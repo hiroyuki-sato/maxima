@@ -1,0 +1,376 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.52
+     from maxima.texi on 10 May 2004 -->
+
+<TITLE>Maxima Manual - Tensor</TITLE>
+<link href="maxima_29.html" rel=Next>
+<link href="maxima_27.html" rel=Previous>
+<link href="maxima_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_27.html">previous</A>, <A HREF="maxima_29.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC89" HREF="maxima_toc.html#TOC89">Tensor</A></H1>
+
+
+
+<H2><A NAME="SEC90" HREF="maxima_toc.html#TOC90">Introduction to Tensor</A></H2>
+
+<P>
+ - Indicial Tensor Manipulation package.  It may be loaded by
+LOADFILE("itensr"); A manual for the Tensor packages is
+available in share/tensor.descr.  A demo is available by
+DEMO("itenso.dem1"); (and additional demos are in
+("itenso.dem2"), ("itenso.dem3") and following).
+
+</P>
+<P>
+ - There are two tensor packages in MACSYMA, CTENSR and
+ITENSR.  CTENSR is Component Tensor Manipulation, and may be accessed
+with LOAD(CTENSR); .  ITENSR is Indicial Tensor Manipulation, and is
+loaded by doing LOAD(ITENSR); A manual for CTENSR AND ITENSR is
+available from the LCS Publications Office.  Request MIT/LCS/TM-167.
+In addition, demos exist on the TENSOR; directory under the filenames
+CTENSO DEMO1, DEMO2, etc. and ITENSO DEMO1, DEMO2, etc.  Do
+DEMO("ctenso.dem1"); or DEMO("itenso.dem2"); Send bugs or
+comments to RP or TENSOR.
+
+</P>
+
+
+<H2><A NAME="SEC91" HREF="maxima_toc.html#TOC91">Definitions for Tensor</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>CANFORM</B> <I>(exp)</I>
+<DD><A NAME="IDX715"></A>
+[Tensor Package] Simplifies exp by renaming dummy
+indices and reordering all indices as dictated by symmetry conditions
+imposed on them. If ALLSYM is TRUE then all indices are assumed
+symmetric, otherwise symmetry information provided by DECSYM
+declarations will be used. The dummy indices are renamed in the same
+manner as in the RENAME function. When CANFORM is applied to a large
+expression the calculation may take a considerable amount of time.
+This time can be shortened by calling RENAME on the expression first.
+Also see the example under DECSYM. Note: CANFORM may not be able to
+reduce an expression completely to its simplest form although it will
+always return a mathematically correct result.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>CANTEN</B> <I>(exp)</I>
+<DD><A NAME="IDX716"></A>
+[Tensor Package] Simplifies exp by renaming (see RENAME)
+and permuting dummy indices. CANTEN is restricted to sums of tensor
+products in which no derivatives are present. As such it is limited
+and should only be used if CANFORM is not capable of carrying out the
+required simplification.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>CARG</B> <I>(exp)</I>
+<DD><A NAME="IDX717"></A>
+returns the argument (phase angle) of exp.  Due to the
+conventions and restrictions, principal value cannot be guaranteed
+unless exp is numeric.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>COUNTER</B>
+<DD><A NAME="IDX718"></A>
+ default: [1] determines the numerical suffix to be used in
+generating the next dummy index in the tensor package.  The prefix is
+determined by the option DUMMYX[#].
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>DEFCON</B> <I>(tensor1,&#60;tensor2,tensor3&#62;)</I>
+<DD><A NAME="IDX719"></A>
+gives tensor1 the property that the
+contraction of a product of tensor1 and tensor2 results in tensor3
+with the appropriate indices.  If only one argument, tensor1, is
+given, then the contraction of the product of tensor1 with any indexed
+object having the appropriate indices (say tensor) will yield an
+indexed object with that name, i.e.tensor, and with a new set of
+indices reflecting the contractions performed.
+    For example, if METRIC: G, then DEFCON(G) will implement the
+raising and lowering of indices through contraction with the metric
+tensor.
+    More than one DEFCON can be given for the same indexed object; the
+latest one given which applies in a particular contraction will be
+used.
+CONTRACTIONS is a list of those indexed objects which have been given
+contraction properties with DEFCON.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>FLUSH</B> <I>(exp,tensor1,tensor2,...)</I>
+<DD><A NAME="IDX720"></A>
+Tensor Package - will set to zero, in
+exp, all occurrences of the tensori that have no derivative indices.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>FLUSHD</B> <I>(exp,tensor1,tensor2,...)</I>
+<DD><A NAME="IDX721"></A>
+Tensor Package - will set to zero, in
+exp, all occurrences of the tensori that have derivative indices.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>FLUSHND</B> <I>(exp,tensor,n)</I>
+<DD><A NAME="IDX722"></A>
+Tensor Package - will set to zero, in exp, all
+occurrences of the differentiated object tensor that have n or more
+derivative indices as the following example demonstrates.
+
+<PRE>
+(C1) SHOW(A([I],[J,R],K,R)+A([I],[J,R,S],K,R,S));
+                               J R S      J R
+(D1)                          A        + A
+                               I,K R S    I,K R
+(C2) SHOW(FLUSHND(D1,A,3));
+                                     J R
+(D2)                                A
+                                     I,K R
+
+</PRE>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>KDELTA</B> <I>(L1,L2)</I>
+<DD><A NAME="IDX723"></A>
+is the generalized Kronecker delta function defined in
+the Tensor package with L1 the list of covariant indices and L2 the
+list of contravariant indices.  KDELTA([i],[j]) returns the ordinary
+Kronecker delta.  The command EV(EXP,KDELTA) causes the evaluation of
+an expression containing KDELTA([],[]) to the dimension of the
+manifold.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>LC</B> <I>(L)</I>
+<DD><A NAME="IDX724"></A>
+is the permutation (or Levi-Civita) tensor which yields 1 if
+the list L consists of an even permutation of integers, -1 if it
+consists of an odd permutation, and 0 if some indices in L are
+repeated.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>LORENTZ</B> <I>(exp)</I>
+<DD><A NAME="IDX725"></A>
+imposes the Lorentz condition by substituting 0 for all
+indexed objects in exp that have a derivative index identical to a
+contravariant index.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>MAKEBOX</B> <I>(exp)</I>
+<DD><A NAME="IDX726"></A>
+will display exp in the same manner as SHOW; however,
+any tensor d'Alembertian occurring in exp will be indicated using the
+symbol [].  For example, []P([M],[N]) represents
+G([],[I,J])*P([M],[N],I,J).
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>METRIC</B> <I>(G)</I>
+<DD><A NAME="IDX727"></A>
+specifies the metric by assigning the variable METRIC:G; in
+addition, the contraction properties of the metric G are set up by
+executing the commands DEFCON(G), DEFCON(G,G,KDELTA).
+The variable METRIC, default: [], is bound to the metric, assigned by
+the METRIC(g) command.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>NTERMSG</B> <I>()</I>
+<DD><A NAME="IDX728"></A>
+gives the user a quick picture of the "size" of the
+Einstein tensor.  It returns a list of pairs whose second elements
+give the number of terms in the components specified by the first
+elements.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>NTERMSRCI</B> <I>()</I>
+<DD><A NAME="IDX729"></A>
+returns a list of pairs, whose second elements give the
+number of terms in the RICCI component specified by the first
+elements.  In this way, it is possible to quickly find the non-zero
+expressions and attempt simplification.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>NZETA</B> <I>(Z)</I>
+<DD><A NAME="IDX730"></A>
+returns the complex value of the Plasma Dispersion Function
+for complex Z.
+
+<PRE>
+NZETAR(Z) ==&#62; REALPART(NZETA(Z))
+</PRE>
+
+<P>
+NZETAI(Z)
+returns IMAGPART(NZETA(Z)).  This function is related to the complex
+error function by
+
+<PRE>
+NZETA(Z) = %I*SQRT(%PI)*EXP(-Z^2)*(1-ERF(-%I*Z)).
+</PRE>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>RAISERIEMANN</B> <I>(dis)</I>
+<DD><A NAME="IDX731"></A>
+returns the contravariant components of the Riemann
+curvature tensor as array elements UR[I,J,K,L].  These are displayed
+if dis is TRUE.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>RATEINSTEIN</B>
+<DD><A NAME="IDX732"></A>
+ default: [] - if TRUE rational simplification will be
+performed on the non-zero components of Einstein tensors; if
+FACRAT:TRUE then the components will also be factored.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>RATRIEMAN</B>
+<DD><A NAME="IDX733"></A>
+ - This switch has been renamed RATRIEMANN.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>RATRIEMANN</B>
+<DD><A NAME="IDX734"></A>
+ default: [] - one of the switches which controls
+simplification of Riemann tensors; if TRUE, then rational
+simplification will be done; if FACRAT:TRUE then each of the
+components will also be factored.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>REMCON</B> <I>(tensor1,tensor2,...)</I>
+<DD><A NAME="IDX735"></A>
+removes all the contraction properties
+from the tensori.  REMCON(ALL) removes all contraction properties from
+all indexed objects.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>RICCICOM</B> <I>(dis)</I>
+<DD><A NAME="IDX736"></A>
+Tensor package) This function first computes the
+covariant components LR[i,j] of the Ricci tensor (LR is a mnemonic for
+"lower Ricci").  Then the mixed Ricci tensor is computed using the
+contravariant metric tensor.  If the value of the argument to RICCICOM
+is TRUE, then these mixed components, RICCI[i,j] (the index i is
+covariant and the index j is contravariant), will be displayed
+directly.  Otherwise, RICCICOM(FALSE) will simply compute the entries
+of the array RICCI[i,j] without displaying the results.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>RINVARIANT</B> <I>()</I>
+<DD><A NAME="IDX737"></A>
+Tensor package) forms the invariant obtained by
+contracting the tensors
+
+<PRE>
+R[i,j,k,l]*UR[i,j,k,l].
+</PRE>
+
+<P>
+This object is not
+
+</P>
+<P>
+automatically simplified since it can be very large.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>SCURVATURE</B> <I>()</I>
+<DD><A NAME="IDX738"></A>
+returns the scalar curvature (obtained by contracting
+the Ricci tensor) of the Riemannian manifold with the given metric.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>SETUP</B> <I>()</I>
+<DD><A NAME="IDX739"></A>
+this has been renamed to TSETUP();  Sets up a metric for
+Tensor calculations.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>WEYL</B> <I>(dis)</I>
+<DD><A NAME="IDX740"></A>
+computes the Weyl conformal tensor.  If the argument dis is
+TRUE, the non-zero components W[I,J,K,L] will be displayed to the
+user.  Otherwise, these components will simply be computed and stored.
+If the switch RATWEYL is set to TRUE, then the components will be
+rationally simplified; if FACRAT is TRUE then the results will be
+factored as well.
+
+</P>
+</DL>
+
+<P><HR><P>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_27.html">previous</A>, <A HREF="maxima_29.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+</BODY>
+</HTML>

@@ -1,0 +1,193 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.52
+     from maxima.texi on 10 May 2004 -->
+
+<TITLE>Maxima Manual - Logarithms</TITLE>
+<link href="maxima_14.html" rel=Next>
+<link href="maxima_12.html" rel=Previous>
+<link href="maxima_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_12.html">previous</A>, <A HREF="maxima_14.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC43" HREF="maxima_toc.html#TOC43">Logarithms</A></H1>
+
+
+
+<H2><A NAME="SEC44" HREF="maxima_toc.html#TOC44">Definitions for Logarithms</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>LOG</B> <I>(X)</I>
+<DD><A NAME="IDX386"></A>
+the natural logarithm.
+
+</P>
+<P>
+  LOGEXPAND[TRUE] - causes LOG(A^B) to become B*LOG(A).  If it is set
+to ALL, LOG(A*B) will also simplify to LOG(A)+LOG(B).  If it is set to
+SUPER, then LOG(A/B) will also simplify to LOG(A)-LOG(B) for rational
+numbers a/b, a#1.  (LOG(1/B), for B integer, always simplifies.)  If
+it is set to FALSE, all of these simplifications will be turned off.
+
+</P>
+<P>
+  LOGSIMP[TRUE] - if FALSE then no simplification of %E to a power
+containing LOG's is done.
+
+</P>
+<P>
+  LOGNUMER[FALSE] - if TRUE then negative floating point arguments to
+LOG will always be converted to their absolute value before the log is
+taken.  If NUMER is also TRUE, then negative integer arguments to LOG
+will also be converted to their absolute value.
+
+</P>
+<P>
+  LOGNEGINT[FALSE] - if TRUE implements the rule LOG(-n) -&#62;
+LOG(n)+%i*%pi for n a positive integer.
+
+</P>
+<P>
+  %E_TO_NUMLOG[FALSE] - when TRUE, "r" some rational number, and
+"x" some expression, %E^(r*LOG(x)) will be simplified into x^r .  It
+should be noted that the RADCAN command also does this transformation,
+and more complicated transformations of this ilk as well.
+The LOGCONTRACT command "contracts" expressions containing LOG.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGABS</B>
+<DD><A NAME="IDX387"></A>
+ default: [FALSE] - when doing indefinite integration where
+logs are generated, e.g. INTEGRATE(1/X,X), the answer is given in
+terms of LOG(ABS(...)) if LOGABS is TRUE, but in terms of LOG(...) if
+LOGABS is FALSE.  For definite integration, the LOGABS:TRUE setting is
+used, because here "evaluation" of the indefinite integral at the
+endpoints is often needed.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGARC</B>
+<DD><A NAME="IDX388"></A>
+ default: [FALSE] - if TRUE will cause the inverse circular and
+hyperbolic functions to be converted into logarithmic form.
+LOGARC(exp) will cause this conversion for a particular expression without
+setting the switch or having to re-evaluate the expression with EV.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGCONCOEFFP</B>
+<DD><A NAME="IDX389"></A>
+ default:[FALSE] - controls which coefficients are
+contracted when using LOGCONTRACT.  It may be set to the name of a
+predicate function of one argument.  E.g. if you like to generate
+SQRTs, you can do LOGCONCOEFFP:'LOGCONFUN$
+LOGCONFUN(M):=FEATUREP(M,INTEGER) OR RATNUMP(M)$ .  Then
+LOGCONTRACT(1/2*LOG(X)); will give LOG(SQRT(X)).
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>LOGCONTRACT</B> <I>(exp)</I>
+<DD><A NAME="IDX390"></A>
+recursively scans an exp, transforming
+subexpressions of the form a1*LOG(b1) + a2*LOG(b2) + c into
+LOG(RATSIMP(b1^a1 * b2^a2)) + c
+
+<PRE>
+(C1) 2*(A*LOG(X) + 2*A*LOG(Y))$
+(C2) LOGCONTRACT(%);
+                                        2  4
+(D3)                             A LOG(X  Y )
+
+</PRE>
+
+<P>
+If you do DECLARE(N,INTEGER); then LOGCONTRACT(2*A*N*LOG(X)); gives
+A*LOG(X^(2*N)).  The coefficients that "contract" in this manner are
+those such as the 2 and the N here which satisfy
+FEATUREP(coeff,INTEGER).  The user can control which coefficients are
+contracted by setting the option LOGCONCOEFFP[FALSE] to the name of a
+predicate function of one argument.  E.g. if you like to generate
+SQRTs, you can do LOGCONCOEFFP:'LOGCONFUN$
+LOGCONFUN(M):=FEATUREP(M,INTEGER) OR RATNUMP(M)$ .  Then
+LOGCONTRACT(1/2*LOG(X)); will give LOG(SQRT(X)).
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGEXPAND</B>
+<DD><A NAME="IDX391"></A>
+ default: [TRUE] - causes LOG(A^B) to become B*LOG(A).  If
+it is set to ALL, LOG(A*B) will also simplify to LOG(A)+LOG(B).  If it
+is set to SUPER, then LOG(A/B) will also simplify to LOG(A)-LOG(B) for
+rational numbers a/b, a#1.  (LOG(1/B), for B integer, always
+simplifies.)  If it is set to FALSE, all of these simplifications will
+be turned off.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGNEGINT</B>
+<DD><A NAME="IDX392"></A>
+ default: [FALSE] - if TRUE implements the rule 
+LOG(-n) -&#62; LOG(n)+%i*%pi   for n a positive integer.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGNUMER</B>
+<DD><A NAME="IDX393"></A>
+ default: [FALSE] - if TRUE then negative floating point
+arguments to LOG will always be converted to their absolute value
+before the log is taken.  If NUMER is also TRUE, then negative integer
+arguments to LOG will also be converted to their absolute value.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>LOGSIMP</B>
+<DD><A NAME="IDX394"></A>
+ default: [TRUE] - if FALSE then no simplification of %E to a
+power containing LOG's is done.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>PLOG</B> <I>(X)</I>
+<DD><A NAME="IDX395"></A>
+the principal branch of the complex-valued natural
+logarithm with -%PI &#60; CARG(X) &#60;= +%PI .
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>POLARFORM</B> <I>(exp)</I>
+<DD><A NAME="IDX396"></A>
+returns R*%E^(%I*THETA) where R and THETA are purely
+real.
+
+</P>
+</DL>
+
+<P><HR><P>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_12.html">previous</A>, <A HREF="maxima_14.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+</BODY>
+</HTML>

@@ -1,0 +1,577 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.52
+     from maxima.texi on 10 May 2004 -->
+
+<TITLE>Maxima Manual - Program Flow</TITLE>
+<link href="maxima_40.html" rel=Next>
+<link href="maxima_38.html" rel=Previous>
+<link href="maxima_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_38.html">previous</A>, <A HREF="maxima_40.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC126" HREF="maxima_toc.html#TOC126">Program Flow</A></H1>
+
+
+
+<H2><A NAME="SEC127" HREF="maxima_toc.html#TOC127">Introduction to Program Flow</A></H2>
+
+<P>
+MACSYMA provides a DO loop for iteration, as well as more primitive
+constructs such as GO.
+
+</P>
+
+
+<H2><A NAME="SEC128" HREF="maxima_toc.html#TOC128">Definitions for Program Flow</A></H2>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>BACKTRACE</B>
+<DD><A NAME="IDX991"></A>
+ default: [] (when DEBUGMODE:ALL has been done) has as value
+a list of all functions currently entered.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>special operator:</U> <B>DO</B>
+<DD><A NAME="IDX992"></A>
+ - The DO statement is used for performing iteration.  Due to its
+great generality the DO statement will be described in two parts.
+First the usual form will be given which is analogous to that used in
+several other programming languages (FORTRAN, ALGOL, PL/I, etc.); then
+the other features will be mentioned.
+1.  There are three variants of this form that differ only in their
+terminating conditions.  They are:
+
+<UL>
+<LI>
+
+(a)  FOR variable : initial-value STEP increment
+      THRU limit DO body
+<LI>
+
+(b)  FOR variable : initial-value STEP increment
+      WHILE condition DO body
+<LI>
+
+(c)  FOR variable : initial-value STEP increment
+      UNLESS condition DO body
+</UL>
+
+<P>
+(Alternatively, the STEP may be given after the termination condition
+or limit.)
+    The initial-value, increment, limit, and body can be any
+expressions.  If the increment is 1 then "STEP 1" may be omitted.
+    The execution of the DO statement proceeds by first assigning the
+initial-value to the variable (henceforth called the
+control-variable). Then: (1) If the control-variable has exceeded the
+limit of a THRU specification, or if the condition of the UNLESS is
+TRUE, or if the condition of the WHILE is FALSE then the DO
+terminates. (2) The body is evaluated.  (3) The increment is added to
+the control-variable.  The process from (1) to (3) is performed
+repeatedly until the termination condition is satisfied.  One may also
+give several termination conditions in which case the DO terminates
+when any of them is satisfied.
+    In general the THRU test is satisfied when the control-variable is
+greater than the limit if the increment was non-negative, or when the
+control-variable is less than the limit if the increment was negative.
+The increment and limit may be non-numeric expressions as long as this
+inequality can be determined.  However, unless the increment is
+syntactically negative (e.g. is a negative number) at the time the DO
+statement is input, MACSYMA assumes it will be positive when the DO is
+executed.  If it is not positive, then the DO may not terminate
+properly.
+    Note that the limit, increment, and termination condition are
+evaluated each time through the loop.  Thus if any of these involve
+much computation, and yield a result that does not change during all
+the executions of the body, then it is more efficient to set a
+variable to their value prior to the DO and use this variable in the
+DO form.
+    The value normally returned by a DO statement is the atom DONE, as
+every statement in MACSYMA returns a value.  However, the function
+RETURN may be used inside the body to exit the DO prematurely and give
+it any desired value.  Note however that a RETURN within a DO that
+occurs in a BLOCK will exit only the DO and not the BLOCK.  Note also
+that the GO function may not be used to exit from a DO into a
+surrounding BLOCK.
+    The control-variable is always local to the DO and thus any
+variable may be used without affecting the value of a variable with
+the same name outside of the DO.  The control-variable is unbound
+after the DO terminates.
+
+<PRE>
+(C1)   FOR A:-3 THRU 26 STEP 7 DO LDISPLAY(A)$
+(E1)          A = -3
+(E2)          A =  4
+(E3)          A = 11
+(E4)          A = 18
+(E5)          A = 25
+</PRE>
+
+<P>
+The function LDISPLAY generates intermediate labels; DISPLAY does not.
+
+<PRE>
+(C6)   S:0$
+(C7)   FOR I:1 WHILE I&#60;=10 DO S:S+I;
+(D7)          DONE
+(C8)   S;
+(D8)          55
+</PRE>
+
+<P>
+Note that the condition in C7 is equivalent to UNLESS I &#62; 10 and also
+THRU 10
+
+<PRE>
+(C9)   SERIES:1$
+(C10)  TERM:EXP(SIN(X))$
+(C11)  FOR P:1 UNLESS P&#62;7 DO
+          (TERM:DIFF(TERM,X)/P,
+          SERIES:SERIES+SUBST(X=0,TERM)*X^P)$
+(C12)   SERIES;
+                7    6     5    4    2
+(D12)          X    X     X    X    X
+               -- - -- - -- - -- + -- + X + 1
+               96   240   15   8    2
+which gives 8 terms of the Taylor series for e^sin(x).
+(C13) POLY:0$
+(C14) FOR I:1 THRU 5 DO
+        FOR J:I STEP -1 THRU 1 DO
+           POLY:POLY+I*X^J$
+(C15) POLY;
+              5      4       3       2
+(D15)      5 X  + 9 X  + 12 X  + 14 X  + 15 X
+(C16) GUESS:-3.0$
+(C17) FOR I:1 THRU 10 DO (GUESS:SUBST(GUESS,X,.5*(X+10/X)),
+         IF ABS(GUESS^2-10)&#60;.00005 THEN RETURN(GUESS));
+(D17)                  - 3.1622807
+</PRE>
+
+<P>
+    This example computes the negative square root of 10 using the
+Newton- Raphson iteration a maximum of 10 times.  Had the convergence
+criterion not been met the value returned would have been "DONE".
+Additional Forms of the DO Statement
+    Instead of always adding a quantity to the control-variable one
+may sometimes wish to change it in some other way for each iteration.
+In this case one may use "NEXT expression" instead of "STEP
+increment".  This will cause the control-variable to be set to the
+result of evaluating expression each time through the loop.
+
+<PRE>
+
+(C1)  FOR COUNT:2 NEXT 3*COUNT THRU 20
+         DO DISPLAY(COUNT)$
+                    COUNT = 2
+                    COUNT = 6
+                    COUNT = 18
+</PRE>
+
+<P>
+    As an alternative to FOR variable:value ...DO... the syntax FOR
+variable FROM value ...DO...  may be used.  This permits the "FROM
+value" to be placed after the step or next value or after the
+termination condition.  If "FROM value" is omitted then 1 is used as
+the initial value.
+    Sometimes one may be interested in performing an iteration where
+the control-variable is never actually used.  It is thus permissible
+to give only the termination conditions omitting the initialization
+and updating information as in the following example to compute the
+square-root of 5 using a poor initial guess.
+
+<PRE>
+(C1) X:1000;
+(C2)  THRU 10 WHILE X#0.0 DO X:.5*(X+5.0/X)$
+(C3) X;
+(D3)               2.236068
+</PRE>
+
+<P>
+    If it is desired one may even omit the termination conditions
+entirely and just give "DO body" which will continue to evaluate the
+body indefinitely.  In this case the function RETURN should be used to
+terminate execution of the DO.
+
+<PRE>
+(C1) NEWTON(F,GUESS):=
+  BLOCK([NUMER,Y],
+        LOCAL(DF),
+        NUMER:TRUE,
+        DEFINE(DF(X),DIFF(F(X),X)),
+        DO (Y:DF(GUESS),
+            IF Y=0.0 THEN ERROR("Derivative at:",GUESS," is zero."),
+            GUESS:GUESS-F(GUESS)/Y,
+            IF ABS(F(GUESS))&#60;5.0E-6 THEN RETURN(GUESS)))$
+(C2) SQR(X):=X^2-5.0$
+(C3) NEWTON(SQR,1000);
+(D3)                    2.236068
+</PRE>
+
+<P>
+    (Note that RETURN, when executed, causes the current value of
+GUESS to be returned as the value of the DO.  The BLOCK is exited and
+this value of the DO is returned as the value of the BLOCK because the
+DO is the last statement in the block.)
+    One other form of the DO is available in MACSYMA.  The syntax is:
+
+</P>
+
+<PRE>
+FOR variable IN list [end-tests] DO body
+</PRE>
+
+<P>
+    The members of the list are any expressions which will
+successively be assigned to the variable on each iteration of the
+body.  The optional end-tests can be used to terminate execution of
+the DO; otherwise it will terminate when the list is exhausted or when
+a RETURN is executed in the body.  (In fact, list may be any
+non-atomic expression, and successive parts are taken.)
+
+<PRE>
+
+(C1)  FOR F IN [LOG, RHO, ATAN] DO LDISP(F(1))$
+(E1)                                  0
+(E2)                                RHO(1)
+                                     %PI
+(E3)                                 ---
+                                      4
+(C4) EV(E3,NUMER);
+(D4)                             0.78539816
+
+</PRE>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>ERRCATCH</B> <I>(exp1, exp2, ...)</I>
+<DD><A NAME="IDX993"></A>
+evaluates its arguments one by one and
+returns a list of the value of the last one if no error occurs.  If an
+error occurs in the evaluation of any arguments, ERRCATCH "catches"
+the error and immediately returns [] (the empty list).  This function
+is useful in BATCH files where one suspects an error might occur which
+would otherwise have terminated the BATCH if the error weren't caught.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>ERREXP</B>
+<DD><A NAME="IDX994"></A>
+ default: [ERREXP] When an error occurs in the course of a
+computation, MACSYMA prints out an error message and terminates the
+computation.  ERREXP is set to the offending expression and the
+message "ERREXP contains the offending expression" is printed.  The
+user can then type ERREXP; to see this and hopefully find the problem.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>ERROR</B> <I>(arg1, arg2, ...)</I>
+<DD><A NAME="IDX995"></A>
+will evaluate and print its arguments and
+then will cause an error return to top level MACSYMA or to the nearest
+enclosing ERRCATCH.  This is useful for breaking out of nested
+functions if an error condition is detected, or wherever one can't
+type control-^.
+The variable ERROR is set to a list describing the error, the first of
+it being a string of text, and the rest the objects in question.
+ERRORMSG(); is the preferred way to see the last error message.
+ERRORFUN default: [FALSE] - if set to the name of a function of no
+arguments will cause that function to be executed whenever an error
+occurs.  This is useful in BATCH files where the user may want his
+MACSYMA killed or his terminal logged out if an error occurs.  In
+these cases ERRORFUN would be set to QUIT or LOGOUT.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>ERRORFUN</B>
+<DD><A NAME="IDX996"></A>
+ default: [FALSE] - if set to the name of a function of no
+arguments will cause that function to be executed whenever an error
+occurs.  This is useful in BATCH files where the user may want his
+MACSYMA killed or his terminal logged out if an error occurs.  In
+these cases ERRORFUN would be set to QUIT or LOGOUT.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>ERRORMSG</B> <I>()</I>
+<DD><A NAME="IDX997"></A>
+reprints the last error message.  This is very helpful if
+you are using a display console and the message has gone off the
+screen.  The variable ERROR is set to a list describing the error,
+the first of it being a string of text, and the rest the objects in
+question.
+TTYINTFUN:LAMBDA([],ERRORMSG(),PRINT(""))$ will set up the user-interrupt
+character (^U) to reprint the message.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>special operator:</U> <B>FOR</B>
+<DD><A NAME="IDX998"></A>
+ - Used in iterations, do DESCRIBE("DO"); for a description of
+MACSYMA's iteration facilities.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>GO</B> <I>(tag)</I>
+<DD><A NAME="IDX999"></A>
+is used within a BLOCK to transfer control to the statement
+of the block which is tagged with the argument to GO.  To tag a
+statement, precede it by an atomic argument as another statement in
+the BLOCK.  For example:
+
+<PRE>
+BLOCK([X],X:1,LOOP,X+1,...,GO(LOOP),...)
+</PRE>
+
+<P>
+.
+The argument to GO must be the name of a tag appearing in the same
+BLOCK.  One cannot use GO to transfer to tag in a BLOCK other than the
+one containing the GO.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>special operator:</U> <B>IF</B>
+<DD><A NAME="IDX1000"></A>
+ - The IF statement is used for conditional execution.  The syntax
+is:
+
+<PRE>
+    IF condition THEN expression1 ELSE expression2.
+</PRE>
+
+<P>
+The result of an IF statement is expression1 if condition is true and
+expression2 if it is false.  expression1 and expression2 are any
+MACSYMA expressions (including nested IF statements), and condition is
+an expression which evaluates to TRUE or FALSE and is composed of
+relational and logical operators which are as follows:
+
+<PRE>
+ 
+Operator name       Symbol      Type
+greater than        &#62;           relational infix
+equal to            = , EQUAL   "  "
+not equal to        #           "  "
+less than           &#60;           "  "
+greater than        &#62;=
+  or equal to                   "  "
+less than           &#60;=
+  or equal to                   "  "
+and                 AND         logical infix
+or                  OR          "  "
+not                 NOT         logical prefix
+
+</PRE>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>LISPDEBUGMODE</B> <I>()</I>
+<DD><A NAME="IDX1001"></A>
+LISPDEBUGMODE(); DEBUGPRINTMODE(); and DEBUG();
+make available to the user debugging features used by systems
+programmers.  These tools are powerful, and although some conventions
+are different from the usual macsyma level it is felt their use is
+very intuitive.  [Some printout may be verbose for slow terminals,
+there are switches for controlling this.]  These commands were
+designed for the user who must debug translated macsyma code, as such
+they are a boon.  See MACDOC;TRDEBG USAGE for more information.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>MAP</B> <I>(fn, exp1, exp2, ...)</I>
+<DD><A NAME="IDX1002"></A>
+returns an expression whose leading operator
+is the same as that of the expi but whose subparts are the results of
+applying fn to the corresponding subparts of the expi.  Fn is either
+the name of a function of n arguments (where n is the number of expi)
+or is a LAMBDA form of n arguments.
+MAPERROR[TRUE] - if FALSE will cause all of the mapping functions to
+(1) stop when they finish going down the shortest expi if not all of
+the expi are of the same length and (2) apply fn to [exp1, exp2,...]
+if the expi are not all the same type of object. If MAPERROR is TRUE
+then an error message will be given in the above two instances.
+One of the uses of this function is to MAP a function (e.g. PARTFRAC)
+onto each term of a very large expression where it ordinarily wouldn't
+be possible to use the function on the entire expression due to an
+exhaustion of list storage space in the course of the computation.
+
+<PRE>
+(C1) MAP(F,X+A*Y+B*Z);
+(D1)                        F(B Z) + F(A Y) + F(X)
+(C2) MAP(LAMBDA([U],PARTFRAC(U,X)),X+1/(X^3+4*X^2+5*X+2));
+                           1       1        1
+(D2)                     ----- - ----- + -------- + X
+                         X + 2   X + 1          2
+                                         (X + 1)
+(C3) MAP(RATSIMP, X/(X^2+X)+(Y^2+Y)/Y);
+                                      1
+(D3)                            Y + ----- + 1
+                                    X + 1
+(C4) MAP("=",[A,B],[-0.5,3]);
+(D4)                          [A = - 0.5, B = 3]
+
+</PRE>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>MAPATOM</B> <I>(expr)</I>
+<DD><A NAME="IDX1003"></A>
+is TRUE if and only if expr is treated by the MAPping
+routines as an "atom", a unit.  "Mapatoms" are atoms, numbers
+(including rational numbers), and subscripted variables.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>MAPERROR</B>
+<DD><A NAME="IDX1004"></A>
+ default: [TRUE] - if FALSE will cause all of the mapping
+functions, for example
+
+<PRE>
+MAP(fn,exp1,exp2,...))
+</PRE>
+
+<P>
+to (1) stop when they finish
+going down the shortest expi if not all of the expi are of the same
+length and (2) apply fn to [exp1, exp2,...] if the expi are not all
+the same type of object.  If MAPERROR is TRUE then an error message
+will be given in the above two instances.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>MAPLIST</B> <I>(fn, exp1, exp2, ...)</I>
+<DD><A NAME="IDX1005"></A>
+yields a list of the applications of fn
+to the parts of the expi.  This differs from MAP(fn,exp1,exp2,...)
+which returns an expression with the same main operator as expi has
+(except for simplifications and the case where MAP does an APPLY).  Fn
+is of the same form as in MAP.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>PREDERROR</B>
+<DD><A NAME="IDX1006"></A>
+ default: [TRUE] - If TRUE, an error message is signalled
+whenever the predicate of an IF statement or an IS function fails to
+evaluate to either TRUE or FALSE.  If FALSE, UNKNOWN is returned
+instead in this case.  The PREDERROR:FALSE mode is not supported in
+translated code.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>RETURN</B> <I>(value)</I>
+<DD><A NAME="IDX1007"></A>
+may be used to exit explicitly from a BLOCK, bringing
+its argument.  Do DESCRIBE(BLOCK); for more information.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>SCANMAP</B> <I>(function,exp)</I>
+<DD><A NAME="IDX1008"></A>
+recursively applies function to exp, in a "top
+down" manner.  This is most useful when "complete" factorization is
+desired, for example:
+
+<PRE>
+(C1) EXP:(A^2+2*A+1)*Y + X^2$
+(C2) SCANMAP(FACTOR,EXP);
+                                    2      2
+(D2)                         (A + 1)  Y + X
+</PRE>
+
+<P>
+Note the way in which SCANMAP applies the given function FACTOR to the
+constituent subexpressions of exp; if another form of exp is presented
+to SCANMAP then the result may be different.  Thus, D2 is not
+recovered when SCANMAP is applied to the expanded form of exp:
+
+<PRE>
+(C3) SCANMAP(FACTOR,EXPAND(EXP));
+                           2                  2
+(D3)                      A  Y + 2 A Y + Y + X
+</PRE>
+
+<P>
+Here is another example of the way in which SCANMAP recursively
+applies a given function to all subexpressions, including exponents:
+
+<PRE>
+(C4) EXPR : U*V^(A*X+B) + C$
+(C5) SCANMAP('F, EXPR);
+                    F(F(F(A) F(X)) + F(B))
+(D5) F(F(F(U) F(F(V)                      )) + F(C))
+</PRE>
+
+<P>
+SCANMAP(function,expression,BOTTOMUP) applies function to exp in a
+"bottom-up" manner.  E.g., for undefined F,
+
+</P>
+
+<PRE>
+SCANMAP(F,A*X+B) -&#62;
+   F(A*X+B) -&#62; F(F(A*X)+F(B)) -&#62; F(F(F(A)*F(X))+F(B))
+SCANMAP(F,A*X+B,BOTTOMUP) -&#62; F(A)*F(X)+F(B)
+    -&#62; F(F(A)*F(X))+F(B) -&#62;
+     F(F(F(A)*F(X))+F(B))
+</PRE>
+
+<P>
+In this case, you get the same answer both
+ways.
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>THROW</B> <I>(exp)</I>
+<DD><A NAME="IDX1009"></A>
+evaluates exp and throws the value back to the most recent
+CATCH.  THROW is used with CATCH as a structured nonlocal exit
+mechanism.
+
+</P>
+</DL>
+
+<P><HR><P>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_38.html">previous</A>, <A HREF="maxima_40.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+</BODY>
+</HTML>

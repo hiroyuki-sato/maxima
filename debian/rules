@@ -1,0 +1,197 @@
+#!/usr/bin/make -f
+#-*- makefile -*-
+# Made with the aid of dh_make, by Craig Small
+# Sample debian/rules that uses debhelper. GNU copyright 1997 by Joey Hess.
+# Some lines taken from debmake, by Christoph Lameter.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=3
+
+NO_STRIP:=
+ALT_LINK:=
+ifeq ($(DEB_BUILD_ARCH),mips)
+ALT_LINK:=--enable-gcl-alt-link
+endif
+ifeq ($(DEB_BUILD_ARCH),mipsel)
+ALT_LINK:=--enable-gcl-alt-link
+endif
+ifeq ($(DEB_BUILD_ARCH),ia64)
+ALT_LINK:=--enable-gcl-alt-link
+NO_STRIP:=-Xmaxima
+endif
+ifeq ($(DEB_BUILD_ARCH),hppa)
+ALT_LINK:=--enable-gcl-alt-link
+endif
+ifeq ($(DEB_BUILD_ARCH),alpha)
+ALT_LINK:=--enable-gcl-alt-link
+endif
+ifeq ($(DEB_BUILD_ARCH),powerpc)
+NO_STRIP:=-Xmaxima
+endif
+
+MVERS:=5.9.0
+build: build-stamp
+build-stamp: 
+	dh_testdir
+
+	./configure --enable-gcl $(ALT_LINK) \
+		--prefix=/usr \
+		--libexec=/usr/lib \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info 
+
+	$(MAKE)
+
+# This sets up some reasonable readline command completion by default
+
+	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
+
+
+# Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
+#	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
+
+	$(MAKE) check >tmp 2>&1 & j=$$! ; echo Waiting on pid $$j ; \
+		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
+
+	cat tmp tests/tests-gcl.log >debian/test_results.out
+
+	grep "Error(s) found in.*:" tests/tests-gcl.log | sed 's,Error(s) found in ,,1'	>tmp
+
+	! [ -e tests/known-bugs ] || diff -u tests/known-bugs tmp
+
+	[ -e tests/known-bugs ] || grep -q "No Errors Found" tests/tests-gcl.log
+
+	rm -f tmp
+
+	cd doc/maximabook &&\
+		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+		dvips -o maxima.ps maxima
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp install-stamp
+
+	-$(MAKE) distclean
+	-rm -f debian/test_results.out tests/tests-gcl.log
+	-find -name Makefile -exec rm {} \;
+	-rm -f src/maxima doc/man/maxima.1 interfaces/xmaxima/Tkmaxima/Header.tcl \
+		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
+		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
+	rm -f src/factor.fn src/nparse.fn tests/gazonk0.fn
+	cd doc/maximabook && \
+		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
+			maxima.log maxima.out maxima.toc maxima.ps
+	dh_clean
+
+
+LOC_DOC=<a href=file://usr/share/doc/maxima/html/maxima_toc.html> (local copy) </a>
+
+install: install-stamp
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+
+	$(MAKE) install DESTDIR=$$(pwd)/debian/tmp
+
+	mkdir -p $$(pwd)/debian/tmp/usr/share/doc/maxima-doc
+	cp -a debian/tmp/usr/share/maxima/$(MVERS)/doc/* \
+		$$(pwd)/debian/tmp/usr/share/doc/maxima-doc 
+	rm -rf debian/tmp/usr/share/maxima/$(MVERS)/doc
+	ln -snf ../../doc/maxima-doc debian/tmp/usr/share/maxima/$(MVERS)/doc
+
+	mkdir -p $$(pwd)/debian/tmp/usr/share/doc/xmaxima
+	cp -a debian/tmp/usr/share/maxima/$(MVERS)/xmaxima/* \
+		$$(pwd)/debian/tmp/usr/share/doc/xmaxima 
+	rm -rf debian/tmp/usr/share/maxima/$(MVERS)/xmaxima
+	ln -snf ../../doc/xmaxima debian/tmp/usr/share/maxima/$(MVERS)/xmaxima
+
+	mkdir -p debian/tmp/usr/share/emacs/site-lisp/maxima
+	cp -a debian/tmp/usr/share/maxima/$(MVERS)/emacs/* \
+		debian/tmp/usr/share/emacs/site-lisp/maxima
+	rm debian/tmp/usr/share/emacs/site-lisp/maxima/dbl.el
+	mkdir -p debian/tmp/usr/share/texmf/tex/latex
+	mv debian/tmp/usr/share/emacs/site-lisp/maxima/*sty \
+		debian/tmp/usr/share/texmf/tex/latex
+	rm -rf debian/tmp/usr/share/maxima/$(MVERS)/emacs
+	ln -snf ../../emacs/site-lisp/maxima debian/tmp/usr/share/maxima/$(MVERS)/emacs
+
+	for i in debian/tmp/usr/bin/xmaxima \
+		debian/tmp/usr/lib/maxima/$(MVERS)/omplotdata \
+		debian/tmp/usr/lib/maxima/$(MVERS)/mgnuplot ; do \
+		cat $$i | sed  -e 's,^#!/bin/sh,#!/usr/bin/wish,1' \
+			-e 's,^exec wish,#exec wish,1' >tmp && chmod 755 tmp && \
+			mv tmp $$i ; done
+
+# GCL must be able to write to directory in which tests are run
+	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
+	cat debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp | sed "s,@MVERS@,$(MVERS),g" >tmp && \
+		mv tmp debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp
+
+	cd debian/tmp/usr/bin && patch -p1 <../../../xmaxima.patch
+	cat debian/tmp/usr/bin/xmaxima | sed "s,@MVERS@,$(MVERS),g" >tmp && \
+		chmod 755 tmp && mv tmp debian/tmp/usr/bin/xmaxima
+
+	cp doc/maximabook/maxima.ps debian/tmp/usr/share/doc/maxima-doc
+
+	dh_install
+
+	touch install-stamp
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installdocs -i
+	dh_installexamples -i
+	dh_installmenu -i
+	dh_installemacsen -i
+	dh_installcron -i
+	dh_installman -i
+	dh_installinfo -i
+	dh_installchangelogs  -i
+	dh_link -i
+	dh_strip -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_shlibdeps -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir -a
+	dh_testroot -a
+	dh_installdocs -a
+	dh_installexamples -a
+	dh_installmenu -a
+	dh_installemacsen -a
+	dh_installcron -a
+	dh_installman -a
+	dh_installinfo -a
+	dh_installchangelogs  -a
+	dh_link -a
+	dh_strip -a $(NO_STRIP)
+	dh_compress -a
+	dh_fixperms -a
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+source diff:                                                                  
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

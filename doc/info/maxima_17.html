@@ -1,0 +1,407 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.52
+     from maxima.texi on 10 May 2004 -->
+
+<TITLE>Maxima Manual - Elliptic Functions</TITLE>
+<link href="maxima_18.html" rel=Next>
+<link href="maxima_16.html" rel=Previous>
+<link href="maxima_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_16.html">previous</A>, <A HREF="maxima_18.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC56" HREF="maxima_toc.html#TOC56">Elliptic Functions</A></H1>
+
+
+
+<H2><A NAME="SEC57" HREF="maxima_toc.html#TOC57">Introduction to Elliptic Functions and Integrals</A></H2>
+
+<P>
+Maxima includes support for Jacobian elliptic functions and for
+complete and incomplete elliptic integrals.  This includes symbolic
+manipulation of these functions and numerical evaluation as well.
+Definitions of these functions and many of their properties can by
+found in Abramowitz and Stegun, Chapter 16--17.  As much as possible,
+we use the definitions and relationships given there.
+
+</P>
+<P>
+In particular, all elliptic functions and integrals use the parameter
+m instead of the modulus k or the modular angle
+\alpha.  This is one area where we differ from Abramowitz and
+Stegun who use the modular angle for the elliptic functions.  The
+following relationships are true:
+
+</P>
+<P>
+The elliptic functions and integrals are primarily intended to support
+symbolic computation.  Therefore, most of derivatives of the functions
+and integrals are known.  However, if floating-point values are given,
+a floating-point result is returned.
+
+</P>
+<P>
+Support for most of the other properties of elliptic functions and
+integrals other than derivatives has not yet been written.
+
+</P>
+<P>
+Some examples of elliptic functions:
+
+<PRE>
+(C1) jacobi_sn(u,m);
+(D1)                            JACOBI_SN(u, m)
+(C2) jacobi_sn(u,1);
+(D2)                                TANH(u)
+(C3) jacobi_sn(u,0);
+(D3)                                SIN(u)
+(C4) diff(jacobi_sn(u,m),u);
+(D4)                    JACOBI_CN(u, m) JACOBI_DN(u, m)
+(C5) diff(jacobi_sn(u,m),m);
+(D5) JACOBI_CN(u, m) JACOBI_DN(u, m)
+
+      ELLIPTIC_E(ASIN(JACOBI_SN(u, m)), m)
+ (u - ------------------------------------)/(2 m)
+                     1 - m
+
+            2
+   JACOBI_CN (u, m) JACOBI_SN(u, m)
+ + --------------------------------
+              2 (1 - m)
+</PRE>
+
+<P>
+Some examples of elliptic integrals:
+
+<PRE>
+(C1) elliptic_f(phi,m);
+(D1)                          ELLIPTIC_F(PHI, m)
+(C2) elliptic_f(phi,0);
+(D2)                                  PHI
+(C3) elliptic_f(phi,1);
+                                      PHI   %PI
+(D3)                          LOG(TAN(--- + ---))
+                                       2     4
+(C4) elliptic_e(phi,1);
+(D4)                               SIN(PHI)
+(C5) elliptic_e(phi,0);
+(D5)                                  PHI
+(C6) elliptic_kc(1/2);
+                                            1
+(D6)                            ELLIPTIC_KC(-)
+                                            2
+(C7) makegamma(%);
+                                        2 1
+                                   GAMMA (-)
+                                          4
+(D7)                              -----------
+                                  4 SQRT(%PI)
+(C8) diff(elliptic_f(phi,m),phi);
+                                       1
+(D8)                         ---------------------
+                                           2
+                             SQRT(1 - m SIN (PHI))
+(C9) diff(elliptic_f(phi,m),m);
+      ELLIPTIC_E(PHI, m) - (1 - m) ELLIPTIC_F(PHI, m)
+(D9) (-----------------------------------------------
+                             m
+
+                            COS(PHI) SIN(PHI)
+                        - ---------------------)/(2 (1 - m))
+                                        2
+                          SQRT(1 - m SIN (PHI))
+</PRE>
+
+<P>
+Support for elliptic functions and integrals was written by Raymond
+Toy.  It is placed under the terms of the General Public License (GPL)
+that governs the distribution of Maxima.
+
+</P>
+
+
+
+<H2><A NAME="SEC58" HREF="maxima_toc.html#TOC58">Definitions for Elliptic Functions</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_SN</B> <I>(u, m)</I>
+<DD><A NAME="IDX480"></A>
+The Jacobian elliptic function sn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_CN</B> <I>(u, m)</I>
+<DD><A NAME="IDX481"></A>
+The Jacobian elliptic function cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_DN</B> <I>(u, m)</I>
+<DD><A NAME="IDX482"></A>
+The Jacobian elliptic function dn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_NS</B> <I>(u, m)</I>
+<DD><A NAME="IDX483"></A>
+The Jacobian elliptic function ns(u,m) = 1/sn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_SC</B> <I>(u, m)</I>
+<DD><A NAME="IDX484"></A>
+The Jacobian elliptic function sc(u,m) = sn(u,m)/cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_SD</B> <I>(u, m)</I>
+<DD><A NAME="IDX485"></A>
+The Jacobian elliptic function sd(u,m) = sn(u,m)/dn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_NC</B> <I>(u, m)</I>
+<DD><A NAME="IDX486"></A>
+The Jacobian elliptic function nc(u,m) = 1/cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_CS</B> <I>(u, m)</I>
+<DD><A NAME="IDX487"></A>
+The Jacobian elliptic function cs(u,m) = cn(u,m)/sn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_CD</B> <I>(u, m)</I>
+<DD><A NAME="IDX488"></A>
+The Jacobian elliptic function cd(u,m) = cn(u,m)/dn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_ND</B> <I>(u, m)</I>
+<DD><A NAME="IDX489"></A>
+The Jacobian elliptic function nc(u,m) = 1/cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_DS</B> <I>(u, m)</I>
+<DD><A NAME="IDX490"></A>
+The Jacobian elliptic function ds(u,m) = dn(u,m)/sn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>JACOBI_DC</B> <I>(u, m)</I>
+<DD><A NAME="IDX491"></A>
+The Jacobian elliptic function dc(u,m) = dn(u,m)/cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_SN</B> <I>(u, m)</I>
+<DD><A NAME="IDX492"></A>
+The inverse of the Jacobian elliptic function sn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_CN</B> <I>(u, m)</I>
+<DD><A NAME="IDX493"></A>
+The inverse of the Jacobian elliptic function cn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_DN</B> <I>(u, m)</I>
+<DD><A NAME="IDX494"></A>
+The inverse of the Jacobian elliptic function dn(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_NS</B> <I>(u, m)</I>
+<DD><A NAME="IDX495"></A>
+The inverse of the Jacobian elliptic function ns(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_SC</B> <I>(u, m)</I>
+<DD><A NAME="IDX496"></A>
+The inverse of the Jacobian elliptic function sc(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_SD</B> <I>(u, m)</I>
+<DD><A NAME="IDX497"></A>
+The inverse of the Jacobian elliptic function sd(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_NC</B> <I>(u, m)</I>
+<DD><A NAME="IDX498"></A>
+The inverse of the Jacobian elliptic function nc(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_CS</B> <I>(u, m)</I>
+<DD><A NAME="IDX499"></A>
+The inverse of the Jacobian elliptic function cs(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_CD</B> <I>(u, m)</I>
+<DD><A NAME="IDX500"></A>
+The inverse of the Jacobian elliptic function cd(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_ND</B> <I>(u, m)</I>
+<DD><A NAME="IDX501"></A>
+The inverse of the Jacobian elliptic function nc(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_DS</B> <I>(u, m)</I>
+<DD><A NAME="IDX502"></A>
+The inverse of the Jacobian elliptic function ds(u,m).
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>INVERSE_JACOBI_DC</B> <I>(u, m)</I>
+<DD><A NAME="IDX503"></A>
+The inverse of the Jacobian elliptic function dc(u,m).
+</DL>
+
+</P>
+
+
+
+<H2><A NAME="SEC59" HREF="maxima_toc.html#TOC59">Definitions for Elliptic Integrals</A></H2>
+
+<a name="ELLIPTIC_F"></a><P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_F</B> <I>(phi, m)</I>
+<DD><A NAME="IDX504"></A>
+The incomplete elliptic integral of the first kind, defined as
+
+</P>
+
+<P>
+See also  <A HREF="maxima_17.html#ELLIPTIC_E">ELLIPTIC_E</A>,  <A HREF="maxima_17.html#ELLIPTIC_KC">ELLIPTIC_KC</A>
+</DL>
+
+</P>
+<a name="ELLIPTIC_E"></a><P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_E</B> <I>(phi, m)</I>
+<DD><A NAME="IDX505"></A>
+The incomplete elliptic integral of the second kind, defined as
+See also  <A HREF="maxima_17.html#ELLIPTIC_E">ELLIPTIC_E</A>,  <A HREF="maxima_17.html#ELLIPTIC_EC">ELLIPTIC_EC</A>
+</DL>
+
+</P>
+<a name="ELLIPTIC_EU"></a><P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_EU</B> <I>(u, m)</I>
+<DD><A NAME="IDX506"></A>
+The incomplete elliptic integral of the second kind, defined as
+
+</P>
+
+<P>
+This is related to ELLIPTIC_E by
+See also  <A HREF="maxima_17.html#ELLIPTIC_E">ELLIPTIC_E</A>.
+</DL>
+
+</P>
+<P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_PI</B> <I>(n, phi, m)</I>
+<DD><A NAME="IDX507"></A>
+The incomplete elliptic integral of the third kind, defined as
+
+</P>
+<P>
+Only the derivative with respect to phi is known by MAXIMA.
+</DL>
+
+</P>
+<a name="ELLIPTIC_KC"></a><P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_KC</B> <I>(m)</I>
+<DD><A NAME="IDX508"></A>
+The complete elliptic integral of the first kind, defined as
+
+</P>
+
+<P>
+For certain values of m, the value of the integral is known in
+terms of Gamma functions.  Use MAKEGAMMA to evaluate them.
+</DL>
+
+</P>
+<a name="ELLIPTIC_EC"></a><P>
+<DL>
+<DT><U>Function:</U> <B>ELLIPTIC_EC</B> <I>(m)</I>
+<DD><A NAME="IDX509"></A>
+The complete elliptic integral of the second kind, defined as
+
+</P>
+
+<P>
+For certain values of m, the value of the integral is known in
+terms of Gamma functions.  Use MAKEGAMMA to evaluate them.
+</DL>
+
+</P>
+
+<P><HR><P>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_16.html">previous</A>, <A HREF="maxima_18.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+</BODY>
+</HTML>

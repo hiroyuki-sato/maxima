@@ -1,0 +1,964 @@
+This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+
+   This is a Texinfo Maxima Manual
+
+   Copyright 1994,2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     A computer algebra system.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definitions for Integration,  Prev: Introduction to Integration,  Up: Integration
+
+Definitions for Integration
+===========================
+
+ - Function: CHANGEVAR (exp,f(x,y),y,x)
+     makes the change of variable given by f(x,y) = 0 in all integrals
+     occurring in exp with integration with respect to x; y is the new
+     variable.
+              (C1) 'INTEGRATE(%E**SQRT(A*Y),Y,0,4);
+                                  4
+                                 /
+                                 [    SQRT(A) SQRT(Y)
+              (D1)               I (%E               ) dY
+                                 ]
+                                 /
+                                  0
+              (C2) CHANGEVAR(D1,Y-Z^2/A,Z,Y);
+                                             2 SQRT(A)
+                                            /
+                                            [              Z
+                                          2 I          Z %E  dZ
+                                            ]
+                                            /
+                                             0
+              (D4)                        ---------------------
+                                                    A
+     CHANGEVAR may also be used to changes in the indices of a sum or
+     product.  However, it must be realized that when a change is made
+     in a sum or product, this change must be a shift, i.e. I=J+ ...,
+     not a higher degree function.  E.g.
+          (C3) SUM(A[I]*X^(I-2),I,0,INF);
+                                         INF
+                                         ====
+                                         \         I - 2
+          (D3)                            >    A  X
+                                         /      I
+                                         ====
+                                         I = 0
+          (C4) CHANGEVAR(%,I-2-N,N,I);
+                                        INF
+                                        ====
+                                        \               N
+          (D4)                           >      A      X
+                                        /        N + 2
+                                        ====
+                                        N = - 2
+
+ - Function: DBLINT ('F,'R,'S,a,b)
+     a double-integral routine which was written in top-level macsyma
+     and then translated and compiled to machine code.  Use
+     LOAD(DBLINT); to access this package.  It uses the Simpson's Rule
+     method in both the x and y directions to calculate /B /S(X) |  | |
+     |    F(X,Y) DY DX .  |  | /A /R(X) The function F(X,Y) must be a
+     translated or compiled function of two variables, and R(X) and
+     S(X) must each be a translated or compiled function of one
+     variable, while a and b must be floating point numbers. The
+     routine has two global variables which determine the number of
+     divisions of the x and y intervals: DBLINT_X and DBLINT_Y, both of
+     which are initially 10, and can be changed independently to other
+     integer values (there are 2*DBLINT_X+1 points computed in the x
+     direction, and 2*DBLINT_Y+1 in the y direction).  The routine
+     subdivides the X axis and then for each value of X it first
+     computes R(X) and S(X); then the Y axis between R(X) and S(X) is
+     subdivided and the integral along the Y axis is performed using
+     Simpson's Rule; then the integral along the X axis is done using
+     Simpson's Rule with the function values being the Y-integrals. This
+     procedure may be numerically unstable for a great variety of
+     reasons, but is reasonably fast: avoid using it on highly
+     oscillatory functions and functions with singularities (poles or
+     branch points in the region).  The Y integrals depend on how far
+     apart R(X) and S(X) are, so if the distance S(X)-R(X) varies
+     rapidly with X, there may be substantial errors arising from
+     truncation with different step-sizes in the various Y integrals.
+     One can increase DBLINT_X and DBLINT_Y in an effort to improve the
+     coverage of the region, at the expense of computation time. The
+     function values are not saved, so if the function is very
+     time-consuming, you will have to wait for re-computation if you
+     change anything (sorry).  It is required that the functions F, R,
+     and S be either translated or compiled prior to calling DBLINT.
+     This will result in orders of magnitude speed improvement over
+     interpreted code in many cases!  The file SHARE1;DBLINT DEMO can
+     be run in batch or demo mode to illustrate the usage on a sample
+     problem; the file SHARE1;DBLNT DEMO1 is an extension of the DEMO
+     which also makes use of other numerical aids, FLOATDEFUNK and
+     QUANC8.  Please send all bug notes and questions to LPH
+
+
+ - Function: DEFINT (exp, var, low, high)
+     DEFinite INTegration, the same as INTEGRATE(exp,var,low,high).
+     This uses symbolic methods, if you wish to use a numerical method
+     try ROMBERG(exp,var,low,high).
+
+
+ - Function: ERF (X)
+     the error function, whose derivative is: 2*EXP(-X^2)/SQRT(%PI).
+
+
+ - Variable: ERFFLAG
+     default: [TRUE] if FALSE prevents RISCH from introducing the ERF
+     function in the answer if there were none in the integrand to
+     begin with.
+
+
+ - Variable: ERRINTSCE
+     default: [TRUE] - If a call to the INTSCE routine is not of the
+     form
+
+          EXP(A*X+B)*COS(C*X)^N*SIN(C*X)
+
+     then the regular integration program will be invoked if the switch
+     ERRINTSCE[TRUE] is TRUE.  If it is FALSE then INTSCE will err out.
+
+
+ - Function: ILT (exp, lvar, ovar)
+     takes the inverse Laplace transform of exp with respect to lvar
+     and parameter ovar.  exp must be a ratio of polynomials whose
+     denominator has only linear and quadratic factors.  By using the
+     functions LAPLACE and ILT together with the SOLVE or LINSOLVE
+     functions the user can solve a single differential or convolution
+     integral equation or a set of them.
+          (C1) 'INTEGRATE(SINH(A*X)*F(T-X),X,0,T)+B*F(T)=T**2;
+                        T
+                       /
+                       [                                     2
+          (D1)         I (SINH(A X) F(T - X)) dX + B F(T) = T
+                       ]
+                       /
+                       0
+          (C2) LAPLACE(%,T,S);
+                      A LAPLACE(F(T), T, S)
+          (D2)        ---------------------
+                              2    2
+                             S  - A
+                                                    2
+                          + B LAPLACE(F(T), T, S) = --
+                                                     3
+                                                    S
+          (C3) LINSOLVE([%],['LAPLACE(F(T),T,S)]);
+          SOLUTION
+                                                  2      2
+                                               2 S  - 2 A
+          (E3)       LAPLACE(F(T), T, S) = --------------------
+                                              5         2     3
+                                           B S  + (A - A  B) S
+          (D3)                         [E3]
+          (C4) ILT(E3,S,T);
+          IS  A B (A B - 1)  POSITIVE, NEGATIVE, OR ZERO?
+          POS;
+                                                 2
+                                 SQRT(A) SQRT(A B  - B) T
+                          2 COSH(------------------------)
+                                            B
+          (D4)  F(T) =  - --------------------------------
+                                         A
+                        2
+                     A T             2
+                  + ------- + ------------------
+                    A B - 1    3  2      2
+                              A  B  - 2 A  B + A
+
+ - Function: INTEGRATE (exp, var)
+     integrates exp with respect to var or returns an integral
+     expression (the noun form) if it cannot perform the integration
+     (see note 1 below).  Roughly speaking three stages are used:
+        *     (1) INTEGRATE sees if the integrand is of the form
+          F(G(X))*DIFF(G(X),X) by testing whether the derivative of some
+          subexpression (i.e. G(X) in the above case) divides the
+          integrand.  If so it looks up F in a table of integrals and
+          substitutes G(X) for X in the integral of F.  This may make
+          use of gradients in taking the derivative.  (If an unknown
+          function appears in the integrand it must be eliminated in
+          this stage or else INTEGRATE will return the noun form of the
+          integrand.)
+
+        *     (2) INTEGRATE tries to match the integrand to a form for
+          which a specific method can be used, e.g.  trigonometric
+          substitutions.
+
+        *     (3) If the first two stages fail it uses the Risch
+          algorithm.      Functional relationships must be explicitly
+          represented in order for INTEGRATE to work properly.
+          INTEGRATE is not affected by DEPENDENCIES set up with the
+          DEPENDS command.  INTEGRATE(exp, var, low, high) finds the
+          definite integral of exp with respect to var from low to high
+          or returns the noun form if it cannot perform the
+          integration.  The limits should not contain var.  Several
+          methods are used, including direct substitution in the
+          indefinite integral and contour integration.  Improper
+          integrals may use the names INF for positive infinity and
+          MINF for negative infinity.  If an integral "form" is desired
+          for manipulation (for example, an integral which cannot be
+          computed until some numbers are substituted for some
+          parameters), the noun form 'INTEGRATE may be used and this
+          will display with an integral sign.  (See Note 1 below.)
+          The function LDEFINT uses LIMIT to evaluate the integral at
+          the lower and upper limits.      Sometimes during integration
+          the user may be asked what the sign of an expression is.
+          Suitable responses are POS;, ZERO;, or NEG;.
+
+          (C1) INTEGRATE(SIN(X)**3,X);
+                              3
+                           COS (X)
+          (D1)             ------- - COS(X)
+                              3
+          (C2) INTEGRATE(X**A/(X+1)**(5/2),X,0,INF);
+          IS  A + 1  POSITIVE, NEGATIVE, OR ZERO?
+          POS;
+          IS  2 A - 3  POSITIVE, NEGATIVE, OR ZERO?
+          NEG;
+                                      3
+          (D2)            BETA(A + 1, - - A)
+                                      2
+          (C3) GRADEF(Q(X),SIN(X**2));
+          (D3)                              Q(X)
+          (C4) DIFF(LOG(Q(R(X))),X);
+                                     d             2
+                                    (-- R(X)) SIN(R (X))
+                                     dX
+          (D4)                      --------------------
+                                          Q(R(X))
+          (C5) INTEGRATE(%,X);
+          (D5)                          LOG(Q(R(X)))
+     (Note 1) The fact that MACSYMA does not perform certain integrals
+     does not always imply that the integral does not exist in closed
+     form. In the example below the integration call returns the noun
+     form but the integral can be found fairly easily. For example, one
+     can compute the roots of `X^3+X+1 = 0' to rewrite the integrand in
+     the form
+          1/((X-A)*(X-B)*(X-C))
+     where A, B and C are the roots. MACSYMA will integrate this
+     equivalent form although the integral is quite complicated.
+          (C6) INTEGRATE(1/(X^3+X+1),X);
+                                    /
+                                    [     1
+          (D6)                      I ---------- dX
+                                    ]  3
+                                    / X  + X + 1
+
+ - Variable: INTEGRATION_CONSTANT_COUNTER
+     - a counter which is updated each time a constant of integration
+     (called by MACSYMA, e.g., "INTEGRATIONCONSTANT1") is introduced
+     into an expression by indefinite integration of an equation.
+
+
+ - Variable: INTEGRATE_USE_ROOTSOF
+     default: [false] If not false then when the denominator of an
+     rational function cannot be factored, we give the integral in a
+     form which is a sum over the roots of the denominator:
+
+          (C4) integrate(1/(1+x+x^5),x);
+          
+                /	 2
+                [ x  - 4 x + 5
+                I ------------ dx				   2 x + 1
+                ]	 3    2		       2	    5 ATAN(-------)
+                / x  - x  + 1	  LOG(x  + x + 1)	   SQRT(3)
+          (D4)  ----------------- - --------------- + ---------------
+          	      7		        14	       7 SQRT(3)
+     but now we set the flag to be true and the first part of the
+     integral will undergo further simplification.
+          (C5) INTEGRATE_USE_ROOTSOF:true;
+          
+          (D5) 			      TRUE
+
+          (C6) integrate(1/(1+x+x^5),x);
+          
+               ====        2
+               \       (%R1  - 4 %R1 + 5) LOG(x - %R1)
+                >      -------------------------------
+               /                    2
+               ====            3 %R1  - 2 %R1
+                               3    2
+               %R1 in ROOTSOF(x  - x  + 1)
+          (D6) ----------------------------------------------------------
+                        7
+          
+                                                                   2 x + 1
+                                               2            5 ATAN(-------)
+                                          LOG(x  + x + 1)          SQRT(3)
+                                        - --------------- + ---------------
+                                                14             7 SQRT(3)
+
+     Note that it may be that we want to approximate the roots in the
+     complex plane, and then provide the function factored, since we
+     will then be able to group the roots and their complex conjugates,
+     so as to give a better answer.
+
+
+ - Function: INTSCE (expr,var)
+     INTSCE LISP contains a routine, written by Richard Bogen, for
+     integrating products of sines,cosines and exponentials of the form
+            EXP(A*X+B)*COS(C*X)^N*SIN(C*X)^M
+     The call is INTSCE(expr,var) expr may be any expression, but if it
+     is not in the above form then the regular integration program will
+     be invoked if the switch ERRINTSCE[TRUE] is TRUE.  If it is FALSE
+     then INTSCE will err out.
+
+
+ - Function: LDEFINT (exp,var,ll,ul)
+     yields the definite integral of exp by using LIMIT to evaluate the
+     indefinite integral of exp with respect to var at the upper limit
+     ul and at the lower limit ll.
+
+
+ - Function: POTENTIAL (givengradient)
+     The calculation makes use of the global variable
+          POTENTIALZEROLOC[0]
+      which must be NONLIST or of the form
+
+          [indeterminatej=expressionj, indeterminatek=expressionk, ...]
+     the former being equivalent to the nonlist expression for all
+     right-hand sides in the latter.  The indicated right-hand sides
+     are used as the lower limit of integration.  The success of the
+     integrations may depend upon their values and order.
+     POTENTIALZEROLOC is initially set to 0.
+
+
+ - Function: QQ
+     - The file SHARE1;QQ FASL (which may be loaded with LOAD("QQ");)
+     contains a function QUANC8 which can take either 3 or 4 arguments.
+     The 3 arg version computes the integral of the function specified
+     as the first argument over the interval from lo to hi as in
+     QUANC8('function name,lo,hi); .  The function name should be
+     quoted.  The 4 arg version will compute the integral of the
+     function or expression (first arg) with respect to the variable
+     (second arg) over the interval from lo to hi as in QUANC8(<f(x) or
+     expression in x>,x,lo,hi).  The method used is the Newton-Cotes
+     8th order polynomial quadrature, and the routine is adaptive. It
+     will thus spend time dividing the interval only when necessary to
+     achieve the error conditions specified by the global variables
+     QUANC8_RELERR (default value=1.0e-4) and QUANC8_ABSERR (default
+     value=1.0e-8) which give the relative error test:
+     |integral(function)-computed value|<
+     quanc8_relerr*|integral(function)| and the absolute error test:
+     |integral(function)-computed value|<quanc8_abserr.  Do
+     PRINTFILE(QQ,USAGE,SHARE1) for details.
+
+
+ - Function: QUANC8 ('function name,lo,hi)
+     An adaptive integrator, available in SHARE1;QQ FASL.  DEMO and
+     USAGE files are provided.  The method is to use Newton-Cotes
+     8-panel quadrature rule, hence the function name QUANC8, available
+     in 3 or 4 arg versions.  Absolute and relative error checks are
+     used.  To use it do LOAD("QQ");  For more details do DESCRIBE(QQ);
+     .
+
+
+ - Function: RESIDUE (exp, var, val)
+     computes the residue in the complex plane of the expression exp
+     when the variable var assumes the value val.  The residue is the
+     coefficient of (var-val)**(-1) in the Laurent series for exp.
+          (C1) RESIDUE(S/(S**2+A**2),S,A*%I);
+                                  1
+          (D1)                    -
+                                  2
+          (C2) RESIDUE(SIN(A*X)/X**4,X,0);
+                                  3
+                                 A
+          (D2)                 - --
+                                 6
+
+ - Function: RISCH (exp, var)
+     integrates exp with respect to var using the transcendental case
+     of the Risch algorithm.  (The algebraic case of the Risch
+     algorithm has not been implemented.)  This currently handles the
+     cases of nested exponentials and logarithms which the main part of
+     INTEGRATE can't do.  INTEGRATE will automatically apply RISCH if
+     given these cases.  ERFFLAG[TRUE] - if FALSE prevents RISCH from
+     introducing the ERF function in the answer if there were none in
+     the integrand to begin with.
+          (C1) RISCH(X^2*ERF(X),X);
+                      2     2
+                   - X     X             3           2
+                 %E     (%E   SQRT(%PI) X  ERF(X) + X  + 1)
+          (D1)   ------------------------------------------
+                                3 SQRT(%PI)
+          (C2) DIFF(%,X),RATSIMP;
+                                           2
+          (D2)                            X  ERF(X)
+
+ - Function: ROMBERG (exp,var,ll,ul)
+     or ROMBERG(exp,ll,ul) - Romberg Integration.  You need not load in
+     any file to use ROMBERG, it is autoloading.  There are two ways to
+     use this function.  The first is an inefficient way like the
+     definite integral version of INTEGRATE:
+     ROMBERG(<integrand>,<variable of integration>,<lower limit>,
+              <upper limit>);
+          Examples:
+                  ROMBERG(SIN(Y),Y,1,%PI);
+                          TIME= 39 MSEC.          1.5403023
+                  F(X):=1/(X^5+X+1);
+                  ROMBERG(F(X),X,1.5,0);
+                          TIME= 162 MSEC.         - 0.75293843
+     The second is an efficient way that is used as follows:
+
+          ROMBERG(<function name>,<lower limit>,<upper limit>);
+
+          Example:
+          F(X):=(MODE_DECLARE([FUNCTION(F),X],FLOAT),1/(X^5+X+1));
+          TRANSLATE(F);
+          ROMBERG(F,1.5,0);
+                  TIME= 13 MSEC.          - 0.75293843
+     The first argument must be a TRANSLATEd or compiled function.  (If
+     it is compiled it must be declared to return a FLONUM.)  If the
+     first argument is not already TRANSLATEd, ROMBERG will not attempt
+     to TRANSLATE it but will give an error.  The accuracy of the
+     integration is governed by the global variables ROMBERGTOL
+     (default value 1.E-4) and ROMBERGIT (default value 11).  ROMBERG
+     will return a result if the relative difference in successive
+     approximations is less than ROMBERGTOL.  It will try halving the
+     stepsize ROMBERGIT times before it gives up.  The number of
+     iterations and function evaluations which ROMBERG will do is
+     governed by ROMBERGABS and ROMBERGMIN, do
+     DESCRIBE(ROMBERGABS,ROMBERGMIN); for details.  ROMBERG may be
+     called recursively and thus can do double and triple integrals.
+          Example:
+          INTEGRATE(INTEGRATE(X*Y/(X+Y),Y,0,X/2),X,1,3);
+                                  13/3 (2 LOG(2/3) + 1)
+          %,NUMER;
+                                  0.81930233
+          DEFINE_VARIABLE(X,0.0,FLOAT,"Global variable in function F")$
+          F(Y):=(MODE_DECLARE(Y,FLOAT), X*Y/(X+Y) )$
+          G(X):=ROMBERG('F,0,X/2)$
+          ROMBERG(G,1,3);
+                                   0.8193023
+     The advantage with this way is that the function F can be used for
+     other purposes, like plotting. The disadvantage is that you have
+     to think up a name for both the function F and its free variable X.
+     Or, without the global:
+                  G1(X):=(MODE_DECLARE(X,FLOAT), ROMBERG(X*Y/(X+Y),Y,0,X/2))$
+                  ROMBERG(G1,1,3);
+                                          0.8193023
+     The advantage here is shortness.
+                  Q(A,B):=ROMBERG(ROMBERG(X*Y/(X+Y),Y,0,X/2),X,A,B)$
+                  Q(1,3);
+                                          0.8193023
+     It is even shorter this way, and the variables do not need to be
+     declared because they are in the context of ROMBERG.  Use of
+     ROMBERG for multiple integrals can have great disadvantages,
+     though.  The amount of extra calculation needed because of the
+     geometric information thrown away by expressing multiple integrals
+     this way can be incredible.  The user should be sure to understand
+     and use the ROMBERGTOL and ROMBERGIT switches.
+
+
+ - Variable: ROMBERGABS
+     default: [0.0] (0.0B0) Assuming that successive estimates produced
+     by ROMBERG are Y[0], Y[1], Y[2] etc., then ROMBERG will return
+     after N iterations if (roughly speaking)  (ABS(Y[N]-Y[N-1]) <=
+     ROMBERGABS OR  ABS(Y[N]-Y[N-1])/(IF Y[N]=0.0 THEN 1.0 ELSE Y[N])
+     <= ROMBERGTOL) is TRUE.  (The condition on the number of
+     iterations given by ROMBERGMIN must also be satisfied.)  Thus if
+     ROMBERGABS is 0.0 (the default) you just get the relative error
+     test.  The usefulness of the additional variable comes when you
+     want to perform an integral, where the dominant contribution comes
+     from a small region.  Then you can do the integral over the small
+     dominant region first, using the relative accuracy check, followed
+     by the integral over the rest of the region using the absolute
+     accuracy check.  Example:  Suppose you want to compute
+             Integral(exp(-x),x,0,50)
+     (numerically) with a relative accuracy of  1 part in 10000000.
+     Define the function.  N is a counter, so we can see how many
+     function evaluations were needed.
+          F(X):=(MODE_DECLARE(N,INTEGER,X,FLOAT),N:N+1,EXP(-X))$
+          TRANSLATE(F)$
+            /* First of all try doing the whole integral at once */
+          BLOCK([ROMBERGTOL:1.E-6,ROMBERABS:0.],N:0,ROMBERG(F,0,50));
+                        ==> 1.00000003
+          N; ==> 257  /* Number of function evaluations*/
+
+     Now do the integral intelligently, by first doing
+     Integral(exp(-x),x,0,10) and then setting ROMBERGABS to 1.E-6*(this
+         partial integral).
+          BLOCK([ROMBERGTOL:1.E-6,ROMBERGABS:0.,SUM:0.],
+            N:0,SUM:ROMBERG(F,0,10),ROMBERGABS:SUM*ROMBERGTOL,ROMBERGTOL:0.,
+                SUM+ROMBERG(F,10,50));  ==> 1.00000001  /* Same as before */
+          N;  ==> 130
+     So if F(X) were a function that took a long time to compute, the
+     second method would be about 2 times quicker.
+
+
+ - Variable: ROMBERGIT
+     default: [11] - The accuracy of the ROMBERG integration command is
+     governed by the global variables ROMBERGTOL[1.E-4] and
+     ROMBERGIT[11].  ROMBERG will return a result if the relative
+     difference in successive approximations is less than ROMBERGTOL.
+     It will try halving the stepsize ROMBERGIT times before it gives
+     up.
+
+
+ - Variable: ROMBERGMIN
+     default: [0] - governs the minimum number of function evaluations
+     that ROMBERG will make.  ROMBERG will evaluate its first arg. at
+     least 2^(ROMBERGMIN+2)+1 times.  This is useful for integrating
+     oscillatory functions, when the normal converge test might
+     sometimes wrongly pass.
+
+
+ - Variable: ROMBERGTOL
+     default: [1.E-4] - The accuracy of the ROMBERG integration command
+     is governed by the global variables ROMBERGTOL[1.E-4] and
+     ROMBERGIT[11].  ROMBERG will return a result if the relative
+     difference in successive approximations is less than ROMBERGTOL.
+     It will try halving the stepsize ROMBERGIT times before it gives
+     up.
+
+
+ - Function: TLDEFINT (exp,var,ll,ul)
+     is just LDEFINT with TLIMSWITCH set to TRUE.
+
+
+
+File: maxima.info,  Node: Equations,  Next: Differential Equations,  Prev: Integration,  Up: Top
+
+Equations
+*********
+
+* Menu:
+
+* Definitions for Equations::
+
+
+File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equations
+
+Definitions for Equations
+=========================
+
+ - Variable: %RNUM_LIST
+     default: [] - When %R variables are introduced in solutions by the
+     ALGSYS command, they are added to %RNUM_LIST in the order they are
+     created.  This is convenient for doing substitutions into the
+     solution later on.  It's recommended to use this list rather than
+     doing CONCAT('%R,J).
+
+ - Variable: ALGEXACT
+     default: [FALSE] affects the behavior of ALGSYS as follows: If
+     ALGEXACT is TRUE, ALGSYS always calls SOLVE and then uses REALROOTS
+     on SOLVE's failures.  If ALGEXACT is FALSE, SOLVE is called only if
+     the eliminant was not univariate, or if it was a quadratic or
+     biquadratic.  Thus ALGEXACT:TRUE doesn't guarantee only exact
+     solutions, just that ALGSYS will first try as hard as it can to
+     give exact solutions, and only yield approximations when all else
+     fails.
+
+ - Function: ALGSYS ([exp1, exp2, ...], [var1, var2, ...])
+     solves the list of simultaneous polynomials or polynomial
+     equations (which can be non-linear) for the list of variables.
+     The symbols %R1, %R2, etc.  will be used to represent arbitrary
+     parameters when needed for the solution (the variable %RNUM_LIST
+     holds these).  In the process described below, ALGSYS is entered
+     recursively if necessary.      The method is as follows: (1) First
+     the equations are FACTORed and split into subsystems.  (2) For
+     each subsystem Si, an equation E and a variable var are selected
+     (the var is chosen to have lowest nonzero degree).  Then the
+     resultant of E and Ej with respect to var is computed for each of
+     the remaining equations Ej in the subsystem Si.  This yields a new
+     subsystem S'i in one fewer variables (var has been eliminated).
+     The process now returns to (1).  (3) Eventually, a subsystem
+     consisting of a single equation is obtained.  If the equation is
+     multivariate and no approximations in the form of floating point
+     numbers have been introduced, then SOLVE is called to find an
+     exact solution.  (The user should realize that SOLVE may not be
+     able to produce a solution or if it does the solution may be a
+     very large expression.)      If the equation is univariate and is
+     either linear, quadratic, or bi-quadratic, then again SOLVE is
+     called if no approximations have been introduced.  If
+     approximations have been introduced or the equation is not
+     univariate and neither linear, quadratic, or bi-quadratic, then if
+     the switch REALONLY[FALSE] is TRUE, the function REALROOTS is
+     called to find the real-valued solutions.  If REALONLY:FALSE then
+     ALLROOTS is called which looks for real and complex-valued
+     solutions.  If ALGSYS produces a solution which has fewer
+     significant digits than required, the user can change the value of
+     ALGEPSILON[10^8] to a higher value.  If ALGEXACT[FALSE] is set to
+     TRUE, SOLVE will always be called.  (4) Finally, the solutions
+     obtained in step (3) are re-inserted into previous levels and the
+     solution process returns to (1).  The user should be aware of
+     several caveats:     When ALGSYS encounters a multivariate
+     equation which contains floating point approximations (usually due
+     to its failing to find exact solutions at an earlier stage), then
+     it does not attempt to apply exact methods to such equations and
+     instead prints the message:         "ALGSYS cannot solve - system
+     too complicated."      Interactions with RADCAN can produce large
+     or complicated expressions.  In that case, the user may use
+     PICKAPART or REVEAL to analyze the solution.  Occasionally, RADCAN
+     may introduce an apparent %I into a solution which is actually
+     real-valued.  Do EXAMPLE(ALGSYS); for examples.
+
+
+ - Function: ALLROOTS (poly)
+     finds all the real and complex roots of the real polynomial poly
+     which must be univariate and may be an equation, e.g.  poly=0.
+     For complex polynomials an algorithm by Jenkins and Traub is used
+     (Algorithm 419, Comm. ACM, vol. 15, (1972), p. 97).  For real
+     polynomials the algorithm used is due to Jenkins (Algorithm 493,
+     TOMS, vol. 1, (1975), p.178).  The flag POLYFACTOR[FALSE] when
+     true causes ALLROOTS to factor the polynomial over the real
+     numbers if the polynomial is real, or over the complex numbers, if
+     the polynomial is complex.  ALLROOTS may give inaccurate results
+     in case of multiple roots.  (If poly is real and you get
+     inaccurate answers, you may want to try ALLROOTS(%I*poly);) Do
+     EXAMPLE(ALLROOTS); for an example.  ALLROOTS rejects
+     non-polynomials.  It requires that the numerator after RATting
+     should be a polynomial, and it requires that the denominator be at
+     most a complex number.  As a result of this ALLROOTS will always
+     return an equivalent (but factored) expression, if POLYFACTOR is
+     TRUE.
+
+
+ - Variable: BACKSUBST
+     default: [TRUE] if set to FALSE will prevent back substitution
+     after the equations have been triangularized.  This may be
+     necessary in very big problems where back substitution would cause
+     the generation of extremely large expressions.  (On MC this could
+     cause storage capacity to be exceeded.)
+
+
+ - Variable: BREAKUP
+     default: [TRUE] if FALSE will cause SOLVE to express the solutions
+     of cubic or quartic equations as single expressions rather than as
+     made up of several common subexpressions which is the default.
+     BREAKUP:TRUE only works when PROGRAMMODE is FALSE.
+
+
+ - Function: DIMENSION (equation or list of equations)
+     The file "share1/dimen.mc" contains functions for automatic
+     dimensional analysis.  LOAD(DIMEN); will load it up for you.
+     There is a demonstration available in share1/dimen.dem.  Do
+     DEMO("dimen"); to run it.
+
+
+ - Variable: DISPFLAG
+     default: [TRUE] if set to FALSE within a BLOCK will inhibit the
+     display of output generated by the solve functions called from
+     within  the BLOCK.  Termination of the BLOCK with a dollar sign,
+     $, sets DISPFLAG to FALSE.
+
+
+ - Function: FUNCSOLVE (eqn,g(t))
+     gives [g(t) = ...]  or [], depending on whether or not there
+     exists a rational fcn g(t) satisfying eqn, which must be a first
+     order, linear polynomial in (for this case) g(t) and g(t+1).
+          (C1) FUNCSOLVE((N+1)*FOO(N)-(N+3)*FOO(N+1)/(N+1) =
+              (N-1)/(N+2),FOO(N));
+                                             N
+          (D1)               FOO(N) = ---------------
+                                      (N + 1) (N + 2)
+     Warning: this is a very rudimentary implementation-many safety
+     checks and obvious generalizations are missing.
+
+
+ - Variable: GLOBALSOLVE
+     default: [FALSE] if set to TRUE then variables which are SOLVEd
+     for will be set to the solution of the set of simultaneous
+     equations.
+
+
+ - Function: IEQN (ie,unk,tech,n,guess)
+     Integral Equation solving routine.  Do LOAD(INTEQN); to access it.
+     CAVEAT: To free some storage, a KILL(LABELS) is included in this
+     file.  Therefore, before loading the integral equation package,
+     the user should give names to any expressions he wants to keep.
+     ie is the integral equation; unk is the unknown function; tech is
+     the technique to be tried from those given above (tech = FIRST
+     means: try the first technique which finds a solution; tech = ALL
+     means: try all applicable techniques); n is the maximum number of
+     terms to take for TAYLOR, NEUMANN, FIRSTKINDSERIES, or FREDSERIES
+     (it is also the maximum depth of recursion for the differentiation
+     method); guess is the initial guess for NEUMANN or FIRSTKINDSERIES.
+     Default values for the 2nd thru 5th parameters are: unk: P(X),
+     where P is the first function encountered in an integrand which is
+     unknown to MACSYMA and X is the variable which occurs as an
+     argument to the first occurrence of P found outside of an integral
+     in the case of SECONDKIND equations, or is the only other variable
+     besides the variable of integration in FIRSTKIND equations.  If the
+     attempt to search for X fails, the user will be asked to supply the
+     independent variable; tech: FIRST; n: 1; guess: NONE, which will
+     cause NEUMANN and FIRSTKINDSERIES to use F(X) as an initial guess.
+
+
+ - Variable: IEQNPRINT
+     default: [TRUE] - governs the behavior of the result returned by
+     the IEQN command (which see).  If IEQNPRINT is set to FALSE, the
+     lists returned by the IEQN function are of the form    [SOLUTION,
+     TECHNIQUE USED, NTERMS, FLAG] where FLAG is absent if the solution
+     is exact.  Otherwise, it is the word APPROXIMATE or INCOMPLETE
+     corresponding to an inexact or non-closed form solution,
+     respectively. If a series method was used, NTERMS gives the number
+     of terms taken (which could be less than the n given to IEQN if an
+     error prevented generation of further terms).
+
+
+ - Function: LHS (eqn)
+     the left side of the equation eqn.
+
+
+ - Function: LINSOLVE ([exp1, exp2, ...], [var1, var2, ...])
+     solves the list of simultaneous linear equations for the list of
+     variables.  The expi must each be polynomials in the variables and
+     may be equations.  If GLOBALSOLVE[FALSE] is set to TRUE then
+     variables which are SOLVEd for will be set to the solution of the
+     set of simultaneous equations.  BACKSUBST[TRUE] if set to FALSE
+     will prevent back substitution after the equations have been
+     triangularized.  This may be necessary in very big problems where
+     back substitution would cause the generation of extremely large
+     expressions.  (On MC this could cause the storage capacity to be
+     exceeded.)  LINSOLVE_PARAMS[TRUE] If TRUE, LINSOLVE also generates
+     the %Ri symbols used to represent arbitrary parameters described
+     in the manual under ALGSYS.  If FALSE, LINSOLVE behaves as before,
+     i.e. when it meets up with an under-determined system of
+     equations, it solves for some of the variables in terms of others.
+          (C1) X+Z=Y$
+          (C2) 2*A*X-Y=2*A**2$
+          (C3) Y-2*Z=2$
+          (C4) LINSOLVE([D1,D2,D3],[X,Y,Z]),GLOBALSOLVE:TRUE;
+          SOLUTION
+          (E4)                            X : A + 1
+          (E5)                             Y : 2 A
+          (E6)                            Z : A - 1
+          (D6)                          [E4, E5, E6]
+
+ - Variable: LINSOLVEWARN
+     default: [TRUE] - if FALSE will cause the message "Dependent
+     equations eliminated" to be suppressed.
+
+
+ - Variable: LINSOLVE_PARAMS
+     default: [TRUE] - If TRUE, LINSOLVE also generates the %Ri symbols
+     used to represent arbitrary parameters described in the manual
+     under ALGSYS.  If FALSE, LINSOLVE behaves as before, i.e.  when it
+     meets up with an under-determined system of equations, it solves
+     for some of the variables in terms of others.
+
+
+ - Variable: MULTIPLICITIES
+     default: [NOT_SET_YET] - will be set to a list of the
+     multiplicities of the individual solutions returned by SOLVE or
+     REALROOTS.
+
+
+ - Function: NROOTS (poly, low, high)
+     finds the number of real roots of the real univariate polynomial
+     poly in the half-open interval (low,high].  The endpoints of the
+     interval may also be MINF,INF respectively for minus infinity and
+     plus infinity.  The method of Sturm sequences is used.
+          (C1) POLY1:X**10-2*X**4+1/2$
+          (C2) NROOTS(POLY1,-6,9.1);
+          RAT REPLACED 0.5 BY 1/2 = 0.5
+          (D2)                               4
+
+ - Function: NTHROOT (p,n)
+     where p is a polynomial with integer coefficients and n is a
+     positive integer returns q, a polynomial over the integers, such
+     that q^n=p or prints an error message indicating that p is not a
+     perfect nth power. This routine is much faster than FACTOR or even
+     SQFR.
+
+
+ - Variable: PROGRAMMODE
+     default: [TRUE] - when FALSE will cause SOLVE, REALROOTS,
+     ALLROOTS, and LINSOLVE to print E-labels (intermediate line
+     labels) to label answers.  When TRUE, SOLVE, etc. return answers
+     as elements in a list.  (Except when BACKSUBST is set to FALSE, in
+     which case PROGRAMMODE:FALSE is also used.)
+
+
+ - Variable: REALONLY
+     default: [FALSE] - if TRUE causes ALGSYS to return only those
+     solutions which are free of %I.
+
+
+ - Function: REALROOTS (poly, bound)
+     finds all of the real roots of the real univariate polynomial poly
+     within a tolerance of bound which, if less than 1, causes all
+     integral roots to be found exactly.  The parameter bound may be
+     arbitrarily small in order to achieve any desired accuracy.  The
+     first argument may also be an equation.  REALROOTS sets
+     MULTIPLICITIES, useful in case of multiple roots.  REALROOTS(poly)
+     is equivalent to REALROOTS(poly,ROOTSEPSILON).
+     ROOTSEPSILON[1.0E-7] is a real number used to establish the
+     confidence interval for the roots.  Do EXAMPLE(REALROOTS); for an
+     example.
+
+
+ - Function: RHS (eqn)
+     the right side of the equation eqn.
+
+
+ - Variable: ROOTSCONMODE
+     default: [TRUE] - Determines the behavior of the ROOTSCONTRACT
+     command.  Do DESCRIBE(ROOTSCONTRACT); for details.
+
+
+ - Function: ROOTSCONTRACT (exp)
+     converts products of roots into roots of products.  For example,
+          ROOTSCONTRACT(SQRT(X)*Y^(3/2)) ==> SQRT(X*Y^3)
+     When RADEXPAND is TRUE and DOMAIN is REAL (their defaults),
+     ROOTSCONTRACT converts ABS into SQRT, e.g.
+
+          ROOTSCONTRACT(ABS(X)*SQRT(Y)) ==> SQRT(X^2*Y)
+
+     There is an option ROOTSCONMODE (default value TRUE), affecting
+     ROOTSCONTRACT as follows:
+
+
+
+          Problem            Value of        Result of applying
+                            ROOTSCONMODE        ROOTSCONTRACT
+          
+          X^(1/2)*Y^(3/2)      FALSE          (X*Y^3)^(1/2)
+          X^(1/2)*Y^(1/4)      FALSE          X^(1/2)*Y^(1/4)
+          X^(1/2)*Y^(1/4)      TRUE           (X*Y^(1/2))^(1/2)
+          X^(1/2)*Y^(1/3)      TRUE           X^(1/2)*Y^(1/3)
+          X^(1/2)*Y^(1/4)      ALL            (X^2*Y)^(1/4)
+          X^(1/2)*Y^(1/3)      ALL            (X^3*Y^2)^(1/6)
+
+     The above examples and more may be tried out by typing
+
+          EXAMPLE(ROOTSCONTRACT);
+
+     When ROOTSCONMODE is FALSE, ROOTSCONTRACT contracts only wrt
+     rational number exponents whose denominators are the same.  The
+     key to the ROOTSCONMODE:TRUE$ examples is simply that 2 divides
+     into 4 but not into 3.  ROOTSCONMODE:ALL$ involves taking the lcm
+     (least common multiple) of the denominators of the exponents.
+     ROOTSCONTRACT uses RATSIMP in a manner similar to LOGCONTRACT (see
+     the manual).
+
+
+ - Variable: ROOTSEPSILON
+     default: [1.0E-7] - a real number used to establish the confidence
+     interval for the roots found by the REALROOTS function.
+
+
+ - Function: SOLVE (exp, var)
+     solves the algebraic equation exp for the variable var and returns
+     a list of solution equations in var.  If exp is not an equation,
+     it is assumed to be an expression to be set equal to zero.  Var
+     may be a function (e.g. F(X)), or other non-atomic expression
+     except a sum or product. It may be omitted if exp contains only one
+     variable.  Exp may be a rational expression, and may contain
+     trigonometric functions, exponentials, etc.  The following method
+     is used: Let E be the expression and X be the variable.  If E is
+     linear in X then it is trivially solved for X.  Otherwise if E is
+     of the form A*X**N+B then the result is (-B/A)**(1/N) times the
+     Nth roots of unity.  If E is not linear in X then the gcd of the
+     exponents of X in E (say N) is divided into the exponents and the
+     multiplicity of the roots is multiplied by N.  Then SOLVE is
+     called again on the result.  If E factors then SOLVE is called on
+     each of the factors.  Finally SOLVE will use the quadratic, cubic,
+     or quartic formulas where necessary.  In the case where E is a
+     polynomial in some function of the variable to be solved for, say
+     F(X), then it is first solved for F(X) (call the result C), then
+     the equation F(X)=C can be solved for X provided the inverse of
+     the function F is known.  BREAKUP[TRUE] if FALSE will cause SOLVE
+     to express the solutions of cubic or quartic equations as single
+     expressions rather than as made up of several common
+     subexpressions which is the default.  MULTIPLICITIES[NOT_SET_YET]
+     - will be set to a list of the multiplicities of the individual
+     solutions returned by SOLVE, REALROOTS, or ALLROOTS.  Try
+     APROPOS(SOLVE) for the switches which affect SOLVE.  DESCRIBE may
+     then by used on the individual switch names if their purpose is not
+     clear.  SOLVE([eq1, ..., eqn], [v1, ..., vn]) solves a system of
+     simultaneous (linear or non-linear) polynomial equations by
+     calling LINSOLVE or ALGSYS and returns a list of the solution
+     lists in the variables.  In the case of LINSOLVE this list would
+     contain a single list of solutions.  It takes two lists as
+     arguments.  The first list (eqi, i=1,...,n) represents the
+     equations to be solved; the second list is a list of the unknowns
+     to be determined.  If the total number of variables in the
+     equations is equal to the number of equations, the second
+     argument-list may be omitted.  For linear systems if the given
+     equations are not compatible, the message INCONSISTENT will be
+     displayed (see the SOLVE_INCONSISTENT_ERROR switch); if no unique
+     solution exists, then SINGULAR will be displayed.  For examples, do
+     EXAMPLE(SOLVE);
+
+
+ - Variable: SOLVEDECOMPOSES
+     default: [TRUE] - if TRUE, will induce SOLVE to use POLYDECOMP
+     (see POLYDECOMP) in attempting to solve polynomials.
+
+
+ - Variable: SOLVEEXPLICIT
+     default: [FALSE] - if TRUE, inhibits SOLVE from returning implicit
+     solutions i.e. of the form F(x)=0.
+
+
+ - Variable: SOLVEFACTORS
+     default: [TRUE] - if FALSE then SOLVE will not try to factor the
+     expression.  The FALSE setting may be desired in some cases where
+     factoring is not necessary.
+
+
+ - Variable: SOLVENULLWARN
+     default: [TRUE] - if TRUE the user will be warned if he calls
+     SOLVE with either a null equation list or a null variable list.
+     For example, SOLVE([],[]); would print two warning messages and
+     return [].
+
+
+ - Variable: SOLVERADCAN
+     default: [FALSE] - if TRUE then SOLVE will use RADCAN which will
+     make SOLVE slower but will allow certain problems containing
+     exponentials and logs to be solved.
+
+
+ - Variable: SOLVETRIGWARN
+     default: [TRUE] - if set to FALSE will inhibit printing by SOLVE
+     of the warning message saying that it is using inverse
+     trigonometric functions to solve the equation, and thereby losing
+     solutions.
+
+
+ - Variable: SOLVE_INCONSISTENT_ERROR
+     default: [TRUE] - If TRUE, SOLVE and LINSOLVE give an error if
+     they meet up with a set of inconsistent linear equations, e.g.
+     SOLVE([A+B=1,A+B=2]).  If FALSE, they return [] in this case.
+     (This is the new mode, previously gotten only by calling ALGSYS.)
+
+
+ - Function: ZRPOLY
+     - This is no longer available in Maxima. See ALLROOTS for a
+     function    to compute the roots of a polynomial.
+
+
+ - Function: ZSOLVE
+     This is not available with Maxima anymore.  Documentation is left
+     for  historical purposes.
+
+     - For those who can make use of approximate numerical solutions to
+     problems, there is a package which calls a routine which has been
+     translated from the IMSL fortran library to solve N simultaneous
+     non-linear equations in N unknowns.  It uses black-box techniques
+     that probably aren't desirable if an exact solution can be
+     obtained from one of the smarter solvers (LINSOLVE, ALGSYS, etc).
+     But for things that the other solvers don't attempt to handle,
+     this can probably give some very useful results.  For
+     documentation, do PRINTFILE("zsolve.usg");.  For a demo do
+     batch("zsolve.mc")$
+
+
+
+File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equations,  Up: Top
+
+Differential Equations
+**********************
+
+* Menu:
+
+* Definitions for Differential Equations::
+

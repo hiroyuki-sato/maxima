@@ -1,0 +1,333 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.52
+     from maxima.texi on 10 May 2004 -->
+
+<TITLE>Maxima Manual - Help</TITLE>
+<link href="maxima_3.html" rel=Next>
+<link href="maxima_1.html" rel=Previous>
+<link href="maxima_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_1.html">previous</A>, <A HREF="maxima_3.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC2" HREF="maxima_toc.html#TOC2">Help</A></H1>
+
+
+
+<H2><A NAME="SEC3" HREF="maxima_toc.html#TOC3">Introduction to Help</A></H2>
+
+<P>
+The most useful online help command is DESCRIBE which obtains help
+on all commands containing a particular string.  Here by command we
+mean a built in operator such as INTEGRATE or FACTOR etc.   As a typing
+short cut you may type <CODE>? fact</CODE> in lieu of <CODE>describe("fact")</CODE>
+
+<PRE>
+(C3) ? inte;
+
+ 0: (maxima.info)Integration.
+ 1: Introduction to Integration.
+ 2: Definitions for Integration.
+ 3: INTERRUPTS.
+ 4: ASKINTEGER :Definitions for Simplification.
+ 5: DISPLAY_FORMAT_INTERNAL :Definitions for Input and Output.
+ 6: INTEGERP :Definitions for Miscellaneous Options.
+ 7: INTEGRATE :Definitions for Integration.
+ 8: INTEGRATION_CONSTANT_COUNTER :Definitions for Integration.
+ 9: INTERPOLATE :Definitions for Numerical.
+Enter n, all, none, or multiple choices eg 1 3 : 7 8;
+
+Info from file /d/linux2/local/share/info/maxima.info:
+ - Function: INTEGRATE (EXP, VAR)
+     integrates exp with respect to var or returns an integral
+     expression (the noun form) if it cannot perform the integration
+     (see note 1 below).  Roughly speaking three stages are used:
+...
+</PRE>
+
+<P>
+In the above the user said he wanted items 7 and 8.  Note the <CODE>;</CODE>
+following the two numbers.  He might have typed <CODE>all</CODE> to
+see help on all the items.
+
+</P>
+
+
+<H2><A NAME="SEC4" HREF="maxima_toc.html#TOC4">Lisp and Maxima</A></H2>
+<P>
+ All of Maxima is of course written in lisp.  There is
+a naming convention for functions and variables:  All symbols which
+begin with a "$" sign at lisp level, are read with the "$" sign stripped
+off at Macsyma level.  For example, there are two lisp functions
+TRANSLATE and $TRANSLATE.   If at macsyma level you enter
+TRANSLATE(FOO); the function which is called is the $translate function.
+To access the other function you must prefix with a "?".   Note you
+may <I>not</I> put a space after the <CODE>?</CODE> since that would indicate
+you were looking for help!   
+
+</P>
+
+<PRE>
+(C1) ?TRANSLATE(FOO); 
+</PRE>
+
+<P>
+Of course, this may well not do what you wanted it to do since it is a
+completely different function.
+
+</P>
+<P>
+To enter a lisp command you may use
+
+<PRE>
+(C1) :lisp (foo 1 2)
+</PRE>
+
+<P>
+or to get a lisp prompt use <CODE>to_lisp();</CODE>, or alternately type
+<CODE>Ctrl-c</CODE> to enter into a debug break.
+This will cause a lisp break loop to be entered.  You
+could now evaluate $d2
+and view the value of the line label D2, in its internal lisp
+format.   Typing <CODE>:q</CODE> will quit to top level, if you are in
+a debug break.  If you had exited maxima with <CODE>to_lisp();</CODE>
+then you should type
+
+<PRE>
+MAXIMA&#62;(run)
+</PRE>
+
+<P>
+at the lisp prompt, to restart the Maxima session.
+
+</P>
+<P>
+If you intend to write lisp functions to be called at macsyma
+level you should name them by names beginning with a "$".   Note
+that all symbols typed at lisp level are automatically read in
+upper case, unless you do something like <CODE>|$odeSolve|</CODE> to
+force the case to be respected.   Maxima interprets symbols
+as mixed case, if the symbol has already been read before
+or at the time it was first read there
+was not an already existing symbol with the same letters but upper
+case only.   Thus if you type
+
+<PRE>
+(C1) Integrate;
+(D1) INTEGRATE
+(C2) Integ;
+(D2) Integ
+</PRE>
+
+<P>
+The symbol <CODE>Integrate</CODE> already existed in upper case since it
+is a Maxima primitive, but INTEG, does not already exist, so the Integ
+is permitted.   This may seem a little bizarre, but we wish to keep
+old maxima code working, which assumes that Maxima primitives may
+be in upper or lower case.   An advantage of this system is that if
+you type in lower case, you will immediately see which are the maxima
+keywords and functions.
+
+</P>
+<P>
+To enter Maxima forms at lisp level, you may use the <CODE>#$</CODE> macro.
+
+<PRE>
+                          (setq $foo #$[x,y]$)
+</PRE>
+
+<P>
+This will have the same effect as entering
+
+<PRE>
+
+(C1)FOO:[X,Y];
+</PRE>
+
+<P>
+
+</P>
+<P>
+except that foo will not appear in the VALUES list.  In order to view
+foo in macsyma printed format you may type
+
+</P>
+
+<PRE>
+(displa $foo)
+</PRE>
+
+<P>
+In this documentation when we wish to refer to a macsyma symbol we
+shall generally omit the $ just as you would when typing at macsyma level.
+This will cause confusion when we also wish to refer to a lisp symbol.
+In this case we shall usually try to use lower case for the lisp symbol
+and upper case for the macsyma symbol.  For example LIST for $list and
+list for the lisp symbol whose printname is "list".
+
+</P>
+<P>
+Since functions defined using the MAXIMA language are not ordinary
+lisp functions, you must use mfuncall to call them.
+For example:
+
+</P>
+
+<PRE>
+(D2)                        FOO(X, Y) := X + Y + 3
+</PRE>
+
+<P>
+
+</P>
+<P>
+then at lisp level
+
+</P>
+
+<PRE>
+CL-MAXIMA&#62;&#62;(mfuncall '$foo 4 5)
+12
+</PRE>
+
+<P>
+A number of lisp functions are shadowed in the maxima package.  This is
+because their use within maxima is not compatible with the definition as
+a system function.  For example typep behaves differently common lisp
+than it did in Maclisp.  If you want to refer to the zeta lisp typep
+while in the maxima package you should use global:typep (or cl:typep for
+common lisp).  Thus
+
+</P>
+
+<PRE>
+
+  (macsyma:typep '(1 2)) ==&#62; 'list
+  (lisp:typep '(1 2))==&#62; error (lisp:type-of '(1 2))==&#62; 'cons
+
+</PRE>
+
+<P>
+To see which symbols are shadowed look in "src/maxima-package.lisp" or
+do a describe of the package at lisp level.
+
+</P>
+
+
+
+<H2><A NAME="SEC5" HREF="maxima_toc.html#TOC5">Garbage Collection</A></H2>
+<P>
+ Symbolic computation tends to create a good deal
+of garbage, and effective handling of this can be crucial to successful
+completion of some programs.
+
+</P>
+<P>
+Under GCL, on UNIX systems where the mprotect system call is available
+(including SUN OS 4.0 and some variants of BSD) a stratified garbage collection
+is available.   This limits the collection to pages which have been recently
+written to.    See the GCL documentation under ALLOCATE and GBC.   At the
+lisp level doing (setq si::*notify-gbc* t) will help you determine which
+areas might need more space.
+
+</P>
+
+
+<H2><A NAME="SEC6" HREF="maxima_toc.html#TOC6">Documentation</A></H2>
+
+<P>
+The source for the documentation is in <TT>`.texi'</TT> texinfo format.
+From this format we can produce the info files used by the online
+commands <CODE>? </CODE> and <CODE>describe</CODE>.   Also <CODE>html</CODE> and <CODE>pdf</CODE>
+files can be produced.
+
+</P>
+<P>
+Additionally there are examples so that you may do
+
+<PRE>
+example(integrate);
+(C4) example(integrate);
+(C5) test(f):=BLOCK([u],u:INTEGRATE(f,x),RATSIMP(f-DIFF(u,x)));
+(D5) test(f) := BLOCK([u], u :
+         INTEGRATE(f, x), RATSIMP(f - DIFF(u, x)));
+(C6) test(SIN(x));
+(D6) 						       0
+(C7) test(1/(x+1));
+(D7) 						       0
+(C8) test(1/(x^2+1));
+(D8) 						       0
+(C9) INTEGRATE(SIN(X)^3,X);
+ 
+</PRE>
+
+
+
+<H2><A NAME="SEC7" HREF="maxima_toc.html#TOC7">Definitions for Help</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>DEMO</B> <I>(file)</I>
+<DD><A NAME="IDX1"></A>
+this is the same as BATCH but pauses after each command
+line and continues when a space is typed (you may need to type
+<CODE>;</CODE> followed by a newline, if running under xmaxima).   The demo
+files have suffix <CODE>.dem</CODE>
+
+</P>
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>DESCRIBE</B> <I>(cmd)</I>
+<DD><A NAME="IDX2"></A>
+
+</P>
+<P>
+This command prints documentation on all commands which contain
+the substring "cmd".   Thus
+
+<PRE>
+(C1) describe("integ");
+ 0: (maxima.info)Integration.
+ 1: Introduction to Integration.
+ 2: Definitions for Integration.
+ 3: ASKINTEGER :Definitions for Simplification.
+..
+Enter n, all, none, or multiple choices eg 1 3 : 2 3;
+Info from file /d/linux2/local/share/info/maxima.info:
+Definitions for Integration
+===========================
+
+ - Function: CHANGEVAR (EXP,F(X,Y),Y,X)
+...
+</PRE>
+
+<P>
+see section <A HREF="maxima_2.html#SEC3">Introduction to Help</A>
+
+</P>
+
+</DL>
+<P>
+<DL>
+<DT><U>Function:</U> <B>EXAMPLE</B> <I>(command)</I>
+<DD><A NAME="IDX3"></A>
+will start up a demonstration of how command works
+on some expressions.  After each command line it will pause and wait
+for a space to be typed, as in the DEMO command.
+
+</P>
+<P>
+The name of the file containing the examples is given by the
+variable manual_demo, which defaults to "maxima.demo".
+
+</P>
+</DL>
+
+<P><HR><P>
+<p>Go to the <A HREF="maxima_1.html">first</A>, <A HREF="maxima_1.html">previous</A>, <A HREF="maxima_3.html">next</A>, <A HREF="maxima_42.html">last</A> section, <A HREF="maxima_toc.html">table of contents</A>.
+</BODY>
+</HTML>
