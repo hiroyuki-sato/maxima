@@ -85,6 +85,7 @@
 (def-op f= fixnum = t)
 (def-op lessp t < t)
 (def-op remainder t rem)
+#-mcl
 (def-op lsh fixnum ash)
 (def-op fixnum-remainder fixnum rem)
 (def-op minus t -)
@@ -244,7 +245,7 @@
 (defun delq (x lis &optional (count most-positive-fixnum))
   (declare (fixnum count))
   #+lucid (setq count 16777214) ;;yukkk.
-  #+cmu (setq count (min count (1- most-positive-fixnum)))
+  #+(or cmu sbcl) (setq count (min count (1- most-positive-fixnum)))
   (delete x lis :test 'eq :count count))
 
 (setf (symbol-function 'lsh) #'ash)
@@ -258,19 +259,16 @@
 (defun  bignump (x)
   (typep x 'bignum))
 
+;; Find the N most significant or least significant bits of the
+;; absolute value of X.  If N is positive, take the most significant;
+;; otherwise, the least significant.
 (defun haipart (x n)
-  (setq x (abs x))
-  (cond ((< x 0)
-	 (logand x (1- (ash 1 (- n)))))
-	(t (ash x (min (- n (integer-length x))
-		       0)))))
-
-(defun haipart (x n)
-  (setq x (abs x))
-  (cond ((< n 0)
-	 (logand x (1- (ash 1 (- n)))))
-	(t (ash x (min (- n (integer-length x))
-		       0)))))
+  (let ((x (abs x)))
+    (cond ((< n 0)
+	   (logand x (1- (ash 1 (- n)))))
+	  (t
+	   (ash x (min (- n (integer-length x))
+		       0))))))
 
 ; also correct but slower.
 ;(defun haipart (integer count)
@@ -326,13 +324,17 @@
 		  
 (defmacro ncons (x) `(cons ,x nil))  ;;can one optimize this??
 
+#+nil
 (defun zl-assoc (x lis)
   (sloop for v in lis when (equal (car v) x) do (loop-return v)))
+(defun zl-assoc (x lis)
+  (assoc x lis :test 'equal))
 
 ;;lucid had troubles
 ;(defun zl-delete (x lis &optional (count most-positive-fixnum))
 ;  (delete x lis :test 'equal :count count))
 
+#+nil
 (defun zl-delete (x lis &optional (count most-positive-fixnum))
   (declare (fixnum count))
   (sloop do (cond ((or (null lis)(<= count 0)) (return-from zl-delete lis))
@@ -348,24 +350,31 @@
      )
   
 	    lis)
-		   
-		   
-		
-	       
-		    
 
+(defun zl-delete (x lis &optional count)
+  (delete x lis :test 'equal :count count))
+		   
+#+nil
 (defun zl-member (x lis)
   (declare (object x lis))
   (sloop for v on lis
 	 when (equal (car v) x)
 	 do (return v)))
+
+(defun zl-member (x lis)
+  (member x lis :test 'equal))
 	 
+#+nil
 (defun zl-remove (item list &optional (n most-positive-fixnum))
   #+lucid (setq n 16777214) ;;yukkk.
-  #+cmu (setq n (min n (1- most-positive-fixnum))) ; yukkk
+  #+(or cmu sbcl) (setq n (min n (1- most-positive-fixnum))) ; yukkk
   (remove item list :count n :test 'equal))
 
-(defvar *acursor* nil)
+(defun zl-remove (item list &optional n)
+  (remove item list :count n :test 'equal))
+
+(defvar *acursor* (make-array 11 :element-type 'fixnum
+			      :initial-element 0))
 
 ;; Format of *acursor*.
 ;; 0                 1  2  3  4  5    6  7  8  9  10
@@ -373,8 +382,6 @@
 ;; array dimension   current index    maximal index
 
 (defun set-up-cursor (ar)
-  (or *acursor* (setf *acursor* (make-array 11 :element-type 'fixnum
-					    :initial-element 0)))
   (let ((lis (array-dimensions ar)))
     (setf (aref *acursor* 0) (length lis))
     (sloop for v in lis for i from 6 do (setf (aref *acursor* i) (f- v 1)))
@@ -382,7 +389,7 @@
 
 (defun aset-by-cursor (ar  val)
   (let ((curs  *acursor*))
-    (declare (type (lisp::array fixnum)  curs))
+    (declare (type (simple-array fixnum (11)) curs))
     (ecase (aref curs 0)
       (1 (setf (aref ar (aref curs 1)) val))
       (2 (setf (aref ar (aref curs 1) (aref curs 2)) val))
@@ -505,7 +512,7 @@
 (setf (symbol-function 'atan2) (symbol-function 'lisp::atan))
 
 (setq *READ-DEFAULT-FLOAT-FORMAT* 'double-float)
-#+CLISP (setq *DEFAULT-FLOAT-FORMAT* 'double-float)
+#+clisp (setq custom:*DEFAULT-FLOAT-FORMAT* 'double-float)
 
 (defmacro float (x &optional (y 1.0d0)) `(lisp::float ,x ,y))
 

@@ -1,7 +1,35 @@
+#+mcl
+(or (find-package "LISP")
+    (rename-package "COMMON-LISP" "COMMON-LISP" '("LISP" "CL")))
+
+#+:sbcl
+(progn
+  (sb-ext:unlock-package "COMMON-LISP")
+    (rename-package "COMMON-LISP" "COMMON-LISP" '("LISP" "CL"))) 
+
 ;; SI is used for the regex info implementation. This line should be removed
 ;; when the info regex implementation no longer requires SI in all lisps.
 ;; jfa 12/12/2001
-(or (find-package "SI") (make-package "SI" :use '(COMMON-LISP)))
+
+;;(or (find-package "SI") (make-package "SI" :use '(COMMON-LISP)))
+
+;; Create the package CL-INFO that holds the info regex routines. For
+;; GCL, we import the necessary symbols we need from SYSTEM, since GCL
+;; comes with an info reader.
+(defpackage "CL-INFO"
+  (:use :common-lisp)
+  (:export "INFO" "*INFO-PATHS*"))
+
+#+(and gcl (not ansi-cl))
+;; Traditional GCL may have empty CL package.  Delete it.
+(if (find-package :common-lisp)
+  (delete-package :common-lisp)) 
+
+#+gcl
+(unless (find-package :common-lisp)
+  ;; Make the LISP package be the CL package
+  (rename-package "LISP" "COMMON-LISP" '("LISP" "CL")))
+
 (or (find-package "SLOOP") (make-package "SLOOP" :use '(LISP)))
 
 
@@ -11,8 +39,8 @@
 
 (or (find-package "MAXIMA")
     (make-package  "MAXIMA"
-	:nicknames '("CL-MACSYMA"  "CL-MAXIMA" "MACSYMA")
-	:use `("LISP" #+clisp ,@(if (find-package "EXT") '("EXT")))  ))
+		   :nicknames '("CL-MACSYMA"  "CL-MAXIMA" "MACSYMA")
+		   :use '("LISP")))
 
 (shadowing-import '(sloop::loop-return sloop::local-finish sloop::loop-finish sloop::sloop) "MAXIMA")
 
@@ -90,7 +118,7 @@
 (import '(si::modulus si::cmod si::ctimes si::cdifference si::cplus)
    'cl-maxima)
 
-#+(or clisp gcl)
+#+gcl
 (import '(system::getenv) (find-package "MAXIMA"))
 #+gcl
 (import '(si::getpid) (find-package "MAXIMA"))
@@ -109,20 +137,21 @@
 (setf (symbol-function 'maxima::newline) (symbol-function 'si::newline))
 
 ;; *info-paths* from cl-info.lisp
-#+(or clisp cmu)
-(import '( si::*info-paths* ) "MAXIMA" )
+#-gcl
+(import '( cl-info::*info-paths* ) "MAXIMA" )
 
-;; detect which version of clisp REGEXP we have
-#+clisp
-(if (find-package "REGEXP") 
-  (push (cond ((apply (intern "REGEXP-EXEC" "REGEXP") 
-                      (list (apply (intern "REGEXP-COMPILE" "REGEXP")
-		                   '("AAA" t)) 
-		            "aaa"))
-                  ':case-fold-search     )
-              (t  ':case-fold-search-not ))
-	*features* ))
-	      
+#+gcl
+(shadowing-import '( cl-info::*info-paths* ) "MAXIMA" )
+
+
+;; MAXIMA uses LISP package which is legacy CLtL1 for GCL.
+;; Thus with ANSI GCL we have to import some symbols from COMMON-LISP
+;; package explicitly.
+;; REMOVE this as soon as we can get rid of LISP and SERROR packages.
+#+(and gcl ansi-cl)
+(import '( cl::*debugger-hook* cl::handler-case )
+  "MAXIMA" )
+
 ;;redefined in commac  lucid 2.1 does (functionp 'jiljay)-->t
 (if (lisp::functionp 'dotimes) (push :shadow-functionp *features*))
 (unless (lisp::functionp 'lisp::functionp)
@@ -149,5 +178,8 @@
 (shadow 'lisp::float 'maxima)
 #+lispm
 (shadow 'lisp::loop 'maxima)
+
+#+allegro
+(shadow '// 'maxima)
 (provide "MAXIMA")
 

@@ -18,7 +18,7 @@
 ;;
 
 
-(in-package "SI")
+(in-package "CL-INFO")
 
 (defvar *match-data*)
 (defvar *case-fold-search* nil)
@@ -32,16 +32,61 @@
 (defun get-match (s n)
   (subseq s (match-start n) (match-end n)))
 
-;; Compile the regex pattern in PAT for use by the string matcher.
-(defun compile-regex (pat &key (case-sensitive t))
-  (let ((*compile-print* nil)
-	(*compile-verbose* nil)
-	#+cmu
-	(*compile-progress* nil)
-	)
-    (compile nil
-	     (nregex:regex-compile pat :case-sensitive case-sensitive))))
 
+;; Compile the regex pattern in PAT for use by the string matcher.  We
+;; precompile three regex's that are used for all queries. If there
+;; were any more, I would have put them in a hash table 
+;; -- jfa 07/24/04
+(let* ((string1 (format nil "Node: ([^~a]*index[^~a]*)~a"
+			(code-char 127) (code-char 127) (code-char 127)))
+       (string2 (format nil "Node: Function and Variable Index~a([0-9]+)"
+			(code-char 127)))
+       (string3 (format nil "~a[~a~a][^~a]*Node:[~a~a]+Function and Variable Index[,~a~a][^~a]*~a"
+			(code-char 31) (code-char 10) (code-char 12) 
+			(code-char 10) (code-char 32) (code-char 9) 
+			(code-char 9) (code-char 10) (code-char 10)
+			(code-char 10)))
+      (precomp-nil-string1
+       (compile nil
+		(nregex:regex-compile 
+		 string1
+		 :case-sensitive nil)))
+      (precomp-t-string2
+       (compile nil
+		(nregex:regex-compile 
+		 string2
+		 :case-sensitive t)))
+      (precomp-t-string3
+       (compile nil
+		(nregex:regex-compile 
+		 string3
+		 :case-sensitive t))))
+  (defun compile-regex (pat &key (case-sensitive t))
+    (cond
+      ((and (equal case-sensitive nil)
+	    (string= pat string1))
+       precomp-nil-string1)
+      ((and (equal case-sensitive t)
+	    (string= pat string2))
+       precomp-t-string2)
+      ((and (equal case-sensitive t)
+	    (string= pat string3))
+       precomp-t-string3)
+      (t
+       (let ((*compile-print* nil)
+	     (*compile-verbose* nil)
+	     #+cmu
+	     (*compile-progress* nil)
+	     #+sbcl
+	     (sb-ext:*compile-progress* nil)
+	     #+gcl
+	     (compiler:*compile-verbose* nil)
+	     )
+	 (compile nil
+		  (nregex:regex-compile 
+		   pat 
+		   :case-sensitive case-sensitive))))))
+  )
 ;; Search the string STRING for the pattern PAT.  Only the part of the
 ;; string bounded by START and END are searched.  PAT may either be a
 ;; string or a compiled regex (which is a function).
@@ -60,7 +105,8 @@
 	(match-start 0))
       -1))
 
-(eval-when (compile eval)
+(eval-when (compile load eval)
+  #-allegro
   (defmacro while (test &body body)
     `(loop while ,test do ,@ body))
   #+nil
@@ -105,12 +151,19 @@
     (let ((len (file-length st)))
       (unless (<= 0 start len)
 	(error "illegal file start ~a" start))
+      #-gcl
       (let ((tem (make-array (- len start)
 			     :element-type 'base-char)))
 	(when (> start 0)
 	  (file-position st start))
 	(read-sequence tem st :start 0 :end (length tem))
-	tem))))
+	tem)
+      #+gcl
+      (let ((tem (make-array (- len start)
+			     :element-type 'string-char)))
+	(if (> start 0) (file-position st start))
+	(si::fread tem 0 (length tem) st) tem)
+      )))
 
 (defun atoi (string start)
   (parse-integer string :start start :junk-allowed t))
@@ -202,9 +255,6 @@
 	       (t (setq tem x)))
 	 )
       tem)))
-
-(defun get-match (string i)
-  (subseq string (match-beginning i) (match-end i)))
 
 (defun string-concatenate (&rest strings)
   (apply #'concatenate 'string strings))
@@ -596,7 +646,7 @@ the general info file.  The search goes over all files."
 ;; Main entry point.  This looks up the desired entry and prompts the
 ;; user to select the desired entries when multiple matches are found.
 (defun info (x &optional (dirs *default-info-files*) (info-paths *info-paths*)
-	       &aux *current-info-data*)
+	     &aux *current-info-data*)
   (let (wanted
 	file
 	position-pattern
@@ -606,56 +656,85 @@ the general info file.  The search goes over all files."
     (when tem
       (let ((nitems (length tem)))
 	(loop for i from 0 for name in tem with prev
-	      do
-	      (setq file nil
-		    position-pattern nil)
-	      (progn
-		;; decode name
-		(when (and (consp name) (consp (cdr name)))
-		  (setq file (cadr name)
-			name (car name)))
-		(when (consp name)
-		  (setq position-pattern (car name) name (cdr name))))
-	      (when (> nitems 1)
-		(format t "~% ~d: ~@[~a :~]~@[(~a)~]~a." i
-			position-pattern
-			(if (eq file prev) nil (setq prev file)) name)))
-	(if (> (length tem) 1)
-	    (format t "~%Enter n, all, none, or multiple choices eg 1 3 : ")
-	    (terpri))
-	(let ((line (if (> (length tem) 1)
-			(read-line)
-			"0"))
-	      (start 0)
-	      val)
-	  (while (equal line "")
-	    (setq line (read-line)))
-	  (while (multiple-value-setq
-		     (val start)
-		   (read-from-string line nil nil :start start))
-	    (cond ((numberp val)
-		   (setq wanted (cons val wanted)))
-		  (t
-		   (setq wanted val)
-		   (return nil))))
-	  (cond ((consp wanted)
-		 (setq wanted (nreverse wanted)))
-		((symbolp wanted)
-		 (setq wanted (and
-			       (equal (symbol-name wanted) "ALL")
-			       (loop for i below (length tem)
-				     collect i)))))
-	  (when wanted
-	    ;; Remove invalid (numerical) answers
-	    (setf wanted (remove-if #'(lambda (x)
-					(and (integerp x) (>= x nitems)))
-				    wanted))
-	    (format t "~%Info from file ~a:" (car *current-info-data*)))
-	  (loop for i in wanted
-		do (princ (show-info (nth i tem))))))))
+	   do
+	   (setq file nil
+		 position-pattern nil)
+	   (progn
+	     ;; decode name
+	     (when (and (consp name) (consp (cdr name)))
+	       (setq file (cadr name)
+		     name (car name)))
+	     (when (consp name)
+	       (setq position-pattern (car name) name (cdr name))))
+	   (when (> nitems 1)
+	     (format t "~% ~d: ~@[~a :~]~@[(~a)~]~a." i
+		     position-pattern
+		     (if (eq file prev) nil (setq prev file)) name)))
+	(setq wanted
+	      (if (> nitems 1)
+		  (loop
+		     for prompt-count from 0
+		     thereis (progn
+			       (finish-output *debug-io*)
+			       (print-prompt prompt-count)
+			       (force-output)
+			       (clear-input)
+			       (select-info-items
+				(parse-user-choice nitems) tem)))
+		  tem))
+	(clear-input)
+	(finish-output *debug-io*)
+	(when (consp wanted)
+	  (format t "~%Info from file ~a:" (car *current-info-data*))
+	  (loop for item in wanted
+	     do (princ (show-info item)))))))
   (values))
 
-#||	     
+(defvar *prompt-prefix* "")
+(defvar *prompt-suffix* "")
+
+(defun print-prompt (prompt-count)
+  (format t "~&~a~a~a"
+	  *prompt-prefix*
+	  (if (zerop prompt-count)
+	      "Enter space-separated numbers, ALL or NONE: "
+	      "Still waiting: ")
+	  *prompt-suffix*))
+
+(defvar +select-by-keyword-alist+
+  '((noop "") (all "a" "al" "all") (none "n" "no" "non" "none")))
+
+(defun parse-user-choice (nitems)
+  (loop
+     with line = (read-line) and nth and pos = 0
+     while (multiple-value-setq (nth pos)
+	     (parse-integer line :start pos :junk-allowed t))
+     if (or (minusp nth) (>= nth nitems))
+     do (format *debug-io*
+		"~&Discarding invalid number ~d." nth)
+     else collect nth into list
+     finally
+     (let ((keyword
+	    (car (rassoc
+		  (string-right-trim
+		   '(#\Space #\Tab #\Newline #\;) (subseq line pos))
+		  +select-by-keyword-alist+
+		  :test #'(lambda (item list)
+			    (member item list :test #'string-equal))))))
+       (unless keyword
+	 (setq keyword 'noop)
+	 (format *debug-io* "~&Ignoring trailing garbage in input."))
+       (return (cons keyword list)))))
+
+(defun select-info-items (selection items)
+  (case (pop selection)
+    (noop (loop
+	     for i in selection
+	     collect (nth i items)))
+    (all items)
+    (none 'none)))
+
+#||
 ;; idea make info_text window have previous,next,up bindings on keys
 ;; and on menu bar.    Have it bring up apropos menu. allow selection
 ;; to say spawn another info_text window.   The symbol that is the window

@@ -535,6 +535,11 @@
 	((NOT (FLOATP X)) 1)
 	(T (CDR (MAXIMA-RATIONALIZE X)))))
 
+;; EXP = f(t,u) where f is some function with, say, VAR = t,
+;; u^k = RATROOT = e*(a*t+b)/(c*t+d), where the smallest possible k
+;; is calculated below.
+;; As always, W is an alist which associates to the coefficients
+;; a, b... (and to VAR) their values.
 (DEFUN RATROOT (EXP VAR RATROOT W) 
 	 (PROG (ROOTLIST K Y W1) 
 	       (COND ((SETQ Y (CHEBYF EXP VAR)) (RETURN Y)))
@@ -569,7 +574,7 @@
 						  ((MEXPT) VAR ((MPLUS) -1 K))))))
 				   ((MEXPT) ((MPLUS)
 					     ((MTIMES) C ((MEXPT) VAR K))
-					     ((MTIMES) -1 A))
+					     ((MTIMES) -1 A e))
 					    2)))))
 		      VAR))
 	       (RETURN (SUBSTINT (SIMPLIFY (LIST '(MEXPT)
@@ -580,6 +585,7 @@
 
 (DEFUN SUBST41 (EXP A B) (SUBST4 EXP)) 
 
+;; exp = a*t^r1*(c1+c2*t^q)^r2, where var = t.
 (DEFUN CHEBYF (EXP VAR) 
   (PROG (R1 R2 D1 D2 N1 N2 W Q) 
 	(COND ((NOT (SETQ W
@@ -596,6 +602,15 @@
 				((COEFFTT) (A FREEVAR)))
 			      NIL)))
 	       (RETURN NIL)))
+	(when (zerop1 (cdr (sassq 'c1 w #'nill)))
+	  (return
+	    (mul*
+	     ;; This factor is locally constant as long as t and
+	     ;; c2*t^q avoid log's branch cut.
+	     (subliss w '((mtimes) a ((mexpt) var ((mtimes) -1 q r2))
+			  ((mexpt) ((mtimes) c2 ((mexpt) var q)) r2)))
+	     (integrator
+	      (subliss w '((mexpt) var ((mplus) r1 ((mtimes) q r2)))) var))))
 	(SETQ Q (CDR (SASSQ 'Q W 'NILL)))
 	(SETQ 
 	 W

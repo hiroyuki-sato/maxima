@@ -8,7 +8,8 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   Statistics.texi Arrays.texi Matrices.texi Affine.texi Tensor.texi \
   Ctensor.texi Series.texi Number.texi Symmetries.texi Groups.texi \
   Runtime.texi Miscellaneous.texi Rules.texi Lists.texi Function.texi \
-  Program.texi Debugging.texi Indices.texi Elliptic.texi
+  Program.texi Debugging.texi Indices.texi Elliptic.texi Bugs.texi \
+  None.texi xrefs.texi
 
 maximahtml.mk:
 	./texi2html -split_chapter maxima.texi
@@ -22,7 +23,8 @@ $(MAXIMAHTML): maxima.texi $(maxima_TEXINFOS)
 	./texi2html -split_chapter maxima.texi 
 
 include $(top_srcdir)/common.mk
-dochtml_DATA = $(MAXIMAHTML)
+genericdir = $(dochtmldir)
+genericdirDATA = $(MAXIMAHTML)
 
 clean: clean-info
 clean: clean-html

@@ -82,7 +82,13 @@
 	   )
 	  (t (apply 'tex1  args)))))
 
-
+(defun quote-% (sym)
+  (let ((strsym (string sym)))
+    (cond ((position (character "%") strsym)
+	   (let ((pos (position (character "%") strsym)))
+	     (concatenate 'string (subseq strsym 0 pos) "\\%" 
+			  (quote-% (subseq strsym (+ pos 1))))))
+	  (t strsym))))
 
 (defun tex1 (mexplabel &optional filename ) ;; mexplabel, and optional filename
   (prog (mexp  texport $gcprint ccol x y itsalabel)
@@ -117,20 +123,29 @@
 		     (setq mexp (list '(mdefine) (cons (list x 'array) (cdadr y)) (caddr y)))))))
 	(cond ((and (null(atom mexp))
 		    (memq (caar mexp) '(mdefine mdefmacro)))
+               (if mexplabel (setq mexplabel (quote-% mexplabel)))
 	       (format texport "|~%" ) ;delimit with |marks
 	       (cond (mexplabel (format texport "~a " mexplabel)))
 	       (mgrind mexp texport) ;write expression as string
 	       (format texport ";|~%"))
-
 	      ((and
 		itsalabel ;; but is it a user-command-label?
-		(eq (getchar $inchar 2) (getchar mexplabel 2)))
+                (<= (length (string $inchar)) (length (string mexplabel)))
+		(eq (getchars $inchar 2 (1+ (length (string $inchar))))
+		    (getchars mexplabel 2 (1+ (length (string $inchar)))))
+                ;; Check to make sure it isn't an outchar in disguise
+                (not
+                 (and
+                  (<= (length (string $outchar)) (length (string mexplabel)))
+                  (eq (getchars $outchar 2 (1+ (length (string $outchar))))
+                      (getchars mexplabel 2 (1+ (length (string $outchar))))))))
 	       ;; aha, this is a C-line: do the grinding:
 	       (format texport "~%|~a " mexplabel) ;delimit with |marks
 	       (mgrind mexp texport) ;write expression as string
 	       (format texport ";|~%"))
-
-	      (t ; display the expression for TeX now:
+	      (t 
+                 (if mexplabel (setq mexplabel (quote-% mexplabel)))
+                 ; display the expression for TeX now:
 		 (myprinc "$$")
 		 (mapc #'myprinc
 		       ;;initially the left and right contexts are
@@ -194,11 +209,19 @@
   (append l
 	  (list (cond ((numberp x) (texnumformat x))
 		      ((and (symbolp x) (get x 'texword)))
+                      ((stringp x) (tex-string x))
+                      ((characterp x) (tex-char x))
 		      (t (tex-stripdollar x))))
-
 	  r))
 
+(defun tex-string (x)
+  (cond ((equal x "") "")
+    ((eql (elt x 0) #\\) x)
+    (t (concatenate 'string "\\mbox{{}" x "{}}"))))
 
+(defun tex-char (x)
+  (if (eql x #\|) "\\mbox{\\verb/|/}"
+    (concatenate 'string "\\mbox{\\verb|" (string x) "|}")))
 
 (defvar *tex-translations* nil)
 ;; '(("AB" . "a")("X" . "x")) would cause  AB12 and X3 C4 to print a_{12} and x_3 C_4
@@ -349,7 +372,7 @@
 
 (defun tex-bigfloat (x l r) (fpformat x))
 
-(defprop mprog "\\mathbf{block}\\>" texword)
+(defprop mprog "\\mathbf{block}\\;" texword)
 (defprop %erf "\\mathrm{erf}" texword)
 (defprop $erf "\\mathrm{erf}" texword) ;; etc for multicharacter names
 (defprop $true  "\\mathbf{true}"  texword)
@@ -377,11 +400,12 @@
 (defprop $%e "e" texword)
 (defprop $inf "\\infty " texword)
 (defprop $minf " -\\infty " texword)
-(defprop %laplace "{\\cal L}" texword)
+(defprop %laplace "\\mathcal{L}" texword)
 (defprop $alpha "\\alpha" texword)
 (defprop $beta "\\beta" texword)
 (defprop $gamma "\\gamma" texword)
 (defprop %gamma "\\Gamma" texword)
+(defprop $%gamma "\\gamma" texword)
 (defprop $delta "\\delta" texword)
 (defprop $epsilon "\\varepsilon" texword)
 (defprop $zeta "\\zeta" texword)
@@ -464,6 +488,8 @@
 		   (doit (and
 			  f ; there is such a function
 			  (memq (getchar f 1) '(% $)) ;; insist it is a % or $ function
+                          (not (eq (car (last (car fx))) 'array)) ; fix for x[i]^2
+                              ; Jesper Harder <harder@ifa.au.dk>
                           (not (memq f '(%sum %product %derivative %integrate %at
 					      %lsum %limit))) ;; what else? what a hack...
 			  (or (and (atom expon) (not (numberp expon))) ; f(x)^y is ok
@@ -577,12 +603,12 @@
   (let ((s1 (tex (cadr x) nil nil 'mparen 'mparen));;integrand delims / & d
 	(var (tex (caddr x) nil nil 'mparen rop))) ;; variable
        (cond((= (length x) 3)
-	     (append l `("\\int {" ,@s1 "}{\\>d" ,@var "}") r))
+	     (append l `("\\int {" ,@s1 "}{\\;d" ,@var "}") r))
 	    (t ;; presumably length 5
 	       (let ((low (tex (nth 3 x) nil nil 'mparen 'mparen))
 		     ;; 1st item is 0
 		     (hi (tex (nth 4 x) nil nil 'mparen 'mparen)))
-		    (append l `("\\int_{" ,@low "}^{" ,@hi "}{" ,@s1 "\\>d" ,@var "}") r))))))
+		    (append l `("\\int_{" ,@low "}^{" ,@hi "}{" ,@s1 "\\;d" ,@var "}") r))))))
 
 (defprop %limit tex-limit tex)
 
@@ -622,13 +648,12 @@
 
 (defun tex-choose (x l r)
   `(,@l
-    "{"
+    "\\pmatrix{"
     ,@(tex (cadr x) nil nil 'mparen 'mparen)
-    "\\choose "
+    "\\\\"
     ,@(tex (caddr x) nil nil 'mparen 'mparen)
     "}"
     ,@r))
-
 
 (defprop rat tex-rat tex)
 (defprop rat 120. tex-lbp)
@@ -746,7 +771,7 @@
      (%inf "\\inf ") ; many will prefer "\\infty". Hmmm.
      ; Latex's "ker" is ... ?
      ; Latex's "lg" is ... ?
-     (%limit "\\lim ")
+     ; lim is handled by tex-limit.
      ; Latex's "liminf" ... ?
      ; Latex's "limsup" ... ?
      (%ln "\\ln ")
@@ -773,7 +798,9 @@
 (defprop mcond 25. tex-rbp)
 (defprop %derivative tex-derivative tex)
 (defun tex-derivative (x l r)
-  (tex (tex-d x '$|d|) l r lop rop ))
+  (tex (if $derivabbrev
+	   (tex-dabbrev x)
+	   (tex-d x '$|d|)) l r lop rop ))
 
 (defun tex-d(x dsym) ;dsym should be $d or "$\\partial"
   ;; format the macsyma derivative form so it looks
@@ -792,6 +819,26 @@
      ((mquotient) ,(simplifya numer nil) ,denom)
      ,arg)))
 
+(defun tex-dabbrev (x)
+  ;; Format diff(f,x,1,y,1) so that it looks like
+  ;; f
+  ;;  x y
+  (let*
+      ((arg (cadr x)) ;; the function being differentiated
+       (difflist (cddr x)) ;; list of derivs e.g. (x 1 y 2)
+       (ords (odds difflist 0))	;; e.g. (1 2)
+       (vars (odds difflist 1))) ;; e.g. (x y)
+    (append
+     (if (symbolp arg)
+	 `((,arg array))
+	 `((mqapply array) ,arg))
+     (if (and (= (length vars) 1)
+	      (= (car ords) 1))
+	 vars
+	 `(((mtimes) ,@(mapcan #'(lambda (var ord)
+				   (make-list ord :initial-element var))
+			       vars ords)))))))
+
 (defun odds(n c)
   ;; if c=1, get the odd terms  (first, third...)
   (cond ((null n) nil)
@@ -800,12 +847,12 @@
 
 (defun tex-mcond (x l r)
   (append l
-    (tex (cadr x) '("\\mathbf{if}\\>")
-      '("\\>\\mathbf{then}\\>") 'mparen 'mparen)
+    (tex (cadr x) '("\\mathbf{if}\\;")
+      '("\\;\\mathbf{then}\\;") 'mparen 'mparen)
     (if (eql (fifth x) '$false)
       (tex (caddr x) nil r 'mcond rop)
       (append (tex (caddr x) nil nil 'mparen 'mparen)
-        (tex (fifth x) '("\\>\\mathbf{else}\\>") r 'mcond rop)))))
+        (tex (fifth x) '("\\;\\mathbf{else}\\;") r 'mcond rop)))))
 
 (defprop mdo tex-mdo tex)
 (defprop mdo 30. tex-lbp)
@@ -819,10 +866,10 @@
 ;; these aren't quite right
 
 (defun tex-mdo (x l r)
-  (tex-list (texmdo x) l r "\\>"))
+  (tex-list (texmdo x) l r "\\;"))
 
 (defun tex-mdoin (x l r)
-  (tex-list (texmdoin x) l r "\\>"))
+  (tex-list (texmdoin x) l r "\\;"))
 
 (defun texmdo (x)
    (nconc (cond ((second x) `("\\mathbf{for}" ,(second x))))
@@ -846,6 +893,63 @@
 		`("\\mathbf{while}" ,(cadr (seventh x))))
 	       (t `("\\mathbf{unless}" ,(seventh x))))
 	 `("\\mathbf{do}" ,(eighth x))))
+
+(defprop mtext tex-mtext tex)
+(defprop text-string tex-mtext tex)
+(defprop mlable tex-mlable tex)
+(defprop spaceout tex-spaceout tex)
+
+;; Additions by Marek Rychlik (rychlik@u.arizona.edu)
+;; This stuff handles setting of LET rules
+
+(defprop | --> | "\\longrightarrow " texsym)
+(defprop | WHERE | "\\;\\mathbf{where}\\;}" texsym)
+
+(defprop &>= ("\\ge ") texsym)
+(defprop &>= tex-infix tex)
+
+(defprop &> (">") texsym)
+(defprop &> tex-infix tex)
+
+(defprop &<= ("\\le ") texsym)
+(defprop &<= tex-infix tex)
+
+(defprop &< ("<") texsym)
+(defprop &< tex-infix tex)
+
+(defprop &= ("=") texsym)
+(defprop &= tex-infix tex)
+
+(defprop |&#| ("\\ne ") texsym)
+(defprop |&#| tex-infix tex)
+
+;; handles portrayal of rules, e.g.
+;; let(abs(x),x, ">" , x, 0);
+;; results in
+;; ((MTEXT SIMP) ((MABS SIMP) |$x|) | --> | |$x| | WHERE | ((&> SIMP) |$x| 0))
+
+(defun tex-mtext (x l r)
+  (tex-list (list* (cadr x)
+                 (texsym (caddr x))
+                 (cadddr x)
+                 (cond ((cddddr x)
+                        (list*
+                         (texsym (caddddr x))
+                         (cdddddr x)))))
+          l r ""))
+
+;; end of additions by Marek Rychlik
+
+(defun tex-mlable (x l r)
+  (tex (caddr x)
+    (append l
+      (if (cadr x)
+        (list (format nil "\\mbox{\\tt\\red(~A) \\black}" (tex-stripdollar (cadr x))))
+        nil))
+    r 'mparen 'mparen))
+
+(defun tex-spaceout (x l r)
+  (append l (list "\\mbox{\\verb|" (make-string (cadr x) :initial-element #\space) "|}") r))
 
 ;; initialize a file so that c-lines will look ok in verbatim mode
 ;; run this first before tex(<whatever>, file);

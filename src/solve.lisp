@@ -314,16 +314,23 @@
 ;;; may be screwed here. (Solve should be made recursive)
 
 (DEFUN EASY-CASES (*EXP *VAR)
-       (COND ((EQ (CAAR *EXP) 'MTIMES)
+       (COND ((OR (ATOM *EXP) (ATOM (CAR *EXP))) NIL)
+             ((EQ (CAAR *EXP) 'MTIMES)
 	      (DO ((TERMS (CDR *EXP) (CDR TERMS)))
 		  ((NULL TERMS))
 		  (SOLVE (CAR TERMS) *VAR 1))
-	      'MTIMES)
-	     ((EQ (CAAR *EXP) 'MEXP)
-	      (COND ((AND (INTEGERP  (CADDR *EXP))
-			  (PLUSP (CADDR *EXP)))
-		     (SOLVE (CADR *EXP) *VAR (CADDR *EXP))
-		     'MEXPRAT)))))
+	      'MTIMES)))
+
+;; This code is commented out because it exposes a bug in the way
+;; solve (or its friends) handles multiplicities. A previous 
+;; version (1.2) had a typo (caar *exp) 'mexp ...) that prevented this
+;; bug from manifesting.  Barton Willis, 12 May 2004
+
+;;	     ((EQ (CAAR *EXP) 'MEXPT)
+;;	      (COND ((AND (INTEGERP  (CADDR *EXP))
+;;			  (PLUSP (CADDR *EXP)))
+;;		     (SOLVE (CADR *EXP) *VAR (CADDR *EXP))
+;;		     'MEXPRAT)))))
 
 ;;; Predicate to test for presence of troublesome trig functions to be
 ;;; canonicalized.  A  table of when to make substitutions should

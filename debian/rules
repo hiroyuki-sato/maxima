@@ -8,7 +8,7 @@
 #export DH_VERBOSE=1
 
 # This is the debhelper compatability version to use.
-export DH_COMPAT=3
+#export DH_COMPAT=3
 
 NO_STRIP:=
 ALT_LINK:=
@@ -32,10 +32,12 @@ ifeq ($(DEB_BUILD_ARCH),powerpc)
 NO_STRIP:=-Xmaxima
 endif
 
-MVERS:=5.9.0
+MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
 build: build-stamp
 build-stamp: 
 	dh_testdir
+
+	automake
 
 	./configure --enable-gcl $(ALT_LINK) \
 		--prefix=/usr \
@@ -43,7 +45,7 @@ build-stamp:
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info 
 
-	$(MAKE)
+	GCL_ANSI=t $(MAKE)
 
 # This sets up some reasonable readline command completion by default
 
@@ -53,35 +55,45 @@ build-stamp:
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
 
-	$(MAKE) check >tmp 2>&1 & j=$$! ; echo Waiting on pid $$j ; \
+	./maxima-local --lisp=gcl --batch-string="run_testsuite(true,true);"  >tmp 2>&1 & \
+		j=$$! ; echo Waiting on pid $$j ; \
 		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
 
-	cat tmp tests/tests-gcl.log >debian/test_results.out
+#	cat tmp tests/tests-gcl.log >debian/test_results.out
 
-	grep "Error(s) found in.*:" tests/tests-gcl.log | sed 's,Error(s) found in ,,1'	>tmp
+#	grep "Error(s) found in.*:" tests/tests-gcl.log | sed 's,Error(s) found in ,,1'	>tmp
 
-	! [ -e tests/known-bugs ] || diff -u tests/known-bugs tmp
+#	! [ -e tests/known-bugs ] || diff -u tests/known-bugs tmp
 
-	[ -e tests/known-bugs ] || grep -q "No Errors Found" tests/tests-gcl.log
+#	[ -e tests/known-bugs ] || grep -q "No Errors Found" tests/tests-gcl.log
+
+	cat tmp >debian/test_results.out
+
+	grep -q "No unexpected errors found." debian/test_results.out
 
 	rm -f tmp
 
-	cd doc/maximabook &&\
-		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-		dvips -o maxima.ps maxima
+#	cd doc/maximabook &&\
+#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
+#		dvips -o maxima.ps maxima
 
 	touch build-stamp
+
+BOOK:=debian/maximabook-19-Sept-2004.pdf
 
 clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp install-stamp
 
-	-$(MAKE) distclean
+	-$(MAKE) clean
 	-rm -f debian/test_results.out tests/tests-gcl.log
-	-find -name Makefile -exec rm {} \;
+	-for i in $$(find -name Makefile) ; do\
+		! [ -e $$i.am ] || rm -f $$i;\
+		! [ -e $$i.am ] || rm -f $$i.in;\
+	 done
 	-rm -f src/maxima doc/man/maxima.1 interfaces/xmaxima/Tkmaxima/Header.tcl \
 		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
 		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
@@ -89,13 +101,28 @@ clean:
 	cd doc/maximabook && \
 		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
 			maxima.log maxima.out maxima.toc maxima.ps
+	rm -f debian/*.install
+	rm -f $(BOOK) config.log config.status plotting/mgnuplot plotting/omplotdata \
+			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
+	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
 	dh_clean
 
 
 LOC_DOC=<a href=file://usr/share/doc/maxima/html/maxima_toc.html> (local copy) </a>
 
+foo:
+	echo hello $(MVERS)
+
+debian/%.install: debian/%.install.in
+	cat $< | sed "s,@MVERS@,$(MVERS),g" >$@
+
+INSTALLS:=$(shell ls -1 debian/*.install.in | sed 's,\.in$$,,1')
+
+debian/%.pdf: debian/%.pdf.uu
+	cat $< | uudecode >$@
+
 install: install-stamp
-install-stamp: build-stamp
+install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	dh_testdir
 	dh_testroot
 	dh_clean -k
@@ -128,19 +155,28 @@ install-stamp: build-stamp
 		debian/tmp/usr/lib/maxima/$(MVERS)/omplotdata \
 		debian/tmp/usr/lib/maxima/$(MVERS)/mgnuplot ; do \
 		cat $$i | sed  -e 's,^#!/bin/sh,#!/usr/bin/wish,1' \
-			-e 's,^exec wish,#exec wish,1' >tmp && chmod 755 tmp && \
+			-e 's,^exec wish,#exec wish,1' \
+                        -e 's,[Nn]etscape,sensible-browser,g' >tmp && chmod 755 tmp && \
 			mv tmp $$i ; done
 
 # GCL must be able to write to directory in which tests are run
-	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
-	cat debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp | sed "s,@MVERS@,$(MVERS),g" >tmp && \
-		mv tmp debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp
+#	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
+#	cat debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp | sed "s,@MVERS@,$(MVERS),g" >tmp && \
+#		mv tmp debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp
 
-	cd debian/tmp/usr/bin && patch -p1 <../../../xmaxima.patch
-	cat debian/tmp/usr/bin/xmaxima | sed "s,@MVERS@,$(MVERS),g" >tmp && \
-		chmod 755 tmp && mv tmp debian/tmp/usr/bin/xmaxima
+#	cd debian/tmp/usr/bin && patch -p1 <../../../xmaxima.patch
+#	cat debian/tmp/usr/bin/xmaxima | sed "s,@MVERS@,$(MVERS),g" >tmp && \
+#		chmod 755 tmp && mv tmp debian/tmp/usr/bin/xmaxima
 
-	cp doc/maximabook/maxima.ps debian/tmp/usr/share/doc/maxima-doc
+	cp $(BOOK) debian/tmp/usr/share/doc/maxima-doc
+
+	cat debian/tmp/usr/share/info/maxima.info | \
+		awk '/START-INFO-DIR-ENTRY/ {print "INFO-DIR-SECTION Math"} {print}' >debian/foo && \
+		mv debian/foo debian/tmp/usr/share/info/maxima.info
+
+	cat debian/tmp/usr/share/man/man1/maxima.1 | \
+		sed 's,^.TH MAXIMA 1L,.TH MAXIMA 1,1' >debian/foo && \
+		mv debian/foo debian/tmp/usr/share/man/man1/maxima.1
 
 	dh_install
 
@@ -156,7 +192,7 @@ binary-indep: build install
 	dh_installemacsen -i
 	dh_installcron -i
 	dh_installman -i
-	dh_installinfo -i
+	dh_installinfo -p maxima-doc debian/tmp/usr/share/info/*info*
 	dh_installchangelogs  -i
 	dh_link -i
 	dh_strip -i

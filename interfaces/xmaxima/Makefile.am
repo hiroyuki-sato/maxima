@@ -1,10 +1,13 @@
 # -*-mode: makefile; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Makefile.am,v 1.33 2003/01/26 21:41:57 amundson Exp $
+#       $Id: Makefile.am,v 1.38 2004/07/26 12:08:05 billingd Exp $
 #
 
 include $(top_srcdir)/common.mk
-xmaxima_DATA=demos.html examples.html intro.html plotmaxima.html maxima-new.png maxima-new.gif server.lisp maxima-icon.ico maxima-icon.png
+
+genericdir = $(xmaximadir)
+
+genericdirDATA=demos.html examples.html intro.html plotmaxima.html maxima-new.png maxima-new.gif maxima-icon.ico maxima-icon.png
 
 bin_SCRIPTS = xmaxima
 
@@ -71,8 +74,9 @@ xmaxima: $(XMAXIMASOURCES) Tkmaxima/tclIndex
 		cat $(XMAXIMASOURCES) > xmaxima && \
 		chmod +x xmaxima
 
-WIN32_FILES = win32/ChangeLog win32/Makefile.in  win32/tclwinkill.c  win32/winkill.c
-EXTRA_DIST = $(xmaxima_DATA) $(XMAXIMA_REAL_SOURCES) $(WIN32_FILES) Tkmaxima/Header.tcl.in win32/maxima.bat maxima-icon.png
+WIN32_FILES = win32/ChangeLog win32/Makefile.in win32/tclwinkill.c  \
+  win32/winkill.c win32/InfoBefore.txt win32/readme.txt
+EXTRA_DIST = $(genericdirDATA) $(XMAXIMA_REAL_SOURCES) $(WIN32_FILES) Tkmaxima/Header.tcl.in maxima-icon.png
 
 
 # Developer convenience target

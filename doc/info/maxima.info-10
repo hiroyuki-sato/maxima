@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.5 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -9,571 +9,1212 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Introduction to Series,  Next: Definitions for Series,  Prev: Series,  Up: Series
+File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and Tables,  Up: Arrays and Tables
 
-Introduction to Series
-======================
+Definitions for Arrays and Tables
+=================================
 
-   Maxima contains functions `Taylor' and `Powerseries' for finding the
-series of differentiable functions.   It also has tools such as `Nusum'
-capable of finding the closed form of some series.   Operations such as
-addition and multiplication work as usual on series. This section
-presents the various global various variables which control the
-expansion.
+ - Function: ARRAY (name, dim1, dim2, ..., dimk)
+ - Function: ARRAY (name, type, dim1, dim2, ..., dimk)
+     This sets up a k-dimensional array.  A maximum of five dimensions
+     may be used.  In the first form, a general array is created.  In
+     the second form, an array meant to have elements of the specified
+     type is created.  TYPE can be fixnum for integers of limited size
+     or flonum for floating-point numbers.
 
-
-File: maxima.info,  Node: Definitions for Series,  Prev: Introduction to Series,  Up: Series
-
-Definitions for Series
-======================
-
- - Variable: CAUCHYSUM
-     default: [FALSE] - When multiplying together sums with INF as
-     their upper limit, if SUMEXPAND is TRUE and CAUCHYSUM is set to
-     TRUE then the Cauchy product will be used rather than the usual
-     product.  In the Cauchy product the index of the inner summation
-     is a function of the index of the outer one rather than varying
-     independently.  That is: SUM(F(I),I,0,INF)*SUM(G(J),J,0,INF)
-     becomes SUM(SUM(F(I)*G(J-I),I,0,J),J,0,INF)
-
-
- - Function: DEFTAYLOR (function, exp)
-     allows the user to define the Taylor series (about 0) of an
-     arbitrary function of one variable as exp which may be a
-     polynomial in that variable or which may be given implicitly as a
-     power series using the SUM function.      In order to display the
-     information given to DEFTAYLOR one can use POWERSERIES(F(X),X,0).
-     (see below).
-          (C1) DEFTAYLOR(F(X),X**2+SUM(X**I/(2**I*I!**2),
-                  I,4,INF));
-          (D1)                          [F]
-          (C2) TAYLOR(%E**SQRT(F(X)),X,0,4);
-                               2         3          4
-                              X    3073 X    12817 X
-          (D2)/R/     1 + X + -- + ------- + -------- +  . . .
-                              2     18432     307200
-
- - Variable: MAXTAYORDER
-     default: [TRUE] - if TRUE, then during algebraic manipulation of
-     (truncated) Taylor series, TAYLOR will try to retain as many terms
-     as are certain to be correct.
+     The subscripts for the ith dimension are the integers running from
+     0 to dimi.  If the user assigns to a subscripted variable before
+     declaring the corresponding array, an undeclared array is set up.
+     If the user has more than one array to be set up the same way,
+     they may all be set up at the same time, by
+     ARRAY([list-of-names],dim1, dim2, ..., dimk).  Undeclared arrays,
+     otherwise known as hashed arrays (because hash coding is done on
+     the subscripts), are more general than declared arrays.  The user
+     does not declare their maximum size, and they grow dynamically by
+     hashing as more elements are assigned values.  The subscripts of
+     undeclared arrays need not even be numbers.  However, unless an
+     array is rather sparse, it is probably more efficient to declare
+     it when possible than to leave it undeclared.  The ARRAY function
+     can be used to transform an undeclared array into a declared array.
 
 
- - Function: NICEINDICES (expr)
-     will take the expression and change all the indices of sums and
-     products to something easily understandable. It makes each index
-     it can "I" , unless "I" is in the internal expression, in which
-     case it sequentially tries J,K,L,M,N,I0,I1,I2,I3,I4,...  until it
-     finds a legal index.
+ - Function: ARRAYAPPLY (array,[sub1, ... ,subk])
+     is like APPLY except the first argument is an array.
 
 
- - Variable: NICEINDICESPREF
-     default: [I,J,K,L,M,N] - the list which NICEINDICES uses to find
-     indices for sums and products.  This allows the user to set the
-     order of preference of how NICEINDICES finds the "nice indices".
-     E.g.  NICEINDICESPREF:[Q,R,S,T,INDEX]$.  Then if NICEINDICES finds
-     that it cannot use any of these as indices in a particular
-     summation, it uses the first as a base to try and tack on numbers.
-     Here, if the list is exhausted, Q0, then Q1, etc, will be tried.
+ - Function: ARRAYINFO (a)
+     returns a list of information about the array a.  For hashed
+     arrays it returns a list of "HASHED", the number of subscripts,
+     and the subscripts of every element which has a value.  For
+     declared arrays it returns a list of "DECLARED", the number of
+     subscripts, and the bounds that were given the the ARRAY function
+     when it was called on a.  Do EXAMPLE(ARRAYINFO); for an example.
 
 
- - Function: NUSUM (exp,var,low,high)
-     performs indefinite summation of exp with respect to var using a
-     decision procedure due to R.W. Gosper.  exp and the potential
-     answer must be expressible as products of nth powers, factorials,
-     binomials, and rational functions.  The terms "definite" and
-     "indefinite summation" are used analogously to "definite" and
-     "indefinite integration".  To sum indefinitely means to give a
-     closed form for the sum over intervals of variable length, not
-     just e.g. 0 to inf.  Thus, since there is no formula for the
-     general partial sum of the binomial series, NUSUM can't do it.
+ - Function: ARRAYMAKE (name,[i1,i2,...])
+     returns name[i1,i2,...].
 
 
- - Function: PADE (taylor-series,num-deg-bound,denom-deg-bound)
-     returns a list of all rational functions which have the given
-     taylor-series expansion where the sum of the degrees of the
-     numerator and the denominator is less than or equal to the
-     truncation level of the power series, i.e.  are "best"
-     approximants, and which additionally satisfy the specified degree
-     bounds.  Its first argument must be a univariate taylor-series;
-     the second and third are positive integers specifying degree
-     bounds on the numerator and denominator.  PADE's first argument
-     can also be a Laurent series, and the degree bounds can be INF
-     which causes all rational functions whose total degree is less
-     than or equal to the length of the power series to be returned.
-     Total degree is num-degree + denom-degree.  Length of a power
-     series is "truncation level" + 1 - minimum(0,"order of series").
+ - Variable: ARRAYS
+     default: [] a list of all the arrays that have been allocated,
+     both declared and undeclared.  Functions which deal with arrays
+     are: ARRAY, ARRAYAPPLY, ARRAYINFO, ARRAYMAKE, FILLARRAY,
+     LISTARRAY, and REARRAY.
 
-          (C15) ff:taylor(1+x+x^2+x^3,x,0,3);
-                                               2    3
-          (D15)/T/                    1 + X + X  + X  + . . .
-          (C16) pade(ff,1,1);
-                                                  1
-          (D16)                              [- -----]
-                                                X - 1
-          (c1) ff:taylor(-(83787*X^10-45552*X^9-187296*X^8
-                            +387072*X^7+86016*X^6-1507328*X^5
-                            +1966080*X^4+4194304*X^3-25165824*X^2
-                            +67108864*X-134217728)
-                 /134217728,x,0,10);
-          (C25) PADE(ff,4,4);
-          (D25) []
-     There is no rational function of degree 4 numerator/denominator,
-     with this power series expansion.  You must in general have degree
-     of the numerator and degree of the denominator adding up to at
-     least the degree of the power series, in order to have enough
-     unknown coefficients to solve.
-          (C26) PADE(ff,5,5);
-          (D26) [-(520256329*X^5-96719020632*X^4-489651410240*X^3
-                     -1619100813312*X^2 -2176885157888*X-2386516803584)
-          	/(47041365435*X^5+381702613848*X^4+1360678489152*X^3
-                          +2856700692480*X^2
-          	        +3370143559680*X+2386516803584)]
+ - Function: BASHINDICES (expr)
+     - transforms the expression expr by giving each summation and
+     product a unique index. This gives CHANGEVAR greater precision
+     when it is working with summations or products.  The form of the
+     unique index is J<number>. The quantity <number> is determined by
+     referring to GENSUMNUM, which can be changed by the user.  For
+     example, GENSUMNUM:0$ resets it.
 
 
- - Variable: POWERDISP
-     default: [FALSE] - if TRUE will cause sums to be displayed with
-     their terms in the reverse order.  Thus polynomials would display
-     as truncated power series, i.e., with the lowest power first.
+ - Function: FILLARRAY (array,list-or-array)
+     fills array from list-or-array.  If array is a floating-point
+     (integer) array then list-or-array should be either a list of
+     floating-point (integer) numbers or another floating-point
+     (integer) array.  If the dimensions of the arrays are different
+     array is filled in row-major order.  If there are not enough
+     elements in list-or-array the last element is used to fill out the
+     rest of array.  If there are too many the remaining ones are thrown
+     away.  FILLARRAY returns its first argument.
 
 
- - Function: POWERSERIES (exp, var, pt)
-     generates the general form of the power series expansion for exp
-     in the variable var about the point pt (which may be INF for
-     infinity).  If POWERSERIES is unable to expand exp, the TAYLOR
-     function may give the first several terms of the series.
-     VERBOSE[FALSE] - if TRUE will cause comments about the progress of
-     POWERSERIES to be printed as the execution of it proceeds.
-          (C1) VERBOSE:TRUE$
-          (C2) POWERSERIES(LOG(SIN(X)/X),X,0);
-          Can't expand
-                                           LOG(SIN(X))
-          So we'll try again after applying the rule:
-                                                  d
-                                                / -- (SIN(X))
-                                                [ dX
-                                  LOG(SIN(X)) = I ----------- dX
-                                                ]   SIN(X)
-                                                /
-          In the first simplification we have returned:
-                                       /
-                                       [
-                                       I COT(X) dX - LOG(X)
-                                       ]
-                                       /
-                              INF
-                              ====        I1  2 I1             2 I1
-                              \      (- 1)   2     BERN(2 I1) X
-                               >     ------------------------------
-                              /                I1 (2 I1)!
-                              ====
-                              I1 = 1
-          (D2)                -------------------------------------
-                                                2
-
- - Variable: PSEXPAND
-     default: [FALSE] - if TRUE will cause extended rational function
-     expressions to display fully expanded.  (RATEXPAND will also cause
-     this.)  If FALSE, multivariate expressions will be displayed just
-     as in the rational function package.  If PSEXPAND:MULTI, then
-     terms with the same total degree in the variables are grouped
-     together.
+ - Function: GETCHAR (a, i)
+     returns the ith character of the quoted string or atomic name a.
+     This function is useful in manipulating the LABELS list.
 
 
- - Function: REVERT (expression,variable)
-     Does reversion of Taylor Series.  "Variable" is the variable the
-     original Taylor expansion is in.  Do LOAD(REVERT) to access this
-     function.  Try
-
-          REVERT2(expression,variable,hipower)
-      also.  REVERT only works on expansions around 0.
+ - Function: LISTARRAY (array)
+     returns a list of the elements of a declared or hashed array.  the
+     order is row-major.  Elements which you have not defined yet will
+     be represented by #####.
 
 
- - Function: SRRAT (exp)
-     this command has been renamed to TAYTORAT.
+ - Function: MAKE_ARRAY (type,dim1,dim2,...,dimn)
+     - creates an array.  "type" may be 'ANY, 'FLONUM, 'FIXNUM, 'HASHED
+     or 'FUNCTIONAL.  This is similar to the ARRAY command, except that
+     the created array is a functional array object.  The advantage of
+     this over ARRAY is that it doesn't have a name, and once a pointer
+     to it goes away, it will also go away.  e.g.  Y:MAKE_ARRAY(....);
+     Y now points to an object which takes up space, but do Y:FALSE,
+     and Y no longer points to that object, so the object will get
+     garbage collected.  Note: the "dimi" here are different from the
+     ARRAY command, since they go from 0 to i-1, i.e.  a "dimension" of
+     10 means you have elements from 0 to 9.
+     Y:MAKE_ARRAY('FUNCTIONAL,'F,'HASHED,1) - The second argument to
+     MAKE_ARRAY in this case is the function to call to calculate array
+     elements, and the rest of the arguments are passed recursively to
+     MAKE_ARRAY to generate the "memory" for the array function object.
 
 
- - Function: TAYLOR (exp, var, pt, pow)
-     expands the expression exp in a truncated Taylor series (or
-     Laurent series, if required) in the variable var around the point
-     pt.  The terms through (var-pt)**pow are generated.  If exp is of
-     the form f(var)/g(var) and g(var) has no terms up to degree pow
-     then TAYLOR will try to expand g(var) up to degree 2*pow.  If
-     there are still no non-zero terms TAYLOR will keep doubling the
-     degree of the expansion of g(var) until reaching pow*2**n where n
-     is the value of the variable TAYLORDEPTH[3].  If
-     MAXTAYORDER[FALSE] is set to TRUE, then during algebraic
-     manipulation of (truncated) Taylor series, TAYLOR will try to
-     retain as many terms as are certain to be correct.  Do
-     EXAMPLE(TAYLOR); for examples.
-     TAYLOR(exp,[var1,pt1,ord1],[var2,pt2,ord2],...)  returns a
-     truncated power series in the variables vari about the points pti,
-     truncated at ordi.  PSEXPAND[FALSE] if TRUE will cause extended
-     rational function expressions to display fully expanded.
-     (RATEXPAND will also cause this.) If FALSE, multivariate
-     expressions will be displayed just as in the rational function
-     package.  If PSEXPAND:MULTI, then terms with the same total degree
-     in the variables are grouped together.  TAYLOR(exp, [var1, var2, .
-     . .], pt, ord) where each of pt and ord may be replaced by a list
-     which will correspond to the list of variables.  that is, the nth
-     items on each of the lists will be associated together.
-     TAYLOR(exp, [x,pt,ord,ASYMP]) will give an expansion of exp in
-     negative powers of (x-pt).  The highest order term will be
-     (x-pt)^(-ord).  The ASYMP is a syntactic device and not to be
-     assigned to.  See also the TAYLOR_LOGEXPAND switch for controlling
-     expansion.
+ - Function: REARRAY (array,dim1, ... ,dimk)
+     can be used to change the size or dimensions of an array.  The new
+     array will be filled with the elements of the old one in row-major
+     order.  If the old array was too small, FALSE, 0.0 or 0 will be
+     used to fill the remaining elements, depending on the type of the
+     array.  The type of the array cannot be changed.
 
 
- - Variable: TAYLORDEPTH
-     default: [3] - If there are still no non-zero terms TAYLOR will
-     keep doubling the degree of the expansion of g(var) until reaching
-     pow*2**n where n is the value of the variable TAYLORDEPTH[3].
+ - Function: REMARRAY (name1, name2, ...)
+     removes arrays and array associated functions and frees the
+     storage occupied.  If name is ALL then all arrays are removed.  It
+     may be necessary to use this function if it is desired to redefine
+     the values in a hashed array.
 
 
- - Function: TAYLORINFO (exp)
-     returns FALSE if exp is not a Taylor series.  Otherwise, a list of
-     lists is returned describing the particulars of the Taylor
-     expansion.  For example,
-          (C3) TAYLOR((1-Y^2)/(1-X),X,0,3,[Y,A,INF]);
-                       2                        2
-          (D3)/R/ 1 - A  - 2 A (Y - A) - (Y - A)
-                              2                        2
-                      + (1 - A  - 2 A (Y - A) - (Y - A) ) X
-                   2                        2   2
-           + (1 - A  - 2 A (Y - A) - (Y - A) ) X
-                              2                        2   3
-                      + (1 - A  - 2 A (Y - A) - (Y - A) ) X
-               + . . .
-          (C4) TAYLORINFO(D3);
-          (D4)                       [[Y, A, INF], [X, 0, 3]]
+ - Variable: USE_FAST_ARRAYS
+     [TRUE on Lispm] - If TRUE then only two types of arrays are
+     recognized.
 
- - Function: TAYLORP (exp)
-     a predicate function which returns TRUE if and only if the
-     expression 'exp' is in Taylor series representation.
+     1) The art-q array (t in common lisp) which may have several
+     dimensions indexed by integers, and may hold any lisp or macsyma
+     object as an entry.  To construct such an array, enter
+     A:MAKE_ARRAY(ANY,3,4); then A will have as value, an array with
+     twelve slots, and the indexing is zero based.
 
+     2) The Hash_table array which is the default type of array created
+     if one does B[X+1]:Y^2 (and B is not already an array,a list, or a
+     matrix- if it were one of these an error would be caused since x+1
+     would not be a valid subscript for an art-q array,a list or a
+     matrix ).  Its indices (also known as keys) may be any object.  It
+     only takes ONE KEY at a time (B[X+1,U]:Y would ignore the u)
+     Referencing is done by B[X+1]==> Y^2.  Of course the key may be a
+     list, eg B[[x+1,u]]:y would be valid.  This is in- compatible with
+     the old Macsyma hash arrays, but saves consing.
 
- - Variable: TAYLOR_LOGEXPAND
-     default: [TRUE] controls expansions of logarithms in TAYLOR
-     series.  When TRUE all log's are expanded fully so that
-     zero-recognition problems involving logarithmic identities do not
-     disturb the expansion process.  However, this scheme is not always
-     mathematically correct since it ignores branch information.  If
-     TAYLOR_LOGEXPAND is set to FALSE, then the only expansion of log's
-     that will occur is that necessary to obtain a formal power series.
-
-
- - Variable: TAYLOR_ORDER_COEFFICIENTS
-     default: [TRUE] controls the ordering of coefficients in the
-     expression.  The default (TRUE) is that coefficients of taylor
-     series will be ordered canonically.
-
-
- - Function: TAYLOR_SIMPLIFIER
-     - A function of one argument which TAYLOR uses to simplify
-     coefficients of power series.
-
-
- - Variable: TAYLOR_TRUNCATE_POLYNOMIALS
-     default: [TRUE] When FALSE polynomials input to TAYLOR are
-     considered to have infinite precison; otherwise (the default) they
-     are truncated based upon the input truncation levels.
-
-
- - Function: TAYTORAT (exp)
-     converts exp from TAYLOR form to CRE form, i.e. it is like
-     RAT(RATDISREP(exp)) although much faster.
-
-
- - Function: TRUNC (exp)
-     causes exp which is in general representation to be displayed as
-     if its sums were truncated Taylor series.  E.g. compare
-     EXP1:X^2+X+1; with EXP2:TRUNC(X^2+X+1); .  Note that IS(EXP1=EXP2);
-     gives TRUE.
-
-
- - Function: UNSUM (fun,n)
-     is the first backward difference fun(n) - fun(n-1).
-          (C1) G(P):=P*4^N/BINOMIAL(2*N,N);
-                                                      N
-                                                   P 4
-          (D1)                       G(P) := ----------------
-                                             BINOMIAL(2 N, N)
-          (C2) G(N^4);
-                                               4  N
-                                              N  4
-          (D2)                           ----------------
-                                         BINOMIAL(2 N, N)
-          (C3) NUSUM(D2,N,0,N);
-                                   4        3       2              N
-                    2 (N + 1) (63 N  + 112 N  + 18 N  - 22 N + 3) 4      2
-          (D3)      ------------------------------------------------ - ------
-                                  693 BINOMIAL(2 N, N)                 3 11 7
-          (C4) UNSUM(%,N);
-                                               4  N
-                                              N  4
-          (D4)                           ----------------
-                                         BINOMIAL(2 N, N)
-
- - Variable: VERBOSE
-     default: [FALSE] - if TRUE will cause comments about the progress
-     of POWERSERIES to be printed as the execution of it proceeds.
+     An advantage of storing the arrays as values of the symbol is that
+     the usual conventions about local variables of a function apply to
+     arrays as well.  The Hash_table type also uses less consing and is
+     more efficient than the old type of macsyma hashar.  To obtain
+     consistent behaviour in translated and compiled code set
+     TRANSLATE_FAST_ARRAYS [TRUE] to be TRUE.
 
 
 
-File: maxima.info,  Node: Number Theory,  Next: Symmetries,  Prev: Series,  Up: Top
+File: maxima.info,  Node: Matrices and Linear Algebra,  Next: Affine,  Prev: Arrays and Tables,  Up: Top
 
-Number Theory
-*************
+Matrices and Linear Algebra
+***************************
 
 * Menu:
 
-* Definitions for Number Theory::
+* Introduction to Matrices and Linear Algebra::
+* Definitions for Matrices and Linear Algebra::
 
 
-File: maxima.info,  Node: Definitions for Number Theory,  Prev: Number Theory,  Up: Number Theory
+File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Definitions for Matrices and Linear Algebra,  Prev: Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
 
-Definitions for Number Theory
-=============================
-
- - Function: BERN (x)
-     gives the Xth Bernoulli number for integer X.  ZEROBERN[TRUE] if
-     set to FALSE excludes the zero BERNOULLI numbers.  (See also BURN).
-
-
- - Function: BERNPOLY (v, n)
-     generates the nth Bernoulli polynomial in the variable v.
-
-
- - Function: BFZETA (exp,n)
-     BFLOAT version of the Riemann Zeta function.  The 2nd argument is
-     how many digits to retain and return, it's a good idea to request
-     a couple of extra.  This function is available by doing
-     LOAD(BFFAC); .
-
-
- - Function: BGZETA (S, FPPREC)
-     BGZETA is like BZETA, but avoids arithmetic overflow errors on
-     large arguments, is faster on medium size arguments (say S=55,
-     FPPREC=69), and is slightly slower on small arguments.  It may
-     eventually replace BZETA.  BGZETA is available by doing
-     LOAD(BFAC);.
-
-
- - Function: BHZETA (S,H,FPPREC)
-     gives FPPREC digits of
-          SUM((K+H)^-S,K,0,INF)
-     This is available by doing LOAD(BFFAC);.
-
-
- - Function: BINOMIAL (X, Y)
-     the binomial coefficient X*(X-1)*...*(X-Y+1)/Y!. If X and Y are
-     integers, then the numerical value of the binomial coefficient is
-     computed.  If Y, or the value X-Y, is an integer, the binomial
-     coefficient is expressed as a polynomial.
-
-
- - Function: BURN (N)
-     is like BERN(N), but without computing all of the uncomputed
-     Bernoullis of smaller index.  So BURN works efficiently for large,
-     isolated N.  (BERN(402) takes about 645 secs vs 13.5 secs for
-     BURN(402).  BERN's time growth seems to be exponential, while
-     BURN's is about cubic.  But if next you do BERN(404), it only
-     takes 12 secs, since BERN remembers all in an array, whereas
-     BURN(404) will take maybe 14 secs or maybe 25, depending on
-     whether MACSYMA needs to BFLOAT a better value of %PI.)  BURN is
-     available by doing LOAD(BFFAC);.  BURN uses an observation of WGD
-     that (rational) Bernoulli numbers can be approximated by
-     (transcendental) zetas with tolerable efficiency.
-
-
- - Function: BZETA
-     - This function is obsolete, see BFZETA.
-
-
- - Function: CF (exp)
-     converts exp into a continued fraction.  exp is an expression
-     composed of arithmetic operators and lists which represent
-     continued fractions.  A continued fraction a+1/(b+1/(c+...)) is
-     represented by the list [a,b,c,...]. a,b,c,.. must be integers.
-     Exp may also involve SQRT(n) where n is an integer.  In this case
-     CF will give as many terms of the continued fraction as the value
-     of the variable CFLENGTH[1] times the period.  Thus the default is
-     to give one period.  (CF binds LISTARITH to FALSE so that it may
-     carry out its function.)
-
-
- - Function: CFDISREP (list)
-     converts the continued fraction represented by list into general
-     representation.
-          (C1) CF([1,2,-3]+[1,-2,1]);
-          (D1)                 [1, 1, 1, 2]
-          (C2) CFDISREP(%);
-                                      1
-          (D2)                1 + ---------
-                                        1
-                                  1 + -----
-                                          1
-                                      1 + -
-                                          2
-
- - Function: CFEXPAND (x)
-     gives a matrix of the numerators and denominators of the
-     next-to-last and last convergents of the continued fraction x.
-          (C1) CF(SQRT(3));
-          (D1)                 [1, 1, 2, 1, 2, 1, 2, 1]
-          (C2) CFEXPAND(%);
-                                       [71  97]
-          (D2)                         [      ]
-                                       [41  56]
-          (C3) D2[1,2]/D2[2,2],NUMER;
-          (D3)                        1.7321429
-
- - Variable: CFLENGTH
-     default: [1] controls the number of terms of the continued
-     fraction the function CF will give, as the value CFLENGTH[1] times
-     the period.  Thus the default is to give one period.
-
-
- - Function: CGAMMA
-     - The Gamma function in the complex plane.  Do LOAD(CGAMMA) to use
-     these functions.  Functions Cgamma, Cgamma2, and LogCgamma2.
-     These functions evaluate the Gamma function over the complex plane
-     using the algorithm of Kuki, CACM algorithm 421.  Calculations are
-     performed in single precision and the relative error is typically
-     around 1.0E-7; evaluation at one point costs less than 1 msec.  The
-     algorithm provides for an error estimate, but the Macsyma
-     implementation currently does not use it.  Cgamma is the general
-     function and may be called with a symbolic or numeric argument.
-     With symbolic arguments, it returns as is; with real floating or
-     rational arguments, it uses the Macsyma Gamma function; and for
-     complex numeric arguments, it uses the Kuki algorithm.  Cgamma2 of
-     two arguments, real and imaginary, is for numeric arguments only;
-     LogCgamma2 is the same, but the log-gamma function is calculated.
-     These two functions are somewhat more efficient.
-
-
- - Function: CGAMMA2
-     - See CGAMMA.
-
-
- - Function: DIVSUM (n,k)
-     adds up all the factors of n raised to the kth power.  If only one
-     argument is given then k is assumed to be 1.
-
-
- - Function: EULER (X)
-     gives the Xth Euler number for integer X.  For the
-     Euler-Mascheroni constant, see %GAMMA.
-
-
- - Function: FACTORIAL (X)
-     The factorial function.  FACTORIAL(X) = X! .  See also
-     MINFACTORIAL and FACTCOMB.  The factorial operator is !, and the
-     double factorial operator is !!.
-
-
- - Function: FIB (X)
-     the Xth Fibonacci number with FIB(0)=0, FIB(1)=1, and
-     FIB(-N)=(-1)^(N+1) *FIB(N).  PREVFIB is FIB(X-1), the Fibonacci
-     number preceding the last one computed.
-
-
- - Function: FIBTOPHI (exp)
-     converts FIB(n) to its closed form definition.  This involves the
-     constant %PHI (= (SQRT(5)+1)/2 = 1.618033989).  If you want the
-     Rational Function Package to know About %PHI do
-     TELLRAT(%PHI^2-%PHI-1)$  ALGEBRAIC:TRUE$ .
-
-
- - Function: INRT (X,n)
-     takes two integer arguments, X and n, and returns the integer nth
-     root of the absolute value of X.
-
-
- - Function: JACOBI (p,q)
-     is the Jacobi symbol of p and q.
-
-
- - Function: LCM (exp1,exp2,...)
-     returns the Least Common Multiple of its arguments.  Do
-     LOAD(FUNCTS); to access this function.
-
-
- - Variable: MAXPRIME
-     default: [489318] - the largest number which may be given to the
-     PRIME(n) command, which returns the nth prime.
-
-
- - Function: MINFACTORIAL (exp)
-     examines exp for occurrences of two factorials which differ by an
-     integer.  It then turns one into a polynomial times the other.  If
-     exp involves binomial coefficients then they will be converted
-     into ratios of factorials.
-          (C1) N!/(N+1)!;
-                                              N!
-          (D1)                             --------
-                                           (N + 1)!
-          (C2) MINFACTORIAL(%);
-                                               1
-          (D2)                               -----
-                                             N + 1
-
- - Function: PARTFRAC (exp, var)
-     expands the expression exp in partial fractions with respect to
-     the main variable, var.  PARTFRAC does a complete partial fraction
-     decomposition.  The algorithm employed is based on the fact that
-     the denominators of the partial fraction expansion (the factors of
-     the original denominator) are relatively prime.  The numerators
-     can be written as linear combinations of denominators, and the
-     expansion falls out.  See EXAMPLE(PARTFRAC); for examples.
-
-
- - Function: PRIME (n)
-     gives the nth prime. MAXPRIME[489318] is the largest number
-     accepted as argument.  Note:  The PRIME command does not work in
-     maxima, since it required a large file of primes, which most users
-     do not want.    PRIMEP does work however.
-
-
- - Function: PRIMEP (n)
-     returns TRUE if n is a prime, FALSE if not.
-
-
- - Function: QUNIT (n)
-     gives the principal unit of the real quadratic number field
-     SQRT(n) where n is an integer, i.e.  the element whose norm is
-     unity.  This amounts to solving Pell's equation A**2- n*B**2=1.
-          (C1) QUNIT(17);
-          (D1)              SQRT(17)+4
-          (C2)  EXPAND(%*(SQRT(17)-4));
-          (D2)               1
-
- - Function: TOTIENT (n)
-     is the number of integers less than or equal to n which are
-     relatively prime to n.
-
-
- - Variable: ZEROBERN
-     default: [TRUE] - if set to FALSE excludes the zero BERNOULLI
-     numbers.  (See the BERN function.)
-
-
- - Function: ZETA (X)
-     gives the Riemann zeta function for certain integer values of X.
-
-
- - Variable: ZETA%PI
-     default: [TRUE] - if FALSE, suppresses ZETA(n) giving coeff*%PI^n
-     for n even.
-
-
-
-File: maxima.info,  Node: Symmetries,  Next: Groups,  Prev: Number Theory,  Up: Top
-
-Symmetries
-**********
+Introduction to Matrices and Linear Algebra
+===========================================
 
 * Menu:
 
-* Definitions for Symmetries::
+* DOT::
+* VECTORS::
+
+
+File: maxima.info,  Node: DOT,  Next: VECTORS,  Prev: Introduction to Matrices and Linear Algebra,  Up: Introduction to Matrices and Linear Algebra
+
+DOT
+---
+
+   - . The dot operator, for matrix (non-commutative) multiplication.
+When "." is used in this way, spaces should be left on both sides of
+it, e.g. A . B.  This distinguishes it plainly from a decimal point in
+a floating point number.  Do APROPOS(DOT); for a list of the switches
+which affect the dot operator.
+
+
+File: maxima.info,  Node: VECTORS,  Prev: DOT,  Up: Introduction to Matrices and Linear Algebra
+
+VECTORS
+-------
+
+   - The file SHARE;VECT > contains a vector analysis package,
+share/vect.dem contains a corresponding demonstration, and SHARE;VECT
+ORTH contains definitions of various orthogonal curvilinear coordinate
+systems.  LOAD(VECT); will load this package for you.  The vector
+analysis package can combine and simplify symbolic expressions
+including dot products and cross products, together with the gradient,
+divergence, curl, and Laplacian operators.  The distribution of these
+operators over sums or products is under user control, as are various
+other expansions, including expansion into components in any specific
+orthogonal coordinate systems.  There is also a capability for deriving
+the scalar or vector potential of a field.  The package contains the
+following commands: VECTORSIMP, SCALEFACTORS, EXPRESS, POTENTIAL, and
+VECTORPOTENTIAL.  Do DESCRIBE(cmd) on these command names, or
+PRINTFILE(VECT,USAGE,SHARE); for details.  Warning:  The VECT package
+declares "." to be a commutative operator.
+
+
+File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: Introduction to Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
+
+Definitions for Matrices and Linear Algebra
+===========================================
+
+ - Function: ADDCOL (M,list1,list2,...,listn)
+     appends the column(s) given by the one or more lists (or matrices)
+     onto the matrix M.
+
+
+ - Function: ADDROW (M,list1,list2,...,listn)
+     appends the row(s) given by the one or more lists (or matrices)
+     onto the matrix M.
+
+
+ - Function: ADJOINT (matrix)
+     computes the adjoint of a matrix.
+
+
+ - Function: AUGCOEFMATRIX ([eq1, ...], [var1, ...])
+     the augmented coefficient matrix for the variables var1,... of the
+     system of linear equations eq1,....  This is the coefficient
+     matrix with a column adjoined for the constant terms in each
+     equation (i.e. those not dependent upon var1,...).  Do
+     EXAMPLE(AUGCOEFMATRIX); for an example.
+
+
+ - Function: CHARPOLY (M, var)
+     computes the characteristic polynomial for Matrix M with respect
+     to var.  That is, DETERMINANT(M - DIAGMATRIX(LENGTH(M),var)).  For
+     examples of this command, do EXAMPLE(CHARPOLY); .
+
+
+ - Function: COEFMATRIX ([eq1, ...], [var1, ...])
+     the coefficient matrix for the variables var1,... of the system of
+     linear equations eq1,...
+
+
+ - Function: COL (M,i)
+     gives a matrix of the ith column of the matrix M.
+
+
+ - Function: COLUMNVECTOR (X)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     COLUMNVECTOR takes a LIST as its argument and returns a column
+     vector the components of which are the elements of the list.  The
+     first element is the first component,...etc...(This is useful if
+     you want to use parts of the outputs of the functions in this
+     package in matrix calculations.)
+
+
+ - Function: CONJUGATE (X)
+     a function in the EIGEN package on the SHARE directory.  It
+     returns the complex conjugate of its argument.  This package may
+     be loaded by LOAD(EIGEN); .  For a complete description of this
+     package, do PRINTFILE("eigen.usg"); .
+
+
+ - Function: COPYMATRIX (M)
+     creates a copy of the matrix M.  This is the only way to make a
+     copy aside from recreating M elementwise.  Copying a matrix may be
+     useful when SETELMX is used.
+
+
+ - Function: DETERMINANT (M)
+     computes the determinant of M by a method similar to Gaussian
+     elimination.  The form of the result depends upon the setting of
+     the switch RATMX.  There is a special routine for dealing with
+     sparse determininants which can be used by setting the switches
+     RATMX:TRUE and SPARSE:TRUE.
+
+
+ - Variable: DETOUT
+     default: [FALSE] if TRUE will cause the determinant of a matrix
+     whose inverse is computed to be kept outside of the inverse.  For
+     this switch to have an effect DOALLMXOPS and DOSCMXOPS should be
+     FALSE (see their descriptions).  Alternatively this switch can be
+     given to EV which causes the other two to be set correctly.
+
+
+ - Function: DIAGMATRIX (n, x)
+     returns a diagonal matrix of size n by n with the diagonal
+     elements all x.  An identity matrix is created by DIAGMATRIX(n,1),
+     or one may use IDENT(n).
+
+
+ - Variable: DOALLMXOPS
+     default: [TRUE] if TRUE all operations relating to matrices are
+     carried out.  If it is FALSE then the setting of the individual
+     DOT switches govern which operations are performed.
+
+
+ - Variable: DOMXEXPT
+     default: [TRUE] if TRUE,
+          %E^MATRIX([1,2],[3,4]) ==>
+          MATRIX([%E,%E^2],[%E^3,%E^4])
+     In general, this transformation affects expressions of the form
+     <base>^<power> where <base> is an expression assumed scalar or
+     constant, and <power> is a list or matrix.  This transformation is
+     turned off if this switch is set to FALSE.
+
+
+ - Variable: DOMXMXOPS
+     default: [TRUE] if TRUE then all matrix-matrix or matrix-list
+     operations are carried out (but not scalar-matrix operations); if
+     this switch is FALSE they are not.
+
+
+ - Variable: DOMXNCTIMES
+     default: [FALSE] Causes non-commutative products of matrices to be
+     carried out.
+
+
+ - Variable: DONTFACTOR
+     default: [] may be set to a list of variables with respect to
+     which factoring is not to occur.  (It is initially empty).
+     Factoring also will not take place with respect to any variables
+     which are less important (using the variable ordering assumed for
+     CRE form) than those on the DONTFACTOR list.
+
+
+ - Variable: DOSCMXOPS
+     default: [FALSE] if TRUE then scalar-matrix operations are
+     performed.
+
+
+ - Variable: DOSCMXPLUS
+     default: [FALSE] if TRUE will cause SCALAR + MATRIX to give a
+     matrix answer.  This switch is not subsumed under DOALLMXOPS.
+
+
+ - Variable: DOT0NSCSIMP
+     default: [TRUE] Causes a non-commutative product of zero and a
+     nonscalar term to be simplified to a commutative product.
+
+
+ - Variable: DOT0SIMP
+     default: [TRUE] Causes a non-commutative product of zero and a
+     scalar term to be simplified to a commutative product.
+
+
+ - Variable: DOT1SIMP
+     default: [TRUE] Causes a non-commutative product of one and
+     another term to be simplified to a commutative product.
+
+
+ - Variable: DOTASSOC
+     default: [TRUE] when TRUE causes (A.B).C to simplify to A.(B.C)
+
+
+ - Variable: DOTCONSTRULES
+     default: [TRUE] Causes a non-commutative product of a constant and
+     another term to be simplified to a commutative product.  Turning
+     on this flag effectively turns on DOT0SIMP, DOT0NSCSIMP, and
+     DOT1SIMP as well.
+
+
+ - Variable: DOTDISTRIB
+     default: [FALSE] if TRUE will cause A.(B+C) to simplify to A.B+A.C
+
+
+ - Variable: DOTEXPTSIMP
+     default: [TRUE] when TRUE causes A.A to simplify to A^^2
+
+
+ - Variable: DOTIDENT
+     default: [1]  The value to be returned by X^^0.
+
+
+ - Variable: DOTSCRULES
+     default: [FALSE] when TRUE will cause A.SC or SC.A to simplify to
+     SC*A and A.(SC*B) to simplify to SC*(A.B)
+
+
+ - Function: ECHELON (M)
+     produces the echelon form of the matrix M.  That is, M with
+     elementary row operations performed on it such that the first
+     non-zero element in each row in the resulting matrix is a one and
+     the column elements under the first one in each row are all zero.
+                                  [2  1 - A  -5 B ]
+          (%o2)                    [               ]
+                                  [A    B      C  ]
+          
+          (%i3) ECHELON(%o2);
+                           [      A - 1        5 B      ]
+                           [1   - -----      - ---      ]
+                           [        2           2       ]
+          (%o3)             [                            ]
+                           [                2 C + 5 A B ]
+                           [0     1         ------------]
+                           [                       2    ]
+                           [                2 B + A  - A]
+
+ - Function: EIGENVALUES (mat)
+     There is a package on the SHARE; directory which contains
+     functions for computing EIGENVALUES and EIGENVECTORS and related
+     matrix computations.  For information on it do
+     PRINTFILE(EIGEN,USAGE,SHARE); .  EIGENVALUES(mat) takes a MATRIX
+     as its argument and returns a list of lists the first sublist of
+     which is the list of eigenvalues of the matrix and the other
+     sublist of which is the list of the multiplicities of the
+     eigenvalues in the corresponding order.  [ The MACSYMA function
+     SOLVE is used here to find the roots of the characteristic
+     polynomial of the matrix.  Sometimes SOLVE may not be able to find
+     the roots of the polynomial;in that case nothing in this package
+     except CONJUGATE, INNERPRODUCT, UNITVECTOR, COLUMNVECTOR and
+     GRAMSCHMIDT will work unless you know the eigenvalues.  In some
+     cases SOLVE may generate very messy eigenvalues.  You may want to
+     simplify the answers yourself before you go on.  There are
+     provisions for this and they will be explained below.  ( This
+     usually happens when SOLVE returns a not-so-obviously real
+     expression for an eigenvalue which is supposed to be real...)]
+     The EIGENVALUES command is available directly from MACSYMA.  To
+     use the other functions you must have loaded in the EIGEN package,
+     either by a previous call to EIGENVALUES, or by doing
+     LOADFILE("eigen"); .
+
+
+ - Function: EIGENVECTORS (MAT)
+     takes a MATRIX as its argument and returns a list of lists the
+     first sublist of which is the output of the EIGENVALUES command
+     and the other sublists of which are the eigenvectors of the matrix
+     corresponding to those eigenvalues respectively.  This function
+     will work directly from MACSYMA, but if you wish to take advantage
+     of the flags for controlling it (see below), you must first load
+     in the EIGEN package from the SHARE; directory.  You may do that by
+     LOADFILE("eigen");.  The flags that affect this function are:
+     NONDIAGONALIZABLE[FALSE] will be set to TRUE or FALSE depending on
+     whether the matrix is nondiagonalizable or diagonalizable after an
+     EIGENVECTORS command is executed.  HERMITIANMATRIX[FALSE] If set
+     to TRUE will cause the degenerate eigenvectors of the hermitian
+     matrix to be orthogonalized using the Gram-Schmidt algorithm.
+     KNOWNEIGVALS[FALSE] If set to TRUE the EIGEN package will assume
+     the eigenvalues of the matrix are known to the user and stored
+     under the global name LISTEIGVALS.  LISTEIGVALS should be set to a
+     list similar to the output of the EIGENVALUES command.  ( The
+     MACSYMA function ALGSYS is used here to solve for the
+     eigenvectors. Sometimes if the eigenvalues are messy, ALGSYS may
+     not be able to produce a solution.  In that case you are advised
+     to try to simplify the eigenvalues by first finding them using
+     EIGENVALUES command and then using whatever marvelous tricks you
+     might have to reduce them to something simpler.  You can then use
+     the KNOWNEIGVALS flag to proceed further. )
+
+
+ - Function: EMATRIX (m, n, x, i, j)
+     will create an m by n matrix all of whose elements are zero except
+     for the i,j element which is x.
+
+
+ - Function: ENTERMATRIX (m, n)
+     allows one to enter a matrix element by element with MACSYMA
+     requesting values for each of the m*n entries.
+          (%i1) ENTERMATRIX(3,3);
+          Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric
+           4. General
+          
+          Answer 1, 2, 3 or 4
+          1;
+          Row 1 Column 1:  A;
+          Row 2 Column 2:  B;
+          Row 3 Column 3:  C;
+          Matrix entered.
+                                           [ A  0  0 ]
+                                           [         ]
+          (%o1)                             [ 0  B  0 ]
+                                           [         ]
+                                           [ 0  0  C ]
+
+ - Function: GENMATRIX (array, i2, j2, i1, j1)
+     generates a matrix from the array using array(i1,j1) for the first
+     (upper-left) element and array(i2,j2) for the last (lower-right)
+     element of the matrix.  If j1=i1 then j1 may be omitted. If
+     j1=i1=1 then i1 and j1 may both be omitted. If a selected element
+     of the array doesn't exist a symbolic one will be used.
+          (%i1) H[I,J]:=1/(I+J-1)$
+          (%i2) GENMATRIX(H,3,3);
+                                     [   1  1]
+                                     [1  -  -]
+                                     [   2  3]
+                                     [       ]
+                                     [1  1  1]
+          (%o2)                       [-  -  -]
+                                     [2  3  4]
+                                     [       ]
+                                     [1  1  1]
+                                     [-  -  -]
+                                     [3  4  5]
+
+ - Function: GRAMSCHMIDT (X)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     GRAMSCHMIDT takes a LIST of lists the sublists of which are of
+     equal length and not necessarily orthogonal (with respect to the
+     innerproduct defined above) as its argument and returns a similar
+     list each sublist of which is orthogonal to all others.  (Returned
+     results may contain integers that are factored.  This is due to
+     the fact that the MACSYMA function FACTOR is used to simplify each
+     substage of the Gram-Schmidt algorithm.  This prevents the
+     expressions from getting very messy and helps to reduce the sizes
+     of the numbers that are produced along the way.)
+
+
+ - Function: HACH (a,b,m,n,l)
+     An implementation of Hacijan's linear programming algorithm is
+     available by doing BATCH("kach.mc"$.  Details of use are available
+     by doing BATCH("kach.dem");
+
+
+ - Function: IDENT (n)
+     produces an n by n identity matrix.
+
+
+ - Function: INNERPRODUCT (X,Y)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     INNERPRODUCT takes two LISTS of equal length as its arguments and
+     returns their inner (scalar) product defined by (Complex Conjugate
+     of X).Y (The "dot" operation is the same as the usual one defined
+     for vectors).
+
+
+ - Function: INVERT (matrix)
+     finds the inverse of a matrix using the adjoint method.  This
+     allows a user to compute the inverse of a matrix with bfloat
+     entries or polynomials with floating pt. coefficients without
+     converting to cre-form.  The DETERMINANT command is used to compute
+     cofactors, so if RATMX is FALSE (the default) the inverse is
+     computed without changing the representation of the elements.  The
+     current implementation is inefficient for matrices of high order.
+     The DETOUT flag if true keeps the determinant factored out of the
+     inverse.  Note: the results are not automatically expanded.  If
+     the matrix originally had polynomial entries, better appearing
+     output can be generated by EXPAND(INVERT(mat)),DETOUT.  If it is
+     desirable to then divide through by the determinant this can be
+     accomplished by XTHRU(%) or alternatively from scratch by
+     EXPAND(ADJOINT(mat))/EXPAND(DETERMINANT(mat)).
+     INVERT(mat):=ADJOINT(mat)/DETERMINANT(mat).  See also
+     DESCRIBE("^^"); for another method of inverting a matrix.
+
+
+ - Variable: LMXCHAR
+     default: [[] - The character used to display the (left) delimiter
+     of a matrix (see also RMXCHAR).
+
+
+ - Function: MATRIX (row1, ..., rown)
+     defines a rectangular matrix with the indicated rows.  Each row
+     has the form of a list of expressions, e.g.  [A, X**2, Y, 0] is a
+     list of 4 elements.  There are a number of MACSYMA commands which
+     deal with matrices, for example:  DETERMINANT, CHARPOLY,
+     GENMATRIX, ADDCOL, ADDROW, COPYMATRIX, TRANSPOSE, ECHELON, and
+     RANK.  There is also a package on the SHARE directory for
+     computing EIGENVALUES.  Try DESCRIBE on these for more information.
+     Matrix multiplication is effected by using the dot operator, ".",
+     which is also convenient if the user wishes to represent other
+     non-commutative algebraic operations.  The exponential of the "."
+     operation is "^^" .  Thus, for a matrix A, A.A = A^^2 and, if it
+     exists, A^^-1 is the inverse of A.  The operations +,-,*,** are
+     all element-by-element operations; all operations are normally
+     carried out in full, including the . (dot) operation.  Many
+     switches exist for controlling simplification rules involving dot
+     and matrix-list operations.  Options Relating to Matrices:
+     LMXCHAR, RMXCHAR, RATMX, LISTARITH, DETOUT, DOALLMXOPS, DOMXEXPT
+     DOMXMXOPS, DOSCMXOPS, DOSCMXPLUS, SCALARMATRIX, and SPARSE.  Do
+     DESCRIBE(option) for details on them.
+
+
+ - Function: MATRIXMAP (fn, M)
+     will map the function fn onto each element of the matrix M.
+
+
+ - Function: MATRIXP (exp)
+     is TRUE if exp is a matrix else FALSE.
+
+
+ - Variable: MATRIX_ELEMENT_ADD
+     default: [+] - May be set to "?"; may also be the name of a
+     function, or a LAMBDA expression.  In this way, a rich variety of
+     algebraic structures may be simulated.  For more details, do
+     DEMO("matrix.dem1"); and DEMO("matrix.dem2");.
+
+
+ - Variable: MATRIX_ELEMENT_MULT
+     default: [*] - May be set to "."; may also be the name of a
+     function, or a LAMBDA expression.  In this way, a rich variety of
+     algebraic structures may be simulated.  For more details, do
+     DEMO("matrix.dem1"); and DEMO("matrix.dem2");
+
+
+ - Variable: MATRIX_ELEMENT_TRANSPOSE
+     default: [FALSE] - Other useful settings are TRANSPOSE and
+     NONSCALARS; may also be the name of a function, or a LAMBDA
+     expression.  In this way, a rich variety of algebraic structures
+     may be simulated.  For more details, do DEMO("matrix.dem1"); and
+     DEMO("matrix.dem2");.
+
+
+ - Function: MATTRACE (M)
+     computes the trace [sum of the elements on the main diagonal] of
+     the square matrix M.  It is used by NCHARPOLY, an alternative to
+     MACSYMA's CHARPOLY.  It is used by doing LOADFILE("nchrpl");
+
+
+ - Function: MINOR (M, i, j)
+     computes the i,j minor of the matrix M.  That is, M with row i and
+     column j removed.
+
+
+ - Function: NCEXPT (A,B)
+     if an (non-commutative) exponential expression is too wide to be
+     displayed as A^^B it will appear as NCEXPT(A,B).
+
+
+ - Function: NCHARPOLY (M,var)
+     finds the characteristic polynomial of the matrix M with respect
+     to var.  This is an alternative to MACSYMA's CHARPOLY.  NCHARPOLY
+     works by computing traces of powers of the given matrix, which are
+     known to be equal to sums of powers of the roots of the
+     characteristic polynomial.  From these quantities the symmetric
+     functions of the roots can be calculated, which are nothing more
+     than the coefficients of the characteristic polynomial.  CHARPOLY
+     works by forming the determinant of VAR * IDENT [N] - A.  Thus
+     NCHARPOLY wins, for example, in the case of large dense matrices
+     filled with integers, since it avoids polynomial arithmetic
+     altogether.  It may be used by doing LOADFILE("nchrpl");
+
+
+ - Function: NEWDET (M,n)
+     also computes the determinant of M but uses the Johnson-Gentleman
+     tree minor algorithm.  M may be the name of a matrix or array.
+     The argument n is the order; it is optional if M is a matrix.
+
+
+ - declaration: NONSCALAR
+     - makes ai behave as does a list or matrix with respect to the dot
+     operator.
+
+
+ - Function: NONSCALARP (exp)
+     is TRUE if exp is a non-scalar, i.e.  it contains atoms declared
+     as non-scalars, lists, or matrices.
+
+
+ - Function: PERMANENT (M,n)
+     computes the permanent of the matrix M.  A permanent is like a
+     determinant but with no sign changes.
+
+
+ - Function: RANK (M)
+     computes the rank of the matrix M.  That is, the order of the
+     largest non-singular subdeterminant of M.  Caveat: RANK may return
+     the wrong answer if it cannot determine that a matrix element that
+     is equivalent to zero is indeed so.
+
+
+ - Variable: RATMX
+     default: [FALSE] - if FALSE will cause determinant and matrix
+     addition, subtraction, and multiplication to be performed in the
+     representation of the matrix elements and will cause the result of
+     matrix inversion to be left in general representation.  If it is
+     TRUE, the 4 operations mentioned above will be performed in CRE
+     form and the result of matrix inverse will be in CRE form.  Note
+     that this may cause the elements to be expanded (depending on the
+     setting of RATFAC) which might not always be desired.
+
+
+ - Function: ROW (M, i)
+     gives a matrix of the ith row of matrix M.
+
+
+ - Variable: SCALARMATRIXP
+     default: [TRUE] - if TRUE, then whenever a 1 x 1 matrix is
+     produced as a result of computing the dot product of matrices it
+     will be converted to a scalar, namely the only element of the
+     matrix.  If set to ALL, then this conversion occurs whenever a 1 x
+     1 matrix is simplified.  If set to FALSE, no conversion will be
+     done.
+
+
+ - Function: SETELMX (x, i, j, M)
+     changes the i,j element of M to x.  The altered matrix is returned
+     as the value.  The notation M[i,j]:x may also be used, altering M
+     in a similar manner, but returning x as the value.
+
+
+ - Function: SIMILARITYTRANSFORM (MAT)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     SIMILARITYTRANSFORM takes a MATRIX as its argument and returns a
+     list which is the output of the UNITEIGENVECTORS command.  In
+     addition if the flag NONDIAGONALIZABLE is FALSE two global
+     matrices LEFTMATRIX and RIGHTMATRIX will be generated.  These
+     matrices have the property that LEFTMATRIX.MAT.RIGHTMATRIX is a
+     diagonal matrix with the eigenvalues of MAT on the diagonal.  If
+     NONDIAGONALIZABLE is TRUE these two matrices will not be
+     generated.  If the flag HERMITIANMATRIX is TRUE then LEFTMATRIX is
+     the complex conjugate of the transpose of RIGHTMATRIX.  Otherwise
+     LEFTMATRIX is the inverse of RIGHTMATRIX.  RIGHTMATRIX is the
+     matrix the columns of which are the unit eigenvectors of MAT.  The
+     other flags (see DESCRIBE(EIGENVALUES); and
+     DESCRIBE(EIGENVECTORS);) have the same effects since
+     SIMILARITYTRANSFORM calls the other functions in the package in
+     order to be able to form RIGHTMATRIX.
+
+
+ - Variable: SPARSE
+     default: [FALSE] - if TRUE and if RATMX:TRUE then DETERMINANT will
+     use special routines for computing sparse determinants.
+
+
+ - Function: SUBMATRIX (m1, ..., M, n1, ...)
+     creates a new matrix composed of the matrix M with rows mi
+     deleted, and columns ni deleted.
+
+
+ - Function: TRANSPOSE (M)
+     produces the transpose of the matrix M.
+
+
+ - Function: TRIANGULARIZE (M)
+     produces the upper triangular form of the matrix M which needn't
+     be square.
+
+
+ - Function: UNITEIGENVECTORS (MAT)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     UNITEIGENVECTORS takes a MATRIX as its argument and returns a list
+     of lists the first sublist of which is the output of the
+     EIGENVALUES command and the other sublists of which are the unit
+     eigenvectors of the matrix corresponding to those eigenvalues
+     respectively.  The flags mentioned in the description of the
+     EIGENVECTORS command have the same effects in this one as well.  In
+     addition there is a flag which may be useful :
+     KNOWNEIGVECTS[FALSE] - If set to TRUE the EIGEN package will assume
+     that the eigenvectors of the matrix are known to the user and are
+     stored under the global name LISTEIGVECTS.  LISTEIGVECTS should be
+     set to a list similar to the output of the EIGENVECTORS command.
+     (If KNOWNEIGVECTS is set to TRUE and the list of eigenvectors is
+     given the setting of the flag NONDIAGONALIZABLE may not be
+     correct.  If that is the case please set it to the correct value.
+     The author assumes that the user knows what he is doing and will
+     not try to diagonalize a matrix the eigenvectors of which do not
+     span the vector space of the appropriate dimension...)
+
+
+ - Function: UNITVECTOR (X)
+     a function in the EIGEN package.  Do LOAD(EIGEN) to use it.
+     UNITVECTOR takes a LIST as its argument and returns a unit list.
+     (i.e. a list with unit magnitude).
+
+
+ - Function: VECTORSIMP (vectorexpression)
+     This function employs additional simplifications, together with
+     various optional expansions according to the settings of the
+     following global flags:
+
+          EXPANDALL, EXPANDDOT, EXPANDDOTPLUS, EXPANDCROSS, EXPANDCROSSPLUS,
+          EXPANDCROSSCROSS, EXPANDGRAD, EXPANDGRADPLUS, EXPANDGRADPROD,
+          EXPANDDIV, EXPANDDIVPLUS, EXPANDDIVPROD, EXPANDCURL, EXPANDCURLPLUS,
+          EXPANDCURLCURL, EXPANDLAPLACIAN, EXPANDLAPLACIANPLUS,
+          EXPANDLAPLACIANPROD.
+
+     All these flags have default value FALSE. The PLUS suffix refers to
+     employing additivity or distributivity.  The PROD suffix refers to
+     the expansion for an operand that is any kind of product.
+     EXPANDCROSSCROSS refers to replacing p~(q~r) with (p.r)*q-(p.q)*r,
+     and EXPANDCURLCURL refers to replacing CURL CURL p with GRAD DIV p
+     + DIV GRAD p.  EXPANDCROSS:TRUE has the same effect as
+     EXPANDCROSSPLUS:EXPANDCROSSCROSS:TRUE, etc.  Two other flags,
+     EXPANDPLUS and EXPANDPROD, have the same effect as setting all
+     similarly suffixed flags true.  When TRUE, another flag named
+     EXPANDLAPLACIANTODIVGRAD, replaces the LAPLACIAN operator with the
+     composition DIV GRAD.  All of these flags are initially FALSE.  For
+     convenience, all of these flags have been declared EVFLAG.  For
+     orthogonal curvilinear coordinates, the global variables
+     COORDINATES[[X,Y,Z]], DIMENSION[3], SF[[1,1,1]], and SFPROD[1] are
+     set by the function invocation
+
+
+ - Variable: VECT_CROSS
+     default:[FALSE] - If TRUE allows DIFF(X~Y,T) to work where ~ is
+     defined in SHARE;VECT (where VECT_CROSS is set to TRUE, anyway.)
+
+
+ - Function: ZEROMATRIX (m,n)
+     takes integers m,n as arguments and returns an m by n matrix of
+     0's.
+
+
+ - special symbol: "["
+     - [ and ] are the characters which MACSYMA uses to delimit a list.
+
+
+File: maxima.info,  Node: Affine,  Next: Tensor,  Prev: Matrices and Linear Algebra,  Up: Top
+
+Affine
+******
+
+* Menu:
+
+* Definitions for Affine::
+
+
+File: maxima.info,  Node: Definitions for Affine,  Prev: Affine,  Up: Affine
+
+Definitions for Affine
+======================
+
+ - Function: FAST_LINSOLVE (eqns,variables)
+     Solves the linear system of equations EQNS for the variables
+     VARIABLES  and returns a result suitable to SUBLIS.  The function
+     is faster than linsolve for system of equations which are sparse.
+
+
+ - Function: GROBNER_BASIS (eqns)
+     Takes as argument a macsyma list of equations and returns a
+     grobner basis for them.  The function POLYSIMP may now be used to
+     simplify other functions relative to the equations.
+
+     GROBNER_BASIS([3*X^2+1,Y*X])$
+
+     POLYSIMP(Y^2*X+X^3*9+2)==> -3*x+2
+
+     Polysimp(f)==> 0 if and only if f is in the ideal generated by the
+     EQNS  ie.  if and only if f is a polynomial combination of the
+     elements of EQNS.
+
+
+ - Function: SET_UP_DOT_SIMPLIFICATIONS (eqns,[check-thru-degree])
+     The eqns are polynomial equations in non commutative variables.
+     The value of CURRENT_VARIABLES is the list of variables used for
+     computing degrees.  The equations must be homogeneous, in order
+     for the procedure to terminate.
+
+     If you have checked overlapping simplifications in
+     DOT_SIMPLIFICATIONS above the degree of f, then the following is
+     true: DOTSIMP(f)==> 0 if and only if f is in the ideal generated
+     by the EQNS  ie.  if and only if f is a polynomial combination of
+     the elements of EQNS.
+
+     The degree is that returned by NC_DEGREE.   This in turn is
+     influenced by the weights of individual variables.
+
+
+ - Function: DECLARE_WEIGHT (var1,wt1,var2,wt2,...)
+     Assigns VAR1 weight WT1, VAR2 weight wt2..  These are the weights
+     used in computing NC_DEGREE.
+
+
+ - Function: NC_DEGREE (poly)
+     Degree of a non commutative polynomial.  See DECLARE_WEIGHTS.
+
+
+ - Function: DOTSIMP (f)
+     ==> 0 if and only if f is in the ideal generated by the EQNS  ie.
+     if and only if f is a polynomial combination of the elements of
+     EQNS.
+
+
+ - Function: FAST_CENTRAL_ELEMENTS (variables,degree)
+     if SET_UP_DOT_SIMPLIFICATIONS has been previously done, finds the
+     central polynomials in the variables in the given degree, For
+     example:
+          set_up_dot_simplifications([y.x+x.y],3);
+          fast_central_elements([x,y],2);
+          [y.y,x.x];
+
+ - Function: CHECK_OVERLAPS (degree,add-to-simps)
+     checks the overlaps thru degree, making sure that you have
+     sufficient simplification rules in each degree, for dotsimp to
+     work correctly.  This process can be speeded up if you know before
+     hand what the dimension of the space of monomials is.  If it is of
+     finite global dimension, then HILBERT should be used.  If you
+     don't know the monomial dimensions, do not specify a
+     RANK_FUNCTIION.  An optional third argument RESET, false says
+     don't bother to query about resetting things.
+
+
+ - Function: MONO (vari,n)
+     VARI is a list of variables.   Returns the list of independent
+     monomials relative to the current dot_simplifications, in degree N
+
+
+ - Function: MONOMIAL_DIMENSIONS (n)
+     Compute the hilbert series through degreen n for the current
+     algebra.
+
+
+ - Function: EXTRACT_LINEAR_EQUATIONS (List_nc_polys,monoms)
+     Makes a list of the coefficients of the polynomials in
+     list_nc_polys of the monoms.  MONOMS is a list of noncommutative
+     monomials.   The coefficients should be scalars.   Use
+     LIST_NC_MONOMIALS to build the list of monoms.
+
+
+ - Function: LIST_NC_MONOMIALS (polys_or_list)
+     returns a list of the non commutative monomials occurring in a
+     polynomial or a collection of polynomials.
+
+
+ - Function: PCOEFF (poly monom [variables-to-exclude-from-cof
+          (list-variables monom)])
+     This function is called from lisp level, and uses internal poly
+     format.
+
+          CL-MAXIMA>>(setq me (st-rat #$x^2*u+y+1$))
+          (#:Y 1 1 0 (#:X 2 (#:U 1 1) 0 1))
+          
+          CL-MAXIMA>>(pcoeff me (st-rat #$x^2$))
+          (#:U 1 1)
+
+     Rule: if a variable appears in monom it must be to the exact power,
+     and if it is in variables to exclude it may not appear unless it
+     was in monom to the exact power.  (pcoeff pol 1 ..) will exclude
+     variables like substituting them to be zero.
+
+
+ - Function: NEW-DISREP (poly)
+     From lisp this returns the general maxima format for an arg which
+     is in st-rat form:
+
+          (displa(new-disrep (setq me (st-rat #$x^2*u+y+1$))))
+          
+                 2
+          Y + U X  + 1
+
+ - Function: CREATE_LIST (form,var1,list1,var2,list2,...)
+     Create a list by evaluating FORM with VAR1 bound to each element
+     of LIST1, and for each such binding bind VAR2 to each element of
+     LIST2,...  The number of elements in the result will be
+     length(list1)*length(list2)*...  Each VARn must actually be a
+     symbol-it will not be evaluated.  The LISTn args will be evaluated
+     once at the beginning of the iteration.
+
+
+          (%i82) create_list1(x^i,i,[1,3,7]);
+          (%o82) [X,X^3,X^7]
+
+     With a double iteration:
+          (%i79) create_list([i,j],i,[a,b],j,[e,f,h]);
+          (%o79) [[A,E],[A,F],[A,H],[B,E],[B,F],[B,H]]
+
+     Instead of LISTn two args maybe supplied each of which should
+     evaluate to a number.   These will be the inclusive lower and
+     upper bounds for the iteration.
+
+          (%i81) create_list([i,j],i,[1,2,3],j,1,i);
+          (%o81) [[1,1],[2,1],[2,2],[3,1],[3,2],[3,3]]
+
+     Note that the limits or list for the j variable can depend on the
+     current value of i.
+
+
+ - Variable: ALL_DOTSIMP_DENOMS
+     if its value is FALSE the denominators encountered in getting
+     dotsimps will not be collected.   To collect the denoms
+          ALL_DOTSIMP_DENOMS:[];
+
+     and they will be nconc'd onto the end of the list.
+
+
+
+File: maxima.info,  Node: Tensor,  Next: Ctensor,  Prev: Affine,  Up: Top
+
+Tensor
+******
+
+* Menu:
+
+* Introduction to Tensor::
+* Definitions for Tensor::
+
+
+File: maxima.info,  Node: Introduction to Tensor,  Next: Definitions for Tensor,  Prev: Tensor,  Up: Tensor
+
+Introduction to Tensor
+======================
+
+   - Indicial Tensor Manipulation package.  It may be loaded by
+LOADFILE("itensr"); A manual for the Tensor packages is available in
+share/tensor.descr.  A demo is available by DEMO("itenso.dem1"); (and
+additional demos are in ("itenso.dem2"), ("itenso.dem3") and following).
+
+   - There are two tensor packages in MACSYMA, CTENSR and ITENSR.
+CTENSR is Component Tensor Manipulation, and may be accessed with
+LOAD(CTENSR); .  ITENSR is Indicial Tensor Manipulation, and is loaded
+by doing LOAD(ITENSR); A manual for CTENSR AND ITENSR is available from
+the LCS Publications Office.  Request MIT/LCS/TM-167.  In addition,
+demos exist on the TENSOR; directory under the filenames CTENSO DEMO1,
+DEMO2, etc. and ITENSO DEMO1, DEMO2, etc.  Do DEMO("ctenso.dem1"); or
+DEMO("itenso.dem2"); Send bugs or comments to RP or TENSOR.
+
+
+File: maxima.info,  Node: Definitions for Tensor,  Prev: Introduction to Tensor,  Up: Tensor
+
+Definitions for Tensor
+======================
+
+ - Function: CANFORM (exp)
+     [Tensor Package] Simplifies exp by renaming dummy indices and
+     reordering all indices as dictated by symmetry conditions imposed
+     on them. If ALLSYM is TRUE then all indices are assumed symmetric,
+     otherwise symmetry information provided by DECSYM declarations
+     will be used. The dummy indices are renamed in the same manner as
+     in the RENAME function. When CANFORM is applied to a large
+     expression the calculation may take a considerable amount of time.
+     This time can be shortened by calling RENAME on the expression
+     first.  Also see the example under DECSYM. Note: CANFORM may not
+     be able to reduce an expression completely to its simplest form
+     although it will always return a mathematically correct result.
+
+
+ - Function: CANTEN (exp)
+     [Tensor Package] Simplifies exp by renaming (see RENAME) and
+     permuting dummy indices. CANTEN is restricted to sums of tensor
+     products in which no derivatives are present. As such it is limited
+     and should only be used if CANFORM is not capable of carrying out
+     the required simplification.
+
+
+ - Function: CARG (exp)
+     returns the argument (phase angle) of exp.  Due to the conventions
+     and restrictions, principal value cannot be guaranteed unless exp
+     is numeric.
+
+
+ - Variable: COUNTER
+     default: [1] determines the numerical suffix to be used in
+     generating the next dummy index in the tensor package.  The prefix
+     is determined by the option DUMMYX[#].
+
+
+ - Function: DEFCON (tensor1,<tensor2,tensor3>)
+     gives tensor1 the property that the contraction of a product of
+     tensor1 and tensor2 results in tensor3 with the appropriate
+     indices.  If only one argument, tensor1, is given, then the
+     contraction of the product of tensor1 with any indexed object
+     having the appropriate indices (say tensor) will yield an indexed
+     object with that name, i.e.tensor, and with a new set of indices
+     reflecting the contractions performed.      For example, if
+     METRIC: G, then DEFCON(G) will implement the raising and lowering
+     of indices through contraction with the metric tensor.      More
+     than one DEFCON can be given for the same indexed object; the
+     latest one given which applies in a particular contraction will be
+     used.  CONTRACTIONS is a list of those indexed objects which have
+     been given contraction properties with DEFCON.
+
+
+ - Function: FLUSH (exp,tensor1,tensor2,...)
+     Tensor Package - will set to zero, in exp, all occurrences of the
+     tensori that have no derivative indices.
+
+
+ - Function: FLUSHD (exp,tensor1,tensor2,...)
+     Tensor Package - will set to zero, in exp, all occurrences of the
+     tensori that have derivative indices.
+
+
+ - Function: FLUSHND (exp,tensor,n)
+     Tensor Package - will set to zero, in exp, all occurrences of the
+     differentiated object tensor that have n or more derivative
+     indices as the following example demonstrates.
+          (%i1) SHOW(A([I],[J,R],K,R)+A([I],[J,R,S],K,R,S));
+                                         J R S      J R
+          (%o1)                          A        + A
+                                         I,K R S    I,K R
+          (%i2) SHOW(FLUSHND(%o1,A,3));
+                                               J R
+          (%o2)                                A
+                                               I,K R
+
+ - Function: KDELTA (L1,L2)
+     is the generalized Kronecker delta function defined in the Tensor
+     package with L1 the list of covariant indices and L2 the list of
+     contravariant indices.  KDELTA([i],[j]) returns the ordinary
+     Kronecker delta.  The command EV(EXP,KDELTA) causes the evaluation
+     of an expression containing KDELTA([],[]) to the dimension of the
+     manifold.
+
+
+ - Function: LC (L)
+     is the permutation (or Levi-Civita) tensor which yields 1 if the
+     list L consists of an even permutation of integers, -1 if it
+     consists of an odd permutation, and 0 if some indices in L are
+     repeated.
+
+
+ - Function: LORENTZ (exp)
+     imposes the Lorentz condition by substituting 0 for all indexed
+     objects in exp that have a derivative index identical to a
+     contravariant index.
+
+
+ - Function: MAKEBOX (exp)
+     will display exp in the same manner as SHOW; however, any tensor
+     d'Alembertian occurring in exp will be indicated using the symbol
+     [].  For example, []P([M],[N]) represents
+     G([],[I,J])*P([M],[N],I,J).
+
+
+ - Function: METRIC (G)
+     specifies the metric by assigning the variable METRIC:G; in
+     addition, the contraction properties of the metric G are set up by
+     executing the commands DEFCON(G), DEFCON(G,G,KDELTA).  The
+     variable METRIC, default: [], is bound to the metric, assigned by
+     the METRIC(g) command.
+
+
+ - Function: NTERMSG ()
+     gives the user a quick picture of the "size" of the Einstein
+     tensor.  It returns a list of pairs whose second elements give the
+     number of terms in the components specified by the first elements.
+
+
+ - Function: NTERMSRCI ()
+     returns a list of pairs, whose second elements give the number of
+     terms in the RICCI component specified by the first elements.  In
+     this way, it is possible to quickly find the non-zero expressions
+     and attempt simplification.
+
+
+ - Function: NZETA (Z)
+     returns the complex value of the Plasma Dispersion Function for
+     complex Z.
+          NZETAR(Z) ==> REALPART(NZETA(Z))
+     NZETAI(Z) returns IMAGPART(NZETA(Z)).  This function is related to
+     the complex error function by
+          NZETA(Z) = %I*SQRT(%PI)*EXP(-Z^2)*(1-ERF(-%I*Z)).
+
+
+ - Function: RAISERIEMANN (dis)
+     returns the contravariant components of the Riemann curvature
+     tensor as array elements UR[I,J,K,L].  These are displayed if dis
+     is TRUE.
+
+
+ - Variable: RATEINSTEIN
+     default: [] - if TRUE rational simplification will be performed on
+     the non-zero components of Einstein tensors; if FACRAT:TRUE then
+     the components will also be factored.
+
+
+ - Variable: RATRIEMAN
+     - This switch has been renamed RATRIEMANN.
+
+
+ - Variable: RATRIEMANN
+     default: [] - one of the switches which controls simplification of
+     Riemann tensors; if TRUE, then rational simplification will be
+     done; if FACRAT:TRUE then each of the components will also be
+     factored.
+
+
+ - Function: REMCON (tensor1,tensor2,...)
+     removes all the contraction properties from the tensori.
+     REMCON(ALL) removes all contraction properties from all indexed
+     objects.
+
+
+ - Function: RICCICOM (dis)
+     Tensor package) This function first computes the covariant
+     components LR[i,j] of the Ricci tensor (LR is a mnemonic for
+     "lower Ricci").  Then the mixed Ricci tensor is computed using the
+     contravariant metric tensor.  If the value of the argument to
+     RICCICOM is TRUE, then these mixed components, RICCI[i,j] (the
+     index i is covariant and the index j is contravariant), will be
+     displayed directly.  Otherwise, RICCICOM(FALSE) will simply
+     compute the entries of the array RICCI[i,j] without displaying the
+     results.
+
+
+ - Function: RINVARIANT ()
+     Tensor package) forms the invariant obtained by contracting the
+     tensors
+          R[i,j,k,l]*UR[i,j,k,l].
+
+     This object is not
+
+     automatically simplified since it can be very large.
+
+
+ - Function: SCURVATURE ()
+     returns the scalar curvature (obtained by contracting the Ricci
+     tensor) of the Riemannian manifold with the given metric.
+
+
+ - Function: SETUP ()
+     this has been renamed to TSETUP();  Sets up a metric for Tensor
+     calculations.
+
+
+ - Function: WEYL (dis)
+     computes the Weyl conformal tensor.  If the argument dis is TRUE,
+     the non-zero components W[I,J,K,L] will be displayed to the user.
+     Otherwise, these components will simply be computed and stored.
+     If the switch RATWEYL is set to TRUE, then the components will be
+     rationally simplified; if FACRAT is TRUE then the results will be
+     factored as well.
+
+
+
+File: maxima.info,  Node: Ctensor,  Next: Series,  Prev: Tensor,  Up: Top
+
+Ctensor
+*******
+
+* Menu:
+
+* Introduction to Ctensor::
+* Definitions for Ctensor::
 

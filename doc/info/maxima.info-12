@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.5 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -9,1001 +9,1245 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: SHARE,  Up: Miscellaneous Options
+File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Symmetries
 
-Definitions for Miscellaneous Options
-=====================================
+Definitions for Symmetries
+==========================
 
- - Variable: ALIASES
-     default: [] atoms which have a user defined alias (set up by the
-     ALIAS, ORDERGREAT, ORDERLESS functions or by DECLAREing the atom a
-     NOUN).
+ - Function: COMP2PUI (n, l)
+     re'alise le passage des fonctions syme'triques comple`tes,
+     donnee's dans la liste l, aux fonctions syme'triques
+     e'le'mentaires de 0 a` n. Si la liste l contient moins de n+1
+     e'le'ments les valeurs formelles viennent la completer. Le premier
+     e'le'ment de la liste l donne le cardinal de l'alphabet si il
+     existe, sinon on le met e'gal a n.
 
- - Variable: ALLSYM
-     default: [TRUE] - If TRUE then all indexed objects are assumed
-     symmetric in all of their covariant and contravariant indices. If
-     FALSE then no symmetries of any kind are assumed in these indices.
-     Derivative indices are always taken to be symmetric.
-
- - declaration: ALPHABETIC
-     Adds to MACSYMA's alphabet which initially contains the letters
-     A-Z, % and _.  Thus, DECLARE("~",ALPHABETIC) enables NEW~VALUE to
-     be used as a name.
+          COMP2PUI(3,[4,g]);
+                               2          3
+                     [4, g, - g  + 2 h2, g  - 3 h2 g + 3 h3]
 
 
- - Function: APROPOS (string)
-     takes a character string as argument and looks at all the MACSYMA
-     names for ones with that string appearing anywhere within them.
-     Thus, APROPOS(EXP); will return a long list of all the flags and
-     functions which have EXP as part of their names, such as EXPAND,
-     EXP, EXPONENTIALIZE.  Thus if you can only remember part of the
-     name of something you can use this command to find the rest of the
-     name.  Similarily, you could say APROPOS(TR_); to find a list of
-     many of the switches relating to the TRANSLATOR (most of which
-     begin with TR_).
+ - Function: CONT2PART (pc,lvar)
+     rend le polyno^me partitionne' associe' a` la forme  contracte'e
+     pc dont les variables sont dans lvar.
+
+          pc : 2*a^3*b*x^4*y + x^5$
+          CONT2PART(pc,[x,y]);
+                                   3
+                              [[2 a  b, 4, 1], [1, 5]]
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, EXPLOSE, PART2CONT, PARTPOL, TCONTRACT, TPARTPOL.
 
 
- - Function: ARGS (exp)
-     returns a list of the args of exp.  I.e. it is essentially
-     equivalent to
-          SUBSTPART("[",exp,0)
-     Both ARGS and SUBSTPART depend on the setting of INFLAG.
+ - Function: CONTRACT (psym,lvar)
+     rend une forme contracte'e (i.e. un mono^me par orbite sous
+     l'action du groupe syme'trique) du polyno^me psym en les variables
+     contenues dans la liste lvar. La fonction EXPLOSE re'alise
+     l'ope'ration inverse. La fonction TCONTRACT teste en plus la
+     syme'trie du polyno^me.
 
-
- - Function: DUMMY (i1,i2,...)
-     will set each index i1,i2,... to name of the form !n where n is a
-     positive integer.  This guarantees that dummy indices which are
-     needed in forming expressions will not conflict with indices
-     already in use.  COUNTER[default 1] determines the numerical
-     suffix to be used in generating the next dummy index.  The prefix
-     is determined by the option DUMMYX[!].
-
-
- - Variable: GENINDEX
-     default: [I] is the alphabetic prefix used to generate the next
-     variable of summation when necessary.
-
-
- - Variable: GENSUMNUM
-     [0] is the numeric suffix used to generate the next variable of
-     summation.  If it is set to FALSE then the index will consist only
-     of GENINDEX with no numeric suffix.
-
-
- - Variable: INF
-     - real positive infinity.
-
-
- - Variable: INFINITY
-     - complex infinity, an infinite magnitude of arbitrary phase
-     angle.  (See also INF and MINF.)
-
-
- - Variable: INFOLISTS
-     default: [] a list of the names of all of the information lists in
-     MACSYMA. These are: LABELS - all bound C,D, and E labels.  VALUES
-     - all bound atoms, i.e. user variables, not MACSYMA Options or
-     Switches, (set up by : , :: , or functional binding).  FUNCTIONS -
-     all user defined functions (set up by f(x):=...).  ARRAYS -
-     declared and undeclared arrays (set up by : , :: , or :=...)
-     MACROS - any Macros defined by the user.  MYOPTIONS - all options
-     ever reset by the user (whether or not they get reset to their
-     default value).  RULES - user defined pattern matching and
-     simplification rules (set up by TELLSIMP, TELLSIMPAFTER, DEFMATCH,
-     or, DEFRULE.)  ALIASES - atoms which have a user defined alias
-     (set up by the ALIAS, ORDERGREAT, ORDERLESS functions or by
-     DECLAREing the atom a NOUN).  DEPENDENCIES - atoms which have
-     functional dependencies (set up by the DEPENDS or GRADEF
-     functions).  GRADEFS - functions which have user defined
-     derivatives (set up by the GRADEF function).  PROPS - atoms which
-     have any property other than those mentioned above, such as
-     atvalues, matchdeclares, etc.  as well as properties specified in
-     the DECLARE function.  LET_RULE_PACKAGES - a list of all the
-     user-defined let rule packages plus the special package
-     DEFAULT_LET_RULE_PACKAGE.  (DEFAULT_LET_RULE_PACKAGE is the name
-     of the rule package used when one is not explicitly set by the
-     user.)
-
-
- - Function: INTEGERP (exp)
-     is TRUE if exp is an integer else FALSE.
-
-
- - Variable: M1PBRANCH
-     default: [FALSE] - "principal branch for -1 to a power".
-     Quantities such as (-1)^(1/3) [i.e. "odd" rational exponent] and
-     (-1)^(1/4) [i.e. "even" rational exponent] are now handled as
-     indicated in the following chart:
-                       DOMAIN:REAL(default)
+          psym : EXPLOSE(2*a^3*b*x^4*y,[x,y,z]);
           
-          (-1)^(1/3):      -1
-          (-1)^(1/4):   (-1)^(1/4)
+                  3      4      3      4      3    4
+               2 a  b y z  + 2 a  b x z  + 2 a  b y  z
+                          3    4        3      4      3    4
+                     + 2 a  b x  z + 2 a  b x y  + 2 a  b x  y
           
-                          DOMAIN:COMPLEX
-          M1PBRANCH:FALSE(default)   M1PBRANCH:TRUE
-          (-1)^(1/3)               1/2+%i*sqrt(3)/2
-          (-1)^(1/4)              sqrt(2)/2+%i*sqrt(2)/2
+          CONTRACT(psym,[x,y,z]);
+          
+                                  3    4
+                               2 a  b x  y
 
- - Function: NUMBERP (exp)
-     is TRUE if exp is an integer, a rational number, a floating point
-     number or a bigfloat else FALSE.
+     Autres fonctions de changements de repre'sentations :
 
-
- - Function: PROPERTIES (a)
-     will yield a list showing the names of all the properties
-     associated with the atom a.
+     CONT2PART, EXPLOSE, PART2CONT, PARTPOL, TCONTRACT, TPARTPOL.
 
 
- - special symbol: PROPS
-     - atoms which have any property other than those explicitly
-     mentioned in INFOLISTS, such as atvalues, matchdeclares, etc. as
-     well as properties specified in the DECLARE function.
+ - Function: DIRECT ([P1,...,Pn],y,f,[lvar1,...,lvarn])
+     calcul l'image directe (voir M. GIUSTI,D. LAZARD et A. VALIBOUZE,
+     ISSAC 1988, Rome) associe'e a` la fonction f, en les listes de
+     variables lvar1,...,lvarn, et aux polyno^mes P1,...,Pn d'une
+     variable y. l'arite' de la fonction f est importante pour le
+     calcul. Ainsi, si l'expression de f ne depend pas d'une variable,
+     non seulement il est inutile de donner cette variable mais cela
+     diminue conside'rablement lees calculs si on ne le fait pas.
+
+          DIRECT([z^2  - e1* z + e2, z^2  - f1* z + f2], z, b*v + a*u,
+                        [[u, v], [a, b]]);
+          
+                              2                         2           2
+                             z  - e1 f1 z - 4 e2 f2 + e1  f2 + e2 f1
+          
+          DIRECT([z^3-e1*z^2+e2*z-e3,z^2  - f1* z + f2], z, b*v + a*u,
+                        [[u, v], [a, b]]);
+          
+           6            5            4       2     4          2  4
+          Y  - 2 E1 F1 Y  - 6 E2 F2 Y  + 2 E1  F2 Y  + 2 E2 F1  Y
+          
+              2   2  4
+          + E1  F1  Y
+          
+                        3                  3       3        3          3  3
+          + 9 E3 F1 F2 Y  + 5 E1 E2 F1 F2 Y  - 2 E1  F1 F2 Y  - 2 E3 F1  Y
+          
+          	    3  3       2   2  2       2      2  2     4   2  2
+          - 2 E1 E2 F1  Y  + 9 E2  F2  Y  - 6 E1  E2 F2  Y  + E1  F2  Y
+          
+          	    2     2       2   2     2       2      2     2
+          - 9 E1 E3 F1  F2 Y  - 6 E2  F1  F2 Y  + 3 E1  E2 F1  F2 Y
+          
+                      4  2
+          + 2 E1 E3 F1  Y
+          
+              2   4  2                 2         2         2
+          + E2  F1  Y  - 27 E2 E3 F1 F2  Y + 9 E1  E3 F1 F2  Y
+          
+                   2      2
+          + 3 E1 E2  F1 F2  Y
+          
+              3         2                3            2      3
+          - E1  E2 F1 F2  Y + 15 E2 E3 F1  F2 Y - 2 E1  E3 F1  F2 Y
+          
+                 2   3
+          - E1 E2  F1  F2 Y
+          
+          	    5          2   3                 3       3      3
+          - 2 E2 E3 F1  Y - 27 E3  F2  + 18 E1 E2 E3 F2  - 4 E1  E3 F2
+          
+                 3   3
+           - 4 E2  F2
+          
+              2   2   3        2   2   2                2   2     3      2   2
+          + E1  E2  F2  + 27 E3  F1  F2  - 9 E1 E2 E3 F1  F2  + E1  E3 F1  F2
+          
+              3   2   2       2   4                 4        2   6
+          + E2  F1  F2  - 9 E3  F1  F2 + E1 E2 E3 F1  F2 + E3  F1
+
+     Recherche du polyno^me dont les racines sont les somme a+u ou a est
+     racine de z^2  - e1* z + e2 et u est racine de z^2  - f1* z + f2
+
+          DIRECT([z^2  - e1* z + e2,z^2  - f1* z + f2], z,a+u,[[u],[a]]);
+          
+           4         3         3         2     2  2            2         2
+          Y  - 2 F1 Y  - 2 E1 Y  + 2 F2 Y  + F1  Y  + 3 E1 F1 Y  + 2 E2 Y
+          
+              2  2
+          + E1  Y
+                                         2                   2
+          - 2 F1 F2 Y - 2 E1 F2 Y - E1 F1  Y - 2 E2 F1 Y - E1  F1 Y
+          
+                          2
+          - 2 E1 E2 Y + F2
+          
+                                   2           2                2
+          + E1 F1 F2 - 2 E2 F2 + E1  F2 + E2 F1  + E1 E2 F1 + E2
+
+     DIRECT peut prendre deux drapeaux possibles : ELEMENTAIRES et
+     PUISSANCES (valeur par de'faut) qui permettent de de'composer les
+     polyno^mes syme'triques apparaissant dans ce calcul par les
+     fonctions syme'triques e'le'mentaires ou les fonctions puissances
+     respectivement.
+
+     fonctions de SYM utilis'ees dans cette fonction :
 
 
- - Function: PROPVARS (prop)
-     yields a list of those atoms on the PROPS list which have the
-     property indicated by prop.  Thus PROPVARS(ATVALUE) will yield a
-     list of atoms which have atvalues.
+          MULTI_ORBIT (donc ORBIT), PUI_DIRECT, MULTI_ELEM
+          (donc ELEM), MULTI_PUI (donc PUI), PUI2ELE, ELE2PUI
+          (si le drapeau DIRECT est a` PUISSANCES).
 
 
- - Function: PUT (a, p, i)
-     associates with the atom a the property p with the indicator i.
-     This enables the user to give an atom any arbitrary property.
+ - Function: ELE2COMP (m , l)
+     passe des fonctions syme'triques e'le'mentaires aux fonctions
+     comple`tes. Similaire a` COMP2ELE et COMP2PUI.
+
+     autres fonctions de changements de bases :
+
+          COMP2ELE, COMP2PUI, ELE2PUI, ELEM, MON2SCHUR, MULTI_ELEM,
+          MULTI_PUI, PUI, PUI2COMP, PUI2ELE, PUIREDUC, SCHUR2COMP.
 
 
- - Function: QPUT (a, p, i)
-     is similar to PUT but it doesn't have its arguments evaluated.
+ - Function: ELE2POLYNOME (l,z)
+     donne le polyno^me en z dont les fonctions syme'triques
+     e'le'mentaires des racines sont dans la liste l.  l=[n,e1,...,en]
+     ou` n est le degre' du polyno^me et ei la i-ie`me fonction
+     syme'trique e'le'mentaire.
+
+           ele2polynome([2,e1,e2],z);
+          
+                                            2
+                                           Z  - E1 Z + E2
+          
+           polynome2ele(x^7-14*x^5  + 56*x^3  - 56*X + 22,x);
+          
+                        [7, 0, - 14, 0, 56, 0, - 56, - 22]
+           ele2polynome( [7, 0, - 14, 0, 56, 0, - 56, - 22],x);
+          
+                                    7       5       3
+                                   X  - 14 X  + 56 X  - 56 X + 22
+
+     la re'ciproque : POLYNOME2ELE(p,z)
+
+     autres fonctions a` voir :
+
+     POLYNOME2ELE, PUI2POLYNOME.
 
 
- - Function: REM (a, i)
-     removes the property indicated by i from the atom a.
+ - Function: ELE2PUI (m, l)
+     passe des fonctions syme'triques e'le'mentaires aux fonctions
+     comple`tes. Similaire a` COMP2ELE et COMP2PUI.
+
+     autres fonctions de changements de bases :
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELEM, MON2SCHUR, MULTI_ELEM,
+          MULTI_PUI, PUI, PUI2COMP, PUI2ELE, PUIREDUC, SCHUR2COMP.
 
 
- - Function: REMOVE (args)
-     will remove some or all of the properties associated with
-     variables or functions.  REMOVE(a1, p1, a2, p2, ...)  removes the
-     property pi from the atom ai.  Ai and pi may also be lists as with
-     DECLARE.  Pi may be any property e.g.  FUNCTION, MODE_DECLARE,
-     etc.  It may also be TRANSFUN implying that the translated LISP
-     version of the function is to be removed.  This is useful if one
-     wishes to have the MACSYMA version of the function executed rather
-     than the translated version. Pi may also be OP or OPERATOR to
-     remove a syntax extension given to ai (see Appendix II).  If ai is
-     "ALL" then the property indicated by pi is removed from all atoms
-     which have it.  Unlike the more specific remove functions
-     (REMVALUE, REMARRAY, REMFUNCTION, and REMRULE) REMOVE does not
-     indicate when a given property is non-existent; it always returns
-     "DONE".
+ - Function: ELEM (ele,sym,lvar)
+     de'compose le polyno^me syme'trique sym, en les variables
+     contenues de la liste lvar, par les fonctions syme'triques
+     e'le'mentaires contenues dans la liste ele. Si le premier
+     e'le'ment de ele est donne' ce sera le cardinal de l'alphabet
+     sinon on prendra le degre' du polyno^me sym. Si il manque des
+     valeurs a` la liste ele des valeurs formelles du type "ei" sont
+     rajoute'es. Le polyno^me sym peut etre donne' sous 3 formes
+     diffe'rentes : contracte'e (ELEM doit alors valoir 1 sa valeur par
+     de'faut), partitionne'e (ELEM doit alors valoir 3) ou e'tendue
+     (i.e. le polyno^me en entier) (ELEM doit alors valoir 2).
+     L'utilsation de la fonction PUI se re'alise sur le me^me mode`le.
+
+     Sur un alphabet de cardinal 3 avec e1, la premie`re fonction
+     syme'trique e'le'mentaire, valant 7, le polyno^me syme'trique en 3
+     variables dont la forme contracte'e (ne de'pendant ici que de deux
+     de ses variables) est x^4-2*x*y se de'compose ainsi en les
+     fonctions syme'triques e'le'mentaires :
+
+          ELEM([3,7],x^4-2*x*y,[x,y]);
+          
+                                         2
+                             28 e3 + 2 e2  - 198 e2 + 2401
+
+     autres fonctions de changements de bases :
+
+     COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, MON2SCHUR, MULTI_ELEM,
+     MULTI_PUI, PUI, PUI2COMP, PUI2ELE, PUIREDUC, SCHUR2COMP.
 
 
- - Function: REMVALUE (name1, name2, ...)
-     removes the values of user variables (which can be subscripted)
-     from the system.  If name is ALL then the values of all user
-     variables are removed.  Values are those items given names by the
-     user as opposed to those which are automatically labeled by
-     MACSYMA as Ci, Di, or Ei.
+ - Function: EXPLOSE (pc,lvar)
+     rend le polyno^me syme'trique associe' a` la forme contracte'e pc.
+     La liste lvar contient les variables.
+
+          EXPLOSE(a*x +1,[x,y,z]);
+          
+                               (x + y + z) a + 1
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, CONT2PART, PART2CONT, PARTPOL, TCONTRACT, TPARTPOL.
 
 
- - Function: RENAME (exp)
-     returns an expression equivalent to exp but with the dummy indices
-     in each term chosen from the set [!1,!2,...].  Each dummy index in
-     a product will be different; for a sum RENAME will try to make
-     each dummy index in a sum the same.  In addition, the indices will
-     be sorted alphanumerically.
+ - Function: KOSTKA (part1,part2)
+     e'crite par P. ESPERET) calcule le nombre de kostka associe' aux
+     partition part1 et part2
+
+          kostka([3,3,3],[2,2,2,1,1,1]);
+                                            6
 
 
- - Function: RNCOMBINE (exp)
-     transforms exp by combining all terms of exp that have identical
-     denominators or denominators that differ from each other by
-     numerical factors only.  This is slightly different from the
-     behavior of COMBINE, which collects terms that have identical
-     denominators.  Setting PFEFORMAT:TRUE and using COMBINE will
-     achieve results similar to those that can be obtained with
-     RNCOMBINE, but RNCOMBINE takes the additional step of
-     cross-multiplying numerical denominator factors.  This results in
-     neater forms, and the possiblity of recognizing some
-     cancellations.  Bugs to ASB.
+ - Function: LGTREILLIS (n,m)
+     rend la liste des partitions de poids n et de longueur m.
+
+     LGTREILLIS(4,2);
+
+     			       [[3, 1], [2, 2]]
+
+     Voir e'galement : LTREILLIS, TREILLIS et TREINAT.
 
 
- - Function: SCALARP (exp)
-     is TRUE if exp is a number, constant, or variable DECLAREd SCALAR,
-     or composed entirely of numbers, constants, and such variables,
-     but not containing matrices or lists.
+ - Function: LTREILLIS (n,m)
+     rend la liste des partitions de poids n et de longueur infe'rieure
+     ou e'gale a` m.
+
+           ltreillis(4,2);
+          
+                                   [[4, 0], [3, 1], [2, 2]]
+
+     Voir e'galement : LGTREILLIS, TREILLIS et TREINAT.
 
 
- - Function: SCALEFACTORS (coordinatetransform)
-     Here coordinatetransform evaluates to the form [[expression1,
-     expression2, ...], indeterminate1, indeterminat2, ...], where
-     indeterminate1, indeterminate2, etc. are the curvilinear
-     coordinate variables and where a set of rectangular Cartesian
-     components is given in terms of the curvilinear coordinates by
-     [expression1, expression2, ...].  COORDINATES is set to the vector
-     [indeterminate1, indeterminate2,...], and DIMENSION is set to the
-     length of this vector.  SF[1], SF[2], ..., SF[DIMENSION] are set
-     to the coordinate scale factors, and SFPROD is set to the product
-     of these scale factors.  Initially, COORDINATES is [X, Y, Z],
-     DIMENSION is 3, and SF[1]=SF[2]=SF[3]=SFPROD=1, corresponding to
-     3-dimensional rectangular Cartesian coordinates.  To expand an
-     expression into physical components in the current coordinate
-     system, there is a function with usage of the form
+ - Function: MON2SCHUR (l)
+     la liste l repre'sente la fonction de Schur S_l :  On a
+     l=[i1,i2,...,iq] avec i1 <= i2 <= ... <= iq . La fonction de Schur
+     est S_[i1,i2...,iq] est le mineur de la matrice infinie (h_{i-j})
+     i>=1, j>=1 compose' des q premie`res lignes et des colonnes
+     i1+1,i2+2,...,iq+q.
+
+     On e'crit cette fonction de Schur en fonction des formes
+     monomiales en utilisant les fonctions TREINAT et KOSTKA. La forme
+     rendue est un polyno^me syme'trique dans une de ses
+     repre'sentations contracte'es avec les variables x1, x2, ...
+
+           mon2schur([1,1,1]);
+          
+                                         X1 X2 X3
+          
+           mon2schur([3]);
+          
+                                                   2        3
+                                      X1 X2 X3 + X1  X2 + X1
+           MON2SCHUR([1,2]);
+          					     2
+           			      2 x1 x2 x3 + x1  x2
+
+     ce qui veut dire que pour 3 variables cela donne :
+             2 x1 x2 x3 + x1^2 x2 + x2^2 x1 + x1^2 x3 + x3^2 x1
+              + x2^2 x3 + x3^2 x2
+
+     autres fonctions de changements de bases :
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, ELEM, MULTI_ELEM,
+          MULTI_PUI, PUI, PUI2COMP, PUI2ELE, PUIREDUC, SCHUR2COMP.
 
 
- - Function: SETUP_AUTOLOAD (file,func1,...,funcN)
-     which takes two or more arguments: a file specification, and one
-     or more function names, "funcI", and which indicates that if a
-     call to "funcI" is made and "funcI" is not defined, that the file
-     specified by "file" is to be automatically loaded in via LOAD,
-     which file should contain a definition for "funcI".  (This is the
-     process by which calling e.g.  INTEGRATE in a fresh MACSYMA causes
-     various files to be loaded in.)  As with the other file-handling
-     commands in MACSYMA, the arguments to SETUP_AUTOLOAD are not
-     evaluated.  Example: SETUP_AUTOLOAD("bessel")$ J1(0.0); .  Note:
-     SETUP_AUTOLOAD does not work for array functions.
+ - Function: MULTI_ELEM (l_elem,multi_pc,l_var)
+     de'compose un polyno^me multi-syme'trique sous la forme
+     multi-contracte'e multi_pc en les groupes de variables contenue
+     dans la liste de listes l_var sur les groupes de fonctions
+     syme'triques e'le'mentaires contenues dans l_elem.
 
+     MULTI_ELEM([[2,e1,e2],[2,f1,f2]],a*x+a^2+x^3,[[x,y],[a,b]]);
+
+     				2		        3  		     - 2 f2 + f1  + e1 f1 - 3 e1 e2 + e1
+
+     autres fonctions de changements de bases :
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, ELEM,
+          MON2SCHUR, MULTI_PUI, PUI, PUI2COMP, PUI2ELE,
+          PUIREDUC, SCHUR2COMP.
+
+
+ - Function: MULTI_ORBIT (P,[lvar1, lvar2,...,lvarp])
+     P est un polyno^me en l'ensemble des variables contenues dans les
+     listes lvar1, lvar2 ... lvarp.  Cette fonction rame`ne l'orbite du
+     polyno^me P sous l'action du produit des groupes syme'triques des
+     ensembles de variables repre'sente's par ces p LISTES.
+
+           MULTI_ORBIT(a*x+b*y,[[x,y],[a,b]]);
+          
+                    [b y + a x, a y + b x]
+          
+           multi_orbit(x+y+2*a,[[x,y],[a,b,c]]);
+          
+                        [Y + X + 2 C, Y + X + 2 B, Y + X + 2 A]
+
+     voir e'galement : ORBIT pour l'action d'un seul groupe syme'trique
+
+
+ - Function: MULTI_PUI
+     est a` la fonction PUI ce que la fonction MULTI_ELEM est a` la
+     fonction ELEM.
+
+          MULTI_PUI([[2,p1,p2],[2,t1,t2]],a*x+a^2+x^3,[[x,y],[a,b]]);
+          
+                                                        3
+                                                 3 P1 P2   P1
+                                    T2 + P1 T1 + ------- - ---
+                                                    2       2
+
+
+ - Function: MULTINOMIAL (r,part)
+     ou` r est le poids de la partition part. Cette fonction rame`ne le
+     coefficient multinomial associe' : si les parts de la partitions
+     part sont i1, i2, ..., ik, le re'sultat de MULTINOMIAL est
+     r!/(i1!i2!...ik!).
+
+
+ - Function: MULTSYM (ppart1, ppart2,N)
+     re'alise le produit de deux polyno^mes syme'triques de N variables
+     en ne travaillant que modulo l'action du groupe syme'trique
+     d'ordre N. Les polyno^mes sont dans leur repre'sentation
+     partitionne'e.
+
+     Soient les 2 polyno^mes syme'triques en x, y : 3*(x+y) + 2*x*y et
+     5*(x^2+y^2) dont les formes partitionne'es sont respectivement
+     [[3,1],[2,1,1]] et [[5,2]], alors leur produit sera donne' par :
+
+           MULTSYM([[3,1],[2,1,1]],[[5,2]],2);
+          
+                      [[10, 3, 1], [15, 2, 1], [15, 3, 0]]
+
+     soit 10*(x^3*y+y^3*x)+15*(x^2*y +y^2*x) +15(x^3+y^3)
+
+     Fonctions de changements de repre'sentations d'un polyno^me
+     syme'trique :
+
+     CONTRACT, CONT2PART, EXPLOSE, PART2CONT, PARTPOL, TCONTRACT,
+     TPARTPOL.
+
+
+ - Function: ORBIT (P,lvar)
+     calcul l'orbite du polyno^me P en les variables de la liste lvar
+     sous l'action du groupe syme'trique de l'ensemble des variables
+     contenues dans la liste lvar.
+
+           orbit(a*x+b*y,[x,y]);
+          
+                                  [A Y + B X, B Y + A X]
+           orbit(2*x+x^2,[x,y]);
+                                          2         2
+                                        [Y  + 2 Y, X  + 2 X]
+
+     voir e'galement : MULTI_ORBIT pour l'action d'un produit de groupes
+     syme'triques sur un polyno^me.
+
+
+ - Function: PART2CONT (ppart,lvar)
+     passe de la forme partitionne'e a` la forme contracte'e d'un
+     polyno^me syme'trique. La forme contracte'e est rendue avec les
+     variables contenues dans lvar.
+
+          PART2CONT([[2*a^3*b,4,1]],[x,y]);
+          
+                                  3    4
+                               2 a  b x  y
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, CONT2PART, EXPLOSE, PARTPOL, TCONTRACT, TPARTPOL.
+
+
+ - Function: PARTPOL (psym, lvar)
+     psym est un polyno^me syme'trique en les variables de lvar. Cette
+     fonction rame`ne sa repre'sentation partitionne'e.
+
+          PARTPOL(-a*(x+y)+3*x*y,[x,y]);
+          
+                             [[3, 1, 1], [- a, 1, 0]]
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, CONT2PART, EXPLOSE, PART2CONT, TCONTRACT, TPARTPOL.
+
+
+ - Function: PERMUT (l)
+     rame`ne la liste des permutations de la liste l.
+
+
+ - Function: POLYNOME2ELE (p,x)
+     donne la liste l=[n,e1,...,en] ou` n est le degre' du polyno^me p
+     en la variable x et ei la i-ieme fonction syme'trique
+     e'le'mentaire des racines de p.
+
+           POLYNOME2ELE(x^7-14*x^5  + 56*x^3  - 56*X + 22,x);
+          
+                        [7, 0, - 14, 0, 56, 0, - 56, - 22]
+          
+           ELE2POLYNOME( [7, 0, - 14, 0, 56, 0, - 56, - 22],x);
+          
+                                    7       5       3
+                                   X  - 14 X  + 56 X  - 56 X + 22
+
+     la re'ciproque : ELE2POLYNOME(l,x)
+
+
+ - Function: PRODRAC (L,K)
+     L est une liste contenant les fonctions syme'triques
+     e'le'mentaires sur un ensemble A. PRODRAC rend le polyno^me dont
+     les racines sont les produits K a` K des e'le'ments de A.
+
+
+ - Function: PUI (pui,sym,lvar)
+     de'compose le polyno^me syme'trique sym, en les variables
+     contenues de la liste lvar, par les fonctions puissances contenues
+     dans la liste pui. Si le premier e'le'ment de pui est donne' ce
+     sera le cardinal de l'alphabet sinon on prendra le degre' du
+     polyno^me sym. Si il manque des valeurs a` la liste pui, des
+     valeurs formelles du type "pi" sont rajoute'es. Le polyno^me sym
+     peut etre donne' sous 3 formes diffe'rentes : contracte'e (PUI
+     doit alors valoir 1 sa valeur par de'faut), partitionne'e (PUI
+     doit alors valoir 3) ou e'tendue (i.e. le polyno^me en entier)
+     (PUI doit alors valoir 2). La fonction ELEM s'utilise de la me^me
+     manie`re.
+
+          PUI;
+          
+          		       1
+          PUI([3,a,b],u*x*y*z,[x,y,z]);
+          
+          			       3
+          			     (a  - 3 b a + 2 p3) u
+                   		     ---------------------
+          				      6
+
+     autres fonctions de changements de bases :
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, ELEM, MON2SCHUR,
+          MULTI_ELEM, MULTI_PUI, PUI2COMP, PUI2ELE, PUIREDUC,
+          SCHUR2COMP.
+
+
+ - Function: PUI2COMP (N,LPUI)
+     rend la liste des N premie`res fonctions comple`tes (avec en te^te
+     le cardinal) en fonction des fonctions puissance donne'es dans la
+     liste LPUI. Si la liste LPUI est vide le cardinal est N sinon
+     c'est son premier e'le'ment similaire a` COMP2ELE et COMP2PUI.
+
+           PUI2COMP(2,[]);
+          
+          					 2
+          				       p1  + p2
+                  		       [2, p1, --------]
+          					  2
+          
+           PUI2COMP(3,[2,a1]);
+          
+          			      2	        3
+          			    a1  + p2  a1  + 3 p2 a1 + 2 p3
+                    	    [2, a1, --------, --------------------]
+          			       2	       6
+
+     Autres fonctions de changements de bases :
+
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, ELEM,
+          MON2SCHUR, MULTI_ELEM, MULTI_PUI, PUI, PUI2ELE,
+          PUIREDUC, SCHUR2COMP.
+
+
+ - Function: PUI2ELE (N,LPUI)
+     re'alise le passage des fonctions puissances aux fonctions
+     syme'triques e'le'mentaires.  Si le drapeau PUI2ELE est GIRARD, on
+     re'cupe`re la liste des fonctions syme'triques e'le'mentaires de 1
+     a` N, et s'il est e'gal a`  CLOSE, la Nie`me fonction syme'trique
+     e'le'mentaire.
+
+     Autres fonctions de changements de bases :
+
+
+          COMP2ELE, COMP2PUI, ELE2COMP, ELE2PUI, ELEM,
+          MON2SCHUR, MULTI_ELEM, MULTI_PUI, PUI, PUI2COMP,
+          PUIREDUC, SCHUR2COMP.
+
+
+ - Function: PUI2POLYNOME (X,LPUI)
+     calcul le polyno^me en X dont les fonctions puissances des racines
+     sont donne'es dans la liste LPUI.
+
+          (%i6) polynome2ele(x^3-4*x^2+5*x-1,x);
+          (%o6)                             [3, 4, 5, 1]
+          (%i7) ele2pui(3,%);
+          (%o7)                             [3, 4, 6, 7]
+          (%i8) pui2polynome(x,%);
+                                         3      2
+          (%o8)                          X  - 4 X  + 5 X - 1
+
+     Autres fonctions a` voir :
+
+     POLYNOME2ELE, ELE2POLYNOME.
+
+
+ - Function: PUI_DIRECT (ORBITE,[lvar1,...,lvarn],[d1,d2,...,dn])
+     Soit f un polynome en n blocs de variables lvar1,...,lvarn.  Soit
+     ci le nombre de variables dans lvari . Et SC le produit des n
+     groupes syme'triques de degre' c1,...,cn. Ce groupe agit
+     naturellement sur f La liste ORBITE est l'orbite, note'e SC(f), de
+     la fonction f sous l'action de SC. (Cette liste peut e^tre obtenue
+     avec la fonction : MULTI_ORBIT).  Les di sont des entiers tels que
+     c1<=d1, c2<=d2,...,cn<=dn.  Soit SD le produit des groupes
+     syme'triques S_d1 x S_d2 x...x S_dn.
+
+     la fonction pui_direct rame`ne les N premie`res fonctions
+     puissances de SD(f) de'duites des fonctions puissances de SC(f)
+     ou` N est le cardinal de SD(f).
+
+     Le re'sultat est rendue sous forme multi-contracte'e par rapport a
+     SD.  i.e. on ne conserve qu'un e'le'ment par orbite sous l'action
+     de SD).
+
+          L:[[x,y],[a,b]]$
+          
+          PUI_DIRECT(MULTI_ORBIT(a*x+b*y, L), L,[2,2]);
+          
+                                              2  2
+                           [a x, 4 a b x y + a  x ]
+          
+          PUI_DIRECT(MULTI_ORBIT(a*x+b*y, L), L,[3,2]);
+          
+                                   2  2     2    2        3  3
+            [2 A X, 4 A B X Y + 2 A  X , 3 A  B X  Y + 2 A  X ,
+          
+              2  2  2  2      3    3        4  4
+          12 A  B  X  Y  + 4 A  B X  Y + 2 A  X ,
+          
+              3  2  3  2      4    4        5  5
+          10 A  B  X  Y  + 5 A  B X  Y + 2 A  X ,
+          
+              3  3  3  3       4  2  4  2      5    5        6  6
+          40 A  B  X  Y  + 15 A  B  X  Y  + 6 A  B X  Y + 2 A  X ]
+          
+           PUI_DIRECT([y+x+2*c, y+x+2*b, y+x+2*a],[[x,y],[a,b,c]],[2,3]);
+          
+                                       2              2
+                [3 x + 2 a, 6 x y + 3 x  + 4 a x + 4 a ,
+          
+                        2                   3        2       2        3
+                     9 x  y + 12 a x y + 3 x  + 6 a x  + 12 a  x + 8 a ]
+          
+          
+          PUI_DIRECT([y+x+2*c, y+x+2*b, y+x+2*a],[[x,y],[a,b,c]],[3,4]);
+
+
+ - Function: PUIREDUC (N,LPUI)
+     LPUI est une liste dont le premier e'le'ment est un entier M.
+     PUIREDUC donne les N premie`res fonctions puissances en fonction
+     des M premie`res.
+
+          PUIREDUC(3,[2]);
+          
+          						  3
+          				      3 p1 p2 - p1
+                   		  [2, p1, p2, -------------]
+          
+          					    2
+
+
+ - Function: RESOLVANTE (p,x,f,[x1,...,xd])
+     calcule la re'solvante du polyno^me p de la variable x et de
+     degre' n >= d par la fonction f exprime'e en les variables
+     x1,...,xd. Il est important pour l'efficacite' des calculs de ne
+     pas mettre dans la liste [x1,...,xd] les variables n'intervenant
+     pas dans la fonction de transformation f.
+
+     Afin de rendre plus efficaces les calculs on peut mettre des
+     drapeaux a` la variable RESOLVANTE afin que des algorithmes
+     ade'quates soient utilise's :
+
+     Si la fonction f est    unitaire :
+        * un polyno^me d'une variable,
+
+        *   line'aire ,
+
+        *   alterne'e,
+
+        *   une somme de variables,
+
+        *   syme'trique en les variables qui apparaissent dans son
+          expression,
+
+        *   un produit de variables,
+
+        * la fonction de la re'solvante de Cayley (utilisable qu'en
+          degre' 5)
+
+               (x1*x2+x2*x3+x3*x4+x4*x5+x5*x1 -
+                    (x1*x3+x3*x5+x5*x2+x2*x4+x4*x1))^2
+
+          generale,
+     le drapeau de RESOLVANTE pourra e^tre respectivement :
+        *   unitaire,
+
+        *   lineaire,
+
+        *   alternee,
+
+        *   somme,
+
+        *   produit,
+
+        *   cayley,
+
+        *   generale.
+
+
+           resolvante:unitaire;
+          resolvante(x^7-14*x^5  + 56*x^3  - 56*X + 22,x,x^3-1,[x]);
+          
+            7      6        5         4          3           2
+          Y  + 7 Y  - 539 Y  - 1841 Y  + 51443 Y  + 315133 Y  + 376999 Y
+          
+           + 125253
+          
+          resolvante : lineaire;
+          resolvante(x^4-1,x,x1+2*x2+3*x3,[x1,x2,x3]);
+          
+           24       20         16            12             8              4
+          Y   + 80 Y   + 7520 Y   + 1107200 Y   + 49475840 Y  + 344489984 Y
+          							 + 655360000
+          	       Meme solution pour :
+          resolvante : general;
+          resolvante(x^4-1,x,x1+2*x2+3*x3,[x1,x2,x3]);
+          resolvante(x^4-1,x,x1+2*x2+3*x3,[x1,x2,x3,x4])
+          direct([x^4-1],x,x1+2*x2+3*x3,[[x1,x2,x3]]);
+          
+          resolvante:lineaire$
+          resolvante(x^4-1,x,x1+x2+x3,[x1,x2,x3);
+          
+          			       4
+          			      Y  - 1
+          
+          resolvante:symetrique$
+          
+          resolvante(x^4-1,x,x1+x2+x3,[x1,x2,x3]);
+          
+          			       4
+          			      Y  - 1
+          resolvante(x^4+x+1,x,x1-x2,[x1,x2]);
+          	  12      8       6        4        2
+          	 Y   + 8 Y  + 26 Y  - 112 Y  + 216 Y  + 229
+          
+          resolvante:alternee$
+          resolvante(x^4+x+1,x,x1-x2,[x1,x2]);
+          
+          	  12      8       6        4        2
+          	 Y   + 8 Y  + 26 Y  - 112 Y  + 216 Y  + 229
+          
+          
+          resolvante:produit;
+          resolvante(x^7-7*x+3,x,x1*x2*x3,[x1,x2,x3]);
+          
+             35      33         29        28         27        26         24
+            Y   - 7 Y   - 1029 Y   + 135 Y   + 7203 Y   - 756 Y   + 1323 Y
+          
+                    23          22            21           20          19
+          + 352947 Y   - 46305 Y   - 2463339 Y   + 324135 Y   - 30618 Y
+          
+          	  18
+          - 453789 Y
+          
+          	    17              15             14              12
+          - 40246444 Y   + 282225202 Y   - 44274492 Y   + 155098503 Y
+          
+                      11
+          + 12252303 Y
+          
+          	   10              9            8            7             6
+          + 2893401 Y   - 171532242 Y  + 6751269 Y  + 2657205 Y  - 94517766 Y
+          
+          	   5             3
+          - 3720087 Y  + 26040609 Y  + 14348907
+          
+             resolvante:symetrique$
+            resolvante(x^7-7*x+3,x,x1*x2*x3,[x1,x2,x3]);
+          
+            35      33         29        28         27        26         24
+           Y   - 7 Y   - 1029 Y   + 135 Y   + 7203 Y   - 756 Y   + 1323 Y
+          
+                    23          22            21           20          19
+          + 352947 Y   - 46305 Y   - 2463339 Y   + 324135 Y   - 30618 Y
+          
+                     18
+           - 453789 Y
+          
+                      17              15             14              12
+          - 40246444 Y   + 282225202 Y   - 44274492 Y   + 155098503 Y
+          
+                       11
+           + 12252303 Y
+          
+                     10              9            8            7             6
+          + 2893401 Y   - 171532242 Y  + 6751269 Y  + 2657205 Y  - 94517766 Y
+          
+                     5             3
+          - 3720087 Y  + 26040609 Y  + 14348907
+          
+          resolvante:cayley$
+          resolvante(x^5-4*x^2+x+1,x,a,[]);
+          
+          " resolvante de Cayley "
+          
+           6       5         4          3            2
+          X  - 40 X  + 4080 X  - 92928 X  + 3772160 X  + 37880832 X + 93392896
+     Pour la re'solvante de Cayley, les 2 derniers arguments sont
+     neutres et le polyno^me donne' en entre'e doit ne'cessairement
+     e^tre de degre' 5.
+
+     Voir e'galement :
+
+          RESOLVANTE_BIPARTITE, RESOLVANTE_PRODUIT_SYM,
+          RESOLVANTE_UNITAIRE, RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN,
+          RESOLVANTE_KLEIN3, RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE.
+
+
+ - Function: RESOLVANTE_ALTERNEE1 (p,x)
+     calcule la transformation de p(x) de degre n par la fonction
+     $\prod_{1\leq i<j\leq n-1} (x_i-x_j)$.
+
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE , RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE, RESOLVANTE_BIPARTITE.
+
+
+ - Function: RESOLVANTE_BIPARTITE (p,x)
+     calcule la transformation de p(x) de degre n (n pair) par la
+     fonction          $x_1x_2\ldots x_{n/2}+x_{n/2+1}\ldotsx_n$
+
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE , RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE,RESOLVANTE_ALTERNEE1
+
+           RESOLVANTE_BIPARTITE(x^6+108,x);
+          
+                           10        8           6             4
+                          Y   - 972 Y  + 314928 Y  - 34012224 Y
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE, RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE,
+          RESOLVANTE_ALTERNEE1.
+
+
+ - Function: RESOLVANTE_DIEDRALE (p,x)
+     calcule la transformation de p(x) par la fonction x_1x_2+x_3x_4.
+
+          resolvante_diedrale(x^5-3*x^4+1,x);
+          
+           15       12       11       10        9         8         7        6
+          X   - 21 X   - 81 X   - 21 X   + 207 X  + 1134 X  + 2331 X  - 945 X
+          
+                     5          4          3          2
+             - 4970 X  - 18333 X  - 29079 X  - 20745 X  - 25326 X - 697
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE.
+
+
+ - Function: RESOLVANTE_KLEIN (p,x)
+     calcule la transformation de p(x) par la fonction x_1x_2x_4+x_4.
+
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE.
+
+
+ - Function: RESOLVANTE_KLEIN3 (p,x)
+     calcule la transformation de p(x) par la fonction x_1x_2x_4+x_4.
+
+     Voir e'galement :
+
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN, RESOLVANTE,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE.
+
+
+ - Function: RESOLVANTE_PRODUIT_SYM (p,x)
+     calcule la liste toutes les r\'esolvantes produit du polyn\^ome
+     p(x).
+
+            resolvante_produit_sym(x^5+3*x^4+2*x-1,x);
+          
+            5      4             10      8       7       6       5    4
+          [Y  + 3 Y  + 2 Y - 1, Y   - 2 Y  - 21 Y  - 31 Y  - 14 Y  - Y
+          
+                3
+          + 14 Y
+          
+                2       10      8       7    6       5       4       3      2
+          + 3 Y  + 1, Y   + 3 Y  + 14 Y  - Y  - 14 Y  - 31 Y  - 21 Y  - 2 Y
+          
+                5      4
+          + 1, Y  - 2 Y  - 3 Y - 1, Y - 1]
+          
+          
+          resolvante:produit$
+          esolvante(x^5+3*x^4+2*x-1,x,a*b*c,[a,b,c]);
+          
+           10      8       7    6       5       4       3      2
+          Y   + 3 Y  + 14 Y  - Y  - 14 Y  - 31 Y  - 21 Y  - 2 Y  + 1
+     Voir e'galement :
+          RESOLVANTE, RESOLVANTE_UNITAIRE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE.
+
+
+ - Function: RESOLVANTE_UNITAIRE (p,q,x)
+     calcule la r\'esolvante du polyn\^ome p(x) par le polyn\^ome q(x).
+
+     Voir e'galement :
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE_VIERER, RESOLVANTE_DIEDRALE.
+
+
+ - Function: RESOLVANTE_VIERER (p,x)
+     calcule la transformation de p(x) par la fonction x_1x_2-x_3x_4.
+
+     Voir e'galement :
+          RESOLVANTE_PRODUIT_SYM, RESOLVANTE_UNITAIRE,
+          RESOLVANTE_ALTERNEE1, RESOLVANTE_KLEIN, RESOLVANTE_KLEIN3,
+          RESOLVANTE, RESOLVANTE_DIEDRALE.
+
+
+ - Function: SCHUR2COMP (P,l_var)
+     : P est un polyno^mes en les variables contenues dans la liste
+     l_var. Chacune des variables de l_var repre'sente une fonction
+     syme'trique comple`te. On repre'sente dans l_var la ie`me fonction
+     syme'trique comple`te comme la concate'nation de la lettre h avec
+     l'entier i : hi.  Cette fonction donne l'expression de P en
+     fonction des fonctions de Schur.
+
+            SCHUR2COMP(h1*h2-h3,[h1,h2,h3]);
+          
+          
+           				    s
+          				     1, 2
+          
+           SCHUR2COMP(a*h3,[h3]);
+          
+           				      s  a
+          				       3
+
+
+ - Function: SOMRAC (liste,K)
+     la liste contient les fonctions syme'triques e'le'mentaires d'un
+     polyno^me P . On calcul le polyno^mes dont les racines sont les
+     sommes K a` K distinctes des racines de P.
+
+     Voir e'galement PRODRAC.
+
+
+ - Function: TCONTRACT (pol,lvar)
+     teste si le polyno^me pol est syme'trique en les variables
+     contenues dans la liste lvar. Si oui il rend une forme contracte'e
+     comme la fonction CONTRACT.
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, CONT2PART, EXPLOSE, PART2CONT, PARTPOL, TPARTPOL.
+
+
+ - Function: TPARTPOL (pol,lvar)
+     teste si le polyno^me pol est syme'trique en les variables
+     contenues dans la liste lvar. Si oui il rend sa forme partionne'e
+     comme la fonction PARTPOL.
+
+     Autres fonctions de changements de repre'sentations :
+
+     CONTRACT, CONT2PART, EXPLOSE, PART2CONT, PARTPOL, TCONTRACT.
+
+
+ - Function: TREILLIS (n)
+     rame`ne toutes les partitions de poids n.
+
+           treillis(4);
+          
+                      [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]]
+
+     Voir e'galement : LGTREILLIS, LTREILLIS et TREINAT.
+
+
+ - Function: TREINAT
+     TREINAT(part)  rame`ne la liste des partitions infe'rieures a` la
+     partition   part pour l'ordre naturel.
+
+             treinat([5]);
+          
+                                         [[5]]
+             treinat([1,1,1,1,1]);
+          
+              [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1],
+          
+               [1, 1, 1, 1, 1]]
+          
+             treinat([3,2]);
+          
+                                  [[5], [4, 1], [3, 2]]
+     Voir e'galement : LGTREILLIS, LTREILLIS et TREILLIS.
 
 
-File: maxima.info,  Node: Rules and Patterns,  Next: Lists,  Prev: Miscellaneous Options,  Up: Top
+File: maxima.info,  Node: Groups,  Next: Runtime Environment,  Prev: Symmetries,  Up: Top
 
-Rules and Patterns
-******************
+Groups
+******
 
 * Menu:
 
-* Introduction to Rules and Patterns::
-* Definitions for Rules and Patterns::
+* Definitions for Groups::
 
 
-File: maxima.info,  Node: Introduction to Rules and Patterns,  Next: Definitions for Rules and Patterns,  Prev: Rules and Patterns,  Up: Rules and Patterns
+File: maxima.info,  Node: Definitions for Groups,  Prev: Groups,  Up: Groups
 
-Introduction to Rules and Patterns
-==================================
+Definitions for Groups
+======================
 
-   This section discusses user defined pattern matching and
-simplification rules (set up by TELLSIMP, TELLSIMPAFTER, DEFMATCH, or,
-DEFRULE.)  You may affect the main simplification procedures, or else
-have your rules applied explicityly using APPLY1 and APPLY2.     There
-are additional mechanisms for polynomials rules under TELLRAT, and for
-commutative and non commutative algebra in chapter on AFFINE.
+ - Function: TODD_COXETER (relations,subgroup)
+     Find the order of G/H where G is the Free Group modulo RELATIONS,
+     and H is the subgroup of G generated by SUBGROUP.  SUBGROUP is an
+     optional argument, defaulting to [].  In doing this it produces a
+     multiplication table for the right action of G on G/H, where the
+     cosets are enumerated [H,Hg2,Hg3,...]  This can be seen internally
+     in the $todd_coxeter_state.  The multiplication tables for the
+     variables are in table:todd_coxeter_state[2] Then table[i] gives
+     the table for the ith variable.  mulcoset(coset,i) :=
+     table[varnum][coset];
 
-
-File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introduction to Rules and Patterns,  Up: Rules and Patterns
+     Example:
 
-Definitions for Rules and Patterns
-==================================
-
- - Function: APPLY1 (exp, rule1, ..., rulen)
-     repeatedly applies the first rule to exp until it fails, then
-     repeatedly applies the same rule to all subexpressions of exp,
-     left-to-right, until the first rule has failed on all
-     subexpressions.  Call the result of transforming exp in this
-     manner exp'.  Then the second rule is applied in the same fashion
-     starting at the top of exp'.  When the final rule fails on the
-     final subexpression, the application is finished.
-
-
- - Function: APPLY2 (exp, rule1, ..., rulen)
-     differs from APPLY1 in that if the first rule fails on a given
-     subexpression, then the second rule is repeatedly applied, etc.
-     Only if they all fail on a given subexpression is the whole set of
-     rules repeatedly applied to the next subexpression.  If one of the
-     rules succeeds, then the same subexpression is reprocessed,
-     starting with the first rule.  MAXAPPLYDEPTH[10000] is the maximum
-     depth to which APPLY1 and APPLY2 will delve.
-
-
- - Function: APPLYB1 (exp, rule1, ..., rulen)
-     is similar to APPLY1 but works from the "bottom up" instead of
-     from the "top down".  That is, it processes the smallest
-     subexpression of exp, then the next smallest, etc.
-     MAXAPPLYHEIGHT[10000] - is the maximum height to which APPLYB1 will
-     reach before giving up.
-
-
- - Variable: CURRENT_LET_RULE_PACKAGE
-     default:[DEFAULT_LET_RULE_PACKAGE] - the name of the rule package
-     that is presently being used.  The user may reset this variable to
-     the name of any rule package previously defined via the LET
-     command.  Whenever any of the functions comprising the let package
-     are called with no package name the value of
-          CURRENT_LET_RULE_PACKAGE
-     is used.  If a call such as LETSIMP(expr,rule_pkg_name); is made,
-     the rule package rule_pkg_name is used for that LETSIMP command
-     only, i.e.  the value of CURRENT_LET_RULE_PACKAGE is not changed.
-
-
- - Variable: DEFAULT_LET_RULE_PACKAGE
-     - the name of the rule package used when one is not explicitly set
-     by the user with LET or by changing the value of
-     CURRENT_LET_RULE_PACKAGE.
-
-
- - Function: DEFMATCH (progname, pattern, parm1, ..., parmn)
-     creates a function of n+1 arguments with the name progname which
-     tests an expression to see if it can match a particular pattern.
-     The pattern is some expression containing pattern variables and
-     parameters.  The parms are given explicitly as arguments to
-     DEFMATCH while the pattern variables (if supplied) were given
-     implicitly in a previous MATCHDECLARE function.  The first
-     argument to the created function progname, is an expression to be
-     matched against the "pattern" and the other n arguments are the
-     actual variables occurring in the expression which are to take the
-     place of dummy variables occurring in the "pattern".  Thus the
-     parms in the DEFMATCH are like the dummy arguments to the
-     SUBROUTINE statement in FORTRAN.  When the function is "called"
-     the actual arguments are substituted.  For example:
-          (C1)  NONZEROANDFREEOF(X,E):=  IF E#0 AND FREEOF(X,E)
-                      THEN TRUE ELSE FALSE$
-          (IS(E#0 AND FREEOF(X,E)) is an  equivalent function
-          definition)
-          (C2)  MATCHDECLARE(A,NONZEROANDFREEOF(X),B,FREEOF(X))$
-          (C3)  DEFMATCH(LINEAR,A*X+B,X)$
-              This has caused the function LINEAR(exp,var1) to be defined.  It
-
-     tests exp to see if it is of the form A*var1+B where A and B do not
-     contain var1 and A is not zero.  DEFMATCHed functions return (if
-     the match is successful) a list of equations whose left sides are
-     the pattern variables and parms and whose right sides are the
-     expressions which the pattern variables and parameters matched.
-     The pattern variables, but not the parameters, are set to the
-     matched expressions.  If the match fails, the function returns
-     FALSE.  Thus LINEAR(3*Z+(Y+1)*Z+Y**2,Z) would return [B=Y**2,
-     A=Y+4, X=Z].  Any variables not declared as pattern variables in
-     MATCHDECLARE or as parameters in DEFMATCH which occur in pattern
-     will match only themselves so that if the third argument to the
-     DEFMATCH in (C4) had been omitted, then LINEAR would only match
-     expressions linear in X, not in any other variable.      A pattern
-     which contains no parameters or pattern variables returns TRUE if
-     the match succeeds.  Do EXAMPLE(DEFMATCH); for more examples.
-
-
- - Function: DEFRULE (rulename, pattern, replacement)
-     defines and names a replacement rule for the given pattern.  If
-     the rule named rulename is applied to an expression (by one of the
-     APPLY functions below), every subexpression matching the pattern
-     will be replaced by the replacement.  All variables in the
-     replacement which have been assigned values by the pattern match
-     are assigned those values in the replacement which is then
-     simplified.  The rules themselves can be treated as functions
-     which will transform an expression by one operation of the pattern
-     match and replacement.  If the pattern fails, the original
-     expression is returned.
-
-
- - Function: DISPRULE (rulename1, rulename2, ...)
-     will display rules with the names rulename1, rulename2, as were
-     given by DEFRULE, TELLSIMP, or TELLSIMPAFTER or a pattern defined
-     by DEFMATCH.  For example, the first rule modifying SIN will be
-     called SINRULE1.  DISPRULE(ALL); will display all rules.
-
-
- - Function: LET (prod, repl, predname, arg1, arg2, ..., argn)
-     defines a substitution rule for LETSIMP such that prod gets
-     replaced by repl.  prod is a product of positive or negative
-     powers of the following types of terms:
-        *     (1) Atoms which LETSIMP will search for literally unless
-          previous to calling LETSIMP the MATCHDECLARE function is used
-          to associate a predicate with the atom.  In this case LETSIMP
-          will match the atom to any term of a product satisfying the
-          predicate.
-
-        *     (2) Kernels such as SIN(X), N!, F(X,Y), etc.  As with
-          atoms above LETSIMP will look for a literal match unless
-          MATCHDECLARE is used to associate a predicate with the
-          argument of the kernel.  A term to a positive power will only
-          match a term having at least that power in the expression
-          being LETSIMPed.  A term to a negative power on the other
-          hand will only match a term with a power at least as
-          negative.  In the case of negative powers in "product" the
-          switch LETRAT must be set to TRUE (see below).  If a
-          predicate is included in the LET function followed by a list
-          of arguments, a tentative match (i.e. one that would be
-          accepted if the predicate were omitted) will be accepted only
-          if predname(arg1',...,argn') evaluates to TRUE where argi' is
-          the value matched to argi.  The argi may be the name of any
-          atom or the argument of any kernel appearing in prod.  repl
-          may be any rational expression.  If any of the atoms or
-          arguments from prod appear in repl the appropriate
-          substitutions will be made.
-         LETRAT[FALSE] when FALSE, LETSIMP will simplify the numerator
-     and denominator of expr independently and return the result.
-     Substitutions such as N!/N goes to (N-1)!  will fail.  To handle
-     such situations LETRAT should be set to TRUE, then the numerator,
-     denominator, and their quotient will be simplified in that order.
-        These substitution functions allow you to work with several
-     rulepackages at once. Each rulepackage can contain any number of
-     LETed rules and is referred to by a user supplied name.  To insert
-     a rule into the rulepackage name, do
-     LET([prod,repl,pred,arg1,...],name).  To apply the rules in
-     rulepackage name, do LETSIMP(expr, name).  The function
-     LETSIMP(expr,name1,name2,...)  is equivalent to doing
-     LETSIMP(expr,name1) followed by LETSIMP(%,name2) etc.
-     CURRENT_LET_RULE_PACKAGE is the name of the rule package that is
-     presently being used.  The user may reset this variable to the
-     name of any rule package previously defined via the LET command.
-     Whenever any of the functions comprising the let package are
-     called with no package name the value of CURRENT_LET_RULE_PACKAGE
-     is used.  If a call such as LETSIMP(expr,rule_pkg_name); is made,
-     the rule package rule_pkg_name is used for that LETSIMP command
-     only, i.e.  the value of CURRENT_LET_RULE_PACKAGE is not changed.
-     There is a DEFAULT_LET_RULE_PACKAGE which is assumed when no other
-     name is supplied to any of the functions.  Whenever a LET includes
-     a rulepackage name that is used as the CURRENT_LET_RULE_PACKAGE.
-
-
- - Variable: LETRAT
-     default: [FALSE] - when FALSE, LETSIMP will simplify the numerator
-     and denominator of expr independently and return the result.
-     Substitutions such as N!/N goes to (N-1)! will fail.  To handle
-     such situations LETRAT should be set to TRUE, then the numerator,
-     denominator, and their quotient will be simplified in that order.
-
-
- - Function: LETRULES ()
-     displays the rules in the current rulepackage.  LETRULES(name)
-     displays the rules in the named rulepackage.  The current
-     rulepackage is the value of
-          CURRENT_LET_RULE_PACKAGE
-     The initial value of the rules is
-          DEFAULT_LET_RULE_PACKAGE
-
-
- - Function: LETSIMP (exp)
-     will continually apply the substitution rules previously defined
-     by the function LET until no further change is made to exp.
-     LETSIMP(expr,rule_pkg_name); will cause the rule package
-     rule_pkg_name to be used for that LETSIMP command only, i.e.  the
-     value of CURRENT_LET_RULE_PACKAGE is not changed.
-
-
- - Variable: LET_RULE_PACKAGES
-     default:[DEFAULT_LET_RULE_PACKAGE] - The value of
-     LET_RULE_PACKAGES is a list of all the user-defined let rule
-     packages plus the special package
-          DEFAULT_LET_RULE_PACKAGE
-     This is the name of the rule package used when one is not
-     explicitly set by the user.
-
-
- - Function: MATCHDECLARE (patternvar, predicate, ...)
-     associates a predicate with a pattern variable so that the
-     variable will only match expressions for which the predicate is
-     not FALSE.  (The matching is accomplished by one of the functions
-     described below).  For example after
-          MATCHDECLARE(Q,FREEOF(X,%E))
-     is executed, Q will match any expression not containing X or %E.
-     If the match succeeds then the variable is set to the matched
-     expression.  The predicate (in this case FREEOF) is written
-     without the last argument which should be the one against which
-     the pattern variable is to be tested.  Note that the patternvar
-     and the arguments to the predicate are evaluated at the time the
-     match is performed.  The odd numbered argument may also be a list
-     of pattern variables all of which are to have the associated
-     predicate.  Any even number of arguments may be given.  For
-     pattern matching, predicates refer to functions which are either
-     FALSE or not FALSE (any non FALSE value acts like TRUE).
-     MATCHDECLARE(var,TRUE) will permit var to match any expression.
-
-
- - Function: MATCHFIX
-     - MATCHFIX operators are used to denote functions of any number of
-     arguments which are passed to the function as a list.  The
-     arguments occur between the main operator and its "matching"
-     delimiter.  The MATCHFIX("x",...) function is a syntax extension
-     function which declares x to be a MATCHFIX operator.   The default
-     binding power is 180, and the ARGS inside may be anything.
-
-
-          (C1) matchfix("|","|");
+          (%i1) symet(n):=create_list(if (j - i) = 1 then (p(i,j))^^3 else
+               if (not i = j) then (p(i,j))^^2 else p(i,i) , j,1,n-1,i,1,j);
+          						      <3>
+          (%o1) SYMET(N) := CREATE_LIST(IF J - I = 1 THEN P(I, J)
           
-          (D1) 				      "|"
-          (C2) |a|+b;
+          			       <2>
+           ELSE (IF NOT I = J THEN P(I, J)
+           ELSE P(I, I)), J, 1, N - 1, I, 1, J)
+          (%i2) p(i,j) :=concat(x,i).concat(x,j);
+          (%o2)                P(I, J) := CONCAT(X, I) . CONCAT(X, J)
+          (%i3) symet(5);
+                                  <3>                    <2>           <3>
+          (%o3) [X1 . X1, (X1 . X2)   , X2 . X2, (X1 . X3)   , (X2 . X3)   ,
           
-          (D2) 				   b + (|a|)
-          (C3) |(a,b)|;
+                                <2>                <2>           <3>
+          X3 . X3,     (X1 . X4)	 , (X2 . X4)   , (X3 . X4)   , X4 . X4]
+          (%i4) todd_coxeter(%o3);
           
-          (D3) 				      |b|
-          (C4) |[a,b]|;
+          Rows tried 426
+          (%o4) 				      120
+          (%i5) todd_coxeter(%o3,[x1]);
           
-          (D4) 				   |[a, b]|
+          Rows tried 213
+          (%o5) 				      60
+          (%i6) todd_coxeter(%o3,[x1,x2]);
           
-          (C9) |x|:=IF NUMBERP(x) THEN ABS(x)
-                  ELSE (IF LISTP(x) AND APPLY("and",MAP(NUMBERP,x))
-          		  THEN SUM(x[i]^2,i,1,LENGTH(x))^0.5 ELSE BUILDQ([u:x],|u|))$
-          
-          (C10) |[1,2,3]|;
-          
-          (D10) 			       3.741657386773941
-          
-          (C18) |-7|;
-          
-          (D18) 				       7
-          (C19) |[a,b]|;
-          
-          (D19) 				   |[a, b]|
+          Rows tried 71
+          (%o6) 				      20
+          (%i7) table:todd_coxeter_state[2]$
+          (%i8) table:todd_coxeter_state[2]$
+          (%i9) table[1];
+          (%o9) {Array: FIXNUM #(0 2 1 3 7 6 5 4 8 11 17 9 12 14 13 20
+                     16 10 18 19 15 0 0 0 0 0 0 0 0  0 0 0 0 0 0 0)}
 
-
- - Function: REMLET (prod, name)
-     deletes the substitution rule, prod -> repl, most recently defined
-     by the LET function.  If name is supplied the rule is deleted from
-     the rule package name.  REMLET() and REMLET(ALL) delete all
-     substitution rules from the current rulepackage. If the name of a
-     rulepackage is supplied, e.g. REMLET(ALL,name), the rulepackage,
-     name, is also deleted.  If a substitution is to be changed using
-     the same product, REMLET need not be called, just redefine the
-     substitution using the same product (literally) with the LET
-     function and the new replacement and/or predicate name.  Should
-     REMLET(product) now be called the original substitution rule will
-     be revived.
-
-
- - Function: REMRULE (function, rulename)
-     will remove a rule with the name rulename from the function which
-     was placed there by DEFRULE, DEFMATCH, TELLSIMP, or TELLSIMPAFTER.
-     If rule-name is ALL, then all rules will be removed.
-
-
- - Function: TELLSIMP (pattern, replacement)
-     is similar to TELLSIMPAFTER but places new information before old
-     so that it is applied before the built-in simplification rules.
-     TELLSIMP is used when it is important to modify the expression
-     before the simplifier works on it, for instance if the simplifier
-     "knows" something about the expression, but what it returns is not
-     to your liking.  If the simplifier "knows" something about the
-     main operator of the expression, but is simply not doing enough for
-     you, you probably want to use TELLSIMPAFTER.  The pattern may not
-     be a sum, product, single variable, or number.  RULES is a list of
-     names having simplification rules added to them by DEFRULE,
-     DEFMATCH, TELLSIMP, or TELLSIMPAFTER.  Do EXAMPLE(TELLSIMP); for
-     examples.
-
-
- - Function: TELLSIMPAFTER (pattern, replacement)
-     defines a replacement for pattern which the MACSYMA simplifier
-     uses after it applies the built-in simplification rules.  The
-     pattern may be anything but a single variable or a number.
+     Note only the elements 1 thru 20 of this array %o9  are meaningful.
+     table[1][4] = 7 indicates coset4.var1 = coset7
 
 
 
-File: maxima.info,  Node: Lists,  Next: Function Definition,  Prev: Rules and Patterns,  Up: Top
+File: maxima.info,  Node: Runtime Environment,  Next: Miscellaneous Options,  Prev: Groups,  Up: Top
 
-Lists
-*****
-
-* Menu:
-
-* Introduction to Lists::
-* Definitions for Lists::
-
-
-File: maxima.info,  Node: Introduction to Lists,  Next: Definitions for Lists,  Prev: Lists,  Up: Lists
-
-Introduction to Lists
-=====================
-
-   Lists are the basic building block for maxima and lisp.   All data
-types other than arrays, hash tables, numbers are represented as lisp
-lists, These lisp lists have the form
-     ((mplus) $A 2)
-
-to indicate an expression `A+2'.   At maxima level one would see the
-infix notation `A+2'.   Maxima also has lists which are printed as
-     [1, 2, 7, x+y]
-
-for a list with 4 elements.   Internally this corresponds to a lisp list
-of the form
-     ((mlist) 1  2  7  ((mplus)  $X $Y ))
-
-The flag which denotes the type field of the maxima expression is a list
-itself, since after it has been through the simplifier the list would
-become
-     ((mlist simp) 1 2 7 ((mplus simp) $X $Y))
-
-
-File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  Up: Lists
-
-Definitions for Lists
-=====================
-
- - Function: APPEND (list1, list2, ...)
-     returns a single list of the elements of list1 followed by the
-     elements of list2,...  APPEND also works on general expressions,
-     e.g. APPEND(F(A,B), F(C,D,E)); -> F(A,B,C,D,E).  Do
-     EXAMPLE(APPEND); for an example.
-
-
- - Function: ASSOC (exp)
-     This function searches for the key in the left hand side of the
-     input list of the form [x,y,z...] where each of the list elements
-     is a expression of a binary operand and 2 elements.  For example
-     x=1, 2^3, [a,b] etc.  The key checked againts the first operand
-     and and returns the second operand if the key is found.  If the
-     key is not found it either returns the default value if supplied or
-     false.
-
- - Function: ATOM (exp)
-     is TRUE if exp is atomic (i.e. a number or name) else FALSE.  Thus
-     ATOM(5) is TRUE while ATOM(A[1]) and ATOM(SIN(X)) are FALSE.
-     (Assuming A[1] and X are unbound.)
-
-
- - Function: CONS (exp, list)
-     returns a new list constructed of the element exp as its first
-     element, followed by the elements of list.  CONS also works on
-     other expressions, e.g. CONS(X, F(A,B,C));  ->  F(X,A,B,C).
-
-
- - Function: COPYLIST (L)
-     creates a copy of the list L.
-
-
- - Function: DELETE (exp1, exp2)
-     removes all occurrences of exp1 from exp2.  Exp1 may be a term of
-     exp2 (if it is a sum) or a factor of exp2 (if it is a product).
-          (C1)  DELETE(SIN(X),X+SIN(X)+Y);
-          (D1)               Y + X
-     DELETE(exp1, exp2, integer) removes the first integer occurrences
-     of exp1 from exp2.  Of course, if there are fewer than integer
-     occurrences of exp1 in exp2 then all occurrences will be deleted.
-
-
- - Function: ENDCONS (exp, list)
-     returns a new list consisting of the elements of list followed by
-     exp.  ENDCONS also works on general expressions, e.g.  ENDCONS(X,
-     F(A,B,C));  ->  F(A,B,C,X).
-
-
- - Function: EVERY (exp)
-     This function takes a list, or a positive number of arguments and
-     returns true if all its arguments are not false.
-
-
- - Function: FIRST (exp) SECOND (exp) .. TENTH (exp)
-     yields the first part of exp which may result in the first element
-     of a list, the first row of a matrix, the first term of a sum,
-     etc.  Note that FIRST and its related functions, REST and LAST,
-     work on the form of exp which is displayed not the form which is
-     typed on input.  If the variable INFLAG [FALSE] is set to TRUE
-     however, these functions will look at the internal form of exp.
-     Note that the simplifier re-orders expressions.  Thus FIRST(X+Y)
-     will be X if INFLAG is TRUE and Y if INFLAG is FALSE.  (FIRST(Y+X)
-     gives the same results).  The functions SECOND .. TENTH yield the
-     second through the tenth part of their input argument.
-
-
- - Function: FLATTEN(exp)
-     Takes a list of the form [[1,2],[3,4]] and returns [1,2,3,4].
-
-
- - Function: GET (a, i)
-     retrieves the user property indicated by i associated with atom a
-     or returns FALSE if a doesn't have property i.
-          (C1) PUT(%E,'TRANSCENDENTAL,'TYPE);
-          (D1) 			        TRANSCENDENTAL
-          (C2) PUT(%PI,'TRANSCENDENTAL,'TYPE)$
-          (C3) PUT(%I,'ALGEBRAIC,'TYPE)$
-          (C4) TYPEOF(EXP) := BLOCK([Q],
-                                  IF NUMBERP(EXP)
-                                  THEN RETURN('ALGEBRAIC),
-                                  IF NOT ATOM(EXP)
-                                  THEN RETURN(MAPLIST('TYPEOF, EXP)),
-                                  Q : GET(EXP, 'TYPE),
-                                  IF Q=FALSE
-          			THEN ERRCATCH(ERROR(EXP,"is not numeric.")) ELSE Q)$
-          (C5) TYPEOF(2*%E+X*%PI);
-          X is not numeric.
-          (D5) 	     [[TRANSCENDENTAL, []], [ALGEBRAIC, TRANSCENDENTAL]]
-          (C6) TYPEOF(2*%E+%PI);
-          (D6) 	        [TRANSCENDENTAL, [ALGEBRAIC, TRANSCENDENTAL]]
-
- - Function: LAST (exp)
-     yields the last part (term, row, element, etc.) of the exp.
-
-
- - Function: LENGTH (exp)
-     gives (by default) the number of parts in the external (displayed)
-     form of exp.  For lists this is the number of elements, for
-     matrices it is the number of rows, and for sums it is the number
-     of terms. (See DISPFORM).  The LENGTH command is affected by the
-     INFLAG switch [default FALSE].  So, e.g. LENGTH(A/(B*C)); gives 2
-     if INFLAG is FALSE (Assuming EXPTDISPFLAG is TRUE), but 3 if
-     INFLAG is TRUE (the internal representation is essentially
-     A*B^-1*C^-1).
-
-
- - Variable: LISTARITH
-     default: [TRUE] - if FALSE causes any arithmetic operations with
-     lists to be suppressed; when TRUE, list-matrix operations are
-     contagious causing lists to be converted to matrices yielding a
-     result which is always a matrix.  However, list-list operations
-     should return lists.
-
-
- - Function: LISTP (exp)
-     is TRUE if exp is a list else FALSE.
-
-
- - Function: MAKELIST (exp,var,lo,hi)
-     returns a list as value.  MAKELIST may be called as
-     MAKELIST(exp,var,lo,hi) ["lo" and "hi" must be integers], or as
-     MAKELIST(exp,var,list).  In the first case MAKELIST is analogous to
-     SUM, whereas in the second case MAKELIST is similar to MAP.
-     Examples:
-             MAKELIST(CONCAT(X,I),I,1,6) yields [X1,X2,X3,X4,X5,X6]
-             MAKELIST(X=Y,Y,[A,B,C]) yields [X=A,X=B,X=C]
-
-
- - Function: MEMBER (exp, list)
-     returns TRUE if exp occurs as a member of list (not within a
-     member).  Otherwise FALSE is returned.  Member also works on
-     non-list expressions, e.g. MEMBER(B, F(A,B,C));  ->  TRUE.
-
-
- - Function: REST (exp, n)
-     yields exp with its first n elements removed if n is positive and
-     its last -n elements removed if n is negative.  If n is 1 it may
-     be omitted.  Exp may be a list, matrix, or other expression.
-
-
- - Function: REVERSE (list)
-     reverses the order of the members of the list (not the members
-     themselves).  REVERSE also works on general expressions, e.g.
-     REVERSE(A=B); gives B=A.  REVERSE default: [FALSE] - in the
-     Plotting functions, if TRUE cause a left-handed coordinate system
-     to be assumed.
-
-
-
-File: maxima.info,  Node: Function Definition,  Next: Program Flow,  Prev: Lists,  Up: Top
-
-Function Definition
+Runtime Environment
 *******************
 
 * Menu:
 
-* Introduction to Function Definition::
-* FUNCTION::
-* MACROS::
-* OPTIMIZATION::
-* Definitions for Function Definition::
+* Introduction for Runtime Environment::
+* INTERRUPTS::
+* Definitions for Runtime Environment::
 
 
-File: maxima.info,  Node: Introduction to Function Definition,  Next: FUNCTION,  Prev: Function Definition,  Up: Function Definition
+File: maxima.info,  Node: Introduction for Runtime Environment,  Next: INTERRUPTS,  Prev: Runtime Environment,  Up: Runtime Environment
 
-Introduction to Function Definition
+Introduction for Runtime Environment
+====================================
+
+   - A file which is loaded automatically for you when you start up a
+MACSYMA, to customize MACSYMA for you.  It is possible to have an init
+file written as a BATCH file of macsyma commands.  We hope this makes
+it easier for users to customize their macsyma environment.  Here is an
+example init file
+             /*-*-macsyma-*-*/
+             setup_autoload("share\;bessel",j0,j1,jn);
+             showtime:all; comgrind:true;
+   The strange looking comment at the top of the file
+"/*-*-macsyma-*-*/" tells that it is a macsyma-language file.  Also:
+"SETUP_AUTOLOAD" can be used to make functions in BATCH files
+autoloading, meaning that you can then use (for instance, here) the
+functions J0, J1 and Jn from the BESSEL package directly because when
+you use the function the BESSEL package will be loaded in for you
+automatically.  If the second file name in the argument to
+SETUP_AUTOLOAD is not specified (the preferred usage) then the standard
+search for second file names of "FASL", "TRLISP", and ">" is done.
+
+
+File: maxima.info,  Node: INTERRUPTS,  Next: Definitions for Runtime Environment,  Prev: Introduction for Runtime Environment,  Up: Runtime Environment
+
+INTERRUPTS
+==========
+
+   - There are several ways the user can interrupt a MACSYMA
+computation, usually with a control character.  Do
+DESCRIBE(CHARACTERS); for details.  MACSYMA will also be interrupted if
+^Z (control-Z) is typed, as this will exit back to Unix shell level
+Usually Control-C interrupts the computation putting you in a break
+loop.  Typing :t should give you top level maxima back again.
+
+
+File: maxima.info,  Node: Definitions for Runtime Environment,  Prev: INTERRUPTS,  Up: Runtime Environment
+
+Definitions for Runtime Environment
 ===================================
 
-
-File: maxima.info,  Node: FUNCTION,  Next: MACROS,  Prev: Introduction to Function Definition,  Up: Function Definition
+ - Function: ALARMCLOCK (arg1, arg2, arg3)
+     will execute the function of no arguments whose name is arg3 when
+     the time specified by arg1 and arg2 elapses.  If arg1 is the atom
+     "TIME" then arg3 will be executed after arg2 seconds of real-time
+     has elapsed while if arg1 is the atom "RUNTIME" then arg3 will be
+     executed after arg2 milliseconds of cpu time. If arg2 is negative
+     then the arg1 timer is shut off.
 
-FUNCTION
-========
 
-   - To define a function in MACSYMA you use the := operator.  E.g.
-     F(X):=SIN(X)
+ - Function: ALLOC
+     takes any number of arguments which are the same as the replies to
+     the "run out of space" question.  It increases allocations
+     accordingly.  E.g. If the user knows initially that his problem
+     will require much space, he can say ALLOC(4); to allocate the
+     maximum amount initially.  See also the DYNAMALLOC switch.
 
-defines a function F.  Anonmyous functions may also be created using
-LAMBDA.  For example
-     lambda([i,j], ... )
 
-can be used instead of F where
-     F(I,J):=BLOCK([], ... );
-     MAP(LAMBDA([I],I+1),L)
+ - Function: BUG ("message")
+     similar to mail, sends a message to MACSYMA Mail.  This may be
+     used for reporting bugs or suspected bugs in MACSYMA.  Expressions
+     may be included by referring to them, outside double quotes, e.g.
+     BUG("I am trying to integrate",%o3,"but it asks for more list
+     space.  What should I do?");
 
-would return a list with 1 added to each term.
 
-   You may also define a function with a variable number of arguments,
-by having a final argument which is assigned to a list of the extra
-arguments:
+ - Function: CLEARSCREEN ()
+     Clears the screen.  The same as typing control-L.
 
-     (C8) f([u]):=u;
-     (C9) f(1,2,3,4);
-     (D9) 				 [1, 2, 3, 4]
-     (C11) f(a,b,[u]):=[a,b,u];
-     (C12) f(1,2,3,4,5,6);
-     (D12) 			     [1, 2, [3, 4, 5, 6]]
 
-   The right hand side of a function is an expression.  Thus if you
-want a sequence of expressions, you do
+ - Function: CONTINUE
+     - Control-^ typed while in MACSYMA causes LISP to be entered.  The
+     user can now type any LISP S-expression and have it evaluated.
+     Typing (CONTINUE) or ^G (control-G) causes MACSYMA to be
+     re-entered.
 
-     f(x):=(expr1,expr2,....,exprn);
-   and the value of exprn is what is returned by the function.
 
-   If you wish to make a `return' from some expression inside the
-function then you must use `block' and `return'.
+ - Function: DDT ()
+     Exits from MACSYMA to the operating system level.  (The same as
+     control-Z on ITS, or control-C on Tops-20.)
 
-     block([],expr1,...,if(a>10) then return(a),...exprn)
-   is itelf an expression, and so could take the place of the right
-hand side of a function definition.  Here it may happen that the return
-happens earlier than the last expression.
 
-   The first `[]' in the block, may contain a list of variables and
-variable assignments, such as `[a:3,b,c:[]]', which would cause the
-three variables `a',`b',and `c' to not refer to their global values,
-but rather have these special values for as long as the code executes
-inside the `block', or inside functions called from inside the `block'.
-This is called dynamic binding, since the variables last from the
-start of the block to the time it exits.  Once you return from the
-`block', or throw out of it, the old values (if any) of the variables
-will be restored.   It is certainly a good idea to protect your
-variables in this way.   Note that the assignments in the block
-variables, are done in parallel.   This means, that if you had used
-`c:a' in the above, the value of `c' would have been the value of `a'
-at the time you just entered the block, but before `a' was bound.
-Thus doing something like
+ - Function: DELFILE (file-specification)
+     will delete the file given by the file-specification (i.e.
+     firstname, secondname, device, user) from the given device.
 
-     block([a:a],expr1,... a:a+3,...exprn)
-   will protect the external value of `a' from being altered, but would
-let you access what that value was.   Thus the right hand side of the
-assignments, is evaluated in the entering context, before any binding
-occurs.  Using just `block([x],..' would cause the x to have itself as
-value, just as if it would have if you entered a fresh MAXIMA session.
 
-   The actual arguments to a function are treated in exactly same way as
-the variables in a block.  Thus in
+ - Function: DISKFREE ()
+     With no args or an arg of TRUE, will return the total number of
+     free blocks of disk space in the system.  With an arg of 0, 1, or
+     13, it will return the number of free blocks of diskspace on the
+     respective disk pack.  With an arg of SECONDARY or PRIMARY, it will
+     return the total number of free blocks of disk space on the
+     secondary or primary disk pack respectively.
 
-     f(x):=(expr1,...exprn);
-     and
-     f(1);
-   we would have a similar context for evaluation of the expressions as
-if we had done
-     block([x:1],expr1,...exprn)
 
-   Inside functions, when the right hand side of a definition, may be
-computed at runtime, it is useful to use `define' and possibly `buildq'.
+ - declaration: FEATURE
+     - A nice adjunct to the system.  STATUS(FEATURE) gives you a list
+     of system features. At present the list for MC is: MACSYMA,
+     NOLDMSG, MACLISP, PDP10, BIGNUM, FASLOAD, HUNK, FUNARG, ROMAN,
+     NEWIO, SFA, PAGING, MC, and ITS.  Any of these "features" may be
+     given as a second argument to STATUS(FEATURE,...); If the
+     specified feature exists, TRUE will be returned, else FALSE.
+     Note: these are system features, and not really "user related".
+     See also DESCRIBE(features); for more user-oriented features.
 
-
-File: maxima.info,  Node: MACROS,  Next: OPTIMIZATION,  Prev: FUNCTION,  Up: Function Definition
 
-MACROS
-======
+ - Function: FEATUREP (a,f)
+     attempts to determine whether the object a has the feature f on
+     the basis of the facts in the current data base.  If so, it
+     returns TRUE, else FALSE.  See DESCRIBE(FEATURES); .
+          (%i1) DECLARE(J,EVEN)$
+          (%i2) FEATUREP(J,INTEGER);
+          (%o2)                                TRUE
 
- - Function: BUILDQ ([varlist],expression);
-     EXPRESSION is any single MAXIMA expression and  VARLIST is a list
-     of elements of the form `<atom>' or `<atom>:<value>'
+ - Function: ROOM ()
+     types out a verbose description of the state of storage and stack
+     management in the Macsyma.  This simply utilizes the Lisp ROOM
+     function.  ROOM(FALSE) - types out a very terse description,
+     containing most of the same information.
 
-Semantics
----------
 
-   The <value>s in the <varlist> are evaluated left to right (the syntax
-<atom> is equivalent to <atom>:<atom>).  then these values are
-substituted into <expression> in parallel.  If any <atom> appears as a
-single argument to the special form SPLICE (i.e. SPLICE(<atom>) ) inside
-<expression>, then the value associated with that <atom> must be a
-macsyma list, and it is spliced into <expression> instead of
-substituted.
+ - Function: STATUS (arg)
+     will return miscellaneous status information about the user's
+     MACSYMA depending upon the arg given.  Permissible arguments and
+     results are as follows:
+        * TIME - the time used so far in the computation.
 
-SIMPLIFICATION
---------------
+        * DAY - the day of the week.
 
-   The arguments to BUILDQ need to be protected from simplification
-until the substitutions have been carried out.  This code should affect
-that by using `''.
+        * DATE - a list of the year, month, and day.
 
-   `buildq' can be useful for building functions on the fly.  One of
-the powerful things about MAXIMA is that you can have your functions
-define other functions to help solve the problem.  Further below we
-discuss building a recursive function, for a series solution.   This
-defining of functions inside functions usually uses `define', which
-evaluates its arguments.  A number of examples are included under
-`splice'.
+        * DAYTIME - a list of the hour, minute, and second.
 
- - Function: SPLICE (atom)
-     This is used with buildq to construct a list. This is handy for
-     making argument lists, in conjunction with BUILDQ
+        * RUNTIME - accumulated cpu time times the atom "MILLISECONDS"
+          in the current    MACSYMA.
 
-          MPRINT([X]) ::= BUILDQ([U : x],
-            if (debuglevel > 3) print(splice(u)));
+        * REALTIME - the real time (in sec) elapsed since the user
+          started up    his MACSYMA.
 
-     Including a call like
-          MPRINT("matrix is ",MAT,"with length",LENGTH(MAT))
-     is equivalent to putting in the line
+        * GCTIME - the garbage collection time used so far in the
+          current    computation.
 
-          IF DEBUGLEVEL > 3
-            THEN PRINT("matrix is ",MAT,"with length",
-                        LENGTH(MAT))
+        * TOTALGCTIME - gives the total garbage collection time used in
+          MACSYMA    so far.
 
-     A more non trivial example would try to display the variable values
-     AND their names.
-          MSHOW(A,B,C)
+        * FREECORE - the number of blocks of core your MACSYMA can
+          expand    before it runs out of address space.  (A block is
+          1024 words.)     Subtracting that value from 250*BLOCKS (the
+          maximum you can get on MC)    tells you how many blocks of
+          core your MACSYMA is using up.  (A    MACSYMA with no "fix"
+          file starts at approx. 191 blocks.)
 
-     should become
+        * FEATURE - gives you a list of system features. At present the
+          list for    MC is: MACSYMA, NOLDMSG, MACLISP, PDP10, BIGNUM,
+          FASLOAD, HUNK,    FUNARG, ROMAN, NEWIO, SFA, PAGING, MC, and
+          ITS.  Any of these    "features" may be given as a second
+          argument to STATUS(FEATURE,...);    If the specified feature
+          exists, TRUE will be returned, else FALSE.     Note: these
+          are system features, and not really "user related".
+     For information about your files, see the FILEDEFAULTS(); command.
 
-          PRINT('A,"=",A,",",'B,"=",B,", and",'C,"=",C)
 
-     so that if it occurs as a line in a program we can print values.
+ - Function: TIME (Di1, Di2, ...)
+     gives a list of the times in milliseconds taken to compute the Di.
+     (Note: the Variable SHOWTIME, default: [FALSE], may be set to
+     TRUE to have computation times printed out with each D-line.)
 
-          (C101) foo(x,y,z):=mshow(x,y,z);
-          (C102) foo(1,2,3);
-          X = 1 , Y = 2 , and Z = 3
-
-     The actual definition of mshow is the following.   Note how buildq
-     lets you build 'QUOTED' structure, so that the  `'u' lets you get
-     the variable name.  Note that in macros, the RESULT is a piece of
-     code which will then be substituted for the macro and evaluated.
-
-          MSHOW([lis])::=BLOCK([ans:[],N:LENGTH(lis)],
-          	   FOR i THRU N DO
-          	       (ans:APPEND(ans,
-          			   BUILDQ([u:lis[i]],
-          				  ['u,"=",u])),
-          		IF i < N
-          		    THEN ans
-          		    :APPEND(ans,
-          			    IF i < N-1 THEN [","]
-          			        ELSE [", and"])),
-          	   BUILDQ([U:ans],PRINT(SPLICE(u))))
-
-     The splice also works to put arguments into algebraic operations:
-
-          (C108) BUILDQ([A:'[B,C,D]],+SPLICE(A));
-          (D108) D+C+B
-     Note how the simplification only occurs AFTER the substitution,
-     The operation applying to the splice in the first cae is the `+'
-     while in the second it is the `*', yet logically you might thing
-     `splice(a)+splice(A)' could be replaced by `2*splice(A)'.   No
-     simplification takes place with the buildq To understand what
-     SPLICE is doing with the algebra you must understand that for
-     MAXIMA, a formula an operation like `A+B+C' is really internally
-     similar to `+(A,B,C)', and similarly for multiplication.  Thus
-     `*(2,B,C,D)' is `2*B*C*D'
-
-          (C114) BUILDQ([A:'[B,C,D]],+SPLICE(A));
-          (D114) D+C+B
-          
-          (C111) BUILDQ([A:'[B,C,D]],SPLICE(A)+SPLICE(A));
-          (D111) 2*D+2*C+2*B
-            but
-          (C112) BUILDQ([A:'[B,C,D]],2*SPLICE(A));
-          (D112) 2*B*C*D
-
-     Finally the buildq can be invaluable for building recursive
-     functions.  Suppose your program is solving a differential
-     equation using the series method, and has determined that it needs
-     to build a recursion relation
-          F[N]:=(-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])/(N^2-N))
-     and it must do this on the fly inside your function.  Now you
-     would really like to add `expand'.
-          F[N]:=EXPAND((-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])
-            /(N^2-N)));
-     but how do you build this code.  You want the `expand' to happen
-     each time the function runs, NOT before it.
-          kill(f),
-          val:(-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])/(N^2-N)),
-          define(f[n],buildq([u:val],expand(u))),
-     does the job.   This might be useful, since when you do
-          With the Expand
-          (C28) f[6];
-          (D28) -AA1/8-13*AA0/180
-     where as without it is kept unsimplified, and even after 6 terms
-     it becomes:
-          (C25) f[6];
-          (D25) (5*(-4*(-3*(-2*(AA1+AA0)+AA1+AA0)/2
-          	    -(AA1+AA0)/2+AA1)
-          	/3
-          	-(-2*(AA1+AA0)+AA1+AA0)/6+(-AA1-AA0)/2)
-                /4
-                +(-3*(-2*(AA1+AA0)+AA1+AA0)/2
-                 -(AA1+AA0)/2+AA1)
-                 /12-(2*(AA1+AA0)-AA1-AA0)/6)
-                /30
-     The expression quickly becomes complicated if not simplified at
-     each stage, so the simplification must be part of the definition.
-     Hence the `buildq' is useful for building the form.
 
 
-File: maxima.info,  Node: OPTIMIZATION,  Next: Definitions for Function Definition,  Prev: MACROS,  Up: Function Definition
+File: maxima.info,  Node: Miscellaneous Options,  Next: Rules and Patterns,  Prev: Runtime Environment,  Up: Top
 
-OPTIMIZATION
-============
+Miscellaneous Options
+*********************
 
-   The optimu files no longer exist in Maxima.  The documentation is
-left here for historical purposes.
+* Menu:
 
-   When using TRANSLATE and generating code with MACSYMA, there are a
-number of techniques which can save time and be helpful.  Do
-DEMO("optimu.dem") for a demonstration.  In particular, the function
-FLOATDEFUNK from TRANSL;OPTIMU FASL, creates a function definition from
-a math-like expression, but it optimizes it (with OPTIMIZE) and puts in
-the MODE_DECLAREations needed to COMPILE correctly. (This can be done
-by hand, of course).  The demo will only run in a fresh macsyma.
+* Introduction to Miscellaneous Options::
+* SHARE::
+* Definitions for Miscellaneous Options::
+
+
+File: maxima.info,  Node: Introduction to Miscellaneous Options,  Next: SHARE,  Prev: Miscellaneous Options,  Up: Miscellaneous Options
+
+Introduction to Miscellaneous Options
+=====================================
+
+   In this section various options are discussed which have a global
+effect on the operation of maxima.   Also various lists such as the
+list of all user defined functions, are discussed.
+
+
+File: maxima.info,  Node: SHARE,  Next: Definitions for Miscellaneous Options,  Prev: Introduction to Miscellaneous Options,  Up: Miscellaneous Options
+
+SHARE
+=====
+
+   - The SHARE directory on MC or on a DEC20 version of MACSYMA
+contains programs, information files, etc.  which are considered to be
+of interest to the MACSYMA community.  Most files on SHARE; are not
+part of the MACSYMA system per se and must be loaded individually by
+the user, e.g.  LOADFILE("array");. Many files on SHARE; were
+contributed by MACSYMA users.  Do PRINTFILE(SHARE,USAGE,SHARE); for
+more details and the conventions for contributing to the SHARE
+directory.  For an annotated "table of contents" of the directory, do:
+PRINTFILE(SHARE,>,SHARE);
 

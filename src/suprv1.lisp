@@ -53,7 +53,7 @@
 		  GC-DAEMON GC-OVERFLOW DEMONL $DYNAMALLOC ALLOCLEVEL INFILE
 		  ALARMCLOCK $C18MAXTIME $FILEID DCOUNT GCLINENUM THISTIME
 		  $NOLABELS $BATCHKILL DISPFLAG SAVENO MCATCH BRKLVL SAVEFILE
-		  STRING ST1 STIME0 $%% $ERROR
+		  ST1 STIME0 $%% $ERROR
 		  *IN-$BATCHLOAD* *IN-TRANSLATE-FILE*
 		  LESSORDER GREATORDER $ERRORFUN MBREAK REPRINT POS $STRDISP
 		  $DSKUSE SMART-TTY RUBOUT-TTY MORE-^W OLDST ALPHABET
@@ -161,12 +161,17 @@
 ;;; Figure out how to do the above for Franz.
        '(Random properties))
 
-(DEFMVAR $% '$% "The last D-line computed, corresponds to lisp *" NO-RESET)
-(DEFMVAR $INCHAR '$C
+(DEFMVAR $% '$% "The last out-line computed, corresponds to lisp *" NO-RESET)
+(DEFMVAR $INCHAR '|$%i|
   "The alphabetic prefix of the names of expressions typed by the user.")
-(DEFMVAR $OUTCHAR '$D
+;;; jfa: begin case-sensitivity hack
+;;;      delete this when case-sensitivity is fixed!!!! 05/11/2004
+(defmvar |$%i| '|$%I|
+  "%i = %I until maxima's case behavior is fixed.")
+;;; jfa: end case-sensitivity hack
+(DEFMVAR $OUTCHAR '|$%o|
   "The alphabetic prefix of the names of expressions returned by the system.")
-(DEFMVAR $LINECHAR '$E
+(DEFMVAR $LINECHAR '|$%t|
   "The alphabetic prefix of the names of intermediate displayed expressions.")
 (DEFMVAR $LINENUM 1 "the line number of the last expression." FIXNUM NO-RESET)
 (DEFMVAR $DIREC 'JRMU
@@ -242,15 +247,22 @@
  (SETQ $LABELS (CONS (CAR $LABELS) (CONS LABEL (DELQ LABEL (CDR $LABELS) 1)))))
 
 (DEFMFUN TYI* NIL
- #+Multics (CLEAR-INPUT NIL)
- (DO ((N (TYI) (TYI))) (NIL)
-     (COND ((OR (char= N #\NewLine) (AND (> N 31) (NOT (char= N #\RUBOUT))))
-	    (RETURN N))
-	   ((char= N #\Page) (FORMFEED) (PRINC (STRIPDOLLAR $PROMPT))))))
+  (CLEAR-INPUT)
+  (DO ((N (TYI) (TYI))) (NIL)
+    (COND ((OR (char= N #\NewLine) (AND (> (char-code N) 31) (NOT (char= N #\RUBOUT))))
+	   (RETURN N))
+	  ((char= N #\Page) (format t "~|") (throw 'retry nil)))))
 
 (DEFUN CONTINUEP NIL
- (PRINC (STRIPDOLLAR $PROMPT))
- (char= (TYI*) #-Multics #\Space #+Multics #\NewLine))
+  (loop
+     (catch 'retry
+       (unwind-protect
+	    (progn
+	      (fresh-line)
+	      (PRINC (STRIPDOLLAR $PROMPT))
+	      (finish-output)
+	      (return (char= (TYI*) #\Newline)))
+	 (clear-input)))))
 
 (DEFUN CHECKLABEL (X)  ; CHECKLABEL returns T iff label is not in use
  (NOT (OR $NOLABELS (= $LINENUM 0) (BOUNDP (CONCAT X $LINENUM)))))
@@ -475,8 +487,15 @@
 	 ((and $dont_kill_symbols_with_lisp_source_files
 	       (symbolp x)(or (get x 'translated)
 			      (and (fboundp x)
+				   #-sbcl
 				   (compiled-function-p
-				     (symbol-function x))))))
+				     (symbol-function x))
+				   #+sbcl
+				   (symbolp
+				    (nth-value 
+				     2
+				     (function-lambda-expression
+				      (symbol-function x))))))))
 	 ((ATOM X)
 	  (SETQ Z (OR (AND (MEMQ X (CDR $ALIASES)) (GET X 'NOUN)) (GET X 'VERB)))
 	  (COND ((OR (NULL ALLBUTL) (NOT (MEMQ Z ALLBUTL)))
@@ -1099,9 +1118,15 @@
 
 
 #+CL (PROGN 'COMPILE
-(DEFMFUN $QUIT () nil #+kcl (bye) #+cmu (ext:quit) #+sbcl (sb-ext:quit) #+clisp (ext:quit)
-
-   (quit)
+(DEFMFUN $QUIT () 
+  nil 
+  (princ *maxima-epilog*)
+  #+kcl (bye) 
+  #+cmu (ext:quit) 
+  #+sbcl (sb-ext:quit) 
+  #+clisp (ext:quit) 
+  #+mcl (ccl::quit)
+  (quit)
    #+excl "don't know quit function")
 (DEFMFUN $LOGOUT () (LOGOUT))
 )
