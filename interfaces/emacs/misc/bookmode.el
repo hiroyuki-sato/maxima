@@ -680,7 +680,7 @@ file")
 		
 		  (and tem
 		       (list (concat "View "(nth 1 tem))
-			     'call-process  "ghostview" nil nil nil
+			     'call-process  "gv" nil nil nil
 			     (expand-file-name(nth 1 tem))
 			     ))
 		  (list "Cancel")
@@ -705,7 +705,7 @@ file")
 			 (concat
 			  (cond ((looking-at "%PS") "")
 				(t "gzip -dc | "))
-			  "ghostview -")
+			  "gv -")
 			 
 	)))
 	 

@@ -1490,7 +1490,7 @@ setrgbcolor} def
 	   (t (setq lis (cddr lis)))))
   (or (eql n 0) (p "stroke")))
 
-(defvar $viewps_command  "(ghostview  ~a)")
+(defvar $viewps_command  "(gv  ~a)")
 
 (defvar $viewps_command  "(gs -I. -Q  ~a)")
 
