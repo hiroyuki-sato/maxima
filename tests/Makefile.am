@@ -1,35 +1,46 @@
 include $(top_srcdir)/common.mk
 MAXIMA = @POSIX_SHELL@ $(top_srcdir)/maxima-local
 if CLISP
-check: clisp-check
-clisp-check:
+check: check-clisp
+check-clisp:
 	echo "Running test suite with clisp..."; \
-	$(MAXIMA) --lisp=clisp --batch-lisp=tests.lisp > tests-clisp.log < /dev/null 2>&1; \
-	./summarize-log tests-clisp.log
+	$(MAXIMA) --lisp=clisp --batch-string="run_testsuite();" < /dev/null
 endif
 
 if CMUCL
-check: cmucl-check
-cmucl-check:
+check: check-cmucl
+check-cmucl:
 	echo "Running test suite with cmucl..."; \
-	$(MAXIMA) --lisp=cmucl --batch-lisp=tests.lisp > tests-cmucl.log < /dev/null 2>&1; \
-	./summarize-log tests-cmucl.log
+	$(MAXIMA) --lisp=cmucl --batch-string="run_testsuite();" < /dev/null
+endif
+
+if SBCL
+check: check-sbcl
+check-sbcl:
+	echo "Running test suite with sbcl..."; \
+	$(MAXIMA) --lisp=sbcl --batch-string="run_testsuite();" < /dev/null
 endif
 
 if GCL
-check: gcl-check
-gcl-check:
+check: check-gcl
+check-gcl:
 	echo "Running test suite with gcl..."; \
-	$(MAXIMA) --lisp=gcl --batch-lisp=tests.lisp > tests-gcl.log < /dev/null 2>&1; \
-	./summarize-log tests-gcl.log
+	$(MAXIMA) --lisp=gcl --batch-string="run_testsuite();" < /dev/null
 endif
 
-install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)$(insttestsdir)
-	$(INSTALL_PROGRAM) summarize-log $(DESTDIR)$(insttestsdir)/summarize-log
+if ACL6
+check: check-acl6
+check-acl6:
+	echo "Running test suite with acl6..."; \
+	$(MAXIMA) --lisp=acl6 --batch-string="run_testsuite();" < /dev/null
+endif
 
-uninstall-local:
-	rm -f $(DESTDIR)$(insttestsdir)/summarize-log
+if OPENMCL
+check: check-openmcl
+check-openmcl:
+	echo "Running test suite with openmcl..."; \
+	$(MAXIMA) --lisp=openmcl --batch-string="run_testsuite();" < /dev/null
+endif
 
 genericdir = $(insttestsdir)
 genericdirDATA = rexamples.mac \
@@ -54,7 +65,8 @@ rtest8.mac \
 rtest9a.mac \
 rtest9.mac \
 rtestode.mac \
+rtestode_zp.mac \
 rtestflatten.mac \
-tests.lisp
+testsuite.lisp
 
-EXTRA_DIST = $(genericdirDATA) summarize-log known-bugs
+EXTRA_DIST = $(genericdirDATA)

@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.5 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -9,1062 +9,1001 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Function Definition,  Prev: OPTIMIZATION,  Up: Function Definition
+File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: SHARE,  Up: Miscellaneous Options
 
-Definitions for Function Definition
+Definitions for Miscellaneous Options
+=====================================
+
+ - Variable: ALIASES
+     default: [] atoms which have a user defined alias (set up by the
+     ALIAS, ORDERGREAT, ORDERLESS functions or by DECLAREing the atom a
+     NOUN).
+
+ - Variable: ALLSYM
+     default: [TRUE] - If TRUE then all indexed objects are assumed
+     symmetric in all of their covariant and contravariant indices. If
+     FALSE then no symmetries of any kind are assumed in these indices.
+     Derivative indices are always taken to be symmetric.
+
+ - declaration: ALPHABETIC
+     Adds to MACSYMA's alphabet which initially contains the letters
+     A-Z, % and _.  Thus, DECLARE("~",ALPHABETIC) enables NEW~VALUE to
+     be used as a name.
+
+
+ - Function: APROPOS (string)
+     takes a character string as argument and looks at all the MACSYMA
+     names for ones with that string appearing anywhere within them.
+     Thus, APROPOS(EXP); will return a long list of all the flags and
+     functions which have EXP as part of their names, such as EXPAND,
+     EXP, EXPONENTIALIZE.  Thus if you can only remember part of the
+     name of something you can use this command to find the rest of the
+     name.  Similarily, you could say APROPOS(TR_); to find a list of
+     many of the switches relating to the TRANSLATOR (most of which
+     begin with TR_).
+
+
+ - Function: ARGS (exp)
+     returns a list of the args of exp.  I.e. it is essentially
+     equivalent to
+          SUBSTPART("[",exp,0)
+     Both ARGS and SUBSTPART depend on the setting of INFLAG.
+
+
+ - Function: DUMMY (i1,i2,...)
+     will set each index i1,i2,... to name of the form !n where n is a
+     positive integer.  This guarantees that dummy indices which are
+     needed in forming expressions will not conflict with indices
+     already in use.  COUNTER[default 1] determines the numerical
+     suffix to be used in generating the next dummy index.  The prefix
+     is determined by the option DUMMYX[!].
+
+
+ - Variable: GENINDEX
+     default: [I] is the alphabetic prefix used to generate the next
+     variable of summation when necessary.
+
+
+ - Variable: GENSUMNUM
+     [0] is the numeric suffix used to generate the next variable of
+     summation.  If it is set to FALSE then the index will consist only
+     of GENINDEX with no numeric suffix.
+
+
+ - Variable: INF
+     - real positive infinity.
+
+
+ - Variable: INFINITY
+     - complex infinity, an infinite magnitude of arbitrary phase
+     angle.  (See also INF and MINF.)
+
+
+ - Variable: INFOLISTS
+     default: [] a list of the names of all of the information lists in
+     MACSYMA. These are: LABELS - all bound C,D, and E labels.  VALUES
+     - all bound atoms, i.e. user variables, not MACSYMA Options or
+     Switches, (set up by : , :: , or functional binding).  FUNCTIONS -
+     all user defined functions (set up by f(x):=...).  ARRAYS -
+     declared and undeclared arrays (set up by : , :: , or :=...)
+     MACROS - any Macros defined by the user.  MYOPTIONS - all options
+     ever reset by the user (whether or not they get reset to their
+     default value).  RULES - user defined pattern matching and
+     simplification rules (set up by TELLSIMP, TELLSIMPAFTER, DEFMATCH,
+     or, DEFRULE.)  ALIASES - atoms which have a user defined alias
+     (set up by the ALIAS, ORDERGREAT, ORDERLESS functions or by
+     DECLAREing the atom a NOUN).  DEPENDENCIES - atoms which have
+     functional dependencies (set up by the DEPENDS or GRADEF
+     functions).  GRADEFS - functions which have user defined
+     derivatives (set up by the GRADEF function).  PROPS - atoms which
+     have any property other than those mentioned above, such as
+     atvalues, matchdeclares, etc.  as well as properties specified in
+     the DECLARE function.  LET_RULE_PACKAGES - a list of all the
+     user-defined let rule packages plus the special package
+     DEFAULT_LET_RULE_PACKAGE.  (DEFAULT_LET_RULE_PACKAGE is the name
+     of the rule package used when one is not explicitly set by the
+     user.)
+
+
+ - Function: INTEGERP (exp)
+     is TRUE if exp is an integer else FALSE.
+
+
+ - Variable: M1PBRANCH
+     default: [FALSE] - "principal branch for -1 to a power".
+     Quantities such as (-1)^(1/3) [i.e. "odd" rational exponent] and
+     (-1)^(1/4) [i.e. "even" rational exponent] are now handled as
+     indicated in the following chart:
+                       DOMAIN:REAL(default)
+          
+          (-1)^(1/3):      -1
+          (-1)^(1/4):   (-1)^(1/4)
+          
+                          DOMAIN:COMPLEX
+          M1PBRANCH:FALSE(default)   M1PBRANCH:TRUE
+          (-1)^(1/3)               1/2+%i*sqrt(3)/2
+          (-1)^(1/4)              sqrt(2)/2+%i*sqrt(2)/2
+
+ - Function: NUMBERP (exp)
+     is TRUE if exp is an integer, a rational number, a floating point
+     number or a bigfloat else FALSE.
+
+
+ - Function: PROPERTIES (a)
+     will yield a list showing the names of all the properties
+     associated with the atom a.
+
+
+ - special symbol: PROPS
+     - atoms which have any property other than those explicitly
+     mentioned in INFOLISTS, such as atvalues, matchdeclares, etc. as
+     well as properties specified in the DECLARE function.
+
+
+ - Function: PROPVARS (prop)
+     yields a list of those atoms on the PROPS list which have the
+     property indicated by prop.  Thus PROPVARS(ATVALUE) will yield a
+     list of atoms which have atvalues.
+
+
+ - Function: PUT (a, p, i)
+     associates with the atom a the property p with the indicator i.
+     This enables the user to give an atom any arbitrary property.
+
+
+ - Function: QPUT (a, p, i)
+     is similar to PUT but it doesn't have its arguments evaluated.
+
+
+ - Function: REM (a, i)
+     removes the property indicated by i from the atom a.
+
+
+ - Function: REMOVE (args)
+     will remove some or all of the properties associated with
+     variables or functions.  REMOVE(a1, p1, a2, p2, ...)  removes the
+     property pi from the atom ai.  Ai and pi may also be lists as with
+     DECLARE.  Pi may be any property e.g.  FUNCTION, MODE_DECLARE,
+     etc.  It may also be TRANSFUN implying that the translated LISP
+     version of the function is to be removed.  This is useful if one
+     wishes to have the MACSYMA version of the function executed rather
+     than the translated version. Pi may also be OP or OPERATOR to
+     remove a syntax extension given to ai (see Appendix II).  If ai is
+     "ALL" then the property indicated by pi is removed from all atoms
+     which have it.  Unlike the more specific remove functions
+     (REMVALUE, REMARRAY, REMFUNCTION, and REMRULE) REMOVE does not
+     indicate when a given property is non-existent; it always returns
+     "DONE".
+
+
+ - Function: REMVALUE (name1, name2, ...)
+     removes the values of user variables (which can be subscripted)
+     from the system.  If name is ALL then the values of all user
+     variables are removed.  Values are those items given names by the
+     user as opposed to those which are automatically labeled by
+     MACSYMA as Ci, Di, or Ei.
+
+
+ - Function: RENAME (exp)
+     returns an expression equivalent to exp but with the dummy indices
+     in each term chosen from the set [!1,!2,...].  Each dummy index in
+     a product will be different; for a sum RENAME will try to make
+     each dummy index in a sum the same.  In addition, the indices will
+     be sorted alphanumerically.
+
+
+ - Function: RNCOMBINE (exp)
+     transforms exp by combining all terms of exp that have identical
+     denominators or denominators that differ from each other by
+     numerical factors only.  This is slightly different from the
+     behavior of COMBINE, which collects terms that have identical
+     denominators.  Setting PFEFORMAT:TRUE and using COMBINE will
+     achieve results similar to those that can be obtained with
+     RNCOMBINE, but RNCOMBINE takes the additional step of
+     cross-multiplying numerical denominator factors.  This results in
+     neater forms, and the possiblity of recognizing some
+     cancellations.  Bugs to ASB.
+
+
+ - Function: SCALARP (exp)
+     is TRUE if exp is a number, constant, or variable DECLAREd SCALAR,
+     or composed entirely of numbers, constants, and such variables,
+     but not containing matrices or lists.
+
+
+ - Function: SCALEFACTORS (coordinatetransform)
+     Here coordinatetransform evaluates to the form [[expression1,
+     expression2, ...], indeterminate1, indeterminat2, ...], where
+     indeterminate1, indeterminate2, etc. are the curvilinear
+     coordinate variables and where a set of rectangular Cartesian
+     components is given in terms of the curvilinear coordinates by
+     [expression1, expression2, ...].  COORDINATES is set to the vector
+     [indeterminate1, indeterminate2,...], and DIMENSION is set to the
+     length of this vector.  SF[1], SF[2], ..., SF[DIMENSION] are set
+     to the coordinate scale factors, and SFPROD is set to the product
+     of these scale factors.  Initially, COORDINATES is [X, Y, Z],
+     DIMENSION is 3, and SF[1]=SF[2]=SF[3]=SFPROD=1, corresponding to
+     3-dimensional rectangular Cartesian coordinates.  To expand an
+     expression into physical components in the current coordinate
+     system, there is a function with usage of the form
+
+
+ - Function: SETUP_AUTOLOAD (file,func1,...,funcN)
+     which takes two or more arguments: a file specification, and one
+     or more function names, "funcI", and which indicates that if a
+     call to "funcI" is made and "funcI" is not defined, that the file
+     specified by "file" is to be automatically loaded in via LOAD,
+     which file should contain a definition for "funcI".  (This is the
+     process by which calling e.g.  INTEGRATE in a fresh MACSYMA causes
+     various files to be loaded in.)  As with the other file-handling
+     commands in MACSYMA, the arguments to SETUP_AUTOLOAD are not
+     evaluated.  Example: SETUP_AUTOLOAD("bessel")$ J1(0.0); .  Note:
+     SETUP_AUTOLOAD does not work for array functions.
+
+
+
+File: maxima.info,  Node: Rules and Patterns,  Next: Lists,  Prev: Miscellaneous Options,  Up: Top
+
+Rules and Patterns
+******************
+
+* Menu:
+
+* Introduction to Rules and Patterns::
+* Definitions for Rules and Patterns::
+
+
+File: maxima.info,  Node: Introduction to Rules and Patterns,  Next: Definitions for Rules and Patterns,  Prev: Rules and Patterns,  Up: Rules and Patterns
+
+Introduction to Rules and Patterns
+==================================
+
+   This section discusses user defined pattern matching and
+simplification rules (set up by TELLSIMP, TELLSIMPAFTER, DEFMATCH, or,
+DEFRULE.)  You may affect the main simplification procedures, or else
+have your rules applied explicityly using APPLY1 and APPLY2.     There
+are additional mechanisms for polynomials rules under TELLRAT, and for
+commutative and non commutative algebra in chapter on AFFINE.
+
+
+File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introduction to Rules and Patterns,  Up: Rules and Patterns
+
+Definitions for Rules and Patterns
+==================================
+
+ - Function: APPLY1 (exp, rule1, ..., rulen)
+     repeatedly applies the first rule to exp until it fails, then
+     repeatedly applies the same rule to all subexpressions of exp,
+     left-to-right, until the first rule has failed on all
+     subexpressions.  Call the result of transforming exp in this
+     manner exp'.  Then the second rule is applied in the same fashion
+     starting at the top of exp'.  When the final rule fails on the
+     final subexpression, the application is finished.
+
+
+ - Function: APPLY2 (exp, rule1, ..., rulen)
+     differs from APPLY1 in that if the first rule fails on a given
+     subexpression, then the second rule is repeatedly applied, etc.
+     Only if they all fail on a given subexpression is the whole set of
+     rules repeatedly applied to the next subexpression.  If one of the
+     rules succeeds, then the same subexpression is reprocessed,
+     starting with the first rule.  MAXAPPLYDEPTH[10000] is the maximum
+     depth to which APPLY1 and APPLY2 will delve.
+
+
+ - Function: APPLYB1 (exp, rule1, ..., rulen)
+     is similar to APPLY1 but works from the "bottom up" instead of
+     from the "top down".  That is, it processes the smallest
+     subexpression of exp, then the next smallest, etc.
+     MAXAPPLYHEIGHT[10000] - is the maximum height to which APPLYB1 will
+     reach before giving up.
+
+
+ - Variable: CURRENT_LET_RULE_PACKAGE
+     default:[DEFAULT_LET_RULE_PACKAGE] - the name of the rule package
+     that is presently being used.  The user may reset this variable to
+     the name of any rule package previously defined via the LET
+     command.  Whenever any of the functions comprising the let package
+     are called with no package name the value of
+          CURRENT_LET_RULE_PACKAGE
+     is used.  If a call such as LETSIMP(expr,rule_pkg_name); is made,
+     the rule package rule_pkg_name is used for that LETSIMP command
+     only, i.e.  the value of CURRENT_LET_RULE_PACKAGE is not changed.
+
+
+ - Variable: DEFAULT_LET_RULE_PACKAGE
+     - the name of the rule package used when one is not explicitly set
+     by the user with LET or by changing the value of
+     CURRENT_LET_RULE_PACKAGE.
+
+
+ - Function: DEFMATCH (progname, pattern, parm1, ..., parmn)
+     creates a function of n+1 arguments with the name progname which
+     tests an expression to see if it can match a particular pattern.
+     The pattern is some expression containing pattern variables and
+     parameters.  The parms are given explicitly as arguments to
+     DEFMATCH while the pattern variables (if supplied) were given
+     implicitly in a previous MATCHDECLARE function.  The first
+     argument to the created function progname, is an expression to be
+     matched against the "pattern" and the other n arguments are the
+     actual variables occurring in the expression which are to take the
+     place of dummy variables occurring in the "pattern".  Thus the
+     parms in the DEFMATCH are like the dummy arguments to the
+     SUBROUTINE statement in FORTRAN.  When the function is "called"
+     the actual arguments are substituted.  For example:
+          (%i1)  NONZEROANDFREEOF(X,E):=  IF E#0 AND FREEOF(X,E)
+                      THEN TRUE ELSE FALSE$
+          (IS(E#0 AND FREEOF(X,E)) is an  equivalent function
+          definition)
+          (%i2)  MATCHDECLARE(A,NONZEROANDFREEOF(X),B,FREEOF(X))$
+          (%i3)  DEFMATCH(LINEAR,A*X+B,X)$
+              This has caused the function LINEAR(exp,var1) to be defined.  It
+
+     tests exp to see if it is of the form A*var1+B where A and B do not
+     contain var1 and A is not zero.  DEFMATCHed functions return (if
+     the match is successful) a list of equations whose left sides are
+     the pattern variables and parms and whose right sides are the
+     expressions which the pattern variables and parameters matched.
+     The pattern variables, but not the parameters, are set to the
+     matched expressions.  If the match fails, the function returns
+     FALSE.  Thus LINEAR(3*Z+(Y+1)*Z+Y**2,Z) would return [B=Y**2,
+     A=Y+4, X=Z].  Any variables not declared as pattern variables in
+     MATCHDECLARE or as parameters in DEFMATCH which occur in pattern
+     will match only themselves so that if the third argument to the
+     DEFMATCH in (%i4) had been omitted, then LINEAR would only match
+     expressions linear in X, not in any other variable.      A pattern
+     which contains no parameters or pattern variables returns TRUE if
+     the match succeeds.  Do EXAMPLE(DEFMATCH); for more examples.
+
+
+ - Function: DEFRULE (rulename, pattern, replacement)
+     defines and names a replacement rule for the given pattern.  If
+     the rule named rulename is applied to an expression (by one of the
+     APPLY functions below), every subexpression matching the pattern
+     will be replaced by the replacement.  All variables in the
+     replacement which have been assigned values by the pattern match
+     are assigned those values in the replacement which is then
+     simplified.  The rules themselves can be treated as functions
+     which will transform an expression by one operation of the pattern
+     match and replacement.  If the pattern fails, the original
+     expression is returned.
+
+
+ - Function: DISPRULE (rulename1, rulename2, ...)
+     will display rules with the names rulename1, rulename2, as were
+     given by DEFRULE, TELLSIMP, or TELLSIMPAFTER or a pattern defined
+     by DEFMATCH.  For example, the first rule modifying SIN will be
+     called SINRULE1.  DISPRULE(ALL); will display all rules.
+
+
+ - Function: LET (prod, repl, predname, arg1, arg2, ..., argn)
+     defines a substitution rule for LETSIMP such that prod gets
+     replaced by repl.  prod is a product of positive or negative
+     powers of the following types of terms:
+        *     (1) Atoms which LETSIMP will search for literally unless
+          previous to calling LETSIMP the MATCHDECLARE function is used
+          to associate a predicate with the atom.  In this case LETSIMP
+          will match the atom to any term of a product satisfying the
+          predicate.
+
+        *     (2) Kernels such as SIN(X), N!, F(X,Y), etc.  As with
+          atoms above LETSIMP will look for a literal match unless
+          MATCHDECLARE is used to associate a predicate with the
+          argument of the kernel.  A term to a positive power will only
+          match a term having at least that power in the expression
+          being LETSIMPed.  A term to a negative power on the other
+          hand will only match a term with a power at least as
+          negative.  In the case of negative powers in "product" the
+          switch LETRAT must be set to TRUE (see below).  If a
+          predicate is included in the LET function followed by a list
+          of arguments, a tentative match (i.e. one that would be
+          accepted if the predicate were omitted) will be accepted only
+          if predname(arg1',...,argn') evaluates to TRUE where argi' is
+          the value matched to argi.  The argi may be the name of any
+          atom or the argument of any kernel appearing in prod.  repl
+          may be any rational expression.  If any of the atoms or
+          arguments from prod appear in repl the appropriate
+          substitutions will be made.
+         LETRAT[FALSE] when FALSE, LETSIMP will simplify the numerator
+     and denominator of expr independently and return the result.
+     Substitutions such as N!/N goes to (N-1)!  will fail.  To handle
+     such situations LETRAT should be set to TRUE, then the numerator,
+     denominator, and their quotient will be simplified in that order.
+        These substitution functions allow you to work with several
+     rulepackages at once. Each rulepackage can contain any number of
+     LETed rules and is referred to by a user supplied name.  To insert
+     a rule into the rulepackage name, do
+     LET([prod,repl,pred,arg1,...],name).  To apply the rules in
+     rulepackage name, do LETSIMP(expr, name).  The function
+     LETSIMP(expr,name1,name2,...)  is equivalent to doing
+     LETSIMP(expr,name1) followed by LETSIMP(%,name2) etc.
+     CURRENT_LET_RULE_PACKAGE is the name of the rule package that is
+     presently being used.  The user may reset this variable to the
+     name of any rule package previously defined via the LET command.
+     Whenever any of the functions comprising the let package are
+     called with no package name the value of CURRENT_LET_RULE_PACKAGE
+     is used.  If a call such as LETSIMP(expr,rule_pkg_name); is made,
+     the rule package rule_pkg_name is used for that LETSIMP command
+     only, i.e.  the value of CURRENT_LET_RULE_PACKAGE is not changed.
+     There is a DEFAULT_LET_RULE_PACKAGE which is assumed when no other
+     name is supplied to any of the functions.  Whenever a LET includes
+     a rulepackage name that is used as the CURRENT_LET_RULE_PACKAGE.
+
+
+ - Variable: LETRAT
+     default: [FALSE] - when FALSE, LETSIMP will simplify the numerator
+     and denominator of expr independently and return the result.
+     Substitutions such as N!/N goes to (N-1)! will fail.  To handle
+     such situations LETRAT should be set to TRUE, then the numerator,
+     denominator, and their quotient will be simplified in that order.
+
+
+ - Function: LETRULES ()
+     displays the rules in the current rulepackage.  LETRULES(name)
+     displays the rules in the named rulepackage.  The current
+     rulepackage is the value of
+          CURRENT_LET_RULE_PACKAGE
+     The initial value of the rules is
+          DEFAULT_LET_RULE_PACKAGE
+
+
+ - Function: LETSIMP (exp)
+     will continually apply the substitution rules previously defined
+     by the function LET until no further change is made to exp.
+     LETSIMP(expr,rule_pkg_name); will cause the rule package
+     rule_pkg_name to be used for that LETSIMP command only, i.e.  the
+     value of CURRENT_LET_RULE_PACKAGE is not changed.
+
+
+ - Variable: LET_RULE_PACKAGES
+     default:[DEFAULT_LET_RULE_PACKAGE] - The value of
+     LET_RULE_PACKAGES is a list of all the user-defined let rule
+     packages plus the special package
+          DEFAULT_LET_RULE_PACKAGE
+     This is the name of the rule package used when one is not
+     explicitly set by the user.
+
+
+ - Function: MATCHDECLARE (patternvar, predicate, ...)
+     associates a predicate with a pattern variable so that the
+     variable will only match expressions for which the predicate is
+     not FALSE.  (The matching is accomplished by one of the functions
+     described below).  For example after
+          MATCHDECLARE(Q,FREEOF(X,%E))
+     is executed, Q will match any expression not containing X or %E.
+     If the match succeeds then the variable is set to the matched
+     expression.  The predicate (in this case FREEOF) is written
+     without the last argument which should be the one against which
+     the pattern variable is to be tested.  Note that the patternvar
+     and the arguments to the predicate are evaluated at the time the
+     match is performed.  The odd numbered argument may also be a list
+     of pattern variables all of which are to have the associated
+     predicate.  Any even number of arguments may be given.  For
+     pattern matching, predicates refer to functions which are either
+     FALSE or not FALSE (any non FALSE value acts like TRUE).
+     MATCHDECLARE(var,TRUE) will permit var to match any expression.
+
+
+ - Function: MATCHFIX
+     - MATCHFIX operators are used to denote functions of any number of
+     arguments which are passed to the function as a list.  The
+     arguments occur between the main operator and its "matching"
+     delimiter.  The MATCHFIX("x",...) function is a syntax extension
+     function which declares x to be a MATCHFIX operator.   The default
+     binding power is 180, and the ARGS inside may be anything.
+
+
+          (%i1) matchfix("|","|");
+          
+          (%o1) 				      "|"
+          (%i2) |a|+b;
+          
+          (%o2) 				   b + (|a|)
+          (%i3) |(a,b)|;
+          
+          (%o3) 				      |b|
+          (%i4) |[a,b]|;
+          
+          (%o4) 				   |[a, b]|
+          
+          (%i9) |x|:=IF NUMBERP(x) THEN ABS(x)
+                  ELSE (IF LISTP(x) AND APPLY("and",MAP(NUMBERP,x))
+          		  THEN SUM(x[i]^2,i,1,LENGTH(x))^0.5 ELSE BUILDQ([u:x],|u|))$
+          
+          (%i10) |[1,2,3]|;
+          
+          (%o10) 			       3.741657386773941
+          
+          (%i18) |-7|;
+          
+          (%o18) 				       7
+          (%i19) |[a,b]|;
+          
+          (%o19) 				   |[a, b]|
+
+
+ - Function: REMLET (prod, name)
+     deletes the substitution rule, prod -> repl, most recently defined
+     by the LET function.  If name is supplied the rule is deleted from
+     the rule package name.  REMLET() and REMLET(ALL) delete all
+     substitution rules from the current rulepackage. If the name of a
+     rulepackage is supplied, e.g. REMLET(ALL,name), the rulepackage,
+     name, is also deleted.  If a substitution is to be changed using
+     the same product, REMLET need not be called, just redefine the
+     substitution using the same product (literally) with the LET
+     function and the new replacement and/or predicate name.  Should
+     REMLET(product) now be called the original substitution rule will
+     be revived.
+
+
+ - Function: REMRULE (function, rulename)
+     will remove a rule with the name rulename from the function which
+     was placed there by DEFRULE, DEFMATCH, TELLSIMP, or TELLSIMPAFTER.
+     If rule-name is ALL, then all rules will be removed.
+
+
+ - Function: TELLSIMP (pattern, replacement)
+     is similar to TELLSIMPAFTER but places new information before old
+     so that it is applied before the built-in simplification rules.
+     TELLSIMP is used when it is important to modify the expression
+     before the simplifier works on it, for instance if the simplifier
+     "knows" something about the expression, but what it returns is not
+     to your liking.  If the simplifier "knows" something about the
+     main operator of the expression, but is simply not doing enough for
+     you, you probably want to use TELLSIMPAFTER.  The pattern may not
+     be a sum, product, single variable, or number.  RULES is a list of
+     names having simplification rules added to them by DEFRULE,
+     DEFMATCH, TELLSIMP, or TELLSIMPAFTER.  Do EXAMPLE(TELLSIMP); for
+     examples.
+
+
+ - Function: TELLSIMPAFTER (pattern, replacement)
+     defines a replacement for pattern which the MACSYMA simplifier
+     uses after it applies the built-in simplification rules.  The
+     pattern may be anything but a single variable or a number.
+
+
+
+File: maxima.info,  Node: Lists,  Next: Function Definition,  Prev: Rules and Patterns,  Up: Top
+
+Lists
+*****
+
+* Menu:
+
+* Introduction to Lists::
+* Definitions for Lists::
+
+
+File: maxima.info,  Node: Introduction to Lists,  Next: Definitions for Lists,  Prev: Lists,  Up: Lists
+
+Introduction to Lists
+=====================
+
+   Lists are the basic building block for maxima and lisp.   All data
+types other than arrays, hash tables, numbers are represented as lisp
+lists, These lisp lists have the form
+     ((mplus) $A 2)
+
+to indicate an expression `A+2'.   At maxima level one would see the
+infix notation `A+2'.   Maxima also has lists which are printed as
+     [1, 2, 7, x+y]
+
+for a list with 4 elements.   Internally this corresponds to a lisp list
+of the form
+     ((mlist) 1  2  7  ((mplus)  $X $Y ))
+
+The flag which denotes the type field of the maxima expression is a list
+itself, since after it has been through the simplifier the list would
+become
+     ((mlist simp) 1 2 7 ((mplus simp) $X $Y))
+
+
+File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  Up: Lists
+
+Definitions for Lists
+=====================
+
+ - Function: APPEND (list1, list2, ...)
+     returns a single list of the elements of list1 followed by the
+     elements of list2,...  APPEND also works on general expressions,
+     e.g. APPEND(F(A,B), F(C,D,E)); -> F(A,B,C,D,E).  Do
+     EXAMPLE(APPEND); for an example.
+
+
+ - Function: ASSOC (exp)
+     This function searches for the key in the left hand side of the
+     input list of the form [x,y,z...] where each of the list elements
+     is a expression of a binary operand and 2 elements.  For example
+     x=1, 2^3, [a,b] etc.  The key checked againts the first operand
+     and and returns the second operand if the key is found.  If the
+     key is not found it either returns the default value if supplied or
+     false.
+
+ - Function: ATOM (exp)
+     is TRUE if exp is atomic (i.e. a number or name) else FALSE.  Thus
+     ATOM(5) is TRUE while ATOM(A[1]) and ATOM(SIN(X)) are FALSE.
+     (Assuming A[1] and X are unbound.)
+
+
+ - Function: CONS (exp, list)
+     returns a new list constructed of the element exp as its first
+     element, followed by the elements of list.  CONS also works on
+     other expressions, e.g. CONS(X, F(A,B,C));  ->  F(X,A,B,C).
+
+
+ - Function: COPYLIST (L)
+     creates a copy of the list L.
+
+
+ - Function: DELETE (exp1, exp2)
+     removes all occurrences of exp1 from exp2.  Exp1 may be a term of
+     exp2 (if it is a sum) or a factor of exp2 (if it is a product).
+          (%i1)  DELETE(SIN(X),X+SIN(X)+Y);
+          (%o1)               Y + X
+     DELETE(exp1, exp2, integer) removes the first integer occurrences
+     of exp1 from exp2.  Of course, if there are fewer than integer
+     occurrences of exp1 in exp2 then all occurrences will be deleted.
+
+
+ - Function: ENDCONS (exp, list)
+     returns a new list consisting of the elements of list followed by
+     exp.  ENDCONS also works on general expressions, e.g.  ENDCONS(X,
+     F(A,B,C));  ->  F(A,B,C,X).
+
+
+ - Function: EVERY (exp)
+     This function takes a list, or a positive number of arguments and
+     returns true if all its arguments are not false.
+
+
+ - Function: FIRST (exp) SECOND (exp) .. TENTH (exp)
+     yields the first part of exp which may result in the first element
+     of a list, the first row of a matrix, the first term of a sum,
+     etc.  Note that FIRST and its related functions, REST and LAST,
+     work on the form of exp which is displayed not the form which is
+     typed on input.  If the variable INFLAG [FALSE] is set to TRUE
+     however, these functions will look at the internal form of exp.
+     Note that the simplifier re-orders expressions.  Thus FIRST(X+Y)
+     will be X if INFLAG is TRUE and Y if INFLAG is FALSE.  (FIRST(Y+X)
+     gives the same results).  The functions SECOND .. TENTH yield the
+     second through the tenth part of their input argument.
+
+
+ - Function: FLATTEN (exp)
+     Takes a list of the form [[1,2],[3,4]] and returns [1,2,3,4].
+
+
+ - Function: GET (a, i)
+     retrieves the user property indicated by i associated with atom a
+     or returns FALSE if a doesn't have property i.
+          (%i1) PUT(%E,'TRANSCENDENTAL,'TYPE);
+          (%o1) 			        TRANSCENDENTAL
+          (%i2) PUT(%PI,'TRANSCENDENTAL,'TYPE)$
+          (%i3) PUT(%I,'ALGEBRAIC,'TYPE)$
+          (%i4) TYPEOF(EXP) := BLOCK([Q],
+                                  IF NUMBERP(EXP)
+                                  THEN RETURN('ALGEBRAIC),
+                                  IF NOT ATOM(EXP)
+                                  THEN RETURN(MAPLIST('TYPEOF, EXP)),
+                                  Q : GET(EXP, 'TYPE),
+                                  IF Q=FALSE
+          			THEN ERRCATCH(ERROR(EXP,"is not numeric.")) ELSE Q)$
+          (%i5) TYPEOF(2*%E+X*%PI);
+          X is not numeric.
+          (%o5) 	     [[TRANSCENDENTAL, []], [ALGEBRAIC, TRANSCENDENTAL]]
+          (%i6) TYPEOF(2*%E+%PI);
+          (%o6) 	        [TRANSCENDENTAL, [ALGEBRAIC, TRANSCENDENTAL]]
+
+ - Function: LAST (exp)
+     yields the last part (term, row, element, etc.) of the exp.
+
+
+ - Function: LENGTH (exp)
+     gives (by default) the number of parts in the external (displayed)
+     form of exp.  For lists this is the number of elements, for
+     matrices it is the number of rows, and for sums it is the number
+     of terms. (See DISPFORM).  The LENGTH command is affected by the
+     INFLAG switch [default FALSE].  So, e.g. LENGTH(A/(B*C)); gives 2
+     if INFLAG is FALSE (Assuming EXPTDISPFLAG is TRUE), but 3 if
+     INFLAG is TRUE (the internal representation is essentially
+     A*B^-1*C^-1).
+
+
+ - Variable: LISTARITH
+     default: [TRUE] - if FALSE causes any arithmetic operations with
+     lists to be suppressed; when TRUE, list-matrix operations are
+     contagious causing lists to be converted to matrices yielding a
+     result which is always a matrix.  However, list-list operations
+     should return lists.
+
+
+ - Function: LISTP (exp)
+     is TRUE if exp is a list else FALSE.
+
+
+ - Function: MAKELIST (exp,var,lo,hi)
+     returns a list as value.  MAKELIST may be called as
+     MAKELIST(exp,var,lo,hi) ["lo" and "hi" must be integers], or as
+     MAKELIST(exp,var,list).  In the first case MAKELIST is analogous to
+     SUM, whereas in the second case MAKELIST is similar to MAP.
+     Examples:
+             MAKELIST(CONCAT(X,I),I,1,6) yields [X1,X2,X3,X4,X5,X6]
+             MAKELIST(X=Y,Y,[A,B,C]) yields [X=A,X=B,X=C]
+
+
+ - Function: MEMBER (exp, list)
+     returns TRUE if exp occurs as a member of list (not within a
+     member).  Otherwise FALSE is returned.  Member also works on
+     non-list expressions, e.g. MEMBER(B, F(A,B,C));  ->  TRUE.
+
+
+ - Function: REST (exp, n)
+     yields exp with its first n elements removed if n is positive and
+     its last -n elements removed if n is negative.  If n is 1 it may
+     be omitted.  Exp may be a list, matrix, or other expression.
+
+
+ - Function: REVERSE (list)
+     reverses the order of the members of the list (not the members
+     themselves).  REVERSE also works on general expressions, e.g.
+     REVERSE(A=B); gives B=A.  REVERSE default: [FALSE] - in the
+     Plotting functions, if TRUE cause a left-handed coordinate system
+     to be assumed.
+
+
+
+File: maxima.info,  Node: Function Definition,  Next: Program Flow,  Prev: Lists,  Up: Top
+
+Function Definition
+*******************
+
+* Menu:
+
+* Introduction to Function Definition::
+* FUNCTION::
+* MACROS::
+* OPTIMIZATION::
+* Definitions for Function Definition::
+
+
+File: maxima.info,  Node: Introduction to Function Definition,  Next: FUNCTION,  Prev: Function Definition,  Up: Function Definition
+
+Introduction to Function Definition
 ===================================
 
- - Function: APPLY (function, list)
-     gives the result of applying the function to the list of its
-     arguments.  This is useful when it is desired to compute the
-     arguments to a function before applying that function.  For
-     example, if L is the list [1, 5, -10.2, 4, 3], then APPLY(MIN,L)
-     gives -10.2.  APPLY is also useful when calling functions which do
-     not have their arguments evaluated if it is desired to cause
-     evaluation of them.  For example, if FILESPEC is a variable bound
-     to the list [TEST, CASE] then APPLY(CLOSEFILE,FILESPEC) is
-     equivalent to CLOSEFILE(TEST,CASE).  In general the first argument
-     to APPLY should be preceded by a ' to make it evaluate to itself.
-     Since some atomic variables have the same name as certain
-     functions the values of the variable would be used rather than the
-     function because APPLY has its first argument evaluated as well as
-     its second.
-
-
- - Function: BINDTEST (ai)
-     causes ai to signal an error if it ever is used in a computation
-     unbound.
-
-
- - Function: BLOCK ([v1,...,vk], statement1,...,statementj)
-     Blocks in MACSYMA are somewhat analogous to subroutines in FORTRAN
-     or procedures in ALGOL or PL/I.  Blocks are like compound
-     statements but also enable the user to label statements within the
-     block and to assign "dummy" variables to values which are local to
-     the block.  The vi are variables which are local to the BLOCK and
-     the stmti are any MACSYMA expressions.  If no variables are to be
-     made local then the list may be omitted.  A block uses these local
-     variables to avoid conflict with variables having the same names
-     used outside of the block (i.e. global to the block).  In this
-     case, upon entry to the block, the global values are saved onto a
-     stack and are inaccessible while the block is being executed.  The
-     local variables then are unbound so that they evaluate to
-     themselves.  They may be bound to arbitrary values within the
-     block but when the block is exited the saved values are restored
-     to these variables.  The values created in the block for these
-     local variables are lost.  Where a variable is used within a block
-     and is not in the list of local variables for that block it will
-     be the same as the variable used outside of the block.      If it
-     is desired to save and restore other local properties besides
-     VALUE, for example ARRAY (except for complete arrays), FUNCTION,
-     DEPENDENCIES, ATVALUE, MATCHDECLARE, ATOMGRAD, CONSTANT, and
-     NONSCALAR then the function LOCAL should be used inside of the
-     block with arguments being the names of the variables.      The
-     value of the block is the value of the last statement or the value
-     of the argument to the function RETURN which may be used to exit
-     explicitly from the block. The function GO may be used to transfer
-     control to the statement of the block that is tagged with the
-     argument to GO.  To tag a statement, precede it by an atomic
-     argument as another statement in the BLOCK.  For example:
-     BLOCK([X],X:1,LOOP,X:X+1,...,GO(LOOP),...).  The argument to GO
-     must be the name of a tag appearing within the BLOCK.  One cannot
-     use GO to transfer to a tag in a BLOCK other than the one
-     containing the GO.      Blocks typically appear on the right side
-     of a function definition but can be used in other places as well.
-
-
- - Function: BREAK (arg1, ...)
-     will evaluate and print its arguments and will then cause a
-     (MACSYMA-BREAK) at which point the user can examine and change his
-     environment.  Upon typing EXIT; the computation resumes.
-     Control-A (^A) will enter a MACSYMA-BREAK from any point
-     interactively.  EXIT; will continue the computation.  Control-X
-     may be used inside the MACSYMA-BREAK to quit locally, without
-     quitting the main computation.
-
-
- - Macro: BUILDQ
-     - See DESCRIBE(MACROS); .
-
-
- - Function: CATCH (exp1,...,expn)
-     evaluates its arguments one by one; if the structure of the expi
-     leads to the evaluation of an expression of the form THROW(arg),
-     then the value of the CATCH is the value of THROW(arg).  This
-     "non-local return" thus goes through any depth of nesting to the
-     nearest enclosing CATCH.  There must be a CATCH corresponding to a
-     THROW, else an error is generated.  If the evaluation of the expi
-     does not lead to the evaluation of any THROW then the value of the
-     CATCH is the value of expn.
-          (C1) G(L):=CATCH(MAP(LAMBDA([X],
-                 IF X<0 THEN THROW(X) ELSE F(X)),L));
-          (C2) G([1,2,3,7]);
-          (D2)                     [F(1), F(2), F(3), F(7)]
-          (C3) G([1,2,-3,7]);
-          (D3)                                - 3
-
-     The function G returns a list of F of each element of L if L
-     consists only of non-negative numbers; otherwise, G "catches" the
-     first negative element of L and "throws" it up.
-
-
- - Function: COMPFILE ([filespec], f1, f2, ..., fn)
-     Compiles functions fi into the file "filespec".  For convenience,
-     see the COMPILE function.
-
-
- - Variable: COMPGRIND
-     default: [FALSE] when TRUE function definitions output by COMPFILE
-     are pretty-printed.
-
-
- - Function: COMPILE (f)
-     The COMPILE command is a convenience feature in macsyma. It
-     handles the calling of the function COMPFILE, which translates
-     macsyma functions into lisp, the calling of the lisp compiler on
-     the file produced by COMPFILE, and the loading of the output of
-     the compiler, know as a FASL file, into the macsyma. It also
-     checks the compiler comment listing output file for certain common
-     errors.  Do PRINTFILE(MCOMPI,DOC,MAXDOC); for more details.
-     COMPILE(); causes macsyma to prompt for arguments.
-     COMPILE(function1,function2,...); compiles the functions, it uses
-     the name of function1 as the first name of the file to put the
-     lisp output.  COMPILE(ALL); or COMPILE(FUNCTIONS); will compile
-     all functions.  COMPILE([file-name],function1,function2,...); N.B.
-     all arguments are evaluated, just like a normal function (it is a
-     normal function!).  Therefore, if you have variables with the same
-     name as part of the file you can not ignore that fact.
-
-
- - Function: COMPILE_LISP_FILE ("input filename")
-     which takes an optional second argument of "output filename," can
-     be used in conjunction with
-
-          TRANSLATE_FILE("filename").
-     For convenience you might define
-
-          Compile_and_load(FILENAME):=
-              LOAD(COMPILE_LISP_FILE(TRANSLATE_FILE(FILENAME)[2]))[2]);
-
-     These file-oriented commands are to be preferred over the use of
-     COMPILE, COMPFILE, and the TRANSLATE SAVE combination.
-
-
- - Function: DEFINE (f(x1, ...), body)
-     is equivalent to f(x1,...):="body but when used inside functions
-     it happens at execution time rather than at the time of definition
-     of the function which contains it.
-
-
- - Function: DEFINE_VARIABLE
-          (name,default-binding,mode,optional-documentation)
-     introduces a global variable into the MACSYMA environment.  This is
-     for user-written packages, which are often translated or compiled.
-     Thus
-          DEFINE_VARIABLE(FOO,TRUE,BOOLEAN);
-     does the following:
-
-     (1) MODE_DECLARE(FOO,BOOLEAN); sets it up for the translator.
-
-     (2) If the variable is unbound, it sets it:  FOO:TRUE.
-
-     (3) DECLARE(FOO,SPECIAL); declares it special.
-
-     (4) Sets up an assign property for it to make sure that it never
-      gets set to a value of the wrong mode.      E.g.  FOO:44 would
-     be an error once FOO is defined BOOLEAN.
-
-     See DESCRIBE(MODE_DECLARE); for a list of the possible "modes".
-     The optional 4th argument is a documentation string.  When
-     TRANSLATE_FILE is used on a package which includes documentation
-     strings, a second file is output in addition to the LISP file which
-     will contain the documentation strings, formatted suitably for use
-     in manuals, usage files, or (for instance) DESCRIBE.  With any
-     variable which has been DEFINE_VARIABLE'd with mode other than
-     ANY, you can give a VALUE_CHECK property, which is a function of
-     one argument called on the value the user is trying to set the
-     variable to.
-
-          PUT('G5,LAMBDA([U],IF U#'G5 THEN ERROR("Don't set G5")),
-                 'VALUE_CHECK);
-
-     Use DEFINE_VARIABLE(G5,'G5,ANY_CHECK, "this ain't supposed to be
-     set by anyone but me.")  ANY_CHECK is a mode which means the same
-     as ANY, but which keeps DEFINE_VARIABLE from optimizing away the
-     assign property.
-
-
- - Function: DISPFUN (f1, f2, ...)
-     displays the definition of the user defined functions f1, f2, ...
-     which may also be the names of array associated functions,
-     subscripted functions, or functions with constant subscripts which
-     are the same as those used when the functions were defined.
-     DISPFUN(ALL) will display all user defined functions as given on
-     the FUNCTIONS and ARRAYS lists except subscripted functions with
-     constant subscripts.  E.g. if the user has defined a function
-     F(x), DISPFUN(F); will display the definition.
-
-
- - Variable: FUNCTIONS
-     default: [] - all user defined functions (set up by f(x):=...).
-
-
- - Function: FUNDEF (functionname)
-     returns the function definition associated with "functionname".
-     FUNDEF(fnname); is similar to DISPFUN(fnname); except that FUNDEF
-     does not invoke display.
-
-
- - Function: FUNMAKE (name,[arg1,...,argn])
-     returns name(arg1,...,argn) without calling the function name.
-
-
- - Function: LOCAL (v1, v2, ...)
-     causes the variables v1,v2,... to be local with respect to all the
-     properties in the statement in which this function is used.  LOCAL
-     may only be used in BLOCKs, in the body of function definitions or
-     LAMBDA expressions, or in the EV function and only one occurrence
-     is permitted in each.  LOCAL is independent of CONTEXT.
-
-
- - Variable: MACROEXPANSION
-     default:[FALSE] - Controls advanced features which affect the
-     efficiency of macros. Possible settings:  FALSE - Macros expand
-     normally each time they are called.   EXPAND - The first time a
-     particular call is evaluated, the expansion is "remembered"
-     internally, so that it doesn't have to be recomputed on subsequent
-     calls making subsequent calls faster.  The macro call still GRINDs
-     and DISPLAYs normally, however extra memory is required to
-     remember all of the expansions.   DISPLACE - The first time a
-     particular call is evaluated, the expansion is substituted for the
-     call.  This requires slightly less storage than when
-     MACROEXPANSION is set to EXPAND and is just as fast, but has the
-     disadvantage that the original macro call is no longer remembered
-     and hence the expansion will be seen if DISPLAY or GRIND is
-     called.  See documentation for TRANSLATE and MACROS for more
-     details.
-
-
- - Variable: MODE_CHECKP
-     default: [TRUE] - If TRUE, MODE_DECLARE checks the modes of bound
-     variables.
-
-
- - Variable: MODE_CHECK_ERRORP
-     default: [FALSE] - If TRUE, MODE_DECLARE calls error.
-
-
- - Variable: MODE_CHECK_WARNP
-     default: [TRUE] - If TRUE, mode errors are described.
-
-
- - Function: MODE_DECLARE (y1, mode1, y2, mode2, ...)
-     MODEDECLARE is a synonym for this.  MODE_DECLARE is used to
-     declare the modes of variables and functions for subsequent
-     translation or compilation of functions. Its arguments are pairs
-     consisting of a variable yi, and a mode which is one of BOOLEAN,
-     FIXNUM, NUMBER, RATIONAL, or FLOAT.  Each yi may also be a list of
-     variables all of which are declared to have modei.  If yi is an
-     array, and if every element of the array which is referenced has a
-     value then ARRAY(yi, COMPLETE, dim1, dim2, ...)  rather than
-          ARRAY(yi, dim1, dim2, ...)
-     should be used when first declaring the bounds of the array.  If
-     all the elements of the array are of mode FIXNUM (FLOAT), use
-     FIXNUM (FLOAT) instead of COMPLETE.  Also if every element of the
-     array is of the same mode, say m, then
-
-          MODE_DECLARE(COMPLETEARRAY(yi),m))
-     should be used for efficient translation.  Also numeric code using
-     arrays can be made to run faster by declaring the expected size of
-     the array, as in:
-
-          MODE_DECLARE(COMPLETEARRAY(A[10,10]),FLOAT)
-
-     for a floating point number array which is 10 x 10.  Additionally
-     one may declare the mode of the result of a function by using
-     FUNCTION(F1,F2,...) as an argument; here F1,F2,... are the names
-     of functions.  For example the expression,
-
-          MODE_DECLARE([FUNCTION(F1,F2,...),X],FIXNUM,Q,
-                                          COMPLETEARRAY(Q),FLOAT)
-
-     declares that X and the values returned by F1,F2,... are
-     single-word integers and that Q is an array of floating point
-     numbers.  MODE_DECLARE is used either immediately inside of a
-     function definition or at top-level for global variables.  Do
-     PRINTFILE(MCOMPI,DOC,MAXDOC); for some examples of the use of
-     MODE_DECLARE in translation and compilation.
-
-
- - Function: MODE_IDENTITY (arg1,arg2)
-     A special form used with MODE_DECLARE and MACROS to delcare, e.g.,
-     a list of lists of flonums, or other compound data object.  The
-     first argument to MODE_IDENTITY is a primitive value mode name as
-     given to MODE_DECLARE (i.e. [FLOAT,FIXNUM,NUMBER, LIST,ANY]), and
-     the second argument is an expression which is evaluated and
-     returned as the value of MODE_IDENTITY.  However, if the return
-     value is not allowed by the mode declared in the first argument,
-     an error or warning is signalled.  The important thing is that the
-     MODE of the expression as determined by the MACSYMA to Lisp
-     translator, will be that given as the first argument, independent
-     of anything that goes on in the second argument.  E.g. X:3.3;
-     MODE_IDENTITY(FIXNUM,X); is an error.  MODE_IDENTITY(FLONUM,X)
-     returns 3.3 .  This has a number of uses, e.g., if you knew that
-     FIRST(L) returned a number then you might write
-     MODE_IDENTITY(NUMBER,FIRST(L)).  However, a more efficient way to
-     do it would be to define a new primitive,
-
-          FIRSTNUMB(X)::=BUILDQ([X],MODE_IDENTITY(NUMBER,X));
-     and use FIRSTNUMB every time you take the first of a list of
-     numbers.
-
-
- - Variable: TRANSBIND
-     default: [FALSE] - if TRUE removes global declarations in the
-     local context.  This applies to variables which are formal
-     parameters to functions which one is TRANSLATE-ing from MACSYMA
-     code to LISP.
-
-
- - Variable: TRANSCOMPILE
-     default:[FALSE] - if true, TRANSLATE will generate the
-     declarations necessary for possible compilation.  The COMPFILE
-     command uses TRANSCOMPILE:TRUE;.
-
-
- - Function: TRANSLATE (f1, f2, ...)
-     translates the user defined functions f1,f2,... from the MACSYMA
-     language to LISP (i.e. it makes them EXPRs).  This results in a
-     gain in speed when they are called.  There is now a version of
-     macsyma with the macsyma to lisp translator pre-loaded into it.
-     It is available by typing :TM (for TranslateMacsyma) at DDT level.
-     When given a file name, E.g. :TM GJC;TMTEST > , it gives that
-     file to the function TRANSLATE_FILE, and proceeds without further
-     user interaction.  If no file name is given, :TM gives a regular
-     macsyma "(C1)" line.  P.s. A user init file with second name "TM"
-     will be loaded if it exists.  You may just want to link this to
-     your macsyma init file.  Functions to be translated should include
-     a call to MODE_DECLARE at the beginning when possible in order to
-     produce more efficient code.  For example:
-
-          F(X1,X2,...):=BLOCK([v1,v2,...],
-                  MODE_DECLARE(v1,mode1,v2,mode2,...),...)
-
-     where the X1,X2,...  are the parameters to the function and the
-     v1,v2,... are the local variables.  The names of translated
-     functions are removed from the FUNCTIONS list if SAVEDEF is FALSE
-     (see below) and are added to the PROPS lists.  Functions should
-     not be translated unless they are fully debugged.  Also,
-     expressions are assumed simplified; if they are not, correct but
-     non- optimal code gets generated.  Thus, the user should not set
-     the SIMP switch to FALSE which inhibits simplification of the
-     expressions to be translated.  The switch TRANSLATE, default:
-     [FALSE], If TRUE, causes automatic translation of a user's
-     function to LISP.  Note that translated functions may not run
-     identically to the way they did before translation as certain
-     incompatabilities may exist between the LISP and MACSYMA versions.
-     Principally, the RAT function with more than one argument and the
-     RATVARS function should not be used if any variables are
-     MODE_DECLAREd CRE.  Also the PREDERROR:FALSE setting will not
-     translate.  SAVEDEF[TRUE] - if TRUE will cause the MACSYMA version
-     of a user function to remain when the function is TRANSLATEd.
-     This permits the definition to be displayed by DISPFUN and allows
-     the function to be edited.  TRANSRUN[TRUE] - if FALSE will cause
-     the interpreted version of all functions to be run (provided they
-     are still around) rather than the translated version.  One can
-     translate functions stored in a file by giving TRANSLATE an
-     argument which is a file specification.  This is a list of the form
-     [fn1,fn2,DSK,dir] where fn1 fn2 is the name of the file of MACSYMA
-     functions, and dir is the name of a file directory.  The result
-     returned by TRANSLATE is a list of the names of the functions
-     TRANSLATEd.  In the case of a file translation the corresponding
-     element of the list is a list of the first and second new file
-     names containing the LISP code resulting from the translation.
-     This will be fn1 LISP on the disk directory dir.  The file of LISP
-     code may be read into MACSYMA by using the LOADFILE function.
-
-
- - Function: TRANSLATE_FILE (file)
-     translates a file of MACSYMA code into a file of LISP code.  It
-     takes one or two arguments.  The first argument is the name of the
-     MACSYMA file, and the optional second argument is the name of the
-     LISP file to produce.  The second argument defaults to the first
-     argument with second file name the value of TR_OUTPUT_FILE_DEFAULT
-     which defaults to TRLISP.  For example:
-     TRANSLATE_FILE("test.mc")); will translate "test.mc" to
-     "test.LISP".  Also produced is a file of translator warning
-     messages of various degrees of severity.  The second file name is
-     always UNLISP.  This file contains valuable (albeit obsure for
-     some) information for tracking down bugs in translated code.  Do
-     APROPOS(TR_) to get a list of TR (for TRANSLATE) switches.  In
-     summary, TRANSLATE_FILE("foo.mc"), LOADFILE("foo.LISP") is "=" to
-     BATCH("foo.mc") modulo certain restrictions (the use of " and % for
-     example).
-
-
- - Variable: TRANSRUN
-     default: [TRUE] - if FALSE will cause the interpreted version of
-     all functions to be run (provided they are still around) rather
-     than the translated version.
-
-
- - Variable: TR_ARRAY_AS_REF
-     default: [TRUE] - If TRUE runtime code uses the value of the
-     variable as the array.
-
-
- - Variable: TR_BOUND_FUNCTION_APPLYP
-     default: [TRUE] - Gives a warning if a bound variable is found
-     being used as a function.
-
-
- - Variable: TR_FILE_TTY_MESSAGESP
-     default: [FALSE] - Determines whether messages generated by
-     TRANSLATE_FILE during translation of a file will be sent to the
-     TTY.  If FALSE (the default), messages about translation of the
-     file are only inserted into the UNLISP file.  If TRUE, the messages
-     are sent to the TTY and are also inserted into the UNLISP file.
-
-
- - Variable: TR_FLOAT_CAN_BRANCH_COMPLEX
-     default: [TRUE] - States whether the arc functions might return
-     complex results.  The arc functions are SQRT, LOG, ACOS, etc.
-     e.g. When it is TRUE then ACOS(X) will be of mode ANY even if X is
-     of mode FLOAT. When FALSE then ACOS(X) will be of mode FLOAT if
-     and only if X is of mode FLOAT.
-
-
- - Variable: TR_FUNCTION_CALL_DEFAULT
-     default: [GENERAL] - FALSE means give up and call MEVAL, EXPR
-     means assume Lisp fixed arg function.  GENERAL, the default gives
-     code good for MEXPRS and MLEXPRS but not MACROS.  GENERAL assures
-     variable bindings are correct in compiled code.  In GENERAL mode,
-     when translating F(X), if F is a bound variable, then it assumes
-     that APPLY(F,[X]) is meant, and translates a such, with apropriate
-     warning. There is no need to turn this off.  With the default
-     settings, no warning messages implies full compatibility of
-     translated and compiled code with the macsyma interpreter.
-
-
- - Variable: TR_GEN_TAGS
-     default: [FALSE] - If TRUE, TRANSLATE_FILE generates a TAGS file
-     for use by the text editor.
-
-
- - Variable: TR_NUMER
-     default: [FALSE] - If TRUE numer properties are used for atoms
-     which have them, e.g. %PI.
-
-
- - Variable: TR_OPTIMIZE_MAX_LOOP
-     default: [100] - The maximum number of times the macro-expansion
-     and optimization pass of the translator will loop in considering a
-     form.  This is to catch MACRO expansion errors, and
-     non-terminating optimization properties.
-
-
- - Variable: TR_OUTPUT_FILE_DEFAULT
-     default: [TRLISP] - This is the second file name to be used for
-     translated lisp output.
-
-
- - Variable: TR_PREDICATE_BRAIN_DAMAGE
-     default: [FALSE] - If TRUE, output possible multiple evaluations
-     in an attempt to interface to the COMPARE package.
-
-
- - Variable: TR_SEMICOMPILE
-     default: [FALSE] - If TRUE TRANSLATE_FILE and COMPFILE output
-     forms which will be macroexpanded but not compiled into machine
-     code by the lisp compiler.
-
-
- - Variable: TR_STATE_VARS
-     default:
-          [TRANSCOMPILE, TR_SEMICOMPILE,
-          TR_WARN_UNDECLARED, TR_WARN_MEVAL, TR_WARN_FEXPR, TR_WARN_MODE,
-          TR_WARN_UNDEFINED_VARIABLE, TR_FUNCTION_CALL_DEFAULT,
-           TR_ARRAY_AS_REF,TR_NUMER]
-     The list of the switches that affect the form of the translated
-     output.  This information is useful to system people when trying
-     to debug the translator.  By comparing the translated product to
-     what should have been produced for a given state, it is possible to
-     track down bugs.
-
-
- - Variable: TR_TRUE_NAME_OF_FILE_BEING_TRANSLATED
-     default: [FALSE] is bound to the quoted string form of the true
-     name of the file most recently translated by TRANSLATE_FILE.
-
-
- - Variable: TR_VERSION
-     - The version number of the translator.
-
-
- - Function: TR_WARNINGS_GET ()
-     Prints a list of warnings which have been given by the translator
-     during the current translation.
-
-
- - Variable: TR_WARN_BAD_FUNCTION_CALLS
-     default: [TRUE] - Gives a warning when when function calls are
-     being made which may not be correct due to improper declarations
-     that were made at translate time.
-
-
- - Variable: TR_WARN_FEXPR
-     default: [COMPFILE] - Gives a warning if any FEXPRs are
-     encountered.  FEXPRs should not normally be output in translated
-     code, all legitimate special program forms are translated.
-
-
- - Variable: TR_WARN_MEVAL
-     default: [COMPFILE] - Gives a warning if the function MEVAL gets
-     called.  If MEVAL is called that indicates problems in the
-     translation.
-
-
- - Variable: TR_WARN_MODE
-     default: [ALL] - Gives a warning when variables are assigned
-     values inappropriate for their mode.
-
-
- - Variable: TR_WARN_UNDECLARED
-     default: [COMPILE] - Determines when to send warnings about
-     undeclared variables to the TTY.
-
-
- - Variable: TR_WARN_UNDEFINED_VARIABLE
-     default: [ALL] - Gives a warning when undefined global variables
-     are seen.
-
-
- - Variable: TR_WINDY
-     default: [TRUE] - Generate "helpfull" comments and programming
-     hints.
-
-
- - Variable: UNDECLAREDWARN
-     default: [COMPFILE] - A switch in the Translator.  There are four
-     relevant settings: SETTING     | ACTION
-     ----------------------------------------------------------- FALSE
-         | never print warning messages.  COMPFILE    | warn when in
-     COMPFILE TRANSLATE   | warn when in TRANSLATE and when
-     TRANSLATE:TRUE ALL         | warn in COMPFILE and TRANSLATE
-     ----------------------------------------------------------- Do
-     MODE_DECLARE(<variable>,ANY) to declare a variable to be a general
-     macsyma variable (i.e. not limited to being FLOAT or FIXNUM).  The
-     extra work in declaring all your variables in code  to be compiled
-     should pay off.
-
-
- - Function: COMPILE_FILE (filename,&optional-outfile)
-     It takes filename which contains macsyma code, and translates this
-     to lisp and then compiles the result.  It returns a list of four
-     files (the original file,translation, notes on translation and the
-     compiled code).
-
-
- - Function: DECLARE_TRANSLATED (FN1,FN2..)
-     When translating a file of macsyma code to lisp, it is important
-     for the translator to know which functions it sees in the file are
-     to be called as translated or compiled functions, and which ones
-     are just macsyma functions or undefined.  Putting this declaration
-     at the top of the file, lets it know that although a symbol does
-     which does not yet have a lisp function value, will have one at
-     call time.  (MFUNCTION-CALL fn arg1 arg2.. ) is generated when the
-     translator does not know fn is going to be a lisp function.
-
+
+File: maxima.info,  Node: FUNCTION,  Next: MACROS,  Prev: Introduction to Function Definition,  Up: Function Definition
+
+FUNCTION
+========
+
+   - To define a function in MACSYMA you use the := operator.  E.g.
+     F(X):=SIN(X)
+
+defines a function F.  Anonmyous functions may also be created using
+LAMBDA.  For example
+     lambda([i,j], ... )
+
+can be used instead of F where
+     F(I,J):=BLOCK([], ... );
+     MAP(LAMBDA([I],I+1),L)
+
+would return a list with 1 added to each term.
+
+   You may also define a function with a variable number of arguments,
+by having a final argument which is assigned to a list of the extra
+arguments:
+
+     (%i8) f([u]):=u;
+     (%i9) f(1,2,3,4);
+     (%o9) 				 [1, 2, 3, 4]
+     (%i11) f(a,b,[u]):=[a,b,u];
+     (%i12) f(1,2,3,4,5,6);
+     (%o12) 			     [1, 2, [3, 4, 5, 6]]
+
+   The right hand side of a function is an expression.  Thus if you
+want a sequence of expressions, you do
+
+     f(x):=(expr1,expr2,....,exprn);
+   and the value of exprn is what is returned by the function.
+
+   If you wish to make a `return' from some expression inside the
+function then you must use `block' and `return'.
+
+     block([],expr1,...,if(a>10) then return(a),...exprn)
+   is itelf an expression, and so could take the place of the right
+hand side of a function definition.  Here it may happen that the return
+happens earlier than the last expression.
+
+   The first `[]' in the block, may contain a list of variables and
+variable assignments, such as `[a:3,b,c:[]]', which would cause the
+three variables `a',`b',and `c' to not refer to their global values,
+but rather have these special values for as long as the code executes
+inside the `block', or inside functions called from inside the `block'.
+This is called dynamic binding, since the variables last from the
+start of the block to the time it exits.  Once you return from the
+`block', or throw out of it, the old values (if any) of the variables
+will be restored.   It is certainly a good idea to protect your
+variables in this way.   Note that the assignments in the block
+variables, are done in parallel.   This means, that if you had used
+`c:a' in the above, the value of `c' would have been the value of `a'
+at the time you just entered the block, but before `a' was bound.
+Thus doing something like
+
+     block([a:a],expr1,... a:a+3,...exprn)
+   will protect the external value of `a' from being altered, but would
+let you access what that value was.   Thus the right hand side of the
+assignments, is evaluated in the entering context, before any binding
+occurs.  Using just `block([x],..' would cause the x to have itself as
+value, just as if it would have if you entered a fresh MAXIMA session.
+
+   The actual arguments to a function are treated in exactly same way as
+the variables in a block.  Thus in
+
+     f(x):=(expr1,...exprn);
+     and
+     f(1);
+   we would have a similar context for evaluation of the expressions as
+if we had done
+     block([x:1],expr1,...exprn)
+
+   Inside functions, when the right hand side of a definition, may be
+computed at runtime, it is useful to use `define' and possibly `buildq'.
 
 
-File: maxima.info,  Node: Program Flow,  Next: Debugging,  Prev: Function Definition,  Up: Top
+File: maxima.info,  Node: MACROS,  Next: OPTIMIZATION,  Prev: FUNCTION,  Up: Function Definition
 
-Program Flow
-************
+MACROS
+======
 
-* Menu:
+ - Function: BUILDQ ([varlist],expression);
+     EXPRESSION is any single MAXIMA expression and  VARLIST is a list
+     of elements of the form `<atom>' or `<atom>:<value>'
 
-* Introduction to Program Flow::
-* Definitions for Program Flow::
+Semantics
+---------
 
-
-File: maxima.info,  Node: Introduction to Program Flow,  Next: Definitions for Program Flow,  Prev: Program Flow,  Up: Program Flow
+   The <value>s in the <varlist> are evaluated left to right (the syntax
+<atom> is equivalent to <atom>:<atom>).  then these values are
+substituted into <expression> in parallel.  If any <atom> appears as a
+single argument to the special form SPLICE (i.e. SPLICE(<atom>) ) inside
+<expression>, then the value associated with that <atom> must be a
+macsyma list, and it is spliced into <expression> instead of
+substituted.
 
-Introduction to Program Flow
-============================
+SIMPLIFICATION
+--------------
 
-   MACSYMA provides a DO loop for iteration, as well as more primitive
-constructs such as GO.
+   The arguments to BUILDQ need to be protected from simplification
+until the substitutions have been carried out.  This code should affect
+that by using `''.
 
-
-File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to Program Flow,  Up: Program Flow
+   `buildq' can be useful for building functions on the fly.  One of
+the powerful things about MAXIMA is that you can have your functions
+define other functions to help solve the problem.  Further below we
+discuss building a recursive function, for a series solution.   This
+defining of functions inside functions usually uses `define', which
+evaluates its arguments.  A number of examples are included under
+`splice'.
 
-Definitions for Program Flow
-============================
+ - Function: SPLICE (atom)
+     This is used with buildq to construct a list. This is handy for
+     making argument lists, in conjunction with BUILDQ
 
- - Variable: BACKTRACE
-     default: [] (when DEBUGMODE:ALL has been done) has as value a list
-     of all functions currently entered.
+          MPRINT([X]) ::= BUILDQ([U : x],
+            if (debuglevel > 3) print(splice(u)));
 
+     Including a call like
+          MPRINT("matrix is ",MAT,"with length",LENGTH(MAT))
+     is equivalent to putting in the line
 
- - special operator: DO
-     - The DO statement is used for performing iteration.  Due to its
-     great generality the DO statement will be described in two parts.
-     First the usual form will be given which is analogous to that used
-     in several other programming languages (FORTRAN, ALGOL, PL/I,
-     etc.); then the other features will be mentioned.  1.  There are
-     three variants of this form that differ only in their terminating
-     conditions.  They are:
-        * (a)  FOR variable : initial-value STEP increment       THRU
-          limit DO body
+          IF DEBUGLEVEL > 3
+            THEN PRINT("matrix is ",MAT,"with length",
+                        LENGTH(MAT))
 
-        * (b)  FOR variable : initial-value STEP increment       WHILE
-          condition DO body
+     A more non trivial example would try to display the variable values
+     AND their names.
+          MSHOW(A,B,C)
 
-        * (c)  FOR variable : initial-value STEP increment       UNLESS
-          condition DO body
-     (Alternatively, the STEP may be given after the termination
-     condition or limit.)      The initial-value, increment, limit, and
-     body can be any expressions.  If the increment is 1 then "STEP 1"
-     may be omitted.      The execution of the DO statement proceeds by
-     first assigning the initial-value to the variable (henceforth
-     called the control-variable). Then: (1) If the control-variable
-     has exceeded the limit of a THRU specification, or if the
-     condition of the UNLESS is TRUE, or if the condition of the WHILE
-     is FALSE then the DO terminates. (2) The body is evaluated.  (3)
-     The increment is added to the control-variable.  The process from
-     (1) to (3) is performed repeatedly until the termination condition
-     is satisfied.  One may also give several termination conditions in
-     which case the DO terminates when any of them is satisfied.
-     In general the THRU test is satisfied when the control-variable is
-     greater than the limit if the increment was non-negative, or when
-     the control-variable is less than the limit if the increment was
-     negative.  The increment and limit may be non-numeric expressions
-     as long as this inequality can be determined.  However, unless the
-     increment is syntactically negative (e.g. is a negative number) at
-     the time the DO statement is input, MACSYMA assumes it will be
-     positive when the DO is executed.  If it is not positive, then the
-     DO may not terminate properly.      Note that the limit,
-     increment, and termination condition are evaluated each time
-     through the loop.  Thus if any of these involve much computation,
-     and yield a result that does not change during all the executions
-     of the body, then it is more efficient to set a variable to their
-     value prior to the DO and use this variable in the DO form.
-     The value normally returned by a DO statement is the atom DONE, as
-     every statement in MACSYMA returns a value.  However, the function
-     RETURN may be used inside the body to exit the DO prematurely and
-     give it any desired value.  Note however that a RETURN within a DO
-     that occurs in a BLOCK will exit only the DO and not the BLOCK.
-     Note also that the GO function may not be used to exit from a DO
-     into a surrounding BLOCK.      The control-variable is always
-     local to the DO and thus any variable may be used without
-     affecting the value of a variable with the same name outside of
-     the DO.  The control-variable is unbound after the DO terminates.
-          (C1)   FOR A:-3 THRU 26 STEP 7 DO LDISPLAY(A)$
-          (E1)          A = -3
-          (E2)          A =  4
-          (E3)          A = 11
-          (E4)          A = 18
-          (E5)          A = 25
-     The function LDISPLAY generates intermediate labels; DISPLAY does
-     not.
-          (C6)   S:0$
-          (C7)   FOR I:1 WHILE I<=10 DO S:S+I;
-          (D7)          DONE
-          (C8)   S;
-          (D8)          55
-     Note that the condition in C7 is equivalent to UNLESS I > 10 and
-     also THRU 10
-          (C9)   SERIES:1$
-          (C10)  TERM:EXP(SIN(X))$
-          (C11)  FOR P:1 UNLESS P>7 DO
-                    (TERM:DIFF(TERM,X)/P,
-                    SERIES:SERIES+SUBST(X=0,TERM)*X^P)$
-          (C12)   SERIES;
-                          7    6     5    4    2
-          (D12)          X    X     X    X    X
-                         -- - --- - -- - -- + -- + X + 1
-                         96   240   15   8    2
-          which gives 8 terms of the Taylor series for e^sin(x).
-          (C13) POLY:0$
-          (C14) FOR I:1 THRU 5 DO
-                  FOR J:I STEP -1 THRU 1 DO
-                     POLY:POLY+I*X^J$
-          (C15) POLY;
-                        5      4       3       2
-          (D15)      5 X  + 9 X  + 12 X  + 14 X  + 15 X
-          (C16) GUESS:-3.0$
-          (C17) FOR I:1 THRU 10 DO (GUESS:SUBST(GUESS,X,.5*(X+10/X)),
-                   IF ABS(GUESS^2-10)<.00005 THEN RETURN(GUESS));
-          (D17)                  - 3.1622807
+     should become
 
-     This example computes the negative square root of 10 using the
-     Newton- Raphson iteration a maximum of 10 times.  Had the
-     convergence criterion not been met the value returned would have
-     been "DONE".  Additional Forms of the DO Statement     Instead of
-     always adding a quantity to the control-variable one may sometimes
-     wish to change it in some other way for each iteration.  In this
-     case one may use "NEXT expression" instead of "STEP increment".
-     This will cause the control-variable to be set to the result of
-     evaluating expression each time through the loop.
+          PRINT('A,"=",A,",",'B,"=",B,", and",'C,"=",C)
 
-          (C1)  FOR COUNT:2 NEXT 3*COUNT THRU 20
-                   DO DISPLAY(COUNT)$
-                              COUNT = 2
-                              COUNT = 6
-                              COUNT = 18
+     so that if it occurs as a line in a program we can print values.
 
-     As an alternative to FOR variable:value ...DO... the syntax FOR
-     variable FROM value ...DO...  may be used.  This permits the "FROM
-     value" to be placed after the step or next value or after the
-     termination condition.  If "FROM value" is omitted then 1 is used
-     as the initial value.      Sometimes one may be interested in
-     performing an iteration where the control-variable is never
-     actually used.  It is thus permissible to give only the
-     termination conditions omitting the initialization and updating
-     information as in the following example to compute the square-root
-     of 5 using a poor initial guess.
-          (C1) X:1000;
-          (C2)  THRU 10 WHILE X#0.0 DO X:.5*(X+5.0/X)$
-          (C3) X;
-          (D3)               2.236068
-         If it is desired one may even omit the termination conditions
-     entirely and just give "DO body" which will continue to evaluate
-     the body indefinitely.  In this case the function RETURN should be
-     used to terminate execution of the DO.
-          (C1) NEWTON(F,GUESS):=
-            BLOCK([NUMER,Y],
-                  LOCAL(DF),
-                  NUMER:TRUE,
-                  DEFINE(DF(X),DIFF(F(X),X)),
-                  DO (Y:DF(GUESS),
-                      IF Y=0.0 THEN ERROR("Derivative at:",GUESS," is zero."),
-                      GUESS:GUESS-F(GUESS)/Y,
-                      IF ABS(F(GUESS))<5.0E-6 THEN RETURN(GUESS)))$
-          (C2) SQR(X):=X^2-5.0$
-          (C3) NEWTON(SQR,1000);
-          (D3)                    2.236068
-         (Note that RETURN, when executed, causes the current value of
-     GUESS to be returned as the value of the DO.  The BLOCK is exited
-     and this value of the DO is returned as the value of the BLOCK
-     because the DO is the last statement in the block.)      One other
-     form of the DO is available in MACSYMA.  The syntax is:
+          (%i101) foo(x,y,z):=mshow(x,y,z);
+          (%i102) foo(1,2,3);
+          X = 1 , Y = 2 , and Z = 3
 
-          FOR variable IN list [end-tests] DO body
-         The members of the list are any expressions which will
-     successively be assigned to the variable on each iteration of the
-     body.  The optional end-tests can be used to terminate execution of
-     the DO; otherwise it will terminate when the list is exhausted or
-     when a RETURN is executed in the body.  (In fact, list may be any
-     non-atomic expression, and successive parts are taken.)
+     The actual definition of mshow is the following.   Note how buildq
+     lets you build 'QUOTED' structure, so that the  `'u' lets you get
+     the variable name.  Note that in macros, the RESULT is a piece of
+     code which will then be substituted for the macro and evaluated.
 
-          (C1)  FOR F IN [LOG, RHO, ATAN] DO LDISP(F(1))$
-          (E1)                                  0
-          (E2)                                RHO(1)
-                                               %PI
-          (E3)                                 ---
-                                                4
-          (C4) EV(E3,NUMER);
-          (D4)                             0.78539816
+          MSHOW([lis])::=BLOCK([ans:[],N:LENGTH(lis)],
+          	   FOR i THRU N DO
+          	       (ans:APPEND(ans,
+          			   BUILDQ([u:lis[i]],
+          				  ['u,"=",u])),
+          		IF i < N
+          		    THEN ans
+          		    :APPEND(ans,
+          			    IF i < N-1 THEN [","]
+          			        ELSE [", and"])),
+          	   BUILDQ([U:ans],PRINT(SPLICE(u))))
 
- - Function: ERRCATCH (exp1, exp2, ...)
-     evaluates its arguments one by one and returns a list of the value
-     of the last one if no error occurs.  If an error occurs in the
-     evaluation of any arguments, ERRCATCH "catches" the error and
-     immediately returns [] (the empty list).  This function is useful
-     in BATCH files where one suspects an error might occur which would
-     otherwise have terminated the BATCH if the error weren't caught.
+     The splice also works to put arguments into algebraic operations:
 
+          (%i108) BUILDQ([A:'[B,C,D]],+SPLICE(A));
+          (%o108) D+C+B
+     Note how the simplification only occurs AFTER the substitution,
+     The operation applying to the splice in the first cae is the `+'
+     while in the second it is the `*', yet logically you might thing
+     `splice(a)+splice(A)' could be replaced by `2*splice(A)'.   No
+     simplification takes place with the buildq To understand what
+     SPLICE is doing with the algebra you must understand that for
+     MAXIMA, a formula an operation like `A+B+C' is really internally
+     similar to `+(A,B,C)', and similarly for multiplication.  Thus
+     `*(2,B,C,D)' is `2*B*C*D'
 
- - Variable: ERREXP
-     default: [ERREXP] When an error occurs in the course of a
-     computation, MACSYMA prints out an error message and terminates the
-     computation.  ERREXP is set to the offending expression and the
-     message "ERREXP contains the offending expression" is printed.  The
-     user can then type ERREXP; to see this and hopefully find the
-     problem.
+          (%i114) BUILDQ([A:'[B,C,D]],+SPLICE(A));
+          (%o114) D+C+B
+          
+          (%i111) BUILDQ([A:'[B,C,D]],SPLICE(A)+SPLICE(A));
+          (%o111) 2*D+2*C+2*B
+            but
+          (%i112) BUILDQ([A:'[B,C,D]],2*SPLICE(A));
+          (%o112) 2*B*C*D
 
-
- - Function: ERROR (arg1, arg2, ...)
-     will evaluate and print its arguments and then will cause an error
-     return to top level MACSYMA or to the nearest enclosing ERRCATCH.
-     This is useful for breaking out of nested functions if an error
-     condition is detected, or wherever one can't type control-^.  The
-     variable ERROR is set to a list describing the error, the first of
-     it being a string of text, and the rest the objects in question.
-     ERRORMSG(); is the preferred way to see the last error message.
-     ERRORFUN default: [FALSE] - if set to the name of a function of no
-     arguments will cause that function to be executed whenever an error
-     occurs.  This is useful in BATCH files where the user may want his
-     MACSYMA killed or his terminal logged out if an error occurs.  In
-     these cases ERRORFUN would be set to QUIT or LOGOUT.
-
-
- - Variable: ERRORFUN
-     default: [FALSE] - if set to the name of a function of no
-     arguments will cause that function to be executed whenever an error
-     occurs.  This is useful in BATCH files where the user may want his
-     MACSYMA killed or his terminal logged out if an error occurs.  In
-     these cases ERRORFUN would be set to QUIT or LOGOUT.
-
-
- - Function: ERRORMSG ()
-     reprints the last error message.  This is very helpful if you are
-     using a display console and the message has gone off the screen.
-     The variable ERROR is set to a list describing the error, the
-     first of it being a string of text, and the rest the objects in
-     question.  TTYINTFUN:LAMBDA([],ERRORMSG(),PRINT(""))$ will set up
-     the user-interrupt character (^U) to reprint the message.
-
-
- - special operator: FOR
-     - Used in iterations, do DESCRIBE("DO"); for a description of
-     MACSYMA's iteration facilities.
-
-
- - Function: GO (tag)
-     is used within a BLOCK to transfer control to the statement of the
-     block which is tagged with the argument to GO.  To tag a
-     statement, precede it by an atomic argument as another statement in
-     the BLOCK.  For example:
-          BLOCK([X],X:1,LOOP,X+1,...,GO(LOOP),...)
-     .  The argument to GO must be the name of a tag appearing in the
-     same BLOCK.  One cannot use GO to transfer to tag in a BLOCK other
-     than the one containing the GO.
-
-
- - special operator: IF
-     - The IF statement is used for conditional execution.  The syntax
-     is:
-              IF condition THEN expression1 ELSE expression2.
-     The result of an IF statement is expression1 if condition is true
-     and expression2 if it is false.  expression1 and expression2 are
-     any MACSYMA expressions (including nested IF statements), and
-     condition is an expression which evaluates to TRUE or FALSE and is
-     composed of relational and logical operators which are as follows:
-
-          Operator name       Symbol      Type
-          greater than        >           relational infix
-          equal to            = , EQUAL   "  "
-          not equal to        #           "  "
-          less than           <           "  "
-          greater than        >=
-            or equal to                   "  "
-          less than           <=
-            or equal to                   "  "
-          and                 AND         logical infix
-          or                  OR          "  "
-          not                 NOT         logical prefix
-
- - Function: LISPDEBUGMODE ()
-     LISPDEBUGMODE(); DEBUGPRINTMODE(); and DEBUG(); make available to
-     the user debugging features used by systems programmers.  These
-     tools are powerful, and although some conventions are different
-     from the usual macsyma level it is felt their use is very
-     intuitive.  [Some printout may be verbose for slow terminals,
-     there are switches for controlling this.]  These commands were
-     designed for the user who must debug translated macsyma code, as
-     such they are a boon.  See MACDOC;TRDEBG USAGE for more
-     information.
-
-
- - Function: MAP (fn, exp1, exp2, ...)
-     returns an expression whose leading operator is the same as that
-     of the expi but whose subparts are the results of applying fn to
-     the corresponding subparts of the expi.  Fn is either the name of
-     a function of n arguments (where n is the number of expi) or is a
-     LAMBDA form of n arguments.  MAPERROR[TRUE] - if FALSE will cause
-     all of the mapping functions to (1) stop when they finish going
-     down the shortest expi if not all of the expi are of the same
-     length and (2) apply fn to [exp1, exp2,...]  if the expi are not
-     all the same type of object. If MAPERROR is TRUE then an error
-     message will be given in the above two instances.  One of the uses
-     of this function is to MAP a function (e.g. PARTFRAC) onto each
-     term of a very large expression where it ordinarily wouldn't be
-     possible to use the function on the entire expression due to an
-     exhaustion of list storage space in the course of the computation.
-          (C1) MAP(F,X+A*Y+B*Z);
-          (D1)                        F(B Z) + F(A Y) + F(X)
-          (C2) MAP(LAMBDA([U],PARTFRAC(U,X)),X+1/(X^3+4*X^2+5*X+2));
-                                     1       1        1
-          (D2)                     ----- - ----- + -------- + X
-                                   X + 2   X + 1          2
-                                                   (X + 1)
-          (C3) MAP(RATSIMP, X/(X^2+X)+(Y^2+Y)/Y);
-                                                1
-          (D3)                            Y + ----- + 1
-                                              X + 1
-          (C4) MAP("=",[A,B],[-0.5,3]);
-          (D4)                          [A = - 0.5, B = 3]
-
- - Function: MAPATOM (expr)
-     is TRUE if and only if expr is treated by the MAPping routines as
-     an "atom", a unit.  "Mapatoms" are atoms, numbers (including
-     rational numbers), and subscripted variables.
-
-
- - Variable: MAPERROR
-     default: [TRUE] - if FALSE will cause all of the mapping
-     functions, for example
-          MAP(fn,exp1,exp2,...))
-     to (1) stop when they finish going down the shortest expi if not
-     all of the expi are of the same length and (2) apply fn to [exp1,
-     exp2,...] if the expi are not all the same type of object.  If
-     MAPERROR is TRUE then an error message will be given in the above
-     two instances.
-
-
- - Function: MAPLIST (fn, exp1, exp2, ...)
-     yields a list of the applications of fn to the parts of the expi.
-     This differs from MAP(fn,exp1,exp2,...)  which returns an
-     expression with the same main operator as expi has (except for
-     simplifications and the case where MAP does an APPLY).  Fn is of
-     the same form as in MAP.
-
-
- - Variable: PREDERROR
-     default: [TRUE] - If TRUE, an error message is signalled whenever
-     the predicate of an IF statement or an IS function fails to
-     evaluate to either TRUE or FALSE.  If FALSE, UNKNOWN is returned
-     instead in this case.  The PREDERROR:FALSE mode is not supported in
-     translated code.
-
-
- - Function: RETURN (value)
-     may be used to exit explicitly from a BLOCK, bringing its
-     argument.  Do DESCRIBE(BLOCK); for more information.
-
-
- - Function: SCANMAP (function,exp)
-     recursively applies function to exp, in a "top down" manner.  This
-     is most useful when "complete" factorization is desired, for
-     example:
-          (C1) EXP:(A^2+2*A+1)*Y + X^2$
-          (C2) SCANMAP(FACTOR,EXP);
-                                              2      2
-          (D2)                         (A + 1)  Y + X
-
-     Note the way in which SCANMAP applies the given function FACTOR to
-     the constituent subexpressions of exp; if another form of exp is
-     presented to SCANMAP then the result may be different.  Thus, D2
-     is not recovered when SCANMAP is applied to the expanded form of
-     exp:
-          (C3) SCANMAP(FACTOR,EXPAND(EXP));
-                                     2                  2
-          (D3)                      A  Y + 2 A Y + Y + X
-
-     Here is another example of the way in which SCANMAP recursively
-     applies a given function to all subexpressions, including
-     exponents:
-          (C4) EXPR : U*V^(A*X+B) + C$
-          (C5) SCANMAP('F, EXPR);
-                              F(F(F(A) F(X)) + F(B))
-          (D5) F(F(F(U) F(F(V)                      )) + F(C))
-     SCANMAP(function,expression,BOTTOMUP) applies function to exp in a
-     "bottom-up" manner.  E.g., for undefined F,
-
-          SCANMAP(F,A*X+B) ->
-             F(A*X+B) -> F(F(A*X)+F(B)) -> F(F(F(A)*F(X))+F(B))
-          SCANMAP(F,A*X+B,BOTTOMUP) -> F(A)*F(X)+F(B)
-              -> F(F(A)*F(X))+F(B) ->
-               F(F(F(A)*F(X))+F(B))
-
-     In this case, you get the same answer both ways.
-
-
- - Function: THROW (exp)
-     evaluates exp and throws the value back to the most recent CATCH.
-     THROW is used with CATCH as a structured nonlocal exit mechanism.
-
+     Finally the buildq can be invaluable for building recursive
+     functions.  Suppose your program is solving a differential
+     equation using the series method, and has determined that it needs
+     to build a recursion relation
+          F[N]:=(-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])/(N^2-N))
+     and it must do this on the fly inside your function.  Now you
+     would really like to add `expand'.
+          F[N]:=EXPAND((-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])
+            /(N^2-N)));
+     but how do you build this code.  You want the `expand' to happen
+     each time the function runs, NOT before it.
+          kill(f),
+          val:(-((N^2-2*N+1)*F[N-1]+F[N-2]+F[N-3])/(N^2-N)),
+          define(f[n],buildq([u:val],expand(u))),
+     does the job.   This might be useful, since when you do
+          With the Expand
+          (%i28) f[6];
+          (%o28) -AA1/8-13*AA0/180
+     where as without it is kept unsimplified, and even after 6 terms
+     it becomes:
+          (%i25) f[6];
+          (%o25) (5*(-4*(-3*(-2*(AA1+AA0)+AA1+AA0)/2
+          	    -(AA1+AA0)/2+AA1)
+          	/3
+          	-(-2*(AA1+AA0)+AA1+AA0)/6+(-AA1-AA0)/2)
+                /4
+                +(-3*(-2*(AA1+AA0)+AA1+AA0)/2
+                 -(AA1+AA0)/2+AA1)
+                 /12-(2*(AA1+AA0)-AA1-AA0)/6)
+                /30
+     The expression quickly becomes complicated if not simplified at
+     each stage, so the simplification must be part of the definition.
+     Hence the `buildq' is useful for building the form.
 
 
-File: maxima.info,  Node: Debugging,  Next: Function and Variable Index,  Prev: Program Flow,  Up: Top
+File: maxima.info,  Node: OPTIMIZATION,  Next: Definitions for Function Definition,  Prev: MACROS,  Up: Function Definition
 
-Debugging
-*********
+OPTIMIZATION
+============
 
-* Menu:
+   The optimu files no longer exist in Maxima.  The documentation is
+left here for historical purposes.
 
-* Source Level Debugging::
-* Keyword Commands::
-* Definitions for Debugging::
-
-
-File: maxima.info,  Node: Source Level Debugging,  Next: Keyword Commands,  Up: Debugging
-
-Source Level Debugging
-======================
-
-   Maxima has source level capabilities.  A user can set a breakpoint at
-a line in a file, and then step line by line from there.  The call
-stack may be examined, together with the variables bound at that level.
-If the user is running the code under GNU emacs in a shell window (dbl
-shell), or is running `xmaxima' the graphical interface version, then
-if he stops at a break point, he will see his current position in the
-source file which will be displayed in the other half of the window,
-either highlighted in red, or with a little arrow pointing at the right
-line.  He can advance single lines at a time by typing M-n (Alt-n) or
-alternately by entering `:n'.  To see the names of the keyword commands
-type :help (or :h).  In general commands may be abbreviated if the
-abbreviation is unique.  If not unique the alternatives will be listed.
-
-   Under Emacs you should run in a `dbl' shell, which requires the
-dbl.el file in the elisp directory.  Make sure you install the elisp
-files or add the maxima elisp directory to your path: eg add the
-following to your `.emacs' file or the `site-init.el'
-
-     (setq load-path (cons "/usr/local/maxima-5.5/elisp" load-path))
-     (autoload 'dbl "dbl")
-   then in emacs
-     M-x dbl
-   should start a shell window in which you can run programs, for
-example maxima, gcl, gdb etc.   This shell window also knows about
-source level debugging, and display of source code in the other window.
-
-     maxima
-     Maxima 5.5 Wed Apr 18 19:02:00 CDT 2001 (with enhancements by W. Schelter).
-     Licensed under the GNU Public License (see file COPYING)
-     (C1) batchload("/tmp/joe.mac");
-     (D1) 				 /tmp/joe.mac
-     (C2) :br joe
-     Turning on debugging debugmode(true)
-     Bkpt 0 for joe (in /tmp/joe.mac line 8)
-     (C2) foo(2,3);
-     Bkpt 0:(joe.mac 8)
-     (dbm:1) :bt                        <-- :bt typed here gives a backtrace
-     #0: joe(y=5)(joe.mac line 8)
-     #1: foo(x=2,y=3)(joe.mac line 5)
-     (joe.mac 9)                        <-- Here type M-n to advance line
-     (joe.mac 10)                       <-- Here type M-n to advance line
-                                        In the other buffer the source code
-                                        appears with an arrow.
-     (dbm:1) u;                         Investigate value of 'u
-     28
-     (dbm:1) u:33;                      Alter it to be 33
-     (dbm:1) :r                         :r Resumes the computation
-     (D3) 				     1094
-
-   The actual file /tmp/joe.mac is the following:
-
-     foo(x,y):=(
-       x:x+2,
-       y:y+2,
-       x:joe(y),
-       x+y);
-     
-     joe(y):=block([u:y^2],
-       u:u+3,
-       u:u^2,
-        u);
-
-   If you are running in Gnu Emacs then if you are looking at the file
-joe.mac, you may set a break point at a certain line of that file by
-typing `C-x space'.  This figures out which function your cursor is in,
-and then it sees which line of that function you are on.   If you are
-on say line 2 of joe, then it will insert in the other window `:br joe
-2' the command to break joe at its second line.   To have this enabled
-you must have maxima-mode.el on in the window in which the file joe.mac
-is visiting.  There are additional commands available in that file
-window, such as evaluating the function into the maxima, by typing
-`Alt-Control-x'
+   When using TRANSLATE and generating code with MACSYMA, there are a
+number of techniques which can save time and be helpful.  Do
+DEMO("optimu.dem") for a demonstration.  In particular, the function
+FLOATDEFUNK from TRANSL;OPTIMU FASL, creates a function definition from
+a math-like expression, but it optimizes it (with OPTIMIZE) and puts in
+the MODE_DECLAREations needed to COMPILE correctly. (This can be done
+by hand, of course).  The demo will only run in a fresh macsyma.
 

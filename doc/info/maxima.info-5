@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.5 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -9,1208 +9,1144 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Polynomials,  Prev: Introduction to Polynomials,  Up: Polynomials
+File: maxima.info,  Node: Definitions for Input and Output,  Prev: PLAYBACK,  Up: Input and Output
 
-Definitions for Polynomials
+Definitions for Input and Output
+================================
+
+ - Variable: %
+     The last D-line computed by MACSYMA (whether or not it was printed
+     out).  (See also %%.)
+
+
+ - Variable: %%
+     The value of the last computation performed while in a
+     (MACSYMA-BREAK).  Also may be used in compound statements in the
+     nth statement to refer to the value of the (n-1)th statement.  E.g.
+     F(N):=(INTEGRATE(X^N,X),SUBST(3,X,%%)-SUBST(2,X,%%)); is in essence
+     equivalent to F(N):=BLOCK([%%], %%:INTEGRATE(X^N,X),
+     SUBST(3,X,%%)-SUBST(2,X,%%)); This will also work for communicating
+     between the (n-1)th and nth (non-atomic) BLOCK statements.
+
+
+ - Variable: %EDISPFLAG
+     default: [FALSE] - if TRUE, MACSYMA displays %E to a negative
+     exponent as a quotient, i.e. %E^-X as 1/%E^X.
+
+
+ - Function: %TH (i)
+     is the ith previous computation.  That is, if the next expression
+     to be computed is D(j) this is D(j-i).  This is useful in BATCH
+     files or for referring to a group of D expressions.  For example,
+     if SUM is initialized to 0 then FOR I:1 THRU 10 DO SUM:SUM+%TH(I)
+     will set SUM to the sum of the last ten D expressions.
+
+
+ - special symbol: "?"
+     - As prefix to a function or variable name, signifies that the
+     function or variable is a LISP token, not a MACSYMA token.  Two
+     question marks typed together, ??, will flush the current MACSYMA
+     command line.
+
+
+ - Variable: ABSBOXCHAR
+     default: [!] is the character used to draw absolute value signs
+     around expressions which are more than a single line high.
+
+ - Function: APPENDFILE (filename1, filename2, DSK, directory)
+     is like WRITEFILE(DSK,directory) but appends to the file whose
+     name is specified by the first two arguments.  A subsequent
+     CLOSEFILE will delete the original file and rename the appended
+     file.
+
+
+ - Function: BACKUP ()
+     To "back up" and see what you did, see PLAYBACK.
+
+
+ - Function: BATCH (file-specification)
+     reads in and evaluates MACSYMA command lines from a file - A
+     facility for executing command lines stored on a disk file rather
+     than in the usual on-line mode. This facility has several uses,
+     namely to provide a reservoir for working command lines, for
+     giving error-free demonstrations, or helping in organizing one's
+     thinking in complex problem-solving situations where modifications
+     may be done via a text editor.  A batch file consists of a set of
+     MACSYMA command lines, each with its terminating ; or $, which may
+     be further separated by spaces, carriage- returns, form-feeds, and
+     the like.  The BATCH function calls for reading in the command
+     lines from the file one at a time, echoing them on the user
+     console, and executing them in turn.  Control is returned to the
+     user console only when serious errors occur or when the end of the
+     file is met.  Of course, the user may quit out of the
+     file-processing by typing control-G at any point.  BATCH files may
+     be created using a text editor or by use of the STRINGOUT command.
+     Do DESCRIBE(STRINGOUT) for details DESCRIBE(FILE); and
+     DESCRIBE(FILES); have additional information on how the file
+     argument is interpreted, and files in general.
+
+
+ - Variable: BATCHKILL
+     default: [FALSE] if TRUE then the effect of all previous BATCH
+     files is nullified because a KILL(ALL) and a RESET() will be done
+     automatically when the next one is read in.  If BATCHKILL is bound
+     to any other atom then a KILL of the value of BATCHKILL will be
+     done.
+
+
+ - Function: BATCHLOAD (file-specification)
+     Batches in the file silently without terminal output or labels.
+
+
+ - Function: BATCON (argument)
+     continues BATCHing in a file which was interrupted.
+
+
+ - Variable: BATCOUNT
+     default: [0] may be set to the number of the last expression
+     BATCHed in from a file.  Thus BATCON(BATCOUNT-1) will resume
+     BATCHing from the expression before the last BATCHed in from
+     before.
+
+
+ - Variable: BOTHCASES
+     default: [TRUE] if TRUE will cause MAXIMA to retain lower case
+     text as well as upper case. Note, however, that the names of any
+     MAXIMA special variables or functions are in upper case.   The
+     default is now TRUE since it makes code more readable, allowing
+     users to have names like SeriesSolve.
+
+     Because of this we make the system variables and functions all
+     upper case, and users may enter them however they like (in upper
+     or lower).  But all other variables and functions are case
+     sensitive.  When you print out your program using for example
+     grind(fundef(f)) then you will see that the symbols like 'IF',
+     'SIN',... all appear in upper case whereas non system symbols
+     appear in the case which you used.
+
+     This is implemented as follows: If the symbol is being encountered
+     for the first time, if the upper case version is in the package
+     and has a nontrivial function or property list, then the upper
+     case symbol is used, and it is recorded on the mixed case one,
+     that the upper case should be used in future.  If a symbol is
+     already in the package then it is just used.
+
+     In effect this means that most old programs should continue to
+     work, and that new ones may write sIn, Sin, SIN, sin etc and they
+     will all be interpreted as SIN.   However if they write MySin this
+     will be different from MYSIN, because MYSIN is not a system
+     function or variable.
+
+          SeriesSolve(f,x):=
+             if (f = sin) ...
+          
+          and this is read as
+          
+          SeriesSolve(f,x):=
+             IF (f = SIN) ...
+
+
+ - Variable: CHANGE_FILEDEFAULTS
+     default: [TRUE] on PDP10 systems, and FALSE elsewhere.  Controls
+     whether the user doing a LOADFILE or BATCH has his file defaults
+     changed to the file LOADFILEd or BATCHed.  The TRUE setting is for
+     people who like DDT-style file defaulting.  The FALSE setting is
+     for people who like the conventions of other operating systems,
+     who like LISP-style file defaulting, or who write packages which
+     do LOADFILEs or BATCHes which should not interfere with their
+     user's file defaults.
+
+
+ - Function: CLOSEFILE (filename1, filename2)
+     closes a file opened by WRITEFILE and gives it the name filename1
+     filename2.  (On a Lisp Machine one need only say CLOSEFILE();.)
+     Thus to save a file consisting of the display of all input and
+     output during some part of a session with MACSYMA the user issues
+     a WRITEFILE, transacts with MACSYMA, then issues a CLOSEFILE.  The
+     user can also issue the PLAYBACK function after a WRITEFILE to
+     save the display of previous transactions.  (Note that what is
+     saved this way is a copy of the display of expressions not the
+     expressions themselves).  To save the actual expression in internal
+     form the SAVE function may be used.  The expression can then be
+     brought back into MACSYMA via the LOADFILE function.  To save the
+     expression in a linear form which may then be BATCHed in later, the
+     STRINGOUT function is used.
+
+
+ - Function: COLLAPSE (expression)
+     collapses" its argument by causing all of its common (i.e. equal)
+     subexpressions to share (i.e. use the same cells), thereby saving
+     space.  (COLLAPSE is a subroutine used by the OPTIMIZE command.)
+     Thus, calling COLLAPSE may be useful before using FASSAVE or after
+     loading in a SAVE file.  You can collapse several expressions
+     together by using COLLAPSE([expr1,...,exprN])$.  Similarly, you can
+     collapse the elements of the array A by doing
+     COLLAPSE(LISTARRAY('A))$.
+
+
+ - Function: CONCAT (arg1, arg2, ...)
+     evaluates its arguments and returns the concatenation of their
+     values resulting in a name or a quoted string the type being given
+     by that of the first argument.  Thus if X is bound to 1 and D is
+     unbound then CONCAT(X,2)="12" and CONCAT(D,X+1)=D2.
+
+
+ - Function: SCONCAT (arg1, arg2, ...)
+     evaluates its arguments and concatenates them into a string.
+     Unlike CONCAT, the arguments do NOT need to be atoms.    The
+     result is a Common Lisp String.
+          (%i5) sconcat("xx[",3,"]:",expand((x+y)^3));
+          (%o5) 			 xx[3]:Y^3+3*X*Y^2+3*X^2*Y+X^3
+     The resulting string could be used in conjunction with print.
+
+ - Variable: CURSORDISP
+     default: [TRUE] If TRUE, causes expressions to be drawn by the
+     displayer in logical sequence.  This only works with a console
+     which can do cursor movement.  If FALSE, expressions are simply
+     printed line by line.  CURSORDISP is FALSE when a WRITEFILE is in
+     effect.
+
+
+ - Variable: DIREC
+     - The value of this variable is the default file directory for
+     SAVE, STORE, FASSAVE, and STRINGOUT.  It is initialized to the
+     user's login name, if he has a disk directory, and to one of the
+     USERSi directories otherwise.  DIREC determines to what directory
+     disk files will be written.
+
+
+ - Function: DISP (expr1,expr2, ...)
+     is like DISPLAY but only the value of the arguments are displayed
+     rather than equations.  This is useful for complicated arguments
+     which don't have names or where only the value of the argument is
+     of interest and not the name.
+
+
+ - Function: DISPCON (tensor1,tensor2,...)
+     displays the contraction properties of the tensori as were given
+     to DEFCON.  DISPCON(ALL) displays all the contraction properties
+     which were defined.
+
+
+ - Function: DISPLAY (expr1, expr2, ...)
+     displays equations whose left side is expri unevaluated, and whose
+     right side is the value of the expression centered on the line.
+     This function is useful in blocks and FOR statements in order to
+     have intermediate results displayed.  The arguments to DISPLAY are
+     usually atoms, subscripted variables, or function calls.  (see the
+     DISP function)
+
+          (%i1) DISPLAY(B[1,2]);
+                                                2
+                                   B     = X - X
+                                    1, 2
+          (%o1)                            DONE
+
+ - Variable: DISPLAY2D
+     default: [TRUE] - if set to FALSE will cause the standard display
+     to be a string (1-dimensional) form rather than a display
+     (2-dimensional) form.  This may be of benefit for users on printing
+     consoles who would like to conserve paper.
+
+
+ - Variable: DISPLAY_FORMAT_INTERNAL
+     default: [FALSE] - if set to TRUE will cause expressions to be
+     displayed without being transformed in ways that hide the internal
+     mathematical representation.  The display then corresponds to what
+     the INPART command returns rather than the PART command.  Examples:
+          User     PART       INPART
+          a-b;      A - B     A + (- 1) B
+                     A            - 1
+          a/b;       -         A B
+                     B
+                                 1/2
+          sqrt(x);   SQRT(X)    X
+                    4 X        4
+          X*4/3;    ---        - X
+                     3         3
+
+ - Function: DISPTERMS (expr)
+     displays its argument in parts one below the other.  That is,
+     first the operator of 'expr' is displayed, then each term in a
+     sum, or factor in a product, or part of a more general expression
+     is displayed separately.  This is useful if expr is too large to be
+     otherwise displayed.  For example if P1, P2, ...  are very large
+     expressions then the display program may run out of storage space
+     in trying to display P1+P2+...  all at once.  However,
+     DISPTERMS(P1+P2+...) will display P1, then below it P2, etc.  When
+     not using DISPTERMS, if an exponential expression is too wide to be
+     displayed as A**B it will appear as EXPT(A,B) (or as NCEXPT(A,B) in
+     the case of A^^B).
+
+
+ - Variable: DSKALL
+     default: [] If TRUE will cause values, functions, arrays, and
+     rules to be written periodically onto the disk in addition to
+     labelled expressions.  TRUE is the default value whereas if DSKALL
+     is FALSE then only labelled expresions will be written.
+
+
+ - Variable: ERROR_SIZE
+     default: [20 for a display terminal, 10 for others].  controls the
+     size of error messages.  For example, let
+     U:(C^D^E+B+A)/(COS(X-1)+1); .  U has an error size of 24.  So if
+     ERROR_SIZE has value < 24 then
+          (%i1) ERROR("The function", FOO,"doesn't like", U,"as input.");
+          prints as:
+          The function FOO doesn't like ERREXP1 as input.
+          If ERROR_SIZE>24 then as:
+                                           E
+                                          D
+                                         C   + B + A
+          The function FOO doesn't like -------------- as input.
+                                        COS(X - 1) + 1
+
+     Expressions larger than ERROR_SIZE are replaced by symbols, and the
+     symbols are set to the expressions.  The symbols are taken from the
+     user-settable list
+          ERROR_SYMS:[ERREXP1,ERREXP2,ERREXP3]
+     .  The default value of this switch might change depending on user
+     experience.  If you find the defaults either too big or two small
+     for your tastes, send mail to MACSYMA.
+
+
+ - Variable: ERROR_SYMS
+     default: [ERREXP1,ERREXP2,ERREXP3] - In error messages,
+     expressions larger than ERROR_SIZE are replaced by symbols, and the
+     symbols are set to the expressions.  The symbols are taken from the
+     list ERROR_SYMS, and are initially ERREXP1, ERREXP2, ERREXP3, etc.
+     After an error message is printed, e.g. "The function FOO doesn't
+     like ERREXP1 as input.", the user can type ERREXP1; to see the
+     expression.  ERROR_SYMS may be set by the user to a different set
+     of symbols, if desired.
+
+
+ - Function: EXPT (A,B)
+     if an exponential expression is too wide to be displayed as A^B it
+     will appear as EXPT(A,B) (or as NCEXPT(A,B) in the case of A^^B).
+
+
+ - Variable: EXPTDISPFLAG
+     default: [TRUE] - if TRUE, MACSYMA displays expressions with
+     negative exponents using quotients e.g., X**(-1) as 1/X.
+
+
+ - Function: FASSAVE (args)
+     is similar to SAVE but produces a FASL file in which the sharing
+     of subexpressions which are shared in core is preserved in the
+     file created.  Hence, expressions which have common subexpressions
+     will consume less space when loaded back from a file created by
+     FASSAVE rather than by SAVE.  Files created with FASSAVE are
+     reloaded using LOADFILE, just as files created with SAVE.  FASSAVE
+     returns a list of the form [<name of file>,<size of file in
+     blocks>,...] where ...  are the things saved.  Warnings are
+     printed out in the case of large files.  FASSAVE may be used while
+     a WRITEFILE is in progress.
+
+
+ - Function: FILEDEFAULTS ()
+     returns the current default filename, in whatever format is used
+     by the specific Macsyma implementation.  (See DESCRIBE(FILE) for
+     what that format is.)  This is the file specification used by
+     LOADFILE, BATCH, and a number of other file-accessing commands.
+     FILEDEFAULTS('file) - sets the current filedefaults to "file".  The
+     argument to FILEDEFAULTS is evaulated as it is anticipated that the
+     command will be used mainly in programs.  The "file" need not be a
+     real file, so one can use this function e.g. if one's real purpose
+     is to set only the "device" field to something, where one does not
+     care about the settings of the other fields.
+
+
+ - Variable: FILENAME
+     default: [] - The value of this variable is the first name of the
+     files which are generated by the automatic disk storage scheme.
+     The default value is the first three characters of the user's login
+     name concatenated with the lowest unused integer, e.g. ECR1.
+
+
+ - Function: FILENAME_MERGE ("filename1","filename2",...)
+     ; merges together filenames.  What this means is that it returns
+     "filename1" except that missing components come from the
+     corresponding components of "filename2", and if they are missing
+     there, then from "filename3".
+
+
+ - Variable: FILENUM
+     default: [0] - The default second file name for files generated by
+     SAVE, STRINGOUT, or FASSAVE if no file names are specified by the
+     user.  It is an integer, and is incremented by one each time a new
+     file is written.
+
+
+ - Variable: FILE_SEARCH
+     - this is a list of files naming directories to search by LOAD and
+     a number of other functions.  The default value of this is a list
+     of the various SHARE directories used by Macsyma.
+     FILE_SEARCH("filename"); searches on those directories and devices
+     specified by the FILE_SEARCH_LISP, FILE_SEARCH_MAXIMA and
+     FILE_SEARCH_DEMO variables, and returns the name of the first file
+     it finds.  This function is invoked by the LOAD function, which is
+     why LOAD("FFT") finds and loads share/fft.mac.  You may add a path
+     to the appropriate list.   Note that the format of the paths
+     allows specifying multiple extensions and multiple paths.
+          "/home/wfs/###.{o,lisp,mac,mc}"
+          "/home/{wfs,joe}/###.{o,lisp,mac,mc}"
+     The '###' is replaced by the actual filename passed.  File_SEARCH
+     first checks if the actual name passed exists, before substituting
+     it in the various patterns.
+
+
+ - Variable: FILE_STRING_PRINT
+     default: [FALSE] on MC, [TRUE] elsewhere.  If TRUE, filenames are
+     output as strings; if FALSE, as lists.  For example, the message
+     when an out of core file is loaded into MACSYMA (e.g. the LIMIT
+     package), appears on MC in list format as   LIMIT FASL DSK MACSYM
+     being loaded and in string format as:   DSK:MACSYM;LIMIT FASL
+     being loaded The string format is like the top level (DDT) file
+     specifications.
+
+
+ - Function: FILE_TYPE ("filename")
+     ; returns FASL, LISP, or MACSYMA, depending on what kind of file
+     it is.  FASL means a compiled Lisp file, which normally has an
+     extension of .VAS in NIL.
+
+
+ - Function: GRIND (arg)
+     prints out arg in a more readable format than the STRING command.
+     It returns a D-line as value.  The GRIND switch, default: [FALSE],
+     if TRUE will cause the STRING, STRINGOUT, and PLAYBACK commands to
+     use "grind" mode instead of "string" mode.  For PLAYBACK, "grind"
+     mode can also be turned on (for processing input lines) by
+     specifying GRIND as an option.
+
+
+ - Variable: IBASE
+     default: [10] - the base for inputting numbers.
+
+
+ - Variable: INCHAR
+     default: [C] - the alphabetic prefix of the names of expressions
+     typed by the user.
+
+
+ - Function: LDISP (expr1,expr2,...)
+     is like DISP but also generates intermediate labels.
+
+
+ - Function: LDISPLAY (expr1,expr2,...)
+     is like DISPLAY but also generates intermediate labels.
+
+
+ - Variable: LINECHAR
+     default: [E] - the alphabetic prefix of the names of intermediate
+     displayed expressions.
+
+
+ - Variable: LINEDISP
+     default: [TRUE] - Allows the use of line graphics in the drawing
+     of equations on those systems which support them (e.g. the Lisp
+     Machine).  This can be disabled by setting LINEDISP to FALSE.  It
+     is automatically disabled during WRITEFILE.
+
+
+ - Variable: LINEL
+     default: [] - the number of characters which are printed on a
+     line. It is initially set by MACSYMA to the line length of the
+     type of terminal being used (as far as is known) but may be reset
+     at any time by the user.  The user may have to reset it in DDT
+     with :TCTYP as well.
+
+
+ - Function: LOAD ("filename")
+     ; takes one argument, a filename represented as a "string" (i.e.
+     inside quotation marks), or as list (e.g. inside square brackets),
+     and locates and loads in the indicated file.  If no directory is
+     specified, it then searches the SHAREi directories and any other
+     directories listed in the FILE_SEARCH variable and loads the
+     indicated file. LOAD("EIGEN") will load the eigen package without
+     the need for the user to be aware of the details of whether the
+     package was compiled, translated, saved, or fassaved, i.e. LOAD
+     will work on both LOADFILEable and BATCHable files.  Note: LOAD
+     will use BATCHLOAD if it finds the file is BATCHable (which means
+     that it will BATCH the file in "silently" without terminal output
+     or labels).  Other MACSYMA commands to load in files are:
+     LOADFILE, RESTORE, BATCH, and DEMO.  Do DESCRIBE(command); for
+     details.  LOADFILE and RESTORE work for files written with SAVE;
+     BATCH and DEMO for those files written with STRINGOUT or created
+     as lists of commands with a text editor.  If load can't find the
+     file, check the value FILE_SEARCH to make sure that it contains an
+     appropriate template.
+
+          (%i4) load("eigen");
+          MACSYMA BUG: Unknown file type NIL
+          
+          Error: macsyma error
+          Error signalled by MEVAL1.
+          Broken at $LOAD.  Type :H for Help.
+          MAXIMA>>:q
+          
+          By examining the file system we find the file is actually in
+          /public/maxima/share/eigen.mc.   So we add that to the file_search
+          path.   This can be done at start up (see init.lsp) or,
+          else it can be done and then the system resaved
+          once it has been customized for local directories and pathnames.
+          At lisp level we would do
+          (in-package "MAXIMA")
+          (setq $file_search ($append (list '(mlist)
+                  "/tmp/foo.mac" "/tmp/foo.mc") $file_search))
+          and at maxima level:
+          
+          (%i5) file_search:append(["/public/maxima/share/foo.mc"],
+                  file_search)$
+          (%i6) load("eigen");
+          
+          batching /usr/public/maxima/share/eigen.mc
+          (%o6) 		        #/public/maxima/share/eigen.mc
+          (%i7) eigenvalues(matrix([a,b],[c,d]));
+          	       2		    2
+                 - SQRT(D  - 2 A D + 4 B C + A ) + D + A
+          (%o7) [[---------------------------------------,
+          			  2
+          
+          				      2			   2
+          				SQRT(D  - 2 A D + 4 B C + A ) + D + A
+          				-------------------------------------], [1, 1]]
+          						  2
+
+ - Function: LOADFILE (filename)
+     loads a file as designated by its arguments.  This function may be
+     used to bring back quantities that were stored from a prior
+     MACSYMA session by use of the SAVE or STORE functions.   Specify
+     the pathname as on your operating system.  For unix this would be
+     "/home/wfs/foo.mc" for example.
+
+
+ - Variable: LOADPRINT
+     default: [TRUE] - governs the printing of messages accompanying
+     loading of files.  The following options are available: TRUE means
+     always print the message; 'LOADFILE means print only when the
+     LOADFILE command is used; 'AUTOLOAD means print only when a file
+     is automatically loaded in (e.g. the integration file SIN FASL);
+     FALSE means never print the loading message.
+
+
+ - Function: NOSTRING (arg)
+     displays all input lines when playing back rather than STRINGing
+     them.  If arg is GRIND then the display will be in a more readable
+     format.  One may include any number of options as in
+     PLAYBACK([5,10],20,TIME,SLOW).
+
+
+ - Variable: OBASE
+     default: [10] the base for display of numbers.
+
+
+ - Variable: OUTCHAR
+     default: [D] - the alphabetic prefix of the names of outputted
+     expressions.
+
+
+ - Variable: PACKAGEFILE
+     default:[FALSE] - Package designers who use SAVE, FASSAVE, or
+     TRANSLATE to create packages (files) for others to use may want to
+     set PACKAGEFILE:TRUE$ to prevent information from being added to
+     MACSYMA's information-lists (e.g. VALUES, FUNCTIONS) except where
+     necessary when the file is loaded in.  In this way, the contents
+     of the package will not get in the user's way when he adds his own
+     data.  Note that this will not solve the problem of possible name
+     conflicts.  Also note that the flag simply affects what is output
+     to the package file.  Setting the flag to TRUE is also useful for
+     creating MACSYMA init files.
+
+
+ - Variable: PARSEWINDOW
+     default:[10] - the maximum number of "lexical tokens" that are
+     printed out on each side of the error-point when a syntax
+     (parsing) error occurs.  This option is especially useful on slow
+     terminals.  Setting it to -1 causes the entire input string to be
+     printed out when an error occurs.
+
+
+ - Variable: PFEFORMAT
+     default: [FALSE] - if TRUE will cause rational numbers to display
+     in a linear form and denominators which are integers to display as
+     rational number multipliers.
+
+
+ - Function: PRINT (exp1, exp2, ...)
+     evaluates and displays its arguments one after the other "on a
+     line" starting at the leftmost position.  If expi is unbound or is
+     preceded by a single quote or is enclosed in "s then it is printed
+     literally.  For example, PRINT("THE VALUE OF X IS ",X).  The value
+     returned by PRINT is the value of its last argument.  No
+     intermediate lines are generated.  (For "printing" files, see the
+     PRINTFILE function.)
+
+
+ - Function: SPRINT (exp1, exp2, ...)
+     evaluates and displays its arguments one after the other "on a
+     line" starting at the leftmost position.  The numbers are printed
+     with the '-' right next to the number, and it disregards line
+     length.
+
+ - Function: TCL_OUTPUT (LIST INDEX &optional-skip)
+     prints a TCL list based on LIST extracting the INDEX slot.  Here
+     skip defaults to 2, meaning that every other element will be
+     printed if the argument is of the form a list of numbers, rathter
+     than a list of lists.  For example:
+          TCL_OUTPUT([x1,y1,x2,y2,x3,y3],1) --> {x1 x2 x3 }
+          TCL_OUTPUT([x1,y1,x2,y2,x3,y3],2) --> {y1 y2 y3 }
+          TCL_OUTPUT([1,2,3,4,5,6],1,3) --> {1 4}
+          TCL_OUTPUT([1,2,3,4,5,6],2,3) --> {2 5}
+
+ - Function: READ (string1, ...)
+     prints its arguments, then reads in and evaluates one expression.
+     For example: A:READ("ENTER THE NUMBER OF VALUES").
+
+
+ - Function: READONLY (string1,...)
+     prints its arguments, then reads in an expression (which in
+     contrast to READ is not evaluated).
+
+
+ - Function: REVEAL (exp,depth)
+     will display exp to the specified integer depth with the length of
+     each part indicated.  Sums will be displayed as Sum(n) and
+     products as Product(n) where n is the number of subparts of the
+     sum or product.  Exponentials will be displayed as Expt.
+          (%i1) INTEGRATE(1/(X^3+2),X)$
+          (%i2) REVEAL(%,2);
+          (%o2)                    Negterm + Quotient + Quotient
+          (%i3) REVEAL(%o1,3);
+                                               ATAN         LOG
+          (%o3)                 - Quotient + ---------- + ----------
+                                            Product(2)   Product(2)
+
+ - Variable: RMXCHAR
+     default: []] - The character used to display the (right) delimiter
+     of a matrix (see also LMXCHAR).
+
+
+ - Function: SAVE (filename,arg1, arg2,...,argi)
+     saves quantities described by its arguments on disk and keeps them
+     in core also.  The arg's are the expressions to be SAVEd.  ALL is
+     the simplest, but note that saving ALL will save the entire
+     contents of your MACSYMA, which in the case of a large computation
+     may result in a large file.  VALUES, FUNCTIONS, or any other items
+     on the INFOLISTS (do DESCRIBE(INFOLISTS); for the list) may be
+     SAVEd, as may functions and variables by name.  C and D lines may
+     also be saved, but it is better to give them explicit names, which
+     may be done in the command line, e.g.  SAVE(RES1=%o15); Files
+     saved with SAVE should be reloaded with LOADFILE.  SAVE returns
+     the pathname where the items were saved.
+
+
+ - Variable: SAVEDEF
+     default: [TRUE] - if TRUE will cause the MACSYMA version of a user
+     function to remain when the function is TRANSLATEd.  This permits
+     the definition to be displayed by DISPFUN and allows the function
+     to be edited.  If SAVEDEF is FALSE, the names of translated
+     functions are removed from the FUNCTIONS list.
+
+
+ - Function: SHOW (exp)
+     will display exp with the indexed objects in it shown having
+     covariant indices as subscripts,contravariant indices as
+     superscripts.  The derivative indices will be displayed as
+     subscripts, separated from the covariant indices by a comma.
+
+
+ - Function: SHOWRATVARS (exp)
+     returns a list of the RATVARS (CRE variables) of exp.
+
+
+ - Variable: STARDISP
+     default: [FALSE] - if TRUE will cause multiplication to be
+     displayed explicitly with an * between operands.
+
+
+ - Function: STRING (expr)
+     converts expr to MACSYMA's linear notation (similar to FORTRAN's)
+     just as if it had been typed in and puts expr into the buffer for
+     possible editing (in which case expr is usually Ci) The STRING'ed
+     expression should not be used in a computation.
+
+
+ - Function: STRINGOUT (args)
+     will output an expression to a file in a linear format.  Such
+     files are then used by the BATCH or DEMO commands.
+     STRINGOUT(file-specification, A1, A2, ...)  outputs to a file
+     given by file-specification ([filename1,filename2,DSK, directory])
+     the values given by A1,A2,..  in a MACSYMA readable format.  The
+     file-specification may be omitted, in which case the default values
+     will be used. The Ai are usually C labels or may be INPUT meaning
+     the value of all C labels.  Another option is to make ai FUNCTIONS
+     which will cause all of the user's function definitions to be
+     strungout (i.e. all those retrieved by DISPFUN(ALL)).  Likewise
+     the ai may be VALUES, and all the variables to which the user has
+     assigned values will be strungout.  ai may also be a list [m,n]
+     which means to stringout all labels in the range m through n
+     inclusive.  This function may be used to create a file of FORTRAN
+     statements by doing some simple editing on the strungout
+     expressions.  If the GRIND switch is set to TRUE, then STRINGOUT
+     will use GRIND format instead of STRING format.  Note: a STRINGOUT
+     may be done while a WRITEFILE is in progress.
+
+
+ - Function: TEX (expr)
+ - Function: TEX (expr,filename)
+ - Function: TEX (label,filename)
+     In the case of a label, a left-equation-number will be produced.
+     in case a file-name is supplied, the output will be appended to the
+     file.
+
+          (%i1) integrate(1/(1+x^3),x);
+          
+          					 2 x - 1
+          		       2	    ATAN(-------)
+          		  LOG(x  - x + 1)	 SQRT(3)    LOG(x + 1)
+          (%o1) 	        - --------------- + ------------- + ----------
+          			 6	       SQRT(3)	        3
+          (%i2) tex(%o1);
+          
+          $$-{{\log \left(x^{2}-x+1\right)}\over{6}}
+            +{{\arctan {{2\>x-1}\over{\sqrt{3}}}}\over{\sqrt{3}}}
+            +{{\log \left(x+1\right)}\over{3}}\leqno{\tt (%o1)}$$
+          (%o2) 				     (%o1)
+          (%i6) tex(integrate(sin(x),x));
+          
+          $$-\cos x$$
+          (%o6) 				     FALSE
+          (%i7) tex(%o1,"/tmp/jo.tex");
+          
+          (%o7) 				     (%o1)
+     where the last expression will be appended to the file
+     `/tmp/jo.tex'
+
+ - Function: SYSTEM (command)
+     Execute COMMAND as a subprocess.  The command will be passed to the
+     default shell for execution.   System is not supported by all
+     operating systems, but generally exists in the unix environment.
+     if hist is a list of frequencies which you wish to plot as a bar
+     graph using xgraph.
+          (%i1) (with_stdout("_hist.out",
+                     for i:1 thru length(hist) do (
+                       print(i,hist[i]))),
+                 system("xgraph -bar -brw .7 -nl < _hist.out"));
+     In order to make the plot be done in the background (returning
+     control to maxima) and remove the temporary file after it is done
+     do:
+          system("(xgraph -bar -brw .7 -nl < _hist.out;  rm -f _hist.out)&")
+
+ - Variable: TTYOFF
+     default: [FALSE] - if TRUE stops printing output to the console.
+
+
+ - macro: WITH_STDOUT (file,stmt1,stmt2,...)
+     Opens file and then evaluates stmt1, stmt2, ....  Any printing to
+     standard output goes to the file instead of the terminal.  It
+     always returns FALSE.   Note the binding of display2d to be false,
+     otherwise the printing will have things like "- 3" instead of "-3".
+
+          mygnuplot(f,var,range,number_ticks):=
+           block([numer:true,display2d:false],
+           with_stdout("/tmp/gnu",
+             for x:range[1] thru range[2] step
+                          (range[2]-range[1])/number_ticks
+                do (print(x,at(f,var=x)))),
+           system("echo \"set data style lines; set title '",
+                  f,"' ;plot '/tmp/gnu'
+          ;pause 10 \" | gnuplot"));
+          
+          (%i8) with_stdout("/home/wfs/joe",
+                n:10,
+                for i:8 thru n
+                  do(print("factorial(",i,") gives ",i!)));
+          (%o8) 				     FALSE
+          (%i9) system("cat /home/wfs/joe");
+          factorial( 8 ) gives  40320
+          factorial( 9 ) gives  362880
+          factorial( 10 ) gives  3628800
+          (%o9) 				       0
+
+
+ - Function: WRITEFILE (DSK, directory)
+     opens up a file for writing.  On a Lisp Machine one uses
+     WRITEFILE("filename").  All interaction between the user and
+     MACSYMA is then recorded in this file, just as it is on the
+     console.  Such a file is a transcript of the session, and is not
+     reloadable or batchable into MACSYMA again.  (See also CLOSEFILE.)
+
+
+
+File: maxima.info,  Node: Floating Point,  Next: Contexts,  Prev: Input and Output,  Up: Top
+
+Floating Point
+**************
+
+* Menu:
+
+* Definitions for Floating Point::
+
+
+File: maxima.info,  Node: Definitions for Floating Point,  Prev: Floating Point,  Up: Floating Point
+
+Definitions for Floating Point
+==============================
+
+ - Function: BFFAC (exp,n)
+     BFLOAT version of the Factorial (shifted Gamma) function.  The 2nd
+     argument is how many digits to retain and return, it's a good idea
+     to request a couple of extra.  This function is available by doing
+     LOAD(BFFAC); .
+
+ - Variable: ALGEPSILON
+     The default value is 10^-8.  The value of ALGEPSILON is used by
+     ALGSYS.
+
+ - Function: BFLOAT (X)
+     converts all numbers and functions of numbers to bigfloat numbers.
+     Setting FPPREC[16] to N, sets the bigfloat precision to N digits.
+     If FLOAT2BF[FALSE] is FALSE a warning message is printed when a
+     floating point number is converted into a bigfloat number (since
+     this may lead to loss of precision).
+
+
+ - Function: BFLOATP (exp)
+     is TRUE if exp is a bigfloat number else FALSE.
+
+
+ - Function: BFPSI (n,z,fpprec)
+     gives polygammas of real arg and integer order.  For digamma,
+     BFPSI0(z,fpprec) is more direct.  Note -BFPSI0(1,fpprec) provides
+     BFLOATed %GAMMA.  To use this do LOAD(BFFAC);
+
+
+ - Variable: BFTORAT
+     default: [FALSE] controls the conversion of bfloats to rational
+     numbers.  If
+          BFTORAT:FALSE
+     RATEPSILON will be used to control the conversion (this results in
+     relatively small rational numbers).  If
+          BFTORAT:TRUE
+     , the rational number generated will accurately represent the
+     bfloat.
+
+
+ - Variable: BFTRUNC
+     default: [TRUE] causes trailing zeroes in non-zero bigfloat
+     numbers not to be displayed.  Thus, if BFTRUNC:FALSE, BFLOAT(1);
+     displays as 1.000000000000000B0. Otherwise, this is displayed as
+     1.0B0.
+
+
+ - Function: CBFAC (z,fpprec)
+     a factorial for complex bfloats.  It may be used by doing
+     LOAD(BFAC); For more details see share2/bfac.usg.
+
+
+ - Function: FLOAT (exp)
+     converts integers, rational numbers and bigfloats in exp to
+     floating point numbers.  It is also an EVFLAG, FLOAT causes
+     non-integral rational numbers and bigfloat numbers to be converted
+     to floating point.
+
+
+ - Variable: FLOAT2BF
+     default: [FALSE] if FALSE, a warning message is printed when a
+     floating point number is converted into a bigfloat number (since
+     this may lead to loss of precision).
+
+
+ - Function: FLOATDEFUNK
+     - is a utility for making floating point functions from
+     mathematical expression. It will take the input expression and
+     FLOAT it, then OPTIMIZE it, and then insert MODE_DECLAREations for
+     all the variables.  This is THE way to use ROMBERG, PLOT2,
+     INTERPOLATE, etc. e.g.  EXP:some-hairy-macsyma-expression;
+
+          FLOATDEFUNK('F,['X],EXP);
+     will define the function F(X) for you.  (Do
+     PRINTFILE(MCOMPI,DOC,MAXDOC); for more details.)
+
+
+ - Function: FLOATNUMP (exp)
+     is TRUE if exp is a floating point number else FALSE.
+
+
+ - Variable: FPPREC
+     default: [16] - Floating Point PRECision.  Can be set to an
+     integer representing the desired precision.
+
+
+ - Variable: FPPRINTPREC
+     default: [0] - The number of digits to print when printing a
+     bigfloat number, making it possible to compute with a large number
+     of digits of precision, but have the answer printed out with a
+     smaller number of digits.  If FPPRINTPREC is 0 (the default), or >=
+     FPPREC, then the value of FPPREC controls the number of digits used
+     for printing.  However, if FPPRINTPREC has a value between 2 and
+     FPPREC-1, then it controls the number of digits used.  (The minimal
+     number of digits used is 2, one to the left of the point and one to
+     the right.  The value 1 for FPPRINTPREC is illegal.)
+
+ - Function: ?ROUND (x,&optional-divisor)
+     round the floating point X to the nearest integer.   The argument
+     must be a regular system float, not a bigfloat.   The ? beginning
+     the name indicates this is normal common lisp function.
+
+          (%i3) ?round(-2.8);
+          (%o3) 				      - 3
+
+ - Function: ?TRUNCATE (x,&optional-divisor)
+     truncate the floating point X towards 0, to become an integer.
+     The argument must be a regular system float, not a bigfloat.  The
+     ? beginning the name indicates this is normal common lisp function.
+
+     (%i4) ?truncate(-2.8);
+     (%o4) 				      - 2
+     (%i5) ?truncate(2.4);
+     (%o5) 				       2
+     (%i6) ?truncate(2.8);
+     (%o6) 				       2
+
+ - Variable: ZUNDERFLOW
+     default: [TRUE] - if FALSE, an error will be signaled if floating
+     point underflow occurs.  Currently in NIL Macsyma, all
+     floating-point underflow, floating-point overflow, and
+     division-by-zero errors signal errors, and this switch is ignored.
+
+
+
+File: maxima.info,  Node: Contexts,  Next: Polynomials,  Prev: Floating Point,  Up: Top
+
+Contexts
+********
+
+* Menu:
+
+* Definitions for Contexts::
+
+
+File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contexts
+
+Definitions for Contexts
+========================
+
+ - Function: ACTIVATE (cont1, cont2, ...)
+     causes the specified contexts conti to be activated.  The facts in
+     these contexts are used in making deductions and retrieving
+     information.  The facts in these contexts are not listed when
+     FACTS(); is done.  The variable ACTIVECONTEXTS is the list of
+     contexts which are active by way of the ACTIVATE function.
+
+
+ - Variable: ACTIVECONTEXTS
+     default: [] is a list of the contexts which are active by way of
+     the ACTIVATE function, as opposed to being active because they are
+     subcontexts of the current context.
+
+
+ - Function: ASSUME (pred1, pred2, ...)
+     First checks the specified predicates for redundancy and
+     consistency with the current data base.  If the predicates are
+     consistent and non-redundant, they are added to the data base; if
+     inconsistent or redundant, no action is taken.  ASSUME returns a
+     list whose entries are the predicates added to the data base and
+     the atoms REDUNDANT or INCONSISTENT where applicable.
+
+
+ - Variable: ASSUMESCALAR
+     default: [TRUE] - helps govern whether expressions `exp' for which
+
+          NONSCALARP(exp) is FALSE
+
+     are assumed to behave like scalars for certain transformations as
+     follows: Let `exp' represent any non-list/non-matrix, and
+     `[1,2,3]' any list or matrix.
+          exp.[1,2,3]; ==>
+           [exp,2*exp,3*exp]
+     if ASSUMESCALAR is TRUE or SCALARP(exp) is TRUE or CONSTANTP(exp)
+     is TRUE.  If ASSUMESCALAR is TRUE, such expressions will behave
+     like scalars only for the commutative operators, but not for ".".
+     If ASSUMESCALAR is FALSE, such expressions will behave like
+     non-scalars.  If ASSUMESCALAR is ALL, such expressions will behave
+     like scalars for all the operators listed above.
+
+ - Variable: ASSUME_POS
+     default:[FALSE] - When using INTEGRATE, etc. one often introduces
+     parameters which are real and positive or one's calculations can
+     often be constructed so that this is true.  There is a switch
+     ASSUME_POS (default FALSE) such that if set to TRUE, MACSYMA will
+     assume one's parameters are positive.  The intention here is to
+     cut down on the number of questions MACSYMA needs to ask.
+     Obviously, ASSUME information or any contextual information
+     present will take precedence.  The user can control what is
+     considered to be a parameter for this purpose.  Parameters by
+     default are those which satisfy SYMBOLP(x) OR SUBVARP(x).  The
+     user can change this by setting the option ASSUME_POS_PRED
+     [default FALSE] to the name of a predicate function of one
+     argument.  E.g. if you want only symbols to be parameters, you can
+     do ASSUME_POS:TRUE$ ASSUME_POS_PRED:'SYMBOLP$ SIGN(A); -> POS,
+     SIGN(A[1]); -> PNZ.
+
+ - Variable: ASSUME_POS_PRED
+     default:[FALSE] - may be set to one argument to control what will
+     be considered a parameter for the "assumptions" that INTEGRATE
+     will make... see ASSUME and ASSUME_POS .
+
+ - Variable: CONTEXT
+     default: INITIAL. Whenever a user assumes a new fact, it is placed
+     in the context named as the current value of the variable CONTEXT.
+     Similarly, FORGET references the current value of CONTEXT.  To
+     change contexts, simply bind CONTEXT to the desired context.  If
+     the specified context does not exist it will be created by an
+     invisible call to NEWCONTEXT.  The context specified by the value
+     of CONTEXT is automatically activated.  (Do DESCRIBE(CONTEXTS);
+     for a general description of the CONTEXT mechanism.)
+
+
+ - Variable: CONTEXTS
+     default: [INITIAL,GLOBAL] is a list of the contexts which
+     currently exist, including the currently active context.  The
+     context mechanism makes it possible for a user to bind together
+     and name a selected portion of his data base, called a context.
+     Once this is done, the user can have MACSYMA assume or forget
+     large numbers of facts merely by activating or deactivating their
+     context.  Any symbolic atom can be a context, and the facts
+     contained in that context will be retained in storage until the
+     user destroys them individually by using FORGET or destroys them
+     as a whole by using KILL to destroy the context to which they
+     belong.      Contexts exist in a formal hierarchy, with the root
+     always being the context GLOBAL, which contains information about
+     MACSYMA that some functions need.  When in a given context, all
+     the facts in that context are "active" (meaning that they are used
+     in deductions and retrievals) as are all the facts in any context
+     which is an inferior of that context.  When a fresh MACSYMA is
+     started up, the user is in a context called INITIAL, which has
+     GLOBAL as a subcontext.  The functions which deal with contexts
+     are: FACTS, NEWCONTEXT, SUPCONTEXT, KILLCONTEXT, ACTIVATE,
+     DEACTIVATE, ASSUME, and FORGET.
+
+
+ - Function: DEACTIVATE (cont1, cont2, ...)
+     causes the specified contexts conti to be deactivated.
+
+
+ - Function: FACTS (item)
+     If 'item' is the name of a context then FACTS returns a list of
+     the facts in the specified context.  If no argument is given, it
+     lists the current context.  If 'item' is not the name of a context
+     then it returns a list of the facts known about 'item' in the
+     current context.  Facts that are active, but in a different
+     context, are not listed.
+
+
+ - declaration: FEATURES
+     - MACSYMA has built-in properties which are handled by the data
+     base.  These are called FEATURES.  One can do DECLARE(N,INTEGER),
+     etc.  One can also DECLARE one's own FEATURES by e.g.  DECLARE(
+     INCREASING, FEATURE); which will then allow one to say DECLARE(F,
+     INCREASING);.  One can then check if F is INCREASING by using the
+     predicate FEATUREP via FEATUREP(F, INCREASING).  There is an
+     infolist FEATURES which is a list of known FEATURES.  At present
+     known FEATURES are: INTEGER, NONINTEGER, EVEN, ODD, RATIONAL,
+     IRRATIONAL, REAL, IMAGINARY, COMPLEX, ANALYTIC, INCREASING,
+     DECREASING, ODDFUN, EVENFUN, POSFUN, COMMUTATIVE, LASSOCIATIVE,
+     RASSOCIATIVE, SYMMETRIC, and ANTISYMMETRIC.  [Note: system
+     "features" may be checked with STATUS(FEATURE, ...); See
+     DESCRIBE(STATUS); or DESCRIBE(FEATURE); for details.]
+
+
+ - Function: FORGET (pred1, pred2, ...)
+     removes relations established by ASSUME.  The predicates may be
+     expressions equivalent to (but not necessarily identical to) those
+     previously ASSUMEd.  FORGET(list) is also a legal form.
+
+
+ - Function: KILLCONTEXT (context1,context2,...,contextn)
+     kills the specified contexts.  If one of them is the current
+     context, the new current context will become the first available
+     subcontext of the current context which has not been killed.  If
+     the first available unkilled context is GLOBAL then INITIAL is
+     used instead.  If the INITIAL context is killed, a new INITIAL is
+     created, which is empty of facts.  KILLCONTEXT doesn't allow the
+     user to kill a context which is currently active, either because
+     it is a subcontext of the current context, or by use of the
+     function ACTIVATE.
+
+
+ - Function: NEWCONTEXT (name)
+     creates a new (empty) context, called name, which has GLOBAL as
+     its only subcontext.  The new context created will become the
+     currently active context.
+
+
+ - Function: SUPCONTEXT (name,context)
+     will create a new context (called name) whose subcontext is
+     context.  If context is not specified, the current context will be
+     assumed.  If it is specified, context must exist.
+
+
+
+File: maxima.info,  Node: Polynomials,  Next: Constants,  Prev: Contexts,  Up: Top
+
+Polynomials
+***********
+
+* Menu:
+
+* Introduction to Polynomials::
+* Definitions for Polynomials::
+
+
+File: maxima.info,  Node: Introduction to Polynomials,  Next: Definitions for Polynomials,  Prev: Polynomials,  Up: Polynomials
+
+Introduction to Polynomials
 ===========================
 
- - Variable: ALGEBRAIC
-     default: [FALSE] must be set to TRUE in order for the
-     simplification of algebraic integers to take effect.
-
- - Variable: BERLEFACT
-     default: [TRUE] if FALSE then the Kronecker factoring algorithm
-     will be used otherwise the Berlekamp algorithm, which is the
-     default, will be used.
-
-
- - Function: BEZOUT (p1, p2, var)
-     an alternative to the RESULTANT command.  It returns a matrix.
-     DETERMINANT of this matrix is the desired resultant.
-
-
- - Function: BOTHCOEF (exp, var)
-     returns a list whose first member is the coefficient of var in exp
-     (as found by RATCOEF if exp is in CRE form otherwise by COEFF) and
-     whose second member is the remaining part of exp.  That is, [A,B]
-     where exp=A*var+B.
-          (C1) ISLINEAR(EXP,VAR):=BLOCK([C],
-                  C:BOTHCOEF(RAT(EXP,VAR),VAR),
-                  IS(FREEOF(VAR,C) AND C[1]#0))$
-          (C2) ISLINEAR((R**2-(X-R)**2)/X,X);
-          (D2)                              TRUE
-
- - Function: COEFF (exp, v, n)
-     obtains the coefficient of v**n in exp.  n may be omitted if it is
-     1.  v may be an atom, or complete subexpression of exp e.g., X,
-     SIN(X), A[I+1], X+Y, etc. (In the last case the expression (X+Y)
-     should occur in exp).  Sometimes it may be necessary to expand or
-     factor exp in order to make v^n explicit.  This is not done
-     automatically by COEFF.
-          (C1) COEFF(2*A*TAN(X)+TAN(X)+B=5*TAN(X)+3,TAN(X));
-          (D1)                         2 A + 1 = 5
-          (C2) COEFF(Y+X*%E**X+1,X,0);
-          (D2)                            Y + 1
-
- - Function: COMBINE (exp)
-     simplifies the sum exp by combining terms with the same
-     denominator into a single term.
-
-
- - Function: CONTENT (p1, var1, ..., varn)
-     returns a list whose first element is the greatest common divisor
-     of the coefficients of the terms of the polynomial p1 in the
-     variable varn (this is the content) and whose second element is
-     the polynomial p1 divided by the content.
-          (C1) CONTENT(2*X*Y+4*X**2*Y**2,Y);
-          (D1)            [2*X, 2*X*Y**2+Y].
-
- - Function: DENOM (exp)
-     returns the denominator of the rational expression exp.
-
-
- - Function: DIVIDE (p1, p2, var1, ..., varn)
-     computes the quotient and remainder of the polynomial p1 divided
-     by the polynomial p2, in a main polynomial variable, varn.  The
-     other variables are as in the RATVARS function.  The result is a
-     list whose first element is the quotient and whose second element
-     is the remainder.
-          (C1) DIVIDE(X+Y,X-Y,X);
-          (D1)                        [1, 2 Y]
-          (C2) DIVIDE(X+Y,X-Y);
-          (D2)                      [ - 1, 2 X]
-
-     (Note that Y is the main variable in C2)
-
-
- - Function: ELIMINATE ([eq1,eq2,...,eqn],[v1,v2,...,vk])
-     eliminates variables from equations (or expressions assumed equal
-     to zero) by taking successive resultants. This returns a list of
-     n-k expressions with the k variables v1,...,vk eliminated.  First
-     v1 is eliminated yielding n-1 expressions, then v2 is, etc.  If
-     k=n then a single expression in a list is returned free of the
-     variables v1,...,vk.  In this case SOLVE is called to solve the
-     last resultant for the last variable.  Example:
-          (C1) EXP1:2*X^2+Y*X+Z;
-                                              2
-          (D1)                   Z + X Y + 2 X
-          (C2) EXP2:3*X+5*Y-Z-1;
-          (D2)                - Z + 5 Y + 3 X - 1
-          (C3) EXP3:Z^2+X-Y^2+5;
-                                 2    2
-          (D3)                  Z  - Y  + X + 5
-          (C4) ELIMINATE([EXP3,EXP2,EXP1],[Y,Z]);
-                      8         7         6          5          4
-          (D3) [7425 X  - 1170 X  + 1299 X  + 12076 X  + 22887 X
-                                         3         2
-                                 - 5154 X  - 1291 X  + 7688 X + 15376]
-
- - Function: EZGCD (p1, p2, ...)
-     gives a list whose first element is the g.c.d of the polynomials
-     p1,p2,...  and whose remaining elements are the polynomials
-     divided by the g.c.d.  This always uses the EZGCD algorithm.
-
-
- - Variable: FACEXPAND
-     default: [TRUE] controls whether the irreducible factors returned
-     by FACTOR are in expanded (the default) or recursive (normal CRE)
-     form.
-
-
- - Function: FACTCOMB (exp)
-     tries to combine the coefficients of factorials in exp with the
-     factorials themselves by converting, for example, (N+1)*N!  into
-     (N+1)!.  SUMSPLITFACT[TRUE] if set to FALSE will cause
-     MINFACTORIAL to be applied after a FACTCOMB.
-          (C1) (N+1)^B*N!^B;
-                                                B   B
-          (D1)                           (N + 1)  N!
-          (C2) FACTCOMB(%);
-
- - Function: FACTOR (exp)
-     factors the expression exp, containing any number of variables or
-     functions, into factors irreducible over the integers.
-     FACTOR(exp, p) factors exp over the field of integers with an
-     element adjoined whose minimum polynomial is p.  FACTORFLAG[FALSE]
-     if FALSE suppresses the factoring of integer factors of rational
-     expressions.  DONTFACTOR may be set to a list of variables with
-     respect to which factoring is not to occur.  (It is initially
-     empty).  Factoring also will not take place with respect to any
-     variables which are less important (using the variable ordering
-     assumed for CRE form) than those on the DONTFACTOR list.
-     SAVEFACTORS[FALSE] if TRUE causes the factors of an expression
-     which is a product of factors to be saved by certain functions in
-     order to speed up later factorizations of expressions containing
-     some of the same factors.  BERLEFACT[TRUE] if FALSE then the
-     Kronecker factoring algorithm will be used otherwise the Berlekamp
-     algorithm, which is the default, will be used.  INTFACLIM[1000] is
-     the largest divisor which will be tried when factoring a bignum
-     integer.  If set to FALSE (this is the case when the user calls
-     FACTOR explicitly), or if the integer is a fixnum (i.e.  fits in
-     one machine word), complete factorization of the integer will be
-     attempted.  The user's setting of INTFACLIM is used for internal
-     calls to FACTOR. Thus, INTFACLIM may be reset to prevent MACSYMA
-     from taking an inordinately long time factoring large integers.
-     NEWFAC[FALSE] may be set to true to use the new factoring routines.
-     Do EXAMPLE(FACTOR); for examples.
-
-
- - Variable: FACTORFLAG
-     default: [FALSE] if FALSE suppresses the factoring of integer
-     factors of rational expressions.
-
-
- - Function: FACTOROUT (exp,var1,var2,...)
-     rearranges the sum exp into a sum of terms of the form
-     f(var1,var2,...)*g where g is a product of expressions not
-     containing the vari's and f is factored.
-
-
- - Function: FACTORSUM (exp)
-     tries to group terms in factors of exp which are sums into groups
-     of terms such that their sum is factorable.  It can recover the
-     result of EXPAND((X+Y)^2+(Z+W)^2) but it can't recover
-     EXPAND((X+1)^2+(X+Y)^2) because the terms have variables in common.
-          (C1) (X+1)*((U+V)^2+A*(W+Z)^2),EXPAND;
-                2      2                            2      2
-          (D1) A X Z  + A Z  + 2 A W X Z + 2 A W Z + A W  X + V  X
-                               2        2    2            2
-                  + 2 U V X + U  X + A W  + V  + 2 U V + U
-          (C2) FACTORSUM(%);
-                                             2          2
-          (D2)                 (X + 1) (A (Z + W)  + (V + U) )
-
- - Function: FASTTIMES (p1, p2)
-     multiplies the polynomials p1 and p2 by using a special algorithm
-     for multiplication of polynomials.  They should be multivariate,
-     dense, and nearly the same size.  Classical multiplication is of
-     order N*M where N and M are the degrees.  FASTTIMES is of order
-     MAX(N,M)**1.585.
-
-
- - Function: FULLRATSIMP (exp)
-     When non-rational expressions are involved, one call to RATSIMP
-     followed as is usual by non-rational ("general") simplification
-     may not be sufficient to return a simplified result.  Sometimes,
-     more than one such call may be necessary.  The command FULLRATSIMP
-     makes this process convenient.  FULLRATSIMP repeatedly applies
-     RATSIMP followed by non-rational simplification to an expression
-     until no further change occurs.  For example, consider For the
-     expression  EXP:   (X^(A/2)+1)^2*(X^(A/2)-1)^2/(X^A-1) .
-     RATSIMP(EXP); gives (X^(2*A)-2*X^A+1)/(X^A-1) .  FULLRATSIMP(EXP);
-     gives   X^A-1 .  The problem may be seen by looking at RAT(EXP);
-     which gives  ((X^(A/2))^4-2*(X^(A/2))^2+1)/(X^A-1) .
-     FULLRATSIMP(exp,var1,...,varn) takes one or more arguments similar
-     to RATSIMP and RAT.
-
-
- - Function: FULLRATSUBST (a,b,c)
-     is the same as RATSUBST except that it calls itself recursively on
-     its result until that result stops changing.  This function is
-     useful when the replacement expression and the replaced expression
-     have one or more variables in common.  FULLRATSUBST will also
-     accept its arguments in the format of LRATSUBST.  That is, the
-     first argument may be a single substitution equation or a list of
-     such equations, while the second argument is the expression being
-     processed.  There is a demo available by DEMO("lrats.dem"); .
-
-
- - Function: GCD (p1, p2, var1, ...)
-     computes the greatest common divisor of p1 and p2.  The flag
-     GCD[SPMOD] determines which algorithm is employed.  Setting GCD to
-     EZ, EEZ, SUBRES, RED, or SPMOD selects the EZGCD, New EEZ GCD,
-     subresultant PRS, reduced, or modular algorithm, respectively.  If
-     GCD:FALSE then GCD(p1,p2,var) will always return 1 for all var.
-     Many functions (e.g.  RATSIMP, FACTOR, etc.) cause gcd's to be
-     taken implicitly.  For homogeneous polynomials it is recommended
-     that GCD:SUBRES be used.  To take the gcd when an algebraic is
-     present, e.g. GCD(X^2-2*SQRT(2)*X+2,X-SQRT(2)); , ALGEBRAIC must be
-     TRUE and GCD must not be EZ.  SUBRES is a new algorithm, and people
-     who have been using the RED setting should probably change it to
-     SUBRES.  The GCD flag, default: [SPMOD], if FALSE will also
-     prevent the greatest common divisor from being taken when
-     expressions are converted to CRE form.  This will sometimes speed
-     the calculation if gcds are not required.
-
-
- - Function: GCDEX (f,g)
- - Function: GCDEX (f,g,var)
-     returns a list containing [a,b,u] where u is the gcd of f and g,
-     and u = a*f + b*g.   The arguments f and g should b univariate
-     polynomials, or else polynomials in VAR a supplied main variable
-     since we need to be in a principal ideal domain for this to work.
-     The gcd means the gcd regarding f and g as univariate polynomials
-     with coefficients being rational functions in the other variables.
-
-     The algorithm is simply the euclidean algorithm, where we have a
-     sequence of `lis[i]:[a[i],b[i],r[i]] ..' which are all
-     perpendicular to `[f,g,-1]' and the next one is built as if `q =
-     quotient(r[i]/r[i+1])' then `lis[i+2]:lis[i]-q*lis[i+1]', and it
-     terminates at `lis[i+1]' when the remainder `r[i+2]' is zero.
-          (C1) gcdex(x^2+1,x^3+4);
-          
-                                        2
-                                       x  + 4 x - 1  x + 4
-          (D1)/R/                   [- ------------, -----, 1]
-                                            17        17
-          
-          (C2) d1.[x^2+1,x^3+4,-1];
-          (D2)                                   0
-
-     note that the gcd in the following is `1' since we work in
-     `k(y)[x]', not the  `y+1' we would expect in `k[y,x] '
-
-          (C4) gcdex(x*(y+1),y^2-1,x);
-          
-                                                1
-          (D4)                            [0, ------, 1]
-                                               2
-                                              y  - 1
-
-
- - Function: GCFACTOR (n)
-     factors the gaussian integer n over the gaussians, i.e.  numbers
-     of the form a + b i where a and b are rational integers (i.e.
-     ordinary integers).  Factors are normalized by making a and b
-     non-negative.
-
-
- - Function: GFACTOR (exp)
-     factors the polynomial exp over the Gaussian integers (i.  e.
-     with SQRT(-1) = %I adjoined).  This is like FACTOR(exp,A**2+1)
-     where A is %I.
-          (C1)  GFACTOR(X**4-1);
-          (D1)        (X - 1) (X + 1) (X + %I) (X - %I)
-
- - Function: GFACTORSUM (exp)
-     is similar to FACTORSUM but applies GFACTOR instead of FACTOR.
-
-
- - Function: HIPOW (exp, v)
-     the highest explicit exponent of v in exp.  Sometimes it may be
-     necessary to expand exp since this is not done automatically by
-     HIPOW.  Thus HIPOW(Y**3*X**2+X*Y**4,X) is 2.
-
-
- - Variable: INTFACLIM
-     default: [1000] is the largest divisor which will be tried when
-     factoring a bignum integer.  If set to FALSE (this is the case
-     when the user calls FACTOR explicitly), or if the integer is a
-     fixnum (i.e. fits in one machine word), complete factorization of
-     the integer will be attempted.  The user's setting of INTFACLIM is
-     used for internal calls to FACTOR. Thus, INTFACLIM may be reset to
-     prevent MACSYMA from taking an inordinately long time factoring
-     large integers.
-
-
- - Variable: KEEPFLOAT
-     default: [FALSE] - if set to TRUE will prevent floating point
-     numbers from being rationalized when expressions which contain
-     them are converted to CRE form.
-
-
- - Function: LRATSUBST (list,exp)
-     is analogous to SUBST(list_of_equations,exp) except that it uses
-     RATSUBST instead of SUBST.  The first argument of LRATSUBST must
-     be an equation or a list of equations identical in format to that
-     accepted by SUBST (see DESCRIBE(SUBST);).  The substitutions are
-     made in the order given by the list of equations, that is, from
-     left to right.  A demo is available by doing DEMO("lrats.dem"); .
-
-
- - Variable: MODULUS
-     default: [FALSE] - if set to a positive prime p, then all
-     arithmetic in the rational function routines will be done modulo p.
-     That is all integers will be reduced to less than p/2 in absolute
-     value (if p=2 then all integers are reduced to 1 or 0).  This is
-     the so called "balanced" modulus system, e.g. N MOD 5 = -2, -1, 0,
-     1, or 2.  Warning: If EXP is already in CRE form when you reset
-     MODULUS, then you may need to re-rat EXP, e.g.
-     EXP:RAT(RATDISREP(EXP)), in order to get correct results. (If
-     MODULUS is set to a positive non-prime integer, this setting will
-     be accepted, but a warning will be given.)
-
-
- - Variable: NEWFAC
-     default: [FALSE], if TRUE then FACTOR will use the new factoring
-     routines.
-
-
- - Function: NUM (exp)
-     obtains the numerator, exp1, of the rational expression exp =
-     exp1/exp2.
-
-
- - Function: QUOTIENT (p1, p2, var1, ...)
-     computes the quotient of the polynomial p1 divided by the
-     polynomial p2.
-
-
- - Function: RAT (exp, v1, ..., vn)
-     converts exp to CRE form by expanding and combining all terms over
-     a common denominator and cancelling out the greatest common
-     divisor of the numerator and denominator as well as converting
-     floating point numbers to rational numbers within a tolerance of
-     RATEPSILON[2.0E-8].  The variables are ordered according to the
-     v1,...,vn as in RATVARS, if these are specified.  RAT does not
-     generally simplify functions other than + , - , * , / , and
-     exponentiation to an integer power whereas RATSIMP does handle
-     these cases.  Note that atoms (numbers and names) in CRE form are
-     not the same as they are in the general form.  Thus RAT(X)- X
-     results in RAT(0) which has a different internal representation
-     than 0.  RATFAC[FALSE] when TRUE invokes a partially factored form
-     for CRE rational expressions.  During rational operations the
-     expression is maintained as fully factored as possible without an
-     actual call to the factor package.  This should always save space
-     and may save some time in some computations.  The numerator and
-     denominator are still made relatively prime (e.g.  RAT((X^2
-     -1)^4/(X+1)^2); yields (X-1)^4*(X+1)^2), but the factors within
-     each part may not be relatively prime.  RATPRINT[TRUE] if FALSE
-     suppresses the printout of the message informing the user of the
-     conversion of floating point numbers to rational numbers.
-     KEEPFLOAT[FALSE] if TRUE prevents floating point numbers from being
-     converted to rational numbers.  (Also see the RATEXPAND and
-     RATSIMP functions.)
-          (C1) ((X-2*Y)**4/(X**2-4*Y**2)**2+1)*(Y+A)*(2*Y+X)
-                  /(4*Y**2+X**2);
-                                                     4
-                                            (X - 2 Y)
-                        (Y + A) (2 Y + X) (------------ + 1)
-                                             2      2 2
-                                           (X  - 4 Y )
-          (D1)          ------------------------------------
-                                        2    2
-                                     4 Y  + X
-          (C2) RAT(%,Y,A,X);
-                                      2 A + 2 Y
-          (D2)/R/                     ---------
-                                       X + 2 Y
-
- - Variable: RATALGDENOM
-     default: [TRUE] - if TRUE allows rationalization of denominators
-     wrt.  radicals to take effect.  To do this one must use CRE form
-     in algebraic mode.
-
-
- - Function: RATCOEF (exp, v, n)
-     returns the coefficient, C, of the expression v**n in the
-     expression exp.  n may be omitted if it is 1.  C will be free
-     (except possibly in a non-rational sense) of the variables in v.
-     If no coefficient of this type exists, zero will be returned.
-     RATCOEF expands and rationally simplifies its first argument and
-     thus it may produce answers different from those of COEFF which is
-     purely syntactic.  Thus RATCOEF((X+1)/Y+X,X) returns (Y+1)/Y
-     whereas COEFF returns 1.  RATCOEF(exp,v,0), viewing exp as a sum,
-     gives a sum of those terms which do not contain v.  Therefore if v
-     occurs to any negative powers, RATCOEF should not be used.  Since
-     exp is rationally simplified before it is examined, coefficients
-     may not appear quite the way they were envisioned.
-          (C1) S:A*X+B*X+5$
-          (C2) RATCOEF(S,A+B);
-          (D2)               X
-
- - Function: RATDENOM (exp)
-     obtains the denominator of the rational expression exp.  If exp is
-     in general form then the DENOM function should be used instead,
-     unless one wishes to get a CRE result.
-
-
- - Variable: RATDENOMDIVIDE
-     default: [TRUE] - if FALSE will stop the splitting up of the terms
-     of the numerator of RATEXPANDed expressions from occurring.
-
-
- - Function: RATDIFF (exp, var)
-     differentiates the rational expression exp (which must be a ratio
-     of polynomials or a polynomial in the variable var) with respect
-     to var.  For rational expressions this is much faster than DIFF.
-     The result is left in CRE form.  However, RATDIFF should not be
-     used on factored CRE forms; use DIFF instead for such expressions.
-          (C1) (4*X**3+10*X-11)/(X**5+5);
-                                                   3
-                                                4 X  + 10 X - 11
-          (D1)                                  ----------------
-                                                      5
-                                                     X
-          (C2) MODULUS:3$
-          (C3) MOD(D1);
-                                          2
-                                         X  + X - 1
-          (D3)                      --------------------
-                                     4    3    2
-                                    X  + X  + X  + X + 1
-          (C4) RATDIFF(D1,X);
-                                    5    4    3
-                                   X  - X  - X  + X - 1
-          (D4)                ------------------------------
-                               8    7    5    4    3
-                              X  - X  + X  - X  + X  - X + 1
-
- - Function: RATDISREP (exp)
-     changes its argument from CRE form to general form.  This is
-     sometimes convenient if one wishes to stop the "contagion", or use
-     rational functions in non-rational contexts.  Most CRE functions
-     will work on either CRE or non-CRE expressions, but the answers may
-     take different forms.  If RATDISREP is given a non-CRE for an
-     argument, it returns its argument unchanged.  See also TOTALDISREP.
-
-
- - Variable: RATEPSILON
-     default: [2.0E-8] - the tolerance used in the conversion of
-     floating point numbers to rational numbers.
-
-
- - Function: RATEXPAND (exp)
-     expands exp by multiplying out products of sums and exponentiated
-     sums, combining fractions over a common denominator, cancelling
-     the greatest common divisor of the numerator and denominator, then
-     splitting the numerator (if a sum) into its respective terms
-     divided by the denominator.  This is accomplished by converting
-     exp to CRE form and then back to general form.  The switch
-     RATEXPAND, default: [FALSE], if TRUE will cause CRE expressions to
-     be fully expanded when they are converted back to general form or
-     displayed, while if it is FALSE then they will be put into a
-     recursive form. (see RATSIMP) RATDENOMDIVIDE[TRUE] - if FALSE will
-     stop the splitting up of the terms of the numerator of RATEXPANDed
-     expressions from occurring.  KEEPFLOAT[FALSE] if set to TRUE will
-     prevent floating point numbers from being rationalized when
-     expressions which contain them are converted to CRE form.
-          (C1) RATEXPAND((2*X-3*Y)**3);
-                          3         2       2        3
-          (D1)      - 27 Y  + 54 X Y  - 36 X  Y + 8 X
-          (C2) (X-1)/(X+1)**2+1/(X-1);
-                                        X - 1       1
-          (D2)                         -------- + -----
-                                              2   X - 1
-                                       (X + 1)
-          (C3) EXPAND(D2);
-                                   X              1           1
-          (D3)                ------------ - ------------ + -----
-                               2              2             X - 1
-                              X  + 2 X + 1   X  + 2 X + 1
-          (C4) RATEXPAND(D2);
-                                       2
-                                    2 X                 2
-          (D4)                 --------------- + ---------------
-                                3    2            3    2
-                               X  + X  - X - 1   X  + X  - X - 1
-
- - Variable: RATFAC
-     default: [FALSE] - when TRUE invokes a partially factored form for
-     CRE rational expressions.  During rational operations the
-     expression is maintained as fully factored as possible without an
-     actual call to the factor package.  This should always save space
-     and may save some time in some computations.  The numerator and
-     denominator are still made relatively prime, for example RAT((X^2
-     -1)^4/(X+1)^2);  yields (X-1)^4*(X+1)^2), but the factors within
-     each part may not be relatively prime.  In the CTENSR (Component
-     Tensor Manipulation) Package, if RATFAC is TRUE, it causes the
-     Ricci, Einstein, Riemann, and Weyl tensors and the Scalar
-     Curvature to be factored automatically.  ** This should only be
-     set for cases where the tensorial components are known to consist
-     of few terms **.  Note: The RATFAC and RATWEIGHT schemes are
-     incompatible and may not both be used at the same time.
-
-
- - Function: RATNUMER (exp)
-     obtains the numerator of the rational expression exp.  If exp is
-     in general form then the NUM function should be used instead,
-     unless one wishes to get a CRE result.
-
-
- - Function: RATNUMP (exp)
-     is TRUE if exp is a rational number (includes integers) else FALSE.
-
-
- - Function: RATP (exp)
-     is TRUE if exp is in CRE or extended CRE form else FALSE.
-
-
- - Variable: RATPRINT
-     default: [TRUE] - if FALSE suppresses the printout of the message
-     informing the user of the conversion of floating point numbers to
-     rational numbers.
-
-
- - Function: RATSIMP (exp)
-     rationally" simplifies (similar to RATEXPAND) the expression exp
-     and all of its subexpressions including the arguments to non-
-     rational functions.  The result is returned as the quotient of two
-     polynomials in a recursive form, i.e.  the coefficients of the
-     main variable are polynomials in the other variables.  Variables
-     may, as in RATEXPAND, include non-rational functions (e.g.
-     SIN(X**2+1) ) but with RATSIMP, the arguments to non-rational
-     functions are rationally simplified.  Note that RATSIMP is
-     affected by some of the variables which affect RATEXPAND.
-     RATSIMP(exp,v1,v2,...,vn) - enables rational simplification with
-     the specification of variable ordering as in RATVARS.
-     RATSIMPEXPONS[FALSE] - if TRUE will cause exponents of expressions
-     to be RATSIMPed automatically during simplification.
-          (C1) SIN(X/(X^2+X))=%E^((LOG(X)+1)**2-LOG(X)**2);
-                                                     2          2
-                              X          (LOG(X) + 1)  - LOG (X)
-          (D1)          SIN(------) = %E
-                             2
-                            X  + X
-          (C2) RATSIMP(%);
-                                            1          2
-          (D2)                        SIN(-----) = %E X
-                                          X + 1
-          (C3) ((X-1)**(3/2)-(X+1)*SQRT(X-1))/SQRT((X-1)*(X+1));
-                                 3/2
-                          (X - 1)    - SQRT(X - 1) (X + 1)
-          (D3)            --------------------------------
-                              SQRT(X - 1) SQRT(X + 1)
-          (C4) RATSIMP(%);
-                                           2
-          (D4)                      - -----------
-                                      SQRT(X + 1)
-          (C5)  X**(A+1/A),RATSIMPEXPONS:TRUE;
-                              2
-                             A  + 1
-                             ------
-                               A
-          (D5)              X
-
- - Variable: RATSIMPEXPONS
-     default: [FALSE] - if TRUE will cause exponents of expressions to
-     be RATSIMPed automatically during simplification.
-
-
- - Function: RATSUBST (a, b, c)
-     substitutes a for b in c.  b may be a sum, product, power, etc.
-     RATSUBST knows something of the meaning of expressions whereas
-     SUBST does a purely syntactic substitution.  Thus
-     SUBST(A,X+Y,X+Y+Z) returns X+Y+Z whereas RATSUBST would return Z+A.
-     RADSUBSTFLAG[FALSE] if TRUE permits RATSUBST to make substitutions
-     like U for SQRT(X) in X.  Do EXAMPLE(RATSUBST); for examples.
-
-
- - Function: RATVARS (var1, var2, ..., varn)
-     forms its n arguments into a list in which the rightmost variable
-     varn will be the main variable of future rational expressions in
-     which it occurs, and the other variables will follow in sequence.
-     If a variable is missing from the RATVARS list, it will be given
-     lower priority than the leftmost variable var1. The arguments to
-     RATVARS can be either variables or non-rational functions (e.g.
-     SIN(X)).  The variable RATVARS is a list of the arguments which
-     have been given to this function.
-
-
- - Function: RATWEIGHT (v1, w1, ..., vn, wn)
-     assigns a weight of wi to the variable vi.  This causes a term to
-     be replaced by 0 if its weight exceeds the value of the variable
-     RATWTLVL [default is FALSE which means no truncation].  The weight
-     of a term is the sum of the products of the weight of a variable
-     in the term times its power.  Thus the weight of 3*v1**2*v2 is
-     2*w1+w2.  This truncation occurs only when multiplying or
-     exponentiating CRE forms of expressions.
-          (C5) RATWEIGHT(A,1,B,1);
-          (D5)                         [[B, 1], [A, 1]]
-          (C6) EXP1:RAT(A+B+1)$
-          (C7) %**2;
-                                2                  2
-          (D7)/R/              B  + (2 A + 2) B + A  + 2 A + 1
-          (C8) RATWTLVL:1$
-          (C9) EXP1**2;
-          (D9)/R/                       2 B + 2 A + 1
-     Note: The RATFAC and RATWEIGHT schemes are incompatible and may not
-     both be used at the same time.
-
-
- - Variable: RATWEIGHTS
-     - a list of weight assignments (set up by the RATWEIGHT function),
-     RATWEIGHTS; or RATWEIGHT(); will show you the list.
-
-          KILL(...,RATWEIGHTS)
-     and
-          SAVE(...,RATWEIGHTS);
-     both work.
-
-
- - Variable: RATWEYL
-     default: [] - one of the switches controlling the simplification
-     of components of the Weyl conformal tensor; if TRUE, then the
-     components will be rationally simplified; if FACRAT is TRUE then
-     the results will be factored as well.
-
-
- - Variable: RATWTLVL
-     default: [FALSE] - used in combination with the RATWEIGHT function
-     to control the truncation of rational (CRE form) expressions (for
-     the default value of FALSE, no truncation occurs).
-
-
- - Function: REMAINDER (p1, p2, var1, ...)
-     computes the remainder of the polynomial p1 divided by the
-     polynomial p2.
-
-
- - Function: RESULTANT (p1, p2, var)
-     computes the resultant of the two polynomials p1 and p2,
-     eliminating the variable var.  The resultant is a determinant of
-     the coefficients of var in p1 and p2 which equals zero if and only
-     if p1 and p2 have a non-constant factor in common.  If p1 or p2
-     can be factored, it may be desirable to call FACTOR before calling
-     RESULTANT.  RESULTANT[SUBRES] - controls which algorithm will be
-     used to compute the resultant.  SUBRES for subresultant prs [the
-     default], MOD for modular resultant algorithm, and RED for reduced
-     prs.  On most problems SUBRES should be best.  On some large
-     degree univariate or bivariate problems MOD may be better.
-     Another alternative is the BEZOUT command which takes the same
-     arguments as RESULTANT and returns a matrix.  DETERMINANT of this
-     matrix is the desired resultant.
-
-
- - Variable: SAVEFACTORS
-     default: [FALSE] - if TRUE causes the factors of an expression
-     which is a product of factors to be saved by certain functions in
-     order to speed up later factorizations of expressions containing
-     some of the same factors.
-
-
- - Function: SQFR (exp)
-     is similar to FACTOR except that the polynomial factors are
-     "square-free." That is, they have factors only of degree one.  This
-     algorithm, which is also used by the first stage of FACTOR,
-     utilizes the fact that a polynomial has in common with its nth
-     derivative all its factors of degree > n.  Thus by taking gcds
-     with the polynomial of the derivatives with respect to each
-     variable in the polynomial, all factors of degree > 1 can be found.
-          (C1) SQFR(4*X**4+4*X**3-3*X**2-4*X-1);
-                                       2               2
-          (D1)                       (X  - 1) (2 X + 1)
-
- - Function: TELLRAT (poly)
-     adds to the ring of algebraic integers known to MACSYMA, the
-     element which is the solution of the polynomial with integer
-     coefficients.  MACSYMA initially knows about %I and all roots of
-     integers. TELLRAT(X); means substitute 0 for X in rational
-     functions.  There is a command UNTELLRAT which takes kernels and
-     removes TELLRAT properties.  When TELLRATing a multivariate
-     polynomial, e.g. TELLRAT(X^2-Y^2);, there would be an ambiguity as
-     to whether to substitute Y^2 for X^2 or vice versa.  The system
-     will pick a particular ordering, but if the user wants to specify
-     which, e.g.  TELLRAT(Y^2=X^2); provides a syntax which says
-     replace Y^2 by X^2.  TELLRAT and UNTELLRAT both can take any
-     number of arguments, and TELLRAT(); returns a list of the current
-     substitutions.  Note: When you TELLRAT reducible polynomials, you
-     want to be careful not to attempt to rationalize a denominator
-     with a zero divisor.  E.g.  TELLRAT(W^3-1)$ ALGEBRAIC:TRUE$
-     RAT(1/(W^2-W)); will give "quotient by zero".  This error can be
-     avoided by setting RATALGDENOM:FALSE$.  ALGEBRAIC[FALSE] must be
-     set to TRUE in order for the simplification of algebraic integers
-     to take effect.  Do EXAMPLE(TELLRAT); for examples.
-
-
- - Function: TOTALDISREP (exp)
-     converts every subexpression of exp from CRE to general form.  If
-     exp is itself in CRE form then this is identical to RATDISREP but
-     if not then RATDISREP would return exp unchanged while TOTALDISREP
-     would "totally disrep" it.  This is useful for ratdisrepping
-     expressions e.g., equations, lists, matrices, etc. which have some
-     subexpressions in CRE form.
-
-
- - Function: UNTELLRAT (x)
-     takes kernels and removes TELLRAT properties.
-
-
-
-File: maxima.info,  Node: Constants,  Next: Logarithms,  Prev: Polynomials,  Up: Top
-
-Constants
-*********
-
-* Menu:
-
-* Definitions for Constants::
-
-
-File: maxima.info,  Node: Definitions for Constants,  Prev: Constants,  Up: Constants
-
-Definitions for Constants
-=========================
-
- - Variable: E
-     - The base of natural logarithms, e, is represented in MACSYMA as
-     %E.
-
-
- - Variable: FALSE
-     - the Boolean constant, false. (NIL in LISP)
-
-
- - Variable: MINF
-     - real minus infinity.
-
-
- - Variable: PI
-     - "pi" is represented in MACSYMA as %PI.
-
-
- - Variable: TRUE
-     - the Boolean constant, true. (T in LISP)
-
-
-
-File: maxima.info,  Node: Logarithms,  Next: Trigonometric,  Prev: Constants,  Up: Top
-
-Logarithms
-**********
-
-* Menu:
-
-* Definitions for Logarithms::
-
-
-File: maxima.info,  Node: Definitions for Logarithms,  Prev: Logarithms,  Up: Logarithms
-
-Definitions for Logarithms
-==========================
-
- - Function: LOG (X)
-     the natural logarithm.
-
-     LOGEXPAND[TRUE] - causes LOG(A^B) to become B*LOG(A).  If it is set
-     to ALL, LOG(A*B) will also simplify to LOG(A)+LOG(B).  If it is
-     set to SUPER, then LOG(A/B) will also simplify to LOG(A)-LOG(B)
-     for rational numbers a/b, a#1.  (LOG(1/B), for B integer, always
-     simplifies.)  If it is set to FALSE, all of these simplifications
-     will be turned off.
-
-     LOGSIMP[TRUE] - if FALSE then no simplification of %E to a power
-     containing LOG's is done.
-
-     LOGNUMER[FALSE] - if TRUE then negative floating point arguments to
-     LOG will always be converted to their absolute value before the
-     log is taken.  If NUMER is also TRUE, then negative integer
-     arguments to LOG will also be converted to their absolute value.
-
-     LOGNEGINT[FALSE] - if TRUE implements the rule LOG(-n) ->
-     LOG(n)+%i*%pi for n a positive integer.
-
-     %E_TO_NUMLOG[FALSE] - when TRUE, "r" some rational number, and "x"
-     some expression, %E^(r*LOG(x)) will be simplified into x^r .  It
-     should be noted that the RADCAN command also does this
-     transformation, and more complicated transformations of this ilk
-     as well.  The LOGCONTRACT command "contracts" expressions
-     containing LOG.
-
-
- - Variable: LOGABS
-     default: [FALSE] - when doing indefinite integration where logs
-     are generated, e.g. INTEGRATE(1/X,X), the answer is given in terms
-     of LOG(ABS(...)) if LOGABS is TRUE, but in terms of LOG(...) if
-     LOGABS is FALSE.  For definite integration, the LOGABS:TRUE
-     setting is used, because here "evaluation" of the indefinite
-     integral at the endpoints is often needed.
-
-
- - Variable: LOGARC
-     default: [FALSE] - if TRUE will cause the inverse circular and
-     hyperbolic functions to be converted into logarithmic form.
-     LOGARC(exp) will cause this conversion for a particular expression
-     without setting the switch or having to re-evaluate the expression
-     with EV.
-
-
- - Variable: LOGCONCOEFFP
-     default:[FALSE] - controls which coefficients are contracted when
-     using LOGCONTRACT.  It may be set to the name of a predicate
-     function of one argument.  E.g. if you like to generate SQRTs, you
-     can do LOGCONCOEFFP:'LOGCONFUN$ LOGCONFUN(M):=FEATUREP(M,INTEGER)
-     OR RATNUMP(M)$ .  Then LOGCONTRACT(1/2*LOG(X)); will give
-     LOG(SQRT(X)).
-
-
- - Function: LOGCONTRACT (exp)
-     recursively scans an exp, transforming subexpressions of the form
-     a1*LOG(b1) + a2*LOG(b2) + c into LOG(RATSIMP(b1^a1 * b2^a2)) + c
-          (C1) 2*(A*LOG(X) + 2*A*LOG(Y))$
-          (C2) LOGCONTRACT(%);
-                                                  2  4
-          (D3)                             A LOG(X  Y )
-     If you do DECLARE(N,INTEGER); then LOGCONTRACT(2*A*N*LOG(X)); gives
-     A*LOG(X^(2*N)).  The coefficients that "contract" in this manner
-     are those such as the 2 and the N here which satisfy
-     FEATUREP(coeff,INTEGER).  The user can control which coefficients
-     are contracted by setting the option LOGCONCOEFFP[FALSE] to the
-     name of a predicate function of one argument.  E.g. if you like to
-     generate SQRTs, you can do LOGCONCOEFFP:'LOGCONFUN$
-     LOGCONFUN(M):=FEATUREP(M,INTEGER) OR RATNUMP(M)$ .  Then
-     LOGCONTRACT(1/2*LOG(X)); will give LOG(SQRT(X)).
-
-
- - Variable: LOGEXPAND
-     default: [TRUE] - causes LOG(A^B) to become B*LOG(A).  If it is
-     set to ALL, LOG(A*B) will also simplify to LOG(A)+LOG(B).  If it
-     is set to SUPER, then LOG(A/B) will also simplify to LOG(A)-LOG(B)
-     for rational numbers a/b, a#1.  (LOG(1/B), for B integer, always
-     simplifies.)  If it is set to FALSE, all of these simplifications
-     will be turned off.
-
-
- - Variable: LOGNEGINT
-     default: [FALSE] - if TRUE implements the rule LOG(-n) ->
-     LOG(n)+%i*%pi   for n a positive integer.
-
-
- - Variable: LOGNUMER
-     default: [FALSE] - if TRUE then negative floating point arguments
-     to LOG will always be converted to their absolute value before the
-     log is taken.  If NUMER is also TRUE, then negative integer
-     arguments to LOG will also be converted to their absolute value.
-
-
- - Variable: LOGSIMP
-     default: [TRUE] - if FALSE then no simplification of %E to a power
-     containing LOG's is done.
-
-
- - Function: PLOG (X)
-     the principal branch of the complex-valued natural logarithm with
-     -%PI < CARG(X) <= +%PI .
-
-
- - Function: POLARFORM (exp)
-     returns R*%E^(%I*THETA) where R and THETA are purely real.
-
-
-
-File: maxima.info,  Node: Trigonometric,  Next: Special Functions,  Prev: Logarithms,  Up: Top
-
-Trigonometric
-*************
-
-* Menu:
-
-* Introduction to Trigonometric::
-* Definitions for Trigonometric::
-
-
-File: maxima.info,  Node: Introduction to Trigonometric,  Next: Definitions for Trigonometric,  Prev: Trigonometric,  Up: Trigonometric
-
-Introduction to Trigonometric
-=============================
-
-   - MACSYMA has many Trig functions defined.  Not all Trig identities
-are programmed, but it is possible for the user to add many of them
-using the pattern matching capabilities of the system.  The Trig
-functions defined in MACSYMA are: ACOS, ACOSH, ACOT, ACOTH, ACSC,
-ACSCH, ASEC, ASECH, ASIN, ASINH, ATAN, ATANH, COS, COSH, COT, COTH,
-CSC, CSCH, SEC, SECH, SIN, SINH, TAN, and TANH.  There are a number of
-commands especially for handling Trig functions, see TRIGEXPAND,
-TRIGREDUCE, and the switch TRIGSIGN.  Two SHARE packages extend the
-simplification rules built into MACSYMA, NTRIG and ATRIG1.  Do
-DESCRIBE(cmd) for details.
-
-
-File: maxima.info,  Node: Definitions for Trigonometric,  Prev: Introduction to Trigonometric,  Up: Trigonometric
-
-Definitions for Trigonometric
-=============================
-
- - Function: ACOS
-     - Arc Cosine
-
-
- - Function: ACOSH
-     - Hyperbolic Arc Cosine
-
-
- - Function: ACOT
-     - Arc Cotangent
-
-
- - Function: ACOTH
-     - Hyperbolic Arc Cotangent
-
-
- - Function: ACSC
-     - Arc Cosecant
-
-
- - Function: ACSCH
-     - Hyperbolic Arc Cosecant
-
-
- - Function: ASEC
-     - Arc Secant
-
-
- - Function: ASECH
-     - Hyperbolic Arc Secant
-
-
- - Function: ASIN
-     - Arc Sine
-
-
- - Function: ASINH
-     - Hyperbolic Arc Sine
-
-
- - Function: ATAN
-     - Arc Tangent
-
-
- - Function: ATAN2 (Y,X)
-     yields the value of ATAN(Y/X) in the interval -%PI to %PI.
-
-
- - Function: ATANH
-     - Hyperbolic Arc Tangent
-
-
- - Function: ATRIG1
-     - SHARE1;ATRIG1 FASL contains several additional simplification
-     rules for inverse trig functions.  Together with rules already
-     known to Macsyma, the following angles are fully implemented: 0,
-     %PI/6, %PI/4, %PI/3, and %PI/2.  Corresponding angles in the other
-     three quadrants are also available.  Do LOAD(ATRIG1); to use them.
-
-
- - Function: COS
-     - Cosine
-
-
- - Function: COSH
-     - Hyperbolic Cosine
-
-
- - Function: COT
-     - Cotangent
-
-
- - Function: COTH
-     - Hyperbolic Cotangent
-
-
- - Function: CSC
-     - Cosecant
-
-
- - Function: CSCH
-     - Hyperbolic Cosecant
-
-
- - Variable: HALFANGLES
-     default: [FALSE] - if TRUE causes half-angles to be simplified
-     away.
-
-
- - Function: SEC
-     - Secant
-
-
- - Function: SECH
-     - Hyperbolic Secant
-
-
- - Function: SIN
-     - Sine
-
-
- - Function: SINH
-     - Hyperbolic Sine
-
-
- - Function: TAN
-     - Tangent
-
-
- - Function: TANH
-     - Hyperbolic Tangent
-
-
- - Function: TRIGEXPAND (exp)
-     expands trigonometric and hyperbolic functions of sums of angles
-     and of multiple angles occurring in exp.  For best results, exp
-     should be expanded.  To enhance user control of simplification,
-     this function expands only one level at a time, expanding sums of
-     angles or multiple angles.  To obtain full expansion into sines
-     and cosines immediately, set the switch TRIGEXPAND:TRUE.
-     TRIGEXPAND default: [FALSE] - if TRUE causes expansion of all
-     expressions containing SINs and COSs occurring subsequently.
-     HALFANGLES[FALSE] - if TRUE causes half-angles to be simplified
-     away.  TRIGEXPANDPLUS[TRUE] - controls the "sum" rule for
-     TRIGEXPAND, expansion of sums (e.g. SIN(X+Y)) will take place only
-     if TRIGEXPANDPLUS is TRUE.  TRIGEXPANDTIMES[TRUE] - controls the
-     "product" rule for TRIGEXPAND, expansion of products (e.g.
-     SIN(2*X)) will take place only if TRIGEXPANDTIMES is TRUE.
-          (C1) X+SIN(3*X)/SIN(X),TRIGEXPAND=TRUE,EXPAND;
-                                        2           2
-          (D1)                     - SIN (X) + 3 COS (X) + X
-          (C2) TRIGEXPAND(SIN(10*X+Y));
-          (D2)               COS(10 X) SIN(Y) + SIN(10 X) COS(Y)
-
- - Variable: TRIGEXPANDPLUS
-     default: [TRUE] - controls the "sum" rule for TRIGEXPAND.  Thus,
-     when the TRIGEXPAND command is used or the TRIGEXPAND switch set
-     to TRUE, expansion of sums (e.g. SIN(X+Y)) will take place only if
-     TRIGEXPANDPLUS is TRUE.
-
-
- - Variable: TRIGEXPANDTIMES
-     default: [TRUE] - controls the "product" rule for TRIGEXPAND.
-     Thus, when the TRIGEXPAND command is used or the TRIGEXPAND switch
-     set to TRUE, expansion of products (e.g. SIN(2*X)) will take place
-     only if TRIGEXPANDTIMES is TRUE.
-
-
- - Variable: TRIGINVERSES
-     default: [ALL] - controls the simplification of the composition of
-     trig and hyperbolic functions with their inverse functions: If
-     ALL, both e.g. ATAN(TAN(X)) and TAN(ATAN(X)) simplify to X.  If
-     TRUE, the arcfunction(function(x)) simplification is turned off.
-     If FALSE, both the arcfun(fun(x)) and fun(arcfun(x))
-     simplifications are turned off.
-
-
- - Function: TRIGREDUCE (exp, var)
-     combines products and powers of trigonometric and hyperbolic SINs
-     and COSs of var into those of multiples of var.  It also tries to
-     eliminate these functions when they occur in denominators.  If var
-     is omitted then all variables in exp are used.  Also see the
-     POISSIMP function (6.6).
-          (C4) TRIGREDUCE(-SIN(X)^2+3*COS(X)^2+X);
-          (D4)                        2 COS(2 X) + X + 1
-          The trigonometric simplification routines will use declared
-          information in some simple cases.  Declarations about variables are
-          used as follows, e.g.
-          (C5) DECLARE(J, INTEGER, E, EVEN, O, ODD)$
-          (C6) SIN(X + (E + 1/2)*%PI)$
-          (D6)                      COS(X)
-          (C7) SIN(X + (O + 1/2) %PI);
-          (D7)                     - COS(X)
-
- - Variable: TRIGSIGN
-     default: [TRUE] - if TRUE permits simplification of negative
-     arguments to trigonometric functions. E.g., SIN(-X) will become
-     -SIN(X) only if TRIGSIGN is TRUE.
-
-
- - Function: TRIGSIMP (expr)
-     employs the identities sin(x)^2 + cos(x)^2 = 1 and cosh(x)^2 -
-     sinh(x)^2 = 1 to simplify expressions containing tan, sec, etc. to
-     sin, cos, sinh, cosh so that further simplification may be
-     obtained by using TRIGREDUCE on the result.  Some examples may be
-     seen by doing DEMO("trgsmp.dem"); .  See also the TRIGSUM function.
-
-
- - Function: TRIGRAT (trigexp)
-     gives a canonical simplifyed quasilinear form of a trigonometrical
-     expression; trigexp is a rational fraction of several sin, cos or
-     tan, the arguments of them are linear forms in some variables (or
-     kernels) and %pi/n (n integer) with integer coefficients. The
-     result is a simplifyed fraction with numerator and denominator
-     linear in sin and cos.  Thus TRIGRAT linearize always when it is
-     possible.(written by D. Lazard).
-
-          (c1) trigrat(sin(3*a)/sin(a+%pi/3));
-          
-          (d1) 		        sqrt(3) sin(2 a) + cos(2 a) - 1
-
-     Here is another example (for which the function was intended); see
-     [Davenport, Siret, Tournier, Calcul Formel, Masson (or in english,
-     Addison-Wesley), section 1.5.5, Morley theorem). Timings are on
-     VAX 780.
-
-          (c4)   c:%pi/3-a-b;
-          
-          					   %pi
-          (d4) 				 - b - a + ---
-          					    3
-          
-          (c5)   bc:sin(a)*sin(3*c)/sin(a+b);
-          
-          			     sin(a) sin(3 b + 3 a)
-          (d5) 			     ---------------------
-          				  sin(b + a)
-          
-          (c6)   ba:bc,c=a,a=c$
-          
-          (c7)   ac2:ba^2+bc^2-2*bc*ba*cos(b);
-          
-          	2       2
-               sin (a) sin (3 b + 3 a)
-          (d7) -----------------------
-          	      2
-          	   sin (b + a)
-          
-          					%pi
-             2 sin(a) sin(3 a) cos(b) sin(b + a - ---) sin(3 b + 3 a)
-          					 3
-           - --------------------------------------------------------
-          			   %pi
-          		   sin(a - ---) sin(b + a)
-          			    3
-          
-                2	        2	  %pi
-             sin (3 a) sin (b + a - ---)
-          			   3
-           + ---------------------------
-          	     2	   %pi
-          	  sin (a - ---)
-          		    3
-          
-          (c9)   trigrat(ac2);
-          Totaltime= 65866 msec.  GCtime= 7716 msec.
-          
-          (d9)
-          - (sqrt(3) sin(4 b + 4 a) - cos(4 b + 4 a)
-          
-          - 2 sqrt(3) sin(4 b + 2 a)
-          
-          + 2 cos(4 b + 2 a) - 2 sqrt(3) sin(2 b + 4 a) + 2 cos(2 b + 4 a)
-          
-          + 4 sqrt(3) sin(2 b + 2 a) - 8 cos(2 b + 2 a) - 4 cos(2 b - 2 a)
-          
-          + sqrt(3) sin(4 b) - cos(4 b) - 2 sqrt(3) sin(2 b) + 10 cos(2 b)
-          
-          + sqrt(3) sin(4 a) - cos(4 a) - 2 sqrt(3) sin(2 a) + 10 cos(2 a)
-          
-             - 9)/4
-
-
-File: maxima.info,  Node: Special Functions,  Next: Orthogonal Polynomials,  Prev: Trigonometric,  Up: Top
-
-Special Functions
-*****************
-
-* Menu:
-
-* Introduction to Special Functions::
-* GAMALG::
-* SPECINT::
-* Definitions for Special Functions::
-
-
-File: maxima.info,  Node: Introduction to Special Functions,  Next: GAMALG,  Prev: Special Functions,  Up: Special Functions
-
-Introduction to Special Functions
-=================================
-
- - %J:
-     [index](expr) - Bessel Funct 1st Kind (in SPECINT)
-
-
- - %K: [index](expr)
-     Bessel Funct 2nd Kind (in SPECINT)
-
-     Constant, in ODE2
-
-
-
-File: maxima.info,  Node: GAMALG,  Next: SPECINT,  Prev: Introduction to Special Functions,  Up: Special Functions
-
-GAMALG
-======
-
-   - A Dirac gamma matrix algebra program which takes traces of and
-does manipulations on gamma matrices in n dimensions.  It may be loaded
-into MACSYMA by LOADFILE("gam"); A preliminary manual is contained in
-the file SHARE;GAM USAGE and may be printed using
-PRINTFILE(GAM,USAGE,SHARE);
+   Polynomials are stored in maxima either in General Form or as
+Cannonical Rational Expressions (CRE) form.  The latter is a standard
+form, and is used internally by operations such as factor, ratsimp, and
+so on.
+
+   Canonical Rational Expressions constitute a kind of representation
+which is especially suitable for expanded polynomials and rational
+functions (as well as for partially factored polynomials and rational
+functions when RATFAC[FALSE] is set to TRUE).  In this CRE form an
+ordering of variables (from most to least main) is assumed for each
+expression.  Polynomials are represented recursively by a list
+consisting of the main variable followed by a series of pairs of
+expressions, one for each term of the polynomial.  The first member of
+each pair is the exponent of the main variable in that term and the
+second member is the coefficient of that term which could be a number or
+a polynomial in another variable again represented in this form.  Thus
+the principal part of the CRE form of 3*X^2-1 is (X 2 3 0 -1) and that
+of 2*X*Y+X-3 is (Y 1 (X 1 2) 0 (X 1 1 0 -3)) assuming Y is the main
+variable, and is (X 1 (Y 1 2 0 1) 0 -3) assuming X is the main
+variable. "Main"-ness is usually determined by reverse alphabetical
+order.  The "variables" of a CRE expression needn't be atomic.  In fact
+any subexpression whose main operator is not + - * / or ^ with integer
+power will be considered a "variable" of the expression (in CRE form) in
+which it occurs.  For example the CRE variables of the expression
+X+SIN(X+1)+2*SQRT(X)+1 are X, SQRT(X), and SIN(X+1).  If the user does
+not specify an ordering of variables by using the RATVARS function
+MACSYMA will choose an alphabetic one.  In general, CRE's represent
+rational expressions, that is, ratios of polynomials, where the
+numerator and denominator have no common factors, and the denominator is
+positive.  The internal form is essentially a pair of polynomials (the
+numerator and denominator) preceded by the variable ordering list.  If
+an expression to be displayed is in CRE form or if it contains any
+subexpressions in CRE form, the symbol /R/ will follow the line label.
+See the RAT function for converting an expression to CRE form.  An
+extended CRE form is used for the representation of Taylor series.  The
+notion of a rational expression is extended so that the exponents of the
+variables can be positive or negative rational numbers rather than just
+positive integers and the coefficients can themselves be rational
+expressions as described above rather than just polynomials.  These are
+represented internally by a recursive polynomial form which is similar
+to and is a generalization of CRE form, but carries additional
+information such as the degree of truncation.  As with CRE form, the
+symbol /T/ follows the line label of such expressions.
 

@@ -20,13 +20,18 @@
 
 ;;; Standard Kinds of Input Prompts
 
+(defvar *prompt-prefix* "")
+(defvar *prompt-suffix* "")
+(defvar *general-display-prefix* "")
+
 (DEFUN MAIN-PROMPT ()
   ;; instead off using this STRIPDOLLAR hackery, the
   ;; MREAD function should call MFORMAT to print the prompt,
   ;; and take a format string and format arguments.
   ;; Even easier and more general is for MREAD to take
   ;; a FUNARG as the prompt. -gjc
-  (FORMAT () "(~A~D) " (STRIPDOLLAR $INCHAR) $LINENUM))
+  (FORMAT () "~A(~A~D) ~A" *prompt-prefix* 
+(STRIPDOLLAR $INCHAR) $LINENUM *prompt-suffix*))
 
 (DEFUN BREAK-PROMPT ()
   (declare (special $prompt))
@@ -66,6 +71,16 @@
   (declare (ignore unused))
   (ext:get-bytes-consed))
 
+#+sbcl
+(defun used-area (&optional unused)
+  (declare (ignore unused))
+  (sb-ext:get-bytes-consed))
+
+#+openmcl
+(defun used-area (&optional unused)
+  (declare (ignore unused))
+  (ccl::total-bytes-allocated))
+
 #+clisp
 (defun used-area (&optional unused)
   (declare (ignore unused))
@@ -74,7 +89,7 @@
     (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
     (dpb space1 (byte 24 24) space2)))
 
-#-(or lispm cmu clisp)
+#-(or lispm cmu sbcl clisp)
 (defun used-area (&optional unused)
   (declare (ignore unused))
   0)
@@ -97,6 +112,7 @@
        (c-tag)
        (d-tag))
       (NIL)
+(catch 'return-from-debugger
     (when (not (checklabel $inchar))
 	  (setq $linenum (f1+ $linenum)))
     #+akcl(si::reset-stack-limits)
@@ -135,7 +151,7 @@
      )
     )
     
-
+    (format t "~a" *general-display-prefix*)
     (cond (#.writefilep ;write out the c line to the dribble file
 	    (let ( (#.ttyoff t) smart-tty  $linedisp)
 	      (displa `((mlable) , c-tag , $__)))))
@@ -168,7 +184,7 @@
 	  (format t "~&Evaluation took ~$ seconds (~$ elapsed)"
        		    time-used etime-used )
 	  #+lispm (format t "using ~A words." (f-  area-after area-before))
-	  #+(or cmu clisp)
+	  #+(or cmu sbcl clisp)
 	  (let ((total-bytes (- area-after area-before)))
 	    (cond ((> total-bytes 1024)
 		   (format t " using ~,3F KB." (/ total-bytes 1024.0))
@@ -190,7 +206,7 @@
     (IF (EQ (CAAR R) 'DISPLAYINPUT)
 	(DISPLA `((MLABLE) ,D-TAG ,$%)))
     (when (eq batch-or-demo-flag ':demo)
-      (mtell "~&_")
+      (mtell "~&~A_~A" *prompt-prefix* *prompt-suffix*)
       (let (quitting)	  
        (do ((char)) (nil)
 	     ;;those are common lisp characters you'r reading here
@@ -220,7 +236,7 @@
 
 	   (unless (zl-MEMBER char '(#\space #\newline #\return #\tab))
 	       (unread-char char input-stream)  
-	     (return nil))))))) 
+	     (return nil)))))))) 
 
 
 (DEFUN $BREAK (&REST ARG-LIST)
@@ -263,11 +279,26 @@
 (DEFUN RETRIEVE (MSG FLAG &AUX (PRINT? NIL))
   (DECLARE (SPECIAL MSG FLAG PRINT?))
   (OR (EQ FLAG 'NOPRINT) (SETQ PRINT? T))
-  (COND ((NOT PRINT?) (SETQ PRINT? T))
-	((NULL MSG))
-	((ATOM MSG) (PRINC MSG) (MTERPRI))
-	((EQ FLAG T) (MAPC #'PRINC (CDR MSG)) (MTERPRI))
-	(T (DISPLA MSG) (MTERPRI)))
+  (COND ((NOT PRINT?) 
+	 (SETQ PRINT? T)
+	 (princ *prompt-prefix*)
+	 (princ *prompt-suffix*))
+	((NULL MSG)
+	 (princ *prompt-prefix*)
+	 (princ *prompt-suffix*))
+	((ATOM MSG) 
+	 (format t "~a~a~a" *prompt-prefix* MSG *prompt-suffix*) 
+	 (MTERPRI))
+	((EQ FLAG T)
+	 (princ *prompt-prefix*) 
+	 (MAPC #'PRINC (CDR MSG)) 
+	 (princ *prompt-suffix*)
+	 (MTERPRI))
+	(T 
+	 (princ *prompt-prefix*)
+	 (displa MSG) 
+	 (princ *prompt-suffix*)
+	 (MTERPRI)))
   (mread-noprompt *query-io* nil))
 
 
@@ -276,10 +307,13 @@
 
 (DEFMFUN $READONLY (&REST L)
   (let ((*mread-prompt*
-	  (if l (string-right-trim '(#\n)
-				   (with-output-to-string (*standard-output*)
-				       (apply '$print l))) "")))
-  (third (mread *query-io*))))
+	 (if l (string-right-trim '(#\n)
+				  (with-output-to-string (*standard-output*)
+				    (apply '$print l))) "")))
+    (setf *mread-prompt* (format nil "~a~a~a" *prompt-prefix* *mread-prompt* 
+				*prompt-suffix*))
+    (setf answer (third (mread *query-io*)))))
+
 
 #-cl
 (DEFUN MREAD-TERMINAL (PROMPT)
@@ -364,35 +398,63 @@
   "")
 
 (defvar *maxima-started* nil)
+(defvar *maxima-prolog* "")
+(defvar *maxima-epilog* "")
+(defun meshugena-clisp-banner ()
+  (format t "  i i i i i i i       ooooo    o        ooooooo   ooooo   ooooo~%")
+  (format t "  I I I I I I I      8     8   8           8     8     o  8    8~%")
+  (format t "  I  \\ `+' /  I      8         8           8     8        8    8~%")
+  (format t "   \\  `-+-'  /       8         8           8      ooooo   8oooo~%");
+  (format t "    `-__|__-'        8         8           8           8  8~%")
+  (format t "        |            8     o   8           8     o     8  8~%")
+  (format t "  ------+------       ooooo    8oooooo  ooo8ooo   ooooo   8~%")
+  (format t "~%")
+  (format t "Copyright (c) Bruno Haible, Michael Stoll 1992, 1993~%")
+  (format t "Copyright (c) Bruno Haible, Marcus Daniels 1994-1997~%")
+  (format t "Copyright (c) Bruno Haible, Pierpaolo Bernardi, Sam Steingold 1998~%")
+  (format t "Copyright (c) Bruno Haible, Sam Steingold 1999-2003~%")
+  (format t 
+	  "--------------------------------------------------------------~%~%"))
 
 #-lispm
 (defun macsyma-top-level (&OPTIONAL (input-stream *standard-input*)
-				    batch-flag)
+			  batch-flag)
   (let ((*package* (find-package "MAXIMA")))
     (if *maxima-started*
 	(format t "Maxima restarted.~%")
-      (progn
-	(format t "Maxima ~a http://maxima.sourceforge.net~%"
-		*autoconf-version*)
-	(format t "Distributed under the GNU Public License. See the file COPYING.~%")
-	(format t "Dedicated to the memory of William Schelter.~%")
-	(format t "This is a development version of Maxima. The function bug_report()~%")
-	(format t "provides bug reporting information.~%")
-	(setq *maxima-started* t)))
-    (if ($file_search "maxima-init.lisp") ($load "maxima-init.lisp"))
-    (if ($file_search "maxima-init.mac") ($batchload "maxima-init.mac"))
+	(progn
+	  #+clisp (meshugena-clisp-banner)
+	  (format t *maxima-prolog*)
+	  (format t "~&Maxima ~a http://maxima.sourceforge.net~%"
+		  *autoconf-version*)
+	  (format t "Using Lisp ~a ~a" (lisp-implementation-type)
+		  #-clisp (lisp-implementation-version)
+		  #+clisp (subseq (lisp-implementation-version)
+				  0 (+ 1 (search
+					  ")" (lisp-implementation-version)))))
+	  #+gcl (format t " (aka GCL)")
+	  (format t "~%")
+	  (format t "Distributed under the GNU Public License. See the file COPYING.~%")
+	  (format t "Dedicated to the memory of William Schelter.~%")
+	  (format t "This is a development version of Maxima. The function bug_report()~%")
+	  (format t "provides bug reporting information.~%")
+	  (setq *maxima-started* t)))
+    (if ($file_search "maxima-init.lisp") ($load ($file_search "maxima-init.lisp")))
+    (if ($file_search "maxima-init.mac") ($batchload ($file_search "maxima-init.mac")))
     
-   (catch 'quit-to-lisp
-     (in-package "MAXIMA")
-     (sloop 
-	 do
-       (catch #+kcl si::*quit-tag* #+cmu 'continue #-(or kcl cmu) nil
+    (catch 'quit-to-lisp
+      (in-package "MAXIMA")
+      (sloop 
+       do
+       (catch #+kcl si::*quit-tag* #+(or cmu sbcl) 'continue #-(or kcl cmu sbcl) nil
 	      (catch 'macsyma-quit
-		(continue input-stream batch-flag)(bye)))))))
+		(continue input-stream batch-flag)
+		(format t *maxima-epilog*)
+		(bye)))))))
 
 #-lispm
 (progn 
-
+  
 #+kcl
 (si::putprop :t 'throw-macsyma-top 'si::break-command)
 
@@ -451,7 +513,7 @@
 
 (defmspec $with_stdout ( arg) (setq arg (cdr arg))
  (let ((body (cdr arg)) res)
-   (with-open-file (*standard-output* (NAMESTRING (stripdollar (car arg)))
+   (with-open-file (*standard-output* (NAMESTRING (maxima-string (car arg)))
 				      :direction :output)
 		   (dolist (v body)
 			     (setq res (meval* v)))
@@ -481,9 +543,26 @@
 
 #+cmu
 (defun $system (&rest args)
-  (ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args))))
+  (ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output t))
+
+#+allegro
+(defun $system (&rest args)
+  (excl:run-shell-command (apply '$sconcat args) :wait t))
+
+#+sbcl
+(defun $system (&rest args)
+  (sb-ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output t))
+
+#+openmcl
+(defun $system (&rest args)
+  (ccl::run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output t))
 
 (defun $room (&optional (arg nil arg-p))
   (if arg-p
       (room arg)
       (room)))
+
+(defun maxima-lisp-debugger (condition me-or-my-encapsulation)
+  (format t "~&Maxima encountered a Lisp error:~%~% ~A" condition)
+  (format t "~&~%Automatically continuing.~%To reenable the Lisp debugger set *debugger-hook* to nil.~%")
+  (throw 'return-from-debugger t))

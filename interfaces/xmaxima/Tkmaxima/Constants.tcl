@@ -132,7 +132,7 @@ set maxima_priv(urlHandlers) {
     text/html  netmath
     text/plain netmath
     image/gif  netmath
-    application/postscript "gv -safer %s"
+    application/postscript "ghostview -safer %s"
     application/pdf "acroread %s"
     application/x-dvi "xdvi %s"
 }

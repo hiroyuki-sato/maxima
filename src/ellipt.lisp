@@ -499,8 +499,8 @@
 ;;
 ;; FORM is list containing the actual expression.  I don't really know
 ;; what Y and Z contain.  Most of this modeled after SIMP-%SIN.
-(defmfun simp-%jacobi_sn (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_sn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -587,8 +587,8 @@
 	   ;; Nothing to do
 	   (eqtest (list '(%jacobi_sn) u m) form)))))
 
-(defmfun simp-%jacobi_cn (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_cn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -677,8 +677,8 @@
 	  (t
 	   (eqtest (list '(%jacobi_cn) u m) form)))))
 
-(defmfun simp-%jacobi_dn (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_dn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -750,8 +750,8 @@
 ;; it, but perhaps allow some way to do that transformation if
 ;; desired.
 
-(defmfun simp-%inverse_jacobi_sn (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_sn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -780,8 +780,8 @@
 	   ;; Nothing to do
 	   (eqtest (list '(%inverse_jacobi_sn) u m) form)))))
 
-(defmfun simp-%inverse_jacobi_cn (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_cn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -813,8 +813,8 @@
 ;; x = asn(sqrt((1-u^2)/m))
 ;; x = adn(u) = asn(sqrt((1-u^2)/m))
 
-(defmfun simp-%inverse_jacobi_dn (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_dn (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -1421,8 +1421,10 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop $elliptic_e
     ((phi m)
-     ;; (1-m*sin(phi)^2)
-     ((mplus simp) 1 ((mtimes simp) -1 m ((mexpt simp) ((%sin simp) phi) 2)))
+     ;; sqrt(1-m*sin(phi)^2)
+     ((mexpt simp)
+      ((mplus simp) 1 ((mtimes simp) -1 m ((mexpt simp) ((%sin simp) phi) 2)))
+      ((rat simp) 1 2))
      ;; diff wrt m
      ((mtimes simp) ((rat simp) 1 2) ((mexpt simp) m -1)
       ((mplus simp) (($elliptic_e simp) phi m)
@@ -1434,8 +1436,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 (defmfun $elliptic_e (phi m)
   (simplify (list '($elliptic_e) (resimplify phi) (resimplify m))))
 
-(defmfun simp-$elliptic_f (form y z)
-  (declare (ignore y))
+(defmfun simp-$elliptic_f (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((phi (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -1460,8 +1462,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	   ;; Nothing to do
 	   (eqtest (list '($elliptic_f) phi m) form)))))
 
-(defmfun simp-$elliptic_e (form y z)
-  (declare (ignore y))
+(defmfun simp-$elliptic_e (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((phi (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -1970,8 +1972,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	   m)))))))
   grad)
 
-(defmfun simp-%jacobi_ns (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_ns (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2070,8 +2072,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	  (($elliptic_e) ((%asin) ((%jacobi_sn) u m)) m)))))))
   grad)
 
-(defmfun simp-%jacobi_nc (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_nc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2180,8 +2182,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	   m)))))))
   grad)
 
-(defmfun simp-%jacobi_nd (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_nd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2285,8 +2287,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	    m))))))))
   grad)
 
-(defmfun simp-%jacobi_sc (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_sc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2397,8 +2399,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	    m))))))))
   grad)
 
-(defmfun simp-%jacobi_sd (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_sd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2535,8 +2537,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
        m))))))))
   grad)
 
-(defmfun simp-%jacobi_cs (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_cs (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2650,8 +2652,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	    m))))))))
   grad)
 
-(defmfun simp-%jacobi_cd (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_cd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2777,8 +2779,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	    m))))))))
   grad)
 
-(defmfun simp-%jacobi_ds (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_ds (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -2916,8 +2918,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	    m))))))))
   grad)
 
-(defmfun simp-%jacobi_dc (form y z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_dc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z))
@@ -3019,8 +3021,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_ns simp-%inverse_jacobi_ns operators)
 
-(defmfun simp-%inverse_jacobi_ns (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_ns (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3070,8 +3072,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_nc simp-%inverse_jacobi_nc operators)
 
-(defmfun simp-%inverse_jacobi_nc (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_nc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3115,8 +3117,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_nd simp-%inverse_jacobi_nd operators)
 
-(defmfun simp-%inverse_jacobi_nd (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_nd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3164,8 +3166,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_sc simp-%inverse_jacobi_sc operators)
 
-(defmfun simp-%inverse_jacobi_sc (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_sc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3210,8 +3212,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_sd simp-%inverse_jacobi_sd operators)
 
-(defmfun simp-%inverse_jacobi_sd (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_sd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3250,8 +3252,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_cs simp-%inverse_jacobi_cs operators)
 
-(defmfun simp-%inverse_jacobi_cs (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_cs (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3299,8 +3301,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_cd simp-%inverse_jacobi_cd operators)
 
-(defmfun simp-%inverse_jacobi_cd (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_cd (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3342,8 +3344,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_ds simp-%inverse_jacobi_ds operators)
 
-(defmfun simp-%inverse_jacobi_ds (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_ds (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3385,8 +3387,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 
 (defprop %inverse_jacobi_dc simp-%inverse_jacobi_dc operators)
 
-(defmfun simp-%inverse_jacobi_dc (form y z)
-  (declare (ignore y))
+(defmfun simp-%inverse_jacobi_dc (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3575,8 +3577,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
      )
   grad)
 
-(defmfun simp-$elliptic_eu (form y z)
-  (declare (ignore y))
+(defmfun simp-$elliptic_eu (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))
@@ -3606,8 +3608,8 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 (defmfun $jacobi_am (u m)
   (simplify `((%jacobi_am) ,(resimplify u) ,(resimplify m))))
 
-(defmfun simp-%jacobi_am (form yy z)
-  (declare (ignore y))
+(defmfun simp-%jacobi_am (form unused z)
+  (declare (ignore unused))
   (twoargcheck form)
   (let ((u (simpcheck (cadr form) z))
 	(m (simpcheck (caddr form) z)))

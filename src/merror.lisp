@@ -43,7 +43,7 @@
   (IF (ATOM EXP) 0
       (DO ((L (CDR EXP) (CDR L))
 	   (N 1 (f1+ (f+ N (ERROR-SIZE (CAR L))))))
-	  ((OR (NULL L)
+	  ((OR (atom L)
 	       ;; no need to go any further, and this will save us
 	       ;; from circular structures. (Which they display
 	       ;; package would have a hell of a time with too.)
@@ -108,7 +108,7 @@
 	       (t
 		(fresh-line *standard-output*)
 		($backtrace 3)
-		(format t "~& -- an error.  Quitting.  To debug this try DEBUGMODE(TRUE);)~%")
+		(format t "~& -- an error.  Quitting.  To debug this try DEBUGMODE(TRUE);~%")
 		(throw 'macsyma-quit t )
 		;(if errcatch (error "macsyma error"))
 		)))

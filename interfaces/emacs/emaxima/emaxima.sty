@@ -39,6 +39,7 @@
 \newdimen\maximasessionbaselineskip
 \maximasessionbaselineskip = \baselineskip %16pt
 
+
 %% For a TeX session
 \newdimen\maximatexsessionbaselineskip
 \maximatexsessionbaselineskip = \baselineskip %16pt
@@ -51,6 +52,26 @@
   \def\maximaoutputcolor{black}
 }
 
+%% For the pre-output
+\newdimen\maximasessionpretexskip
+\maximasessionpretexskip = 8pt
+\newdimen\maximapostpretexskip
+\maximapostpretexskip = 8pt
+\newdimen\maximapreoutputskip
+\maximapreoutputskip = 8pt
+
+%% Process options
+\newif\ifmaxusebreqn
+\maxusebreqnfalse
+\newif\ifmaximausepreview
+\maximausepreviewfalse
+\DeclareOption{breqn}{\maxusebreqntrue}
+\DeclareOption{preview}{\maximausepreviewtrue}
+\ProcessOptions\relax
+
+%% The List of Examples
+\newcommand{\maximaexamplesname}{List of Maxima Examples}
+
 %% Some things are handled differently when pdflatex is used.
 
 \ifx\pdfoutput\undefined
@@ -61,14 +82,25 @@
   \color{black}
 \fi
 
+
 %% A macro for writing Maxima in the ``proper'' font
 
 \def\Maxima{{\sffamily\slshape Maxima\/}}
 \def\maximaheadersize{\tiny}
 
+%% Some commands used by imaxima that are carried over
+\newcommand{\ifrac}[2]{\frac{#1}{#2}}
+\newcommand{\ifracd}[2]{#1/\left(#2\right)}
+\newcommand{\ifracn}[2]{\left(#1\right)/#2}
+\newcommand{\isubscript}[2]{{#1}_{#2}}
+\newcommand{\iexpt}[2]{{#1}^{#2}}
+
 %% Let's use some local macros
 
 \catcode`\@=11\relax
+
+%% To take care of the case where preview isn't loaded.
+\@ifpackageloaded{preview}{}{\newenvironment{preview}{}{}}
 
 %% First of all, set up some delimiters
 %% The units are in terms of em and ex, so if the font size is
@@ -215,7 +247,7 @@
         \baselineskip = \maximaoutputbaselineskip
         \setupm@ximaverbatim\dom@ximaverbatim}      
 {\catcode`\|=0 \catcode`\\=12 %
- |obeylines|gdef|dom@ximaverbatim^^M#1\endmaxima{#1|endgroup|ifmaximalines|m@ximabottom|fi|par|vskip 1.5ex|par|endgroup}}
+ |obeylines|gdef|dom@ximaverbatim^^M#1\endmaxima{#1|endgroup|ifmaximalines|m@ximabottom|fi|par|vskip 1.5ex|par|endgroup|ifmaximausepreview|end{preview}|fi}}
 
 %% Now we need to set up the actual environments.
 %% We will need some "if"s to tell us where we are
@@ -226,10 +258,48 @@
 
 \def\maximanot@k{}
 
+%% Some stuff of the list of examples
+
+\@ifclassloaded{book}
+{\newcounter{maximaexample}[chapter]
+\newcommand\listofmaximaexamples{%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \chapter*{\maximaexamplesname}%
+      \@mkboth{\MakeUppercase\maximaexamplesname}%
+              {\MakeUppercase\maximaexamplesname}%
+    \@starttoc{lom}%
+    \if@restonecol\twocolumn\fi
+    }
+\newcommand{\maxcaption}[1]{\addcontentsline{lom}{figure}
+  {\protect\numberline{\thechapter.\themaximaexample} {\protect\ignorespaces #1}}}}
+{\newcounter{maximaexample}
+\newcommand\listofmaximaexamples{%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \section*{\maximaexamplesname}%
+      \@mkboth{\MakeUppercase\maximaexamplesname}%
+              {\MakeUppercase\maximaexamplesname}%
+    \@starttoc{lom}%
+    \if@restonecol\twocolumn\fi
+    }
+\newcommand{\maxcaption}[1]{\addcontentsline{lom}{figure}
+  {\protect\numberline{\themaximaexample}
+    {\protect\ignorespaces #1}}}}
+
+\newcommand{\l@example}[2]{\par\noindent#1 {\itshape #2}}
+
 %% The top delimiter depends on whether or not it is an initial cell,
 %% etc.
 
 \def\beginmaxima{
+     \ifmaximausepreview\begin{preview}\fi
      \begingroup
      \par  \vskip \premaximaspace \par
      \baselineskip = \maximainputbaselineskip
@@ -239,7 +309,7 @@
 
 \def\m@xima{
      \ifx\maximanextchar [%
-         \let\maximanext = \m@ximainit
+         \let\maximanext = \m@ximaexample
      \else
          \ifx\maximanextchar <%
               \let\maximanext = \m@ximapart
@@ -250,28 +320,20 @@
      \maximanext
 }
 
-\def\m@ximainit[#1]{
-     \futurelet\maximanextchar%
-     \m@xima@nit}
+\def\m@ximaexample[#1]{
+     \stepcounter{maximaexample}
+     \maxcaption{#1}
+     \futurelet\maximanextchar\m@ximapostexample
+}
 
-\def\m@xima@nit{
+\def\m@ximapostexample{
      \ifx\maximanextchar <%
-          \let\maximanext = \m@ximainitpart
+          \let\maximanext = \m@ximapart
      \else
-          \let\maximanext = \m@ximainitonly
+          \let\maximanext = \m@ximastart
      \fi
      \maximanext
 }
-
-\def\m@ximainitonly{
-     \par
-     \vskip 1.5ex
-     \par
-     \ifmaximalines\m@ximainittop\fi
-     \maximasm@llsk
-     \m@ximainputverbatim
-}
-
 
 \def\m@ximastart{
      \par
@@ -301,21 +363,10 @@
      \m@ximainputverbatim
 }
 
-\def\m@ximainitpart<#1:#2>{
-     \par
-     \vskip 1.5ex
-     \par
-     \def\maximatestt@k{#2}
-     \ifx\maximatestt@k\maximanot@k
-         \def\m@ximaparttext{Definition of package #1}
-     \else
-         \def\m@ximaparttext{<#1:#2>}
-     \fi
-     \ifmaximalines\m@ximainitparttop\m@ximaparttext\fi
-     \futurelet\maximanextchar\m@ximap@rt
-}
 
 %% Now to take care of the various types of output
+
+\def\m@ximapreoutputskip{\par\vspace{\maximapreoutputskip}\par}
 
 \def\maximaoutput{
      \endm@ximainputverbatim
@@ -327,10 +378,6 @@
      \m@ximaoutputverbatim
 }      
 
-\def\m@ximatexd#1\\{ \[ #1 \]\endgroup}
-\def\m@ximatexe#1.#2\\{\[ E#1 = #2 \]\endgroup}
-
-
 \def\maximatexoutput{
      \endm@ximainputverbatim
      \maximasm@llsk
@@ -339,9 +386,12 @@
      \ifmaximalines\m@ximatexoutput\fi
      \maximasm@llsk
      \begingroup
+     \catcode`\%=12\relax
+     \def\ps{\m@ximapreoutputskip}
      \def\D{\begingroup\par\m@ximatexd}
      \def\E{\begingroup\par\m@ximatexe}
      \def\p{\begingroup\setupm@ximasessionverbatim\dom@ximasessionpreprompt}
+     \def\m{\m@ximatexoutputeqn}
      \maximaoutputfont
 }      
 
@@ -366,6 +416,7 @@
       \vskip \postmaximaspace
       \par
       \endgroup
+      \ifmaximausepreview\end{preview}\fi
 }
 
 %% Now the Maxima sessions
@@ -426,7 +477,7 @@
         \baselineskip = \maximasessionbaselineskip
         \setupm@ximasessionverbatim\dom@ximasessionverbatim}      
 {\catcode`\|=0 \catcode`\\=12 %
- |obeylines|gdef|dom@ximasessionverbatim^^M#1\endmaximasession{#1|ifmaximasessionlines|m@ximasessionbottom|fi|par|vskip 1.5ex|par|endgroup}}
+ |obeylines|gdef|dom@ximasessionverbatim^^M#1\endmaximasession{#1|ifmaximasessionlines|m@ximasessionbottom|fi|par|vskip 1.5ex|par|endgroup|ifmaximausepreview|end{preview}|fi}}
 
 %% Now we need to set up the actual environments.
 %% We will need some "if"s to tell us where we are
@@ -438,7 +489,32 @@
 %% etc.
 
 \def\beginmaximasession{
+     \ifmaximausepreview\begin{preview}\fi
      \begingroup
+     \begingroup
+     \catcode`\^^M=12     
+     \futurelet\maximanextchar\m@ximasession
+}
+
+\def\m@ximasession{
+     \ifx\maximanextchar [%
+         \let\maximanext = \m@ximasessionexample
+     \else
+         \let\maximanext = \m@ximasessionstart
+     \fi
+     \maximanext
+}
+
+
+\def\m@ximasessionexample[#1]{
+     \refstepcounter{maximaexample}
+     \maxcaption{#1}
+     \m@ximasessionstart
+}
+
+
+\def\m@ximasessionstart{
+     \endgroup
      \m@ximainsessioninputtrue
      \m@ximasessionsessionfalse
 %     \m@ximatexsessionfalse
@@ -464,17 +540,14 @@
      \m@ximasessionsessionverbatim
 }      
 
+\def\m@ximapercent{\%}
 \def\setupm@ximasessionverbatim{
 \obeylines \maximauncatcodespecials \obeyspaces}
 {\obeyspaces\global\let =\ }
 {\catcode`\|=0 \catcode`\\=12 %
-|obeylines|gdef|dom@ximatexsessionverbatim#1.#2\\{|par|textcolor{|maximapromptcolor}{(C#1)}#2|par|endgroup}
-|obeylines|gdef|dom@ximasessionpreprompt#1\\{|par #1|par|endgroup}
+|obeylines|gdef|dom@ximatexsessionverbatim#1.#2\\{|par|textcolor{|maximapromptcolor}{(|m@ximapercent{}i#1)}#2|par|endgroup}
+|obeylines|gdef|dom@ximasessionpreprompt#1\\{|par|parskip=|maximasessionpretexskip #1|par|endgroup|vspace{|maximapostpretexskip}}
 }
-
-\def\m@ximasessionoutput#1.#2\\{\textcolor{\maximapromptcolor}{(D#1)} \[ #2 \]\endgroup}
-
-\def\m@ximasessioneoutput#1.#2\\{\textcolor{\maximapromptcolor}{(E#1)} \[ #2 \]\endgroup}
 
 \def\maximatexsession{
       \endgroup
@@ -484,14 +557,19 @@
       \par
       \ifmaximasessionlines\m@ximasessiontop\fi
       \begingroup
+      \catcode`\%=12\relax
       \m@ximainsessioninputfalse
       \m@ximasessionsessiontrue
+      \def\ps{\m@ximapreoutputskip}
       \def\C{\begingroup\color{\maximainputcolor}
         \setupm@ximasessionverbatim\dom@ximatexsessionverbatim}
+      \let\i=\C
       \def\D{\begingroup\color{\maximaoutputcolor}\par\m@ximasessionoutput}
+      \let\o=\D
       \def\E{\begingroup\color{\maximaoutputcolor}\par\m@ximasessioneoutput}
+      \let\t=\E
       \def\DD{\begingroup\color{\maximaoutputcolor}\par\m@ximatexd}
-      \def\p{\begingroup\setupm@ximasessionverbatim\dom@ximasessionpreprompt}
+      \def\p{\begingroup\color{\maximaoutputcolor}\setupm@ximasessionverbatim\dom@ximasessionpreprompt}
       \baselineskip=\maximatexsessionbaselineskip
       \maximasessionoutputfont
 }
@@ -511,6 +589,7 @@
     \fi
     \color{black}
     \endgroup
+    \ifmaximausepreview\end{preview}\fi
 }
 
 %% Finally, the Maxima noshows.
@@ -539,6 +618,36 @@
     \catcode`\%=14\relax
     \endgroup
 }
+
+
+%%% Finally, some things that require the breqn package.
+%% They are at the end, since if breqn is loaded too early, it
+%% interferes with some verbatim environments.
+
+\ifmaxusebreqn
+  \ifx\pdfoutput\undefined
+  \else
+    \def\keyed@msg#1#2#3{}
+  \fi
+  \usepackage[cmbase]{flexisym}
+  \usepackage{breqn}
+  \newenvironment{emaxmath}
+     {\begin{dmath*}}
+     {\end{dmath*}}
+\else
+  \newenvironment{emaxmath}
+     {\begin{displaymath}}
+     {\end{displaymath}}
+\fi
+  
+\def\m@ximatexoutputeqn#1\\{\begin{emaxmath} #1 \end{emaxmath}}
+
+\def\m@ximatexd#1\\{ \begin{emaxmath} #1 \end{emaxmath}\endgroup}
+\def\m@ximatexe#1.#2\\{\begin{emaxmath} E#1 = #2 \end{emaxmath}\endgroup}
+
+\def\m@ximasessionoutput#1.#2\\{\textcolor{\maximapromptcolor}{(\%o#1)} \begin{emaxmath} #2 \end{emaxmath}\endgroup}
+
+\def\m@ximasessioneoutput#1.#2\\{\textcolor{\maximapromptcolor}{(\%t#1)} \begin{emaxmath} #2 \end{emaxmath}\endgroup}
 
 \catcode`\@=12\relax
 

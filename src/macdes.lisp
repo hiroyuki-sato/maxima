@@ -16,7 +16,8 @@
   (block
    $example
    (let ((example (car l))
-	 (file (or (cadr l)  (maxima-path "doc" $manual_demo))))
+	 (file (or (cadr l)  (combine-path 
+			      (list *maxima-demodir* $manual_demo)))))
      (or (symbolp example)
 	 (merror
 	  "First arg ~M to example must be a symbol, eg example(functions)"))
@@ -111,22 +112,27 @@
 				     form l)
 			      ))
 		      (T (merror "BAD ARG")))))))
-(defvar *info-paths* nil)
 
+;; The documentation is now in INFO format and can be printed using
+;; tex, or viewed using info or gnu emacs or using a web browser.  All
+;; versions of maxima have a builtin info retrieval mechanism.
 
-
-(defun $describe(x &aux (*info-paths* *info-paths*) have)
-  (setq x ($sconcat x))
-  (if (and (find-package "SI")
-           (fboundp (intern "INFO" "SI")))
-      (return-from $describe (funcall (intern "INFO" "SI") x
-         '("maxima.info") #-gcl *info-paths*)))
-
-  "The documentation is now in INFO format and can be printed using
-tex, or viewed using info or gnu emacs or using a web browser:
-http://www.ma.utexas.edu/maxima/
-   Some versions of maxima built have a builtin info retrieval mechanism."
-  )
+(defmspec $describe (x)
+  (setq x ($sconcat (cadr x)))
+  (let ((cl-info::*prompt-prefix* *prompt-prefix*)
+	(cl-info::*prompt-suffix* *prompt-suffix*))
+    #-gcl
+    (cl-info:info x '("maxima.info") *info-paths*)
+    ;; Optimization: GCL's built-in info is much faster than our info
+    ;; implementation. However, GCL's info won't respect out *prompt-
+    ;; variables. Compromise by only calling our info when the prompts
+    ;; are not empty. --jfa 07/25/04
+    #+gcl
+    (if (and (string= *prompt-prefix* "") (string= *prompt-suffix* ""))
+	(progn
+	  (setf system::*info-paths* *info-paths*)
+	  (system::info x '("maxima.info")))
+	(cl-info:info x '("maxima.info")))))
 
 (defun $apropos ( s ) 
   (cons '(mlist) (apropos-list s "MAXIMA"))) 

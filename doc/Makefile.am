@@ -1,6 +1,13 @@
 SUBDIRS = info man intromax share emaxima
 
-EXTRA_DIST = maximabook/Makefile\
+genericdir = $(docdir)
+
+genericdirDATA = \
+contributors\
+implementation/dir_vars.txt\
+implementation/external-interface.txt\
+maximabook/Makefile\
+maximabook/README\
 maximabook/maxima.bib\
 maximabook/TODO\
 maximabook/algcal/algcal.tex\
@@ -19,14 +26,14 @@ maximabook/images/emaximashot.eps\
 maximabook/images/emaximashot.png\
 maximabook/images/imaxima.eps\
 maximabook/images/imaxima.png\
+maximabook/images/maximawindowsinstall1.eps\
+maximabook/images/maximawindowsinstall1.png\
 maximabook/images/maxima_geomview.eps\
 maximabook/images/maxima_geomview.png\
 maximabook/images/maxima_gnuplot.eps\
 maximabook/images/maxima_gnuplot.png\
 maximabook/images/maxima_openmath.eps\
 maximabook/images/maxima_openmath.png\
-maximabook/images/maximawindowsinstall1.eps\
-maximabook/images/maximawindowsinstall1.png\
 maximabook/images/symaxx.eps\
 maximabook/images/symaxx.png\
 maximabook/images/symaxxoutput.png\
@@ -47,6 +54,9 @@ maximabook/output/izicinfo.txt\
 maximabook/output/output.tex\
 maximabook/preface/pref.tex\
 maximabook/programming/prog.tex\
+maximabook/README\
+maximabook/share/calculus/pdiff.tex\
+maximabook/share/physics/dimension.tex\
 maximabook/storage/bibarchive/axiom.bib\
 maximabook/storage/bibarchive/higherordersymbcomput.bib\
 maximabook/storage/bibarchive/jsymcomp.bib\
@@ -55,11 +65,26 @@ maximabook/storage/bibarchive/macsyma.bib\
 maximabook/storage/bibarchive/maple-extract.bib\
 maximabook/storage/bibarchive/maple-tech.bib\
 maximabook/storage/bibarchive/mathematica.bib\
-maximabook/storage/bibarchive/red-a-f.bib\
-maximabook/storage/bibarchive/red-g-l.bib\
-maximabook/storage/bibarchive/red-m-z.bib\
 maximabook/storage/bibarchive/redbooks.bib\
 maximabook/storage/bibarchive/redextra.bib\
 maximabook/storage/bibarchive/reduce.bib\
+maximabook/storage/bibarchive/red-a-f.bib\
+maximabook/storage/bibarchive/red-g-l.bib\
+maximabook/storage/bibarchive/red-m-z.bib\
 maximabook/storage/bibarchive/sigsam.bib\
-maximabook/storage/primer/primer.tex
+maximabook/storage/primer/primer.tex\
+misc/completescanoffunctionssortedbybytecodelength.txt\
+misc/grepforvariables.sh\
+misc/maximafunctions.txt\
+misc/maximafunctionsundocumented.txt\
+misc/maximaitemspresentinbothfunctionandvariablescans.txt\
+misc/maximavariables.txt\
+misc/maximavariablesundocumented.txt\
+misc/processlisfiles.sh\
+misc/weirdvariables.txt\
+misc/workingvariables.txt\
+misc/x.awk
+
+EXTRA_DIST = $(genericdirDATA)
+include $(top_srcdir)/common.mk
+
