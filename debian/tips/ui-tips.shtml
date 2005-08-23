@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+<title>Maxima user interface tips</title>
+
+<!-- Meta Tags -->
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<meta name="description" content="Maxima user interface tips."/>
+
+<meta name="keywords" content="Maxima, computer algebra, docs, documentation"/>
+
+<!-- End Meta Tags -->
+
+<!-- CSS (Page Layout) inclusion -->
+<link rel="stylesheet" type="text/css" href="style.css"/>
+
+</head>
+
+<!-- Begin main document -->
+
+<div>
+
+<div class="title">Maxima - a sophisticated computer algebra system</div>
+
+<div class="titlespacer"></div>
+
+<!-- Left side menu -->
+
+<div class="menu">
+   <div class="menutitle">
+   <img src="maximalogo.png" width="88" height="83" alt="Maxima Logo"/>   
+   </div>
+   <div class="menubutton"> 
+   <a href="index.shtml">Home</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="faq/faq.html">FAQ</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="docs.shtml">Docs</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="screenshots.shtml">Screen Shots</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="download.shtml">Download</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="http://sourceforge.net/tracker/?group_id=4933&amp;atid=104933">Report Bugs</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="http://sourceforge.net/projects/maxima">Project Page</a>
+   </div>   
+   <div class="menubutton"> 
+   <a href="releaseplans.shtml">Release Plans</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="misc.shtml">Misc</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="3rdpartycode.shtml">Third Party Maxima Code</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="relatedprojects.shtml">Related Projects</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="lisp.shtml">Lisp Links</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="compalg.shtml">Computer Algebra</a>
+   </div>
+   <div class="menubutton"> 
+   <a href="http://maxima.sf.net/maximalist.html">Mail Lists</a>
+   </div>
+   <div class="imagespace">
+    <a href="http://sourceforge.net"> <img src="http://sourceforge.net/sflogo.php?group_id=4933&amp;type=1" width="88" height="31" alt="SourceForge Logo"/></a>
+   </div>
+</div>
+
+
+<!-- Main page content -->
+
+<div class="contentbox">
+<h3>Maxima user interface tips</h3>
+<div class="contentbox2">
+  <h4>describe shortcut</h4>
+<p>The describe command, e.g.,
+    describe(integrate);
+can be shortened to "? ", i.e.,
+    ? integrate</p>
+<p>
+Unfortunately, this shortcut contains two exceptions to Maxima's usual
+input rules:
+
+(a) Unlike practically every other input line in Maxima, the
+line does not require a semi-colon or dollar sign to signify the end
+of the entry.
+
+(b) The space is significant; "?integrate" has a
+separate meaning from "? integrate"; the former calls the lisp
+function "integrate".
+</p>
+</div>
+
+<div class="contentbox2">
+  <h4>:lisp shortcut</h4>
+  <p>Individual lisp commands may be entered by starting the
+       input line with ":lisp"
+       Ordinarily, one enters lisp mode with to_lisp(): 
+<pre>
+(%i1) to_lisp();
+Type (to-maxima) to restart
+
+MAXIMA> (format t "hello from lisp~%")
+hello from lisp
+NIL
+MAXIMA> (setf foo 1)
+;
+Warning:  Declaring FOO special.
+1
+MAXIMA> (to-maxima)
+Returning to Maxima
+(%o1)                                TRUE
+(%i2)
+
+</pre>
+The above example is equivalent to
+<pre>
+(%i1) :lisp (format t "hello from lisp~%")
+hello from lisp
+NIL
+(%i1) :lisp (setf foo 1)
+Warning:  Declaring FOO special.
+
+1
+(%i1)
+</pre>
+Note that :lisp lines to not need to end with semi-colons or dollar
+signs.
+</div>
+
+<div class="contentbox2">
+<h4>Input and output labels
+</h4>
+<p>Before Maxima 5.9.1, the input and output labels were C1, C2,
+       etc. and D1, D2, etc., respectively. Starting with 5.9.1, the C
+       and D characters have been changed to %i and %o. The prompts
+       are customizable via the inchar and outchar variables.
+</p>
+<p>
+For example, the pre-5.9.1 behavior can be restored via
+<pre>
+    inchar:C; outchar:D;
+</pre>
+Even though the variable names imply that they should evaluate to a
+single character, the prompts may have arbitrary lengths. For example,
+<pre>
+    inchar:long_input_label; outchar:long_output_label;
+</pre>
+are also legal values.        
+</p>
+</div>
+
+<div class="contentbox2">
+<h4>Re-enabling the lisp debugger in Maxima
+</h4>
+<p>
+As of Maxima 5.9.1, lisp errors will cause the user to be dumped into
+the lisp debugger. The lisp debugger can be re-enabled by setting the
+*debugger-hook* variable in lisp to nil, i.e.,
+<pre>
+    (setf *debugger-hook* nil)
+</pre>
+To restore maxima's default behavior, set *debugger-hook* to point to
+the function maxima-lisp-debugger, i.e.,
+<pre>
+    (setf *debugger-hook* #'maxima-lisp-debugger)
+</pre>
+</p>
+</div>
+
+<div class="contentbox2">
+<h4>Environment variables
+</h4>
+<p>
+Maxima uses several environment
+variables. The following description comes from the man page:
+</p>
+<pre>
+MAXIMA_USERDIR
+       Points  to  a  directory  for user customization files. Maxima's
+       default search  paths  include  MAXIMA_USERDIR.  Default  value:
+       $HOME/.maxima.
+
+MAXIMA_PREFIX
+       Maxima  looks for its input files in the directory configured at
+       compile time, /home/amundson/opt/maxima. Maxima can be relocated
+       to  a different directory as long as the maxima script maintains
+       the same relative position with  respect  to  the  Maxima  input
+       files.  If, for some reason, the maxima script needs to be relo-
+       cated independently, MAXIMA_PREFIX needs to be set to  point  to
+       the top of the tree holding the input files.
+
+MAXIMA_DIRECTORY
+       MAXIMA_DIRECTORY  is equivalent to MAXIMA_PREFIX. It is included
+       only for backward compatibility with older versions of Maxima.
+</pre>
+<p>Maxima uses  several  other  environment  variables  for  communication
+between  the maxima script and the lisp image. All such variables start
+with MAXIMA_. They should not need to be modified by the user.
+</p>
+</div>
+
+<div class="contentbox2">
+<h4>Customization files
+</h4>
+<p> Maxima checks for the presence of the
+       files maxima-init.lisp and maxima-init.mac in the search path
+       and loads them if available. The most logical place to put
+       these files is in MAXIMA_USERDIR, as defined above.
+</p>
+<p>An example maxima-init.lisp that re-enables the lisp debugger:
+<pre>
+(setf *debugger-hook* nil)
+(format t "*** My personal maxima-init.lisp has been loaded ***~%")
+</pre>
+</p>
+<p>An example maxima-init.mac that enables gnuplot's pm3d mode:
+<pre>
+set_plot_option([gnuplot_pm3d,true]);
+print("*** My very own personal maxima-init.mac has been loaded. ***");
+</pre>
+</p>
+<p>
+The print/format statements are useful for debugging. They can be
+removed once the init files are established to be working.
+</p>
+</div>
+
+<div class="contentbox2">
+<h4>Customizing the display of equations
+</h4>
+<p>The maxima variables
+       display2d, stardisp and linel allow for customization of the
+       display of equations.
+</p>
+<p>display2d is a boolean controlling the formatting of displayed
+equations:
+<pre>
+(%i1) display2d;
+
+(%o1)                                TRUE
+(%i2) x/(y^2+z^2);
+
+                                       x
+(%o2)                               -------
+                                     2    2
+                                    z  + y
+(%i3) display2d:false;
+
+(%o3) FALSE
+(%i4) x/(y^2+z^2);
+
+(%o4) x/(z^2+y^2)
+</pre>
+</p>
+
+<p>stardisp controls whether spaces or *'s are used to represent
+multiplication:  
+<pre>
+(%i1) stardisp;
+
+(%o1)                                FALSE
+(%i2) a*b*c;
+
+(%o2)                                a b c
+(%i3) stardisp:true;
+
+(%o3)                                TRUE
+(%i4) a*b*c;
+
+(%o4)                                a*b*c
+</pre>
+</p>
+<p>linel controls the number of characters per line:
+<pre>
+(%i1) linel;
+
+(%o1)                                 79
+(%i2) ratexpand((x+y+z)^3);
+
+       3        2        2      2                  2      3        2      2
+(%o2) z  + 3 y z  + 3 x z  + 3 y  z + 6 x y z + 3 x  z + y  + 3 x y  + 3 x  y
+
+                                                                              3
+                                                                           + x
+(%i3) linel:40;
+
+(%o3)              40
+(%i4) ratexpand((x+y+z)^3);
+
+       3        2        2      2
+(%o4) z  + 3 y z  + 3 x z  + 3 y  z
+
+                2      3        2
+ + 6 x y z + 3 x  z + y  + 3 x y
+
+      2      3
+ + 3 x  y + x
+</pre>
+</p>
+</div>
+
+
+
+<p></p>
+</div>
+</body>
+</html>

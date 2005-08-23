@@ -178,6 +178,10 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 		sed 's,^.TH MAXIMA 1L,.TH MAXIMA 1,1' >debian/foo && \
 		mv debian/foo debian/tmp/usr/share/man/man1/maxima.1
 
+	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
+	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/{plotting,tips} -name "*.uu") ; do \
+		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
+
 	dh_install
 
 	touch install-stamp
@@ -196,7 +200,7 @@ binary-indep: build install
 	dh_installchangelogs  -i
 	dh_link -i
 	dh_strip -i
-	dh_compress -i
+	dh_compress -i -X.shtml
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_shlibdeps -i
