@@ -1,1004 +1,1519 @@
 @menu
 * Introduction to Input and Output::  
-* FILES::                       
-* PLAYBACK::                    
+* Files::                       
 * Definitions for Input and Output::  
 @end menu
 
-@node Introduction to Input and Output, FILES, Input and Output, Input and Output
+@node Introduction to Input and Output, Files, Input and Output, Input and Output
 @section Introduction to Input and Output
 
-@node FILES, PLAYBACK, Introduction to Input and Output, Input and Output
-@section FILES
- - A file is simply an area on a particular storage device which
-contains data or text.  The only storage devices which are used on the
-MC machine are disks and tapes.  Files on the disks are figuratively
-grouped into "directories".  A directory is just a list of all the
-files stored under a given user name.  Do DESCRIBE(FILEOP); for
-details of how you may inspect your files using MACSYMA.  Other
-commands which deal with files are: SAVE, FASSAVE, STORE, LOAD,
-LOADFILE, RESTORE, UNSTORE, STRINGOUT, BATCH, BATCON, DEMO, WRITEFILE,
-CLOSEFILE, DELFILE, REMFILE, and APPENDFILE.
+@node Files, Definitions for Input and Output, Introduction to Input and Output, Input and Output
+@section Files
+A file is simply an area on a particular storage device which contains data or text.
+Files on the disks are figuratively grouped into "directories".
+A directory is just a list of files.
+Commands which deal with files are:
+@code{save},
+@code{load},
+@code{loadfile},
+@code{stringout},
+@code{batch},
+@code{demo},
+@code{writefile},
+@code{closefile},
+and
+@code{appendfile}.
 
-@node PLAYBACK, Definitions for Input and Output, FILES, Input and Output
-@section PLAYBACK
- It is possible to play back the input lines in a temporary
-scroll down window, and so not lose ones current work.  This can
-be done by typing Function  E.  A numeric argument tells it the line
-number to start at, otherwise it will go back about 40 lines.
-
-@c end concepts Input and Output
-@node Definitions for Input and Output,  , PLAYBACK, Input and Output
+@node Definitions for Input and Output,  , Files, Input and Output
 @section Definitions for Input and Output
-@c @node %, %%, PLAYBACK, Input and Output
-@c @unnumberedsec phony
-@defvar %
- The last D-line computed by MACSYMA (whether or not it was printed
-out).  (See also %%.)
 
-@end defvar
-@c @node %%, %EDISPFLAG, %, Input and Output
-@c @unnumberedsec phony
-@defvar %%
- The value of the last computation performed while in a
-(MACSYMA-BREAK).  Also may be used in compound statements in the nth
-statement to refer to the value of the (n-1)th statement.  E.g.
-F(N):=(INTEGRATE(X^N,X),SUBST(3,X,%%)-SUBST(2,X,%%)); is in essence
-equivalent to F(N):=BLOCK([%%], %%:INTEGRATE(X^N,X),
-SUBST(3,X,%%)-SUBST(2,X,%%)); This will also work for communicating
-between the (n-1)th and nth (non-atomic) BLOCK statements.
+@defvr {System variable} _
 
-@end defvar
-@c @node %EDISPFLAG, %TH, %%, Input and Output
-@c @unnumberedsec phony
-@defvar %EDISPFLAG
- default: [FALSE] - if TRUE, MACSYMA displays %E to a
-negative exponent as a quotient, i.e. %E^-X as 1/%E^X.
+@code{_} is the most recent input expression (e.g., @code{%i1}, @code{%i2}, @code{%i3}, ...).
 
-@end defvar
-@c @node %TH, {special symbol}, %EDISPFLAG, Input and Output
-@c @unnumberedsec phony
-@defun %TH (i)
-is the ith previous computation.  That is, if the next
-expression to be computed is D(j) this is D(j-i).  This is useful in
-BATCH files or for referring to a group of D expressions.  For
-example, if SUM is initialized to 0 then FOR I:1 THRU 10 DO
-SUM:SUM+%TH(I) will set SUM to the sum of the last ten D expressions.
+@code{_} is assigned the input before the input is simplified or evaluated.
+However, the value of @code{_} is simplified (but not evaluated) when it is displayed.
 
-@end defun
-@c @node "?"
-@c @unnumberedsec phony
-@deffn {special symbol} "?"
-  - As prefix to a function or variable name, signifies that the
-function or variable is a LISP token, not a MACSYMA token.  Two
-question marks typed together, ??, will flush the current MACSYMA
-command line.
+@code{_} is recognized by @code{batch}, but not by @code{load}.
+
+See also @code{%}.
+
+Examples:
+
+@c ===beg===
+@c 13 + 29;
+@c :lisp $_
+@c _;
+@c sin (%pi/2);
+@c :lisp $_
+@c _;
+@c a: 13$
+@c b: 29$
+@c a + b;
+@c :lisp $_
+@c _;
+@c a + b;
+@c ev (_);
+@c ===end===
+@example
+(%i1) 13 + 29;
+(%o1)                          42
+(%i2) :lisp $_
+((MPLUS) 13 29)
+(%i2) _;
+(%o2)                          42
+(%i3) sin (%pi/2);
+(%o3)                           1
+(%i4) :lisp $_
+((%SIN) ((MQUOTIENT) $%PI 2))
+(%i4) _;
+(%o4)                           1
+(%i5) a: 13$
+(%i6) b: 29$
+(%i7) a + b;
+(%o7)                          42
+(%i8) :lisp $_
+((MPLUS) $A $B)
+(%i8) _;
+(%o8)                         b + a
+(%i9) a + b;
+(%o9)                          42
+(%i10) ev (_);
+(%o10)                         42
+@end example
+
+@end defvr
+
+@defvr {System variable} %
+@code{%} is the output expression (e.g., @code{%o1}, @code{%o2}, @code{%o3}, ...)
+most recently computed by Maxima,
+whether or not it was displayed.
+
+@code{%} is recognized by @code{batch}, but not by @code{load}.
+
+See also @code{_}, @code{%%}, and @code{%th}.
+
+@end defvr
+
+@defvr {System variable} %%
+In a compound statement comprising two or more statements,
+@code{%%} is the value of the previous statement.
+For example,
+
+@example
+block (integrate (x^5, x), ev (%%, x=2) - ev (%%, x=1));
+block ([prev], prev: integrate (x^5, x), ev (prev, x=2) - ev (prev, x=1));
+@end example
+
+yield the same result, namely @code{21/2}.
+
+A compound statement may comprise other compound statements.
+Whether a statement be simple or compound, 
+@code{%%} is the value of the previous statement.
+For example,
+
+@example
+block (block (a^n, %%*42), %%/6)
+@end example
+
+yields @code{7*a^n}.
+
+Within a compound statement, the value of @code{%%} may be inspected at a break prompt,
+which is opened by executing the @code{break} function.
+For example, at the break prompt opened by
+
+@example
+block (a: 42, break ())$
+@end example
+
+entering @code{%%;} yields @code{42}.
+
+At the first statement in a compound statement,
+or outside of a compound statement,
+@code{%%} is undefined.
+
+@code{%%} is recognized by both @code{batch} and @code{load}.
+
+See also @code{%}.
+
+@end defvr
+
+@defvr {Option variable} %edispflag
+Default value: @code{false}
+
+When @code{%edispflag} is @code{true},
+Maxima displays @code{%e} to a negative exponent as a quotient.
+For example, @code{%e^-x} is displayed as @code{1/%e^x}.
+
+@end defvr
+
+@deffn {Function} %th (@var{i})
+The value of the @var{i}'th previous output expression.
+That is, if the next expression to be computed is the @var{n}'th output,
+@code{%th (@var{m})} is the (@var{n} - @var{m})'th output.
+
+@code{%th} is useful in @code{batch} files or for referring to a group of output expressions.
+For example,
+
+@example
+block (s: 0, for i:1 thru 10 do s: s + %th (i))$
+@end example
+
+sets @code{s} to the sum of the last ten output expressions.
+
+@code{%th} is recognized by @code{batch}, but not by @code{load}.
+
+See also @code{%}.
 
 @end deffn
-@c @node ABSBOXCHAR, APPENDFILE, {special symbol}, Input and Output
-@c @unnumberedsec phony
-@defvar ABSBOXCHAR
- default: [!] is the character used to draw absolute value
-signs around expressions which are more than a single line high.
-@end defvar
+
+@deffn {Special symbol} "?"
+As prefix to a function or variable name, @code{?} signifies that the
+name is a Lisp name, not a Maxima name.
+For example, @code{?round} signifies the Lisp function @code{ROUND}.
+See @ref{Lisp and Maxima} for more on this point.
+
+The notation @code{? word} (a question mark followed a word, separated by whitespace)
+is equivalent to @code{describe ("word")}.
+
+@end deffn
+
+@defvr {Option variable} absboxchar
+Default value: @code{!}
+
+@code{absboxchar} is the character used to draw absolute value
+signs around expressions which are more than one line tall.
+
+@end defvr
 
 
-@c end concepts Input and Output
-@c @node APPENDFILE, BACKUP, ABSBOXCHAR, Input and Output
-@c @unnumberedsec phony
-@defun APPENDFILE (filename1, filename2, DSK, directory)
-is like
-WRITEFILE(DSK,directory) but appends to the file whose name is
-specified by the first two arguments.  A subsequent CLOSEFILE will
-delete the original file and rename the appended file.
+@deffn {Function} appendfile (@var{filename})
+Appends a console transcript to @var{filename}.
+@code{appendfile} is the same as @code{writefile}, 
+except that the transcript file, if it exists, is always appended.
 
-@end defun
-@c @node BACKUP, BATCH, APPENDFILE, Input and Output
-@c @unnumberedsec phony
-@defun BACKUP ()
-To "back up" and see what you did, see PLAYBACK.
+@code{closefile} closes the transcript file opened by @code{appendfile} or @code{writefile}.
 
-@end defun
-@c @node BATCH, BATCHKILL, BACKUP, Input and Output
-@c @unnumberedsec phony
-@defun BATCH (file-specification)
-reads in and evaluates MACSYMA command
-lines from a file - A facility for executing command lines stored on a
-disk file rather than in the usual on-line mode. This facility has
-several uses, namely to provide a reservoir for working command lines,
-for giving error-free demonstrations, or helping in organizing one's
-thinking in complex problem-solving situations where modifications may
-be done via a text editor.
-A batch file consists of a set of MACSYMA command lines, each with its
-terminating ; or $, which may be further separated by spaces,
-carriage- returns, form-feeds, and the like.
-The BATCH function calls for reading in the command lines from the
-file one at a time, echoing them on the user console, and executing
-them in turn.  Control is returned to the user console only when
-serious errors occur or when the end of the file is met.  Of course,
-the user may quit out of the file-processing by typing control-G at
-any point.
-BATCH files may be created using a text editor or by use of the
-STRINGOUT command.  Do DESCRIBE(STRINGOUT) for details
-DESCRIBE(FILE); and DESCRIBE(FILES); have additional information on
-how the file argument is interpreted, and files in general.
+@end deffn
 
-@end defun
-@c @node BATCHKILL, BATCHLOAD, BATCH, Input and Output
-@c @unnumberedsec phony
-@defvar BATCHKILL
- default: [FALSE] if TRUE then the effect of all previous
-BATCH files is nullified because a KILL(ALL) and a RESET() will be
-done automatically when the next one is read in.  If BATCHKILL is
-bound to any other atom then a KILL of the value of BATCHKILL will be
-done.
+@c batch CAN TAKE 'test AS AN OPTIONAL ARGUMENT IN WHICH CASE IT CALLS test-batch
+@c (SAME AS run_testsuite) -- SHOULD DOCUMENT batch (file, 'test)
+@c FIX BUG WHICH CAUSES batch (<file>, 'test) TO FAIL, THEN DOCUMENT IT HERE
+@deffn {Function} batch (@var{filename})
+Reads Maxima expressions from @var{filename} and evaluates them.
+@code{batch} searches for @var{filename} in the list @code{file_search_maxima}.
+See @code{file_search}.
 
-@end defvar
-@c @node BATCHLOAD, BATCON, BATCHKILL, Input and Output
-@c @unnumberedsec phony
-@defun BATCHLOAD (file-specification)
-Batches in the file silently without
-terminal output or labels.
+@var{filename} comprises a sequence of Maxima expressions,
+each terminated with @code{;} or @code{$}.
+The special variable @code{%} and the function @code{%th}
+refer to previous results within the file.
+The file may include @code{:lisp} constructs.
+Spaces, tabs, and newlines in the file are ignored.
+A suitable input file may be created by a text editor or by the @code{stringout} function.
 
-@end defun
-@c @node BATCON, BATCOUNT, BATCHLOAD, Input and Output
-@c @unnumberedsec phony
-@defun BATCON (argument)
-continues BATCHing in a file which was interrupted.
+@code{batch} reads each input expression from @var{filename},
+displays the input to the console, 
+computes the corresponding output expression,
+and displays the output expression.
+Input labels are assigned to the input expressions
+and output labels are assigned to the output expressions.
+@code{batch} evaluates every input expression in the file
+unless there is an error.
+If user input is requested (by @code{asksign} or @code{askinteger}, for example)
+@code{batch} pauses to collect the requisite input and then continue.
 
-@end defun
-@c @node BATCOUNT, BOTHCASES, BATCON, Input and Output
-@c @unnumberedsec phony
-@defvar BATCOUNT
- default: [0] may be set to the number of the last expression
-BATCHed in from a file.  Thus BATCON(BATCOUNT-1) will resume BATCHing
-from the expression before the last BATCHed in from before.
+@c CTRL-C BREAKS batch IN CMUCL, BUT CLISP (ALTHO IT SHOWS "User break") KEEPS GOING !!!
+@c DON'T KNOW ABOUT GCL !!!
+It may be possible to halt @code{batch} by typing @code{control-C} at the console.
+The effect of @code{control-C} depends on the underlying Lisp implementation.
 
-@end defvar
-@c @node BOTHCASES, CHANGE_FILEDEFAULTS, BATCOUNT, Input and Output
-@c @unnumberedsec phony
-@defvar BOTHCASES
- default: [TRUE] if TRUE will cause MAXIMA to retain lower
-case text as well as upper case. Note, however, that the names of any
-MAXIMA special variables or functions are in upper case.   The default
-is now TRUE since it makes code more readable, allowing users to
-have names like SeriesSolve.  
+@code{batch} has several uses,
+such as to provide a reservoir for working command lines,
+to give error-free demonstrations,
+or to help organize one's thinking in solving complex problems.
 
-Because of this we make the system variables and functions all upper
-case, and users may enter them however they like (in upper or lower).
-But all other variables and functions are case sensitive.
-When you print out your program using for example grind(fundef(f))
-then you will see that the symbols like 'IF', 'SIN',... all appear
-in upper case whereas non system symbols appear in the case which
-you used.
+@code{batch} evaluates its argument.
+@c LACK OF A RETURN VALUE IS A BUG; THE INTENT IS TO RETURN THE FILE PATH, TO JUDGE BY THE SOURCE CODE
+@code{batch} has no return value.
 
-This is implemented as follows: If the symbol is being encountered for
-the first time, if the upper case version is in the package and has a
-nontrivial function or property list, then the upper case symbol is
-used, and it is recorded on the mixed case one, that the upper case
-should be used in future.  If a symbol is already in the package then it
-is just used.
+See also @code{load}, @code{batchload}, and @code{demo}.
 
-In effect this means that most old programs should continue to work,
-and that new ones may write sIn, Sin, SIN, sin etc and they will
-all be interpreted as SIN.   However if they write MySin this will
-be different from MYSIN, because MYSIN is not a system function or
-variable.  
+@end deffn
 
+@c RECOMMEND CUTTING THIS ITEM, AS THE load SUBSUMES FUNCTIONALITY OF batchload
+@deffn {Function} batchload (@var{filename})
+Reads Maxima expressions from @var{filename} and evaluates them,
+without displaying the input or output expressions
+and without assigning labels to output expressions.
+Printed output (such as produced by @code{print} or @code{describe})
+is displayed, however.
 
+The special variable @code{%} and the function @code{%th}
+refer to previous results from the interactive interpreter,
+not results within the file.
+The file cannot include @code{:lisp} constructs.
+
+@code{batchload} returns the path of @var{filename}, as a string.
+@code{batchload} evaluates its argument.
+
+See also @code{batch} and @code{load}.
+@c batchload APPEARS TO HAVE THE SAME EFFECT AS load. WHY NOT GET RID OF batchload ???
+
+@end deffn
+
+@deffn {Function} closefile ()
+Closes the transcript file opened by @code{writefile} or @code{appendfile}.
+
+@end deffn
+
+@c NEEDS CLARIFICATION !!!
+@deffn {Function} collapse (@var{expr})
+Collapses @var{expr} by causing all of its
+common (i.e., equal) subexpressions to share (i.e., use the same cells),
+thereby saving space.  (@code{collapse} is a subroutine used by the @code{optimize}
+command.)  Thus, calling @code{collapse} may be useful
+after loading in a @code{save} file.  You can collapse several expressions
+together by using @code{collapse ([@var{expr_1}, ..., @var{expr_n}])}.  Similarly, you can
+collapse the elements of the array @code{A} by doing
+@code{collapse (listarray ('A))}.
+
+@end deffn
+
+@deffn {Function} concat (@var{arg_1}, @var{arg_2}, ...)
+Concatenates its arguments.
+The arguments must evaluate to atoms.
+The return value is a symbol if the first argument is a symbol
+and a Maxima string otherwise.
+
+@code{concat} evaluates its arguments.
+The single quote @code{'} prevents evaluation.
 
 @example
-SeriesSolve(f,x):=
-   if (f = sin) ...
-
-and this is read as
-
-SeriesSolve(f,x):=
-   IF (f = SIN) ...
+(%i1) y: 7$
+(%i2) z: 88$
+(%i3) concat (y, z/2);
+(%o3)                          744
+(%i4) concat ('y, z/2);
+(%o4)                          y44
 @end example
 
+A symbol constructed by @code{concat} may
+be assigned a value and appear in expressions.
+The @code{::} (double colon) assignment operator evaluates its left-hand side.
 
-
-
-
-@end defvar
-@c @node CHANGE_FILEDEFAULTS, CLOSEFILE, BOTHCASES, Input and Output
-@c @unnumberedsec phony
-@defvar CHANGE_FILEDEFAULTS
- default: [TRUE] on PDP10 systems, and FALSE
-elsewhere.  Controls whether the user doing a LOADFILE or BATCH has
-his file defaults changed to the file LOADFILEd or BATCHed.  The TRUE
-setting is for people who like DDT-style file defaulting.  The FALSE
-setting is for people who like the conventions of other operating
-systems, who like LISP-style file defaulting, or who write packages
-which do LOADFILEs or BATCHes which should not interfere with their
-user's file defaults.
-
-@end defvar
-@c @node CLOSEFILE, COLLAPSE, CHANGE_FILEDEFAULTS, Input and Output
-@c @unnumberedsec phony
-@defun CLOSEFILE (filename1, filename2)
-closes a file opened by WRITEFILE and
-gives it the name filename1 filename2.  (On a Lisp Machine one need
-only say CLOSEFILE();.)  Thus to save a file consisting of the display
-of all input and output during some part of a session with MACSYMA the
-user issues a WRITEFILE, transacts with MACSYMA, then issues a
-CLOSEFILE.  The user can also issue the PLAYBACK function after a
-WRITEFILE to save the display of previous transactions.  (Note that
-what is saved this way is a copy of the display of expressions not the
-expressions themselves).  To save the actual expression in internal
-form the SAVE function may be used.  The expression can then be
-brought back into MACSYMA via the LOADFILE function.  To save the
-expression in a linear form which may then be BATCHed in later, the
-STRINGOUT function is used.
-
-@end defun
-@c @node COLLAPSE, CONCAT, CLOSEFILE, Input and Output
-@c @unnumberedsec phony
-@defun COLLAPSE (expression)
-collapses" its argument by causing all of its
-common (i.e. equal) subexpressions to share (i.e. use the same cells),
-thereby saving space.  (COLLAPSE is a subroutine used by the OPTIMIZE
-command.)  Thus, calling COLLAPSE may be useful before using FASSAVE
-or after loading in a SAVE file.  You can collapse several expressions
-together by using COLLAPSE([expr1,...,exprN])$.  Similarly, you can
-collapse the elements of the array A by doing
-COLLAPSE(LISTARRAY('A))$.
-
-@end defun
-@c @node CONCAT, CURSORDISP, COLLAPSE, Input and Output
-@c @unnumberedsec phony
-@defun CONCAT (arg1, arg2, ...)
-evaluates its arguments and returns the
-concatenation of their values resulting in a name or a quoted string
-the type being given by that of the first argument.  Thus if X is
-bound to 1 and D is unbound then CONCAT(X,2)="12" and
-CONCAT(D,X+1)=D2.
-
-@end defun
-@defun SCONCAT (arg1, arg2, ...)
-
-evaluates its arguments and concatenates them into a string.  Unlike
-CONCAT, the arguments do NOT need to be atoms.    The result is a Common
-Lisp String.
 @example
-(%i5) sconcat("xx[",3,"]:",expand((x+y)^3));
-(%o5) 			 xx[3]:Y^3+3*X*Y^2+3*X^2*Y+X^3
+(%i5) a: concat ('y, z/2);
+(%o5)                          y44
+(%i6) a:: 123;
+(%o6)                          123
+(%i7) y44;
+(%o7)                          123
+(%i8) b^a;
+                               y44
+(%o8)                         b
+(%i9) %, numer;
+                               123
+(%o9)                         b
 @end example
-The resulting string could be used in conjunction with print.
-@end defun
-@c @node CURSORDISP, DIREC, CONCAT, Input and Output
-@c @unnumberedsec phony
-@defvar CURSORDISP
- default: [TRUE] If TRUE, causes expressions to be drawn by
-the displayer in logical sequence.  This only works with a console
-which can do cursor movement.  If FALSE, expressions are simply
-printed line by line.  CURSORDISP is FALSE when a WRITEFILE is in
-effect.
 
-@end defvar
-@c @node DIREC, DISP, CURSORDISP, Input and Output
-@c @unnumberedsec phony
-@defvar DIREC
- - The value of this variable is the default file directory for
-SAVE, STORE, FASSAVE, and STRINGOUT.  It is initialized to the user's
-login name, if he has a disk directory, and to one of the USERSi
-directories otherwise.  DIREC determines to what directory disk files
-will be written.
+Note that although @code{concat (1, 2)} looks like a number, it is a Maxima string.
 
-@end defvar
-@c @node DISP, DISPCON, DIREC, Input and Output
-@c @unnumberedsec phony
-@defun DISP (expr1,expr2, ...)
-is like DISPLAY but only the value of the
+@example
+(%i10) concat (1, 2) + 3;
+(%o10)                       12 + 3
+@end example
+
+@end deffn
+
+@deffn {Function} sconcat (@var{arg_1}, @var{arg_2}, ...)
+
+Concatenates its arguments into a string.
+Unlike @code{concat}, the arguments do @i{not} need to be atoms.
+
+The result is a Lisp string.
+@c THAT'S ODD; WHY NOT A MAXIMA STRING ??
+
+@example
+(%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
+(%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+@end example
+
+@end deffn
+
+@c AFTER REVIEWING src/displa.lisp, IT LOOKS LIKE THIS VARIABLE HAS NO EFFECT
+@c CUT IT ON THE NEXT PASS
+@c @defvar cursordisp
+@c Default value: @code{true}
+@c 
+@c When @code{cursordisp} is @code{true}, expressions are drawn by
+@c the displayer in logical sequence.  This only works with a console
+@c which can do cursor movement.  If @code{false}, expressions are
+@c printed line by line.
+@c 
+@c @code{cursordisp} is always @code{false} when a @code{writefile} is in
+@c effect.
+@c 
+@c @end defvar
+
+@c REPHRASE, NEEDS EXAMPLES
+@deffn {Function} disp (@var{expr_1}, @var{expr_2}, ...)
+is like @code{display} but only the value of the
 arguments are displayed rather than equations.  This is useful for
 complicated arguments which don't have names or where only the value
 of the argument is of interest and not the name.
 
-@end defun
-@c @node DISPCON, DISPLAY, DISP, Input and Output
-@c @unnumberedsec phony
-@defun DISPCON (tensor1,tensor2,...)
-displays the contraction properties of
-the tensori as were given to DEFCON.  DISPCON(ALL) displays all the
+@end deffn
+
+@c HMM, THIS NEXT ITEM IS DEFINED IN A SHARE FILE (itensor.lisp); 
+@c DOES ITS DESCRIPTION WANT TO BE ELSEWHERE ???
+@deffn {Function} dispcon (@var{tensor_1}, @var{tensor_2}, ...)
+@deffnx {Function} dispcon (all)
+Displays the contraction properties of
+its arguments as were given to @code{defcon}.  @code{dispcon (all)} displays all the
 contraction properties which were defined.
 
-@end defun
-@c @node DISPLAY, DISPLAY2D, DISPCON, Input and Output
-@c @unnumberedsec phony
-@defun DISPLAY (expr1, expr2, ...)
-displays equations whose left side is
-expri unevaluated, and whose right side is the value of the expression
-centered on the line.  This function is useful in blocks and FOR
+@end deffn
+
+@c REPHRASE, MORE EXAMPLES
+@deffn {Function} display (@var{expr_1}, @var{expr_2}, ...)
+Displays equations whose left side is
+@var{expr_i} unevaluated, and whose right side is the value of the expression
+centered on the line.  This function is useful in blocks and @code{for}
 statements in order to have intermediate results displayed.  The
-arguments to DISPLAY are usually atoms, subscripted variables, or
-function calls.  (see the DISP function)
+arguments to @code{display} are usually atoms, subscripted variables, or
+function calls.  See also @code{disp}.
 
 @example
-(%i1) DISPLAY(B[1,2]);
+(%i1) display(B[1,2]);
                                       2
                          B     = X - X
                           1, 2
-(%o1)                            DONE
-
-
+(%o1)                            done
 @end example
-@end defun
-@c @node DISPLAY2D, DISPLAY_FORMAT_INTERNAL, DISPLAY, Input and Output
-@c @unnumberedsec phony
-@defvar DISPLAY2D
- default: [TRUE] - if set to FALSE will cause the standard
-display to be a string (1-dimensional) form rather than a display
-(2-dimensional) form.  This may be of benefit for users on printing
-consoles who would like to conserve paper.
 
-@end defvar
-@c @node DISPLAY_FORMAT_INTERNAL, DISPTERMS, DISPLAY2D, Input and Output
-@c @unnumberedsec phony
-@defvar DISPLAY_FORMAT_INTERNAL
- default: [FALSE] - if set to TRUE will cause
-expressions to be displayed without being transformed in ways that
+@end deffn
+
+@defvr {Option variable} display2d
+Default value: @code{true}
+
+When @code{display2d} is @code{false},
+the console display is a string (1-dimensional) form rather than a display
+(2-dimensional) form.
+
+@end defvr
+
+@defvr {Option variable} display_format_internal
+Default value: @code{false}
+
+When @code{display_format_internal} is @code{true},
+expressions are displayed without being transformed in ways that
 hide the internal mathematical representation.  The display then
-corresponds to what the INPART command returns rather than the PART
-command.  Examples:
+corresponds to what @code{inpart} returns rather than @code{part}.
+
+Examples:
+
 @example
-User     PART       INPART
+User     part       inpart
 a-b;      A - B     A + (- 1) B
+
            A            - 1
 a/b;       -         A B
            B
                        1/2
-sqrt(x);   SQRT(X)    X
+sqrt(x);   sqrt(X)    X
+
           4 X        4
 X*4/3;    ---        - X
            3         3
-
 @end example
-@end defvar
-@c @node DISPTERMS, DSKALL, DISPLAY_FORMAT_INTERNAL, Input and Output
-@c @unnumberedsec phony
-@defun DISPTERMS (expr)
-displays its argument in parts one below the other.
-That is, first the operator of 'expr' is displayed, then each term in
+
+@end defvr
+
+@c IS THIS FUNCTION STILL USEFUL ???
+@c REPHRASE, NEEDS EXAMPLES
+@deffn {Function} dispterms (@var{expr})
+Displays @var{expr} in parts one below the other.
+That is, first the operator of @var{expr} is displayed, then each term in
 a sum, or factor in a product, or part of a more general expression is
-displayed separately.  This is useful if expr is too large to be
-otherwise displayed.  For example if P1, P2, ...  are very large
+displayed separately.  This is useful if @var{expr} is too large to be
+otherwise displayed.  For example if @code{P1}, @code{P2}, ...  are very large
 expressions then the display program may run out of storage space in
-trying to display P1+P2+...  all at once.  However,
-DISPTERMS(P1+P2+...) will display P1, then below it P2, etc.  When not
-using DISPTERMS, if an exponential expression is too wide to be
-displayed as A**B it will appear as EXPT(A,B) (or as NCEXPT(A,B) in
-the case of A^^B).
+trying to display @code{P1 + P2 + ...}  all at once.  However,
+@code{dispterms (P1 + P2 + ...)} displays @code{P1}, then below it @code{P2}, etc.  When not
+using @code{dispterms}, if an exponential expression is too wide to be
+displayed as @code{A^B} it appears as @code{expt (A, B)} (or as @code{ncexpt (A, B)} in
+the case of @code{A^^B}).
 
-@end defun
-@c @node DSKALL, ERROR_SIZE, DISPTERMS, Input and Output
-@c @unnumberedsec phony
-@defvar DSKALL
- default: [] If TRUE will cause values, functions, arrays, and
-rules to be written periodically onto the disk in addition to labelled
-expressions.  TRUE is the default value whereas if DSKALL is FALSE
-then only labelled expresions will be written.
+@end deffn
 
-@end defvar
-@c @node ERROR_SIZE, ERROR_SYMS, DSKALL, Input and Output
-@c @unnumberedsec phony
-@defvar ERROR_SIZE
- default: [20 for a display terminal, 10 for others].
-controls the size of error messages.  For example, let
-U:(C^D^E+B+A)/(COS(X-1)+1); .  U has an error size of 24.  So if
-ERROR_SIZE has value < 24 then 
+@defvr {Option variable} error_size
+Default value: 10
+
+@code{error_size} modifies error messages according to the size of expressions which appear in them.
+If the size of an expression (as determined by the Lisp function @code{ERROR-SIZE})
+is greater than @code{error_size},
+the expression is replaced in the message by a symbol,
+and the symbol is assigned the expression.
+The symbols are taken from the list @code{error_syms}.
+
+Otherwise, the expression is smaller than @code{error_size},
+and the expression is displayed in the message.
+
+See also @code{error} and @code{error_syms}.
+
+Example:
+@c OUTPUT GENERATED BY THE FOLLOWING
+@c U: (C^D^E + B + A)/(cos(X-1) + 1)$
+@c error_size: 20$
+@c error ("Example expression is", U);
+@c errexp1;
+@c error_size: 30$
+@c error ("Example expression is", U);
+
+The size of @code{U}, as determined by @code{ERROR-SIZE}, is 24.
+
 @example
-(%i1) ERROR("The function", FOO,"doesn't like", U,"as input.");
-prints as:
-The function FOO doesn't like ERREXP1 as input.
-If ERROR_SIZE>24 then as:
-                                 E
-                                D
-                               C   + B + A
-The function FOO doesn't like -------------- as input.
-                              COS(X - 1) + 1
+(%i1) U: (C^D^E + B + A)/(cos(X-1) + 1)$
 
+(%i2) error_size: 20$
+
+(%i3) error ("Example expression is", U);
+
+Example expression is errexp1
+ -- an error.  Quitting.  To debug this try debugmode(true);
+(%i4) errexp1;
+                            E
+                           D
+                          C   + B + A
+(%o4)                    --------------
+                         cos(X - 1) + 1
+(%i5) error_size: 30$
+
+(%i6) error ("Example expression is", U);
+
+                         E
+                        D
+                       C   + B + A
+Example expression is --------------
+                      cos(X - 1) + 1
+ -- an error.  Quitting.  To debug this try debugmode(true);
 @end example
 
-Expressions larger than ERROR_SIZE are replaced by symbols, and the
+@end defvr
+
+@defvr {Option variable} error_syms
+Default value: @code{[errexp1, errexp2, errexp3]}
+
+In error messages,
+expressions larger than @code{error_size} are replaced by symbols, and the
 symbols are set to the expressions.  The symbols are taken from the
-user-settable list
-@example
-ERROR_SYMS:[ERREXP1,ERREXP2,ERREXP3]
-@end example
-.
-The default value of this switch might change depending on user
-experience.  If you find the defaults either too big or two small
-for your tastes, send mail to MACSYMA.
+list @code{error_syms}.
+The first too-large expression is replaced by @code{error_syms[1]},
+the second by @code{error_syms[2]}, and so on.
 
-@end defvar
-@c @node ERROR_SYMS, EXPT, ERROR_SIZE, Input and Output
-@c @unnumberedsec phony
-@defvar ERROR_SYMS
- default: [ERREXP1,ERREXP2,ERREXP3] - In error messages,
-expressions larger than ERROR_SIZE are replaced by symbols, and the
-symbols are set to the expressions.  The symbols are taken from the
-list ERROR_SYMS, and are initially ERREXP1, ERREXP2, ERREXP3, etc.
-After an error message is printed, e.g. "The function FOO doesn't
-like ERREXP1 as input.", the user can type ERREXP1; to see the
-expression.  ERROR_SYMS may be set by the user to a different set
-of symbols, if desired.
+If there are more too-large expressions than there are elements of @code{error_syms},
+symbols are constructed automatically,
+with the @var{n}-th symbol equivalent to @code{concat ('errexp, @var{n})}.
 
-@end defvar
-@c @node EXPT, EXPTDISPFLAG, ERROR_SYMS, Input and Output
-@c @unnumberedsec phony
-@defun EXPT (A,B)
-if an exponential expression is too wide to be displayed
-as A^B it will appear as EXPT(A,B) (or as NCEXPT(A,B) in the case of
-A^^B).
+See also @code{error} and @code{error_size}.
 
-@end defun
-@c @node EXPTDISPFLAG, FASSAVE, EXPT, Input and Output
-@c @unnumberedsec phony
-@defvar EXPTDISPFLAG
- default: [TRUE] - if TRUE, MACSYMA displays expressions
-with negative exponents using quotients e.g., X**(-1) as 1/X.
+@end defvr
 
-@end defvar
-@c @node FASSAVE, FILEDEFAULTS, EXPTDISPFLAG, Input and Output
-@c @unnumberedsec phony
-@defun FASSAVE (args)
-is similar to SAVE but produces a FASL file in which
-the sharing of subexpressions which are shared in core is preserved in
-the file created.  Hence, expressions which have common subexpressions
-will consume less space when loaded back from a file created by
-FASSAVE rather than by SAVE.  Files created with FASSAVE are reloaded
-using LOADFILE, just as files created with SAVE.  FASSAVE returns a
-list of the form [<name of file>,<size of file in blocks>,...] where
-...  are the things saved.  Warnings are printed out in the case of
-large files.  FASSAVE may be used while a WRITEFILE is in progress.
+@deffn {Function} expt (@var{a}, @var{b})
+If an exponential expression is too wide to be displayed
+as @code{@var{a}^@var{b}} it appears as @code{expt (@var{a}, @var{b})} (or as @code{ncexpt (@var{a}, @var{b})} in the case of
+@code{@var{a}^^@var{b}}).
 
-@end defun
-@c @node FILEDEFAULTS, FILENAME, FASSAVE, Input and Output
-@c @unnumberedsec phony
-@defun FILEDEFAULTS ()
-returns the current default filename, in whatever
-format is used by the specific Macsyma implementation.  (See
-DESCRIBE(FILE) for what that format is.)  This is the file specification
-used by LOADFILE, BATCH, and a number of other file-accessing commands.
-FILEDEFAULTS('file) - sets the current filedefaults to "file".  The
-argument to FILEDEFAULTS is evaulated as it is anticipated that the
-command will be used mainly in programs.  The "file" need not be a
-real file, so one can use this function e.g. if one's real purpose is
-to set only the "device" field to something, where one does not care
-about the settings of the other fields.
+@c THIS SEEMS LIKE A BUG TO ME. expt, ncexpt SHOULD BE RECOGNIZED SINCE MAXIMA
+@c ITSELF PRINTS THEM SOMETIMES. THESE SHOULD JUST SIMPLIFY TO ^ AND ^^, RESPECTIVELY.
+@code{expt} and @code{ncexpt} are not recognized in input.
 
-@end defun
-@c @node FILENAME, FILENAME_MERGE, FILEDEFAULTS, Input and Output
-@c @unnumberedsec phony
-@defvar FILENAME
- default: [] - The value of this variable is the first name
-of the files which are generated by the automatic disk storage scheme.
-The default value is the first three characters of the user's login
-name concatenated with the lowest unused integer, e.g. ECR1.
+@end deffn
 
-@end defvar
-@c @node FILENAME_MERGE, FILENUM, FILENAME, Input and Output
-@c @unnumberedsec phony
-@defun FILENAME_MERGE ("filename1","filename2",...)
-; merges together
-filenames.  What this means is that it returns "filename1" except
-that missing components come from the corresponding components of
-"filename2", and if they are missing there, then from "filename3".
+@defvr {Option variable} exptdispflag
+Default value: @code{true}
 
-@end defun
-@c @node FILENUM, FILE_SEARCH, FILENAME_MERGE, Input and Output
-@c @unnumberedsec phony
-@defvar FILENUM
- default: [0] - The default second file name for files generated
-by SAVE, STRINGOUT, or FASSAVE if no file names are specified by the
-user.  It is an integer, and is incremented by one each time a new file
-is written.
+When @code{exptdispflag} is @code{true}, Maxima displays expressions
+with negative exponents using quotients, e.g., @code{X^(-1)} as @code{1/X}.
 
-@end defvar
-@c @node FILE_SEARCH, FILE_STRING_PRINT, FILENUM, Input and Output
-@c @unnumberedsec phony
-@defvar FILE_SEARCH
- - this is a list of files naming directories to search
-by LOAD and a number of other functions.  The default value of this
-is a list of the various SHARE directories used by Macsyma.
-FILE_SEARCH("filename"); searches on those directories and devices
-specified by the FILE_SEARCH_LISP, FILE_SEARCH_MAXIMA and FILE_SEARCH_DEMO variables, and returns the name of the
-first file it finds.  This function is invoked by the LOAD function,
-which is why LOAD("FFT") finds and loads share/fft.mac.  You may
-add a path to the appropriate list.   Note that the format
-of the paths allows specifying multiple extensions and multiple paths.
-@example
-"/home/wfs/###.@{o,lisp,mac,mc@}"
-"/home/@{wfs,joe@}/###.@{o,lisp,mac,mc@}"
-@end example
-The '###' is replaced by the actual filename passed.
-File_SEARCH first checks if the actual name passed exists,
-before substituting it in the various patterns.
+@end defvr
 
-@end defvar
-@c @node FILE_STRING_PRINT, FILE_TYPE, FILE_SEARCH, Input and Output
-@c @unnumberedsec phony
-@defvar FILE_STRING_PRINT
- default: [FALSE] on MC, [TRUE] elsewhere.  If
-TRUE, filenames are output as strings; if FALSE, as lists.  For
-example, the message when an out of core file is loaded into
-MACSYMA (e.g. the LIMIT package), appears on MC in list format as
-  LIMIT FASL DSK MACSYM being loaded
-and in string format as:
-  DSK:MACSYM;LIMIT FASL being loaded
-The string format is like the top level (DDT) file specifications.
+@c NEEDS EXAMPLES
+@deffn {Function} filename_merge (@var{path}, @var{filename})
+Constructs a modified path from @var{path} and @var{filename}.
+If the final component of @var{path} is of the form @code{###.@var{something}},
+the component is replaced with @code{@var{filename}.@var{something}}.
+Otherwise, the final component is simply replaced by @var{filename}.
 
-@end defvar
-@c @node FILE_TYPE, GRIND, FILE_STRING_PRINT, Input and Output
-@c @unnumberedsec phony
-@defun FILE_TYPE ("filename")
-; returns FASL, LISP, or MACSYMA, depending on
-what kind of file it is.  FASL means a compiled Lisp file, which
-normally has an extension of .VAS in NIL.
+@c SAY SOMETHING ABOUT ARG TYPE -- LISP STRINGS WORK BETTER THAN MAXIMA STRINGS
+@c SAY SOMETHING ABOUT RETURN TYPE
+@end deffn
 
-@end defun
-@c @node GRIND, IBASE, FILE_TYPE, Input and Output
-@c @unnumberedsec phony
-@defun GRIND (arg)
-prints out arg in a more readable format than the STRING
-command.  It returns a D-line as value.
-The GRIND switch, default: [FALSE], if TRUE will cause the STRING,
-STRINGOUT, and PLAYBACK commands to use "grind" mode instead of
-"string" mode.  For PLAYBACK, "grind" mode can also be turned on (for
-processing input lines) by specifying GRIND as an option.
+@deffn {Function} file_search (@var{filename})
+@deffnx {Function} file_search (@var{filename}, @var{pathlist})
 
-@end defun
-@c @node IBASE, INCHAR, GRIND, Input and Output
-@c @unnumberedsec phony
-@defvar IBASE
- default: [10] - the base for inputting numbers.
+@code{file_search} searches for the file @var{filename} and returns the path to the file
+(as a string) if it can be found; otherwise @code{file_search} returns @code{false}.
+@code{file_search (@var{filename})} searches in the default search directories,
+which are specified by the @code{file_search_maxima}, @code{file_search_lisp}, and @code{file_search_demo} variables.
 
-@end defvar
-@c @node INCHAR, LDISP, IBASE, Input and Output
-@c @unnumberedsec phony
-@defvar INCHAR
- default: [C] - the alphabetic prefix of the names of
-expressions typed by the user.
+@code{file_search} first checks if the actual name passed exists,
+before attempting to match it to ``wildcard'' file search patterns.
+See @code{file_search_maxima} concerning file search patterns.
 
-@end defvar
-@c @node LDISP, LDISPLAY, INCHAR, Input and Output
-@c @unnumberedsec phony
-@defun LDISP (expr1,expr2,...)
-is like DISP but also generates intermediate
-labels.
-
-@end defun
-@c @node LDISPLAY, LINECHAR, LDISP, Input and Output
-@c @unnumberedsec phony
-@defun LDISPLAY (expr1,expr2,...)
-is like DISPLAY but also generates
-intermediate labels.
-
-@end defun
-@c @node LINECHAR, LINEDISP, LDISPLAY, Input and Output
-@c @unnumberedsec phony
-@defvar LINECHAR
- default: [E] - the alphabetic prefix of the names of
-intermediate displayed expressions.
-
-@end defvar
-@c @node LINEDISP, LINEL, LINECHAR, Input and Output
-@c @unnumberedsec phony
-@defvar LINEDISP
- default: [TRUE] - Allows the use of line graphics in the
-drawing of equations on those systems which support them (e.g. the
-Lisp Machine).  This can be disabled by setting LINEDISP to FALSE.  It
-is automatically disabled during WRITEFILE.
-
-@end defvar
-@c @node LINEL, LOAD, LINEDISP, Input and Output
-@c @unnumberedsec phony
-@defvar LINEL
- default: [] - the number of characters which are printed on a
-line. It is initially set by MACSYMA to the line length of the type of
-terminal being used (as far as is known) but may be reset at any time
-by the user.  The user may have to reset it in DDT with :TCTYP as
-well.
-
-@end defvar
-@c @node LOAD, LOADFILE, LINEL, Input and Output
-@c @unnumberedsec phony
-@defun LOAD ("filename")
-; takes one argument, a filename represented as a
-"string" (i.e. inside quotation marks), or as list (e.g. inside square
-brackets), and locates and loads in the indicated file.  If no
-directory is specified, it then searches the SHAREi directories and
-any other directories listed in the FILE_SEARCH variable and loads the
-indicated file. LOAD("EIGEN") will load the eigen package without the
-need for the user to be aware of the details of whether the package
-was compiled, translated, saved, or fassaved, i.e. LOAD will work on
-both LOADFILEable and BATCHable files.  Note: LOAD will use BATCHLOAD
-if it finds the file is BATCHable (which means that it will BATCH the
-file in "silently" without terminal output or labels).
-Other MACSYMA commands to load in files are: LOADFILE, RESTORE,
-BATCH, and DEMO.  Do DESCRIBE(command); for details.  LOADFILE and
-RESTORE work for files written with SAVE; BATCH and DEMO for those
-files written with STRINGOUT or created as lists of commands with a
-text editor.
-If load can't find the file, check the value FILE_SEARCH to make sure
-that it contains an appropriate template.
+The argument @var{filename} can be a path and file name,
+or just a file name, or, if a file search directory includes a file search pattern,
+just the base of the file name (without an extension).
+For example,
 
 @example
-(%i4) load("eigen");
-MACSYMA BUG: Unknown file type NIL
-
-Error: macsyma error
-Error signalled by MEVAL1.
-Broken at $LOAD.  Type :H for Help.
-MAXIMA>>:q
-
-By examining the file system we find the file is actually in
-/public/maxima/share/eigen.mc.   So we add that to the file_search
-path.   This can be done at start up (see init.lsp) or,
-else it can be done and then the system resaved
-once it has been customized for local directories and pathnames.
-At lisp level we would do
-(in-package "MAXIMA")
-(setq $file_search ($append (list '(mlist)
-        "/tmp/foo.mac" "/tmp/foo.mc") $file_search))
-and at maxima level:
-
-(%i5) file_search:append(["/public/maxima/share/foo.mc"],
-        file_search)$
-(%i6) load("eigen");
-
-batching /usr/public/maxima/share/eigen.mc
-(%o6) 		        #/public/maxima/share/eigen.mc
-(%i7) eigenvalues(matrix([a,b],[c,d]));
-	       2		    2
-       - SQRT(D  - 2 A D + 4 B C + A ) + D + A
-(%o7) [[---------------------------------------, 
-			  2
-
-				      2			   2
-				SQRT(D  - 2 A D + 4 B C + A ) + D + A
-				-------------------------------------], [1, 1]]
-						  2
-
+file_search ("/home/wfs/special/zeta.mac");
+file_search ("zeta.mac");
+file_search ("zeta");
 @end example
-@end defun
-@c @node LOADFILE, LOADPRINT, LOAD, Input and Output
-@c @unnumberedsec phony
-@defun LOADFILE (filename)
-loads a file as designated by its
-arguments.  This function may be used to bring back quantities that
-were stored from a prior MACSYMA session by use of the SAVE or STORE
-functions.   Specify the pathname as on your operating system.  For
-unix this would be "/home/wfs/foo.mc" for example.
 
-@end defun
-@c @node LOADPRINT, NOSTRING, LOADFILE, Input and Output
-@c @unnumberedsec phony
-@defvar LOADPRINT
- default: [TRUE] - governs the printing of messages
-accompanying loading of files.  The following options are available:
-TRUE means always print the message; 'LOADFILE means print only when
-the LOADFILE command is used; 'AUTOLOAD means print only when a file
-is automatically loaded in (e.g. the integration file SIN FASL); FALSE
-means never print the loading message.
+all find the same file, assuming the file exists and @code{/home/wfs/special/###.mac}
+is in @code{file_search_maxima}.
 
-@end defvar
-@c @node NOSTRING, OBASE, LOADPRINT, Input and Output
-@c @unnumberedsec phony
-@defun NOSTRING (arg)
-displays all input lines when playing back rather than
-STRINGing them.  If arg is GRIND then the display will be in a more
-readable format.  One may include any number of options as in
-PLAYBACK([5,10],20,TIME,SLOW).
+@code{file_search (@var{filename}, @var{pathlist})} searches only in the directories
+specified by @var{pathlist},
+which is a list of strings.
+The argument @var{pathlist} supersedes the default search directories,
+so if the path list is given, @code{file_search} searches only the ones specified,
+and not any of the default search directories.
+Even if there is only one directory in @var{pathlist}, it must still be given as a one-element list.
 
-@end defun
-@c @node OBASE, OUTCHAR, NOSTRING, Input and Output
-@c @unnumberedsec phony
-@defvar OBASE
- default: [10] the base for display of numbers.
+The user may modify the default search directories. See @code{file_search_maxima}.
 
-@end defvar
-@c @node OUTCHAR, PACKAGEFILE, OBASE, Input and Output
-@c @unnumberedsec phony
-@defvar OUTCHAR
- default: [D] - the alphabetic prefix of the names of
-outputted expressions.
+@code{file_search} is invoked by @code{load} with @code{file_search_maxima} and @code{file_search_lisp}
+as the search directories.
 
-@end defvar
-@c @node PACKAGEFILE, PARSEWINDOW, OUTCHAR, Input and Output
-@c @unnumberedsec phony
-@defvar PACKAGEFILE
- default:[FALSE] - Package designers who use SAVE,
-FASSAVE, or TRANSLATE to create packages (files) for others
-to use may want to set PACKAGEFILE:TRUE$ to prevent information
-from being added to MACSYMA's information-lists (e.g. VALUES,
-FUNCTIONS) except where necessary when the file is loaded in.
+@end deffn
+
+@defvr {Option variable} file_search_maxima
+@defvrx {Option variable} file_search_lisp
+@defvrx {Option variable} file_search_demo
+These variables specify lists of directories to be searched
+by @code{load}, @code{demo}, and some other Maxima functions.
+The default values of these variables
+name various directories in the Maxima installation.
+
+The user can modify these variables,
+either to replace the default values or to append additional directories.
+For example,
+
+@example
+file_search_maxima: ["/usr/local/foo/###.mac",
+    "/usr/local/bar/###.mac"]$
+@end example
+
+replaces the default value of @code{file_search_maxima},
+while
+
+@example
+file_search_maxima: append (file_search_maxima,
+    ["/usr/local/foo/###.mac", "/usr/local/bar/###.mac"])$
+@end example
+
+appends two additional directories.
+It may be convenient to put such an expression in the file @code{maxima-init.mac}
+so that the file search path is assigned automatically when Maxima starts.
+
+Multiple filename extensions and multiple paths can be specified by
+special ``wildcard'' constructions.
+The string @code{###} expands into the sought-after name,
+while a comma-separated list enclosed in curly braces @code{@{foo,bar,baz@}} expands
+into multiple strings.
+For example, supposing the sought-after name is @code{neumann},
+
+@example
+"/home/@{wfs,gcj@}/###.@{lisp,mac@}"
+@end example
+
+expands into @code{/home/wfs/neumann.lisp}, @code{/home/gcj/neumann.lisp}, @code{/home/wfs/neumann.mac}, and @code{/home/gcj/neumann.mac}.
+
+@end defvr
+
+@deffn {Function} file_type (@var{filename})
+Returns a guess about the content of @var{filename},
+based on the filename extension.
+@var{filename} need not refer to an actual file;
+no attempt is made to open the file and inspect the content.
+
+The return value is a symbol, either @code{object}, @code{lisp}, or @code{maxima}.
+If the extension starts with @code{m} or @code{d}, @code{file_type} returns @code{maxima}.
+If the extension starts with @code{l}, @code{file_type} returns @code{lisp}.
+If none of the above, @code{file_type} returns @code{object}.
+
+@end deffn
+
+@deffn {Function} grind (@var{expr})
+@deffnx {Option variable} grind
+The function @code{grind} prints @var{expr}
+to the console in a form suitable for input to Maxima.
+@code{grind} always returns @code{done}.
+
+See also @code{string}, which returns a string instead of printing its output.
+@code{grind} attempts to print the expression in a manner which makes it
+slightly easier to read than the output of @code{string}.
+
+When the variable @code{grind} is @code{true},
+the output of @code{string} and @code{stringout} has the same format as that of @code{grind};
+otherwise no attempt is made to specially format the output of those functions.
+The default value of the variable @code{grind} is @code{false}.
+
+@code{grind} can also be specified as an argument of @code{playback}.
+When @code{grind} is present,
+@code{playback} prints input expressions in the same format as the @code{grind} function.
+Otherwise, no attempt is made to specially format input expressions.
+
+@end deffn
+
+@defvr {Option variable} ibase
+Default value: 10
+
+Integers entered into Maxima are interpreted
+with respect to the base @code{ibase}.
+
+@code{ibase} may be assigned any integer between 2 and 35 (decimal), inclusive.
+@c WHY NOT 36, BY THE WAY ??
+When @code{ibase} is greater than 10, the numerals comprise the decimal numerals 0 through 9
+@c UPPERCASE/LOWERCASE DISTINCTION HERE ??
+plus capital letters of the alphabet A, B, C, ..., as needed.
+The numerals for base 35, the largest acceptable base,
+comprise 0 through 9 and A through Y.
+@c HOW, EXACTLY, DOES ONE TYPE IN THE LETTERS ??
+@c ibase: 11$ 1A; YIELDS AN ERROR
+@c \1A; #1A; \#1A; DON'T WORK EITHER
+
+See also @code{obase}.
+
+@c NEED EXAMPLES HERE
+@end defvr
+
+@defvr {Option variable} inchar
+Default value: @code{%i}
+
+@code{inchar} is the prefix of the labels of expressions entered by the user.
+Maxima automatically constructs a label for each input expression
+by concatenating @code{inchar} and @code{linenum}.
+@code{inchar} may be assigned any string or symbol, not necessarily a single character.
+
+@example
+(%i1) inchar: "input";
+(%o1)                                input
+(input1) expand ((a+b)^3);
+                            3        2      2      3
+(%o1)                      b  + 3 a b  + 3 a  b + a
+(input2)
+@end example
+
+See also @code{labels}.
+
+@end defvr
+
+@deffn {Function} ldisp (@var{expr_1}, ..., @var{expr_n})
+Displays expressions @var{expr_1}, ..., @var{expr_n} to the console
+as printed output.
+@code{ldisp} assigns an intermediate expression label to each argument
+and returns the list of labels.
+
+See also @code{disp}.
+
+@example
+(%i1) e: (a+b)^3;
+                                   3
+(%o1)                       (b + a)
+(%i2) f: expand (e);
+                     3        2      2      3
+(%o2)               b  + 3 a b  + 3 a  b + a
+(%i3) ldisp (e, f);
+                                   3
+(%t3)                       (b + a)
+
+                     3        2      2      3
+(%t4)               b  + 3 a b  + 3 a  b + a
+
+(%o4)                      [%t3, %t4]
+(%i4) %t3;
+                                   3
+(%o4)                       (b + a)
+(%i5) %t4;
+                     3        2      2      3
+(%o5)               b  + 3 a b  + 3 a  b + a
+@end example
+
+@end deffn
+
+@deffn {Function} ldisplay (@var{expr_1}, ..., @var{expr_n})
+Displays expressions @var{expr_1}, ..., @var{expr_n} to the console
+as printed output.
+Each expression is printed as an equation of the form @code{lhs = rhs}
+in which @code{lhs} is one of the arguments of @code{ldisplay}
+and @code{rhs} is its value.
+Typically each argument is a variable.
+@code{ldisp} assigns an intermediate expression label to each equation
+and returns the list of labels.
+
+See also @code{display}.
+
+@example
+(%i1) e: (a+b)^3;
+                                   3
+(%o1)                       (b + a)
+(%i2) f: expand (e);
+                     3        2      2      3
+(%o2)               b  + 3 a b  + 3 a  b + a
+(%i3) ldisplay (e, f);
+                                     3
+(%t3)                     e = (b + a)
+
+                       3        2      2      3
+(%t4)             f = b  + 3 a b  + 3 a  b + a
+
+(%o4)                      [%t3, %t4]
+(%i4) %t3;
+                                     3
+(%o4)                     e = (b + a)
+(%i5) %t4;
+                       3        2      2      3
+(%o5)             f = b  + 3 a b  + 3 a  b + a
+@end example
+
+@end deffn
+
+@defvr {Option variable} linechar
+Default value: @code{%t}
+
+@code{linechar} is the prefix of the labels of intermediate expressions generated by Maxima.
+Maxima constructs a label for each intermediate expression (if displayed)
+by concatenating @code{linechar} and @code{linenum}.
+@code{linechar} may be assigned any string or symbol, not necessarily a single character.
+
+Intermediate expressions might or might not be displayed.
+See @code{programmode} and @code{labels}.
+
+@end defvr
+
+@defvr {Option variable} linel
+Default value: 79
+
+@code{linel} is the assumed width (in characters) of the console display
+for the purpose of displaying expressions.
+@code{linel} may be assigned any value by the user,
+although very small or very large values may be impractical.
+Text printed by built-in Maxima functions, such as error messages and the output of @code{describe},
+is not affected by @code{linel}.
+
+@end defvr
+
+@defvr {Option variable} lispdisp
+Default value: @code{false}
+
+When @code{lispdisp} is @code{true},
+Lisp symbols are displayed with a leading question mark @code{?}.
+Otherwise,
+Lisp symbols are displayed with no leading mark.
+
+Examples:
+
+@c ===beg===
+@c lispdisp: false$
+@c ?foo + ?bar;
+@c lispdisp: true$
+@c ?foo + ?bar;
+@c ===end===
+@example
+(%i1) lispdisp: false$
+(%i2) ?foo + ?bar;
+(%o2)                       foo + bar
+(%i3) lispdisp: true$
+(%i4) ?foo + ?bar;
+(%o4)                      ?foo + ?bar
+@end example
+
+@end defvr
+
+@deffn {Function} load (@var{filename})
+Evaluates expressions in @var{filename}, 
+thus bringing variables, functions, and other objects into Maxima.
+The binding of any existing object is clobbered by the binding recovered from @var{filename}. 
+To find the file,
+@code{load} calls @code{file_search} with @code{file_search_maxima} and @code{file_search_lisp}
+as the search directories.
+If @code{load} succeeds, it returns the name of the file.
+Otherwise @code{load} prints an error message.
+
+@code{load} works equally well for Lisp code and Maxima code.
+Files created by @code{save}, @code{translate_file}, and @code{compile_file}, which create Lisp code,
+and @code{stringout}, which creates Maxima code,
+can all be processed by @code{load}.
+@code{load} calls @code{loadfile} to load Lisp files and @code{batchload} to load Maxima files.
+
+See also @code{loadfile}, @code{batch}, @code{batchload}, and @code{demo}.
+@code{loadfile} processes Lisp files;
+@code{batch}, @code{batchload}, and @code{demo} process Maxima files.
+
+See @code{file_search} for more detail about the file search mechanism.
+
+@code{load} evaluates its argument.
+
+@end deffn
+
+@c RECOMMEND CUTTING THIS ITEM, AS THE load SUBSUMES FUNCTIONALITY OF loadfile
+@deffn {Function} loadfile (@var{filename})
+Evaluates Lisp expressions in @var{filename}.
+@code{loadfile} does not invoke @code{file_search}, so @code{filename} must include
+the file extension and as much of the path as needed to find the file.
+
+@code{loadfile} can process files created by @code{save}, @code{translate_file}, and @code{compile_file}.
+The user may find it more convenient to use @code{load} instead of @code{loadfile}.
+
+@code{loadfile} quotes its argument, so @code{filename} must be a literal string,
+not a string variable.
+The double-single-quote operator defeats quotation.
+
+@end deffn
+
+@c loadprint DOESN'T EXACTLY WORK LIKE THIS, BUT IT HARDLY SEEMS WORTH FIXING
+@c I GUESS THIS COULD BE UPDATED TO DESCRIBE THE WAY IT ACTUALLY WORKS
+@defvr {Option variable} loadprint
+Default value: @code{true}
+
+@code{loadprint} tells whether to print a message when a file is loaded.
+
+@itemize @bullet
+@item
+When @code{loadprint} is @code{true}, always print a message.
+@item
+When @code{loadprint} is @code{'loadfile}, print a message only if
+a file is loaded by the function @code{loadfile}.
+@item
+When @code{loadprint} is @code{'autoload},
+print a message only if a file is automatically loaded.
+See @code{setup_autoload}.
+@item
+When @code{loadprint} is @code{false}, never print a message.
+@end itemize
+
+@end defvr
+
+@defvr {Option variable} obase
+Default value: 10
+
+@code{obase} is the base for integers displayed by Maxima.
+
+@code{obase} may be assigned any integer between 2 and 35 (decimal), inclusive.
+@c WHY NOT 36, BY THE WAY ??
+When @code{obase} is greater than 10, the numerals comprise the decimal numerals 0 through 9
+plus capital letters of the alphabet A, B, C, ..., as needed.
+The numerals for base 35, the largest acceptable base,
+comprise 0 through 9, and A through Y.
+
+See also @code{ibase}.
+
+@c NEED EXAMPLES HERE
+@end defvr
+
+@defvr {Option variable} outchar
+Default value: @code{%o}
+
+@code{outchar} is the prefix of the labels of expressions computed by Maxima.
+Maxima automatically constructs a label for each computed expression
+by concatenating @code{outchar} and @code{linenum}.
+@code{outchar} may be assigned any string or symbol, not necessarily a single character.
+
+@example
+(%i1) outchar: "output";
+(output1)                           output
+(%i2) expand ((a+b)^3);
+                            3        2      2      3
+(output2)                  b  + 3 a b  + 3 a  b + a
+(%i3)
+@end example
+
+See also @code{labels}.
+
+@end defvr
+
+@c STILL EXISTS, NEEDS CLARIFICATION !!!
+@defvr {Option variable} packagefile
+Default value: @code{false}
+
+Package designers who use @code{save}
+or @code{translate} to create packages (files) for others
+to use may want to set @code{packagefile: true} to prevent information
+from being added to Maxima's information-lists (e.g. @code{values},
+@code{functions}) except where necessary when the file is loaded in.
 In this way, the contents of the package will not get in the
 user's way when he adds his own data.  Note that this will not
 solve the problem of possible name conflicts.  Also note that
 the flag simply affects what is output to the package file.
-Setting the flag to TRUE is also useful for creating MACSYMA
+Setting the flag to @code{true} is also useful for creating Maxima
 init files.
 
-@end defvar
-@c @node PARSEWINDOW, PFEFORMAT, PACKAGEFILE, Input and Output
-@c @unnumberedsec phony
-@defvar PARSEWINDOW
- default:[10] - the maximum number of "lexical tokens"
-that are printed out on each side of the error-point when a syntax
-(parsing) error occurs.  This option is especially useful on slow
-terminals.  Setting it to -1 causes the entire input string to be
-printed out when an error occurs.
+@end defvr
 
-@end defvar
-@c @node PFEFORMAT, PRINT, PARSEWINDOW, Input and Output
-@c @unnumberedsec phony
-@defvar PFEFORMAT
- default: [FALSE] - if TRUE will cause rational numbers to
-display in a linear form and denominators which are integers to
-display as rational number multipliers.
+@defvr {Option variable} pfeformat
+Default value: @code{false}
 
-@end defvar
-@c @node PRINT, READ, PFEFORMAT, Input and Output
-@c @unnumberedsec phony
-@defun PRINT (exp1, exp2, ...)
-evaluates and displays its arguments one
-after the other "on a line" starting at the leftmost position.  If
-expi is unbound or is preceded by a single quote or is enclosed in "s
-then it is printed literally.  For example, PRINT("THE VALUE OF X IS
-",X).  The value returned by PRINT is the value of its last argument.
-No intermediate lines are generated.  (For "printing" files, see
-the PRINTFILE function.)
+When @code{pfeformat} is @code{true}, a ratio of integers is
+displayed with the solidus (forward slash) character,
+and an integer denominator @code{n}
+is displayed as a leading multiplicative term @code{1/n}.
 
-@end defun
-
-@defun SPRINT (exp1, exp2, ...)
-evaluates and displays its arguments one
-after the other "on a line" starting at the leftmost position.  The
-numbers are printed with the '-' right next to the number, and
-it disregards line length.   
-@end defun
-
-@defun TCL_OUTPUT (LIST INDEX &optional-skip)
-prints a TCL list based on LIST extracting the INDEX slot.
-Here skip defaults to 2, meaning that every other element
-will be printed if the argument is of the form a list of numbers,
-rathter than a list of lists.
-For example:
 @example
-TCL_OUTPUT([x1,y1,x2,y2,x3,y3],1) --> @{x1 x2 x3 @}
-TCL_OUTPUT([x1,y1,x2,y2,x3,y3],2) --> @{y1 y2 y3 @}
-TCL_OUTPUT([1,2,3,4,5,6],1,3) --> @{1 4@}
-TCL_OUTPUT([1,2,3,4,5,6],2,3) --> @{2 5@}
+(%i1) pfeformat: false$
+(%i2) 2^16/7^3;
+                              65536
+(%o2)                         -----
+                               343
+(%i3) (a+b)/8;
+                              b + a
+(%o3)                         -----
+                                8
+(%i4) pfeformat: true$ 
+(%i5) 2^16/7^3;
+(%o5)                       65536/343
+(%i6) (a+b)/8;
+(%o6)                      1/8 (b + a)
 @end example
-@end defun
 
-@c @node READ, READONLY, PRINT, Input and Output
-@c @unnumberedsec phony
-@defun READ (string1, ...)
-prints its arguments, then reads in and evaluates
-one expression.  For example: A:READ("ENTER THE NUMBER OF VALUES").
+@end defvr
 
-@end defun
-@c @node READONLY, REVEAL, READ, Input and Output
-@c @unnumberedsec phony
-@defun READONLY (string1,...)
-prints its arguments, then reads in an
-expression (which in contrast to READ is not evaluated).
+@deffn {Function} print (@var{expr_1}, ..., @var{expr_n})
+Evaluates and displays @var{expr_1}, ..., @var{expr_n}
+one after another, from left to right,
+starting at the left edge of the console display.
 
-@end defun
-@c @node REVEAL, RMXCHAR, READONLY, Input and Output
-@c @unnumberedsec phony
-@defun REVEAL (exp,depth)
-will display exp to the specified integer depth
-with the length of each part indicated.  Sums will be displayed as
-Sum(n) and products as Product(n) where n is the number of subparts of
-the sum or product.  Exponentials will be displayed as Expt.
+The value returned by @code{print} is the value of its last argument.
+@code{print} does not generate intermediate expression labels.
+
+See also @code{display}, @code{disp}, @code{ldisplay}, and @code{ldisp}.
+Those functions display one expression per line, while @code{print} attempts
+to display two or more expressions per line.
+
+To display the contents of a file, see @code{printfile}.
+
 @example
-(%i1) INTEGRATE(1/(X^3+2),X)$
-(%i2) REVEAL(%,2);
-(%o2)                    Negterm + Quotient + Quotient
-(%i3) REVEAL(%o1,3);
-                                     ATAN         LOG
-(%o3)                 - Quotient + ---------- + ----------
-                                  Product(2)   Product(2)
+(%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+            3        2      2      3
+(a+b)^3 is b  + 3 a b  + 3 a  b + a  log (a^10/b) is 
 
+                                              10 log(a) - log(b) 
+(%i2) r;
+(%o2)                  10 log(a) - log(b)
+(%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+                           (a+b)^3 is
 
+                     3        2      2      3
+                    b  + 3 a b  + 3 a  b + a
+
+                         log (a^10/b) is
+
+                       10 log(a) - log(b)
 @end example
-@end defun
-@c @node RMXCHAR, SAVE, REVEAL, Input and Output
-@c @unnumberedsec phony
-@defvar RMXCHAR
- default: []] - The character used to display the (right)
-delimiter of a matrix (see also LMXCHAR).
 
-@end defvar
-@c @node SAVE, SAVEDEF, RMXCHAR, Input and Output
-@c @unnumberedsec phony
-@defun SAVE (filename,arg1, arg2,...,argi)
-saves quantities
-described by its arguments on disk and keeps them in core also.
-The arg's are the expressions to be SAVEd.
-ALL is the simplest, but note that saving ALL will save the entire
-contents of your MACSYMA, which in the case of a large computation may
-result in a large file.  VALUES,
-FUNCTIONS, or any other items on the INFOLISTS (do
-DESCRIBE(INFOLISTS); for the list) may be SAVEd, as may functions and
-variables by name.  C and D lines may also be saved, but it is better
-to give them explicit names, which may be done in the command line,
-e.g.  SAVE(RES1=%o15); Files saved with SAVE should be reloaded with
-LOADFILE.  SAVE returns the pathname where the items were saved.
+@end deffn
 
+@c RECOMMEND CUTTING THIS ITEM AND CUTTING $tcl_output IN src/plot.lisp
+@c THIS REALLY, REALLY SEEMS LIKE CRUFT:
+@c $tcl_output IS NEVER CALLED WITHIN MAXIMA SOURCE,
+@c AND THIS EXTREMELY NARROW, LIMITED FUNCTIONALITY ISN'T USEFUL TO USERS
+@c AND IT'S BROKEN: INCORRECT OUTPUT FOR CLISP, DIES ON GCL
+@deffn {Function} tcl_output (@var{list}, @var{i0}, @var{skip})
+@deffnx {Function} tcl_output (@var{list}, @var{i0})
+@deffnx {Function} tcl_output ([@var{list_1}, ..., @var{list_n}], @var{i})
 
-@end defun
-@c @node SAVEDEF, SHOW, SAVE, Input and Output
-@c @unnumberedsec phony
-@defvar SAVEDEF
- default: [TRUE] - if TRUE will cause the MACSYMA version of a
-user function to remain when the function is TRANSLATEd.  This permits
-the definition to be displayed by DISPFUN and allows the function to
-be edited.  If SAVEDEF is FALSE, the names of translated functions are
-removed from the FUNCTIONS list.
+Prints elements of a list enclosed by curly braces @code{@{ @}},
+suitable as part of a program in the Tcl/Tk language.
 
-@end defvar
-@c @node SHOW, SHOWRATVARS, SAVEDEF, Input and Output
-@c @unnumberedsec phony
-@defun SHOW (exp)
-will display exp with the indexed objects in it shown
-having covariant indices as subscripts,contravariant indices as
-superscripts.  The derivative indices will be displayed as subscripts,
+@code{tcl_output (@var{list}, @var{i0}, @var{skip})}
+prints @var{list}, beginning with element @var{i0} and printing elements
+@code{@var{i0} + @var{skip}}, @code{@var{i0} + 2 @var{skip}}, etc.
+
+@code{tcl_output (@var{list}, @var{i0})}
+is equivalent to @code{tcl_output (@var{list}, @var{i0}, 2)}.
+
+@code{tcl_output ([@var{list_1}, ..., @var{list_n}], @var{i})}
+prints the @var{i}'th elements of @var{list_1}, ..., @var{list_n}.
+
+Examples:
+@c EXAMPLE INPUT
+@c tcl_output ([1, 2, 3, 4, 5, 6], 1, 3)$
+@c tcl_output ([1, 2, 3, 4, 5, 6], 2, 3)$
+@c tcl_output ([3/7, 5/9, 11/13, 13/17], 1)$
+@c tcl_output ([x1, y1, x2, y2, x3, y3], 2)$
+@c tcl_output ([[1, 2, 3], [11, 22, 33]], 1)$
+
+@c EXAMPLE OUTPUT: CLISP
+@c OUTPUT IS OK FOR FIRST TWO, BROKEN FOR OTHERS
+@c GCL OUTPUT: SAME FOR FIRST TWO
+@c GCL FAILS ON OTHERS (IN EACH CASE COMPLAINING ELEMENTS ARE "not of type (OR RATIONAL LISP:FLOAT)"
+@example
+(%i1) tcl_output ([1, 2, 3, 4, 5, 6], 1, 3)$
+
+ @{1.000000000     4.000000000     
+ @}
+(%i2) tcl_output ([1, 2, 3, 4, 5, 6], 2, 3)$
+
+ @{2.000000000     5.000000000     
+ @}
+(%i3) tcl_output ([3/7, 5/9, 11/13, 13/17], 1)$
+
+ @{((RAT SIMP) 3 7) ((RAT SIMP) 11 13) 
+ @}
+(%i4) tcl_output ([x1, y1, x2, y2, x3, y3], 2)$
+
+ @{$Y1 $Y2 $Y3 
+ @}
+(%i5) tcl_output ([[1, 2, 3], [11, 22, 33]], 1)$
+
+ @{SIMP 1.000000000     11.00000000     
+ @}
+@end example
+
+@end deffn
+
+@deffn {Function} read (@var{expr_1}, ..., @var{expr_n})
+Prints @var{expr_1}, ..., @var{expr_n}, then reads one expression from the console
+and returns the evaluated expression.
+The expression is terminated with a semicolon @code{;} or dollar sign @code{$}.
+
+See also @code{readonly}.
+
+@example
+(%i1) foo: 42$ 
+(%i2) foo: read ("foo is", foo, " -- enter new value.")$
+foo is 42  -- enter new value. 
+(a+b)^3;
+(%i3) foo;
+                                     3
+(%o3)                         (b + a)
+@end example
+
+@end deffn
+
+@deffn {Function} readonly (@var{expr_1}, ..., @var{expr_n})
+Prints @var{expr_1}, ..., @var{expr_n}, then reads one expression from the console
+and returns the expression (without evaluation).
+The expression is terminated with a @code{;} (semicolon) or @code{$} (dollar sign).
+
+@example
+(%i1) aa: 7$
+(%i2) foo: readonly ("Enter an expression:");
+Enter an expression: 
+2^aa;
+                                  aa
+(%o2)                            2
+(%i3) foo: read ("Enter an expression:");
+Enter an expression: 
+2^aa;
+(%o3)                            128
+@end example
+
+See also @code{read}.
+
+@end deffn
+
+@deffn {Function} reveal (@var{expr}, @var{depth})
+Replaces parts of @var{expr} at the specified integer @var{depth}
+with descriptive summaries.
+
+@itemize @bullet
+@item
+Sums and differences are replaced by @code{sum(@var{n})}
+where @var{n} is the number of operands of the sum.
+@item
+Products are replaced by @code{product(@var{n})}
+where @var{n} is the number of operands of the product.
+@item
+Exponentials are replaced by @code{expt}. 
+@item
+Quotients are replaced by @code{quotient}.
+@item
+Unary negation is replaced by @code{negterm}.
+@end itemize
+
+When @var{depth} is greater than or equal to the maximum depth of @var{expr},
+@code{reveal (@var{expr}, @var{depth})} returns @var{expr} unmodified.
+
+@code{reveal} evaluates its arguments.
+@code{reveal} returns the summarized expression.
+
+Example:
+
+@example
+(%i1) e: expand ((a - b)^2)/expand ((exp(a) + exp(b))^2);
+                          2            2
+                         b  - 2 a b + a
+(%o1)               -------------------------
+                        b + a     2 b     2 a
+                    2 %e      + %e    + %e
+(%i2) reveal (e, 1);
+(%o2)                       quotient
+(%i3) reveal (e, 2);
+                             sum(3)
+(%o3)                        ------
+                             sum(3)
+(%i4) reveal (e, 3);
+                     expt + negterm + expt
+(%o4)               ------------------------
+                    product(2) + expt + expt
+(%i5) reveal (e, 4);
+                       2                 2
+                      b  - product(3) + a
+(%o5)         ------------------------------------
+                         product(2)     product(2)
+              2 expt + %e           + %e
+(%i6) reveal (e, 5);
+                         2            2
+                        b  - 2 a b + a
+(%o6)              --------------------------
+                       sum(2)     2 b     2 a
+                   2 %e       + %e    + %e
+(%i7) reveal (e, 6);
+                          2            2
+                         b  - 2 a b + a
+(%o7)               -------------------------
+                        b + a     2 b     2 a
+                    2 %e      + %e    + %e
+@end example
+
+@end deffn
+
+@defvr {Option variable} rmxchar
+Default value: @code{]}
+
+@code{rmxchar} is the character drawn on the right-hand side of a matrix.
+
+See also @code{lmxchar}.
+
+@end defvr
+
+@c NEEDS EXAMPLES
+@deffn {Function} save (@var{filename}, @var{name_1}, @var{name_2}, @var{name_3}, ...)
+@deffnx {Function} save (@var{filename}, values, functions, labels, ...)
+@deffnx {Function} save (@var{filename}, [@var{m}, @var{n}])
+@c @defunx save (@var{filename}, @var{name_1}=@var{expr_1}, @var{name_2}=@var{expr_2}, ...)
+@c PRECEDING @defunx IS LONGER THAN 1 LINE, CAUSES cl-info.lisp TO STUMBLE; WORKAROUND:
+@deffnx {Function} save (@var{filename}, @var{name_1}=@var{expr_1}, ...)
+@deffnx {Function} save (@var{filename}, all)
+Stores the current values of @var{name_1}, @var{name_2}, @var{name_3}, ..., in @var{filename}.
+The arguments are the names of variables, functions, or other objects.
+If a name has no value or function associated with it, it is ignored.
+@code{save} returns @var{filename}.
+
+@code{save} stores data in the form of Lisp expressions.
+The data stored by @code{save} may be recovered by @code{load (@var{filename})}.
+The effect of executing @code{save} when @var{filename} already exists
+depends on the underlying Lisp implementation;
+the file may be clobbered, or @code{save} may complain with an error message.
+
+The special form @code{save (@var{filename}, values, functions, labels, ...)}
+stores the items named by @code{values}, @code{functions}, @code{labels}, etc.
+The names may be any specified by the variable @code{infolists}.
+@code{values} comprises all user-defined variables.
+
+The special form @code{save (@var{filename}, [@var{m}, @var{n}])} stores the values of
+input and output labels @var{m} through @var{n}.
+Note that @var{m} and @var{n} must be literal integers or double-quoted symbols.
+Input and output labels may also be stored one by one, e.g., @code{save ("foo.1", %i42, %o42)}.
+@code{save (@var{filename}, labels)} stores all input and output labels.
+When the stored labels are recovered, they clobber existing labels.
+
+The special form @code{save (@var{filename}, @var{name_1}=@var{expr_1}, @var{name_2}=@var{expr_2}, ...)}
+stores the values of @var{expr_1}, @var{expr_2}, ...,
+with names @var{name_1}, @var{name_2}, ....
+It is useful to apply this form to input and output labels, e.g., @code{save ("foo.1", aa=%o88)}.
+The right-hand side of the equality in this form may be any expression, which is evaluated.
+This form does not introduce the new names into the current Maxima environment,
+but only stores them in @var{filename}.
+
+These special forms and the general form of @code{save} may be mixed at will.
+For example, @code{save (@var{filename}, aa, bb, cc=42, functions, [11, 17])}.
+
+The special form @code{save (@var{filename}, all)} stores the current state of Maxima.
+This includes all user-defined variables, functions, arrays, etc., as well
+as some automatically defined items.
+The saved items include system variables,
+such as @code{file_search_maxima} or @code{showtime}, if they have been assigned new values by the user;
+see @code{myoptions}.
+
+@code{save} quotes its arguments. 
+@var{filename} must be a string, not a string variable.
+The first and last labels to save, if specified, must be integers.
+The double quote operator evaluates a string variable to its string value,
+e.g., @code{s: "foo.1"$ save (''s, all)$},
+and integer variables to their integer values, e.g., @code{m: 5$ n: 12$ save ("foo.1", [''m, ''n])$}.
+
+@c ANY USE FOR THE FOLLOWING ???
+@c The following device constructs a list of variables to save and saves them.
+@c 
+@c @example
+@c s: "foo.1"$
+@c l: ['aa, 'bb, 'cc, 'dd]$
+@c apply (save, append ([s], l))$
+@c @end example
+@end deffn
+
+@c NEEDS MORE WORK !!!
+@defvr {Option variable} savedef
+Default value: @code{true}
+
+When @code{savedef} is @code{true}, the Maxima version of a
+user function is preserved when the function is translated.
+This permits the definition to be displayed by @code{dispfun} and allows the function to
+be edited.
+
+When @code{savedef} is @code{false}, the names of translated functions are
+removed from the @code{functions} list.
+
+@end defvr
+
+@c THIS FUNCTION IS IN THE SHARE PACKAGE itensor.lisp
+@c MOVE THIS DESCRIPTION TO Itensor.texi
+@deffn {Function} show (@var{expr})
+Displays @code{expr} with the indexed objects in it shown
+having covariant indices as subscripts, contravariant indices as
+superscripts.  The derivative indices are displayed as subscripts,
 separated from the covariant indices by a comma.
 
-@end defun
-@c @node SHOWRATVARS, STARDISP, SHOW, Input and Output
-@c @unnumberedsec phony
-@defun SHOWRATVARS (exp)
-returns a list of the RATVARS (CRE variables) of
-exp.
+@end deffn
 
-@end defun
-@c @node STARDISP, STRING, SHOWRATVARS, Input and Output
-@c @unnumberedsec phony
-@defvar STARDISP
- default: [FALSE] - if TRUE will cause multiplication to be
-displayed explicitly with an * between operands.
+@deffn {Function} showratvars (@var{expr})
+Returns a list of the canonical rational expression (CRE) variables in expression @code{expr}.
 
-@end defvar
-@c @node STRING, STRINGOUT, STARDISP, Input and Output
-@c @unnumberedsec phony
-@defun STRING (expr)
-converts expr to MACSYMA's linear notation (similar to
-FORTRAN's) just as if it had been typed in and puts expr into the
-buffer for possible editing (in which case expr is usually Ci) The
-STRING'ed expression should not be used in a computation.
+See also @code{ratvars}.
 
-@end defun
-@c @node STRINGOUT, TTYOFF, STRING, Input and Output
-@c @unnumberedsec phony
-@defun STRINGOUT (args)
-will output an expression to a file in a linear
-format.  Such files are then used by the BATCH or DEMO commands.
-STRINGOUT(file-specification, A1, A2, ...)  outputs to a file given by
-file-specification ([filename1,filename2,DSK, directory]) the values
-given by A1,A2,..  in a MACSYMA readable format.  The
-file-specification may be omitted, in which case the default values
-will be used. The Ai are usually C labels or may be INPUT meaning the
-value of all C labels.  Another option is to make ai FUNCTIONS which
-will cause all of the user's function definitions to be strungout
-(i.e. all those retrieved by DISPFUN(ALL)).  Likewise the ai may be
-VALUES, and all the variables to which the user has assigned values
-will be strungout.  ai may also be a list [m,n] which means to
-stringout all labels in the range m through n inclusive.  This
-function may be used to create a file of FORTRAN statements by doing
-some simple editing on the strungout expressions.  If the GRIND switch
-is set to TRUE, then STRINGOUT will use GRIND format instead of STRING
-format.  Note: a STRINGOUT may be done while a WRITEFILE is in
-progress.
+@end deffn
 
-@end defun
+@defvr {Option variable} stardisp
+Default value: @code{false}
 
-@defun TEX (expr)
-@defunx TEX (expr,filename)
-@defunx TEX (label,filename)
+When @code{stardisp} is @code{true}, multiplication is
+displayed with an asterisk @code{*} between operands.
+
+@end defvr
+
+@c NEEDS CLARIFICATION AND EXAMPLES
+@deffn {Function} string (@var{expr})
+Converts @code{expr} to Maxima's linear notation
+just as if it had been typed in.
+
+The return value of @code{string} is a string,
+and thus it cannot be used in a computation.
+
+@end deffn
+
+@c SHOULD BE WRITTEN WITH LEADING ? BUT THAT CONFUSES CL-INFO SO WORK AROUND
+@c @defvr {Lisp variable} ?stringdisp
+@defvr {Lisp variable} stringdisp
+Default value: @code{false}
+
+When @code{?stringdisp} is @code{true},
+strings are displayed enclosed in double quote marks.
+Otherwise,
+quote marks are not displayed.
+
+@code{?stringdisp} is always @code{true} when displaying a function definition.
+
+@code{?stringdisp} is a Lisp variable,
+so it must be written with a leading question mark @code{?}.
+
+Examples:
+
+@c ===beg===
+@c ?stringdisp: false$
+@c "This is an example string.";
+@c foo () := print ("This is a string in a function definition.");
+@c ?stringdisp: true$
+@c "This is an example string.";
+@c ===end===
+@example
+(%i1) ?stringdisp: false$
+(%i2) "This is an example string.";
+(%o2)              This is an example string.
+(%i3) foo () := print ("This is a string in a function definition.");
+(%o3) foo() := 
+              print("This is a string in a function definition.")
+(%i4) ?stringdisp: true$
+(%i5) "This is an example string.";
+(%o5)             "This is an example string."
+@end example
+
+@end defvr
+
+@deffn {Function} stringout (@var{filename}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
+@deffnx {Function} stringout (@var{filename}, [@var{m}, @var{n}])
+@deffnx {Function} stringout (@var{filename}, input)
+@deffnx {Function} stringout (@var{filename}, functions)
+@deffnx {Function} stringout (@var{filename}, values)
+
+@code{stringout} writes expressions to a file in the same form the
+expressions would be typed for input. The file can then be used
+as input for the @code{batch} or @code{demo} commands, and it may be edited for
+any purpose. @code{stringout} can be executed while @code{writefile} is in progress.
+
+The general form of @code{stringout} writes the values of one or more 
+expressions to the output file. Note that if an expression is a
+variable, only the value of the variable is written and not the name
+of the variable. As a useful special case, the expressions may be
+input labels (@code{%i1}, @code{%i2}, @code{%i3}, ...) or output labels (@code{%o1}, @code{%o2}, @code{%o3}, ...).
+
+If @code{grind} is @code{true}, @code{stringout} formats the output using the @code{grind}
+format. Otherwise the @code{string} format is used. See @code{grind} and @code{string}.
+
+The special form @code{stringout (@var{filename}, [@var{m}, @var{n}])} writes the
+values of input labels m through n, inclusive. 
+
+The special form @code{stringout (@var{filename}, input)} writes all
+input labels to the file.
+
+The special form @code{stringout (@var{filename}, functions)} writes all
+user-defined functions (named by the global list @code{functions}) to the file.
+
+The special form @code{stringout (@var{filename}, values)} writes all
+user-assigned variables (named by the global list @code{values})
+to the file. Each variable is printed as an
+assignment statement, with the name of the variable, a colon, and its
+value. Note that the general form of @code{stringout} does not print 
+variables as assignment statements.
+
+@end deffn
+
+@c NEEDS EXPANSION, CLARIFICATION, AND EXAMPLES
+@deffn {Function} tex (@var{expr})
+@deffnx {Function} tex (@var{expr}, @var{filename})
+@deffnx {Function} tex (@var{label}, @var{filename})
 
 In the case of a label,
-a left-equation-number will be produced.
-in case a file-name is supplied, the output will be appended to the
+a left-equation-number is produced.
+in case a file-name is supplied, the output is appended to the
 file.
 
 @example
-(%i1) integrate(1/(1+x^3),x);
-
-					 2 x - 1
-		       2	    ATAN(-------)
-		  LOG(x  - x + 1)	 SQRT(3)    LOG(x + 1)
-(%o1) 	        - --------------- + ------------- + ----------
-			 6	       SQRT(3)	        3
-(%i2) tex(%o1);
-
-$$-@{@{\log \left(x^@{2@}-x+1\right)@}\over@{6@}@}
-  +@{@{\arctan @{@{2\>x-1@}\over@{\sqrt@{3@}@}@}@}\over@{\sqrt@{3@}@}@}
-  +@{@{\log \left(x+1\right)@}\over@{3@}@}\leqno@{\tt (%o1)@}$$
-(%o2) 				     (%o1)
-(%i6) tex(integrate(sin(x),x));
-
+(%i1) integrate (1/(1+x^3), x);
+                                    2 x - 1
+                  2            atan(-------)
+             log(x  - x + 1)        sqrt(3)    log(x + 1)
+(%o1)      - --------------- + ------------- + ----------
+                    6             sqrt(3)          3
+(%i2) tex (%o1);
+$$-@{@{\log \left(x^2-x+1\right)@}\over@{6@}@}+@{@{\arctan \left(@{@{2\,x-1
+ @}\over@{\sqrt@{3@}@}@}\right)@}\over@{\sqrt@{3@}@}@}+@{@{\log \left(x+1\right)
+ @}\over@{3@}@}\leqno@{\tt (\%o1)@}$$
+(%o2)                          (\%o1)
+(%i3) tex (integrate (sin(x), x));
 $$-\cos x$$
-(%o6) 				     FALSE
-(%i7) tex(%o1,"/tmp/jo.tex");
-
-(%o7) 				     (%o1)
+(%o3)                           false
+(%i4) tex (%o1, "foo.tex");
+(%o4)                          (\%o1)
 @end example
-where the last expression will be appended to the file @file{/tmp/jo.tex}
-@end defun
-@defun SYSTEM (command)
-Execute COMMAND as a subprocess.  The command will be passed to the
-default shell for execution.   System is not supported by all operating
-systems, but generally exists in the unix environment.
-if hist is a list of frequencies which you wish to plot as a bar graph
-using xgraph. 
+
+@end deffn
+
+@c NEEDS CLARIFICATION
+@deffn {Function} system (@var{command})
+Executes @var{command} as a separate process.
+The command is passed to the default shell for execution.
+@code{system} is not supported by all operating
+systems, but generally exists in Unix and Unix-like environments.
+
+Supposing @code{_hist.out}
+is a list of frequencies which you wish to plot as a bar graph
+using @code{xgraph}. 
+
 @example
 (%i1) (with_stdout("_hist.out",
            for i:1 thru length(hist) do (
              print(i,hist[i]))),
        system("xgraph -bar -brw .7 -nl < _hist.out"));
 @end example
-In order to make the plot be done in the background (returning control to maxima)
+
+In order to make the plot be done in the background (returning control to Maxima)
 and remove the temporary file after it is done do:
+
 @example
 system("(xgraph -bar -brw .7 -nl < _hist.out;  rm -f _hist.out)&")
-@end example
-@end defun
-
-@c @node TTYOFF, WRITEFILE, STRINGOUT, Input and Output
-@c @unnumberedsec phony
-@defvar TTYOFF
- default: [FALSE] - if TRUE stops printing output to the
-console.
-
-@end defvar
-
-@deffn {macro} WITH_STDOUT (file,stmt1,stmt2,...)
-Opens file and then evaluates stmt1, stmt2, ....  Any printing
-to standard output goes to the file instead of the terminal.
-It always returns FALSE.   Note the binding of display2d to be
-false, otherwise the printing will have things like "- 3" instead
-of "-3".
-@example
-
-mygnuplot(f,var,range,number_ticks):=
- block([numer:true,display2d:false],
- with_stdout("/tmp/gnu",
-   for x:range[1] thru range[2] step
-                (range[2]-range[1])/number_ticks
-      do (print(x,at(f,var=x)))),
- system("echo \"set data style lines; set title '",
-        f,"' ;plot '/tmp/gnu'
-;pause 10 \" | gnuplot"));
-
-(%i8) with_stdout("/home/wfs/joe",
-      n:10,
-      for i:8 thru n
-        do(print("factorial(",i,") gives ",i!)));
-(%o8) 				     FALSE
-(%i9) system("cat /home/wfs/joe");
-factorial( 8 ) gives  40320 
-factorial( 9 ) gives  362880 
-factorial( 10 ) gives  3628800 
-(%o9) 				       0
 @end example
 
 @end deffn
 
+@defvr {Option variable} ttyoff
+Default value: @code{false}
 
+When @code{ttyoff} is @code{true}, output expressions are not displayed.
+Output expressions are still computed and assigned labels. See @code{labels}.
 
-@c @node WRITEFILE,  , TTYOFF, Input and Output
-@c @unnumberedsec phony
-@defun WRITEFILE (DSK, directory)
-opens up a file for writing.  On a Lisp
-Machine one uses WRITEFILE("filename").  All interaction between the
-user and MACSYMA is then recorded in this file, just as it is on the
-console.  Such a file is a transcript of the session, and is not
-reloadable or batchable into MACSYMA again.  (See also CLOSEFILE.)
+Text printed by built-in Maxima functions, such as error messages and the output of @code{describe},
+is not affected by @code{ttyoff}.
 
-@end defun
+@end defvr
+
+@deffn {Macro} with_stdout (@var{filename}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
+Opens @var{filename} and then evaluates @var{expr_1}, @var{expr_2}, @var{expr_3}, ....
+The values of the arguments are not stored in @var{filename},
+but any printed output generated by evaluating the arguments
+(from @code{print}, @code{display}, @code{disp}, or @code{grind}, for example)
+goes to @var{filename} instead of the console.
+
+@code{with_stdout} returns the value of its final argument.
+
+See also @code{writefile}.
+
+@c THIS DOESN'T SEEM VERY IMPORTANT TO MENTION ...
+@c Note the binding of display2d to be
+@c false, otherwise the printing will have things like "- 3" instead
+@c of "-3".
+@c
+@example
+@c THIS EXAMPLE USES SOME UNIX-ISH CONSTRUCTS -- WILL IT WORK IN WINDOWS ???
+@c ALSO IT'S SORT OF COMPLICATED AND THE SIMPLER SECOND EXAMPLE ILLUSTRATES with_stdout BETTER !!!
+@c mygnuplot (f, var, range, number_ticks) :=
+@c  block ([numer:true, display2d:false],
+@c  with_stdout("tmp.out",
+@c    dx: (range[2]-range[1])/number_ticks,
+@c    for x: range[1] thru range[2] step dx
+@c       do print (x, at (f, var=x))),
+@c  system ("echo \"set data style lines; set title '", f,"' ;plot '/tmp/gnu'
+@c ;pause 10 \" | gnuplot"))$
+(%i1) with_stdout ("tmp.out", for i:5 thru 10 do print (i, "! yields", i!))$
+(%i2) printfile ("tmp.out")$
+5 ! yields 120 
+6 ! yields 720 
+7 ! yields 5040 
+8 ! yields 40320 
+9 ! yields 362880 
+10 ! yields 3628800
+@end example
+
+@end deffn
+
+@deffn {Function} writefile (@var{filename})
+Begins writing a transcript of the Maxima session to @var{filename}.
+All interaction between the user and Maxima is then recorded in this file,
+@c FOLLOWING CLAIM PROBABLY NEEDS TO BE QUALIFIED
+just as it appears on the console.
+
+As the transcript is printed in the console output format,
+it cannot be reloaded into Maxima.
+To make a file containing expressions which can be reloaded,
+see @code{save} and @code{stringout}.
+@code{save} stores expressions in Lisp form, while @code{stringout} stores expressions in Maxima form.
+
+The effect of executing @code{writefile} when @var{filename} already exists
+depends on the underlying Lisp implementation;
+the transcript file may be clobbered, or the file may be appended.
+@code{appendfile} always appends to the transcript file.
+
+It may be convenient to execute @code{playback} after
+@code{writefile} to save the display of previous interactions.
+As @code{playback} displays only the input and output variables (@code{%i1}, @code{%o1}, etc.),
+any output generated by a print statement in a function 
+(as opposed to a return value) is not displayed by @code{playback}.
+
+@code{closefile} closes the transcript file opened by @code{writefile} or @code{appendfile}.
+
+@end deffn

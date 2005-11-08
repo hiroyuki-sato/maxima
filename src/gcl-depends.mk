@@ -3,13 +3,14 @@ binary-gcl/maxima : numerical/f2cl-package.lisp
 binary-gcl/maxima : numerical/slatec.lisp
 binary-gcl/maxima : command-line.lisp
 binary-gcl/maxima : nregex.lisp
+binary-gcl/maxima : sys-proclaim.lisp
 binary-gcl/maxima : autoconf-variables.lisp
 binary-gcl/maxima : nregex.lisp
 binary-gcl/maxima : cl-info.lisp
 binary-gcl/maxima : sloop.lisp
 binary-gcl/maxima : lmdcls.lisp
 binary-gcl/maxima : letmac.lisp
-binary-gcl/maxima : kclmac.lisp
+binary-gcl/maxima : generr.lisp
 binary-gcl/maxima : clmacs.lisp
 binary-gcl/maxima : commac.lisp
 binary-gcl/maxima : mormac.lisp
@@ -269,8 +270,9 @@ binary-gcl/maxima : laplac.lisp
 binary-gcl/maxima : pade.lisp
 binary-gcl/maxima : homog.lisp
 binary-gcl/maxima : combin.lisp
+binary-gcl/maxima : nset.lisp
+binary-gcl/maxima : rand-mt19937.lisp
 binary-gcl/maxima : mstuff.lisp
-binary-gcl/maxima : set.lisp
 binary-gcl/maxima : ratpoi.lisp
 binary-gcl/maxima : pois2.lisp
 binary-gcl/maxima : pois3.lisp

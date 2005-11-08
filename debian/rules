@@ -11,26 +11,26 @@
 #export DH_COMPAT=3
 
 NO_STRIP:=
-ALT_LINK:=
-ifeq ($(DEB_BUILD_ARCH),mips)
-ALT_LINK:=--enable-gcl-alt-link
-endif
-ifeq ($(DEB_BUILD_ARCH),mipsel)
-ALT_LINK:=--enable-gcl-alt-link
-endif
-ifeq ($(DEB_BUILD_ARCH),ia64)
-ALT_LINK:=--enable-gcl-alt-link
-NO_STRIP:=-Xmaxima
-endif
-ifeq ($(DEB_BUILD_ARCH),hppa)
-ALT_LINK:=--enable-gcl-alt-link
-endif
-ifeq ($(DEB_BUILD_ARCH),alpha)
-ALT_LINK:=--enable-gcl-alt-link
-endif
-ifeq ($(DEB_BUILD_ARCH),powerpc)
-NO_STRIP:=-Xmaxima
-endif
+#ALT_LINK:=
+#ifeq ($(DEB_BUILD_ARCH),mips)
+#ALT_LINK:=--enable-gcl-alt-link
+#endif
+#ifeq ($(DEB_BUILD_ARCH),mipsel)
+#ALT_LINK:=--enable-gcl-alt-link
+#endif
+#ifeq ($(DEB_BUILD_ARCH),ia64)
+#ALT_LINK:=--enable-gcl-alt-link
+#NO_STRIP:=-Xmaxima
+#endif
+#ifeq ($(DEB_BUILD_ARCH),hppa)
+#ALT_LINK:=--enable-gcl-alt-link
+#endif
+#ifeq ($(DEB_BUILD_ARCH),alpha)
+#ALT_LINK:=--enable-gcl-alt-link
+#endif
+#ifeq ($(DEB_BUILD_ARCH),powerpc)
+#NO_STRIP:=-Xmaxima
+#endif
 
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
 build: build-stamp
@@ -39,7 +39,7 @@ build-stamp:
 
 	automake
 
-	./configure --enable-gcl $(ALT_LINK) \
+	GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '#-native-reloc(princ "--enable-gcl-alt-link")(bye)') \
 		--prefix=/usr \
 		--libexec=/usr/lib \
 		--mandir=/usr/share/man \
@@ -98,9 +98,9 @@ clean:
 		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
 		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
 	rm -f src/factor.fn src/nparse.fn tests/gazonk0.fn
-	cd doc/maximabook && \
-		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
-			maxima.log maxima.out maxima.toc maxima.ps
+#	cd doc/maximabook && \
+#		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
+#			maxima.log maxima.out maxima.toc maxima.ps
 	rm -f debian/*.install
 	rm -f $(BOOK) config.log config.status plotting/mgnuplot plotting/omplotdata \
 			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
@@ -181,6 +181,9 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
 	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/{plotting,tips} -name "*.uu") ; do \
 		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
+
+	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/{plotting,tips} -name "*.shtml") ; do \
+		mv $$i $${i%.shtml}.html ; done
 
 	dh_install
 

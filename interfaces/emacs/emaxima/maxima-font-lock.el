@@ -4,8 +4,8 @@
 
 ;; Author: Jay Belanger <belanger@truman.edu>
 ;; $Name:  $
-;; $Revision: 1.10 $
-;; $Date: 2004/04/02 22:44:43 $
+;; $Revision: 1.13 $
+;; $Date: 2005/01/10 22:57:35 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -167,6 +167,7 @@
    "algepsilon"
    "algexact"
    "aliases"
+   "all"
    "allsym"
    "arrays"
    "askexp"
@@ -247,6 +248,8 @@
    "gradefs"
    "halfangles"
    "ibase"
+   "icounter"
+   "idummyx"
    "ieqnprint"
    "inchar"
    "inflag"
@@ -426,6 +429,7 @@
    "alias"
    "alloc"
    "allroots"
+   "anti"
    "antid"
    "antidiff"
    "append"
@@ -524,7 +528,6 @@
    "content"
    "continue"
    "contract"
-   "contract"
    "copylist"
    "copymatrix"
    "cos"
@@ -536,6 +539,7 @@
    "csc"
    "csch"
    "curvature"
+   "cyc"
    "dblint"
    "ddt"
    "deactivate"
@@ -544,6 +548,7 @@
    "declare"
    "declare_translated"
    "declare_weight"
+   "decsym"
    "defcon"
    "define"
    "define_variable"
@@ -578,11 +583,10 @@
    "distrib"
    "divide"
    "divsum"
+   "dlt"
    "dotsimp"
    "dpart"
-   "dscalar"
-   "dummy"))
-   
+   "dscalar"))
 
 (defvar maxima-match-functions-2
   (concat "\\<\\("
@@ -692,10 +696,12 @@
    "horner"
    "ic1"
    "ident"
+   "idummy"
    "ieqn"
    "ift"
    "ilt"
    "imagpart"
+   "imetric"
    "indices"
    "infix"
    "innerproduct"
@@ -709,6 +715,7 @@
    "intsce"
    "invert"
    "is"
+   "ishow"
    "isolate"
    "isqrt"
    "jacobi"
@@ -717,9 +724,11 @@
    "killcontext"
    "kostka"
    "labels"
+   "lambda"
    "laplace"
    "last"
    "lc"
+   "lc2kdt"
    "lcm"
    "ldefint"
    "ldisp"
@@ -728,6 +737,7 @@
    "let"
    "letrules"
    "letsimp"
+   "levi_civita"
    "lgtreillis"
    "lhs"
    "limit"
@@ -974,7 +984,6 @@
    "setup_autoload"
    "set_plot_option"
    "set_up_dot_simplifications"
-   "show"
    "showratvars"
    "sign"
    "signum"
@@ -1004,6 +1013,7 @@
    "sum"
    "sumcontract"
    "supcontext"
+   "sym"
    "symbolp"
    "system"
    "tan"
@@ -1174,6 +1184,7 @@
    "else"
    "for"
    "if"
+   "in"
    "step"
    "then"
    "thru"

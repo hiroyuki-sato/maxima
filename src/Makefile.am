@@ -25,7 +25,7 @@ clisp: binary-clisp/maxima.mem
 binary-clisp/maxima.mem:
 	test -d binary-clisp || mkdir binary-clisp
 	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
-	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:saveinitmem "binary-clisp/maxima.mem" :init-function (function user::run)))'
+	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:saveinitmem "binary-clisp/maxima.mem" :init-function (function cl-user::run)))'
 
 install-clisp:
 	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-clisp"
@@ -229,6 +229,7 @@ echo_%:
 
 genericdir = $(instsrcdir)
 real_lisp_sources = acall.lisp \
+airy.lisp \
 algfac.lisp \
 algsys.lisp \
 ar.lisp \
@@ -263,7 +264,6 @@ evalw.lisp \
 ezgcd.lisp \
 factor.lisp \
 fcall.lisp \
-flatten.lisp \
 float.lisp \
 fortra.lisp \
 generate-sys-proclaim.lisp \
@@ -323,6 +323,7 @@ nisimp.lisp \
 nparse.lisp \
 nrat4.lisp \
 nregex.lisp \
+nset.lisp \
 numer.lisp \
 numerm.lisp \
 numth.lisp \
@@ -342,6 +343,7 @@ polyrz.lisp \
 powers.lisp \
 procs.lisp \
 psolve.lisp \
+rand-mt19937.lisp \
 rat3a.lisp \
 rat3b.lisp \
 rat3c.lisp \
@@ -361,7 +363,6 @@ schatc.lisp \
 scs.lisp \
 series.lisp \
 server.lisp \
-set.lisp \
 simp.lisp \
 sin.lisp \
 sinint.lisp \
@@ -423,6 +424,8 @@ numerical/slatec/dbesk.lisp \
 numerical/slatec/dbesy0.lisp \
 numerical/slatec/dbesy1.lisp \
 numerical/slatec/dbesy.lisp \
+numerical/slatec/dbi.lisp \
+numerical/slatec/dbie.lisp \
 numerical/slatec/dbsi0e.lisp \
 numerical/slatec/dbsi1e.lisp \
 numerical/slatec/dbsk0e.lisp \
@@ -500,6 +503,7 @@ numerical/slatec/zbesj.lisp \
 numerical/slatec/zbesk.lisp \
 numerical/slatec/zbesy.lisp \
 numerical/slatec/zbinu.lisp \
+numerical/slatec/zbiry.lisp \
 numerical/slatec/zbknu.lisp \
 numerical/slatec/zbuni.lisp \
 numerical/slatec/zbunk.lisp \

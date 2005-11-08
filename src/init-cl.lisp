@@ -1,12 +1,12 @@
-;********************************************************
-; file:        init-cl.lisp                              
-; description: Initialize Maxima                         
-; date:        Wed Jan 13 1999 - 20:27                   
-; author:      Liam Healy <Liam.Healy@nrl.navy.mil>      
-;********************************************************
+;;********************************************************
+;; file:        init-cl.lisp                              
+;; description: Initialize Maxima                         
+;; date:        Wed Jan 13 1999 - 20:27                   
+;; author:      Liam Healy <Liam.Healy@nrl.navy.mil>      
+;;********************************************************
 
 (in-package :maxima)
-(use-package "COMMAND-LINE")
+
 ;;; An ANSI-CL portable initializer to replace init_max1.lisp
 
 ;;; Locations of various types of files. These variables are discussed
@@ -20,14 +20,12 @@
 (defvar *maxima-sharedir*)
 (defvar *maxima-symdir*)
 (defvar *maxima-srcdir*)
-(defvar *maxima-demodir*)
-(defvar *maxima-testsdir*)
 (defvar *maxima-docdir*)
 (defvar *maxima-infodir*)
 (defvar *maxima-htmldir*)
-(defvar *maxima-plotdir*)
 (defvar *maxima-layout-autotools*)
 (defvar *maxima-userdir*)
+(defvar *maxima-tempdir*)
 
 (defun print-directories ()
   (format t "maxima-prefix=~a~%" *maxima-prefix*)
@@ -43,6 +41,7 @@
   (format t "maxima-plotdir=~a~%" *maxima-plotdir*)
   (format t "maxima-layout-autotools=~a~%" *maxima-layout-autotools*)
   (format t "maxima-userdir=~a~%" *maxima-userdir*)
+  (format t "maxima-tempdir=~a~%" *maxima-tempdir*)
   ($quit))
 
 (defvar *maxima-lispname* #+clisp "clisp"
@@ -53,12 +52,7 @@
 	#+openmcl "openmcl"
 	#-(or clisp cmu sbcl gcl allegro openmcl) "unknownlisp")
 
-(defun combine-path (list)
-  (let ((result (first list)))
-    (mapc #'(lambda (x) 
-		(setf result 
-		      (concatenate 'string result "/" x))) (rest list))
-    result))
+
 
 (defvar $file_search_lisp nil
   "Directories to search for Lisp source code.")
@@ -72,29 +66,6 @@
 (defvar $file_search_usage nil)
 (defvar $chemin nil)
 
-#+gcl
-(defun maxima-getenv (envvar)
-  (si::getenv envvar))
-
-#+allegro
-(defun maxima-getenv (envvar)
-  (system:getenv envvar))
-
-#+cmu
-(defun maxima-getenv (envvar)
-  (cdr (assoc envvar ext:*environment-list* :test #'string=)))
-
-#+sbcl
-(defun maxima-getenv (envvar)
-  (sb-ext:posix-getenv envvar))
-
-#+clisp
-(defun maxima-getenv (envvar)
-  (ext:getenv envvar))
-
-#+mcl
-(defun maxima-getenv (envvar)
-  (ccl::getenv envvar))
 
 (defun maxima-parse-dirstring (str)
   (let ((sep "/"))
@@ -109,7 +80,7 @@
 		       (concatenate 'string
 				    (string-right-trim 
 				     ":" dev) ":")
-		     ""))
+		       ""))
 		 "/"
 		 (combine-path
 		  (rest (pathname-directory str))))))
@@ -120,7 +91,7 @@
 	(datadir)
 	(infodir)
 	(package-version (combine-path (list *autoconf-package*
-					 *autoconf-version*)))
+					     *autoconf-version*)))
 	(binary-subdirectory (concatenate 'string 
 					  "binary-" *maxima-lispname*)))
     (if maxima-prefix-env
@@ -199,10 +170,24 @@
 		  "/tmp")))
     (combine-path (list (maxima-parse-dirstring base-dir) maxima-dir))))
 
+(defun default-tempdir ()
+  (let ((home-env (maxima-getenv "HOME"))
+	(base-dir ""))
+    (setf base-dir 
+	  (if (and home-env (string/= home-env ""))
+	      (if (string= home-env "c:\\")
+		  "c:\\user\\"
+		  home-env)
+	      (if (string= *autoconf-win32* "true")
+		  "c:\\user\\"
+		  "/tmp")))
+    (maxima-parse-dirstring base-dir)))
+
 (defun set-pathnames ()
   (let ((maxima-prefix-env (maxima-getenv "MAXIMA_PREFIX"))
 	(maxima-layout-autotools-env (maxima-getenv "MAXIMA_LAYOUT_AUTOTOOLS"))
-	(maxima-userdir-env (maxima-getenv "MAXIMA_USERDIR")))
+	(maxima-userdir-env (maxima-getenv "MAXIMA_USERDIR"))
+	(maxima-tempdir-env (maxima-getenv "MAXIMA_TEMPDIR")))
     ;; MAXIMA_DIRECTORY is a deprecated substitute for MAXIMA_PREFIX
     (if (not maxima-prefix-env)
 	(setq maxima-prefix-env (maxima-getenv "MAXIMA_DIRECTORY")))
@@ -219,7 +204,10 @@
 	(set-pathnames-without-autoconf maxima-prefix-env))
     (if maxima-userdir-env
 	(setq *maxima-userdir* (maxima-parse-dirstring maxima-userdir-env))
-	(setq *maxima-userdir* (default-userdir))))
+	(setq *maxima-userdir* (default-userdir)))
+    (if maxima-tempdir-env
+	(setq *maxima-tempdir* (maxima-parse-dirstring maxima-tempdir-env))
+	(setq *maxima-tempdir* (default-tempdir))))
   
   (let* ((ext #+gcl "o"
 	      #+cmu (c::backend-fasl-file-type c::*target-backend*)
@@ -236,7 +224,7 @@
 	 (maxima-patterns "###.{mac,mc}")
 	 (demo-patterns "###.{dem,dm1,dm2,dm3,dmt}")
 	 (usage-patterns "##.{usg,texi}")
-	 (share-subdirs "{affine,algebra,calculus,combinatorics,contrib,contrib/nset,contrib/pdiff,diffequations,graphics,integequations,integration,macro,matrix,misc,numeric,physics,simplification,specfunctions,sym,tensor,trigonometry,utils,vector}"))
+	 (share-subdirs "{affine,algebra,calculus,combinatorics,contrib,contrib/nset,contrib/pdiff,contrib/numericalio,contrib/descriptive,contrib/distrib,linearalgebra,diffequations,graphics,integequations,integration,macro,matrix,misc,numeric,physics,simplification,specfunctions,sym,tensor,trigonometry,utils,vector}"))
     (setq $file_search_lisp
 	  (list '(mlist)
 		;; actually, this entry is not correct.
@@ -266,7 +254,9 @@
 				    usage-patterns))
 		(combine-path (list *maxima-docdir* usage-patterns))))
     (setq $chemin
-	  (concatenate 'string *maxima-symdir* "/"))
+	  (list '(mlist)
+		(combine-path (list *maxima-symdir* lisp-patterns))
+		(combine-path (list *maxima-symdir* maxima-patterns))))
     (setq cl-info::*info-paths* (list (concatenate 'string
 						   *maxima-infodir* "/")))))
 
@@ -325,14 +315,14 @@
 	(setf lisp-string (unix-like-basename lisp))
 	(when (search "binary-" lisp-string)
 	  (setf lisp-string (subseq lisp-string (length "binary-") 
-				  (length lisp-string)))
+				    (length lisp-string)))
 	  (format t "version ~a, lisp ~a~%" version-string lisp-string))))
     (bye)))
 
 (defun process-maxima-args (input-stream batch-flag)
-;    (format t "processing maxima args = ")
-;    (mapc #'(lambda (x) (format t "\"~a\"~%" x)) (get-application-args))
-;    (terpri)
+  ;;    (format t "processing maxima args = ")
+  ;;    (mapc #'(lambda (x) (format t "\"~a\"~%" x)) (get-application-args))
+  ;;    (terpri)
   (let ((maxima-options nil))
     (setf maxima-options
 	  (list 
@@ -399,7 +389,8 @@
 	   (make-cl-option :names '("--disable-readline")
 			   :action #'(lambda ()
 				       #+gcl
-				       (si::readline-off)))
+				       (si::readline-off))
+			   :help-string "Disable readline support.")
 	   (make-cl-option :names '("-s" "--server")
 			   :argument "<port>"
 			   :action #'(lambda (port-string)
@@ -429,7 +420,7 @@
     (process-args (get-application-args) maxima-options))
   (values input-stream batch-flag))
 
-(defun user::run ()
+(defun cl-user::run ()
   "Run Maxima in its own package."
   (in-package "MAXIMA")
   (setf *load-verbose* nil)
@@ -445,28 +436,22 @@
       (set-pathnames)
       (setf (values input-stream batch-flag) 
 	    (process-maxima-args input-stream batch-flag))
-      #+(or cmu sbcl clisp allegro mcl)
       (progn
 	(loop 
-	   (with-simple-restart (macsyma-quit "Macsyma top-level")
-	     (macsyma-top-level input-stream batch-flag))))
-      #-(or cmu sbcl clisp allegro mcl)
-      (catch 'macsyma-quit
-	(macsyma-top-level input-stream batch-flag)))))
+	 (with-simple-restart (macsyma-quit "Maxima top-level")
+	     (macsyma-top-level input-stream batch-flag)))))))
 
-(import 'user::run)
-
-($setup_autoload "eigen.mac" '$eigenvectors '$eigenvalues)
+(import 'cl-user::run)
 
 (defun $to_lisp ()
-  (format t "~&Type (to-maxima) to restart~%")
+  (format t "~&Type (to-maxima) to restart, ($quit) to quit Maxima.~%")
   (let ((old-debugger-hook *debugger-hook*))
     (catch 'to-maxima
       (unwind-protect
-	  (maxima-read-eval-print-loop)
+	   (maxima-read-eval-print-loop)
 	(setf *debugger-hook* old-debugger-hook)
 	(format t "Returning to Maxima~%"))))
-)
+  )
 
 (defun to-maxima ()
   (throw 'to-maxima t))
@@ -482,38 +467,37 @@
        (prin1 (eval form))))))
 
 (defun maxima-lisp-debugger-repl (condition me-or-my-encapsulation)
+  (declare (ignore me-or-my-encapsulation))
   (format t "~&Maxima encountered a Lisp error:~%~% ~A" condition)
   (format t "~&~%Automatically continuing.~%To reenable the Lisp debugger set *debugger-hook* to nil.~%")
   (throw 'to-maxima-repl t))
-
-(defun $jfa_lisp ()
-  (format t "jfa was here"))
 
 (defvar $help "type describe(topic) or example(topic);")
 
 (defun $help () $help)			;
 
-;; CMUCL needs because when maxima reaches EOF, it calls BYE, not $QUIT.
-#+cmu
-(defun bye ()
-  (ext:quit))
+;;; Now that all of maxima has been loaded, define the various lists
+;;; and hashtables of builtin symbols and values.
 
-#+sbcl
-(defun bye ()
-  (sb-ext:quit))
+;;; The symbols in problematic-symbols contains properties with
+;;; circular data structures. Attempting to copy a circular structure
+;;; into *builtin-symbol-props* would cause a hang. Lacking a better
+;;; solution, we simply avoid those symbols.
+(let ((problematic-symbols '($%gamma $%phi $global $%pi $%e)))
+  (do-symbols (s (find-package 'maxima))
+    (when (and (eql (symbol-package s) (find-package 'maxima))
+	       (memq (getchar s 1) '($ % &)))
+      (push s *builtin-symbols*)
+      (when (not (memq s problematic-symbols))
+	(setf (gethash s *builtin-symbol-props*)
+	      (copy-tree (symbol-plist s)))))))
 
-#+clisp
-(defun bye ()
-  (ext:quit))
+(dolist (s *builtin-symbols*)
+  (when (boundp s)
+    (push s *builtin-symbols-with-values*)))
 
-#+allegro
-(defun bye ()
-  (excl:exit))
+(dolist (s *builtin-symbols-with-values*)
+  (setf (gethash s *builtin-symbol-values*) (symbol-value s)))
 
-#+mcl
-(defun bye ()
-  (ccl::quit))
-
-(defun $maxima_server (port)
-  (load "/home/amundson/devel/maxima/archive/src/server.lisp")
-  (user::setup port))
+(setf *builtin-$props* (copy-list $props))
+(setf *builtin-$rules* (copy-list $rules))
