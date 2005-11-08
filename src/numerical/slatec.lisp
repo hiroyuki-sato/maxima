@@ -1,6 +1,6 @@
 
 (defpackage "SLATEC"
-  (:use "F2CL-LIB" #-gcl "COMMON-LISP" #+gcl "LISP")
+  (:use "F2CL-LIB" "COMMON-LISP")
   (:export
    ;; Error functions
    "DERF" "DERFC"
@@ -14,11 +14,14 @@
    ;; Bessel function: I
    "DBESI0" "DBESI1" "DBESI" "DBSI0E" "DBSI1E" "ZBESI"
 
-   ;; Bessel function : K
+   ;; Bessel function: K
    "DBESK0" "DBESK1" "DBESK" "ZBESK"
+
+   ;; Besseel function: H
+   "ZBESH"
    
    ;; Airy functions
-   "DAI"
+   "DAI" "ZAIRY" "DJAIRY" "DBI" "ZBIRY" "DYAIRY"
 
    ;; Exponential integrals
    "DE1")

@@ -1,43 +1,43 @@
-; macros.l - all the basic macros
+;; macros.l - all the basic macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;Copyright (c) University of Waikato;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;Hamilton, New Zeland 1992-95 - all rights reserved;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (in-package :f2cl-lib)
 
-; macros:
-;	rexpt
-;	fexport
-;	fproclaim
-;	fuse-package 
-;	fin-package
-;	map-defvar
-;	do1 
-;	do!
-;	double-cdr
-;	putproperty
-;	defprop
-;	array-cl
-;	store-cl
-;	apply!
+;; macros:
+;;	rexpt
+;;	fexport
+;;	fproclaim
+;;	fuse-package 
+;;	fin-package
+;;	map-defvar
+;;	do1 
+;;	do!
+;;	double-cdr
+;;	putproperty
+;;	defprop
+;;	array-cl
+;;	store-cl
+;;	apply!
 
-;	rfref
-;	rfset
-;	fref
-;	fset
+;;	rfref
+;;	rfset
+;;	fref
+;;	fset
 
-;	while
-;       fdo
-;	reset-vble - a defun
-;       arithmetic-if
-;	computed-goto
-;	assigned-goto
-;	eqv
-;	constant-list
-;----------------------------------------------------------------------------
+;;	while
+;;       fdo
+;;	reset-vble - a defun
+;;       arithmetic-if
+;;	computed-goto
+;;	assigned-goto
+;;	eqv
+;;	constant-list
+;;----------------------------------------------------------------------------
 
 (eval-when (compile load eval) (proclaim '(special *verbose*)))
-;----------------------------------------------------------------------------
+;;----------------------------------------------------------------------------
 #+aclpc (defmacro rexpt (x y) `(realpart (expt ,x ,y)))
 #-aclpc (defmacro rexpt (x y) `(expt ,x ,y))
 
@@ -81,11 +81,11 @@ is not included")
   `(complex double-float))
 
 (deftype array-double-float ()
-    `(array double-float (*)))
+  `(array double-float (*)))
 (deftype array-integer4 ()
-    `(array integer4 (*)))
+  `(array integer4 (*)))
 (deftype array-single-float ()
-    `(array single-float (*)))
+  `(array single-float (*)))
 (deftype array-strings ()
   `(array string (*)))
 
@@ -167,12 +167,12 @@ is not included")
     (declare (type fixnum offset)
 	     (optimize (speed 3) (safety 0)))
     (loop
-	(multiple-value-bind (displaced-to index-offset)
-	    (array-displacement array)
-	  (when (null displaced-to)
-	    (return-from find-array-data (values array offset)))
-	  (incf offset index-offset)
-	  (setf array displaced-to)))))
+     (multiple-value-bind (displaced-to index-offset)
+	 (array-displacement array)
+       (when (null displaced-to)
+	 (return-from find-array-data (values array offset)))
+       (incf offset index-offset)
+       (setf array displaced-to)))))
 
 (defmacro with-array-data ((data-var offset-var array) &rest body)
   `(multiple-value-bind (,data-var ,offset-var)
@@ -255,17 +255,17 @@ is not included")
 	     (t
 	      ,data-list)))))  
 
-;----------------------------------------------------------------------------
+;;----------------------------------------------------------------------------
 
 #-aclpc (defmacro while (con &rest body)
-            `(loop (if (not ,con) (return t)) ,@body))
-;------------------------------------------------------------------
+	  `(loop (if (not ,con) (return t)) ,@body))
+;;------------------------------------------------------------------
 
 (defmacro fortran_comment (&rest args)
   (declare (ignore args)))
 
-;----------------------------------------------------------------------------
-; fdo has similar syntax as do except there will only be one do_vble
+;;----------------------------------------------------------------------------
+;; fdo has similar syntax as do except there will only be one do_vble
 
 (defmacro fdo (do_vble_clause predicate_clause &rest body)
   (let ((step (gensym (symbol-name '#:step-)))
@@ -295,39 +295,39 @@ is not included")
 			     ,iteration_count (the integer4 (1- ,iteration_count)))))
 		  '((go loop)))))))))
 
-;(defmacro fdo (do-vbles predicate-clause &rest body)
-;   `(prog nil
-;          (setq ,(caar do-vbles) ,(cadar do-vbles)) 
-;          loop
-;          (return
-;          (cond ,(reset-vble predicate-clause)
-;                ,(cons 't 
-;                       (append 
-;                        (append body `((setq ,(caar do-vbles) ,(caddar do-vbles))))
-;                        '((go loop))))))))
-;(defmacro fdo (do-vbles predicate-clause &rest body)
-;   `(prog (iteration-count)
-;          ,(append '(psetq) 
-;                   (do ((do-vars do-vbles (cdr do-vars))
-;                        (ret nil (append ret (list (caar do-vars) (cadar do-vars)))))
-;                       ((null do-vars) ret)))
-;          loop
-;          (return
-;          (cond ,predicate-clause
-;                ,(cons 't 
-;                       (append 
-;                        (append body
-;                                (list
-;                                (append '(psetq)
-;                                (do ((do-vars do-vbles (cdr do-vars))
-;                                     (ret nil (append ret (if (null (caddar do-vars)) 
-;                                                              nil 
-;                                                              (list (caar do-vars) 
-;                                                                    (caddar do-vars))))))
-;                                    ((null do-vars) ret)))))
-;                        '((go loop))))))))
+;;(defmacro fdo (do-vbles predicate-clause &rest body)
+;;   `(prog nil
+;;          (setq ,(caar do-vbles) ,(cadar do-vbles)) 
+;;          loop
+;;          (return
+;;          (cond ,(reset-vble predicate-clause)
+;;                ,(cons 't 
+;;                       (append 
+;;                        (append body `((setq ,(caar do-vbles) ,(caddar do-vbles))))
+;;                        '((go loop))))))))
+;;(defmacro fdo (do-vbles predicate-clause &rest body)
+;;   `(prog (iteration-count)
+;;          ,(append '(psetq) 
+;;                   (do ((do-vars do-vbles (cdr do-vars))
+;;                        (ret nil (append ret (list (caar do-vars) (cadar do-vars)))))
+;;                       ((null do-vars) ret)))
+;;          loop
+;;          (return
+;;          (cond ,predicate-clause
+;;                ,(cons 't 
+;;                       (append 
+;;                        (append body
+;;                                (list
+;;                                (append '(psetq)
+;;                                (do ((do-vars do-vbles (cdr do-vars))
+;;                                     (ret nil (append ret (if (null (caddar do-vars)) 
+;;                                                              nil 
+;;                                                              (list (caar do-vars) 
+;;                                                                    (caddar do-vars))))))
+;;                                    ((null do-vars) ret)))))
+;;                        '((go loop))))))))
 
-;----------------------------------------------------------------------------
+;;----------------------------------------------------------------------------
 ;; macro for division 
 
 (defmacro f2cl/ (x y)
@@ -400,6 +400,12 @@ is not included")
             (error "bad statement number in assigned goto"))
         (go ,i)))
 
+
+(eval-when (:load-toplevel :compile-toplevel :execute)
+(defun make-label (n) 
+  (read-from-string (concatenate 'string (symbol-name :label) (princ-to-string n))))
+
+
 (defun assigned-goto-aux (tag-list)
   (let ((cases nil))
     (dolist (tag tag-list)
@@ -407,6 +413,8 @@ is not included")
 	    cases))
     (push `(t (error "Unknown label for assigned goto")) cases)
     (nreverse cases)))
+)
+
 
 (defmacro assigned-goto (var tag-list)
   `(case ,var
@@ -459,7 +467,8 @@ is not included")
        (truncate (the (double-float #.(float (- (ash 1 31)) 1d0)
 				    #.(float (1- (ash 1 31)) 1d0))
 		   x))))))
-  
+
+
 (defun ifix (x)
   (int x))
 (defun idfix (x)
@@ -880,7 +889,7 @@ is not included")
   (declare (type double-float x))
   (atan x))
 (defun atan2 (x y)
-  (declare (type double-float x))
+  (declare (type single-float x))
   (atan x y))
 (defun datan2 (x y)
   (declare (type double-float x y))
@@ -947,7 +956,7 @@ is not included")
     `(let ((,v ',vals))
       ,(process-implied-do implied-do low-bnds var-types v))))
 
-;-----------------------------------------------------------------------------  ; end of macros.l
+;;-----------------------------------------------------------------------------  ; end of macros.l
    
 ;; Map Fortran logical unit numbers to Lisp streams
 
@@ -1125,7 +1134,7 @@ causing all pending operations to be flushed"
 		      `',dims
 		      `(list ,@dims))))
     `(let ((,init (make-array ,new-dims
-			      :element-type `(simple-array base-char (,',@len))
+			      :element-type `(simple-array character (,',@len))
 			      :initial-element (make-string ,@len))))
        (dotimes (k (array-total-size ,init))
 	 (setf (aref ,init k)
@@ -1317,31 +1326,84 @@ causing all pending operations to be flushed"
 ;;;-------------------------------------------------------------------------
 ;;; end of macros.l
 ;;;
-;;; $Id: f2cl-lib.lisp,v 1.5 2003/11/26 17:27:16 rtoy Exp $
+;;; $Id: f2cl-lib.lisp,v 1.7 2005/05/19 12:40:27 rtoy Exp $
 ;;; $Log: f2cl-lib.lisp,v $
-;;; Revision 1.5  2003/11/26 17:27:16  rtoy
-;;; Synchronize to the current versions of f2cl.
+;;; Revision 1.7  2005/05/19 12:40:27  rtoy
+;;; Update and merge to current version of macros.l from the f2cl
+;;; distribution.  Most of the changes done for maxima have been merged to
+;;; the f2cl version, and we're just picking up the changes in the f2cl
+;;; version.
 ;;;
-;;; Revision 1.4  2003/07/24 18:46:30  rtoy
-;;; Correct a declaration in amax0.
-;;;
-;;; Revision 1.3  2002/05/19 20:24:22  rtoy
-;;; o GCL doesn't like the declarations in our max functions, so don't
-;;;   declare the variables.
-;;; o GCL doesn't like our defparameter for *lun-hash*.  Make it defvar.
-;;; o GCL doesn't have least-positive-normalized-double-float, so
-;;;   make it the same as least-positive-double-float.  Do likewise for
+;;; Revision 1.62  2005/05/16 15:50:25  rtoy
+;;; o Replace single semicolons with multiple semicolons as appropriate.
+;;; o GCL apparently doesn't like some declarations, so comment them out
+;;;   for GCL.
+;;; o GCL doesn't like the defparameter for *lun-hash*.
+;;; o GCL doesn't seem to have least-positive-normalized-double-float, so
+;;;   make it the same as least-positive-double-float.  Likewise for
 ;;;   single-float.
 ;;;
-;;; Revision 1.2  2002/05/05 23:44:35  rtoy
-;;; Update to latest version of macros.l:
-;;; o Fixes bug in int-sub.
-;;; o GCL doesn't have least-positive-normalized float constants
-;;; o d1mach(5)/r1mach(5) wasn't being computed as accurately as it should
-;;;   have.
+;;; These changes come from maxima.
 ;;;
-;;; Revision 1.1  2002/04/26 13:03:40  rtoy
-;;; Initial revision.
+;;; Revision 1.61  2005/03/28 20:38:18  rtoy
+;;; Make strings with an element-type of character instead of base-char,
+;;; in case the Lisp implementation has unicode support.
+;;;
+;;; Revision 1.60  2004/09/01 14:17:57  rtoy
+;;; atan2 takes single-float args, not double-float.
+;;;
+;;; Revision 1.59  2004/08/14 22:29:16  marcoxa
+;;; Added an EVAL-WHEN to silence the LW compiler.
+;;;
+;;; Revision 1.58  2004/08/14 04:17:45  rtoy
+;;; Need a definition for MAKE-LABEL.
+;;;
+;;; Revision 1.57  2003/11/23 14:10:11  rtoy
+;;; FDO should not call function that are not in the F2CL-LIB package.
+;;; Macros.l should be self-contained.
+;;;
+;;; Revision 1.56  2003/11/13 05:37:11  rtoy
+;;; Add macro WITH-MULTI-ARRAY-DATA.  Basically like WITH-ARRAY-DATA, but
+;;; takes a list of array info so we don't get deeply nested code when
+;;; there are lots of arrays.
+;;;
+;;; Keep WITH-ARRAY-DATA around for backward compatibility.
+;;;
+;;; Revision 1.55  2003/11/12 05:33:22  rtoy
+;;; Macro to handle assigned gotos was wrong.  Fix it.
+;;;
+;;; Revision 1.54  2003/09/25 03:43:43  rtoy
+;;; Need to check for reserved names in the fdo macro.  (I think.)
+;;;
+;;; Revision 1.53  2003/01/07 18:44:52  rtoy
+;;; Add new implementations of aint.  Speeds up mpnorm by a factor of 5 on
+;;; CMUCL/sparc!
+;;;
+;;; Revision 1.52  2002/09/13 17:50:19  rtoy
+;;; From Douglas Crosher:
+;;;
+;;; o Make this work with lower-case Lisps
+;;; o Fix a few typos
+;;; o Make a safer fortran reader.
+;;;
+;;; Revision 1.51  2002/06/30 13:08:51  rtoy
+;;; Add some declarations to AINT so that CMUCL can completely inline the
+;;; call to ftruncate.
+;;;
+;;; Revision 1.50  2002/05/05 23:41:17  rtoy
+;;; Typo: extra paren.
+;;;
+;;; Revision 1.49  2002/05/05 23:38:47  rtoy
+;;; The int-sub macro didn't handle things like (- 3 m m) correctly.  It
+;;; was returning (- 3 (- m m)) instead of (- (- 3 m) m)!
+;;;
+;;; Revision 1.48  2002/05/03 17:48:06  rtoy
+;;; GCL doesn't have least-positive-normalized-{single/double}-float, so
+;;; use just least-positive-{single/double}-float.
+;;;
+;;; Revision 1.47  2002/05/03 17:44:36  rtoy
+;;; Replace row-major-aref with just aref because we don't need it and
+;;; because gcl doesn't have it.
 ;;;
 ;;; Revision 1.46  2002/03/19 02:23:09  rtoy
 ;;; According to the rules of Fortran, the initializers in a DATA

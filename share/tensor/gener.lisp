@@ -1,19 +1,32 @@
 ;;; -*- Mode:LISP; Package:MACSYMA -*-
+;; 
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+;;
+;; Comments: Code to generate ctensor programs from itensor expressions
+;;
 
 ;	** (c) Copyright 1979 Massachusetts Institute of Technology **
 (in-package "MAXIMA")
 
 
-(declare-top (special $metric $metricconvert indlist empty))
+(declare-top (special $imetric $metricconvert indlist empty))
 
-;$METRICCONVERT if non-NIL will allow $GENERATE to rename the metric tensor
-;   ($METRIC must be bound) with 2 covariant indices to LG and with 2
+;$METRICCONVERT if non-NIL will allow $IC_CONVERT to rename the metric tensor
+;   ($IMETRIC must be bound) with 2 covariant indices to LG and with 2
 ;   contravariant indices to UG.
 
-(defun $GENERATE (e)
+(defun $IC_CONVERT (e)
        (prog (free lhs rhs)
 	     (cond ((or (atom e) (not (eq (caar e) 'MEQUAL)))
-		    (merror "GENERATE requires an equation as an argument"))
+		    (merror "IC_CONVERT requires an equation as an argument"))
 		   ((equal (setq free ($indices e)) empty)
 		    (return (cons '(MSETQ) (cdr e))))
 		   ((or (eq (ml-typep (cadr e)) 'SYMBOL)           ;If a symbol or
@@ -33,18 +46,18 @@
 			    (ishow lhs))))
 	     (setq free (nreverse (itensor-sort (cdadr free)))  ;Set FREE to just the
 		   indlist nil)                           ;free indices
-	     (and $METRICCONVERT (boundp '$METRIC)
-		  (setq lhs (changename $METRIC t 0 2 '$UG
-					(changename $METRIC t 2 0 '$LG lhs))
-			rhs (changename $METRIC t 0 2 '$UG
-					(changename $METRIC t 2 0 '$LG rhs))))
+	     (and $METRICCONVERT (boundp '$IMETRIC)
+		  (setq lhs (changename $IMETRIC t 0 2 '$UG
+					(changename $IMETRIC t 2 0 '$LG lhs))
+			rhs (changename $IMETRIC t 0 2 '$UG
+					(changename $IMETRIC t 2 0 '$LG rhs))))
 	     (tabulate rhs)
 	     (setq indlist (unique indlist))
 	     (do ((q (mapcar 'car indlist) (cdr q)))
 		 ((null q))
 		 (cond ((memq (car q) (cdr q))
 			(merror "~
-GENERATE cannot currently handle indexed objects of the same name~
+IC_CONVERT cannot currently handle indexed objects of the same name~
 ~%with different numbers of covariant and//or contravariant indices:~%~M"
 				(car q)))))
 	     (cond ((not (eq (ml-typep lhs) 'SYMBOL))
@@ -102,7 +115,7 @@ GENERATE cannot currently handle indexed objects of the same name~
 
 (defun SUMMER (p dummy) ;Makes implicit sums explicit in the product or indexed
                         ;object P where DUMMY is the list of dummy indices of P
-       (prog (dummy2 scalars indexed s)                          ;at this level
+       (prog (dummy2 scalars indexed s dummy3)                   ;at this level
 	     (setq dummy2 (intersect (all ($indices2 p)) dummy))
 	     (do ((p (cond ((eq (caar p) 'MTIMES) (cdr p))
 			   (t (ncons p))) (cdr p))
@@ -130,13 +143,13 @@ GENERATE cannot currently handle indexed objects of the same name~
 						($indices
 						 (append '((MTIMES))
 							 scalars indexed)))))))
-		    (setq dummy2 s
+		    (setq dummy3 s
 			  s scalars
 			  scalars nil)
 		    (do ((p s (cdr p)) (obj))
 			((null p))
 			(setq obj (car p))
-			(cond ((null (intersect dummy2 (all ($indices obj))))
+			(cond ((null (intersect dummy3 (all ($indices obj))))
 			       (setq scalars (cons obj scalars)))
 			      (t (setq indexed (cons obj indexed)))))))
 	     (return
@@ -166,24 +179,26 @@ GENERATE cannot currently handle indexed objects of the same name~
 	      (append (ncons (car e)) (ncons (t-convert (cadr e))) (cddr e)))
 	     (t (changeform e))))
 
-(defun CHANGEFORM (e)           ;Converts a single object from ITENSR format to
+(defun CHANGEFORM (e)           ;Converts a single object from ITENSOR format to
        (cond ((atom e) e)       ;ETENSR format
 	     ((rpobj e)
 	      (do ((deriv (cdddr e) (cdr deriv))
-		   (new (cond ((and (null (cdadr e)) (null (cdaddr e)))
+;		   (new (cond ((and (null (cdadr e)) (null (cdaddr e)))
+		   (new (cond ((and (null (covi e)) (null (conti e)))
 			       (caar e))     ;If no covariant and contravariant
 			                     ;indices then make into an atom
 			      (t (cons (cons (equiv-table (caar e)) '(ARRAY))
-				       (append (cdadr e) (cdaddr e)))))))
+;				       (append (cdadr e) (cdaddr e)))))))
+				       (append (covi e) (conti e)))))))
 		  ((null deriv) new)
 		  (setq new (append '(($DIFF)) (ncons new)
-				    (ncons (cons '($OMEGA ARRAY)
+				    (ncons (cons '($CT_COORDS ARRAY)
 						 (ncons (car deriv))))))))
 	     (t e)))
 
 (defun EQUIV-TABLE (a)                ;Makes appropiate name changes converting
-       (cond ((memq a '($CHR1 %CHR1)) '$LCS)             ;from ITENSR to ETENSR
-	     ((memq a '($CHR2 %CHR2)) '$MCS)
+       (cond ((memq a '($ICHR1 %ICHR1)) '$LCS)            ;from ITENSOR to ETENSR
+	     ((memq a '($ICHR2 %ICHR2)) '$MCS)
 	     (t a)))
 
 (declare-top (unspecial indlist))
@@ -296,7 +311,7 @@ GENERATE cannot currently handle indexed objects of the same name~
 					(cadr (cdaddr e)) (cadddr e) indexl))
 			  (deriv (cddddr e) (cdr deriv)))
 			 ((null deriv) e)
-			 (setq e (conmetderiv ($diff e (car deriv))
+			 (setq e (conmetderiv ($idiff e (car deriv))
 					      g indexl))))
 		    (t e)))
 	     (t (mysubst0 (cons (car e)
@@ -310,13 +325,13 @@ GENERATE cannot currently handle indexed objects of the same name~
 	   (flag (list '(MPLUS SIMP)
 		       (list '(MTIMES SIMP) -1
 			     (list g (ncons SMLIST) (list SMLIST dummy i))
-			     (list '($CHR2 SIMP) (list SMLIST dummy k)
+			     (list '($ICHR2 SIMP) (list SMLIST dummy k)
 				   (list SMLIST j)))
 		       (list '(MTIMES SIMP) -1
 			     (list g (ncons SMLIST) (list SMLIST dummy j))
-			     (list '($CHR2 SIMP) (list SMLIST dummy k)
+			     (list '($ICHR2 SIMP) (list SMLIST dummy k)
 				   (list SMLIST i)))))
-	   (setq dummy ($dummy))
+	   (setq dummy ($idummy))
 	   (and (not (memq dummy indexl)) (setq flag t))))
 
 (add2lnc '(($CONMETDERIV) $EXP $NAME) $funcs)
@@ -343,9 +358,9 @@ GENERATE cannot currently handle indexed objects of the same name~
 
 (add2lnc '(($FLUSH1DERIV) $EXP $NAME) $funcs)
 
-(defun $GEODESIC (exp g)
-       ($flush1deriv ($flush exp '$CHR2 '%CHR2) g))
+(defun $IGEODESIC_COORDS (exp g)
+       ($flush1deriv ($flush exp '$ICHR2 '%ICHR2) g))
 
-(add2lnc '(($GEODESIC) $EXP $NAME) $funcs)
+(add2lnc '(($IGEODESIC_COORDS) $EXP $NAME) $funcs)
 
 

@@ -1,12 +1,27 @@
 ;;; -*- Mode:LISP; Package:MACSYMA -*-
+;; 
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+;;
+;; Comments: Canonical simplification for itensor.lisp
+;;
+
 ;	** (c) Copyright 1979 Massachusetts Institute of Technology **
+
 (in-package "MAXIMA")
 
 
 
-(DECLARE-TOP (SPECIAL FREI BOUNI $CANTERM BREAKLIST SMLIST $DUMMYX))
+(DECLARE-TOP (SPECIAL FREI BOUNI $CANTERM BREAKLIST SMLIST $IDUMMYX))
 
-(SETQ NODOWN '($CHR2 $CHR1 %CHR2 %CHR1 $KDELTA %KDELTA))
+(SETQ NODOWN '($ICHR2 $ICHR1 %ICHR2 %ICHR1 $KDELTA %KDELTA))
 
 (DEFUN NDOWN (X) (PUTPROP X T 'NODOWN))
 
@@ -19,39 +34,56 @@
 
 (DEFUN BREK (I) (COND  ((ZL-MEMBER I BREAKLIST) T) ))
 
+; This package blindly rearranges the indices of RPOBJs, even those for
+; which such index mangling is forbidden, like our special tensors. To
+; avoid this, we use a private version of RPOBJ that excludes special
+; tensors like the Levi-Civita or Christoffel symbols
+
+(defun specialrpobj (e)
+  (cond ((or (atom e) (atom (car e))) nil)
+        (t (or (member (caar e) christoffels)
+               (eq (caar e) '$kdelta) (eq (caar e) '%kdelta)
+               (eq (caar e) '$levi_civita) (eq (caar e) '%levi_civita)
+           )
+        )
+  )
+)
+
+(defun reallyrpobj (e) (cond ((specialrpobj e) nil) (t (rpobj e))))
+
 ;L IS A LIST OF FACTORS WHICH RPOBS SEPARATES INTO A LIST OF TWO LISTS.  THE
 ;FIRST IS A LIST OF THE RPOBECTS IN L.  THE SECOND IS A LIST OF NON-RP OBJECTS
 
 (DEFUN RPOBS (L)
  (DO ( (X L (CDR X))
-       (Y NIL (COND ((RPOBJ (CAR X)) (APPEND (LIST (CAR X)) Y) )
+       (Y NIL (COND ((reallyRPOBJ (CAR X)) (APPEND (LIST (CAR X)) Y) )
                     (T  Y) )    )
-       (Z NIL (COND ((RPOBJ (CAR X)) Z) 
+       (Z NIL (COND ((reallyRPOBJ (CAR X)) Z) 
                     (T (APPEND (LIST (CAR X)) Z)) ) )    )
 
      ( (NULL X) (CONS  Y (LIST Z)))  ))
      
-(DEFUN NAME (RP) (COND ((RPOBJ RP) (CAAR RP) )
-                        (T (MERROR "NOT RPOBJECT"))))
-(DEFUN CONTI (RP) (COND ((RPOBJ RP) (CDADDR RP))
-                       (T (MERROR "NOT RPOBJECT"))))
-
-(DEFUN COVI (RP) (COND ((RPOBJ RP) (CDADR RP))
-                       (T (MERROR "NOT RPOBJECT"))))
-
-(DEFUN DERI (RP) (COND ((RPOBJ RP) (CDDDR RP))
-                       (T (MERROR "NOT RPOBJECT"))))
-
-(DEFMFUN $NAME (RP) (COND (($TENPR RP) (CAAR RP) ) ;test the name of tensor
-                        (T (MERROR "NOT TENPRECT"))))
-(DEFMFUN $CONTI (RP) (COND (($TENPR RP) (cons SMLIST (CDADDR RP)))
-                       (T (MERROR "NOT RPOBJECT")))) ;test the contravariant indices
-
-(DEFMFUN $COVI (RP) (COND (($TENPR RP) (cons SMLIST (CDADR RP)))
-                       (T (MERROR "NOT RPOBJECT")))) ;test the contravariant indices
-
-(DEFUN $DERI (RP) (COND (($TENPR RP) (cons SMLIST (CDDDR RP)))
-                       (T (MERROR "NOT RPOBJECT"))))
+;(DEFUN NAME (RP) (COND ((RPOBJ RP) (CAAR RP) )
+;                        (T (MERROR "NOT RPOBJECT"))))
+;(DEFUN CONTI (RP) (COND ((RPOBJ RP) (CDADDR RP))
+;                       (T (MERROR "NOT RPOBJECT"))))
+;
+;(DEFUN COVI (RP) (COND ((RPOBJ RP) (CDADR RP))
+;                       (T (MERROR "NOT RPOBJECT"))))
+;
+;(DEFUN DERI (RP) (COND ((RPOBJ RP) (CDDDR RP))
+;                       (T (MERROR "NOT RPOBJECT"))))
+;
+;(DEFMFUN $NAME (RP) (COND (($TENPR RP) (CAAR RP) ) ;test the name of tensor
+;                        (T (MERROR "NOT TENPRECT"))))
+;(DEFMFUN $CONTI (RP) (COND (($TENPR RP) (cons SMLIST (CDADDR RP)))
+;                       (T (MERROR "NOT RPOBJECT")))) ;test the contravariant indices
+;
+;(DEFMFUN $COVI (RP) (COND (($TENPR RP) (cons SMLIST (CDADR RP)))
+;                       (T (MERROR "NOT RPOBJECT")))) ;test the contravariant indices
+;
+;(DEFUN $DERI (RP) (COND (($TENPR RP) (cons SMLIST (CDDDR RP)))
+;                       (T (MERROR "NOT RPOBJECT"))))
 
 (DEFUN FRE (L) (INTERSECT L FREI))
 
@@ -121,7 +153,7 @@ A  (COND ((EQUAL J (f+ -1 K))
 
 (DEFUN TOP (RP) (CDADDR RP))
 (DEFUN BOT (RP) (APPEND (CDADR RP) (CDDDR RP)))
-(DEFUN ALLIND (RP) (COND ((NOT (RPOBJ RP)) NIL)
+(DEFUN ALLIND (RP) (COND ((NOT (reallyRPOBJ RP)) NIL)
             (T (APPEND (CDADR RP) (CDADDR RP) (CDDDR RP)))))
 
 ;MON IS A MONOMIAL WHOSE FACTORS ARE ANYBODY
@@ -359,7 +391,7 @@ A   (COND ((NULL A)
 
 (DEFUN INDSTRUC (MON)
  (DO  ( (L (CDR MON) (CDR L))
-        (B NIL (COND ((RPOBJ (CAR L)) 
+        (B NIL (COND ((reallyRPOBJ (CAR L)) 
                        (APPEND B  (LIST (FINDSTRUC (CAR L))) ))
                       (T  B) ))  )
       ( (NULL L)  B)  )  )
@@ -414,7 +446,7 @@ A   (COND ((NULL A)
 
 (DEFUN TINDSTRUC (MON)
  (DO ( (L (CDR MON) (CDR L))
-       (B NIL (COND ((RPOBJ (CAR L))
+       (B NIL (COND ((reallyRPOBJ (CAR L))
                      (APPEND B  (TFINDSTRUC (CAR L)) ))
                     (T B) )))
      ((NULL L) B)))
@@ -422,7 +454,7 @@ A   (COND ((NULL A)
 (DEFUN TFINDSTRUC (FACT)
      (APPEND (CDADR FACT) (CDADDR FACT) (CDDDR FACT) ))   
 
-(DEFUN DUMM (X)  (EQUAL (CADR (EXPLODEC X)) $DUMMYX))
+(DEFUN DUMM (X)  (EQUAL (CADR (EXPLODEC X)) $IDUMMYX))
 
 
 (DEFUN FINDPERMUT (I1 I2) 
@@ -454,14 +486,16 @@ A   (COND ((NULL A)
 
      
  
-(DEFUN $CANTEN (X)  (DO ((I ($NTERMS X) ($NTERMS L))
+(DEFUN $CANTEN (X)  (cond ((not $allsym) (merror "canten works only if allsym:true has been set")) (t  (DO ((I ($NTERMS X) ($NTERMS L))
                       (L (CANFORM X) (CANFORM L)) )
                      ((= I ($NTERMS L))  L) 
 		      (COND ((EQ $CANTERM T) (PRINT I))) ))
+                    ))
 
-(DEFUN $CONCAN (X) (DO ((I ($NTERMS X) ($NTERMS L))
+(DEFUN $CONCAN (X) (cond ((not $allsym) (merror "concan works only if allsym:true has been set")) (t  (DO ((I ($NTERMS X) ($NTERMS L))
 			(L (CANFORM X) ($CONTRACT (CANFORM L))))
 		       ((= I ($NTERMS L)) L)
 		       (COND ((EQ $CANTERM T) (PRINT I))) ))
+                    ))
 
 

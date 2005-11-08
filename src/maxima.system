@@ -1,10 +1,6 @@
 ; -*- Lisp -*-
-#+(or cmu sbcl openmcl)
-(or (find-package "USER")
-    (rename-package "COMMON-LISP-USER" "COMMON-LISP-USER"
-		    (cons "USER" (package-nicknames "COMMON-LISP-USER"))))
 
-(in-package :user)
+(in-package :cl-user)
 
 (pushnew :cl *features*)
 (pushnew :nocp *features*)
@@ -58,8 +54,7 @@
                (:module destructuring-let :source-pathname ""
                         :components ((:file "letmac")))
                (:module compatibility-macros1 :source-pathname ""
-                        :components (#-gcl (:file "generr") ; jfa
-				     #+gcl (:file "kclmac")
+                        :components ((:file "generr")
 				     (:file "clmacs")))
                (:module compatibility-macros :source-pathname ""
                         :components ((:file "commac"))) 
@@ -271,6 +266,12 @@
 					  :depends-on ("d9aimp" "dcsevl" "initds"))
 				   (:file "dai"
 					  :depends-on ("d9aimp" "daie" "dcsevl" "initds" "xermsg"))
+                                  (:file "dbie"
+                                         :depends-on ("d9aimp" "dcsevl" "initds"))
+                                  (:file "dbi"
+                                         :depends-on ("d9aimp" "dbie" "dcsevl" "initds" "xermsg"))
+                                  (:file "zbiry"
+                                         :depends-on ("zabs" "zbinu" "zdiv" "zsqrt"))
 				   ;; Error functions
 				   (:file "derf"
 					  :depends-on ("dcsevl" "derfc" "initds"))
@@ -381,6 +382,7 @@
 	       (:module server :source-pathname ""
 			:components ((:file "server")))
                (:module i-o :source-pathname ""
+			:depends-on (compatibility-macros)
                         :components ((:file "macsys") 
                                      (:file "mload") 
                                      (:file "suprv1")
@@ -425,11 +427,13 @@
 	       (:module numerical-functions :source-pathname ""
 			:components ((:file "bessel")
 				     ;;#+gcl(:file "parse-body")
-				     (:file "ellipt") 
+				     (:file "ellipt")
+				     (:file "airy")
 				     (:file "numer") 
 				     (:file "intpol") 
 				     (:file "rombrg")))
 	       (:module reader :source-pathname ""
+			:depends-on (compatibility-macros)
 			:components ((:file "nparse")))
 	       (:module display :source-pathname ""
 			:components ((:file "displa") 
@@ -501,8 +505,9 @@
 				     (:file "pade") 
 				     (:file "homog") 
 				     (:file "combin") 
-				     (:file "mstuff")
-				     (:file "set")))
+                     (:file "nset")
+                     (:file "rand-mt19937")
+				     (:file "mstuff")))
 	       (:module poisson-series :source-pathname ""
 			:components ((:file "ratpoi")
 				     (:file "pois2") 

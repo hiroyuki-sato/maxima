@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plotdf.tcl,v 1.5 2002/09/19 16:26:42 mikeclarkson Exp $
+#       $Id: Plotdf.tcl,v 1.7 2004/10/30 08:21:07 vvzhy Exp $
 #
 ###### Plotdf.tcl ######
 #######################################################################
@@ -33,7 +33,7 @@ set plotdfOptions {
     {parameters "" "List of parameters and values eg k=3,l=7+k"}
     {sliders "" "List of parameters ranges k=3:5,u"}
     {linecolors { green black  brown gray black} "colors to use for lines in data plots"}
-    {doTrajectoryAt "" "Place to calculate trajectory"}
+    {trajectory_at "" "Place to calculate trajectory"}
     {linewidth "1.0" "Width of integral lines" }
     {nolines 0 "If not 0, plot points and nolines"}
     {bargraph 0 "If not 0 this is the width of the bars on a bar graph" }
@@ -56,26 +56,26 @@ proc makeFrameDf { win } {
     catch { set top [winfo parent $win]}
     catch {
 
-	wm title $top "Direction Fields"
+	wm title $top [mc "Direction Fields"]
 	wm iconname $top "DF plot"
 	#    wm geometry $top 750x700-0+20
     }
-    set wb $w.buttons
+    set wb $w.plotmenu
     makeLocal $win buttonFont
-    label $w.msg  -wraplength 600 -justify left -text "A direction field plotter by William Schelter" -font $buttonFont
+    label $w.msg  -wraplength 600 -justify left -text [mc "A direction field plotter by William Schelter"] -font $buttonFont
 
-    button $wb.integrate -text "Integrate" -command "setForIntegrate $w" -font $buttonFont
-    setBalloonhelp $win $wb.integrate {Causes clicking on the  plot with the left mouse button at a point, to draw a trajectory passing through that point.   Under Config there is an entry box which allows entering exact x,y coordinates, and which also records the place of the last trajectory computed.}
+    $wb.m add command -label [mc "Integrate"] -command "setForIntegrate $w" -font $buttonFont
+    ## setBalloonhelp $win $wb.integrate [mc "Causes clicking on the  plot with the left mouse button at a point, to draw a trajectory passing through that point.   Under Config there is an entry box which allows entering exact x,y coordinates, and which also records the place of the last trajectory computed."]
 
-    button $wb.plotversust -text "Plot Versus t" -command "plotVersusT $w" -font $buttonFont
-    setBalloonhelp $win $wb.plotversust {Plot the x and y values for the  last trajectory versus t.}
+    $wb.m add command -label [mc "Plot Versus t"] -command "plotVersusT $w" -font $buttonFont
+    ## setBalloonhelp $win $wb.plotversust [mc "Plot the x and y values for the  last trajectory versus t."]
 
 
     setForIntegrate $w
-    pack $wb.integrate -side top -expand 1 -fill x
-    pack $wb.plotversust -side top -expand 1 -fill x
     # pack $w.msg -side top
     pack $w
+    place $wb -in $w -x 2 -y 2 -anchor nw
+    raise $wb
     return $win
 }
 
@@ -98,7 +98,7 @@ proc swapChoose {win msg winchoose } {
 proc doHelpdf { win } {
     global Parser
     doHelp $win [join [list \
-			   {
+			 [mc  {
 			       William Schelter's solver/plotter for ode systems.
 
 			       To QUIT this HELP click here.
@@ -129,11 +129,11 @@ proc doHelpdf { win } {
 			       the initial t value (tinitial), and the x and y centers
 			       and radii, may be set under the  Config menu.
 
-			       You may print to a postscript printer, or save the plot \
-				   as a postscript file, by clicking on save.   To change \
+			       You may print to a postscript printer, or save the plot 
+				   as a postscript file, by clicking on save.   To change 
 				   between printing and saving see the Print Options under Config.
 			
-			   } $Parser(help)]]
+			   } ] $Parser(help)]]
 }
 
 proc setForIntegrate { win} {
@@ -157,11 +157,11 @@ proc doIntegrate { win x0 y0 } {
     makeLocal $win xradius yradius c tstep  nsteps direction linewidth tinitial versus_t linecolors
     linkLocal $win didLast trajectoryStarts
     set rtosx rtosx$win ; set rtosy rtosy$win
-    oset $win doTrajectoryAt [format "%.10g  %.10g" $x0 $y0]
+    oset $win trajectory_at [format "%.10g  %.10g" $x0 $y0]
     lappend trajectoryStarts [list $x0 $y0]
 
     set didLast {}
-    # puts "doing at $doTrajectoryAt"
+    # puts "doing at $trajectory_at"
     set steps $nsteps
     if { "$tstep" == "" } {
 	set h [expr {[vectorlength $xradius $yradius] / 200.0}]
@@ -275,9 +275,9 @@ proc plotVersusT {win } {
     }
 
     foreach {na val } [array get doing] {
-	lappend plotdata [list label "x versus t"] [list plotpoints 2]
+	lappend plotdata [list label "x(t)"] [list plotpoints 2]
 	lappend plotdata [list xversusy [lindex $val 2] [lindex $val 0] ]
-	lappend plotdata [list label "y versus t"]	
+	lappend plotdata [list label "y(t)"]	
 	lappend plotdata [list xversusy [lindex $val 2] [lindex $val 1] ]
     }
     if { ![winfo exists .versust] } {
@@ -286,7 +286,7 @@ proc plotVersusT {win } {
 
 
     plot2d -data $plotdata -windowname $nwin -ycenter $xcenter -yradius $xradius
-    wm title .versust "X and Y versus t"
+    wm title .versust [mc "X and Y versus t"]
 }
 
 proc lreverse { lis } {
@@ -416,7 +416,7 @@ proc parseOdeArg {  s } {
 	set s [string range $s [lindex $junk 1] end]
     }
     if { ![info exists ans] || ([llength $ans] == 2 && "[lindex $ans 0]" != "-dydx") } {
-	error "bad -ode argument: $orig\nwant d(y,x)=f(x,y) \n   OR d(x,t)=f(x,y) d(y,t)=g(x,y) "
+	error [concat [mc "bad -ode argument:"] "$orig" [mc "\nwant d(y,x)=f(x,y) \n   OR d(x,t)=f(x,y) d(y,t)=g(x,y)"]]
     }
     return $ans
 }
@@ -462,7 +462,7 @@ proc replotdf { win } {
 	set data ""
 	
     }
-    makeLocal $win c dxdt dydt tinitial nsteps xfun     doTrajectoryAt parameters
+    makeLocal $win c dxdt dydt tinitial nsteps xfun     trajectory_at parameters
 
     setUpTransforms $win 1.0
     setXffYff $dxdt $dydt $parameters
@@ -470,8 +470,8 @@ proc replotdf { win } {
     setForIntegrate $win
     oset $win curveNumber -1
     drawDF $win $tinitial
-    if { "$doTrajectoryAt" != "" } {
-	eval doIntegrate $win  $doTrajectoryAt
+    if { "$trajectory_at" != "" } {
+	eval doIntegrate $win  $trajectory_at
     }
     set xfundata ""
     foreach v [sparseListWithParams $xfun {x y t} $parameters ] {
@@ -509,11 +509,11 @@ proc doConfigdf { win } {
 	mkentry $wb1.$w [oloc $win $w] $w $buttonFont
 	pack $wb1.$w -side bottom -expand 1 -fill x
     }
-    mkentry $wb1.doTrajectoryAt [oloc $win doTrajectoryAt] \
+    mkentry $wb1.trajectory_at [oloc $win trajectory_at] \
 	"Trajectory at" $buttonFont
-    bind $wb1.doTrajectoryAt.e <KeyPress-Return> \
-	"eval doIntegrate $win \[oget $win doTrajectoryAt\] "
-    pack  $wb1.doTrajectoryAt   $frdydx    -side bottom -expand 1 -fill x
+    bind $wb1.trajectory_at.e <KeyPress-Return> \
+	"eval doIntegrate $win \[oget $win trajectory_at\] "
+    pack  $wb1.trajectory_at   $frdydx    -side bottom -expand 1 -fill x
     if { "[oget $win dydx]" != "" } { swapChoose $win dydx $frdydx }
     setForIntegrate $win
 }

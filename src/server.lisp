@@ -9,9 +9,13 @@
   (require 'sb-posix)
   (require 'sb-bsd-sockets))
 
+
+(defvar $in_netmath nil)
+(defvar $show_openplot t)
+(defvar *socket-connection*)
+
 (defun setup-server (port &optional (host "localhost"))
   (let* ((sock (open-socket host port)))
-    (setq me sock)
     #+gcl (setq si::*sigpipe-action* 'si::bye)
     (setq *socket-connection* sock)
     (setq *standard-input* sock)
@@ -26,7 +30,7 @@
 
 ;;; from CLOCC: <http://clocc.sourceforge.net>
 (defun open-socket (host port &optional bin)
-  "Open a socket connection to HOST at PORT."
+  "Open a socket connection to `host' at `port'."
   (declare (type (or integer string) host) (fixnum port) (type boolean bin))
   (let ((host (etypecase host
                 (string host)
@@ -70,7 +74,8 @@
 (deff getpid (symbol-function
 	      ;; Decide at load time which function to use.
 	      (or (and (memq :unix *features*)
-		       (find-symbol "PROGRAM-ID" "SYS"))
+		       (or (find-symbol "PROCESS-ID" "SYS")
+			   (find-symbol "PROGRAM-ID" "SYS")))
 		  'getpid-from-environment)))
 
 #+cmu
