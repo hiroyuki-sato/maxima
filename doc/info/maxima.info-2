@@ -609,6 +609,57 @@ File: maxima.info,  Node: Definitions for Polynomials,  Prev: Introduction to Po
      `num' evaluates its argument.
 
 
+ -- Function: polydecomp (<p>, <x>)
+     Decomposes the polynomial <p> in the variable <x> into the
+     functional composition of polynomials in <x>.  `polydecomp'
+     returns a list `[<p_1>, ..., <p_n>]' such that
+
+          lambda ([x], p_1) (lambda ([x], p_2) (... (lambda ([x], p_n) (x)) ...))
+
+     is equal to <p>.  The degree of <p_i> is greater than 1 for <i>
+     less than <n>.
+
+     Such a decomposition is not unique.
+
+     Examples:
+
+          (%i1) polydecomp (x^210, x);
+                                    7   5   3   2
+          (%o1)                   [x , x , x , x ]
+          (%i2) p : expand (subst (x^3 - x - 1, x, x^2 - a));
+                          6      4      3    2
+          (%o2)          x  - 2 x  - 2 x  + x  + 2 x - a + 1
+          (%i3) polydecomp (p, x);
+                                  2       3
+          (%o3)                 [x  - a, x  - x - 1]
+
+     The following function composes `L = [e_1, ..., e_n]' as functions
+     in `x'; it is the inverse of polydecomp:
+
+          compose (L, x) :=
+            block ([r : x], for e in L do r : subst (e, x, r), r) $
+
+     Re-express above example using `compose':
+
+          (%i3) polydecomp (compose ([x^2 - a, x^3 - x - 1], x), x);
+                                  2       3
+          (%o3)                 [x  - a, x  - x - 1]
+
+     Note that though `compose (polydecomp (<p>, <x>), <x>)' always
+     returns <p> (unexpanded), `polydecomp (compose ([<p_1>, ...,
+     <p_n>], <x>), <x>)' does not necessarily return `[<p_1>, ...,
+     <p_n>]':
+
+          (%i4) polydecomp (compose ([x^2 + 2*x + 3, x^2], x), x);
+                                    2       2
+          (%o4)                   [x  + 2, x  + 1]
+          (%i5) polydecomp (compose ([x^2 + x + 1, x^2 + x + 1], x), x);
+                                2       2
+                               x  + 3  x  + 5
+          (%o5)               [------, ------, 2 x + 1]
+                                 4       2
+
+
  -- Function: quotient (<p_1>, <p_2>)
  -- Function: quotient (<p_1>, <p_2>, <x_1>, ..., <x_n>)
      Returns the polynomial <p_1> divided by the polynomial <p_2>.  The
@@ -1239,7 +1290,7 @@ File: maxima.info,  Node: Definitions for Constants,  Prev: Constants,  Up: Cons
 ==============================
 
  -- Constant: %e
-     - The base of natural logarithms, e, is represented in Maxima as
+     - the base of natural logarithms, e, is represented in Maxima as
      `%e'.
 
 
@@ -1293,8 +1344,71 @@ File: maxima.info,  Node: Definitions for Logarithms,  Prev: Logarithms,  Up: Lo
      `logcontract' command "contracts" expressions containing `log'.
 
 
+ -- Function: li [<s>] (<z>)
+     Represents the polylogarithm function of order <s> and argument
+     <z>, defined by the infinite series
+
+                                           inf
+                                           ====   k
+                                           \     z
+                                  Li (z) =  >    --
+                                    s      /      s
+                                           ====  k
+                                           k = 1
+
+     `li [1]' is `- log (1 - z)'.  `li [2]' and `li [3]' are the
+     dilogarithm and trilogarithm functions, respectively.
+
+     When the order is 1, the polylogarithm simplifies to `- log (1 -
+     z)', which in turn simplifies to a numerical value if <z> is a
+     real or complex floating point number or the `numer' evaluation
+     flag is present.
+
+     When the order is 2 or 3, the polylogarithm simplifies to a
+     numerical value if <z> is a real floating point number or the
+     `numer' evaluation flag is present.
+
+     Examples:
+
+          (%i1) assume (x > 0);
+          (%o1)                        [x > 0]
+          (%i2) integrate ((log (1 - t)) / t, t, 0, x);
+          (%o2)                       - li (x)
+                                          2
+          (%i3) li [2] (7);
+          (%o3)                        li (7)
+                                         2
+          (%i4) li [2] (7), numer;
+          (%o4)        1.24827317833392 - 6.113257021832577 %i
+          (%i5) li [3] (7);
+          (%o5)                        li (7)
+                                         3
+          (%i6) li [2] (7), numer;
+          (%o6)        1.24827317833392 - 6.113257021832577 %i
+          (%i7) L : makelist (i / 4.0, i, 0, 8);
+          (%o7)   [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
+          (%i8) map (lambda ([x], li [2] (x)), L);
+          (%o8) [0, .2676526384986274, .5822405249432515,
+          .9784693966661848, 1.64493407, 2.190177004178597
+           - .7010261407036192 %i, 2.374395264042415
+           - 1.273806203464065 %i, 2.448686757245154
+           - 1.758084846201883 %i, 2.467401098097648
+           - 2.177586087815347 %i]
+          (%i9) map (lambda ([x], li [3] (x)), L);
+          (%o9) [0, .2584613953442624, 0.537213192678042,
+          .8444258046482203, 1.2020569, 1.642866878950322
+           - .07821473130035025 %i, 2.060877505514697
+           - .2582419849982037 %i, 2.433418896388322
+           - .4919260182322965 %i, 2.762071904015935
+           - .7546938285978846 %i]
+
+
  -- Function: log (<x>)
-     Represents the natural logarithm of <x>.
+     Represents the natural (base e) logarithm of <x>.
+
+     Maxima does not have a built-in function for the base 10 logarithm
+     or other bases.  `log10(x) := log(x) / log(10)' is a useful
+     definition.
 
      Simplification and evaluation of logarithms is governed by several
      global flags:
@@ -1753,7 +1867,7 @@ File: maxima.info,  Node: Definitions for Trigonometric,  Prev: Introduction to 
 
 
 
-File: maxima.info,  Node: Special Functions,  Next: Orthogonal Polynomials,  Prev: Trigonometric,  Up: Top
+File: maxima.info,  Node: Special Functions,  Next: Elliptic Functions,  Prev: Trigonometric,  Up: Top
 
 16 Special Functions
 ********************
@@ -2207,370 +2321,9 @@ File: maxima.info,  Node: Definitions for Special Functions,  Prev: specint,  Up
 
 
 
-File: maxima.info,  Node: Orthogonal Polynomials,  Next: Elliptic Functions,  Prev: Special Functions,  Up: Top
+File: maxima.info,  Node: Elliptic Functions,  Next: Limits,  Prev: Special Functions,  Up: Top
 
-17 Orthogonal Polynomials
-*************************
-
-* Menu:
-
-* Introduction to Orthogonal Polynomials::
-* Definitions for Orthogonal Polynomials::
-
-
-File: maxima.info,  Node: Introduction to Orthogonal Polynomials,  Next: Definitions for Orthogonal Polynomials,  Up: Orthogonal Polynomials
-
-17.1 Introduction to Orthogonal Polynomials
-===========================================
-
-The `specfun' package contains Maxima code for the evaluation of all
-orthogonal polynomials listed in Chapter 22 of Abramowitz and Stegun.
-These include Chebyshev, Laguerre, Hermite, Jacobi, Legendre, and
-ultraspherical (Gegenbauer) polynomials.  Additionally, `specfun'
-contains code for spherical Bessel, spherical Hankel, and spherical
-harmonic functions.  The `specfun' package is not part of Maxima proper;
-it is loaded at request of the user via `load' or automatically via the
-`autoload' system.
-
-   The following table lists each function in `specfun', its Maxima
-name, restrictions on its arguments, and a reference to the algorithm
-`specfun' uses to evaluate it.  With few exceptions, `specfun' follows
-the conventions of Abramowitz and Stegun.  In all cases, m and n must
-be integers.
-
-   A&S refers to Abramowitz and Stegun, _Handbook of Mathematical
-Functions_ (10th printing, December 1972), G&R to Gradshteyn and Ryzhik,
-_Table of Integrals, Series, and Products_ (1980 corrected and enlarged
-edition), and Merzbacher to _Quantum Mechanics_ (second edition, 1970).
-
-_Function_         _Maxima Name_      _Restrictions_     _Reference(s)_
-Chebyshev T        chebyshev_t(n, x)  n > -1             A&S 22.5.31
-Chebyshev U        chebyshev_u(n, x)  n > -1             A&S 22.5.32
-generalized        gen_laguerre(n,a,x)n > -1             A&S page 789
-Laguerre                                                 
-Laguerre           laguerre(n,x)      n > -1             A&S 22.5.67
-Hermite            hermite(n,x)        n > -1            A&S 22.4.40,
-                                                         22.5.41
-Jacobi             jacobi_p(n,a,b,x)   n > -1, a, b >    A&S page 789
-                                      -1                 
-associated         assoc_legendre_p(n,m,x)n > -1             A&S 22.5.37,
-Legendre P                                               8.6.6, 8.2.5
-associated         assoc_legendre_q(n,m,x)n > -1, m > -1     G & R 8.706
-Legendre Q                                               
-Legendre P         legendre_p(n,m,x)  n > -1             A&S 22.5.35
-Legendre Q         legendre_q(n,m,x)  n > -1             A&S 8.6.19
-spherical Hankel   spherical_hankel1(n,n > -1             A&S 10.1.36
-1st                x)                                    
-spherical Hankel   spherical_hankel2(n,n > -1             A&S 10.1.17
-2nd                x)                                    
-spherical Bessel   spherical_bessel_j(n,x)n > -1             A&S 10.1.8,
-J                                                        10.1.15
-spherical Bessel   spherical_bessel_y(n,x)n > -1             A&S 10.1.9,
-Y                                                        10.1.15
-spherical          spherical_harmonic(n,m,x,y)n > -1, |m| <= n   Merzbacher 9.64
-harmonic                                                 
-ultraspherical     ultraspherical(n,a,x) n > -1            A&S 22.5.27
-(Gegenbauer)                                             
-
-   The `specfun' package is primarily intended for symbolic
-computation. It is hoped that it gives accurate floating point results
-as well; however, no claims are made that the algorithms are well
-suited for numerical evaluation.  Some effort, however, has been made
-to provide good numerical performance.  When all arguments, except for
-the order, are floats (but not bigfloats), many functions in `specfun'
-call a float modedeclared version of the Jacobi function.  This greatly
-speeds floating point evaluation of the orthogonal polynomials.
-
-   `specfun' handles most domain errors by returning an unevaluated
-function.  No simplification rules (based on recursion relations) are
-defined for unevaluated functions.  It is possible for an expression
-involving sums of unevaluated special functions to vanish, yet Maxima
-is unable to reduce it to zero.
-
-   `load ("specfun")' loads the `specfun' package.  Alternatively,
-`setup_autoload' causes the package to be loaded when one of the
-`specfun' functions appears in an expression.  `setup_autoload' may
-appear at the command line or in the `maxima-init.mac' file.  See
-`setup_autoload'.
-
-   An example use of `specfun' is
-
-     (%i1) load ("specfun")$
-     (%i2) [hermite (0, x), hermite (1, x), hermite (2, x)];
-                                              2
-     (%o2)               [1, 2 x, - 2 (1 - 2 x )]
-     (%i3) diff (hermite (n, x), x);
-     (%o3)                 2 n hermite(n - 1, x)
-
-   Generally, compiled code runs faster than translated code; however,
-translated code may be better for program development.
-
-   Some functions (namely `jacobi_p', `ultraspherical', `chebyshev_t',
-`chebyshev_u', and `legendre_p'), return a series representation when
-the order is a symbolic integer.  The series representation is not used
-by `specfun' for any computations, but it may be simplified by Maxima
-automatically, or it may be possible to use the series to evaluate the
-function through further manipulations.  For example:
-
-     (%i1) load ("specfun")$
-     (%i2) legendre_p (n, x);
-     (%o2)                   legendre_p(n, x)
-     (%i3) ultraspherical (n, 3/2, 2);
-                  genfact(3, n, - 1) jacobi_p(n, 1, 1, 2)
-     (%o3)        ---------------------------------------
-                            genfact(2, n, - 1)
-     (%i4) declare (n, integer)$
-     (%i5) legendre_p (n, x);
-            n - 1
-            ====
-            \                                                 n - i%
-     (%o5) ( >     binomial(n, i%) binomial(n, n - i%) (x - 1)
-            /
-            ====
-            i% = 1
-
-                                         i%          n          n   n
-                                  (x + 1)   + (x + 1)  + (x - 1) )/2
-     (%i6) ultraspherical (n, 3/2, 2);
-                               n - 1
-                               ====
-                               \       i%
-     (%o6) genfact(3, n, - 1) ( >     3   binomial(n + 1, i%)
-                               /
-                               ====
-                               i% = 1
-
-                                         n
-      binomial(n + 1, n - i%) + (n + 1) 3  + n + 1)
-
-                           n
-     /(genfact(2, n, - 1) 2 )
-
-   The first and last terms of the sum are added outside the summation.
-Removing these two terms avoids Maxima bugs associated with 0^0 terms
-in a sum that should evaluate to 1, but evaluate to 0 in a Maxima
-summation. Because the sum index runs from 1 to n - 1, the lower sum
-index will exceed the upper sum index when n = 0; setting `sumhack' to
-true provides a fix. For example:
-
-     (%i1) load ("specfun")$
-     (%i2) declare (n, integer)$
-     (%i3) e: legendre_p(n,x)$
-     (%i4) ev (e, sum, n=0);
-     Lower bound to sum: 1
-     is greater than the upper bound: - 1
-      -- an error.  Quitting.  To debug this try debugmode(true);
-     (%i5) ev (e, sum, n=0, sumhack=true);
-     (%o5)                           1
-
-   Most functions in `specfun' have a `gradef' property; derivatives
-with respect to the order or other function parameters are undefined,
-and an attempt to compute such a derivative yields an error message.
-
-   The `specfun' package and its documentation were written by Barton
-Willis of the University of Nebraska at Kearney. It is released under
-the terms of the General Public License (GPL).  Send bug reports and
-comments on this package to willisb@unk.edu.  In your report, please
-include the Maxima version, as reported by `build_info()', and the
-`specfun' version, as reported by `get ('specfun, 'version)'.
-
-
-File: maxima.info,  Node: Definitions for Orthogonal Polynomials,  Prev: Introduction to Orthogonal Polynomials,  Up: Orthogonal Polynomials
-
-17.2 Definitions for Orthogonal Polynomials
-===========================================
-
- -- Function: assoc_legendre_p (<n>, <m>, <x>)
-     Returns the associated Legendre function of the first kind for
-     integers  n > -1  and  m > -1.  When  | m | > n  and  n >= 0, we
-     have   assoc_legendre_p (n, m, x) = 0.  Reference: A&S 22.5.37
-     page 779,  A&S 8.6.6 (second equation) page 334, and A&S 8.2.5
-     page 333.
-
-     `load ("specfun")' loads this function.
-
-     See *Note assoc_legendre_q::, *Note legendre_p::, and *Note
-     legendre_q::.
-
- -- Function: assoc_legendre_q (<n>, <m>, <x>)
-     Returns the associated Legendre function of the second kind for
-     integers  n > -1  and  m > -1.
-
-     Reference: Gradshteyn and Ryzhik  8.706 page 1000.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note assoc_legendre_p::, *Note legendre_p::, and *Note
-     legendre_q::.
-
- -- Function: chebyshev_t (<n>, <x>)
-     Returns the Chebyshev function of the first kind for  integers  n
-     > -1.
-
-     Reference: A&S 22.5.31 page 778 and A&S 6.1.22 page 256.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note chebyshev_u::.
-
-
- -- Function: chebyshev_u (<n>, <x>)
-     Returns the Chebyshev function of the second kind for integers  n
-     > -1.
-
-     Reference: A&S, 22.8.3 page 783  and A&S 6.1.22 page 256.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note chebyshev_t::.
-
-
- -- Function: gen_laguerre (<n>, <a>, <x>)
-     Returns the generalized Laguerre polynomial for  integers  n > -1.
-
-     `load ("specfun")' loads this function.
-
-     Reference: table on page 789 in A&S.
-
- -- Function: hermite (<n>, <x>)
-     Returns the Hermite polynomial for integers  n > -1.
-
-     `load ("specfun")' loads this function.
-
-     Reference:  A&S 22.5.40 and 22.5.41, page 779.
-
-
- -- Function: jacobi_p (<n>, <a>, <b>, <x>)
-     Returns the Jacobi polynomial for integers  n > -1  and  a  and  b
-     symbolic or  a > -1  and b > -1.  (The Jacobi polynomials are
-     actually defined for all  a  and  b ; however, the Jacobi
-     polynomial weight  (1-x)^a(1+x)^b isn't integrable for  a <= -1 or
-     b <= -1.)
-
-     When a, b, and  x  are floats (but not bfloats) specfun calls a
-     special modedeclared version of jacobi_p.  For numerical values,
-     the modedeclared version is much faster than the other version.
-     Many  functions in specfun are computed as a special case of the
-     Jacobi polynomials; they also enjoy the  speed boost from the
-     modedeclared version of  jacobi.
-
-     If  n  has been declared to be an integer, jacobi_p (n, a, b, x)
-     returns a summation representation for the Jacobi function.
-     Because Maxima simplifies 0^0  to  0  in a sum, two terms of the
-     sum are added outside the summation.
-
-     `load ("specfun")' loads this function.
-
-     Reference:  table on page 789 in A&S.
-
-
- -- Function: laguerre (<n>, <x>)
-     Returns the Laguerre polynomial for integers  n > -1.
-
-     Reference: A&S 22.5.16, page 778 and A&S page 789.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note gen_laguerre::.
-
-
- -- Function: legendre_p (<n>, <x>)
-     Returns the Legendre polynomial of the first kind for  integers  n
-     > -1.
-
-     Reference: A&S 22.5.35 page 779.
-
-     `load ("specfun")' loads this function.
-
-     See *Note legendre_q::.
-
-
- -- Function: legendre_q (<n>, <x>)
-     Returns the Legendre polynomial of the first kind for  integers  n
-     > -1.
-
-     Reference: A&S 8.6.19 page 334.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note legendre_p::.
-
-
- -- Function: spherical_bessel_j (<n>, <x>)
-     Returns the spherical Bessel function of the first kind for
-     integers  n > -1.
-
-     Reference: A&S 10.1.8 page 437 and A&S 10.1.15 page 439.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note spherical_hankel1::, *Note spherical_hankel2::, and
-     *Note spherical_bessel_y::.
-
-
- -- Function: spherical_bessel_y (<n>, <x>)
-     Returns the spherical Bessel function of the second kind for
-     integers  n > -1.
-
-     Reference: A&S 10.1.9 page 437 and 10.1.15 page 439.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note spherical_hankel1::, *Note spherical_hankel2::, and
-     *Note spherical_bessel_y::.
-
-
- -- Function: spherical_hankel1 (<n>, <x>)
-     Returns the spherical hankel function  of the first kind for
-     integers  n > -1.
-
-     Reference: A&S 10.1.36 page 439.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note spherical_hankel2::, *Note spherical_bessel_j::, and
-     *Note spherical_bessel_y::.
-
-
- -- Function: spherical_hankel2 (<n>, <x>)
-     Returns the spherical hankel function  of the second kind for
-     integers  n > -1.
-
-     Reference:  A&S 10.1.17 page 439.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note spherical_hankel1::, *Note spherical_bessel_j::, and
-     *Note spherical_bessel_y::.
-
-
- -- Function: spherical_harmonic (<n>, <m>, <x>, <y>)
-     Returns the spherical harmonic function for integers  n > -1 and
-     | m | <= n .
-
-     Reference:  Merzbacher 9.64.
-
-     `load ("specfun")' loads this function.
-
-     See also *Note assoc_legendre_p::.
-
-
- -- Function: ultraspherical (<n>, <a>, <x>)
-     Returns the ultraspherical polynomials for integers  n > -1.  The
-     ultraspherical polynomials are also known as Gegenbauer
-     polynomials.
-
-     Reference: A&S 22.5.27
-
-     `load ("specfun")' loads this function.
-
-     See also *Note jacobi_p::.
-
-
-
-File: maxima.info,  Node: Elliptic Functions,  Next: Limits,  Prev: Orthogonal Polynomials,  Up: Top
-
-18 Elliptic Functions
+17 Elliptic Functions
 *********************
 
 * Menu:
@@ -2582,7 +2335,7 @@ File: maxima.info,  Node: Elliptic Functions,  Next: Limits,  Prev: Orthogonal P
 
 File: maxima.info,  Node: Introduction to Elliptic Functions and Integrals,  Next: Definitions for Elliptic Functions,  Up: Top
 
-18.1 Introduction to Elliptic Functions and Integrals
+17.1 Introduction to Elliptic Functions and Integrals
 =====================================================
 
 Maxima includes support for Jacobian elliptic functions and for
@@ -2674,7 +2427,7 @@ that governs the distribution of Maxima.
 
 File: maxima.info,  Node: Definitions for Elliptic Functions,  Next: Definitions for Elliptic Integrals,  Prev: Introduction to Elliptic Functions and Integrals,  Up: Top
 
-18.2 Definitions for Elliptic Functions
+17.2 Definitions for Elliptic Functions
 =======================================
 
  -- Function: jacobi_sn (<u>, <m>)
@@ -2752,7 +2505,7 @@ File: maxima.info,  Node: Definitions for Elliptic Functions,  Next: Definitions
 
 File: maxima.info,  Node: Definitions for Elliptic Integrals,  Prev: Definitions for Elliptic Functions,  Up: Top
 
-18.3 Definitions for Elliptic Integrals
+17.3 Definitions for Elliptic Integrals
 =======================================
 
  -- Function: elliptic_f (<phi>, <m>)
@@ -2808,7 +2561,7 @@ File: maxima.info,  Node: Definitions for Elliptic Integrals,  Prev: Definitions
 
 File: maxima.info,  Node: Limits,  Next: Differentiation,  Prev: Elliptic Functions,  Up: Top
 
-19 Limits
+18 Limits
 *********
 
 * Menu:
@@ -2818,7 +2571,7 @@ File: maxima.info,  Node: Limits,  Next: Differentiation,  Prev: Elliptic Functi
 
 File: maxima.info,  Node: Definitions for Limits,  Prev: Limits,  Up: Limits
 
-19.1 Definitions for Limits
+18.1 Definitions for Limits
 ===========================
 
  -- Option variable: lhospitallim
@@ -2887,7 +2640,7 @@ File: maxima.info,  Node: Definitions for Limits,  Prev: Limits,  Up: Limits
 
 File: maxima.info,  Node: Differentiation,  Next: Integration,  Prev: Limits,  Up: Top
 
-20 Differentiation
+19 Differentiation
 ******************
 
 * Menu:
@@ -2897,7 +2650,7 @@ File: maxima.info,  Node: Differentiation,  Next: Integration,  Prev: Limits,  U
 
 File: maxima.info,  Node: Definitions for Differentiation,  Prev: Differentiation,  Up: Differentiation
 
-20.1 Definitions for Differentiation
+19.1 Definitions for Differentiation
 ====================================
 
  -- Function: antid (<expr>, <x>, <u(x)>)
@@ -3479,7 +3232,7 @@ File: maxima.info,  Node: Definitions for Differentiation,  Prev: Differentiatio
 
 File: maxima.info,  Node: Integration,  Next: Equations,  Prev: Differentiation,  Up: Top
 
-21 Integration
+20 Integration
 **************
 
 * Menu:
@@ -3490,7 +3243,7 @@ File: maxima.info,  Node: Integration,  Next: Equations,  Prev: Differentiation,
 
 File: maxima.info,  Node: Introduction to Integration,  Next: Definitions for Integration,  Prev: Integration,  Up: Integration
 
-21.1 Introduction to Integration
+20.1 Introduction to Integration
 ================================
 
 Maxima has several routines for handling integration.  The `integrate'
@@ -3510,7 +3263,7 @@ and `h(x)'.
 
 File: maxima.info,  Node: Definitions for Integration,  Prev: Introduction to Integration,  Up: Integration
 
-21.2 Definitions for Integration
+20.2 Definitions for Integration
 ================================
 
  -- Function: changevar (<expr>, <f(x,y)>, <y>, <x>)
@@ -4686,7 +4439,7 @@ File: maxima.info,  Node: Definitions for Integration,  Prev: Introduction to In
 
 File: maxima.info,  Node: Equations,  Next: Differential Equations,  Prev: Integration,  Up: Top
 
-22 Equations
+21 Equations
 ************
 
 * Menu:
@@ -4696,7 +4449,7 @@ File: maxima.info,  Node: Equations,  Next: Differential Equations,  Prev: Integ
 
 File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equations
 
-22.1 Definitions for Equations
+21.1 Definitions for Equations
 ==============================
 
  -- System variable: %rnum_list
@@ -5007,7 +4760,16 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      Default value: `false'
 
      When `globalsolve' is `true', solved-for variables are assigned
-     the solution values found by `solve'.
+     the solution values found by `linsolve', and by `solve' when
+     solving two or more linear equations.
+
+     When `globalsolve' is `false', solutions found by `linsolve' and
+     by `solve' when solving two or more linear equations are expressed
+     as equations, and the solved-for variables are not assigned.
+
+     When solving anything other than two or more linear equations,
+     `solve' ignores `globalsolve'.  Other functions which solve
+     equations (e.g., `algsys') always ignore `globalsolve'.
 
      Examples:
 
@@ -5099,24 +4861,44 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      `ieqn' if an error prevented generation of further terms).
 
 
- -- Function: lhs (<eqn>)
-     Returns the left side of the equation <eqn>.
+ -- Function: lhs (<expr>)
+     Returns the left-hand side (that is, the first argument) of the
+     expression <expr>, when the operator of <expr> is one of the
+     relational operators `< <= = # equal notequal >= >', one of the
+     assignment operators `:= ::= : ::', or a user-defined binary infix
+     operator, as declared by `infix'.
 
-     If the argument is not an equation, `lhs' returns the argument.
+     When <expr> is an atom or its operator is something other than the
+     ones listed above, `lhs' returns <expr>.
 
      See also `rhs'.
 
-     Example:
+     Examples:
 
-          (%i1) e: x^2 + y^2 = z^2;
-                                     2    2    2
-          (%o1)                     y  + x  = z
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
           (%i2) lhs (e);
-                                        2    2
-          (%o2)                        y  + x
+          (%o2)                        bb + aa
           (%i3) rhs (e);
-                                          2
-          (%o3)                          z
+          (%o3)                          cc
+          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb), lhs (aa > bb)];
+          (%o4)                   [aa, aa, aa, aa]
+          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)), lhs (notequal (aa, bb))];
+          (%o5)                   [aa, aa, aa, aa]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
+          (%o10)               [foo(x), bar(y), x, x]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) lhs (aa ][ bb);
+          (%o12)                         aa
 
 
  -- Function: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
@@ -5124,8 +4906,8 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      variables.  The expressions must each be polynomials in the
      variables and may be equations.
 
-     When `globalsolve' is `true' then variables which are solved for
-     will be set to the solution of the set of simultaneous equations.
+     When `globalsolve' is `true', each solved-for variable is bound to
+     its value in the solution of the equations.
 
      When `backsubst' is `false', `linsolve' does not carry out back
      substitution after the equations have been triangularized.  This
@@ -5138,11 +4920,55 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      under-determined system of equations with some variables expressed
      in terms of others.
 
-          (%i1) e1: x + z = y$
-          (%i2) e2: 2*a*x - y = 2*a^2$
-          (%i3) e3: y - 2*z = 2$
-          (%i4) linsolve ([e1, e2, e3], [x, y, z]);
-          (%o4)            [x = a + 1, y = 2 a, z = a - 1]
+     When `programmode' is `false', `linsolve' displays the solution
+     with intermediate expression (`%t') labels, and returns the list
+     of labels.
+
+          (%i1) e1: x + z = y;
+          (%o1)                       z + x = y
+          (%i2) e2: 2*a*x - y = 2*a^2;
+                                                 2
+          (%o2)                   2 a x - y = 2 a
+          (%i3) e3: y - 2*z = 2;
+          (%o3)                      y - 2 z = 2
+          (%i4) [globalsolve: false, programmode: true];
+          (%o4)                     [false, true]
+          (%i5) linsolve ([e1, e2, e3], [x, y, z]);
+          (%o5)            [x = a + 1, y = 2 a, z = a - 1]
+          (%i6) [globalsolve: false, programmode: false];
+          (%o6)                    [false, false]
+          (%i7) linsolve ([e1, e2, e3], [x, y, z]);
+          Solution
+
+          (%t7)                       z = a - 1
+
+          (%t8)                        y = 2 a
+
+          (%t9)                       x = a + 1
+          (%o9)                    [%t7, %t8, %t9]
+          (%i9) ''%;
+          (%o9)            [z = a - 1, y = 2 a, x = a + 1]
+          (%i10) [globalsolve: true, programmode: false];
+          (%o10)                    [true, false]
+          (%i11) linsolve ([e1, e2, e3], [x, y, z]);
+          Solution
+
+          (%t11)                      z : a - 1
+
+          (%t12)                       y : 2 a
+
+          (%t13)                      x : a + 1
+          (%o13)                 [%t11, %t12, %t13]
+          (%i13) ''%;
+          (%o13)           [z : a - 1, y : 2 a, x : a + 1]
+          (%i14) [x, y, z];
+          (%o14)                 [a + 1, 2 a, a - 1]
+          (%i15) [globalsolve: true, programmode: true];
+          (%o15)                    [true, true]
+          (%i16) linsolve ([e1, e2, e3], '[x, y, z]);
+          (%o16)           [x : a + 1, y : 2 a, z : a - 1]
+          (%i17) [x, y, z];
+          (%o17)                 [a + 1, 2 a, a - 1]
 
 
  -- Option variable: linsolvewarn
@@ -5221,24 +5047,44 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      interval for the roots.  Do `example (realroots)' for an example.
 
 
- -- Function: rhs (<eqn>)
-     Returns the right side of the equation <eqn>.
+ -- Function: rhs (<expr>)
+     Returns the right-hand side (that is, the second argument) of the
+     expression <expr>, when the operator of <expr> is one of the
+     relational operators `< <= = # equal notequal >= >', one of the
+     assignment operators `:= ::= : ::', or a user-defined binary infix
+     operator, as declared by `infix'.
 
-     If the argument is not an equation, `rhs' returns `0'.
+     When <expr> is an atom or its operator is something other than the
+     ones listed above, `rhs' returns 0.
 
      See also `lhs'.
 
-     Example:
+     Examples:
 
-          (%i1) e: x^2 + y^2 = z^2;
-                                     2    2    2
-          (%o1)                     y  + x  = z
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
           (%i2) lhs (e);
-                                        2    2
-          (%o2)                        y  + x
+          (%o2)                        bb + aa
           (%i3) rhs (e);
-                                          2
-          (%o3)                          z
+          (%o3)                          cc
+          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb), rhs (aa > bb)];
+          (%o4)                   [bb, bb, bb, bb]
+          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)), rhs (notequal (aa, bb))];
+          (%o5)                   [bb, bb, bb, bb]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
+          (%o10)                  [2 x, 3 y, y, y]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) rhs (aa ][ bb);
+          (%o12)                         bb
 
 
  -- Option variable: rootsconmode
@@ -5370,6 +5216,14 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      compatible, the message `inconsistent' will be displayed (see the
      `solve_inconsistent_error' switch); if no unique solution exists,
      then `singular' will be displayed.
+
+     When `programmode' is `false', `solve' displays solutions with
+     intermediate expression (`%t') labels, and returns the list of
+     labels.
+
+     When `globalsolve' is `true' and the problem is to solve two or
+     more linear equations, each solved-for variable is bound to its
+     value in the solution of the equations.
 
      Examples:
 
@@ -5534,7 +5388,7 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
 
 File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equations,  Up: Top
 
-23 Differential Equations
+22 Differential Equations
 *************************
 
 * Menu:
@@ -5544,7 +5398,7 @@ File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equat
 
 File: maxima.info,  Node: Definitions for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
 
-23.1 Definitions for Differential Equations
+22.1 Definitions for Differential Equations
 ===========================================
 
  -- Function: bc2 (<solution>, <xval1>, <yval1>, <xval2>, <yval2>)
@@ -5698,7 +5552,7 @@ File: maxima.info,  Node: Definitions for Differential Equations,  Prev: Differe
 
 File: maxima.info,  Node: Numerical,  Next: Statistics,  Prev: Differential Equations,  Up: Top
 
-24 Numerical
+23 Numerical
 ************
 
 * Menu:
@@ -5711,13 +5565,13 @@ File: maxima.info,  Node: Numerical,  Next: Statistics,  Prev: Differential Equa
 
 File: maxima.info,  Node: Introduction to Numerical,  Next: Fourier packages,  Prev: Numerical,  Up: Numerical
 
-24.1 Introduction to Numerical
+23.1 Introduction to Numerical
 ==============================
 
 
 File: maxima.info,  Node: Fourier packages,  Next: Definitions for Numerical,  Prev: Introduction to Numerical,  Up: Numerical
 
-24.2 Fourier packages
+23.2 Fourier packages
 =====================
 
 The `fft' package comprises functions for the numerical (not symbolic)
@@ -5733,7 +5587,7 @@ coefficients and some functions for manipulation of expressions.  See
 
 File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Fourier Series,  Prev: Fourier packages,  Up: Numerical
 
-24.3 Definitions for Numerical
+23.3 Definitions for Numerical
 ==============================
 
  -- Function: polartorect (<magnitude_array>, <phase_array>)
@@ -5949,118 +5803,101 @@ File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Four
           (%o4)                       7.0E+154
 
 
- -- Function: interpolate (<f>(<x>), <x>, <a>, <b>)
- -- Function: interpolate (<f>, <a>, <b>)
+ -- Function: find_root (<f>(<x>), <x>, <a>, <b>)
+ -- Function: find_root (<f>, <a>, <b>)
      Finds the zero of function <f> as variable <x> varies over the
      range `[<a>, <b>]'.  The function must have a different sign at
      each endpoint.  If this condition is not met, the action of the
-     function is governed by `intpolerror'.  If `intpolerror' is `true'
-     then an error occurs, otherwise the value of `intpolerror' is
-     returned (thus for plotting `intpolerror' might be set to 0.0).
-     Otherwise (given that Maxima can evaluate the first argument in
-     the specified range, and that it is continuous) `interpolate' is
-     guaranteed to come up with the zero (or one of them if there is
-     more than one zero).  The accuracy of `interpolate' is governed by
-     `intpolabs' and `intpolrel' which must be non-negative floating
-     point numbers.  `interpolate' will stop when the first arg
-     evaluates to something less than or equal to `intpolabs' or if
-     successive approximants to the root differ by no more than
-     `intpolrel * <one of the approximants>'.  The default values of
-     `intpolabs' and `intpolrel' are 0.0 so `interpolate' gets as good
-     an answer as is possible with the single precision arithmetic we
-     have.  The first arg may be an equation.  The order of the last
-     two args is irrelevant.  Thus
+     function is governed by `find_root_error'.  If `find_root_error'
+     is `true' then an error occurs, otherwise the value of
+     `find_root_error' is returned (thus for plotting `find_root_error'
+     might be set to 0.0).  Otherwise (given that Maxima can evaluate
+     the first argument in the specified range, and that it is
+     continuous) `find_root' is guaranteed to come up with the zero (or
+     one of them if there is more than one zero).  The accuracy of
+     `find_root' is governed by `find_root_abs' and `find_root_rel'
+     which must be non-negative floating point numbers.  `find_root'
+     will stop when the first arg evaluates to something less than or
+     equal to `find_root_abs' or if successive approximants to the root
+     differ by no more than `find_root_rel * <one of the approximants>'.
+     The default values of `find_root_abs' and `find_root_rel' are 0.0
+     so `find_root' gets as good an answer as is possible with the
+     single precision arithmetic we have.  The first arg may be an
+     equation.  The order of the last two args is irrelevant.  Thus
 
-          interpolate (sin(x) = x/2, x, %pi, 0.1);
+          find_root (sin(x) = x/2, x, %pi, 0.1);
 
      is equivalent to
 
-          interpolate (sin(x) = x/2, x, 0.1, %pi);
+          find_root (sin(x) = x/2, x, 0.1, %pi);
 
      The method used is a binary search in the range specified by the
      last two args.  When it thinks the function is close enough to
      being linear, it starts using linear interpolation.
 
+     Examples:
+
           (%i1) f(x) := sin(x) - x/2;
                                                   x
           (%o1)                  f(x) := sin(x) - -
                                                   2
-          (%i2) interpolate (sin(x) - x/2, x, 0.1, %pi);
+          (%i2) find_root (sin(x) - x/2, x, 0.1, %pi);
           (%o2)                   1.895494267033981
-          (%i3) interpolate (sin(x) = x/2, x, 0.1, %pi);
+          (%i3) find_root (sin(x) = x/2, x, 0.1, %pi);
           (%o3)                   1.895494267033981
-          (%i4) interpolate (f(x), x, 0.1, %pi);
+          (%i4) find_root (f(x), x, 0.1, %pi);
           (%o4)                   1.895494267033981
-          (%i5) interpolate (f, 0.1, %pi);
+          (%i5) find_root (f, 0.1, %pi);
           (%o5)                   1.895494267033981
 
-     There is also a Newton method interpolation routine. See `newton'.
 
-
- -- Option variable: intpolabs
+ -- Option variable: find_root_abs
      Default value: 0.0
 
-     `intpolabs' is the accuracy of the `interpolate' command is
-     governed by `intpolabs' and `intpolrel' which must be non-negative
-     floating point numbers.  `interpolate' will stop when the first
-     arg evaluates to something less than or equal to `intpolabs' or if
-     successive approximants to the root differ by no more than
-     `intpolrel * <one of the approximants>'.  The default values of
-     `intpolabs' and `intpolrel' are 0.0 so `interpolate' gets as good
-     an answer as is possible with the single precision arithmetic we
-     have.
+     `find_root_abs' is the accuracy of the `find_root' command is
+     governed by `find_root_abs' and `find_root_rel' which must be
+     non-negative floating point numbers.  `find_root' will stop when
+     the first arg evaluates to something less than or equal to
+     `find_root_abs' or if successive approximants to the root differ
+     by no more than `find_root_rel * <one of the approximants>'.  The
+     default values of `find_root_abs' and `find_root_rel' are 0.0 so
+     `find_root' gets as good an answer as is possible with the single
+     precision arithmetic we have.
 
 
- -- Option variable: intpolerror
+ -- Option variable: find_root_error
      Default value: `true'
 
-     `intpolerror' governs the behavior of `interpolate'.  When
-     `interpolate' is called, it determines whether or not the function
-     to be interpolated satisfies the condition that the values of the
+     `find_root_error' governs the behavior of `find_root'.  When
+     `find_root' is called, it determines whether or not the function
+     to be solved satisfies the condition that the values of the
      function at the endpoints of the interpolation interval are
      opposite in sign.  If they are of opposite sign, the interpolation
-     proceeds.  If they are of like sign, and `intpolerror' is `true',
-     then an error is signaled.  If they are of like sign and
-     `intpolerror' is not `true', the value of `intpolerror' is
-     returned.  Thus for plotting, `intpolerror' might be set to 0.0.
+     proceeds.  If they are of like sign, and `find_root_error' is
+     `true', then an error is signaled.  If they are of like sign and
+     `find_root_error' is not `true', the value of `find_root_error' is
+     returned.  Thus for plotting, `find_root_error' might be set to
+     0.0.
 
 
- -- Option variable: intpolrel
+ -- Option variable: find_root_rel
      Default value: 0.0
 
-     `intpolrel' is the accuracy of the `interpolate' command is
-     governed by `intpolabs' and `intpolrel' which must be non-negative
-     floating point numbers.  `interpolate' will stop when the first
-     arg evaluates to something less than or equal to `intpolabs' or if
-     successive approximants to the root differ by no more than
-     `intpolrel * <one of the approximants>'.  The default values of
-     `intpolabs' and `intpolrel' are 0.0 so `interpolate' gets as good
-     an answer as is possible with the single precision arithmetic we
-     have.
-
-
- -- Function: newton (<expr>, <x>, <x_0>, <eps>)
-     Interpolation by Newton's method. `load ("newton1")' loads this
-     function.
-
-     `newton' can handle some expressions that `interpolate' refuses to
-     handle, since `interpolate' requires that everything evaluate to a
-     floating point number.  Thus `newton (x^2 - a^2, x, a/2, a^2/100)'
-     complains that it can't tell if `6.098490481853958E-4 a^2 <
-     a^2/100'.  After `assume (a>0)', the same function call succeeds,
-     yielding a symbolic result, `1.00030487804878 a'.
-
-     On the other hand, `interpolate (x^2 - a^2, x, a/2, 2*a)' complains
-     that `0.5 a' is not a floating point number.
-
-     An adaptive integrator which uses the Newton-Cotes 8 panel
-     quadrature rule is available.  See `qq'.
+     `find_root_rel' is the accuracy of the `find_root' command is
+     governed by `find_root_abs' and `find_root_rel' which must be
+     non-negative floating point numbers.  `find_root' will stop when
+     the first arg evaluates to something less than or equal to
+     `find_root_abs' or if successive approximants to the root differ
+     by no more than `find_root_rel * <one of the approximants>'.  The
+     default values of `find_root_abs' and `find_root_rel' are 0.0 so
+     `find_root' gets as good an answer as is possible with the single
+     precision arithmetic we have.
 
 
 
 File: maxima.info,  Node: Definitions for Fourier Series,  Prev: Definitions for Numerical,  Up: Numerical
 
-24.4 Definitions for Fourier Series
+23.4 Definitions for Fourier Series
 ===================================
 
  -- Function: equalp (<x>, <y>)
@@ -6164,7 +6001,7 @@ File: maxima.info,  Node: Definitions for Fourier Series,  Prev: Definitions for
 
 File: maxima.info,  Node: Statistics,  Next: Arrays and Tables,  Prev: Numerical,  Up: Top
 
-25 Statistics
+24 Statistics
 *************
 
 * Menu:
@@ -6174,7 +6011,7 @@ File: maxima.info,  Node: Statistics,  Next: Arrays and Tables,  Prev: Numerical
 
 File: maxima.info,  Node: Definitions for Statistics,  Prev: Statistics,  Up: Statistics
 
-25.1 Definitions for Statistics
+24.1 Definitions for Statistics
 ===============================
 
  -- Function: gauss (<mean>, <sd>)
@@ -6185,7 +6022,7 @@ File: maxima.info,  Node: Definitions for Statistics,  Prev: Statistics,  Up: St
 
 File: maxima.info,  Node: Arrays and Tables,  Next: Matrices and Linear Algebra,  Prev: Statistics,  Up: Top
 
-26 Arrays and Tables
+25 Arrays and Tables
 ********************
 
 * Menu:
@@ -6195,7 +6032,7 @@ File: maxima.info,  Node: Arrays and Tables,  Next: Matrices and Linear Algebra,
 
 File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and Tables,  Up: Arrays and Tables
 
-26.1 Definitions for Arrays and Tables
+25.1 Definitions for Arrays and Tables
 ======================================
 
  -- Function: array (<name>, <dim_1>, ..., <dim_n>)
@@ -6287,11 +6124,6 @@ File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and T
      `fillarray' returns its first argument.
 
 
- -- Function: getchar (<a>, <i>)
-     Returns the <i>'th character of the quoted string or atomic name
-     <a>.  This function is useful in manipulating the `labels' list.
-
-
  -- Function: listarray (<A>)
      Returns a list of the elements of a declared or hashed array <A>.
      The order is row-major.  Elements which are not yet defined are
@@ -6338,6 +6170,34 @@ File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and T
      `remarray' returns the list of arrays removed.
 
 
+ -- Function: subvar (<x>, <i>)
+     Evaluates the subscripted expression `<x>[<i>]'.
+
+     `subvar' evaluates its arguments.
+
+     `arraymake (<x>, [<i>]' constructs the expression `<x>[<i>]', but
+     does not evaluate it.
+
+     Examples:
+
+          (%i1) x : foo $
+
+          (%i2) i : 3 $
+
+          (%i3) subvar (x, i);
+          (%o3)                         foo
+                                           3
+          (%i4) foo : [aa, bb, cc, dd, ee]$
+
+          (%i5) subvar (x, i);
+          (%o5)                          cc
+          (%i6) arraymake (x, [i]);
+          (%o6)                         foo
+                                           3
+          (%i7) ''%;
+          (%o7)                          cc
+
+
  -- Option variable: use_fast_arrays
      - if `true' then only two types of arrays are recognized.
 
@@ -6369,7 +6229,7 @@ File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and T
 
 File: maxima.info,  Node: Matrices and Linear Algebra,  Next: Affine,  Prev: Arrays and Tables,  Up: Top
 
-27 Matrices and Linear Algebra
+26 Matrices and Linear Algebra
 ******************************
 
 * Menu:
@@ -6380,7 +6240,7 @@ File: maxima.info,  Node: Matrices and Linear Algebra,  Next: Affine,  Prev: Arr
 
 File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Definitions for Matrices and Linear Algebra,  Prev: Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
 
-27.1 Introduction to Matrices and Linear Algebra
+26.1 Introduction to Matrices and Linear Algebra
 ================================================
 
 * Menu:
@@ -6392,7 +6252,7 @@ File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: De
 
 File: maxima.info,  Node: Dot,  Next: Vectors,  Prev: Introduction to Matrices and Linear Algebra,  Up: Introduction to Matrices and Linear Algebra
 
-27.1.1 Dot
+26.1.1 Dot
 ----------
 
 The operator `.' represents noncommutative multiplication and scalar
@@ -6423,7 +6283,7 @@ expressions involving `.', namely `dot', `dot0nscsimp', `dot0simp',
 
 File: maxima.info,  Node: Vectors,  Next: eigen,  Prev: Dot,  Up: Introduction to Matrices and Linear Algebra
 
-27.1.2 Vectors
+26.1.2 Vectors
 --------------
 
 `vect' is a package of functions for vector analysis.  `load ("vect")'
@@ -6447,7 +6307,7 @@ commutative operator.
 
 File: maxima.info,  Node: eigen,  Prev: Vectors,  Up: Introduction to Matrices and Linear Algebra
 
-27.1.3 eigen
+26.1.3 eigen
 ------------
 
 The package `eigen' contains several functions devoted to the symbolic
@@ -6466,7 +6326,7 @@ without the user prompt between successive computations.
 
 File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: Introduction to Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
 
-27.2 Definitions for Matrices and Linear Algebra
+26.2 Definitions for Matrices and Linear Algebra
 ================================================
 
  -- Function: addcol (<M>, <list_1>, ..., <list_n>)
@@ -6480,7 +6340,8 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
 
  -- Function: adjoint (<M>)
-     Returns the adjoint of the matrix <M>.
+     Returns the adjoint of the matrix <M>.  The adjoint matrix is the
+     transpose of the matrix of cofactors of <M>.
 
 
  -- Function: augcoefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>, ...,
@@ -6536,8 +6397,13 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
 
  -- Function: coefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
-     Returns the coefficient matrix for the variables <eqn_1>, ...,
-     <eqn_m> of the system of linear equations <x_1>, ..., <x_n>.
+     Returns the coefficient matrix for the variables <x_1>, ..., <x_n>
+     of the system of linear equations <eqn_1>, ..., <eqn_m>.
+
+          (%i1) coefmatrix([2*x-(a-1)*y+5*b = 0, b*y+a*x = 3], [x,y]);
+                                           [ 2  1 - a ]
+          (%o1)                            [          ]
+                                           [ a    b   ]
 
 
  -- Function: col (<M>, <i>)
@@ -6574,8 +6440,6 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
  -- Function: conjugate (<x>)
      Returns the complex conjugate of <x>.
-
-     `load (conjugate)' loads this function.
 
           (%i1) declare ([aa, bb], real, cc, complex, ii, imaginary);
 
@@ -6803,24 +6667,34 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
 
  -- Function: echelon (<M>)
-     Returns the echelon form of the matrix <M>.  The echelon form is
-     computed from <M> by elementary row operations such that the first
-     non-zero element in each row in the resulting matrix is a one and
-     the column elements under the first one in each row are all zero.
+     Returns the echelon form of the matrix <M>, as produced by
+     Gaussian elimination.  The echelon form is computed from <M> by
+     elementary row operations such that the first non-zero element in
+     each row in the resulting matrix is one and the column elements
+     under the first one in each row are all zero.
 
-          (%i1) m: matrix ([2, 1-a, -5*b], [a, b, c]);
-                                 [ 2  1 - a  - 5 b ]
-          (%o1)                  [                 ]
-                                 [ a    b      c   ]
-          (%i2) echelon (m);
-                            [      a - 1       5 b     ]
-                            [ 1  - -----     - ---     ]
-                            [        2          2      ]
-          (%o2)/R/          [                          ]
-                            [             2 c + 5 a b  ]
-                            [ 0     1     ------------ ]
-                            [                    2     ]
-                            [             2 b + a  - a ]
+     `triangularize' also carries out Gaussian elimination, but it does
+     not normalize the leading non-zero element in each row.
+
+     `lu_factor' and `cholesky' are other functions which yield
+     triangularized matrices.
+
+          (%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                                 [  3   7  aa  bb ]
+                                 [                ]
+          (%o1)                  [ - 1  8  5   2  ]
+                                 [                ]
+                                 [  9   2  11  4  ]
+          (%i2) echelon (M);
+                            [ 1  - 8  - 5      - 2     ]
+                            [                          ]
+                            [         28       11      ]
+                            [ 0   1   --       --      ]
+          (%o2)             [         37       37      ]
+                            [                          ]
+                            [              37 bb - 119 ]
+                            [ 0   0    1   ----------- ]
+                            [              37 aa - 313 ]
 
 
  -- Function: eigenvalues (<M>)
@@ -6835,9 +6709,8 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
      `eigenvalues' calls the function `solve' to find the roots of the
      characteristic polynomial of the matrix.  Sometimes `solve' may
      not be able to find the roots of the polynomial; in that case some
-     other functions in this package (except `conjugate',
-     `innerproduct', `unitvector', `columnvector' and `gramschmidt')
-     will not work.
+     other functions in this package (except `innerproduct',
+     `unitvector', `columnvector' and `gramschmidt') will not work.
 
      In some cases the eigenvalues found by `solve' may be complicated
      expressions.  (This may happen when `solve' returns a
@@ -7553,9 +7426,26 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
 
  -- Function: triangularize (<M>)
-     Returns the upper triangular form of the matrix `M'.
+     Returns the upper triangular form of the matrix `M', as produced
+     by Gaussian elimination.  The return value is the same as
+     `echelon', except that the leading nonzero coefficient in each row
+     is not normalized to 1.
 
-     <M> need not be square.
+     `lu_factor' and `cholesky' are other functions which yield
+     triangularized matrices.
+
+          (%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                                 [  3   7  aa  bb ]
+                                 [                ]
+          (%o1)                  [ - 1  8  5   2  ]
+                                 [                ]
+                                 [  9   2  11  4  ]
+          (%i2) triangularize (M);
+                       [ - 1   8         5            2      ]
+                       [                                     ]
+          (%o2)        [  0   - 74     - 56         - 22     ]
+                       [                                     ]
+                       [  0    0    626 - 74 aa  238 - 74 bb ]
 
 
  -- Function: uniteigenvectors (<M>)
@@ -7685,10 +7575,149 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
 
 File: maxima.info,  Node: Affine,  Next: itensor,  Prev: Matrices and Linear Algebra,  Up: Top
 
-28 Affine
+27 Affine
 *********
 
 * Menu:
 
 * Definitions for Affine::
+
+
+File: maxima.info,  Node: Definitions for Affine,  Prev: Affine,  Up: Affine
+
+27.1 Definitions for Affine
+===========================
+
+ -- Function: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
+          <x_n>])
+     Solves the simultaneous linear equations <expr_1>, ..., <expr_m>
+     for the variables <x_1>, ..., <x_n>.  Each <expr_i> may be an
+     equation or a general expression; if given as a general
+     expression, it is treated as an equation of the form `<expr_i> =
+     0'.
+
+     The return value is a list of equations of the form `[<x_1> =
+     <a_1>, ..., <x_n> = <a_n>]' where <a_1>, ..., <a_n> are all free
+     of <x_1>, ..., <x_n>.
+
+     `fast_linsolve' is faster than `linsolve' for system of equations
+     which are sparse.
+
+
+ -- Function: grobner_basis ([<expr_1>, ..., <expr_m>])
+     Returns a Groebner basis for the equations <expr_1>, ..., <expr_m>.
+     The function `polysimp' can then be used to simplify other
+     functions relative to the equations.
+
+          grobner_basis ([3*x^2+1, y*x])$
+
+          polysimp (y^2*x + x^3*9 + 2) ==> -3*x + 2
+
+     `polysimp(f)' yields 0 if and only if <f> is in the ideal
+     generated by <expr_1>, ..., <expr_m>, that is, if and only if <f>
+     is a polynomial combination of the elements of <expr_1>, ...,
+     <expr_m>.
+
+
+ -- Function: set_up_dot_simplifications (<eqns>,
+          <check_through_degree>)
+ -- Function: set_up_dot_simplifications (<eqns>)
+     The <eqns> are polynomial equations in non commutative variables.
+     The value of `current_variables' is the list of variables used for
+     computing degrees.  The equations must be homogeneous, in order
+     for the procedure to terminate.
+
+     If you have checked overlapping simplifications in
+     `dot_simplifications' above the degree of <f>, then the following
+     is true: `dotsimp (<f>)' yields 0 if and only if <f> is in the
+     ideal generated by the equations, i.e., if and only if <f> is a
+     polynomial combination of the elements of the equations.
+
+     The degree is that returned by `nc_degree'.   This in turn is
+     influenced by the weights of individual variables.
+
+
+ -- Function: declare_weight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
+     Assigns weights <w_1>, ..., <w_n> to <x_1>, ..., <x_n>,
+     respectively.  These are the weights used in computing `nc_degree'.
+
+
+ -- Function: nc_degree (<p>)
+     Returns the degree of a noncommutative polynomial <p>.  See
+     `declare_weights'.
+
+
+ -- Function: dotsimp (<f>)
+     Returns 0 if and only if <f> is in the ideal generated by the
+     equations, i.e., if and only if <f> is a polynomial combination of
+     the elements of the equations.
+
+
+ -- Function: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
+     If `set_up_dot_simplifications' has been previously done, finds
+     the central polynomials in the variables <x_1>, ..., <x_n> in the
+     given degree, <n>.
+
+     For example:
+          set_up_dot_simplifications ([y.x + x.y], 3);
+          fast_central_elements ([x, y], 2);
+          [y.y, x.x];
+
+
+ -- Function: check_overlaps (<n>, <add_to_simps>)
+     Checks the overlaps thru degree <n>, making sure that you have
+     sufficient simplification rules in each degree, for `dotsimp' to
+     work correctly.  This process can be speeded up if you know before
+     hand what the dimension of the space of monomials is.  If it is of
+     finite global dimension, then `hilbert' should be used.  If you
+     don't know the monomial dimensions, do not specify a
+     `rank_function'.  An optional third argument `reset', `false' says
+     don't bother to query about resetting things.
+
+
+ -- Function: mono ([<x_1>, ..., <x_n>], <n>)
+     Returns the list of independent monomials relative to the current
+     dot simplifications of degree <n> in the variables <x_1>, ...,
+     <x_n>.
+
+
+ -- Function: monomial_dimensions (<n>)
+     Compute the Hilbert series through degree <n> for the current
+     algebra.
+
+
+ -- Function: extract_linear_equations ([<p_1>, ..., <p_n>], [<m_1>,
+          ..., <m_n>])
+     Makes a list of the coefficients of the noncommutative polynomials
+     <p_1>, ..., <p_n> of the noncommutative monomials <m_1>, ...,
+     <m_n>.  The coefficients should be scalars.   Use
+     `list_nc_monomials' to build the list of monomials.
+
+
+ -- Function: list_nc_monomials ([<p_1>, ..., <p_n>])
+ -- Function: list_nc_monomials (<p>)
+     Returns a list of the non commutative monomials occurring in a
+     polynomial <p> or a list of polynomials <p_1>, ..., <p_n>.
+
+
+ -- Option variable: all_dotsimp_denoms
+     Default value: `false'
+
+     When `all_dotsimp_denoms' is a list, the denominators encountered
+     by `dotsimp' are appended to the list.  `all_dotsimp_denoms' may
+     be initialized to an empty list `[]' before calling `dotsimp'.
+
+     By default, denominators are not collected by `dotsimp'.
+
+
+
+File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Affine,  Up: Top
+
+28 itensor
+**********
+
+* Menu:
+
+* Introduction to itensor::
+* Definitions for itensor::
 

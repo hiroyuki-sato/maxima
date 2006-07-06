@@ -1,16 +1,29 @@
 # -*- mode: rpm-spec -*-
 
-# By default, this spec file will generate RPMs for CMUCL
+# By default, this spec file will generate RPMs for clisp
 # This can be changed by modifying the variables below.
-%define enable_clisp 0
-%define clisp_flags --disable-clisp
-%define clisp_version 2.33
+%define enable_clisp 1
+%define clisp_flags --enable-clisp
 %define enable_cmucl 0
 %define cmucl_flags --disable-cmucl
 %define enable_sbcl 0
 %define sbcl_flags --disable-sbcl
-%define enable_gcl 1
-%define gcl_flags --enable-gcl
+%define enable_gcl 0
+%define gcl_flags --disable-gcl
+
+# Options to build language packs
+#  Spanish 
+%define enable_lang_es 1
+%define lang_es_flags --enable-lang-es
+#  Spanish UTF-8  
+%define enable_lang_es_utf 1
+%define lang_es_flags_utf --enable-lang-es-utf8
+#  Portuguese
+%define enable_lang_pt 1
+%define lang_pt_flags --enable-lang-pt
+#  Portuguese
+%define enable_lang_pt_utf 1
+%define lang_pt_flags_utf --enable-lang-pt-utf8
 
 # Inhibit automatic compressing of info files. Compressed info
 # files break maxima's internal help.
@@ -19,7 +32,7 @@
 Summary: Maxima Symbolic Computation Program
 Name: maxima
 Version: @VERSION@
-Release: 1
+Release: 1.fedora1
 License: GPL
 Group: Development/Languages
 URL: http://maxima.sourceforge.net
@@ -85,9 +98,47 @@ Provides: maxima_exec
 Maxima compiled with Gnu Common Lisp.
 %endif
 
+%if %{enable_lang_es}
+%package lang-es
+Summary: Maxima Spanish language pack
+Group: Development/Languages
+Requires: maxima
+%description lang-es
+Maxima Spanish lagnuage support.
+%endif
+
+%if %{enable_lang_es_utf}
+%package lang-es-utf8
+Summary: Maxima Spanish UTF-8 language pack
+Group: Development/Languages
+Requires: maxima
+%description lang-es-utf8
+Maxima Spanish lagnuage support (UTF-8).
+%endif
+
+%if %{enable_lang_pt}
+%package lang-pt
+Summary: Maxima Portuguese language pack
+Group: Development/Languages
+Requires: maxima
+%description lang-pt
+Maxima Portuguese lagnuage support.
+%endif
+
+%if %{enable_lang_pt_utf}
+%package lang-pt-utf8
+Summary: Maxima Portuguese UTF-8 language pack
+Group: Development/Languages
+Requires: maxima
+%description lang-pt-utf8
+Maxima Portuguese lagnuage support (UTF-8).
+%endif
+
 %prep
 %setup -q
-%configure  %{?sbcl_flags:} %{?cmucl_flags:} %{?gcl_flags:} %{?clisp_flags:}
+%configure  %{?sbcl_flags:} %{?cmucl_flags:} %{?gcl_flags:} %{?clisp_flags:} \
+	    %{?lang_es_flags:} %{?lang_es_flags_utf:} \
+	    %{?lang_pt_flags:} %{?lang_pt_flags_utf:} 
 
 %build
 make
@@ -127,42 +178,97 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{_datadir}/maxima/%{version}/*
+%dir %{_datadir}/maxima
+%{_datadir}/maxima/%{version}
+%if %{enable_lang_es}
+%exclude %{_datadir}/maxima/%{version}/doc/html/es
+%endif
+%if %{enable_lang_pt}
+%exclude %{_datadir}/maxima/%{version}/doc/html/pt
+%endif
+%if %{enable_lang_es_utf}
+%exclude %{_datadir}/maxima/%{version}/doc/html/es.utf8
+%endif
+%if %{enable_lang_pt_utf}
+%exclude %{_datadir}/maxima/%{version}/doc/html/pt.utf8
+%endif
+%dir %{_libexecdir}/maxima
 %{_libexecdir}/maxima/%{version}
 %{_infodir}/*
+%if %{enable_lang_es}
+%exclude %{_infodir}/es
+%endif
+%if %{enable_lang_pt}
+%exclude %{_infodir}/pt
+%endif
+%if %{enable_lang_es_utf}
+%exclude %{_infodir}/es.utf8
+%endif
+%if %{enable_lang_pt_utf}
+%exclude %{_infodir}/pt.utf8
+%endif
 %{_mandir}/man1/maxima.1
 %{_bindir}/maxima
 %{_bindir}/rmaxima
-%doc AUTHORS COPYING INSTALL README README.lisps README.rpms
+%doc AUTHORS COPYING INSTALL INSTALL.lisp NEWS 
+%doc README README.lisps README.rpms README.external README.i18n
 
 %files xmaxima
 %{_bindir}/xmaxima
-%{_datadir}/maxima/%{version}/xmaxima/*
+%{_datadir}/maxima/%{version}/xmaxima
 
 %if %{enable_clisp}
 %files exec-clisp
-%{_libdir}/maxima/%{version}/binary-clisp/*
+%{_libdir}/maxima/%{version}/binary-clisp
 %endif
 
 %if %{enable_cmucl}
 %files exec-cmucl
-%{_libdir}/maxima/%{version}/binary-cmucl/*
+%{_libdir}/maxima/%{version}/binary-cmucl
 %endif
 
 %if %{enable_sbcl}
 %files exec-sbcl
-/usr/lib/maxima/%{version}/binary-sbcl/*
+/usr/lib/maxima/%{version}/binary-sbcl
 %endif
 
 %if %{enable_gcl}
 %files exec-gcl
-%{_libdir}/maxima/%{version}/binary-gcl/*
+%{_libdir}/maxima/%{version}/binary-gcl
+%endif
+
+%if %{enable_lang_es}
+%files lang-es
+%{_datadir}/maxima/%{version}/doc/html/es
+%{_infodir}/es
+%endif
+
+%if %{enable_lang_es_utf}
+%files lang-es-utf8
+%{_datadir}/maxima/%{version}/doc/html/es.utf8
+%{_infodir}/es.utf8
+%endif
+
+%if %{enable_lang_pt}
+%files lang-pt
+%{_datadir}/maxima/%{version}/doc/html/pt
+%{_infodir}/pt
+%endif
+
+%if %{enable_lang_pt_utf}
+%files lang-pt-utf8
+%{_datadir}/maxima/%{version}/doc/html/pt.utf8
+%{_infodir}/pt.utf8
 %endif
 
 %doc
 
 
 %changelog
+* Wed Dec 28 2005 Vadim Zhytnikov <vvzhy@natorn.ru>
+- Spanish and Portuguese language packs.
+- Package maxima subdirectories for clean uninstall.
+
 * Sat Jan  4 2003 James Amundson <amundson@fnal.gov>
 - Added doc files
 - Added explicit clisp version

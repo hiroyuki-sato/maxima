@@ -53,7 +53,6 @@ Support for specific areas of mathematics
 * Trigonometric::               Manipulating expressions with trig and
                                 inverse trig functions.
 * Special Functions::           Special functions
-* Orthogonal Polynomials::      Orthogonal Polynomials and Special functions
 * Elliptic Functions::          Elliptic Functions and Integrals
 * Limits::                      Limits of expressions.
 * Differentiation::             Differential calculus.
@@ -172,11 +171,6 @@ Special Functions
 * Introduction to Special Functions::
 * specint::
 * Definitions for Special Functions::
-
-Orthogonal Polynomials
-
-* Introduction to Orthogonal Polynomials::
-* Definitions for Orthogonal Polynomials::
 
 Elliptic Functions
 
@@ -484,8 +478,9 @@ File: maxima.info,  Node: Definitions for Bug Detection and Reporting,  Prev: In
 ===============================================
 
  -- Function: run_testsuite ()
- -- Function: run_testsuite (boolean)
- -- Function: run_testsuite (boolean, boolean)
+ -- Function: run_testsuite (<boolean>)
+ -- Function: run_testsuite (<boolean>, <boolean>)
+ -- Function: run_testsuite (<boolean>, <boolean>, <list>)
      Run the Maxima test suite. Tests producing the desired answer are
      considered "passes," as are tests that do not produce the desired
      answer, but are marked as known bugs.
@@ -497,12 +492,32 @@ File: maxima.info,  Node: Definitions for Bug Detection and Reporting,  Prev: In
 
      `run_testsuite (true, true)' displays all tests.
 
+     If the optional third argument is given, a subset of the tests is
+     run.  The subset of the tests to run is given as a list of the
+     names of the tests.  The complete set of tests is specified by
+     `testsuite_files'.
+
      `run_testsuite' changes the Maxima environment.  Typically a test
      script executes `kill' to establish a known environment (namely
      one without user-defined functions and variables) and then defines
      functions and variables appropriate to the test.
 
      `run_testsuite' returns `done'.
+
+ -- Option variable: testsuite_files
+     `testsuite_files' is the set of tests to be run by
+     `run_testsuite'.  It is a list of names of the files containing
+     the tests to run.  If some of the tests in a file are known to
+     fail, then instead of listing the name of the file, a list
+     containing the file name and the test numbers that fail is used.
+
+     For example, this is a part of the default set of tests:
+
+           ["rtest13s", ["rtest14", 57, 63]]
+
+     This specifies the testsuite consists of the files "rtest13s" and
+     "rtest14", but "rtest14" contains two tests that are known to
+     fail: 57 and 63.
 
  -- Function: bug_report ()
      Prints out Maxima and Lisp version numbers, and gives a link to
@@ -1033,8 +1048,8 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
 
              * `expand' causes expansion.
 
-             * `expand (m, n)' causes expansion, setting the values of
-               `maxposex' and `maxnegex' to m and n respectively.
+             * `expand (<m>, <n>)' causes expansion, setting the values
+               of `maxposex' and `maxnegex' to <m> and <n> respectively.
 
              * `detout' causes any matrix inverses computed in <expr>
                to have their determinant kept outside of the inverse
@@ -1043,8 +1058,8 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
              * `diff' causes all differentiations indicated in <expr>
                to be performed.
 
-             * `derivlist (x, y, z, ...)' causes only differentiations
-               with respect to the indicated variables.
+             * `derivlist (<x>, <y>, <z>, ...)' causes only
+               differentiations with respect to the indicated variables.
 
              * `float' causes non-integral rational numbers to be
                converted to floating point.
@@ -1236,7 +1251,7 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
 
  -- Function: kill (<symbol_1>, ..., <symbol_n>)
  -- Function: kill (labels)
- -- Function: kill (clabels, dlabels, elabels)
+ -- Function: kill (inlabels, outlabels, linelabels)
  -- Function: kill (<n>)
  -- Function: kill ([<m>, <n>])
  -- Function: kill (values, functions, arrays, ...)
@@ -1247,16 +1262,16 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
      single array element or subscripted function.
 
      Several special arguments are recognized.  Different kinds of
-     arguments may be combined, e.g., `kill (clabels, functions, allbut
-     (foo, bar))'.
+     arguments may be combined, e.g., `kill (inlabels, functions,
+     allbut (foo, bar))'.
 
      `kill (labels)' unbinds all input, output, and intermediate
-     expression labels created so far.  `kill (clabels)' unbinds only
+     expression labels created so far.  `kill (inlabels)' unbinds only
      input labels which begin with the current value of `inchar'.
-     Likewise, `kill (dlabels)' unbinds only output labels which begin
-     with the current value of `outchar', and `kill (elabels)' unbinds
-     only intermediate expression labels which begin with the current
-     value of `linechar'.
+     Likewise, `kill (outlabels)' unbinds only output labels which
+     begin with the current value of `outchar', and `kill (linelabels)'
+     unbinds only intermediate expression labels which begin with the
+     current value of `linechar'.
 
      `kill (<n>)', where <n> is an integer, unbinds the <n> most recent
      input and output labels.
@@ -1266,7 +1281,7 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
 
      `kill (<infolist>)', where <infolist> is any item in `infolists'
      (such as `values', `functions', or `arrays') unbinds all items in
-     `infolist'.  See also `infolists'.
+     <infolist>.  See also `infolists'.
 
      `kill (all)' unbinds all items on all infolists.  `kill (all)'
      does not reset global variables to their default values; see
@@ -1316,18 +1331,16 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
      By default, Maxima displays the result of each user input
      expression, giving the result an output label.  The output display
      is suppressed by terminating the input with `$' (dollar sign)
-     instead of `;' (semicolon).  An output label is generated, but not
-     displayed, and the label may be referenced in the same way as
-     displayed output labels.  See also `%', `%%', and `%th'.
+     instead of `;' (semicolon).  An output label is constructed and
+     bound to the result, but not displayed, and the label may be
+     referenced in the same way as displayed output labels.  See also
+     `%', `%%', and `%th'.
 
      Intermediate expression labels can be generated by some functions.
      The flag `programmode' controls whether `solve' and some other
      functions generate intermediate expression labels instead of
      returning a list of expressions.  Some other functions, such as
      `ldisplay', always generate intermediate expression labels.
-
-     `first (rest (labels (''inchar)))' returns the most recent input
-     label.
 
      See also `inchar', `outchar', `linechar', and `infolists'.
 
@@ -1347,13 +1360,20 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
  -- Option variable: nolabels
      Default value: `false'
 
-     When `nolabels' is `true', input and output labels are generated
-     but not appended to `labels', the list of all input and output
-     labels.  `kill (labels)' kills the labels on the `labels' list,
-     but does not kill any labels generated since `nolabels' was
-     assigned `true'.  It seems likely this behavior is simply broken.
+     When `nolabels' is `true', input and output result labels (`%i'
+     and `%o', respectively) are displayed, but the labels are not
+     bound to results, and the labels are not appended to the `labels'
+     list.  Since labels are not bound to results, garbage collection
+     can recover the memory taken up by the results.
 
-     See also `batch', `batchload', and `labels'.
+     Otherwise input and output result labels are bound to results, and
+     the labels are appended to the `labels' list.
+
+     Intermediate expression labels (`%t') are not affected by
+     `nolabels'; whether `nolabels' is `true' or `false', intermediate
+     expression labels are bound and appended to the `labels' list.
+
+     See also `batch', `load', and `labels'.
 
 
  -- Option variable: optionset
@@ -1445,8 +1465,17 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
 
  -- Function: remfunction (<f_1>, ..., <f_n>)
  -- Function: remfunction (all)
-     Removes the user defined functions <f_1>, ..., <f_n> from Maxima.
-     `remfunction (all)' removes all functions.
+     Unbinds the function definitions of the symbols <f_1>, ..., <f_n>.
+     The arguments may be the names of ordinary functions (created by
+     `:=' or `define') or macro functions (created by `::=').
+
+     `remfunction (all)' unbinds all function definitions.
+
+     `remfunction' quotes its arguments.
+
+     `remfunction' returns a list of the symbols for which the function
+     definition was unbound.  `false' is returned in place of any
+     symbol for which there is no function definition.
 
 
  -- Function: reset ()
@@ -1466,7 +1495,10 @@ File: maxima.info,  Node: Definitions for Command Line,  Prev: Introduction to C
      When `showtime' is `true', the computation time and elapsed time is
      printed with each output expression.
 
-     See also `time', `timer', and `playback'.
+     The computation time is always recorded, so `time' and `playback'
+     can display the computation time even when `showtime' is `false'.
+
+     See also `timer'.
 
 
  -- Function: sstatus (<feature>, <package>)
@@ -1696,9 +1728,88 @@ File: maxima.info,  Node: Definitions for Operators,  Prev: prefix,  Up: Operato
 
 
  -- Operator: "::="
-     The "::=" is used instead of ":=" to indicate that what follows is
-     a macro definition, rather than an ordinary functional definition.
-     See `macros'.
+     Macro function definition operator.  `::=' defines a function
+     (called a "macro" for historical reasons) which quotes its
+     arguments, and the expression which it returns (called the "macro
+     expansion") is evaluated in the context from which the macro was
+     called.  A macro function is otherwise the same as an ordinary
+     function.
+
+     `macroexpand' returns a macro expansion (without evaluating it).
+     `macroexpand (foo (x))' followed by `''%' is equivalent to `foo
+     (x)' when `foo' is a macro function.
+
+     `::=' puts the name of the new macro function onto the global list
+     `macros'.  `kill', `remove', and `remfunction' unbind macro
+     function definitions and remove names from `macros'.
+
+     `fundef' or `dispfun' return a macro function definition or assign
+     it to a label, respectively.
+
+     Macro functions commonly contain `buildq' and `splice' expressions
+     to construct an expression, which is then evaluated.
+
+     Examples
+
+     A macro function quotes its arguments, so message (1) shows `y -
+     z', not the value of `y - z'.  The macro expansion (the quoted
+     expression `'(print ("(2) x is equal to", x))' is evaluated in the
+     context from which the macro was called, printing message (2).
+
+          (%i1) x: %pi;
+          (%o1)                          %pi
+          (%i2) y: 1234;
+          (%o2)                         1234
+          (%i3) z: 1729 * w;
+          (%o3)                        1729 w
+          (%i4) printq1 (x) ::= block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+          (%o4) printq1(x) ::= block(print("(1) x is equal to", x),
+                                          '(print("(2) x is equal to", x)))
+          (%i5) printq1 (y - z);
+          (1) x is equal to y - z
+          (2) x is equal to %pi
+          (%o5)                          %pi
+
+     An ordinary function evaluates is arguments, so message (1) shows
+     the value of `y - z'.  The return value is not evaluated, so
+     message (2) is not printed until the explicit evaluation `''%'.
+
+          (%i1) x: %pi;
+          (%o1)                          %pi
+          (%i2) y: 1234;
+          (%o2)                         1234
+          (%i3) z: 1729 * w;
+          (%o3)                        1729 w
+          (%i4) printe1 (x) := block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+          (%o4) printe1(x) := block(print("(1) x is equal to", x),
+                                          '(print("(2) x is equal to", x)))
+          (%i5) printe1 (y - z);
+          (1) x is equal to 1234 - 1729 w
+          (%o5)              print((2) x is equal to, x)
+          (%i6) ''%;
+          (2) x is equal to %pi
+          (%o6)                          %pi
+
+     `macroexpand' returns a macro expansion.  `macroexpand (foo (x))'
+     followed by `''%' is equivalent to `foo (x)' when `foo' is a macro
+     function.
+
+          (%i1) x: %pi;
+          (%o1)                          %pi
+          (%i2) y: 1234;
+          (%o2)                         1234
+          (%i3) z: 1729 * w;
+          (%o3)                        1729 w
+          (%i4) g (x) ::= buildq ([x], print ("x is equal to", x));
+          (%o4)    g(x) ::= buildq([x], print("x is equal to", x))
+          (%i5) macroexpand (g (y - z));
+          (%o5)              print(x is equal to, y - z)
+          (%i6) ''%;
+          x is equal to 1234 - 1729 w
+          (%o6)                     1234 - 1729 w
+          (%i7) g (y - z);
+          x is equal to 1234 - 1729 w
+          (%o7)                     1234 - 1729 w
 
 
  -- Operator: ":="
@@ -1827,10 +1938,102 @@ File: maxima.info,  Node: Definitions for Operators,  Prev: prefix,  Up: Operato
      Returns the complex absolute value (the complex modulus) of <expr>.
 
 
+ -- Function: ceiling (<x>)
+     When <x> is a real number, return the least integer that is
+     greater than or equal to <x>.
+
+     If <x> is a constant expression (`10 * %pi', for example),
+     `ceiling' evaluates <x> using big floating point numbers, and
+     applies `ceiling' to the resulting big float. Because `ceiling'
+     uses floating point evaluation, it's possible, although unlikely,
+     that `ceiling' could return an erroneous value for constant
+     inputs. To guard against errors, the floating point evaluation is
+     done using three values for `fpprec'.
+
+     For non-constant inputs, `ceiling' tries to return a simplified
+     value.  Here are examples of the simplifications that `ceiling'
+     knows about:
+
+          (%i1) ceiling(ceiling(x));
+          (%o1) ceiling(x)
+          (%i2) ceiling(floor(x));
+          (%o2) floor(x)
+          (%i3) declare(n,integer)$
+          (%i4) [ceiling(n), ceiling(abs(n)), ceiling(max(n,6))];
+          (%o4) [n, abs(n), max(n,6)]
+          (%i5) assume(x > 0, x < 1)$
+          (%i6) ceiling(x);
+          (%o6) 1
+          (%i7) tex(ceiling(a));
+             $$\left \lceil a \right \rceil$$
+
+     The function `ceiling' does not automatically map over lists or
+     matrices.  Finally, for all inputs that are manifestly complex,
+     `ceiling' returns a noun form.
+
+     If the range of a function is a subset of the integers, it can be
+     declared to be `integervalued'. Both the `ceiling' and `floor'
+     functions can use this information; for example:
+
+          (%i1) declare(f,integervalued)$
+          (%i2) floor(f(x));
+          (%o2) f(x)
+          (%i3) ceiling(f(x) -1);
+          (%o3) f(x)-1
+
+
+ -- Function: charfun (<p>)
+     Return 0 when the predicate <p> evaluates to `false'; return 1
+     when the predicate evaluates to `true'.  When the predicate
+     evaluates to something other than `true' or `false' (unknown),
+     return a noun form.
+
+     Examples:
+
+          (%i1) charfun(x<1);
+          (%o1) charfun(x<1)
+          (%i2) subst(x=-1,%);
+          (%o2) 1
+          (%i3) e : charfun('"and"(-1 < x, x < 1))$
+          (%i4) [subst(x=-1,e), subst(x=0,e), subst(x=1,e)];
+          (%o4) [0,1,0]
+
+
  -- Declaration: commutative
      If `declare(h,commutative)' is done, this tells the simplifier
      that `h' is a commutative function.  E.g. `h(x,z,y)' will simplify
      to `h(x, y, z)'.  This is the same as `symmetric'.
+
+
+ -- Function: compare (<x>, <y>)
+     Return a comparison operator <op> (`<', `<=', `>', `>=', `=', or
+     `#') such that `is (<x> <op> <y>)' evaluates to true; when either
+     <x> or <y> depends on `%i' and `<x> # <y>', return `notcomparable';
+     when there is no such operator or Maxima isn't able to determine
+     the operator, return `unknown'.
+
+     Examples:
+
+          (%i1) compare(1,2);
+          (%o1) <
+          (%i2) compare(1,x);
+          (%o2) unknown
+          (%i3) compare(%i,%i);
+          (%o3) =
+          (%i4) compare(%i,%i+1);
+          (%o4) notcomparable
+          (%i5) compare(1/x,0);
+          (%o5) #
+          (%i6) compare(x,abs(x));
+          (%o6) <=
+
+     The function `compare' doesn't try to determine whether the real
+     domains of its arguments are nonempty; thus
+
+          (%i1) compare(acos(x^2+1), acos(x^2+1) + 1);
+          (%o1) <
+
+     The real domain of `acos (x^2 + 1)' is empty.
 
 
  -- Function: entier (<x>)
@@ -1868,6 +2071,50 @@ File: maxima.info,  Node: Definitions for Operators,  Prev: prefix,  Up: Operato
           (%o2)                        [a > 1]
           (%i3) is (log (log (a+1) + 1) > 0 and a^2 + 1 > 2*a);
           (%o3)                         true
+
+
+ -- Function: floor (<x>)
+     When <x> is a real number, return the largest integer that is less
+     than or equal to <x>.
+
+     If <x> is a constant expression (`10 * %pi', for example), `floor'
+     evaluates <x> using big floating point numbers, and applies floor
+     to the resulting big float. Because floor uses floating point
+     evaluation, it's possible, although unlikely, that `floor' could
+     return  an erroneous value for constant inputs.  To guard against
+     errors, the floating point evaluation is done using three values
+     for `fpprec'.
+
+     For non-constant inputs, `floor' tries to return a simplified
+     value.  Here are examples of the simplifications that `floor'
+     knows about:
+
+          (%i1) floor(ceiling(x));
+          (%o1) ceiling(x)
+          (%i2) floor(floor(x));
+          (%o2) floor(x)
+          (%i3) declare(n,integer)$
+          (%i3) [floor(n), floor(abs(n)), floor(min(n,6))];
+          (%o4) [n,abs(n),min(n,6)]
+          (%i4) assume(x > 0, x < 1)$
+          (%i5) floor(x);
+          (%o5) 0
+          (%i6) tex(floor(a);
+              $$\left \lfloor a \right \rfloor$$
+
+     The function `floor' does not automatically map over lists or
+     matrices.  Finally, for all inputs that are manifestly complex,
+     `floor' returns a noun form.
+
+     If the range of a function is a subset of the integers, it can be
+     declared to be `integervalued'. Both the `ceiling' and `floor'
+     functions can use this information; for example:
+
+          (%i1) declare(f,integervalued)$
+          (%i2) floor(f(x));
+          (%o2) f(x)
+          (%i3) ceiling(f(x) -1);
+          (%o3) f(x)-1
 
 
  -- Function: notequal (<expr_1>, <expr_2>)
@@ -2027,26 +2274,74 @@ File: maxima.info,  Node: Definitions for Operators,  Prev: prefix,  Up: Operato
      which is an integer.
 
 
- -- Function: max (<x_1>, <x_2>, ...)
-     Returns the maximum of its arguments (or returns a simplified form
-     if some of its arguments are non-numeric).
+ -- Function: lmax (<L>)
+     When <L> is a list or a set, return `apply ('max, args (<L>))'.
+     When <L> isn't a list or a set, signal an error.
 
 
- -- Function: min (<x_1>, <x_2>, ...)
-     Returns the minimum of its arguments (or returns a simplified form
-     if some of its arguments are non-numeric).
+ -- Function: lmin (<L>)
+     When <L> is a list or a set, return `apply ('min, args (<L>))'.
+     When <L> isn't a list or a set, signal an error.
 
 
- -- Function: mod (<p>)
- -- Function: mod (<p>, <m>)
+ -- Function: max (<x_1>, ..., <x_n>)
+     Return a simplified value for the maximum of the expressions <x_1>
+     through <x_n>.  When `get (trylevel, maxmin)', is 2 or greater,
+     `max' uses the simplification `max (e, -e) --> |e|'.  When `get
+     (trylevel, maxmin)' is 3 or greater, <max> tries to eliminate
+     expressions that are between two other arguments; for example,
+     `max (x, 2*x, 3*x) --> max (x, 3*x)'. To set the value of
+     `trylevel' to 2, use `put (trylevel, 2, maxmin)'.
+
+
+ -- Function: min (<x_1>, ..., <x_n>)
+     Return a simplified value for the minimum of the expressions `x_1'
+     through `x_n'.  When `get (trylevel, maxmin)', is 2 or greater,
+     `min' uses the simplification `min (e, -e) --> -|e|'.  When `get
+     (trylevel, maxmin)' is 3 or greater, `min' tries to eliminate
+     expressions that are between two other arguments; for example,
+     `min (x, 2*x, 3*x) --> min (x, 3*x)'. To set the value of
+     `trylevel' to 2, use `put (trylevel, 2, maxmin)'.
+
+
+ -- Function: polymod (<p>)
+ -- Function: polymod (<p>, <m>)
      Converts the polynomial <p> to a modular representation with
      respect to the current modulus which is the value of the variable
      `modulus'.
 
-     `mod (<p>, <m>)' specifies a modulus <m> to be used instead of the
-     current value of `modulus'.
+     `polymod (<p>, <m>)' specifies a modulus <m> to be used instead of
+     the current value of `modulus'.
 
      See `modulus'.
+
+
+ -- Function: mod (<x>, <y>)
+     If <x> and <y> are real numbers and <y> is nonzero, return `<x> -
+     <y> * floor(<x> / <y>)'.  Further for all real <x>, we have `mod
+     (<x>, 0) = <x>'. For a discussion of the definition `mod (<x>, 0)
+     = <x>', see Section 3.4, of "Concrete Mathematics," by Graham,
+     Knuth, and Patashnik. The function `mod (<x>, 1)' is a sawtooth
+     function with period 1 with `mod (1, 1) = 0' and `mod (0, 1) = 0'.
+
+     To find the principal argument (a number in the interval `(-%pi,
+     %pi]') of a complex number, use the function `<x> |-> %pi - mod
+     (%pi - <x>, 2*%pi)', where <x> is an argument.
+
+     When <x> and <y> are constant expressions (`10 * %pi', for
+     example), `mod' uses the same big float evaluation scheme that
+     `floor' and `ceiling' uses.  Again, it's possible, although
+     unlikely, that `mod' could return an erroneous value in such cases.
+
+     For nonnumerical arguments <x> or <y>, `mod' knows several
+     simplification rules:
+
+          (%i1) mod(x,0);
+          (%o1) x
+          (%i2) mod(a*x,a*y);
+          (%o2) a*mod(x,y)
+          (%i3) mod(0,x);
+          (%o3) 0
 
 
  -- Function: oddp (<expr>)
@@ -2126,6 +2421,50 @@ File: maxima.info,  Node: Definitions for Operators,  Prev: prefix,  Up: Operato
           (%o12)                  4.394553645870825
           (%i13) random (100.0);
           (%o13)                  32.28666704056853
+
+
+ -- Function: rationalize (<expr>)
+     Convert all double floats and big floats in the Maxima expression
+     <expr> to their exact rational equivalents. If you are not
+     familiar with the binary representation of floating point numbers,
+     you might be surprised that `rationalize (0.1)' does not equal
+     1/10.  This behavior isn't special to Maxima - the number 1/10 has
+     a repeating, not a terminating, binary representation.
+
+          (%i1) rationalize(0.5);
+          (%o1) 1/2
+          (%i2) rationalize(0.1);
+          (%o2) 3602879701896397/36028797018963968
+          (%i3) fpprec : 5$
+          (%i4) rationalize(0.1b0);
+          (%o4) 209715/2097152
+          (%i5) fpprec : 20$
+          (%i6) rationalize(0.1b0);
+          (%o6) 236118324143482260685/2361183241434822606848
+          (%i7) rationalize(sin(0.1 * x + 5.6));
+          (%o7) sin((3602879701896397*x)/36028797018963968+3152519739159347/562949953421312)
+
+     Example use:
+
+          unitfrac(r) := block([uf : [], q],
+             if not(ratnump(r)) then error("The input to 'unitfrac' must be a rational number"),
+             while r # 0 do (
+                  uf : cons(q : 1/ceiling(1/r), uf),
+                  r : r - q),
+             reverse(uf));
+
+          (%i2) unitfrac(9/10);
+          (%o2) [1/2,1/3,1/15]
+          (%i3) apply("+",%);
+          (%o3) 9/10
+          (%i4) unitfrac(-9/10);
+          (%o4) [-1,1/10]
+          (%i5) apply("+",%);
+          (%o5) -9/10
+          (%i6) unitfrac(36/37);
+          (%o6) [1/2,1/3,1/8,1/69,1/6808]
+          (%i7) apply("+",%);
+          (%o7) 36/37
 
 
  -- Function: sign (<expr>)
@@ -2842,6 +3181,27 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
 
      Examples:
 
+          (%i1) box (a^2 + b^2);
+                       """""""""
+                       " 2   2 "
+          (%o1)        "b  + a "
+                       """""""""
+          (%i2) box (a^2 + b^2, term_1);
+                       term_1"""
+                       " 2   2 "
+          (%o2)        "b  + a "
+                       """""""""
+          (%i3) 1729 - box (1729);
+                            """"""
+          (%o3)      1729 - "1729"
+                            """"""
+          (%i4) boxchar: "-";
+          (%o4)            -
+          (%i5) box (sin(x) + cos(y));
+                          -----------------
+          (%o5)           -COS(y) + SIN(x)-
+                          -----------------
+          (%i6)
 
 
  -- Option variable: boxchar
@@ -2906,6 +3266,21 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
 
      Examples:
 
+          (%i1) constantp (7 * sin(2));
+          (%o1) 				     TRUE
+          (%i2) constantp (rat (17/29));
+          (%o2) 				     TRUE
+          (%i3) constantp (%pi * sin(%e));
+          (%o3) 				     TRUE
+          (%i4) constantp (exp (x));
+          (%o4) 				     FALSE
+          (%i5) declare (x, constant);
+          (%o5) 				     DONE
+          (%i6) constantp (exp (x));
+          (%o6) 				     TRUE
+          (%i7) constantp (foo (x) + bar (%e) + baz (2));
+          (%o7) 				     FALSE
+          (%i8)
 
 
  -- Function: declare (<a_1>, <f_1>, <a_2>, <f_2>, ...)
@@ -3713,20 +4088,62 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
 
 
  -- Function: product (<expr>, <i>, <i_0>, <i_1>)
-     Returns the product of the values of `expr' as the index <i>
-     varies from <i_0> to <i_1>.  The evaluation is similar to that of
-     `sum'.
+     Represents a product of the values of <expr> as the index <i>
+     varies from <i_0> to <i_1>.  The noun form `'product' is displayed
+     as an uppercase letter pi.
 
-     If <i_1> is one less than <i_0>, the product is an "empty product"
-     and `product' returns 1 rather than reporting an error.  See also
-     `prodhack'.
+     `product' evaluates <expr> and lower and upper limits <i_0> and
+     <i_1>, `product' quotes (does not evaluate) the index <i>.
 
-     Maxima does not simplify products.
+     If the upper and lower limits differ by an integer, <expr> is
+     evaluated for each value of the index <i>, and the result is an
+     explicit product.
 
-     Example:
+     Otherwise, the range of the index is indefinite.  Some rules are
+     applied to simplify the product.  When the global variable
+     `simpproduct' is `true', additional rules are applied.  In some
+     cases, simplification yields a result which is not a product;
+     otherwise, the result is a noun form `'product'.
+
+     See also `nouns' and `evflag'.
+
+     Examples:
 
           (%i1) product (x + i*(i+1)/2, i, 1, 4);
           (%o1)           (x + 1) (x + 3) (x + 6) (x + 10)
+          (%i2) product (i^2, i, 1, 7);
+          (%o2)                       25401600
+          (%i3) product (a[i], i, 1, 7);
+          (%o3)                 a  a  a  a  a  a  a
+                                 1  2  3  4  5  6  7
+          (%i4) product (a(i), i, 1, 7);
+          (%o4)          a(1) a(2) a(3) a(4) a(5) a(6) a(7)
+          (%i5) product (a(i), i, 1, n);
+                                       n
+                                     /===\
+                                      ! !
+          (%o5)                       ! !  a(i)
+                                      ! !
+                                     i = 1
+          (%i6) product (k, k, 1, n);
+                                         n
+                                       /===\
+                                        ! !
+          (%o6)                         ! !  k
+                                        ! !
+                                       k = 1
+          (%i7) product (k, k, 1, n), simpproduct;
+          (%o7)                          n!
+          (%i8) product (integrate (x^k, x, 0, 1), k, 1, n);
+                                       n
+                                     /===\
+                                      ! !    1
+          (%o8)                       ! !  -----
+                                      ! !  k + 1
+                                     k = 1
+          (%i9) product (if k <= 5 then a^k else b^k, k, 1, 10);
+                                        15  40
+          (%o9)                        a   b
 
 
  -- Function: realpart (<expr>)
@@ -3810,31 +4227,26 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
 
  -- Function: sum (<expr>, <i>, <i_0>, <i_1>)
      Represents a summation of the values of <expr> as the index <i>
-     varies from <i_0> to <i_1>.  Sums may be differentiated, added,
-     subtracted, or multiplied with some automatic simplification being
-     performed.  The noun form `'sum' is displayed in sigma notation.
+     varies from <i_0> to <i_1>.  The noun form `'sum' is displayed as
+     an uppercase letter sigma.
+
+     `sum' evaluates its summand <expr> and lower and upper limits
+     <i_0> and <i_1>, `sum' quotes (does not evaluate) the index <i>.
 
      If the upper and lower limits differ by an integer, the summand
      <expr> is evaluated for each value of the summation index <i>, and
-     the results are added together.
+     the result is an explicit sum.
 
-     Otherwise, if the `simpsum' is `true' the summation is simplified.
-     Simplification may sometimes yield a closed form.  If the
-     evaluation flag `simpsum' is `false' or simplification fails, the
-     result is a noun form `'sum'.
+     Otherwise, the range of the index is indefinite.  Some rules are
+     applied to simplify the summation.  When the global variable
+     `simpsum' is `true', additional rules are applied.  In some cases,
+     simplification yields a result which is not a summation;
+     otherwise, the result is a noun form `'sum'.
 
-     `sum' evaluates <i_0> and <i_1> and quotes <i>.  The summand
-     <expr> is quoted under some circumstances, or evaluated to greater
-     or lesser degree in others.
-
-     If <i_1> is one less than <i_0>, the sum is a considered an "empty
-     sum" and `sum' returns 0 rather than reporting an error.  See also
-     `sumhack'.
-
-     When the evaluation flag `cauchysum' is `true', the product of
-     summations is expressed as a Cauchy product, in which the index of
-     the inner summation is a function of the index of the outer one,
-     rather than varying independently.
+     When the `evflag' (evaluation flag) `cauchysum' is `true', a
+     product of summations is expressed as a Cauchy product, in which
+     the index of the inner summation is a function of the index of the
+     outer one, rather than varying independently.
 
      The global variable `genindex' is the alphabetic prefix used to
      generate the next index of summation, when an automatically
@@ -3846,7 +4258,7 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
      only `genindex' with no numeric suffix.
 
      See also `sumcontract', `intosum', `bashindices', `niceindices',
-     `nouns', and `evflag'.
+     `nouns', `evflag', and `zeilberger'.
 
      Examples:
 
@@ -3865,18 +4277,67 @@ File: maxima.info,  Node: Definitions for Expressions,  Prev: Syntax,  Up: Expre
                                      /
                                      ====
                                      i = 1
-          (%i5) ev (sum (2^i + i^2, i, 0, n), simpsum);
+          (%i5) sum (2^i + i^2, i, 0, n);
+                                    n
+                                   ====
+                                   \       i    2
+          (%o5)                     >    (2  + i )
+                                   /
+                                   ====
+                                   i = 0
+          (%i6) sum (2^i + i^2, i, 0, n), simpsum;
                                         3      2
                              n + 1   2 n  + 3 n  + n
-          (%o5)             2      + --------------- - 1
+          (%o6)             2      + --------------- - 1
                                             6
-          (%i6) ev (sum (1/3^i, i, 1, inf), simpsum);
+          (%i7) sum (1/3^i, i, 1, inf);
+                                      inf
+                                      ====
+                                      \     1
+          (%o7)                        >    --
+                                      /      i
+                                      ====  3
+                                      i = 1
+          (%i8) sum (1/3^i, i, 1, inf), simpsum;
                                           1
-          (%o6)                           -
+          (%o8)                           -
                                           2
-          (%i7) ev (sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf), simpsum);
+          (%i9) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf);
+                                        inf
+                                        ====
+                                        \     1
+          (%o9)                      30  >    --
+                                        /      2
+                                        ====  i
+                                        i = 1
+          (%i10) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf), simpsum;
                                             2
-          (%o7)                        5 %pi
+          (%o10)                       5 %pi
+          (%i11) sum (integrate (x^k, x, 0, 1), k, 1, n);
+                                      n
+                                     ====
+                                     \       1
+          (%o11)                      >    -----
+                                     /     k + 1
+                                     ====
+                                     k = 1
+          (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10));
+          Incorrect syntax: Too many )'s
+          else b^k, k, 1, 10))
+                            ^
+          (%i12) linenum:11;
+          (%o11)                         11
+          (%i12) sum (integrate (x^k, x, 0, 1), k, 1, n);
+                                      n
+                                     ====
+                                     \       1
+          (%o12)                      >    -----
+                                     /     k + 1
+                                     ====
+                                     k = 1
+          (%i13) sum (if k <= 5 then a^k else b^k, k, 1, 10);
+                    10    9    8    7    6    5    4    3    2
+          (%o13)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
 
 
  -- Function: lsum (<expr>, <x>, <L>)
@@ -4298,14 +4759,6 @@ File: maxima.info,  Node: Definitions for Simplification,  Prev: Simplification,
      (f(x) > 0)' yields `true'.
 
 
- -- Option variable: prodhack
-     Default value: `false'
-
-     When `prodhack' is `true', the identity `product (f(i), i, a, b) =
-     1/product (f(i), i, b+1, a-1)' is applied if `a' is greater than
-     `b'.  For example, `product (f(i), i, 3, 1)' yields `1/f(2)'.
-
-
  -- Function: radcan (<expr>)
      Simplifies <expr>, which can contain logs, exponentials, and
      radicals, by converting it into a form which is canonical over a
@@ -4429,14 +4882,6 @@ File: maxima.info,  Node: Definitions for Simplification,  Prev: Simplification,
                               i3 = 0 i4 = 0
 
 
- -- Option variable: sumhack
-     Default value: `false'
-
-     When `sumhack' is `true', the identity `sum (f(i), i, a, b) = -
-     sum (f(i), i, b+1, a-1)' is applied if `a' is greater than `b'.
-     For example, `(sumhack: true, sum (f(i), i, 3, 1))' yields `-f(2)'.
-
-
  -- Option variable: sumsplitfact
      Default value: `true'
 
@@ -4493,8 +4938,7 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
      as `"{xrange -3 4}"' The following plots two curves, using big
      points, labeling the first one `jim' and the second one `jane'.
           openplot_curves ([["{plotpoints 1} {pointsize 6} {label jim}
-                {text {xaxislabel {joe is nice}}}"],
-                [1, 2, 3, 4, 5, 6, 7, 8],
+                {xaxislabel {joe is nice}}"], [1, 2, 3, 4, 5, 6, 7, 8],
                 ["{label jane} {color pink }"], [3, 1, 4, 2, 5, 7]]);
 
      Some other special keywords are `xfun', `color', `plotpoints',
@@ -4509,6 +4953,10 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
  -- Function: plot2d ([<expr_1>, ..., <expr_n>], <x_range>)
  -- Function: plot2d (<expr>, <x_range>, <y_range>)
  -- Function: plot2d (<expr>, <x_range>)
+ -- Function: plot2d ([<name_1>, ..., <name_n>], <x_range>, <y_range>)
+ -- Function: plot2d ([<name_1>, ..., <name_n>], <x_range>)
+ -- Function: plot2d (<name>, <x_range>, <y_range>)
+ -- Function: plot2d (<name>, <x_range>)
      Displays a plot of one or more expressions as a function of one
      variable.
 
@@ -4545,10 +4993,31 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
      range is set to <y_range>.  All options are assumed to have
      default values unless otherwise specified by `set_plot_option'.
 
+     When the function to be plotted is a function defined in Maxima by
+     `:=' or `define', or in Lisp by DEFUN or DEFMFUN, the function can
+     be specified by name.  Functions defined in Lisp by DEFMSPEC, and
+     simplifying functions, cannot be specified by name; that includes
+     many built-in functions.
+
      Examples:
+
+     Plotting an expression, and setting some commonly-used parameters.
 
           (%i1) plot2d (sin(x), [x, -5, 5])$
           (%i2) plot2d (sec(x), [x, -2, 2], [y, -20, 20], [nticks, 200])$
+
+     Plotting functions by name.
+
+          (%i1) F(x) := x^2 $
+
+          (%i2) :lisp (defun |$g| (x) (m* x x x))
+
+          $g
+          (%i2) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
+
+          (%i3) plot2d (F, [u, -1, 1])$
+
+          (%i4) plot2d ([F, G, H], [u, -1, 1])$
 
      Anywhere there may be an ordinary expression, there may be a
      parametric expression: <parametric_expr> is a list of the form
@@ -4788,15 +5257,16 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
                [gnuplot_preamble, "set log y"]
 
         * Option: `gnuplot_curve_titles' Controls the titles given in
-          the plot key. The default value is `default', which
+          the plot key. The default value is `[default]', which
           automatically sets the title of each curve to the function
-          plotted. If not `default', `gnuplot_curve_titles' should
-          contain a list of strings. (To disable the plot key entirely,
-          add `"set nokey"' to `gnuplot_preamble'.)
+          plotted. If not `[default]', `gnuplot_curve_titles' should
+          contain a list of strings, each of which is `"title
+          '<title_string>'"'.  (To disable the plot key, add `"set
+          nokey"' to `gnuplot_preamble'.)
 
           Example:
 
-               [gnuplot_curve_titles, ["my first function", "my second function"]]
+               [gnuplot_curve_titles, ["title 'My first function'", "title 'My second function'"]]
 
         * Option: `gnuplot_curve_styles' A list of strings controlling
           the appearance of curves, i.e., color, width, dashing, etc.,
@@ -4890,14 +5360,21 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
 
 
  -- Function: plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
- -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_range>,
+ -- Function: plot3d (<name>, <x_range>, <y_range>, ..., <options>, ...)
+ -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_rge>, <y_rge>)
+ -- Function: plot3d ([<name_1>, <name_2>, <name_3>], <x_range>,
           <y_range>, ..., <options>, ...)
+     Displays a plot of one or three expressions as functions of two
+     variables.
+
           plot3d (2^(-u^2 + v^2), [u, -5, 5], [v, -7, 7]);
+
      plots `z = 2^(-u^2+v^2)' with `u' and `v' varying in [-5,5] and
      [-7,7] respectively, and with <u> on the x axis, and `v' on the y
      axis.
 
-     An example of the second pattern of arguments is
+     An example of the third pattern of arguments is
+
           plot3d ([cos(x)*(3 + y*cos(x/2)), sin(x)*(3 + y*cos(x/2)), y*sin(x/2)],
              [x, -%pi, %pi], [y, -1, 1], ['grid, 50, 15]);
 
@@ -4906,12 +5383,19 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
      argument `['grid, 50, 15]' gives the grid number of rectangles in
      the x direction and y direction.
 
+     When the function to be plotted is a function defined in Maxima by
+     `:=' or `define', or in Lisp by DEFUN or DEFMFUN, the function can
+     be specified by name.  Functions defined in Lisp by DEFMSPEC, and
+     simplifying functions, cannot be specified by name; that includes
+     many built-in functions.
+
      This example shows a plot of the real part of `z^1/3'.
 
            plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
                ['grid, 12, 80], ['plot_format, ps],
                ['transform_xy, polar_to_xy], ['view_direction, 1, 1, 1.4],
                ['colour_z, true]);
+
      Here the `view_direction' option indicates the direction from
      which we take a projection.  We actually do this from infinitely
      far away, but parallel to the line from `view_direction' to the
@@ -4927,6 +5411,7 @@ File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotti
           plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi], [y, -%pi, %pi], ['grid, 40, 40]);
 
      or a torus
+
           expr_1: cos(y)*(10.0+6*cos(x));
           expr_2: sin(y)*(10.0+6*cos(x));
           expr_3: -6*sin(x);
@@ -5083,17 +5568,50 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 9.3 Definitions for Input and Output
 ====================================
 
+ -- System variable: __
+     `__' is the input expression currently being evaluated.  That is,
+     while an input expression <expr> is being evaluated, `__' is
+     <expr>.
+
+     `__' is assigned the input expression before the input is
+     simplified or evaluated.  However, the value of `__' is simplified
+     (but not evaluated) when it is displayed.
+
+     `__' is recognized by `batch', but not by `load'.
+
+     See also `_' and `%'.
+
+     Examples:
+
+          (%i1) print ("I was called as", __);
+          I was called as print(I was called as, __)
+          (%o1)              print(I was called as, __)
+          (%i2) foo (__);
+          (%o2)                     foo(foo(__))
+          (%i3) g (x) := (print ("Current input expression =", __), 0);
+          (%o3) g(x) := (print("Current input expression =", __), 0)
+          (%i4) [aa : 1, bb : 2, cc : 3];
+          (%o4)                       [1, 2, 3]
+          (%i5) (aa + bb + cc)/(dd + ee + g(x));
+                                      cc + bb + aa
+          Current input expression = --------------
+                                     g(x) + ee + dd
+                                          6
+          (%o5)                        -------
+                                       ee + dd
+
+
  -- System variable: _
      `_' is the most recent input expression (e.g., `%i1', `%i2',
      `%i3', ...).
 
-     `_' is assigned the input before the input is simplified or
-     evaluated.  However, the value of `_' is simplified (but not
-     evaluated) when it is displayed.
+     `_' is assigned the input expression before the input is
+     simplified or evaluated.  However, the value of `_' is simplified
+     (but not evaluated) when it is displayed.
 
      `_' is recognized by `batch', but not by `load'.
 
-     See also `%'.
+     See also `__' and `%'.
 
      Examples:
 
@@ -5133,8 +5651,8 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
 
  -- System variable: %%
-     In a compound statement comprising two or more statements, `%%' is
-     the value of the previous statement.  For example,
+     In compound statements, namely `block', `lambda', or `(<s_1>, ...,
+     <s_n>)', `%%' is the value of the previous statement.  For example,
 
           block (integrate (x^5, x), ev (%%, x=2) - ev (%%, x=1));
           block ([prev], prev: integrate (x^5, x), ev (prev, x=2) - ev (prev, x=1));
@@ -5205,6 +5723,21 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
      `absboxchar' is the character used to draw absolute value signs
      around expressions which are more than one line tall.
+
+
+ -- Option variable: file_output_append
+     Default value: `false'
+
+     `file_output_append' governs whether file output functions append
+     or truncate their output file.  When `file_output_append' is
+     `true', such functions append to their output file.  Otherwise,
+     the output file is truncated.
+
+     `save', `stringout', and `with_stdout' respect
+     `file_output_append'.  Other functions which write output files do
+     not respect `file_output_append'.  In particular, plotting and
+     translation functions always truncate their output file, and `tex'
+     and `appendfile' always append.
 
 
  -- Function: appendfile (<filename>)
@@ -5578,6 +6111,9 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      The function `grind' prints <expr> to the console in a form
      suitable for input to Maxima.  `grind' always returns `done'.
 
+     When <expr> is the name of a function or macro, `grind' prints the
+     function or macro definition instead of just the name.
+
      See also `string', which returns a string instead of printing its
      output.  `grind' attempts to print the expression in a manner
      which makes it slightly easier to read than the output of `string'.
@@ -5591,6 +6127,81 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      `grind' is present, `playback' prints input expressions in the
      same format as the `grind' function.  Otherwise, no attempt is
      made to specially format input expressions.
+
+     `grind' evaluates its argument.
+
+     Examples:
+
+          (%i1) aa + 1729;
+          (%o1)                       aa + 1729
+          (%i2) grind (%);
+          aa+1729$
+          (%o2)                         done
+          (%i3) [aa, 1729, aa + 1729];
+          (%o3)                 [aa, 1729, aa + 1729]
+          (%i4) grind (%);
+          [aa,1729,aa+1729]$
+          (%o4)                         done
+          (%i5) matrix ([aa, 17], [29, bb]);
+                                     [ aa  17 ]
+          (%o5)                      [        ]
+                                     [ 29  bb ]
+          (%i6) grind (%);
+          matrix([aa,17],[29,bb])$
+          (%o6)                         done
+          (%i7) set (aa, 17, 29, bb);
+          (%o7)                   {17, 29, aa, bb}
+          (%i8) grind (%);
+          {17,29,aa,bb}$
+          (%o8)                         done
+          (%i9) exp (aa / (bb + 17)^29);
+                                          aa
+                                      -----------
+                                               29
+                                      (bb + 17)
+          (%o9)                     %e
+          (%i10) grind (%);
+          %e^(aa/(bb+17)^29)$
+          (%o10)                        done
+          (%i11) expr: expand ((aa + bb)^10);
+                   10           9        2   8         3   7         4   6
+          (%o11) bb   + 10 aa bb  + 45 aa  bb  + 120 aa  bb  + 210 aa  bb
+                   5   5         6   4         7   3        8   2
+           + 252 aa  bb  + 210 aa  bb  + 120 aa  bb  + 45 aa  bb
+                  9        10
+           + 10 aa  bb + aa
+          (%i12) grind (expr);
+          bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6
+               +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2
+               +10*aa^9*bb+aa^10$
+          (%o12)                        done
+          (%i13) string (expr);
+          (%o13) bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6\
+          +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2+10*aa^9*\
+          bb+aa^10
+          (%i14) cholesky (A):= block ([n : length (A), L : copymatrix (A),
+          p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
+          (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
+          p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
+          for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+          (%i15) grind (cholesky);
+          cholesky(A):=block(
+                   [n:length(A),L:copymatrix(A),
+                    p:makelist(0,i,1,length(A))],
+                   for i thru n do
+                       (for j from i thru n do
+                            (x:L[i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),
+                             if i = j then p[i]:1/sqrt(x)
+                                 else L[j,i]:x*p[i])),
+                   for i thru n do L[i,i]:1/p[i],
+                   for i thru n do (for j from i+1 thru n do L[i,j]:0),L)$
+          (%o15)                        done
+          (%i16) string (fundef (cholesky));
+          (%o16) cholesky(A):=block([n:length(A),L:copymatrix(A),p:makelis\
+          t(0,i,1,length(A))],for i thru n do (for j from i thru n do (x:L\
+          [i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),if i = j then p[i]:1/sqrt(x\
+          ) else L[j,i]:x*p[i])),for i thru n do L[i,i]:1/p[i],for i thru \
+          n do (for j from i+1 thru n do L[i,j]:0),L)
 
 
  -- Option variable: ibase
@@ -6042,10 +6653,13 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      with it, it is ignored.  `save' returns <filename>.
 
      `save' stores data in the form of Lisp expressions.  The data
-     stored by `save' may be recovered by `load (<filename>)'.  The
-     effect of executing `save' when <filename> already exists depends
-     on the underlying Lisp implementation; the file may be clobbered,
-     or `save' may complain with an error message.
+     stored by `save' may be recovered by `load (<filename>)'.
+
+     The global flag `file_output_append' governs whether `save'
+     appends or truncates the output file.  When `file_output_append'
+     is `true', `save' appends to the output file.  Otherwise, `save'
+     truncates the output file.  In either case, `save' creates the
+     file if it does not yet exist.
 
      The special form `save (<filename>, values, functions, labels,
      ...)'  stores the items named by `values', `functions', `labels',
@@ -6165,6 +6779,12 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      any purpose. `stringout' can be executed while `writefile' is in
      progress.
 
+     The global flag `file_output_append' governs whether `stringout'
+     appends or truncates the output file.  When `file_output_append'
+     is `true', `stringout' appends to the output file.  Otherwise,
+     `stringout' truncates the output file.  In either case,
+     `stringout' creates the file if it does not yet exist.
+
      The general form of `stringout' writes the values of one or more
      expressions to the output file. Note that if an expression is a
      variable, only the value of the variable is written and not the
@@ -6195,10 +6815,38 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
 
  -- Function: tex (<expr>)
+ -- Function: tex (<label>)
  -- Function: tex (<expr>, <filename>)
  -- Function: tex (<label>, <filename>)
-     In the case of a label, a left-equation-number is produced.  in
-     case a file-name is supplied, the output is appended to the file.
+     Prints a representation of an expression suitable for the TeX
+     document preparation system.  The result is a fragment of a
+     document, which can be copied into a larger document but not
+     processed by itself.
+
+     `tex (<expr>)' prints a TeX representation of <expr> on the
+     console.
+
+     `tex (<label>)' prints a TeX representation of the expression
+     named by <label> and assigns it an equation label (to be displayed
+     to the left of the expression).  The TeX equation label is the
+     same as the Maxima label.
+
+     `tex (<expr>, <filename>)' appends a TeX representation of <expr>
+     to the file <filename>.  `tex' quotes the <filename> argument;
+     quote-quote `''' forces evaluation of the argument.
+
+     `tex (<label>, <filename>)' appends a TeX representation of the
+     expression named by <label>, with an equation label, to the file
+     <filename>.  `tex' quotes the <filename> argument; quote-quote
+     `''' forces evaluation of the argument.
+
+     `tex' evaluates its argument after testing it to see if it is a
+     label.  Quote-quote `''' forces evaluation of the argument,
+     thereby defeating the test and preventing the label.
+
+     See also `texput'.
+
+     Examples:
 
           (%i1) integrate (1/(1+x^3), x);
                                               2 x - 1
@@ -6216,6 +6864,84 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
           (%o3)                           false
           (%i4) tex (%o1, "foo.tex");
           (%o4)                          (\%o1)
+
+
+ -- Function: texput (<a>, <s>)
+ -- Function: texput (<a>, <s>, <operator_type>)
+ -- Function: texput (<a>, [<s_1>, <s_2>], matchfix)
+ -- Function: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
+     Set the TeX output for the atom <a>, which can be a symbol or the
+     name of an operator.
+
+     `texput (<a>, <s>)' causes the `tex' function to interpolate the
+     string <s> into the TeX output in place of <a>.
+
+     `texput (<a>, <s>, <operator_type>)', where <operator_type> is
+     `prefix', `infix', or `postfix' causes the `tex' function to
+     interpolate <s> into the TeX output in place of <a>, and to place
+     the interpolated text in the appropriate position.
+
+     `texput (<a>, [<s_1>, <s_2>], matchfix)' causes the `tex' function
+     to interpolate <s_1> and <s_2> into the TeX output on either side
+     of the arguments of <a>.  The arguments (if more than one) are
+     separated by commas.
+
+     `texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)' causes the `tex'
+     function to interpolate <s_1> and <s_2> into the TeX output on
+     either side of the arguments of <a>, with <s_3> separating the
+     arguments.
+
+     Examples:
+
+          (%i1) texput (me,"\\mu_e");
+          (%o1)                         \mu_e
+          (%i2) tex (me);
+          $$\mu_e$$
+          (%o2)                         false
+          (%i3) texput (lcm, "\\mathrm{lcm}");
+          (%o3)                     \mathrm{lcm}
+          (%i4) tex (lcm (a, b));
+          $$\mathrm{lcm}\left(a , b\right)$$
+          (%o4)                         false
+          (%i5) prefix ("grad");
+          (%o5)                         grad
+          (%i6) texput ("grad", " \\nabla ", prefix);
+          (%o6)                          180
+          (%i7) tex (grad f);
+          $$ \nabla f$$
+          (%o7)                         false
+          (%i8) infix ("~");
+          (%o8)                           ~
+          (%i9) texput ("~", " \\times ", infix);
+          (%o9)                          180
+          (%i10) tex (a ~ b);
+          $$a \times b$$
+          (%o10)                        false
+          (%i11) postfix ("@");
+          (%o11)                          @
+          (%i12) texput ("@", "!!", postfix);
+          (%o12)                         160
+          (%i13) tex (x @);
+          $$x!!$$
+          (%o13)                        false
+          (%i14) matchfix ("<<", ">>");
+          (%o14)                         <<
+          (%i15) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+          (%o15)              \langle ( \rangle , false)
+          (%i16) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o16)                        false
+          (%i17) tex (<<a, b>>);
+          $$ \langle a , b \rangle $$
+          (%o17)                        false
+          (%i18) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+          (%o18)            \langle ( \rangle ,  \, | \,)
+          (%i19) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o19)                        false
+          (%i20) tex (<<a, b>>);
+          $$ \langle a \, | \,b \rangle $$
+          (%o20)                        false
 
 
  -- Function: system (<command>)
@@ -6250,12 +6976,19 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      and the output of `describe', is not affected by `ttyoff'.
 
 
- -- Macro: with_stdout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Function: with_stdout (<filename>, <expr_1>, <expr_2>, <expr_3>,
+          ...)
      Opens <filename> and then evaluates <expr_1>, <expr_2>, <expr_3>,
      ....  The values of the arguments are not stored in <filename>,
      but any printed output generated by evaluating the arguments (from
      `print', `display', `disp', or `grind', for example) goes to
      <filename> instead of the console.
+
+     The global flag `file_output_append' governs whether `with_stdout'
+     appends or truncates the output file.  When `file_output_append'
+     is `true', `with_stdout' appends to the output file.  Otherwise,
+     `with_stdout' truncates the output file.  In either case,
+     `with_stdout' creates the file if it does not yet exist.
 
      `with_stdout' returns the value of its final argument.
 
@@ -6486,14 +7219,57 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
 
 
  -- Function: assume (<pred_1>, ..., <pred_n>)
-     Adds predicates <pred_1>, ..., <pred_n> to the current database,
-     after checking for redundancy and inconsistency.  If the
-     predicates are consistent and non-redundant, they are added to the
-     data base; if inconsistent or redundant, no action is taken.
+     Adds predicates <pred_1>, ..., <pred_n> to the current context.
+     If a predicate is inconsistent or redundant with the predicates in
+     the current context, it is not added to the context.  The context
+     accumulates predicates from each call to `assume'.
 
      `assume' returns a list whose elements are the predicates added to
-     the database and the atoms `redundant' or `inconsistent' where
+     the context or the atoms `redundant' or `inconsistent' where
      applicable.
+
+     The predicates <pred_1>, ..., <pred_n> can only be expressions
+     with the relational operators `< <= equal notequal >=' and `>'.
+     Predicates cannot be literal equality `=' or literal inequality
+     `#' expressions, nor can they be predicate functions such as
+     `integerp'.
+
+     Compound predicates of the form `<pred_1> and ... and <pred_n>'
+     are recognized, but not `<pred_1> or ... or <pred_n>'.  `not
+     <pred_k>' is recognized if <pred_k> is a relational predicate.
+     Expressions of the form `not (<pred_1> and <pred_2>)' and `not
+     (<pred_1> or <pred_2>)' are not recognized.
+
+     Maxima's deduction mechanism is not very strong; there are many
+     obvious consequences which cannot be determined by `is'.  This is
+     a known weakness.
+
+     `assume' evaluates its arguments.
+
+     See also `is', `facts', `forget', `context', and `declare'.
+
+     Examples:
+
+          (%i1) assume (xx > 0, yy < -1, zz >= 0);
+          (%o1)              [xx > 0, yy < - 1, zz >= 0]
+          (%i2) assume (aa < bb and bb < cc);
+          (%o2)                  [bb > aa, cc > bb]
+          (%i3) facts ();
+          (%o3)     [xx > 0, - 1 > yy, zz >= 0, bb > aa, cc > bb]
+          (%i4) is (xx > yy);
+          (%o4)                         true
+          (%i5) is (yy < -yy);
+          (%o5)                         true
+          (%i6) is (sinh (bb - aa) > 0);
+          (%o6)                         true
+          (%i7) forget (bb > aa);
+          (%o7)                       [bb > aa]
+          (%i8) prederror : false;
+          (%o8)                         false
+          (%i9) is (sinh (bb - aa) > 0);
+          (%o9)                        unknown
+          (%i10) is (bb^2 < cc^2);
+          (%o10)                       unknown
 
 
  -- Option variable: assumescalar
@@ -6524,14 +7300,14 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
      Default value: `false'
 
      When `assume_pos' is `true' and the sign of a parameter <x> cannot
-     be determined from the `assume' database or other considerations,
+     be determined from the current context or other considerations,
      `sign' and `asksign (<x>)' return `true'.  This may forestall some
      automatically-generated `asksign' queries, such as may arise from
      `integrate' or other computations.
 
-     By default, a parameter is <x> such that `symbolp (x)' or `subvarp
-     (x)'.  The class of expressions considered parameters can be
-     modified to some extent via the variable `assume_pos_pred'.
+     By default, a parameter is <x> such that `symbolp (<x>)' or
+     `subvarp (<x>)'.  The class of expressions considered parameters
+     can be modified to some extent via the variable `assume_pos_pred'.
 
      `sign' and `asksign' attempt to deduce the sign of expressions
      from the sign of operands within the expression.  For example, if
@@ -6560,8 +7336,8 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
      function returns `true', <x> is considered a parameter for the
      purpose of `assume_pos'.
 
-     By default, a parameter is <x> such that `symbolp (x)' or `subvarp
-     (x)'.
+     By default, a parameter is <x> such that `symbolp (<x>)' or
+     `subvarp (<x>)'.
 
      See also `assume' and `assume_pos'.
 
@@ -6627,7 +7403,7 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
      created automatically by a call to `newcontext'.  The specified
      context is activated automatically.
 
-     See `context' for a general description of the context mechanism.
+     See `contexts' for a general description of the context mechanism.
 
 
  -- Option variable: contexts
@@ -6637,10 +7413,9 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
      including the currently active context.
 
      The context mechanism makes it possible for a user to bind together
-     and name a selected portion of his database, called a context.
-     Once this is done, the user can have Maxima assume or forget large
-     numbers of facts merely by activating or deactivating their
-     context.
+     and name a collection of facts, called a context.  Once this is
+     done, the user can have Maxima assume or forget large numbers of
+     facts merely by activating or deactivating their context.
 
      Any symbolic atom can be a context, and the facts contained in that
      context will be retained in storage until destroyed one by one by
@@ -6682,7 +7457,7 @@ File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contex
      variables.  These are called "features".
 
      `declare (<x>, <foo>)' gives the property <foo> to the function or
-     variable `x'.
+     variable <x>.
 
      `declare (<foo>, feature)' declares a new feature <foo>.  For
      example, `declare ([red, green, blue], feature)' declares three

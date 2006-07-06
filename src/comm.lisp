@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;	** (c) Copyright 1982 Massachusetts Institute of Technology **
 
 (macsyma-module comm)
@@ -450,9 +450,14 @@
 				 ((rat) -1 2))))
 	    (%atan ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1))
 	    (%acot ((mtimes) -1 ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1)))
-	    (%acsc ((mtimes) -1 ((mexpt) x -1)
-		    ((mexpt) ((mplus) -1 ((mexpt) x 2)) ((rat) -1 2))))
-	    (%asec ((mtimes) ((mexpt) x -1) ((mexpt) ((mplus) -1 ((mexpt) x 2)) ((rat) -1 2))))
+	    (%acsc ((mtimes) -1 
+		    ((mexpt) ((mplus) 1 ((mtimes) -1 ((mexpt) x -2)))
+		     ((rat) -1 2)) 
+		    ((mexpt) x -2)))
+	    (%asec ((mtimes)
+		    ((mexpt) ((mplus) 1 ((mtimes) -1 ((mexpt) x -2)))
+		     ((rat) -1 2))
+		    ((mexpt) x -2)))
 	    (%sinh ((%cosh) x))
 	    (%cosh ((%sinh) x))
 	    (%tanh ((mexpt) ((%sech) x) 2))
@@ -463,10 +468,12 @@
 	    (%acosh ((mexpt) ((mplus) -1 ((mexpt) x 2)) ((rat) -1 2)))
 	    (%atanh ((mexpt) ((mplus) 1 ((mtimes) -1 ((mexpt) x 2))) -1))
 	    (%acoth ((mtimes) -1 ((mexpt) ((mplus) -1 ((mexpt) x 2)) -1)))
-	    (%asech ((mtimes) -1 ((mexpt) x -1)
-		     ((mexpt) ((mplus) 1 ((mtimes) -1 ((mexpt) x 2))) ((rat) -1 2))))
-	    (%acsch ((mtimes) -1 ((mexpt) x -1)
-		     ((mexpt) ((mplus) 1 ((mexpt) x 2)) ((rat) -1 2))))
+	    (%asech ((mtimes) -1
+		     ((mexpt) ((mplus) -1 ((mexpt) x -2)) ((rat) -1 2))
+		     ((mexpt) x -2)))
+	    (%acsch ((mtimes) -1
+		     ((mexpt) ((mplus) 1 ((mexpt) x -2)) ((rat) -1 2))
+		     ((mexpt) x -2)))
 	    (mabs ((mtimes) x ((mexpt) ((mabs) x) -1)))
 	    (%erf ((mtimes) 2 ((mexpt) $%pi ((rat) -1 2))
 		   ((mexpt) $%e ((mtimes) -1 ((mexpt) x 2)))))
@@ -565,10 +572,17 @@
 	((mspecfunp (caar e)) e)
 	(t (cons (car e) (mapcar #'meval (cdr e))))))
 
+; Construct a new intermediate result label,
+; and bind it to the expression e. 
+; The global flag $NOLABELS is ignored; the label is always bound.
+; Otherwise (if ELABEL were to observe $NOLABELS) it would be
+; impossible to programmatically refer to intermediate result expression.
+
 (defmfun elabel (e)
   (if (not (checklabel $linechar)) (setq $linenum (f1+ $linenum)))
-  (makelabel $linechar)
-  (if (not $nolabels) (set linelable e))
+  (let (($nolabels nil)) ; <-- This is pretty ugly. MAKELABEL should take another argument.
+    (makelabel $linechar))
+  (set linelable e)
   linelable)
 
 (defmfun $dispterms (e)

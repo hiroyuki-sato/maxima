@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;	** (c) Copyright 1982 Massachusetts Institute of Technology **
 
 (macsyma-module mlisp)
@@ -2087,19 +2087,20 @@ wrapper for this."
 			      fun (afuncall ary 2) l))
 		  (setq sub (mapcar #'meval (cdr l)))
 		  (setq hashl (afuncall ary (setq lispsub
-						  (f+ 3 (fixnum-remainder (hasher sub) (afuncall ary 0))))))	  (do ((hashl1 hashl (cdr hashl1)))
-														      ((null hashl1)
-														       (cond ((not (eq r munbound))
-															      (setq sub (ncons (cons sub r)))
-															      (cond ((null hashl) (store (afuncall ary lispsub) sub))
-																    (t (nconc hashl sub)))
-															      (store (afuncall ary 1) (f1+ (afuncall ary 1))))))
-														    (cond ((alike (caar hashl1) sub)
-															   (cond ((eq r munbound) (store (afuncall ary 1)
-																			 (f1- (afuncall ary 1))))
-																 (t (nconc hashl (ncons (cons sub r)))))
-															   (store (afuncall ary lispsub) (zl-delete (car hashl1) hashl 1))
-															   (return nil))))
+						  (f+ 3 (fixnum-remainder (hasher sub) (afuncall ary 0))))))
+		  (do ((hashl1 hashl (cdr hashl1)))
+		      ((null hashl1)
+		       (cond ((not (eq r munbound))
+			      (setq sub (ncons (cons sub r)))
+			      (cond ((null hashl) (store (afuncall ary lispsub) sub))
+				    (t (nconc hashl sub)))
+			      (store (afuncall ary 1) (f1+ (afuncall ary 1))))))
+		    (cond ((alike (caar hashl1) sub)
+			   (cond ((eq r munbound) (store (afuncall ary 1)
+							 (f1- (afuncall ary 1))))
+				 (t (nconc hashl (ncons (cons sub r)))))
+			   (store (afuncall ary lispsub) (zl-delete (car hashl1) hashl 1))
+			   (return nil))))
 		  (if (> (afuncall ary 1) (afuncall ary 0))
 		      (arraysize fun (f* 2 (afuncall ary 0))))
 		  r)
@@ -2498,15 +2499,19 @@ wrapper for this."
 
 (defmspec $dispfun (l) (setq l (cdr l))
 	  (cond ((or (cdr l) (not (eq (car l) '$all))) (dispfun1 l nil nil))
-		(t (dispfun1 (cdr $functions) t nil)
-		   (dispfun1 (mapcan #'(lambda (x) (if (mget x 'aexpr) (ncons x)))
-				     (cdr $arrays))
-			     nil t)
-		   (dispfun1 (cdr $macros) t nil))))
+		(t
+          `((mlist simp)
+            ,@(apply #'append
+               (list (cdr (dispfun1 (cdr $functions) t nil))
+                     (cdr (dispfun1
+                            (mapcan #'(lambda (x) (if (mget x 'aexpr) (ncons x)))
+                                    (cdr $arrays)) nil t))
+                     (cdr (dispfun1 (cdr $macros) t nil))))))))
 
 (defun dispfun1 (l flag maexprp)
-  (dolist (fun l) ($ldisp (consfundef (if flag (caar fun) fun) maexprp nil)))
-  '$done)
+  `((mlist simp) 
+    ,@(loop for fun in l collect
+            (cadr ($ldisp (consfundef (if flag (caar fun) fun) maexprp nil))))))
 
 (defmspec $fundef (x) (consfundef (fexprcheck x) nil nil))
 
@@ -2733,7 +2738,7 @@ wrapper for this."
   (mapc #'(lambda (x) (putprop x t 'evflag))
 	'($exponentialize $%emode $demoivre $logexpand $logarc $lognumer
 	  $radexpand $keepfloat $listarith $float $ratsimpexpons $ratmx
-	  $simp $simpsum $algebraic $ratalgdenom $factorflag $ratfac
+	  $simp $simpsum $simpproduct $algebraic $ratalgdenom $factorflag $ratfac
 	  $infeval $%enumer $programmode $lognegint $logabs $letrat
 	  $halfangles $exptisolate $isolate_wrt_times $sumexpand
 	  $cauchysum $numer_pbranch $m1pbranch $dotscrules

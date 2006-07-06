@@ -25,7 +25,7 @@
 ;;   (:export "CL-OPTION" "MAKE-CL-OPTION" "LIST-CL-OPTIONS" "PROCESS-ARGS"
 ;; 	   "GET-APPLICATION-ARGS"))
 
-(in-package "COMMAND-LINE")
+(in-package :command-line)
 
 (defstruct cl-option
   (names nil)
@@ -113,6 +113,10 @@
 	  (do ((removed-arg nil (pop result)))
 	      ((or (equal removed-arg "--") (equal nil result)) result)))
 
+  #+scl (let ((result ext:*command-line-strings*))
+	  (do ((removed-arg nil (pop result)))
+	      ((or (equal removed-arg "--") (equal nil result)) result)))
+
   #+sbcl (rest sb-ext:*posix-argv*)
 
   #+gcl  (let ((result  si::*command-args*))
@@ -127,4 +131,6 @@
       
 
   ;; FIXME: openmcl version missing
+  #+openmcl
+  (rest (ccl::command-line-arguments))
   )

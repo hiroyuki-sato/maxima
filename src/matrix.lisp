@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module matrix)
 
 (declare-top(special errrjfflag oneoff* ei* ej* *ech* *tri* *inv*
@@ -155,7 +155,7 @@
 	(t (mapcar #'ratplus a b)))) 
 
 (defmfun $determinant (mat)
-  (cond ((atom mat) (list '(%determinant) mat))
+  (cond ((not (or (mbagp mat) ($matrixp mat))) (if ($scalarp mat) mat (list '(%determinant) mat)))
 	(t (setq mat (check mat))
 	   (if (not (= (length mat) (length (cadr mat))))
 	       (merror "`determinant' called on a non-square matrix."))

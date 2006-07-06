@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;	** (c) Copyright 1982 Massachusetts Institute of Technology **
 
 ;;(macsyma-module suprv)
@@ -175,6 +175,9 @@
   "The default file directory for `save', `store', `fassave', and `stringout'."
   no-reset)
 
+(defmvar $file_output_append nil
+  "Flag to tell file-writing functions whether to append or clobber the output file.")
+
 ;;(DEFMVAR $ERREXP '$ERREXP)
 
 (defmvar user-timesofar nil)
@@ -276,7 +279,8 @@
 	ret (let ((errset 'errbreak2) (thistime -1))
 	      (errset (displa (list '(mlable) linelable $%)))))
   (if (null ret) (mtell "~%Error during display~%"))
-  (if $disptime (mtell-open "Displaytime= ~A msec.~%" (- (runtime) tim)))
+  (if $disptime (mtell-open "Displaytime= ~A sec.~%" (quotient (float (- (runtime) tim))
+								internal-time-units-per-second)))
   ret)
 
 
@@ -304,21 +308,21 @@
     (if stg (princ (maknam (reverse stg))))
     (setq reprint nil)))
 
-;; The PDP10 is one of the only systems which autoload.
-;; The definition for non-autoloading systems is in MAXMAC. - CWH
-;; For now we'll let a USER put autoload properties on symbols
-;; and at least let them get found on Multics. - Jim 3/24/81
-;; Franz also autoloads -- jkf
-;;
+; Following GENERIC-AUTOLOAD is copied from orthopoly/orthopoly-init.lisp.
+; Previous version didn't take Clisp, CMUCL, or SBCL into account.
 
 #+cl
 (defun generic-autoload (file &aux type)
   (setq file (pathname (cdr file)))
   (setq type (pathname-type file))
-  (cond ((member type
-		 '(nil "BIN" "O" "o" "XFASL" "QFASL" "LISP" "LSP") :test 'equalp)
-	 (load file))
-	(t ($batchload file))))
+  (let ((bin-ext #+gcl "o"
+         #+cmu (c::backend-fasl-file-type c::*target-backend*)
+         #+clisp "fas"
+         #+allegro "fasl"
+         #-(or gcl cmu clisp allegro) ""))
+    (if (member type (list bin-ext "lisp" "lsp")  :test 'equalp)
+    (load file :verbose 't) ($batchload file))))
+
 #+cl
 (defvar autoload 'generic-autoload)
 
@@ -354,7 +358,7 @@
 
 #+cl
 (defun $setup_autoload (filename &rest functions)
-  (let ((file  (string-trim "&$" (print-invert-case filename))))
+  (let ((file ($file_search filename)))
     (dolist (func functions)
       (nonsymchk func '$setup_autoload)
       (putprop (setq func (dollarify-name func)) file 'autoload)
@@ -523,8 +527,8 @@
 		    '((mlist simp))
 		    tellratlist nil $dontfactor '((mlist)) $setcheck nil)
 	      (killallcontexts))
-	     ((setq z (assq x '(($clabels . $inchar) ($dlabels . $outchar)
-				($elabels . $linechar))))
+	     ((setq z (assq x '(($inlabels . $inchar) ($outlabels . $outchar)
+				($linelabels . $linechar))))
 	      (mapc #'(lambda (y) (remvalue y '$kill))
 		    (getlabels* (eval (cdr z)) nil)))
 	     ((and (eq (ml-typep x) 'fixnum) (not (< x 0))) (remlabels x))
@@ -809,8 +813,8 @@
 			 ((or incharp
 			      (prog2 (when (and timep (setq l (get (car l1) 'time)))
 				       (setq x (gctimep timep (cdr l)))
-				       (mtell-open "~A msec." (car l))
-				       #+gc (if x (mtell-open "  GCtime= ~A msec." (cdr l)))
+				       (mtell-open "~A sec." (car l))
+				       #+gc (if x (mtell-open "  GCtime= ~A sec." (cdr l)))
 				       (mterpri))
 				  (not (or inputp (get (car l1) 'nodisp)))))
 			  (mterpri) (displa (list '(mlable) (car l1) (meval1 (car l1)))))
@@ -992,14 +996,21 @@
   (setq x (exploden x))
   (if (char= (car x) #\&) (mapcar #'casify (cdr x)) (cdr x)))
 
-(defmspec $stringout (x)  (setq x (cdr x))
-	  (let (file maxima-error l1 truename)
-	    (setq file ($filename_merge (car x)))
-	    (setq x (cdr x))
-	    (with-open-file (savefile file :direction :output)
+(defmspec $stringout (x)
+  (setq x (cdr x))
+  (let*
+    ((file ($filename_merge (car x)))
+     (filespec (if (or (eq $file_output_append '$true) (eq $file_output_append t))
+        `(savefile ,file :direction :output :if-exists :append :if-does-not-exist :create)
+        `(savefile ,file :direction :output :if-exists :supersede :if-does-not-exist :create))))
+    (setq x (cdr x))
+    (eval 
+      `(let (maxima-error l1 truename)
+        (declare (special $grind $strdisp))
+	    (with-open-file ,filespec
 	      (cond ((null
 		      (errset
-		       (do ((l x (cdr l)))( (null l))
+		       (do ((l ',x (cdr l)))( (null l))
 			 (cond ((memq (car l) '($all $input))
 				(setq l (nconc (getlabels* $inchar t) (cdr l))))
 			       ((eq (car l) '$values)
@@ -1038,7 +1049,8 @@
 	      (setq truename (truename savefile))
 	      (terpri savefile))
 	    (if maxima-error (let ((errset 'errbreak1)) (merror "Error in `stringout' attempt")))
-	    (cl:namestring truename)))
+	    (cl:namestring truename)))))
+
 (defmspec $labels (char)
   (setq char (fexprcheck char))
   (nonsymchk char '$labels)
@@ -1103,14 +1115,15 @@
   (throw 'mcatch exp))
 
 (defmspec $time (l) (setq l (cdr l))
-	  #-cl
-	  (mtell-open "`time' or [total`time', GC`time'] in msecs.:~%")
-	  #+cl
-	  (format t "~&Time:")
+	  ;#-cl
+	  ;(mtell-open "`time' or [total`time', GC`time'] in secs.:~%")
+	  ;#+cl
+	  ;(format t "~&Time:")
 	  (cons '(mlist simp)
 		(mapcar
 		 #'(lambda (x)
-		     (or (and (setq x (or (get x 'time)
+		     (or (and (symbolp x)
+		    	      (setq x (or (get x 'time)
 					  (and (eq x '$%) (cons (cadr $lasttime)
 								(caddr $lasttime)))))
 			      (if (= (cdr x) 0)
@@ -1133,7 +1146,7 @@
 	      nil 
 	      (princ *maxima-epilog*)
   #+kcl (lisp::bye) 
-	      #+cmu (ext:quit) 
+	      #+(or cmu scl) (ext:quit) 
 	      #+sbcl (sb-ext:quit) 
 	      #+clisp (ext:quit) 
 	      #+mcl (ccl::quit)

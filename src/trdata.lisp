@@ -10,7 +10,7 @@
 ;;;       (c) Copyright 1982 Massachusetts Institute of Technology       ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module trdata)
 
 ;;; N.B. This is some data. Boy, does it have subtle effect on the code
@@ -26,7 +26,7 @@
 
 ;; this should go someplace else perhaps.
 
-(def-autoload-translate $romberg $interpolate)
+(def-autoload-translate $romberg $find_root)
 
 ;;; MODEDECLARE(FUNCTION(LENGTH),FIXNUM)
 
@@ -41,7 +41,7 @@
 ;;; ROMBERG is a macsyma macro.
 
   (mapc #'(lambda (x) (putprop x '$float 'function-mode))
-	'($romberg_subr $interpolate_subr))
+	'($romberg_subr $find_root_subr))
 
 ;;; Functions of BOOLEAN return VALUE. i.e. PREDICATES
 

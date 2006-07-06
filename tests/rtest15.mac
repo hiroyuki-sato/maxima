@@ -319,3 +319,97 @@ solve('diff(y,x),'diff(y,x));
 /* multiplicity bug in solve.lisp 1.3 - 13 may 2004 */
 eigenvalues(matrix([3,1,0,0],[-4,-1,0,0],[7,1,2,1],[-17,-6,-1,0]));
 [[1],[4]];
+
+/* Bug 1369669 */
+trigexpand(csc(3*x));
+csc(x)^3*sec(x)^3/(3*csc(x)^2*sec(x)-sec(x)^3);
+
+/* Bug 1369451 */
+trigexpand(sec(x+y));
+csc(x)*sec(x)*csc(y)*sec(y)/(csc(x)*csc(y)-sec(x)*sec(y));
+
+/* Bug 1309377 */
+fpred(x) := (prederror:'false, is(x <= -1));
+fpred(x):=(prederror:'false,is(x <= -1))$
+fpred(xyzzy);
+unknown$
+translate(fpred);
+[fpred]$
+fpred(xyzzy);
+unknown$
+
+/* Bug 1281737 */
+limit(atan(x)/(1/exp(1)-exp(-(1+x)^2)),x,inf,'plus);
+%e*%pi/2;
+
+/* Bug 1363411 */
+'sum(1+f(k),k,1,2),simpsum;
+f(2) + f(1) + 2;
+
+/* Bug 1403415, fixed in clmacs.lisp rev 1.20 */
+float(0.0b0);
+0.0;
+
+/* Bug 1404754, fixed in float.lisp rev 1.23 */
+1.0b0*x;
+1.0b0*x;
+
+/* Bug 1374704.  See also 1418010 because result isn't simplified. */
+(assume(cos(x)>0),0);
+0;
+integrate(sin(x)/cos(x)^2,x,0,%pi/3);
+1/cos(%pi/3)-1/cos(0);
+
+/*
+ * Test compiled array access
+ */
+use_fast_arrays:false;
+false;
+
+(ar:make_array('fixnum,3,2),0);
+0;
+(aref(array,row,col):=array[row,col],0);
+0;
+ar[2,1]:1;
+1;
+aref(ar,2,1);
+1;
+compile(aref);
+[aref];
+aref(ar,2,1);
+1;
+/* A old-style maxima hashed array */
+har[2,1]:1;
+1;
+aref(har,2,1);
+1;
+
+use_fast_arrays:true;
+true;
+har2[3,4]:12;
+12;
+aref(har2,3,4);
+12;
+
+/*
+ * This test from Fabrizio Caruso, maxima list, 2006/02/14 
+ *
+ * We're basically trying to test that the compiled version of foo
+ * returns a fixnum array, just like the interpreted one.
+ */
+foo(x) := block([r], r : make_array('fixnum,2), r[0]:x,r[1]:x+1, return(r));
+foo(x) := block([r], r : make_array('fixnum,2), r[0]:x,r[1]:x+1, return(r))$
+foo(7);
+foo(7)$
+compile(foo);
+[foo];
+foo(7);
+foo(7)$
+
+use_fast_arrays:false;
+false;
+
+/* Bug 1405931: integrate(log(x)/(x^2+1)^2,x,0,inf)
+ */
+integrate(log(x)/(x^2+1)^2,x,0,inf);
+-%pi/4;

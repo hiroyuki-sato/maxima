@@ -9,7 +9,7 @@
 ;;;                 GJC 9:29am  Saturday, 5 April 1980		 	 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module transl)
 (transl-module transl)
 
@@ -624,11 +624,18 @@ APPLY means like APPLY.")
 		     "Badly formed `bind_during_translation' binding~%~:M"
 		     p))))))))
 
+;; This basically tells the msetq def%tr to use defparameter insetad
+;; of setq because we're doing a setq at top-level, which isn't
+;; specified by ANSI CL.
+(defvar *macexpr-top-level-form-p* nil)
+
 (defmfun translate-macexpr-toplevel (form &aux (*transl-backtrace* nil)
 					  tr-abort)
   ;; there are very few top-level special cases, I don't
   ;; think it would help the code any to generalize TRANSLATE
   ;; to target levels.
+  ;;
+  ;; Except msetq at top-level is special for ANSI CL.  See below.
   (setq form (toplevel-optimize form))
   (cond ((atom form) nil)
 	((eq (caar form) '$bind_during_translation)
@@ -690,7 +697,17 @@ APPLY means like APPLY.")
 	 ;; almost allways wants to. flatten.
 	 ;; note that this ignores the $%% crock.
 	 `(progn 'compile
-	   ,@(mapcar #'translate-macexpr-toplevel (cdr form))))
+		 ,@(mapcar #'translate-macexpr-toplevel (cdr form))))
+	((eq 'msetq (caar form))
+	 ;; Toplevel msetq's should really be defparameter instead of
+	 ;; setq for Common Lisp.  
+	 (let ((*macexpr-top-level-form-p* t))
+	   (dtranslate form)))
+	((eq '$define_variable (caar form))
+	 ;; Toplevel msetq's should really be defparameter instead of
+	 ;; setq for Common Lisp.  
+	 (let ((*macexpr-top-level-form-p* t))
+	   (dtranslate form)))
 	(t		
 	 (let  ((t-form (dtranslate form)))
 	   (cond (tr-abort
@@ -930,8 +947,9 @@ APPLY means like APPLY.")
 	((setq temp #+lispm (getl-lm-fcn-prop fun '(expr subr lsubr))
 	       #-lispm (getl fun '(expr subr lsubr)))
 	 (car temp))
-	#+lispm
+	#+(or cl lispm)
 	((get fun 'once-translated))
+	((get fun 'translated))
 	(t nil)))
 
 (defun tr-infamous-noun-form (form)
@@ -1152,9 +1170,14 @@ APPLY means like APPLY.")
 (defun make-declares (varlist localp &aux (dl) (fx) (fl) specs)
   (when $transcompile
     (do ((l varlist (cdr l))
-	 (mode) (var)
-	 )
+	 (mode) (var))
 	((null l))
+      
+      ;; When a variable is declared special, be sure to declare it
+      ;; special here.
+      (when (and localp (get (car l) 'special))
+	(push (car l) specs))
+      
       (when (or (not localp)
 		(not (get (car l) 'special)))
 	;; don't output local declarations on special variables.
@@ -1477,7 +1500,10 @@ APPLY means like APPLY.")
 		     (let ((tn (tr-gensym)))
 		       (lambda-wrap1 tn val `(progn (,assign ',var ,tn)
 					      (setq ,(teval var) ,tn))))
-		     `(setq ,(teval var) ,val))))
+		     `(,(if *macexpr-top-level-form-p*
+			    'defparameter
+			    'setq)
+			    ,(teval var) ,val))))
 	  ((memq 'array (car var))
 	   (tr-arraysetq var val))
 	  (t
@@ -1507,8 +1533,8 @@ APPLY means like APPLY.")
 		  (cdr form)))
     (if (memq mode '($fixnum $float $number))
 	`(,mode  ,(if (eq 'min op) 'min 'max) . ,(mapcar 'cdr arglist))
-	`($any ,(if (eq 'min op) 'minimum 'maximum)
-	  (list . ,(mapcar 'dconvx arglist))))))
+	`($any ,(if (eq 'min op) '$lmin '$lmax)
+	  (list '(mlist) . ,(mapcar 'dconvx arglist))))))
 
 
 ;;; mode acessing, binding, handling. Super over-simplified.
@@ -1640,29 +1666,6 @@ APPLY means like APPLY.")
 (defun teval (var) (or (get var 'tbind) var))
 
 
-
-#+cl
-(defmacro maset ( val ar  &rest inds)
-  `(progn
-    (cond ((symbolp ,ar)(setf ,ar (make-equal-hash-table
-				   ,(if (cdr inds) t nil)))))
-    (maset1 ,val  ,ar ,@  inds)))
-
-
-;;#+lispm  ;;removed the apply from tr-arraycall and &rest.
-;;(defun tr-maref (ar &rest inds)
-;;    `(nil maref ,ar ,@ (copy-list inds)))
-
-
-
-(defmacro maref (ar &rest inds)
-  (cond ((or (eql ar 'mqapply)(and (consp ar) (memq 'mqapply ar)))
-         `(marrayref ,(first inds) ,@ (cdr inds)))
-	((consp ar)`(marrayref ,ar ,(first inds) ,@ (cdr inds)))
-	(t
-	 `(maref1  ,ar,@ inds))))
-
-
 
 
 ;; Local Modes:

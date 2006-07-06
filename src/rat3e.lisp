@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module rat3e)
 
 ;;	This is the rational function package part 5.
@@ -358,8 +358,8 @@
 (declare-top(unspecial var))
 
 
-(defmfun $mod nargs
-  (if (not (or (f= nargs 1) (f= nargs 2))) (wna-err '$mod))
+(defmfun $polymod nargs
+  (if (not (or (f= nargs 1) (f= nargs 2))) (wna-err '$polymod))
   (let ((modulus modulus))
     (cond ((f= nargs 2)
 	   (setq modulus (arg 2))

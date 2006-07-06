@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module trigi)
 
 (load-macsyma-macros mrgmac)
@@ -62,7 +62,7 @@
 				   %sinh %cosh %tanh %csch %sech %coth)))
 
 (defmfun arcp (func) (memq func '(%asin %acos %atan %acsc %asec %acot
-				  %asinh %acosh %atanh %acsch %asech %acoth)))
+					%asinh %acosh %atanh %acsch %asech %acoth)))
 
 (defprop %sin simp-%sin operators)
 (defprop %cos simp-%cos operators)
@@ -89,14 +89,294 @@
 (defprop %acsch simp-%acsch operators)
 (defprop %asech simp-%asech operators)
 
+(defun domain-error (x f)
+  (merror "The number ~:M isn't in the domain of ~A" (complexify x) f))
+
+;; Build a hash table 'cl-double-float-op' that maps Maxima function names 
+;; to their CL equivalents. 
+
+(defvar *double-float-op* (make-hash-table :size 64)
+  "Hash table mapping a maxima function to a corresponding Lisp
+  function to evaluate the maxima function numerically with
+  double-float precision.")
+
+(defvar *big-float-op* (make-hash-table)
+  "Hash table mapping a maxima function to a corresponding Lisp
+  function to evaluate the maxima function numerically with
+  big-float precision.")
+  
+;; Some Lisp implementations goof up branch cuts for ASIN, ACOS, and/or ATANH.
+;; Here are definitions which have the right branch cuts
+;; (assuming LOG, PHASE, and SQRT have the right branch cuts).
+;; Don't bother trying to sort out which implementations get it right or wrong;
+;; we'll make all implementations use these functions.
+
+;; Apply formula from CLHS if X falls on a branch cut.
+;; Otherwise punt to CL:ASIN.
+(defun maxima-branch-asin (x)
+  ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
+  (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
+    (* #C(0d0 -1d0) (cl:log (+ (* #C(0d0 1d0) x) (cl:sqrt (- #C(1d0 0d0) (* x x))))))
+    (cl:asin x)))
+
+;; Apply formula from CLHS if X falls on a branch cut.
+;; Otherwise punt to CL:ACOS.
+(defun maxima-branch-acos (x)
+  ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
+  (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
+    (- (/ pi #C(2d0 0d0)) (maxima-branch-asin x))
+    (cl:acos x)))
+
+;; Apply formula from CLHS if X falls on a branch cut.
+;; Otherwise punt to CL:ATANH.
+(defun maxima-branch-atanh (x)
+  ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
+  (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
+    (/ (- (cl:log (+ #C(1d0 0d0) x)) (cl:log (- #C(1d0 0d0) x))) #C(2d0 0d0))
+    (cl:atanh x)))
+
+;; Fill the hash table.
+(macrolet ((frob (mfun dfun)
+	     `(setf (gethash ',mfun *double-float-op*) ,dfun)))
+  (frob mplus #'+)
+  (frob mtimes #'*)
+  (frob mquotient #'/)
+  (frob mminus #'-)
+
+  (frob %cos #'cl:cos)
+  (frob %sin #'cl:sin)
+  (frob %tan #'cl:tan)
+
+  (frob %sec #'(lambda (x)
+		 (let ((y (ignore-errors (/ 1 (cl:cos x)))))
+		   (if y y (domain-error x 'sec)))))
+				   
+  (frob %csc #'(lambda (x)
+		 (let ((y (ignore-errors (/ 1 (cl:sin x)))))
+		   (if y y (domain-error x 'csc)))))
+
+  (frob %cot #'(lambda (x)
+		 (let ((y (ignore-errors (/ 1 (cl:tan x)))))
+		   (if y y (domain-error x 'cot)))))
+
+  (frob %acos #'maxima-branch-acos)
+  (frob %asin #'maxima-branch-asin)
+
+  (frob %atan #'cl:atan)
+
+  (frob %asec #'(lambda (x)
+		  (let ((y (ignore-errors (maxima-branch-acos (/ 1 x))))) 
+		    (if y y (domain-error x 'asec)))))
+
+  (frob %acsc #'(lambda (x)
+		  (let ((y (ignore-errors (maxima-branch-asin (/ 1 x)))))
+		    (if y y (domain-error x 'acsc)))))
+
+  (frob %acot #'(lambda (x)
+		  (let ((y (ignore-errors (cl:atan (/ 1 x)))))
+		    (if y y (domain-error x 'acot)))))
+
+  (frob %cosh #'cl:cosh)
+  (frob %sinh #'cl:sinh)
+  (frob %tanh #'cl:tanh)
+
+  (frob %sech #'(lambda (x)
+		  (let ((y (ignore-errors (/ 1 (cl:cosh x)))))
+		    (if y y (domain-error x 'sech)))))
+
+  (frob %csch #'(lambda (x)
+		  (let ((y (ignore-errors (/ 1 (cl:sinh x)))))
+		    (if y y (domain-error x 'csch)))))
+
+  (frob %coth #'(lambda (x)
+		  (let ((y (ignore-errors (/ 1 (cl:tanh x)))))
+		    (if y y (domain-error x 'coth)))))
+
+  (frob %acosh #'cl:acosh)
+  (frob %asinh #'cl:asinh)
+  
+  (frob %atanh #'maxima-branch-atanh)
+
+  (frob %asech #'(lambda (x)
+		   (let ((y (ignore-errors (cl:acosh (/ 1 x)))))
+		     (if y y (domain-error x 'asech)))))
+
+  (frob %acsch #'(lambda (x)
+		   (let ((y (ignore-errors (cl:asinh (/ 1 x)))))
+		     (if y y (domain-error x 'acsch)))))
+
+  (frob %acoth #'(lambda (x)
+		   (let ((y (ignore-errors (maxima-branch-atanh (/ 1 x))))) 
+		     (if y y (domain-error x 'acoth)))))
+
+  (frob %mabs #'cl:abs)
+  (frob $exp #'cl:exp)
+  (frob mexpt #'cl:expt)
+  (frob %sqrt #'cl:sqrt)
+  (frob %log #'(lambda (x)
+		 (let ((y (ignore-errors (cl:log x))))
+		   (if y y (domain-error x 'log)))))
+
+  (frob %plog #'(lambda (x)
+		  (let ((y (ignore-errors (cl:log x))))
+		    (if y y (domain-error x 'log)))))
+
+  (frob $conjugate #'cl:conjugate)
+  (frob $floor #'cl:ffloor)
+  (frob $ceiling #'cl:fceiling)
+  (frob $realpart #'cl:realpart)
+  (frob $imagpart #'cl:imagpart)
+  (frob $max #'cl:max)
+  (frob $min #'cl:min)
+  (frob %signnum #'cl:signum)
+  (frob $atan2 #'cl:atan)
+  (frob %log #'(lambda (x)
+		 (let ((y (ignore-errors (cl:log x))))
+		   (if y y (domain-error x 'log)))))
+  (frob %sqrt #'cl:sqrt)
+  )
+
+(macrolet ((frob (mfun dfun)
+	     `(setf (gethash ',mfun *big-float-op*) ,dfun)))
+  ;; All big-float implementation functions MUST support a required x
+  ;; arg and an optional y arg for the real and imaginary parts.  The
+  ;; imaginary part does not have to be given.
+  (frob %asin #'big-float-asin)
+  (frob %sinh #'big-float-sinh)
+  (frob %asinh #'big-float-asinh)
+  (frob %tanh #'big-float-tanh)
+  (frob %atanh #'big-float-atanh)
+  (frob %acos 'big-float-acos)
+  (frob %log 'big-float-log)
+  (frob %sqrt 'big-float-sqrt)
+  )
+
+;; Here is a general scheme for defining and applying reflection rules. A 
+;; reflection rule is something like f(-x) --> f(x), or  f(-x) --> %pi - f(x). 
+
+;; We define functions for the two most common reflection rules; these
+;; are the odd function rule (f(-x) --> -f(x)) and the even function rule
+;; (f(-x) --> f(x)). A reflection rule takes two arguments (the operator and 
+;; the operand).
+
+(defun odd-function-reflect (op x)
+  (neg `((,op simp) ,(neg x))))
+
+(defun even-function-reflect (op x)
+  `((,op simp) ,(neg x)))
+
+;; Put the reflection rule on the property list of the exponential-like
+;; functions.
+
+(setf (get '%cos 'reflection-rule) #'even-function-reflect)
+(setf (get '%sin 'reflection-rule) #'odd-function-reflect)
+(setf (get '%tan 'reflection-rule) #'odd-function-reflect)
+(setf (get '%sec 'reflection-rule) #'even-function-reflect)
+(setf (get '%csc 'reflection-rule) #'odd-function-reflect)
+(setf (get '%cot 'reflection-rule) #'odd-function-reflect)
+
+;; See A&S 4.4.14--4.4.19
+
+(setf (get '%acos 'reflection-rule) #'(lambda (op x) (sub '$%pi (take (list op) (neg x)))))
+(setf (get '%asin 'reflection-rule) #'odd-function-reflect)
+(setf (get '%atan 'reflection-rule) #'odd-function-reflect)
+(setf (get '%asec 'reflection-rule) #'(lambda (op x) (sub '$%pi (take (list op) (neg x)))))
+(setf (get '%acsc 'reflection-rule) #'odd-function-reflect)
+(setf (get '%acot 'reflection-rule) #'odd-function-reflect)
+
+(setf (get '%cosh 'reflection-rule) #'even-function-reflect)
+(setf (get '%sinh 'reflection-rule) #'odd-function-reflect)
+(setf (get '%tanh 'reflection-rule) #'odd-function-reflect)
+(setf (get '%sech 'reflection-rule) #'even-function-reflect)
+(setf (get '%csch 'reflection-rule) #'odd-function-reflect)
+(setf (get '%coth 'reflection-rule) #'odd-function-reflect)
+
+(setf (get '%asinh 'reflection-rule) #'odd-function-reflect)
+(setf (get '%atanh 'reflection-rule) #'odd-function-reflect)
+(setf (get '%asech 'reflection-rule) #'even-function-reflect)
+(setf (get '%acsch 'reflection-rule) #'odd-function-reflect)
+(setf (get '%acoth 'reflection-rule) #'even-function-reflect)
+
+;; When b is nil, do not apply the reflection rule. For trigonometric like
+;; functions, b is $trigsign.  This function uses 'great' to decide when to
+;; apply the rule.  Another possibility is to apply the rule when (mminusp* x)
+;; evaluates to true. Maxima <= 5.9.3 uses this scheme; with this method, we have 
+;; assume(z < 0), cos(z) --> cos(-z). I (Barton Willis) think this goofy.
+
+;; The function 'great' is non-transitive. I don't think this bug will cause
+;; trouble for this function. If there is an expression such that both
+;; (great (neg x) x) and (great x (neg x)) evaluate to true, this function
+;; could cause an infinite loop. I could protect against this possibility with 
+;; (and b f (great (neg x) x) (not (great x (neg x))).
+
+(defun apply-reflection-simp (op x &optional (b t))
+  (let ((f (get op 'reflection-rule)))
+    (if (and b f (great (neg x) x)) (funcall f op x) nil)))
+  
+(defun taylorize (op x)
+  (if ($taylorp x)
+      (mfuncall '$apply '$taylor `((mlist) ((,op) ,($ratdisrep x)) ,@(cdr ($taylorinfo x)))) nil))
+
+(defun float-or-rational-p (x)
+  (or (floatp x) ($ratnump x)))
+
+(defun bigfloat-or-number-p (x)
+  (or ($bfloatp x) (numberp x) ($ratnump x)))
+
+;; When z is a Maxima complex float or when 'numer' is true and z is a
+;; Maxima complex number, evaluate (op z) by applying the mapping from
+;; the Maxima operator 'op' to the operator in the hash table
+;; 'double-float-op'. When z isn't a Maxima complex number, return
+;; nil.
+
+(defun double-float-eval (op z)
+  (let ((op (gethash op *double-float-op*)))
+    (when (and op (complex-number-p z 'float-or-rational-p))
+      (let ((x ($realpart z)) (y ($imagpart z)))
+	(when (or $numer (floatp x) (floatp y))
+	  (setq x ($float x))
+	  (setq y ($float y))
+	  (complexify (funcall op (if (zerop y) x (complex x y)))))))))
+
+;; For now, big float evaluation of trig-like functions for complex
+;; big floats uses rectform.  I suspect that for some functions (not
+;; all of them) rectform generates expressions that are poorly suited
+;; for numerical evaluation. For better accuracy, these functions
+;; (maybe acosh, for one) may need to be special cased.  If they are
+;; special-cased, the *big-float-op* hash table contains the special
+;; cases.
+
+(defun big-float-eval (op z)
+  (when (complex-number-p z 'bigfloat-or-number-p)
+    (let ((x ($realpart z))
+	  (y ($imagpart z))
+	  (bop (gethash op *big-float-op*)))
+      ;; If bop is non-NIL, we want to try that first.  If bop
+      ;; declines (by returning NIL), we silently give up and use the
+      ;; rectform version.
+      (cond ((and ($bfloatp x) (like 0 y))
+	     (or (and bop (funcall bop x))
+		 ($bfloat `((,op simp) ,x))))
+	    ((or ($bfloatp x) ($bfloatp y))
+	     (or (and bop (funcall bop ($bfloat x) ($bfloat y)))
+		 (let ((z (add ($bfloat x) (mul '$%i ($bfloat y)))))
+		   (setq z ($rectform `((,op simp) ,z)))
+		   ($bfloat z))))))))
+	 
+;; For complex big float evaluation, it's important to check the 
+;; simp flag -- otherwise Maxima can get stuck in an infinite loop:
+;; asin(1.23b0 + %i * 4.56b0) ---> (simp-%asin ((%asin) ...) -->
+;; (big-float-eval ((%asin) ...) --> (risplit ((%asin simp) ...) -->
+;; (simp-%asin ((%asin simp) ...). If the simp flag is ignored, we've
+;; got trouble.
+
 (defmfun simp-%sin (form y z) 
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (sin y))
-	((and $numer (integerp y))
-	 (sin (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) 0) ((linearp y '$%pi) (%piargs-sin\Cos y)))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) 0) ((linearp y '$%pi) (%piargs-sin/cos y)))))
 	((and $%iargs (multiplep y '$%i)) (mul '$%i (cons-exp '%sinh (coeff y '$%i 1))))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%asin (setq z (caar y))) (cadr y))
@@ -109,17 +389,17 @@
 	((and $trigexpand (trigexpand '%sin y)))
 	($exponentialize (exponentialize '%sin y))
 	((and $halfangles (halfangle '%sin y)))
-	((and $trigsign (mminusp* y)) (neg (cons-exp '%sin (neg y))))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (neg (cons-exp '%sin (neg y))))
 	(t (eqtest (list '(%sin) y) form))))
 
 (defmfun simp-%cos (form y z) 
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (cos y))
-	((and $numer (integerp y))
-	 (cos (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) 1) ((linearp y '$%pi) (%piargs-sin\Cos (add %pi//2 y))))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) 1) ((linearp y '$%pi) (%piargs-sin/cos (add %pi//2 y))))))
 	((and $%iargs (multiplep y '$%i)) (cons-exp '%cosh (coeff y '$%i 1)))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%acos (setq z (caar y))) (cadr y))
@@ -132,10 +412,11 @@
 	((and $trigexpand (trigexpand '%cos y)))
 	($exponentialize (exponentialize '%cos y))
 	((and $halfangles (halfangle '%cos y)))
-	((and $trigsign (mminusp* y)) (cons-exp '%cos (neg y)))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (cons-exp '%cos (neg y)))
 	(t (eqtest (list '(%cos) y) form))))
 
-(defun %piargs-sin\Cos (x)
+(defun %piargs-sin/cos (x)
   (let ($float coeff ratcoeff zl-rem)
     (setq ratcoeff (coefficient x '$%pi 1)
 	  coeff (linearize ratcoeff) zl-rem (coefficient x '$%pi 0))
@@ -149,11 +430,10 @@
 (defmfun simp-%tan (form y z)
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (tan y))
-	((and $numer (integerp y))
-	 (tan (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) 0) ((linearp y '$%pi) (%piargs-tan\Cot y)))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) 0) ((linearp y '$%pi) (%piargs-tan/cot y)))))
 	((and $%iargs (multiplep y '$%i)) (mul '$%i (cons-exp '%tanh (coeff y '$%i 1))))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%atan (setq z (caar y))) (cadr y))
@@ -166,19 +446,19 @@
 	((and $trigexpand (trigexpand '%tan y)))
 	($exponentialize (exponentialize '%tan y))
 	((and $halfangles (halfangle '%tan y)))
-	((and $trigsign (mminusp* y)) (neg (cons-exp '%tan (neg y))))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (neg (cons-exp '%tan (neg y))))
 	(t (eqtest (list '(%tan) y) form))))
 
 (defmfun simp-%cot (form y z)
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
   
-  (cond ((floatp y) (cot y))
-	((and $numer (integerp y))
-	 (cot (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) (dbz-err1 'cot))
-			     ((and (linearp y '$%pi) (setq z (%piargs-tan\Cot (add %pi//2 y)))) (neg z)))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) (domain-error y 'cot))
+			     ((and (linearp y '$%pi) (setq z (%piargs-tan/cot (add %pi//2 y)))) (neg z)))))
 	((and $%iargs (multiplep y '$%i)) (mul -1 '$%i (cons-exp '%coth (coeff y '$%i 1))))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%acot (setq z (caar y))) (cadr y))
@@ -191,10 +471,11 @@
 	((and $trigexpand (trigexpand '%cot y)))
 	($exponentialize (exponentialize '%cot y))
 	((and $halfangles (halfangle '%cot y)))
-	((and $trigsign (mminusp* y)) (neg (cons-exp '%cot (neg y))))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (neg (cons-exp '%cot (neg y))))
 	(t (eqtest (list '(%cot) y) form))))
 
-(defun %piargs-tan\Cot (x)
+(defun %piargs-tan/cot (x)
   (prog ($float coeff zl-rem)
      (setq coeff (linearize (coefficient x '$%pi 1)) zl-rem (coefficient x '$%pi 0))
      (return (cond ((and (zerop1 zl-rem)
@@ -209,12 +490,11 @@
 (defmfun simp-%csc (form y z)
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (csc y))
-	((and $numer (integerp y))
-	 (csc (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) (dbz-err1 'csc))
-			     ((linearp y '$%pi) (%piargs-csc\Sec y)))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) (domain-errror y 'csc))
+			     ((linearp y '$%pi) (%piargs-csc/sec y)))))
 	((and $%iargs (multiplep y '$%i)) (mul -1 '$%i (cons-exp '%csch (coeff y '$%i 1))))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%acsc (setq z (caar y))) (cadr y))
@@ -227,18 +507,18 @@
 	((and $trigexpand (trigexpand '%csc y)))
 	($exponentialize (exponentialize '%csc y))
 	((and $halfangles (halfangle '%csc y)))
-	((and $trigsign (mminusp* y)) (neg (cons-exp '%csc (neg y))))
-	
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (neg (cons-exp '%csc (neg y))))
+
 	(t (eqtest (list '(%csc) y) form))))
 
 (defmfun simp-%sec (form y z)
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (sec y))
-	((and $numer (integerp y))
-	 (sec (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
-	((and $%piargs (cond ((zerop1 y) 1) ((linearp y '$%pi) (%piargs-csc\Sec (add %pi//2 y))))))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
+	((and $%piargs (cond ((zerop1 y) 1) ((linearp y '$%pi) (%piargs-csc/sec (add %pi//2 y))))))
 	((and $%iargs (multiplep y '$%i)) (cons-exp '%sech (coeff y '$%i 1)))
 	((and $triginverses (not (atom y))
 	      (cond ((eq '%asec (setq z (caar y))) (cadr y))
@@ -251,11 +531,12 @@
 	((and $trigexpand (trigexpand '%sec y)))
 	($exponentialize (exponentialize '%sec y))
 	((and $halfangles (halfangle '%sec y)))
-	((and $trigsign (mminusp* y)) (cons-exp '%sec (neg y)))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (cons-exp '%sec (neg y)))
 	
 	(t (eqtest (list '(%sec) y) form))))
 
-(defun %piargs-csc\Sec (x)
+(defun %piargs-csc/sec (x)
   (prog ($float coeff zl-rem)
      (setq coeff (linearize (coefficient x '$%pi 1)) zl-rem (coefficient x '$%pi 0))
      (return (cond ((and (zerop1 zl-rem) (setq zl-rem (%piargs coeff nil))) (div 1 zl-rem))
@@ -268,17 +549,17 @@
 (defmfun simp-%atan (form y z)
   (oneargcheck form)
   (setq y (simpcheck (cadr form) z))
-  (cond ((floatp y) (atan1 y))
-	((and $numer (integerp y))
-	 (atan1 (float y 2.0d0 )))
-	(($bfloatp y) ($bfloat form))
+  (cond ((double-float-eval (mop form) y))
+	((and (not (member 'simp (car form))) (big-float-eval (mop form) y)))
+	((taylorize (mop form) (second form)))
 	((and $%piargs
 	      (cond ((zerop1 y) 0) ((equal 1 y) %pi//4) ((equal -1 y) (neg %pi//4)))))
 	((and $%iargs (multiplep y '$%i)) (mul '$%i (cons-exp '%atanh (coeff y '$%i 1))))
 	((and (eq $triginverses '$all) (not (atom y))
 	      (if (eq (caar y) '%tan) (cadr y))))
 	($logarc (logarc '%atan y))
-	((and $trigsign (mminusp* y)) (neg (cons-exp '%atan (neg y))))
+	((apply-reflection-simp (mop form) y $trigsign))
+	;((and $trigsign (mminusp* y)) (neg (cons-exp '%atan (neg y))))
 	(t (eqtest (list '(%atan) y) form))))
 
 (defun %piargs (x ratcoeff)
@@ -446,6 +727,7 @@
   (cond ((not errorsw) (merror "Division by zero in ~A function" func))
 	(t (throw 'errorsw t))))
 
+#|
 ;; Only used by LAP code right now.
 
 #+pdp10
@@ -472,6 +754,7 @@
 
 #-(or pdp10 cl) (defmacro t//$ (x y function) function ;Ignored
 			  `(//$ ,x ,y))
+|#
 #+cl
 (defmacro t//$ (x y function)
   (if (equal y 0.0)
@@ -482,6 +765,7 @@
 (defun t//$-foo (x y function) function
        (//$ x y))
 
+#|
 #+pdp10 (lap-a-list '(
 
 		      (lap 	t//$ subr)
@@ -624,3 +908,5 @@
 
 (defmfun acsch (num) (asinh (t//$ 1.0 (float num) 'acsch)))
 
+
+|#

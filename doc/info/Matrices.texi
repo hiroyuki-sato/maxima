@@ -101,6 +101,7 @@ more lists (or matrices) onto the matrix @var{M}.
 
 @deffn {Function} adjoint (@var{M})
 Returns the adjoint of the matrix @var{M}.
+The adjoint matrix is the transpose of the matrix of cofactors of @var{M}.
 
 @end deffn
 
@@ -163,9 +164,15 @@ with respect to variable @var{x}.  That is,
 
 @deffn {Function} coefmatrix ([@var{eqn_1}, ..., @var{eqn_m}], [@var{x_1}, ..., @var{x_n}])
 Returns the coefficient matrix for the
-variables @var{eqn_1}, ..., @var{eqn_m} of the system of linear equations 
-@var{x_1}, ..., @var{x_n}.
-@c AN EXAMPLE WOULD BE REALLY NICE HERE
+variables @var{x_1}, ..., @var{x_n} of the system of linear equations 
+@var{eqn_1}, ..., @var{eqn_m}.
+
+@example
+(%i1) coefmatrix([2*x-(a-1)*y+5*b = 0, b*y+a*x = 3], [x,y]);
+                                 [ 2  1 - a ]
+(%o1)                            [          ]
+                                 [ a    b   ]
+@end example
 
 @end deffn
 
@@ -211,8 +218,6 @@ Warning - you are redefining the Macsyma function eigenvectors
 
 @deffn {Function} conjugate (@var{x})
 Returns the complex conjugate of @var{x}.
-
-@code{load (conjugate)} loads this function.
 
 @c ===beg===
 @c declare ([aa, bb], real, cc, complex, ii, imaginary);
@@ -505,25 +510,39 @@ to @code{SC*A} and @code{A.(SC*B)} simplifies to @code{SC*(A.B)}.
 @end defvr
 
 @deffn {Function} echelon (@var{M})
-Returns the echelon form of the matrix @var{M}.  The echelon form is computed from @var{M}
+Returns the echelon form of the matrix @var{M},
+as produced by Gaussian elimination.
+The echelon form is computed from @var{M}
 by elementary row operations such that the first
-non-zero element in each row in the resulting matrix is a one and the
+non-zero element in each row in the resulting matrix is one and the
 column elements under the first one in each row are all zero.
 
+@code{triangularize} also carries out Gaussian elimination,
+but it does not normalize the leading non-zero element in each row.
+
+@code{lu_factor} and @code{cholesky} are other functions which yield triangularized matrices.
+
+@c ===beg===
+@c M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+@c echelon (M);
+@c ===end===
 @example
-(%i1) m: matrix ([2, 1-a, -5*b], [a, b, c]);
-                       [ 2  1 - a  - 5 b ]
-(%o1)                  [                 ]
-                       [ a    b      c   ]
-(%i2) echelon (m);
-                  [      a - 1       5 b     ]
-                  [ 1  - -----     - ---     ]
-                  [        2          2      ]
-(%o2)/R/          [                          ]
-                  [             2 c + 5 a b  ]
-                  [ 0     1     ------------ ]
-                  [                    2     ]
-                  [             2 b + a  - a ]
+(%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                       [  3   7  aa  bb ]
+                       [                ]
+(%o1)                  [ - 1  8  5   2  ]
+                       [                ]
+                       [  9   2  11  4  ]
+(%i2) echelon (M);
+                  [ 1  - 8  - 5      - 2     ]
+                  [                          ]
+                  [         28       11      ]
+                  [ 0   1   --       --      ]
+(%o2)             [         37       37      ]
+                  [                          ]
+                  [              37 bb - 119 ]
+                  [ 0   0    1   ----------- ]
+                  [              37 aa - 313 ]
 @end example
 
 @end deffn
@@ -543,7 +562,7 @@ multiplicities of the eigenvalues in the corresponding order.
 characteristic polynomial of the matrix.
 Sometimes @code{solve} may not be able to find the roots of the polynomial;
 in that case some other functions in this
-package (except @code{conjugate}, @code{innerproduct}, @code{unitvector}, @code{columnvector} and
+package (except @code{innerproduct}, @code{unitvector}, @code{columnvector} and
 @code{gramschmidt}) will not work.
 @c WHICH ONES ARE THE FUNCTIONS WHICH DON'T WORK ??
 @c ACTUALLY IT'S MORE IMPORTANT TO LIST THE ONES WHICH DON'T WORK HERE
@@ -1379,9 +1398,31 @@ of @code{length (m)} rows and 1 column, such that @code{N[i,1] = M[i]}.
 @end deffn
 
 @deffn {Function} triangularize (@var{M})
-Returns the upper triangular form of the matrix @code{M}.
+Returns the upper triangular form of the matrix @code{M},
+as produced by Gaussian elimination.
+The return value is the same as @code{echelon},
+except that the leading nonzero coefficient in each row is not normalized to 1.
 
-@var{M} need not be square.
+@code{lu_factor} and @code{cholesky} are other functions which yield triangularized matrices.
+
+@c ===beg===
+@c M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+@c triangularize (M);
+@c ===end===
+@example
+(%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                       [  3   7  aa  bb ]
+                       [                ]
+(%o1)                  [ - 1  8  5   2  ]
+                       [                ]
+                       [  9   2  11  4  ]
+(%i2) triangularize (M);
+             [ - 1   8         5            2      ]
+             [                                     ]
+(%o2)        [  0   - 74     - 56         - 22     ]
+             [                                     ]
+             [  0    0    626 - 74 aa  238 - 74 bb ]
+@end example
 
 @end deffn
 
