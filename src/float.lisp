@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (macsyma-module float)
 
@@ -192,7 +192,7 @@ One extra decimal digit in actual representation for rounding purposes.")
   (cond ((equal (cadr l) 0)
 	 (if (not (equal (caddr l) 0))
 	     (mtell "Warning - an incorrect form for 0.0b0 has been generated."))
-	 (list '|0| '|.| '|0| 'b '|0|))
+	 (list '|0| '|.| '|0| '|b| '|0|))
 	(t ;; L IS ALWAYS POSITIVE FP NUMBER
 	 (let ((extradigs (fix (add1 (quotient (haulong (caddr l)) 3.32))))
 	       (*m 1) (*cancelled 0)) 
@@ -234,7 +234,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 						       (nreverse l3))))))
 				      (setq l2 (cons (car l1) l2) l1 (cdr l1))))))
 		      (ncons '|0|))
-		  (ncons 'b)
+		  (ncons '|b|)
 		  (explodec (sub1 (cadr l))))))))
 
 (defun bigfloatp (x) 
@@ -550,18 +550,30 @@ One extra decimal digit in actual representation for rounding purposes.")
 		    ans (fpplus ans (fpquotient term (intofp n)))))))
      (return ans)))
 
-(defun fpatan2 (y x)			; ATAN(Y/X) from -PI to PI
-  (cond ((equal (car x) 0)		; ATAN(INF), but what sign?
-	 (cond ((equal (car y) 0) (merror "atan(0//0) has been generated."))
+;; atan(y/x) taking into account the quadrant.  (Also equal to
+;; arg(x+%i*y).)
+(defun fpatan2 (y x)
+  (cond ((equal (car x) 0)
+	 ;; atan(y/0) = atan(inf), but what sign?
+	 (cond ((equal (car y) 0)
+		(merror "atan(0//0) has been generated."))
 	       ((minusp (car y))
+		;; We're on the negative imaginary axis, so -pi/2.
 		(fpquotient (fppi) (intofp -2)))
-	       (t (fpquotient (fppi) (intofp 2)))))
+	       (t
+		;; The positive imaginary axis, so +pi/2
+		(fpquotient (fppi) (intofp 2)))))
 	((signp g (car x))
-	 (cond ((signp g (car y)) (fpatan (fpquotient y x)))
-	       (t (fpminus (fpatan (fpquotient y x))))))
+	 ;; x > 0.  atan(y/x) is the correct value.
+	 (fpatan (fpquotient y x)))
 	((signp g (car y))
+	 ;; x < 0, and y > 0.  We're in quadrant II, so the angle we
+	 ;; want is pi+atan(y/x).
 	 (fpplus (fppi) (fpatan (fpquotient y  x))))
-	(t (fpdifference (fpatan (fpquotient y x)) (fppi))))) 
+	(t
+	 ;; x <= 0 and y <= 0.  We're in quadrant III, so the angle we
+	 ;; want is atan(y/x)-pi.
+	 (fpdifference (fpatan (fpquotient y x)) (fppi))))) 
 
 (defun tanbigfloat (a)
   (setq a (car a)) 
@@ -1026,14 +1038,13 @@ One extra decimal digit in actual representation for rounding purposes.")
   (list (fpround (car a)) (plus -2 *m (cadr a))))
 
 (defun timesbigfloat (h) 
-  (prog (fans tst r nfans) 
-     (setq fans (setq tst (bcons (fpone))) nfans 1)
+  (prog (fans r nfans) 
+     (setq fans (bcons (fpone)) nfans 1)
      (do ((l h (cdr l))) ((null l))
        (if (setq r (bigfloatp (car l)))
 	   (setq fans (bcons (fptimes* (cdr r) (cdr fans))))
 	   (setq nfans (list '(mtimes) (car l) nfans))))
      (return (cond ((equal nfans 1) fans)
-		   ((equal fans tst) nfans)
 		   (t (simplify (list '(mtimes) fans nfans))))))) 
 
 (defun invertbigfloat (a) 
@@ -1260,6 +1271,486 @@ One extra decimal digit in actual representation for rounding purposes.")
      (setq r (bigfloatp (car l)))
      (return (cond ((null r) (list '(mabs) (car l)))
 		   (t (bcons (fpabs (cdr r)))))))) 
+
+
+;;;; Bigfloat implementations of special functions.
+;;;;
+
+;;; This is still a bit messy.  Some functions here take bigfloat
+;;; numbers, represented by ((bigfloat) <mant> <exp>), but others want
+;;; just the FP number, represented by (<mant> <exp>).  Likewise, some
+;;; return a bigfloat, some return just the FP.
+;;;
+;;; This needs to be systemized somehow.  It isn't helped by the fact
+;;; that some of the routines above also do the samething.
+;;;
+;;; The implementation for the special functions for a complex
+;;; argument are mostly taken from W. Kahan, "Branch Cuts for Complex
+;;; Elementary Functions or Much Ado About Nothing's Sign Bit", in
+;;; Iserles and Powell (eds.) "The State of the Art in Numerical
+;;; Analysis", pp 165-211, Clarendon Press, 1987
+
+;; Compute exp(x) - 1, but do it carefully to preserve precision when
+;; |x| is small.  X is a FP number, and a FP number is returned.  That
+;; is, no bigfloat stuff.
+(defun fpexpm1 (x)
+  ;; What is the right breakpoint here?  Is 1 ok?  Perhaps 1/e is better?
+  (cond ((fpgreaterp (fpabs x) (fpone))
+	 ;; exp(x) - 1
+	 (fpdifference (fpexp x) (fpone)))
+	(t
+	 ;; Use Taylor series for exp(x) - 1
+	 (let ((ans x)
+	       (oans nil)
+	       (term x))
+	   (do ((n 2 (1+ n)))
+	       ((equal ans oans))
+	     (setf term (fpquotient (fptimes* x term) (intofp n)))
+	     (setf oans ans)
+	     (setf ans (fpplus ans term)))
+	   ans))))
+  
+;; log(1+x) for small x.  X is FP number, and a FP number is returned.
+(defun fplog1p (x)
+  ;; Use the same series as given above for fplog.  For small x we use
+  ;; the series, otherwise fplog is accurate enough.
+  (cond ((fpgreaterp (fpabs x) (fpone))
+	 (fplog (fpplus x (fpone))))
+	(t
+	 (let* ((sum (intofp 0))
+		(term (fpquotient x (fpplus x (intofp 2))))
+		(f (fptimes* term term))
+		(oldans nil))
+	   (do ((n 1 (+ n 2)))
+	       ((equal sum oldans))
+	     (setq oldans sum)
+	     (setq sum (fpplus sum
+			       (fpquotient term (intofp n))))
+	     (setq term (fptimes* term f)))
+	   (fptimes* sum (intofp 2))))))
+
+;; sinh(x) for real x.  X is a bigfloat, and a bigfloat is returned.
+(defun fpsinh (x)
+  ;; X must be a maxima bigfloat
+  
+  ;; See, for example, Hart et al., Computer Approximations, 6.2.27:
+  ;;
+  ;; sinh(x) = 1/2*(D(x) + D(x)/(1+D(x)))
+  ;;
+  ;; where D(x) = exp(x) - 1.
+  (let ((d (fpexpm1 (cdr (bigfloatp x)))))
+    (bcons
+     (fpquotient (fpplus d
+			 (fpquotient d
+				     (fpplus d (fpone))))
+		 (intofp 2)))))
+
+(defun big-float-sinh (x &optional y)
+  ;; The rectform for sinh for complex args should be numerically
+  ;; accurate, so return nil in that case.
+  (unless y
+    (fpsinh x)))
+
+;; asinh(x) for real x.  X is a bigfloat, and a bigfloat is returned.
+(defun fpasinh (x)
+  ;; asinh(x) = sign(x) * log(|x| + sqrt(1+x*x))
+  ;;
+  ;; And
+  ;;
+  ;; asinh(x) = x, if 1+x*x = 1
+  ;;          = sign(x) * (log(2) + log(x)), large |x|
+  ;;          = sign(x) * log(2*|x| + 1/(|x|+sqrt(1+x*x))), if |x| > 2
+  ;;          = sign(x) * log1p(|x|+x^2/(1+sqrt(1+x*x))), otherwise.
+  ;;
+  ;; But I'm lazy right now and we only implement the last 2 cases.
+  ;; We should implement all cases.
+  (let* ((fp-x (cdr (bigfloatp x)))
+	 (absx (fpabs fp-x))
+	 (one (fpone))
+	 (two (intofp 2))
+	 (minus (minusp (car fp-x)))
+	 result)
+    ;; We only use two formulas here.  |x| <= 2 and |x| > 2.  Should
+    ;; we add one for very big x and one for very small x, as given above.
+    (cond ((fpgreaterp absx two)
+	   ;; |x| > 2
+	   ;;
+	   ;; log(2*|x| + 1/(|x|+sqrt(1+x^2)))
+	   (setf result
+		 (fplog (fpplus (fptimes* absx two)
+				(fpquotient one
+					    (fpplus absx
+						    (fproot (bcons (fpplus one
+									   (fptimes* absx absx)))
+							    2)))))))
+	  (t
+	   ;; |x| <= 2
+	   ;;
+	   ;; log1p(|x|+x^2/(1+sqrt(1+x^2)))
+	   (let ((x*x (fptimes* absx absx)))
+	     (setq result
+		   (fplog1p (fpplus absx
+				    (fpquotient x*x
+						(fpplus one
+							(fproot (bcons (fpplus one x*x))
+								2)))))))))
+    (if minus
+	(bcons (fpminus result))
+	(bcons result))))
+
+(defun complex-asinh (x y)
+  ;; asinh(z) = -%i * asin(%i*z)
+  (multiple-value-bind (u v)
+      (complex-asin (mul -1 y) x)
+    (values v (bcons (fpminus (cdr u))))))
+
+(defun big-float-asinh (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-asinh x y)
+	(add u
+	     (mul '$%i v)))
+      (fpasinh x)))
+
+(defun fpasin-core (x)
+  ;; asin(x) = atan(x/(sqrt(1-x^2))
+  ;;         = sgn(x)*[%pi/2 - atan(sqrt(1-x^2)/abs(x))]
+  ;;
+  ;; Use the first for  0 <= x < 1/2 and the latter for 1/2 < x <= 1.
+  ;;
+  ;; If |x| > 1, we need to do something else.
+  ;;
+  ;; asin(x) = -%i*log(sqrt(1-x^2)+%i*x)
+  ;;         = -%i*log(%i*x + %i*sqrt(x^2-1))
+  ;;         = -%i*[log(|x + sqrt(x^2-1)|) + %i*%pi/2]
+  ;;         = %pi/2 - %i*log(|x+sqrt(x^2-1)|)
+  
+  (let ((fp-x (cdr (bigfloatp x))))
+    (cond ((minusp (car fp-x))
+	   ;; asin(-x) = -asin(x);
+	   (mul -1 (fpasin (bcons (fpminus fp-x)))))
+	  ((fplessp fp-x (cdr bfhalf))
+	   ;; 0 <= x < 1/2
+	   ;; asin(x) = atan(x/sqrt(1-x^2))
+	   (bcons
+	    (fpatan (fpquotient fp-x
+				(fproot (bcons
+					 (fptimes* (fpdifference (fpone) fp-x)
+						   (fpplus (fpone) fp-x)))
+					2)))))
+	  ((fpgreaterp fp-x (fpone))
+	   ;; x > 1
+	   ;; asin(x) = %pi/2 - %i*log(|x+sqrt(x^2-1)|)
+	   ;;
+	   ;; Should we try to do something a little fancier with the
+	   ;; argument to log and use log1p for better accuracy?
+	   (let ((arg (fpplus fp-x
+			      (fproot (bcons (fptimes* (fpdifference fp-x (fpone))
+						       (fpplus fp-x (fpone))))
+				      2))))
+	     (add (div '$%pi 2)
+		  (mul -1 '$%i
+		       (bcons (fplog arg))))))
+		       
+	  (t
+	   ;; 1/2 <= x <= 1
+	   ;; asin(x) = %pi/2 - atan(sqrt(1-x^2)/x)
+	   (let ((piby2 (fpquotient (fppi) (intofp 2))))
+	     (add (div '$%pi 2)
+		  (mul -1
+		       (bcons
+			(fpatan
+			 (fpquotient (fproot
+				      (bcons (fptimes* (fpdifference (fpone)
+								     fp-x)
+						       (fpplus (fpone) fp-x)))
+				      2)
+				     fp-x))))))))))
+
+;; asin(x) for real x.  X is a bigfloat, and a maxima number (real or
+;; complex) is returned.
+(defun fpasin (x)
+  ;; asin(x) = atan(x/(sqrt(1-x^2))
+  ;;         = sgn(x)*[%pi/2 - atan(sqrt(1-x^2)/abs(x))]
+  ;;
+  ;; Use the first for  0 <= x < 1/2 and the latter for 1/2 < x <= 1.
+  ;;
+  ;; If |x| > 1, we need to do something else.
+  ;;
+  ;; asin(x) = -%i*log(sqrt(1-x^2)+%i*x)
+  ;;         = -%i*log(%i*x + %i*sqrt(x^2-1))
+  ;;         = -%i*[log(|x + sqrt(x^2-1)|) + %i*%pi/2]
+  ;;         = %pi/2 - %i*log(|x+sqrt(x^2-1)|)
+  
+  ($bfloat (fpasin-core x)))
+
+;; Square root of a complex number (xx, yy).  Both are bigfloats.  FP
+;; (non-bigfloat) numbers are returned.
+(defun complex-sqrt (xx yy)
+  (let* ((x (cdr (bigfloatp xx)))
+	 (y (cdr (bigfloatp yy)))
+	 (rho (fpplus (fptimes* x x)
+		      (fptimes* y y))))
+    (setf rho (fpplus (fpabs x) (fproot (bcons rho) 2)))
+    (setf rho (fpplus rho rho))
+    (setf rho (fpquotient (fproot (bcons rho) 2) (intofp 2)))
+
+    (let ((eta rho)
+	  (nu y))
+      (when (fpgreaterp rho (intofp 0))
+	(setf nu (fpquotient (fpquotient nu rho) (intofp 2)))
+	(when (fplessp x (intofp 0))
+	  (setf eta (fpabs nu))
+	  (setf nu (if (minusp (car y))
+		       (fpminus rho)
+		       rho))))
+      (values eta nu))))
+
+;; asin(z) for complex z = x + %i*y.  X and Y are bigfloats.  The real
+;; and imaginary parts are returned as bigfloat numbers.
+(defun complex-asin (x y)
+  (let ((x (cdr (bigfloatp x)))
+	(y (cdr (bigfloatp y))))
+    (multiple-value-bind (re-sqrt-1-z im-sqrt-1-z)
+	(complex-sqrt (bcons (fpdifference (intofp 1) x))
+		      (bcons (fpminus y)))
+      (multiple-value-bind (re-sqrt-1+z im-sqrt-1+z)
+	  (complex-sqrt (bcons (fpplus (intofp 1) x))
+			(bcons y))
+	;; Realpart is atan(x/Re(sqrt(1-z)*sqrt(1+z)))
+	;; Imagpart is asinh(Im(conj(sqrt(1-z))*sqrt(1+z)))
+	(values (bcons
+		 (fpatan (fpquotient x
+				     (fpdifference (fptimes* re-sqrt-1-z
+							     re-sqrt-1+z)
+						   (fptimes* im-sqrt-1-z
+							     im-sqrt-1+z)))))
+		(fpasinh (bcons
+			  (fpdifference (fptimes* re-sqrt-1-z
+						  im-sqrt-1+z)
+					(fptimes* im-sqrt-1-z
+						  re-sqrt-1+z)))))))))
+  
+(defun big-float-asin (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-asin x y)
+	(add u
+	     (mul '$%i v)))
+      (fpasin x)))
+  
+  
+;; tanh(x) for real x.  X is a bigfloat, and a bigfloat is returned.
+(defun fptanh (x)
+  ;; X is Maxima bigfloat
+  ;; tanh(x) = D(2*x)/(2+D(2*x))
+  (let* ((two (intofp 2))
+	 (fp (cdr (bigfloatp x)))
+	 (d (fpexpm1 (fptimes* fp two))))
+    (bcons
+     (fpquotient d (fpplus d two)))))
+
+;; tanh(z), z = x + %i*y.  X, Y are bigfloats, and a maxima number is
+;; returned.
+(defun complex-tanh (x y)
+  (let* ((fpx (cdr (bigfloatp x)))
+	 (fpy (cdr (bigfloatp y)))
+	 (tv (cdr (tanbigfloat (list y))))
+	 (beta (fpplus (fpone) (fptimes* tv tv)))
+	 (s (cdr (fpsinh x)))
+	 (s^2 (fptimes* s s))
+	 (rho (fproot (bcons (fpplus (fpone) s^2))
+		      2))
+	 (den (fpplus (fpone) (fptimes* beta s^2))))
+    (values (bcons (fpquotient (fptimes* beta (fptimes* rho s))
+			       den))
+	    (bcons (fpquotient tv den)))))
+
+(defun big-float-tanh (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-tanh x y)
+	(add u (mul '$%i v)))
+      (fptanh x)))
+
+;; atanh(x) for real x, |x| <= 1.  X is a bigfloat, and a bigfloat is
+;; returned.
+(defun fpatanh (x)
+  ;; atanh(x) = -atanh(-x)
+  ;;          = 1/2*log1p(2*x/(1-x)), x >= 0.5
+  ;;          = 1/2*log1p(2*x+2*x*x/(1-x)), x <= 0.5
+
+  (let* ((fp-x (cdr (bigfloatp x))))
+    (cond ((fplessp fp-x (intofp 0))
+	   ;; atanh(x) = -atanh(-x)
+	   (mul -1 (fpatanh (bcons (fpminus fp-x)))))
+	  ((fpgreaterp fp-x (fpone))
+	   ;; x > 1, so use complex version.
+	   (multiple-value-bind (u v)
+	       (complex-atanh x (bcons (intofp 0)))
+	     (add u (mul '$%i v))))
+	  ((fpgreaterp fp-x (cdr bfhalf))
+	   ;; atanh(x) = 1/2*log1p(2*x/(1-x))
+	   (bcons
+	    (fptimes* bfhalf
+		      (fplog1p (fpquotient (fptimes* (intofp 2) fp-x)
+					   (fpdifference (fpone) fp-x))))))
+	  (t
+	   ;; atanh(x) = 1/2*log1p(2*x + 2*x*x/(1-x))
+	   (let ((2x (fptimes* (intofp 2) fp-x)))
+	     (bcons
+	      (fptimes* (cdr bfhalf)
+			(fplog1p (fpplus 2x
+					 (fpquotient (fptimes* 2x fp-x)
+						     (fpdifference (fpone) fp-x)))))))))))
+
+;; Stuff which follows is derived from atanh z = (log(1 + z) - log(1 - z))/2
+;; which apparently originates with Kahan's "Much ado" paper.
+
+;; The formulas for eta and nu below can be easily derived from
+;; rectform(atanh(x+%i*y)) =
+;;
+;; 1/4*log(((1+x)^2+y^2)/((1-x)^2+y^2)) + %i/2*(arg(1+x+%i*y)-arg(1-x+%i*(-y)))
+;;
+;; Expand the argument of log out and divide it out and we get
+;;
+;; log(((1+x)^2+y^2)/((1-x)^2+y^2)) = log(1+4*x/((1-x)^2+y^2))
+;;
+;; When y = 0, Im atanh z = 1/2 (arg(1 + x) - arg(1 - x))
+;;                        = if x < -1 then %pi/2 else if x > 1 then -%pi/2 else <whatever>
+;;
+;; Otherwise, arg(1 - x + %i*(-y)) = - arg(1 - x + %i*y),
+;; and Im atanh z = 1/2 (arg(1 + x + %i*y) + arg(1 - x + %i*y)).
+;; Since arg(x)+arg(y) = arg(x*y) (almost), we can simplify the
+;; imaginary part to
+;;
+;; arg((1+x+%i*y)*(1-x+%i*y)) = arg((1-x)*(1+x)-y^2+2*y*%i)
+;; = atan2(2*y,((1-x)*(1+x)-y^2))
+;;
+;; These are the eta and nu forms below.
+(defun complex-atanh (x y)
+  (let* ((fpx (cdr (bigfloatp x)))
+	 (fpy (cdr (bigfloatp y)))
+	 (beta (if (minusp (car fpx))
+		   (fpminus (fpone))
+		   (fpone)))
+     (x-lt-minus-1 (mevalp `((mlessp) ,x -1)))
+     (x-gt-plus-1 (mevalp `((mgreaterp) ,x 1)))
+     (y-equals-0 (like y '((bigfloat) 0 0)))
+	 (x (fptimes* beta fpx))
+	 (y (fptimes* beta (fpminus fpy)))
+	 ;; Kahan has rho = 4/most-positive-float.  What should we do
+	 ;; here about that?  Our big floats don't really have a
+	 ;; most-positive float value.
+	 (rho (intofp 0))
+	 (t1 (fpplus (fpabs y) rho))
+	 (t1^2 (fptimes* t1 t1))
+	 (1-x (fpdifference (fpone) x))
+	 ;; eta = log(1+4*x/((1-x)^2+y^2))/4
+	 (eta (fpquotient
+	       (fplog1p (fpquotient (fptimes* (intofp 4) x)
+				    (fpplus (fptimes* 1-x 1-x)
+					    t1^2)))
+	       (intofp 4)))
+     ;; If y = 0, then Im atanh z = %pi/2 or -%pi/2.
+	 ;; Otherwise nu = 1/2*atan2(2*y,(1-x)*(1+x)-y^2)
+	 (nu (if y-equals-0
+           ;; EXTRA FPMINUS HERE TO COUNTERACT FPMINUS IN RETURN VALUE
+           (fpminus (if x-lt-minus-1 (cdr ($bfloat '((mquotient) $%pi 2))) (if x-gt-plus-1 (cdr ($bfloat '((mminus) ((mquotient) $%pi 2)))) (merror "COMPLEX-ATANH: HOW DID I GET HERE?"))))
+           (fptimes* (cdr bfhalf)
+		       (fpatan2
+			(fptimes* (intofp 2) y)
+			(fpdifference (fptimes* 1-x
+						(fpplus (fpone) x))
+				      t1^2))))))
+    (values (bcons (fptimes* beta eta))
+        ;; WTF IS FPMINUS DOING HERE ??
+	    (bcons (fpminus (fptimes* beta nu))))))
+    
+  
+(defun big-float-atanh (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-atanh x y)
+	(add u (mul '$%i v)))
+      (fpatanh x)))
+
+;; acos(x) for real x.  X is a bigfloat, and a maxima number is returned.
+(defun fpacos (x)
+  ;; acos(x) = %pi/2 - asin(x)
+  ($bfloat (add (div '$%pi 2)
+		(mul -1 (fpasin-core x)))))
+
+(defun complex-acos (x y)
+  (let ((x (cdr (bigfloatp x)))
+	(y (cdr (bigfloatp y))))
+    (multiple-value-bind (re-sqrt-1-z im-sqrt-1-z)
+	(complex-sqrt (bcons (fpdifference (intofp 1) x))
+		      (bcons (fpminus y)))
+      (multiple-value-bind (re-sqrt-1+z im-sqrt-1+z)
+	  (complex-sqrt (bcons (fpplus (intofp 1) x))
+			(bcons y))
+	(values (bcons
+		 (fptimes* (intofp 2)
+			   (fpatan (fpquotient re-sqrt-1-z
+					       re-sqrt-1+z))))
+		(fpasinh (bcons
+			  (fpdifference
+			   (fptimes* re-sqrt-1+z im-sqrt-1-z)
+			   (fptimes* im-sqrt-1+z re-sqrt-1-z)))))))))
+				  
+
+(defun big-float-acos (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-acos x y)
+	(add u (mul '$%i v)))
+      (fpacos x)))
+
+(defun complex-log (x y)
+  (let* ((x (cdr (bigfloatp x)))
+	 (y (cdr (bigfloatp y)))
+	 (t1 (let (($float2bf t))
+	       ;; No warning message, please.
+	       (floattofp 1.2d0)))
+	 (t2 (intofp 3))
+	 (rho (fpplus (fptimes* x x)
+		      (fptimes* y y)))
+	 (abs-x (fpabs x))
+	 (abs-y (fpabs y))
+	 (beta (fpmax abs-x abs-y))
+	 (theta (fpmin abs-x abs-y)))
+    (values (if (or (fpgreaterp t1 beta)
+		    (fplessp rho t2))
+		(fpquotient (fplog1p (fpplus (fptimes* (fpdifference beta (fpone))
+						       (fpplus beta (fpone)))
+					     (fptimes* theta theta)))
+			    (intofp 2))
+		(fpquotient (fplog rho) (intofp 2)))
+	    (fpatan2 y x))))
+
+(defun big-float-log (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-log x y)
+	(add (bcons u) (mul '$%i (bcons v))))
+      (let ((fp-x (cdr (bigfloatp x))))
+	(if (fplessp fp-x (intofp 0))
+	    ;; ??? Do we want to return an exact %i*%pi or a float
+	    ;; approximation?
+	    (add (bcons (fplog (fpminus fp-x)))
+		 (mul '$%i (bcons (fppi))))
+	    (bcons (fplog fp-x))))))
+
+(defun big-float-sqrt (x &optional y)
+  (if y
+      (multiple-value-bind (u v)
+	  (complex-sqrt x y)
+	(add (bcons u) (mul '$%i (bcons v))))
+      (let ((fp-x (cdr (bigfloatp x))))
+	(if (fplessp fp-x (intofp 0))
+	    (mul '$%i (bcons (fproot (bcons (fpminus fp-x)) 2)))
+	    (bcons (fproot x 2))))))
 
 (eval-when
     #+gcl (load)

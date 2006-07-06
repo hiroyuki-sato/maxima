@@ -27,16 +27,58 @@ and
 @node Definitions for Input and Output,  , Files, Input and Output
 @section Definitions for Input and Output
 
+@defvr {System variable} __
+
+@code{__} is the input expression currently being evaluated.
+That is, while an input expression @var{expr} is being evaluated, @code{__} is @var{expr}.
+
+@code{__} is assigned the input expression before the input is simplified or evaluated.
+However, the value of @code{__} is simplified (but not evaluated) when it is displayed.
+
+@code{__} is recognized by @code{batch}, but not by @code{load}.
+
+See also @code{_} and @code{%}.
+
+Examples:
+
+@c ===beg===
+@c print ("I was called as", __);
+@c foo (__);
+@c g (x) := (print ("Current input expression =", __), 0);
+@c [aa : 1, bb : 2, cc : 3];
+@c (aa + bb + cc)/(dd + ee + g(x));
+@c ===end===
+@example
+(%i1) print ("I was called as", __);
+I was called as print(I was called as, __) 
+(%o1)              print(I was called as, __)
+(%i2) foo (__);
+(%o2)                     foo(foo(__))
+(%i3) g (x) := (print ("Current input expression =", __), 0);
+(%o3) g(x) := (print("Current input expression =", __), 0)
+(%i4) [aa : 1, bb : 2, cc : 3];
+(%o4)                       [1, 2, 3]
+(%i5) (aa + bb + cc)/(dd + ee + g(x));
+                            cc + bb + aa
+Current input expression = -------------- 
+                           g(x) + ee + dd
+                                6
+(%o5)                        -------
+                             ee + dd
+@end example
+
+@end defvr
+
 @defvr {System variable} _
 
 @code{_} is the most recent input expression (e.g., @code{%i1}, @code{%i2}, @code{%i3}, ...).
 
-@code{_} is assigned the input before the input is simplified or evaluated.
+@code{_} is assigned the input expression before the input is simplified or evaluated.
 However, the value of @code{_} is simplified (but not evaluated) when it is displayed.
 
 @code{_} is recognized by @code{batch}, but not by @code{load}.
 
-See also @code{%}.
+See also @code{__} and @code{%}.
 
 Examples:
 
@@ -96,7 +138,8 @@ See also @code{_}, @code{%%}, and @code{%th}.
 @end defvr
 
 @defvr {System variable} %%
-In a compound statement comprising two or more statements,
+In compound statements,
+namely @code{block}, @code{lambda}, or @code{(@var{s_1}, ..., @var{s_n})},
 @code{%%} is the value of the previous statement.
 For example,
 
@@ -186,6 +229,22 @@ signs around expressions which are more than one line tall.
 
 @end defvr
 
+@defvr {Option variable} file_output_append
+Default value: @code{false}
+
+@code{file_output_append} governs whether file output functions
+append or truncate their output file.
+When @code{file_output_append} is @code{true},
+such functions append to their output file.
+Otherwise, the output file is truncated.
+
+@code{save}, @code{stringout}, and @code{with_stdout} respect @code{file_output_append}.
+Other functions which write output files do not respect @code{file_output_append}.
+In particular, plotting and translation functions always truncate their output file,
+and @code{tex} and @code{appendfile} always append.
+@c WHAT ABOUT WRITEFILE ??
+
+@end defvr
 
 @deffn {Function} appendfile (@var{filename})
 Appends a console transcript to @var{filename}.
@@ -654,6 +713,9 @@ The function @code{grind} prints @var{expr}
 to the console in a form suitable for input to Maxima.
 @code{grind} always returns @code{done}.
 
+When @var{expr} is the name of a function or macro,
+@code{grind} prints the function or macro definition instead of just the name.
+
 See also @code{string}, which returns a string instead of printing its output.
 @code{grind} attempts to print the expression in a manner which makes it
 slightly easier to read than the output of @code{string}.
@@ -667,6 +729,105 @@ The default value of the variable @code{grind} is @code{false}.
 When @code{grind} is present,
 @code{playback} prints input expressions in the same format as the @code{grind} function.
 Otherwise, no attempt is made to specially format input expressions.
+
+@code{grind} evaluates its argument.
+
+Examples:
+
+@c ===beg===
+@c aa + 1729;
+@c grind (%);
+@c [aa, 1729, aa + 1729];
+@c grind (%);
+@c matrix ([aa, 17], [29, bb]);
+@c grind (%);
+@c set (aa, 17, 29, bb);
+@c grind (%);
+@c exp (aa / (bb + 17)^29);
+@c grind (%);
+@c expr: expand ((aa + bb)^10);
+@c grind (expr);
+@c string (expr);
+@c cholesky (A):= block ([n : length (A), L : copymatrix (A),
+@c p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
+@c (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
+@c p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
+@c for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+@c grind (cholesky);
+@c string (fundef (cholesky));
+@c ===end===
+@example
+(%i1) aa + 1729;
+(%o1)                       aa + 1729
+(%i2) grind (%);
+aa+1729$
+(%o2)                         done
+(%i3) [aa, 1729, aa + 1729];
+(%o3)                 [aa, 1729, aa + 1729]
+(%i4) grind (%);
+[aa,1729,aa+1729]$
+(%o4)                         done
+(%i5) matrix ([aa, 17], [29, bb]);
+                           [ aa  17 ]
+(%o5)                      [        ]
+                           [ 29  bb ]
+(%i6) grind (%);
+matrix([aa,17],[29,bb])$
+(%o6)                         done
+(%i7) set (aa, 17, 29, bb);
+(%o7)                   @{17, 29, aa, bb@}
+(%i8) grind (%);
+@{17,29,aa,bb@}$
+(%o8)                         done
+(%i9) exp (aa / (bb + 17)^29);
+                                aa
+                            -----------
+                                     29
+                            (bb + 17)
+(%o9)                     %e
+(%i10) grind (%);
+%e^(aa/(bb+17)^29)$
+(%o10)                        done
+(%i11) expr: expand ((aa + bb)^10);
+         10           9        2   8         3   7         4   6
+(%o11) bb   + 10 aa bb  + 45 aa  bb  + 120 aa  bb  + 210 aa  bb
+         5   5         6   4         7   3        8   2
+ + 252 aa  bb  + 210 aa  bb  + 120 aa  bb  + 45 aa  bb
+        9        10
+ + 10 aa  bb + aa
+(%i12) grind (expr);
+bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6
+     +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2
+     +10*aa^9*bb+aa^10$
+(%o12)                        done
+(%i13) string (expr);
+(%o13) bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6\
++252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2+10*aa^9*\
+bb+aa^10
+(%i14) cholesky (A):= block ([n : length (A), L : copymatrix (A),
+p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
+(x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
+p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
+for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+(%i15) grind (cholesky);
+cholesky(A):=block(
+         [n:length(A),L:copymatrix(A),
+          p:makelist(0,i,1,length(A))],
+         for i thru n do
+             (for j from i thru n do
+                  (x:L[i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),
+                   if i = j then p[i]:1/sqrt(x)
+                       else L[j,i]:x*p[i])),
+         for i thru n do L[i,i]:1/p[i],
+         for i thru n do (for j from i+1 thru n do L[i,j]:0),L)$
+(%o15)                        done
+(%i16) string (fundef (cholesky));
+(%o16) cholesky(A):=block([n:length(A),L:copymatrix(A),p:makelis\
+t(0,i,1,length(A))],for i thru n do (for j from i thru n do (x:L\
+[i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),if i = j then p[i]:1/sqrt(x\
+) else L[j,i]:x*p[i])),for i thru n do L[i,i]:1/p[i],for i thru \
+n do (for j from i+1 thru n do L[i,j]:0),L)
+@end example
 
 @end deffn
 
@@ -1196,10 +1357,10 @@ See also @code{lmxchar}.
 @deffn {Function} save (@var{filename}, @var{name_1}, @var{name_2}, @var{name_3}, ...)
 @deffnx {Function} save (@var{filename}, values, functions, labels, ...)
 @deffnx {Function} save (@var{filename}, [@var{m}, @var{n}])
-@c @defunx save (@var{filename}, @var{name_1}=@var{expr_1}, @var{name_2}=@var{expr_2}, ...)
-@c PRECEDING @defunx IS LONGER THAN 1 LINE, CAUSES cl-info.lisp TO STUMBLE; WORKAROUND:
 @deffnx {Function} save (@var{filename}, @var{name_1}=@var{expr_1}, ...)
 @deffnx {Function} save (@var{filename}, all)
+@c @defunx save (@var{filename}, @var{name_1}=@var{expr_1}, @var{name_2}=@var{expr_2}, ...)
+@c PRECEDING @defunx IS LONGER THAN 1 LINE, CAUSES cl-info.lisp TO STUMBLE; WORK AROUND IT
 Stores the current values of @var{name_1}, @var{name_2}, @var{name_3}, ..., in @var{filename}.
 The arguments are the names of variables, functions, or other objects.
 If a name has no value or function associated with it, it is ignored.
@@ -1207,9 +1368,13 @@ If a name has no value or function associated with it, it is ignored.
 
 @code{save} stores data in the form of Lisp expressions.
 The data stored by @code{save} may be recovered by @code{load (@var{filename})}.
-The effect of executing @code{save} when @var{filename} already exists
-depends on the underlying Lisp implementation;
-the file may be clobbered, or @code{save} may complain with an error message.
+
+The global flag @code{file_output_append} governs
+whether @code{save} appends or truncates the output file.
+When @code{file_output_append} is @code{true},
+@code{save} appends to the output file.
+Otherwise, @code{save} truncates the output file.
+In either case, @code{save} creates the file if it does not yet exist.
 
 The special form @code{save (@var{filename}, values, functions, labels, ...)}
 stores the items named by @code{values}, @code{functions}, @code{labels}, etc.
@@ -1356,6 +1521,13 @@ expressions would be typed for input. The file can then be used
 as input for the @code{batch} or @code{demo} commands, and it may be edited for
 any purpose. @code{stringout} can be executed while @code{writefile} is in progress.
 
+The global flag @code{file_output_append} governs
+whether @code{stringout} appends or truncates the output file.
+When @code{file_output_append} is @code{true},
+@code{stringout} appends to the output file.
+Otherwise, @code{stringout} truncates the output file.
+In either case, @code{stringout} creates the file if it does not yet exist.
+
 The general form of @code{stringout} writes the values of one or more 
 expressions to the output file. Note that if an expression is a
 variable, only the value of the variable is written and not the name
@@ -1383,15 +1555,38 @@ variables as assignment statements.
 
 @end deffn
 
-@c NEEDS EXPANSION, CLARIFICATION, AND EXAMPLES
 @deffn {Function} tex (@var{expr})
+@deffnx {Function} tex (@var{label})
 @deffnx {Function} tex (@var{expr}, @var{filename})
 @deffnx {Function} tex (@var{label}, @var{filename})
 
-In the case of a label,
-a left-equation-number is produced.
-in case a file-name is supplied, the output is appended to the
-file.
+Prints a representation of an expression
+suitable for the TeX document preparation system.
+The result is a fragment of a document,
+which can be copied into a larger document
+but not processed by itself.
+
+@code{tex (@var{expr})} prints a TeX representation of @var{expr} on the console.
+
+@code{tex (@var{label})} prints a TeX representation of the expression named by @var{label}
+and assigns it an equation label (to be displayed to the left of the expression).
+The TeX equation label is the same as the Maxima label.
+
+@code{tex (@var{expr}, @var{filename})} appends a TeX representation of @var{expr}
+to the file @var{filename}.
+@code{tex} quotes the @var{filename} argument; quote-quote @code{''} forces evaluation of the argument.
+
+@code{tex (@var{label}, @var{filename})} appends a TeX representation of the
+expression named by @var{label}, with an equation label, to the file @var{filename}.
+@code{tex} quotes the @var{filename} argument; quote-quote @code{''} forces evaluation of the argument.
+
+@code{tex} evaluates its argument after testing it to see if it is a label.
+Quote-quote @code{''} forces evaluation of the argument, thereby defeating the test
+and preventing the label.
+
+See also @code{texput}.
+
+Examples:
 
 @example
 (%i1) integrate (1/(1+x^3), x);
@@ -1410,6 +1605,110 @@ $$-\cos x$$
 (%o3)                           false
 (%i4) tex (%o1, "foo.tex");
 (%o4)                          (\%o1)
+@end example
+
+@end deffn
+
+@deffn {Function} texput (@var{a}, @var{s})
+@deffnx {Function} texput (@var{a}, @var{s}, @var{operator_type})
+@deffnx {Function} texput (@var{a}, [@var{s_1}, @var{s_2}], matchfix)
+@deffnx {Function} texput (@var{a}, [@var{s_1}, @var{s_2}, @var{s_3}], matchfix)
+
+Set the TeX output for the atom @var{a},
+which can be a symbol or the name of an operator.
+
+@code{texput (@var{a}, @var{s})} causes the @code{tex} function
+to interpolate the string @var{s} into the TeX output in place of @var{a}.
+
+@code{texput (@var{a}, @var{s}, @var{operator_type})},
+where @var{operator_type} is @code{prefix}, @code{infix}, or @code{postfix}
+causes the @code{tex} function to interpolate @var{s} into the TeX output in place of @var{a},
+and to place the interpolated text in the appropriate position.
+
+@code{texput (@var{a}, [@var{s_1}, @var{s_2}], matchfix)}
+causes the @code{tex} function to interpolate @var{s_1} and @var{s_2} into the TeX output
+on either side of the arguments of @var{a}.
+The arguments (if more than one) are separated by commas.
+
+@code{texput (@var{a}, [@var{s_1}, @var{s_2}, @var{s_3}], matchfix)}
+causes the @code{tex} function to interpolate @var{s_1} and @var{s_2} into the TeX output
+on either side of the arguments of @var{a},
+with @var{s_3} separating the arguments.
+
+Examples:
+
+@c ===beg===
+@c texput (me,"\\mu_e");
+@c tex (me);
+@c texput (lcm, "\\mathrm{lcm}");
+@c tex (lcm (a, b));
+@c prefix ("grad");
+@c texput ("grad", " \\nabla ", prefix);
+@c tex (grad f);
+@c infix ("~");
+@c texput ("~", " \\times ", infix);
+@c tex (a ~ b);
+@c postfix ("@");
+@c texput ("@", "!!", postfix);
+@c tex (x @);
+@c matchfix ("<<", ">>");
+@c texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+@c tex (<<a>>);
+@c tex (<<a, b>>);
+@c texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+@c tex (<<a>>);
+@c tex (<<a, b>>);
+@c ===end===
+@example
+(%i1) texput (me,"\\mu_e");
+(%o1)                         \mu_e
+(%i2) tex (me);
+$$\mu_e$$
+(%o2)                         false
+(%i3) texput (lcm, "\\mathrm@{lcm@}");
+(%o3)                     \mathrm@{lcm@}
+(%i4) tex (lcm (a, b));
+$$\mathrm@{lcm@}\left(a , b\right)$$
+(%o4)                         false
+(%i5) prefix ("grad");
+(%o5)                         grad
+(%i6) texput ("grad", " \\nabla ", prefix);
+(%o6)                          180
+(%i7) tex (grad f);
+$$ \nabla f$$
+(%o7)                         false
+(%i8) infix ("~");
+(%o8)                           ~
+(%i9) texput ("~", " \\times ", infix);
+(%o9)                          180
+(%i10) tex (a ~ b);
+$$a \times b$$
+(%o10)                        false
+(%i11) postfix ("@@");
+(%o11)                          @@
+(%i12) texput ("@@", "!!", postfix);
+(%o12)                         160
+(%i13) tex (x @@);
+$$x!!$$
+(%o13)                        false
+(%i14) matchfix ("<<", ">>");
+(%o14)                         <<
+(%i15) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+(%o15)              \langle ( \rangle , false)
+(%i16) tex (<<a>>);
+$$ \langle a \rangle $$
+(%o16)                        false
+(%i17) tex (<<a, b>>);
+$$ \langle a , b \rangle $$
+(%o17)                        false
+(%i18) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+(%o18)            \langle ( \rangle ,  \, | \,)
+(%i19) tex (<<a>>);
+$$ \langle a \rangle $$
+(%o19)                        false
+(%i20) tex (<<a, b>>);
+$$ \langle a \, | \,b \rangle $$
+(%o20)                        false
 @end example
 
 @end deffn
@@ -1452,12 +1751,19 @@ is not affected by @code{ttyoff}.
 
 @end defvr
 
-@deffn {Macro} with_stdout (@var{filename}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
+@deffn {Function} with_stdout (@var{filename}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
 Opens @var{filename} and then evaluates @var{expr_1}, @var{expr_2}, @var{expr_3}, ....
 The values of the arguments are not stored in @var{filename},
 but any printed output generated by evaluating the arguments
 (from @code{print}, @code{display}, @code{disp}, or @code{grind}, for example)
 goes to @var{filename} instead of the console.
+
+The global flag @code{file_output_append} governs
+whether @code{with_stdout} appends or truncates the output file.
+When @code{file_output_append} is @code{true},
+@code{with_stdout} appends to the output file.
+Otherwise, @code{with_stdout} truncates the output file.
+In either case, @code{with_stdout} creates the file if it does not yet exist.
 
 @code{with_stdout} returns the value of its final argument.
 

@@ -270,11 +270,13 @@ binary-cmucl/maxima.core : homog.lisp
 binary-cmucl/maxima.core : combin.lisp
 binary-cmucl/maxima.core : nset.lisp
 binary-cmucl/maxima.core : rand-mt19937.lisp
+binary-cmucl/maxima.core : maxmin.lisp
+binary-cmucl/maxima.core : nummod.lisp
+binary-cmucl/maxima.core : conjugate.lisp
 binary-cmucl/maxima.core : mstuff.lisp
 binary-cmucl/maxima.core : ratpoi.lisp
 binary-cmucl/maxima.core : pois2.lisp
 binary-cmucl/maxima.core : pois3.lisp
-binary-cmucl/maxima.core : nusum.lisp
 binary-cmucl/maxima.core : desoln.lisp
 binary-cmucl/maxima.core : elim.lisp
 binary-cmucl/maxima.core : trgsmp.lisp

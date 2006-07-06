@@ -886,9 +886,9 @@
 	      (fboundp 'system::require))
 
     #-:lispworks
-    (in-package "LISP")
+    (in-package :lisp)
     #+:lispworks
-    (in-package "SYSTEM")
+    (in-package :system)
 
     (export '(*modules* provide require))
 
@@ -994,7 +994,7 @@
 (defpackage "MAKE" (:use "COMMON-LISP") (:nicknames "MK"))
 
 #-(or :sbcl :cltl2 :lispworks :ecl :scl)
-(in-package "MAKE" :nicknames '("MK"))
+(in-package :make :nicknames '("MK"))
 
 ;;; For CLtL2 compatible lisps...
 #+(and :excl :allegro-v4.0 :cltl2)
@@ -1024,7 +1024,7 @@
 ;;; The code below, is originally executed also for CMUCL. However I
 ;;; believe this is wrong, since CMUCL comes with its own defpackage.
 ;;; I added the extra :CMU in the 'or'.
-#+(and :cltl2 (not (or :cmu :clisp :sbcl
+#+(and :cltl2 (not (or :cmu :scl :clisp :sbcl
 		       (and :excl (or :allegro-v4.0 :allegro-v4.1))
 		       :mcl)))
 (eval-when (compile load eval)
@@ -1047,10 +1047,10 @@
 
 #+(or :cltl2 :lispworks :scl)
 (eval-when (compile load eval)
-  (in-package "MAKE"))
+  (in-package :make))
 
 #+ecl
-(in-package "MAKE")
+(in-package :make)
 
 ;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19970105
 ;;; 'provide' is not esternal in 'CLTL1' in Allegro v 4.1
@@ -1165,21 +1165,21 @@
 #|
 #-(or :sbcl :cmu :ccl :allegro :excl :lispworks :symbolics)
 (eval-when (compile load eval)
-  (import *exports* #-(or :cltl2 :lispworks) "USER"
-	            #+(or :cltl2 :lispworks) "COMMON-LISP-USER")
-  (import *special-exports* #-(or :cltl2 :lispworks) "USER"
-	                    #+(or :cltl2 :lispworks) "COMMON-LISP-USER"))
+  (import *exports* #-(or :cltl2 :lispworks) :user
+	            #+(or :cltl2 :lispworks) :common-lisp-user)
+  (import *special-exports* #-(or :cltl2 :lispworks) :user
+	                    #+(or :cltl2 :lispworks) :common-lisp-user))
 #+(or :sbcl :cmu :ccl :allegro :excl :lispworks :symbolics)
 (eval-when (compile load eval)
-  (import *exports* #-(or :cltl2 :lispworks) "USER"
-	            #+(or :cltl2 :lispworks) "COMMON-LISP-USER")
+  (import *exports* #-(or :cltl2 :lispworks) :user
+	            #+(or :cltl2 :lispworks) :common-lisp-user)
   (shadowing-import *special-exports*
-		    #-(or :cltl2 :lispworks) "USER"
-		    #+(or :cltl2 :lispworks) "COMMON-LISP-USER"))
+		    #-(or :cltl2 :lispworks) :user
+		    #+(or :cltl2 :lispworks) :common-lisp-user))
 |#
 
-#-(or :PCL :CLOS :scl)
-(when (find-package "PCL")
+#-(or :pcl :clos :scl)
+(when (find-package :pcl)
   (pushnew :pcl *modules*)
   (pushnew :pcl *features*))
 
@@ -1194,7 +1194,7 @@
 ;;; ********************************
 
 (defvar *dont-redefine-require*
-  #+cmu (if (find-symbol "*MODULE-PROVIDER-FUNCTIONS*" "EXT") t nil)
+  #+cmu (if (find-symbol "*MODULE-PROVIDER-FUNCTIONS*" :ext) t nil)
   #+(or clisp sbcl) t
   #+allegro t
   #-(or cmu sbcl clisp allegro) nil
@@ -1219,8 +1219,9 @@
 #-cormanlisp
 (defun home-subdirectory (directory)
   (concatenate 'string
-	#+(or :sbcl :cmu :scl)
+	#+(or :sbcl :cmu)
 	"home:"
+	#+scl "file://home/"
 	#-(or :sbcl :cmu :scl)
 	(let ((homedir (user-homedir-pathname)))
 	  (or (and homedir (namestring homedir))
@@ -1386,7 +1387,7 @@
 	 ;; PA is Precision Architecture, HP's 9000/800 RISC cpu
 	 #+(and Lucid PA)		      ("lisp" . "hbin")
          #+excl ("cl"   . ,(pathname-type (compile-file-pathname "foo.cl")))
-         #+(or :cmu :scl)  ("lisp" . ,(or (c:backend-fasl-file-type c:*backend*) "fasl"))
+         #+(or cmu scl) ("lisp" . ,(or (c:backend-fasl-file-type c:*backend*) "fasl"))
 ;	 #+(and :CMU (not (or :sgi :sparc)))  ("lisp" . "fasl")
 ;        #+(and :CMU :sgi)                    ("lisp" . "sgif")
 ;        #+(and :CMU :sparc)                  ("lisp" . "sparcf")
@@ -1649,6 +1650,9 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (machine-type-translation "PC/386"                           "x86")
 ;;; CLisp Win32
 
+;;; SCL.
+(machine-type-translation "AMD64"                            "amd64")
+
 #+(and :lucid :sun :mc68000)
 (machine-type-translation "unknown"     "sun3")
 
@@ -1692,7 +1696,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (defun compiler-type-translation (name &optional operation)
   (if operation
       (setf (gethash (string-upcase name) *compiler-type-alist*) operation)
-    (gethash (string-upcase name) *compiler-type-alist*)))
+      (gethash (string-upcase name) *compiler-type-alist*)))
 
 (compiler-type-translation "lispworks 3.2.1"         "lispworks")
 (compiler-type-translation "lispworks 3.2.60 beta 6" "lispworks")
@@ -1723,6 +1727,10 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (compiler-type-translation "cmu 17f" "cmu")
 (compiler-type-translation "cmu 17e" "cmu")
 (compiler-type-translation "cmu 17d" "cmu")
+
+(compiler-type-translation "scl 1.2.7" "scl")
+(compiler-type-translation "scl 1.2.8" "scl")
+(compiler-type-translation "scl 1.2.9" "scl")
 
 ;;; ********************************
 ;;; System Names *******************
@@ -1806,6 +1814,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 ;;;       "[root.][subdir]BAZ"
 ;;; Use #+:vaxlisp for VAXLisp 3.0, #+(and vms dec common vax) for v2.2
 
+#-scl
 (defun new-append-directories (absolute-dir relative-dir)
   ;; Version of append-directories for CLtL2-compliant lisps. In particular,
   ;; they must conform to section 23.1.3 "Structured Directories". We are
@@ -1829,11 +1838,11 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 	 (rel-directory (directory-to-list (pathname-directory rel-dir)))
 	 (rel-keyword (when (keywordp (car rel-directory))
 			(pop rel-directory)))
-         #-(or :MCL :sbcl :clisp) (rel-file (file-namestring rel-dir))
+         #-(or :MCL :sbcl :clisp :cmu) (rel-file (file-namestring rel-dir))
 	 ;; Stig (July 2001);
 	 ;; These values seems to help clisp as well
-	 #+(or :MCL :sbcl :clisp) (rel-name (pathname-name rel-dir))
-	 #+(or :MCL :sbcl :clisp) (rel-type (pathname-type rel-dir))
+	 #+(or :MCL :sbcl :clisp :cmu) (rel-name (pathname-name rel-dir))
+	 #+(or :MCL :sbcl :clisp :cmu) (rel-type (pathname-type rel-dir))
 	 (directory nil))
 
     ;; TI Common Lisp pathnames can return garbage for file names because
@@ -1886,13 +1895,14 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
                     :directory
                     directory
 		    :name
-		    #-(or :sbcl :MCL :clisp) rel-file
-		    #+(or :sbcl :MCL :clisp) rel-name
+		    #-(or :sbcl :MCL :clisp :cmu) rel-file
+		    #+(or :sbcl :MCL :clisp :cmu) rel-name
 
-		    #+(or :sbcl :MCL :clisp) :type
-		    #+(or :sbcl :MCL :clisp) rel-type
+		    #+(or :sbcl :MCL :clisp :cmu) :type
+		    #+(or :sbcl :MCL :clisp :cmu) rel-type
 		    ))))
 
+#-scl
 (defun directory-to-list (directory)
   ;; The directory should be a list, but nonstandard implementations have
   ;; been known to use a vector or even a string.
@@ -1963,7 +1973,6 @@ ABS: NIL          REL: NIL               Result: ""
 
 ||#
 
-
 (defun append-directories (absolute-directory relative-directory)
   "There is no CL primitive for tacking a subdirectory onto a directory.
    We need such a function because defsystem has both absolute and
@@ -1988,10 +1997,12 @@ ABS: NIL          REL: NIL               Result: ""
 	    relative-directory)
        ;; For use with logical pathnames package.
        (append-logical-directories-mk absolute-directory relative-directory))
-     |#
+      |#
+      #-scl
       ((namestring-probably-logical absolute-directory)
        ;; A simplistic stab at handling logical pathnames
        (append-logical-pnames absolute-directory relative-directory))
+      #-scl
       (t
        ;; In VMS, merge-pathnames actually does what we want!!!
        #+:VMS
@@ -2002,7 +2013,21 @@ ABS: NIL          REL: NIL               Result: ""
 				  :name relative-directory))
        ;; Cross your fingers and pray.
        #-(or :VMS :macl1.3.2)
-       (new-append-directories absolute-directory relative-directory)))))
+       (new-append-directories absolute-directory relative-directory))
+      #+scl
+      (t
+       (let ((absolute (pathname (or absolute-directory ""))))
+	 (when (or (pathname-name absolute) (pathname-type absolute))
+	   (let* ((directory (or (pathname-directory absolute) '(:relative)))
+		  (directory (append directory (list (file-namestring absolute)))))
+	     (setf absolute (make-pathname :directory directory
+					   :name nil
+					   :type nil
+					   :version nil
+					   :defaults absolute))))
+	 (ext:resolve-pathname (or relative-directory "")
+			       absolute))))))
+      
 
 #+:logical-pathnames-mk
 (defun append-logical-directories-mk (absolute-dir relative-dir)
@@ -2085,6 +2110,7 @@ ABS: NIL          REL: NIL               Result: ""
 (defun logical-pathname-p (thing)
   (typep (parse-namestring thing) 'logical-pathname))
 
+#-scl
 (defun pathname-logical-p (thing)
   (typecase thing
     (logical-pathname t)
@@ -2099,6 +2125,7 @@ ABS: NIL          REL: NIL               Result: ""
 ;;; 19990707 Marco Antoniotti
 ;;; old version
 
+#-scl
 (defun namestring-probably-logical (namestring)
   (and (stringp namestring)
        ;; unix pathnames don't have embedded semicolons
@@ -2138,6 +2165,7 @@ ABS: NIL          REL: NIL               Result: ""
 ||#
 
 
+#-scl
 (defun append-logical-pnames (absolute relative)
   (declare (type (or null string pathname) absolute relative))
   (let ((abs (if absolute
@@ -2221,32 +2249,8 @@ D
 
 ||#
 
-;;; The following is a change proposed by DTC for SCL.
-;;; Maybe it could be used all the time.
-
-#-scl
 (defun new-file-type (pathname type)
-  ;; why not (make-pathname :type type :defaults pathname)?
-  (make-pathname
-   :host (pathname-host pathname)
-   :device (pathname-device pathname)
-   :directory (pathname-directory pathname)
-   :name (pathname-name pathname)
-   :type type
-   :version (pathname-version pathname)))
-
-
-#+scl
-(defun new-file-type (pathname type)
-  ;; why not (make-pathname :type type :defaults pathname)?
-  (make-pathname
-   :host (pathname-host pathname :case :common)
-   :device (pathname-device pathname :case :common)
-   :directory (pathname-directory pathname :case :common)
-   :name (pathname-name pathname :case :common)
-   :type (string-upcase type)
-   :version (pathname-version pathname :case :common)))
-
+  (make-pathname :type type :defaults pathname))
 
 
 ;;; ********************************
@@ -2430,7 +2434,7 @@ D
 	    (when path
 	      (gethash path *file-load-time-table*)))))))))
 
-#-(or :cmu)
+#-(or :cmu :scl)
 (defsetf component-load-time (component) (value)
   `(when ,component
     (etypecase ,component
@@ -2455,7 +2459,7 @@ D
 		    ,value)))))))
     ,value))
 
-#+(or :cmu)
+#+(or :cmu :scl)
 (defun (setf component-load-time) (value component)
   (declare
    (type (or null string pathname component) component)
@@ -2786,7 +2790,8 @@ the system definition, if provided."
     ;; beacuse of possible null names (e.g. :defsystem components)
     ;; causing problems with the subsequenct call to NAMESTRING.
     ;; (format *trace-output* "~&>>>> PATHNAME is ~S~%" pathname)
-    (cond ((pathname-logical-p pathname) ; See definition of test above.
+    (cond #-scl
+	  ((pathname-logical-p pathname) ; See definition of test above.
 	   (setf pathname
 		 (merge-pathnames pathname
 				  (make-pathname
@@ -2795,6 +2800,7 @@ the system definition, if provided."
 							      type))))
 	   ;;(format t "new path = ~A~%" pathname)
 	   (namestring (translate-logical-pathname pathname)))
+	  #-scl
 	  (t
 	   (namestring
 	    (make-pathname :host (when (component-host component)
@@ -2803,19 +2809,11 @@ the system definition, if provided."
 				   #+sbcl
 				   (component-host component)
 				   #-sbcl
-				   (pathname-host (component-host component)
-						  #+scl :case #+scl :common
-						  ))
-			   :directory (pathname-directory pathname
-						  #+scl :case #+scl :common
-						  )
+				   (pathname-host (component-host component)))
+			   :directory (pathname-directory pathname)
 			   ;; Use :directory instead of :defaults
-			   :name (pathname-name pathname
-						  #+scl :case #+scl :common
-						  )
-			   :type #-scl (component-extension component type)
-			         #+scl (string-upcase
-					(component-extension component type))
+			   :name (pathname-name pathname)
+			   :type (component-extension component type)
 			   :device
 			   #+sbcl
 			   :unspecific
@@ -2829,7 +2827,14 @@ the system definition, if provided."
 						  #+scl :case #+scl :common
 						  )))
 			   ;; :version :newest
-			   ))))))
+			   )))
+	  #+scl
+	  (t
+	   (make-pathname
+	    :name (component-name component)
+	    :type (component-extension component type)
+	    :defaults pathname
+	    :case :uri)))))
 
 ;;; What about CMU17 :device :unspecific in the above?
 
@@ -3623,7 +3628,6 @@ the system definition, if provided."
 		     #-openmcl (optimize (inhibit-warnings 3)))
 	    (unless (component-operation operation)
 	      (error "Operation ~A undefined." operation))
-
 	    (operate-on-component system operation force))))
     (when dribble (dribble))))
 
@@ -4174,7 +4178,7 @@ the system definition, if provided."
 (pushnew 'sbcl-mk-defsystem-module-provider sb-ext:*module-provider-functions*)
 )
 
-#+#.(cl:if (cl:and (cl:find-package "EXT") (cl:find-symbol "*MODULE-PROVIDER-FUNCTIONS*" "EXT")) '(and) '(or))
+#+#.(cl:if (cl:and (cl:find-package :ext) (cl:find-symbol "*MODULE-PROVIDER-FUNCTIONS*" :ext)) '(and) '(or))
 (progn
   (defun cmucl-mk-defsystem-module-provider (name)
     (let ((module-name (string-downcase (string name))))
@@ -4245,7 +4249,7 @@ the system definition, if provided."
 
 (defmacro define-language (name &key compiler loader
 				source-extension binary-extension)
-  (let ((language (gensym "LANGUAGE")))
+  (let ((language (gensym (symbol-name '#:language))))
     `(let ((,language (make-language :name ,name
 				     :compiler ,compiler
 				     :loader ,loader
@@ -4386,7 +4390,7 @@ the system definition, if provided."
 
 	     (setf verbose-stream
 		   (make-useable-stream
-		    #+cmu error-file-stream
+		    #+(or cmu scl) error-file-stream
 		    (and verbose *trace-output*)))
 
 	     (format verbose-stream "Running ~A~@[ ~{~A~^ ~}~]~%"
@@ -4401,7 +4405,7 @@ the system definition, if provided."
 			   (make-useable-stream error-file-stream
 						(if (eq error-output t)
 						    *error-output*
-						  error-output)))
+						    error-output)))
 			  (process
 			   (ext:run-program program arguments
 					    :error error-output)))
@@ -4626,9 +4630,10 @@ the system definition, if provided."
 	       ;; DeSoi [marcoxa@sourceforge.net 20020529]
 
 	       (ensure-directories-exist
-		(make-pathname
-		 :host (pathname-host output-file)
-		 :directory (pathname-directory output-file)))
+		(make-pathname :name nil
+			       :type nil
+			       :version nil
+			       :defaults output-file))
 
 	       (or *oos-test*
 		   (apply (compile-function component)
@@ -4655,8 +4660,8 @@ the system definition, if provided."
 
 ;; see CLOCC/PORT/sys.lisp:compiled-file-p
 (eval-when (load eval compile)
-  (when (find-package "PORT")
-    (import (find-symbol "COMPILED-FILE-P" "PORT"))))
+  (when (find-package :port)
+    (import (find-symbol (symbol-name '#:compiled-file-p) :port))))
 (unless (fboundp 'compiled-file-p)
  (defun compiled-file-p (file-name)
   "Return T if the FILE-NAME is a filename designator for a valid compiled.

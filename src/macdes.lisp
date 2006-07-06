@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (defconstant *doc-start* (code-char 31))
 
@@ -61,13 +61,15 @@
 			  (return-from $example '$done)))
 		   (setq tem (dbm-read st nil nil))
 		   (setq $linenum (+ 1 $linenum))
-		   (set (setq c-tag (makelabel $inchar)) (nth 2 tem))
+		   (setq c-tag (makelabel $inchar))
+		   (unless $nolabels (set c-tag (nth 2 tem)))
 		   (let ($display2d)
 		     (displa `((mlable) ,c-tag ,(nth 2 tem)))
 					;(mformat nil "Input: ~M;" (nth 2 tem))
 		     )
 		   (setq $% (meval* (nth 2 tem)))
-		   (set (setq d-tag (makelabel $outchar)) $%)
+		   (setq d-tag (makelabel $outchar))
+		   (unless $nolabels (set d-tag $%))
 		   (if (eq (caar tem) 'displayinput)
 		       (displa `((mlable) ,d-tag ,$%)))
 					;(mformat nil "==> ~M"  (setq $% (meval* (nth 2 tem))))
@@ -130,9 +132,10 @@
 (defmspec $describe (x)
   (setq x ($sconcat (cadr x)))
   (let ((cl-info::*prompt-prefix* *prompt-prefix*)
-	(cl-info::*prompt-suffix* *prompt-suffix*))
+	(cl-info::*prompt-suffix* *prompt-suffix*)
+	(cl-info::*lang-subdir* *maxima-lang-subdir*))
     #-gcl
-    (cl-info:info x '("maxima.info") cl-info:*info-paths*)
+    (cl-info:info x)
     ;; Optimization: GCL's built-in info is much faster than our info
     ;; implementation. However, GCL's info won't respect out *prompt-
     ;; variables. Compromise by only calling our info when the prompts
@@ -141,13 +144,13 @@
     ;; GCL's info is not quite compatible (GCL 2.6.6) with recent
     ;; texinfo releases. -- ZW 01-Apr-05
     #+gcl
-    (cl-info:info x '("maxima.info") cl-info:*info-paths*)
+    (cl-info:info x)
     #+nil
     (if (and (string= *prompt-prefix* "") (string= *prompt-suffix* ""))
 	(progn
 	  (setf system::*info-paths* cl-info:*info-paths*)
 	  (system::info x '("maxima.info")))
-	(cl-info:info x '("maxima.info") cl-info:*info-paths*))))
+	(cl-info:info x))))
 
 (defun $apropos ( s ) 
-  (cons '(mlist) (apropos-list s "MAXIMA"))) 
+  (cons '(mlist) (apropos-list s :maxima)))

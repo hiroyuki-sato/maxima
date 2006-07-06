@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;	** (c) Copyright 1982 Massachusetts Institute of Technology **
 
 (macsyma-module comm2)
@@ -310,8 +310,7 @@
 	     ((null x)
 	      (cond ((null roots) (subst0 (cons '(mtimes) (nreverse notroots)) e))
 		    (t (if $rootsconmode
-			   (destructuring-let (m
-					       ((min gcd lcm) (rtc-getinfo roots)))
+			   (destructuring-let (((min gcd lcm) (rtc-getinfo roots)))
 			     (cond ((and (= min gcd) (not (= gcd 1))
 					 (not (= min lcm))
 					 (not (eq $rootsconmode '$all)))
@@ -418,9 +417,7 @@
 		(or ($bfloatp x) ($bfloatp y))) ;at least one bfloat
 	   (setq x ($bfloat x)
 		 y ($bfloat y))
-	   (if (mminusp* y)
-	       (neg (*fpatan (neg y) (list x)))
-	       (*fpatan y (list x))))
+	   (*fpatan y (list x)))
 	  ((and $%piargs (free x '$%i) (free y '$%i)
 		;; Only use asksign if %piargs is on.
 		(cond ((zerop1 y) (if (atan2negp x) (simplify '$%pi) 0))
@@ -624,13 +621,19 @@
 	  (nconc (car l) (ncons (meval (list header i j))))))
       l)))
 
+; Execute deep copy for copymatrix and copylist.
+; Resolves SF bug report [ 1224960 ] sideeffect with copylist.
+; An optimization would be to call COPY-TREE only on mutable expressions.
+
 (defmfun $copymatrix (x)
   (if (not ($matrixp x)) (merror "Argument not a matrix - `copymatrix':~%~M" x))
-  (cons (car x) (mapcar #'(lambda (x) (copy-top-level x)) (cdr x))))
+  (copy-tree x))
 
 (defmfun $copylist (x)
   (if (not ($listp x)) (merror "Argument not a list - `copylist':~%~M" x))
-  (cons (car x) (copy-top-level (cdr x))))
+  (copy-tree x))
+
+(defmfun $copy (x) (copy-tree x))
 
 ;;;; ADDROW
 

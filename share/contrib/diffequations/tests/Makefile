@@ -11,10 +11,7 @@ TEST_FILES = \
 	rtest_ode1_riccati.mac rtest_ode1_abel.mac
 
 check: $(TEST_FILES)
-	(echo 'to_lisp();';\
-	echo '(setq *maxima-testsdir* ".")';\
-	echo '(to-maxima)';\
-	echo 'file_search_maxima:append(["../###.mac"],file_search_maxima);';\
+	(echo ':lisp (setq *maxima-testsdir* ".")';\
 	echo "load('pdiff);";\
 	echo "use_pdiff:false;";\
 	echo "load('contrib_ode);";\
@@ -22,10 +19,7 @@ check: $(TEST_FILES)
 
 # Verbose output
 check.log: $(TEST_FILES)
-	(echo 'to_lisp();';\
-	echo '(setq *maxima-testsdir* ".")';\
-	echo '(to-maxima)';\
-	echo 'file_search_maxima:append(["../###.mac"],file_search_maxima);';\
+	(echo ':lisp (setq *maxima-testsdir* ".")';\
 	echo "load('pdiff);";\
 	echo "use_pdiff:false;";\
 	echo "load('contrib_ode);";\

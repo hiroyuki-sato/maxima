@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module trutil)
 
 
@@ -23,7 +23,7 @@
 (deftrfun tr-gensym (&optional k)
   (and k (setq tr-gensym-kounter k))
   (prog2 nil
-      (implode (nconc (explodec '|tr-gensym~|)
+      (implode (nconc (explodec 'tr-gensym~)
 		      (explodec tr-gensym-kounter)))
     (setq tr-gensym-kounter (f1+ tr-gensym-kounter))))
 (declare-top (unspecial tr-gensym-kounter))

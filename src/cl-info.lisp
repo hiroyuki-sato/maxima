@@ -18,7 +18,10 @@
 ;;
 
 
-(in-package "CL-INFO")
+(in-package :cl-info)
+
+(defvar *index-name* "index")
+(defvar *extra-chars* "")
 
 (defvar *match-data*)
 (defvar *case-fold-search* nil)
@@ -47,20 +50,15 @@
 			(code-char 9) (code-char 10) (code-char 10)
 			(code-char 10)))
        (precomp-nil-string1
-	(compile nil
-		 (regex-compile 
-		  string1
-		  :case-sensitive nil)))
+	#-gcl (compile nil (regex-compile string1 :case-sensitive nil))
+	#+gcl (regex-compile string1 :case-sensitive nil))
        (precomp-t-string2
-	(compile nil
-		 (regex-compile 
-		  string2
-		  :case-sensitive t)))
+	#-gcl (compile nil (regex-compile string2 :case-sensitive nil))
+	#+gcl (regex-compile string2 :case-sensitive nil))
        (precomp-t-string3
-	(compile nil
-		 (regex-compile 
-		  string3
-		  :case-sensitive t))))
+	#-gcl (compile nil (regex-compile string3 :case-sensitive nil))
+	#+gcl (regex-compile string3 :case-sensitive nil)))
+
   (defun compile-regex (pat &key (case-sensitive t))
     (cond
       ((and (equal case-sensitive nil)
@@ -75,17 +73,15 @@
       (t
        (let ((*compile-print* nil)
 	     (*compile-verbose* nil)
-	     #+cmu
-	     (*compile-progress* nil)
+	     #+(or cmu scl)
+	     (ext:*compile-progress* nil)
 	     #+sbcl
 	     (sb-ext:*compile-progress* nil)
 	     #+gcl
 	     (compiler:*compile-verbose* nil)
 	     )
-	 (compile nil
-		  (regex-compile 
-		   pat 
-		   :case-sensitive case-sensitive))))))
+	 #-gcl (compile nil (regex-compile pat :case-sensitive case-sensitive))
+	 #+gcl (regex-compile pat :case-sensitive case-sensitive)))))
   )
 ;; Search the string STRING for the pattern PAT.  Only the part of the
 ;; string bounded by START and END are searched.  PAT may either be a
@@ -118,7 +114,7 @@
 (eval-when (compile eval load)
   (defun sharp-u-reader (stream subchar arg)
     (declare (ignore subchar arg))
-    (let ((tem (make-array 10 :element-type 'base-char
+    (let ((tem (make-array 10 :element-type 'character
 			   :fill-pointer 0 :adjustable t)))
       (unless (eql (read-char stream) #\")
 	(error "sharp-u-reader reader needs a \"right after it"))
@@ -132,10 +128,11 @@
 					      (#\r . #\return))))
 			     ch))))
 	 (vector-push-extend ch tem)))
-      (coerce tem '(simple-array base-char (*)))))
+      (coerce tem '(simple-array character (*)))))
 
   (set-dispatch-macro-character #\# #\u 'sharp-u-reader)
-  )
+  ) 
+;; match unbalanced " above which confuse some editors
 
 (defvar *info-data* nil)
 (defvar *current-info-data* nil)
@@ -153,7 +150,7 @@
 	(error "illegal file start ~a" start))
       #-gcl
       (let ((tem (make-array (- len start)
-			     :element-type 'base-char)))
+			     :element-type 'character)))
 	(when (> start 0)
 	  (file-position st start))
 	(read-sequence tem st :start 0 :end (length tem))
@@ -226,12 +223,12 @@
 ;; Quote the given string, protecting any special regexp characters so
 ;; that they stand for themselves.
 (defun re-quote-string (x)
+  (declare (string x))
   (let ((i 0)
 	(len (length x))
 	ch
 	(extra 0))
-    (declare (fixnum i len extra)
-	     (string x))
+    (declare (fixnum i len extra))
     (let (tem)
       (tagbody
        AGAIN
@@ -249,7 +246,7 @@
 	       ((> extra 0)
 		(setq tem 
 		      (make-array (+ (length x) extra)
-				  :element-type 'base-char :fill-pointer 0))
+				  :element-type 'character :fill-pointer 0))
 		(setq i 0)
 		(go AGAIN))
 	       (t (setq tem x)))
@@ -283,7 +280,10 @@
       (let* (s
 	     (node-string (car (nth 1 *current-info-data*)))
 	     (node
-	      (and node-string (car (get-nodes "index" node-string)))))
+	      (and node-string (car (if (equal *index-name* "index")
+	                        	(get-nodes *index-name* node-string)
+				        (or (get-nodes *index-name* node-string)
+				            (get-nodes "index"      node-string)))))))
 	(when node
 	  (setq s (show-info node nil))
 	  (setf (third *current-info-data*) s)))))
@@ -346,13 +346,28 @@
   "search for the first occurrence of a file in the directory list dirs
 that matches the name name with extention ext"
   (dolist (dir dirs)
-    (let ((base-name (make-pathname :directory (pathname-directory dir))))
+    (let (base-name base-name-lang)
+      (setq base-name (make-pathname :device (pathname-device dir)
+                                     :directory (pathname-directory dir)))
+      (when *lang-subdir*
+        (setq base-name-lang (make-pathname :device (pathname-device dir)
+                                            :directory (append (pathname-directory dir) 
+					                       `(,*lang-subdir*)) )))
       (dolist (type extensions)
-	(let ((pathname (make-pathname :name name
+	(let (pathname)
+	  (when *lang-subdir*
+	    (setq pathname (make-pathname :name name
+				          :type (if (equalp type "")
+						    nil
+						    type)
+				          :defaults base-name-lang))
+	    (when (probe-file pathname)
+	      (return-from file-search pathname)))
+	  (setq pathname (make-pathname :name name
 				       :type (if (equalp type "")
 						 nil
 						 type)
-				       :defaults base-name)))
+				       :defaults base-name))
 	  (when (probe-file pathname)
 	    (return-from file-search pathname))))))
   ;; We couldn't find the file
@@ -368,30 +383,6 @@ that matches the name name with extention ext"
     (when (equal name "DIR")
       (setq name "dir"))
     (setq file (file-search name *info-paths* '("" "info") nil))
-    (cond ((and (null file)
-		(not (equal name "dir")))
-	   ;; jfa: FIXME Sat Feb  2 16:18:04 2002
-	   ;; The error message is a temporary hack.
-	   ;; The code following the error message would do something.
-	   ;; (a) It is not clear to me what it is trying to do.
-	   ;; (b) The format statmement is missing an argument.
-	   ;; (c) Even if (b) is fixed, the show-info statement
-	   ;;     creates an infinite loop.
-	   ;;
-	   ;; rlt: I think the code is trying to find the Top entry in
-	   ;; the file "dir" and looking in there for the location of
-	   ;; the maxima file.  If you don't have a dir file, we lose.
-	   (error "failed to find info directory")
-	   (format t "looking for dir~a~%")
-	   (let* ((tem (show-info "(dir)Top" nil))
-		  *case-fold-search*)
-	     (cond ((>= (string-match
-			 (string-concatenate "(([^(]*"
-					     (re-quote-string name)
-					     "(.info)?))")
-			 tem)
-			0)
-		    (setq file (get-match tem 1)))))))
     (cond (file
 	   (let* ((na (namestring (truename file))))
 	     (cond ((setq tem (assoc na *info-data* :test 'equal))
@@ -400,8 +391,7 @@ that matches the name name with extention ext"
 		    (setq *current-info-data*
 			  (list na (info-get-tags na) nil))
 		    (setq *info-data* (cons *current-info-data* *info-data*))))))
-	  (t
-	   (format t "(not found ~s)" name)))
+          (t (format t "setup-info: ~S not found in ~S~%" name *info-paths*)))
     nil))
 			  
 (defun get-info-choices (pat type)
@@ -545,7 +535,7 @@ that matches the name name with extention ext"
 		(when (or (>= (setq subnode
 				    (string-match
 				     (string-concatenate
-				      #u"\n -+ [A-Za-z ]+: "
+				      (format nil #u"\n -+ [A-Za-z~a ]+: " *extra-chars*)
 				      position-pattern
 				      #u"[ \n]"
 				      )
@@ -573,7 +563,8 @@ that matches the name name with extention ext"
 				 (string-match doc-start s
 					       (+ beg 1 initial-offset) end)))
 			   ;;(format t "start-doc = ~A~%" start-doc)
-			   (cond ((>= (string-match pat-subnode s
+			   (cond ((>= (string-match (format nil #u"\n -+ [a-zA-Z~a]" *extra-chars*) 
+						    s
 						    (if (>= start-doc 0)
 							start-doc
 							(+ beg 1 initial-offset))
@@ -590,7 +581,8 @@ that matches the name name with extention ext"
 	      (subseq s (+ initial-offset beg) e)))))))
   )
 
-(defvar *default-info-files* '( "gcl-si.info" "gcl-tk.info" "gcl.info"))
+(defvar *default-info-files* '("maxima.info"))
+(defvar *lang-subdir*	     nil)
 
 (defun info-aux (x dirs)
   (loop for v in dirs
@@ -684,7 +676,6 @@ the general info file.  The search goes over all files."
 	(clear-input)
 	(finish-output *debug-io*)
 	(when (consp wanted)
-	  (format t "~%Info from file ~a:" (car *current-info-data*))
 	  (loop for item in wanted
 		do (princ (show-info item)))))))
   (values))

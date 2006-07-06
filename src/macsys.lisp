@@ -12,7 +12,7 @@
 ;;;
 ;;; *** NOTE *** this file uses common-lisp read syntax.
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module system)
 
 ;;(eval-when (:execute :compile-toplevel :load-toplevel)
@@ -69,7 +69,7 @@
 ;;  (multiple-value-bind (nil used)(si:room-get-area-length-used area)
 ;;    used))
 
-#+cmu
+#+(or cmu scl)
 (defun used-area (&optional unused)
   (declare (ignore unused))
   (ext:get-bytes-consed))
@@ -92,7 +92,7 @@
     (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
     (dpb space1 (byte 24 24) space2)))
 
-#-(or lispm cmu sbcl clisp)
+#-(or lispm cmu scl sbcl clisp)
 (defun used-area (&optional unused)
   (declare (ignore unused))
   0)
@@ -156,7 +156,7 @@
 		 (displa `((mlable) , c-tag , $__)))))
 	(if (eq r eof) (return '$done))
 	(setq $__ (caddr r))
-	(set  c-tag $__)
+	(unless $nolabels (set  c-tag $__))
 	(cond (batch-or-demo-flag
 	       (displa `((mlable) ,c-tag , $__))))
 	(setq time-before (get-internal-run-time)
@@ -173,12 +173,15 @@
 			  (float (difference etime-after etime-before))
 			  internal-time-units-per-second))
 	(setq accumulated-time (plus accumulated-time time-used))
-	(set (setq d-tag (makelabel $outchar)) $%)
+	(setq d-tag (makelabel $outchar))
+	(unless $nolabels (set d-tag $%))
 	(setq $_ $__)
 	(when $showtime
 	  (format t "Evaluation took ~$ seconds (~$ elapsed)"
-		  time-used etime-used )
-	  #+(or cmu sbcl clisp)
+		  time-used etime-used )  
+          #+gcl 
+	  (format t "~%")
+	  #+(or cmu scl sbcl clisp)
 	  (let ((total-bytes (- area-after area-before)))
 	    (cond ((> total-bytes (* 1024 1024))
 		   (format t " using ~,3F MB.~%"
@@ -381,30 +384,14 @@
 (defvar *maxima-started* nil)
 (defvar *maxima-prolog* "")
 (defvar *maxima-epilog* "")
-(defun meshugena-clisp-banner ()
-  (format t "  i i i i i i i       ooooo    o        ooooooo   ooooo   ooooo~%")
-  (format t "  I I I I I I I      8     8   8           8     8     o  8    8~%")
-  (format t "  I  \\ `+' /  I      8         8           8     8        8    8~%")
-  (format t "   \\  `-+-'  /       8         8           8      ooooo   8oooo~%") ;
-  (format t "    `-__|__-'        8         8           8           8  8~%")
-  (format t "        |            8     o   8           8     o     8  8~%")
-  (format t "  ------+------       ooooo    8oooooo  ooo8ooo   ooooo   8~%")
-  (format t "~%")
-  (format t "Copyright (c) Bruno Haible, Michael Stoll 1992, 1993~%")
-  (format t "Copyright (c) Bruno Haible, Marcus Daniels 1994-1997~%")
-  (format t "Copyright (c) Bruno Haible, Pierpaolo Bernardi, Sam Steingold 1998~%")
-  (format t "Copyright (c) Bruno Haible, Sam Steingold 1999-2003~%")
-  (format t 
-	  "--------------------------------------------------------------~%~%"))
 
 #-lispm
 (defun macsyma-top-level (&optional (input-stream *standard-input*)
 			  batch-flag)
-  (let ((*package* (find-package "MAXIMA")))
+  (let ((*package* (find-package :maxima)))
     (if *maxima-started*
 	(format t "Maxima restarted.~%")
 	(progn
-	  #+clisp (meshugena-clisp-banner)
 	  (format t *maxima-prolog*)
 	  (format t "~&Maxima ~a http://maxima.sourceforge.net~%"
 		  *autoconf-version*)
@@ -424,10 +411,10 @@
     (if ($file_search "maxima-init.mac") ($batchload ($file_search "maxima-init.mac")))
     
     (catch 'quit-to-lisp
-      (in-package "MAXIMA")
+      (in-package :maxima)
       (loop 
        do
-       (catch #+kcl si::*quit-tag* #+(or cmu sbcl) 'continue #-(or kcl cmu sbcl) nil
+       (catch #+kcl si::*quit-tag* #+(or cmu scl sbcl) 'continue #-(or kcl cmu scl sbcl) nil
 	      (catch 'macsyma-quit
 		(continue input-stream batch-flag)
 		(format t *maxima-epilog*)
@@ -496,15 +483,20 @@
   (defun filestrip (x) (subseq (print-invert-case (car x)) 1)) 
   )
 
-(defmspec $with_stdout ( arg) (setq arg (cdr arg))
-	  (let ((body (cdr arg)) res)
-	    (with-open-file (*standard-output* (namestring (maxima-string (car arg)))
-					       :direction :output)
-	      (dolist (v body)
-		(setq res (meval* v)))
-	      res)))
-
-
+(defmspec $with_stdout (arg)
+  (setq arg (cdr arg))
+  (let*
+    ((fname (namestring (maxima-string (car arg))))
+     (filespec
+       (if (or (eq $file_output_append '$true) (eq $file_output_append t))
+         `(*standard-output* ,fname :direction :output :if-exists :append :if-does-not-exist :create)
+         `(*standard-output* ,fname :direction :output :if-exists :supersede :if-does-not-exist :create))))
+    (eval
+      `(with-open-file ,filespec
+         (let ((body ',(cdr arg)) res)
+           (dolist (v body)
+             (setq res (meval* v)))
+           res)))))
 
 (defun $sconcat(&rest x)
   (let ((ans "") )
@@ -523,8 +515,8 @@
 (defun $system (&rest args)
   #+gcl   (lisp:system (apply '$sconcat args))
   #+clisp (ext:run-shell-command (apply '$sconcat args))
-  #+cmu   (ext:run-program "/bin/sh"
-			   (list "-c" (apply '$sconcat args)) :output t)
+  #+(or cmu scl) (ext:run-program "/bin/sh"
+				  (list "-c" (apply '$sconcat args)) :output t)
   #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t)
   #+sbcl  (sb-ext:run-program "/bin/sh"
 			      (list "-c" (apply '$sconcat args)) :output t)

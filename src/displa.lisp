@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module displa)
 
 ;; N.B. You must read the macro file before reading this file.
@@ -185,7 +185,6 @@
 (defvar *alt-display1d* nil)
 
 (defmfun displa (form &aux #+kcl(form form))
-  (fresh-line)
   (if (or (not #.ttyoff) #.writefilep)
       (cond #+franz ($typeset (apply #'$photot (list form)))
 	    ($display2d 
@@ -307,7 +306,7 @@
 		(setq result nil w (f+ linel width)))
 	       (t (increment width)
 		  (when (and (= w width) l)
-		    (forcebreak (cons #\# result) width)
+		    (forcebreak (cons #\\ result) width)
 		    (setq result nil w (f+ linel width))
 		    (increment width))
 		  (setq result (rplacd dummy result))))))))

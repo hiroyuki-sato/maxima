@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module simp)
 
 (declare-top (special exptrlsw rulesw $%e_to_numlog *inv* substp
@@ -123,6 +123,8 @@
 		      $false $on $off $logabs rischpf $limitdomain rischp rp-polylogp ))
 (setq $rootsepsilon 1.0e-7 $%rnum 0
       $grindswitch nil $algepsilon 100000000. $algdelta 1.0e-5) 
+
+(defmvar $listarith t)
 
 (progn
   (setq $listarith t wflag nil $lognumer nil expandp nil $domain '$real
@@ -869,7 +871,12 @@
 	    (cond ((null (setq y (cdr y)))
 		   (return (simplifya (cons '(mplus) b) t))))
 	    (go loop)))
+	((double-float-eval (mop x) y))
+	((and (not (member 'simp (car x)))
+	      (big-float-eval (mop x) y)))
+	#+nil
 	(($bfloatp y) ($bfloat (list '(%log) y)))
+	#+nil
 	((or (floatp y) (and $numer (integerp y)))
 	 (cond ((plusp y) (log y))
 	       ($lognumer (cond ((equal y -1) 0) (t (log (minus y)))))
@@ -883,10 +890,14 @@
   (simplifya (list '(mtimes) (caddr w)
 		   (simplifya (list '(%log) (cadr w)) t)) t))
 
-(defmfun simpsqrt (x vestigial z)
-  vestigial				;Ignored.       
+(defmfun simpsqrt (x y z)
   (oneargcheck x)
-  (simplifya (list '(mexpt) (cadr x) '((rat simp) 1 2)) z))
+  (setq y (simpcheck (cadr x) z))
+  (cond ((double-float-eval (mop x) y))
+	((and (not (member 'simp (car x)))
+	      (big-float-eval (mop x) y)))
+	(t
+	 (simplifya (list '(mexpt) (cadr x) '((rat simp) 1 2)) z))))
 
 (defmfun simpquot (x y z)
   (twoargcheck x)
@@ -956,16 +967,34 @@
      (if (null (cdr fm)) (return out))
      (go loop)))
 
+;; I (rtoy) think this does some simple optimizations of x * y.
 (defun testt (x)
-  (cond ((mnump x) x)
-	((null (cddr x)) (cadr x))
-	((onep1 (cadr x))
-	 (cond ((null (cdddr x)) (caddr x)) (t (rplacd x (cddr x)))))
-	(t (testtneg x))))
+  (cond ((mnump x)
+	 x)
+	((null (cddr x))
+	 ;; We have something like ((mtimes) foo).  This is the same as foo.
+	 (cadr x))
+	((eql 1 (cadr x))
+	 ;; We have 1*foo.  Which is the same as foo.  This should not
+	 ;; be applied to 1.0 or 1b0!
+	 (cond ((null (cdddr x))
+		(caddr x))
+	       (t (rplacd x (cddr x)))))
+	(t
+	 (testtneg x))))
 
+;; This basically converts -(a+b) to -a-b.
 (defun testtneg (x)
-  (cond ((and (equal (cadr x) -1) (null (cdddr x)) (mplusp (caddr x)) $negdistrib)
-	 (addn (mapcar (function (lambda (z) (mul2 -1 z))) (cdaddr x)) t))
+  (cond ((and (equal (cadr x) -1)
+	      (null (cdddr x))
+	      (mplusp (caddr x))
+	      $negdistrib)
+	 ;; If x is exactly of the form -1*(sum), and $negdistrib is
+	 ;; true, we distribute the -1 across the sum.
+	 (addn (mapcar #'(lambda (z)
+			   (mul2 -1 z))
+		       (cdaddr x))
+	       t))
 	(t x)))
 
 (defun testp (x) (cond ((atom x) 0)
@@ -1527,7 +1556,26 @@
 			  (t (go retno))))
 		  (mget gr '$numer)))
 		((eq gr '$%e)
-		 (cond (($bfloatp pot) (return ($bfloat (list '(mexpt) '$%e pot))))
+		 ;; Numerically evaluate if the power is a double-float.
+		 (let ((val (double-float-eval '$exp pot)))
+		   (when val
+		     (return val)))
+		 ;; Numerically evaluate if the power is a (complex)
+		 ;; big-float.  (This is basically the guts of
+		 ;; big-float-eval, but we can't use big-float-eval.)
+		 (when (and (not (member 'simp (car x)))
+			    (complex-number-p pot 'bigfloat-or-number-p))
+		   (let ((x ($realpart pot))
+			 (y ($imagpart pot)))
+		     (cond ((and ($bfloatp x) (like 0 y))
+			    ($bfloat `((mexpt simp) $%e ,pot)))
+			   ((or ($bfloatp x) ($bfloatp y))
+			    (let ((z (add ($bfloat x) (mul '$%i ($bfloat y)))))
+			      (setq z ($rectform `((mexpt simp) $%e ,z)))
+			      (return ($bfloat z)))))))
+		 (cond #+nil
+		       (($bfloatp pot) (return ($bfloat (list '(mexpt) '$%e pot))))
+		       #+nil
 		       ((or (floatp pot) (and $numer (integerp pot)))
 			(return (exp pot)))
 		       ((and $logsimp (among '%log pot)) (return (%etolog pot)))

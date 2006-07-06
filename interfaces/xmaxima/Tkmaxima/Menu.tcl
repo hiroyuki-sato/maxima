@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Menu.tcl,v 1.16.2.1 2005/09/30 15:26:26 robert_dodier Exp $
+#       $Id: Menu.tcl,v 1.17 2005/09/30 15:23:11 robert_dodier Exp $
 #
 
 proc pMAXSaveTexToFile {text} {

@@ -5,7 +5,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;;(eval-when (compile)
 ;;  (proclaim '(optimize (safety 0) (speed 3) (space 0))))
@@ -25,6 +25,10 @@
     )
 
 (defvar *prin1* nil)		  ;a function called instead of prin1.
+
+;; Should we give this a different name?
+(defvar *fortran-print* nil
+  "Tells EXPLODEN we are printing numbers for Fortran so include the exponent marker.")
 
 (eval-when
     #+gcl (load compile eval)
@@ -149,10 +153,12 @@
 (defprop array arrayp ml-typep)
 (defprop atom  atom ml-typep)
 
-#+cmu (shadow '(cl:compiled-function-p) (find-package "MAXIMA"))
-#+cmu (defun compiled-function-p (x)
-	(and (functionp x) (not (symbolp x))
-	     (not (eval:interpreted-function-p x))))
+#+(or cmu scl)
+(shadow '(cl:compiled-function-p) (find-package :maxima))
+#+(or cmu scl)
+(defun compiled-function-p (x)
+  (and (functionp x) (not (symbolp x))
+       (not (eval:interpreted-function-p x))))
 
 (defprop compiled-function compiled-function-p ml-typep)
 (defprop extended-number extended-number-p ml-typep)
@@ -458,6 +464,9 @@ values")
 		 ))))
   `(progn #-cl 'compile
     #+lispm (si::record-source-file-name ',function 'defmfun)
+    ;; I (rtoy) think we can consider all defmfun's as translated
+    ;; functions.
+    (defprop ,function t translated)
     (defun ,function . ,rest)))
 
 ;;sample usage
@@ -472,12 +481,34 @@ values")
 	   (setq string (print-invert-case symb)))
 	  ((floatp symb)
 	   (let ((a (abs symb)))
-	     (cond ((or (eql a 0.0)
-			(and (>= a .001)
-			     (<= a 10000000.0)))
-		    (setq string (format nil "~vf" (+ 1 $fpprec) symb)))
-		   (t (setq string (format nil "~ve" (+ 4 $fpprec) symb)))))
-	   (setq string (string-left-trim " " string)))
+	     ;; When printing out something for Fortran, we want to be
+	     ;; sure to print the exponent marker so that Fortran
+	     ;; knows what kind of number it is.  It turns out that
+	     ;; Fortran's exponent markers are the same as Lisp's so
+	     ;; we just need to make sure the exponent marker is
+	     ;; printed.
+	     ;;
+	     ;; Also, for normal output, we basically want to use
+	     ;; prin1, but we can't because we want fpprec to control
+	     ;; how many digits are printed.  So we have to check for
+	     ;; the size of the number and use ~e or ~f appropriately.
+	     (if *fortran-print*
+		 (setq string (format nil "~e" symb))
+		 (multiple-value-bind (form width)
+		     (cond ((or (zerop a)
+				(<= 1 a 1d7))
+			    (values "~vf" (+ 1 $fpprec)))
+			   ((<= 0.001d0 a 1)
+			    (values "~vf" (+ $fpprec
+					     (cond ((< a 0.01d0)
+						    3)
+						   ((< a 0.1d0)
+						    2)
+						   (t 1)))))
+			   (t
+			    (values "~ve" (+ 5 $fpprec))))
+		   (setq string (format nil form width symb))))
+	     (setq string (string-trim " " string))))
 	  #+(and gcl (not gmp))
 	  ((bignump symb)
 	   (let* ((big symb)
@@ -568,7 +599,8 @@ values")
 	(t (princ-to-string sym))))
 				      
 (defun implode1 (lis upcase &aux (ar *string-for-implode*) (leng 0))
-  (declare (type string ar) (fixnum leng))
+  (declare (type string ar) (fixnum leng)
+	   (ignore upcase))
   (or (> (array-total-size ar) (setq leng (length lis)))
       (adjust-array ar (+ leng 20)))
   (setf (fill-pointer ar) leng)
@@ -581,7 +613,7 @@ values")
 	 (setf (aref ar i) v))
   (intern-invert-case ar))
 
-(defun bothcase-implode (lis  &aux tem )
+(defun bothcase-implode (lis)
   (implode1 lis nil))
 
 (defun list-string (strin &aux tem)
@@ -667,7 +699,7 @@ values")
 
 (defvar *prompt-on-read-hang* nil)
 (defvar *read-hang-prompt* "")
-(defun tyi (&optional (stream *standard-input*) eof-option)
+(defun tyi-raw (&optional (stream *standard-input*) eof-option)
   (let ((ch (read-char-no-hang stream nil eof-option)))
     (if ch
 	ch
@@ -677,10 +709,47 @@ values")
 	    (force-output *standard-output*))
 	  (read-char stream nil eof-option)))))
 
+(defun tyi (&optional (stream *standard-input*) eof-option)
+  (let ((ch (tyi-raw stream eof-option)))
+    (if (eq ch eof-option)
+      ch
+      (backslash-check ch stream eof-option))))
+
+; The sequences of characters
+; <anything-except-backslash>
+;   (<backslash> <newline> | <backslash> <return> | <backslash> <return> <newline>)+
+;   <anything>
+; are reduced to <anything-except-backslash> <anything> .
+; Note that this has no effect on <backslash> <anything-but-newline-or-return> .
+
+(let ((previous-tyi #\a))
+  (defun backslash-check (ch stream eof-option)
+    (if (eq previous-tyi #\\ )
+      (progn (setq previous-tyi #\a) ch)
+      (setq previous-tyi
+        (if (eq ch #\\ )
+          (let ((next-char (tyipeek nil stream nil eof-option)))
+            (if (or (eq next-char #\newline) (eq next-char #\return))
+              (eat-continuations ch stream eof-option)
+              ch))
+          ch))))
+  ; We have just read <backslash> and we know the next character is <newline> or <return>.
+  ; Eat line continuations until we come to something which doesn't match, or we reach eof.
+  (defun eat-continuations (ch stream eof-option)
+    (setq ch (tyi-raw stream eof-option))
+    (do () ((not (or (eq ch #\newline) (eq ch #\return))))
+      (let ((next-char (tyipeek nil stream nil eof-option)))
+        (if (and (eq ch #\return) (eq next-char #\newline))
+          (tyi-raw stream eof-option)))
+      (setq ch (tyi-raw stream eof-option))
+      (let ((next-char (tyipeek nil stream nil eof-option)))
+        (if (and (eq ch #\\ ) (or (eq next-char #\return) (eq next-char #\newline)))
+          (setq ch (tyi-raw stream eof-option))
+          (return-from eat-continuations ch))))
+    ch))
+
 (defun tyipeek (&optional peek-type &rest read-args)
-  (if read-args
-      (peek-char peek-type (car read-args))
-      (peek-char peek-type)))
+  (eval `(peek-char ,peek-type ,@read-args)))
 
 ;;I don't think these are terribly useful so why use them.
 

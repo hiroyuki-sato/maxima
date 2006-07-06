@@ -1,6 +1,9 @@
 ;;Autoloads for maxima
-(in-package "MAXIMA")
+(in-package :maxima)
 
+($auto_mexpr '$nusum "nusum")
+($auto_mexpr '$unsum "nusum")
+($auto_mexpr '$funcsolve "nusum")
 
 (auto-mexpr '$trigrat '|trigrat|)
 ($auto_mexpr '$gcdex '|gcdex|)
@@ -19,6 +22,7 @@
 ($auto_mexpr '$declare_linear_operator "misc/declin")
 
 ($auto_mexpr '$nonumfactor "simplification/genut")
+(meval '((%setup_autoload simp) &bffac $bfzeta))
 
 ;jfa
 ($auto_mexpr '$eigenvectors '|eigen|)

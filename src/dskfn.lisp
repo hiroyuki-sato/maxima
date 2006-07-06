@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;	** (c) Copyright 1982 Massachusetts Institute of Technology **
 
 (macsyma-module dskfn)
@@ -176,18 +176,21 @@
 
 #+(or cl nil)
 (defun dsksetup (x storefl fasdumpfl fn)
-  (let (#-cl(*nopoint t) prinlength prinlevel ofile file
+  (let (#-cl(*nopoint t) prinlength prinlevel ofile file (fname (nsubstring (print-invert-case (car x)) 1))
 	    *print-gensym*
 	    list fasdeqlist fasdnoneqlist maxima-error #+pdp10 length #+pdp10 oint)
     #+cl
-    (setq savefile (open (nsubstring (print-invert-case (car x)) 1) :direction :output))
+    (setq savefile
+      (if (or (eq $file_output_append '$true) (eq $file_output_append t))
+        (open fname :direction :output :if-exists :append :if-does-not-exist :create)
+        (open fname :direction :output :if-exists :supersede :if-does-not-exist :create)))
     #+nil
     (setq savefile (open ($filename_merge (car x)) :out))
     (setq file (list (car x)))
     (when (null fasdumpfl)
       (princ ";;; -*- Mode: LISP; package:maxima; syntax:common-lisp; -*- " savefile)
       (terpri savefile)
-      (princ "(in-package \"MAXIMA\")" savefile)
+      (princ "(in-package :maxima)" savefile)
       )
     (dolist (u x)
       (cond ((atom u) (if (not (symbolp u)) (improper-arg-err u fn)))
@@ -214,8 +217,8 @@
       ((null x))
     (cond ((setq val (listargp (car x)))
 	   (setq x (nconc (getlabels (car val) (cdr val) nil) (cdr x))))
-	  ((setq val (assq (car x) '(($clabels . $inchar) ($dlabels . $outchar)
-				     ($elabels . $linechar))))
+	  ((setq val (assq (car x) '(($inlabels . $inchar) ($outlabels . $outchar)
+				     ($linelabels . $linechar))))
 	   (setq x (nconc (getlabels* (eval (cdr val)) nil) (cdr x)))))
     (if (not (atom (car x)))
 	(setq rename (cadar x) item (getopr (caddar x)))

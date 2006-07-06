@@ -20,7 +20,7 @@
 ;; correspond with the naming conventions in commercial MACSYMA.
 ;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (macsyma-module itensor) ;; added 9/24/82 at UCB
 
@@ -127,6 +127,7 @@
 (defun plusi(l)
   (cond
     ((null l) l)
+    ((and (numberp (car l)) (< (car l) 0)) (plusi (cdr l)))
     ((atom (car l))  (cons (car l) (plusi (cdr l))))
     ((and (isprod (caar l)) (eq (cadar l) -1)) (plusi (cdr l)))
     (t (cons (car l) (plusi (cdr l))))
@@ -136,6 +137,7 @@
 (defun minusi(l)
   (cond
     ((null l) l)
+    ((and (numberp (car l)) (< (car l) 0)) (cons (neg (car l)) (plusi (cdr l))))
     ((atom (car l))  (minusi (cdr l)))
     (
       (and (isprod (caar l)) (eq (cadar l) -1)) 
@@ -829,7 +831,7 @@
     ((rpobj e) (contract5 e))
     (
       (eq (caar e) 'mtimes)
-      (mysubst0 (simplifya (cons '(mtimes) (contract4 e)) t) e)
+      (mysubst0 (simplifya (cons '(mtimes) (contract4a e)) t) e)
     )
     (
       (eq (caar e) 'mplus)
@@ -838,6 +840,32 @@
     (t
       (mysubst0 (simplifya (cons (car e) (mapcar '$contract (cdr e))) nil) e)
     )
+  )
+)
+
+(defun contract4a (e)
+  (prog (l1 l2)
+    (setq l1 nil l2 nil)
+    (dolist (o (cdr e))
+      (cond
+        ((or (atom o) (atom (car o))) (setq l1 (cons o l1)))
+        (
+          (and (eq (caar o) 'mexpt) (eq (caddr o) -1))
+          (setq l2 (cons (cadr o) l2))
+        )
+        (t (setq l1 (cons o l1)))
+      )
+    )
+    (cond (l1 (setq l1 (contract4 (cons '(mtimes) l1)))))
+    (cond (l2 (setq l1 (cons (list '(mexpt)
+                                   (cons '(mtimes)
+                                          (contract4 (cons '(mtimes) l2))
+                                   )
+                                   '-1
+                             )
+                             l1
+                       ))))
+    (return l1)
   )
 )
 
@@ -1589,6 +1617,17 @@
 			(CADR $COORD))) (RETURN (SUBST X Y (CHAINRULE E Y))))
 		(T (RETURN (CHAINRULE E X))))))
 
+(defun diffexpt1 (e x)
+;; RETURN: n*v^n*rename(v'/v) where e=v^n
+  (list '(mtimes) (caddr e) e
+    ($rename
+      (list '(mtimes) (list '(mexpt) (cadr e) -1)
+             (sdiff (cadr e) x)
+      )
+    )
+  )
+)
+
 ;Redefined so that the derivative of any indexed object appends on the
 ;coordinate index in sorted order unless the indexed object was declared
 ;constant in which case 0 is returned.
@@ -1616,7 +1655,7 @@
 		     (CDR E))))
 	     ((EQ (CAAR E) 'MTIMES)
  	      (ADDN (SDIFFTIMES (CDR E) X) T))
-	     ((EQ (CAAR E) 'MEXPT) (DIFFEXPT E X))
+	     ((EQ (CAAR E) 'MEXPT) (DIFFEXPT1 E X))
 ;;	     ((RPOBJ E) (DIFFRPOBJ E X))                        ;New line added
 ;;	     ((AND (BOUNDP '$IMETRIC) (EQ (CAAR E) '%DETERMINANT);New line added
 ;;		   (EQ (CADR E) $IMETRIC))
@@ -1630,7 +1669,7 @@
 	     ((NOT (DEPENDS E X))
 	      (COND ((FIXP X) (LIST '(%DERIVATIVE) E X))
 		    ((ATOM X) 0.)
-		    (T (LIST '(%DERIVATIVE E X)))))
+		    (T (LIST '(%DERIVATIVE) E X))))
 							  ;This line moved down
 	     ((EQ (CAAR E) 'MNCTIMES)
 	      (SIMPLUS (LIST '(MPLUS)
@@ -1666,6 +1705,17 @@
    (if (null l) (return out))
    (setq left (cons term left))
    (go loop)))
+
+(defun idiffexpt1 (e x)
+;; RETURN: n*v^n*rename(v'/v) where e=v^n
+  (list '(mtimes) (caddr e) e
+    ($rename
+      (list '(mtimes) (list '(mexpt) (cadr e) -1)
+             (idiff (cadr e) x)
+      )
+    )
+  )
+)
 
 (defun idiffexpt (e x)
   (if (mnump (caddr e))
@@ -1813,7 +1863,7 @@
 		     (CDR E))))
 	     ((EQ (CAAR E) 'MTIMES)
  	      (ADDN (IDIFFTIMES (CDR E) X) T))
-	     ((EQ (CAAR E) 'MEXPT) (IDIFFEXPT E X))
+	     ((EQ (CAAR E) 'MEXPT) (IDIFFEXPT1 E X))
 	((RPOBJ E) (DIFFRPOBJ E X))
     ((AND (BOUNDP '$IMETRIC) (EQ (CAAR E) '%DETERMINANT)
       (EQ (CADR E) $IMETRIC))
@@ -1842,8 +1892,8 @@
 ;;		     (ICHAINRULE E X))
 ;;           (idiff%deriv (list e x 1)))
              0)
-		    ((FREEL (CDR E) X) 0.)
-		    (T (DIFF%DERIV (LIST E X 1.)))))
+;;		    ((FREEL (CDR E) X) 0.)
+		    (T (IDIFF%DERIV (LIST E X 1.)))))
 	     ((MEMQ (CAAR E) '(%SUM %PRODUCT)) (IDIFFSUMPROD E X))
 	     (T (IDIFFGRAD E X))
   )
@@ -1987,6 +2037,19 @@
       )
       ((atom e))
       (
+        (and (eq (caar e) 'mexpt) (eq (caddr e) -1))
+        (setq x (indices (cadr e)) bottom (append bottom (car x))
+                            top (append top (cadr x)))
+      )
+      (
+        (and (memq (caar e) '(%derivative $diff))
+             (or (eq (length e) 3) (eq (cadddr e) 1)))
+        (setq x (indices (cadr e)) bottom (append bottom (cadr x))
+                            top (append top (car x)))
+        (setq x (indices (caddr e)) bottom (append bottom (car x))
+                            top (append top (cadr x)))
+      )
+      (
         (memq (caar e) '(mtimes mnctimes mncexpt))
         (dolist (v (cdr e))
           (setq x (indices v) bottom (append bottom (cadr x))
@@ -2030,11 +2093,11 @@
         (setq x (indices (cadr e)) bottom (append bottom (cadr x))
               top (append top (car x)))
       )
-      (
-        (memq (caar e) '(%derivative $diff))
-        (setq x (indices (cadr e)) bottom (append bottom (cadr x))
-              top (append top (car x)))
-      )
+;      (
+;        (memq (caar e) '(%derivative $diff))
+;        (setq x (indices (cadr e)) bottom (append bottom (cadr x))
+;              top (append top (car x)))
+;      )
     )
     (return (list top bottom))
   )
@@ -2115,7 +2178,10 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 (DEFUN RENAME (E)                           ;Renames dummy indices consistently
        (COND
 	((ATOM E) E)
-	((OR (RPOBJ E) (EQ (CAAR E) 'MTIMES));If an indexed object or a product
+	((OR (RPOBJ E) (EQ (CAAR E) 'MTIMES););If an indexed object or a product
+        (and (memq (caar e) '(%derivative $diff)) ; or a derivative expression
+             (or (eq (length e) 3) (eq (cadddr e) 1)))
+    )
 	 ((LAMBDA  (L) 
 	(SIMPTIMES (REORDER (COND (L (SUBLIS (itensor-CLEANUP L (SETQ N INDEX)) E))(T E))) 1 T))
 	  (CDADDR ($INDICES E))                     ;Gets list of dummy indices

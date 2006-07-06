@@ -26,6 +26,7 @@
 (defvar *maxima-layout-autotools*)
 (defvar *maxima-userdir*)
 (defvar *maxima-tempdir*)
+(defvar *maxima-lang-subdir*)
 
 (defun print-directories ()
   (format t "maxima-prefix=~a~%" *maxima-prefix*)
@@ -42,15 +43,17 @@
   (format t "maxima-layout-autotools=~a~%" *maxima-layout-autotools*)
   (format t "maxima-userdir=~a~%" *maxima-userdir*)
   (format t "maxima-tempdir=~a~%" *maxima-tempdir*)
+  (format t "maxima-lang-subpdir=~a~%" *maxima-lang-subdir*)
   ($quit))
 
 (defvar *maxima-lispname* #+clisp "clisp"
 	#+cmu "cmucl"
+	#+scl "scl"
 	#+sbcl "sbcl"
 	#+gcl "gcl"
 	#+allegro "acl6"
 	#+openmcl "openmcl"
-	#-(or clisp cmu sbcl gcl allegro openmcl) "unknownlisp")
+	#-(or clisp cmu scl sbcl gcl allegro openmcl) "unknownlisp")
 
 
 
@@ -64,6 +67,10 @@
   "Directories to search for demos.")
 
 (defvar $file_search_usage nil)
+
+(defvar $file_search_tests nil
+  "Directories to search for maxima test suite")
+
 (defvar $chemin nil)
 
 
@@ -76,7 +83,8 @@
 		 (let ((dev (pathname-device str)))
 		   (if (consp dev)
 		       (setf dev (first dev)))
-		   (if (and dev (not (string= dev "")))
+		   (if (and dev (not (eq dev :unspecific))
+			    (not (string= dev "")))
 		       (concatenate 'string
 				    (string-right-trim 
 				     ":" dev) ":")
@@ -183,6 +191,55 @@
 		  "/tmp")))
     (maxima-parse-dirstring base-dir)))
 
+(defun set-locale ()
+  (let (locale language territory codeset)
+    (setq cl-info::*index-name* "index")
+    (unless  (setq *maxima-lang-subdir* (maxima-getenv "MAXIMA_LANG_SUBDIR"))
+	(setq locale (or (maxima-getenv "LC_ALL")
+                         (maxima-getenv "LC_MESSAGES")
+                         (maxima-getenv "LANG")))
+	(cond
+	    ((null locale) 
+		(setq *maxima-lang-subdir* nil))
+	    ((zl-member locale '("C" "POSIX" "c" "posix")) 		 
+		(setq *maxima-lang-subdir* nil))
+	    (t  (when (eql (position #\. locale) 5)
+		    (setq codeset (string-downcase (subseq locale 6))))
+		(when (eql (position #\_ locale) 2)
+		    (setq territory (string-downcase (subseq locale 3 5))))
+		(setq language (string-downcase (subseq locale 0 2)))
+		;; Set *maxima-lang-subdir* only for known languages.
+		;; Extend procedure below as soon as new translation
+		;; is available. 
+		(cond
+		    ;; English
+		    ((equal language "en")
+			(setq *maxima-lang-subdir* nil))
+		    ;; Latin-1 aka iso-8859-1 languages 
+		    ((zl-member language '("es" "pt"))
+		      (if (zl-member codeset '("utf-8" "utf8"))
+		    	    (setq *maxima-lang-subdir* (concatenate 'string language ".utf8"))
+		    	    (setq *maxima-lang-subdir* language)))
+		    (t  (setq *maxima-lang-subdir* nil)))
+		;; Translation of the word "Index" to match node "Fuction and Variable Index"
+		(cond
+		    ((equal language "es")
+			(setq cl-info::*index-name* (format nil "~andice" (code-char #xCD))))
+		    ((equal language "pt")
+			(setq cl-info::*index-name* (format nil "~andice" (code-char #xCD)))) 
+		)
+		;; Additional language-dependent pattern to match nodes such as 
+		;;  -- Function: foo (x)
+		;; or
+		;;  -- Option variable: bar
+		(cond 
+		    ;; This pattern is suitable for all Latin-1 (aka ISO-8859-1) langages
+		    ((zl-member language '("es" "pt"))
+		        (setq cl-info::*extra-chars* (format nil "~a-~a" (code-char #xC0) (code-char #xFF))))
+		)
+	    )))
+   (setq cl-info::*lang-subdir* *maxima-lang-subdir*)))    
+
 (defun set-pathnames ()
   (let ((maxima-prefix-env (maxima-getenv "MAXIMA_PREFIX"))
 	(maxima-layout-autotools-env (maxima-getenv "MAXIMA_LAYOUT_AUTOTOOLS"))
@@ -210,13 +267,13 @@
 	(setq *maxima-tempdir* (default-tempdir))))
   
   (let* ((ext #+gcl "o"
-	      #+cmu (c::backend-fasl-file-type c::*target-backend*)
+	      #+(or cmu scl) (c::backend-fasl-file-type c::*target-backend*)
 	      #+sbcl "fasl"
 	      #+clisp "fas"
 	      #+allegro "fasl"
 	      #+(and openmcl darwinppc-target) "dfsl"
 	      #+(and openmcl linuxppc-target) "pfsl"
-	      #-(or gcl cmu sbcl clisp allegro openmcl)
+	      #-(or gcl cmu scl sbcl clisp allegro openmcl)
 	      "")
 	 (lisp-patterns (concatenate 
 			 'string "###.{"
@@ -224,7 +281,10 @@
 	 (maxima-patterns "###.{mac,mc}")
 	 (demo-patterns "###.{dem,dm1,dm2,dm3,dmt}")
 	 (usage-patterns "##.{usg,texi}")
-	 (share-subdirs "{affine,algebra,calculus,combinatorics,contrib,contrib/nset,contrib/pdiff,contrib/numericalio,contrib/descriptive,contrib/distrib,linearalgebra,diffequations,graphics,integequations,integration,macro,matrix,misc,numeric,physics,simplification,specfunctions,sym,tensor,trigonometry,utils,vector}"))
+	 (share-subdirs-list '("affine" "algebra" "calculus" "combinatorics" "contrib" "contrib/nset" "contrib/pdiff" "contrib/numericalio" "contrib/descriptive" "contrib/distrib" "contrib/diffequations" "contrib/simplex" "contrib/solve_rec" "contrib/stringproc" "contrib/Zeilberger" "linearalgebra" "diffequations" "graphics" "integequations" "integration" "macro" "matrix" "misc" "numeric" "orthopoly" "physics" "simplification" "sym" "tensor" "trigonometry" "utils" "vector"))
+     ; Smash the list of share subdirs into a string of the form "{affine,algebra,...,vector}" .
+	 (share-subdirs (format nil "{~{~A~^,~}}" share-subdirs-list)))
+
     (setq $file_search_lisp
 	  (list '(mlist)
 		;; actually, this entry is not correct.
@@ -253,12 +313,25 @@
 		(combine-path (list *maxima-sharedir* share-subdirs
 				    usage-patterns))
 		(combine-path (list *maxima-docdir* usage-patterns))))
+    (setq $file_search_tests
+	  `((mlist) ,(combine-path (list *maxima-testsdir* maxima-patterns))))
     (setq $chemin
 	  (list '(mlist)
 		(combine-path (list *maxima-symdir* lisp-patterns))
 		(combine-path (list *maxima-symdir* maxima-patterns))))
-    (setq cl-info::*info-paths* (list (concatenate 'string
-						   *maxima-infodir* "/")))))
+    (setq cl-info::*info-paths* (list (concatenate 'string *maxima-infodir* "/")))
+    ;; Share subdirs are not required here since all .info files are installed
+    ;; in one directory *maxima-infodir* -- there is no info files in share.
+    ;; vvzhy Jan 2, 2006
+    ;(setq L (mapcar #'(lambda (x) (concatenate 'string *maxima-sharedir* "/" x "/")) share-subdirs-list))
+    ;(setq cl-info::*info-paths* (append cl-info::*info-paths* L))
+
+    ; Look for "foo.info" in share directory "foo".
+    (loop for d in share-subdirs-list do
+      (let ((name (if (find #\/ d) (unix-like-basename d) d)))
+        (when (cl-info::file-search name cl-info::*info-paths* '("info") nil)
+          #+debug (format t "SET-PATHNAMES: found an info file for share directory ~S~%" name)
+          (nconc cl-info::*default-info-files* `(,(concatenate 'string name ".info"))))))))
 
 (defun get-dirs (path)
   #+(or :clisp :sbcl)
@@ -272,7 +345,7 @@
     (if (equal (subseq pathstring (- len 1) len) "/")
 	(progn (setf len (- len 1))
 	       (setf pathstring (subseq pathstring 0 len))))
-    (subseq pathstring (+ (position #\/ pathstring :from-end t) 1) len)))
+    (subseq pathstring (+ (or (position #\/ pathstring :from-end t) (position #\\ pathstring :from-end t)) 1) len)))
 
 (defun unix-like-dirname (path)
   (let* ((pathstring (namestring path))
@@ -280,7 +353,7 @@
     (if (equal (subseq pathstring (- len 1) len) "/")
 	(progn (setf len (- len 1))
 	       (setf pathstring (subseq pathstring 0 len))))
-    (subseq pathstring 0 (position #\/ pathstring :from-end t))))
+    (subseq pathstring 0 (or (position #\/ pathstring :from-end t) (position #\\ pathstring :from-end t)))))
 
 (defun list-avail-action ()
   (let* ((maxima-verpkglibdir (if (maxima-getenv "MAXIMA-VERPKGLIBDIR")
@@ -422,7 +495,7 @@
 
 (defun cl-user::run ()
   "Run Maxima in its own package."
-  (in-package "MAXIMA")
+  (in-package :maxima)
   (setf *load-verbose* nil)
   (setf *debugger-hook* #'maxima-lisp-debugger)
   (let ((input-stream *standard-input*)
@@ -434,6 +507,7 @@
     
     (catch 'to-lisp
       (set-pathnames)
+      (set-locale)
       (setf (values input-stream batch-flag) 
 	    (process-maxima-args input-stream batch-flag))
       (progn
@@ -484,8 +558,8 @@
 ;;; into *builtin-symbol-props* would cause a hang. Lacking a better
 ;;; solution, we simply avoid those symbols.
 (let ((problematic-symbols '($%gamma $%phi $global $%pi $%e)))
-  (do-symbols (s (find-package 'maxima))
-    (when (and (eql (symbol-package s) (find-package 'maxima))
+  (do-symbols (s (find-package :maxima))
+    (when (and (eql (symbol-package s) (find-package :maxima))
 	       (memq (getchar s 1) '($ % &)))
       (push s *builtin-symbols*)
       (when (not (memq s problematic-symbols))

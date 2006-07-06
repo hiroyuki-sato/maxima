@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;to do add for other cl implementations.
 ;;(defun remove-type ( l)
 ;;  (loop for v in l
@@ -25,6 +25,11 @@
   (lisp:clines "#define MAKE_UNSPECIAL(x) (check_type_symbol(&(x)),(x)->s.s_stype = stp_ordinary, Cnil)")
   (lisp:defentry make-unspecial (lisp:object) (lisp:object "MAKE_UNSPECIAL")))
 
+#+(or scl cmu)
+(defun make-unspecial (symbol)
+  (ext:clear-info variable c::kind symbol)
+  symbol)
+
 
 (defmacro declare-top (&rest decl-specs)
   `(eval-when
@@ -37,10 +42,12 @@
 	     when (eql (car v) 'unspecial)
 	     collect `(progn
 		       ,@(loop for w in (cdr v)
-				collect #-gcl  `(remprop ',w
+				collect #-(or gcl scl cmu)
+                                       `(remprop ',w
 						 #-excl 'special
 						 #+excl 'excl::.globally-special.)
-				#+gcl `(make-unspecial ',w)))
+				#+(or gcl scl cmu)
+			        `(make-unspecial ',w)))
 	     else collect `(proclaim ',v))))
 
 ;;this list should contain all specials required by runtime or more
@@ -81,7 +88,7 @@
   $negsumdispflag $newfac $nolabels $norepeat $noundisp $numer
   $numer_pbranch $operators $opsubst $optimprefix $optionset $outchar
   $pagepause $parsewindow $partswitch $pfeformat $piece $pointbound
-  $poislim $powerdisp $prederror $prodhack $programmode $props
+  $poislim $powerdisp $prederror $programmode $props
   $radexpand $ratalgdenom $ratdenomdivide $ratepsilon $ratexpand
   $ratfac $ratmx $ratprint $ratsimpexpons $ratvars $ratweights
   $ratwtlvl $realonly $refcheck $resultant $rmxchar $rombergabs
@@ -91,7 +98,7 @@
   $solvedecomposes $solveexplicit $solvefactors $solvenullwarn
   $solveradcan $solvetrigwarn $solve_inconsistent_error $sparse
   $special $sqrtdispflag $stardisp $storenum $sublis_apply_lambda
-  $subnumsimp $subscrmap $sumexpand $sumhack $sumsplitfact
+  $subnumsimp $subscrmap $sumexpand $sumsplitfact
   $superlogcon $suspend $taylor_logexpand
   $taylor_truncate_polynomials $timer $timer_devalue
   $to_call_lisp_compiler $trace $trace_break_arg $trace_max_indent

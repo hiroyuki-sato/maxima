@@ -8,7 +8,7 @@
 ;;; OPTIONS functions
 ;;; (c) Copyright 1980, Massachusetts Institute of Technology
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (macsyma-module option)
 
@@ -549,7 +549,7 @@
 
 (subc $minor (c))
 
-(subc $mod (c))
+(subc $polymod (c))
 
 (subc $modedeclare (c))
 
