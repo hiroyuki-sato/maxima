@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
    Esse é um Manual do Maxima no formato Texinfo
 
@@ -9,9 +9,2049 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: Equações
+
+21.1 Definições para Equações
+=============================
+
+ -- Variável: %rnum_list
+     Valor padrão: `[]'
+
+     `%rnum_list' é a lista de variáveis introduzidas em soluções por
+     `algsys'.  `%r' variáveis São adicionadas a `%rnum_list' na ordem
+     em que forem criadas.  Isso é conveniente para fazer substituições
+     dentro da solução mais tarde.  É recomendado usar essa lista em
+     lugar de fazer `concat ('%r, j)'.
+
+
+ -- Variável: algexact
+     Valor padrão: `false'
+
+     `algexact' afeta o comportamento de `algsys' como segue:
+
+     Se `algexact' é `true', `algsys' sempre chama `solve' e então usa
+     `realroots' sobre falhas de `solve'.
+
+     Se `algexact' é `false', `solve' é chamada somente se o eliminante
+     não for de uma variável, ou se for uma quadrática ou uma
+     biquadrada.
+
+     Dessa forma `algexact: true' não garante soluções exatas, apenas
+     que `algsys' tentará primeiro pegar soluções exatas, e somente
+     retorna aproximações quando tudo mais falha.
+
+
+ -- Função: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
+ -- Função: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
+     Resolve polinômios simultâneos <expr_1>, ..., <expr_m> ou equações
+     polinômiais <eqn_1>, ..., <eqn_m> para as variáveis <x_1>, ...,
+     <x_n>.  Uma expressão <expr> é equivalente a uma equação `<expr> =
+     0'.  Pode existir mais equações que variáveis ou vice-versa.
+
+     `algsys' retorna uma lista de soluções, com cada solução dada com
+     uma lista de valores de estado das equações das variáveis <x_1>,
+     ..., <x_n> que satisfazem o sistema de equações.  Se `algsys' não
+     pode achar uma solução, uma lista vazia `[]' é retornada.
+
+     Os símbolos `%r1', `%r2', ..., são introduzidos tantos quantos
+     forem necessários para representar parâmetros arbitrários na
+     solução; essas variáveis são também anexadas à lista `%rnum_list'.
+
+     O método usado é o seguinte:
+
+     (1) Primeiro as equações são fatoradas e quebradas em subsistemas.
+
+     (2) Para cada subsistema <S_i>, uma equação <E> e uma variável <x>
+     são selecionados.  A variável é escolhida para ter o menor grau
+     não zero.  Então a resultante de <E> e <E_j> em relação a <x> é
+     calculada para cada um das equações restantes <E_j> nos
+     subsistemas <S_i>.  Isso retorna um novo subsistema <S_i'> em umas
+     poucas variáveis, como <x> tenha sido eliminada.  O processo agora
+     retorna ao passo (1).
+
+     (3) Eventualmente, um subsistema consistindo de uma equação
+     simples é obtido.  Se a equação é de várias variáveis e
+     aproximações na forma de números em ponto flutuante nã tenham sido
+     introduzidas, então `solve' é chamada para achar uma solução exata.
+
+     Em alguns casos, `solve' não está habilitada a achar uma solução,
+     ou se isso é feito a solução pode ser uma expressão expressão
+     muito larga.
+
+     Se a equação é de uma única variável e é ou linear, ou quadrática,
+     ou biquadrada, então novamente `solve' é chamada se aproximações
+     não tiverem sido introduzidas.  Se aproximações tiverem sido
+     introduzidas ou a equação não é de uma única variável e nem tão
+     pouco linear, quadratica, ou biquadrada, então o comutador
+     `realonly' é `true', A função `realroots' é chamada para achar o
+     valor real das soluções.  Se `realonly' é `false', então
+     `allroots' é chamada a qual procura por soluções reais e complexas.
+
+     Se `algsys' produz uma solução que tem poucos digitos
+     significativos que o requerido, o usuário pode escolher o valor de
+     `algepsilon' para um valor maior.
+
+     Se `algexact' é escolhido para `true', `solve' será sempre chamada.
+
+     (4) Finalmente, as soluções obtidas no passo (3) são substituídas
+     dentro dos níveis prévios e o processo de solução retorna para (1).
+
+     Quando `algsys' encontrar uma equação de várias variáveis que
+     contém aproximações em ponto flutuante (usualmente devido a suas
+     falhas em achar soluções exatas por um estágio mais fácil), então
+     não tentará aplicar métodos exatos para tais equações e em lugar
+     disso imprime a mensagem: "`algsys' cannot solve - system too
+     complicated."
+
+     Interações com `radcan' podem produzir expressões largas ou
+     complicadas.  Naquele caso, pode ser possível isolar partes do
+     resultado com `pickapart' ou `reveal'.
+
+     Ocasionalmente, `radcan' pode introduzir uma unidade imaginária
+     `%i' dentro de uma solução que é atualmente avaliada como real.
+
+     Exemplos:
+
+     ++
+          (%i1) e1: 2*x*(1 - a1) - 2*(x - 1)*a2;
+          (%o1)              2 (1 - a1) x - 2 a2 (x - 1)
+          (%i2) e2: a2 - a1;
+          (%o2)                        a2 - a1
+          (%i3) e3: a1*(-y - x^2 + 1);
+                                             2
+          (%o3)                   a1 (- y - x  + 1)
+          (%i4) e4: a2*(y - (x - 1)^2);
+                                                 2
+          (%o4)                   a2 (y - (x - 1) )
+          (%i5) algsys ([e1, e2, e3, e4], [x, y, a1, a2]);
+          (%o5) [[x = 0, y = %r1, a1 = 0, a2 = 0],
+
+                                            [x = 1, y = 0, a1 = 1, a2 = 1]]
+          (%i6) e1: x^2 - y^2;
+                                        2    2
+          (%o6)                        x  - y
+          (%i7) e2: -1 - y + 2*y^2 - x + x^2;
+                                   2        2
+          (%o7)                 2 y  - y + x  - x - 1
+          (%i8) algsys ([e1, e2], [x, y]);
+                           1            1
+          (%o8) [[x = - -------, y = -------],
+                        sqrt(3)      sqrt(3)
+
+                  1              1             1        1
+          [x = -------, y = - -------], [x = - -, y = - -], [x = 1, y = 1]]
+               sqrt(3)        sqrt(3)          3        3
+
+
+ -- Função: allroots (<expr>)
+ -- Função: allroots (<eqn>)
+     Calcula aproximações numéricas de raízes reais e complexas do
+     polinômio <expr> ou equação polinômial <eqn> de uma variável.
+
+     O sinalizador `polyfactor' quando `true' faz com que `allroots'
+     fatore o polinômio sobre os números reais se o polinômio for real,
+     ou sobre os números complexos, se o polinômio for complexo.
+
+     `allroots' pode retornar resultados imprecisos no caso de
+     multiplas raízes.  Se o polinômio for real, `allroots (%i*<p>)')
+     pode retornar aproximações mais precisas que `allroots (<p>)',
+     como `allroots' invoca um algorítmo diferente naquele caso.
+
+     `allroots' rejeita não-polinômios.  Isso requer que o numerador
+     após a classificação (`rat''ing) poderá ser um polinômio, e isso
+     requer que o denominador seja quando muito um número complexo.
+     Com um resultado disso `allroots' irá sempre retornar uma
+     expressão equivalente (mas fatorada), se `polyfactor' for `true'.
+
+     Para polinômios complexos um algorítmo por Jenkins and Traub é
+     usado (Algorithm 419, Comm.  ACM, vol.  15, (1972), p.  97).  Para
+     polinômios reais o algorítmo usado é devido a Jenkins (Algorithm
+     493, ACM TOMS, vol.  1, (1975), p.178).
+
+     Exemplos:
+
+          (%i1) eqn: (1 + 2*x)^3 = 13.5*(1 + x^5);
+                                      3          5
+          (%o1)              (2 x + 1)  = 13.5 (x  + 1)
+          (%i2) soln: allroots (eqn);
+          (%o2) [x = .8296749902129361, x = - 1.015755543828121,
+
+          x = .9659625152196369 %i - .4069597231924075,
+
+          x = - .9659625152196369 %i - .4069597231924075, x = 1.0]
+          (%i3) for e in soln
+                  do (e2: subst (e, eqn), disp (expand (lhs(e2) - rhs(e2))));
+                                - 3.5527136788005E-15
+
+                               - 5.32907051820075E-15
+
+                   4.44089209850063E-15 %i - 4.88498130835069E-15
+
+                  - 4.44089209850063E-15 %i - 4.88498130835069E-15
+
+                                 3.5527136788005E-15
+
+          (%o3)                         done
+          (%i4) polyfactor: true$
+          (%i5) allroots (eqn);
+          (%o5) - 13.5 (x - 1.0) (x - .8296749902129361)
+
+                                     2
+           (x + 1.015755543828121) (x  + .8139194463848151 x
+
+           + 1.098699797110288)
+
+
+ -- Variável: backsubst
+     Valor padrão: `true'
+
+     Quando `backsubst' é `false', evita substituições em expressões
+     anteriores após as equações terem sido triangularizadas.  Isso pode
+     ser de grande ajuda em problemas muito grandes onde substituição
+     em expressões anteriores pode vir a causar a geração de expressões
+     extremamente largas.
+
+
+ -- Variável: breakup
+     Valor padrão: `true'
+
+     Quando `breakup' é `true', `solve' expressa soluções de equações
+     cúbicas e quárticas em termos de subexpressões comuns, que são
+     atribuídas a rótulos de expressões intermediárias (`%t1', `%t2',
+     etc.).  De outra forma, subexpressões comuns não são identificadas.
+
+     `breakup: true' tem efeito somente quando `programmode' é `false'.
+
+     Exemplos:
+
+          (%i1) programmode: false$
+          (%i2) breakup: true$
+          (%i3) solve (x^3 + x^2 - 1);
+
+                                  sqrt(23)    25 1/3
+          (%t3)                  (--------- + --)
+                                  6 sqrt(3)   54
+          Solution:
+
+                                                sqrt(3) %i   1
+                                                ---------- - -
+                          sqrt(3) %i   1            2        2   1
+          (%t4)    x = (- ---------- - -) %t3 + -------------- - -
+                              2        2            9 %t3        3
+
+                                                sqrt(3) %i   1
+                                              - ---------- - -
+                        sqrt(3) %i   1              2        2   1
+          (%t5)    x = (---------- - -) %t3 + ---------------- - -
+                            2        2             9 %t3         3
+
+                                             1     1
+          (%t6)                  x = %t3 + ----- - -
+                                           9 %t3   3
+          (%o6)                    [%t4, %t5, %t6]
+          (%i6) breakup: false$
+          (%i7) solve (x^3 + x^2 - 1);
+          Solution:
+
+                       sqrt(3) %i   1
+                       ---------- - -
+                           2        2        sqrt(23)    25 1/3
+          (%t7) x = --------------------- + (--------- + --)
+                       sqrt(23)    25 1/3    6 sqrt(3)   54
+                    9 (--------- + --)
+                       6 sqrt(3)   54
+
+                                                        sqrt(3) %i   1    1
+                                                     (- ---------- - -) - -
+                                                            2        2    3
+
+                     sqrt(23)    25 1/3  sqrt(3) %i   1
+          (%t8) x = (--------- + --)    (---------- - -)
+                     6 sqrt(3)   54          2        2
+
+                                                      sqrt(3) %i   1
+                                                    - ---------- - -
+                                                          2        2      1
+                                                + --------------------- - -
+                                                     sqrt(23)    25 1/3   3
+                                                  9 (--------- + --)
+                                                     6 sqrt(3)   54
+
+                      sqrt(23)    25 1/3             1             1
+          (%t9)  x = (--------- + --)    + --------------------- - -
+                      6 sqrt(3)   54          sqrt(23)    25 1/3   3
+                                           9 (--------- + --)
+                                              6 sqrt(3)   54
+          (%o9)                    [%t7, %t8, %t9]
+
+
+ -- Função: dimension (<eqn>)
+ -- Função: dimension (<eqn_1>, ..., <eqn_n>)
+     `dimen' é um pacote de análise dimensional.  `load ("dimen")'
+     chama esse pacote.  `demo ("dimen")' mostra uma cura demostração.
+
+
+ -- Variável: dispflag
+     Valor padrão: `true'
+
+     Se escolhida para `false' dentro de um `block' inibirá a
+     visualização da saída gerada pelas funções solve chamadas de
+     dentro de `block'.  Terminando `block' com um sinal de dolar, $,
+     escolhe `dispflag' para `false'.
+
+
+ -- Função: funcsolve (<eqn>, <g>(<t>))
+     Retorna `[<g>(<t>) = ...]'  ou `[]', dependendo de existir ou não
+     uma função racional `<g>(<t>)' satisfazendo <eqn>, que deve ser de
+     primeira ordem, polinômio linear em (para esse caso) `<g>(<t>)'
+     and `<g>(<t>+1)'
+
+          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) = (n - 1)/(n + 2);
+                                      (n + 3) f(n + 1)   n - 1
+          (%o1)        (n + 1) f(n) - ---------------- = -----
+                                           n + 1         n + 2
+          (%i2) funcsolve (eqn, f(n));
+
+          Equações dependentes eliminadas:  (4 3)
+                                             n
+          (%o2)                f(n) = ---------------
+                                      (n + 1) (n + 2)
+
+     Atenção: essa é uma implementação muito rudimentar - muitas
+     verificações de segurança e obviamente generalizações estão
+     ausêntes.
+
+
+ -- Variável: globalsolve
+     Valor padrão: `false'
+
+     When `globalsolve' for `true', variáveis para as quais as equações
+     são resolvidas são atribuidas aos valores da solução encontrados
+     por `linsolve', e por `solve' quando resolvendo duas ou mais
+     equações lineares.  Quando `globalsolve' for `false', soluções
+     encontradas por `linsolve' e por `solve' quando resolvendo duas ou
+     mais equações lineares são espressas como equações, e as variáveis
+     para as quais a equação foi resolvida não são atribuidas.
+
+     Quando resolvendo qualquer coisa outra que não duas equações
+     lineares ou mais, `solve' ignora `globalsolve'.  Outras funções
+     que resolvem equações (e.g., `algsys') sempre ignoram
+     `globalsolve'.
+
+     Exemplos:
+
+          (%i1) globalsolve: true$
+          (%i2) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
+          Solution
+
+                                           17
+          (%t2)                        x : --
+                                           7
+
+                                             1
+          (%t3)                        y : - -
+                                             7
+          (%o3)                     [[%t2, %t3]]
+          (%i3) x;
+                                         17
+          (%o3)                          --
+                                         7
+          (%i4) y;
+                                           1
+          (%o4)                          - -
+                                           7
+          (%i5) globalsolve: false$
+          (%i6) kill (x, y)$
+          (%i7) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
+          Solution
+
+                                           17
+          (%t7)                        x = --
+                                           7
+
+                                             1
+          (%t8)                        y = - -
+                                             7
+          (%o8)                     [[%t7, %t8]]
+          (%i8) x;
+          (%o8)                           x
+          (%i9) y;
+          (%o9)                           y
+
+
+ -- Função: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
+     `inteqn' é um pacote para resolver equações integrais.  `load
+     ("inteqn")' carrega esse pacote.
+
+     <ie> é a equação integral; <unk> é a função desconhecida; <tech> é
+     a técnica a ser tentada nesses dados acima (<tech> = `first'
+     significa: tente a primeira técnica que achar uma solução; <tech>
+     = `all' significa: tente todas a técnicas aplicáveis); <n> é o
+     número máximo de termos a serem usados de `taylor', `neumann',
+     `firstkindseries', ou `fredseries' (isso é também o número máximo
+     de ciclos de recurssão para o método de diferenciação); <guess> é
+     o inicial suposto para `neumann' ou `firstkindseries'.
+
+     Valores padrão do segundo até o quinto parâmetro são:
+
+     <unk>: `<p>(<x>)', onde <p> é a primeira função encontrada em um
+     integrando que é desconhecida para Maxima e <x> é a variável que
+     ocorre como um argumento para a primeira ocorrência de <p> achada
+     fora de uma integral no caso de equações `secondkind' , ou é
+     somente outra variável ao lado da variável de integração em
+     equações `firstkind'.  Se uma tentativa de procurar por <x> falha,
+     o usuário será perguntado para suprir a variável independente.
+
+     tech: `first'
+
+     n: 1
+
+     guess: `none' o que fará com que `neumann' e `firstkindseries' use
+     `<f>(<x>)' como uma suposição inicial.
+
+
+ -- Variável de opção: ieqnprint
+     Valor padrão: `true'
+
+     `ieqnprint' governa o comportamento do resultado retornado pelo
+     comando `ieqn'.  Quando `ieqnprint' é `false', as listas
+     retornadas pela função `ieqn' são da forma
+
+     [<solução>, <tecnica usada>, <nterms>, <sinalizador>]
+
+     onde <sinalizador> é retirado se a solução for exata.
+
+     De outra forma, isso é a palavra `approximate' ou `incomplete'
+     correspondendo à forma inexata ou forma aberta de solução,
+     respectivamente.  Se um método de série foi usado, <nterms>
+     fornece o número de termos usados (que poderá ser menor que os n
+     dados para `ieqn' se ocorrer um erro evita a geração de termos
+     adicionais).
+
+
+ -- Função: lhs (<expr>)
+     Retorna o lado esquerdo (isto é, o primeiro argumento) da
+     expressão <expr>, quando o operador de <expr> for um dos
+     operadores relacionais `< <= = # equal notequal >= >', um dos
+     operadores de atribuição `:= ::= : ::', ou um operadro infixo
+     definido pelo usuário, como declarado por meio de `infix'.
+
+     Quando <expr> for um átomo ou seu operador for alguma coisa que
+     não esses listados acima, `lhs' retorna <expr>.
+
+     Veja também `rhs'.
+
+     Exemplos:
+
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
+          (%i2) lhs (e);
+          (%o2)                        bb + aa
+          (%i3) rhs (e);
+          (%o3)                          cc
+          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb), lhs (aa > bb)];
+          (%o4)                   [aa, aa, aa, aa]
+          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)), lhs (notequal (aa, bb))];
+          (%o5)                   [aa, aa, aa, aa]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
+          (%o10)               [foo(x), bar(y), x, x]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) lhs (aa ][ bb);
+          (%o12)                         aa
+
+
+ -- Função: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
+     Resolve a lista de equações lineares simultâneas para a lista de
+     variáveis.  As expressões devem ser cada uma polinômios nas
+     variáveis e podem ser equações.
+
+     Quando `globalsolve' é `true' então variáveis que foram resolvidas
+     serão escolhidas para a solução do conjunto de equações
+     simultâneas.
+
+     Quando `backsubst' é `false', `linsolve' não realiza substituição
+     em equações anteriores após as equações terem sido
+     triangularizadas.  Isso pode ser necessário em problemas muito
+     grandes onde substituição em equações anteriores poderá causar a
+     geração de expressões extremamente largas.
+
+     Quando `linsolve_params' é `true', `linsolve' também gera símbolos
+     `%r' usados para representar parâmetros arbitrários descritos no
+     manual sob `algsys'.  De outra forma, `linsolve' resolve um
+     menor-determinado sistema de equações com algumas variáveis
+     expressas em termos de outras.
+
+          (%i1) e1: x + z = y$
+          (%i2) e2: 2*a*x - y = 2*a^2$
+          (%i3) e3: y - 2*z = 2$
+          (%i4) linsolve ([e1, e2, e3], [x, y, z]);
+          (%o4)            [x = a + 1, y = 2 a, z = a - 1]
+
+
+ -- Variável: linsolvewarn
+     Valor padrão: `true'
+
+     Quando `linsolvewarn' é `true', `linsolve' imprime uma mensagem
+     "Dependent equações eliminated".
+
+
+ -- Variável: linsolve_params
+     Valor padrão: `true'
+
+     Quando `linsolve_params' é `true', `linsolve' também gera os
+     símbolos `%r' usados para representar parâmetros arbitrários
+     descritos no manual sob `algsys'.  De outra forma, `linsolve'
+     resolve um menor-determinado sistema de equações com algumas
+     variáveis expressas em termos e outras.
+
+
+ -- Variável: multiplicities
+     Valor padrão: `not_set_yet'
+
+     `multiplicities' é escolhida para uma lista de multiplicidades das
+     soluções individuais retornadas por `solve' ou `realroots'.
+
+
+ -- Função: nroots (<p>, <low>, <high>)
+     Retorna o número de raízes reais do polinômio real de uma única
+     variável <p> no intervalo semi-aberto `(<low>, <high>]'.  Uma
+     extremidade do intervalo podem ser `minf' ou `inf'.  infinito e
+     mais infinito.
+
+     `nroots' usa o método das sequüências de Sturm.
+
+          (%i1) p: x^10 - 2*x^4 + 1/2$
+          (%i2) nroots (p, -6, 9.1);
+          (%o2)                           4
+
+
+ -- Função: nthroot (<p>, <n>)
+     Onde p é um polinômio com coeficientes inteiros e n é um inteiro
+     positivo retorna q, um polinômio sobre os inteiros, tal que q^n=p
+     ou imprime uma mensagem de erro indicando que p não é uma potência
+     n-ésima perfeita.  Essa rotina é mais rápida que `factor' ou mesmo
+     `sqfr'.
+
+
+ -- Variável: programmode
+     Valor padrão: `true'
+
+     Quando `programmode' é `true', `solve', `realroots', `allroots', e
+     `linsolve' retornam soluções como elementos em uma lista.  (Exceto
+     quando `backsubst' é escolhido para `false', nesse caso
+     `programmode: false' é assumido.)
+
+     Quando `programmode' é `false', `solve', etc.  cria rótulos de
+     expressões intermediárias `%t1', `t2', etc., e atribui as soluções
+     para eles.
+
+
+ -- Variável: realonly
+     Valor padrão: `false'
+
+     Quando `realonly' é `true', `algsys' retorna somente aquelas
+     soluções que estão livres de `%i'.
+
+
+ -- Função: realroots (<poly>, <bound>)
+     Acha todas as raízes reais de um polinômio também real de uma
+     única variável poly dentro de uma tolerância de limite que, se
+     menor que 1, faz com que todas as raízes da integral sejam achadas
+     exatamente.  O parâmetro limite pode ser arbitrariamente pequeno
+     com o objetivo de encontrar qualquer precisão desejada.  O
+     primeiro argumento pode também ser uma equação.  `realroots'
+     escolhe `multiplicities', útil em caso de multiplas raízes.
+     `realroots (<p>)' é equivalente a `realroots (<p>, rootsepsilon)'.
+     `rootsepsilon' é um número real usado para estabelecer um
+     intervalo de confidência para as ra@'izes.  Faça `example
+     (realroots)' para um exemplo.
+
+
+ -- Função: rhs (<expr>)
+     Retorna o lado direito (isto é, o segundo argumento) da expressão
+     <expr>, quando o operador de <expr> for um dos operadores
+     relacionais `< <= = # equal notequal >= >', um dos operadores de
+     atribuição `:= ::= : ::', ou um operador binário infixo definido
+     pelo usuário, como declarado por meio de `infix'.
+
+     Quando <expr> for um étomo ou seu operadro for alguma coisa que
+     não esses listados acima, `rhs' retorna 0.
+
+     Veja também `lhs'.
+
+     Exemplos:
+
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
+          (%i2) lhs (e);
+          (%o2)                        bb + aa
+          (%i3) rhs (e);
+          (%o3)                          cc
+          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb), rhs (aa > bb)];
+          (%o4)                   [bb, bb, bb, bb]
+          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)), rhs (notequal (aa, bb))];
+          (%o5)                   [bb, bb, bb, bb]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
+          (%o10)                  [2 x, 3 y, y, y]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) rhs (aa ][ bb);
+          (%o12)                         bb
+
+
+ -- Variável de opção: rootsconmode
+     Valor padrão: `true'
+
+     `rootsconmode' governa o comportamento do comando `rootscontract'.
+     Veja `rootscontract' para detalhes.
+
+
+ -- Função: rootscontract (<expr>)
+     Converte produtos de raízes em raízes de produtos.  Por exemplo,
+     `rootscontract (sqrt(x)*y^(3/2))' retorna `sqrt(x*y^3)'.
+
+     Quando `radexpand' é `true' e `domain' é `real', `rootscontract'
+     converte `abs' em `sqrt', e.g., `rootscontract (abs(x)*sqrt(y))'
+     retorna `sqrt(x^2*y)'.
+
+     Existe uma opção `rootsconmode' afetando `rootscontract' como
+     segue:
+
+          Problem            Value of        Result of applying
+                            rootsconmode        rootscontract
+
+          x^(1/2)*y^(3/2)      false          (x*y^3)^(1/2)
+          x^(1/2)*y^(1/4)      false          x^(1/2)*y^(1/4)
+          x^(1/2)*y^(1/4)      true           (x*y^(1/2))^(1/2)
+          x^(1/2)*y^(1/3)      true           x^(1/2)*y^(1/3)
+          x^(1/2)*y^(1/4)      all            (x^2*y)^(1/4)
+          x^(1/2)*y^(1/3)      all            (x^3*y^2)^(1/6)
+
+     Quando `rootsconmode' é `false', `rootscontract' contrai somente
+     como relação a expoentes de número racional cujos denominadores
+     são os mesmos.  A chave para os exemplos `rootsconmode: true' é
+     simplesmente que 2 divides 4 mas não divide 3.  `rootsconmode:
+     all' envolve pegar o menor multiplo comum dos denominadores dos
+     expoentes.
+
+     `rootscontract' usa `ratsimp' em uma maneira similar a
+     `logcontract'.
+
+     Exemplos:
+
+          (%i1) rootsconmode: false$
+          (%i2) rootscontract (x^(1/2)*y^(3/2));
+                                             3
+          (%o2)                      sqrt(x y )
+          (%i3) rootscontract (x^(1/2)*y^(1/4));
+                                             1/4
+          (%o3)                     sqrt(x) y
+          (%i4) rootsconmode: true$
+          (%i5) rootscontract (x^(1/2)*y^(1/4));
+          (%o5)                    sqrt(x sqrt(y))
+          (%i6) rootscontract (x^(1/2)*y^(1/3));
+                                             1/3
+          (%o6)                     sqrt(x) y
+          (%i7) rootsconmode: all$
+          (%i8) rootscontract (x^(1/2)*y^(1/4));
+                                        2   1/4
+          (%o8)                       (x  y)
+          (%i9) rootscontract (x^(1/2)*y^(1/3));
+                                       3  2 1/6
+          (%o9)                      (x  y )
+          (%i10) rootsconmode: false$
+          (%i11) rootscontract (sqrt(sqrt(x) + sqrt(1 + x))
+                              *sqrt(sqrt(1 + x) - sqrt(x)));
+          (%o11)                          1
+          (%i12) rootsconmode: true$
+          (%i13) rootscontract (sqrt(5 + sqrt(5)) - 5^(1/4)*sqrt(1 + sqrt(5)));
+          (%o13)                          0
+
+
+ -- Variável de opção: rootsepsilon
+     Valor padrão: 1.0e-7
+
+     `rootsepsilon' é a tolerância que estabelece o intervalo de
+     conficência para as raízes achadas pela função `realroots'.
+
+
+ -- Função: solve (<expr>, <x>)
+ -- Função: solve (<expr>)
+ -- Função: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+     Resolve a equação algébrica <expr> para a variável <x> e retorna
+     uma lista de equações solução em <x>.  Se <expr> não é uma
+     equação, a equação `<expr> = 0' é assumida em seu lugar.  <x> pode
+     ser uma função (e.g. `f(x)'), ou outra expressão não atômica
+     exceto uma adição ou um produto.  <x> pode ser omitido se <expr>
+     contém somente uma variável.  <expr> pode ser uma expressão
+     racional, e pode conter funções trigonométricas, exponenciais, etc.
+
+     O seguinte método é usado:
+
+     Tome <E> sendo a expressão e <X> sendo a variável.  Se <E> é
+     linear em <X> então isso é trivialmente resolvido para <X>.  De
+     outra forma se <E> é da forma `A*X^N + B' então o resultado é
+     `(-B/A)^1/N)' vezes as `N''ésimas raízes da unidade.
+
+     Se <E> não é linear em <X> então o máximo divisor comum (mdc) dos
+     expoentes de <X> em <E> (digamos <N>) é dividido dentro dos
+     expoentes e a multiplicidade das raízes é multiplicada por <N>.
+     Então `solve' é chamada novamente sobre o resultado.  Se <E> for
+     dada em fatores então `solve' é chamada sobre cada um dos fatores.
+     Finalmente `solve' usará as fórmulas quadráticas, cúbicas, ou
+     quárticas onde necessário.
+
+     No caso onde <E> for um polinômio em alguma função de variável a
+     ser resolvida, digamos `F(X)', então isso é primeiro resolvida
+     para `F(X)' (chama o resultado <C>), então a equação `F(X)=C' pode
+     ser resolvida para <X> fornecendo o inverso da função <F> que é
+     conhecida.
+
+     `breakup' se `false' fará com que `solve' expresse as soluções de
+     equações cúbicas ou quárticas como expressões simples ao invés de
+     como feito em cima de várias subexpressões comuns que é o padrão.
+
+     `multiplicities' - será escolhido para uma lista de
+     multiplicidades de soluções individuais retornadas por `solve',
+     `realroots', ou `allroots'.  Tente `apropos (solve)' para os
+     comutadores que afetam `solve'.  `describe' pode então ser usada
+     sobre o nome do comutador individual se seu proprósito não é claro.
+
+     `solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])' resolve um
+     sistema de equações polinomiais (lineares ou não-lineares)
+     simultâneas por chamada a `linsolve' ou `algsys' e retorna uma
+     lista de listas solução nas variáveis.  No caso de `linsolve' essa
+     lista conterá uma lista simples de soluções.  Isso pega duas
+     listas como argumentos.  A primeira lista representa as equações a
+     serem resolvidas; a segunda lista é a lista de desconhecidos a ser
+     determinada.  Se o número total de variáveis nas equações é igual
+     ao número de equações, a segunda lista-argumento pode ser omitida.
+     Para sistemas lineares se as dadas equações não são compatíveis,
+     a mensagem `inconsistent' será mostrada (veja o comutador
+     `solve_inconsistent_error' ); se não existe solução única, então
+     `singular' será mostrado.
+
+     Exemplos:
+
+          (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
+
+          SOLVE is using arc-trig functions to get a solution.
+          Some soluções will be lost.
+                                      %pi
+          (%o1)                  [x = ---, f(x) = 1]
+                                       6
+          (%i2) ev (solve (5^f(x) = 125, f(x)), solveradcan);
+                                          log(125)
+          (%o2)                   [f(x) = --------]
+                                           log(5)
+          (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
+                                2    2
+          (%o3)             [4 x  - y  = 12, x y - x = 2]
+          (%i4) solve (%, [x, y]);
+          (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
+
+           - .1331240357358706, y = .0767837852378778
+
+           - 3.608003221870287 %i], [x = - .5202594388652008 %i
+
+           - .1331240357358706, y = 3.608003221870287 %i
+
+           + .0767837852378778], [x = - 1.733751846381093,
+
+          y = - .1535675710019696]]
+          (%i5) solve (1 + a*x + x^3, x);
+                                                 3
+                        sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
+          (%o5) [x = (- ---------- - -) (--------------- - -)
+                            2        2      6 sqrt(3)      2
+
+                  sqrt(3) %i   1
+                 (---------- - -) a
+                      2        2
+           - --------------------------, x =
+                        3
+                sqrt(4 a  + 27)   1 1/3
+             3 (--------------- - -)
+                   6 sqrt(3)      2
+
+                                    3
+           sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
+          (---------- - -) (--------------- - -)
+               2        2      6 sqrt(3)      2
+
+                   sqrt(3) %i   1
+                (- ---------- - -) a
+                       2        2
+           - --------------------------, x =
+                        3
+                sqrt(4 a  + 27)   1 1/3
+             3 (--------------- - -)
+                   6 sqrt(3)      2
+
+                   3
+           sqrt(4 a  + 27)   1 1/3               a
+          (--------------- - -)    - --------------------------]
+              6 sqrt(3)      2                  3
+                                        sqrt(4 a  + 27)   1 1/3
+                                     3 (--------------- - -)
+                                           6 sqrt(3)      2
+          (%i6) solve (x^3 - 1);
+                       sqrt(3) %i - 1        sqrt(3) %i + 1
+          (%o6)   [x = --------------, x = - --------------, x = 1]
+                             2                     2
+          (%i7) solve (x^6 - 1);
+                     sqrt(3) %i + 1      sqrt(3) %i - 1
+          (%o7) [x = --------------, x = --------------, x = - 1,
+                           2                   2
+
+                               sqrt(3) %i + 1        sqrt(3) %i - 1
+                         x = - --------------, x = - --------------, x = 1]
+                                     2                     2
+          (%i8) ev (x^6 - 1, %[1]);
+                                                6
+                                (sqrt(3) %i + 1)
+          (%o8)                 ----------------- - 1
+                                       64
+          (%i9) expand (%);
+          (%o9)                           0
+          (%i10) x^2 - 1;
+                                        2
+          (%o10)                       x  - 1
+          (%i11) solve (%, x);
+          (%o11)                  [x = - 1, x = 1]
+          (%i12) ev (%th(2), %[1]);
+          (%o12)                          0
+
+
+ -- Variável de opção: solvedecomposes
+     Valor padrão: `true'
+
+     Quando `solvedecomposes' é `true', `solve' chama `polydecomp' se
+     perguntado para resolver polinômios.
+
+
+ -- Variável de opção: solveexplicit
+     Valor padrão: `false'
+
+     Quando `solveexplicit' é `true', inibe `solve' de retornar
+     soluções implícitas, isto é, soluções da forma `F(x) = 0' onde `F'
+     é alguma função.
+
+
+ -- Variável de opção: solvefactors
+     Valor padrão: `true'
+
+     Quando `solvefactors' é `false', `solve' não tenta fatorar a
+     expressão.  O `false' escolhido pode ser desejado em alguns casos
+     onde a fatoração não é necessária.
+
+
+ -- Variável de opção: solvenullwarn
+     Valor padrão: `true'
+
+     Quando `solvenullwarn' é `true', `solve' imprime uma mensagem de
+     alerta se chamada com ou uma lista equação ou uma variável lista
+     nula.  Por exemplo, `solve ([], [])' imprimirá duas mensagens de
+     alerta e retorna `[]'.
+
+
+ -- Variável de opção: solveradcan
+     Valor padrão: `false'
+
+     Quando `solveradcan' é `true', `solve' chama `radcan' que faz
+     `solve' lento mas permitirá certamente que problemas contendo
+     exponeniais e logarítmos sejam resolvidos.
+
+
+ -- Variável de opção: solvetrigwarn
+     Valor padrão: `true'
+
+     Quando `solvetrigwarn' é `true', `solve' pode imprimir uma
+     mensagem dizendo que está usando funções trigonométricas inversas
+     para resolver a equação, e desse modo perdendo soluções.
+
+
+ -- Variável de opção: solve_inconsistent_error
+     Valor padrão: `true'
+
+     Quando `solve_inconsistent_error' é `true', `solve' e `linsolve'
+     resultam em erro se as equações a serem resolvidas são
+     inconsistentes.
+
+     Se `false', `solve' e `linsolve' retornam uma lista vazia `[]' se
+     as equações forem inconsistentes.
+
+     Exemplo:
+
+          (%i1) solve_inconsistent_error: true$
+          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
+          Inconsistent equações:  (2)
+           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i3) solve_inconsistent_error: false$
+          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
+          (%o4)                          []
+
+
+
+File: maxima.info,  Node: Equações Diferenciais,  Next: Numérico,  Prev: Equações,  Up: Top
+
+22 Equações Diferenciais
+************************
+
+* Menu:
+
+* Definições para Equações Diferenciais::
+
+
+File: maxima.info,  Node: Definições para Equações Diferenciais,  Prev: Equações Diferenciais,  Up: Equações Diferenciais
+
+22.1 Definições para Equações Diferenciais
+==========================================
+
+ -- Função: bc2 (<solução>, <xval1>, <yval1>, <xval2>, <yval2>)
+     Resolve problema do valor limite para equações diferenciais de
+     segunda ordem.  Aqui: <solução> é uma solução geral para a
+     equação, como encontrado por `ode2', <xval1> é uma equação para a
+     variável independente na forma `<x> = <x0>', e <yval1> é uma
+     equação para a variável dependente na forma `<y> = <y0>'.  A
+     <xval2> e a <yval2> são equações para essas variáveis em outro
+     ponto.  Veja `ode2' para exemplo de utilização.
+
+
+ -- Função: desolve (<eqn>, <x>)
+ -- Função: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+     A função `dsolve' resolve sistemas de equações diferenciais
+     ordinárias lineares usando transformada de Laplace.  Aqui as
+     <eqn>'s são equações diferenciais nas variáveis dependentes <x_1>,
+     ..., <x_n>.  A relação funcional deve ser explicitamente indicada
+     em ambas as equações e as variáveis.  Por Exemplo
+
+          'diff(f,x,2)=sin(x)+'diff(g,x);
+          'diff(f,x)+x^2-f=2*'diff(g,x,2);
+
+     não é o formato apropriado.  O caminho correto é:
+
+          'diff(f(x),x,2)=sin(x)+'diff(g(x),x);
+          'diff(f(x),x)+x^2-f=2*'diff(g(x),x,2);
+
+     A chamada é então `desolve([%o3,%o4],[f(x),g(x)]);' .
+
+     Se as condições iniciais em 0 são conhecidas, elas podem ser
+     fornecidas antes chamando `desolve' através de `atvalue'.
+
+          (%i1) 'diff(f(x),x)='diff(g(x),x)+sin(x);
+                           d           d
+          (%o1)            -- (f(x)) = -- (g(x)) + sin(x)
+                           dx          dx
+          (%i2) 'diff(g(x),x,2)='diff(f(x),x)-cos(x);
+                            2
+                           d            d
+          (%o2)            --- (g(x)) = -- (f(x)) - cos(x)
+                             2          dx
+                           dx
+          (%i3) atvalue('diff(g(x),x),x=0,a);
+          (%o3)                           a
+          (%i4) atvalue(f(x),x=0,1);
+          (%o4)                           1
+          (%i5) desolve([%o1,%o2],[f(x),g(x)]);
+                            x
+          (%o5) [f(x) = a %e  - a + 1, g(x) =
+
+                                                          x
+                                             cos(x) + a %e  - a + g(0) - 1]
+          (%i6) [%o1,%o2],%o5,diff;
+                       x       x      x                x
+          (%o6)   [a %e  = a %e , a %e  - cos(x) = a %e  - cos(x)]
+
+     Se `desolve' não pode obter uma solução, retorna `false'.
+
+
+ -- Função: ic1 (<solução>, <xval>, <yval>)
+     Resolve o problema do valor inicial para equação diferencial de
+     primeira ordem.  Aqui: <solução> é uma solução geral para a
+     equação, como encontrado por `ode2', <xval> é uma equação para a
+     variável independente na forma `<x> = <x0>', e <yval> é uma
+     equação para a variável dependente na forma `<y> = <y0>'. Veja
+     `ode2' para exemplo de utilização.
+
+
+ -- Função: ic2 (<solução>, <xval>, <yval>, <dval>)
+     Resolve o problema do valor inicial para equação diferencial de
+     segunda ordem.  Aqui: <solução> é uma solução geral para a
+     equação, como encontrado por `ode2', <xval> é uma equação para a
+     variável independente na forma `<x> = <x0>', <yval> é uma
+     equação para a variável dependente na forma `<y> = <y0>', e <dval>
+     é uma equação para a derivada da variável dependente com
+     relação à variável independente avaliada no ponto <xval>.  Veja
+     `ode2' para exemplo de utilização.
+
+
+ -- Função: ode2 (<eqn>, <dvar>, <ivar>)
+     A função `ode2' resolve equações diferenciais ordinária ou de
+     primeira ou de segunda ordem.  Recebe três argumentos: uma EDO
+     <eqn>, a variável dependente <dvar>, e a variável
+     independente<ivar>.  Quando obtém sucesso, retorna ou uma
+     solução (explícita ou implícita) para a variável dependente.  `%c'
+     é usado para representar a constante no caso de equações de
+     primeira ordem, e `%k1' e `%k2' as constantes para equações de
+     segunda ordem.  Se `ode2' não pode obter a solução por alguma
+     razão, retorna `false', após talvez mostra uma mensagem de erro.
+     O método implementado para equações diferenciais de primeira ordem
+     na seqüência na qual eles são testados são: linear, separável,
+     exato - talvez requerendo um fator de integração, homogêneos,
+     equação de Bernoulli, e um método homogêneo geral.  Para segunda
+     ordem: coeficiente constante, exato, linear homogêneo com
+     coeficientes não-constantes os quais podem ser transformados para
+     coeficientes constates, o Euler ou equação equidimensional, o
+     método de variação de parâmetros, e equações as quais são livres
+     ou da variável independente ou da dependente de modo que elas
+     possam ser reduzidas duas equações lineares de primeria ordem para
+     serem resolvidas seqüêncialmente.  No curso de resolver EDOs,
+     muitas variáveis são escolhidas puramente para propósitos
+     informativos: `método' denota o método de solução usado e.g.
+     `linear', `intfactor' denota qualquer fator de integração usado,
+     `odeindex' denota o índice para o método de Bernoulli ou para o
+     método homogêneo generalizado, e `yp' denota a solução particular
+     para a técnica de variação de parâmetros.
+
+     Com o objetivo de resolver os problemas dos valores iniciais
+     (PVIs) e problemas dos valores limite (PVLs), a rotina `ic1' está
+     disponível para equações de primeira ordem, e `ic2' e `bc2' para
+     segunda ordem PVIs e PVLs, respectively.
+
+     Example:
+
+          (%i1) x^2*'diff(y,x) + 3*y*x = sin(x)/x;
+                                2 dy           sin(x)
+          (%o1)                x  -- + 3 x y = ------
+                                  dx             x
+          (%i2) ode2(%,y,x);
+                                       %c - cos(x)
+          (%o2)                    y = -----------
+                                            3
+                                           x
+          (%i3) ic1(%o2,x=%pi,y=0);
+                                        cos(x) + 1
+          (%o3)                   y = - ----------
+                                             3
+                                            x
+          (%i4) 'diff(y,x,2) + y*'diff(y,x)^3 = 0;
+                                   2
+                                  d y      dy 3
+          (%o4)                   --- + y (--)  = 0
+                                    2      dx
+                                  dx
+          (%i5) ode2(%,y,x);
+                                3
+                               y  + 6 %k1 y
+          (%o5)                ------------ = x + %k2
+                                    6
+          (%i6) ratsimp(ic2(%o5,x=0,y=0,'diff(y,x)=2));
+                                       3
+                                    2 y  - 3 y
+          (%o6)                   - ---------- = x
+                                        6
+          (%i7) bc2(%o5,x=0,y=1,x=1,y=3);
+                                   3
+                                  y  - 10 y       3
+          (%o7)                   --------- = x - -
+                                      6           2
+
+
+
+File: maxima.info,  Node: Numérico,  Next: Estatística,  Prev: Equações Diferenciais,  Up: Top
+
+23 Numérico
+***********
+
+* Menu:
+
+* Introdução a Numérico::
+* Pacotes de Fourier::
+* Definições para Numérico::
+* Definições para Séries de Fourier::
+
+
+File: maxima.info,  Node: Introdução a Numérico,  Next: Pacotes de Fourier,  Prev: Numérico,  Up: Numérico
+
+23.1 Introdução a Numérico
+==========================
+
+
+File: maxima.info,  Node: Pacotes de Fourier,  Next: Definições para Numérico,  Prev: Introdução a Numérico,  Up: Numérico
+
+23.2 Pacotes de Fourier
+=======================
+
+O pacote `fft' compreende funções para computação numérica (não
+simbólica) das transformações rápidas de Fourier.  `load ("fft")' chama
+esse pacote.  Veja `fft'.
+
+   O pacote `fourie' compreende funções para computação simbólica de
+séries de Fourier.  `load ("fourie")' chama esse pacote.  Existem
+funções no pacote `fourie' para calcular coeficientes da integral de
+Fourier e algumas funções para manipulação de expressões.  Veja
+`Definições para Séries'.
+
+
+File: maxima.info,  Node: Definições para Numérico,  Next: Definições para Séries de Fourier,  Prev: Pacotes de Fourier,  Up: Numérico
+
+23.3 Definições para Numérico
+=============================
+
+ -- Função: polartorect (<magnitude_array>, <phase_array>)
+     Traduz valores complexos da forma `r %e^(%i t)' para a forma `a +
+     b %i'.  `load ("fft")' chama essa função dentro do Maxima. Veja
+     também `fft'.
+
+     O módulo e a fase, `r' e `t', São tomados de <magnitude_array> e
+     <phase_array>, respectivamente. Os valores originais de arrays de
+     entrada são substituídos pelas partes real e emaginária, `a' e
+     `b', no retorno. As saídas são calculadas como
+
+          a: r cos (t)
+          b: r sin (t)
+
+     Os arrays de entrada devem ter o mesmo tamanho  e ser
+     unidimensionais.  O tamanho do array não deve ser uma potência de
+     2.
+
+     `polartorect' é a função inversa de `recttopolar'.
+
+
+ -- Função: recttopolar (<real_array>, <imaginary_array>)
+     Traduz valores complexos da forma `a + b %i' para a forma `r
+     %e^(%i t)'.  `load ("fft")' chama essa função dentro do Maxima.
+     Veja também `fft'.
+
+     As partes real e imaginária, `a' e `b', são tomadas de
+     <real_array> e <imaginary_array>, respectivamente. Os valores
+     originais dos arrays de entrada são substituídos pelo módulo e
+     pelo ângulo, `r' e `t', no retorno. As saídas são calculadas como
+
+          r: sqrt (a^2 + b^2)
+          t: atan2 (b, a)
+
+     O ângulo calculado encontra-se no intervalo de `-%pi' a `%pi'.
+
+     Os arrays de entrada devem ter o mesmo tamanho e ser
+     unidimensionais.  O tamanho do array não deve ser uma potência de
+     2.
+
+     `recttopolar' é a função inversa de `polartorect'.
+
+
+ -- Função: ift (<real_array>, <imaginary_array>)
+     Transformação rápida inversa discreta de Fourier . `load ("fft")'
+     chama essa função dentro do Maxima.
+
+     `ift' realiza a transformação rápida complexa de Fourier sobre
+     arrays em ponto flutuante unidimensionais. A transformação inversa
+     é definida como
+
+          x[j]: sum (y[j] exp (+2 %i %pi j k / n), k, 0, n-1)
+
+     Veja `fft' para maiores detalhes.
+
+
+ -- Função: fft (<real_array>, <imaginary_array>)
+ -- Função: ift (<real_array>, <imaginary_array>)
+ -- Função: recttopolar (<real_array>, <imaginary_array>)
+ -- Função: polartorect (<magnitude_array>, <phase_array>)
+     Transformação rápidada de Fourier e funções relacionadas. `load
+     ("fft")' chama essas funções dentro do Maxima.
+
+     `fft' e `ift' realiza transformação rápida complexa de Fourier e a
+     transformação inversa, respectivamente, sobre arrays em ponto
+     flutuante unidimensionais. O tamanho de <imaginary_array> deve ser
+     igual ao tamanho de <real_array>.
+
+     `fft' e `ift' operam in-loco. Isto é, sobre o retorno de `fft' ou
+     de `ift', O conteúdo original dos arrays de entrada é substituído
+     pela saída.  A função `fillarray' pode fazer uma cópia de um
+     array, isso pode ser necessário.
+
+     A transformação discreta de Fourier e sua transformação inversa
+     são definidas como segue. Tome `x' sendo os dados originais, com
+
+          x[i]: real_array[i] + %i imaginary_array[i]
+
+     Tome `y' sendo os dados transformados. A transformação normal e
+     sua transformação inversa são
+
+          y[k]: (1/n) sum (x[j] exp (-2 %i %pi j k / n), j, 0, n-1)
+
+          x[j]:       sum (y[j] exp (+2 %i %pi j k / n), k, 0, n-1)
+
+     Arrays adequadas podem ser alocadas pela função `array'. Por
+     exemplo:
+
+          array (my_array, float, n-1)$
+
+     declara um array unidimensional com n elementos, indexado de 0 a
+     n-1 inclusive. O número de elementos n deve ser igual a 2^m para
+     algum m.
+
+     `fft' pode ser aplicada a dados reais (todos os arrays imaginários
+     são iguais a zero) para obter coeficientes seno e cosseno.  Após
+     chamar `fft', os coeficientes seno e cosseno, digamos `a' e `b',
+     podem ser calculados como
+
+          a[0]: real_array[0]
+          b[0]: 0
+
+     e
+
+          a[j]: real_array[j] + real_array[n-j]
+          b[j]: imaginary_array[j] - imaginary_array[n-j]
+
+     para j variando de 1 a n/2-1, e
+
+          a[n/2]: real_array[n/2]
+          b[n/2]: 0
+
+     `recttopolar' traduz valores complexos da forma `a + b %i' para a
+     forma `r %e^(%i t)'. Veja `recttopolar'.
+
+     `polartorect' traduz valores complexos da forma `r %e^(%i t)' para
+     a forma `a + b %i'. Veja `polartorect'.
+
+     `demo ("fft")' exibe uma demonstração do pacote `fft'.
+
+
+ -- Variável de opção: fortindent
+     Valor padrão: 0
+
+     `fortindent' controla a margem esquerda de indentação de
+     expressões mostradas pelo comando `fortran'.  0 fornece indentação
+     normal (i.e., 6 espaços), e valores positivos farão com que
+     expressões sejam mostrados mais além para a direita.
+
+
+ -- Função: fortran (<expr>)
+     Mostra <expr> como uma declaração Fortran.  A linha de saída é
+     indentada com espaços.  Se a linha for muito longa, `fortran'
+     imprime linhas de continuação.  `fortran' mostra o operador de
+     exponenciação `^' como `**', e mostra um número complexo `a + b
+     %i' na forma `(a,b)'.
+
+     <expr> pode ser uma equação. Nesse caso, `fortran' mostra uma
+     declaração de atribuição, atribuindo o primeiro membro (esquerda)
+     da equação ao segundo membro (direita).  Em particular, se o
+     primeiro membro <expr> é um nome de uma matriz, então `fortran'
+     mostra uma declaração de atribuição para cada elemento da matriz.
+
+     Se <expr> não for alguma coisa reconhecida por `fortran', a
+     expressão é mostrada no formato `grind' sem reclamação.  `fortran'
+     não conhece listas, arrays ou funções.
+
+     `fortindent' controla o margem esquerda das linhas mostradas.  0 é
+     a margem normal (i.e., indentada 6 espaços). Incrementando
+     `fortindent' faz com que expressões sejam mostradas adiante para a
+     direita.
+
+     quando `fortspaces' for `true', `fortran' preenche cada linha
+     mostrada com espaços em branco até completar 80 columas.
+
+     `fortran' avalia seus argumentos; colocando um apóstrofo em um
+     argumento evita avaliação.  `fortran' sempre retorna `done'.
+
+     Exemplos:
+
+          (%i1) expr: (a + b)^12$
+          (%i2) fortran (expr);
+                (b+a)**12
+          (%o2)                         done
+          (%i3) fortran ('x=expr);
+                x = (b+a)**12
+          (%o3)                         done
+          (%i4) fortran ('x=expand (expr));
+                x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+               1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+               2   **3+66*a**10*b**2+12*a**11*b+a**12
+          (%o4)                         done
+          (%i5) fortran ('x=7+5*%i);
+                x = (7,5)
+          (%o5)                         done
+          (%i6) fortran ('x=[1,2,3,4]);
+                x = [1,2,3,4]
+          (%o6)                         done
+          (%i7) f(x) := x^2$
+          (%i8) fortran (f);
+                f
+          (%o8)                         done
+
+
+ -- Variável de opção: fortspaces
+     Valor padrão: `false'
+
+     Quando `fortspaces' for `true', `fortran' preenche cada linha
+     mostrada com espaços em branco até completar 80 columas.
+
+
+ -- Função: horner (<expr>, <x>)
+ -- Função: horner (<expr>)
+     Retorna uma representação rearranjada de <expr> como na regra de
+     Horner, usando <x> como variável principal se isso for
+     especificado.  `x' pode ser omitido e nesse caso a variável
+     principal da forma de expressão racional canônica de <expr> é
+     usada.
+
+     `horner' algumas vezes melhora a estabilidade se `expr' for ser
+     numericamente avaliada.  Isso também é útil se Maxima é usado para
+     gerar programas para rodar em Fortran. Veja também `stringout'.
+
+          (%i1) expr: 1e-155*x^2 - 5.5*x + 5.2e155;
+                                     2
+          (%o1)            1.0E-155 x  - 5.5 x + 5.2E+155
+          (%i2) expr2: horner (%, x), keepfloat: true;
+          (%o2)            (1.0E-155 x - 5.5) x + 5.2E+155
+          (%i3) ev (expr, x=1e155);
+          Maxima encountered a Lisp error:
+
+           floating point overflow
+
+          Automatically continuing.
+          To reenable the Lisp debugger set *debugger-hook* to nil.
+          (%i4) ev (expr2, x=1e155);
+          (%o4)                       7.0E+154
+
+
+ -- Função: find_root (<f>(<x>), <x>, <a>, <b>)
+ -- Função: find_root (<f>, <a>, <b>)
+     Encontra a raíz da função <f> com a variável <x> percorrendo o
+     intervalo `[<a>, <b>]'.  A função deve ter um sinal diferente em
+     cada ponto final.  Se essa condição não for alcançada, a action of
+     the function is governed by `find_root_error'.  If
+     `find_root_error' is `true' then an error occurs, otherwise the
+     value of `find_root_error' is returned (thus for plotting
+     `find_root_error' might be set to 0.0).  De outra forma (dado que
+     Maxima pode avaliar o primeiro argumento no intervalo
+     especificado, e que o intervalo é contínuo) `find_root' é
+     garantido vir para cima com a raíz (ou um deles se existir mais
+     que uma raíz).  A precisão de `find_root' é governada por
+     `intpolabs' e `intpolrel' os quais devem ser números em ponto
+     flutuante não negativos.  `find_root' encerrará quando o primeiro
+     argumento avaliar para alguma coisa menor que ou igual a
+     `intpolabs' ou se sucessivas aproximações da raíz diferirem por
+     não mais que `intpolrel * <um dos aproximandos>'.  O valor padrão
+     de `intpolabs' e `intpolrel' são 0.0 de forma que `find_root' pega
+     como boa uma resposta como for possível com a precisão aritmética
+     simples que tivermos.  O primeiro argumento pode ser uma equação.
+     A ordem dos dois últimos argumentos é irrelevante.  Dessa forma
+
+          find_root (sin(x) = x/2, x, %pi, 0.1);
+
+     é equivalente a
+
+          find_root (sin(x) = x/2, x, 0.1, %pi);
+
+     O método usado é uma busca binária no intervalo especificado pelos
+     últimos dois argumentos.  Quando o resultado da busca for
+     encontrado a função é fechada o suficiente para ser linear, isso
+     inicia usando interpolação linear.
+
+     Examples:
+          (%i1) f(x) := sin(x) - x/2;
+                                                  x
+          (%o1)                  f(x) := sin(x) - -
+                                                  2
+          (%i2) find_root (sin(x) - x/2, x, 0.1, %pi);
+          (%o2)                   1.895494267033981
+          (%i3) find_root (sin(x) = x/2, x, 0.1, %pi);
+          (%o3)                   1.895494267033981
+          (%i4) find_root (f(x), x, 0.1, %pi);
+          (%o4)                   1.895494267033981
+          (%i5) find_root (f, 0.1, %pi);
+          (%o5)                   1.895494267033981
+
+
+ -- Variável de opção: find_root_abs
+     Valor padrão: 0.0
+
+     `find_root_abs' é a precisão do comando `find_root'. A precisão é
+     governada por `find_root_abs' e `find_root_rel' que devem ser
+     números não negativos em ponto flutuante.  `find_root' terminará
+     quando o primeiro argumento avaliar para alguma coisa menor que ou
+     igual a `find_root_abs' ou se sucessivos aproximandos para a raíz
+     diferirem por não mais que `find_root_rel * <um dos aproximandos>'.
+     Os valores padrão de `find_root_abs' e `find_root_rel' são 0.0 de
+     forma que `find_root' tome como boa uma resposta que for possível
+     com a precisão aritmética simples que tivermos.
+
+
+ -- Variável de opção: find_root_error
+     Valor padrão: `true'
+
+     `find_root_error' governa o comportamento de `find_root'.  Quando
+     `find_root' for chamada, ela determina se a função a ser resolvida
+     satisfaz ou não a condição que os valores da função nos pontos
+     finais do intervalo de interpolação são opostos em sinal.  Se eles
+     forem de sinais opostos, a interpolação prossegue.  Se eles forem
+     de mesmo sinal, e `find_root_error' for `true', então um erro é
+     sinalizado.  Se eles forem de mesmo sinal e `find_root_error' não
+     for `true', o valor de `find_root_error' é retornado.  Dessa forma
+     para montagem de gráfico, `find_root_error' pode ser escolhida
+     para 0.0.
+
+
+ -- Variável de opção: find_root_rel
+     Valor padrão: 0.0
+
+     `find_root_rel' é a precisão do comando `find_root' e é governada
+     por `find_root_abs' e `find_root_rel' que devem ser números não
+     negativos em ponto flutuante.  `find_root' terminará quando o
+     primeiro argumento avaliar para alguma coisa menor que ou igual a
+     `find_root_abs' ou se sucessivos aproximandos para a raíz
+     diferirem de não mais que `find_root_rel * <um dos aproximandos>'.
+     Os valores padrão de `find_root_labs' e `find_root_rel' é 0.0 de
+     forma que `find_root' toma como boa uma resposta que for possível
+     com a precisão aritmética simples que tivermos.
+
+
+
+File: maxima.info,  Node: Definições para Séries de Fourier,  Prev: Definições para Numérico,  Up: Numérico
+
+23.4 Definições para Séries de Fourier
+======================================
+
+ -- Função: equalp (<x>, <y>)
+     Retorna `true' se `equal (<x>, <y>)' de outra forma `false' (não
+     fornece uma mensagem de erro como `equal (x, y)' poderia fazer
+     nesse caso).
+
+
+ -- Função: remfun (<f>, <expr>)
+ -- Função: remfun (<f>, <expr>, <x>)
+     `remfun (<f>, <expr>)' substitue todas as ocorrências de `<f>
+     (<arg>)' por <arg> em <expr>.
+
+     `remfun (<f>, <expr>, <x>)' substitue todas as ocorrências de `<f>
+     (<arg>)' por <arg> em <expr> somente se <arg> contiver a variável
+     <x>.
+
+
+ -- Função: funp (<f>, <expr>)
+ -- Função: funp (<f>, <expr>, <x>)
+     `funp (<f>, <expr>)' retorna `true' se <expr> contém a função <f>.
+
+     `funp (<f>, <expr>, <x>)' retorna `true' se <expr> contém a
+     função <f> e a variável <x> em algum lugar no argumento de uma das
+     instâncias de <f>.
+
+
+ -- Função: absint (<f>, <x>, <halfplane>)
+ -- Função: absint (<f>, <x>)
+ -- Função: absint (<f>, <x>, <a>, <b>)
+     `absint (<f>, <x>, <halfplane>)' retorna a integral indefinida de
+     <f> com relação a <x> no dado semi-plano (`pos', `neg', ou `both').
+     <f> pode conter expressões da forma `abs (x)', `abs (sin (x))',
+     `abs (a) * exp (-abs (b) * abs (x))'.
+
+     `absint (<f>, <x>)' é equivalente a `absint (<f>, <x>, pos)'.
+
+     `absint (<f>, <x>, <a>, <b>)' retorna a integral definida de <f>
+     com relação a <x> de <a> até <b>.  <f> pode incluir valores
+     absolutos.
+
+
+ -- Função: fourier (<f>, <x>, <p>)
+     Retorna uma lista de coeficientes de Fourier de `<f>(<x>)'
+     definidos sobre o intervalo `[-%pi, %pi]'.
+
+
+ -- Função: foursimp (<l>)
+     Simplifica `sin (n %pi)' para 0 se `sinnpiflag' for `true' e `cos
+     (n %pi)' para `(-1)^n' se `cosnpiflag' for `true'.
+
+
+ -- Variável de opção: sinnpiflag
+     Valor padrão: `true'
+
+     Veja `foursimp'.
+
+
+ -- Variável de opção: cosnpiflag
+     Valor padrão: `true'
+
+     Veja `foursimp'.
+
+
+ -- Função: fourexpand (<l>, <x>, <p>, <limit>)
+     Constrói e retorna a série de Fourier partindo da lista de
+     coeficientes de Fourier <l> até (up through) <limit> termos
+     (<limit> pode ser `inf'). <x> e <p> possuem o mesmo significado
+     que em `fourier'.
+
+
+ -- Função: fourcos (<f>, <x>, <p>)
+     Retorna os coeficientes do cosseno de Fourier para `<f>(<x>)'
+     definida sobre `[0, %pi]'.
+
+
+ -- Função: foursin (<f>, <x>, <p>)
+     Retorna os coeficientes do seno de Fourier para `<f>(<x>)'
+     definida sobre `[0, %pi]'.
+
+
+ -- Função: totalfourier (<f>, <x>, <p>)
+     Retorna `fourexpand (foursimp (fourier (<f>, <x>, <p>)), <x>, <p>,
+     'inf)'.
+
+
+ -- Função: fourint (<f>, <x>)
+     Constrói e retorna uma lista de coeficientes de integral de
+     Fourier de `<f>(<x>)' definida sobre `[minf, inf]'.
+
+
+ -- Função: fourintcos (<f>, <x>)
+     Retorna os coeficientes da integral do cosseno de Fourier para
+     `<f>(<x>)' on `[0, inf]'.
+
+
+ -- Função: fourintsin (<f>, <x>)
+     Retorna os coeficientes da integral do seno de Fourier para
+     `<f>(<x>)' on `[0, inf]'.
+
+
+
+File: maxima.info,  Node: Estatística,  Next: Arrays,  Prev: Numérico,  Up: Top
+
+24 Estatística
+**************
+
+* Menu:
+
+* Definições para Estatística::
+
+
+File: maxima.info,  Node: Definições para Estatística,  Prev: Estatística,  Up: Estatística
+
+24.1 Definições para Estatística
+================================
+
+ -- Função: gauss (<mean>, <sd>)
+     Retorna um número em ponto flutuante randômico de uma
+     distribuição normal com usando <mean> e desvio padrão <sd>.
+
+
+
+File: maxima.info,  Node: Arrays,  Next: Matrizes e Álgebra Linear,  Prev: Estatística,  Up: Top
+
+25 Arrays
+*********
+
+* Menu:
+
+* Definições para Arrays::
+
+
+File: maxima.info,  Node: Definições para Arrays,  Prev: Arrays,  Up: Arrays
+
+25.1 Definições para Arrays
+===========================
+
+ -- Função: array (<name>, <dim_1>, ..., <dim_n>)
+ -- Função: array (<name>, <type>, <dim_1>, ..., <dim_n>)
+ -- Função: array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)
+     Cria um array n-dimensional.  n pode ser menor ou igual a 5.  Os
+     subscritos para a i'ésima dimensão são inteiros no intervalo de 0
+     a <dim_i>.
+
+     `array (<name>, <dim_1>, ..., <dim_n>)' cria um array genérico.
+
+     `array (<name>, <type>, <dim_1>, ..., <dim_n>)' cria um array, com
+     elementos de um tipo especificado.  <type> pode ser `fixnum' para
+     inteiros de tamanho limitado ou `flonum' para números em ponto
+     flutuante.
+
+     `array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)' cria m
+     arrays, todos da mesma dimensão.
+
+     Se o usuário atribui a uma variável subscrita antes de declarar o
+     array correspondente, um array não declarado é criado.  Arrays não
+     declarados, também conhecidos como array desordenado (porque o
+     codigo desordenado termina nos subscritos), são mais gerais que
+     arrays declarados.  O usuário não declara seu tamanho máximo, e
+     ele cresce dinamicamente e desordenadamente à medida que são
+     atribuídos valores a mais elementos.  Os subscritos de um array
+     não declarado não precisam sempre ser números.  Todavia, exceto
+     para um array um tanto quanto esparso, é provavelmente mais
+     eficiente declarar isso quando possível que deixar não declarado.
+     A função `array' pode ser usada para transformar um array não
+     declarado em um array declarado.
+
+
+ -- Função: arrayapply (<A>, [<i_1>, ..., <i_n>])
+     Avalia `<A> [<i_1>, ..., <i_n>]', quando <A> for um array e <i_1>,
+     ..., <i_n> são inteiros.
+
+     Ela é remanescente de `apply', exceto o primeiro argumento que é
+     um array ao invés de uma função.
+
+
+ -- Função: arrayinfo (<A>)
+     Retorna informações sobre o array <A>.  O argumento <A> pode ser
+     um array declarado, uma array não declarado ( que sofreu um hash),
+     uma função de array, ou uma função que possui subscrito.
+
+     Para arrays declarados, `arrayinfo' retorna uma lista
+     compreendendo o átomo `declared', o n;umero de dimensões, e o
+     tamanho de cada dimensão.  Os elementos do array, ambos associados
+     e não associados, são retornados por `listarray'.
+
+     Para arrays não declarados (arrays que sofreram um hash),
+     `arrayinfo' retorna uma lista compreendendo o átomo `hashed', o
+     número de subscritos, e os subscritos de de todo elemento que
+     tiver um valor.  Os valores são retornados por meio de `listarray'.
+
+     Para funções de array, `arrayinfo' retretorna uma lista
+     compreendendo o átomo `hashed', o número de subscritos, e
+     quaisquer valores de subscritos para os quais exista valores
+     funcionais armazenados.  Os valores funcionais armazenados são
+     retornados através de `listarray'.
+
+     Para funções que possuem subscritos, `arrayinfo' retorna uma lista
+     compreendendo o átomo `hashed', o número de subscritos, e qualquer
+     valores subscritos para os quais existe uma expressões lambda.  As
+     expressões lambda são retornadas por `listarray'.
+
+     Examples:
+
+     `arrayinfo' e `listarray' aplicado a um array declarado.
+
+          (%i1) array (aa, 2, 3);
+          (%o1)                          aa
+          (%i2) aa [2, 3] : %pi;
+          (%o2)                          %pi
+          (%i3) aa [1, 2] : %e;
+          (%o3)                          %e
+          (%i4) arrayinfo (aa);
+          (%o4)                 [declared, 2, [2, 3]]
+          (%i5) listarray (aa);
+          (%o5) [#####, #####, #####, #####, #####, #####, %e, #####,
+                                                  #####, #####, #####, %pi]
+
+     `arrayinfo' e `listarray' aplicado a um array não declarado (no
+     qual foi aplicado um hash).
+
+          (%i1) bb [FOO] : (a + b)^2;
+                                             2
+          (%o1)                       (b + a)
+          (%i2) bb [BAR] : (c - d)^3;
+                                             3
+          (%o2)                       (c - d)
+          (%i3) arrayinfo (bb);
+          (%o3)               [hashed, 1, [BAR], [FOO]]
+          (%i4) listarray (bb);
+                                        3         2
+          (%o4)                 [(c - d) , (b + a) ]
+
+     `arrayinfo' e `listarray' aplicado a uma função de array.
+
+          (%i1) cc [x, y] := y / x;
+                                               y
+          (%o1)                      cc     := -
+                                       x, y    x
+          (%i2) cc [u, v];
+                                          v
+          (%o2)                           -
+                                          u
+          (%i3) cc [4, z];
+                                          z
+          (%o3)                           -
+                                          4
+          (%i4) arrayinfo (cc);
+          (%o4)              [hashed, 2, [4, z], [u, v]]
+          (%i5) listarray (cc);
+                                        z  v
+          (%o5)                        [-, -]
+                                        4  u
+
+     `arrayinfo' e `listarray' aplicadas a funções com subscritos.
+
+          (%i1) dd [x] (y) := y ^ x;
+                                               x
+          (%o1)                     dd (y) := y
+                                      x
+          (%i2) dd [a + b];
+                                              b + a
+          (%o2)                  lambda([y], y     )
+          (%i3) dd [v - u];
+                                              v - u
+          (%o3)                  lambda([y], y     )
+          (%i4) arrayinfo (dd);
+          (%o4)             [hashed, 1, [b + a], [v - u]]
+          (%i5) listarray (dd);
+                                   b + a                v - u
+          (%o5)      [lambda([y], y     ), lambda([y], y     )]
+
+ -- Função: arraymake (<name>, [<i_1>, ..., <i_n>])
+     Retorna a expressão `<name> [<i_1>, ..., <i_n>]'.
+
+     Isso é um código remanescente de `funmake', exceto o valor
+     retornado é um array de referência não avaliado ao invés de uma
+     chamada de função não avaliada.
+
+
+ -- Variável de sistema: arrays
+     Valor padrão: `[]'
+
+     `arrays' é uma lista dos arrays que tiverem sido alocados.  Essa
+     lista compreende arrays declarados através de `array', arrays
+     desordenados (hashed) construídos através de definição implícita
+     (atribuindo alguma coisa a um elemento de array), e funções de
+     array definidas por meio de `:=' e `define'.  Arrays definidos por
+     meio de `make_array' não estão incluídos.
+
+     Veja também `array', `arrayapply', `arrayinfo', `arraymake',
+     `fillarray', `listarray', e `rearray'.
+
+     Exemplos:
+
+          (%i1) array (aa, 5, 7);
+          (%o1)                          aa
+          (%i2) bb [FOO] : (a + b)^2;
+                                             2
+          (%o2)                       (b + a)
+          (%i3) cc [x] := x/100;
+                                             x
+          (%o3)                      cc  := ---
+                                       x    100
+          (%i4) dd : make_array ('any, 7);
+          (%o4)       {Array:  #(NIL NIL NIL NIL NIL NIL NIL)}
+          (%i5) arrays;
+          (%o5)                     [aa, bb, cc]
+
+
+ -- Função: bashindices (<expr>)
+     Transforma a expressão <expr> dando a cada somatório e a cada
+     produto um único índice.  Isso dá a `changevar' grande precisão
+     quando se está trabalhando com somatórios e produtos.  A forma do
+     único índice é `j<number>'.  A quantidade <number> é determindad
+     por referência a `gensumnum', que pode ser alterada pelo usuário.
+     Por exemplo, `gensumnum:0$' reseta isso.
+
+
+ -- Função: fillarray (<A>, <B>)
+     Preenche o array <A> com <B>, que é uma lista ou um array.
+
+     Se <A> for um array de ponto flutuante (inteiro) então <B> poderá
+     ser ou uma lista de números (inteiros) em ponto flutuante ou outro
+     array em ponto flutuante (inteiro).
+
+     Se as dimensões do array forem diferentes <A> é preenchida na
+     ordem da maior linha.  Se não existem elementos livres em <B> o
+     último elemento é usado para preencher todo o resto de <A>.  Se
+     existirem muitos os restantes serão descartados.
+
+     `fillarray' retorna esse primeiro argumento.
+
+
+ -- Função: listarray (<A>)
+     Retorna uma lista dos elementos do array <A>.  O argumento <A>
+     pode ser um array declarado, um array não declarado (desordenado -
+     hashed), uma função de array, ou uma função com subscritos.
+
+     Elementos são listados em ordem de linha maior.  Isto é, elementos
+     são ordenados conforme o primeiro índice, en seguida conforme o
+     segundo índice, e assim sucessivamente.  A sequüência de ordenação
+     por meio dos valores dos índices é a mesma ordem estabelecida por
+     meio de `orderless'.
+
+     Para arrays não declarados , funções de arrays, e funções com
+     subscritos, os elementos correspondem aos valores de índice
+     retornados através de `arrayinfo'.
+
+     Elemetos não associados de arrays genéricos declarados (isto é,
+     não `fixnum' e não `flonum') são retornados como `#####'.
+     Elementos não associados de arrays declarados `fixnum' ou `flonum'
+     são retornados como 0 ou 0.0, respectivamente.  Elementos não
+     associados de arrays não declarados, funções de array, e funções
+     subscritas não são retornados.
+
+     Exemplos:
+
+     `listarray' e `arrayinfo' aplicados a um array declarado.
+
+          (%i1) array (aa, 2, 3);
+          (%o1)                          aa
+          (%i2) aa [2, 3] : %pi;
+          (%o2)                          %pi
+          (%i3) aa [1, 2] : %e;
+          (%o3)                          %e
+          (%i4) listarray (aa);
+          (%o4) [#####, #####, #####, #####, #####, #####, %e, #####,
+                                                  #####, #####, #####, %pi]
+          (%i5) arrayinfo (aa);
+          (%o5)                 [declared, 2, [2, 3]]
+
+     `listarray' e `arrayinfo' aplicadas a arrays não declarados
+     (hashed - desordenados).
+
+          (%i1) bb [FOO] : (a + b)^2;
+                                             2
+          (%o1)                       (b + a)
+          (%i2) bb [BAR] : (c - d)^3;
+                                             3
+          (%o2)                       (c - d)
+          (%i3) listarray (bb);
+                                        3         2
+          (%o3)                 [(c - d) , (b + a) ]
+          (%i4) arrayinfo (bb);
+          (%o4)               [hashed, 1, [BAR], [FOO]]
+
+     `listarray' e `arrayinfo' aplicada a uma função de array.
+
+          (%i1) cc [x, y] := y / x;
+                                               y
+          (%o1)                      cc     := -
+                                       x, y    x
+          (%i2) cc [u, v];
+                                          v
+          (%o2)                           -
+                                          u
+          (%i3) cc [4, z];
+                                          z
+          (%o3)                           -
+                                          4
+          (%i4) listarray (cc);
+                                        z  v
+          (%o4)                        [-, -]
+                                        4  u
+          (%i5) arrayinfo (cc);
+          (%o5)              [hashed, 2, [4, z], [u, v]]
+
+     `listarray' e `arrayinfo' aplicadas a funções com subscritos.
+
+          (%i1) dd [x] (y) := y ^ x;
+                                               x
+          (%o1)                     dd (y) := y
+                                      x
+          (%i2) dd [a + b];
+                                              b + a
+          (%o2)                  lambda([y], y     )
+          (%i3) dd [v - u];
+                                              v - u
+          (%o3)                  lambda([y], y     )
+          (%i4) listarray (dd);
+                                   b + a                v - u
+          (%o4)      [lambda([y], y     ), lambda([y], y     )]
+          (%i5) arrayinfo (dd);
+          (%o5)             [hashed, 1, [b + a], [v - u]]
+
+
+ -- Função: make_array (<type>, <dim_1>, ..., <dim_n>)
+     Cria e retorna um array de Lisp.  <type> pode ser `any', `flonum',
+     `fixnum', `hashed' ou `functional'.  Existem n indices, e o
+     i'enésimo indice está no intervalo de 0 a <dim_i> - 1.
+
+     A vantagem de `make_array' sobre `array' é que o valor de retorno
+     não tem um nome, e uma vez que um ponteiro a ele vai, ele irá
+     também.  Por exemplo, se `y: make_array (...)' então `y' aponta
+     para um objeto que ocupa espaço, mas depois de `y: false', `y' não
+     mais aponta para aquele objeto, então o objeto pode ser descartado.
+
+
+ -- Função: rearray (<A>, <dim_1>, ..., <dim_n>)
+     Altera as dimenções de um array.  O novo array será preenchido com
+     os elementos do antigo em ordem da maior linha.  Se o array antigo
+     era muito pequeno, os elementos restantes serão preenchidos com
+     `false', `0.0' ou `0', dependendo do tipo do array.  O tipo do
+     array não pode ser alterado.
+
+
+ -- Função: remarray (<A_1>, ..., <A_n>)
+ -- Função: remarray (all)
+     Remove arrays e funções associadas a arrays e libera o espaço
+     ocupado.  Os argumentos podem ser arrays declarados, arrays não
+     declarados (dsordenados - hashed), funções de array functions, e
+     funções com subscritos.
+
+     `remarray (all)' remove todos os ítens na lista global `arrays'.
+
+     Isso pode ser necessário para usar essa função se isso é desejado
+     para redefinir os valores em um array desordenado.
+
+     `remarray' retorna a lista dos arrays removidos.
+
+
+ -- Função: subvar (<x>, <i>)
+     Avalia a expressão subscrita `<x>[<i>]'.
+
+     `subvar' avalia seus argumentos.
+
+     `arraymake (<x>, [<i>]' constrói a expressão `<x>[<i>]', mas não a
+     avalia.
+
+     Exemplos:
+
+          (%i1) x : foo $
+
+          (%i2) i : 3 $
+
+          (%i3) subvar (x, i);
+          (%o3) foo
+           3
+          (%i4) foo : [aa, bb, cc, dd, ee]$
+
+          (%i5) subvar (x, i);
+          (%o5) +(%i6) arraymake (x, [i]);
+          (%o6) foo
+           3
+          (%i7) ''%;
+          (%o7) +
+
+
+ -- Variável de pção: use_fast_arrays
+     - Se `true' somente dois tipos de arrays são reconhecidos.
+
+     1) O array art-q (t no Lisp Comum) que pode ter muitas dimensões
+     indexadas por inteiros, e pode aceitar qualquer objeto do Lisp ou
+     do Maxima como uma entrada.  Para construir assim um array, insira
+     `a:make_array(any,3,4);' então `a' terá como valor, um array com
+     doze posições, e o índice é baseado em zero.
+
+     2) O array Hash_table que é o tipo padrão de array criado se um
+     faz `b[x+1]:y^2' (e `b' não é ainda um array, uma lista, ou uma
+     matriz - se isso ou um desses ocorrer um erro pode ser causado
+     desde `x+1' não poderá ser um subscrito válido para um array
+     art-q, uma lista ou uma matriz).  Esses índices (também conhecidos
+     como chaves) podem ser quaisquer objetos.  Isso somente pega uma
+     chave por vez a cada vez (`b[x+1,u]:y' ignorará o `u').  A
+     referência termina em `b[x+1] ==> y^2'.  Certamente a chave poe
+     ser uma lista , e.g.  `b[[x+1,u]]:y' poderá ser válido.  Isso é
+     incompatível com os arrays antigos do Maxima, mas poupa recursos.
+
+     Uma vantagem de armazenar os arrays como valores de símbolos é que
+     as convenções usuais sobre variáveis locais de uma função
+     aplicam-se a arrays também.  O tipo Hash_table também usa menos
+     recursos e é mais eficiente que o velho tipo hashar do Maxima.
+     Para obter comportamento consistente em códigos traduzidos e
+     compilados posicione `translate_fast_arrays' para ser `true'.
+
+
+
+File: maxima.info,  Node: Matrizes e Álgebra Linear,  Next: Funções Afins,  Prev: Arrays,  Up: Top
+
+26 Matrizes e Álgebra Linear
+****************************
+
+/Matrices.texi/1.24/Sat Jun 24 06:45:55 2006/-ko/
+
+* Menu:
+
+* Introdução a Matrizes e Álgebra Linear::
+* Definições para Matrizes e Álgebra Linear::
+
+
+File: maxima.info,  Node: Introdução a Matrizes e Álgebra Linear,  Next: Definições para Matrizes e Álgebra Linear,  Prev: Matrizes e Álgebra Linear,  Up: Matrizes e Álgebra Linear
+
+26.1 Introdução a Matrizes e Álgebra Linear
+===========================================
+
+* Menu:
+
+* Ponto::
+* Vetores::
+* auto::
+
+
+File: maxima.info,  Node: Ponto,  Next: Vetores,  Prev: Introdução a Matrizes e Álgebra Linear,  Up: Introdução a Matrizes e Álgebra Linear
+
+26.1.1 Ponto
+------------
+
+O operador `.' representa multiplicação não comutativa e produto
+escalar.  Quando os operandos são matrizes 1-coluna ou 1-linha `a' e
+`b', a expresão `a.b' é equivalente a `sum (a[i]*b[i], i, 1,
+length(a))'.  Se `a' e `b' não são complexos, isso é o produto escalar,
+também chamado produto interno ou produto do ponto, de `a' e `b'.  O
+produto escalar é definido como `conjugate(a).b' quando `a' e `b' são
+complexos; `innerproduct' no pacote `eigen' fornece o produto escalar
+complexo.
+
+   Quando os operandos são matrizes mais gerais, o produto é a matriz
+produto `a' e `b'.  O número de linhas de `b' deve ser igual ao número
+de colunas de `a', e o resultado tem número de linhas igual ao número
+de linhas de `a' e número de colunas igual ao número de colunas de `b'.
+
+   Para distingüir `.' como um operador aritmético do ponto decimal em
+um número em ponto flutuante, pode ser necessário deixar espaços em
+cada lado.  Por exemplo, `5.e3' é `5000.0' mas `5 . e3' é `5' vezes
+`e3'.
+
+   Existem muitos sinalizadores que governam a simplificação de
+expresões envolvendo `.', a saber `dot', `dot0nscsimp', `dot0simp',
+`dot1simp', `dotassoc', `dotconstrules', `dotdistrib', `dotexptsimp',
+`dotident', e `dotscrules'.
+
+
+File: maxima.info,  Node: Vetores,  Next: auto,  Prev: Ponto,  Up: Introdução a Matrizes e Álgebra Linear
+
+26.1.2 Vetores
+--------------
+
+`vect' é um pacote de funções para análise vetorial.  `load ("vect")'
+chama esse pacote, e `demo ("vect")' permite visualizar uma
+demonstração.
+
+   O pacote de análise vetorial pode combinar e simplificar expresões
+simbólicas incluindo produtos dos pontos e productos dos x, juntamente
+com o gradiente, divergencia, torção, e operadores Laplacianos.  A
+distribuição desses operadores sobre adições ou produtos é governada
+por muitos sinalizadores, como são várias outras expansões, incluindo
+expansão dentro de componentes em qualquer sistema de coordenadas
+ortogonais.  Existem também funções para derivar o escalar ou vetor
+potencial de um campo.
+
+   O pacote `vect' contém essas funções: `vectorsimp', `scalefactors',
+`express', `potential', e `vectorpotential'.
+
+   Atenção: o pacote `vect' declara o operador ponto `.' como sendo um
+operador comutativo.
+
+
+File: maxima.info,  Node: auto,  Prev: Vetores,  Up: Introdução a Matrizes e Álgebra Linear
+
+26.1.3 auto
+-----------
+
+O pacote `eigen' contém muitas funções devotadas para a computação
+simbólica de autovalores e autovetores.  Maxima chama o pacote
+automaticamente se uma das funções `eigenvalues' ou `eigenvectors' é
+invocada.  O pacote pode ser chamado explicitamente com `load
+("eigen")'.
+
+   `demo ("eigen")' mostra uma demonstração das compatibilidades desse
+pacote.  `batch ("eigen")' executa a mesma demonstração, mas sem
+lembretes de usuário entre sucessivas computações.
+
+   As funções no pacote `eigen' são `innerproduct', `unitvector',
+`columnvector', `gramschmidt', `eigenvalues', `eigenvectors',
+`uniteigenvectors', e `similaritytransform'.
+
+
 File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: Introdução a Matrizes e Álgebra Linear,  Up: Matrizes e Álgebra Linear
 
-27.2 Definições para Matrizes e Álgebra Linear
+26.2 Definições para Matrizes e Álgebra Linear
 ==============================================
 
  -- Função: addcol (<M>, <list_1>, ..., <list_n>)
@@ -504,18 +2544,25 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      Retorna uma matriz gerada de <a>, pegando o elemento
      `<a>[<i_1>,<j_1>]' como o elemento do canto superior esquerdo e
      `<a>[<i_2>,<j_2>]' como o elemento do canto inferior direto da
-     matriz.  Aqui <a> é um array (criado por `array' mas não por
-     `make_array') ou por uma função array.** (Uma funçãO array é
-     criado como outras funções com `:=' ou `define', mas os argumentos
-     são colocados entre colchêtes em lugar de parêntesis.)
+     matriz.  Aqui <a> é um array declarado (criado através de `array'
+     mas não por meio de `make_array') ou um array não declarado, ou
+     uma função array, ou uma expressão lambda de dois argumentos.
+     (Uma funçãO array é criado como outras funções com `:=' ou
+     `define', mas os argumentos são colocados entre colchêtes em lugar
+     de parêntesis.)
 
      Se <j_1> é omitido, isso é assumido ser igual a <i_1>.  Se ambos
      <j_1> e <i_1> são omitidos, ambos são assumidos iguais a 1.
 
-     Se um elemento selecionado `i,j' de um array é indefinido, a
+     Se um elemento selecionado `i,j' de um array for indefinido, a
      matriz conterá um elemento simbólico `<a>[i,j]'.
 
-          (%i1) h[i,j] := 1/(i+j-1)$
+     Exemplos:
+
+          (%i1) h [i, j] := 1 / (i + j - 1);
+                                              1
+          (%o1)                  h     := ---------
+                                  i, j    i + j - 1
           (%i2) genmatrix (h, 3, 3);
                                      [    1  1 ]
                                      [ 1  -  - ]
@@ -528,16 +2575,28 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                      [ 1  1  1 ]
                                      [ -  -  - ]
                                      [ 3  4  5 ]
-          (%i3) array (a, fixnum, 2, 2)$
-          (%i4) a[1,1]: %e$
-          (%i5) a[2,2]: %pi$
-          (%i6) kill (a[1,2], a[2,1])$
-          (%i7) genmatrix (a, 2, 2);
-                                  [  %e    a     ]
-                                  [         1, 2 ]
-          (%o7)                   [              ]
-                                  [ a       %pi  ]
-                                  [  2, 1        ]
+          (%i3) array (a, fixnum, 2, 2);
+          (%o3)                           a
+          (%i4) a [1, 1] : %e;
+          (%o4)                          %e
+          (%i5) a [2, 2] : %pi;
+          (%o5)                          %pi
+          (%i6) genmatrix (a, 2, 2);
+                                     [ %e   0  ]
+          (%o6)                      [         ]
+                                     [ 0   %pi ]
+          (%i7) genmatrix (lambda ([i, j], j - i), 3, 3);
+                                   [  0    1   2 ]
+                                   [             ]
+          (%o7)                    [ - 1   0   1 ]
+                                   [             ]
+                                   [ - 2  - 1  0 ]
+          (%i8) genmatrix (B, 2, 2);
+                                  [ B      B     ]
+                                  [  1, 1   1, 2 ]
+          (%o8)                   [              ]
+                                  [ B      B     ]
+                                  [  2, 1   2, 2 ]
 
 
  -- Função: gramschmidt (<x>)
@@ -1231,8 +3290,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      Retorna um matriz <m> por <n>, com todos os elementos sendo zero.
 
 
- -- Símbolo especial: "["
- -- Símbolo especial: "]"
+ -- Símbolo especial: [
+ -- Símbolo especial: ]
      `[' e `]' marcam o omeço e o fim, respectivamente, de uma lista.
 
      `[' e `]' também envolvem os subscritos de uma lista, array, array
@@ -1268,7 +3327,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
 File: maxima.info,  Node: Funções Afins,  Next: itensor,  Prev: Matrizes e Álgebra Linear,  Up: Top
 
-28 Funções Afins
+27 Funções Afins
 ****************
 
 * Menu:
@@ -1278,7 +3337,7 @@ File: maxima.info,  Node: Funções Afins,  Next: itensor,  Prev: Matrizes e Ál
 
 File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Afins,  Up: Funções Afins
 
-28.1 Definições para Funções Afins
+27.1 Definições para Funções Afins
 ==================================
 
  -- Função: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
@@ -1409,7 +3468,7 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
 File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Funções Afins,  Up: Top
 
-29 itensor
+28 itensor
 **********
 
 * Menu:
@@ -1420,7 +3479,7 @@ File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Funções Afins,  Up: 
 
 File: maxima.info,  Node: Introdução a itensor,  Next: Definições para itensor,  Prev: itensor,  Up: itensor
 
-29.1 Introdução a itensor
+28.1 Introdução a itensor
 =========================
 
 Maxima implementa a manipulação de tensores simbólicos d dois tipos
@@ -1476,7 +3535,7 @@ que em alguns casos o usuário possa encontrar dificuldade com a
 especificação da métrica, definição de função, e a avaliação de objetos
 "indexados" diferenciados.
 
-29.1.1 Nova notação d tensores
+28.1.1 Nova notação d tensores
 ------------------------------
 
 Até agora, o pacote `itensor' no Maxima tinha usado uma notação que
@@ -1530,7 +3589,7 @@ considerável chance que "novos" tensores irão falhar em interoperar com
 certas funções ou recursos. Essas falhas serão corrigidas à medida que
 forem encontradas... até então, seja cuidadoso!
 
-29.1.2 Manipulação de tensores indiciais
+28.1.2 Manipulação de tensores indiciais
 ----------------------------------------
 
 o pacote de manipulação de tensores indiciais pode ser chamado através
@@ -1665,10 +3724,10 @@ cálculos simples.
 
 File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itensor,  Up: itensor
 
-29.2 Definições para itensor
+28.2 Definições para itensor
 ============================
 
-29.2.1 Gerenciando objetos indexados
+28.2.1 Gerenciando objetos indexados
 ------------------------------------
 
  -- Função: entertensor (<nome>)
@@ -2173,7 +4232,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      Similar a `canten' mas também executa contração de índices.
 
 
-29.2.2 Simetrias de tensores
+28.2.2 Simetrias de tensores
 ----------------------------
 
  -- Variável de Opção: allsym
@@ -2254,7 +4313,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      completamente para sua forma mais simples embora retorne sempre um
      resultado matemáticamente correto.
 
-29.2.3 Cálculo de tensores indiciais
+28.2.3 Cálculo de tensores indiciais
 ------------------------------------
 
  -- Função: diff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
@@ -2525,7 +4584,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      possuem exatamente um índice derivativo.
 
 
-29.2.4 Tensores em espaços curvos
+28.2.4 Tensores em espaços curvos
 ---------------------------------
 
  -- Função: imetric (<g>)
@@ -2592,23 +4651,23 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t3)     - a     ichr2    - a     ichr2    + a      + ichr2     a
                        i %1      j s    %1 j      i s    i j,s        %1 s  i j
           (%i4) imetric:g;
-          (%o4) 				       g
+          (%o4)                                  g
           (%i5) ishow(ev(%th(2),ichr2))$
-          	 %1 %4  k
-          	g      a     (g	      - g       + g	 )
-          		i %1   s %4,j	 j s,%4	   j %4,s
+                   %1 %4  k
+                  g      a     (g       - g       + g      )
+                          i %1   s %4,j    j s,%4    j %4,s
           (%t5) - ------------------------------------------
-          			    2
+                                      2
               %1 %3  k
-             g	  a     (g       - g	   + g	    )
-          	   %1 j	  s %3,i    i s,%3    i %3,s
+             g      a     (g       - g       + g      )
+                     %1 j   s %3,i    i s,%3    i %3,s
            - ------------------------------------------
-          		       2
+                                 2
               k %2  %1
-             g     a    (g        - g	   + g	     )
-          	  i j   s %2,%1	   %1 s,%2    %1 %2,s	  k
+             g     a    (g        - g        + g       )
+                    i j   s %2,%1    %1 s,%2    %1 %2,s     k
            + ------------------------------------------- + a
-          			2			  i j,s
+                                  2                         i j,s
           (%i6)
 
 
@@ -2653,7 +4712,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%o5)                                  0
 
 
-29.2.5 Molduras móveis
+28.2.5 Molduras móveis
 ----------------------
 
 Maxima atualmente tem a habilidade de executar cálculos usando molduras
@@ -2844,7 +4903,7 @@ moldura (`ifc1' e `ifc2') cuja forma parte dos coeficientes de conecção
      Especifica como o suporte da moldura (`ifb') é calculado.
 
 
-29.2.6 Torsão e não metricidade
+28.2.6 Torsão e não metricidade
 -------------------------------
 
 Maxima pode trabalhar com torsão e não metricidade. Quando o sinalizador
@@ -2972,7 +5031,7 @@ são incluídos.
                                               ,%1    i j
 
 
-29.2.7 Álgebra exterior
+28.2.7 Álgebra exterior
 -----------------------
 
 O pacote `itensor' pode executar operações sobre campos tensores
@@ -3020,7 +5079,7 @@ comportamento do produto cunha: se `igeowedge_flag' for `false' (o
 padrão), a primeira, definição "tensorial" é usada, de outra forma a
 segunda, definição "geométrica" irá ser aplicada.
 
- -- Operator: "~"
+ -- Operator: ~
      O operador do produto cunha é definido como sendo o acento til
      `~'. O til é um operador binário. Seus argumentos podem ser
      expressões envolvendo escalares, tensores covariantes de categoria
@@ -3054,7 +5113,7 @@ segunda, definição "geométrica" irá ser aplicada.
                                      i j  k    i  j k    i k  j
 
 
- -- Operator: "|"
+ -- Operator: |
      A barra vertical `|' denota a operação binária "contração com um
      vetor". Quando um tensor covariante totalmente antisimétrico é
      contraído com um vetor contravariante, o resultado é o mesmo
@@ -3164,7 +5223,7 @@ segunda, definição "geométrica" irá ser aplicada.
      diferenciais irão concordar com a noção do elemento volume.
 
 
-29.2.8 Exportando expressões TeX
+28.2.8 Exportando expressões TeX
 --------------------------------
 
 O pacote `itensor' fornece suporte limitado à exportação de expressões
@@ -3201,7 +5260,7 @@ indexados apropriadamente.
      experimental.
 
 
-29.2.9 Interagindo com o pacote `ctensor'
+28.2.9 Interagindo com o pacote `ctensor'
 -----------------------------------------
 
 O pacote `itensor' possui a habilidade de gerar código Maxima que pode
@@ -3255,7 +5314,7 @@ executa essa tarefa é `ic_convert'.
              l, m
 
 
-29.2.10 Palavras reservadas
+28.2.10 Palavras reservadas
 ---------------------------
 
 As palavras seguintes do Maxima são usadas internamente pelo pacote
@@ -3278,7 +5337,7 @@ As palavras seguintes do Maxima são usadas internamente pelo pacote
 
 File: maxima.info,  Node: ctensor,  Next: Pacote atensor,  Prev: itensor,  Up: Top
 
-30 ctensor
+29 ctensor
 **********
 
 * Menu:
@@ -3289,7 +5348,7 @@ File: maxima.info,  Node: ctensor,  Next: Pacote atensor,  Prev: itensor,  Up: T
 
 File: maxima.info,  Node: Introdução a ctensor,  Next: Definições para ctensor,  Prev: ctensor,  Up: ctensor
 
-30.1 Introdução a ctensor
+29.1 Introdução a ctensor
 =========================
 
 `ctensor' é um pacote de manipulação de componentes.  Para usar o pacote
@@ -3402,10 +5461,10 @@ solução de Schwarzschild) como um exemplo. Muitas das funções em
 
 File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctensor,  Up: ctensor
 
-30.2 Definições para ctensor
+29.2 Definições para ctensor
 ============================
 
-30.2.1 Inicialização e configuração
+29.2.1 Inicialização e configuração
 -----------------------------------
 
  -- Função: csetup ()
@@ -3548,7 +5607,7 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
      métrica da moldura de Lorentz.
 
 
-30.2.2 Os tensores do espaço curvo
+29.2.2 Os tensores do espaço curvo
 ----------------------------------
 
 O principal propósito do pacote `ctensor' é calcular os tensores do
@@ -3662,7 +5721,7 @@ escolhida para `true', os seguintes tensores podem ser calculados:
 
      Se a variável `cframe_flag' for `false', o tensor de Riemann é
      calculado diretamente dos símbolos de Christoffel. Se
-     `cframe_flag' for `false', o tensor covariante de Riemann é
+     `cframe_flag' for `true', o tensor covariante de Riemann é
      calculado primeiro dos coeficientes de campo da moldura.
 
 
@@ -3706,7 +5765,7 @@ escolhida para `true', os seguintes tensores podem ser calculados:
      resultados irão ser fatorados também.
 
 
-30.2.3 Expansão das séries de Taylor
+29.2.3 Expansão das séries de Taylor
 ------------------------------------
 
 O pacote `ctensor' possui a habilidade para truncar resultados assumindo
@@ -3854,7 +5913,7 @@ simplifica resultados.
      gravitacional.
 
 
-30.2.4 Campos de moldura
+29.2.4 Campos de moldura
 ------------------------
 
 Quando a variável `cframe_flag' for escolhida para `true', o pacote
@@ -3870,7 +5929,7 @@ Quando a variável `cframe_flag' for escolhida para `true', o pacote
              ab         d,e       e,d      a     b
 
 
-30.2.5 Classificação Algébrica
+29.2.5 Classificação Algébrica
 ------------------------------
 
 Um novo recurso (a partir de November de 2004) de `ctensor' é sua
@@ -4008,7 +6067,7 @@ compatibilidade, veja o arquivo `share/tensor/petrov.dem'.
      de 2004, e é provável que contenha erros.
 
 
-30.2.6 Torsão e não metricidade
+29.2.6 Torsão e não metricidade
 -------------------------------
 
 `ctensor' possui a habilidade de calcular e incluir coeficientes de
@@ -4066,7 +6125,7 @@ subtraídos dos coeficientes de conecção indexados mistos.
      partir do vetor de não metricidade <nm>.
 
 
-30.2.7 Recursos diversos
+29.2.7 Recursos diversos
 ------------------------
 
  -- Função: ctransform (<M>)
@@ -4222,7 +6281,7 @@ subtraídos dos coeficientes de conecção indexados mistos.
      equações de campo são as componentes de um array chamado `rosen'.
 
 
-30.2.8 Funções utilitárias
+29.2.8 Funções utilitárias
 --------------------------
 
  -- Função: diagmatrixp (<M>)
@@ -4461,7 +6520,7 @@ subtraídos dos coeficientes de conecção indexados mistos.
      Retorna uma nova lista consistindo de <L> com o <n>'ésimo elemento
      apagado.
 
-30.2.9 Variáveis usadas por `ctensor'
+29.2.9 Variáveis usadas por `ctensor'
 -------------------------------------
 
  -- Variável de opção: dim
@@ -4680,7 +6739,7 @@ subtraídos dos coeficientes de conecção indexados mistos.
      nomes de coordenadas.  Veja também `csetup'.
 
 
-30.2.10 Nomes reservados
+29.2.10 Nomes reservados
 ------------------------
 
 Os seguintes nomes são usados internamente pelo pacote `ctensor' e não
@@ -4689,9 +6748,9 @@ devem ser redefinidos:
        Name         Description
        ---------------------------------------
        _lg()        Avalia para `lfg' se a moldura métrica for usada,
-     		    para `lg' de outra forma
+                         para `lg' de outra forma
        _ug()        Avalia para `ufg' se a moldura métrica for usada,
-     		    para `ug' de outra forma
+                         para `ug' de outra forma
        cleanup()    Remove ítens da lista `deindex'
        contract4()  Usado por psi()
        filemet()    Usado por csetup() quando lendo a métrica de um arquivo
@@ -4700,24 +6759,24 @@ devem ser redefinidos:
        findde3()    Usado por findde()
        kdelt()      Delta de Kronecker (não generalizado)
        newmet()     Usado por csetup() para escolher uma métrica
-     		    interativamente
+                         interativamente
        setflags()   Usado por init_ctensor()
        readvalue()
        resimp()
        sermet()     Usado por csetup() para informar uma métricacom série
-     		    de Taylor
+                         de Taylor
        txyzsum()
        tmetric()    Moldura métrica, usado por cmetric() quando
-     		    cframe_flag:true
+                         cframe_flag:true
        triemann()   Tensor de Riemann em base de moldura, usado quando
-     		    cframe_flag:true
+                         cframe_flag:true
        tricci()     Tensor de Ricci em base de moldura, usada quando
-     		    cframe_flag:true
+                         cframe_flag:true
        trrc()       Coeficientes de rotação de Ricci, usado por
-     		    christof()
+                         christof()
        yesp()
 
-30.2.11 Changes
+29.2.11 Changes
 ---------------
 
 Em Novembro de 2004, o pacote `ctensor' foi extensivamente reescrito.
@@ -4756,7 +6815,7 @@ pacote com a versão comercial do Macsyma.
 
 File: maxima.info,  Node: Pacote atensor,  Next: Séries,  Prev: ctensor,  Up: Top
 
-31 Pacote atensor
+30 Pacote atensor
 *****************
 
 * Menu:
@@ -4767,7 +6826,7 @@ File: maxima.info,  Node: Pacote atensor,  Next: Séries,  Prev: ctensor,  Up: T
 
 File: maxima.info,  Node: Introdução ao Pacote atensor,  Next: Definições para o Pacote atensor,  Prev: Pacote atensor,  Up: Pacote atensor
 
-31.1 Introdução ao Pacote atensor
+30.1 Introdução ao Pacote atensor
 =================================
 
 `atensor' é um pacote de manipulção de tensores algébricos.  Para usar
@@ -4858,7 +6917,7 @@ simplificações desejadas.
 
 File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introdução ao Pacote atensor,  Up: Pacote atensor
 
-31.2 Definições para o Pacote atensor
+30.2 Definições para o Pacote atensor
 =====================================
 
  -- Função: init_atensor (<alg_type>, <opt_dims>)
@@ -4997,7 +7056,7 @@ File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introduçã
 
 File: maxima.info,  Node: Séries,  Next: Teoria dos Números,  Prev: Pacote atensor,  Up: Top
 
-32 Séries
+31 Séries
 *********
 
 * Menu:
@@ -5008,7 +7067,7 @@ File: maxima.info,  Node: Séries,  Next: Teoria dos Números,  Prev: Pacote ate
 
 File: maxima.info,  Node: Introdução a Séries,  Next: Definições para Séries,  Prev: Séries,  Up: Séries
 
-32.1 Introdução a Séries
+31.1 Introdução a Séries
 ========================
 
 Maxima contém funções `taylor' e `powerseries' (séries de potência)
@@ -5017,1811 +7076,6 @@ ferramentas  tais como `nusum' capazes de encontrar a forma fechada de
 algumas séries.   Operações tais como adição e multiplicação travalham
 da forma usual sobre séries.  Essa seção apresenta as variáveis globais
 que controlam a expansão.
-
-
-File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séries,  Up: Séries
-
-32.2 Definições para Séries
-===========================
-
- -- Variável de opção: cauchysum
-     Valor padrão: `false'
-
-     Quando multiplicando adições jutas com `inf' como seus limites
-     superiores, se `sumexpand' for `true' e `cauchysum' for `true'
-     então o produto de Cauchy será usado em lugar do produto usual.
-     No produto de Cauchy o índice do somatório interno é uma função do
-     índice do externo em lugar de variar independentemente.
-
-     Exemplo:
-
-          (%i1) sumexpand: false$
-          (%i2) cauchysum: false$
-          (%i3) s: sum (f(i), i, 0, inf) * sum (g(j), j, 0, inf);
-                                inf         inf
-                                ====        ====
-                                \           \
-          (%o3)                ( >    f(i))  >    g(j)
-                                /           /
-                                ====        ====
-                                i = 0       j = 0
-          (%i4) sumexpand: true$
-          (%i5) cauchysum: true$
-          (%i6) ''s;
-                           inf     i1
-                           ====   ====
-                           \      \
-          (%o6)             >      >     g(i1 - i2) f(i2)
-                           /      /
-                           ====   ====
-                           i1 = 0 i2 = 0
-
-
- -- Função: deftaylor (<f_1>(<x_1>), <expr_1>, ..., <f_n>(<x_n>),
-          <expr_n>)
-     Para cada função <f_i> de uma variável <x_i>, `deftaylor' define
-     <expr_i> como a séries de Taylor sobre zero.  <expr_i> é
-     tipicamente um polinômio em <x_i> ou um somatório; expressões mais
-     gerais são aceitas por `deftaylor' sem reclamações.
-
-     `powerseries (<f_i>(<x_i>), <x_i>, 0)' retorna as séries definidas
-     por `deftaylor'.
-
-     `deftaylor' retorna uma lista das funções <f_1>, ..., <f_n>.
-     `deftaylor' avalia seus argumentos.
-
-     Exemplo:
-
-          (%i1) deftaylor (f(x), x^2 + sum(x^i/(2^i*i!^2), i, 4, inf));
-          (%o1)                          [f]
-          (%i2) powerseries (f(x), x, 0);
-                                inf
-                                ====      i1
-                                \        x         2
-          (%o2)                  >     -------- + x
-                                /       i1    2
-                                ====   2   i1!
-                                i1 = 4
-          (%i3) taylor (exp (sqrt (f(x))), x, 0, 4);
-                                2         3          4
-                               x    3073 x    12817 x
-          (%o3)/T/     1 + x + -- + ------- + -------- + . . .
-                               2     18432     307200
-
-
- -- Variável de opção: maxtayorder
-     Valor padrão: `true'
-
-     Quando `maxtayorder' for `true', durante a manipulação algébrica
-     de séries (truncadas) de Taylor, `taylor' tenta reter tantos
-     termos quantos forem conhecidos serem corretos.
-
-
- -- Função: niceindices (<expr>)
-     Renomeia os índices de adições e produtos em <expr>.
-     `niceindices' tenta renomear cada índice para o valor de
-     `niceindicespref[1]', a menos que o nome apareça nas parcelas do
-     somatório ou produtório, nesses casos `niceindices' tenta os
-     elementos seguintes de `niceindicespref' por sua vez, até que uma
-     varável não usada unused variable seja encontrada.  Se a lista
-     inteira for exaurida, índices adicionais são constrídos através da
-     anexaao de inteiros ao valor de `niceindicespref[1]', e.g., `i0',
-     `i1', `i2', ....
-
-     `niceindices' retorna uma expressão.  `niceindices' avalia seu
-     argumento.
-
-     Exemplo:
-
-          (%i1) niceindicespref;
-          (%o1)                  [i, j, k, l, m, n]
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j l + k)
-                               ! !  /
-                              l = 1 ====
-                                    k = 1
-
-
- -- Variável de opção: niceindicespref
-     Valor padrão: `[i, j, k, l, m, n]'
-
-     `niceindicespref' é a lista da qual `niceindices' pega os nomes
-     dos índices de adições e produtos products.
-
-     Os elementos de `niceindicespref' são tipicamente nomes de
-     variáveis, embora que não seja imposto por `niceindices'.
-
-     Exemplo:
-
-          (%i1) niceindicespref: [p, q, r, s, t, u]$
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j q + p)
-                               ! !  /
-                              q = 1 ====
-                                    p = 1
-
-
- -- Função: nusum (<expr>, <x>, <i_0>, <i_1>)
-     Realiza o somatório hipergeométrico indefinido de <expr> com
-     relação a <x> usando um procedimento de decisão devido a R.W.
-     Gosper.  <expr> e o resultado deve ser expressável como produtos
-     de expoentes inteiros, fatoriais, binomios, e funções recionais.
-
-     Os termos "definido" and "e somatório indefinido" são usados
-     analogamente a "definida" and "integração indefinida".  Adicionar
-     indefinidamente significa dar um resultado simólico para a adição
-     sobre intervalos de comprimentos de variáveis, não apenas e.g. 0 a
-     infinito.  Dessa forma, uma vez que não existe fórmula para a
-     adição parcial geral de séries binomiais, `nusum' não pode fazer
-     isso.
-
-     `nusum' e `unsum' conhecem um porco sobre adições e subtrações de
-     produtos finitos.  Veja também `unsum'.
-
-     Exemplos:
-
-          (%i1) nusum (n*n!, n, 0, n);
-
-          Dependent equations eliminated:  (1)
-          (%o1)                     (n + 1)! - 1
-          (%i2) nusum (n^4*4^n/binomial(2*n,n), n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o2) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i3) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o3)                   ----------------
-                                  binomial(2 n, n)
-          (%i4) unsum (prod (i^2, i, 1, n), n);
-                              n - 1
-                              /===\
-                               ! !   2
-          (%o4)              ( ! !  i ) (n - 1) (n + 1)
-                               ! !
-                              i = 1
-          (%i5) nusum (%, n, 1, n);
-
-          Dependent equations eliminated:  (2 3)
-                                      n
-                                    /===\
-                                     ! !   2
-          (%o5)                      ! !  i  - 1
-                                     ! !
-                                    i = 1
-
-
- -- Função: pade (<taylor_series>, <numer_deg_bound>, <denom_deg_bound>)
-     Retorna uma lista de todas as funções racionais que possuem a dada
-     expansão da séries de Taylor onde a adição dos graus do numerador
-     e do denominador é menor que ou igual ao nível de truncação das
-     séries de potência, i.e.  são "melhores" aproximações, e que
-     adicionalmente satisfazem o grau especificado associado.
-
-     <taylor_series> é uma séries de Taylor de uma variável.
-     <numer_deg_bound> e <denom_deg_bound> são inteiros positivos
-     especificando o grau associado sobre o numerador e o denominador.
-
-     <taylor_series> podem também ser séries de Laurent, e o grau
-     associado pode ser `inf' que acarreta todas funções racionais cujo
-     grau total for menor que ou igual ao comprimento das séries de
-     potências a serem retornadas.  O grau total é definido como
-     `<numer_deg_bound> + <denom_deg_bound>'.  O comprimento de séries
-     de potência é definido como `"nível de trncação" + 1 - min(0,
-     "ordem das séries")'.
-
-          (%i1) taylor (1 + x + x^2 + x^3, x, 0, 3);
-                                        2    3
-          (%o1)/T/             1 + x + x  + x  + . . .
-          (%i2) pade (%, 1, 1);
-                                           1
-          (%o2)                       [- -----]
-                                         x - 1
-          (%i3) t: taylor(-(83787*x^10 - 45552*x^9 - 187296*x^8
-                             + 387072*x^7 + 86016*x^6 - 1507328*x^5
-                             + 1966080*x^4 + 4194304*x^3 - 25165824*x^2
-                             + 67108864*x - 134217728)
-                 /134217728, x, 0, 10);
-                              2    3       4       5       6        7
-                       x   3 x    x    15 x    23 x    21 x    189 x
-          (%o3)/T/ 1 - - + ---- - -- - ----- + ----- - ----- - ------
-                       2    16    32   1024    2048    32768   65536
-
-                                            8         9          10
-                                      5853 x    2847 x    83787 x
-                                    + ------- + ------- - --------- + . . .
-                                      4194304   8388608   134217728
-          (%i4) pade (t, 4, 4);
-          (%o4)                          []
-
-     Não existe função racional de grau 4 numerador/denominador, com
-     essa expansão de série de potência.  Você obrigatoriamente em
-     geral tem grau do numerador e grau do denominador adicionando para
-     cima ao menor grau das séries de potência, com o objetivo de ter
-     disponível coeficientes desconhecidos para resolver.
-
-          (%i5) pade (t, 5, 5);
-                               5                4                 3
-          (%o5) [- (520256329 x  - 96719020632 x  - 489651410240 x
-
-                            2
-           - 1619100813312 x  - 2176885157888 x - 2386516803584)
-
-                         5                 4                  3
-          /(47041365435 x  + 381702613848 x  + 1360678489152 x
-
-                            2
-           + 2856700692480 x  + 3370143559680 x + 2386516803584)]
-
-
- -- Variável de opção: powerdisp
-     Valor padrão: `false'
-
-     Quando `powerdisp' for `true', uma adição é mostrada com seus
-     termos em ordem do crescimento do expoente.  Dessa forma um
-     polinômio é mostrado como séries de potências truncadas, com o
-     termo constante primeiro e o maior expoente por último.
-
-     Por padão, termos de uma adição são mostrados em ordem do expoente
-     decrescente.
-
-
- -- Função: powerseries (<expr>, <x>, <a>)
-     Retorna a forma geral expansão de séries de potência para <expr>
-     na variável <x> sobre o ponto <a> (o qual pode ser `inf' para
-     infinito).
-
-     Se `powerseries' incapaz de expandir <expr>, `taylor' pode dar os
-     primeiros muitos termos de séries.
-
-     Quando `verbose' for `true', `powerseries' mostra mensagens de
-     progresso.
-
-          (%i1) verbose: true$
-          (%i2) powerseries (log(sin(x)/x), x, 0);
-          can't expand
-                                           log(sin(x))
-          so we'll try again after applying the rule:
-                                                  d
-                                                / -- (sin(x))
-                                                [ dx
-                                  log(sin(x)) = i ----------- dx
-                                                ]   sin(x)
-                                                /
-          in the first simplification we have returned:
-                                       /
-                                       [
-                                       i cot(x) dx - log(x)
-                                       ]
-                                       /
-                              inf
-                              ====        i1  2 i1             2 i1
-                              \      (- 1)   2     bern(2 i1) x
-                               >     ------------------------------
-                              /                i1 (2 i1)!
-                              ====
-                              i1 = 1
-          (%o2)                -------------------------------------
-                                                2
-
-
- -- Variável de opção: psexpand
-     Valor padrão: `false'
-
-     Quando `psexpand' for `true', uma expressão função racional
-     extendida é mostrada completamente expandida.  O comutador
-     `ratexpand' tem o mesmo efeito.
-
-     Quando `psexpand' for `false', uma expressão de várias variáveis é
-     mostrada apenas como no pacote de função racional.
-
-     Quando `psexpand' for  `multi', então termos com o mesmo grau
-     total nas variáveis são agrupados juntos.
-
-
- -- Função: revert (<expr>, <x>)
- -- Função: revert2 (<expr>, <x>, <n>)
-     Essas funções retornam a reversão de <expr>, uma série de Taylor
-     sobre zero na variável <x>.  `revert' retorna um polinômio de grau
-     igual ao maior expoente em <expr>.  `revert2' retorna um polinômio
-     de grau <n>, o qual pode ser maior que, igual a, ou menor que o
-     grau de <expr>.
-
-     `load ("revert")' chama essas funções.
-
-     Exemplos:
-
-          (%i1) load ("revert")$
-          (%i2) t: taylor (exp(x) - 1, x, 0, 6);
-                             2    3    4    5     6
-                            x    x    x    x     x
-          (%o2)/T/      x + -- + -- + -- + --- + --- + . . .
-                            2    6    24   120   720
-          (%i3) revert (t, x);
-                         6       5       4       3       2
-                     10 x  - 12 x  + 15 x  - 20 x  + 30 x  - 60 x
-          (%o3)/R/ - --------------------------------------------
-                                          60
-          (%i4) ratexpand (%);
-                               6    5    4    3    2
-                              x    x    x    x    x
-          (%o4)             - -- + -- - -- + -- - -- + x
-                              6    5    4    3    2
-          (%i5) taylor (log(x+1), x, 0, 6);
-                              2    3    4    5    6
-                             x    x    x    x    x
-          (%o5)/T/       x - -- + -- - -- + -- - -- + . . .
-                             2    3    4    5    6
-          (%i6) ratsimp (revert (t, x) - taylor (log(x+1), x, 0, 6));
-          (%o6)                           0
-          (%i7) revert2 (t, x, 4);
-                                    4    3    2
-                                   x    x    x
-          (%o7)                  - -- + -- - -- + x
-                                   4    3    2
-
-
- -- Função: taylor (<expr>, <x>, <a>, <n>)
- -- Função: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
- -- Função: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
- -- Função: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...],
-          [<n_1>, <n_2>, ...])
-     `taylor (<expr>, <x>, <a>, <n>)' expande a expressão <expr> em uma
-     série truncada de Taylor ou de Laurent na variável <x> em torno do
-     ponto <a>, contendo termos até `(<x> - <a>)^<n>'.
-
-     Se <expr> é da forma `<f>(<x>)/<g>(<x>)' e `<g>(<x>)' não possui
-     de grau acima do grau <n> então `taylor' tenta expandir `<g>(<x>)'
-     acima do gau `2 <n>'.  Se existe ainda termos não zero, `taylor'
-     dobra o grau de expansão de `<g>(<x>)' contanto que o grau da
-     expansão o grau da expansão seja menor que ou igual a `<n>
-     2^taylordepth'.
-
-     `taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)' retorna uma série
-     de potência truncada de grau <n> em todas as variáveis <x_1>,
-     <x_2>, ...  sobre o ponto `(<a>, <a>, ...)'.
-
-     `taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>, <n_2>],
-     ...)'  retorna uma série de potência truncada nas variáveis <x_1>,
-     <x_2>, ...  sobre o ponto `(<a_1>, <a_2>, ...)', truncada em
-     <n_1>, <n_2>, ....
-
-     `taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...], [<n_1>,
-     <n_2>, ...])' retorna uma série de potência truncada nas variáveis
-     <x_1>, <x_2>, ...  sobre o ponto `(<a_1>, <a_2>, ...)', truncada
-     em <n_1>, <n_2>, ....
-
-     `taylor (<expr>, [<x>, <a>, <n>, 'asymp])' retorna uma expansão de
-     <expr> em expoentes negativos de `<x> - <a>'.  O termo de maior
-     ordem é `(<x> - <a>)^<-n>'.
-
-     Quando `maxtayorder' for `true', então durante maniplulação
-     algébrica da séries de Taylor (truncada), `taylor' tenta reter
-     tantos termos quantos forem conhecidos serem corretos.
-
-     Quando `psexpand' for `true', uma expressão de função racional
-     extendida é mostrada completamente expandida.  O comutador
-     `ratexpand' tem o mesmo efeito.  Quando `psexpand' for `false',
-     uma expressão de várias variáveis é mostrada apenas como no pacote
-     de função racional.  Quando `psexpand' for  `multi', então os
-     termos com o mesmo grau total nas variáveis são agrupados juntos.
-
-     Veja também o comutador `taylor_logexpand' para controlar a
-     expansão.
-
-     Exemplos:
-
-          (%i1) taylor (sqrt (sin(x) + a*x + 1), x, 0, 3);
-                                     2             2
-                       (a + 1) x   (a  + 2 a + 1) x
-          (%o1)/T/ 1 + --------- - -----------------
-                           2               8
-
-                                             3      2             3
-                                         (3 a  + 9 a  + 9 a - 1) x
-                                       + -------------------------- + . . .
-                                                     48
-          (%i2) %^2;
-                                              3
-                                             x
-          (%o2)/T/           1 + (a + 1) x - -- + . . .
-                                             6
-          (%i3) taylor (sqrt (x + 1), x, 0, 5);
-                                 2    3      4      5
-                            x   x    x    5 x    7 x
-          (%o3)/T/      1 + - - -- + -- - ---- + ---- + . . .
-                            2   8    16   128    256
-          (%i4) %^2;
-          (%o4)/T/                  1 + x + . . .
-          (%i5) product ((1 + x^i)^2.5, i, 1, inf)/(1 + x^2);
-                                   inf
-                                  /===\
-                                   ! !    i     2.5
-                                   ! !  (x  + 1)
-                                   ! !
-                                  i = 1
-          (%o5)                   -----------------
-                                        2
-                                       x  + 1
-          (%i6) ev (taylor(%, x,  0, 3), keepfloat);
-                                         2           3
-          (%o6)/T/    1 + 2.5 x + 3.375 x  + 6.5625 x  + . . .
-          (%i7) taylor (1/log (x + 1), x, 0, 3);
-                                         2       3
-                           1   1   x    x    19 x
-          (%o7)/T/         - + - - -- + -- - ----- + . . .
-                           x   2   12   24    720
-          (%i8) taylor (cos(x) - sec(x), x, 0, 5);
-                                          4
-                                     2   x
-          (%o8)/T/                - x  - -- + . . .
-                                         6
-          (%i9) taylor ((cos(x) - sec(x))^3, x, 0, 5);
-          (%o9)/T/                    0 + . . .
-          (%i10) taylor (1/(cos(x) - sec(x))^3, x, 0, 5);
-                                                         2          4
-                      1     1       11      347    6767 x    15377 x
-          (%o10)/T/ - -- + ---- + ------ - ----- - ------- - --------
-                       6      4        2   15120   604800    7983360
-                      x    2 x    120 x
-
-                                                                    + . . .
-          (%i11) taylor (sqrt (1 - k^2*sin(x)^2), x, 0, 6);
-                         2  2       4      2   4
-                        k  x    (3 k  - 4 k ) x
-          (%o11)/T/ 1 - ----- - ----------------
-                          2            24
-
-                                              6       4       2   6
-                                         (45 k  - 60 k  + 16 k ) x
-                                       - -------------------------- + . . .
-                                                    720
-          (%i12) taylor ((x + 1)^n, x, 0, 4);
-                                2       2     3      2         3
-                              (n  - n) x    (n  - 3 n  + 2 n) x
-          (%o12)/T/ 1 + n x + ----------- + --------------------
-                                   2                 6
-
-                                         4      3       2         4
-                                       (n  - 6 n  + 11 n  - 6 n) x
-                                     + ---------------------------- + . . .
-                                                    24
-          (%i13) taylor (sin (y + x), x, 0, 3, y, 0, 3);
-                         3                 2
-                        y                 y
-          (%o13)/T/ y - -- + . . . + (1 - -- + . . .) x
-                        6                 2
-
-                              3                       2
-                         y   y            2      1   y            3
-                    + (- - + -- + . . .) x  + (- - + -- + . . .) x  + . . .
-                         2   12                  6   12
-          (%i14) taylor (sin (y + x), [x, y], 0, 3);
-                               3        2      2      3
-                              x  + 3 y x  + 3 y  x + y
-          (%o14)/T/   y + x - ------------------------- + . . .
-                                          6
-          (%i15) taylor (1/sin (y + x), x, 0, 3, y, 0, 3);
-                    1   y              1    1               1            2
-          (%o15)/T/ - + - + . . . + (- -- + - + . . .) x + (-- + . . .) x
-                    y   6               2   6                3
-                                       y                    y
-
-                                                     1            3
-                                                + (- -- + . . .) x  + . . .
-                                                      4
-                                                     y
-          (%i16) taylor (1/sin (y + x), [x, y], 0, 3);
-                                       3         2       2        3
-                      1     x + y   7 x  + 21 y x  + 21 y  x + 7 y
-          (%o16)/T/ ----- + ----- + ------------------------------- + . . .
-                    x + y     6                   360
-
-
- -- Variável de opção: taylordepth
-     Valor padrão: 3
-
-     Se existem ainda termos não zero, `taylor' dobra o grau da
-     expansão de `<g>(<x>)' contanto que o grau da expansão seja menor
-     que ou igual a `<n> 2^taylordepth'.
-
-
- -- Função: taylorinfo (<expr>)
-     Retorna information about the séries de Taylor <expr>.  O valor de
-     retorno é uma lista de listas.  Cada lista compreende o nome de
-     uma variável, o ponto de expansão, e o grau da expansão.
-
-     `taylorinfo' retorna `false' se <expr> não for uma séries de
-     Taylor.
-
-     Exemplo:
-
-          (%i1) taylor ((1 - y^2)/(1 - x), x, 0, 3, [y, a, inf]);
-                            2                       2
-          (%o1)/T/ - (y - a)  - 2 a (y - a) + (1 - a )
-
-                   2                        2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   3
-           + (1 - a  - 2 a (y - a) - (y - a) ) x  + . . .
-          (%i2) taylorinfo(%);
-          (%o2)               [[y, a, inf], [x, 0, 3]]
-
-
- -- Função: taylorp (<expr>)
-     Retorna `true' se <expr> for uma séries de Taylor, e `false' de
-     outra forma.
-
-
- -- Variável de opção: taylor_logexpand
-     Valor padrão: `true'
-
-     `taylor_logexpand' controla expansão de logarítmos em séries de
-     `taylor'.
-
-     Quando `taylor_logexpand' for `true', todos  logarítmos são
-     expandidos completamente dessa forma problemas de reconhecimento
-     de zero envolvendo envolvendo identidades logarítmicas não
-     atrapalham o processo de expansão.  Todavia, esse esquema não é
-     sempre maematicamente correto uma vez que isso ignora
-     informações de ramo.
-
-     Quando `taylor_logexpand' for escolhida para `false', então a
-     expansão logarítmica que ocorre é somente aquela que for
-     necessária para obter uma séries de potência formal.
-
-
- -- Variável de opção: taylor_order_coefficients
-     Valor padrão: `true'
-
-     `taylor_order_coefficients' controla a ordenação dos coeficientes
-     em uma série de Taylor.
-
-     Quando `taylor_order_coefficients' for `true', coeficientes da
-     séries de Taylor são ordenados canonicamente.
-
-
- -- Função: taylor_simplifier (<expr>)
-     Simplifica coeficientes da séries  de potência <expr>.  `taylor'
-     chama essa função.
-
-
- -- Variável de opção: taylor_truncate_polynomials
-     Valor padrão: `true'
-
-     Quando `taylor_truncate_polynomials' for `true', polinômios são
-     truncados baseados sobre a entrada de níveis de truncação.
-
-     De outra forma, entrada de polinômios para `taylor' são
-     consideradas terem precisão infinita.
-
-
- -- Função: taytorat (<expr>)
-     Converte <expr> da forma `taylor' para a forma de expressão
-     racional canônica (CRE).  O efeito é o mesmo que `rat (ratdisrep
-     (<expr>))', mas mais rápido.
-
-
- -- Função: trunc (<expr>)
-     Coloca notas na representação interna da expressão geral <expr> de
-     modo que isso é mostrado como se suas adições forem séries de
-     Taylor truncadas.  <expr> is not otherwise modified.
-
-     Exemplo:
-
-          (%i1) expr: x^2 + x + 1;
-                                      2
-          (%o1)                      x  + x + 1
-          (%i2) trunc (expr);
-                                          2
-          (%o2)                  1 + x + x  + . . .
-          (%i3) is (expr = trunc (expr));
-          (%o3)                         true
-
-
- -- Função: unsum (<f>, <n>)
-     Retorna a primeira diferençã de trás para frente `<f>(<n>) -
-     <f>(<n> - 1)'.  Dessa forma `unsum' logicamente é a inversa de
-     `sum'.
-
-     Veja também `nusum'.
-
-     Exemplos:
-
-          (%i1) g(p) := p*4^n/binomial(2*n,n);
-                                               n
-                                            p 4
-          (%o1)               g(p) := ----------------
-                                      binomial(2 n, n)
-          (%i2) g(n^4);
-                                        4  n
-                                       n  4
-          (%o2)                   ----------------
-                                  binomial(2 n, n)
-          (%i3) nusum (%, n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o3) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i4) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o4)                   ----------------
-                                  binomial(2 n, n)
-
-
- -- Variável de opção: verbose
-     Valor padrão: `false'
-
-     Quando `verbose' for `true', `powerseries' mostra mensagens de
-     progresso.
-
-
-
-File: maxima.info,  Node: Teoria dos Números,  Next: Symmetries,  Prev: Séries,  Up: Top
-
-33 Teoria dos Números
-*********************
-
-* Menu:
-
-* Definições para Teoria dos Números::
-
-
-File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria dos Números,  Up: Teoria dos Números
-
-33.1 Definições para Teoria dos Números
-=======================================
-
- -- Função: bern (<n>)
-     Retorna o <n>'ésimo número de Bernoulli para o inteiro <n>.
-     Números de Bernoulli iguais a zero são suprimidos se `zerobern'
-     for `false'.
-
-     Veja também `burn'.
-
-          (%i1) zerobern: true$
-          (%i2) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                            1  1       1      1        1
-          (%o2)       [1, - -, -, 0, - --, 0, --, 0, - --]
-                            2  6       30     42       30
-          (%i3) zerobern: false$
-          (%i4) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                      1  1    1   5     691   7    3617  43867
-          (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
-                      2  6    30  66    2730  6    510    798
-
-
- -- Função: bernpoly (<x>, <n>)
-     Retorna o <n>'ésimo polinômio de Bernoulli na variável <x>.
-
-
- -- Função: bfzeta (<s>, <n>)
-     Retorna a função zeta de Riemann para o argumento <s>.  O valor de
-     retorno é um grande inteiro em ponto flutuante (bfloat); <n> é o
-     número de dígitos no valor de retorno.
-
-     `load ("bffac")' chama essa função.
-
-
- -- Função: bfhzeta (<s>, <h>, <n>)
-     Retorna a função zeta de Hurwitz para os argumentos <s> e <h>.  O
-     valor de retorno é um grande inteiro em ponto flutuante (bfloat);
-     <n> é o números de dígitos no valor de retorno.
-
-     A função zeta de Hurwitz é definida como
-
-          sum ((k+h)^-s, k, 0, inf)
-
-     `load ("bffac")' chama essa função.
-
-
- -- Função: binomial (<x>, <y>)
-     O coeficiente binomial `<x>!/(<y>! (<x> - <y>)!)'.  Se <x> e <y>
-     forem inteiros, então o valor numérico do coeficiente binomial é
-     calculado.  Se <y>, ou <x - y>, for um inteiro, o the coeficiente
-     binomial é expresso como um polinômio.
-
-     Exemplos:
-
-          (%i1) binomial (11, 7);
-          (%o1)                          330
-          (%i2) 11! / 7! / (11 - 7)!;
-          (%o2)                          330
-          (%i3) binomial (x, 7);
-                  (x - 6) (x - 5) (x - 4) (x - 3) (x - 2) (x - 1) x
-          (%o3)   -------------------------------------------------
-                                        5040
-          (%i4) binomial (x + 7, x);
-                (x + 1) (x + 2) (x + 3) (x + 4) (x + 5) (x + 6) (x + 7)
-          (%o4) -------------------------------------------------------
-                                         5040
-          (%i5) binomial (11, y);
-          (%o5)                    binomial(11, y)
-
-
- -- Função: burn (<n>)
-     Retorna o <n>'ésimo número de Bernoulli para o inteiro <n>.
-     `burn' pode ser mais eficitente que `bern' para valores grandes e
-     isolados de <n> (talvez <n> maior que 105 ou algo parecido), como
-     `bern' calcula todos os números de Bernoulli até o índice <n>
-     antes de retornar.
-
-     `burn' explora a observação que números de Bernoulli (racionais)
-     podem ser aproximados através de zetas (transcendentes) com
-     eficiência tolerável.
-
-     `load ("bffac")' chama essa função.
-
-
- -- Função: cf (<expr>)
-     Converte <expr> em uma fração contínua.  <expr> é uma expressão
-     compreendendo frações contínuas e raízes quadradas de inteiros.
-     Operandos na expressão podem ser combinados com operadores
-     aritméticos.  Com excessão de frações contínuas e raízes quadradas,
-     fatores na expressão devem ser números inteiros ou racionais.
-     Maxima não conhece operações sobre frações contínuas fora de `cf'.
-
-     `cf' avalia seus argumentos após associar `listarith' a `false'.
-     `cf' retorna uma fração contínua, representada como uma lista.
-
-     Uma fração contínua `a + 1/(b + 1/(c + ...))' é representada
-     através da lista `[a, b, c, ...]'.  Os elementos da lista `a',
-     `b', `c', ... devem avaliar para inteiros.  <expr> pode também
-     conter `sqrt (n)' onde `n' é um inteiro.  Nesse caso `cf'
-     fornecerá tantos termos de fração contínua quantos forem o valor
-     da variável `cflength' vezes o período.
-
-     Uma fração contínua pode ser avaliada para um número através de
-     avaliação da representação aritmética retornada por `cfdisrep'.
-     Veja também `cfexpand' para outro caminho para avaliar uma fração
-     contínua.
-
-     Veja também `cfdisrep', `cfexpand', e `cflength'.
-
-     Exemplos:
-
-        * <expr> é uma expressão compreendendo frações contínuas e
-          raízes quadradas de inteiros.
-
-               (%i1) cf ([5, 3, 1]*[11, 9, 7] + [3, 7]/[4, 3, 2]);
-               (%o1)               [59, 17, 2, 1, 1, 1, 27]
-               (%i2) cf ((3/17)*[1, -2, 5]/sqrt(11) + (8/13));
-               (%o2)        [0, 1, 1, 1, 3, 2, 1, 4, 1, 9, 1, 9, 2]
-
-        * `cflength' controla quantos períodos de fração contínua são
-          computados para números algébricos, números irracionais.
-
-               (%i1) cflength: 1$
-               (%i2) cf ((1 + sqrt(5))/2);
-               (%o2)                    [1, 1, 1, 1, 2]
-               (%i3) cflength: 2$
-               (%i4) cf ((1 + sqrt(5))/2);
-               (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-               (%i5) cflength: 3$
-               (%i6) cf ((1 + sqrt(5))/2);
-               (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-        * Um fração contínua pode ser avaliado através da avaliação da
-          representação aritmética retornada por `cfdisrep'.
-
-               (%i1) cflength: 3$
-               (%i2) cfdisrep (cf (sqrt (3)))$
-               (%i3) ev (%, numer);
-               (%o3)                   1.731707317073171
-
-        * Maxima não conhece operações sobre frações contínuas fora de
-          `cf'.
-
-               (%i1) cf ([1,1,1,1,1,2] * 3);
-               (%o1)                     [4, 1, 5, 2]
-               (%i2) cf ([1,1,1,1,1,2]) * 3;
-               (%o2)                  [3, 3, 3, 3, 3, 6]
-
-
- -- Função: cfdisrep (<list>)
-     Constrói e retorna uma expressão aritmética comum da forma `a +
-     1/(b + 1/(c + ...))' a partir da representação lista de uma fração
-     contínua `[a, b, c, ...]'.
-
-          (%i1) cf ([1, 2, -3] + [1, -2, 1]);
-          (%o1)                     [1, 1, 1, 2]
-          (%i2) cfdisrep (%);
-                                            1
-          (%o2)                     1 + ---------
-                                              1
-                                        1 + -----
-                                                1
-                                            1 + -
-                                                2
-
-
- -- Função: cfexpand (<x>)
-     Retorna uma matriz de numeradores e denominadores dos último
-     (columa 1) e penúltimo (columa 2) convergentes da fração contínua
-     <x>.
-
-          (%i1) cf (rat (ev (%pi, numer)));
-
-          `rat' replaced 3.141592653589793 by 103993//33102 = 3.141592653011902
-          (%o1)                  [3, 7, 15, 1, 292]
-          (%i2) cfexpand (%);
-                                   [ 103993  355 ]
-          (%o2)                    [             ]
-                                   [ 33102   113 ]
-          (%i3) %[1,1]/%[2,1], numer;
-          (%o3)                   3.141592653011902
-
-
- -- Variável de opção: cflength
-     Valor padrão: 1
-
-     `cflength' controla o número de termos da fração contínua que a
-     função `cf' fornecerá, como o valor de `cflength' vezes o período.
-     Dessa forma o padrão é fornecer um período.
-
-          (%i1) cflength: 1$
-          (%i2) cf ((1 + sqrt(5))/2);
-          (%o2)                    [1, 1, 1, 1, 2]
-          (%i3) cflength: 2$
-          (%i4) cf ((1 + sqrt(5))/2);
-          (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-          (%i5) cflength: 3$
-          (%i6) cf ((1 + sqrt(5))/2);
-          (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-
- -- Função: divsum (<n>, <k>)
- -- Função: divsum (<n>)
-     `divsum (<n>, <k>)' retorna a adição dos divisores de <n> elevados
-     à <k>'ésima potência.
-
-     `divsum (<n>)' retorna a adição dos divisores de <n>.
-
-          (%i1) divsum (12);
-          (%o1)                          28
-          (%i2) 1 + 2 + 3 + 4 + 6 + 12;
-          (%o2)                          28
-          (%i3) divsum (12, 2);
-          (%o3)                          210
-          (%i4) 1^2 + 2^2 + 3^2 + 4^2 + 6^2 + 12^2;
-          (%o4)                          210
-
-
- -- Função: euler (<n>)
-     Retorna o <n>'ésimo número de Euler para o inteiro <n> não
-     negativo.
-
-     Para a constante de Euler-Mascheroni, veja `%gamma'.
-
-          (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
-
-
- -- Constante: %gamma
-     A constante de Euler-Mascheroni, 0.5772156649015329 ....
-
-
- -- Função: factorial (<x>)
-     Representa a função fatorial. Maxima trata `factorial (<x>)' da
-     mesma forma que `<x>!'.  Veja `!'.
-
-
- -- Função: fib (<n>)
-     Retorna o <n>'ésimo número de Fibonacci.  `fib(0)' igual a 0 e
-     `fib(1)' igual a 1, e `fib (-<n>)' igual a `(-1)^(<n> + 1) *
-     fib(<n>)'.
-
-     Após chamar `fib', `prevfib' é iguala `fib (<x> - 1)', o número de
-     Fibonacci anterior ao último calculado.
-
-          (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
-
-
- -- Função: fibtophi (<expr>)
-     Expressa números de Fibonacci em termos da constante `%phi', que é
-     `(1 + sqrt(5))/2', aproximadamente 1.61803399.
-
-     Por padrão, Maxima não conhece `%phi'.  Após executar `tellrat
-     (%phi^2 - %phi - 1)' e `algebraic: true', `ratsimp' pode
-     simplificar algumas expressões contendo `%phi'.
-
-          (%i1) fibtophi (fib (n));
-                                     n             n
-                                 %phi  - (1 - %phi)
-          (%o1)                  -------------------
-                                     2 %phi - 1
-          (%i2) fib (n-1) + fib (n) - fib (n+1);
-          (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
-          (%i3) ratsimp (fibtophi (%));
-          (%o3)                           0
-
-
- -- Função: inrt (<x>, <n>)
-     Retorna a parte inteira da <n>'ésima raíz do valor absoluto de <x>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], inrt (10^a, 3)), l);
-          (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
-
-
- -- Função: jacobi (<p>, <q>)
-     Retorna símbolo de Jacobi de <p> e <q>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], jacobi (a, 9)), l);
-          (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
-
-
- -- Função: lcm (<expr_1>, ..., <expr_n>)
-     Retorna o menor múltiplo comum entre seus argumentos.  Os
-     argumentos podem ser expressões gerais também inteiras.
-
-     `load ("functs")' chama essa função.
-
-
- -- Função: minfactorial (<expr>)
-     Examina <expr> procurando por ocorrências de dois fatoriais que
-     diferem por um inteiro.  `minfactorial' então converte um em um
-     polinômio vezes o outro.
-
-          (%i1) n!/(n+2)!;
-                                         n!
-          (%o1)                       --------
-                                      (n + 2)!
-          (%i2) minfactorial (%);
-                                          1
-          (%o2)                    ---------------
-                                   (n + 1) (n + 2)
-
-
- -- Função: partfrac (<expr>, <var>)
-     Expande a expressão <expr> em frações parciais com relação à
-     variável principal <var>.  `partfrac' faz uma decomposição
-     completa de fração parcial.  O algorítmo utilizado é baseado no
-     fato que os denominadores de uma expansão de fração parcial (os
-     fatores do denominador original) são relativamente primos.  Os
-     numeradores podem ser escritos como combinação linear dos
-     denominadores, e a expansão acontece.
-
-          (%i1) 1/(1+x)^2 - 2/(1+x) + 2/(2+x);
-                                2       2        1
-          (%o1)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-          (%i2) ratsimp (%);
-                                           x
-          (%o2)                 - -------------------
-                                   3      2
-                                  x  + 4 x  + 5 x + 2
-          (%i3) partfrac (%, x);
-                                2       2        1
-          (%o3)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-
-
- -- Função: primep (<n>)
-     Retorna `true' se `n' for um primo, `false' se não.
-
-
- -- Função: qunit (<n>)
-     Retorna a principal unidade do campo dos números quadráticos reais
-     `sqrt (<n>)' onde <n> é um inteiro, i.e., o elemento cuja norma é
-     unidade.  Isso é importante para resolver a equação de Pell `a^2 -
-     <n> b^2 = 1'.
-
-          (%i1) qunit (17);
-          (%o1)                     sqrt(17) + 4
-          (%i2) expand (% * (sqrt(17) - 4));
-          (%o2)                           1
-
-
- -- Função: totient (<n>)
-     Retorna o número de inteiros menores que ou iguais a <n> que são
-     relativamente primos com <n>.
-
-
- -- Variável de opção: zerobern
-     Valor padrão: `true'
-
-     Quando `zerobern' for `false', `bern' exclui os números de
-     Bernoulli que forem iguais a zero.  Veja `bern'.
-
-
- -- Função: zeta (<n>)
-     Retorna a função zeta de Riemann se <x> for um inteiro negativo,
-     0, 1, ou número par positivo, e retorna uma forma substantiva
-     `zeta (<n>)' para todos os outros argumentos, incluindo não
-     inteiros racionais, ponto flutuante, e argumentos complexos.
-
-     Veja também `bfzeta' e `zeta%pi'.
-
-          (%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
-                                               2              4
-                     1        1     1       %pi            %pi
-          (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
-                    120       12    2        6              90
-
-
- -- Variável de opção: zeta%pi
-     Valor padrão: `true'
-
-     Quando `zeta%pi' for `true', `zeta' retorna uma expressão
-     proporcional a `%pi^n' para inteiro par `n'.  De outra forma,
-     `zeta' retorna uma forma substantiva `zeta (n)' para inteiro par
-     `n'.
-
-          (%i1) zeta%pi: true$
-          (%i2) zeta (4);
-                                           4
-                                        %pi
-          (%o2)                         ----
-                                         90
-          (%i3) zeta%pi: false$
-          (%i4) zeta (4);
-          (%o4)                        zeta(4)
-
-
-
-File: maxima.info,  Node: Symmetries,  Next: Grupos,  Prev: Teoria dos Números,  Up: Top
-
-34 Symmetries
-*************
-
-* Menu:
-
-* Definitions for Symmetries::
-
-
-File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Symmetries
-
-34.1 Definitions for Symmetries
-===============================
-
-THIS SECTION NEEDS TO BE TRANSLATED.
-
-
-File: maxima.info,  Node: Grupos,  Next: Tempo de Execução,  Prev: Symmetries,  Up: Top
-
-35 Grupos
-*********
-
-* Menu:
-
-* Definições para Grupos::
-
-
-File: maxima.info,  Node: Definições para Grupos,  Prev: Grupos,  Up: Grupos
-
-35.1 Definições para Grupos
-===========================
-
- -- Função: todd_coxeter (<relação>, <subgroupo>)
- -- Função: todd_coxeter (<relação>)
-     Acha a ordem de G/H onde G é o módulo do Grupo Livre <relação>, e
-     H é o subgroupo de G gerado por <subgroupo>.  <subgroupo> é um
-     argumento opcional, cujo valor padrão é [].  Em fazendo isso a
-     função produz uma tabela de multiplicação à direita de G sobre
-     G/H, onde os co-conjuntos são enumerados [H,Hg2,Hg3,...].  Isso
-     pode ser visto internamente no `$todd_coxeter_state'.
-
-     As tabelas de multiplicação para as variáveis estão em
-     `table:todd_coxeter_state[2]'.  Então `table[i]' fornece a tabela
-     para a i'ésima variável.  `multiplos_co_conjuntos(co_conjunto,i)
-     := table[varnum][co_conjunto];'
-
-     Exemplo:
-
-          (%i1) symet(n):=create_list(
-                  if (j - i) = 1 then (p(i,j))^^3 else
-                      if (not i = j) then (p(i,j))^^2 else
-                          p(i,i) , j, 1, n-1, i, 1, j);
-                                                                 <3>
-          (%o1) symet(n) := create_list(if j - i = 1 then p(i, j)
-
-                                          <2>
-           else (if not i = j then p(i, j)    else p(i, i)), j, 1, n - 1,
-
-          i, 1, j)
-          (%i2) p(i,j) := concat(x,i).concat(x,j);
-          (%o2)        p(i, j) := concat(x, i) . concat(x, j)
-          (%i3) symet(5);
-                   <2>           <3>    <2>           <2>           <3>
-          (%o3) [x1   , (x1 . x2)   , x2   , (x1 . x3)   , (x2 . x3)   ,
-
-                      <2>           <2>           <2>           <3>    <2>
-                    x3   , (x1 . x4)   , (x2 . x4)   , (x3 . x4)   , x4   ]
-          (%i4) todd_coxeter(%o3);
-
-          Rows tried 426
-          (%o4)                          120
-          (%i5) todd_coxeter(%o3,[x1]);
-
-          Rows tried 213
-          (%o5)                          60
-          (%i6) todd_coxeter(%o3,[x1,x2]);
-
-          Rows tried 71
-          (%o6)                          20
-          (%i7) table:todd_coxeter_state[2]$
-          (%i8) table[1];
-          (%o8) {Array: (SIGNED-BYTE 30) #(0 2 1 3 7 6 5 4 8 11 17 9 12 14 #
-
-          13 20 16 10 18 19 15 0 0 0 0 0 0 0 0 0 0 0 0
-
-            0 0 0)}
-
-     Observe que somente os elementos de 1 a 20 desse array `%o8' são
-     significativos.  `table[1][4] = 7' indica coset4.var1 = coset7
-
-
-
-File: maxima.info,  Node: Tempo de Execução,  Next: Opções Diversas,  Prev: Grupos,  Up: Top
-
-36 Tempo de Execução
-********************
-
-* Menu:
-
-* Introdução a Tempo de Execução::
-* Interrupções::
-* Definições para Tempo de Execução::
-
-
-File: maxima.info,  Node: Introdução a Tempo de Execução,  Next: Interrupções,  Prev: Tempo de Execução,  Up: Tempo de Execução
-
-36.1 Introdução a Tempo de Execução
-===================================
-
-`maxima-init.mac' é um arquivo que é chamado automaticamente quando o
-Maxima inicia.  Você pode usar `maxima-init.mac' para personalizar seu
-ambiente Maxima.  `maxima-init.mac', se existir, é tipicamente colocado
-no diretório chamado por `:lisp (default-userdir)', embora possa estar
-em qualquer outro diretório procurado pela função `file_search'.
-
-   Aqui está um exemplo do arquivo `maxima-init.mac':
-
-     setup_autoload ("specfun.mac", ultraspherical, assoc_legendre_p);
-     showtime:all;
-
-   Nesse Exemplo, `setup_autoload' diz ao Maxima para chamar o arquivo
-especificado (`specfun.mac') se qualquer das funções (`ultraspherical',
-`assoc_legendre_p') forem chamadas sem estarem definidas.  Dessa forma
-você não precisa lembrar de chamar o arquivo antes das funções.
-
-   A declaração `showtime: all' diz ao Maxima escolher a variável
-`showtime'.  O arquivo `maxima-init.mac' pode conter qualquer outras
-atribuições ou outras declarações do Maxima.
-
-
-File: maxima.info,  Node: Interrupções,  Next: Definições para Tempo de Execução,  Prev: Introdução a Tempo de Execução,  Up: Tempo de Execução
-
-36.2 Interrupções
-=================
-
-O usuário pode parar uma computação que consome muito tempo com o
-caractere ^C (control-C).  A ação padrão é parar a computação e mostrar
-outra linha de comando do usuário.  Nesse caso, não é possível
-continuar a computação interrompida.
-
-   Se a variável `*debugger-hook*' é escolhida para `nil', através do
-comando
-
-     :lisp (setq *debugger-hook* nil)
-
-então na ocasião do recebimento do ^C, Maxima iniciará o depurador Lisp,
-e o usuário pode usar o depurador para inspecionar o ambiente Lisp.  A
-computação interrompida pode ser retomada através do comando `continue'
-no depurador Lisp.  O método de retorno para ao Maxima partindo do
-depurador Lisp (outro como executando a computação para
-complementação) é diferente para cada versão do Lisp.
-
-   Em sistemas Unix, o caratere ^Z (control-Z) faz com que Maxima pare
-tudo e aguarde em segundo plano, e o controle é retornado para a linha
-de comando do shell.  O comando `fg' faz com que o Maxima retorne ao
-primeiro plano e continue a partir do ponto no qual foi interrompido.
-
-
-File: maxima.info,  Node: Definições para Tempo de Execução,  Prev: Interrupções,  Up: Tempo de Execução
-
-36.3 Definições para Tempo de Execução
-======================================
-
- -- Declaração: feature
-     Maxima compreende dois tipos distintos de recurso, recursos do
-     sistema e recursos aplicados a expressões matemáticas.  Veja
-     Também `status' para informações sobre recursos do sistema.  Veja
-     Também `features' e `featurep' para informações sobre recursos
-     matemáticos.
-
-     `feature' por si mesmo não é o nome de uma função ou variável.
-
-
- -- Função: featurep (<a>, <f>)
-     Tenta determinar se o objeto <a> tem o recurso <f> na base dos
-     fatos dentro base de dados corrente.  Se possue, é retornado
-     `true', de outra forma é retornado `false'.
-
-     Note que `featurep' retorna `false' quando nem <f> nem a negação
-     de <f> puderem ser estabelecidas.
-
-     `featurep' avalia seus argumentos.
-
-     Veja também `declare' e `features'.
-
-          (%i1) declare (j, even)$
-          (%i2) featurep (j, integer);
-          (%o2)                           true
-
-
- -- Função: room ()
- -- Função: room (true)
- -- Função: room (false)
-     Mostra uma descrição do estado de armazenamento e gerenciamento de
-     pilha no Maxima. `room' chama a função Lisp de mesmo nome.
-
-        * `room ()' mostra uma descrição moderada.
-
-        * `room (true)' mostra uma descrição detalhada.
-
-        * `room (false)' mostra uma descrição resumida.
-
-
- -- Função: status (feature)
- -- Função: status (feature, <recurso_ativo>)
- -- Função: status (status)
-     Retorna informações sobre a presença ou ausência de certos
-     recursos dependentes do sistema operacional.
-
-        * `status (feature)' retorna uma lista dos recursos do sistema.
-          Inclui a versão do Lisp, tipo de sistema operacional, etc.  A
-          lista pode variar de um tipo de Lisp para outro.
-
-        * `status (feature, <recurso_ativo>)' retorna `true' se
-          <recurso_ativo> está na lista de ítens retornada através de
-          `status (feature)' e `false' de outra forma.  `status' não
-          avalia o argumento <recurso_ativo>.  O operador aspas
-          simples, `''', evita a avaliação.  Um recurso cujo nome
-          contém um caractere especial, tal como um hífem, deve ser
-          fornecido como um argumento em forma de seqüência de
-          caracteres. Por Exemplo, `status (feature, "ansi-cl")'.
-
-        * `status (status)' retorna uma lista de dois elementos
-          `[feature, status]'.  `feature' e `status' são dois
-          argumentos aceitos pela função `status'; Não está claro se
-          essa lista tem significância adicional.
-
-     A variável `features' contém uma lista de recursos que se aplicam a
-     expressões matemáticas. Veja `features' e `featurep' para maiores
-     informações.
-
-
- -- Função: time (%o1, %o2, %o3, ...)
-     Retorna uma lista de tempos, em segundos, usados para calcular as
-     linhas de saída `%o1', `%o2', `%o3', .... O tempo retornado é uma
-     estimativa do Maxima do tempo interno de computação, não do tempo
-     decorrido. `time' pode somente ser aplicado a variáveis(rótulos)
-     de saída de linha; para quaisquer outras variáveis, `time' retorna
-     `unknown' (tempo desconhecido).
-
-     Escolha `showtime: true' para fazer com que Maxima moste o tempo
-     de computação e o tempo decorrido a cada linha de saída.
-
-
- -- Função: timedate ()
-     Retorna uma seqüência de caracteres representando a data e hora
-     atuais.  A seqüência de caracteres tem o formato `HH:MM:SS Dia,
-     mm/dd/aaaa (GMT-n)', Onde os campos são horas, minutos, segundos,
-     dia da semana, mês, dia do mês, ano, e horas que diferem da hora
-     GMT.
-
-     O valor de retorno é uma seqüência de caracteres Lisp.
-
-     Exemplo:
-
-          (%i1) d: timedate ();
-          (%o1) 08:05:09 Wed, 11/02/2005 (GMT-7)
-          (%i2) print ("timedate mostra o tempo atual", d)$
-          timedate reports current time 08:05:09 Wed, 11/02/2005 (GMT-7)
-
-
-
-File: maxima.info,  Node: Opções Diversas,  Next: Regras e Modelos,  Prev: Tempo de Execução,  Up: Top
-
-37 Opções Diversas
-******************
-
-* Menu:
-
-* Introdução a Opções Diversas::
-* Compartilhado::
-* Definições para Opções Diversas::
-
-
-File: maxima.info,  Node: Introdução a Opções Diversas,  Next: Compartilhado,  Prev: Opções Diversas,  Up: Opções Diversas
-
-37.1 Introdução a Opções Diversas
-=================================
-
-Nessa seção várias opções são tratadas pelo fato de possuirem um efeito
-global sobre a operação do Maxima.   Também várias listas tais como a
-lista de todas as funções definidas pelo usuário, são discutidas.
-
-
-File: maxima.info,  Node: Compartilhado,  Next: Definições para Opções Diversas,  Prev: Introdução a Opções Diversas,  Up: Opções Diversas
-
-37.2 Compartilhado
-==================
-
-O diretório "share" do Maxima contém programas e outros arquivos de
-interesse para os usuários do Maxima, mas que não são parte da
-implementação do núcleo do Maxima.  Esses programas são tipicamente
-chamados via `load' ou `setup_autoload'.
-
-   `:lisp *maxima-sharedir*' mostra a localização do diretório
-compartilhado dentro do sistema de arquivos do usuário.
-
-   `printfile ("share.usg")' imprime uma lista de pacotes
-desatualizados dos pacotes compartilhados.  Usuários podem encontrar
-isso de forma mais detalhada navegando no diretório compartilhado
-usando um navegador de sistema de arquivo.
-
-
-File: maxima.info,  Node: Definições para Opções Diversas,  Prev: Compartilhado,  Up: Opções Diversas
-
-37.3 Definições para Opções Diversas
-====================================
-
- -- Variável de sistema: aliases
-     Valor padrão: `[]'
-
-     `aliases' é a lista de átomos que possuem um alias definido pelo
-     usuário (escolhido através das funções `alias', `ordergreat',
-     `orderless' ou através da declaração do átomo como sendo um `noun'
-     (substantivo) com `declare').
-
- -- Declaração: alphabetic
-     `declare (<char>, alphabetic)' adiciona `char' (caracteres) ao
-     alfabeto do Maxima, que inicialmente contém as letras de `A' até
-     `Z', de `a' até `z', `%' e `_'.  <char> é especificado como uma
-     seqüência de caracteres de comprimento 1, e.g., `"~"'.
-
-          (%i1) declare ("~", alphabetic);
-          (%o1)                         done
-          (%i2) foo~bar;
-          (%o2)                        foo~bar
-          (%i3) atom (foo~bar);
-          (%o3)                         true
-
-
- -- Função: apropos (<string>)
-     Procura por nomes Maxima que possuem <string> aparecendo em
-     qualquer lugar dentro de seu nome.  Dessa forma, `apropos (exp)'
-     retorna uma lista de todos os sinalizadores e funções que possuem
-     `exp' como parte de seus nomes, tais como `expand', `exp', e
-     `exponentialize'.  Dessa forma você pode somente lembra parte do
-     nome de alguma coisa você pode usar esse comando para achar o
-     restante do nome.  Similarmente, você pode dizer `apropos (tr_)'
-     para achar uma lista de muitos dos comutadores relatando para o
-     tradutor, muitos dos quais começam com `tr_'.
-
-
- -- Função: args (<expr>)
-     Retorna a lista de argumentos de `expr', que pode ser de qualquer
-     tipo de expressão outra como um átomo.  Somente os argumentos do
-     operador de nível mais alto são extraídos; subexpressões de `expr'
-     aparecem como elementos ou subexpressões de elementos da lista de
-     argumentos.
-
-     A ordem dos ítens na lista pode depender do sinalizador global
-     `inflag'.
-
-     `args (<expr>)' é equivalente a `substpart ("[", <expr>, 0)'.
-     Veja também `substpart'.
-
-     Veja também `op'.
-
-
- -- Variável de opção: genindex
-     Valor padrão: `i'
-
-     `genindex' é o prefixo usado para gerar a próxima variável do
-     somatório quando necessário.
-
-
- -- Variável de opção: gensumnum
-     Valor padrão: 0
-
-     `gensumnum' é o sufixo numérico usado para gerar variável seguinte
-     do somatório.  Se isso for escolhido para `false' então o índice
-     consistirá somente de `genindex' com um sufixo numérico.
-
-
- -- Constante: inf
-     Infinito positivo real.
-
-
- -- Constante: infinity
-     Infinito complexo, uma magnitude infinita de ângulo de fase
-     arbitrária.  Veja também `inf' e `minf'.
-
-
- -- Variável de sistema: infolists
-     Valor padrão: `[]'
-
-     `infolists' é uma lista dos nomes de todas as listas de informação
-     no Maxima. São elas:
-
-    `labels'
-          Todos associam `%i', `%o', e rótulos `%t'.
-
-    `values'
-          Todos associam átomos que são variáveis de usuário, não
-          opções do Maxima ou comutadores, criados através de `:' ou
-          `::' ou associando funcionalmente.
-
-    `functions'
-          Todas as funções definidas pelo usuário, criadas através de
-          `:=' ou `define'.
-
-    `arrays'
-          Todos os arrays declarados e não declarados, criados através
-          de `:', `::', ou `:='.
-
-    `macros'
-          Todas as macros definidas pelo usuário.
-
-    `myoptions'
-          Todas as opções alguma vez alteradas pelo usuário (mesmo que
-          tenham ou não elas tenham mais tarde retornadas para seus
-          valores padrão).
-
-    `rules'
-          Todos os modelos definidos pelo usuário que coincidirem e
-          regras de simplificação, criadas através de `tellsimp',
-          `tellsimpafter', `defmatch', ou `defrule'.
-
-    `aliases'
-          Todos os átomos que possuem um alias definido pelo usuário,
-          criado através das funções `alias', `ordergreat', `orderless'
-          ou declarando os átomos como um `noun' com `declare'.
-
-    `dependencies'
-          Todos os átomos que possuem dependências funcionais, criadas
-          através das funções `depends' ou `gradef'.
-
-    `gradefs'
-          Todas as funções que possuem derivadas definidas pelo
-          usuário, cridas através da função `gradef'.
-
-    `props'
-          Todos os átomos que possuem quaisquer propriedades outras que
-          não essas mencionadas acima, tais como propriedades
-          estabelecidas por `atvalue' , `matchdeclare', etc., também
-          propriedades estabelecidas na função `declare'.
-
-    `let_rule_packages'
-          Todos os pacote de régras em uso definidos pelo usuário mais
-          o pacote especial `default_let_rule_package'.
-          (`default_let_rule_package' é o nome do pacote de régras
-          usado quando um não está explicitamente escolhido pelo
-          usuário.)
-
-
-
- -- Função: integerp (<expr>)
-     Retorna `true' se <expr> é um inteiro numérico literal, de outra
-     forma retorna `false'.
-
-     `integerp' retorna falso se seu argumento for um símbolo, mesmo se
-     o argumento for declarado inteiro.
-
-     Exemplos:
-
-          (%i1) integerp (0);
-          (%o1)                         true
-          (%i2) integerp (1);
-          (%o2)                         true
-          (%i3) integerp (-17);
-          (%o3)                         true
-          (%i4) integerp (0.0);
-          (%o4)                         false
-          (%i5) integerp (1.0);
-          (%o5)                         false
-          (%i6) integerp (%pi);
-          (%o6)                         false
-          (%i7) integerp (n);
-          (%o7)                         false
-          (%i8) declare (n, integer);
-          (%o8)                         done
-          (%i9) integerp (n);
-          (%o9)                         false
-
-
- -- Variável de opção: m1pbranch
-     Valor padrão: `false'
-
-     `m1pbranch' é principal descendente de `-1' a um expoente.
-     Quantidades tais como `(-1)^(1/3)' (isto é, um expoente racional
-     "ímpar") e `(-1)^(1/4)' (isto é, um expoente racional "par") são
-     manuseados como segue:
-
-                        domain:real
-
-          (-1)^(1/3):      -1
-          (-1)^(1/4):   (-1)^(1/4)
-
-                       domain:complex
-          m1pbranch:false          m1pbranch:true
-          (-1)^(1/3)               1/2+%i*sqrt(3)/2
-          (-1)^(1/4)              sqrt(2)/2+%i*sqrt(2)/2
-
-
- -- Função: numberp (<expr>)
-     Retorna `true' se <expr> for um inteiro literal, número racional,
-     número em ponto flutuante, ou um grande número em ponto flutuante,
-     de outra forma retorna `false'.
-
-     `numberp' retorna falso se seu argumento for um símbolo, mesmo se
-     o argumento for um número simbólico tal como `%pi' ou `%i', ou
-     declarado ser par, ímpar, inteiro, racional, irracional, real,
-     imaginário, ou complexo.
-
-     Exemplos:
-
-          (%i1) numberp (42);
-          (%o1)                         true
-          (%i2) numberp (-13/19);
-          (%o2)                         true
-          (%i3) numberp (3.14159);
-          (%o3)                         true
-          (%i4) numberp (-1729b-4);
-          (%o4)                         true
-          (%i5) map (numberp, [%e, %pi, %i, %phi, inf, minf]);
-          (%o5)      [false, false, false, false, false, false]
-          (%i6) declare (a, even, b, odd, c, integer, d, rational,
-               e, irrational, f, real, g, imaginary, h, complex);
-          (%o6)                         done
-          (%i7) map (numberp, [a, b, c, d, e, f, g, h]);
-          (%o7) [false, false, false, false, false, false, false, false]
-
-
- -- Função: properties (<a>)
-     Retorna uma lista de nomes de todas as propriedades associadas com
-     o átomo <a>.
-
-
- -- Símbolo especial: props
-     `props' são átomos que possuem qualquer propriedade outra como
-     essas explicitamente mencionadas em `infolists', tais como
-     atvalues, matchdeclares, etc., também propriedades especificadas
-     na função  `declare'.
-
-
- -- Função: propvars (<prop>)
-     Retorna uma lista desses átomos sobre a lista `props' que possui a
-     propriedade indicada através de <prop>.  Dessa forma `propvars
-     (atvalue)' retorna uma lista de átomos que possuem atvalues.
-
-
- -- Função: put (<átomo>, <valor>, <indicador>)
-     Atribui <valor> para a propriedade (especificada através de
-     <indicador>) do <átomo>.  <indicador> pode ser o nome de qualquer
-     propriedade, não apenas uma propriedade definida pelo sistema.
-
-     `put' avalia seus argumentos.  `put' retorna <valor>.
-
-     Exemplos:
-
-          (%i1) put (foo, (a+b)^5, expr);
-                                             5
-          (%o1)                       (b + a)
-          (%i2) put (foo, "Hello", str);
-          (%o2)                         Hello
-          (%i3) properties (foo);
-          (%o3)            [[user properties, str, expr]]
-          (%i4) get (foo, expr);
-                                             5
-          (%o4)                       (b + a)
-          (%i5) get (foo, str);
-          (%o5)                         Hello
-
-
- -- Função: qput (<átomo>, <valor>, <indicador>)
-     Atribui <valor> para a propriedade (especificada através de
-     <indicador>) do <átomo>.  Isso é o mesmo que `put', exceto que os
-     argumentos nã são avaliados.
-
-     Exemplo:
-
-          (%i1) foo: aa$
-          (%i2) bar: bb$
-          (%i3) baz: cc$
-          (%i4) put (foo, bar, baz);
-          (%o4)                          bb
-          (%i5) properties (aa);
-          (%o5)                [[user properties, cc]]
-          (%i6) get (aa, cc);
-          (%o6)                          bb
-          (%i7) qput (foo, bar, baz);
-          (%o7)                          bar
-          (%i8) properties (foo);
-          (%o8)            [value, [user properties, baz]]
-          (%i9) get ('foo, 'baz);
-          (%o9)                          bar
-
-
- -- Função: rem (<átomo>, <indicador>)
-     Remove a propriedade indicada através de <indicador> do <átomo>.
-
-
- -- Função: remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
- -- Função: remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)
- -- Função: remove ("<a>", operator)
- -- Função: remove (<a>, transfun)
- -- Função: remove (all, <p>)
-     Remove propriedades associadas a átomos.
-
-     `remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)' remove a propriedade
-     `p_k' do átomo `a_k'.
-
-     `remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)' remove as
-     propriedades `<p_1>, ..., <p_n>' dos átomos <a_1>, ..., <a_m>.
-     Pode existir mais que um par de listas.
-
-     `remove (all, <p>)' remove a propriedade <p> de todos os átomos
-     que a possuem.
-
-     A propriedade removida pode ser definida pelo sistema tal como
-     `function', `macro' ou `mode_declare', ou propriedades definidas
-     pelo usuário.
-
-     uma propriedade pode ser `transfun' para remover a versão
-     traduzida Lisp de uma função.  Após executar isso, a versão Maxima
-     da função é executada em lugar da versão traduzida.
-
-     `remove ("<a>", operator)' ou, equivalentemente, `remove ("<a>",
-     op)' remove de <a> as propriedades `operator' declaradas através de
-     `prefix', `infix', `nary', `postfix', `matchfix', ou `nofix'.
-     Note que o nome do operador deve ser escrito como uma seqüência de
-     caracteres com apóstofo.
-
-     `remove' sempre retorna `done' se um átomo possui ou não uma
-     propriedade especificada.  Esse comportamento é diferente das
-     funções remove mais específicas `remvalue', `remarray',
-     `remfunction', e `remrule'.
-
-
- -- Função: remvalue (<nome_1>, ..., <nome_n>)
- -- Função: remvalue (all)
-     Remove os valores de Variáveis de usuário <nome_1>, ..., <nome_n>
-     (que podem ser subscritas) do sistema.
-
-     `remvalue (all)' remove os valores de todas as variáveis em
-     `values', a lista de todas as variáveis nomeadas através do usuário
-     (em oposição a essas que são automaticamente atribuídas através do
-     Maxima).
-
-     Veja também `values'.
-
-
- -- Função: rncombine (<expr>)
-     Transforma <expr> combinando todos os termos de <expr> que possuem
-     denominadores idênticos ou denominadores que diferem de cada um
-     dos outros apenas por fatores numéricos somente.  Isso é
-     ligeiramente diferente do comportamento de de `combine', que
-     coleta termos que possuem denominadores idênticos.
-
-     Escolhendo `pfeformat: true' e usando `combine' retorna resultados
-     similares a esses que podem ser obtidos com `rncombine', mas
-     `rncombine' pega o passo adicional de multiplicar cruzado fatores
-     numérios do denominador.  Esses resultados em forma ideal, e a
-     possibilidade de reconhecer alguns cancelamentos.
-
-
- -- Função: scalarp (<expr>)
-     Retorna `true' se <expr> for um número, constante, ou variável
-     declarada `scalar' com `declare', ou composta inteiramente de
-     números, constantes, e tais Variáveis, bmas não contendo matrizes
-     ou listas.
-
-
- -- Função: setup_autoload (<nomedearquivo>, <função_1>, ...,
-          <função_n>)
-     Especifica que se qualquer entre <função_1>, ..., <função_n> for
-     referenciado e não ainda definido, <nomedeqrquivo> é chamado via
-     `load'.  <nomedearquivo> usualmente contém definições para as
-     funções especificadas, embora isso não seja obrigatório.
-
-     `setup_autoload' não trabalha para funções array.
-
-     `setup_autoload' não avalia seus argumentos.
-
-     Exemplo:
-
-          (%i1) legendre_p (1, %pi);
-          (%o1)                  legendre_p(1, %pi)
-          (%i2) setup_autoload ("specfun.mac", legendre_p, ultraspherical);
-          (%o2)                         done
-          (%i3) ultraspherical (2, 1/2, %pi);
-          Warning - you are redefining the Macsyma função ultraspherical
-          Warning - you are redefining the Macsyma função legendre_p
-                                      2
-                           3 (%pi - 1)
-          (%o3)            ------------ + 3 (%pi - 1) + 1
-                                2
-          (%i4) legendre_p (1, %pi);
-          (%o4)                          %pi
-          (%i5) legendre_q (1, %pi);
-                                        %pi + 1
-                                %pi log(-------)
-                                        1 - %pi
-          (%o5)                 ---------------- - 1
-                                       2
-
-
-
-File: maxima.info,  Node: Regras e Modelos,  Next: Listas,  Prev: Opções Diversas,  Up: Top
-
-38 Regras e Modelos
-*******************
-
-* Menu:
-
-* Introdução a Regras e Modelos::
-* Definições para Regras e Modelos::
-
-
-File: maxima.info,  Node: Introdução a Regras e Modelos,  Next: Definições para Regras e Modelos,  Prev: Regras e Modelos,  Up: Regras e Modelos
-
-38.1 Introdução a Regras e Modelos
-==================================
-
-Essa seção descreve coincidências de modelos definidos pelo usuário e
-regras de simplificação.  Existem dois grupos de funções que
-implementam até certo ponto diferentes esquemas de coincidência de
-modelo.  Em um grupo estão `tellsimp', `tellsimpafter', `defmatch',
-`defrule', `apply1', `applyb1', e `apply2'.  Em outro grupo estão `let'
-e `letsimp'.  Ambos os esquemas definem modelos em termos de variáveis
-de modelo declaradas por `matchdeclare'.
-
-   Regras de coincidência de modelos definidas por `tellsimp' e
-`tellsimpafter' são aplicadas automaticamente através do simplificador
-do Maxima.  Regras definidas através de `defmatch', `defrule', e `let'
-são aplicadas através de uma chamada explícita de função.
-
-   Existe mecanismos adicionais para regras aplicadas a polinômios
-através de `tellrat', e para álgebra comutativa e não comutativa no
-pacote `affine'.
 
 
 

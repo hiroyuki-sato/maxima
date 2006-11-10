@@ -23,7 +23,7 @@
 
 
 ;; List of GCD algorithms.  Default one is first.
-(defmvar *gcdl* '($subres $ez $red $spmod $mod $sphen $eez $algebraic))
+(defmvar *gcdl* '($subres $ez $red $spmod $mod $algebraic))
 
 (defmvar $gcd (car *gcdl*))		;Sparse Modular
 
@@ -120,8 +120,6 @@
 	((eq $gcd '$ez) (ezgcd2 x y))
 	((eq $gcd '$red) (list (oldgcd x y)))
 	((eq $gcd '$mod) (newgcd x y modulus))
-	((eq $gcd '$sphen) (merror "sphgcd not implemented")) ; (SPHGCD X Y))
-	((eq $gcd '$eez) (merror "eezgcd not implemented")) ; (EEZGCD X Y))
 	((not (memq $gcd *gcdl*))
 	 (merror "`gcd' set incorrectly:~%~M" $gcd))
 	(t (list 1 x y))))
@@ -436,13 +434,6 @@
   (do ((pp (if (oddp p) (f- p 2) (f- p 1)) (f- pp 2))) ((f< pp 0))
     (if (primep pp) (return pp))))
 
-(defun primep (p)
-  (and (or (lessp p 14.)
-	   (let ((modulus p))
-	     (and (equal 1 (cexpt 13. (sub1 p))) (equal 1 (cexpt 3 (sub1 p))))))
-       (null (cddr (setq p (cfactorw p))))
-       (= 1 (cadr p))))
-
 ;; #O <form> reads <form> in octal (base 8)
 
 
@@ -461,6 +452,16 @@
 	   1073741561 1073741527 1073741503 1073741477 1073741467 1073741441
 	   1073741419 1073741399)
 	 ))
+      (1152921504606846975
+       '(setq bigprimes
+       '(576460752303423433 576460752303423389 576460752303423263
+         576460752303423061 576460752303422971 576460752303422881
+         576460752303422839 576460752303422801 576460752303422627
+         576460752303422617 576460752303422599 576460752303422557
+         576460752303422543 576460752303422533 576460752303422501
+         576460752303422479 576460752303422431 576460752303422429
+         576460752303422369 576460752303422309)
+       ))
       ;; Could always use the following, but it takes several seconds to compute
       ;; so if we want to autoload this file, it is tiresome.
       (t '(do ((i 0 (f1+ i))	   ;GENERATES 20 LARGEST PRIMES < WORD
@@ -510,13 +511,6 @@
 ;;(DO ((I 0 (f1+ I))				;GENERATES 20 LARGEST
 ;;	     (P (LSH -1 -1) (NEWPRIME P)))		;PRIMES < WORD
 ;;	    ((= I 20.)))
-
-
-
-(defmfun $primep (p)
-  (if (not (integerp p))
-      (merror "Argument to `primep' must be an integer:~%~M" p))
-  (let ($intfaclim) (primep (abs p))))
 
 
 (defun leadcoefficient (p) (if (pcoefp p) p (leadcoefficient (caddr p))))

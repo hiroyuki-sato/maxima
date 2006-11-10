@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: RunMaxima.tcl,v 1.19 2004/10/13 12:08:58 vvzhy Exp $
+#       $Id: RunMaxima.tcl,v 1.23.2.3 2006/09/05 11:36:19 villate Exp $
 #
 proc textWindowWidth { w } {
     set font [$w cget -font]
@@ -25,6 +25,7 @@ proc packBoth {fr browser} {
 
 proc CMeval { w } {
     linkLocal $w inputs
+    oset $w output 0
     set prev ""
     #puts "CMeval $w, [$w compare insert < lastStart]"
     if { [$w compare insert < lastStart] } {
@@ -37,16 +38,21 @@ proc CMeval { w } {
 	    $w insert lastStart $code input
 	}
     }
-    #    puts "expr=<[$w get lastStart end]>"
-    #  puts "tags=[$w tag names insert],insert=[$w index insert]"
-    if { [lsearch [$w tag names insert] insert] >= 0 } {
-	$w mark set lastStart [lindex [$w tag prevrange input] 0]
-    }
+    # puts "expr=<[$w get lastStart end]>"
+    # puts "tags=[$w tag names insert],insert=[$w index insert]"
+    # if { [lsearch [$w tag names insert] insert] >= 0 } {
+    # 	 $w mark set lastStart [lindex [$w tag prevrange input insert] 0]
+    # }
     set expr [string trimright [$w get lastStart end] \n]
-    if { ![regexp "^\[ \n\t]*:|\[;\$]\$" $expr] } {
+    # puts "command-line: ([$w index lastStart], [$w index end])"
+    # puts "command: $expr"
+    if { ![regexp {^[ \n\t]*:|[;\$]$|^\?[ \t]+[^ \t]} $expr] } {
 	$w insert insert "\n"
 	$w see insert
-	if { [oget $w atMaximaPrompt] } {
+	if { [catch {set atprompt [oget $w atMaximaPrompt]}] } {
+	    puts {atMaximaPrompt not defined}
+	} elseif { $atprompt } {
+	    # puts "atMaximaPrompt=$atprompt"
 	    return
 	}
     }
@@ -54,14 +60,17 @@ proc CMeval { w } {
     $w tag add input lastStart "end -1char"
     $w mark set  lastStart "end -1char"
     lappend inputs $expr
+
+    oset $w inputIndex [expr {[llength $inputs] - 1}]
+    openMathAnyKey $w [string index $expr end] [string index $expr end]
+
     set tag ""
-    #    puts "sending <$expr>"
+    # puts "sending <$expr>"
     # set res [sendMaxima $w $expr ]
     set res [sendMaxima $w $expr\n ]
     # set res [sendMaxima $w $expr ]
     # puts "[$w dump -all "lastStart linestart" end]"
     #message "send form"
-
 }
 
 proc acceptMaxima { win port filter } {
@@ -194,7 +203,8 @@ proc closeMaxima { win } {
 #
 #todo fix sendMaximaWait win expr
 proc maximaFilter { win sock } {
-    linkLocal $win  plotPending
+    linkLocal $win plotPending output
+    if {![info exists output]} {set output 1}
     global pdata
     if { [eof $sock] } {
 	# puts "at end"
@@ -218,17 +228,17 @@ proc maximaFilter { win sock } {
 	append res [string range $it [expr { 1+[lindex $junk 1]}] end]
 	set it $res
     }
-    # puts it=<$it>
+    # puts "it=<$it>"
     if { [regexp -indices "\{plot\[d23]\[fd]" $it inds] } {
 	set plotPending [string range $it [lindex $inds 0] end]
 	set it ""
-	if { [regexp {\((C|%i)[0-9]+\) $} $it ff] } {
+	if { [regexp {\(\(C|%i\)[0-9]+\) $} $it ff] } {
 	    regexp "\{plot\[d23]\[df].*\}" $ff it
 	    #	set it $ff
 	}
     }
     if { [info exists plotPending] } {
-	#puts "plotPending=<$plotPending>,it=<$it>"
+	# puts "plotPending=<$plotPending>,it=<$it>"
 	append plotPending $it
 	set it ""
 	if { [regexp -indices "\n\\((D|%o)\[0-9\]+\\)" $plotPending  inds] } {
@@ -236,32 +246,46 @@ proc maximaFilter { win sock } {
 	    set plotPending [string range $plotPending 0 [lindex $inds 0]]
 	    set data $plotPending
 	    unset plotPending
-	    #puts itplot=<$it>,$inds
-	    #puts plotdata=<$data>
+	    # puts "itplot=<$it>,$inds"
+	    # puts "plotdata=<$data>"
 	    doShowPlot $win $data
 
 	}
     }
 
-    $win insert end $it "output"
-    $win mark set  lastStart "end -1char"
-    if { [regexp {\((C|%i)[0-9]+\) $|\(dbm:[0-9]+\) $|([A-Z]+>[>]*)$} $it junk lisp]  } {
-	#puts "junk=$junk, lisp=$lisp,[expr { 0 == [string compare $lisp {}] }]"
-	#puts "it=<$it>,pdata={[array get pdata *]},[$win index end],[$win index insert]"
+    if {[string length $it] > 0} {
+	# Make sure Maxima's output starts on a new line but do not tag the
+	# new line as output
+        set it2 $it
+	if {$output == 0} {
+	    if {[string equal -length 1 $it "\n"]} {
+		set it2 [string range $it 1 end]
+	    }
+	    $win insert end "\n" input
+	    set output 1
+	}
+	$win insert end $it2 output
+	$win mark set lastStart "end -1char"
+    }
+    if { [regexp {\((?:C|%i)[0-9]+\) $|\(dbm:[0-9]+\) $|(MAXIMA>? ?)$|(none'?:? ?)$} $it junk lisp describe]  } {
+	# puts "junk=$junk, lisp=$lisp,[expr {0 == [string compare $lisp {}]}]"
+	# puts "it=<$it>,pdata={[array get pdata *]},[$win index end],[$win index insert]"
 
 	if { [info exists pdata($sock,wait) ] && $pdata($sock,wait) > 0 } {
-	    #puts "it=<$it>,begin=$pdata($sock,begin),end=[$win index {end linestart}]"
-	    #puts dump=[$win dump -all "insert -3 lines" end]
+	    # puts "it=<$it>,begin=$pdata($sock,begin),end=[$win index {end linestart}]"
+	    # puts dump=[$win dump -all "insert -3 lines" end]
 	    setAct pdata($sock,result) [$win get $pdata($sock,begin) "end -1char linestart" ]
-	    #puts result=$pdata($sock,result)
+	    # puts result=$pdata($sock,result)
 	    set pdata($sock,wait) 0
 	}
 	$win mark set lastStart "end -1char"
 	$win tag add  input "end -1char" end
-	oset $win atMaximaPrompt [expr { 0 == [string compare $lisp ""] }]
+	oset $win atMaximaPrompt [expr { 0 == [string compare $lisp {}] && 0 == [string compare $describe {} ] } ]
 	
     }
     $win see end
+    #moves the cursor to the end
+    $win mark set insert output.last
     return
 }
 

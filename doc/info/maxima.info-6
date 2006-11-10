@@ -1,0 +1,1745 @@
+This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+
+   This is a Texinfo Maxima Manual
+
+   Copyright 1994,2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     A computer algebra system.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definitions for solve_rec,  Prev: Introduction to solve_rec,  Up: solve_rec
+
+66.2 Definitions for solve_rec
+==============================
+
+ -- Function: closed_form (<expr>)
+     Tries to simplify all sums appearing in <expr> to a closed form.
+
+     `closed_form' uses Gosper and Zeilberger algorithms to simplify
+     sums.
+
+     To use this function first load the `closed_form' package with
+     `load(closed_form)'.
+
+     Example:
+
+          (%i1) load("closed_form")$
+          (%i2) sum(binom(n+k,k)/2^k, k, 0, n) + sum(binom(2*n, 2*k), k, 0, n);
+                   n                            n
+                  ====                         ====
+                  \      binomial(n + k, k)    \
+          (%o2)    >     ------------------ +   >    binomial(2 n, 2 k)
+                  /               k            /
+                  ====           2             ====
+                  k = 0                        k = 0
+          (%i3) closed_form(%);
+                                         n
+                                        4     n
+          (%o3)                         -- + 2
+                                        2
+
+
+ -- Function: reduce_order (<rec>, <sol>, <var>)
+     Reduces the order of linear recurrence <rec> when a particular
+     solution <sol> is known. The reduced reccurence can be used to get
+     other solutions.
+
+     Example:
+
+          (%i3) rec: x[n+2] = x[n+1] + x[n]/n;
+                                                x
+                                                 n
+          (%o3)               x      = x      + --
+                               n + 2    n + 1   n
+          (%i4) solve_rec(rec, x[n]);
+          WARNING: found some hypergeometrical solutions!
+          (%o4)                    x  = %k  n
+                                    n     1
+          (%i5) reduce_order(rec, n, x[n]);
+          (%t5)                    x  = n %z
+                                    n       n
+
+                                     n - 1
+                                     ====
+                                     \
+          (%t6)                %z  =  >     %u
+                                 n   /        %j
+                                     ====
+                                     %j = 0
+
+          (%o6)             (- n - 2) %u     - %u
+                                        n + 1     n
+          (%i6) solve_rec((n+2)*%u[n+1] + %u[n], %u[n]);
+                                               n
+                                      %k  (- 1)
+                                        1
+          (%o6)                 %u  = ----------
+                                  n    (n + 1)!
+
+          So the general solution is
+
+                       n - 1
+                       ====        n
+                       \      (- 1)
+                 %k  n  >    -------- + %k  n
+                   2   /     (n + 1)!     1
+                       ====
+                       n = 0
+
+
+ -- Option variable: simplify_products
+     Default value: `true'
+
+     If `simplify_products' is `true', `solve_rec' will try to simplify
+     products in result.
+
+     See also: `solve_rec'.
+
+
+ -- Function: solve_rec (<eqn>, <var>, [<init>])
+     Solves for hypergeometrical solutions to linear recurrence <eqn>
+     with polynomials coefficient in variable <var>. Optional arguments
+     <init> are initial conditions.
+
+     `solve_rec' can solve linear recurrences with constant
+     coefficients, finds hypergeometrical solutions to homogeneous
+     linear recurrences with polynomial coefficients, rational
+     solutions to linear recurrences with polynomial coefficients and
+     can solve Ricatti type recurrences.
+
+     Note that the running time of the algorithm used to find
+     hypergeometrical solutions is exponential in the degree of the
+     leading and trailing coefficient.
+
+     To use this function first load the `solve_rec' package with
+     `load(solve_rec);'.
+
+     Example of linear recurrence with constant coefficients:
+
+          (%i2) solve_rec(a[n]=a[n-1]+a[n-2]+n/2^n, a[n]);
+                                  n          n
+                     (sqrt(5) - 1)  %k  (- 1)
+                                      1           n
+          (%o2) a  = ------------------------- - ----
+                 n               n                  n
+                                2                5 2
+                                                          n
+                                             (sqrt(5) + 1)  %k
+                                                              2    2
+                                           + ------------------ - ----
+                                                      n              n
+                                                     2            5 2
+
+     Example of linear recurrence with polynomial coefficients:
+
+          (%i7) 2*x*(x+1)*y[x] - (x^2+3*x-2)*y[x+1] + (x-1)*y[x+2];
+                                   2
+          (%o7) (x - 1) y      - (x  + 3 x - 2) y      + 2 x (x + 1) y
+                         x + 2                   x + 1                x
+          (%i8) solve_rec(%, y[x], y[1]=1, y[3]=3);
+                                        x
+                                     3 2    x!
+          (%o9)                 y  = ---- - --
+                                 x    4     2
+
+     Example of Ricatti type recurrence:
+
+          (%i2) x*y[x+1]*y[x] - y[x+1]/(x+2) + y[x]/(x-1) = 0;
+                                      y         y
+                                       x + 1     x
+          (%o2)         x y  y      - ------ + ----- = 0
+                           x  x + 1   x + 2    x - 1
+          (%i3) solve_rec(%, y[x], y[3]=5)$
+          (%i4) ratsimp(minfactorial(factcomb(%)));
+                                             3
+                                         30 x  - 30 x
+          (%o4) y  = - -------------------------------------------------
+                 x        6      5       4       3       2
+                       5 x  - 3 x  - 25 x  + 15 x  + 20 x  - 12 x - 1584
+
+     See also: `solve_rec_rat', `simplify_products', and
+     `product_use_gamma'.
+
+
+ -- Function: solve_rec_rat (<eqn>, <var>, [<init>])
+     Solves for rational solutions to linear recurrences. See solve_rec
+     for description of arguments.
+
+     To use this function first load the `solve_rec' package with
+     `load(solve_rec);'.
+
+     Example:
+
+          (%i1) (x+4)*a[x+3] + (x+3)*a[x+2] - x*a[x+1] + (x^2-1)*a[x];
+          (%o1)  (x + 4) a      + (x + 3) a      - x a
+                          x + 3            x + 2      x + 1
+                                                             2
+                                                         + (x  - 1) a
+                                                                      x
+          (%i2) solve_rec_rat(% = (x+2)/(x+1), a[x]);
+                                 1
+          (%o2)      a  = ---------------
+                      x   (x - 1) (x + 1)
+
+     See also: `solve_rec'.
+
+
+ -- Option variable: product_use_gamma
+     Default value: `true'
+
+     When simplifying products, `solve_rec' introduces gamma function
+     into the expression if `product_use_gamma' is `true'.
+
+     See also: `simplify_products', `solve_rec'.
+
+
+ -- Function: summand_to_rec (<summand>, <k>, <n>)
+ -- Function: summand_to_rec (<summand>, [<k>, <lo>, <hi>], <n>)
+     Returns the recurrence sattisfied by the sum
+
+               hi
+              ====
+              \
+               >     summand
+              /
+              ====
+            k = lo
+
+     where summand is hypergeometrical in <k> and <n>. If <lo> and <hi>
+     are omited, they are assumed to be `lo = -inf' and `hi = inf'.
+
+     To use this function first load the `closed_form' package with
+     `load(closed_form)'.
+
+     Example:
+
+          (%i1) load("closed_form")$
+          (%i2) summand: binom(n,k);
+          (%o2)                           binomial(n, k)
+          (%i3) summand_to_rec(summand,k,n);
+          (%o3)                      2 sm  - sm      = 0
+                                         n     n + 1
+          (%i7) summand: binom(n, k)/(k+1);
+                                          binomial(n, k)
+          (%o7)                           --------------
+                                              k + 1
+          (%i8) summand_to_rec(summand, [k, 0, n], n);
+          (%o8)               2 (n + 1) sm  - (n + 2) sm      = - 1
+                                          n             n + 1
+
+
+
+File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: solve_rec,  Up: Top
+
+67 stirling
+***********
+
+* Menu:
+
+* Definitions for stirling::
+
+
+File: maxima.info,  Node: Definitions for stirling,  Prev: stirling,  Up: stirling
+
+67.1 Definitions for stirling
+=============================
+
+ -- Function: stirling (<z>,<n>)
+     Replace `gamma(x)' with the O(1/x^(2n-1)) Stirling formula. when
+     <n> isn't a nonnegative integer, signal an error.
+
+     Reference: Abramowitz & Stegun, " Handbook of mathematical
+     functions", 6.1.40.
+
+     Examples:
+          (%i1) load (stirling)$
+
+          (%i2) stirling(gamma(%alpha+x)/gamma(x),1);
+                 1/2 - x             x + %alpha - 1/2
+          (%o2) x        (x + %alpha)
+                                             1           1
+                                      --------------- - ---- - %alpha
+                                      12 (x + %alpha)   12 x
+                                    %e
+          (%i3) taylor(%,x,inf,1);
+                              %alpha       2    %alpha
+                    %alpha   x       %alpha  - x       %alpha
+          (%o3)/T/ x       + -------------------------------- + . . .
+                                           2 x
+          (%i4) map('factor,%);
+                                                 %alpha - 1
+                   %alpha   (%alpha - 1) %alpha x
+          (%o4)   x       + -------------------------------
+                                            2
+
+     The function `stirling' knows the difference between the variable
+     'gamma' and the function gamma:
+
+          (%i5) stirling(gamma + gamma(x),0);
+                                              x - 1/2   - x
+          (%o5)    gamma + sqrt(2) sqrt(%pi) x        %e
+          (%i6) stirling(gamma(y) + gamma(x),0);
+                                   y - 1/2   - y
+          (%o6) sqrt(2) sqrt(%pi) y        %e
+                                                        x - 1/2   - x
+                                   + sqrt(2) sqrt(%pi) x        %e
+
+     To use this function write first `load("stirling")'.
+
+
+File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
+
+68 stringproc
+*************
+
+* Menu:
+
+* Introduction to string processing::
+* Definitions for input and output::
+* Definitions for characters::
+* Definitions for strings::
+
+
+File: maxima.info,  Node: Introduction to string processing,  Next: Definitions for input and output,  Prev: stringproc,  Up: stringproc
+
+68.1 Introduction to string processing
+======================================
+
+`stringproc.lisp' enlarges Maximas capabilities of working with strings.
+
+   Please note that for Maxima Version 5.9.1 you need a different file.
+For questions and bugs mail to van.nek at arcor.de .
+
+   Load `stringproc.lisp' by typing `load("stringproc");'.
+
+   In Maxima a string is easily constructed by typing "text".  Note
+that Maxima-strings are no Lisp-strings and vice versa.  Tests can be
+done with `stringp' respectively `lstringp'.  If for some reasons you
+have a value, that is a Lisp-string, maybe when using Maxima-function
+sconcat, you can convert via `sunlisp'.
+
+     (%i1) load("stringproc")$
+     (%i2) m: "text";
+     (%o2)                         text
+     (%i3) [stringp(m),lstringp(m)];
+     (%o3)                     [true, false]
+     (%i4) l: sconcat("text");
+     (%o4)                         text
+     (%i5) [stringp(l),lstringp(l)];
+     (%o5)                     [false, true]
+     (%i6) stringp( sunlisp(l) );
+     (%o6)                         true
+
+   All functions in `stringproc.lisp', that return strings, return
+Maxima-strings.
+
+   Characters are introduced as Maxima-strings of length 1.  Of course,
+these are no Lisp-characters.  Tests can be done with `charp'
+(respectively `lcharp' and conversion from Lisp to Maxima with
+`cunlisp').
+
+     (%i1) load("stringproc")$
+     (%i2) c: "e";
+     (%o2)                           e
+     (%i3) [charp(c),lcharp(c)];
+     (%o3)                     [true, false]
+     (%i4) supcase(c);
+     (%o4)                           E
+     (%i5) charp(%);
+     (%o5)                         true
+
+   Again, all functions in `stringproc.lisp', that return characters,
+return Maxima-characters.  Due to the fact, that the introduced
+characters are strings of length 1, you can use a lot of string
+functions also for characters.  As seen, `supcase' is one example.
+
+   It is important to know, that the first character in a Maxima-string
+is at position 1.  This is designed due to the fact that the first
+element in a Maxima-list is at position 1 too.  See definitions of
+charat and charlist for examples.
+
+   In applications string-functions are often used when working with
+files.  You will find some useful stream- and print-functions in
+`stringproc.lisp'.  The following example shows some of the here
+introduced functions at work.
+
+   Example:
+
+   Let file contain Maxima console I/O, saved with 'Save Console to
+File' or with copy and paste.  `extracti' then extracts the values of
+all input labels to a batchable file, which path is the return value.
+The batch process can directly be started with `batch(%)'.  Note that
+`extracti' fails if at least one label is damaged, maybe due to erasing
+the `).' Or if there are input lines from a batch process.  In this
+case terminators are missing.  It fails too, if there are some
+characters behind the terminators, maybe due to comment.
+
+     extracti(file):= block(
+        [ s1: openr(file), ifile: sconc(file,".in"), line, nl: false ],
+        s2: openw(ifile),
+
+        while ( stringp(line: readline(s1)) ) do (
+           if ssearch( sconc("(",inchar),line ) = 1 then (
+              line: strim(" ",substring( line,ssearch(")",line)+1 )),
+              printf( s2,"~a~%",line ),
+              checklast(line) )
+           else if nl then (
+              line: strimr(" ",line),
+              printf( s2,"~a~%",line ),
+              checklast(line) )),
+
+        close(s1), close(s2),
+        ifile)$
+
+     checklast(line):= block(
+        [ last: charat( line,slength(line) ) ],
+        if cequal(last,";") or cequal(last,"$") then
+           nl:false else nl:true )$
+
+   File 'C:\home\maxima\test.out':
+
+     (%i1) f(x):= sin(x)$
+     (%i2) diff(f(x),x);
+     (%o2)                               cos(x)
+     (%i3) df(x):= ''%;
+     (%o3)                           df(x) := cos(x)
+     (%i4) df(0);
+     (%o4)                                  1
+
+   Maxima:
+
+     (%i11) extracti("C:\\home\\maxima\\test.out");
+     (%o11)             C:\home\maxima\test.out.in
+     (%i12) batch(%);
+
+     batching #pC:/home/maxima/test.out.in
+     (%i13)                          f(x) := sin(x)
+     (%i14)                           diff(f(x), x)
+     (%o14)                              cos(x)
+     (%i15)                          df(x) := cos(x)
+     (%o15)                          df(x) := cos(x)
+     (%i16)                               df(0)
+     (%o16)                                 1
+
+
+File: maxima.info,  Node: Definitions for input and output,  Next: Definitions for characters,  Prev: Introduction to string processing,  Up: stringproc
+
+68.2 Definitions for input and output
+=====================================
+
+Example:
+
+     (%i1) s: openw("C:\\home\\file.txt");
+     (%o1)                 #<output stream C:\home\file.txt>
+     (%i2) control: "~2tAn atom: ~20t~a~%~2tand a list: ~20t~{~r ~}~%~2tand an integer: ~20t~d~%"$
+     (%i3) printf( s,control, 'true,[1,2,3],42 )$
+     (%o3)                                false
+     (%i4) close(s);
+     (%o4)                                true
+     (%i5) s: openr("C:\\home\\file.txt");
+     (%o5)                 #<input stream C:\home\file.txt>
+     (%i6) while stringp( tmp:readline(s) ) do print(tmp)$
+       An atom:          true
+       and a list:       one two three
+       and an integer:   42
+     (%i7) close(s)$
+
+ -- Function: close (<stream>)
+     Closes <stream> and returns `true' if <stream> had been open.
+
+
+ -- Function: flength (<stream>)
+     Returns the number of elements in <stream>.
+
+
+ -- Function: fposition (<stream>)
+ -- Function: fposition (<stream>, <pos>)
+     Returns the current position in <stream>, if <pos> is not used.
+     If <pos> is used, `fposition' sets the position in <stream>.
+     <pos> has to be a positive number, the first element in <stream>
+     is in position 1.
+
+
+ -- Function: freshline ()
+ -- Function: freshline (<stream>)
+     Writes a new line to <stream>, if the position is not at the
+     beginning of a line.  `freshline' does not work properly with the
+     streams `true' and `false'.
+
+
+ -- Function: newline ()
+ -- Function: newline (<stream>)
+     Writes a new line to <stream>.  `newline' does not work properly
+     with the streams `true' and `false'.  See `sprint' for an example
+     of using `newline'.
+
+
+ -- Function: opena (<file>)
+     Returns an output stream to <file>.  If an existing file is
+     opened, `opena' appends elements at the end of file.
+
+
+ -- Function: openr (<file>)
+     Returns an input stream to <file>.  If <file> does not exist, it
+     will be created.
+
+
+ -- Function: openw (<file>)
+     Returns an output stream to <file>.  If <file> does not exist, it
+     will be created.  If an existing file is opened, `openw'
+     destructively modifies <file>.
+
+
+ -- Function: printf (<dest>, <string>)
+ -- Function: printf (<dest>, <string>, <expr_1>, ..., <expr_n>)
+     `printf' is like FORMAT in Common Lisp.  (From gcl.info: "format
+     produces formatted output by outputting the characters of
+     control-string string and observing that a tilde introduces a
+     directive.  The character after the tilde, possibly preceded by
+     prefix parameters and modifiers, specifies what kind of formatting
+     is desired.  Most directives use one or more elements of args to
+     create their output.")
+
+     The following description and the examples may give an idea of
+     using `printf'.  See Lisp reference for more information.  Note
+     that there are some directives, which do not work in Maxima.  For
+     example, `~:[' fails.  `printf' is designed with the intention,
+     that `~s' is read as `~a'.  Also note that the selection directive
+     `~[' is zero-indexed.
+
+             ~%       new line
+             ~&       fresh line
+             ~t       tab
+             ~$       monetary
+             ~d       decimal integer
+             ~b       binary integer
+             ~o       octal integer
+             ~x       hexadecimal integer
+             ~br      base-b integer
+             ~r       spell an integer
+             ~p       plural
+             ~f       floating point
+             ~e       scientific notation
+             ~g       ~f or ~e, depending upon magnitude
+             ~a       as printed by Maxima function print
+             ~s       like ~a
+             ~~       ~
+             ~<       justification, ~> terminates
+             ~(       case conversion, ~) terminates
+             ~[       selection, ~] terminates
+             ~{       iteration, ~} terminates
+
+          (%i1) printf( false, "~s ~a ~4f ~a ~@r",
+          "String",sym,bound,sqrt(8),144), bound = 1.234;
+          (%o1)                 String sym 1.23 2*sqrt(2) CXLIV
+          (%i2) printf( false,"~{~a ~}",["one",2,"THREE"] );
+          (%o2)                          one 2 THREE
+          (%i3) printf( true,"~{~{~9,1f ~}~%~}",mat ),
+          mat = args( matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]) )$
+                1.1       2.0       3.3
+                4.0       5.0       6.0
+                7.0       8.9       9.0
+          (%i4) control: "~:(~r~) bird~p ~[is~;are~] singing."$
+          (%i5) printf( false,control, n,n,if n=1 then 0 else 1 ), n=2;
+          (%o5)                    Two birds are singing.
+
+     If <dest> is a stream or `true', then `printf' returns `false'.
+     Otherwise, `printf' returns a string containing the output.
+
+
+ -- Function: readline (<stream>)
+     Returns a string containing the characters from the current
+     position in <stream> up to the end of the line or <false> if the
+     end of the file is encountered.
+
+
+ -- Function: sprint (<expr_1>, ..., <expr_n>)
+     Evaluates and displays its arguments one after the other `on a
+     line' starting at the leftmost position.  The numbers are printed
+     with the '-' right next to the number, and it disregards line
+     length.
+
+          (%i1) for n:0 thru 16 do sprint( fib(n) )$
+          0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987
+
+     In xmaxima you might wish to add `,newline()', if you prefer line
+     breaking prior to printing.  See `ascii' for an example.
+
+
+
+File: maxima.info,  Node: Definitions for characters,  Next: Definitions for strings,  Prev: Definitions for input and output,  Up: stringproc
+
+68.3 Definitions for characters
+===============================
+
+ -- Function: alphacharp (<char>)
+     Returns `true' if <char> is an alphabetic character.
+
+
+ -- Function: alphanumericp (<char>)
+     Returns `true' if <char> is an alphabetic character or a digit.
+
+
+ -- Function: ascii (<int>)
+     Returns the character corresponding to the ASCII number <int>.  (
+     -1 < int < 256 )
+
+          (%i1) for n from 0 thru 255 do ( tmp: ascii(n),
+          if alphacharp(tmp) then sprint(tmp) ), newline()$
+          A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g
+          h i j k l m n o p q r s t u v w x y z
+
+
+ -- Function: cequal (<char_1>, <char_2>)
+     Returns `true' if <char_1> and <char_2> are the same.
+
+
+ -- Function: cequalignore (<char_1>, <char_2>)
+     Like `cequal' but ignores case.
+
+
+ -- Function: cgreaterp (<char_1>, <char_2>)
+     Returns `true' if the ASCII number of <char_1> is greater than the
+     number of <char_2>.
+
+
+ -- Function: cgreaterpignore (<char_1>, <char_2>)
+     Like `cgreaterp' but ignores case.
+
+
+ -- Function: charp (<obj>)
+     Returns `true' if <obj> is a Maxima-character.  See introduction
+     for example.
+
+
+ -- Function: cint (<char>)
+     Returns the ASCII number of <char>.
+
+
+ -- Function: clessp (<char_1>, <char_2>)
+     Returns `true' if the ASCII number of <char_1> is less than the
+     number of <char_2>.
+
+
+ -- Function: clesspignore (<char_1>, <char_2>)
+     Like `clessp' but ignores case.
+
+
+ -- Function: constituent (<char>)
+     Returns `true' if <char> is a graphic character and not the space
+     character.  A graphic character is a character one can see, plus
+     the space character.  (`constituent' is defined by Paul Graham,
+     ANSI Common Lisp, 1996, page 67.)
+
+          (%i1) for n from 0 thru 255 do ( tmp: ascii(n),
+          if constituent(tmp) then sprint(tmp) ), newline()$
+          ! " #  %  ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B
+          C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c
+          d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+
+
+ -- Function: cunlisp (<lisp_char>)
+     Converts a Lisp-character into a Maxima-character.  (You wont need
+     it.)
+
+
+ -- Function: digitcharp (<char>)
+     Returns `true' if <char> is a digit.
+
+
+ -- Function: lcharp (<obj>)
+     Returns `true' if <obj> is a Lisp-character.  (You wont need it.)
+
+
+ -- Function: lowercasep (<char>)
+     Returns `true' if <char> is a lowercase character.
+
+
+ -- Variable: newline
+     The character newline.
+
+
+ -- Variable: space
+     The character space.
+
+
+ -- Variable: tab
+     The character tab.
+
+
+ -- Function: uppercasep (<char>)
+     Returns `true' if <char> is an uppercase character.
+
+
+
+File: maxima.info,  Node: Definitions for strings,  Prev: Definitions for characters,  Up: stringproc
+
+68.4 Definitions for strings
+============================
+
+ -- Function: sunlisp (<lisp_string>)
+     Converts a Lisp-string into a Maxima-string.  (In general you wont
+     need it.)
+
+
+ -- Function: lstringp (<obj>)
+     Returns `true' if <obj> is a Lisp-string.  (In general you wont
+     need it.)
+
+
+ -- Function: stringp (<obj>)
+     Returns `true' if <obj> is a Maxima-string.  See introduction for
+     example.
+
+
+ -- Function: charat (<string>, <n>)
+     Returns the <n>-th character of <string>.  The first character in
+     <string> is returned with <n> = 1.
+
+          (%i1) load("stringproc")$
+          (%i2) charat("Lisp",1);
+          (%o2)                           L
+
+
+ -- Function: charlist (<string>)
+     Returns the list of all characters in <string>.
+
+          (%i1) load("stringproc")$
+          (%i2) charlist("Lisp");
+          (%o2)                     [L, i, s, p]
+          (%i3) %[1];
+          (%o3)                           L
+
+
+ -- Function: parsetoken (<string>)
+     `parsetoken' converts the first token in <string> to the
+     corresponding number or returns `false' if the number cannot be
+     determined .  The delimiter set for tokenizing is `{space, comma,
+     semicolon, tab, newline}'.
+
+          (%i1) load("stringproc")$
+          (%i2) 2*parsetoken("1.234 5.678");
+          (%o2)                         2.468
+
+     For parsing you can also use function parse_string.  See
+     description in file 'share\contrib\eval_string.lisp'.
+
+
+ -- Function: sconc (<expr_1>, ..., <expr_n>)
+     Evaluates its arguments and concatenates them into a string.
+     `sconc' is like `sconcat' but returns a Maxima string.
+
+          (%i1) load("stringproc")$
+          (%i2) sconc("xx[",3,"]:",expand((x+y)^3));
+          (%o2)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+          (%i3) stringp(%);
+          (%o3)                         true
+
+
+ -- Function: scopy (<string>)
+     Returns a copy of <string> as a new string.
+
+
+ -- Function: sdowncase (<string>)
+ -- Function: sdowncase (<string>, <start>)
+ -- Function: sdowncase (<string>, <start>, <end>)
+     Like `supcase', but uppercase characters are converted to
+     lowercase.
+
+
+ -- Function: sequal (<string_1>, <string_2>)
+     Returns `true' if <string_1> and <string_2> are the same length
+     and contain the same characters.
+
+
+ -- Function: sequalignore (<string_1>, <string_2>)
+     Like `sequal' but ignores case.
+
+
+ -- Function: sexplode (<string>)
+     `sexplode' is an alias for function `charlist'.
+
+
+ -- Function: simplode (<list>)
+ -- Function: simplode (<list>, <delim>)
+     `simplode' takes a list of expressions and concatenates them into
+     a string.  If no delimiter <delim> is used, `simplode' is like
+     `sconc' and uses no delimiter.  <delim> can be any string.
+
+          (%i1) load("stringproc")$
+          (%i2) simplode(["xx[",3,"]:",expand((x+y)^3)]);
+          (%o2)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+          (%i3) simplode( sexplode("stars")," * " );
+          (%o3)                   s * t * a * r * s
+          (%i4) simplode( ["One","more","coffee."]," " );
+          (%o4)                   One more coffee.
+
+
+ -- Function: sinsert (<seq>, <string>, <pos>)
+     Returns a string that is a concatenation of `substring (<string>,
+     1, <pos> - 1)', the string <seq> and `substring (<string>, <pos>)'.
+     Note that the first character in <string> is in position 1.
+
+          (%i1) load("stringproc")$
+          (%i2) s: "A submarine."$
+          (%i3) sconc( substring(s,1,3),"yellow ",substring(s,3) );
+          (%o3)                  A yellow submarine.
+          (%i4) sinsert("hollow ",s,3);
+          (%o4)                  A hollow submarine.
+
+
+ -- Function: sinvertcase (<string>)
+ -- Function: sinvertcase (<string>, <start>)
+ -- Function: sinvertcase (<string>, <start>, <end>)
+     Returns <string> except that each character from position <start>
+     to <end> is inverted.  If <end> is not given, all characters from
+     start to the <end> of <string> are replaced.
+
+          (%i1) load("stringproc")$
+          (%i2) sinvertcase("sInvertCase");
+          (%o2)                      SiNVERTcASE
+
+
+ -- Function: slength (<string>)
+     Returns the number of characters in <string>.
+
+
+ -- Function: smake (<num>, <char>)
+     Returns a new string with a number of <num> characters <char>.
+
+          (%i1) load("stringproc")$
+          (%i2) smake(3,"w");
+          (%o2)                          www
+
+
+ -- Function: smismatch (<string_1>, <string_2>)
+ -- Function: smismatch (<string_1>, <string_2>, <test>)
+     Returns the position of the first character of <string_1> at which
+     <string_1> and <string_2> differ or `false'.  Default test
+     function for matching is `sequal'.  If `smismatch' should ignore
+     case, use `sequalignore' as test.
+
+          (%i1) load("stringproc")$
+          (%i2) smismatch("seven","seventh");
+          (%o2)                           6
+
+
+ -- Function: split (<string>)
+ -- Function: split (<string>, <delim>)
+ -- Function: split (<string>, <delim>, <multiple>)
+     Returns the list of all tokens in <string>.  Each token is an
+     unparsed string.  `split' uses <delim> as delimiter.  If <delim>
+     is not given, the space character is the default delimiter.
+     <multiple> is a boolean variable with `true' by default.  Multiple
+     delimiters are read as one.  This is useful if tabs are saved as
+     multiple space characters.  If <multiple> is set to `false', each
+     delimiter is noted.
+
+          (%i1) load("stringproc")$
+          (%i2) split("1.2   2.3   3.4   4.5");
+          (%o2)                 [1.2, 2.3, 3.4, 4.5]
+          (%i3) split("first;;third;fourth",";",false);
+          (%o3)               [first, , third, fourth]
+
+
+ -- Function: sposition (<char>, <string>)
+     Returns the position of the first character in <string> which
+     matches <char>.  The first character in <string> is in position 1.
+     For matching characters ignoring case see `ssearch'.
+
+
+ -- Function: sremove (<seq>, <string>)
+ -- Function: sremove (<seq>, <string>, <test>)
+ -- Function: sremove (<seq>, <string>, <test>, <start>)
+ -- Function: sremove (<seq>, <string>, <test>, <start>, <end>)
+     Returns a string like <string> but without all substrings matching
+     <seq>.  Default test function for matching is `sequal'.  If
+     `sremove' should ignore case while searching for <seq>, use
+     `sequalignore' as test.  Use <start> and <end> to limit searching.
+     Note that the first character in <string> is in position 1.
+
+          (%i1) load("stringproc")$
+          (%i2) sremove("n't","I don't like coffee.");
+          (%o2)                   I do like coffee.
+          (%i3) sremove ("DO ",%,'sequalignore);
+          (%o3)                    I like coffee.
+
+
+ -- Function: sremovefirst (<seq>, <string>)
+ -- Function: sremovefirst (<seq>, <string>, <test>)
+ -- Function: sremovefirst (<seq>, <string>, <test>, <start>)
+ -- Function: sremovefirst (<seq>, <string>, <test>, <start>, <end>)
+     Like `sremove' except that only the first substring that matches
+     `seq' is removed.
+
+
+ -- Function: sreverse (<string>)
+     Returns a string with all the characters of <string> in reverse
+     order.
+
+
+ -- Function: ssearch (<seq>, <string>)
+ -- Function: ssearch (<seq>, <string>, <test>)
+ -- Function: ssearch (<seq>, <string>, <test>, <start>)
+ -- Function: ssearch (<seq>, <string>, <test>, <start>, <end>)
+     Returns the position of the first substring of <string> that
+     matches the string <seq>.  Default test function for matching is
+     `sequal'.  If `ssearch' should ignore case, use `sequalignore' as
+     test.  Use <start> and <end> to limit searching.  Note that the
+     first character in <string> is in position 1.
+
+          (%i1) ssearch("~s","~{~S ~}~%",'sequalignore);
+          (%o1)                                  4
+
+
+ -- Function: ssort (<string>)
+ -- Function: ssort (<string>, <test>)
+     Returns a string that contains all characters from <string> in an
+     order such there are no two successive characters <c> and <d> such
+     that `test (<c>, <d>)' is `false' and `test (<d>, <c>)' is `true'.
+     Default test function for sorting is <clessp>.  The set of test
+     functions is `{clessp, clesspignore, cgreaterp, cgreaterpignore,
+     cequal, cequalignore}'.
+
+          (%i1) load("stringproc")$
+          (%i2) ssort("I don't like Mondays.");
+          (%o2)                    '.IMaddeiklnnoosty
+          (%i3) ssort("I don't like Mondays.",'cgreaterpignore);
+          (%o3)                 ytsoonnMlkIiedda.'
+
+
+ -- Function: ssubst (<new>, <old>, <string>)
+ -- Function: ssubst (<new>, <old>, <string>, <test>)
+ -- Function: ssubst (<new>, <old>, <string>, <test>, <start>)
+ -- Function: ssubst (<new>, <old>, <string>, <test>, <start>, <end>)
+     Returns a string like <string> except that all substrings matching
+     <old> are replaced by <new>.  <old> and <new> need not to be of
+     the same length.  Default test function for matching is `sequal'.
+     If `ssubst' should ignore case while searching for old, use
+     `sequalignore' as test.  Use <start> and <end> to limit searching.
+     Note that the first character in <string> is in position 1.
+
+          (%i1) load("stringproc")$
+          (%i2) ssubst("like","hate","I hate Thai food. I hate green tea.");
+          (%o2)          I like Thai food. I like green tea.
+          (%i3) ssubst("Indian","thai",%,'sequalignore,8,12);
+          (%o3)         I like Indian food. I like green tea.
+
+
+ -- Function: ssubstfirst (<new>, <old>, <string>)
+ -- Function: ssubstfirst (<new>, <old>, <string>, <test>)
+ -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>)
+ -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>,
+          <end>)
+     Like `subst' except that only the first substring that matches
+     <old> is replaced.
+
+
+ -- Function: strim (<seq>,<string>)
+     Returns a string like <string>, but with all characters that
+     appear in <seq> removed from both ends.
+
+          (%i1) load("stringproc")$
+          (%i2) "/* comment */"$
+          (%i3) strim(" /*",%);
+          (%o3)                        comment
+          (%i4) slength(%);
+          (%o4)                           7
+
+
+ -- Function: striml (<seq>, <string>)
+     Like `strim' except that only the left end of <string> is trimmed.
+
+
+ -- Function: strimr (<seq>, <string>)
+     Like `strim' except that only the right end of string is trimmed.
+
+
+ -- Function: substring (<string>, <start>)
+ -- Function: substring (<string>, <start>, <end>)
+     Returns the substring of <string> beginning at position <start>
+     and ending at position <end>.  The character at position <end> is
+     not included.  If <end> is not given, the substring contains the
+     rest of the string.  Note that the first character in <string> is
+     in position 1.
+
+          (%i1) load("stringproc")$
+          (%i2) substring("substring",4);
+          (%o2)                        string
+          (%i3) substring(%,4,6);
+          (%o3)                          in
+
+
+ -- Function: supcase (<string>)
+ -- Function: supcase (<string>, <start>)
+ -- Function: supcase (<string>, <start>, <end>)
+     Returns <string> except that lowercase characters from position
+     <start> to <end> are replaced by the corresponding uppercase ones.
+     If <end> is not given, all lowercase characters from <start> to
+     the end of <string> are replaced.
+
+          (%i1) load("stringproc")$
+          (%i2) supcase("english",1,2);
+          (%o2)                        English
+
+
+ -- Function: tokens (<string>)
+ -- Function: tokens (<string>, <test>)
+     Returns a list of tokens, which have been extracted from <string>.
+     The tokens are substrings whose characters satisfy a certain test
+     function.  If test is not given, <constituent> is used as the
+     default test.  `{constituent, alphacharp, digitcharp, lowercasep,
+     uppercasep, charp, characterp, alphanumericp}' is the set of test
+     functions.  (The Lisp-version of `tokens' is written by Paul
+     Graham. ANSI Common Lisp, 1996, page 67.)
+
+          (%i1) load("stringproc")$
+          (%i2) tokens("24 October 2005");
+          (%o2)                  [24, October, 2005]
+          (%i3) tokens("05-10-24",'digitcharp);
+          (%o3)                     [05, 10, 24]
+          (%i4) map(parsetoken,%);
+          (%o4)                      [5, 10, 24]
+
+
+
+File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
+
+69 unit
+*******
+
+* Menu:
+
+* Introduction to Units::
+* Definitions for Units::
+
+
+File: maxima.info,  Node: Introduction to Units,  Next: Definitions for Units,  Prev: unit,  Up: unit
+
+69.1 Introduction to Units
+==========================
+
+The _unit_ package enables the user to convert between arbitrary units
+and work with dimensions in equations. The functioning of this package
+is radically different from the original Maxima units package - whereas
+the original was a basic list of definitions, this package uses
+rulesets to allow the user to chose, on a per dimension basis, what
+unit final answers should be rendered in.  It will separate units
+instead of intermixing them in the display, allowing the user to
+readily identify the units associated with a particular answer.  It
+will allow a user to simplify an expression to its fundamental Base
+Units, as well as providing fine control over simplifying to derived
+units.  Dimensional analysis is possible, and a variety of tools are
+available to manage conversion and simplification options. In addition
+to customizable automatic conversion, _units_ also provides a
+traditional manual conversion option.
+
+   Note - when unit conversions are inexact Maxima will make
+approximations resulting in fractions. This is a consequence of the
+techniques used to simplify units.  The messages warning of this type
+of substitution are disabled by default in the case of units (normally
+they are on) since this situation occurs frequently and the warnings
+clutter the output.  (The existing state of ratprint is restored after
+unit conversions, so user changes to that setting will be preserved
+otherwise.)  If  the user needs this information for units, they can set
+_unitverbose:on_ to reactivate the printing of warnings from the unit
+conversion process.
+
+   _unit_ is included in Maxima in the share/contrib/unit directory. It
+obeys normal Maxima package loading conventions:
+
+     (%i1) load("unit")$
+     *******************************************************************
+     *                       Units version 0.50                        *
+     *          Definitions based on the NIST Reference on             *
+     *              Constants, Units, and Uncertainty                  *
+     *       Conversion factors from various sources including         *
+     *                   NIST and the GNU units package                *
+     *******************************************************************
+
+     Redefining necessary functions...
+     WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
+     WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
+     WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
+     WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
+     Initializing unit arrays...
+     Done.
+
+   The WARNING messages are expected and not a cause for concern - they
+indicate the _unit_ package is redefining functions already defined in
+Maxima proper.  This is necessary in order to properly handle units.
+The user should be aware that if other changes have been made to these
+functions by other packages those changes will be overwritten by this
+loading process.
+
+   The _unit.mac_ file also loads a lisp file _unit-functions.lisp_
+which contains the lisp functions needed for the package.
+
+   Clifford Yapp is the primary author.  He has received valuable
+assistance from Barton Willis of the University of Nebraska at Kearney
+(UNK), Robert Dodier, and other intrepid folk of the Maxima mailing
+list.
+
+   There are probably lots of bugs.  Let me know.  `float' and `numer'
+don't do what is expected.
+
+   TODO : dimension functionality, handling of temperature, showabbr
+and friends.  Show examples with addition of quantities containing
+units.
+
+
+File: maxima.info,  Node: Definitions for Units,  Prev: Introduction to Units,  Up: unit
+
+69.2 Definitions for Units
+==========================
+
+ -- Function: setunits (<list>)
+     By default, the _unit_ package does not use any derived
+     dimensions, but will convert all units to the seven fundamental
+     dimensions using MKS units.
+          (%i2) N;
+                                               kg m
+          (%o2)                                ----
+                                                 2
+                                                s
+          (%i3) dyn;
+                                             1      kg m
+          (%o3)                           (------) (----)
+                                           100000     2
+                                                     s
+          (%i4) g;
+                                              1
+          (%o4)                             (----) (kg)
+                                             1000
+          (%i5) centigram*inch/minutes^2;
+                                            127        kg m
+          (%o5)                       (-------------) (----)
+                                       1800000000000     2
+                                                        s
+
+     In some cases this is the desired behavior.  If the user wishes to
+     use other units, this is achieved with the `setunits' command:
+          (%i6) setunits([centigram,inch,minute]);
+          (%o6)                                done
+          (%i7) N;
+                                      1800000000000   %in cg
+          (%o7)                      (-------------) (------)
+                                           127            2
+                                                      %min
+          (%i8) dyn;
+                                         18000000   %in cg
+          (%o8)                         (--------) (------)
+                                           127          2
+                                                    %min
+          (%i9) g;
+          (%o9)                             (100) (cg)
+          (%i10) centigram*inch/minutes^2;
+                                              %in cg
+          (%o10)                              ------
+                                                  2
+                                              %min
+
+     The setting of units is quite flexible.  For example, if we want to
+     get back to kilograms, meters, and seconds as defaults for those
+     dimensions we can do:
+          (%i11) setunits([kg,m,s]);
+          (%o11)                               done
+          (%i12) centigram*inch/minutes^2;
+                                            127        kg m
+          (%o12)                      (-------------) (----)
+                                       1800000000000     2
+                                                        s
+
+     Derived units are also handled by this command:
+          (%i17) setunits(N);
+          (%o17)                               done
+          (%i18) N;
+          (%o18)                                 N
+          (%i19) dyn;
+                                              1
+          (%o19)                           (------) (N)
+                                            100000
+          (%i20) kg*m/s^2;
+          (%o20)                                 N
+          (%i21) centigram*inch/minutes^2;
+                                              127
+          (%o21)                        (-------------) (N)
+                                         1800000000000
+
+     Notice that the _unit_ package recognized the non MKS combination
+     of mass, length, and inverse time squared as a force, and
+     converted it to Newtons.  This is how Maxima works in general.
+     If, for example, we prefer dyne to Newtons, we simply do the
+     following:
+          (%i22) setunits(dyn);
+          (%o22)                               done
+          (%i23) kg*m/s^2;
+          (%o23)                          (100000) (dyn)
+          (%i24) centigram*inch/minutes^2;
+                                            127
+          (%o24)                         (--------) (dyn)
+                                          18000000
+
+     To discontinue simplifying to any force, we use the uforget
+     command:
+          (%i26) uforget(dyn);
+          (%o26)                               false
+          (%i27) kg*m/s^2;
+                                               kg m
+          (%o27)                               ----
+                                                 2
+                                                s
+          (%i28) centigram*inch/minutes^2;
+                                            127        kg m
+          (%o28)                      (-------------) (----)
+                                       1800000000000     2
+                                                        s
+     This would have worked equally well with `uforget(N)' or
+     `uforget(%force)'.
+
+     See also `uforget'. To use this function write first
+     `load("unit")'.
+
+ -- Function: uforget (<list>)
+     By default, the _unit_ package converts all units to the seven
+     fundamental dimensions using MKS units. This behavior can be
+     changed with the `setunits' command. After that, the user can
+     restore the default behavior for a particular dimension by means
+     of the `uforget' command:
+          (%i13) setunits([centigram,inch,minute]);
+          (%o13)                               done
+          (%i14) centigram*inch/minutes^2;
+                                              %in cg
+          (%o14)                              ------
+                                                  2
+                                              %min
+          (%i15) uforget([cg,%in,%min]);
+          (%o15)                      [false, false, false]
+          (%i16) centigram*inch/minutes^2;
+                                            127        kg m
+          (%o16)                      (-------------) (----)
+                                       1800000000000     2
+                                                        s
+
+     `uforget' operates on dimensions, not units, so any unit of a
+     particular dimension will work.  The dimension itself is also a
+     legal argument.
+
+     See also `setunits'. To use this function write first
+     `load("unit")'.
+
+ -- Function: convert (<expr>, <list>)
+     When resetting the global environment is overkill, there is the
+     `convert' command, which allows one time conversions.  It can
+     accept either a single argument or a list of units to use in
+     conversion.  When a convert operation is done, the normal global
+     evaluation system is bypassed, in order to avoid the desired
+     result being converted again.  As a consequence, for inexact
+     calculations "rat" warnings will be visible if the global
+     environment controlling this behavior (`ratprint') is true.  This
+     is also useful for spot-checking the accuracy of a global
+     conversion.  Another feature is `convert' will allow a user to do
+     Base Dimension conversions even if the global environment is set to
+     simplify to a Derived Dimension.
+
+          (%i2) kg*m/s^2;
+                                               kg m
+          (%o2)                                ----
+                                                 2
+                                                s
+          (%i3) convert(kg*m/s^2,[g,km,s]);
+                                               g km
+          (%o3)                                ----
+                                                 2
+                                                s
+          (%i4) convert(kg*m/s^2,[g,inch,minute]);
+
+          `rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
+                                        18000000000   %in g
+          (%o4)                        (-----------) (-----)
+                                            127           2
+                                                      %min
+          (%i5) convert(kg*m/s^2,[N]);
+          (%o5)                                  N
+          (%i6) convert(kg*m^2/s^2,[N]);
+          (%o6)                                 m N
+          (%i7) setunits([N,J]);
+          (%o7)                                done
+          (%i8) convert(kg*m^2/s^2,[N]);
+          (%o8)                                 m N
+          (%i9) convert(kg*m^2/s^2,[N,inch]);
+
+          `rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
+                                           5000
+          (%o9)                           (----) (%in N)
+                                           127
+          (%i10) convert(kg*m^2/s^2,[J]);
+          (%o10)                                 J
+          (%i11) kg*m^2/s^2;
+          (%o11)                                 J
+          (%i12) setunits([g,inch,s]);
+          (%o12)                               done
+          (%i13) kg*m/s^2;
+          (%o13)                                 N
+          (%i14) uforget(N);
+          (%o14)                               false
+          (%i15) kg*m/s^2;
+                                          5000000   %in g
+          (%o15)                         (-------) (-----)
+                                            127       2
+                                                     s
+          (%i16) convert(kg*m/s^2,[g,inch,s]);
+
+          `rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
+                                          5000000   %in g
+          (%o16)                         (-------) (-----)
+                                            127       2
+                                                     s
+
+     See also `setunits' and `uforget'. To use this function write
+     first `load("unit")'.
+
+ -- Optional variable: usersetunits
+     Default value: none
+
+     If a user wishes to have a default unit behavior other than that
+     described, they can make use of _maxima-init.mac_ and the
+     _usersetunits_ variable.  The _unit_ package will check on startup
+     to see if this variable has been assigned a list.  If it has, it
+     will use setunits on that list and take the units from that list
+     to be defaults.  `uforget' will revert to the behavior defined by
+     usersetunits over its own defaults.  For example, if we have a
+     _maxima-init.mac_ file containing:
+          usersetunits : [N,J];
+     we would see the following behavior:
+          (%i1) load("unit")$
+          *******************************************************************
+          *                       Units version 0.50                        *
+          *          Definitions based on the NIST Reference on             *
+          *              Constants, Units, and Uncertainty                  *
+          *       Conversion factors from various sources including         *
+          *                   NIST and the GNU units package                *
+          *******************************************************************
+
+          Redefining necessary functions...
+          WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
+          WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
+          WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
+          WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
+          Initializing unit arrays...
+          Done.
+          User defaults found...
+          User defaults initialized.
+          (%i2) kg*m/s^2;
+          (%o2)                                  N
+          (%i3) kg*m^2/s^2;
+          (%o3)                                  J
+          (%i4) kg*m^3/s^2;
+          (%o4)                                 J m
+          (%i5) kg*m*km/s^2;
+          (%o5)                             (1000) (J)
+          (%i6) setunits([dyn,eV]);
+          (%o6)                                done
+          (%i7) kg*m/s^2;
+          (%o7)                           (100000) (dyn)
+          (%i8) kg*m^2/s^2;
+          (%o8)                     (6241509596477042688) (eV)
+          (%i9) kg*m^3/s^2;
+          (%o9)                    (6241509596477042688) (eV m)
+          (%i10) kg*m*km/s^2;
+          (%o10)                   (6241509596477042688000) (eV)
+          (%i11) uforget([dyn,eV]);
+          (%o11)                           [false, false]
+          (%i12) kg*m/s^2;
+          (%o12)                                 N
+          (%i13) kg*m^2/s^2;
+          (%o13)                                 J
+          (%i14) kg*m^3/s^2;
+          (%o14)                                J m
+          (%i15) kg*m*km/s^2;
+          (%o15)                            (1000) (J)
+     Without `usersetunits', the initial inputs would have been
+     converted to MKS, and uforget would have resulted in a return to
+     MKS rules.  Instead, the user preferences are respected in both
+     cases.  Notice these can still be overridden if desired.  To
+     completely eliminate this simplification - i.e.  to have the user
+     defaults reset to factory defaults - the `dontusedimension'
+     command can be used.  `uforget' can restore user settings again,
+     but only if `usedimension' frees it for use.  Alternately,
+     `kill(usersetunits)' will completely remove all knowledge of the
+     user defaults from the session.  Here are some examples of how
+     these various options work.
+          (%i2) kg*m/s^2;
+          (%o2)                                  N
+          (%i3) kg*m^2/s^2;
+          (%o3)                                  J
+          (%i4) setunits([dyn,eV]);
+          (%o4)                                done
+          (%i5) kg*m/s^2;
+          (%o5)                           (100000) (dyn)
+          (%i6) kg*m^2/s^2;
+          (%o6)                     (6241509596477042688) (eV)
+          (%i7) uforget([dyn,eV]);
+          (%o7)                          [false, false]
+          (%i8) kg*m/s^2;
+          (%o8)                                  N
+          (%i9) kg*m^2/s^2;
+          (%o9)                                  J
+          (%i10) dontusedimension(N);
+          (%o10)                             [%force]
+          (%i11) dontusedimension(J);
+          (%o11)                         [%energy, %force]
+          (%i12) kg*m/s^2;
+                                               kg m
+          (%o12)                               ----
+                                                 2
+                                                s
+          (%i13) kg*m^2/s^2;
+                                                   2
+                                               kg m
+          (%o13)                               -----
+                                                 2
+                                                s
+          (%i14) setunits([dyn,eV]);
+          (%o14)                               done
+          (%i15) kg*m/s^2;
+                                               kg m
+          (%o15)                               ----
+                                                 2
+                                                s
+          (%i16) kg*m^2/s^2;
+                                                   2
+                                               kg m
+          (%o16)                               -----
+                                                 2
+                                                s
+          (%i17) uforget([dyn,eV]);
+          (%o17)                         [false, false]
+          (%i18) kg*m/s^2;
+                                               kg m
+          (%o18)                               ----
+                                                 2
+                                                s
+          (%i19) kg*m^2/s^2;
+                                                   2
+                                               kg m
+          (%o19)                               -----
+                                                 2
+                                                s
+          (%i20) usedimension(N);
+          Done.  To have Maxima simplify to this dimension, use setunits([unit])
+          to select a unit.
+          (%o20)                               true
+          (%i21) usedimension(J);
+          Done.  To have Maxima simplify to this dimension, use setunits([unit])
+          to select a unit.
+          (%o21)                               true
+          (%i22) kg*m/s^2;
+                                               kg m
+          (%o22)                               ----
+                                                 2
+                                                s
+          (%i23) kg*m^2/s^2;
+                                                   2
+                                               kg m
+          (%o23)                               -----
+                                                 2
+                                                s
+          (%i24) setunits([dyn,eV]);
+          (%o24)                               done
+          (%i25) kg*m/s^2;
+          (%o25)                          (100000) (dyn)
+          (%i26) kg*m^2/s^2;
+          (%o26)                    (6241509596477042688) (eV)
+          (%i27) uforget([dyn,eV]);
+          (%o27)                           [false, false]
+          (%i28) kg*m/s^2;
+          (%o28)                                 N
+          (%i29) kg*m^2/s^2;
+          (%o29)                                 J
+          (%i30) kill(usersetunits);
+          (%o30)                               done
+          (%i31) uforget([dyn,eV]);
+          (%o31)                          [false, false]
+          (%i32) kg*m/s^2;
+                                               kg m
+          (%o32)                               ----
+                                                 2
+                                                s
+          (%i33) kg*m^2/s^2;
+                                                   2
+                                               kg m
+          (%o33)                               -----
+                                                 2
+                                                s
+     Unfortunately this wide variety of options is a little confusing
+     at first, but once the user grows used to them they should find
+     they have very full control over their working environment.
+
+
+ -- Function: metricexpandall (<x>)
+     Rebuilds global unit lists automatically creating all desired
+     metric units.  <x> is a numerical argument which is used to
+     specify how many metric prefixes the user wishes defined.  The
+     arguments are as follows, with each higher number defining all
+     lower numbers' units:
+                     0 - none. Only base units
+                     1 - kilo, centi, milli
+          (default)  2 - giga, mega, kilo, hecto, deka, deci, centi, milli,
+                         micro, nano
+                     3 - peta, tera, giga, mega, kilo, hecto, deka, deci,
+                         centi, milli, micro, nano, pico, femto
+                     4 - all
+     Normally, Maxima will not define the full expansion since this
+     results in a very large number of units, but `metricexpandall' can
+     be used to rebuild the list in a more or less complete fashion.
+     The relevant variable in the _unit.mac_ file is <%unitexpand>.
+
+ -- Variable: %unitexpand
+     Default value: `2'
+
+     This is the value supplied to `metricexpandall' during the initial
+     loading of _unit_.
+
+
+
+File: maxima.info,  Node: zeilberger,  Next: Function and Variable Index,  Prev: unit,  Up: Top
+
+70 zeilberger
+*************
+
+* Menu:
+
+* Introduction to zeilberger::
+* Definitions for zeilberger::
+
+
+File: maxima.info,  Node: Introduction to zeilberger,  Next: Definitions for zeilberger,  Prev: zeilberger,  Up: zeilberger
+
+70.1 Introduction to zeilberger
+===============================
+
+`zeilberger' is a implementation of Zeilberger's algorithm for definite
+hypergeometric summation, and also Gosper's algorithm for indefinite
+hypergeometric summation.
+
+   `zeilberger' makes use of the "filtering" optimization method
+developed by Axel Riese.
+
+   `zeilberger' was developed by Fabrizio Caruso.
+
+   `load (zeilberger)' loads this package.
+
+70.1.0.1 The indefinite summation problem
+.........................................
+
+`zeilberger' implements Gosper's algorithm for indefinite
+hypergeometric summation.  Given a hypergeometric term F_k in k we want
+to find its hypergeometric anti-difference, that is, a hypergeometric
+term f_k such that F_k = f_(k+1) - f_k.
+
+70.1.0.2 The definite summation problem
+.......................................
+
+`zeilberger' implements Zeilberger's algorithm for definite
+hypergeometric summation.  Given a proper hypergeometric term (in n and
+k) F_(n,k) and a positive integer d we want to find a d-th order linear
+recurrence with polynomial coefficients (in n) for F_(n,k) and a
+rational function R in n and k such that
+
+   a_0 F_(n,k) + ... + a_d F_(n+d),k = Delta_K(R(n,k) F_(n,k))
+
+   where Delta_k is the k-forward difference operator, i.e.,
+Delta_k(t_k) := t_(k+1) - t_k.
+
+70.1.1 Verbosity levels
+-----------------------
+
+There are also verbose versions of the commands which are called by
+adding one of the following prefixes:
+
+`Summary'
+     Just a summary at the end is shown
+
+`Verbose'
+     Some information in the intermidiate steps
+
+`VeryVerbose'
+     More information
+
+`Extra'
+     Even more information including information on the linear system
+     in Zeilberger's algorithm
+
+   For example: `GosperVerbose', `parGosperVeryVerbose',
+`ZeilbergerExtra', `AntiDifferenceSummary'.
+
+
+File: maxima.info,  Node: Definitions for zeilberger,  Prev: Introduction to zeilberger,  Up: zeilberger
+
+70.2 Definitions for zeilberger
+===============================
+
+ -- Function: AntiDifference (<F_k>, <k>)
+     Returns the hypergeometric anti-difference of <F_k>, if it exists.
+     Otherwise `AntiDifference' returns `no_hyp_antidifference'.
+
+ -- Function: Gosper (<F_k>, <k>)
+     Returns the rational certificate <R(k)> for <F_k>, that is, a
+     rational function such that
+
+     F_k = R(k+1) F_(k+1) - R(k) F_k
+
+     if it exists.  Otherwise, `Gosper' returns `no_hyp_sol'.
+
+ -- Function: GosperSum (<F_k>, <k>, <a>, <b>)
+     Returns the summmation of <F_k> from <k> = <a> to <k> = <b> if
+     <F_k> has a hypergeometric anti-difference.  Otherwise,
+     `GosperSum' returns `nongosper_summable'.
+
+     Examples:
+
+          (%i1) load (zeilberger);
+          (%o1)  /usr/share/maxima/share/contrib/Zeilberger/zeilberger.mac
+          (%i2) GosperSum ((-1)^k*k / (4*k^2 - 1), k, 1, n);
+
+          Dependent equations eliminated:  (1)
+                                     3       n + 1
+                                (n + -) (- 1)
+                                     2               1
+          (%o2)               - ------------------ - -
+                                            2        4
+                                2 (4 (n + 1)  - 1)
+          (%i3) GosperSum (1 / (4*k^2 - 1), k, 1, n);
+                                          3
+                                    - n - -
+                                          2       1
+          (%o3)                  -------------- + -
+                                          2       2
+                                 4 (n + 1)  - 1
+          (%i4) GosperSum (x^k, k, 1, n);
+                                    n + 1
+                                   x          x
+          (%o4)                    ------ - -----
+                                   x - 1    x - 1
+          (%i5) GosperSum ((-1)^k*a! / (k!*(a - k)!), k, 1, n);
+                                          n + 1
+                          a! (n + 1) (- 1)              a!
+          (%o5)       - ------------------------- - ----------
+                        a (- n + a - 1)! (n + 1)!   a (a - 1)!
+          (%i6) GosperSum (k*k!, k, 1, n);
+
+          Dependent equations eliminated:  (1)
+          (%o6)                     (n + 1)! - 1
+          (%i7) GosperSum ((k + 1)*k! / (k + 1)!, k, 1, n);
+                            (n + 1) (n + 2) (n + 1)!
+          (%o7)             ------------------------ - 1
+                                    (n + 2)!
+          (%i8) GosperSum (1 / ((a - k)!*k!), k, 1, n);
+          (%o8)                  nonGosper_summable
+
+ -- Function: parGosper (<F_{n,k}>, <k>, <n>, <d>)
+     Attempts to find a a <d>-th order recurrence for <F_{n,k}>.
+
+     The algorithm yields a sequence [s_1, s_2, ..., s_m] of solutions.
+     Each solution has the form
+
+     [R(n, k), [a_0, a_1, ..., a_d]]
+
+     `parGosper' returns `[]' if it fails to find a recurrence.
+
+ -- Function: Zeilberger (<F_{n,k}>, <k>, <n>)
+     Attempts to compute the indefinite hypergeometric summation of
+     <F_{n,k}>.
+
+     `Zeilberger' first invokes `Gosper', and if that fails to find a
+     solution, then invokes `parGosper' with order 1, 2, 3, ..., up to
+     `MAX_ORD'.  If Zeilberger finds a solution before reaching
+     `MAX_ORD', it stops and returns the solution.
+
+     The algorithms yields a sequence [s_1, s_2, ..., s_m] of solutions.
+     Each solution has the form
+
+     [R(n,k), [a_0, a_1, ..., a_d]]
+
+     `Zeilberger' returns `[]' if it fails to find a solution.
+
+     `Zeilberger' invokes `Gosper' only if `gosper_in_zeilberger' is
+     `true'.
+
+70.3 General global variables
+=============================
+
+ -- Global variable: MAX_ORD
+     Default value: 5
+
+     `MAX_ORD' is the maximum recurrence order attempted by
+     `Zeilberger'.
+
+ -- Global variable: simplified_output
+     Default value: `false'
+
+     When `simplified_output' is `true', functions in the `zeilberger'
+     package attempt further simplification of the solution.
+
+ -- Global variable: linear_solver
+     Default value: `linsolve'
+
+     `linear_solver' names the solver which is used to solve the system
+     of equations in Zeilberger's algorithm.
+
+ -- Global variable: warnings
+     Default value: `true'
+
+     When `warnings' is `true', functions in the `zeilberger' package
+     print warning messages during execution.
+
+ -- Global variable: gosper_in_zeilberger
+     Default value: `true'
+
+     When `gosper_in_zeilberger' is `true', the `Zeilberger' function
+     calls `Gosper' before calling `parGosper'.  Otherwise,
+     `Zeilberger' goes immediately to `parGosper'.
+
+ -- Global variable: trivial_solutions
+     Default value: `true'
+
+     When `trivial_solutions' is `true', `Zeilberger' returns solutions
+     which have certificate equal to zero, or all coefficients equal to
+     zero.
+
+70.4 Variables related to the modular test
+==========================================
+
+ -- Global variable: mod_test
+     Default value: `false'
+
+     When `mod_test' is `true', `parGosper' executes a modular test for
+     discarding systems with no solutions.
+
+ -- Global variable: modular_linear_solver
+     Default value: `linsolve'
+
+     `modular_linear_solver' names the linear solver used by the
+     modular test in `parGosper'.
+
+ -- Global variable: ev_point
+     Default value: `big_primes[10]'
+
+     `ev_point' is the value at which the variable <n> is evaluated
+     when executing the modular test in `parGosper'.
+
+ -- Global variable: mod_big_prime
+     Default value: `big_primes[1]'
+
+     `mod_big_prime' is the modulus used by the modular test in
+     `parGosper'.
+
+ -- Global variable: mod_threshold
+     Default value: 4
+
+     `mod_threshold' is the greatest order for which the modular test
+     in `parGosper' is attempted.
+

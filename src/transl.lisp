@@ -103,7 +103,9 @@
 (putprop '$transbind #'obsolete-variable 'assign)
 
 (defvar *untranslated-functions-called* nil)
-(declaim (special *declared-translated-functions*))
+
+(defmvar *declared-translated-functions* nil
+         "List of functions which are believed to be translated.")
 
 (defmvar $tr_semicompile nil
   "If TRUE TRANSLATE_FILE and COMPFILE output forms which will~
@@ -1388,7 +1390,7 @@ APPLY means like APPLY.")
 
 (defun new-end-symbol ( &aux tem)
   (loop for i from 0
-	 do (setq tem (intern (format nil "test-~A" i)))
+	 do (setq tem (intern (format nil "~A-~A" '#:test i)))
 	 when (null (symbol-plist tem))
 	 do (return tem)))
 

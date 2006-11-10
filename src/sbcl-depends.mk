@@ -240,7 +240,6 @@ binary-sbcl/maxima.core : mat.lisp
 binary-sbcl/maxima.core : matrix.lisp
 binary-sbcl/maxima.core : sprdet.lisp
 binary-sbcl/maxima.core : newinv.lisp
-binary-sbcl/maxima.core : linnew.lisp
 binary-sbcl/maxima.core : newdet.lisp
 binary-sbcl/maxima.core : schatc.lisp
 binary-sbcl/maxima.core : matcom.lisp
@@ -279,8 +278,6 @@ binary-sbcl/maxima.core : pois2.lisp
 binary-sbcl/maxima.core : pois3.lisp
 binary-sbcl/maxima.core : desoln.lisp
 binary-sbcl/maxima.core : elim.lisp
-binary-sbcl/maxima.core : trgsmp.lisp
-binary-sbcl/maxima.core : ode2.lisp
 binary-sbcl/maxima.core : invert.lisp
 binary-sbcl/maxima.core : hypgeo.lisp
 binary-sbcl/maxima.core : hyp.lisp

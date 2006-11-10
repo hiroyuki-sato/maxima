@@ -234,7 +234,7 @@
 	 finally (return `(progn ,@ tem))))
 
 (defmacro defquote  (fn (aa . oth) &body rest &aux help ans) 
-  (setq help (intern (format nil "~a-aux" fn)))
+  (setq help (intern (format nil "~a-~a" fn '#:aux)))
   (cond ((eq aa '&rest)
 	 (setq ans
 	       (list
@@ -480,7 +480,9 @@ values")
     (cond ((symbolp symb)
 	   (setq string (print-invert-case symb)))
 	  ((floatp symb)
-	   (let ((a (abs symb)))
+	   (let
+         ((a (abs symb))
+          (effective-printprec (if (or (= $fpprintprec 0) (> $fpprintprec 16)) 16 $fpprintprec)))
 	     ;; When printing out something for Fortran, we want to be
 	     ;; sure to print the exponent marker so that Fortran
 	     ;; knows what kind of number it is.  It turns out that
@@ -489,7 +491,7 @@ values")
 	     ;; printed.
 	     ;;
 	     ;; Also, for normal output, we basically want to use
-	     ;; prin1, but we can't because we want fpprec to control
+	     ;; prin1, but we can't because we want fpprintprec to control
 	     ;; how many digits are printed.  So we have to check for
 	     ;; the size of the number and use ~e or ~f appropriately.
 	     (if *fortran-print*
@@ -497,16 +499,16 @@ values")
 		 (multiple-value-bind (form width)
 		     (cond ((or (zerop a)
 				(<= 1 a 1d7))
-			    (values "~vf" (+ 1 $fpprec)))
+			    (values "~vf" (+ 1 effective-printprec)))
 			   ((<= 0.001d0 a 1)
-			    (values "~vf" (+ $fpprec
+			    (values "~vf" (+ effective-printprec
 					     (cond ((< a 0.01d0)
 						    3)
 						   ((< a 0.1d0)
 						    2)
 						   (t 1)))))
 			   (t
-			    (values "~ve" (+ 5 $fpprec))))
+			    (values "~ve" (+ 5 effective-printprec))))
 		   (setq string (format nil form width symb))))
 	     (setq string (string-trim " " string))))
 	  #+(and gcl (not gmp))
@@ -545,6 +547,7 @@ values")
 (defun implode (lis) (implode1 lis nil))
 
 
+#-(or scl allegro)
 (defun maybe-invert-string-case (string)
   ;; If STRING is all the same case, invert the case.  Otherwise, do
   ;; nothing.
@@ -561,6 +564,27 @@ values")
 	  (t
 	   string))))
 
+#+(or scl allegro)
+(defun maybe-invert-string-case (string)
+  (cond (#+scl (eq ext:*case-mode* :lower)
+	 #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+	 string)
+	(t
+	 ;; If STRING is all the same case, invert the case.  Otherwise, do
+	 ;; nothing.
+	 (flet ((alpha-upper-case-p (s)
+		  (not (some #'lower-case-p s)))
+		(alpha-lower-case-p (s)
+		  (not (some #'upper-case-p s))))
+	   ;; Don't explicitly add a package here.  It seems maxima sets
+	   ;; *package* as needed.
+	   (cond ((alpha-upper-case-p string)
+		  (string-downcase string))
+		 ((alpha-lower-case-p string)
+		  (string-upcase string))
+		 (t
+		  string))))))
+
 (defun intern-invert-case (string)
   ;; Like read-from-string with readtable-case :invert
   ;;
@@ -569,13 +593,29 @@ values")
   (intern (maybe-invert-string-case string)))
 
 
-#-gcl
+#-(or gcl scl allegro)
 (let ((local-table (copy-readtable nil)))
   (setf (readtable-case local-table) :invert)
   (defun print-invert-case (sym)
     (let ((*readtable* local-table)
 	  (*print-case* :upcase))
       (princ-to-string sym))))
+
+#+(or scl allegro)
+(let ((local-table (copy-readtable nil)))
+  (unless #+scl (eq ext:*case-mode* :lower)
+	  #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+    (setf (readtable-case local-table) :invert))
+  (defun print-invert-case (sym)
+    (cond (#+scl (eq ext:*case-mode* :lower)
+	   #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+	   (let ((*readtable* local-table)
+		 (*print-case* :downcase))
+	     (princ-to-string sym)))
+	  (t
+	   (let ((*readtable* local-table)
+		 (*print-case* :upcase))
+	     (princ-to-string sym))))))
 
 #+gcl
 (defun print-invert-case (sym)
@@ -662,6 +702,18 @@ values")
 	 else do (maxima-error "bad entry")
 	 finally 
 	 (return (make-symbol (maybe-invert-string-case (coerce tem 'string))))))
+
+(defmacro make-mstring (string)
+  "Make a Maxima string.  The case is inverted for standard CL, and is not
+  changed for lower-case case-sensitive CL variants."
+  #-(or scl allegro)
+  `',(intern (print-invert-case (make-symbol (concatenate 'string "&" string))))
+  #+(or scl allegro)
+  `',(cond (#+scl (eq ext:*case-mode* :lower)
+	    #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+	    (intern (concatenate 'string "&" string)))
+	   (t
+	    (intern (print-invert-case (make-symbol (concatenate 'string "&" string)))))))
 
 ;;for those window labels etc. that are wrong type.
 

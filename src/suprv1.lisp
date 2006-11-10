@@ -588,7 +588,7 @@
 
 (defmfun ruleof (rule)
   (or (mget rule 'ruleof)
-      (let ((op (caaadr (mget rule '$rule))) l)
+      (let* ((pattern (cadr (mget rule '$rule))) (op (if (atom pattern) nil (caar pattern))) l)
 	(and (setq l (get op 'rules)) (memq rule l) op))))
 
 (defmfun $debugmode (x) (debugmode1 nil x))
@@ -986,10 +986,21 @@
       name))
 
 
-#+cl
+#+(and cl (not scl) (not allegro))
 (defun casify-exploden (x)
   (cond ((char= (getcharn x 1) #\&)
 	 (cdr (exploden (string-upcase (string x)))))
+	(t (exploden x))))
+#+(or scl allegro)
+(defun casify-exploden (x)
+  (cond ((char= (getcharn x 1) #\&)
+	 (let ((string (string x)))
+	   (cond (#+scl (eq ext:*case-mode* :lower)
+		  #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+		  (setf string (string-downcase string)))
+		 (t
+		  (setf string (string-upcase string))))
+	   (cdr (exploden string))))
 	(t (exploden x))))
 #-cl
 (defmfun casify-exploden (x)

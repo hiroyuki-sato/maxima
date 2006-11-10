@@ -1,0 +1,79 @@
+@menu
+* Definitions for augmented_lagrangian::
+@end menu
+
+@node Definitions for augmented_lagrangian,  , augmented_lagrangian, augmented_lagrangian
+@section Definitions for augmented_lagrangian
+
+@deffn {Function} augmented_lagrangian_method (@var{FOM}, @var{xx}, @var{C}, @var{yy})
+@deffnx {Function} augmented_lagrangian_method (@var{FOM}, @var{xx}, @var{C}, @var{yy}, optional_args)
+
+Returns an approximate minimum of the expression @var{FOM}
+with respect to the variables @var{xx},
+holding the constraints @var{C} equal to zero.
+@var{yy} is a list of initial guesses for @var{xx}.
+The method employed is the augmented Lagrangian method (see Refs [1] and [2]).
+
+@code{optional_args} represents additional arguments,
+specified as @code{@var{symbol} = @var{value}}.
+The optional arguments recognized are:
+
+@table @code
+@item niter
+Number of iterations of the augmented Lagrangian algorithm
+@item lbfgs_tolerance
+Tolerance supplied to LBFGS
+@item iprint
+IPRINT parameter (a list of two integers which controls verbosity) supplied to LBFGS
+@item %lambda
+Initial value of @code{%lambda} to be used for calculating the augmented Lagrangian
+@end table
+
+This implementation minimizes the augmented Lagrangian by
+applying the limited-memory BFGS (LBFGS) algorithm,
+which is a quasi-Newton algorithm.
+
+@code{load(augmented_lagrangian)} loads this function.
+
+See also @code{lbfgs}.
+
+References:
+
+[1] http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html
+
+[2] http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf
+
+Example:
+
+@c ===beg===
+@c load (lbfgs);
+@c load (augmented_lagrangian);
+@c FOM: x^2 + 2*y^2;
+@c xx: [x, y];
+@c C: [x + y - 1];
+@c yy: [1, 1];
+@c augmented_lagrangian_method (FOM, xx, C, yy, iprint = [-1, 0]);
+@c ===end===
+@example
+(%i1) load (lbfgs);
+(%o1) /home/robert/tmp/maxima-release-branch/maxima/share/lbfgs/\
+lbfgs.mac
+(%i2) load (augmented_lagrangian);
+(%o2) /home/robert/tmp/maxima-release-branch/maxima/share/contri\
+b/augmented_lagrangian.mac
+(%i3) FOM: x^2 + 2*y^2;
+                               2    2
+(%o3)                       2 y  + x
+(%i4) xx: [x, y];
+(%o4)                        [x, y]
+(%i5) C: [x + y - 1];
+(%o5)                      [y + x - 1]
+(%i6) yy: [1, 1];
+(%o6)                        [1, 1]
+(%i7) augmented_lagrangian_method (FOM, xx, C, yy, iprint = [-1, 0]);
+(%o7) [[x = 0.6478349888525, y = 0.32391749442625], 
+                                 %lambda = [- 1.267422460983745]]
+@end example
+
+@end deffn
+

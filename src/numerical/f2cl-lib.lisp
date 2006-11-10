@@ -1179,8 +1179,8 @@ causing all pending operations to be flushed"
 ;; length.  The string is initialized with #\Space because it seems
 ;; that's what Fortran initializes it to.
 (defmacro f2cl-init-string (dims len &optional inits)
-  (let ((init (gensym "ARRAY-"))
-	(k (gensym "IDX-")))
+  (let ((init (gensym (symbol-name '#:array-)))
+	(k (gensym (symbol-name '#:idx-))))
     `(let ((,init (make-array (* ,@dims)
 			      :element-type `(simple-array character (,',@len))
 			      :initial-element (make-string ,@len))))
@@ -1244,17 +1244,15 @@ causing all pending operations to be flushed"
 ;;  D1MACH( 5) = LOG10(B)
 ;;
 
-#+gcl
-(defconstant least-positive-normalized-double-float least-positive-double-float)
-#+gcl
-(defconstant least-positive-normalized-single-float least-positive-single-float)
+;; #+gcl
+;; (defconstant least-positive-normalized-double-float least-positive-double-float)
+;; #+gcl
+;; (defconstant least-positive-normalized-single-float least-positive-single-float)
 
 
 (defun d1mach (i)
   (ecase i
-    (1
-     #-gcl least-positive-normalized-double-float
-     #+gcl least-positive-double-float)
+    (1 least-positive-normalized-double-float)
     (2 most-positive-double-float)
     (3 double-float-epsilon)
     (4 (scale-float double-float-epsilon 1))
@@ -1262,9 +1260,7 @@ causing all pending operations to be flushed"
 
 (defun r1mach (i)
   (ecase i
-    (1
-     #-gcl least-positive-normalized-single-float
-     #+gcl least-positive-single-float)
+    (1 least-positive-normalized-single-float)
     (2 most-positive-single-float)
     (3 single-float-epsilon)
     (4 (scale-float single-float-epsilon 1))
@@ -1386,8 +1382,12 @@ causing all pending operations to be flushed"
 ;;;-------------------------------------------------------------------------
 ;;; end of macros.l
 ;;;
-;;; $Id: f2cl-lib.lisp,v 1.8 2006/01/31 15:22:26 rtoy Exp $
+;;; $Id: f2cl-lib.lisp,v 1.9 2006/07/27 05:37:46 robert_dodier Exp $
 ;;; $Log: f2cl-lib.lisp,v $
+;;; Revision 1.9  2006/07/27 05:37:46  robert_dodier
+;;; Commit patches submitted by Douglas Crosher to support Scieneer and Allegro.
+;;; With these changes, make and run_testsuite succeed for SBCL, Clisp, and GCL on Linux.
+;;;
 ;;; Revision 1.8  2006/01/31 15:22:26  rtoy
 ;;; o Regenerate all f2cl'ed code because dasyjy.f was not getting the
 ;;;   alfa and beta arrays intialized from the data statements.  (This was

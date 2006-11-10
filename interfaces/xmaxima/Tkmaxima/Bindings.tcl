@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Bindings.tcl,v 1.3 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: Bindings.tcl,v 1.4.2.2 2006/09/11 15:36:03 villate Exp $
 #
 ###### Bindings.tcl ######
 ############################################################
@@ -11,23 +11,49 @@
 global NCtextHelp
 set NCtextHelp [mc "
 Bindings:
-<Return>   This sends the current expression (ie where the insert
-cursor is)  for evaluation.
-<Linefeed> (Control-j) This inserts a newline, and is useful
-for entering multiline input.
+<Return>    This sends the current expression (ie where the insert
+            cursor is)  for evaluation.
+<Linefeed>  (Control-j) This inserts a newline, and is useful
+            for entering multiline input.
 <Control-k> Kills the current line and puts it in kill ring.
-Successive control-k's append their output together.
-<Control-y> Yank out the last kill, Meta-y cycles thru previous
-kills.
-<Control-g> Interrupt the current computation.
-<Alt-p>   Previous input, or if repeated cycle through the previous
-inputs.  If the current input is not empty, then
-match only inputs which begin with the current input.
-<Alt-n>   Like Previous input, but in opposite direction.
+            Successive control-k's append their output together.
+<Control-y> Yank out the last kill, Meta-y cycles through previous
+            kills.
+<Control-g> Interrupts the current computation.
+<Alt-p>     Previous input, or if repeated cycle through the previous
+            inputs.  If the current input is not empty, then
+            match only inputs which begin with the current input.
+<Alt-n>     Like Previous input, but in opposite direction.
+<Alt-s>     Print again the Maxima input prompt.
 "]
 
 proc vMAXSetCNTextBindings {w} {
-    bind CNtext <Return> "CMeval %W  ; break"
+    # Disable default keyboard bindings in output fields 
+    bind CNtext <Key> {
+	if {[lsearch [%W tag names [%W index insert]] output] >= 0} break
+    }
+
+    # Keep only default bindings for the cursor movement keys
+    foreach Key {<Left> <Right> <Up> <Down> <Next> <Prior> <Home> <End>
+	<Shift-Left> <Shift-Right> <Shift-Up> <Shift-Down> <Shift-Home>
+	<Shift-End> <Control-Shift-Home> <Control-Shift-End>
+	<Control-a> <Control-b> <Control-e> <Control-f> <Control-n> <Control-p>
+	<Control-Home> <Control-End> <Meta-less> <Meta-greater> <Meta-b>
+	<Meta-f>} {
+	bind CNtext $Key "# nothing"
+    }
+	
+    # The "Return" key is bound to command evaluation, except in output tags
+    bind CNtext <Return> {
+	if {[lsearch [%W tag names [%W index insert]] output] >= 0} {
+	    break
+	} else {
+	    CMeval %W
+	    break
+	}
+    }
+
+    # Special keys (see NCtextHelp above for explanation)
     bind CNtext <Control-g> "CMinterrupt %W "
     bind CNtext <Control-u> "CNclearinput %W "
     bind CNtext "\)"  "CNblinkMatchingParen %W %A"
@@ -40,7 +66,6 @@ proc vMAXSetCNTextBindings {w} {
     bind CNtext <Control-Key-c>  {tk_textCopy %W ;break}
     bind CNtext <Control-Key-x>  {tk_textCut %W ;break}
     bind CNtext <Control-Key-v>  {tk_textPaste %W ;break}
-
 }
 
 

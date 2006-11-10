@@ -15,10 +15,19 @@ Ctensor.es.texi          Input.es.texi         Numerical.es.texi      Symmetries
 Debugging.es.texi        Integration.es.texi   Operators.es.texi      Trigonometric.es.texi \
 Differential.es.texi     Introduction.es.texi  Plotting.es.texi  \
 Differentiation.es.texi  Itensor.es.texi       Polynomials.es.texi \
-Elliptic.es.texi         Limits.es.texi        Program.es.texi
+Elliptic.es.texi         Limits.es.texi        Program.es.texi \
+bode.texi           augmented_lagrangian.texi      cholesky.texi       descriptive.texi \
+diag.texi           distrib.texi                   eval_string.texi    f90.texi \
+ggf.texi            impdiff.texi                   interpol.texi       lindstedt.texi \
+linearalgebra.texi  lsquares.texi                  makeOrders.texi     mnewton.texi \
+numericalio.texi    opsubst.texi                   orthopoly.texi      plotdf.texi \
+simplex.texi        simplifications.texi           solve_rec.texi      stirling.texi \
+stringproc.texi     unit.texi                      zeilberger.texi 
+
+
 
 maximahtml.es.mk:
-	../texi2html -split_chapter --lang=es --output=. maxima.texi
+	perl ../texi2html -split_chapter --lang=es --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
 	rm -f maximahtml.es.mk
 	ls -1 maxima*.html | sed 's/\(.*\)/MAXIMAESHTML += \1/' > maximahtml.es.mk
 
@@ -27,10 +36,12 @@ include maximahtml.es.mk
 
 $(MAXIMAESHTML): maxima.texi $(maxima_TEXINFOS)
 	perl ../texi2html -split_chapter --lang=es --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
+	perl ../create_index
 
 include $(top_srcdir)/common.mk
 genericdir = $(dochtmldir)/es
-genericdirDATA = $(MAXIMAESHTML)
+genericdirDATA = $(MAXIMAESHTML)\
+contents.hhc index.hhk header.hhp
 
 clean-local: clean-info clean-html
 
@@ -39,8 +50,10 @@ clean-info:
 
 clean-html:
 	rm -f maxima.html maxima_*.html
+	rm -f contents.hhc
+	rm -f index.hhk
 
-EXTRA_DIST = maximahtml.es.mk
+EXTRA_DIST = maximahtml.es.mk header.hhp
 
 install-info-am: $(INFO_DEPS)
 	test -z "$(infodir)$(langsdir)" || mkdir -p -- "$(DESTDIR)$(infodir)$(langsdir)"
