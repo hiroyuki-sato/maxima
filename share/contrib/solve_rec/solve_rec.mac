@@ -11,7 +11,7 @@
  * ***                      polynomial coefficients.                     *** *
  * ***                                                                   *** *
  * ***                                                                   *** *
- * ***   Version: 1.06                                                   *** *
+ * ***   Version: 1.08                                                   *** *
  * ***   Author:  Andrej Vodopivec <andrejv@users.sourceforge.net>       *** *
  * ***                                                                   *** *
  * ************************************************************************* *
@@ -45,23 +45,9 @@ eval_when(batch,
           ttyoff : true,
           nolabels : true)$
 
-eval_when(translate,
-          declare_translated(change_to_shift_op,differ_degree,max_shift,
-                             min_shift,to_standard_form1,to_standard_form,
-                             differ_order,solve_rec_order_1,solve_rec_gen,
-                             solve_rec_lin_1,ricatti_type,rec_polyp,
-                             solve_rec_lin_cc,hyper,remove_duplicates,
-                             get_linearly_independent1,solve_rec_ic1,
-                             solve_rec_rat1,get_variables,solve_rec_ic,
-                             subst_all,get_lower_bound,simplify_product,
-                             solve_rec_char_gen,get_exps,solve_rec_char_part,
-                             rec_polyp1,solve_rec,normalize_product,
-                             hyper_poly,monic_factors,my_prod,
-                             monic_factors_sol,monic_factors_fac,
-                             solve_rec_poly,casoratian_determinant,
-                             remove_duplicates1))$
+put('solve_rec, 1.08, 'version)$
 
-put('solve_rec, 1.06, 'version)$
+define_variable(solve_rec_warn,        true,   bool)$
 
 define_variable(simplify_products,     true,   bool)$
 define_variable(normalize_products,    true,   bool)$
@@ -88,29 +74,32 @@ define_variable(%x, '%x, any)$
 define_variable(%u, '%u, any)$
 define_variable(%z, '%z, any)$
 
+sr_print([arg]) :=
+  if solve_rec_warn then apply(print, arg)$
+
 /**************************************************************************
  *
  * shift operator handling
  *
  *************************************************************************/
 
-change_to_shift_op(expr, %f, %n) := 
+change_to_shift_op(expr, %f, %n) :=
   if atom(expr) then expr
   else if part(expr, 0)=%f then block(
-    [k : args(expr)],
-    funmake('shift_op, [%f, %n, k[1]-%n])
+    [k% : args(expr)],
+    funmake('shift_op, [%f, %n, k%[1]-%n])
   )
   else if member(part(expr, 0), ["+", "*", "//", "^", "-"]) then
     apply(part(expr, 0),
-      map(lambda([u], change_to_shift_op(u, %f, %n)), args(expr)))
+      map(lambda([%u], change_to_shift_op(%u, %f, %n)), args(expr)))
   else expr$
 
-max_shift(expr) := 
+max_shift(expr) :=
   if atom(expr) then -inf
   else if part(expr, 0)=shift_op then part(expr, 3)
   else apply('max, map('max_shift, args(expr)))$
 
-min_shift(expr) := 
+min_shift(expr) :=
   if atom(expr) then inf
   else if part(expr, 0)=shift_op then part(expr, 3)
   else apply('min, map('min_shift, args(expr)))$
@@ -142,20 +131,20 @@ differ_order(expr) := max_shift(expr)-min_shift(expr)$
  *
  *************************************************************************/
 
-to_standard_form1(expr, %n, m) :=
+to_standard_form1(expr, %n, %m) :=
   if atom(expr) then (
-    if expr=%n then %n-m
+    if expr=%n then %n-%m
     else expr
   )
   else if part(expr, 0)='shift_op then (
     if part(expr, 2)=%n then funmake('shift_op, [part(expr, 1), part(expr, 2),
-                                                 part(expr, 3)-m])
+                                                 part(expr, 3)-%m])
     else expr
   )
   else if member(part(expr, 0), ["+", "-", "*", "//", "^"]) then
-  apply(part(expr, 0), map(lambda([u], to_standard_form1(u, %n, m)),
+  apply(part(expr, 0), map(lambda([u], to_standard_form1(u, %n, %m)),
                                   args(expr)))
-  else subst(%n=%n-m, expr)$
+  else subst(%n=%n-%m, expr)$
 
 
 to_standard_form(expr, %f, %n) := block(
@@ -179,7 +168,7 @@ solve_rec(eq, fn, [cond]) := block(
   %f : part(fn, 0),
   %n : part(fn, 1),
   if not(atom(%f)) or not(atom(%n)) then return(false),
-  
+
   std_form : to_standard_form(eq, %f, %n),
   std_form : expand(num(ratsimp(std_form))),
   ord : differ_order(std_form),
@@ -196,6 +185,7 @@ solve_rec(eq, fn, [cond]) := block(
 
 solve_rec_order_1(std_form, %f, %n, cond) := block(
   [deg : differ_degree(std_form), sol],
+
   if deg=1 then block(
     [c2, c1, c0],
     c2 : ratcoeff(std_form, funmake('shift_op, [%f, %n, 1])),
@@ -204,26 +194,35 @@ solve_rec_order_1(std_form, %f, %n, cond) := block(
                           - c1*funmake('shift_op, [%f, %n, 0])),
     solve_rec_lin_1(expand(-c1/c2), expand(-c0/c2), %f, %n, cond)
   )
+
   else if deg=2 then (
     return(ricatti_type(std_form, %f, %n, cond))
   )
+
   else return(false)
 )$
 
 solve_rec_gen(std_form, %f, %n, cond) := block(
   [deg : differ_degree(std_form), coeffs : [], ihom, cc : true, coeffs1,
    pc : true, sol : false, ord : differ_order(std_form), var, num_sol, i%],
+
   if deg#1 then return(false),
-  coeffs : makelist(coeff(std_form, funmake('shift_op, [%f, %n, ord-i])), i, 0, ord),
-  coeffs1 : makelist(ratsimp(coeffs[i]/coeffs[1]), i, 1, ord+1),
-  for i:0 thru ord do (
-    std_form : std_form - coeffs[i+1]*funmake('shift_op, [%f, %n, ord-i]),
-    if not(freeof(%n, coeffs1[i+1])) then cc : false,
-    if not(rec_polyp(coeffs[i+1], %n)) then pc : false
+
+  coeffs : makelist(coeff(std_form, funmake('shift_op, [%f, %n, ord-i%])),
+                    i%, 0, ord),
+  coeffs1 : makelist(ratsimp(coeffs[i%]/coeffs[1]), i%, 1, ord+1),
+  for i%:0 thru ord do (
+    std_form : std_form - coeffs[i%+1]*funmake('shift_op, [%f, %n, ord-i%]),
+    if not(freeof(%n, coeffs1[i%+1])) then cc : false,
+    if not(rec_polyp(coeffs[i%+1], %n)) then pc : false
   ),
+
   ihom : expand(std_form),
+
   if cc=true then sol : solve_rec_lin_cc(coeffs1, ihom/coeffs[1], %f, %n, cond)
+
   else if pc=true then (
+
     if ihom=0 and use_hyper then (
       sol : hyper(reverse(coeffs), %n),
       if sol#false then block(
@@ -233,29 +232,31 @@ solve_rec_gen(std_form, %f, %n, cond) := block(
         num_sol : length(sol),
         sol : sum(%k[i%]*sol[i%]/abs(numfactor(sol[i%])), i%, 1, length(sol)),
         if num_sol<ord then (
-          print("WARNING: found some hypergeometrical solutions!"),
+          sr_print("WARNING: found some hypergeometrical solutions!"),
           if length(cond)>0 then
-            print("WARNING: disregarding initial conditions!")
+            sol : false
         )
         else if length(cond)>0 then
           sol : solve_rec_ic1(sol, %f, %n, cond,
-                              makelist(%k[i], i, 1, length(cond)))
+                              makelist(%k[i%], i%, 1, length(cond)))
       )
     )
+
     else if rec_polyp(ihom, %n) and use_ratsol then (
       sol : solve_rec_rat1(reverse(coeffs), ihom, %n),
       if sol#false then (
         var : get_variables(sol),
         if length(var)<ord then (
-          print("WARNING: found some rational solutions!"),
+          sr_print("WARNING: found some rational solutions!"),
           if length(cond)#0 then
-            print("WARNING: disregarding initial conditions!")
+            sr_print("WARNING: disregarding initial conditions!")
         )
         else if length(cond)#0 then
           sol : solve_rec_ic1(sol, %f, %n, cond,
-                              makelist(var[i], i, 1, length(cond)))
+                              makelist(var[i%], i%, 1, length(cond)))
       )
     )
+
   ),
   sol
 )$
@@ -310,28 +311,32 @@ solve_rec_ic1(gen_sol, %f, %n, cond, var) := block(
  *************************************************************************/
 
 solve_rec_lin_1(%a, %b, %f, %n, cond) := block(
-  [gen_sol, simpsum:true, ap, %j, %l, lo, solve_rec_lin_context],
+  [gen_sol, simpsum:true, ap, %j, %l, lo, prodhack:true],
+
   if %b#0 then
     lo : get_lower_bound(%a*%b, %n)
   else
     lo : get_lower_bound(%a, %n),
+
   %b : subst(%j, %n, %b),
   %a : subst(%l, %n, %a),
-  newcontext(solve_rec_lin_context),
-  assume(%j>lo),
+
   if freeof(%l, %a) then
     ap : %a^(%n-%j-1)
-  else
+  else (
     ap : minfactorial(simplify_product(product(%a, %l, %j+1, %n-1))),
+    ap : ap/numfactor(ap)
+  ),
   if freeof(%l, %a) then
     gen_sol : %k[1]*%a^(%n-lo)
   else (
     gen_sol : minfactorial(simplify_product(product(%a, %l, lo, %n-1))),
     gen_sol : %k[1]*gen_sol/abs(numfactor(gen_sol))
   ),
+
   gen_sol : gen_sol + nusum(%b*ap, %j, lo, %n-1),
-  killcontext(solve_rec_lin_context),
   solve_rec_method : "First order linear reccurence",
+
   if length(cond)>0 then
     solve_rec_ic1(gen_sol, %f, %n, cond, [%k[1]])
   else
@@ -340,15 +345,19 @@ solve_rec_lin_1(%a, %b, %f, %n, cond) := block(
 
 get_lower_bound(expr, %n) := block(
   [ex : ratsimp(expr), sol, s, i, bound : 0, de, nu],
+
   de : denom(ex),
   nu : num(ex),
+
   sol : solve(de, %n),
+
   if length(sol)>0 then (
     for i in sol do (
       s : rhs(i),
       if integerp(s) and s>= bound then bound : s+1
     )
   ),
+
   sol : solve(nu, %n),
   if sol#all and length(sol)>0 then (
     for i in sol do (
@@ -356,6 +365,7 @@ get_lower_bound(expr, %n) := block(
       if integerp(s) and s>= bound then bound : s+1
     )
   ),
+
   bound
 )$
 
@@ -372,8 +382,9 @@ solve_rec_lin_cc(coeffs, ihom, %f, %n, cond) := block(
 
   if ihom#0 then block(
     [exps : get_exps(expand(ihom), %n), curr_ihom, pol],
+
     exps : remove_duplicates(exps),
-    
+
     for ex in exps do block(
       [base, pow, mul, %emode : false],
       pol : coeff(ihom, ex),
@@ -399,7 +410,7 @@ solve_rec_lin_cc(coeffs, ihom, %f, %n, cond) := block(
         ihom : expand(ihom-pol*ex)
       )
     )
-  
+
   ),
   if ihom#0 and not(rec_polyp(ihom, %n)) then return(false),
   if ihom#0 then ihom : solve_rec_char_part(coeffs, 1, ihom, ihom, %n),
@@ -413,31 +424,34 @@ solve_rec_lin_cc(coeffs, ihom, %f, %n, cond) := block(
 
 solve_rec_char_gen(coeffs, %f, %n) := block(
   [deg : length(coeffs), %x, pol, sol, i, j:1, gen_sol : 0, %k, i%],
+
   pol : sum(coeffs[i%]*%x^(deg-i%), i%, 1, deg),
   sol : solve(pol, %x),
+
   for i:1 thru length(sol) do block(
     [k%],
     gen_sol : gen_sol + rhs(sol[i])^%n*
               sum(%k[j+k%]*%n^k%, k%, 0, multiplicities[i]-1),
     j : j+multiplicities[i]
   ),
+
   gen_sol
 )$
 
 solve_rec_char_part(coeffs, po, ihom_pol, ihom, %n) := block(
-  [pol : expand(ihom_pol), hi, u, p, %u, eqns, i%, char, k, i,
+  [pol : expand(ihom_pol), hi, u, p%, %u, eqns, i%, char, k, i,
    %d : length(coeffs)],
   hi : hipow(pol, %n),
   if rec_polyp(pol, %n)=false and hi>0 then return(false),
-  p : sum(%u[i%]*%n^i%, i%, 0, hi),
+  p% : sum(%u[i%]*%n^i%, i%, 0, hi),
   char : sum(coeffs[length(coeffs)-i%]*%x^i%, i%, 0, length(coeffs)-1),
   while subst(po, %x, char)=0 and char#0 do (
-    p : p*%n,
+    p% : p%*%n,
     char : diff(char, %x)
   ),
-  p : expand(p*po^%n),
+  p% : expand(p%*po^%n),
   eqns : 0,
-  for i:1 thru %d do eqns : eqns + subst(%n+%d-i, %n, p)*coeffs[i],
+  for i:1 thru %d do eqns : eqns + subst(%n+%d-i, %n, p%)*coeffs[i],
   eqns : expand(eqns) + ihom,
   eqns : expand(eqns/po^%n),
   eqns : makelist(ratcoeff(eqns, %n, i)=0, i, lopow(eqns,%n), hipow(eqns, %n)),
@@ -445,9 +459,9 @@ solve_rec_char_part(coeffs, po, ihom_pol, ihom, %n) := block(
     false
   else (
     if (listp(eqns[1])) then
-      subst_all(p, eqns[1]) /*at(p, eqns[1])*/
+      subst_all(p%, eqns[1]) /*at(p, eqns[1])*/
     else
-      subst_all(p, eqns)
+      subst_all(p%, eqns)
   )
 )$
 
@@ -458,18 +472,18 @@ rec_polyp(p, n) :=
     rec_polyp1(p, n, hi)
   )$
 
-rec_polyp1(p, %n, hi) := block(
-  [c : ratcoeff(p, %n, hi)],
+rec_polyp1(p%, %n, hi) := block(
+  [c : ratcoeff(p%, %n, hi)],
   if not(freeof(%n, hi)) then false
   else if freeof(%n, c) then (
-    p : expand(p-c*%n^hi),
-    if hi=hipow(p, %n) then false
+    p% : expand(p%-c*%n^hi),
+    if hi=hipow(p%, %n) then false
     else (
-      hi : hipow(p,%n),
+      hi : hipow(p%,%n),
       if hi=0 then
         true
       else
-        rec_polyp1(p, %n, hi)
+        rec_polyp1(p%, %n, hi)
       )
   )
   else
@@ -566,7 +580,7 @@ hyper_poly(coeffs, ihom, %n) := block(
   while true do (
     s : s+1,
     j : 0,
-    deg_poly : coeff(coeffs[1], %n, m-s) + 
+    deg_poly : coeff(coeffs[1], %n, m-s) +
                sum(
                   binomial(%x, j%)*
                     sum(i%^j%*coeff(coeffs[i%+1], %n, m-s+j%), i%, 1, d-1),
@@ -667,7 +681,8 @@ hyper(polys, %n) := block(
                 sol : subst(%j, %n, sol),
                 lo : get_lower_bound(sol, %j),
                 sol : apply(nounify('product), [sol, %j, lo, %n-1]),
-                sol : minfactorial(simplify_product(sol))
+                sol : minfactorial(simplify_product(sol)),
+                sol : sol/numfactor(sol)
               ),
               solutions : append(solutions, [sol]),
               have_solution : true
@@ -684,7 +699,7 @@ hyper(polys, %n) := block(
   )
 )$
 
-monic_factors(p, %n) := 
+monic_factors(p, %n) :=
   if hyper_factor_solve then monic_factors_sol(p, %n)
   else monic_factors_fac(p, %n)$
 
@@ -694,10 +709,10 @@ monic_factors_fac(p, %n) := block(
   if atom(factors) then return([1, factors]),
   if part(factors, 0)="//" then factors : part(factors, 1),
   if part(factors, 0)="-" then factors : factors*(-1),
-  
+
   /* This is a dirty trick to get a product */
   if member(part(factors, 0), ["^", "+"]) then factors : %%n*factors,
-  
+
   for f in factors do (
     if not(freeof(%n, f)) then (
       tmp : sol,
@@ -769,7 +784,7 @@ solve_rec_rat(eqn, fn) := block(
 
 solve_rec_rat1(coeffs, ihom, %n) := block(
   [A, B, ord : length(coeffs), res, %y, i, M : -1, d, u : 1, sol, eq, i%,
-   gc, coeffs1],
+   gc, coeffs1, prodhack:true],
   coeffs1 : makelist(subst(%n-i+1, %n, coeffs[i]), i, 1, ord),
   gc : apply('ezgcd, coeffs1)[1],
   u : gc,
@@ -863,7 +878,7 @@ reduce_order(eqn, sol, fn) := block(
   c : ratcoeff(eq, funmake('shift_op, [%z, %n, 0])),
   if c#0 then return(false),
   eq : expand(eq - c*funmake('shift_op, [%z, %n, 0])),
-  e1 : %f[n] = sol*%z[%n],
+  e1 : %f[%n] = sol*%z[%n],
   ldisplay(e1),
   e2 : %z[%n] = 'sum(%u[%j], %j, 0, %n-1),
   ldisplay(e2),
@@ -893,36 +908,35 @@ reduce_order(eqn, sol, fn) := block(
  *************************************************************************/
 
 simplify_product(prod) := block(
-  [term, %n, lo, hi, %kk : 0, nu, de, comm : [], p : 1,
+  [term, %n, lo, hi, %kk : 0, nu, de, comm : [], p% : 1,
    deg : simplify_products_deg],
   if simplify_products=false then return(prod),
   if atom(prod) then return(prod),
   if member(part(prod, 0), ["+", "-", "*", "//", "^"]) then
     return(apply(part(prod, 0), map('simplify_product, args(prod)))),
   if part(prod, 0)#nounify('product) then return(prod),
-  
+
+  /* Read product arguments. */
   %n : part(prod, 2),
   lo : part(prod, 3),
   hi : part(prod, 4),
   term : factor(part(prod, 1)),
-  
-  if term=%n then return(hi!/lo!),
-  
-  if atom(term) then return(prod),
 
-  if freeof(%n, term) then return(term^(hi-lo+1)),
-  
-  if part(term, 0)="-" and length(args(term))=1 then (
-    p : (-1)^(hi-lo+1),
-    term : part(term, 1)
-  ),
-  
+  /* Check for simple cases.   */
+  if term=%n then return(hi!/(lo-1)!),
+
+  if atom(term) or freeof(%n, term) then return(term^(hi-lo+1)),
+
+  /* Distribute over products.  */
   if part(term, 0)="*" then
-    p*apply("*", map(lambda([u], simplify_product(apply(nounify('product),
-                                                        [u, %n, lo, hi]))),
+    p%*apply("*", map(lambda([u], simplify_product(apply(nounify('product),
+                                                         [u, %n, lo, hi]))),
                      args(term)))
+
+  /* Take care of fractions. */
   else if part(term, 0)="//" then block(
     [nu : num(term), de : denom(term)],
+    /* Check for cancelations. */
     for %kk:-deg thru deg do block(
       [g],
       g : gcd(expand(subst(%n+%kk, %n, nu)), de),
@@ -932,48 +946,55 @@ simplify_product(prod) := block(
         nu : ratsimp(nu/subst(%n-%kk, %n, g))
       )
     ),
+    /* Cancel common terms. */
     for c in comm do block(
       [kk : c[1], d],
       if kk<0 then (
-        p : p*my_prod(c[3], %n, hi+kk+1, hi),
+        p% : p%*my_prod(c[3], %n, hi+kk+1, hi),
         d : my_prod(c[2], %n, lo, lo-kk-1),
-        p : p/d
+        p% : p%/d
       )
       else (
-        p : p*1/my_prod(c[2], %n, hi-kk+1, hi),
+        p% : p%*1/my_prod(c[2], %n, hi-kk+1, hi),
         d : my_prod(c[3], %n, lo, lo+kk-1),
-        p : p*d
+        p% : p%*d
       )
     ),
+    /* Distribute over fractions. */
     nu : simplify_product(apply(nounify('product), [nu, %n, lo, hi])),
     de : simplify_product(apply(nounify('product), [de, %n, lo, hi])),
-    p*nu/de
+    p%*nu/de
   )
   else if part(term, 0)="^" and integerp(part(term, 2)) then (
     simplify_product(apply(nounify('product), [part(term, 1), %n, lo, hi]))^
       part(term, 2)
   )
+  /* Assume we have a poly. */
   else block(
-    [hp : hipow(term, %n), lcoeff, %m],
-    lcoeff : ratcoeff(term, %n, hp),
-    if rec_polyp(term, %n) and hp=1 then (
-      if integerp(ratcoeff(term, %n, 0)) and lcoeff=1 then (
-        prod : apply(nounify('product), [factor(term), %n, lo, hi]),
+    [aa, bb, lcoeff, %m],
+    bb : bothcoef(term, %n), aa : bb[1], bb : bb[2],
+
+    /* Take care of linear products. */
+    if freeof(%n, aa) and freeof(%n, bb) then (
+      if aa=1 then (
         %m : term - %n,
-        (hi+%m)!/(lo+%m)!
-        /*prod : changevar(prod, term - %m, %m, %n),*/
+        (hi+%m)!/(lo+%m-1)!
       )
-      else if product_use_gamma=false and lcoeff=-1 then (
-        apply(nounify('product), [-term, %n, lo, hi])*(-1)^(hi-lo)
+      else if aa=-1 then (
+        %m : term + %n,
+        (%m-lo)!/(%m-hi-1)!
       )
-      else if product_use_gamma then
-        gamma(subst(hi+1, %n, expand(term/lcoeff)))/
-        gamma(subst(lo, %n, expand(term/lcoeff)))*lcoeff^(hi-lo)
+      else if product_use_gamma and integerp(aa) then
+        gamma(subst(hi+1, %n, expand(term/aa)))/
+        gamma(subst(lo, %n, expand(term/aa)))*aa^(hi-lo)
       else
         prod
     )
+    else if part(term, 0)="-" and length(args(term))=1 then
+      (-1)^(hi-lo)*simplify_product(apply(nounify('product), [-term, %n, lo, hi]))
+    /* Give up! */
     else
-      p*apply(nounify('product), [factor(term), %n, lo, hi])
+      p%*apply(nounify('product), [factor(term), %n, lo, hi])
   )
 )$
 
@@ -986,6 +1007,7 @@ normalize_product(%expr) :=
      %hi : part(%expr, 4),
      %vars],
     %vars : listofvars(%hi),
+    /* We check if upper limit is const. + numb. - then we normalize to const. */
     if length(%vars)=1 and hipow(%hi, %vars[1])=1 then block(
       [%co : coeff(%hi, %vars[1]), %dd, %r],
       %dd : %hi - %co*%vars[1],
@@ -1032,24 +1054,6 @@ remove_duplicates1(lst1, lst2) :=
   if length(lst1)=0 then lst2
   else if member(first(lst1), lst2) then remove_duplicates1(rest(lst1), lst2)
   else remove_duplicates1(rest(lst1), cons(first(lst1), lst2))$
-
-/*************************************************************************
- *
- * summand_to_rec: converts sum(expr, k in Z) to recurrence.
- * Requires Zeilberger package!
- *
- *************************************************************************/
-
-define_variable(sm, 'sm, any)$
-
-summand_to_rec(expr, k, n) := block(
-  [i, zb, ord, rec],
-  zb : Zeilberger(expr, k, n),
-  rec : part(zb, 1, 2),
-  ord : length(rec),
-  rec : rec . makelist(sm[n+i], i, 0, ord-1),
-  rec
-)$
 
 eval_when(batch,
           ttyoff : false,

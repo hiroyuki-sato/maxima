@@ -182,6 +182,7 @@ binary-clisp/maxima.mem : algfac.lisp
 binary-clisp/maxima.mem : nalgfa.lisp
 binary-clisp/maxima.mem : ufact.lisp
 binary-clisp/maxima.mem : result.lisp
+binary-clisp/maxima.mem : ifactor.lisp
 binary-clisp/maxima.mem : rat3a.lisp
 binary-clisp/maxima.mem : rat3b.lisp
 binary-clisp/maxima.mem : rat3d.lisp
@@ -242,7 +243,6 @@ binary-clisp/maxima.mem : mat.lisp
 binary-clisp/maxima.mem : matrix.lisp
 binary-clisp/maxima.mem : sprdet.lisp
 binary-clisp/maxima.mem : newinv.lisp
-binary-clisp/maxima.mem : linnew.lisp
 binary-clisp/maxima.mem : newdet.lisp
 binary-clisp/maxima.mem : schatc.lisp
 binary-clisp/maxima.mem : matcom.lisp
@@ -281,8 +281,6 @@ binary-clisp/maxima.mem : pois2.lisp
 binary-clisp/maxima.mem : pois3.lisp
 binary-clisp/maxima.mem : desoln.lisp
 binary-clisp/maxima.mem : elim.lisp
-binary-clisp/maxima.mem : trgsmp.lisp
-binary-clisp/maxima.mem : ode2.lisp
 binary-clisp/maxima.mem : invert.lisp
 binary-clisp/maxima.mem : hypgeo.lisp
 binary-clisp/maxima.mem : hyp.lisp

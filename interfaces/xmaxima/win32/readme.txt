@@ -1,5 +1,6 @@
 This is the windows README file.
 
+
 Binary files included with this distribution
 --------------------------------------------
 
@@ -23,6 +24,31 @@ gnuplot:
 
 The files wgnuplot.exe, wgnuplot.hlp and wgnuplot.mnu are from the
 Windows distribution of gnuplot from http://gnuplot.sourceforge.net
+
+
+wxMaxima:
+
+The files in the wxMaxima subdirectory are from the Windows distribution
+of wxMaxima available from http://wxmaxima.sourceforge.net.
+
+
+Maxima GUI and firewall
+-----------------------
+
+Sometimes Maxima GUI (xmaxima or wxMaxima) can't launch Maxima
+or issues timeout message or gets no response for Maxima commands.  
+Quite probably the problem is caused by firewall and/or antivirus software.  
+The Maxima GUI talks to the computational engine through a socket.  
+Antivirus and/or firewall programs see that and may try to block it 
+(because some malicious programs open sockets too).  
+
+To resolve the problem:
+
+1.  Try to find the control panel for the antivirus and/or firewall. 
+
+2.  Find the Maxima GUI on the list of blocked programs and disable 
+    blocking for it.  The GUI program might appear as "Tcl/Tk" 
+    (the name of the GUI toolkit for xmaxima).
 
 
 Out of Environment Space
@@ -91,3 +117,4 @@ these steps:
     that the program requires, and then click OK. 
 
 NOTE: The maximum amount of memory that you can allocate is 4096 KB.
+

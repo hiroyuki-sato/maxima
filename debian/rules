@@ -28,15 +28,16 @@ NO_STRIP:=
 #ifeq ($(DEB_BUILD_ARCH),alpha)
 #ALT_LINK:=--enable-gcl-alt-link
 #endif
-#ifeq ($(DEB_BUILD_ARCH),powerpc)
-#NO_STRIP:=-Xmaxima
-#endif
+ifeq ($(DEB_BUILD_ARCH),powerpc)
+NO_STRIP:=-Xmaxima
+endif
 
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
 build: build-stamp
 build-stamp: 
 	dh_testdir
 
+	aclocal
 	automake
 
 	GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '#-native-reloc(princ "--enable-gcl-alt-link")(bye)') \
@@ -55,6 +56,7 @@ build-stamp:
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
 
+	chmod +x ./maxima-local
 	./maxima-local --lisp=gcl --batch-string="run_testsuite(true,true);"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
 		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
@@ -88,7 +90,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp install-stamp
 
-	-$(MAKE) clean
+	-GCL_ANSI=t $(MAKE) clean
 	-rm -f debian/test_results.out tests/tests-gcl.log
 	-for i in $$(find -name Makefile) ; do\
 		! [ -e $$i.am ] || rm -f $$i;\
@@ -156,8 +158,15 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 		debian/tmp/usr/lib/maxima/$(MVERS)/mgnuplot ; do \
 		cat $$i | sed  -e 's,^#!/bin/sh,#!/usr/bin/wish,1' \
 			-e 's,^exec wish,#exec wish,1' \
+			-e 's,\$${prefix}/share,/usr/share,1' \
                         -e 's,[Nn]etscape,sensible-browser,g' >tmp && chmod 755 tmp && \
 			mv tmp $$i ; done
+
+	mkdir -p debian/tmp/usr/share/applications
+	cp debian/xmaxima.desktop debian/tmp/usr/share/applications
+	mkdir -p debian/tmp/usr/share/pixmaps
+	ln -s /usr/share/doc/xmaxima/maxima-icon.png debian/tmp/usr/share/pixmaps/maxima-icon.png
+
 
 # GCL must be able to write to directory in which tests are run
 #	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
@@ -206,7 +215,7 @@ binary-indep: build install
 	dh_installchangelogs  -i
 	dh_link -i
 	dh_strip -i
-	dh_compress -i -X.shtml
+	dh_compress -i -X.shtml -X.hh
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_shlibdeps -i

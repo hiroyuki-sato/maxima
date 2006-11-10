@@ -28,6 +28,25 @@
 (defvar *maxima-tempdir*)
 (defvar *maxima-lang-subdir*)
 
+(defmvar $maxima_tempdir)
+(putprop '$maxima_tempdir 'shadow-string-assignment 'assign)
+(putprop '$maxima_tempdir '*maxima-tempdir* 'lisp-shadow)
+
+(defmvar $maxima_userdir)
+(putprop '$maxima_userdir 'shadow-string-assignment 'assign)
+(putprop '$maxima_userdir '*maxima-userdir* 'lisp-shadow)
+
+(defun shadow-string-assignment (var value)
+  (cond
+    ((mstringp value)
+     (set (get var 'lisp-shadow) (maybe-invert-string-case (symbol-name (stripdollar value))))
+     value)
+    ((stringp value)
+     (set (get var 'lisp-shadow) value)
+     value)
+    (t
+      (merror "Attempt to assign a non-string to ~:M" var))))
+
 (defun print-directories ()
   (format t "maxima-prefix=~a~%" *maxima-prefix*)
   (format t "maxima-imagesdir=~a~%" *maxima-imagesdir*)
@@ -43,7 +62,7 @@
   (format t "maxima-layout-autotools=~a~%" *maxima-layout-autotools*)
   (format t "maxima-userdir=~a~%" *maxima-userdir*)
   (format t "maxima-tempdir=~a~%" *maxima-tempdir*)
-  (format t "maxima-lang-subpdir=~a~%" *maxima-lang-subdir*)
+  (format t "maxima-lang-subdir=~a~%" *maxima-lang-subdir*)
   ($quit))
 
 (defvar *maxima-lispname* #+clisp "clisp"
@@ -51,7 +70,7 @@
 	#+scl "scl"
 	#+sbcl "sbcl"
 	#+gcl "gcl"
-	#+allegro "acl6"
+	#+allegro "acl"
 	#+openmcl "openmcl"
 	#-(or clisp cmu scl sbcl gcl allegro openmcl) "unknownlisp")
 
@@ -264,7 +283,13 @@
 	(setq *maxima-userdir* (default-userdir)))
     (if maxima-tempdir-env
 	(setq *maxima-tempdir* (maxima-parse-dirstring maxima-tempdir-env))
-	(setq *maxima-tempdir* (default-tempdir))))
+	(setq *maxima-tempdir* (default-tempdir)))
+
+    ; Assign initial values for Maxima shadow variables
+    (setq $maxima_userdir *maxima-userdir*)
+    (setf (gethash '$maxima_userdir *variable-initial-values*) *maxima-userdir*)
+    (setq $maxima_tempdir *maxima-tempdir*)
+    (setf (gethash '$maxima_tempdir *variable-initial-values*) *maxima-tempdir*))
   
   (let* ((ext #+gcl "o"
 	      #+(or cmu scl) (c::backend-fasl-file-type c::*target-backend*)
@@ -281,7 +306,57 @@
 	 (maxima-patterns "###.{mac,mc}")
 	 (demo-patterns "###.{dem,dm1,dm2,dm3,dmt}")
 	 (usage-patterns "##.{usg,texi}")
-	 (share-subdirs-list '("affine" "algebra" "calculus" "combinatorics" "contrib" "contrib/nset" "contrib/pdiff" "contrib/numericalio" "contrib/descriptive" "contrib/distrib" "contrib/diffequations" "contrib/simplex" "contrib/solve_rec" "contrib/stringproc" "contrib/Zeilberger" "linearalgebra" "diffequations" "graphics" "integequations" "integration" "macro" "matrix" "misc" "numeric" "orthopoly" "physics" "simplification" "sym" "tensor" "trigonometry" "utils" "vector"))
+	 (share-subdirs-list
+       '("affine"
+         "algebra"
+         "algebra/charsets"
+         "algebra/solver"
+         "calculus"
+         "combinatorics"
+         "contrib"
+         "contrib/boolsimp"
+         "contrib/descriptive"
+         "contrib/diffequations"
+         "contrib/diffequations/tests"
+         "contrib/distrib"
+         "contrib/ezunits"
+         "contrib/format"
+         "contrib/gentran"
+         "contrib/gentran/test"
+         "contrib/Grobner"
+         "contrib/lurkmathml"
+         "contrib/maximaMathML"
+         "contrib/mcclim"
+         "contrib/numericalio"
+         "contrib/pdiff"
+         "contrib/prim"
+         "contrib/rand"
+         "contrib/sarag"
+         "contrib/simplex"
+         "contrib/simplex/Tests"
+         "contrib/solve_rec"
+         "contrib/state"
+         "contrib/stringproc"
+         "contrib/unit"
+         "contrib/Zeilberger"
+         "diffequations"
+         "lbfgs"
+         "linearalgebra"
+         "integequations"
+         "integration"
+         "macro"
+         "matrix"
+         "misc"
+         "numeric"
+         "orthopoly"
+         "physics"
+         "simplification"
+         "sym"
+         "tensor"
+         "tensor/tests"
+         "trigonometry"
+         "utils"
+         "vector"))
      ; Smash the list of share subdirs into a string of the form "{affine,algebra,...,vector}" .
 	 (share-subdirs (format nil "{~{~A~^,~}}" share-subdirs-list)))
 
@@ -459,6 +534,9 @@
 			   :action #'(lambda (file)
 				       (load file))
 			   :help-string "Preload <lisp-file>.")
+       (make-cl-option :names '("-q" "--quiet")
+               :action #'(lambda () (declare (special *maxima-quiet*)) (setq *maxima-quiet* t))
+               :help-string "Suppress Maxima start-up message.")
 	   (make-cl-option :names '("--disable-readline")
 			   :action #'(lambda ()
 				       #+gcl
@@ -546,9 +624,11 @@
   (format t "~&~%Automatically continuing.~%To reenable the Lisp debugger set *debugger-hook* to nil.~%")
   (throw 'to-maxima-repl t))
 
-(defvar $help "type describe(topic) or example(topic);")
+(defvar $help "type `describe(topic);' or `example(topic);' or `? topic'")
 
-(defun $help () $help)			;
+(defun $help (&rest args)
+  (declare (ignore args))
+  $help)
 
 ;;; Now that all of maxima has been loaded, define the various lists
 ;;; and hashtables of builtin symbols and values.

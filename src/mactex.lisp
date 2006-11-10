@@ -82,7 +82,7 @@
 
 (defun quote-% (sym)
   (let* ((strsym (string sym))
-         (pos (position-if #'(lambda (c) (find c "%_")) strsym)))
+         (pos (position-if #'(lambda (c) (find c "$%&_")) strsym)))
     (if pos
       (concatenate 'string (subseq strsym 0 pos) "\\" (subseq strsym pos (1+ pos))
                            (quote-% (subseq strsym (1+ pos))))
@@ -122,26 +122,28 @@
 		  (setq mexp (list '(mdefine) (cons (list x 'array) (cdadr y)) (caddr y)))))))
      (cond ((and (null(atom mexp))
 		 (memq (caar mexp) '(mdefine mdefmacro)))
-	    (if mexplabel (setq mexplabel (quote-% mexplabel)))
-	    (format texport "|~%" )	;delimit with |marks
+	    (format texport "~%\\begin{verbatim}~%")
 	    (cond (mexplabel (format texport "~a " mexplabel)))
 	    (mgrind mexp texport)	;write expression as string
-	    (format texport ";|~%"))
+	    (format texport ";~%\\end{verbatim}~%"))
 	   ((and
 	     itsalabel ;; but is it a user-command-label?
+         ;; THE FOLLOWING TESTS SEEM PRETTY STRANGE --
+         ;; WHY CHECK INITIAL SUBSTRING IF SYMBOL IS ON THE $LABELS LIST ??
+         ;; PROBABLY IT IS A HOLDOVER FROM THE DAYS WHEN LABELS WERE C AND D INSTEAD OF %I AND %O
 	     (<= (length (string $inchar)) (length (string mexplabel)))
-	     (eq (getchars $inchar 2 (1+ (length (string $inchar))))
+	     (eq (getchars (maybe-invert-string-case (string $inchar)) 2 (1+ (length (string $inchar))))
 		 (getchars mexplabel 2 (1+ (length (string $inchar)))))
 	     ;; Check to make sure it isn't an outchar in disguise
 	     (not
 	      (and
 	       (<= (length (string $outchar)) (length (string mexplabel)))
-	       (eq (getchars $outchar 2 (1+ (length (string $outchar))))
+	       (eq (getchars (maybe-invert-string-case (string $outchar)) 2 (1+ (length (string $outchar))))
 		   (getchars mexplabel 2 (1+ (length (string $outchar))))))))
 	    ;; aha, this is a C-line: do the grinding:
-	    (format texport "~%|~a " mexplabel) ;delimit with |marks
+	    (format texport "~%\\begin{verbatim}~%~a " mexplabel)
 	    (mgrind mexp texport)	;write expression as string
-	    (format texport ";|~%"))
+	    (format texport ";~%\\end{verbatim}~%"))
 	   (t 
 	    (if mexplabel (setq mexplabel (quote-% mexplabel)))
 					; display the expression for TeX now:
@@ -173,9 +175,8 @@
 
 (defun myprinc (chstr)
   (prog (chlst)
-     (cond ((greaterp (plus (length (setq chlst (exploden chstr)))
-			    ccol)
-		      70.)
+     (cond ((and (greaterp (plus (length (setq chlst (exploden chstr))) ccol) 70.)
+                 (or (stringp chstr) (equal chstr '| |)))
 	    (terpri texport)      ;would have exceeded the line length
 	    (setq ccol 1.)
 	    (myprinc " ")	    ; lead off with a space for safety
@@ -210,6 +211,9 @@
 	  (list (cond ((numberp x) (texnumformat x))
 		      ((and (symbolp x) (get x 'texword)))
                       ((stringp x) (tex-string x))
+                      ((mstringp x)
+                       (let ((s (maybe-invert-string-case (symbol-name (stripdollar x)))))
+                         (tex-string (quote-% (if stringdisp (concatenate 'string "``" s "''") s)))))
                       ((characterp x) (tex-char x))
 		      (t (tex-stripdollar x))))
 	  r))
@@ -232,9 +236,15 @@
     (loop while (not (eq (setq tem (mread-raw st eof)) eof))
 	   do (tex1 (third tem) f2))))
 
-(defun tex-stripdollar(sym &aux )
-  (or (symbolp sym) (return-from tex-stripdollar sym))
-  (let* ((pname (quote-% sym))
+(defun tex-stripdollar (x)
+  (let ((s (maybe-invert-string-case (symbol-name (tex-stripdollar0 x)))))
+    (if (> (length s) 1)
+      (concatenate 'string "{\\it " s "}")
+      s)))
+
+(defun tex-stripdollar0 (sym &aux )
+  (or (symbolp sym) (return-from tex-stripdollar0  sym))
+  (let* ((pname (quote-% (stripdollar sym)))
 	 (l (length pname))
 	 (begin-sub
 	  (loop for i downfrom (1- l)
@@ -255,8 +265,7 @@
 		  (unless (eql i (- l 1))
 		    (vector-push #\{ tem)
 		    (setq begin-sub t))))
-	   (cond ((not (and (eql i 0) (eql (aref pname i) #\$)))
-		  (vector-push (aref pname i) tem)))
+		  (vector-push (aref pname i) tem)
 	   finally
 	   (cond ((eql begin-sub t)
 		  (vector-push #\} tem))))
@@ -272,7 +281,7 @@
     (cond ((integerp atom)
 	   atom)
 	  (t
-	   (setq r (explode atom))
+	   (setq r (exploden atom))
 	   (setq exponent (member 'e r :test #'string-equal)) ;; is it ddd.ddde+EE
 	   (cond ((null exponent)
 		  ;; it is not. go with it as given
@@ -304,7 +313,7 @@
 ;; operator
 
 (defun tex-function (x l r op) op
-       (setq l (tex (texword (caar x)) l nil 'mparen 'mparen)
+       (setq l (tex (caar x) l nil 'mparen 'mparen)
 	     r (tex (cons '(mprogn) (cdr x)) nil r 'mparen 'mparen))
        (nconc l r))
 
@@ -364,14 +373,33 @@
 
 (defprop bigfloat tex-bigfloat tex)
 
+; For 1.2345b678, generate TeX output 1.2345_B \times 10^{678} .
+; If the exponent is 0, then ... \times 10^{0} is generated
+; (no attempt to strip off zero exponent).
+
 (defun tex-bigfloat (x l r) 
-    (append l (fpformat x) r))
+  (let ((formatted (fpformat x)))
+    ; There should always be a '|b| or '|B| in the FPFORMAT output.
+    ; Play it safe -- check anyway.
+    (if (or (find '|b| formatted) (find '|B| formatted))
+      (let*
+        ((expt-symbols '(|_| |b| | | |\\| |T| |I| |M| |E| |S| | | |1| |0| |^| |{|))
+         (spell-out-expt
+           (append
+             (apply #'append
+                    (mapcar
+                      #'(lambda (e) (if (or (eq e '|b|) (eq e '|B|)) expt-symbols (list e)))
+                      formatted))
+             '(|}|))))
+        (append l spell-out-expt r))
+      (append l formatted r))))
 
 (defprop mprog "\\mathbf{block}\\;" texword)
 (defprop %erf "\\mathrm{erf}" texword)
 (defprop $erf "\\mathrm{erf}" texword) ;; etc for multicharacter names
 (defprop $true  "\\mathbf{true}"  texword)
 (defprop $false "\\mathbf{false}" texword)
+(defprop $done "\\mathbf{done}" texword)
 
 (defprop mprogn tex-matchfix tex) ;; mprogn is (<progstmnt>, ...)
 (defprop mprogn (("\\left(") "\\right)") texsym)
@@ -391,15 +419,15 @@
   (append l r))	;; fixed 9/24/87 RJF
 
 (defprop $%i "i" texword)
-(defprop $%pi "\\pi" texword)
 (defprop $%e "e" texword)
 (defprop $inf "\\infty " texword)
 (defprop $minf " -\\infty " texword)
 (defprop %laplace "\\mathcal{L}" texword)
+
 (defprop $alpha "\\alpha" texword)
 (defprop $beta "\\beta" texword)
 (defprop $gamma "\\gamma" texword)
-(defprop %gamma "\\Gamma" texword)
+(defprop %gamma "\\Gamma" texword)  ; THIS IS UNFORTUNATE ...
 (defprop $%gamma "\\gamma" texword)
 (defprop $delta "\\delta" texword)
 (defprop $epsilon "\\varepsilon" texword)
@@ -407,11 +435,14 @@
 (defprop $eta "\\eta" texword)
 (defprop $theta "\\vartheta" texword)
 (defprop $iota "\\iota" texword)
-(defprop $kappa "\\varkappa" texword)
-;;(defprop $lambda "\\lambda" texword)
+(defprop $kappa "\\kappa" texword)
+(defprop lambda "\\lambda" texword)
+(defprop $lambda "\\lambda" texword)
 (defprop $mu "\\mu" texword)
 (defprop $nu "\\nu" texword)
 (defprop $xi "\\xi" texword)
+(defprop $omicron " o" texword)
+(defprop $%pi "\\pi" texword)
 (defprop $pi "\\pi" texword)
 (defprop $rho "\\rho" texword)
 (defprop $sigma "\\sigma" texword)
@@ -421,20 +452,34 @@
 (defprop $chi "\\chi" texword)
 (defprop $psi "\\psi" texword)
 (defprop $omega "\\omega" texword)
+
+(defprop |$Alpha| "{\\rm A}" texword)
+(defprop |$Beta| "{\\rm B}" texword)
 (defprop |$Gamma| "\\Gamma" texword)
 (defprop |$Delta| "\\Delta" texword)
+(defprop |$Epsilon| "{\\rm E}" texword)
+(defprop |$Zeta| "{\\rm Z}" texword)
+(defprop |$Eta| "{\\rm H}" texword)
 (defprop |$Theta| "\\Theta" texword)
+(defprop |$Iota| "{\\rm I}" texword)
+(defprop |$Kappa| "{\\rm K}" texword)
 (defprop |$Lambda| "\\Lambda" texword)
+(defprop |$Mu| "{\\rm M}" texword)
+(defprop |$Nu| "{\\rm N}" texword)
 (defprop |$Xi| "\\Xi" texword)
+(defprop |$Omicron| "{\\rm O}" texword)
 (defprop |$Pi| "\\Pi" texword)
+(defprop |$Rho| "{\\rm P}" texword)
 (defprop |$Sigma| "\\Sigma" texword)
+(defprop |$Tau| "{\\rm T}" texword)
 (defprop |$Upsilon| "\\Upsilon" texword)
 (defprop |$Phi| "\\Phi" texword)
+(defprop |$Chi| "{\\rm X}" texword)
 (defprop |$Psi| "\\Psi" texword)
 (defprop |$Omega| "\\Omega" texword)
 
 (defprop mquote tex-prefix tex)
-(defprop mquote ("'") texsym)
+(defprop mquote ("\\mbox{{}'{}}") texsym)
 
 (defprop msetq tex-infix tex)
 (defprop msetq (":") texsym)
@@ -503,16 +548,17 @@
 			 (setq r (tex (car bascdr) nil r f 'mparen))
 			 (setq r (tex (cons '(mprogn) bascdr) nil r 'mparen 'mparen))))
 		    (t nil)))))		; won't doit. fall through
-      (t (setq l (cond ((and (numberp (cadr x))
-			     (numneedsparen (cadr x)))
-			(tex (cadr x) (cons "\\left(" l) '("\\right)") lop
+      (t (setq l (cond ((or ($bfloatp (cadr x)) (and (numberp (cadr x))
+			     (numneedsparen (cadr x))))
+            ; ACTUALLY THIS TREATMENT IS NEEDED WHENEVER (CAAR X) HAS GREATER BINDING POWER THAN MTIMES ...
+			(tex (cadr x) (append l '("\\left(")) '("\\right)") lop
 			     (caar x)))
 		       (t (tex (cadr x) l nil lop (caar x))))
 	       r (if (mmminusp (setq x (nformat (caddr x))))
 		     ;; the change in base-line makes parens unnecessary
 		     (if nc
 			 (tex (cadr x) '("^ {-\\langle ")(cons "\\rangle }" r) 'mparen 'mparen)
-			 (tex (cadr x) '("^ {- ")(cons " }" r) 'mparen 'mparen))
+             (tex (cadr x) '("^ {- ") (cons " }" r) 'mminus 'mparen))
 		     (if nc
 			 (tex x (list "^{\\langle ")(cons "\\rangle}" r) 'mparen 'mparen)
 			 (if (and (integerp x) (< x 10))
@@ -689,6 +735,7 @@
 (defprop mequal (=) texsym)
 
 (defprop mnotequal tex-infix tex)
+(defprop mnotequal ("\\neq ") texsym)
 
 (defprop mgreaterp tex-infix tex)
 (defprop mgreaterp (>) texsym)
@@ -703,13 +750,13 @@
 (defprop mleqp ("\\leq ") texsym)
 
 (defprop mnot tex-prefix tex)
-(defprop mnot ("\\not ") texsym)
+(defprop mnot ("\\neg ") texsym)
 
 (defprop mand tex-nary tex)
-(defprop mand ("\\and") texsym)
+(defprop mand "\\land " texsym)
 
 (defprop mor tex-nary tex)
-(defprop mor ("\\or") texsym)
+(defprop mor "\\lor " texsym)
 
 ;; make sin(x) display as sin x , but sin(x+y) as sin(x+y)
 ;; etc
@@ -723,6 +770,9 @@
     (setf (get a 'tex-rbp) 130)))
 
 
+;; I WONDER IF ALL BUILT-IN FUNCTIONS SHOULD BE SET IN ROMAN TYPE
+(defprop $atan2 "{\\rm atan2}" texword)
+
 ;; JM 09/01 expand and re-order to follow table of "log-like" functions,
 ;; see table in Lamport, 2nd edition, 1994, p. 44, table 3.9.
 ;; I don't know if these are Latex-specific so you may have to define
@@ -733,6 +783,7 @@
 	(%acos "\\arccos ")
 	(%asin "\\arcsin ")
 	(%atan "\\arctan ")
+
 					; Latex's arg(x) is ... ?
 	(%cos "\\cos ")
 	(%cosh "\\cosh ")
@@ -764,6 +815,24 @@
 	(%tanh "\\tanh ")
 	;; (%erf "{\\rm erf}") this would tend to set erf(x) as erf x. Unusual
 					;(%laplace "{\\cal L}")
+
+    ; Maxima built-in functions which do not have corresponding TeX symbols.
+
+    (%asec "{\\rm arcsec}\\; ")
+    (%acsc "{\\rm arccsc}\\; ")
+    (%acot "{\\rm arccot}\\; ")
+
+    (%sech "{\\rm sech}\\; ")
+    (%csch "{\\rm csch}\\; ")
+    
+    (%asinh "{\\rm asinh}\\; ")
+    (%acosh "{\\rm acosh}\\; ")
+    (%atanh "{\\rm atanh}\\; ")
+
+    (%asech "{\\rm asech}\\; ")
+    (%acsch "{\\rm acsch}\\; ")
+    (%acoth "{\\rm acoth}\\; ")
+
 	)) ;; etc
 
 (defprop mor tex-nary tex)
@@ -878,7 +947,7 @@
 ;; This stuff handles setting of LET rules
 
 (defprop | --> | "\\longrightarrow " texsym)
-(defprop | WHERE | "\\;\\mathbf{where}\\;" texsym)
+(defprop #.(intern (format nil " ~A " 'where)) "\\;\\mathbf{where}\\;" texsym)
 
 (defprop &>= ("\\ge ") texsym)
 (defprop &>= tex-infix tex)

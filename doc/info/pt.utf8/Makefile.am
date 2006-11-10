@@ -12,7 +12,7 @@ fcharset = "ISO-8859-1"
 tcharset = "UTF-8"
 
 maximahtml_pt.mk:
-	../texi2html -split_chapter --lang=pt --output=. maxima.texi
+	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
 	rm -f maximahtml_pt.mk
 	ls -1 maxima*.html | sed 's/\(.*\)/MAXIMAHTML += \1/' > maximahtml_pt.mk
 
@@ -21,10 +21,12 @@ include maximahtml_pt.mk
 
 $(MAXIMAHTML): maxima.texi $(maxima_TEXINFOS)
 	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
+	perl ../create_index
 
 include $(top_srcdir)/common.mk
 genericdir = $(dochtmldir)/pt.utf8
-genericdirDATA = $(MAXIMAHTML)
+genericdirDATA = $(MAXIMAHTML)\
+contents.hhc index.hhk header.hhp
 
 clean-local: clean-info clean-html
 
@@ -33,8 +35,10 @@ clean-info:
 
 clean-html:
 	rm -f maxima.html maxima_*.html
+	rm -f contents.hhc
+	rm -f index.hhk
 
-EXTRA_DIST = maximahtml_pt.mk
+EXTRA_DIST = maximahtml_pt.mk header.hhp
 
 maxima.info: maxima.texi
 	@rm -f $@ $@-[0-9] $@-[0-9][0-9]

@@ -1,5 +1,5 @@
 @c Language: Portuguese, Encoding: iso-8859-1
-@c /Command.texi/1.37/Fri Jan 13 08:15:55 2006/-ko/
+@c /Command.texi/1.41/Sat Jul  8 08:14:19 2006/-ko/
 @iftex
 @hyphenation{si-na-li-za-do-res}
 @hyphenation{de-mo-ra-da-men-te}
@@ -15,7 +15,7 @@
 
 @c NEEDS EXAMPLES
 @c THIS ITEM IS VERY IMPORTANT !!
-@deffn operador "'"
+@deffn {Operador} '
 O operador ap@'ostrofo @code{'} evita avalia@,{c}@~ao.
 
 Aplicado a um s@'imbolo,
@@ -134,15 +134,193 @@ O ap@'ostrofo n@~ao evita simplifica@,{c}@~ao.
 (%o2)                          - 1
 @end example
 
-
 @end deffn
 
-@deffn {Operador} "'@w{}'"
-O operador @code{'@w{}'} (ap@'ostrofo-ap@'ostrofo) faz com que ocorra uma avalia@,{c}@~ao extra.
-E.g., @code{'@w{}'%i4} ir@'a reavaliar a linha de entrada @code{%i4}.
-@code{'@w{}'(f(x))} significa avalie a express@~ao @code{f(x)} novamente.
-@code{'@w{}'f(x)} (com as aspas simples aplicadas a @code{f} em lugar de @code{f(x)})
-significa retorne a forma verbal de @code{f} aplicada a @code{[x]}.
+@deffn {Operator} ''
+O operador ap@'ostrofo-ap@'ostrofo @code{'@w{}'} (dois ap@'ostrofost) modifica avalia@,{c}@~ao em express@~oes de entrada.
+
+Aplicado a uma express@~ao geral @var{expr}, ap@'ostrofo-ap@'ostrofo faz com que o valor de @var{expr}
+seja substitu@'ido por @var{expr} na express@~ao de entrada.
+
+Aplicado ao operadro de uma express@~ao,
+ap@'ostrofo-ap@'ostrofo modifica o operadro de um susbstantivo para um verbo (se esse operador n@~ao for j@'a um verbo).
+
+O operador ap@'ostrofo-ap@'ostrofo @'e aplicado atrav@'es do passador de entrada;
+o ap@'ostrofo-ap@'ostrofo n@~ao @'e armazenado como parte de uma express@~ao de entrada passada.
+O operador ap@'ostrofo-ap@'ostrofo @'e sempre aplicado t@~ao rapidamente quanto for passado,
+e n@~ao pode receber um terceiro ap@'ostrofo.
+Dessa forma faz com que ocorra avalia@,{c}@~ao quando essa avalia@,{c}@~ao for de outra forma suprimida,
+da mesma forma que em defini@,{c}@~oes de fun@,{c}@~ao, defini@,{c}@~oes de express@~aoes lambda, e express@~oes que recebem um ap@'ostrofo simples @code{'}.
+
+Ap@'ostrofo-ap@'ostrofo @'e reconhecido por @code{batch} e @code{load}.
+
+Veja tamb@'em o operador ap@'ostrofo @code{'} e @code{nouns}.
+
+Exemplos:
+Aplicado a uma express@~ao geral @var{expr}, ap@'ostrofo-ap@'ostrofo fazem com que o valor de @var{expr}
+seja substituido por @var{expr} na express@~ao de entrada.
+
+@c ===beg===
+@c expand ((a + b)^3);
+@c [_, ''_];
+@c [%i1, ''%i1];
+@c [aa : cc, bb : dd, cc : 17, dd : 29];
+@c foo_1 (x) := aa - bb * x;
+@c foo_1 (10);
+@c ''%;
+@c ''(foo_1 (10));
+@c foo_2 (x) := ''aa - ''bb * x;
+@c foo_2 (10);
+@c [x0 : x1, x1 : x2, x2 : x3];
+@c x0;
+@c ''x0;
+@c '' ''x0;
+@c ===end===
+@example
+(%i1) expand ((a + b)^3);
+                     3        2      2      3
+(%o1)               b  + 3 a b  + 3 a  b + a
+(%i2) [_, ''_];
+                         3    3        2      2      3
+(%o2)     [expand((b + a) ), b  + 3 a b  + 3 a  b + a ]
+(%i3) [%i1, ''%i1];
+                         3    3        2      2      3
+(%o3)     [expand((b + a) ), b  + 3 a b  + 3 a  b + a ]
+(%i4) [aa : cc, bb : dd, cc : 17, dd : 29];
+(%o4)                   [cc, dd, 17, 29]
+(%i5) foo_1 (x) := aa - bb * x;
+(%o5)                 foo_1(x) := aa - bb x
+(%i6) foo_1 (10);
+(%o6)                      cc - 10 dd
+(%i7) ''%;
+(%o7)                         - 273
+(%i8) ''(foo_1 (10));
+(%o8)                         - 273
+(%i9) foo_2 (x) := ''aa - ''bb * x;
+(%o9)                 foo_2(x) := cc - dd x
+(%i10) foo_2 (10);
+(%o10)                        - 273
+(%i11) [x0 : x1, x1 : x2, x2 : x3];
+(%o11)                    [x1, x2, x3]
+(%i12) x0;
+(%o12)                         x1
+(%i13) ''x0;
+(%o13)                         x2
+(%i14) '' ''x0;
+(%o14)                         x3
+@end example
+
+Aplicado ao operador de uma express@~ao,
+ap@'ostrofo-ap@'ostrofo muda o operadro de um substantivo para um verbo (se esse operadro n@~ao for j@'a um verbo).
+
+@c ===beg==
+@c sin (1);
+@c ''sin (1);
+@c declare (foo, noun);
+@c foo (x) := x - 1729;
+@c foo (100);
+@c ''foo (100);
+@c ===end==
+@example
+(%i1) sin (1);
+(%o1)                        sin(1)
+(%i2) ''sin (1);
+(%o2)                    0.8414709848079
+(%i3) declare (foo, noun);
+(%o3)                         done
+(%i4) foo (x) := x - 1729;
+(%o4)                 ''foo(x) := x - 1729
+(%i5) foo (100);
+(%o5)                       foo(100)
+(%i6) ''foo (100);
+(%o6)                        - 1629
+@end example
+
+O operador ap@'ostrofo-ap@'ostrofo @'e aplicado por meio de um passador de entrada;
+operador-ap@'ostrofo n@~ao @'e armazenado como parte da express@~ao de entrada.
+
+@c ===beg===
+@c [aa : bb, cc : dd, bb : 1234, dd : 5678];
+@c aa + cc;
+@c display (_, op (_), args (_));
+@c ''(aa + cc);
+@c display (_, op (_), args (_));
+@c ===end===
+@example
+(%i1) [aa : bb, cc : dd, bb : 1234, dd : 5678];
+(%o1)                 [bb, dd, 1234, 5678]
+(%i2) aa + cc;
+(%o2)                        dd + bb
+(%i3) display (_, op (_), args (_));
+                           _ = cc + aa
+
+                         op(cc + aa) = +
+
+                    args(cc + aa) = [cc, aa]
+
+(%o3)                         done
+(%i4) ''(aa + cc);
+(%o4)                         6912
+(%i5) display (_, op (_), args (_));
+                           _ = dd + bb
+
+                         op(dd + bb) = +
+
+                    args(dd + bb) = [dd, bb]
+
+(%o5)                         done
+@end example
+
+Ap@'ostrofo ap@'ostrofo faz com que ocorra avalia@,{c}@~ao quando a avalia@,{c}@~ao tiver sido de outra forma suprimida,
+da mesma forma que em defini@,{c}@~oes de fun@,{c}@~ao, da mesma forma que em defini@,{c}@~oes de fun@,{c}@~ao lambda expressions, E express@~oes que recebem o ap@'ostrofo simples @code{'}.
+
+@c ===beg===
+@c foo_1a (x) := ''(integrate (log (x), x));
+@c foo_1b (x) := integrate (log (x), x);
+@c dispfun (foo_1a, foo_1b);
+@c integrate (log (x), x);
+@c foo_2a (x) := ''%;
+@c foo_2b (x) := %;
+@c dispfun (foo_2a, foo_2b);
+@c F : lambda ([u], diff (sin (u), u));
+@c G : lambda ([u], ''(diff (sin (u), u)));
+@c '(sum (a[k], k, 1, 3) + sum (b[k], k, 1, 3));
+@c '(''(sum (a[k], k, 1, 3)) + ''(sum (b[k], k, 1, 3)));
+@c ===end===
+@example
+(%i1) foo_1a (x) := ''(integrate (log (x), x));
+(%o1)               foo_1a(x) := x log(x) - x
+(%i2) foo_1b (x) := integrate (log (x), x);
+(%o2)           foo_1b(x) := integrate(log(x), x)
+(%i3) dispfun (foo_1a, foo_1b);
+(%t3)               foo_1a(x) := x log(x) - x
+
+(%t4)           foo_1b(x) := integrate(log(x), x)
+
+(%o4)                      [%t3, %t4]
+(%i4) integrate (log (x), x);
+(%o4)                     x log(x) - x
+(%i5) foo_2a (x) := ''%;
+(%o5)               foo_2a(x) := x log(x) - x
+(%i6) foo_2b (x) := %;
+(%o6)                    foo_2b(x) := %
+(%i7) dispfun (foo_2a, foo_2b);
+(%t7)               foo_2a(x) := x log(x) - x
+
+(%t8)                    foo_2b(x) := %
+
+(%o8)                      [%t7, %t8]
+(%i8) F : lambda ([u], diff (sin (u), u));
+(%o8)             lambda([u], diff(sin(u), u))
+(%i9) G : lambda ([u], ''(diff (sin (u), u)));
+(%o9)                  lambda([u], cos(u))
+(%i10) '(sum (a[k], k, 1, 3) + sum (b[k], k, 1, 3));
+(%o10)         sum(b , k, 1, 3) + sum(a , k, 1, 3)
+                    k                  k
+(%i11) '(''(sum (a[k], k, 1, 3)) + ''(sum (b[k], k, 1, 3)));
+(%o11)             b  + a  + b  + a  + b  + a
+                    3    3    2    2    1    1
+@end example
 
 @end deffn
 
@@ -225,6 +403,8 @@ sejam avaliadas.
 @item
 @code{eval} faz com que uma avalia@,{c}@~ao posterior de @var{expr} ocorra.  (Veja passo (5)
 adiante.)
+@code{eval} pode ocorrer multiplas vezes.
+Para cada instância de @code{eval}, a express@~ao @'e avaliada novamente.
 @item
 @code{A} onde @code{A} @'e um @'atomo declarado seja um sinalizador de avalia@,{c}@~ao (veja @code{evflag})
 faz com que @code{A} seja associado a
@@ -294,7 +474,7 @@ qualquer chamada de fun@,{c}@~ao em @var{expr} ser@'a completada depois das vari
 nela serem avalidas e que @code{ev(F(x))} dessa forma possa comportar-se como @code{F(ev(x))}.
 
 @item
-Se um dos argumentos for @code{eval}, passos (3) e (4) ser@~ao repetidos.
+Para cada instância de @code{eval} nos argumentos, os passos (3) e (4) s@~ao repetidos.
 @end enumerate
 
                      Exemplos
@@ -355,15 +535,15 @@ Solution
 @end deffn
 
 @defvr {Propriedade} evflag
-Alguns sinalizadores Booleanos possuem a propriedae @code{evflag}.
-@code{ev} trata tais sinalizadores especialmente.
-Um sinalizador com a propriedade @code{evflag} n@~ao ser@'a associado a @code{true}
-durante a execu@,{c}@~ao de @code{ev} se isso for
-mensionado na chamada para @code{ev}.
-Por exemplo, @code{demoivre} e @code{ratfac} s@~ao associados a @code{true}
-durante a chamada @code{ev (%, demoivre, ratfac)}.
+Quando um s@'imbolo @var{x} tem a propriedade @code{evflag},
+as express@~oes @code{ev(@var{expr}, @var{x})} e @code{@var{expr}, @var{x}}
+(na linha de comando interativa) s@~ao equivalentes a @code{ev(@var{expr}, @var{x} = true)}.
+Isto @'e, @var{x} est@'a associada a @code{true} enquanto @var{expr} for avaliada.
 
-Os sinalizadores que possuem a propriedade @code{evflag} s@~ao:
+A express@~ao @code{declare(@var{x}, evflag)}
+fornece a propriedade @code{evflag} para a vari@'avel @var{x}.
+
+Os sinalizadores que possuem a propriedade @code{evflag} por padr@~ao s@~ao os seguintes:
 @c FOLLOWING LIST CONSTRUCTED FROM LIST UNDER (prog1 '(evflag properties) ...)
 @c NEAR LINE 2649 OF mlisp.lisp AT PRESENT (2004/11).
 @code{algebraic},
@@ -397,26 +577,78 @@ Os sinalizadores que possuem a propriedade @code{evflag} s@~ao:
 @code{ratsimpexpons},
 @code{simp},
 @code{simpsum},
-@code{sumexpand}, and
+@code{sumexpand}, e
 @code{trigexpand}.
 
-A constru@,{c}@~ao @code{:lisp (putprop '|$foo| t 'evflag)}
-fornece a propriedade @code{evflag} para a vari@'avel @code{foo},
-ent@~ao @code{foo} @'associada a @code{true} durante a chamada @code{ev (%, foo)}.
-Equivalentemente, @code{ev (%, foo:true)} tem o mesmo efeito.
+Exemplos:
+
+@c ===beg===
+@c sin (1/2);
+@c sin (1/2), float;
+@c sin (1/2), float=true;
+@c simp : false;
+@c 1 + 1;
+@c 1 + 1, simp;
+@c simp : true;
+@c sum (1/k^2, k, 1, inf);
+@c sum (1/k^2, k, 1, inf), simpsum;
+@c declare (aa, evflag);
+@c if aa = true then YES else NO;
+@c if aa = true then YES else NO, aa;
+@c ===end===
+@example
+(%i1) sin (1/2);
+                                 1
+(%o1)                        sin(-)
+                                 2
+(%i2) sin (1/2), float;
+(%o2)                   0.479425538604203
+(%i3) sin (1/2), float=true;
+(%o3)                   0.479425538604203
+(%i4) simp : false;
+(%o4)                         false
+(%i5) 1 + 1;
+(%o5)                         1 + 1
+(%i6) 1 + 1, simp;
+(%o6)                           2
+(%i7) simp : true;
+(%o7)                         true
+(%i8) sum (1/k^2, k, 1, inf);
+                            inf
+                            ====
+                            \     1
+(%o8)                        >    --
+                            /      2
+                            ====  k
+                            k = 1
+(%i9) sum (1/k^2, k, 1, inf), simpsum;
+                                 2
+                              %pi
+(%o9)                         ----
+                               6
+(%i10) declare (aa, evflag);
+(%o10)                        done
+(%i11) if aa = true then SIM else N@~AO;
+(%o11)                         N@~AO
+(%i12) if aa = true then SIM else N@~AO, aa;
+(%o12)                         SIM
+@end example
 
 @end defvr
 
 @defvr {Propriedade}  evfun
-Agumas fun@,{c}@~oes possuem a proriedade @code{evfun}.
-@code{ev} trata cada fun@,{c}@~ao especialmente.
-Uma fun@,{c}@~ao com a propriedade @code{evfun} ser@'a aplicada
-durante a execu@,{c}@~ao de @code{ev} se isso for
-mecionado na chamada a @code{ev}.
-Por exemplo, @code{ratsimp} e @code{radcan} ser@'a aplicada
-durante a chamada @code{ev (%, ratsimp, radcan)}.
+Quando uma fun@,{c}@~ao @var{F} tem a propriedade @code{evfun},
+as express@~oes @code{ev(@var{expr}, @var{F})} e @code{@var{expr}, @var{F}}
+(na linha de comando interativa)
+s@~ao equivalentes a @code{@var{F}(ev(@var{expr}))}.
 
-As fun@,{c}@~oes que possuem a propriedade @code{evfun} s@~ao:
+Se duas ou mais fun@,{c}@~oes @var{F}, @var{G}, etc., que possuem a propriedade @code{evfun} forem especificadas,
+as fun@,{c}@~oes ser@~ao aplicadas na ordem em que forem especificadas.
+
+A express@~ao @code{declare(@var{F}, evfun)}
+fornece a propriedade @code{evfun} para a fun@,{c}@~ao @var{F}.
+
+As fun@,{c}@~oes que possuem a propriedade @code{evfun} por padr@~ao s@~ao as seguintes:
 @c FOLLOWING LIST CONSTRUCTED FROM LIST UNDER (prog1 '(evfun properties) ...)
 @c NEAR LINE 2643 IN mlisp.lisp AT PRESENT (2004/11).
 @code{bfloat},
@@ -432,10 +664,75 @@ As fun@,{c}@~oes que possuem a propriedade @code{evfun} s@~ao:
 @code{trigexpand}, e
 @code{trigreduce}.
 
-A constru@,{c}@~ao @code{:lisp (putprop '|$foo| t 'evfun)}
-fornece a propriedade @code{evfun} para a fun@,{c}@~ao @code{foo},
-de modo que @code{foo} @'e aplicada durante a chamada @code{ev (%, foo)}.
-Equivalentemente, @code{foo (ev (%))} tem o mesmo efeito.
+Exemplos:
+ 
+@c ===beg===
+@c x^3 - 1;
+@c x^3 - 1, factor;
+@c factor (x^3 - 1);
+@c cos(4 * x) / sin(x)^4;
+@c cos(4 * x) / sin(x)^4, trigexpand;
+@c cos(4 * x) / sin(x)^4, trigexpand, ratexpand;
+@c ratexpand (trigexpand (cos(4 * x) / sin(x)^4));
+@c declare ([F, G], evfun);
+@c (aa : bb, bb : cc, cc : dd);
+@c aa;
+@c aa, F;
+@c F (aa);
+@c F (ev (aa));
+@c aa, F, G;
+@c G (F (ev (aa)));
+@c ===end===
+@example
+(%i1) x^3 - 1;
+                              3
+(%o1)                        x  - 1
+(%i2) x^3 - 1, factor;
+                                2
+(%o2)                 (x - 1) (x  + x + 1)
+(%i3) factor (x^3 - 1);
+                                2
+(%o3)                 (x - 1) (x  + x + 1)
+(%i4) cos(4 * x) / sin(x)^4;
+                            cos(4 x)
+(%o4)                       --------
+                               4
+                            sin (x)
+(%i5) cos(4 * x) / sin(x)^4, trigexpand;
+                 4           2       2         4
+              sin (x) - 6 cos (x) sin (x) + cos (x)
+(%o5)         -------------------------------------
+                                4
+                             sin (x)
+(%i6) cos(4 * x) / sin(x)^4, trigexpand, ratexpand;
+                           2         4
+                      6 cos (x)   cos (x)
+(%o6)               - --------- + ------- + 1
+                          2          4
+                       sin (x)    sin (x)
+(%i7) ratexpand (trigexpand (cos(4 * x) / sin(x)^4));
+                           2         4
+                      6 cos (x)   cos (x)
+(%o7)               - --------- + ------- + 1
+                          2          4
+                       sin (x)    sin (x)
+(%i8) declare ([F, G], evfun);
+(%o8)                         done
+(%i9) (aa : bb, bb : cc, cc : dd);
+(%o9)                          dd
+(%i10) aa;
+(%o10)                         bb
+(%i11) aa, F;
+(%o11)                        F(cc)
+(%i12) F (aa);
+(%o12)                        F(bb)
+(%i13) F (ev (aa));
+(%o13)                        F(cc)
+(%i14) aa, F, G;
+(%o14)                      G(F(cc))
+(%i15) G (F (ev (aa)));
+(%o15)                      G(F(cc))
+@end example
 
 @end defvr
 
@@ -452,18 +749,20 @@ inclua @code{X='X} como um argumento para @code{ev}.  Certamente express@~oes ta
 @c REVIEW FOR ACCURACY AND COMPLETENESS
 @c THIS ITEM IS VERY IMPORTANT !!
 @c NEEDS EXAMPLES
-@deffn {Fun@,{c}@~ao} kill (@var{s@'imbolo_1}, ..., @var{s@'imbolo_n})
+@deffn {Fun@,{c}@~ao} kill (@var{a_1}, ..., @var{a_n})
 @deffnx {Fun@,{c}@~ao} kill (labels)
 @deffnx {Fun@,{c}@~ao} kill (inlabels, outlabels, linelabels)
 @deffnx {Fun@,{c}@~ao} kill (@var{n})
 @deffnx {Fun@,{c}@~ao} kill ([@var{m}, @var{n}])
 @deffnx {Fun@,{c}@~ao} kill (values, functions, arrays, ...)
 @deffnx {Fun@,{c}@~ao} kill (all)
-@deffnx {Fun@,{c}@~ao} kill (allbut (@var{s@'imbolo_1}, ..., @var{s@'imbolo_n}))
+@deffnx {Fun@,{c}@~ao} kill (allbut (@var{a_1}, ..., @var{a_n}))
 
 Remove todas as associa@,{c}@~oes (valor, fun@,{c}@~oes, array, ou regra) dos argumentos
-@var{s@'imbolo_1}, ..., @var{s@'imbolo_n}.
-Um argumento pode ser um elemento simples de um array ou uma fun@,{c}@~ao subscrita.
+@var{a_1}, ..., @var{a_n}.
+Um argumento @var{a_k} pode ser um s@'imbolo ou um elemento de array simples.
+Quando @var{a_k} for um elemento de array simples, @code{kill} remove a associa@,{c}@~ao daquele elemento
+sem afetar qualquer outro elemento do array.
 
 Muitos argumentos especiais s@~ao reconhecidos.  
 Diferentes fam@'ilias de argumentos 
@@ -492,8 +791,8 @@ Veja tamb@'em @code{infolists}.
 @code{kill (all)} n@~ao retorna vari@'aveis globais para seus valores padr@~oes;
 Veja @code{reset} sobre esse ponto.
 
-@code{kill (allbut (@var{s@'imbolo_1}, ..., @var{s@'imbolo_n}))}
-libera todos os @'itens em todas as infolists exceto para @var{s@'imbolo_1}, ..., @var{s@'imbolo_n}.
+@code{kill (allbut (@var{a_1}, ..., @var{a_n}))}
+remove a associa@,{c}@~ao de todos os itens sobre todas as infolistas exceto para @var{a_1}, ..., @var{a_n}.
 @code{kill (allbut (@var{infolist}))} libera todos os @'itens exceto para si pr@'oprio em @var{infolist},
 onde @var{infolist} @'e @code{values}, @code{functions}, @code{arrays}, etc.
 
@@ -502,7 +801,7 @@ sejam liberados disso.
 Em particular, para liberar a mem@'oria usada pelo valor de um s@'imbolo,
 deve-se liberar o r@'otulo de sa@'ida que mosta o valor associado, bem como liberando o pr@'oprio s@'imbolo.
 
-@code{kill} n@~ao avalia seus argumentos.
+@code{kill} coloca um ap@'ostro em seus argumentos (n@~ao os avalia).
 O operador ap@'ostrofo-ap@'ostrofo, @code{'@w{}'}, faz com que ocorra avalia@,{c}@~ao.
 
 @code{kill (@var{s@'imbolo})} libera todas as propriedades de @var{s@'imbolo}.

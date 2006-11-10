@@ -1,11 +1,12 @@
 @c Language: Portuguese, Encoding: iso-8859-1
-@c /Expressions.texi/1.42/Sat Dec 24 08:37:47 2005/-ko/
+@c /Expressions.texi/1.49/Mon Jul 31 07:17:26 2006/-ko/
 @menu
 * Introdu@value{cedilha}@~ao a Express@~oes::  
 * Atribui@value{cedilha}@~ao::                  
 * Complexo::                     
 * Substantivos e Verbos::
 * Identificadores::
+* Seq@"u@^encias de caracteres::
 * Desigualdade::                  
 * Sintaxe::                      
 * Defini@value{cedilha}@~oes para Express@~oes::  
@@ -50,8 +51,8 @@ ciclos n@~ao seja muito @'util (eles retornam sempre @code{done}).
 (%o2)                         done
 @end example
 
-contanto que o que voc@^e realmente queira @'e provavelmente incluir um terceiro
-termo na @i{express@~ao com v@'irgula} que atualmente fornece de volta o valor.
+contanto que o que voc@^e realmente queira seja provavelmente incluir um terceiro
+termo na @i{express@~ao com v@'irgula} que fornece de volta o valor atualizado.
 
 @example
 (%i3) y: (x: 1, for i from 1 thru 10 do (x: x*i), x)$
@@ -66,7 +67,7 @@ termo na @i{express@~ao com v@'irgula} que atualmente fornece de volta o valor.
 Existem dois operadores de atribui@,{c}@~ao no Maxima, "@code{:}" e "@code{::}".
 E.g., @code{a: 3} escolhe a vari@'avel @code{a} para 3. @code{::} atribui o valor da
 express@~ao sobre seu lado direito para o valor da quantidade sobre seu lado esquerdo,
-que deve avaliar para uma vari@'avel at@^omica ou para uma vari@'avel subscrita.
+que deve avaliar para uma vari@'avel at@^omica ou para uma vari@'avel com subscrito.
 
 @c THIS REALLY NEEDS EXPANSION
 @node Complexo, Substantivos e Verbos, Atribui@value{cedilha}@~ao, Express@~oes
@@ -74,7 +75,7 @@ que deve avaliar para uma vari@'avel at@^omica ou para uma vari@'avel subscrita.
 Uma express@~ao complexa @'e especificada no Maxima atrav@'es da adi@,{c}@~ao da
 parte real da express@~ao a @code{%i} vezes a parte imagin@'aria.  Dessa forma as
 ra@'izes da equa@,{c}@~ao @code{x^2 - 4*x + 13 = 0} s@~ao @code{2 + 3*%i} e @code{2 - 3*%i}.  Note que
-produtos de simplifica@,{c}@~ao de express@~oes complexas podem ter efeito atrav@'es da
+produtos de simplifica@,{c}@~ao de express@~oes complexas podem ser efetuadas atrav@'es da
 expans@~ao do produto.  Simplifica@,{c}@~ao de quocientes, ra@'izes, e outras
 fun@,{c}@~oes de express@~oes complexas podem usualmente serem realizadas atrav@'es do uso
 das fun@,{c}@~oes @code{realpart}, @code{imagpart}, @code{rectform}, @code{polarform}, @code{abs}, @code{carg}.
@@ -153,14 +154,14 @@ Exemplos:
 (%o11)                       log(42)
 @end example
 
-@node Identificadores, Desigualdade, Substantivos e Verbos, Express@~oes
+@node Identificadores, Seq@"u@^encias de caracteres, Substantivos e Verbos, Express@~oes
 @section Identificadores
 Identificadores do Maxima podem compreender caracteres alfab@'eticos,
 mais os numerais de 0 a 9,
 mais qualquer caractere especial precedido por um caractere contra-barra @code{\}.
 
 Um numeral pode ser o primeiro caractere de um identificador
-se esse numeral for precedido por uma contra barra.
+se esse numeral for precedido por uma contra-barra.
 Numerais que forem o segundo ou o @'ultimo caractere n@~ao precisam ser precedidos por uma contra barra.
 
 Um caractere especial pode ser declarado alfab@'etico atrav@'es da fun@,{c}@~ao @code{declare}.
@@ -171,7 +172,7 @@ de @code{A} a @code{Z}, de @code{a} a @code{z}, @code{%}, e @code{_}.
 Maxima @'e sens@'ivel @`a caixa . Os identificadores @code{algumacoisa}, @code{ALGUMACOISA}, e @code{Algumacoisa} s@~ao distintos.
 Veja @ref{Lisp e Maxima} para mais sobre esse ponto.
 
-Um identificador Maxima @'e um s@'imbolo Lisp que come@,{c}a com um sianl de d@'olar @code{$}.
+Um identificador Maxima @'e um s@'imbolo Lisp que come@,{c}a com um sinal de d@'olar @code{$}.
 Qualquer outro s@'imbolo Lisp @'e precedido por um ponto de interroga@,{c}@~ao @code{?} quando aparecer no Maxima.
 Veja @ref{Lisp e Maxima} para maiores detalhes sobre esse ponto.
 
@@ -222,7 +223,81 @@ Exemplos:
 (%o12)                         foo
 @end example
 
-@node Desigualdade, Sintaxe, Identificadores, Express@~oes
+@node Seq@"u@^encias de caracteres, Desigualdade, Identificadores, Express@~oes
+@section Seq@"u@^encias de caracteres
+
+Strings (seq@"u@^encias de caracteres) s@~ao contidas entre aspas duplas @code{"} em entradas de dados usados pelo Maxima,
+e mostradas com ou sem as aspas duplas, 
+dependendo do valor escolhido para a vari@'avel global @code{?stringdisp}.
+
+Seq@"u@^encias de caracteres podem conter quaisquer caracteres,
+incluindo tabula@,{c}@~oes (tab), nova linha (ou fim de linha), e caracteres de retorno da cabe@,{c}a de impress@~ao (carriage return).
+A seq@"u@^encia @code{\"} @'e reconhecida com uma aspa dupla literal,
+e @code{\\} como uma contrabarra literal.
+Quando a contrabarra aparecer no final de uma linha,
+a contrabarra e a termina@,{c}@~ao de linha
+(ou nova linha ou retorno de carro e nova linha)
+s@~ao ignorados,
+de forma que a seq@"u@^encia de caracteres continue na pr@'oxima linha.
+Nenhuma outra combina@,{c}@~ao especial de contrabarra com outro caractere @'e reconhecida;
+quando a contrabarra aparecer antes de qualquer outro caractere que n@~ao seja @code{"}, @code{\},
+ou um fim de linha, a contrabarra @'e ignorada.
+N@~ao exite caminho para representar um caractere especial
+(tal como uma tabula@,{c}@~ao, nova linha, ou retorno da cabe@,{c}a de impress@~ao)
+exceto atrav@'es de encaixar o caractere literal na seq@"u@^encia de caracteres.
+
+N@~ao existe tipo de caractere no Maxima;
+um caractere simples @'e representado como uma seq@"u@^encia de caracteres de um @'unico caractere.
+
+Seq@"u@^encias de caracteres no Maxima s@~ao implementadas como s@'imbolos do Lisp, n@~ao como seq@"uencias de caracteres do not Lisp;
+o que pode mudar em futuras vers@~oes do Maxima.
+Maxima pode mostrar seq@"u@^encias de caracteres do Lisp e caracteres do Lisp,
+embora algumas outras opera@,{c}@~oes (por exemplo, testes de igualdade) possam falhar.
+@c DISCOMFORT WITH LISP STRINGS AND CHARACTERS IS A BUG.
+
+O pacote adicional @code{stringproc} cont@'em muitas fun@,{c}@~oes que trabalham com seq@"u@^encias de caracteres.
+
+Exemplos:
+
+@c ===beg===
+@c s_1 : "Isso @'e uma seq@"u@^encia de caracteres  do Maxima.";
+@c s_2 : "Caracteres \"aspas duplas\" e contrabarras \\ encaixados em uma seq@"u@^encia de caracteres.";
+@c s_3 : "Caractere de fim de linha encaixado
+@c nessa seq@"u@^encia de caracteres.";
+@c s_4 : "Ignore o \
+@c caractere de \
+@c fim de linha nessa \
+@c seq@"u@^encia de caracteres.";
+@c ?stringdisp : false;
+@c s_1;
+@c ?stringdisp : true;
+@c s_1;
+@c ===end===
+@example
+(%i1) s_1 : "Isso @'e uma seq@"u@^encia de caracteres  do Maxima.";
+(%o1)               Isso @'e uma seq@"u@^encia de caracteres  do Maxima.
+(%i2) s_2 : "Caracteres \"aspas duplas\" e contrabarras \\ encaixados em uma seq@"u@^encia de caracteres.";
+(%o2) Caracteres "aspas duplas" e contrabarra \ encaixados em uma seq@"u@^encia de caracteres.
+(%i3) s_3 : "Caractere de fim de linha encaixado
+nessa seq@"u@^encia de caracteres.";
+(%o3) Caractere de fim de linha encaixado
+nessa seq@"u@^encia de caracteres.
+(%i4) s_4 : "Ignore o \
+caractere de \
+fim de linha nessa \
+seq@"u@^encia de caracteres.";
+(%o4) Ignore o caractere de fim de linha nessa seq@"u@^encia de caracteres.
+(%i5) ?stringdisp : false;
+(%o5)                         false
+(%i6) s_1;
+(%o6)               Isso @'e uma seq@"u@^encia de caracteres  do Maxima.
+(%i7) ?stringdisp : true;
+(%o7)                         true
+(%i8) s_1;
+(%o8)              "Isso @'e uma seq@"u@^encia de caracteres  do Maxima."
+@end example
+
+@node Desigualdade, Sintaxe, Seq@"u@^encias de caracteres, Express@~oes
 @section Desigualdade
 Maxima tem os operadores de desigualdade @code{<}, @code{<=}, @code{>=}, @code{>}, @code{#}, e @code{notequal}.
 Veja @code{if} para uma descri@,{c}@~ao de express@~oes condicionais.
@@ -289,7 +364,7 @@ As fun@,{c}@~oes m@'axima que definem novos operadores est@~ao sumarizadas nessa
 equilibrando expoente associado esquerdo (padr@~ao) e o expoente associado direito ("eae" e "ead", respectivamente).
 @c REWORK FOLLOWING COMMENT. IT'S NOT CLEAR ENOUGH, GIVEN THAT IT'S FAIRLY IMPORTANT
 (Associa@,{c}@~ao de expoentes determina a preced@^encia do operador. todavia, uma vez que os expoentes
-esquerdo e diretiro podem ser diferentes, associa@,{c}@~ao de expoentes @'e at@'e certo ponto mais complicado que preced@^encia.)
+esquerdo e direito podem ser diferentes, associa@,{c}@~ao de expoentes @'e at@'e certo ponto mais complicado que preced@^encia.)
 Alguma das fun@,{c}@~oes de defini@,{c}@~ao de opera@,{c}@~oes tomam argumentos adicionais;
 veja as descri@,{c}@~oes de fun@,{c}@~ao para maiores detalhes.
 
@@ -400,7 +475,7 @@ as vari@'aveis assumindo os valores como especificado para elas na lista de
 equa@,{c}@~oes @code{[@var{eqn_1}, ..., @var{eqn_n}]} ou a equa@,{c}@~ao simples @var{eqn}.
 
 Se uma subexpress@~ao depender de qualquer das vari@'aveis para a qual um valor foi especificado
-mas n@~ao existe @code{atvalue} especificado e isso n@~ao pode ser de outra forma avaliado,
+mas n@~ao existe @code{atvalue} especificado e essa subexpress@~ao n@~ao pode ser avaliada de outra forma,
 ent@~ao uma forma substantiva de @code{at} @'e retornada que mostra em uma forma bidimensional.
 
 @code{at} realiza m@'ultiplas substitui@,{c}@~oes em s@'erie, n@~ao em paralelo.
@@ -460,7 +535,8 @@ Uma caixa @'e desenhada sobre a tela quando @code{display2d} for @code{true}.
 Empacota @var{expr} em uma caixa rotulada pelo s@'imbolo @var{a}.
 O r@'otulo @'e truncado se for maior que a largura da caixa.
 
-Uma express@~ao dentro de uma caixa n@~ao avalia para seu conte@'udo,
+@code{box} avalia seu argumento.
+Todavia, uma express@~ao dentro de uma caixa n@~ao avalia para seu conte@'udo,
 ent@~ao express@~oes dentro de caixas s@~ao efetivamente exclu@'idas de c@'alculos.
 
 @code{boxchar} @'e o caractere usado para desenhar a caixa em @code{box}
@@ -470,6 +546,9 @@ Exemplos:
 
 @c ===beg===
 @c box (a^2 + b^2);
+@c a : 1234;
+@c b : c - d;
+@c box (a^2 + b^2);
 @c box (a^2 + b^2, term_1);
 @c 1729 - box (1729);
 @c boxchar: "-";
@@ -477,26 +556,34 @@ Exemplos:
 @c ===end===
 @example
 (%i1) box (a^2 + b^2);
-             """""""""
-             " 2   2 "
-(%o1)        "b  + a "
-             """""""""
-(%i2) box (a^2 + b^2, term_1);
-             term_1"""
-             " 2   2 "
-(%o2)        "b  + a "
-             """""""""
-(%i3) 1729 - box (1729);
-                  """"""
-(%o3)      1729 - "1729"
-                  """"""
-(%i4) boxchar: "-";
-(%o4)            -
-(%i5) box (sin(x) + cos(y));
-                -----------------
-(%o5)           -COS(y) + SIN(x)-
-                -----------------
-(%i6) 
+                            """""""""
+                            " 2    2"
+(%o1)                       "b  + a "
+                            """""""""
+(%i2) a : 1234;
+(%o2)                         1234
+(%i3) b : c - d;
+(%o3)                         c - d
+(%i4) box (a^2 + b^2);
+                      """"""""""""""""""""
+                      "       2          "
+(%o4)                 "(c - d)  + 1522756"
+                      """"""""""""""""""""
+(%i5) box (a^2 + b^2, term_1);
+                      term_1""""""""""""""
+                      "       2          "
+(%o5)                 "(c - d)  + 1522756"
+                      """"""""""""""""""""
+(%i6) 1729 - box (1729);
+                                 """"""
+(%o6)                     1729 - "1729"
+                                 """"""
+(%i7) boxchar: "-";
+(%o7)                           -
+(%i8) box (sin(x) + cos(y));
+                        -----------------
+(%o8)                   -cos(y) + sin(x)-
+                        -----------------
 @end example
 
 @end deffn
@@ -516,7 +603,7 @@ desenhada ser@'a redesenhada com o caractere mudado caso isso seja solicitado.
 
 @deffn {Fun@value{cedilha}@~ao} carg (@var{z})
 Retorna o argumento complexo de @var{z}.
-O argumento complexo @'e um ângulo @code{theta} no intervalo de @code{(-%pi, %pi]}
+O argumento complexo @'e um @^angulo @code{theta} no intervalo de @code{(-%pi, %pi]}
 tal que @code{r exp (theta %i) = @var{z}} onde @code{r} @'e o m@'odulo de @var{z}.
 @c ACTUALLY carg DOESN'T ALWAYS RETURN A VALUE IN (-%pi, %pi]; SEE SF BUG REPORT # 816166
 
@@ -582,7 +669,7 @@ Uma express@~ao @'e considerada uma express@~ao constante se seus argumentos for
 n@'umeros (incluindo n@'umeros racionais, como mostrado com @code{/R/}),
 constantes simb@'olicas como @code{%pi}, @code{%e}, e @code{%i},
 vari@'aveis associadas a uma constante ou constante declarada atrav@'es de @code{declare},
-ou fun@,{c}@~oes cujos argumentos forem constante.
+ou fun@,{c}@~oes cujos argumentos forem constantes.
 
 @code{constantp} avalia seus argumentos.
 
@@ -600,19 +687,19 @@ Exemplos:
 
 @example
 (%i1) constantp (7 * sin(2));
-(%o1) 				     TRUE
+(%o1)                                true
 (%i2) constantp (rat (17/29));
-(%o2) 				     TRUE
+(%o2)                                true
 (%i3) constantp (%pi * sin(%e));
-(%o3) 				     TRUE
+(%o3)                                true
 (%i4) constantp (exp (x));
-(%o4) 				     FALSE
+(%o4)                                false
 (%i5) declare (x, constant);
-(%o5) 				     DONE
+(%o5)                                done
 (%i6) constantp (exp (x));
-(%o6) 				     TRUE
+(%o6)                                true
 (%i7) constantp (foo (x) + bar (%e) + baz (2));
-(%o7) 				     FALSE
+(%o7)                                false
 (%i8) 
 @end example
 
@@ -620,91 +707,426 @@ Exemplos:
 
 @c NEEDS EXPANSION, CLARIFICATION, AND EXAMPLES
 @c THIS ITEM IS EXTREMELY IMPORTANT
-@deffn {Fun@value{cedilha}@~ao} declare (@var{a_1}, @var{f_1}, @var{a_2}, @var{f_2}, ...)
-Atribui ao @'atomo @var{a_i} o sinalizador @var{f_i}.
-Os @var{a_i}'s e @var{f_i}'s podem tamb@'em serem listas de @'atomos e sinalizadores respectivamente nesse caso
-cada um dos @'atomos tomam todas as propriedades.
+@c ENSURE THAT ALL KEYWORDS RECOGNIZED BY declare HAVE THEIR OWN DOCUMENTATION ITEMS !!
+@c ALSO: HOW TO FIND THE LIST OF ALL SYMBOLS WHICH HAVE A GIVEN PROPERTY ??
+@deffn {Fun@value{cedilha}@~ao} declare (@var{a_1}, @var{p_1}, @var{a_2}, @var{p_2}, ...)
+Atribui aos @'atomos ou lista de @'atomos @var{a_i} a propriedade ou lista de propriedades @var{p_i}.
+Quando @var{a_i} e/ou @var{p_i} forem listas,
+cada um dos @'atomos recebe todas as propriedades.
 
 @code{declare} n@~ao avalia seus argumentos.
 @code{declare} sempre retorna @code{done}.
 
-Os poss@'iveis sinalizadores e seus significados s@~ao:
-
-@code{constant} torna @var{a_i} uma constate como @'e @code{%pi}.
-
-@code{mainvar} torna @var{a_i} uma @code{mainvar} (vari@'avel principal).  A escala de ordena@,{c}@~ao para @'atomos: numeros <
-constantes (e.g. @code{%e}, @code{%pi}) < escalares < outras vari@'aveis < vari@'aveis principais.
-
-@code{scalar} torna @var{a_i} um escalar.
-
-@code{nonscalar} faz @var{a_i} comportar-se como como comporta-se uma lista ou matriz com rela@,{c}@~ao ao
-operador ponto.
-
-@code{noun} torna a fun@,{c}@~ao @var{a_i} um substantivo de forma que n@~ao possa ser avaliada
-automaticamente.
-
-@code{evfun} torna @var{a_i} conhecido para a fun@,{c}@~ao @code{ev} de forma que @code{ev} possa vir a ser aplicada
-se seu nome for mencionado.  Veja @code{evfun}.
-
-@code{evflag} torna @var{a_i} conhecido para a fun@,{c}@~ao @code{ev} de forma que @code{ev} possa vir a ser associado a
-@code{true} durante a execu@,{c}@~ao de @code{ev} se isso for mencionado.  Veja @code{evflag}.
-
-@code{bindtest} faz com que @var{a_i} sinalize um erro se isso mesmo for usado em um
-c@'alculo n@~ao associado.
-
-Maxima atualmente reconhe os seguintes recursos de
-objetos:
-
-@c THIS LIST AND NEXT ONE COMPRISE features !!!
-@c SHOULD GIVE A REFERENCE TO features INSTEAD OF LISTING !!!
-@c NEED TO CHECK THIS LIST !!!
-@example
-even, odd, integer, rational, irrational, real, imaginary,
-e complex
-@end example
-
-Que pode ser traduzido para o portugu@^es como:
-
-@example
-par, @'impar, inteiro, racional, irracional, real, imagin@'ario,
-e complexo
-@end example
-
-Os recursos @'uteis de fun@,{c}@~oes incluem:
-
-@c NEED TO CHECK THIS LIST !! IS IT COMPREHENSIVE ??
-@example
-increasing,
-decreasing, oddfun (odd function), evenfun (even function),
-commutative (or symmetric), antisymmetric, lassociative and
-rassociative
-@end example
-
-Que pode ser traduzido para o portugu@^es como:
-@example
-incremento,
-decremento, oddfun (fun@,{c}@~ao @'impar), evenfun (fun@,{c}@~ao par),
-comutativa (ou simetrica), antisimetrica, lassociative (associativa @`a esquerda) and
-rassociative (associativa @`a direita).
-@end example
-
-
-@c WHAT DOES THIS MEAN EXACTLY ??
-Os @var{a_i} e @var{f_i} podem tamb@'em serem listas de objetos ou recursos.
-
-@code{featurep (@var{objeto}, @var{recurso})}
-determina se @var{objeto} foi declarado para ter @var{recurso}.
+Como colocado na descri@,{c}@~ao para cada sinalizador de declara@,{c}@~ao,
+para alguns sinalizadores
+@code{featurep(@var{objeto}, @var{recurso})}
+retorna @code{true} se @var{objeto} tiver sido declarado para ter @var{recurso}.
+Todavia, @code{featurep} n@~ao reconhece alguns sinalizadores; isso @'e um erro.
 
 Veja tamb@'em @code{features}.
+
+@code{declare} reconhece as seguintes propriedades:
+
+@table @asis
+@item @code{evfun}
+Torna @var{a_i} conhecido para @code{ev} de forma que a fun@,{c}@~ao nomeada por @var{a_i}
+@'e aplicada quando @var{a_i} aparece como um sinalizador argumento de @code{ev}.
+Veja @code{evfun}.
+
+@item @code{evflag}
+Torna @var{a_i} conhecido para a fun@,{c}@~ao @code{ev} de forma que @var{a_i} @'e associado a @code{true}
+durante a execu@,{c}@~ao de @code{ev} quando @var{a_i} aparece como um sinalizador argumento de @code{ev}.
+Veja @code{evflag}.
+
+@c OBSOLETE @code{special} (RECONHECIDA POR DECLARE MAS NUNCA USADA EM LUGAR ALGUM)
+ 
+@c OBSOLETE @code{nonarray} (RECONHECIDA POR DECLARE MAS NUNCA USADA EM LUGAR ALGUM)
+
+@item @code{bindtest}
+Diz ao Maxima para disparar um erro quando @var{a_i} for avaliado como sendo livre de associa@,{c}@~ao.
+
+@item @code{noun}
+Diz ao Maxima para passar @var{a_i} como um substantivo. 
+O efeito disso @'e substituir intâncias de @var{a_i} com @code{'@var{a_i}}
+ou @code{nounify(@var{a_i})}, ependendo do contexto.
+
+@item @code{constant}
+Diz ao Maxima para considerar @var{a_i} uma constante simb@'olica.
+@c WHAT MAXIMA KNOWS ABOUT SYMBOLIC CONSTANTS IS PRETTY LIMITED
+@c DUNNO IF WE WANT TO GET INTO DETAILS HERE. 
+@c MAYBE IN THE DOCUMENTATION FOR CONSTANT (IF THERE IS SUCH)
+
+@item @code{scalar}
+Diz ao Maxima para considerar @var{a_i} uma vari@'avel escalar.
+
+@item @code{nonscalar}
+Diz ao Maxima para considerar @var{a_i} uma vari@'avel n@~ao escalar.
+The usual application is to declare a variable as a symbolic vector or matrix.
+
+@item @code{mainvar}
+Diz ao Maxima para considerar @var{a_i} uma "vari@'avel principal" (@code{mainvar}).
+@code{ordergreatp} determina a ordena@,{c}@~ao de @'atomos como segue:
+
+(vari@'aveis principais) > (outras vari@'aveis) > (vari@'aveis escalares) > (constantes) > (n@'umeros)
+
+@item @code{alphabetic}
+Diz ao Maxima para reconhecer @var{a_i} como um caractere alfab@'etico.
+
+@item @code{feature}
+Diz ao Maxima para reconhecer @var{a_i} como nome de um recurso.
+Other atoms may then be declared to have the @var{a_i} property.
+
+@item @code{rassociative}, @code{lassociative}
+Diz ao Maxima para reconhecer @var{a_i} como uma func@~ao associativa a direita ou associativa a esquerda.
+
+@item @code{nary}
+Diz ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao n-@'aria (com muitos argumentos).
+
+A declara@,{c}@~ao @code{nary} n@~ao tem o mesmo objetivo que uma chamada @`a fun@,{c}@~ao @code{nary}.
+O @'unico efeito de @code{declare(foo, nary)} @'e para instruir o simplificador do Maxima
+a melhorar as pr@'oximas express@~oes,
+por exemplo, para simplificar @code{foo(x, foo(y, z))} para @code{foo(x, y, z)}.
+
+@item @code{symmetric}, @code{antisymmetric}, @code{commutative}
+Diz ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao sim@'etrica ou antisim@'etrica.
+@code{commutative} @'e o mesmo que @code{symmetric}.
+
+@item
+@code{oddfun}, @code{evenfun}
+Diz ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao par ou uma fun@,{c}@~ao @'impar.
+ 
+@item @code{outative}
+Diz ao Maxima para simplificar express@~oes @var{a_i}
+colocando fatores constantes em evid@^encia no primeiro argumento.
+
+Quando @var{a_i} tiver um argumento,
+um fator @'e onsiderado constante se for um literal ou se for declarado como sendo constante.
+
+Quando @var{a_i} tiver dois ou mais argumentos,
+um fator @'e considerado constante
+se o segundo argumento for um s@'imbolo
+e o fator estiver livre do segundo argumento.
+
+@item @code{multiplicative}
+Diz ao Maxima para simplificar express@~oes do tipo @var{a_i}
+atrav@'es da substitui@,{c}@~ao @code{@var{a_i}(x * y * z * ...)} @code{-->}
+@code{@var{a_i}(x) * @var{a_i}(y) * @var{a_i}(z) * ...}.
+A substitui@,{c}@~ao @'e realizada no primeiro argumento somente.
+
+@item @code{additive}
+Diz ao Maxima para simplificar express@~oes do tipo @var{a_i}
+atrav@'es da substitui@,{c}@~ao @code{@var{a_i}(x + y + z + ...)} @code{-->}
+@code{@var{a_i}(x) + @var{a_i}(y) + @var{a_i}(z) + ...}.
+A substitui@,{c}@~ao @'e realizada no primeiro argumento somente.
+
+@item @code{linear}
+Equivalente a declarar @var{a_i} ao mesmo tempo @code{outative} e @code{additive}.
+
+@c OBSOLETE @code{analytic} (RECOGNIZED BY DECLARE BUT NEVER USED ANYWHERE)
+ 
+@item @code{integer}, @code{noninteger}
+Diz ao Maxima para reconhecer @var{a_i} como como uma vari@'avel inteira ou como uma vari@'avel n@~ao inteira.
+ 
+Maxima reconhece os seguintes recursos de objetos:
+
+@item @code{even}, @code{odd}
+Diz ao Maxima para reconhecer @var{a_i} como uma vari@'avel inteira par ou como uma vari@'avel inteira @'impar.
+
+@item @code{rational}, @code{irrational}
+Diz ao Maxima para reconhecer @var{a_i} como uma vari@'avel real e racional ou como uma vari@'avel real e irracional.
+
+@item @code{real}, @code{imaginary}, @code{complex}
+Dia ao Maxima para reconhecer @var{a_i} como uma vari@'avel real, imagin@'aria pura ou complexa.
+ 
+@item @code{increasing}, @code{decreasing}
+Dia ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao de incremento ou decremento.
+@c MAXIMA FAILS TO DEDUCE F(2) > F(1) FOR INCREASING FUNCTION F
+@c AND FAILS TO DEDUCE ANYTHING AT ALL ABOUT DECREASING FUNCTIONS
+@c REPORTED AS SF BUG # 1483194
+
+@item @code{posfun}
+Diz ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao positiva.
+
+@item @code{integervalued}
+Diz ao Maxima para reconhecer @var{a_i} como uma fun@,{c}@~ao de valores inteiros.
+
+@end table
+
+Exemplos:
+
+Declara@,{c}@~oes @code{evfun} e @code{evflag}.
+@c ===beg===
+@c declare (expand, evfun);
+@c (a + b)^3;
+@c (a + b)^3, expand;
+@c declare (demoivre, evflag);
+@c exp (a + b*%i);
+@c exp (a + b*%i), demoivre;
+@c ===end===
+@example
+(%i1) declare (expand, evfun);
+(%o1)                         done
+(%i2) (a + b)^3;
+                                   3
+(%o2)                       (b + a)
+(%i3) (a + b)^3, expand;
+                     3        2      2      3
+(%o3)               b  + 3 a b  + 3 a  b + a
+(%i4) declare (demoivre, evflag);
+(%o4)                         done
+(%i5) exp (a + b*%i);
+                             %i b + a
+(%o5)                      %e
+(%i6) exp (a + b*%i), demoivre;
+                      a
+(%o6)               %e  (%i sin(b) + cos(b))
+@end example
+
+Declara@,{c}@~ao @code{bindtest}.
+@c ===beg===
+@c aa + bb;
+@c declare (aa, bindtest);
+@c aa + bb;
+@c aa : 1234;
+@c aa + bb;
+@c ===end===
+@example
+(%i1) aa + bb;
+(%o1)                        bb + aa
+(%i2) declare (aa, bindtest);
+(%o2)                         done
+(%i3) aa + bb;
+aa unbound variable
+ -- an error.  Quitting.  To debug this try debugmode(true);
+(%i4) aa : 1234;
+(%o4)                         1234
+(%i5) aa + bb;
+(%o5)                       bb + 1234
+@end example
+
+Declara@,{c}@~ao @code{noun}.
+@c ===beg===
+@c factor (12345678);
+@c declare (factor, noun);
+@c factor (12345678);
+@c ''%, nouns;
+@c ===end===
+@example
+(%i1) factor (12345678);
+                             2
+(%o1)                     2 3  47 14593
+(%i2) declare (factor, noun);
+(%o2)                         done
+(%i3) factor (12345678);
+(%o3)                   factor(12345678)
+(%i4) ''%, nouns;
+                             2
+(%o4)                     2 3  47 14593
+@end example
+
+Declara@,{c}@~oes @code{constant}, @code{scalar}, @code{nonscalar}, e @code{mainvar}.
+@c ===beg===
+@c declare (bb, constant);
+@c declare (cc, scalar);
+@c declare (dd, nonscalar);
+@c declare (ee, mainvar);
+@c ===end===
+@example
+@end example
+
+Declara@,{c}@~ao @code{alphabetic}.
+@c ===beg===
+@c xx\~yy : 1729;
+@c declare ("~", alphabetic);
+@c xx~yy + yy~xx + ~xx~~yy~;
+@c ===end===
+@example
+(%i1) xx\~yy : 1729;
+(%o1)                         1729
+(%i2) declare ("~", alphabetic);
+(%o2)                         done
+(%i3) xx~yy + yy~xx + ~xx~~yy~;
+(%o3)                ~xx~~yy~ + yy~xx + 1729
+@end example
+
+Declara@,{c}@~ao @code{feature}.
+@c ===beg===
+@c declare (FOO, feature);
+@c declare (x, FOO);
+@c featurep (x, FOO);
+@c ===end===
+@example
+(%i1) declare (FOO, feature);
+(%o1)                         done
+(%i2) declare (x, FOO);
+(%o2)                         done
+(%i3) featurep (x, FOO);
+(%o3)                         true
+@end example
+
+Declara@,{c}@~oes @code{rassociative} and @code{lassociative}.
+@c ===beg===
+@c declare (F, rassociative);
+@c declare (G, lassociative);
+@c ===end===
+@example
+@end example
+
+Declara@,{c}@~ao @code{nary}.
+@c ===beg===
+@c H (H (a, b), H (c, H (d, e)));
+@c declare (H, nary);
+@c H (H (a, b), H (c, H (d, e)));
+@c ===end===
+@example
+(%i1) H (H (a, b), H (c, H (d, e)));
+(%o1)               H(H(a, b), H(c, H(d, e)))
+(%i2) declare (H, nary);
+(%o2)                         done
+(%i3) H (H (a, b), H (c, H (d, e)));
+(%o3)                   H(a, b, c, d, e)
+@end example
+
+Declara@,{c}@~oes @code{symmetric} e @code{antisymmetric}.
+@c ===beg===
+@c S (b, a);
+@c declare (S, symmetric);
+@c S (b, a);
+@c S (a, c, e, d, b);
+@c T (b, a);
+@c declare (T, antisymmetric);
+@c T (b, a);
+@c T (a, c, e, d, b);
+@c ===end===
+@example
+(%i1) S (b, a);
+(%o1)                        S(b, a)
+(%i2) declare (S, symmetric);
+(%o2)                         done
+(%i3) S (b, a);
+(%o3)                        S(a, b)
+(%i4) S (a, c, e, d, b);
+(%o4)                   S(a, b, c, d, e)
+(%i5) T (b, a);
+(%o5)                        T(b, a)
+(%i6) declare (T, antisymmetric);
+(%o6)                         done
+(%i7) T (b, a);
+(%o7)                       - T(a, b)
+(%i8) T (a, c, e, d, b);
+(%o8)                   T(a, b, c, d, e)
+@end example
+
+Declara@,{c}@~oes @code{oddfun} e @code{evenfun}.
+@c ===beg===
+@c o (- u) + o (u);
+@c declare (o, oddfun);
+@c o (- u) + o (u);
+@c e (- u) - e (u);
+@c declare (e, evenfun);
+@c e (- u) - e (u);
+@c ===end===
+@example
+(%i1) o (- u) + o (u);
+(%o1)                     o(u) + o(- u)
+(%i2) declare (o, oddfun);
+(%o2)                         done
+(%i3) o (- u) + o (u);
+(%o3)                           0
+(%i4) e (- u) - e (u);
+(%o4)                     e(- u) - e(u)
+(%i5) declare (e, evenfun);
+(%o5)                         done
+(%i6) e (- u) - e (u);
+(%o6)                           0
+@end example
+
+Declara@,{c}@~ao @code{outative}.
+@c ===beg===
+@c F1 (100 * x);
+@c declare (F1, outative);
+@c F1 (100 * x);
+@c declare (zz, constant);
+@c F1 (zz * y);
+@c ===end===
+@example
+(%i1) F1 (100 * x);
+(%o1)                       F1(100 x)
+(%i2) declare (F1, outative);
+(%o2)                         done
+(%i3) F1 (100 * x);
+(%o3)                       100 F1(x)
+(%i4) declare (zz, constant);
+(%o4)                         done
+(%i5) F1 (zz * y);
+(%o5)                       zz F1(y)
+@end example
+
+Declara@,{c}@~ao @code{multiplicative}.
+@c ===beg===
+@c F2 (a * b * c);
+@c declare (F2, multiplicative);
+@c F2 (a * b * c);
+@c ===end===
+@example
+(%i1) F2 (a * b * c);
+(%o1)                       F2(a b c)
+(%i2) declare (F2, multiplicative);
+(%o2)                         done
+(%i3) F2 (a * b * c);
+(%o3)                   F2(a) F2(b) F2(c)
+@end example
+
+Declara@,{c}@~ao @code{additive}.
+@c ===beg===
+@c F3 (a + b + c);
+@c declare (F3, additive);
+@c F3 (a + b + c);
+@c ===end===
+@example
+(%i1) F3 (a + b + c);
+(%o1)                     F3(c + b + a)
+(%i2) declare (F3, additive);
+(%o2)                         done
+(%i3) F3 (a + b + c);
+(%o3)                 F3(c) + F3(b) + F3(a)
+@end example
+
+Declara@,{c}@~ao @code{linear}.
+@c ===beg===
+@c 'sum (F(k) + G(k), k, 1, inf);
+@c declare (nounify (sum), linear);
+@c 'sum (F(k) + G(k), k, 1, inf);
+@c ===end===
+@example
+(%i1) 'sum (F(k) + G(k), k, 1, inf);
+                       inf
+                       ====
+                       \
+(%o1)                   >    (G(k) + F(k))
+                       /
+                       ====
+                       k = 1
+(%i2) declare (nounify (sum), linear);
+(%o2)                         done
+(%i3) 'sum (F(k) + G(k), k, 1, inf);
+                     inf          inf
+                     ====         ====
+                     \            \
+(%o3)                 >    G(k) +  >    F(k)
+                     /            /
+                     ====         ====
+                     k = 1        k = 1
+@end example
 
 @end deffn
 
 @c NEEDS WORK
 @deffn {Fun@value{cedilha}@~ao} disolate (@var{expr}, @var{x_1}, ..., @var{x_n})
 @'e similar a @code{isolate (@var{expr}, @var{x})}
-exceto que isso habilita ao usu@'ario isolar
-mais que uma vari@'avel simultâneamente.  Isso pode ser @'util, por
-exemplo, se se for tentado mudar vari@'aveis em uma integra@,{c}@~ao
+exceto que essa fun@,{c}@~ao habilita ao usu@'ario isolar
+mais que uma vari@'avel simult@^aneamente.  Isso pode ser @'util, por
+exemplo, se se tiver tentado mudar vari@'aveis em uma integra@,{c}@~ao
 m@'ultipla, e em mudan@,{c}a de vari@'avel envolvendo duas ou mais das
 vari@'aveis de integra@,{c}@~ao.  Essa fun@,{c}@~ao @'e chamada automaticamente de
 @file{simplification/disol.mac}.  Uma demostra@,{c}@~ao est@'a dispon@'ivel atrav@'es de
@@ -715,10 +1137,10 @@ vari@'aveis de integra@,{c}@~ao.  Essa fun@,{c}@~ao @'e chamada automaticamente 
 @c NEEDS WORK
 @deffn {Fun@value{cedilha}@~ao} dispform (@var{expr})
 Retorna a representa@,{c}@~ao externa de @var{expr} com rela@,{c}@~ao a seu
-principal operador.  Isso pode ser @'util em conjun@,{c}@`ao com @code{part} que
+principal operador.  Isso pode ser @'util em conjun@,{c}@~ao com @code{part} que
 tamb@'em lida com a representa@,{c}@~ao externa.  Suponha que @var{expr} seja -A .
 Ent@~ao a representa@,{c}@~ao interna de @var{expr} @'e  "*"(-1,A), enquanto que
-a representa@,{c}@`ao externa @'e "-"(A). @code{dispform (@var{expr}, all)} converte a
+a representa@,{c}@~ao externa @'e "-"(A). @code{dispform (@var{expr}, all)} converte a
 express@~ao inteira (n@~ao apenas o n@'ivel mais alto) para o formato externo.  Por
 exemplo, se @code{expr: sin (sqrt (x))}, ent@~ao @code{freeof (sqrt, expr)} e
 @code{freeof (sqrt, dispform (expr))} fornece @code{true}, enquanto
@@ -774,7 +1196,7 @@ de uma caixa.  A caixa @'e atualmente parte da express@~ao.
 @c PROBABLY MORE TO BE SAID HERE
 @deffn {Fun@value{cedilha}@~ao} exp (@var{x})
 Representa fun@,{c}@~ao exponencial.  
-Instâncias de @code{exp (@var{x})} em uma entrada s@~ao simplificadas para @code{%e^@var{x}};
+Inst@^ancias de @code{exp (@var{x})} em uma entrada s@~ao simplificadas para @code{%e^@var{x}};
 @code{exp} n@~ao aparece em express@~oes simplificadas.
 
 @code{demoivre} se @code{true} faz com que @code{%e^(a + b %i)} simplificar para
@@ -1002,9 +1424,9 @@ Se os expoentes associados n@~ao forem ambos maior ou menor,
 alguma rela@,{c}@~ao mais complicada ocorre.
 
 A associatividade de @var{op} depende de seus expoentes associados.
-Maior expoente associado esquerdo (@var{eae}) implica uma instância de
+Maior expoente associado esquerdo (@var{eae}) implica uma inst@^ancia de
 @var{op} @'e avaliadas antes de outros operadores para sua esquerda em uma express@~ao,
-enquanto maior expoente associado direito (@var{ead}) implica uma instância de
+enquanto maior expoente associado direito (@var{ead}) implica uma inst@^ancia de
 @var{op} @'e avaliada antes de outros operadores para sua direita em uma express@~ao.
 Dessa forma maior @var{eae} torna @var{op} associativo @`a direita,
 enquanto maior @var{ead} torna @var{op} associativa @`a esquerda.
@@ -1118,8 +1540,8 @@ express@~ao em que ocorrerem.
 @code{exptisolate} (valor padr@~ao: @code{false}) se @code{true} far@'a com que @code{isolate} examine expoentes de
 @'atomos (como @code{%e}) que contenham @var{x}.
 
-@code{isolate_wrt_times} se @code{true}, ent@~ao @code{isolate} ir@'a tamb@'em isolar produtos
-wrt. Veja @code{isolate_wrt_times}.
+@code{isolate_wrt_times} se @code{true}, ent@~ao @code{isolate} ir@'a tamb@'em isolar com rela@,{c}@~ao a 
+produtos. Veja @code{isolate_wrt_times}.
 
 Fa@,{c}a @code{example (isolate)} para exemplos.
 
@@ -1130,7 +1552,7 @@ Fa@,{c}a @code{example (isolate)} para exemplos.
 Valor padr@~ao: @code{false}
 
 Quando @code{isolate_wrt_times} for @code{true}, @code{isolate}
-ir@'a tamb@'em isolar produtos wrt.  E.g. compare ambas as escolhas do
+ir@'a tamb@'em isolar com rela@,{c}@~ao a produtos.  E.g. compare ambas as escolhas do
 comutador em
 
 @example
@@ -1171,9 +1593,9 @@ O comportamento padr@~ao @'e omitir isso.
 Valor padr@~ao: @code{true}
 
 Quando @code{listdummyvars} for @code{false}, "vari@'aveis dummy" na
-express@~ao n@~ao ser@~ao inclu@'idasna lista retornada por @code{listofvars}.
+express@~ao n@~ao ser@~ao inclu@'idas na lista retornada por @code{listofvars}.
 (O significado de "vari@'avel dummy" @'e o mesmo que em @code{freeof}.
-"Vari@'aveis dummy" s@~ao coisas matem@'aticas como o @'indice de um somat@'orio ou
+"Vari@'aveis dummy" s@~ao conceitos matem@'aticos como o @'indice de um somat@'orio ou
 produt@'orio, a vari@'avel limite, e a vari@'avel da integral definida.)
 Exemplo:
 
@@ -1264,7 +1686,7 @@ forma @'e equivalente a @code{multthru (@var{expr_1}*@var{expr_2})}.
 (%o4)            ------------------------------
                                   2
                              a b s
-(%i5) multthru (%);  /* note that this does not expand (b+a)^10 */
+(%i5) multthru (%);  /* note que isso n@~ao expande (b+a)^10 */
                                         10
                        2   a b   (b + a)
 (%o5)                  - + --- + ---------

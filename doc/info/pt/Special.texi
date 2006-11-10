@@ -1,5 +1,5 @@
 @c Language: Portuguese, Encoding: iso-8859-1
-@c /Special.texi/1.22/Tue Aug 16 21:36:38 2005/-ko/
+@c /Special.texi/1.24/Sun Apr 23 18:21:37 2006/-ko/
 @menu
 * Introdu@value{cedilha}@~ao a Fun@value{cedilha}@value{o_til}es Especiais::  
 * specint::                     
@@ -133,7 +133,7 @@ Essas regras de deriva@,{c}@~ao s@~ao conhecidas para Maxima:
 
 Valores de fun@,{c}@~ao s@~ao calculados a partir das s@'eries de Taylor convergentes para @code{abs(@var{x}) < 3},
 e a partir de expans@~oes assint@'oticas para @code{@var{x} < -3} ou @code{@var{x} > 3} como necess@'ario.
-Esses resultados somente apresentam discrepâncias num@'ericas muito pequenas em @code{@var{x} = 3} e @code{@var{x} = -3}.
+Esses resultados somente apresentam discrep@^ancias num@'ericas muito pequenas em @code{@var{x} = 3} e @code{@var{x} = -3}.
 Para detalhes, veja Abramowitz e Stegun,
 @i{Handbook of Mathematical Functions}, Sess@~ao 10.4 e Tabela 10.11.
 
@@ -455,7 +455,7 @@ Converte @var{a} em um c@'odigo de Poisson.
 @c NEED CROSS REFS HERE
 @c NEED EXAMPLES HERE
 @deffn {Fun@value{cedilha}@value{a_til}o} makefact (@var{expr})
-Transforma instâncias de fun@,{c}@~oes binomiais, gama,
+Transforma inst@^ancias de fun@,{c}@~oes binomiais, gama,
 e beta em @var{expr} para fatoriais.
 
 Veja tamb@'em @code{makegamma}.
@@ -465,7 +465,7 @@ Veja tamb@'em @code{makegamma}.
 @c NEED CROSS REFS HERE
 @c NEED EXAMPLES HERE
 @deffn {Fun@value{cedilha}@value{a_til}o} makegamma (@var{expr})
-Transforma instâncias de fun@,{c}@~oes binomiais, fatorial,
+Transforma inst@^ancias de fun@,{c}@~oes binomiais, fatorial,
 e beta em @var{expr} para fun@,{c}@~oes gama.
 
 Veja tamb@'em @code{makefact}.
@@ -580,7 +580,7 @@ livre dessas vari@'aveis, e al@'e disso, livre de senos ou cossenos.
 opera sobre @var{a} e @var{b} como no tipo (1) acima, mas onde @var{d} @'e uma s@'erie de
 Poisson, expande @code{cos(@var{d})} e @code{sin(@var{d})} para a ordem @var{n} como provendo o
 resultado da substitui@,{c}@~ao @code{@var{a} + @var{d}} por @var{b} em @var{c}.  A id@'eia @'e que @var{d} @'e uma
-expans@~ao em termos de um pequeno parâmetro.  Por exemplo,
+expans@~ao em termos de um pequeno par@^ametro.  Por exemplo,
 @code{poissubst (u, v, cos(v), %e, 3)} retorna @code{cos(u)*(1 - %e^2/2) - sin(u)*(%e - %e^3/6)}.
 
 @end deffn
@@ -609,11 +609,66 @@ necess@'ario.
 @end deffn
 
 @c NEED INFO HERE ABOUT THE SUBSCRIPTED FORM psi[n](x)
-@deffn {Fun@value{cedilha}@value{a_til}o} psi (@var{x})
-@deffnx {Fun@value{cedilha}@value{a_til}o} psi [@var{n}](@var{x})
-A derivada de @code{log (gamma (x))}.
+@c I (rtoy) don't think there is a plain psi(x) function anymore.
+@c @deffn {Fun@value{cedilha}@value{a_til}o} psi (@var{x})
+@c @deffnx {Fun@value{cedilha}@value{a_til}o} psi [@var{n}](@var{x})
+@deffn {Fun@value{cedilha}@value{a_til}o} psi [@var{n}](@var{x})
 
-Maxima n@~ao sabe como calcular um valor num@'erico de @code{psi}.
-Todavia, a fun@,{c}@~ao @code{bfpsi} no pacote @code{bffac} pode calcular valores num@'ericos.
+A derivada de @code{log (gamma (@var{x}))} de ordem @code{@var{n}+1}.
+Dessa forma, @code{psi[0](@var{x})} @'e a primeira derivada,
+@code{psi[1](@var{x})} @'e a segunda derivada, etc.
 
-@end deffn
+Maxima n@~ao sabe como, em geral, calcular um valor num@'erico de
+@code{psi}, mas Maxima pode calcular alguns valores exatos para argumentos racionais.
+Muitas vari@'aveis controlam qual intervalo de argumentos racionais @code{psi} ir@'a
+retornar um valor exato, se poss@'ivel.  Veja @code{maxpsiposint},
+@code{maxpsinegint}, @code{maxpsifracnum}, e @code{maxpsifracnum}.
+Isto @'e, @var{x} deve localizar-se entre @code{maxpsinegint} e
+@code{maxpsiposint}.  Se o valor absoluto da parte facion@'aria de
+@var{x} for racional e tiver um numerador menor que @code{maxpsifracnum}
+e tiver um denominador menor que @code{maxpsifracdenom}, @code{psi}
+ir@'a retornar um valor exato.
+
+A fun@,{c}@~ao @code{bfpsi} no pacote @code{bffac} pode calcular
+valores num@'ericos.
+ 
+ @end deffn
+
+@defvr {Vari@'avel de op@value{cedilha}@~ao} maxpsiposint
+Valor padr@~ao: 20
+
+@code{maxpsiposint} @'e o maior valor positivo para o qual
+@code{psi[n](x)} ir@'a tentar calcular um valor exato.
+
+@end defvr
+
+@defvr {Vari@'avel de op@value{cedilha}@~ao} maxpsinegint
+Valor padr@~ao: -10
+
+@code{maxpsinegint} @'e o valor mais negativo para o qual
+@code{psi[n](x)} ir@'a tentar calcular um valor exato.  Isto @'e, se
+@var{x} for menor que @code{maxnegint}, @code{psi[n](@var{x})} n@~ao ir@'a
+retornar resposta simplificada, mesmo se isso for poss@'ivel.
+
+@end defvr
+
+@defvr {Vari@'avel de op@value{cedilha}@~ao} maxpsifracnum
+Valor padr@~ao: 4
+
+Tomemos @var{x} como sendo um n@'umero racional menor que a unidade e da forma @code{p/q}.
+Se @code{p} for menor que @code{maxpsifracnum}, ent@~ao
+@code{psi[@var{n}](@var{x})} n@~ao ir@'a tentar retornar um valor
+simplificado.
+
+@end defvr
+
+@defvr {Vari@'avel de op@value{cedilha}@~ao} maxpsifracdenom
+Valor padr@~ao: 4
+
+Tomemos @var{x} como sendo um n@'umero racional menor que a unidade e da forma @code{p/q}.
+Se @code{q} for maior que @code{maxpsifracdeonm}, ent@~ao
+@code{psi[@var{n}](@var{x})} n@~ao ir@'a tentar retornar um valor
+simplificado.
+
+
+@end defvr

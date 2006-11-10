@@ -11,7 +11,8 @@ apropos('tr_optimize_max_loop);
 integrate(3^log(x),x);
 3^((1/log(3)+1)*log(x))/((1/log(3)+1)*log(3))$
 
-/* wester[1995] problem 84 - known failure - 7 april 2002 */
+/* wester[1995] problem 84 
+   Bug 541030 fixed 2006-02-27, rev 1.14 of src/sin.lisp */
 integrate(sqrt(x+1/x-2),x,0,1);
 4/3$
 
@@ -413,3 +414,87 @@ false;
  */
 integrate(log(x)/(x^2+1)^2,x,0,inf);
 -%pi/4;
+
+/*
+ * Bug 941457: integrate(1/x^5,x,1,2^(1/78))
+ * Fixed 2006/03/13.  Solution needs work, though.
+ */
+multthru(factor(integrate(1/x^5,x,1,2^(1/78))));
+1/4-2^(37/39)/8;
+
+/*
+ * Bug 938235: integrate((1/2)*u^2-1/u^5,u,1,sqrt(2))
+ * Fixed 2006/03/13.  Solution needs work, though.
+ */
+integrate((1/2)*u^2-1/u^5,u,1,sqrt(2));
+sqrt(2)/3-17/48;
+
+/*
+ * These next two cases are regression tests.  Rev 1.11 of sin.lisp
+ * caused different (much messier) results to be returned.
+ */
+integrate(sin(2*x)/sec(x),x);
+-2*cos(x)^3/3;
+
+integrate(-a*sin(2*x)/(a*sin(x)^2+b),x);
+-log(a*sin(x)^2+b);
+
+/*
+ * Bug 1471861: limit(abs(sin(x)/x),x,0);
+ * Fixed 2006/05/05, limit.lisp, rev 1.20.
+ */
+limit(abs(sin(x)/x),x,0);
+1;
+
+/* 
+ * Bug 1482843: subscripted variable causes trouble in integrate
+ *
+ * Fixed in defint.lisp, rev 1.25, 2006/05/06.
+ */
+integrate(exp(-(x-mu[1])^2),x,0,inf);
+sqrt(%pi)*erf(mu[1])/2+sqrt(%pi)/2;
+
+/*
+ * Bug 1487703: integrate((sqrt(x^4-6*x^2+1)-x^2+1)/(2*x),x) fails
+ *
+ * Fixed in sin.lisp, 2006/05/14.  We don't loop forever anymore.
+ */
+integrate((sqrt(x^4-6*x^2+1)-x^2+1)/(2*x),x);
+('integrate(%e^(log(x^2+2*x-1)/2+log(x^2-2*x-1)/2)/x,x)+log(x)-x^2/2)/2;
+
+/*
+ * Bug mentioned in mailing-list, 2006-05-31, "problem with bigfloats"
+ */
+exp(1.0b-1);
+1.105170918075648b0;
+
+/* sqrt(0b0) loops endlessly (bug report # 1515703)
+ * asin(1b0) triggers same bug (it eventually calls sqrt(0b0))
+ * Problem was in FPROOT.
+ */
+
+sqrt(0b0);
+0b0;
+
+/* 0b0^(1/n) is not routed through FPROOT. Test it anyway. */
+[0b0^(1/2), 0b0^(1/3), 0b0^(1/17)];
+[0b0, 0b0, 0b0];
+
+asin(1b0);
+bfloat(%pi/2);
+
+asin(-1b0);
+-bfloat(%pi/2);
+
+/* li[2](1.0) stack overflow (bug report # 1514861)
+ */
+
+li[2](1.0);
+ev (%pi^2/6, numer);
+
+/* bug report [ 782046 ] limit(abs(x),x,0) fails
+ * appears to be fixed in 5.9.3cvs -- verify
+ */
+
+limit (abs(x), x, 0);
+0;

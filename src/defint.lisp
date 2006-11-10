@@ -1,4 +1,4 @@
-;;; -*-  Mode: Lisp; Package: Maxima; Syntax: Common-Lisp; Base: 10 -*- ;;;;
+;; -*-  Mode: Lisp; Package: Maxima; Syntax: Common-Lisp; Base: 10 -*- ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;     The data in this file contains enhancments.                    ;;;;;
 ;;;                                                                    ;;;;;
@@ -18,8 +18,9 @@
 ;;
 ;;	i(grand,var,a,b) will be used for integrate(grand,var,a,b)
 
-;;references are to evaluation of definite integrals by symbolic
-;;manipulation by paul s. wang.
+;; References are to "Evaluation of Definite Integrals by Symbolic
+;; Manipulation", by Paul S. Wang,
+;; (http://www.lcs.mit.edu/publications/pubs/pdf/MIT-LCS-TR-092.pdf)
 ;;
 ;;	nointegrate is a macsyma level flag which inhibits indefinite
 ;;integration.
@@ -58,7 +59,9 @@
 ;;		 tries an integration by parts.  (only routine to
 ;;		 try integration by parts) [wang, pp 93-95]
 ;;
-;;	dintexp- i(f(exp(x)),x,a,b) = i(f(x+1),x,a',b')
+;;	dintexp- i(f(exp(k*x)),x,a,inf) = i(f(x+1)/(x+1),x,0,inf)
+;;               or i(f(x)/x,x,0,inf)/k. First case hold for a=0;
+;;               the second for a=minf. [wang 96-97]
 ;;
 ;;dintegrate also tries indefinite integration based on certain 
 ;;predicates (such as abconv) and tries breaking up the integrand
@@ -69,7 +72,7 @@
 ;;
 ;;	   scaxn  - sc(b*x^n) (sc stands for sin or cos) [wang, pp 81-83]
 ;;
-;;	   ssp    - a*sc^n(r*x)/x^m  [wang, pp 83,84]
+;;	   ssp    - a*sc^n(r*x)/x^m  [wang, pp 86,87]
 ;;
 ;;	   zmtorat- rational function. done by multiplication by plog(-x)
 ;;		    and finding the residues over the keyhole contour
@@ -147,18 +150,19 @@
 		   no-err-sub oscip %einvolve sin-sq-cos-sq-sub)
 		      
 ;;;rsn* is in comdenom. does a ratsimp of numerator.
-	    (special *def2* pcprntd mtoinf* rsn* semirat*
+	    (special *def2* pcprntd *mtoinf* rsn* semirat*
 		     sn* sd* leadcoef checkfactors 
 		     *nodiverg rd* exp1
-		     ul1 ll1 *dflag bptu bptd plm* zn zd
+		     *ul1* *ll1* *dflag bptu bptd plm* zn
+		     #+nil zd
 		     *updn ul ll exp pe* pl* rl* pl*1 rl*1
 		     loopstop* var nn* nd* dn* p*
 		     ind* factors rlm*
-		     plogabs *zexptsimp? scflag
-		     sin-cos-recur rad-poly-recur dintlog-recur
-		     dintexp-recur defintdebug defint-assumptions
-		     current-assumptions
-		     global-defint-assumptions)
+		     plogabs *zexptsimp? *scflag*
+		     *sin-cos-recur* *rad-poly-recur* *dintlog-recur*
+		     *dintexp-recur* defintdebug *defint-assumptions*
+		     *current-assumptions*
+		     *global-defint-assumptions*)
 	 
 	    (array* (notype *i* 1 *j* 1))
 	    (genprefix def)
@@ -199,12 +203,12 @@
   "A non-integer-list for non-atoms found out to be `noninteger's")
 
 (defun $defint (exp var ll ul)
-  (let ((global-defint-assumptions ())
+  (let ((*global-defint-assumptions* ())
 	(integer-info ()) (integerl integerl) (nonintegerl nonintegerl))
     (with-new-context (context)
       (unwind-protect
-	   (let ((defint-assumptions ())  (*def2* ())  (rad-poly-recur ())
-		 (sin-cos-recur ())  (dintexp-recur ())  (dintlog-recur 0.)
+	   (let ((*defint-assumptions* ())  (*def2* ())  (*rad-poly-recur* ())
+		 (*sin-cos-recur* ())  (*dintexp-recur* ())  (*dintlog-recur* 0.)
 		 (ans nil)  (orig-exp exp)  (orig-var var)
 		 (orig-ll ll)  (orig-ul ul) 
 		 (pcprntd nil)  (*nodiverg nil)  ($logabs t)  (limitp t)
@@ -212,7 +216,7 @@
 		 ($domain '$real) ($m1pbranch ())) ;Try this out.
 
 	     (find-function '$limit)
-	     (make-global-assumptions) ;sets global-defint-assumptions
+	     (make-global-assumptions) ;sets *global-defint-assumptions*
 	     (find-function '$residue)
 	     (setq exp (ratdisrep exp))
 	     (setq var (ratdisrep var))
@@ -254,14 +258,14 @@
   (cond ((or (polyinx exp var nil)
 	     (catch 'pin%ex (pin%ex exp)))
 	 (setq exp (antideriv exp))
-;;;If antideriv can't do it, returns nil
-;;;use limit to evaluate every answer returned by antideriv.
+	 ;; If antideriv can't do it, returns nil
+	 ;; use limit to evaluate every answer returned by antideriv.
 	 (cond ((null exp) nil)
 	       (t (intsubs exp ll ul))))))
 ;;;Hack the expression up for exponentials.
 
 (defun sinintp (expr var)
-;;; Is this expr a candidate for SININT ?
+  ;; Is this expr a candidate for SININT ?
   (let ((expr (factor expr))
 	(numer nil)
 	(denom nil))
@@ -271,7 +275,7 @@
 	   (cond ((and (polyinx denom var nil)
 		       (deg-lessp denom var 2))
 		  t)))
-;;;ERF type things go here.
+	  ;;ERF type things go here.
 	  ((let ((exponent (%einvolve numer)))
 	     (and (polyinx exponent var nil)
 		  (deg-lessp exponent var 2)))
@@ -292,7 +296,16 @@
 		   (and (numberp (caddr expr))
 			(not (eq (asksign (m+ power (m- (caddr expr))))
 				 '$negative))))
-	       (deg-lessp (cadr expr) var power)))))
+	       (deg-lessp (cadr expr) var power)))
+	 ((and (consp expr)
+	       (member 'array (car expr))
+	       (not (eq var (caar expr))))
+	  ;; We have some subscripted variable that's not our variable
+	  ;; (I think), so it's deg-lessp.
+	  ;;
+	  ;; FIXME: Is this the best way to handle this?  Are there
+	  ;; other cases we're mising here?
+	  t)))
 
 (defun antideriv (a)
   (let ((limitp ())
@@ -329,6 +342,7 @@
     (setq ans (catch 'errorsw (apply '$limit argvec)))
     (if (eq ans t) nil ans)))
 
+#+nil
 (defun intcv (nv ind flag)
   (let ((d (bx**n+a nv))
 	(*roots ())  (*failures ())  ($breakup ()))
@@ -336,25 +350,59 @@
 		(equal ll 0)
 		(equal (cadr d) 1)) ())
 	  (t (solve (m+t 'yx (m*t -1. nv)) var 1.)
-	     (cond (*roots (setq d (subst var 'yx (caddar *roots)))
-			   (cond (flag (intcv2 d ind nv))
-				 (t (intcv1 d ind nv))))
+	     (format t "*roots = ~A~%" *roots)
+	     (format t "subst ~A~%" (caddar *roots))
+	     (cond (*roots
+		    (setq d (subst var 'yx (caddar *roots)))
+		    (format t "d = ~A~%" d)
+		    (cond (flag (intcv2 d ind nv))
+			  (t (intcv1 d ind nv))))
 		   (t ()))))))
+
+(defun intcv (nv ind flag)
+  (let ((d (bx**n+a nv))
+	(*roots ())  (*failures ())  ($breakup ()))
+    (cond ((and (eq ul '$inf)
+		(equal ll 0)
+		(equal (cadr d) 1)) ())
+	  (t
+	   ;; This is a hack!  If nv is of the form b*x^n+a, we can
+	   ;; solve the equation manually instead of using solve.
+	   ;; Why?  Because solve asks us for the sign of yx and
+	   ;; that's bogus.
+	   (cond (d
+		  ;; Solve yx = b*x^n+a, for x.  Any root will do.  So we
+		  ;; have x = ((yx-a)/b)^(1/n).
+		  (destructuring-bind (a n b)
+		      d
+		    (let ((root (power* (div (sub 'yx a) b) (inv n))))
+		      (cond (t
+			     (setq d (subst var 'yx root))
+			     (cond (flag (intcv2 d ind nv))
+				   (t (intcv1 d ind nv))))
+			    ))))
+		 (t
+		  (solve (m+t 'yx (m*t -1. nv)) var 1.)
+		  (cond (*roots
+			 (setq d (subst var 'yx (caddar *roots)))
+			 (cond (flag (intcv2 d ind nv))
+			       (t (intcv1 d ind nv))))
+			(t ()))))))))
 
 (defun intcv1 (d ind nv) 
   (cond ((and (intcv2 d ind nv)
-	      (not (alike1 ll1 ul1)))
+	      (not (alike1 *ll1* *ul1*)))
 	 (let ((*def2* t))
-	   (defint exp1 var ll1 ul1)))))
+	   (defint exp1 var *ll1* *ul1*)))))
 
 (defun intcv2 (d ind nv)
   (intcv3 d ind nv)
   (and (cond ((and (zerop1 (m+ ll ul))
 		   (evenfn nv var))
 	      (setq exp1 (m* 2 exp1)
-		    ll1 (limcp nv var 0 '$plus)))
-	     (t (setq ll1 (limcp nv var ll '$plus))))
-       (setq ul1 (limcp nv var ul '$minus))))
+		    *ll1* (limcp nv var 0 '$plus)))
+	     (t (setq *ll1* (limcp nv var ll '$plus))))
+       (setq *ul1* (limcp nv var ul '$minus))))
 
 (defun limcp (a b c d) 
   (let ((ans ($limit a b c d)))
@@ -372,10 +420,10 @@
   (setq exp1 (sratsimp (subst var 'yx exp1))))
 
 (defun defint (exp var ll ul)
-  (let ((old-assumptions defint-assumptions)  (current-assumptions ()))
+  (let ((old-assumptions *defint-assumptions*)  (*current-assumptions* ()))
     (unwind-protect
 	 (prog ()
-	    (setq current-assumptions (make-defint-assumptions 'noask))
+	    (setq *current-assumptions* (make-defint-assumptions 'noask))
 	    (let ((exp (resimplify exp))            
 		  (var (resimplify var))
 		  ($exptsubst t)
@@ -414,7 +462,7 @@
 		(cond ((setq  ans (initial-analysis exp var ll ul))
 		       (return (m* c ans))))
 		(return nil))))
-      (restore-defint-assumptions old-assumptions current-assumptions))))
+      (restore-defint-assumptions old-assumptions *current-assumptions*))))
 
 (defun defint-list (exp var ll ul)
   (cond ((and (not (atom exp)) 
@@ -460,43 +508,47 @@
 
 
 (defun method-by-limits (exp var ll ul)
-  (let ((old-assumptions defint-assumptions))
-    (setq current-assumptions (make-defint-assumptions 'noask))
+  (let ((old-assumptions *defint-assumptions*))
+    (setq *current-assumptions* (make-defint-assumptions 'noask))
     ;;Should be a PROG inside of unwind-protect, but Multics has a compiler
     ;;bug wrt. and I want to test this code now.
     (unwind-protect
 	 (cond ((and (and (eq ul '$inf)
-			  (eq ll '$minf))  (mtoinf exp var)))
+			  (eq ll '$minf))
+		     (mtoinf exp var)))
 	       ((and (and (eq ul '$inf)
-			  (equal ll 0.))  (ztoinf exp var)))
+			  (equal ll 0.))
+		     (ztoinf exp var)))
 ;;;This seems((and (and (eq ul '$inf)
 ;;;fairly losing	(setq exp (subin (m+ ll var) exp))
 ;;;			(setq ll 0.))
 ;;;		   (ztoinf exp var)))
 	       ((and (equal ll 0.)
-		     (freeof var ul) (eq ($asksign ul) '$pos) (zto1 exp)))
+		     (freeof var ul)
+		     (eq ($asksign ul) '$pos)
+		     (zto1 exp)))
 	       ;;	     ((and (and (equal ul 1.)
 	       ;;			(equal ll 0.))  (zto1 exp)))
 	       (t (dintegrate exp var ll ul)))
-      (restore-defint-assumptions old-assumptions defint-assumptions))))
+      (restore-defint-assumptions old-assumptions *defint-assumptions*))))
        
 
 (defun dintegrate (exp var ll ul)
-  (let ((ans nil) (arg nil) (scflag nil) 
+  (let ((ans nil) (arg nil) (*scflag* nil) 
 	(*dflag nil) ($%emode t))
 ;;;NOT COMPLETE for sin's and cos's.
-    (cond ((and (not sin-cos-recur)
+    (cond ((and (not *sin-cos-recur*)
 		(oscip exp)
-		(setq scflag t)
+		(setq *scflag* t)
 		(intsc1 ll ul exp)))
-	  ((and (not rad-poly-recur)
+	  ((and (not *rad-poly-recur*)
 		(notinvolve exp '(%log))
 		(not (%einvolve exp))
 		(method-radical-poly exp var ll ul)))
-	  ((and (not (equal dintlog-recur 2.))
+	  ((and (not (equal *dintlog-recur* 2.))
 		(setq arg (involve exp '(%log)))
 		(dintlog exp arg)))
-	  ((and (not dintexp-recur)
+	  ((and (not *dintexp-recur*)
 		(setq arg (%einvolve exp))
 		(dintexp exp var)))
 	  ((and (not (ratp exp var)) 
@@ -509,7 +561,7 @@
 
 (defun method-radical-poly (exp var ll ul)
 ;;;Recursion stopper
-  (let ((rad-poly-recur t)		;recursion stopper
+  (let ((*rad-poly-recur* t)		;recursion stopper
 	(result ()))
     (cond ((and (sinintp exp var) 
 		(setq result (antideriv exp))
@@ -518,7 +570,7 @@
 		(setq result (ratfnt exp))))
 	  ((and (setq result (antideriv exp))
 		(intsubs result ll ul)))
-	  ((and (not scflag)
+	  ((and (not *scflag*)
 		(not (eq ul '$inf))
 		(radic exp var)
 		(kindp34)
@@ -547,11 +599,11 @@
 		  (intsubs anti-deriv (m+ (caar previous-pole) 'epsilon)
 			   (m+ (caar current-pole) (m- 'epsilon))))))
 			   
-;;;Hack answer to simplify "Correctly".
+  ;;Hack answer to simplify "Correctly".
   (cond ((not (freeof '%log ans)) 
 	 (setq ans ($logcontract ans))))
   (setq ans (get-limit (get-limit ans 'epsilon 0 '$plus) 'prin-inf '$inf))
-;;;Return setion.
+  ;;Return setion.
   (cond ((or (null ans)
 	     (not (free ans '$infinity)) 
 	     (not (free ans '$ind)))  ())
@@ -578,11 +630,36 @@
 	     (setq pole-list (append (list (cons ll 'ignored)) pole-list)))))
   pole-list)
 
+;; Assumes EXP is a rational expression with no polynomial part and
+;; converts the finite integration to integration over a half-infinite
+;; interval.  The substitution y = (x-a)/(b-x) is used.  Equivalently,
+;; x = (b*y+a)/(y+1).
+;;
+;; (I'm guessing CV means Change Variable here.)
+#+nil
 (defun cv (exp)
   (if (not (or (real-infinityp ll) (real-infinityp ul)))
       (method-by-limits (intcv3 (m// (m+t ll (m*t ul var))
 				     (m+t 1. var)) nil 'yx)
 			var 0. '$inf)
+      ()))
+
+(defun cv (exp)
+  (if (not (or (real-infinityp ll) (real-infinityp ul)))
+      ;; FIXME!  This is a hack.  We apply the transformation with
+      ;; symbolic limits and then substitute the actual limits later.
+      ;; That way method-by-limits (usually?) sees a simpler
+      ;; integrand.
+      ;;
+      ;; See Bugs 938235 and 941457.  These fail because $FACTOR is
+      ;; unable to factor the transformed result.  This needs more
+      ;; work (in other places).
+      (let ((trans (intcv3 (m// (m+t 'll (m*t 'ul var))
+				(m+t 1. var))
+			   nil 'yx)))
+	(setf trans (subst ll 'll trans))
+	(setf trans (subst ul 'ul trans))
+	(method-by-limits trans var 0. '$inf))
       ()))
 
 (defun ratfnt (exp)
@@ -623,11 +700,15 @@
   (numden exp)
   (let* ((d dn*)
 	 (a (cond ((and (zerop1 ($limit d var ll '$plus))
-			(eq (limit-pole (m+ exp (m+ (m- ll) var)) var ll '$plus) '$yes))
+			(eq (limit-pole (m+ exp (m+ (m- ll) var))
+					var ll '$plus)
+			    '$yes))
 		   t)
 		  (t nil)))
 	 (b (cond ((and (zerop1 ($limit d var ul '$minus))
-			(eq (limit-pole (m+ exp (m+ ul (m- var))) var ul '$minus) '$yes))
+			(eq (limit-pole (m+ exp (m+ ul (m- var)))
+					var ul '$minus)
+			    '$yes))
 		   t)
 		  (t nil))))
     (or a b)))
@@ -638,8 +719,8 @@
 
 (defun make-defint-assumptions (ask-or-not)
   (cond ((null (order-limits ask-or-not))  ())
-	(t (mapc 'forget defint-assumptions)
-	   (setq defint-assumptions ())
+	(t (mapc 'forget *defint-assumptions*)
+	   (setq *defint-assumptions* ())
 	   (let ((sign-ll (cond ((eq ll '$inf)  '$pos)
 				((eq ll '$minf) '$neg)
 				(t ($sign ($limit ll)))))
@@ -652,24 +733,24 @@
 					 (not (eq ll '$minf)))  '$neg)
 				   (t ($sign ($limit (m+ ul (m- ll))))))))
 	     (cond ((eq sign-ul-ll '$pos)
-		    (setq defint-assumptions
+		    (setq *defint-assumptions*
 			  `(,(assume `((mgreaterp) ,var ,ll))
 			    ,(assume `((mgreaterp) ,ul ,var)))))
 		   ((eq sign-ul-ll '$neg)
-		    (setq defint-assumptions
+		    (setq *defint-assumptions*
 			  `(,(assume `((mgreaterp) ,var ,ul))
 			    ,(assume `((mgreaterp) ,ll ,var))))))
 	     (cond ((and (eq sign-ll '$pos)
 			 (eq sign-ul '$pos))
-		    (setq defint-assumptions
+		    (setq *defint-assumptions*
 			  `(,(assume `((mgreaterp) ,var 0))
-			    ,@defint-assumptions)))
+			    ,@*defint-assumptions*)))
 		   ((and (eq sign-ll '$neg)
 			 (eq sign-ul '$neg))
-		    (setq defint-assumptions
+		    (setq *defint-assumptions*
 			  `(,(assume `((mgreaterp) 0 ,var))
-			    ,@defint-assumptions)))
-		   (t defint-assumptions))))))
+			    ,@*defint-assumptions*)))
+		   (t *defint-assumptions*))))))
 
 (defun restore-defint-assumptions (old-assumptions assumptions)
   (do ((llist assumptions (cdr llist)))
@@ -680,28 +761,29 @@
     (assume (car llist))))
 
 (defun make-global-assumptions ()
-  (setq global-defint-assumptions
+  (setq *global-defint-assumptions*
 	(cons (assume '((mgreaterp) *z* 0.))
-	      global-defint-assumptions))
-;;; *Z* is a "zero parameter" for this package.
-;;; Its also used to transform.
+	      *global-defint-assumptions*))
+  ;; *Z* is a "zero parameter" for this package.
+  ;; Its also used to transform.
   ;;  limit(exp,var,val,dir) -- limit(exp,tvar,0,dir)
-  (setq global-defint-assumptions
+  (setq *global-defint-assumptions*
 	(cons (assume '((mgreaterp) epsilon 0.))
-	      global-defint-assumptions))	   
-  (setq global-defint-assumptions
+	      *global-defint-assumptions*))	   
+  (setq *global-defint-assumptions*
 	(cons (assume '((mlessp) epsilon 1.0e-8))
-	      global-defint-assumptions)) 
-;;; EPSILON is used in principal vaule code to denote the familiar
-;;; mathematical entity.
-  (setq global-defint-assumptions
+	      *global-defint-assumptions*)) 
+  ;; EPSILON is used in principal vaule code to denote the familiar
+  ;; mathematical entity.
+  (setq *global-defint-assumptions*
 	(cons (assume '((mgreaterp) prin-inf 1.0e+8))
-	      global-defint-assumptions)))
+	      *global-defint-assumptions*)))
+
 ;;; PRIN-INF Is a special symbol in the principal value code used to
 ;;; denote an end-point which is proceeding to infinity.
 
 (defun forget-global-assumptions ()
-  (do ((llist global-defint-assumptions (cdr llist)))
+  (do ((llist *global-defint-assumptions* (cdr llist)))
       ((null llist) t)
     (forget (car llist)))
   (cond ((not (null integer-info))
@@ -729,7 +811,7 @@
 		  (setq ll ul)
 		  (setq ul '$inf)
 		  (setq exp (m- exp))))
-;;;Fix limits so that ll < ul. 
+	   ;;Fix limits so that ll < ul. 
 	   (let ((d (complm ask-or-not)))
 	     (cond ((equal d -1.)
 		    (setq exp (m- exp))
@@ -745,20 +827,22 @@
     (cond ((alike1 ul ll)  0.)
 	  ((eq (setq a (cond (askflag ($asksign ($limit (m+t ul (m- ll)))))
 			     (t ($sign ($limit (m+t ul (m- ll)))))))
-	       '$pos)  1.)
+	       '$pos)
+	   1.)
 	  ((eq a '$neg)  -1.)
 	  (t 1.))))
 
 
 (defun intsubs (e a b)
   (cond ((easy-subs e a b))
-	(t (setq current-assumptions
+	(t (setq *current-assumptions*
 		 (make-defint-assumptions 'ask)) ;get forceful!
 	   (let ((generate-atan2 ())  ($algebraic t)
 		 (rpart ())  (ipart ()))
-	     (desetq (rpart . ipart) (cond ((not (free e '$%i))
-					    (trisplit e))
-					   (t (cons e 0))))
+	     (desetq (rpart . ipart)
+		     (cond ((not (free e '$%i))
+			    (trisplit e))
+			   (t (cons e 0))))
 	     (cond ((not (equal (sratsimp ipart) 0))  
 		    (let ((rans (cond ((limit-subs rpart a b))
 				      (t (m-
@@ -917,9 +1001,11 @@
 	        		      (cond ((equal ($imagpart x) 0)  t)
 					    (t ())))))))
 
-(defun lowerhalf (j) (eq ($asksign ($imagpart j)) '$neg)) 
+(defun lowerhalf (j)
+  (eq ($asksign ($imagpart j)) '$neg))
 
-(defun upperhalf (j) (eq ($asksign ($imagpart j)) '$pos)) 
+(defun upperhalf (j)
+  (eq ($asksign ($imagpart j)) '$pos))
 
 
 (defun csemiup (n d var)
@@ -1022,9 +1108,10 @@
 
 
 (defun evenfn (e var)
-  (let ((temp (m+ (m- e) (cond ((atom var)
-				($substitute (m- var) var e))
-			       (t ($ratsubst (m- var) var e))))))
+  (let ((temp (m+ (m- e)
+		  (cond ((atom var)
+			 ($substitute (m- var) var e))
+			(t ($ratsubst (m- var) var e))))))
     (cond ((zerop1 temp)
 	   t)
 	  ((zerop1 ($ratsimp temp))
@@ -1100,7 +1187,7 @@
 	    (return temp))
 	   (t nil))
      on
-     (cond ((let ((mtoinf* nil))
+     (cond ((let ((*mtoinf* nil))
 	      (setq temp (ggr grand t)))
 	    (return temp))
 	   ((mplusp grand)
@@ -1217,13 +1304,29 @@
 		     (involve grand '(%sinh %cosh %tanh)))
 		 (p*pin%ex n)	      ;setq's P* and PE*...Barf again.
 		 (setq ans (catch 'pin%ex (pin%ex d))))
+	    ;; We have an integral of the form p(x)*F(exp(x)), where
+	    ;; p(x) is a polynomial.
 	    (cond ((null p*)
+		   ;; No polynomial
 		   (return (dintexp grand var)))
-		  ((and (zerop1 (get-limit grand var '$inf))
-			(zerop1 (get-limit grand var '$minf))
-			(setq ans (rectzto%pi2 (m*l p*) (m*l pe*) d)))
+		  ((not (and (zerop1 (get-limit grand var '$inf))
+			     (zerop1 (get-limit grand var '$minf))))
+		   ;; These limits must exist for the integral to converge.
+		   (diverg))
+		  ((setq ans (rectzto%pi2 (m*l p*) (m*l pe*) d))
+		   ;; This only handles the case when the F(z) is a
+		   ;; rational function.
 		   (return (m* (m// nc dc) ans)))
-		  (t (diverg)))))
+		  ((setq ans (log-transform (m*l p*) (m*l pe*) d))
+		   ;; If we get here, F(z) is not a rational function.
+		   ;; We transform it using the substitution x=log(y)
+		   ;; which gives us an integral of the form
+		   ;; p(log(y))*F(y)/y, which maxima should be able to
+		   ;; handle.
+		   (return (m* (m// nc dc) ans)))
+		  (t
+		   ;; Give up.  We don't know how to handle this.
+		   (return nil)))))
      en
      (cond ((setq ans (ggrm grand)) 
 	    (return ans))
@@ -1238,7 +1341,7 @@
 	      (eq (ask-integer (caddr exp) '$even)
 		  '$yes)
 	      (ratgreaterp 0. (car exp)))
-	 exp))) 
+	 exp)))
 
 ;;; given (b*x+a)^n+c returns  (a b n c)
 (defun linpower (exp var)
@@ -1338,13 +1441,13 @@
       (setq n2 (cadadr nl) n (caadr nl) nl nil))))
 
 (defun ggrm (e)
-  (prog (poly expo mtoinf* mb  varlist  genvar l c gvar) 
+  (prog (poly expo *mtoinf* mb  varlist  genvar l c gvar) 
      (setq varlist (list var))
-     (setq mtoinf* t)
+     (setq *mtoinf* t)
      (cond ((and (setq expo (%einvolve e))
 		 (polyp (setq poly ($ratsimp (m// e (m^t '$%e expo)))))
 		 (setq l (catch 'ggrm (ggr (m^t '$%e expo) nil))))
-	    (setq mtoinf* nil)
+	    (setq *mtoinf* nil)
 	    (setq mb (m- (subin 0. (cadr l))))
 	    (setq poly (m+ (subin (m+t mb var) poly)
 			   (subin (m+t mb (m*t -1. var)) poly))))
@@ -1373,8 +1476,8 @@
   (m* k `((%gamma) ,b) (m^ a (m- b)))) 
 
 (defun radic (e v) 
-;;;If rd* is t the m^ts must just be free of var.
-;;;If rd* is () the m^ts must be mnump's.
+  ;;If rd* is t the m^ts must just be free of var.
+  ;;If rd* is () the m^ts must be mnump's.
   (let ((rd* ())) 
     (radicalp e v)))
 
@@ -1393,29 +1496,41 @@
 				(cond ((cadr n) (cadr n))
 				      (t 0.))))))))
 
+;; Look at an expression e of the form sin(r*x)^k, where k is an
+;; integer.  Return the list (1 r k).  (Not sure if the first element
+;; of the list is always 1 because I'm not sure what partition is
+;; trying to do here.)
 (defun skr (e)
   (prog (m r k) 
      (cond ((atom e) (return nil)))
      (setq e (partition e var 1))
      (setq m (car e))
      (setq e (cdr e))
-     (cond ((setq r (sinrx e)) (return (list m r 1)))
+     (cond ((setq r (sinrx e))
+	    (return (list m r 1)))
 	   ((and (mexptp e)
 		 (eq (ask-integer (setq k (caddr e)) '$integer) '$yes)
 		 (setq r (sinrx (cadr e))))
 	    (return (list m r k)))))) 
 
+;; Look at an expression e of the form sin(r*x) and return r.
 (defun sinrx (e)
   (cond ((and (consp e) (eq (caar e) '%sin))
-	 (cond ((eq (cadr e) var) 1.)
-	       ((and (setq e (partition (cadr e) var 1)) (eq (cdr e) var))
-		(car e)))))) 
+	 (cond ((eq (cadr e) var)
+		1.)
+	       ((and (setq e (partition (cadr e) var 1))
+		     (eq (cdr e) var))
+		(car e))))))
 
-(declare-top(special n)) 
 
 
+;; integrate(a*sc(r*x)^k/x^n,x,0,inf).
 (defun ssp (exp)
-  (prog (u n c) 
+  (prog (u n c)
+     ;; I don't think this needs to be special.
+     #+nil
+     (declare (special n))
+     ;; Replace (1-cos(x)^2) with sin(x)^2.
      (setq exp ($substitute (m^t `((%sin) ,var) 2.)
 			    (m+t 1. (m- (m^t `((%cos) ,var) 2.)))
 			    exp))
@@ -1423,46 +1538,103 @@
      (setq u nn*)
      (cond ((and (setq n (findp dn*))
 		 (eq (ask-integer n '$integer) '$yes))
-	    (cond ((setq c (skr u)) 
+	    ;; n is the power of the denominator.
+	    (cond ((setq c (skr u))
+		   ;; The simple case.
 		   (return (scmp c n)))
 		  ((and (mplusp u)
 			(setq c (andmapcar #'skr (cdr u))))
+		   ;; Do this for a sum of such terms.
 		   (return (m+l (mapcar #'(lambda (j) (scmp j n))
 					c)))))))))
 
-(declare-top(unspecial n)) 
-
+;; We have an integral of the form sin(r*x)^k/x^n.  C is the list (1 r k).
+;;
+;; The substitution y=r*x converts this integral to
+;;
+;;   r^(n-1)*integral(sin(y)^k/y^n,y,0,inf)
+;;
+;; (If r is negative, we need to negate the result.)
+;;
+;; The recursion Wang gives on p. 87 has a typo.  The second term
+;; should be subtracted from the first.  This formula is given in G&R,
+;; 3.82, formula 12.
+;;
+;; integrate(sin(x)^r/x^s,x) =
+;;    r*(r-1)/(s-1)/(s-2)*integrate(sin(x)^(r-2)/x^(s-2),x)
+;;    - r^2/(s-1)/(s-2)*integrate(sin(x)^r/x^(s-2),x)
+;;
+;; (Limits are assumed to be 0 to inf.)
+;;
+;; This recursion ends up with integrals with s = 1 or 2 and
+;;
+;; integrate(sin(x)^p/x,x,0,inf) = integrate(sin(x)^(p-1),x,0,%pi/2)
+;;
+;; with p > 0 and odd.  This latter integral is known to maxima, and
+;; it's value is beta(p/2,1/2)/2.
+;;
+;; integrate(sin(x)^2/x^2,x,0,inf) = %pi/2*binomial(q-3/2,q-1)
+;;
+;; where q >= 2.
+;; 
 (defun scmp (c n)
-  (m* (car c) (m^ (cadr c) (m+ n -1)) `((%signum) ,(cadr c))
+  ;; Compute sign(r)*r^(n-1)*integrate(sin(y)^k/y^n,y,0,inf)
+  (m* (car c)
+      (m^ (cadr c) (m+ n -1))
+      `((%signum) ,(cadr c))
       (sinsp (caddr c) n)))
 
+;; integrate(sin(x)^n/x^2,x,0,inf) = pi/2*binomial(n-3/2,n-1).
+;; Express in terms of Gamma functions, though.
 (defun sevn (n)
   (m* half%pi ($makegamma `((%binomial) ,(m+t (m+ n -1) '((rat) -1. 2.))
 			    ,(m+ n -1)))))
 
 
+;; integrate(sin(x)^n/x,x,0,inf) = beta((n+1)/2,1/2)/2, for n odd and
+;; n > 0.
 (defun sforx (n)
   (cond ((equal n 1.) 
 	 half%pi) 
 	(t (bygamma (m+ n -1) 0.)))) 
 
+;; This implements the recursion for computing
+;; integrate(sin(y)^l/y^k,y,0,inf).  (Note the change in notation from
+;; the above!)
 (defun sinsp (l k)
   (let ((i ())
 	(j ()))
     (cond ((eq ($sign (m+ l (m- (m+ k -1))))
 	       '$neg)
+	   ;; Integral diverges if l-(k-1) < 0.
 	   (diverg))
 	  ((not (even1 (m+ l k)))
+	   ;; If l + k is not even, return NIL.  (Is this the right
+	   ;; thing to do?)
 	   nil)
 	  ((equal k 2.)
+	   ;; We have integrate(sin(y)^l/y^2).  Use sevn to evaluate.
 	   (sevn (m// l 2.)))
-	  ((equal k 1.) 
+	  ((equal k 1.)
+	   ;; We have integrate(sin(y)^l/y,y)
 	   (sforx l))
 	  ((eq ($sign  (m+ k -2.))
 	       '$pos)
-	   (setq i (m* (m+ k -1) (setq j (m+ k -2.))))
-	   (m+ (m* l (m+ l -1) (m^t i -1.) (sinsp (m+ l -2.) j))
-	       (m* (m- (m^ l 2)) (m^t i -1.)
+	   (setq i (m* (m+ k -1)
+		       (setq j (m+ k -2.))))
+	   ;; j = k-2, i = (k-1)*(k-2)
+	   ;;
+	   ;; 
+	   ;; The main recursion:
+	   ;;
+	   ;; i(sin(y)^l/y^k)
+	   ;;    = l*(l-1)/(k-1)/(k-2)*i(sin(y)^(l-2)/y^k)
+	   ;;      - l^2/(k-1)/(k-1)*i(sin(y)^l/y^(k-2))
+	   (m+ (m* l (m+ l -1)
+		   (m^t i -1.)
+		   (sinsp (m+ l -2.) j))
+	       (m* (m- (m^ l 2))
+		   (m^t i -1.)
 		   (sinsp l j)))))))
 
 (defun fpart (a)
@@ -1539,7 +1711,7 @@
   (let ((limit-diff (m+ b (m* -1 a)))
 	($%emode t)
 	($trigsign t)
-	(sin-cos-recur t))		;recursion stopper
+	(*sin-cos-recur* t))		;recursion stopper
     (prog (ans d nzp2 l) 
        (cond ((or (not (mnump (m// limit-diff '$%pi)))
 		  (not (period %pi2 e var)))
@@ -1675,9 +1847,9 @@
       (t ()))))
 
 (defun real-branch (exponent value)
-;;;Says wether (m^t value exponent) has at least one real branch.
-;;;Only works for values of 1 and -1 now.
-;;;Returns $yes $no $unknown.
+  ;; Says wether (m^t value exponent) has at least one real branch.
+  ;; Only works for values of 1 and -1 now.  Returns $yes $no
+  ;; $unknown.
   (cond ((equal value 1.)
 	 '$yes)
 	((eq (ask-integer exponent '$integer) '$yes)
@@ -1688,6 +1860,7 @@
 	       (t '$no)))
 	(t '$unknown)))
 
+;; Compute beta((m+1)/2,(n+1)/2)/2.
 (defun bygamma (m n)
   (let ((one-half (m//t 1. 2.)))
     (m* one-half `(($beta) ,(m* one-half (m+t 1. m))
@@ -1705,7 +1878,6 @@
   (cond ((null e) nil)
 	((funcall p e) e))) 
 
-(declare-top(special l c k)) 
 
 (comment (the following func is not complete)) 
 
@@ -1728,17 +1900,22 @@
 
 
 
+;; Check e for an expression of the form x^kk*(b*x^n+a)^l.  If it
+;; matches, Return the two values kk and (list l a n b).
 (defun bata0 (e)
-  (cond ((atom e) nil)
-	((and (mtimesp e)
-	      (null (cdddr e))
-	      (or (and (setq k (findp (cadr e)))
-		       (setq c (bxm (caddr e) (polyinx (caddr e) var nil))))
-		  (and (setq k (findp (caddr e)))
-		       (setq c (bxm (cadr e) (polyinx (cadr e) var nil))))))
-	 t)
-	((setq c (bxm e (polyinx e var nil)))
-	 (setq k 0.)))) 
+  (let (k c)
+    (cond ((atom e) nil)
+	  ((and (mtimesp e)
+		(null (cdddr e))
+		(or (and (setq k (findp (cadr e)))
+			 (setq c (bxm (caddr e) (polyinx (caddr e) var nil))))
+		    (and (setq k (findp (caddr e)))
+			 (setq c (bxm (cadr e) (polyinx (cadr e) var nil))))))
+	   (values k c))
+	  ((setq c (bxm e (polyinx e var nil)))
+	   (setq k 0.)
+	   (values k c)))))
+
 
 ;;(DEFUN BATAP (E) 
 ;;  (PROG (K C L) 
@@ -1758,42 +1935,71 @@
 ;;			C))))))
 
 
-;;; Integrals of the form i(log(x)^m*x^k*(a+b*x^n)^l,x,0,ul) with
-;;; ul>0, b<0, a=-b*ul^n, k>-1, l>-1, n>0, m a nonnegative integer. 
-;;; These integrals are essentially partial derivatives of the 
-;;; Beta function (i.e. the Eulerian integral of the first kind).
-;;; Note that, currently, with the default setting intanalysis:true,
-;;; this function might not even be called for some of these integrals.
-;;; However, this can be palliated by setting intanalysis:false. 
+;; Integrals of the form i(log(x)^m*x^k*(a+b*x^n)^l,x,0,ul).  There
+;; are two cases to consider: One case has ul>0, b<0, a=-b*ul^n, k>-1,
+;; l>-1, n>0, m a nonnegative integer.  The second case has ul=inf, l < 0.
+;;
+;; These integrals are essentially partial derivatives of the Beta
+;; function (i.e. the Eulerian integral of the first kind).  Note
+;; that, currently, with the default setting intanalysis:true, this
+;; function might not even be called for some of these integrals.
+;; However, this can be palliated by setting intanalysis:false.
 
 (defun zto1 (e)				
   (when (or (mtimesp e) (mexptp e))
-    (let ((m 0) (log (list '(%log) var)))
-      (flet ((set-m (p) (setq m p)))
-	(find-if #'(lambda (fac) (powerofx fac log #'set-m var)) (cdr e)))
+    (let ((m 0)
+	  (log (list '(%log) var)))
+      (flet ((set-m (p)
+	       (setq m p)))
+	(find-if #'(lambda (fac)
+		     (powerofx fac log #'set-m var))
+		 (cdr e)))
       (when (and (freeof var m) 
 		 (eq (ask-integer m '$integer) '$yes)
 		 (not (eq ($asksign m) '$neg))) 
 	(setq e (m//t e (list '(mexpt) log m)))
-	(multiple-value-bind
-	      (k/n l n b) (batap-new e)
-	  (when k/n
-	    (let ((beta (simplify (list '($beta) k/n l)))
-		  (m (if (eq ($asksign m) '$zero) 0 m)))
-	      ;; The result looks like B(k/n,l) ( ... ).
-	      ;; Perhaps, we should just $factor, instead of
-	      ;; pulling out beta like this.
-	      (m*t
-	       beta
-	       ($fullratsimp
-		(m//t
+	(cond
+	  ((eq ul '$inf)
+	   (multiple-value-bind (kk s d r cc)
+	       (batap-inf e)
+	     ;; We have i(x^kk/(d+cc*x^r)^s,x,0,inf) =
+	     ;; beta(aa,bb)/(cc^aa*d^bb*r).  Compute this, and then
+	     ;; differentiate it m times to get the log term
+	     ;; incorporated.
+	     (when kk
+	       (let* ((aa (div (add 1 var) r))
+		      (bb (sub s aa))
+		      (m (if (eq ($asksign m) '$zero)
+			     0
+			     m)))
+	       (let ((res (div `(($beta) ,aa ,bb)
+			       (mul (m^t cc aa)
+				    (m^t d bb)
+				    r))))
+		 ($at ($diff res var m)
+		      (list '(mequal) var kk)))))))
+	  (t
+	   (multiple-value-bind
+		 (k/n l n b) (batap-new e)
+	     (when k/n
+	       (let ((beta (simplify (list '($beta) k/n l)))
+		     (m (if (eq ($asksign m) '$zero) 0 m)))
+		 ;; The result looks like B(k/n,l) ( ... ).
+		 ;; Perhaps, we should just $factor, instead of
+		 ;; pulling out beta like this.
 		 (m*t
-		  (m^t (m-t b) (m1-t l))
-		  (m^t ul (m*t n (m1-t l)))
-		  (m^t n (m-t (m1+t m)))
-		  ($at ($diff (m*t (m^t ul (m*t n var)) (list '($beta) var l))
-			      var m) (list '(mequal) var k/n))) 
-		 beta))))))))))
+		  beta
+		  ($fullratsimp
+		   (m//t
+		    (m*t
+		     (m^t (m-t b) (m1-t l))
+		     (m^t ul (m*t n (m1-t l)))
+		     (m^t n (m-t (m1+t m)))
+		     ($at ($diff (m*t (m^t ul (m*t n var))
+				      (list '($beta) var l))
+				 var m)
+			  (list '(mequal) var k/n)))
+		    beta))))))))))))
 
 
 ;;; If e is of the form given below, make the obvious change
@@ -1805,14 +2011,16 @@
 ;;; of course would give wrong results.
 
 (defun batap-new (e) 
-  (let (k c) 
-    (declare (special k c))
-    ;; Parse e
-    (when (bata0 e)
-      (multiple-value-bind
-	    ;; e=x^k*(a+b*x^n)^l
-	    (l a n b)  (values-list c)
-	(when (and (freeof var k) (freeof var n) (freeof var l)
+  ;; Parse e
+  (multiple-value-bind (k c)
+      (bata0 e)
+    (when k
+      ;; e=x^k*(a+b*x^n)^l
+      (destructuring-bind (l a n b)
+	  c
+	(when (and (freeof var k)
+		   (freeof var n)
+		   (freeof var l)
 		   (alike1 a (m-t (m*t b (m^t ul n))))
 		   (eq ($asksign b) '$neg)
 		   (eq ($asksign (setq k (m1+t k))) '$pos)
@@ -1821,27 +2029,65 @@
 	  (values (m//t k n) l n b))))))
 
 
+;; Wang p. 71 gives the following formula for a beta function:
+;;
+;; integrate(x^(k-1)/(c*x^r+d)^s,x,0,inf)
+;;   = beta(a,b)/(c^a*d^b*r)
+;;
+;; where a = k/r > 0, b = s - a > 0, s > k > 0, r > 0, c*d > 0.
+;;
+;; This function matches this and returns k-1, d, r, c, a, b.  And
+;; also checks that all the conditions hold.  If not, NIL is returned.
+;;
+(defun batap-inf (e)
+  (multiple-value-bind (k c)
+      (bata0 e)
+    (when k
+      (destructuring-bind (l d r cc)
+	  c
+	(let* ((s (mul -1 l))
+	       (kk (add k 1))
+	       (a (div kk r))
+	       (b (sub s a)))
+	  (when (and (freeof var k)
+		     (freeof var r)
+		     (freeof var l)
+		     (eq ($asksign kk) '$pos)
+		     (eq ($asksign a) '$pos)
+		     (eq ($asksign b) '$pos)
+		     (eq ($asksign (sub s k)) '$pos)
+		     (eq ($asksign r) '$pos)
+		     (eq ($asksign (mul cc d)) '$pos))
+	    (values k s d r cc)))))))
+  
 
+;; Handles beta integrals.
 (defun batapp (e)
-  (prog (k c d l al) 
-     (cond ((not (or (equal ll 0) (eq ll '$minf)))
-	    (setq e (subin (m+ ll var) e))))
-     (cond ((not (bata0 e)) (return nil))
-	   ((and (ratgreaterp (setq al (caddr c)) 0.)
-		 (eq ($asksign (setq k (m// (m+ 1. k)
-					    al)))
-		     '$pos)
-		 (ratgreaterp (setq l (m* -1. (car c)))
-			      k)
-		 (eq ($asksign (m* (setq d (cadr c))
-				   (setq c (cadddr c))))
-		     '$pos))
-	    (setq l (m+ l (m*t -1. k)))
-	    (return (m// `(($beta) ,k ,l)
-			 (mul* al (m^ c k) (m^ d l)))))))) 
+  (cond ((not (or (equal ll 0)
+		  (eq ll '$minf)))
+	 (setq e (subin (m+ ll var) e))))
+  (multiple-value-bind (k c)
+      (bata0 e)
+    (cond ((null k)
+	   nil)
+	  (t
+	   (destructuring-bind (l d al c)
+	       c
+	     ;; e = x^k*(d+c*x^al)^l.
+	     (let ((new-k (m// (m+ 1 k) al)))
+	       (when (and (ratgreaterp al 0.)
+			  (eq ($asksign new-k) '$pos)
+			  (ratgreaterp (setq l (m* -1. l))
+				       new-k)
+			  (eq ($asksign (m* d c))
+			      '$pos))
+		 (setq l (m+ l (m*t -1. new-k)))
+		 (m// `(($beta) ,new-k ,l)
+		      (mul* al (m^ c new-k) (m^ d l))))))))))
 
-(declare-top(unspecial l c k)) 
 
+;; Compute exp(d)*gamma((c+1)/b)/b/a^((c+1)/b).  In essence, this is
+;; the value of integrate(x^c*exp(d-a*x^b),x,0,inf).
 (defun gamma1 (c a b d)
   (m* (m^t '$%e d)
       (m^ (m* b (m^ a (setq c (m// (m+t c 1.) b))))
@@ -1876,6 +2122,39 @@
 	     (t (intcv arg nil nil)))))))
 
 
+;; Wang 81-83.  Unfortunately, the pdf version has page 82 as all
+;; black, so here is, as best as I can tell, what Wang is doing.
+;; Fortunately, p. 81 has the necessary hints.
+;;
+;; First consider integrate(exp(%i*k*x^n),x) around the closed contour
+;; consisting of the real axis from 0 to R, the arc from the angle 0
+;; to %pi/(2*n) and the ray from the arc back to the origin.
+;;
+;; There are no poles in this region, so the integral must be zero.
+;; But consider the integral on the three parts.  The real axis is the
+;; integral we want.  The return ray is
+;;
+;;   exp(%i*%pi/2/n) * integrate(exp(%i*k*(t*exp(%i*%pi/2/n))^n),t,R,0)
+;;     = exp(%i*%pi/2/n) * integrate(exp(%i*k*t^n*exp(%i*%pi/2)),t,R,0)
+;;     = -exp(%i*%pi/2/n) * integrate(exp(-k*t^n),t,0,R)
+;;
+;; As R -> infinity, this last integral is gamma(1/n)/k^(1/n)/n.
+;;
+;; We assume the integral on the circular arc approaches 0 as R ->
+;; infinity.  (Need to prove this.)
+;;
+;; Thus, we have 
+;;
+;;   integrate(exp(%i*k*t^n),t,0,inf) 
+;;     = exp(%i*%pi/2/n) * gamma(1/n)/k^(1/n)/n.
+;;
+;; Equating real and imaginary parts gives us the desired results:
+;;
+;; integrate(cos(k*t^n),t,0,inf) = G * cos(%pi/2/n)
+;; integrate(sin(k*t^n),t,0,inf) = G * sin(%pi/2/n)
+;;
+;; where G = gamma(1/n)/k^(1/n)/n.
+;;
 (defun scaxn (e)
   (let (ind s g) 
     (cond ((atom e)  nil)
@@ -1883,21 +2162,29 @@
 		    (eq (caar e) '%cos))
 		(setq ind (caar e))
 		(setq e (bx**n (cadr e))))
-	   (cond ((equal (car e) 1.)  '$ind)
+	   ;; Ok, we have cos(b*x^n) or sin(b*x^n), and we set e = (a
+	   ;; b n) where the arg of the trig function is b*x^n+a.
+	   (cond ((equal (car e) 1.)
+		  ;; a = 1.  Give up.
+		  '$ind)
 		 ((zerop (setq s (let ((sign ($asksign (cadr e))))
 				   (cond ((eq sign '$pos) 1)
 					 ((eq sign '$neg) -1)
 					 ((eq sign '$zero) 0)))))
+		  ;; s is the sign of b.  Give up if it's zero.
 		  nil)
 		 ((not (eq ($asksign (m+ -1 (car e)))  '$pos))
+		  ;; Give up if a-1 <= 0
 		  nil)
-		 (t (setq g (gamma1 0. (m* s (cadr e)) (car e) 0.))
-		    (setq e (m* g `((,ind) ,(m// half%pi (car e))))) 
-		    (m* (cond ((and (eq ind '%sin)
-				    (equal s -1.))
-			       -1.)
-			      (t 1.))
-			e)))))))
+		 (t
+		  ;; We can apply our formula now.  g = gamma(1/n)/n/b^(1/n)
+		  (setq g (gamma1 0. (m* s (cadr e)) (car e) 0.))
+		  (setq e (m* g `((,ind) ,(m// half%pi (car e))))) 
+		  (m* (cond ((and (eq ind '%sin)
+				  (equal s -1.))
+			     -1.)
+			    (t 1.))
+		      e)))))))
 		      
 
 (comment this is the second part of the definite integral package) 
@@ -1985,6 +2272,8 @@
 #-cl	      ;in case other lisps don't understand internal declares.
 (declare-top(special *i* *j*))
 
+;; Handle integral(n(x)/d(x)*log(x)^m,x,0,inf).  n and d are
+;; polynomials.
 (defun log*rat (n d m)
   (prog (leadcoef factors c plm* pl* rl* pl*1 rl*1 rlm*)
      (declare (special *i* *j*))
@@ -2068,6 +2357,16 @@
        (m (m+ n -1) (m+ m -1)))
       ((signp l m) (solvex eql cl nil nil))))
 
+;; Integrate(p(x)*f(exp(x))/g(exp(x)),x,minf,inf) by applying the
+;; transformation y = exp(x) to get
+;; integrate(p(log(y))*f(y)/g(y)/y,y,0,inf).  This should be handled
+;; by dintlog.
+(defun log-transform (p pe d)
+  (let ((new-p (subst (list '(%log) var) var p))
+	(new-pe (subst var 'z* (catch 'pin%ex (pin%ex pe))))
+	(new-d (subst var 'z* (catch 'pin%ex (pin%ex d)))))
+    (defint (div (div (mul new-p new-pe) new-d) var) var 0 ul)))
+  
 ;; This implements Wang's algorithm in Chapter 5.2, pp. 98-100.
 ;;
 ;; This is a very brief description of the algorithm.  Basically, we
@@ -2107,10 +2406,14 @@
        ;; result.  I think the second element of the list is an alist
        ;; consisting of the pole and it's multiplicity.  I don't know
        ;; what the rest of the list is.
-       (setq pl (cdr (polelist denom-exponential #'(lambda (j) 
-						     (or (not (equal ($imagpart j) 0))
-							 (eq ($asksign ($realpart j)) '$neg)))
+       (setq pl (cdr (polelist denom-exponential
 			       #'(lambda (j)
+				   ;; The imaginary part is nonzero,
+				   ;; or the realpart is negative.
+				   (or (not (equal ($imagpart j) 0))
+				       (eq ($asksign ($realpart j)) '$neg)))
+			       #'(lambda (j)
+				   ;; The realpart is not zero.
 				   (not (eq ($asksign ($realpart j)) '$zero)))))))
      ;; Not sure what this does.
      (cond ((null pl)
@@ -2160,8 +2463,9 @@
     (setq ans (cons (m* c (m^t var i)) ans))
     (setq cl (cons c cl))))
 
-(declare-top(special *failflag *lhflag lhv *indicator cnt *disconflag)) 
+;;(declare-top(special *failflag *lhflag lhv *indicator cnt *disconflag)) 
 
+#+nil
 (defun %e-integer-coeff (exp)
   (cond ((mapatom exp) t)
 	((and (mexptp exp)
@@ -2170,38 +2474,64 @@
 		  '$yes))  t)
 	(t (andmapc '%e-integer-coeff (cdr exp)))))
 
+;; Check to see if each term in exp that is of the form exp(k*x) has
+;; an integer value for k.
+(defun %e-integer-coeff (exp)
+  (cond ((mapatom exp) t)
+	((and (mexptp exp)
+	      (eq (cadr exp) '$%e))
+	 (eq (ask-integer ($coeff (caddr exp) var) '$integer)
+	     '$yes))
+	(t (andmapc '%e-integer-coeff (cdr exp)))))
+
 (defun wlinearpoly (e var)
   (cond ((and (setq e (polyinx e var t))
 	      (equal (deg e) 1.))
 	 (subin 1. e)))) 
 
-(declare-top(special e $exponentialize))
-
+;; Test to see if exp is of the form f(exp(x)), and if so, replace
+;; exp(x) with 'z*.  That is, basically return f(z*).
 (defun pin%ex (exp)
-  (pin%ex0 (cond ((notinvolve exp '(%sinh %cosh %tanh)) exp)
-		 (t (setq exp (let (($exponentialize t))
-				($expand exp)))))))
+  (declare (special $exponentialize))
+  (pin%ex0 (cond ((notinvolve exp '(%sinh %cosh %tanh))
+		  exp)
+		 (t
+		  (let (($exponentialize t))
+		    (setq exp ($expand exp)))))))
 
 (defun pin%ex0 (e)
-  (cond ((not (among var e))  e)
-	((atom e)  (throw 'pin%ex nil))
+  ;; Does e really need to be special here?  Seems to be ok without
+  ;; it; testsuite works.
+  #+nil
+  (declare (special e))
+  (cond ((not (among var e))
+	 e)
+	((atom e)
+	 (throw 'pin%ex nil))
 	((and (mexptp e)
 	      (eq (cadr e)  '$%e))
-	 (cond ((eq (caddr e) var)  'z*)
+	 (cond ((eq (caddr e) var)
+		'z*)
 	       ((let ((linterm (wlinearpoly (caddr e) var)))
 		  (and linterm
 		       (m* (subin 0 e) (m^t 'z* linterm)))))
-	       (t (throw 'pin%ex nil))))
-	((mtimesp e)  (m*l (mapcar #'pin%ex0 (cdr e))))
-	((mplusp e)  (m+l (mapcar #'pin%ex0 (cdr e))))
-	(t (throw 'pin%ex nil))))
+	       (t
+		(throw 'pin%ex nil))))
+	((mtimesp e)
+	 (m*l (mapcar #'pin%ex0 (cdr e))))
+	((mplusp e)
+	 (m+l (mapcar #'pin%ex0 (cdr e))))
+	(t
+	 (throw 'pin%ex nil))))
 
-(declare-top (unspecial e)) 
-
+;; Test to see if exp is of the form p(x)*f(exp(x)).  If so, set p* to
+;; be p(x) and set pe* to f(exp(x)).
 (defun p*pin%ex (nd*)
   (setq nd* ($factor nd*))
-  (cond ((polyinx nd* var nil) (setq p* (cons nd* p*)) t)
-	((catch 'pin%ex (pin%ex nd*)) (setq pe* (cons nd* pe*)) t)
+  (cond ((polyinx nd* var nil)
+	 (setq p* (cons nd* p*)) t)
+	((catch 'pin%ex (pin%ex nd*))
+	 (setq pe* (cons nd* pe*)) t)
 	((mtimesp nd*)
 	 (andmapcar #'p*pin%ex (cdr nd*)))))
 
@@ -2212,6 +2542,9 @@
 	((setq p (bx**n+a p))
 	 (m* (caddr p) (m^t var (cadr p)))))) 
 
+;; I think this is looking at f(exp(x)) and tries to find some
+;; rational function R and some number k such that f(exp(x)) =
+;; R(exp(k*x)).
 (defun funclogor%e (e)
   (prog (ans arg nvar r) 
      (cond ((or (ratp e var)
@@ -2228,6 +2561,13 @@
 		 (setq arg (findsub arg)))
 	    (go ag)))))
 
+;; Integration by parts.
+;;
+;; integrate(u(x)*diff(v(x),x),x,a,b)
+;;              |b
+;;   = u(x)*v(x)| - integrate(v(x)*diff(u(x),x))
+;;              |a
+;;
 (defun dintbypart (u v a b)
 ;;;SINCE ONLY CALLED FROM DINTLOG TO get RID OF LOGS - IF LOG REMAINS, QUIT
   (let ((ad (antideriv v)))
@@ -2248,21 +2588,41 @@
 					    (m- p2)))
 				  (t nil)))))))))))
 
+;; integrate(f(exp(k*x)),x,a,b), where f(z) is rational.
+;;
+;; See Wang p. 96-97.
+;;
+;; If the limits are minf to inf, we use the substitution y=exp(k*x)
+;; to get integrate(f(y)/y,y,0,inf)/k.  If the limits are 0 to inf,
+;; use the substitution s+1=exp(k*x) to get
+;; integrate(f(s+1)/(s+1),s,0,inf).
 (defun dintexp (exp arg &aux ans)
-  (let ((dintexp-recur t))		;recursion stopper
+  (let ((*dintexp-recur* t))		;recursion stopper
     (cond ((and (sinintp exp var)     ;To be moved higher in the code.
 		(setq ans (antideriv exp))
-		(setq ans (intsubs ans ll ul))))
+		(setq ans (intsubs ans ll ul)))
+	   ;; If we can integrate it directly, do so and take the
+	   ;; appropriate limits.
+	   )
 	  ((setq ans (funclogor%e exp))
-	   (cond ((and (equal ll 0.) (eq ul '$inf))
+	   ;; ans is the list (f(x) exp(k*x)).
+	   (cond ((and (equal ll 0.)
+		       (eq ul '$inf))
+		  ;; Use the substitution s + 1 = exp(k*x).  The
+		  ;; integral becomes integrate(f(s+1)/(s+1),s,0,inf)
 		  (setq exp (subin (m+t 1. arg) (car ans)))
 		  (setq ans (m+t -1. (cadr ans))))
-		 (t (setq exp (car ans))
-		    (setq ans (cadr ans))))
+		 (t
+		  ;; Use the substitution y=exp(k*x) because the
+		  ;; limits are minf to inf.
+		  (setq exp (car ans))
+		  (setq ans (cadr ans))))
+	   ;; Apply the substitution and integrate it.
 	   (intcv ans t nil)))))
 
+;; integrate(log(g(x))*f(x),x,0,inf)
 (defun dintlog (exp arg)
-  (let ((dintlog-recur (f1+ dintlog-recur))) ;recursion stopper
+  (let ((*dintlog-recur* (f1+ *dintlog-recur*))) ;recursion stopper
     (prog (ans d) 
        (cond ((and (eq ul '$inf)
 		   (equal ll 0.)
@@ -2270,49 +2630,104 @@
 		   (equal 1. ($ratsimp (m// exp (m* (m- (subin (m^t var -1.)
 							       exp))
 						    (m^t var -2.))))))
+	      ;; Make the substitution y=1/x.  If the integrand has
+	      ;; exactly the same form, the answer has to be 0.
 	      (return 0.))
 	     ((setq ans (antideriv exp))
+	      ;; It's easy if we have the antiderivative.
 	      (return (intsubs ans ll ul)))
 	     ((setq ans (logx1 exp ll ul))
 	      (return ans)))
+       ;; Ok, the easy cases didn't work.  We now try integration by
+       ;; parts.  Set ANS to f(x).
        (setq ans (m// exp `((%log) ,arg)))
-       (cond ((involve ans '(%log)) (return nil))
+       (cond ((involve ans '(%log))
+	      ;; Bad. f(x) contains a log term, so we give up.
+	      (return nil))
 	     ((and (eq arg var)
 		   (equal 0. (no-err-sub 0. ans))
 		   (setq d (let ((*def2* t))
 			     (defint (m* ans (m^t var '*z*))
 				 var ll ul))))
+	      ;; The arg of the log function is the same as the
+	      ;; integration variable.  We can do something a little
+	      ;; simpler than integration by parts.  We have something
+	      ;; like f(x)*log(x).  Consider f(x)*x^z.  If we
+	      ;; differentiate this wrt to z, the integrand becomes
+	      ;; f(x)*log(x)*x^z.  When we evaluate this at z = 0, we
+	      ;; get the desired integrand.
+	      ;;
+	      ;; So we need f(0) to be 0 at 0.  If we can integrate
+	      ;; f(x)*x^z, then we differentiate the result and
+	      ;; evaluate it at z = 0.
 	      (return (derivat '*z* 1. d 0.)))
 	     ((setq ans (dintbypart `((%log) ,arg) ans ll ul))
+	      ;; Try integration by parts.
 	      (return ans))))))
 
-(defun derivat (var n e pt) (subin pt (apply '$diff (list e var n)))) 
+;; Compute diff(e,var,n) at the point pt.
+(defun derivat (var n e pt)
+  (subin pt (apply '$diff (list e var n)))) 
+
+;;; GGR and friends
 
-;;;MAYBPC RETURNS (COEF EXPO CONST)
+;; MAYBPC returns (COEF EXPO CONST)
+;;
+;; This basically picks off b*x^n+a and returns the list
+;; (b n a).  It may also set the global *zd*.
 (defun maybpc (e var)
-  (cond (mtoinf* (throw 'ggrm (linpower0 e var)))
-	((and (not mtoinf*)
-	      (null (setq e (bx**n+a e)))) ;bx**n+a --> (a b n) or nil.
+  (declare (special *zd*))
+  (cond (*mtoinf* (throw 'ggrm (linpower0 e var)))
+	((and (not *mtoinf*)
+	      (null (setq e (bx**n+a e)))) ;bx**n+a --> (a n b) or nil.
 	 nil)				;with var being x.
+	;; At this point, e is of the form (a n b)
 	((and (among '$%i (caddr e))
 	      (zerop1 ($realpart (caddr e)))
 	      (setq zn ($imagpart (caddr e)))
 	      (eq ($asksign (cadr e)) '$pos))
+	 ;; If we're here, b is complex, and n > 0.  zn = imagpart(b).
+	 ;;
+	 ;; Set var to the same sign as zn.
 	 (cond ((eq ($asksign zn) '$neg)
 		(setq var -1.)
 		(setq zn (m- zn)))
 	       (t (setq var 1.)))
-	 (setq zd (m^t '$%e (m// (mul* var '$%i '$%pi (m+t 1. nd*))
-				 (m*t 2. (cadr e)))))
-	 `(,zn ,(cadr e) ,(car e)))
+	 ;; zd = exp(var*%i*%pi*(1+nd)/(2*n). (ZD is special!)
+	 (setq *zd* (m^t '$%e (m// (mul* var '$%i '$%pi (m+t 1. nd*))
+				   (m*t 2. (cadr e)))))
+	 ;; Return zn, n, a.
+	 `(,(caddr e) ,(cadr e) ,(car e)))
 	((and (or (eq (setq var ($asksign ($realpart (caddr e)))) '$neg)
 		  (equal var '$zero))
 	      (equal ($imagpart (cadr e)) 0)
 	      (ratgreaterp (cadr e) 0.))
-	 `(,(m- (caddr e)) ,(cadr e) ,(car e)))))
+	 ;; We're here if realpart(b) <= 0, and n >= 0.  Then return -b, n, a.
+	 `(,(caddr e) ,(cadr e) ,(car e)))))
 
+;; Integrate x^m*exp(b*x^n+a), with realpart(m) > -1.
+;;
+;; See Wang, pp. 84-85.
+;;
+;; I believe the formula Wang gives is incorrect.  The derivation is
+;; correct except for the last step.
+;;
+;; Let J = integrate(x^m*exp(%i*k*x^n),x,0,inf), with k < 0.
+;;
+;; Then J = exp(-%pi*%i*(m+1)/(2*n))*integrate(R^m*exp(k*R^n),R,0,inf)
+;;
+;; Wang seems to say this last integral is gamma(s/n/(-k)^s) where s =
+;; (m+1)/n.  But that seems wrong.  If we use the substitution x =
+;; (y/k)^(1/n), we end up with the result:
+;;
+;;   integrate(y^((m+1)/n-1)*exp(-y),y,0,inf)/k^((m+1)/n)/n.
+;;
+;; or gamma((m+1)/n)/k^((m+1)/n)/n.
+;;
+#+nil
 (defun ggr (e ind)
-  (prog (c zd zn nn* dn* nd* dosimp $%emode) 
+  (prog (c *zd* zn nn* dn* nd* dosimp $%emode)
+     (declare (special *zd*))
      (setq nd* 0.)
      (cond (ind (setq e ($expand e))
 		(cond ((and (mplusp e)
@@ -2328,21 +2743,98 @@
      (setq c (car e))
      (setq e (cdr e))
      (cond ((setq e (ggr1 e var))
-	    (setq e (apply 'gamma1 e))
-	    (cond (zd (setq $%emode t)
-		      (setq dosimp t)
-		      (setq e (m* zd e))))))
+	    ;; e = (m b n a).  I think we want to compute
+	    ;; gamma((m+1)/n)/k^((m+1)/n)/n.
+	    ;;
+	    ;; FIXME: If n > m + 1, the integral converges.  We need
+	    ;; to check for this.
+	    (progn
+	      (format t "e = ~A~%" e)
+	      (format t "asksign ~A = ~A~%"
+		      (sub (third e) (add ($realpart (first e)) 1))
+		      ($asksign (sub (third e) (add ($realpart (first e)) 1)))))
+	    
+	    (setq e (apply #'gamma1 e))
+	    ;; NOTE: *zd* (Ick!) is special and might be set by maybpc.
+	    (when *zd*
+	      ;; FIXME: Why do we set %emode here?  Shouldn't we just
+	      ;; bind it?  And why do we want it bound to T anyway?
+	      ;; Shouldn't the user control that?  The same goes for
+	      ;; dosimp.
+	      ;;(setq $%emode t)
+	      (setq dosimp t)
+	      (setq e (m* *zd* e)))))
+     (cond (e (return (m* c e))))))
+
+(defun ggr (e ind)
+  (prog (c *zd* zn nn* dn* nd* dosimp $%emode)
+     (declare (special *zd*))
+     (setq nd* 0.)
+     (cond (ind (setq e ($expand e))
+		(cond ((and (mplusp e)
+			    (let ((*nodiverg t))
+			      (setq e (catch 'divergent
+					(andmapcar
+					 #'(lambda (j) 
+					     (ggr j nil))
+					 (cdr e))))))
+		       (cond ((eq e 'divergent) nil)
+			     (t (return (sratsimp (cons '(mplus) e)))))))))
+     (setq e (rmconst1 e))
+     (setq c (car e))
+     (setq e (cdr e))
+     (cond ((setq e (ggr1 e var))
+	    ;; e = (m b n a).  I think we want to compute
+	    ;; gamma((m+1)/n)/k^((m+1)/n)/n.
+	    ;;
+	    ;; FIXME: If n > m + 1, the integral converges.  We need
+	    ;; to check for this.
+	    (destructuring-bind (m b n a)
+		e
+	      ;; Check for convergence.  If b is complex, we need n -
+	      ;; m > 1.  If b is real, we need b < 0.
+	      (when (and (zerop1 ($imagpart b))
+			 (not (eq ($asksign b) '$neg)))
+		(diverg))
+	      (when (and (not (zerop1 ($imagpart b)))
+			 (not (eq ($asksign (sub n (add m 1))) '$pos)))
+		(diverg))
+	      (setq e (gamma1 m (cond ((zerop1 ($imagpart b))
+				       ;; If we're here, b must be negative.
+				       (neg b))
+				      (t
+				       ;; Complex b.  Take the imaginary part
+				       `((mabs) ,($imagpart b))))
+			      n a))
+	      ;; NOTE: *zd* (Ick!) is special and might be set by maybpc.
+	      (when *zd*
+		;; FIXME: Why do we set %emode here?  Shouldn't we just
+		;; bind it?  And why do we want it bound to T anyway?
+		;; Shouldn't the user control that?  The same goes for
+		;; dosimp.
+		;;(setq $%emode t)
+		(setq dosimp t)
+		(setq e (m* *zd* e))))))
      (cond (e (return (m* c e))))))
 
 
-
+;; Match x^m*exp(b*x^n+a).  If it does, return (list m b n a).
 (defun ggr1 (e var) 
   (cond ((atom e) nil)
 	((and (mexptp e)
 	      (eq (cadr e) '$%e))
-	 (cond ((setq e (maybpc (caddr e) var)) (cons 0. e))))
+	 ;; We're looking at something like exp(f(var)).  See if it's
+	 ;; of the form b*x^n+a, and return (list 0 b n a).  (The 0 is
+	 ;; so we can graft something onto it if needed.)
+	 (cond ((setq e (maybpc (caddr e) var))
+		(cons 0. e))))
 	((and (mtimesp e)
+	      ;; E should be the product of exactly 2 terms
 	      (null (cdddr e))
+	      ;; Check to see if one of the terms is of the form
+	      ;; var^p.  If so, make sure the realpart of p > -1.  If
+	      ;; so, check the other term has the right form via
+	      ;; another call to ggr1.
 	      (or (and (setq dn* (xtorterm (cadr e) var))
 		       (ratgreaterp (setq nd* ($realpart dn*))
 				    -1.)
@@ -2351,11 +2843,16 @@
 		       (ratgreaterp (setq nd* ($realpart dn*))
 				    -1.)
 		       (setq nn* (ggr1 (cadr e) var)))))
+	 ;; Both terms have the right form and nn* contains the arg of
+	 ;; the exponential term.  Put dn* as the car of nn*.  The
+	 ;; result is something like (m b n a) when we have the
+	 ;; expression x^m*exp(b*x^n+a).
 	 (rplaca nn* dn*))))
 
 
+;; Match b*x^n+a.  If a match is found, return the list (a n b).
+;; Otherwise, return NIL
 (defun bx**n+a (e)
-;;; returns list of (a b n) or nil.
   (cond ((eq e var) 
 	 (list 0. 1. 1.))
 	((or (atom e) 
@@ -2367,8 +2864,8 @@
 			     (cons a e))
 			    (t ()))))))))
 
+;; Match b*x^n.  Return the list (n b) if found or NIL if not.
 (defun bx**n (e)
-;;;returns a list (n e) or nil.
   (let ((n ()))
     (and (setq n (xexponget e var))
 	 (not (among var
@@ -2376,7 +2873,7 @@
 				   ($maxnegex 1))
 			       ($expand (m// e (m^t var n)))))))
 	 (list n e))))
-
+
 (defun xexponget (e nn*)
   (cond ((atom e) (cond ((eq e var) 1.)))
 	((mnump e) nil)
@@ -2484,7 +2981,7 @@
 		   (equal (caddr (caddr e)) 2.))
 	      (among var (cadr e)))
 	 (cadr e))
-	(t (ormapc #'sqrtinvolve (cdr e))))) 
+	(t (ormapc #'sqrtinvolve (cdr e)))))
 
 (defun bydif (r s d)
   (let ((b 1)  p)
@@ -2540,6 +3037,7 @@
 	    
 ;;; Temporary fix for a lacking in taylor, which loses with %i in denom.
 ;;; Besides doesn't seem like a bad thing to do in general.
+#+nil
 (defun %i-out-of-denom (exp)
   (let ((denom ($denom exp))
 	(den-conj nil))
@@ -2547,6 +3045,22 @@
 	   (setq den-conj (maxima-substitute (m- '$%i) '$%i denom))
 	   (setq exp (m* den-conj ($ratsimp (m// exp den-conj))))
 	   (setq exp (simplify ($multthru  (sratsimp exp)))))
+	  (t exp))))
+
+(defun %i-out-of-denom (exp)
+  (let ((denom ($denom exp)))
+    (cond ((among '$%i denom)
+	   ;; Multiply the denominator by it's conjugate to get rid of
+	   ;; %i.
+	   (let* ((den-conj (maxima-substitute (m- '$%i) '$%i denom))
+		  (num ($num exp))
+		  (new-denom ($ratsimp (m* denom den-conj))))
+	     ;; If the new denominator still contains %i, just give
+	     ;; up.  Otherwise, multiply the numerator by the
+	     ;; conjugate and divide by the new denominator.
+	     (if (among '$%i new-denom)
+		 exp
+		 (setq exp (m// (m* num den-conj) new-denom)))))
 	  (t exp))))
 
 ;;; LL and UL must be real otherwise this routine return $UNKNOWN.
@@ -2605,6 +3119,7 @@
 		   (t '$no))))
     (cond ((eq ans '$no)   '$no)
 	  ((null ans)   nil)
+	  ((eq ans '$und) '$no)
 	  ((equal ans 0.)   '$no)
 	  (t '$yes))))
 
