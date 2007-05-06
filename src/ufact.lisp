@@ -52,8 +52,8 @@
 
 (defun dpgcd (p q)
   (if (< (car p) (car q)) (exch p q))
-  (do ((p (copy-top-level p) q)
-       (q (copy-top-level q) (dpremquo p q nil)))
+  (do ((p (copy-list p) q)
+       (q (copy-list q) (dpremquo p q nil)))
       ((= (car q) 0)
        (if (= (cadr q) 0) p '(0 1)))))
 
@@ -106,7 +106,7 @@
 (defun dpmodrem (p q)
   (cond ((< (car p) (car q)) p)
 	((= (car q) 0) '(0 0))
-	((dpremquo (copy1* p) (copy1* q) nil))))
+	((dpremquo (copy-list p) (copy-list q) nil))))
   
 (defun dpmodquo (p q)
   (cond ((< (car p) (car q)) '(0 0))
@@ -115,7 +115,7 @@
 	       (t (cons (car p)
 			(mapcar #'(lambda (c) (cquotient c (cadr q))) (cdr p))
 			))))
-	((dpremquo (copy1* p) (copy1* q) t))))
+	((dpremquo (copy-list p) (copy-list q) t))))
   
 ;; If FLAG is T, return quotient.  Otherwise return remainder.
 

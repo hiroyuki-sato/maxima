@@ -34,11 +34,18 @@ mcset ru "Multiple" "Множественное"
 mcset ru "Preferences" "Настройки"
 mcset ru "Show Tcl Console" "Отобразить консоль Tcl"
 mcset ru "Clear Memory" "Очистить память"
+mcset ru "Input prompt" "Приглашение"
 mcset ru "Kill All" "Очистить всё"
 mcset ru "Run Tests" "Запуск тестов"
 mcset ru "Help" "Справка"
 mcset ru "Maxima Help" "Справка по Maxima"
 mcset ru "Maxima Homepage" "Домашняя страница Maxima"
+mcset ru "Maxima Manual" "Руководство по Maxima"
+mcset ru "Maxima Manual (xmaxima browser)" "Руководство по Maxima (обозреватель xmaxima)"
+mcset ru "Maxima Manual (web browser)" "Руководство по Maxima (web обозвеватель)"
+mcset ru "Xmaxima Manual" "Руководство по Xmaxima"
+mcset ru "Xmaxima Manual (xmaxima browser)" "Руководство по Xmaxima (обозреватель xmaxima)"
+mcset ru "Xmaxima Manual (web browser)" "Руководство по Xmaxima (web обозвеватель)"
 mcset ru "Project Page" "Страница проекта"
 mcset ru "Bug Reports" "Для сообщений об ошибках"
 
@@ -67,29 +74,36 @@ Bindings:
 <Control-y> Yank out the last kill, Meta-y cycles through previous
             kills.
 <Control-g> Interrupts the current computation.
-<Alt-p>     Previous input, or if repeated cycle through the previous
-            inputs.  If the current input is not empty, then
-            match only inputs which begin with the current input.
-<Alt-n>     Like Previous input, but in opposite direction.
+<Alt-p>     Gets the previous input in the history of inputs; if the
+            first input is reached, it proceeds to the last input. If
+            some characters are written before clicking on Alt-p, only
+            history items containing those characters will be considered.
+<Alt-n>     Gets the next input in the history of inputs; if the end is
+            reached, it proceeds to the first input. If some characters
+            are written before clicking on Alt-n, only history items
+            containing those characters will be considered.
 <Alt-s>     Print again the Maxima input prompt.
 " "
 Клавиатурные привязки:
-<Return>   Вычислить текущее выражение (находящееся в позиции
-курсора).
-<Linefeed> (Control-j) Вставить новую строку; полезно при
-многострочном вводе.
+<Return>    Вычислить текущее выражение, находящееся в позиции
+            курсора.
+<Linefeed>  (Control-j) Вставить новую строку; полезно при
+            многострочном вводе.
 <Control-k> Удалить строку, начиная с текущей позиции, добавляя
-ее в буфер удаленных строк. Последующие нажатия Control-k's
-соединяют их вместе.
-<Control-y> Возвратить последнюю удаленную строку, Meta-y 
-циклически перебирает предшествующие удаленные строки.
+            ее в буфер удаленных строк. Последующие нажатия 
+	    Control-k's добавляет строки с буферу удалённых строк.
+<Control-y> Возвращает последнюю удаленную строку, Meta-y 
+            циклически перебирает предшествующие удаленные строки.
 <Control-g> Прерывать текущие вычисления.
-<Alt-p>   Предыдущий ввод, при повторном нажатии выводит
-все предшествующие строки. Если текущая строка ввода не пуста,
-выводит только те строки, начало которых совпадает с текущей
-строкой.
-<Alt-n>   То же, что и предыдущий ввод, но в обратном направлении.
-<Alt-s>   Сновы вывести приглашение Maxima.
+<Alt-p>     Предыдущая введенная строка, при повторном нажатии выводит
+            все предыдущие строки. При достижении первой строки в истстории
+            переходит к последней. Если текущая строка ввода не пуста,
+            выводит только те строки, которые содержат её как подстроку.
+<Alt-n>     Последующая введенная строка, при повторном нажатии выводит
+            все последующие строки. При достижении последней строки в истстории
+            переходит к первой. Если текущая строка ввода не пуста,
+            выводит только те строки, которые содержат её как подстроку.
+<Alt-s>     Снова вывести приглашение Maxima.
 "
 
 

@@ -20,8 +20,8 @@ UninstallFilesDir={app}\uninst
 ; MinVersion=4,3.51
 
 [Files]
-Source: "/usr\info\pt\*.*"; DestDir: "{app}\info\pt\";  Flags: recursesubdirs
-Source: "/usr\share\maxima\5.10.0\doc\html\pt\*.*"; DestDir: "{app}\share\maxima\5.10.0\doc\html\pt\";  Flags: recursesubdirs
+Source: "/usr/local\info\pt\*.*"; DestDir: "{app}\info\pt\";  Flags: recursesubdirs
+Source: "/usr/local\share\maxima\5.10.0\doc\html\pt\*.*"; DestDir: "{app}\share\maxima\5.10.0\doc\html\pt\";  Flags: recursesubdirs
 
 [Messages]
 SetupWindowTitle=Setup - Maxima Portuguese language pack

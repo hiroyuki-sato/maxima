@@ -5,6 +5,9 @@
 ($auto_mexpr '$unsum "nusum")
 ($auto_mexpr '$funcsolve "nusum")
 
+($auto_mexpr '$bfzeta "bffac")
+($auto_mexpr '$bfpsi "bffac")
+
 (auto-mexpr '$trigrat '|trigrat|)
 ($auto_mexpr '$gcdex '|gcdex|)
 ($auto_mexpr '$expandwrt "simplification/stopex")
@@ -33,6 +36,7 @@
 ($auto_mexpr '$ic1 "ode2.mac")
 ($auto_mexpr '$ic2 "ode2.mac")
 ($auto_mexpr '$bc2 "ode2.mac")
+($auto_mexpr '$desimp "ode2.mac")
 
 (dolist (v       
 	  '($arite
@@ -88,14 +92,188 @@
   (setf (get v 'autoload)        "sym.mac")
   )
 
+(dolist (f       
+     '($close
+       $flength
+       $fposition
+       $freshline
+       $newline
+       $opena
+       $openr
+       $openw
+       $printf
+       $readline
+       $alphacharp
+       $alphanumericp
+       $ascii
+       $cequal
+       $cequalignore
+       $cgreaterp
+       $cgreaterpignore
+       $charp
+       $cint
+       $clessp
+       $clesspignore
+       $constituent
+       $cunlisp
+       $digitcharp
+       $lcharp
+       $lowercasep
+       $uppercasep
+       $sunlisp
+       $lstringp
+       $stringp
+       $charat
+       $charlist
+       $parsetoken
+       $sconc
+       $scopy
+       $sdowncase
+       $sequal
+       $sequalignore
+       $sexplode
+       $simplode
+       $sinsert
+       $sinvertcase
+       $slength
+       $smake
+       $smismatch
+       $split
+       $sposition
+       $sremove
+       $sremovefirst
+       $sreverse
+       $ssearch
+       $ssort
+       $ssubst
+       $ssubstfirst
+       $strim
+       $striml
+       $strimr
+       $substring
+       $supcase
+       $tokens ))
+  (setf (get f 'autoload) "stringproc"))
+
+(auto-mspec '$romberg "romberg")
+
+(dolist (f       
+     '($read_matrix
+       $read_lisp_array
+       $read_maxima_array
+       $read_hashed_array
+       $read_nested_list
+       $read_list
+       $write_data ))
+  (autof f "numericalio"))
+
+(autof '$eval_string "eval_string")
+(autof '$parse_string "eval_string")
+
+
+;; begin functions from share/linearalgebra 
+
+; loading linearalgebra.mac loads the complete linearalgebra stuff
+(defun autof-linearalgebra (fun)
+  (unless (fboundp fun)
+    (setf (symbol-function fun)
+        #'(lambda (&rest l)
+         ($aload_mac "linearalgebra")
+         (apply fun l)))))
+
+(dolist (f       
+     '($eigens_by_jacobi   ; eigens-by-jacobi.lisp
+     
+       $cholesky           ; linalgcholesky.lisp
+       
+       $circulant          ; linalg-extra.lisp
+       $cauchy_matrix
+       $hessian
+       $jacobian
+       $matrix_sign
+       
+       $blockmatrixp       ; linalg-utilities.lisp
+       $ctranspose
+       $identfor
+       $matrix_size
+       $mytest
+       $require_list 
+       $require_matrix
+       $require_nonempty_matrix 
+       $require_posinteger
+       $require_selfadjoint_matrix
+       $require_square_matrix
+       $require_symmetric_matrix
+       $require_unblockedmatrix 
+       $zerofor
+       $zeromatrixp
+       
+       $get_lu_factors     ; lu.lisp
+       $invert_by_lu 
+       $linsolve_by_lu
+       $lu_backsub
+       $lu_factor
+       $mat_cond
+       
+       $matrixexp          ; matrixexp.lisp
+       $matrixfun
+       $spectral_rep
+       
+       $addmatrices        ; mring.lisp
+       $require_ring
+       
+       $nonnegintegerp     ; polynomialp.lisp
+       $polynomialp ))
+  (autof-linearalgebra f))
+
+(let ((fun '$ringeval))    ; mring.lisp
+  (unless (get fun 'mfexpr*)
+    (setf (get fun 'mfexpr*)
+     #'(lambda (l)
+         ($aload_mac "linearalgebra")
+         (funcall (get fun 'mfexpr*) l)))))
+
+(dolist (mexpr       
+     '($column_reduce      ;linearalgebra.mac
+       $columnop
+       $columnspace 
+       $columnswap
+       $diag_matrix
+       $dotproduct 
+       $good_pivot
+       $hankel
+       $hilbert_matrix
+       $hipow_gzero
+       $kronecker_product
+       $locate_matrix_entry
+       $mat_fullunblocker
+       $mat_norm
+       $mat_trace
+       $mat_unblocker
+       $nullity
+       $nullspace
+       $orthogonal_complement
+       $polytocompanion
+       $ptriangularize
+       $ptriangularize_with_proviso
+       $rank
+       $request_rational_matrix
+       $require_integer
+       $require_symbol
+       $rowop
+       $rowswap
+       $toeplitz
+       $vandermonde_matrix ))
+  ($auto_mexpr mexpr "linearalgebra"))
+
+;; end functions from share/linearalgebra
+
 
 '$parametric
 '(defvar $plot_options '((mlist)
 					;((mlist) $x -3 3)
 					;((mlist) $y -3 3)
 			 ((mlist) $grid 30 30)
-			 ((mlist) $view_direction 1 1 1)
-			 ((mlist) $colour_z nil)
 			 ((mlist) $transform_xy nil)
 			 ((mlist) $run_viewer t)
 			 ((mlist) $plot_format $openmath)

@@ -43,7 +43,7 @@
     
 	(cond ((atom x) ;; typical case is setting an atom to a value
 	       (when (or (not (symbolp x)) 
-			 (memq x '(t nil)) ;can't set t or nil, boolean constants
+			 (member x '(t nil) :test #'eq) ;can't set t or nil, boolean constants
 			 (mget x '$numer)  ;can't set a numeric constant like $%pi or $%e
 			 (char= (getcharn x 1) #\&)) ;can't set a string (begins with &)
 		 (if munbindp (return nil)) ;dunno what this does. see mlisp.lisp file.
@@ -55,7 +55,7 @@
 	       ;; a settable atom. Let's get on with it.
 	       (let ((f (get x 'assign)))
 		 (if (and f (or (not (eq x y))
-				(memq f '(neverset read-only-assign))))
+				(member f '(neverset read-only-assign) :test #'eq)))
 		     (if (eq (funcall f x y) 'munbindp) (return nil))))
 	       (cond ((and (not (boundp x))
 			   (not dsksetp)) ;? something about disk?
@@ -88,10 +88,10 @@
               (return-from mset (funcall mset-extension-op x y)))))
 
 	      ;; x is not an atom, but something like (($M array simp) 12)
-	      ((memq 'array (cdar x))
+	      ((member 'array (cdar x) :test #'eq)
 	       (return (arrstore x y))) ;; do the array store
 	      
-	  ;;    ((and $subscrmap (memq (caar x) '(mlist $matrix)));; deprecated.
+	  ;;    ((and $subscrmap (member (caar x) '(mlist $matrix) :test #'eq));; deprecated.
 	 ;;      (return (outermap1 'mset x y)))
 
 	      (t (merror "Improper left-hand side for an assignment:~%~M" x)))))
@@ -186,7 +186,7 @@
        (if (null ($get recordname '$defstruct_default))
          (merror "~% new: don't know anything about `~M'." recordname))
 
-       (copy ($get recordname '$defstruct_default)))
+       (copy-tree ($get recordname '$defstruct_default)))
 
       ;; assume there is some initialization here e.g. new (f(5,6,7))
       (t
@@ -198,7 +198,7 @@
             (merror "~% new: wrong number of arguments in initializer; expected ~M, not ~M."
                     (length (cdr ($get recordop '$defstruct_default))) (length recordargs)))
 
-          (copy recordname))))))
+          (copy-tree recordname))))))
 
 ;; this is the lisp code equivalent to executing the command
 ;; infix(@);

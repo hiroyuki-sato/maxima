@@ -9,13 +9,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module nrat4)
 
-(declare-top(genprefix fqz_)
-	    (special $ratsimpexpons *exp *exp2 *radsubst *loglist $radsubstflag 
-		     $radexpand $logsimp *v *var fr-factor radcanp ratsubvl)
-	    (*lexpr $ratsimp)
-	    (fixnum nargs))
+(declare-top (special $ratsimpexpons *exp *exp2 *radsubst *loglist $radsubstflag 
+		      $radexpand $logsimp *v *var fr-factor radcanp ratsubvl))
 
 (load-macsyma-macros rzmac ratmac)
 
@@ -34,7 +32,7 @@
 (defun rform (x) (cdr (ratf x)))
 
 (setq radcanp nil)
-
+
 (defmfun $ratcoef nargs
   (cond ((= nargs 3) (ratcoeff (arg 1) (arg 2) (arg 3)))
 	((= nargs 2) (ratcoeff (arg 1) (arg 2) 1))
@@ -42,7 +40,7 @@
 
 (defmfun ratcoeff (a b c)
   (let* ((formflag ($ratp a))
-	 (taylorform (and formflag (memq 'trunc (cdar a)))))
+	 (taylorform (and formflag (member 'trunc (cdar a) :test #'eq))))
     (cond ((zerop1 b) (improper-arg-err b '$ratcoeff))
 	  ((mbagp a) (cons (car a)
 			   (mapcar #'(lambda (a) (ratcoeff a b c))
@@ -77,7 +75,7 @@
 	((null lg)
 	 (cons (list 'mrat 'simp (nreverse nlv) (nreverse nlg))
 	       ratform))
-      (cond ((memq (car lg) newgens)
+      (cond ((member (car lg) newgens :test #'eq)
 	     (push (car lg) nlg)
 	     (push (car lv) nlv))))))
 
@@ -112,7 +110,7 @@
   (cond ((null p) 0)
 	((zerop (car p)) (cadr p))
 	(t (constcoef (cddr p)))))
-
+
 (setq *radsubst nil ratsubvl t)		;SUBST ON VARLIST
 
 (defmfun $ratsubst (a b c)		;NEEDS CODE FOR FAC. FORM 
@@ -120,7 +118,7 @@
      ;;hard to maintain user ordering info.
      (if ($ratp c) (setq dontdisrepit t))
      (when (and $radsubstflag
-		(prog2 (newvar b) (ormapc #'mexptp varlist)))
+		(prog2 (newvar b) (some #'mexptp varlist)))
        (let (($factorflag t) *exp *exp2 *radsubst)
 	 (setq b (fullratsimp b))
 	 (setq c (fullratsimp c))
@@ -170,7 +168,7 @@
 	    (setq a (rattimes a (cons (cdr b) 1) t))
 	    (setq b (cons (car b) 1))))
      (setq c
-	   (cond ((zl-member (car b) '(0 1))
+	   (cond ((member (car b) '(0 1) :test #'equal)
 		  (ratf (maxima-substitute (rdis a) b (rdis c))))
 		 (t (cons (list 'mrat 'simp varlist genvar)
 			  (if (eqn (cdr a) 1)
@@ -183,7 +181,7 @@
 	     varlist nil
 	     c (ratf c)))
      (return (cond (dontdisrepit c) (t ($ratdisrep c))))))
-
+
 (defun xptimes (x y) (if $ratwtlvl (wtptimes x y 0) (ptimes x y)))
 
 (defun allsubst00 (a b c)
@@ -213,7 +211,7 @@
   (do ((ptr l (cddr ptr)))
       ((null ptr) l)
     (setf (cadr ptr) (ptimes h (cadr ptr)))))
-
+
 
 (defun pairoff (l m)
   (cond ((null m) l) (t (cons (car m) (pairoff (cdr l) (cdr m))))))
@@ -231,12 +229,12 @@
 		(list (setq maxpow
 			    (do ((b b (quotient b a))
 				 (ans 0 (f1+ ans)))
-				((or (greaterp (abs a) (abs b))
+				((or (> (abs a) (abs b))
 				     (eqn maxpow ans))
 				 ans)))
 		      (quotient b (setq maxpow (expt a maxpow)))
 		      0
-		      (remainder b maxpow)))
+		      (rem b maxpow)))
 	       (t (everysubst1 a b maxpow))))
 	((or (pcoefp b) (pointergp (car a) (car b))) (list 0 b))
 	((eq (car a) (car b))
@@ -245,7 +243,7 @@
 	(t (everysubst1 a b maxpow))))
 
 (defun everypterms (x p n maxpow)
-  (if (lessp (cadr x) n) (list 0 x)
+  (if (< (cadr x) n) (list 0 x)
       (prog (k ans q part)
 	 (setq k (car x))
 	 (setq x (cdr x))
@@ -264,13 +262,13 @@
   (do ((ptr l (cddr ptr)))
       ((null ptr) l)
     (setf (cadr ptr)
-	  (ptimes (psimp k (list (f- j (f* n (car ptr))) 1))
+	  (ptimes (psimp k (list (- j (f* n (car ptr))) 1))
 		  (cadr ptr)))))
-
+
 (defun substforsum (a b maxpow)
-  (do ((pow 0 (add1 pow))
+  (do ((pow 0 (1+ pow))
        (quot) (zl-rem) (ans))
-      ((not (lessp pow maxpow)) (list* maxpow b ans))
+      ((not (< pow maxpow)) (list* maxpow b ans))
     (desetq (quot zl-rem) (pdivide b a))
     (unless (and (eqn (cdr quot) 1)
 		 (not (pzerop (car quot)))
@@ -310,7 +308,7 @@
       (and (not (atom (cdr x)))
 	   (null (cdddr x))
 	   (pureprod (caddr x)))))
-
+
 (defmfun $bothcoef (r var) 
   (prog (*var h varlist genvar $ratfac)
      (unless ($ratp r)
@@ -357,26 +355,11 @@
      (if (freeof (getopr (car l)) e) (go loop))
      (return nil)))
 
-;;(DEFMFUN FREEOF (VAR E) 
-;;  (COND ((ALIKE1 VAR E) NIL)
-;;	((ATOM E) T)
-;;	((AND (OR (MEMQ (CAAR E) '(%PRODUCT %SUM %LAPLACE))
-;;		  (AND (EQ (CAAR E) '%INTEGRATE) (CDDDR E))
-;;		  (AND (EQ (CAAR E) '%LIMIT) (CDDR E)))
-;;	      (ALIKE1 VAR (CADDR E)))
-;;	 (FREEOFL VAR (CDDDR E)))
-;;	((EQ (CAAR E) '%AT)
-;;	 (COND ((NOT (FREEOFL VAR (HAND-SIDE (CADDR E) 'R))) NIL)
-;;	       ((NOT (FREEOFL VAR (HAND-SIDE (CADDR E) 'L))) T)
-;;	       (T (FREEOF VAR (CADR E)))))
-;;	(ARGSFREEOFP (FREEOFL VAR (MARGS E)))
-;;	(T (AND (FREEOF VAR (CAAR E)) (FREEOFL VAR (CDR E))))))
-;;Update from F302 --gsb
 (defun freeof (var e) 
   (cond ((alike1 var e) nil)
 	((atom e) t)
 	((and (not argsfreeofp) (alike1 var (caar e))) nil)
-	((and (or (memq (caar e) '(%product %sum %laplace))
+	((and (or (member (caar e) '(%product %sum %laplace) :test #'eq)
 		  (and (eq (caar e) '%integrate) (cdddr e))
 		  (and (eq (caar e) '%limit) (cddr e)))
 	      (alike1 var (caddr e)))
@@ -385,7 +368,7 @@
 	 (cond ((not (freeofl var (hand-side (caddr e) 'r))) nil)
 	       ((not (freeofl var (hand-side (caddr e) 'l))) t)
 	       (t (freeof var (cadr e)))))
-	((and (eq (caar e) 'lambda) (memq var (cdadr e))) t)
+	((and (eq (caar e) 'lambda) (member var (cdadr e) :test #'eq)) t)
 	(argsfreeofp (freeofl var (margs e)))
 	(t (freeofl var (cdr e)))))
 
@@ -394,8 +377,8 @@
 (defmfun hand-side (e flag)
   (setq e (if (eq (caar e) 'mequal) (ncons e) (cdr e)))
   (mapcar #'(lambda (u) (if (eq flag 'l) (cadr u) (caddr u))) e))
-
-(comment subtitle radcan)
+
+;; subtitle radcan
 
 (defmfun $radcan (exp)
   (cond ((mbagp exp) (cons (car exp) (mapcar '$radcan (cdr exp))))
@@ -423,19 +406,19 @@
 (defun spc0 ()
   (prog (*v *loglist) 
      (if (allatoms varlist) (return nil))
-     (setq varlist (mapcar (function spc1) varlist));make list of logs
+     (setq varlist (mapcar #'spc1 varlist)) ;make list of logs
      (setq *loglist (factorlogs *loglist))
-     (mapc (function spc2) *loglist)	;subst log factorizations
-     (mapc (function spc3) varlist genvar) ;expand exponents
-     (mapc (function spc4) varlist)	;make exponent list
+     (mapc #'spc2 *loglist)		   ;subst log factorizations
+     (mapc #'spc3 varlist genvar)	   ;expand exponents
+     (mapc #'spc4 varlist)		   ;make exponent list
      (desetq (varlist . genvar) (spc5 *v varlist genvar))
 					;find expon dependencies
-     (setq varlist (mapcar (function rjfsimp) varlist))	;restore radicals
-     (mapc (function spc7) varlist)))	;simplify radicals
+     (setq varlist (mapcar #'rjfsimp varlist)) ;restore radicals
+     (mapc #'spc7 varlist)))		       ;simplify radicals
 
 (defun allatoms (l)
   (loop for x in l always (atom x)))
-
+
 (defun rjfsimp (x &aux expon) 
   (cond ((and *radsubst $radsubstflag) x)
 	((not (m$exp? (setq x (let ($logsimp) (resimplify x))))) x)
@@ -449,7 +432,7 @@
 		    (and rischflag (cdr power) (return x))
 		    (return
 		      `((mexpt) ,(cadar power)
-			,(muln	(zl-remove (car power) (cdr expon) 1)
+			,(muln	(remove (car power) (cdr expon) :count 1 :test #'equal)
 				nil))))
 		   (rischflag (return x)))))))
 
@@ -465,7 +448,7 @@
   (if *radsubst (setq *exp2 (allsubst00 a b *exp2))))
 
 (setq *var nil)
-
+
 (defun spc1 (x)
   (cond ((mlogp x) (putonloglist x))
 	((and (mexptp x) (not (eq (cadr x) '$%e)))
@@ -487,7 +470,7 @@
   ((lambda (sum)			;RFORM LOGAND TO SUM 
      (if (cdr sum) (cons '(mplus) sum)	;OF LOGS
 	 (car sum)))
-   (mapcar (function spc2b) x)))
+   (mapcar #'spc2b x)))
 	 
 (defun spc2b (x)
   (let ((log `((%log simp ratsimp irreducible) ,(pdis (car x)))))
@@ -504,7 +487,7 @@
 				    (cdr y))))
     (radsubst (rform y) (rget v))
     (dsubsta y x varlist)))
-
+
 (defun spc4 (x) 
   (if (and (m$exp? x)
 	   (not (memalike (caddr x) *v)))
@@ -526,7 +509,7 @@
 (defun spc5 (vl oldvarlist oldgenvar &aux gcdlist varlist genvar)
   (dolist (v vl)
     (destructuring-let* ((((nil . c) . r) (rzcontent (rform v)))
-			 (g (zl-assoc r gcdlist)))
+			 (g (assoc r gcdlist :test #'equal)))
       (cond (g (setf (cadr g) (plcm c (cadr g)))
 	       (push (list ($exp v) c) (cddr g)))
 	    (t (push (list r c (list ($exp v) c)) gcdlist)))))
@@ -566,7 +549,7 @@
       (radsubst (ratexpt rbase (cadr expon))
 		(ratexpt rad (caddr expon))))))
 
-
+
 (defun goodform (l) ;;bad -> good
   (loop for (exp coef) on l by #'pt-red
 	 collect (cons exp coef)))
@@ -577,13 +560,13 @@
        (setq log
 	     (cons log (goodform
 			(ratfact (rform (radcan1 (cadr log)))
-				 (function pfactor)))))
+				 #'pfactor))))
        (cond ((equal (caadr log) -1) (push log negl))
 	     (t (push log posl))))
      (setq negl (flsort negl) posl (flsort posl) l (append negl posl))
-     (setq negl (mapcar (function cdr) negl)
-	   posl (mapcar (function cdr) posl))
-     a     (setq negl (zl-delete '((-1 . 1)) negl))
+     (setq negl (mapcar #'cdr negl)
+	   posl (mapcar #'cdr posl))
+     a     (setq negl (delete '((-1 . 1)) negl :test #'equal))
      (or negl
 	 (return (mapc #'(lambda (x) (rplacd x (spc2a (cdr x)))) l)))
      (setq maxnl (flmaxl negl)
@@ -598,8 +581,8 @@
      (cond ((and (flevenp maxpl) (not (flevenp maxnl)))
 	    (mapc #'(lambda (fp) (rplaca (car fp) (pminus (caar fp)))
 			    (cond ((oddp (cdar fp))
-				   (zl-delete '(-1 . 1) fp)
-				   (setq negl (zl-delete fp negl))
+				   (setq fp (delete '(-1 . 1) fp :test #'equal))
+				   (setq negl (delete fp negl :test #'equal))
 				   (and (cdr fp) (push (cdr fp) posl)))))
 		  maxnl)
 	    (go a))
@@ -614,7 +597,7 @@
   (mapl #'(lambda (x) (if (equal p (caaar x))
 			  (rplaca x (cdar x))))
 	pl)
-  (zl-delete nil pl))
+  (delete nil pl :test #'equal))
 
 (defun flmaxl (fpl)			;lists of fac. polys
   (cond ((null fpl) nil)
@@ -627,7 +610,7 @@
 	       ((null ll) maxl)))))
 
 (defun flsort (fpl)
-  (mapc #'(lambda (x) (rplacd x (sortcar (cdr x) #'flgreat)))
+  (mapc #'(lambda (x) (rplacd x (sort (cdr x) #'flgreat :key #'car)))
 	fpl))
 
 (defun nmt (p any)
@@ -650,7 +633,7 @@
 
 (defun flgreat1 (p q)
   (cond ((numberp p)
-	 (cond ((numberp q) (greaterp p q))
+	 (cond ((numberp q) (> p q))
 	       (t nil)))
 	((numberp q) t)
 	((pointergp (car p) (car q)) t)
@@ -658,9 +641,3 @@
 	((> (cadr p) (cadr q)) t)
 	((< (cadr p) (cadr q)) nil)
 	(t (flgreat1 (caddr p) (caddr q)))))
-
-
-;; Undeclarations for the file:
-#-nil
-(declare-top(notype nargs))
-

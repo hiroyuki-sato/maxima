@@ -94,6 +94,7 @@
 (defmvar $pivot_max_sx   15000  "Maximum number of pivots allowed."   fixnum)
 (defmvar $epsilon_sx      1e-8  "Epsilon for numerical computation."  flonum)
 (defmvar $scale_sx         nil  "Should we scale the input."         boolean)
+(defmvar $warn_rank_sx     nil  "Print warnings about rank."         boolean)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                                                           ;;
@@ -101,6 +102,7 @@
 ;; form.                                                                     ;;
 ;;                                                                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defun $linear_program (A b c)
   (if (not ($matrixp A))
@@ -118,7 +120,8 @@
          (n ($length ($first A)))
          (Tab (make-array `(,(+ 2 m) ,(1+ n)))) ; Tableau
          (basis ())      ; which columns are in current basis
-         (sc-fac ()))    ; scaling factors
+         (sc-fac ())     ; scaling factors
+	 ($ratprint nil))
     
     (setq $pivot_count_sx 0)
 
@@ -185,7 +188,8 @@
 
           (dotimes (i m)
             (if (>= (nth i basis) n)
-                (if (not (run-out-of-basis-sx Tab m n basis i))
+                (if (and (not (run-out-of-basis-sx Tab m n basis i))
+			 $warn_rank_sx)
                     ($print "Matrix A is not of full rank:"
                             "Row" (1+ i) "is redundant!"))))
 
@@ -241,8 +245,7 @@
             (progn
               (setq tmp (aref Tab (1- m) j))
               (setq jp j))))
-      (if (or (mlsp tmp $epsilon_sx)
-              (meqp tmp $epsilon_sx))
+      (if (mgqp $epsilon_sx tmp)
           (progn
             (setq is-bounded t)
             (setq have-solution t))

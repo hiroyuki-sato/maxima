@@ -189,8 +189,8 @@
     ((pzerop x) (return-from cfactor (list (pzero) 1)))
     ((eqn x -1) (return-from cfactor (list -1 1)))
     ((minusp x)
-     (return-from cfactor (cons -1 (cons 1 (cfactor (minus x))))))
-    ((lessp x 2) (return-from cfactor (list x 1)))
+     (return-from cfactor (cons -1 (cons 1 (cfactor (- x))))))
+    ((< x 2) (return-from cfactor (list x 1)))
     (t
      (let* ((factor-list (get-factor-list x))
 	    (factor-list (sort factor-list (lambda (u v) (< (car u) (car v)))))

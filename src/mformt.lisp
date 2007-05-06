@@ -9,58 +9,50 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module mformt)
+
 (load-macsyma-macros mforma)
 
-(eval-when (eval)
-  (setq macro-expansion-use 'displace))
+(setf (get '|| 'mformat-ops) nil)
+(setf (get '|| 'mformat-state-vars) nil)
 
+(defmacro def-mformat-op (char &rest body)
+  `(+def-mformat-op ,'|| ,char ,@body))
 
-#+lispm
-(record-source-file-name 'mformat-loop 'macro t)
-;;macro expand the following!!
+(defmacro def-mformat-var (var val init)
+  `(+def-mformat-var ,'|| ,var ,val ,init))
 
-(def-mformat)
-;;macro expansion of the (def-mformat)  --wfs
-;;(PROGN 'COMPILE
-;;       (DEFMACRO DEF-MFORMAT-OP (CHAR &REST BODY)
-;;           `(+DEF-MFORMAT-OP || ,CHAR . ,BODY))
-;;       (DEFMACRO DEF-MFORMAT-VAR (VAR VAL INIT)
-;;           `(+DEF-MFORMAT-VAR || ,VAR ,VAL ,INIT))
-;;       (DEFMACRO MFORMAT-LOOP (&REST ENDCODE)
-;;           `(+MFORMAT-LOOP || . ,ENDCODE)))
-#+lispm
-(record-source-file-name 'def-format-var 'defmacro t)
-;;see above-wfs
+(defmacro mformat-loop (&rest endcode)
+  `(+mformat-loop ,'|| ,@endcode))
 
-
-(def-mformat-var |:-FLAG|     nil t)
-(def-mformat-var |@-FLAG|     nil t)
-(def-mformat-var parameter   0  t)	; Who can read "~33,34,87A" ?
+(def-mformat-var |:-FLAG| nil t)
+(def-mformat-var |@-FLAG| nil t)
+(def-mformat-var parameter 0 t)	; Who can read "~33,34,87A" ?
 (def-mformat-var parameter-p nil t)
-(def-mformat-var text       nil nil)
+(def-mformat-var text nil nil)
 (def-mformat-var text-temp nil nil)
 (def-mformat-var displa-p nil nil)
 (def-mformat-var pre-%-p nil nil)
 (def-mformat-var post-%-p nil nil)
 
-#-pdp10
-(defmfun check-out-of-core-string (sstring) sstring)
-
 (defmacro push-text-temp ()
-  '(if text-temp (setq text (cons (cons '(text-string) (nreverse text-temp))
-			     text)
-		  text-temp nil)))
+  '(when text-temp
+     (push (cons '(text-string) (nreverse text-temp)) text)
+     (setq text-temp nil)))
 
 (defmacro output-text ()
-  '(progn (push-text-temp)
+  '(progn
+    (push-text-temp)
     (output-text* stream text displa-p pre-%-p post-%-p)
-    (setq text nil displa-p nil pre-%-p nil post-%-p nil)))
+    (setq text nil
+     displa-p nil
+     pre-%-p nil
+     post-%-p nil)))
 
 (def-mformat-op (#\% #\&)
-    (cond ((or text text-temp)
+    (cond ((or text text-temp) ;; there is text to output.
 	   (setq post-%-p t)
-	   ;; there is text to output.
 	   (output-text))
 	  (t
 	   (setq pre-%-p t))))
@@ -89,58 +81,40 @@
 	text))
 
 (defmfun mformat n
-  (or (> n 1)
-      ;; make error message without new symbols.
-      ;; This error should not happen in compiled code because
-      ;; this check is done at compile time too.
-      (maxima-error 'wrng-no-args 'mformat))
+  (unless (> n 1)
+    ;; make error message without new symbols.
+    ;; This error should not happen in compiled code because
+    ;; this check is done at compile time too.
+    (maxima-error "mformat: wrng-no-args"))
   (let* ((stream (arg 1))
-	 (sstring (exploden (check-out-of-core-string (arg 2))))
+	 (sstring (exploden (arg 2)))
 	 (arg-index 2))
-					;(or (eql (car sstring) #\&) (push #\& sstring))
-	
-    (and (or (null stream)
-	     (eq t stream))
-	 (setq stream *standard-output*))
+    (when (or (null stream) (eq t stream))
+      (setq stream *standard-output*))
     ;; This is all done via macros to save space,
     ;; (No functions, no special variable symbols.)
     ;; If the lack of flexibilty becomes an issue then
     ;; it can be changed easily.
     (mformat-loop (output-text))
     ;; Keep from getting bitten by buffering.
-    (force-output stream)
-    ))
+    (force-output stream)))
 
 ;;can't change mformat since there are various places where stream = nil means
 ;; standard output not a string  
 ;;note: compile whole file, incremental compiling will not work.
 
-
 (defmfun aformat n
-  (or (> n 1)
+  (unless (> n 1)
       ;; make error message without new symbols.
       ;; This error should not happen in compiled code because
       ;; this check is done at compile time too.
-      (maxima-error 'wrng-no-args 'mformat))
+      (maxima-error "mformat: wrng-no-args"))
   (let ((stream (arg 1))
-	(sstring (exploden (check-out-of-core-string (arg 2))))
+	(sstring (exploden (arg 2)))
 	(arg-index 2))
-    #+nil
-    (and (or (null stream)
-	     (eq t stream))
-	 (setq stream *standard-output*))
-
-    (cond((null stream)
-	  (with-output-to-string (stream)
-	    (mformat-loop (output-text))))
-	 (t (mformat-loop (output-text))))
-    ;; This is all done via macros to save space,
-    ;; (No functions, no special variable symbols.)
-    ;; If the lack of flexibilty becomes an issue then
-    ;; it can be changed easily.
-    #+multics
-    (force-output stream)
-    ))
+    (if (null stream)
+	(with-output-to-string (stream) (mformat-loop (output-text)))
+	(mformat-loop (output-text)))))
 
 
 (defun output-text* (stream text displa-p pre-%-p post-%-p)
@@ -153,28 +127,17 @@
 	     ((null text))
 	   (do ((l (cdr (pop text)) (cdr l)))
 	       ((null l))
-	     (tyo (car l) stream)))
+	     (write-char (car l) stream)))
 	 (if post-%-p (terpri stream)))))
 
 (defun-prop (text-string dimension) (form result)
-  ;; come up with something more efficient later.
   (dimension-atom (maknam (cdr form)) result))
 
 (defmfun displaf (object stream)
-  ;; for DISPLA to a file. actually this works for SFA's and
-  ;; other streams in maclisp.
-  #-(or cl nil)
-  (if (eq stream nil)
-      (displa object)
-      (let ((^r t)
-	    (^w t)
-	    (outfiles (ncons stream)))
-	(displa object)))
-  #+(or cl nil)
+  ;; for DISPLA to a file.
   ;; a bit of a kludge here. ^r and ^w still communicate something
   ;; to the displa package, but OUTFILES has not been implemented/hacked.
-  (if (or (eq stream nil)
-	  (eq stream *standard-output*))
+  (if (or (eq stream nil) (eq stream *standard-output*))
       (displa object)
       (let ((*standard-output* stream)
 	    (^r t)
@@ -183,30 +146,3 @@
 
 (defmfun mtell (&rest l)
   (apply #'mformat nil l))
-
-
-;; Calling-sequence optimizations.
-#+pdp10
-(progn 'compile
-       (let ((x (getl 'mformat '(expr lsubr))))
-	 (remprop '*mformat (car x))
-	 (putprop '*mformat (cadr x) (car x)))
-       (declare (*lexpr *mformat))
-       (defmfun *mformat-2 (a b) (*mformat a b))
-       (defmfun *mformat-3 (a b c) (*mformat a b c))
-       (defmfun *mformat-4 (a b c d) (*mformat a b c d))
-       (defmfun *mformat-5 (a b c d e) (*mformat a b c d e))
-
-       (let ((x (getl 'mtell '(expr lsubr))))
-	 (remprop '*mtell (car x))
-	 (putprop '*mtell (cadr x) (car x)))
-       (declare (*lexpr *mtell))
-       (defmfun mtell1 (a)         (*mtell a))
-       (defmfun mtell2 (a b)       (*mtell a b))
-       (defmfun mtell3 (a b c)     (*mtell a b c))
-       (defmfun mtell4 (a b c d)   (*mtell a b c d))
-       (defmfun mtell5 (a b c d e) (*mtell a b c d e))
-       )
-
-
-

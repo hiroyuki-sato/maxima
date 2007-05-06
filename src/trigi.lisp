@@ -9,20 +9,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module trigi)
 
 (load-macsyma-macros mrgmac)
 
-(declare-top(genprefix tri)
-	    (special varlist errorsw $demoivre)
-	    (flonum (tan) (cot) (sec) (csc)
-		    (atan2) (atan1) (acot)
-		    (sinh) (cosh) (tanh) (coth) (csch) (sech)
-		    (asinh) (acsch)
-		    (t//$ flonum flonum notype))
-	    (*expr $bfloat teval signum1 zerop1 islinear expand1
-		   timesk addk maxima-integerp evod logarc
-		   mevenp eqtest halfangle coeff))
+(declare-top (special varlist errorsw $demoivre))
 
 (defmvar $%piargs t)
 (defmvar $%iargs t)
@@ -50,20 +42,26 @@
 
 ;;; Arithmetic utilities.
 
-(defmfun sqrt1-x^2 (x) (power (sub 1 (power x 2)) 1//2))
+(defmfun sqrt1-x^2 (x)
+  (power (sub 1 (power x 2)) 1//2))
 
-(defmfun sqrt1+x^2 (x) (power (add 1 (power x 2)) 1//2))
+(defmfun sqrt1+x^2 (x)
+  (power (add 1 (power x 2)) 1//2))
 
-(defmfun sqrtx^2-1 (x) (power (add (power x 2) -1) 1//2))
+(defmfun sqrtx^2-1 (x)
+  (power (add (power x 2) -1) 1//2))
 
-(defmfun sq-sumsq (x y) (power (add (power x 2) (power y 2)) 1//2))
+(defmfun sq-sumsq (x y)
+  (power (add (power x 2) (power y 2)) 1//2))
 
-(defmfun trigp (func) (memq func '(%sin %cos %tan %csc %sec %cot
-				   %sinh %cosh %tanh %csch %sech %coth)))
+(defmfun trigp (func)
+  (member func '(%sin %cos %tan %csc %sec %cot %sinh %cosh %tanh %csch %sech %coth)
+	  :test #'eq))
 
-(defmfun arcp (func) (memq func '(%asin %acos %atan %acsc %asec %acot
-					%asinh %acosh %atanh %acsch %asech %acoth)))
-
+(defmfun arcp (func)
+  (member func '(%asin %acos %atan %acsc %asec %acot %asinh %acosh %atanh %acsch %asech %acoth)
+	  :test #'eq))
+
 (defprop %sin simp-%sin operators)
 (defprop %cos simp-%cos operators)
 (defprop %tan simp-%tan operators)
@@ -114,17 +112,68 @@
 ;; Apply formula from CLHS if X falls on a branch cut.
 ;; Otherwise punt to CL:ASIN.
 (defun maxima-branch-asin (x)
-  ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
+  ;; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
   (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
-    (* #C(0d0 -1d0) (cl:log (+ (* #C(0d0 1d0) x) (cl:sqrt (- #C(1d0 0d0) (* x x))))))
-    (cl:asin x)))
+      ;; The formula from CLHS is asin(x) = -%i*log(%i*x+sqrt(1-x^2)).
+      ;; This has problems with overflow for large x.
+      ;;
+      ;; Let's rewrite it, where abs(x)>1
+      ;;
+      ;; asin(x) = -%i*log(%i*x+abs(x)*sqrt(1-1/x^2))
+      ;;         = -%i*log(%i*x*(1+abs(x)/x*sqrt(1-1/x^2)))
+      ;;         = -%i*[log(abs(x)*abs(1+abs(x)/x*sqrt(1-1/x^2)))
+      ;;                 + %i*arg(%i*x*(1+abs(x)/x*sqrt(1-1/x^2)))]
+      ;;         = -%i*[log(abs(x)*(1+abs(x)/x*sqrt(1-1/x^2)))
+      ;;                 + %i*%pi/2*sign(x)]
+      ;;         = %pi/2*sign(x) - %i*[log(abs(x)*(1+abs(x)/x*sqrt(1-1/x^2))]
+      ;;
+      ;; Now, look at log part.  If x > 0, we have
+      ;;
+      ;;    log(x*(1+sqrt(1-1/x^2)))
+      ;;
+      ;; which is just fine.  For x < 0, we have
+      ;;
+      ;;    log(abs(x)*(1-sqrt(1-1/x^2))).
+      ;;
+      ;; But
+      ;;    1-sqrt(1-1/x^2) = (1-sqrt(1-1/x^2))*(1+sqrt(1-1/x^2))/(1+sqrt(1-1/x^2))
+      ;;                    = (1-(1-1/x^2))/(1+sqrt(1-1/x^2))
+      ;;                    = 1/x^2/(1+sqrt(1-1/x^2))
+      ;;
+      ;; So
+      ;;
+      ;;    log(abs(x)*(1-sqrt(1-1/x^2)))
+      ;;        = log(abs(x)/x^2/(1+sqrt(1-1/x^2)))
+      ;;        = -log(x^2/abs(x)*(1+sqrt(1-1/x^2))
+      ;;        = -log(abs(x)*(1+sqrt(1-1/x^2)))
+      ;;
+      ;; Thus, for x < 0,
+      ;;
+      ;; asin(x) = -%pi/2+%i*log(abs(x)*(1+sqrt(1-1/x^2)))
+      ;;         = -asin(-x)
+      ;;
+      ;; If we had an accurate f(x) = log(1+x) function, we should
+      ;; probably evaluate log(1+sqrt(1-1/x^2)) via f(x) instead of
+      ;; log.  One other accuracy change is to evaluate sqrt(1-1/x^2)
+      ;; as sqrt(1-1/x)*sqrt(1+1/x), because 1/x^2 won't underflow as
+      ;; soon as 1/x.
+      (let* ((absx (abs x))
+	     (recip (/ absx))
+	     (result (complex (/ #.(float pi 1d0) 2)
+			      (- (log (* absx
+					 (1+ (* (sqrt (+ 1 recip))
+						(sqrt (- 1 recip))))))))))
+	(if (minusp x)
+	    (- result)
+	    result))
+      (cl:asin x)))
 
 ;; Apply formula from CLHS if X falls on a branch cut.
 ;; Otherwise punt to CL:ACOS.
 (defun maxima-branch-acos (x)
   ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
   (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
-    (- (/ pi #C(2d0 0d0)) (maxima-branch-asin x))
+    (- #.(/ (float pi 1d0) 2) (maxima-branch-asin x))
     (cl:acos x)))
 
 ;; Apply formula from CLHS if X falls on a branch cut.
@@ -132,12 +181,11 @@
 (defun maxima-branch-atanh (x)
   ; Test for (IMAGPART X) is EQUAL because signed zero is EQUAL to zero.
   (if (and (> (abs (realpart x)) 1d0) (equal (imagpart x) 0d0))
-    (/ (- (cl:log (+ #C(1d0 0d0) x)) (cl:log (- #C(1d0 0d0) x))) #C(2d0 0d0))
+    (/ (- (cl:log (+ 1 x)) (cl:log (- 1 x))) 2)
     (cl:atanh x)))
 
 ;; Fill the hash table.
-(macrolet ((frob (mfun dfun)
-	     `(setf (gethash ',mfun *double-float-op*) ,dfun)))
+(macrolet ((frob (mfun dfun) `(setf (gethash ',mfun *double-float-op*) ,dfun)))
   (frob mplus #'+)
   (frob mtimes #'*)
   (frob mquotient #'/)
@@ -233,11 +281,9 @@
   (frob %log #'(lambda (x)
 		 (let ((y (ignore-errors (cl:log x))))
 		   (if y y (domain-error x 'log)))))
-  (frob %sqrt #'cl:sqrt)
-  )
+  (frob %sqrt #'cl:sqrt))
 
-(macrolet ((frob (mfun dfun)
-	     `(setf (gethash ',mfun *big-float-op*) ,dfun)))
+(macrolet ((frob (mfun dfun) `(setf (gethash ',mfun *big-float-op*) ,dfun)))
   ;; All big-float implementation functions MUST support a required x
   ;; arg and an optional y arg for the real and imaginary parts.  The
   ;; imaginary part does not have to be given.
@@ -248,8 +294,7 @@
   (frob %atanh #'big-float-atanh)
   (frob %acos 'big-float-acos)
   (frob %log 'big-float-log)
-  (frob %sqrt 'big-float-sqrt)
-  )
+  (frob %sqrt 'big-float-sqrt))
 
 ;; Here is a general scheme for defining and applying reflection rules. A 
 ;; reflection rule is something like f(-x) --> f(x), or  f(-x) --> %pi - f(x). 
@@ -581,7 +626,7 @@
 	((apply-reflection-simp (mop form) y $trigsign))
 	;((and $trigsign (mminusp* y)) (neg (cons-exp '%atan (neg y))))
 	(t (eqtest (list '(%atan) y) form))))
-
+
 (defun %piargs (x ratcoeff)
   (cond ((and (integerp (car x)) (integerp (cdr x))) 0)
 	((not (mevenp (car x))) 
@@ -632,9 +677,6 @@
 		 (not (null (setq dummy (linearize (cadr form))))))
 	    (return (cons (car dummy) (mmod (cdr dummy) (caddr form))))))))
 
-#-cl
-(defun lcm (x y) (quotient (times x y) (gcd x y)))
-
 (defun rgcd (x y)
   (cond ((integerp x)
 	 (cond ((integerp y) (gcd x y))
@@ -644,9 +686,9 @@
 
 (defun maxima-reduce (x y)
   (prog (gcd)
-     (setq gcd (gcd x y) x (quotient x gcd) y (quotient y gcd))
-     (if (minusp y) (setq x (minus x) y (minus y)))
-     (return (if (equal y 1) x (list '(rat simp) x y)))))
+     (setq gcd (gcd x y) x (truncate x gcd) y (truncate y gcd))
+     (if (minusp y) (setq x (- x) y (- y)))
+     (return (if (eql y 1) x (list '(rat simp) x y)))))
 
 ;; The following four functions are generated in code by TRANSL. - JPG 2/1/81
 
@@ -660,10 +702,10 @@
   (cond ((equal 0 y) (dbz-err))
 	((integerp x)
 	 (cond ((integerp y) (maxima-reduce x y))
-	       (t (maxima-reduce (times x (caddr y)) (cadr y)))))
-	((integerp y) (maxima-reduce (cadr x) (times (caddr x) y)))
-	(t (maxima-reduce (times (cadr x) (caddr y)) (times (caddr x) (cadr y))))))
-
+	       (t (maxima-reduce (* x (caddr y)) (cadr y)))))
+	((integerp y) (maxima-reduce (cadr x) (* (caddr x) y)))
+	(t (maxima-reduce (* (cadr x) (caddr y)) (* (caddr x) (cadr y))))))
+
 (defmfun $exponentialize (exp)
   (let ($demoivre)
     (cond ((atom exp) exp)
@@ -704,13 +746,14 @@
 	 (div 2 (sub (power '$%e arg) (power '$%e (neg arg)))))
 	((eq '%sech op)
 	 (div 2 (add (power '$%e arg) (power '$%e (mul -1 arg)))))))
-
-(defun coefficient (exp var pow) (coeff (expand1 exp 1 0) var pow))
+
+(defun coefficient (exp var pow)
+  (coeff (expand1 exp 1 0) var pow))
 
 (defun mmod (x mod)
   (cond ((and (integerp x) (integerp mod))
-	 (if (minusp (if (zerop mod) x (setq x (f- x (f* mod (// x mod))))))
-	     (f+ x mod)
+	 (if (minusp (if (zerop mod) x (setq x (- x (* mod (truncate x mod))))))
+	     (+ x mod)
 	     x))
         ((and ($ratnump x) ($ratnump mod))
 	 (let
@@ -719,9 +762,6 @@
 	   (setq mod (mul* d mod))
 	   (div (mod x mod) d)))
 	(t nil)))
-;;	((AND (NOT (ATOM X)) (EQ 'RAT (CAAR X)))
-;;	 (LIST '(RAT) (MMOD (CADR X) (f* MOD (CADDR X))) (CADDR X))
-
 
 (defun multiplep (exp var)
   (and (not (zerop1 exp)) (zerop1 (sub exp (mul var (coeff exp var 1))))))
@@ -729,13 +769,14 @@
 (defun linearp (exp var)
   (and (setq exp (islinear (expand1 exp 1 0) var)) (not (equal (car exp) 0))))
 
-(defmfun mminusp (x) (= -1 (signum1 x)))
+(defmfun mminusp (x)
+  (= -1 (signum1 x)))
 
 (defmfun mminusp* (x)
   (let (sign)
     (setq sign (csign x))
-    (or (memq sign '($neg $nz))
-	(and (mminusp x) (not (memq sign '($pos $pz)))))))
+    (or (member sign '($neg $nz) :test #'eq)
+	(and (mminusp x) (not (member sign '($pos $pz) :test #'eq))))))
 
 ;; This should give more information somehow.
 
@@ -746,187 +787,3 @@
 (defun dbz-err1 (func)
   (cond ((not errorsw) (merror "Division by zero in ~A function" func))
 	(t (throw 'errorsw t))))
-
-#|
-;; Only used by LAP code right now.
-
-#+pdp10
-(defun numeric-err (x msg) (merror "~A in ~A function" msg x))
-
-;; Trig, hyperbolic functions, and inverses, which take real floating args
-;; and return real args.  Checks made for overflow and out of range args.
-;; The following are read-time constants.
-;; This seems bogus.  Probably want (FSC (LSH 1 26.) 0) for the PDP10. -cwh
-
-#.(setq eps #+pdp10 (fsc 1.0 -26.)
-	#+cl			    ;(ASH 1.0 #+3600 -24. #-3600 -31.)
-	(scale-float 1.0 -24)
-	#-(or pdp10 cl) 1.4e-8)
-
-#-cl ;;it already has a value thank you very much
-(setq pi #.(atan 0.0 -1.0))
-(eval-when (load eval compile)
-  (defvar piby2 (coerce (/ pi 2.0) 'double-float)))
-
-;; This function is in LAP for PDP10 systems.  On the Lisp Machine and
-;; in NIL, this should CONDITION-BIND the appropriate arithmetic overflow
-;; signals and do whatever NUMERIC-ERR or DBZ-ERR does.  Fix later.
-
-#-(or pdp10 cl) (defmacro t//$ (x y function) function ;Ignored
-			  `(//$ ,x ,y))
-|#
-#+cl
-(defmacro t//$ (x y function)
-  (if (equal y 0.0)
-      ;; DEFEAT INCOMPETENTLY DONE COMPILER:OPTIMIZATION.
-      `(t//$-foo ,x ,y ,function)
-      `(//$ ,x ,y)))
-#+cl
-(defun t//$-foo (x y function) function
-       (//$ x y))
-
-#|
-#+pdp10 (lap-a-list '(
-
-		      (lap 	t//$ subr)
-		      (args 	t//$ (nil . 3))
-		      (push p (% 0 0 float1))
-		      (jrst 2 @ (% 0 0 nexta))
-		      nexta	(move tt 0 a)
-		      (fdvr tt 0 b)	;DIVIDE TT BY SECOND ARG
-		      (jfcl 10 uflow)
-		      ans	(popj p)
-		      uflow	(move a c)
-		      (skipn 0 0 b)
-		      (jcall 1 'dbz-err1)
-		      (movei b 'overflow)
-		      (jsp t nextb)
-		      nextb	(tlnn t 64.)
-		      (jcall 2 'numeric-err)
-		      (movei b 'underflow)
-		      (skipn 0 (special zunderflow))
-		      (jcall 2 'numeric-err)
-		      (movei tt 0)
-		      (jrst 0 ans)
-		      nil ))
-
-;; Numeric functions (SIN, COS, LOG, EXP are built in to Lisp).
-
-(defmfun tan (x) (t//$ (sin x) (cos x) 'tan))
-
-(defmfun cot (x) (t//$ (cos x) (sin x) 'cot))
-
-(defmfun sec (x) (t//$ 1.0 (cos x) 'sec))
-
-(defmfun csc (x) (t//$ 1.0 (sin x) 'csc))
-
-;; #.<form> means to evaluate <form> at read-time.
-
-(declare-top (flonum yy yflo))
-
-#-franz
-(defmfun asin (num)
-  (let ((yflo (float num)))
-    (cond ((> (abs yflo) 1.0) (logarc '%asin yflo))
-	  ((< (abs yflo) #.(sqrt eps)) yflo)
-	  (t (*$ (atan (abs yflo) (sqrt (-$ 1.0 (*$ yflo yflo))))
-		 (if (< yflo 0.0) -1.0 1.0))))))
-
-#-franz
-(defmfun acos (num) 
-  (let ((yflo (float num)))
-    (cond ((> (abs yflo) 1.0) (logarc '%acos yflo))
-	  ((< (abs yflo) #.(sqrt eps)) (-$ #.piby2 yflo))
-	  (t (atan (sqrt (-$ 1.0 (*$ yflo yflo))) yflo)))))
-
-#+maclisp
-(defun atan2 (y x)
-  (let ((yflo (atan (abs y) x))) (if (minusp y) (-$ yflo) yflo)))
-
-(defmfun atan1 (num)
-  (let ((yflo (float num)))
-    (*$ (atan (abs yflo) 1.0) (if (minusp yflo) -1.0 1.0))))
-
-(defmfun acot (num)
-  (let ((yflo (float num)))
-    (*$ (atan 1.0 (abs yflo)) (if (minusp yflo) -1.0 1.0))))
-
-(defmfun asec (num)
-  (let ((yflo (float num)))
-    (if (< (abs yflo) 1.0) (logarc '%asec yflo)) (acos (//$ yflo))))
-
-(defmfun acsc (num)
-  (let ((yflo (float num)))
-    (if (< (abs yflo) 1.0) (logarc '%acsc yflo)) (asin (//$ yflo))))
-
-(defmfun sinh (num)
-  (let ((yy (float num)) (yflo 0.0))
-    (cond ((< (abs yy) #.(sqrt eps)) yy)
-	  (t (setq yflo (exp (abs yy)) yflo (//$ (-$ yflo (//$ yflo)) 2.0))
-	     (if (< yy 0.0) (-$ yflo) yflo)))))
-
-(defmfun cosh (num)
-  (let ((yflo (float num)))
-    (setq yflo (exp (abs yflo))) (//$ (+$ yflo (//$ yflo)) 2.0)))
-
-(defmfun tanh (num)
-  (let ((yy (float num)) (yflo 0.0))
-    (cond ((< (abs yy) #.(sqrt eps)) yy)
-	  (t (setq yflo (exp (*$ -2.0 (abs yy))) yflo (//$ (1-$ yflo) (1+$ yflo)))
-	     (if (plusp yy) (-$ yflo) yflo)))))
-
-(defmfun coth (num)
-  (let ((yy (float num)) (yflo 0.0))
-    (cond ((< (abs yy) #.(sqrt eps)) (//$ yy))
-	  (t (setq yflo (exp (*$ -2.0 (abs yy))) yflo (t//$ (1+$ yflo) (1-$ yflo) 'coth))
-	     (if (plusp yy) (-$ yflo) yflo)))))
-
-(defmfun csch (num)
-  (let ((yy (float num)) (yflo 0.0))
-    (cond ((< (abs yy) #.(sqrt eps)) (//$ yy))
-	  (t (setq yflo (exp (-$ (abs yy)))
-		   yflo (t//$ (*$ 2.0 yflo)
-			      (1-$ (if (< yflo #.(sqrt eps)) 0.0 (*$ yflo yflo))) 'csch))
-	     (if (plusp yy) (-$ yflo) yflo)))))
-
-(defmfun sech (num)
-  (let ((yflo (float num))) (setq yflo (exp (-$ (abs yflo))))
-       (//$ yflo 0.5 (1+$ (if (< yflo #.(sqrt eps)) 0.0 (*$ yflo yflo))))))
-
-(defmfun acosh (num)
-  (let ((yflo (float num)))
-    (cond ((< yflo 1.0) (logarc '%acosh yflo))
-	  ((> yflo #.(sqrt (//$ eps))) (log (*$ 2.0 yflo)))
-	  (t (log (+$ (sqrt (1-$ (*$ yflo yflo))) yflo))))))
-
-(defmfun asinh (num)
-  (let* ((yy (float num))
-	 (yflo (abs yy)))
-    (cond ((< yflo #.(sqrt eps)) yflo)
-	  (t (setq yflo (log (cond ((> yflo #.(sqrt (//$ eps))) (*$ 2.0 yflo))
-				   (t (+$ (sqrt (1+$ (*$ yflo yflo))) yflo)))))
-	     (cond ((minusp yy) (-$ yflo)) (t yflo))))))
-
-(defmfun atanh (num)
-  (let ((yflo (float num)))
-    (cond ((< (abs yflo) #.(sqrt eps)) yflo)
-	  ((< (abs yflo) 1.0) (//$ (log (t//$ (1+$ yflo) (-$ 1.0 yflo) 'atanh)) 2.0))
-	  ((= 1.0 (abs yflo)) (t//$ 1.0 0.0 'atanh))
-	  (t (logarc '%atanh yflo)))))
-
-(defmfun acoth (num)
-  (let ((yflo (float num)))
-    (cond ((> (abs yflo) 1.0)
-	   (//$ (log (//$ (+$ 1.0 yflo) (+$ -1.0 yflo))) 2.0))
-	  ((= 1.0 (abs yflo)) (t//$ 1.0 0.0 'acoth))
-	  (t (logarc '%acoth yflo)))))
-
-(defmfun asech (num)
-  (let ((yflo (float num)))
-    (cond ((or (minusp yflo) (> yflo 1.0)) (logarc '%asech yflo)))
-    (acosh (t//$ 1.0 yflo 'asech))))
-
-(defmfun acsch (num) (asinh (t//$ 1.0 (float num) 'acsch)))
-
-
-|#

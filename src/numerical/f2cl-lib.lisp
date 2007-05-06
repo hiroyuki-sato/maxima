@@ -60,11 +60,12 @@ is not included")
 ;; If you change this, you may need to change some of the macros
 ;; below, such as INT and AINT!
 
-#+(or cmu scl)
-(deftype integer4 ()
-  `(signed-byte 32))
-#-(or cmu scl)
-(deftype integer4 ()
+#+(or cmu scl sbcl)
+(deftype integer4 (&optional (low #x-80000000) (high #x7fffffff))
+  `(integer ,low ,high))
+#-(or cmu scl sbcl)
+(deftype integer4 (&optional low high)
+  (declare (ignore low high))
   'fixnum)
 
 (deftype integer2 ()
@@ -152,7 +153,7 @@ is not included")
   `(subseq ,s (1- ,(first range)) ,(second range)))
 
 (defmacro fset-string (a b)
-  `(setf (fref-string ,(second a) ,(third a)) ,b))
+  `(setf (fref-string ,(second a) ,(third a)) (string ,b)))
 
 (defmacro f2cl-// (a b)
   `(concatenate 'string ,a ,b))
@@ -226,10 +227,21 @@ is not included")
   ;; change the dimensions.  Of course, for this to work in Fortran,
   ;; the common block has to contain exactly that one array, or the
   ;; array must be the last element of the common block.)
-  `(make-array (- (array-total-size ,vname) ,(col-major-index indices bounds))
+  ;;
+  ;; Note: In some places in LAPACK, an array slice is taken where the
+  ;; slice exceeds the bounds of the array.  However, the array is
+  ;; never accessed.  What are we to do?  We could modify the LAPACK
+  ;; routines (everywhere!) to check for this, or we can silently make
+  ;; array-slice make a 0-element array.  If the array is then
+  ;; accessed, we should get an error at the point of access, not the
+  ;; point of creation.
+  ;;
+  ;; This seems somewhat reasonable, so let's do that for array
+  ;; slices.
+  `(make-array (max 0 (- (array-total-size ,vname) ,(col-major-index indices bounds)))
     :element-type ',type
     :displaced-to ,vname
-    :displaced-index-offset ,(col-major-index indices bounds)))
+    :displaced-index-offset (min (array-total-size ,vname) ,(col-major-index indices bounds))))
 
 #+nil
 (defmacro array-slice (vname type indices bounds)
@@ -409,7 +421,7 @@ is not included")
 (defun assigned-goto-aux (tag-list)
   (let ((cases nil))
     (dolist (tag tag-list)
-      (push `(,tag (go ,(make-label tag)))
+      (push `(,tag (go ,(f2cl-lib::make-label tag)))
 	    cases))
     (push `(t (error "Unknown label for assigned goto")) cases)
     (nreverse cases)))
@@ -599,12 +611,17 @@ is not included")
 (defun cmplx (x &optional y)
   (complex x (if y y 0)))
 
-(defun ichar (c)
-  (char-int c))
-(defun fchar (i)			;intrinsic function char
-  (char-int i))
+(defun dcmplx (x &optional y)
+  (coerce (complex x (if y y 0)) '(complex double-float)))
 
-(declaim (inline iabs dabs cabs amod dmod))
+(defun ichar (c)
+  (if (stringp c)
+      (char-int (aref c 0))
+      (char-int c)))
+(defun fchar (i)			;intrinsic function char
+  (code-char i))
+
+(declaim (inline iabs dabs cabs cdabs amod dmod))
 #-aclpc
 (defun iabs (x)
   (declare (type integer4 x))
@@ -614,6 +631,9 @@ is not included")
   (abs x))
 (defun cabs (x)
   (declare (type complex x))
+  (abs x))
+(defun cdabs (x)
+  (declare (type (complex double-float) x))
   (abs x))
 
 (defun amod (x y)
@@ -782,10 +802,16 @@ is not included")
 
 ;; AIMAG: imaginary part of a complex number
 ;; CONJG: conjugate of a complex number
-(declaim (inline aimag conjg))
+(declaim (inline aimag conjg dconjg dimag))
 (defun aimag (c)
   (imagpart c))
+(defun dimag (c)
+  (declare (type (complex double-float) c))
+  (imagpart c))
 (defun conjg (c)
+  (conjugate c))
+(defun dconjg (c)
+  (declare (type (complex double-float) c))
   (conjugate c))
 
 (declaim (inline fsqrt flog))
@@ -811,11 +837,13 @@ is not included")
 ;; this is not true, the original Fortran code was broken anyway, so
 ;; GIGO (garbage in, garbage out).
 
-(declaim (inline dsqrt csqrt alog dlog clog alog10 dlog10))
+(declaim (inline dsqrt csqrt zsqrt alog dlog clog alog10 dlog10))
 (defun dsqrt (x)
   (declare (type (double-float 0d0) x))
   (sqrt  x))
 (defun csqrt (x)
+  (sqrt x))
+(defun zsqrt (x)
   (sqrt x))
 (defun alog (x)
   (declare (type (or (single-float (0f0)) (member 0f0)) x))
@@ -1074,9 +1102,10 @@ causing all pending operations to be flushed"
 (defmacro fformat (dest-lun format-cilist &rest args)
   (let ((stream (gensym)))
     `(let ((,stream (lun->stream ,dest-lun)))
-      (execute-format-main ,stream ',format-cilist ,@args)
-      (when (stringp ,dest-lun)
-	(replace ,dest-lun (get-output-stream-string ,stream))))))
+       (execute-format-main ,stream ',format-cilist ,@args)
+       ,@(unless (or (eq t dest-lun) (numberp dest-lun))
+	  `((when (stringp ,dest-lun)
+	     (replace ,dest-lun (get-output-stream-string ,stream))))))))
 
 (defun execute-format (top stream format arg-list)
   (do ((formats format (if (and top (null formats))
@@ -1244,12 +1273,6 @@ causing all pending operations to be flushed"
 ;;  D1MACH( 5) = LOG10(B)
 ;;
 
-;; #+gcl
-;; (defconstant least-positive-normalized-double-float least-positive-double-float)
-;; #+gcl
-;; (defconstant least-positive-normalized-single-float least-positive-single-float)
-
-
 (defun d1mach (i)
   (ecase i
     (1 least-positive-normalized-double-float)
@@ -1377,13 +1400,23 @@ causing all pending operations to be flushed"
 (defun stop (&optional arg)
   (when arg
     (format cl::*error-output* "~A~%" arg))
-  (error "STOP reached"))
+  (cerror "Continue anyway" "STOP reached"))
 
 ;;;-------------------------------------------------------------------------
 ;;; end of macros.l
 ;;;
-;;; $Id: f2cl-lib.lisp,v 1.9 2006/07/27 05:37:46 robert_dodier Exp $
+;;; $Id: f2cl-lib.lisp,v 1.12 2007/01/11 17:08:41 rtoy Exp $
 ;;; $Log: f2cl-lib.lisp,v $
+;;; Revision 1.12  2007/01/11 17:08:41  rtoy
+;;; GCL apparently supports
+;;; least-positive-normalized-{double,single}-float now.
+;;;
+;;; Revision 1.11  2006/12/26 14:53:47  rtoy
+;;; SBCL can handle integer4 types well, too.
+;;;
+;;; Revision 1.10  2006/12/20 18:13:05  rtoy
+;;; Update to latest f2cl versions.
+;;;
 ;;; Revision 1.9  2006/07/27 05:37:46  robert_dodier
 ;;; Commit patches submitted by Douglas Crosher to support Scieneer and Allegro.
 ;;; With these changes, make and run_testsuite succeed for SBCL, Clisp, and GCL on Linux.

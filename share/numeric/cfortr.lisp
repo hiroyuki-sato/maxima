@@ -12,13 +12,11 @@
 (declare (special lb rb         ;used for communication with mstring.
                   $loadprint    ;if nil, no load message gets printed.
                   1//2 -1//2
-                  prefix-psize suffix-psize)
-;;;         (fixnum (fort-len notype) (pre-compile notype))
-)
+                  prefix-psize suffix-psize))
 
 (defmvar pure-fortran nil "If T, separate FORTRAN output enabled." boolean)
 (defmvar comment-fortran nil "T for comments only." boolean)
-(defmvar fortran-wallpaper 'T "SFA file stream")
+(defmvar fortran-wallpaper 't "SFA file stream")
 (defmvar fort-line-width (- 72 6) "Max # of statement characters" fixnum)
 (defmvar allowed-length-floor 28 "Min # of characters in a subexpression" fixnum)
 (defmvar halfing-floor (* 2 allowed-length-floor) "See ALLOWED-LENGTH-FLOOR" fixnum)
@@ -106,16 +104,16 @@
 ;; symbol, and the symbol is bound to a matrix, then the matrix is printed
 ;; using an array assignment notation.
 
-(DEFMSPEC $CRAY_FORTRAN (L)
- (SETQ L (FEXPRCHECK L))
- (LET ((VALUE (STRMEVAL L)))
-      (COND ((MSETQP L) (SETQ VALUE `((MEQUAL) ,(CADR L) ,(MEVAL L)))))
-      (COND ((AND (SYMBOLP L) ($MATRIXP VALUE))
-             ($FORTMX L VALUE))
-            ((AND (NOT (ATOM VALUE)) (EQ (CAAR VALUE) 'MEQUAL)
-                  (SYMBOLP (CADR VALUE)) ($MATRIXP (CADDR VALUE)))
-             ($FORTMX (CADR VALUE) (CADDR VALUE)))
-            (T (FORTRAN-PRINT VALUE)))))
+(defmspec $cray_fortran (l)
+ (setq l (fexprcheck l))
+ (let ((value (strmeval l)))
+      (cond ((msetqp l) (setq value `((mequal) ,(cadr l) ,(meval l)))))
+      (cond ((and (symbolp l) ($matrixp value))
+             ($fortmx l value))
+            ((and (not (atom value)) (eq (caar value) 'mequal)
+                  (symbolp (cadr value)) ($matrixp (caddr value)))
+             ($fortmx (cadr value) (caddr value)))
+            (t (fortran-print value)))))
 
 ;; This function is called from Lisp programs.  It takes an expression and
 ;; a stream argument.  Default stream is NIL in MacLisp and STANDARD-OUTPUT
@@ -191,7 +189,7 @@
                        (let ((char (pop x)))
                          (tyo char stream)
                          (and pure-fortran (tyo char fortran-wallpaper))))
-                   (increment column))
+                   (incf column))
       ;; columns 73 to 80 contain spaces
                (if $fortspaces (print-spaces 8 stream))
                (terpri stream)
@@ -239,7 +237,7 @@
         (cond ((and $fort_float (fixp e)) (float e))
               ((eq e '$%i) (list '(mprogn) 0.0 1.0)) ;; %I is (0,1)
               (t e)))
-       ((memq 'array (cdar e)) e)
+       ((member 'array (cdar e) :test #'eq) e)
        (t (let ((op (caar e)))
             (cond ((eq op '%log) (list '(%alog simp) (fortscan (cadr e))))
                   ((eq op 'mexpt)
@@ -257,7 +255,7 @@
                   ((eq op 'rat) (rem-value e))
                   ((eq op 'mrat) (fortscan (ratdisrep e)))
                   ;;  complex numbers to f77 syntax a+b%i ==> (a,b)
-                  ((and (memq op '(mtimes mplus))
+                  ((and (member op '(mtimes mplus) :test #'eq)
                         ((lambda (a) 
                            (and (numberp (cadr a))
                                 (numberp (caddr a))
@@ -300,10 +298,10 @@
              (let ((fpp (eq op 'mplus))
                    (prod (eq op 'mtimes)))
                (do ((mp (cdr x) (cdr mp))
-                    (brackets (memq op '(mtimes mexpt mquotient)))
+                    (brackets (member op '(mtimes mexpt mquotient) :test #'eq))
                     (negexps 0)
                     (sm (cond ((or prod fpp (eq op 'mquotient)) -1)
-                              ((memq op '(mexpt mminus)) 0)
+                              ((member op '(mexpt mminus) :test #'eq) 0)
                               (t (flatc op)))))
                    ((null mp)
                     (and (> sm $labelength) 
@@ -317,7 +315,7 @@
                    (cond ((atom obj))
                          (brackets
                           (let ((inop (caar obj)))
-                            (and (or (memq inop '(mplus mminus))
+                            (and (or (member inop '(mplus mminus) :test #'eq)
                                      (and prod
                                           (eq inop 'mexpt)
                                           (let ((exn (caddr obj)))
@@ -340,7 +338,7 @@
   (let ((cp-sym (implode (nconc (exploden $break_prefix)
                                 (exploden $fbreak_temp_counter)
                                 (exploden $sequence_optim_suffix)))))
-    (increment $fbreak_temp_counter)
+    (incf $fbreak_temp_counter)
     (fortran-print `((mequal) ,cp-sym ,x) t)
     cp-sym))
 
@@ -348,7 +346,7 @@
    (cond (($mapatom x))
          (t
           (let ((opr (caar x)))
-            (cond ((memq opr '(mtimes mplus))
+            (cond ((member opr '(mtimes mplus) :test #'eq)
                    (do ((newlen (+ 2 (+ prefix-psize suffix-psize
                                         (flatc $fbreak_temp_counter))))
                         (threshold (// size 2))
@@ -357,13 +355,13 @@
                         (scan (cdr x) (cdr scan)))
                        ((null scan)
                         (cond ((> newlen threshold)
-                               (rplaca (memq (car newobj) x)
+                               (rplaca (member (car newobj) x :test #'eq)
                                        (fort-temp (cond ((eq opr 'mplus)
                                                          (addn newobj nil))
                                                         (t (muln newobj nil)))))
                                (do ((iscan (cdr newobj) (cdr iscan)))
                                    ((null iscan))
-                                 (setq x (delq (car iscan) x))))
+                                 (setq x (delete (car iscan) x :test #'eq))))
                               (t
                                (do ((iscan big-ones (cdr iscan)))
                                    ((null iscan))
@@ -434,7 +432,7 @@
           (pre-compile x)))
    x)
 
-(DEFMACRO TABLEN () #-(or Franz LISPM) (STATUS TABSIZE) #+(or Franz LISPM) 8)
+(defmacro tablen () #-(or Franz LISPM) (status tabsize) #+(or Franz LISPM) 8)
 
 (defvar eliminate-space nil)
 
@@ -474,7 +472,7 @@
 			    (setq tab-encounter nil eliminate-space nil)))
                       (setq pure-col (1+ pure-col))
                       (tyo arg out-designate))))
-              ((memq op '(:print :princ))
+              ((member op '(:print :princ) :test #'eq)
                (if (eq op :print) (setq pure-col 0))
                (let ((str `(nil nil ,@(exploden arg))))
                  (do ((rst (cdr str) (cdr rst))
@@ -514,8 +512,8 @@
               (t (sfa-unclaimed-message self op arg)))))))
 
 (defun $open_fortran_file (file)
- (and (eq fortran-wallpaper 'T)
-      (status feature SFA)
+ (and (eq fortran-wallpaper 't)
+      (status feature sfa)
       (setq fortran-wallpaper
             (sfa-create 'pure-fortran-handler 1 'fortran-wallpaper)))
  (sfa-store fortran-wallpaper 0 (sfa-call fortran-wallpaper :open ($filename_merge file)))

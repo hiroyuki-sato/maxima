@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Menu.tcl,v 1.17.4.1 2006/09/11 15:38:01 villate Exp $
+#       $Id: Menu.tcl,v 1.31 2007/02/25 19:02:12 vvzhy Exp $
 #
 
 proc pMAXSaveTexToFile {text} {
@@ -74,6 +74,10 @@ proc vMAXAddSystemMenu {fr text} {
     $m add command -underline 0 \
 	-label [mc "Restart"] \
 	-command [list runOneMaxima $text]
+    $m add command -underline 0 \
+	-label [mc "Input prompt"] \
+	-accel {Alt+s} \
+	-command [list event generate $text <Alt-Key-s>]
 
     $m add separator
     $m add command -underline 1 \
@@ -143,7 +147,7 @@ proc vMAXAddSystemMenu {fr text} {
     foreach elt { embedded separate multiple } {
 	$pm add radio -label [mc [string totit $elt]] \
 	    -variable maxima_default(plotwindow) \
-	    -value $elt
+	    -value $elt -command [list SetPlotFormat $text ]
     }
 
     $m add separator
@@ -168,11 +172,12 @@ proc vMAXAddSystemMenu {fr text} {
     foreach elt {labels values functions macros arrays \
 		     myoptions props aliases rules gradefs \
 		     dependencies let_rule_packages} {
-	$km add command -label "Kill [string totit $elt]" \
+	$km add command -label [mc [string totit $elt]] \
 	    -command [list sendMaxima $text "kill($elt)\$\n"]
     }
-    $m add separator
-    set dir $maxima_priv(pTestsDir)
+
+    $m add separator  
+    set dir $maxima_priv(pTestsDir)  
     if {[file isdir $dir]} {
 	set state normal
     } else {
@@ -188,6 +193,20 @@ proc vMAXAddSystemMenu {fr text} {
     set m [menu .menu.help -tearoff 0]
     .menu add cascade -label [mc "Help"] -menu $m -underline 0
 
+    # Xmaxima manual
+    set xfile [file join $maxima_priv(maxima_verpkgdatadir) xmaxima html xmaxima.html]
+    if {[file isfile $xfile]} {
+	set xstate normal
+	if {$tcl_platform(platform) == "windows"} {
+	    # decodeURL is broken and needs fixing
+	    # This is a workaround
+	    set xfile [file attrib $xfile -shortname]
+	}
+    } else {
+	set xstate disabled
+    }
+    
+    # Maxima manual
     set file $maxima_priv(pReferenceToc)
     if {[file isfile $file]} {
 	set state normal
@@ -199,9 +218,21 @@ proc vMAXAddSystemMenu {fr text} {
     } else {
 	set state disabled
     }
-    $m add command -underline 7 -label [mc "Maxima Help"] \
-	-state $state \
-	-command "OpenMathOpenUrl \"file:/$file\""
+    if {$tcl_platform(platform) == "windows"} {
+        $m add command -underline 1 -label [mc "Maxima Manual"] \
+        	-state $state \
+	        -command [list exec hh.exe $file & ]
+        $m add command -underline 4 -label [mc "Xmaxima Manual (xmaxima browser)"] \
+        	-state $xstate \
+	        -command "OpenMathOpenUrl \"file:/$xfile\""
+    } else {
+        $m add command -underline 1 -label [mc "Maxima Manual (xmaxima browser)"] \
+        	-state $state \
+	        -command "OpenMathOpenUrl \"file:/$file\""
+        $m add command -underline 4 -label [mc "Xmaxima Manual (xmaxima browser)"] \
+        	-state $xstate \
+	        -command "OpenMathOpenUrl \"file:/$xfile\""
+    }
     set browse {exec}
 
     # FIXME: get a browser object
@@ -215,17 +246,24 @@ proc vMAXAddSystemMenu {fr text} {
 	}
     } else {
 	
-	set selectedbrowser mozilla
+	set selectedbrowser xdg-open
 
-	foreach b { mozilla konqueror epiphany firefox netscape } {
+	foreach b { xdg-open htmlview firefox mozilla konqueror epiphany galeon amaya opera netscape } {
 	    if { ! [catch {exec which $b} ] } {
 		set selectedbrowser $b
 		break } }
 
 	lappend browse $selectedbrowser
     }
-    $m add sep
-    $m add command -underline 0 -label [mc "Maxima Homepage"] \
+    $m add separator
+    if {$tcl_platform(platform) != "windows"} {
+	$m add command -underline 0 -label [mc "Maxima Manual (web browser)"] \
+	    -command [list eval $browse "file://$file" &]
+    }
+    $m add command -underline 0 -label [mc "Xmaxima Manual (web browser)"] \
+	-command [list eval $browse "file://$xfile" &]
+    $m add separator
+    $m add command -underline 7 -label [mc "Maxima Homepage"] \
 	-command [list eval $browse http://maxima.sourceforge.net &]
     $m add command -underline 0 -label [mc "Project Page"] \
 	-command [list eval $browse http://sourceforge.net/projects/maxima &]
@@ -238,6 +276,17 @@ proc vMAXAddSystemMenu {fr text} {
 
     # Backwards compatability
     return $win
+}
+
+proc SetPlotFormat { text } {
+
+    global maxima_default
+    
+    if { $maxima_default(plotwindow) == "embedded" } {
+	#sendMaxima $text "set_plot_option(\[plot_format,openmath\])\$\n"
+	sendMaxima $text ":lisp-quiet (prog2 (\$set_plot_option '((mlist simp) \$plot_format \$openmath)) nil) \n"
+    }
+    
 }
 
 

@@ -9,19 +9,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module csimp)
 
 (declare-top (special rsn* $factlim $exponentialize 
 		      var varlist genvar $%emode $ratprint 
 		      nn* dn* $errexp sqrt3//2 sqrt2//2 -sqrt2//2 -sqrt3//2
-		      $demoivre errorsw islinp $keepfloat $ratfac)
-	     (*lexpr $ratcoef)
-	     (genprefix %))
+		      $demoivre errorsw islinp $keepfloat $ratfac))
 
 (load-macsyma-macros rzmac)
 
 (declare-top (special $nointegrate $lhospitallim $tlimswitch $limsubst
-		      $abconvtest complex-limit plogabs $intanalysis ))
+		      $abconvtest complex-limit plogabs $intanalysis))
 
 
 (setq $demoivre nil rsn* nil $nointegrate nil $lhospitallim 4 
@@ -43,7 +42,7 @@
 	 %coth %acoth %sech %asech %csch %acsch)
        by #'cddr
        do  (putprop a b '$inverse) (putprop b a '$inverse))
-
+
 (defmfun $demoivre (exp)
   (let ($exponentialize nexp)
     (cond ((atom exp) exp)
@@ -108,7 +107,7 @@
 ;; ((lambda (*ask*) 
 ;;    (integerp10 (ssimplifya (sublis '((z** . 0) (*z* . 0)) x)))) 
 ;;  t))
-
+
 ;;(defun integerp10 (x) 
 ;; ((lambda (d) 
 ;;   (cond ((or (null x) (not (free x '$%i))) nil)
@@ -132,7 +131,7 @@
      (setq nn*
 	   (simplifya (pdis (ratnumerator e))
 		      nil))))
-
+
 (defun fmt (exp) 
   (let (nn*) 
     (cond ((atom exp) exp)
@@ -171,7 +170,9 @@
 (defun spexp (expl dn*) 
   (cons '(mtimes) (mapcar #'(lambda (e) (list '(mexpt) dn* e)) expl)))
 
-(defun subin (y x) (cond ((not (among var x)) x) (t (maxima-substitute y var x))))
+(defun subin (y x)
+  (cond ((not (among var x)) x)
+	(t (maxima-substitute y var x))))
 
 ;; Right-hand side (rhs) and left-hand side (lhs) of binary infix expressions.
 ;; These are unambiguous for relational operators, some other built-in infix operators,
@@ -198,7 +199,7 @@
   (defmfun $rhs (rel)
      (if (atom rel)
        0
-       (if (or (memq (caar rel) (append relational-ops other-infix-ops))
+       (if (or (member (caar rel) (append relational-ops other-infix-ops) :test #'eq)
                ;; This test catches user-defined infix operators.
                (eq (get (caar rel) 'led) 'parse-infix))
          (caddr rel)
@@ -207,7 +208,7 @@
   (defmfun $lhs (rel)
      (if (atom rel)
        rel
-       (if (or (memq (caar rel) (append relational-ops other-infix-ops)) 
+       (if (or (member (caar rel) (append relational-ops other-infix-ops) :test #'eq) 
                ;; This test catches user-defined infix operators.
                (eq (get (caar rel) 'led) 'parse-infix))
          (cadr rel)
@@ -217,8 +218,6 @@
   (cond ((and (mnump x) (mnump y))
 	 (great x y))
 	((equal ($asksign (m- x y)) '$pos))))
-
-
 
 (defun %especial (e) 
   (prog (varlist y k j ans $%emode $ratprint genvar)
@@ -243,14 +242,14 @@
   (prog (m n eo flag) 
      (cond ((numberp r) (return (cond ((even r) 0) (t 1)))))
      (setq m (cadr r))
-     (cond ((minusp m) (setq m (minus m)) (setq flag t)))
+     (cond ((minusp m) (setq m (- m)) (setq flag t)))
      (setq n (caddr r))
-     loop (cond ((greaterp m n)
-		 (setq m (difference m n))
+     loop (cond ((> m n)
+		 (setq m (- m n))
 		 (setq eo (not eo))
 		 (go loop)))
      (setq m (list '(rat)
-		   (cond (flag (minus m)) (t m))
+		   (cond (flag (- m)) (t m))
 		   n))
      (return (cond (eo (addk m (cond (flag 1) (t -1))))
 		   (t m))))) 
@@ -284,22 +283,22 @@
 
 (defun polyp (a)
   (cond ((atom a) t)
-	((memq (caar a) '(mplus mtimes))
-	 (andmapc (function polyp) (cdr a)))
+	((member (caar a) '(mplus mtimes) :test #'eq)
+	 (every #'polyp (cdr a)))
 	((eq (caar a) 'mexpt)
 	 (cond ((free (cadr a) var)
 		(free (caddr a) var))
 	       (t (and (integerp (caddr a))
-		       (greaterp (caddr a) 0)
+		       (> (caddr a) 0)
 		       (polyp (cadr a))))))
 	(t (andmapcar #'(lambda (subexp)
 			  (free subexp var))
 		      (cdr a)))))
-
+
 (defun pip (e)
   (prog (varlist d c) 
      (newvar e)
-     (cond ((not (memq '$%pi varlist)) (return nil)))
+     (cond ((not (member '$%pi varlist :test #'eq)) (return nil)))
      (setq varlist '($%pi))
      (newvar e)
      (setq e (cdr (ratrep* e)))
@@ -328,7 +327,7 @@
        (t (setq j
 		(trigred (add2* '((rat simp) 1 2)
 				(list (car j)
-				      (minus (cadr j))
+				      (- (cadr j))
 				      (caddr j)))))))
      (cond ((numberp j) (return 0))
 	   ((mnump j) (setq j (cdr j))))
@@ -360,24 +359,9 @@
 				'$%pi))
 		(cond (ind (cond (ep (list '(mtimes simp)
 					   -1
-					   (list '(%sin simp)
-						 ang)))
-				 (t (list '(%sin simp)
-					  ang))))
+					   (list '(%sin simp) ang)))
+				 (t (list '(%sin simp) ang))))
 		      (t (list '(%cos simp) ang)))))))) 
-
-;;(defun scsign (e) 
-;;       ((lambda (varlist genvar $ratprint) 
-;;	 (setq *sign* nil)
-;;	 (setq e (ratf e))
-;;	 (setq *pform*
-;;	       (simplifya (rdis (cond ((pminusp (cadr e))
-;;				       (setq *sign* t)
-;;				       (cons (pminus (cadr e))
-;;					     (cddr e)))
-;;				      (t (cdr e))))
-;;			  nil)))
-;;	nil nil nil)) 
 
 (defun archk (a b v) 
   (simplify
@@ -394,4 +378,3 @@
        (genl (cadddr h) (cdr genl)))
 ;;;is car of rat form
       ((eq (car varl) v) (car genl))))
-

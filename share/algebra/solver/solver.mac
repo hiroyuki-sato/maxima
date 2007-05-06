@@ -425,6 +425,9 @@ Solver( Equations, [ SolverParams ] ) := (
       Solutions,       /* List of solutions found by Solver             */
       RemainingEqs,    /* List of remaining equations                   */
 
+      /* Assumptions made in linear solver should be local  */
+      Solver_Assumptions : [],
+
       Active
     ],
 
@@ -715,7 +718,7 @@ SetupSolver( Equations, SolverParams ) := (
         /* powers with respect to the lowest power.                     */
 
         if
-          not member( 'false, map( 'IntegerP, Power ) )
+          not member( 'false, map( 'integerp, Power ) )
           and
           Power[1] # 1
         then
@@ -890,7 +893,7 @@ SolverAssumeZero( Expression ) := (
       if
         ( Solver_Incons_Params = 'ASK )
         and
-        ( AskCSign( Expression ) # 'ZERO )
+        ( asksign( Expression ) # 'zero )
       then
         return( false )
       else
@@ -991,8 +994,15 @@ ImmediateAssignments( Solutions, RemainingEqs, Variables, Parameters ) := (
               'DETAIL,
               SolverMsg["Assign"], totaldisrep( Left = Right )
             ),
-            
-            Solutions : endcons( Left = Right, Solutions ),
+
+            if member( Left, map( lhs, Solutions ) ) then (
+              if assoc( Left, Solutions ) # Right then (
+                PrintMsg( 'SHORT, SolverMsg["Incons"], Left = Right ),
+                TerminateSolver()
+              )
+            )
+            else
+              Solutions : endcons( Left = Right, Solutions ),
             RemainingEqs[i] : [],
 
             AssignmentMade : true
@@ -1018,8 +1028,15 @@ ImmediateAssignments( Solutions, RemainingEqs, Variables, Parameters ) := (
               'DETAIL,
               SolverMsg["Assign"], totaldisrep( Right = Left )
             ),
-
-            Solutions : endcons( Right = Left, Solutions ),
+          
+            if member( Right, map( lhs, Solutions ) ) then (
+              if assoc( Right, Solutions ) # Left then (
+                PrintMsg( 'SHORT, SolverMsg["Incons"], Left = Right ),
+                TerminateSolver()
+              )
+            )
+            else
+              Solutions : endcons( Right = Left, Solutions ),
             RemainingEqs[i] : [],
 
             AssignmentMade : true
@@ -1084,9 +1101,9 @@ LinearSolver( Solutions, Equations, Variables, Parameters ) := (
       EqValuation, VarValuation,
       rhsExpressions,
 
-      LinsolveWarn             : false,
-      Linsolve_Params          : false,
-      Solve_Inconsistent_error : false,
+      linsolvewarn             : false,
+      linsolve_params          : false,
+      Solve_Inconsistent_Error : false,
 
       EqWasLast : false
     ],
@@ -1479,7 +1496,7 @@ ComplCoeffMatrix( Eqs, ActiveVars ) := (
         map(
           lambda(
             [ Eq ],
-            num( fullratsimp( expand( lhs( Eq ) - rhs( Eq ) ) ) )
+            fullratsimp( expand( lhs( Eq ) - rhs( Eq ) ) )
           ),
           Eqs
         )
@@ -1821,7 +1838,7 @@ ValuationSolver( Solutions, Equations, Variables, Parameters ) := (
               for Sol in Solution do (
 
                 map(
-                  lambda([x,y],x::y),
+                  lambda([x,y], x::y),
                   [ 'Stat, 'RSolutions, 'REqs, 'RVars ],
                   ValuationSolver(
                     [ Sol ],
@@ -2220,7 +2237,7 @@ PostProcess( Solutions, UserVars, Expressions, PowerSubst ) := (
         /* Evaluate all variables and expressions with the solutions. */
         for Var in append( UserVars, Expressions ) do (
 
-          EvalVar : if ( assoc( Var, SolSet ) # false ) or not atom( Var ) then
+          EvalVar : if member( Var, map(lhs, SolSet) ) or not atom( Var ) then
 
             /* There may be errors when indeterminate expressions are */
             /* encountered.                                           */
@@ -2249,7 +2266,9 @@ PostProcess( Solutions, UserVars, Expressions, PowerSubst ) := (
           UsrSolSet : endcons( UnsolvedEqs, UsrSolSet ),
 
         if Solver_RatSimp_Sols then
-          UsrSolSet : errcatch( fullratsimp( UsrSolSet ) ),
+          UsrSolSet : errcatch( fullratsimp( UsrSolSet ) )
+        else
+          UsrSolSet : [UsrSolSet],
 
         if UsrSolSet = [] then
           PrintMsg( 'SHORT, SolverMsg["SolSetDrp"] )
@@ -2288,8 +2307,9 @@ ExpandSolutionHierarchy( Solutions ) := (
       FlatSolutions, list
     ),
 
+    if length( Solutions ) = 0 then return ( [] )
     /* listp = true indicates an additional recursion level */
-    if listp( last( Solutions ) ) then (
+    else if listp( last( Solutions ) ) then (
 
       FlatSolutions : rest( Solutions, -1 ),
 

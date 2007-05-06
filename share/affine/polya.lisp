@@ -170,7 +170,7 @@
 (defun make-premonomial (monomial)
   (cond ((atom monomial) monomial)
 	(t
-	 (zl-delete '(mtimes simp) monomial))))
+	 (delete '(mtimes simp) monomial :test #'equal))))
 (defun macsyma-list (&rest l)
   (cons '(mlist simp) (copy-list l)))
 (defun show-coeff (poly )
@@ -590,7 +590,7 @@
 	      (sloop for v in a-list
 		    appending
 		    (sloop for perm in answer
-			  when (not (zl-member v perm))
+			  when (not (member v perm :test #'equal))
 			  collecting (cons v perm)))))
 	
   answer)
@@ -603,7 +603,7 @@
 	((eq (setq tem (car (last perm))) sub1-leng)
 	 (nsign-of-permutation (nbutlast perm)))
 	(t (nsubst tem sub1-leng perm)
-	   (minus (nsign-of-permutation (nbutlast perm)))))))
+	   (- (nsign-of-permutation (nbutlast perm)))))))
 (defun $make_art_q (&rest indices)
   (make-array indices :adjustable t))
 
@@ -613,12 +613,11 @@
 	(t (sloop for u in monomial do (print u)
 		 (cond ((numberp u) nil)
 		       ((atom u) (return u))
-		       ((zl-member u '((mtimes simp) (mtimes)
+		       ((member u '((mtimes simp) (mtimes)
 				    (mexpt simp) (mncexpt simp) (mncexpt)
-				    (mnctimes simp)(mnctimes))) nil)
-		       ((zl-member (car u)'((mtimes simp) (mtimes)
-				
-				    (mnctimes simp)(mnctimes)))
+				    (mnctimes simp)(mnctimes)) :test #'equal) nil)
+		       ((member (car u)'((mtimes simp) (mtimes)
+				    (mnctimes simp)(mnctimes)) :test #'equal)
 			(return ($first_variable (cdr u))))
 		       (t (return (second u))))))))
 		  
@@ -693,7 +692,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 	 (sloop for v in (third (car expr))
 	       when (not (fast-scalarp v))
 	       do (setq nc-product-appeared t)
-	       when (and (memq v variables) nc-product-appeared)
+	       when (and (member v variables :test #'eq) nc-product-appeared)
 	       do (setq maybe-out-of-order t))))
   (cond (maybe-out-of-order 
 	(setq nc-product-appeared nil)
@@ -702,7 +701,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 	       for w in (fourth (car expr))
 	       when (and (not (atom v))(eq (caar v) 'mnctimes))
 	       do (setq nc-product-appeared t)
-	       when (and (memq v variables) nc-product-appeared
+	       when (and (member v variables :test #'eq) nc-product-appeared
 			 (appears-in (cdr expr) w))
 	       do 
 	       (setq maybe-out-of-order t)))
@@ -714,7 +713,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 		      when (and (not (atom v)) (eq (caar v) 'mnctimes)
 				(appears-in (cdr expr) w))
 		      do (setq nc-product-appeared t)
-		      when (and (memq v variables) nc-product-appeared
+		      when (and (member v variables :test #'eq) nc-product-appeared
 				(appears-in (cdr expr) w))
 		      do (return t))
 		(format t "~%~%~%*************Changing rat order")
@@ -822,7 +821,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 		 (format t "adding it to answer")
 	         (cond ((fifth the-num)(setq expr (nred  (fifth the-num) the-denom)))	;cons?
 		       (t (setq expr 0)))
-	     (setq answer (n+ answer (nred (firstn 3 the-num) the-denom)))
+	     (setq answer (n+ answer (nred (subseq the-num 0 3) the-denom)))
 	     do
 	     (setq repl nil)
 	     (setq tem nil the-num nil the-denom nil )
@@ -879,7 +878,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
      (cond ($new_fast_dotsimp      (setq answer (new-rat-dotsimp (cdr expr))))
 	   (t  (setq answer (rat-dotsimp  expr)))))
     ((mbagp expr)(setq answer (cons (car expr) (mapcar #'$dotsimp (cdr expr)))))
-    ((zl-member(caar expr) '(mtimes mnctimes))
+    ((member (caar expr) '(mtimes mnctimes) :test ##equal)
      (setq answer(apply 'dotsimp-one-term
 				(multiple-value-list (find-worst-nc-monomial expr))))
      (cond (($must_replacep answer)
@@ -1000,7 +999,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 			      else
 			      do
 			      (cond ((atom (setq pattern (car tem)))
-				     (cond ((zl-member pattern monom)
+				     (cond ((member pattern monom :test #'equal)
 					    ;;we have to handle
 					    ;;the case of an atomic pattern by making
 					    ;;it a standard list '(nonsense)
@@ -1013,9 +1012,8 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 			      when
 			      (initial-sublist pattern monom)
 			      do
-			      (setq tema (firstn (f- (length init-monom)
-						    (length monom) 1)
-						 (cdr init-monom)))
+			      (setq tema (subseq (cdr init-monom) 0
+						 (- (length init-monom) (length monom) 1)))
 			      (cond ($new_fast_dotsimp
 				     (setq answer
 					   (new-rat-ncmul1
@@ -1076,11 +1074,11 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (cond ((atom f)(cond ((equal f x) 1)
 		       (t 0)))
 	((equal f x) 1)
-	((eq (caar f) 'mtimes)(cond ((zl-member  x f)
-				     (zl-delete x (copy-list f)))
+	((eq (caar f) 'mtimes)(cond ((member x f :test #'equal)
+				     (delete x (copy-list f) :test #'equal))
 				    ((and (equal x 1) ($scalarp f)) f)
 				    (t 0)))
-	((memq  (caar f) '(mplus mlist mequal))
+	((member  (caar f) '(mplus mlist mequal) :test #'eq)
 	 (simplifya (cons (list (caar f))
 			  (mapcar #'(lambda (y)
 				     ( $my_coeff y x)) (cdr f))) nil))))
@@ -1209,7 +1207,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (sloop for i from 1 to (length a-list)
 	do
        
-	(cond ((member-even  (firstn i a-list) (cdr $dot_simplifications))(return t)))))))
+	(cond ((member-even  (subseq a-list 0 i) (cdr $dot_simplifications)) (return t)))))))
 ;
 ;(defun $mono (a-list n &optional $sort &aux answer tem ans1 sorted-cdr-list)
 ;  "Returns the dot-monomials which will not be replaced by $dot_simplifications
@@ -1306,21 +1304,21 @@ dot_products, much the same as can be obtained by doing $dotsimp")
  The latter works only for number coefficients, while the former works using rattimes, etc.")
 (defun $setfy (a-list)
   (sloop for v in a-list
-	when (not (zl-member v tem))
+	when (not (member v tem :test #'equal))
 	collecting v into tem
 	finally (return tem)))
 (defun $list_nc_monomials (expr &aux answer )
   (cond ((atom expr) '((mlist simp)))
 	((eq (caar expr) 'mnctimes)`((mlist simp) ,expr))
-	((memq (caar expr) '(mlist mequal $matrix))
+	((member (caar expr) '(mlist mequal $matrix) :test #'eq)
 	 (sloop for u in (cdr expr)
 	       appending (cdr ($list_nc_monomials u)) into a-list
 	       finally (return (cons '(mlist simp) ($setfy a-list)))))
 	(t  (setq expr ($expand expr))
 	    (cond ((eq (caar expr) 'mplus)
 		   (sloop for u in (cdr expr)
-			 when (not (zl-member (setq answer (extract_nc_and_sc_parts u))
-					   a-list))
+			 when (not (member (setq answer (extract_nc_and_sc_parts u))
+					   a-list :test #'equal))
 			 collecting answer into a-list
 			 finally (return (cons '(mlist simp) a-list))))
 		  ((eq (caar expr) 'mtimes)
@@ -1355,7 +1353,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 		  (rational-functionp v)))
 	do
 	(cond ((rational-functionp v)(setq denom (denom v))))
-	(return (cons (poly-ncmul1 (ncmuln (firstn i list-of-terms) nil)
+	(return (cons (poly-ncmul1 (ncmuln (subseq list-of-terms 0 i) nil)
 			   (num v)		
 			   (ncmuln (nthcdr (f1+ i) list-of-terms) nil)) denom))
 	finally  (return (ncmuln list-of-terms nil))))
@@ -1366,7 +1364,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 	for i from 0
 	when ($ratp v)
 	do
-	(return (ncmul1 (ncmuln (firstn i list-of-terms) nil)
+	(return (ncmul1 (ncmuln (subseq list-of-terms 0 i) nil)
 			   v
 			   (ncmuln (nthcdr (f1+ i) list-of-terms) nil)))
 	finally (return (ncmuln list-of-terms nil))))
@@ -1407,7 +1405,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 ;	 (format t "~%find-worst-nc-monomial was applied to a non sum.  Expanding and continuing with " )(displa expr)))
 ;  (cond ((atom expr) (setq answer expr coefficient 1 answeru expr))
 ;	((eq (caar expr) 'mnctimes)(setq answer expr coefficient 1 answeru expr))
-;;	((memq (caar expr) '(mlist mequal)) (sloop for u in (cdr expr)
+;;	((member (caar expr) '(mlist mequal) :test #'eq) (sloop for u in (cdr expr)
 ;;			     appending (cdr ($list_nc_monomials u)) into a-list
 ;;			     finally (return (cons '(mlist simp) ($setfy a-list)))))
 ;	((eq (caar expr) 'mplus) (sloop for u in (cdr expr)
@@ -1483,9 +1481,6 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (cond (($ratp expr) nil)
 	((atom expr) (setq answer expr coefficient 1 answeru expr))
 	((eq (caar expr) 'mnctimes)(setq answer expr coefficient 1 answeru expr))
-;	((memq (caar expr) '(mlist mequal)) (sloop for u in (cdr expr)
-;			     appending (cdr ($list_nc_monomials u)) into a-list
-;			     finally (return (cons '(mlist simp) ($setfy a-list))))
 	((eq (caar expr) 'mplus) (sloop for u in (cdr expr)
 			    when (null answer)
 			    do (setq answeru u)
@@ -1589,15 +1584,15 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 					do
 					(return
 					  (apply 'mul*
-						 (cdr (zl-delete monom (copy-list expr)))))
+						 (cdr (delete monom (copy-list expr) :test #'equal))))
 					when (and ($sump u)
 						  (setq tem1 ($nc_coeff u monom))
 						  (not (number-and-zerop tem1)))
 					do
 					(return
 					  (apply 'mul*
-							 tem1
-							 (zl-delete u (copy-list (cdr expr)))))
+						 tem1
+						 (delete u (copy-list (cdr expr)) :test #'equal)))
 					finally (return 0)))
 			  (mplus (sloop named sue for v in (cdr expr)
 				       do (setq tem1 ($nc_coeff v monom))
@@ -1621,7 +1616,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 (defun ncsimp (expr)
   (cond (($scalarp expr) expr)
 	((atom expr) expr)
-	((memq 'ncsimp (car expr)) expr)
+	((member 'ncsimp (car expr)) expr :test #'eq)
 	(t
 	 (let ((nc-monoms ($list_nc_monomials expr)))
 	   (sloop for vv in (cdr nc-monoms)
@@ -1645,23 +1640,16 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (setq equations ($extract_linear_equations eqns independent-monomials))
   (cond ((null unknowns)(setq unknowns ($list_of_variables equations))))
   (macsyma-list equations unknowns))
+
 (defun $nc_coefficients (eqns &aux ans)
   (let (vars (rat-subs ($tellrat)))
-  (setq ans ($extr_eqns eqns ($list_nc_monomials eqns)))
-       (setq vars (third ans))
-       (sloop for v in (cdr vars)
-	     when (or ($constantp v)
-		       (appears-in rat-subs v))
-	     do (setq vars (zl-delete v vars)))
-       (list '(mlist simp) (second ans) vars)))
-;
-;(defmacro add-if-variable-if-new (l var1)
-; `(cond ((and ,l (not (numberp ,l))
-;			     (not (memq ,l '(simp mtimes mplus mexpt mlist
-;						 mnctimes mncexpt mequal)))
-;			     (not (memq ,l (symbol-value ,var1))))
-;			(set ,var1 (cons ,l (symbol-value ,var1))))))
-
+    (setq ans ($extr_eqns eqns ($list_nc_monomials eqns)))
+    (setq vars (third ans))
+    (sloop for v in (cdr vars)
+	   when (or ($constantp v)
+		    (appears-in rat-subs v))
+	   do (setq vars (delete v vars :test #'equal)))
+    (list '(mlist simp) (second ans) vars)))
 
 (defun $find_relations_in_free_ring (a-list &aux answers eqns gen-sum repr)
    (check-arg a-list '$listp "macsyma list")
@@ -1686,17 +1674,17 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (cond ((atom l)
 	 (cond ((and l
 		     (not (numberp l))
-		     (not (memq l '(simp mtimes mplus mexpt mlist mrat rat
-						 mnctimes mncexpt mequal $matrix)))
-		     (not (memq l (symbol-value var1))))
+		     (not (member l '(simp mtimes mplus mexpt mlist mrat rat mnctimes
+				      mncexpt mequal $matrix) :test #'eq))
+		     (not (member l (symbol-value var1) :test #'eq)))
 		(set var1 (cons l (symbol-value var1))))))
 	(t 
 	 (sloop for u in l
 	       do
 	       (aux_to_list_of_variables u var1)))))
 
-(defun $firstn ( n a-list)
-  (firstn (f1+ n) a-list))
+(defun $firstn (n a-list)
+  (subseq a-list 0 (1+ n)))
 
 (defun $general_sum (terms &optional coefficients &aux answer)
   (cond ((null coefficients)
@@ -1790,7 +1778,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 (defvar $type_of_entries_for_poly_vector :any-macsyma)
 
 (defun $constant_term (expr variables)
-  (cond ((atom expr)(cond ((memq expr variables) 0)
+  (cond ((atom expr)(cond ((member expr variables :test #'eq) 0)
 			  (t expr)))
 	((not ($plusp expr))
 	 (cond ((appears-in expr 'mplus )(error "should expand expr before taking const"))
@@ -2060,9 +2048,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (sloop  while some-of-big
 	 when (initial-sublist small some-of-big)
 	 do (setf answer (append 
-			      (list  (firstn
-			    (f- (length big)
-			       (length some-of-big)) big)
+			      (list  (subseq big 0 (- (length big) (length some-of-big)))
 			    (nthcdr (length small) some-of-big))
 			      answer))
 		  	 do
@@ -2078,7 +2064,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
   (setf $dot_simplifications (copy-list l))
 
 	(show l)
-	(setf $dot_simplifications (firstn 3 l))
+	(setf $dot_simplifications (subseq l 0 3))
 	(setf l (cdddr l))
 	
         (sloop while l
@@ -2230,7 +2216,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 ;
 ;   (sloop for v in (cdr all-eqns) do (displa v))
 
-  (setf answer ($fast_linsolve all-eqns (firstn (length terms) $aaaa)))
+  (setf answer ($fast_linsolve all-eqns (subseq $aaaa 0 (length terms))))
   (setf answer ($sublis answer gen-sum)))
 ;  (break aft)
 ;  ($express_in_terms_of_basis variables answer relations))
@@ -2308,7 +2294,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 	 (sloop for u in (cdr f)
 	       maximize ($nc_degree u type-of-weight)))
 ;;;	 ($nc_degree (extract_nc_and_sc_parts f) type-of-weight ))
-	((memq (caar f) '( rat)) 0)
+	((member (caar f) '(rat) :test #'eq) 0)
 	((eq (caar f) 'mrat)
 	 (cond ($leading_monomial_is_lowest_degree
 		(sloop for v in (varlist f)
@@ -2547,7 +2533,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 			 collecting ($rat (aref a-row (f1+ i)))))
 	
 	(setf all-eqns (cons '(mlist simp) eqns))
-  (setf answer ($fast_linsolve all-eqns (firstn (length monoms) $aaaa)))
+  (setf answer ($fast_linsolve all-eqns (subseq $aaaa 0 (length monoms))))
   (setf answer ($sublis answer  gen-sum)))
 (defvar *show-entry-type* t)
 
@@ -2633,7 +2619,8 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 			   (sloop for v in mat-polys
 				 with tem
 				 do (setq tem (zl-union (list-variables (nth i v)) tem))
-				 when (and (not (memq 1 tem)) (not (pzerop (gencoeff (nth i v) 1 tem))))
+				 when (and (not (member 1 tem))
+					   (not (pzerop (gencoeff (nth i v) 1 tem))))
 				   do (setq tem (cons 1 tem))
 				 finally (return 				    
 				   (sloop for va in tem when (eql va 1)
@@ -2719,7 +2706,7 @@ scalars in the alphabet"
   (setq big-pd (poly-data-from-nc-matrix big-mat))
   (setq all-rows (listarray (pd-rows big-pd)))
   (multiple-value-bind (sp1 sp2) 
-      (sp-quotient-space-basis (firstn ($length modulo-mat) all-rows)
+      (sp-quotient-space-basis (subseq all-rows 0 ($length modulo-mat))
 			       (nthcdr  ($length modulo-mat) all-rows))
     sp2
    (setf (pd-rows big-pd) (sp-rows sp1))

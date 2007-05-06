@@ -84,13 +84,21 @@ to subsitute their knowledge of defsystem for the following steps.
 
     (si:save-system "binary-gcl/maxima")
 
+    SBCL: (SBCL terminates after saving the image)
+
+    (sb-ext:save-lisp-and-die "binary-sbcl/maxima.core" :toplevel #'cl-user::run :executable t)
+
     CMUCL: (CMUCL terminates after saving the image)
 
-    (extensions:save-lisp "binary-cmucl/maxima.core" :init-function 'user::run)
+    (extensions:save-lisp "binary-cmucl/maxima.core" :init-function 'cl-user::run)
 
     SCL: (SCL terminates after saving the image)
 
     (extensions:save-lisp "binary-scl/maxima.core" :init-function 'user::run)
+
+    Allegro:
+
+    (excl:dumplisp :name "binary-acl/maxima.dxl")
 
 (10) Execute the saved image.
 

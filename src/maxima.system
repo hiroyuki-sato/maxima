@@ -3,7 +3,7 @@
 (in-package :cl-user)
 
 (pushnew :cl *features*)
-(pushnew :nocp *features*)
+
 #+gcl
 (let ((version-num (+ (* 10000 system::*gcl-major-version*)
 		      (* 100 system::*gcl-minor-version*)
@@ -13,8 +13,11 @@
 		      
 #+cmu
 (setf ext:*gc-verbose* nil)
+
 (setf *load-verbose* nil)
+
 (defvar *maxima-build-time* (multiple-value-list (get-decoded-time)))
+
 (export '*maxima-build-time*)
 
 (mk:defsystem "maxima"
@@ -96,8 +99,7 @@
                                      (:file "mformt") 
                                      (:file "mutils") 
                                      (:file "outmis") 
-                                     (:file "ar") 
-                                     (:file "misc")))
+                                     (:file "ar")))
                (:module commands :source-pathname ""
                         :components ((:file "comm")
                                      (:file "comm2")))
@@ -442,8 +444,7 @@
 				     (:file "airy"
 					    :depends-on ("ellipt"))
 				     (:file "numer") 
-				     (:file "intpol") 
-				     (:file "rombrg")))
+				     (:file "intpol")))
 	       (:module reader :source-pathname ""
 			:depends-on (compatibility-macros)
 			:components ((:file "nparse")))
@@ -537,6 +538,9 @@
 			 (:file "todd-coxeter")
 			 (:file "mactex")
 			 (:file "plot")))
+	       (:module graphics-drivers :source-pathname ""
+			:components ((:file "gnuplot")
+				     (:file "openmath")))
 	       (:module final :source-pathname ""
 			;; These are not compiled, for whatever reason
 			:load-only t

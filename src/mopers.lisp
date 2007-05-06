@@ -9,7 +9,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module mopers macro)
+
 (load-macsyma-macros defopt)
 (load-macsyma-macros-at-runtime 'defopt)
 
@@ -37,24 +39,24 @@
 ;; operands.
 
 (defopt add (&rest terms)
-  (cond ((= (length terms) 2) `(add2 . ,(copy-rest-arg terms)))
-	(t `(addn (list . , (copy-rest-arg terms)) t))))
+  (cond ((= (length terms) 2) `(add2 . ,terms))
+	(t `(addn (list . ,terms) t))))
 
 (defopt add* (&rest terms)
-  (cond ((= (length terms) 2) `(add2* . ,(copy-rest-arg terms)))
-	(t `(addn (list . ,(copy-rest-arg terms)) nil))))
+  (cond ((= (length terms) 2) `(add2* . ,terms))
+	(t `(addn (list . ,terms) nil))))
 
 ;; Multiplication -- call MUL or NCMUL with simplified operands; MUL* or NCMUL*
 ;; with unsimplified operands.
 
 (defopt mul (&rest factors)
-  (cond ((= (length factors) 2) `(mul2 . ,(copy-rest-arg factors)))
-	((= (length factors) 3) `(mul3 . ,(copy-rest-arg factors)))
-	(t `(muln (list . ,(copy-rest-arg factors)) t))))
+  (cond ((= (length factors) 2) `(mul2 . ,factors))
+	((= (length factors) 3) `(mul3 . ,factors))
+	(t `(muln (list . ,factors) t))))
 
 (defopt mul* (&rest factors)
-  (cond ((= (length factors) 2) `(mul2* . ,(copy-rest-arg factors)))
-	(t `(muln (list . ,(copy-rest-arg factors)) nil))))
+  (cond ((= (length factors) 2) `(mul2* . ,factors))
+	(t `(muln (list . ,factors) nil))))
 
 ;; the rest here can't be DEFOPT's because there aren't interpreted versions yet.
 
@@ -62,8 +64,8 @@
 (defmacro inv* (x) `(power* ,x -1))
 
 (defmacro ncmul (&rest factors)
-  (cond ((= (length factors) 2) `(ncmul2 . ,(copy-rest-arg factors)))
-	(t `(ncmuln (list . ,(copy-rest-arg factors)) t))))
+  (cond ((= (length factors) 2) `(ncmul2 . ,factors))
+	(t `(ncmuln (list . ,factors) t))))
 
 ;; (TAKE '(%TAN) X) = tan(x)
 ;; This syntax really loses.  Not only does this syntax lose, but this macro
@@ -77,14 +79,14 @@
   (setq simplifier
 	(and (not (atom operator))
 	     (eq (car operator) 'quote)
-	     (cdr (assq (caadr operator) '((%atan  . simp-%atan)
+	     (cdr (assoc (caadr operator) '((%atan  . simp-%atan)
 					   (%tan   . simp-%tan)
 					   (%log   . simpln)
 					   (mabs   . simpabs)
 					   (%sin   . simp-%sin)
 					   (%cos   . simp-%cos)
 					   ($atan2 . simpatan2)
-					   )))))
+					   ) :test #'eq))))
   (cond (simplifier `(,simplifier (list ,operator . ,args) 1 t))
 	(t `(simplifya (list ,operator . ,args) t))))
 
@@ -98,14 +100,7 @@
 ;; several places.  In Franz, Multics, and the LISPM, this macros out on the
 ;; assumption that calls are more expensive than the additional memory.
 
-#+(or cl multics franz nil)
 (defopt simplify (x) `(simplifya ,x nil))
-
-
-;; Multics Lisp is broken in that it doesn't grab the subr definition
-;; when applying.  If the macro definition is there first, it tries that and
-;; loses.
-#+multics (if (get 'simplify 'subr) (remprop 'simplify 'macro))
 
 ;; A hand-made DEFSTRUCT for dealing with the Macsyma MDO structure.
 ;; Used in GRAM, etc. for storing/retrieving from DO structures.
@@ -124,4 +119,3 @@
 
 (defmacro defgrad (name arguments . body)
   `(defprop ,name (,arguments . ,body) grad))
-

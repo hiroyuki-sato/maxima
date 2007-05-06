@@ -15,6 +15,10 @@
 @SET_MAKE@
 
 # versioned installation directories
+
+# Installation/uninstallation and distribution for .html files.
+# htmlname -- html base name (e.g. maxima or xmaxima)
+# htmlinstdir -- html installation directory  
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -38,7 +42,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(maxima_TEXINFOS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/maximahtml.mk \
+	$(srcdir)/Makefile.in $(top_srcdir)/common-html.mk \
 	$(top_srcdir)/common.mk texinfo.tex
 subdir = doc/info
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -70,7 +74,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 am__installdirs = "$(DESTDIR)$(infodir)"
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = es es.utf8 pt pt.utf8
+DIST_SUBDIRS = es es.utf8 pt pt.utf8 pt_BR pt_BR.utf8
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ACL_FALSE = @ACL_FALSE@
@@ -110,6 +114,10 @@ LANG_ES_FALSE = @LANG_ES_FALSE@
 LANG_ES_TRUE = @LANG_ES_TRUE@
 LANG_ES_UTF8_FALSE = @LANG_ES_UTF8_FALSE@
 LANG_ES_UTF8_TRUE = @LANG_ES_UTF8_TRUE@
+LANG_PT_BR_FALSE = @LANG_PT_BR_FALSE@
+LANG_PT_BR_TRUE = @LANG_PT_BR_TRUE@
+LANG_PT_BR_UTF8_FALSE = @LANG_PT_BR_UTF8_FALSE@
+LANG_PT_BR_UTF8_TRUE = @LANG_PT_BR_UTF8_TRUE@
 LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
@@ -199,7 +207,9 @@ win32 = @win32@
 @LANG_ES_UTF8_TRUE@ES_DIR_UTF8 = es.utf8
 @LANG_PT_TRUE@PT_DIR = pt
 @LANG_PT_UTF8_TRUE@PT_DIR_UTF8 = pt.utf8
-SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8)
+@LANG_PT_BR_TRUE@PT_BR_DIR = pt_BR
+@LANG_PT_BR_UTF8_TRUE@PT_BR_DIR_UTF8 = pt_BR.utf8
+SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8)
 info_TEXINFOS = maxima.texi
 maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   Expressions.texi Simplification.texi Plotting.texi Input.texi \
@@ -207,16 +217,17 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   Logarithms.texi Trigonometric.texi Special.texi \
   Limits.texi Differentiation.texi Integration.texi Equations.texi \
   Differential.texi Numerical.texi \
-  Statistics.texi Arrays.texi Matrices.texi Affine.texi Itensor.texi \
+  Arrays.texi Matrices.texi Affine.texi Itensor.texi \
   Ctensor.texi Atensor.texi Series.texi Number.texi Symmetries.texi \
   Groups.texi Runtime.texi Miscellaneous.texi Rules.texi Lists.texi \
   Function.texi Program.texi Debugging.texi Indices.texi Elliptic.texi \
   Bugs.texi nset.texi zeilberger.texi orthopoly.texi linearalgebra.texi \
   solve_rec.texi stringproc.texi numericalio.texi descriptive.texi \
-  distrib.texi simplex.texi simplifications.texi unit.texi makeOrders.texi \
+  distrib.texi draw.texi simplex.texi simplifications.texi unit.texi makeOrders.texi \
   mnewton.texi lsquares.texi plotdf.texi lindstedt.texi impdiff.texi \
-  ggf.texi f90.texi eval_string.texi diag.texi cholesky.texi dynamics.texi\
-  bode.texi augmented_lagrangian.texi opsubst.texi stirling.texi interpol.texi
+  ggf.texi f90.texi eval_string.texi diag.texi dynamics.texi\
+  bode.texi augmented_lagrangian.texi opsubst.texi stats.texi stirling.texi\
+  implicit_plot.texi interpol.texi lbfgs.texi romberg.texi grobner.texi
 
 figurefiles = \
 figures/dynamics1.gif\
@@ -227,6 +238,9 @@ figures/dynamics5.gif\
 figures/dynamics6.gif\
 figures/dynamics7.gif\
 figures/dynamics8.gif\
+figures/dynamics9.gif\
+figures/dynamics10.gif\
+figures/implicit_plot.gif\
 figures/plotdf1.gif\
 figures/plotdf2.gif\
 figures/plotdf3.gif\
@@ -260,29 +274,51 @@ figures/plotting24.gif\
 figures/plotting25.gif\
 figures/orthopoly1.gif
 
-MAXIMAHTML = maxima_10.html maxima_11.html maxima_12.html \
-	maxima_13.html maxima_14.html maxima_15.html maxima_16.html \
-	maxima_17.html maxima_18.html maxima_19.html maxima_1.html \
-	maxima_20.html maxima_21.html maxima_22.html maxima_23.html \
-	maxima_24.html maxima_25.html maxima_26.html maxima_27.html \
-	maxima_28.html maxima_29.html maxima_2.html maxima_30.html \
-	maxima_31.html maxima_32.html maxima_33.html maxima_34.html \
-	maxima_35.html maxima_36.html maxima_37.html maxima_38.html \
-	maxima_39.html maxima_3.html maxima_40.html maxima_41.html \
-	maxima_42.html maxima_43.html maxima_44.html maxima_45.html \
-	maxima_46.html maxima_47.html maxima_48.html maxima_49.html \
-	maxima_4.html maxima_50.html maxima_51.html maxima_52.html \
-	maxima_53.html maxima_54.html maxima_55.html maxima_56.html \
-	maxima_57.html maxima_58.html maxima_59.html maxima_5.html \
-	maxima_60.html maxima_61.html maxima_62.html maxima_63.html \
-	maxima_64.html maxima_65.html maxima_66.html maxima_67.html \
-	maxima_68.html maxima_69.html maxima_6.html maxima_70.html \
-	maxima_71.html maxima_72.html maxima_73.html maxima_74.html \
-	maxima_75.html maxima_76.html maxima_77.html maxima_78.html \
-	maxima_79.html maxima_7.html maxima_80.html maxima_81.html \
-	maxima_82.html maxima_83.html maxima_8.html maxima_9.html \
-	maxima_abt.html maxima_fot.html maxima.html maxima_ovr.html \
-	maxima_toc.html
+pdffigures = \
+figures/dynamics1.pdf\
+figures/dynamics2.pdf\
+figures/dynamics3.pdf\
+figures/dynamics4.pdf\
+figures/dynamics5.pdf\
+figures/dynamics6.pdf\
+figures/dynamics7.pdf\
+figures/dynamics8.pdf\
+figures/dynamics9.pdf\
+figures/dynamics10.pdf\
+figures/implicit_plot.pdf\
+figures/plotdf1.pdf\
+figures/plotdf2.pdf\
+figures/plotdf3.pdf\
+figures/plotdf4.pdf\
+figures/plotdf5.pdf\
+figures/plotdf6.pdf\
+figures/plotting1.pdf\
+figures/plotting2.pdf\
+figures/plotting3.pdf\
+figures/plotting4.pdf\
+figures/plotting5.pdf\
+figures/plotting6.pdf\
+figures/plotting7.pdf\
+figures/plotting8.pdf\
+figures/plotting9.pdf\
+figures/plotting10.pdf\
+figures/plotting11.pdf\
+figures/plotting12.pdf\
+figures/plotting13.pdf\
+figures/plotting14.pdf\
+figures/plotting15.pdf\
+figures/plotting16.pdf\
+figures/plotting17.pdf\
+figures/plotting18.pdf\
+figures/plotting19.pdf\
+figures/plotting20.pdf\
+figures/plotting21.pdf\
+figures/plotting22.pdf\
+figures/plotting23.pdf\
+figures/plotting24.pdf\
+figures/plotting25.pdf\
+figures/orthopoly1.pdf
+
 verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
 verpkgdatadir = $(pkgdatadir)/@VERSION@
@@ -296,17 +332,21 @@ instsrcdir = $(verpkgdatadir)/src
 xmaximadir = $(verpkgdatadir)/xmaxima
 insttestsdir = $(verpkgdatadir)/tests
 genericdir = $(dochtmldir)
-genericdirDATA = \
-$(MAXIMAHTML)\
-$(figurefiles)\
-contents.hhc index.hhk header.hhp
+genericdirDATA = $(figurefiles) \
+contents.hhc index.hhk header.hhp maxima.hhp
 
-EXTRA_DIST = texi2html maximahtml.mk manual.css texi2html.init $(genericdirDATA) create_index header.hhp
+htmlname = maxima
+htmlinstdir = $(dochtmldir)
+EXTRA_DIST = texi2html manual.css texi2html.init \
+    $(genericdirDATA) $(pdffigures) \
+    create_index maxima-index.lisp \
+    check_crlf check_tab fix_crlf fix_tab build_index.pl
+
 all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .dvi .html .info .pdf .ps .texi
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/maximahtml.mk $(top_srcdir)/common.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(top_srcdir)/common-html.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -382,7 +422,6 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 $(srcdir)/maxima.info: maxima.texi $(maxima_TEXINFOS)
 maxima.dvi: maxima.texi $(maxima_TEXINFOS)
 maxima.pdf: maxima.texi $(maxima_TEXINFOS)
-maxima.html: maxima.texi $(maxima_TEXINFOS)
 .dvi.ps:
 	$(DVIPS) -o $@ $<
 
@@ -601,10 +640,10 @@ distdir: $(DISTFILES)
 	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-info
+	  dist-info dist-hook
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(INFO_DEPS)
+all-am: Makefile $(INFO_DEPS) all-local
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(infodir)"; do \
@@ -715,12 +754,12 @@ uninstall-am: uninstall-info-am uninstall-local
 
 uninstall-info: uninstall-info-recursive
 
-.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-local clean-recursive ctags \
-	ctags-recursive dist-info distclean distclean-generic \
-	distclean-recursive distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-local install-exec \
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am all-local check \
+	check-am clean clean-generic clean-local clean-recursive ctags \
+	ctags-recursive dist-hook dist-info distclean \
+	distclean-generic distclean-recursive distclean-tags distdir \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-data-local install-exec \
 	install-exec-am install-info install-info-am install-man \
 	install-strip installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-aminfo \
@@ -730,13 +769,15 @@ uninstall-info: uninstall-info-recursive
 	uninstall uninstall-am uninstall-info-am uninstall-local
 
 
-maximahtml.mk:
-	perl ./texi2html -split_chapter --lang=en --output=. --css-include=./manual.css --init-file ./texi2html.init maxima.texi 
-	rm -f maximahtml.mk
-	ls -1 maxima*.html | sed 's/\(.*\)/MAXIMAHTML += \1/' > maximahtml.mk
+all-local: maxima-index.lisp maxima.html contents.hhc
 
-$(MAXIMAHTML): maxima.texi $(maxima_TEXINFOS)
+maxima-index.lisp: maxima.info build_index.pl
+	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
+
+maxima.html: maxima.texi $(maxima_TEXINFOS)
 	perl ./texi2html -split_chapter --lang=en --output=. --css-include=./manual.css --init-file ./texi2html.init maxima.texi 
+
+contents.hhc: maxima.html
 	perl ./create_index
 
 # Support for installation of DATA files in a generic directory
@@ -773,16 +814,90 @@ uninstall-datafiles:
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
 
+install-data-local: install-maxima-html
+install-maxima-html: $(htmlname).html
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(htmlinstdir)
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list="$(srcdir)/$(htmlname).html $(srcdir)/$(htmlname)_*.html" ; \
+	for p in $$list; do \
+	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
+	  if test -f $(srcdir)/$$f; then \
+            if test ! -d `dirname $(DESTDIR)$(htmlinstdir)/$$f`; then \
+              $(mkinstalldirs) `dirname $(DESTDIR)$(htmlinstdir)/$$f`; \
+            fi; \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(htmlinstdir)/$$f"; \
+	    $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(htmlinstdir)/$$f; \
+	  else if test -f $$f; then \
+            if test ! -d `dirname $(DESTDIR)$(htmlinstdir)/$$f`; then \
+              $(mkinstalldirs) `dirname $(DESTDIR)$(htmlinstdir)/$$f`; \
+            fi; \
+	    echo " $(INSTALL_DATA) $$f $(DESTDIR)$(htmlinstdir)/$$f"; \
+	    $(INSTALL_DATA) $$f $(DESTDIR)$(htmlinstdir)/$$f; \
+	  fi; fi; \
+	done
+
+uninstall-local: uninstall-maxima-html
+uninstall-maxima-html:
+	@$(NORMAL_UNINSTALL)
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname).html 
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname)_*.html
+
+dist-hook: dist-maxima-html
+dist-maxima-html: $(htmlname).html
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list="$(srcdir)/$(htmlname).html $(srcdir)/$(htmlname)_*.html" ; \
+	for p in $$list; do \
+	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
+	  test -f $(distdir)/$$f || cp -p $(srcdir)/$$f $(distdir)/$$f; \
+	done
+
+all-local: warn_texinfo
+dist-hook: check_texinfo
+
+install-data-local: install-maxima-index
+uninstall-local: uninstall-maxima-index
+
+install-maxima-index: maxima-index.lisp
+	test -z "$(infodir)" || mkdir -p -- "$(DESTDIR)$(infodir)"
+	$(INSTALL_DATA) maxima-index.lisp "$(DESTDIR)$(infodir)/maxima-index.lisp"
+
+uninstall-maxima-index: maxima-index.lisp
+	rm -f "$(DESTDIR)$(infodir)/maxima-index.lisp"
+
 clean-local: clean-info
 clean-local: clean-html
 
 clean-info:
 	rm -f maxima.info*
+	rm -f maxima-index.lisp
 
 clean-html:
 	rm -f maxima*.html
 	rm -f contents.hhc
 	rm -f index.hhk
+
+check_texinfo:
+	pattern=`printf "\r$$"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
+	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have DOS-style EOLs: $$bad_files" ; \
+	echo "Run make distclean and then /doc/info/fix_crlf to fix the problem." ; exit 1 )
+	pattern=`printf "\t"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
+	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have unexpanded Tabs: $$bad_files" ; \
+	echo "Run make distclean and then /doc/info/fix_tab to fix the problem." ; exit 1 )
+
+warn_texinfo:
+	pattern=`printf "\r$$"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
+	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have DOS-style EOLs: $$bad_files" ; \
+	echo "Run /doc/info/fix_crlf to fix the problem." )
+	pattern=`printf "\t"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
+	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
+	echo "Run /doc/info/fix_tab to fix the problem." )
+
+.PHONY: check_texinfo warn_texinfo
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
