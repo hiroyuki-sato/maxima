@@ -7,300 +7,6 @@ plot2d (f(x), [x, -2, 2]);
 (kill (all), 0);
 0;
 
-/* Test simplification of boolean expressions.
- * '(...) expressions are simplified but not evaluated.
- */
-
-['("and" ()), '("or" ())];      /* analogous to * and + with no arguments */
-[true, false];
-
-/* These values are supposed to be ignored in quoted expressions '(...).
- */
-(a : true, b : false, c : true, 0);
-0;
-
-('(a and b), [op (%%), args (%%)]);
-["and", '[a, b]];
-
-('(a or b), [op (%%), args (%%)]);
-["or", '[a, b]];
-
-('(not a), [op (%%), args (%%)]);
-["not", '[a]];
-
-('(a and b or c and d), [op (%%), args (%%)]);
-["or", ['(a and b), '(c and d)]];
-
-('((a or b) and (c or d)), [op (%%), args (%%)]);
-["and", ['(a or b), '(c or d)]];
-
-'(a and true);
-'a;
-
-'(a and false);
-false;
-
-'(a or true);
-true;
-
-'(a or false);
-'a;
-
-'[true and true, true and false, true or true, true or false, false and true, false and false, false or true, false or false];
-[true, false, true, true, false, false, true, false];
-
-'((a or true) and (b or true));
-true;
-
-'(a and true or b and true);
-'(a or b);
-
-'(a or b or c or false);
-'(a or b or c);
-
-'(a and b and c and true);
-'(a and b and c);
-
-'(not (a and b));
-'((not a) or (not b));
-
-'(not a and b);
-'((not a) and b);
-
-'(not (a or b));
-'((not a) and (not b));
-
-'(not (a or b or c or d or e));
-'((not a) and (not b) and (not c) and (not d) and (not e));
-
-'(not (a and b and c and d and e));
-'((not a) or (not b) or (not c) or (not d) or (not e));
-
-'(not (a or b and c or d and e));
-'((not a) and ((not b) or (not c)) and ((not d) or (not e)));
-
-'(not (a and not b or c and not d and not e));
-'(((not a) or b) and ((not c) or d or e));
-
-'(not a or b);
-'((not a) or b);
-
-'(not not a);
-'a;
-
-'(not not not a);
-'(not a);
-
-'(not not not not a);
-'a;
-
-/* Side-effects shouldn't happen in simplification (since arguments are not evaluated).
- */
-
-(kill (a, b, c), 0);
-0;
-
-('((a : true) and (b : false) and (c : foo ())), [op (%%), args (%%), a, b, c]);
-["and", '[a : true, b : false, c : foo ()], 'a, 'b, 'c];
-
-('(not (a : true)), [op (%%), args (%%), a]);
-["not", '[a : true], 'a];
-
-/* Miscellaneous tests.
- */
-expr: '(a > b and (equal (c, d) or e = 1) and not f <= g or notequal (h, %pi));
-'(a > b and (equal (c, d) or e = 1) and f > g or notequal (h, %pi));
-
-'(a > b and b > c and true or a < b and b < c and true or false or not true);
-'((a > b and b > c) or (a < b and b < c));
-
-'(not not not not a > b);
-'(a > b);
-
-'(not not not not not a > b);
-'(a <= b);
-
-'(not not not false and not not not not true);
-true;
-
-'(not foo (a));
-funmake ("not", '[foo (a)]);
-
-'[is (not a > b or false), is (not a > b or true), is (not a > b and false)];
-'[is (a <= b), true, false];
-
-'['is (not a > b or false), 'is (not a > b or true), 'is (not a > b and false)];
-'['is (a <= b), true, false];
-
-'[maybe (not a > b or false), maybe (not a > b or true), maybe (not a > b and false)];
-'[maybe (a <= b), true, false];
-
-'['maybe (not a > b or false), 'maybe (not a > b or true), 'maybe (not a > b and false)];
-'['maybe (a <= b), true, false];
-
-/* Test evaluation of boolean expressions.
- * Evaluate the arguments and simplify.
- */
-
-["and" (), "or" ()];      /* analogous to * and + with no arguments */
-[true, false];
-
-(a and b, [op (%%), args (%%)]);
-["and", '[a, b]];
-
-(a or b, [op (%%), args (%%)]);
-["or", '[a, b]];
-
-(not a, [op (%%), args (%%)]);
-["not", '[a]];
-
-(a and b or c and d, [op (%%), args (%%)]);
-["or", ['(a and b), '(c and d)]];
-
-((a or b) and (c or d), [op (%%), args (%%)]);
-["and", ['(a or b), '(c or d)]];
-
-a and true;
-'a;
-
-a and false;
-false;
-
-a or true;
-true;
-
-a or false;
-'a;
-
-(a or true) and (b or true);
-true;
-
-a and true or b and true;
-'(a or b);
-
-a or b or c or false;
-'(a or b or c);
-
-a and b and c and true;
-'(a and b and c);
-
-not (a and b);
-'((not a) or (not b));
-
-not a and b;
-'((not a) and b);
-
-not (a or b);
-'((not a) and (not b));
-
-not (a or b or c or d or e);
-'((not a) and (not b) and (not c) and (not d) and (not e));
-
-not (a and b and c and d and e);
-'((not a) or (not b) or (not c) or (not d) or (not e));
-
-not (a or b and c or d and e);
-'((not a) and ((not b) or (not c)) and ((not d) or (not e)));
-
-not (a and not b or c and not d and not e);
-'(((not a) or b) and ((not c) or d or e));
-
-not a or b;
-'((not a) or b);
-
-not not a;
-'a;
-
-not not not a;
-'(not a);
-
-not not not not a;
-'a;
-
-/* Side-effects should happen in evaluation.
- */
-
-((a : true) and (b : true) and (c : foo ()), [%%, a, b, c]);
-[foo (), true, true, foo ()];
-
-(not (a : bar ()), [%%, a]);
-['(not bar ()), bar ()];
-
-(kill (a, b, c), 0);
-0;
-
-/* Miscellaneous tests.
- */
-expr: a > b and (equal (c, d) or e = 1) and not f <= g or notequal (h, %pi);
-'(a > b and equal (c, d) and f > g or notequal (h, %pi));
-
-''expr, e=1;
-'(a > b and equal (c, d) and f > g or notequal (h, %pi));
-
-''expr, e=1, h=%e;
-true;
-
-''expr, e=1, h=%pi;
-'(a > b and equal (c, d) and f > g);
-
-''expr, e=89, f = g + 1;
-'(a > b and equal (c, d) or notequal (h, %pi));
-
-(assume (notequal (c, d), equal (f, 100), g < 0), 0);
-0;
-
-''expr, e = 1;
-'(notequal (h, %pi));
-
-a > b and b > c and true or a < b and b < c and true or false or not true;
-'((a > b and b > c) or (a < b and b < c));
-
-not not not not a > b;
-'(a > b);
-
-not not not not not a > b;
-'(a <= b);
-
-not not not false and not not not not true;
-true;
-
-/* is-evaluation of conditionals.
- * is(foo) => true, false, and unknown or error (depending on prederror flag).
- */
-
-ev (is (a > b or a > c), prederror=false);
-unknown;
-
-errcatch (ev (is (a > b or a > c), prederror=true));
-[];
-
-[is (not a > b or true), is (not a > b and false), 'is (not a > b or true), 'is (not a > b and false)];
-[true, false, true, false];
-
-[maybe (not a > b or false), maybe (not a > b or true), maybe (not a > b and false)];
-[unknown, true, false];
-
-['maybe (not a > b or false), 'maybe (not a > b or true), 'maybe (not a > b and false)];
-['maybe (a <= b), true, false];
-
-is (not a > b or true);
-true;
-
-is (not a > b and false);
-false;
-
-ev (maybe (not a > b or false), prederror=false);
-unknown;
-
-ev (maybe (not a > b or false), prederror=true);
-unknown;
-
-ev (maybe (not a > b), a = 100.0, b = 1000/3);
-true;
-
-ev (maybe (not a > b), b = 100.0, a = 1000/3);
-false;
-
 /* Test 'if (noun).
  */
 (expr: if a > b then if a > c then a else d else if b > c then b else c, 0);
@@ -433,3 +139,43 @@ L;
 
 (L : [], (is(first (push (false, L))), if %% then %% else (is(first (push (true, L))), if %% then %% else (is(first (push (true, L))), if %% then %%))), [%%, L]);
 [true, [true, false]];
+
+/* Translation of conditionals and boolean expressions.
+ * Translating this file (rtest_boolsimp.mac) would be a good test,
+ * but the translator is too broken to translate all of the file.
+ */
+
+/* Leave this mode_declare for later.
+ * The effect which would be observable here would be
+ * to trigger an error if some argument is not true or false.
+ * But as it stands, the translation code doesn't exploit
+ * the boolean mode_declare in any way.
+mode_declare ([a%, b%, c%, d%], boolean);
+[[a%, b%, c%, d%]];
+ */
+
+/* Example from mailing list 2006/05/04, tnx Barton */
+
+(kill(f), f(x) := if x < 0 then -1 else 1, 0);
+0;
+
+f(a);
+'if a < 0 then -1 else 1;
+
+(translate(f), f(a));
+'if a < 0 then -1 else 1;
+
+/* Other examples of translated functions */
+
+(my_max (x, y, z) := if x > y and x > z then x elseif y > z then y else z, translate (my_max));
+[my_max];
+
+my_max (11, 33, 22);
+33;
+
+my_max (a + b, c, 1);
+'if a + b > c and a + b > 1 then a + b elseif c > 1 then c else 1;
+
+[assume (c < 1), my_max (a + b, c, 1), forget (c < 1)];
+[[c < 1], 'if a + b > c and a + b > 1 then a + b else 1, [c < 1]];
+

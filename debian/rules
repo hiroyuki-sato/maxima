@@ -104,7 +104,7 @@ clean:
 #		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
 #			maxima.log maxima.out maxima.toc maxima.ps
 	rm -f debian/*.install
-	rm -f $(BOOK) config.log config.status plotting/mgnuplot plotting/omplotdata \
+	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
 			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
 	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
 	dh_clean
@@ -154,7 +154,6 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	ln -snf ../../emacs/site-lisp/maxima debian/tmp/usr/share/maxima/$(MVERS)/emacs
 
 	for i in debian/tmp/usr/bin/xmaxima \
-		debian/tmp/usr/lib/maxima/$(MVERS)/omplotdata \
 		debian/tmp/usr/lib/maxima/$(MVERS)/mgnuplot ; do \
 		cat $$i | sed  -e 's,^#!/bin/sh,#!/usr/bin/wish,1' \
 			-e 's,^exec wish,#exec wish,1' \
@@ -196,6 +195,12 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 
 	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/{plotting,tips} -name "*.shtml") ; do \
 		mv $$i $${i%.shtml}.html ; done
+
+	for i in $$(find debian/tmp/usr/share/info -name "maxima-index.lisp") ; do \
+		mkdir -p debian/tmp/usr/share/doc/maxima-doc/$$(basename $$(dirname $$i)) && \
+                mv $$i debian/tmp/usr/share/doc/maxima-doc/$$(basename $$(dirname $$i)) ; done
+
+	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/lurkmathml/mathmltest
 
 	dh_install
 

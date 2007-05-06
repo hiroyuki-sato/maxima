@@ -1,11 +1,12 @@
-@c english version 1.31
+@c english version 1.38
 @menu
-* n-arios::                        
-* no-fijos::                       
-* operador::                    
-* postfijos::                     
-* prefijos::                      
-* Definiciones para Operadores::   
+* n-arios::
+* no-fijos::
+* postfijos::
+* prefijos::
+* Operadores aritm@'eticos::
+* Operadores relacionales::
+* Operadores generales::
 @end menu
 
 @node n-arios, no-fijos, Operadores, Operadores
@@ -14,41 +15,371 @@
 
 Un operador de tipo @code{nary}(@code{n}-ario, en Maxima nary) es usado para denotar una funci@'on cuyo n@'umero de argumentos es arbitrario; los argumentos se separa por el s@'{@dotless{i}}mbolo del operador, como en A+B o A+B+C. La funci@'on @code{nary("x")} es una extensi@'on de la funci@'on @code{syntax} para declarar a x como un operador @code{n}-ario. Las funciones pueden ser declaradas para ser @code{nary}. Si se hace @code{declare(J,nary);}, se esta diciendo al simplificador que haga la reducci@'on de @code{j(j(a,b),j(c,d))} a @code{j(a, b, c, d)}.
 
-Funciones relacionadas: @code{syntax}.
+V@'ease tambi@'en @code{syntax}.
 
-@node no-fijos, operador, n-arios, Operadores
+@node no-fijos, postfijos, n-arios, Operadores
 
 @section no-fijos
 
 Los operadores de tipo @code{nofix} (no-fijos, en Maxima nofix) son usados para denotar funciones que no reciben argumentos. La mera presencia de tal operador en un comando causar@'a que la correspondiente funci@'on sea evaluada. Por ejemplo, cuando se escribe "exit;" para salir de una interrupci@'on de Maxima, "exit" se est@'a comportando de forma similar a un operador no-fijo (@code{nofix}). La funci@'on @code{nofix("x")} es una extensi@'on de la funci@'on syntax la cual declara a x como un operador @code{nofix}. 
 
-Funciones relacionadas @code{syntax}.
+V@'ease tambi@'en @code{syntax}.
 
 
-@node operador, postfijos, no-fijos, Operadores
-@section operadores
-V@'ease @code{operadores}.
-
-@node postfijos, prefijos, operador, Operadores
+@node postfijos, prefijos, no-fijos, Operadores
 @section postfijos
 
 Un operador de tipo @code{postfix} (postfijo), al contrario de los de tipo @code{prefix}, denota funciones de un solo argumento, pero en este caso el argumento precede inmediatamente la ocurrencia del operador en la cadena de entrada, como en @code{3!}. La funci@'on @code{postfix("x")} es una extensi@'on de la funci@'on syntax para declarar a x como un operador @code{postfix}. 
 
-Funciones relacionadas: @code{syntax}.   
+V@'ease tambi@'en @code{syntax}.   
 
-@node prefijos, Definiciones para Operadores, postfijos, Operadores
+@node prefijos, Operadores aritm@'eticos, postfijos, Operadores
 @section prefijos
 Un operador de tipo @code{prefix} (prefijo, en Maxima prefix) indica una funci@'on de un (1) argumento, dicho argumento viene inmediatamente despu@'es de una ocurrencia del operador. La funci@'on @code{prefix("x")} es una extensi@'on de la funci@'on syntax para declarar a x como un operador de @code{prefix}. 
 
-Funciones relacionadas: @code{syntax}.
+V@'ease tambi@'en @code{syntax}.
 
-@c end concepts Operators
-@node Definiciones para Operadores,  , prefijos, Operadores
-@section Definiciones para Operadores
+
+
+
+@node Operadores aritm@'eticos, Operadores relacionales, prefijos, Operadores
+@section Operadores aritm@'eticos
+
+@deffn {Operador} +
+@ifinfo
+@fnindex Suma
+@end ifinfo
+@deffnx {Operador} -
+@ifinfo
+@fnindex Resta
+@end ifinfo
+@deffnx {Operador} *
+@ifinfo
+@fnindex Multiplicaci@'on
+@end ifinfo
+@deffnx {Operador} /
+@ifinfo
+@fnindex Divisi@'on
+@end ifinfo
+@deffnx {Operador} ^
+@ifinfo
+@fnindex Exponenciaci@'on
+@end ifinfo
+
+Los s@'{@dotless{i}}mbolos @code{+} @code{*} @code{/} y @code{^} representan
+la suma, resta, multiplicaci@'on, divisi@'on y exponenciaci@'on, respectivamente.
+Los nombres de estos operadores son @code{"+"} @code{"*"} @code{"//"} y @code{"^"},
+que pueden aparecer all@'a donde se requiera el nombre de una funci@'on u operador.
+
+Los s@'{@dotless{i}}mbolos @code{+} y @code{-} representan el positivo y negativo unario,
+siendo los nombres de estos operadores @code{"+"} y @code{"-"}, respectivamente.
+
+En Maxima, la resta @code{a - b} se representa como la suma @code{a + (- b)}.
+Expresiones tales como @code{a + (- b)} se muestran como restas. Maxima
+reconoce @code{"-"} tan solo como el operador de negaci@'on unaria, no como
+el nombre del operador de resta binaria.
+
+La divisi@'on @code{a / b} se representa en maxima como la multiplicaci@'on
+@code{a * b^(- 1)}. Expresiones tales como @code{a * b^(- 1)} se muestran 
+como divisiones. Maxima reconoce @code{"//"} como el nombre del operador
+de divisi@'on.
+
+La suma y la multiplicaci@'on son operadores conmutativos n-arios. La 
+divisi@'on y la exponenciaci@'on son operadores no conmutativos binarios.
+
+Maxima ordena los operandos de los operadores conmutativos para
+formar lo que se conoce como representaci@'on can@'onica. A efectos de
+almacenamiento interno, la ordenaci@'on viene determinada por @code{orderlessp}.
+A efectos de presentaci@'on de las expresiones, la ordenaci@'on de la suma
+la determina @code{ordergreatp}, y en el caso de la multiplicaci@'on, la
+ordenaci@'on coincide con la del almacenamiento interno.
+
+Los c@'alculos aritm@'eticos se realizan con n@'umeros literales
+(enteros, racionales, decimales ordinarios y decimales grandes).
+Excepto en el caso de la exponenciaci@'on, todas las operaciones
+aritm@'eticas con n@'umeros dan lugar a resultados en forma de
+n@'umeros. La exponenciaci@'on da como resultado un n@'umero
+si alguno de los operandos es decimal ordinario o grande (@i{bigfloat}),
+o si el resultado es un entero o racional; en caso contrario,
+la exponenciaci@'on puede expresarse como una ra@'{@dotless{i}}z
+cuadrada (@code{sqrt}), como otra potencia, o simplemente no
+sufre cambios.
+
+Se produce contagio de los decimales en coma flotante en los
+c@'alculos aritm@'eticos: si alg@'un operando es un n@'umero decimal
+grande (@i{bigfloat}), el resultado ser@'a tambi@'en un n@'umero
+decimal grande; no habiendo decimales grandes, pero s@'{@dotless{i}}
+ordinarios, el resultado sr@'a tambi@'en un decimal ordinario; de no
+haber operandos decimales, el resultado ser@'a un n@'umero racional o
+entero. 
+
+Los c@'alculos aritm@'eticos son simplificaciones, no evaluaciones, por lo
+que se realizan en expresiones comentadas.
+
+Las operaciones aritm@'eticas se aplican elemento a elemento en el
+caso de las listas cuando la variable global @code{listarith} vale @code{true};
+pero en el caso de las matrices, siempre se aplican elemento a elemento.
+Cuando un operando es una lista o matriz y otro operando lo es de otro tipo
+cualquiera, @'este se combina con cada uno de los elementos de la lista o
+matriz.
+
+Ejemplos:
+
+La suma y la multiplicaci@'on son operadores conmutativos n-arios.
+Maxima ordena los operandos para formar lo que se conoce como 
+representaci@'on can@'onica. Los nombres de estos operadores son
+@code{"+"} y @code{"-"}.
+@c ===beg===
+@c c + g + d + a + b + e + f;
+@c [op (%), args (%)];
+@c c * g * d * a * b * e * f;
+@c [op (%), args (%)];
+@c apply ("+", [a, 8, x, 2, 9, x, x, a]);
+@c apply ("*", [a, 8, x, 2, 9, x, x, a]);
+@c ===end===
+
+@example
+(%i1) c + g + d + a + b + e + f;
+(%o1)               g + f + e + d + c + b + a
+(%i2) [op (%), args (%)];
+(%o2)              [+, [g, f, e, d, c, b, a]]
+(%i3) c * g * d * a * b * e * f;
+(%o3)                     a b c d e f g
+(%i4) [op (%), args (%)];
+(%o4)              [*, [a, b, c, d, e, f, g]]
+(%i5) apply ("+", [a, 8, x, 2, 9, x, x, a]);
+(%o5)                    3 x + 2 a + 19
+(%i6) apply ("*", [a, 8, x, 2, 9, x, x, a]);
+                                 2  3
+(%o6)                       144 a  x
+@end example
+
+La divisi@'on y la exponenciaci@'on son operadores no conmutativos binarios.
+Los nombres de estos operadores son @code{"//"} y @code{"^"}.
+@c ===beg===
+@c [a / b, a ^ b];
+@c [map (op, %), map (args, %)];
+@c [apply ("//", [a, b]), apply ("^", [a, b])];
+@c ===end===
+
+@example
+(%i1) [a / b, a ^ b];
+                              a   b
+(%o1)                        [-, a ]
+                              b
+(%i2) [map (op, %), map (args, %)];
+(%o2)              [[//, ^], [[a, b], [a, b]]]
+(%i3) [apply ("//", [a, b]), apply ("^", [a, b])];
+                              a   b
+(%o3)                        [-, a ]
+                              b
+@end example
+
+La resta y la divisi@'on se representan internamente en
+t@'erminos de la suma y multiplicaci@'on, respectivamente.
+@c ===beg===
+@c [inpart (a - b, 0), inpart (a - b, 1), inpart (a - b, 2)];
+@c [inpart (a / b, 0), inpart (a / b, 1), inpart (a / b, 2)];
+@c ===end===
+
+@example
+(%i1) [inpart (a - b, 0), inpart (a - b, 1), inpart (a - b, 2)];
+(%o1)                      [+, a, - b]
+(%i2) [inpart (a / b, 0), inpart (a / b, 1), inpart (a / b, 2)];
+                                   1
+(%o2)                       [*, a, -]
+                                   b
+@end example
+
+Los c@'alculos se realizan con n@'umeros literales.
+Se produce el contagio de los n@'umeros decimales.
+@c ===beg===
+@c 17 + b - (1/2)*29 + 11^(2/4);
+@c [17 + 29, 17 + 29.0, 17 + 29b0];
+@c ===end===
+
+@example
+(%i1) 17 + b - (1/2)*29 + 11^(2/4);
+                                       5
+(%o1)                   b + sqrt(11) + -
+                                       2
+(%i2) [17 + 29, 17 + 29.0, 17 + 29b0];
+(%o2)                   [46, 46.0, 4.6b1]
+@end example
+
+Los c@'alculos aritm@'eticos son una simplificaci@'on, no una
+evaluaci@'on.
+@c ===beg===
+@c simp : false;
+@c '(17 + 29*11/7 - 5^3);
+@c simp : true;
+@c '(17 + 29*11/7 - 5^3);
+@c ===end===
+
+@example
+(%i1) simp : false;
+(%o1)                         false
+(%i2) '(17 + 29*11/7 - 5^3);
+                              29 11    3
+(%o2)                    17 + ----- - 5
+                                7
+(%i3) simp : true;
+(%o3)                         true
+(%i4) '(17 + 29*11/7 - 5^3);
+                                437
+(%o4)                         - ---
+                                 7
+@end example
+
+Los c@'alculos aritm@'eticos se realizan elemento a elemento 
+en las listas (seg@'un sea el valor de @code{listarith}) y
+matrices.
+@c ===beg===
+@c matrix ([a, x], [h, u]) - matrix ([1, 2], [3, 4]);
+@c 5 * matrix ([a, x], [h, u]);
+@c listarith : false;
+@c [a, c, m, t] / [1, 7, 2, 9];
+@c [a, c, m, t] ^ x;
+@c listarith : true;
+@c [a, c, m, t] / [1, 7, 2, 9];
+@c [a, c, m, t] ^ x;
+@c ===end===
+
+@example
+(%i1) matrix ([a, x], [h, u]) - matrix ([1, 2], [3, 4]);
+                        [ a - 1  x - 2 ]
+(%o1)                   [              ]
+                        [ h - 3  u - 4 ]
+(%i2) 5 * matrix ([a, x], [h, u]);
+                          [ 5 a  5 x ]
+(%o2)                     [          ]
+                          [ 5 h  5 u ]
+(%i3) listarith : false;
+(%o3)                         false
+(%i4) [a, c, m, t] / [1, 7, 2, 9];
+                          [a, c, m, t]
+(%o4)                     ------------
+                          [1, 7, 2, 9]
+(%i5) [a, c, m, t] ^ x;
+                                      x
+(%o5)                     [a, c, m, t]
+(%i6) listarith : true;
+(%o6)                         true
+(%i7) [a, c, m, t] / [1, 7, 2, 9];
+                              c  m  t
+(%o7)                     [a, -, -, -]
+                              7  2  9
+(%i8) [a, c, m, t] ^ x;
+                          x   x   x   x
+(%o8)                   [a , c , m , t ]
+@end example
+
+@end deffn
+
+
+@deffn {Operador} **
+
+Operador de exponenciaci@'on.
+Maxima identifica @code{**} con el operador @code{^} en la entrada
+de expresiones, pero se representa como @code{^} en las salidas
+no formateadas (@code{display2d=false}), o colocando un 
+super@'{@dotless{i}}ndice en la salida formateada (@code{display2d=true}).
+
+La funci@'on @code{fortran} representa el operador de exponenciaci@'on
+con @code{**}, tanto si se ha introducido como @code{**} o como @code{^}.
+
+Ejemplos:
+
+@c ===beg===
+@c is (a**b = a^b);
+@c x**y + x^z;
+@c string (x**y + x^z);
+@c fortran (x**y + x^z);
+@c ===end===
+@example
+(%i1) is (a**b = a^b);
+(%o1)                         true
+(%i2) x**y + x^z;
+                              z    y
+(%o2)                        x  + x
+(%i3) string (x**y + x^z);
+(%o3)                        x^z+x^y
+(%i4) fortran (x**y + x^z);
+      x**z+x**y
+(%o4)                         done
+@end example
+
+@end deffn
+
+
+
+@node Operadores relacionales, Operadores generales, Operadores aritm@'eticos, Operadores
+@section Operadores relacionales
+
+@deffn {Operator} <
+@ifinfo
+@fnindex Menor que
+@end ifinfo
+@deffnx {Operator} <=
+@ifinfo
+@fnindex Menor o igual que
+@end ifinfo
+@deffnx {Operator} >=
+@ifinfo
+@fnindex Mayor o igual que
+@end ifinfo
+@deffnx {Operator} >
+@ifinfo
+@fnindex Mayor que
+@end ifinfo
+
+@end deffn
+
+@node Operadores generales, , Operadores relacionales, Operadores
+@section Operadores generales
+
+
+@deffn {Operator} ^^
+@ifinfo
+@fnindex Exponenciaci@'on no conmutativa
+@end ifinfo
+
+Operador de exponenciaci@'on no conmutativa.
+Se trata del operador de exponenciaci@'on correspondiente a la
+multiplicaci@'on no conmutativa @code{.}, del mismo modo que el
+operador de exponenciaci@'on ordinario @code{^} se corresponde 
+con la multiplicaci@'on conmutativa @code{*}.
+
+La exponenciaci@'on no conmutativa se representa como @code{^^}
+en las salidas no formateadas (@code{display2d=false}), o colocando un 
+super@'{@dotless{i}}ndice entre @'angulos (@code{< >}) en la salida 
+formateada (@code{display2d=true}).
+
+Ejemplos:
+
+@c ===beg===
+@c a . a . b . b . b + a * a * a * b * b;
+@c string (a . a . b . b . b + a * a * a * b * b);
+@c ===end===
+@example
+(%i1) a . a . b . b . b + a * a * a * b * b;
+                        3  2    <2>    <3>
+(%o1)                  a  b  + a    . b
+(%i2) string (a . a . b . b . b + a * a * a * b * b);
+(%o2)                  a^3*b^2+a^^2 . b^^3
+@end example
+
+@end deffn
+
+
 
 @deffn {Operador} !
-El operador factorial. 
-Para cualquier n@'umero complejo @code{x} (incluyendo enteros, racionales  y n@'umeros reales) excepto para enteros negativos, @code{x!} se define como @code{gamma(x+1)}. 
+@ifinfo
+@fnindex Factorial
+@end ifinfo
+El operador factorial. Para cualquier n@'umero complejo @code{x}
+(incluyendo enteros, racionales  y n@'umeros reales) excepto para
+enteros negativos, @code{x!} se define como @code{gamma(x+1)}. 
 
 Para un entero @code{x}, @code{x!} simplifica el producto de los enteros desde 1 hasta @code{x}.
 @code{0!} simplifica a 1.
@@ -61,7 +392,7 @@ Si @code{x} es cualquier otra cosa, @code{x!} no se simplifica.
 Las variables 
 @code{factlim}, @code{minfactorial} y  @code{factcomb} controlan la simplificaci@'on de expresiones que contienen factoriales. 
 
-Las funciones @code{gamma}, @code{bffac} y @code{cbffac} son variaciones 
+Las funciones @code{gamma}, @code{bffac} y @code{cbffac} son variaciones de
 la funci@'on gamma. 
 @code{makegamma} substituye a @code{gamma} para factoriales y funciones relacionadas. 
 
@@ -87,7 +418,7 @@ El factorial de un entero, semi-entero o de punto flotante es simplificado a men
 @item
 El factorial de un n@'umero complejo, constante  conocida (por ejemplo @code{%e}) o una expresi@'on general no es simplificado. 
 
-Sin embargo puede ser posible simplificar el factorial despu@'es evaluar el operando. 
+Sin embargo puede ser posible simplificar el factorial despu@'es de evaluar el operando. 
 
 @c ===beg===
 @c [(%i + 1)!, %pi!, %e!, (cos(1) + sin(1))!];
@@ -135,6 +466,9 @@ precedida por el operador comilla.
 @end deffn
 
 @deffn {Operador} !!
+@ifinfo
+@fnindex Doble factorial
+@end ifinfo
 El operador doble factorial.
 
 Para un n@'umero entero, de punto flotante o racional @code{n},
@@ -146,7 +480,7 @@ Note que esta definici@'on no coincide con otras definciones publicadas para arg
 @c REPORTED TO BUG TRACKER AS BUG # 1093138 !!!
 
 Para un entero par (o impar) @code{n}, @code{n!} se evalua el producto de
-todos los enteros pares (o impares) consecutivos desde 2 (o 1) por @code{n}inclusive.  
+todos los enteros pares (o impares) consecutivos desde 2 (o 1) por @code{n} inclusive.  
 
 Para un argumento @code{n} el cual no es un n@'umero entero, punto flotante o racional, @code{n!!} produce una forma de nombre @code{genfact (n, n/2, 2)}. 
 
@@ -155,6 +489,9 @@ Para un argumento @code{n} el cual no es un n@'umero entero, punto flotante o ra
 @end deffn
 
 @deffn {Operador} #
+@ifinfo
+@fnindex Negaci@'on de la igualdad sint@'actica
+@end ifinfo
 Representa la negaci@'on de la igualdad sint@'actica @code{=}.
 
 N@'otese que debido a las reglas de evaluaci@'on de expresiones
@@ -191,6 +528,9 @@ Ejemplos:
 @end deffn
 
 @deffn {Operador} .
+@ifinfo
+@fnindex Multiplicaci@'on no conmutativa
+@end ifinfo
 El operador punto, para multiplicaci@'on de matrices (no-conmutativo). 
 Cuando "." se usa de esta forma, se dejar@'an espacios a
 ambos lados de @'este, como en @code{A . B}. As@'{@dotless{i}} se evita que se confunda con el punto decimal de los n@'umeros. 
@@ -211,10 +551,16 @@ y
 @end deffn
 
 @deffn {Operador} :
+@ifinfo
+@fnindex Operador de asignaci@'on
+@end ifinfo
 El operador de asignaci@'on. Por ejemplo, @code{A:3} se asigna a la variable @var{A} el valor de 3.
 @end deffn
 
 @deffn {Operador} ::
+@ifinfo
+@fnindex Operador de asignaci@'on (eval@'ua el miembro izquierdo)
+@end ifinfo
 Operador de asignaci@'on. :: asigna el valor de una expresi@'on
 en su derecha a el valor de la cantidad en su izquierda, la cual
 debe evaluarse a una variable de tipo at@'omica o una variable subindicada.
@@ -222,6 +568,9 @@ debe evaluarse a una variable de tipo at@'omica o una variable subindicada.
 @end deffn
 
 @deffn {Operador} ::=
+@ifinfo
+@fnindex Operador de definici@'on de funciones macro
+@end ifinfo
 El operador de definici@'on de macros @code{::=} define una funci@'on (llamada macro por razones hist@'oricas) que no eval@'ua sus argumentos, siendo la expresi@'on que retorna (llamada "macroexpansi@'on") evaluada dentro del contexto desde el cual se ha invocado la macro. En cualquier otro sentido, una funci@'on macro es igual que una funci@'on ordinaria.
 
 @code{macroexpand} devuelve la expresi@'on que a su vez fue devuelta por una macro (sin evaluar la expresi@'on);
@@ -325,12 +674,99 @@ x is equal to 1234 - 1729 w
 @end deffn
 
 @deffn {Operador} :=
-El operador de definici@'on de funciones. Por ejemplo, @code{f(x):=sin(x)} define
- una funci@'on @code{f}. 
+@ifinfo
+@fnindex Operador de definici@'on de funciones
+@end ifinfo
+
+El operador de definici@'on de funciones. 
+La expresi@'on @code{@var{f}(@var{x_1}, ..., @var{x_n}) := @var{expr}}
+define una funci@'on de nombre @var{f} con argumentos
+@var{x_1}, ..., @var{x_n} y cuerpo @var{expr}.
+El operador @code{:=} no eval@'ua el cuerpo de la funci@'on (a menos que
+se indique lo contrario mediante el operador comilla-comilla @code{'@w{}'}).
+La funci@'on as@'{@dotless{i}} definida puede ser una funci@'on ordinaria
+de Maxima (con argumentos encerrados entre par@'entesis) o una funci@'on
+array (con argumentos encerrados entre corchetes).
+
+Cuando el @'ultimo o @'unico argumento @var{x_n} es una lista de un solo
+elemento, la funci@'on definida por @code{:=} acepta un n@'umero variable
+de argumentos. Los valores de los argumentos se asignan uno a uno a los
+argumentos formales @var{x_1}, ..., @var{x_(n - 1)}, y cualesquiera otros
+valores de argumentos, si existen, se asignan a @var{x_n} en forma de lista.
+
+Todas las definiciones de funciones aparecen en el mismo espacio de
+nombres; definiendo una funci@'on @code{f} dentro de otra funci@'on @code{g}
+no limita el alcance de @code{f} a @code{g}.
+
+Si un argumento formal @var{x_k} es un s@'{@dotless{i}}mbolo afectado por el
+operador comilla (expresi@'on nominal), la funci@'on definida por @code{:=} no eval@'ua el
+correspondiente valor de argumento. 
+En cualquier otro caso, los argumentos que se pasan son evaluados.
+
+V@'eanse tambi@'en @code{define} y @code{::=}.
+
+Ejemplos:
+
+@code{:=} no eval@'ua el cuerpo de la funci@'on (a menos que
+se indique lo contrario mediante el operador comilla-comilla @code{'@w{}'}).
+
+@c ===beg===
+@c expr : cos(y) - sin(x);
+@c F1 (x, y) := expr;
+@c F1 (a, b);
+@c F2 (x, y) := ''expr;
+@c F2 (a, b);
+@c ===end===
+@example
+(%i1) expr : cos(y) - sin(x);
+(%o1)                    cos(y) - sin(x)
+(%i2) F1 (x, y) := expr;
+(%o2)                   F1(x, y) := expr
+(%i3) F1 (a, b);
+(%o3)                    cos(y) - sin(x)
+(%i4) F2 (x, y) := ''expr;
+(%o4)              F2(x, y) := cos(y) - sin(x)
+(%i5) F2 (a, b);
+(%o5)                    cos(b) - sin(a)
+@end example
+
+La funci@'on as@'{@dotless{i}} definida puede ser una funci@'on ordinaria
+de Maxima o una funci@'on array.
+
+@c ===beg===
+@c G1 (x, y) := x.y - y.x;
+@c G2 [x, y] := x.y - y.x;
+@c ===end===
+@example
+(%i1) G1 (x, y) := x.y - y.x;
+(%o1)               G1(x, y) := x . y - y . x
+(%i2) G2 [x, y] := x.y - y.x;
+(%o2)                G2     := x . y - y . x
+                       x, y
+@end example
+
+Cuando el @'ultimo o @'unico argumento @var{x_n} es una lista de un solo
+elemento, la funci@'on definida por @code{:=} acepta un n@'umero variable
+de argumentos.
+
+@c ===beg===
+@c H ([L]) := apply ("+", L);
+@c H (a, b, c);
+@c ===end===
+@example
+(%i1) H ([L]) := apply ("+", L);
+(%o1)                H([L]) := apply("+", L)
+(%i2) H (a, b, c);
+(%o2)                       c + b + a
+@end example
 
 @end deffn
 
 @deffn {Operador} =
+@ifinfo
+@fnindex Operador de ecuaci@'on
+@fnindex Igualdad sint@'actica
+@end ifinfo
 Operador de ecuaci@'on.
 
 La expresi@'on @code{@var{a} = @var{b}} representa una ecuaci@'on
@@ -467,7 +903,41 @@ obliga a la evaluaci@'on previa de @var{expr},
 
 @end deffn
 
+
+
+@deffn {Operador} and
+@ifinfo
+@fnindex Conjunci@'on l@'ogica
+@end ifinfo
+Operador de conjunci@'on l@'ogica.
+El operador @code{and} es un operador infijo @code{n}-ario;
+sus operandos son expresiones booleanas y su resultado es un valor l@'ogico.
+
+El operador @code{and} impone la evaluaci@'on (igual que @code{is}) de uno o m@'as operandos,
+y puede forzar la evaluaci@'on de todos los operandos.
+
+Los operandos se eval@'uan en el orden en el que aparecen; 
+s@'olo eval@'ua tantos operandos como sean necesarios para determinar el resultado.
+Si alg@'un operando vale @code{false},
+el resultado es @code{false} y ya no se eval@'uan m@'as operandos.
+
+La variable global @code{prederror} controla el comportamiento de @code{and}
+cuando la evaluaci@'on de un operando no da como resultado @code{true} o @code{false};
+@code{and} imprime un mensaje de error cuando @code{prederror} vale @code{true}.
+Cuando los operandos devuelven un valor diferente a @code{true} o @code{false}
+al ser evaluados, el resultado es una expresi@'on booleana.
+
+El operador @code{and} no es conmutativo:
+@code{a and b} puede no ser igual a @code{b and a} debido al tratamiento de operandos indeterminados.
+
+@end deffn
+
+
+
 @deffn {Operador} or
+@ifinfo
+@fnindex Disyunci@'on l@'ogica
+@end ifinfo
 Operador de disyunci@'on l@'ogica. El operador @code{or} es un operador infijo @code{n}-ario;
 sus operandos son expresiones booleanas y su resultado es un valor l@'ogico.
 
@@ -476,21 +946,32 @@ y puede forzar la evaluaci@'on de todos los operandos.
 
 Los operandos se eval@'uan en el orden en el que aparecen; @code{or} s@'olo eval@'ua tantos operandos como sean necesarios para determinar el resultado. Si un operando vale @code{true}, el resultado es @code{true} y ya no se eval@'uan m@'as operandos.
 
-La variable global @code{prederror} controla el comportamiento de @code{or} cuando la evaluaci@'on de un operando no da como resultado @code{true} o @code{false}; @code{or} imprime un mensaje de error cuando @code{prederror} vale @code{true}.
-En caso contrario, @code{and} devuelve @code{unknown}.
+La variable global @code{prederror} controla el comportamiento 
+de @code{or} cuando la evaluaci@'on de un operando no da como 
+resultado @code{true} o @code{false}; @code{or} imprime un 
+mensaje de error cuando @code{prederror} vale @code{true}.
+Cuando los operandos devuelven un valor diferente a @code{true} o @code{false}
+al ser evaluados, el resultado es una expresi@'on booleana.
 
 El operador @code{or} no es conmutativo: @code{a or b} puede no ser igual a @code{b or a} debido al tratamiento de operandos indeterminados.
 
 @end deffn
 
 @deffn {Operador} not
+@ifinfo
+@fnindex Negaci@'on l@'ogica
+@end ifinfo
 Operador de negaci@'on l@'ogica. El operador @code{not} es un operador prefijo;
 su operando es una expresi@'on booleana y su resultado es un valor l@'ogico.
 
 El operador @code{not} impone la evaluaci@'on (igual que @code{is}) de su operando.
 
-La variable global @code{prederror} controla el comportamiento de @code{not} cuando la evaluaci@'on de su operando no da como resultado @code{true} o @code{false}; @code{not} imprime un mensaje de error cuando @code{prederror} vale @code{true}.
-En caso contrario, @code{not} devuelve @code{unknown}.
+La variable global @code{prederror} controla el comportamiento de
+@code{not} cuando la evaluaci@'on de su operando no da como 
+resultado @code{true} o @code{false}; @code{not} imprime un mensaje 
+de error cuando @code{prederror} vale @code{true}.
+Cuando los operandos devuelven un valor diferente a @code{true} o @code{false}
+al ser evaluados, el resultado es una expresi@'on booleana.
 
 @end deffn
 
@@ -502,12 +983,12 @@ el m@'odulo de @var{expr}.
 @end deffn
 
 @defvr {Clave} additive
-Si @code{declate(f,additive)} ha sido ejecutado, entonces: 
+Si @code{declare(f,additive)} ha sido ejecutado, entonces: 
 
 (1) Si @code{f} es univariado, cada vez que el simplificador encuentre
 @code{f} aplicada a una suma, @code{f} ser@'a distribuida bajo esta suma. Por ejemplo, @code{f(x+y)} se simplificar@'a a @code{f(x)+f(y)}. 
 
-(2) Si @code{f} es una funci@'on de 2 o m@'as argumentos, aditivamente es definida como aditiva en el primer argumento de @code{f}, como en el caso de @code{sum} o @code{integrate}. Por ejemplo, @code{f(h(x)+g(x),x)} se simplificar@'a a @code{f(h(x),x)+f(g(x),x)}. Esta simplificaci@'on no ocurre cuando @code{f} se aplia a expresiones de la forma @code{sum(x[i],i,lower-limit,upper-limit)}.
+(2) Si @code{f} es una funci@'on de 2 o m@'as argumentos, aditivamente es definida como aditiva en el primer argumento de @code{f}, como en el caso de @code{sum} o @code{integrate}. Por ejemplo, @code{f(h(x)+g(x),x)} se simplificar@'a a @code{f(h(x),x)+f(g(x),x)}. Esta simplificaci@'on no ocurre cuando @code{f} se aplica a expresiones de la forma @code{sum(x[i],i,lower-limit,upper-limit)}.
 
 @end defvr
 
@@ -740,11 +1221,6 @@ Adem@'as de @code{is}, otros operadores eval@'uan @code{equal} y @code{notequal}
 a  @code{true} o @code{false}; a saber, @code{if}, @code{and}, @code{or} y @code{not}.
 
 La negaci@'on de @code{equal} es @code{notequal}.
-N@'otese que debido a las reglas de evaluaci@'on de expresiones
-de tipo predicado (en concreto debido a que @code{not @var{expr}}
-obliga a la evaluaci@'on previa de @var{expr}), 
-@code{not equal(@var{a}, @var{b})} equivale a @code{is(notequal(@var{a}, @var{b}))}, 
-pero no a @code{notequal(@var{a}, @var{b})}.
 
 Ejemplos:
 
@@ -798,9 +1274,7 @@ ser sint@'acticamente iguales (es decir, id@'enticas).
 (%i7) ratsimp (x - y);
 (%o7)                         x - y
 (%i8) is (equal (x, y));
-Maxima was unable to evaluate the predicate:
-equal(x, y)
- -- an error.  Quitting.  To debug this try debugmode(true);
+(%o8)                        unknown
 (%i9) is (x = y);
 (%o9)                         false
 @end example
@@ -839,16 +1313,14 @@ Otros operadores eval@'uan @code{equal} y @code{notequal}
 a  @code{true} o @code{false}.
 
 @c ===beg===
-@c if equal (a, b) then FOO else BAR;
+@c if equal (y, y - 1) then FOO else BAR;
 @c eq_1 : equal (x, x + 1);
 @c eq_2 : equal (y^2 + 2*y + 1, (y + 1)^2);
 @c [eq_1 and eq_2, eq_1 or eq_2, not eq_1];
 @c ===end===
 @example
-(%i1) if equal (a, b) then FOO else BAR;
-Maxima was unable to evaluate the predicate:
-equal(a, b)
- -- an error.  Quitting.  To debug this try debugmode(true);
+(%i4) if equal (y, y - 1) then FOO else BAR;
+(%o4)                          BAR
 (%i2) eq_1 : equal (x, x + 1);
 (%o2)                    equal(x, x + 1)
 (%i3) eq_2 : equal (y^2 + 2*y + 1, (y + 1)^2);
@@ -933,12 +1405,6 @@ Si el rango de una funci@'on es subconjunto de los n@'umeros enteros, entonces p
 @deffn {Funci@'on} notequal (@var{a}, @var{b})
 Representa la negaci@'on de @code{equal (@var{a}, @var{b})}.
 
-N@'otese que debido a las reglas de evaluaci@'on de expresiones
-de tipo predicado (en concreto debido a que @code{not @var{expr}}
-obliga a la evaluaci@'on previa de @var{expr}), 
-@code{not equal(@var{a}, @var{b})} equivale a @code{is(notequal(@var{a}, @var{b}))}, 
-pero no a @code{notequal(@var{a}, @var{b})}.
-
 Ejemplos:
 
 @c ===beg===
@@ -947,14 +1413,11 @@ Ejemplos:
 @c notequal (a, b);
 @c not equal (a, b);
 @c maybe (notequal (a, b));
-@c maybe (not equal (a, b));
 @c assume (a > b);
 @c equal (a, b);
 @c maybe (equal (a, b));
 @c notequal (a, b);
-@c not equal (a, b);
 @c maybe (notequal (a, b));
-@c maybe (not equal (a, b));
 @c ===end===
 @example
 (%i1) equal (a, b);
@@ -964,27 +1427,19 @@ Ejemplos:
 (%i3) notequal (a, b);
 (%o3)                    notequal(a, b)
 (%i4) not equal (a, b);
-Maxima was unable to evaluate the predicate:
-equal(a, b)
- -- an error.  Quitting.  To debug this try debugmode(true);
+(%o4)                    notequal(a, b)
 (%i5) maybe (notequal (a, b));
 (%o5)                        unknown
-(%i6) maybe (not equal (a, b));
-(%o6)                        unknown
-(%i7) assume (a > b);
-(%o7)                        [a > b]
-(%i8) equal (a, b);
-(%o8)                      equal(a, b)
-(%i9) maybe (equal (a, b));
-(%o9)                         false
-(%i10) notequal (a, b);
-(%o10)                   notequal(a, b)
-(%i11) not equal (a, b);
-(%o11)                        true
-(%i12) maybe (notequal (a, b));
-(%o12)                        true
-(%i13) maybe (not equal (a, b));
-(%o13)                        true
+(%i6) assume (a > b);
+(%o6)                        [a > b]
+(%i7) equal (a, b);
+(%o7)                      equal(a, b)
+(%i8) maybe (equal (a, b));
+(%o8)                         false
+(%i9) notequal (a, b);
+(%o9)                    notequal(a, b)
+(%i10) maybe (notequal (a, b));
+(%o10)                        true
 @end example
 
 @end deffn
@@ -1322,7 +1777,7 @@ Ejemplos:
 
 
 @deffn {Funci@'on} rationalize (@var{expr})
-Convierte todos los n@'umeros en coma flotante de doble precisi@'on y grandes (big float) presentes en una expresi@'on @var{expr} de Maxima a a sus formas racionales exactas equivalentes. Si el usuario no est@'a familiarizado con la representaci@'on binaria de n@'umeros en coma flotante, le puede extra@~nar que @code{rationalize (0.1)} no sea igual que 1/10.  Este comportamiento no es @'unico de Maxima, ya que el n@'umero 1/10 en su forma binaria es peri@'odico y no exacto.
+Convierte todos los n@'umeros en coma flotante de doble precisi@'on y grandes (big float) presentes en una expresi@'on @var{expr} de Maxima a sus formas racionales exactas equivalentes. Si el usuario no est@'a familiarizado con la representaci@'on binaria de n@'umeros en coma flotante, le puede extra@~nar que @code{rationalize (0.1)} no sea igual que 1/10.  Este comportamiento no es @'unico de Maxima, ya que el n@'umero 1/10 en su forma binaria es peri@'odico y no exacto.
 
 @c ===beg===
 @c rationalize (0.5);

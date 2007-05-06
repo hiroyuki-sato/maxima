@@ -19,11 +19,11 @@ bessel_j(-n,x);
 diff(bessel_j(0,x),x);
 -bessel_j(1,x);
 diff(bessel_j(1,x),x);
-bessel_j(0,x)-bessel_j(1,x)/x;
+(bessel_j(0,x)-bessel_j(2,x))/2;
 diff(bessel_y(0,x),x);
 -bessel_y(1,x);
 diff(bessel_y(1,x),x);
-bessel_y(0,x)-bessel_y(1,x)/x;
+(bessel_y(0,x)-bessel_y(2,x))/2;
 diff(bessel_i(0,x),x);
 bessel_i(1,x);
 diff(bessel_i(1,x),x);
@@ -1011,3 +1011,40 @@ true;
 
 kill(closeto);
 done;
+
+/*
+ * Tests for failed cases to see if we're returning the noun forms
+ */
+/* fail-on-f24p146test */
+specint(t^(-3/2)*exp(-t^2/8/a)*exp(-p*t),t);
+'specint(t^(-3/2)*exp(-t^2/8/a)*exp(-p*t),t);
+
+/* fail-on-f35p147test */
+specint((2*t)^(-3/2)*exp(-2*sqrt(a)*sqrt(t))*exp(-p*t),t);
+'specint(exp(-p*t -2*sqrt(a)*sqrt(t))/(8*t^(3/2)),t);
+
+/* fail-on-f29p146test */
+specint(t^(v-1)*exp(1/8/t)*exp(-p*t),t);
+'specint(t^(v-1)*exp(1/8/t)*exp(-p*t),t);
+
+/* fail-in-arbpow (aka f1p137test) */
+specint(t^(-1)*exp(-p*t),t);
+'specint(exp(-p*t)/t,t);
+
+/* fail-in-f2p105vcond */
+(assume(p>3),0);
+0;
+
+specint(8*t^1*exp(3*t)*bessel_y(3,t)*exp(-p*t),t);
+'specint(8*bessel_y(3,t)*t*exp(-(p-3)*t),t);
+
+/* fail-in-f50cond */
+specint(8*t^1*exp(3*t)*bessel_y(8,7*sqrt(t))*exp(-p*t),t);
+'specint(8*bessel_y(8,7*sqrt(t))*t*exp(-(p-3)*t),t);
+
+/* fail-in-dionarghyp-y */
+specint(8*t^1*exp(3*t)*bessel_y(8,7*t^(3/2))*exp(-p*t),t);
+'specint(8*bessel_y(8,7*t^(3/2))*t*exp(-(p-3)*t),t);
+
+(assume(t>0,v2>1), radcan(specint(bessel_i(-v2,t)*exp(-p*t),t)));
+'specint(exp((%i*%pi*v2-2*p*t)/2)*bessel_i(-v2,t)/(-1)^(v2/2),t);

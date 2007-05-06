@@ -1,5 +1,5 @@
 ;; A Maxima ring stucture
-;; Copyright (C) 2005, Barton Willis
+;; Copyright (C) 2005, 2007, Barton Willis
 
 ;; Barton Willis
 ;; Department of Mathematics
@@ -101,6 +101,7 @@
    :great #'>
    :add #'+
    :div #'/
+   :rdiv #'/
    :reciprocal #'/
    :mult #'*
    :sub #'-
@@ -128,6 +129,7 @@
    :great #'>
    :add #'+
    :div #'/
+   :rdiv #'/
    :reciprocal #'/
    :mult #'*
    :sub #'-
@@ -156,7 +158,7 @@
    :name '$crering
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (like b 0))
+   :great #'(lambda (a b) (eq t (meqp b 0)))
    :add #'add
    :div #'div
    :rdiv #'div
@@ -167,7 +169,7 @@
    :psqrt #'(lambda (s) (if (member (csign ($ratdisrep s)) `($pos $pz $zero)) (take '(%sqrt) s) nil))
    :add-id #'(lambda () 0)
    :mult-id #'(lambda () 1)
-   :fzerop #'(lambda (s) (like s 0))
+   :fzerop #'(lambda (s) (eq t (meqp s 0)))
    :adjoint #'(lambda (s) (take '($conjugate) s))
    :mring-to-maxima #'(lambda (s) s)
    :maxima-to-mring #'(lambda (s) ($rat s))))
@@ -179,7 +181,7 @@
    :name '$generalring
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (like b 0))
+   :great #'(lambda (a b) (eq t (meqp b 0)))
    :add #'(lambda (a b) ($rectform (add a b)))
    :div #'(lambda (a b) ($rectform (div a b)))
    :rdiv #'(lambda (a b) ($rectform (div a b)))
@@ -190,7 +192,7 @@
    :psqrt #'(lambda (s) (if (member (csign s) `($pos $pz $zero)) (take '(%sqrt) s) nil))
    :add-id #'(lambda () 0)
    :mult-id #'(lambda () 1)
-   :fzerop #'(lambda (s) (like s 0))
+   :fzerop #'(lambda (s) (eq t (meqp s 0)))
    :adjoint #'(lambda (s) (take '($conjugate) s))
    :mring-to-maxima #'(lambda (s) s)
    :maxima-to-mring #'(lambda (s) s)))
@@ -220,8 +222,8 @@
    :adjoint #'cl:identity
    :mring-to-maxima #'(lambda (s) s)
    :maxima-to-mring #'(lambda (s) 
-			(setq s ($bfloat s))
-			(if ($bfloatp s) s
+			(setq s ($rectform ($bfloat s)))
+			(if (or (eq s '$%i) (complex-number-p s '$bfloatp)) s
 			  (merror "Unable to convert matrix entry to a big float")))))
 
 (setf (get '$bigfloatfield 'ring) *bigfloatfield*)
@@ -288,18 +290,41 @@
    :name '$noncommutingring
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (like b 0))
+   :great #'(lambda (a b) (eq t (meqp b 0)))
    :add #'(lambda (a b) (add a b))
-   :div #'(lambda (a b) (simplify `((mnctimes) ,a ((mncexpt) ,b -1))))  
-   :rdiv #'(lambda (a b) (simplify `((mnctimes) ((mncexpt) ,b -1) ,a)))
-   :reciprocal #'(lambda (s) (simplify `((mncexpt) ,s -1)))
-   :mult #'(lambda (a b) (simplify `((mnctimes) ,a ,b)))
+   :div #'(lambda (a b) (progn
+			  (let (($matrix_element_mult '&.)
+				($matrix_element_transpose '$transpose))
+			    (setq b (if ($matrixp b) ($invert_by_lu b '$noncommutingring)
+				      (take '(mncexpt) b -1)))
+			    (take '(mnctimes) a b))))
+   
+   :rdiv #'(lambda (a b) (progn
+			   (let (($matrix_element_mult '&.)
+				 ($matrix_element_transpose '$transpose))
+			     (setq b (if ($matrixp b) ($invert_by_lu b '$noncommutingring)
+				       (take '(mncexpt) b -1)))
+			     (take  '(mnctimes) b a))))
+				
+
+   :reciprocal #'(lambda (s) (progn
+			       (let (($matrix_element_mult '&.)
+				     ($matrix_element_transpose '$transpose))
+				 (if ($matrixp s) ($invert_by_lu s '$noncommutingring) 
+				   (take '(mncexpt) s -1)))))
+
+   :mult #'(lambda (a b) (progn 
+			   (let (($matrix_element_mult '&.)
+				 ($matrix_element_transpose '$transpose))
+			     (take  '(mnctimes) a b))))
+
+
    :sub #'(lambda (a b) (sub a b))
    :negate #'(lambda (a) (mult -1 a))
    :add-id #'(lambda () 0)
    :psqrt #'(lambda (s) (take '(%sqrt) s))
    :mult-id #'(lambda () 1)
-   :fzerop #'(lambda (s) (like s 0))
+   :fzerop #'(lambda (s) (eq t (meqp s 0)))
    :adjoint #'(lambda (s) ($transpose (take '($conjugate) s)))
    :mring-to-maxima #'cl:identity
    :maxima-to-mring #'cl:identity))

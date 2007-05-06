@@ -20,8 +20,8 @@ UninstallFilesDir={app}\uninst
 ; MinVersion=4,3.51
 
 [Files]
-Source: "/usr\info\es\*.*"; DestDir: "{app}\info\es\";  Flags: recursesubdirs
-Source: "/usr\share\maxima\5.10.0\doc\html\es\*.*"; DestDir: "{app}\share\maxima\5.10.0\doc\html\es\";  Flags: recursesubdirs
+Source: "/usr/local\info\es\*.*"; DestDir: "{app}\info\es\";  Flags: recursesubdirs
+Source: "/usr/local\share\maxima\5.10.0\doc\html\es\*.*"; DestDir: "{app}\share\maxima\5.10.0\doc\html\es\";  Flags: recursesubdirs
 
 [Messages]
 SetupWindowTitle=Setup - Maxima Spanish language pack

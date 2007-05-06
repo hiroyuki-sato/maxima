@@ -11,25 +11,222 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Symmetries
 
-33.1 Definitions for Symmetries
+32.1 Definitions for Symmetries
 ===============================
 
- -- Function: comp2pui (<n>, <l>)
-     re'alise le passage des fonctions syme'triques comple`tes,
-     donnee's dans la liste <l>, aux fonctions syme'triques
-     e'le'mentaires de 0 a` <n>. Si la liste <l> contient moins de
-     `<n>+1' e'le'ments les valeurs formelles viennent la completer. Le
-     premier e'le'ment de la liste <l> donne le cardinal de l'alphabet
-     si il existe, sinon on le met e'gal a <n>.
+32.1.1 Changing bases
+---------------------
+
+ -- Function: comp2pui (<n>, <L>)
+     implements passing from the complete symmetric functions given in
+     the list <L> to the elementary symmetric functions from 0 to <n>.
+     If the list <L> contains fewer than <n+1> elements, it will be
+     completed with formal values of the type <h1>, <h2>, etc. If the
+     first element of the list <L> exists, it specifies the size of the
+     alphabet, otherwise the size is set to <n>.
 
           (%i1) comp2pui (3, [4, g]);
                                   2                    2
           (%o1)    [4, g, 2 h2 - g , 3 h3 - g h2 + g (g  - 2 h2)]
 
 
+ -- Function: ele2pui (<m>, <L>)
+     goes from the elementary symmetric functions to the complete
+     functions.  Similar to `comp2ele' and `comp2pui'.
+
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: ele2comp (<m>, <L>)
+     Goes from the elementary symmetric functions to the compete
+     functions.  Similar to `comp2ele' and `comp2pui'.
+
+     Other functions for changing bases: `comp2ele'.
+
+ -- Function: elem (<ele>, <sym>, <lvar>)
+     decomposes the symmetric polynomial <sym>, in the variables
+     contained in the list <lvar>, in terms of the elementary symmetric
+     functions given in the list <ele>.  If the first element of <ele>
+     is given, it will be the size of the alphabet, otherwise the size
+     will be the degree of the polynomial <sym>.  If values are missing
+     in the list <ele>, formal values of the type <e1>, <e2>, etc. will
+     be added.  The polynomial <sym> may be given in three different
+     forms: contracted (`elem' should then be 1, its default value),
+     partitioned (`elem' should be 3), or extended (i.e. the entire
+     polynomial, and `elem' should then be 2).  The function `pui' is
+     used in the same way.
+
+     On an alphabet of size 3 with <e1>, the first elementary symmetric
+     function, with value 7, the symmetric polynomial in 3 variables
+     whose contracted form (which here depends on only two of its
+     variables) is <x^4-2*x*y> decomposes as follows in elementary
+     symmetric functions:
+
+          (%i1) elem ([3, 7], x^4 - 2*x*y, [x, y]);
+          (%o1) 7 (e3 - 7 e2 + 7 (49 - e2)) + 21 e3
+
+                                                   + (- 2 (49 - e2) - 2) e2
+          (%i2) ratsimp (%);
+                                        2
+          (%o2)             28 e3 + 2 e2  - 198 e2 + 2401
+
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: mon2schur (<L>)
+     The list <L> represents the Schur function S_L: we have L = [i_1,
+     i_2, ..., i_q], with i_1 <= i_2 <= ... <= i_q.  The Schur function
+     S_[i_1, i_2, ..., i_q] is the minor of the infinite matrix
+     h_[i-j], i <= 1, j <= 1, consisting of the q first rows and the
+     columns 1 + i_1, 2 + i_2, ..., q + i_q.
+
+     This Schur function can be written in terms of monomials by using
+     `treinat' and `kostka'.  The form returned is a symmetric
+     polynomial in a contracted representation in the variables
+     x_1,x_2,\ldots.
+
+          (%i1) mon2schur ([1, 1, 1]);
+          (%o1)                       x1 x2 x3
+          (%i2) mon2schur ([3]);
+                                            2        3
+          (%o2)                x1 x2 x3 + x1  x2 + x1
+          (%i3) mon2schur ([1, 2]);
+                                                2
+          (%o3)                  2 x1 x2 x3 + x1  x2
+
+     which means that for 3 variables this gives:
+
+             2 x1 x2 x3 + x1^2 x2 + x2^2 x1 + x1^2 x3 + x3^2 x1
+              + x2^2 x3 + x3^2 x2
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: multi_elem (<l_elem>, <multi_pc>, <l_var>)
+     decomposes a multi-symmetric polynomial in the multi-contracted
+     form <multi_pc> in the groups of variables contained in the list
+     of lists <l_var> in terms of the elementary symmetric functions
+     contained in <l_elem>.
+
+          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
+                                                            3
+          (%o1)         - 2 f2 + f1 (f1 + e1) - 3 e1 e2 + e1
+          (%i2) ratsimp (%);
+                                   2                       3
+          (%o2)         - 2 f2 + f1  + e1 f1 - 3 e1 e2 + e1
+
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: multi_pui
+     is to the function `pui' what the function `multi_elem' is to the
+     function `elem'.
+
+          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
+                                                      3
+                                          3 p1 p2   p1
+          (%o1)              t2 + p1 t1 + ------- - ---
+                                             2       2
+
+
+ -- Function: pui (<L>, <sym>, <lvar>)
+     decomposes the symmetric polynomial <sym>, in the variables in the
+     list <lvar>, in terms of the power functions in the list <L>.  If
+     the first element of <L> is given, it will be the size of the
+     alphabet, otherwise the size will be the degree of the polynomial
+     <sym>.  If values are missing in the list <L>, formal values of
+     the type <p1>, <p2> , etc. will be added. The polynomial <sym> may
+     be given in three different forms: contracted (`elem' should then
+     be 1, its default value), partitioned (`elem' should be 3), or
+     extended (i.e. the entire polynomial, and `elem' should then be
+     2). The function `pui' is used in the same way.
+
+          (%i1) pui;
+          (%o1)                           1
+          (%i2) pui ([3, a, b], u*x*y*z, [x, y, z]);
+                                 2
+                             a (a  - b) u   (a b - p3) u
+          (%o2)              ------------ - ------------
+                                  6              3
+          (%i3) ratsimp (%);
+                                                 3
+                                (2 p3 - 3 a b + a ) u
+          (%o3)                 ---------------------
+                                          6
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: pui2comp (<n>, <lpui>)
+     renders the list of the first <n> complete functions (with the
+     length first) in terms of the power functions given in the list
+     <lpui>. If the list <lpui> is empty, the cardinal is <n>,
+     otherwise it is its first element (as in `comp2ele' and
+     `comp2pui').
+
+          (%i1) pui2comp (2, []);
+                                                 2
+                                          p2 + p1
+          (%o1)                   [2, p1, --------]
+                                             2
+          (%i2) pui2comp (3, [2, a1]);
+                                                      2
+                                           a1 (p2 + a1 )
+                                   2  p3 + ------------- + a1 p2
+                            p2 + a1              2
+          (%o2)     [2, a1, --------, --------------------------]
+                               2                  3
+          (%i3) ratsimp (%);
+                                      2                     3
+                               p2 + a1   2 p3 + 3 a1 p2 + a1
+          (%o3)        [2, a1, --------, --------------------]
+                                  2               6
+     Other functions for changing bases: `comp2ele'.
+
+
+ -- Function: pui2ele (<n>, <lpui>)
+     effects the passage from power functions to the elementary
+     symmetric functions.  If the flag `pui2ele' is `girard', it will
+     return the list of elementary symmetric functions from 1 to <n>,
+     and if the flag is `close', it will return the <n>-th elementary
+     symmetric function.
+
+     Other functions for changing bases: `comp2ele'.
+
+ -- Function: puireduc (<n>, <lpui>)
+     <lpui> is a list whose first element is an integer <m>.
+     `puireduc' gives the first <n> power functions in terms of the
+     first <m>.
+
+          (%i1) puireduc (3, [2]);
+                                                   2
+                                             p1 (p1  - p2)
+          (%o1)          [2, p1, p2, p1 p2 - -------------]
+                                                   2
+          (%i2) ratsimp (%);
+                                                     3
+                                         3 p1 p2 - p1
+          (%o2)              [2, p1, p2, -------------]
+                                               2
+
+ -- Function: schur2comp (<P>, <l_var>)
+     <P> is a polynomial in the variables of the list <l_var>.  Each of
+     these variables represents a complete symmetric function.  In
+     <l_var> the <i>-th complete symmetric function is represented by
+     the concatenation of the letter `h' and the integer <i>: `h<i>'.
+     This function expresses <P> in terms of Schur functions.
+
+          (%i1) schur2comp (h1*h2 - h3, [h1, h2, h3]);
+          (%o1)                         s
+                                         1, 2
+          (%i2) schur2comp (a*h3, [h3]);
+          (%o2)                         s  a
+                                         3
+
+32.1.2 Changing representations
+-------------------------------
+
  -- Function: cont2part (<pc>, <lvar>)
-     rend le polyno^me partitionne' associe' a` la forme  contracte'e
-     <pc> dont les variables sont dans <lvar>.
+     returns the partitioned polynomial associated to the contracted
+     form <pc> whose variables are in <lvar>.
 
           (%i1) pc: 2*a^3*b*x^4*y + x^5;
                                      3    4      5
@@ -38,18 +235,12 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                                              3
           (%o2)              [[1, 5, 0], [2 a  b, 4, 1]]
 
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `explose', `part2cont', `partpol', `tcontract',
-     `tpartpol'.
-
-
  -- Function: contract (<psym>, <lvar>)
-     rend une forme contracte'e (i.e. un mono^me par orbite sous
-     l'action du groupe syme'trique) du polyno^me <psym> en les
-     variables contenues dans la liste <lvar>. La fonction `explose'
-     re'alise l'ope'ration inverse. La fonction `tcontract' teste en
-     plus la syme'trie du polyno^me.
+     returns a contracted form (i.e. a monomial orbit under the action
+     of the symmetric group) of the polynomial <psym> in the variables
+     contained in the list <lvar>.  The function `explose' performs the
+     inverse operation.  The function `tcontract' tests the symmetry of
+     the polynomial.
 
           (%i1) psym: explose (2*a^3*b*x^4*y, [x, y, z]);
                    3      4      3      4      3    4        3    4
@@ -61,22 +252,55 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                                         3    4
           (%o2)                      2 a  b x  y
 
-     Autres fonctions de changements de repre'sentations :
+ -- Function: explose (<pc>, <lvar>)
+     returns the symmetric polynomial associated with the contracted
+     form <pc>. The list <lvar> contains the variables.
 
-     `cont2part', `explose', `part2cont', `partpol', `tcontract',
-     `tpartpol'.
+          (%i1) explose (a*x + 1, [x, y, z]);
+          (%o1)                  a z + a y + a x + 1
 
+ -- Function: part2cont (<ppart>, <lvar>)
+     goes from the partitioned form to the contracted form of a
+     symmetric polynomial.  The contracted form is rendered with the
+     variables in <lvar>.
+
+          (%i1) part2cont ([[2*a^3*b, 4, 1]], [x, y]);
+                                        3    4
+          (%o1)                      2 a  b x  y
+
+ -- Function: partpol (<psym>, <lvar>)
+     <psym> is a symmetric polynomial in the variables of the list
+     <lvar>. This function retturns its partitioned representation.
+
+          (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
+          (%o1)               [[3, 1, 1], [- a, 1, 0]]
+
+
+ -- Function: tcontract (<pol>, <lvar>)
+     tests if the polynomial <pol> is symmetric in the variables of the
+     list <lvar>.  If so, it returns a contracted representation like
+     the function `contract'.
+
+
+ -- Function: tpartpol (<pol>, <lvar>)
+     tests if the polynomial <pol> is symmetric in the variables of the
+     list <lvar>.  If so, it returns its partitioned representation like
+     the function `partpol'.
+
+
+32.1.3 Groups and orbits
+------------------------
 
  -- Function: direct ([<p_1>, ..., <p_n>], <y>, <f>, [<lvar_1>, ...,
           <lvar_n>])
-     calcul l'image directe (voir M. GIUSTI, D. LAZARD et A. VALIBOUZE,
-     ISSAC 1988, Rome) associe'e a` la fonction <f>, en les listes de
-     variables <lvar_1>, ..., <lvar_n>, et aux polyno^mes <p_1>, ...,
-     <p_n> d'une variable <y>. l'arite' de la fonction <f> est
-     importante pour le calcul. Ainsi, si l'expression de <f> ne depend
-     pas d'une variable, non seulement il est inutile de donner cette
-     variable mais cela diminue conside'rablement lees calculs si on ne
-     le fait pas.
+     calculates the direct image (see M. Giusti, D. Lazard et A.
+     Valibouze, ISSAC 1988, Rome) associated to the function <f>, in
+     the lists of variables <lvar_1>, ..., <lvar_n>, and in the
+     polynomials <p_1>, ..., <p_n> in a variable <y>.  The arity of the
+     function <f> is important for the calulation.  Thus, if the
+     expression for <f> does not depend on some variable, it is useless
+     to include this variable, and not including it will also
+     considerably reduce the amount of computation.
 
           (%i1) direct ([z^2  - e1* z + e2, z^2  - f1* z + f2],
                         z, b*v + a*u, [[u, v], [a, b]]);
@@ -119,10 +343,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                              2    4        2   6
            + (e1 e2 e3 - 9 e3 ) f1  f2 + e3  f1
 
-     Recherche du polyno^me dont les racines sont les somme a+u ou a est
-     racine de z^2  - e1* z + e2 et u est racine de z^2  - f1* z + f2
+     Finding the polynomial whose roots are the sums a+u where a is a
+     root of z^2 - e_1 z + e_2 and u is a root of z^2 - f_1 z + f_2.
 
-          (%i1) ratsimp (direct ([z^2  - e1* z + e2, z^2  - f1* z + f2],
+          (%i1) ratsimp (direct ([z^2 - e1* z + e2, z^2 - f1* z + f2],
                                     z, a + u, [[u], [a]]));
                  4                    3             2
           (%o1) y  + (- 2 f1 - 2 e1) y  + (2 f2 + f1  + 3 e1 f1 + 2 e2
@@ -136,434 +360,81 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                2
            + e2
 
-     `direct' peut prendre deux drapeaux possibles : `elementaires' et
-     `puissances' (valeur par de'faut) qui permettent de de'composer
-     les polyno^mes syme'triques apparaissant dans ce calcul par les
-     fonctions syme'triques e'le'mentaires ou les fonctions puissances
-     respectivement.
+     `direct' accepts two flags: `elementaires' and `puissances'
+     (default) which allow decomposing the symmetric polynomials
+     appearing in the calculation into elementary symmetric functions,
+     or power functions, respectively.
 
-     Fonctions de `sym' utilis'ees dans cette fonction :
+     Functions of `sym' used in this function:
 
-     `multi_orbit' (donc `orbit'), `pui_direct', `multi_elem' (donc
-     `elem'), `multi_pui' (donc `pui'), `pui2ele', `ele2pui' (si le
-     drapeau `direct' est a` `puissances').
-
-
- -- Function: ele2comp (<m>, <l>)
-     passe des fonctions syme'triques e'le'mentaires aux fonctions
-     comple`tes. Similaire a` `comp2ele' et `comp2pui'.
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2pui', `elem', `mon2schur',
-     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
-     `puireduc', `schur2comp'.
+     `multi_orbit' (so `orbit'), `pui_direct', `multi_elem' (so
+     `elem'), `multi_pui' (so `pui'), `pui2ele', `ele2pui' (if the flag
+     `direct' is in `puissances').
 
 
- -- Function: ele2polynome (<l>, <z>)
-     donne le polyno^me en <z> dont les fonctions syme'triques
-     e'le'mentaires des racines sont dans la liste <l>.  `<l> = [<n>,
-     <e_1>, ..., <e_n>]' ou` <n> est le degre' du polyno^me et <e_i> la
-     <i>-ie`me fonction syme'trique e'le'mentaire.
-
-          (%i1) ele2polynome ([2, e1, e2], z);
-                                    2
-          (%o1)                    z  - e1 z + e2
-          (%i2) polynome2ele (x^7 - 14*x^5 + 56*x^3  - 56*x + 22, x);
-          (%o2)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
-          (%i3) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
-                            7       5       3
-          (%o3)            x  - 14 x  + 56 x  - 56 x + 22
-
-     La re'ciproque: `polynome2ele (<P>, <z>)'
-
-     Autres fonctions a` voir :
-
-     `polynome2ele', `pui2polynome'.
-
-
- -- Function: ele2pui (<m>, <l>)
-     passe des fonctions syme'triques e'le'mentaires aux fonctions
-     comple`tes. Similaire a` `comp2ele' et `comp2pui'.
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `elem', `mon2schur',
-     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
-     `puireduc', `schur2comp'.
-
-
- -- Function: elem (<ele>, <sym>, <lvar>)
-     de'compose le polyno^me syme'trique <sym>, en les variables
-     contenues de la liste <lvar>, par les fonctions syme'triques
-     e'le'mentaires contenues dans la liste <ele>. Si le premier
-     e'le'ment de <ele> est donne' ce sera le cardinal de l'alphabet
-     sinon on prendra le degre' du polyno^me <sym>. Si il manque des
-     valeurs a` la liste <ele> des valeurs formelles du type "ei" sont
-     rajoute'es. Le polyno^me <sym> peut etre donne' sous 3 formes
-     diffe'rentes : contracte'e (`elem' doit alors valoir 1 sa valeur
-     par de'faut), partitionne'e (`elem' doit alors valoir 3) ou
-     e'tendue (i.e. le polyno^me en entier) (`elem' doit alors valoir
-     2). L'utilsation de la fonction `pui' se re'alise sur le me^me
-     mode`le.
-
-     Sur un alphabet de cardinal 3 avec e1, la premie`re fonction
-     syme'trique e'le'mentaire, valant 7, le polyno^me syme'trique en 3
-     variables dont la forme contracte'e (ne de'pendant ici que de deux
-     de ses variables) est x^4-2*x*y se de'compose ainsi en les
-     fonctions syme'triques e'le'mentaires :
-
-          (%i1) elem ([3, 7], x^4 - 2*x*y, [x, y]);
-          (%o1) 7 (e3 - 7 e2 + 7 (49 - e2)) + 21 e3
-
-                                                   + (- 2 (49 - e2) - 2) e2
-          (%i2) ratsimp (%);
-                                        2
-          (%o2)             28 e3 + 2 e2  - 198 e2 + 2401
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `mon2schur',
-     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
-     `puireduc', `schur2comp'.
-
-
- -- Function: explose (<pc>, <lvar>)
-     rend le polyno^me syme'trique associe' a` la forme contracte'e
-     <pc>. La liste <lvar> contient les variables.
-
-          (%i1) explose (a*x + 1, [x, y, z]);
-          (%o1)                  a z + a y + a x + 1
-
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `cont2part', `part2cont', `partpol', `tcontract',
-     `tpartpol'.
-
-
- -- Function: kostka (<part_1>, <part_2>)
-     e'crite par P. ESPERET, calcule le nombre de Kostka associe' aux
-     partition <part_1> et <part_2>.
-
-          (%i1) kostka ([3, 3, 3], [2, 2, 2, 1, 1, 1]);
-          (%o1)                           6
-
-
- -- Function: lgtreillis (<n>, <m>)
-     rend la liste des partitions de poids <n> et de longueur <m>.
-
-          (%i1) lgtreillis (4, 2);
-          (%o1)                   [[3, 1], [2, 2]]
-
-     Voir e'galement : `ltreillis', `treillis' et `treinat'.
-
-
- -- Function: ltreillis (<n>, <m>)
-     rend la liste des partitions de poids <n> et de longueur
-     infe'rieure ou e'gale a` <m>.
-
-          (%i1) ltreillis (4, 2);
-          (%o1)               [[4, 0], [3, 1], [2, 2]]
-
-     Voir e'galement : `lgtreillis', `treillis' et `treinat'.
-
-
- -- Function: mon2schur (<l>)
-     la liste <l> repre'sente la fonction de Schur S_<l>:  On a <l> =
-     [<i_1>, <i_2>, ..., <i_q>] avec <i_1> <= <i_2> <= ... <= <i_q>.
-     La fonction de Schur est S_[<i_1>, <i_2>, ..., <i_q>] est le
-     mineur de la matrice infinie (h_{i-j}) <i> >= 1, <j> >= 1 compose'
-     des q premie`res lignes et des colonnes <i_1> + 1, <i_2> + 2, ...,
-     <i_q> + <q>.
-
-     On e'crit cette fonction de Schur en fonction des formes
-     monomiales en utilisant les fonctions `treinat' et `kostka'. La
-     forme rendue est un polyno^me syme'trique dans une de ses
-     repre'sentations contracte'es avec les variables <x_1>, <x_2>, ....
-
-          (%i1) mon2schur ([1, 1, 1]);
-          (%o1)                       x1 x2 x3
-          (%i2) mon2schur ([3]);
-                                            2        3
-          (%o2)                x1 x2 x3 + x1  x2 + x1
-          (%i3) mon2schur ([1, 2]);
-                                                2
-          (%o3)                  2 x1 x2 x3 + x1  x2
-
-     ce qui veut dire que pour 3 variables cela donne :
-
-             2 x1 x2 x3 + x1^2 x2 + x2^2 x1 + x1^2 x3 + x3^2 x1
-              + x2^2 x3 + x3^2 x2
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
-     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
-     `puireduc', `schur2comp'.
-
-
- -- Function: multi_elem (<l_elem>, <multi_pc>, <l_var>)
-     de'compose un polyno^me multi-syme'trique sous la forme
-     multi-contracte'e <multi_pc> en les groupes de variables contenue
-     dans la liste de listes <l_var> sur les groupes de fonctions
-     syme'triques e'le'mentaires contenues dans <l_elem>.
-
-          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
-                                                            3
-          (%o1)         - 2 f2 + f1 (f1 + e1) - 3 e1 e2 + e1
-          (%i2) ratsimp (%);
-                                   2                       3
-          (%o2)         - 2 f2 + f1  + e1 f1 - 3 e1 e2 + e1
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
-     `mon2schur', `multi_pui', `pui', `pui2comp', `pui2ele',
-     `puireduc', `schur2comp'.
-
-
- -- Function: multi_orbit (<P>, [<lvar_1>, <lvar_2>, ..., <lvar_p>])
-     <P> est un polyno^me en l'ensemble des variables contenues dans
-     les listes <lvar_1>, <lvar_2>, ..., <lvar_p>.  Cette fonction
-     rame`ne l'orbite du polyno^me <P> sous l'action du produit des
-     groupes syme'triques des ensembles de variables repre'sente's par
-     ces <p> listes.
+ -- Function: multi_orbit (<P>, [<lvar_1>, <lvar_2>,..., <lvar_p>])
+     <P> is a polynomial in the set of variables contained in the lists
+     <lvar_1>, <lvar_2>, ..., <lvar_p>. This function returns the orbit
+     of the polynomial <P> under the action of the product of the
+     symmetric groups of the sets of variables represented in these <p>
+     lists.
 
           (%i1) multi_orbit (a*x + b*y, [[x, y], [a, b]]);
           (%o1)                [b y + a x, a y + b x]
           (%i2) multi_orbit (x + y + 2*a, [[x, y], [a, b, c]]);
           (%o2)        [y + x + 2 c, y + x + 2 b, y + x + 2 a]
-
-     Voir e'galement : `orbit' pour l'action d'un seul groupe
-     syme'trique.
-
-
- -- Function: multi_pui
-     est a` la fonction `pui' ce que la fonction `multi_elem' est a` la
-     fonction `elem'.
-
-          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
-                                                      3
-                                          3 p1 p2   p1
-          (%o1)              t2 + p1 t1 + ------- - ---
-                                             2       2
-
-
- -- Function: multinomial (<r>, <part>)
-     ou` <r> est le poids de la partition <part>. Cette fonction
-     rame`ne le coefficient multinomial associe' : si les parts de la
-     partitions part sont <i_1>, <i_2>, ..., <i_k>, le re'sultat de
-     `multinomial' est `<r>!/(<i_1>! <i_2>! ... <i_k>!)'.
-
+     Also see: `orbit' for the action of a single symmetric group.
 
  -- Function: multsym (<ppart_1>, <ppart_2>, <n>)
-     re'alise le produit de deux polyno^mes syme'triques de <n>
-     variables en ne travaillant que modulo l'action du groupe
-     syme'trique d'ordre <n>. Les polyno^mes sont dans leur
-     repre'sentation partitionne'e.
+     returns the product of the two symmetric polynomials in <n>
+     variables by working only modulo the action of the symmetric group
+     of order <n>. The polynomials are in their partitioned form.
 
-     Soient les 2 polyno^mes syme'triques en `x', `y': `3*(x + y) +
-     2*x*y' et `5*(x^2 + y^2)' dont les formes partitionne'es sont
-     respectivement `[[3, 1], [2, 1, 1]]' et `[[5, 2]]', alors leur
-     produit sera donne' par :
+     Given the 2 symmetric polynomials in <x>, <y>:  `3*(x + y) +
+     2*x*y' and `5*(x^2 + y^2)' whose partitioned forms are `[[3, 1],
+     [2, 1, 1]]' and `[[5, 2]]', their product will be
 
           (%i1) multsym ([[3, 1], [2, 1, 1]], [[5, 2]], 2);
           (%o1)         [[10, 3, 1], [15, 3, 0], [15, 2, 1]]
+     that is `10*(x^3*y + y^3*x) + 15*(x^2*y + y^2*x) + 15*(x^3 + y^3)'.
 
-     soit `10*(x^3*y + y^3*x) + 15*(x^2*y + y^2*x) + 15*(x^3 + y^3)'.
-
-     Fonctions de changements de repre'sentations d'un polyno^me
-     syme'trique :
+     Functions for changing the representations of a symmetric
+     polynomial:
 
      `contract', `cont2part', `explose', `part2cont', `partpol',
      `tcontract', `tpartpol'.
 
-
  -- Function: orbit (<P>, <lvar>)
-     calcul l'orbite du polyno^me <P> en les variables de la liste
-     <lvar> sous l'action du groupe syme'trique de l'ensemble des
-     variables contenues dans la liste <lvar>.
+     computes the orbit of the polynomial <P> in the variables in the
+     list <lvar> under the action of the symmetric group of the set of
+     variables in the list <lvar>.
 
           (%i1) orbit (a*x + b*y, [x, y]);
           (%o1)                [a y + b x, b y + a x]
           (%i2) orbit (2*x + x^2, [x, y]);
                                   2         2
           (%o2)                 [y  + 2 y, x  + 2 x]
-
-     Voir e'galement : `multi_orbit' pour l'action d'un produit de
-     groupes syme'triques sur un polyno^me.
-
-
- -- Function: part2cont (<ppart>, <lvar>)
-     passe de la forme partitionne'e a` la forme contracte'e d'un
-     polyno^me syme'trique. La forme contracte'e est rendue avec les
-     variables contenues dans <lvar>.
-
-          (%i1) part2cont ([[2*a^3*b, 4, 1]], [x, y]);
-                                        3    4
-          (%o1)                      2 a  b x  y
-
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `cont2part', `explose', `partpol', `tcontract',
-     `tpartpol'.
-
-
- -- Function: partpol (<psym>, <lvar>)
-     <psym> est un polyno^me syme'trique en les variables de <lvar>.
-     Cette fonction rame`ne sa repre'sentation partitionne'e.
-
-          (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
-          (%o1)               [[3, 1, 1], [- a, 1, 0]]
-
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `cont2part', `explose', `part2cont', `tcontract',
-     `tpartpol'.
-
-
- -- Function: permut (<l>)
-     rame`ne la liste des permutations de la liste <l>.
-
-
- -- Function: polynome2ele (<P>, <x>)
-     donne la liste `<l> = [<n>, <e_1>, ..., <e_n>]' ou` <n> est le
-     degre' du polyno^me <P> en la variable <x> et <e_i> la <i>-ieme
-     fonction syme'trique e'le'mentaire des racines de <P>.
-
-          (%i1) polynome2ele (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x);
-          (%o1)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
-          (%i2) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
-                            7       5       3
-          (%o2)            x  - 14 x  + 56 x  - 56 x + 22
-
-     La re'ciproque : `ele2polynome (<l>, <x>)'
-
-
- -- Function: prodrac (<l>, <k>)
-     <l> est une liste contenant les fonctions syme'triques
-     e'le'mentaires sur un ensemble <A>. `prodrac' rend le polyno^me
-     dont les racines sont les produits <k> a` <k> des e'le'ments de
-     <A>.
-
-
- -- Function: pui (<l>, <sym>, <lvar>)
-     de'compose le polyno^me syme'trique <sym>, en les variables
-     contenues de la liste <lvar>, par les fonctions puissances
-     contenues dans la liste <l>. Si le premier e'le'ment de <l> est
-     donne' ce sera le cardinal de l'alphabet sinon on prendra le
-     degre' du polyno^me <sym>. Si il manque des valeurs a` la liste
-     <l>, des valeurs formelles du type "pi" sont rajoute'es. Le
-     polyno^me sym peut etre donne' sous 3 formes diffe'rentes :
-     contracte'e (`pui' doit alors valoir 1 sa valeur par de'faut),
-     partitionne'e (`pui' doit alors valoir 3) ou e'tendue (i.e. le
-     polyno^me en entier) (`pui' doit alors valoir 2). La fonction
-     `elem' s'utilise de la me^me manie`re.
-
-          (%i1) pui;
-          (%o1)                           1
-          (%i2) pui ([3, a, b], u*x*y*z, [x, y, z]);
-                                 2
-                             a (a  - b) u   (a b - p3) u
-          (%o2)              ------------ - ------------
-                                  6              3
-          (%i3) ratsimp (%);
-                                                 3
-                                (2 p3 - 3 a b + a ) u
-          (%o3)                 ---------------------
-                                          6
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem', `mon2schur',
-     `multi_elem', `multi_pui', `pui2comp', `pui2ele', `puireduc',
-     `schur2comp'.
-
-
- -- Function: pui2comp (<n>, <lpui>)
-     rend la liste des <n> premie`res fonctions comple`tes (avec en
-     te^te le cardinal) en fonction des fonctions puissance donne'es
-     dans la liste <lpui>. Si la liste <lpui> est vide le cardinal est
-     N sinon c'est son premier e'le'ment similaire a` `comp2ele' et
-     `comp2pui'.
-
-          (%i1) pui2comp (2, []);
-                                                 2
-                                          p2 + p1
-          (%o1)                   [2, p1, --------]
-                                             2
-          (%i2) pui2comp (3, [2, a1]);
-                                                      2
-                                           a1 (p2 + a1 )
-                                   2  p3 + ------------- + a1 p2
-                            p2 + a1              2
-          (%o2)     [2, a1, --------, --------------------------]
-                               2                  3
-          (%i3) ratsimp (%);
-                                      2                     3
-                               p2 + a1   2 p3 + 3 a1 p2 + a1
-          (%o3)        [2, a1, --------, --------------------]
-                                  2               6
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
-     `mon2schur', `multi_elem', `multi_pui', `pui', `pui2ele',
-     `puireduc', `schur2comp'.
-
-
- -- Function: pui2ele (<n>, <lpui>)
-     re'alise le passage des fonctions puissances aux fonctions
-     syme'triques e'le'mentaires.  Si le drapeau `pui2ele' est
-     `girard', on re'cupe`re la liste des fonctions syme'triques
-     e'le'mentaires de 1 a` <n>, et s'il est e'gal a` `close', la
-     <n>-ie`me fonction syme'trique e'le'mentaire.
-
-     Autres fonctions de changements de bases :
-
-     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
-     `mon2schur', `multi_elem', `multi_pui', `pui', `pui2comp',
-     `puireduc', `schur2comp'.
-
-
- -- Function: pui2polynome (<x>, <lpui>)
-     calcul le polyno^me en <x> dont les fonctions puissances des
-     racines sont donne'es dans la liste <lpui>.
-
-          (%i1) pui;
-          (%o1)                           1
-          (%i2) kill(labels);
-          (%o0)                         done
-          (%i1) polynome2ele (x^3 - 4*x^2 + 5*x - 1, x);
-          (%o1)                     [3, 4, 5, 1]
-          (%i2) ele2pui (3, %);
-          (%o2)                     [3, 4, 6, 7]
-          (%i3) pui2polynome (x, %);
-                                  3      2
-          (%o3)                  x  - 4 x  + 5 x - 1
-
-     Autres fonctions a` voir : `polynome2ele', `ele2polynome'.
-
+     See also `multi_orbit' for the action of a product of symmetric
+     groups on a polynomial.
 
  -- Function: pui_direct (<orbite>, [<lvar_1>, ..., <lvar_n>], [<d_1>,
           <d_2>, ..., <d_n>])
-     Soit <f> un polynome en <n> blocs de variables <lvar_1>, ...,
-     <lvar_n>.  Soit <c_i> le nombre de variables dans <lvar_i> . Et
-     <SC> le produit des <n> groupes syme'triques de degre' <c_1>, ...,
-     <c_n>. Ce groupe agit naturellement sur <f>.  La liste <orbite>
-     est l'orbite, note'e `<SC>(<f>)', de la fonction <f> sous l'action
-     de <SC>. (Cette liste peut e^tre obtenue avec la fonction :
-     `multi_orbit').  Les di sont des entiers tels que <c_1> <= <d_1>,
-     <c_2> <= <d_2>, ..., <c_n> <= <d_n>.  Soit <SD> le produit des
-     groupes syme'triques <S_d1> x <S_d2> x ... x <S_dn>.
+     Let <f> be a polynomial in <n> blocks of variables <lvar_1>, ...,
+     <lvar_n>.  Let <c_i> be the number of variables in <lvar_i>, and
+     <SC> be the product of <n> symmetric groups of degree <c_1>, ...,
+     <c_n>. This group acts naturally on <f>.  The list <orbite> is the
+     orbit, denoted `<SC>(<f>)', of the function <f> under the action
+     of <SC>. (This list may be obtained by the function
+     `multi_orbit'.)  The <di> are integers s.t. c_1 \le d_1, c_2 \le
+     d_2, \ldots, c_n \le d_n.
 
-     La fonction `pui_direct' rame`ne les <n> premie`res fonctions
-     puissances de `<SD>(<f>)' de'duites des fonctions puissances de
-     `<SC>(<f>)' ou` <n> est le cardinal de `<SD>(<f>)'.
+     Let <SD> be the product of the symmetric groups S_[d_1] x S_[d_2]
+     x ... x S_[d_n].  The function `pui_direct' returns the first <n>
+     power functions of `<SD>(<f>)' deduced from the power functions of
+     `<SC>(<f>)', where <n> is the size of `<SD>(<f>)'.
 
-     Le re'sultat est rendue sous forme multi-contracte'e par rapport a
-     <SD>.  i.e. on ne conserve qu'un e'le'ment par orbite sous
-     l'action de <SD>).
+     The result is in multi-contracted form w.r.t. <SD>, i.e. only one
+     element is kept per orbit, under the action of <SD>.
 
           (%i1) l: [[x, y], [a, b]];
           (%o1)                   [[x, y], [a, b]]
@@ -590,56 +461,153 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                         9 x  y + 12 a x y + 3 x  + 6 a x  + 12 a  x + 8 a ]
 
 
- -- Function: puireduc (<n>, <lpui>)
-     <lpui> est une liste dont le premier e'le'ment est un entier <m>.
-     `puireduc' donne les <n> premie`res fonctions puissances en
-     fonction des <m> premie`res.
+32.1.4 Partitions
+-----------------
 
-          (%i1) puireduc (3, [2]);
-                                                   2
-                                             p1 (p1  - p2)
-          (%o1)          [2, p1, p2, p1 p2 - -------------]
-                                                   2
-          (%i2) ratsimp (%);
-                                                     3
-                                         3 p1 p2 - p1
-          (%o2)              [2, p1, p2, -------------]
-                                               2
+ -- Function: kostka (<part_1>, <part_2>)
+     written by P. Esperet, calculates the Kostka number of the
+     partition <part_1> and <part_2>.
+
+          (%i1) kostka ([3, 3, 3], [2, 2, 2, 1, 1, 1]);
+          (%o1)                           6
+
+ -- Function: lgtreillis (<n>, <m>)
+     returns the list of partitions of weight <n> and length <m>.
+
+          (%i1) lgtreillis (4, 2);
+          (%o1)                   [[3, 1], [2, 2]]
+     Also see: `ltreillis', `treillis' and `treinat'.
+
+ -- Function: ltreillis (<n>, <m>)
+     returns the list of partitions of weight <n> and length less than
+     or equal to <m>.
+
+          (%i1) ltreillis (4, 2);
+          (%o1)               [[4, 0], [3, 1], [2, 2]]
+     Also see: `lgtreillis', `treillis' and `treinat'.
+
+ -- Function: treillis (<n>)
+     returns all partitions of weight <n>.
+
+          (%i1) treillis (4);
+          (%o1)    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]]
+
+     See also: `lgtreillis', `ltreillis' and `treinat'.
 
 
- -- Function: resolvante (<P>, <x>, <f>, [<x_1>, ..., <x_d>])
-     calcule la re'solvante du polyno^me <P> de la variable <x> et de
-     degre' <n> >= <d> par la fonction <f> exprime'e en les variables
-     <x_1>, ..., <x_d>. Il est important pour l'efficacite' des calculs
-     de ne pas mettre dans la liste `[<x_1>, ..., <x_d>]' les variables
-     n'intervenant pas dans la fonction de transformation <f>.
+ -- Function: treinat (<part>)
+     retruns the list of partitions inferior to the partition <part>
+     w.r.t.  the natural order.
 
-     Afin de rendre plus efficaces les calculs on peut mettre des
-     drapeaux a` la variable `resolvante' afin que des algorithmes
-     ade'quates soient utilise's :
+          (%i1) treinat ([5]);
+          (%o1)                         [[5]]
+          (%i2) treinat ([1, 1, 1, 1, 1]);
+          (%o2) [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1],
 
-     Si la fonction <f> est unitaire :
-        * un polyno^me d'une variable,
+                                                           [1, 1, 1, 1, 1]]
+          (%i3) treinat ([3, 2]);
+          (%o3)                 [[5], [4, 1], [3, 2]]
 
-        *   line'aire ,
+     See also: `lgtreillis', `ltreillis' and `treillis'.
 
-        *   alterne'e,
 
-        *   une somme de variables,
+32.1.5 Polynomials and their roots
+----------------------------------
 
-        *   syme'trique en les variables qui apparaissent dans son
-          expression,
+ -- Function: ele2polynome (<L>, <z>)
+     returns the polynomial in <z> s.t. the elementary symmetric
+     functions of its roots are in the list `<L> = [<n>, <e_1>, ...,
+     <e_n>]', where <n> is the degree of the polynomial and <e_i> the
+     <i>-th elementary symmetric function.
 
-        *   un produit de variables,
+          (%i1) ele2polynome ([2, e1, e2], z);
+                                    2
+          (%o1)                    z  - e1 z + e2
+          (%i2) polynome2ele (x^7 - 14*x^5 + 56*x^3  - 56*x + 22, x);
+          (%o2)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
+          (%i3) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
+                            7       5       3
+          (%o3)            x  - 14 x  + 56 x  - 56 x + 22
+     The inverse: `polynome2ele (<P>, <z>)'.
 
-        * la fonction de la re'solvante de Cayley (utilisable qu'en
-          degre' 5)
+     Also see: `polynome2ele', `pui2polynome'.
+
+ -- Function: polynome2ele (<P>, <x>)
+     gives the list `<l> = [<n>, <e_1>, ..., <e_n>]' where <n> is the
+     degree of the polynomial <P> in the variable <x> and <e_i> is the
+     <i>-the elementary symmetric function of the roots of <P>.
+
+          (%i1) polynome2ele (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x);
+          (%o1)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
+          (%i2) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
+                            7       5       3
+          (%o2)            x  - 14 x  + 56 x  - 56 x + 22
+     The inverse: `ele2polynome (<l>, <x>)'
+
+ -- Function: prodrac (<L>, <k>)
+     <L> is a list containing the elementary symmetric functions on a
+     set <A>. `prodrac' returns the polynomial whose roots are the <k>
+     by <k> products of the elements of <A>.
+
+     Also see `somrac'.
+
+ -- Function: pui2polynome (<x>, <lpui>)
+     calculates the polynomial in <x> whose power functions of the roots
+     are given in the list <lpui>.
+
+          (%i1) pui;
+          (%o1)                           1
+          (%i2) kill(labels);
+          (%o0)                         done
+          (%i1) polynome2ele (x^3 - 4*x^2 + 5*x - 1, x);
+          (%o1)                     [3, 4, 5, 1]
+          (%i2) ele2pui (3, %);
+          (%o2)                     [3, 4, 6, 7]
+          (%i3) pui2polynome (x, %);
+                                  3      2
+          (%o3)                  x  - 4 x  + 5 x - 1
+     See also: `polynome2ele', `ele2polynome'.
+
+ -- Function: somrac (<L>, <k>)
+     The list <L> contains elementary symmetric functions of a
+     polynomial <P> . The function computes the polynomial whose roots
+     are the <k> by <k> distinct sums of the roots of <P>.
+
+     Also see `prodrac'.
+
+32.1.6 Resolvents
+-----------------
+
+ -- Function: resolvante (<P>, <x>, <f>, [<x_1>,..., <x_d>])
+     calculates the resolvent of the polynomial <P> in <x> of degree
+     <n> >= <d> by the function <f> expressed in the variables <x_1>,
+     ..., <x_d>.  For efficiency of computation it is important to not
+     include in the list `[<x_1>, ..., <x_d>]' variables which do not
+     appear in the transformation function <f>.
+
+     To increase the efficiency of the computation one may set flags in
+     `resolvante' so as to use appropriate algorithms:
+
+     If the function <f> is unitary:
+        * A polynomial in a single variable,
+
+        *   linear,
+
+        *   alternating,
+
+        *   a sum,
+
+        *   symmetric,
+
+        *   a product,
+
+        * the function of the Cayley resolvent (usable up to degree 5)
 
                (x1*x2 + x2*x3 + x3*x4 + x4*x5 + x5*x1 -
                     (x1*x3 + x3*x5 + x5*x2 + x2*x4 + x4*x1))^2
 
-          generale,
-     le drapeau de `resolvante' pourra e^tre respectivement :
+          general,
+     the flag of `resolvante' may be, respectively:
         *   unitaire,
 
         *   lineaire,
@@ -784,11 +752,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
                                                                  + 93392896
 
-     Pour la re'solvante de Cayley, les 2 derniers arguments sont
-     neutres et le polyno^me donne' en entre'e doit ne'cessairement
-     e^tre de degre' 5.
+     For the Cayley resolvent, the 2 last arguments are neutral and the
+     input polynomial must necessarily be of degree 5.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_bipartite', `resolvante_produit_sym',
      `resolvante_unitaire', `resolvante_alternee1', `resolvante_klein',
@@ -796,10 +763,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_alternee1 (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' de degre <n> par la
-     fonction $\prod_{1\leq i<j\leq n-1} (x_i-x_j)$.
+     calculates the transformation `<P>(<x>)' of degree <n> by the
+     function product(x_i - x_j, 1 <= i < j <= n - 1).
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire', `resolvante' ,
      `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
@@ -807,10 +774,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_bipartite (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' de degre <n> (<n> pair)
-     par la fonction $x_1x_2\ldots x_{n/2}+x_{n/2+1}\ldotsx_n$
+     calculates the transformation of `<P>(<x>)' of even degree <n> by
+     the function x_1 x_2 ... x_[n/2] + x_[n/2 + 1] ... x_n.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire', `resolvante' ,
      `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
@@ -820,7 +787,7 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                         10        8           6             4
           (%o1)        y   - 972 y  + 314928 y  - 34012224 y
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire', `resolvante',
      `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
@@ -828,7 +795,7 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_diedrale (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' par la fonction `<x_1>
+     calculates the transformation of `<P>(<x>)' by the function `<x_1>
      <x_2> + <x_3> <x_4>'.
 
           (%i1) resolvante_diedrale (x^5 - 3*x^4 + 1, x);
@@ -840,7 +807,7 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
            - 697
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire',
      `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
@@ -848,10 +815,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_klein (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' par la fonction `<x_1>
+     calculates the transformation of `<P>(<x>)' by the function `<x_1>
      <x_2> <x_4> + <x_4>'.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire',
      `resolvante_alternee1', `resolvante', `resolvante_klein3',
@@ -859,10 +826,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_klein3 (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' par la fonction `<x_1>
+     calculates the transformation of `<P>(<x>)' by the function `<x_1>
      <x_2> <x_4> + <x_4>'.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire',
      `resolvante_alternee1', `resolvante_klein', `resolvante',
@@ -870,7 +837,7 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_produit_sym (<P>, <x>)
-     calcule la liste toutes les r\'esolvantes produit du polyn\^ome
+     calculates the list of all product resolvents of the polynomial
      `<P>(<x>)'.
 
           (%i1) resolvante_produit_sym (x^5 + 3*x^4 + 2*x - 1, x);
@@ -889,7 +856,7 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
                  10      8       7    6        5       4       3     2
           (%o3) y   + 3 y  + 14 y  - y  - 14 y  - 31 y  - 21 y  - 2 y  + 1
 
-     Voir e'galement :
+     See also:
 
      `resolvante', `resolvante_unitaire', `resolvante_alternee1',
      `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
@@ -897,10 +864,10 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_unitaire (<P>, <Q>, <x>)
-     calcule la r\'esolvante du polyn\^ome `<P>(<x>)' par le polyn\^ome
-     `<Q>(<x>)'.
+     computes the resolvent of the polynomial `<P>(<x>)' by the
+     polynomial `<Q>(<x>)'.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante', `resolvante_alternee1',
      `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
@@ -908,91 +875,32 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
 
  -- Function: resolvante_vierer (<P>, <x>)
-     calcule la transformation de `<P>(<x>)' par la fonction `<x_1>
+     computes the transformation of `<P>(<x>)' by the function `<x_1>
      <x_2> - <x_3> <x_4>'.
 
-     Voir e'galement :
+     See also:
 
      `resolvante_produit_sym', `resolvante_unitaire',
      `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
      `resolvante', `resolvante_diedrale'.
 
 
- -- Function: schur2comp (<P>, <l_var>)
-     <P> est un polyno^mes en les variables contenues dans la liste
-     <l_var>. Chacune des variables de <l_var> repre'sente une fonction
-     syme'trique comple`te. On repre'sente dans <l_var> la ie`me
-     fonction syme'trique comple`te comme la concate'nation de la
-     lettre `h' avec l'entier <i> : `h<i>'.  Cette fonction donne
-     l'expression de <P> en fonction des fonctions de Schur.
+32.1.7 Miscellaneous
+--------------------
 
-          (%i1) schur2comp (h1*h2 - h3, [h1, h2, h3]);
-          (%o1)                         s
-                                         1, 2
-          (%i2) schur2comp (a*h3, [h3]);
-          (%o2)                         s  a
-                                         3
+ -- Function: multinomial (<r>, <part>)
+     where <r> is the weight of the partition <part>.  This function
+     returns the associate multinomial coefficient: if the parts of
+     <part> are <i_1>, <i_2>, ..., <i_k>, the result is `<r>!/(<i_1>!
+     <i_2>! ... <i_k>!)'.
 
-
- -- Function: somrac (<l>, <k>)
-     la liste <l> contient les fonctions syme'triques e'le'mentaires
-     d'un polyno^me <P> . On calcul le polyno^mes dont les racines sont
-     les sommes <K> a` <K> distinctes des racines de <P>.
-
-     Voir e'galement `prodrac'.
-
-
- -- Function: tcontract (<pol>, <lvar>)
-     teste si le polyno^me pol est syme'trique en les variables
-     contenues dans la liste <lvar>. Si oui il rend une forme
-     contracte'e comme la fonction `contract'.
-
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `cont2part', `explose', `part2cont', `partpol',
-     `tpartpol'.
-
-
- -- Function: tpartpol (<pol>, <lvar>)
-     teste si le polyno^me pol est syme'trique en les variables
-     contenues dans la liste <lvar>. Si oui il rend sa forme partionne'e
-     comme la fonction `partpol'.
-
-     Autres fonctions de changements de repre'sentations :
-
-     `contract', `cont2part', `explose', `part2cont', `partpol',
-     `tcontract'.
-
-
- -- Function: treillis (<n>)
-     rame`ne toutes les partitions de poids <n>.
-
-          (%i1) treillis (4);
-          (%o1)    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]]
-
-     Voir e'galement : `lgtreillis', `ltreillis' et `treinat'.
-
-
- -- Function: treinat (<part>)
-     rame`ne la liste des partitions infe'rieures a` la partition
-     <part> pour l'ordre naturel.
-
-          (%i1) treinat ([5]);
-          (%o1)                         [[5]]
-          (%i2) treinat ([1, 1, 1, 1, 1]);
-          (%o2) [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1],
-
-                                                           [1, 1, 1, 1, 1]]
-          (%i3) treinat ([3, 2]);
-          (%o3)                 [[5], [4, 1], [3, 2]]
-
-     Voir e'galement : `lgtreillis', `ltreillis' et `treillis'.
-
+ -- Function: permut (<L>)
+     returns the list of permutations of the list <L>.
 
 
 File: maxima.info,  Node: Groups,  Next: Runtime Environment,  Prev: Symmetries,  Up: Top
 
-34 Groups
+33 Groups
 *********
 
 * Menu:
@@ -1002,7 +910,7 @@ File: maxima.info,  Node: Groups,  Next: Runtime Environment,  Prev: Symmetries,
 
 File: maxima.info,  Node: Definitions for Groups,  Prev: Groups,  Up: Groups
 
-34.1 Definitions for Groups
+33.1 Definitions for Groups
 ===========================
 
  -- Function: todd_coxeter (<relations>, <subgroup>)
@@ -1066,7 +974,7 @@ File: maxima.info,  Node: Definitions for Groups,  Prev: Groups,  Up: Groups
 
 File: maxima.info,  Node: Runtime Environment,  Next: Miscellaneous Options,  Prev: Groups,  Up: Top
 
-35 Runtime Environment
+34 Runtime Environment
 **********************
 
 * Menu:
@@ -1078,7 +986,7 @@ File: maxima.info,  Node: Runtime Environment,  Next: Miscellaneous Options,  Pr
 
 File: maxima.info,  Node: Introduction for Runtime Environment,  Next: Interrupts,  Prev: Runtime Environment,  Up: Runtime Environment
 
-35.1 Introduction for Runtime Environment
+34.1 Introduction for Runtime Environment
 =========================================
 
 `maxima-init.mac' is a file which is loaded automatically when Maxima
@@ -1104,7 +1012,7 @@ or other Maxima statements.
 
 File: maxima.info,  Node: Interrupts,  Next: Definitions for Runtime Environment,  Prev: Introduction for Runtime Environment,  Up: Runtime Environment
 
-35.2 Interrupts
+34.2 Interrupts
 ===============
 
 The user can stop a time-consuming computation with the ^C (control-C)
@@ -1130,7 +1038,7 @@ command causes Maxima to resume from the point at which it was stopped.
 
 File: maxima.info,  Node: Definitions for Runtime Environment,  Prev: Interrupts,  Up: Runtime Environment
 
-35.3 Definitions for Runtime Environment
+34.3 Definitions for Runtime Environment
 ========================================
 
  -- Declaration: feature
@@ -1257,10 +1165,57 @@ File: maxima.info,  Node: Definitions for Runtime Environment,  Prev: Interrupts
           timedate reports current time 08:05:09 Wed, 11/02/2005 (GMT-7)
 
 
+ -- Function: absolute_real_time ()
+     Returns the number of seconds since midnight, January 1, 1900 UTC.
+     The return value is an integer.
+
+     See also `elapsed_real_time' and `elapsed_run_time'.
+
+     Example:
+
+          (%i1) absolute_real_time ();
+          (%o1)                      3385045277
+          (%i2) 1900 + absolute_real_time () / (365.25 * 24 * 3600);
+          (%o2)                   2007.265612087104
+
+
+ -- Function: elapsed_real_time ()
+     Returns the number of seconds (including fractions of a second)
+     since Maxima was most recently started or restarted.  The return
+     value is a floating-point number.
+
+     See also `absolute_real_time' and `elapsed_run_time'.
+
+     Example:
+
+          (%i1) elapsed_real_time ();
+          (%o1)                       2.559324
+          (%i2) expand ((a + b)^500)$
+          (%i3) elapsed_real_time ();
+          (%o3)                       7.552087
+
+
+ -- Function: elapsed_run_time ()
+     Returns an estimate of the number of seconds (including fractions
+     of a second) which Maxima has spent in computations since Maxima
+     was most recently started or restarted.  The return value is a
+     floating-point number.
+
+     See also `absolute_real_time' and `elapsed_real_time'.
+
+     Example:
+
+          (%i1) elapsed_run_time ();
+          (%o1)                         0.04
+          (%i2) expand ((a + b)^500)$
+          (%i3) elapsed_run_time ();
+          (%o3)                         1.26
+
+
 
 File: maxima.info,  Node: Miscellaneous Options,  Next: Rules and Patterns,  Prev: Runtime Environment,  Up: Top
 
-36 Miscellaneous Options
+35 Miscellaneous Options
 ************************
 
 * Menu:
@@ -1272,7 +1227,7 @@ File: maxima.info,  Node: Miscellaneous Options,  Next: Rules and Patterns,  Pre
 
 File: maxima.info,  Node: Introduction to Miscellaneous Options,  Next: Share,  Prev: Miscellaneous Options,  Up: Miscellaneous Options
 
-36.1 Introduction to Miscellaneous Options
+35.1 Introduction to Miscellaneous Options
 ==========================================
 
 In this section various options are discussed which have a global effect
@@ -1282,7 +1237,7 @@ user defined functions, are discussed.
 
 File: maxima.info,  Node: Share,  Next: Definitions for Miscellaneous Options,  Prev: Introduction to Miscellaneous Options,  Up: Miscellaneous Options
 
-36.2 Share
+35.2 Share
 ==========
 
 The Maxima "share" directory contains programs and other files of
@@ -1300,7 +1255,7 @@ directory using a file system browser.
 
 File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  Up: Miscellaneous Options
 
-36.3 Definitions for Miscellaneous Options
+35.3 Definitions for Miscellaneous Options
 ==========================================
 
  -- System variable: aliases
@@ -1311,17 +1266,22 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
      declaring the atom a `noun' with `declare').
 
  -- Declaration: alphabetic
-     `declare (<char>, alphabetic)' adds `char' to Maxima's alphabet,
-     which initially contains the letters `A' through `Z', `a' through
-     `z', `%' and `_'.  <char> is specified as a string of length 1,
-     e.g., `"~"'.
+     `alphabetic' is a declaration type recognized by `declare'.  The
+     expression `declare(<s>, alphabetic)' tells Maxima to recognize as
+     alphabetic all of the characters in <s>, which must be a string.
 
-          (%i1) declare ("~", alphabetic);
-          (%o1)                         done
-          (%i2) foo~bar;
-          (%o2)                        foo~bar
-          (%i3) atom (foo~bar);
-          (%o3)                         true
+     See also *Note Identifiers::.
+
+     Example:
+
+          (%i1) xx\~yy\`\@ : 1729;
+          (%o1)                         1729
+          (%i2) declare ("~`@", alphabetic);
+          (%o2)                         done
+          (%i3) xx~yy`@ + @yy`xx + `xx@@yy~;
+          (%o3)               `xx@@yy~ + @yy`xx + 1729
+          (%i4) listofvars (%);
+          (%o4)                  [@yy`xx, `xx@@yy~]
 
 
  -- Function: apropos (<string>)
@@ -1682,7 +1642,7 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
 
 File: maxima.info,  Node: Rules and Patterns,  Next: Lists,  Prev: Miscellaneous Options,  Up: Top
 
-37 Rules and Patterns
+36 Rules and Patterns
 *********************
 
 * Menu:
@@ -1693,7 +1653,7 @@ File: maxima.info,  Node: Rules and Patterns,  Next: Lists,  Prev: Miscellaneous
 
 File: maxima.info,  Node: Introduction to Rules and Patterns,  Next: Definitions for Rules and Patterns,  Prev: Rules and Patterns,  Up: Rules and Patterns
 
-37.1 Introduction to Rules and Patterns
+36.1 Introduction to Rules and Patterns
 =======================================
 
 This section describes user-defined pattern matching and simplification
@@ -1716,7 +1676,7 @@ package.
 
 File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introduction to Rules and Patterns,  Up: Rules and Patterns
 
-37.2 Definitions for Rules and Patterns
+36.2 Definitions for Rules and Patterns
 =======================================
 
  -- Function: apply1 (<expr>, <rule_1>, ..., <rule_n>)
@@ -1786,45 +1746,50 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
 
 
  -- Function: defmatch (<progname>, <pattern>, <x_1>, ..., <x_n>)
-     Creates a function `<progname> (<expr>, <y_1>, ..., <y_n>)' which
+ -- Function: defmatch (<progname>, <pattern>)
+     Defines a function `<progname>(<expr>, <x_1>, ..., <x_n>)' which
      tests <expr> to see if it matches <pattern>.
 
-     <pattern> is an expression containing the pattern variables <x_1>,
-     ..., <x_n> and pattern parameters, if any.  The pattern variables
-     are given explicitly as arguments to `defmatch' while the pattern
-     parameters are declared by the `matchdeclare' function.
+     <pattern> is an expression containing the pattern arguments <x_1>,
+     ..., <x_n> (if any) and some pattern variables (if any).  The
+     pattern arguments are given explicitly as arguments to `defmatch'
+     while the pattern variables are declared by the `matchdeclare'
+     function.  Any variable not declared as a pattern variable in
+     `matchdeclare' or as a pattern argument in `defmatch' matches only
+     itself.
 
      The first argument to the created function <progname> is an
      expression to be matched against the pattern and the other
-     arguments are the actual variables <y_1>, ..., <y_n> in the
-     expression which correspond to the dummy variables <x_1>, ...,
-     <x_n> in the pattern.
+     arguments are the actual arguments which correspond to the dummy
+     variables <x_1>, ..., <x_n> in the pattern.
 
      If the match is successful, <progname> returns a list of equations
-     whose left sides are the pattern variables and pattern parameters,
-     and whose right sides are the expressions which the pattern
-     variables and parameters matched.  The pattern parameters, but not
-     the variables, are assigned the subexpressions they match.  If the
-     match fails, <progname> returns `false'.
+     whose left sides are the pattern arguments and pattern variables,
+     and whose right sides are the subexpressions which the pattern
+     arguments and variables matched.  The pattern variables, but not
+     the pattern arguments, are assigned the subexpressions they match.
+     If the match fails, <progname> returns `false'.
 
-     Any variables not declared as pattern parameters in `matchdeclare'
-     or as variables in `defmatch' match only themselves.
-
-     A pattern which contains no pattern variables or parameters
-     returns `true' if the match succeeds.
+     A literal pattern (that is, a pattern which contains neither
+     pattern arguments nor pattern variables) returns `true' if the
+     match succeeds.
 
      See also `matchdeclare', `defrule', `tellsimp', and
      `tellsimpafter'.
 
      Examples:
 
-     This `defmatch' defines the function `linearp (expr, y)', which
-     tests `expr' to see if it is of the form `a*y + b' such that `a'
-     and `b' do not contain `y'.
+     Define a function `linearp(expr, x)' which tests `expr' to see if
+     it is of the form `a*x + b' such that `a' and `b' do not contain
+     `x' and `a' is nonzero.  This match function matches expressions
+     which are linear in any variable, because the pattern argument `x'
+     is given to `defmatch'.
 
-          (%i1) matchdeclare (a, freeof(x), b, freeof(x))$
-          (%i2) defmatch (linearp, a*x + b, x)$
-          (%i3) linearp (3*z + (y+1)*z + y^2, z);
+          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+          (%o1)                         done
+          (%i2) defmatch (linearp, a*x + b, x);
+          (%o2)                        linearp
+          (%i3) linearp (3*z + (y + 1)*z + y^2, z);
                                    2
           (%o3)              [b = y , a = y + 4, x = z]
           (%i4) a;
@@ -1832,36 +1797,52 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
           (%i5) b;
                                           2
           (%o5)                          y
+          (%i6) x;
+          (%o6)                           x
 
-     If the third argument to `defmatch' in line (%i2) had been
-     omitted, then `linear' would only match expressions linear in <x>,
-     not in any other variable.
+     Define a function `linearp(expr)' which tests `expr' to see if it
+     is of the form `a*x + b' such that `a' and `b' do not contain `x'
+     and `a' is nonzero.  This match function only matches expressions
+     linear in `x', not any other variable, because no pattern argument
+     is given to `defmatch'.
 
-          (%i1) matchdeclare ([a, f], true)$
-          (%i2) constinterval (l, h) := constantp (h - l)$
-          (%i3) matchdeclare (b, constinterval (a))$
-          (%i4) matchdeclare (x, atom)$
-          (%i5) (remove (integrate, outative),
-                    defmatch (checklimits, 'integrate (f, x, a, b)),
-                    declare (integrate, outative))$
-          (%i6) 'integrate (sin(t), t, %pi + x, 2*%pi + x);
+          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+          (%o1)                         done
+          (%i2) defmatch (linearp, a*x + b);
+          (%o2)                        linearp
+          (%i3) linearp (3*z + (y + 1)*z + y^2);
+          (%o3)                         false
+          (%i4) linearp (3*x + (y + 1)*x + y^2);
+                                       2
+          (%o4)                  [b = y , a = y + 4]
+
+     Define a function `checklimits(expr)' which tests `expr' to see if
+     it is a definite integral.
+
+          (%i1) matchdeclare ([a, f], true);
+          (%o1)                         done
+          (%i2) constinterval (l, h) := constantp (h - l);
+          (%o2)        constinterval(l, h) := constantp(h - l)
+          (%i3) matchdeclare (b, constinterval (a));
+          (%o3)                         done
+          (%i4) matchdeclare (x, atom);
+          (%o4)                         done
+          (%i5) simp : false;
+          (%o5)                         false
+          (%i6) defmatch (checklimits, 'integrate (f, x, a, b));
+          (%o6)                      checklimits
+          (%i7) simp : true;
+          (%o7)                         true
+          (%i8) 'integrate (sin(t), t, %pi + x, 2*%pi + x);
                                  x + 2 %pi
                                 /
                                 [
-          (%o6)                 I          sin(t) dt
+          (%o8)                 I          sin(t) dt
                                 ]
                                 /
                                  x + %pi
-          (%i7) checklimits (%);
-          (%o7)    [b = x + 2 %pi, a = x + %pi, x = t, f = sin(t)]
-          (%i8) a;
-          (%o8)                        x + %pi
-          (%i9) b;
-          (%o9)                       x + 2 %pi
-          (%i10) f;
-          (%o10)                       sin(t)
-          (%i11) x;
-          (%o11)                          t
+          (%i9) checklimits (%);
+          (%o9)    [b = x + 2 %pi, a = x + %pi, x = t, f = sin(t)]
 
 
  -- Function: defrule (<rulename>, <pattern>, <replacement>)
@@ -2633,7 +2614,7 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
 
 File: maxima.info,  Node: Lists,  Next: Sets,  Prev: Rules and Patterns,  Up: Top
 
-38 Lists
+37 Lists
 ********
 
 * Menu:
@@ -2644,7 +2625,7 @@ File: maxima.info,  Node: Lists,  Next: Sets,  Prev: Rules and Patterns,  Up: To
 
 File: maxima.info,  Node: Introduction to Lists,  Next: Definitions for Lists,  Prev: Lists,  Up: Lists
 
-38.1 Introduction to Lists
+37.1 Introduction to Lists
 ==========================
 
 Lists are the basic building block for Maxima and Lisp.   All data types
@@ -2672,7 +2653,7 @@ become
 
 File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  Up: Lists
 
-38.2 Definitions for Lists
+37.2 Definitions for Lists
 ==========================
 
  -- Function: append (<list_1>, ..., <list_n>)
@@ -2961,6 +2942,28 @@ File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  
      for more details.
 
 
+ -- Function: sublist_indices (<L>, <P>)
+     Returns the indices of the elements `x' of the list <L> for which
+     the predicate `maybe(<P>(x))' returns `true'; this excludes
+     `unknown' as well as `false'.  <P> may be the name of a function
+     or a lambda expression.  <L> must be a literal list.
+
+     Examples:
+
+          (%i1) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], lambda ([x], x='b));
+          (%o1)                     [2, 3, 7, 9]
+          (%i2) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], symbolp);
+          (%o2)                  [1, 2, 3, 4, 7, 9]
+          (%i3) sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0], identity);
+          (%o3)                       [1, 4, 5]
+          (%i4) assume (x < -1);
+          (%o4)                       [x < - 1]
+          (%i5) map (maybe, [x > 0, x < 0, x < -2]);
+          (%o5)                [false, true, unknown]
+          (%i6) sublist_indices ([x > 0, x < 0, x < -2], identity);
+          (%o6)                          [2]
+
+
  -- Function: tenth (<expr>)
      Returns the 10'th item of expression or list <expr>.  See `first'
      for more details.
@@ -2974,7 +2977,7 @@ File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  
 
 File: maxima.info,  Node: Sets,  Next: Function Definition,  Prev: Lists,  Up: Top
 
-39 Sets
+38 Sets
 *******
 
 * Menu:
@@ -2985,7 +2988,7 @@ File: maxima.info,  Node: Sets,  Next: Function Definition,  Prev: Lists,  Up: T
 
 File: maxima.info,  Node: Introduction to Sets,  Next: Definitions for Sets,  Prev: Sets,  Up: Sets
 
-39.1 Introduction to Sets
+38.1 Introduction to Sets
 =========================
 
 Maxima provides set functions, such as intersection and union, for
@@ -2999,7 +3002,7 @@ of the first and second kind, the Bell numbers, multinomial
 coefficients, partitions of nonnegative integers, and a few others.
 Maxima also defines a Kronecker delta function.
 
-39.1.1 Usage
+38.1.1 Usage
 ------------
 
 To construct a set with members `a_1, ..., a_n', write `set(a_1, ...,
@@ -3137,7 +3140,7 @@ a variable `z', use
    The section *Note Definitions for Sets:: has a complete list of the
 set functions in Maxima.
 
-39.1.2 Set Member Iteration
+38.1.2 Set Member Iteration
 ---------------------------
 
 There two ways to to iterate over set members. One way is the use
@@ -3164,7 +3167,7 @@ there are other Maxima functions that work correctly on sets.  In
 future versions of the set functions, `first' and `rest' may function
 differently or not at all.
 
-39.1.3 Bugs
+38.1.3 Bugs
 -----------
 
 The set functions use the Maxima function `orderlessp' to order set
@@ -3242,7 +3245,7 @@ not call `unorder'.
    If you find something that you think might be a set function bug,
 please report it to the Maxima bug database. See `bug_report'.
 
-39.1.4 Authors
+38.1.4 Authors
 --------------
 
 Stavros Macrakis of Cambridge, Massachusetts and Barton Willis of the
@@ -3252,7 +3255,7 @@ and their documentation.
 
 File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up: Sets
 
-39.2 Definitions for Sets
+38.2 Definitions for Sets
 =========================
 
  -- Function: adjoin (<x>, <a>)
@@ -3811,7 +3814,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
           (%o1)                          0.0
           (%i2) 1/10 - 0.1;
           (%o2)                          0.0
-          (%i3) Warning:  Float to bigfloat conversion of 0.250.25 - 0.25b0;
+          (%i3) 0.25 - 0.25b0;
+          Warning:  Float to bigfloat conversion of 0.25
           (%o3)                         0.0b0
           (%i4) kron_delta (1/4, 0.25);
                                             1
@@ -3821,7 +3825,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
                                             1
           (%o5)                  kron_delta(--, 0.1)
                                             10
-          (%i6) Warning:  Float to bigfloat conversion of 0.25kron_delta (0.25, 0.25b0);
+          (%i6) kron_delta (0.25, 0.25b0);
+          Warning:  Float to bigfloat conversion of 0.25
           (%o6)               kron_delta(0.25, 2.5b-1)
 
      `kron_delta' is symmetric.
@@ -4064,6 +4069,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
      `permutations' complains if <a> is not a literal list or set.
 
+     See also `random_permutation'.
+
      Examples:
 
           (%i1) permutations ([a, a]);
@@ -4099,6 +4106,26 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
           (%o5)                 {{w}, {x}, {y}, {z}}
           (%i6) powerset ({w, x, y, z}, 0);
           (%o6)                         {{}}
+
+
+ -- Function: random_permutation (<a>)
+     Returns a random permutation of the set or list <a>, as
+     constructed by the Knuth shuffle algorithm.
+
+     The return value is a new list, which is distinct from the
+     argument even if all elements happen to be the same.  However, the
+     elements of the argument are not copied.
+
+     Examples:
+
+          (%i1) random_permutation ([a, b, c, 1, 2, 3]);
+          (%o1)                  [c, 1, 2, 3, a, b]
+          (%i2) random_permutation ([a, b, c, 1, 2, 3]);
+          (%o2)                  [b, 3, 1, c, a, 2]
+          (%i3) random_permutation ({x + 1, y + 2, z + 3});
+          (%o3)                 [y + 2, z + 3, x + 1]
+          (%i4) random_permutation ({x + 1, y + 2, z + 3});
+          (%o4)                 [x + 1, y + 2, z + 3]
 
 
  -- Function: rreduce (<F>, <s>)
@@ -4636,7 +4663,7 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
 File: maxima.info,  Node: Function Definition,  Next: Program Flow,  Prev: Sets,  Up: Top
 
-40 Function Definition
+39 Function Definition
 **********************
 
 * Menu:
@@ -4649,16 +4676,16 @@ File: maxima.info,  Node: Function Definition,  Next: Program Flow,  Prev: Sets,
 
 File: maxima.info,  Node: Introduction to Function Definition,  Next: Function,  Prev: Function Definition,  Up: Function Definition
 
-40.1 Introduction to Function Definition
+39.1 Introduction to Function Definition
 ========================================
 
 
 File: maxima.info,  Node: Function,  Next: Macros,  Prev: Introduction to Function Definition,  Up: Function Definition
 
-40.2 Function
+39.2 Function
 =============
 
-40.2.1 Ordinary functions
+39.2.1 Ordinary functions
 -------------------------
 
 To define a function in Maxima you use the := operator.  E.g.
@@ -4747,7 +4774,7 @@ if we had done
    Inside functions, when the right hand side of a definition, may be
 computed at runtime, it is useful to use `define' and possibly `buildq'.
 
-40.2.2 Array functions
+39.2.2 Array functions
 ----------------------
 
 An array function stores the function value the first time it is called
@@ -4781,7 +4808,7 @@ all of the stored values at once, except for `kill(<a>)' or
 
 File: maxima.info,  Node: Macros,  Next: Definitions for Function Definition,  Prev: Function,  Up: Function Definition
 
-40.3 Macros
+39.3 Macros
 ===========
 
  -- Function: buildq (<L>, <expr>)
@@ -4980,7 +5007,7 @@ File: maxima.info,  Node: Macros,  Next: Definitions for Function Definition,  P
 
 File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  Up: Function Definition
 
-40.4 Definitions for Function Definition
+39.4 Definitions for Function Definition
 ========================================
 
  -- Function: apply (<F>, [<x_1>, ..., <x_n>])
@@ -5123,8 +5150,14 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
 
 
  -- Function: compfile (<filename>, <f_1>, ..., <f_n>)
-     Translates Maxima functions <f_1>, ..., <f_n> into Lisp and writes
-     the translated code into the file <filename>.
+ -- Function: compfile (<filename>, functions)
+ -- Function: compfile (<filename>, all)
+     Translates Maxima functions into Lisp and writes the translated
+     code into the file <filename>.
+
+     `compfile(<filename>, <f_1>, ..., <f_n>)' translates the specified
+     functions.  `compfile(<filename>, functions)' and
+     `compfile(<filename>, all)' translate all user-defined functions.
 
      The Lisp translations are not evaluated, nor is the output file
      processed by the Lisp compiler.  `translate' creates and evaluates
@@ -5150,61 +5183,94 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
 
 
  -- Function: define (<f>(<x_1>, ..., <x_n>), <expr>)
+ -- Function: define (<f>[<x_1>, ..., <x_n>], <expr>)
+ -- Function: define (funmake (<f>, [<x_1>, ..., <x_n>]), <expr>)
+ -- Function: define (arraymake (<f>, [<x_1>, ..., <x_n>]), <expr>)
+ -- Function: define (ev (<expr_1>), <expr_2>)
      Defines a function named <f> with arguments <x_1>, ..., <x_n> and
-     function body <expr>.
+     function body <expr>.  `define' always evaluates its second
+     argument (unless explicitly quoted).  The function so defined may
+     be an ordinary Maxima function (with arguments enclosed in
+     parentheses) or an array function (with arguments enclosed in
+     square brackets).
 
-     `define' quotes its first argument in most cases, and evaluates
-     its second argument unless explicitly quoted.  However, if the
-     first argument is an expression of the form `ev (<expr>)',
-     `funmake (<expr>)', or `arraymake (<expr>)', the first argument is
-     evaluated; this allows for the function name to be computed, as
-     well as the body.
+     When the last or only function argument <x_n> is a list of one
+     element, the function defined by `define' accepts a variable
+     number of arguments.  Actual arguments are assigned one-to-one to
+     formal arguments <x_1>, ..., <x_(n - 1)>, and any further actual
+     arguments, if present, are assigned to <x_n> as a list.
 
-     `define' is similar to the function definition operator `:=', but
-     when `define' appears inside a function, the definition is created
-     using the value of `expr' at execution time rather than at the
-     time of definition of the function which contains it.
+     When the first argument of `define' is an expression of the form
+     `<f>(<x_1>, ..., <x_n>)' or `<f>[<x_1>, ..., <x_n>]', the function
+     arguments are evaluated but <f> is not evaluated, even if there is
+     already a function or variable by that name.
+
+     When the first argument is an expression with operator `funmake',
+     `arraymake', or `ev', the first argument is evaluated; this allows
+     for the function name to be computed, as well as the body.
 
      All function definitions appear in the same namespace; defining a
      function `f' within another function `g' does not limit the scope
      of `f' to `g'.
 
-     `define' defines array functions (called with arguments in square
-     brackets `[ ]') as well as ordinary functions.
+     If some formal argument <x_k> is a quoted symbol (after
+     evaluation), the function defined by `define' does not evaluate
+     the corresponding actual argument.  Otherwise all actual arguments
+     are evaluated.
+
+     See also `:=' and `::='.
 
      Examples:
 
-          (%i1) foo: 2^bar;
-                                         bar
-          (%o1)                         2
-          (%i2) g(x) := (f_1 (y) :=   foo*x*y,
-                         f_2 (y) := ''foo*x*y,
-                 define (f_3 (y),     foo*x*y),
-                 define (f_4 (y),   ''foo*x*y));
-                                                       bar
-          (%o2) g(x) := (f_1(y) := foo x y, f_2(y) := 2    x y,
-                                                                  bar
-                         define(f_3(y), foo x y), define(f_4(y), 2    x y))
-          (%i3) functions;
-          (%o3)                        [g(x)]
-          (%i4) g(a);
-                                              bar
-          (%o4)                  f_4(y) := a 2    y
-          (%i5) functions;
-          (%o5)        [g(x), f_1(y), f_2(y), f_3(y), f_4(y)]
-          (%i6) dispfun (f_1, f_2, f_3, f_4);
-          (%t6)                   f_1(y) := foo x y
+     `define' always evaluates its second argument (unless explicitly
+     quoted).
 
-                                            bar
-          (%t7)                  f_2(y) := 2    x y
+          (%i1) expr : cos(y) - sin(x);
+          (%o1)                    cos(y) - sin(x)
+          (%i2) define (F1 (x, y), expr);
+          (%o2)              F1(x, y) := cos(y) - sin(x)
+          (%i3) F1 (a, b);
+          (%o3)                    cos(b) - sin(a)
+          (%i4) F2 (x, y) := expr;
+          (%o4)                   F2(x, y) := expr
+          (%i5) F2 (a, b);
+          (%o5)                    cos(y) - sin(x)
 
-                                              bar
-          (%t8)                  f_3(y) := a 2    y
+     The function defined by `define' may be an ordinary Maxima
+     function or an array function.
 
-                                              bar
-          (%t9)                  f_4(y) := a 2    y
+          (%i1) define (G1 (x, y), x.y - y.x);
+          (%o1)               G1(x, y) := x . y - y . x
+          (%i2) define (G2 [x, y], x.y - y.x);
+          (%o2)                G2     := x . y - y . x
+                                 x, y
 
-          (%o9)                         done
+     When the last or only function argument <x_n> is a list of one
+     element, the function defined by `define' accepts a variable
+     number of arguments.
+
+          (%i1) define (H ([L]), '(apply ("+", L)));
+          (%o1)                H([L]) := apply("+", L)
+          (%i2) H (a, b, c);
+          (%o2)                       c + b + a
+
+     When the first argument is an expression with operator `funmake',
+     `arraymake', or `ev', the first argument is evaluated.
+
+          (%i1) [F : I, u : x];
+          (%o1)                        [I, x]
+          (%i2) funmake (F, [u]);
+          (%o2)                         I(x)
+          (%i3) define (funmake (F, [u]), cos(u) + 1);
+          (%o3)                  I(x) := cos(x) + 1
+          (%i4) define (arraymake (F, [u]), cos(u) + 1);
+          (%o4)                   I  := cos(x) + 1
+                                   x
+          (%i5) define (foo (x, y), bar (y, x));
+          (%o5)                foo(x, y) := bar(y, x)
+          (%i6) define (ev (foo (x, y)), sin(x) - cos(y));
+          (%o6)             bar(y, x) := sin(x) - cos(y)
+
 
  -- Function: define_variable (<name>, <default_value>, <mode>)
      Introduces a global variable into the Maxima environment.
@@ -6215,7 +6281,7 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
 
 File: maxima.info,  Node: Program Flow,  Next: Debugging,  Prev: Function Definition,  Up: Top
 
-41 Program Flow
+40 Program Flow
 ***************
 
 * Menu:
@@ -6226,7 +6292,7 @@ File: maxima.info,  Node: Program Flow,  Next: Debugging,  Prev: Function Defini
 
 File: maxima.info,  Node: Introduction to Program Flow,  Next: Definitions for Program Flow,  Prev: Program Flow,  Up: Program Flow
 
-41.1 Introduction to Program Flow
+40.1 Introduction to Program Flow
 =================================
 
 Maxima provides a `do' loop for iteration, as well as more primitive
@@ -6235,7 +6301,7 @@ constructs such as `go'.
 
 File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to Program Flow,  Up: Program Flow
 
-41.2 Definitions for Program Flow
+40.2 Definitions for Program Flow
 =================================
 
  -- Function: backtrace ()
@@ -6525,16 +6591,40 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
 
 
  -- Special operator: if
-     The `if' statement is used for conditional execution.  The syntax
-     is:
+     Represents conditional evaluation. Various forms of `if'
+     expressions are recognized.
 
-          if <condition> then <expr_1> else <expr_2>
+     `if <cond_1> then <expr_1> else <expr_0>' evaluates to <expr_1> if
+     <cond_1> evaluates to `true', otherwise the expression evaluates
+     to `expr_0'.
 
-     The result of an `if' statement is <expr_1> if condition is `true'
-     and <expr_2> otherwise.  <expr_1> and <expr_2> are any Maxima
-     expressions (including nested `if' statements), and <condition> is
-     an expression which evaluates to `true' or `false' and is composed
-     of relational and logical operators which are as follows:
+     `if <cond_1> then <expr_1> elseif <cond_2> then <expr_2> elseif
+     ... else <expr_0>' evaluates to <expr_k> if <cond_k> is `true' and
+     all preceding conditions are `false'.  If none of the conditions
+     are `true', the expression evaluates to `expr_0'.
+
+     A trailing `else false' is assumed if `else' is missing.  That is,
+     `if <cond_1> then <expr_1>' is equivalent to `if <cond_1> then
+     <expr_1> else false', and `if <cond_1> then <expr_1> elseif ...
+     elseif <cond_n> then <expr_n>' is equivalent to `if <cond_1> then
+     <expr_1> elseif ... elseif <cond_n> then <expr_n> else false'.
+
+     The alternatives <expr_0>, ..., <expr_n> may be any Maxima
+     expressions, including nested `if' expressions.  The alternatives
+     are neither simplified nor evaluated unless the corresponding
+     condition is `true'.
+
+     The conditions <cond_1>, ..., <cond_n> are expressions which
+     potentially or actually evaluate to `true' or `false'.  When a
+     condition does not actually evaluate to `true' or `false', the
+     behavior of `if' is governed by the global flag `prederror'.  When
+     `prederror' is `true', it is an error if any evaluated condition
+     does not evaluate to `true' or `false'.  Otherwise, conditions
+     which do not evaluate to `true' or `false' are accepted, and the
+     result is a conditional expression.
+
+     Among other elements, conditions may comprise relational and
+     logical operators as follows.
 
           Operation            Symbol      Type
 
@@ -6687,6 +6777,10 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      mechanism.
 
 
+ -- Special operator: while
+     See `do'.
+
+
  -- Function: outermap (<f>, <a_1>, ..., <a_n>)
      Applies the function <f> to each one of the elements of the outer
      product <a_1> cross <a_2> ... cross <a_n>.
@@ -6811,7 +6905,7 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
 
 File: maxima.info,  Node: Debugging,  Next: augmented_lagrangian,  Prev: Program Flow,  Up: Top
 
-42 Debugging
+41 Debugging
 ************
 
 * Menu:
@@ -6823,7 +6917,7 @@ File: maxima.info,  Node: Debugging,  Next: augmented_lagrangian,  Prev: Program
 
 File: maxima.info,  Node: Source Level Debugging,  Next: Keyword Commands,  Up: Debugging
 
-42.1 Source Level Debugging
+41.1 Source Level Debugging
 ===========================
 
 Maxima has a built-in source level debugger.  The user can set a
@@ -6930,7 +7024,7 @@ the function into the Maxima, by typing `Alt-Control-x'.
 
 File: maxima.info,  Node: Keyword Commands,  Next: Definitions for Debugging,  Prev: Source Level Debugging,  Up: Debugging
 
-42.2 Keyword Commands
+41.2 Keyword Commands
 =====================
 
 Keyword commands are special keywords which are not interpreted as
@@ -7005,7 +7099,7 @@ among the break keywords.   Thus `:br' would suffice for `:break'.
 
 File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  Up: Debugging
 
-42.3 Definitions for Debugging
+41.3 Definitions for Debugging
 ==============================
 
  -- Option variable: refcheck
@@ -7067,11 +7161,15 @@ File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  U
 
 
  -- Function: timer (<f_1>, ..., <f_n>)
+ -- Function: timer (all)
  -- Function: timer ()
      Given functions <f_1>, ..., <f_n>, `timer' puts each one on the
      list of functions for which timing statistics are collected.
      `timer(f)$ timer(g)$' puts `f' and then `g' onto the list; the
      list accumulates from one call to the next.
+
+     `timer(all)' puts all user-defined functions (as named by the
+     global variable `functions') on the list of timed functions.
 
      With no arguments, `timer' returns the list of timed functions.
 
@@ -7138,12 +7236,16 @@ File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  U
 
 
  -- Function: trace (<f_1>, ..., <f_n>)
+ -- Function: trace (all)
  -- Function: trace ()
      Given functions <f_1>, ..., <f_n>, `trace' instructs Maxima to
      print out debugging information whenever those functions are
      called.  `trace(f)$ trace(g)$' puts `f' and then `g' onto the list
      of functions to be traced; the list accumulates from one call to
      the next.
+
+     `trace(all)' puts all user-defined functions (as named by the
+     global variable `functions') on the list of functions to be traced.
 
      With no arguments, `trace' returns a list of all the functions
      currently being traced.
@@ -7232,7 +7334,7 @@ File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  U
 
 File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Debugging,  Up: Top
 
-43 augmented_lagrangian
+42 augmented_lagrangian
 ***********************
 
 * Menu:
@@ -7242,7 +7344,7 @@ File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Debugging,  
 
 File: maxima.info,  Node: Definitions for augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
 
-43.1 Definitions for augmented_lagrangian
+42.1 Definitions for augmented_lagrangian
 =========================================
 
  -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
@@ -7308,9 +7410,9 @@ File: maxima.info,  Node: Definitions for augmented_lagrangian,  Prev: augmented
 
 
 
-File: maxima.info,  Node: bode,  Next: cholesky,  Prev: augmented_lagrangian,  Up: Top
+File: maxima.info,  Node: bode,  Next: descriptive,  Prev: augmented_lagrangian,  Up: Top
 
-44 bode
+43 bode
 *******
 
 * Menu:
@@ -7320,7 +7422,7 @@ File: maxima.info,  Node: bode,  Next: cholesky,  Prev: augmented_lagrangian,  U
 
 File: maxima.info,  Node: Definitions for bode,  Prev: bode,  Up: bode
 
-44.1 Definitions for bode
+43.1 Definitions for bode
 =========================
 
  -- Function: bode_gain (<H>, <range>, ...<plot_opts>...)
@@ -7420,90 +7522,9 @@ File: maxima.info,  Node: Definitions for bode,  Prev: bode,  Up: bode
      `bode_gain'
 
 
-File: maxima.info,  Node: cholesky,  Next: descriptive,  Prev: bode,  Up: Top
+File: maxima.info,  Node: descriptive,  Next: diag,  Prev: bode,  Up: Top
 
-45 cholesky
-***********
-
-* Menu:
-
-* Definitions for cholesky::
-
-
-File: maxima.info,  Node: Definitions for cholesky,  Prev: cholesky,  Up: cholesky
-
-45.1 Definitions for cholesky
-=============================
-
- -- Function: cholesky (<A>)
-     Compute Cholesky decomposition of <A>, a lower-triangular matrix
-     <L> such that `L . transpose(L) = A'.
-
-     Some examples follow.
-
-     Example 1:
-          (%i1) load("cholesky")$
-
-          (%i2) A : matrix ([a, b, c], [d, e, f], [g, h, i]);
-                                  [ a  b  c ]
-                                  [         ]
-          (%o2)                   [ d  e  f ]
-                                  [         ]
-                                  [ g  h  i ]
-          (%i3) A2 : transpose (A) . A;
-                [   2    2    2                                     ]
-                [  g  + d  + a     g h + d e + a b  g i + d f + a c ]
-                [                                                   ]
-          (%o3) [                    2    2    2                    ]
-                [ g h + d e + a b   h  + e  + b     h i + e f + b c ]
-                [                                                   ]
-                [                                     2    2    2   ]
-                [ g i + d f + a c  h i + e f + b c   i  + f  + c    ]
-          (%i4) B : cholesky (A2)$
-
-          (%i5) B . transpose (B) - A2;
-                                  [ 0  0  0 ]
-                                  [         ]
-          (%o5)                   [ 0  0  0 ]
-                                  [         ]
-                                  [ 0  0  0 ]
-
-     Example 2:
-          (%i6) A : matrix ([2, 3, 4], [-2, 2,- 3], [11, -2, 3]);
-                              [  2    3    4  ]
-                              [               ]
-          (%o6)               [ - 2   2   - 3 ]
-                              [               ]
-                              [ 11   - 2   3  ]
-          (%i7) A2 : transpose (A) . A;
-                              [ 129   - 20  47 ]
-                              [                ]
-          (%o7)               [ - 20   17   0  ]
-                              [                ]
-                              [  47    0    34 ]
-          (%i8) B : cholesky (A2);
-                 [  sqrt(129)         0             0      ]
-                 [                                         ]
-                 [      20        sqrt(1793)               ]
-                 [ - ---------    ----------        0      ]
-          (%o8)  [   sqrt(129)    sqrt(129)                ]
-                 [                                         ]
-                 [     47       940 sqrt(129)      153     ]
-                 [  ---------   --------------  ---------- ]
-                 [  sqrt(129)   129 sqrt(1793)  sqrt(1793) ]
-          (%i9) B . transpose (B) - A2;
-                                 [ 0  0  0 ]
-                                 [         ]
-          (%o9)                  [ 0  0  0 ]
-                                 [         ]
-                                 [ 0  0  0 ]
-
-     To use this function write first `load("cholesky")'.
-
-
-File: maxima.info,  Node: descriptive,  Next: diag,  Prev: cholesky,  Up: Top
-
-46 descriptive
+44 descriptive
 **************
 
 * Menu:

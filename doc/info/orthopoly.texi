@@ -141,7 +141,7 @@ otherwise arise by evaluating with @var{n} equal to 0.
 (%o3)                           0
 @end example
 
-The gradef property only applies to the ``main'' variable; derivatives with 
+The @code{gradef} property only applies to the ``main'' variable; derivatives with 
 respect other arguments usually result in an error message; for example
 
 @c ===beg===
@@ -307,8 +307,8 @@ By far, the best way to do numerical evaluation is to make one or more
 of the function arguments floating point numbers. By doing that, 
 specialized floating point algorithms are used for evaluation.
 
-Maxima's @code{float} function is somewhat indiscriminant; if you apply 
-@code{float} to an an expression involving an orthogonal polynomial with a
+Maxima's @code{float} function is somewhat indiscriminate; if you apply 
+@code{float} to an expression involving an orthogonal polynomial with a
 symbolic degree or order parameter, these parameters may be 
 converted into floats; after that, the expression will not evaluate 
 fully. Consider
@@ -333,7 +333,7 @@ fully. Consider
                              2
 @end example
 
-The expression in (%o3) will not evaluate to a float; orthopoly doesn't
+The expression in (%o3) will not evaluate to a float; @code{orthopoly} doesn't
 recognize floating point values where it requires an integer. Similarly, 
 numerical evaluation of the @code{pochhammer} function for orders that
 exceed @code{pochhammer_max_index} can be troublesome; consider
@@ -379,7 +379,7 @@ orthogonal polynomials; we've generally used the conventions
 of conventions of Abramowitz and Stegun.
 
 Before you suspect a bug in orthopoly, check some special cases 
-to determine if your definitions match those used by orthonormal. 
+to determine if your definitions match those used by @code{orthopoly}. 
 Definitions often differ by a normalization; occasionally, authors
 use ``shifted'' versions of the functions that makes the family
 orthogonal on an interval other than @math{(-1, 1)}. To define, for example,
@@ -406,7 +406,7 @@ a Legendre polynomial that is orthogonal on @math{(0, 1)}, define
 @anchor{Floating point Evaluation}
 @subsection Floating point Evaluation
 
-Most functions in orthopoly use a running error analysis to 
+Most functions in @code{orthopoly} use a running error analysis to 
 estimate the error in floating point evaluation; the 
 exceptions are the spherical Bessel functions and the associated Legendre 
 polynomials of the second kind. For numerical evaluation, the spherical 
@@ -423,14 +423,14 @@ Intervals have the form @code{interval (@var{c}, @var{r})}, where @var{c} is the
 center of the interval and @var{r} is its radius. The 
 center of an interval can be a complex number, and the radius is always a positive real number.
 
-Here is an an example.
+Here is an example.
 
 @c ===beg===
 @c fpprec : 50$
 @c y0 : jacobi_p (100, 2, 3, 0.2);
 @c y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
 @c ===end==
-=
+
 @example
 (%i1) fpprec : 50$
 
@@ -516,7 +516,7 @@ and the final result is a double.
 (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
 @end example
 
-@subsection Graphics and orthopoly
+@subsection Graphics and @code{orthopoly}
 
 To plot expressions that involve the orthogonal polynomials, you 
 must do two things:
@@ -551,7 +551,7 @@ different than just quoting the function name using @code{'legendre_p (5, @var{x
 The @code{orthopoly} package defines the
 Pochhammer symbol and a unit step function. @code{orthopoly} uses 
 the Kronecker delta function and the unit step function in
-gradef statements.
+@code{gradef} statements.
 
 To convert Pochhammer symbols into quotients of gamma functions,
 use @code{makegamma}.
@@ -571,7 +571,7 @@ use @code{makegamma}.
                             sqrt(%pi)
 @end example
 
-Derivatives of the pochhammer symbol are given in terms of the @code{psi}
+Derivatives of the Pochhammer symbol are given in terms of the @code{psi}
 function.
 
 @c ===beg===
@@ -588,7 +588,7 @@ function.
 @end example
 
 You need to be careful with the expression in (%o1); the difference of the
-@code{psi} functions has poles when @code{@var{x} = -1, -2, .., -@var{n}}. These poles
+@code{psi} functions has polynomials when @code{@var{x} = -1, -2, .., -@var{n}}. These polynomials
 cancel with factors in @code{pochhammer (@var{x}, @var{n})} making the derivative a degree
 @code{@var{n} - 1} polynomial when @var{n} is a positive integer.
 
@@ -633,7 +633,7 @@ The unit step function is left-continuous; thus
 @end example
 
 If you need a unit step function that is neither left or right continuous
-at zero, define your own using signum; for example,
+at zero, define your own using @code{signum}; for example,
 
 @c ===beg===
 @c xunit_step (x) := (1 + signum (x))/2$
@@ -654,20 +654,18 @@ requires that the unit step function be left-continuous.
 @subsection Algorithms
 
 Generally, @code{orthopoly} does symbolic evaluation by using a hypergeometic 
-representation of the various orthogonal polynomials. The hypergeometic 
+representation of the orthogonal polynomials. The hypergeometic 
 functions are evaluated using the (undocumented) functions @code{hypergeo11} 
 and @code{hypergeo21}. The exceptions are the half-integer Bessel functions 
-and the associated Legendre function of the second kind. The Bessel functions are
-evaluated using an explicit representation, while the associated Legendre 
+and the associated Legendre function of the second kind. The half-integer Bessel functions are
+evaluated using an explicit representation, and the associated Legendre 
 function of the second kind is evaluated using recursion.
 
 For floating point evaluation, we again convert most functions into
 a hypergeometic form; we evaluate the hypergeometic functions using 
 forward recursion. Again, the exceptions are the half-integer Bessel functions 
 and the associated Legendre function of the second kind. Numerically, 
-the half-integer Bessel functions are evaluated using the SLATEC code, and the 
-associated Legendre functions of the second kind is numerically evaluated using 
-the same algorithm as its symbolic evaluation uses.
+the half-integer Bessel functions are evaluated using the SLATEC code.
 
 
 @node Definitions for orthogonal polynomials,  , Introduction to orthogonal polynomials, orthopoly
@@ -711,7 +709,7 @@ Reference: Abramowitz and Stegun, equation 22.5.55, page 780.
 @end deffn
 
 @deffn {Function} intervalp (@var{e})
-Return true if the input is an interval and return false if it isn't. 
+Return @code{true} if the input is an interval and return false if it isn't. 
 @end deffn
 
 @deffn {Function} jacobi_p (@var{n}, @var{a}, @var{b}, @var{x})
@@ -790,7 +788,7 @@ A recursion relation for foo isn't known to Maxima
 @defvr {Variable} orthopoly_returns_intervals
 Default value: @code{true}
 
-When @code{orthopoly_returns_intervals} is true, floating point results are returned in
+When @code{orthopoly_returns_intervals} is @code{true}, floating point results are returned in
 the form @code{interval (@var{c}, @var{r})}, where @var{c} is the center of an interval
 and @var{r} is its radius. The center can be a complex number; in that
 case, the interval is a disk in the complex plane.
@@ -906,14 +904,14 @@ Reference: Abramowitz and Stegun, equations 10.1.9, page 437 and 10.1.15, page 4
 @end deffn
 
 @deffn {Function} spherical_hankel1 (@var{n}, @var{x})
-The spherical hankel function of the
+The spherical Hankel function of the
 first kind.
 
 Reference: Abramowitz and Stegun, equation 10.1.36, page 439.
 @end deffn
 
 @deffn {Function} spherical_hankel2 (@var{n}, @var{x})
-The spherical hankel function of the second kind.
+The spherical Hankel function of the second kind.
 
 Reference: Abramowitz and Stegun, equation 10.1.17, page 439.
 @end deffn
@@ -934,7 +932,7 @@ takes on the value 1/2 at zero, use @code{(1 + signum (@var{x}))/2}.
 @end deffn
 
 @deffn {Function} ultraspherical (@var{n}, @var{a}, @var{x})
-The ultraspherical polynomial (also known the Gegenbauer polynomial).
+The ultraspherical polynomial (also known as the Gegenbauer polynomial).
 
 Reference: Abramowitz and Stegun, equation 22.5.46, page 779.
 @end deffn

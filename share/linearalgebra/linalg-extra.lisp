@@ -37,5 +37,71 @@
     (setq mat (nreverse mat))
     (push '($matrix) mat)))
 
+(defun $hessian (e vars)
+  (if ($listp vars)
+      (let ((n ($length vars)))
+	($genmatrix `((lambda) ((mlist) i j) ($diff ,e (nth i ,vars) 1 (nth j ,vars) 1)) n n))
+    `(($hessian) ,e ,vars)))
 
-  
+(defun $jacobian (e vars)
+  (if (and ($listp vars) ($listp e))
+      (let ((m ($length e)) (n ($length vars)))
+	($genmatrix `((lambda) ((mlist) i j) ($diff (nth i ,e) (nth j ,vars))) m n))
+    `(($jacobian) ,e ,vars)))
+
+;; Use Sylvester's criterion to decide if the self-adjoint part of a matrix is 
+;; negative definite (neg), negative semidefinite (nz), positive semidefinite (pz), 
+;; or positive definite (pos). By the self-adjoint part of a matrix M, I mean
+;; (M + M^*) / 2, where ^* is the conjugate transpose. 
+
+;; For purely numerical matrices, there more efficient algorithms; for symbolic
+;; matrices, things like matrix([a,b],[b,a]), assume(a > 0, a^2 > b^2), I think
+;; this is the best we can do.
+
+;; (1) The divide by 2 isn't needed, but try assume(a > 0, a^2 > b^2),
+;; matrix_sign(matrix([a,b],[b,a])) without the divide by 2.
+
+(defun $matrix_sign (m)
+  (let ((i 1) (sgn) (n) (matrix-sign))
+    ($require_square_matrix m '$first '$matrix_sign)
+    (setq m (div (add m ($ctranspose m)) 2)) ;; see (1)
+    (setq n ($first ($matrix_size m)))
+    (setq matrix-sign (csign (ratdisrep (newdet m i nil))))
+    
+    (while (and (member matrix-sign '($neg $nz $pz $pos) :test #'eq) (< i n))
+      (incf i)
+      (setq sgn (csign (ratdisrep (newdet m i nil))))      
+      (cond
+       ((and (eq matrix-sign '$neg) (member sgn '($nz $neg) :test #'eq))
+	(setq matrix-sign sgn))
+       
+       ((and (eq matrix-sign '$neg) (eq sgn '$zero))
+	(setq matrix-sign '$nz))
+       
+       ((eq matrix-sign '$neg)
+	(setq matrix-sign '$pnz))
+       
+       ((and (eq matrix-sign '$nz) (member sgn '($neg $nz $zero) :test #'eq))
+	(setq matrix-sign '$nz))
+	
+       ((eq matrix-sign '$nz) 
+	(setq matrix-sign '$pnz))
+
+       ((and (eq matrix-sign '$pz) (member sgn '($pz $pos $zero) :test #'eq))
+	(setq matrix-sign '$pz))
+
+       ((eq matrix-sign '$pz) 
+	(setq matrix-sign '$pnz))
+
+       ((and (eq matrix-sign '$pos) (member sgn '($pz $pos) :test #'eq))
+	(setq matrix-sign sgn))
+
+       ((and (eq matrix-sign '$pos) (eq sgn '$zero))
+	(setq matrix-sign '$pz))
+       
+       ((eq matrix-sign '$pos)
+	(setq matrix-sign '$pnz))
+
+       (t (setq matrix-sign '$pnz))))
+    
+    (if (eq matrix-sign '$zero) '$pnz matrix-sign)))

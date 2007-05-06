@@ -285,7 +285,7 @@
 
 
 (defun toolongexpp (exp)
-  (greaterp (numprintlen exp) maxexpprintlen*))
+  (> (numprintlen exp) maxexpprintlen*))
 
 (defun toolongstmtp (stmt)
   (cond ((atom stmt) nil)  ;; pwang 11/11/86
@@ -316,7 +316,7 @@
 	(return toolong)))
 
 (defun toolongdop (dostmt)
-  (cond ((greaterp (eval (cons 'plus (foreach exp in (caadr dostmt) collect
+  (cond ((> (eval (cons '+ (foreach exp in (caadr dostmt) collect
 					      (numprintlen exp))))
 		   maxexpprintlen*) t)
 	((toolongexpp (caaddr dostmt)) t)
@@ -351,7 +351,7 @@
 	((onep (length exp))
 	 (numprintlen (car exp)))
 	(t
-	 (plus (length exp)
-	       (eval (cons 'plus
+	 (+ (length exp)
+	       (eval (cons '+
 			   (foreach elt in (cdr exp) collect
 				    (numprintlen elt))))))))

@@ -9,19 +9,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module series)
 
-(declare-top (genprefix ps)
-	     (*lexpr factor $gcd $rat)
-	     (fixnum %n %nn)
-	     (special var *n *a *m *c *index $cauchysum *gcd*
+(declare-top (special var *n *a *m *c *index $cauchysum *gcd*
 		      nn* dn* $ratsimpexpons *infsumsimp
 		      *ratexp splist *var usexp $verbose ans *trigred
 		      *form indl *noexpand $ratexpand))
 
 (load-macsyma-macros rzmac)
-
-;;
+
 ;;******************************************************************************
 ;;				driver 	stage
 ;;******************************************************************************
@@ -82,7 +79,7 @@
       (mtell "In the first simplification we have returned:")
       (show-exp w))
     w))
-
+
 ;;
 ;;*****************************************************************************
 ;;	pass two		expansion phase
@@ -102,7 +99,7 @@
 	((eq (caar exp) '%derivative) (sp2diff (cadr exp) (cddr exp)))
 	((eq (caar exp) '%integrate)
 	 (sp2integ (cadr exp) (caddr exp) (cdddr exp)))
-	((memq (caar exp) '(%product %sum))
+	((member (caar exp) '(%product %sum) :test #'eq)
 	 (list* (car exp) (sp2expand (cadr exp)) (cddr exp)))
 	(t (list '(%sum)
 		 (m* (m^ var *index)
@@ -125,7 +122,7 @@
 	       (list '(mlable) nil exp)))
     (numden exp)
     (sratexpnd nn* dn*)))
-
+
 (defun sratexpnd (n d)
     (let ((ans (list nil))
         (splist)
@@ -157,11 +154,11 @@
                      (m1 d linpat)))
 
              ;; fix for powerseries(1/sqrt(1+x),x,) bug--------------
-             (cond ((not (integerp (cdr (assq 'n ans))))
+             (cond ((not (integerp (cdr (assoc 'n ans :test #'eq))))
                   (setf (cdadr ans) (mul -1 (cdadr ans)))))
              ;; end of bug fix---------------------------------------
 
-             (m// (srbinexpnd (cdr ans)) (cdr (assq 'cc (cdr ans)))))
+             (m// (srbinexpnd (cdr ans)) (cdr (assoc 'cc (cdr ans) :test #'eq))))
             (t
              (and *ratexp (throw 'psex nil))
              (if (not (eq (caar d) 'mtimes)) (ratexand1 n d))
@@ -190,7 +187,7 @@
 						      "Partial fraction expansion failed")))))
 				     ($partfrac (div* n d) var)))))
 	   t))
-
+
 (defun sratsubst (gcd num den)
   (and $verbose
        (prog2 (mtell "We are substituting for the occurrences of")
@@ -223,10 +220,10 @@
 	(t (exlist (cdr exp)))))
 
 (defun srbinexpnd (ans)
-  (let ((n (cdr (assq 'n ans)))
-	(a (cdr (assq 'a ans)))
-	(m (cdr (assq 'm ans)))
-	(c (cdr (assq 'c ans))))
+  (let ((n (cdr (assoc 'n ans :test #'eq)))
+	(a (cdr (assoc 'a ans :test #'eq)))
+	(m (cdr (assoc 'm ans :test #'eq)))
+	(c (cdr (assoc 'c ans :test #'eq))))
     (cond ((integerp n) (srintegexpd n a m c))
 	  (t (list '(%sum)
 		   (m// (m* (m^ (m* c var) (m* m *index))
@@ -237,7 +234,7 @@
 
 (defun psp2form (coeff exp bas)
   (list '(%sum) (m* coeff (m^ var exp)) *index bas '$inf))
-
+
 (defun srintegexpd (n a m c)
   (and $verbose
        (prog2 (mtell "Using a special rule for expressions of form ")
@@ -258,18 +255,18 @@
 		       (m^ (m* -1 c) *index))
 		   (if (equal m 1) *index (m* *index m))
 		   0))
-	(t (psp2form (m* (do ((nn (f1- n) (f1- nn))
+	(t (psp2form (m* (do ((nn (1- n) (1- nn))
 			      (l nil (cons (list '(mplus) *index nn) l)))
 			     ((= nn 0)
-			      (m*l (cons (m// 1 (factorial (f1- n))) l))))
+			      (m*l (cons (m// 1 (factorial (1- n))) l))))
 			 (m^ (m* -1 c (m^ a -1)) *index)
-			 (m^ a (f- n)))
+			 (m^ a (- n)))
 		     (if (equal m 1) *index (m* *index m))
 		     0))))
 
 (defun sratp (a var)
   (cond ((atom a) t)
-	((memq (caar a) '(mplus mtimes)) (sandmap (cdr a)))
+	((member (caar a) '(mplus mtimes) :test #'eq) (sandmap (cdr a)))
 	((eq (caar a) 'mexpt)
 	 (cond ((free (cadr a) var) (free (caddr a) var))
 	       ((smono a var) t)
@@ -277,7 +274,7 @@
 	(t (free (cadr a) var))))
 
 (defun sandmap (l) (or (null l) (and (sratp (car l) var) (sandmap (cdr l)))))
-
+
 (defun sp2trig (exp) (subst *index '*index (oldget (caar exp) 'sp2)))
 
 (defun sp2log (e)
@@ -286,12 +283,12 @@
 		     ((null (smono exp var)) (throw 'psex nil))
 		     ((or (and (numberp *a)
 			       (minusp *a)
-			       (setq *a (minus *a)))
+			       (setq *a (- *a)))
 			  (and (mtimesp *a)
 			       (numberp (cadr *a))
 			       (minusp (cadr *a))
 			       (setq *a (simptimes
-					 (list* (car *a) (minus (cadr *a)) (cddr *a))
+					 (list* (car *a) (- (cadr *a)) (cddr *a))
 					 1 t))))
 		      (list '(%sum)
 			    (m* -1
@@ -311,7 +308,7 @@
 		      (m* (caddr exp) (caddr (cadr exp))))))
 	((and (free (caddr exp) var)
 	      (signp g (caddr exp))
-	      (lessp (caddr exp) $maxposex))
+	      (< (caddr exp) $maxposex))
 	 (m*l (dup (sp2expand (cadr exp)) (caddr exp))))
 	((free (cadr exp) var)
 	 (sp2sub (subst *index
@@ -325,8 +322,11 @@
 		 (caddr exp)))
 	(t (throw 'psex nil))))
 
-(defun dup (x %n) (if (= %n 1) (ncons x) (cons x (dup x (f1- %n)))))
-
+(defun dup (x %n)
+  (if (= %n 1)
+      (ncons x)
+      (cons x (dup x (1- %n)))))
+
 (defun sp2diff (exp l)
   (let (indl)
     (cond ((free exp var)
@@ -336,7 +336,7 @@
 		  (if ll (sp3form exp (cons '(%derivative) (nreverse ll)))
 		      exp))
 	       (cond ((eq (car l) var)
-		      (do ((%i (cadr l) (f1- %i)))
+		      (do ((%i (cadr l) (1- %i)))
 			  ((= %i 0) exp)
 			(setq indl nil
 			      exp (sp2diff1 (sp2expand exp) nil nil))))
@@ -361,8 +361,8 @@
     (setq e (m2 exp '((mtimes) ((coefftt) (fr freevar))
 		      ((coefftt) (e true)))
 		nil)
-	  fr (cdr (assq 'fr e))
-	  e  (cdr (assq 'e e)))
+	  fr (cdr (assoc 'fr e :test #'eq))
+	  e  (cdr (assoc 'e e :test #'eq)))
     (sp3reconst
      (cond ((and (mexptp e) (eq (cadr e) var))
 	    (cond ((equal 0 (mbinding (ind lol)
@@ -373,7 +373,7 @@
 		   (m* fr (caddr e) (m^ (cadr e) (m- (caddr e) 1))))
 		  (t (sdiff exp var))))
 	   (t (sdiff exp var))))))
-
+
 (defun sp2integ (exp v l)
   (if (null l)
       (if (eq var v)
@@ -416,8 +416,8 @@
     (setq e (m2 exp '((mtimes) ((coefftt) (fr freevar))
 		      ((coefftt) (e true)))
 		nil)
-	  fr (cdr (assq 'fr e))
-	  e  (cdr (assq 'e e)))
+	  fr (cdr (assoc 'fr e :test #'eq))
+	  e  (cdr (assoc 'e e :test #'eq)))
     (cond ((and (mexptp e) (eq (cadr e) var))
 	   (cond ((mgrp -1 (mbinding (ind lol)
 				     (meval (caddr e))))
@@ -434,12 +434,10 @@
 			   (list '(%integrate) v lo hi)))))
 	(t (m+ (sp2sub (setq exp (sp2expand (subst var v exp))) hi)
 	       (m* -1 (sp2sub exp lo))))))
-
-;;
+
 ;;************************************************************************************
 ;;	phase three		miscellaneous garbage and final simplification
 ;;************************************************************************************
-;;
 
 (defun sp3reconst (e)
   (do ((l indl (cdr l)) (e e (list* '(%sum) e (car l))))
@@ -463,7 +461,7 @@
 	((eq (caar e) '%sum)
 	 (list* '(%sum) (sp3form1 (cadr e)) (cddr e)))
 	(t (list* (car *form) e (cdr *form)))))
-
+
 ;; These are the series expansions for circular functions
 
 (defprop %sin
@@ -518,7 +516,7 @@
 	     ((mexpt) sp2var ((mtimes) 2 *index)))
      *index 0 $inf)
   sp2)
-
+
 ;; These are the series definitions of exponential functions.
 
 (defprop mexpt
@@ -578,7 +576,7 @@
       ((mexpt) sp2var ((mplus) ((mtimes) 2 *index) -1)))
      *index 0 $inf)
   sp2)
-
+
 ;;arc trigonometric function expansions
 
 (defprop %asin

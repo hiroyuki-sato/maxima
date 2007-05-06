@@ -1404,6 +1404,24 @@ false$
 xreduce("or",[true,true],false)$
 true$
 
+(nary ("@@@"), declare ("@@@", nary), "@@@" ([L]) := apply (FOO, L), kill (FOO));
+done;
+
+xreduce ("@@@", [a, e, c, b, d]);
+FOO (a, e, c, b, d);
+
+xreduce ("@@@", {a, e, c, b, d});
+FOO (a, b, c, d, e);
+
+(infix ("%%%"), "%%%" (aa, bb) := BAR (aa, bb), kill (BAR));
+done;
+
+xreduce ("%%%", [a, e, c, b, d]);
+BAR (BAR (BAR (BAR (a, e), c), b), d);
+
+xreduce ("%%%", {a, e, c, b, d});
+BAR (BAR (BAR (BAR (a, b), c), d), e);
+
 makeset(i,[i],set());
 set()$
 
@@ -1478,26 +1496,53 @@ every(is, makeset(moebius(i*j) = moebius(i) * moebius(j) * rprimep(i,j),[i,j],
 cartesian_product(setify(makelist(i,i,1,15)),setify(makelist(j,j,1,15)))));
 true$
 
+/* Tests for random_permutation */
+
+(set_random_state (make_random_state (1234)), 0);
+0;
+
+(L : '[a + 1, b - 2, c * d, %pi, %e], S : setify (L), 0);
+0;
+
+[random_permutation (L), random_permutation (L), random_permutation (L)];
+'[[a + 1, %e, c*d, b - 2, %pi], [b - 2, a + 1, c*d, %e, %pi], [a + 1, c*d, b - 2, %e, %pi]];
+
+[random_permutation (S), random_permutation (S), random_permutation (S)];
+'[[c*d, b - 2, a + 1, %pi, %e], [%pi, %e, a + 1, b - 2, c*d], [b - 2, %pi, a + 1, %e, c*d]];
+
+apply ("+", makelist (if random_permutation ([1, 2, 3, 4]) = [4,2,1,3] then 1 else 0, i, 1, 1000));
+41;
+
+/* Tests for sublist_indices */
+
+sublist_indices ([], lambda([x], x='b));
+[];
+
+errcatch (sublist_indices (1, lambda([x], x='b)));
+[];
+
+sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], lambda ([x], x='b));
+[2, 3, 7, 9];
+
+sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], lambda ([x], integerp (x)));
+[5, 6, 8];
+
+sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], symbolp);
+[1, 2, 3, 4, 7, 9];
+
+sublist_indices ([true, false, false, true, true], identity);
+[1, 4, 5];
+
+sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0], identity);
+[1, 4, 5];
+
+(kill (P), P(x) := ordergreatp (x, 'm), sublist_indices ('[a, %pi, x, z, h, y, %e, 1, s], P));
+[3, 4, 6, 9];
+
+sublist_indices ('[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], lambda ([x], evenp(x) and primep(x)));
+[3];
+
+/* Finale */
 
 (print("nset version ",get(nset,'version)),0);
 0$
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

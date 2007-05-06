@@ -16,7 +16,7 @@
 ;  - flatten conditionals -- nested if --> if -- elseif -- elseif -- elseif -- else
 ;  - arithmetic on conditionals -- distribute arithmetic ops over if
 ;  - make up rules via tellsimp & friends for integrate / sum / diff applied to conditionals
-;  - knock out redundant clauses in simplification (i.e. if x => y then knock out y)
+;  - knock out redundant clauses in simplification (i.e. if x implies y then knock out y)
 
 ; Examples:
 ;
@@ -38,48 +38,6 @@
 ; from left to right, only as needed to establish whether the whole expression
 ; is true or false. Therefore arguments which potentially have side effects
 ; (print, kill, save, quit, etc) may or may not actually have those side effects.
-;
-; Simplification of boolean expressions:
-;
-; and: if any argument simplifies to false, return false
-;  otherwise omit arguments which simplify to true and simplify others
-;  if only one argument remains, return it
-;  if none remain, return true
-;
-; or: if any argument simplifies to true, return true
-;  otherwise omit arguments which simplify to false and simplify others
-;  if only one argument remains, return it
-;  if none remain, return false
-;
-; not: if argument simplifies to true / false, return false / true
-;  otherwise reverse sense of comparisons (if argument is a comparison)
-;  otherwise return not <simplified argument>
-;
-; Evaluation (MEVAL) of boolean expressions:
-; same as simplification except evaluating (MEVALP) arguments instead of simplifying
-; When prederror = true, complain if expression evaluates to something other than T / NIL
-; (otherwise return unevaluated boolean expression)
-;
-; Evaluation (MEVALP) of boolean expressions:
-; same as simplification except evaluating (MEVALP) arguments instead of simplifying
-; When prederror = true, complain if expression evaluates to something other than T / NIL
-; (otherwise return unevaluated boolean expression)
-;
-; Simplification of "is" expressions:
-; if argument simplifies to true/false, return true/false
-; otherwise return is (<simplified argument>)
-;
-; Evaluation of "is" expressions:
-; if argument evaluates to true/false, return true/false
-; otherwise return unknown if prederror = false, else trigger an error
-;
-; Simplification of "maybe" expressions:
-; if argument simplifies to true/false, return true/false
-; otherwise return maybe (<simplified expression>)
-;
-; Evaluation of "maybe" expressions:
-; if argument evaluates to true/false, return true/false
-; otherwise return unknown
 ;
 ; Simplification of "if" expressions:
 ;
@@ -115,128 +73,15 @@
 
 (in-package :maxima)
 
+; Kill off translation properties of conditionals and Boolean operators.
+; Ideally we could avoid calling MEVAL when arguments are declared Boolean.
+; We're not there yet.
+
+(remprop 'mcond 'translate)
+
 ; It's OK for MEVALATOMS to evaluate the arguments of MCOND.
 ; %MCOND already has this property.
 (defprop mcond t evok)
-
-; Change default value of $PREDERROR to NIL.
-; Binding $PREDERROR to T banishes unevaluated conditionals.
-(setq $prederror nil)
-
-(remprop '$is 'mfexpr*)
-(remprop '$maybe 'mfexpr*)
-
-(defprop $is simp-$is operators)
-(defprop %is simp-$is operators)
-(defprop $maybe simp-$is operators)
-(defprop %maybe simp-$is operators)
-
-; I'VE ASSUMED (NULL Z) => SIMPLIFIY ARGUMENTS
-; SAME WITH SIMPCHECK (SRC/SIMP.LISP)
-; SAME WITH TELLSIMP-GENERATED SIMPLIFICATION FUNCTIONS
-; SAME WITH SIMPLIFICATION OF %SIN
-; PRETTY SURE I'VE SEEN OTHER EXAMPLES AS WELL
-; Z SEEMS TO SIGNIFY "ARE THE ARGUMENTS SIMPLIFIED YET"
-
-(defun maybe-simplifya (x z) (if z x (simplifya x z)))
-
-(defun maybe-simplifya-protected (x z)
-  (let ((errcatch t) ($errormsg nil))
-    (declare (special errcatch $errormsg))
-    (ignore-errors (maybe-simplifya x z) x)))
-
-(defun simp-$is (x y z)
-  (declare (ignore y))
-  (let ((a (maybe-simplifya (cadr x) z)))
-    (if (or (eq a t) (eq a nil))
-      a
-      `((,(caar x) simp) ,a))))
-
-(defmfun $is (pat)
-  (multiple-value-bind (ans patevalled) (mevalp1 pat)
-    (cond
-      ((memq ans '(t nil)) ans)
-      ; I'D RATHER HAVE ($PREDERROR ($THROW `(($PREDERROR) ,PATEVALLED))) HERE
-      ($prederror (pre-err patevalled))
-      (t '$unknown))))
-
-(defmfun $maybe (pat)
-  (multiple-value-bind (ans patevalled) (let (($prederror nil)) (mevalp1 pat))
-    (cond
-      ((memq ans '(t nil)) ans)
-      (t '$unknown))))
-
-(defun mevalp1 (pat)
-  (let (patevalled ans)
-    (setq ans 
-      (cond ((and (not (atom pat)) (memq (caar pat) '(mnot mand mor)))
-	   (cond ((eq 'mnot (caar pat)) (is-mnot (cadr pat)))
-	         ((eq 'mand (caar pat)) (is-mand (cdr pat)))
-	         (t (is-mor (cdr pat)))))
-	  ((atom (setq patevalled (meval pat))) patevalled)
-	  ((memq (caar patevalled) '(mnot mand mor)) (mevalp1 patevalled))
-	  (t (mevalp2 patevalled (caar patevalled) (cadr patevalled) (caddr patevalled)))))
-    (values ans patevalled)))
-
-(defmfun mevalp2 (patevalled pred arg1 arg2)
-  (cond ((eq 'mequal pred) (like arg1 arg2))
-	((eq '$equal pred) (meqp arg1 arg2))
-	((eq 'mnotequal pred) (not (like arg1 arg2)))
-	((eq '$notequal pred) (mnqp arg1 arg2))
-	((eq 'mgreaterp pred) (mgrp arg1 arg2))
-	((eq 'mlessp pred) (mgrp arg2 arg1))
-	((eq 'mgeqp pred) (mgqp arg1 arg2))
-	((eq 'mleqp pred) (mgqp arg2 arg1))
-	(t (isp (munformat patevalled)))))
-
-(defmfun mevalp (pat)
-  (multiple-value-bind (ans patevalled) (mevalp1 pat)
-    (cond ((memq ans '(#.(not ()) ()))
-       ans)
-      ; I'D RATHER HAVE ($PREDERROR ($THROW `(($PREDERROR) ,PATEVALLED))) HERE
-      ($prederror (pre-err patevalled))
-      (t (or patevalled ans)))))
-
-(defmfun assume (pat)
-  (if (and (not (atom pat))
-	   (eq (caar pat) 'mnot)
-	   (eq (caaadr pat) '$equal))
-      (setq pat `(($notequal) ,@(cdadr pat))))
-  (let ((dummy (let ($assume_pos) (mevalp1 pat))))
-    (cond ((eq dummy t) '$redundant)
-	  ((null dummy) '$inconsistent)
-	  ((atom dummy) '$meaningless)
-	  (t (learn pat t)))))
-
-(defmspec mand (form) (setq form (cdr form))
-  (do ((l form (cdr l)) (x) (unevaluated))
-    ((null l)
-    (cond
-      ((= (length unevaluated) 0) t)
-      ((= (length unevaluated) 1) (car unevaluated))
-      (t (cons '(mand) (reverse unevaluated)))))
-  (setq x (mevalp (car l)))
-  (cond
-    ((null x) (return nil))
-    ((not (memq x '(t nil))) (push x unevaluated)))))
-
-(defmspec mor (form) (setq form (cdr form))
-  (do ((l form (cdr l)) (x) (unevaluated))
-  ((null l)
-    (cond
-      ((= (length unevaluated) 0) nil)
-      ((= (length unevaluated) 1) (car unevaluated))
-      (t (cons '(mor) (reverse unevaluated)))))
-  (setq x (mevalp (car l)))
-  (cond
-    ((eq x t) (return t))
-    ((not (memq x '(t nil))) (push x unevaluated)))))
-
-(defmspec mnot (form) (setq form (cdr form))
-  (let ((x (mevalp (car form))))
-    (cond
-      ((memq x '(t nil)) (not x))
-      (t `((mnot) ,x)))))
 
 ; X is an expression of the form ((OP) B1 G1 B2 G2 B3 G3 ...)
 ; where OP is MCOND or %MCOND,
@@ -307,8 +152,8 @@
       (setq args (cddr args)))
     
     (cond
-      ((null args-simplified) '$false)
-      ((or (eq (car args-simplified) t) (eq (car args-simplified) '$true))
+      ((null args-simplified) nil)
+      ((or (eq (car args-simplified) t) (eq (car args-simplified) t))
        (cadr args-simplified))
       (t
         ; Indicate that the return value has been simplified.
@@ -320,93 +165,6 @@
 
 (putprop 'mcond 'simp-mcond 'operators)
 (putprop '%mcond 'simp-mcond 'operators)
-
-; Redefine REQUIRE-BOOLEAN from nset.lisp --
-; current version assumes MEVALP returns only T, NIL, or $UNKNOWN,
-; which is no longer the case.
-
-(defun require-boolean (x) (cond ((or (not x) (eq x t)) x) (t nil)))
-
-(putprop 'mnot 'simp-mnot 'operators)
-(putprop 'mand 'simp-mand 'operators)
-(putprop 'mor 'simp-mor 'operators)
-
-(defun simp-mand (x y z)
-  (declare (ignore y))
-  (do ((l (cdr x) (cdr l)) (a) (simplified))
-    ((null l)
-    (cond
-      ((= (length simplified) 0) t)
-      ((= (length simplified) 1) (car simplified))
-      (t (cons '(mand simp) (reverse simplified)))))
-  (setq a (maybe-simplifya (car l) z))
-  (cond
-    ((null a) (return nil))
-    ((eq a '$unknown) (if (not (memq '$unknown simplified)) (push a simplified)))
-    ((not (memq a '(t nil))) (push a simplified)))))
-
-(defun simp-mor (x y z)
-  (declare (ignore y))
-  (do ((l (cdr x) (cdr l)) (a) (simplified))
-    ((null l)
-    (cond
-      ((= (length simplified) 0) nil)
-      ((= (length simplified) 1) (car simplified))
-      (t (cons '(mor simp) (reverse simplified)))))
-  (setq a (maybe-simplifya (car l) z))
-  (cond
-    ((eq a t) (return t))
-    ((eq a '$unknown) (if (not (memq '$unknown simplified)) (push a simplified)))
-    ((not (memq a '(t nil))) (push a simplified)))))
-
-; ALSO CUT STUFF ABOUT NOT EQUAL => NOTEQUAL AT TOP OF ASSUME
-
-(defun simp-mnot (x y z)
-  (declare (ignore y))
-  (let ((arg (maybe-simplifya (cadr x) z)))
-    (if (atom arg)
-      (cond
-        ((or (eq arg t) (eq arg '$true))
-         nil)
-        ((or (eq arg nil) (eq arg '$false))
-         t)
-        ((eq arg '$unknown)
-         '$unknown)
-        (t `((mnot simp) ,arg)))
-      (let ((arg-op (caar arg)) (arg-arg (cdr arg)))
-        (setq arg-arg (mapcar #'(lambda (a) (maybe-simplifya a z)) arg-arg))
-        (cond
-          ((eq arg-op 'mlessp)
-           `((mgeqp simp) ,@arg-arg))
-          ((eq arg-op 'mleqp)
-           `((mgreaterp simp) ,@arg-arg))
-          ((eq arg-op 'mequal)
-           `((mnotequal simp) ,@arg-arg))
-          ((eq arg-op '$equal)
-           `(($notequal simp) ,@arg-arg))
-          ((eq arg-op 'mnotequal)
-           `((mequal simp) ,@arg-arg))
-          ((eq arg-op '$notequal)
-           `(($equal simp) ,@arg-arg))
-          ((eq arg-op 'mgeqp)
-           `((mlessp simp) ,@arg-arg))
-          ((eq arg-op 'mgreaterp)
-           `((mleqp simp) ,@arg-arg))
-          ((eq arg-op 'mnot)
-           (car arg-arg))
-
-          ; Distribute negation over conjunction and disjunction;
-          ; analogous to '(- (a + b)) --> - a - b.
-
-          ((eq arg-op 'mand)
-           (let ((L (mapcar #'(lambda (e) `((mnot) ,e)) arg-arg)))
-             (simplifya `((mor) ,@L) nil)))
-
-          ((eq arg-op 'mor)
-           (let ((L (mapcar #'(lambda (e) `((mnot) ,e)) arg-arg)))
-             (simplifya `((mand) ,@L) nil)))
-
-          (t `((mnot simp) ,arg)))))))
 
 ; WTF IS THIS ??
 (let ((save-intext (symbol-function 'intext)))
@@ -466,77 +224,16 @@
  (t (merror "Improper arguments to function 'some'"))))
 |#
 
-; DON'T FORGET TO KILL OFF (DEFVAR PATEVALLED), IS-MNOT, IS-MAND, IS-MOR, AND TRANSLATION STUFF !!
+; REDEFINE PARSE-CONDITION (IN SRC/NPARSE.LISP) TO APPEND NIL INSTEAD OF $FALSE
+; WHEN INPUT IS LIKE "IF FOO THEN BAR" (WITHOUT ELSE)
 
-; HEY SPEAKING OF WHICH HERE IS THE TRANSLATION STUFF FROM ACALL.LISP
-
-; LOOKS LIKE SOME OF THIS STUFF NEED NOT BE REVISED
-; JUST COMMENT OUT IN CASE I CHANGE MY MIND
-
-#|
-(defmfun is-boole-check (form)
-  (cond ((null form) nil)
-	((eq form t) t)
-	('else
-	 ;; We check for T and NIL quickly, otherwise go for the database.
-	 (mevalp_tr form $prederror nil))))
-
-(defmfun maybe-boole-check (form)
-  (mevalp_tr form nil nil))
-
-;; The following entry point is for querying the database without
-;; the dubious side effects of using PREDERROR:FALSE.
-
-(defmspec $maybe (form) (mevalp_tr (fexprcheck form) nil t))
-
-(declare-top(special patevalled))
-|#
-
-(defun mevalp_tr (pat error? meval?)
-  (let (patevalled ans)
-    (setq ans (mevalp1_tr pat error? meval?))
-    (cond ((memq ans '(t nil)) ans)
-	  (error?
-	   (pre-err patevalled))
-	  ('else '$unknown))))
-
-(defun mevalp1_tr (pat error? meval?)
-  (cond ((and (not (atom pat)) (memq (caar pat) '(mnot mand mor)))
-	 (cond ((eq 'mnot (caar pat)) (is-mnot_tr (cadr pat) error? meval?))
-	       ((eq 'mand (caar pat)) (is-mand_tr (cdr pat) error? meval?))
-	       (t (is-mor_tr (cdr pat) error? meval?))))
-	((atom (setq patevalled (if meval? (meval pat) pat))) patevalled)
-	((memq (caar patevalled) '(mnot mand mor)) (mevalp1_tr patevalled
-							       error?
-							       meval?))
-	(t (mevalp2 patevalled (caar patevalled) (cadr patevalled) (caddr patevalled)))))
-
-(defun is-mnot_tr (pred error? meval?)
-  (setq pred (mevalp_tr pred error? meval?))
-  (cond ((eq t pred) nil)
-	((not pred))
-	(t (pred-reverse pred))))
-
-(defun is-mand_tr (pl error? meval?)
-  (do ((dummy) (npl))
-      ((null pl) (cond ((null npl))
-		       ((null (cdr npl)) (car npl))
-		       (t (cons '(mand) (nreverse npl)))))
-    (setq dummy (mevalp_tr (car pl) error? meval?)
-	  pl (cdr pl))
-    (cond ((eq t dummy))
-	  ((null dummy) (return nil))
-	  (t (setq npl (cons dummy npl))))))
-
-(defun is-mor_tr (pl error? meval?)
-  (do ((dummy) (npl))
-      ((null pl) (cond ((null npl) nil)
-		       ((null (cdr npl)) (car npl))
-		       (t (cons '(mor) (nreverse npl)))))
-    (setq dummy (mevalp_tr (car pl) error? meval?)
-	  pl (cdr pl))
-    (cond ((eq t dummy) (return t))
-	  ((null dummy))
-	  (t (setq npl (cons dummy npl))))))
-
-
+(defun parse-condition (op)
+  (list* (parse (rpos op) (rbp op))
+	 (if (eq (first-c) '$then)
+	     (parse '$any (rbp (pop-c)))
+	     (mread-synerr "Missing `then'"))
+	 (case (first-c)
+	   (($else)   (list t (parse '$any (rbp (pop-c)))))
+	   (($elseif) (parse-condition (pop-c)))
+	   (t
+	    (list t nil)))))

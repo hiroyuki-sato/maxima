@@ -70,7 +70,6 @@ Soporte para campos más específicos de las matemáticas
 * Ecuaciones::                         Definición y resolución de ecuaciones.
 * Ecuaciones Diferenciales::           Definición y resolución de ecuaciones diferenciales.
 * Métodos numéricos::              Integración numérica, transformadas de Fourier, etc.
-* Estadística::          Funciones estadísticas.
 * Arrays::                             Creación y manipulación de arrays.
 * Matrices y Álgebra Lineal::        Operaciones matriciales.
 * Afines::
@@ -98,15 +97,17 @@ Paquetes adicionales
 
 * augmented_lagrangian::        Paquete augmented_lagrangian.
 * bode::                        Gráficos de Bode.
-* cholesky::                    Descomposición de Cholesky.
 * descriptive::                 Estadística descriptiva.
 * diag::                        Matrices de Jordan.
 * distrib::                     Distribuciones de probabilidad.
+* draw::                        Un interfaz Maxima-Gnuplot.
+* dynamics::                    Gráficas de sistemas dinámicos y fractales.
 * eval_string::                 Expresiones de Maxima en formato de cadena.
 * f90::                         Traductor de Maxima fortran.
 * ggf::                         Expresión general de sucesiones.
 * impdiff::                     Derivadas implícitas.
 * interpol::                    Interpolación.
+* lbfgs::                       Paquete L-BFGS para minimización sin restricciones.
 * lindstedt::                   Paquete Lindstedt.
 * linearalgebra::               Funciones de álgebra lineal.
 * lsquares::                    Mínimos cuadrados.
@@ -116,9 +117,11 @@ Paquetes adicionales
 * opsubst::                     Utilidad para sustituciones.
 * orthopoly::                   Polinomios ortogonales.
 * plotdf::                      Gráficos de campos vectoriales.
+* romberg::                     Integración numérica por el método de Romberg.
 * simplex::                     Programación lineal.
 * simplification::              Reglas y funciones de simplificación.
 * solve_rec::                   Recurrencias lineales.
+* stats::                       Inferencia estadística.
 * stirling::                    Fórmula de Stirling.
 * stringproc::                  Procesamiento de cadenas.
 * unit::                        Unidades físicas y dimensiones.
@@ -137,12 +140,10 @@ Introducción
 
 Fallos
 
-* Introducción a la detección e informe de fallos::
 * Definiciones para la detección e informe de fallos::
 
 Ayuda
 
-* Introducción a la Ayuda::
 * Lisp y Maxima::
 * Recolector de Basura::
 * Documentación::
@@ -157,10 +158,11 @@ Operadores
 
 * n-arios::
 * no-fijos::
-* operador::
 * postfijos::
 * prefijos::
-* Definiciones para Operadores::
+* Operadores aritméticos::
+* Operadores relacionales::
+* Operadores generales::
 
 Expresiones
 
@@ -183,7 +185,6 @@ Gráficos
 
 Entrada y Salida
 
-* Introducción a  Entrada y Salida::
 * Comentarios::
 * Archivos::
 * Definiciones para Entrada y Salida::
@@ -217,7 +218,6 @@ Trigonometría
 Funciones Especiales
 
 * Introducción a las Funciones Especiales::
-* specint::
 * Definiciones para las Funciones Especiales::
 
 Funciones elípticas
@@ -245,6 +245,7 @@ Ecuaciones
 
 Ecuaciones Diferenciales
 
+* Introducción a las Ecuaciones Diferenciales::
 * Definiciones para Ecuaciones Diferenciales::
 
 Métodos numéricos
@@ -253,10 +254,6 @@ Métodos numéricos
 * Series de Fourier::
 * Definiciones para los métodos numéricos::
 * Definiciones para las series de Fourier::
-
-Estadística
-
-* Definiciones para Estadística::
 
 Arrays
 
@@ -359,10 +356,6 @@ bode
 
 * Definiciones para bode::
 
-cholesky
-
-* Definiciones para cholesky::
-
 descriptive
 
 * Introducción a descriptive::
@@ -380,6 +373,16 @@ distrib
 * Introducción a distrib::
 * Definiciones para distribuciones continuas::
 * Definiciones para distribuciones discretas::
+
+draw
+
+* Introducción a draw::
+* Definiciones para draw::
+
+dynamics
+
+* Introducción a dynamics::
+* Definiciones para dynamics::
 
 eval_string
 
@@ -401,6 +404,11 @@ interpol
 
 * Introducción a interpol::
 * Definiciones para interpol::
+
+lbfgs
+
+* Introducción a lbfgs::
+* Definiciones para lbfgs::
 
 lindstedt
 
@@ -441,6 +449,10 @@ plotdf
 
 * Definiciones para plotdf::
 
+romberg
+
+* Definiciones para romberg::
+
 simplex
 
 * Introducción a simplex::
@@ -455,6 +467,13 @@ solve_rec
 
 * Introducción a solve_rec::
 * Definiciones para solve_rec::
+
+stats
+
+* Introducción a stats::
+* Definiciones para inference_result::
+* Definiciones para stats::
+* Definiciones para distribuciones especiales::
 
 stirling
 
@@ -642,39 +661,27 @@ File: maxima.info,  Node: Detección e informe de fallos,  Next: Ayuda,  Prev: I
 
 * Menu:
 
-* Introducción a la detección e informe de fallos::
 * Definiciones para la detección e informe de fallos::
 
 
-File: maxima.info,  Node: Introducción a la detección e informe de fallos,  Next: Definiciones para la detección e informe de fallos,  Up: Detección e informe de fallos
+File: maxima.info,  Node: Definiciones para la detección e informe de fallos,  Up: Detección e informe de fallos
 
-2.1 Introducción a la detección e informe de fallos
-===================================================
-
-Como todos los grandes programas, Maxima contiene tanto bugs conocidos
-como desconocidos. Este capítulo describe las facilidades internas para
-ejecutar la suite de evaluación de Maxima (Maxima test suite) además de
-reportar nuevos bugs.
-
-
-File: maxima.info,  Node: Definiciones para la detección e informe de fallos,  Prev: Introducción a la detección e informe de fallos,  Up: Detección e informe de fallos
-
-2.2 Definiciones para la detección e informe de fallos
+2.1 Definiciones para la detección e informe de fallos
 ======================================================
 
  -- Función: run_testsuite ()
  -- Función: run_testsuite (<boolean>)
  -- Función: run_testsuite (<boolean>, <boolean>)
  -- Función: run_testsuite (<boolean>, <boolean>, <list>)
-     Ejecuta la suite de evaluación de Maxima. Los tests que producen
+     Ejecuta el conjunto de pruebas de Maxima. Los tests que producen
      las respuestas deseadas son considerados como "pruebas superadas",
      como los tests que no producen las respuestas deseadas, son
-     marcados como bugs conocidos.
+     marcados como fallos conocidos.
 
      `run_testsuite ()' muestra sólo los test que no pasaron la prueba.
 
-     `run_testsuite (true)' muestra los tests que son marcados como bugs
-     conocidos, además de fallos.
+     `run_testsuite (true)' muestra los tests que son marcados como
+     fallos conocidos, además de fallos.
 
      `run_testsuite (true, true)' muestra todos los tests.
 
@@ -709,13 +716,13 @@ File: maxima.info,  Node: Definiciones para la detección e informe de fallos,  
 
  -- Función: bug_report ()
      Imprime las versiones de Maxima y de Lisp y proporciona un enlace
-     a la página web de reporte de bugs del proyecto Maxima.  La
+     a la página web sobre informe de fallos del proyecto Maxima.  La
      información respecto a las versiones es la misma que reporta la
      función `build_info'.
 
-     Cuando un bug es reportado, es de gran ayuda que se copie la
+     Cuando se informa sobre un fallo, es de gran ayuda que se copie la
      información relacionada con la versión de Maxima y de Lisp usada,
-     dentro del reporte de bug.
+     dentro del propio informe.
 
      `bug_report' retorna una cadena vacía `""'.
 
@@ -733,56 +740,15 @@ File: maxima.info,  Node: Ayuda,  Next: Línea de Comandos,  Prev: Detección e 
 
 * Menu:
 
-* Introducción a la Ayuda::
 * Lisp y Maxima::
 * Recolector de Basura::
 * Documentación::
 * Definiciones para la Ayuda::
 
 
-File: maxima.info,  Node: Introducción a la Ayuda,  Next: Lisp y Maxima,  Prev: Ayuda,  Up: Ayuda
+File: maxima.info,  Node: Lisp y Maxima,  Next: Recolector de Basura,  Prev: Ayuda,  Up: Ayuda
 
-3.1 Introducción a la Ayuda
-===========================
-
-El comando de ayuda más útil es `describe', el cual es invocado por el
-signo de cierre de interrogación `?' a través del prompt interactivo.
-`? foo' (con espacio entre `?' y `foo') es equivalente a `describe
-("foo")', donde `foo' es el nombre o parte del nombre de alguna función
-o tema; entonces `describe' encontrará todos los documentos que
-contengan la cadena `foo' en sus títulos y los desplegará como opciones.
-Si hay más de una opción, Maxima preguntará al usuario para que
-seleccione las opciones que desee consultar.
-
-     (%i1) ? integ
-      0: (maxima.info)Introduction to Elliptic Functions and Integrals.
-      1: Definitions for Elliptic Integrals.
-      2: Integration.
-      3: Introduction to Integration.
-      4: Definitions for Integration.
-      5: askinteger :Definitions for Simplification.
-      6: integerp :Definitions for Miscellaneous Options.
-      7: integrate :Definitions for Integration.
-      8: integrate_use_rootsof :Definitions for Integration.
-      9: integration_constant_counter :Definitions for Integration.
-     Enter space-separated numbers, `all' or `none': 7 8
-
-     Info from file /use/local/maxima/doc/info/maxima.info:
-      - Function: integrate (expr, var)
-      - Function: integrate (expr, var, a, b)
-          Attempts to symbolically compute the integral of `expr' with
-          respect to `var'.  `integrate (expr, var)' is an indefinite
-          integral, while `integrate (expr, var, a, b)' is a definite
-          integral, [...]
-
-   En este ejemplo las opciones 7 y 8 fueron seleccionadas.  Todas o
-ninguna de las opciones pueden ser seleccionadas escribiendo `all' o
-`none', las cuales pueden ser abrevidas por `a' o `n', respectivamente.
-
-
-File: maxima.info,  Node: Lisp y Maxima,  Next: Recolector de Basura,  Prev: Introducción a la Ayuda,  Up: Ayuda
-
-3.2 Lisp y Maxima
+3.1 Lisp y Maxima
 =================
 
 Maxima fue escrito en Lisp, y es muy fácil tener acceso a funciones y
@@ -828,13 +794,13 @@ mayúsculas en identificadores, mientras que Lisp no.  Existen algunas
 reglas que gobiernan la traducción de nombres entre Lisp y Maxima.
 
   1. Un identificador Lisp que no se encuentra encerrado en barras
-     verticales corresponde a un identificador Maxima in minúscula.
-     Que el idenficador Lisp este en mayúscula, minúscula o una
-     combinación de las dos, no afecta en nada.  E.g., los
+     verticales corresponde a un identificador Maxima en minúscula.
+     Que el idenficador Lisp esté en mayúscula, minúscula o una
+     combinación de ambas, no afecta en nada.  Por ejemplo, los
      identificadores Lisp `$foo', `$FOO', y `$Foo', todos corresponden
      al identificador Maxima `foo'.
 
-  2. Unn identificador Lisp el cual se encuentre todo en mayúscula o
+  2. Un identificador Lisp el cual se encuentre todo en mayúscula o
      todo en minúscula y encerrado entre barras verticales corresponde
      a un identicador Maxima con el caso contrario.  Esto es, de
      mayúsculas cambia a minúsculas y de minúsculas cambia a mayúsculas.
@@ -882,7 +848,7 @@ cuales se listan a continuación:
 
 File: maxima.info,  Node: Recolector de Basura,  Next: Documentación,  Prev: Lisp y Maxima,  Up: Ayuda
 
-3.3 Recolector de Basura
+3.2 Recolector de Basura
 ========================
 
 La computación simbólica tiende a crear una buena cantidad de basura, y
@@ -891,16 +857,16 @@ algunos programas.
 
    Bajo GCL (GNU Common Lisp), en los sistemas UNIX donde la llamada al
 sistema mprotect esta disponible (incluyendo SUN OS 4.0 y algunas
-variantes de BSD) un recolector de basura estratificado está disponibe.
-Estos límites de colección para memoria virtual, han sido escritos
-recientemente. Mire la documentación de GCL bajo ALLOCATE y GBC.  En el
-nivel lisp haga (setq si::*notify-gbc* t) eso le ayudará a determinar
-cuales áreas necesitan más espacio.
+variantes de BSD) un recolector de basura estratificado está
+disponible. Estos límites de colección para memoria virtual, han sido
+escritos recientemente. Mire la documentación de GCL bajo ALLOCATE y
+GBC.  En el nivel lisp haga (setq si::*notify-gbc* t) eso le ayudará a
+determinar cuales áreas necesitan más espacio.
 
 
 File: maxima.info,  Node: Documentación,  Next: Definiciones para la Ayuda,  Prev: Recolector de Basura,  Up: Ayuda
 
-3.4 Documentación
+3.3 Documentación
 =================
 
 El manual en línea del usuario de Maxima puede ser visto en diferentes
@@ -933,7 +899,7 @@ Por ejemplo:
 
 File: maxima.info,  Node: Definiciones para la Ayuda,  Prev: Documentación,  Up: Ayuda
 
-3.5 Definiciones para la Ayuda
+3.4 Definiciones para la Ayuda
 ==============================
 
  -- Función: demo (<archivo>)
@@ -1020,23 +986,38 @@ File: maxima.info,  Node: Definiciones para la Ayuda,  Prev: Documentación,  Up
           _
           (%i13)
 
- -- Función: describe (<cadena>)
-     Encuentra todos los documentos los cuales contengan <cadena> es
-     sus títulos y los despliega como opciones.  Si hay más de una
-     opción, Maxima preguntará al usuario para que seleccione las
-     opciones que desee consultar.  En el prompt interactivo, `? foo'
-     (con espacio entre `?' y `foo') es equivalente a  `describe
-     ("foo")'.
+ -- Función: describe (<string>)
+ -- Función: describe (<string>, exact)
+ -- Función: describe (<string>, inexact)
+     La sentencia `describe(<string>)' equivale a `describe(<string>,
+     exact)'.
 
-     `describe ("")' produce una lista de todos los temas documentados
-     en el manual en línea.
+     La sentencia `describe(<string>, exact)' encuentra el elemento, si
+     existe, cuyo título coincide exactamente con <string> (ignorando
+     la diferencia entre mayúsculas y minúsculas).
 
-     `describe' no evalua su argumento.  `describe' siempre retorna
-     `false'.
+     La sentencia `describe(<string>, inexact)' encuentra todos los
+     elementos documentados que contengan <string> en sus títulos.
+
+     Si hay más de una opción, Maxima preguntará al usuario para que
+     seleccione las opciones que desee consultar.
+
+     La sentencia `? foo' (con espacio entre `?' y `foo') equivale a
+     `describe("foo", exact)', mientras que `?? foo' equivale a
+     `describe("foo", inexact)'.
+
+     `describe ("", inexact)' produce una lista de todos los temas
+     documentados en el manual en línea.
+
+     `describe' no evalúa su argumento. La función `describe' devuelve
+     `true' si encuentra la documentación solicitada y `false' en caso
+     contrario.
+
+     Véase también *Note Documentación::.
 
      Ejemplo:
 
-          (%i1) ? integ
+          (%i1) ?? integ
            0: (maxima.info)Introduction to Elliptic Functions and Integrals.
            1: Definitions for Elliptic Integrals.
            2: Integration.
@@ -1057,9 +1038,9 @@ File: maxima.info,  Node: Definiciones para la Ayuda,  Prev: Documentación,  Up
                integral, while `integrate (expr, var, a, b)' is a definite
                integral, [...]
 
-     En este ejemplo las opciones 7 y 8 fueron seleccionadas.  Todas o
+     En este ejemplo fueron seleccionadas las opciones 7 y 8 .  Todas o
      ninguna de las opciones pueden ser seleccionadas escribiendo `all'
-     o `none', las cuales pueden ser abrevidas por `a' o `n',
+     o `none', las cuales pueden ser abreviadas por `a' o `n',
      respectivamente.
 
 
@@ -1076,7 +1057,7 @@ File: maxima.info,  Node: Definiciones para la Ayuda,  Prev: Documentación,  Up
 
      `example' no evalua su argumento.  `example' retorna `done' a
      menos que haya un error o que no haya argumento, en cuyo caso
-     `example' retornará la lista de todos los temas conocidos.
+     `example' devolverá la lista de todos los temas conocidos.
 
      Ejemplos:
 
@@ -1109,13 +1090,13 @@ File: maxima.info,  Node: Introducción a la Línea de Comandos,  Next: Definici
 4.1 Introducción a la Línea de Comandos
 =======================================
 
- -- Operador: "'"
-     El operador comilla sencilla `'' evita la evaluación.
+ -- Operador: '
+     El operador comilla simple `'' evita la evaluación.
 
-     Aplicado a un símbolo, la comilla sencilla evita la evaluación del
+     Aplicado a un símbolo, la comilla simple evita la evaluación del
      símbolo.
 
-     Aplicado a la llamada de una función, la comilla sencilla evita la
+     Aplicado a la llamada de una función, la comilla simple evita la
      evaluación de la función llamada, aunque los argumentos de la
      función son evaluados (siempre y cuando la evaluación no se evite
      de otra manera).  El resultado es una forma de nombre de la
@@ -1138,7 +1119,7 @@ File: maxima.info,  Node: Introducción a la Línea de Comandos,  Next: Definici
 
      Ejemplos:
 
-     Aplicado a un símbolo, la comilla sencilla evita la evaluación del
+     Aplicado a un símbolo, la comilla simple evita la evaluación del
      símbolo.
 
           (%i1) aa: 1024;
@@ -1151,7 +1132,7 @@ File: maxima.info,  Node: Introducción a la Línea de Comandos,  Next: Definici
           (%i4) ''%;
           (%o4)                        1048576
 
-     Aplicado a la llamada de una función, la comilla sencilla evita la
+     Aplicado a la llamada de una función, la comilla simple evita la
      evaluación de la función llamada, aunque los argumentos de la
      función son evaluados (siempre y cuando la evaluación no se evite
      de otra manera).  El resultado es una forma de nombre de la
@@ -1193,7 +1174,7 @@ File: maxima.info,  Node: Introducción a la Línea de Comandos,  Next: Definici
           (%i5) ''%;
           (%o5)                          51
 
-     La comilla sencilla no evita la simplificación.
+     La comilla simple no evita la simplificación.
 
           (%i1) sin (17 * %pi) + cos (17 * %pi);
           (%o1)                          - 1
@@ -1395,7 +1376,7 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
                con otras variables interruptor y causan en <expr> que
                sea resimplificada sin ser reevaluada.
 
-             * `nouns' causa que la evaluación de las formas de nombre
+             * `nouns' causa la evaluación de las formas nominales
                (típicamente funciones sin evaluar tales como
                `'integrate' or `'diff') en `expr'.
 
@@ -1409,7 +1390,7 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
                calculadas en <expr> conserven su determinante fuera de
                la inversa, en vez de que divida a cada elemento.
 
-             * `diif' realiza todas las diferenciaciones indicadas en
+             * `diff' realiza todas las diferenciaciones indicadas en
                <expr>.
 
              * `derivlist (<x>, <y>, <z>, ...)' realiza sólo las
@@ -1727,8 +1708,8 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
      (outlabels)' elimina únicamente las asignaciones de las etiquetas
      de salida que comienzan con el valor actual de `outchar'.
      Finalmente, `kill (linelabels)' elimina únicamente las asignaciones
-     las asignaciones de las etiquetas de las expresiones intermedias
-     que comienzan con el valor actual de `linechar'.
+     de las etiquetas de las expresiones intermedias que comienzan con
+     el valor actual de `linechar'.
 
      La instrucción `kill (<n>)', siendo <n> un entero, elimina las
      asignaciones de las últimas <n> etiquetas, tanto de entrada como
@@ -1767,7 +1748,7 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
      y `remrule' eliminan propiedades específicas.
 
      `kill' siempre devuelve `done', incluso cuando alguno de sus
-     argumento carecía de asignación previa.
+     argumentos carecía de asignación previa.
 
 
  -- Función: labels (<symbol>)
@@ -1799,7 +1780,7 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
      vez de un `;' (punto y coma).  En este caso, se crea la etiqueta
      de salida y se le asigna el resultado, aunque éste no se muestre;
      aún así, la etiqueta puede ser referenciada de la misma forma que
-     se hace con aquéllas cuyos resultados sí son muestrados.
+     se hace con aquéllas cuyos resultados sí son mostrados.
 
      Véanse también: `%', `%%' y `%th'.
 
@@ -1833,7 +1814,7 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
      les asignan los resultados; además, las etiquetas no se incorporan
      a la lista `labels'.  Puesto que a las etiquetas no se les asignan
      resultados, el colector de basura puede recuperar la memoria
-     ocupada por los éstos.
+     ocupada por éstos.
 
      En el caso contrario, a las etiquetas de entrada y salida se les
      asignan los resultados correspondientes y son añadidas a la lista
@@ -1907,18 +1888,17 @@ File: maxima.info,  Node: Definiciones para la Línea de Comandos,  Prev: Introd
 
      `playback (grind)' muestra las expresiones de entrada en el mismo
      formato como la función `grind'.  Las expresiones de salida no se
-     ven afectadas por la opción `grind'.  Vea `grind'.
-
-     Los argumentos pueden ser combinandos, e.g., `playback ([5, 10],
-     grind, time, slow)'.
+     ven afectadas por la opción `grind'.  Vea `grind'.  Los argumentos
+     pueden ser combinados, por ejemplo, `playback ([5, 10], grind,
+     time, slow)'.
 
 
  -- Función: printprops (<a>, <i>)
  -- Función: printprops ([<a_1>, ..., <a_n>], <i>)
  -- Función: printprops (all, <i>)
      Muestra la propiedad con el indicador <i> asociado con el átomo
-     <a>. <a> pueder ser también una lista de átomos o el átomo `all'
-     en cuyo caso todos los átomos a los cuales se les haya dado esa
+     <a>. <a> puede ser también una lista de átomos o el átomo `all' en
+     cuyo caso todos los átomos a los cuales se les haya dado esa
      propiedad serán usados.  Por ejemplo, `printprops ([f, g],
      atvalue)'. `printprops' es para propiedades que no pueden ser
      mostradas de otra manera, i.e. para `atvalue', `atomgrad',
@@ -2018,10 +1998,11 @@ File: maxima.info,  Node: Operadores,  Next: Expresiones,  Prev: Línea de Coman
 
 * n-arios::
 * no-fijos::
-* operador::
 * postfijos::
 * prefijos::
-* Definiciones para Operadores::
+* Operadores aritméticos::
+* Operadores relacionales::
+* Operadores generales::
 
 
 File: maxima.info,  Node: n-arios,  Next: no-fijos,  Prev: Operadores,  Up: Operadores
@@ -2038,10 +2019,10 @@ declaradas para ser `nary'. Si se hace `declare(J,nary);', se esta
 diciendo al simplificador que haga la reducción de `j(j(a,b),j(c,d))' a
 `j(a, b, c, d)'.
 
-   Funciones relacionadas: `syntax'.
+   Véase también `syntax'.
 
 
-File: maxima.info,  Node: no-fijos,  Next: operador,  Prev: n-arios,  Up: Operadores
+File: maxima.info,  Node: no-fijos,  Next: postfijos,  Prev: n-arios,  Up: Operadores
 
 5.2 no-fijos
 ============
@@ -2054,20 +2035,12 @@ interrupción de Maxima, "exit" se está comportando de forma similar a
 un operador no-fijo (`nofix'). La función `nofix("x")' es una extensión
 de la función syntax la cual declara a x como un operador `nofix'.
 
-   Funciones relacionadas `syntax'.
+   Véase también `syntax'.
 
 
-File: maxima.info,  Node: operador,  Next: postfijos,  Prev: no-fijos,  Up: Operadores
+File: maxima.info,  Node: postfijos,  Next: prefijos,  Prev: no-fijos,  Up: Operadores
 
-5.3 operadores
-==============
-
-Véase `operadores'.
-
-
-File: maxima.info,  Node: postfijos,  Next: prefijos,  Prev: operador,  Up: Operadores
-
-5.4 postfijos
+5.3 postfijos
 =============
 
 Un operador de tipo `postfix' (postfijo), al contrario de los de tipo
@@ -2077,12 +2050,12 @@ cadena de entrada, como en `3!'. La función `postfix("x")' es una
 extensión de la función syntax para declarar a x como un operador
 `postfix'.
 
-   Funciones relacionadas: `syntax'.
+   Véase también `syntax'.
 
 
-File: maxima.info,  Node: prefijos,  Next: Definiciones para Operadores,  Prev: postfijos,  Up: Operadores
+File: maxima.info,  Node: prefijos,  Next: Operadores aritméticos,  Prev: postfijos,  Up: Operadores
 
-5.5 prefijos
+5.4 prefijos
 ============
 
 Un operador de tipo `prefix' (prefijo, en Maxima prefix) indica una
@@ -2091,16 +2064,241 @@ después de una ocurrencia del operador. La función `prefix("x")' es una
 extensión de la función syntax para declarar a x como un operador de
 `prefix'.
 
-   Funciones relacionadas: `syntax'.
+   Véase también `syntax'.
 
 
-File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Operadores
+File: maxima.info,  Node: Operadores aritméticos,  Next: Operadores relacionales,  Prev: prefijos,  Up: Operadores
 
-5.6 Definiciones para Operadores
-================================
+5.5 Operadores aritméticos
+==========================
+
+ -- Operador: +
+ -- Operador: -
+ -- Operador: *
+ -- Operador: /
+ -- Operador: ^
+     Los símbolos `+' `*' `/' y `^' representan la suma, resta,
+     multiplicación, división y exponenciación, respectivamente.  Los
+     nombres de estos operadores son `"+"' `"*"' `"//"' y `"^"', que
+     pueden aparecer allá donde se requiera el nombre de una función u
+     operador.
+
+     Los símbolos `+' y `-' representan el positivo y negativo unario,
+     siendo los nombres de estos operadores `"+"' y `"-"',
+     respectivamente.
+
+     En Maxima, la resta `a - b' se representa como la suma `a + (- b)'.
+     Expresiones tales como `a + (- b)' se muestran como restas. Maxima
+     reconoce `"-"' tan solo como el operador de negación unaria, no
+     como el nombre del operador de resta binaria.
+
+     La división `a / b' se representa en maxima como la multiplicación
+     `a * b^(- 1)'. Expresiones tales como `a * b^(- 1)' se muestran
+     como divisiones. Maxima reconoce `"//"' como el nombre del operador
+     de división.
+
+     La suma y la multiplicación son operadores conmutativos n-arios. La
+     división y la exponenciación son operadores no conmutativos
+     binarios.
+
+     Maxima ordena los operandos de los operadores conmutativos para
+     formar lo que se conoce como representación canónica. A efectos de
+     almacenamiento interno, la ordenación viene determinada por
+     `orderlessp'.  A efectos de presentación de las expresiones, la
+     ordenación de la suma la determina `ordergreatp', y en el caso de
+     la multiplicación, la ordenación coincide con la del
+     almacenamiento interno.
+
+     Los cálculos aritméticos se realizan con números literales
+     (enteros, racionales, decimales ordinarios y decimales grandes).
+     Excepto en el caso de la exponenciación, todas las operaciones
+     aritméticas con números dan lugar a resultados en forma de
+     números. La exponenciación da como resultado un número si alguno
+     de los operandos es decimal ordinario o grande (bigfloat), o si el
+     resultado es un entero o racional; en caso contrario, la
+     exponenciación puede expresarse como una raíz cuadrada (`sqrt'),
+     como otra potencia, o simplemente no sufre cambios.
+
+     Se produce contagio de los decimales en coma flotante en los
+     cálculos aritméticos: si algún operando es un número decimal
+     grande (bigfloat), el resultado será también un número decimal
+     grande; no habiendo decimales grandes, pero sí ordinarios, el
+     resultado srá también un decimal ordinario; de no haber operandos
+     decimales, el resultado será un número racional o entero.
+
+     Los cálculos aritméticos son simplificaciones, no evaluaciones,
+     por lo que se realizan en expresiones comentadas.
+
+     Las operaciones aritméticas se aplican elemento a elemento en el
+     caso de las listas cuando la variable global `listarith' vale
+     `true'; pero en el caso de las matrices, siempre se aplican
+     elemento a elemento.  Cuando un operando es una lista o matriz y
+     otro operando lo es de otro tipo cualquiera, éste se combina con
+     cada uno de los elementos de la lista o matriz.
+
+     Ejemplos:
+
+     La suma y la multiplicación son operadores conmutativos n-arios.
+     Maxima ordena los operandos para formar lo que se conoce como
+     representación canónica. Los nombres de estos operadores son `"+"'
+     y `"-"'.
+
+          (%i1) c + g + d + a + b + e + f;
+          (%o1)               g + f + e + d + c + b + a
+          (%i2) [op (%), args (%)];
+          (%o2)              [+, [g, f, e, d, c, b, a]]
+          (%i3) c * g * d * a * b * e * f;
+          (%o3)                     a b c d e f g
+          (%i4) [op (%), args (%)];
+          (%o4)              [*, [a, b, c, d, e, f, g]]
+          (%i5) apply ("+", [a, 8, x, 2, 9, x, x, a]);
+          (%o5)                    3 x + 2 a + 19
+          (%i6) apply ("*", [a, 8, x, 2, 9, x, x, a]);
+                                           2  3
+          (%o6)                       144 a  x
+
+     La división y la exponenciación son operadores no conmutativos
+     binarios.  Los nombres de estos operadores son `"//"' y `"^"'.
+
+          (%i1) [a / b, a ^ b];
+                                        a   b
+          (%o1)                        [-, a ]
+                                        b
+          (%i2) [map (op, %), map (args, %)];
+          (%o2)              [[//, ^], [[a, b], [a, b]]]
+          (%i3) [apply ("//", [a, b]), apply ("^", [a, b])];
+                                        a   b
+          (%o3)                        [-, a ]
+                                        b
+
+     La resta y la división se representan internamente en términos de
+     la suma y multiplicación, respectivamente.
+
+          (%i1) [inpart (a - b, 0), inpart (a - b, 1), inpart (a - b, 2)];
+          (%o1)                      [+, a, - b]
+          (%i2) [inpart (a / b, 0), inpart (a / b, 1), inpart (a / b, 2)];
+                                             1
+          (%o2)                       [*, a, -]
+                                             b
+
+     Los cálculos se realizan con números literales.  Se produce el
+     contagio de los números decimales.
+
+          (%i1) 17 + b - (1/2)*29 + 11^(2/4);
+                                                 5
+          (%o1)                   b + sqrt(11) + -
+                                                 2
+          (%i2) [17 + 29, 17 + 29.0, 17 + 29b0];
+          (%o2)                   [46, 46.0, 4.6b1]
+
+     Los cálculos aritméticos son una simplificación, no una evaluación.
+
+          (%i1) simp : false;
+          (%o1)                         false
+          (%i2) '(17 + 29*11/7 - 5^3);
+                                        29 11    3
+          (%o2)                    17 + ----- - 5
+                                          7
+          (%i3) simp : true;
+          (%o3)                         true
+          (%i4) '(17 + 29*11/7 - 5^3);
+                                          437
+          (%o4)                         - ---
+                                           7
+
+     Los cálculos aritméticos se realizan elemento a elemento en las
+     listas (según sea el valor de `listarith') y matrices.
+
+          (%i1) matrix ([a, x], [h, u]) - matrix ([1, 2], [3, 4]);
+                                  [ a - 1  x - 2 ]
+          (%o1)                   [              ]
+                                  [ h - 3  u - 4 ]
+          (%i2) 5 * matrix ([a, x], [h, u]);
+                                    [ 5 a  5 x ]
+          (%o2)                     [          ]
+                                    [ 5 h  5 u ]
+          (%i3) listarith : false;
+          (%o3)                         false
+          (%i4) [a, c, m, t] / [1, 7, 2, 9];
+                                    [a, c, m, t]
+          (%o4)                     ------------
+                                    [1, 7, 2, 9]
+          (%i5) [a, c, m, t] ^ x;
+                                                x
+          (%o5)                     [a, c, m, t]
+          (%i6) listarith : true;
+          (%o6)                         true
+          (%i7) [a, c, m, t] / [1, 7, 2, 9];
+                                        c  m  t
+          (%o7)                     [a, -, -, -]
+                                        7  2  9
+          (%i8) [a, c, m, t] ^ x;
+                                    x   x   x   x
+          (%o8)                   [a , c , m , t ]
+
+
+ -- Operador: **
+     Operador de exponenciación.  Maxima identifica `**' con el
+     operador `^' en la entrada de expresiones, pero se representa como
+     `^' en las salidas no formateadas (`display2d=false'), o colocando
+     un superíndice en la salida formateada (`display2d=true').
+
+     La función `fortran' representa el operador de exponenciación con
+     `**', tanto si se ha introducido como `**' o como `^'.
+
+     Ejemplos:
+
+          (%i1) is (a**b = a^b);
+          (%o1)                         true
+          (%i2) x**y + x^z;
+                                        z    y
+          (%o2)                        x  + x
+          (%i3) string (x**y + x^z);
+          (%o3)                        x^z+x^y
+          (%i4) fortran (x**y + x^z);
+                x**z+x**y
+          (%o4)                         done
+
+
+
+File: maxima.info,  Node: Operadores relacionales,  Next: Operadores generales,  Prev: Operadores aritméticos,  Up: Operadores
+
+5.6 Operadores relacionales
+===========================
+
+ -- Operator: <
+ -- Operator: <=
+ -- Operator: >=
+ -- Operator: >
+
+
+File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales,  Up: Operadores
+
+5.7 Operadores generales
+========================
+
+ -- Operator: ^^
+     Operador de exponenciación no conmutativa.  Se trata del operador
+     de exponenciación correspondiente a la multiplicación no
+     conmutativa `.', del mismo modo que el operador de exponenciación
+     ordinario `^' se corresponde con la multiplicación conmutativa `*'.
+
+     La exponenciación no conmutativa se representa como `^^' en las
+     salidas no formateadas (`display2d=false'), o colocando un
+     superíndice entre ángulos (`< >') en la salida formateada
+     (`display2d=true').
+
+     Ejemplos:
+
+          (%i1) a . a . b . b . b + a * a * a * b * b;
+                                  3  2    <2>    <3>
+          (%o1)                  a  b  + a    . b
+          (%i2) string (a . a . b . b . b + a * a * a * b * b);
+          (%o2)                  a^3*b^2+a^^2 . b^^3
+
 
  -- Operador: !
-     El operador factorial.  Para cualquier número complejo `x'
+     El operador factorial. Para cualquier número complejo `x'
      (incluyendo enteros, racionales  y números reales) excepto para
      enteros negativos, `x!' se define como `gamma(x+1)'.
 
@@ -2115,7 +2313,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
      Las variables `factlim', `minfactorial' y  `factcomb' controlan la
      simplificación de expresiones que contienen factoriales.
 
-     Las funciones `gamma', `bffac' y `cbffac' son variaciones la
+     Las funciones `gamma', `bffac' y `cbffac' son variaciones de la
      función gamma.  `makegamma' substituye a `gamma' para factoriales
      y funciones relacionadas.
 
@@ -2135,7 +2333,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
           ejemplo `%e') o una expresión general no es simplificado.
 
           Sin embargo puede ser posible simplificar el factorial
-          después evaluar el operando.
+          después de evaluar el operando.
 
                (%i1) [(%i + 1)!, %pi!, %e!, (cos(1) + sin(1))!];
                (%o1)      [(%i + 1)!, %pi!, %e!, (sin(1) + cos(1))!]
@@ -2173,7 +2371,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
 
      Para un entero par (o impar) `n', `n!' se evalua el producto de
      todos los enteros pares (o impares) consecutivos desde 2 (o 1) por
-     `n'inclusive.
+     `n' inclusive.
 
      Para un argumento `n' el cual no es un número entero, punto
      flotante o racional, `n!!' produce una forma de nombre `genfact
@@ -2316,8 +2514,66 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
 
 
  -- Operador: :=
-     El operador de definición de funciones. Por ejemplo,
-     `f(x):=sin(x)' define  una función `f'.
+     El operador de definición de funciones.  La expresión `<f>(<x_1>,
+     ..., <x_n>) := <expr>' define una función de nombre <f> con
+     argumentos <x_1>, ..., <x_n> y cuerpo <expr>.  El operador `:=' no
+     evalúa el cuerpo de la función (a menos que se indique lo
+     contrario mediante el operador comilla-comilla `''').  La función
+     así definida puede ser una función ordinaria de Maxima (con
+     argumentos encerrados entre paréntesis) o una función array (con
+     argumentos encerrados entre corchetes).
+
+     Cuando el último o único argumento <x_n> es una lista de un solo
+     elemento, la función definida por `:=' acepta un número variable
+     de argumentos. Los valores de los argumentos se asignan uno a uno
+     a los argumentos formales <x_1>, ..., <x_(n - 1)>, y cualesquiera
+     otros valores de argumentos, si existen, se asignan a <x_n> en
+     forma de lista.
+
+     Todas las definiciones de funciones aparecen en el mismo espacio de
+     nombres; definiendo una función `f' dentro de otra función `g' no
+     limita el alcance de `f' a `g'.
+
+     Si un argumento formal <x_k> es un símbolo afectado por el
+     operador comilla (expresión nominal), la función definida por `:='
+     no evalúa el correspondiente valor de argumento.  En cualquier
+     otro caso, los argumentos que se pasan son evaluados.
+
+     Véanse también `define' y `::='.
+
+     Ejemplos:
+
+     `:=' no evalúa el cuerpo de la función (a menos que se indique lo
+     contrario mediante el operador comilla-comilla `''').
+
+          (%i1) expr : cos(y) - sin(x);
+          (%o1)                    cos(y) - sin(x)
+          (%i2) F1 (x, y) := expr;
+          (%o2)                   F1(x, y) := expr
+          (%i3) F1 (a, b);
+          (%o3)                    cos(y) - sin(x)
+          (%i4) F2 (x, y) := ''expr;
+          (%o4)              F2(x, y) := cos(y) - sin(x)
+          (%i5) F2 (a, b);
+          (%o5)                    cos(b) - sin(a)
+
+     La función así definida puede ser una función ordinaria de Maxima
+     o una función array.
+
+          (%i1) G1 (x, y) := x.y - y.x;
+          (%o1)               G1(x, y) := x . y - y . x
+          (%i2) G2 [x, y] := x.y - y.x;
+          (%o2)                G2     := x . y - y . x
+                                 x, y
+
+     Cuando el último o único argumento <x_n> es una lista de un solo
+     elemento, la función definida por `:=' acepta un número variable
+     de argumentos.
+
+          (%i1) H ([L]) := apply ("+", L);
+          (%o1)                H([L]) := apply("+", L)
+          (%i2) H (a, b, c);
+          (%o2)                       c + b + a
 
 
  -- Operador: =
@@ -2415,6 +2671,30 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
           (%o2)                         true
 
 
+ -- Operador: and
+     Operador de conjunción lógica.  El operador `and' es un operador
+     infijo `n'-ario; sus operandos son expresiones booleanas y su
+     resultado es un valor lógico.
+
+     El operador `and' impone la evaluación (igual que `is') de uno o
+     más operandos, y puede forzar la evaluación de todos los operandos.
+
+     Los operandos se evalúan en el orden en el que aparecen; sólo
+     evalúa tantos operandos como sean necesarios para determinar el
+     resultado.  Si algún operando vale `false', el resultado es
+     `false' y ya no se evalúan más operandos.
+
+     La variable global `prederror' controla el comportamiento de `and'
+     cuando la evaluación de un operando no da como resultado `true' o
+     `false'; `and' imprime un mensaje de error cuando `prederror' vale
+     `true'.  Cuando los operandos devuelven un valor diferente a
+     `true' o `false' al ser evaluados, el resultado es una expresión
+     booleana.
+
+     El operador `and' no es conmutativo: `a and b' puede no ser igual
+     a `b and a' debido al tratamiento de operandos indeterminados.
+
+
  -- Operador: or
      Operador de disyunción lógica. El operador `or' es un operador
      infijo `n'-ario; sus operandos son expresiones booleanas y su
@@ -2431,7 +2711,9 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
      La variable global `prederror' controla el comportamiento de `or'
      cuando la evaluación de un operando no da como resultado `true' o
      `false'; `or' imprime un mensaje de error cuando `prederror' vale
-     `true'.  En caso contrario, `and' devuelve `unknown'.
+     `true'.  Cuando los operandos devuelven un valor diferente a
+     `true' o `false' al ser evaluados, el resultado es una expresión
+     booleana.
 
      El operador `or' no es conmutativo: `a or b' puede no ser igual a
      `b or a' debido al tratamiento de operandos indeterminados.
@@ -2448,7 +2730,9 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
      La variable global `prederror' controla el comportamiento de `not'
      cuando la evaluación de su operando no da como resultado `true' o
      `false'; `not' imprime un mensaje de error cuando `prederror' vale
-     `true'.  En caso contrario, `not' devuelve `unknown'.
+     `true'.  Cuando los operandos devuelven un valor diferente a
+     `true' o `false' al ser evaluados, el resultado es una expresión
+     booleana.
 
 
  -- Función: abs (<expr>)
@@ -2457,7 +2741,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
 
 
  -- Clave: additive
-     Si `declate(f,additive)' ha sido ejecutado, entonces:
+     Si `declare(f,additive)' ha sido ejecutado, entonces:
 
      (1) Si `f' es univariado, cada vez que el simplificador encuentre
      `f' aplicada a una suma, `f' será distribuida bajo esta suma. Por
@@ -2467,7 +2751,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
      definida como aditiva en el primer argumento de `f', como en el
      caso de `sum' o `integrate'. Por ejemplo, `f(h(x)+g(x),x)' se
      simplificará a `f(h(x),x)+f(g(x),x)'. Esta simplificación no
-     ocurre cuando `f' se aplia a expresiones de la forma
+     ocurre cuando `f' se aplica a expresiones de la forma
      `sum(x[i],i,lower-limit,upper-limit)'.
 
 
@@ -2642,11 +2926,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
      Además de `is', otros operadores evalúan `equal' y `notequal' a
      `true' o `false'; a saber, `if', `and', `or' y `not'.
 
-     La negación de `equal' es `notequal'.  Nótese que debido a las
-     reglas de evaluación de expresiones de tipo predicado (en concreto
-     debido a que `not <expr>' obliga a la evaluación previa de <expr>),
-     `not equal(<a>, <b>)' equivale a `is(notequal(<a>, <b>))', pero no
-     a `notequal(<a>, <b>)'.
+     La negación de `equal' es `notequal'.
 
      Ejemplos:
 
@@ -2681,9 +2961,7 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
           (%i7) ratsimp (x - y);
           (%o7)                         x - y
           (%i8) is (equal (x, y));
-          Maxima was unable to evaluate the predicate:
-          equal(x, y)
-           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%o8)                        unknown
           (%i9) is (x = y);
           (%o9)                         false
 
@@ -2709,10 +2987,8 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
 
      Otros operadores evalúan `equal' y `notequal' a  `true' o `false'.
 
-          (%i1) if equal (a, b) then FOO else BAR;
-          Maxima was unable to evaluate the predicate:
-          equal(a, b)
-           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i4) if equal (y, y - 1) then FOO else BAR;
+          (%o4)                          BAR
           (%i2) eq_1 : equal (x, x + 1);
           (%o2)                    equal(x, x + 1)
           (%i3) eq_2 : equal (y^2 + 2*y + 1, (y + 1)^2);
@@ -2779,11 +3055,6 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
  -- Función: notequal (<a>, <b>)
      Representa la negación de `equal (<a>, <b>)'.
 
-     Nótese que debido a las reglas de evaluación de expresiones de
-     tipo predicado (en concreto debido a que `not <expr>' obliga a la
-     evaluación previa de <expr>), `not equal(<a>, <b>)' equivale a
-     `is(notequal(<a>, <b>))', pero no a `notequal(<a>, <b>)'.
-
      Ejemplos:
 
           (%i1) equal (a, b);
@@ -2793,27 +3064,19 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
           (%i3) notequal (a, b);
           (%o3)                    notequal(a, b)
           (%i4) not equal (a, b);
-          Maxima was unable to evaluate the predicate:
-          equal(a, b)
-           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%o4)                    notequal(a, b)
           (%i5) maybe (notequal (a, b));
           (%o5)                        unknown
-          (%i6) maybe (not equal (a, b));
-          (%o6)                        unknown
-          (%i7) assume (a > b);
-          (%o7)                        [a > b]
-          (%i8) equal (a, b);
-          (%o8)                      equal(a, b)
-          (%i9) maybe (equal (a, b));
-          (%o9)                         false
-          (%i10) notequal (a, b);
-          (%o10)                   notequal(a, b)
-          (%i11) not equal (a, b);
-          (%o11)                        true
-          (%i12) maybe (notequal (a, b));
-          (%o12)                        true
-          (%i13) maybe (not equal (a, b));
-          (%o13)                        true
+          (%i6) assume (a > b);
+          (%o6)                        [a > b]
+          (%i7) equal (a, b);
+          (%o7)                      equal(a, b)
+          (%i8) maybe (equal (a, b));
+          (%o8)                         false
+          (%i9) notequal (a, b);
+          (%o9)                    notequal(a, b)
+          (%i10) maybe (notequal (a, b));
+          (%o10)                        true
 
 
  -- Operador: eval
@@ -3094,11 +3357,11 @@ File: maxima.info,  Node: Definiciones para Operadores,  Prev: prefijos,  Up: Op
  -- Función: rationalize (<expr>)
      Convierte todos los números en coma flotante de doble precisión y
      grandes (big float) presentes en una expresión <expr> de Maxima a
-     a sus formas racionales exactas equivalentes. Si el usuario no
-     está familiarizado con la representación binaria de números en
-     coma flotante, le puede extrañar que `rationalize (0.1)' no sea
-     igual que 1/10.  Este comportamiento no es único de Maxima, ya que
-     el número 1/10 en su forma binaria es periódico y no exacto.
+     sus formas racionales exactas equivalentes. Si el usuario no está
+     familiarizado con la representación binaria de números en coma
+     flotante, le puede extrañar que `rationalize (0.1)' no sea igual
+     que 1/10.  Este comportamiento no es único de Maxima, ya que el
+     número 1/10 en su forma binaria es periódico y no exacto.
 
           (%i1) rationalize (0.5);
                                           1
@@ -3664,8 +3927,8 @@ precedido de la barra invertida `\'.  Los caracteres numéricos que
 ocupen la segunda posición o posterior no necesitan ir precedidos de la
 barra invertida.
 
-   Un carácter especial puede declararse alfabético con la función
-`declare'.  Así declarado, no necesita ir precedido de la barra
+   Los caracteres pueden declararse como alfabéticos con la función
+`declare'.  Así declarados, no necesitan ir precedidos de la barra
 invertida en un identificador.  En principio, los caracteres
 alfabéticos son las letras de `A' a `Z' y `a' a `z', junto con  `%' y
 `_'.
@@ -3716,7 +3979,7 @@ File: maxima.info,  Node: Cadenas de caracteres,  Next: Desigualdades,  Prev: Id
 
 Las cadenas de caracteres deben ir acotadas por comillas dobles (`"')
 al ser introducidas en Maxima, siendo luego mostradas con o sin ellas,
-dependiendo del valor de la variable global `?stringdisp'.
+dependiendo del valor de la variable global `stringdisp'.
 
    Las cadenas pueden contener todo tipo de caracteres, incluyendo
 tabulaciones, caracteres de nueva línea y de retorno.  La secuencia
@@ -3760,11 +4023,11 @@ permiten trabajar con cadenas.
      characters in \
      this string.";
      (%o4) Ignore the line termination characters in this string.
-     (%i5) ?stringdisp : false;
+     (%i5) stringdisp : false;
      (%o5)                         false
      (%i6) s_1;
      (%o6)               This is a Maxima string.
-     (%i7) ?stringdisp : true;
+     (%i7) stringdisp : true;
      (%o7)                         true
      (%i8) s_1;
      (%o8)              "This is a Maxima string."
@@ -4161,7 +4424,8 @@ File: maxima.info,  Node: Definiciones para Expresiones,  Prev: Sintaxis,  Up: E
           escalares) > (constantes) > (números)
 
     `alphabetic'
-          Hace que Maxima considere a <a_i> como un carácter alfabético.
+          Indica a Maxima que reconozca todos los caracteres de la
+          cadena alfanumérica <a_i> como caracteres alfabéticos.
 
     `feature'
           Hace que Maxima considere a <a_i> como el nombre de una
@@ -4294,12 +4558,14 @@ File: maxima.info,  Node: Definiciones para Expresiones,  Prev: Sintaxis,  Up: E
      `mainvar'.
 
      Declaración en base a `alphabetic'.
-          (%i1) xx\~yy : 1729;
+          (%i1) xx\~yy\`\@ : 1729;
           (%o1)                         1729
-          (%i2) declare ("~", alphabetic);
+          (%i2) declare ("~`@", alphabetic);
           (%o2)                         done
-          (%i3) xx~yy + yy~xx + ~xx~~yy~;
-          (%o3)                ~xx~~yy~ + yy~xx + 1729
+          (%i3) xx~yy`@ + @yy`xx + `xx@@yy~;
+          (%o3)               `xx@@yy~ + @yy`xx + 1729
+          (%i4) listofvars (%);
+          (%o4)                  [@yy`xx, `xx@@yy~]
 
      Declaración en base a `feature'.
           (%i1) declare (FOO, feature);
@@ -4912,8 +5178,11 @@ File: maxima.info,  Node: Definiciones para Expresiones,  Prev: Sintaxis,  Up: E
      operador prefijo, infijo (binario o `n'-ario), postfijo, "bi-fijo"
      o "no-fijo" ("bi-fijo"  se refiere a un par de símbolos que
      encierran su o sus argumentos, y "no-fijo" es un operador que no
-     necesita argumentos).  En cualquier otro caso `op' devuelve un
-     símbolo.
+     necesita argumentos).  Si <expr> es la expresión de una función
+     subindicada, `op' devuelve la función subindicada; en cuyo caso el
+     valor devuelto no es un átomo.  En otro caso, <expr> es la
+     expresión de una función array u ordinaria, y entonces `op'
+     devuelve un símbolo.
 
      La función `op' observa el valor de la variable global `inflag'.
 
@@ -4923,7 +5192,7 @@ File: maxima.info,  Node: Definiciones para Expresiones,  Prev: Sintaxis,  Up: E
 
      Ejemplos:
 
-          (%i1) ?stringdisp: true$
+          (%i1) stringdisp: true$
           (%i2) op (a * b * c);
           (%o2)                          "*"
           (%i3) op (a * b + c);
@@ -4944,6 +5213,11 @@ File: maxima.info,  Node: Definiciones para Expresiones,  Prev: Sintaxis,  Up: E
           (%o10)                        "foo"
           (%i11) op (foo a);
           (%o11)                        "foo"
+          (%i12) op (F [x, y] (a, b, c));
+          (%o12)                        F
+                                         x, y
+          (%i13) op (G [u, v, w]);
+          (%o13)                          G
 
 
  -- Función: operatorp (<expr>, <op>)
@@ -5474,8 +5748,6 @@ File: maxima.info,  Node: Definiciones para Simplificación,  Prev: Simplificaci
 
 7.1 Definiciones para Simplificación
 ====================================
-
-* Menu:
 
  -- Variable del sistema: askexp
      Cuando se invoca a `asksign', la expresión que se va a analizar es
@@ -6020,160 +6292,167 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
      La variable `in_netmath' no afecta a `plot2d'.
 
 
- -- Función: openplot_curves (<list>, <rest_options>)
-     Toma una lista de curvas como
-          [[x1, y1, x2, y2, ...], [u1, v1, u2, v2, ...], ..]
-     o
-          [[[x1, y1], [x2, y2], ...], ...]
-     y las dibuja. Es similar a xgraph_curves, pero utiliza las rutinas
-     de "open plot".  Se le puede dar argumentos adicionales como
-     `"{xrange -3 4}"' El siguiente ejemplo dibuja dos curvas con
-     puntos grandes, etiquetando el primero con `jim' y el segundo con
-     `jane'.
-          (%i1) openplot_curves ([["{plotpoints 1} {pointsize 6}
-                {label jim} {xaxislabel {joe is nice}}"],
-                [1, 2, 3, 4, 5, 6, 7, 8], ["{label jane} {color pink }"],
-                [3, -1, 4, 2, 5, 7]]);
+ -- Función: plot2d (<expr>, <x_range>, ..., <options>, ...)
+ -- Función: plot2d ([<expr_1>, ..., <expr_n>], ..., <options>, ...)
+ -- Función: plot2d ([<expr_1>, ..., <expr_n>], <x_range>,...,
+          <options>, ...)
+     Donde <expr>, <expr_1>, ..., <expr_n> pueden ser expresiones,
+     funciones u operadores de Maxima o Lisp, o una lista de cualquiera
+     de las siguientes formas: `[discrete, [<x1>, ..., <xn>], [<y1>,
+     ..., <yn>]]', `[discrete, [[<x1>, <y1>], ..., [<xn>, ..., <yn>]]'
+     o `[parametric, <x_expr>, <y_expr>, <t_range>]'.
 
-     Otros símbolos de elementos importantes son `xfun', `color',
-     `plotpoints', `linecolors', `pointsize', `nolines', `bargraph',
-     `labelposition', `xaxislabel' y `yaxislabel'.
-
-
- -- Función: plot2d (<expr>, <range>, ..., <options>, ...)
- -- Función: plot2d (<parametric_expr>)
- -- Función: plot2d (<discrete_expr>)
- -- Función: plot2d ([<expr_1>, ..., <expr_n>], <x_range>, <y_range>)
- -- Función: plot2d ([<expr_1>, ..., <expr_n>], <x_range>)
- -- Función: plot2d (<expr>, <x_range>, <y_range>)
- -- Función: plot2d (<expr>, <x_range>)
- -- Función: plot2d ([<name_1>, ..., <name_n>], <x_range>, <y_range>)
- -- Función: plot2d ([<name_1>, ..., <name_n>], <x_range>)
- -- Función: plot2d (<name>, <x_range>, <y_range>)
- -- Función: plot2d (<name>, <x_range>)
      Muestra un gráfico de una o más expresiones como función de una
      variable.
 
-     En todos los casos, <expr> es una expresión a ser representada en
-     el eje vertical como función de una variable.  El argumento
-     <x_range>, que es el rango del eje horizontal, es una lista de la
-     forma `[<variable>, <min>, <max>]', donde <variable> es una
-     variable que aparece en <expr>. También <y_range>, el rango del
-     eje vertical, es otra lista de la forma `[y, <min>, <max>]'.
+     La función `plot2d' representa gráficamente la expresión <expr> o
+     expresiones `[<name_1>, ..., <name_n>]'. Las expresiones que no
+     sean de tipo paramétrico o discreto deben depender todas ellas de
+     una única variable <var>, siendo obligatorio utilizar <x_range>
+     para nombrar la variable y darle sus valores mínimo y máximo
+     usando la siguiente sintaxis: `[<variable>, <min>, <max>]'.  El
+     gráfico mostrará el eje horizontal acotado por los valores <min> y
+     <max>.
 
-     La llamada `plot2d (<expr>, <x_range>)' dibuja plots <expr> como
-     función de la variable nombrada en <x_range>, en el rango
-     especificado por <x_range>.  Si el rango vertical no se especifica
-     explícitamente por medio de `set_plot_option', se escogerá
-     automáticamente.  Todas las opciones toman sus valores por defecto
-     a menos que se especifiquen de otra manera con `set_plot_option'.
+     La expresión a ser representada puede ser dada en la forma discreta
+     o paramétrica, esto es, como una lista que comienza con las
+     palabras `discrete' o `parametric'. La clave <discrete> debe
+     seguirse de dos listas de valores, ambas de igual longitud,
+     conteniendo las coordenadas horizontales y verticales del conjunto
+     de puntos; alternativamente, las coordenadas de cada punto pueden
+     darse como listas de dos valores, todas ellas formando a su vez
+     una lista. La clave <parametric> debe seguirse de dos expresiones,
+     <x_expr> y <y_expr>, junto con un rango de la forma `[<var>,
+     <min>, <max>]'; ambas expresiones deben depender únicamente de la
+     variable cuyo nombre aparece en el rango.  El gráfico mostrará los
+     pares `[<x_expr>, <y_expr>]' según <var> varía de <min> a <max>.
 
-     La llamada `plot2d (<expr>, <x_range>, <y_range>)' dibuja <expr>
-     como función de la variable nombrada en <x_range>, en el rango
-     especificado por <x_range>.  El rango vertical se ajusta a
-     <y_range>.  Todas las opciones toman sus valores por defecto a
-     menos que se especifiquen de otra manera con `set_plot_option'.
+     El rango del eje vertical no es necesario especificarlo. Es una más
+     de las opciones de la función, siendo su sintaxis `[y, <min>,
+     <max>]', mostrando entonces la gráfica el rango completo, incluso
+     si la función no alcanza estos valores. En caso de no
+     especificarse el rango vertical en `set_plot_option', se
+     establecerá de forma automática como aquel rango en el que la
+     función toma sus valores.
 
-     La llamada `plot2d ([<expr_1>, ..., <expr_n>], <x_range>)' dibuja
-     <expr_1>, ..., <expr_n> como función de la variable nombrada en
-     <x_range>, en el rango especificado por <x_range>.  Si el rango
-     vertical no se especifica explícitamente por medio de
-     `set_plot_option', se escogerá automáticamente.  Todas las opciones
-     toman sus valores por defecto a menos que se especifiquen de otra
-     manera con `set_plot_option'.
+     Cualesquiera otras opciones deben ser listas, comenzando con el
+     nombre de la opción.
 
-     La llamada `plot2d ([<expr_1>, ..., <expr_n>], <x_range>,
-     <y_range>)' dibuja <expr_1>, ..., <expr_n> como función de la
-     variable nombrada en <x_range>, en el rango especificado por
-     <x_range>.  El rango vertical se ajusta a <y_range>.  Todas las
-     opciones toman sus valores por defecto a menos que se especifiquen
-     de otra manera con `set_plot_option'.
+     La opción <xlabel> puede utilizarse para darle una etiqueta al eje
+     horizontal; si no se usa esta opción, el eje horizontal será
+     etiquetado con el nombre de la variable especificada en <x_range>.
 
-     La función a representar puede ser identificada por medio del
-     nombre de un operador o función de Maxima o Lisp, con una
-     expresión lambda, o con una expresión de Maxima. Cuando se use un
-     nombre o expresión lambda, la función a la que se refiere debe
-     depender de un único argumento.
+     Del mismo modo se puede asignar una etiqueta al eje vertical con
+     la opción <ylabel>. Si sólo hay una expresión a ser representada y
+     no se ha hecho uso de la opción <ylabel>, el eje vertical será
+     etiquetado con la expresión a ser representada, a menos que sea
+     muy larga, o con el texto "discrete data", en caso de gráficos de
+     puntos. Si la expresión es de tipo paramétrico, las dos
+     expresiones que dan las coordenadas horizontal y vertical serán
+     utilizadas para etiquetar ambos ejes.
+
+     Las opciones `[logx]' y `[logy]' no necesitan parámetros,
+     permitiendo que los ejes horizontal y vertical se dibujen en la
+     escala logarítmica.
+
+     Si hay varias expresiones para ser dibujadas, se mostrará una
+     leyenda que identifique a cada una de ellas. Las etiquetas a
+     utilizar pueden especificarse con la opción <legend>. Si no se
+     utiliza esta opción, Maxima creará etiquetas a partir de las
+     expresiones.
+
+     Por defecto, las funciones se dibujarán como un conjunto de
+     segmentos lineales uniendo los puntos que bien se dan en formato
+     <discrete>, o que se calculan automáticamente a partir de la
+     expresión dada, de acuerdo con el tamaño muestral indicado por la
+     opción <nticks>.  Asimismo, la opción <style> puede utilizarse
+     para mostrar los puntos aislados, o éstos junto con los segmentos
+     que los unen.
+
+     Hay varias opciones globales almacenadas en la lista
+     <plot_options>, las cuales se pueden modificar con la función
+     `set_plot_option'; cualquiera de estas opciones puede ignorarse
+     con las opciones que se utilicen desde el comando <plot2d>.
+
+     Las funciones a ser representadas pueden especificarse con el
+     nombre de una función u operador de Maxima o de Lisp, con una
+     expresión lambda de MAxima, o con una expresión válida de maxima.
+     En caso de especificarse con un nombre o expresión lambda, la
+     función debe ser tal que dependa de un solo argumento.
 
      Ejemplos:
 
-     Gráfico de una expresión y especificación de algunos parámetros de
-     uso común.
+     Gráficos de funciones ordinarias.
 
           (%i1) plot2d (sin(x), [x, -5, 5])$
+
           (%i2) plot2d (sec(x), [x, -2, 2], [y, -20, 20], [nticks, 200])$
 
-     Representando funciones por nombre.
+     Especificación de funciones por su nombre.
 
-          (%i1) F(x) := x^2 $
+          (%i3) F(x) := x^2 $
 
-          (%i2) :lisp (defun |$g| (x) (m* x x x))
+          (%i4) :lisp (defun |$g| (x) (m* x x x))
 
           $g
-          (%i2) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
+          (%i5) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
 
-          (%i3) plot2d (F, [u, -1, 1])$
+          (%i6) plot2d (F, [u, -1, 1])$
 
-          (%i4) plot2d ([F, G, H], [u, -1, 1])$
+          (%i7) plot2d ([F, G, H], [u, -1, 1], [y, -1.5, 1.5])$
 
-     Allá donde vaya una expresión ordinaria, también puede ir una
-     expresión paramétrica en su lugar: <parametric_expr> es una lista
-     de la forma `[parametric, <x_expr>, <y_expr>, <t_range>,
-     <options>]'.  Aquí <x_expr> y <y_expr> son expresiones de una
-     variable <var> que a su vez es el primer elemento del rango
-     <trange>.  El dibujo que se obtiene es el lugar geométrico de los
-     pares `[<x_expr>, <y_expr>]' cuando <var> varía según <trange>.
+     Se puede representar una circunferencia como una función
+     paramétrica de parámetro <t>. No es necesario especificar el rango
+     del eje horizontal, pues el propio rango de <t> determina el
+     dominio. No obstante, ya que las longitudes de los ejes horizontal
+     y vertical están en una proporción de 4 a 3, se utilizará la
+     opción <xrange> para conseguir la misma escala en ambos ejes:
 
-     En el siguiente ejemplo se dibuja un círculo, luego se repite lo
-     mismo con pocos puntos, con lo que se obtiene una estrella, para
-     finalmente dibujar todo junto con una función ordinaria en `x'.
+          (%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi], [nticks,80]],
+                     [x, -4/3, 4/3])$
 
-     Ejemplos de gráficos paramétricos:
+     Si se repite el mismo gráfico con solo 8 puntos y se extiende el
+     rango del parámetro para que dé dos vueltas, se tiene el dibujo de
+     una estrella:
 
-        * Un círculo como curva paramétrica.
-               (%i1) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
-                       [nticks, 80]])$
+          (%i9) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
+                  [nticks, 8]], [x, -2, 2], [y, -1.5, 1.5])$
 
-        * Una estrella: la curva anterior con sólo ocho puntos.
-               (%i2) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
-                       [nticks, 8]])$
+     Combinación del gráfico de un polinomio cúbico y de una
+     circunferencia paramétrica:
 
-        * Un polinomio cúbico definido como curva ordinaria y un círculo
-          definido en forma paramétrica.
-               (%i3) plot2d ([x^3 + 2, [parametric, cos(t), sin(t), [t, -5, 5],
-                       [nticks, 80]]], [x, -3, 3])$
+          (%i10) plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5],
+                  [nticks, 80]]], [x, -3, 3])$
 
+     Ejemplo de gráfico logarítmico:
 
-     También se pueden utilizar expresiones discretas en lugar de
-     ordinarias o paramétricas: <discrete_expr> es una lista de la
-     forma `[discrete, <x_list>, <y_list>]' o `[discrete, <xy_list>]',
-     siendo <xy_list> una lista de pares `[<x>,<y>]'.
+          (%i11) plot2d (exp(3*s), [s, -2, 2], [logy])$
 
-     Ejemplos de gráficos discretos:
+     Ejemplos de gráficos de puntos, empezando por la definición de las
+     coordenadas de cinco puntos en los dos formatos admisibles:
 
-        * Se crean algunas listas para los ejemplos siguientes.
-               (%i1) xx:makelist(x,x,0,10)$
-               (%i2) yy:makelist(exp(-x*1.0),x,0,10)$
-               (%i3) xy:makelist([x,x*x],x,0,5)$
+          (%i12) xx:[10, 20, 30, 40, 50]$
+          (%i13) yy:[.6, .9, 1.1, 1.3, 1.4]$
+          (%i14) xy:[[10,.6], [20,.9], [30,1.1], [40,1.3], [50,1.4]]$
 
-        * Dibujo con segmentos lineales.
-               (%i4) plot2d([discrete,xx,yy])$
+     Representación de los puntos unidos por segmentos:
 
-        * Dibujo con segmentos lineales, utilizando una lista de pares.
-               (%i5) plot2d([discrete,xy])$
+          (%i15) plot2d([discrete,xx,yy])$
 
-        * Dibujo con puntos.
-               (%i6) plot2d([discrete,xx,yy],[gnuplot_curve_styles,
-                     ["with points"]])$
+     Representación de los puntos aislados, ilustrando también la
+     segunda forma de especificar las coordenadas:
 
-        * Dibujo de la curva `cos(<x>)' con segmentos y (<xx>,<yy>) con
-          puntos.
-               (%i7) plot2d([cos(x),[discrete,xx,yy]],[x,0,10],
-                    [gnuplot_curve_styles,
-                    ["with lines","with points pointsize 3"]])$
+          (%i16) plot2d([discrete, xy], [style, points])$
 
-     Véase también `plot_options', que describe las opciones gráficas y
-     tiene más ejemplos.
+     El gráfico de los puntos se puede mostrar conjuntamente con el de
+     la función ter'ica que los predice:
+
+          (%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
+                  [style, [points,3,5], [lines,1,3]], [legend,"experiment","theory"],
+                  [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
+
+     Véase también `plot_options', que describe las opciones gráficas,
+     junto con más ejemplos.
 
 
  -- Función: xgraph_curves (<list>)
@@ -6238,14 +6517,23 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
 
      Las opciones gráficas que reconocen `plot2d' y `plot3d' son:
 
-        * Opción: `plot_format' determina qué módulo gráfico van a
-          utilizar `plot2d' y `plot3d'.
+        * Opción: `plot_format'
 
-             * Valor por defecto: `gnuplot' Gnuplot es el programa por
-               defecto y el más avanzado. Requiere de una instalación
-               externa de gnuplot.
+          Determina qué programa gráfico se va a utilizar con `plot2d'
+          y `plot3d'.
 
-             * Valor: `mgnuplot' Mgnuplot es una interface para gnuplot
+             * Valor: `gnuplot' (es el valor por defecto en Windows)
+               Gnuplot es el programa por defecto y el más avanzado.
+               Requiere de una instalación externa de gnuplot.
+
+             * Value: `gnuplot_pipes' (es el valor por defecto en
+               sistemas distintos de Windows) Es similar al formato
+               `gnuplot', excepto que la comunicación con Gnuplot se
+               hace por medio de una tubería. Se debería utilizar para
+               ver gráficos en pantalla; para guardar gráficos en
+               srchivos, mejor utilizar el formato `gnuplot'.
+
+             * Valor: `mgnuplot' Mgnuplot es una interfaz para Gnuplot
                basada en Tk. Se incluye en la distribución de Maxima.
                Mgnuplot ofrece una interface gráfica de usuario
                rudimentaria para gnuplot, pero tiene algunas mejoras
@@ -6254,134 +6542,251 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
                Tcl/Tk.
 
              * Valor: `openmath' Openmath es un programa gráfico
-               escrito en Tcl/Tk. Se incluye en la distribución de
-               Maxima.
-
-             * Valor: `ps' Genera ficheros PostScript directamente
-               desde Maxima. Se tendrán resultados PostScript mejores
-               utilizando gnuplot, dejando la opción `plot_format' sin
-               especificar (aceptando la que tiene por defecto), y
-               dándole a `gnuplot_term' el valor `ps'.
-
-        * Opción: `run_viewer' controla si el visor apropiado para la
-          salida gráfica debe ejecutarse o no.
-
-             * Valor por defecto: `true', ejecuta el visor.
-
-             * Valor: `false', no ejecuta el visor.
-
-        * `gnuplot_term' establece el terminal de gnuplot.
-             * Valor por defecto: `default' La salidad de gnuplot se
-               muestra en una ventana gráfica.
-
-             * Valor: `dumb' GLa salidad de gnuplot se muestra en la
-               consola de Maxima con caracteres ASCII.
-
-             * Valor: `ps' Gnuplot genera comandos en lenguaje
-               PostScript.  Si la opción `gnuplot_out_file' vale
-               <filename>, gnuplot escribe los comandos PostScript en
-               <filename>; en caso contrario, los almacena en el
-               fichero `maxplot.ps'.
-
-             * Valor: cualquier especificación válida de terminal
-               admitida por gnuplot.  Gnuplot puede generar salidas en
-               otros muchos formatos gráficos, como png, jpeg, svg,
-               etc. Para crear una figura en cualquiera de estos
-               formatos, se debe asignar a la opción `gnuplot_term' el
-               nombre (en forma de símbolo) de cualquiera de los
-               terminales que soporta gnuplot, o la especificación
-               completa del terminal con cualquiera de las opciones
-               válidas (en forma de cadena). Por ejemplo,
-               `[gnuplot_term,png]' crea una salida en formato PNG
-               (Portable Network Graphics), mientras que
-               `[gnuplot_term,"png size 1000,1000"]' crea un PNG de
-               tamaño 1000x1000 pixels. Si la opción `gnuplot_out_file'
-               se ajusta a <filename>, gnuplot almacena la salida en el
-               fichero <filename>; en caso contrario, se guarda en el
-               fichero `maxplot.<term>', siendo <term> el nombre del
-               terminal de gnuplot.
+               escrito en Tcl/Tk. Este formato lo suministra el paquete
+               Xmaxima, que se distribuye junto con Maxima; se deberá
+               instalar Xmaxima si se quiere usar este formato. No sólo
+               se puede utilizar Openmath desde Xmaxima, sino también
+               desde cualquier otro interfaz gráfico para Maxima.
 
 
-        * Opción: `gnuplot_out_file' escribe la salida de gnuplot en un
-          fichero.
+        * Opción: `run_viewer'
 
-             * Valor por defecto: `false' No se especifica ningún
-               archivo de salida.
+          Controla si el visor apropiado para la salida gráfica debe
+          ejecutarse o no.
 
-             * Valor: <filename> Ejemplo: `[gnuplot_out_file,
-               "myplot.ps"]' Este ejemplo envía código PostScript al
-               fichero `myplot.ps' cuando se utiliza conjuntamente con
-               el terminal PostScript de gnuplot.
+             * Valor por defecto: `true'
 
-        * Opción: `x' Rango horizontal por defecto.
-               [x, - 3, 3]
-          Establece el rango horizontal como [-3, 3].
+               Ejecuta el visor.
 
-        * Opción: `y' Rango vertical por defecto.
+             * Valor: `false'
+
+               No ejecuta el visor.
+
+        * Opción: `y'
+
+          Rango vertical del gráfico.
+
+          Ejemplo:
+
                [y, - 3, 3]
           Establece el rango vertical como [-3, 3].
 
-        * Opción: `t' El rango por defecto para el parámetro de las
-          representaciones paramétricas.
-               [t, 0, 10]
-          Establece el rango de la variable paramétrica como [0, 10].
+        * Opción: `plot_realpart' Si `plot_realpart' vale `true', se
+          representará la parte real de un valor complejo <x>, lo cual
+          equivale a representar `realpart(<x>)' en lugar de <x>.  Si
+          vale `false', sólo se representarán aquellos valores con
+          parte imaginaria nula, ignorando así cualesquiera valores
+          complejos.
 
-        * Opción: `nticks' Número inicial de puntos a utilizar por el
-          algoritmo adaptativo de representación gráfica.
+          Ejemplo:
+
+               plot2d (log(x), [x, -5, 5], [plot_realpart, false]);
+               plot2d (log(x), [x, -5, 5], [plot_realpart, true]);
+          El valor por defecto es `false'.
+
+        * Opción: `nticks'
+
+          En `plot2d', es el número inicial de puntos utilizados por el
+          procedimiento adaptativo para la representación de funciones.
+          También es el número de puntos a ser calculados en los
+          gráficos paramétricos.
+
+          Ejemplo:
+
                [nticks, 20]
           El valor por defecto para `nticks' es 10.
 
-        * Opción: `adapt_depth' Número máximo de particiones utilizado
-          por el algoritmo adaptativo de representación gráfica.
+        * Opción: `adapt_depth'
+
+          Número máximo de particiones utilizado por el algoritmo
+          adaptativo de representación gráfica.
+
+          Ejemplo:
+
                [adapt_depth, 5]
           El valor por defecto para `adapt_depth' es 10.
+
+        * Opción: `xlabel'
+
+          Etiqueta del eje horizontal en gráficos 2d.
+
+          Ejemplo:
+
+               [xlabel, "Time in seconds"]
+
+        * Opción: `ylabel'
+
+          Etiqueta del eje vertical en gráficos 2d.
+
+          Ejemplo:
+
+               [ylabel, "Temperature"]
+
+        * Opción: `logx'
+
+          Hace que el eje horizontal en los gráficos 2d se dibuje en la
+          escala logarítmica. No necesita de parámetros adicionales.
+
+        * Opción: `logy'
+
+          Hace que el eje vertical en los gráficos 2d se dibuje en la
+          escala logarítmica. No necesita de parámetros adicionales.
+
+        * Opción: `legend'
+
+          Etiquetas para las expresiones de los gráficos 2d. Si hay más
+          expresiones que etiquetas, éstas se repetirán. Por defecto se
+          pasarán los nombres de las expresiones o funciones, o las
+          palabras `discrete1', `discrete2', ..., para gráficos de
+          puntos.
+
+          Ejemplo:
+
+               [legend, "Set 1", "Set 2", "Set 3"]
+
+        * Opción: `style'
+
+          Estilos a utilizar para las funciones o conjuntos de datos en
+          gráficos 2d. A la palabra `style' debe seguirle uno o más
+          estilos. Si hay más funciones o conjuntos de datos que
+          estilos, éstos se repetirán. Los estilos que se admiten son:
+          <lines> para segmentos lineales, <points> para puntos
+          aislados, <linespoints> para segmentos y puntos, <dots> para
+          pequeños puntos aislados. Gnuplot también acepta el estilo
+          <impulses>.
+
+          Cada estilo puede ir encerrado en una lista con parámetros
+          adicionales: <lines> acepta uno o dos números: el ancho del
+          segmento y un entero que identifica el color; <points> acepta
+          uno o dos parámetros, el primero es el radio de los puntos y
+          el segundo un entero que en Gnuplot selecciona diferentes
+          formas y colores para los puntos y que en Openmath cambia el
+          color de éstos; <linesdots> acepta hasta cuatro parámetros,
+          los dos primeros son lo mismo que en <lines> y los dos
+          últimos son lo mismo que en <points>.
+
+          Ejemplo:
+
+               [style,[lines,2,3],[points,1,4]]
+
+          En Gnuplot, con este código se representaría la primera
+          (tercera, quinta, etc.) expresión con segmentos azules de
+          ancho 2, y la segunda (cuarta, sexta, etc.) expresión con
+          cuadrados verdes de tama24no 1. En Openmath, la primera
+          expresión se representaría con segmentos magenta de ancho 2, y
+          la segunda con puntos naranja de radio 1. Nótese que
+          `openmath_color(3)' y `openmath_color(4)' devuelven `magenta'
+          y `orange', respectivamente.
+
+          El estilo por defecto es <lines> de ancho 1 y diferentes
+          colores.
 
         * Opción: `grid' Establece el número de puntos de la retícula a
           utilizar en las direcciones x e y en los gráficos de tres
           dimensiones.
+
+          Ejemplo:
+
                [grid, 50, 50]
+
           establece la retícula en 50 por 50 puntos. El valor por
           defecto es 30 por 30.
 
-        * Opción: `transform_xy' Permite que se realicen
-          transformaciones en los gráficos de tres dimensiones.
+        * Opción: `transform_xy'
+
+          Permite que se realicen transformaciones en los gráficos de
+          tres dimensiones.
+
+          Ejemplo:
+
                [transform_xy, false]
           El valor por defecto de `transform_xy' es `false'. Cuando
           vale `false', da el resultado de
-               make_transform ([x, y, z], f1(x, y, z), f2(x, y, z), f3(x, y, z))$
+
+               make_transform([x,y,z], f1(x,y,z), f2(x,y,z), f3(x,y,z))$
           La transformación `polar_xy' está definida en Maxima.
           Devuelve la misma transformación que
+
                make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
 
-        * Opción: `colour_z' es específico del formato gráfico `ps'.
-               [colour_z, true]
-          El valor por defecto de `colour_z' es `false'.
-
-        * Opción: `view_direction' Específico del formato gráfico `ps'.
-               [view_direction, 1, 1, 1]
-          El valor por defecto de `view_direction' es [1, 1, 1].
+     Opciones de Gnuplot:
 
      Hay varias opciones gráficas que son específicas de gnuplot.
-     Todas ellas (excepto `gnuplot_pm3d') son comandos propios de
-     gnuplot que se especifican como cadenas alfanuméricas. Consúltese
-     la documentación de gnuplot para más detalles.
+     Algunas de ellas son comandos propios de gnuplot que se
+     especifican como cadenas alfanuméricas.  Consúltese la
+     documentación de Gnuplot para más detalles.
 
-        * Opción: `gnuplot_pm3d' Controla la utilización del modo PM3D,
-          que tiene capacidades avanzadas para gráficos
-          tridimensionales. PM3D sólo está disponible en versiones de
-          gnuplot posteriores a la 3.7. El valor por defecto de
-          `gnuplot_pm3d' es `false'.
+        * Opción: `gnuplot_term'
+
+          Establece el terminal de salida para Gnuplot.
+
+             * Valor por defecto: `default'
+
+               Gnuplot muestra el gráfico en una ventana gráfica.
+
+             * Valor: `dumb'
+
+               Gnuplot muestra el gráfico en la consola de Maxima en
+               estilo ASCII artístico.
+
+             * Valor: `ps'
+
+               Gnuplot genera código en lenguaje PostScript.  Si a la
+               opción `gnuplot_out_file' se le da el valor <filename>,
+               Gnuplot escribe el código PostScript en <filename>. En
+               caso contrario, se guarda en el archivo `maxplot.ps'.
+
+             * Valor: Cualquier otro terminal admitido por Gnuplot.
+
+               Gnuplot puede generar gráficos en otros muchos formatos,
+               tales como png, jpeg, svg etc. Para crear gráficos en
+               cualquera de estos formatos, a la opción `gnuplot_term'
+               se le puede asignar cualquiera de los terminales
+               admitidos por Gnuplot, bien por su nombre (símbolo) bien
+               con la especificación completa del terminal (cadena).
+               Por ejemplo, `[gnuplot_term,png]' guarda el gráfico en
+               formato PNG (Portable Network Graphics), mientras que
+               `[gnuplot_term,"png size 1000,1000"]' lo hace con
+               dimensiones 1000x1000 píxeles.  Si a la opción
+               `gnuplot_out_file' se le da el valor <filename>, Gnuplot
+               escribe el código PostScript en <filename>. En caso
+               contrario, se guarda en el archivo `maxplot.<term>',
+               siendo <term> el nombre del terminal.
+
+
+        * Opción: `gnuplot_out_file'
+
+          Guarda el gráfico generado por Gnuplot en un archivo.
+
+             * Valor por defecto: `false'
+
+               No se especifica nombre de fichero.
+
+             * Valor: <filename>
+
+               Con `[gnuplot_out_file, "myplot.ps"]' se envía código
+               PostScript al archivo `myplot.ps' cuando se utiliza
+               conjuntamente con el terminal PostScript de Gnuplot.
+
+        * Opción: `gnuplot_pm3d'
+
+          Controla la utilización del modo PM3D, que tiene capacidades
+          avanzadas para gráficos tridimensionales. PM3D sólo está
+          disponible en versiones de Gnuplot posteriores a la 3.7. El
+          valor por defecto de `gnuplot_pm3d' es `false'.
 
           Ejemplo:
 
                [gnuplot_pm3d, true]
 
-        * Opción: `gnuplot_preamble' Introduce instrucciones de gnuplot
-          antes de que se haga el dibujo. Puede utilizarse cualquier
-          comando válido de gnuplot. Si interesa introducir varios
-          comandos se separarán con punto y coma. El ejemplo que se
-          muestra produce un gráfico en escala logarítmica. El valor
-          por defecto de `gnuplot_preamble' es la cadena vacía `""'.
+        * Opción: `gnuplot_preamble'
+
+          Introduce instrucciones de gnuplot antes de que se haga el
+          dibujo. Puede utilizarse cualquier comando válido de gnuplot.
+          Si interesa introducir varios comandos se separarán con punto
+          y coma. El ejemplo que se muestra produce un gráfico en
+          escala logarítmica. El valor por defecto de
+          `gnuplot_preamble' es la cadena vacía `""'.
 
           Ejemplo:
 
@@ -6401,50 +6806,60 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
 
                [gnuplot_curve_titles, ["title 'My first function'", "title 'My second function'"]]
 
-        * Opción: `gnuplot_curve_styles' Es una lista de cadenas que
-          controlan el aspecto de las curvas, como el color, el ancho,
-          la discontinuidad, etc., y que deben enviarse al comando
-          `plot' de gnuplot. El valor por defecto es `["with lines 3",
-          "with lines 1", "with lines 2", "with lines 5", "with lines
-          4", "with lines 6", "with lines 7"]', que realiza un ciclo
-          sobre un conjunto de colores diferentes. Consúltese la
-          documentación de gnuplot sobre `plot' para más información.
+        * Opción: `gnuplot_curve_styles'
+
+          Es una lista de cadenas que controlan el aspecto de las
+          curvas, como el color, el ancho, la discontinuidad, etc., y
+          que deben enviarse al comando `plot' de gnuplot. El valor por
+          defecto es `["with lines 3", "with lines 1", "with lines 2",
+          "with lines 5", "with lines 4", "with lines 6", "with lines
+          7"]', que realiza un ciclo sobre un conjunto de colores
+          diferentes. Consúltese la documentación de gnuplot sobre
+          `plot' para más información.
 
           Ejemplo:
 
                [gnuplot_curve_styles, ["with lines 7", "with lines 2"]]
 
-        * Opción: `gnuplot_default_term_command' Comando de gnuplot
-          para establecer el tipo de terminal para el terminal por
-          defecto. El valor por defecto es la cadena vacía `""', esto
-          es, utiliza el valor por defecto de gnuplot.
+        * Opción: `gnuplot_default_term_command'
+
+          Comando de gnuplot para establecer el tipo de terminal por
+          defecto.  El valor por defecto es `set term windows "Verdana"
+          15' en sistemas Windows, y `set term x11 font "Helvetica,16"'
+          en sistemas X11.
 
           Ejemplo:
 
                [gnuplot_default_term_command, "set term x11"]
 
-        * Opción: `gnuplot_dumb_term_command' Comando de gnuplot para
-          establecer el tipo de terminal para el terminal oculto. El
-          valor por defecto es `"set term dumb 79 22"', que da una
-          salida de texto de 79 por 22 caracteres.
+        * Opción: `gnuplot_dumb_term_command'
+
+          Comando de gnuplot para establecer el tipo de terminal para
+          el terminal oculto. El valor por defecto es `"set term dumb
+          79 22"', que da una salida de texto de 79 por 22 caracteres.
 
           Ejemplo:
 
                [gnuplot_dumb_term_command, "set term dumb 132 50"]
 
-        * Opción: `gnuplot_ps_term_command' Comando de gnuplot para
-          establecer el tipo de terminal para el terminal PostScript.
-          El valor por defecto es `"set size 1.5, 1.5;set term
-          postscript eps enhanced color solid 24"', que establece un
-          tamaño de 1.5 veces el valor por defecto de gnuplot, junto
-          con un tamaño de fuente de 24, entre otras cosas. Consúltese
-          la documentación de gnuplot para más información sobre `set
-          term postscript'.
+        * Opción: `gnuplot_ps_term_command'
+
+          Comando de gnuplot para establecer el tipo de terminal para
+          el terminal PostScript. El valor por defecto es `"set size
+          1.5, 1.5;set term postscript eps enhanced color solid 24"',
+          que establece un tamaño de 1.5 veces el valor por defecto de
+          gnuplot, junto con un tamaño de fuente de 24, entre otras
+          cosas. Consúltese la documentación de gnuplot para más
+          información sobre `set term postscript'.
 
           Ejemplo:
 
+          Todas las figuras de los ejemplos de la función <plot2d> de
+          este manual se obtuvieron a partir de archivos Postscript
+          generados asignándole a `gnuplot_ps_term_command' el valor
+
                [gnuplot_ps_term_command,
-               "set term postscript eps enhanced color solid 18"]
+               "set size 1.3, 1.3; set term postscript eps color solid lw 2.5 30"]
 
 
      Ejemplos:
@@ -6513,6 +6928,8 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
               [gnuplot_pm3d, true], [grid, 150, 150])$
 
 
+ -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_range>,
+          <y_range>, ..., <options>, ...)
  -- Función: plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
  -- Función: plot3d (<name>, <x_range>, <y_range>, ..., <options>, ...)
  -- Función: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_rge>, <y_rge>)
@@ -6527,7 +6944,8 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
      [-2,2] respectivamente, y con <u> sobre el eje x, y con `v' sobre
      el eje y.
 
-     El mismo gráfico se puede dibujar usando openmath:
+     El mismo gráfico se puede dibujar usando openmath (si Xmaxima fué
+     instalado):
 
           (%i2)  plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2],
                          [plot_format, openmath]);
@@ -6555,15 +6973,7 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
      Este ejemplo muestra un gráfico de la parte real de `z^1/3'.
 
           (%i4) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
-                ['grid, 12, 80], ['transform_xy, polar_to_xy],
-                ['view_direction, 1, 1, 1.4], ['colour_z, true]);
-
-     Aquí la opción `view_direction' indica la dirección desde la que
-     se hace la proyección. Se hace esto desde una posición infinita
-     pero paralela a la línea que va desde  `view_direction' hasta el
-     origen.  Esto sólo se utiliza cuando `plot_format' está en `ps',
-     puesto que los otros visores permiten la rotación interactiva del
-     objeto.
+                ['grid, 12, 80], ['transform_xy, polar_to_xy]);
 
      Otros ejemplos son la botella de Klein:
 
@@ -6604,27 +7014,6 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
           make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
      es una transformación para pasar a coordenadas polares.
 
- -- Función: plot2d_ps (<expr>, <range>)
-     Escribe en el <pstream> una secuencia de comandos PostScript que
-     dibujan <expr> sobre <range>.
-
-     El argumento <expr> es una expresión y <range> es una lista de la
-     forma `[<x>, <min>, <max>]' en la cual <x> es una variable que
-     aparece en <expr>.
-
-     Véase también `closeps'.
-
-
- -- Función: closeps ()
-     Esta función debería invocarse al final de una secuencia de
-     comandos gráficos.  Cierra el <pstream> y le asigna `nil'. También
-     puede ser invocado antes de empezar un dibujo, para asegurar que
-     se cierre el <pstream> si estaba abierto.  Todas las instrucciones
-     que se envían al <pstream> lo abren si es necesario. La función
-     `closeps' es independiente de otras instrucciones gráficas, ya que
-     si se quiere dibujar dos rangos o sobreponer varios gráficos,
-     <pstream> debe permanecer abierto.
-
  -- Función: set_plot_option (<option>)
      Asigna un valor a una de las variables globales que controlan los
      gráficos. El argumento <option> se especifica como una lista de
@@ -6645,8 +7034,7 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
           (%i1) set_plot_option ([grid, 30, 40]);
           (%o1) [[x, - 1.755559702014E+305, 1.755559702014E+305],
           [y, - 1.755559702014E+305, 1.755559702014E+305], [t, - 3, 3],
-          [grid, 30, 40], [view_direction, 1, 1, 1], [colour_z, false],
-          [transform_xy, false], [run_viewer, true],
+          [grid, 30, 40], [transform_xy, false], [run_viewer, true],
           [plot_format, gnuplot], [gnuplot_term, default],
           [gnuplot_out_file, false], [nticks, 10], [adapt_depth, 10],
           [gnuplot_pm3d, false], [gnuplot_preamble, ],
@@ -6662,7 +7050,6 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
           (%i3) set_plot_option (['x, -100, 100]);
           (%o3) [[x, - 100.0, 100.0], [y, - 1.755559702014E+305,
           1.755559702014E+305], [t, - 3, 3], [grid, 30, 40],
-          [view_direction, 1, 1, 1], [colour_z, false],
           [transform_xy, false], [run_viewer, true],
           [plot_format, gnuplot], [gnuplot_term, default],
           [gnuplot_out_file, false], [nticks, 10], [adapt_depth, 10],
@@ -6676,25 +7063,35 @@ File: maxima.info,  Node: Definiciones para Gráficos,  Prev: Gráficos,  Up: Gr
           eps enhanced color solid 24]]
 
 
- -- Función: psdraw_curve (<ptlist>)
-     Dibuja una curva uniendo los puntos de <ptlist>, que puede ser de
-     la forma `[x0, y0, x1, y1, ...]' o `[[x0, y0], [x1, y1], ...]'
+   Funciones para trabajar con el formato gnuplot_pipes:
 
-     La función `join' se puede utilizar para tomar una lista con las x
-     y otra con las y para luego formar pares.
-
-     La función <psdraw_curve> tan sólo llama a la función <pscurve>.
-     Esta es su definición:
-
-          (defun $psdraw_curve (lis)
-            (p "newpath")
-            ($pscurve lis)
-            (p "stroke"))
+ -- Función: gnuplot_start ()
+     Inicializa una tubería hacia Gnuplot, con el fin de ser utilizada
+     para utilizar el formato `gnuplot_pipes'.  No es necesario
+     inicializarla manualmente antes de hacer gráficos.
 
 
- -- Función: pscom (<cmd>)
-     El argumento <cmd> se añade al fichero PostScript.  Ejemplo:
-          pscom ("4.5 72 mul 5.5 72 mul translate 14 14 scale");
+ -- Función: gnuplot_close ()
+     Cierra la tubería hacia Gnuplot que haya sido utilizada para hacer
+     gráficos.
+
+
+ -- Función: gnuplot_restart ()
+     Cierra la tubería hacia Gnuplot que haya sido utilizada para hacer
+     gráficos e inicializa una nueva.
+
+
+ -- Función: gnuplot_replot ()
+ -- Función: gnuplot_replot (<s>)
+     Actualiza la ventana de Gnuplot. Si `gnuplot_replot' es invocada
+     con un comando de Gnuplot en la cadena <s>, entonces <s> es
+     enviada a Gnuplot antes de redibujar la ventana.
+
+
+ -- Función: gnuplot_reset ()
+     Resetea Gnuplot cuando se utiliza el formato `gnuplot_pipes'.
+     Para actualizar la ventana de Gnuplot invóquese a `gnuplot_replot'
+     después de `gnuplot_reset'.
 
 
 
@@ -6705,21 +7102,14 @@ File: maxima.info,  Node: Entrada y Salida,  Next: Aritmética de punto flotante
 
 * Menu:
 
-* Introducción a  Entrada y Salida::
 * Comentarios::
 * Archivos::
 * Definiciones para Entrada y Salida::
 
 
-File: maxima.info,  Node: Introducción a Entrada y Salida,  Next: Comentarios,  Prev: Entrada y Salida,  Up: Entrada y Salida
+File: maxima.info,  Node: Comentarios,  Next: Archivos,  Prev: Entrada y Salida,  Up: Entrada y Salida
 
-9.1 Introducción a Entrada y Salida
-===================================
-
-
-File: maxima.info,  Node: Comentarios,  Next: Archivos,  Prev: Introducción a Entrada y Salida,  Up: Entrada y Salida
-
-9.2 Comentarios
+9.1 Comentarios
 ===============
 
 En Maxima, un comentario es cualquier texto encerrado entre las marcas
@@ -6752,7 +7142,7 @@ ambos.
 
 File: maxima.info,  Node: Archivos,  Next: Definiciones para Entrada y Salida,  Prev: Comentarios,  Up: Entrada y Salida
 
-9.3 Archivos
+9.2 Archivos
 ============
 
 Un archivo no es más que una área de un cierto dispositivo de

@@ -34,7 +34,6 @@ binary-clisp/maxima.mem : mformt.lisp
 binary-clisp/maxima.mem : mutils.lisp
 binary-clisp/maxima.mem : outmis.lisp
 binary-clisp/maxima.mem : ar.lisp
-binary-clisp/maxima.mem : misc.lisp
 binary-clisp/maxima.mem : comm.lisp
 binary-clisp/maxima.mem : comm2.lisp
 binary-clisp/maxima.mem : mlisp.lisp
@@ -218,7 +217,6 @@ binary-clisp/maxima.mem : ellipt.lisp
 binary-clisp/maxima.mem : airy.lisp
 binary-clisp/maxima.mem : numer.lisp
 binary-clisp/maxima.mem : intpol.lisp
-binary-clisp/maxima.mem : rombrg.lisp
 binary-clisp/maxima.mem : nparse.lisp
 binary-clisp/maxima.mem : displa.lisp
 binary-clisp/maxima.mem : nforma.lisp
@@ -287,6 +285,8 @@ binary-clisp/maxima.mem : hyp.lisp
 binary-clisp/maxima.mem : todd-coxeter.lisp
 binary-clisp/maxima.mem : mactex.lisp
 binary-clisp/maxima.mem : plot.lisp
+binary-clisp/maxima.mem : gnuplot.lisp
+binary-clisp/maxima.mem : openmath.lisp
 binary-clisp/maxima.mem : autol.lisp
 binary-clisp/maxima.mem : max_ext.lisp
 binary-clisp/maxima.mem : init-cl.lisp

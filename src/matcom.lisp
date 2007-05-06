@@ -9,14 +9,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :maxima)
+
 (macsyma-module matcom)
 
 ;; This is the Match Compiler.
 
-(declare-top  (genprefix mc_)
-	      (special *expr *rules *rulelist $rules alist $props 
-		       *afterflag args boundlist *a* pt
-		       reflist topreflist program $noundisp))
+(declare-top (special *expr *rules *rulelist $rules alist $props 
+		      *afterflag args boundlist *a* pt
+		      reflist topreflist program $noundisp))
 
 (setq *afterflag nil)
 
@@ -33,7 +33,7 @@
     (cond ((symbolp (car x))
 	   (cond ((and (not (symbolp (cadr x)))
 		       (or (numberp (cadr x))
-			   (memq (caaadr x) '(mand mor mnot mcond mprog))))
+			   (member (caaadr x) '(mand mor mnot mcond mprog) :test #'eq)))
 		  (improper-arg-err (cadr x) '$matchdeclare)))
 	   (meta-add2lnc (car x) '$props)
 	   (meta-mputprop (car x) (ncons (cadr x)) 'matchdeclare))
@@ -53,7 +53,7 @@
 						  e
 						  (list 'quote p)))
 				      '(matcherr)))))
-		   ((memq p boundlist)
+		   ((member p boundlist :test #'eq)
 		    (emit (list 'cond
 				(list (list 'not (list 'equal e p))
 				      '(matcherr)))))
@@ -62,11 +62,11 @@
 (defun emit (x) (setq program (nconc program (list x))))
 
 (defun memqargs (x)
-  (cond ((or (numberp x) (memq x boundlist)) x)
+  (cond ((or (numberp x) (member x boundlist :test #'eq)) x)
 	((and (symbolp x) (get x 'operators)) `(quote ,x))
 	;; ((NULL BOUNDLIST) (LIST 'SIMPLIFYA (LIST 'QUOTE X) NIL))
 	(t `(meval (quote ,x)))))
-
+
 (defun makepreds (l gg) 
   (cond ((null l) nil)
 	(t (cons (cond ((atom (car l))
@@ -81,10 +81,7 @@
      (setq topreflist (list e))
      (cond ((atom (errset (compilematch e pt)))
 	    (merror "Match processing aborted~%"))
-	   (t (mtell
-	       "~M Will be matched uniquely since sub-parts would otherwise be ambigious.~%" 
-  
-	       pt)
+	   (t (mtell "~M Will be matched uniquely since sub-parts would otherwise be ambigious.~%" pt)
 	      (return (list 'lambda
 			    (list e)
 			    `(declare (special ,e))
@@ -103,7 +100,7 @@
 					  (list (list 'not (list 'equal e 0.))
 						'(matcherr))))))
 		     ((null (cdr leftover)) (return (compilematch e (car leftover))))
-		     ((setq f (intersect leftover boundlist))
+		     ((setq f (intersection leftover boundlist :test #'equal))
 		      (emit (list 'setq
 				  e
 				  (list 'meval
@@ -111,12 +108,10 @@
 					      (list '(mplus)
 						    e
 						    (list '(mminus) (car f)))))))
-		      (zl-delete (car f) leftover)
+		      (setq leftover (delete (car f) leftover :test #'equal))
 		      (go a1))
 		     (t
-		      (mtell "~M partitions `sum'"
-			     (cons '(mplus) leftover)
-			     )
+		      (mtell "~M partitions `sum'" (cons '(mplus) leftover))
 		      (setq boundlist (append boundlist (atomson leftover)))
 		      (return (emit (list 'cond
 					  (list (list 'part+
@@ -213,7 +208,7 @@
 		     (list 'quote
 			   (list '(mplus) e (list '(mminus) (car p)))))))
    (go a)))
-
+
 (defun compiletimes (e p) 
   (prog (reflist f g h leftover) 
    a    (setq p (cdr p))
@@ -223,18 +218,16 @@
 					  (list (list 'not (list 'equal e 1.))
 						'(matcherr))))))
 		     ((null (cdr leftover)) (return (compilematch e (car leftover))))
-		     ((setq f (intersect leftover boundlist))
+		     ((setq f (intersection leftover boundlist :test #'equal))
 		      (emit (list 'setq
 				  e
 				  (list 'meval
 					(list 'quote
 					      (list '(mquotient) e (car f))))))
-		      (zl-delete (car f) leftover)
+		      (setq leftover (delete (car f) leftover :test #'equal))
 		      (go a1))
 		     (t
-		      (mtell "~M partitions `product'"
-			     (cons '(mtimes) leftover)
-			     )
+		      (mtell "~M partitions `product'" (cons '(mtimes) leftover))
 		      (setq boundlist (append boundlist (atomson leftover)))
 		      (return (emit (list 'cond
 					  (list (list 'part*
@@ -309,7 +302,7 @@
 	       (list 'meval
 		     (list 'quote (list '(mquotient) e (car p))))))
    (go a)))
-
+
 
 (defmspec $defmatch (form)
   (let ((meta-prop-p nil))
@@ -318,11 +311,10 @@
 (defun proc-$defmatch (l) 
   (prog (pt pt* args *a* boundlist reflist topreflist program name tem) 
      (setq name (car l))
-     (setq pt (copy (setq pt* (simplify (cadr l)))))
+     (setq pt (copy-tree (setq pt* (simplify (cadr l)))))
      (cond ((atom pt)
-	    (setq pt (copy (setq pt* (meval pt))))
-	    (mtell "~M~%Is the pattern~%" pt)
-	    ))
+	    (setq pt (copy-tree (setq pt* (meval pt))))
+	    (mtell "~M~%Is the pattern~%" pt)))
      (setq args (cddr l))
      (cond ((null (allatoms args)) (mtell "Non-atomic pattern variables")
 	    (return nil)))
@@ -353,7 +345,7 @@
 	((atom (car l)) (cons (car l) (atomson (cdr l))))
 	(t (atomson (cdr l)))))
 
-
+
 (defmspec $tellsimp (form)
   (let ((meta-prop-p nil))
     (proc-$tellsimp (cdr form))))
@@ -366,13 +358,13 @@
 (defun proc-$tellsimp (l) 
   (prog (pt rhs boundlist reflist topreflist *a* program name tem
 	 oldstuff pgname oname rulenum) 
-     (setq pt (copy (simplifya (car l) nil)))
+     (setq pt (copy-tree (simplifya (car l) nil)))
      (setq name pt) 
-     (setq rhs (copy (simplifya (cadr l) nil)))
+     (setq rhs (copy-tree (simplifya (cadr l) nil)))
      (cond ((alike1 pt rhs) (merror "Circular rule attempted - `tellsimp'"))
 	   ((or (atom pt) (mget (setq name (caar pt)) 'matchdeclare))
 	    (merror "~%~A unsuitable~%" (fullstrip1 (getop name))))
-	   ((memq name '(mplus mtimes))
+	   ((member name '(mplus mtimes) :test #'eq)
 	    (mtell "Warning: Putting rules on '+' or '*' is inefficient, and may not work.~%")))
      (setq *a* (genref))
      (cond ((atom (errset (compileeach *a* (cdr pt))))
@@ -409,15 +401,14 @@
 				   (nconc (list 'prog)
 					  (list (setq tem (nconc boundlist
 								 (cdr (reverse topreflist)))))
-					  #+cl
 					  `((declare (special ,@ tem)))
 					  program
 					  (list (list 'return
 						      (list 'values (memqargs rhs) t))))))
-			    (cond ((not (memq name '(mtimes mplus)))
+			    (cond ((not (member name '(mtimes mplus) :test #'eq))
 				   (list 'return
 					 (list 'cond
-					       '(rule-hit ans) '((and (not dosimp) (memq 'simp (cdar x)))x)
+					       '(rule-hit ans) '((and (not dosimp) (member 'simp (cdar x) :test #'eq))x)
 					       (list t
 						     (cond (oldstuff (cons oldstuff
 									   '(x a2 t)))
@@ -453,7 +444,7 @@
 
 (defun %to$ (l) (cond ((eq (car l) '%) (rplaca l '$)) (l)))
 
-
+
 (defmspec $tellsimpafter (form)
   (let ((meta-prop-p nil))
     (proc-$tellsimpafter (cdr form))))
@@ -461,14 +452,14 @@
 (defun proc-$tellsimpafter (l) 
   (prog (pt rhs boundlist reflist topreflist *a* program name oldstuff plustimes pgname oname tem
 	 rulenum) 
-     (setq pt (copy (simplifya (car l) nil)))
+     (setq pt (copy-tree (simplifya (car l) nil)))
      (setq name pt)
-     (setq rhs (copy (simplifya (cadr l) nil)))
+     (setq rhs (copy-tree (simplifya (cadr l) nil)))
      (cond ((alike1 pt rhs) (merror "Circular rule attempted - `tellsimpafter'"))
 	   ((or (atom pt) (mget (setq name (caar pt)) 'matchdeclare))
 	    (merror "~%~A unsuitable~%" (fullstrip1 (getop name)))))
      (setq *a* (genref))
-     (setq plustimes (memq name '(mplus mtimes)))
+     (setq plustimes (member name '(mplus mtimes) :test #'eq))
      (if (atom (if plustimes (errset (compilematch *a* pt))
 		   (errset (compileeach *a* (cdr pt)))))
 	 (merror "Match processing aborted~%"))
@@ -508,7 +499,6 @@
 				       (nconc (list 'prog)
 					      (list (setq tem(nconc boundlist
 								    (cdr (reverse topreflist)))))
-					      #+cl
 					      `((declare (special ,@ tem)))
 					      program
                           (cond
@@ -527,7 +517,7 @@
 				  'oldrules)))))
 
 (defun announce-rule-firing (rulename expr simplified-expr)
-  (let (($display2d nil) (stringdisp nil))
+  (let (($display2d nil) ($stringdisp nil))
     ($print (make-mstring "By") rulename '|&,| expr '|&-->| simplified-expr))
   simplified-expr)
 
@@ -540,10 +530,10 @@
   (prog (pt rhs boundlist reflist topreflist name *a* program lhs* rhs*   tem) 
      (if (not (= (length l) 3)) (wna-err '$defrule))
      (setq name (car l))
-     (if (or (not (symbolp name)) (mopp name) (memq name '($all $%)))
+     (if (or (not (symbolp name)) (mopp name) (member name '($all $%) :test #'eq))
 	 (merror "Improper rule name:~%~M" name))
-     (setq pt (copy (setq lhs* (simplify (cadr l)))))
-     (setq rhs (copy (setq rhs* (simplify (caddr l)))))
+     (setq pt (copy-tree (setq lhs* (simplify (cadr l)))))
+     (setq rhs (copy-tree (setq rhs* (simplify (caddr l)))))
      (setq *a* (genref))
      (cond ((atom (errset (compilematch *a* pt)))
 	    (merror "Match processing aborted~%"))
@@ -555,7 +545,6 @@
 				     (nconc (list 'prog)
 					    (list (setq tem (nconc boundlist
 								   (cdr (reverse topreflist)))))
-					    #+cl
 					    `((declare (special ,@ tem)))
 					    program
 					    (list (list 'return
@@ -564,7 +553,7 @@
 	      (meta-mputprop name (setq l (list '(mequal) lhs* rhs*)) '$rule)
 	      (meta-mputprop name '$defrule '$ruletype)
 	      (return (list '(msetq) name (cons '(marrow) (cdr l))))))))
-
+
 ; GETDEC constructs an expression of the form ``if <match> then <assign value> else <match failed>''.
 
 ; matchdeclare (aa, true);
@@ -608,11 +597,12 @@
 ; pattern-variable is the pattern variable (as declared by matchdeclare)
 ; match-against is the expression to match against
 
-; CALL $MAYBE INSTEAD OF IS IN THIS STUFF -- IS BINDS $PREDERROR TO T, WE REALLY DON'T WANT THAT
-; ACTUALLY ON SECOND THOUGHT WE DON'T WANT $MAYBE EITHER SINCE IT CAN
-; RETURN A NON-NIL VALUE WHICH IS NOT T (NAMELY $UNKNOWN).
-; HOW ABOUT CALLING DEFINITELY-SO WHERE
-; (DEFUN DEFINITELY-SO (E) (EQ ($MAYBE E) T))
+; Return T if $MAYBE returns T, otherwise NIL.
+; That makes all non-T values (e.g. $UNKNOWN or noun expressions) act like NIL.
+
+(defun definitely-so (e)
+  (eq (mfuncall '$maybe e) t))
+
 (defun getdec (pattern-variable match-against)
   (let (p)
     (if (setq p (mget pattern-variable 'matchdeclare))
@@ -621,7 +611,7 @@
       ; Otherwise, <foo> is ((<op>) <args>)
 
       ; If <foo> is $TRUE, T, or $ALL, generated code always assigns gensym value to pattern variable
-      (if (and (atom (car p)) (memq (car p) '($true t $all)))
+      (if (and (atom (car p)) (member (car p) '($true t $all) :test #'eq))
         `(msetq ,pattern-variable ,match-against)
 
         ; Otherwise, we have some work to do.
@@ -631,25 +621,27 @@
                 (if (atom p-op)
                   ; P-OP is the name of a function. Try to generate a Lisp function call.
                   (if (and (fboundp p-op) (not (get p-op 'translated)))   ; WHY THE TEST FOR TRANSLATED PROPERTY ??
-                    `(,p-op ,@(ncons match-against))
-                    `(is '((,p-op) ,@(ncons match-against))))
+                    `(eq t (,p-op ,@(ncons match-against)))
+                    `(definitely-so '((,p-op) ,@(ncons match-against))))
 
                   ; Otherwise P-OP is something like ((<op>) <args>).
                   (progn
                     (setq p-args (cdr p-op))
                     (cond
                       ((eq (caar p-op) 'lambda)
-                       `(is (mapply1 ',p-op (list ,match-against) t nil)))
+                       `(definitely-so (mapply1 ',p-op (list ,match-against) t nil)))
                       ((eq (caar p-op) 'mqapply)
-                       `(is (meval ',(append p-op (ncons match-against)))))
+                       `(definitely-so (meval ',(append p-op (ncons match-against)))))
                       ; Otherwise P-OP must be a function call with the last arg missing.
                       (t
-                        `(is (cons ',(car p-op) ',(append (mapcar 'memqargs p-args) (ncons match-against)))))))))
+                        (if (and (consp (car p-op)) (mget (caar p-op) 'mmacro))
+                          `(definitely-so (cons ',(car p-op) ,(append '(list) (mapcar 'memqargs p-args) (ncons match-against))))
+                          `(definitely-so (cons ',(car p-op) ',(append (mapcar 'memqargs p-args) (ncons match-against))))))))))
 
           `(cond
              (,test-expr (msetq ,pattern-variable ,match-against))
              ((matcherr))))))))
-
+
 (defun compilematch (e p) 
   (prog (reflist) 
      (cond ((fixedmatchp p)
@@ -706,7 +698,7 @@
      (setq a (tr-gensym))
      (setq topreflist (cons a topreflist))
      (return (car (setq reflist (cons a reflist))))))
-(defun compileeach (elist plist) 
+(defun compileeach (elist plist) 
     (prog (reflist count) 
        (setq count 0)
        (setq reflist (cons elist reflist))
@@ -724,10 +716,10 @@
 (defun fixedmatchp (x)
   (cond ((numberp x) t)
 	((atom x)
-	 (if (or (memq x boundlist) (null (mget x 'matchdeclare))) t))
-	(t (and (or (memq (caar x) boundlist)
+	 (if (or (member x boundlist :test #'eq) (null (mget x 'matchdeclare))) t))
+	(t (and (or (member (caar x) boundlist :test #'eq)
 		    (null (mget (caar x) 'matchdeclare)))
 		(fmp1 (cdr x))))))
 
-(defun fmp1 (x) (if (null x) t (and (fixedmatchp (car x)) (fmp1 (cdr x)))))
-
+(defun fmp1 (x)
+  (if (null x) t (and (fixedmatchp (car x)) (fmp1 (cdr x)))))

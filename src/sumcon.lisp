@@ -60,7 +60,7 @@
 		    (setq notsum (cons (car x) notsum)))
 		   ((eq (caaar x) '%sum)
 		    (setq sum (if (null sum)
-				  (car x)
+				  (copy-tree (car x))
 				  (muln (list sum (car x)) t))))
 		   (t (setq notsum (cons ($sumcontract (car x))
 					 notsum))))))
@@ -128,10 +128,12 @@
 
 (defmvar $niceindicespref '((mlist simp) $i $j $k $l $m $n))
 
-(defun get-free-index (llist)
+(defun get-free-index (llist &optional i)
   (or (do ((try-list (cdr $niceindicespref) (cdr try-list)))
 	  ((null try-list))
-	(if (free llist (car try-list)) (return (car try-list))))
+	(if (or (free llist (car try-list))
+		(eq i (car try-list)))
+	    (return (car try-list))))
       (do ((n 0 (f1+ n)) (try))
 	  (nil)
 	(setq try (concat (cadr $niceindicespref) n))
@@ -140,18 +142,19 @@
 (defmfun $bashindices (e)	       ; e is assumed to be simplified
   (let (($genindex '$j))
     (cond ((atom e) e)
-	  ((memq (caar e) '(%sum %product))
+	  ((member (caar e) '(%sum %product) :test #'eq)
 	   (sumconsimp (subst (gensumindex) (caddr e) e)))
 	  (t (recur-apply #'$bashindices e)))))
 
 (defmfun $niceindices (e)
   (if (atom e) e
       (let ((e (recur-apply #'$niceindices e)))
-	(if (memq (caar e) '(%sum %product))
-	    (sumconsimp (subst (get-free-index e) (caddr e) e))
-	    e))))
+	(cond ((atom e) e)
+	      ((member (caar e) '(%sum %product) :test #'eq)
+	       (sumconsimp (subst (get-free-index e (caddr e)) (caddr e) e)))
+	      (t e)))))
 
 (defun sumconsimp (e)
-  (if (and (not (atom e)) (memq (caar e) '(%sum %product)))
+  (if (and (not (atom e)) (member (caar e) '(%sum %product) :test #'eq))
       (list* (car e) (sumconsimp (cadr e)) (cddr e))
       (resimplify e)))

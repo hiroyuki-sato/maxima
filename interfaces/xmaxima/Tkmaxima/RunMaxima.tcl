@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: RunMaxima.tcl,v 1.23.2.3 2006/09/05 11:36:19 villate Exp $
+#       $Id: RunMaxima.tcl,v 1.29.4.2 2007/04/11 22:53:50 villate Exp $
 #
 proc textWindowWidth { w } {
     set font [$w cget -font]
@@ -30,10 +30,10 @@ proc CMeval { w } {
     #puts "CMeval $w, [$w compare insert < lastStart]"
     if { [$w compare insert < lastStart] } {
 	set this [thisRange $w input insert]
-	if { "$this" != "" } {
-	    set code [eval $w get $this]
+	if { [llength $this] > 1 } {
+            set code [$w get [lindex $this 0]+1c [lindex $this 1]]
+	    set code [string trimright $code \n]
 	    set prev [string trimright [$w get lastStart end] \n]
-
 	    $w delete lastStart end
 	    $w insert lastStart $code input
 	}
@@ -46,7 +46,7 @@ proc CMeval { w } {
     set expr [string trimright [$w get lastStart end] \n]
     # puts "command-line: ([$w index lastStart], [$w index end])"
     # puts "command: $expr"
-    if { ![regexp {^[ \n\t]*:|[;\$]$|^\?[ \t]+[^ \t]} $expr] } {
+    if { ![regexp {^[ \n\t]*:|[;\$][ \t]*$|^\?[\?!]?[ \t]+[^ \t]} $expr] } {
 	$w insert insert "\n"
 	$w see insert
 	if { [catch {set atprompt [oget $w atMaximaPrompt]}] } {
@@ -57,7 +57,7 @@ proc CMeval { w } {
 	}
     }
 
-    $w tag add input lastStart "end -1char"
+    $w tag add input lastStart-1c "end -1char"
     $w mark set  lastStart "end -1char"
     lappend inputs $expr
 
@@ -241,7 +241,7 @@ proc maximaFilter { win sock } {
 	# puts "plotPending=<$plotPending>,it=<$it>"
 	append plotPending $it
 	set it ""
-	if { [regexp -indices "\n\\((D|%o)\[0-9\]+\\)" $plotPending  inds] } {
+	if { [regexp -indices "\n\\((C|%i)\[0-9\]+\\)" $plotPending  inds] } {
 	    set it [string range $plotPending [lindex $inds 0] end]
 	    set plotPending [string range $plotPending 0 [lindex $inds 0]]
 	    set data $plotPending
@@ -341,6 +341,8 @@ proc runOneMaxima { win } {
 	return -code error [mc "Failed to start Maxima"]
     }
     gui status [mc "Started Maxima"]
+    
+    SetPlotFormat $maxima_priv(cConsoleText)
 
     set res [list [oget $win pid] $sock ]
     global pdata
