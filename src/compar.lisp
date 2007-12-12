@@ -298,8 +298,8 @@ relational knowledge is contained in the default context GLOBAL."
     (declare (special errcatch $errormsg))
     (ignore-errors (maybe-simplifya x z) x)))
 
-(defun simp-$is (x y z)
-  (declare (ignore y))
+(defun simp-$is (x yy z)
+  (declare (ignore yy))
   (let ((a (maybe-simplifya (cadr x) z)))
     (if (or (eq a t) (eq a nil))
       a
@@ -317,13 +317,11 @@ relational knowledge is contained in the default context GLOBAL."
       (t '$unknown))))
 
 (defmfun $maybe (pat)
-  (let*
-    ((x (let (($prederror nil)) (mevalp1 pat)))
-     (ans (car x))
-     (patevalled (cadr x)))
-    (cond
-      ((member ans '(t nil) :test #'eq) ans)
-      (t '$unknown))))
+  (let* ((x (let (($prederror nil)) (mevalp1 pat)))
+	 (ans (car x)))
+    (if (member ans '(t nil) :test #'eq)
+	ans
+	'$unknown)))
 
 (defmfun is (pred)
   (let (($prederror t))
@@ -333,15 +331,15 @@ relational knowledge is contained in the default context GLOBAL."
 ; which calls NARY1 to flatten nested "and" and "or" expressions
 ; (due to $NARY property of MAND and MOR, declared elsewhere).
 
-(put 'mand t 'opers)
-(put 'mor t 'opers)
+(putprop 'mand t 'opers)
+(putprop 'mor t 'opers)
 
 (putprop 'mnot 'simp-mnot 'operators)
 (putprop 'mand 'simp-mand 'operators)
 (putprop 'mor 'simp-mor 'operators)
 
-(defun simp-mand (x y z)
-  (declare (ignore y))
+(defun simp-mand (x yy z)
+  (declare (ignore yy))
   (do ((l (cdr x) (cdr l)) (a) (simplified))
     ((null l)
     (cond
@@ -354,8 +352,8 @@ relational knowledge is contained in the default context GLOBAL."
     ((eq a '$unknown) (if (not (member '$unknown simplified :test #'eq)) (push a simplified)))
     ((not (member a '(t nil) :test #'eq)) (push a simplified)))))
 
-(defun simp-mor (x y z)
-  (declare (ignore y))
+(defun simp-mor (x yy z)
+  (declare (ignore yy))
   (do ((l (cdr x) (cdr l)) (a) (simplified))
     ((null l)
     (cond
@@ -370,8 +368,8 @@ relational knowledge is contained in the default context GLOBAL."
 
 ; ALSO CUT STUFF ABOUT NOT EQUAL => NOTEQUAL AT TOP OF ASSUME
 
-(defun simp-mnot (x y z)
-  (declare (ignore y))
+(defun simp-mnot (x yy z)
+  (declare (ignore yy))
   (let ((arg (maybe-simplifya (cadr x) z)))
     (if (atom arg)
       (cond
@@ -850,28 +848,87 @@ relational knowledge is contained in the default context GLOBAL."
       (if (op-equalp fi '$equal)
 	  (setq e ($ratsubst (nth 2 fi) (nth 1 fi) e))))))
 
+(defun maxima-declared-arrayp (x)
+  (and
+    (symbolp x)
+    (mget x 'array)
+    (get (mget x 'array) 'array)))
+
+(defun maxima-undeclared-arrayp (x)
+  (and
+    (symbolp x)
+    (mget x 'hashar)
+    (get (mget x 'hashar) 'array)))
+
 (defun meqp (a b)
-  (let ((z))
-    (setq a (specrepcheck a))
-    (setq b (specrepcheck b))
-    (cond ((or (like a b)) (not (member a indefinites)))
+  ;; Check for some particular types before falling into the general case.
+  (cond
+    ((stringp a)
+     (and (stringp b) (equal a b)))
+    ((stringp b) nil)
 
-	  ((or (member a indefinites) (member b indefinites)
-	       (member a infinities) (member b infinities)) nil)
+    ((mstringp a)
+     (and (mstringp b) (equal a b)))
+    ((mstringp b) nil)
 
-	  ((and (symbolp a) (or (eq t a) (eq nil a) (get a 'sysconst))
-		(symbolp b) (or (eq t b) (eq nil b) (get b 'sysconst))) nil)
+    ((arrayp a)
+     (and (arrayp b) (array-meqp a b)))
+    ((arrayp b) nil)
 
-	  ((or (mbagp a) (mrelationp a) (mbagp b) (mrelationp b))
-	   (cond ((and (or (and (mbagp a) (mbagp b)) (and (mrelationp a) (mrelationp b)))
-		       (eq (mop a) (mop b)) (= (length (margs a)) (length (margs b))))
-		  (setq z (list-meqp (margs a) (margs b)))
-		  (if (or (eq z t) (eq z nil)) z `(($equal) ,a ,b)))
-		 (t nil)))
+    ((maxima-declared-arrayp a)
+     (and (maxima-declared-arrayp b) (maxima-declared-array-meqp a b)))
+    ((maxima-declared-arrayp b) nil)
 
-	  ((and (op-equalp a 'lambda) (op-equalp b 'lambda)) (lambda-meqp a b))
-	  (($setp a) (set-meqp a b))
-	  (t (meqp-by-csign (equal-facts-simp ($ratsimp (sub a b))) a b)))))
+    ((maxima-undeclared-arrayp a)
+     (and (maxima-undeclared-arrayp b) (maxima-undeclared-array-meqp a b)))
+    ((maxima-undeclared-arrayp b) nil)
+
+    (t
+      (let ((z))
+        (setq a (specrepcheck a))
+        (setq b (specrepcheck b))
+        (cond ((or (like a b)) (not (member a indefinites)))
+
+          ((or (member a indefinites) (member b indefinites)
+               (member a infinities) (member b infinities)) nil)
+
+          ((and (symbolp a) (or (eq t a) (eq nil a) (get a 'sysconst))
+            (symbolp b) (or (eq t b) (eq nil b) (get b 'sysconst))) nil)
+
+          ((or (mbagp a) (mrelationp a) (mbagp b) (mrelationp b))
+           (cond ((and (or (and (mbagp a) (mbagp b)) (and (mrelationp a) (mrelationp b)))
+                   (eq (mop a) (mop b)) (= (length (margs a)) (length (margs b))))
+              (setq z (list-meqp (margs a) (margs b)))
+              (if (or (eq z t) (eq z nil)) z `(($equal) ,a ,b)))
+             (t nil)))
+
+          ((and (op-equalp a 'lambda) (op-equalp b 'lambda)) (lambda-meqp a b))
+          (($setp a) (set-meqp a b))
+          (t (meqp-by-csign (equal-facts-simp ($ratsimp (sub a b))) a b)))))))
+
+;; Two arrays are equal (according to MEQP)
+;; if (1) they have the same dimensions,
+;; and (2) their elements are MEQP.
+
+(defun array-meqp (p q)
+  (and
+    (equal (array-dimensions p) (array-dimensions q))
+    (progn
+      (dotimes (i (array-total-size p))
+        (let ((z (let ($ratprint) (meqp (row-major-aref p i) (row-major-aref q i)))))
+          (cond
+            ((eq z nil) (return-from array-meqp nil))
+            ((eq z t))
+            (t (return-from array-meqp `(($equal) ,p ,q))))))
+      t)))
+
+(defun maxima-declared-array-meqp (p q)
+  (array-meqp (get (mget p 'array) 'array) (get (mget q 'array) 'array)))
+
+(defun maxima-undeclared-array-meqp (p q)
+  (and
+    (alike1 (mfuncall '$arrayinfo p) (mfuncall '$arrayinfo q))
+    (let ($ratprint) (meqp ($listarray p) ($listarray q)))))
 
 (defun list-meqp (p q)
   (let ((z))
@@ -916,22 +973,24 @@ relational knowledge is contained in the default context GLOBAL."
       (if (every #'(lambda (s) (eq nil (meqp bk s))) a) (throw 'done t)))
     (throw 'done nil)))
 
-(defmfun mgrp (x y)
-  (compare x y)
-  (cond ((eq '$pos sign))
-	((member sign '($neg $zero $nz) :test #'eq) nil)
-	(t (c-$pos odds evens))))
+(defun mgrp (a b)
+  (setq a (sub a b))
+  (let ((sgn (csign a)))
+    (cond ((eq sgn '$pos) t)
+	  ((eq sgn t) nil) ;; csign thinks a - b isn't real
+	  ((memq sgn '($neg $zero $nz)) nil)
+	  (t `((mgreaterp) ,a 0)))))
 
 (defun mlsp (x y)
   (mgrp y x))
 
-(defmfun mgqp (x y)
-  (compare x y)
-  (cond ((member sign '($pos $zero $pz) :test #'eq) t)
-	((eq '$neg sign) nil)
-	((eq '$nz sign) (c-$zero odds evens))
-	((eq '$pn sign) (c-$pos odds evens))
-	(t (c-$pz odds evens))))
+(defun mgqp (a b)
+  (setq a (sub a b))
+  (let ((sgn (csign a)))
+    (cond ((memq sgn '($pos $zero $pz)) t)
+	  ((eq sgn t) nil) ;; csign thinks a - b isn't real 
+	  ((eq sgn '$neg) nil)
+	  (t `((mgeqp) ,a 0)))))
 
 (defun mnqp (x y)
   (let ((b (meqp x y)))
@@ -956,7 +1015,6 @@ relational knowledge is contained in the default context GLOBAL."
 	((null e) (list '(mgeqp) (lmul o) 0))
 	(t (setq e (mapcar #'(lambda (l) (pow l 2)) e))
 	   (list '(mgeqp) (lmul (nconc o e)) 0))))
-
 
 (defun sign* (x)
   (let (sign minus odds evens)
@@ -1007,8 +1065,8 @@ relational knowledge is contained in the default context GLOBAL."
      (return sign)))
 
 (defun numer (x)
-  (let ($ratsimpexpons)
-    (car (errset (meval `(($ev) ,x $numer $%enumer)) nil))))
+  (let (($numer t)) ;currently, no effect on $float, but proposed to
+    ($float x)))
 
 (defun constp (x)
   (cond ((floatp x) 'float)
@@ -1111,15 +1169,29 @@ relational knowledge is contained in the default context GLOBAL."
   (when (or (and (numberp xrhs) (minusp xrhs)
 		 (not (atom xlhs)) (eq (sign* xlhs) '$pos))
 					; e.g. sign(a^3+%pi-1) where a>0
-	    (and (mexptp xlhs)		; e.g. sign(%e^x-1) where x>0
-		 (member (sign* (sub 1 xrhs)) '($pos $zero $pz) :test #'eq)
+	    (and (mexptp xlhs)		
+		 ;; e.g. sign(%e^x-1) where x>0
 		 (eq (sign* (caddr xlhs)) '$pos)
-		 (eq (sign* (sub (cadr xlhs) 1)) '$pos))
-	    (and (mexptp xlhs) (mexptp xrhs) ; e.g. sign(2^x-2^y) where x>y
+		 (or (and
+		      ;; Q^Rpos - S, S<=1, Q>1
+		      (memq (sign* (sub 1 xrhs)) '($pos $zero $pz))
+		      (eq (sign* (sub (cadr xlhs) 1)) '$pos))
+		     (and
+		      ;; Qpos ^ Rpos - Spos => Qpos - Spos^(1/Rpos)
+		      (eq (sign* (cadr xlhs)) '$pos)
+		      (eq (sign* xrhs) '$pos)
+		      (eq (sign* (sub (cadr xlhs)
+				      (power xrhs (div 1 (caddr xlhs)))))
+			  '$pos))))
+	    (and (mexptp xlhs) (mexptp xrhs)
+		 ;; Q^R - Q^T, Q>1, (R-T) > 0
+		 ;; e.g. sign(2^x-2^y) where x>y
 		 (alike1 (cadr xlhs) (cadr xrhs))
 		 (eq (sign* (sub (cadr xlhs) 1)) '$pos)
 		 (eq (sign* (sub (caddr xlhs) (caddr xrhs))) '$pos)))
-    (setq sign '$pos minus nil odds nil evens nil) t))
+    (setq sign '$pos minus nil odds nil evens nil)
+    t)
+  )
 
 (defun signsum (x)
   (do ((l (cdr x) (cdr l)) (s '$zero))

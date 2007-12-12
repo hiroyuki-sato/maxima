@@ -36,9 +36,9 @@
       (mcall user-level value)))
   value)
 
-(deftrvar defined_variables ())
+(defvar defined_variables ())
 
-(deftrvar $define_variable ())
+(defvar $define_variable ())
 
 (def%tr $define_variable (form)	;;VAR INIT MODE.
   (cond ((> (length form) 3)
@@ -191,7 +191,7 @@
 
 (declare-top (unspecial trflag mode form))
 
-(deftrfun declvalue (v mode trflag)
+(defun declvalue (v mode trflag)
   (when trflag (setq v (teval v)))
   (add2lnc v $props)
   (putprop v mode 'mode))
@@ -256,7 +256,6 @@ maybe you want ~:M mode.~%"
 	 (case mode
 	   (($integer $integerp) '$fixnum)
 	   (($complex) "&to ask about this")
-	   (($fucked $shitty) "&to watch your language")
 	   (t "&to see the documentation on"))))
 
 (defmfun fluidize (variable)

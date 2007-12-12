@@ -1,9 +1,9 @@
 @menu
-* Definitions for Plotting::    
+* Functions and Variables for Plotting::    
 @end menu
 
-@node Definitions for Plotting,  , Plotting, Plotting
-@section Definitions for Plotting
+@node Functions and Variables for Plotting,  , Plotting, Plotting
+@section Functions and Variables for Plotting
 
 @deffn {Function} contour_plot (@var{expr}, @var{x_range}, @var{y_range}, @var{options}, ...)
 
@@ -22,8 +22,10 @@ Examples:
 @c contour_plot (sin(y) * cos(x)^2, [x, -4, 4], [y, -4, 4]);
 @c F(x, y) := x^3 + y^2;
 @c contour_plot (F, [u, -4, 4], [v, -4, 4]);
-@c contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble, "set size ratio -1"]);
-@c set_plot_option ([gnuplot_preamble, "set cntrparam levels 12"])$
+@c contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble, 
+@c       "set size ratio -1"]);
+@c set_plot_option ([gnuplot_preamble, 
+@c       "set cntrparam levels 12"])$
 @c contour_plot (F, [u, -4, 4], [v, -4, 4]);
 @c ===end===
 @example
@@ -36,9 +38,11 @@ Examples:
 (%o3)                  F(x, y) := x  + y
 (%i4) contour_plot (F, [u, -4, 4], [v, -4, 4]);
 (%o4) 
-(%i5) contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble, "set size ratio -1"]);
+(%i5) contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble,
+      "set size ratio -1"]);
 (%o5) 
-(%i6) set_plot_option ([gnuplot_preamble, "set cntrparam levels 12"])$
+(%i6) set_plot_option ([gnuplot_preamble,
+                        "set cntrparam levels 12"])$
 
 (%i7) contour_plot (F, [u, -4, 4], [v, -4, 4]);
 @end example
@@ -108,7 +112,7 @@ option. The option @var{xlabel} can be used to give a label for the
 horizontal axis; if that option is not used, the horizontal axis will
 be labeled with the name of the variable specified in @var{x_range}, or
 with the expression @var{x_expr} in the case of just one parametric
-expresssion, or it will be left blank otherwise.
+expression, or it will be left blank otherwise.
 
 A label for the vertical axis can be given with the @var{ylabel}
 option. If there is only one expression to be plotted and the
@@ -129,8 +133,8 @@ option is not used, Maxima will create labels from the expressions.
 By default, the expressions are plotted as a set of line segments
 joining adjacent points within a set of points which is either given in
 the @var{discrete} form, or calculated automatically from the expression
-given, using an algorithm that atomatically adapts the steps among
-points using as an intial estimate of the total number of points the
+given, using an algorithm that automatically adapts the steps among
+points using as an initial estimate of the total number of points the
 value set with the @var{nticks} option. The option @var{style} can be
 used to make one of the expressions to be represented as a set of
 isolated points, or as points and line segments.
@@ -198,11 +202,12 @@ lengths are in the 4 to 3 proportion, we will use the @var{xrange}
 option to obtain the same scaling in both axes:
 
 @c ===beg===
-@c plot2d ([parametric, cos(t), sin(t), [t, -%pi, %pi], [nticks, 80]], [x, -4/3, 4/3])$
+@c plot2d ([parametric, cos(t), sin(t), [t, -%pi, %pi], 
+@c       [nticks, 80]], [x, -4/3, 4/3])$
 @c ===end===
 @example
-(%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi], [nticks,80]],
-           [x, -4/3, 4/3])$
+(%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi],
+      [nticks,80]], [x, -4/3, 4/3])$
 @end example
 
 @ifnotinfo
@@ -213,7 +218,8 @@ If we repeat that plot with only 8 points and extending the range
 of the parameter to give two turns, we will obtain the plot of a star:
 
 @c ===beg===
-@c plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2], [nticks, 8]], [x, -2, 2], [y, -1.5, 1.5])$
+@c plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2], 
+@c         [nticks, 8]], [x, -2, 2], [y, -1.5, 1.5])$
 @c ===end===
 @example
 (%i9) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
@@ -228,7 +234,8 @@ Combination of an ordinary plot of a cubic polynomial with a
 parametric plot of a circle:
 
 @c ===beg===
-@c plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5], [nticks, 80]]], [x, -3, 3])$
+@c plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5], 
+@c         [nticks, 80]]], [x, -3, 3])$
 @c ===end===
 @example
 (%i10) plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5],
@@ -295,27 +302,23 @@ The plot of the data points can be shown together with a plot of the
 theoretical function that predicts the data:
 
 @c ===beg===
-@c plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-@c [style, [points,5,2,6], [lines,1,1]], [legend,"experiment","theory"],
-@c [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
+@c plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50], 
+@c         [style, [points,3,5], [lines,1,3]], 
+@c         [legend,"experiment","theory"], 
+@c         [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
 @c ===end===
 @example
 (%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-       [style, [points,5,2,6], [lines,1,1]], [legend,"experiment","theory"],
-       [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
+        [style, [points,3,5], [lines,1,3]],
+        [legend,"experiment","theory"],
+        [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
 @end example
 
 @ifnotinfo
 @image{figures/plotting12,8cm}
 @end ifnotinfo
 
-The meaning of the three numbers after the ``points'' style option are:
-5: radius of the points, 2: color used (red), 6: type of objects used
-(solid squares). The two numbers after the ``lines'' style option give
-the thickness of the line (1 point) and the color (1 corresponds to blue).
-
-See also @code{plot_options}, which describes plotting options and has
-more examples.
+See also @code{plot_options}, which describes plotting options and has more examples.
 
 @end deffn
 
@@ -551,21 +554,14 @@ Option: @code{legend}
 
 The labels for the various expressions in a 2d plot with several
 expressions. If there are more expressions than the number of labels
-given, they will be repeated. If legend is followed by the word
-@emph{false}, the legend will not be shown.  By default, the names of
-the expressions or functions will be used for the legend, or the words
-discrete1, discrete2, ..., for discrete sets of points.
+given, they will be repeated. By default, the names of the expressions
+or functions will be used, or the words discrete1, discrete2, ..., for
+discrete sets of points.
 
 Example:
 @example
 [legend, "Set 1", "Set 2", "Set 3"]
 @end example
-
-@item
-Option: @code{box}
-
-Currently, this option can only be followed by the word @emph{false},
-and it will be used to supress the box around the plot.
 
 @item
 Option: @code{style}
@@ -580,32 +576,26 @@ isolated dots. Gnuplot accepts also an @var{impulses} style.
 
 Each of the styles can be enclosed inside a list with some aditional
 parameters. @var{lines} accepts one or two numbers: the width of the
-line and an integer that identifies a color. The default color codes
-are: 1: blue, 2: red, 3: magenta, 4: orange, 5: brown, 6: lime and 7:
-aqua.
-
-@var{points} accepts one two or three parameters; the first parameter is
-the radius of the points, the second parameter is an integer that
-selects the color, using the same code used for @var{lines} and the
-third parameter is currently used only by Gnuplot and it corresponds to
-several objects instead of points. The default types of objects are: 1:
-filled circles, 2: open circles, 3: plus signs, 4: x, 5: *, 6: filled
-squares, 7: open squares, 8: filled triangles, 9: open triangles, 10:
-filled inverted triangles, 11: open inverted triangles, 12: filled
-lozenges and 13: open lozenges.
-
-@var{linesdots} accepts up to four parameters: line width, points
-radius, color and type of object to replace the points.
+line and an integer that identifies a color. @var{points} accepts one
+or two parameters; the first parameter is the radius of the points and
+the second parameter is an integer that in Gnuplot selects different
+shapes and colors for the points and in Openmath changes the color
+used for the points. @var{linesdots} accepts up to four parameters;
+the first two are the same as for @var{lines} and the last two are the
+same as for @var{points}.
 
 Example:
 @example
-[style,[lines,2,3],[points,1,4,3]]
+[style,[lines,2,3],[points,1,4]]
 @end example
 
-This will plot the first (and third, fifth, etc) expression with magenta
-line segments of width 2, and the second (and fourth, sixth, etc)
-expression with orange plus signs of size 1 (orange circles in the case
-of Openmath).
+In Gnuplot, this will plot the first (and third, fifth, etc)
+expression with blue line segments of width 2, and the second (and
+fourth, sixth, etc) expression with green squares of size 1. In
+Openmath, the first expression will be plotted with magenta lines of
+width 2, and the second with orange points of radius 1; notice that
+openmath_color(3) and openmath_color(4) return ``magenta'' and
+``orange''.
 
 The default for the style option is @var{lines} with a width of 1, and
 different colors.
@@ -814,8 +804,8 @@ manual were obtained from Postscript files that were generated after
 setting @code{gnuplot_ps_term_command} as:
 
 @example
-[gnuplot_ps_term_command,
-"set size 1.3, 1.3; set term postscript eps color solid lw 2.5 30"]
+[gnuplot_ps_term_command, "set size 1.3, 1.3; \
+        set term postscript eps color solid lw 2.5 30"]
 @end example
 
 @end itemize
@@ -1128,7 +1118,7 @@ eps enhanced color solid 24]]
 @deffn {Function} gnuplot_start ()
 
 Opens the pipe to gnuplot used for plotting with the
-@code{gnuplot_pipes} format. Is is not necessary to manually open the
+@code{gnuplot_pipes} format. Is not necessary to manually open the
 pipe before plotting.
 
 @end deffn

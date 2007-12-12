@@ -9,10 +9,216 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Fourier Series,  Prev: Fourier packages,  Up: Numerical
+File: maxima.info,  Node: Functions and Variables for Differential Equations,  Prev: Introduction to Differential Equations,  Up: Differential Equations
 
-23.3 Definitions for Numerical
+22.2 Functions and Variables for Differential Equations
+=======================================================
+
+ -- Function: bc2 (<solution>, <xval1>, <yval1>, <xval2>, <yval2>)
+     Solves a boundary value problem for a second order differential
+     equation.  Here: <solution> is a general solution to the equation,
+     as found by `ode2'; <xval1> specifies the value of the independent
+     variable in a first point, in the form `<x> = <x1>', and <yval1>
+     gives the value of the dependent variable in that point, in the
+     form `<y> = <y1>'. The expressions <xval2> and <yval2> give the
+     values for these variables at a second point, using the same form.
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: desolve (<eqn>, <x>)
+ -- Function: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+     The function `dsolve' solves systems of linear ordinary
+     differential equations using Laplace transform.  Here the <eqn>'s
+     are differential equations in the dependent variables <x_1>, ...,
+     <x_n>.  The functional dependence of <x_1>, ..., <x_n> on an
+     independent variable, for instance <x>, must be explicitly
+     indicated in the variables and its derivatives. For example, this
+     would not be the correct way to define two equations:
+
+          eqn_1: 'diff(f,x,2) = sin(x) + 'diff(g,x);
+          eqn_2: 'diff(f,x) + x^2 - f = 2*'diff(g,x,2);
+
+     The correct way would be:
+
+          eqn_1: 'diff(f(x),x,2) = sin(x) + 'diff(g(x),x);
+          eqn_2: 'diff(f(x),x) + x^2 - f(x) = 2*'diff(g(x),x,2);
+
+     The call to the function `desolve' would then be
+          desolve([eqn_1, eqn_2], [f(x),g(x)]);
+
+     If initial conditions at `x=0' are known, they can be supplied
+     before calling `desolve' by using `atvalue'.
+
+          (%i1) 'diff(f(x),x)='diff(g(x),x)+sin(x);
+                           d           d
+          (%o1)            -- (f(x)) = -- (g(x)) + sin(x)
+                           dx          dx
+          (%i2) 'diff(g(x),x,2)='diff(f(x),x)-cos(x);
+                            2
+                           d            d
+          (%o2)            --- (g(x)) = -- (f(x)) - cos(x)
+                             2          dx
+                           dx
+          (%i3) atvalue('diff(g(x),x),x=0,a);
+          (%o3)                           a
+          (%i4) atvalue(f(x),x=0,1);
+          (%o4)                           1
+          (%i5) desolve([%o1,%o2],[f(x),g(x)]);
+                            x
+          (%o5) [f(x) = a %e  - a + 1, g(x) =
+
+                                                          x
+                                             cos(x) + a %e  - a + g(0) - 1]
+          (%i6) [%o1,%o2],%o5,diff;
+                       x       x      x                x
+          (%o6)   [a %e  = a %e , a %e  - cos(x) = a %e  - cos(x)]
+
+     If `desolve' cannot obtain a solution, it returns `false'.
+
+
+ -- Function: ic1 (<solution>, <xval>, <yval>)
+     Solves initial value problems for first order differential
+     equations.  Here <solution> is a general solution to the equation,
+     as found by `ode2', <xval> gives an initial value for the
+     independent variable in the form `<x> = <x0>', and <yval> gives the
+     initial value for the dependent variable in the form `<y> = <y0>'.
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: ic2 (<solution>, <xval>, <yval>, <dval>)
+     Solves initial value problems for second-order differential
+     equations.  Here <solution> is a general solution to the equation,
+     as found by `ode2', <xval> gives the initial value for the
+     independent variable in the form `<x> = <x0>', <yval> gives the
+     initial value of the dependent variable in the form `<y> = <y0>',
+     and <dval> gives the initial value for the first derivative of the
+     dependent variable with respect to independent variable, in the
+     form `diff(<y>,<x>) = <dy0>' (`diff' does not have to be quoted).
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: ode2 (<eqn>, <dvar>, <ivar>)
+     The function `ode2' solves an ordinary differential equation (ODE)
+     of first or second order. It takes three arguments: an ODE given by
+     <eqn>, the dependent variable <dvar>, and the independent variable
+     <ivar>. When successful, it returns either an explicit or implicit
+     solution for the dependent variable. `%c' is used to represent the
+     integration constant in the case of first-order equations, and
+     `%k1' and `%k2' the constants for second-order equations. The
+     dependence of the dependent variable on the independent variable
+     does not have to be written explicitly, as in the case of
+     `desolve', but the independent variable must always be given as the
+     third argument.
+
+     If `ode2' cannot obtain a solution for whatever reason, it returns
+     `false', after perhaps printing out an error message. The methods
+     implemented for first order equations in the order in which they
+     are tested are: linear, separable, exact - perhaps requiring an
+     integrating factor, homogeneous, Bernoulli's equation, and a
+     generalized homogeneous method. The types of second-order
+     equations which can be solved are: constant coefficients, exact,
+     linear homogeneous with non-constant coefficients which can be
+     transformed to constant coefficients, the Euler or
+     equi-dimensional equation, equations solvable by the method of
+     variation of parameters, and equations which are free of either the
+     independent or of the dependent variable so that they can be
+     reduced to two first order linear equations to be solved
+     sequentially.
+
+     In the course of solving ODE's, several variables are set purely
+     for informational purposes: `method' denotes the method of solution
+     used (e.g., `linear'), `intfactor' denotes any integrating factor
+     used, `odeindex' denotes the index for Bernoulli's method or for
+     the generalized homogeneous method, and `yp' denotes the
+     particular solution for the variation of parameters technique.
+
+     In order to solve initial value problems (IVP) functions `ic1' and
+     `ic2' are available for first and second order equations, and to
+     solve second-order boundary value problems (BVP) the function `bc2'
+     can be used.
+
+     Example:
+
+          (%i1) x^2*'diff(y,x) + 3*y*x = sin(x)/x;
+                                2 dy           sin(x)
+          (%o1)                x  -- + 3 x y = ------
+                                  dx             x
+          (%i2) ode2(%,y,x);
+                                       %c - cos(x)
+          (%o2)                    y = -----------
+                                            3
+                                           x
+          (%i3) ic1(%o2,x=%pi,y=0);
+                                        cos(x) + 1
+          (%o3)                   y = - ----------
+                                             3
+                                            x
+          (%i4) 'diff(y,x,2) + y*'diff(y,x)^3 = 0;
+                                   2
+                                  d y      dy 3
+          (%o4)                   --- + y (--)  = 0
+                                    2      dx
+                                  dx
+          (%i5) ode2(%,y,x);
+                                3
+                               y  + 6 %k1 y
+          (%o5)                ------------ = x + %k2
+                                    6
+          (%i6) ratsimp(ic2(%o5,x=0,y=0,'diff(y,x)=2));
+                                       3
+                                    2 y  - 3 y
+          (%o6)                   - ---------- = x
+                                        6
+          (%i7) bc2(%o5,x=0,y=1,x=1,y=3);
+                                   3
+                                  y  - 10 y       3
+          (%o7)                   --------- = x - -
+                                      6           2
+
+
+
+File: maxima.info,  Node: Numerical,  Next: Arrays,  Prev: Differential Equations,  Up: Top
+
+23 Numerical
+************
+
+* Menu:
+
+* Introduction to Numerical::
+* Fourier packages::
+* Functions and Variables for Numerical::
+* Functions and Variables for Fourier Series::
+
+
+File: maxima.info,  Node: Introduction to Numerical,  Next: Fourier packages,  Prev: Numerical,  Up: Numerical
+
+23.1 Introduction to Numerical
 ==============================
+
+
+File: maxima.info,  Node: Fourier packages,  Next: Functions and Variables for Numerical,  Prev: Introduction to Numerical,  Up: Numerical
+
+23.2 Fourier packages
+=====================
+
+The `fft' package comprises functions for the numerical (not symbolic)
+computation of the fast Fourier transform.  `load ("fft")' loads this
+package.  See `fft'.
+
+   The `fourie' package comprises functions for the symbolic computation
+of Fourier series.  `load ("fourie")' loads this package.  There are
+functions in the `fourie' package to calculate Fourier integral
+coefficients and some functions for manipulation of expressions.  See
+`Functions and Variables for Fourier Series'.
+
+
+File: maxima.info,  Node: Functions and Variables for Numerical,  Next: Functions and Variables for Fourier Series,  Prev: Fourier packages,  Up: Numerical
+
+23.3 Functions and Variables for Numerical
+==========================================
 
  -- Function: polartorect (<magnitude_array>, <phase_array>)
      Translates complex values of the form `r %e^(%i t)' to the form `a
@@ -169,28 +375,29 @@ File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Four
 
      Examples:
 
-          (%i1) expr: (a + b)^12$
-          (%i2) fortran (expr);
-                (b+a)**12
-          (%o2)                         done
-          (%i3) fortran ('x=expr);
-                x = (b+a)**12
-          (%o3)                         done
-          (%i4) fortran ('x=expand (expr));
-                x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
-               1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
-               2   **3+66*a**10*b**2+12*a**11*b+a**12
-          (%o4)                         done
-          (%i5) fortran ('x=7+5*%i);
-                x = (7,5)
-          (%o5)                         done
-          (%i6) fortran ('x=[1,2,3,4]);
-                x = [1,2,3,4]
-          (%o6)                         done
-          (%i7) f(x) := x^2$
-          (%i8) fortran (f);
-                f
-          (%o8)                         done
+
+     (%i1) expr: (a + b)^12$
+     (%i2) fortran (expr);
+           (b+a)**12
+     (%o2)                         done
+     (%i3) fortran ('x=expr);
+           x = (b+a)**12
+     (%o3)                         done
+     (%i4) fortran ('x=expand (expr));
+           x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+          1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+          2   **3+66*a**10*b**2+12*a**11*b+a**12
+     (%o4)                         done
+     (%i5) fortran ('x=7+5*%i);
+           x = (7,5)
+     (%o5)                         done
+     (%i6) fortran ('x=[1,2,3,4]);
+           x = [1,2,3,4]
+     (%o6)                         done
+     (%i7) f(x) := x^2$
+     (%i8) fortran (f);
+           f
+     (%o8)                         done
 
 
  -- Option variable: fortspaces
@@ -227,37 +434,45 @@ File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Four
           (%o4)                       7.0E+154
 
 
- -- Function: find_root (<f>(<x>), <x>, <a>, <b>)
+ -- Function: find_root (<expr>, <x>, <a>, <b>)
  -- Function: find_root (<f>, <a>, <b>)
-     Finds the zero of function <f> as variable <x> varies over the
-     range `[<a>, <b>]'.  The function must have a different sign at
-     each endpoint.  If this condition is not met, the action of the
-     function is governed by `find_root_error'.  If `find_root_error'
-     is `true' then an error occurs, otherwise the value of
-     `find_root_error' is returned (thus for plotting `find_root_error'
-     might be set to 0.0).  Otherwise (given that Maxima can evaluate
-     the first argument in the specified range, and that it is
-     continuous) `find_root' is guaranteed to come up with the zero (or
-     one of them if there is more than one zero).  The accuracy of
-     `find_root' is governed by `find_root_abs' and `find_root_rel'
-     which must be non-negative floating point numbers.  `find_root'
-     will stop when the first arg evaluates to something less than or
-     equal to `find_root_abs' or if successive approximants to the root
-     differ by no more than `find_root_rel * <one of the approximants>'.
-     The default values of `find_root_abs' and `find_root_rel' are 0.0
-     so `find_root' gets as good an answer as is possible with the
-     single precision arithmetic we have.  The first arg may be an
-     equation.  The order of the last two args is irrelevant.  Thus
+ -- Option variable: find_root_error
+ -- Option variable: find_root_abs
+ -- Option variable: find_root_rel
+     Finds a root of the expression <expr> or the function <f> over the
+     closed interval [<a>, <b>].  The expression <expr> may be an
+     equation, in which case `find_root' seeks a root of `lhs(<expr>) -
+     rhs(<expr>)'.
 
-          find_root (sin(x) = x/2, x, %pi, 0.1);
+     Given that Maxima can evaluate <expr> or <f> over [<a>, <b>] and
+     that <expr> or <f> is continuous, `find_root' is guaranteed to
+     find the root, or one of the roots if there is more than one.
 
-     is equivalent to
+     `find_root' initially applies binary search.  If the function in
+     question appears to be smooth enough, `find_root' applies linear
+     interpolation instead.
 
-          find_root (sin(x) = x/2, x, 0.1, %pi);
+     The accuracy of `find_root' is governed by `find_root_abs' and
+     `find_root_rel'.  `find_root' stops when the function in question
+     evaluates to something less than or equal to `find_root_abs', or
+     if successive approximants <x_0>, <x_1> differ by no more than
+     `find_root_rel * max(abs(x_0), abs(x_1))'.  The default values of
+     `find_root_abs' and `find_root_rel' are both zero.
 
-     The method used is a binary search in the range specified by the
-     last two args.  When it thinks the function is close enough to
-     being linear, it starts using linear interpolation.
+     `find_root' expects the function in question to have a different
+     sign at the endpoints of the search interval.  If this condition
+     is not met, the behavior of `find_root' is governed by
+     `find_root_error'.  When `find_root_error' is `true', `find_root'
+     prints an error message.  Otherwise `find_root' returns the value
+     of `find_root_error'.  The default value of `find_root_error' is
+     `true'.
+
+     If <f> evaluates to something other than a number at any step in
+     the search algorithm, `find_root' returns a partially-evaluated
+     `find_root' expression.
+
+     The order of <a> and <b> is ignored; the region in which a root is
+     sought is [min(<a>, <b>), max(<a>, <b>)].
 
      Examples:
 
@@ -273,49 +488,13 @@ File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Four
           (%o4)                   1.895494267033981
           (%i5) find_root (f, 0.1, %pi);
           (%o5)                   1.895494267033981
-
-
- -- Option variable: find_root_abs
-     Default value: 0.0
-
-     `find_root_abs' is the accuracy of the `find_root' command is
-     governed by `find_root_abs' and `find_root_rel' which must be
-     non-negative floating point numbers.  `find_root' will stop when
-     the first arg evaluates to something less than or equal to
-     `find_root_abs' or if successive approximants to the root differ
-     by no more than `find_root_rel * <one of the approximants>'.  The
-     default values of `find_root_abs' and `find_root_rel' are 0.0 so
-     `find_root' gets as good an answer as is possible with the single
-     precision arithmetic we have.
-
-
- -- Option variable: find_root_error
-     Default value: `true'
-
-     `find_root_error' governs the behavior of `find_root'.  When
-     `find_root' is called, it determines whether or not the function
-     to be solved satisfies the condition that the values of the
-     function at the endpoints of the interpolation interval are
-     opposite in sign.  If they are of opposite sign, the interpolation
-     proceeds.  If they are of like sign, and `find_root_error' is
-     `true', then an error is signaled.  If they are of like sign and
-     `find_root_error' is not `true', the value of `find_root_error' is
-     returned.  Thus for plotting, `find_root_error' might be set to
-     0.0.
-
-
- -- Option variable: find_root_rel
-     Default value: 0.0
-
-     `find_root_rel' is the accuracy of the `find_root' command is
-     governed by `find_root_abs' and `find_root_rel' which must be
-     non-negative floating point numbers.  `find_root' will stop when
-     the first arg evaluates to something less than or equal to
-     `find_root_abs' or if successive approximants to the root differ
-     by no more than `find_root_rel * <one of the approximants>'.  The
-     default values of `find_root_abs' and `find_root_rel' are 0.0 so
-     `find_root' gets as good an answer as is possible with the single
-     precision arithmetic we have.
+          (%i6) find_root (exp(x) = y, x, 0, 100);
+                                      x
+          (%o6)           find_root(%e  = y, x, 0.0, 100.0)
+          (%i7) find_root (exp(x) = y, x, 0, 100), y = 10;
+          (%o7)                   2.302585092994046
+          (%i8) log (10.0);
+          (%o8)                   2.302585092994046
 
 
  -- Function: newton (<expr>, <x>, <x_0>, <eps>)
@@ -351,10 +530,10 @@ File: maxima.info,  Node: Definitions for Numerical,  Next: Definitions for Four
 
 
 
-File: maxima.info,  Node: Definitions for Fourier Series,  Prev: Definitions for Numerical,  Up: Numerical
+File: maxima.info,  Node: Functions and Variables for Fourier Series,  Prev: Functions and Variables for Numerical,  Up: Numerical
 
-23.4 Definitions for Fourier Series
-===================================
+23.4 Functions and Variables for Fourier Series
+===============================================
 
  -- Function: equalp (<x>, <y>)
      Returns `true' if `equal (<x>, <y>)' otherwise `false' (doesn't
@@ -462,13 +641,13 @@ File: maxima.info,  Node: Arrays,  Next: Matrices and Linear Algebra,  Prev: Num
 
 * Menu:
 
-* Definitions for Arrays::
+* Functions and Variables for Arrays::
 
 
-File: maxima.info,  Node: Definitions for Arrays,  Prev: Arrays,  Up: Arrays
+File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up: Arrays
 
-24.1 Definitions for Arrays
-===========================
+24.1 Functions and Variables for Arrays
+=======================================
 
  -- Function: array (<name>, <dim_1>, ..., <dim_n>)
  -- Function: array (<name>, <type>, <dim_1>, ..., <dim_n>)
@@ -963,10 +1142,10 @@ File: maxima.info,  Node: Matrices and Linear Algebra,  Next: Affine,  Prev: Arr
 * Menu:
 
 * Introduction to Matrices and Linear Algebra::
-* Definitions for Matrices and Linear Algebra::
+* Functions and Variables for Matrices and Linear Algebra::
 
 
-File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Definitions for Matrices and Linear Algebra,  Prev: Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
+File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Functions and Variables for Matrices and Linear Algebra,  Prev: Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
 
 25.1 Introduction to Matrices and Linear Algebra
 ================================================
@@ -1052,10 +1231,10 @@ without the user prompt between successive computations.
 `eigenvectors', `uniteigenvectors', and `similaritytransform'.
 
 
-File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: Introduction to Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
+File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebra,  Prev: Introduction to Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
 
-25.2 Definitions for Matrices and Linear Algebra
-================================================
+25.2 Functions and Variables for Matrices and Linear Algebra
+============================================================
 
  -- Function: addcol (<M>, <list_1>, ..., <list_n>)
      Appends the column(s) given by the one or more lists (or matrices)
@@ -1513,7 +1692,8 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
           (%i1) n: 3$
           (%i2) m: entermatrix (n, n)$
 
-          Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric  4. General
+          Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric
+          4. General
           Answer 1, 2, 3 or 4 :
           1$
           Row 1 Column 1:
@@ -1972,7 +2152,8 @@ File: maxima.info,  Node: Definitions for Matrices and Linear Algebra,  Prev: In
                                   [ transpose(a) ]
           (%o6)                   [              ]
                                   [ transpose(b) ]
-          (%i7) matrix_element_transpose: lambda ([x], realpart(x) - %i*imagpart(x))$
+          (%i7) matrix_element_transpose: lambda ([x], realpart(x)
+                - %i*imagpart(x))$
           (%i8) m: matrix ([1 + 5*%i, 3 - 2*%i], [7*%i, 11]);
                                [ 5 %i + 1  3 - 2 %i ]
           (%o8)                [                    ]
@@ -2321,13 +2502,13 @@ File: maxima.info,  Node: Affine,  Next: itensor,  Prev: Matrices and Linear Alg
 
 * Menu:
 
-* Definitions for Affine::
+* Functions and Variables for Affine::
 
 
-File: maxima.info,  Node: Definitions for Affine,  Prev: Affine,  Up: Affine
+File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Affine,  Up: Affine
 
-26.1 Definitions for Affine
-===========================
+26.1 Functions and Variables for Affine
+=======================================
 
  -- Function: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
           <x_n>])
@@ -2460,10 +2641,10 @@ File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Affine,  Up: Top
 * Menu:
 
 * Introduction to itensor::
-* Definitions for itensor::
+* Functions and Variables for itensor::
 
 
-File: maxima.info,  Node: Introduction to itensor,  Next: Definitions for itensor,  Prev: itensor,  Up: itensor
+File: maxima.info,  Node: Introduction to itensor,  Next: Functions and Variables for itensor,  Prev: itensor,  Up: itensor
 
 27.1 Introduction to itensor
 ============================
@@ -2660,8 +2841,8 @@ calculations.
      (%t12) v    - g      v   (e p       + e   p     - e p       - e    p
              i,j           %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
 
-                                                     + e p       + e   p    )/2
-                                                          i %5,j    ,j  i %5
+                                              + e p       + e   p    )/2
+                                                   i %5,j    ,j  i %5
      (%i13) iframe_flag:true;
      (%o13)                               true
      (%i14) ishow(covdiff(v([i],[]),j))$
@@ -2677,9 +2858,9 @@ calculations.
      (%t16) - (ifg      v   ifb       + ifg      v   ifb       - 2 v
                          %6    j %8 i             %6    i j %8      i,j
 
-                                                         %6 %8
-                                                    - ifg      v   ifb      )/2
-                                                                %6    %8 i j
+                                                  %6 %8
+                                             - ifg      v   ifb      )/2
+                                                         %6    %8 i j
      (%i17) ishow(canform(s([i,j],[])-s([j,i])))$
      (%t17)                            s    - s
                                         i j    j i
@@ -2696,10 +2877,10 @@ calculations.
      (%t22)                                 0
 
 
-File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itensor,  Up: itensor
+File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introduction to itensor,  Up: itensor
 
-27.2 Definitions for itensor
-============================
+27.2 Functions and Variables for itensor
+========================================
 
 27.2.1 Managing indexed objects
 -------------------------------
@@ -2798,9 +2979,9 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t4) g      g      ichr2      ichr2      ichr2      ichr2
                                    %1 %4      %2 %3      %5 %6      %7 r
 
-                        %4 %5  %6 %7      u          %1         %3         %2
-                     - g      g      ichr2      ichr2      ichr2      ichr2
-                                          %1 %2      %3 %5      %4 %6      %7 r
+                  %4 %5  %6 %7      u          %1         %3         %2
+               - g      g      ichr2      ichr2      ichr2      ichr2
+                                    %1 %2      %3 %5      %4 %6      %7 r
           (%i5) flipflag:true;
           (%o5)                                true
           (%i6) ishow(rename(expr))$
@@ -2808,9 +2989,9 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t6) g      g      ichr2      ichr2      ichr2      ichr2
                                    %1 %2      %3 %4      %5 %6      %7 r
 
-                        %4 %5  %6 %7      u          %1         %3         %2
-                     - g      g      ichr2      ichr2      ichr2      ichr2
-                                          %1 %2      %3 %4      %5 %6      %7 r
+                  %4 %5  %6 %7      u          %1         %3         %2
+               - g      g      ichr2      ichr2      ichr2      ichr2
+                                    %1 %2      %3 %4      %5 %6      %7 r
           (%i7) flipflag:false;
           (%o7)                                false
           (%i8) rename(%th(2));
@@ -2820,9 +3001,9 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t9) g      g      ichr2      ichr2      ichr2     ichr2
                                    %1 %6      %2 %3      %4 r      %5 %7
 
-                        %1 %2  %3 %4      %6         %5         %7        u
-                     - g      g      ichr2      ichr2      ichr2     ichr2
-                                          %1 %3      %2 %6      %4 r      %5 %7
+                  %1 %2  %3 %4      %6         %5         %7        u
+               - g      g      ichr2      ichr2      ichr2     ichr2
+                                    %1 %3      %2 %6      %4 r      %5 %7
 
 
  -- Option variable: flipflag
@@ -3089,7 +3270,8 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) expr:ishow('levi_civita([],[i,j])*'levi_civita([k,l],[])*a([j],[k]))$
+          (%i2) expr:ishow('levi_civita([],[i,j])
+                           *'levi_civita([k,l],[])*a([j],[k]))$
                                             i j  k
           (%t2)                  levi_civita    a  levi_civita
                                                  j            k l
@@ -3119,7 +3301,8 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
      this results in an error.
 
 
-          (%i7) expr:ishow('levi_civita([],[i,j])*'levi_civita([],[k,l])*a([j,k],[]))$
+          (%i7) expr:ishow('levi_civita([],[i,j])
+                           *'levi_civita([],[k,l])*a([j,k],[]))$
                                            i j            k l
           (%t7)                 levi_civita    levi_civita    a
                                                                j k
@@ -3134,9 +3317,12 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%i9) imetric(g);
           (%o9)                                done
           (%i10) ishow(lc2kdt(expr))$
-                   %3 i       k   %4 j       l     %3 i       l   %4 j       k
-          (%t10) (g     kdelta   g     kdelta   - g     kdelta   g     kdelta  ) a
-                              %3             %4               %3             %4   j k
+                   %3 i       k   %4 j       l     %3 i       l   %4 j
+          (%t10) (g     kdelta   g     kdelta   - g     kdelta   g
+                              %3             %4               %3
+                        k
+                  kdelta  ) a
+                        %4   j k
           (%i11) ishow(contract(expand(%)))$
                                             l i      l i
           (%t11)                           a    - a g
@@ -3223,7 +3409,8 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) expr:contract(expand(a([i1,j1,k1],[])*kdels([i,j,k],[i1,j1,k1])))$
+          (%i2) expr:contract( expand( a([i1, j1, k1], [])
+                     *kdels([i, j, k], [i1, j1, k1])))$
           (%i3) ishow(expr)$
           (%t3)         a      + a      + a      + a      + a      + a
                          k j i    k i j    j k i    j i k    i k j    i j k
@@ -3312,9 +3499,9 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t2) b   (v   a       + v   a     + v   a    )
                  ,l       i j,%2    ,j  i %2    ,i  %2 j
 
-                                          %1  k        %1  k      %1  k
-                                      + (v   b      - b   v    + v   b   ) a
-                                              ,%1 l    ,l  ,%1    ,l  ,%1   i j
+                                    %1  k        %1  k      %1  k
+                                + (v   b      - b   v    + v   b   ) a
+                                        ,%1 l    ,l  ,%1    ,l  ,%1   i j
 
 
  -- Function: rediff (<ten>)
@@ -3363,9 +3550,9 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t4) - ichr2        - ichr2     ichr2      - ichr2       ichr2
                        i k,j m        %1 j      i k,m        %1 j,m      i k
 
-                          l              l         %1           l           %1
-                   + ichr2        + ichr2     ichr2      + ichr2       ichr2
-                          i j,k m        %1 k      i j,m        %1 k,m      i j
+                       l              l         %1           l           %1
+                + ichr2        + ichr2     ichr2      + ichr2       ichr2
+                       i j,k m        %1 k      i j,m        %1 k,m      i j
 
      Note: In earlier versions of Maxima, derivative forms of the
      Christoffel-symbols also could not be evaluated. This has been
@@ -3576,12 +3763,12 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
      Yields the Riemann curvature tensor in terms of the Christoffel
      symbols of the second kind (`ichr2').  The following notation is
      used:
-                         h             h            h         %1         h
-               icurvature     = - ichr2      - ichr2     ichr2    + ichr2
-                         i j k         i k,j        %1 j      i k        i j,k
-                                         h          %1
-                                  + ichr2      ichr2
-                                         %1 k       i j
+                      h             h            h         %1         h
+            icurvature     = - ichr2      - ichr2     ichr2    + ichr2
+                      i j k         i k,j        %1 j      i k        i j,k
+                                      h          %1
+                               + ichr2      ichr2
+                                      %1 k       i j
 
  -- Function: covdiff (<expr>, <v_1>, <v_2>, ...)
      Yields the covariant derivative of <expr> with respect to the
@@ -3601,9 +3788,13 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%t2)                                a
                                                 i j
           (%i3) ishow(covdiff(%,s))$
-                       k         %1     k         %1     k            k     %1
-          (%t3)     - a     ichr2    - a     ichr2    + a      + ichr2     a
-                       i %1      j s    %1 j      i s    i j,s        %1 s  i j
+                       k         %1     k         %1     k
+          (%t3)     - a     ichr2    - a     ichr2    + a
+                       i %1      j s    %1 j      i s    i j,s
+
+                       k     %1
+                + ichr2     a
+                       %1 s  i j
           (%i4) imetric:g;
           (%o4)                                  g
           (%i5) ishow(ev(%th(2),ichr2))$
@@ -3644,9 +3835,13 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(icurvature([r,s,t],[u]))$
-                       u            u         %1         u            u         %1
-          (%t2) - ichr2      - ichr2     ichr2    + ichr2      + ichr2     ichr2
-                       r t,s        %1 s      r t        r s,t        %1 t      r s
+                       u            u         %1         u
+          (%t2) - ichr2      - ichr2     ichr2    + ichr2
+                       r t,s        %1 s      r t        r s,t
+
+                                                        u         %1
+                                                 + ichr2     ichr2
+                                                        %1 t      r s
           (%i3) ishow(igeodesic_coords(%,ichr2))$
                                            u            u
           (%t3)                       ichr2      - ichr2
@@ -3654,13 +3849,13 @@ File: maxima.info,  Node: Definitions for itensor,  Prev: Introduction to itenso
           (%i4) ishow(igeodesic_coords(icurvature([r,s,t],[u]),ichr2)+
                       igeodesic_coords(icurvature([s,t,r],[u]),ichr2)+
                       igeodesic_coords(icurvature([t,r,s],[u]),ichr2))$
-                       u            u            u            u            u
-          (%t4) - ichr2      + ichr2      + ichr2      - ichr2      - ichr2
-                       t s,r        t r,s        s t,r        s r,t        r t,s
+                       u            u            u            u
+          (%t4) - ichr2      + ichr2      + ichr2      - ichr2
+                       t s,r        t r,s        s t,r        s r,t
 
-                                                                            u
-                                                                     + ichr2
-                                                                            r s,t
+                                                       u            u
+                                                - ichr2      + ichr2
+                                                       r t,s        r s,t
           (%i5) canform(%);
           (%o5)                                  0
 
@@ -3934,7 +4129,8 @@ is true, nonmetricity components are included.
           (%o1)      /share/tensor/itensor.lisp
           (%i2) imetric:g;
           (%o2)                                  g
-          (%i3) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+          (%i3) covdiff( covdiff( f( [], []), i), j)
+                                - covdiff( covdiff( f( [], []), j), i)$
           (%i4) ishow(%)$
                                              %4              %2
           (%t4)                    f    ichr2    - f    ichr2
@@ -3943,7 +4139,8 @@ is true, nonmetricity components are included.
           (%o5)                                  0
           (%i6) itorsion_flag:true;
           (%o6)                                true
-          (%i7) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+          (%i7) covdiff( covdiff( f( [], []), i), j)
+                                - covdiff( covdiff( f( [], []), j), i)$
           (%i8) ishow(%)$
                                      %8             %6
           (%t8)             f    icc2    - f    icc2    - f     + f
@@ -4146,10 +4343,10 @@ be applied.
                                              6
           (%i8) ishow(canform(hodge(%)))$
                            %1 %2 %3 %8            %4 %5 %6 %7
-          (%t8) levi_civita            levi_civita            g        g
-                                                               %1 %106  %2 %107
-                                                      g        g      A        /6
-                                                       %3 %108  %4 %8  %5 %6 %7
+          (%t8) levi_civita            levi_civita            g
+                                                               %1 %106
+                                       g        g        g      A         /6
+                                        %2 %107  %3 %108  %4 %8  %5 %6 %7
           (%i9) lc2kdt(%)$
 
           (%i10) %,kdelta$
@@ -4191,9 +4388,13 @@ translate tensor expressions into appropriately indexed TeX objects.
           (%i3) idummyx:m;
           (%o3)                                  m
           (%i4) ishow(icurvature([j,k,l],[i]))$
-                      m1       i           m1       i           i            i
-          (%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2      + ichr2
-                      j k      m1 l        j l      m1 k        j l,k        j k,l
+                      m1       i           m1       i           i
+          (%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2
+                      j k      m1 l        j l      m1 k        j l,k
+
+                                                                i
+                                                         + ichr2
+                                                                j k,l
           (%i5) tentex(%)$
           $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
            \Gamma_{k\,m_1}^{i}-\Gamma_{j\,l,k}^{i}+\Gamma_{j\,k,l}^{i}$$
@@ -4231,15 +4432,16 @@ that performs this task is `ic_convert'.
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)*b([i],[l,k]))$
+          (%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)
+                *b([i],[l,k]))$
                                        k        m   l k
           (%t2)                       t    = f a   b    g
                                        i j      ,j  i    l m
           (%i3) ic_convert(eqn);
-          (%o3) for i thru dim do (for j thru dim
-
-          do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                                 i, j, k                   m           j   i, l, k
+          (%o3) for i thru dim do (for j thru dim do (
+                 for k thru dim do
+                  t        : f sum(sum(diff(a , ct_coords ) b
+                   i, j, k                   m           j   i, l, k
 
            g    , l, 1, dim), m, 1, dim)))
             l, m
@@ -4248,10 +4450,10 @@ that performs this task is `ic_convert'.
           (%i5) metricconvert:true;
           (%o5)                                true
           (%i6) ic_convert(eqn);
-          (%o6) for i thru dim do (for j thru dim
-
-          do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                                 i, j, k                   m           j   i, l, k
+          (%o6) for i thru dim do (for j thru dim do (
+                 for k thru dim do
+                  t        : f sum(sum(diff(a , ct_coords ) b
+                   i, j, k                   m           j   i, l, k
 
            lg    , l, 1, dim), m, 1, dim)))
              l, m
@@ -4286,10 +4488,10 @@ File: maxima.info,  Node: ctensor,  Next: atensor,  Prev: itensor,  Up: Top
 * Menu:
 
 * Introduction to ctensor::
-* Definitions for ctensor::
+* Functions and Variables for ctensor::
 
 
-File: maxima.info,  Node: Introduction to ctensor,  Next: Definitions for ctensor,  Prev: ctensor,  Up: ctensor
+File: maxima.info,  Node: Introduction to ctensor,  Next: Functions and Variables for ctensor,  Prev: ctensor,  Up: ctensor
 
 28.1 Introduction to ctensor
 ============================
@@ -4400,10 +4602,10 @@ Schwarzschild solution) as an example. Many of the functions in
      (%o11)                               done
 
 
-File: maxima.info,  Node: Definitions for ctensor,  Prev: Introduction to ctensor,  Up: ctensor
+File: maxima.info,  Node: Functions and Variables for ctensor,  Prev: Introduction to ctensor,  Up: ctensor
 
-28.2 Definitions for ctensor
-============================
+28.2 Functions and Variables for ctensor
+========================================
 
 28.2.1 Initialization and setup
 -------------------------------
@@ -4419,13 +4621,13 @@ File: maxima.info,  Node: Definitions for ctensor,  Prev: Introduction to ctenso
      computes the metric inverse and sets up the package for further
      calculations.
 
-     If `cframe_flag' is false, the function computes the inverse metric
-     `ug' from the (user-defined) matrix `lg'. The metric determinant is
-     also computed and stored in the variable `gdet'. Furthermore, the
-     package determines if the metric is diagonal and sets the value of
-     `diagmetric' accordingly. If the optional argument <dis> is
-     present and not equal to `false', the user is prompted to see the
-     metric inverse.
+     If `cframe_flag' is `false', the function computes the inverse
+     metric `ug' from the (user-defined) matrix `lg'. The metric
+     determinant is also computed and stored in the variable `gdet'.
+     Furthermore, the package determines if the metric is diagonal and
+     sets the value of `diagmetric' accordingly. If the optional
+     argument <dis> is present and not equal to `false', the user is
+     prompted to see the metric inverse.
 
      If `cframe_flag' is `true', the function expects that the values of
      `fri' (the inverse frame matrix) and `lfg' (the frame metric) are
@@ -4439,34 +4641,47 @@ File: maxima.info,  Node: Definitions for ctensor,  Prev: Introduction to ctenso
      <coordinate_system> can be one of the following symbols:
 
 
-            SYMBOL               Dim Coordinates       Description/comments
-            --------------------------------------------------------------------------
-            cartesian2d           2  [x,y]             Cartesian 2D coordinate system
-            polar                 2  [r,phi]           Polar coordinate system
-            elliptic              2  [u,v]             Elliptic coordinate system
-            confocalelliptic      2  [u,v]             Confocal elliptic coordinates
-            bipolar               2  [u,v]             Bipolar coordinate system
-            parabolic             2  [u,v]             Parabolic coordinate system
-            cartesian3d           3  [x,y,z]           Cartesian 3D coordinate system
-            polarcylindrical      3  [r,theta,z]       Polar 2D with cylindrical z
-            ellipticcylindrical   3  [u,v,z]           Elliptic 2D with cylindrical z
-            confocalellipsoidal   3  [u,v,w]           Confocal ellipsoidal
-            bipolarcylindrical    3  [u,v,z]           Bipolar 2D with cylindrical z
-            paraboliccylindrical  3  [u,v,z]           Parabolic 2D with cylindrical z
-            paraboloidal          3  [u,v,phi]         Paraboloidal coordinates
-            conical               3  [u,v,w]           Conical coordinates
-            toroidal              3  [u,v,phi]         Toroidal coordinates
-            spherical             3  [r,theta,phi]     Spherical coordinate system
-            oblatespheroidal      3  [u,v,phi]         Oblate spheroidal coordinates
-            oblatespheroidalsqrt  3  [u,v,phi]
-            prolatespheroidal     3  [u,v,phi]         Prolate spheroidal coordinates
-            prolatespheroidalsqrt 3  [u,v,phi]
-            ellipsoidal           3  [r,theta,phi]     Ellipsoidal coordinates
-            cartesian4d           4  [x,y,z,t]         Cartesian 4D coordinate system
-            spherical4d           4  [r,theta,eta,phi] Spherical 4D coordinate system
-            exteriorschwarzschild 4  [t,r,theta,phi]   Schwarzschild metric
-            interiorschwarzschild 4  [t,z,u,v]         Interior Schwarzschild metric
-            kerr_newman           4  [t,r,theta,phi]   Charged axially symmetric metric
+           SYMBOL             Dim Coordinates     Description/comments
+           ------------------------------------------------------------------
+           cartesian2d           2  [x,y]             Cartesian 2D coordinate
+                                                      system
+           polar                 2  [r,phi]           Polar coordinate system
+           elliptic              2  [u,v]             Elliptic coord. system
+           confocalelliptic      2  [u,v]             Confocal elliptic
+                                                      coordinates
+           bipolar               2  [u,v]             Bipolar coord. system
+           parabolic             2  [u,v]             Parabolic coord. system
+           cartesian3d           3  [x,y,z]           Cartesian 3D coordinate
+                                                      system
+           polarcylindrical      3  [r,theta,z]       Polar 2D with
+                                                      cylindrical z
+           ellipticcylindrical   3  [u,v,z]           Elliptic 2D with
+                                                      cylindrical z
+           confocalellipsoidal   3  [u,v,w]           Confocal ellipsoidal
+           bipolarcylindrical    3  [u,v,z]           Bipolar 2D with
+                                                      cylindrical z
+           paraboliccylindrical  3  [u,v,z]           Parabolic 2D with
+                                                      cylindrical z
+           paraboloidal          3  [u,v,phi]         Paraboloidal coords.
+           conical               3  [u,v,w]           Conical coordinates
+           toroidal              3  [u,v,phi]         Toroidal coordinates
+           spherical             3  [r,theta,phi]     Spherical coord. system
+           oblatespheroidal      3  [u,v,phi]         Oblate spheroidal
+                                                      coordinates
+           oblatespheroidalsqrt  3  [u,v,phi]
+           prolatespheroidal     3  [u,v,phi]         Prolate spheroidal
+                                                      coordinates
+           prolatespheroidalsqrt 3  [u,v,phi]
+           ellipsoidal           3  [r,theta,phi]     Ellipsoidal coordinates
+           cartesian4d           4  [x,y,z,t]         Cartesian 4D coordinate
+                                                      system
+           spherical4d           4  [r,theta,eta,phi] Spherical 4D coordinate
+                                                      system
+           exteriorschwarzschild 4  [t,r,theta,phi]   Schwarzschild metric
+           interiorschwarzschild 4  [t,z,u,v]         Interior Schwarzschild
+                                                      metric
+           kerr_newman           4  [t,r,theta,phi]   Charged axially
+                                                      symmetric metric
 
      `coordinate_system' can also be a list of transformation functions,
      followed by a list containing the coordinate variables. For
@@ -4503,11 +4718,13 @@ File: maxima.info,  Node: Definitions for ctensor,  Prev: Introduction to ctenso
                 r*sin(theta),[r,theta,phi]]);
           (%o3)                                done
           (%i4) fri;
-                [ cos(phi) cos(theta)  - cos(phi) r sin(theta)  - sin(phi) r cos(theta) ]
-                [                                                                       ]
-          (%o4) [ sin(phi) cos(theta)  - sin(phi) r sin(theta)   cos(phi) r cos(theta)  ]
-                [                                                                       ]
-                [     sin(theta)            r cos(theta)                   0            ]
+          (%o4)
+           [cos(phi)cos(theta) -cos(phi) r sin(theta) -sin(phi) r cos(theta)]
+           [                                                                ]
+           [sin(phi)cos(theta) -sin(phi) r sin(theta)  cos(phi) r cos(theta)]
+           [                                                                ]
+           [    sin(theta)           r cos(theta)                0          ]
+
           (%i5) cmetric();
           (%o5)                                false
           (%i6) lg:trigsimp(lg);
@@ -4745,7 +4962,8 @@ functions:
           (%o3)                                true
           (%i4) ct_coords:[t,r,theta,phi];
           (%o4)                         [t, r, theta, phi]
-          (%i5) lg:matrix([-1,0,0,0],[0,1,0,0],[0,0,r^2,0],[0,0,0,r^2*sin(theta)^2]);
+          (%i5) lg:matrix([-1,0,0,0],[0,1,0,0],[0,0,r^2,0],
+                          [0,0,0,r^2*sin(theta)^2]);
                                   [ - 1  0  0         0        ]
                                   [                            ]
                                   [  0   1  0         0        ]
@@ -4766,15 +4984,15 @@ functions:
           (%i7) depends(l,r);
           (%o7)                               [l(r)]
           (%i8) lg:lg+l*h;
-                   [ h11 l - 1      0          0                 0            ]
-                   [                                                          ]
-                   [     0      h22 l + 1      0                 0            ]
-                   [                                                          ]
-          (%o8)    [                        2                                 ]
-                   [     0          0      r  + h33 l            0            ]
-                   [                                                          ]
-                   [                                    2    2                ]
-                   [     0          0          0       r  sin (theta) + h44 l ]
+                [ h11 l - 1      0          0                 0            ]
+                [                                                          ]
+                [     0      h22 l + 1      0                 0            ]
+                [                                                          ]
+          (%o8) [                        2                                 ]
+                [     0          0      r  + h33 l            0            ]
+                [                                                          ]
+                [                                    2    2                ]
+                [     0          0          0       r  sin (theta) + h44 l ]
           (%i9) cmetric(false);
           (%o9)                                done
           (%i10) einstein(false);
@@ -4839,9 +5057,9 @@ functions:
           (%o22) - (((h11 h22 - h11 ) (l )  r  - 2 h33 l    r ) sin (theta)
                                         r               r r
 
-                                          2               2      4    2
-                            - 2 h44 l    r  - h33 h44 (l ) )/(4 r  sin (theta))
-                                     r r                r
+                                      2               2      4    2
+                        - 2 h44 l    r  - h33 h44 (l ) )/(4 r  sin (theta))
+                                 r r                r
 
      This capability can be useful, for instance, when working in the
      weak field limit far from a gravitational source.
@@ -4936,25 +5154,25 @@ For a demonstration of this capability, see the file
           (%i6) nptetrad(true);
           (%t6) np =
 
-                 [  sqrt(r - 2 m)           sqrt(r)                                     ]
-                 [ ---------------   ---------------------      0             0         ]
-                 [ sqrt(2) sqrt(r)   sqrt(2) sqrt(r - 2 m)                              ]
-                 [                                                                      ]
-                 [  sqrt(r - 2 m)            sqrt(r)                                    ]
-                 [ ---------------  - ---------------------     0             0         ]
-                 [ sqrt(2) sqrt(r)    sqrt(2) sqrt(r - 2 m)                             ]
-                 [                                                                      ]
-                 [                                              r      %i r sin(theta)  ]
-                 [        0                    0             -------   ---------------  ]
-                 [                                           sqrt(2)       sqrt(2)      ]
-                 [                                                                      ]
-                 [                                              r       %i r sin(theta) ]
-                 [        0                    0             -------  - --------------- ]
-                 [                                           sqrt(2)        sqrt(2)     ]
+          [ sqrt(r - 2 m)           sqrt(r)                                 ]
+          [---------------   ---------------------    0            0        ]
+          [sqrt(2) sqrt(r)   sqrt(2) sqrt(r - 2 m)                          ]
+          [                                                                 ]
+          [ sqrt(r - 2 m)            sqrt(r)                                ]
+          [---------------  - ---------------------   0            0        ]
+          [sqrt(2) sqrt(r)    sqrt(2) sqrt(r - 2 m)                         ]
+          [                                                                 ]
+          [                                          r      %i r sin(theta) ]
+          [       0                    0          -------   --------------- ]
+          [                                       sqrt(2)       sqrt(2)     ]
+          [                                                                 ]
+          [                                          r       %i r sin(theta)]
+          [       0                    0          -------  - ---------------]
+          [                                       sqrt(2)        sqrt(2)    ]
 
-                                       sqrt(r)          sqrt(r - 2 m)
-          (%t7) npi = matrix([- ---------------------, ---------------, 0, 0],
-                                sqrt(2) sqrt(r - 2 m)  sqrt(2) sqrt(r)
+                                       sqrt(r)         sqrt(r - 2 m)
+          (%t7) npi = matrix([- ---------------------,---------------, 0, 0],
+                                sqrt(2) sqrt(r - 2 m) sqrt(2) sqrt(r)
 
                     sqrt(r)            sqrt(r - 2 m)
           [- ---------------------, - ---------------, 0, 0],
@@ -5081,7 +5299,8 @@ connection coefficients.
           (%o2)                                true
           (%i3) dim:4;
           (%o3)                                  4
-          (%i4) lg:matrix([a,0,0,0],[0,x^2,0,0],[0,0,x^2*sin(y)^2,0],[0,0,0,-d]);
+          (%i4) lg:matrix([a, 0, 0, 0], [ 0, x^2, 0, 0],
+                                        [0, 0, x^2*sin(y)^2, 0], [0,0,0,-d]);
                                     [ a  0       0        0  ]
                                     [                        ]
                                     [     2                  ]
@@ -5101,12 +5320,12 @@ connection coefficients.
           (%o8)                                done
           (%i9) findde(ein,2);
                                                       2
-          (%o9) [d  x - a d + d, 2 a d d    x - a (d )  x - a  d d  x + 2 a d d
-                  x                     x x         x        x    x            x
+          (%o9) [d  x - a d + d, 2 a d d    x - a (d )  x - a  d d  x
+                  x                     x x         x        x    x
 
-                                                                  2          2
-                                                          - 2 a  d , a  x + a  - a]
-                                                               x      x
+                                                        2          2
+                                    + 2 a d d   - 2 a  d , a  x + a  - a]
+                                             x       x      x
           (%i10) deindex;
           (%o10)                     [[1, 1], [2, 2], [4, 4]]
 
@@ -5248,23 +5467,23 @@ connection coefficients.
           (%i4) riemann(false);
           (%o4)                                done
           (%i5) cdisplay(riem);
-                         [ 0               0                    0            0      ]
-                         [                                                          ]
-                         [                              2                           ]
-                         [      3 m (r - 2 m)   m    2 m                            ]
-                         [ 0  - ------------- + -- - ----       0            0      ]
-                         [            4          3     4                            ]
-                         [           r          r     r                             ]
-                         [                                                          ]
-              riem     = [                                 m (r - 2 m)              ]
-                  1, 1   [ 0               0               -----------       0      ]
-                         [                                      4                   ]
-                         [                                     r                    ]
-                         [                                                          ]
-                         [                                              m (r - 2 m) ]
-                         [ 0               0                    0       ----------- ]
-                         [                                                   4      ]
-                         [                                                  r       ]
+                    [ 0               0                   0           0     ]
+                    [                                                       ]
+                    [                              2                        ]
+                    [      3 m (r - 2 m)   m    2 m                         ]
+                    [ 0  - ------------- + -- - ----      0           0     ]
+                    [            4          3     4                         ]
+                    [           r          r     r                          ]
+                    [                                                       ]
+          riem    = [                                m (r - 2 m)            ]
+              1, 1  [ 0               0              -----------      0     ]
+                    [                                     4                 ]
+                    [                                    r                  ]
+                    [                                                       ]
+                    [                                           m (r - 2 m) ]
+                    [ 0               0                   0     ----------- ]
+                    [                                                4      ]
+                    [                                               r       ]
 
                                           [    2 m (r - 2 m)       ]
                                           [ 0  -------------  0  0 ]
@@ -5310,22 +5529,22 @@ connection coefficients.
                                          [                         ]
                                          [       0         0  0  0 ]
 
-                             [     2 m                                         ]
-                             [ ------------  0        0               0        ]
-                             [  2                                              ]
-                             [ r  (r - 2 m)                                    ]
-                             [                                                 ]
-                             [      0        0        0               0        ]
-                             [                                                 ]
-                  riem     = [                         m                       ]
-                      2, 2   [      0        0  - ------------        0        ]
-                             [                     2                           ]
-                             [                    r  (r - 2 m)                 ]
-                             [                                                 ]
-                             [                                         m       ]
-                             [      0        0        0         - ------------ ]
-                             [                                     2           ]
-                             [                                    r  (r - 2 m) ]
+                       [     2 m                                         ]
+                       [ ------------  0        0               0        ]
+                       [  2                                              ]
+                       [ r  (r - 2 m)                                    ]
+                       [                                                 ]
+                       [      0        0        0               0        ]
+                       [                                                 ]
+            riem     = [                         m                       ]
+                2, 2   [      0        0  - ------------        0        ]
+                       [                     2                           ]
+                       [                    r  (r - 2 m)                 ]
+                       [                                                 ]
+                       [                                         m       ]
+                       [      0        0        0         - ------------ ]
+                       [                                     2           ]
+                       [                                    r  (r - 2 m) ]
 
                                           [ 0  0       0        0 ]
                                           [                       ]
@@ -5426,22 +5645,22 @@ connection coefficients.
                                         [ 0  0  - ---------------  0 ]
                                         [                r           ]
 
-                           [        2                                             ]
-                           [   m sin (theta)                                      ]
-                           [ - -------------         0                0         0 ]
-                           [         r                                            ]
-                           [                                                      ]
-                           [                         2                            ]
-                           [                    m sin (theta)                     ]
-                riem     = [        0         - -------------         0         0 ]
-                    4, 4   [                          r                           ]
-                           [                                                      ]
-                           [                                          2           ]
-                           [                                   2 m sin (theta)    ]
-                           [        0                0         ---------------  0 ]
-                           [                                          r           ]
-                           [                                                      ]
-                           [        0                0                0         0 ]
+                     [        2                                             ]
+                     [   m sin (theta)                                      ]
+                     [ - -------------         0                0         0 ]
+                     [         r                                            ]
+                     [                                                      ]
+                     [                         2                            ]
+                     [                    m sin (theta)                     ]
+          riem     = [        0         - -------------         0         0 ]
+              4, 4   [                          r                           ]
+                     [                                                      ]
+                     [                                          2           ]
+                     [                                   2 m sin (theta)    ]
+                     [        0                0         ---------------  0 ]
+                     [                                          r           ]
+                     [                                                      ]
+                     [        0                0                0         0 ]
 
           (%o5)                                done
 
@@ -5664,7 +5883,7 @@ The following names are used internally by the `ctensor' package and
 should not be redefined:
 
        Name         Description
-       ---------------------------------------
+       ---------------------------------------------------------------------
        _lg()        Evaluates to lfg if frame metric used, lg otherwise
        _ug()        Evaluates to ufg if frame metric used, ug otherwise
        cleanup()    Removes items drom the deindex list
@@ -5694,7 +5913,7 @@ Many functions and variables have been renamed in order to make the
 package compatible with the commercial version of Macsyma.
 
        New Name     Old Name        Description
-       --------------------------------------------------------------------------
+       ---------------------------------------------------------------------
        ctaylor()    DLGTAYLOR()     Taylor-series expansion of an expression
        lgeod[]      EM              Geodesic equations
        ein[]        G[]             Mixed Einstein-tensor
@@ -5706,7 +5925,7 @@ package compatible with the commercial version of Macsyma.
        ctayvar      PARAM           Taylor-series expansion variable
        lriem[]      R[]             Covariant Riemann-tensor
        uriemann()   RAISERIEMANN()  Compute the contravariant Riemann-tensor
-       ratriemann   RATRIEMAN       Rational simplification of the Riemann-tensor
+       ratriemann   RATRIEMAN       Rational simplif. of the Riemann-tensor
        uric[]       RICCI[]         Contravariant Ricci-tensor
        uricci()     RICCICOM()      Compute the contravariant Ricci-tensor
        cmetric()    SETMETRIC()     Set up the metric
@@ -5726,10 +5945,10 @@ File: maxima.info,  Node: atensor,  Next: Series,  Prev: ctensor,  Up: Top
 * Menu:
 
 * Introduction to atensor::
-* Definitions for atensor::
+* Functions and Variables for atensor::
 
 
-File: maxima.info,  Node: Introduction to atensor,  Next: Definitions for atensor,  Prev: atensor,  Up: atensor
+File: maxima.info,  Node: Introduction to atensor,  Next: Functions and Variables for atensor,  Prev: atensor,  Up: atensor
 
 29.1 Introduction to atensor
 ============================
@@ -5816,10 +6035,10 @@ consider setting `dotassoc' to `false'. In this case, however,
 simplifications.
 
 
-File: maxima.info,  Node: Definitions for atensor,  Prev: Introduction to atensor,  Up: atensor
+File: maxima.info,  Node: Functions and Variables for atensor,  Prev: Introduction to atensor,  Up: atensor
 
-29.2 Definitions for atensor
-============================
+29.2 Functions and Variables for atensor
+========================================
 
  -- Function: init_atensor (<alg_type>, <opt_dims>)
  -- Function: init_atensor (<alg_type>)
@@ -5966,10 +6185,10 @@ File: maxima.info,  Node: Series,  Next: Number Theory,  Prev: atensor,  Up: Top
 * Menu:
 
 * Introduction to Series::
-* Definitions for Series::
+* Functions and Variables for Series::
 
 
-File: maxima.info,  Node: Introduction to Series,  Next: Definitions for Series,  Prev: Series,  Up: Series
+File: maxima.info,  Node: Introduction to Series,  Next: Functions and Variables for Series,  Prev: Series,  Up: Series
 
 30.1 Introduction to Series
 ===========================
@@ -5981,10 +6200,10 @@ addition and multiplication work as usual on series. This section
 presents the global variables which control the expansion.
 
 
-File: maxima.info,  Node: Definitions for Series,  Prev: Introduction to Series,  Up: Series
+File: maxima.info,  Node: Functions and Variables for Series,  Prev: Introduction to Series,  Up: Series
 
-30.2 Definitions for Series
-===========================
+30.2 Functions and Variables for Series
+=======================================
 
  -- Option variable: cauchysum
      Default value: `false'
@@ -6648,486 +6867,5 @@ File: maxima.info,  Node: Number Theory,  Next: Symmetries,  Prev: Series,  Up: 
 
 * Menu:
 
-* Definitions for Number Theory::
-
-
-File: maxima.info,  Node: Definitions for Number Theory,  Prev: Number Theory,  Up: Number Theory
-
-31.1 Definitions for Number Theory
-==================================
-
- -- Function: bern (<n>)
-     Returns the <n>'th Bernoulli number for integer <n>.  Bernoulli
-     numbers equal to zero are suppressed if `zerobern' is `false'.
-
-     See also `burn'.
-
-          (%i1) zerobern: true$
-          (%i2) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                            1  1       1      1        1
-          (%o2)       [1, - -, -, 0, - --, 0, --, 0, - --]
-                            2  6       30     42       30
-          (%i3) zerobern: false$
-          (%i4) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                      1  1    1   5     691   7    3617  43867
-          (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
-                      2  6    30  66    2730  6    510    798
-
-
- -- Function: bernpoly (<x>, <n>)
-     Returns the <n>'th Bernoulli polynomial in the variable <x>.
-
-
- -- Function: bfzeta (<s>, <n>)
-     Returns the Riemann zeta function for the argument <s>.  The
-     return value is a big float (bfloat); <n> is the number of digits
-     in the return value.
-
-     `load ("bffac")' loads this function.
-
-
- -- Function: bfhzeta (<s>, <h>, <n>)
-     Returns the Hurwitz zeta function for the arguments <s> and <h>.
-     The return value is a big float (bfloat); <n> is the number of
-     digits in the return value.
-
-     The Hurwitz zeta function is defined as
-
-          sum ((k+h)^-s, k, 0, inf)
-
-     `load ("bffac")' loads this function.
-
-
- -- Function: binomial (<x>, <y>)
-     The binomial coefficient `<x>!/(<y>! (<x> - <y>)!)'.  If <x> and
-     <y> are integers, then the numerical value of the binomial
-     coefficient is computed.  If <y>, or <x - y>, is an integer, the
-     binomial coefficient is expressed as a polynomial.
-
-     Examples:
-
-          (%i1) binomial (11, 7);
-          (%o1)                          330
-          (%i2) 11! / 7! / (11 - 7)!;
-          (%o2)                          330
-          (%i3) binomial (x, 7);
-                  (x - 6) (x - 5) (x - 4) (x - 3) (x - 2) (x - 1) x
-          (%o3)   -------------------------------------------------
-                                        5040
-          (%i4) binomial (x + 7, x);
-                (x + 1) (x + 2) (x + 3) (x + 4) (x + 5) (x + 6) (x + 7)
-          (%o4) -------------------------------------------------------
-                                         5040
-          (%i5) binomial (11, y);
-          (%o5)                    binomial(11, y)
-
-
- -- Function: burn (<n>)
-     Returns the <n>'th Bernoulli number for integer <n>.  `burn' may
-     be more efficient than `bern' for large, isolated <n> (perhaps <n>
-     greater than 105 or so), as `bern' computes all the Bernoulli
-     numbers up to index <n> before returning.
-
-     `burn' exploits the observation that (rational) Bernoulli numbers
-     can be approximated by (transcendental) zetas with tolerable
-     efficiency.
-
-     `load ("bffac")' loads this function.
-
-
- -- Function: cf (<expr>)
-     Converts <expr> into a continued fraction.  <expr> is an expression
-     comprising continued fractions and square roots of integers.
-     Operands in the expression may be combined with arithmetic
-     operators.  Aside from continued fractions and square roots,
-     factors in the expression must be integer or rational numbers.
-     Maxima does not know about operations on continued fractions
-     outside of `cf'.
-
-     `cf' evaluates its arguments after binding `listarith' to `false'.
-     `cf' returns a continued fraction, represented as a list.
-
-     A continued fraction `a + 1/(b + 1/(c + ...))' is represented by
-     the list `[a, b, c, ...]'.  The list elements `a', `b', `c', ...
-     must evaluate to integers.  <expr> may also contain `sqrt (n)'
-     where `n' is an integer.  In this case `cf' will give as many
-     terms of the continued fraction as the value of the variable
-     `cflength' times the period.
-
-     A continued fraction can be evaluated to a number by evaluating
-     the arithmetic representation returned by `cfdisrep'.  See also
-     `cfexpand' for another way to evaluate a continued fraction.
-
-     See also `cfdisrep', `cfexpand', and `cflength'.
-
-     Examples:
-
-        * <expr> is an expression comprising continued fractions and
-          square roots of integers.
-
-               (%i1) cf ([5, 3, 1]*[11, 9, 7] + [3, 7]/[4, 3, 2]);
-               (%o1)               [59, 17, 2, 1, 1, 1, 27]
-               (%i2) cf ((3/17)*[1, -2, 5]/sqrt(11) + (8/13));
-               (%o2)        [0, 1, 1, 1, 3, 2, 1, 4, 1, 9, 1, 9, 2]
-
-        * `cflength' controls how many periods of the continued fraction
-          are computed for algebraic, irrational numbers.
-
-               (%i1) cflength: 1$
-               (%i2) cf ((1 + sqrt(5))/2);
-               (%o2)                    [1, 1, 1, 1, 2]
-               (%i3) cflength: 2$
-               (%i4) cf ((1 + sqrt(5))/2);
-               (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-               (%i5) cflength: 3$
-               (%i6) cf ((1 + sqrt(5))/2);
-               (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-        * A continued fraction can be evaluated by evaluating the
-          arithmetic representation returned by `cfdisrep'.
-
-               (%i1) cflength: 3$
-               (%i2) cfdisrep (cf (sqrt (3)))$
-               (%i3) ev (%, numer);
-               (%o3)                   1.731707317073171
-
-        * Maxima does not know about operations on continued fractions
-          outside of `cf'.
-
-               (%i1) cf ([1,1,1,1,1,2] * 3);
-               (%o1)                     [4, 1, 5, 2]
-               (%i2) cf ([1,1,1,1,1,2]) * 3;
-               (%o2)                  [3, 3, 3, 3, 3, 6]
-
-
- -- Function: cfdisrep (<list>)
-     Constructs and returns an ordinary arithmetic expression of the
-     form `a + 1/(b + 1/(c + ...))' from the list representation of a
-     continued fraction `[a, b, c, ...]'.
-
-          (%i1) cf ([1, 2, -3] + [1, -2, 1]);
-          (%o1)                     [1, 1, 1, 2]
-          (%i2) cfdisrep (%);
-                                            1
-          (%o2)                     1 + ---------
-                                              1
-                                        1 + -----
-                                                1
-                                            1 + -
-                                                2
-
-
- -- Function: cfexpand (<x>)
-     Returns a matrix of the numerators and denominators of the last
-     (column 1) and next-to-last (column 2) convergents of the
-     continued fraction <x>.
-
-          (%i1) cf (rat (ev (%pi, numer)));
-
-          `rat' replaced 3.141592653589793 by 103993//33102 = 3.141592653011902
-          (%o1)                  [3, 7, 15, 1, 292]
-          (%i2) cfexpand (%);
-                                   [ 103993  355 ]
-          (%o2)                    [             ]
-                                   [ 33102   113 ]
-          (%i3) %[1,1]/%[2,1], numer;
-          (%o3)                   3.141592653011902
-
-
- -- Option variable: cflength
-     Default value: 1
-
-     `cflength' controls the number of terms of the continued fraction
-     the function `cf' will give, as the value `cflength' times the
-     period.  Thus the default is to give one period.
-
-          (%i1) cflength: 1$
-          (%i2) cf ((1 + sqrt(5))/2);
-          (%o2)                    [1, 1, 1, 1, 2]
-          (%i3) cflength: 2$
-          (%i4) cf ((1 + sqrt(5))/2);
-          (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-          (%i5) cflength: 3$
-          (%i6) cf ((1 + sqrt(5))/2);
-          (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-
- -- Function: divsum (<n>, <k>)
- -- Function: divsum (<n>)
-     `divsum (<n>, <k>)' returns the sum of the divisors of <n> raised
-     to the <k>'th power.
-
-     `divsum (<n>)' returns the sum of the divisors of <n>.
-
-          (%i1) divsum (12);
-          (%o1)                          28
-          (%i2) 1 + 2 + 3 + 4 + 6 + 12;
-          (%o2)                          28
-          (%i3) divsum (12, 2);
-          (%o3)                          210
-          (%i4) 1^2 + 2^2 + 3^2 + 4^2 + 6^2 + 12^2;
-          (%o4)                          210
-
-
- -- Function: euler (<n>)
-     Returns the <n>'th Euler number for nonnegative integer <n>.
-
-     For the Euler-Mascheroni constant, see `%gamma'.
-
-          (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
-
-
- -- Constant: %gamma
-     The Euler-Mascheroni constant, 0.5772156649015329 ....
-
-
- -- Function: factorial (<x>)
-     Represents the factorial function. Maxima treats `factorial (<x>)'
-     the same as `<x>!'.  See `!'.
-
-
- -- Function: fib (<n>)
-     Returns the <n>'th Fibonacci number.  `fib(0)' equal to 0 and
-     `fib(1)' equal to 1, and `fib (-<n>)' equal to `(-1)^(<n> + 1) *
-     fib(<n>)'.
-
-     After calling `fib', `prevfib' is equal to `fib (<x> - 1)', the
-     Fibonacci number preceding the last one computed.
-
-          (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
-
-
- -- Function: fibtophi (<expr>)
-     Expresses Fibonacci numbers in <expr> in terms of the constant
-     `%phi', which is `(1 + sqrt(5))/2', approximately 1.61803399.
-
-     Examples:
-
-          (%i1) fibtophi (fib (n));
-                                     n             n
-                                 %phi  - (1 - %phi)
-          (%o1)                  -------------------
-                                     2 %phi - 1
-          (%i2) fib (n-1) + fib (n) - fib (n+1);
-          (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
-          (%i3) fibtophi (%);
-                      n + 1             n + 1       n             n
-                  %phi      - (1 - %phi)        %phi  - (1 - %phi)
-          (%o3) - --------------------------- + -------------------
-                          2 %phi - 1                2 %phi - 1
-                                                    n - 1             n - 1
-                                                %phi      - (1 - %phi)
-                                              + ---------------------------
-                                                        2 %phi - 1
-          (%i4) ratsimp (%);
-          (%o4)                           0
-
-
- -- Function: ifactors (<n>)
-     For a positive integer <n> returns the factorization of <n>. If
-     `n=p1^e1..pk^nk' is the decomposition of <n> into prime factors,
-     ifactors returns `[[p1, e1], ... , [pk, ek]]'.
-
-     Factorization methods used are trial divisions by primes up to
-     9973, Pollard's rho method and elliptic curve method.
-
-          (%i1) ifactors(51575319651600);
-          (%o1)     [[2, 4], [3, 2], [5, 2], [1583, 1], [9050207, 1]]
-          (%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
-          (%o2)                        51575319651600
-
-
- -- Function: inrt (<x>, <n>)
-     Returns the integer <n>'th root of the absolute value of <x>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], inrt (10^a, 3)), l);
-          (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
-
-
- -- Function: inv_mod (<n>, <m>)
-     Computes the inverse of <n> modulo <m>.  `inv_mod (n,m)' returns
-     `false', if <n> is a zero divisor modulo <m>.
-
-          (%i1) inv_mod(3, 41);
-          (%o1)                           14
-          (%i2) ratsimp(3^-1), modulus=41;
-          (%o2)                           14
-          (%i3) inv_mod(3, 42);
-          (%o3)                          false
-
-
- -- Function: jacobi (<p>, <q>)
-     Returns the Jacobi symbol of <p> and <q>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], jacobi (a, 9)), l);
-          (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
-
-
- -- Function: lcm (<expr_1>, ..., <expr_n>)
-     Returns the least common multiple of its arguments.  The arguments
-     may be general expressions as well as integers.
-
-     `load ("functs")' loads this function.
-
-
- -- Function: minfactorial (<expr>)
-     Examines <expr> for occurrences of two factorials which differ by
-     an integer.  `minfactorial' then turns one into a polynomial times
-     the other.
-
-          (%i1) n!/(n+2)!;
-                                         n!
-          (%o1)                       --------
-                                      (n + 2)!
-          (%i2) minfactorial (%);
-                                          1
-          (%o2)                    ---------------
-                                   (n + 1) (n + 2)
-
-
- -- Function: next_prime (<n>)
-     Returns the smallest prime bigger than <n>.
-
-          (%i1) next_prime(27);
-          (%o1)                       29
-
-
- -- Function: partfrac (<expr>, <var>)
-     Expands the expression <expr> in partial fractions with respect to
-     the main variable <var>.  `partfrac' does a complete partial
-     fraction decomposition.  The algorithm employed is based on the
-     fact that the denominators of the partial fraction expansion (the
-     factors of the original denominator) are relatively prime.  The
-     numerators can be written as linear combinations of denominators,
-     and the expansion falls out.
-
-          (%i1) 1/(1+x)^2 - 2/(1+x) + 2/(2+x);
-                                2       2        1
-          (%o1)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-          (%i2) ratsimp (%);
-                                           x
-          (%o2)                 - -------------------
-                                   3      2
-                                  x  + 4 x  + 5 x + 2
-          (%i3) partfrac (%, x);
-                                2       2        1
-          (%o3)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-
- -- Function: power_mod (<a>, <n>, <m>)
-     Uses a modular algorithm to compute `a^n mod m' where <a> and <n>
-     are integers and <m> is a positive integer.  If <n> is negative,
-     `inv_mod' is used to find the modular inverse.
-
-          (%i1) power_mod(3, 15, 5);
-          (%o1)                          2
-          (%i2) mod(3^15,5);
-          (%o2)                          2
-          (%i3) power_mod(2, -1, 5);
-          (%o3)                          3
-          (%i4) inv_mod(2,5);
-          (%o4)                          3
-
-
- -- Function: primep (<n>)
-     Primality test. If `primep (n)' returns `false', <n> is a
-     composite number and if it returns `true', <n> is a prime number
-     with very high probability.
-
-     For <n> less than 341550071728321 a deterministic version of
-     Miller-Rabin's test is used. If `primep (n)' returns `true', then
-     <n> is a prime number.
-
-     For <n> bigger than 34155071728321 `primep' uses
-     `primep_number_of_tests' Miller-Rabin's pseudo-primality tests and
-     one Lucas pseudo-primality test. The probability that <n> will
-     pass one Miller-Rabin test is less than 1/4. Using the default
-     value 25 for `primep_number_of_tests', the probability of <n>
-     beeing composite is much smaller that 10^-15.
-
-
- -- Option variable: primep_number_of_tests
-     Default value: 25
-
-     Number of Miller-Rabin's tests used in `primep'.
-
- -- Function: prev_prime (<n>)
-     Returns the greatest prime smaller than <n>.
-
-          (%i1) prev_prime(27);
-          (%o1)                       23
-
- -- Function: qunit (<n>)
-     Returns the principal unit of the real quadratic number field
-     `sqrt (<n>)' where <n> is an integer, i.e., the element whose norm
-     is unity.  This amounts to solving Pell's equation `a^2 - <n> b^2
-     = 1'.
-
-          (%i1) qunit (17);
-          (%o1)                     sqrt(17) + 4
-          (%i2) expand (% * (sqrt(17) - 4));
-          (%o2)                           1
-
-
- -- Function: totient (<n>)
-     Returns the number of integers less than or equal to <n> which are
-     relatively prime to <n>.
-
-
- -- Option variable: zerobern
-     Default value: `true'
-
-     When `zerobern' is `false', `bern' excludes the Bernoulli numbers
-     which are equal to zero.  See `bern'.
-
-
- -- Function: zeta (<n>)
-     Returns the Riemann zeta function if <x> is a negative integer, 0,
-     1, or a positive even number, and returns a noun form `zeta (<n>)'
-     for all other arguments, including rational noninteger, floating
-     point, and complex arguments.
-
-     See also `bfzeta' and `zeta%pi'.
-
-          (%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
-                                               2              4
-                     1        1     1       %pi            %pi
-          (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
-                    120       12    2        6              90
-
-
- -- Option variable: zeta%pi
-     Default value: `true'
-
-     When `zeta%pi' is `true', `zeta' returns an expression
-     proportional to `%pi^n' for even integer `n'.  Otherwise, `zeta'
-     returns a noun form `zeta (n)' for even integer `n'.
-
-          (%i1) zeta%pi: true$
-          (%i2) zeta (4);
-                                           4
-                                        %pi
-          (%o2)                         ----
-                                         90
-          (%i3) zeta%pi: false$
-          (%i4) zeta (4);
-          (%o4)                        zeta(4)
-
-
-
-File: maxima.info,  Node: Symmetries,  Next: Groups,  Prev: Number Theory,  Up: Top
-
-32 Symmetries
-*************
-
-* Menu:
-
-* Definitions for Symmetries::
+* Functions and Variables for Number Theory::
 

@@ -38,21 +38,46 @@
     (push '($matrix) mat)))
 
 (defun $hessian (e vars)
-  (if ($listp vars)
-      (let ((n ($length vars)))
-	($genmatrix `((lambda) ((mlist) i j) ($diff ,e (nth i ,vars) 1 (nth j ,vars) 1)) n n))
-    `(($hessian) ,e ,vars)))
-
+  (cond (($listp vars)
+	 (let ((z) (mat nil))
+	   (setq vars (margs vars))
+	   (dolist (vi vars)
+	     (setq z ($diff e vi))
+	     (push (cons '(mlist) (mapcar #'(lambda (s) ($diff z s)) vars)) mat))
+	   (cons '($matrix) (reverse mat))))
+	(t  `(($hessian) ,e ,vars))))
+	    
 (defun $jacobian (e vars)
-  (if (and ($listp vars) ($listp e))
-      (let ((m ($length e)) (n ($length vars)))
-	($genmatrix `((lambda) ((mlist) i j) ($diff (nth i ,e) (nth j ,vars))) m n))
-    `(($jacobian) ,e ,vars)))
+  (cond ((and ($listp vars) ($listp e))
+	 (setq e (margs e))
+	 (setq vars (margs vars))
+	 (let ((mat nil))
+	   (dolist (ei e)
+	     (push (cons '(mlist) (mapcar #'(lambda (s) ($diff ei s)) vars)) mat))
+	   (cons '($matrix) (reverse mat))))
+	(t `(($jacobian) ,e ,vars))))
+
+(defun $vandermonde_matrix (l)
+  (let ((x) (row) (acc))
+    (setq l (require-list l "$vandermonde_matrix"))
+    (dolist (li l)
+      (setq x 1 row nil)
+      (dolist (lk l)
+        (declare (ignore lk))
+	(push x row)
+	(setq x (mul x li)))
+      (setq row (nreverse row))
+      (push '(mlist) row)
+      (push row acc))
+    (setq acc (nreverse acc))
+    (push '($matrix) acc)
+    acc))
 
 ;; Use Sylvester's criterion to decide if the self-adjoint part of a matrix is 
-;; negative definite (neg), negative semidefinite (nz), positive semidefinite (pz), 
-;; or positive definite (pos). By the self-adjoint part of a matrix M, I mean
-;; (M + M^*) / 2, where ^* is the conjugate transpose. 
+;; negative definite (neg) or positive definite (pos). By the self-adjoint part 
+;; of a matrix M, I mean (M + M^*) / 2, where ^* is the conjugate transpose. For
+;; all other cases, return pnz. This algorithm is unable to determine if a matrix
+;; is negative semidefinite or positive semidefinite.
 
 ;; For purely numerical matrices, there more efficient algorithms; for symbolic
 ;; matrices, things like matrix([a,b],[b,a]), assume(a > 0, a^2 > b^2), I think
@@ -62,46 +87,20 @@
 ;; matrix_sign(matrix([a,b],[b,a])) without the divide by 2.
 
 (defun $matrix_sign (m)
-  (let ((i 1) (sgn) (n) (matrix-sign))
+  (let ((n) (det) (p-sgn nil) (n-sgn nil))
     ($require_square_matrix m '$first '$matrix_sign)
     (setq m (div (add m ($ctranspose m)) 2)) ;; see (1)
     (setq n ($first ($matrix_size m)))
-    (setq matrix-sign (csign (ratdisrep (newdet m i nil))))
     
-    (while (and (member matrix-sign '($neg $nz $pz $pos) :test #'eq) (< i n))
-      (incf i)
-      (setq sgn (csign (ratdisrep (newdet m i nil))))      
-      (cond
-       ((and (eq matrix-sign '$neg) (member sgn '($nz $neg) :test #'eq))
-	(setq matrix-sign sgn))
-       
-       ((and (eq matrix-sign '$neg) (eq sgn '$zero))
-	(setq matrix-sign '$nz))
-       
-       ((eq matrix-sign '$neg)
-	(setq matrix-sign '$pnz))
-       
-       ((and (eq matrix-sign '$nz) (member sgn '($neg $nz $zero) :test #'eq))
-	(setq matrix-sign '$nz))
-	
-       ((eq matrix-sign '$nz) 
-	(setq matrix-sign '$pnz))
-
-       ((and (eq matrix-sign '$pz) (member sgn '($pz $pos $zero) :test #'eq))
-	(setq matrix-sign '$pz))
-
-       ((eq matrix-sign '$pz) 
-	(setq matrix-sign '$pnz))
-
-       ((and (eq matrix-sign '$pos) (member sgn '($pz $pos) :test #'eq))
-	(setq matrix-sign sgn))
-
-       ((and (eq matrix-sign '$pos) (eq sgn '$zero))
-	(setq matrix-sign '$pz))
-       
-       ((eq matrix-sign '$pos)
-	(setq matrix-sign '$pnz))
-
-       (t (setq matrix-sign '$pnz))))
+    (loop for i from 1 to n do
+      (setq det (ratdisrep (newdet m i nil)))
+      (push (csign det) p-sgn)
+      (push (csign (mul (power -1 i) det)) n-sgn))
     
-    (if (eq matrix-sign '$zero) '$pnz matrix-sign)))
+    (cond ((every #'(lambda (s) (eq s '$pos)) p-sgn) '$pos)
+	  ((every #'(lambda (s) (eq s '$pos)) n-sgn) '$neg)
+	  (t '$pnz))))
+
+
+
+ 

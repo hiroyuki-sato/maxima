@@ -89,7 +89,7 @@
      ;; collect the file-name, if any, and open a port if needed
      (setq texport (cond((null filename) *standard-output* ) ; t= output to terminal
 			(t
-			 (open (string (print-invert-case (stripdollar filename)))
+			 (open (namestring (maxima-string (meval filename)))
 			       :direction :output
 			       :if-exists :append
 			       :if-does-not-exist :create))))
@@ -123,14 +123,14 @@
          ;; WHY CHECK INITIAL SUBSTRING IF SYMBOL IS ON THE $LABELS LIST ??
          ;; PROBABLY IT IS A HOLDOVER FROM THE DAYS WHEN LABELS WERE C AND D INSTEAD OF %I AND %O
 	     (<= (length (string $inchar)) (length (string mexplabel)))
-	     (eq (getchars (maybe-invert-string-case (string $inchar)) 2 (1+ (length (string $inchar))))
-		 (getchars mexplabel 2 (1+ (length (string $inchar)))))
+	     (string= (subseq (maybe-invert-string-case (string $inchar)) 1 (length (string $inchar)))
+		      (subseq (string mexplabel) 1 (length (string $inchar))))
 	     ;; Check to make sure it isn't an outchar in disguise
 	     (not
 	      (and
 	       (<= (length (string $outchar)) (length (string mexplabel)))
-	       (eq (getchars (maybe-invert-string-case (string $outchar)) 2 (1+ (length (string $outchar))))
-		   (getchars mexplabel 2 (1+ (length (string $outchar))))))))
+	       (string= (subseq (maybe-invert-string-case (string $outchar)) 1 (length (string $outchar)))
+			(subseq (string mexplabel) 1 (length (string $outchar)))))))
 	    ;; aha, this is a C-line: do the grinding:
 	    (format texport "~%\\begin{verbatim}~%~a " mexplabel)
 	    (mgrind mexp texport)	;write expression as string
@@ -977,27 +977,20 @@
 (defun tex-spaceout (x l r)
   (append l (cons (format nil "\\hspace{~dmm}" (* 3 (cadr x))) r)))
 
-;; initialize a file so that c-lines will look ok in verbatim mode
-;; run this first before tex(<whatever>, file);
+;; run some code initialize file before $tex is run
 (defun $texinit(file)
-  ;; copy header from some generic place
-  (funcall 'exec (list
-		  (concat "cp "
-			  vaxima-main-dir
-			  "//ucb//verbwin " ;extra slashes for maclisp // = /
-			  (stripdollar file))))
-  '$done )
+(declare (ignore file))
+  '$done)
+
 ;; this just prints a \\end on the file;  this is something a TeXnician would
 ;; probably have no trouble spotting, and will generally be unnecessary, since
 ;; we anticipate almost all use of tex would be involved in inserting this
 ;; stuff into larger files that would have their own \\end or equivalent.
 (defun $texend(filename)
-  (with-open-file (st      (stripdollar filename)
-			   :direction :output
-			   :if-exists :append
-			   :if-does-not-exist :create)
-    (format st "\\end~%")
-    '$done))
+  (with-open-file (st (stripdollar filename)  :direction :output
+		      :if-exists :append :if-does-not-exist :create)
+    (format st "\\end~%"))
+  '$done)
 
 ;; Undone and trickier:
 ;; handle reserved symbols stuff, just in case someone
@@ -1011,61 +1004,56 @@
 ;;  The texput function was written by Barton Willis.
 
 (defun $texput (e s &optional tx)
+  (when (mstringp e)
+    (setq e (define-symbol (string-left-trim '(#\&) e))))
 
-  (cond ((mstringp e)
-	 (setq e (define-symbol (string-left-trim '(#\&) e)))))
-
-  (cond (($listp s)
-	 (setq s (margs s)))
-	(t
-	 (setq s (list s))))
+  (setq s (if ($listp s) (margs s) (list s)))
   
   (setq s (mapcar #'(lambda (x) (maybe-invert-string-case (symbol-name (stripdollar x)))) s))
 
   (cond ((null tx)
 	 (putprop e (nth 0 s) 'texword))
-	
 	((eq tx '$matchfix)
 	 (putprop e 'tex-matchfix 'tex)
 	 (cond ((< (length s) 2)
 		(merror "Improper 2nd argument to `texput' for matchfix operator."))
-	       ((eq (length s) 2)
-		(putprop e (list (list (nth 0 s)) (nth 1 s)) 'texsym))
+	       ((= (length s) 2)
+		(putprop e (list (list (first s)) (second s)) 'texsym))
 	       (t
-		(putprop e (list (list (nth 0 s)) (nth 1 s) (nth 2 s)) 'texsym)))
-     `((mlist) ,@s))
+		(putprop e (list (list (first s)) (second s) (third s)) 'texsym)))
+	 `((mlist) ,@s))
 
-    ((eq tx '$nofix)
-     (putprop e 'tex-nofix 'tex)
-     (putprop e s 'texsym)
-     (car s))
+	((eq tx '$nofix)
+	 (putprop e 'tex-nofix 'tex)
+	 (putprop e s 'texsym)
+	 (car s))
 
 	((eq tx '$prefix)
 	 (putprop e 'tex-prefix 'tex)
-     (when (null (get e 'grind))
-       (putprop e 180 'tex-rbp))
+	 (when (null (get e 'grind))
+	   (putprop e 180 'tex-rbp))
 	 (putprop e s 'texsym)
-     (car s))
+	 (car s))
 		
 	((eq tx '$infix)
 	 (putprop e 'tex-infix 'tex)
-     (when (null (get e 'grind))
-       (putprop e 180 'tex-lbp)
-       (putprop e 180 'tex-rbp))
+	 (when (null (get e 'grind))
+	   (putprop e 180 'tex-lbp)
+	   (putprop e 180 'tex-rbp))
 	 (putprop e  s 'texsym)
-     (car s))
+	 (car s))
 
-    ((eq tx '$nary)
-     (putprop e 'tex-nary 'tex)
-     (when (null (get e 'grind))
-       (putprop e 180 'tex-lbp)
-       (putprop e 180 'tex-rbp))
-     (putprop e s 'texsym)
-     (car s))
+	((eq tx '$nary)
+	 (putprop e 'tex-nary 'tex)
+	 (when (null (get e 'grind))
+	   (putprop e 180 'tex-lbp)
+	   (putprop e 180 'tex-rbp))
+	 (putprop e s 'texsym)
+	 (car s))
 
 	((eq tx '$postfix)
 	 (putprop e 'tex-postfix 'tex)
-     (when (null (get e 'grind))
-       (putprop e 180 'tex-lbp))
+	 (when (null (get e 'grind))
+	   (putprop e 180 'tex-lbp))
 	 (putprop e  s 'texsym)
-     (car s))))
+	 (car s))))

@@ -23,35 +23,27 @@
 
 (defmvar mopl nil)
 
-(declare-top  (special m$+ $lasttime $disptime
+(declare-top  (special $lasttime $disptime
 		       bindlist loclist errset $labels linelable $filesize
-		       st rephrase $dispflag refchkl baktrcl ttyheight
-		       dskfnp dsksavep *rset
-		       ^w ^r ^q lf tab ff batconl cr ^h ^s
+		       st rephrase $dispflag refchkl baktrcl
+		       dskfnp dsksavep *rset ^q lf tab ff cr
 		       $values $functions $arrays $aliases $gradefs $dependencies
 		       $rules $props $ratvars $ratvarswitch *mdebug* errbrksw errcatch
-		       varlist genvar $device $filename $filenum lbp rbp
+		       varlist genvar $device $filename $filenum
 		       $gensumnum checkfactors $features featurel $backtrace
-		       $weightlevels tellratlist $dontfactor $infolists loadfiles
-		       $dskall allbutl lisperrprint
-		       alarmclock dcount thistime
+		       $weightlevels tellratlist $dontfactor $infolists
+		       $dskall allbutl lisperrprint dcount thistime
 		       $nolabels dispflag saveno mcatch brklvl savefile
-		       $%% $error
-		       *in-translate-file*
+		       $%% $error *in-translate-file*
 		       lessorder greatorder $errorfun mbreak reprint pos $strdisp
-		       $dskuse smart-tty rubout-tty more-^w oldst *alphabet*
-		       $loadprint opers
-		       *ratweights $ratweights quitmsg
-		       loadf display-file $grind scrollp $cursordisp
-		       $stringdisp $lispdisp defaultf
-		       state-pdl command printmsg mrg-punt
+		       $dskuse smart-tty more-^w oldst
+		       $loadprint opers *ratweights $ratweights quitmsg
+		       loadf $grind $stringdisp $lispdisp defaultf
+		       state-pdl command
 		       transp $contexts $setcheck $macros
 		       autoload))
 
-(defmvar $prompt
-    '_
-  nil
-  no-reset)
+(defvar $prompt '_)
 
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'opalias))
@@ -69,7 +61,7 @@
       thistime 0
       $disptime nil)
 
-(setq batconl nil $strdisp t $grind nil)
+(setq $strdisp t $grind nil)
 
 (setq refchkl nil
       *mdebug* nil
@@ -86,9 +78,9 @@
 
 (setq *in-translate-file* nil)
 
-(setq $debugmode nil $pagepause nil $dskgc nil $poislim 5)
+(setq $debugmode nil $pagepause nil $poislim 5)
 
-(setq $loadprint nil ^s nil loadfiles nil)
+(setq $loadprint nil)
 
 (setq $nolabels nil $aliases '((mlist simp)) lessorder nil greatorder nil)
 
@@ -107,7 +99,7 @@
 
 (setq quitmsg  " "
       more-^w nil
-      lisperrprint t printmsg nil mrg-punt nil)
+      lisperrprint t)
 
 (setq state-pdl (ncons 'lisp-toplevel))
 
@@ -158,18 +150,19 @@
       (clearsign))))
 
 (defmfun makelabel (x)
-  (when (and $dskuse (not $nolabels) (> (setq dcount (1+ dcount)) $filesize))
-    (setq dcount 0) (dsksave))
-  (setq linelable (concat x $linenum))
-  (if (not $nolabels)
-      (if (or (null (cdr $labels))
+  (when (and $dskuse (not $nolabels) (> (incf dcount) $filesize))
+    (setq dcount 0)
+    (dsksave))
+  (setq linelable (intern (format nil "~a~d" x $linenum)))
+  (unless $nolabels
+    (when (or (null (cdr $labels))
 	      (when (member linelable (cddr $labels) :test #'equal)
 		(setf $labels (delete linelable $labels :count 1 :test #'eq)) t)
 	      (not (eq linelable (cadr $labels))))
-	  (setq $labels (cons (car $labels) (cons linelable (cdr $labels))))))
+      (setq $labels (cons (car $labels) (cons linelable (cdr $labels))))))
   linelable)
 
-(defmfun printlabel nil
+(defmfun printlabel ()
   (mtell-open "(~A) " (subseq (print-invert-case linelable) 1)))
 
 (defmfun mexploden (x)
@@ -180,14 +173,14 @@
 (defmfun addlabel (label)
   (setq $labels (cons (car $labels) (cons label (delete label (cdr $labels) :count 1 :test #'eq)))))
 
-(defmfun tyi* nil
+(defmfun tyi* ()
   (clear-input)
   (do ((n (tyi) (tyi))) (nil)
-    (cond ((or (char= n #\newline) (and (> (char-code n) 31) (not (char= n #\rubout))))
+    (cond ((or (char= n #\newline) (and (> (char-code n) 31) (char/= n #\rubout)))
 	   (return n))
 	  ((char= n #\page) (format t "~|") (throw 'retry nil)))))
 
-(defun continuep nil
+(defun continuep ()
   (loop
    (catch 'retry
      (unwind-protect
@@ -199,13 +192,13 @@
        (clear-input)))))
 
 (defun checklabel (x)	; CHECKLABEL returns T iff label is not in use
-  (not (or $nolabels (= $linenum 0) (boundp (concat x $linenum)))))
+  (not (or $nolabels
+	   (= $linenum 0)
+	   (boundp (intern (format nil "~a~a"x $linenum))))))
 
 (defun gctimep (timep tim)
   (cond ((and (eq timep '$all) (not (zerop tim))) (princ "Totaltime= ") t)
 	(t (princ "Time= ") nil)))
-
-(defun listen () 0)			; Doesn't exist yet.
 
 (defun display* (&aux (ret nil) (tim 0))
   (setq tim (get-internal-run-time)
@@ -229,8 +222,8 @@
 	 #+allegro "fasl"
 	 #-(or gcl cmu clisp allegro) ""))
     (if (member type (list bin-ext "lisp" "lsp")  :test 'equalp)
-      #-sbcl (load file :verbose 't) #+sbcl (with-compilation-unit nil (load file :verbose 't))
-      ($batchload file))))
+      #-sbcl (load file) #+sbcl (with-compilation-unit nil (load file))
+      ($load file))))
 
 (defvar autoload 'generic-autoload)
 
@@ -243,7 +236,7 @@
   ($load (to-macsyma-namestring file)))
 
 (defmspec $loadfile (form)
-  (loadfile (filestrip (cdr form)) nil
+  (loadfile (namestring (maxima-string (meval (cadr form)))) nil
 	    (not (member $loadprint '(nil $autoload) :test #'equal))))
 
 
@@ -541,7 +534,7 @@
 				(cond ((catch 'mbreak
 					 (let (st oldst rephrase
 						  (mbreak (cons bindlist loclist)))
-					   (setq $linenum (1+ $linenum))
+					   (incf $linenum)
 					   (continue)))
 				       (go end))
 				      (t (mtell-open "Back to the break~%"))))
@@ -574,7 +567,6 @@
 
 (defun errlfun (x)
   (when (null (errset (progn
-			(setq ^s nil)
 			(if loadf
 			    (setq defaultf loadf
 				  loadf nil)))))
@@ -635,22 +627,21 @@
     (princ x)
     (write-char #\space)))
 
-(defmfun $print n
-  (if (= n 0)
+(defmfun $print (&rest args)
+  (if (null args)
       '((mlist simp))
-      (let ((l (listify n))
-	    ;; Don't print out strings with quotation marks!
-	    $stringdisp)
-	(do ((l l (cddr l)))( (null l)) (rplacd l (cons " " (cdr l))))
-	(displa (setq printmsg (cons '(mtext) l)))
+      (let ((l args) $stringdisp) ;; Don't print out strings with quotation marks!
+	(do ((l l (cddr l)))
+	    ((null l))
+	  (rplacd l (cons " " (cdr l))))
+	(displa (cons '(mtext) l))
 	(cadr (reverse l)))))
 
 (defmspec $playback (x)
   (setq x (cdr x))
   (let ((state-pdl (cons 'playback state-pdl)))
     (prog (l l1 l2 numbp slowp nostringp inputp timep grindp inchar largp)
-       (setq inchar (getlabcharn $inchar))
-					; Only the 1st alphabetic char. of $INCHAR is tested
+       (setq inchar (getlabcharn $inchar)) ; Only the 1st alphabetic char. of $INCHAR is tested
        (setq timep $showtime grindp $grind)
        (do ((x x (cdr x)))( (null x))
 	 (cond ((eq (ml-typep (car x)) 'fixnum) (setq numbp (car x)))
@@ -675,9 +666,11 @@
 	  (errset
 	   (cond ((and (not nostringp) incharp)
 		  (let ((linelable (car l1))) (mterpri) (printlabel))
-		  (if grindp (mgrind (meval1 (car l1)) nil)
-		      (mapc #+gcl #'tyo #-gcl #'write-char (mstring (meval1 (car l1)))))
-		  (if (get (car l1) 'nodisp) (princ '$) (princ '|;|))
+		  (if grindp
+		      (mgrind (meval1 (car l1)) nil)
+		      (mapc #'(lambda (x) (write-char x)) (mstring (meval1 (car l1)))))	;gcl doesn't like a
+					; simple write-char, therefore wrapped it up in a lambda - are_muc
+		  (if (get (car l1) 'nodisp) (princ "$") (princ ";"))
 		  (mterpri))
 		 ((or incharp
 		      (prog2 (when (and timep (setq l (get (car l1) 'time)))
@@ -795,7 +788,7 @@
   (nonsymchk x '$verbify)
   (setq x (amperchk x))
   (cond ((get x 'noun))
-	((and (char= (getcharn x 1) #\%)
+	((and (char= (char (symbol-name x) 0) #\%)
 	      (prog2
 		  ($nounify (implode (cons #\$ (cdr (exploden x)))))
 		  (get x 'noun))))
@@ -803,7 +796,7 @@
 
 
 (defmfun dollarify-name (name)
-  (let ((n (getcharn name 1)))
+  (let ((n (char (symbol-name name) 0)))
     (cond ((char= n #\&)
 	   (or (get name 'opr)
 	       (let ((namel (casify-exploden name)) ampname dolname)
@@ -858,7 +851,7 @@
    &AB ==> $AB,
    &aB ==> $aB,
    |aB| ==> |aB| "
-  (if (char= (getcharn name 1) #\&)
+  (if (char= (char (symbol-name name) 0) #\&)
       (getalias (or (get name 'opr)
 		    (implode (cons #\$ (casify-exploden name)))))
       name))
@@ -866,13 +859,13 @@
 
 #+(and cl (not scl) (not allegro))
 (defun casify-exploden (x)
-  (cond ((char= (getcharn x 1) #\&)
+  (cond ((char= (char (symbol-name x) 0) #\&)
 	 (cdr (exploden (maybe-invert-string-case (string x)))))
 	(t (exploden x))))
 
 #+(or scl allegro)
 (defun casify-exploden (x)
-  (cond ((char= (getcharn x 1) #\&)
+  (cond ((char= (char (symbol-name x) 0) #\&)
 	 (let ((string (string x)))
 	   (unless #+scl (eq ext:*case-mode* :lower)
 		   #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
@@ -883,7 +876,7 @@
 (defmspec $stringout (x)
   (setq x (cdr x))
   (let*
-    ((file ($filename_merge (car x)))
+    ((file (namestring (maxima-string (meval (car x)))))
      (filespec (if (or (eq $file_output_append '$true) (eq $file_output_append t))
 	`(savefile ,file :direction :output :if-exists :append :if-does-not-exist :create)
 	`(savefile ,file :direction :output :if-exists :supersede :if-does-not-exist :create))))
@@ -971,7 +964,11 @@
 	(setq l1 (cons (car l) l1)))))
 
 (defmfun getlabcharn (label)
-  (let ((char (getcharn label 2))) (if (char= char #\%) (getcharn label 3) char)))
+  (let ((c (char (symbol-name label) 1)))
+    (if (char= c #\%)
+	(char (symbol-name label) 2)
+	c)))
+
 (defmspec $errcatch (form)
   (let ((errcatch (cons bindlist loclist)) ret)
     (if (null (setq ret (let (*mdebug*)
@@ -1066,14 +1063,6 @@
 	 (setq *features* (delete ($mkey item) *features*)) t)
 	(t (error "know only how to set and remove feature status"))))
 
-(defmfun $dskgc (xx)
-  (declare (ignore xx))
-  nil)
-
-(defun dskgc1 (xx yy)
-  (declare (ignore xx yy))
-  nil)
-
 (do ((l '($sqrt $erf $sin $cos $tan $log $plog $sec $csc $cot $sinh $cosh
 	  $tanh $sech $csch $coth $asin $acos $atan $acot $acsc $asec $asinh
 	  $acosh $atanh $acsch $asech $acoth $binomial $gamma $genfact $del)
@@ -1094,7 +1083,7 @@
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'assign))
       '(($debugmode debugmode1)
-	($pagepause pagepause1) ($dskgc dskgc1)
+	($pagepause pagepause1)
 	($ttyintfun ttyintfunsetup)
 	($fpprec fpprec1) ($poislim poislim1)
 	($default_let_rule_package let-rule-setter)

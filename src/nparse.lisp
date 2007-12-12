@@ -66,9 +66,6 @@
       (terpri)
       (throw-macsyma-top)))
 
-(defun firstcharn (x)
-  (aref (string x) 0))
-
 (defun tyi-parse-int (stream eof)
   (or *parse-window*
       (progn (setq *parse-window* (make-list 25))
@@ -78,7 +75,7 @@
     (setf (car *parse-window*) tem *parse-window*
 	  (cdr *parse-window*))
     (if (eql tem #\newline)
-	(newline stream #\newline))
+	(newline stream))
     tem))
 
 (defun *mread-prompt* (out-stream char)
@@ -495,7 +492,7 @@
 
 
 (defun mstringp (x)
-  (and (symbolp x) (char= (aref (symbol-name x) 0) #\&)))
+  (and (symbolp x) (char= (char (symbol-name x) 0) #\&)))
 
 (defun inherit-propl (op-to op-from getl)
   (let ((propl (getl op-from getl)))
@@ -540,8 +537,7 @@
     (setq res
 	  (if (null tem)
 	      (if (operatorp op)
-		  (mread-synerr "~A is not a prefix operator"
-				(mopstrip op))
+		  (mread-synerr "~A is not a prefix operator" (mopstrip op))
 		  (cons '$any op))
 	      (funcall (cadr tem) op)))
     res))
@@ -740,12 +736,12 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 ;;Important for lispm rubout handler
 (defun mread (&rest read-args)
   (progn
-	 (when *mread-prompt*
-	       (and *parse-window* (setf (car *parse-window*) nil
-					 *parse-window* (cdr *parse-window*)))
-	       (princ *mread-prompt*)
-	       (force-output))
-	 (apply 'mread-raw read-args)))
+    (when *mread-prompt*
+      (and *parse-window* (setf (car *parse-window*) nil
+				*parse-window* (cdr *parse-window*)))
+      (princ *mread-prompt*)
+      (force-output))
+    (apply 'mread-raw read-args)))
 
 (defun mread-prompter (stream char)
   (declare (special *mread-prompt-internal*)
@@ -1158,6 +1154,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 	  (let ((propval (get '$^ prop)))
 	    (if propval (putprop '$** propval prop))))
       '(lbp rbp pos rpos lpos mheader))
+
 (inherit-propl  '$** '$^ (led-propl))
 
 (def-lbp     |$^^| 140.)
@@ -1433,10 +1430,11 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 	((numberp x) x)
 	((symbolp x)
 	 (or (get x 'reversealias)
-	     (if (member (aref (symbol-name x) 0) '(#\$ #\% #\&))
-		 (implode (cdr (exploden x)))
-		 x)))
-	(t (maknam (mstring x)))))
+	     (let ((name (symbol-name x)))
+	       (if (member (char name 0) '(#\$ #\% #\&) :test #'char=)
+		   (subseq name 1)
+		   name))))
+	(t x)))
 
 (define-initial-symbols
     ;; * Note: /. is looked for explicitly rather than
@@ -1632,13 +1630,9 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 		   (cons  (make-instream :stream str :stream-name name)
 			  *stream-alist*))))))
 
-(defun newline (str ch) ch
-       (let ((in (get-instream str)))
-	 (setf (instream-line in) (the fixnum (+ 1 (instream-line in)))))
-       ;; if the next line begins with '(',
-       ;; then record all cons's eg arglist )
-       ;;(setq *at-newline*  (if (eql (peek-char nil str nil) #\() :all t))
-       (values))
+(defun newline (str)
+  (incf (instream-line (get-instream str)))
+  (values))
 
 (defun find-stream (stream)
    (dolist (v *stream-alist*)
@@ -1652,8 +1646,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 			  lis
     (let* ((st (get-instream *parse-stream*))
  	   (n (instream-line st))
-	   (nam (instream-name st))
-	   )
+	   (nam (instream-name st)))
       (or nam (return-from add-lineinfo lis))
       (setq *current-line-info*
 	    (cond ((eq (cadr *current-line-info*) nam)

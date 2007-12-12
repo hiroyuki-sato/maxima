@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on May, 2 2007 by texi2html 1.76 -->
+<!-- Created on August, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -143,18 +156,18 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 8. Plotting </h1>
 
 <table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#SEC33">8.1 Definitions for Plotting</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    
+<tr><td align="left" valign="top"><a href="#SEC33">8.1 Functions and Variables for Plotting</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    
 </td></tr>
 </table>
 
 <hr size="6">
-<a name="Definitions-for-Plotting"></a>
+<a name="Functions-and-Variables-for-Plotting"></a>
 <a name="SEC33"></a>
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC32" title="Previous section in reading order"> &lt; </a>]</td>
@@ -169,10 +182,10 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 8.1 Definitions for Plotting </h2>
+<h2 class="section"> 8.1 Functions and Variables for Plotting </h2>
 
 <dl>
 <dt><u>Function:</u> <b>contour_plot</b><i> (<var>expr</var>, <var>x_range</var>, <var>y_range</var>, <var>options</var>, ...)</i>
@@ -188,7 +201,7 @@ Any additional arguments are treated the same as in <code>plot3d</code>.
 </p>
 <p>Examples:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4]);
+<pre class="example">(%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4]);
 (%o1) 
 (%i2) contour_plot (sin(y) * cos(x)^2, [x, -4, 4], [y, -4, 4]);
 (%o2) 
@@ -197,12 +210,14 @@ Any additional arguments are treated the same as in <code>plot3d</code>.
 (%o3)                  F(x, y) := x  + y
 (%i4) contour_plot (F, [u, -4, 4], [v, -4, 4]);
 (%o4) 
-(%i5) contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble, &quot;set size ratio -1&quot;]);
+(%i5) contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble,
+      &quot;set size ratio -1&quot;]);
 (%o5) 
-(%i6) set_plot_option ([gnuplot_preamble, &quot;set cntrparam levels 12&quot;])$
+(%i6) set_plot_option ([gnuplot_preamble,
+                        &quot;set cntrparam levels 12&quot;])$
 
 (%i7) contour_plot (F, [u, -4, 4], [v, -4, 4]);
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
@@ -272,7 +287,7 @@ option. The option <var>xlabel</var> can be used to give a label for the
 horizontal axis; if that option is not used, the horizontal axis will
 be labeled with the name of the variable specified in <var>x_range</var>, or
 with the expression <var>x_expr</var> in the case of just one parametric
-expresssion, or it will be left blank otherwise.
+expression, or it will be left blank otherwise.
 </p>
 <p>A label for the vertical axis can be given with the <var>ylabel</var>
 option. If there is only one expression to be plotted and the
@@ -293,8 +308,8 @@ option is not used, Maxima will create labels from the expressions.
 <p>By default, the expressions are plotted as a set of line segments
 joining adjacent points within a set of points which is either given in
 the <var>discrete</var> form, or calculated automatically from the expression
-given, using an algorithm that atomatically adapts the steps among
-points using as an intial estimate of the total number of points the
+given, using an algorithm that automatically adapts the steps among
+points using as an initial estimate of the total number of points the
 value set with the <var>nticks</var> option. The option <var>style</var> can be
 used to make one of the expressions to be represented as a set of
 isolated points, or as points and line segments.
@@ -313,15 +328,15 @@ function must be a function of one argument.
 </p>
 <p>Plots of common functions.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) plot2d (sin(x), [x, -5, 5])$
+<pre class="example">(%i1) plot2d (sin(x), [x, -5, 5])$
 
 (%i2) plot2d (sec(x), [x, -2, 2], [y, -20, 20], [nticks, 200])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting2.gif" alt="figures/plotting2"></div><div class="image"><img src="./figures/plotting3.gif" alt="figures/plotting3"></div>
 </p>
 <p>Plotting functions by name.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) F(x) := x^2 $
+<pre class="example">(%i3) F(x) := x^2 $
 
 (%i4) :lisp (defun |$g| (x) (m* x x x))
 
@@ -331,7 +346,7 @@ $g
 (%i6) plot2d (F, [u, -1, 1])$
 
 (%i7) plot2d ([F, G, H], [u, -1, 1], [y, -1.5, 1.5])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting4.gif" alt="figures/plotting4"></div><div class="image"><img src="./figures/plotting5.gif" alt="figures/plotting5"></div>
 </p>
 <p>We can plot a circle using a parametric plot with a parameter
@@ -341,67 +356,62 @@ domain. However, since the graph's horizontal and vertical axes
 lengths are in the 4 to 3 proportion, we will use the <var>xrange</var>
 option to obtain the same scaling in both axes:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi], [nticks,80]],
-           [x, -4/3, 4/3])$
-</pre></td></tr></table>
+<pre class="example">(%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi],
+      [nticks,80]], [x, -4/3, 4/3])$
+</pre>
 <p><div class="image"><img src="./figures/plotting6.gif" alt="figures/plotting6"></div>
 </p>
 <p>If we repeat that plot with only 8 points and extending the range
 of the parameter to give two turns, we will obtain the plot of a star:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i9) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
+<pre class="example">(%i9) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
         [nticks, 8]], [x, -2, 2], [y, -1.5, 1.5])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting7.gif" alt="figures/plotting7"></div>
 </p>
 <p>Combination of an ordinary plot of a cubic polynomial with a
 parametric plot of a circle:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i10) plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5],
+<pre class="example">(%i10) plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5],
         [nticks, 80]]], [x, -3, 3])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting8.gif" alt="figures/plotting8"></div>
 </p>
 <p>Example of a logarithmic plot:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i11) plot2d (exp(3*s), [s, -2, 2], [logy])$
-</pre></td></tr></table>
+</p><pre class="example">(%i11) plot2d (exp(3*s), [s, -2, 2], [logy])$
+</pre>
 <p><div class="image"><img src="./figures/plotting9.gif" alt="figures/plotting9"></div>
 </p>
 <p>To show some examples of discrete plots, we will start by entering the
 coordinates of 5 points, in the two different ways that can be used:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i12) xx:[10, 20, 30, 40, 50]$
+<pre class="example">(%i12) xx:[10, 20, 30, 40, 50]$
 (%i13) yy:[.6, .9, 1.1, 1.3, 1.4]$
 (%i14) xy:[[10,.6], [20,.9], [30,1.1], [40,1.3], [50,1.4]]$
-</pre></td></tr></table>
+</pre>
 <p>To plot those data points, joined with line segments, we use:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i15) plot2d([discrete,xx,yy])$
-</pre></td></tr></table>
+</p><pre class="example">(%i15) plot2d([discrete,xx,yy])$
+</pre>
 <p><div class="image"><img src="./figures/plotting10.gif" alt="figures/plotting10"></div>
 </p>
 <p>We will now show the plot with only points, and illustrating the use of
 the second way of giving the points coordinates:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i16) plot2d([discrete, xy], [style, points])$
-</pre></td></tr></table>
+<pre class="example">(%i16) plot2d([discrete, xy], [style, points])$
+</pre>
 <p><div class="image"><img src="./figures/plotting11.gif" alt="figures/plotting11"></div>
 </p>
 <p>The plot of the data points can be shown together with a plot of the
 theoretical function that predicts the data:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-       [style, [points,5,2,6], [lines,1,1]], [legend,&quot;experiment&quot;,&quot;theory&quot;],
-       [xlabel,&quot;pendulum's length (cm)&quot;], [ylabel,&quot;period (s)&quot;])$
-</pre></td></tr></table>
+<pre class="example">(%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
+        [style, [points,3,5], [lines,1,3]],
+        [legend,&quot;experiment&quot;,&quot;theory&quot;],
+        [xlabel,&quot;pendulum's length (cm)&quot;], [ylabel,&quot;period (s)&quot;])$
+</pre>
 <p><div class="image"><img src="./figures/plotting12.gif" alt="figures/plotting12"></div>
 </p>
-<p>The meaning of the three numbers after the &quot;points&quot; style option are:
-5: radius of the points, 2: color used (red), 6: type of objects used
-(solid squares). The two numbers after the &quot;lines&quot; style option give
-the thickness of the line (1 point) and the color (1 corresponds to blue).
-</p>
-<p>See also <code>plot_options</code>, which describes plotting options and has
-more examples.
+<p>See also <code>plot_options</code>, which describes plotting options and has more examples.
 </p>
 </dd></dl>
 
@@ -414,44 +424,44 @@ xgraph is not installed, this command will fail.
 </p>
 <p>A point set may be of the form
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[x0, y0, x1, y1, x2, y2, ...]
-</pre></td></tr></table><p>or
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[[x0, y0], [x1, y1], ...]
-</pre></td></tr></table><p>A point set may also contain symbols which give labels or other
+<pre class="example">[x0, y0, x1, y1, x2, y2, ...]
+</pre><p>or
+</p><pre class="example">[[x0, y0], [x1, y1], ...]
+</pre><p>A point set may also contain symbols which give labels or other
 information.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">xgraph_curves ([pt_set1, pt_set2, pt_set3]);
-</pre></td></tr></table>
+<pre class="example">xgraph_curves ([pt_set1, pt_set2, pt_set3]);
+</pre>
 <p>graph the three point sets as three curves.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">pt_set: append ([&quot;NoLines: True&quot;, &quot;LargePixels: true&quot;],
+<pre class="example">pt_set: append ([&quot;NoLines: True&quot;, &quot;LargePixels: true&quot;],
                           [x0, y0, x1, y1, ...]);
-</pre></td></tr></table>
+</pre>
 
 <p>would make the point set (and subsequent ones), have  
 no lines between points, and to use large pixels.
 See the man page on xgraph for more options to specify.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">pt_set: append ([concat (&quot;\&quot;&quot;, &quot;x^2+y&quot;)], [x0, y0, x1, y1, ...]);
-</pre></td></tr></table>
+<pre class="example">pt_set: append ([concat (&quot;\&quot;&quot;, &quot;x^2+y&quot;)], [x0, y0, x1, y1, ...]);
+</pre>
 
 <p>would make there be a &quot;label&quot; of &quot;x^2+y&quot; for this particular
 point set.    The <code>&quot;</code> at the beginning is what tells
 xgraph this is a label.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">pt_set: append ([concat (&quot;TitleText: Sample Data&quot;)], [x0, ...])$
-</pre></td></tr></table>
+<pre class="example">pt_set: append ([concat (&quot;TitleText: Sample Data&quot;)], [x0, ...])$
+</pre>
 
 <p>would make the main title of the plot be &quot;Sample Data&quot; instead
 of &quot;Maxima Plot&quot;.
 </p>
 <p>To make a bar graph with bars which are 0.2 units wide, and
 to plot two possibly different such bar graphs:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i1) xgraph_curves ([append ([&quot;BarGraph: true&quot;, &quot;NoLines: true&quot;,
+</p><pre class="example">(%i1) xgraph_curves ([append ([&quot;BarGraph: true&quot;, &quot;NoLines: true&quot;,
       &quot;BarWidth: .2&quot;], create_list ([i - .2, i^2], i, 1, 3)),
       append ([&quot;BarGraph: true&quot;, &quot;NoLines: true&quot;, &quot;BarWidth: .2&quot;],
       create_list ([i + .2, .7*i^2], i, 1, 3))]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting13.gif" alt="figures/plotting13"></div>
 </p>
 
@@ -540,8 +550,8 @@ Option: <code>y</code>
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[y, - 3, 3]
-</pre></td></tr></table><p>Sets the vertical range to [-3, 3].
+<pre class="example">[y, - 3, 3]
+</pre><p>Sets the vertical range to [-3, 3].
 </p>
 </li><li>
 Option: <code>plot_realpart</code>
@@ -555,9 +565,9 @@ and complex values are ignored.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">plot2d (log(x), [x, -5, 5], [plot_realpart, false]);
+<pre class="example">plot2d (log(x), [x, -5, 5], [plot_realpart, false]);
 plot2d (log(x), [x, -5, 5], [plot_realpart, true]);
-</pre></td></tr></table><p>The default value is <code>false</code>.
+</pre><p>The default value is <code>false</code>.
 </p>
 </li><li>
 Option: <code>nticks</code>
@@ -568,8 +578,8 @@ number of points that will be shown in a parametric plot.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[nticks, 20]
-</pre></td></tr></table><p>The default for <code>nticks</code> is 10.
+<pre class="example">[nticks, 20]
+</pre><p>The default for <code>nticks</code> is 10.
 </p>
 </li><li>
 Option: <code>adapt_depth</code>
@@ -578,8 +588,8 @@ Option: <code>adapt_depth</code>
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[adapt_depth, 5]
-</pre></td></tr></table><p>The default for <code>adapt_depth</code> is 10.
+<pre class="example">[adapt_depth, 5]
+</pre><p>The default for <code>adapt_depth</code> is 10.
 </p>
 </li><li>
 Option: <code>xlabel</code>
@@ -587,16 +597,16 @@ Option: <code>xlabel</code>
 <p>The label for the horizontal axis in a 2d plot.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[xlabel, &quot;Time in seconds&quot;]
-</pre></td></tr></table>
+</p><pre class="example">[xlabel, &quot;Time in seconds&quot;]
+</pre>
 </li><li>
 Option: <code>ylabel</code>
 
 <p>The label of the vertical axis in a 2d plot.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[ylabel, &quot;Temperature&quot;]
-</pre></td></tr></table>
+</p><pre class="example">[ylabel, &quot;Temperature&quot;]
+</pre>
 </li><li>
 Option: <code>logx</code>
 
@@ -614,20 +624,13 @@ Option: <code>legend</code>
 
 <p>The labels for the various expressions in a 2d plot with several
 expressions. If there are more expressions than the number of labels
-given, they will be repeated. If legend is followed by the word
-<em>false</em>, the legend will not be shown.  By default, the names of
-the expressions or functions will be used for the legend, or the words
-discrete1, discrete2, ..., for discrete sets of points.
+given, they will be repeated. By default, the names of the expressions
+or functions will be used, or the words discrete1, discrete2, ..., for
+discrete sets of points.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[legend, &quot;Set 1&quot;, &quot;Set 2&quot;, &quot;Set 3&quot;]
-</pre></td></tr></table>
-</li><li>
-Option: <code>box</code>
-
-<p>Currently, this option can only be followed by the word <em>false</em>,
-and it will be used to supress the box around the plot.
-</p>
+</p><pre class="example">[legend, &quot;Set 1&quot;, &quot;Set 2&quot;, &quot;Set 3&quot;]
+</pre>
 </li><li>
 Option: <code>style</code>
 
@@ -641,30 +644,24 @@ isolated dots. Gnuplot accepts also an <var>impulses</var> style.
 </p>
 <p>Each of the styles can be enclosed inside a list with some aditional
 parameters. <var>lines</var> accepts one or two numbers: the width of the
-line and an integer that identifies a color. The default color codes
-are: 1: blue, 2: red, 3: magenta, 4: orange, 5: brown, 6: lime and 7:
-aqua.
-</p>
-<p><var>points</var> accepts one two or three parameters; the first parameter is
-the radius of the points, the second parameter is an integer that
-selects the color, using the same code used for <var>lines</var> and the
-third parameter is currently used only by Gnuplot and it corresponds to
-several objects instead of points. The default types of objects are: 1:
-filled circles, 2: open circles, 3: plus signs, 4: x, 5: *, 6: filled
-squares, 7: open squares, 8: filled triangles, 9: open triangles, 10:
-filled inverted triangles, 11: open inverted triangles, 12: filled
-lozenges and 13: open lozenges.
-</p>
-<p><var>linesdots</var> accepts up to four parameters: line width, points
-radius, color and type of object to replace the points.
+line and an integer that identifies a color. <var>points</var> accepts one
+or two parameters; the first parameter is the radius of the points and
+the second parameter is an integer that in Gnuplot selects different
+shapes and colors for the points and in Openmath changes the color
+used for the points. <var>linesdots</var> accepts up to four parameters;
+the first two are the same as for <var>lines</var> and the last two are the
+same as for <var>points</var>.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[style,[lines,2,3],[points,1,4,3]]
-</pre></td></tr></table>
-<p>This will plot the first (and third, fifth, etc) expression with magenta
-line segments of width 2, and the second (and fourth, sixth, etc)
-expression with orange plus signs of size 1 (orange circles in the case
-of Openmath).
+</p><pre class="example">[style,[lines,2,3],[points,1,4]]
+</pre>
+<p>In Gnuplot, this will plot the first (and third, fifth, etc)
+expression with blue line segments of width 2, and the second (and
+fourth, sixth, etc) expression with green squares of size 1. In
+Openmath, the first expression will be plotted with magenta lines of
+width 2, and the second with orange points of radius 1; notice that
+openmath_color(3) and openmath_color(4) return &quot;magenta&quot; and
+&quot;orange&quot;.
 </p>
 <p>The default for the style option is <var>lines</var> with a width of 1, and
 different colors.
@@ -676,8 +673,8 @@ Option: <code>grid</code>
 for three-dimensional plotting.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[grid, 50, 50]
-</pre></td></tr></table><p>sets the grid to 50 by 50 points. The default grid is 30 by 30.
+</p><pre class="example">[grid, 50, 50]
+</pre><p>sets the grid to 50 by 50 points. The default grid is 30 by 30.
 </p>
 </li><li>
 Option: <code>transform_xy</code>
@@ -685,15 +682,15 @@ Option: <code>transform_xy</code>
 <p>Allows transformations to be applied to three-dimensional plots.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">[transform_xy, false]
-</pre></td></tr></table><p>The default <code>transform_xy</code> is <code>false</code>. If it is not <code>false</code>, it should be
+</p><pre class="example">[transform_xy, false]
+</pre><p>The default <code>transform_xy</code> is <code>false</code>. If it is not <code>false</code>, it should be
 the output of
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">make_transform([x,y,z], f1(x,y,z), f2(x,y,z), f3(x,y,z))$
-</pre></td></tr></table><p>The <code>polar_xy</code> transformation is built in. It gives the same
+<pre class="example">make_transform([x,y,z], f1(x,y,z), f2(x,y,z), f3(x,y,z))$
+</pre><p>The <code>polar_xy</code> transformation is built in. It gives the same
 transformation as
-</p><table><tr><td>&nbsp;</td><td><pre class="example">make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
-</pre></td></tr></table></li></ul>
+</p><pre class="example">make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
+</pre></li></ul>
 
 <p><b>Gnuplot options:</b>
 </p>
@@ -768,8 +765,8 @@ default value for <code>gnuplot_pm3d</code> is <code>false</code>.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_pm3d, true]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_pm3d, true]
+</pre>
 </li><li>
 Option: <code>gnuplot_preamble</code>
 
@@ -780,8 +777,8 @@ log scale plot. The default value for <code>gnuplot_preamble</code> is the empty
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_preamble, &quot;set log y&quot;]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_preamble, &quot;set log y&quot;]
+</pre>
 </li><li>
 Option: <code>gnuplot_curve_titles</code>
 
@@ -794,9 +791,9 @@ each of which is <code>&quot;title '<var>title_string</var>'&quot;</code>.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_curve_titles,
+<pre class="example">[gnuplot_curve_titles,
 [&quot;title 'My first function'&quot;, &quot;title 'My second function'&quot;]]
-</pre></td></tr></table>
+</pre>
 </li><li>
 Option: <code>gnuplot_curve_styles</code>
 
@@ -808,8 +805,8 @@ gnuplot documentation for <code>plot</code> for more information.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_curve_styles, [&quot;with lines 7&quot;, &quot;with lines 2&quot;]]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_curve_styles, [&quot;with lines 7&quot;, &quot;with lines 2&quot;]]
+</pre>
 </li><li>
 Option: <code>gnuplot_default_term_command</code>
 
@@ -820,8 +817,8 @@ font &quot;Helvetica,16&quot;</code> in X11 windows systems.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_default_term_command, &quot;set term x11&quot;]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_default_term_command, &quot;set term x11&quot;]
+</pre>
 </li><li>
 Option: <code>gnuplot_dumb_term_command</code>
 
@@ -832,8 +829,8 @@ characters.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_dumb_term_command, &quot;set term dumb 132 50&quot;]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_dumb_term_command, &quot;set term dumb 132 50&quot;]
+</pre>
 </li><li>
 Option: <code>gnuplot_ps_term_command</code>
 
@@ -850,9 +847,9 @@ other things. See the gnuplot documentation for <code>set term postscript</code>
 manual were obtained from Postscript files that were generated after
 setting <code>gnuplot_ps_term_command</code> as:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[gnuplot_ps_term_command,
-&quot;set size 1.3, 1.3; set term postscript eps color solid lw 2.5 30&quot;]
-</pre></td></tr></table>
+<pre class="example">[gnuplot_ps_term_command, &quot;set size 1.3, 1.3; \
+        set term postscript eps color solid lw 2.5 30&quot;]
+</pre>
 </li></ul>
 
 <p><b>Examples:</b>
@@ -861,17 +858,17 @@ setting <code>gnuplot_ps_term_command</code> as:
 <li>
 Saves a plot of <code>sin(x)</code> to the file <code>sin.eps</code>.
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) plot2d (sin(x), [x, 0, 2*%pi], [gnuplot_term, ps],
+<pre class="example">(%i1) plot2d (sin(x), [x, 0, 2*%pi], [gnuplot_term, ps],
                         [gnuplot_out_file, &quot;sin.eps&quot;])$
-</pre></td></tr></table>
+</pre>
 <ul>
 <li>
 Uses the y option to chop off singularities and the gnuplot_preamble
 option to put the key at the bottom of the plot instead of the top.
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) plot2d ([gamma(x), 1/gamma(x)], [x, -4.5, 5], [y, -10, 10],
+<pre class="example">(%i2) plot2d ([gamma(x), 1/gamma(x)], [x, -4.5, 5], [y, -10, 10],
                      [gnuplot_preamble, &quot;set key bottom&quot;])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting14.gif" alt="figures/plotting14"></div>
 </p>
 <ul>
@@ -879,14 +876,14 @@ option to put the key at the bottom of the plot instead of the top.
 Uses a very complicated <code>gnuplot_preamble</code> to produce fancy x-axis labels.
 (Note that the <code>gnuplot_preamble</code> string must be entered without any line breaks.)
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) my_preamble: &quot;set xzeroaxis; set xtics ('-2pi' -6.283, \
+<pre class="example">(%i3) my_preamble: &quot;set xzeroaxis; set xtics ('-2pi' -6.283, \
 '-3pi/2' -4.712, '-pi' -3.1415, '-pi/2' -1.5708, '0' 0, \
 'pi/2' 1.5708, 'pi' 3.1415,'3pi/2' 4.712, '2pi' 6.283)&quot;$
 
 (%i4) plot2d([cos(x), sin(x), tan(x), cot(x)],
        [x, -2*%pi, 2.1*%pi], [y, -2, 2],
        [gnuplot_preamble, my_preamble]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting15.gif" alt="figures/plotting15"></div>
 </p>
 <ul>
@@ -897,7 +894,7 @@ output that takes advantage of the advanced text formatting available
 in gnuplot.
 (Note that the <code>gnuplot_preamble</code> string must be entered without any line breaks.)
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i5) my_preamble: &quot;set xzeroaxis; set xtics ('-2{/Symbol p}' \
+<pre class="example">(%i5) my_preamble: &quot;set xzeroaxis; set xtics ('-2{/Symbol p}' \
 -6.283, '-3{/Symbol p}/2' -4.712, '-{/Symbol p}' -3.1415, \
 '-{/Symbol p}/2' -1.5708, '0' 0,'{/Symbol p}/2' 1.5708, \
 '{/Symbol p}' 3.1415,'3{/Symbol p}/2' 4.712, '2{/Symbol p}' \
@@ -906,14 +903,14 @@ in gnuplot.
 (%i6) plot2d ([cos(x), sin(x), tan(x)], [x, -2*%pi, 2*%pi],
     [y, -2, 2], [gnuplot_preamble, my_preamble],
     [gnuplot_term, ps], [gnuplot_out_file, &quot;trig.eps&quot;]);
-</pre></td></tr></table>
+</pre>
 <ul>
 <li>
 A three-dimensional plot using the gnuplot pm3d terminal.
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i7) plot3d (atan (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+<pre class="example">(%i7) plot3d (atan (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
         [grid, 50, 50], [gnuplot_pm3d, true])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting16.gif" alt="figures/plotting16"></div>
 </p>
 <ul>
@@ -921,12 +918,12 @@ A three-dimensional plot using the gnuplot pm3d terminal.
 A three-dimensional plot without a mesh and with contours
 projected on the bottom plane.
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i8) my_preamble: &quot;set pm3d at s;unset surface;set contour;\
+<pre class="example">(%i8) my_preamble: &quot;set pm3d at s;unset surface;set contour;\
 set cntrparam levels 20;unset key&quot;$
 (%i9) plot3d(atan(-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
     [grid, 50, 50], [gnuplot_pm3d, true],
     [gnuplot_preamble, my_preamble])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting17.gif" alt="figures/plotting17"></div>
 </p>
 <ul>
@@ -934,10 +931,10 @@ set cntrparam levels 20;unset key&quot;$
 A plot where the z-axis is represented by color only.
 (Note that the <code>gnuplot_preamble</code> string must be entered without any line breaks.)
 </li></ul>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i10) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+<pre class="example">(%i10) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
     [gnuplot_preamble, &quot;set view map; unset surface&quot;],
     [gnuplot_pm3d, true], [grid, 150, 150])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting18.gif" alt="figures/plotting18"></div>
 </p>
 </dd></dl>
@@ -960,8 +957,8 @@ A plot where the z-axis is represented by color only.
 </dt>
 <dd><p>Displays a plot of one or three expressions as functions of two variables.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2]);
-</pre></td></tr></table>
+<pre class="example">(%i1) plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2]);
+</pre>
 <p><div class="image"><img src="./figures/plotting19.gif" alt="figures/plotting19"></div>
 </p>
 <p>plots <code>z = 2^(-u^2+v^2)</code> with <code>u</code> and <code>v</code> varying in [-3,3] and
@@ -970,9 +967,9 @@ axis.
 </p>
 <p>The same graph can be plotted using openmath (if Xmaxima is installed):
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2)  plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2],
+<pre class="example">(%i2)  plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2],
                [plot_format, openmath]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting25.gif" alt="figures/plotting25"></div>
 </p>
 
@@ -981,9 +978,9 @@ from different sides.
 </p>
 <p>An example of the third pattern of arguments is
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) plot3d ([cos(x)*(3 + y*cos(x/2)), sin(x)*(3 + y*cos(x/2)),
+<pre class="example">(%i3) plot3d ([cos(x)*(3 + y*cos(x/2)), sin(x)*(3 + y*cos(x/2)),
    y*sin(x/2)], [x, -%pi, %pi], [y, -1, 1], ['grid, 50, 15]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting20.gif" alt="figures/plotting20"></div>
 </p>
 <p>which plots a Moebius band, parametrized by the three expressions given
@@ -1003,14 +1000,14 @@ each function must be a function of three arguments.
 </p>
 <p>This example shows a plot of the real part of <code>z^1/3</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i4) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
+<pre class="example">(%i4) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
       ['grid, 12, 80], ['transform_xy, polar_to_xy]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting21.gif" alt="figures/plotting21"></div>
 </p>
 <p>Other examples are the Klein bottle:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i5) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y)
+<pre class="example">(%i5) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y)
       + 3.0) - 10.0$
 (%i6) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y)
       + 3.0)$
@@ -1018,17 +1015,17 @@ each function must be a function of three arguments.
 
 (%i8) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
       [y, -%pi, %pi], ['grid, 40, 40]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting22.gif" alt="figures/plotting22"></div>
 </p>
 <p>and a torus:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i9) expr_1: cos(y)*(10.0+6*cos(x))$
+<pre class="example">(%i9) expr_1: cos(y)*(10.0+6*cos(x))$
 (%i10) expr_2: sin(y)*(10.0+6*cos(x))$
 (%i11) expr_3: -6*sin(x)$
 (%i12) plot3d ([expr_1, expr_2, expr_3], [x, 0, 2*%pi],
        [y, 0, 2*%pi], ['grid, 40, 40]);
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting23.gif" alt="figures/plotting23"></div>
 </p>
 <p>Sometimes it is necessary to define a function to plot the expression. All
@@ -1036,11 +1033,11 @@ the arguments to plot3d are evaluated before being passed to plot3d, and
 so trying to make an expression which does just what is needed may be
 difficult, and it is just easier to make a function.   
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i13) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],
+<pre class="example">(%i13) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],
        [1, 2, 3, 3])$
 (%i14) f(x, y) := float (M [?round(x), ?round(y)])$
 (%i15) plot3d (f, [x, 1, 4], [y, 1, 4], ['grid, 4, 4])$
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./figures/plotting24.gif" alt="figures/plotting24"></div>
 </p>
 <p>See <code>plot_options</code> for more examples.
@@ -1054,8 +1051,8 @@ difficult, and it is just easier to make a function.
 </dt>
 <dd><p>Returns a function suitable for the transform function in plot3d. Use
 with the plot option <code>transform_xy</code>.
-</p><table><tr><td>&nbsp;</td><td><pre class="example">make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
-</pre></td></tr></table><p>is a transformation to polar coordinates.
+</p><pre class="example">make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
+</pre><p>is a transformation to polar coordinates.
 </p></dd></dl>
 
 <dl>
@@ -1080,7 +1077,7 @@ When a <code>plot_options</code> keyword has an assigned value,
 quote it to prevent evaluation.
 </p>
 
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) set_plot_option ([grid, 30, 40]);
+<pre class="example">(%i1) set_plot_option ([grid, 30, 40]);
 (%o1) [[x, - 1.755559702014E+305, 1.755559702014E+305], 
 [y, - 1.755559702014E+305, 1.755559702014E+305], [t, - 3, 3], 
 [grid, 30, 40], [transform_xy, false], [run_viewer, true], 
@@ -1110,7 +1107,7 @@ with lines 7]], [gnuplot_default_term_command, ],
 [gnuplot_dumb_term_command, set term dumb 79 22], 
 [gnuplot_ps_term_command, set size 1.5, 1.5;set term postscript #
 eps enhanced color solid 24]]
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -1128,7 +1125,7 @@ eps enhanced color solid 24]]
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 8.1.1 Functions for working with the gnuplot_pipes format </h3>
@@ -1138,7 +1135,7 @@ eps enhanced color solid 24]]
 <a name="IDX262"></a>
 </dt>
 <dd><p>Opens the pipe to gnuplot used for plotting with the
-<code>gnuplot_pipes</code> format. Is is not necessary to manually open the
+<code>gnuplot_pipes</code> format. Is not necessary to manually open the
 pipe before plotting.
 </p>
 </dd></dl>
@@ -1196,12 +1193,12 @@ format. To update the gnuplot window call <code>gnuplot_replot</code> after
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>May, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>August, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

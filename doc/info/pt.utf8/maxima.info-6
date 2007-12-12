@@ -240,10 +240,9 @@ Equação Diferencial Ordinária (EDO) de primeira ordem, ou para um
 sistema de duas EDO's autónomas, de primeira ordem.
 
    Por tratar-se de um pacote adicional, para poder usá-lo deverá
-primeiro carregá-lo com o comando `load("plotdf")'. Plotdf precisa do
-Openmath, que é fornecido pelo pacote Xmaxima (Xmaxima, para além de
-servir como consola gráfica para o Maxima, é também o programa que
-produz os gráficos no formato Openmath).
+primeiro carregá-lo com o comando `load("plotdf")'. Também é necessário
+que Xmaxima esteja instalado, inclusivamente se executar o Maxima desde
+outra interface diferente.
 
    Para desenhar o campo de direcções de uma única EDO, essa equação
 deverá escrever-se na forma seguinte:
@@ -251,11 +250,10 @@ deverá escrever-se na forma seguinte:
             -- = F(x,y)
             dx
 
-   e a função <F> será dada como argumento para o comando `plotdf'. Se
-as variáveis independente e dependente não forem <x> e <y>, como na
-equação acima, então os nomes dessas duas variáveis deverá indicar-se
-numa lista que será o segundo argumento para o comando plotdf (ver os
-exemplos).
+   e a função <F> será dada como argumento para o comando `plotdf'. A
+variável independente tem que ser sempre <x> e a variável dependente
+<y>. A essas duas variáveis não poderá estar associado nenhum valor
+numérico.
 
    Para desenhar o campo de direcções de um sistema autónomo de duas
 EDO's, as duas equações devem ser escritas na forma seguinte
@@ -264,14 +262,7 @@ EDO's, as duas equações devem ser escritas na forma seguinte
             dt             dt
 
    e o argumento para o comando `plotdf' será uma lista com duas
-expressões para as funções <F> e <G>, nessa ordem; nomeadamente, a
-primeira expressão definirá a derivada no tempo da variável
-representada no eixo horizontal, e a segunda expressão será a derivada
-no tempo da variável representada no eixo vertical. Essas duas
-variáveis não têm que ser <x> e <y>, mas se não forem, então o segundo
-argumento para o comando plotdf deverá ser uma lista com os nomes
-dessas variáveis, primeiro a variável no eixo horizontal, seguida da
-variável no eixo vertical.
+expressões para as funções <F> e <G>.
 
    Quando se trabalha com uma única equação, `plotdf' assume
 implicitamente que `x=t' e `G(x,y)=1', transformando a equação num
@@ -283,15 +274,11 @@ File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf
 63.2 Definições para plotdf
 ===========================
 
- -- Function: plotdf (<dydx>, ...opç ~oes...)
- -- Function: plotdf (<dvdu>, `['<u>,<v>`]', ...opç ~oes...)
- -- Function: plotdf (`['<dxdt>,<dydt>`]', ...opç ~oes...)
- -- Function: plotdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]',
-          ...opç ~oes...)
+ -- Function: plotdf (<dydx>,...opç ~oes...)
+ -- Function: plotdf (`['<dxdt>,<dydt>`]',...opç ~oes...)
      Desenha um campo de direcções em duas dimensões <x> e <y>.
 
      <dydx>, <dxdt> e <dydt> são expressões que dependem de <x> e <y>.
-     <dvdu>, <dudt> e <dvdt> são expressões que dependem de <u> e <v>.
      Para além dessas duas variáveis, as duas expressões podem depender
      de um conjunto de parâmetros, com valores numéricos que são dados
      por meio da opção `parameters' (a sintaxe dessa opção explica-se
@@ -335,13 +322,18 @@ File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf
      <t>, as coordenadas do centro e o raio, podem ser alterados no
      sub-menú da opção _Config_.
 
-     Com a opção _Save_, pode gravar-se o gráfico num ficheiro
-     Postscript.
+     Com a opção _Save_, pode imprimir-se o gráfico numa impressora
+     Postscript ou gravar uma cópia num ficheiro Postscript. Para optar
+     entre impressão ou gravação em ficheiro, selecciona-se _Print
+     Options_ na janela de diálogo de _Config_. Após ter preenchido os
+     campos da janela de diálogo de _Save_, será necessário seleccionar
+     a opção _Save_ do primeiro menú para criar o ficheiro ou imprimir o
+     gráfico.
 
      Opções gráficas:
 
      A função `plotdf' admite varias opções, cada uma sendo uma lista
-     de dois ou mais elementos. O primeiro elemento é o nome da
+     de duas ou mais elementos. O primeiro elemento é o nome da
      opção, e o resto estará formado pelos argumentos para essa
      opção.
 
@@ -359,12 +351,12 @@ File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf
 
         * "direction" estabelece a direcção da variável independente
           que será seguida para calcular uma curva integral.  Os
-          valores possíveis são: `forward', para fazer que a variável
+          valores possí são: `forward', para fazer que a variável
           independente aumente `nsteps' vezes, com incrementos `tstep';
           `backward', para fazer que a variável independente diminua;
           `both', para estender a curva integral `nsteps' passos para a
           frente e `nsteps' passos para atrás.  As palavras `right' e
-          `left' podem ser usadas como sinónimos de `forward' e
+          `left' podem serem usadas como sinónimos de `forward' e
           `backward'.  O valor por omissão é `both'.
 
         * "tinitial" estabelece o valor inicial da variável <t>
@@ -400,62 +392,75 @@ File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf
 
         * "xfun" estabelece uma cadeia de caracteres com funções de <x>
           separadas por ponto e vírgula para ser representadas por cima
-          do campo de direcções. Essas funções serão interpretadas pelo
-          Tcl, e não pelo Maxima.
+          do campo de direcções. Essas funções serão interpretadas por
+          Tcl, e não por Maxima.
 
-        * "x" deverá estar seguida de dois números que definem os
-          valores mínimo e máximo a serem apresentados no eixo
-          horizontal.  Se a variável no eixo horizontal não for <x>,
-          esta opção deverá ter o nome da variável no eixo horizontal.
-          O intervalo por omissão é de -10 a 10.
+        * "xradius" é metade do comprimento do intervalo de valores a
+          representar na direcção x.  O valor por omissão é 10.
 
-        * "y" deverá estar seguida de dois números que definem os
-          valores mínimo e máximo a serem apresentados no eixo vertical.
-          Se a variável no eixo vertical não for <y>, esta opção deverá
-          ter o nome da variável no eixo vertical.  O intervalo por
-          omissão é de -10 a 10.
+        * "yradius" é metade do comprimento do intervalo de valores a
+          representar na direcção y.  O valor por omissão é 10.
+
+        * "xcenter" é a coordenada x do ponto situado no centro do
+          gráfico.  O valor por omissão é 0.
+
+        * "ycenter" é a coordenada y do ponto situado no centro do
+          gráfico.  O valor por omissão é 0.
+
+        * "width" estabelece a largura da janela gráfica em pixels.  O
+          valor por omissão é 500.
+
+        * "height" estabelece a altura da janela gráfica em pixels.  O
+          valor por omissão é 500.
 
 
      Exemplos:
+
+     NOTA: Em alguns casos, dependendo da interface usada para executar
+     o Maxima, as funções que usam `openmath', em particular `plotdf',
+     podem desencadear um bug se terminarem em ponto e vírgula, e não
+     com o símbolo de dólar. Para evitar problemas, usaremos o símbolo
+     de dóla nos exemplos a seguir.
 
         * Para mostrar o campo de direcções da equação diferencial y' =
           exp(-x) + y e a solução que passa por (2, -0.1):
                (%i1) load("plotdf")$
 
-               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1])$
+               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1]);
 
         * Para mostrar o campo de direcções da equação diff(y,x) = x -
           y^2 e a solução com condição inicial y(-1) = 3, pode
           utilizar-se o comando:
                (%i3) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
                          [trajectory_at,-1,3], [direction,forward],
-                         [y,-5,5], [x,-4,16])$
+                         [yradius,5],[xcenter,6]);
           O gráfico também mostra a função y = sqrt(x).
 
         * O exemplo seguinte mostra o campo de direcções de um
-          oscilador harmónico, definido pelas equações dz/dt = v e
-          dv/dt = -k*z/m, e a curva integral que passa por (z,v) =
+          oscilador harmónico, definido pelas equações dx/dt = y e
+          dy/dt = -k*x/m, e a curva integral que passa por (x,y) =
           (6,0), com uma barra de slider que permitirá mudar o valor de
           m interactivamente (k permanecerá fixo em 2):
-               (%i4) plotdf([v,-k*z/m], [z,v], [parameters,"m=2,k=2"],
-                           [sliders,"m=1:5"], [trajectory_at,6,0])$
+               (%i4) plotdf([y,-k*x/m],[parameters,"m=2,k=2"],
+                           [sliders,"m=1:5"], [trajectory_at,6,0]);
 
         * Para representar o campo de direcções da equação de Duffing,
           m*x"+c*x'+k*x+b*x^3 = 0, introduz-se a variável y=x' e faz-se:
                (%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
                              [parameters,"k=-1,m=1.0,c=0,b=1"],
-                             [sliders,"k=-2:2,m=-1:1"], [tstep,0.1])$
+                             [sliders,"k=-2:2,m=-1:1"],[tstep,0.1]);
 
         * O campo de direcções dum pêndulo amortecido, incluindo a
           solução para condições iniciales dadas, com uma barra de
           slider que pode usar-se para mudar o valor da masa, m, e com
           o gráfico das duas variáveis de estado em função do tempo:
 
-               (%i6) plotdf([w,-g*sin(a)/l - b*w/m/l], [a,w],
+               (%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
                         [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
                         [trajectory_at,1.05,-9],[tstep,0.01],
-                        [a,-10,2], [w,-14,14], [direction,forward],
-                        [nsteps,300], [sliders,"m=0.1:1"], [versus_t,1])$
+                        [xradius,6],[yradius,14],
+                        [xcenter,-4],[direction,forward],[nsteps,300],
+                        [sliders,"m=0.1:1"], [versus_t,1]);
 
 
 
@@ -3303,9 +3308,9 @@ File: maxima.info,  Node: Definições para sequências de caracteres,  Prev: De
      caracteres satisfazem a uma determinada função de teste.  Se o
      teste não for fornecido, <constituent> é usada como teste padrão.
      `{constituent, alphacharp, digitcharp, lowercasep, uppercasep,
-     charp, characterp, alphanumericp}' é o conjunto de fnçòes de teste.
-     (A verão Lisp de `tokens' é escrita por Paul Graham. ANSI Common
-     Lisp, 1996, page 67.)
+     charp, characterp, alphanumericp}' é o conjunto de fnç~oes de
+     teste.  (A versão Lisp de `tokens' é escrita por Paul Graham. ANSI
+     Common Lisp, 1996, page 67.)
 
           (%i1) load("stringproc")$
           (%i2) tokens("24 October 2005");

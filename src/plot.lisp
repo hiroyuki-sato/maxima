@@ -103,6 +103,9 @@
   #+cmu (setq *gnuplot-stream*
               (ext:process-input (ext:run-program path nil :input :stream
                                                   :output nil :wait nil)))
+  #+scl (setq *gnuplot-stream*
+              (ext:process-input (ext:run-program path nil :input :stream
+                                                  :output nil :wait nil)))
   #+sbcl (setq *gnuplot-stream*
                (sb-ext:process-input (sb-ext:run-program path nil
                                                          :input :stream
@@ -112,7 +115,7 @@
 ;;            (si::fp-output-stream (si:run-process path nil)))
   #+gcl (setq *gnuplot-stream*
               (open (concatenate 'string "| " path) :direction :output))
-  #-(or clisp cmu sbcl gcl)
+  #-(or clisp cmu sbcl gcl scl)
   (merror "Gnuplot not supported with your lisp!")
   
   ;; set mouse must be the first command send to gnuplot
@@ -507,7 +510,7 @@
 (defun coerce-float-fun (expr &optional lvars)
   (cond ((and (consp expr) (functionp expr))
          expr)
-        ((and (symbolp expr) (not (member expr lvars)))
+        ((and (symbolp expr) (not (member expr lvars)) (not ($constantp expr)))
          (cond
        ((fboundp expr)
         (symbol-function expr))
@@ -551,7 +554,7 @@
        ; VARS and SUBSCRIPTED-VARS are Maxima lists.
        ; Other lists are Lisp lists.
        (when (cdr subscripted-vars)
-	 (setq gensym-vars (mapcar #'(lambda (x) (declare (ignore x)) (gensym))
+	 (setq gensym-vars (mapcar #'(lambda (ign) (declare (ignore ign)) (gensym))
 				   (cdr subscripted-vars)))
 	 (mapcar #'(lambda (a b) (setq vars (subst b a vars :test 'equal)))
 		 (cdr subscripted-vars) gensym-vars)
@@ -582,7 +585,7 @@
                  `((progn (setq ,save-list-gensym nil)
                           ,@(append subscripted-vars-save subscripted-vars-mset))))
 
-           (let (($ratprint nil) ($numer t)
+           (let (($ratprint nil) ($numer t) ($%enumer t) (nounsflag t)
                  (errorsw t)
                  (errcatch t))
              (declare (special errcatch))
@@ -626,6 +629,8 @@
          (let*
            (($ratprint nil)
             ($numer t)
+            ($%enumer t)
+            (nounsflag t)
             (result (maybe-realpart (mapply ',expr (list ,@gensym-args) t))))
            (if ($numberp result)
              ($float result)
@@ -1237,22 +1242,22 @@
     (dolist (v options)
       (if ($listp v)
         (case (second v)
-          ('$logx (setf log-x t))
-          ('$logy (setf log-y t))
-	  ('$box (setf box (cddr v)))
-          ('$xlabel (setf xlabel (print-invert-case (stripdollar (third v)))))
-          ('$ylabel (setf ylabel (print-invert-case (stripdollar (third v)))))
-          ('$x (when (fourth v)
+          ($logx (setf log-x t))
+          ($logy (setf log-y t))
+	  ($box (setf box (cddr v)))
+          ($xlabel (setf xlabel (print-invert-case (stripdollar (third v)))))
+          ($ylabel (setf ylabel (print-invert-case (stripdollar (third v)))))
+          ($x (when (fourth v)
                 (setf xmin (meval (third v)))
                 (setf xmax (meval (fourth v)))
                 ($set_plot_option `((mlist) $x ,xmin ,xmax)))
               (unless xlabel (setf xlabel "x")))
-          ('$y (when (fourth v)
+          ($y (when (fourth v)
                 (setf ymin (meval (third v)))
                 (setf ymax (meval (fourth v)))
                 ($set_plot_option `((mlist) $y ,ymin ,ymax))))
-          ('$style (setf styles (cddr v)))
-          ('$legend (setf legend (cddr v)))
+          ($style (setf styles (cddr v)))
+          ($legend (setf legend (cddr v)))
           (t ($set_plot_option v)))
         (merror "Option ~M should be a list" v)))
     (when (and xlabel log-x) (setf xlabel (format nil "log(~a)" xlabel)))
@@ -1277,8 +1282,8 @@
           (st)
           (cond ($show_openplot (format st "plot2d -data {~%"))
                 (t (format st "{plot2d ")))
-          (when (and xmin xmax) (format st " {xrange ~,10g ~,10g}" xmin xmax))
-          (when (and ymin ymax) (format st " {yrange ~,10g ~,10g}" ymin ymax))
+          (when (and xmin xmax) (format st " {xrange ~g ~g}" xmin xmax))
+          (when (and ymin ymax) (format st " {yrange ~g ~g}" ymin ymax))
           (when xlabel (format st " {xaxislabel \"~a\"}" xlabel))
           (when ylabel (format st " {yaxislabel \"~a\"}" ylabel))
 	  (when (and legend (not (first legend)))
@@ -1345,10 +1350,10 @@
 	    (when (and box (not (first box)))
 	      (format st "unset border; unset xtics; unset ytics~%"))
             (format st "plot")
-            (when (and xmin xmax) (format st " [~,10g:~,10g]" xmin xmax))
+            (when (and xmin xmax) (format st " [~g:~g]" xmin xmax))
             (when (and ymin ymax)
               (unless (and xmin xmax) (format st " []")) 
-              (format st " [~,10g:~,10g]" ymin ymax)))
+              (format st " [~g:~g]" ymin ymax)))
            ($gnuplot_pipes
             (check-gnuplot-process)
             ($gnuplot_reset)
@@ -1365,14 +1370,14 @@
             (when (and xmin xmax)
               (setq *gnuplot-command*
                     ($sconcat *gnuplot-command* 
-                              (format nil " [~,10g:~,10g]"  xmin xmax))))
+                              (format nil " [~g:~g]"  xmin xmax))))
             (when (and ymin ymax) 
               (unless (and xmin xmax)
                 (setq *gnuplot-command* ($sconcat *gnuplot-command*
                                                   (format nil " []"))))
               (setq *gnuplot-command*
                     ($sconcat *gnuplot-command* 
-                              (format nil " [~,10g:~,10g]"  ymin ymax))))))
+                              (format nil " [~g:~g]"  ymin ymax))))))
          (dolist (v (cdr fun))
            (case plot-format
              ($gnuplot_pipes
@@ -1471,7 +1476,7 @@
                         (format st "~%"))
                        (t
                         (format st "move "))))
-                     (t  (format st "~,10g ~,10g ~%" v w)
+                     (t  (format st "~g ~g ~%" v w)
                          (setq in-discontinuity nil)))))))))
     
     (case plot-format
@@ -1487,14 +1492,6 @@
       )
     ""))
 
-(defun $openplot_curves (&rest options)
-  (format t "")
-  (format t "~% openplot_curves was not being maintained and it has been~%")
-  (format t " removed from Maxima. To get a similar functionality, use:~%")
-  (format t "    plot2d([discrete, ...], [plot_format,openmath])~%")
-  (format t " Please read the documentation for plot2d. We apologize for~%")
-  (format t " any inconvenience.~%~%"))
-
 ;;(defun maxima-bin-search (command)
 ;;  (or ($file_search command
 ;;                  `((mlist) , (maxima-path "bin" "###")))
@@ -1503,7 +1500,7 @@
 
 ; Adapted from MSTRINGP (change & to $).
 (defun msymbolp (x)
-    (and (symbolp x) (char= (firstcharn x) #\$)))
+  (and (symbolp x) (char= (char (symbol-value x) 0) #\$)))
 
 ;; OK, here are some test cases for $SPRINT.
 ;; The only strange one is sprint ([s1, s2, s3]) which is printing an expression containing
@@ -1602,7 +1599,7 @@
                                    (($listp (car v))
                                     (setq w (cdar v))
                                     (setq v (cdr v))))
-                       (format st "~,10g ~,10g ~%" (car w) (second w)))))))
+                       (format st "~g ~g ~%" (car w) (second w)))))))
   ($system "xgraph -t 'Maxima Plot' < xgraph-out &"))
 
 
