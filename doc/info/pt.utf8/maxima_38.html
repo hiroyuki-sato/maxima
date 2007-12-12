@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on Maio, 2 2007 by texi2html 1.76 -->
+<!-- Created on Agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -221,7 +234,7 @@ s&atilde;o equivalentes. Os conjuntos s&atilde;o sempre mostrados entre chaves
 <p>Se um elemento &eacute; listado mais de uma vez, o simplificador do Maxima
 elimina o elemento redundante.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) set();
+<pre class="example">(%i1) set();
 (%o1)                          {}
 (%i2) set(a, b, a);
 (%o2)                        {a, b}
@@ -237,7 +250,7 @@ elimina o elemento redundante.
 (%o7)                       {a, {b}}
 (%i8) {a, [b]};
 (%o8)                       {a, [b]}
-</pre></td></tr></table>
+</pre>
 <p>Dois elementos <var>x</var> e <var>y</var> s&atilde;o redundantes (nomeadamente,
 considerados o mesmo para prop&oacute;sito de constru&ccedil;&atilde;o de
 conjuntos) se e somente se <code>is(<var>x</var> = <var>y</var>)</code> retornar
@@ -246,7 +259,7 @@ Note que <code>is(equal(<var>x</var>, <var>y</var>))</code> pode retornar <code>
 enquanto <code>is(<var>x</var> = <var>y</var>)</code> retorna <code>false</code>; nesse caso
 os elementos <var>x</var> e <var>y</var> s&atilde;o considerados distintos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) x: a/c + b/c;
+<pre class="example">(%i1) x: a/c + b/c;
                               b   a
 (%o1)                         - + -
                               c   c
@@ -274,48 +287,48 @@ os elementos <var>x</var> e <var>y</var> s&atilde;o considerados distintos.
                           b + a  b   a
 (%o9)                    {-----, - + -}
                             c    c   c
-</pre></td></tr></table>
+</pre>
 <p>Para construir um conjunto dos elementos de uma lista, use <code>setify</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) setify ([b, a]);
+<pre class="example">(%i1) setify ([b, a]);
 (%o1)                        {a, b}
-</pre></td></tr></table>
+</pre>
 <p>Os elementos de conjunto <code>x</code> e <code>y</code> ser&atilde;o considerados iguais
 se <code>is(x = y)</code> for avaliando para <code>true</code>. Dessa forma,
 <code>rat(x)</code> e <code>x</code> s&atilde;o iguais como elementos de conjunto;
 consequentemente,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {x, rat(x)};
+<pre class="example">(%i1) {x, rat(x)};
 (%o1)                          {x}
-</pre></td></tr></table>
+</pre>
 <p>Adicionalmente, uma vez que <code>is((x - 1)*(x + 1) = x^2 - 1)</code> avalia
 para <code>false</code>, <code>(x - 1)*(x + 1)</code> e <code>x^2 - 1</code> s&atilde;o
 considerados elementos de conjunto diferentes; dessa forma
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {(x - 1)*(x + 1), x^2 - 1};
+<pre class="example">(%i1) {(x - 1)*(x + 1), x^2 - 1};
                                        2
 (%o1)               {(x - 1) (x + 1), x  - 1}
-</pre></td></tr></table>
+</pre>
 <p>Para reduzir esse conjunto a um conjunto simples, apliquemos <code>rat</code>
 a cada elemento do conjunto
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {(x - 1)*(x + 1), x^2 - 1};
+<pre class="example">(%i1) {(x - 1)*(x + 1), x^2 - 1};
                                        2
 (%o1)               {(x - 1) (x + 1), x  - 1}
 (%i2) map (rat, %);
                               2
 (%o2)/R/                    {x  - 1}
-</pre></td></tr></table>
+</pre>
 <p>Para remover redund&acirc;ncias em outros conjuntos, poder&aacute; ter que usar
 outras fun&ccedil;&otilde;es de simplifica&ccedil;&atilde;o. Aqui
 est&aacute; um exemplo que usa <code>trigsimp</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {1, cos(x)^2 + sin(x)^2};
+<pre class="example">(%i1) {1, cos(x)^2 + sin(x)^2};
                             2         2
 (%o1)                {1, sin (x) + cos (x)}
 (%i2) map (trigsimp, %);
 (%o2)                          {1}
-</pre></td></tr></table>
+</pre>
 <p>Um conjunto est&aacute; simplificado quando os seus elementos n&atilde;o s&atilde;o
 redundantes e o conjunto est&aacute; ordenado. A vers&atilde;o actual das
 fun&ccedil;&otilde;es de conjunto usam a fun&ccedil;&atilde;o
@@ -328,14 +341,14 @@ diferente</em>.
 substitui&ccedil;&otilde;es, for&ccedil;am automaticamente a
 uma re-simplifica&ccedil;&atilde;o; por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: {a, b, c}$
+<pre class="example">(%i1) s: {a, b, c}$
 (%i2) subst (c=a, s);
 (%o2)                        {a, b}
 (%i3) subst ([a=x, b=x, c=x], s);
 (%o3)                          {x}
 (%i4) map (lambda ([x], x^2), set (-1, 0, 1));
 (%o4)                        {0, 1}
-</pre></td></tr></table>
+</pre>
 <p>Maxima trata listas e conjuntos como objectos distintos;
 fun&ccedil;&otilde;es tais como <code>union</code> e <code>intersection</code>
 produzem um erro se qualquer argumento n&atilde;o for um conjunto. se
@@ -343,12 +356,12 @@ precisar aplicar uma fun&ccedil;&atilde;o de conjunto a uma lista, use
 a fun&ccedil;&atilde;o <code>setify</code> para converter essa lista num
 conjunto. Dessa forma
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) union ([1, 2], {a, b});
+<pre class="example">(%i1) union ([1, 2], {a, b});
 Function union expects a set, instead found [1,2]
  -- an error.  Quitting.  To debug this try debugmode(true);
 (%i2) union (setify ([1, 2]), {a, b});
 (%o2)                     {1, 2, a, b}
-</pre></td></tr></table>
+</pre>
 <p>Para extrair todos os elementos de um conjunto <code>s</code> que satisfazem
 um predicado <code>f</code>, use <code>subset(s, f)</code>. (Um <i>predicado</i> &eacute; um
 uma fun&ccedil;&atilde;o que avalia para os valores booleanos
@@ -356,9 +369,9 @@ uma fun&ccedil;&atilde;o que avalia para os valores booleanos
 equa&ccedil;&otilde;es num dado conjunto que n&atilde;o depende de uma
 vari&aacute;vel <code>z</code>, use
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) subset ({x + y + z, x - y + 4, x + y - 5}, lambda ([e], freeof (z, e)));
+<pre class="example">(%i1) subset ({x + y + z, x - y + 4, x + y - 5}, lambda ([e], freeof (z, e)));
 (%o1)               {- y + x + 4, y + x - 5}
-</pre></td></tr></table>
+</pre>
 <p>A sec&ccedil;&atilde;o <em>Defini&ccedil;&otilde;es para
 Conjuntos</em> possui uma lista completa das fun&ccedil;&otilde;es de
 conjunto no Maxima.
@@ -386,19 +399,19 @@ conjunto no Maxima.
 <p>Existem duas formas de fazer itera&ccedil;&otilde;es sobre elementos
 de conjuntos. Uma forma &eacute; usar <code>map</code>; por exemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) map (f, {a, b, c});
+<pre class="example">(%i1) map (f, {a, b, c});
 (%o1)                  {f(a), f(b), f(c)}
-</pre></td></tr></table>
+</pre>
 <p>A outra forma consiste em usar <code>for <var>x</var> in <var>s</var> do</code>
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: {a, b, c};
+<pre class="example">(%i1) s: {a, b, c};
 (%o1)                       {a, b, c}
 (%i2) for si in s do print (concat (si, 1));
 a1 
 b1 
 c1 
 (%o2)                         done
-</pre></td></tr></table>
+</pre>
 <p>As fun&ccedil;&otilde;es <code>first</code> e <code>rest</code> do Maxima
 trabalham actualmente sobre conjuntos. Aplicada a um conjunto,
 <code>first</code> retorna o primeiro elemento mostrado de um conjunto; qual o
@@ -439,31 +452,31 @@ manifestar quando tentar usar conjuntos com elementos que s&atilde;o listas
 ou matrizes que contenham express&otilde;es na forma racional can&oacute;nica
 (CRE). Um exemplo &eacute;
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {[x], [rat (x)]};
+<pre class="example">(%i1) {[x], [rat (x)]};
 Maxima encountered a Lisp error:
 
   The value #:X1440 is not of type LIST.
 
 Automatically continuing.
 To reenable the Lisp debugger set *debugger-hook* to nil.
-</pre></td></tr></table>
+</pre>
 <p>Essa express&atilde;o faz com que o Maxima produza um erro (a mensagem de
 erro depender&aacute; da vers&atilde;o do Lisp que o Maxima estiver a
 utilizar). Outro exemplo &eacute;
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) setify ([[rat(a)], [rat(b)]]);
+<pre class="example">(%i1) setify ([[rat(a)], [rat(b)]]);
 Maxima encountered a Lisp error:
 
   The value #:A1440 is not of type LIST.
 
 Automatically continuing.
 To reenable the Lisp debugger set *debugger-hook* to nil.
-</pre></td></tr></table>
+</pre>
 <p>Essas falhas s&atilde;o causadas por falhas em <code>orderlessp</code> e
 <code>like</code>, e n&atilde;o por falhas nas fun&ccedil;&otilde;es de
 conjunto. Para ilustrar, experimente as express&otilde;es
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) orderlessp ([rat(a)], [rat(b)]);
+<pre class="example">(%i1) orderlessp ([rat(a)], [rat(b)]);
 Maxima encountered a Lisp error:
 
   The value #:B1441 is not of type LIST.
@@ -472,21 +485,21 @@ Automatically continuing.
 To reenable the Lisp debugger set *debugger-hook* to nil.
 (%i2) is ([rat(a)] = [rat(a)]);
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 <p>At&eacute; que essas falhas forem corrigidas, n&atilde;o construa conjuntos com
 elementos que sejam listas ou matrizes contendo express&otilde;es na forma
 racional can&oacute;nica (CRE); um conjunto com um elemento na forma CRE,
 contudo, pode n&atilde;o ser um problema:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) {x, rat (x)};
+<pre class="example">(%i1) {x, rat (x)};
 (%o1)                          {x}
-</pre></td></tr></table>
+</pre>
 <p>A <code>orderlessp</code> do Maxima possui outra falha que pode causar
 problemas com fun&ccedil;&otilde;es de conjunto; nomeadamente, o
 predicado de ordena&ccedil;&atilde;o <code>orderlessp</code> n&atilde;o &eacute;
 transitivo. O mais simples exemplo conhecido que mostra isso &eacute;
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) q: x^2$
+<pre class="example">(%i1) q: x^2$
 (%i2) r: (x + 1)^2$
 (%i3) s: x*(x + 2)$
 (%i4) orderlessp (q, r);
@@ -495,7 +508,7 @@ transitivo. O mais simples exemplo conhecido que mostra isso &eacute;
 (%o5)                         true
 (%i6) orderlessp (q, s);
 (%o6)                         false
-</pre></td></tr></table>
+</pre>
 <p>Essa falha pode causar problemas com todas as fun&ccedil;&otilde;es de
 conjunto bem como com fun&ccedil;&otilde;es do Maxima em geral. &Eacute;
 prov&aacute;vel, mas n&atilde;o certo, que essa falha possa ser evitada se todos
@@ -576,11 +589,11 @@ r&aacute;pida que <code>union</code>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) adjoin (c, {a, b});
+<pre class="example">(%i1) adjoin (c, {a, b});
 (%o1)                       {a, b, c}
 (%i2) adjoin (a, {a, b});
 (%o2)                        {a, b}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="belln"></a>
@@ -603,18 +616,18 @@ e conjuntos, &eacute; calculada em forma distributiva.
 </p>
 <p><code>belln</code> aplicado a inteiros n&atilde;o negativos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) makelist (belln (i), i, 0, 6);
+<pre class="example">(%i1) makelist (belln (i), i, 0, 6);
 (%o1)               [1, 1, 2, 5, 15, 52, 203]
 (%i2) is (cardinality (set_partitions ({})) = belln (0));
 (%o2)                         true
 (%i3) is (cardinality (set_partitions ({1, 2, 3, 4, 5, 6})) = belln (6));
 (%o3)                         true
-</pre></td></tr></table>
+</pre>
 <p><code>belln</code> aplicado a argumentos que n&atilde;o s&atilde;o inteiros n&atilde;o negativos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) [belln (x), belln (sqrt(3)), belln (-9)];
+<pre class="example">(%i1) [belln (x), belln (sqrt(3)), belln (-9)];
 (%o1)        [belln(x), belln(sqrt(3)), belln(- 9)]
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="cardinality"></a>
@@ -629,7 +642,7 @@ simplifica&ccedil;&atilde;o n&atilde;o estiver habilitada.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) cardinality ({});
+<pre class="example">(%i1) cardinality ({});
 (%o1)                           0
 (%i2) cardinality ({a, a, b, c});
 (%o2)                           3
@@ -637,7 +650,7 @@ simplifica&ccedil;&atilde;o n&atilde;o estiver habilitada.
 (%o3)                         false
 (%i4) cardinality ({a, a, b, c});
 (%o4)                           3
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="cartesian_005fproduct"></a>
@@ -654,7 +667,7 @@ conjunto literal.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) cartesian_product ({0, 1});
+<pre class="example">(%i1) cartesian_product ({0, 1});
 (%o1)                      {[0], [1]}
 (%i2) cartesian_product ({0, 1}, {0, 1});
 (%o2)           {[0, 0], [0, 1], [1, 0], [1, 1]}
@@ -662,7 +675,7 @@ conjunto literal.
 (%o3)                      {[x, y, z]}
 (%i4) cartesian_product ({x}, {-1, 0, 1});
 (%o4)              {[x, - 1], [x, 0], [x, 1]}
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 
 <p><a name="disjoin"></a>
@@ -682,13 +695,13 @@ Desses, <code>disjoin</code> &eacute; geralmente mais r&aacute;pido que os outro
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) disjoin (a, {a, b, c, d});
+<pre class="example">(%i1) disjoin (a, {a, b, c, d});
 (%o1)                       {b, c, d}
 (%i2) disjoin (a + b, {5, z, a + b, %pi});
 (%o2)                      {5, %pi, z}
 (%i3) disjoin (a - b, {5, z, a + b, %pi});
 (%o3)                  {5, %pi, b + a, z}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="disjointp"></a>
@@ -704,11 +717,11 @@ literais.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) disjointp ({a, b, c}, {1, 2, 3});
+<pre class="example">(%i1) disjointp ({a, b, c}, {1, 2, 3});
 (%o1)                         true
 (%i2) disjointp ({a, b, 3}, {1, 2, 3});
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="divisors"></a>
@@ -732,25 +745,25 @@ e conjuntos, &eacute; calculada em forma distributiva.
 adi&ccedil;&atilde;o dos seus divisores (excepto o pr&oacute;prio 28) &eacute;
 28.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: divisors(28);
+<pre class="example">(%i1) s: divisors(28);
 (%o1)                 {1, 2, 4, 7, 14, 28}
 (%i2) lreduce (&quot;+&quot;, args(s)) - 28;
 (%o2)                          28
-</pre></td></tr></table>
+</pre>
 <p><code>divisors</code> &eacute; uma fun&ccedil;&atilde;o de
 simplifica&ccedil;&atilde;o.  Substituindo 8 por <code>a</code> em
 <code>divisors(a)</code> calcula os divisores sem ser preciso pedir que
 <code>divisors(8)</code> seja reavaliada.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) divisors (a);
+<pre class="example">(%i1) divisors (a);
 (%o1)                      divisors(a)
 (%i2) subst (8, a, %);
 (%o2)                     {1, 2, 4, 8}
-</pre></td></tr></table>
+</pre>
 <p><code>divisors</code>, aplicada a equa&ccedil;&otilde;es, listas, matrizes
 e conjuntos, &eacute; calculada em forma distributiva.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) divisors (a = b);
+<pre class="example">(%i1) divisors (a = b);
 (%o1)               divisors(a) = divisors(b)
 (%i2) divisors ([a, b, c]);
 (%o2)        [divisors(a), divisors(b), divisors(c)]
@@ -760,7 +773,7 @@ e conjuntos, &eacute; calculada em forma distributiva.
                   [ divisors(c)  divisors(d) ]
 (%i4) divisors ({a, b, c});
 (%o4)        {divisors(a), divisors(b), divisors(c)}
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="elementp"></a>
 </p><dl>
@@ -774,11 +787,11 @@ e conjuntos, &eacute; calculada em forma distributiva.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) elementp (sin(1), {sin(1), sin(2), sin(3)});
+<pre class="example">(%i1) elementp (sin(1), {sin(1), sin(2), sin(3)});
 (%o1)                         true
 (%i2) elementp (sin(1), {cos(1), cos(2), cos(3)});
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="emptyp"></a>
@@ -791,11 +804,11 @@ lista vazia.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) map (emptyp, [{}, []]);
+<pre class="example">(%i1) map (emptyp, [{}, []]);
 (%o1)                     [true, true]
 (%i2) map (emptyp, [a + b, {{}}, %pi]);
 (%o2)                 [false, false, false]
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
        
 <p><a name="equiv_005fclasses"></a>
 </p><dl>
@@ -822,22 +835,22 @@ mas o resultado &eacute; geralmente incorrecto nesse caso.
 <p>A rela&ccedil;&atilde;o de equival&ecirc;ncia &eacute; uma express&atilde;o lambda a
 qual retorna <code>true</code> ou <code>false</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, lambda ([x, y], is (equal (x, y))));
+<pre class="example">(%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, lambda ([x, y], is (equal (x, y))));
 (%o1)            {{1, 1.0}, {2, 2.0}, {3, 3.0}}
-</pre></td></tr></table>
+</pre>
 <p>A rela&ccedil;&atilde;o de equival&ecirc;ncia &eacute; o nome de uma
 fun&ccedil;&atilde;o relacional que avalia para <code>true</code> ou
 <code>false</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, equal);
+<pre class="example">(%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, equal);
 (%o1)            {{1, 1.0}, {2, 2.0}, {3, 3.0}}
-</pre></td></tr></table>
+</pre>
 <p>As classes de equival&ecirc;ncia s&atilde;o n&uacute;meros que diferem por um m&uacute;ltiplo
 de 3.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) equiv_classes ({1, 2, 3, 4, 5, 6, 7}, lambda ([x, y], remainder (x - y, 3) = 0));
+<pre class="example">(%i1) equiv_classes ({1, 2, 3, 4, 5, 6, 7}, lambda ([x, y], remainder (x - y, 3) = 0));
 (%o1)              {{1, 4, 7}, {2, 5}, {3, 6}}
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="every"></a>
 </p><dl>
@@ -886,23 +899,23 @@ de retorno de <code>every</code> &eacute; <code>unknown</code>.
 <p><code>every</code> aplicada a um conjunto simples. O predicado &eacute; uma
 fun&ccedil;&atilde;o de um argumento.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) every (integerp, {1, 2, 3, 4, 5, 6});
+<pre class="example">(%i1) every (integerp, {1, 2, 3, 4, 5, 6});
 (%o1)                         true
 (%i2) every (atom, {1, 2, sin(3), 4, 5 + y, 6});
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 <p><code>every</code> aplicada a duas listas. O predicado &eacute; uma
 fun&ccedil;&atilde;o de dois argumentos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) every (&quot;=&quot;, [a, b, c], [a, b, c]);
+<pre class="example">(%i1) every (&quot;=&quot;, [a, b, c], [a, b, c]);
 (%o1)                         true
 (%i2) every (&quot;#&quot;, [a, b, c], [a, b, c]);
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 <p>Predicado <var>f</var> que produz resultados diferentes de <code>true</code> ou
 <code>false</code>, governados por meio da vari&aacute;vel global <code>prederror</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) prederror : false;
+<pre class="example">(%i1) prederror : false;
 (%o1)                         false
 (%i2) map (lambda ([a, b], is (a &lt; b)), [x, y, z], [x^2, y^2, z^2]);
 (%o2)              [unknown, unknown, unknown]
@@ -912,7 +925,7 @@ fun&ccedil;&atilde;o de dois argumentos.
 (%o4)                         true
 (%i5) every (&quot;&lt;&quot;, [x, y, z], [x^2, y^2, z^2]);
 (%o5)                         false
-</pre></td></tr></table>
+</pre>
 </dd></dl>
  
 <p><a name="extremal_005fsubset"></a>
@@ -936,11 +949,11 @@ conjunto ou lista <var>s</var> para a qual a fun&ccedil;&atilde;o real
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) extremal_subset ({-2, -1, 0, 1, 2}, abs, max);
+<pre class="example">(%i1) extremal_subset ({-2, -1, 0, 1, 2}, abs, max);
 (%o1)                       {- 2, 2}
 (%i2) extremal_subset ({sqrt(2), 1.57, %pi/2}, sin, min);
 (%o2)                       {sqrt(2)}
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="flatten"></a>
 </p><dl>
@@ -971,48 +984,48 @@ retorna os seus argumentos sem modifica&ccedil;&atilde;o.
 <p>Aplicado a uma lista, <code>flatten</code> re&uacute;ne todos os elementos da
 lista que sejam listas.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) flatten ([a, b, [c, [d, e], f], [[g, h]], i, j]);
+<pre class="example">(%i1) flatten ([a, b, [c, [d, e], f], [[g, h]], i, j]);
 (%o1)            [a, b, c, d, e, f, g, h, i, j]
-</pre></td></tr></table>
+</pre>
 <p>Aplicado a um conjunto, <code>flatten</code> re&uacute;ne todos os elementos do
 conjunto que sejam conjuntos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) flatten ({a, {b}, {{c}}});
+<pre class="example">(%i1) flatten ({a, {b}, {{c}}});
 (%o1)                       {a, b, c}
 (%i2) flatten ({a, {[a], {a}}});
 (%o2)                       {a, [a]}
-</pre></td></tr></table>
+</pre>
 <p>o efeito de <code>flatten</code> &eacute; similar a declarar o operador principal
 para ser en&aacute;rio. No entanto, <code>flatten</code> n&atilde;o faz efeito sobre
 subexpress&otilde;es que possuem um operador diferente do operador principal,
 enquanto uma declara&ccedil;&atilde;o en&aacute;ria faz efeito.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) expr: flatten (f (g (f (f (x)))));
+<pre class="example">(%i1) expr: flatten (f (g (f (f (x)))));
 (%o1)                     f(g(f(f(x))))
 (%i2) declare (f, nary);
 (%o2)                         done
 (%i3) ev (expr);
 (%o3)                      f(g(f(x)))
-</pre></td></tr></table>
+</pre>
 <p><code>flatten</code> trata fun&ccedil;&otilde;es subscritas da mesma forma
 que qualquer outro operador.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) flatten (f[5] (f[5] (x, y), z));
+<pre class="example">(%i1) flatten (f[5] (f[5] (x, y), z));
 (%o1)                      f (x, y, z)
                             5
-</pre></td></tr></table>
+</pre>
 <p>&Eacute; poss&iacute;vel que <code>flatten</code> construa express&otilde;es nas
 quais o n&uacute;mero de argumentos difira dos argumentos declarados para um
 operador;
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) 'mod (5, 'mod (7, 4));
+<pre class="example">(%i1) 'mod (5, 'mod (7, 4));
 (%o1)                   mod(5, mod(7, 4))
 (%i2) flatten (%);
 (%o2)                     mod(5, 7, 4)
 (%i3) ''%, nouns;
 Wrong number of arguments to mod
  -- an error.  Quitting.  To debug this try debugmode(true);
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="full_005flistify"></a>
 </p><dl>
@@ -1028,11 +1041,11 @@ n&atilde;o for (<code>set</code>).
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) full_listify ({a, b, {c, {d, e, f}, g}});
+<pre class="example">(%i1) full_listify ({a, b, {c, {d, e, f}, g}});
 (%o1)               [a, b, [c, [d, e, f], g]]
 (%i2) full_listify (F (G ({a, b, H({c, d, e})})));
 (%o2)              F(G([a, b, H([c, d, e])]))
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="fullsetify"></a>
@@ -1053,11 +1066,11 @@ um conjunto.  Quando <var>a</var> n&atilde;o for uma lista, o resultado &eacute;
 conjunto porque o operador principal de <code>f([b])</code> n&atilde;o &eacute; uma
 lista.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) fullsetify ([a, [a]]);
+<pre class="example">(%i1) fullsetify ([a, [a]]);
 (%o1)                       {a, {a}}
 (%i2) fullsetify ([a, f([b])]);
 (%o2)                      {a, f([b])}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="identity"></a>
@@ -1072,9 +1085,9 @@ lista.
 <p><code>identity</code> pode ser usado como um predicado quando os argumentos
 forem valores Booleanos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) every (identity, [true, true]);
+<pre class="example">(%i1) every (identity, [true, true]);
 (%o1)                         true
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="integer_005fpartitions"></a>
 </p><dl>
@@ -1106,7 +1119,7 @@ n&atilde;o tem parti&ccedil;&otilde;es.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) integer_partitions (3);
+<pre class="example">(%i1) integer_partitions (3);
 (%o1)               {[1, 1, 1], [2, 1], [3]}
 (%i2) s: integer_partitions (25)$
 (%i3) cardinality (s);
@@ -1117,19 +1130,19 @@ n&atilde;o tem parti&ccedil;&otilde;es.
 (%o5) {[2, 2, 1], [3, 1, 1], [3, 2, 0], [4, 1, 0], [5, 0, 0]}
 (%i6) integer_partitions (5, 2);
 (%o6)               {[3, 2], [4, 1], [5, 0]}
-</pre></td></tr></table>
+</pre>
 <p>Para encontrar todas as parti&ccedil;&otilde;es que satisfazem uma
 condi&ccedil;&atilde;o, use a fun&ccedil;&atilde;o <code>subset</code>;
 aqui est&aacute; um exemplo que encontra todas as parti&ccedil;&otilde;es
 de 10 cujos elementos da lista s&atilde;o n&uacute;meros primos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: integer_partitions (10)$
+<pre class="example">(%i1) s: integer_partitions (10)$
 (%i2) cardinality (s);
 (%o2)                          42
 (%i3) xprimep(x) := integerp(x) and (x &gt; 1) and primep(x)$
 (%i4) subset (s, lambda ([x], every (xprimep, x)));
 (%o4) {[2, 2, 2, 2, 2], [3, 3, 2, 2], [5, 3, 2], [5, 5], [7, 3]}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="intersect"></a>
@@ -1154,7 +1167,7 @@ conjunto literal.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) S_1 : {a, b, c, d};
+<pre class="example">(%i1) S_1 : {a, b, c, d};
 (%o1)                     {a, b, c, d}
 (%i2) S_2 : {d, e, f, g};
 (%o2)                     {d, e, f, g}
@@ -1170,7 +1183,7 @@ conjunto literal.
 (%o7)                          {d}
 (%i8) intersection (S_1, S_2, S_3, S_4);
 (%o8)                          {}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
@@ -1213,47 +1226,47 @@ retorna um express&atilde;o substantiva.
 <p>Os argumentos de <code>kron_delta</code> s&atilde;o id&ecirc;nticos. <code>kron_delta</code>
 simplifica para 1.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) kron_delta (a, a);
+<pre class="example">(%i1) kron_delta (a, a);
 (%o1)                           1
 (%i2) kron_delta (x^2 - y^2, x^2 - y^2);
 (%o2)                           1
 (%i3) float (kron_delta (1/10, 0.1));
 (%o3)                           1
-</pre></td></tr></table>
+</pre>
 <p>Os argumentos de <code>kron_delta</code> s&atilde;o equivalentes, e a
 diferen&ccedil;a entre eles n&atilde;o &eacute; um n&uacute;mero em ponto
 flutuante.  <code>kron_delta</code> simplifica para 1.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) assume (equal (x, y));
+<pre class="example">(%i1) assume (equal (x, y));
 (%o1)                     [equal(x, y)]
 (%i2) kron_delta (x, y);
 (%o2)                           1
-</pre></td></tr></table>
+</pre>
 <p>Os argumentos de <code>kron_delta</code> n&atilde;o s&atilde;o equivalentes.
 <code>kron_delta</code> simplifica para 0.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) kron_delta (a + 1, a);
+<pre class="example">(%i1) kron_delta (a + 1, a);
 (%o1)                           0
 (%i2) assume (a &gt; b)$
 (%i3) kron_delta (a, b);
 (%o3)                           0
 (%i4) kron_delta (1/5, 0.7);
 (%o4)                           0
-</pre></td></tr></table>
+</pre>
 <p>Os argumentos de <code>kron_delta</code> podem ou n&atilde;o ser equivalentes.
 <code>kron_delta</code> simplifica para uma express&atilde;o substantiva.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) kron_delta (a, b);
+<pre class="example">(%i1) kron_delta (a, b);
 (%o1)                   kron_delta(a, b)
 (%i2) assume(x &gt;= y)$
 (%i3) kron_delta (x, y);
 (%o3)                   kron_delta(x, y)
-</pre></td></tr></table>
+</pre>
 <p>Os argumentos de <code>kron_delta</code> s&atilde;o equivalentes, mas a
 diferen&ccedil;a entre eles &eacute; um n&uacute;mero em ponto flutuante.
 <code>kron_delta</code> simplifica para uma express&atilde;o substantiva.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) 1/4 - 0.25;
+<pre class="example">(%i1) 1/4 - 0.25;
 (%o1)                          0.0
 (%i2) 1/10 - 0.1;
 (%o2)                          0.0
@@ -1271,10 +1284,10 @@ Warning:  Float to bigfloat conversion of 0.25
 (%i6) kron_delta (0.25, 0.25b0);
 Warning:  Float to bigfloat conversion of 0.25
 (%o6)               kron_delta(0.25, 2.5b-1)
-</pre></td></tr></table>
+</pre>
 <p><code>kron_delta</code> &eacute; sim&eacute;trica.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) kron_delta (x, y);
+<pre class="example">(%i1) kron_delta (x, y);
 (%o1)                   kron_delta(x, y)
 (%i2) kron_delta (y, x);
 (%o2)                   kron_delta(x, y)
@@ -1284,7 +1297,7 @@ Warning:  Float to bigfloat conversion of 0.25
 (%o4)                         true
 (%i5) is (kron_delta (x, y) = kron_delta (y, x));
 (%o5)                         true
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="listify"></a>
@@ -1300,11 +1313,11 @@ por operadores de lista.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) listify ({a, b, c, d});
+<pre class="example">(%i1) listify ({a, b, c, d});
 (%o1)                     [a, b, c, d]
 (%i2) listify (F ({a, b, c, d}));
 (%o2)                    F({a, b, c, d})
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="lreduce"></a>
@@ -1333,27 +1346,27 @@ mais &agrave; <em>esquerda</em> de lista; da&iacute; o nome &quot;lreduce&quot;.
 </p>
 <p><code>lreduce</code> sem o argumento opcional.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) lreduce (f, [1, 2, 3]);
+<pre class="example">(%i1) lreduce (f, [1, 2, 3]);
 (%o1)                     f(f(1, 2), 3)
 (%i2) lreduce (f, [1, 2, 3, 4]);
 (%o2)                  f(f(f(1, 2), 3), 4)
-</pre></td></tr></table>
+</pre>
 <p><code>lreduce</code> com o argumento opcional.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) lreduce (f, [1, 2, 3], 4);
+<pre class="example">(%i1) lreduce (f, [1, 2, 3], 4);
 (%o1)                  f(f(f(4, 1), 2), 3)
-</pre></td></tr></table>
+</pre>
 <p><code>lreduce</code> aplicada a operadores bin&aacute;rios internos do Maxima
 <code>//</code> &eacute; o operador de divis&atilde;o.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) lreduce (&quot;^&quot;, args ({a, b, c, d}));
+<pre class="example">(%i1) lreduce (&quot;^&quot;, args ({a, b, c, d}));
                                b c d
 (%o1)                       ((a ) )
 (%i2) lreduce (&quot;//&quot;, args ({a, b, c, d}));
                                 a
 (%o2)                         -----
                               b c d
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="makeset"></a>
@@ -1378,7 +1391,7 @@ elemento, e cada elemento de <var>s</var> deve ser uma lista de um elemento.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) makeset (i/j, [i, j], [[1, a], [2, b], [3, c], [4, d]]);
+<pre class="example">(%i1) makeset (i/j, [i, j], [[1, a], [2, b], [3, c], [4, d]]);
                            1  2  3  4
 (%o1)                     {-, -, -, -}
                            a  b  c  d
@@ -1395,7 +1408,7 @@ elemento, e cada elemento de <var>s</var> deve ser uma lista de um elemento.
                                        z + 2 y, 2 z + x, 2 z + y}
 (%i5) makeset (sin(x), [x], {[1], [2], [3]});
 (%o5)               {sin(1), sin(2), sin(3)}
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="moebius"></a>
 </p><dl>
@@ -1414,7 +1427,7 @@ e conjuntos, &eacute; calculada em forma distributiva.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) moebius (1);
+<pre class="example">(%i1) moebius (1);
 (%o1)                           1
 (%i2) moebius (2 * 3 * 5);
 (%o2)                          - 1
@@ -1434,7 +1447,7 @@ e conjuntos, &eacute; calculada em forma distributiva.
                            [ - 1  1 ]
 (%i9) moebius ({21, 22, 23, 24});
 (%o9)                      {- 1, 0, 1}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
  
 <p><a name="multinomial_005fcoeff"></a>
@@ -1461,7 +1474,7 @@ geral, <code>multinomial_coeff (<var>a_1</var>, ..., <var>a_n</var>)</code> calc
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) multinomial_coeff (1, 2, x);
+<pre class="example">(%i1) multinomial_coeff (1, 2, x);
                             (x + 3)!
 (%o1)                       --------
                               2 x!
@@ -1475,7 +1488,7 @@ geral, <code>multinomial_coeff (<var>a_1</var>, ..., <var>a_n</var>)</code> calc
                             2 (- 6)!
 (%i4) minfactorial (%);
 (%o4)                          10
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="num_005fdistinct_005fpartitions"></a>
 </p><dl>
@@ -1498,13 +1511,13 @@ tais que <em><var>n</var> = k_1 + ... + k_m</em>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) num_distinct_partitions (12);
+<pre class="example">(%i1) num_distinct_partitions (12);
 (%o1)                          15
 (%i2) num_distinct_partitions (12, list);
 (%o2)      [1, 1, 1, 2, 2, 3, 4, 5, 6, 8, 10, 12, 15]
 (%i3) num_distinct_partitions (n);
 (%o3)              num_distinct_partitions(n)
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="num_005fpartitions"></a>
@@ -1528,13 +1541,13 @@ n&atilde;o constr&oacute;i actualmente o conjunto das parti&ccedil;&otilde;es, n
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) num_partitions (5) = cardinality (integer_partitions (5));
+<pre class="example">(%i1) num_partitions (5) = cardinality (integer_partitions (5));
 (%o1)                         7 = 7
 (%i2) num_partitions (8, list);
 (%o2)            [1, 1, 2, 3, 5, 7, 11, 15, 22]
 (%i3) num_partitions (n);
 (%o3)                   num_partitions(n)
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 
@@ -1557,11 +1570,11 @@ e o segundo conjunto compreende quaisquer outros elementos de <var>a</var>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) partition_set ({2, 7, 1, 8, 2, 8}, evenp);
+<pre class="example">(%i1) partition_set ({2, 7, 1, 8, 2, 8}, evenp);
 (%o1)                   [{1, 7}, {2, 8}]
 (%i2) partition_set ({x, rat(y), rat(y) + z, 1}, lambda ([x], ratp(x)));
 (%o2)/R/              [{1, x}, {y, y + z}]
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="permutations"></a>
 </p><dl>
@@ -1578,11 +1591,11 @@ nas permuta&ccedil;&otilde;es.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) permutations ([a, a]);
+<pre class="example">(%i1) permutations ([a, a]);
 (%o1)                       {[a, a]}
 (%i2) permutations ([a, a, b]);
 (%o2)           {[a, a, b], [a, b, a], [b, a, a]}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="powerset"></a>
@@ -1606,7 +1619,7 @@ ou se <var>n</var> n&atilde;o for um inteiro n&atilde;o negativo.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) powerset ({a, b, c});
+<pre class="example">(%i1) powerset ({a, b, c});
 (%o1) {{}, {a}, {a, b}, {a, b, c}, {a, c}, {b}, {b, c}, {c}}
 (%i2) powerset ({w, x, y, z}, 4);
 (%o2)                    {{w, x, y, z}}
@@ -1618,7 +1631,7 @@ ou se <var>n</var> n&atilde;o for um inteiro n&atilde;o negativo.
 (%o5)                 {{w}, {x}, {y}, {z}}
 (%i6) powerset ({w, x, y, z}, 0);
 (%o6)                         {{}}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="rreduce"></a>
@@ -1645,20 +1658,20 @@ lista de elementos <i>mais &agrave; direita - rightmost</i>, da&iacute; o nome &
 </p>
 <p><code>rreduce</code> sem o argumento opcional.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) rreduce (f, [1, 2, 3]);
+<pre class="example">(%i1) rreduce (f, [1, 2, 3]);
 (%o1)                     f(1, f(2, 3))
 (%i2) rreduce (f, [1, 2, 3, 4]);
 (%o2)                  f(1, f(2, f(3, 4)))
-</pre></td></tr></table>
+</pre>
 <p><code>rreduce</code> com o argumento opcional.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) rreduce (f, [1, 2, 3], 4);
+<pre class="example">(%i1) rreduce (f, [1, 2, 3], 4);
 (%o1)                  f(1, f(2, f(3, 4)))
-</pre></td></tr></table>
+</pre>
 <p><code>rreduce</code> aplicada a operadores de dois argumentos internos ( definidos por padr&atilde;o) ao Maxima.
 <code>//</code> &eacute; o operadro de divis&atilde;o.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) rreduce (&quot;^&quot;, args ({a, b, c, d}));
+<pre class="example">(%i1) rreduce (&quot;^&quot;, args ({a, b, c, d}));
                                  d
                                 c
                                b
@@ -1667,7 +1680,7 @@ lista de elementos <i>mais &agrave; direita - rightmost</i>, da&iacute; o nome &
                                a c
 (%o2)                          ---
                                b d
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="setdifference"></a>
@@ -1682,7 +1695,7 @@ n&atilde;o est&atilde;ono conjunto <var>b</var>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) S_1 : {a, b, c, x, y, z};
+<pre class="example">(%i1) S_1 : {a, b, c, x, y, z};
 (%o1)                  {a, b, c, x, y, z}
 (%i2) S_2 : {aa, bb, c, x, y, zz};
 (%o2)                 {aa, bb, c, x, y, zz}
@@ -1696,7 +1709,7 @@ n&atilde;o est&atilde;ono conjunto <var>b</var>.
 (%o6)                  {a, b, c, x, y, z}
 (%i7) setdifference ({}, S_1);
 (%o7)                          {}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="setequalp"></a>
@@ -1713,13 +1726,13 @@ De outra forma, <code>setequalp</code> retorna <code>false</code>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) setequalp ({1, 2, 3}, {1, 2, 3});
+<pre class="example">(%i1) setequalp ({1, 2, 3}, {1, 2, 3});
 (%o1)                         true
 (%i2) setequalp ({a, b, c}, {1, 2, 3});
 (%o2)                         false
 (%i3) setequalp ({x^2 - y^2}, {(x + y) * (x - y)});
 (%o3)                         false
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="setify"></a>
@@ -1735,13 +1748,13 @@ s&atilde;o ordenados de acordo com o predicado <code>orderlessp</code>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) setify ([1, 2, 3, a, b, c]);
+<pre class="example">(%i1) setify ([1, 2, 3, a, b, c]);
 (%o1)                  {1, 2, 3, a, b, c}
 (%i2) setify ([a, b, c, a, b, c]);
 (%o2)                       {a, b, c}
 (%i3) setify ([7, 13, 11, 1, 3, 9, 5]);
 (%o3)                {1, 3, 5, 7, 9, 11, 13}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="setp"></a>
@@ -1759,13 +1772,13 @@ e tamb&eacute;m para conjuntos simplificados.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) simp : false;
+<pre class="example">(%i1) simp : false;
 (%o1)                         false
 (%i2) {a, a, a};
 (%o2)                       {a, a, a}
 (%i3) setp (%);
 (%o3)                         true
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="set_005fpartitions"></a>
@@ -1800,31 +1813,31 @@ a uni&atilde;o dos elementos de <em>P</em> &eacute; igual a <em>S</em>.
 </p>
 <p>O conjunto vazio &eacute; uma parti&ccedil;&atilde;o de si mesmo, as ondi&ccedil;&otilde;es 1 e 2 s&atilde;o &quot;vaziamente&quot; verdadeiras.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) set_partitions ({});
+<pre class="example">(%i1) set_partitions ({});
 (%o1)                         {{}}
-</pre></td></tr></table>
+</pre>
 <p>A cardinalidade do conjunto de parti&ccedil;&otilde;es de um conjunto pode ser encontrada usando <code>stirling2</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
+<pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
 (%i2) p: set_partitions (s, 3)$ 
 (%o3)                        90 = 90
 (%i4) cardinality(p) = stirling2 (6, 3);
-</pre></td></tr></table>
+</pre>
 <p>Cada elemento de <code>p</code> pode ter <var>n</var> = 3 elementos; vamos verificar.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
+<pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
 (%i2) p: set_partitions (s, 3)$ 
 (%o3)                          {3}
 (%i4) map (cardinality, p);
-</pre></td></tr></table>
+</pre>
 <p>Finalmente, para cada elementos de <code>p</code>, a uni&atilde;o de seus elementos possivelmente ser&aacute; 
 igua a <code>s</code>; novamente vamos comprovar.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
+<pre class="example">(%i1) s: {0, 1, 2, 3, 4, 5}$
 (%i2) p: set_partitions (s, 3)$ 
 (%o3)                 {{0, 1, 2, 3, 4, 5}}
 (%i4) map (lambda ([x], apply (union, listify (x))), p);
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="some"></a>
 </p><dl>
@@ -1872,24 +1885,24 @@ tais valores s&atilde;o tratados como <code>unknown</code> (desconhecidos).
 <p><code>some</code> aplicado a um conjunto simples.
 O predicado &eacute; uma fun&ccedil;&atilde;o de um argumento.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) some (integerp, {1, 2, 3, 4, 5, 6});
+<pre class="example">(%i1) some (integerp, {1, 2, 3, 4, 5, 6});
 (%o1)                         true
 (%i2) some (atom, {1, 2, sin(3), 4, 5 + y, 6});
 (%o2)                         true
-</pre></td></tr></table>
+</pre>
 <p><code>some</code> aplicada a duas listas.
 O predicado &eacute; uma fun&ccedil;&atilde;o de dois argumentos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) some (&quot;=&quot;, [a, b, c], [a, b, c]);
+<pre class="example">(%i1) some (&quot;=&quot;, [a, b, c], [a, b, c]);
 (%o1)                         true
 (%i2) some (&quot;#&quot;, [a, b, c], [a, b, c]);
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 <p>Retorna o valor do predicado <var>f</var> o qual avalia
 para alguma coisa que n&atilde;o <code>true</code> ou <code>false</code>
 e s&atilde;o governados atrav&eacute;s do sinalizador global <code>prederror</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) prederror : false;
+<pre class="example">(%i1) prederror : false;
 (%o1)                         false
 (%i2) map (lambda ([a, b], is (a &lt; b)), [x, y, z], [x^2, y^2, z^2]);
 (%o2)              [unknown, unknown, unknown]
@@ -1903,7 +1916,7 @@ e s&atilde;o governados atrav&eacute;s do sinalizador global <code>prederror</co
 (%o6)                         false
 (%i7) some (&quot;&lt;&quot;, [x, y, z], [x^2, y^2, z + 1]);
 (%o7)                         true
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="stirling1"></a>
 </p><dl>
@@ -1949,19 +1962,19 @@ terceira edi&ccedil;&atilde;o, Volume 1, Se&ccedil;&atilde;o 1.2.6, Equa&ccedil;
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (n, integer)$
+<pre class="example">(%i1) declare (n, integer)$
 (%i2) assume (n &gt;= 0)$
 (%i3) stirling1 (n, n);
 (%o3)                           1
-</pre></td></tr></table>
+</pre>
 <p><code>stirling1</code> n&atilde;o simplifica para argumentos n&atilde;o inteiros.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) stirling1 (sqrt(2), sqrt(2));
+<pre class="example">(%i1) stirling1 (sqrt(2), sqrt(2));
 (%o1)              stirling1(sqrt(2), sqrt(2))
-</pre></td></tr></table>
+</pre>
 <p>Maxima aplica identidades a <code>stirling1</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (n, integer)$
+<pre class="example">(%i1) declare (n, integer)$
 (%i2) assume (n &gt;= 0)$
 (%i3) stirling1 (n + 1, n);
                             n (n + 1)
@@ -1969,7 +1982,7 @@ terceira edi&ccedil;&atilde;o, Volume 1, Se&ccedil;&atilde;o 1.2.6, Equa&ccedil;
                                 2
 (%i4) stirling1 (n + 1, 1);
 (%o4)                          n!
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="stirling2"></a>
 </p><dl>
@@ -2023,19 +2036,19 @@ terceira edi&ccedil;&atilde;o, Volume 1, Se&ccedil;&atilde;o 1.2.6, Equa&ccedil;
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (n, integer)$
+<pre class="example">(%i1) declare (n, integer)$
 (%i2) assume (n &gt;= 0)$
 (%i3) stirling2 (n, n);
 (%o3)                           1
-</pre></td></tr></table>
+</pre>
 <p><code>stirling2</code> n&atilde;o simplifica para argumentos n&atilde;o inteiros.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) stirling2 (%pi, %pi);
+<pre class="example">(%i1) stirling2 (%pi, %pi);
 (%o1)                  stirling2(%pi, %pi)
-</pre></td></tr></table>
+</pre>
 <p>Maxima aplica identidades a <code>stirling2</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (n, integer)$
+<pre class="example">(%i1) declare (n, integer)$
 (%i2) assume (n &gt;= 0)$
 (%i3) stirling2 (n + 9, n + 8);
                          (n + 8) (n + 9)
@@ -2044,7 +2057,7 @@ terceira edi&ccedil;&atilde;o, Volume 1, Se&ccedil;&atilde;o 1.2.6, Equa&ccedil;
 (%i4) stirling2 (n + 1, 2);
                               n
 (%o4)                        2  - 1
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <p><a name="subset"></a>
 </p><dl>
@@ -2063,11 +2076,11 @@ for which <var>f</var> returns anything other than <code>false</code>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) subset ({1, 2, x, x + y, z, x + y + z}, atom);
+<pre class="example">(%i1) subset ({1, 2, x, x + y, z, x + y + z}, atom);
 (%o1)                     {1, 2, x, z}
 (%i2) subset ({1, 2, 7, 8, 9, 14}, evenp);
 (%o2)                      {2, 8, 14}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="subsetp"></a>
@@ -2081,11 +2094,11 @@ for which <var>f</var> returns anything other than <code>false</code>.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) subsetp ({1, 2, 3}, {a, 1, b, 2, c, 3});
+<pre class="example">(%i1) subsetp ({1, 2, 3}, {a, 1, b, 2, c, 3});
 (%o1)                         true
 (%i2) subsetp ({a, 1, b, 2, c, 3}, {1, 2, 3});
 (%o2)                         false
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="symmdifference"></a>
@@ -2103,7 +2116,7 @@ the same as <code>union(setdifference(<var>a</var>, <var>b</var>), setdifference
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) S_1 : {a, b, c};
+<pre class="example">(%i1) S_1 : {a, b, c};
 (%o1)                       {a, b, c}
 (%i2) S_2 : {1, b, c};
 (%o2)                       {1, b, c}
@@ -2119,7 +2132,7 @@ the same as <code>union(setdifference(<var>a</var>, <var>b</var>), setdifference
 (%o7)                        {1, z}
 (%i8) symmdifference ({}, S_1, S_2, S_3);
 (%o8)                        {1, z}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="tree_005freduce"></a>
@@ -2153,14 +2166,14 @@ da&iacute; o nome &quot;tree_reduce&quot;.
 </p>
 <p><code>tree_reduce</code> aplicada a uma lista com um n&uacute;mero par de elementos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) tree_reduce (f, [a, b, c, d]);
+<pre class="example">(%i1) tree_reduce (f, [a, b, c, d]);
 (%o1)                  f(f(a, b), f(c, d))
-</pre></td></tr></table>
+</pre>
 <p><code>tree_reduce</code> aplicada a uma lista com um n&uacute;mero &iacute;mpar de elementos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) tree_reduce (f, [a, b, c, d, e]);
+<pre class="example">(%i1) tree_reduce (f, [a, b, c, d, e]);
 (%o1)               f(f(f(a, b), f(c, d)), e)
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="union"></a>
@@ -2176,7 +2189,7 @@ da&iacute; o nome &quot;tree_reduce&quot;.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) S_1 : {a, b, c + d, %e};
+<pre class="example">(%i1) S_1 : {a, b, c + d, %e};
 (%o1)                   {%e, a, b, d + c}
 (%i2) S_2 : {%pi, %i, %e, c + d};
 (%o2)                 {%e, %i, %pi, d + c}
@@ -2192,7 +2205,7 @@ da&iacute; o nome &quot;tree_reduce&quot;.
 (%o7)       {17, 29, 1729, %e, %i, %pi, a, b, d + c}
 (%i8) union ({}, S_1, S_2, S_3);
 (%o8)       {17, 29, 1729, %e, %i, %pi, a, b, d + c}
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <p><a name="xreduce"></a>
@@ -2226,23 +2239,23 @@ o resultado &eacute; equivalente a <code>xreduce(<var>s</var>, cons(<var>s_0</va
 <p><code>xreduce</code> aplicada a uma fun&ccedil;&atilde;o sabidamente en&aacute;ria.
 <code>F</code> &eacute; chamada uma vez, com todos os argumentos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (F, nary);
+<pre class="example">(%i1) declare (F, nary);
 (%o1)                         done
 (%i2) F ([L]) := L;
 (%o2)                      F([L]) := L
 (%i3) xreduce (F, [a, b, c, d, e]);
 (%o3)         [[[[[(&quot;[&quot;, simp), a], b], c], d], e]
-</pre></td></tr></table>
+</pre>
 <p><code>xreduce</code> aplicada a uma fun&ccedil;&atilde;o n&atilde;o sabidamente en&aacute;ria.
 <code>G</code> &eacute; chamada muitas vezes, com dois argumentos de cada vez.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) G ([L]) := L;
+<pre class="example">(%i1) G ([L]) := L;
 (%o1)                      G([L]) := L
 (%i2) xreduce (G, [a, b, c, d, e]);
 (%o2)         [[[[[(&quot;[&quot;, simp), a], b], c], d], e]
 (%i3) lreduce (G, [a, b, c, d, e]);
 (%o3)                 [[[[a, b], c], d], e]
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -2261,7 +2274,7 @@ o resultado &eacute; equivalente a <code>xreduce(<var>s</var>, cons(<var>s_0</va
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>Maio, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>Agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

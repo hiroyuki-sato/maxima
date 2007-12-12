@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: RunMaxima.tcl,v 1.29.4.2 2007/04/11 22:53:50 villate Exp $
+#       $Id: RunMaxima.tcl,v 1.30 2007/05/29 00:44:47 villate Exp $
 #
 proc textWindowWidth { w } {
     set font [$w cget -font]

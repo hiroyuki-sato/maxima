@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on mayo, 2 2007 by texi2html 1.76 -->
+<!-- Created on agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -143,7 +156,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 27. itensor </h1>
@@ -151,7 +164,7 @@ div.image
 <table class="menu" border="0" cellspacing="0">
 <tr><td align="left" valign="top"><a href="#SEC90">27.1 Introducci&oacute;n a itensor</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC93">27.2 Definiciones para itensor</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+<tr><td align="left" valign="top"><a href="#SEC93">27.2 Funciones y variables para itensor</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 </table>
 
@@ -171,7 +184,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 27.1 Introducci&oacute;n a itensor </h2>
@@ -206,14 +219,14 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.1.1 Notaci&oacute;n tensorial </h3>
 
 <p>Hasta ahora, el paquete <code>itensor</code> de Maxima utilizaba una notaci&oacute;n que algunas veces llevaba a una ordenaci&oacute;n incorrecta de los &iacute;ndices. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) imetric(g);
+<pre class="example">(%i2) imetric(g);
 (%o2)                                done
 (%i3) ishow(g([],[j,k])*g([],[i,l])*a([i,j],[]))$
                                  i l  j k
@@ -222,21 +235,21 @@ div.image
 (%i4) ishow(contract(%))$
                                       k l
 (%t4)                                a
-</pre></td></tr></table>
+</pre>
 <p>Este resultado no es correcto a menos que <code>a</code> sea un tensor sim&eacute;trico. La raz&oacute;n por la que esto ocurre es que aunque <code>itensor</code> mantenga correctamente el orden dentro del conjunto de &iacute;ndices covariantes y contravariantes, una vez un &iacute;ndice sea aumentado o disminuido, su posici&oacute;n relativa al otro conjunto de &iacute;ndices se pierde.
 </p>
 <p>Para evitar este problema, se ha desarrollado una notaci&oacute;n totalmente compatible con la anterior.En esta notaci&oacute;n, los &iacute;ndices contravariantes se insertan en las posiciones correctas en la lista de &iacute;ndices covariantes, pero precedidos del signo negativo.
 </p>
 <p>En esta notaci&oacute;n, el ejemplo anterior da el resultado correcto:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i5) ishow(g([-j,-k],[])*g([-i,-l],[])*a([i,j],[]))$
+<pre class="example">(%i5) ishow(g([-j,-k],[])*g([-i,-l],[])*a([i,j],[]))$
                                  i l       j k
 (%t5)                           g    a    g
                                       i j
 (%i6) ishow(contract(%))$
                                       l k
 (%t6)                                a
-</pre></td></tr></table>
+</pre>
 <p>El &uacute;nico c&oacute;digo que hace uso de esta notaci&oacute;n es la funci&oacute;n <code>lc2kdt</code>. </p>
 <p>Devido a que este c&oacute;digo es nuevo, puede contener errores.
 </p>
@@ -256,7 +269,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.1.2 Manipulaci&oacute;n indexada de tensores </h3>
@@ -273,7 +286,7 @@ div.image
 </p>
 <p>La siguiente sesi&oacute;n de ejemplo demuestra c&oacute;mo cargar el paquete <code>itensor</code>, especificar el nombre de la m&eacute;trica y realizar algunos c&aacute;lculos sencillos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) imetric(g);
 (%o2)                                done
@@ -310,8 +323,8 @@ div.image
 (%t12) v    - g      v   (e p       + e   p     - e p       - e    p
         i,j           %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
 
-                                                + e p       + e   p    )/2
-                                                     i %5,j    ,j  i %5
+                                         + e p       + e   p    )/2
+                                              i %5,j    ,j  i %5
 (%i13) iframe_flag:true;
 (%o13)                               true
 (%i14) ishow(covdiff(v([i],[]),j))$
@@ -327,9 +340,9 @@ div.image
 (%t16) - (ifg      v   ifb       + ifg      v   ifb       - 2 v
                     %6    j %8 i             %6    i j %8      i,j
 
-                                                    %6 %8
-                                               - ifg      v   ifb      )/2
-                                                           %6    %8 i j
+                                             %6 %8
+                                        - ifg      v   ifb      )/2
+                                                    %6    %8 i j
 (%i17) ishow(canform(s([i,j],[])-s([j,i])))$
 (%t17)                            s    - s
                                    i j    j i
@@ -344,10 +357,10 @@ div.image
 (%o21)                               done
 (%i22) ishow(canform(a([i,j],[])+a([j,i])))$
 (%t22)                                 0
-</pre></td></tr></table>
+</pre>
 
 <hr size="6">
-<a name="Definiciones-para-itensor"></a>
+<a name="Funciones-y-variables-para-itensor"></a>
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC92" title="Previous section in reading order"> &lt; </a>]</td>
 <td valign="middle" align="left">[<a href="#SEC94" title="Next section in reading order"> &gt; </a>]</td>
@@ -361,12 +374,12 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 
 <a name="SEC93"></a>
-<h2 class="section"> 27.2 Definiciones para itensor </h2>
+<h2 class="section"> 27.2 Funciones y variables para itensor </h2>
 <hr size="6">
 <a name="SEC94"></a>
 <table cellpadding="1" cellspacing="1" border="0">
@@ -382,14 +395,14 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.1 Trabajando con objetos indexados </h3>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>entertensor</b><i> (<var>nombre</var>)</i>
-<a name="IDX834"></a>
+<a name="IDX838"></a>
 </dt>
 <dd><p>Permite crear un objeto indexado llamado <var>nombre</var>, con cualquier n&uacute;mero de &iacute;ndices tensoriales y de derivadas. Se admiten desde un &uacute;nico &iacute;ndice hasta una lista de &iacute;ndices. V&eacute;ase el ejemplo en la descripci&oacute;n de <code>covdiff</code>.
 </p>
@@ -397,7 +410,7 @@ div.image
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>changename</b><i> (<var>anterior</var>, <var>nuevo</var>, <var>expr</var>)</i>
-<a name="IDX835"></a>
+<a name="IDX839"></a>
 </dt>
 <dd><p>Cambia el nombre de todos los objetos indexados llamados <var>anterior</var> a <var>new</var> en <var>expr</var>. El argumento <var>anterior</var> puede ser un s&iacute;mbolo o una lista de la forma <code>[<var>nombre</var>, <var>m</var>, <var>n</var>]</code>, en cuyo caso s&oacute;lo los objetos indexados de llamados <var>nombre</var> con <var>m</var> &iacute;ndices covariantes y <var>n</var> contravariantes se renombrar&aacute;n como <var>nuevo</var>.
 </p>
@@ -405,11 +418,11 @@ div.image
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>listoftens</b>
-<a name="IDX836"></a>
+<a name="IDX840"></a>
 </dt>
 <dd><p>Hace un listado de todos los tensores y sus &iacute;ndices en una expresi&oacute;n tensorial. Por ejemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i6) ishow(a([i,j],[k])*b([u],[],v)+c([x,y],[])*d([],[])*e)$
                                          k
 (%t6)                        d e c    + a    b
@@ -419,12 +432,12 @@ div.image
 (%t7)                        [a   , b   , c   , d]
                                i j   u,v   x y
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>ishow</b><i> (<var>expr</var>)</i>
-<a name="IDX837"></a>
+<a name="IDX841"></a>
 </dt>
 <dd><p>Muestra <var>expr</var> con todos los objetos indexados que contiene, junto con los correspondientes &iacute;ndices covariantes (como sub&iacute;ndices) y contravariantes (como super&iacute;ndices). Los &iacute;ndices de derivadas se muestran como sub&iacute;ndices, separados de los covariantes por una coma; v&eacute;anse los m&uacute;ltiples ejemplos de este documento.
 </p>
@@ -432,11 +445,11 @@ div.image
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>indices</b><i> (<var>expr</var>)</i>
-<a name="IDX838"></a>
+<a name="IDX842"></a>
 </dt>
 <dd><p>Devuelve una lista con dos elementos. El primer elemento es una lista con los &iacute;ndices libres, aquellos que aparecen una sola vez. El segundo elemento es una lista con los &iacute;ndices mudos en <var>expr</var>, aquellos que aparecen exactamente dos veces. Por ejemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(a([i,j],[k,l],m,n)*b([k,o],[j,m,p],q,r))$
@@ -446,7 +459,7 @@ div.image
 (%i3) indices(%);
 (%o3)                 [[l, p, i, n, o, q, r], [k, j, m]]
 
-</pre></td></tr></table>
+</pre>
 <p>Un producto tensorial que contenga el mismo &iacute;ndice m&aacute;s de dos veces es sint&aacute;cticamente incorrecto. La funci&oacute;n <code>indices</code> intenta tratar estas expresiones de una forma razonable; sin embargo, cuando se la obliga a manipular una expresi&oacute;n incorrecta puede tener un comportamiento imprevisto.
 </p>
 
@@ -454,15 +467,15 @@ div.image
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>rename</b><i> (<var>expr</var>)</i>
-<a name="IDX839"></a>
+<a name="IDX843"></a>
 </dt>
 <dt><u>Funci&oacute;n:</u> <b>rename</b><i> (<var>expr</var>, <var>count</var>)</i>
-<a name="IDX840"></a>
+<a name="IDX844"></a>
 </dt>
 <dd><p>Devuelve una expresi&oacute;n equivalente a <var>expr</var> pero con los &iacute;ndices mudos de cada t&eacute;rmino elegidos del conjunto  <code>[%1, %2,...]</code> si el segundo argumento opcional se omite. En otro caso, los &iacute;ndices mudos son indexados empezando con el valor <var>count</var>. Cada &iacute;ndice mudo en un producto ser&aacute; diferente. En el caso de las sumas, la funci&oacute;n <code>rename</code> operar&aacute; sobre cada t&eacute;rmino de la suma reinicializando el contador con cada t&eacute;rmino. De esta manera <code>rename</code> puede servir como simplificador tensorial. Adem&aacute;s, los &iacute;ndices se ordenar&aacute;n alfanum&eacute;ricamente, si la variable <code>allsym</code> vale <code>true</code>, respecto de los &iacute;ndices covariantes y contravariantes dependiendo del valor de <code>flipflag</code>. Si  <code>flipflag</code> vale <code>false</code>, entonces los &iacute;ndices se renombrar&aacute;n de acuerdo con el orden de los &iacute;ndices contravariantes. Si <code>flipflag</code> vale <code>true</code>, entonces los &iacute;ndices se renombrar&aacute;n de acuerdo con el orden de los &iacute;ndices covariantes. Suele acontecer que el efecto combinado de los dos cambios de nombre reduzcan la expresi&oacute;n m&aacute;s de lo que que pueda reducir cualquiera de ellas por separado.
 </p>
 
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) allsym:true;
@@ -477,9 +490,9 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 (%t4) g      g      ichr2      ichr2      ichr2      ichr2
                          %1 %4      %2 %3      %5 %6      %7 r
 
-              %4 %5  %6 %7      u          %1         %3         %2
-           - g      g      ichr2      ichr2      ichr2      ichr2
-                                %1 %2      %3 %5      %4 %6      %7 r
+        %4 %5  %6 %7      u          %1         %3         %2
+     - g      g      ichr2      ichr2      ichr2      ichr2
+                          %1 %2      %3 %5      %4 %6      %7 r
 (%i5) flipflag:true;
 (%o5)                                true
 (%i6) ishow(rename(expr))$
@@ -487,9 +500,9 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 (%t6) g      g      ichr2      ichr2      ichr2      ichr2
                          %1 %2      %3 %4      %5 %6      %7 r
 
-              %4 %5  %6 %7      u          %1         %3         %2
-           - g      g      ichr2      ichr2      ichr2      ichr2
-                                %1 %2      %3 %4      %5 %6      %7 r
+        %4 %5  %6 %7      u          %1         %3         %2
+     - g      g      ichr2      ichr2      ichr2      ichr2
+                          %1 %2      %3 %4      %5 %6      %7 r
 (%i7) flipflag:false;
 (%o7)                                false
 (%i8) rename(%th(2));
@@ -499,15 +512,15 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 (%t9) g      g      ichr2      ichr2      ichr2     ichr2
                          %1 %6      %2 %3      %4 r      %5 %7
 
-              %1 %2  %3 %4      %6         %5         %7        u
-           - g      g      ichr2      ichr2      ichr2     ichr2
-                                %1 %3      %2 %6      %4 r      %5 %7
-</pre></td></tr></table>
+        %1 %2  %3 %4      %6         %5         %7        u
+     - g      g      ichr2      ichr2      ichr2     ichr2
+                          %1 %3      %2 %6      %4 r      %5 %7
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Variable opcional:</u> <b>flipflag</b>
-<a name="IDX841"></a>
+<a name="IDX845"></a>
 </dt>
 <dd><p>Valor por defecto: <code>false</code>
 </p>
@@ -519,10 +532,10 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>defcon</b><i> (<var>tensor_1</var>)</i>
-<a name="IDX842"></a>
+<a name="IDX846"></a>
 </dt>
 <dt><u>Funci&oacute;n:</u> <b>defcon</b><i> (<var>tensor_1</var>, <var>tensor_2</var>, <var>tensor_3</var>)</i>
-<a name="IDX843"></a>
+<a name="IDX847"></a>
 </dt>
 <dd><p>Le asigna a gives <var>tensor_1</var> la propiedad de que la contracci&oacute;n de un producto de <var>tensor_1</var> por <var>tensor_2</var> da como resultado un <var>tensor_3</var> con los &iacute;ndices apropiados. Si s&oacute;lo se aporta un argumento, <var>tensor_1</var>, entonces la contracci&oacute;n del producto de <var>tensor_1</var> por cualquier otro objeto indexado que tenga los &iacute;ndices apropiados, por ejemplo <code>my_tensor</code>, dar&aacute; como resultado un objeto indexado con ese nombre, <code>my_tensor</code>, y con un nuevo conjunto de &iacute;ndices que reflejen las contracciones realizadas. Por ejemplo, si <code>imetric:g</code>, entonces <code>defcon(g)</code> implementar&aacute; el aumento o disminuci&oacute;n de los &iacute;ndices a trav&eacute;s de la contracci&oacute;n con el tensor m&eacute;trico. Se puede dar m&aacute;s de un <code>defcon</code> para el mismo objeto indexado, aplic&aacute;ndose el &uacute;ltimo. La variable 
 <code>contractions</code> es una lista con aquellos objetos indexados a los que se le han dado propiedades de contracci&oacute;n con  <code>defcon</code>.
@@ -531,10 +544,10 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>remcon</b><i> (<var>tensor_1</var>, ..., <var>tensor_n</var>)</i>
-<a name="IDX844"></a>
+<a name="IDX848"></a>
 </dt>
 <dt><u>Funci&oacute;n:</u> <b>remcon</b><i> (all)</i>
-<a name="IDX845"></a>
+<a name="IDX849"></a>
 </dt>
 <dd><p>Borra todas las propiedades de contracci&oacute;n de <var>tensor_1</var>, ..., <var>tensor_n</var>). La llamada <code>remcon(all)</code> borra todas las propiedades de contracci&oacute;n de todos los objetos indexados.
 </p>
@@ -542,7 +555,7 @@ ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>contract</b><i> (<var>expr</var>)</i>
-<a name="IDX846"></a>
+<a name="IDX850"></a>
 </dt>
 <dd><p>Lleva a cabo las contracciones tensoriales en <var>expr</var>, la cual puede ser cualquier combinaci&oacute;n de sumas y productos. Esta funci&oacute;n utiliza la informaci&oacute;n dada a la funci&oacute;n <code>defcon</code>. Para obtener mejores resultados, <code>expr</code>
 deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand</code> es la forma m&aacute;s r&aacute;pida de expandir productos y potencias de sumas si no hay variables en los denominadores de los t&eacute;rminos.
@@ -551,7 +564,7 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>indexed_tensor</b><i> (<var>tensor</var>)</i>
-<a name="IDX847"></a>
+<a name="IDX851"></a>
 </dt>
 <dd><p>Debe ejecutarse antes de asignarle componentes a un <var>tensor</var> para el que ya existe un valor, como <code>ichr1</code>, <code>ichr2</code> o <code>icurvature</code>. V&eacute;ase el ejemplo de la descripci&oacute;n de <code>icurvature</code>.
 </p>
@@ -559,7 +572,7 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>components</b><i> (<var>tensor</var>, <var>expr</var>)</i>
-<a name="IDX848"></a>
+<a name="IDX852"></a>
 </dt>
 <dd><p>Permite asignar un valor indexado a la expresi&oacute;n <var>expr</var> dando los valores de las componentes de <var>tensor</var>. El tensor debe ser de la forma <code>t([...],[...])</code>, donde cualquiera de las listas puede estar vac&iacute;a. La expresi&oacute;n  <var>expr</var> puede ser cualquier objeto indexado que tenga otros objetos con los mismos &iacute;ndices libres que <var>tensor</var>. Cuando se utiliza para asignar valores al tensor m&eacute;trico en el que las componentes contengan &iacute;ndices mudos, se debe tener cuidado en no generar &iacute;ndices mudos m&uacute;ltiples. Se pueden borrar estas asignaciones con la funci&oacute;n  <code>remcomps</code>.
 </p>
@@ -569,16 +582,16 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 </p>
 <p>1) Como una expresi&oacute;n indexada. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i2) components(g([],[i,j]),e([],[i])*p([],[j]))$
 (%i3) ishow(g([],[i,j]))$
                                       i  j
 (%t3)                                e  p
 
-</pre></td></tr></table>
+</pre>
 <p>2) Como una matriz:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i6) components(g([i,j],[]),lg);
 (%o6)                                done
 (%i7) ishow(g([i,j],[]))$
@@ -589,10 +602,10 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 (%i9) g([4,4],[]);
 (%o9)                                 - 1
 
-</pre></td></tr></table>
+</pre>
 <p>3) Como una funci&oacute;n. Se puede utilizar una funci&oacute;n de Maxima para especificar las componentes de un tensor en base a sus &iacute;ndices. Por ejemplo, el c&oacute;digo siguiente asigna  <code>kdelta</code> a <code>h</code> si <code>h</code> tiene el mismo n&uacute;mero de &iacute;ndices covariantes y contravariantes y no tiene &iacute;ndices de derivadas, asign&aacute;ndole <code>g</code> en otro caso:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i4) h(l1,l2,[l3]):=if length(l1)=length(l2) and length(l3)=0
   then kdelta(l1,l2) else apply(g,append([l1,l2], l3))$
 (%i5) ishow(h([i],[j]))$
@@ -604,10 +617,10 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 (%t6)                               g
                                      i j,l
 
-</pre></td></tr></table>
+</pre>
 <p>4) Utilizando los patrones de Maxima, en particular las funciones <code>defrule</code> y <code>applyb1</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) matchdeclare(l1,listp);
@@ -628,12 +641,12 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
                                          %1  %2  %3 n
 
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>remcomps</b><i> (<var>tensor</var>)</i>
-<a name="IDX849"></a>
+<a name="IDX853"></a>
 </dt>
 <dd><p>Borra todos los valores de <var>tensor</var> que han sido asignados con la funci&oacute;n <code>components</code>.
 </p>
@@ -642,11 +655,11 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>showcomps</b><i> (<var>tensor</var>)</i>
-<a name="IDX850"></a>
+<a name="IDX854"></a>
 </dt>
 <dd><p>Muestra las componentes de un tensor definidas con la instrucci&oacute;n <code>components</code>. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(ctensor);
 (%o1)       /share/tensor/ctensor.mac
 (%i2) load(itensor);
@@ -680,14 +693,14 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
                   [                                         r     ]
 (%o5)                                false
 
-</pre></td></tr></table>
+</pre>
 <p>La funci&oacute;n <code>showcomps</code> tambi&eacute;n puede mostrar las componentes de tensores de rango mayor de 2.
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>idummy</b><i> ()</i>
-<a name="IDX851"></a>
+<a name="IDX855"></a>
 </dt>
 <dd><p>Incrementa <code>icounter</code> y devuelve un &iacute;ndice de la forma <code>%n</code> siendo <code>n</code> un entero positivo.  Esto garantiza que &iacute;ndices mudos que sean necesarios para formar expresiones no entren en conflico con &iacute;ndices que ya est&aacute;n en uso. V&eacute;ase el ejemplo de la descripci&oacute;n de <code>indices</code>.
 </p>
@@ -695,7 +708,7 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Variable opcional:</u> <b>idummyx</b>
-<a name="IDX852"></a>
+<a name="IDX856"></a>
 </dt>
 <dd><p>Valor por defecto: <code>%</code>
 </p>
@@ -705,7 +718,7 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Variable opcional:</u> <b>icounter</b>
-<a name="IDX853"></a>
+<a name="IDX857"></a>
 </dt>
 <dd><p>Valor por defecto: <code>1</code>
 </p>
@@ -714,7 +727,7 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>kdelta</b><i> (<var>L1</var>, <var>L2</var>)</i>
-<a name="IDX854"></a>
+<a name="IDX858"></a>
 </dt>
 <dd><p>Es la funci&oacute;n delta generalizada de Kronecker definida en el paquete <code>itensor</code> siendo <var>L1</var> la lista de &iacute;ndices covariantes y <var>L2</var> la lista de &iacute;ndices contravariantes. La funci&oacute;n  <code>kdelta([i],[j])</code> devuelve el valor de la delta ordinaria de Kronecker. La instrucci&oacute;n <code>ev(<var>expr</var>,kdelta)</code> provoca la evaluaci&oacute;n de una expresi&oacute;n que contenga <code>kdelta([],[])</code>.
 </p>
@@ -724,11 +737,11 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>kdels</b><i> (<var>L1</var>, <var>L2</var>)</i>
-<a name="IDX855"></a>
+<a name="IDX859"></a>
 </dt>
 <dd><p>Funci&oacute;n delta de Kronecker simetrizada, utilizada en algunos c&aacute;lculos. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) kdelta([1,2],[2,1]);
@@ -744,12 +757,12 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 (%t4)                  kdelta  kdelta  + kdelta  kdelta
                              a       b         a       b
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>levi_civita</b><i> (<var>L</var>)</i>
-<a name="IDX856"></a>
+<a name="IDX860"></a>
 </dt>
 <dd><p>Es el tensor de permutaci&oacute;n de Levi-Civita, el cual devuelve 1  si la lista <var>L</var> con una permutaci&oacute;n par de enteros, -1 si es en una permutaci&oacute;n impar y 0 si algunos de los &iacute;ndices de <var>L</var> est&aacute;n repetidos.
 </p>
@@ -757,14 +770,15 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>lc2kdt</b><i> (<var>expr</var>)</i>
-<a name="IDX857"></a>
+<a name="IDX861"></a>
 </dt>
 <dd><p>Simplifica expresiones que contengan el s&iacute;mbolo de Levi-Civita, convirti&eacute;ndolas en expresiones con la delta de Kronecker siempre que sea posible. La diferencia principal entre esta funci&oacute;n y la simple evaluaci&oacute;n del s&iacute;mbolo de Levi-Civita consiste en que de esta &uacute;ltima forma se obtienen expresiones de Kronecker con &iacute;ndices num&eacute;ricos, lo que impide simplificaciones ulteriores. La funci&oacute;n <code>lc2kdt</code> evita este problema, dando resultados con son m&aacute;s f&aacute;ciles de simplificar con <code>rename</code> o <code>contract</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
-(%i2) expr:ishow('levi_civita([],[i,j])*'levi_civita([k,l],[])*a([j],[k]))$
+(%i2) expr:ishow('levi_civita([],[i,j])
+                 *'levi_civita([k,l],[])*a([j],[k]))$
                                   i j  k
 (%t2)                  levi_civita    a  levi_civita
                                        j            k l
@@ -789,11 +803,12 @@ deber&iacute;a estar completamente expandida. La funci&oacute;n <code>ratexpand<
 (%t6)                           a  - a kdelta
                                  l           l
 
-</pre></td></tr></table>
+</pre>
 <p>La funci&oacute;n <code>lc2kdt</code> en ocasiones hace uso del tensor m&eacute;trico. Si el tensor m&eacute;trico no fue previamente definido con <code>imetric</code>, se obtiene un mensaje de error.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
-(%i7) expr:ishow('levi_civita([],[i,j])*'levi_civita([],[k,l])*a([j,k],[]))$
+<pre class="example">
+(%i7) expr:ishow('levi_civita([],[i,j])
+                 *'levi_civita([],[k,l])*a([j,k],[]))$
                                  i j            k l
 (%t7)                 levi_civita    levi_civita    a
                                                      j k
@@ -808,24 +823,27 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 (%i9) imetric(g);
 (%o9)                                done
 (%i10) ishow(lc2kdt(expr))$
-         %3 i       k   %4 j       l     %3 i       l   %4 j       k
-(%t10) (g     kdelta   g     kdelta   - g     kdelta   g     kdelta  ) a
-                    %3             %4               %3             %4   j k
+         %3 i       k   %4 j       l     %3 i       l   %4 j
+(%t10) (g     kdelta   g     kdelta   - g     kdelta   g    
+                    %3             %4               %3
+              k
+        kdelta  ) a
+              %4   j k
 (%i11) ishow(contract(expand(%)))$
                                   l i      l i
 (%t11)                           a    - a g
 
-</pre></td></tr></table>
+</pre>
 
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>lc_l</b>
-<a name="IDX858"></a>
+<a name="IDX862"></a>
 </dt>
 <dd><p>Regla de simplificaci&oacute;n utilizada en expresiones que contienen el s&iacute;mbolo de <code>levi_civita</code> sin evaluar. Junto con  <code>lc_u</code>, puede utilizarse para simplificar muchas expresiones de forma m&aacute;s eficiente que la evaluaci&oacute;n de <code>levi_civita</code>. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2)  el1:ishow('levi_civita([i,j,k],[])*a([],[i])*a([],[j]))$
@@ -841,12 +859,12 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 (%i5) ishow(canform(contract(expand(applyb1(el2,lc_l,lc_u)))))$
 (%t5)                                  0
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>lc_u</b>
-<a name="IDX859"></a>
+<a name="IDX863"></a>
 </dt>
 <dd><p>Regla de simplificaci&oacute;n utilizada en expresiones que contienen el s&iacute;mbolo de <code>levi_civita</code> sin evaluar. Junto con  <code>lc_l</code>, puede utilizarse para simplificar muchas expresiones de forma m&aacute;s eficiente que la evaluaci&oacute;n de <code>levi_civita</code>. V&eacute;ase <code>lc_l</code>.
 </p>
@@ -854,7 +872,7 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>canten</b><i> (<var>expr</var>)</i>
-<a name="IDX860"></a>
+<a name="IDX864"></a>
 </dt>
 <dd><p>Simplifica <var>expr</var> renombrando (v&eacute;ase <code>rename</code>) y permutando &iacute;ndices mudos. La funci&oacute;n <code>rename</code> se restringe a sumas de productos de tensores en los cuales no hay derivadas, por lo que est&aacute; limitada y s&oacute;lo deber&iacute;a utilizarse si <code>canform</code> no es capaz de de llevar a cabo la simplificaci&oacute;n requerida.
 </p>
@@ -864,7 +882,7 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>concan</b><i> (<var>expr</var>)</i>
-<a name="IDX861"></a>
+<a name="IDX865"></a>
 </dt>
 <dd><p>Similar a <code>canten</code> pero tambi&eacute;n realiza la contracci&oacute;n de los &iacute;ndices.
 </p>
@@ -885,14 +903,14 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.2 Simetr&iacute;as de tensores </h3>
 
 <dl>
 <dt><u>Variable opcional:</u> <b>allsym</b>
-<a name="IDX862"></a>
+<a name="IDX866"></a>
 </dt>
 <dd><p>Valor por defecto: <code>false</code>
 </p>
@@ -902,14 +920,15 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>decsym</b><i> (<var>tensor</var>, <var>m</var>, <var>n</var>, [<var>cov_1</var>, <var>cov_2</var>, ...], [<var>contr_1</var>, <var>contr_2</var>, ...])</i>
-<a name="IDX863"></a>
+<a name="IDX867"></a>
 </dt>
 <dd><p>Declara propiedades de simetr&iacute;a para el <var>tensor</var> de <var>m</var> &iacute;ndices covariantes y <var>n</var> contravariantes. Los <var>cov_i</var> y <var>contr_i</var> son seudofunciones que expresan relaciones de simetr&iacute;a entre los &iacute;ndices covariantes y contravariantes, respectivamente. &Eacute;stos son de la forma <code>symoper(<var>index_1</var>, <var>index_2</var>,...)</code> donde <code>symoper</code> es uno de <code>sym</code>, <code>anti</code> o <code>cyc</code> y los <var>index_i</var> son enteros que indican la posici&oacute;n del &iacute;ndice en el <var>tensor</var>.  Esto declarar&aacute; a <var>tensor</var> sim&eacute;trico, antisim&eacute;trico o c&iacute;clico respecto de <var>index_i</var>. La llamada <code>symoper(all)</code> indica que todos los &iacute;ndices cumplen la condici&oacute;n de simetr&iacute;a. Por ejemplo, dado un objeto <code>b</code> con 5 &iacute;ndices covariantes, <code>decsym(b,5,3,[sym(1,2),anti(3,4)],[cyc(all)])</code> declara <code>b</code> sim&eacute;trico en el primer y segundo &iacute;ndices covariantes, antisim&eacute;trico en su tercer y cuarto &iacute;ndices tambi&eacute;n covariantes y c&iacute;clico en todos sus &iacute;ndices contravariantes. Cualquiera de las listas de declaraci&oacute;n de simetr&iacute;as puede ser nula. La funci&oacute;n que realiza las simplificaciones es <code>canform</code>, como se ilustra en el siguiente ejemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
-(%i2) expr:contract(expand(a([i1,j1,k1],[])*kdels([i,j,k],[i1,j1,k1])))$
+(%i2) expr:contract(expand(a([i1,j1,k1],[])
+            *kdels([i,j,k],[i1,j1,k1])))$
 (%i3) ishow(expr)$
 (%t3)         a      + a      + a      + a      + a      + a
                k j i    k i j    j k i    j i k    i k j    i j k
@@ -934,20 +953,20 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 (%i12) dispsym(a,3,0);
 (%o12)                     [[cyc, [[1, 2, 3]], []]]
 
-</pre></td></tr></table>
+</pre>
 
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>remsym</b><i> (<var>tensor</var>, <var>m</var>, <var>n</var>)</i>
-<a name="IDX864"></a>
+<a name="IDX868"></a>
 </dt>
 <dd><p>Borra todas las propiedades de simetr&iacute;a del <var>tensor</var> que tiene <var>m</var> &iacute;ndices covariantes y <var>n</var> contravariantes.
 </p></dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>canform</b><i> (<var>expr</var>)</i>
-<a name="IDX865"></a>
+<a name="IDX869"></a>
 </dt>
 <dd><p>Simplifica <var>expr</var> renombrando &iacute;ndices mudos y reordenando todos los &iacute;ndices seg&uacute;n las condiciones de simetr&iacute;a que se le hayan impuesto. Si <code>allsym</code> vale <code>true</code> entonces todos los &iacute;ndices se consideran sim&eacute;tricos, en otro caso se utilizar&aacute; la informaci&oacute;n sobre simetr&iacute;as suministrada por <code>decsym</code>. Los &iacute;ndices mudos se renombran de la misma manera que en la funci&oacute;n <code>rename</code>. Cuando <code>canform</code> se aplica a una expresi&oacute;n grande el c&aacute;lculo puede llevar mucho tiempo. Este tiempo se puede acortar llamando primero  a <code>rename</code>.
 V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym</code>. La funci&oacute;n <code>canform</code> puede que no reduzca completamente una expresi&oacute;n a su forma m&aacute;s sencilla, pero en todo caso devolver&aacute; un resultado matem&aacute;ticamente correcto.
@@ -968,7 +987,7 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.3 C&aacute;lculo tensorial indexado </h3>
@@ -976,7 +995,7 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>diff</b><i> (<var>expr</var>, <var>v_1</var>, [<var>n_1</var>, [<var>v_2</var>, <var>n_2</var>] ...])</i>
-<a name="IDX866"></a>
+<a name="IDX870"></a>
 </dt>
 <dd><p>Se trata de la funci&oacute;n de Maxima para la diferenciaci&oacute;n, ampliada para las necesidades del paquete <code>itensor</code>. Calcula la derivada de <var>expr</var> respecto de <var>v_1</var> <var>n_1</var> veces, respecto de <var>v_2</var> <var>n_2</var> veces, etc. Para el paquete de tensores,la funci&oacute;n ha sido modificada de manera que <var>v_i</var> puedan ser enteros desde 1 hasta el valor que tome la variable <code>dim</code>. Esto permite que la derivaci&oacute;n se pueda realizar con respecto del <var>v_i</var>-&eacute;simo miembro de la lista <code>vect_coords</code>. Si <code>vect_coords</code> guarda una variable at&oacute;mica, entonces esa variable ser&aacute; la que se utilice en la derivaci&oacute;n. Con esto se hace posible la utilizaci&oacute;n de una lista con nombres de coordenadas subindicadas, como <code>x[1]</code>, <code>x[2]</code>, ...
 </p></dd></dl>
@@ -984,7 +1003,7 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>idiff</b><i> (<var>expr</var>, <var>v_1</var>, [<var>n_1</var>, [<var>v_2</var>, <var>n_2</var>] ...])</i>
-<a name="IDX867"></a>
+<a name="IDX871"></a>
 </dt>
 <dd><p>Diferenciaci&oacute;n inicial. Al contrario que <code>diff</code>, que deriva respecto de una variable independiente, <code>idiff</code> puede usarse para derivar respecto de una coordenada. </p>
 <p>La funci&oacute;n <code>idiff</code> tambi&eacute;n puede derivar el determinante del tensor m&eacute;trico. As&iacute;, si <code>imetric</code> toma el valor <code>G</code> entonces <code>idiff(determinant(g),k)</code> devolver&aacute; <code>2*determinant(g)*ichr2([%i,k],[%i])</code> donde la &iacute;ndice mudo <code>%i</code> se escoge de forma apropiada.
@@ -992,11 +1011,11 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>liediff</b><i> (<var>v</var>, <var>ten</var>)</i>
-<a name="IDX868"></a>
+<a name="IDX872"></a>
 </dt>
 <dd><p>Calcula la derivada de Lie de la expresi&oacute;n tensorial <var>ten</var> respecto de campo vectorial <var>v</var>. La expresi&oacute;n <var>ten</var> debe ser cualquier tensor indexado; <var>v</var> debe ser el nombre (sin &iacute;ndices) de un campo vectorial. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(liediff(v,a([i,j],[])*b([],[k],l)))$
@@ -1004,17 +1023,17 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 (%t2) b   (v   a       + v   a     + v   a    )
        ,l       i j,%2    ,j  i %2    ,i  %2 j
 
-                                %1  k        %1  k      %1  k
-                            + (v   b      - b   v    + v   b   ) a
-                                    ,%1 l    ,l  ,%1    ,l  ,%1   i j
+                          %1  k        %1  k      %1  k
+                      + (v   b      - b   v    + v   b   ) a
+                              ,%1 l    ,l  ,%1    ,l  ,%1   i j
 
-</pre></td></tr></table>
+</pre>
 
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>rediff</b><i> (<var>ten</var>)</i>
-<a name="IDX869"></a>
+<a name="IDX873"></a>
 </dt>
 <dd><p>Calcula todas las instrucciones <code>idiff</code> que aparezcan en la expresi&oacute;n tensorial <var>ten</var>.
 </p>
@@ -1022,7 +1041,7 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>undiff</b><i> (<var>expr</var>)</i>
-<a name="IDX870"></a>
+<a name="IDX874"></a>
 </dt>
 <dd><p>Devuelve una expresi&oacute;n equivalente a <var>expr</var> pero con todas las derivadas de los objetos indexados reemplazadas por la forma nominal de la funci&oacute;n <code>idiff</code>. </p>
 </dd></dl>
@@ -1030,13 +1049,13 @@ V&eacute;ase tambi&eacute;n el ejemplo de la descripci&oacute;n de <code>decsym<
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>evundiff</b><i> (<var>expr</var>)</i>
-<a name="IDX871"></a>
+<a name="IDX875"></a>
 </dt>
 <dd><p>Equivale a <code>undiff</code> seguido de  <code>ev</code> y <code>rediff</code>.
 </p>
 <p>La raz&oacute;n de esta operaci&oacute;n es evaluar de forma sencilla expresiones que no pueden ser directamente evaluadas en su forma derivada. Por ejemplo, lo siguiente provoca un error:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) icurvature([i,j,k],[l],m);
 Maxima encountered a Lisp error:
@@ -1046,10 +1065,10 @@ Maxima encountered a Lisp error:
 
 Automatically continuing.
 To reenable the Lisp debugger set *debugger-hook* to nil.
-</pre></td></tr></table>
+</pre>
 <p>Sin embargo, si <code>icurvature</code> se da en forma nominal, puede ser evaluada utilizando <code>evundiff</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) ishow('icurvature([i,j,k],[l],m))$
+<pre class="example">(%i3) ishow('icurvature([i,j,k],[l],m))$
                                          l
 (%t3)                          icurvature
                                          i j k,m
@@ -1058,15 +1077,36 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 (%t4) - ichr2        - ichr2     ichr2      - ichr2       ichr2
              i k,j m        %1 j      i k,m        %1 j,m      i k
 
-                l              l         %1           l           %1
-         + ichr2        + ichr2     ichr2      + ichr2       ichr2
-                i j,k m        %1 k      i j,m        %1 k,m      i j
-</pre></td></tr></table>
+             l              l         %1           l           %1
+      + ichr2        + ichr2     ichr2      + ichr2       ichr2
+             i j,k m        %1 k      i j,m        %1 k,m      i j
+</pre>
+<p>Nota: en versiones antiguas de Maxima, las formas derivadas de los s&iacute;mbolos de
+Christoffel no se pod&iacute;an evaluar. Este fallo ha sido subsanado, de manera que
+<code>evundiff</code> ya no se necesita en expresiones como esta:
+</p>
+<pre class="example">(%i5) imetric(g);
+(%o5)                                done
+(%i6) ishow(ichr2([i,j],[k],l))$
+       k %3
+      g     (g         - g         + g        )
+              j %3,i l    i j,%3 l    i %3,j l
+(%t6) -----------------------------------------
+                          2
+
+                         k %3
+                        g     (g       - g       + g      )
+                         ,l     j %3,i    i j,%3    i %3,j
+                      + -----------------------------------
+                                         2
+</pre>
+
+
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>flush</b><i> (<var>expr</var>, <var>tensor_1</var>, <var>tensor_2</var>, ...)</i>
-<a name="IDX872"></a>
+<a name="IDX876"></a>
 </dt>
 <dd><p>Iguala a cero en la expresi&oacute;n <var>expr</var> todas las apariciones de <var>tensor_i</var> que no tengan &iacute;ndices de derivadas.
 </p>
@@ -1074,7 +1114,7 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>flushd</b><i> (<var>expr</var>, <var>tensor_1</var>, <var>tensor_2</var>, ...)</i>
-<a name="IDX873"></a>
+<a name="IDX877"></a>
 </dt>
 <dd><p>Iguala a cero en la expresi&oacute;n <var>expr</var> todas las apariciones de <var>tensor_i</var> que tengan &iacute;ndices de derivadas
 </p>
@@ -1082,12 +1122,12 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>flushnd</b><i> (<var>expr</var>, <var>tensor</var>, <var>n</var>)</i>
-<a name="IDX874"></a>
+<a name="IDX878"></a>
 </dt>
 <dd><p>Iguala a cero en <var>expr</var> todas las apariciones del objeto diferenciado  <var>tensor</var> que tenga <var>n</var> o m&aacute;s
 &iacute;ndices de derivadas, como demuestra el siguiente ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(a([i],[J,r],k,r)+a([i],[j,r,s],k,r,s))$
@@ -1098,11 +1138,11 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
                                      J r
 (%t3)                               a
                                      i,k r
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>coord</b><i> (<var>tensor_1</var>, <var>tensor_2</var>, ...)</i>
-<a name="IDX875"></a>
+<a name="IDX879"></a>
 </dt>
 <dd><p>Le da a <var>tensor_i</var> la propiedad de diferenciaci&oacute;n coordenada, que la derivada del vector contravariante cuyo nombre es uno de los <var>tensor_i</var> es igual a la delta de Kronecker.  Por ejemplo, si se ha hecho <code>coord(x)</code> entonces  <code>idiff(x([],[i]),j)</code> da <code>kdelta([i],[j])</code>. La llamada <code>coord</code> devuelve una lista de todos los objetos indexados con esta propiedad.
 </p>
@@ -1110,10 +1150,10 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>remcoord</b><i> (<var>tensor_1</var>, <var>tensor_2</var>, ...)</i>
-<a name="IDX876"></a>
+<a name="IDX880"></a>
 </dt>
 <dt><u>Funci&oacute;n:</u> <b>remcoord</b><i> (all)</i>
-<a name="IDX877"></a>
+<a name="IDX881"></a>
 </dt>
 <dd><p>Borra todas las propiedades de diferenciaci&oacute;n coordenada de <code>tensor_i</code> que hayan sido establecidas por la funci&oacute;n <code>coord</code>. La llamada <code>remcoord(all)</code> borra esta propiedad de todos los objetos indexados.
 </p>
@@ -1121,7 +1161,7 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>makebox</b><i> (<var>expr</var>)</i>
-<a name="IDX878"></a>
+<a name="IDX882"></a>
 </dt>
 <dd><p>Muestra <var>expr</var> de la misma manera que lo hace <code>show</code>; sin embargo, cualquier tensor de d'Alembert que aparezca en  <var>expr</var> estar&aacute; indicado por <code>[]</code>.  Por ejemplo, <code>[]p([m],[n])</code> representa <code>g([],[i,j])*p([m],[n],i,j)</code>.
 </p>
@@ -1129,11 +1169,11 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>conmetderiv</b><i> (<var>expr</var>, <var>tensor</var>)</i>
-<a name="IDX879"></a>
+<a name="IDX883"></a>
 </dt>
 <dd><p>Simplifica expresiones que contengan derivadas ordinarias tanto de las formas covariantes como contravariantes del tensor m&eacute;trico. Por ejemplo,  <code>conmetderiv</code> puede relacionar la derivada del tensor m&eacute;trico contravariante con los s&iacute;mbolos de Christoffel, como se ve en el ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(g([],[a,b],c))$
@@ -1144,45 +1184,45 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
                          %1 b      a       %1 a      b
 (%t3)                 - g     ichr2     - g     ichr2
                                    %1 c              %1 c
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>simpmetderiv</b><i> (<var>expr</var>)</i>
-<a name="IDX880"></a>
+<a name="IDX884"></a>
 </dt>
 <dt><u>Funci&oacute;n:</u> <b>simpmetderiv</b><i> (<var>expr</var>[, <var>stop</var>])</i>
-<a name="IDX881"></a>
+<a name="IDX885"></a>
 </dt>
 <dd><p>Simplifica expresiones que contienen productos de las derivadas del tensor m&eacute;trico. La funci&oacute;n <code>simpmetderiv</code> reconoce dos identidades:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
    ab        ab           ab                 a
   g   g   + g   g     = (g   g  )   = (kdelta )   = 0
    ,d  bc        bc,d         bc ,d          c ,d
 
-</pre></td></tr></table>
+</pre>
 <p>de donde 
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
    ab          ab
   g   g   = - g   g
    ,d  bc          bc,d
-</pre></td></tr></table>
+</pre>
 <p>y
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
   ab          ab
  g   g     = g   g
   ,j  ab,i    ,i  ab,j
 
-</pre></td></tr></table>
+</pre>
 <p>que se deduce de las simetr&iacute;as de los s&iacute;mbolos de Christoffel.
 </p>
 <p>La funci&oacute;n <code>simpmetderiv</code> tiene un argumento opcional, el cual detiene la funci&oacute;n despu&eacute;s de la primera sustituci&oacute;n exitosa en un expresi&oacute;n producto. La funci&oacute;n <code>simpmetderiv</code> tambi&eacute;n hace uso de la variable global <var>flipflag</var> que determina c&oacute;mo aplicar una ordenaci&oacute;n &quot;can&oacute;nica&quot; a los &iacute;ndices de los productos.
 </p>
 <p>Todo esto se puede utilizar para conseguir buenas simplificaciones que ser&iacute;an dif&iacute;ciles o imposibles de conseguir, lo que se demuestra en el siguiente ejemplo, que utiliza expl&iacute;citamente las simplificaciones parciales de <code>simpmetderiv</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) imetric(g);
@@ -1216,14 +1256,14 @@ errexp1 has improper indices
 (%t10)                           - g    g
                                     ,e   c b,d
 
-</pre></td></tr></table>
+</pre>
 <p>V&eacute;ase tambi&eacute;n <code>weyl.dem</code> para un ejemplo que utiliza <code>simpmetderiv</code> y <code>conmetderiv</code> para simplificar contracciones del tensor de Weyl.
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>flush1deriv</b><i> (<var>expr</var>, <var>tensor</var>)</i>
-<a name="IDX882"></a>
+<a name="IDX886"></a>
 </dt>
 <dd><p>Iguala a cero en <code>expr</code> todas las apariciones de <code>tensor</code> que tengan exactamente un &iacute;ndice derivado.
 </p>
@@ -1244,17 +1284,17 @@ errexp1 has improper indices
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.4 Tensores en espacios curvos </h3>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>imetric</b><i> (<var>g</var>)</i>
-<a name="IDX883"></a>
+<a name="IDX887"></a>
 </dt>
 <dt><u>Variable de sistema:</u> <b>imetric</b>
-<a name="IDX884"></a>
+<a name="IDX888"></a>
 </dt>
 <dd><p>Especifica la m&eacute;trica haciendo la asignaci&oacute;n de la variable <code>imetric:<var>g</var></code>, adem&aacute;s las propiedades de contracci&oacute;n de la m&eacute;trica <var>g</var> se fijan ejecutando las instrucciones <code>defcon(<var>g</var>), defcon(<var>g</var>,<var>g</var>,kdelta)</code>. La variable <code>imetric</code>, a la que no se le asigna ning&uacute;n valor por defecto, tiene el valor de la m&eacute;trica que se le haya asignado con la instrucci&oacute;n <code>imetric(<var>g</var>)</code>.
 </p>
@@ -1262,7 +1302,7 @@ errexp1 has improper indices
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>idim</b><i> (<var>n</var>)</i>
-<a name="IDX885"></a>
+<a name="IDX889"></a>
 </dt>
 <dd><p>Establece las dimensiones de la m&eacute;trica. Tambi&eacute;n inicializa las propiedades de antisimetr&iacute;a de los s&iacute;mbolos de Levi-Civita para la dimensi&oacute;n dada.
 </p>
@@ -1270,46 +1310,46 @@ errexp1 has improper indices
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>ichr1</b><i> ([<var>i</var>, <var>j</var>, <var>k</var>])</i>
-<a name="IDX886"></a>
+<a name="IDX890"></a>
 </dt>
 <dd><p>Devuelve el s&iacute;mbolo de Christoffel de primera especie dado por la definici&oacute;n 
-</p><table><tr><td>&nbsp;</td><td><pre class="example">       (g      + g      - g     )/2 .
+</p><pre class="example">       (g      + g      - g     )/2 .
          ik,j     jk,i     ij,k
-</pre></td></tr></table>
+</pre>
 <p>Para evaluar los s&iacute;mbolos de Christoffel de una m&eacute;trica determinada, a la variable  <code>imetric</code> hay que asignarle un nombre como en el ejemplo de la descripci&oacute;n de <code>chr2</code>.
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>ichr2</b><i> ([<var>i</var>, <var>j</var>], [<var>k</var>])</i>
-<a name="IDX887"></a>
+<a name="IDX891"></a>
 </dt>
 <dd><p>Devuelve el s&iacute;mbolo de Christoffel de segunda especie dado por la definici&oacute;n
-</p><table><tr><td>&nbsp;</td><td><pre class="example">                       ks
+</p><pre class="example">                       ks
    ichr2([i,j],[k]) = g    (g      + g      - g     )/2
                              is,j     js,i     ij,s
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>icurvature</b><i> ([<var>i</var>, <var>j</var>, <var>k</var>], [<var>h</var>])</i>
-<a name="IDX888"></a>
+<a name="IDX892"></a>
 </dt>
 <dd><p>Devuelve el tensor de curvatura de Riemann en t&eacute;rminos de los s&iacute;mbolos de Christoffel de segunda especie (<code>ichr2</code>).  Se utiliza la siguiente notaci&oacute;n:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">               h             h            h         %1         h
+</p><pre class="example">               h             h            h         %1         h
      icurvature     = - ichr2      - ichr2     ichr2    + ichr2
                i j k         i k,j        %1 j      i k        i j,k
                                h          %1
                         + ichr2      ichr2
                                %1 k       i j
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>covdiff</b><i> (<var>expr</var>, <var>v_1</var>, <var>v_2</var>, ...)</i>
-<a name="IDX889"></a>
+<a name="IDX893"></a>
 </dt>
 <dd><p>Devuelve la derivada covariante de <var>expr</var> respecto de las variables  <var>v_i</var> en t&eacute;rminos de los s&iacute;mbolos de Christoffel de segunda especie (<code>ichr2</code>). Para evaluarlos debe hacerse <code>ev(<var>expr</var>,ichr2)</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) entertensor()$
@@ -1321,9 +1361,13 @@ Enter a list of the derivative indices: [];
 (%t2)                                a
                                       i j
 (%i3) ishow(covdiff(%,s))$
-             k         %1     k         %1     k            k     %1
-(%t3)     - a     ichr2    - a     ichr2    + a      + ichr2     a
-             i %1      j s    %1 j      i s    i j,s        %1 s  i j
+             k         %1     k         %1     k
+(%t3)     - a     ichr2    - a     ichr2    + a
+             i %1      j s    %1 j      i s    i j,s
+
+             k     %1
+      + ichr2     a
+             %1 s  i j
 (%i4) imetric:g;
 (%o4)                                  g
 (%i5) ishow(ev(%th(2),ichr2))$
@@ -1343,12 +1387,12 @@ Enter a list of the derivative indices: [];
  + ------------------------------------------- + a
                         2                         i j,s
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>lorentz_gauge</b><i> (<var>expr</var>)</i>
-<a name="IDX890"></a>
+<a name="IDX894"></a>
 </dt>
 <dd><p>Impone la condici&oacute;n de Lorentz sustituyendo por 0 todos los objetos indexados de <var>expr</var> que tengan un &iacute;ndice derivado id&eacute;ntico a un &iacute;ndice contravariante.
 </p>
@@ -1356,17 +1400,21 @@ Enter a list of the derivative indices: [];
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>igeodesic_coords</b><i> (<var>expr</var>, <var>nombre</var>)</i>
-<a name="IDX891"></a>
+<a name="IDX895"></a>
 </dt>
 <dd><p>Elimina los s&iacute;mbolos no diferenciados de Christoffel y las primeras derivadas del tensor m&eacute;trico de <var>expr</var>. El argumento <var>nombre</var> de la funci&oacute;n <code>igeodesic_coords</code> se refiere a la m&eacute;trica <var>nombre</var> si aparece en <var>expr</var>, mientras que los coeficientes de conexi&oacute;n deben tener los nombres  <code>ichr1</code> y/o <code>ichr2</code>. El siguiente ejemplo hace la verificaci&oacute;n de la identidad c&iacute;clica satisfecha por el tensor de curvatura de Riemann haciendo uso de la funci&oacute;n <code>igeodesic_coords</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(icurvature([r,s,t],[u]))$
-             u            u         %1         u            u         %1
-(%t2) - ichr2      - ichr2     ichr2    + ichr2      + ichr2     ichr2
-             r t,s        %1 s      r t        r s,t        %1 t      r s
+             u            u         %1         u     
+(%t2) - ichr2      - ichr2     ichr2    + ichr2      
+             r t,s        %1 s      r t        r s,t 
+
+                                              u         %1
+                                       + ichr2     ichr2
+                                              %1 t      r s
 (%i3) ishow(igeodesic_coords(%,ichr2))$
                                  u            u
 (%t3)                       ichr2      - ichr2
@@ -1374,17 +1422,17 @@ Enter a list of the derivative indices: [];
 (%i4) ishow(igeodesic_coords(icurvature([r,s,t],[u]),ichr2)+
             igeodesic_coords(icurvature([s,t,r],[u]),ichr2)+
             igeodesic_coords(icurvature([t,r,s],[u]),ichr2))$
-             u            u            u            u            u
-(%t4) - ichr2      + ichr2      + ichr2      - ichr2      - ichr2
-             t s,r        t r,s        s t,r        s r,t        r t,s
+             u            u            u            u
+(%t4) - ichr2      + ichr2      + ichr2      - ichr2
+             t s,r        t r,s        s t,r        s r,t
 
-                                                                  u
-                                                           + ichr2
-                                                                  r s,t
+                                             u            u
+                                      - ichr2      + ichr2
+                                             r t,s        r s,t
 (%i5) canform(%);
 (%o5)                                  0
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -1402,7 +1450,7 @@ Enter a list of the derivative indices: [];
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.5 Sistemas de referencia m&oacute;viles </h3>
@@ -1419,7 +1467,7 @@ Enter a list of the derivative indices: [];
 </p>
 <p>Maxima utiliza estos dos tensores para definir los coeficientes del sistema de referencia: <code>ifc1</code> y and <code>ifc2</code>, los cuales forman parte de los coeficientes de conexi&oacute;n <code>icc1</code> y <code>icc2</code>, tal como demuestra el siguiente ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) iframe_flag:true;
@@ -1443,62 +1491,62 @@ Enter a list of the derivative indices: [];
 (%t6)               ifr   ifr   (ifri        - ifri       )
                        a     b       c %4,%5       c %5,%4
 
-</pre></td></tr></table>
+</pre>
 <p>Se utiliza un m&eacute;todo alternativo  para calcular el sistema de referencia <code>ifb</code> si la variable <code>iframe_bracket_form</code> vale <code>false</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i8) block([iframe_bracket_form:false],ishow(ifb([a,b,c])))$
                        %7    %6        %6      %7
 (%t8)              (ifr   ifr     - ifr     ifr  ) ifri
                        a     b,%7      a,%7    b       c %6
 
-</pre></td></tr></table>
+</pre>
 
 <dl>
 <dt><u>Variable:</u> <b>ifb</b>
-<a name="IDX892"></a>
+<a name="IDX896"></a>
 </dt>
 <dd><p>Es el sistema de referencia soporte. La contribuci&oacute;n de la m&eacute;trica del campo a los coeficientes de conexi&oacute;n se expresa utilizando:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
           - ifb      + ifb      + ifb
                c a b      b c a      a b c
 ifc1    = --------------------------------
     abc                  2
 
-</pre></td></tr></table>
+</pre>
 <p>El sistema de referencia soporte se define en t&eacute;rminos del campo y la m&eacute;trica del sistema de referencia. Se utilizan dos m&eacute;todos alternativos dependiendo del valor de <code>frame_bracket_form</code>. Si vale <code>true</code> (que es el valor por defecto) o si <code>itorsion_flag</code> vale <code>true</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
           d      e                                      f
 ifb =  ifr    ifr   (ifri      - ifri      - ifri    itr   )
    abc    b      c       a d,e       a e,d       a f    d e
 
 
-</pre></td></tr></table>
+</pre>
 <p>En otro caso:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
              e      d        d      e
 ifb    = (ifr    ifr    - ifr    ifr   ) ifri
    abc       b      c,e      b,e    c        a d
 
-</pre></td></tr></table>
+</pre>
 
 </dd></dl>
 
 
 <dl>
 <dt><u>Variable:</u> <b>icc1</b>
-<a name="IDX893"></a>
+<a name="IDX897"></a>
 </dt>
 <dd><p>Coeficientes de conexi&oacute;n de primera especie. Se definen en <code>itensor</code> como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 icc1    = ichr1    - ikt1    - inmc1
     abc        abc       abc        abc
 
-</pre></td></tr></table>
+</pre>
 <p>En esta expresi&oacute;n, si <code>iframe_flag</code> vale <code>true</code>, el s&iacute;mbolo de Christoffel <code>ichr1</code> se reemplaza por el coeficiente de conexi&oacute;n del sistema de referencia <code>ifc1</code>. Si <code>itorsion_flag</code> vale <code>false</code>, <code>ikt1</code> ser&aacute; omitido. Tambi&eacute;n se omite si se utiliza una base, ya que la torsi&oacute;n ya est&aacute; calculada como parte del sistema de referencia.
 </p>
 </dd></dl>
@@ -1506,53 +1554,53 @@ icc1    = ichr1    - ikt1    - inmc1
 
 <dl>
 <dt><u>Variable:</u> <b>icc2</b>
-<a name="IDX894"></a>
+<a name="IDX898"></a>
 </dt>
 <dd><p>Coeficientes de conexi&oacute;n de segunda especie. Se definen en <code>itensor</code> como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
     c         c        c         c
 icc2   = ichr2   - ikt2   - inmc2
     ab        ab       ab        ab
 
-</pre></td></tr></table>
+</pre>
 <p>En esta expresi&oacute;n, si la variable <code>iframe_flag</code> vale <code>true</code>, el s&iacute;mbolo de Christoffel <code>ichr2</code> se reemplaza por el coeficiente de conexi&oacute;n del sistema de referencia <code>ifc2</code>. Si <code>itorsion_flag</code> vale <code>false</code>, <code>ikt2</code> se omite. Tambi&eacute;n se omite si se utiliza una base de referncia. Por &uacute;ltimo, si  <code>inonmet_flag</code> vale <code>false</code>, se omite <code>inmc2</code>.
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>ifc1</b>
-<a name="IDX895"></a>
+<a name="IDX899"></a>
 </dt>
 <dd><p>Coeficiente del sistema de referencia de primera especie, tambi&eacute;n conocido como coeficientes de rotaci&oacute;n de Ricci. Este tensor represnta la contribuci&oacute;n de la m&eacute;trica del sistema de referencia al coeficiente de conexi&oacute;n de primera especie, definido como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
           - ifb      + ifb      + ifb
                c a b      b c a      a b c
 ifc1    = --------------------------------
     abc                   2
 
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>ifc2</b>
-<a name="IDX896"></a>
+<a name="IDX900"></a>
 </dt>
 <dd><p>Coeficiente del sistema de referencia de primera especie. Este tensor representa la contribuci&oacute;n de la m&eacute;trica del sistema de referencia al coeficiente de conexi&oacute;n de primera especie, definido como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
     c       cd
 ifc2   = ifg   ifc1
     ab             abd
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>ifr</b>
-<a name="IDX897"></a>
+<a name="IDX901"></a>
 </dt>
 <dd><p>El campo del sistema de referencia. Se contrae con el campo inverso <code>ifri</code> para formar la m&eacute;trica del sistema de referencia, <code>ifg</code>.
 </p>
@@ -1560,7 +1608,7 @@ ifc2   = ifg   ifc1
 
 <dl>
 <dt><u>Variable:</u> <b>ifri</b>
-<a name="IDX898"></a>
+<a name="IDX902"></a>
 </dt>
 <dd><p>Campo inverso del sistema de referencia. Especifica la base del sistema de referencia (vectores de la base dual).
 </p>
@@ -1568,7 +1616,7 @@ ifc2   = ifg   ifc1
 
 <dl>
 <dt><u>Variable:</u> <b>ifg</b>
-<a name="IDX899"></a>
+<a name="IDX903"></a>
 </dt>
 <dd><p>La m&eacute;trica del sistema de referencia. Su valor por defecto es <code>kdelta</code>, pero puede cambiarse utilizando 
 <code>components</code>.
@@ -1577,7 +1625,7 @@ ifc2   = ifg   ifc1
 
 <dl>
 <dt><u>Variable:</u> <b>ifgi</b>
-<a name="IDX900"></a>
+<a name="IDX904"></a>
 </dt>
 <dd><p>La m&eacute;trica inversa del sistema de referencia. Se contrae con la m&eacute;trica <code>ifg</code> para dar <code>kdelta</code>.
 </p>
@@ -1585,7 +1633,7 @@ ifc2   = ifg   ifc1
 
 <dl>
 <dt><u>Variable opcional:</u> <b>iframe_bracket_form</b>
-<a name="IDX901"></a>
+<a name="IDX905"></a>
 </dt>
 <dd><p>Valor por defecto: <code>true</code>
 </p>
@@ -1608,7 +1656,7 @@ ifc2   = ifg   ifc1
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.6 Torsi&oacute;n y no metricidad </h3>
@@ -1617,97 +1665,98 @@ ifc2   = ifg   ifc1
 </p>
 <dl>
 <dt><u>Variable:</u> <b>inm</b>
-<a name="IDX902"></a>
+<a name="IDX906"></a>
 </dt>
 <dd><p>Vector de no metricidad. La no metricidad conforme se define a partir de la derivada covariante del tensor m&eacute;trico. La derivada covariante del tensor m&eacute;trico, que normalmente es nula, se calcula, cuando <code>inonmet_flag</code> vale <code>true</code>, como 
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">g     =- g  inm
+<pre class="example">g     =- g  inm
  ij;k     ij   k
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 
 <dl>
 <dt><u>Variable:</u> <b>inmc1</b>
-<a name="IDX903"></a>
+<a name="IDX907"></a>
 </dt>
 <dd><p>Permutaci&oacute;n covariante de las componentes del vector de no metricidad. Se define como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
            g   inm  - inm  g   - g   inm
             ab    c      a  bc    ac    b
 inmc1    = ------------------------------
      abc                 2
 
-</pre></td></tr></table>
+</pre>
 <p>(Sustit&uacute;yase <code>g</code> por <code>ifg</code> si se utiliza una m&eacute;trica para el sistema de referencia.)
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>inmc2</b>
-<a name="IDX904"></a>
+<a name="IDX908"></a>
 </dt>
 <dd><p>Permutaci&oacute;n contravariante de las componentes del vector de no metricidad. Se utiliza en los coeficientes de conexi&oacute;n si <code>inonmet_flag</code> vale <code>true</code>. Se define como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
                       c         c         cd
           -inm  kdelta  - kdelta  inm  + g   inm  g
      c        a       b         a    b          d  ab
 inmc2   = -------------------------------------------
      ab                        2
 
-</pre></td></tr></table>
+</pre>
 <p>(Sustit&uacute;yase <code>g</code> por <code>ifg</code> si se utiliza una m&eacute;trica para el sistema de referencia.)
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>ikt1</b>
-<a name="IDX905"></a>
+<a name="IDX909"></a>
 </dt>
 <dd><p>Permutaci&oacute;n covariante del tensor de permutaci&oacute;n, tambi&eacute;n conocido como contorsi&oacute;n. Se define como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
                   d           d       d
           -g   itr  - g    itr   - itr   g
             ad    cb    bd    ca      ab  cd
 ikt1    = ----------------------------------
     abc                   2
 
-</pre></td></tr></table>
+</pre>
 <p>(Sustit&uacute;yase <code>g</code> por <code>ifg</code> si se utiliza una m&eacute;trica para el sistema de referencia.)
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>ikt2</b>
-<a name="IDX906"></a>
+<a name="IDX910"></a>
 </dt>
 <dd><p>Permutaci&oacute;n contravariante del tensor de permutaci&oacute;n, tambi&eacute;n conocido como contorsi&oacute;n. Se define como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
     c     cd
 ikt2   = g   ikt1
     ab           abd
 
-</pre></td></tr></table>
+</pre>
 <p>(Sustit&uacute;yase <code>g</code> por <code>ifg</code> si se utiliza una m&eacute;trica para el sistema de referencia.)
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>itr</b>
-<a name="IDX907"></a>
+<a name="IDX911"></a>
 </dt>
 <dd><p>Tensor de torsi&oacute;n. Para una m&eacute;trica con torsi&oacute;n, la diferenciaci&oacute;n covariante iterada de una funci&oacute;n escalar no conmuta, tal como demuestra el siguiente ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) imetric:g;
 (%o2)                                  g
-(%i3) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+(%i3) covdiff(covdiff(f([],[]),i),j)
+         -covdiff(covdiff(f([],[]),j),i)$
 (%i4) ishow(%)$
                                    %4              %2
 (%t4)                    f    ichr2    - f    ichr2
@@ -1716,7 +1765,8 @@ ikt2   = g   ikt1
 (%o5)                                  0
 (%i6) itorsion_flag:true;
 (%o6)                                true
-(%i7) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+(%i7) covdiff(covdiff(f([],[]),i),j)
+        -covdiff(covdiff(f([],[]),j),i)$
 (%i8) ishow(%)$
                            %8             %6
 (%t8)             f    icc2    - f    icc2    - f     + f
@@ -1749,7 +1799,7 @@ ikt2   = g   ikt1
 (%t16)                           - f    itr
                                     ,%1    i j
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -1767,7 +1817,7 @@ ikt2   = g   ikt1
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.7 &Aacute;lgebra exterior </h3>
@@ -1776,41 +1826,41 @@ ikt2   = g   ikt1
 </p>
 <p>Desafortunadamente no hay consenso entre los autores a la hora de definir el producto exterior. Algunos autores prefieren una definici&oacute;n que se corresponde con la noci&oacute;n de antisimetrizaci&oacute;n, con lo que el producto externo de dos campos vectoriales se definir&iacute;a como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">            a a  - a a
+<pre class="example">            a a  - a a
              i j    j i
  a  /\ a  = -----------
   i     j        2
-</pre></td></tr></table>
+</pre>
 <p>De forma m&aacute;s general, el producto de una p-forma por una q-forma se definir&iacute;a como
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">                       1     k1..kp l1..lq
+<pre class="example">                       1     k1..kp l1..lq
 A       /\ B       = ------ D              A       B
  i1..ip     j1..jq   (p+q)!  i1..ip j1..jq  k1..kp  l1..lq
-</pre></td></tr></table>
+</pre>
 <p>donde <code>D</code> es la delta de Kronecker.
 </p>
 <p>Otros autores, sin embargo, prefieren una definici&oacute;n &quot;geom&eacute;trica&quot; que se corresponde con la noci&oacute;n del elemento de volumen,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">a  /\ a  = a a  - a a
+<pre class="example">a  /\ a  = a a  - a a
  i     j    i j    j i
-</pre></td></tr></table>
+</pre>
 <p>y, en el caso general,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">                       1    k1..kp l1..lq
+<pre class="example">                       1    k1..kp l1..lq
 A       /\ B       = ----- D              A       B
  i1..ip     j1..jq   p! q!  i1..ip j1..jq  k1..kp  l1..lq
-</pre></td></tr></table>
+</pre>
 <p>Puesto que <code>itensor</code> un paquete de &aacute;lgebra tensorial, la primera de estas dos definiciones parece la m&aacute;s natural. Sin embargo, muchas aplicaciones hacen uso de la segunda definici&oacute;n. Para resolver el dilema, se define una variable que controla el comportamiento del producto exteriort: si <code>igeowedge_flag</code> vale <code>false</code> (el valor por defecto), se utiliza la primera definici&oacute;n, si vale <code>true</code>, la segunda.
 </p>
 <dl>
 <dt><u>Operador:</u> <b>~</b>
-<a name="IDX908"></a>
+<a name="IDX912"></a>
 </dt>
 <dd><p>El operador del producto exterior se representa por el s&iacute;mbolo <code>~</code>. Este es un operador binario. Sus argumentos deben ser expresiones que tengan escalares, tensores covariantes de rango uno o tensores covariantes de rango <code>l</code> que hayan sido declarados antisim&eacute;tricos en todos los &iacute;ndices covariantes.
 </p>
 <p>El comportamiento del operador del producto exterior se controla con la variable <code>igeowedge_flag</code>, como en el ejemplo siguiente:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(a([i])~b([j]))$
                                  a  b  - b  a
@@ -1832,18 +1882,18 @@ A       /\ B       = ----- D              A       B
 (%i7) ishow(a([i,j])~b([k]))$
 (%t7)                     a    b  + b  a    - a    b
                            i j  k    i  j k    i k  j
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Operador:</u> <b>|</b>
-<a name="IDX909"></a>
+<a name="IDX913"></a>
 </dt>
 <dd><p>La barra vertical <code>|</code> representa la operaci&oacute;n &quot;contracci&oacute;n con un vector&quot;. Cuando un tensor covariante totalmente antisim&eacute;trico se contrae con un vector contravariante, el resultado no depende del &iacute;ndice utilizado para la contracci&oacute;n. As&iacute;, es posible definir la operaci&oacute;n de contracci&oacute;n de forma que no se haga referencia al &iacute;ndice.
 </p>
 <p>En el paquete <code>itensor</code> la contracci&oacute;n con un vector se realiza siempre respecto del primer &iacute;ndice de la ordenaci&oacute;n literal. Ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) decsym(a,2,0,[anti(all)],[]);
 (%o2)                                done
@@ -1855,18 +1905,18 @@ A       /\ B       = ----- D              A       B
                                      %1
 (%t4)                             - v   a
                                          %1 j
-</pre></td></tr></table>
+</pre>
 <p>N&oacute;tese que es primordial que los tensores utilizados junto con el operador <code>|</code> se declaren totalmente antisim&eacute;tricos en sus  &iacute;ndices covariantes. De no ser as&iacute;, se pueden obtener resultados incorrectos.
 </p>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>extdiff</b><i> (<var>expr</var>, <var>i</var>)</i>
-<a name="IDX910"></a>
+<a name="IDX914"></a>
 </dt>
 <dd><p>Calcula la derivada exterior de <var>expr</var> con respecto del &iacute;ndice <var>i</var>. La derivada exterior se define formalmente como el producto exterior del operador de la derivada parcial y una forma diferencial. Por lo tanto, esta operaci&oacute;n tambi&eacute;n se ve afectada por el valor que tome la variable <code>igeowedge_flag</code>. Ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) ishow(extdiff(v([i]),j))$
                                   v    - v
@@ -1888,16 +1938,16 @@ A       /\ B       = ----- D              A       B
 (%i7) ishow(extdiff(a([i,j]),k))$
 (%t7)                      a      - a      + a
                             j k,i    i k,j    i j,k
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>hodge</b><i> (<var>expr</var>)</i>
-<a name="IDX911"></a>
+<a name="IDX915"></a>
 </dt>
 <dd><p>Calcula el dual de Hodge  <var>expr</var>. Por ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) imetric(g);
@@ -1919,10 +1969,10 @@ A       /\ B       = ----- D              A       B
                                    6
 (%i8) ishow(canform(hodge(%)))$
                  %1 %2 %3 %8            %4 %5 %6 %7
-(%t8) levi_civita            levi_civita            g        g
-                                                     %1 %106  %2 %107
-                                            g        g      A        /6
-                                             %3 %108  %4 %8  %5 %6 %7
+(%t8) levi_civita            levi_civita            g       
+                                                     %1 %106
+                             g        g        g      A         /6
+                              %2 %107  %3 %108  %4 %8  %5 %6 %7
 (%i9) lc2kdt(%)$
 
 (%i10) %,kdelta$
@@ -1931,12 +1981,12 @@ A       /\ B       = ----- D              A       B
 (%t11)                     - A
                               %106 %107 %108
 
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Variable opcional:</u> <b>igeowedge_flag</b>
-<a name="IDX912"></a>
+<a name="IDX916"></a>
 </dt>
 <dd><p>Valor por defecto: <code>false</code>
 </p>
@@ -1960,7 +2010,7 @@ A       /\ B       = ----- D              A       B
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.8 Exportando expresiones en TeX </h3>
@@ -1970,11 +2020,11 @@ A       /\ B       = ----- D              A       B
 </p>
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>tentex</b><i> (<var>expr</var>)</i>
-<a name="IDX913"></a>
+<a name="IDX917"></a>
 </dt>
 <dd><p>Para utilizar la funci&oacute;n <code>tentex</code>, primero se debe cargar <code>tentex</code>, tal como muestra el siguiente ejemplo:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">
+<pre class="example">
 (%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
 (%i2) load(tentex);
@@ -1982,14 +2032,18 @@ A       /\ B       = ----- D              A       B
 (%i3) idummyx:m;
 (%o3)                                  m
 (%i4) ishow(icurvature([j,k,l],[i]))$
-            m1       i           m1       i           i            i
-(%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2      + ichr2
-            j k      m1 l        j l      m1 k        j l,k        j k,l
+            m1       i           m1       i           i
+(%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2
+            j k      m1 l        j l      m1 k        j l,k
+
+                                                      i
+                                               + ichr2
+                                                      j k,l
 (%i5) tentex(%)$
 $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
  \Gamma_{k\,m_1}^{i}-\Gamma_{j\,l,k}^{i}+\Gamma_{j\,k,l}^{i}$$
 
-</pre></td></tr></table>
+</pre>
 <p>N&oacute;tese la asignaci&oacute;n de la variable <code>idummyx</code> para evitar la aparici&oacute;n del s&iacute;mbolo del porcentaje en la expresi&oacute;n en TeX, que puede dar errores de compilaci&oacute;n.
 </p>
 <p>T&eacute;ngase en cuenta que esta versi&oacute;n de la funci&oacute;n <code>tentex</code> es experimental.
@@ -2011,7 +2065,7 @@ $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.9 Interactuando con ctensor </h3>
@@ -2020,21 +2074,22 @@ $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
 </p>
 <dl>
 <dt><u>Function:</u> <b>ic_convert</b><i> (<var>eqn</var>)</i>
-<a name="IDX914"></a>
+<a name="IDX918"></a>
 </dt>
 <dd><p>Convierte la ecuaci&oacute;n <var>eqn</var> del entorno <code>itensor</code> a una sentencia de asignaci&oacute;n de <code>ctensor</code>. Sumas impl&iacute;citas sobre &iacute;ndices mudos se hacen expl&iacute;citas mientras que objetos indexados se transforman en arreglos (los sub&iacute;ndices de los arreglos se ordenan poniendo primero los covariantes seguidos de los contravariantes. La derivada de un objeto indexado se reemplazar&aacute; por por la forma nominal de <code>diff</code> tomada con respecto a <code>ct_coords</code> con el sub&iacute;ndice correspondiente al &iacute;ndice derivado. Los s&iacute;mbolos de Christoffel <code>ichr1</code>  <code>ichr2</code> se traducen a <code>lcs</code> y <code>mcs</code>, respectivamente. Adem&aacute;s, se a&ntilde;aden bucles <code>do</code> para la sumaci&oacute;n de todos los &iacute;ndices libres, de manera que la sentencia traducida pueda ser evaluada haciendo simplemente <code>ev</code>. Los siguientes ejemplos muestran las funcionalidades de esta funci&oacute;n.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(itensor);
+<pre class="example">(%i1) load(itensor);
 (%o1)      /share/tensor/itensor.lisp
-(%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)*b([i],[l,k]))$
+(%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)
+      *b([i],[l,k]))$
                              k        m   l k
 (%t2)                       t    = f a   b    g
                              i j      ,j  i    l m
 (%i3) ic_convert(eqn);
-(%o3) for i thru dim do (for j thru dim 
-
-do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                       i, j, k                   m           j   i, l, k
+(%o3) for i thru dim do (for j thru dim do (
+       for k thru dim do
+        t        : f sum(sum(diff(a , ct_coords ) b
+         i, j, k                   m           j   i, l, k
 
  g    , l, 1, dim), m, 1, dim)))
   l, m
@@ -2043,14 +2098,14 @@ do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
 (%i5) metricconvert:true;
 (%o5)                                true
 (%i6) ic_convert(eqn);
-(%o6) for i thru dim do (for j thru dim 
-
-do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                       i, j, k                   m           j   i, l, k
+(%o6) for i thru dim do (for j thru dim do (
+       for k thru dim do
+        t        : f sum(sum(diff(a , ct_coords ) b
+         i, j, k                   m           j   i, l, k
 
  lg    , l, 1, dim), m, 1, dim)))
    l, m
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -2068,14 +2123,14 @@ do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h3 class="subsection"> 27.2.10 Palabras reservadas </h3>
 
 <p>Las siguientes palabras son utilizadas por el paquete <code>itensor</code> internamente, por lo que no deber&iacute;an ser modificadas por el usuario:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">  Palabra    Comentarios
+<pre class="example">  Palabra    Comentarios
   ------------------------------------------
   indices2() Versi&oacute;n interna de indices()
   conti      Lista los &iacute;ndices contravariantes
@@ -2088,7 +2143,7 @@ do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
   _lc2kdt0
   _lcprod
   _extlc
-</pre></td></tr></table>
+</pre>
 
 <hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
@@ -2101,12 +2156,12 @@ do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>mayo, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

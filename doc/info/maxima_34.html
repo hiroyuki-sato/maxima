@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on May, 2 2007 by texi2html 1.76 -->
+<!-- Created on August, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -143,7 +156,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 34. Runtime Environment </h1>
@@ -153,7 +166,7 @@ div.image
 </td></tr>
 <tr><td align="left" valign="top"><a href="#SEC140">34.2 Interrupts</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                  
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC141">34.3 Definitions for Runtime Environment</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  
+<tr><td align="left" valign="top"><a href="#SEC141">34.3 Functions and Variables for Runtime Environment</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  
 </td></tr>
 </table>
 
@@ -174,7 +187,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 34.1 Introduction for Runtime Environment </h2>
@@ -186,9 +199,9 @@ although it can be in any directory searched by the function <code>file_search</
 </p>
 <p>Here is an example <code>maxima-init.mac</code> file:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">setup_autoload (&quot;specfun.mac&quot;, ultraspherical, assoc_legendre_p);
+<pre class="example">setup_autoload (&quot;specfun.mac&quot;, ultraspherical, assoc_legendre_p);
 showtime:all;
-</pre></td></tr></table>
+</pre>
 <p>In this example, <code>setup_autoload</code> tells Maxima to load the
 specified file
 (<code>specfun.mac</code>) if any of the functions (<code>ultraspherical</code>,
@@ -215,7 +228,7 @@ other Maxima statements.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 34.2 Interrupts </h2>
@@ -226,10 +239,10 @@ The default action is to stop the computation
 and print another user prompt.
 In this case, it is not possible to restart a stopped computation.
 </p>
-<p>If the variable <code>*debugger-hook*</code> is set to <code>nil</code>, by executing
+<p>If the Lisp variable <code>*debugger-hook*</code> is set to <code>nil</code>, by executing
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">:lisp (setq *debugger-hook* nil)
-</pre></td></tr></table>
+<pre class="example">:lisp (setq *debugger-hook* nil)
+</pre>
 
 <p>then upon receiving ^C, Maxima will enter the Lisp debugger,
 and the user may use the debugger to inspect the Lisp environment.
@@ -245,7 +258,7 @@ The <code>fg</code> command causes Maxima
 to resume from the point at which it was stopped.
 </p>
 <hr size="6">
-<a name="Definitions-for-Runtime-Environment"></a>
+<a name="Functions-and-Variables-for-Runtime-Environment"></a>
 <a name="SEC141"></a>
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC140" title="Previous section in reading order"> &lt; </a>]</td>
@@ -260,14 +273,14 @@ to resume from the point at which it was stopped.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 34.3 Definitions for Runtime Environment </h2>
+<h2 class="section"> 34.3 Functions and Variables for Runtime Environment </h2>
 
 <dl>
 <dt><u>Declaration:</u> <b>feature</b>
-<a name="IDX1130"></a>
+<a name="IDX1133"></a>
 </dt>
 <dd><p>Maxima understands two distinct types of features,
 system features and features which apply to mathematical expressions.
@@ -280,7 +293,7 @@ See also <code>features</code> and <code>featurep</code> for information about m
 
 <dl>
 <dt><u>Function:</u> <b>featurep</b><i> (<var>a</var>, <var>f</var>)</i>
-<a name="IDX1131"></a>
+<a name="IDX1134"></a>
 </dt>
 <dd><p>Attempts to determine whether the object <var>a</var> has the
 feature <var>f</var> on the basis of the facts in the current database.  If so,
@@ -293,15 +306,15 @@ nor the negation of <var>f</var> can be established.
 </p>
 <p>See also <code>declare</code> and <code>features</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) declare (j, even)$
+<pre class="example">(%i1) declare (j, even)$
 (%i2) featurep (j, integer);
 (%o2)                           true
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>System variable:</u> <b>maxima_tempdir</b>
-<a name="IDX1132"></a>
+<a name="IDX1135"></a>
 </dt>
 <dd><p><code>maxima_tempdir</code> names the directory in which Maxima creates some temporary files.
 In particular, temporary files for plotting are created in <code>maxima_tempdir</code>.
@@ -315,7 +328,7 @@ if Maxima can locate it; otherwise Maxima makes a guess about a suitable directo
 
 <dl>
 <dt><u>System variable:</u> <b>maxima_userdir</b>
-<a name="IDX1133"></a>
+<a name="IDX1136"></a>
 </dt>
 <dd><p><code>maxima_userdir</code> names a directory which Maxima searches to find Maxima and Lisp files.
 (Maxima searches some other directories as well;
@@ -333,13 +346,13 @@ those variables must be changed separately.
 
 <dl>
 <dt><u>Function:</u> <b>room</b><i> ()</i>
-<a name="IDX1134"></a>
+<a name="IDX1137"></a>
 </dt>
 <dt><u>Function:</u> <b>room</b><i> (true)</i>
-<a name="IDX1135"></a>
+<a name="IDX1138"></a>
 </dt>
 <dt><u>Function:</u> <b>room</b><i> (false)</i>
-<a name="IDX1136"></a>
+<a name="IDX1139"></a>
 </dt>
 <dd><p>Prints out a description of the state of storage and
 stack management in Maxima. <code>room</code> calls the Lisp function of 
@@ -358,13 +371,13 @@ the same name.
 
 <dl>
 <dt><u>Function:</u> <b>status</b><i> (feature)</i>
-<a name="IDX1137"></a>
+<a name="IDX1140"></a>
 </dt>
 <dt><u>Function:</u> <b>status</b><i> (feature, <var>putative_feature</var>)</i>
-<a name="IDX1138"></a>
+<a name="IDX1141"></a>
 </dt>
 <dt><u>Function:</u> <b>status</b><i> (status)</i>
-<a name="IDX1139"></a>
+<a name="IDX1142"></a>
 </dt>
 <dd><p>Returns information about the presence or absence of certain
 system-dependent features.
@@ -394,7 +407,7 @@ mathematical expressions. See <code>features</code> and <code>featurep</code> fo
 
 <dl>
 <dt><u>Function:</u> <b>time</b><i> (%o1, %o2, %o3, ...)</i>
-<a name="IDX1140"></a>
+<a name="IDX1143"></a>
 </dt>
 <dd><p>Returns a list of the times, in seconds, taken to compute the output
 lines <code>%o1</code>, <code>%o2</code>, <code>%o3</code>, .... The time returned is Maxima's estimate of
@@ -409,7 +422,7 @@ and elapsed time with each output line.
 
 <dl>
 <dt><u>Function:</u> <b>timedate</b><i> ()</i>
-<a name="IDX1141"></a>
+<a name="IDX1144"></a>
 </dt>
 <dd><p>Returns a string representing the current time and date.
 The string has the format <code>HH:MM:SS Day, mm/dd/yyyy (GMT-n)</code>,
@@ -420,16 +433,16 @@ hours, minutes, seconds, day of week, month, day of month, year, and hours diffe
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) d: timedate ();
+<pre class="example">(%i1) d: timedate ();
 (%o1) 08:05:09 Wed, 11/02/2005 (GMT-7)
 (%i2) print (&quot;timedate reports current time&quot;, d)$
 timedate reports current time 08:05:09 Wed, 11/02/2005 (GMT-7)
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Function:</u> <b>absolute_real_time</b><i> ()</i>
-<a name="IDX1142"></a>
+<a name="IDX1145"></a>
 </dt>
 <dd><p>Returns the number of seconds since midnight, January 1, 1900 UTC.
 The return value is an integer.
@@ -438,16 +451,16 @@ The return value is an integer.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) absolute_real_time ();
+<pre class="example">(%i1) absolute_real_time ();
 (%o1)                      3385045277
 (%i2) 1900 + absolute_real_time () / (365.25 * 24 * 3600);
 (%o2)                   2007.265612087104
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Function:</u> <b>elapsed_real_time</b><i> ()</i>
-<a name="IDX1143"></a>
+<a name="IDX1146"></a>
 </dt>
 <dd><p>Returns the number of seconds (including fractions of a second)
 since Maxima was most recently started or restarted.
@@ -457,17 +470,17 @@ The return value is a floating-point number.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) elapsed_real_time ();
+<pre class="example">(%i1) elapsed_real_time ();
 (%o1)                       2.559324
 (%i2) expand ((a + b)^500)$
 (%i3) elapsed_real_time ();
 (%o3)                       7.552087
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Function:</u> <b>elapsed_run_time</b><i> ()</i>
-<a name="IDX1144"></a>
+<a name="IDX1147"></a>
 </dt>
 <dd><p>Returns an estimate of the number of seconds (including fractions of a second)
 which Maxima has spent in computations since Maxima was most recently started or restarted.
@@ -477,12 +490,12 @@ The return value is a floating-point number.
 </p>
 <p>Example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) elapsed_run_time ();
+<pre class="example">(%i1) elapsed_run_time ();
 (%o1)                         0.04
 (%i2) expand ((a + b)^500)$
 (%i3) elapsed_run_time ();
 (%o3)                         1.26
-</pre></td></tr></table>
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -496,12 +509,12 @@ The return value is a floating-point number.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>May, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>August, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

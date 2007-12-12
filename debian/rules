@@ -37,6 +37,8 @@ build: build-stamp
 build-stamp: 
 	dh_testdir
 
+	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do [ -e $$i.ori ] || cp $$i $$i.ori; done
+
 	aclocal
 	automake
 
@@ -50,7 +52,7 @@ build-stamp:
 
 # This sets up some reasonable readline command completion by default
 
-	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
+	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
 
 
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
@@ -107,13 +109,11 @@ clean:
 	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
 			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
 	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
+	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
 	dh_clean
 
 
 LOC_DOC=<a href=file://usr/share/doc/maxima/html/maxima_toc.html> (local copy) </a>
-
-foo:
-	echo hello $(MVERS)
 
 debian/%.install: debian/%.install.in
 	cat $< | sed "s,@MVERS@,$(MVERS),g" >$@
@@ -220,7 +220,7 @@ binary-indep: build install
 	dh_installchangelogs  -i
 	dh_link -i
 	dh_strip -i
-	dh_compress -i -X.shtml -X.hh
+	dh_compress -i -X.shtml -X.hh -Xmaxima-index.lisp
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_shlibdeps -i

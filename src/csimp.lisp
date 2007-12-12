@@ -118,7 +118,7 @@
 ;;		(eq d 'yes))))
 ;; nil))
 
-(setq var (maknam (explode 'foo))) 
+(setq var (make-symbol "foo")) 
 
 (defun numden (e)
   (prog (varlist) 
@@ -296,12 +296,14 @@
 		      (cdr a)))))
 
 (defun pip (e)
-  (prog (varlist d c) 
+  (prog (varlist d c)
      (newvar e)
      (cond ((not (member '$%pi varlist :test #'eq)) (return nil)))
      (setq varlist '($%pi))
      (newvar e)
-     (setq e (cdr (ratrep* e)))
+     (let (($ratfac nil))
+       ;; non-nil $ratfac changes form of CRE
+       (setq e (cdr (ratrep* e))))
      (setq d (cdr e))
      (cond ((not (atom d)) (return nil))
 	   ((equal e '(0 . 1))

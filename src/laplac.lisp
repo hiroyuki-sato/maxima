@@ -298,12 +298,12 @@
    (and (not ($unknown f))
 	(errset ($defint f x a '$inf)))))
 
- ;;;CREATES HOPEFULLY UNIQUE NAMES FOR VARIABLE OF INTEGRATION
+ ;;;CREATES UNIQUE NAMES FOR VARIABLE OF INTEGRATION
 (defun createname (head tail)
-  (implode (nconc (explodec head) (explodec tail))))
+  (gentemp (format nil "~S~S" head tail)))
 
+;;;REDUCES LAPLACE(F(T)/T**N,T,S) CASE TO LAPLACE(F(T)/T**(N-1),T,S) CASE
 (defun hackit (exponent rest)
-       ;;;REDUCES LAPLACE(F(T)/T**N,T,S) CASE TO LAPLACE(F(T)/T**(N-1),T,S) CASE
   (cond ((equal exponent -1)
 	 ((lambda (parm) (laptimes rest)) (createname parm 1)))
 	(t (mydefint (hackit (1+ exponent) rest)
@@ -786,14 +786,14 @@
 (defmacro coef (pol)
   `(disrep (ratqu (polcoef (car p) ,pol) (cdr p))))
 
-(defmfun lapsum n
-  (cons '(mplus) (listify n)))
+(defmfun lapsum (&rest args)
+  (cons '(mplus) args))
 
-(defmfun lapprod n
-  (cons '(mtimes) (listify n)))
+(defmfun lapprod (&rest args)
+  (cons '(mtimes) args))
 
-(defmfun expo n
-  (cons '(mexpt) (listify n)))
+(defmfun expo (&rest args)
+  (cons '(mexpt) args))
 
 ;;;INVERTS P(S)/Q(S) WHERE Q(S) IS IRREDUCIBLE
 (defun ilt3 (p)

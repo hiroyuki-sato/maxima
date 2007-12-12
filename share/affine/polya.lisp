@@ -376,8 +376,7 @@
 		;;;corresponding-variables-column
 		when tem
 		do
-		(cond ($solution_parameter (setq parameter
-						 (concat $solution_parameter ii)))
+		(cond ($solution_parameter (setq parameter (intern (format nil "~a~d" $solution_parameter ii))))
 		      (t
 		       (error "unexpected case")
 		       (setq parameter
@@ -508,42 +507,6 @@
 	   (vector-push  (make-hash-table :test 'equal) (pv-array-of-tables self))))))
 
 
-(defmacro $create_list(form &rest l)
-  `(create-list2 ',form ',l))
-
-(defun create-list2 (form l)
-  (cons '(mlist) (apply 'create-list1 form l)))
-
-(defun create-list1(form &rest l &aux lis var1 top)
-  (cond ((null l)(list (meval* form)))
-	(t
-	 (setq var1 (car l)
-	       lis (second l)
-	       l (cddr l))
-	 (or (symbolp var1) (error "~a not a symbol" var1))
- 	 (setq lis (meval* lis))
-	 (progv (list var1)
-		(list nil)
-		(cond ((and (numberp lis)
-			    (progn
-			      (setq top (car l) l (cdr l))
-			      (setq top (meval* top))
-			      (numberp top)))
-		       (sloop for i from lis to top
-			      nodeclare t
-			      do (set var1 i)
-			      append
-			      (apply 'create-list1
-				     form l)))
-		      (($listp lis)
-		       (sloop for v in (cdr lis)
-			      do (set var1 v)
-			      append
-			      (apply 'create-list1
-				     form l)
-			      ))
-		      (t (maxima-error "Bad Arg")))))))
-	
 (defun $my_sum (quote-form quote-index  start  &optional end &aux answer)
   (setq quote-form  (subst 'ind quote-index quote-form))
   (setq start (meval start))
@@ -560,23 +523,6 @@
   (setq answer (meval* (cons '(mplus) answer)))
    answer)
 
-;(defun $create_list (quote-form quote-index  start  &optional end &aux answer)
-;  (setq quote-form  (subst 'ind quote-index quote-form))
-;  (setq start (meval start))
-;  (setq end (meval end))
-;  (setq answer
-;	(cond (end
-;		 (sloop for ind from start to end
-;		      		       collecting
-;		       (meval quote-form)))
-;	      (t
-;	       (sloop for ind  in (cdr start)
-;		     collecting
-;		     (meval quote-form)))))
-;  (setq answer (cons '(mlist simp) answer))
-;   answer)
-; 
- 
 (defun $list_dot (l ll)
  (apply 'add*  (sloop for u in (cdr l) for v in (cdr ll)
 	collecting (mul* u v))))
@@ -878,7 +824,7 @@ dot_products, much the same as can be obtained by doing $dotsimp")
      (cond ($new_fast_dotsimp      (setq answer (new-rat-dotsimp (cdr expr))))
 	   (t  (setq answer (rat-dotsimp  expr)))))
     ((mbagp expr)(setq answer (cons (car expr) (mapcar #'$dotsimp (cdr expr)))))
-    ((member (caar expr) '(mtimes mnctimes) :test ##equal)
+    ((member (caar expr) '(mtimes mnctimes) :test #'equal)
      (setq answer(apply 'dotsimp-one-term
 				(multiple-value-list (find-worst-nc-monomial expr))))
      (cond (($must_replacep answer)
@@ -1763,37 +1709,37 @@ dot_products, much the same as can be obtained by doing $dotsimp")
 	((eq (caar f) 'mnctimes) f)
 	((eq (caar f) 'mtimes)($extract_nc_part f))
 	(t
-  (check-arg f $plusp  "Macsyma sum")
+  (check-arg f $plusp  "Maxima sum")
   (setq answer  (sloop for u in (cdr f)
 	collecting  ($extract_nc_part u)))
   (cons '(mlist simp) answer))))
-;
-;(defmacro m- (&rest l)
-;  `(simplifya (cons '(mplus simp) ((car ,l) ((mtimes simp) -1 (cdr ,l))))))
 
-(eval-when (load  compile)
-(defvar $poly_vector (make-polynomial-vectors))
-)
+(eval-when
+    #+gcl (load  compile)
+    #-gcl (:load-toplevel :compile-toplevel)
+    (defvar $poly_vector (make-polynomial-vectors)))
 
 (defvar $type_of_entries_for_poly_vector :any-macsyma)
 
 (defun $constant_term (expr variables)
-  (cond ((atom expr)(cond ((member expr variables :test #'eq) 0)
-			  (t expr)))
+  (cond ((atom expr)
+	 (cond ((member expr variables :test #'eq) 0)
+	       (t expr)))
 	((not ($plusp expr))
-	 (cond ((appears-in expr 'mplus )(error "should expand expr before taking const"))
+	 (cond ((appears-in expr 'mplus)
+		(error "should expand expr before taking const"))
 	       (t
-	 	 (sloop for v in (cdr variables)
-	       when (appears-in expr v)
-	       do (return 0)
-	       finally (return expr)))))
+		(loop for v in (cdr variables)
+		   when (appears-in expr v)
+		   do (return 0)
+		   finally (return expr)))))
 	(t
-  (sloop for v in (cdr expr)
-	when (not (sloop for w in (cdr variables)
-	           when (appears-in v w)
-		   do (return t)))
-	collecting v into the-constants
-	finally  (return (addn the-constants t))))))
+	 (sloop for v in (cdr expr)
+		when (not (sloop for w in (cdr variables)
+				 when (appears-in v w)
+				 do (return t)))
+		collecting v into the-constants
+		finally  (return (addn the-constants t))))))
 ;(defun sh ( poly &aux tem)
 ;  (cond ((equal (cdr poly) 1)nil)
 ;	(t (setq poly (cons poly 1))))

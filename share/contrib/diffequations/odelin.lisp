@@ -14,6 +14,9 @@
 
 ($put '$odelin 19 '$version)
 
+;; [DB 2007-04-29] I have added some comments to generic-de-solver and 
+;; subsidiary routines.  They are just my interpretation of the code.
+
 ;; The functions mtimesp and mexptp are either missing from 
 ;; commerical macsyma, or they have different names. For commerical
 ;; macsyma, here are the definitions.
@@ -26,15 +29,18 @@
 (defun mexptp (x)
   (and (consp x) (consp (car x)) (equal (caar x) 'mexpt)))
 
-(eval-when (load compile eval)
-  ($load "nset")
-  ($load "polynomialp")
-  ($load "sqfr")
-  ($load "spherodialwave")
-  ($load "kummer")
-  ($load "extrabessel")
-  ($load "lazysolver")
-  ($load "gauss"))
+(eval-when
+    #+gcl (load compile eval)
+    #-gcl (:load-toplevel :compile-toplevel :execute)
+    ($load "nset")
+    ($load "polynomialp")
+    ($load "sqfr")
+    ($load "spherodialwave")
+    ($load "kummer")
+    ($load "extrabessel")
+    ($load "lazysolver")
+    ($load "gauss")
+    ($load "odeutils"))
 
 (defmvar $de_solver_is_loquacious t)
 
@@ -60,23 +66,7 @@
 (defun $rerat (dirtyrat)
   (let ((varlist nil) (genvar nil))
   ($rat ($ratdisrep dirtyrat))))
-
-;; Map the function f onto a mbag and simplify the result.  When the
-;; bag is an equality, list, or matrix, simplification isn't needed;
-;; however, new types of bags (say sets) may need simplification after 
-;; the mapping.
-
-;; Maxima is hit-or-miss about mapping functions over mbags. I suggest
-;; we develop that a function similar to this one and that we use it
-;; everywhere a function is mapped over a mbag. 
-
-;; If the arguments of bag are in CRE form, margs changes them to general 
-;; form---and mbag-map may return an expression in general form. Maybe this 
-;; behavior is impolite?
-
-(defun mbag-map (f bag)
-  (simplify `((,(mop bag)) ,@(mapcar f (margs bag)))))
-    
+   
 (defun require-linear-homogeneous-de (de y x)
   (setq y (require-symbol y "$odelin"))
   (setq x (require-symbol x "$odelin"))
@@ -322,25 +312,6 @@
     (setq q ($rat q x))
     (- ($hipow ($ratnumer q) x) ($hipow ($ratdenom q) x))))
 
-(defun get-de-cnd (xi vh v x)
-  (let ((dxi) (ddxi) (dddxi) (dxi^2) ($gcd '$spmod) ($algebraic t) 
-	($ratfac nil) ($ratprint nil))
-    
-    (setq xi ($ratdisrep xi))
-    (setq dxi ($diff xi x))
-    (setq dxi^2 (mul dxi dxi))
-    (setq ddxi ($diff dxi x))
-    (setq dddxi ($diff ddxi x))
-    
-    ;; 4*dxi^4*v(xi)-4*dxi^2*vh(x)+2*dddxi*dxi-3*ddxi^2
-   
-    ($ratdisrep ($ratnumer
-		 (add
-		  (mul 4 ($substitute xi x v) dxi^2 dxi^2)
-		  (mul -4 vh dxi^2)
-		  (mul 2 dxi dddxi)
-		  (mul -3 ddxi ddxi))))))
-
 (defun xeasy-eqs (p s x)
   (let ((acc `(($set))))
     (setq s (polynomial-filter s x #'(lambda (n) (min 1 n))))
@@ -387,11 +358,74 @@
 		  (t (list p))))
     (dolist (pj p acc)
       (setq acc (mul acc (if (mexptp pj) (car (margs pj)) pj))))))   
-	           
-(defun number-of-unks (p unks)
-  (let (($listconstvars nil))
-    ($cardinality ($intersection ($setify ($listofvars p)) unks))))
-    
+
+;; generic-de-solver uses a method described by Bronstein and Lafaille, 
+;; to compute special function solutions of non-Liouvillian 2nd order 
+;; linear homogeneous ODES.
+;;
+;; M Bronstein, S Lafaille, Solutions of linear ordinary differential 
+;; equations in terms of special functions, Proceedings of ISSAC 2002, Lille, 
+;; ACM Press, 23-28. 
+;; (http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac2002.pdf)
+;;
+;; Given 
+;; - an ode y'' = v y, where v is a function of x, 
+;; - a target 2nd order linear ODE L y = 0, with
+;;    - L = D^2 + a1 D + a0 a 2nd order linear differential operator
+;;    - {F1,F2} a known fundamental solution set of L y = 0
+;; we seek functions m(x) and xi(x) st { m(x) F1(xi(x)), m(x) F2{xi(x)) }
+;; is a fundamental solution set of y'' = v y.
+;;
+;; xi(x) satisfies a non-linear third-order ODE [Eq 7 in paper] (see 
+;; get-de-cnd below).  The solution of this DE is a rational function 
+;; xi(x)=P(x)/Q(x) where P(x) and Q(x) are polynomials.  It is shown 
+;; that the denominator Q(x) is given by certain terms in the square-free
+;; factorization of the denominator of v(x), and an upper bound to
+;; the degree of the numerator P(x) can be found.  This allows P(x) to be 
+;; found, if it exists, using the method of undetermined coefficients.  
+;; These quantities depend on the order at infinity of v(x) and 
+;; Delta=(a1)^2+2*a1'-4*a0
+;; 
+;;
+;; For each target equation L = D^2 + a1 D + a0 we specialize the solver
+;; by providing
+;; o  params:       a list of additional parameters in the operator
+;; o  denom-filter: a rule to select the terms in the square-free 
+;;                  factorization of the denominator of v(x) that form Q(x).
+;; o  degree-bound: the upper bound for the degree of the numerator P(x)
+;; o  de-cnd: -Delta/4, where Delta = (a1)^2  + 2 a1' - 4 a0
+;;
+;;
+;;                           i
+;; Theorem 1:  Let Product( Q  ) be the squarefree decomposition of 
+;;                           i
+;; the denominator of v(x)and d = order at infinity of Delta, with d<2.
+;;                                                 i
+;; Then the denominator Q(x) of xi(x) is Product( Q  ) with n=(2-d)*i+2
+;;                                                 n
+;;
+;; The numerator P(x) is a polynomial in x.  Either deg(P) <= deg(Q)+1
+;; or deg(P) = deg(Q) + (2-order_at_infinity(v))/(2-d).  When d<0 the
+;; first bound becomes deg(P) <= deg(Q).
+;;
+;; The function denom-filter(n) returns the exponent i for the term Q_n,
+;; with i=0 for factors Q_n that are not used.
+;;
+;; CASE   |  n      | 1  2  3  4  5  6  7  8 |  Example
+;; -------|---------|------------------------------------------------------
+;; d = -1 | i=3*n+2 | 0  0  0  0  1  0  0  2 | (not used)
+;; d =  0 | i=2*n+2 | 0  0  0  1  0  2  0  3 | bessel-xi-denom-filter
+;; d =  1 | i=n+2   | 0  0  1  2  3  4  5  6 | bessel-sqrt-xi-denom-filter
+;; d =  2 | i=0     | 0  0  0  0  0  0  0  0 | hypergeo21-xi-denom-filter
+;;
+;; The function degree-bound returns the upper bound of the numerator
+;; P(x) of xi(x).  
+;; 
+;; The proof in the paper only applies for the case d<2. It does not apply
+;; for the 2F1 hypergeometric function where d=2, although the method clearly 
+;; works for this case too.
+;;
+;;
 (defun generic-de-solver (v x params denom-filter degree-bound de-cnd)
   (setq v ($rat v x))
   (let ((s) (q) (p) (n) (unks) (nz) (eqs) (cnd) (sol) (xeqs)
@@ -421,6 +455,46 @@
 	   `(,(div p q) ,params))
 	  (t nil))))
 
+;; Called by generic-de-solver implementing method of Bronstein and Lafaille.
+;; Returns the differential equation satisfied by xi(x) [Eq 7 in paper] 
+;;
+;;       2                       2                           4         2
+;; 3*xi'' - 2*xi'*xi''' + (a1(xi) + 2*a1'(xi) - 4*a0(xi))*xi' - 4*v*xi' = 0
+;;
+;; In this routine
+;;    vh is the expression v(x) in DE to be solved (D^2-v)y=0
+;;    v  is the expression -(a1(x)^2 + 2*a1'(x) - 4*a0(x))/4
+;;    We return (-1) times equation above
+;;
+(defun get-de-cnd (xi vh v x)
+  (let ((dxi) (ddxi) (dddxi) (dxi^2) ($gcd '$spmod) ($algebraic t) 
+	($ratfac nil) ($ratprint nil))
+    
+    (setq xi ($ratdisrep xi))
+    (setq dxi ($diff xi x))
+    (setq dxi^2 (mul dxi dxi))
+    (setq ddxi ($diff dxi x))
+    (setq dddxi ($diff ddxi x))
+    
+    ;; 4*dxi^4*v(xi)-4*dxi^2*vh(x)+2*dddxi*dxi-3*ddxi^2
+   
+    ($ratdisrep ($ratnumer
+		 (add
+		  (mul 4 ($substitute xi x v) dxi^2 dxi^2)
+		  (mul -4 vh dxi^2)
+		  (mul 2 dxi dddxi)
+		  (mul -3 ddxi ddxi))))))
+
+;; The differential operator with the FSS {bessel_j(mu,x),bessel_y(mu,x)} 
+;; is L = D^2 + a1*D + a0, with a1 = 1/x and a0 = (1-mu^2/x^2).
+;; 
+;; Delta = (a1)^2+2*a1'-4*a0  = (4*mu^2-1)/x^2-4
+;;       -> constant as x-> infinity.  (order at infinity is 0)
+;;
+;; de-cnd = -Delta/4 = (4*x^2+1-4*mu^2)/(4*x^2)
+;;
+;; Additional parameter [mu]
+;;
 (defun bessel-xi-denom-filter (n)
   (if (and (evenp n) (> n 3)) (/ (- n 2) 2) 0))
 
@@ -452,7 +526,18 @@
 		     `(($set) 
 		       (($fbessel_j) ,mu ,z)
 		       (($fbessel_y) ,mu ,z)))))))
-       
+
+;; The differential operator with the FSS 
+;;   {bessel_j(mu,sqrt(x)),bessel_y(mu,sqrt(x))} 
+;; is L = D^2 + a1 D + a0, with a1 = 1/x and a0 = (1/x-mu^2/x^2)/4.
+;; 
+;; Delta = (a1)^2 +2*a1'-4*a0 = (mu^2-1)/x^2-1/x
+;;       -> 1/x as x-> infinity.  (order at infinity is 1)
+;;
+;; de-cnd = -Delta/4 = (1 + x - mu^2)/(4*x^2)
+;;
+;; Additional parameter [mu]
+;;       
 (defun bessel-sqrt-xi-denom-filter (n)
   (if (> n 2) (- n 2) 0))
 
@@ -484,6 +569,17 @@
 		       (($fbessel_j) ,mu ,z)
 		       (($fbessel_y) ,mu ,z)))))))
 
+;; The differential operator with the FSS {kummer_m(a,b,x),kummer_u(a,b,x)} 
+;; is L = D^2 + a1*D + a0, with a1 = b/x - 1 and a0 = -a/x.
+;;  
+;; Delta = (a1)^2+2*a1'-4*a0 = 1+(4*a-2*b)/x+(b^2-2*b)/x^2
+;;       = (x^2 + (4 a - 2 b) x + b^2 -2 b)/x^2
+;;       -> 1 as x-> infinity.  (order at infinity is 0)
+;;
+;; de-cnd = -Delta/4 = (-x^2+(2*b-4*a)*x-b^2+2*b)/(4*x^2)
+;;
+;; Additional parameters to be determined are [a,b]
+;;
 (defun hypergeo01-xi-denom-filter (n)
   (if (and (evenp n) (> n 3)) (/ (- n 2) 2) 0))
 
@@ -520,7 +616,25 @@
 		       (($kummer_m) ,a ,b ,z)
 		       (($kummer_u) ,a ,b ,z)))))))
 
-    
+;; The differential operator with the FSS 
+;; {spherodialwave_a(b,c,q,x),spherodialwave_b(b,c,q,x)} 
+;; is L = D^2 + a1*D + a0, with a1 = -2*(b+1)*x/(1-x^2) 
+;; and a0 = (c-4*q*x^2)/(1-x^2)
+;;  
+;; Delta = (a1)^2  + 2 a1' - 4 a0
+;;       = 4*(-q*x^4 + (4q+b^2+b+c)*x^2 - (b+c+1)) / (1-x^2)^2
+;;       -> constant as x-> infinity.  (order at infinity is 0)
+;;
+;; de-cnd = -Delta/4 = (q*x^4 - (4q+b^2+b+c)*x^2 + (b+c+1)) / (1-x^2)^2
+;;
+;; Additional parameters to be determined are [b,c,q]
+;;
+;; FIXME: [DB 2007-04-29] Need to clarify definition of the spherodial
+;; wave functions as I can't find a reference that exactly matches.
+;; The values of a1 and a0 above:
+;; - give an ODE that is satisfied by spherodialwave_a and spherodialwave_b, 
+;; - value of de-cnd derived from them matches the one in the code below.
+;;
 (defun spherodialwave-xi-denom-filter (n)
   (if (and (evenp n) (> n 3)) (/ (- n 2) 2) 0))
 
@@ -560,6 +674,24 @@
 		       (($spherodialwave_a) ,b ,c ,q ,z)
 		       (($spherodialwave_b) ,b ,c ,q ,z)))))))
 
+;; The differential operator for the hypergeometric differential equation 
+;; (A&S 15.5.1) with the FSS {gauss_a(a,b,c,x),gauss_b(a,b,c,x)} is
+;; L = D^2 + a1 D + a0, with a1=(c-(a+b+1)*x)/(x*(1-x)) and a0=-a*b/(x*(1-x)).
+;;  
+;; Delta = (a1)^2  + 2*a1' - 4*a0
+;;           2            2       2                                      2
+;;         (b  - 2 a b + a  - 1) x  + ((- 2 b - 2 a + 2) c + 4 a b) x + c  - 2 c
+;;       = ---------------------------------------------------------------------
+;;                                           2  2
+;;                                    (x - 1)  x
+;;
+;;       -> constant/x^2 as x-> infinity.  (order at infinity is 2)
+;; 
+;; de-cnd = -Delta/4 
+;;        = -((b^2-2*a*b+a^2-1)*x^2+((-2*b-2*a+2)*c+4*a*b)*x+c^2-2*c)/(4*x^2*(x-1)^2)
+;;
+;; Additional parameters to be determined are [a,b,c]
+;;
 (defun hypergeo21-xi-denom-filter (n)
   (declare (ignore n))
   0)

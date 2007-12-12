@@ -31,11 +31,7 @@
 
 (macsyma-module mathml)
 
-(declare-top
-	 (special lop rop ccol $gcprint texport $labels $inchar
-		  vaxima-main-dir
-		  )
-	 (*expr mathml-lbp mathml-rbp))
+(declare-top (special lop rop ccol $gcprint texport $labels $inchar vaxima-main-dir))
 
 ;; top level command the result of converting the expression x.
 
@@ -68,7 +64,7 @@
 	;; do a normal evaluation of the expression in macsyma
 	(setq mexp (meval mexplabel))
 	(cond ((member mexplabel $labels :test #'eq); leave it if it is a label
-	       (setq mexplabel (concat "(" (stripdollar mexplabel) ")"))
+	       (setq mexplabel (intern (format nil "(~a)" (stripdollar mexplabel))))
 	       (setq itsalabel t))
 	      (t (setq mexplabel nil)));flush it otherwise
 
@@ -154,7 +150,7 @@
 (defun mathml-atom (x l r) 
   (append l
 	  (list (cond ((numberp x) (mathmlnumformat x))
-                      ((mstringp x) (string-left-trim '(#\&) x))
+                      ((mstringp x) (maybe-invert-string-case (string-left-trim '(#\&) x)))
 		      ((and (symbolp x) (get x 'mathmlword)))
 		      (t (mathml-stripdollar x))))
 	  r))
@@ -183,7 +179,7 @@
 (defun mathml-stripdollar(sym)
   (or (symbolp sym) 
       (return-from mathml-stripdollar sym))
-  (let* ((pname (string-left-trim '(#\$) (symbol-name sym)))
+  (let* ((pname (maybe-invert-string-case (string-left-trim '(#\$) (symbol-name sym))))
 	 (l (length pname))
 	 (begin-sub
 	  (sloop for i downfrom (1- l)

@@ -1108,7 +1108,7 @@
 	  (when (and (eq lim1 '$finite) (lim-infp lim1))
 	     (break "Undefined finite*inf in lim-times"))
 	  (setq lim (lim-abs lim2)))
-	 (t (break "Undefined limit product ~A * ~A in lim-times lim1 lim2")))
+	 (t (break "Undefined limit product ~A * ~A in lim-times" lim1 lim2)))
    (if (or (lim-imagp lim1) (lim-imagp lim2))
        (if (lim-infp lim) '$infinity '$im)
       (if (and (lim-plusp lim1) (lim-plusp lim2)) lim (lim-minus lim)))))
@@ -1863,9 +1863,8 @@
 
 ;;; [var, pt, order, asymp]
 
-(defmfun $taylor n
-   (if (= n 0) (wna-err '$taylor))
-   (taylor* (arg 1) (listify (- 1 n))))
+(defmfun $taylor (e &rest args)
+   (taylor* e args))
 
 (defun taylor* (arg l)
    ;; We must bind $MAXTAYORDER to () below because of the problem of constants
@@ -1883,9 +1882,8 @@
    ;; up when $maxtayorder isn't bound here. Similarly, loadfile(taybad,rl,
    ;; aljabr) and see tomh's bug note of 4/15/81.
    (let ((tlist () ) ($maxtayorder () ) (*within-srf?* () )
-	 (exact-poly (if l (not $taylor_truncate_polynomials)
-			'user-specified)))
-     (declare(special *within-srf?* ))
+	 (exact-poly (if l (not $taylor_truncate_polynomials) 'user-specified)))
+     (declare (special *within-srf?*))
 
       (parse-tay-args l)
       (taylor1 arg (ncons tlist))))
@@ -2433,11 +2431,12 @@
 		 (cond ((not (psp temp)) temp)
 		       (t (pscsubst1 psarg temp)))))))))
 
-(defun symbolic-expand (arg psarg func) ; should be much stronger
-       arg ;Ignored.
-       (prep1 (simplifya (if (atom func) `((,func) ,(rcdisrep psarg))
-			     `((mqapply) ,func ,(rcdisrep psarg)))
-			 () )))
+(defun symbolic-expand (ign psarg func) ; should be much stronger
+  (declare (ignore ign))
+  (prep1 (simplifya (if (atom func)
+			`((,func) ,(rcdisrep psarg))
+			`((mqapply) ,func ,(rcdisrep psarg)))
+		    () )))
 
 (defun expand-sing-trig? (arg func)
    (cond ((member func *pscirc :test #'eq) (tay-exponentialize arg func))

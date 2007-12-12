@@ -35,10 +35,10 @@
 (defmvar $tr_windy t
   "Generate helpful comments and programming hints.")
 
-(deftrvar *translation-msgs-files* nil
+(defvar *translation-msgs-files* nil
   "Where the warning and other comments goes.")
 
-(deftrvar $tr_version (get 'transl-autoload 'version))
+(defvar $tr_version (get 'transl-autoload 'version))
 
 (defmvar transl-file nil "output stream of $compfile and $translate_file")
 
@@ -60,12 +60,6 @@
       $tr_array_as_ref
       $tr_numer
       $define_variable))
-
-(defmacro compfile-outputname-temp ()
-  '`,(pathname "_cmf_"))
-
-(defmacro compfile-outputname ()
-  '`,(pathname (maybe-invert-string-case (symbol-name (stripdollar $tr_output_file_default)))))
 
 (defmacro trlisp-inputname-d1 () ;; so hacks on DEFAULTF will not
   '`,(pathname "")) ;; stray the target.
@@ -91,30 +85,21 @@
 (defmacro trcomments-outputname-temp ()
   '`,(pathname "_unli_"))
 
-(deftrvar declares nil)
-
-(defun rename-tf (newname)
-  (let ((in-file (truename transl-file)))
-    (close transl-file)
-    (rename-file in-file (maxima-string newname))))
+(defvar declares nil)
 
 (defmspec $compfile (forms)
-  (let ((newname (second forms)))
     (setq forms (cdr forms))
     (bind-transl-state
      (setq $transcompile t
 	   *in-compfile* t)
-     (let ((out-file-name (cond ((mfilename-onlyp (car forms))
-				 ($filename_merge (pop forms)))
-				(t "")))
-	   (t-error nil)
-	   (*translation-msgs-files* nil))
-       (setq out-file-name (mergef out-file-name (compfile-outputname)))
+     (let
+       ((out-file-name (namestring (maxima-string (meval (car forms)))))
+        (t-error nil)
+        (*translation-msgs-files* nil))
+       (pop forms)
        (unwind-protect
 	    (progn
-	      (setq transl-file (open-out-dsk (mergef (compfile-outputname-temp)
-						      out-file-name)))
-
+	      (setq transl-file (open-out-dsk out-file-name))
 	      (cond ((or (member '$all forms :test #'eq)
 			 (member '$functions forms :test #'eq))
 		     (setq forms (mapcar #'caar (cdr $functions)))))
@@ -134,14 +119,13 @@
 		       (cond (tr-abort
 			      (setq t-error (print-abort-msg item 'compfile)))
 			     (t
-			      (cond ($compgrind
-				     (mformat transl-file "~2%;; Function ~:@M~%" item)))
+			      (when $compgrind
+				(mformat transl-file "~2%;; Function ~:@M~%" item))
 			      (print* t-item))))))
-	      (setq out-file-name (rename-tf newname))
-	      (to-macsyma-namestring out-file-name))
+          (to-macsyma-namestring out-file-name))
 	 ;; unwind-protected
 	 (if transl-file (close transl-file))
-	 (if t-error (delete-file transl-file)))))))
+	 (if t-error (delete-file transl-file))))))
 
 (defun compile-function (f)
   (mformat  *translation-msgs-files* "~%Translating ~:@M" f)
@@ -217,7 +201,7 @@
 (defun call-batch1 (in-stream out-stream &aux expr transl)
   (cleanup)
   ;; we want the thing to start with a newline..
-  (newline in-stream #\n)
+  (newline in-stream)
   (let ((*readtable* (copy-readtable nil))
 	#-gcl (*print-pprint-dispatch* (copy-pprint-dispatch)))
     #-gcl
@@ -240,11 +224,12 @@
 
 
 (defun translate-from-stream (from-stream &key to-stream eval pretty (print-function #'prin1)
-			      &aux expr transl )
+			      &aux expr transl)
   (bind-transl-state
-   (loop while (and (setq expr (mread from-stream)) (consp expr))
+   (loop
       with *in-translate-file* = t
       with *print-pretty* = pretty
+      while (and (setq expr (mread from-stream)) (consp expr))
       do (setq transl (translate-macexpr-toplevel (third expr)))
       (cond (eval (eval transl)))
       (cond (to-stream (funcall print-function transl to-stream)))
@@ -384,12 +369,11 @@ translated."
 	(t
 	 (setq flag (and $tr_semicompile
 			 (not (eq (car p) 'eval-when))))
-	 (when flag (princ* '|(|) (princ* 'progn) (terpri*))
-	 (cond ($compgrind
-		(sprin1 p))
-	       (t
-		(prin1 p transl-file)))
-	 (when flag (princ* '|)|))
+	 (when flag (princ* #\() (princ* 'progn) (terpri*))
+	 (if $compgrind
+	     (prin1 p)
+	     (prin1 p transl-file))
+	 (when flag (princ* #\)))
 	 (terpri transl-file))))
 
 (defun princ* (form)
@@ -429,7 +413,7 @@ translated."
   (mformat transl-file
 	   "~%~
 	   ~%~
-	   ~%(eval-when (compile eval) ~
+	   ~%(eval-when (:compile-toplevel :execute) ~
 	   ~%      (setq *infile-name-key*~
 	   ~%               ((lambda (file-name)~
 	   ~%                           ;; temp crock for multics.~
@@ -438,17 +422,15 @@ translated."
 	   ~%                                (t file-name)))~
 	   ~%                  (truename infile))))~
 	   ~%~
-	   ~%(eval-when (compile) ~
+	   ~%(eval-when (:compile-toplevel) ~
 	   ~%   (setq $tr_semicompile '~S)~
 	   ~%   (setq forms-to-compile-queue ()))~
 	   ~%~%;;; ~S~%~%"
 	   $tr_semicompile source)
   (cond ($transcompile
 	 (update-global-declares)
-	 (if $compgrind
-	     (mformat
-	      transl-file
-	      ";;; General declarations required for translated Maxima code.~%"))
+	 (when $compgrind
+	   (mformat transl-file ";;; General declarations required for translated Maxima code.~%"))
 	 (print* `(declare . ,declares)))))
 
 (defun print-abort-msg (fun from)

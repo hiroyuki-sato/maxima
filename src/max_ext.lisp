@@ -92,6 +92,7 @@
   (setf (get v 'autoload)        "sym.mac")
   )
 
+
 (dolist (f       
      '($close
        $flength
@@ -101,6 +102,9 @@
        $opena
        $openr
        $openw
+       $make_string_input_stream
+       $make_string_output_stream
+       $get_output_stream_string
        $printf
        $readline
        $alphacharp
@@ -155,6 +159,7 @@
        $tokens ))
   (setf (get f 'autoload) "stringproc"))
 
+
 (auto-mspec '$romberg "romberg")
 
 (dolist (f       
@@ -165,34 +170,25 @@
        $read_nested_list
        $read_list
        $write_data ))
-  (autof f "numericalio"))
+  (setf (get f 'autoload) "numericalio"))
 
-(autof '$eval_string "eval_string")
-(autof '$parse_string "eval_string")
+(setf (get '$eval_string 'autoload) "eval_string")
+(setf (get '$parse_string 'autoload) "eval_string")
 
 
-;; begin functions from share/linearalgebra 
-
-; loading linearalgebra.mac loads the complete linearalgebra stuff
-(defun autof-linearalgebra (fun)
-  (unless (fboundp fun)
-    (setf (symbol-function fun)
-        #'(lambda (&rest l)
-         ($aload_mac "linearalgebra")
-         (apply fun l)))))
-
+;; functions from share/linearalgebra 
 (dolist (f       
-     '($eigens_by_jacobi   ; eigens-by-jacobi.lisp
+     '($eigens_by_jacobi       ; eigens-by-jacobi.lisp
      
-       $cholesky           ; linalgcholesky.lisp
+       $cholesky               ; linalgcholesky.lisp
        
-       $circulant          ; linalg-extra.lisp
+       $circulant              ; linalg-extra.lisp
        $cauchy_matrix
        $hessian
        $jacobian
        $matrix_sign
        
-       $blockmatrixp       ; linalg-utilities.lisp
+       $blockmatrixp           ; linalg-utilities.lisp
        $ctranspose
        $identfor
        $matrix_size
@@ -208,33 +204,27 @@
        $zerofor
        $zeromatrixp
        
-       $get_lu_factors     ; lu.lisp
+       $get_lu_factors         ; lu.lisp
        $invert_by_lu 
        $linsolve_by_lu
        $lu_backsub
        $lu_factor
        $mat_cond
        
-       $matrixexp          ; matrixexp.lisp
+       $matrixexp              ; matrixexp.lisp
        $matrixfun
        $spectral_rep
        
-       $addmatrices        ; mring.lisp
+       $addmatrices            ; mring.lisp
        $require_ring
+       $ringeval
        
-       $nonnegintegerp     ; polynomialp.lisp
+       $nonnegintegerp         ; polynomialp.lisp
        $polynomialp ))
-  (autof-linearalgebra f))
-
-(let ((fun '$ringeval))    ; mring.lisp
-  (unless (get fun 'mfexpr*)
-    (setf (get fun 'mfexpr*)
-     #'(lambda (l)
-         ($aload_mac "linearalgebra")
-         (funcall (get fun 'mfexpr*) l)))))
+  (setf (get f 'autoload) "linearalgebra"))
 
 (dolist (mexpr       
-     '($column_reduce      ;linearalgebra.mac
+     '($column_reduce          ; linearalgebra.mac
        $columnop
        $columnspace 
        $columnswap
@@ -265,8 +255,6 @@
        $toeplitz
        $vandermonde_matrix ))
   ($auto_mexpr mexpr "linearalgebra"))
-
-;; end functions from share/linearalgebra
 
 
 '$parametric

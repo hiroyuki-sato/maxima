@@ -9,16 +9,921 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Introduction to descriptive,  Next: Definitions for data manipulation,  Prev: descriptive,  Up: descriptive
+File: maxima.info,  Node: Keyword Commands,  Next: Functions and Variables for Debugging,  Prev: Source Level Debugging,  Up: Debugging
 
-44.1 Introduction to descriptive
+41.2 Keyword Commands
+=====================
+
+Keyword commands are special keywords which are not interpreted as
+Maxima expressions.  A keyword command can be entered at the Maxima
+prompt or the debugger prompt, although not at the break prompt.
+Keyword commands start with a colon, '`:''.  For example, to evaluate a
+Lisp form you may type `:lisp' followed by the form to be evaluated.
+
+     (%i1) :lisp (+ 2 3)
+     5
+
+   The number of arguments taken depends on the particular command.
+Also, you need not type the whole command, just enough to be unique
+among the break keywords.   Thus `:br' would suffice for `:break'.
+
+   The keyword commands are listed below.
+
+`:break F n'
+     Set a breakpoint in function `F' at line offset `n' from the
+     beginning of the function.  If `F' is given as a string, then it
+     is assumed to be a file, and `n' is the offset from the beginning
+     of the file.  The offset is optional. If not given, it is assumed
+     to be zero (first line of the function or file).
+
+`:bt'
+     Print a backtrace of the stack frames
+
+`:continue'
+     Continue the computation
+
+`:delete'
+     Delete the specified breakpoints, or all if none are specified
+
+`:disable'
+     Disable the specified breakpoints, or all if none are specified
+
+`:enable'
+     Enable the specified breakpoints, or all if none are specified
+
+`:frame n'
+     Print stack frame `n', or the current frame if none is specified
+
+`:help'
+     Print help on a debugger command, or all commands if none is
+     specified
+
+`:info'
+     Print information about item
+
+`:lisp some-form'
+     Evaluate `some-form' as a Lisp form
+
+`:lisp-quiet some-form'
+     Evaluate Lisp form `some-form' without any output
+
+`:next'
+     Like `:step', except `:next' steps over function calls
+
+`:quit'
+     Quit the current debugger level without completing the computation
+
+`:resume'
+     Continue the computation
+
+`:step'
+     Continue the computation until it reaches a new source line
+
+`:top'
+     Return to the Maxima prompt (from any debugger level) without
+     completing the computation
+
+
+File: maxima.info,  Node: Functions and Variables for Debugging,  Prev: Keyword Commands,  Up: Debugging
+
+41.3 Functions and Variables for Debugging
+==========================================
+
+ -- Option variable: refcheck
+     Default value: `false'
+
+     When `refcheck' is `true', Maxima prints a message each time a
+     bound variable is used for the first time in a computation.
+
+
+ -- Option variable: setcheck
+     Default value: `false'
+
+     If `setcheck' is set to a list of variables (which can be
+     subscripted), Maxima prints a message whenever the variables, or
+     subscripted occurrences of them, are bound with the ordinary
+     assignment operator `:', the `::' assignment operator, or function
+     argument binding, but not the function assignment `:=' nor the
+     macro assignment `::=' operators.  The message comprises the name
+     of the variable and the value it is bound to.
+
+     `setcheck' may be set to `all' or `true' thereby including all
+     variables.
+
+     Each new assignment of `setcheck' establishes a new list of
+     variables to check, and any variables previously assigned to
+     `setcheck' are forgotten.
+
+     The names assigned to `setcheck' must be quoted if they would
+     otherwise evaluate to something other than themselves.  For
+     example, if `x', `y', and `z' are already bound, then enter
+
+          setcheck: ['x, 'y, 'z]$
+
+     to put them on the list of variables to check.
+
+     No printout is generated when a variable on the `setcheck' list is
+     assigned to itself, e.g., `X: 'X'.
+
+
+ -- Option variable: setcheckbreak
+     Default value: `false'
+
+     When `setcheckbreak' is `true', Maxima will present a break prompt
+     whenever a variable on the `setcheck' list is assigned a new value.
+     The break occurs before the assignment is carried out.  At this
+     point, `setval' holds the value to which the variable is about to
+     be assigned.  Hence, one may assign a different value by assigning
+     to `setval'.
+
+     See also `setcheck' and `setval'.
+
+
+ -- System variable: setval
+     Holds the value to which a variable is about to be set when a
+     `setcheckbreak' occurs.  Hence, one may assign a different value
+     by assigning to `setval'.
+
+     See also `setcheck' and `setcheckbreak'.
+
+
+ -- Function: timer (<f_1>, ..., <f_n>)
+ -- Function: timer (all)
+ -- Function: timer ()
+     Given functions <f_1>, ..., <f_n>, `timer' puts each one on the
+     list of functions for which timing statistics are collected.
+     `timer(f)$ timer(g)$' puts `f' and then `g' onto the list; the
+     list accumulates from one call to the next.
+
+     `timer(all)' puts all user-defined functions (as named by the
+     global variable `functions') on the list of timed functions.
+
+     With no arguments, `timer' returns the list of timed functions.
+
+     Maxima records how much time is spent executing each function on
+     the list of timed functions.  `timer_info' returns the timing
+     statistics, including the average time elapsed per function call,
+     the number of calls, and the total time elapsed.  `untimer'
+     removes functions from the list of timed functions.
+
+     `timer' quotes its arguments.  `f(x) := x^2$ g:f$ timer(g)$' does
+     not put `f' on the timer list.
+
+     If `trace(f)' is in effect, then `timer(f)' has no effect; `trace'
+     and `timer' cannot both be in effect at the same time.
+
+     See also `timer_devalue'.
+
+
+ -- Function: untimer (<f_1>, ..., <f_n>)
+ -- Function: untimer ()
+     Given functions <f_1>, ..., <f_n>, `untimer' removes each function
+     from the timer list.
+
+     With no arguments, `untimer' removes all functions currently on
+     the timer list.
+
+     After `untimer (f)' is executed, `timer_info (f)' still returns
+     previously collected timing statistics, although `timer_info()'
+     (with no arguments) does not return information about any function
+     not currently on the timer list.  `timer (f)' resets all timing
+     statistics to zero and puts `f' on the timer list again.
+
+
+ -- Option variable: timer_devalue
+     Default value: `false'
+
+     When `timer_devalue' is `true', Maxima subtracts from each timed
+     function the time spent in other timed functions. Otherwise, the
+     time reported for each function includes the time spent in other
+     functions.  Note that time spent in untimed functions is not
+     subtracted from the total time.
+
+     See also `timer' and `timer_info'.
+
+
+ -- Function: timer_info (<f_1>, ..., <f_n>)
+ -- Function: timer_info ()
+     Given functions <f_1>, ..., <f_n>, `timer_info' returns a matrix
+     containing timing information for each function.  With no
+     arguments, `timer_info' returns timing information for all
+     functions currently on the timer list.
+
+     The matrix returned by `timer_info' contains the function name,
+     time per function call, number of function calls, total time, and
+     `gctime', which meant "garbage collection time" in the original
+     Macsyma but is now always zero.
+
+     The data from which `timer_info' constructs its return value can
+     also be obtained by the `get' function:
+
+          get(f, 'calls);  get(f, 'runtime);  get(f, 'gctime);
+
+     See also `timer'.
+
+
+ -- Function: trace (<f_1>, ..., <f_n>)
+ -- Function: trace (all)
+ -- Function: trace ()
+     Given functions <f_1>, ..., <f_n>, `trace' instructs Maxima to
+     print out debugging information whenever those functions are
+     called.  `trace(f)$ trace(g)$' puts `f' and then `g' onto the list
+     of functions to be traced; the list accumulates from one call to
+     the next.
+
+     `trace(all)' puts all user-defined functions (as named by the
+     global variable `functions') on the list of functions to be traced.
+
+     With no arguments, `trace' returns a list of all the functions
+     currently being traced.
+
+     The `untrace' function disables tracing.  See also `trace_options'.
+
+     `trace' quotes its arguments. Thus, `f(x) := x^2$ g:f$ trace(g)$'
+     does not put `f' on the trace list.
+
+     When a function is redefined, it is removed from the timer list.
+     Thus after `timer(f)$ f(x) := x^2$', function `f' is no longer on
+     the timer list.
+
+     If `timer (f)' is in effect, then `trace (f)' has no effect;
+     `trace' and `timer' can't both be in effect for the same function.
+
+
+ -- Function: trace_options (<f>, <option_1>, ..., <option_n>)
+ -- Function: trace_options (<f>)
+     Sets the trace options for function <f>.  Any previous options are
+     superseded.  `trace_options (<f>, ...)' has no effect unless
+     `trace (<f>)' is also called (either before or after
+     `trace_options').
+
+     `trace_options (<f>)' resets all options to their default values.
+
+     The option keywords are:
+
+        * `noprint' Do not print a message at function entry and exit.
+
+        * `break' Put a breakpoint before the function is entered, and
+          after the function is exited. See `break'.
+
+        * `lisp_print' Display arguments and return values as Lisp
+          objects.
+
+        * `info' Print `-> true' at function entry and exit.
+
+        * `errorcatch' Catch errors, giving the option to signal an
+          error, retry the function call, or specify a return value.
+
+     Trace options are specified in two forms. The presence of the
+     option keyword alone puts the option into effect unconditionally.
+     (Note that option <foo> is not put into effect by specifying
+     `<foo>: true' or a similar form; note also that keywords need not
+     be quoted.) Specifying the option keyword with a predicate
+     function makes the option conditional on the predicate.
+
+     The argument list to the predicate function is always `[level,
+     direction, function, item]' where `level' is the recursion level
+     for the function,  `direction' is either `enter' or `exit',
+     `function' is the name of the function, and `item' is the argument
+     list (on entering) or the return value (on exiting).
+
+     Here is an example of unconditional trace options:
+
+          (%i1) ff(n) := if equal(n, 0) then 1 else n * ff(n - 1)$
+
+          (%i2) trace (ff)$
+
+          (%i3) trace_options (ff, lisp_print, break)$
+
+          (%i4) ff(3);
+
+     Here is the same function, with the `break' option conditional on
+     a predicate:
+
+          (%i5) trace_options (ff, break(pp))$
+
+          (%i6) pp (level, direction, function, item) := block (print (item),
+              return (function = 'ff and level = 3 and direction = exit))$
+
+          (%i7) ff(6);
+
+
+ -- Function: untrace (<f_1>, ..., <f_n>)
+ -- Function: untrace ()
+     Given functions <f_1>, ..., <f_n>, `untrace' disables tracing
+     enabled by the `trace' function.  With no arguments, `untrace'
+     disables tracing for all functions.
+
+     `untrace' returns a list of the functions for which it disabled
+     tracing.
+
+
+
+File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Debugging,  Up: Top
+
+42 augmented_lagrangian
+***********************
+
+* Menu:
+
+* Functions and Variables for augmented_lagrangian::
+
+
+File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
+
+42.1 Functions and Variables for augmented_lagrangian
+=====================================================
+
+ -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
+ -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
+          optional_args)
+     Returns an approximate minimum of the expression <FOM> with
+     respect to the variables <xx>, holding the constraints <C> equal
+     to zero.  <yy> is a list of initial guesses for <xx>.  The method
+     employed is the augmented Lagrangian method (see Refs [1] and [2]).
+
+     `optional_args' represents additional arguments, specified as
+     `<symbol> = <value>'.  The optional arguments recognized are:
+
+    `niter'
+          Number of iterations of the augmented Lagrangian algorithm
+
+    `lbfgs_tolerance'
+          Tolerance supplied to LBFGS
+
+    `iprint'
+          IPRINT parameter (a list of two integers which controls
+          verbosity) supplied to LBFGS
+
+    `%lambda'
+          Initial value of `%lambda' to be used for calculating the
+          augmented Lagrangian
+
+     This implementation minimizes the augmented Lagrangian by applying
+     the limited-memory BFGS (LBFGS) algorithm, which is a quasi-Newton
+     algorithm.
+
+     `load(augmented_lagrangian)' loads this function.
+
+     See also `lbfgs'.
+
+     References:
+
+     [1]
+     `http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html'
+
+     [2] `http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf'
+
+     Example:
+
+          (%i1) load (lbfgs);
+          (%o1)     /maxima/share/lbfgs/lbfgs.mac
+          (%i2) load (augmented_lagrangian);
+          (%o2)
+             /maxima/share/contrib/augmented_lagrangian.mac
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) xx: [x, y];
+          (%o4)                        [x, y]
+          (%i5) C: [x + y - 1];
+          (%o5)                      [y + x - 1]
+          (%i6) yy: [1, 1];
+          (%o6)                        [1, 1]
+          (%i7) augmented_lagrangian_method(FOM, xx, C, yy, iprint=[-1,0]);
+          (%o7) [[x = 0.66665984108002, y = 0.33334027245545],
+                                           %lambda = [- 1.333337940892525]]
+
+
+
+File: maxima.info,  Node: bode,  Next: contrib_ode,  Prev: augmented_lagrangian,  Up: Top
+
+43 bode
+*******
+
+* Menu:
+
+* Functions and Variables for bode::
+
+
+File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bode
+
+43.1 Functions and Variables for bode
+=====================================
+
+ -- Function: bode_gain (<H>, <range>, ...<plot_opts>...)
+     Function to draw Bode gain plots.
+
+     Examples (1 through 7 from
+          `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
+     8 from Ron Crummett):
+          (%i1) load("bode")$
+
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+
+          (%i3) bode_gain (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+
+          (%i5) bode_gain (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+
+          (%i7) bode_gain (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+
+          (%i9) bode_gain (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+
+          (%i11) bode_gain (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+
+          (%i13) bode_gain (H6 (s), [w, 1/1000, 1000]),
+                            omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+
+          (%i15) bode_gain (H7 (s), [w, 1/1000, 1000]),
+                            omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+
+          (%i17) bode_gain (H8 (s), [w, 1/1000, 1000])$
+
+     To use this function write first `load("bode")'. See also
+     `bode_phase'
+
+ -- Function: bode_phase (<H>, <range>, ...<plot_opts>...)
+     Function to draw Bode phase plots.
+
+     Examples (1 through 7 from
+          `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
+     8 from Ron Crummett):
+          (%i1) load("bode")$
+
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+
+          (%i3) bode_phase (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+
+          (%i5) bode_phase (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+
+          (%i7) bode_phase (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+
+          (%i9) bode_phase (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+
+          (%i11) bode_phase (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+
+          (%i13) bode_phase (H6 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+
+          (%i15) bode_phase (H7 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+
+          (%i17) bode_phase (H8 (s), [w, 1/1000, 1000])$
+
+          (%i18) block ([bode_phase_unwrap : false],
+                        bode_phase (H8 (s), [w, 1/1000, 1000]));
+
+          (%i19) block ([bode_phase_unwrap : true],
+                        bode_phase (H8 (s), [w, 1/1000, 1000]));
+
+     To use this function write first `load("bode")'. See also
+     `bode_gain'
+
+
+File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: bode,  Up: Top
+
+44 contrib_ode
+**************
+
+* Menu:
+
+* Introduction to contrib_ode::
+* Functions and Variables for contrib_ode::
+* Possible improvements to contrib_ode::
+* Test cases for contrib_ode::
+* References for contrib_ode::
+
+
+File: maxima.info,  Node: Introduction to contrib_ode,  Next: Functions and Variables for contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
+
+44.1 Introduction to contrib_ode
+================================
+
+Maxima's ordinary differential equation (ODE) solver `ode2' solves
+elementary linear ODEs of first and second order.  The function
+`contrib_ode' extends `ode2' with additional methods for linear and
+non-linear first order ODEs and linear homogeneous second order ODEs.
+The code is still under development and the calling sequence may change
+in future releases.  Once the code has stabilized it may be moved from
+the contrib directory and integrated into Maxima.
+
+   This package must be loaded with the command `load('contrib_ode)'
+before use.
+
+   The calling convention for `contrib_ode' is identical to `ode2'.  It
+takes three arguments: an ODE (only the left hand side need be given if
+the right hand side is 0), the dependent variable, and the independent
+variable.  When successful, it returns a list of solutions.
+
+   The form of the solution differs from `ode2'.  As non-linear
+equations can have multiple solutions, `contrib_ode' returns a list of
+solutions.  Each  solution can have a number of forms:
+   * an explicit solution for the dependent variable,
+
+   * an implicit solution for the dependent variable,
+
+   * a parametric solution in terms of variable `%t', or
+
+   * a tranformation into another ODE in variable `%u'.
+
+
+   `%c' is used to represent the constant of integration for first
+order equations.  `%k1' and `%k2' are the constants for second order
+equations.  If `contrib_ode' cannot obtain a solution for whatever
+reason, it returns `false', after perhaps printing out an error message.
+
+   It is necessary to return a list of solutions, as even first order
+non-linear ODEs can have multiple solutions.  For example:
+
+     (%i1) load('contrib_ode)$
+
+     (%i2) eqn:x*'diff(y,x)^2-(1+x*y)*'diff(y,x)+y=0;
+
+                         dy 2             dy
+     (%o2)            x (--)  - (x y + 1) -- + y = 0
+                         dx               dx
+     (%i3) contrib_ode(eqn,y,x);
+
+                                                  x
+     (%o3)             [y = log(x) + %c, y = %c %e ]
+     (%i4) method;
+
+     (%o4)                        factor
+
+   Nonlinear ODEs can have singular solutions without constants of
+integration, as in the second solution of the following example:
+
+     (%i1) load('contrib_ode)$
+
+     (%i2) eqn:'diff(y,x)^2+x*'diff(y,x)-y=0;
+
+                            dy 2     dy
+     (%o2)                 (--)  + x -- - y = 0
+                            dx       dx
+     (%i3) contrib_ode(eqn,y,x);
+
+                                                2
+                                      2        x
+     (%o3)              [y = %c x + %c , y = - --]
+                                               4
+     (%i4) method;
+
+     (%o4)                       clairault
+
+   The following ODE has two parametric solutions in terms of the dummy
+variable `%t'.  In this case the parametric solutions can be manipulated
+to give explicit solutions.
+
+     (%i1) load('contrib_ode)$
+
+     (%i2) eqn:'diff(y,x)=(x+y)^2;
+
+                               dy          2
+     (%o2)                     -- = (y + x)
+                               dx
+     (%i3) contrib_ode(eqn,y,x);
+
+     (%o3) [[x = %c - atan(sqrt(%t)), y = - x - sqrt(%t)],
+                          [x = atan(sqrt(%t)) + %c, y = sqrt(%t) - x]]
+     (%i4) method;
+
+     (%o4)                       lagrange
+
+   The following example (Kamke 1.112) demonstrates an implicit
+solution.
+
+     (%i1) load('contrib_ode)$
+
+     (%i2) assume(x>0,y>0);
+
+     (%o2)                    [x > 0, y > 0]
+     (%i3) eqn:x*'diff(y,x)-x*sqrt(y^2+x^2)-y;
+
+                          dy           2    2
+     (%o3)              x -- - x sqrt(y  + x ) - y
+                          dx
+     (%i4) contrib_ode(eqn,y,x);
+
+                                       y
+     (%o4)                  [x - asinh(-) = %c]
+                                       x
+     (%i5) method;
+
+     (%o5)                          lie
+
+   The following Riccati equation is transformed into a linear second
+order ODE in the variable `%u'.  Maxima is unable to solve the new ODE,
+so it is returned unevaluated.
+     (%i1) load('contrib_ode)$
+
+     (%i2) eqn:x^2*'diff(y,x)=a+b*x^n+c*x^2*y^2;
+
+                         2 dy      2  2      n
+     (%o2)              x  -- = c x  y  + b x  + a
+                           dx
+     (%i3) contrib_ode(eqn,y,x);
+
+                    d%u
+                    ---                            2
+                    dx        2     n - 2   a     d %u
+     (%o3)  [[y = - ----, %u c  (b x      + --) + ---- c = 0]]
+                    %u c                     2      2
+                                            x     dx
+     (%i4) method;
+
+     (%o4)                        riccati
+
+   For first order ODEs `contrib_ode' calls `ode2'.  It then tries the
+following methods: factorization, Clairault, Lagrange, Riccati, Abel
+and Lie symmetry methods.  The Lie method is not attempted on Abel
+equations if the Abel method fails, but it is tried if the Riccati
+method returns an unsolved second order ODE.
+
+   For second order ODEs `contrib_ode' calls `ode2' then `odelin'.
+
+   Extensive debugging traces and messages are displayed if the command
+`put('contrib_ode,true,'verbose)' is executed.
+
+
+File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possible improvements to contrib_ode,  Prev: Introduction to contrib_ode,  Up: contrib_ode
+
+44.2 Functions and Variables for contrib_ode
+============================================
+
+ -- Function: contrib_ode (<eqn>, <y>, <x>)
+     Returns a list of solutions of the ODE <eqn> with independent
+     variable <x> and dependent variable <y>.
+
+
+ -- Function: odelin (<eqn>, <y>, <x>)
+     `odelin' solves linear homogeneous ODEs of first and second order
+     with independent variable <x> and dependent variable <y>.  It
+     returns a fundamental solution set of the ODE.
+
+     For second order ODEs, `odelin' uses a method, due to Bronstein
+     and Lafaille, that searches for solutions in terms of given
+     special functions.
+
+          (%i1) load('contrib_ode);
+
+          (%i2) odelin(x*(x+1)*'diff(y,x,2)+(x+5)*'diff(y,x,1)+(-4)*y,y,x);
+          ...trying factor method
+          ...solving 7 equations in 4 variables
+          ...trying the Bessel solver
+          ...solving 1 equations in 2 variables
+          ...trying the F01 solver
+          ...solving 1 equations in 3 variables
+          ...trying the spherodial wave solver
+          ...solving 1 equations in 4 variables
+          ...trying the square root Bessel solver
+          ...solving 1 equations in 2 variables
+          ...trying the 2F1 solver
+          ...solving 9 equations in 5 variables
+                 gauss_a(- 6, - 2, - 3, - x)  gauss_b(- 6, - 2, - 3, - x)
+          (%o2) {---------------------------, ---------------------------}
+                              4                            4
+                             x                            x
+
+
+ -- Function: ode_check (<eqn>, <soln>)
+     Returns the value of ODE <eqn> after substituting a possible
+     solution <soln>.  The value is equivalent to zero if <soln> is a
+     solution of <eqn>.
+
+          (%i1) load('contrib_ode)$
+
+          (%i2) eqn:'diff(y,x,2)+(a*x+b)*y;
+
+                                   2
+                                  d y
+          (%o2)                   --- + (a x + b) y
+                                    2
+                                  dx
+          (%i3) ans:[y = bessel_y(1/3,2*(a*x+b)^(3/2)/(3*a))*%k2*sqrt(a*x+b)
+                   +bessel_j(1/3,2*(a*x+b)^(3/2)/(3*a))*%k1*sqrt(a*x+b)];
+
+                                            3/2
+                              1  2 (a x + b)
+          (%o3) [y = bessel_y(-, --------------) %k2 sqrt(a x + b)
+                              3       3 a
+                                                    3/2
+                                      1  2 (a x + b)
+                           + bessel_j(-, --------------) %k1 sqrt(a x + b)]
+                                      3       3 a
+          (%i4) ode_check(eqn,ans[1]);
+
+          (%o4)                           0
+
+
+ -- System variable: `method'
+     The variable `method' is set to the successful solution method.
+
+
+ -- Variable: `%c'
+     `%c' is the integration constant for first order ODEs.
+
+
+ -- Variable: `%k1'
+     `%k1' is the first integration constant for second order ODEs.
+
+
+ -- Variable: `%k2'
+     `%k2' is the second integration constant for second order ODEs.
+
+
+ -- Function: gauss_a (<a>, <b>, <c>, <x>)
+     `gauss_a(a,b,c,x)' and `gauss_b(a,b,c,x)' are 2F1 geometric
+     functions.  They represent any two independent solutions of the
+     hypergeometric differential equation `x(1-x) diff(y,x,2) +
+     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
+
+     The only use of these functions is in solutions of ODEs returned by
+     `odelin' and `contrib_ode'.  The definition and use of these
+     functions may change in future releases of Maxima.
+
+     See also `gauss_b', `dgauss_a' and `gauss_b'.
+
+
+ -- Function: gauss_b (<a>, <b>, <c>, <x>)
+     See `gauss_a'.
+
+ -- Function: dgauss_a (<a>, <b>, <c>, <x>)
+     The derivative with respect to <x> of `gauss_a(<a>, <b>, <c>,
+     <x>)'.
+
+ -- Function: dgauss_b (<a>, <b>, <c>, <x>)
+     The derivative with respect to <x> of `gauss_b(<a>, <b>, <c>,
+     <x>)'.
+
+ -- Function: kummer_m (<a>, <b>, <x>)
+     Kummer's M function, as defined in Abramowitz and Stegun, Handbook
+     of Mathematical Functions, Section 13.1.2.
+
+     The only use of this function is in solutions of ODEs returned by
+     `odelin' and `contrib_ode'.  The definition and use of this
+     function may change in future releases of Maxima.
+
+     See also `kummer_u', `dkummer_m' and `dkummer_u'.
+
+ -- Function: kummer_u (<a>, <b>, <x>)
+     Kummer's U function, as defined in Abramowitz and Stegun, Handbook
+     of Mathematical Functions, Section 13.1.3.
+
+     See `kummer_m'.
+
+ -- Function: dkummer_m (<a>, <b>, <x>)
+     The derivative with respect to <x> of `kummer_m(<a>, <b>, <x>)'.
+
+ -- Function: dkummer_u (<a>, <b>, <x>)
+     The derivative with respect to <x> of `kummer_u(<a>, <b>, <x>)'.
+
+
+File: maxima.info,  Node: Possible improvements to contrib_ode,  Next: Test cases for contrib_ode,  Prev: Functions and Variables for contrib_ode,  Up: contrib_ode
+
+44.3 Possible improvements to contrib_ode
+=========================================
+
+These routines are work in progress.  I still need to:
+
+   * Extend the FACTOR method `ode1_factor' to work for multiple roots.
+
+   * Extend the FACTOR method `ode1_factor' to attempt to solve higher
+     order factors.  At present it only attemps to solve linear
+     factors.
+
+   * Fix the LAGRANGE routine `ode1_lagrange' to prefer real roots over
+      complex roots.
+
+   * Add additional methods for Riccati equations.
+
+   * Improve the detection of Abel equations of second kind.  The
+     exisiting   pattern matching is weak.
+
+   * Work on the Lie symmetry group routine `ode1_lie'.  There are
+     quite a   few problems with it: some parts are unimplemented; some
+     test cases   seem to run forever; other test cases crash; yet
+     others return very   complex "solutions".  I wonder if it really
+     ready for release yet.
+
+   * Add more test cases.
+
+
+
+File: maxima.info,  Node: Test cases for contrib_ode,  Next: References for contrib_ode,  Prev: Possible improvements to contrib_ode,  Up: contrib_ode
+
+44.4 Test cases for contrib_ode
+===============================
+
+The routines have been tested on a approximately one thousand  test
+cases from Murphy, Kamke, Zwillinger and elsewhere.  These are included
+in the tests subdirectory.
+
+   * The Clairault routine `ode1_clairault' finds all known solutions,
+     including singular solutions, of the Clairault equations in
+     Murphy and   Kamke.
+
+   * The other routines often return a single solution when multiple
+     solutions exist.
+
+   * Some of the "solutions" from `ode1_lie' are overly complex and
+     impossible to check.
+
+   * There are some crashes.
+
+
+
+File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for contrib_ode,  Up: contrib_ode
+
+44.5 References for contrib_ode
+===============================
+
+  1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
+     Vol 1,     Geest & Portig, Leipzig, 1961
+
+  2. G. M. Murphy, Ordinary Differential Equations and Their Solutions,
+        Van Nostrand, New York, 1960
+
+  3. D. Zwillinger, Handbook of Differential Equations, 3rd edition,
+     Academic Press, 1998
+
+  4. F. Schwarz, Symmetry Analysis of Abel's Equation, Studies in
+     Applied Mathematics, 100:269-294 (1998)
+
+  5. F. Schwarz, Algorithmic Solution of Abel's Equation,     Computing
+     61, 39-49 (1998)
+
+  6. E. S. Cheb-Terrab, A. D. Roche, Symmetries and First Order     ODE
+     Patterns, Computer Physics Communications 113 (1998), p 239.
+     (`http://lie.uwaterloo.ca/papers/ode_vii.pdf')
+
+  7. E. S. Cheb-Terrab, T. Koloknikov,  First Order ODEs,
+     Symmetries and Linear Transformations, European Journal of
+     Applied Mathematics, Vol. 14, No. 2, pp. 231-246 (2003).
+     (`http://arxiv.org/abs/math-ph/0007023',
+     `http://lie.uwaterloo.ca/papers/ode_iv.pdf')
+
+  8. G. W. Bluman, S. C. Anco, Symmetry and Integration Methods for
+     Differential Equations, Springer, (2002)
+
+  9. M. Bronstein, S. Lafaille, Solutions of linear ordinary
+     differential equations in terms of special functions, Proceedings
+     of ISSAC 2002, Lille, ACM Press, 23-28.
+     (`http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac2002.pdf')
+
+
+
+File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
+
+45 descriptive
+**************
+
+* Menu:
+
+* Introduction to descriptive::
+* Functions and Variables for data manipulation::
+* Functions and Variables for descriptive statistics::
+* Functions and Variables for specific multivariate descriptive statistics::
+* Functions and Variables for statistical graphs::
+
+
+File: maxima.info,  Node: Introduction to descriptive,  Next: Functions and Variables for data manipulation,  Prev: descriptive,  Up: descriptive
+
+45.1 Introduction to descriptive
 ================================
 
 Package `descriptive' contains a set of functions for making
 descriptive statistical computations and graphing. Together with the
 source code there are three data sets in your Maxima tree:
 `pidigits.data', `wind.data' and `biomed.data'. They can be also
-downloaded from the web site `www.biomates.net'.
+downloaded from the web site `http://www.biomates.net'.
 
    Any statistics manual can be used as a reference to the functions in
 package `descriptive'.
@@ -147,10 +1052,10 @@ a sample with categorical value `a' is taken,
                                  [ b  5 ]
 
 
-File: maxima.info,  Node: Definitions for data manipulation,  Next: Definitions for descriptive statistics,  Prev: Introduction to descriptive,  Up: descriptive
+File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: Functions and Variables for descriptive statistics,  Prev: Introduction to descriptive,  Up: descriptive
 
-44.2 Definitions for data manipulation
-======================================
+45.2 Functions and Variables for data manipulation
+==================================================
 
  -- Function: continuous_freq (<list>)
  -- Function: continuous_freq (<list>, <m>)
@@ -193,7 +1098,7 @@ File: maxima.info,  Node: Definitions for data manipulation,  Next: Definitions 
 
  -- Function: subsample (<data_matrix>, <logical_expression>)
  -- Function: subsample (<data_matrix>, <logical_expression>,
-          <col_num>, <col_num>, ...)
+          <col_num1>, <col_num2>, ...)
      This is a sort of variation of the Maxima `submatrix' function.
      The first argument is the name of the data matrix, the second is a
      quoted logical expression and optional additional arguments are
@@ -305,17 +1210,17 @@ File: maxima.info,  Node: Definitions for data manipulation,  Next: Definitions 
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
           (%i3) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i4) mean (subsample (s3, '(%c[4] # NA and %c[6] # NA), 3, 4, 5, 6));
+          (%i4) mean(subsample(s3, '(%c[4] # NA and %c[6] # NA), 3,4,5,6));
           (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813,
                                                                       2514
                                                                       ----]
                                                                        13
 
 
-File: maxima.info,  Node: Definitions for descriptive statistics,  Next: Definitions for specific multivariate descriptive statistics,  Prev: Definitions for data manipulation,  Up: descriptive
+File: maxima.info,  Node: Functions and Variables for descriptive statistics,  Next: Functions and Variables for specific multivariate descriptive statistics,  Prev: Functions and Variables for data manipulation,  Up: descriptive
 
-44.3 Definitions for descriptive statistics
-===========================================
+45.3 Functions and Variables for descriptive statistics
+=======================================================
 
  -- Function: mean (<list>)
  -- Function: mean (<matrix>)
@@ -541,7 +1446,7 @@ File: maxima.info,  Node: Definitions for descriptive statistics,  Next: Definit
 
  -- Function: quantile (<list>, <p>)
  -- Function: quantile (<matrix>, <p>)
-     This is the <p>-`quantile', with <p> a number in [0, 1], of the
+     This is the <p>-quantile, with <p> a number in [0, 1], of the
      sample <list>.  Although there are several definitions for the
      sample quantile (Hyndman, R. J., Fan, Y. (1996) <Sample quantiles
      in statistical packages>. American Statistician, 50, 361-365), the
@@ -553,7 +1458,8 @@ File: maxima.info,  Node: Definitions for descriptive statistics,  Next: Definit
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
           (%i3) s1 : read_list (file_search ("pidigits.data"))$
-          (%i4) /* 1st and 3rd quartiles */ [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
+          (%i4) /* 1st and 3rd quartiles */
+                   [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
           (%o4)                      [2.0, 7.25]
           (%i5) s2 : read_matrix (file_search ("wind.data"))$
           (%i6) quantile (s2, 1/4);
@@ -578,7 +1484,7 @@ File: maxima.info,  Node: Definitions for descriptive statistics,  Next: Definit
           (%i6) median (s2);
           (%o6)         [10.06, 9.855, 10.73, 15.48, 14.105]
 
-     The median is the 1/2-`quantile'.
+     The median is the 1/2-quantile.
 
      See also function `quantile'.
 
@@ -805,10 +1711,10 @@ File: maxima.info,  Node: Definitions for descriptive statistics,  Next: Definit
      See also function `quantile'.
 
 
-File: maxima.info,  Node: Definitions for specific multivariate descriptive statistics,  Next: Definitions for statistical graphs,  Prev: Definitions for descriptive statistics,  Up: descriptive
+File: maxima.info,  Node: Functions and Variables for specific multivariate descriptive statistics,  Next: Functions and Variables for statistical graphs,  Prev: Functions and Variables for descriptive statistics,  Up: descriptive
 
-44.4 Definitions for specific multivariate descriptive statistics
-=================================================================
+45.4 Functions and Variables for specific multivariate descriptive statistics
+=============================================================================
 
  -- Function: cov (<matrix>)
      The covariance matrix of the multivariate sample, defined as
@@ -1030,10 +1936,10 @@ File: maxima.info,  Node: Definitions for specific multivariate descriptive stat
      See also `cov' and `cov1'.
 
 
-File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions for specific multivariate descriptive statistics,  Up: descriptive
+File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev: Functions and Variables for specific multivariate descriptive statistics,  Up: descriptive
 
-44.5 Definitions for statistical graphs
-=======================================
+45.5 Functions and Variables for statistical graphs
+===================================================
 
  -- Function: dataplot (<list>)
  -- Function: dataplot (<list>, <option_1>, <option_2>, ...)
@@ -1078,8 +1984,7 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
 
 
      For example, with the following input a simple plot of the first
-     twenty digits of `%pi' is requested and the output stored in an
-     eps file.
+     twenty digits of `%pi' is requested.
 
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
@@ -1092,9 +1997,9 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
           (%i3) s1 : read_list (file_search ("pidigits.data"))$
-          (%i4) dataplot (makelist (s1[k], k, 1, 50), 'maintitle = "First pi digits",
+          (%i4) dataplot (makelist (s1[k], k, 1, 50),
            'axisnames = ["digit order", "digit value"], 'pointstyle = 2,
-           'joined = true)$
+           'maintitle = "First pi digits", 'joined = true)$
 
      Function `dataplot' can be used to plot points in the plane. The
      next example is a scatterplot of the pairs of wind speeds
@@ -1114,7 +2019,7 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
           (%i1) load (descriptive)$
           (%i2) x : [[-1, 2], [5, 7], [5, -3], [-6, -9], [-4, 6]]$
           (%i3) dataplot (apply ('matrix, x), 'maintitle = "Points",
-           'joined = true, 'axisnames = ["", ""], 'picturescales = [0.5, 1.0])$
+           'joined=true, 'axisnames=["", ""], 'picturescales=[0.5, 1.0])$
 
      Points in three dimensional space can be seen as a projection on
      the plane. In this example, plots of wind speeds corresponding to
@@ -1124,11 +2029,12 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
           (%i3) s2 : read_matrix (file_search ("wind.data"))$
-          (%i4) /* 3D plot */ dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
+          (%i4) /* 3D plot */
+           dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
            'maintitle = "Pairs of wind speeds measured in knots",
            'axisnames = ["Station A", "Station B", "Station C"])$
-          (%i5) /* Multivariate scatterplot */ dataplot (submatrix (s2, 4, 5),
-           'nclasses = 6, 'threedim = false)$
+          (%i5) /* Multivariate scatterplot */
+           dataplot (submatrix (s2, 4, 5), 'nclasses = 6, 'threedim = false)$
      Note that in the last example, the number of classes in the
      histograms of the diagonal is set to 6, and that option
      `'threedim' is set to `false'.
@@ -1181,8 +2087,9 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
           (%i1) load (descriptive)$
           (%i2) load (numericalio)$
           (%i3) s1 : read_list (file_search ("pidigits.data"))$
-          (%i4) histogram (s1, 'maintitle = "pi digits", 'axisnames = ["", "Absolute frequency"],
-           'relbarwidth = 0.2, 'barcolor = 3, 'colorintensity = 0.6)$
+          (%i4) histogram (s1, 'maintitle = "pi digits",
+           'axisnames = ["", "Absolute frequency"], 'relbarwidth = 0.2,
+           'barcolor = 3, 'colorintensity = 0.6)$
           (%i5) s2 : read_matrix (file_search ("wind.data"))$
           (%i6) histogram (col (s2, 3), 'colorintensity = 0.3)$
      Note that in the first case, `s1' is a list and in the second
@@ -1227,7 +2134,7 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
           (%i2) load (numericalio)$
           (%i3) s3 : read_matrix (file_search ("biomed.data"))$
           (%i4) barsplot (col (s3, 1), 'maintitle = "Groups of patients",
-           'axisnames = ["Group", "# of individuals"], 'colorintensity = 0.2)$
+           'axisnames=["Group", "# of individuals"], 'colorintensity=0.2)$
      The first column in sample `s3' stores the categorical values `A'
      and `B', also known sometimes as factors. On the other hand, the
      positive integer numbers in the second column are ages, in years,
@@ -1284,18 +2191,18 @@ File: maxima.info,  Node: Definitions for statistical graphs,  Prev: Definitions
 
 File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
-45 diag
+46 diag
 *******
 
 * Menu:
 
-* Definitions for diag::
+* Functions and Variables for diag::
 
 
-File: maxima.info,  Node: Definitions for diag,  Prev: diag,  Up: diag
+File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: diag
 
-45.1 Definitions for diag
-=========================
+46.1 Functions and Variables for diag
+=====================================
 
  -- Function: diag (<lm>)
      Constructs a square matrix with the matrices of <lm> in the
@@ -1349,7 +2256,7 @@ File: maxima.info,  Node: Definitions for diag,  Prev: diag,  Up: diag
  -- Function: jordan (<mat>)
      Returns the Jordan form of matrix <mat>, but codified in a Maxima
      list.  To get the corresponding matrix, call function `dispJordan'
-     using as argument the output of `JF'.
+     using as argument the output of `jornan'.
 
      Example:
           (%i1) load("diag")$
@@ -1478,11 +2385,12 @@ File: maxima.info,  Node: Definitions for diag,  Prev: diag,  Up: diag
      matrix. This computation is based on Cauchy's integral formula,
      which states that if `f(x)' is analytic and
 
-          mat=diag([JF(m1,n1),...,JF(mk,nk)]),
+          mat = diag([JF(m1,n1),...,JF(mk,nk)]),
 
      then
 
-          f(mat)=ModeMatrix*diag([f(JF(m1,n1)),...,f(JF(mk,nk))])*ModeMatrix^^(-1)
+          f(mat) = ModeMatrix*diag([f(JF(m1,n1)), ..., f(JF(mk,nk))])
+                                                        *ModeMatrix^^(-1)
 
      Note that there are about 6 or 8 other methods for this
      calculation.
@@ -1689,19 +2597,19 @@ File: maxima.info,  Node: Definitions for diag,  Prev: diag,  Up: diag
 
 File: maxima.info,  Node: distrib,  Next: draw,  Prev: diag,  Up: Top
 
-46 distrib
+47 distrib
 **********
 
 * Menu:
 
 * Introduction to distrib::
-* Definitions for continuous distributions::
-* Definitions for discrete distributions::
+* Functions and Variables for continuous distributions::
+* Functions and Variables for discrete distributions::
 
 
-File: maxima.info,  Node: Introduction to distrib,  Next: Definitions for continuous distributions,  Prev: distrib,  Up: distrib
+File: maxima.info,  Node: Introduction to distrib,  Next: Functions and Variables for continuous distributions,  Prev: distrib,  Up: distrib
 
-46.1 Introduction to distrib
+47.1 Introduction to distrib
 ============================
 
 Package `distrib' contains a set of functions for making probability
@@ -1826,7 +2734,8 @@ variates are compared by means of their histograms:
      (%i2) load(descriptive)$
      (%i3) showtime: true$
      Evaluation took 0.00 seconds (0.00 elapsed) using 32 bytes.
-     (%i4) random_chi2_algorithm: 'ahrens_cheng$ histogram(random_chi2(10,500))$
+     (%i4) random_chi2_algorithm: 'ahrens_cheng$
+                                            histogram(random_chi2(10,500))$
      Evaluation took 0.00 seconds (0.00 elapsed) using 40 bytes.
      Evaluation took 0.69 seconds (0.71 elapsed) using 5.694 MB.
      (%i6) random_chi2_algorithm: 'inverse$ histogram(random_chi2(10,500))$
@@ -1899,10 +2808,10 @@ by typing
 <'mario AT edu DOT xunta DOT es'>.
 
 
-File: maxima.info,  Node: Definitions for continuous distributions,  Next: Definitions for discrete distributions,  Prev: Introduction to distrib,  Up: distrib
+File: maxima.info,  Node: Functions and Variables for continuous distributions,  Next: Functions and Variables for discrete distributions,  Prev: Introduction to distrib,  Up: distrib
 
-46.2 Definitions for continuous distributions
-=============================================
+47.2 Functions and Variables for continuous distributions
+=========================================================
 
  -- Function: pdf_normal (<x>,<m>,<s>)
      Returns the value at <x> of the density function of a Normal(m,s)
@@ -3240,10 +4149,10 @@ File: maxima.info,  Node: Definitions for continuous distributions,  Next: Defin
      function, write first `load(distrib)'.
 
 
-File: maxima.info,  Node: Definitions for discrete distributions,  Prev: Definitions for continuous distributions,  Up: distrib
+File: maxima.info,  Node: Functions and Variables for discrete distributions,  Prev: Functions and Variables for continuous distributions,  Up: distrib
 
-46.3 Definitions for discrete distributions
-===========================================
+47.3 Functions and Variables for discrete distributions
+=======================================================
 
  -- Function: pdf_binomial (<x>,<n>,<p>)
      Returns the value at <x> of the probability function of a
@@ -3807,36 +4716,38 @@ File: maxima.info,  Node: Definitions for discrete distributions,  Prev: Definit
 
 File: maxima.info,  Node: draw,  Next: dynamics,  Prev: distrib,  Up: Top
 
-47 draw
+48 draw
 *******
 
 * Menu:
 
 * Introduction to draw::
-* Definitions for draw::
+* Functions and Variables for draw::
+* Functions and Variables for pictures::
+* Functions and Variables for worldmap::
 
 
-File: maxima.info,  Node: Introduction to draw,  Next: Definitions for draw,  Prev: draw,  Up: draw
+File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables for draw,  Prev: draw,  Up: draw
 
-47.1 Introduction to draw
+48.1 Introduction to draw
 =========================
 
 `draw' is a Maxima-Gnuplot interface.
 
-   There are three functions to be used at Maxima level: `draw2d',
+   There are three main functions to be used at Maxima level: `draw2d',
 `draw3d' and `draw'.
 
    Follow this link for more elaborated examples of this package:
 
-   http://www.telefonica.net/web2/biomates/maxima/gpdraw
+   `http://www.telefonica.net/web2/biomates/maxima/gpdraw'
 
    You need Gnuplot 4.2 to run this program.
 
 
-File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up: draw
+File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and Variables for pictures,  Prev: Introduction to draw,  Up: draw
 
-47.2 Definitions for draw
-=========================
+48.2 Functions and Variables for draw
+=====================================
 
  -- Graphic option: xrange
      Default value: `false'
@@ -4174,6 +5085,9 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
      Gnuplot's behaviour by writing settings to be sent before the
      `plot' or `splot' command.
 
+     The value of this option must be a string or a list of strings
+     (one per line).
+
      Since this is a global graphics option, its position in the scene
      description does not matter.
 
@@ -4462,15 +5376,20 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
 
           (%i1) load(draw)$
           (%i2) draw2d(points(makelist([random(20),random(50)],k,1,10)),
-                       point_size = 5,
-                       points(makelist(k,k,1,20),makelist(random(30),k,1,20)))$
+                  point_size = 5,
+                  points(makelist(k,k,1,20),makelist(random(30),k,1,20)))$
 
  -- Graphic option: point_type
      Default value: 1
 
-     `point_type' is an index (greater or equal than -1) to specify how
-     points are displayed.  Point colors are controlled with this
-     option.
+     `point_type' indicates how isolated points are displayed; the
+     value of this option can be any integer index greater or equal
+     than -1, or the name of a point style: `$none' (-1), `dot' (0),
+     `plus' (1), `multiply' (2), `asterisk' (3), `square' (4),
+     `filled_square' (5), `circle' (6), `filled_circle' (7),
+     `up_triangle' (8), `filled_up_triangle' (9), `down_triangle' (10),
+     `filled_down_triangle' (11), `diamant' (12) and `filled_diamant'
+     (13).
 
      This option affects the following graphic objects:
         * `gr2d': `points'.
@@ -4483,23 +5402,23 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
           (%i2) draw2d(xrange = [0,10],
                        yrange = [0,10],
                        point_size = 3,
-                       point_type = 1,
+                       point_type = diamant,
                        points([[1,1],[5,1],[9,1]]),
-                       point_type = 2,
+                       point_type = filled_down_triangle,
                        points([[1,2],[5,2],[9,2]]),
-                       point_type = 3,
+                       point_type = asterisk,
                        points([[1,3],[5,3],[9,3]]),
-                       point_type = 4,
+                       point_type = filled_diamant,
                        points([[1,4],[5,4],[9,4]]),
                        point_type = 5,
                        points([[1,5],[5,5],[9,5]]),
                        point_type = 6,
                        points([[1,6],[5,6],[9,6]]),
-                       point_type = 7,
+                       point_type = filled_circle,
                        points([[1,7],[5,7],[9,7]]),
                        point_type = 8,
                        points([[1,8],[5,8],[9,8]]),
-                       point_type = 9,
+                       point_type = filled_diamant,
                        points([[1,9],[5,9],[9,9]]) )$
 
  -- Graphic option: points_joined
@@ -4518,15 +5437,15 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
           (%i2) draw2d(xrange        = [0,10],
                        yrange        = [0,4],
                        point_size    = 3,
-                       point_type    = 1,
-                       line_type     = 3,
+                       point_type    = up_triangle,
+                       color         = blue,
                        points([[1,1],[5,1],[9,1]]),
                        points_joined = true,
-                       point_type    = 3,
-                       line_type     = 5,
+                       point_type    = square,
+                       line_type     = dots,
                        points([[1,2],[5,2],[9,2]]),
-                       point_type    = 5,
-                       line_type     = 8,
+                       point_type    = circle,
+                       color         = red,
                        line_width    = 7,
                        points([[1,3],[5,3],[9,3]]) )$
 
@@ -4702,11 +5621,11 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
                        points_joined   = true,
                        points([[5,0],[5,10]]),
                        color           = blue,
-                       label("Centered alignment (default)",5,2),
+                       label(["Centered alignment (default)",5,2]),
                        label_alignment = 'left,
-                       label("Left alignment",5,5),
+                       label(["Left alignment",5,5]),
                        label_alignment = 'right,
-                       label("Right alignment",5,8))$
+                       label(["Right alignment",5,8]))$
 
      See also `label_orientation', and `color'.
 
@@ -4728,10 +5647,10 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
                        point_size = 0,
                        points([[5,5]]),
                        color      = navy,
-                       label("Horizontal orientation (default)",5,2),
+                       label(["Horizontal orientation (default)",5,2]),
                        label_orientation = 'vertical,
                        color             = "#654321",
-                       label("Vertical orientation",1,5))$
+                       label(["Vertical orientation",1,5]))$
 
      See also `label_alignment' and `color'.
 
@@ -4778,7 +5697,7 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
                        color = "light-blue", /* double quotes if - is used */
                        explicit(1.5 + x^2,x,-1,1),
                        color = "#23ab0f",
-                       label("This is a label",0,1.2)  )$
+                       label(["This is a label",0,1.2])  )$
 
      See also `fill_color'.
 
@@ -4879,10 +5798,10 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
      Example:
 
           (%i1) load(draw)$
-          (%i2) draw2d(key = "Sinus",
+          (%i2) draw2d(key   = "Sinus",
                        explicit(sin(x),x,0,10),
-                       key = "Cosinus",
-                       line_type = 3,
+                       key   = "Cosinus",
+                       color = red,
                        explicit(cos(x),x,0,10) )$
 
  -- Graphic option: xu_grid
@@ -5023,403 +5942,36 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
 
  -- Scene constructor: gr2d (<graphic option>, ..., <graphic object>,
           ...)
-     Function `gr2d' builds an object describing a 2d scene. Arguments
+     Function `gr2d' builds an object describing a 2D scene. Arguments
      are graphic options and graphic objects. This scene is interpreted
      sequentially: graphic options affect those graphic objects placed
-     on its right.
-
-     To make use of this function, write first `load(draw)'.
+     on its right. Some graphic options affect the global appearence of
+     the scene.
 
      This is the list of graphic objects available for scenes in two
-     dimensions:
+     dimensions: `points', `polygon', `rectangle', `ellipse', `label',
+     `vector', `explicit', `implicit', `polar', `parametric', `image'
+     and `geomap'.
 
-        * `points([[x1,y1], [x2,y2], [x3,y3],...])' or
-          `points([x1,x2,x3,...], [y1,y2,y3,...])': allocates points
-          `[x1,y1]', `[x2,y2]', `[x2,y2]', ....
-
-          This object is affected by the following graphic options:
-          `point_size', `point_type', `points_joined', `line_width',
-          `key', `line_type' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(key           = "Small points",
-                            points(makelist([random(20),random(50)],k,1,10)),
-                            point_type    = 6,
-                            point_size    = 3,
-                            points_joined = true,
-                            key           = "Great points",
-                            points(makelist(k,k,1,20),makelist(random(30),k,1,20)))$
-
-        * `polygon([[x1,y1], [x2,y2], [x3,y3],...])' or
-          `polygon([x1,x2,x3,...], [y1,y2,y3,...])': plots a polygon
-          with vertices `[x1,y1]', `[x2,y2]', `[x2,y2]', ... on the
-          plane.
-
-          This object is affected by the following graphic options:
-          `transparent', `fill_color', `border', `line_width', `key',
-          `line_type' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(color      = "#e245f0",
-                            line_width = 8,
-                            polygon([[3,2],[7,2],[5,5]]),
-                            border      = false,
-                            fill_color  = yellow,
-                            polygon([[5,2],[9,2],[7,5]]) )$
-
-        * `rectangle([x1,y1], [x2,y2])': plots a rectangle with
-          opposite vertices `[x1,y1]' and `[x2,y2]'.
-
-          This object is affected by the following graphic options:
-          `transparent', `fill_color', `border', `line_width', `key',
-          `line_type' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(fill_color  = red,
-                            line_width  = 6,
-                            line_type   = dots,
-                            transparent = false,
-                            fill_color  = blue,
-                            rectangle([-2,-2],[8,-1]),   /* opposite vertices */
-                            transparent = true,
-                            line_type   = solid,
-                            line_width  = 1,
-                            rectangle([9,4],[2,-1.5]),
-                            xrange      = [-3,10],
-                            yrange      = [-3,4.5] )$
-
-        * `ellipse(xc, yc, a, b, ang1, ang2)': plots an ellipse
-          centered at `[xc, yc]' with horizontal and vertical semi axis
-          `a' and `b', respectively, from angle `ang1' to angle `ang2'.
-
-          This object is affected by the following graphic options:
-          `nticks', `transparent', `fill_color', `border', `line_width',
-          `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(transparent = false,
-                            fill_color  = red,
-                            color       = gray30,
-                            transparent = false,
-                            line_width  = 5,
-                            ellipse(0,6,3,2,270,-270),  /* center (x,y), a, b, start & end in degrees */
-                            transparent = true,
-                            color       = blue,
-                            line_width  = 3,
-                            ellipse(2.5,6,2,3,30,-90),
-                            xrange      = [-3,6],
-                            yrange      = [2,9] )$
-
-        * `label(string,x,y)': writes the `string' at point `[x,y]'.
-
-          This object is affected by the following graphic options:
-          `label_alignment', `label_orientation' and `color'.
-
-          Example:
-
-          In this example, a dummy point is added to get an image.
-          Package `draw' needs always data to draw an scene.  These
-          colors may change in different terminals.
-               (%i1) load(draw)$
-               (%i2) draw2d(explicit(x^2,x,-1,1),
-                            color = "red",
-                            label("Label in red",0,0.3),
-                            color = "#0000ff",
-                            label("Label in blue",0,0.6),
-                            color = "light-blue", /* double quotes if - is used */
-                            label("Label in light-blue",0,0.9)  )$
-
-        * `vector([x,y], [dx,dy])': plots vector `[dx,dy]' with origin
-          in `[x,y]'.
-
-          This object is affected by the following graphic options:
-          `head_both', `head_length', `head_angle', `head_type',
-          `line_width', `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(xrange      = [0,12],
-                            yrange      = [0,10],
-                            head_length = 1,
-                            vector([0,1],[5,5]), /* default type */
-                            head_type = 'empty,
-                            vector([3,1],[5,5]),
-                            head_both = true,
-                            head_type = 'nofilled,
-                            line_type = dots,
-                            vector([6,1],[5,5]))$
-
-        * `explicit(fcn,var,minval,maxval)': plots explicit function
-          `fcn', with variable `var' taking values from `minval' to
-          `maxval'.
-
-          This object is affected by the following graphic options:
-          `nticks', `adapt_depth', `line_width', `line_type', `key',
-          `filled_func', `fill_color' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(line_width = 3,
-                            color      = blue,
-                            explicit(x^2,x,-3,3) )$
-               (%i3) draw2d(fill_color  = brown,
-                            filled_func = true,
-                            explicit(x^2,x,-3,3) )$
-
-        *
-          `implicit(fcn,x-var,x-minval,x-maxval,y-var,y-minval,y-maxval)':
-          plots the implicit function defined by `fcn', with variable
-          `x-var' taking values from `x-minval' to `x-maxval', and
-          variable `y-var' taking values from `y-minval' to `y-maxval'.
-
-          This object is affected by the following graphic options:
-          `ip_grid', `ip_grid_in', `line_width', `line_type', `key' and
-          `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(terminal  = eps,
-                            grid      = true,
-                            line_type = solid,
-                            key       = "y^2=x^3-2*x+1",
-                              implicit(y^2=x^3-2*x+1, x, -4,4, y, -4,4),
-                            line_type = dots,
-                            key       = "x^3+y^3 = 3*x*y^2-x-1",
-                             implicit(x^3+y^3 = 3*x*y^2-x-1, x, -4,4, y, -4,4),
-                            title     = "Two implicit functions" )$
-
-        * `polar(radius,ang,minang,maxang)': plots function
-          `radius(ang)' defined in polar coordinates, with variable
-          `ang' taking values from `minang' to `maxang'.
-
-          This object is affected by the following graphic options:
-          `nticks', `line_width', `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(user_preamble = "set grid polar",
-                            nticks        = 200,
-                            xrange        = [-5,5],
-                            yrange        = [-5,5],
-                            line_type     = 6,
-                            line_width    = 3,
-                            title         = "Hyperbolic Spiral",
-                            polar(10/theta,theta,1,10*%pi) )$
-
-        * `parametric(xfun,yfun,par,parmin,parmax)': plots parametric
-          function `[xfun,yfun]', with parameter `par' taking values
-          from `parmin' to `parmax'.
-
-          This object is affected by the following graphic options:
-          `nticks', `line_width', `line_type', `key'and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw2d(explicit(exp(x),x,-1,3),
-                            color = red,
-                            key   = "This is the parametric one!!",
-                            parametric(2*cos(rrr),rrr^2,rrr,0,2*%pi))$
-
-        * `image(im,x0,y0,width,height)': plots image `im' in the
-          rectangular region from vertex `(x0,y0)' to
-          `(x0+width,y0+height)' on the real plane. Argument `im' must
-          be a matrix of real numbers, or a matrix of vectors of length
-          three.
-
-          If `im' is a matrix of real numbers, pixel values are
-          interpreted according to graphic option `palette', which is a
-          vector of length three with components ranging from -36 to
-          +36; each value is an index for a formula mapping the levels
-          onto red, green and blue colors, respectively:
-                0: 0               1: 0.5           2: 1
-                3: x               4: x^2           5: x^3
-                6: x^4             7: sqrt(x)       8: sqrt(sqrt(x))
-                9: sin(90x)       10: cos(90x)     11: |x-0.5|
-               12: (2x-1)^2       13: sin(180x)    14: |cos(180x)|
-               15: sin(360x)      16: cos(360x)    17: |sin(360x)|
-               18: |cos(360x)|    19: |sin(720x)|  20: |cos(720x)|
-               21: 3x             22: 3x-1         23: 3x-2
-               24: |3x-1|         25: |3x-2|       26: (3x-1)/2
-               27: (3x-2)/2       28: |(3x-1)/2|   29: |(3x-2)/2|
-               30: x/0.32-0.78125 31: 2*x-0.84     32: 4x;1;-2x+1.84;x/0.08-11.5
-               33: |2*x - 0.5|    34: 2*x          35: 2*x - 0.5
-               36: 2*x - 1
-          negative numbers mean negative colour component.
-
-          `palette = gray' and `palette = color' are short cuts for
-          `palette = [3,3,3]' and `palette = [7,5,15]', respectively.
-
-          If `im' is a matrix of vectors of length three, they are
-          interpreted as red, green and blue color components.
-
-          Examples:
-
-          If `im' is a matrix of real numbers, pixel values are
-          interpreted according to graphic option `palette'.
-               (%i1) load(draw)$
-               (%i2) im: apply(
-                          'matrix,
-                           makelist(makelist(random(200),i,1,30),i,1,30))$
-               (%i3) /* palette = color, default */
-                     draw2d(image(im,0,0,30,30))$
-               (%i4) draw2d(palette = gray, image(im,0,0,30,30))$
-               (%i5) draw2d(palette = [15,20,-4],
-                            colorbox=false,
-                            image(im,0,0,30,30))$
-
-          See also `colorbox'.
-
-          If `im' is a matrix of vectors of length three, they are
-          interpreted as red, green and blue color components.
-               (%i1) load(draw)$
-               (%i2) im: apply(
-                           'matrix,
-                            makelist(
-                              makelist([random(300),
-                                        random(300),
-                                        random(300)],i,1,30),i,1,30))$
-               (%i3) draw2d(image(im,0,0,30,30))$
-
-
-     See also the following graphic options: `xrange', `yrange',
+     See also the following global graphic options: `xrange', `yrange',
      `logx', `logy', `terminal', `grid', `title', `xlabel', `ylabel',
      `xtics', `ytics', `xy_file', `file_name', `pic_width',
      `pic_height', `eps_width', `eps_height', `user_preamble',
-     `axis_bottom', `axis_left', `axis_top', and `axis_right'.
+     `axis_bottom', `axis_left', `axis_top' and `axis_right'.
 
+     To make use of this function, write first `load(draw)'.
 
  -- Scene constructor: gr3d (<graphic option>, ..., <graphic object>,
           ...)
      Function `gr3d' builds an object describing a 3d scene. Arguments
      are graphic options and graphic objects. This scene is interpreted
      sequentially: graphic options affect those graphic objects placed
-     on its right.
-
-     To make use of this function, write first `load(draw)'.
+     on its right. Some graphic options affect the global appearence of
+     the scene.
 
      This is the list of graphic objects available for scenes in three
-     dimensions:
-
-        * `points([[x1,y1,z1], [x2,y2,z2], [x3,y3,z3],...])' or
-          `points([x1,x2,x3,...], [y1,y2,y3,...], [z1,z2,z3,...])':
-          allocates points `[x1,y1,z1]', `[x2,y2,z2]', `[x2,y2,z3]',
-          ....
-
-          This object is affected by the following graphic options:
-          `point_size', `point_type', `points_joined', `line_width',
-          `key', `line_type' and `color'.
-
-          Examples:
-
-          One tridimensional sample,
-               (%i1) load(draw)$
-               (%i2) load (numericalio)$
-               (%i3) s2 : read_matrix (file_search ("wind.data"))$
-               (%i4) draw3d(title      = "Daily average wind speeds",
-                            point_size = 2,
-                            points(args(submatrix (s2, 4, 5))) )$
-
-          Two tridimensional samples,
-               (%i1) load(draw)$
-               (%i2) load (numericalio)$
-               (%i3) s2 : read_matrix (file_search ("wind.data"))$
-               (%i4) draw3d(title      = "Daily average wind speeds. Two data sets",
-                            point_size = 2,
-                            key        = "Sample from stations 1, 2 and 3",
-                            points(args(submatrix (s2, 4, 5))),
-                            point_type = 4,
-                            key        = "Sample from stations 1, 4 and 5",
-                            points(args(submatrix (s2, 2, 3))) )$
-
-        * `label(string,x,y,z)': writes the `string' at point `[x,y,z]'.
-
-          This object is affected by the following graphic options:
-          `label_alignment', `label_orientation' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw3d(explicit(exp(sin(x)+cos(x^2)),x,-3,3,y,-3,3),
-                            color = red,
-                            label("UP",-2,0,3),
-                            color = blue,
-                            label("DOWN",2,0,-3) )$
-
-        * `explicit(fcn,var1,minval1,maxval1,var2,minval2,maxval2)':
-          plots explicit function `fcn', with variable `var1' taking
-          values from `minval1' to `maxval1' and variable `var2' taking
-          values from `minval2' to `maxval2'.
-
-          This object is affected by the following graphic options:
-          `xu_grid', `yv_grid', `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw3d(key   = "Gauss",
-                            color = "#a02c00",
-                            explicit(20*exp(-x^2-y^2)-10,x,-3,3,y,-3,3),
-                            yv_grid     = 10,
-                            color = blue,
-                            key   = "Plane",
-                            explicit(x+y,x,-5,5,y,-5,5),
-                            surface_hide = true)$
-
-        * `parametric(xfun,yfun,zfun,par,parmin,parmax)': plots
-          parametric curve `[xfun,yfun,zfun]', with parameter `par'
-          taking values from `parmin' to `parmax'.
-
-          This object is affected by the following graphic options:
-          `nticks', `line_width', `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw3d(explicit(exp(sin(x)+cos(x^2)),x,-3,3,y,-3,3),
-                            color = royalblue,
-                            parametric(cos(5*u)^2,sin(7*u),u-2,u,0,2),
-                            color      = turquoise,
-                            line_width = 2,
-                            parametric(t^2,sin(t),2+t,t,0,2),
-                            surface_hide = true,
-                            title = "Surface & curves" )$
-
-        *
-          `parametric_surface(xfun,yfun,zfun,par1,par1min,par1max,par2,par2min,par2max)':
-          plots parametric surface `[xfun,yfun,zfun]', with parameter
-          `par1' taking values from `par1min' to `par1max' and
-          parameter `par2' taking values from `par2min' to `par2max'.
-
-          This object is affected by the following graphic options:
-          `xu_grid', `yv_grid', `line_type', `key' and `color'.
-
-          Example:
-
-               (%i1) load(draw)$
-               (%i2) draw3d(title          = "Sea shell",
-                            xu_grid        = 100,
-                            yv_grid        = 25,
-                            rot_vertical   = 100,
-                            rot_horizontal = 20,
-                            surface_hide   = true,
-                            parametric_surface(0.5*u*cos(u)*(cos(v)+1),
-                                               0.5*u*sin(u)*(cos(v)+1),
-                                               u*sin(v) - ((u+3)/8*%pi)^2 - 20,
-                                               u, 0, 13*%pi, v, -%pi, %pi) )$
-
+     dimensions: `points', `label', `vector', `explicit', `parametric'
+     and `parametric_surface'.
 
      See also the following graphic options: `xrange', `yrange',
      `zrange', `logx', `logy', `logz', `terminal', `grid', `title',
@@ -5430,9 +5982,595 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
      `xu_grid', `yv_grid', `surface_hide', `contour', `contour_levels',
      `palette', `colorbox' and `enhanced3d'.
 
+     To make use of this function, write first `load(draw)'.
+
+ -- Graphic object: points ([[<x1>,<y1>], [<x2>,<y2>],...])
+ -- Graphic object: points ([<x1>,<x2>,...], [<y1>,<y2>,...])
+ -- Graphic object: points ([<y1>,<y2>,...])
+ -- Graphic object: points ([[<x1>,<y1>,<z1>], [<x2>,<y2>,<z2>],...])
+ -- Graphic object: points ([<x1>,<x2>,...], [<y1>,<y2>,...],
+          [<z1>,<z2>,...])
+     Draws points in 2D and 3D.
+
+     This object is affected by the following graphic options:
+     `point_size', `point_type', `points_joined', `line_width', `key',
+     `line_type' and `color'.
+
+     2D
+
+     `points ([[<x1>,<y1>], [<x2>,<y2>],...])' or `points
+     ([<x1>,<x2>,...], [<y1>,<y2>,...])' plots points `[x1,y1]',
+     `[x2,y2]', etc. If abscissas are not given, they are set to
+     consecutive positive integers, so that `points ([<y1>,<y2>,...])'
+     draws points `[1,<y1>]', `[2,<y2>]', etc.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  key = "Small points",
+                  points(makelist([random(20),random(50)],k,1,10)),
+                  point_type    = circle,
+                  point_size    = 3,
+                  points_joined = true,
+                  key           = "Great points",
+                  points(makelist(k,k,1,20),makelist(random(30),k,1,20)),
+                  point_type    = filled_down_triangle,
+                  key           = "Automatic abscissas",
+                  color         = red,
+                  points([2,12,8]))$
+
+     3D
+
+     `points ([[<x1>,<y1>,<z1>], [<x2>,<y2>,<z2>],...])' or `points
+     ([<x1>,<x2>,...], [<y1>,<y2>,...], [<z1>,<z2>,...])' plots points
+     `[<x1>,<y1>,<z1>]', `[<x2>,<y2>,<z2>]', etc.
+
+     Examples:
+
+     One tridimensional sample,
+          (%i1) load(draw)$
+          (%i2) load (numericalio)$
+          (%i3) s2 : read_matrix (file_search ("wind.data"))$
+          (%i4) draw3d(title = "Daily average wind speeds",
+                       point_size = 2,
+                       points(args(submatrix (s2, 4, 5))) )$
+
+     Two tridimensional samples,
+          (%i1) load(draw)$
+          (%i2) load (numericalio)$
+          (%i3) s2 : read_matrix (file_search ("wind.data"))$
+          (%i4) draw3d(
+                   title = "Daily average wind speeds. Two data sets",
+                   point_size = 2,
+                   key        = "Sample from stations 1, 2 and 3",
+                   points(args(submatrix (s2, 4, 5))),
+                   point_type = 4,
+                   key        = "Sample from stations 1, 4 and 5",
+                   points(args(submatrix (s2, 2, 3))) )$
+
+ -- Graphic object: polygon ([[<x1>,<y1>], [<x2>,<y2>],...])
+ -- Graphic object: polygon ([<x1>,<x2>,...], [<y1>,<y2>,...])
+     Draws polygons in 2D.
+
+     2D
+
+     `polygon ([[<x1>,<y1>], [<x2>,<y2>],...])' or `polygon
+     ([<x1>,<x2>,...], [<y1>,<y2>,...])': plots on the plane a polygon
+     with vertices `[<x1>,<y1>]', `[<x2>,<y2>]', etc..
+
+     This object is affected by the following graphic options:
+     `transparent', `fill_color', `border', `line_width', `key',
+     `line_type' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(color      = "#e245f0",
+                       line_width = 8,
+                       polygon([[3,2],[7,2],[5,5]]),
+                       border      = false,
+                       fill_color  = yellow,
+                       polygon([[5,2],[9,2],[7,5]]) )$
+
+ -- Graphic object: rectangle ([<x1>,<y1>], [<x2>,<y2>])
+     Draws rectangles in 2D.
+
+     2D
+
+     `rectangle ([<x1>,<y1>], [<x2>,<y2>])' draws a rectangle with
+     opposite vertices `[<x1>,<y1>]' and `[<x2>,<y2>]'.
+
+     This object is affected by the following graphic options:
+     `transparent', `fill_color', `border', `line_width', `key',
+     `line_type' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(fill_color  = red,
+                       line_width  = 6,
+                       line_type   = dots,
+                       transparent = false,
+                       fill_color  = blue,
+                       rectangle([-2,-2],[8,-1]), /* opposite vertices */
+                       transparent = true,
+                       line_type   = solid,
+                       line_width  = 1,
+                       rectangle([9,4],[2,-1.5]),
+                       xrange      = [-3,10],
+                       yrange      = [-3,4.5] )$
+
+ -- Graphic object: ellipse (<xc>, <yc>, <a>, <b>, <ang1>, <ang2>)
+     Draws ellipses and circles in 2D.
+
+     2D
+
+     `ellipse (<xc>, <yc>, <a>, <b>, <ang1>, <ang2>)' plots an ellipse
+     centered at `[<xc>, <yc>]' with horizontal and vertical semi axis
+     <a> and <b>, respectively, from angle <ang1> to angle <ang2>.
+
+     This object is affected by the following graphic options: `nticks',
+     `transparent', `fill_color', `border', `line_width', `line_type',
+     `key' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(transparent = false,
+                       fill_color  = red,
+                       color       = gray30,
+                       transparent = false,
+                       line_width  = 5,
+                       ellipse(0,6,3,2,270,-270),
+                       /* center (x,y), a, b, start & end in degrees */
+                       transparent = true,
+                       color       = blue,
+                       line_width  = 3,
+                       ellipse(2.5,6,2,3,30,-90),
+                       xrange      = [-3,6],
+                       yrange      = [2,9] )$
+
+ -- Graphic object: label ([<string>,<x>,<y>],...)
+ -- Graphic object: label ([<string>,<x>,<y>,<z>],...)
+     Writes labels in 2D and 3D.
+
+     This object is affected by the following graphic options:
+     `label_alignment', `label_orientation' and `color'.
+
+     2D
+
+     `label([<string>,<x>,<y>])' writes the <string> at point
+     `[<x>,<y>]'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(yrange = [0.1,1.4],
+                       color = "red",
+                       label(["Label in red",0,0.3]),
+                       color = "#0000ff",
+                       label(["Label in blue",0,0.6]),
+                       color = "light-blue",
+                       label(["Label in light-blue",0,0.9],
+                             ["Another ligght-blue",0,1.2])  )$
+
+     3D
+
+     `label([<string>,<x>,<y>,<z>])' writes the <string> at point
+     `[<x>,<y>,<z>]'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(explicit(exp(sin(x)+cos(x^2)),x,-3,3,y,-3,3),
+                       color = red,
+                       label(["UP 1",-2,0,3], ["UP 2",1.5,0,4]),
+                       color = blue,
+                       label(["DOWN 1",2,0,-3]) )$
+
+ -- Graphic object: vector ([<x>,<y>], [<dx>,<dy>])
+ -- Graphic object: vector ([<x>,<y>,<z>], [<dx>,<dy>,<dz>])
+     Draws vectors in 2D and 3D.
+
+     This object is affected by the following graphic options:
+     `head_both', `head_length', `head_angle', `head_type',
+     `line_width', `line_type', `key' and `color'.
+
+     2D
+
+     `vector([<x>,<y>], [<dx>,<dy>])' plots vector `[<dx>,<dy>]' with
+     origin in `[<x>,<y>]'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(xrange      = [0,12],
+                       yrange      = [0,10],
+                       head_length = 1,
+                       vector([0,1],[5,5]), /* default type */
+                       head_type = 'empty,
+                       vector([3,1],[5,5]),
+                       head_both = true,
+                       head_type = 'nofilled,
+                       line_type = dots,
+                       vector([6,1],[5,5]))$
+
+     3D
+
+     `vector([<x>,<y>,<z>], [<dx>,<dy>,<dz>])' plots vector
+     `[<dx>,<dy>,<dz>]' with origin in `[<x>,<y>,<z>]'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(color = cyan,
+                       vector([0,0,0],[1,1,1]/sqrt(3)),
+                       vector([0,0,0],[1,-1,0]/sqrt(2)),
+                       vector([0,0,0],[1,1,-2]/sqrt(6)) )$
+
+ -- Graphic object: explicit (<fcn>,<var>,<minval>,<maxval>)
+ -- Graphic object: explicit
+          (<fcn>,<var1>,<minval1>,<maxval1>,<var2>,<minval2>,<maxval2>)
+     Draws explicit functions in 2D and 3D.
+
+     2D
+
+     `explicit(<fcn>,<var>,<minval>,<maxval>)' plots explicit function
+     <fcn>, with variable <var> taking values from <minval> to <maxval>.
+
+     This object is affected by the following graphic options: `nticks',
+     `adapt_depth', `line_width', `line_type', `key', `filled_func',
+     `fill_color' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(line_width = 3,
+                       color      = blue,
+                       explicit(x^2,x,-3,3) )$
+          (%i3) draw2d(fill_color  = brown,
+                       filled_func = true,
+                       explicit(x^2,x,-3,3) )$
+
+     3D
+
+     `explicit(<fcn>,<var1>,<minval1>,<maxval1>,<var2>,<minval2>,<maxval2>)'
+     plots explicit function <fcn>, with variable <var1> taking values
+     from <minval1> to <maxval1> and variable <var2> taking values from
+     <minval2> to <maxval2>.
+
+     This object is affected by the following graphic options:
+     `xu_grid', `yv_grid', `line_type', `key' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(key   = "Gauss",
+                       color = "#a02c00",
+                       explicit(20*exp(-x^2-y^2)-10,x,-3,3,y,-3,3),
+                       yv_grid     = 10,
+                       color = blue,
+                       key   = "Plane",
+                       explicit(x+y,x,-5,5,y,-5,5),
+                       surface_hide = true)$
+
+ -- Graphic object: implicit
+          (<fcn>,<xvar>,<xminval>,<xmaxval>,<yvar>,<yminval>,<ymaxval>)
+     Draws implicit functions in 2D.
+
+     2D
+
+     `implicit(<fcn>,<xvar>,<xminval>,<xmaxval>,<yvar>,<yminval>,<ymaxval>)'
+     plots the implicit function defined by <fcn>, with variable <xvar>
+     taking values from <xminval> to <xmaxval>, and variable <yvar>
+     taking values from <yminval> to <ymaxval>.
+
+     This object is affected by the following graphic options:
+     `ip_grid', `ip_grid_in', `line_width', `line_type', `key' and
+     `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(terminal  = eps,
+                       grid      = true,
+                       line_type = solid,
+                       key       = "y^2=x^3-2*x+1",
+                       implicit(y^2=x^3-2*x+1, x, -4,4, y, -4,4),
+                       line_type = dots,
+                       key       = "x^3+y^3 = 3*x*y^2-x-1",
+                       implicit(x^3+y^3 = 3*x*y^2-x-1, x,-4,4, y,-4,4),
+                       title     = "Two implicit functions" )$
+
+ -- Graphic object: polar (<radius>,<ang>,<minang>,<maxang>)
+     Draws 2D functions defined in polar coordinates.
+
+     2D
+
+     `polar (<radius>,<ang>,<minang>,<maxang>)' plots function
+     `<radius>(<ang>)' defined in polar coordinates, with variable
+     <ang> taking values from <minang> to <maxang>.
+
+     This object is affected by the following graphic options: `nticks',
+     `line_width', `line_type', `key' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(user_preamble = "set grid polar",
+                       nticks        = 200,
+                       xrange        = [-5,5],
+                       yrange        = [-5,5],
+                       color         = blue,
+                       line_width    = 3,
+                       title         = "Hyperbolic Spiral",
+                       polar(10/theta,theta,1,10*%pi) )$
+
+ -- Graphic object: parametric (<xfun>,<yfun>,<par>,<parmin>,<parmax>)
+ -- Graphic object: parametric
+          (<xfun>,<yfun>,<zfun>,<par>,<parmin>,<parmax>)
+     Draws parametric functions in 2D and 3D.
+
+     This object is affected by the following graphic options: `nticks',
+     `line_width', `line_type', `key' and `color'.
+
+     2D
+
+     `parametric (<xfun>,<yfun>,<par>,<parmin>,<parmax>)' plots
+     parametric function `[<xfun>,<yfun>]', with parameter <par> taking
+     values from <parmin> to <parmax>.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(explicit(exp(x),x,-1,3),
+                       color = red,
+                       key   = "This is the parametric one!!",
+                       parametric(2*cos(rrr),rrr^2,rrr,0,2*%pi))$
+
+     3D
+
+     `parametric (<xfun>,<yfun>,<zfun>,<par>,<parmin>,<parmax>)' plots
+     parametric curve `[<xfun>,<yfun>,<zfun>]', with parameter <par>
+     taking values from <parmin> to <parmax>.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(explicit(exp(sin(x)+cos(x^2)),x,-3,3,y,-3,3),
+                       color = royalblue,
+                       parametric(cos(5*u)^2,sin(7*u),u-2,u,0,2),
+                       color      = turquoise,
+                       line_width = 2,
+                       parametric(t^2,sin(t),2+t,t,0,2),
+                       surface_hide = true,
+                       title = "Surface & curves" )$
+
+ -- Graphic object: image (<im>,<x0>,<y0>,<width>,<height>)
+     Renders images in 2D.
+
+     2D
+
+     `image (<im>,<x0>,<y0>,<width>,<height>)' plots image <im> in the
+     rectangular region from vertex `(<x0>,<y0>)' to
+     `(x0+<width>,y0+<height>)' on the real plane. Argument <im> must
+     be a matrix of real numbers, a matrix of vectors of length three
+     or a <picture> object.
+
+     If <im> is a matrix of real numbers or a `levels picture' object,
+     pixel values are interpreted according to graphic option `palette',
+     which is a vector of length three with components ranging from -36
+     to +36; each value is an index for a formula mapping the levels
+     onto red, green and blue colors, respectively:
+           0: 0               1: 0.5           2: 1
+           3: x               4: x^2           5: x^3
+           6: x^4             7: sqrt(x)       8: sqrt(sqrt(x))
+           9: sin(90x)       10: cos(90x)     11: |x-0.5|
+          12: (2x-1)^2       13: sin(180x)    14: |cos(180x)|
+          15: sin(360x)      16: cos(360x)    17: |sin(360x)|
+          18: |cos(360x)|    19: |sin(720x)|  20: |cos(720x)|
+          21: 3x             22: 3x-1         23: 3x-2
+          24: |3x-1|         25: |3x-2|       26: (3x-1)/2
+          27: (3x-2)/2       28: |(3x-1)/2|   29: |(3x-2)/2|
+          30: x/0.32-0.78125                  31: 2*x-0.84
+          32: 4x;1;-2x+1.84;x/0.08-11.5
+          33: |2*x - 0.5|    34: 2*x          35: 2*x - 0.5
+          36: 2*x - 1
+     negative numbers mean negative colour component.
+
+     `palette = gray' and `palette = color' are short cuts for `palette
+     = [3,3,3]' and `palette = [7,5,15]', respectively.
+
+     If <im> is a matrix of vectors of length three or an `rgb picture'
+     object, they are interpreted as red, green and blue color
+     components.
+
+     Examples:
+
+     If <im> is a matrix of real numbers, pixel values are interpreted
+     according to graphic option `palette'.
+          (%i1) load(draw)$
+          (%i2) im: apply(
+                     'matrix,
+                      makelist(makelist(random(200),i,1,30),i,1,30))$
+          (%i3) /* palette = color, default */
+                draw2d(image(im,0,0,30,30))$
+          (%i4) draw2d(palette = gray, image(im,0,0,30,30))$
+          (%i5) draw2d(palette = [15,20,-4],
+                       colorbox=false,
+                       image(im,0,0,30,30))$
+
+     See also `colorbox'.
+
+     If <im> is a matrix of vectors of length three, they are
+     interpreted as red, green and blue color components.
+          (%i1) load(draw)$
+          (%i2) im: apply(
+                      'matrix,
+                       makelist(
+                         makelist([random(300),
+                                   random(300),
+                                   random(300)],i,1,30),i,1,30))$
+          (%i3) draw2d(image(im,0,0,30,30))$
+
+     Package `draw' automatically loads package `picture'. In this
+     example, a level picture object is built by hand and then rendered.
+          (%i1) load(draw)$
+          (%i2) im: make_level_picture([45,87,2,134,204,16],3,2);
+          (%o2)       picture(level, 3, 2, {Array:  #(45 87 2 134 204 16)})
+          (%i3) /* default color palette */
+                draw2d(image(im,0,0,30,30))$
+          (%i4) /* gray palette */
+                draw2d(palette = gray,
+                       image(im,0,0,30,30))$
+
+     An xpm file is read and then rendered.
+          (%i1) load(draw)$
+          (%i2) im: read_xpm("myfile.xpm")$
+          (%i3) draw2d(image(im,0,0,10,7))$
+
+     See also `make_level_picture', `make_rgb_picture' and `read_xpm'.
+
+     URL `http://www.telefonica.net/web2/biomates/maxima/gpdraw/image'
+     contains more elaborated examples.
+
+ -- Global variable: boundaries_array
+     Default value: `false'
+
+     `boundaries_array' is where the graphic object `geomap' looks for
+     boundaries coordinates.
+
+     Each component of `boundaries_array' is an array of floating point
+     quantities, the coordinates of a polygonal segment or map boundary.
+
+     See also `geomap'.
+
+ -- Graphic object: geomap (<n1>,<n2>,...)
+     Draws cartographic maps in 2D.
+
+     2D
+
+     This function works together with global variable
+     `boundaries_array'.
+
+     Arguments are numbers or lists containing numbers or lists of
+     numbers.  All these numbers must be integers greater or equal than
+     zero, representing the components of global array
+     `boundaries_array'.
+
+     Each component of `boundaries_array' is an array of floating point
+     quantities, the coordinates of a polygonal segment or map boundary.
+
+     `geomap (<n1>,<n2>,...)' flattens its arguments and draws the
+     associated boundaries in `boundaries_array'.
+
+     This object is affected by the following graphic options:
+     `line_width', `line_type' and `color'.
+
+     Examples:
+
+     A simple map defined by hand:
+          (%i1) load(draw)$
+          (%i2) /* Vertices of boundary #0: {(1,1),(2,5),(4,3)} */
+             ( bnd0: make_array(flonum,6),
+               bnd0[0]:1.0, bnd0[1]:1.0, bnd0[2]:2.0,
+               bnd0[3]:5.0, bnd0[4]:4.0, bnd0[5]:3.0 )$
+          (%i3) /* Vertices of boundary #1: {(4,3),(5,4),(6,4),(5,1)} */
+             ( bnd1: make_array(flonum,8),
+               bnd1[0]:4.0, bnd1[1]:3.0, bnd1[2]:5.0, bnd1[3]:4.0,
+               bnd1[4]:6.0, bnd1[5]:4.0, bnd1[6]:5.0, bnd1[7]:1.0)$
+          (%i4) /* Vertices of boundary #2: {(5,1), (3,0), (1,1)} */
+             ( bnd2: make_array(flonum,6),
+               bnd2[0]:5.0, bnd2[1]:1.0, bnd2[2]:3.0,
+               bnd2[3]:0.0, bnd2[4]:1.0, bnd2[5]:1.0 )$
+          (%i5) /* Vertices of boundary #3: {(1,1), (4,3)} */
+             ( bnd3: make_array(flonum,4),
+               bnd3[0]:1.0, bnd3[1]:1.0, bnd3[2]:4.0, bnd3[3]:3.0)$
+          (%i6) /* Vertices of boundary #4: {(4,3), (5,1)} */
+             ( bnd4: make_array(flonum,4),
+               bnd4[0]:4.0, bnd4[1]:3.0, bnd4[2]:5.0, bnd4[3]:1.0)$
+          (%i7) /* Pack all together in boundaries_array */
+             ( boundaries_array: make_array(any,5),
+               boundaries_array[0]: bnd0, boundaries_array[1]: bnd1,
+               boundaries_array[2]: bnd2, boundaries_array[3]: bnd3,
+               boundaries_array[4]: bnd4 )$
+          (%i8) draw2d(geomap([0,1,2,3,4]))$
+
+     Auxiliary package `worldmap' sets global variable
+     `boundaries_array' to real world boundaries in (longitude,
+     latitude) coordinates. These data are in the public domain and
+     come from `http://www-cger.nies.go.jp/grid-e/gridtxt/grid19.html'.
+     Package `worldmap' defines also boundaries for countries and
+     continents as lists with the necessary components of
+     `boundaries_array' (see file `share/draw/worldmap.mac' for more
+     information). Package `draw' does not automatically load
+     `worldmap'.
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) c1: gr2d(geomap(Canada,United_States,
+                                Mexico,Cuba))$
+          (%i4) c2: gr2d(geomap(Africa))$
+          (%i5) c3: gr2d(geomap(Oceania,China,Japan))$
+          (%i6) c4: gr2d(geomap(France,Portugal,Spain,
+                                Morocco,Western_Sahara))$
+          (%i7) draw(columns  = 2,
+                     c1,c2,c3,c4)$
+
+     Package `worldmap' is also useful for plotting countries as
+     polygons. In this case, graphic object `geomap' is no longer
+     necessary and the `polygon' object is used instead. Since lists
+     are now used and not arrays, maps rendering will be slower. See
+     also `make_poly_country' and `make_poly_continent' to understand
+     the following code.
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) mymap: append(
+             [color      = white],  /* borders are white */
+             [fill_color = red],             make_poly_country(Bolivia),
+             [fill_color = cyan],            make_poly_country(Paraguay),
+             [fill_color = green],           make_poly_country(Colombia),
+             [fill_color = blue],            make_poly_country(Chile),
+             [fill_color = "#23ab0f"],       make_poly_country(Brazil),
+             [fill_color = goldenrod],       make_poly_country(Argentina),
+             [fill_color = "midnight-blue"], make_poly_country(Uruguay))$
+          (%i4) apply(draw2d, mymap)$
+
+     See also
+     `http://www.telefonica.net/web2/biomates/maxima/gpdraw/geomap' for
+     more elaborated examples.
+
+ -- Graphic object: parametric_surface
+          (<xfun>,<yfun>,<zfun>,<par1>,<par1min>,<par1max>,<par2>,<par2min>,<par2max>)
+     Draws parametric surfaces in 3D.
+
+     3D
+
+     `parametric_surface
+     (<xfun>,<yfun>,<zfun>,<par1>,<par1min>,<par1max>,<par2>,<par2min>,<par2max>)'
+     plots parametric surface `[<xfun>,<yfun>,<zfun>]', with parameter
+     <par1> taking values from <par1min> to <par1max> and parameter
+     <par2> taking values from <par2min> to <par2max>.
+
+     This object is affected by the following graphic options:
+     `xu_grid', `yv_grid', `line_type', `key' and `color'.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(title          = "Sea shell",
+                       xu_grid        = 100,
+                       yv_grid        = 25,
+                       rot_vertical   = 100,
+                       rot_horizontal = 20,
+                       surface_hide   = true,
+                       parametric_surface(0.5*u*cos(u)*(cos(v)+1),
+                                     0.5*u*sin(u)*(cos(v)+1),
+                                     u*sin(v) - ((u+3)/8*%pi)^2 - 20,
+                                     u, 0, 13*%pi, v, -%pi, %pi) )$
 
  -- Function: draw (<gr2d>, ..., <gr3d>, ..., <options>, ...)
-     Plots a series of scenes; its arguments are `gr2d' and `gr3d'
+     Plots a series of scenes; its arguments are `gr2d' and/or `gr3d'
      objects, together with some options. By default, the scenes are
      put together in one column.
 
@@ -5455,47 +6593,264 @@ File: maxima.info,  Node: Definitions for draw,  Prev: Introduction to draw,  Up
                              polygon([4,5,7],[6,4,2]))$
           (%i4) draw(scene1, scene2, columns = 2)$
 
- -- Function: draw2d (<option>, <graphic object>, ...)
+ -- Function: draw2d (<option>, <graphic_object>, ...)
      This function is a short cut for `draw2d(gr2d(<options>, ...,
-     <graphic object>, ...))'.
+     <graphic_object>, ...))'.
 
      It can be used to plot a unique scene in 2d.
 
      To make use of this function, write first `load(draw)'.
 
 
- -- Function: draw3d (<option>, <graphic object>, ...)
+ -- Function: draw3d (<option>, <graphic_object>, ...)
      This function is a short cut for `draw3d(gr3d(<options>, ...,
-     <graphic object>, ...))'.
+     <graphic_object>, ...))'.
 
      It can be used to plot a unique scene in 3d.
 
      To make use of this function, write first `load(draw)'.
 
 
- -- Variable: draw_pipes
-     Default value: `true'
+
+File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw
 
-     When `draw_pipes' is `true', Maxima communicates with Gnuplot via
-     pipes. If `draw_pipes' is `false', Maxima communicates with
-     Gnuplot via files. This is only useful in non Windows systems.
+48.3 Functions and Variables for pictures
+=========================================
 
+ -- Function: make_level_picture (<data>)
+ -- Function: make_level_picture (<data>,<width>,<height>)
+     Returns a levels `picture' object. `make_level_picture (<data>)'
+     builds the `picture' object from matrix <data>.
+     `make_level_picture (<data>,<width>,<height>)' builds the object
+     from a list of numbers; in this case, both the <width> and the
+     <height> must be given.
+
+     The returned `picture' object contains the following four parts:
+
+       1. symbol `level'
+
+       2. image width
+
+       3. image height
+
+       4. an integer array with pixel data ranging from 0 to 255.
+          Argument <data> must contain only numbers ranged from 0 to
+          255; negative numbers are substituted by 0, and those which
+          are greater than 255 are set to 255.
+
+     Example:
+
+     Level picture from matrix.
+          (%i1) load(draw)$
+          (%i2) make_level_picture(matrix([3,2,5],[7,-9,3000]));
+          (%o2)         picture(level, 3, 2, {Array:  #(3 2 5 7 0 255)})
+
+     Level picture from numeric list.
+          (%i1) load(draw)$
+          (%i2) make_level_picture([-2,0,54,%pi],2,2);
+          (%o2)            picture(level, 2, 2, {Array:  #(0 0 54 3)})
+
+ -- Function: picturep (<x>)
+     Returns `true' if the argument is a well formed image, and `false'
+     otherwise.
+
+ -- Function: picture_equalp (<x>,<y>)
+     Returns `true' in case of equal pictures, and `false' otherwise.
+
+ -- Function: make_rgb_picture (<redlevel>,<greenlevel>,<bluelevel>)
+     Returns an rgb-coloured `picture' object. All three arguments must
+     be levels picture; with red, green and blue levels.
+
+     The returned `picture' object contains the following four parts:
+
+       1. symbol `rgb'
+
+       2. image width
+
+       3. image height
+
+       4. an integer array of length `3*width*height' with pixel data
+          ranging from 0 to 255. Each pixel is represented by three
+          consecutive numbers (red, green, blue).
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
+          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
+          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
+          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
+          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
+          (%i5) make_rgb_picture(red,green,blue);
+          (%o5) picture(rgb, 2, 2,
+                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
+
+ -- Function: take_channel (<im>,<color>)
+     If argument <color> is <red>, <green> or <blue>, function
+     `take_channel' returns the corresponding color channel of picture
+     <im>.  Example:
+
+          (%i1) load(draw)$
+          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
+          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
+          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
+          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
+          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
+          (%i5) make_rgb_picture(red,green,blue);
+          (%o5) picture(rgb, 2, 2,
+                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
+          (%i6) take_channel(%,'green);  /* simple quote!!! */
+          (%o6)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+
+ -- Function: negative_picture (<pic>)
+     Returns the negative of a (`level' or `rgb') picture.
+
+ -- Function: rgb2level (<pic>)
+     Transforms an `rgb' picture into a `level' one by averaging the
+     red, green and blue channels.
+
+ -- Function: get_pixel (<pic>,<x>,<y>)
+     Returns pixel from picture. Coordinates <x> and <y> range from 0 to
+     `width-1' and `height-1', respectively.
+
+ -- Function: read_xpm (<xpm_file>)
+     Reads a file in xpm and returns a picture object.
+
+
+File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions and Variables for pictures,  Up: draw
+
+48.4 Functions and Variables for worldmap
+=========================================
+
+ -- Function: region_boundaries (<x1>,<y1>,<x2>,<y2>)
+     Detects polygonal segments of global variable `boundaries_array'
+     contained in the rectangle with vertices (<x1>,<y1>) -upper left-
+     and (<x2>,<y2>) -bottom right-.
+
+     Example:
+
+     Returns segment numbers for plotting southern Italy.
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) region_boundaries(10.4,41.5,20.7,35.4);
+          (%o3)                [1846, 1863, 1864, 1881, 1888, 1894]
+          (%i4) draw2d(geomap(%))$
+
+ -- Function: numbered_boundaries (<nlist>)
+     Draws a list of polygonal segments (boundaries), labeled by its
+     numbers (`boundaries_array' coordinates). This is of great help
+     when building new geographical entities.
+
+     Example:
+
+     Map of Europe labeling borders with their component number in
+     `boundaries_array'.
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) european_borders:
+                     region_boundaries(-31.81,74.92,49.84,32.06)$
+          (%i4) numbered_boundaries(european_borders)$
+
+ -- Function: make_polygon (<nlist>)
+     Returns a `polygon' object from boundary indices. Argument <nlist>
+     is a list of components of `boundaries_array'.
+
+     Example:
+
+     Bhutan is defined by boundary numbers 171, 173 and 1143, so that
+     `make_polygon([171,173,1143])' appends arrays of coordinates
+     `boundaries_array[171]', `boundaries_array[173]' and
+     `boundaries_array[1143]' and returns a `polygon' object suited to
+     be plotted by `draw'. To avoid an error message, arrays must be
+     compatible in the sense that any two consecutive arrays have two
+     coordinates in the extremes in common. In this example, the two
+     first components of `boundaries_array[171]' are equal to the last
+     two coordinates of `boundaries_array[173]', and the two first of
+     `boundaries_array[173]' are equal to the two first of
+     `boundaries_array[1143]'; in conclussion, boundary numbers 171,
+     173 and 1143 (in this order) are compatible and the colored
+     polygon can be drawn.
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) Bhutan;
+          (%o3)                        [[171, 173, 1143]]
+          (%i4) boundaries_array[171];
+          (%o4) {Array:
+                 #(88.750549 27.14727 88.806351 27.25305 88.901367 27.282221
+                   88.917877 27.321039)}
+          (%i5) boundaries_array[173];
+          (%o5) {Array:
+                 #(91.659554 27.76511 91.6008 27.66666 91.598022 27.62499
+                   91.631348 27.536381 91.765533 27.45694 91.775253 27.4161
+                   92.007751 27.471939 92.11441 27.28583 92.015259 27.168051
+                   92.015533 27.08083 92.083313 27.02277 92.112183 26.920271
+                   92.069977 26.86194 91.997192 26.85194 91.915253 26.893881
+                   91.916924 26.85416 91.8358 26.863331 91.712479 26.799999
+                   91.542191 26.80444 91.492188 26.87472 91.418854 26.873329
+                   91.371353 26.800831 91.307457 26.778049 90.682457 26.77417
+                   90.392197 26.903601 90.344131 26.894159 90.143044 26.75333
+                   89.98996 26.73583 89.841919 26.70138 89.618301 26.72694
+                   89.636093 26.771111 89.360786 26.859989 89.22081 26.81472
+                   89.110237 26.829161 88.921631 26.98777 88.873016 26.95499
+                   88.867737 27.080549 88.843307 27.108601 88.750549
+                   27.14727)}
+          (%i6) boundaries_array[1143];
+          (%o6) {Array:
+                 #(91.659554 27.76511 91.666924 27.88888 91.65831 27.94805
+                   91.338028 28.05249 91.314972 28.096661 91.108856 27.971109
+                   91.015808 27.97777 90.896927 28.05055 90.382462 28.07972
+                   90.396088 28.23555 90.366074 28.257771 89.996353 28.32333
+                   89.83165 28.24888 89.58609 28.139999 89.35997 27.87166
+                   89.225517 27.795 89.125793 27.56749 88.971077 27.47361
+                   88.917877 27.321039)}
+          (%i7) Bhutan_polygon: make_polygon([171,173,1143])$
+          (%i8) draw2d(Bhutan_polygon)$
+
+ -- Function: make_poly_country (<country_name>)
+     Makes the necessary polygons to draw a colored country.  If
+     islands exist, one country can be defined with more than just one
+     polygon.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) make_poly_country(India)$
+          (%i4) apply(draw2d, %)$
+
+ -- Function: make_poly_continent (<continent_name>)
+ -- Function: make_poly_continent (<country_list>)
+     Makes the necessary polygons to draw a colored continent or a list
+     of countries.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) load(worldmap)$
+          (%i3) /* A continent */
+                make_poly_continent(Africa)$
+          (%i4) apply(draw2d, %)$
+          (%i5) /* A list of countries */
+                make_poly_continent([Germany,Denmark,Poland])$
+          (%i6) apply(draw2d, %)$
 
 
 File: maxima.info,  Node: dynamics,  Next: eval_string,  Prev: draw,  Up: Top
 
-48 dynamics
+49 dynamics
 ***********
 
 * Menu:
 
 * Introduction to dynamics::
-* Definitions for dynamics::
+* Functions and Variables for dynamics::
 
 
-File: maxima.info,  Node: Introduction to dynamics,  Next: Definitions for dynamics,  Prev: dynamics,  Up: dynamics
+File: maxima.info,  Node: Introduction to dynamics,  Next: Functions and Variables for dynamics,  Prev: dynamics,  Up: dynamics
 
-48.1 Introduction to dynamics
+49.1 Introduction to dynamics
 =============================
 
 The additional package `dynamics' includes several functions to create
@@ -5526,10 +6881,10 @@ the variable name, and the minimum and maximum values; the number of
 steps can now be changed with the option <nticks>.
 
 
-File: maxima.info,  Node: Definitions for dynamics,  Prev: Introduction to dynamics,  Up: dynamics
+File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduction to dynamics,  Up: dynamics
 
-48.2 Definitions for dynamics
-=============================
+49.2 Functions and Variables for dynamics
+=========================================
 
  -- Function: chaosgame (`[['<x1>, <y1>`]'...`['<xm>, <ym>`]]',
           `['<x0>, <y0>`]', <b>, <n>, ..., options, ...);
@@ -5883,18 +7238,18 @@ at t=0:
 
 File: maxima.info,  Node: eval_string,  Next: f90,  Prev: dynamics,  Up: Top
 
-49 eval_string
+50 eval_string
 **************
 
 * Menu:
 
-* Definitions for eval_string::
+* Functions and Variables for eval_string::
 
 
-File: maxima.info,  Node: Definitions for eval_string,  Prev: eval_string,  Up: eval_string
+File: maxima.info,  Node: Functions and Variables for eval_string,  Prev: eval_string,  Up: eval_string
 
-49.1 Definitions for eval_string
-================================
+50.1 Functions and Variables for eval_string
+============================================
 
  -- Function: eval_string (<str>)
      Parse the Maxima string <str> as a Maxima expression and evaluate
@@ -5932,18 +7287,18 @@ File: maxima.info,  Node: Definitions for eval_string,  Prev: eval_string,  Up: 
 
 File: maxima.info,  Node: f90,  Next: ggf,  Prev: eval_string,  Up: Top
 
-50 f90
+51 f90
 ******
 
 * Menu:
 
-* Definitions for f90::
+* Functions and Variables for f90::
 
 
-File: maxima.info,  Node: Definitions for f90,  Prev: f90,  Up: f90
+File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
 
-50.1 Definitions for f90
-========================
+51.1 Functions and Variables for f90
+====================================
 
  -- Function: f90 (<expr>)
      The f90 command is an update to the original maxima fortran
@@ -5952,26 +7307,27 @@ File: maxima.info,  Node: Definitions for f90,  Prev: f90,  Up: f90
      In the next example, notice how the fortran command breaks lines
      within symbols. The `f90' command never breaks within a symbol.
 
-          (%i1) load("f90")$
 
-          (%i2) expr:expand((xxx+yyy+7)^4);
-                   4            3         3        2    2
-          (%o2) yyy  + 4 xxx yyy  + 28 yyy  + 6 xxx  yyy
-                       2          2        3             2
-           + 84 xxx yyy  + 294 yyy  + 4 xxx  yyy + 84 xxx  yyy
-                                         4         3          2
-           + 588 xxx yyy + 1372 yyy + xxx  + 28 xxx  + 294 xxx
-           + 1372 xxx + 2401
-          (%i3) fortran(expr);
-                yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294*yy
-               1   y**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx**4+28*
-               2   xxx**3+294*xxx**2+1372*xxx+2401
-          (%o3)                       done
-          (%i4) f90(expr);
-          yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294* &
-               yyy**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx** &
-               4+28*xxx**3+294*xxx**2+1372*xxx+2401
-          (%o4)                       done
+     (%i1) load("f90")$
+
+     (%i2) expr:expand((xxx+yyy+7)^4);
+              4            3         3        2    2
+     (%o2) yyy  + 4 xxx yyy  + 28 yyy  + 6 xxx  yyy
+                  2          2        3             2
+      + 84 xxx yyy  + 294 yyy  + 4 xxx  yyy + 84 xxx  yyy
+                                    4         3          2
+      + 588 xxx yyy + 1372 yyy + xxx  + 28 xxx  + 294 xxx
+      + 1372 xxx + 2401
+     (%i3) fortran(expr);
+           yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294*yy
+          1   y**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx**4+28*
+          2   xxx**3+294*xxx**2+1372*xxx+2401
+     (%o3)                       done
+     (%i4) f90(expr);
+     yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294* &
+          yyy**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx** &
+          4+28*xxx**3+294*xxx**2+1372*xxx+2401
+     (%o4)                       done
 
      The `f90' implementation was done as a quick hack. It is not a
      necessarily a good example upon which to base other language
@@ -5982,18 +7338,18 @@ File: maxima.info,  Node: Definitions for f90,  Prev: f90,  Up: f90
 
 File: maxima.info,  Node: ggf,  Next: grobner,  Prev: f90,  Up: Top
 
-51 ggf
+52 ggf
 ******
 
 * Menu:
 
-* Definitions for ggf::
+* Functions and Variables for ggf::
 
 
-File: maxima.info,  Node: Definitions for ggf,  Prev: ggf,  Up: ggf
+File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf,  Up: ggf
 
-51.1 Definitions for ggf
-========================
+52.1 Functions and Variables for ggf
+====================================
 
  -- Option variable: GGFINFINITY
      Default value: 3
@@ -6040,18 +7396,18 @@ File: maxima.info,  Node: Definitions for ggf,  Prev: ggf,  Up: ggf
 
 File: maxima.info,  Node: grobner,  Next: impdiff,  Prev: ggf,  Up: Top
 
-52 grobner
+53 grobner
 **********
 
 * Menu:
 
 * Introduction to grobner ::
-* Definitions for grobner ::
+* Functions and Variables for grobner ::
 
 
-File: maxima.info,  Node: Introduction to grobner,  Next: Definitions for grobner,  Prev: Top,  Up: Top
+File: maxima.info,  Node: Introduction to grobner,  Next: Functions and Variables for grobner,  Prev: Top,  Up: Top
 
-52.1 Introduction to grobner
+53.1 Introduction to grobner
 ============================
 
 `grobner' is a package for working with Groebner bases in Maxima.
@@ -6074,7 +7430,7 @@ Some of the calculation in the demo will take a lot of time therefore
 the output `grobner-demo.output' of the demo can be found in the same
 directory as the demo file.
 
-52.1.1 Notes on the grobner package
+53.1.1 Notes on the grobner package
 -----------------------------------
 
 The package was written by
@@ -6097,7 +7453,7 @@ Jean-Charles Fauge`re
 LIP6/CNRS Universite' Paris VI
 January 20, 1999
 
-52.1.2 Implementations of admissible monomial orders in grobner
+53.1.2 Implementations of admissible monomial orders in grobner
 ---------------------------------------------------------------
 
    * `lex'
@@ -6118,12 +7474,12 @@ January 20, 1999
 
 
 
-File: maxima.info,  Node: Definitions for grobner,  Prev: Introduction to grobner,  Up: Top
+File: maxima.info,  Node: Functions and Variables for grobner,  Prev: Introduction to grobner,  Up: Top
 
-52.2 Definitions for grobner
-============================
+53.2 Functions and Variables for grobner
+========================================
 
-52.2.1 Global switches for grobner
+53.2.1 Global switches for grobner
 ----------------------------------
 
  -- Option variable: poly_monomial_order
@@ -6194,7 +7550,7 @@ File: maxima.info,  Node: Definitions for grobner,  Prev: Introduction to grobne
      reduction means that division algorithm stops after the first
      reduction.
 
-52.2.2 Simple operators in grobner
+53.2.2 Simple operators in grobner
 ----------------------------------
 
 `poly_add', `poly_subtract', `poly_multiply' and `poly_expt' are the
@@ -6239,7 +7595,7 @@ _maxima_ general form.
      It assumes that the division is possible, which may not always be
      the case in rings which are not fields.
 
-52.2.3 Other functions in grobner
+53.2.3 Other functions in grobner
 ---------------------------------
 
  -- Function: poly_expand (<poly>, <varlist>)
@@ -6316,7 +7672,7 @@ _maxima_ general form.
      polynomials and returns the resulting Groebner basis.
 
 
-52.2.4 Standard postprocessing of Groebner Bases
+53.2.4 Standard postprocessing of Groebner Bases
 ------------------------------------------------
 
 The _k-th elimination Ideal_ I_k of an Ideal I over K[ x[1],...,x[n] ]
@@ -6459,741 +7815,10 @@ I }.
 
 File: maxima.info,  Node: impdiff,  Next: implicit_plot,  Prev: grobner,  Up: Top
 
-53 impdiff
+54 impdiff
 **********
 
 * Menu:
 
-* Definitions for impdiff::
-
-
-File: maxima.info,  Node: Definitions for impdiff,  Prev: impdiff,  Up: impdiff
-
-53.1 Definitions for impdiff
-============================
-
- -- Function: implicit_derivative
-          (<f>,<indvarlist>,<orderlist>,<depvar>)
-     This subroutine computes implicit derivatives of multivariable
-     functions.  <f> is an array function, the indexes are the
-     derivative degree in the <indvarlist> order; <indvarlist> is the
-     independent variable list; <orderlist> is the order desired; and
-     <depvar> is the dependent variable.
-
-     To use this function write first `load("impdiff")'.
-
-
-File: maxima.info,  Node: implicit_plot,  Next: interpol,  Prev: impdiff,  Up: Top
-
-54 implicit_plot
-****************
-
-* Menu:
-
-* Definitions for implicit_plot::
-
-
-File: maxima.info,  Node: Definitions for implicit_plot,  Prev: implicit_plot,  Up: implicit_plot
-
-54.1 Definitions for implicit_plot
-==================================
-
- -- Function: implicit_plot (<expr>, <x_range>, <y_range>)
- -- Function: implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
-          <y_range>)
-     Displays a plot of one or more expressions in implicit form.
-     <expr> is the expression to be plotted, <x_range> the range of the
-     horizontal axis and <y_range> the range of vertical axis.
-     <implicit_plot> only works with the gnuplot driver.
-     <implicit_plot> respects global setting for the gnuplot driver set
-     by the <set_plot_option> function. Options can also be passed to
-     <implicit_plot> function as optional arguments.
-
-     <implicit_plot> works by tracking sign changes on the area given
-     by <x_range> and <y_range> and can fail for complicated
-     expressions.
-
-     Example:
-          (%i1) implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4],
-           [gnuplot_preamble, "set zeroaxis"]);
-
-
-
-File: maxima.info,  Node: interpol,  Next: lbfgs,  Prev: implicit_plot,  Up: Top
-
-55 interpol
-***********
-
-* Menu:
-
-* Introduction to interpol::
-* Definitions for interpol::
-
-
-File: maxima.info,  Node: Introduction to interpol,  Next: Definitions for interpol,  Prev: interpol,  Up: interpol
-
-55.1 Introduction to interpol
-=============================
-
-Package `interpol' defines de Lagrangian, the linear and the cubic
-splines methods for polynomial interpolation.
-
-   For comments, bugs or suggestions, please contact me at <'mario AT
-edu DOT xunta DOT es'>.
-
-
-File: maxima.info,  Node: Definitions for interpol,  Prev: Introduction to interpol,  Up: interpol
-
-55.2 Definitions for interpol
-=============================
-
- -- Function: lagrange (<points>)
- -- Function: lagrange (<points>, <option>)
-     Computes the polynomial interpolation by the Lagrangian method.
-     Argument <points> must be either:
-
-        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
-
-        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
-
-        * a list of numbers, `p: [4,6,3]', in which case the abscissas
-          will be assigned automatically to 1, 2, 3, etc.
-
-     In the first two cases the pairs are ordered with respect to the
-     first coordinate before making computations.
-
-     With the <option> argument it is possible to select the name for
-     the independent variable, which is `'x' by default; to define
-     another one, write something like `varname='z'.
-
-     Examples:
-
-          (%i1) load("interpol")$
-          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
-          (%i3) lagrange(p);
-                           4        3         2
-                       73 x    701 x    8957 x    5288 x   186
-          (%o3)        ----- - ------ + ------- - ------ + ---
-                        420     210       420      105      5
-          (%i4) f(x):=''%;
-                               4        3         2
-                           73 x    701 x    8957 x    5288 x   186
-          (%o4)    f(x) := ----- - ------ + ------- - ------ + ---
-                            420     210       420      105      5
-          (%i5) /* Evaluate the polynomial at some points */
-                map(f,[2.3,5/7,%pi]);
-                                       919062
-          (%o5)  [- 1.567534999999992, ------,
-                                       84035
-                                   4          3           2
-                             73 %pi    701 %pi    8957 %pi    5288 %pi   186
-                             ------- - -------- + --------- - -------- + ---]
-                               420       210         420        105       5
-          (%i6) %,numer;
-          (%o6) [- 1.567534999999992, 10.9366573451538, 2.89319655125692]
-          (%i7) /* Plot the polynomial together with points */
-                plot2d([f(x),[discrete,p]],[x,0,10],
-                     [gnuplot_curve_styles,
-                           ["with lines","with points pointsize 3"]])$
-          (%i8) /* Change variable name */
-                lagrange(p, varname=w);
-                           4        3         2
-                       73 w    701 w    8957 w    5288 w   186
-          (%o8)        ----- - ------ + ------- - ------ + ---
-                        420     210       420      105      5
-
-
- -- Function: charfun2 (<x>, <a>, <b>)
-     Returns `true' if number <x> belongs to the interval [a, b), and
-     `false' otherwise.
-
- -- Function: linearinterpol (<points>)
- -- Function: linearinterpol (<points>, <option>)
-     Computes the polynomial interpolation by the linear method.
-     Argument <points> must be either:
-
-        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
-
-        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
-
-        * a list of numbers, `p: [4,6,3]', in which case the abscissas
-          will be assigned automatically to 1, 2, 3, etc.
-
-     In the first two cases the pairs are ordered with respect to the
-     first coordinate before making computations.
-
-     With the <option> argument it is possible to select the name for
-     the independent variable, which is `'x' by default; to define
-     another one, write something like `varname='z'.
-
-     Examples:
-          (%i1) load("interpol")$
-          (%i2) p: matrix([7,2],[8,3],[1,5],[3,2],[6,7])$
-          (%i3) linearinterpol(p);
-                  13   3 x
-          (%o3)  (-- - ---) charfun2(x, minf, 3)
-                  2     2
-           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
-              5 x
-           + (--- - 3) charfun2(x, 3, 6)
-               3
-
-          (%i4) f(x):=''%;
-                          13   3 x
-          (%o4)  f(x) := (-- - ---) charfun2(x, minf, 3)
-                          2     2
-           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
-              5 x
-           + (--- - 3) charfun2(x, 3, 6)
-               3
-          (%i5)  /* Evaluate the polynomial at some points */
-                 map(f,[7.3,25/7,%pi]);
-                                      62  5 %pi
-          (%o5)                 [2.3, --, ----- - 3]
-                                      21    3
-          (%i6) %,numer;
-          (%o6)  [2.3, 2.952380952380953, 2.235987755982989]
-          (%i7)  /* Plot the polynomial together with points */
-                 plot2d(['(f(x)),[discrete,args(p)]],[x,-5,20],
-                     [gnuplot_curve_styles,
-                           ["with lines","with points pointsize 3"]])$
-          (%i8)  /* Change variable name */
-                 linearinterpol(p, varname='s);
-                 13   3 s
-          (%o8) (-- - ---) charfun2(s, minf, 3)
-                 2     2
-           + (s - 5) charfun2(s, 7, inf) + (37 - 5 s) charfun2(s, 6, 7)
-              5 s
-           + (--- - 3) charfun2(s, 3, 6)
-               3
-
-
- -- Function: cspline (<points>)
- -- Function: cspline (<points>, <option1>, <option2>, ...)
-     Computes the polynomial interpolation by the cubic splines method.
-     Argument <points> must be either:
-
-        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
-
-        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
-
-        * a list of numbers, `p: [4,6,3]', in which case the abscissas
-          will be assigned automatically to 1, 2, 3, etc.
-
-     In the first two cases the pairs are ordered with respect to the
-     first coordinate before making computations.
-
-     There are three options to fit specific needs:
-        * `'d1', default `'unknown', is the first derivative at x_1; if
-          it is `'unknown', the second derivative at x_1 is made equal
-          to 0 (natural cubic spline); if it is equal to a number, the
-          second derivative is calculated based on this number.
-
-        * `'dn', default `'unknown', is the first derivative at x_n; if
-          it is `'unknown', the second derivative at x_n is made equal
-          to 0 (natural cubic spline); if it is equal to a number, the
-          second derivative is calculated based on this number.
-
-        * `'varname', default `'x', is the name of the independent
-          variable.
-
-     Examples:
-          (%i1) load("interpol")$
-          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
-          (%i3) /* Unknown first derivatives at the extremes
-                   is equivalent to natural cubic splines */
-                cspline(p);
-                        3         2
-                  1159 x    1159 x    6091 x   8283
-          (%o3)  (------- - ------- - ------ + ----) charfun2(x, minf, 3)
-                   3288      1096      3288    1096
-                      3         2
-                2587 x    5174 x    494117 x   108928
-           + (- ------- + ------- - -------- + ------) charfun2(x, 7, inf)
-                 1644       137       1644      137
-                    3          2
-              4715 x    15209 x    579277 x   199575
-           + (------- - -------- + -------- - ------) charfun2(x, 6, 7)
-               1644       274        1644      274
-                      3         2
-                3287 x    2223 x    48275 x   9609
-           + (- ------- + ------- - ------- + ----) charfun2(x, 3, 6)
-                 4932       274      1644     274
-
-          (%i4) f(x):=''%$
-          (%i5) /* Some evaluations */
-                map(f,[2.3,5/7,%pi]), numer;
-          (%o5) [1.991460766423356, 5.823200187269903, 2.227405312429507]
-          (%i6) /* Plotting interpolating function */
-                plot2d(['(f(x)),[discrete,p]],[x,0,10],
-                    [gnuplot_curve_styles,
-                         ["with lines","with points pointsize 3"]])$
-          (%i7) /* New call, but giving values at the derivatives */
-                cspline(p,d1=0,dn=0);
-                        3          2
-                  1949 x    11437 x    17027 x   1247
-          (%o7)  (------- - -------- + ------- + ----) charfun2(x, minf, 3)
-                   2256       2256      2256     752
-                      3          2
-                1547 x    35581 x    68068 x   173546
-           + (- ------- + -------- - ------- + ------) charfun2(x, 7, inf)
-                  564       564        141      141
-                   3          2
-              607 x    35147 x    55706 x   38420
-           + (------ - -------- + ------- - -----) charfun2(x, 6, 7)
-               188       564        141      47
-                      3         2
-                3895 x    1807 x    5146 x   2148
-           + (- ------- + ------- - ------ + ----) charfun2(x, 3, 6)
-                 5076       188      141      47
-          (%i8) /* Defining new interpolating function */
-                g(x):=''%$
-          (%i9) /* Plotting both functions together */
-                plot2d(['(f(x)),'(g(x)),[discrete,p]],[x,0,10],
-                     [gnuplot_curve_styles,
-                        ["with lines","with lines","with points pointsize 3"]])$
-
-
-
-File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: interpol,  Up: Top
-
-56 lbfgs
-********
-
-* Menu:
-
-* Introduction to lbfgs::
-* Definitions for lbfgs::
-
-
-File: maxima.info,  Node: Introduction to lbfgs,  Next: Definitions for lbfgs,  Prev: Top,  Up: Top
-
-56.1 Introduction to lbfgs
-==========================
-
-`lbfgs' is an implementation of the L-BFGS algorithm [1] to solve
-unconstrained minimization problems via a limited-memory quasi-Newton
-(BFGS) algorithm.  It is called a limited-memory method because a
-low-rank approximation of the Hessian matrix inverse is stored instead
-of the entire Hessian inverse.  The program was originally written in
-Fortran [2] by Jorge Nocedal, incorporating some functions originally
-written by Jorge J. More' and David J. Thuente, and translated into
-Lisp automatically via the program `f2cl'.  The Maxima package `lbfgs'
-comprises the translated code plus an interface function which manages
-some details.
-
-   References:
-
-   [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
-large scale optimization". Mathematical Programming B 45:503-528 (1989)
-
-   [2] http://netlib.org/opt/lbfgs_um.shar
-
-
-File: maxima.info,  Node: Definitions for lbfgs,  Prev: Introduction to lbfgs,  Up: Top
-
-56.2 Definitions for lbfgs
-==========================
-
- -- Function: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
-     Finds an approximate solution of the unconstrained minimization of
-     the figure of merit <FOM> over the list of variables <X>, starting
-     from initial estimates <X0>, such that norm grad FOM < epsilon
-     max(1, norm X).
-
-     The algorithm applied is a limited-memory quasi-Newton (BFGS)
-     algorithm [1].  It is called a limited-memory method because a
-     low-rank approximation of the Hessian matrix inverse is stored
-     instead of the entire Hessian inverse.  Each iteration of the
-     algorithm is a line search, that is, a search along a ray in the
-     variables <X>, with the search direction computed from the
-     approximate Hessian inverse.  The FOM is always decreased by a
-     successful line search.  Usually (but not always) the norm of the
-     gradient of FOM also decreases.
-
-     <iprint> controls progress messages printed by `lbfgs'.
-
-    `iprint[1]'
-          `<iprint>[1]' controls the frequency of progress messages.
-         `iprint[1] < 0'
-               No progress messages.
-
-         `iprint[1] = 0'
-               Messages at the first and last iterations.
-
-         `iprint[1] > 0'
-               Print a message every `<iprint>[1]' iterations.
-
-    `iprint[2]'
-          `<iprint>[2]' controls the verbosity of progress messages.
-         `iprint[2] = 0'
-               Print out iteration count, number of evaluations of
-               <FOM>, value of <FOM>, norm of the gradient of <FOM>,
-               and step length.
-
-         `iprint[2] = 1'
-               Same as `<iprint>[2] = 0', plus <X0> and the gradient of
-               <FOM> evaluated at <X0>.
-
-         `iprint[2] = 2'
-               Same as `<iprint>[2] = 1', plus values of <X> at each
-               iteration.
-
-         `iprint[2] = 3'
-               Same as `<iprint>[2] = 2', plus the gradient of <FOM> at
-               each iteration.
-
-     The columns printed by `lbfgs' are the following.
-
-    `I'
-          Number of iterations. It is incremented for each line search.
-
-    `NFN'
-          Number of evaluations of the figure of merit.
-
-    `FUNC'
-          Value of the figure of merit at the end of the most recent
-          line search.
-
-    `GNORM'
-          Norm of the gradient of the figure of merit at the end of the
-          most recent line search.
-
-    `STEPLENGTH'
-          An internal parameter of the search algorithm.
-
-     Additional information concerning details of the algorithm are
-     found in the comments of the original Fortran code [2].
-
-     See also `lbfgs_nfeval_max' and `lbfgs_ncorrections'.
-
-     References:
-
-     [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
-     large scale optimization". Mathematical Programming B 45:503-528
-     (1989)
-
-     [2] http://netlib.org/opt/lbfgs_um.shar
-
-     Examples:
-
-     The same FOM as computed by FGCOMPUTE in the program sdrive.f in
-     the LBFGS package from Netlib.  Note that the variables in
-     question are subscripted variables.  The FOM has an exact minimum
-     equal to zero at u[k] = 1 for k = 1, ..., 8.
-
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
-          (%i2) t1[j] := 1 - u[j];
-          (%o2)                     t1  := 1 - u
-                                      j         j
-          (%i3) t2[j] := 10*(u[j + 1] - u[j]^2);
-                                                    2
-          (%o3)                t2  := 10 (u      - u )
-                                 j         j + 1    j
-          (%i4) n : 8;
-          (%o4)                           8
-          (%i5) FOM : sum (t1[2*j - 1]^2 + t2[2*j - 1]^2, j, 1, n/2);
-                           2 2           2              2 2           2
-          (%o5) 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
-                      8    7           7           6    5           5
-                               2 2           2              2 2           2
-                  + 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
-                          4    3           3           2    1           1
-          (%i6) lbfgs (FOM, '[u[1], u[2], u[3], u[4], u[5], u[6], u[7], u[8]],
-                 [-1.2, 1, -1.2, 1, -1.2, 1, -1.2, 1], 1e-3, [1, 0]);
-          *************************************************
-            N=    8   NUMBER OF CORRECTIONS=25
-                 INITIAL VALUES
-           F=  9.680000000000000D+01   GNORM=  4.657353755084532D+02
-          *************************************************
-
-             I  NFN     FUNC                    GNORM                   STEPLENGTH
-
-             1    3     1.651479526340304D+01   4.324359291335977D+00   7.926153934390631D-04
-             2    4     1.650209316638371D+01   3.575788161060007D+00   1.000000000000000D+00
-             3    5     1.645461701312851D+01   6.230869903601577D+00   1.000000000000000D+00
-             4    6     1.636867301275588D+01   1.177589920974980D+01   1.000000000000000D+00
-             5    7     1.612153014409201D+01   2.292797147151288D+01   1.000000000000000D+00
-             6    8     1.569118407390628D+01   3.687447158775571D+01   1.000000000000000D+00
-             7    9     1.510361958398942D+01   4.501931728123680D+01   1.000000000000000D+00
-             8   10     1.391077875774294D+01   4.526061463810632D+01   1.000000000000000D+00
-             9   11     1.165625686278198D+01   2.748348965356917D+01   1.000000000000000D+00
-            10   12     9.859422687859137D+00   2.111494974231644D+01   1.000000000000000D+00
-            11   13     7.815442521732281D+00   6.110762325766556D+00   1.000000000000000D+00
-            12   15     7.346380905773160D+00   2.165281166714631D+01   1.285316401779533D-01
-            13   16     6.330460634066370D+00   1.401220851762050D+01   1.000000000000000D+00
-            14   17     5.238763939851439D+00   1.702473787613255D+01   1.000000000000000D+00
-            15   18     3.754016790406701D+00   7.981845727704576D+00   1.000000000000000D+00
-            16   20     3.001238402309352D+00   3.925482944716691D+00   2.333129631296807D-01
-            17   22     2.794390709718290D+00   8.243329982546473D+00   2.503577283782332D-01
-            18   23     2.563783562918759D+00   1.035413426521790D+01   1.000000000000000D+00
-            19   24     2.019429976377856D+00   1.065187312346769D+01   1.000000000000000D+00
-            20   25     1.428003167670903D+00   2.475962450826961D+00   1.000000000000000D+00
-            21   27     1.197874264861340D+00   8.441707983493810D+00   4.303451060808756D-01
-            22   28     9.023848941942773D-01   1.113189216635162D+01   1.000000000000000D+00
-            23   29     5.508226405863770D-01   2.380830600326308D+00   1.000000000000000D+00
-            24   31     3.902893258815567D-01   5.625595816584421D+00   4.834988416524465D-01
-            25   32     3.207542206990315D-01   1.149444645416472D+01   1.000000000000000D+00
-            26   33     1.874468266362791D-01   3.632482152880997D+00   1.000000000000000D+00
-            27   34     9.575763380706598D-02   4.816497446154354D+00   1.000000000000000D+00
-            28   35     4.085145107543406D-02   2.087009350166495D+00   1.000000000000000D+00
-            29   36     1.931106001379290D-02   3.886818608498966D+00   1.000000000000000D+00
-            30   37     6.894000721499670D-03   3.198505796342214D+00   1.000000000000000D+00
-            31   38     1.443296033051864D-03   1.590265471025043D+00   1.000000000000000D+00
-            32   39     1.571766603154336D-04   3.098257063980634D-01   1.000000000000000D+00
-            33   40     1.288011776581970D-05   1.207784183577257D-02   1.000000000000000D+00
-            34   41     1.806140173752971D-06   4.587890233385193D-02   1.000000000000000D+00
-            35   42     1.769004645459358D-07   1.790537375052208D-02   1.000000000000000D+00
-            36   43     3.312164100763217D-10   6.782068426119681D-04   1.000000000000000D+00
-
-           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
-           IFLAG = 0
-          (%o6) [u  = 1.000005339815974, u  = 1.000009942839805,
-                  1                       2
-          u  = 1.000005339815974, u  = 1.000009942839805,
-           3                       4
-          u  = 1.000005339815974, u  = 1.000009942839805,
-           5                       6
-          u  = 1.000005339815974, u  = 1.000009942839805]
-           7                       8
-
-     A regression problem.  The FOM is the mean square difference
-     between the predicted value F(X[i]) and the observed value Y[i].
-     The function F is a bounded monotone function (a so-called
-     "sigmoidal" function).  In this example, `lbfgs' computes
-     approximate values for the parameters of F and `plot2d' displays a
-     comparison of F with the observed data.
-
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
-          (%i2) FOM : '((1/length(X))*sum((F(X[i]) - Y[i])^2, i, 1, length(X)));
-                                         2
-                         sum((F(X ) - Y ) , i, 1, length(X))
-                                 i     i
-          (%o2)          -----------------------------------
-                                      length(X)
-          (%i3) X : [1, 2, 3, 4, 5];
-          (%o3)                    [1, 2, 3, 4, 5]
-          (%i4) Y : [0, 0.5, 1, 1.25, 1.5];
-          (%o4)                [0, 0.5, 1, 1.25, 1.5]
-          (%i5) F(x) := A/(1 + exp(-B*(x - C)));
-                                             A
-          (%o5)            F(x) := ----------------------
-                                   1 + exp((- B) (x - C))
-          (%i6) ''FOM;
-                          A               2            A                2
-          (%o6) ((----------------- - 1.5)  + (----------------- - 1.25)
-                    - B (5 - C)                  - B (4 - C)
-                  %e            + 1            %e            + 1
-                      A             2            A               2
-           + (----------------- - 1)  + (----------------- - 0.5)
-                - B (3 - C)                - B (2 - C)
-              %e            + 1          %e            + 1
-                       2
-                      A
-           + --------------------)/5
-                - B (1 - C)     2
-             (%e            + 1)
-          (%i7) estimates : lbfgs (FOM, '[A, B, C], [1, 1, 1], 1e-4, [1, 0]);
-          *************************************************
-            N=    3   NUMBER OF CORRECTIONS=25
-                 INITIAL VALUES
-           F=  1.348738534246918D-01   GNORM=  2.000215531936760D-01
-          *************************************************
-
-             I  NFN     FUNC                    GNORM                   STEPLENGTH
-
-             1    3     1.177820636622582D-01   9.893138394953992D-02   8.554435968992371D-01
-             2    6     2.302653892214013D-02   1.180098521565904D-01   2.100000000000000D+01
-             3    8     1.496348495303005D-02   9.611201567691633D-02   5.257340567840707D-01
-             4    9     7.900460841091139D-03   1.325041647391314D-02   1.000000000000000D+00
-             5   10     7.314495451266917D-03   1.510670810312237D-02   1.000000000000000D+00
-             6   11     6.750147275936680D-03   1.914964958023047D-02   1.000000000000000D+00
-             7   12     5.850716021108205D-03   1.028089194579363D-02   1.000000000000000D+00
-             8   13     5.778664230657791D-03   3.676866074530332D-04   1.000000000000000D+00
-             9   14     5.777818823650782D-03   3.010740179797255D-04   1.000000000000000D+00
-
-           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
-           IFLAG = 0
-          (%o7) [A = 1.461933911464101, B = 1.601593973254802,
-                                                     C = 2.528933072164854]
-          (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
-          (%o8)
-
-
- -- Variable: lbfgs_nfeval_max
-     Default value: 100
-
-     `lbfgs_nfeval_max' is the maximum number of evaluations of the
-     figure of merit (FOM) in `lbfgs'.  When `lbfgs_nfeval_max' is
-     reached, `lbfgs' returns the result of the last successful line
-     search.
-
-
- -- Variable: lbfgs_ncorrections
-     Default value: 25
-
-     `lbfgs_ncorrections' is the number of corrections applied to the
-     approximate inverse Hessian matrix which is maintained by `lbfgs'.
-
-
-
-File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
-
-57 lindstedt
-************
-
-* Menu:
-
-* Definitions for lindstedt::
-
-
-File: maxima.info,  Node: Definitions for lindstedt,  Prev: lindstedt,  Up: lindstedt
-
-57.1 Definitions for lindstedt
-==============================
-
- -- Function: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
-     This is a first pass at a Lindstedt code.  It can solve problems
-     with initial conditions entered, which can be arbitrary constants,
-     (just not <%k1> and <%k2>) where the initial conditions on the
-     perturbation equations are z[i]=0, z'[i]=0 for i>0. <ic> is the
-     list of initial conditions.
-
-     Problems occur when initial conditions are not given, as the
-     constants in the perturbation equations are the same as the zero
-     order equation solution.  Also, problems occur when the initial
-     conditions for the perturbation equations are not z[i]=0, z'[i]=0
-     for i>0, such as the Van der Pol equation.
-
-     Example:
-          (%i1) load("makeOrders")$
-
-          (%i2) load("lindstedt")$
-
-          (%i3) Lindstedt('diff(x,t,2)+x-(e*x^3)/6,e,2,[1,0]);
-                    2
-                   e  (cos(5 T) - 24 cos(3 T) + 23 cos(T))
-          (%o3) [[[---------------------------------------
-                                    36864
-             e (cos(3 T) - cos(T))
-           - --------------------- + cos(T)],
-                      192
-                    2
-                 7 e    e
-          T = (- ---- - -- + 1) t]]
-                 3072   16
-
-     To use this function write first `load("makeOrders")' and
-     `load("lindstedt")'.
-
-
-File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
-
-58 linearalgebra
-****************
-
-* Menu:
-
-* Introduction to linearalgebra::
-* Definitions for linearalgebra::
-
-
-File: maxima.info,  Node: Introduction to linearalgebra,  Next: Definitions for linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
-
-58.1 Introduction to linearalgebra
-==================================
-
-`linearalgebra' is a collection of functions for linear algebra.
-
-   Example:
-
-     (%i1) M : matrix ([1, 2], [1, 2]);
-                                 [ 1  2 ]
-     (%o1)                       [      ]
-                                 [ 1  2 ]
-     (%i2) nullspace (M);
-                                    [  1  ]
-                                    [     ]
-     (%o2)                     span([   1 ])
-                                    [ - - ]
-                                    [   2 ]
-     (%i3) columnspace (M);
-                                     [ 1 ]
-     (%o3)                      span([   ])
-                                     [ 1 ]
-     (%i4) ptriangularize (M - z*ident(2), z);
-                              [ 1   2 - z   ]
-     (%o4)                    [             ]
-                              [           2 ]
-                              [ 0  3 z - z  ]
-     (%i5) M : matrix ([1, 2, 3], [4, 5, 6], [7, 8, 9]) - z*ident(3);
-                          [ 1 - z    2      3   ]
-                          [                     ]
-     (%o5)                [   4    5 - z    6   ]
-                          [                     ]
-                          [   7      8    9 - z ]
-     (%i6) MM : ptriangularize (M, z);
-                   [ 4  5 - z            6            ]
-                   [                                  ]
-                   [                2                 ]
-                   [     66        z    102 z   132   ]
-                   [ 0   --      - -- + ----- + ---   ]
-     (%o6)         [     49        7     49     49    ]
-                   [                                  ]
-                   [               3        2         ]
-                   [           49 z    245 z    147 z ]
-                   [ 0    0    ----- - ------ - ----- ]
-                   [            264      88      44   ]
-     (%i7) algebraic : true;
-     (%o7)                         true
-     (%i8) tellrat (MM [3, 3]);
-                              3       2
-     (%o8)                  [z  - 15 z  - 18 z]
-     (%i9) MM : ratsimp (MM);
-                    [ 4  5 - z           6           ]
-                    [                                ]
-                    [                2               ]
-     (%o9)          [     66      7 z  - 102 z - 132 ]
-                    [ 0   --    - ------------------ ]
-                    [     49              49         ]
-                    [                                ]
-                    [ 0    0             0           ]
-     (%i10) nullspace (MM);
-                             [        1         ]
-                             [                  ]
-                             [   2              ]
-                             [  z  - 14 z - 16  ]
-                             [  --------------  ]
-     (%o10)             span([        8         ])
-                             [                  ]
-                             [    2             ]
-                             [   z  - 18 z - 12 ]
-                             [ - -------------- ]
-                             [         12       ]
-     (%i11) M : matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]);
-                            [ 1   2   3   4  ]
-                            [                ]
-                            [ 5   6   7   8  ]
-     (%o11)                 [                ]
-                            [ 9   10  11  12 ]
-                            [                ]
-                            [ 13  14  15  16 ]
-     (%i12) columnspace (M);
-                                [ 1  ]  [ 2  ]
-                                [    ]  [    ]
-                                [ 5  ]  [ 6  ]
-     (%o12)                span([    ], [    ])
-                                [ 9  ]  [ 10 ]
-                                [    ]  [    ]
-                                [ 13 ]  [ 14 ]
-     (%i13) apply ('orthogonal_complement, args (nullspace (transpose (M))));
-                                [ 0 ]  [  1  ]
-                                [   ]  [     ]
-                                [ 1 ]  [  0  ]
-     (%o13)                span([   ], [     ])
-                                [ 2 ]  [ - 1 ]
-                                [   ]  [     ]
-                                [ 3 ]  [ - 2 ]
+* Functions and Variables for impdiff::
 

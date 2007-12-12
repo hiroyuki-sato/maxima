@@ -9,10 +9,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: Input and Output
+File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: Files,  Up: Input and Output
 
-9.3 Definitions for Input and Output
-====================================
+9.3 Functions and Variables for Input and Output
+================================================
 
  -- System variable: __
      `__' is the input expression currently being evaluated.  That is,
@@ -118,7 +118,8 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      <s_n>)', `%%' is the value of the previous statement.  For example,
 
           block (integrate (x^5, x), ev (%%, x=2) - ev (%%, x=1));
-          block ([prev], prev: integrate (x^5, x), ev (prev, x=2) - ev (prev, x=1));
+          block ([prev], prev: integrate (x^5, x),
+                         ev (prev, x=2) - ev (prev, x=1));
 
      yield the same result, namely `21/2'.
 
@@ -658,10 +659,12 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
           +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2+10*aa^9*\
           bb+aa^10
           (%i14) cholesky (A):= block ([n : length (A), L : copymatrix (A),
-          p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
-          (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
-          p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
-          for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+            p : makelist (0, i, 1, length (A))], for i thru n do
+            for j : i thru n do
+            (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1),
+            if i = j then p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]),
+            for i thru n do L[i, i] : 1 / p[i],
+            for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
           (%i15) grind (cholesky);
           cholesky(A):=block(
                    [n:length(A),L:copymatrix(A),
@@ -855,10 +858,6 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      and `compile_file'.  The user may find it more convenient to use
      `load' instead of `loadfile'.
 
-     `loadfile' quotes its argument, so `filename' must be a literal
-     string, not a string variable.  The quote-quote operator `'''
-     defeats quotation.
-
 
  -- Option variable: loadprint
      Default value: `true'
@@ -961,14 +960,16 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
      To display the contents of a file, see `printfile'.
 
-          (%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+          (%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is",
+                radcan (log (a^10/b)))$
                       3        2      2      3
           (a+b)^3 is b  + 3 a b  + 3 a  b + a  log (a^10/b) is
 
                                                         10 log(a) - log(b)
           (%i2) r;
           (%o2)                  10 log(a) - log(b)
-          (%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+          (%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is",
+                radcan (log (a^10/b)))$
                                      (a+b)^3 is
 
                                3        2      2      3
@@ -1177,12 +1178,7 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      or `showtime', if they have been assigned new values by the user;
      see `myoptions'.
 
-     `save' quotes its arguments.  <filename> must be a string, not a
-     string variable.  The first and last labels to save, if specified,
-     must be integers.  The quote-quote operator `''' evaluates a
-     string variable to its string value, e.g., `s: "foo.1"$ save (''s,
-     all)$', and integer variables to their integer values, e.g., `m:
-     5$ n: 12$ save ("foo.1", [''m, ''n])$'.
+     `save' evaluates <filename> and quotes all other arguments.
 
 
  -- Option variable: savedef
@@ -1240,7 +1236,8 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
           (%i1) stringdisp: false$
           (%i2) "This is an example string.";
           (%o2)              This is an example string.
-          (%i3) foo () := print ("This is a string in a function definition.");
+          (%i3) foo () :=
+                print ("This is a string in a function definition.");
           (%o3) foo() :=
                         print("This is a string in a function definition.")
           (%i4) stringdisp: true$
@@ -1312,16 +1309,14 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      same as the Maxima label.
 
      `tex (<expr>, <filename>)' appends a TeX representation of <expr>
-     to the file <filename>.  `tex' quotes the <filename> argument;
-     quote-quote `''' forces evaluation of the argument.
+     to the file <filename>.
 
      `tex (<label>, <filename>)' appends a TeX representation of the
      expression named by <label>, with an equation label, to the file
-     <filename>.  `tex' quotes the <filename> argument; quote-quote
-     `''' forces evaluation of the argument.
+     <filename>.
 
-     `tex' evaluates its argument after testing it to see if it is a
-     label.  Quote-quote `''' forces evaluation of the argument,
+     `tex' evaluates its first argument after testing it to see if it
+     is a label.  Quote-quote `''' forces evaluation of the argument,
      thereby defeating the test and preventing the label.
 
      See also `texput'.
@@ -1411,11 +1406,11 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
      Assign TeX output for a postfix operator.
 
-          (%i1) postfix ("@");
-          (%o1)                           @
-          (%i2) texput ("@", "!!", postfix);
+          (%i1) postfix ("##");
+          (%o1)                          ##
+          (%i2) texput ("##", "!!", postfix);
           (%o2)                          !!
-          (%i3) tex (x @);
+          (%i3) tex (x ##);
           $$x!!$$
           (%o3)                         false
 
@@ -1451,7 +1446,8 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
           (%i4) tex (<<a, b>>);
           $$ \langle a , b \rangle $$
           (%o4)                         false
-          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"],
+                matchfix);
           (%o5)           [ \langle ,  \rangle ,  \, | \,]
           (%i6) tex (<<a>>);
           $$ \langle a \rangle $$
@@ -1493,25 +1489,26 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      and the output of `describe', is not affected by `ttyoff'.
 
 
- -- Function: with_stdout (<filename>, <expr_1>, <expr_2>, <expr_3>,
-          ...)
-     Opens <filename> and then evaluates <expr_1>, <expr_2>, <expr_3>,
-     ....  The values of the arguments are not stored in <filename>,
-     but any printed output generated by evaluating the arguments (from
-     `print', `display', `disp', or `grind', for example) goes to
-     <filename> instead of the console.
+ -- Function: with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Function: with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
+     Evaluates <expr_1>, <expr_2>, <expr_3>, ...  and writes any output
+     thus generated to a file <f> or output stream <s>.  The evaluated
+     expressions are not written to the output.  Output may be
+     generated by `print', `display', `grind', among other functions.
 
      The global flag `file_output_append' governs whether `with_stdout'
-     appends or truncates the output file.  When `file_output_append'
-     is `true', `with_stdout' appends to the output file.  Otherwise,
-     `with_stdout' truncates the output file.  In either case,
-     `with_stdout' creates the file if it does not yet exist.
+     appends or truncates the output file <f>.  When
+     `file_output_append' is `true', `with_stdout' appends to the
+     output file.  Otherwise, `with_stdout' truncates the output file.
+     In either case, `with_stdout' creates the file if it does not yet
+     exist.
 
      `with_stdout' returns the value of its final argument.
 
      See also `writefile'.
 
-          (%i1) with_stdout ("tmp.out", for i:5 thru 10 do print (i, "! yields", i!))$
+          (%i1) with_stdout ("tmp.out", for i:5 thru 10 do
+                print (i, "! yields", i!))$
           (%i2) printfile ("tmp.out")$
           5 ! yields 120
           6 ! yields 720
@@ -1555,13 +1552,13 @@ File: maxima.info,  Node: Floating Point,  Next: Contexts,  Prev: Input and Outp
 
 * Menu:
 
-* Definitions for Floating Point::
+* Functions and Variables for Floating Point::
 
 
-File: maxima.info,  Node: Definitions for Floating Point,  Prev: Floating Point,  Up: Floating Point
+File: maxima.info,  Node: Functions and Variables for Floating Point,  Prev: Floating Point,  Up: Floating Point
 
-10.1 Definitions for Floating Point
-===================================
+10.1 Functions and Variables for Floating Point
+===============================================
 
  -- Function: bffac (<expr>, <n>)
      Bigfloat version of the factorial (shifted gamma) function.  The
@@ -1685,13 +1682,13 @@ File: maxima.info,  Node: Contexts,  Next: Polynomials,  Prev: Floating Point,  
 
 * Menu:
 
-* Definitions for Contexts::
+* Functions and Variables for Contexts::
 
 
-File: maxima.info,  Node: Definitions for Contexts,  Prev: Contexts,  Up: Contexts
+File: maxima.info,  Node: Functions and Variables for Contexts,  Prev: Contexts,  Up: Contexts
 
-11.1 Definitions for Contexts
-=============================
+11.1 Functions and Variables for Contexts
+=========================================
 
  -- Function: activate (<context_1>, ..., <context_n>)
      Activates the contexts <context_1>, ..., <context_n>.  The facts
@@ -2023,10 +2020,10 @@ File: maxima.info,  Node: Polynomials,  Next: Constants,  Prev: Contexts,  Up: T
 * Menu:
 
 * Introduction to Polynomials::
-* Definitions for Polynomials::
+* Functions and Variables for Polynomials::
 
 
-File: maxima.info,  Node: Introduction to Polynomials,  Next: Definitions for Polynomials,  Prev: Polynomials,  Up: Polynomials
+File: maxima.info,  Node: Introduction to Polynomials,  Next: Functions and Variables for Polynomials,  Prev: Polynomials,  Up: Polynomials
 
 12.1 Introduction to Polynomials
 ================================
@@ -2076,10 +2073,10 @@ the degree of truncation.  As with CRE form, the symbol /T/ follows the
 line label of such expressions.
 
 
-File: maxima.info,  Node: Definitions for Polynomials,  Prev: Introduction to Polynomials,  Up: Polynomials
+File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introduction to Polynomials,  Up: Polynomials
 
-12.2 Definitions for Polynomials
-================================
+12.2 Functions and Variables for Polynomials
+============================================
 
  -- Option variable: algebraic
      Default value: `false'
@@ -2683,7 +2680,8 @@ File: maxima.info,  Node: Definitions for Polynomials,  Prev: Introduction to Po
      functional composition of polynomials in <x>.  `polydecomp'
      returns a list `[<p_1>, ..., <p_n>]' such that
 
-          lambda ([x], p_1) (lambda ([x], p_2) (... (lambda ([x], p_n) (x)) ...))
+          lambda ([x], p_1) (lambda ([x], p_2) (... (lambda ([x], p_n) (x))
+            ...))
 
      is equal to <p>.  The degree of <p_i> is greater than 1 for <i>
      less than <n>.
@@ -2775,8 +2773,8 @@ File: maxima.info,  Node: Definitions for Polynomials,  Prev: Introduction to Po
      See also `ratexpand' and  `ratsimp'.
 
      Examples:
-
-          (%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x) /(4*y^2 + x^2);
+          (%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x) /
+                (4*y^2 + x^2);
                                                      4
                                             (x - 2 y)
                         (y + a) (2 y + x) (------------ + 1)
@@ -3350,13 +3348,13 @@ File: maxima.info,  Node: Constants,  Next: Logarithms,  Prev: Polynomials,  Up:
 
 * Menu:
 
-* Definitions for Constants::
+* Functions and Variables for Constants::
 
 
-File: maxima.info,  Node: Definitions for Constants,  Prev: Constants,  Up: Constants
+File: maxima.info,  Node: Functions and Variables for Constants,  Prev: Constants,  Up: Constants
 
-13.1 Definitions for Constants
-==============================
+13.1 Functions and Variables for Constants
+==========================================
 
  -- Constant: %e
      `%e' represents the base of the natural logarithm, also known as
@@ -3459,13 +3457,13 @@ File: maxima.info,  Node: Logarithms,  Next: Trigonometric,  Prev: Constants,  U
 
 * Menu:
 
-* Definitions for Logarithms::
+* Functions and Variables for Logarithms::
 
 
-File: maxima.info,  Node: Definitions for Logarithms,  Prev: Logarithms,  Up: Logarithms
+File: maxima.info,  Node: Functions and Variables for Logarithms,  Prev: Logarithms,  Up: Logarithms
 
-14.1 Definitions for Logarithms
-===============================
+14.1 Functions and Variables for Logarithms
+===========================================
 
  -- Option variable: %e_to_numlog
      Default value: `false'
@@ -3673,10 +3671,10 @@ File: maxima.info,  Node: Trigonometric,  Next: Special Functions,  Prev: Logari
 * Menu:
 
 * Introduction to Trigonometric::
-* Definitions for Trigonometric::
+* Functions and Variables for Trigonometric::
 
 
-File: maxima.info,  Node: Introduction to Trigonometric,  Next: Definitions for Trigonometric,  Prev: Trigonometric,  Up: Trigonometric
+File: maxima.info,  Node: Introduction to Trigonometric,  Next: Functions and Variables for Trigonometric,  Prev: Trigonometric,  Up: Trigonometric
 
 15.1 Introduction to Trigonometric
 ==================================
@@ -3694,10 +3692,91 @@ simplification rules built into Maxima, `ntrig' and `atrig1'.  Do
 `describe(<command>)' for details.
 
 
-File: maxima.info,  Node: Definitions for Trigonometric,  Prev: Introduction to Trigonometric,  Up: Trigonometric
+File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Introduction to Trigonometric,  Up: Trigonometric
 
-15.2 Definitions for Trigonometric
-==================================
+15.2 Functions and Variables for Trigonometric
+==============================================
+
+ -- Option variable: %piargs
+     Default value: `true'
+
+     When `%piargs' is `true', trigonometric functions are simplified
+     to algebraic constants when the argument is an integer multiple of
+     %pi, %pi/2, %pi/3, %pi/4, or %pi/6
+
+     Maxima knows some identities which can be applied when %pi, etc.,
+     are multiplied by an integer variable (that is, a symbol declared
+     to be integer).
+
+     Examples:
+
+          (%i1) %piargs : false;
+          (%o1)                         false
+          (%i2) [sin (%pi), sin (%pi/2), sin (%pi/3)];
+                                          %pi       %pi
+          (%o2)            [sin(%pi), sin(---), sin(---)]
+                                           2         3
+          (%i3) [sin (%pi/4), sin (%pi/5), sin (%pi/6)];
+                                %pi       %pi       %pi
+          (%o3)            [sin(---), sin(---), sin(---)]
+                                 4         5         6
+          (%i4) %piargs : true;
+          (%o4)                         true
+          (%i5) [sin (%pi), sin (%pi/2), sin (%pi/3)];
+                                          sqrt(3)
+          (%o5)                    [0, 1, -------]
+                                             2
+          (%i6) [sin (%pi/4), sin (%pi/5), sin (%pi/6)];
+                                   1         %pi   1
+          (%o6)                [-------, sin(---), -]
+                                sqrt(2)       5    2
+          (%i7) [cos (%pi/3), cos (10*%pi/3), tan (10*%pi/3), cos (sqrt(2)*%pi/3)];
+                          1    1               sqrt(2) %pi
+          (%o7)          [-, - -, sqrt(3), cos(-----------)]
+                          2    2                    3
+
+     Some identities are applied when %pi and %pi/2 are multiplied by
+     an integer variable.
+
+          (%i1) declare (n, integer, m, even);
+          (%o1)                         done
+          (%i2) [sin (%pi * n), cos (%pi * m), sin (%pi/2 * m), cos (%pi/2 * m)];
+                                                m/2
+          (%o2)                  [0, 1, 0, (- 1)   ]
+
+
+ -- Option variable: %iargs
+     Default value: `true'
+
+     When `%iargs' is `true', trigonometric functions are simplified to
+     hyperbolic functions when the argument is apparently a multiple of
+     the imaginary unit %i.
+
+     Even when the argument is demonstrably real, the simplification is
+     applied; Maxima considers only whether the argument is a literal
+     multiple of %i.
+
+     Examples:
+
+          (%i1) %iargs : false;
+          (%o1)                         false
+          (%i2) [sin (%i * x), cos (%i * x), tan (%i * x)];
+          (%o2)           [sin(%i x), cos(%i x), tan(%i x)]
+          (%i3) %iargs : true;
+          (%o3)                         true
+          (%i4) [sin (%i * x), cos (%i * x), tan (%i * x)];
+          (%o4)           [%i sinh(x), cosh(x), %i tanh(x)]
+
+     Even when the argument is demonstrably real, the simplification is
+     applied.
+
+          (%i1) declare (x, imaginary);
+          (%o1)                         done
+          (%i2) [featurep (x, imaginary), featurep (x, real)];
+          (%o2)                     [true, false]
+          (%i3) sin (%i * x);
+          (%o3)                      %i sinh(x)
+
 
  -- Function: acos (<x>)
      - Arc Cosine.
@@ -4009,10 +4088,10 @@ File: maxima.info,  Node: Special Functions,  Next: Elliptic Functions,  Prev: T
 * Menu:
 
 * Introduction to Special Functions::
-* Definitions for Special Functions::
+* Functions and Variables for Special Functions::
 
 
-File: maxima.info,  Node: Introduction to Special Functions,  Next: Definitions for Special Functions,  Prev: Special Functions,  Up: Special Functions
+File: maxima.info,  Node: Introduction to Special Functions,  Next: Functions and Variables for Special Functions,  Prev: Special Functions,  Up: Special Functions
 
 16.1 Introduction to Special Functions
 ======================================
@@ -4023,7 +4102,8 @@ Special function notation follows:
      bessel_y (index, expr)         Bessel function, 2nd kind
      bessel_i (index, expr)         Modified Bessel function, 1st kind
      bessel_k (index, expr)         Modified Bessel function, 2nd kind
-     %he[n] (z)                     Hermite polynomial (Nota bene: `he', not `h'. See A&S 22.5.18)
+     %he[n] (z)                     Hermite polynomial (Nota bene: `he',
+                                    not `h'. See A&S 22.5.18)
      %p[u,v] (z)                    Legendre function
      %q[u,v] (z)                    Legendre function, 2nd kind
      hstruve[n] (z)                 Struve H function
@@ -4037,14 +4117,15 @@ Special function notation follows:
      %w[u,k] (z)                    Whittaker function, 2nd kind
      erfc (z)                       Complement of the erf function
      ei (z)                         Exponential integral (?)
-     kelliptic (z)                  Complete elliptic integral of the first kind (K)
+     kelliptic (z)                  Complete elliptic integral of the first
+                                    kind (K)
      %d [n] (z)                     Parabolic cylinder function
 
 
-File: maxima.info,  Node: Definitions for Special Functions,  Prev: Introduction to Special Functions,  Up: Special Functions
+File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: Introduction to Special Functions,  Up: Special Functions
 
-16.2 Definitions for Special Functions
-======================================
+16.2 Functions and Variables for Special Functions
+==================================================
 
  -- Function: airy_ai (<x>)
      The Airy function Ai, as defined in Abramowitz and Stegun,
@@ -4393,7 +4474,7 @@ File: maxima.info,  Node: Definitions for Special Functions,  Prev: Introduction
 
 
  -- Option variable: maxpsifracnum
-     Default value: 4
+     Default value: 6
 
      Let <x> be a rational number less than one of the form `p/q'.  If
      `p' is greater than `maxpsifracnum', then `psi[<n>](<x>)' will not
@@ -4401,10 +4482,10 @@ File: maxima.info,  Node: Definitions for Special Functions,  Prev: Introduction
 
 
  -- Option variable: maxpsifracdenom
-     Default value: 4
+     Default value: 6
 
      Let <x> be a rational number less than one of the form `p/q'.  If
-     `q' is greater than `maxpsifracdeonm', then `psi[<n>](<x>)' will
+     `q' is greater than `maxpsifracdenom', then `psi[<n>](<x>)' will
      not try to return a simplified value.
 
 
@@ -4430,7 +4511,8 @@ File: maxima.info,  Node: Definitions for Special Functions,  Prev: Introduction
                                            a 3/2
                                     2 (p + -)
                                            4
-          (%i3) specint (t^(1/2) * bessel_j(1, 2 * a^(1/2) * t^(1/2)) * exp(-p*t), t);
+          (%i3) specint (t^(1/2) * bessel_j(1, 2 * a^(1/2) * t^(1/2))
+                        * exp(-p*t), t);
                                              - a/p
                                    sqrt(a) %e
           (%o3)                    ---------------
@@ -4447,11 +4529,11 @@ File: maxima.info,  Node: Elliptic Functions,  Next: Limits,  Prev: Special Func
 * Menu:
 
 * Introduction to Elliptic Functions and Integrals::
-* Definitions for Elliptic Functions::
-* Definitions for Elliptic Integrals::
+* Functions and Variables for Elliptic Functions::
+* Functions and Variables for Elliptic Integrals::
 
 
-File: maxima.info,  Node: Introduction to Elliptic Functions and Integrals,  Next: Definitions for Elliptic Functions,  Up: Top
+File: maxima.info,  Node: Introduction to Elliptic Functions and Integrals,  Next: Functions and Variables for Elliptic Functions,  Up: Top
 
 17.1 Introduction to Elliptic Functions and Integrals
 =====================================================
@@ -4543,10 +4625,10 @@ Toy.  It is placed under the terms of the General Public License (GPL)
 that governs the distribution of Maxima.
 
 
-File: maxima.info,  Node: Definitions for Elliptic Functions,  Next: Definitions for Elliptic Integrals,  Prev: Introduction to Elliptic Functions and Integrals,  Up: Top
+File: maxima.info,  Node: Functions and Variables for Elliptic Functions,  Next: Functions and Variables for Elliptic Integrals,  Prev: Introduction to Elliptic Functions and Integrals,  Up: Top
 
-17.2 Definitions for Elliptic Functions
-=======================================
+17.2 Functions and Variables for Elliptic Functions
+===================================================
 
  -- Function: jacobi_sn (<u>, <m>)
      The Jacobian elliptic function sn(u,m).
@@ -4621,10 +4703,10 @@ File: maxima.info,  Node: Definitions for Elliptic Functions,  Next: Definitions
      The inverse of the Jacobian elliptic function dc(u,m).
 
 
-File: maxima.info,  Node: Definitions for Elliptic Integrals,  Prev: Definitions for Elliptic Functions,  Up: Top
+File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev: Functions and Variables for Elliptic Functions,  Up: Top
 
-17.3 Definitions for Elliptic Integrals
-=======================================
+17.3 Functions and Variables for Elliptic Integrals
+===================================================
 
  -- Function: elliptic_f (<phi>, <m>)
      The incomplete elliptic integral of the first kind, defined as
@@ -4684,13 +4766,13 @@ File: maxima.info,  Node: Limits,  Next: Differentiation,  Prev: Elliptic Functi
 
 * Menu:
 
-* Definitions for Limits::
+* Functions and Variables for Limits::
 
 
-File: maxima.info,  Node: Definitions for Limits,  Prev: Limits,  Up: Limits
+File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up: Limits
 
-18.1 Definitions for Limits
-===========================
+18.1 Functions and Variables for Limits
+=======================================
 
  -- Option variable: lhospitallim
      Default: 4
@@ -4763,13 +4845,13 @@ File: maxima.info,  Node: Differentiation,  Next: Integration,  Prev: Limits,  U
 
 * Menu:
 
-* Definitions for Differentiation::
+* Functions and Variables for Differentiation::
 
 
-File: maxima.info,  Node: Definitions for Differentiation,  Prev: Differentiation,  Up: Differentiation
+File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Differentiation,  Up: Differentiation
 
-19.1 Definitions for Differentiation
-====================================
+19.1 Functions and Variables for Differentiation
+================================================
 
  -- Function: antid (<expr>, <x>, <u(x)>)
      Returns a two-element list, such that an antiderivative of <expr>
@@ -5356,12 +5438,12 @@ File: maxima.info,  Node: Integration,  Next: Equations,  Prev: Differentiation,
 * Menu:
 
 * Introduction to Integration::
-* Definitions for Integration::
+* Functions and Variables for Integration::
 * Introduction to QUADPACK::
-* Definitions for QUADPACK::
+* Functions and Variables for QUADPACK::
 
 
-File: maxima.info,  Node: Introduction to Integration,  Next: Definitions for Integration,  Prev: Integration,  Up: Integration
+File: maxima.info,  Node: Introduction to Integration,  Next: Functions and Variables for Integration,  Prev: Integration,  Up: Integration
 
 20.1 Introduction to Integration
 ================================
@@ -5380,10 +5462,10 @@ does not handle integrals in terms of unknown functions such as `g(x)'
 and `h(x)'.
 
 
-File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QUADPACK,  Prev: Introduction to Integration,  Up: Integration
+File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introduction to QUADPACK,  Prev: Introduction to Integration,  Up: Integration
 
-20.2 Definitions for Integration
-================================
+20.2 Functions and Variables for Integration
+============================================
 
  -- Function: changevar (<expr>, <f(x,y)>, <y>, <x>)
      Makes the change of variable given by `<f(x,y)> = 0' in all
@@ -5775,11 +5857,11 @@ File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QU
           (%o4) ----------------------------------------------------------
                          7
 
-                                                                       2 x + 1
-                                                   2            5 atan(-------)
-                                              log(x  + x + 1)          sqrt(3)
-                                            - --------------- + ---------------
-                                                    14             7 sqrt(3)
+                                                                2 x + 1
+                                            2            5 atan(-------)
+                                       log(x  + x + 1)          sqrt(3)
+                                     - --------------- + ---------------
+                                             14             7 sqrt(3)
 
      Alternatively the user may compute the roots of the denominator
      separately, and then express the integrand in terms of these roots,
@@ -5860,7 +5942,7 @@ File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QU
 
 
 
-File: maxima.info,  Node: Introduction to QUADPACK,  Next: Definitions for QUADPACK,  Prev: Definitions for Integration,  Up: Integration
+File: maxima.info,  Node: Introduction to QUADPACK,  Next: Functions and Variables for QUADPACK,  Prev: Functions and Variables for Integration,  Up: Integration
 
 20.3 Introduction to QUADPACK
 =============================
@@ -5947,19 +6029,19 @@ functions, but they are not exposed at the Maxima level.
 
    (4) National Bureau of Standards, Washington, D.C., U.S.A
 
-   (5) http://www.netlib.org/slatec
+   (5) `http://www.netlib.org/slatec'
 
-   (6) http://www.netlib.org/quadpack
+   (6) `http://www.netlib.org/quadpack'
 
    (7) R. Piessens, E. de Doncker-Kapenga, C.W. Uberhuber, and D.K.
 Kahaner.  QUADPACK: A Subroutine Package for Automatic Integration.
 Berlin: Springer-Verlag, 1983, ISBN 0387125531.
 
 
-File: maxima.info,  Node: Definitions for QUADPACK,  Prev: Introduction to QUADPACK,  Up: Integration
+File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduction to QUADPACK,  Up: Integration
 
-20.4 Definitions for QUADPACK
-=============================
+20.4 Functions and Variables for QUADPACK
+=========================================
 
  -- Function: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
  -- Function: quad_qag (<f>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
@@ -6236,7 +6318,8 @@ File: maxima.info,  Node: Definitions for QUADPACK,  Prev: Introduction to QUADP
 
           (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
-          (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1), x, 0, 5);
+          (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
+                x, 0, 5);
           Principal Value
                                  alpha
                   alpha       9 4                 9
@@ -6247,13 +6330,13 @@ File: maxima.info,  Node: Definitions for QUADPACK,  Prev: Introduction to QUADP
                                   alpha
                                2 4      + 2
 
-                   3 alpha                       3 alpha
-                   -------                       -------
-                      2            alpha/2          2          alpha/2
-                2 4        atan(4 4       )   2 4        atan(4       )   alpha
-              - --------------------------- - -------------------------)/2
-                          alpha                        alpha
-                       2 4      + 2                 2 4      + 2
+                 3 alpha                       3 alpha
+                 -------                       -------
+                    2            alpha/2          2          alpha/2
+              2 4        atan(4 4       )   2 4        atan(4       )   alpha
+            - --------------------------- - -------------------------)/2
+                        alpha                        alpha
+                     2 4      + 2                 2 4      + 2
           (%i3) ev (%, alpha=5, numer);
           (%o3)                    - 3.130120337415917
 
@@ -6428,7 +6511,8 @@ File: maxima.info,  Node: Definitions for QUADPACK,  Prev: Introduction to QUADP
 
           (%i1) quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
           (%o1)     [1.376043389877692, 4.72710759424899E-11, 765, 0]
-          (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x), x, 0, inf));
+          (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
+                x, 0, inf));
                              alpha/2 - 1/2            2 alpha
                   sqrt(%pi) 2              sqrt(sqrt(2        + 1) + 1)
           (%o2)   -----------------------------------------------------
@@ -6538,13 +6622,13 @@ File: maxima.info,  Node: Equations,  Next: Differential Equations,  Prev: Integ
 
 * Menu:
 
-* Definitions for Equations::
+* Functions and Variables for Equations::
 
 
-File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equations
+File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equations,  Up: Equations
 
-21.1 Definitions for Equations
-==============================
+21.1 Functions and Variables for Equations
+==========================================
 
  -- System variable: %rnum_list
      Default value: `[]'
@@ -6835,7 +6919,8 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      which must be a first order, linear polynomial in (for this case)
      `<g>(<t>)' and `<g>(<t>+1)'
 
-          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) = (n - 1)/(n + 2);
+          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) =
+                (n - 1)/(n + 2);
                                       (n + 3) f(n + 1)   n - 1
           (%o1)        (n + 1) f(n) - ---------------- = -----
                                            n + 1         n + 2
@@ -6975,9 +7060,11 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
           (%o2)                        bb + aa
           (%i3) rhs (e);
           (%o3)                          cc
-          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb), lhs (aa > bb)];
+          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb),
+                 lhs (aa > bb)];
           (%o4)                   [aa, aa, aa, aa]
-          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)), lhs (notequal (aa, bb))];
+          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)),
+                 lhs (notequal (aa, bb))];
           (%o5)                   [aa, aa, aa, aa]
           (%i6) e1: '(foo(x) := 2*x);
           (%o6)                     foo(x) := 2 x
@@ -7197,9 +7284,11 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
           (%o2)                        bb + aa
           (%i3) rhs (e);
           (%o3)                          cc
-          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb), rhs (aa > bb)];
+          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb),
+                 rhs (aa > bb)];
           (%o4)                   [bb, bb, bb, bb]
-          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)), rhs (notequal (aa, bb))];
+          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)),
+                 rhs (notequal (aa, bb))];
           (%o5)                   [bb, bb, bb, bb]
           (%i6) e1: '(foo(x) := 2*x);
           (%o6)                     foo(x) := 2 x
@@ -7282,7 +7371,7 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
                               *sqrt(sqrt(1 + x) - sqrt(x)));
           (%o11)                          1
           (%i12) rootsconmode: true$
-          (%i13) rootscontract (sqrt(5 + sqrt(5)) - 5^(1/4)*sqrt(1 + sqrt(5)));
+          (%i13) rootscontract (sqrt(5+sqrt(5)) - 5^(1/4)*sqrt(1+sqrt(5)));
           (%o13)                          0
 
 
@@ -7524,10 +7613,10 @@ File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equat
 * Menu:
 
 * Introduction to Differential Equations::
-* Definitions for Differential Equations::
+* Functions and Variables for Differential Equations::
 
 
-File: maxima.info,  Node: Introduction to Differential Equations,  Next: Definitions for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
+File: maxima.info,  Node: Introduction to Differential Equations,  Next: Functions and Variables for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
 
 22.1 Introduction to Differential Equations
 ===========================================
@@ -7537,210 +7626,4 @@ analytic solutions for some specific types of first and second-order
 equations. To obtain a numerical solution for a system of differential
 equations, see the additional package `dynamics'. For graphical
 representations in phase space, see the additional package `plotdf'.
-
-
-File: maxima.info,  Node: Definitions for Differential Equations,  Prev: Introduction to Differential Equations,  Up: Differential Equations
-
-22.2 Definitions for Differential Equations
-===========================================
-
- -- Function: bc2 (<solution>, <xval1>, <yval1>, <xval2>, <yval2>)
-     Solves a boundary value problem for a second order differential
-     equation.  Here: <solution> is a general solution to the equation,
-     as found by `ode2'; <xval1> specifies the value of the independent
-     variable in a first point, in the form `<x> = <x1>', and <yval1>
-     gives the value of the dependent variable in that point, in the
-     form `<y> = <y1>'. The expressions <xval2> and <yval2> give the
-     values for these variables at a second point, using the same form.
-
-     See `ode2' for an example of its usage.
-
-
- -- Function: desolve (<eqn>, <x>)
- -- Function: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     The function `dsolve' solves systems of linear ordinary
-     differential equations using Laplace transform.  Here the <eqn>'s
-     are differential equations in the dependent variables <x_1>, ...,
-     <x_n>.  The functional dependence of <x_1>, ..., <x_n> on an
-     independent variable, for instance <x>, must be explicitly
-     indicated in the variables and its derivatives. For example, this
-     would not be the correct way to define two equations:
-
-          eqn_1: 'diff(f,x,2) = sin(x) + 'diff(g,x);
-          eqn_2: 'diff(f,x) + x^2 - f = 2*'diff(g,x,2);
-
-     The correct way would be:
-
-          eqn_1: 'diff(f(x),x,2) = sin(x) + 'diff(g(x),x);
-          eqn_2: 'diff(f(x),x) + x^2 - f(x) = 2*'diff(g(x),x,2);
-
-     The call to the function `desolve' would then be
-          desolve([eqn_1, eqn_2], [f(x),g(x)]);
-
-     If initial conditions at `x=0' are known, they can be supplied
-     before calling `desolve' by using `atvalue'.
-
-          (%i1) 'diff(f(x),x)='diff(g(x),x)+sin(x);
-                           d           d
-          (%o1)            -- (f(x)) = -- (g(x)) + sin(x)
-                           dx          dx
-          (%i2) 'diff(g(x),x,2)='diff(f(x),x)-cos(x);
-                            2
-                           d            d
-          (%o2)            --- (g(x)) = -- (f(x)) - cos(x)
-                             2          dx
-                           dx
-          (%i3) atvalue('diff(g(x),x),x=0,a);
-          (%o3)                           a
-          (%i4) atvalue(f(x),x=0,1);
-          (%o4)                           1
-          (%i5) desolve([%o1,%o2],[f(x),g(x)]);
-                            x
-          (%o5) [f(x) = a %e  - a + 1, g(x) =
-
-                                                          x
-                                             cos(x) + a %e  - a + g(0) - 1]
-          (%i6) [%o1,%o2],%o5,diff;
-                       x       x      x                x
-          (%o6)   [a %e  = a %e , a %e  - cos(x) = a %e  - cos(x)]
-
-     If `desolve' cannot obtain a solution, it returns `false'.
-
-
- -- Function: ic1 (<solution>, <xval>, <yval>)
-     Solves initial value problems for first order differential
-     equations.  Here <solution> is a general solution to the equation,
-     as found by `ode2', <xval> gives an initial value for the
-     independent variable in the form `<x> = <x0>', and <yval> gives the
-     initial value for the dependent variable in the form `<y> = <y0>'.
-
-     See `ode2' for an example of its usage.
-
-
- -- Function: ic2 (<solution>, <xval>, <yval>, <dval>)
-     Solves initial value problems for second-order differential
-     equations.  Here <solution> is a general solution to the equation,
-     as found by `ode2', <xval> gives the initial value for the
-     independent variable in the form `<x> = <x0>', <yval> gives the
-     initial value of the dependent variable in the form `<y> = <y0>',
-     and <dval> gives the initial value for the first derivative of the
-     dependent variable with respect to independent variable, in the
-     form `diff(<y>,<x>) = <dy0>' (`diff' does not have to be quoted).
-
-     See `ode2' for an example of its usage.
-
-
- -- Function: ode2 (<eqn>, <dvar>, <ivar>)
-     The function `ode2' solves an ordinary differential equation (ODE)
-     of first or second order. It takes three arguments: an ODE given by
-     <eqn>, the dependent variable <dvar>, and the independent variable
-     <ivar>. When successful, it returns either an explicit or implicit
-     solution for the dependent variable. `%c' is used to represent the
-     integration constant in the case of first-order equations, and
-     `%k1' and `%k2' the constants for second-order equations. The
-     dependence of the dependent variable on the independent variable
-     does not have to be written explicitly, as in the case of
-     `desolve', but the independent variable must always be given as the
-     third argument.
-
-     If `ode2' cannot obtain a solution for whatever reason, it returns
-     `false', after perhaps printing out an error message. The methods
-     implemented for first order equations in the order in which they
-     are tested are: linear, separable, exact - perhaps requiring an
-     integrating factor, homogeneous, Bernoulli's equation, and a
-     generalized homogeneous method. The types of second-order
-     equations which can be solved are: constant coefficients, exact,
-     linear homogeneous with non-constant coefficients which can be
-     transformed to constant coefficients, the Euler or
-     equi-dimensional equation, equations solvable by the method of
-     variation of parameters, and equations which are free of either the
-     independent or of the dependent variable so that they can be
-     reduced to two first order linear equations to be solved
-     sequentially.
-
-     In the course of solving ODE's, several variables are set purely
-     for informational purposes: `method' denotes the method of solution
-     used (e.g., `linear'), `intfactor' denotes any integrating factor
-     used, `odeindex' denotes the index for Bernoulli's method or for
-     the generalized homogeneous method, and `yp' denotes the
-     particular solution for the variation of parameters technique.
-
-     In order to solve initial value problems (IVP) functions `ic1' and
-     `ic2' are available for first and second order equations, and to
-     solve second-order boundary value problems (BVP) the function `bc2'
-     can be used.
-
-     Example:
-
-          (%i1) x^2*'diff(y,x) + 3*y*x = sin(x)/x;
-                                2 dy           sin(x)
-          (%o1)                x  -- + 3 x y = ------
-                                  dx             x
-          (%i2) ode2(%,y,x);
-                                       %c - cos(x)
-          (%o2)                    y = -----------
-                                            3
-                                           x
-          (%i3) ic1(%o2,x=%pi,y=0);
-                                        cos(x) + 1
-          (%o3)                   y = - ----------
-                                             3
-                                            x
-          (%i4) 'diff(y,x,2) + y*'diff(y,x)^3 = 0;
-                                   2
-                                  d y      dy 3
-          (%o4)                   --- + y (--)  = 0
-                                    2      dx
-                                  dx
-          (%i5) ode2(%,y,x);
-                                3
-                               y  + 6 %k1 y
-          (%o5)                ------------ = x + %k2
-                                    6
-          (%i6) ratsimp(ic2(%o5,x=0,y=0,'diff(y,x)=2));
-                                       3
-                                    2 y  - 3 y
-          (%o6)                   - ---------- = x
-                                        6
-          (%i7) bc2(%o5,x=0,y=1,x=1,y=3);
-                                   3
-                                  y  - 10 y       3
-          (%o7)                   --------- = x - -
-                                      6           2
-
-
-
-File: maxima.info,  Node: Numerical,  Next: Arrays,  Prev: Differential Equations,  Up: Top
-
-23 Numerical
-************
-
-* Menu:
-
-* Introduction to Numerical::
-* Fourier packages::
-* Definitions for Numerical::
-* Definitions for Fourier Series::
-
-
-File: maxima.info,  Node: Introduction to Numerical,  Next: Fourier packages,  Prev: Numerical,  Up: Numerical
-
-23.1 Introduction to Numerical
-==============================
-
-
-File: maxima.info,  Node: Fourier packages,  Next: Definitions for Numerical,  Prev: Introduction to Numerical,  Up: Numerical
-
-23.2 Fourier packages
-=====================
-
-The `fft' package comprises functions for the numerical (not symbolic)
-computation of the fast Fourier transform.  `load ("fft")' loads this
-package.  See `fft'.
-
-   The `fourie' package comprises functions for the symbolic computation
-of Fourier series.  `load ("fourie")' loads this package.  There are
-functions in the `fourie' package to calculate Fourier integral
-coefficients and some functions for manipulation of expressions.  See
-`Definitions for Fourier Series'.
 

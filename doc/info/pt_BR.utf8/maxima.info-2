@@ -9,10 +9,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  Up: Entrada e Saída
+File: maxima.info,  Node: Funções e Variáveis Definidas para Entrada e Saída,  Prev: Arquivos,  Up: Entrada e Saída
 
-9.3 Definições para Entrada e Saída de Dados
-============================================
+9.3 Funções e Variáveis Definidas para Entrada e Saída de Dados
+===============================================================
 
  -- Variável de sistema: __
      `__' é a expressão de entrada atualmente sendo avaliada.  Isto é,
@@ -388,8 +388,9 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
  -- Variável de opção: display2d
      Valor padrão: `true'
 
-     Quando `display2d' é `false', O console visualizador é
-     unidimensional ao invés de bidimensional.
+     Quando `display2d' for `false', O console visualizador é da forma
+     de uma seqüência de caracteres (unidimensional) ao invés da forma
+     bidimensional.
 
 
  -- Variável de opção: display_format_internal
@@ -538,7 +539,7 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
           file_search ("zeta.mac");
           file_search ("zeta");
 
-     todos acham o mesmo arquivo, assumindo que o arquivo exista e
+     todos encontram o mesmo arquivo, assumindo que o arquivo exista e
      `/home/wfs/special/###.mac' está em `file_search_maxima'.
 
      `file_search (<nomearquivo>, <listacaminho>)' procura somente
@@ -632,7 +633,9 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
      `playback'.  Quando `grind' está presente, `playback' imprime
      expressões de entrada no mesmo formato que a função `grind'.  De
      outra forma, nenhuma tentativa é feita para formatar especialmente
-     as expressões de entrada.  `grind' avalia seus argumentos.
+     as expressões de entrada.
+
+     `grind' avalia seus argumentos.
 
      Exemplos:
 
@@ -886,11 +889,6 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
      `loadfile' pode processar arquivos criados por `save',
      `translate_file', e `compile_file'.  O usuário pode achar isso
      mais conveniente para usar `load' em lugar de `loadfile'.
-
-     `loadfile' avalia seu argumento, então `nomearquivo' deve
-     obrigatóriamente ser uma seqüência de caracteres literal, não uma
-     variável do tipo seqüência de caracteres.  O operador
-     apóstrofo-apóstrofo `''' não aceita avaliação.
 
 
  -- Variável de opção: loadprint
@@ -1214,15 +1212,8 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
      tais como `file_search_maxima' ou `showtime', se a elas tiverem
      sido atribuídos novos valores pelo usuário; veja `myoptions'.
 
-     `save' avalia seus argumentos.  <nomearquivo> deve
-     obrigatóriamente ser uma seqüência de caracteres, não uma variável
-     tipo seqüência de caracteres.  O primeiro e o último rótulos a
-     salvar, se especificado, devem obrigatóriamente serem inteiros.  O
-     operador apóstrofo-apóstrofo `''' avalia uma variável tipo
-     seqüência de caracteres para seu valor seqüência de caracteres,
-     e.g., `s: "foo.1"$ save (''s, all)$', e variáveis inteiras para
-     seus valores inteiros, e.g., `m: 5$ n: 12$ save ("foo.1", [''m,
-     ''n])$'.
+     `save' avalia <nomearquivo> e não avalia todos os outros
+     argumentos.
 
 
  -- Variável de opção: savedef
@@ -1342,8 +1333,8 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
  -- Função: tex (<label>, <nomearquivo>)
      Imprime uma representação de uma expressão adequada para o sistema
      TeX  de preparação de documento.  O resultado é um fragmento de um
-     documento, que pode ser copiado dentro de um documento maior.
-     Esse fragmento não pode ser processado de forma direta e isolada.
+     documento, que pode ser copiado dentro de um documento maior Esse
+     fragmento não pode ser processado de forma direta e isolada.
 
      `tex (<expr>)' imprime uma representação TeX da <expr> no console.
 
@@ -1353,19 +1344,16 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
      mesmo que o rótulo da equação no Maxima.
 
      `tex (<expr>, <nomearquivo>)' anexa ao final uma representação TeX
-     de <expr> no arquivo <nomearquivo>.  `tex' não avalia o argumento
-     <nomearquivo>; apóstrofo-apóstrofo `''' força a avaliação so
-     argumento.
+     de <expr> no arquivo <nomearquivo>.
 
      `tex (<rótulo>, <nomearquivo>)' anexa ao final uma
      representação TeX da expressão chamada de <rótulo>, com um rótulo
      de equação, ao arquivo <nomearquivo>.
 
-     `tex' não avalia o argumento <nomearquivo>; apóstrofo-apóstrofo
-     `''' força a avaliação so argumento.  `tex' avalia seus argumentos
-     após testar esse argumento para ver se é um rótulo.  duplo
-     apóstrofo `''' força a avaliação do argumento, desse modo
-     frustrando o teste e prevenindo o rótulo.
+     `tex' avalia seu primeiro argumento após testar esse argumento
+     para ver se é um rótulo.  duplo apóstrofo `''' força a
+     avaliação do argumento, desse modo frustrando o teste e prevenindo
+     o rótulo.
 
      Veja também `texput'.
 
@@ -1454,11 +1442,11 @@ File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  
 
      Atribui saída TeX a um operadro pósfixado.
 
-          (%i1) postfix ("@");
-          (%o1)                           @
-          (%i2) texput ("@", "!!", postfix);
+          (%i1) postfix ("##");
+          (%o1)                          ##
+          (%i2) texput ("##", "!!", postfix);
           (%o2)                          !!
-          (%i3) tex (x @);
+          (%i3) tex (x ##);
           $$x!!$$
           (%o3)                         false
 
@@ -1601,13 +1589,13 @@ File: maxima.info,  Node: Ponto Flutuante,  Next: Contextos,  Prev: Entrada e Sa
 
 * Menu:
 
-* Definições para ponto Flutuante::
+* Funções e Variáveis Definidas para ponto Flutuante::
 
 
-File: maxima.info,  Node: Definições para ponto Flutuante,  Prev: Ponto Flutuante,  Up: Ponto Flutuante
+File: maxima.info,  Node: Funções e Variáveis Definidas para ponto Flutuante,  Prev: Ponto Flutuante,  Up: Ponto Flutuante
 
-10.1 Definições para ponto Flutuante
-====================================
+10.1 Funções e Variáveis Definidas para ponto Flutuante
+=======================================================
 
  -- Função: bffac (<expr>, <n>)
      Versão para grandes números em ponto flutuante da função
@@ -1740,13 +1728,13 @@ File: maxima.info,  Node: Contextos,  Next: Polinômios,  Prev: Ponto Flutuante,
 
 * Menu:
 
-* Definições para Contextos::
+* Funções e Variáveis Definidas para Contextos::
 
 
-File: maxima.info,  Node: Definições para Contextos,  Prev: Contextos,  Up: Contextos
+File: maxima.info,  Node: Funções e Variáveis Definidas para Contextos,  Prev: Contextos,  Up: Contextos
 
-11.1 Definições para Contextos
-==============================
+11.1 Funções e Variáveis Definidas para Contextos
+=================================================
 
  -- Função: activate (<context_1>, ..., <context_n>)
      Ativa os contextos <context_1>, ..., <context_n>.  Os fatos nesses
@@ -2085,10 +2073,10 @@ File: maxima.info,  Node: Polinômios,  Next: Constantes,  Prev: Contextos,  Up:
 * Menu:
 
 * Introdução a Polinômios::
-* Definições para Polinômios::
+* Funções e Variáveis Definidas para Polinômios::
 
 
-File: maxima.info,  Node: Introdução a Polinômios,  Next: Definições para Polinômios,  Prev: Polinômios,  Up: Polinômios
+File: maxima.info,  Node: Introdução a Polinômios,  Next: Funções e Variáveis Definidas para Polinômios,  Prev: Polinômios,  Up: Polinômios
 
 12.1 Introdução a Polinômios
 ============================
@@ -2141,10 +2129,10 @@ truncação.  Do mesmo modo que na forma CRE, o símbolo /T/ segue o
 rótulo de linha que contém as tais expressões.
 
 
-File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a Polinômios,  Up: Polinômios
+File: maxima.info,  Node: Funções e Variáveis Definidas para Polinômios,  Prev: Introdução a Polinômios,  Up: Polinômios
 
-12.2 Definições para Polinômios
-===============================
+12.2 Funções e Variáveis Definidas para Polinômios
+==================================================
 
  -- Variável de opção: algebraic
      Valor Padrão: `false'
@@ -2673,8 +2661,8 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
      calculados em `divisors', `divsum' e `totient'.
 
      Chamadas internas a `factor' respeitam o valor especificado pelo
-     usuário para `intfaclim'.  Setting `intfaclim' to `true' may reduce
-     `intfaclim'.  Escolhendo `intfaclim' para `true' podemos reduzir o
+     usuário para `intfaclim'. Setting `intfaclim' to `true' may reduce
+     `intfaclim'. Escolhendo `intfaclim' para `true' podemos reduzir o
      tempo gasto fatorando grandes inteiros.
 
 
@@ -3434,18 +3422,18 @@ File: maxima.info,  Node: Constantes,  Next: Logarítmos,  Prev: Polinômios,  U
 
 * Menu:
 
-* Definições para Constantes::
+* Funções e Variáveis Definidas para Constantes::
 
 
-File: maxima.info,  Node: Definições para Constantes,  Prev: Constantes,  Up: Constantes
+File: maxima.info,  Node: Funções e Variáveis Definidas para Constantes,  Prev: Constantes,  Up: Constantes
 
-13.1 Definições para Constantes
-===============================
+13.1 Funções e Variáveis Definidas para Constantes
+==================================================
 
  -- Constante: %e
      `%e' representa a base do logarítmo natural, também conhecido como
-     constante de Euler.  O valor num´erico de `%e' é um número em
-     ponto flutuante de precisão dupla 2.718281828459045d0.
+     constante de Euler.  O valor numérico de `%e' é um número em ponto
+     flutuante de precisão dupla 2.718281828459045d0.
 
 
  -- Constante: %i
@@ -3542,13 +3530,13 @@ File: maxima.info,  Node: Logarítmos,  Next: Trigonometria,  Prev: Constantes, 
 
 * Menu:
 
-* Definições para Logarítmos::
+* Funções e Variáveis Definidas para Logarítmos::
 
 
-File: maxima.info,  Node: Definições para Logarítmos,  Prev: Logarítmos,  Up: Logarítmos
+File: maxima.info,  Node: Funções e Variáveis Definidas para Logarítmos,  Prev: Logarítmos,  Up: Logarítmos
 
-14.1 Definições para Logarítmos
-===============================
+14.1 Funções e Variáveis Definidas para Logarítmos
+==================================================
 
  -- Variável de opção: %e_to_numlog
      Valor padrão: `false'
@@ -3623,8 +3611,8 @@ File: maxima.info,  Node: Definições para Logarítmos,  Prev: Logarítmos,  Up
      Representa o logarítmo natural (base e) de <x>.
 
      Maxima não possui uma função interna para logarítmo de base 10 ou
-     de outras bases. `log10(x) := log(x) / log(10)' é uma definição
-     útil.
+     de outras bases.  `log10(x) := log(x) / log(10)' é uma
+     definição útil.
 
      Simplificação e avaliação de logarítmos são governadas por muitos
      sinalizadores globais:
@@ -3670,16 +3658,9 @@ File: maxima.info,  Node: Definições para Logarítmos,  Prev: Logarítmos,  Up
 
  -- Variável de opção: logarc
  -- Função: logarc (<expr>)
-     Se `true' irá fazer com que as funções circularee inversas e
-     hiperbólicas sejam convertidas em formas logarítimicas.
-     `logarc(<exp>)' irá fazer com que essa conversão para uma expressão
-     particular <exp> sem escolher o comutador ou tendo que re-avaliar
-     a expressão com `ev'.
-
      Quando a variável global `logarc' for `true', funções circulares
-     inversas e funções hiperbólicas são substituídas por suas
-     funções logarítmicas equivalentes.  O valor padrão de `logarc' é
-     `false'.
+     inversas e funções hiperbólicas serão convertidas em funções
+     logarítimicas equivalentes.  O valor padrão de `logarc' é `false'.
 
      A função `logarc(<expr>)' realiza aquela substituíção para uma
      expressão <expr> sem modificar o valor da variável global `logarc'.
@@ -3714,7 +3695,7 @@ File: maxima.info,  Node: Definições para Logarítmos,  Prev: Logarítmos,  Up
      `logconcoeffp' para o nome de uma função predicado de um
      argumento.  E.g. se você gosta de gerara raízes quadradas, você
      pode fazer `logconcoeffp:'logconfun$
-     logconfun(m):=featurep(m,integer) ou ratnump(m)$' .  então
+     logconfun(m):=featurep(m,integer) ou ratnump(m)$' .  Então
      `logcontract(1/2*log(x));' irá fornecer `log(sqrt(x))'.
 
 
@@ -3768,10 +3749,10 @@ File: maxima.info,  Node: Trigonometria,  Next: Funções Especiais,  Prev: Loga
 * Menu:
 
 * Introdução ao Pacote Trigonométrico::
-* Definições para Trigonometria::
+* Funções e Variáveis Definidas para Trigonometria::
 
 
-File: maxima.info,  Node: Introdução ao Pacote Trigonométrico,  Next: Definições para Trigonometria,  Prev: Trigonometria,  Up: Trigonometria
+File: maxima.info,  Node: Introdução ao Pacote Trigonométrico,  Next: Funções e Variáveis Definidas para Trigonometria,  Prev: Trigonometria,  Up: Trigonometria
 
 15.1 Introdução ao Pacote Trigonométrico
 ========================================
@@ -3790,10 +3771,10 @@ de simplificação construídas no Maxima, `ntrig' e `atrig1'.  Faça
 `describe(<comando>)' para detalhes.
 
 
-File: maxima.info,  Node: Definições para Trigonometria,  Prev: Introdução ao Pacote Trigonométrico,  Up: Trigonometria
+File: maxima.info,  Node: Funções e Variáveis Definidas para Trigonometria,  Prev: Introdução ao Pacote Trigonométrico,  Up: Trigonometria
 
-15.2 Definições para Trigonometria
-==================================
+15.2 Funções e Variáveis Definidas para Trigonometria
+=====================================================
 
  -- Função: acos (<x>)
      - Arco Cosseno.
@@ -4110,10 +4091,10 @@ File: maxima.info,  Node: Funções Especiais,  Next: Funções Elípticas,  Pre
 * Menu:
 
 * Introdução a Funções Especiais::
-* Definições para Funções Especiais::
+* Funções e Variáveis Definidas para Funções Especiais::
 
 
-File: maxima.info,  Node: Introdução a Funções Especiais,  Next: Definições para Funções Especiais,  Prev: Funções Especiais,  Up: Funções Especiais
+File: maxima.info,  Node: Introdução a Funções Especiais,  Next: Funções e Variáveis Definidas para Funções Especiais,  Prev: Funções Especiais,  Up: Funções Especiais
 
 16.1 Introdução a Funções Especiais
 ===================================
@@ -4128,7 +4109,7 @@ A notação de função especial segue adiante:
      %p[u,v] (z)                    Função de Legendre
      %q[u,v] (z)                    Função de Legendre, segundo tipo
      hstruve[n] (z)                 Função H de Struve H
-     lstruve[n] (z)                 Função de L Struve
+     lstruve[n] (z)                 Função L de Struve
      %f[p,q] ([], [], expr)         Função Hipergeométrica Generalizada
      gamma()                        Função Gamma
      gammagreek(a,z)                Função gama incompleta
@@ -4142,10 +4123,10 @@ A notação de função especial segue adiante:
      %d [n] (z)                     Função cilíndrica parabólica
 
 
-File: maxima.info,  Node: Definições para Funções Especiais,  Prev: Introdução a Funções Especiais,  Up: Funções Especiais
+File: maxima.info,  Node: Funções e Variáveis Definidas para Funções Especiais,  Prev: Introdução a Funções Especiais,  Up: Funções Especiais
 
-16.2 Definições para Funções Especiais
-======================================
+16.2 Funções e Variáveis Definidas para Funções Especiais
+=========================================================
 
  -- Função: airy_ai (<x>)
      A função de Airy Ai, como definida em Abramowitz e Stegun,
@@ -4250,7 +4231,7 @@ File: maxima.info,  Node: Definições para Funções Especiais,  Prev: Introdu�
                               ====
                               k = 0
 
-     todavia séries infinitas não são usadas nos cálculos.
+     embora séries infinitas não são usadas nos cálculos.
 
 
  -- Função: bessel_k (<v>, <z>)
@@ -4375,7 +4356,7 @@ File: maxima.info,  Node: Definições para Funções Especiais,  Prev: Introdu�
 
 
  -- Função: poisdiff (<a>, <b>)
-     Deriva <a> com relação a <b>.  <b> deve ocorrer somente nos
+     Deriva <a> em relação a <b>.  <b> deve ocorrer somente nos
      argumentos trigonométricos ou somente nos coeficientes.
 
 
@@ -4494,24 +4475,32 @@ File: maxima.info,  Node: Definições para Funções Especiais,  Prev: Introdu�
 
 
  -- Variável de opção: maxpsifracnum
-     Valor padrão: 4
+     Valor padrão: 6
 
      Tomemos <x> como sendo um número racional menor que a unidade e da
      forma `p/q'.  Se `p' for menor que `maxpsifracnum', então
      `psi[<n>](<x>)' não irá tentar retornar um valor simplificado.
 
 
- -- Função: specint (exp(- s*<t>) * <expr>, <t>)
-     Calcula a transformada de Laplace de <expr> com ralação à variável
+ -- Variável de opção: maxpsifracdenom
+     Valor padrão: 6
+
+     Tomemos <x> como sendo um número racional menor que a unidade e da
+     forma `p/q'.  Se `q' for maior que `maxpsifracdenom', então
+     `psi[<n>](<x>)' não irá tentar retornar um valor simplificado.
+
+
+ -- Function: specint (exp(- s*<t>) * <expr>, <t>)
+     Calcula a trasformada de Laplace de <expr> com relação à variável
      <t>.  O integrando <expr> pode conter funções especiais.
 
-     Se `specint' não puder calcular a integral, o valore de retorno
-     pode conter vários símbolos do Lisp, incluindo
+     Se `specint' não puder calcular a integral, o valor de retorno pode
+     coter vários símbolos do Lisp, incluindo
      `other-defint-to-follow-negtest', `other-lt-exponential-to-follow',
      `product-of-y-with-nofract-indices', etc.; isso é um erro.
 
-     `demo(hypgeo)' mostra muitos exemplos de transformadas de Laplace
-     calculados por `specint'.
+     `demo(hypgeo)' mostra muitos exemplos de tansformadas de Laplace
+     calculados por meio de `specint'.
 
      Exemplos:
 
@@ -4531,14 +4520,6 @@ File: maxima.info,  Node: Definições para Funções Especiais,  Prev: Introdu�
                                          p
 
 
- -- Variável de opção: maxpsifracdenom
-     Valor padrão: 4
-
-     Tomemos <x> como sendo um número racional menor que a unidade e da
-     forma `p/q'.  Se `q' for maior que `maxpsifracdeonm', então
-     `psi[<n>](<x>)' não irá tentar retornar um valor simplificado.
-
-
 
 File: maxima.info,  Node: Funções Elípticas,  Next: Limites,  Prev: Funções Especiais,  Up: Top
 
@@ -4548,11 +4529,11 @@ File: maxima.info,  Node: Funções Elípticas,  Next: Limites,  Prev: Funções
 * Menu:
 
 * Introdução a Funções Elípticas e Integrais::
-* Definições para Funções Elípticas::
-* Definições para Integrais Elípticas::
+* Funções e Variáveis Definidas para Funções Elípticas::
+* Funções e Variáveis Definidas para Integrais Elípticas::
 
 
-File: maxima.info,  Node: Introdução a Funções Elípticas e Integrais,  Next: Definições para Funções Elípticas,  Up: Top
+File: maxima.info,  Node: Introdução a Funções Elípticas e Integrais,  Next: Funções e Variáveis Definidas para Funções Elípticas,  Up: Top
 
 17.1 Introdução a Funções Elípticas e Integrais
 ===============================================
@@ -4645,10 +4626,10 @@ Raymond Toy.  Foi colocado sob os termos da Licençã Pública Geral (GPL)
 que governa a distribuição do Maxima.
 
 
-File: maxima.info,  Node: Definições para Funções Elípticas,  Next: Definições para Integrais Elípticas,  Prev: Introdução a Funções Elípticas e Integrais,  Up: Top
+File: maxima.info,  Node: Funções e Variáveis Definidas para Funções Elípticas,  Next: Funções e Variáveis Definidas para Integrais Elípticas,  Prev: Introdução a Funções Elípticas e Integrais,  Up: Top
 
-17.2 Definições para Funções Elípticas
-======================================
+17.2 Funções e Variáveis Definidas para Funções Elípticas
+=========================================================
 
  -- Função: jacobi_sn (<u>, <m>)
      A Função elíptica Jacobiana sn(u,m).
@@ -4723,10 +4704,10 @@ File: maxima.info,  Node: Definições para Funções Elípticas,  Next: Defini�
      A inversa da função elíptica Jacobiana dc(u,m).
 
 
-File: maxima.info,  Node: Definições para Integrais Elípticas,  Prev: Definições para Funções Elípticas,  Up: Top
+File: maxima.info,  Node: Funções e Variáveis Definidas para Integrais Elípticas,  Prev: Funções e Variáveis Definidas para Funções Elípticas,  Up: Top
 
-17.3 Definições para Integrais Elípticas
-========================================
+17.3 Funções e Variáveis Definidas para Integrais Elípticas
+===========================================================
 
  -- Função: elliptic_f (<phi>, <m>)
      A integral elíptica incompleta de primeiro tipo, definida como
@@ -4784,13 +4765,13 @@ File: maxima.info,  Node: Limites,  Next: Diferenciação,  Prev: Funções Elí
 
 * Menu:
 
-* Definições para Limites::
+* Funções e Variáveis Definidas para Limites::
 
 
-File: maxima.info,  Node: Definições para Limites,  Prev: Limites,  Up: Limites
+File: maxima.info,  Node: Funções e Variáveis Definidas para Limites,  Prev: Limites,  Up: Limites
 
-18.1 Definições para Limites
-============================
+18.1 Funções e Variáveis Definidas para Limites
+===============================================
 
  -- Variável de Opção: lhospitallim
      Valor padrão: 4
@@ -4862,15 +4843,17 @@ File: maxima.info,  Node: Diferenciação,  Next: Integração,  Prev: Limites, 
 19 Diferenciação
 ****************
 
+/Differentiation.texi/1.20/Sat Jun  2 00:12:38 2007/-ko/
+
 * Menu:
 
-* Definições para Diferenciação::
+* Funções e Variáveis Definidas para Diferenciação::
 
 
-File: maxima.info,  Node: Definições para Diferenciação,  Prev: Diferenciação,  Up: Diferenciação
+File: maxima.info,  Node: Funções e Variáveis Definidas para Diferenciação,  Prev: Diferenciação,  Up: Diferenciação
 
-19.1 Definições para Diferenciação
-==================================
+19.1 Funções e Variáveis Definidas para Diferenciação
+=====================================================
 
  -- Função: antid (<expr>, <x>, <u(x)>)
      Retorna uma lista de dois elementos, tais que uma antiderivada de
@@ -5461,12 +5444,12 @@ File: maxima.info,  Node: Integração,  Next: Equações,  Prev: Diferenciaçã
 * Menu:
 
 * Introdução a Integração::
-* Definições para Integração::
+* Funções e Variáveis Definidas para Integração::
 * Introdução a QUADPACK::
-* Definições para QUADPACK::
+* Funções e Variáveis Definidas para QUADPACK::
 
 
-File: maxima.info,  Node: Introdução a Integração,  Next: Definições para Integração,  Prev: Integração,  Up: Integração
+File: maxima.info,  Node: Introdução a Integração,  Next: Funções e Variáveis Definidas para Integração,  Prev: Integração,  Up: Integração
 
 20.1 Introdução a Integração
 ============================
@@ -5485,10 +5468,10 @@ logarítmicas, exponenciais, radicais, etc.) e umas poucas extensões
 de funções desconhecidas tais como `g(x)' e `h(x)'.
 
 
-File: maxima.info,  Node: Definições para Integração,  Next: Introdução a QUADPACK,  Prev: Introdução a Integração,  Up: Integração
+File: maxima.info,  Node: Funções e Variáveis Definidas para Integração,  Next: Introdução a QUADPACK,  Prev: Introdução a Integração,  Up: Integração
 
-20.2 Definições para Integração
-===============================
+20.2 Funções e Variáveis Definidas para Integração
+==================================================
 
  -- Função: changevar (<expr>, <f(x,y)>, <y>, <x>)
      Faz a mudança de variável dada por `<f(x,y)> = 0' em todas as
@@ -5970,7 +5953,7 @@ File: maxima.info,  Node: Definições para Integração,  Next: Introdução a 
 
 
 
-File: maxima.info,  Node: Introdução a QUADPACK,  Next: Definições para QUADPACK,  Prev: Definições para Integração,  Up: Integração
+File: maxima.info,  Node: Introdução a QUADPACK,  Next: Funções e Variáveis Definidas para QUADPACK,  Prev: Funções e Variáveis Definidas para Integração,  Up: Integração
 
 20.3 Introdução a QUADPACK
 ==========================
@@ -6068,10 +6051,10 @@ Kahaner.  QUADPACK: A Subroutine Package for Automatic Integration.
 Berlin: Springer-Verlag, 1983, ISBN 0387125531.
 
 
-File: maxima.info,  Node: Definições para QUADPACK,  Prev: Introdução a QUADPACK,  Up: Integração
+File: maxima.info,  Node: Funções e Variáveis Definidas para QUADPACK,  Prev: Introdução a QUADPACK,  Up: Integração
 
-20.4 Definições para QUADPACK
-=============================
+20.4 Funções e Variáveis Definidas para QUADPACK
+================================================
 
  -- Função: quad_qag (<f(x)>, <x>, <a>, <b>, <chave>, <epsrel>,
           <limite>)
@@ -6651,13 +6634,13 @@ File: maxima.info,  Node: Equações,  Next: Equações Diferenciais,  Prev: Int
 
 * Menu:
 
-* Definições para Equações::
+* Funções e Variáveis Definidas para Equações::
 
 
-File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: Equações
+File: maxima.info,  Node: Funções e Variáveis Definidas para Equações,  Prev: Equações,  Up: Equações
 
-21.1 Definições para Equações
-=============================
+21.1 Funções e Variáveis Definidas para Equações
+================================================
 
  -- Variável: %rnum_list
      Valor padrão: `[]'
@@ -6681,9 +6664,9 @@ File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: 
      não for de uma variável, ou se for uma quadrática ou uma
      biquadrada.
 
-     Dessa forma `algexact: true' não garante soluções exatas, apenas
-     que `algsys' tentará primeiro pegar soluções exatas, e somente
-     retorna aproximações quando tudo mais falha.
+     Dessa forma `algexact: true' não garante somente soluções exatas,
+     apenas que `algsys' tentará primeiro pegar soluções exatas, e
+     somente retorna aproximações quando tudo mais falha.
 
 
  -- Função: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
@@ -6975,11 +6958,12 @@ File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: 
      When `globalsolve' for `true', variáveis para as quais as
      equações são resolvidas são atribuidas aos valores da solução
      encontrados por `linsolve', e por `solve' quando resolvendo duas
-     ou mais equações lineares.  Quando `globalsolve' for `false',
-     soluções encontradas por `linsolve' e por `solve' quando
-     resolvendo duas ou mais equações lineares são espressas como
-     equações, e as variáveis para as quais a equação foi resolvida não
-     são atribuidas.
+     ou mais equações lineares.
+
+     Quando `globalsolve' for `false', soluções encontradas por
+     `linsolve' e por `solve' quando resolvendo duas ou mais equações
+     lineares são espressas como equações, e as variáveis para as quais
+     a equação foi resolvida não são atribuidas.
 
      Quando resolvendo qualquer coisa outra que não duas equações
      lineares ou mais, `solve' ignora `globalsolve'.  Outras funções
@@ -7028,7 +7012,7 @@ File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: 
 
 
  -- Função: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
-     `inteqn' é um pacote para resolver equações integrais.  `load
+     `inteqn' é um pacote para resolver equações com integrais.  `load
      ("inteqn")' carrega esse pacote.
 
      <ie> é a equação integral; <unk> é a função desconhecida; <tech> é
@@ -7475,12 +7459,19 @@ File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: 
      `solve_inconsistent_error' ); se não existe solução única, então
      `singular' será mostrado.
 
-     Exemplos:
+     Quando `programmode' for `false', `solve' mostra soluções com
+     rótulos de expressões intermediárias (`%t'), e retorna a lista de
+     rótulos.
 
+     Quando `globalsolve' for `true' e o problema for resolver duas ou
+     mais equações lineares, cada variável para a qual a equação for
+     resolvida é associada a seu valor na solução das equações.
+
+     Exemplos:
           (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
 
           SOLVE is using arc-trig functions to get a solution.
-          Some soluções will be lost.
+          Some solutions will be lost.
                                       %pi
           (%o1)                  [x = ---, f(x) = 1]
                                        6
@@ -7618,8 +7609,8 @@ File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: 
  -- Variável de opção: solve_inconsistent_error
      Valor padrão: `true'
 
-     Quando `solve_inconsistent_error' é `true', `solve' e `linsolve'
-     resultam em erro se as equações a serem resolvidas são
+     Quando `solve_inconsistent_error' for `true', `solve' e `linsolve'
+     resultam em erro se as equações a serem resolvidas forem
      inconsistentes.
 
      Se `false', `solve' e `linsolve' retornam uma lista vazia `[]' se
@@ -7645,20 +7636,8 @@ File: maxima.info,  Node: Equações Diferenciais,  Next: Numérico,  Prev: Equa
 * Menu:
 
 * Introdução a Equações Diferenciais::
-* Definições para Equações Diferenciais::
-
-
-File: maxima.info,  Node: Introdução a Equações Diferenciais,  Next: Definições para Equações Diferenciais,  Prev: Equações Diferenciais,  Up: Equações Diferenciais
-
-22.1 Introdução a Equações Diferenciais
-=======================================
-
-Essa seção descreve as funções disponíves no Maxima para obter
-soluções analíticas para alguns tipos específicos de equações
-diferencias de primeira ordem e de equações diferencias de segunda
-ordem. Para obter uma solução numérica para um sistema de equações
-diferenciais, veja o pacote adicional `dynamics'. Para representações
-gráficas em espaço de fase, veja o pacote adicional `plotdf'.
+* Funções e Variáveis Definidas para Equações Diferenciais::
+Definições para Equações Diferenciais
 
 
 

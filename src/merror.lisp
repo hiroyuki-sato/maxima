@@ -129,13 +129,14 @@
 	     (nreverse new-argl)))
     (let ((form (pop l)))
       (cond ((> (error-size form) $error_size)
-	     (setq symbol-number (1+ symbol-number))
+	     (incf symbol-number)
 	     (let ((sym (nthcdr symbol-number $error_syms)))
 	       (cond (sym
 		      (setq sym (car sym)))
 		     (t
-		      (setq sym (concat '$errexp symbol-number))
-		      (setq $error_syms (append $error_syms (list sym)))))
+		      (setq sym (intern (format nil "~A~D" '$errexp
+						symbol-number)))
+		      (tuchus $error_syms sym)))
 	       (push sym error-symbols)
 	       (push form error-values)
 	       (push sym new-argl)))
@@ -180,8 +181,10 @@
 ;;; in macsyma. Once all functions of this type are rounded up
 ;;; I'll see about implementing signaling. -GJC
 
-(defmfun errrjf n
-  (if errrjfflag (throw 'raterr nil) (apply #'merror (listify n))))
+(defmfun errrjf (&rest args)
+  (if errrjfflag
+      (throw 'raterr nil)
+      (apply #'merror args)))
 
 ;;; The user-error function is called on |&foo| "strings" and expressions.
 ;;; Cons up a format string so that $ERROR can be bound.
@@ -195,7 +198,7 @@
        (setq sl (maknam sl))
        (cons sl (nreverse se)))
     (setq s (pop l))
-    (cond ((and (symbolp s) (char= (getcharn s 1) #\&))
+    (cond ((and (symbolp s) (char= (char (symbol-name s) 0) #\&))
 	   (setq sb (mapcan #'(lambda (x)
 				(if (char= x #\~)
 				    (list x x)

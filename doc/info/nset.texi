@@ -1,9 +1,9 @@
 @menu
 * Introduction to Sets::       
-* Definitions for Sets::       
+* Functions and Variables for Sets::       
 @end menu
 
-@node Introduction to Sets, Definitions for Sets, Sets, Sets
+@node Introduction to Sets, Functions and Variables for Sets, Sets, Sets
 @section Introduction to Sets
 
 Maxima provides set functions, such as intersection and 
@@ -120,8 +120,8 @@ To construct a set from the elements of a list, use @code{setify}.
 @end example
 
 Set members @code{x} and @code{y} are equal provided @code{is(x = y)} 
-evaluates to true. Thus @code{rat(x)} and @code{x} are equal as set members;
-consequently, 
+evaluates to @code{true}. Thus @code{rat(x)} and @code{x} are equal as set
+members; consequently, 
 
 @c ===beg===
 @c {x, rat(x)};
@@ -131,7 +131,7 @@ consequently,
 (%o1)                          @{x@}
 @end example
 
-Further, since @code{is((x - 1)*(x + 1) = x^2 - 1)} evaluates to false, 
+Further, since @code{is((x - 1)*(x + 1) = x^2 - 1)} evaluates to @code{false}, 
 @code{(x - 1)*(x + 1)} and @code{x^2 - 1} are distinct set members; thus 
 
 @c ===beg===
@@ -221,14 +221,16 @@ boolean-valued function.) For example, to find the equations
 in a given set that do not depend on a variable @code{z}, use
 
 @c ===beg===
-@c subset ({x + y + z, x - y + 4, x + y - 5}, lambda ([e], freeof (z, e)));
+@c subset ({x + y + z, x - y + 4, x + y - 5}, 
+@c                                     lambda ([e], freeof (z, e)));
 @c ===end===
 @example
-(%i1) subset (@{x + y + z, x - y + 4, x + y - 5@}, lambda ([e], freeof (z, e)));
+(%i1) subset (@{x + y + z, x - y + 4, x + y - 5@},
+                                    lambda ([e], freeof (z, e)));
 (%o1)               @{- y + x + 4, y + x - 5@}
 @end example
 
-The section @ref{Definitions for Sets} has a complete list of
+The section @ref{Functions and Variables for Sets} has a complete list of
 the set functions in Maxima.
 
 @subsection Set Member Iteration
@@ -410,8 +412,8 @@ Stavros Macrakis of Cambridge, Massachusetts and Barton Willis of the
 University of Nebraska at Kearney (UNK) wrote the Maxima set functions and their
 documentation. 
 
-@node Definitions for Sets,  , Introduction to Sets, Sets
-@section Definitions for Sets
+@node Functions and Variables for Sets,  , Introduction to Sets, Sets
+@section Functions and Variables for Sets
 
 @anchor{adjoin}
 @deffn {Function} adjoin (@var{x}, @var{a}) 
@@ -460,14 +462,16 @@ Examples:
 @c ===beg===
 @c makelist (belln (i), i, 0, 6);
 @c is (cardinality (set_partitions ({})) = belln (0));
-@c is (cardinality (set_partitions ({1, 2, 3, 4, 5, 6})) = belln (6));
+@c is (cardinality (set_partitions ({1, 2, 3, 4, 5, 6})) = 
+@c                        belln (6));
 @c ===end===
 @example
 (%i1) makelist (belln (i), i, 0, 6);
 (%o1)               [1, 1, 2, 5, 15, 52, 203]
 (%i2) is (cardinality (set_partitions (@{@})) = belln (0));
 (%o2)                         true
-(%i3) is (cardinality (set_partitions (@{1, 2, 3, 4, 5, 6@})) = belln (6));
+(%i3) is (cardinality (set_partitions (@{1, 2, 3, 4, 5, 6@})) =
+                       belln (6));
 (%o3)                         true
 @end example
 
@@ -720,10 +724,12 @@ Examples:
 The equivalence relation is a lambda expression which returns @code{true} or @code{false}.
 
 @c ===beg===
-@c equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, lambda ([x, y], is (equal (x, y))));
+@c equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, 
+@c                         lambda ([x, y], is (equal (x, y))));
 @c ===end===
 @example
-(%i1) equiv_classes (@{1, 1.0, 2, 2.0, 3, 3.0@}, lambda ([x, y], is (equal (x, y))));
+(%i1) equiv_classes (@{1, 1.0, 2, 2.0, 3, 3.0@},
+                        lambda ([x, y], is (equal (x, y))));
 (%o1)            @{@{1, 1.0@}, @{2, 2.0@}, @{3, 3.0@}@}
 @end example
 
@@ -741,10 +747,12 @@ which @code{is} evaluates to @code{true} or @code{false}.
 The equivalence classes are numbers which differ by a multiple of 3.
 
 @c ===beg===
-@c equiv_classes ({1, 2, 3, 4, 5, 6, 7}, lambda ([x, y], remainder (x - y, 3) = 0));
+@c equiv_classes ({1, 2, 3, 4, 5, 6, 7}, 
+@c                      lambda ([x, y], remainder (x - y, 3) = 0));
 @c ===end===
 @example
-(%i1) equiv_classes (@{1, 2, 3, 4, 5, 6, 7@}, lambda ([x, y], remainder (x - y, 3) = 0));
+(%i1) equiv_classes (@{1, 2, 3, 4, 5, 6, 7@},
+                     lambda ([x, y], remainder (x - y, 3) = 0));
 (%o1)              @{@{1, 4, 7@}, @{2, 5@}, @{3, 6@}@}
 @end example
 @end deffn
@@ -775,7 +783,7 @@ Given an empty set @code{@{@}} or empty lists @code{[]} as arguments,
 
 When the global flag @code{maperror} is @code{true}, all lists 
 @var{L_1}, ..., @var{L_n} must have equal lengths.
-When @code{maperror} is false, list arguments are
+When @code{maperror} is @code{false}, list arguments are
 effectively truncated to the length of the shortest list. 
 
 Return values of the predicate @var{f} which evaluate (via @code{is})
@@ -824,7 +832,8 @@ are governed by the global flag @code{prederror}.
 
 @c ===beg===
 @c prederror : false;
-@c map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+@c map (lambda ([a, b], is (a < b)), [x, y, z], 
+@c                    [x^2, y^2, z^2]);
 @c every ("<", [x, y, z], [x^2, y^2, z^2]);
 @c prederror : true;
 @c every ("<", [x, y, z], [x^2, y^2, z^2]);
@@ -832,7 +841,8 @@ are governed by the global flag @code{prederror}.
 @example
 (%i1) prederror : false;
 (%o1)                         false
-(%i2) map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+(%i2) map (lambda ([a, b], is (a < b)), [x, y, z],
+                   [x^2, y^2, z^2]);
 (%o2)              [unknown, unknown, unknown]
 (%i3) every ("<", [x, y, z], [x^2, y^2, z^2]);
 (%o3)                        unknown
@@ -995,7 +1005,7 @@ When @var{a} is not a list, it is returned unchanged.
 
 Examples:
 
-In line (%o2), the argument of @code{f} isn't converted to a set
+In line @code{(%o2)}, the argument of @code{f} isn't converted to a set
 because the main operator of @code{f([b])} isn't a list.
 
 @c ===beg===
@@ -1612,12 +1622,14 @@ Examples:
 
 @c ===beg===
 @c partition_set ({2, 7, 1, 8, 2, 8}, evenp);
-@c partition_set ({x, rat(y), rat(y) + z, 1}, lambda ([x], ratp(x)));
+@c partition_set ({x, rat(y), rat(y) + z, 1}, 
+@c                      lambda ([x], ratp(x)));
 @c ===end===
 @example
 (%i1) partition_set (@{2, 7, 1, 8, 2, 8@}, evenp);
 (%o1)                   [@{1, 7@}, @{2, 8@}]
-(%i2) partition_set (@{x, rat(y), rat(y) + z, 1@}, lambda ([x], ratp(x)));
+(%i2) partition_set (@{x, rat(y), rat(y) + z, 1@},
+                     lambda ([x], ratp(x)));
 (%o2)/R/              [@{1, x@}, @{y, y + z@}]
 @end example
 @end deffn
@@ -2015,7 +2027,7 @@ Given an empty set @code{@{@}} or empty lists @code{[]} as arguments,
 
 When the global flag @code{maperror} is @code{true}, all lists 
 @var{L_1}, ..., @var{L_n} must have equal lengths.
-When @code{maperror} is false, list arguments are
+When @code{maperror} is @code{false}, list arguments are
 effectively truncated to the length of the shortest list. 
 
 Return values of the predicate @var{f} which evaluate (via @code{is})
@@ -2062,7 +2074,8 @@ are governed by the global flag @code{prederror}.
 
 @c ===beg===
 @c prederror : false;
-@c map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+@c map (lambda ([a, b], is (a < b)), [x, y, z], 
+@c            [x^2, y^2, z^2]);
 @c some ("<", [x, y, z], [x^2, y^2, z^2]);
 @c some ("<", [x, y, z], [x^2, y^2, z + 1]);
 @c prederror : true;
@@ -2072,7 +2085,8 @@ are governed by the global flag @code{prederror}.
 @example
 (%i1) prederror : false;
 (%o1)                         false
-(%i2) map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+(%i2) map (lambda ([a, b], is (a < b)), [x, y, z],
+           [x^2, y^2, z^2]);
 (%o2)              [unknown, unknown, unknown]
 (%i3) some ("<", [x, y, z], [x^2, y^2, z^2]);
 (%o3)                        unknown
@@ -2322,8 +2336,8 @@ Examples:
 Returns the symmetric difference, that is,
 the set of members that occur in exactly one set @var{a_k}.
 
-Given two arguments, @code{symmdifference(@var{a}, @var{b})} is
-the same as @code{union(setdifference(@var{a}, @var{b}), setdifference(@var{b}, @var{a}))}.
+Given two arguments, @code{symmdifference ( @var{a}, @var{b})} is
+the same as @code{union ( setdifference ( @var{a}, @var{b}), setdifference(@var{b}, @var{a}))}.
 
 @code{symmdifference} complains if any argument is not a literal set.
 

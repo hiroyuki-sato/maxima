@@ -9,10 +9,775 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to linearalgebra,  Up: linearalgebra
+File: maxima.info,  Node: Functions and Variables for impdiff,  Prev: impdiff,  Up: impdiff
 
-58.2 Definitions for linearalgebra
+54.1 Functions and Variables for impdiff
+========================================
+
+ -- Function: implicit_derivative
+          (<f>,<indvarlist>,<orderlist>,<depvar>)
+     This subroutine computes implicit derivatives of multivariable
+     functions.  <f> is an array function, the indexes are the
+     derivative degree in the <indvarlist> order; <indvarlist> is the
+     independent variable list; <orderlist> is the order desired; and
+     <depvar> is the dependent variable.
+
+     To use this function write first `load("impdiff")'.
+
+
+File: maxima.info,  Node: implicit_plot,  Next: interpol,  Prev: impdiff,  Up: Top
+
+55 implicit_plot
+****************
+
+* Menu:
+
+* Functions and Variables for implicit_plot::
+
+
+File: maxima.info,  Node: Functions and Variables for implicit_plot,  Prev: implicit_plot,  Up: implicit_plot
+
+55.1 Functions and Variables for implicit_plot
+==============================================
+
+ -- Function: implicit_plot (<expr>, <x_range>, <y_range>)
+ -- Function: implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
+          <y_range>)
+     Displays a plot of one or more expressions in implicit form.
+     <expr> is the expression to be plotted, <x_range> the range of the
+     horizontal axis and <y_range> the range of vertical axis.
+     `implicit_plot' only works with the gnuplot driver.
+     `implicit_plot' respects global setting for the gnuplot driver set
+     by the <set_plot_option> function. Options can also be passed to
+     `implicit_plot' function as optional arguments.
+
+     `implicit_plot' works by tracking sign changes on the area given
+     by <x_range> and <y_range> and can fail for complicated
+     expressions.
+
+     `load(implicit_plot)' loads this function.
+
+     Example:
+          (%i1) implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4],
+           [gnuplot_preamble, "set zeroaxis"]);
+
+
+
+File: maxima.info,  Node: interpol,  Next: lbfgs,  Prev: implicit_plot,  Up: Top
+
+56 interpol
+***********
+
+* Menu:
+
+* Introduction to interpol::
+* Functions and Variables for interpol::
+
+
+File: maxima.info,  Node: Introduction to interpol,  Next: Functions and Variables for interpol,  Prev: interpol,  Up: interpol
+
+56.1 Introduction to interpol
+=============================
+
+Package `interpol' defines de Lagrangian, the linear and the cubic
+splines methods for polynomial interpolation.
+
+   For comments, bugs or suggestions, please contact me at <'mario AT
+edu DOT xunta DOT es'>.
+
+
+File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduction to interpol,  Up: interpol
+
+56.2 Functions and Variables for interpol
+=========================================
+
+ -- Function: lagrange (<points>)
+ -- Function: lagrange (<points>, <option>)
+     Computes the polynomial interpolation by the Lagrangian method.
+     Argument <points> must be either:
+
+        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
+
+        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
+
+        * a list of numbers, `p: [4,6,3]', in which case the abscissas
+          will be assigned automatically to 1, 2, 3, etc.
+
+     In the first two cases the pairs are ordered with respect to the
+     first coordinate before making computations.
+
+     With the <option> argument it is possible to select the name for
+     the independent variable, which is `'x' by default; to define
+     another one, write something like `varname='z'.
+
+     Note that when working with high degree polynomials, floating
+     point evaluations are inestable.
+
+     Examples:
+
+          (%i1) load(interpol)$
+          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
+          (%i3) lagrange(p);
+                           4        3         2
+                       73 x    701 x    8957 x    5288 x   186
+          (%o3)        ----- - ------ + ------- - ------ + ---
+                        420     210       420      105      5
+          (%i4) f(x):=''%;
+                               4        3         2
+                           73 x    701 x    8957 x    5288 x   186
+          (%o4)    f(x) := ----- - ------ + ------- - ------ + ---
+                            420     210       420      105      5
+          (%i5) /* Evaluate the polynomial at some points */
+                map(f,[2.3,5/7,%pi]);
+                                       919062
+          (%o5)  [- 1.567534999999992, ------,
+                                       84035
+                                   4          3           2
+                             73 %pi    701 %pi    8957 %pi    5288 %pi   186
+                             ------- - -------- + --------- - -------- + ---]
+                               420       210         420        105       5
+          (%i6) %,numer;
+          (%o6) [- 1.567534999999992, 10.9366573451538, 2.89319655125692]
+          (%i7) load(draw)$  /* load draw package */
+          (%i8) /* Plot the polynomial together with points */
+                draw2d(
+                  color      = red,
+                  key        = "Lagrange polynomial",
+                  explicit(f(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+          (%i9) /* Change variable name */
+                lagrange(p, varname=w);
+                           4        3         2
+                       73 w    701 w    8957 w    5288 w   186
+          (%o9)        ----- - ------ + ------- - ------ + ---
+                        420     210       420      105      5
+
+
+ -- Function: charfun2 (<x>, <a>, <b>)
+     Returns `true' if number <x> belongs to the interval [a, b), and
+     `false' otherwise.
+
+ -- Function: linearinterpol (<points>)
+ -- Function: linearinterpol (<points>, <option>)
+     Computes the polynomial interpolation by the linear method.
+     Argument <points> must be either:
+
+        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
+
+        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
+
+        * a list of numbers, `p: [4,6,3]', in which case the abscissas
+          will be assigned automatically to 1, 2, 3, etc.
+
+     In the first two cases the pairs are ordered with respect to the
+     first coordinate before making computations.
+
+     With the <option> argument it is possible to select the name for
+     the independent variable, which is `'x' by default; to define
+     another one, write something like `varname='z'.
+
+     Examples:
+          (%i1) load(interpol)$
+          (%i2) p: matrix([7,2],[8,3],[1,5],[3,2],[6,7])$
+          (%i3) linearinterpol(p);
+                  13   3 x
+          (%o3)  (-- - ---) charfun2(x, minf, 3)
+                  2     2
+           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
+              5 x
+           + (--- - 3) charfun2(x, 3, 6)
+               3
+
+          (%i4) f(x):=''%;
+                          13   3 x
+          (%o4)  f(x) := (-- - ---) charfun2(x, minf, 3)
+                          2     2
+           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
+              5 x
+           + (--- - 3) charfun2(x, 3, 6)
+               3
+          (%i5)  /* Evaluate the polynomial at some points */
+                 map(f,[7.3,25/7,%pi]);
+                                      62  5 %pi
+          (%o5)                 [2.3, --, ----- - 3]
+                                      21    3
+          (%i6) %,numer;
+          (%o6)  [2.3, 2.952380952380953, 2.235987755982989]
+          (%i7) load(draw)$  /* load draw package */
+          (%i8)  /* Plot the polynomial together with points */
+                 draw2d(
+                   color      = red,
+                   key        = "Linear interpolator",
+                   explicit(f(x),x,-5,20),
+                   point_size = 3,
+                   color      = blue,
+                   key        = "Sample points",
+                   points(args(p)))$
+          (%i9)  /* Change variable name */
+                 linearinterpol(p, varname='s);
+                 13   3 s
+          (%o9) (-- - ---) charfun2(s, minf, 3)
+                 2     2
+           + (s - 5) charfun2(s, 7, inf) + (37 - 5 s) charfun2(s, 6, 7)
+              5 s
+           + (--- - 3) charfun2(s, 3, 6)
+               3
+
+
+ -- Function: cspline (<points>)
+ -- Function: cspline (<points>, <option1>, <option2>, ...)
+     Computes the polynomial interpolation by the cubic splines method.
+     Argument <points> must be either:
+
+        * a two column matrix, `p:matrix([2,4],[5,6],[9,3])',
+
+        * a list of pairs, `p: [[2,4],[5,6],[9,3]]',
+
+        * a list of numbers, `p: [4,6,3]', in which case the abscissas
+          will be assigned automatically to 1, 2, 3, etc.
+
+     In the first two cases the pairs are ordered with respect to the
+     first coordinate before making computations.
+
+     There are three options to fit specific needs:
+        * `'d1', default `'unknown', is the first derivative at x_1; if
+          it is `'unknown', the second derivative at x_1 is made equal
+          to 0 (natural cubic spline); if it is equal to a number, the
+          second derivative is calculated based on this number.
+
+        * `'dn', default `'unknown', is the first derivative at x_n; if
+          it is `'unknown', the second derivative at x_n is made equal
+          to 0 (natural cubic spline); if it is equal to a number, the
+          second derivative is calculated based on this number.
+
+        * `'varname', default `'x', is the name of the independent
+          variable.
+
+     Examples:
+          (%i1) load(interpol)$
+          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
+          (%i3) /* Unknown first derivatives at the extremes
+                   is equivalent to natural cubic splines */
+                cspline(p);
+                        3         2
+                  1159 x    1159 x    6091 x   8283
+          (%o3)  (------- - ------- - ------ + ----) charfun2(x, minf, 3)
+                   3288      1096      3288    1096
+                      3         2
+                2587 x    5174 x    494117 x   108928
+           + (- ------- + ------- - -------- + ------) charfun2(x, 7, inf)
+                 1644       137       1644      137
+                    3          2
+              4715 x    15209 x    579277 x   199575
+           + (------- - -------- + -------- - ------) charfun2(x, 6, 7)
+               1644       274        1644      274
+                      3         2
+                3287 x    2223 x    48275 x   9609
+           + (- ------- + ------- - ------- + ----) charfun2(x, 3, 6)
+                 4932       274      1644     274
+
+          (%i4) f(x):=''%$
+          (%i5) /* Some evaluations */
+                map(f,[2.3,5/7,%pi]), numer;
+          (%o5) [1.991460766423356, 5.823200187269903, 2.227405312429507]
+          (%i6) load(draw)$  /* load draw package */
+          (%i7) /* Plotting interpolating function */
+                draw2d(
+                  color      = red,
+                  key        = "Cubic splines",
+                  explicit(f(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+          (%i8) /* New call, but giving values at the derivatives */
+                cspline(p,d1=0,dn=0);
+                        3          2
+                  1949 x    11437 x    17027 x   1247
+          (%o8)  (------- - -------- + ------- + ----) charfun2(x, minf, 3)
+                   2256       2256      2256     752
+                      3          2
+                1547 x    35581 x    68068 x   173546
+           + (- ------- + -------- - ------- + ------) charfun2(x, 7, inf)
+                  564       564        141      141
+                   3          2
+              607 x    35147 x    55706 x   38420
+           + (------ - -------- + ------- - -----) charfun2(x, 6, 7)
+               188       564        141      47
+                      3         2
+                3895 x    1807 x    5146 x   2148
+           + (- ------- + ------- - ------ + ----) charfun2(x, 3, 6)
+                 5076       188      141      47
+          (%i8) /* Defining new interpolating function */
+                g(x):=''%$
+          (%i9) /* Plotting both functions together */
+                draw2d(
+                  color      = black,
+                  key        = "Cubic splines (default)",
+                  explicit(f(x),x,0,10),
+                  color      = red,
+                  key        = "Cubic splines (d1=0,dn=0)",
+                  explicit(g(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+
+
+
+File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: interpol,  Up: Top
+
+57 lbfgs
+********
+
+* Menu:
+
+* Introduction to lbfgs::
+* Functions and Variables for lbfgs::
+
+
+File: maxima.info,  Node: Introduction to lbfgs,  Next: Functions and Variables for lbfgs,  Prev: Top,  Up: Top
+
+57.1 Introduction to lbfgs
+==========================
+
+`lbfgs' is an implementation of the L-BFGS algorithm [1] to solve
+unconstrained minimization problems via a limited-memory quasi-Newton
+(BFGS) algorithm.  It is called a limited-memory method because a
+low-rank approximation of the Hessian matrix inverse is stored instead
+of the entire Hessian inverse.  The program was originally written in
+Fortran [2] by Jorge Nocedal, incorporating some functions originally
+written by Jorge J. More' and David J. Thuente, and translated into
+Lisp automatically via the program `f2cl'.  The Maxima package `lbfgs'
+comprises the translated code plus an interface function which manages
+some details.
+
+   References:
+
+   [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
+large scale optimization". Mathematical Programming B 45:503-528 (1989)
+
+   [2] `http://netlib.org/opt/lbfgs_um.shar'
+
+
+File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction to lbfgs,  Up: Top
+
+57.2 Functions and Variables for lbfgs
+======================================
+
+ -- Function: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
+     Finds an approximate solution of the unconstrained minimization of
+     the figure of merit <FOM> over the list of variables <X>, starting
+     from initial estimates <X0>, such that norm grad FOM < epsilon
+     max(1, norm X).
+
+     The algorithm applied is a limited-memory quasi-Newton (BFGS)
+     algorithm [1].  It is called a limited-memory method because a
+     low-rank approximation of the Hessian matrix inverse is stored
+     instead of the entire Hessian inverse.  Each iteration of the
+     algorithm is a line search, that is, a search along a ray in the
+     variables <X>, with the search direction computed from the
+     approximate Hessian inverse.  The FOM is always decreased by a
+     successful line search.  Usually (but not always) the norm of the
+     gradient of FOM also decreases.
+
+     <iprint> controls progress messages printed by `lbfgs'.
+
+    `iprint[1]'
+          `<iprint>[1]' controls the frequency of progress messages.
+         `iprint[1] < 0'
+               No progress messages.
+
+         `iprint[1] = 0'
+               Messages at the first and last iterations.
+
+         `iprint[1] > 0'
+               Print a message every `<iprint>[1]' iterations.
+
+    `iprint[2]'
+          `<iprint>[2]' controls the verbosity of progress messages.
+         `iprint[2] = 0'
+               Print out iteration count, number of evaluations of
+               <FOM>, value of <FOM>, norm of the gradient of <FOM>,
+               and step length.
+
+         `iprint[2] = 1'
+               Same as `<iprint>[2] = 0', plus <X0> and the gradient of
+               <FOM> evaluated at <X0>.
+
+         `iprint[2] = 2'
+               Same as `<iprint>[2] = 1', plus values of <X> at each
+               iteration.
+
+         `iprint[2] = 3'
+               Same as `<iprint>[2] = 2', plus the gradient of <FOM> at
+               each iteration.
+
+     The columns printed by `lbfgs' are the following.
+
+    `I'
+          Number of iterations. It is incremented for each line search.
+
+    `NFN'
+          Number of evaluations of the figure of merit.
+
+    `FUNC'
+          Value of the figure of merit at the end of the most recent
+          line search.
+
+    `GNORM'
+          Norm of the gradient of the figure of merit at the end of the
+          most recent line search.
+
+    `STEPLENGTH'
+          An internal parameter of the search algorithm.
+
+     Additional information concerning details of the algorithm are
+     found in the comments of the original Fortran code [2].
+
+     See also `lbfgs_nfeval_max' and `lbfgs_ncorrections'.
+
+     References:
+
+     [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
+     large scale optimization". Mathematical Programming B 45:503-528
+     (1989)
+
+     [2] `http://netlib.org/opt/lbfgs_um.shar'
+
+     Examples:
+
+     The same FOM as computed by FGCOMPUTE in the program sdrive.f in
+     the LBFGS package from Netlib.  Note that the variables in
+     question are subscripted variables.  The FOM has an exact minimum
+     equal to zero at u[k] = 1 for k = 1, ..., 8.
+
+          (%i1) load (lbfgs);
+          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i2) t1[j] := 1 - u[j];
+          (%o2)                     t1  := 1 - u
+                                      j         j
+          (%i3) t2[j] := 10*(u[j + 1] - u[j]^2);
+                                                    2
+          (%o3)                t2  := 10 (u      - u )
+                                 j         j + 1    j
+          (%i4) n : 8;
+          (%o4)                           8
+          (%i5) FOM : sum (t1[2*j - 1]^2 + t2[2*j - 1]^2, j, 1, n/2);
+                           2 2           2              2 2           2
+          (%o5) 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
+                      8    7           7           6    5           5
+                               2 2           2              2 2           2
+                  + 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
+                          4    3           3           2    1           1
+          (%i6) lbfgs (FOM, '[u[1],u[2],u[3],u[4],u[5],u[6],u[7],u[8]],
+                 [-1.2, 1, -1.2, 1, -1.2, 1, -1.2, 1], 1e-3, [1, 0]);
+          *************************************************
+            N=    8   NUMBER OF CORRECTIONS=25
+                 INITIAL VALUES
+           F=  9.680000000000000D+01   GNORM=  4.657353755084532D+02
+          *************************************************
+
+           I NFN   FUNC                    GNORM                   STEPLENGTH
+
+           1   3   1.651479526340304D+01   4.324359291335977D+00   7.926153934390631D-04
+           2   4   1.650209316638371D+01   3.575788161060007D+00   1.000000000000000D+00
+           3   5   1.645461701312851D+01   6.230869903601577D+00   1.000000000000000D+00
+           4   6   1.636867301275588D+01   1.177589920974980D+01   1.000000000000000D+00
+           5   7   1.612153014409201D+01   2.292797147151288D+01   1.000000000000000D+00
+           6   8   1.569118407390628D+01   3.687447158775571D+01   1.000000000000000D+00
+           7   9   1.510361958398942D+01   4.501931728123680D+01   1.000000000000000D+00
+           8  10   1.391077875774294D+01   4.526061463810632D+01   1.000000000000000D+00
+           9  11   1.165625686278198D+01   2.748348965356917D+01   1.000000000000000D+00
+          10  12   9.859422687859137D+00   2.111494974231644D+01   1.000000000000000D+00
+          11  13   7.815442521732281D+00   6.110762325766556D+00   1.000000000000000D+00
+          12  15   7.346380905773160D+00   2.165281166714631D+01   1.285316401779533D-01
+          13  16   6.330460634066370D+00   1.401220851762050D+01   1.000000000000000D+00
+          14  17   5.238763939851439D+00   1.702473787613255D+01   1.000000000000000D+00
+          15  18   3.754016790406701D+00   7.981845727704576D+00   1.000000000000000D+00
+          16  20   3.001238402309352D+00   3.925482944716691D+00   2.333129631296807D-01
+          17  22   2.794390709718290D+00   8.243329982546473D+00   2.503577283782332D-01
+          18  23   2.563783562918759D+00   1.035413426521790D+01   1.000000000000000D+00
+          19  24   2.019429976377856D+00   1.065187312346769D+01   1.000000000000000D+00
+          20  25   1.428003167670903D+00   2.475962450826961D+00   1.000000000000000D+00
+          21  27   1.197874264861340D+00   8.441707983493810D+00   4.303451060808756D-01
+          22  28   9.023848941942773D-01   1.113189216635162D+01   1.000000000000000D+00
+          23  29   5.508226405863770D-01   2.380830600326308D+00   1.000000000000000D+00
+          24  31   3.902893258815567D-01   5.625595816584421D+00   4.834988416524465D-01
+          25  32   3.207542206990315D-01   1.149444645416472D+01   1.000000000000000D+00
+          26  33   1.874468266362791D-01   3.632482152880997D+00   1.000000000000000D+00
+          27  34   9.575763380706598D-02   4.816497446154354D+00   1.000000000000000D+00
+          28  35   4.085145107543406D-02   2.087009350166495D+00   1.000000000000000D+00
+          29  36   1.931106001379290D-02   3.886818608498966D+00   1.000000000000000D+00
+          30  37   6.894000721499670D-03   3.198505796342214D+00   1.000000000000000D+00
+          31  38   1.443296033051864D-03   1.590265471025043D+00   1.000000000000000D+00
+          32  39   1.571766603154336D-04   3.098257063980634D-01   1.000000000000000D+00
+          33  40   1.288011776581970D-05   1.207784183577257D-02   1.000000000000000D+00
+          34  41   1.806140173752971D-06   4.587890233385193D-02   1.000000000000000D+00
+          35  42   1.769004645459358D-07   1.790537375052208D-02   1.000000000000000D+00
+          36  43   3.312164100763217D-10   6.782068426119681D-04   1.000000000000000D+00
+
+
+           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
+           IFLAG = 0
+          (%o6) [u  = 1.000005339815974, u  = 1.000009942839805,
+                  1                       2
+          u  = 1.000005339815974, u  = 1.000009942839805,
+           3                       4
+          u  = 1.000005339815974, u  = 1.000009942839805,
+           5                       6
+          u  = 1.000005339815974, u  = 1.000009942839805]
+           7                       8
+
+     A regression problem.  The FOM is the mean square difference
+     between the predicted value F(X[i]) and the observed value Y[i].
+     The function F is a bounded monotone function (a so-called
+     "sigmoidal" function).  In this example, `lbfgs' computes
+     approximate values for the parameters of F and `plot2d' displays a
+     comparison of F with the observed data.
+
+          (%i1) load (lbfgs);
+          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i2) FOM : '((1/length(X))*sum((F(X[i]) - Y[i])^2, i, 1,
+                                                          length(X)));
+                                         2
+                         sum((F(X ) - Y ) , i, 1, length(X))
+                                 i     i
+          (%o2)          -----------------------------------
+                                      length(X)
+          (%i3) X : [1, 2, 3, 4, 5];
+          (%o3)                    [1, 2, 3, 4, 5]
+          (%i4) Y : [0, 0.5, 1, 1.25, 1.5];
+          (%o4)                [0, 0.5, 1, 1.25, 1.5]
+          (%i5) F(x) := A/(1 + exp(-B*(x - C)));
+                                             A
+          (%o5)            F(x) := ----------------------
+                                   1 + exp((- B) (x - C))
+          (%i6) ''FOM;
+                          A               2            A                2
+          (%o6) ((----------------- - 1.5)  + (----------------- - 1.25)
+                    - B (5 - C)                  - B (4 - C)
+                  %e            + 1            %e            + 1
+                      A             2            A               2
+           + (----------------- - 1)  + (----------------- - 0.5)
+                - B (3 - C)                - B (2 - C)
+              %e            + 1          %e            + 1
+                       2
+                      A
+           + --------------------)/5
+                - B (1 - C)     2
+             (%e            + 1)
+          (%i7) estimates : lbfgs (FOM, '[A, B, C], [1, 1, 1], 1e-4, [1, 0]);
+          *************************************************
+            N=    3   NUMBER OF CORRECTIONS=25
+                 INITIAL VALUES
+           F=  1.348738534246918D-01   GNORM=  2.000215531936760D-01
+          *************************************************
+
+          I  NFN  FUNC                    GNORM                   STEPLENGTH
+          1    3  1.177820636622582D-01   9.893138394953992D-02   8.554435968992371D-01
+          2    6  2.302653892214013D-02   1.180098521565904D-01   2.100000000000000D+01
+          3    8  1.496348495303005D-02   9.611201567691633D-02   5.257340567840707D-01
+          4    9  7.900460841091139D-03   1.325041647391314D-02   1.000000000000000D+00
+          5   10  7.314495451266917D-03   1.510670810312237D-02   1.000000000000000D+00
+          6   11  6.750147275936680D-03   1.914964958023047D-02   1.000000000000000D+00
+          7   12  5.850716021108205D-03   1.028089194579363D-02   1.000000000000000D+00
+          8   13  5.778664230657791D-03   3.676866074530332D-04   1.000000000000000D+00
+          9   14  5.777818823650782D-03   3.010740179797255D-04   1.000000000000000D+00
+
+
+           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
+           IFLAG = 0
+          (%o7) [A = 1.461933911464101, B = 1.601593973254802,
+                                                     C = 2.528933072164854]
+          (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
+          (%o8)
+
+
+ -- Variable: lbfgs_nfeval_max
+     Default value: 100
+
+     `lbfgs_nfeval_max' is the maximum number of evaluations of the
+     figure of merit (FOM) in `lbfgs'.  When `lbfgs_nfeval_max' is
+     reached, `lbfgs' returns the result of the last successful line
+     search.
+
+
+ -- Variable: lbfgs_ncorrections
+     Default value: 25
+
+     `lbfgs_ncorrections' is the number of corrections applied to the
+     approximate inverse Hessian matrix which is maintained by `lbfgs'.
+
+
+
+File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
+
+58 lindstedt
+************
+
+* Menu:
+
+* Functions and Variables for lindstedt::
+
+
+File: maxima.info,  Node: Functions and Variables for lindstedt,  Prev: lindstedt,  Up: lindstedt
+
+58.1 Functions and Variables for lindstedt
+==========================================
+
+ -- Function: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
+     This is a first pass at a Lindstedt code.  It can solve problems
+     with initial conditions entered, which can be arbitrary constants,
+     (just not <%k1> and <%k2>) where the initial conditions on the
+     perturbation equations are z[i]=0, z'[i]=0 for i>0. <ic> is the
+     list of initial conditions.
+
+     Problems occur when initial conditions are not given, as the
+     constants in the perturbation equations are the same as the zero
+     order equation solution.  Also, problems occur when the initial
+     conditions for the perturbation equations are not z[i]=0, z'[i]=0
+     for i>0, such as the Van der Pol equation.
+
+     Example:
+          (%i1) load("makeOrders")$
+
+          (%i2) load("lindstedt")$
+
+          (%i3) Lindstedt('diff(x,t,2)+x-(e*x^3)/6,e,2,[1,0]);
+                    2
+                   e  (cos(5 T) - 24 cos(3 T) + 23 cos(T))
+          (%o3) [[[---------------------------------------
+                                    36864
+             e (cos(3 T) - cos(T))
+           - --------------------- + cos(T)],
+                      192
+                    2
+                 7 e    e
+          T = (- ---- - -- + 1) t]]
+                 3072   16
+
+     To use this function write first `load("makeOrders")' and
+     `load("lindstedt")'.
+
+
+File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
+
+59 linearalgebra
+****************
+
+* Menu:
+
+* Introduction to linearalgebra::
+* Functions and Variables for linearalgebra::
+
+
+File: maxima.info,  Node: Introduction to linearalgebra,  Next: Functions and Variables for linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
+
+59.1 Introduction to linearalgebra
 ==================================
+
+`linearalgebra' is a collection of functions for linear algebra.
+
+   Example:
+
+     (%i1) M : matrix ([1, 2], [1, 2]);
+                                 [ 1  2 ]
+     (%o1)                       [      ]
+                                 [ 1  2 ]
+     (%i2) nullspace (M);
+                                    [  1  ]
+                                    [     ]
+     (%o2)                     span([   1 ])
+                                    [ - - ]
+                                    [   2 ]
+     (%i3) columnspace (M);
+                                     [ 1 ]
+     (%o3)                      span([   ])
+                                     [ 1 ]
+     (%i4) ptriangularize (M - z*ident(2), z);
+                              [ 1   2 - z   ]
+     (%o4)                    [             ]
+                              [           2 ]
+                              [ 0  3 z - z  ]
+     (%i5) M : matrix ([1, 2, 3], [4, 5, 6], [7, 8, 9]) - z*ident(3);
+                          [ 1 - z    2      3   ]
+                          [                     ]
+     (%o5)                [   4    5 - z    6   ]
+                          [                     ]
+                          [   7      8    9 - z ]
+     (%i6) MM : ptriangularize (M, z);
+                   [ 4  5 - z            6            ]
+                   [                                  ]
+                   [                2                 ]
+                   [     66        z    102 z   132   ]
+                   [ 0   --      - -- + ----- + ---   ]
+     (%o6)         [     49        7     49     49    ]
+                   [                                  ]
+                   [               3        2         ]
+                   [           49 z    245 z    147 z ]
+                   [ 0    0    ----- - ------ - ----- ]
+                   [            264      88      44   ]
+     (%i7) algebraic : true;
+     (%o7)                         true
+     (%i8) tellrat (MM [3, 3]);
+                              3       2
+     (%o8)                  [z  - 15 z  - 18 z]
+     (%i9) MM : ratsimp (MM);
+                    [ 4  5 - z           6           ]
+                    [                                ]
+                    [                2               ]
+     (%o9)          [     66      7 z  - 102 z - 132 ]
+                    [ 0   --    - ------------------ ]
+                    [     49              49         ]
+                    [                                ]
+                    [ 0    0             0           ]
+     (%i10) nullspace (MM);
+                             [        1         ]
+                             [                  ]
+                             [   2              ]
+                             [  z  - 14 z - 16  ]
+                             [  --------------  ]
+     (%o10)             span([        8         ])
+                             [                  ]
+                             [    2             ]
+                             [   z  - 18 z - 12 ]
+                             [ - -------------- ]
+                             [         12       ]
+     (%i11) M : matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12],
+                        [13, 14, 15, 16]);
+                            [ 1   2   3   4  ]
+                            [                ]
+                            [ 5   6   7   8  ]
+     (%o11)                 [                ]
+                            [ 9   10  11  12 ]
+                            [                ]
+                            [ 13  14  15  16 ]
+     (%i12) columnspace (M);
+                                [ 1  ]  [ 2  ]
+                                [    ]  [    ]
+                                [ 5  ]  [ 6  ]
+     (%o12)                span([    ], [    ])
+                                [ 9  ]  [ 10 ]
+                                [    ]  [    ]
+                                [ 13 ]  [ 14 ]
+     (%i13) apply ('orthogonal_complement, args (nullspace (transpose (M))));
+                                [ 0 ]  [  1  ]
+                                [   ]  [     ]
+                                [ 1 ]  [  0  ]
+     (%o13)                span([   ], [     ])
+                                [ 2 ]  [ - 1 ]
+                                [   ]  [     ]
+                                [ 3 ]  [ - 2 ]
+
+
+File: maxima.info,  Node: Functions and Variables for linearalgebra,  Prev: Introduction to linearalgebra,  Up: linearalgebra
+
+59.2 Functions and Variables for linearalgebra
+==============================================
 
  -- Function: addmatrices (<f>, <M_1>, ..., <M_n>)
      Using the function <f> as the addition function, return the sum of
@@ -55,8 +820,7 @@ File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to 
  -- Function: copy (<e>)
      Return a copy of the Maxima expression <e>. Although <e> can be any
      Maxima expression, the copy function is the most useful when <e>
-     is either a list or a matrix; consider: m : [1,[2,3]]$ mm : m$
-     mm[2][1] : x$ m; mm;
+     is either a list or a matrix; consider:
           (%i1) m : [1,[2,3]]$
           (%i2) mm : m$
           (%i3) mm[2][1] : x$
@@ -65,7 +829,7 @@ File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to 
           (%i5) mm;
           (%o5)                      [1,[x,3]]
      Let's try the same experiment, but this time let <mm> be a copy of
-     <m> m : [1,[2,3]]$ mm : copy(m)$ mm[2][1] : x$ m; mm;
+     <m>
           (%i6) m : [1,[2,3]]$
           (%i7) mm : copy(m)$
           (%i8) mm[2][1] : x$
@@ -130,7 +894,7 @@ File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to 
 
      Examples:
 
-          (%i1) S : matrix ([1/sqrt(2), 1/sqrt(2)], [- 1/sqrt(2), 1/sqrt(2)]);
+          (%i1) S: matrix([1/sqrt(2), 1/sqrt(2)],[-1/sqrt(2), 1/sqrt(2)]);
                                [     1         1    ]
                                [  -------   ------- ]
                                [  sqrt(2)   sqrt(2) ]
@@ -499,7 +1263,8 @@ File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to 
 
           (%i1) polynomialp ((x + 1)*(x + 2)^(3/2), [x], numberp, numberp);
           (%o1)                         true
-          (%i2) polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x], numberp, numberp);
+          (%i2) polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x], numberp,
+                                                                  numberp);
           (%o2)                         true
 
      Polynomials with two variables:
@@ -602,111 +1367,383 @@ File: maxima.info,  Node: Definitions for linearalgebra,  Prev: Introduction to 
 
 File: maxima.info,  Node: lsquares,  Next: makeOrders,  Prev: linearalgebra,  Up: Top
 
-59 lsquares
+60 lsquares
 ***********
 
 * Menu:
 
-* Definitions for lsquares::
+* Functions and Variables for lsquares::
 
 
-File: maxima.info,  Node: Definitions for lsquares,  Prev: lsquares,  Up: lsquares
+File: maxima.info,  Node: Functions and Variables for lsquares,  Prev: lsquares,  Up: lsquares
 
-59.1 Definitions for lsquares
-=============================
+60.1 Functions and Variables for lsquares
+=========================================
 
- -- Global variable: DETCOEF
-     This variable is used by functions `lsquares' and `plsquares' to
-     store the Coefficient of Determination which measures the goodness
-     of fit. It ranges from 0 (no correlation) to 1 (exact correlation).
+ -- Function: lsquares_estimates (<D>, <x>, <e>, <a>)
+ -- Function: lsquares_estimates (<D>, <x>, <e>, <a>, initial = <L>,
+          tol = <t>)
+     Estimate parameters <a> to best fit the equation <e> in the
+     variables <x> and <a> to the data <D>, as determined by the method
+     of least squares.  `lsquares_estimates' first seeks an exact
+     solution, and if that fails, then seeks an approximate solution.
 
-     When `plsquares' is called with a list of dependent variables,
-     <DETCOEF> is set to a list of Coefficients of Determination. See
-     `plsquares' for details.
+     The return value is a list of lists of equations of the form `[a =
+     ..., b = ..., c = ...]'.  Each element of the list is a distinct,
+     equivalent minimum of the mean square error.
 
-     See also `lsquares'.
+     The data <D> must be a matrix.  Each row is one datum (which may
+     be called a `record' or `case' in some contexts), and each column
+     contains the values of one variable across all data.  The list of
+     variables <x> gives a name for each column of <D>, even the
+     columns which do not enter the analysis.  The list of parameters
+     <a> gives the names of the parameters for which estimates are
+     sought.  The equation <e> is an expression or equation in the
+     variables <x> and <a>; if <e> is not an equation, it is treated
+     the same as `<e> = 0'.
 
- -- Function: lsquares (<Mat>,<VarList>,<equation>,<ParamList>)
- -- Function: lsquares
-          (<Mat>,<VarList>,<equation>,<ParamList>,<GuessList>)
-     Multiple nonlinear equation adjustment of a data table by the
-     "least squares" method. <Mat> is a matrix containing the data,
-     <VarList> is a list of variable names (one for each <Mat> column),
-     <equation> is the equation to adjust (it must be in the form:
-     `depvar=f(indepvari,..., paramj,...)', `g(depvar)=f(indepvari,...,
-     paramj,...)' or `g(depvar, paramk,...)=f(indepvari,...,
-     paramj,...)'), <ParamList> is the list of the parameters to
-     obtain, and <GuessList> is an optional list of initial
-     approximations to the parameters; when this last argument is
-     present, `mnewton' is used instead of `solve' in order to get the
-     parameters.
+     Additional arguments to `lsquares_estimates' are specified as
+     equations and passed on verbatim to the function `lbfgs' which is
+     called to find estimates by a numerical method when an exact
+     result is not found.
 
-     The equation may be fully nonlinear with respect to the independent
-     variables and to the dependent variable.  In order to use
-     `solve()', the equations must be linear or polynomial with respect
-     to the parameters. Equations like `y=a*b^x+c' may be adjusted for
-     `[a,b,c]' with `solve' if the `x' values are little positive
-     integers and there are few data (see the example in lsquares.dem).
-     `mnewton' allows to adjust a nonlinear equation with respect to the
-     parameters, but a good set of initial approximations must be
-     provided.
+     If some exact solution can be found (via `solve'), the data <D>
+     may contain non-numeric values.  However, if no exact solution is
+     found, each element of <D> must have a numeric value.  This
+     includes numeric constants such as `%pi' and `%e' as well as
+     literal numbers (integers, rationals, ordinary floats, and
+     bigfloats).  Numerical calculations are carried out with ordinary
+     floating-point arithmetic, so all other kinds of numbers are
+     converted to ordinary floats for calculations.
 
-     If possible, the adjusted equation is returned. If there exists
-     more than one solution, a list of equations is returned.  The
-     Coefficient of Determination is displayed in order to inform about
-     the goodness of fit, from 0 (no correlation) to 1 (exact
-     correlation).  This value is also stored in the global variable
-     <DETCOEF>.
+     `load(lsquares)' loads this function.
 
-     Examples using `solve':
-          (%i1) load("lsquares")$
+     See also `lsquares_estimates_exact',
+     `lsquares_estimates_approximate', `lsquares_mse',
+     `lsquares_residuals', and `lsquares_residual_mse'.
 
-          (%i2) lsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
-                         [x,y,z], z=a*x*y+b*x+c*y+d, [a,b,c,d]);
-                Determination Coefficient = 1.0
-                              x y + 23 y - 29 x - 19
-          (%o2)           z = ----------------------
-                                        6
-          (%i3) lsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
-                         [n,p], p=a4*n^4+a3*n^3+a2*n^2+a1*n+a0,
-                   [a0,a1,a2,a3,a4]);
-                Determination Coefficient = 1.0
-                               4       3      2
-                            3 n  - 10 n  + 9 n  - 2 n
-          (%o3)         p = -------------------------
-                                        6
-          (%i4) lsquares(matrix([1,7],[2,13],[3,25]),
-                         [x,y], (y+c)^2=a*x+b, [a,b,c]);
-                Determination Coefficient = 1.0
-          (%o4) [y = 28 - sqrt(657 - 216 x),
-                                          y = sqrt(657 - 216 x) + 28]
-          (%i5) lsquares(matrix([1,7],[2,13],[3,25],[4,49]),
-                         [x,y], y=a*b^x+c, [a,b,c]);
-                Determination Coefficient = 1.0
-                                        x
-          (%o5)                  y = 3 2  + 1
+     Examples:
 
-     Examples using `mnewton':
-          (%i6) load("lsquares")$
+     A problem for which an exact solution is found.
 
-          (%i7) lsquares(matrix([1.1,7.1],[2.1,13.1],[3.1,25.1],[4.1,49.1]),
-                         [x,y], y=a*b^x+c, [a,b,c], [5,5,5]);
-                                                       x
-          (%o7) y = 2.799098974610482 1.999999999999991
-                                                  + 1.099999999999874
-          (%i8) lsquares(matrix([1.1,4.1],[4.1,7.1],[9.1,10.1],[16.1,13.1]),
-                         [x,y], y=a*x^b+c, [a,b,c], [4,1,2]);
-                                       .4878659755898127
-          (%o8) y = 3.177315891123101 x
-                                                  + .7723843491402264
-          (%i9) lsquares(matrix([0,2,4],[3,3,5],[8,6,6]),
-                        [m,n,y], y=(A*m+B*n)^(1/3)+C, [A,B,C], [3,3,3]);
-                                                               1/3
-          (%o9) y = (3.999999999999862 n + 4.999999999999359 m)
-                                                   + 2.00000000000012
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) lsquares_estimates (M, [z, x, y], (z + D)^2 = A*x + B*y + C, [A, B, C, D]);
+                            59        27      10921        107
+          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
 
-     To use this function write first `load("lsquares")'. See also
-     `DETCOEF' and `mnewton'.
+     A problem for which no exact solution is found, so
+     `lsquares_estimates' resorts to numerical approximation.
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1], [2, 7/4], [3, 11/4], [4, 13/4]);
+                                      [ 1  1  ]
+                                      [       ]
+                                      [    7  ]
+                                      [ 2  -  ]
+                                      [    4  ]
+                                      [       ]
+          (%o2)                       [    11 ]
+                                      [ 3  -- ]
+                                      [    4  ]
+                                      [       ]
+                                      [    13 ]
+                                      [ 4  -- ]
+                                      [    4  ]
+          (%i3) lsquares_estimates (M, [x, y], y = a*x^b + c, [a, b, c], initial = [3, 3, 3], iprint = [-1, 0]);
+          (%o3) [[a = 1.387365874920637, b = .7110956639593767,
+                                                  c = - .4142705622439105]]
+
+
+ -- Function: lsquares_estimates_exact (<MSE>, <a>)
+     Estimate parameters <a> to minimize the mean square error <MSE>,
+     by constructing a system of equations and attempting to solve them
+     symbolically via `solve'.  The mean square error is an expression
+     in the parameters <a>, such as that returned by `lsquares_mse'.
+
+     The return value is a list of lists of equations of the form `[a =
+     ..., b = ..., c = ...]'.  The return value may contain zero, one,
+     or two or more elements.  If two or more elements are returned,
+     each represents a distinct, equivalent minimum of the mean square
+     error.
+
+     See also `lsquares_estimates', `lsquares_estimates_approximate',
+     `lsquares_mse', `lsquares_residuals', and `lsquares_residual_mse'.
+
+     Example:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_exact (mse, [A, B, C, D]);
+                            59        27      10921        107
+          (%o4)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+
+
+ -- Function: lsquares_estimates_approximate (<MSE>, <a>, initial =
+          <L>, tol = <t>)
+     Estimate parameters <a> to minimize the mean square error <MSE>,
+     via the numerical minimization function `lbfgs'.  The mean square
+     error is an expression in the parameters <a>, such as that
+     returned by `lsquares_mse'.
+
+     The solution returned by `lsquares_estimates_approximate' is a
+     local (perhaps global) minimum of the mean square error.  For
+     consistency with `lsquares_estimates_exact', the return value is a
+     nested list which contains one element, namely a list of equations
+     of the form `[a = ..., b = ..., c = ...]'.
+
+     Additional arguments to `lsquares_estimates_approximate' are
+     specified as equations and passed on verbatim to the function
+     `lbfgs'.
+
+     <MSE> must evaluate to a number when the parameters are assigned
+     numeric values.  This requires that the data from which <MSE> was
+     constructed comprise only numeric constants such as `%pi' and `%e'
+     and literal numbers (integers, rationals, ordinary floats, and
+     bigfloats).  Numerical calculations are carried out with ordinary
+     floating-point arithmetic, so all other kinds of numbers are
+     converted to ordinary floats for calculations.
+
+     `load(lsquares)' loads this function.
+
+     See also `lsquares_estimates', `lsquares_estimates_exact',
+     `lsquares_mse', `lsquares_residuals', and `lsquares_residual_mse'.
+
+     Example:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_approximate (mse, [A, B, C, D], iprint = [-1, 0]);
+          (%o4) [[A = - 3.67850494740174, B = - 1.683070351177813,
+                           C = 10.63469950148635, D = - 3.340357993175206]]
+
+
+ -- Function: lsquares_mse (<D>, <x>, <e>)
+     Returns the mean square error (MSE), a summation expression, for
+     the equation <e> in the variables <x>, with data <D>.
+
+     The MSE is defined as:
+
+                              n
+                             ====
+                             \                        2
+                              >    (lhs(e ) - rhs(e ))
+                             /           i         i
+                             ====
+                             i = 1
+                             --------------------------
+                                         n
+
+     where <n> is the number of data and `<e>[i]' is the equation <e>
+     evaluated with the variables in <x> assigned values from the
+     `i'-th datum, `<D>[i]'.
+
+     `load(lsquares)' loads this function.
+
+     Example:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) diff (mse, D);
+                   5
+                  ====
+                  \                             2
+                4  >    (D + M    ) ((D + M    )  - C - M     B - M     A)
+                  /           i, 1         i, 1          i, 3      i, 2
+                  ====
+                  i = 1
+          (%o4) ----------------------------------------------------------
+                                            5
+          (%i5) ''mse, nouns;
+                         2                 2         9 2               2
+          (%o5) (((D + 3)  - C - 2 B - 2 A)  + ((D + -)  - C - B - 2 A)
+                                                     4
+                     2               2         3 2               2
+           + ((D + 2)  - C - B - 2 A)  + ((D + -)  - C - 2 B - A)
+                                               2
+                     2             2
+           + ((D + 1)  - C - B - A) )/5
+
+
+ -- Function: lsquares_residuals (<D>, <x>, <e>, <a>)
+     Returns the residuals for the equation <e> with specified
+     parameters <a> and data <D>.
+
+     <D> is a matrix, <x> is a list of variables, <e> is an equation or
+     general expression; if not an equation, <e> is treated as if it
+     were `<e> = 0'.  <a> is a list of equations which specify values
+     for any free parameters in <e> aside from <x>.
+
+     The residuals are defined as:
+
+                                  lhs(e ) - rhs(e )
+                                       i         i
+
+     where `<e>[i]' is the equation <e> evaluated with the variables in
+     <x> assigned values from the `i'-th datum, `<D>[i]', and assigning
+     any remaining free variables from <a>.
+
+     `load(lsquares)' loads this function.
+
+     Example:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (M, [z, x, y], (z + D)^2 = A*x + B*y + C, [A, B, C, D]);
+                            59        27      10921        107
+          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+          (%i4) lsquares_residuals (M, [z, x, y], (z + D)^2 = A*x + B*y + C, first (a));
+                               13    13    13  13  13
+          (%o4)               [--, - --, - --, --, --]
+                               64    64    32  64  64
+
+
+ -- Function: lsquares_residual_mse (<D>, <x>, <e>, <a>)
+     Returns the residual mean square error (MSE) for the equation <e>
+     with specified parameters <a> and data <D>.
+
+     The residual MSE is defined as:
+
+                              n
+                             ====
+                             \                        2
+                              >    (lhs(e ) - rhs(e ))
+                             /           i         i
+                             ====
+                             i = 1
+                             --------------------------
+                                         n
+
+     where `<e>[i]' is the equation <e> evaluated with the variables in
+     <x> assigned values from the `i'-th datum, `<D>[i]', and assigning
+     any remaining free variables from <a>.
+
+     `load(lsquares)' loads this function.
+
+     Example:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1, 1], [3/2, 1, 2], [9/4, 2, 1], [3, 2, 2], [2, 2, 1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (M, [z, x, y], (z + D)^2 = A*x + B*y + C, [A, B, C, D]);
+                            59        27      10921        107
+          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+          (%i4) lsquares_residual_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C, first (a));
+                                        169
+          (%o4)                         ----
+                                        2560
+
 
  -- Function: plsquares (<Mat>,<VarList>,<depvars>)
  -- Function: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
@@ -792,18 +1829,18 @@ File: maxima.info,  Node: Definitions for lsquares,  Prev: lsquares,  Up: lsquar
 
 File: maxima.info,  Node: makeOrders,  Next: mnewton,  Prev: lsquares,  Up: Top
 
-60 makeOrders
+61 makeOrders
 *************
 
 * Menu:
 
-* Definitions for makeOrders::
+* Functions and Variables for makeOrders::
 
 
-File: maxima.info,  Node: Definitions for makeOrders,  Prev: makeOrders,  Up: makeOrders
+File: maxima.info,  Node: Functions and Variables for makeOrders,  Prev: makeOrders,  Up: makeOrders
 
-60.1 Definitions for makeOrders
-===============================
+61.1 Functions and Variables for makeOrders
+===========================================
 
  -- Function: makeOrders (<indvarlist>,<orderlist>)
      Returns a list of all powers for a polynomial up to and including
@@ -827,18 +1864,18 @@ File: maxima.info,  Node: Definitions for makeOrders,  Prev: makeOrders,  Up: ma
 
 File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: makeOrders,  Up: Top
 
-61 mnewton
+62 mnewton
 **********
 
 * Menu:
 
-* Definitions for mnewton::
+* Functions and Variables for mnewton::
 
 
-File: maxima.info,  Node: Definitions for mnewton,  Prev: mnewton,  Up: mnewton
+File: maxima.info,  Node: Functions and Variables for mnewton,  Prev: mnewton,  Up: mnewton
 
-61.1 Definitions for mnewton
-============================
+62.1 Functions and Variables for mnewton
+========================================
 
  -- Option variable: newtonepsilon
      Default value: `10.0^(-fpprec/2)'
@@ -884,29 +1921,29 @@ File: maxima.info,  Node: Definitions for mnewton,  Prev: mnewton,  Up: mnewton
 
 File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
 
-62 numericalio
+63 numericalio
 **************
 
 * Menu:
 
 * Introduction to numericalio::
-* Definitions for numericalio::
+* Functions and Variables for numericalio::
 
 
-File: maxima.info,  Node: Introduction to numericalio,  Next: Definitions for numericalio,  Prev: numericalio,  Up: numericalio
+File: maxima.info,  Node: Introduction to numericalio,  Next: Functions and Variables for numericalio,  Prev: numericalio,  Up: numericalio
 
-62.1 Introduction to numericalio
+63.1 Introduction to numericalio
 ================================
 
-`numericalio' is a collection of functions to read and write data files.
-The entire file is read to construct one object; partial reads are not
-supported.
+`numericalio' is a collection of functions to read and write data files
+and streams.
 
-   It is assumed that each item to read or write is atomic: an integer,
-float, bigfloat, string, or symbol, and not a rational or complex
-number or any other kind of nonatomic expression.  These functions may
-attempt to do something sensible faced with nonatomic expressions, but
-the results are not specified here and subject to change.
+   It is assumed that each item to read or write is an atom: an
+integer, float, bigfloat, string, or symbol, and not a rational or
+complex number or any other kind of nonatomic expression.  The
+`numericalio' functions may attempt to do something sensible faced with
+nonatomic expressions, but the results are not specified here and
+subject to change.
 
    Atoms in both input and output files have the same format as in
 Maxima batch files or the interactive console.  In particular, strings
@@ -919,38 +1956,48 @@ lines) is recognized.
    <separator_flag> tells which character separates elements.  It is an
 optional argument for all read and write functions.
 
-   For input, these values of <separator_flag> are recognized: `comma'
-for comma separated values, `pipe' for values separated by the vertical
-bar character `|', `semicolon' for values separated by semicolon `;',
-and `space' for values separated by space or tab characters.  If the
-file name ends in `.csv' and <separator_flag> is not specified, `comma'
-is assumed.  If the file name ends in something other than `.csv' and
-`separator_flag' is not specified, `space' is assumed.
+63.1.1 Separator flag values for input
+--------------------------------------
 
-   For output, the same four flags are recognized as for input, and
-also `tab', for values separated by the tab character.
+For input, these values of <separator_flag> are recognized: `comma' for
+comma separated values, `pipe' for values separated by the vertical bar
+character `|', `semicolon' for values separated by semicolon `;', and
+`space' for values separated by space or tab characters.  If the file
+name ends in `.csv' and <separator_flag> is not specified, `comma' is
+assumed.  If the file name ends in something other than `.csv' and
+`separator_flag' is not specified, `space' is assumed.
 
    In input, multiple successive space and tab characters count as a
 single separator.  However, multiple comma, pipe, or semicolon
 characters are significant.  Successive comma, pipe, or semicolon
 characters (with or without intervening spaces or tabs) are considered
 to have `false' between the separators.  For example, `1234,,Foo' is
-treated the same as `1234,false,Foo'.  In output, `false' atoms are
-written as such; a list `[1234, false, Foo]' is written
-`1234,false,Foo', and there is no attempt to collapse the output to
-`1234,,Foo'.
+treated the same as `1234,false,Foo'.
+
+63.1.2 Separator flag values for output
+---------------------------------------
+
+For output, `tab', for values separated by the tab character, is
+recognized as a value of <separator_flag>, as well as `comma', `pipe',
+`semicolon', and `space'.
+
+   In output, `false' atoms are written as such; a list `[1234, false,
+Foo]' is written `1234,false,Foo', and there is no attempt to collapse
+the output to `1234,,Foo'.
 
 
-File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to numericalio,  Up: numericalio
+File: maxima.info,  Node: Functions and Variables for numericalio,  Prev: Introduction to numericalio,  Up: numericalio
 
-62.2 Definitions for numericalio
-================================
+63.2 Functions and Variables for numericalio
+============================================
 
  -- Function: read_matrix (<file_name>)
  -- Function: read_matrix (<file_name>, <separator_flag>)
-     Reads the file <file_name> and returns its entire content as a
-     matrix.  If <separator_flag> is not specified, the file is assumed
-     space-delimited.
+ -- Function: read_matrix (<S>)
+ -- Function: read_matrix (<S>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a matrix.  If <separator_flag> is not specified,
+     the file is assumed space-delimited.
 
      `read_matrix' infers the size of the matrix from the input data.
      Each line of the file becomes one row of the matrix.  If some
@@ -959,9 +2006,15 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
  -- Function: read_lisp_array (<file_name>, <A>)
  -- Function: read_lisp_array (<file_name>, <A>, <separator_flag>)
+ -- Function: read_lisp_array (<S>, <A>)
+ -- Function: read_lisp_array (<S>, <A>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a Lisp array.  If <separator_flag> is not
+     specified, the file is assumed space-delimited.
+
      `read_lisp_array' requires that the array be declared by
      `make_array' before calling the read function. (This obviates the
-     need to infer the array dimensions, which could be a hassle for
+     need to infer the array dimensions, which could be a problem for
      arrays with multiple dimensions.)
 
      `read_lisp_array' does not check to see that the input file
@@ -971,6 +2024,12 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
  -- Function: read_maxima_array (<file_name>, <A>)
  -- Function: read_maxima_array (<file_name>, <A>, <separator_flag>)
+ -- Function: read_maxima_array (<S>, <A>)
+ -- Function: read_maxima_array (<S>, <A>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a Maxima array.  If <separator_flag> is not
+     specified, the file is assumed space-delimited.
+
      `read_maxima_array' requires that the array be declared by `array'
      before calling the read function. (This obviates the need to infer
      the array dimensions, which could be a hassle for arrays with
@@ -983,6 +2042,12 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
  -- Function: read_hashed_array (<file_name>, <A>)
  -- Function: read_hashed_array (<file_name>, <A>, <separator_flag>)
+ -- Function: read_hashed_array (<S>, <A>)
+ -- Function: read_hashed_array (<S>, <A>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a hashed array.  If <separator_flag> is not
+     specified, the file is assumed space-delimited.
+
      `read_hashed_array' treats the first item on a line as a hash key,
      and associates the remainder of the line (as a list) with the key.
      For example, the line `567 12 17 32 55' is equivalent to `A[567]:
@@ -992,6 +2057,12 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
  -- Function: read_nested_list (<file_name>)
  -- Function: read_nested_list (<file_name>, <separator_flag>)
+ -- Function: read_nested_list (<S>)
+ -- Function: read_nested_list (<S>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a nested list.  If <separator_flag> is not
+     specified, the file is assumed space-delimited.
+
      `read_nested_list' returns a list which has a sublist for each
      line of input. Lines need not have the same numbers of elements.
      Empty lines are not ignored: an empty line yields an empty sublist.
@@ -999,13 +2070,19 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
  -- Function: read_list (<file_name>)
  -- Function: read_list (<file_name>, <separator_flag>)
-     `read_list' reads all input into a flat list.  `read_list' ignores
-     end-of-line characters.
+ -- Function: read_list (<S>)
+ -- Function: read_list (<S>, <separator_flag>)
+     Reads the file <file_name> or file stream <S> and returns its
+     entire content as a flat list.  If <separator_flag> is not
+     specified, the file is assumed space-delimited.
 
 
  -- Function: write_data (<X>, <file_name>)
  -- Function: write_data (<object>, <file_name>, <separator_flag>)
-     `write_data' writes the object <X> to the file <file_name>.
+ -- Function: write_data (<X>, <S>)
+ -- Function: write_data (<object>, <S>, <separator_flag>)
+     `write_data' writes the object <X> to the file <file_name> or file
+     stream <S>.
 
      `write_data' writes matrices in row-major form, with one line per
      row.
@@ -1021,25 +2098,30 @@ File: maxima.info,  Node: Definitions for numericalio,  Prev: Introduction to nu
 
      `write_data' writes a flat list all on one line.
 
-     Whether `write_data' appends or truncates its output file is
-     governed by the global variable `file_output_append'.
+     When `write_data' writes to a file, the global variable
+     `file_output_append' governs whether the output file is appended
+     or truncated.
+
+     No special action concerning appending or truncating is taken when
+     `write_data' writes to a file stream.  The file stream is not
+     closed by `write_data'.
 
 
 
 File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: Top
 
-63 opsubst
+64 opsubst
 **********
 
 * Menu:
 
-* Definitions for opsubst::
+* Functions and Variables for opsubst::
 
 
-File: maxima.info,  Node: Definitions for opsubst,  Prev: opsubst,  Up: opsubst
+File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  Up: opsubst
 
-63.1 Definitions for opsubst
-============================
+64.1 Functions and Variables for opsubst
+========================================
 
  -- Function: opsubst (<f>,<g>,<e>)
  -- Function: opsubst (<g>=<f>,<e>)
@@ -1103,18 +2185,18 @@ File: maxima.info,  Node: Definitions for opsubst,  Prev: opsubst,  Up: opsubst
 
 File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
 
-64 orthopoly
+65 orthopoly
 ************
 
 * Menu:
 
 * Introduction to orthogonal polynomials::
-* Definitions for orthogonal polynomials::
+* Functions and Variables for orthogonal polynomials::
 
 
-File: maxima.info,  Node: Introduction to orthogonal polynomials,  Next: Definitions for orthogonal polynomials,  Prev: orthopoly,  Up: orthopoly
+File: maxima.info,  Node: Introduction to orthogonal polynomials,  Next: Functions and Variables for orthogonal polynomials,  Prev: orthopoly,  Up: orthopoly
 
-64.1 Introduction to orthogonal polynomials
+65.1 Introduction to orthogonal polynomials
 ===========================================
 
 `orthopoly' is a package for symbolic and numerical evaluation of
@@ -1133,7 +2215,7 @@ edition), and Eugen Merzbacher Quantum Mechanics (2nd edition, 1970).
 the `orthopoly' package and its documentation. The package is released
 under the GNU General Public License (GPL).
 
-64.1.1 Getting Started with orthopoly
+65.1.1 Getting Started with orthopoly
 -------------------------------------
 
 `load (orthopoly)' loads the `orthopoly' package.
@@ -1212,7 +2294,8 @@ message; for example
                                     n - 1
      (%i2) diff (hermite (n, x), n);
 
-     Maxima doesn't know the derivative of hermite with respect the first argument
+     Maxima doesn't know the derivative of hermite with respect the first
+     argument
       -- an error.  Quitting.  To debug this try debugmode(true);
 
    Generally, functions in `orthopoly' map over lists and matrices. For
@@ -1268,7 +2351,7 @@ two-dimensional output on a terminal.
      $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
      (%o4)                         false
 
-64.1.2 Limitations
+65.1.2 Limitations
 ------------------
 
 When an expression involves several orthogonal polynomials with
@@ -1278,7 +2361,8 @@ quantity, you'll be in trouble. For example, the following expression
 vanishes for integers <n> greater than 1, yet Maxima is unable to
 simplify it to zero.
 
-     (%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x) + (1 - n) * legendre_p (n - 2, x);
+     (%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x)
+           + (1 - n) * legendre_p (n - 2, x);
      (%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
                        n - 1           n               n - 2
 
@@ -1377,7 +2461,7 @@ polynomial that is orthogonal on (0, 1), define
      (%o3)/R/                    --------
                                     2
 
-64.1.3 Floating point Evaluation
+65.1.3 Floating point Evaluation
 --------------------------------
 
 Most functions in `orthopoly' use a running error analysis to estimate
@@ -1426,7 +2510,8 @@ define interval addition, we can define
 
      (%i1) infix ("@+")$
 
-     (%i2) "@+"(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2) + part (y, 2))$
+     (%i2) "@+"(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2)
+           + part (y, 2))$
 
      (%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
      (%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
@@ -1450,7 +2535,7 @@ converted into double floats and the final result is a double.
      (%i1) ultraspherical (150, 0.5b0, 0.9b0);
      (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
 
-64.1.4 Graphics and `orthopoly'
+65.1.4 Graphics and `orthopoly'
 -------------------------------
 
 To plot expressions that involve the orthogonal polynomials, you must
@@ -1463,14 +2548,15 @@ polynomials before plotting; consequently, the specialized floating
 point code doesn't get called.  Here is an example of how to plot an
 expression that involves a Legendre polynomial.
 
-     (%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]), orthopoly_returns_intervals : false;
+     (%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]),
+                             orthopoly_returns_intervals : false;
      (%o1)
 
    The entire expression `legendre_p (5, x)' is quoted; this is
 different than just quoting the function name using `'legendre_p (5,
 <x>)'.
 
-64.1.5 Miscellaneous Functions
+65.1.5 Miscellaneous Functions
 ------------------------------
 
 The `orthopoly' package defines the Pochhammer symbol and a unit step
@@ -1542,7 +2628,7 @@ continuous at zero, define your own using `signum'; for example,
    Do not redefine `unit_step' itself; some code in `orthopoly'
 requires that the unit step function be left-continuous.
 
-64.1.6 Algorithms
+65.1.6 Algorithms
 -----------------
 
 Generally, `orthopoly' does symbolic evaluation by using a hypergeometic
@@ -1562,10 +2648,10 @@ Numerically, the half-integer Bessel functions are evaluated using the
 SLATEC code.
 
 
-File: maxima.info,  Node: Definitions for orthogonal polynomials,  Prev: Introduction to orthogonal polynomials,  Up: orthopoly
+File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  Prev: Introduction to orthogonal polynomials,  Up: orthopoly
 
-64.2 Definitions for orthogonal polynomials
-===========================================
+65.2 Functions and Variables for orthogonal polynomials
+=======================================================
 
  -- Function: assoc_legendre_p (<n>, <m>, <x>)
      The associated Legendre function of the first kind.
@@ -1676,7 +2762,7 @@ File: maxima.info,  Node: Definitions for orthogonal polynomials,  Prev: Introdu
                                       2
                                    - x
           (%o1)                 [%e    , - inf, inf]
-          (%i2) integrate (w[1] * hermite (3, x) * hermite (2, x), x, w[2], w[3]);
+          (%i2) integrate(w[1]*hermite(3, x)*hermite(2, x), x, w[2], w[3]);
           (%o2)                           0
 
      The main variable of <f> must be a symbol; if it isn't, Maxima
@@ -1773,18 +2859,18 @@ File: maxima.info,  Node: Definitions for orthogonal polynomials,  Prev: Introdu
 
 File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
 
-65 plotdf
+66 plotdf
 *********
 
 * Menu:
 
 * Introduction to plotdf::
-* Definitions for plotdf::
+* Functions and Variables for plotdf::
 
 
-File: maxima.info,  Node: Introduction to plotdf,  Next: Definitions for plotdf,  Prev: plotdf,  Up: plotdf
+File: maxima.info,  Node: Introduction to plotdf,  Next: Functions and Variables for plotdf,  Prev: plotdf,  Up: plotdf
 
-65.1 Introduction to plotdf
+66.1 Introduction to plotdf
 ===========================
 
 The function `plotdf' creates a plot of the direction field of a
@@ -1828,10 +2914,10 @@ one on the vertical axis.
 two autonomous equations.
 
 
-File: maxima.info,  Node: Definitions for plotdf,  Prev: Introduction to plotdf,  Up: plotdf
+File: maxima.info,  Node: Functions and Variables for plotdf,  Prev: Introduction to plotdf,  Up: plotdf
 
-65.2 Definitions for plotdf
-===========================
+66.2 Functions and Variables for plotdf
+=======================================
 
  -- Function: plotdf (<dydx>, ...options...)
  -- Function: plotdf (<dvdu>, `['<u>,<v>`]', ...options...)
@@ -2005,18 +3091,18 @@ File: maxima.info,  Node: Definitions for plotdf,  Prev: Introduction to plotdf,
 
 File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
-66 romberg
+67 romberg
 **********
 
 * Menu:
 
-* Definitions for romberg::
+* Functions and Variables for romberg::
 
 
-File: maxima.info,  Node: Definitions for romberg,  Prev: Top,  Up: Top
+File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: Top
 
-66.1 Definitions for romberg
-============================
+67.1 Functions and Variables for romberg
+========================================
 
  -- Function: romberg (<expr>, <x>, <a>, <b>)
  -- Function: romberg (<F>, <a>, <b>)
@@ -2070,7 +3156,8 @@ File: maxima.info,  Node: Definitions for romberg,  Prev: Top,  Up: Top
 
           (%i1) load (romberg);
           (%o1)    /usr/share/maxima/5.11.0/share/numeric/romberg.lisp
-          (%i2) f(x) := 1/((x - 1)^2 + 1/100) + 1/((x - 2)^2 + 1/1000) + 1/((x - 3)^2 + 1/200);
+          (%i2) f(x) := 1/((x - 1)^2 + 1/100) + 1/((x - 2)^2 + 1/1000)
+                        + 1/((x - 3)^2 + 1/200);
                               1                 1                1
           (%o2) f(x) := -------------- + --------------- + --------------
                                2    1           2    1            2    1
@@ -2171,18 +3258,18 @@ File: maxima.info,  Node: Definitions for romberg,  Prev: Top,  Up: Top
 
 File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
 
-67 simplex
+68 simplex
 **********
 
 * Menu:
 
 * Introduction to simplex::
-* Definitions for simplex::
+* Functions and Variables for simplex::
 
 
-File: maxima.info,  Node: Introduction to simplex,  Next: Definitions for simplex,  Prev: simplex,  Up: simplex
+File: maxima.info,  Node: Introduction to simplex,  Next: Functions and Variables for simplex,  Prev: simplex,  Up: simplex
 
-67.1 Introduction to simplex
+68.1 Introduction to simplex
 ============================
 
 `simplex' is a package for linear optimization using the simplex
@@ -2191,18 +3278,18 @@ algorithm.
    Example:
 
      (%i1) load("simplex")$
-     (%i2) minimize_sx(x+y, [3*x+2*y>2, x+4*y>3]);
+     (%i2) minimize_lp(x+y, [3*x+2*y>2, x+4*y>3]);
                        9        7       1
      (%o2)            [--, [y = --, x = -]]
                        10       10      5
 
 
-File: maxima.info,  Node: Definitions for simplex,  Prev: Introduction to simplex,  Up: simplex
+File: maxima.info,  Node: Functions and Variables for simplex,  Prev: Introduction to simplex,  Up: simplex
 
-67.2 Definitions for simplex
-============================
+68.2 Functions and Variables for simplex
+========================================
 
- -- Option variable: epsilon_sx
+ -- Option variable: epsilon_lp
      Default value: `10^-8'
 
      Epsilon used for numerical computations in `linear_program'.
@@ -2234,37 +3321,37 @@ File: maxima.info,  Node: Definitions for simplex,  Prev: Introduction to simple
           (%o5)            [[--, 4, --, 0], - -]
                              2      2         2
 
-     See also: `minimize_sx', `scale_sx', and `epsilon_sx'.
+     See also: `minimize_lp', `scale_lp', and `epsilon_lp'.
 
 
- -- Function: maximize_sx (<obj>, <cond>, [<pos>])
+ -- Function: maximize_lp (<obj>, <cond>, [<pos>])
      Maximizes linear objective function <obj> subject to some linear
-     constraints <cond>. See `minimize_sx' for detailed description of
+     constraints <cond>. See `minimize_lp' for detailed description of
      arguments and return value.
 
-     See also: `minimize_sx'.
+     See also: `minimize_lp'.
 
 
- -- Function: minimize_sx (<obj>, <cond>, [<pos>])
+ -- Function: minimize_lp (<obj>, <cond>, [<pos>])
      Minimizes a linear objective function <obj> subject to some linear
      constraints <cond>. <cond> a list of linear equations or
      inequalities. In strict inequalities `>' is replaced by `>=' and
      `<' by `<='. The optional argument <pos> is a list of decision
      variables which are assumed to be positive.
 
-     If the minimum exists, `minimize_sx' returns a list which contains
+     If the minimum exists, `minimize_lp' returns a list which contains
      the minimum value of the objective function and a list of decision
      variable values for which the minimum is attained. If the problem
-     is not bounded, `minimize_sx' returns "Problem not bounded!" and
+     is not bounded, `minimize_lp' returns "Problem not bounded!" and
      if the problem is not feasible, it returns "Ploblem not feasible!".
 
      The decision variables are not assumed to be nonegative by
      default. If all decision variables are nonegative, set
-     `nonegative_sx' to `true'.  If only some of decision variables are
+     `nonegative_lp' to `true'.  If only some of decision variables are
      positive, list them in the optional argument <pos> (note that this
      is more efficient than adding constraints).
 
-     `minimize_sx' uses the simplex algorithm which is implemented in
+     `minimize_lp' uses the simplex algorithm which is implemented in
      maxima `linear_program' function.
 
      To use this function first load the `simplex' package with
@@ -2272,44 +3359,44 @@ File: maxima.info,  Node: Definitions for simplex,  Prev: Introduction to simple
 
      Examples:
 
-          (%i1) minimize_sx(x+y, [3*x+y=0, x+2*y>2]);
+          (%i1) minimize_lp(x+y, [3*x+y=0, x+2*y>2]);
                                 4       6        2
           (%o1)                [-, [y = -, x = - -]]
                                 5       5        5
-          (%i2) minimize_sx(x+y, [3*x+y>0, x+2*y>2]), nonegative_sx=true;
+          (%i2) minimize_lp(x+y, [3*x+y>0, x+2*y>2]), nonegative_lp=true;
           (%o2)                [1, [y = 1, x = 0]]
-          (%i3) minimize_sx(x+y, [3*x+y=0, x+2*y>2]), nonegative_sx=true;
+          (%i3) minimize_lp(x+y, [3*x+y=0, x+2*y>2]), nonegative_lp=true;
           (%o3)                Problem not feasible!
-          (%i4) minimize_sx(x+y, [3*x+y>0]);
+          (%i4) minimize_lp(x+y, [3*x+y>0]);
           (%o4)                Problem not bounded!
 
-     See also: `maximize_sx', `nonegative_sx', `epsilon_sx'.
+     See also: `maximize_lp', `nonegative_lp', `epsilon_lp'.
 
 
- -- Option variable: nonegative_sx
+ -- Option variable: nonegative_lp
      Default value: `false'
 
-     If `nonegative_sx' is true all decision variables to `minimize_sx'
-     and `maximize_sx' are assumed to be positive.
+     If `nonegative_lp' is true all decision variables to `minimize_lp'
+     and `maximize_lp' are assumed to be positive.
 
-     See also: `minimize_sx'.
+     See also: `minimize_lp'.
 
 
 
 File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
 
-68 simplification
+69 simplification
 *****************
 
 * Menu:
 
 * Introduction to simplification::
-* Definitions for simplification::
+* Functions and Variables for simplification::
 
 
-File: maxima.info,  Node: Introduction to simplification,  Next: Definitions for simplification,  Prev: simplification,  Up: simplification
+File: maxima.info,  Node: Introduction to simplification,  Next: Functions and Variables for simplification,  Prev: simplification,  Up: simplification
 
-68.1 Introduction to simplification
+69.1 Introduction to simplification
 ===================================
 
 The directory `maxima/share/simplification' contains several scripts
@@ -2317,12 +3404,12 @@ which implement simplification rules and functions, and also some
 functions not related to simplification.
 
 
-File: maxima.info,  Node: Definitions for simplification,  Prev: Introduction to simplification,  Up: simplification
+File: maxima.info,  Node: Functions and Variables for simplification,  Prev: Introduction to simplification,  Up: simplification
 
-68.2 Definitions for simplification
-===================================
+69.2 Functions and Variables for simplification
+===============================================
 
-68.2.1 Package absimp
+69.2.1 Package absimp
 ---------------------
 
 The `absimp' package contains pattern-matching rules that extend the
@@ -2350,7 +3437,7 @@ demonstration of this package.
      (%i4) cosh (abs (x));
      (%o4)                               cosh(x)
 
-68.2.2 Package facexp
+69.2.2 Package facexp
 ---------------------
 
 The `facexp' package contains several related  functions that provide
@@ -2464,7 +3551,7 @@ demonstration of this package.
      does  not  need  to  repeat  that  effort.   This  capability is
      especially useful when the expressions to be summed are very large.
 
-68.2.3 Package functs
+69.2.3 Package functs
 ---------------------
 
  -- Function: rempart (<expr>, <n>)
@@ -2617,7 +3704,7 @@ demonstration of this package.
 
      To use this function write first `load(functs)'.
 
-68.2.4 Package ineq
+69.2.4 Package ineq
 -------------------
 
 The `ineq' package contains simplification rules for inequalities.
@@ -2682,9 +3769,12 @@ quantity multiplying an inequality.
 
    The most common mis-feature is illustrated by:
 
-     eq: a > b;
-     2*eq;
-     % - eq;
+     (%i1) eq: a > b;
+     (%o1)                              a > b
+     (%i2) 2*eq;
+     (%o2)                            2 (a > b)
+     (%i3) % - eq;
+     (%o3)                              a > b
 
    Another problem is 0 times an inequality; the default to have this
 turn into 0 has been left alone. However, if you type
@@ -2709,7 +3799,7 @@ must enclose the rulename in quotes to refer to it, as in `remrule
 `disprule ("*rule2")' to display the definition of the second
 multiplicative rule.
 
-68.2.5 Package rducon
+69.2.5 Package rducon
 ---------------------
 
  -- Function: reduce_consts (<expr>)
@@ -2744,7 +3834,7 @@ multiplicative rule.
      `load (rducon)' loads this function.  `demo (rducon)' shows a
      demonstration of this function.
 
-68.2.6 Package scifac
+69.2.6 Package scifac
 ---------------------
 
  -- Function: gcfac (<expr>)
@@ -2771,7 +3861,7 @@ multiplicative rule.
      `load (scifac)' loads this function.  `demo (scifac)' shows a
      demonstration of this function.
 
-68.2.7 Package sqdnst
+69.2.7 Package sqdnst
 ---------------------
 
  -- Function: sqrtdenest (<expr>)
@@ -2801,18 +3891,18 @@ multiplicative rule.
 
 File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: Top
 
-69 solve_rec
+70 solve_rec
 ************
 
 * Menu:
 
 * Introduction to solve_rec::
-* Definitions for solve_rec::
+* Functions and Variables for solve_rec::
 
 
-File: maxima.info,  Node: Introduction to solve_rec,  Next: Definitions for solve_rec,  Prev: solve_rec,  Up: solve_rec
+File: maxima.info,  Node: Introduction to solve_rec,  Next: Functions and Variables for solve_rec,  Prev: solve_rec,  Up: solve_rec
 
-69.1 Introduction to solve_rec
+70.1 Introduction to solve_rec
 ==============================
 
 `solve_rec' is a package for solving linear recurrences with polynomial
@@ -2831,10 +3921,10 @@ coefficients.
                   n     (n + 1) (n + 2)      (n + 1) (n + 2)
 
 
-File: maxima.info,  Node: Definitions for solve_rec,  Prev: Introduction to solve_rec,  Up: solve_rec
+File: maxima.info,  Node: Functions and Variables for solve_rec,  Prev: Introduction to solve_rec,  Up: solve_rec
 
-69.2 Definitions for solve_rec
-==============================
+70.2 Functions and Variables for solve_rec
+==========================================
 
  -- Function: reduce_order (<rec>, <sol>, <var>)
      Reduces the order of linear recurrence <rec> when a particular
@@ -2905,7 +3995,8 @@ File: maxima.info,  Node: Definitions for solve_rec,  Prev: Introduction to solv
      Example:
 
           (%i1) load("simplify_sum")$
-          (%i2) sum(binom(n+k,k)/2^k, k, 0, n) + sum(binom(2*n, 2*k), k, 0, n);
+          (%i2) sum(binom(n+k,k)/2^k, k, 0, n)
+                                       + sum(binom(2*n, 2*k), k, 0, n);
                    n                            n
                   ====                         ====
                   \      binomial(n + k, k)    \
@@ -3055,20 +4146,20 @@ File: maxima.info,  Node: Definitions for solve_rec,  Prev: Introduction to solv
 
 File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
-70 stats
+71 stats
 ********
 
 * Menu:
 
 * Introduction to stats::
-* Definitions for inference_result::
-* Definitions for stats::
-* Definitions for special distributions::
+* Functions and Variables for inference_result::
+* Functions and Variables for stats::
+* Functions and Variables for special distributions::
 
 
-File: maxima.info,  Node: Introduction to stats,  Next: Definitions for inference_result,  Prev: Top,  Up: Top
+File: maxima.info,  Node: Introduction to stats,  Next: Functions and Variables for inference_result,  Prev: Top,  Up: Top
 
-70.1 Introduction to stats
+71.1 Introduction to stats
 ==========================
 
 Package `stats' contains a set of classical statistical inference and
@@ -3096,10 +4187,10 @@ more details.
    <'mario AT edu DOT xunta DOT es'>.
 
 
-File: maxima.info,  Node: Definitions for inference_result,  Next: Definitions for stats,  Prev: Introduction to stats,  Up: Top
+File: maxima.info,  Node: Functions and Variables for inference_result,  Next: Functions and Variables for stats,  Prev: Introduction to stats,  Up: Top
 
-70.2 Definitions for inference_result
-=====================================
+71.2 Functions and Variables for inference_result
+=================================================
 
  -- Function: inference_result (<title>, <values>, <numbers>)
      Constructs an `inference_result' object of the type returned by the
@@ -3210,10 +4301,10 @@ File: maxima.info,  Node: Definitions for inference_result,  Next: Definitions f
      See also `inference_result' and `take_inference'.
 
 
-File: maxima.info,  Node: Definitions for stats,  Next: Definitions for special distributions,  Prev: Definitions for inference_result,  Up: Top
+File: maxima.info,  Node: Functions and Variables for stats,  Next: Functions and Variables for special distributions,  Prev: Functions and Variables for inference_result,  Up: Top
 
-70.3 Definitions for stats
-==========================
+71.3 Functions and Variables for stats
+======================================
 
  -- Option variable: stats_numer
      Default value: `true'
@@ -3429,7 +4520,8 @@ File: maxima.info,  Node: Definitions for stats,  Next: Definitions for special 
           (%i1) load("stats")$
           (%i2) x: [20.4,62.5,61.3,44.2,11.1,23.7]$
           (%i3) y: matrix([1.2],[6.9],[38.7],[20.4],[17.2])$
-          (%i4) test_means_difference(x,y,'alternative='greater,'varequal=true);
+          (%i4) test_means_difference(x,y,'alternative='greater,
+                                                           'varequal=true);
                       |              DIFFERENCE OF MEANS TEST
                       |
                       |         diff_estimate = 20.31999999999999
@@ -3917,7 +5009,8 @@ File: maxima.info,  Node: Definitions for stats,  Next: Definitions for special 
      prediction when `x=113' are also calculated.
 
           (%i1) load("stats")$
-          (%i2) s:[[125,140.7],[130,155.1],[135,160.3],[140,167.2],[145,169.8]]$
+          (%i2) s:[[125,140.7], [130,155.1], [135,160.3], [140,167.2],
+                                                          [145,169.8]]$
           (%i3) z:simple_linear_regression(s,conflevel=0.99);
                      |               SIMPLE LINEAR REGRESSION
                      |
@@ -3937,8 +5030,8 @@ File: maxima.info,  Node: Definitions for stats,  Next: Definitions for special 
                      |
                      |             p_value = 0.0038059549413203
           (%i4) plot2d([[discrete, s], take_inference(model,z)],
-                        [x,120,150],
-                        [gnuplot_curve_styles, ["with points","with lines"]] )$
+                  [x,120,150],
+                  [gnuplot_curve_styles, ["with points","with lines"]] )$
           (%i5) take_inference(model,z), x=133;
           (%o5)                         155.808
           (%i6) take_inference(means,z);
@@ -3948,10 +5041,10 @@ File: maxima.info,  Node: Definitions for stats,  Next: Definitions for special 
 
 
 
-File: maxima.info,  Node: Definitions for special distributions,  Prev: Definitions for stats,  Up: Top
+File: maxima.info,  Node: Functions and Variables for special distributions,  Prev: Functions and Variables for stats,  Up: Top
 
-70.4 Definitions for special distributions
-==========================================
+71.4 Functions and Variables for special distributions
+======================================================
 
  -- Function: pdf_signed_rank (<x>, <n>)
      Probability density function of the exact distribution of the
@@ -3984,18 +5077,18 @@ File: maxima.info,  Node: Definitions for special distributions,  Prev: Definiti
 
 File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
-71 stirling
+72 stirling
 ***********
 
 * Menu:
 
-* Definitions for stirling::
+* Functions and Variables for stirling::
 
 
-File: maxima.info,  Node: Definitions for stirling,  Prev: stirling,  Up: stirling
+File: maxima.info,  Node: Functions and Variables for stirling,  Prev: stirling,  Up: stirling
 
-71.1 Definitions for stirling
-=============================
+72.1 Functions and Variables for stirling
+=========================================
 
  -- Function: stirling (<z>,<n>)
      Replace `gamma(x)' with the O(1/x^(2n-1)) Stirling formula. when
@@ -4042,20 +5135,20 @@ File: maxima.info,  Node: Definitions for stirling,  Prev: stirling,  Up: stirli
 
 File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
-72 stringproc
+73 stringproc
 *************
 
 * Menu:
 
 * Introduction to string processing::
-* Definitions for input and output::
-* Definitions for characters::
-* Definitions for strings::
+* Functions and Variables for input and output::
+* Functions and Variables for characters::
+* Functions and Variables for strings::
 
 
-File: maxima.info,  Node: Introduction to string processing,  Next: Definitions for input and output,  Prev: stringproc,  Up: stringproc
+File: maxima.info,  Node: Introduction to string processing,  Next: Functions and Variables for input and output,  Prev: stringproc,  Up: stringproc
 
-72.1 Introduction to string processing
+73.1 Introduction to string processing
 ======================================
 
 `stringproc.lisp' enlarges Maximas capabilities of working with strings
@@ -4150,7 +5243,8 @@ or bigfloats needs `parse_string', which will be autoloaded from
      (%i10) map( parse_string, list );
      (%o10)           [42, 1.234, sqrt(2), %pi, 0.01, 0.01, 1.0b-2]
      (%i11) float(%);
-     (%o11) [42.0, 1.234, 1.414213562373095, 3.141592653589793, 0.01, 0.01, 0.01]
+     (%o11) [42.0, 1.234, 1.414213562373095, 3.141592653589793, 0.01,
+                                                          0.01, 0.01]
      (%i12) readline(s);
      (%o12)                               false
      (%i13) close(s)$
@@ -4158,17 +5252,18 @@ or bigfloats needs `parse_string', which will be autoloaded from
    `readline' returns `false' when the end of file occurs.
 
 
-File: maxima.info,  Node: Definitions for input and output,  Next: Definitions for characters,  Prev: Introduction to string processing,  Up: stringproc
+File: maxima.info,  Node: Functions and Variables for input and output,  Next: Functions and Variables for characters,  Prev: Introduction to string processing,  Up: stringproc
 
-72.2 Definitions for input and output
-=====================================
+73.2 Functions and Variables for input and output
+=================================================
 
 Example:
 
      (%i1) s: openw("E:/file.txt");
      (%o1)                     #<output stream E:/file.txt>
      (%i2) control:
-     "~2tAn atom: ~20t~a~%~2tand a list: ~20t~{~r ~}~%~2tand an integer: ~20t~d~%"$
+     "~2tAn atom: ~20t~a~%~2tand a list: ~20t~{~r ~}~%~2t\
+     and an integer: ~20t~d~%"$
      (%i3) printf( s,control, 'true,[1,2,3],42 )$
      (%o3)                                false
      (%i4) close(s);
@@ -4272,8 +5367,8 @@ Example:
           (%o1)                 String sym 1.23 2*sqrt(3) CXLIV
           (%i2) printf( false,"~{~a ~}",["one",2,"THREE"] );
           (%o2)                          one 2 THREE
-          (%i3) printf( true,"~{~{~9,1f ~}~%~}",mat ),
-                        mat = args( matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]) )$
+          (%i3) printf(true,"~{~{~9,1f ~}~%~}",mat ),
+                    mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
                 1.1       2.0       3.3
                 4.0       5.0       6.0
                 7.0       8.9       9.0
@@ -4299,8 +5394,8 @@ Example:
      `stringproc.lisp' might be useful, if you whish to place
      intermediate line breaking.
 
-          (%i1) for n:0 thru 22 do sprint( fib(n) )$
-          0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711
+          (%i1) for n:0 thru 20 do sprint( fib(n) )$
+          0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765
           (%i2) for n:0 thru 22 do (
                    sprint(fib(n)), if mod(n,10)=9 then newline() )$
           0 1 1 2 3 5 8 13 21 34
@@ -4309,10 +5404,10 @@ Example:
 
 
 
-File: maxima.info,  Node: Definitions for characters,  Next: Definitions for strings,  Prev: Definitions for input and output,  Up: stringproc
+File: maxima.info,  Node: Functions and Variables for characters,  Next: Functions and Variables for strings,  Prev: Functions and Variables for input and output,  Up: stringproc
 
-72.3 Definitions for characters
-===============================
+73.3 Functions and Variables for characters
+===========================================
 
  -- Function: alphacharp (<char>)
      Returns `true' if <char> is an alphabetic character.
@@ -4327,7 +5422,8 @@ File: maxima.info,  Node: Definitions for characters,  Next: Definitions for str
      -1 < int < 256 )
 
           (%i1) for n from 0 thru 255 do (
-          tmp: ascii(n), if alphacharp(tmp) then sprint(tmp), if n=96 then newline() )$
+             tmp: ascii(n), if alphacharp(tmp) then sprint(tmp),
+                if n=96 then newline() )$
           A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
           a b c d e f g h i j k l m n o p q r s t u v w x y z
 
@@ -4414,10 +5510,10 @@ File: maxima.info,  Node: Definitions for characters,  Next: Definitions for str
 
 
 
-File: maxima.info,  Node: Definitions for strings,  Prev: Definitions for characters,  Up: stringproc
+File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions and Variables for characters,  Up: stringproc
 
-72.4 Definitions for strings
-============================
+73.4 Functions and Variables for strings
+========================================
 
  -- Function: sunlisp (<lisp_string>)
      Converts a Lisp-string into a Maxima-string.  (In general you
@@ -4730,18 +5826,18 @@ File: maxima.info,  Node: Definitions for strings,  Prev: Definitions for charac
 
 File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
 
-73 unit
+74 unit
 *******
 
 * Menu:
 
 * Introduction to Units::
-* Definitions for Units::
+* Functions and Variables for Units::
 
 
-File: maxima.info,  Node: Introduction to Units,  Next: Definitions for Units,  Prev: unit,  Up: unit
+File: maxima.info,  Node: Introduction to Units,  Next: Functions and Variables for Units,  Prev: unit,  Up: unit
 
-73.1 Introduction to Units
+74.1 Introduction to Units
 ==========================
 
 The _unit_ package enables the user to convert between arbitrary units
@@ -4813,10 +5909,10 @@ and friends.  Show examples with addition of quantities containing
 units.
 
 
-File: maxima.info,  Node: Definitions for Units,  Prev: Introduction to Units,  Up: unit
+File: maxima.info,  Node: Functions and Variables for Units,  Prev: Introduction to Units,  Up: unit
 
-73.2 Definitions for Units
-==========================
+74.2 Functions and Variables for Units
+======================================
 
  -- Function: setunits (<list>)
      By default, the _unit_ package does not use any derived
@@ -5047,7 +6143,8 @@ File: maxima.info,  Node: Definitions for Units,  Prev: Introduction to Units,  
           *******************************************************************
 
           Redefining necessary functions...
-          WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
+          WARNING: DEFUN/DEFMACRO: redefining function
+           TOPLEVEL-MACSYMA-EVAL ...
           WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
           WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
           WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
@@ -5152,12 +6249,12 @@ File: maxima.info,  Node: Definitions for Units,  Prev: Introduction to Units,  
                                                  2
                                                 s
           (%i20) usedimension(N);
-          Done.  To have Maxima simplify to this dimension, use setunits([unit])
-          to select a unit.
+          Done.  To have Maxima simplify to this dimension, use
+          setunits([unit]) to select a unit.
           (%o20)                               true
           (%i21) usedimension(J);
-          Done.  To have Maxima simplify to this dimension, use setunits([unit])
-          to select a unit.
+          Done.  To have Maxima simplify to this dimension, use
+          setunits([unit]) to select a unit.
           (%o21)                               true
           (%i22) kg*m/s^2;
                                                kg m
@@ -5230,18 +6327,18 @@ File: maxima.info,  Node: Definitions for Units,  Prev: Introduction to Units,  
 
 File: maxima.info,  Node: zeilberger,  Next: Function and Variable Index,  Prev: unit,  Up: Top
 
-74 zeilberger
+75 zeilberger
 *************
 
 * Menu:
 
 * Introduction to zeilberger::
-* Definitions for zeilberger::
+* Functions and Variables for zeilberger::
 
 
-File: maxima.info,  Node: Introduction to zeilberger,  Next: Definitions for zeilberger,  Prev: zeilberger,  Up: zeilberger
+File: maxima.info,  Node: Introduction to zeilberger,  Next: Functions and Variables for zeilberger,  Prev: zeilberger,  Up: zeilberger
 
-74.1 Introduction to zeilberger
+75.1 Introduction to zeilberger
 ===============================
 
 `zeilberger' is a implementation of Zeilberger's algorithm for definite
@@ -5255,7 +6352,7 @@ developed by Axel Riese.
 
    `load (zeilberger)' loads this package.
 
-74.1.0.1 The indefinite summation problem
+75.1.0.1 The indefinite summation problem
 .........................................
 
 `zeilberger' implements Gosper's algorithm for indefinite
@@ -5263,7 +6360,7 @@ hypergeometric summation.  Given a hypergeometric term F_k in k we want
 to find its hypergeometric anti-difference, that is, a hypergeometric
 term f_k such that F_k = f_(k+1) - f_k.
 
-74.1.0.2 The definite summation problem
+75.1.0.2 The definite summation problem
 .......................................
 
 `zeilberger' implements Zeilberger's algorithm for definite
@@ -5277,7 +6374,7 @@ rational function R in n and k such that
    where Delta_k is the k-forward difference operator, i.e.,
 Delta_k(t_k) := t_(k+1) - t_k.
 
-74.1.1 Verbosity levels
+75.1.1 Verbosity levels
 -----------------------
 
 There are also verbose versions of the commands which are called by
@@ -5300,10 +6397,10 @@ adding one of the following prefixes:
 `ZeilbergerExtra', `AntiDifferenceSummary'.
 
 
-File: maxima.info,  Node: Definitions for zeilberger,  Prev: Introduction to zeilberger,  Up: zeilberger
+File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introduction to zeilberger,  Up: zeilberger
 
-74.2 Definitions for zeilberger
-===============================
+75.2 Functions and Variables for zeilberger
+===========================================
 
  -- Function: AntiDifference (<F_k>, <k>)
      Returns the hypergeometric anti-difference of <F_k>, if it exists.
@@ -5392,7 +6489,7 @@ File: maxima.info,  Node: Definitions for zeilberger,  Prev: Introduction to zei
      `Zeilberger' invokes `Gosper' only if `gosper_in_zeilberger' is
      `true'.
 
-74.3 General global variables
+75.3 General global variables
 =============================
 
  -- Global variable: MAX_ORD
@@ -5433,7 +6530,7 @@ File: maxima.info,  Node: Definitions for zeilberger,  Prev: Introduction to zei
      which have certificate equal to zero, or all coefficients equal to
      zero.
 
-74.4 Variables related to the modular test
+75.4 Variables related to the modular test
 ==========================================
 
  -- Global variable: mod_test
