@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module logarc)
 
 ;;;  Logarc and Halfangles
@@ -17,30 +17,43 @@
   (cond ((atom exp) exp)
 	((arcp (caar exp)) (logarc (caar exp) ($logarc (cadr exp))))
 	((eq (caar exp) '$atan2)
-	 (logarc '%atan ($logarc (div (cadr exp) (caddr exp)))))
+	 (logarc '%atan2 (list ($logarc (second exp)) ($logarc (third exp)))))
 	(t (recur-apply #'$logarc exp))))
 
 (defmfun logarc (f x)
-  ;;Gives logarithmic form of arc trig and hyperbolic functions
-  (let ((s (memq f '(%acos %atan %asinh %atanh))))
-    (cond 
-      ((memq f '(%acos %asin))
-       (mul (min%i)
-	    (take '(%log)
-		  (add (mul (if s '$%i 1)
-			    (root (add 1 (neg (power x 2))) 2))
-		       (mul (if s 1 '$%i) x)))))
-      ((memq f '(%atan %acot))
-       (mul (i//2)
-	    (take '(%log) (div (add 1 (morp s (mul '$%i x)))
-			       (add (mul '$%i x) (porm s 1))))))
-      ((memq f '(%asinh %acosh))
-       (take '(%log) (add x (root (add (power x 2) (porm s 1)) 2))))
-      ((memq f '(%atanh %acoth))
-       (mul (half) (take '(%log) (div (add 1 x) (morp s (add x -1))))))
-      ((memq f '(%asec %acsc %asech %acsch))
-       (logarc (oldget (oldget (get f '$inverse) 'recip) '$inverse) (inv x)))
-      (t (merror "Bad argument to Logarc")))))
+  ;;Gives the logarithmic form of arc trig and hyperbolic functions
+
+  (cond ((eq f '%acos)
+	 ;; -%i * log(x + %i*sqrt(1-x^2))
+	 (mul -1 '$%i (take '(%log) (add x (mul '$%i (root (sub 1 (power x 2)) 2))))))
+	((eq f '%asin)
+	 ;; -%i * log(sqrt(1-x^2)+%i*x)
+	 (mul -1 '$%i (take '(%log) (add (mul '$%i x) (root (sub 1 (power x 2)) 2)))))
+	((eq f '%atan)
+	 ;; (log(1 + %i*x) - log(1 - %i*x)) /(2 %i)
+	 (div (sub (take '(%log) (add 1 (mul '$%i x))) (take '(%log) (sub 1 (mul '$%i x))))
+	      (mul 2 '$%i)))
+	((eq f '%atan2)
+	 ;; atan2(y,x) = -%i*log((x + %i*y)/sqrt(x^2+y^2))
+	 (destructuring-bind (y x)
+	     x
+	   (mul -1 '$%i
+		(take '(%log) (div (add x (mul '$%i y))
+				   (power (add (mul x x) (mul y y))
+					  1//2))))))
+    	((eq f '%asinh)
+	 ;; log(sqrt(x^2+1)+x)
+	 (take '(%log) (add x (root (add 1 (power x 2)) 2))))
+	((eq f '%acosh)
+	 ;; 2 * log(sqrt((x+1)/2)+sqrt((x-1)/2))
+	 (mul 2 (take '(%log) (add (root (div (add x 1) 2) 2) (root (div (add x -1) 2) 2)))))
+    	((eq f '%atanh)
+	 ;;  (log(x+1)-log(1-x))/2
+	 (div (sub (take '(%log) (add 1 x)) (take '(%log) (sub 1 x))) 2))
+    	((member f '(%asec %acsc %acot %asech %acsch %acoth) :test #'eq)
+	 ;; asec(x) = acos(1/x), and etc.
+	 (logarc (oldget (oldget (get f '$inverse) 'recip) '$inverse) (inv x)))
+	(t (merror "Bad argument to 'logarc'"))))
 
 (defmfun halfangle (f a)
   (and (mtimesp a)
@@ -49,15 +62,15 @@
        (halfangleaux f (mul 2 a))))
 
 (defun halfangleaux (f a) ;; f=function; a=twice argument
-  (let ((sw (memq f '(%cos %cot %coth %cosh))))
-    (cond ((memq f '(%sin %cos))
+  (let ((sw (member f '(%cos %cot %coth %cosh) :test #'eq)))
+    (cond ((member f '(%sin %cos) :test #'eq)
 	   (power (div (add 1 (porm sw (take '(%cos) a))) 2) (1//2)))
-	  ((memq f '(%tan %cot))
+	  ((member f '(%tan %cot) :test #'eq)
 	   (div (add 1 (porm sw (take '(%cos) a))) (take '(%sin) a)))
-	  ((memq f '(%sinh %cosh))
+	  ((member f '(%sinh %cosh) :test #'eq)
 	   (power (div (add (take '(%cosh) a) (porm sw 1)) 2) (1//2)))
-	  ((memq f '(%tanh %coth))
+	  ((member f '(%tanh %coth) :test #'eq)
 	   (div (add (take '(%cosh) a) (porm sw 1)) (take '(%sinh) a)))
-	  ((memq f '(%sec %csc %sech %csch))
+	  ((member f '(%sec %csc %sech %csch) :test #'eq)
 	   (inv (halfangleaux (get f 'recip) a))))))
 

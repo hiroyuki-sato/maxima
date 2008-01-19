@@ -20,11 +20,6 @@
 ;;;	element of the list.
 ;;;
 
-;;; Compiler Declarations
-
-(DECLARE (*FEXPR $FOPTIMIZE)
-	 (*EXPR $OPTIMIZE STRIPDOLLAR MGET MPUTPROP))
-
 ;;; $FOPTIMIZE is the name of the driver that gets called from Macsyma
 
 (DEFUN $FOPTIMIZE FEXPR (X) (CONS (NCONS 'MLIST) (MAPCAR 'FOPTIMIZE X)))
@@ -46,7 +41,7 @@
 		  (NOT (EQ (CAAR X) 'MLIST))
 		  (NOT (SYMBOLP (CADR X)))
 		  (NOT (SYMBOLP (CADDR X))))
-	      (CURSORPOS 'A TYO)
+	      (fresh-line)
 	      (PRINC '|;FOPTIMIZE called on an illegal form.| TYO)
 	      (ERR))
 	     (T
@@ -62,7 +57,7 @@
 
 (DEFUN FOPTIMIZE-AUX (DEF NAME)
        (COND ((NOT DEF)
-	      (CURSORPOS 'A TYO)
+	      (fresh-line)
 	      (PRINC '|;No function definition for | TYO)
 	      (PRINC (STRIPDOLLAR NAME) TYO)
 	      (PRINC '|. It will be ignored.| TYO)

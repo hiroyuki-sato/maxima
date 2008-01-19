@@ -13,13 +13,7 @@
 ;; Comments: TeX formatting module for itensor.lisp
 ;;
 
-(in-package "MAXIMA")
-
-;(declare-top
-;	 (special lop rop ccol $gcprint texport $labels $inchar
-;		  vaxima-main-dir
-;		  )
-;	 (*expr tex-lbp tex-rbp))
+(in-package :maxima)
 
 ;; top level command the result of tex'ing the expression x.
 ;; Lots of messing around here to get C-labels verbatim printed
@@ -28,16 +22,16 @@
 ;(defmspec $tex(l) ;; mexplabel, and optional filename
 ;  (let ((args (cdr l)))
 ;  (apply 'tex1  args)))
-(defprop $Dl "\\Delta" texword)
-(defprop $divG "(\\nabla\\cdot G)" texword)
-(defprop $OG "(\\Omega\\cdot G)" texword)
-(defprop $Dl_1 "\\Delta^{\\star}" texword)
-(defprop $Dl_c "\\Delta_{\\chi}" texword)
-(defprop $Omega "\\Omega" texword)
-(defprop $Om "\\Omega^{\\star}" texword)
-(defprop $DLT "\\delta" texword)
-(defprop $PHI  "\\Phi" texword)
-(defprop $D_T  "\\frac{\\partial}{\\partial t}" texword)
+(defprop $dl "\\Delta" texword)
+(defprop $divg "(\\nabla\\cdot G)" texword)
+(defprop $og "(\\Omega\\cdot G)" texword)
+(defprop $dl_1 "\\Delta^{\\star}" texword)
+(defprop $dl_c "\\Delta_{\\chi}" texword)
+(defprop $omega "\\Omega" texword)
+(defprop $om "\\Omega^{\\star}" texword)
+(defprop $dlt "\\delta" texword)
+(defprop $phi  "\\Phi" texword)
+(defprop $d_t  "\\frac{\\partial}{\\partial t}" texword)
 
 (defprop $kdelta "\\delta" texword)
 (defprop %kdelta "\\delta" texword)
@@ -98,4 +92,3 @@
     (t (cons (tenreform (car x)) (tenreform (cdr x))))
   )
 )
-

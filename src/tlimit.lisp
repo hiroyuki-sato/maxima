@@ -8,56 +8,46 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module tlimit)
+
 (load-macsyma-macros rzmac)
 
 ;; TOP LEVEL FUNCTION(S): $TLIMIT $TLDEFINT
 
-(declare-top(genprefix tl)
-	    (*lexpr $limit)
-	    (special $tlimswitch taylored exp var val ll ul
-		     silent-taylor-flag)) 
+(declare-top (special exp var val ll ul))
 
-#-nil
-(defmfun $tlimit nargs 
-  ((lambda ($tlimswitch) (apply '$limit (listify nargs))) t)) 
-#+nil
-(defmfun $tlimit (&restv argvec)
-  (let (($tlimswitch t)) (apply #'$limit argvec)))
+(defmfun $tlimit (&rest args)
+  (let (($tlimswitch t))
+    (declare (special $tlimswitch))
+    (apply #'$limit args)))
 
-
-(defmfun $tldefint (exp var ll ul) 
-  ((lambda ($tlimswitch) ($ldefint exp var ll ul)) t))
+(defmfun $tldefint (exp var ll ul)
+  (let (($tlimswitch t))
+    (declare (special $tlimswitch))
+    ($ldefint exp var ll ul)))
 
 (defun tlimp (exp)		; TO BE EXPANDED TO BE SMARTER (MAYBE)
-  t) 
-
-(defun taylim (e *i*) 
+  t)
+
+(defun taylim (e *i*)
   (prog (ex)
      (setq ex (catch 'taylor-catch
 		(let ((silent-taylor-flag t))
-		  ($taylor e var (ridofab val) 1.))))
-     (or ex (return (cond ((eq *i* t) (limit1 e var val))
-			  ((eq *i* 'think) (cond ((memq (caar exp)
-							'(mtimes mexpt))
-						  (limit1 e var val))
-						 (t (simplimit e var val))))
-			  (t (simplimit e var val)))))
+		  (declare (special silent-taylor-flag))
+		  ($taylor e var (ridofab val) 1))))
+     (or ex (return (cond ((eq *i* t)
+			   (limit1 e var val))
+			  ((eq *i* 'think)
+			   (if (member (caar exp) '(mtimes mexpt) :test #'eq)
+			       (limit1 e var val)
+			       (simplimit e var val)))
+			  (t
+			   (simplimit e var val)))))
      (return
        (let ((taylored t))
-	 (limit
-	  (simplify
-	   ($logcontract ($ratdisrep ex)))
-	  ;;(COND ((EQ (CADR EX) 'PS)
-	  ;;       (CONS (CAR EX)
-	  ;;             (LIST 'PS (THIRD EX) (FOURTH EX)
-	  ;;                   (FIFTH EX))))
-	  ;;      (t (EX)))
-	  var
-	  val
-	  'think)))))
+	 (declare (special taylored))
+	 (limit (simplify ($logcontract ($ratdisrep ex))) var val 'think)))))
 
-#-nil
-(declare-top(unspecial taylored exp var val ll ul)) 
-
+(declare-top (unspecial exp var val ll ul))

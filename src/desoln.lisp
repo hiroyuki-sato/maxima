@@ -2,7 +2,7 @@
 ;;;Translated on: 5/12/85 13:15:46;;Maxima System version 8
 ;;** Variable settings were **
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;;TRANSCOMPILE:FALSE;
 ;;TR_SEMICOMPILE:FALSE;
@@ -16,7 +16,9 @@
 ;;TR_ARRAY_AS_REF:TRUE;
 ;;TR_NUMER:FALSE;
 ;;DEFINE_VARIABLE:FALSE;
-(eval-when (compile eval load)
+(eval-when
+    #+gcl (compile eval load)
+    #-gcl (:compile-toplevel :execute :load-toplevel)
   (defprop $desolve t translated)
   (add2lnc '$desolve $props)
   (defmtrfun
@@ -36,7 +38,7 @@
 	 ((not (eql ($length (setq $ovar (maref $vars 1)))
 		    1))
 	  (simplify ($error $ovar
-			    '|&contains more than one independent variable.|))))
+			    (make-mstring "contains more than one independent variable.")))))
        (setq $ovar (simplify ($inpart $ovar 1)))
        (setq $dispflag nil)
        (setq
@@ -66,7 +68,7 @@
 	 nil))
        (cond ((or (like $teqns '((mlist)))
 		  (like $teqns (list '(mlist) '((mlist)))))
-	      (simplify ($error '|&`desolve' can't handle this case.|)))
+	      (simplify ($error (make-mstring "`desolve' can't handle this case."))))
 	     (t (setq $teqns (simplify ($first $teqns)))))
        (cond ((not (like $flag t))
 	      (setq $teqns (simplify ($first $teqns)))))

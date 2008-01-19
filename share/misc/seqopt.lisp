@@ -8,9 +8,6 @@
 
 (macsyma-module seqopt)
 
-(eval-when (load eval) (or (get 'expens 'version)
-			   (load "expense")))
-
 (defmvar $sequence_optim_prefix '$opt
          "String used to prefix all optimized temporaries arising from a
    call to SEQUENCE_OPTIMIZE."
@@ -60,10 +57,6 @@
 (defvar optim-vars nil
   "MACSYMA list of generated names for common subexpressions(Not used if
    a list equations is passed to SEQUENCE_OPTIMIZE).")
-
-(declare (special setqs)
-         (array* (notype (subexp 1)))
-         (fixnum n (alike1-hash)))
 
 (array subexp t 64.)
 
@@ -156,7 +149,7 @@
 (defun optim-format (x)
   (cond ((atom x) x)
         ((and (eq 'rat (caar x)) (minusp (cadr x)))
-         `((mminus) ((rat) ,(minus (cadr x)) ,(caddr x))))
+         `((mminus) ((rat) ,(- (cadr x)) ,(caddr x))))
         ((and (eq 'mquotient (caar x)) (not (equal 1 (cadr x))))
          (let ((nmr (cadr x)))
            (optim-format `((mtimes simp) ,@(cond ((mtimesp nmr) (cdr nmr))
@@ -248,7 +241,7 @@
        (cond ((mtimesp x)
               (let ((coeff (cadr x)))
                 (cond ((and (fixp coeff) (minusp coeff))
-                       (append `((mtimes) ,(minus coeff)) (cddr x)))
+                       (append `((mtimes) ,(- coeff)) (cddr x)))
                       (t `((mminus) ,x)))))
              ((mnump x) (mul -1 x))
              ((or (atom x) (not (eq (caar x) 'mminus))) `((mminus) ,x))
@@ -263,7 +256,7 @@
                    (cond ((equal sign -1)
                           (let ((chk-merge (caddr x)))
                             (cond ((and (not (atom chk-merge))
-                                        (memq (caar chk-merge) $merge_ops))
+                                        (member (caar chk-merge) $merge_ops :test #'eq))
                                    (rplacd (cdr x) (append `(((,(caar chk-merge)) ,(disp-negate (cadr chk-merge))
                                                                                   ,(disp-negate (caddr chk-merge))
                                                                                   ,(cadddr chk-merge)))
@@ -273,7 +266,7 @@
                                   (t `((mminus) ,(cond ((cdddr x)
                                                         (rplacd x (cddr x)) x)
                                                        (t (caddr x))))))))
-                         (t `((mminus) ,(append `((mtimes) ,(minus sign)) (cddr x))))))
+                         (t `((mminus) ,(append `((mtimes) ,(- sign)) (cddr x))))))
                   (t x))))
          (t (do ((search (cdr x) (cdr search)))
                 ((null search) x)
@@ -289,14 +282,14 @@
                (let* ((carl (car l)) (res (collapse carl)))
                  (or (eq carl res) (rplaca l res))))
              (do ((l (subexp n) (cdr l)))
-                 ((null l) (store (subexp n) (cons (list x) (subexp n))) x)
+                 ((null l) (setf (subexp n) (cons (list x) (subexp n))) x)
                (if (alike1 x (caar l)) (return (caar l)))))))
 
 (defun comexp (x)
   (cond ((atom x))
         ((eq 'rat (caar x)))
         (t
-         (setq x (assq x (subexp (logand 63. (alike1-hash x)))))
+         (setq x (assoc x (subexp (logand 63. (alike1-hash x))) :test #'eq))
          (cond ((null (cdr x))
                 (rplacd x 1)
                 (mapc 'comexp (cdar x)))
@@ -304,10 +297,10 @@
 
 (defun optim (x)
   (cond ((atom x) x)
-        ((and (memq 'array (cdar x)) (not (mget (caar x) 'arrayfun-mode))) x)
+        ((and (member 'array (cdar x) :test #'eq) (not (mget (caar x) 'arrayfun-mode))) x)
         ((eq 'rat (caar x)) x)
         (t 
-         (let ((xpair (assq x (subexp (logand 63. (alike1-hash x)))))
+         (let ((xpair (assoc x (subexp (logand 63. (alike1-hash x))) :test #'eq))
                (nx (do ((l (cdr x) (cdr l))
                         (c (list (car x)) (cons (optim (car l)) c)))
                        ((null l) (nreverse c)))))
@@ -336,7 +329,7 @@
    (let ((newvar (implode (nconc (exploden $sequence_optim_prefix)
                                  (exploden $sequence_optim_counter)
                                  (exploden $sequence_optim_suffix)))))
-     (increment $sequence_optim_counter)
+     (incf $sequence_optim_counter)
      (if optim-vars (setq optim-vars `(,.optim-vars ,newvar)))
      newvar))
 
@@ -475,7 +468,7 @@
                                                          (cond ((not modified)
                                                                 (setq modified t
                                                                       next (append next nil))
-                                                                (setq remain (memq powered? next))
+                                                                (setq remain (member powered? next :test #'eq))
                                                                 (setq powered? (car remain))))
                                                          (cond (pf
                                                                 (let ((mbase (base result)))
@@ -487,15 +480,15 @@
                                                                (t
                                                                 (setq result (make-expt (product-base (base result) (base powered?)) (exponent result)))
                                                                 (cond ((zerop ab)
-                                                                       (setq next (delq powered? next)))
+                                                                       (setq next (delete powered? next :test #'eq)))
                                                                       (t
-                                                                       (let ((pabs (minus ab))
+                                                                       (let ((pabs (- ab))
                                                                              (mbase (base powered?)))
                                                                          (cond ((equal pabs 1)
                                                                                 (cond ((mtimesp mbase)
                                                                                        (setq next (nconc next (cdr mbase)))
-                                                                                       (setq remain (memq powered? next))
-                                                                                       (setq next (delq powered? next)))
+                                                                                       (setq remain (member powered? next :test #'eq))
+                                                                                       (setq next (delete powered? next :test #'eq)))
                                                                                       (t (rplaca remain mbase))))
                                                                                (t (rplaca remain (make-expt mbase pabs))))))))))))))))))))))
              (setq result (floating-exponent-gather result))
@@ -590,7 +583,7 @@
                                                    (setq result (make-expt (muln others nil) current-gcd))))
                                             (do ((rescan pntrs (cdr rescan)))
                                                 ((null rescan) (setq repeat nil))
-                                              (setq next (delq (car rescan) next))))
+                                              (setq next (delete (car rescan) next :test #'eq))))
                                          (declare (fixnum save))
                                          (let* ((expt (car scan))
                                                 (expon-2 (exponent expt))
@@ -622,7 +615,7 @@
                                                     (cond ((not modified)
                                                            (setq modified t
                                                                  next (append next nil))
-                                                           (setq remain (memq powered? next))
+                                                           (setq remain (member powered? next :test #'eq))
                                                            (setq powered? (car remain))))
                                                     (setq current-gcd fgcd
                                                           pntrs `(,.pntrs ,powered?))))))))))))))
@@ -667,7 +660,7 @@
                                (and (mexptp powered?)
                                     (let ((expon-2 (exponent powered?)))
                                       (and (fixp expon-2)
-                                           (let* ((intdif (difference expon expon-2))
+                                           (let* ((intdif (- expon expon-2))
                                                   (pf (plusp intdif)))
                                              (declare (fixnum intdif))
                                              (cond ((or (zerop intdif)
@@ -685,7 +678,7 @@
                                                     (cond ((not modified)
                                                            (setq modified t
                                                                  next (append next nil))
-                                                           (setq remain (memq powered? next))
+                                                           (setq remain (member powered? next :test #'eq))
                                                            (setq powered? (car remain))))
                                                     (cond (pf
                                                            (let ((mbase (base result)))
@@ -697,15 +690,15 @@
                                                           (t
                                                            (setq result (make-expt (product-base (base result) (base powered?)) (exponent result)))
                                                            (cond ((zerop intdif)
-                                                                  (setq next (delq powered? next)))
+                                                                  (setq next (delete powered? next :test #'eq)))
                                                                  (t
-                                                                  (let ((pabs (minus intdif))
+                                                                  (let ((pabs (- intdif))
                                                                         (mbase (base powered?)))
                                                                     (cond ((equal pabs 1)
                                                                            (cond ((mtimesp mbase)
                                                                                   (setq next (nconc next (cdr mbase)))
-                                                                                  (setq remain (memq powered? next))
-                                                                                  (setq next (delq powered? next)))
+                                                                                  (setq remain (member powered? next :test #'eq))
+                                                                                  (setq next (delete powered? next :test #'eq)))
                                                                                  (t (rplaca remain mbase))))
                                                                           (t (rplaca remain (make-expt mbase pabs))))))))))))))))))))
                (setq result (integer-exponent-gather result))
@@ -766,7 +759,7 @@
                                                                              (cond ((mtimesp mbase) (cdr mbase))
                                                                                    (t (ncons mbase))))
                                                                             (t (ncons (make-expt mbase (quotient expon-2 current-gcd)))))))
-                                             next (delq expt next))))))
+                                             next (delete expt next :test #'eq))))))
                            (declare (fixnum current-gcd))
                            (let ((powered? (car remain)))
                              (and (mexptp powered?)
@@ -777,7 +770,7 @@
                                                   (cond ((not modified)
                                                          (setq modified t
                                                                next (append next nil))
-                                                         (setq remain (memq powered? next))
+                                                         (setq remain (member powered? next :test#'eq))
                                                          (setq powered? (car remain))))
                                                   (setq current-gcd intgcd
                                                         pntrs `(,.pntrs ,powered?)))))))))))))

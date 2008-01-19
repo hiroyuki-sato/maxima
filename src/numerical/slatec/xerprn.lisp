@@ -1,27 +1,27 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let* ((newlin "$$"))
   (declare (type (simple-array character (2)) newlin))
   (defun xerprn (prefix npref messg nwrap)
-    (declare (type f2cl-lib:integer4 nwrap npref)
+    (declare (type (f2cl-lib:integer4) nwrap npref)
              (type (simple-array character (*)) messg prefix))
     (prog ((iu (make-array 5 :element-type 'f2cl-lib:integer4)) (nunit 0)
            (cbuff
             (make-array '(148) :element-type 'character :initial-element #\ ))
            (idelta 0) (lpiece 0) (nextc 0) (lenmsg 0) (lwrap 0) (lpref 0) (i 0)
            (n 0))
-      (declare (type (simple-array f2cl-lib:integer4 (5)) iu)
-               (type f2cl-lib:integer4 n i lpref lwrap lenmsg nextc lpiece
-                                       idelta nunit)
+      (declare (type (integer) n i lpref lwrap lenmsg nextc lpiece idelta)
+               (type (simple-array f2cl-lib:integer4 (5)) iu)
+               (type (f2cl-lib:integer4) nunit)
                (type (simple-array character (148)) cbuff))
       (multiple-value-bind (var-0 var-1)
           (xgetua iu nunit)
@@ -32,7 +32,7 @@
                     ((> i nunit) nil)
         (tagbody
           (if (= (f2cl-lib:fref iu (i) ((1 5))) 0)
-              (f2cl-lib:fset (f2cl-lib:fref iu (i) ((1 5))) n))
+              (setf (f2cl-lib:fref iu (i) ((1 5))) n))
          label10))
       (cond
         ((< npref 0)
@@ -180,4 +180,17 @@
       (go end_label)
      end_label
       (return (values nil nil nil nil)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::xerprn
+                 fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo
+           :arg-types '((simple-array character (*))
+                        (fortran-to-lisp::integer4)
+                        (simple-array character (*))
+                        (fortran-to-lisp::integer4))
+           :return-values '(nil nil nil nil)
+           :calls '(fortran-to-lisp::i1mach fortran-to-lisp::xgetua))))
 

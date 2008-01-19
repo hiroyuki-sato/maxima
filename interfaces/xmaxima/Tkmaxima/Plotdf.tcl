@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plotdf.tcl,v 1.7 2004/10/30 08:21:07 vvzhy Exp $
+#       $Id: Plotdf.tcl,v 1.11 2006/07/30 19:27:22 villate Exp $
 #
 ###### Plotdf.tcl ######
 #######################################################################
@@ -17,8 +17,8 @@ set plotdfOptions {
 
     {xradius 10 "Width in x direction of the x values" }
     {yradius 10 "Height in y direction of the y values"}
-    {width 500 "Width of canvas in pixels"}
-    {height 500 "Height of canvas in pixels" }
+    {width 560 "Width of canvas in pixels"}
+    {height 560 "Height of canvas in pixels" }
     {scrollregion {} "Area to show if canvas is larger" }
     {xcenter 0.0 {(xcenter,ycenter) is the origin of the window}}
     {ycenter 0.0 "see xcenter"}
@@ -43,10 +43,9 @@ set plotdfOptions {
     {zoomfactor "1.6 1.6" "Factor to zoom the x and y axis when zooming.  Zoom out will be reciprocal" }
     {errorbar 0 "If not 0 width in pixels of errorbar.  Two y values supplied for each x: {y1low y1high y2low y2high  .. }"}
     {data "" "List of data sets to be plotted.  Has form { {xversusy {x1 x2 ... xn} {y1 .. yn ... ym}} .. {againstIndex {y1 y2 .. yn}}  .. }"}
-    {labelposition "10 35" "Position for the curve labels nw corner"}
+    {labelposition "10 15" "Position for the curve labels nw corner"}
 }
 
-if { "[info proc makeFrame]" == "" } { source "plotconf.tcl" }
 proc makeFrameDf { win } {
     set w [makeFrame $win df]
     makeLocal $win c dydx
@@ -56,26 +55,16 @@ proc makeFrameDf { win } {
     catch { set top [winfo parent $win]}
     catch {
 
-	wm title $top [mc "Direction Fields"]
-	wm iconname $top "DF plot"
+	wm title $top [mc "Openmath: Plotdf"]
+	wm iconname $top "plotdf"
 	#    wm geometry $top 750x700-0+20
     }
-    set wb $w.plotmenu
+    set wb $w.menubar
     makeLocal $win buttonFont
-    label $w.msg  -wraplength 600 -justify left -text [mc "A direction field plotter by William Schelter"] -font $buttonFont
-
-    $wb.m add command -label [mc "Integrate"] -command "setForIntegrate $w" -font $buttonFont
-    ## setBalloonhelp $win $wb.integrate [mc "Causes clicking on the  plot with the left mouse button at a point, to draw a trajectory passing through that point.   Under Config there is an entry box which allows entering exact x,y coordinates, and which also records the place of the last trajectory computed."]
-
-    $wb.m add command -label [mc "Plot Versus t"] -command "plotVersusT $w" -font $buttonFont
-    ## setBalloonhelp $win $wb.plotversust [mc "Plot the x and y values for the  last trajectory versus t."]
-
-
+    button $wb.integrate -text [mc "Integrate"] -command "setForIntegrate $w" -font $buttonFont
+    button $wb.versust -text [mc "Plot Versus t"] -command "plotVersusT $w" -font $buttonFont
+    pack $wb.integrate $wb.versust -side left
     setForIntegrate $w
-    # pack $w.msg -side top
-    pack $w
-    place $wb -in $w -x 2 -y 2 -anchor nw
-    raise $wb
     return $win
 }
 
@@ -99,46 +88,37 @@ proc doHelpdf { win } {
     global Parser
     doHelp $win [join [list \
 			 [mc  {
-			       William Schelter's solver/plotter for ode systems.
+SOLVER/PLOTTER FOR SYSTEMS OF DIFFERENTIAL EQUAITONS
 
-			       To QUIT this HELP click here.
+To quit this help click anywhere on this text.
 
-			       Clicking at a point computes the trajectory
-			       (x(t),y(t)) starting at that point, and satisfying
-			       the differential equation
-			
-			       dx/dt = dxdt
-			       dy/dt = dydt
+Clicking at a point computes the trajectory (x(t),y(t)) starting at that \
+point, and satisfying the differential equations		
+      dx/dt = dxdt       dy/dt = dydt
 
-			       By clicking on Zoom, the mouse now allows you to zoom
-			       in on a region of the plot.  Each click near a point
-			       magnifies the plot, keeping the center at the point
-			       you clicked.  Depressing the SHIFT key while clicking
-			       zooms in the opposite direction.
+By clicking on Zoom, the mouse will allow you to zoom in on a region \
+of the plot. Each click near a point magnifies the plot, keeping the center \
+at the point you clicked. Depressing the SHIFT key while clicking \
+zooms in the opposite direction. To resume computing trajectories click \
+on Integrate.
 
-			       To resume computing trajectories click on Integrate.
+Clicking on Config will open a menu where several settings can be changed, \
+such as the differential equations being solved, the intial point for the \
+trajectory to be computed, the direction of integration for that trajectory, \
+the time step for each integration interval and the number of integration \
+steps (nsteps). Replot is used to update the plot with the \
+changes made in the Config menu.
 
-			       To change the differential equation, click on Config and
-			       enter new values in the entry windows, and then click on
-			       Replot in the main menu bar.
+Holding the right mouse button down while moving the mouse will drag \
+(translate) the plot sideways or up and down.
 
-			       Holding the right mouse button down allows you to drag
-			       (translate) the plot sideways or up and down.
-
-			       Additional parameters such as the number of steps (nsteps),
-			       the initial t value (tinitial), and the x and y centers
-			       and radii, may be set under the  Config menu.
-
-			       You may print to a postscript printer, or save the plot 
-				   as a postscript file, by clicking on save.   To change 
-				   between printing and saving see the Print Options under Config.
-			
-			   } ] $Parser(help)]]
+The plot can be saved as a postscript file, by clicking on Save.
+} ] $Parser(help)]]
 }
 
 proc setForIntegrate { win} {
     makeLocal $win c
-    $c delete printrectangle
+#    $c delete printrectangle
     bind $c  <1> "doIntegrateScreen $win %x %y "
 }
 
@@ -350,17 +330,21 @@ proc drawDF { win tinitial } {
     set xfactor [lindex $transform 0]
     set yfactor [lindex $transform 3]
     set extra $stepsize
-    set uptox [expr {[$rtosx $xmax] + $extra}]
-    set uptoy [expr {[$rtosy $ymin] + $extra}]
+    set uptox [$rtosx $xmax]
+    set uptoy [$rtosy $ymin]
+#    set uptox [expr {[$rtosx $xmax] + $extra}]
+#    set uptoy [expr {[$rtosy $ymin] + $extra}]
+#    set uptox [expr {[$rtosx $xmax] + $extra}]
+#    set uptoy [expr {[$rtosy $ymin] + $extra}]
     # draw the axes:
     #puts "draw [$rtosx $xmin] to $uptox"
-    for { set x [expr {[$rtosx $xmin] - $extra}] } { $x < $uptox } { set x [expr {$x +$stepsize}] } {
-	for { set y [expr {[$rtosy $ymax] - $extra}] } { $y < $uptoy } { set y [expr {$y + $stepsize}] } {
+    for { set x [expr {[$rtosx $xmin] + $extra}] } { $x < $uptox } { set x [expr {$x +$stepsize}] } {
+	for { set y [expr {[$rtosy $ymax] + $extra}] } { $y < $uptoy } { set y [expr {$y + $stepsize}] } {
 	    set args "$t0 [$storx $x] [$story $y]"
 	    set dfx [expr {$xfactor * [eval xff $args]}]
 	    # screen y is negative of other y
 	    set dfy [expr  {$yfactor * [eval yff $args]}]
-	    #     puts "$dfx $dfy"
+	    # puts "$dfx $dfy"
 	    set len  [vectorlength $dfx $dfy]
 	    append all " $len $dfx $dfy "
 	    if { $min > $len } { set min $len }
@@ -381,10 +365,9 @@ proc drawDF { win tinitial } {
     # puts "now to draw,s1=$s1 s2=$s2,max=$max,min=$min"
     # puts "xfactor=$xfactor,yfactor=$yfactor"
 
-
     set i -1
-    for { set x [expr {[$rtosx $xmin] - $stepsize}] } { $x < $uptox } { set x [expr {$x +$stepsize}] } {
-	for { set y [expr {[$rtosy $ymax] - $stepsize}] } { $y < $uptoy } { set y [expr {$y + $stepsize}] } {
+    for { set x [expr {[$rtosx $xmin] + $stepsize}] } { $x < $uptox } { set x [expr {$x +$stepsize}] } {
+	for { set y [expr {[$rtosy $ymax] + $stepsize}] } { $y < $uptoy } { set y [expr {$y + $stepsize}] } {
 	
 	
 	    set len [lindex $all [incr i]]
@@ -398,11 +381,26 @@ proc drawDF { win tinitial } {
         }
     }
 
-    $c create line [$rtosx 0 ] [$rtosy -1000] [$rtosx 0] [$rtosy 1000] \
-	-fill $axisGray
-    $c create line [$rtosx -1000] [$rtosy 0] [$rtosx 1000] [$rtosy 0] \
-	-fill $axisGray
-    axisTicks $win $c
+    # Draw the two axes
+    if { $xmin*$xmax < 0 } {
+	$c create line [$rtosx 0 ] [$rtosy $ymax] [$rtosx 0] [$rtosy $ymin] \
+                       -fill $axisGray
+    }
+    if { $ymin*$ymax < 0 } {
+	$c create line [$rtosx $xmin] [$rtosy 0] [$rtosx $xmax] [$rtosy 0] \
+                       -fill $axisGray
+    }
+    # Draw the plot box
+    if { "[$c find withtag printrectangle]" == "" } {
+	set x1 [rtosx$win $xmin]
+	set y1 [rtosy$win $ymax]
+	set x2 [rtosx$win $xmax]
+	set y2 [rtosy$win $ymin]
+	$c create rectangle $x1 $y1 $x2 $y2 -tags printrectangle -width 2
+	marginTicks $c [storx$win $x1] [story$win $y2] [storx$win $x2] \
+	    [story$win $y1] "printrectangle marginticks"
+
+    }
 }
 
 proc parseOdeArg {  s } {
@@ -416,7 +414,8 @@ proc parseOdeArg {  s } {
 	set s [string range $s [lindex $junk 1] end]
     }
     if { ![info exists ans] || ([llength $ans] == 2 && "[lindex $ans 0]" != "-dydx") } {
-	error [concat [mc "bad -ode argument:"] "$orig" [mc "\nwant d(y,x)=f(x,y) \n   OR d(x,t)=f(x,y) d(y,t)=g(x,y)"]]
+	error [mc "bad -ode argument:\n$orig\nShould be d(y,x)=f(x,y)
+       OR d(x,t)=f(x,y) d(y,t)=g(x,y)"]
     }
     return $ans
 }
@@ -448,7 +447,6 @@ proc plotdf { args } {
     oset $win sliderCommand sliderCommandDf
     oset $win trajectoryStarts ""
 
-
     oset $win maintitle [concat "makeLocal $win  dxdt dydt dydx ;"  \
 			     {if { "$dydx" == "" } { concat "dx/dt = $dxdt , dy/dt = $dydt"}  else {
 				 concat "dy/dx = $dydt" } } ]
@@ -462,9 +460,8 @@ proc replotdf { win } {
 	set data ""
 	
     }
-    makeLocal $win c dxdt dydt tinitial nsteps xfun     trajectory_at parameters
-
-    setUpTransforms $win 1.0
+    makeLocal $win c dxdt dydt tinitial nsteps xfun trajectory_at parameters
+    setUpTransforms $win 0.8
     setXffYff $dxdt $dydt $parameters
     $c delete all
     setForIntegrate $win
@@ -482,7 +479,6 @@ proc replotdf { win } {
 		 0 xversusy]
     }
     redraw2dData $win -tags path
-
 }
 
 proc setXffYff { dxdt dydt parameters } {
@@ -517,8 +513,6 @@ proc doConfigdf { win } {
     if { "[oget $win dydx]" != "" } { swapChoose $win dydx $frdydx }
     setForIntegrate $win
 }
-
-
 
 proc sliderCommandDf { win var val } {
     linkLocal $win recompute

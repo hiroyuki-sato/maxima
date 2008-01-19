@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((nbif 0)
@@ -82,13 +82,13 @@
   (declare (type f2cl-lib:logical first$)
            (type (simple-array double-float (15)) big2cs bif2cs)
            (type (simple-array double-float (13)) bigcs bifcs)
-           (type double-float xmax x3sml)
-           (type f2cl-lib:integer4 nbig2 nbif2 nbig nbif))
+           (type (double-float) xmax x3sml)
+           (type (integer) nbig2 nbif2 nbig nbif))
   (setq first$ f2cl-lib:%true%)
   (defun dbi (x)
-    (declare (type double-float x))
-    (prog ((theta 0.0) (xm 0.0) (z 0.0) (dbi 0.0) (abs$ 0.0f0) (eta 0.0f0))
-      (declare (type single-float eta abs$) (type double-float dbi z xm theta))
+    (declare (type (double-float) x))
+    (prog ((theta 0.0) (xm 0.0) (z 0.0) (dbi 0.0) (eta 0.0f0))
+      (declare (type (single-float) eta) (type (double-float) dbi z xm theta))
       (cond
         (first$
          (setf eta (* 0.1f0 (f2cl-lib:freal (f2cl-lib:d1mach 3))))
@@ -131,4 +131,17 @@
       (go end_label)
      end_label
       (return (values dbi nil)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::dbi fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo :arg-types '((double-float))
+                                            :return-values '(nil)
+                                            :calls '(fortran-to-lisp::dbie
+                                                     fortran-to-lisp::xermsg
+                                                     fortran-to-lisp::dcsevl
+                                                     fortran-to-lisp::d9aimp
+                                                     fortran-to-lisp::initds
+                                                     fortran-to-lisp::d1mach))))
 

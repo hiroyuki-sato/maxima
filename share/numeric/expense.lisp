@@ -66,23 +66,21 @@
          "A MACSYMA list of currently known CRAY-1 vector merge operations."
          modified-commands '($block_optimize $expense))
 
-(declare (fixnum ($expense notype) (multiplies-in-nth-power notype)))
-
 (defun multiplies-in-nth-power (nth)
    (cond ((< nth 2) 0)
          (t
-          (let ((slow (bigp nth)))
-            (do ((exin nth (cond (slow (difference exin (times pw2 rem)))
+          (let ((slow (bignump nth)))
+            (do ((exin nth (cond (slow (- exin (* pw2 rem)))
                                  (t (- exin (* pw2 rem)))))
                  (rem 0)
                  (in-cut -2 (+ 1 in-cut rem))
-                 (pw2 1 (cond (slow (plus pw2 pw2))
+                 (pw2 1 (cond (slow (+ pw2 pw2))
                               (t (+ pw2 pw2)))))
                 ((or (zerop exin) (> in-cut $cost_float_power))
                  (cond ((< in-cut $cost_float_power) in-cut)
                        (t $cost_float_power)))
               (declare (fixnum exin rem in-cut pw2))
-              (setq rem (cond (slow (remainder (quotient exin pw2) 2))
+              (setq rem (cond (slow (rem (quotient exin pw2) 2))
                               (t (\ (// exin pw2) 2)))))))))
 
 ;;; the following macro is courtesy of gjc.
@@ -98,7 +96,7 @@
 (defun $expense (x)
   (cond (($mapatom x) 0)
         (t (let ((opr (caar x)))
-             (cond ((memq opr '(mplus mtimes))
+             (cond ((member opr '(mplus mtimes) :test #'eq)
                     (let ((cl (+ (- (length x) 2)
                                  (eval&reduce '+ '$expense (cdr x)))))
                       (cond ((and (eq opr 'mtimes) (equal -1 (cadr x))) (1- cl))
@@ -117,7 +115,7 @@
                                            (t $cost_sin_cos_log))))))))
                    ((eq opr 'mminus) ($expense (cadr x)))
                    ((eq opr '%sqrt) (+ $cost_sqrt ($expense (cadr x))))
-                   ((memq opr $merge_ops) (+ 4
+                   ((member opr $merge_ops :test #'eq) (+ 4
                                              ($expense (cadr x))
                                              ($expense (caddr x))
                                              ($expense (cadddr x))))
@@ -126,9 +124,9 @@
                            (+ $cost_reciprocal ($expense (caddr x))))
                           (t (+ (* $cost_divide (- (length x) 2))
                                 (eval&reduce '+ '$expense (cdr x))))))
-                   ((memq opr '(%acos %asin %atan %cosh %sinh %tan %tanh))
+                   ((member opr '(%acos %asin %atan %cosh %sinh %tan %tanh) :test #'eq)
                     (+ $cost_hyper_trig ($expense (cadr x))))
-                   ((memq opr '(%cos %log %sin))
+                   ((member opr '(%cos %log %sin) :test #'eq)
                     (+ $cost_sin_cos_log ($expense (cadr x))))
                    ((eq opr '$atan2)
                     (+ $cost_hyper_trig ($expense (cadr x)) ($expense (caddr x))))

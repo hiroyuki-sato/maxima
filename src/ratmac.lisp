@@ -8,41 +8,30 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module ratmac macro)
 
 ;; Macros for manipulating rational functions.
 
 (defmacro pcoefp (e) `(atom ,e))
 
-
-
-#-cl
-(defmacro pzerop (x) `(signp e ,x))	;TRUE FOR 0 OR 0.0
-;;;(DEFMACRO PZEROP (X) `(LET ((gg1032 ,X)) (AND (NUMBERP gg1032) (ZEROP gg1032))))
-
 (proclaim '(inline pzerop))
-#+cl
-(defun pzerop (x) (if (fixnump x) (zerop (the fixnum x))
-		      (if (consp x) nil
-			  (and (floatp x) (zerop x)))))
+(defun pzerop (x)
+  (if (fixnump x)
+      (zerop (the fixnum x))
+      (if (consp x)
+	  nil
+	  (and (floatp x) (zerop x)))))
 
-#+cl
 (defmacro pzero () 0)
 (defmacro ptzerop (terms) `(null ,terms)) ;for poly terms
 (defmacro ptzero () '())
 
-#-cl
-(defmacro czerop (c) `(signp e ,c))
-#+cl
 (defmacro czerop (c) `(pzerop ,c))
 
-(defmacro cminus (c) `(minus ,c))
+(defmacro cminus (c) `(- ,c))
 (defmacro cminusp (c) `(minusp ,c))
-(defmacro cderivative (ign ign1)ign ign1 0)
-
-;; Similar to REMOVE on the Lisp Machine
-(defmacro delet (item llist) `(zl-delete ,item (copy-top-level ,llist )))
 
 ;; the rational function package uses GENSYM's to represent variables.
 ;; The PDP-10 implementation used to use the PRINTNAME of the gensym
@@ -52,14 +41,33 @@
 ;; cell. Actually, better to use the PACKAGE slot, a kludge is a kludge right?
 
 (defmacro valget (item)
-  #+nil `(get ,item 'gensymval)
-  #-nil `(symbol-value ,item))
+  `(symbol-value ,item))
 
 (defmacro valput (item val)
-  `(setf (valget ,item) ,val))
+  `(setf (symbol-value ,item) ,val))
+
+;; A historical note from Richard Fateman, on the maxima list,
+;; 2006/03/17:
+;;
+;; "The name pointerp comes from the original hack when we wanted a
+;; bunch of atoms that could be ordered fast, we just generated, say,
+;; 10 gensyms.  Then we sorted them by the addresses of the symbols in
+;; memory.  Then we associated them with x,y,z,....  This meant that
+;; pointergp was one or two instructions on a PDP-10, in assembler."
+;; 
+;; "That version of pointergp turned out to be more trouble than it was
+;; worth because we sometimes had to interpolate between two gensym
+;; "addresses" and to do that we had to kind of renumber too much of
+;; the universe.  Or maybe we just weren't clever enough to do it
+;; without introducing bugs."
+;;
+;; Richard Fateman also says pointergp needs to be fast because it's
+;; called a lot.  So if you get an error from pointergp, it's probably
+;; because someone forgot to initialize things correctly.
 
 (proclaim '(inline pointergp))
-(defun pointergp (a b) (f> (valget a) (valget b)))
+(defun pointergp (a b)
+  (> (symbol-value a) (symbol-value b)))
 
 ;;(macro ALGV (L) `(AND $ALGEBRAIC (GET ,(CADR L) 'TELLRAT)))
 (defmacro algv (v)
@@ -75,8 +83,7 @@
 
 ;;poly constructor
 
-(defmacro make-poly (var &optional (terms-or-e nil options?) (c nil e-c?)
-		     (terms nil terms?))
+(defmacro make-poly (var &optional (terms-or-e nil options?) (c nil e-c?) (terms nil terms?))
   (cond ((null options?) `(cons ,var '(1 1)))
 	((null e-c?) `(psimp ,var ,terms-or-e))
 	((null terms?) `(list ,var ,terms-or-e ,c))
@@ -118,20 +125,3 @@
 
 
 (defvar $ratvarswitch t)
-
-;;(defvar *rational-function-files* '(
-;;ratmac
-;;rat3a
-;;rat3b
-;;rat3c
-;;rat3e
-;;nrat4
-;;ratout
-;;lesfac
-;;factor
-;;algfac
-;;nalgfa
-;;newfac
-;;ufact
-;;result
-;;spgcd))

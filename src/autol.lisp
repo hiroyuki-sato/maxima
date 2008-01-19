@@ -1,4 +1,4 @@
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;; These are the helper functions for autoloading.
 ;; The actual autoloading data is in src/max_ext.lisp
@@ -12,7 +12,7 @@
     (setq tem ($file_search1 file '((mlist)
 				    $file_search_lisp
 				    $system)))
-    (and tem (load tem))))
+    (and tem #-sbcl (load tem) #+sbcl (with-compilation-unit nil (load tem)))))
 
 (defun $aload_mac (file &aux *load-verbose* tem)
   (let (($system  (list  '(mlist)

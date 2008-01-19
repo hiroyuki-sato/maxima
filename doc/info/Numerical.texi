@@ -1,14 +1,14 @@
 @menu
 * Introduction to Numerical::   
 * Fourier packages::                     
-* Definitions for Numerical::   
-* Definitions for Fourier Series::
+* Functions and Variables for Numerical::   
+* Functions and Variables for Fourier Series::
 @end menu
 
 @node Introduction to Numerical, Fourier packages, Numerical, Numerical
 @section Introduction to Numerical
 
-@node Fourier packages, Definitions for Numerical, Introduction to Numerical, Numerical
+@node Fourier packages, Functions and Variables for Numerical, Introduction to Numerical, Numerical
 @section Fourier packages
 The @code{fft} package comprises functions for the numerical (not symbolic) computation
 of the fast Fourier transform.
@@ -20,12 +20,12 @@ of Fourier series.
 @code{load ("fourie")} loads this package.
 There are functions in the @code{fourie} package to calculate Fourier integral
 coefficients and some functions for manipulation of expressions.
-See @code{Definitions for Fourier Series}.
+See @code{Functions and Variables for Fourier Series}.
 
 @c end concepts Numerical
 
-@node Definitions for Numerical, Definitions for Fourier Series, Fourier packages, Numerical
-@section Definitions for Numerical
+@node Functions and Variables for Numerical, Functions and Variables for Fourier Series, Fourier packages, Numerical
+@section Functions and Variables for Numerical
 @c NOTE: Let's keep POLARTORECT, RECTTOPOLAR, and IFT before FFT
 @c in this file. Otherwise DESCRIBE returns the FFT text (because
 @c POLARTORECT, etc are list in the heading of FFT with @defunx).
@@ -205,7 +205,7 @@ quoting an argument defeats evaluation.
 
 Examples:
 
-@example
+@verbatim
 (%i1) expr: (a + b)^12$
 (%i2) fortran (expr);
       (b+a)**12                                                                 
@@ -214,9 +214,9 @@ Examples:
       x = (b+a)**12                                                             
 (%o3)                         done
 (%i4) fortran ('x=expand (expr));
-      x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792        
-     1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b        
-     2   **3+66*a**10*b**2+12*a**11*b+a**12                                     
+      x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+     1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+     2   **3+66*a**10*b**2+12*a**11*b+a**12
 (%o4)                         done
 (%i5) fortran ('x=7+5*%i);
       x = (7,5)                                                                 
@@ -228,7 +228,7 @@ Examples:
 (%i8) fortran (f);
       f                                                                         
 (%o8)                         done
-@end example
+@end verbatim
 
 @end deffn
 
@@ -270,146 +270,137 @@ To reenable the Lisp debugger set *debugger-hook* to nil.
 
 @end deffn
 
-@c NEEDS WORK
-@deffn {Function} interpolate (@var{f}(@var{x}), @var{x}, @var{a}, @var{b})
-@deffnx {Function} interpolate (@var{f}, @var{a}, @var{b})
-Finds the zero of function @var{f} as variable @var{x} varies over the range @code{[@var{a}, @var{b}]}.
-The function must have a
-different sign at each endpoint.  If this condition is not met, the
-action of the function is governed by @code{intpolerror}.  If
-@code{intpolerror} is @code{true} then an error occurs, otherwise the value of
-@code{intpolerror} is returned (thus for plotting @code{intpolerror} might be set to
-0.0).  Otherwise (given that Maxima can evaluate the first argument
-in the specified range, and that it is continuous) @code{interpolate} is
-guaranteed to come up with the zero (or one of them if there is more
-than one zero).  The accuracy of @code{interpolate} is governed by
-@code{intpolabs} and @code{intpolrel} which must be non-negative floating
-point numbers.  @code{interpolate} will stop when the first arg evaluates to
-something less than or equal to @code{intpolabs} or if successive
-approximants to the root differ by no more than @code{intpolrel * <one of the approximants>}.
-The default values of @code{intpolabs} and @code{intpolrel} are
-0.0 so @code{interpolate} gets as good an answer as is possible with the
-single precision arithmetic we have.  The first arg may be an
-equation.  The order of the last two args is irrelevant.  Thus
+@deffn {Function} find_root (@var{expr}, @var{x}, @var{a}, @var{b})
+@deffnx {Function} find_root (@var{f}, @var{a}, @var{b})
+@deffnx {Option variable} find_root_error
+@deffnx {Option variable} find_root_abs
+@deffnx {Option variable} find_root_rel
 
-@example
-interpolate (sin(x) = x/2, x, %pi, 0.1);
-@end example
+Finds a root of the expression @var{expr} or the function @var{f}
+over the closed interval @math{[@var{a}, @var{b}]}.
+The expression @var{expr} may be an equation,
+in which case @code{find_root} seeks a root of @code{lhs(@var{expr}) - rhs(@var{expr})}.
 
-is equivalent to
+Given that Maxima can evaluate @var{expr} or @var{f} over @math{[@var{a}, @var{b}]}
+and that @var{expr} or @var{f} is continuous,
+@code{find_root} is guaranteed to find the root,
+or one of the roots if there is more than one.
 
-@example
-interpolate (sin(x) = x/2, x, 0.1, %pi);
-@end example
+@code{find_root} initially applies binary search.
+If the function in question appears to be smooth enough,
+@code{find_root} applies linear interpolation instead.
 
-The method used is a binary search in the range specified by the last
-two args.  When it thinks the function is close enough to being
-linear, it starts using linear interpolation.
+The accuracy of @code{find_root} is governed by @code{find_root_abs} and @code{find_root_rel}.
+@code{find_root} stops when the function in question
+evaluates to something less than or equal to @code{find_root_abs},
+or if successive approximants @var{x_0}, @var{x_1} differ by no more than
+@code{find_root_rel * max(abs(x_0), abs(x_1))}.
+The default values of @code{find_root_abs} and @code{find_root_rel} are both zero.
 
-@c PREVIOUS EXAMPLE STUFF
+@code{find_root} expects the function in question to have a different sign at the endpoints
+of the search interval.
+If this condition is not met,
+the behavior of @code{find_root} is governed by @code{find_root_error}.
+When @code{find_root_error} is @code{true},
+@code{find_root} prints an error message.
+Otherwise @code{find_root} returns the value of @code{find_root_error}.
+The default value of @code{find_root_error} is @code{true}.
+
+If @var{f} evaluates to something other than a number at any step in the search algorithm,
+@code{find_root} returns a partially-evaluated @code{find_root} expression.
+
+The order of @var{a} and @var{b} is ignored;
+the region in which a root is sought is @math{[min(@var{a}, @var{b}), max(@var{a}, @var{b})]}.
+
+Examples:
+@c PREVIOUS EXAMPLE STUFF -- MAY WANT TO BRING TRANSLATE BACK INTO THE EXAMPLE
 @c f(x):=(mode_declare(x,float),sin(x)-x/2.0);
 @c interpolate(sin(x)-x/2,x,0.1,%pi)       time= 60 msec
 @c interpolate(f(x),x,0.1,%pi);            time= 68 msec
 @c translate(f);
 @c interpolate(f(x),x,0.1,%pi);            time= 26 msec
 @c interpolate(f,0.1,%pi);                 time=  5 msec
-@c
-@c STUFF BELOW GENERATED FROM THE FOLLOWING
+
+@c ===beg===
 @c f(x) := sin(x) - x/2;
-@c interpolate (sin(x) - x/2, x, 0.1, %pi);
-@c interpolate (sin(x) = x/2, x, 0.1, %pi);
-@c interpolate (f(x), x, 0.1, %pi);
-@c interpolate (f, 0.1, %pi);
+@c find_root (sin(x) - x/2, x, 0.1, %pi);
+@c find_root (sin(x) = x/2, x, 0.1, %pi);
+@c find_root (f(x), x, 0.1, %pi);
+@c find_root (f, 0.1, %pi);
+@c find_root (exp(x) = y, x, 0, 100);
+@c find_root (exp(x) = y, x, 0, 100), y = 10;
+@c log (10.0);
+@c ===end===
 @example
 (%i1) f(x) := sin(x) - x/2;
                                         x
 (%o1)                  f(x) := sin(x) - -
                                         2
-(%i2) interpolate (sin(x) - x/2, x, 0.1, %pi);
+(%i2) find_root (sin(x) - x/2, x, 0.1, %pi);
 (%o2)                   1.895494267033981
-(%i3) interpolate (sin(x) = x/2, x, 0.1, %pi);
+(%i3) find_root (sin(x) = x/2, x, 0.1, %pi);
 (%o3)                   1.895494267033981
-(%i4) interpolate (f(x), x, 0.1, %pi);
+(%i4) find_root (f(x), x, 0.1, %pi);
 (%o4)                   1.895494267033981
-(%i5) interpolate (f, 0.1, %pi);
+(%i5) find_root (f, 0.1, %pi);
 (%o5)                   1.895494267033981
+(%i6) find_root (exp(x) = y, x, 0, 100);
+                            x
+(%o6)           find_root(%e  = y, x, 0.0, 100.0)
+(%i7) find_root (exp(x) = y, x, 0, 100), y = 10;
+(%o7)                   2.302585092994046
+(%i8) log (10.0);
+(%o8)                   2.302585092994046
 @end example
 
-There is also a Newton method interpolation routine. See @code{newton}.
-
 @end deffn
 
-@defvr {Option variable} intpolabs
-Default value: 0.0
-
-@code{intpolabs} is the accuracy of the @code{interpolate} command is
-governed by @code{intpolabs} and @code{intpolrel} which must be
-non-negative floating point numbers.  @code{interpolate} will stop when the
-first arg evaluates to something less than or equal to @code{intpolabs} or if
-successive approximants to the root differ by no more than @code{intpolrel * <one of the approximants>}.
-The default values of @code{intpolabs} and
-@code{intpolrel} are 0.0 so @code{interpolate} gets as good an answer as is possible
-with the single precision arithmetic we have.
-
-@end defvr
-
-@defvr {Option variable} intpolerror
-Default value: @code{true}
-
-@code{intpolerror} governs the behavior of @code{interpolate}.
-When @code{interpolate} is called, it determines whether or not the function
-to be interpolated satisfies the condition that the values of the
-function at the endpoints of the interpolation interval are opposite
-in sign.  If they are of opposite sign, the interpolation proceeds.
-If they are of like sign, and @code{intpolerror} is @code{true}, then an error is
-signaled.  If they are of like sign and @code{intpolerror} is not @code{true}, the
-value of @code{intpolerror} is returned.  Thus for plotting, @code{intpolerror}
-might be set to 0.0.
-
-@end defvr
-
-@defvr {Option variable} intpolrel
-Default value: 0.0
-
-@code{intpolrel} is the accuracy of the @code{interpolate} command is
-governed by @code{intpolabs} and @code{intpolrel} which must be
-non-negative floating point numbers.  @code{interpolate} will stop when the
-first arg evaluates to something less than or equal to @code{intpolabs} or if
-successive approximants to the root differ by no more than @code{intpolrel * <one of the approximants>}.
-The default values of @code{intpolabs} and
-@code{intpolrel} are 0.0 so @code{interpolate} gets as good an answer as is possible
-with the single precision arithmetic we have.
-
-@end defvr
-
-@c NEEDS WORK
-@c SEARCHING THE SHARE DIRECTORY TURNS UP SOME OTHER "NEWTON" FUNCTIONS
-@c share/contrib/mnewton.mac
-@c share/numeric/newton.mac
-@c THERE MAY WELL BE OTHERS
 @deffn {Function} newton (@var{expr}, @var{x}, @var{x_0}, @var{eps})
-Interpolation by Newton's method. @code{load ("newton1")} loads this function.
+Returns an approximate solution of @code{@var{expr} = 0} by Newton's method,
+considering @var{expr} to be a function of one variable, @var{x}.
+The search begins with @code{@var{x} = @var{x_0}}
+and proceeds until @code{abs(@var{expr}) < @var{eps}}
+(with @var{expr} evaluated at the current value of @var{x}).
 
-@code{newton} can handle some expressions
-that @code{interpolate} refuses to handle, since @code{interpolate} requires
-that everything evaluate to a floating point number.
-Thus @code{newton (x^2 - a^2, x, a/2, a^2/100)}
-complains that it can't tell if @code{6.098490481853958E-4 a^2 < a^2/100}.
-After @code{assume (a>0)}, the same function call succeeds,
-yielding a symbolic result, @code{1.00030487804878 a}.
+@code{newton} allows undefined variables to appear in @var{expr},
+so long as the termination test @code{abs(@var{expr}) < @var{eps}} evaluates
+to @code{true} or @code{false}.
+Thus it is not necessary that @var{expr} evaluate to a number.
 
-On the other hand,
-@code{interpolate (x^2 - a^2, x, a/2, 2*a)} complains
-that @code{0.5 a} is not a floating point number.
+@code{load(newton1)} loads this function.
 
-An adaptive integrator which uses the Newton-Cotes 8 panel quadrature
-rule is available.  See @code{qq}.
+See also @code{realroots}, @code{allroots}, @code{find_root}, and @code{mnewton}.
 
-@c NEEDS EXAMPLES
+Examples:
+
+@c ===beg===
+@c load (newton1);
+@c newton (cos (u), u, 1, 1/100);
+@c ev (cos (u), u = %);
+@c assume (a > 0);
+@c newton (x^2 - a^2, x, a/2, a^2/100);
+@c ev (x^2 - a^2, x = %);
+@c ===end===
+@example
+(%i1) load (newton1);
+(%o1) /usr/share/maxima/5.10.0cvs/share/numeric/newton1.mac
+(%i2) newton (cos (u), u, 1, 1/100);
+(%o2)                   1.570675277161251
+(%i3) ev (cos (u), u = %);
+(%o3)                 1.2104963335033528E-4
+(%i4) assume (a > 0);
+(%o4)                        [a > 0]
+(%i5) newton (x^2 - a^2, x, a/2, a^2/100);
+(%o5)                  1.00030487804878 a
+(%i6) ev (x^2 - a^2, x = %);
+                                           2
+(%o6)                6.098490481853958E-4 a
+@end example
+
 @end deffn
 
-@node Definitions for Fourier Series, , Definitions for Numerical, Numerical
-@section Definitions for Fourier Series
+@node Functions and Variables for Fourier Series, , Functions and Variables for Numerical, Numerical
+@section Functions and Variables for Fourier Series
 
 @c REPHRASE
 @deffn {Function} equalp (@var{x}, @var{y})
@@ -462,10 +453,10 @@ returns the definite integral of @var{f} with respect to @var{x} from @var{a} to
 @c NEEDS EXAMPLES
 @end deffn
 
-@c NEEDS EXPANSION. WHAT IS THE ARGUMENT p ??
+@c NEEDS EXPANSION
 @deffn {Function} fourier (@var{f}, @var{x}, @var{p})
 Returns a list of the Fourier coefficients of @code{@var{f}(@var{x})} defined
-on the interval @code{[-%pi, %pi]}.
+on the interval @code{[-p, p]}.
 
 @c NEEDS EXAMPLES
 @end deffn
@@ -502,21 +493,21 @@ may be @code{inf}). @var{x} and @var{p} have same meaning as in
 @c NEEDS EXAMPLES
 @end deffn
 
-@c NEEDS EXPANSION. WHAT IS THE ARGUMENT p ??
+@c NEEDS EXPANSION
 @deffn {Function} fourcos (@var{f}, @var{x}, @var{p})
-Returns the Fourier cosine coefficients for @code{@var{f}(@var{x})} defined on @code{[0, %pi]}.
+Returns the Fourier cosine coefficients for @code{@var{f}(@var{x})} defined on @code{[0, @var{p}]}.
 
 @c NEEDS EXAMPLES
 @end deffn
 
-@c NEEDS EXPANSION. WHAT IS THE ARGUMENT p ??
+@c NEEDS EXPANSION
 @deffn {Function} foursin (@var{f}, @var{x}, @var{p})
-Returns the Fourier sine coefficients for @code{@var{f}(@var{x})} defined on @code{[0, %pi]}.
+Returns the Fourier sine coefficients for @code{@var{f}(@var{x})} defined on @code{[0, @var{p}]}.
 
 @c NEEDS EXAMPLES
 @end deffn
 
-@c NEEDS EXPANSION. WHAT IS THE ARGUMENT p ??
+@c NEEDS EXPANSION
 @deffn {Function} totalfourier (@var{f}, @var{x}, @var{p})
 Returns @code{fourexpand (foursimp (fourier (@var{f}, @var{x}, @var{p})), @var{x}, @var{p}, 'inf)}.
 

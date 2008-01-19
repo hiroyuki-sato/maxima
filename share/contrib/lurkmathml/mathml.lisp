@@ -1,4 +1,4 @@
-(in-package "MAXIMA")
+(in-package :maxima)
 ;; MathML-printing
 ;; Created by David Drysdale (DMD), December 2002/January 2003
 ;;
@@ -31,11 +31,7 @@
 
 (macsyma-module mathml)
 
-(declare-top
-	 (special lop rop ccol $gcprint texport $labels $inchar
-		  vaxima-main-dir
-		  )
-	 (*expr mathml-lbp mathml-rbp))
+(declare-top (special lop rop ccol $gcprint texport $labels $inchar vaxima-main-dir))
 
 ;; top level command the result of converting the expression x.
 
@@ -67,8 +63,8 @@
 	;; go back and analyze the first arg more thoroughly now.
 	;; do a normal evaluation of the expression in macsyma
 	(setq mexp (meval mexplabel))
-	(cond ((memq mexplabel $labels); leave it if it is a label
-	       (setq mexplabel (concat "(" (stripdollar mexplabel) ")"))
+	(cond ((member mexplabel $labels :test #'eq); leave it if it is a label
+	       (setq mexplabel (intern (format nil "(~a)" (stripdollar mexplabel))))
 	       (setq itsalabel t))
 	      (t (setq mexplabel nil)));flush it otherwise
 
@@ -82,7 +78,7 @@
 		    ((setq y (mget x 'aexpr))
 		     (setq mexp (list '(mdefine) (cons (list x 'array) (cdadr y)) (caddr y)))))))
 	(cond ((and (null (atom mexp))
-		    (memq (caar mexp) '(mdefine mdefmacro)))
+		    (member (caar mexp) '(mdefine mdefmacro) :test #'eq))
 	       (format texport "<pre>~%" ) 
 	       (cond (mexplabel (format texport "~a " mexplabel)))
                ;; need to get rid of "<" signs
@@ -131,7 +127,7 @@
                    (> (mathml-lbp rop) (mathml-rbp (caar x))))
 	       (mathml-paren x l r))
 	      ;; special check needed because macsyma notates arrays peculiarly
-	      ((memq 'array (cdar x)) (mathml-array x l r))
+	      ((member 'array (cdar x) :test #'eq) (mathml-array x l r))
 	      ;; dispatch for object-oriented mathml-ifiying
 	      ((get (caar x) 'mathml) (funcall (get (caar x) 'mathml) x l r))
 	      (t (mathml-function x l r nil))))
@@ -154,7 +150,7 @@
 (defun mathml-atom (x l r) 
   (append l
 	  (list (cond ((numberp x) (mathmlnumformat x))
-                      ((mstringp x) (string-left-trim '(#\&) x))
+                      ((mstringp x) (maybe-invert-string-case (string-left-trim '(#\&) x)))
 		      ((and (symbolp x) (get x 'mathmlword)))
 		      (t (mathml-stripdollar x))))
 	  r))
@@ -183,7 +179,7 @@
 (defun mathml-stripdollar(sym)
   (or (symbolp sym) 
       (return-from mathml-stripdollar sym))
-  (let* ((pname (string-left-trim '(#\$) (symbol-name sym)))
+  (let* ((pname (maybe-invert-string-case (string-left-trim '(#\$) (symbol-name sym))))
 	 (l (length pname))
 	 (begin-sub
 	  (sloop for i downfrom (1- l)
@@ -390,9 +386,9 @@
 		   (expon (caddr x)) ;; this is the exponent
 		   (doit (and
 			  f ; there is such a function
-			  (memq (getchar f 1) '(% $)) ;; insist it is a % or $ function
-                          (not (memq f '(%sum %product %derivative %integrate %at
-					      %lsum %limit))) ;; what else? what a hack...
+			  (member (getchar f 1) '(% $) :test #'eq) ;; insist it is a % or $ function
+                          (not (member f '(%sum %product %derivative %integrate %at
+					      %lsum %limit) :test #'eq)) ;; what else? what a hack...
 			  (or (and (atom expon) (not (numberp expon))) ; f(x)^y is ok
 			      (and (atom expon) (numberp expon) (> expon 0))))))
 			      ; f(x)^3 is ok, but not f(x)^-1, which could
@@ -415,7 +411,7 @@
 			(mathml x (list "</mrow> <mfenced separators=\"\" open=\"<\" close=\">\">")(cons "</mfenced></msup>" r) 'mparen 'mparen)
 			(if (and (numberp x) (< x 10))
 			    (mathml x (list "</mrow> ")(cons "</msup> " r) 'mparen 'mparen)
-			    (mathml x (list "</mrow> <mrow>")(cons "</mrow><mrow> " r) 'mparen 'mparen))
+			    (mathml x (list "</mrow> <mrow>")(cons "</mrow></msup> " r) 'mparen 'mparen))
 			)))))
       (append l r)))
 
@@ -557,7 +553,8 @@
 
 (defun mathml-mplus (x l r)
  ;(declare (fixnum w))
- (cond ((memq 'trunc (car x))(setq r (cons "<mo>+</mo><mtext>&ctdot;</mtext> " r))))
+ (cond ((member 'trunc (car x) :test #'eq)
+	(setq r (cons "<mo>+</mo><mtext>&ctdot;</mtext> " r))))
  (cond ((null (cddr x))
 	(if (null (cdr x))
 	    (mathml-function x l r t)

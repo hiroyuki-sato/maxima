@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((con
@@ -43,26 +43,25 @@
                                        -2813563.22658653 1268365.27332162
                                        -331645.172484564 45218.7689813627
                                        -2499.83048181121 24.3805296995561
-                                       3284469.85307204 -1.97068191184322e+7
-                                       5.09526024926646e+7 -7.41051482115327e+7
-                                       6.6344512274729e+7 -3.75671766607634e+7
-                                       1.32887671664218e+7 -2785618.12808645
+                                       3284469.85307204 -1.97068191184322e7
+                                       5.09526024926646e7 -7.41051482115327e7
+                                       6.6344512274729e7 -3.75671766607634e7
+                                       1.32887671664218e7 -2785618.12808645
                                        308186.404612662 -13886.089753717
                                        110.017140269247))))
   (declare (type (array double-float (65)) c)
            (type (array double-float (2)) con))
   (defun dasyik (x fnu kode flgik ra arg in y)
     (declare (type (array double-float (*)) y)
-             (type f2cl-lib:integer4 in kode)
-             (type double-float arg ra flgik fnu x))
+             (type (f2cl-lib:integer4) in kode)
+             (type (double-float) arg ra flgik fnu x))
     (f2cl-lib:with-multi-array-data
         ((y double-float y-%data% y-%offset%))
       (prog ((ak 0.0) (ap 0.0) (coef 0.0) (etx 0.0) (fn 0.0) (gln 0.0) (s1 0.0)
              (s2 0.0) (t$ 0.0) (tol 0.0) (t2 0.0) (z 0.0) (j 0) (jn 0) (k 0)
-             (kk 0) (l 0) (abs$ 0.0f0))
-        (declare (type single-float abs$)
-                 (type f2cl-lib:integer4 l kk k jn j)
-                 (type double-float z t2 tol t$ s2 s1 gln fn etx coef ap ak))
+             (kk 0) (l 0))
+        (declare (type (f2cl-lib:integer4) l kk k jn j)
+                 (type (double-float) z t2 tol t$ s2 s1 gln fn etx coef ap ak))
         (setf tol (f2cl-lib:d1mach 3))
         (setf tol (max tol 1.0e-15))
         (setf fn fnu)
@@ -107,14 +106,28 @@
                 (if (< (max (abs ak) (abs ap)) tol) (go label40))
                label30))
            label40
-            (setf t$ (coerce (abs t$) 'double-float))
-            (f2cl-lib:fset (f2cl-lib:fref y-%data% (jn) ((1 *)) y-%offset%)
-                           (* s2
-                              coef
-                              (f2cl-lib:fsqrt t$)
-                              (f2cl-lib:fref con (kk) ((1 2)))))
+            (setf t$ (abs t$))
+            (setf (f2cl-lib:fref y-%data% (jn) ((1 *)) y-%offset%)
+                    (* s2
+                       coef
+                       (f2cl-lib:fsqrt t$)
+                       (f2cl-lib:fref con (kk) ((1 2)))))
            label50))
         (go end_label)
        end_label
         (return (values nil nil nil nil ra arg nil nil))))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::dasyik
+                 fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo
+           :arg-types '((double-float) (double-float)
+                        (fortran-to-lisp::integer4) (double-float)
+                        (double-float) (double-float)
+                        (fortran-to-lisp::integer4) (array double-float (*)))
+           :return-values '(nil nil nil nil fortran-to-lisp::ra
+                            fortran-to-lisp::arg nil nil)
+           :calls '(fortran-to-lisp::d1mach))))
 

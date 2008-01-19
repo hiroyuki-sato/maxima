@@ -6,23 +6,6 @@
 ;;; (1) Construct floating point numbers using portable operations.
 ;;; (2) Construct large integers using all bits of each chunk.
 
-(defpackage "MT19937"
-  (:use :common-lisp)
-  (:shadow #:random-state
-       #:random-state-p
-       #:random
-       #:*random-state*
-       #:make-random-state)
-  (:export #:random-state
-       #:random-state-p
-       #:random
-       #:*random-state*
-       #:make-random-state
-       #:%random-single-float
-       #:%random-double-float
-       #:random-chunk
-       #:init-random-state))
-
 ;;; Begin MT19937 implementation.
 ;;; **********************************************************************
 ;;;
@@ -35,7 +18,7 @@
 ;;; generator.", ACM Transactions on Modeling and Computer Simulation,
 ;;; 1997, to appear.
 
-(in-package "MT19937")
+(in-package :mt19937)
 
 (defconstant mt19937-n 624)
 (defconstant mt19937-m 397)
@@ -338,7 +321,7 @@
 
 ;;; begin Maxima-specific stuff
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (defmfun $set_random_state (x)
   "Copy the argument, and assign the copy to MT19937::*RANDOM-STATE*.
@@ -358,7 +341,10 @@
 (defmfun $random (x)
   "Returns the next number from this generator.
   Punt to MT19937::RANDOM."
-  (mt19937::random x))
+  (if (and (or (integerp x) (floatp x))
+	   (> x 0))
+      (mt19937::random x)
+    (merror "Random requires a positive integer or float argument, not ~m" x)))
 
 ;;; end Maxima-specific stuff
 

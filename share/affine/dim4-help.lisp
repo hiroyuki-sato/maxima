@@ -1,16 +1,8 @@
 ;;; -*- Mode:Lisp; Package:CL-MAXIMA; Base:10 -*-
-(in-package "MAXIMA")
-
-
-;#+kcl
-;(defmacro sloop (&rest body) (sloop::parse-loop  body))
-
-#+lispm
-(defmacro sloop (&rest l) `(si::loop ,@ l))
-
+(in-package :maxima)
 
 (defun $complexity(v &optional sum)
-  (cond ((eql v 0)(if sum -1 '$Z))
+  (cond ((eql v 0)(if sum -1 '$z))
 	((mbagp v)
 	 (cond (sum
 		(loop for u in  (cdr v)
@@ -35,7 +27,7 @@
 	 (complexity-difference1 y x)))))
 
 (defun $pdegree(v va)
-  (cond ((eql v 0) '$Z)
+  (cond ((eql v 0) '$z)
 	((mbagp v)
 	 (cons (car v)
 	       (loop for w in (cdr v) collect ($pdegree w va))))
@@ -126,15 +118,14 @@
 
 (defun $row_less (a b) (> (number_zeros a) (number_zeros b)))
 
-(defun $Row_sort(mat pred)
+(defun $row_sort (mat pred)
   (cons '($matrix) (sort (copy-list (cdr mat)) pred)))
 
 (defun $reorder_matrix(mat &aux rows)
   (setq rows
 	(loop for u in (cdr mat)
-	collect (cons (loop for v in (cdr u) sum (gen-pcomplexity (st-rat v)))
-		      u)))
-  (setq rows (sortcar rows '<))
+	collect (cons (loop for v in (cdr u) sum (gen-pcomplexity (st-rat v))) u)))
+  (setq rows (sort rows #'< :key #'car))
   (cons '($matrix) (mapcar 'cdr rows)))
 
 (defun $best_row(mat &aux  tem at)
@@ -237,37 +228,38 @@ list of lists call this function on each of the lists independently."
 	     (cond ((numberp tem) (header-poly lis))
 		   (t (header-poly (pquotient lis tem))))))))
 
-#+lispm
-(defmacro sloop (&rest l)(cons 'loop l))
-
 (defun $linearize_nc (x)
-   (cond ((consp x)
-          (cond ((and (consp (car x)) (eq (caar x) 'mnctimes))
-		 (setf (car x) '(mtimes))
-		 (sloop for v on (cdr x)
-			for term in (cdr x)
-			for i from 1
-			do (setf (car v) (concat term i))))
-		(t (cons ($linearize_nc (car x)) ($linearize_nc (cdr x))))))
-	 (t x)))
+  (cond ((consp x)
+	 (cond ((and (consp (car x)) (eq (caar x) 'mnctimes))
+		(setf (car x) '(mtimes))
+		(loop for v on (cdr x)
+		   for term in (cdr x)
+		   for i from 1
+		   do (setf (car v) (intern (format nil "~a~d" term i)))))
+	       (t (cons ($linearize_nc (car x)) ($linearize_nc (cdr x))))))
+	(t x)))
 
 (defun $copy (x) (copy-tree x))
 
 (defun $linearize_nc_to_nc (x)
-   (cond ((consp x)
-          (cond ((and (consp (car x)) (eq (caar x) 'mnctimes))
-		 (sloop for v on (cdr x)
-			for term in (cdr x)
-			for i from 1
-			do (setf (car v) (concat term i))))
-		(t (cons ($linearize_nc_to_nc (car x)) ($linearize_nc_to_nc (cdr x)))))
-	  x)
-	 (t x)))
+  (cond ((consp x)
+	 (cond ((and (consp (car x)) (eq (caar x) 'mnctimes))
+		(loop for v on (cdr x)
+		   for term in (cdr x)
+		   for i from 1
+		   do (setf (car v) (intern (format nil "~a~d" term i)))))
+	       (t (cons ($linearize_nc_to_nc (car x)) ($linearize_nc_to_nc (cdr x)))))
+	 x)
+	(t x)))
 
-(defun times_4_n (n) (cond ((eql n 0) 1)
-			      (t (* 4 n))))
+(defun times_4_n (n)
+  (if (zerop n)
+      1
+      (* 4 n)))
 
-(defun hilbert_4(n) (round ($binomial (+ n 3) 3)))
+(defun hilbert_4(n)
+  (round ($binomial (+ n 3) 3)))
+
 (push 'hilbert_4 *all-rank-functions*)
 
 ;(sloop for i below 10 collect (list i (hilbert_tem i)))

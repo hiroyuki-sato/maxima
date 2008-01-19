@@ -56,9 +56,9 @@ kdelta([i,j,j],[1,2,3]);
 %,kdelta;
 0;
 contract(expand(lc2kdt('levi_civita([i,j,k],[])*a([],[j])*'levi_civita([],[k,l,n])*b([l],[])*c([n],[]))));
-a([],[j])*b([i],[])*c([j],[])-a([],[j])*b([j],[])*c([i],[]);
+a([],[n])*b([i],[])*c([n],[])-a([],[l])*c([i],[])*b([l],[]);
 contract(expand(lc2kdt('levi_civita([i,j,k],[])*a([],[j])*b([],[k])*'levi_civita([],[i,l,n])*c([l],[])*u([n],[]))));
-a([],[j])*b([],[k])*c([j],[])*u([k],[])-a([],[j])*b([],[k])*c([k],[])*u([j],[]);
+a([],[l])*b([],[n])*c([l],[])*u([n],[])-b([],[l])*a([],[n])*c([l],[])*u([n],[]);
 canform(contract(expand(applyb1('levi_civita([],[i,j,k])*a([j])*a([k]),lc_l,lc_u))));
 0;
 /* Frames, derivatives */
@@ -88,7 +88,7 @@ a([i])~b([j]);
 (a([i],[])*b([j],[])-a([j],[])*b([i],[]))/2;
 decsym(p,2,0,[anti(all)],[]);
 done;
-canform(extdiff(p([j,k]),i));
+factor(canform(extdiff(p([j,k]),i)));
 (p([j,k],[],i)-p([i,k],[],j)+p([i,j],[],k))/3;
 extdiff(a([j])~b([k]),k);
 0;
@@ -123,4 +123,6 @@ done;
 apply(ev,[contract(apply(ev,[contract(apply(ev,[det(H),nouns,expand])),nouns])),nouns]);
 1;
 /* TODO: ic_convert */
+ic_convert(f([a],[b])=g([],[b,c])*(B([a],[],c)-C([],[d])*g([a,d],[],c)));
+for a thru dim do (for b thru dim do f[a,b]:sum(ug[b,c]*diff(B[a],ct_coords[c]),c,1,dim)-sum(sum(ug[b,c]*C[d]*diff(lg[a,d],ct_coords[c]),c,1,dim),d,1,dim));
 /* TODO: torsion, nonmetricity tensors, connection coeffs */

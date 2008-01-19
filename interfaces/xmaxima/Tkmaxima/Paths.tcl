@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Paths.tcl,v 1.15.2.1 2005/09/25 07:43:14 vvzhy Exp $
+#       $Id: Paths.tcl,v 1.26 2007/02/25 10:34:36 vvzhy Exp $
 #
 # Attach this near the bottom of the xmaxima code to find the paths needed
 # to start up the interface.
@@ -140,7 +140,7 @@ proc setMaxDir {} {
     }
 
     # omplotdata messages
-    ::msgcat::mcload [file join $maxima_priv(maxima_verpkgdatadir) msgs]
+    #::msgcat::mcload [file join $maxima_priv(maxima_verpkgdatadir) msgs]
 
     if {[info exists maxima_priv(maxima_verpkglibdir)]} {
 	# drop through
@@ -168,6 +168,82 @@ proc setMaxDir {} {
     # xmaxima messages
     ::msgcat::mcload [file join $maxima_priv(maxima_xmaximadir) msgs]
 
+    # Define maxima_lang_subdir
+    if { [info exists env(MAXIMA_LANG_SUBDIR)] } {
+	set maxima_priv(maxima_lang_subdir) $env(MAXIMA_LANG_SUBDIR)
+    } else {
+	if { $tcl_platform(platform) == "windows" } {
+    	    set wlocale [ ::msgcat::mclocale ]
+	} else {
+    	    set wlocale ""
+	    if { [info exists env(LC_ALL)] } { 
+		set wlocale $env(LC_ALL) 
+	    } elseif { [info exists env(LC_MESSAGES)] } { 
+		set wlocale $env(LC_MESSAGES) 
+	    } elseif { [info exists env(LANG)] } { 
+		set wlocale $env(LANG) }
+	}	
+	# Only languages known to Maxima
+	set wlocale [string tolower $wlocale]
+	switch -glob $wlocale {
+	  "es*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "es.utf8"
+		}
+	  "es*" {
+		    set maxima_priv(maxima_lang_subdir) "es"
+		}
+	  "pt_br*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "pt_BR.utf8"
+		}
+	  "pt_br*" {
+		    set maxima_priv(maxima_lang_subdir) "pt_BR"
+		}
+	  "pt*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "pt.utf8"
+		}
+	  "pt*" {
+		    set maxima_priv(maxima_lang_subdir) "pt"
+		}
+	  "de*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "de.utf8"
+		}
+	  "de*" {
+		    set maxima_priv(maxima_lang_subdir) "de"
+		}
+	  "fr*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "fr.utf8"
+		}
+	  "fr*" {
+		    set maxima_priv(maxima_lang_subdir) "fr"
+		}
+	  "it*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "it.utf8"
+		}
+	  "it*" {
+		    set maxima_priv(maxima_lang_subdir) "it"
+		}
+	  "ru*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "ru.utf8"
+		}
+	  "ru*koi*" {
+		    set maxima_priv(maxima_lang_subdir) "ru.koi8r"
+		}
+	  "ru*" {
+		    set maxima_priv(maxima_lang_subdir) "ru"
+		}
+	  default 
+	        {
+		    set maxima_priv(maxima_lang_subdir) ""
+		}
+	}
+	#puts $maxima_priv(maxima_lang_subdir)
+    }
+
+    # On Windows ::msgcat::mclocale is a good way to derive locale 
+    if { $tcl_platform(platform) == "windows" } {
+	    set env(LANG) [ ::msgcat::mclocale ]
+    }
+
     # Bring derived quantities up here too so we can see the
     # side effects of setting the above variables
 
@@ -178,8 +254,21 @@ proc setMaxDir {} {
 	    [file join $dir maxima_toc.html]
     } elseif {[file isdir [set dir [file join  $maxima_priv(maxima_verpkgdatadir) doc]]]} {
 	# 5.9 and up
-	set maxima_priv(pReferenceToc) \
-	    [file join $dir html maxima_toc.html]
+        if { $tcl_platform(platform) == "windows" } {
+	    if { $maxima_priv(maxima_lang_subdir) != "" && \
+		 [file exists [file join $dir chm $maxima_priv(maxima_lang_subdir) maxima.chm] ] } {
+		set maxima_priv(pReferenceToc) [file join $dir chm $maxima_priv(maxima_lang_subdir) maxima.chm]
+	    } else {
+		set maxima_priv(pReferenceToc) [file join $dir chm maxima.chm]
+	    }
+	} else {
+	    if { $maxima_priv(maxima_lang_subdir) != "" && \
+		 [file exists [file join $dir html $maxima_priv(maxima_lang_subdir) maxima_toc.html] ] } {
+		set maxima_priv(pReferenceToc) [file join $dir html $maxima_priv(maxima_lang_subdir) maxima_toc.html]
+	    } else {
+		set maxima_priv(pReferenceToc) [file join $dir html maxima_toc.html]
+	    }
+	}
     } else {
 	tide_notify [M [mc "Documentation not found in '%s'"] \
 			 [file native  $maxima_priv(maxima_verpkgdatadir)]]
@@ -253,7 +342,6 @@ proc setMaxDir {} {
 proc vMAXSetMaximaCommand {} {
     global maxima_priv tcl_platform env
 
-    set maxima_opts [lMaxInitSetOpts]
     set maxima_priv(localMaximaServer) ""
 
     if {[info exists maxima_priv(xmaxima_maxima)] && \
@@ -312,7 +400,7 @@ proc vMAXSetMaximaCommand {} {
 
     set command {}
     lappend command $exe
-    eval lappend command  $maxima_opts
+    eval lappend command $maxima_priv(opts)
 
     # FIXME: This is gcl specific so -lisp option is bogus
     if {$tcl_platform(os) == "Windows 95"} {

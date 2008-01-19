@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Myhtml.tcl,v 1.11 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: Myhtml.tcl,v 1.15 2006/10/01 23:58:29 villate Exp $
 #
 ###### Myhtml.tcl ######
 ############################################################
@@ -379,7 +379,7 @@ defTag ul -alter {Aindent 1} -body { xHMlistEnter
 
 #defTag p -before "\n\n" -sbody {}
 #defTag p -before "\n\n" -sbody {}
-defTag p -body { xHMassureNewlines 1 } -sbody {}
+defTag p -before "\n" -body { xHMassureNewlines 1 } -sbody { xHMassureNewlines 1 }
 defTag blockquote -before "\n\n" -after "\n"
 defTag pre -alter {family fixed Cnowrap nowrap} -before "\n" /pre "\n"
 defTag samp -alter {family fixed}
@@ -413,8 +413,10 @@ defTag font -body {
 	xHMalterFont $win adjust
     }
 
+proc notyet { args } {
+    puts [concat [mc "not yet"] "$args"]
+}
 
-proc notyet { args } 	{puts [concat [mc "not yet"] "$args"] }
 defTag isindex -body xHMdo_isindex -sbody {}
 defTag meta -body list -sbody list
 defTag form  -before "\n" -after "\n"  -body {
@@ -900,8 +902,8 @@ proc xHMinsertBullet { win i } {
 }
 
 defTag th -body list
-defTag td -body list
-defTag tr -body list
+defTag td -body list -after "\t\t\t\t"
+defTag tr -body list -after "\n"
 
 
 
@@ -1083,9 +1085,12 @@ proc xHMsetDefaultPreferences {} {
 }
 
 xHMsetDefaultPreferences
-catch { source ~/netmath.ini }
+catch { source ~/.xmaximarc }
 
-proc dputs {x}  { puts $x ; flush stdout}
+proc dputs {x} {
+    puts $x ; flush stdout
+}
+
 proc xHMinit_state { win args } {
     upvar #0 xHMvar$win wvar
     upvar #0 xHMtaglist$win taglist
@@ -1395,20 +1400,27 @@ proc xHMparse_html {html {cmd HMtest_parse} {firstTag hmstart}} {
     #dputs "beginning parse"
 
      global meee ; set meee $html;
-	regsub -all \} <$firstTag>\n$html\n</$firstTag> {\&cb;} html
-        #dputs "beginning parse1"
-	regsub -all \{ $html {\&ob;} html
-        # prevent getting \} \{ or \\n in a braces expression.
-    	regsub -all "\\\\(\[\n<>])" $html "\\&#92;\\1" html
-	#regsub -all "<(/?)(\[^ \t\n\r>]+)\[ \t\n\r\]*(\[^>]*)>" $html \
-		"\}\n$cmd {\\2} {\\1} {\\3} \{" html
-    	regsub -all "<(\[^ \t\n\r>]+)\[ \t\n\r\]*(\[^>]*)>" $html \
-		"\}\n$cmd {\\1}  {\\2} \{" html
-        # puts "<html=$html>"
-        #dputs "beginning end splitparse1"
+     regsub -all {(['\"])\./\.\.} $html {\1..} html 
+     regsub -- "^.*<!DOCTYPE\[^>\]*>" $html {} html
+     regsub -all -- "--(\[ \t\n\]*)>" $html "\001\\1\002" html
+     regsub -all -- "<--(\[^\001\]*)\001(\[^\002\]*)\002" $html \
+	 {\&lt;--\1--\2\&gt;} html
+     regsub -all -- "<!--\[^\001\]*\001(\[^\002\]*)\002"  $html {} html
 
-        #dputs "list {$html}"
-	eval "list {$html}"
+     regsub -all \} <$firstTag>\n$html\n</$firstTag> {\&cb;} html
+     #dputs "beginning parse1"
+     regsub -all \{ $html {\&ob;} html
+     # prevent getting \} \{ or \\n in a braces expression.
+     regsub -all "\\\\(\[\n<>])" $html "\\&#92;\\1" html
+     #regsub -all "<(/?)(\[^ \t\n\r>]+)\[ \t\n\r\]*(\[^>]*)>" $html \
+	 "\}\n$cmd {\\2} {\\1} {\\3} \{" html
+     regsub -all "<(\[^ \t\n\r>]+)\[ \t\n\r\]*(\[^>]*)>" $html \
+	 "\}\n$cmd {\\1}  {\\2} \{" html
+     # puts "<html=$html>"
+     #dputs "beginning end splitparse1"
+
+     #dputs "list {$html}"
+     eval "list {$html}"
 
 }
 

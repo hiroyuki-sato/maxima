@@ -1,19 +1,19 @@
 @menu
 * Introduction to Integration::  
-* Definitions for Integration::  
+* Functions and Variables for Integration::  
+* Introduction to QUADPACK::
+* Functions and Variables for QUADPACK::
 @end menu
 
-@node Introduction to Integration, Definitions for Integration, Integration, Integration
+@node Introduction to Integration, Functions and Variables for Integration, Integration, Integration
 @section Introduction to Integration
 
 Maxima has several routines for handling integration.
 The @code{integrate} function makes use of most of them.  There is also the
 @code{antid} package, which handles an unspecified function (and its
-derivatives, of course).  For numerical uses, there is the @code{romberg}
-function; an
-adaptave integrator which uses the Newton-Cotes 8 panel quadrature
-rule, called @code{quanc8}; and a set of adaptive integrators from Quadpack,
-named @code{quad_qag}, @code{quad_qags}, etc.
+derivatives, of course).  For numerical uses,
+there is a set of adaptive integrators from QUADPACK,
+named @code{quad_qag}, @code{quad_qags}, etc., which are described under the heading @code{QUADPACK}.
 Hypergeometric functions are being worked on,
 see @code{specint} for details.
 Generally speaking, Maxima only handles integrals which are
@@ -23,8 +23,8 @@ extensions (error function, dilogarithm).  It does not handle
 integrals in terms of unknown functions such as @code{g(x)} and @code{h(x)}.
 
 @c end concepts Integration
-@node Definitions for Integration,  , Introduction to Integration, Integration
-@section Definitions for Integration
+@node Functions and Variables for Integration, Introduction to QUADPACK, Introduction to Integration, Integration
+@section Functions and Variables for Integration
 
 @c NEEDS WORK
 @deffn {Function} changevar (@var{expr}, @var{f(x,y)}, @var{y}, @var{x})
@@ -381,7 +381,7 @@ log(x-4)/73-('integrate((x^2+4*x+18)/(x^3+2*x+1),x))/73$
 Defining a function in terms of an integral.
 The body of a function is not evaluated when the function is defined.
 Thus the body of @code{f_1} in this example contains the noun form of @code{integrate}.
-The double-single-quotes operator @code{'@w{}'} causes the integral to be evaluated,
+The quote-quote operator @code{'@w{}'} causes the integral to be evaluated,
 and the result becomes the body of @code{f_2}.
 
 @example
@@ -452,11 +452,11 @@ integral will be expressed as a summation over the roots of the denominator of t
 (%o4) ----------------------------------------------------------
                7
 
-                                                             2 x + 1
-                                         2            5 atan(-------)
-                                    log(x  + x + 1)          sqrt(3)
-                                  - --------------- + ---------------
-                                          14             7 sqrt(3)
+                                                      2 x + 1
+                                  2            5 atan(-------)
+                             log(x  + x + 1)          sqrt(3)
+                           - --------------- + ---------------
+                                   14             7 sqrt(3)
 @end example
 
 Alternatively the user may compute the roots of the denominator separately,
@@ -499,48 +499,6 @@ sides in the latter.  The indicated right-hand sides are used as the
 lower limit of integration.  The success of the integrations may
 depend upon their values and order. @code{potentialzeroloc} is initially set
 to 0.
-
-@end deffn
-
-@c THIS ITEM IS A MESS BUT DON'T BOTHER TO FIX IT:
-@c THE GAUSS-KRONROD FUNCTIONS (QUADPACK) MAKE THIS OBSOLETE
-@deffn {Function} qq
-The package @code{qq} (which may be loaded with @code{load ("qq")})
-contains a function @code{quanc8} which can take either 3 or 4 arguments. The
-3 arg version computes the integral of the function specified as the
-first argument over the interval from lo to hi as in
-@code{quanc8 ('function, lo, hi)}.
-The function name should be quoted.  The 4 arg version will compute
-the integral of the function or expression (first arg) with respect to
-the variable (second arg) over the interval from @code{lo} to @code{hi} as in
-@code{quanc8(<f(x) or expression in x>, x, lo, hi)}.
-The method used is the Newton-Cotes 8th order polynomial quadrature,
-and the routine is adaptive. It will thus spend time dividing the
-interval only when necessary to achieve the error conditions specified
-by the global variables @code{quanc8_relerr} (default value=1.0e-4) and
-@code{quanc8_abserr} (default value=1.0e-8) which give the relative error
-test:
-
-@example
-|integral(function) - computed value| < quanc8_relerr*|integral(function)|
-@end example
-
-and the absolute error test:
-
-@example
-|integral(function) - computed value| < quanc8_abserr
-@end example
-
-@code{printfile ("qq.usg")} yields additional information.
-
-@end deffn
-
-@deffn {Function} quanc8 (@var{expr}, @var{a}, @var{b})
-An adaptive integrator.
-Demonstration and usage files are provided.  The method is to
-use Newton-Cotes 8-panel quadrature rule, hence the function name
-@code{quanc8}, available in 3 or 4 arg versions.  Absolute and relative error
-checks are used.  To use it do @code{load ("qq")}.  See also @code{qq}.
 
 @end deffn
 
@@ -590,217 +548,110 @@ with.
 
 @end deffn
 
-@c NEEDS WORK BUT DON'T BOTHER TO CLEAN IT UP:
-@c THE GAUSS-KRONROD FUNCTIONS (QUADPACK) MAKE THIS OBSOLETE
-@deffn {Function} romberg (@var{expr}, @var{x}, @var{a}, @var{b})
-@deffnx {Function} romberg (@var{expr}, @var{a}, @var{b})
-Romberg integration.
-There are two ways to use this function.  The first is an inefficient
-way like the definite integral version of @code{integrate}:
-@code{romberg (<integrand>, <variable of integration>, <lower limit>, <upper limit>)}.
-
-Examples:
-
-@example
-(%i1) showtime: true$
-(%i2) romberg (sin(y), y, 0, %pi);
-Evaluation took 0.00 seconds (0.01 elapsed) using 25.293 KB.
-(%o2)                   2.000000016288042
-(%i3) 1/((x-1)^2+1/100) + 1/((x-2)^2+1/1000) + 1/((x-3)^2+1/200)$
-(%i4) f(x) := ''%$
-(%i5) rombergtol: 1e-6$
-(%i6) rombergit: 15$
-(%i7) romberg (f(x), x, -5, 5);
-Evaluation took 11.97 seconds (12.21 elapsed) using 12.423 MB.
-(%o7)                   173.6730736617464
-@c INCLUDE THIS COMPARISON TO EXACT RESULT ??? YIELDS A LOT OF "RAT replaced" MESSAGES !!!
-@c integrate (f(x), x, -5, 5) - %, numer;
-@end example
-
-The second is an efficient way that is used as follows:
-
-@example
-romberg (<function name>, <lower limit>, <upper limit>);
-@end example
-
-Continuing the above example, we have:
-@example
-(%i8) f(x) := (mode_declare ([function(f), x], float), ''(%th(5)))$
-(%i9) translate(f);
-(%o9)                          [f]
-(%i10) romberg (f, -5, 5);
-Evaluation took 3.51 seconds (3.86 elapsed) using 6.641 MB.
-(%o10)                  173.6730736617464
-@end example
-
-The first argument must be a translated or compiled function.  (If it
-is compiled it must be declared to return a @code{flonum}.)  If the first
-argument is not already translated, @code{romberg} will not attempt to
-translate it but will give an error.
-
-The accuracy of the integration is governed by the global variables
-@code{rombergtol} (default value 1.E-4) and @code{rombergit} (default value 11).
-@code{romberg} will return a result if the relative difference in successive
-approximations is less than @code{rombergtol}.  It will try halving the
-stepsize @code{rombergit} times before it gives up.  The number of iterations
-and function evaluations which @code{romberg} will do is governed by
-@code{rombergabs} and @code{rombergmin}.
-
-@code{romberg} may be called recursively and thus can do double and triple
-integrals.
-
-Example:
-@example
-(%i1) assume (x > 0)$
-(%i2) integrate (integrate (x*y/(x+y), y, 0, x/2), x, 1, 3)$
-(%i3) radcan (%);
-                    26 log(3) - 26 log(2) - 13
-(%o3)             - --------------------------
-                                3
-(%i4) %,numer;
-(%o4)                   .8193023963959073
-(%i5) define_variable (x, 0.0, float, "Global variable in function F")$
-(%i6) f(y) := (mode_declare (y, float), x*y/(x+y))$
-(%i7) g(x) := romberg ('f, 0, x/2)$  
-(%i8) romberg (g, 1, 3);
-(%o8)                   .8193022864324522
-@end example
-
-The advantage with this way is that the function @code{f} can be used for other 
-purposes, like plotting. The disadvantage is that you have to think up 
-a name for both the function @code{f} and its free variable @code{x}.
-Or, without the global:
-
-@example
-(%i1) g_1(x) := (mode_declare (x, float), romberg (x*y/(x+y), y, 0, x/2))$
-(%i2) romberg (g_1, 1, 3);
-(%o2)                   .8193022864324522
-@end example
-
-The advantage here is shortness.
-
-@example
-(%i3) q (a, b) := romberg (romberg (x*y/(x+y), y, 0, x/2), x, a, b)$
-(%i4) q (1, 3);
-(%o4)                   .8193022864324522
-@end example
-
-It is even shorter this way, and the variables do not need to be declared 
-because they are in the context of @code{romberg}.
-Use of @code{romberg} for multiple integrals can have great disadvantages,
-though.  The amount of extra calculation needed because of the
-geometric information thrown away by expressing multiple integrals
-this way can be incredible.  The user should be sure to understand and
-use the @code{rombergtol} and @code{rombergit} switches.
-
-@end deffn
-
-@defvr {Option variable} rombergabs
-Default value: 0.0
-
-Assuming that successive estimates
-produced by @code{romberg} are @code{y[0]}, @code{y[1]}, @code{y[2]}, etc., then @code{romberg} will
-return after @code{n} iterations if (roughly speaking)
-
-@example
- (abs(y[n]-y[n-1]) <= rombergabs or
- abs(y[n]-y[n-1])/(if y[n]=0.0 then 1.0 else y[n]) <= rombergtol)
-@end example
-
-is @code{true}.  (The condition on the number of iterations given by
-@code{rombergmin} must also be satisfied.)
-Thus if @code{rombergabs} is 0.0 (the default) you just get the relative
-error test.  The usefulness of the additional variable comes when you
-want to perform an integral, where the dominant contribution comes
-from a small region.  Then you can do the integral over the small
-dominant region first, using the relative accuracy check, followed by
-the integral over the rest of the region using the absolute accuracy
-check.
-
-Example:  Suppose you want to compute
-
-@example
-'integrate (exp(-x), x, 0, 50)
-@end example
-
-(numerically) with a relative accuracy of  1 part in 10000000.
-Define the function.  @code{n} is a counter, so we can see how many
-function evaluations were needed.
-First of all try doing the whole integral at once.
-
-@example
-(%i1) f(x) := (mode_declare (n, integer, x, float), n:n+1, exp(-x))$
-(%i2) translate(f)$
-Warning-> n is an undefined global variable.
-(%i3) block ([rombergtol: 1.e-6, romberabs: 0.0], n:0, romberg (f, 0, 50));
-(%o3)                   1.000000000488271
-(%i4) n;
-(%o4)                          257
-@end example
-
-That approach required 257 function evaluations.
- Now do the integral intelligently, by first doing
-     @code{'integrate (exp(-x), x, 0, 10)} and then setting @code{rombergabs} to 1.E-6 times (this
-     partial integral).
-This approach takes only 130 function evaluations.
-
-@example
-(%i5) block ([rombergtol: 1.e-6, rombergabs:0.0, sum:0.0],
-  n: 0, sum: romberg (f, 0, 10), rombergabs: sum*rombergtol, rombergtol:0.0,
-      sum + romberg (f, 10, 50));
-(%o5)                   1.000000001234793
-(%i6) n;
-(%o6)                          130
-@end example
-
-So if @code{f(x)} were a function that took a long time to compute, the
-second method would be about 2 times quicker.
-
-@end defvr
-
-@defvr {Option variable} rombergit
-Default value: 11
-
-The accuracy of the @code{romberg} integration
-command is governed by the global variables @code{rombergtol} and
-@code{rombergit}.  @code{romberg} will return a result if the relative
-difference in successive approximations is less than @code{rombergtol}.  It
-will try halving the stepsize @code{rombergit} times before it gives up.
-
-@end defvr
-
-@defvr {Option variable} rombergmin
-Default value: 0
-
-@code{rombergmin} governs the minimum number of function
-evaluations that @code{romberg} will make.  @code{romberg} will evaluate its first
-arg. at least @code{2^(rombergmin+2)+1} times.  This is useful for
-integrating oscillatory functions, when the normal converge test might
-sometimes wrongly pass.
-
-@end defvr
-
-@defvr {Option variable} rombergtol
-Default value: 1e-4
-
-The accuracy of the @code{romberg} integration
-command is governed by the global variables @code{rombergtol} and
-@code{rombergit}.  @code{romberg} will return a result if the relative
-difference in successive approximations is less than @code{rombergtol}.  It
-will try halving the stepsize @code{rombergit} times before it gives up.
-
-@end defvr
-
 @c NEEDS EXPANSION, CLARIFICATION, AND EXAMPLES
 @deffn {Function} tldefint (@var{expr}, @var{x}, @var{a}, @var{b})
 Equivalent to @code{ldefint} with @code{tlimswitch} set to @code{true}.
 
 @end deffn
 
+@footnotestyle end
+
+@node Introduction to QUADPACK, Functions and Variables for QUADPACK, Functions and Variables for Integration, Integration
+@section Introduction to QUADPACK
+
+
+@c FOLLOWING TEXT ADAPTED WITH HEAVY MODIFICATION FROM http://www.netlib.org/slatec/src/qpdoc.f
+
+QUADPACK is a collection of functions for the numerical
+computation of one-dimensional definite integrals.
+It originated from a joint project of
+R. Piessens @footnote{Applied Mathematics and Programming Division, K.U. Leuven},
+E. de Doncker @footnote{Applied Mathematics and Programming Division, K.U. Leuven},
+C. Ueberhuber @footnote{Institut f@"ur Mathematik, T.U. Wien},
+and D. Kahaner @footnote{National Bureau of Standards, Washington, D.C., U.S.A}.
+
+The QUADPACK library included in Maxima is an automatic translation
+(via the program @code{f2cl}) of the Fortran source code of QUADPACK as it appears in
+the SLATEC Common Mathematical Library, Version 4.1 @footnote{@url{http://www.netlib.org/slatec}}.
+The SLATEC library is dated July 1993, but the QUADPACK functions
+were written some years before.
+There is another version of QUADPACK at Netlib @footnote{@url{http://www.netlib.org/quadpack}};
+it is not clear how that version differs from the SLATEC version.
+
+The QUADPACK functions included in Maxima are all automatic,
+in the sense that these functions attempt to compute a result to a specified accuracy,
+requiring an unspecified number of function evaluations.
+Maxima's Lisp translation of QUADPACK also includes some non-automatic functions,
+but they are not exposed at the Maxima level.
+
+Further information about QUADPACK can be found in the QUADPACK book
+@footnote{R. Piessens, E. de Doncker-Kapenga, C.W. Uberhuber, and D.K. Kahaner.
+@i{QUADPACK: A Subroutine Package for Automatic Integration.}
+Berlin: Springer-Verlag, 1983, ISBN 0387125531.}.
+
+@subsection Overview
+
+@table @code
+@item quad_qag
+Integration of a general function over a finite interval.
+@code{quad_qag} implements a simple globally adaptive integrator using the strategy of Aind (Piessens, 1973).
+The caller may choose among 6 pairs of Gauss-Kronrod quadrature
+formulae for the rule evaluation component.
+The high-degree rules are suitable for strongly oscillating integrands.
+
+@item quad_qags
+Integration of a general function over a finite interval.
+@code{quad_qags} implements globally adaptive interval subdivision with extrapolation
+(de Doncker, 1978) by the Epsilon algorithm (Wynn, 1956).
+
+@item quad_qagi
+Integration of a general function over an infinite or semi-infinite interval.
+The interval is mapped onto a finite interval and
+then the same strategy as in @code{quad_qags} is applied.
+
+@item quad_qawo
+Integration of @math{cos(omega x) f(x)} or @math{sin(omega x) f(x)} over a finite interval,
+where @math{omega} is a constant.
+The rule evaluation component is based on the modified Clenshaw-Curtis technique.
+@code{quad_qawo} applies adaptive subdivision with extrapolation, similar to @code{quad_qags}.
+
+@item quad_qawf
+Calculates a Fourier cosine or Fourier sine transform on a semi-infinite interval.
+The same approach as in @code{quad_qawo} is applied on successive finite intervals,
+and convergence acceleration by means of the Epsilon algorithm (Wynn, 1956) 
+is applied to the series of the integral contributions.
+
+@item quad_qaws
+Integration of @math{w(x) f(x)} over a finite interval @math{[a, b]},
+where @math{w} is a function of the form @math{(x - a)^alpha (b - x)^beta v(x)}
+and @math{v(x)} is 1 or @math{log(x - a)} or @math{log(b - x)} or @math{log(x - a) log(b - x)},
+and @math{alpha > -1} and @math{beta > -1}.
+A globally adaptive subdivision strategy is applied,
+with modified Clenshaw-Curtis integration on the subintervals which contain @math{a} or @math{b}.
+
+@item quad_qawc
+Computes the Cauchy principal value of @math{f(x)/(x - c)} over a finite interval @math{(a, b)}
+and specified @math{c}.
+The strategy is globally adaptive, and modified
+Clenshaw-Curtis integration is used on the subranges
+which contain the point @math{x = c}.
+@end table
+
+@node Functions and Variables for QUADPACK, , Introduction to QUADPACK, Integration
+@section Functions and Variables for QUADPACK
+
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qag (@var{f(x)}, @var{x}, @var{a}, @var{b}, @var{key}, @var{epsrel}, @var{limit})
-Numerically evaluate the integral
+@deffnx {Function} quad_qag (@var{f}, @var{x}, @var{a}, @var{b}, @var{key}, @var{epsrel}, @var{limit})
+
+Integration of a general function over a finite interval.
+@code{quad_qag} implements a simple globally adaptive integrator using the strategy of Aind (Piessens, 1973).
+The caller may choose among 6 pairs of Gauss-Kronrod quadrature
+formulae for the rule evaluation component.
+The high-degree rules are suitable for strongly oscillating integrands.
+
+@code{quad_qag} computes the integral
 
 @ifhtml
 @math{integrate (f(x), x, a, b)}
@@ -812,13 +663,15 @@ Numerically evaluate the integral
 $$\int_a^b {f(x) dx}$$
 @end tex
 
-using a simple adaptive integrator.
-
 The function to be integrated is @var{f(x)}, with dependent
 variable @var{x}, and the function is to be integrated between the
 limits @var{a} and @var{b}.  @var{key} is the integrator to be used
 and should be an integer between 1 and 6, inclusive.  The value of
 @var{key} selects the order of the Gauss-Kronrod integration rule.
+High-order rules are suitable for strongly oscillating integrands.
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The numerical integration is done adaptively by subdividing the
 integration region into sub-intervals until the desired accuracy is
@@ -874,11 +727,30 @@ Examples:
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qags (@var{f(x)}, @var{x}, @var{a}, @var{b}, @var{epsrel}, @var{limit})
+@deffnx {Function} quad_qags (@var{f}, @var{x}, @var{a}, @var{b}, @var{epsrel}, @var{limit})
 
-Numerically integrate the given function using adaptive quadrature with
-extrapolation.  The function to be integrated is @var{f(x)}, with
+Integration of a general function over a finite interval.
+@code{quad_qags} implements globally adaptive interval subdivision with extrapolation
+(de Doncker, 1978) by the Epsilon algorithm (Wynn, 1956).
+
+@code{quad_qags} computes the integral
+
+@ifhtml
+@math{integrate (f(x), x, a, b)}
+@end ifhtml
+@ifinfo
+@math{integrate (f(x), x, a, b)}
+@end ifinfo
+@tex
+$$\int_a^b {f(x) dx}$$
+@end tex
+
+The function to be integrated is @var{f(x)}, with
 dependent variable @var{x}, and the function is to be integrated
 between the limits @var{a} and @var{b}.
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The optional arguments @var{epsrel} and @var{limit} are the desired
 relative error and the maximum number of subintervals, respectively.
@@ -932,8 +804,13 @@ Note that @code{quad_qags} is more accurate and efficient than @code{quad_qag} f
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qagi (@var{f(x)}, @var{x}, @var{a}, @var{inftype}, @var{epsrel}, @var{limit})
+@deffnx {Function} quad_qagi (@var{f}, @var{x}, @var{a}, @var{inftype}, @var{epsrel}, @var{limit})
 
-Numerically evaluate one of the following integrals
+Integration of a general function over an infinite or semi-infinite interval.
+The interval is mapped onto a finite interval and
+then the same strategy as in @code{quad_qags} is applied.
+
+@code{quad_qagi} evaluates one of the following integrals
 
 @ifhtml
 @math{integrate (f(x), x, a, inf)}
@@ -956,10 +833,10 @@ $$\int_\infty^a {f(x) dx}$$
 @end tex
 
 @ifhtml
-@math{integrate (f(x), x, a, minf, inf)}
+@math{integrate (f(x), x, minf, inf)}
 @end ifhtml
 @ifinfo
-@math{integrate (f(x), x, a, minf, inf)}
+@math{integrate (f(x), x, minf, inf)}
 @end ifinfo
 @tex
 $$\int_{-\infty}^\infty {f(x) dx}$$
@@ -968,6 +845,9 @@ $$\int_{-\infty}^\infty {f(x) dx}$$
 using the Quadpack QAGI routine.  The function to be integrated is
 @var{f(x)}, with dependent variable @var{x}, and the function is to
 be integrated over an infinite range.
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The parameter @var{inftype} determines the integration interval as follows:
 
@@ -1035,8 +915,14 @@ Examples:
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qawc (@var{f(x)}, @var{x}, @var{c}, @var{a}, @var{b}, @var{epsrel}, @var{limit})
+@deffnx {Function} quad_qawc (@var{f}, @var{x}, @var{c}, @var{a}, @var{b}, @var{epsrel}, @var{limit})
 
-Numerically compute the Cauchy principal value of
+Computes the Cauchy principal value of @math{f(x)/(x - c)} over a finite interval.
+The strategy is globally adaptive, and modified
+Clenshaw-Curtis integration is used on the subranges
+which contain the point @math{x = c}.
+
+@code{quad_qawc} computes the Cauchy principal value of
 
 @ifhtml
 @math{integrate (f(x)/(x - c), x, a, b)}
@@ -1051,6 +937,9 @@ $$\int_{a}^{b}{{{f\left(x\right)}\over{x-c}}\>dx}$$
 using the Quadpack QAWC routine.  The function to be integrated is
 @code{@var{f(x)}/(@var{x} - @var{c})}, with dependent variable @var{x}, and the function
 is to be integrated over the interval @var{a} to @var{b}.
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The optional arguments @var{epsrel} and @var{limit} are the desired
 relative error and the maximum number of subintervals, respectively.
@@ -1090,7 +979,8 @@ Examples:
 @example
 (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5);
 (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
-(%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1), x, 0, 5);
+(%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
+      x, 0, 5);
 Principal Value
                        alpha
         alpha       9 4                 9
@@ -1101,13 +991,13 @@ Principal Value
                         alpha
                      2 4      + 2
 
-         3 alpha                       3 alpha
-         -------                       -------
-            2            alpha/2          2          alpha/2
-      2 4        atan(4 4       )   2 4        atan(4       )   alpha
-    - --------------------------- - -------------------------)/2
-                alpha                        alpha
-             2 4      + 2                 2 4      + 2
+       3 alpha                       3 alpha
+       -------                       -------
+          2            alpha/2          2          alpha/2
+    2 4        atan(4 4       )   2 4        atan(4       )   alpha
+  - --------------------------- - -------------------------)/2
+              alpha                        alpha
+           2 4      + 2                 2 4      + 2
 (%i3) ev (%, alpha=5, numer);
 (%o3)                    - 3.130120337415917
 @end example
@@ -1117,9 +1007,15 @@ Principal Value
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qawf (@var{f(x)}, @var{x}, @var{a}, @var{omega}, @var{trig}, @var{epsabs}, @var{limit}, @var{maxp1}, @var{limlst})
+@deffnx {Function} quad_qawf (@var{f}, @var{x}, @var{a}, @var{omega}, @var{trig}, @var{epsabs}, @var{limit}, @var{maxp1}, @var{limlst})
 
-Numerically compute the a Fourier-type integral using the Quadpack QAWF
-routine.  The integral is
+Calculates a Fourier cosine or Fourier sine transform on a semi-infinite interval
+using the Quadpack QAWF function.
+The same approach as in @code{quad_qawo} is applied on successive finite intervals,
+and convergence acceleration by means of the Epsilon algorithm (Wynn, 1956) 
+is applied to the series of the integral contributions.
+
+@code{quad_qawf} computes the integral
 
 @ifhtml
 @math{integrate (f(x)*w(x), x, a, inf)}
@@ -1139,6 +1035,9 @@ The weight function @math{w} is selected by @var{trig}:
 @item sin
 @math{w(x) = sin (omega x)}
 @end table
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The optional arguments are:
 
@@ -1209,8 +1108,14 @@ Examples:
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
 @deffn {Function} quad_qawo (@var{f(x)}, @var{x}, @var{a}, @var{b}, @var{omega}, @var{trig}, @var{epsabs}, @var{limit}, @var{maxp1}, @var{limlst})
+@deffnx {Function} quad_qawo (@var{f}, @var{x}, @var{a}, @var{b}, @var{omega}, @var{trig}, @var{epsabs}, @var{limit}, @var{maxp1}, @var{limlst})
 
-Numerically compute the integral using the Quadpack QAWO
+Integration of @math{cos(omega x) f(x)} or @math{sin(omega x) f(x)} over a finite interval,
+where @math{omega} is a constant.
+The rule evaluation component is based on the modified Clenshaw-Curtis technique.
+@code{quad_qawo} applies adaptive subdivision with extrapolation, similar to @code{quad_qags}.
+
+@code{quad_qawo} computes the integral using the Quadpack QAWO
 routine:
 
 @ifhtml
@@ -1231,6 +1136,9 @@ The weight function @math{w} is selected by @var{trig}:
 @item sin
 @math{w(x) = sin (omega x)}
 @end table
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The optional arguments are:
 
@@ -1287,7 +1195,8 @@ Examples:
 @example
 (%i1) quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
 (%o1)     [1.376043389877692, 4.72710759424899E-11, 765, 0]
-(%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x), x, 0, inf));
+(%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
+      x, 0, inf));
                    alpha/2 - 1/2            2 alpha
         sqrt(%pi) 2              sqrt(sqrt(2        + 1) + 1)
 (%o2)   -----------------------------------------------------
@@ -1301,9 +1210,16 @@ Examples:
 
 @c THERE ARE OPTIONAL ARGUMENTS WHICH MAKES LISTING THE VARIANTS A LITTLE TEDIOUS
 @c NEED A MORE CONVENIENT (AND NONAMBIGUOUS) NOTATION FOR OPTIONAL ARGUMENTS
-@deffn {Function} quad_qaws (@var{f(x)}, @var{x}, @var{a}, @var{b}, @var{alfa}, @var{beta}, @var{wfun}, @var{epsabs}, @var{limit})
+@deffn {Function} quad_qaws (@var{f(x)}, @var{x}, @var{a}, @var{b}, @var{alpha}, @var{beta}, @var{wfun}, @var{epsabs}, @var{limit})
+@deffnx {Function} quad_qaws (@var{f}, @var{x}, @var{a}, @var{b}, @var{alpha}, @var{beta}, @var{wfun}, @var{epsabs}, @var{limit})
 
-Numerically compute the integral using the Quadpack QAWS
+Integration of @math{w(x) f(x)} over a finite interval,
+where @math{w(x)} is a certain algebraic or logarithmic function.
+A globally adaptive subdivision strategy is applied,
+with modified Clenshaw-Curtis integration on the subintervals which contain the endpoints
+of the interval of integration.
+
+@code{quad_qaws} computes the integral using the Quadpack QAWS
 routine:
 
 @ifhtml
@@ -1320,14 +1236,17 @@ The weight function @math{w} is selected by @var{wfun}:
 
 @table @code
 @item 1
-@math{w(x) = (x - a)^alfa (b - x)^beta}
+@math{w(x) = (x - a)^alpha (b - x)^beta}
 @item 2
-@math{w(x) = (x - a)^alfa (b - x)^beta log(x - a)}
+@math{w(x) = (x - a)^alpha (b - x)^beta log(x - a)}
 @item 3
-@math{w(x) = (x - a)^alfa (b - x)^beta log(b - x)}
-@item 2
-@math{w(x) = (x - a)^alfa (b - x)^beta log(x - a) log(b - x)}
+@math{w(x) = (x - a)^alpha (b - x)^beta log(b - x)}
+@item 4
+@math{w(x) = (x - a)^alpha (b - x)^beta log(x - a) log(b - x)}
 @end table
+
+The integrand may be specified as the name of a Maxima or Lisp function or operator,
+a Maxima lambda expression, or a general Maxima expression.
 
 The optional arguments are:
 

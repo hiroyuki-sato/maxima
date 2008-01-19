@@ -1,14 +1,13 @@
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (defun $listofei (e )
-   (declare (special $d2 $lg $lexp ))
-	(setq $d2 (copy (car e)))
+   (declare (special $d2 $lg $lexp))
+	(setq $d2 (copy-tree (car e)))
 	(setq $lg ())
 	(setq $lexp ())
-	(do (
-	     (lvar   (caddr $d2) (cdr lvar))
-	     (lg   (cadddr $d2) (cdr lg))
-	     (var) )
+	(do ((lvar (caddr $d2) (cdr lvar))
+	     (lg (cadddr $d2) (cdr lg))
+	     (var))
 	    ((null lvar)(setq $lg (cons '(mlist) $lg))
 	    		(setq $lexp (cons '(mlist) $lexp))
 			(setq $d2 (cons $d2  (cdr e))) )
@@ -21,15 +20,20 @@
 		   (setq $lexp (cons var $lexp))
 		   (setq var  (concat "$_" (car lg)))
 		   (setq $lg (cons var $lg))
-		   (rplaca lvar var)
-		   ))))
+		   (rplaca lvar var)))))
 
-#$trigrat(exp):=	block([e,n,d,lg,f,lexp,ls,d2,l2,alg,gcd1],
+#$trigrat_equationp (e) :=
+    not atom (e)
+    and member (op (e), ["=", "#", "<", "<=", ">=", ">"])$
+
+#$trigrat(exp):=
+    if matrixp (exp) or listp (exp) or setp (exp) or trigrat_equationp (exp)
+    then map (trigrat, exp)
+    else block([e,n,d,lg,f,lexp,ls,d2,l2,alg,gcd1],
 		declare(d2,special,lg,special,lexp,special),
 		alg:algebraic,gcd1:gcd,
 		algebraic:true,gcd:subres,
-		e:ev(exp,exponentialize=true,ratsimp),
-		e:rat(e),
+		e: rat(ratsimp(exponentialize(exp))),
 		n:num(e),d:denom(e),
 		listofei(d),
 		l2:map(lambda([u,v],u^((hipow(d2,v)+lopow(d2,v))/2)),

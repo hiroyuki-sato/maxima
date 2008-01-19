@@ -3,7 +3,7 @@
 (in-package :cl-user)
 
 (pushnew :cl *features*)
-(pushnew :nocp *features*)
+
 #+gcl
 (let ((version-num (+ (* 10000 system::*gcl-major-version*)
 		      (* 100 system::*gcl-minor-version*)
@@ -13,8 +13,11 @@
 		      
 #+cmu
 (setf ext:*gc-verbose* nil)
+
 (setf *load-verbose* nil)
+
 (defvar *maxima-build-time* (multiple-value-list (get-decoded-time)))
+
 (export '*maxima-build-time*)
 
 (mk:defsystem "maxima"
@@ -23,13 +26,16 @@
                    #+cmu (make-pathname
 			  :name "binary-cmucl"
 			  :directory (pathname-directory *load-truename*))
+                   #+scl (make-pathname
+			  :name "binary-scl"
+			  :directory (pathname-directory *load-truename*))
 		   #+sbcl (make-pathname
 			   :name "binary-sbcl"
 			   :directory (pathname-directory *load-truename*))
 		   #+gcl "binary-gcl"
-		   #+allegro "binary-acl6"
+		   #+allegro "binary-acl"
 		   #+openmcl "binary-openmcl"
-		   #-(or clisp cmu sbcl gcl allegro openmcl) "binary-unknownlisp"
+		   #-(or clisp cmu scl sbcl gcl allegro openmcl) "binary-unknownlisp"
   :components (#+gcl
 	       (:module proclaim :source-pathname ""
 			:load-only t
@@ -43,7 +49,7 @@
 	       (:module package :source-pathname ""
 			:load-only t
 			:components (#-gcl(:file "maxima-package")
-				     (:file "autoconf-variables")))
+					  (:file "autoconf-variables")))
 	       (:module info :source-pathname ""
 			:components ((:file "nregex")
 				     (:file "cl-info")))
@@ -83,6 +89,7 @@
                         :components ((:file "numerm")))
                #+gcl (:file "optimize") ; jfa check this
                (:module utilities :source-pathname ""
+			:depends-on (utility-macros)
                         :components ((:file "opers")
                                      (:file "utils") 
                                      (:file "sumcon") 
@@ -92,8 +99,7 @@
                                      (:file "mformt") 
                                      (:file "mutils") 
                                      (:file "outmis") 
-                                     (:file "ar") 
-                                     (:file "misc")))
+                                     (:file "ar")))
                (:module commands :source-pathname ""
                         :components ((:file "comm")
                                      (:file "comm2")))
@@ -281,7 +287,10 @@
 				   (:file "de1"
 					  :depends-on ("dcsevl" "initds" "xermsg"))
 				   (:file "dei"
-					  :depends-on ("de1"))))
+					  :depends-on ("de1"))
+				   (:file "dspenc"
+					  :depends-on ("d9upak"))
+				   (:file "d9upak")))
 			 (:module quadpack
 				  :source-pathname "slatec"
 				  :components
@@ -394,6 +403,8 @@
                                      (:file "nalgfa") 
                                      (:file "ufact") 
                                      (:file "result")))
+	       (:module ifactor :source-pathname ""
+			:components ((:file "ifactor")))
 	       (:module rational-functions :source-pathname ""
 			:components ((:file "rat3a") 
 				     (:file "rat3b") 
@@ -423,15 +434,17 @@
 				     (:file "fcall") 
 				     (:file "evalw") 
 				     (:file "trprop") 
-				     (:file "mdefun")))
+				     (:file "mdefun"))
+			:depends-on (maxima-language-compiler-macros))
 	       (:module numerical-functions :source-pathname ""
+			:depends-on (trigonometry)
 			:components ((:file "bessel")
 				     ;;#+gcl(:file "parse-body")
 				     (:file "ellipt")
-				     (:file "airy")
+				     (:file "airy"
+					    :depends-on ("ellipt"))
 				     (:file "numer") 
-				     (:file "intpol") 
-				     (:file "rombrg")))
+				     (:file "intpol")))
 	       (:module reader :source-pathname ""
 			:depends-on (compatibility-macros)
 			:components ((:file "nparse")))
@@ -472,7 +485,6 @@
 	       (:module determinants :source-pathname ""
 			:components ((:file "sprdet") 
 				     (:file "newinv") 
-				     (:file "linnew") 
 				     (:file "newdet")))
 	       (:module pattern-matching :source-pathname ""
 			:components ((:file "schatc") 
@@ -505,26 +517,30 @@
 				     (:file "pade") 
 				     (:file "homog") 
 				     (:file "combin") 
-                     (:file "nset")
-                     (:file "rand-mt19937")
+				     (:file "nset")
+				     (:file "rand-mt19937")
+				     (:file "maxmin")
+				     (:file "nummod")
+				     (:file "conjugate")
 				     (:file "mstuff")))
 	       (:module poisson-series :source-pathname ""
 			:components ((:file "ratpoi")
 				     (:file "pois2") 
 				     (:file "pois3")))
 	       (:module translated-packages :source-pathname ""
+			:depends-on ("maxima-language-compiler-macros")
 			:components
-			((:file "nusum")
-			 (:file "desoln")
+			((:file "desoln")
 			 (:file "elim")
-			 (:file "trgsmp")
-			 (:file "ode2")
 			 (:file "invert")
 			 (:file "hypgeo")
 			 (:file "hyp")
 			 (:file "todd-coxeter")
 			 (:file "mactex")
 			 (:file "plot")))
+	       (:module graphics-drivers :source-pathname ""
+			:components ((:file "gnuplot")
+				     (:file "openmath")))
 	       (:module final :source-pathname ""
 			;; These are not compiled, for whatever reason
 			:load-only t
