@@ -2,7 +2,7 @@
 ;;;Translated on: 5/12/85 13:57:48;;Maxima System version 8
 ;;** Variable settings were **
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;;TRANSCOMPILE:FALSE;
 ;;TR_SEMICOMPILE:FALSE;
@@ -16,7 +16,9 @@
 ;;TR_ARRAY_AS_REF:TRUE;
 ;;TR_NUMER:FALSE;
 ;;DEFINE_VARIABLE:FALSE;
-(eval-when (compile eval load)
+(eval-when
+    #+gcl (compile eval load)
+    #-gcl (:compile-toplevel :execute :load-toplevel)
   (defprop $adjoint t translated)
   (add2lnc '$adjoint $props)
   (defmtrfun
@@ -44,7 +46,9 @@
        $adj)
      '$adj
      '$n)))
-(eval-when (compile eval load)
+(eval-when
+    #+gcl (compile eval load)
+    #-gcl (:compile-toplevel :execute :load-toplevel)
   (defprop $invert t translated)
   (add2lnc '$invert $props)
   (defmtrfun ($invert $any mdefine nil nil)

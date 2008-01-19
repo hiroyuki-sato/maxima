@@ -8,10 +8,11 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module pade)
 
-(declare-top(special tlist tpf))
+(declare-top (special tlist tpf))
 
 (load-macsyma-macros rzmac mhayat ratmac)
 
@@ -29,7 +30,7 @@
 
 (defmacro denom (r) `(cdr ,r))
 
-(defmacro eneg (exp) `(cons (minus (car ,exp)) (cdr ,exp)))
+(defmacro eneg (exp) `(cons (- (car ,exp)) (cdr ,exp)))
 
 (defmacro pade-lexp (poly) `(cond ((p0? ,poly) (ezero))
 			     (t (le ,poly))))
@@ -43,7 +44,7 @@
   `(make-ps (gvar-o tpf) (poly-data tpf) (reverse ,p)))
 
 (defmfun $pade (taylor-form n-bound d-bound)
-  (cond ((not (and ($ratp taylor-form) (memq 'trunc (car taylor-form))))
+  (cond ((not (and ($ratp taylor-form) (member 'trunc (car taylor-form) :test #'eq)))
 	 (merror "First argument to Pade must be a taylor series")))
   (destructuring-let (((nil nil varlist genvar tlist) (car taylor-form)))
     (cons '(mlist)

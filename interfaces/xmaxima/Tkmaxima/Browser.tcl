@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Browser.tcl,v 1.13 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: Browser.tcl,v 1.20 2006/12/04 02:59:47 villate Exp $
 #
 ###### Browser.tcl ######
 ############################################################
@@ -368,8 +368,9 @@ proc OpenMathGetWindow { commandPanel win } {
     }
 }
 
-
-proc getw { s  } { eval pack forget [winfo children . ] ; pack $s}
+proc getw { s } {
+    eval pack forget [winfo children . ] ; pack $s
+}
 
 proc try1 { file } {
     global ccc
@@ -627,10 +628,14 @@ proc getURL { resolved type {mimeheader ""} {post ""} } {
 	    set name [toLocalFilename $res]
 	    set fi [open $name r]
 	    set answer [read $fi]
-	    if { [regexp {[.]html?$} $name ] || [regexp -nocase "^(\[ \n\t\r\])*<html>" $answer] } {
+	    if { [regexp -nocase {[.]html?$} $name ] || [regexp -nocase "^(\[ \n\t\r\])*<html>" $answer] } {
 		set contentType text/html
 	    } elseif {  [regexp {[.]gif([^/]*)$} $name ] } {
 		set contentType image/gif
+	    } elseif {  [regexp {[.]png([^/]*)$} $name ] } {
+		set contentType image/png
+	    } elseif {  [regexp {[.]jpe?g([^/]*)$} $name ] } {
+		set contentType image/jpeg
 	    } else {
 		set contentType text/plain
 	    }
@@ -700,12 +705,13 @@ proc backgroundGetImage1  { image res width height }   {
 	    fconfigure $s -blocking 0
 	    ##DO NOT DELETE THE FOLLOWING !!!!!puts!!!!!!!!
 	    puts $s [getURLrequest [encodeURL $res] \
-			 $server $port {image/gif image/x-bitmap}]
+			 $server $port {image/gif image/png image/jpeg image/x-bitmap}]
 	    flush $s
 
-	    if { [regexp -nocase {[.]gif([^/]*)$} [assoc filename $res] ] } {
+
+	    if { [regexp -nocase $maxima_priv(imgregexp) [assoc filename $res] mm extension] } {
 		fconfigure $s -translation binary
-		set tmp xxtmp[incr maxima_priv(imagecounter)].gif
+		set tmp xxtmp[incr maxima_priv(imagecounter)].$extension
 
 		if { [info exists maxima_priv(inbrowser)] ||  [catch {set out [open $tmp w] } ] } {
 		    # if have binary..
@@ -715,7 +721,7 @@ proc backgroundGetImage1  { image res width height }   {
 		    if {  [readAllData $s -tovar \
 			       maxima_priv($s,url_result) -mimeheader \
 			       maxima_priv($s,mimeheader)
-			  ] > 0  && [string match *gif [assoc content-type $maxima_priv($s,mimeheader)]] } {
+			  ] > 0  && [string match *$extension [assoc content-type $maxima_priv($s,mimeheader)]] } {
 			set ans $image
 			$image configure -data [tobase64 $maxima_priv($s,url_result)]
 
@@ -845,6 +851,9 @@ proc ws_outputToTemp { string file ext encoding } {
 
 proc OpenMathOpenUrl { name args} {
     global maxima_priv
+    
+    # Removes any white spaces at the end of the Url given
+    set name [string trimright $name]
 
     gui status [concat [mc "Opening"] "$name"]
 
@@ -1170,7 +1179,7 @@ proc fontDialog { top } {
 proc savePreferences {} {
     global maxima_default maxima_priv
 
-    if {[catch {open  "~/netmath.ini" w} fi]} {return}
+    if {[catch {open  "~/.xmaximarc" w} fi]} {return}
 
     puts $fi "array set maxima_default {"
     foreach {k v} [array get maxima_default *] {

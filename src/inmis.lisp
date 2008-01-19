@@ -8,7 +8,7 @@
 ;;;  (c) Copyright 1976, 1983 Massachusetts Institute of Technology      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module inmis)
 
 (declare-top (special listofvars))
@@ -35,7 +35,7 @@
 (defmfun $listofvars (e) 
   (let ((listofvars (ncons '(mlist))))
     (when ($ratp e)
-      (and (memq 'trunc (cddar e)) (setq e ($taytorat e)))
+      (and (member 'trunc (cddar e) :test #'eq) (setq e ($taytorat e)))
       (setq e (cons '(mlist)
 		    (sublis (mapcar #'cons
 				    (car (cdddar e))
@@ -47,7 +47,8 @@
     (atomvars e)
     (if (not $listdummyvars)
 	(dolist (u (cdr listofvars))
-	  (if (freeof u e) (zl-delete u listofvars 1))))
+	  (if (freeof u e)
+	      (setq listofvars (delete u listofvars :count 1 :test #'equal)))))
     listofvars))
 
 (defun atomvars (e) 
@@ -55,51 +56,54 @@
 	 (add2lnc e listofvars))
 	((atom e))
 	((specrepp e) (atomvars (specdisrep e)))
-	((memq 'array (car e)) (myadd2lnc e listofvars))
+	((member 'array (car e) :test #'eq) (myadd2lnc e listofvars))
 	(t (mapc #'atomvars (margs e))))) 
 
 (defun myadd2lnc (item list) 
   (and (not (memalike item list)) (nconc list (ncons item)))) 
 
-;; Reset the settings of all Macsyma user-level switches to their initial
-;; values.
+;; Bind variables declared with DEFMVAR to their initial values.
+;; Some initial values are non-Maxima expressions, e.g., (2 3 5 7)
+;; Attempt to handle those as well as Maxima expressions.
+;; No attempt is made to handle variables declare with DEFVAR or by other means.
 
-#+its
-(defmfun $reset nil (load '((dsk macsym) reset fasl)) '$done)
+(defun maybe-reset (key val actually-reset reset-verbose)
+  ; MAYBE DEFMVAR VALUES SHOULD ONLY BE MAXIMA EXPRESSIONS ??
+  (let ((non-maxima (and (consp val) (not (consp (car val))))))
+    (when
+      ; TEST (BOUNDP KEY), OTHERWISE ATTEMPT TO COMPARE VALUES FAILS ...
+      (and (boundp key)
+        (if non-maxima
+          ; Apply EQUALP to non-Maxima expressions.
+          (not (equalp (symbol-value key) val))
+          ; Apply ALIKE1 to Maxima expressions.
+          (not (alike1 (symbol-value key) val))))
+      
+      (when reset-verbose
+        ; ATTEMPT TO COPE WITH NON-MAXIMA EXPRESSIONS FOR BENEFIT OF DISPLA
+        (let ((displa-val (if non-maxima `((mprogn) ,@val) val)))
+          (displa `((mtext) "reset: bind " ,key " to " ,displa-val))))
+      (nconc actually-reset (list key))
+      (setf (symbol-value key) val))))
 
-#+multics
-(defmfun $reset () (load (executable-dir "reset")) '$done)
+(defmspec $reset_verbosely (L)
+  (reset-do-the-work (cdr L) t))
 
-#+nil
-(defmfun $reset ()
-  (load "MAX$DISK:[MAXDMP]RESET" :set-default-pathname nil))
+(defmspec $reset (L)
+  (reset-do-the-work (cdr L) nil))
 
-;; Please do not use the following version on MC without consulting with me.
-;; I already fixed several bugs in it, but the +ITS version works fine on MC 
-;; and takes less address space. - JPG
-(declare-top(special modulus $fpprec))
-#-(or cl its multics nil) ;This version should be eventually used on Multics.
-(defmfun $reset ()
-  (setq *print-base* 10. *read-base* 10. ; *NOPOINT T
-	modulus nil
-					;ZUNDERFLOW T
-	)
-  ($debugmode nil)
-  (cond ((not (= $fpprec 16.)) ($fpprec 16.) (setq $fpprec 16.))) 
-  #+gc ($dskgc nil)
-  (load #+pdp10   '((aljabr) init reset)
-	#+lispm   "MACSYMA-OBJECT:ALJABR;INIT"
-	#+multics (executable-dir "init_reset")
-	#+franz    (concat vaxima-main-dir "//aljabr//reset"))
-  ;; *** This can be flushed when all Macsyma user-switches are defined
-  ;; *** with DEFMVAR.  This is part of an older mechanism.
-  #+pdp10 (load '((macsym) reset fasl))
-  '$done)
+(defun reset-do-the-work (args reset-verbose)
 
-(defmfun $reset ()
-  (setq *print-base* 10.)
-  (setq *read-base* 10.)
-  (maphash #'(lambda (key val)
-	       (format t "Resetting ~S to ~S~%" key val)
-	       (setf (symbol-value key) val))
-	   *variable-initial-values*))
+  (let ((actually-reset (copy-tree '((mlist)))) ($lispdisp t))
+    (if args
+      (mapcar
+        #'(lambda (key)
+            (maybe-reset key (gethash key *variable-initial-values*) actually-reset reset-verbose))
+        args)
+
+      (maphash
+        #'(lambda (key val)
+            (maybe-reset key val actually-reset reset-verbose))
+        *variable-initial-values*))
+  
+    actually-reset))

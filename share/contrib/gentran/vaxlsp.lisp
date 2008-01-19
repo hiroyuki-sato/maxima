@@ -1,6 +1,3 @@
-
-
-
 ;*******************************************************************************
 ;*                                                                             *
 ;*  copyright (c) 1988 kent state univ.  kent, ohio 44242                      *
@@ -32,7 +29,7 @@
   (foreach f in form collect
 	   (cond ((member f '($begin_group $end_group))
 		  f)
-	         ((macexpp f)
+		 ((macexpp f)
 		  (franzexp form 0 form))
 
 ;; should have a function to make the choices of 0, 1, 2, 3 or 4 ;;
@@ -43,21 +40,21 @@
 
 (defun franzexp (exp ind context)
 
-  	(setq allnum t )
+	(setq allnum t )
 			;;set flag to check if all numbers in an expression
- 
+
 
   (cond ((atom exp)
 
 	 (cond ((numberp exp)
-	     	(cond ((equal ind 0)
+		(cond ((equal ind 0)
 
-	     	       (setq expty (exptype  context ))
+		       (setq expty (exptype  context ))
 		       (cond(allnum (setq expty lefttype)))
 				;;solve all numbers in an expression
 
-	     	       (cond ((eq expty 'integer)
-		    	       exp)
+		       (cond ((eq expty 'integer)
+			       exp)
 			     ((eq expty 'real)
 			      (float exp))
 			     ((eq expty 'double)       ;"double" & "complex"
@@ -72,23 +69,23 @@
 		     ((equal ind 2)
 		      (float exp))
 
-		     ((equal ind 3)	
-		      (double exp))		
+		     ((equal ind 3)
+		      (double exp))
 
-		     ((equal ind 4)	
-		      (gcomplex exp))		
+		     ((equal ind 4)
+		      (gcomplex exp))
 
 		)
 	)
-		
+
 	       ((eq (nthchar exp 1) '|&|)
 		(uconcat '|"| (stripdollar1 exp) '|"|))
 	       ((eq exp t) (cond ((eq *gentranlang 'c) 1)
 				 (t '| .true. |)))
 	       (t
 		(stripdollar1 exp))))
-	
-	((eq (caar exp) '$gquote) (cadr exp)) ;; gquote added by pwang 11/10/86 
+
+	((eq (caar exp) '$gquote) (cadr exp)) ;; gquote added by pwang 11/10/86
 	((eq (caar exp) 'mtimes)
 	 (simptimes1 (foreach term in (cdr exp) collect
 			      (franzexp term 0 exp))
@@ -118,12 +115,12 @@
 				 (franzexp (caddr exp) 1 nil))))))
 
 	((and (and (= (caar exp) 'mminus) (numberp (cadr exp)))
-	            (and (= 1 (length (car exp)))
-	                 (and (numberp (cadr exp)) (numberp (caddr exp))) )) 
+		    (and (= 1 (length (car exp)))
+			 (and (numberp (cadr exp)) (numberp (caddr exp))) ))
 
 	 (cond ((get (caar exp) 'franznotn)
-	 	(cons (get (caar exp) 'franznotn)
-	       	(mapcar (function
+		(cons (get (caar exp) 'franznotn)
+		(mapcar (function
 			(lambda (elt) (franzexp elt ind context)))
 		       (cdr exp))))
 		(t
@@ -143,7 +140,7 @@
 	       (mapcar (function
 			(lambda (elt) (franzexp elt 1 nil)))
 		       (cdr exp))))))
-;;	1 is always the right selection?????	
+;;	1 is always the right selection?????
 
 ;;	Following several functions were added by Trevor 12/86
 
@@ -154,7 +151,7 @@
 ;;(print exp)
 	( cond ( ( null exp ) ( return 'integer ) ) )
 	( cond ( ( atom exp ) ( return ( itemtype exp ) ) ) )
-	
+
 	(cond ((and (listp (car exp)) (= 'array (cadar exp)))
 	       (return (exptype (caar exp))) ))
 
@@ -184,8 +181,8 @@
 	     (t (return 'nil)))  ))
 
 
-;;	( cond ( ( and ( numberp ( cadr exp ) ) 
-;;		       ( numberp ( caddr exp ) ) ) 
+;;	( cond ( ( and ( numberp ( cadr exp ) )
+;;		       ( numberp ( caddr exp ) ) )
 ;;		 ( return expty ) ) )
 
 
@@ -196,26 +193,26 @@
 	( cond ( ( numberp item )
 		 ( cond ( ( floatp item ) ( return 'real ) )
 			( t ( return 'integer ) )  ))
-	       ( t 
-	         (setq allnum nil)
-			;; set flag to to nil to show 
+	       ( t
+		 (setq allnum nil)
+			;; set flag to to nil to show
 			;; not all numbers in an expression
 		 ( return ( getvartype (stripdollar1 item)) ) )  )))
 
 (defun double (num)
     (prog (dnum)
-    	(cond ((floatp num) 
+	(cond ((floatp num)
 	       (setq dnum (append (explode num) '(d 0)))
 	       (return (apply 'concat dnum)))
-	      (t (return (concat num '|.| 'd0))) )))
+	      (t (return (intern (format nil "~a.D0" num)))))))
 
 (defun gcomplex (num)
     (prog (cnum)
-    	(cond ((floatp num) 
-	       (setq cnum (append (explode num) '( |,| 0 |.| 0 |)| ) ))
+	(cond ((floatp num)
+	       (setq cnum (append (explode num) '( |,| 0 |.| 0 |)|)))
 	       (setq cnum (cons '|(| cnum ))
 	       (return (apply 'concat cnum)))
-	      (t (return (concat '|(| num '|.| 0 '|,| 0 '|.| 0 '|)| ))) )))
+	      (t (return (intern (format nil "(~a.0,0.0)" num)))))))
 
 (defun simptimes1 (terms fp)
   (let ((neg) (denoms))
@@ -253,7 +250,7 @@
 
 (defun franzstmt (stmt)
   ; return the franz lisp equivalent statement ;
-  (cond ((member (caar stmt) '( msetq mdo )) 
+  (cond ((member (caar stmt) '( msetq mdo ))
 	 (setq lefttype (exptype (cadr stmt))) ))
 		;;added by Trevor 12/28/86
 
@@ -279,12 +276,12 @@
 
 (defun mac$literalp (stmt)
   ; is stmt a $literal function? ;
-  (memq (caar stmt) '($literal literal $data data)))
+  (member (caar stmt) '($literal literal $data data) :test #'eq))
 
 (defun franzliteral (fn stmt)
   (cons fn
 	(foreach exp in (cdr stmt) collect
-		 (cond ((memq exp '($tab $cr)) exp)
+		 (cond ((member exp '($tab $cr) :test #'eq) exp)
 		       ((listp exp) (franzexp exp 0 stmt))
 		       (t (stripdollar1 exp))))))
 
@@ -393,11 +390,11 @@
 (defun franzfor (stmt)
   ; return the franz lisp representation for a for statement      ;
   ; ((mdo) var lo incr nextexp hi exitcond dobody)                ;
-  ;   -->  (do ((var lo (plus var incr))  =or=  (var lo nextexp)) ;
-  ;            ((or (greaterp var hi) exitcond))                  ;
+  ;   -->  (do ((var lo (+ var incr))  =or=  (var lo nextexp)) ;
+  ;            ((or (> var hi) exitcond))                  ;
   ;            dobody)                                            ;
   (let (((var lo incr nextexp hi exitcond dobody) (cdr stmt))
-	                                dovars doexit posincr)
+					dovars doexit posincr)
        (setq oincr    incr
 	     onextexp nextexp)
        (setq var      (franzexp var 0 var )
@@ -419,10 +416,10 @@
        (cond (incr
 	      (cond ((or (null (getvartype var))
 			 (inttypep (getvartype var)))
-		     (cond ((numberp lo) (setq lo (fix lo))))
-		     (cond ((numberp hi) (setq hi (fix hi))))
-		     (cond ((numberp incr) (setq incr (fix incr))))))
-	      (setq dovars `((,var ,lo (plus ,var ,incr))))))
+		     (cond ((numberp lo) (setq lo (floor lo))))
+		     (cond ((numberp hi) (setq hi (floor hi))))
+		     (cond ((numberp incr) (setq incr (floor incr))))))
+	      (setq dovars `((,var ,lo (+ ,var ,incr))))))
        (cond (nextexp
 	      (setq dovars `((,var ,lo ,nextexp)))))
        (cond (hi
@@ -431,9 +428,9 @@
 		    (t
 		     (setq posincr (noerrmevalp '((mgeqp) oincr 0)))))
 	      (cond (posincr
-		     (setq doexit `((greaterp ,var ,hi))))
+		     (setq doexit `((> ,var ,hi))))
 		    (t
-		     (setq doexit `((lessp ,var ,hi)))))))
+		     (setq doexit `((< ,var ,hi)))))))
        (cond (exitcond (setq doexit (append1 doexit exitcond))))
        (cond ((> (length doexit) 1)
 	      (setq doexit (list (cons 'or doexit)))))
@@ -442,8 +439,8 @@
 (defun franzforin (stmt)
   ; return the franz lisp representation for a for-in statement             ;
   ; ((mdoin) dovar dolist nil nil nil doexitcond dobody)                    ;
-  ;   -->  (do ((genvar 1 (plus genvar 1)))                                 ;
-  ;            ((greaterp genvar listlength))                               ;
+  ;   -->  (do ((genvar 1 (+ genvar 1)))                                 ;
+  ;            ((> genvar listlength))                               ;
   ;            (cond ((equal genvar 1) (setq dovar list(1)))                ;
   ;                  ((equal genvar 2) (setq dovar list(2)))                ;
   ;                    .                                                    ;
@@ -467,15 +464,15 @@
 			    (setq ,dovar ,(franzexp (nthelem i dolist)
 						  0  (nthelem i dolist))))))))
        (cond (doexitcond
-	      `(do ((,gvar 1 (plus ,gvar 1)))
-		   ((greaterp ,gvar ,(length dolist)))
+	      `(do ((,gvar 1 (+ ,gvar 1)))
+		   ((> ,gvar ,(length dolist)))
 		   (progn
 		    ,(cons 'cond condbody)
 		    (cond (,(franzexp doexitcond 0 doexitcond ) (break)))
 		    ,(franz dobody))))
 	     (t
-	      `(do ((,gvar 1 (plus ,gvar 1)))
-		   ((greaterp ,gvar ,(length dolist)))
+	      `(do ((,gvar 1 (+ ,gvar 1)))
+		   ((> ,gvar ,(length dolist)))
 		   (progn
 		    ,(cons 'cond condbody)
 		    ,(franz dobody)))))))
@@ -521,19 +518,19 @@
   (cond ((null exp) nil)
 	((atom exp))
 	((atom (car exp)) nil)
-	((not (memq (caar exp) '(mcond mdefine mdo mdoin mgo mprog mprogn
-			         mreturn msetq $end $ev $literal $print
-				 $readonly $stop $data))))))
+	((not (member (caar exp) '(mcond mdefine mdo mdoin mgo mprog mprogn
+				 mreturn msetq $end $ev $literal $print
+				 $readonly $stop $data) :test #'eq)))))
 
 (defun maclogexpp (exp)
   ; is exp a macsyma logical expression? ;
   (cond ((atom exp)
 	 (not (numberp exp)))
 	((listp (car exp))
-	 (not (memq (caar exp)
+	 (not (member (caar exp)
 		    '(mcond mdefine mdo mdoin mgo mexpt mminus mplus mprog
 		      mprogn mquotient mreturn msetq mtimes rat $end $ev
-		      $print $readonly $stop))))))
+		      $print $readonly $stop) :test #'eq)))))
 
 (defun macstmtp (stmt)
   ; is stmt a macsyma statement? ;

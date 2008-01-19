@@ -1,9 +1,9 @@
 @menu
 * Introduction to Matrices and Linear Algebra::  
-* Definitions for Matrices and Linear Algebra::  
+* Functions and Variables for Matrices and Linear Algebra::  
 @end menu
 
-@node Introduction to Matrices and Linear Algebra, Definitions for Matrices and Linear Algebra, Matrices and Linear Algebra, Matrices and Linear Algebra
+@node Introduction to Matrices and Linear Algebra, Functions and Variables for Matrices and Linear Algebra, Matrices and Linear Algebra, Matrices and Linear Algebra
 @section Introduction to Matrices and Linear Algebra
 
 @menu
@@ -84,8 +84,8 @@ The functions in the @code{eigen} package are
 and @code{similaritytransform}.
 
 @c end concepts Matrices and Linear Algebra
-@node Definitions for Matrices and Linear Algebra,  , Introduction to Matrices and Linear Algebra, Matrices and Linear Algebra
-@section Definitions for Matrices and Linear Algebra
+@node Functions and Variables for Matrices and Linear Algebra,  , Introduction to Matrices and Linear Algebra, Matrices and Linear Algebra
+@section Functions and Variables for Matrices and Linear Algebra
 
 @deffn {Function} addcol (@var{M}, @var{list_1}, ..., @var{list_n})
 Appends the column(s) given by the one
@@ -101,6 +101,7 @@ more lists (or matrices) onto the matrix @var{M}.
 
 @deffn {Function} adjoint (@var{M})
 Returns the adjoint of the matrix @var{M}.
+The adjoint matrix is the transpose of the matrix of cofactors of @var{M}.
 
 @end deffn
 
@@ -163,9 +164,15 @@ with respect to variable @var{x}.  That is,
 
 @deffn {Function} coefmatrix ([@var{eqn_1}, ..., @var{eqn_m}], [@var{x_1}, ..., @var{x_n}])
 Returns the coefficient matrix for the
-variables @var{eqn_1}, ..., @var{eqn_m} of the system of linear equations 
-@var{x_1}, ..., @var{x_n}.
-@c AN EXAMPLE WOULD BE REALLY NICE HERE
+variables @var{x_1}, ..., @var{x_n} of the system of linear equations 
+@var{eqn_1}, ..., @var{eqn_m}.
+
+@example
+(%i1) coefmatrix([2*x-(a-1)*y+5*b = 0, b*y+a*x = 3], [x,y]);
+                                 [ 2  1 - a ]
+(%o1)                            [          ]
+                                 [ a    b   ]
+@end example
 
 @end deffn
 
@@ -211,8 +218,6 @@ Warning - you are redefining the Macsyma function eigenvectors
 
 @deffn {Function} conjugate (@var{x})
 Returns the complex conjugate of @var{x}.
-
-@code{load (conjugate)} loads this function.
 
 @c ===beg===
 @c declare ([aa, bb], real, cc, complex, ii, imaginary);
@@ -505,25 +510,39 @@ to @code{SC*A} and @code{A.(SC*B)} simplifies to @code{SC*(A.B)}.
 @end defvr
 
 @deffn {Function} echelon (@var{M})
-Returns the echelon form of the matrix @var{M}.  The echelon form is computed from @var{M}
+Returns the echelon form of the matrix @var{M},
+as produced by Gaussian elimination.
+The echelon form is computed from @var{M}
 by elementary row operations such that the first
-non-zero element in each row in the resulting matrix is a one and the
+non-zero element in each row in the resulting matrix is one and the
 column elements under the first one in each row are all zero.
 
+@code{triangularize} also carries out Gaussian elimination,
+but it does not normalize the leading non-zero element in each row.
+
+@code{lu_factor} and @code{cholesky} are other functions which yield triangularized matrices.
+
+@c ===beg===
+@c M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+@c echelon (M);
+@c ===end===
 @example
-(%i1) m: matrix ([2, 1-a, -5*b], [a, b, c]);
-                       [ 2  1 - a  - 5 b ]
-(%o1)                  [                 ]
-                       [ a    b      c   ]
-(%i2) echelon (m);
-                  [      a - 1       5 b     ]
-                  [ 1  - -----     - ---     ]
-                  [        2          2      ]
-(%o2)/R/          [                          ]
-                  [             2 c + 5 a b  ]
-                  [ 0     1     ------------ ]
-                  [                    2     ]
-                  [             2 b + a  - a ]
+(%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                       [  3   7  aa  bb ]
+                       [                ]
+(%o1)                  [ - 1  8  5   2  ]
+                       [                ]
+                       [  9   2  11  4  ]
+(%i2) echelon (M);
+                  [ 1  - 8  - 5      - 2     ]
+                  [                          ]
+                  [         28       11      ]
+                  [ 0   1   --       --      ]
+(%o2)             [         37       37      ]
+                  [                          ]
+                  [              37 bb - 119 ]
+                  [ 0   0    1   ----------- ]
+                  [              37 aa - 313 ]
 @end example
 
 @end deffn
@@ -543,7 +562,7 @@ multiplicities of the eigenvalues in the corresponding order.
 characteristic polynomial of the matrix.
 Sometimes @code{solve} may not be able to find the roots of the polynomial;
 in that case some other functions in this
-package (except @code{conjugate}, @code{innerproduct}, @code{unitvector}, @code{columnvector} and
+package (except @code{innerproduct}, @code{unitvector}, @code{columnvector} and
 @code{gramschmidt}) will not work.
 @c WHICH ONES ARE THE FUNCTIONS WHICH DON'T WORK ??
 @c ACTUALLY IT'S MORE IMPORTANT TO LIST THE ONES WHICH DON'T WORK HERE
@@ -632,7 +651,8 @@ The elements may be any expressions, which are evaluated.
 (%i1) n: 3$
 (%i2) m: entermatrix (n, n)$
 
-Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric  4. General
+Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric 
+4. General
 Answer 1, 2, 3 or 4 : 
 1$
 Row 1 Column 1: 
@@ -663,8 +683,10 @@ Returns a matrix generated from @var{a},
 taking element @code{@var{a}[@var{i_1},@var{j_1}]}
 as the upper-left element and @code{@var{a}[@var{i_2},@var{j_2}]}
 as the lower-right element of the matrix.
-Here @var{a} is an array (created by @code{array} but not by @code{make_array})
-or an array function. 
+Here @var{a} is a declared array (created by @code{array} but not by @code{make_array})
+or an undeclared array,
+or an array function,
+or a lambda expression of two arguments.
 (An array function is created like other functions with @code{:=} or @code{define},
 but arguments are enclosed in square brackets instead of parentheses.)
 
@@ -674,8 +696,23 @@ If both @var{j_1} and @var{i_1} are omitted, both are assumed equal to 1.
 If a selected element @code{i,j} of the array is undefined,
 the matrix will contain a symbolic element @code{@var{a}[i,j]}.
 
+Examples:
+
+@c ===beg===
+@c h [i, j] := 1 / (i + j - 1);
+@c genmatrix (h, 3, 3);
+@c array (a, fixnum, 2, 2);
+@c a [1, 1] : %e;
+@c a [2, 2] : %pi;
+@c genmatrix (a, 2, 2);
+@c genmatrix (lambda ([i, j], j - i), 3, 3);
+@c genmatrix (B, 2, 2);
+@c ===end===
 @example
-(%i1) h[i,j] := 1/(i+j-1)$
+(%i1) h [i, j] := 1 / (i + j - 1);
+                                    1
+(%o1)                  h     := ---------
+                        i, j    i + j - 1
 (%i2) genmatrix (h, 3, 3);
                            [    1  1 ]
                            [ 1  -  - ]
@@ -688,16 +725,28 @@ the matrix will contain a symbolic element @code{@var{a}[i,j]}.
                            [ 1  1  1 ]
                            [ -  -  - ]
                            [ 3  4  5 ]
-(%i3) array (a, fixnum, 2, 2)$
-(%i4) a[1,1]: %e$
-(%i5) a[2,2]: %pi$
-(%i6) kill (a[1,2], a[2,1])$
-(%i7) genmatrix (a, 2, 2);
-                        [  %e    a     ]
-                        [         1, 2 ]
-(%o7)                   [              ]
-                        [ a       %pi  ]
-                        [  2, 1        ]
+(%i3) array (a, fixnum, 2, 2);
+(%o3)                           a
+(%i4) a [1, 1] : %e;
+(%o4)                          %e
+(%i5) a [2, 2] : %pi;
+(%o5)                          %pi
+(%i6) genmatrix (a, 2, 2);
+                           [ %e   0  ]
+(%o6)                      [         ]
+                           [ 0   %pi ]
+(%i7) genmatrix (lambda ([i, j], j - i), 3, 3);
+                         [  0    1   2 ]
+                         [             ]
+(%o7)                    [ - 1   0   1 ]
+                         [             ]
+                         [ - 2  - 1  0 ]
+(%i8) genmatrix (B, 2, 2);
+                        [ B      B     ]
+                        [  1, 1   1, 2 ]
+(%o8)                   [              ]
+                        [ B      B     ]
+                        [  2, 1   2, 2 ]
 @end example
 
 @end deffn
@@ -745,16 +794,6 @@ Warning - you are redefining the Macsyma function eigenvectors
 (%i5) [i (y[1], y[2]), i (y[2], y[3]), i (y[3], y[1])];
 (%o5)                       [0, 0, 0]
 @end example
-
-@end deffn
-
-@deffn {Function} hach (@var{a}, @var{b}, @var{m}, @var{n}, @var{l})
-@code{hach} is an implementation of Hacijan's linear programming algorithm.
-
-@code{load ("kach")} loads this function.
-@code{demo ("kach")} executes a demonstration of this function.
-@c ACTUALLY BOTH kach.mac AND kach.dem APPEAR TO BE BROKEN AT THE MOMENT
-@c DUNNO WHAT WE SHOULD DO ABOUT THAT HERE
 
 @end deffn
 
@@ -1162,7 +1201,8 @@ Examples:
                         [ transpose(a) ]
 (%o6)                   [              ]
                         [ transpose(b) ]
-(%i7) matrix_element_transpose: lambda ([x], realpart(x) - %i*imagpart(x))$
+(%i7) matrix_element_transpose: lambda ([x], realpart(x)
+      - %i*imagpart(x))$
 (%i8) m: matrix ([1 + 5*%i, 3 - 2*%i], [7*%i, 11]);
                      [ 5 %i + 1  3 - 2 %i ]
 (%o8)                [                    ]
@@ -1373,15 +1413,40 @@ Returns the transpose of @var{M}.
 If @var{M} is a matrix, the return value is another matrix @var{N}
 such that @code{N[i,j] = M[j,i]}.
 
-Otherwise @var{M} is a list, and the return value is a matrix @var{N}
+If @var{M} is a list, the return value is a matrix @var{N}
 of @code{length (m)} rows and 1 column, such that @code{N[i,1] = M[i]}.
+
+Otherwise @var{M} is a symbol,
+and the return value is a noun expression @code{'transpose (@var{M})}.
 
 @end deffn
 
 @deffn {Function} triangularize (@var{M})
-Returns the upper triangular form of the matrix @code{M}.
+Returns the upper triangular form of the matrix @code{M},
+as produced by Gaussian elimination.
+The return value is the same as @code{echelon},
+except that the leading nonzero coefficient in each row is not normalized to 1.
 
-@var{M} need not be square.
+@code{lu_factor} and @code{cholesky} are other functions which yield triangularized matrices.
+
+@c ===beg===
+@c M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+@c triangularize (M);
+@c ===end===
+@example
+(%i1) M: matrix ([3, 7, aa, bb], [-1, 8, 5, 2], [9, 2, 11, 4]);
+                       [  3   7  aa  bb ]
+                       [                ]
+(%o1)                  [ - 1  8  5   2  ]
+                       [                ]
+                       [  9   2  11  4  ]
+(%i2) triangularize (M);
+             [ - 1   8         5            2      ]
+             [                                     ]
+(%o2)        [  0   - 74     - 56         - 22     ]
+             [                                     ]
+             [  0    0    626 - 74 aa  238 - 74 bb ]
+@end example
 
 @end deffn
 
@@ -1483,8 +1548,12 @@ Returns an @var{m} by @var{n} matrix, all elements of which are zero.
 
 @end deffn
 
-@defvr {Special symbol} "["
-@defvrx {Special symbol} "]"
+@defvr {Special symbol} [
+@defvrx {Special symbol} ]
+@ifinfo
+@fnindex List delimiters
+@fnindex Subscript operator
+@end ifinfo
 @code{[} and @code{]} mark the beginning and end, respectively, of a list.
 
 @code{[} and @code{]} also enclose the subscripts of

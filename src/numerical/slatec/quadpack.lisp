@@ -2,42 +2,55 @@
 
 (in-package :maxima)
 
+#-gcl
+(defmacro get-integrand (fun var)
+  `(compile nil (coerce-float-fun ,fun `((mlist) ,,var))))
+
+#+gcl
+(defmacro get-integrand (fun var)
+  `(coerce-float-fun ,fun `((mlist) ,,var)))
+
 (defun $quad_qag (fun var a b key &optional (epsrel 1d-8) (limit 200))
   (let* ((lenw (* 4 limit))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array limit :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-			      `((mlist) ,var)))))
-    (multiple-value-bind (junk z-a z-b z-epsabs z-epsrel z-key result abserr neval ier z-limit z-lenw last)
-	(slatec::dqag #'(lambda (x)
-			    (float (second (funcall f x)) 1d0))
-			(float a) (float b) 0d0 (float epsrel) key
-			0d0 0d0 0 0
-			limit lenw 0 iwork work)
-      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-key z-limit z-lenw))
+	 (f (get-integrand fun var)))
+    (multiple-value-bind (junk z-a z-b z-epsabs z-epsrel z-key result abserr neval ier
+			       z-limit z-lenw last)
+	(slatec:dqag #'(lambda (x)
+			  (float (funcall f x) 1d0))
+		      ($float a)
+		      ($float b)
+		      0d0
+		      ($float epsrel) key
+		      0d0 0d0 0 0
+		      limit lenw 0 iwork work)
+      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-key z-limit z-lenw last))
       (list '(mlist) result abserr neval ier))))
   
 (defun $quad_qags (fun var a b &optional (epsrel 1d-8) (limit 200))
   (let* ((lenw (* 4 limit))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array limit :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-			      `((mlist) ,var)))))
-    (multiple-value-bind (junk z-a z-b z-epsabs z-epsrel result abserr neval ier z-limit z-lenw last)
-	(slatec::dqags #'(lambda (x)
-			    (float (second (funcall f x)) 1d0))
-			(float a) (float b) 0d0 (float epsrel)
-			0d0 0d0 0 0
-			limit lenw 0 iwork work)
-      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-limit z-lenw))
+	 (f (get-integrand fun var)))
+    (multiple-value-bind (junk z-a z-b z-epsabs z-epsrel result abserr neval ier
+			       z-limit z-lenw last)
+	(slatec:dqags #'(lambda (x)
+			   (float (funcall f x) 1d0))
+		       ($float a)
+		       ($float b)
+		       0d0
+		       ($float epsrel)
+		       0d0 0d0 0 0
+		       limit lenw 0 iwork work)
+      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-limit z-lenw last))
       (list '(mlist) result abserr neval ier))))
 
 (defun $quad_qagi (fun var bound inf-type  &optional (epsrel 1d-8) (limit 200))
   (let* ((lenw (* 4 limit))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array limit :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-					   `((mlist) ,var))))
+	 (f (get-integrand fun var))
 	 (infinity (case inf-type
 		     ((1 $inf)
 		      ;; Interval is [bound, infinity]
@@ -48,90 +61,111 @@
 		     ((2 $both)
 		      ;; Interval is [-infinity, infinity]
 		      2))))
-    (multiple-value-bind (junk z-bound z-inf z-epsabs z-epsrel result abserr neval ier z-limit z-lenw last)
-	(slatec::dqagi #'(lambda (x)
-			   (float (second (funcall f x)) 1d0))
-			(float bound) infinity 0d0 (float epsrel)
-			0d0 0d0 0 0
-			limit lenw 0 iwork work)
-      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-limit z-lenw))
+    (multiple-value-bind (junk z-bound z-inf z-epsabs z-epsrel result abserr neval ier
+			       z-limit z-lenw last)
+	(slatec:dqagi #'(lambda (x)
+			   (float (funcall f x) 1d0))
+	       ($float bound)
+		       infinity
+		       0d0
+		       ($float epsrel)
+		       0d0 0d0 0 0
+		       limit lenw 0 iwork work)
+      (declare (ignore junk z-bound z-inf z-epsabs z-epsrel z-limit z-lenw last))
       (list '(mlist) result abserr neval ier))))
 
 (defun $quad_qawc (fun var c a b &optional (epsrel 1d-8) (limit 200))
   (let* ((lenw (* 4 limit))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array limit :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-					   `((mlist) ,var)))))
-    (multiple-value-bind (junk z-a z-b z-c z-epsabs z-epsrel result abserr neval ier z-limit z-lenw last)
-	(slatec::dqawc #'(lambda (x)
-			   (float (second (funcall f x)) 1d0))
-		       (float a) (float b) (float c)
-		       0d0 (float epsrel)
+	 (f (get-integrand fun var)))
+    (multiple-value-bind (junk z-a z-b z-c z-epsabs z-epsrel result abserr neval ier
+			       z-limit z-lenw last)
+	(slatec:dqawc #'(lambda (x)
+			   (float (funcall f x) 1d0))
+		       ($float a)
+		       ($float b)
+		       ($float c)
+		       0d0
+		       ($float epsrel)
 		       0d0 0d0 0 0
 		       limit lenw 0 iwork work)
-      (declare (ignore junk z-a z-b z-epsabs z-epsrel z-limit z-lenw))
+      (declare (ignore junk z-a z-b z-c z-epsabs z-epsrel z-limit z-lenw last))
       (list '(mlist) result abserr neval ier))))
 
-(defun $quad_qawf (fun var a omega trig &optional (epsabs 1d-10) (limit 200) (maxp1 100) (limlst 10))
+(defun $quad_qawf (fun var a omega trig &optional (epsabs 1d-10) (limit 200)
+		       (maxp1 100) (limlst 10))
   (let* ((leniw limit)
 	 (lenw (+ (* 2 leniw) (* 25 maxp1)))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array leniw :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-					   `((mlist) ,var))))
+	 (f (get-integrand fun var))
 	 (integr (ecase trig
 		   ((1 %cos $cos) 1)
 		   ((2 %sin $sin) 2))))
-    (multiple-value-bind (junk z-a z-omega z-integr epsabs result abserr neval ier z-limlst z-lst
+    (multiple-value-bind (junk z-a z-omega z-integr epsabs result abserr neval ier
+			       z-limlst z-lst
 			       z-leniw z-maxp1 z-lenw)
-	(slatec::dqawf #'(lambda (x)
-			   (float (second (funcall f x)) 1d0))
-		       (float a) (float omega) integr
-		       (float epsabs)
+	(slatec:dqawf #'(lambda (x)
+			   (float (funcall f x) 1d0))
+		       ($float a)
+		       ($float omega)
+		       integr
+		       ($float epsabs)
 		       0d0 0d0 0 0
 		       limlst 0 leniw maxp1 lenw iwork work)
-      (declare (ignore junk z-a z-omega z-integr z-limlst z-lst z-leniw z-maxp1 z-lenw))
+      (declare (ignore junk z-a z-omega z-integr epsabs z-limlst z-lst
+		       z-leniw z-maxp1 z-lenw))
       (list '(mlist) result abserr neval ier))))
 
-(defun $quad_qawo (fun var a b omega trig &optional (epsrel 1d-10) (limit 200) (maxp1 100) (limlst 10))
+(defun $quad_qawo (fun var a b omega trig &optional (epsrel 1d-10) (limit 200)
+		       (maxp1 100))
   (let* ((leniw limit)
 	 (lenw (+ (* 2 leniw) (* 25 maxp1)))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array leniw :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-					   `((mlist) ,var))))
+	 (f (get-integrand fun var))
 	 (integr (ecase trig
 		   ((1 %cos $cos) 1)
 		   ((2 %sin $sin) 2))))
     (multiple-value-bind (junk z-a z-b z-omega z-integr z-epsabs z-epsrel
-			       result abserr neval ier z-limlst z-lst
-			       z-leniw z-maxp1 z-lenw)
-	(slatec::dqawo #'(lambda (x)
-			   (float (second (funcall f x)) 1d0))
-		       (float a) (float b) (float omega) integr
-		       0d0 (float epsrel)
+			       result abserr neval ier
+			       z-leniw z-maxp1 z-lenw z-lst)
+	(slatec:dqawo #'(lambda (x)
+			   (float (funcall f x) 1d0))
+		       ($float a)
+		       ($float b)
+		       ($float omega)
+		       integr
+		       0d0
+		       ($float epsrel)
 		       0d0 0d0 0 0
 		       leniw maxp1 lenw 0 iwork work)
-      (declare (ignore junk z-a z-omega z-integr z-limlst z-lst z-leniw z-maxp1 z-lenw))
+      (declare (ignore junk z-a z-b z-omega z-integr z-epsabs z-epsrel
+		       z-lst z-leniw z-maxp1 z-lenw))
       (list '(mlist) result abserr neval ier))))
 
 (defun $quad_qaws (fun var a b alfa beta wfun &optional (epsrel 1d-10) (limit 200))
   (let* ((lenw (* 4 limit))
 	 (work (make-array lenw :element-type 'double-float))
 	 (iwork (make-array limit :element-type 'f2cl-lib:integer4))
-	 (f (compile nil (coerce-float-fun `((mlist) ,fun)
-					   `((mlist) ,var)))))
+	 (f (get-integrand fun var)))
     (multiple-value-bind (junk z-a z-b z-alfa z-beta z-int z-epsabs z-epsrel
 			       result abserr neval ier
 			       z-limit z-lenw last)
-	(slatec::dqaws #'(lambda (x)
-			   (float (second (funcall f x)) 1d0))
-		       (float a) (float b) (float alfa) (float beta) wfun
-		       0d0 (float epsrel)
+	(slatec:dqaws #'(lambda (x)
+			   (float (funcall f x) 1d0))
+		       ($float a)
+		       ($float b)
+		       ($float alfa)
+		       ($float beta)
+		       wfun
+		       0d0
+		       ($float epsrel)
 		       0d0 0d0 0 0
 		       limit lenw 0 iwork work)
-      (declare (ignore junk z-a z-b z-alfa z-beta z-int z-limit z-lenw last))
+      (declare (ignore junk z-a z-b z-alfa z-beta z-int z-epsabs z-epsrel
+		       z-limit z-lenw last))
       (list '(mlist) result abserr neval ier))))
 
 

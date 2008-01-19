@@ -11,7 +11,7 @@
 ;;;     of the first, second and third kinds.                          ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;(macsyma-module ellipt)
 
 (defvar 3//2 '((rat simp) 3 2))
@@ -456,24 +456,37 @@
 (defmfun $inverse_jacobi_dn (u m)
   (simplify (list '(%inverse_jacobi_dn) (resimplify u) (resimplify m))))
 
-;; A complex number looks like
+;; Possible forms of a complex number:
 ;;
-;; ((MPLUS SIMP) 0.70710678118654757 ((MTIMES SIMP) 0.70710678118654757 $%I))
+;; 2.3
+;; $%i
+;; ((mplus simp) 2.3 ((mtimes simp) 2.3 $%i))
+;; ((mplus simp) 2.3 $%i))
+;; ((mtimes simp) 2.3 $%i)
 ;;
-;; or
-;;
-;; ((MPLUS SIMP) 1 $%I))
-;;
-(defun complex-number-p (u)
-  ;; Return non-NIL if U is a complex number (or number)
-  (or (numberp u)
-      (and (consp u)
-	   (numberp (second u))
-	   (or (and (consp (third u))
-		    (numberp (second (third u)))
-		    (eq (third (third u)) '$%i))
-	       (and (eq (third u) '$%i))))))
 
+
+;; Is argument u a complex number with real and imagpart satisfying predicate ntypep?
+(defun complex-number-p (u &optional (ntypep 'numberp))
+  (labels ((a1 (x) (cadr x))
+	   (a2 (x) (caddr x))
+	   (a3+ (x) (cdddr x))
+	   (N (x) (funcall ntypep x))	     ; N
+	   (i (x) (and (eq x '$%i) (N 1)))   ; %i
+	   (N+i (x) (and (null (a3+ x))	     ; mplus test is precondition
+			 (N (a1 x))
+			 (or (i (a2 x))
+			     (and (mtimesp (a2 x)) (N*i (a2 x))))))
+	   (N*i (x) (and (null (a3+ x))	     ; mtimes test is precondition
+			 (N (a1 x))
+			 (i (a2 x)))))
+    (declare (inline a1 a2 a3+ N i N+i N*i))
+    (cond ((N u))			     ;2.3
+	  ((atom u) (i u))		     ;%i
+	  ((mplusp u) (N+i u))		     ;N+%i, N+N*%i
+	  ((mtimesp u) (N*i u))		     ;N*%i
+	  (t nil))))
+	
 (defun complexify (x)
   ;; Convert a Lisp number to a maxima number
   (if (realp x)
@@ -810,7 +823,7 @@
 	   ;; Numerically evaluate acn
 	   ;;
 	   ;; acn(x,m) = F(acos(x),m)
-	   (elliptic-f (acos (float u)) m))
+	   (elliptic-f (cl:acos (float u)) m))
 	  ((and $numer (complex-number-p u)
 		(complex-number-p m))
 	   (complexify (elliptic-f (cl:acos (complex ($realpart u) ($imagpart u)))
@@ -849,7 +862,7 @@
 		  (m (float m))
 		  (phi (/ (* (sqrt (- 1 u)) (sqrt (+ 1 u)))
 			  (sqrt m))))
-	     (elliptic-f (asin phi) m)))
+	     (elliptic-f (cl:asin phi) m)))
 	  ((and $numer (complex-number-p u)
 		(complex-number-p m))
 	   (let* ((u (complex ($realpart u) ($imagpart u)))
@@ -996,10 +1009,6 @@ where x >= 0, y >= 0, z >=0, and at most one of x, y, z is zero.
 	   (setf z (* (+ z lam) 1/4))))))))
 
 (let ((errtol (expt (* 4 double-float-epsilon) 1/6))
-      (uplim (/ most-positive-double-float 5))
-      (lolim (* #-gcl least-positive-normalized-double-float
-		#+gcl least-positive-double-float
-		5))
       (c1 (float 1/24 1d0))
       (c2 (float 3/44 1d0))
       (c3 (float 1/14 1d0)))
@@ -1063,7 +1072,7 @@ first kind:
 	       (m (float m-arg)))
 	   (cond ((> m 1)
 		  ;; A&S 17.4.15
-		  (/ (elliptic-f (asin (* (sqrt m) (sin phi))) (/ m))))
+		  (/ (elliptic-f (cl:asin (* (sqrt m) (sin phi))) (/ m))))
 		 ((< m 0)
 		  ;; A&S 17.4.17
 		  (let* ((m (- m))
@@ -1117,7 +1126,7 @@ first kind:
   (declare (double-float m))
   (cond ((> m 1)
 	 ;; A&S 17.4.15
-	 (/ (elliptic-f (asin (sqrt m)) (/ m))))
+	 (/ (elliptic-f (cl:asin (sqrt m)) (/ m))))
 	((< m 0)
 	 ;; A&S 17.4.17
 	 (let* ((m (- m))
@@ -3645,12 +3654,12 @@ first kind:
 		       ;; 0 <= u-rem < K so
 		       ;; E(u + K) = E(u) + E - m*sn(u)*cd(u)
 		       (let ((u-k (- u ell-k)))
-			 (- (+ (elliptic-e (asin (sn u-k m)) m)
+			 (- (+ (elliptic-e (cl:asin (sn u-k m)) m)
 			       ell-e)
 			    (/ (* m (sn u-k m) (cn u-k m))
 			       (dn u-k m)))))
 		      (t
-		       (elliptic-e (asin (sn u m)) m)))))))
+		       (elliptic-e (cl:asin (sn u m)) m)))))))
 	((complexp u)
 	 ;; From Lawden:
 	 ;;
@@ -3716,7 +3725,7 @@ first kind:
     (cond ((or (and (floatp u) (floatp m))
 	       (and $numer (numberp u) (numberp m)))
 	   ;; Numerically evaluate am
-	   (asin (sn (float u 1d0) (float m 1d0))))
+	   (cl:asin (sn (float u 1d0) (float m 1d0))))
 	  (t
 	   ;; Nothing to do
 	   (eqtest (list '(%jacobi_am) u m) form)))))

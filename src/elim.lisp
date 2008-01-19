@@ -2,7 +2,7 @@
 ;;;Translated on: 5/12/85 13:46:23;;Maxima System version 8
 ;;** Variable settings were **
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;;TRANSCOMPILE:FALSE;
 ;;TR_SEMICOMPILE:FALSE;
@@ -16,7 +16,9 @@
 ;;TR_ARRAY_AS_REF:TRUE;
 ;;TR_NUMER:FALSE;
 ;;DEFINE_VARIABLE:FALSE;
-(eval-when (compile eval load)
+(eval-when
+    #+gcl (compile eval load)
+    #-gcl (:compile-toplevel :execute :load-toplevel)
   (defprop $eliminate t translated)
   (add2lnc '$eliminate $props)
   (defmtrfun
@@ -30,12 +32,12 @@
        (setq $flag (setq $dispflag nil))
        (cond ((not (and ($listp $eqns)
 			($listp $vars)))
-	      (simplify ($error '|&The arguments must both be lists|))))
+	      (simplify ($error (make-mstring "The arguments must both be lists")))))
        (cond ((> ($length $vars)
 		 (setq $l ($length $eqns)))
-	      (simplify ($error '|&More variables then equations|))))
+	      (simplify ($error (make-mstring "More variables then equations")))))
        (cond ((eql $l 1)
-	      (simplify ($error '|&Can't eliminate from only one equation|))))
+	      (simplify ($error (make-mstring "Can't eliminate from only one equation")))))
        (cond ((eql ($length $vars) $l)
 	      (setq $vars ($reverse $vars))
 	      (setq $sv (maref $vars 1))

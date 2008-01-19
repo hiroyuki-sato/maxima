@@ -1,42 +1,38 @@
-(in-package "COMMON-LISP-USER")
+(in-package :common-lisp-user)
 
-(defpackage "MAXIMA-NREGEX"
-  (:use "COMMON-LISP")
+(defpackage :maxima-nregex
+  (:use :common-lisp)
   (:export
-   ;; Vars
-   "*REGEX-DEBUG*" "*REGEX-GROUPS*" "*REGEX-GROUPINGS*"
-   ;; Functions
-   "REGEX-COMPILE"
+   ;; vars
+   #:*regex-debug* #:*regex-groups* #:*regex-groupings*
+   ;; functions
+   #:regex-compile
    ))
 
-(defpackage "CL-INFO"
-  (:use "COMMON-LISP" "MAXIMA-NREGEX")
-  (:export "INFO" "*INFO-PATHS*"))
+(defpackage :cl-info
+  (:use :common-lisp))
 
-(defpackage "COMMAND-LINE"
-  (:use "COMMON-LISP")
-  (:nicknames "CMDLINE")
-  (:export "CL-OPTION" "MAKE-CL-OPTION" "LIST-CL-OPTIONS" "PROCESS-ARGS"
-	   "GET-APPLICATION-ARGS"))
+(defpackage :command-line
+  (:use :common-lisp)
+  (:nicknames :cmdline)
+  (:export #:cl-option #:make-cl-option #:list-cl-options #:process-args
+	   #:get-application-args))
 
 ;; GCL has SLOOP built in but it's slightly different now...
-(defpackage "CL-SLOOP"
-  (:use "COMMON-LISP")
-  (:export "SLOOP"))
+(defpackage :cl-sloop
+  (:use :common-lisp)
+  (:export #:sloop))
 
-(defpackage "MAXIMA"
-  (:use "COMMON-LISP" "COMMAND-LINE")
-  (:nicknames "CL-MACSYMA" "CL-MAXIMA" "MACSYMA")
-  (:import-from "CL-SLOOP" "SLOOP")
-  (:shadow complement                   ;(maxmac)
-	   continue		 ;(macsys): part of the top-level loop
+(defpackage :maxima
+  (:use :common-lisp :command-line)
+  (:nicknames :cl-macsyma :cl-maxima :macsyma)
+  (:import-from :cl-sloop #:sloop)
+  (:shadow continue		 ;(macsys): part of the top-level loop
 	   //                           ;(clmacs): arithmetic operator
 	   float		;(clmacs): has 1.0d0 as default format
 	   functionp                    ;(commac): accepts symbols
 	   array                        ;(commac)
 	   exp			   ;various files declare this special
-	   listen		     ;(suprv1): has trivial definition
-					; (listen any) ==> 0
 	   signum                       ;(commac): same except
 					; (cl:signum 1.3)==1.0 not 1 but I (?)
 					; think this is ok for macsyma
@@ -50,18 +46,35 @@
 	   ;; Maxima parses lambda as cl:lambda. 
 	   #+(and sbcl sb-package-locks) makunbound)
   #+gcl
-  (:import-from "SYSTEM"
+  (:import-from :system
 		;; Faster modular arithmetic.
 		;; Unfortunately, as S. Macrakis observed (bug #706562),
 		;; SI::CMOD currently behaves in a strange way:
 		;; (let ((si::modulus 4)) (si::cmod 2)) => 2
 		;; (let ((si::modulus 4)) (si::cmod -2)) => -2
-		"MODULUS" "CMOD" "CTIMES" "CDIFFERENCE" "CPLUS"
+		#:modulus #:cmod #:ctimes #:cdifference #:cplus
 
-		"GETPID" "GET-INSTREAM"
-		"SHORT-NAME" "CLEANUP" "INSTREAM-STREAM-NAME" "INSTREAM-LINE"
-		"INSTREAM-NAME" "INSTREAM-STREAM" "STREAM-NAME" "COMPLETE-PROP"
-		"*STREAM-ALIST*" "BREAK-CALL"))
+		#:getpid #:get-instream
+		#:short-name #:cleanup #:instream-stream-name #:instream-line
+		#:instream-name #:instream-stream #:stream-name #:complete-prop
+		#:*stream-alist* #:break-call))
 
 
-(provide "MAXIMA")
+(defpackage :mt19937
+  (:use :common-lisp)
+  (:shadow #:random-state
+       #:random-state-p
+       #:random
+       #:*random-state*
+       #:make-random-state)
+  (:export #:random-state
+       #:random-state-p
+       #:random
+       #:*random-state*
+       #:make-random-state
+       #:%random-single-float
+       #:%random-double-float
+       #:random-chunk
+       #:init-random-state))
+
+(provide :maxima)

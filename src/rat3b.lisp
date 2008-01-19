@@ -8,14 +8,14 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module rat3b)
 
 ;;	THIS IS THE NEW RATIONAL FUNCTION PACKAGE PART 2.
 ;;	IT INCLUDES RATIONAL FUNCTIONS ONLY.
 
-(declare-top(genprefix a_2)
-	    (special $algebraic $ratfac $keepfloat $float))
+(declare-top (special $algebraic $ratfac $keepfloat $float))
 
 (load-macsyma-macros ratmac)
 
@@ -27,17 +27,16 @@
 (defun palgp (poly)
   (cond ((pcoefp poly) nil)
 	((alg poly) t)
-	(t (do ((p (cdr poly) (cddr p))) ((null p))
+	(t (do ((p (cdr poly) (cddr p)))
+	       ((null p))
 	     (and (palgp (cadr p)) (return t))))))
-
-
 
 
 (defun ratdx (e *x*)
   (declare (special *x*))
   (prog (varlist flag v* genvar *a a trunclist)
      (declare (special v* *a flag trunclist))
-     (and (memq 'trunc (car e)) (setq trunclist (cadddr (cdar e))))
+     (and (member 'trunc (car e) :test #'eq) (setq trunclist (cadddr (cdar e))))
      (cond ((not (eq (caar e) (quote mrat))) (setq e (ratf e))))
      (setq varlist (caddar e))
      (setq genvar (car (cdddar e)))
@@ -45,8 +44,7 @@
      (cond ((> (length genvar) (length varlist))
 	    ;; Presumably this produces a copy of GENVAR which has the
 	    ;; same length as VARLIST.  Why not rplacd?
-	    (setq genvar (mapcar #'(lambda (a b) a ;Ignored
-					   b)
+	    (setq genvar (mapcar #'(lambda (a b) (declare (ignore a)) b)
 				 varlist genvar))))
      (setq *x* (fullratsimp *x*))
      (newvar *x*) 
@@ -78,19 +76,20 @@
 		       (rattimes (cons u 1) (ratdp v) t))
 	       (cons (pexpt v 2) 1)))
 
-(defun ratdp (p) (cond ((pcoefp p) (rzero))
-		       ((rzerop (get (car p) 'diff))
-			(ratdp1 (cons (list (car p) 'foo 1) 1) (cdr p)))
-		       (t (ratdp2 (cons (list (car p) 'foo 1) 1)
-				  (get (car p) 'diff)
-				  (cdr p)))))
+(defun ratdp (p)
+  (cond ((pcoefp p) (rzero))
+	((rzerop (get (car p) 'diff))
+	 (ratdp1 (cons (list (car p) 'foo 1) 1) (cdr p)))
+	(t (ratdp2 (cons (list (car p) 'foo 1) 1)
+		   (get (car p) 'diff)
+		   (cdr p)))))
 
 (defun ratdp1 (x v)
   (cond ((null v) (rzero))
 	((eqn (car v) 0) (ratdp (cadr v)))
 	(t (ratplus (rattimes (subst (car v) 'foo x) (ratdp (cadr v)) t)
 		    (ratdp1 x (cddr v))))))
-
+
 (defun ratdp2 (x dx v)
   (cond ((null v) (rzero))
 	((eqn (car v) 0) (ratdp (cadr v)))
@@ -101,7 +100,7 @@
 				     (ratdp (cadr v)) t))))
 	(t (ratplus (ratdp2 x dx (cddr v))
 		    (ratplus (rattimes dx
-				       (rattimes (subst (sub1 (car v))
+				       (rattimes (subst (1- (car v))
 							'foo
 							x)
 						 (cons (ptimes (car v)
@@ -127,15 +126,10 @@
 		   (t (rplacd num (ptimes (cdr num)
 					  (pexpt (cadr denom) 2)))))))))
 
-;; (DEFMFUN RATABS (Y)
-;;  (COND ((PMINUSP (CAR Y)) (CONS (PMINUS (CAR Y)) (CDR Y)))
-;; 	(T Y)))
-
-
-(defmfun ratdif (x y) (ratplus x (ratminus y))) 
+(defmfun ratdif (x y)
+  (ratplus x (ratminus y))) 
 
 (defmfun ratfact (x fn)
-  (declare (object fn))
   (cond ((and $keepfloat (or (pfloatp (car x)) (pfloatp (cdr x)))
 	      (setq fn 'floatfact) nil))
 	((not (equal (cdr x) 1))
@@ -148,9 +142,6 @@
     (cond ((equal primp 1) cont)
 	  (t (append cont (list primp 1))))))
 
-;; (DEFUN RATGCM (X Y)
-;;   (CONS (PGCD (CAR X) (CAR Y)) (PLCM (CDR X) (CDR Y))))
-
 (defun ratinvert (y)
   (ratalgdenom
    (cond ((pzerop (car y)) (errrjf "`quotient' by `zero'"))
@@ -161,7 +152,8 @@
 	 ((pminusp (car y)) (cons (pminus (cdr y)) (pminus (car y))))
 	 (t (cons (cdr y) (car y))))))
 
-(defmfun ratminus (x) (cons (pminus (car x)) (cdr x)))
+(defmfun ratminus (x)
+  (cons (pminus (car x)) (cdr x)))
 	 
 (defun ratalgdenom (x)
   (cond ((not $ratalgdenom) x)
@@ -186,7 +178,6 @@
 		 ((pminusp (cdr b))
 		  (cons (pminus (car b)) (pminus (cdr b))))
 		 (t b)))))
-
 
 (defun ptimes* (p q)
   (cond ($ratwtlvl (wtptimes p q 0))
@@ -211,7 +202,7 @@
 (defmfun ratexpt (x n)
   (cond ((equal n 0) '(1 . 1))
 	((equal n 1) x)
-	((minusp n) (ratinvert (ratexpt x (minus n))))
+	((minusp n) (ratinvert (ratexpt x (- n))))
 	($ratwtlvl (ratreduce (wtpexpt (car x) n) (wtpexpt (cdr x) n)))
 	($algebraic (ratreduce (pexpt (car x) n) (pexpt (cdr x) n)))
 	(t (cons (pexpt (car x) n) (pexpt (cdr x) n)))))
@@ -238,13 +229,14 @@
 	(t (setq q (pgcdcofacts (cdr x) (cdr y)))
 	   (setq n (pplus (ptimes (car x)(caddr q))
 			  (ptimes (car y)(cadr q))))
-	   (cond ((pzerop n) (rzero))
-		 ((eqn 1 (car q)) (cons n (ptimes (cdr x) (cdr y))))
-		 (t (setq n (ratreduce n (car q)))
-		    (cons (car n) (ptimes (cdr n)
-					  (ptimes (cadr q) (caddr q)))))))))
+	   (if (cadddr q)		; denom factor from algebraic gcd
+	       (setq n (ptimes n (cadddr q))))
+	   (ratreduce n 
+		      (ptimes (car q)
+			      (ptimes (cadr q) (caddr q)))))))
 
-(defmfun ratquotient (x y) (rattimes x (ratinvert y) t)) 
+(defmfun ratquotient (x y)
+  (rattimes x (ratinvert y) t)) 
 
 ;;	THIS IS THE END OF THE NEW RATIONAL FUNCTION PACKAGE PART 2.
 ;;	IT INCLUDES RATIONAL FUNCTIONS ONLY.

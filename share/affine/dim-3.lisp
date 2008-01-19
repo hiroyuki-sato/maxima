@@ -5,7 +5,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (defun point-of-tensors (special-tensor standard-tensor
 			       &key (nc-monomials ($list_nc_monomials standard-tensor)))
@@ -51,8 +51,8 @@
 	do (setq tem (sub*  (ncmul* v elmt)
 			    (ncmul*  elmt (setq oth ($general_sum $current_variables $aaaa )))))
 	(setq answ ($totaldisrep ($numerator ($dotsimp tem))))
-	(setq eqns ($extract_Linear_equations  (list '(mlist)answ)))
-	(setq solns ($fast_linsolve eqns (firstn (length $current_variables) $aaaa)))
+	(setq eqns ($extract_linear_equations  (list '(mlist) answ)))
+	(setq solns ($fast_linsolve eqns (subseq $aaaa 0 (length $current_variables))))
 	collecting ($sublis solns oth) into final
 	do (mshow (cons '(mlist)final))
 	finally (return (cons '(mlist) final))))
@@ -75,7 +75,7 @@
 	(t (collect-atoms1 (cdr tree) pred))))
 
   
-(defun $Find_coefficients_for_linear_combination( items in-terms-of monoms &optional (cofs $aaaa)
+(defun $find_coefficients_for_linear_combination( items in-terms-of monoms &optional (cofs $aaaa)
 		 &aux (gen-sum 0) rest-monoms final-answ answ tem dif)
    (setq monoms (nreverse (st-rat  monoms)))
   (while (setq in-terms-of (cdr in-terms-of))
@@ -114,7 +114,7 @@
 		    (cons (car matrix)
 			  (sloop for u in (cdr matrix)
 				with max =  (1+ (max i j))
-				collecting (nconc (firstn max u) (nthcdr max u)))))))
+				collecting (nconc (subseq u 0 max) (nthcdr max u)))))))
 				
   (sloop for u in (cdr matrix)
 	do (swapf (nth i u) (nth j u)))
@@ -122,7 +122,7 @@
 
 (defun $interchange_matrix_rows (matrix i j &optional copy)
   "interchange MATRIX rows I and J.  If COPY then copy then don't do it destructively"
-  (cond (copy (setq matrix (nconc (firstn (setq copy(1+ (max i j))) matrix)
+  (cond (copy (setq matrix (nconc (subseq matrix 0 (setq copy (1+ (max i j))))
 				   (nthcdr copy matrix )))))
   (swapf (nth i matrix) (nth j matrix))
   matrix)
@@ -183,7 +183,7 @@
 						   (>= ($length replacements)
 						       ($length vari))) "long enough macsyma-list")
 		      (cond (prefix (setf (cdr vari) (sort (cdr vari) 'alphalessp))))
-		      (pairlis (cdr vari) (firstn ($length vari) (cdr replacements))))))
+		      (pairlis (cdr vari) (subseq (cdr replacements) 0 ($length vari))))))
   (sublis subs form))
 
 (defun check-cases (roots-of-one &aux relats)
@@ -338,7 +338,7 @@
   (mshow tem)
   (setq tem ($dotsimp tem))
   (mshow tem)
-  (setq eqns ($extract_Linear_equations ($totaldisrep ($numerator tem))))
+  (setq eqns ($extract_linear_equations ($totaldisrep ($numerator tem))))
   (cond (auto-data (sloop for v in (cdr auto-data )
 			 collecting ($maybe_ldata_solve ($append v eqns) :yes t ) into all
 			 finally (return (apply '$append all))))
@@ -480,7 +480,7 @@
   "if trace-matrix is the <ui,uj> for an inner product, find the elt u, such that
    <u,ui>=1 and <u,uj>=0 for i not = j, where i= number-of-element-in-basis."
   (setq cond0 ($list_matrix_entries
-		(ncmul* trace-matrix (setq vari(firstn (length basis) $aaaa)))))
+		(ncmul* trace-matrix (setq vari (subseq $aaaa 0 (length basis))))))
   (setq actual-conditions   (cons '(mlist) (sloop for v in (cdr cond0 )
 						for i from 1
 						when (eql i number-of-element-in-basis)
@@ -603,11 +603,11 @@
 
 
 (defvar *nvars* 6)
-(defun LIST-ORDERED-PAIRS-WITH-REPEAT-COUNT(i j n nrepeats)
+(defun list-ordered-pairs-with-repeat-count(i j n nrepeats)
   ;; return the list of 2*n integers all less than i
   ;; such that there are no more than NREPEATS.
   (let ((*nvars* i))
-    (LIST-ORDERED-PAIRS-WITH-REPEAT-COUNT1 i j n nrepeats)))
+    (list-ordered-pairs-with-repeat-count1 i j n nrepeats)))
 
 (defun repeat-ok1 (i j lis nrepeats &aux (n 0))
   
@@ -622,17 +622,17 @@
 		 (t t)))))
   
 (defun list-ordered-pairs-with-repeat-count1 (i j number-pairs number-repeats)
-  (COND ((<= Number-pairs 0) (list NIL))
-	(T
+  (cond ((<= number-pairs 0) (list nil))
+	(t
 	 (sloop for ii to i
 		when ( < ii *nvars*)
 		append
 		(sloop for jj below (if (eql ii i) j *nvars* )
-		       APPEND
-		       (SLOOP FOR U IN (LIST-ORDERED-PAIRS-WITH-REPEAT-COUNT1
-					II JJ (- Number-pairs 1) number-repeats)
+		       append
+		       (sloop for u in (list-ordered-pairs-with-repeat-count1
+					ii jj (- number-pairs 1) number-repeats)
 			      when (repeat-ok1 ii jj u number-repeats)
-				      COLLECT (APPEND (LIST II JJ) U)))))))
+				      collect (append (list ii jj) u)))))))
 
 
 

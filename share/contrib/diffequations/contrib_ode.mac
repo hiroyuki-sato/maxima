@@ -3,25 +3,32 @@
   Driver for contributed ODE routines
 
 
-  Copyright (C) 2004 David Billinghurst		 
-  		       								 
-  This program is free software; you can redistribute it and/or modify	 
-  it under the terms of the GNU General Public License as published by	 
-  the Free Software Foundation; either version 2 of the License, or		 
-  (at your option) any later version.					 
- 		       								 
-  This program is distributed in the hope that it will be useful,		 
-  but WITHOUT ANY WARRANTY; without even the implied warranty of		 
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the		 
-  GNU General Public License for more details.				 
- 		       								 
+  Copyright (C) 2004,2006,2007 David Billinghurst
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version. 
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
   You should have received a copy of the GNU General Public License	
   along with this program; if not, write to the Free Software 		 
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.	
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+
+declare(method,special);
 
 if get('ode1_nonlinear,'version)=false then
   load('ode1_nonlinear)$
+
+if get('odelin,'version)=false then
+  load('odelin)$
+
+load('opsubst)$
 
 contrib_ode(eqn,y,x) := block(
   [soln,degree:derivdegree(eqn,y,x)],
@@ -50,18 +57,52 @@ contrib_ode(eqn,y,x) := block(
     )
   )
   else if (degree=2) then (
-    ode_disp("   Second order equation"),
-    ode_disp("    -> ode2"),
-    soln:ode2(eqn,y,x),
-    if (soln#false) then (
-      ode_disp("     Successful"),
-      [soln]
-    )
-    else
-      false
+    return(ode2_linear(eqn,y,x))
   )
   else (
     error("contrib_ode: This case cannot occur"),
+    false
+  )
+)$
+
+/* Try methods for linear 2nd order ODEs.
+   eqn is a 2nd order ODE.
+   FIXME: Remove multiple checks for linearity 
+*/
+ode2_linear(eqn,y,x) := block(
+  [de,a1,a2,a3,a4,soln,%k1,%k2],
+  ode_disp("   Second order equation"),
+  de: desimp(lhs(eqn)-rhs(eqn)),
+  a1: coeff(de,'diff(y,x,2)), 
+  a2: coeff(de,'diff(y,x)), 
+  a3: coeff(de,y),
+  a4: expand(de - a1*'diff(y,x,2) - a2*'diff(y,x) - a3*y),
+  if (freeof(y,[a1,a2,a3,a4])) then (
+    ode_disp("     Linear 2nd order ODE"),
+    /* Try the ode2 routines first */
+    ode_disp("    -> ode2"),
+    soln:ode2(eqn,y,x),
+    /* ode2 can return [] on failure */
+    if (soln#false and soln#[]) then (
+      ode_disp("     Successful"),
+      [soln]
+    ) else if is(a4=0) then (
+      /* Now try the routines in odelin */
+      ode_disp("    -> odelin"),
+      soln:odelin(eqn,y,x),
+      if (soln#false) then (
+        ode_disp("     Successful"),
+        method:'odelin,
+        ode_disp(soln),
+        /* odelin returns a fundamental soln set */
+        soln:listify(soln),
+        [y=%k1*soln[1]+%k2*soln[2]]
+      ) else (
+        false
+      )
+    )
+  ) else (
+    ode_disp("     Non-linear 2nd order ODE"),
     false
   )
 )$
@@ -110,7 +151,7 @@ ode_check(e_,a_) := block(
 
   /* Is it a simple solution */
   if lhs(a_)=y_ then (
-    return(ratsimp(ev(lhs(e_)-rhs(e_),a_,diff)))
+    return(ode_check_tidy(ratsimp(ev(lhs(e_)-rhs(e_),a_,diff))))
   ),
 
   /* Must be an implicit solution */
@@ -126,5 +167,68 @@ ode_check(e_,a_) := block(
     print("Problem - dy/dx is ",u),
     return(false)
   ),
-  fullratsimp(ev(lhs(e_)-rhs(e_),u))
+  ode_check_tidy(fullratsimp(ev(lhs(e_)-rhs(e_),u)))
 )$
+
+/* Attempt to simplify the result from ode_check() */
+ode_check_tidy(e) := if freeof_bessel(e) then e else bessimp(e)$
+
+
+/*  This Bessel function simplification code can be improved,
+    but is does work fairly well on the contrib_ode testsuite.
+    Need to extend to cover cases like Kamke 1.14 and 1.24
+*/
+
+freeof_bessel(e):=freeof(nounify(bessel_j),nounify(bessel_y),
+   nounify(bessel_i),nounify(bessel_k),e);
+
+/* Simplify expressions containing bessel_F, where F in {j,y,i,k}.
+   Repeatedly find the highest order term F and substitute Fsub for F 
+
+   When F is a Bessel function of order n and argument x, then
+   Fsub is contains Bessel functions of order n-1 and n-2.
+
+   We separate the set of arguments into classes that have identical
+   second arguments and orders that differ by integers, then work on each
+   class until all the orders differ by less than 2. 
+*/
+besFsimp(ex,F,Fsub) := block([arglist,ords,ord2,max,min,s,t,u,m,n,x,e:ex],
+  if freeof(nounify(F),ex) then return(ex),
+  argset:setify(gatherargs(ex,F)),
+  /*  partition arguments into sets with same second argument and
+      orders that differ by an integer */
+  argset:equiv_classes(argset,lambda([x,y],
+    (second(x)=second(y)) and integerp(ratsimp(first(x)-first(y))))),
+
+  /* Iterate over each equivalance class */
+
+  for s in argset do (
+    x:second(first(s)),  /* The common argument for s */
+    ords:map('first,s),  /* List of orders */
+    t:first(ords),          /* One element of the list of orders */
+    ord2:map(lambda([m],ratsimp(m-t)),ords), /* List of differences */
+    max:lmax(ord2),      /* maximum order is t+max */
+    min:lmin(ord2),      /* minimum order is t+min */
+    for m: max step -1 unless ratsimp(m-min)<2 do (
+      n:subset(ords,lambda([u],is(ratsimp(u-t-m)=0))),
+      n:if emptyp(n) then ratsimp(t+m) else first(n),
+      e:subst(apply(Fsub,[n,x]),apply(F,[n,x]),e),
+      e:ratsimp(e)
+    ) 
+  ),
+  e
+)$
+
+besjsimp(ex):=besFsimp(ex,bessel_j,
+  lambda([n,x], 2*(n-1)*bessel_j(n-1,x)/x-bessel_j(n-2,x)));
+
+besysimp(ex):=besFsimp(ex,bessel_y,
+  lambda([n,x], 2*(n-1)*bessel_y(n-1,x)/x-bessel_y(n-2,x)));
+
+besisimp(ex):=besFsimp(ex,bessel_i,
+  lambda([n,x],-2*(n-1)*bessel_i(n-1,x)/x+bessel_i(n-2,x)));
+
+besksimp(ex):=besFsimp(ex,bessel_k,
+  lambda([n,x], 2*(n-1)*bessel_k(n-1,x)/x+bessel_k(n-2,x)));
+
+bessimp(e) := besksimp(besisimp(besysimp(besjsimp(e))))$

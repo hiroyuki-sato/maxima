@@ -8,8 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
-
+(in-package :maxima)
 
 (macsyma-module merror)
 
@@ -18,7 +17,7 @@
 
 (defvar *mdebug* t "Enter the lisp debugger on an error if this is true")
 
-(defmvar $error '((mlist simp) |&No error.|)
+(defmvar $error `((mlist simp) ,(make-mstring "No error."))
   "During an MAXIMA-ERROR break this is bound to a list
   of the arguments to the call to MAXIMA-ERROR, with the message
   text in a compact format.")
@@ -30,7 +29,7 @@
   "Signals a Maxima user error."
   (apply #'merror (fstringc l)))
 
-(defmvar $error_size 10.
+(defmvar $error_size 60.
   "Expressions greater in SOME size measure over this value
   are replaced by symbols {ERREXP1, ERREXP2,...} in the MAXIMA-ERROR
   display, the symbols being set to the expressions, so that one can
@@ -38,16 +37,22 @@
   this variable may be determined by factors of terminal speed and type.")
 
 (defun error-size (exp)
-  (if (atom exp) 0
+  ; RATDISREP the argument in case it's a CRE. Ugh.
+  ; But RATDISREP simplifies its argument, which is a no-no if we got here
+  ; because some simplification code is complaining, so inhibit simplification. Double ugh.
+  (let (($simp nil))
+    (setq exp (ratdisrep exp)))
+
+  (if (atom exp)
+      0
       (do ((l (cdr exp) (cdr l))
-	   (n 1 (f1+ (f+ n (error-size (car l))))))
+	   (n 1 (1+ (+ n (error-size (car l))))))
 	  ((or (atom l)
 	       ;; no need to go any further, and this will save us
 	       ;; from circular structures. (Which the display
 	       ;; package would have a hell of a time with too.)
 	       (> n $error_size))
-	   n)
-	(declare (fixnum n)))))
+	   n))))
 
 ;;; Problem: Most macsyma users do not take advantage of break-points
 ;;; for debugging. Therefore they need to have the error variables
@@ -58,21 +63,6 @@
 ;;; set things back. It would be better to bind these variables,
 ;;; for, amoung other things, then the values could get garbage 
 ;;; collected.
-
-;;Make up your mind.  The first definition here, commented out, is the
-;; original in the source.  I guess the binding didn't make it, because
-;; the second is from the 302 fix file F302. --gsb
-;;(DEFMFUN MERROR (STRING &REST L)
-;;  (SETQ STRING (CHECK-OUT-OF-CORE-STRING STRING))
-;;  (LET (($ERROR `((MLIST) ,STRING ,@L)))
-;;    (AND $ERRORMSG ($ERRORMSG))
-;;    (ERROR #+(OR LISPM NIL) STRING)))
-;;#-cl
-;;(DEFMFUN MERROR (STRING &REST L)
-;;  (SETQ STRING (CHECK-OUT-OF-CORE-STRING STRING))
-;;  (SETQ $ERROR `((MLIST) ,STRING ,@L))
-;;  (AND $ERRORMSG ($ERRORMSG))
-;;  (MAXIMA-ERROR #+(OR CL NIL) STRING))
 
 (define-condition maxima-$error (error)
   ((message :initform $error :reader the-$error))
@@ -89,31 +79,23 @@
   (cond (*mdebug*
 	 (let ((dispflag t) ret)
 	   (declare (special $help dispflag))
-	   (format t " -- an error.  Entering the Maxima Debugger dbm")
+	   (format t " -- an error.  Entering the Maxima Debugger dbm~%~
+                       Enter `:h' for help~%")
 	   (progn
 	     (setq ret (break-dbm-loop nil))
 	     (cond ((eql ret :resume)
-		    (break-quit)))
-		    
-	     ;;#+previous
-	     ;;	     (cond ((and (eql ret 'exit)
-	     ;;		    (member 'macsyma-break state-pdl))
-	     ;; 	            (throw 'macsyma-break t))
-	     ;;	           (t  (throw 'macsyma-quit t)
-	     ;;	      ))
-	     )))
+		    (break-quit))))))
 	(errcatch  (error 'maxima-$error))
 	(t
 	 (fresh-line *standard-output*)
 	 ($backtrace 3)
-	 (format t "~& -- an error.  Quitting.  To debug this try debugmode(true);~%")
-	 (throw 'macsyma-quit 'maxima-error)
-					;(if errcatch (error "macsyma error"))
-	 )))
+	 (format t "~& -- an error.  To debug this try debugmode(true);~%")
+	 (throw 'macsyma-quit 'maxima-error))))
 
 (defmacro with-$error (&body body)
   "Let MERROR signal a MAXIMA-$ERROR condition."
-  `(let ((errcatch t) *mdebug*	       ;let merror signal a lisp error
+  `(let ((errcatch t)
+	 *mdebug*		       ;let merror signal a lisp error
 	 $errormsg)			;don't print $error
      (declare (special errcatch))
      ,@body))
@@ -147,17 +129,18 @@
 	     (nreverse new-argl)))
     (let ((form (pop l)))
       (cond ((> (error-size form) $error_size)
-	     (setq symbol-number (f1+ symbol-number))
+	     (incf symbol-number)
 	     (let ((sym (nthcdr symbol-number $error_syms)))
 	       (cond (sym
 		      (setq sym (car sym)))
-		     ('else
-		      (setq sym (concat '$errexp symbol-number))
-		      (setq $error_syms (append $error_syms (list sym)))))
+		     (t
+		      (setq sym (intern (format nil "~A~D" '$errexp
+						symbol-number)))
+		      (tuchus $error_syms sym)))
 	       (push sym error-symbols)
 	       (push form error-values)
 	       (push sym new-argl)))
-	    ('else
+	    (t
 	     (push form new-argl))))))
 
 (defmfun $errormsg ()
@@ -176,15 +159,13 @@
 	  (mtell "~%** error while printing error message **~%~A~%"
 		 (cadr $error)
 		 )))
-    (fresh-line)
-    )
+    (fresh-line))
   '$done)
 
 (defmfun read-only-assign (var val)
   (if munbindp
       'munbindp
-      (merror "Attempting to assign read-only variable ~:M the value:~%~M"
-	      var val)))
+      (merror "Attempting to assign read-only variable ~:M the value:~%~M" var val)))
 
 
 (defprop $error read-only-assign  assign)
@@ -200,8 +181,10 @@
 ;;; in macsyma. Once all functions of this type are rounded up
 ;;; I'll see about implementing signaling. -GJC
 
-(defmfun errrjf n
-  (if errrjfflag (throw 'raterr nil) (apply #'merror (listify n))))
+(defmfun errrjf (&rest args)
+  (if errrjfflag
+      (throw 'raterr nil)
+      (apply #'merror args)))
 
 ;;; The user-error function is called on |&foo| "strings" and expressions.
 ;;; Cons up a format string so that $ERROR can be bound.
@@ -213,10 +196,9 @@
        (se nil))
       ((null l)
        (setq sl (maknam sl))
-					;#+PDP10 (putprop sl t '+INTERNAL-STRING-MARKER)
        (cons sl (nreverse se)))
     (setq s (pop l))
-    (cond ((and (symbolp s) (char= (getcharn s 1) #\&))
+    (cond ((and (symbolp s) (char= (char (symbol-name s) 0) #\&))
 	   (setq sb (mapcan #'(lambda (x)
 				(if (char= x #\~)
 				    (list x x)

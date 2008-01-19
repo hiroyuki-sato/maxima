@@ -8,7 +8,8 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module mhayat macro)
 
 ;;;   **************************************************************
@@ -46,11 +47,10 @@
 ;;; in the current power series.
 ;;; The terms in the list of exponent-coefficient pairs are ordered by
 ;;; increasing degree.
-
+
 (declare-top (special tlist ivars key-vars last-exp))
 
-
-(comment subtitle hayat macros)
+;; subtitle hayat macros
 
 (defmacro pszero (var pw) var pw ''(0 . 1)) ; until constants are fixed
 
@@ -59,10 +59,11 @@
 (defmacro pscoefp (e) `(null (psp ,e)))
 
 (defmacro psquo (ps1 &optional ps2)
-  (ifn ps2 `(psexpt ,ps1 (rcmone))
-       `(pstimes ,ps1 (psexpt ,ps2 (rcmone)))))
+  (cond ((not ps2) `(psexpt ,ps1 (rcmone)))
+	(t `(pstimes ,ps1 (psexpt ,ps2 (rcmone))))))
 
-(defmacro pslog-gvar (gvar) `(pslog2 (get-inverse ,gvar)))
+(defmacro pslog-gvar (gvar)
+  `(pslog2 (get-inverse ,gvar)))
 
 (defmacro gvar-o (e) `(cadr ,e))
 
@@ -141,7 +142,7 @@
 (defmacro mlet (varl vals comp)
   `(mbinding (,varl ,vals) ,comp))
 
-
+
 ;;; these macros access "tlist" to get various global information
 ;;; "tlist" is structured as a list of datums, each datum having
 ;;; following form:
@@ -186,7 +187,8 @@
 
 (defmacro switches (datum) `(cadddr ,datum))
 
-(defmacro switch (sw datum) `(cdr (assq ,sw (switches ,datum))))
+(defmacro switch (sw datum)
+  `(cdr (assoc ,sw (switches ,datum) :test #'eq)))
 
 (defmacro int-var (datum) `(cddddr ,datum))
 
@@ -196,23 +198,29 @@
 
 (defmacro data-gvar (data) `(car (data-gvar-o ,data)))
 
-(defmacro get-inverse (gensym) `(cdr (assq ,gensym ivars)))
+(defmacro get-inverse (gensym)
+  `(cdr (assoc ,gensym ivars :test #'eq)))
 
-(defmacro gvar->kvar (gvar) `(cdr (assq ,gvar ivars)))
+(defmacro gvar->kvar (gvar)
+  `(cdr (assoc ,gvar ivars :test #'eq)))
 
-(defmacro get-key-var (gensym) `(cdr (assq ,gensym key-vars)))
+(defmacro get-key-var (gensym)
+  `(cdr (assoc ,gensym key-vars :test #'eq)))
 
-(defmacro gvar->var (gvar) `(cdr (assq ,gvar key-vars)))
+(defmacro gvar->var (gvar)
+  `(cdr (assoc ,gvar key-vars :test #'eq)))
 
 (defmacro dummy-var () '(cdar key-vars))
 
 (defmacro first-datum () '(car tlist))
 
 (defmacro get-datum (expr &optional not-canonicalized?)
-  (if not-canonicalized? `(assol ,expr tlist)
-      `(zl-assoc ,expr tlist)))
+  (if not-canonicalized?
+      `(assol ,expr tlist)
+      `(assoc ,expr tlist :test #'equal)))
 
-(defmacro var-data (var) `(zl-assoc ,var tlist))
+(defmacro var-data (var)
+  `(assoc ,var tlist :test #'equal))
 
 (defmacro gvar-data (gvar) `(var-data (gvar->var ,gvar)))
 
@@ -266,14 +274,14 @@
 (defmacro merrcatch (form) `(catch 'errorsw ,form))
 
 ;;There is a duplicate version of this in MAXMAC
-;;(defmacro infinities () ''($INF $MINF $INFINITY))
+;;(defmacro infinities () ''($inf $minf $infinity))
 
 ;; Macros for manipulating expansion data in the expansion table.
 
 (defmacro exp-datum-lt (fun exp-datum)
   `(if (atom (cadr ,exp-datum))
     (funcall (cadr ,exp-datum) (cdr ,fun))
-    (copy (cadr ,exp-datum))))
+    (copy-tree (cadr ,exp-datum))))
 
 (defmacro exp-datum-le (fun exp-datum)  `(e (exp-datum-lt ,fun ,exp-datum)))
 
@@ -305,8 +313,8 @@
 				 (m^ (get-inverse (gvar ,p))
 				  (edisrep (e ,term)))))
 
-
-(comment coefficient arithmetic)
+
+;; coefficient arithmetic
 
 (defmacro rczero ()  ''(0 . 1))
 
@@ -352,8 +360,8 @@
 (defmacro rcderiv (x v) `(ratderivative ,x ,v))
 
 (defmacro rcderivx (x) `(ratdx1 (car ,x) (cdr ,x)))
-
-(comment exponent arithmetic)
+
+;; exponent arithmetic
 
 ;; These macros are also used in BMT;PADE and RAT;NALGFA.
 
@@ -374,8 +382,5 @@
 (defmacro ezero () ''(0 . 1))
 
 (defmacro eone () ''(1 . 1))
-
-#-mcl
-(defmacro ezerop (e) `(zerop (car ,e)))
 
 (defmacro rcinv (r) `(ratinvert ,r))

@@ -3,9 +3,9 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name:  $
-;; $Revision: 1.13 $
-;; $Date: 2005/01/10 22:57:35 $
+;; $Name: version-5_13_0 $
+;; $Revision: 1.15 $
+;; $Date: 2007/02/25 16:42:59 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -506,7 +506,6 @@
    "chr1"
    "chr2"
    "christof"
-   "clearscreen"
    "closefile"
    "closeps"
    "coeff"
@@ -889,8 +888,6 @@
    "pui_direct"
    "put"
    "qput"
-   "qq"
-   "quanc8"
    "quit"
    "qunit"
    "quotient"))

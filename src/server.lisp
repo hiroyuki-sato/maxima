@@ -1,14 +1,12 @@
-
 ;; very simple server started on port
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 #+sbcl
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require 'asdf)		    ;not needed here for a recent SBCL
   (require 'sb-posix)
   (require 'sb-bsd-sockets))
-
 
 (defvar $in_netmath nil)
 (defvar $show_openplot t)
@@ -22,11 +20,11 @@
     (setq *standard-output* sock)
     (setq *error-output* sock)
     (setq *terminal-io* sock)
-    (format t "pid=~a~%"        (getpid))
+    (setq *trace-output* sock)
+    (format t "pid=~a~%" (getpid))
     (force-output sock)
-    (setq *debug-io* sock)
-    (values)
-    ))
+    (setq *debug-io* sock))
+  (values))
 
 ;;; from CLOCC: <http://clocc.sourceforge.net>
 (defun open-socket (host port &optional bin)
@@ -39,9 +37,9 @@
                                   :format (if bin :binary :text))
     #+clisp (socket:socket-connect port host :element-type
 				   (if bin '(unsigned-byte 8) 'character))
-    #+cmu (sys:make-fd-stream (ext:connect-to-inet-socket host port)
-                              :input t :output t :element-type
-                              (if bin '(unsigned-byte 8) 'character))
+    #+(or cmu scl) (sys:make-fd-stream (ext:connect-to-inet-socket host port)
+				       :input t :output t :element-type
+				       (if bin '(unsigned-byte 8) 'character))
     #+sbcl (let ((socket (make-instance 'sb-bsd-sockets:inet-socket
 					:type :stream :protocol :tcp)))
 	     (sb-bsd-sockets:socket-connect
@@ -53,7 +51,7 @@
     #+gcl (si::socket port :host host)
     #+lispworks (comm:open-tcp-stream host port :direction :io :element-type
                                       (if bin 'unsigned-byte 'base-char))
-    #-(or allegro clisp cmu sbcl gcl lispworks)
+    #-(or allegro clisp cmu scl sbcl gcl lispworks)
     (error 'not-implemented :proc (list 'open-socket host port bin))))
 
 
@@ -70,26 +68,21 @@
       (values (parse-integer (maxima-getenv "PID")))
     ((or type-error parse-error) () -1)))
 
-#+clisp
-(deff getpid (symbol-function
-	      ;; Decide at load time which function to use.
-	      (or (and (memq :unix *features*)
-		       (or (find-symbol "PROCESS-ID" "SYS")
-			   (find-symbol "PROGRAM-ID" "SYS")))
-		  'getpid-from-environment)))
+;;; For gcl, getpid imported from system in maxima-package.lisp
+#-gcl
+(defun getpid ()
+#+clisp (os:process-id)
+#+(or cmu scl) (unix:unix-getpid)
+#+sbcl (sb-unix:unix-getpid)
+#+gcl (system:getpid)
+#+openmcl (ccl::getpid)
+#-(or clisp cmu scl sbcl gcl openmcl) (getpid-from-environment)
+)
 
-#+cmu
-(defun getpid () (unix:unix-getpid))
-
-#+sbcl
-(defun getpid () (sb-unix:unix-getpid))
-
-#+(or gcl clisp cmu sbcl)
+#+(or gcl clisp cmu scl sbcl)
 (defun xchdir (w)
   #+clisp (ext:cd w)
   #+gcl (si::chdir w)
-  #+cmu (unix::unix-chdir w)
+  #+(or cmu scl) (unix::unix-chdir w)
   #+sbcl (sb-posix:chdir w)
   )
- 
-  

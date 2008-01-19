@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((nterf 0)
@@ -40,13 +40,13 @@
       (first$ nil))
   (declare (type f2cl-lib:logical first$)
            (type (simple-array double-float (21)) erfcs)
-           (type double-float sqrtpi sqeps xbig)
-           (type f2cl-lib:integer4 nterf))
+           (type (double-float) sqrtpi sqeps xbig)
+           (type (integer) nterf))
   (setq first$ f2cl-lib:%true%)
   (defun derf (x)
-    (declare (type double-float x))
-    (prog ((y 0.0) (derf 0.0) (abs$ 0.0f0))
-      (declare (type single-float abs$) (type double-float derf y))
+    (declare (type (double-float) x))
+    (prog ((y 0.0) (derf 0.0))
+      (declare (type (double-float) derf y))
       (cond
         (first$
          (setf nterf
@@ -57,7 +57,7 @@
                   (- (f2cl-lib:flog (* sqrtpi (f2cl-lib:d1mach 3))))))
          (setf sqeps (f2cl-lib:fsqrt (* 2.0 (f2cl-lib:d1mach 3))))))
       (setf first$ f2cl-lib:%false%)
-      (setf y (coerce (abs x) 'double-float))
+      (setf y (abs x))
       (if (> y 1.0) (go label20))
       (if (<= y sqeps) (setf derf (/ (* 2.0 x x) sqrtpi)))
       (if (> y sqeps)
@@ -69,4 +69,15 @@
       (go end_label)
      end_label
       (return (values derf nil)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::derf fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo :arg-types '((double-float))
+                                            :return-values '(nil)
+                                            :calls '(fortran-to-lisp::derfc
+                                                     fortran-to-lisp::dcsevl
+                                                     fortran-to-lisp::initds
+                                                     fortran-to-lisp::d1mach))))
 

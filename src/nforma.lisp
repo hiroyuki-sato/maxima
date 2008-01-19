@@ -8,7 +8,8 @@
 ;;;     (c) Copyright 1981 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module nforma)
 
 (declare-top (special 1//2 -1//2 displayp aliaslist in-p))
@@ -19,20 +20,15 @@
 (defmvar $exptdispflag t)
 (defmvar $sqrtdispflag t)
 (defmvar $negsumdispflag t)
+
 (setq in-p nil)
-
-;;(defun $extendp (xxxx)
-;;  (declare (ignore xxxx))
-;;  nil)
-
-;;for new types that answer (send x :macsyma-extended-type) and such like.
 
 (defmfun nformat (form)
   (cond ((atom form)
-	 (cond ((and (numberp form) (minusp form)) (list '(mminus) (minus form)))
+	 (cond ((and (numberp form) (minusp form)) (list '(mminus) (- form)))
 	       ((eq t form) (if in-p t '$true))
 	       ((eq nil form) (if in-p nil '$false))
-	       ((and displayp (car (assqr form aliaslist))))
+	       ((and displayp (car (rassoc form aliaslist :test #'eq))))
 	       ;;	       (($EXTENDP FORM)
 	       ;;		(NFORMAT (transform-extends form)))
 	       (t form)))
@@ -40,7 +36,7 @@
 	 form)
 	((eq 'rat (caar form))
 	 (cond ((minusp (cadr form))
-		(list '(mminus) (list '(rat) (minus (cadr form)) (caddr form))))
+		(list '(mminus) (list '(rat) (- (cadr form)) (caddr form))))
 	       (t (cons '(rat) (cdr form)))))
 	((eq 'mmacroexpanded (caar form)) (nformat (caddr form)))
 	((null (cdar form)) form)
@@ -51,18 +47,19 @@
 	((eq 'mpois (caar form)) (nformat ($outofpois form)))
 	((eq 'bigfloat (caar form))
 	 (if (minusp (cadr form))
-	     (list '(mminus) (list (car form) (minus (cadr form)) (caddr form)))
+	     (list '(mminus) (list (car form) (- (cadr form)) (caddr form)))
 	     (cons (car form) (cdr form))))
 	(t form)))
 
 (defun form-mplus (form &aux args trunc)
   (setq args (mapcar #'nformat (cdr form)))
-  (setq trunc (memq 'trunc (cdar form)))
+  (setq trunc (member 'trunc (cdar form) :test #'eq))
   (cons (if trunc '(mplus trunc) '(mplus))
-	(cond ((and (memq 'ratsimp (cdar form)) (not (memq 'simp (cdar form))))
+	(cond ((and (member 'ratsimp (cdar form) :test #'eq)
+		    (not (member 'simp (cdar form) :test #'eq)))
 	       (if $powerdisp (nreverse args) args))
-	      ((and trunc (not (memq 'simp (cdar form)))) (nreverse args))
-	      ((or $powerdisp trunc (memq 'cf (cdar form))) args)
+	      ((and trunc (not (member 'simp (cdar form) :test #'eq))) (nreverse args))
+	      ((or $powerdisp trunc (member 'cf (cdar form) :test #'eq)) args)
 	      ((and $negsumdispflag (null (cdddr form)))
 	       (if (and (not (mmminusp (car args)))
 			(mmminusp (cadr args)))
@@ -107,15 +104,14 @@
 	(t (cons '(mexpt) (cdr form)))))
 
 (defun form-mrat (form)
-  (let ((trunc (memq 'trunc (cdar form))) exact)
+  (let ((trunc (member 'trunc (cdar form) :test #'eq)) exact)
     (if (and trunc (eq (cadr form) 'ps))
 	(setq exact (null (car (cadddr form)))))
     (setq form (ratdisrepd form))
     (rdis1 form)
     (if (and trunc (or (atom form)
 		       ;; A constant, e.g. ((mplus) $a 1)
-		       (not (zl-member (car form)
-				       '((mplus exact) (mplus trunc))))))
+		       (not (member (car form) '((mplus exact) (mplus trunc)) :test #'equal))))
 	(cons (if exact '(mplus exact) '(mplus trunc)) (ncons form))
 	(nformat form))))
 
@@ -135,6 +131,6 @@
   (if (or (atom form) (eq (caar form) 'bigfloat))
       form
       (cons (delsimp (car form))
-	    (if (memq (caar form) '(mdo mdoin))
+	    (if (member (caar form) '(mdo mdoin) :test #'eq)
 		(mapcar #'(lambda (u) (if u (nformat-all u))) (cdr form))
 		(mapcar #'nformat-all (cdr form))))))
