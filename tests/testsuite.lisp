@@ -5,15 +5,43 @@
 ;;; of the test problems that are expected to fail, e.g.
 ;;; ("testfile.mac" 7 9 13).
 
-(setf *testsuite-files*
-      '("rtestnset.mac" "rtest1.mac" "rtest1a.mac" "rtest2.mac" "rtest4.mac"  "rtest5.mac"
-	"rtest6.mac" "rtest6a.mac" "rtest6b.mac" "rtest7.mac" "rtest9.mac"
-	"rtest9a.mac" "rtest10.mac" "rtest11.mac" "rtest13.mac" "rtest13s.mac"
-	("rtest14.mac" 57 63)
-	("rtest15.mac" 4)
-	("rtest16.mac" 5)
-	"rtestode.mac" "rtestode_zp.mac"
-	"rtest3.mac" "rtest8.mac" "rtest12.mac" "rexamples.mac"
-	"rtesthyp.mac"
-    "rtestmt19937.mac"
+(setf $testsuite_files
+      '((mlist simp)
+	"rtestnset" "rtest1" "rtest1a" "rtest2" "rtest4"  
+	((mlist) "rtest5" 48)
+	"rtest6" "rtest6a" "rtest6b" "rtest7"
+    ((mlist) "rtest9" 80)
+	"rtest9a"
+	((mlist) "rtest10" 24 25)
+	"rtest11" "rtest13" "rtest13s"
+	((mlist simp) "rtest14" 57 63)
+	((mlist simp) "rtest15")
+	"rtest16"
+	"rtestode" "rtestode_zp"
+	"rtest3" "rtest8"
+	((mlist) "rtest12" 76 78)
+	"rexamples"
+	"rtesthyp"
+        ((mlist) "rtest_hypgeo" 143 226)
+	"rtestmt19937"
+	((mlist) "rtest_allnummod" 135 136 417 418)
+	"rtestconjugate"
+	((mlist) "rtestsum" 3 4 18 75)
+	"rtest_trig"
+	"rtest_zeta"
+	"rtest_diff_invtrig"
+	"rtest_scalarp"
+	"rtest_everysome"
+	"rtestint"
+	"rtestifactor"
+	((mlist) "rtest_equal" 157 160)
+	((mlist) "rtest_abs" 42 43)
+	((mlist) "rtest_taylor" 66 67 72 88 91 94 96 99 104 118 119 120 121 123 124)
+	((mlist) "rtest_dot")
+	"rtest_mset"
+	((mlist) "rtest_boolean" 100 101)
+	((mlist) "rtest_round")
+	((mlist) "rtest_map" 2 3 4)
+	((mlist) "rtest_sign" 21 25 30 40 62 63 65 72 77 79 84)
+	((mlist) "rtest_algebraic")
 	))

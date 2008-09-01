@@ -8,21 +8,19 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module nalgfa)
 
-(declare-top(special alg-num vlist *var *nosplitf *algvar 
-		     *denom *num *ans algfac* $nalgfac alpha)
-	    (genprefix nalg))
+(declare-top (special vlist *var *nosplitf *algvar *denom *num *ans
+		      algfac* $nalgfac alpha))
 
 (load-macsyma-macros rzmac ratmac)
 
-(setq alg-num 0)
+(defun new-alg ()
+  (newsym (gentemp (symbol-name '$alg))))
 
-(defun new-alg nil
-  (newsym (concat '$alg  (setq alg-num (f1+ alg-num)))))
 
-
 (defun psqfrp (p var)
   (zerop (pdegree (pgcd p (pderivative p var)) var)))
 
@@ -35,9 +33,7 @@
 		     (a (cdddr p) (cddr a))
 		     (ans (caddr p)
 			  (pplus
-			   (ptimes ans
-				   (pexpt val
-					  (f- ld (car a))))
+			   (ptimes ans (pexpt val (- ld (car a))))
 			   (cadr a))))
 		    ((null a) (ptimes ans (pexpt val ld)))))))
 	((pointergp var (car p)) p)
@@ -61,11 +57,9 @@
 	  ((null (pointergp mvar var)) (cons var l))
 	  ((let ((newvar (gensym)))
 	     (setq genvar (append genvar (list newvar)))
-	     (setplist newvar (symbol-plist var))
-	     (set newvar (f1+ (symbol-value mvar)))
-	     (cons newvar
-		   (mapcar #'(lambda (p) (pvsubst newvar var p))
-			   l)))))))
+	     (setf (symbol-plist newvar) (symbol-plist var))
+	     (setf (symbol-value newvar) (1+ (symbol-value mvar)))
+	     (cons newvar (mapcar #'(lambda (p) (pvsubst newvar var p)) l)))))))
 
 (defun lmainvar (l) ;;main var of list of poly's
   (do ((l l (cdr l))
@@ -75,7 +69,7 @@
 	  ((null v) (setq v (caar l)))
 	  ((pointergp (caar l) v)
 	   (setq v (caar l))))))
-
+
 (defun presult (p1 p2 var) ;;change call in algsys?
   (let ((genvar genvar))
     (setq var (ordervar var (list p1 p2))
@@ -92,17 +86,17 @@
 (defun pcoefvec (p)
   (cond ((pcoefp p) (list p))
 	((do ((l)
-	      (i (cadr p) (f1- i))
+	      (i (cadr p) (1- i))
 	      (p (cdr p)))
 	     ((signp l i) (nreverse l))
-	   (push (cond ((and p (f= (car p) i))
+	   (push (cond ((and p (= (car p) i))
 			(prog1 (cadr p) (setq p (cddr p))))
 		       ( 0 ))
 		 l)))))
 
 (defun algtrace1 (bvec tvec)
-  (do ((i (f- (length tvec) (length bvec)) (f1- i)))
-      ((f= i 0) (algtrace* bvec tvec))
+  (do ((i (- (length tvec) (length bvec)) (1- i)))
+      ((zerop i) (algtrace* bvec tvec))
     (setq bvec (cons 0 bvec))))
 
 (defun algtrace* (bvec tvec)
@@ -114,8 +108,7 @@
 	(do ((l (cdr b) (cdr l))
 	     (tv tvec (cdr tv)))
 	    ((null l))
-	  (rplaca l (pdifference (car l)
-				 (ptimes (car b) (car tv))))))))
+	  (rplaca l (pdifference (car l) (ptimes (car b) (car tv))))))))
 
 (defun algtrace (r p)
   (cond ((eq (caar r) (car p))
@@ -126,10 +119,10 @@
 		    (cdr r)))))
 
 (defmfun $algtrace (r p var)
-  (let ((varlist (list var))			
+  (let ((varlist (list var))
 	(genvar nil))
     (rdis* (algtrace (rform r) (car (rform p))))))
-
+
 (defun good-form (l) ;;bad -> good
   (do ((l l (cddr l))
        (ans))
@@ -139,34 +132,29 @@
 (defun bad-form (l) ;;good -> bad
   (mapcar #'(lambda (q) (list (cdr q) (car q))) l))
 
-(defmfun $algfac n
-  (cond ((f= n 3) (apply '$pfactoralg (listify n)))
-	(t (let ((varlist))
-	     (cond ((f= n 2)
-		    (newvar (arg 2))
-		    (cond ((alike1 (arg 2) (car varlist))
-			   ($pfactoralg (arg 1) nil (arg 2)))
-			  (t ($pfactoralg (arg 1)
-					  (arg 2)
-					  (car (last varlist))))))
-		   (t (newvar (arg 1))
-		      (setq varlist
-			    (mapcan #'(lambda (q) (cond ((algpget q)
-							 (list q))
-							(t nil)))
-				    varlist))
-		      (cond ((f= (length varlist) 1)
-			     ($pfactoralg (arg 1)
-					  nil
-					  (car varlist)))
-			    ((f> (length varlist) 1)
-			     (merror "too many algebraics"))
-			    (t (merror "no algebraics")))))))))
+(defmfun $algfac (a1 &optional (a2 nil a2?) (a3 nil a3?))
+  (if a3?
+      ($pfactoralg a1 a2 a3)
+      (let ((varlist))
+	(cond (a2?
+	       (newvar a2)
+	       (if (alike1 a2 (car varlist))
+		   ($pfactoralg a1 nil a2)
+		   ($pfactoralg a1 a2 (car (last varlist)))))
+	      (t
+	       (newvar a1)
+		 (setq varlist (mapcan #'(lambda (q) (if (algpget q) (list q) nil)) varlist))
+		 (cond ((= (length varlist) 1)
+			($pfactoralg a1 nil (car varlist)))
+		       ((> (length varlist) 1)
+			(merror "too many algebraics"))
+		       (t
+			(merror "no algebraics"))))))))
 
 (defmfun $pfactoralg (f p alg)
   (let ((varlist (list alg))
-	(genvar) (vlist) (tellratlist) ($ratfac)		    
-	($gcd '$algebraic) 
+	(genvar) (vlist) (tellratlist) ($ratfac)
+	($gcd '$algebraic)
 	($algebraic) ($ratalgdenom t)
 	(*denom 1) (*num 1) (*ans))
     (cond ((and (null p) (radfunp alg t)) (newvar (cadr alg)))
@@ -175,7 +163,7 @@
     (cond ((null vlist) (merror "attempt to factor a constant")))
     (setq varlist (nconc varlist (sortgreat vlist)))
     (cond (p (setq p (cadr (ratrep* p)))
-	     (push (cons alg (mapcar (function pdis) (cdr p)))
+	     (push (cons alg (mapcar #'pdis (cdr p)))
 		   tellratlist))
 	  (t (setq p (algpget alg))
 	     (setq p (pdifference
@@ -188,21 +176,21 @@
 	  (cons (rdis (ratreduce *num *denom))
 		(mapcar 'pdis f)))))
 
-(declare-top(special adn*)) ;also redefine fact5 to call nalgfac correctly
+(declare-top (special adn*)) ;also redefine fact5 to call nalgfac correctly
 
 (defun nalgfac (p mp)
   (let ((*num 1) (*denom 1) (*ans) (algfac*) ($nalgfac)
 	($algebraic t) ($gcd '$algebraic))
     (setq p (pfactoralg1 p mp 0))
-    (setq adn* (times adn* *denom))
+    (setq adn* (* adn* *denom))
     (cond ((equal *num 1) p)
 	  (t (cons *num p)))))
-
+
 (setq *nosplitf t)
 
 (defun pfactoralg1 (f p ind)
   (cond ((pcoefp f) (setq *num (ptimeschk f *num)) *ans)
-	((f= (cadr f) 1) (setq f (pshift f (car p) ind))
+	((= (cadr f) 1) (setq f (pshift f (car p) ind))
 	 (push (algnormal f) *ans)
 	 (setq f (rquotient f (car *ans))
 	       *denom (ptimeschk (cdr f) *denom)
@@ -214,7 +202,9 @@
 	       *denom (ptimeschk (cdr f) *denom))
 	 (pfactoralg1 (car f) p ind))
 	((zerop (pdegree f (car p)))
-	 (mapc #'(lambda (q) (pfactoralg1 (pshift q (car p) -1) p (f1+ ind)))
+	 (mapc #'(lambda (q) 
+		   (if (pcoefp q) nil
+		     (pfactoralg1 (pshift q (car p) -1) p (1+ ind))))
 	       (let (($algebraic nil)
 		     ($gcd (car *gcdl*)))
 		 (pfactor1 f)))
@@ -229,25 +219,26 @@
 	       ((null l)
 		(setq *num (ptimeschk f *num))
 		(mapc #'(lambda (q) (pfactoralg1
-				     (pshift q alg -1) p (f1+ ind)))
+				     (pshift q alg -1) p (1+ ind)))
 		      polys)
 		*ans)
-	     (cond ((pcoefp (car l)) nil)
-		   (t (setq temp (cond ((null (cddr l)) f)
-				       (t (pgcd f (car l)))))
-		      (cond ((f= (cadr temp) 1)
-			     (setq temp (algnormal temp))
-			     (push (pshift temp alg ind) *ans))
-			    ((f= (cadr l) 1)
-			     (setq temp (algnormal temp))
-			     (push (pshift temp alg ind) *ans)
-			     (or *nosplitf
-				 (setq *nosplitf
-				       (list (car l) temp ind))))
-			    (t (push temp polys)))
-		      (setq f (rquotient f temp)
-			    *denom (ptimeschk (cdr f) *denom)
-			    f (car f)))) ))))
+	       (cond ((pcoefp (car l)) nil)
+		     (t (setq temp (cond ((null (cddr l)) f)
+					 (t (pgcd f (car l)))))
+			(cond ((pcoefp temp) nil)
+			      ((= (cadr temp) 1)
+			       (setq temp (algnormal temp))
+			       (push (pshift temp alg ind) *ans))
+			      ((= (cadr l) 1)
+			       (setq temp (algnormal temp))
+			       (push (pshift temp alg ind) *ans)
+			       (or *nosplitf
+				   (setq *nosplitf
+					 (list (car l) temp ind))))
+			      (t (push temp polys)))
+			(setq f (rquotient f temp)
+			      *denom (ptimeschk (cdr f) *denom)
+			      f (car f)))) ))))
 
 (defun pshift (f alg c)
   (if (= c 0) f
@@ -255,7 +246,7 @@
 	       (car f) f)))
 
 
-
+
 (defmfun $splitfield (p var)
   (let ((varlist)
 	(genvar)
@@ -303,7 +294,7 @@
   (ratreduce (pterm (cdr p) 0)
 	     (pminus (pterm (cdr p) 1))))
 
-
+
 (defun psplit-field1 (p)
   ;;returns minimal poly and list of roots
   ;;p must be square free
@@ -327,7 +318,7 @@
 				 (car alpha)))))
 	    (setq polys
 		  (mapcan
-		   #'(lambda (q) 
+		   #'(lambda (q)
 		       (cond ((equal (cadr q) 1) ;;linear factor
 			      (push (plsolve q) zeroes)
 			      nil) ;;flush linear factor
@@ -344,7 +335,7 @@
 		     (plsolve (pgcd (cons (caar *nosplitf) (cdr minpoly))
 				    (exchangevar (car *nosplitf) *algvar)))))
 		(setq alpha (ratplus (cons (make-poly *algvar) 1)
-				     (rattimes (cons (f- (cadr *nosplitf)) 1)
+				     (rattimes (cons (- (cadr *nosplitf)) 1)
 					       beta t)))
 		(setq zeroes
 		      (mapcar
@@ -360,11 +351,11 @@
 (defun exchangevar (poly var)
   (let ((newvar (gensym))
 	(ovar (car poly)))
-    (set newvar (f1+ (eval ovar)))
+    (set newvar (1+ (eval ovar)))
     (pvsubst ovar newvar
 	     (pvsubst var ovar
 		      (pvsubst newvar var poly)))))
-
+
 (defun rgsubst (val var p) ;;generalized psubst substitutes any
   (cond ((pcoefp p)
 	 (cons p 1)) ;;expression for any var in p
@@ -377,19 +368,19 @@
 			  (ratplus
 			   (rattimes ans
 				     (ratexpt val
-					      (f- ld (car a)))
+					      (- ld (car a)))
 				     t)
 			   (cons (cadr a) 1))))
 		    ((null a) (rattimes ans (ratexpt val ld) t))))))
 	((pointergp var (car p)) (cons p 1))
 	(t (let ((newsym (gensym)))
-	     (set newsym (f1+ (symbol-value (car p))))
+	     (set newsym (1+ (symbol-value (car p))))
 	     (rgsubst val newsym (pvsubst newsym var p))))))
 
-(defun ratgsubst (val var rat) 
+(defun ratgsubst (val var rat)
   (ratquotient (rgsubst val var (car rat))
 	       (rgsubst val var (cdr rat))))
-
+
 (defun algnorm (f p)
   (presult f p (car p)))
 
@@ -405,7 +396,7 @@
   (*bind* ((pvar (car p)))
 	  (setq f (cdr (ordervar pvar (list f p))) ;;new main var will be car of p
 		p (cadr f) f (car f))  ;make mainvar of f = mainvar(p)
-	  (do ((i 0 (f1+ i))
+	  (do ((i 0 (1+ i))
 	       (dif (pdifference (make-poly fvar) (make-poly (car p))))
 	       (f f (pgsubst dif fvar f))
 	       (res))
@@ -434,24 +425,22 @@
 			      (cadr norm))))
     (setq beta (plsolve beta)
 	  alpha (ratplus (cons (make-poly gvar) 1)
-			 (rattimes (cons (f- (cadddr (cdr norm))) 1)
+			 (rattimes (cons (- (cadddr (cdr norm))) 1)
 				   beta t)))
     (list (car norm) ;;minimal poly
 	  (pplus (make-poly a) ;;new prim elm in old guys
-		 (list (car b) 1 (f- (cadddr (cdr norm)))))
+		 (list (car b) 1 (- (cadddr (cdr norm)))))
 	  alpha beta)))	;;in terms of gamma
 
-(comment discriminant of a basis)
-(defmfun $bdiscr n
+;; discriminant of a basis
+
+(defmfun $bdiscr (&rest args)
   (let ((varlist) (genvar))
-    (xcons (bdiscr (mapcar #'rform (listify (f1- n)))
-		   (car (rform (arg n))))
+    (xcons (bdiscr (mapcar #'rform (butlast args))
+		   (car (rform (car (last args)))))
 	   (list 'mrat 'simp varlist genvar))))
 
 (defun bdiscr (l minp)
-  (det
-   (mapcar #'(lambda (q1)
-	       (mapcar #'(lambda (q2) (algtrace (ptimes q1 q2) minp)) l))
-	   l)))
-
-;;(declare-top(unspecial genvar varlist *var *num *ans alpha adn*))
+  (det (mapcar #'(lambda (q1)
+		   (mapcar #'(lambda (q2) (algtrace (ptimes q1 q2) minp)) l))
+	       l)))

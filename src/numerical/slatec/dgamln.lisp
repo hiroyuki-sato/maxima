@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((gln
@@ -76,27 +76,26 @@
                                        0.17964437236883057 -1.3924322169059011
                                        13.402864044168393 -156.84828462600203
                                        2193.1033333333335 -36108.77125372499
-                                       691472.268851313 -1.5238221539407415e+7
-                                       3.8290075139141417e+8
-                                       -1.0882266035784391e+10
-                                       3.4732028376500226e+11
-                                       -1.2369602142269275e+13
-                                       4.887880647930793e+14
-                                       -2.1320333960919372e+16)))
+                                       691472.268851313 -1.5238221539407415e7
+                                       3.8290075139141417e8
+                                       -1.0882266035784391e10
+                                       3.4732028376500226e11
+                                       -1.2369602142269275e13
+                                       4.887880647930793e14
+                                       -2.1320333960919372e16)))
       (con 1.8378770664093456))
-  (declare (type double-float con)
+  (declare (type (double-float) con)
            (type (simple-array double-float (22)) cf)
            (type (simple-array double-float (100)) gln))
   (defun dgamln (z ierr)
-    (declare (type f2cl-lib:integer4 ierr) (type double-float z))
+    (declare (type (f2cl-lib:integer4) ierr) (type (double-float) z))
     (prog ((i 0) (i1m 0) (k 0) (mz 0) (nz 0) (fln 0.0) (fz 0.0) (rln 0.0)
            (s 0.0) (tlg 0.0) (trm 0.0) (tst 0.0) (t1 0.0) (wdtol 0.0)
            (zdmy 0.0) (zinc 0.0) (zm 0.0) (zmin 0.0) (zp 0.0) (zsq 0.0)
-           (dgamln 0.0) (abs$ 0.0f0))
-      (declare (type single-float abs$)
-               (type double-float dgamln zsq zp zmin zm zinc zdmy wdtol t1 tst
-                                  trm tlg s rln fz fln)
-               (type f2cl-lib:integer4 nz mz k i1m i))
+           (dgamln 0.0))
+      (declare (type (double-float) dgamln zsq zp zmin zm zinc zdmy wdtol t1
+                                    tst trm tlg s rln fz fln)
+               (type (f2cl-lib:integer4) nz mz k i1m i))
       (setf ierr 0)
       (if (<= z 0.0) (go label70))
       (if (> z 101.0) (go label10))
@@ -160,4 +159,14 @@
       (go end_label)
      end_label
       (return (values dgamln nil ierr)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::dgamln
+                 fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo
+           :arg-types '((double-float) (fortran-to-lisp::integer4))
+           :return-values '(nil fortran-to-lisp::ierr)
+           :calls '(fortran-to-lisp::i1mach fortran-to-lisp::d1mach))))
 

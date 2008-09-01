@@ -1,4 +1,4 @@
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (declaim (optimize (safety 2) (space 3)))
 
@@ -336,13 +336,20 @@
 	 ;; First, read and discard the #\? since we don't need it anymore.
 	 (read-char stream)
 	 (let ((next (peek-char nil stream nil)))
-	   (cond ((member next '(#\space #\tab))
-		  ;; Got "? <stuff>".  This means describe.
+	   (cond ((member next '(#\space #\tab #\!))
+		  ;; Got "? <stuff>" or "?! <stuff>". Invoke exact search on <stuff>.
 		  (let* ((line (string-trim 
 				'(#\space #\tab #\; #\$)
 				(subseq 
 				 (read-line stream eof-error-p eof-value) 1))))
-		    `((displayinput) nil (($describe) ,line))))
+		    `((displayinput) nil (($describe) ,line $exact))))
+         ((equal next #\?)
+          ;; Got "?? <stuff>". Invoke inexact search on <stuff>.
+		  (let* ((line (string-trim 
+				'(#\space #\tab #\; #\$)
+				(subseq 
+				 (read-line stream eof-error-p eof-value) 1))))
+		    `((displayinput) nil (($describe) ,line $inexact))))
 		 (t
 		  ;; Got "?<stuff>" This means a call to a Lisp
 		  ;; function.  Pass this on to mread which can handle
@@ -494,13 +501,21 @@
 		collect (cons vv (or (get vv 'break-doc) "Undocumented"))
 		into all
 		finally (setq all (sort all 'alphalessp))
-		(format t "Break commands start with ':' Any unique substring may be used, eg :r :re :res all work for :resume.~%Command     Description~%
---------     --------------------------------------")   
+	      (format t "~
+Break commands start with ':' Any unique substring may be used,~%~
+eg :r :re :res all work for :resume.~2%~
+Command      Description~%~
+-----------  --------------------------------------")   
 		(loop for vv in all
-		       do (format t "~% ~(~s~)     ~a" (car vv) (cdr vv)))
+		   do (format t "~% ~(~12s~)" (car vv))
+		     (format t (cdr vv)))
+	        (finish-output)
 		))))
 
-(def-break :help 'break-help "Print help on a break command or with no arguments on all break commands")
+(def-break :help 'break-help
+  "Print help on a break command or with no arguments on
+             all break commands")
+;; What is this debug command for?
 (def-break :_none #'(lambda()) nil)
 (def-break :next  'step-next
   "Like :step, except that subroutine calls are stepped over")
@@ -511,17 +526,12 @@
 (def-break :top  #'(lambda( &rest l)l (throw 'macsyma-quit 'top)) "Throw to top level")
 
 
+(defstruct (line-info (:type list)) line file)
 
-(eval-when
-    #+gcl (compile load eval)
-    #-gcl (:compile-toplevel :load-toplevel :execute)
-
-    (defstruct (line-info (:type list)) line file)
-
-    (defstruct (bkpt (:type list)) form file file-line function))
+(defstruct (bkpt (:type list)) form file file-line function)
 
 
-(defun *break-points* (form  ) 
+(defun *break-points* (form)
   (let ((pos(position form *break-points* :key 'car )))
     (format t "Bkpt ~a:" pos)
     (break-dbm-loop  (aref *break-points* pos) )))
@@ -529,16 +539,12 @@
 
 ;;fun = function name eg '$|odeSeriesSolve| and li = offset from beginning of function.
 ;;   or= string (filename) and li = absolute position.
-;; 
 
-(defun break-function (fun &optional (li 0)  absolute  &aux i tem info form
-		       fun-line
-		       )
+(defun break-function (fun &optional (li 0) absolute &aux i tem info form fun-line)
   (unless *mdebug*
     (format t "~&Turning on debugging debugmode(true)")
     (setq *mdebug* t))
-  (cond ((or (stringp fun)
-	     (and (mstringp fun) (setq fun ($sconcat fun))))
+  (cond ((stringp fun)
 	 (let ((file fun)  start)
 	   (loop named joe for vv being the symbols of 'maxima with tem with linfo
 		  when (and (typep (setq tem (set-full-lineinfo vv))
@@ -546,7 +552,7 @@
 			    (setq linfo (get-lineinfo (aref tem 1)))
 			    (equal file (cadr linfo))
 			    (fb >= li (setq start (aref tem 0)))
-			    (fb <= li (f + start (length (the vector tem)))))
+			    (fb <= li (+ start (length (the vector tem)))))
 		  do (setq fun vv li (f - li start -1 ))
 					; (print (list 'found fun fun li  (aref tem 0)))
 		  (return-from joe nil)
@@ -583,13 +589,12 @@
 
 
 ;; note  need to make the redefine function, fixup the break point
-;; list.. 
+;; list..
 
 (defun make-break-point (fun ar i)
   (declare (fixnum i) (type (vector t) ar))
   (let* ((tem (aref ar i))
 	 (linfo (get-lineinfo tem)))
-					;(defstruct (bkpt (:type list)) form file file-line function)    
     (and linfo (list tem (cadr linfo) (car linfo) fun))))
 
 (defun dbm-up (n &aux (cur *current-frame*) (m (length *mlambda-call-stack*)))
@@ -699,10 +704,11 @@
   )
    
 (def-break :delete  #'(lambda (&rest l) (iterate-over-bkpts l :delete)(values))
-  "Delete all breakpoints, or if arguments are supplied delete the specified
-breakpoints" )
-(def-break :frame  '$frame "With an argument print the selected stack frame.
-Otherwise the current frame." )
+  "Delete all breakpoints, or if arguments are supplied delete the
+             specified breakpoints" )
+(def-break :frame  '$frame
+  "With an argument print the selected stack frame.
+             Otherwise the current frame." )
 (def-break :resume  #'(lambda () :resume) "Continue the computation." )
 (def-break :continue  #'(lambda () :resume)  "Continue the computation." )
 
@@ -717,9 +723,9 @@ Otherwise the current frame." )
 
 (def-break :break  'do-break
   "Set a breakpoint in the specified FUNCTION at the
-specified LINE offset from the beginning of the function.
-If FUNCTION is given as a string, then it is presumed to be
-a FILE and LINE is the offset from the beginning of the file." )
+             specified LINE offset from the beginning of the function.
+             If FUNCTION is given as a string, then it is presumed to be
+             a FILE and LINE is the offset from the beginning of the file." )
 
 ;; force the rest of the line to be broken at spaces,
 ;; and each item read as a maxima atom.
@@ -764,7 +770,7 @@ a FILE and LINE is the offset from the beginning of the file." )
 	 (push var *diff-bindlist*)
 	 (push (symbol-value var) *diff-mspeclist*)
 	 (cond ((eq (car mspeclist) munbound)
-		(makunbound var) (delq var $values 1))
+		(makunbound var) (setq $values (delete var $values :count 1 :test #'eq)))
 	       (t (let ((munbindp t)) (mset var (car mspeclist)))))
 	 (setq mspeclist (cdr mspeclist) bindlist (cdr bindlist))))
 
@@ -776,6 +782,5 @@ a FILE and LINE is the offset from the beginning of the file." )
     (remove-bindings bdlist)
     (when lineinfo
       (fresh-line *debug-io*)
-      (format *debug-io* "~a:~a::~%" (cadr lineinfo)
-	      (+ 0 (car lineinfo))))
+      (format *debug-io* "~a:~a::~%" (cadr lineinfo) (+ 0 (car lineinfo))))
     (values)))

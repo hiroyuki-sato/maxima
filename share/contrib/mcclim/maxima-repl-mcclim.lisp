@@ -19,10 +19,9 @@
 
 ;; Maxima needs to be loaded before this file can work!
 (eval-when (:compile-toplevel :load-toplevel)
-  (require :maxima)
-  )
+  (require :maxima))
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;; Replace some of maxima's display routines with own.
 
 (defvar *x-width* nil)
@@ -78,14 +77,14 @@
   (declare (fixnum w h ))
   (setq oldrow (car (cursorpos))
 	oldcol 0
-	h (f+ oldrow bkptht bkptdp))
+	h (+ oldrow bkptht bkptdp))
   (cursorpos* oldrow 0)
   ;; Move the cursor vertically until we are at the bottom line of the
   ;; new expression.
   (do ()
       ((= h oldrow))
     ;;(tyo* #\newline)
-    (increment oldrow))
+    (incf oldrow))
   (cursorpos* oldrow 0)
   (draw-2d result (f- oldrow bkptdp 1) w)
   (cursorpos* (setq h (min (f- ttyheight 2) h)) 0))
@@ -109,9 +108,9 @@
 			      (integerp (caar l))))))
 	     (cond
 	       ((null (cddar l))
-		(setq col (f+ col (caar l))))
+		(setq col (+ col (caar l))))
 	       (t (draw-2d (reverse (cddar l))
-			   (f-  row (cadar l)) (f+ col (caar l)))
+			   (-  row (cadar l)) (+ col (caar l)))
 		  (setq col oldcol)))
 	     (pop l))
 	   (cursorpos* row col))
@@ -131,30 +130,30 @@
 (defun d-box (linear? h d w body &aux (char 0) dmstr)
 					;char a char?
   (declare (fixnum h d w ))
-  (cond		     ;((AND (NOT LINEAR?) LINE-GRAPHICS-TTY $LINEDISP)
-    ;;	 (LET ((X-MIN (f* LG-CHARACTER-X OLDCOL))
-    ;;	       (X-MAX (f* LG-CHARACTER-X (f+ OLDCOL W 2)))
-    ;;	       (Y-MIN (f+ (f* LG-CHARACTER-Y (f- OLDROW H)) 2))
-    ;;	       (Y-MAX (f- (f* LG-CHARACTER-Y (f+ OLDROW D 2)) 2)))
-    ;;	      (declare (fixnum X-MIN X-MAX Y-MIN Y-MAX))
-    ;;	      (LG-SET-POINT X-MIN Y-MIN)
-    ;;	      (LG-DRAW-VECTOR X-MAX Y-MIN)
-    ;;	      (LG-DRAW-VECTOR X-MAX Y-MAX)
-    ;;	      (LG-DRAW-VECTOR X-MIN Y-MAX)
-    ;;	      (LG-END-VECTOR  X-MIN Y-MIN))
-    ;;	 (CURSORPOS* OLDROW (f1+ OLDCOL))
-    ;;	 (DRAW-2D BODY OLDROW OLDCOL)
-    ;;	 (CURSORPOS* OLDROW (f+ OLDCOL 1)))
-    ;;	((AND (NOT LINEAR?) CHARACTER-GRAPHICS-TTY $LINEDISP)
-    ;;	 (D-MATRIX NIL 'LEFT (f1+ H) (f1+ D))
-    ;;	 (CURSORPOS* (f- OLDROW H) OLDCOL)
-    ;;	 (D-HBAR NIL W)
-    ;;	 (CURSORPOS* (f+ OLDROW H) (f- OLDCOL W))
-    ;;	 (DRAW-2D BODY OLDROW OLDCOL)
-    ;;	 (CURSORPOS* (f+ OLDROW D 1) (f- OLDCOL W))
-    ;;	 (D-HBAR NIL W)
-    ;;	 (CURSORPOS* (f- OLDROW D 1) OLDCOL)
-    ;;	 (D-MATRIX NIL 'RIGHT (f1+ H) (f1+ D)))
+  (cond		     ;((and (not linear?) line-graphics-tty $linedisp)
+    ;;	 (let ((x-min (f* lg-character-x oldcol))
+    ;;	       (x-max (f* lg-character-x (f+ oldcol w 2)))
+    ;;	       (y-min (f+ (f* lg-character-y (f- oldrow h)) 2))
+    ;;	       (y-max (f- (f* lg-character-y (f+ oldrow d 2)) 2)))
+    ;;	      (declare (fixnum x-min x-max y-min y-max))
+    ;;	      (lg-set-point x-min y-min)
+    ;;	      (lg-draw-vector x-max y-min)
+    ;;	      (lg-draw-vector x-max y-max)
+    ;;	      (lg-draw-vector x-min y-max)
+    ;;	      (lg-end-vector  x-min y-min))
+    ;;	 (cursorpos* oldrow (f1+ oldcol))
+    ;;	 (draw-2d body oldrow oldcol)
+    ;;	 (cursorpos* oldrow (f+ oldcol 1)))
+    ;;	((and (not linear?) character-graphics-tty $linedisp)
+    ;;	 (d-matrix nil 'left (f1+ h) (f1+ d))
+    ;;	 (cursorpos* (f- oldrow h) oldcol)
+    ;;	 (d-hbar nil w)
+    ;;	 (cursorpos* (f+ oldrow h) (f- oldcol w))
+    ;;	 (draw-2d body oldrow oldcol)
+    ;;	 (cursorpos* (f+ oldrow d 1) (f- oldcol w))
+    ;;	 (d-hbar nil w)
+    ;;	 (cursorpos* (f- oldrow d 1) oldcol)
+    ;;	 (d-matrix nil 'right (f1+ h) (f1+ d)))
     (t (setq char #\- #+nil(getcharn $boxchar 2))
        (setq dmstr
 	     `((0 ,h (d-hbar ,(f+ 2 w) ,char))
@@ -169,7 +168,7 @@
 	   (draw-2d dmstr oldrow oldcol)))))
 
 
-(in-package :CLIM-USER)
+(in-package :clim-user)
 ;; CLIM needs to be loaded too, of course.
 
 (defparameter *listener-use-debug-io* #+hefner t #-hefner nil)
@@ -438,7 +437,7 @@
 	     (write-char char output))))))))
 
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (defun clim-display (form &rest args)
   (let ((displayp t)
 	(linearray (if displayp (make-array 80.) linearray))
@@ -484,7 +483,7 @@
 #+nil
 (setf maxima::*alt-display2d* #'clim-display)
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (defun boxify (form)
   "Takes a maxima internal form and adds boxes everywhere, as if dpart
   was done on all possible places"

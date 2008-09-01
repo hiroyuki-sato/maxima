@@ -46,10 +46,11 @@
 	  #+clisp (#+lisp=cl ext:default-directory 
 			     #-lisp=cl lisp:default-directory)
 	  #+cmu (ext:default-directory)
+	  #+scl (unix-namestring (ext:default-directory))
 	  #+cormanlisp (ccl:get-current-directory)
 	  #+lispworks (hcl:get-working-directory)
 	  #+lucid (lcl:working-directory)
-	  #-(or allegro clisp cmu cormanlisp lispworks lucid) 
+	  #-(or allegro clisp cmu scl cormanlisp lispworks lucid) 
 	  (truename ".")))))
   
 (defun get-version ()
@@ -68,11 +69,14 @@
   
 (defvar *maxima-lispname* #+clisp "clisp"
 	#+cmu "cmucl"
+	#+scl "scl"
 	#+sbcl "sbcl"
 	#+gcl "gcl"
-	#+allegro "acl6"
+	#+allegro "acl"
 	#+openmcl "openmcl"
-	#-(or clisp cmu sbcl gcl allegro openmcl) "unknownlisp")
+    #+abcl "abcl"
+    #+ecl "ecl"
+	#-(or clisp cmu scl sbcl gcl allegro openmcl abcl ecl) "unknownlisp")
 
 (defun configure (&key (interactive t) (verbose nil)
 		  is-win32 
@@ -80,9 +84,11 @@
 		  posix-shell
 		  clisp-name
 		  cmucl-name
-		  acl6-name
+		  scl-name
+		  acl-name
 		  openmcl-name
-		  sbcl-name)
+		  sbcl-name
+		  ecl-name)
   (let ((prefix (if maxima-directory 
 		    maxima-directory
 		    (default-directory-string)))
@@ -90,9 +96,11 @@
 	(shell (if posix-shell posix-shell "/bin/sh"))
 	(clisp (if clisp-name clisp-name "clisp"))
 	(cmucl (if cmucl-name cmucl-name "lisp"))
-	(acl6 (if acl6-name acl6-name "acl"))
+	(scl (if scl-name scl-name "lisp"))
+	(acl (if acl-name acl-name "acl"))
 	(openmcl (if openmcl-name openmcl-name "mcl"))
 	(sbcl (if sbcl-name sbcl-name "sbcl"))
+	(ecl (if ecl-name ecl-name "ecl"))
 	(files (list "maxima-local.in" "src/maxima.in" "src/maxima.bat.in"
 		     "src/autoconf-variables.lisp.in"))
 	(substitutions))
@@ -109,12 +117,18 @@
 	  (setf cmucl 
 		(read-with-default "Name of the CMUCL executable (optional)"
 				   cmucl))
-	  (setf acl6 
+	  (setf scl 
+		(read-with-default "Name of the SCL executable (optional)"
+				   scl))
+	  (setf acl 
 		(read-with-default "Name of the Allegro executable (optional)"
-				   acl6))
+				   acl))
 	  (setf openmcl 
 		(read-with-default "Name of the OpenMCL executable (optional)"
 				   openmcl))
+	  (setf ecl 
+		(read-with-default "Name of the ECL executable (optional)"
+				   ecl))
 	  (setf sbcl 
 		(read-with-default "Name of the SBCL executable (optional)"
 				   sbcl))))
@@ -130,8 +144,10 @@
 			      (cons "@DEFAULTLISP@" *maxima-lispname*)
 			      (cons "@CLISP_NAME@" clisp)
 			      (cons "@CMUCL_NAME@" cmucl)
-			      (cons "@ACL6_NAME@" acl6)
+			      (cons "@SCL_NAME@" scl)
+			      (cons "@ACL_NAME@" acl)
 			      (cons "@OPENMCL_NAME@" openmcl)
+			      (cons "@ECL_NAME@" ecl)
 			      (cons "@SBCL_NAME@" sbcl)))
     (if verbose
 	(mapc #'(lambda (pair) (format t "~a=~a~%" (first pair) (rest pair)))

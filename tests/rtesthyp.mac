@@ -54,11 +54,11 @@ exp(z)*sinh(z)/z$
  * He(n,x) = 2^(-n/2)*H(n,x/sqrt(2))
  */
 hgfred([-4],[1/2],z^2/2);
-hermite(8,z/sqrt(2))/1680$
+hermite(8,z/sqrt(2))/1680;
 
 /* A&S 13.6.18 */
-hgfred([-4],[3/2],z^2/2);
-sqrt(2)*hermite(9,z/sqrt(2))/30240/z$
+ratsimp(hgfred([-4],[3/2],z^2/2));
+hermite(9,z/sqrt(2))/(15120*sqrt(2)*z)$
 
 /* A&S 13.6.19 */
 ratsimp(hgfred([1/2],[3/2],-z^2));
@@ -302,8 +302,8 @@ laguerre(7,z)$
 hgfred([-2],[1/2],z);
 hermite(4,sqrt(z))/12$
 
-hgfred([-2],[3/2],z);
-hermite(5,sqrt(z))/(120*sqrt(z))$
+ratsimp(hgfred([-2],[3/2],z));
+hermite(5,sqrt(z))/(120*sqrt(z));
 
 hgfred([a],[a+1],-z);
 a*%gammagreek(a,z)/z^a$
@@ -503,7 +503,7 @@ hgfred([a+2,-a],[1/2],zn)-zn^(1-a)/(a*(a+1))*diff(zn^(a+1)*hgfred([a,-a],[1/2],z
  *    = (1-z)^(3/2)*z^(a+1/2)/(1/2-a)*diff(z^(1/2-a)*(1-z)^(-1/2)*F(a,-a;1/2;z),z,1)
  * 
  */
-hgfred([a-1,-a],[1/2],zn)-(1-zn)^(3/2)*zn^(a+1/2)/(1/2-a)*diff(zn^(1/2-a)*(1-zn)^(-1/2)*hgfred([a,-a],[1/2],zn),zn,1);
+ratsimp(hgfred([a-1,-a],[1/2],zn)-(1-zn)^(3/2)*zn^(a+1/2)/(1/2-a)*diff(zn^(1/2-a)*(1-zn)^(-1/2)*hgfred([a,-a],[1/2],zn),zn,1));
 0$
 
 /*
@@ -522,7 +522,7 @@ hgfred([a-1,-a],[1/2],zn)-(1-zn)^(3/2)*zn^(a+1/2)/(1/2-a)*diff(zn^(1/2-a)*(1-zn)
  * F(a,-a;-1/2;z) = z^(3/2)/poch(-1/2,1)*diff(z^(-1/2)*F(a,-a;1/2;z),z,1)
  * 
  */
-hgfred([a,-a],[-1/2],zn) - zn^(3/2)/(-1/2)*diff(zn^(-1/2)*hgfred([a,-a],[1/2],zn),zn,1);
+ratsimp(hgfred([a,-a],[-1/2],zn) - zn^(3/2)/(-1/2)*diff(zn^(-1/2)*hgfred([a,-a],[1/2],zn),zn,1));
 0$
 
 /*
@@ -544,7 +544,7 @@ hgfred([a,-a],[-1/2],zn) - zn^(3/2)/(-1/2)*diff(zn^(-1/2)*hgfred([a,-a],[1/2],zn
  * F(a-1,-a;-1/2;z) = z^(3/2)*(1-z)^(a+1/2)/poch(-1/2,1)*diff(z^(-1/2)*(1-z)^(-a+1/2)*F(a,-a;1/2;z),z,1)
  * 
  */
-hgfred([a-1,-a],[-1/2],zn) - zn^(3/2)*(1-zn)^(a+1/2)/(-1/2)*diff(zn^(-1/2)*(1-zn)^(-a+1/2)*hgfred([a,-a],[1/2],zn),zn,1);
+ratsimp(hgfred([a-1,-a],[-1/2],zn) - zn^(3/2)*(1-zn)^(a+1/2)/(-1/2)*diff(zn^(-1/2)*(1-zn)^(-a+1/2)*hgfred([a,-a],[1/2],zn),zn,1));
 0$
 
 /*
@@ -580,11 +580,11 @@ hgfred([a-1,-a],[-1/2],zn) - zn^(3/2)*(1-zn)^(a+1/2)/(-1/2)*diff(zn^(-1/2)*(1-zn
  *         *diff(z^a*(1-z)^(2-a)*G(z),z,n)
  * 
  */
-hgfred([a-2,-a],[-1/2],zn) - 
+ratsimp(hgfred([a-2,-a],[-1/2],zn) - 
    zn^(3/2)*(1-zn)^(a+1/2)/(-1/2)*(1/2-a)^(-1)*
    diff(zn^a*(1-zn)^(2-a)
         *diff(zn^(-a+1/2)*(1-zn)^(-1/2)*hgfred([a,-a],[1/2],zn),zn,1)
-        ,zn,1);
+        ,zn,1));
 0$
 
 /*
@@ -627,7 +627,7 @@ hgfred([1,2],[3/2],zn) - diff(zn*hgfred([1,1],[3/2],zn),zn,1);
  *
  * F(a+3,b;a+2,z) = z^(-1-a)/(a+2)*diff(z^(a+2)*(1-z)^(-b),z,1)
  */
-hgfred([a+3,b],[a+2],z);
+multthru(hgfred([a+3,b],[a+2],z));
 b*(1-z)^(-b-1)*z/(a+2)+1/(1-z)^b$
 
 /*
@@ -635,9 +635,10 @@ b*(1-z)^(-b-1)*z/(a+2)+1/(1-z)^b$
  *                = z^(-1-a)/(a+2)/(a+3)*diff(z^(a+3)*F(b;;z),z,2)
  *
  */
-hgfred([b,a+4],[a+2],z);
-b*(b+1)*(1-z)^(-b-2)*z^2/((a+2)*(a+3))
-	+2*b*(1-z)^(-b-1)*z/(a+2)+1/(1-z)^b$
+ratsimp(hgfred([b,a+4],[a+2],z)-
+(b*(b+1)*(1-z)^(-b-2)*z^2/((a+2)*(a+3))
+	+2*b*(1-z)^(-b-1)*z/(a+2)+1/(1-z)^b));
+0$
 
 /*
  * Bug 1155241:  F(1/2,-1/2;3/2,z)
@@ -761,3 +762,914 @@ hgfred([s-1,s+1/2],[2*s+2],z)
 
 hgfred([s-1,s+1/2],[2*s+2],z) - hgfred([s+1/2,s-1],[2*s+2],z);
 0$
+
+(assume(p>0),true);
+true$
+/* Table of Integral Transforms */
+/* Formula 36, p 147 */
+specint(exp(-a*exp(-t))*exp(-p*t),t);
+a^(-p)*gammagreek(p,a)$
+
+/* Formula 37, p 147 */
+specint(exp(-a*exp(t))*exp(-p*t),t);
+a^p*gammaincomplete(-p,a)$
+
+/* Formula 16, p 217 */
+(assume(2*v+2*u+1>0),true);
+true$
+(assume(2*v-2*u+1>0),true);
+true$
+specint(t^(v-1)*%w[k,u](a*t)*exp(-p*t),t);
+a^(u+1/2)*(p+a/2)^(-v-u-1/2)*gamma(v-u+1/2)*gamma(v+u+1/2)
+			   *%f[2,1]([v+u+1/2,u-k+1/2],[v-k+1],(p-a/2)/(p+a/2))
+	 /gamma(v-k+1)$
+
+/*
+ * Bug 1376865 
+ * Formula 24, p. 178.
+ */
+ratsimp(specint(%ei(-t)*exp(-p*t),t));
+-log(p+1)/p;
+
+/*
+ * Formula 25, p. 178 
+ *
+ * t^(-1/2)*%ei(-t)
+ * -> -2*%pi/sqrt(p)*log(sqrt(p)+sqrt(p+1))
+ *
+ * Maxima will ask for the sign of 2*psey-1.  If you answer pos, you'll get the answer below.
+ *
+ */
+/*
+ratsimp(specint(t^(-1/2)*%ei(-t)*exp(-p*t),t));
+-sqrt(%pi)*log(-(sqrt(p)*sqrt(p+1)+p+1)/(sqrt(p)*sqrt(p+1)-p-1))
+	/sqrt(p);
+*/
+
+/*
+ * Formula 26, p. 178 
+ *
+ * sin(a*t)*%ei(-t)
+ * -> -(p^2+a^2)^(-1)*(a/2*log((p+1)^2+a^2) - p*atan(a/(p+1)))
+ */
+ratsimp(rectform(specint(sin(a*t)*%ei(-t)*exp(-p*t),t)));
+(2*p*atan(a/(p+1))-a*log(p^2+2*p+a^2+1))/(2*p^2+2*a^2);
+
+/*
+ * Formula 27, p. 178 
+ *
+ * cos(a*t)*%ei(-t)
+ * -> -(p^2+a^2)^(-1)*(p/2*log((p+1)^2+a^2) + a*atan(a/(p+1)))
+ */
+ratsimp(rectform(specint(cos(a*t)*%ei(-t)*exp(-p*t),t)));
+-((2*a*atan(a/(p+1))+p*log(p^2+2*p+a^2+1))/(2*p^2+2*a^2));
+
+/*
+ * Formula 34, p. 179
+ *
+ * exp(b*t)*gammagreek(v,a*t)
+ * -> gamma(v)*a^v*(p-b)^(-1)*(p+a-b)^(-v)
+ */
+(assume(p>b,v>-1),0);
+0;
+radcan(specint(exp(b*t)*gammagreek(v,a*t)*exp(-p*t),t));
+a^v*gamma(v+1)/((p-b)*(p-b+a)^v*v);
+
+/*
+ * Formula 1, p. 214
+ *
+ * kbateman[0](t) -> 1/(p+1)
+ *
+ */
+radcan(specint(kbateman[0](t)*exp(-p*t),t));
+1/(p+1);
+
+/*
+ * More tests, based on special values from 
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/
+ *
+ * These tests mostly provided by Edmond Orignac 
+ */
+ratsimp(hgfred([-1/2,1/2,2],[1,3/2],x)-
+               (3/4*sqrt(1-x)+1/4*asin(sqrt(x))/sqrt(x)));
+0;
+
+ratsimp(hgfred([-1/2,1/2,2],[1,5/2],x)-
+               (3*(sqrt(x)*sqrt(1-x)*(6*x-1)+(4*x+1)*asin(sqrt(x)))/(32*x**(3/2))));
+0;
+
+ratsimp(hgfred([-1/2,1/2,5/2],[3/2,3/2],x)-
+               (1/3*asin(sqrt(x))/sqrt(x)+2/3*sqrt(1-x)));
+0;
+
+ratsimp(hgfred([-1/2,1,3/2],[1/2,2],x)-
+               (2*((1+2*x)*sqrt(1-x)-1)/(3*x)));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,3/2],[1/2,3],x))-
+               (4*(-2*(2*x+3)*(1-x)**(3/2)-5*x+6)/(15*x**2)));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[1/2,1/2],x))-
+	1/3*((8*x^2-13*x+3)/(1-x)^2-8*sqrt(x)*atanh(sqrt(x))));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[1/2,3/2],x))-
+	1/3*((3-4*x)/(1-x)-4*sqrt(x)*atanh(sqrt(x))));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[3/2,3/2],x))-
+               1/3*((1-2*x)*atanh(sqrt(x))/sqrt(x)+2));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,3],[2,2],x))-
+	       ((2-(2-5*x)*sqrt(1-x))/(6*x)));
+0;
+
+
+ratsimp(hgfred([-1/2,3/2,3/2],[1/2,5/2],x)-
+               (-3/4*asin(sqrt(x))/x**(3/2)+3*(1+x-2*x**2)/(4*sqrt(1-x)*x)));
+0;
+
+
+ratsimp(hgfred([-1/2,3/2,3],[5/2,2],x)-
+               ((3*sqrt(x)*sqrt(1-x)*(10*x-1)+3*asin(sqrt(x)))/(32*x**(3/2))));
+0;
+               
+/*
+ * Tests for 2F1.  From
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/06/01/
+ */
+
+/* Fixed a, b, z */
+
+hgfred([a,b],[a],z);
+(1-z)^(-b);
+
+hgfred([a,b],[b],z);
+(1-z)^(-a);
+
+ratsimp(hgfred([a,b],[b-1],z)
+        -((1-z)^(-a-1)*(b+(a-b+1)*z-1)/(b-1)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/06/04/
+ */
+
+ratsimp(hgfred([a,a/2+1],[a/2],z)
+        - (1-z)^(-a-1)*(z+1));
+0;
+
+hgfred([a,a+1/2],[2*a],z);
+2^(2*a-1)*(sqrt(1-z)+1)^(1-2*a)/sqrt(1-z);
+
+
+hgfred([a,a+1/2],[2*a+1],z);
+2^(2*a)*(sqrt(1-z)+1)^(-2*a);
+
+hgfred([a,a+1/2],[1/2],zp);
+((1+sqrt(zp))^(-2*a)+(1-sqrt(zp))^(-2*a))/2;
+
+ratsimp(hgfred([a,a+1/2],[3/2],z)
+              -((1-sqrt(z))^(1-2*a)-(sqrt(z)+1)^(1-2*a))/(2*(2*a-1)*sqrt(z)));  
+0;
+
+hgfred([a,-a],[1/2],zp);
+cos(2*a*asin(sqrt(zp)));
+
+hgfred([a,1-a],[1/2],zp);
+cos((2*a-1)*asin(sqrt(zp)))/sqrt(1-zp);
+
+hgfred([a,1-a],[1],x1);
+legendre_p(a-1,1-2*x1);
+
+hgfred([a,1-a],[3/2],z);
+sin((1-2*a)*asin(sqrt(z)))/((1-2*a)*sqrt(z));
+
+hgfred([a,2-a],[3/2],z);
+sin((2-2*a)*asin(sqrt(z)))/((2-2*a)*sqrt(1-z)*sqrt(z));
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/01/
+ */
+
+factor(hgfred([-1/2,-1/2],[1/2],zp));
+asin(sqrt(zp))*sqrt(zp) + sqrt(1 - zp);
+
+ratsimp(factor(hgfred([-1/2,-1/2],[3/2],zp))-
+1/4*((2*zp+1)*asin(sqrt(zp))/sqrt(zp)+3*sqrt(1-zp)));
+0;
+
+ratsimp(factor(hgfred([-1/2,-1/2],[5/2],zp))-
+3/64/zp^(3/2)*(sqrt(1-zp)*sqrt(zp)*(1+14*zp)+(8*zp^2+8*zp-1)*asin(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,-1/2],[7/2],zp))-
+5/768/zp^(5/2)*(sqrt(1-zp)*sqrt(zp)*(-3+16*zp+92*zp^2)+3*(16*zp^3+24*zp^2-6*zp+1)*asin(sqrt(zp)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/02/
+ */
+
+ratsimp(factor(hgfred([-1/2,1/2],[3/2],zp))-
+(asin(sqrt(zp))+sqrt(zp)*sqrt(1-zp))/2/sqrt(zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1/2],[5/2],zp))-
+3/16/zp^(3/2)*(sqrt(1-zp)*sqrt(zp)*(1+2*zp)+(4*zp-1)*asin(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1/2],[7/2],zp))-
+5/128/zp^(5/2)*(sqrt(1-zp)*sqrt(zp)*(3+2*zp)*(4*zp-1)+3*(8*zp^2-4*zp+1)*asin(sqrt(zp)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/03/
+ */
+
+hgfred([-1/2,1],[1/2],zp);
+1-sqrt(zp)*atanh(sqrt(zp));
+
+ratsimp(factor(hgfred([-1/2,1],[3/2],zp))-
+1/2*(1-(zp-1)/sqrt(zp)*atanh(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1],[2],zp))-
+2/3/zp*(1-(1-zp)^(3/2))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1],[5/2],zp))-
+3/8/zp^(3/2)*(sqrt(zp)*(zp+1)-(zp-1)^2*atanh(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1],[3],zp))-
+4/15/zp^2*(-2+5*zp+2*(1-zp)^(5/2))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1],[7/2],zp))-
+(-5/48/zp^(5/2)*(3*atanh(sqrt(zp))*(zp-1)^3+sqrt(zp)*(-3*zp^2-8*zp+3)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,1],[4],zp))-
+(-(2*(8*(1-zp)^(7/2)-35*zp^2+28*zp-8))/(35*zp^3))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/04/
+ */
+
+ratsimp(factor(hgfred([-1/2,3/2],[1/2],zp))-
+(1-2*zp)/sqrt(1-zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2],[5/2],zp))-
+3/8/zp^(3/2)*(sqrt(1-zp)*sqrt(zp)*(-1+2*zp)+asin(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2],[7/2],zp))-
+5/32/zp^(5/2)*(sqrt(1-zp)*sqrt(zp)*(3-4*zp+4*zp^2)+(6*zp-3)*asin(sqrt(zp)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/05/
+ */
+
+ratsimp(factor(hgfred([-1/2,2],[1/2],zp))-
+(3*zp-3*(zp-1)*atanh(sqrt(zp))*sqrt(zp)-2)/2/(zp-1)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[1],zp))-
+(2-3*zp)/2/sqrt(1-zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[3/2],zp))-
+1/4*((1-3*zp)/sqrt(zp)*atanh(sqrt(zp))+3)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[3],zp))-
+4/15/zp^2*(sqrt(1-zp)*(zp-1)*(2+3*zp)+2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[5/2],zp))-
+1/16/zp^(3/2)*(3*sqrt(zp)*(3*zp-1)+(-9*zp^2+6*zp+3)*atanh(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[4],zp))-
+8/35/zp^3*(-4+7*zp+sqrt(1-zp)*(zp-1)^2*(4+3*zp))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,2],[7/2],zp))-
+(-5/32/zp^(5/2)*(3*(zp+1)*atanh(sqrt(zp))*(zp-1)^2+sqrt(zp)*(-3*zp^2+2*zp-3)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/06/
+ */
+
+ratsimp(factor(hgfred([-1/2,5/2],[1/2],zp))-
+(8*zp^2-12*zp+3)/3/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2],[3/2],zp))-
+(3-4*zp)/3/sqrt(1-zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2],[7/2],zp))-
+5/48/zp^(5/2)*(sqrt(1-zp)*sqrt(zp)*(1+2*zp)*(-3+4*zp)+3*asin(sqrt(zp)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/07/
+ */
+
+ratsimp(factor(hgfred([-1/2,3],[1/2],zp))-
+(-15*sqrt(zp)*atanh(sqrt(zp))*(zp-1)^2+15*zp^2-25*zp+8)/8/(zp-1)^2
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[1],zp))-
+(15*zp^2-24*zp+8)/8/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[3/2],zp))-
+(sqrt(zp)*(15*zp-13)-3*(5*zp^2-6*zp+1)*atanh(sqrt(zp)))/16/(zp-1)/sqrt(zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[2],zp))-
+(4-5*zp)/4/sqrt(1-zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[5/2],zp))-
+3/64/zp^(3/2)*(sqrt(zp)*(15*zp-1)+(-15*zp^2+6*zp+1)*atanh(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[7/2],zp))-
+(-5/128/zp^(5/2)*(sqrt(zp)*(-15*zp^2+4*zp+3)+3*(5*zp^3-3*zp^2-zp-1)*atanh(sqrt(zp))))
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[4],zp))-
+2/35/zp^3*(8-(1-zp)^(3/2)*(8+12*zp+15*zp^2))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/08/
+ */
+
+ratsimp(factor(hgfred([-1/2,7/2],[1/2],zp))-
+(5-30*zp+40*zp^2-16*zp^3)/5/(1-zp)^(5/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,7/2],[3/2],zp))-
+(24*zp^2-40*zp+15)/15/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,7/2],[5/2],zp))-
+(5-6*zp)/5/sqrt(1-zp)
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/09/
+ */
+
+ratsimp(factor(hgfred([-1/2,4],[1/2],zp))-
+1/48/(zp-1)^3*(-105*sqrt(zp)*atanh(sqrt(zp))*(zp-1)^3+105*zp^3-280*zp^2+231*zp-48)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[1],zp))-
+(16-72*zp+90*zp^2-35*zp^3)/16/(1-zp)^(5/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[3/2],zp))-
+(sqrt(zp)*(105*zp^2-190*zp+81)-15*(zp-1)^2*(7*zp-1)*atanh(sqrt(zp)))/96/(zp-1)^2/sqrt(zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[2],zp))-
+(35*zp^2-60*zp+24)/24/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[5/2],zp))-
+(sqrt(zp)*(105*zp^2-100*zp+3)-3*(35*zp^3-45*zp^2+9*zp+1)*atanh(sqrt(zp)))/128/(zp-1)/zp^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[3],zp))-
+(6-7*zp)/6/sqrt(1-zp)
+);
+0;
+
+ratsimp(factor(hgfred([-1/2,4],[7/2],zp))-
+5/768/zp^(5/2)*(sqrt(zp)*(105*zp^2-10*zp-3)-3*(35*zp^3-15*zp^2-3*zp-1)*atanh(sqrt(zp)))
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/20/
+ */
+
+ratsimp(factor(hgfred([1/2,1],[-1/2],zp))-
+(1-3*zp)/(zp-1)^2
+);
+0;
+
+hgfred([1/2,1],[3/2],zp);
+log((sqrt(zp)+1)/(1-sqrt(zp)))/(2*sqrt(zp));
+
+ratsimp(factor(hgfred([1/2,1],[2],zp))-
+2*(1-sqrt(1-zp))/zp
+);
+0;
+
+ratsimp(factor(hgfred([1/2,1],[5/2],zp))-
+3/2/zp^(3/2)*((zp-1)*atanh(sqrt(zp))+sqrt(zp))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,1],[3],zp))-
+(-4/3/zp^2*((2*sqrt(1-zp)-3)*zp-2*sqrt(1-zp)+2))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,1],[7/2],zp))-
+5/8/zp^(5/2)*(3*atanh(sqrt(zp))*(zp-1)^2+sqrt(zp)*(5*zp-3))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,1],[4],zp))-
+(2*(-8*(1-zp)^(5/2)+15*zp^2-20*zp+8))/5/zp^3
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/22/
+ */
+
+factor(hgfred([1/2,2],[-1/2],z));
+(5*z-1)/(z-1)^3;
+
+ratsimp(factor(hgfred([1/2,2],[1],zp))-
+(2-zp)/2/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([1/2,2],[3/2],zp))-
+1/2*(atanh(sqrt(zp))/sqrt(zp)+1/(1-zp))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,2],[5/2],zp))-
+((3*(zp+1)/4/zp^(3/2)*atanh(sqrt(zp))-3/4/zp))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,2],[3],zp))-
+4/3/zp^2*(2-(zp+2)*sqrt(1-zp))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,2],[7/2],zp))-
+15/16/zp^(5/2)*((zp^2+2*zp-3)*atanh(sqrt(zp))-(zp-3)*sqrt(zp))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,2],[4],zp))-
+8/5/zp^3*(-sqrt(1-zp)*zp^2+(5-3*sqrt(1-zp))*zp+4*sqrt(1-zp)-4)
+);
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric2F1/03/07/24/
+ */
+
+ratsimp(hgfred([1/2,3],[-1/2],z) - (1-7*z)/(z-1)^4);
+0$
+
+ratsimp(factor(hgfred([1/2,3],[1],z))-
+(3*z^2-8*z+8)/8/(1-z)^(5/2)
+);
+0;
+
+ratsimp(factor(hgfred([1/2,3],[3/2],zp))-
+(3*atanh(sqrt(zp))*(zp-1)^2+sqrt(zp)*(5-3*zp))/8/(zp-1)^2/sqrt(zp)
+);
+0;
+
+ratsimp(factor(hgfred([1/2,3],[2],zp))-
+(4-3*zp)/4/(1-zp)^(3/2)
+);
+0;
+
+ratsimp(factor(hgfred([1/2,3],[5/2],zp))-
+3/16/(zp-1)/zp^(3/2)*(sqrt(zp)*(1-3*zp)+(3*zp^2-2*zp-1)*atanh(sqrt(zp)))
+);
+0;
+
+ratsimp(factor(hgfred([1/2,3],[7/2],zp))-
+15/64/zp^(5/2)*((3*zp^2+2*zp+3)*atanh(sqrt(zp))-3*sqrt(zp)*(zp+1))
+);
+0;
+
+/*
+ * Tests for 2F2
+ */
+hgfred([a,b],[a,c],z);
+%f[1,1]([b],[c],z)$
+
+/* test with exponentials */ 
+
+/* Part 1: exponential times polynomial */ 
+
+ratsimp(factor(hgfred([3/2,3/2],[1/2,1/2],x))-
+	exp(x)*(4*x^2+8*x+1));
+0;
+
+ratsimp(factor(hgfred([3/2,2],[1/2,1],x))-
+	exp(x)*(2*x^2+5*x+1));
+0;
+
+ratsimp(factor(hgfred([3/2,3],[1/2,2],x))-
+	exp(x)*(2*x^2+7*x+2)/2);
+0;
+
+ratsimp(factor(hgfred([2,2],[1,1],x))-
+	exp(x)*(x^2+3*x+1));
+0;
+
+ratsimp(factor(hgfred([3,3],[2,2],x))-
+	exp(x)*(x^2+5*x+4)/4);
+0;
+
+ratsimp(factor(hgfred([3,3],[1,2],x))-
+	exp(x)*(x^3+8*x^2+14*x+4)/4);
+0;
+
+/* Part 2: exponential times rational fraction */ 
+
+ratsimp(factor(exponentialize(expand(hgfred([1,3/2],[1/2,2],x))))-
+	(exp(x)*(2*x-1)+1)/x);
+0;
+
+ratsimp(factor(exponentialize(expand(hgfred([1,5/2],[3/2,2],x))))-
+	(exp(x)*(2*x+1)-1)/(3*x));
+0;
+
+ratsimp(factor(exponentialize(expand(hgfred([1,3],[2,2],x))))-
+	(exp(x)*(x+1)-1)/(2*x));
+0;
+
+
+/* test with incomplete gamma */ 
+/*
+hgfred([1/2,b],[3/2,b+1],x);
+b*(sqrt(%pi/x)*erfi(sqrt(x))-(-x)^(-b)*(gamma(b)-gammaincomplete(b,-z)))/(2*b-1)$
+*/
+
+/* Note: I am unsure about Maxima notation for the incomplte gamma
+function */ 
+
+/* Tests with erfi */
+(erfi(x) := -%i*erf(%i*x),0);
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2],[1/2,1/2],x))-
+	(exp(x)-2*sqrt(%pi)*sqrt(x)*erfi(sqrt(x))));
+0;
+
+
+ratsimp(factor(hgfred([-1/2,2],[1/2,1],x))-
+	(exp(x)-3/2*sqrt(%pi)*sqrt(x)*erfi(sqrt(x))));
+0;
+
+
+ratsimp(factor(hgfred([-1/2,5/2],[1/2,3/2],x))-
+	(exp(x)-4/3*sqrt(%pi)*sqrt(x)*erfi(sqrt(x))));
+0;
+
+ratsimp(factor(hgfred([-1/2,3],[1/2,2],x))-
+	(exp(x)-5/4*sqrt(%pi)*sqrt(x)*erfi(sqrt(x))));
+0;
+ 
+
+/*
+ratsimp(factor(hgfred([(-1)/2,1],[1/2,2],x))-
+	(1/(3*x)*(exp(x)*(2*x+1)-2*sqrt(%pi)*erfi(sqrt(x))*x^(3/2)-1)));
+0;
+*/
+
+/*
+hgfred([(-1)/2,1],[1/2,3],x);
+1/(15*x^2)*(exp(x)*(8*x^2+4*x+2)-8*sqrt(%pi)*erfi(sqrt(x))*x^(5/2)-2*(5*x+3))$
+*/
+
+/*
+hgfred([(-1)/2,1],[3/2,2],x);
+1/(6*x)*(2*exp(x)*(x-1)+sqrt(%pi)*sqrt(x)*erfi(sqrt(x))*(3-2*x)+2)$
+*/
+
+/*
+hgfred([(-1)/2,1],[3/2,3],x);
+2/(15*x^2)*(exp(x)*(2*x^2-4*x-1)+sqrt(%pi)*x^(3/2)*erfi(sqrt(x))*(5-2*x)+5*z+1)$ 
+*/
+
+/* Tests with erf */ 
+ratsimp(factor(hgfred([1,3],[1/2,2],x))-
+	(2*x+4+sqrt(%pi)*sqrt(x)*(2*x+5)*exp(x)*erf(sqrt(x)))/4);
+0;
+
+
+
+
+/* Tests with modified bessel  functions I_0 and I_1 */
+
+/*
+hgfred([1,3/2],[2,2],x);
+2*(exp(x/2)*bessel_i(0,x/2)-1)/x$
+*/
+
+/*
+hgfred([1/2,5/2],[3/2,2],x);
+exp(x/2)*(3*bessel_i(0,x/2)-bessel_i(1,x/2))/3$
+*/
+
+/*
+hgfred([1/2,3],[2,2],x);
+exp(x/2)*(2*bessel_i(0,x/2)-bessel_i(1,x/2))/2$
+*/
+
+/*
+hgfred([-1/2,3/2],[1/2,1],x);
+exp(x/2)*((1-2*x)*bessel_i(0,x/2)+*x*bessel_i(1,x/2))$
+*/
+
+/*
+hgfred([(-1)/2,1],[2,2],x);
+1/(9*x)*(4*exp(x/2)*x*(x-2)*bessel_i(1,x/2)-2*exp(x/2)*(2*x^2-6*x+3)*bessel_i(0,x/2)+6)$
+*/
+
+/*
+hgfred([(-1)/2,1],[2,3],x);
+4/(45*x)*(exp(x/2)*(4*x^2-14*x+3)*bessel_i(1,x/2)-exp(x/2)*(4*x^2-18*x+15)*bessel_i(0,x/2)+15)$
+*/
+
+
+/* Test with exponential integral */ 
+
+/*
+hgfred([1,1],[2,2],x);
+(2*%ei(x)+log(1/x)-log(x)-2%gamma)/(2*x)$ 
+*/
+/* The above formula may be simplificated by noting
+log(1/x)=-log(x) for x>0; the expression might be in terms of E1 instead
+of Ei */ 
+
+
+/*
+ * Tests for 3F2
+ */
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/05/
+ */
+
+factor(hgfred([-1/2,1/2,2],[1,3/2],zp));
+(3*sqrt(1-zp)*sqrt(zp)+asin(sqrt(zp)))/(4*sqrt(zp));
+
+ratsimp(factor(hgfred([-1/2,1/2,2],[1,5/2],zp))-
+3*(sqrt(1-zp)*sqrt(zp)*(6*zp-1)+(4*zp+1)*asin(sqrt(zp)))/(32*zp^(3/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/06/
+ */
+
+factor(hgfred([-1/2,1/2,5/2],[3/2,3/2],zp));
+(2*sqrt(1-zp)*sqrt(zp)+asin(sqrt(zp)))/(3*sqrt(zp));
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/07/
+ */
+
+ratsimp(factor(hgfred([-1/2,1/2,3],[1,3/2],zp))
+-(sqrt(zp)*(13-15*zp)+3*sqrt(1-zp)*asin(sqrt(zp)))/(16*sqrt(zp)*sqrt(1-zp)));
+0;
+
+ratsimp(factor(hgfred([-1/2,1/2,3],[1,5/2],zp))
+-(3*sqrt(1-zp)*sqrt(zp)*(30*zp-1)+3*(12*zp+1)*asin(sqrt(zp)))/(128*zp^(3/2)));
+0;
+
+factor(hgfred([-1/2,1/2,3],[3/2,2],zp));
+(5*sqrt(1-zp)*sqrt(zp)+3*asin(sqrt(zp)))/(8*sqrt(zp));
+
+ratsimp(factor(hgfred([-1/2,1/2,3],[5/2,2],zp))
+-3*(sqrt(1-zp)*sqrt(zp)*(10*zp+1)+(12*zp-1)*asin(sqrt(zp)))/(64*zp^(3/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/09/
+ */
+
+ratsimp(factor(hgfred([-1/2,1,3/2],[1/2,2],z))
+-2*((1+2*z)*sqrt(1-z)-1)/(3*z));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,3/2],[1/2,3],z))
+-4*(-2*(2*z+3)*(1-z)^(3/2)-5*z+6)/(15*z^2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/11/
+ */
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[1/2,2],z))
+-2*(4*z*(1-2*z)-sqrt(1-z)+1)/(9*sqrt(1-z)*z));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[1/2,3],z))
+-4*(-5*z+2*sqrt(1-z)*(8*z^2+4*z+3)-6)/(45*z^2));
+
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[3/2,2],z))
+-2*(1-(1-4*z)*sqrt(1-z))/(9*z));
+0;
+
+ratsimp(factor(hgfred([-1/2,1,5/2],[3/2,3],z))
+-4*(5*z+2-2*(4*z+1)*(1-z)^(3/2))/(45*z^2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/13/
+ */
+ratsimp(factor(hgfred([-1/2,3/2,3/2],[1/2,1/2],z))
+-(4*z^2-6*z+1)/(1-z)^(3/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2,3/2],[1/2,5/2],zp))
+-3*(sqrt(zp)*(-2*zp^2+zp+1)-sqrt(1-zp)*asin(sqrt(zp)))/(4*sqrt(1-zp)*zp^(3/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/14/
+ */
+ratsimp(factor(hgfred([-1/2,3/2,2],[1/2,1],z))
+-(6*z^2-9*z+2)/(2*(1-z)^(3/2)));
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2,2],[1/2,3],z))
+-4*((2*z^2+z+2)*sqrt(1-z)-2)/(5*z^2));
+0;
+
+ratsimp(factor(hgfred([-1/2,3/2,2],[1,5/2],zp))
+-3*(sqrt(zp)*sqrt(1-zp)*(6*zp+1)-asin(sqrt(zp)))/(16*zp^(3/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/15/
+ */
+
+ratsimp(factor(hgfred([-1/2,3/2,5/2],[1/2,1/2],z))
+-(-16*z^3+40*z^2-30*z+3)/(3*(1-z)^(5/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/16/
+ */
+
+ratsimp(factor(hgfred([-1/2,3/2,3],[1/2,1],z))
+-(-30*z^3+75*z^2-56*z+8)/(8*(1-z)^(5/2)));
+0;
+
+
+ratsimp(factor(hgfred([-1/2,3/2,3],[1/2,2],z))
+-(10*z^2-15*z+4)/(4*(1-z)^(3/2)));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/17/
+ */
+
+ratsimp(factor(hgfred([-1/2,2,2],[1,1],z))
+-(9*z^2-14*z+4)/(4*(1-z)^(3/2)));
+0;
+
+ratsimp(factor(hgfred([-1/2,2,2],[1,3],z))
+-2*((9*z^2+2*z+4)*sqrt(1-z)-4)/(15*z^2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/18/
+ */
+
+ratsimp(factor(hgfred([-1/2,2,5/2],[1/2,1],z))
+-(2-15*z+20*z^2-8*z^3)/(2*(1-z)^(5/2)));
+0;
+
+ratsimp(factor(hgfred([-1/2,2,5/2],[1/2,3],z))
+-4*(-8*z^3+4*z^2+z+2*sqrt(1-z)-2)/(15*z^2*sqrt(1-z)));
+0;
+
+ratsimp(factor(hgfred([-1/2,2,5/2],[1,3/2],z))
+-(12*z^2-19*z+6)/(6*(1-z)^(3/2)));
+0;
+
+ratsimp(factor(hgfred([-1/2,2,5/2],[3,3/2],z))
+-4/(45*z^2)*((12*z^2+z+2)*sqrt(1-z)-2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/19/
+ */
+
+ratsimp(factor(hgfred([-1/2,2,3],[1,1],z))
+-(-45*z^3+114*z^2-88*z+16)/16/(1-z)^(5/2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/20/
+ */
+
+ratsimp(factor(hgfred([-1/2,5/2,5/2],[1/2,1/2],z))
+-(64*z^4-224*z^3+280*z^2-144*z+9)/9/(1-z)^(7/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2,5/2],[1/2,3/2],z))
+-(-32*z^3+80*z^2-60*z+9)/9/(1-z)^(5/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2,5/2],[3/2,3/2],z))
+-(16*z^2-26*z+9)/9/(1-z)^(3/2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/21/
+ */
+
+ratsimp(factor(hgfred([-1/2,5/2,3],[1/2,1],z))
+-(40*z^4-140*z^3+175*z^2-88*z+8)/8/(1-z)^(7/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2,3],[1/2,2],z))
+-(-40*z^3+100*z^2-75*z+12)/12/(1-z)^(5/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2,3],[3/2,1],z))
+-(-20*z^3+51*z^2-40*z+8)/8/(1-z)^(5/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,5/2,3],[3/2,2],z))
+-(20*z^2-33*z+12)/12/(1-z)^(3/2));
+0;
+
+/*
+ * http://functions.wolfram.com/HypergeometricFunctions/Hypergeometric3F2/03/08/22/
+ */
+
+ratsimp(factor(hgfred([-1/2,3,3],[1,1],z))
+-(225*z^4-792*z^3+1000*z^2-512*z+64)/64/(1-z)^(7/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,3,3],[1,2],z))
+-(-75*z^3+192*z^2-152*z+32)/32/(1-z)^(5/2));
+0;
+
+ratsimp(factor(hgfred([-1/2,3,3],[2,2],z))
+-(25*z^2-42*z+16)/16/(1-z)^(3/2));
+0;

@@ -8,14 +8,11 @@
 ;;;     (c) Copyright 1981 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module ar)
 
-(declare-top (special evarrp munbound flounbound fixunbound #+cl $use_fast_arrays))
-
-;;; This code needs to be checked carefully for the lispm.
-
-
+(declare-top (special evarrp munbound flounbound fixunbound $use_fast_arrays))
 
 (defstruct (mgenarray (:conc-name mgenarray-) (:type vector))
   aref
@@ -25,121 +22,100 @@
   generator
   content)
 
-;;#-cl
-;;(DEFUN MARRAY-TYPE (X)
-  
-;;  (OR (CDR (ASSQ (ARRAY-TYPE X)
-;;		 '((FLONUM . $FLOAT)
-;;		   (FIXNUM . $FIXNUM))))
-;;      (MGENARRAY-TYPE X)))
-
 (defun marray-type (x)
   (case (ml-typep x)
     (array (array-element-type x))
     (hash-table 'hash-table)
     (cl:array  (princ "confusion over `array' and `cl:array'")
-		  (array-element-type x))
+	       (array-element-type x))
     (otherwise
- 
-     (or (cdr (assq (array-type x)
-		    '((flonum . $float)
-		      (fixnum . $fixnum))))
+     (or (cdr (assoc (array-element-type x) '((flonum . $float) (fixnum . $fixnum))))
 	 (mgenarray-type x)))))
 
 
 (defmfun $make_array (type &rest diml)
-  (let ((ltype (assq type '(($float . flonum) ($flonum . flonum)
-			    ($fixnum . fixnum)))))
-    (cond ((not ltype)
-	   (cond ((eq type '$any)
-		  (make-array diml :initial-element nil))
-		 ((eq type '$hashed)
-		  (let ((kludge (gensym)))
-		    (or (integerp (car diml))
-			(merror "non-integer number of dimensions: ~M"
-				(car diml)))
-		    (insure-array-props kludge () (car diml))
-		    (make-mgenarray :type '$hashed
-				    :content kludge)))
-		 ((eq type '$functional)
-		  ;; MAKE_ARRAY('FUNCTIONAL,LAMBDA(...),'ARRAY_TYPE,...)
-		  (or (> (length diml) 1)
-		      (merror "not enough arguments for functional array specification"))
-		  (let ((ar (apply #'$make_array (cdr diml)))
-			(the-null))
-		    (case (marray-type ar)
-		      (($fixnum)
-		       (fillarray ar (list (setq the-null fixunbound))))
-		      (($float)
-		       (fillarray ar (list (setq the-null flounbound))))
-		      (($any)
-		       (fillarray (mgenarray-content ar) (list (setq the-null munbound))))
-		      (t
-		       ;; Nothing to do for hashed arrays. Is FUNCTIONAL here
-		       ;; an error?
-		       (setq the-null 'notexist)))
-		    (make-mgenarray :type '$functional
-				    :content ar
-				    :generator (car diml)
-				    :null the-null)))
-		 ('else
-		  (merror "Array type of ~M is not recognized by `make_array'" type))))
-	  ('else
-	   (apply '*array nil (cdr ltype) diml)))))
+  (let ((ltype (assoc type '(($float . flonum) ($flonum . flonum) ($fixnum . fixnum)))))
+    (if (not ltype)
+	(case type
+	  ($any
+	   (make-array diml :initial-element nil))
+	  ($hashed
+	   (let ((kludge (gensym)))
+	     (unless (integerp (car diml))
+	       (merror "non-integer number of dimensions: ~M" (car diml)))
+	     (insure-array-props kludge () (car diml))
+	     (make-mgenarray :type '$hashed :content kludge)))
+	  ($functional ;; MAKE_ARRAY('FUNCTIONAL,LAMBDA(...),'ARRAY_TYPE,...)
+	   (unless (> (length diml) 1)
+	     (merror "not enough arguments for functional array specification"))
+	   (let ((ar (apply #'$make_array (cdr diml)))
+		 (the-null))
+	     (case (marray-type ar)
+	       ($fixnum
+		(fillarray ar (list (setq the-null fixunbound))))
+	       ($float
+		(fillarray ar (list (setq the-null flounbound))))
+	       ($any
+		(fillarray (mgenarray-content ar) (list (setq the-null munbound))))
+	       (t
+		;; Nothing to do for hashed arrays.
+		;; Is FUNCTIONAL here an error?
+		(setq the-null 'notexist)))
+	     (make-mgenarray :type '$functional :content ar :generator (car diml) :null the-null)))
+	  (t
+	   (merror "Array type of ~M is not recognized by `make_array'" type)))
+	(make-array diml :initial-element (case (cdr ltype)
+					    (fixnum 0)
+					    (flonum 0.0)
+					    (otherwise nil))))))
 
 (defmfun maknum (x)
-  (cond ($use_fast_arrays
-	 (exploden (format nil "~A" x)))
-	(t (format nil "~A" x))))
+  (if $use_fast_arrays
+      (exploden (format nil "~A" x))
+      (format nil "~A" x)))
 
 (defmfun dimension-array-object (form result &aux (mtype (marray-type form)))
-  (cond ($use_fast_arrays (dimension-string  (maknum form) result))
-	(t
-	 (dimension-string
-	  (nconc (exploden "{Array: ")
-		 (cdr (exploden mtype))
-		 (exploden " ")
-		 (exploden (maknum form))
-		 (if (memq mtype '($float $fixnum $any))
-		     (nconc (exploden "[")
-			    (do ((l (cdr (arraydims (if (memq mtype '($float $fixnum))
-							form
-							(mgenarray-content form))))
-				    (cdr l))
-				 (v nil
-				    (nconc (nreverse (exploden (car l))) v)))
-				((null l) (nreverse v))
-			      (if v (push #\, v)))
-			    (exploden "]")))
-		 (exploden "}"))
-	  result))))
+  (if $use_fast_arrays
+      (dimension-string (maknum form) result)
+      (dimension-string
+       (nconc (exploden "{Array: ")
+	      (cdr (exploden mtype))
+	      (exploden " ")
+	      (exploden (maknum form))
+	      (if (member mtype '($float $fixnum $any))
+		  (nconc (exploden "[")
+			 (do ((l (cdr (arraydims (if (member mtype '($float $fixnum))
+						     form
+						     (mgenarray-content form))))
+				 (cdr l))
+			      (v nil (nconc (nreverse (exploden (car l))) v)))
+			     ((null l) (nreverse v))
+			   (if v (push #\, v)))
+			 (exploden "]")))
+	      (exploden "}"))
+       result)))
 
 
 
 (defun marray-check (a)
   (if (eq (ml-typep a) 'array)
       (case (marray-type a)
-	((art-q ) a)
-	(($fixnum $float) a)
+	(($fixnum $float art-q) a)
 	(($any) (mgenarray-content a))
 	(($hashed $functional)
-	
 	 ;; BUG: It does have a number of dimensions! Gosh. -GJC
 	 (merror "Hashed array has no dimension info: ~M" a))
 	(t
 	 (marray-type-unknown a)))
       (merror "Not an array: ~M" a)))
 
-;;(DEFMFUN $ARRAY_NUMBER_OF_DIMENSIONS (A)
-;;  (ARRAY-/#-DIMS (MARRAY-CHECK A)))
-
 (defmfun $array_dimension_n (n a)
-  (array-dimension  (marray-check a) n))
+  (array-dimension (marray-check a) n))
 
 (defun marray-type-unknown (x)
   (merror "Bug: Array of unhandled type: ~S" x))
 
-(defun marrayref-gensub (aarray ind1 inds)  
+(defun marrayref-gensub (aarray ind1 inds)
   (case (marray-type aarray)
     ;; We are using a CASE on the TYPE instead of a FUNCALL, (or SUBRCALL)
     ;; because we are losers. All this stuff uses too many functions from
@@ -174,11 +150,8 @@
 	   value)))
     (t
      (marray-type-unknown aarray))))
-	  
-(defmfun $make_art_q (&rest l)
-  (make-array l))
 
-(defun marrayset-gensub (val aarray ind1 inds) 
+(defun marrayset-gensub (val aarray ind1 inds)
   (case (marray-type aarray)
     ((t) (setf (apply #'aref aarray ind1 inds) val))
     (($hashed)
@@ -200,5 +173,3 @@
 
 (defmfun arrstore-extend (a l r)
   (marrayset-gensub r a (car l) (cdr l)))
-
-

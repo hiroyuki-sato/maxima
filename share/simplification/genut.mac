@@ -111,16 +111,16 @@ listtoprod(list) :=
   apply("*",list)$
 
 /* The following mimics the behaviour of APPEND.  Note, however, that
-   INTERSECTION takes exactly two arguments */
+   INTERSECT_LIST takes exactly two arguments */
 
-intersection(exp1,exp2) :=
+intersect_list(exp1,exp2) :=
   (if atom(exp1)
-  then error(concat("argument value `", exp1, "' to INTERSECTION was atomic")),
+  then error(concat("argument value `", exp1, "' to `intersect_list' was atomic")),
   if atom(exp2)
-  then error(concat("argument value `", exp2, "' to INTERSECTION was atomic")),
+  then error(concat("argument value `", exp2, "' to `intersect_list' was atomic")),
   block([op:inpart(exp1,0)],
   if op#inpart(exp2,0)
-  then error("Arguments to INTERSECTION are not compatible."),
+  then error("Arguments to `intersect_list' are not compatible."),
   block([inflag:true,cap:[]],
     for term in exp1 do
       if member(term,exp2)
@@ -154,6 +154,9 @@ alias(FORMAL,NOUN);
 /* LST is an alternating list of operators and associated functions.
    OP_FCN_LIST is used to pass LST to recursive calls to OPMAP. */
 
+/* The change from ampersand symbols to CL strings breaks opmap (the call to
+?getf in particular).
+
 opmap(exp,lst) :=
   if atom(exp)
   then exp
@@ -162,6 +165,19 @@ opmap(exp,lst) :=
     then block([op_fcn_list:lst],
       apply(fun,[exp]))
     else exp)$
+*/
+
+opmap(exp, lst) := block([op_fcn_list : lst, e_op, x, fun : false, inflag : true],
+  if mapatom(exp) then exp
+  else (
+    e_op : op(exp),
+    while lst # [ ] do (
+      x : first(lst),
+      lst : rest(lst),
+      if x = e_op and lst # [ ] then (
+        fun : first(lst),
+        lst : [ ])),
+      if fun = false then exp else apply(fun, [exp])))$
 
 iflopmap(op,fun,exp) :=
   if op="*"

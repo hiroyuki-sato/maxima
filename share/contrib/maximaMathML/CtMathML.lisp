@@ -1,3 +1,4 @@
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  Purpose:  Generate MathML Content code from MAXIMA
 ;;;  File: CtMathML.lsp
@@ -19,26 +20,15 @@
 ;; Author: Paul S. Wang
 ;; Date: 4/99
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;=============================================================================
-;    (c) copyright 2002	 Kent State University
-;		all rights reserved.
-;
-; Authors:  Paul S. Wang, Kent State University
-; This work was supported by NSF/USA.
-; Permission to use this work for any purpose is granted provided that
-; the copyright notice, author and support credits above are retained.
-;
-;=============================================================================
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module mathml)
 (declaim (special lop rop ccol *row *indent* mPrport))
 
 
 (defmfun $ctmathml (&rest margs)
-         (prog (ccol *row* *indent* displaytype filename mexplabel
-		 mexpress mPrport x y eqnline lop rop)
+         (prog (ccol *row* *indent* filename 
+		 mexpress mPrport x y lop rop)
 	   (setq lop 'mparen rop 'mparen)
            (setq mexpress (car margs))
            (setq ccol 1 *indent* 0 *row* t)
@@ -75,7 +65,7 @@
                       (eq 'mlable (caar mexpress)))
                 (setq mexpress (cadr mexpress))
 	   )
-           (tprinc "<math>")
+           (tprinc "<math  xmlns='http://www.w3.org/1998/Math/MathML'>")
            (ctmathml (nformat mexpress))  ;;; call engine
 	   (tprinc "</math>")
            (when filename (terpri mPrport) (close mPrport))
@@ -141,19 +131,18 @@
          (tprinc (princ-to-string a))
 	 (tprinc "</cn>")
         )
-        ((setq val (get a 'chchr))
+        ((setq val (safe-get a 'chchr))
 	 (cond ((member val '("&pi;" "&gamma;" "&ii;" "&ee;") :test #'equal)
 	          (tprinc "<cn type=\"constant\">") )
 	       (t (tprinc "<cn>") )
 	 )
-         (tprinc val) (tprinc "</ci>")
+         (tprinc val) (tprinc "</cn>")
         )
-        (t (tprinc "<ci>")
-         (tprinc (apply 'concat (mapcar #'handle_rsw
-                   (rm '// (explode (fullstrip1 a))))))
-         (tprinc "</ci>"))
-  )
-))
+        (t
+          (let ((my-atom (if (symbolp a) (print-invert-case (stripdollar a)) a)))
+            (tprinc "<ci>")
+            (tprinc (coerce (mapcar #'handle_rsw (rm '// (exploden my-atom))) 'string))
+            (tprinc "</ci>"))))))
 
 (defun cpxp(a)
 (if (among '$%i a)
@@ -222,11 +211,11 @@
 	       (tprinc "<")(tprinc sym)(tprinc ">") 
 	       (tprinc "<bvar>")(ctmathml var)(tprinc "</bvar>") 
                (setq ll (nformat (meval 
-                 (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF ll))))
+                 (list '($substitute) '((mminus) $inf) '$minf ll))))
 	       (tprinc "<lowlimit>")(ctmathml ll)(tprinc "</lowlimit>") 
 	       (myterpri)
                (setq ul (nformat (meval 
-                 (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF ul))))
+                 (list '($substitute) '((mminus) $inf) '$minf ul))))
 	       (tprinc "<uplimit>")(ctmathml ul)(tprinc "</uplimit>") 
 	       (ctmathml exp)
 	       (row-end "</apply>")
@@ -242,7 +231,7 @@
      (tprinc "<")(tprinc sym)(tprinc ">") 
      (tprinc "<bvar>")(ctmathml v)(tprinc "</bvar>") 
      (setq p (nformat (meval 
-       (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF p))))
+       (list '($substitute) '((mminus) $inf) '$minf p))))
      (tprinc "<lowlimit>")(ctmathml p)(tprinc "</lowlimit>") 
      (myterpri)
      (cond (args (row-begin "<condition>")

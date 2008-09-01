@@ -46,7 +46,7 @@ x:1000;
 thru 10 while x # 0 do x:0.5*(x+5/x);
 done$
 x;
-2.28242904$
+2.282429035887867$
 remvalue(x);
 [x]$
 newton(f,guess):=block([numer,y],local(f,df,x,guess),numer:true,
@@ -152,21 +152,21 @@ done;
  ev(%e^x*sin(x)^2,exponentialize);
  -%e^x*(%e^(%i*x)-%e^-(%i*x))^2/4;
   integrate(%,x);
--(%e^((2*%i+1)*x)/(2*%i+1)+%e^((1-2*%i)*x)/(1-2*%i)-2*%e^x)/4; 
+-((%e^((2*%i+1)*x)/(2*%i+1)+%e^((1-2*%i)*x)/(1-2*%i)-2*%e^x)/4); 
  ev(%,demoivre);
- -(%e^x*(%i*sin(2*x)+cos(2*x))/(2*%i+1)
+ -((%e^x*(%i*sin(2*x)+cos(2*x))/(2*%i+1)
       +%e^x*(cos(2*x)-%i*sin(2*x))/(1-2*%i)-2*%e^x)
-      /4;
+      /4);
  ans:ev(%,ratexpand);
  -%e^x*sin(2*x)/5-%e^x*cos(2*x)/10+%e^x/2;
  ev(ans,x:1,numer)-ev(ans,x:0,numer);
  0.5779160182042402;
- block([fpprec:35],ev(ans,x:1,bfloat)-ev(ans,x:0,bfloat));
- 5.7791601820424019599988308251707781339427227258443b-1;
+ block([fpprec:35], ev(ans,x:1,bfloat)-ev(ans,x:0,bfloat));
+''(block([fpprec : 35], 5.7791601820424019599988308251707781b-1));
  integrate(%e^x*sin(x)^2,x);
- -(2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10;
+ -(((2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10));
  trigreduce(%);
- -(2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10;
+ -((2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10);
  % - ans,ratsimp;
  0 ;
 
@@ -182,7 +182,7 @@ ev(%,numer);
 sin(1);
 sin(1)$
 ev(sin(1),numer);
-0.8414709848079;
+0.8414709848078965$
 beta(1/2,2/5);
 beta(1/2,2/5)$
 ev(%,numer);
@@ -194,6 +194,8 @@ fpprec:25;
 25$
 sin(5.0b-1);
 4.794255386042030002732879b-1$
+(reset (fpprec), 0);
+0;
 /*begin fix */
  exp:cos(x)^2-sin(x)^2;
  cos(x)^2-sin(x)^2$
@@ -220,3 +222,80 @@ sech(x)^2*sinh(x)*tanh(x)/coth(x)^2+cosh(x)^2*sech(x)^2*tanh(x)/coth(x)^2
 				   +sech(x)^2*tanh(x)/coth(x)^2$
 trigsimp(%);
 (sinh(x)^5+sinh(x)^4+2*sinh(x)^3)/cosh(x)^5$
+/* These are from the trgsmp.dem file.  
+ * I (rtoy) hand-verified these results (using maxima, of course)
+ */
+(1-sin(x)^2)*cos(x)/cos(x)^2+tan(x)*sec(x)^2;
+(1-sin(x)^2)*cos(x)/cos(x)^2+tan(x)*sec(x)^2$
+trigsimp(%);
+(sin(x)+cos(x)^4)/cos(x)^3$
+
+tan(x)^2+sec(x)^2/(1-tan(x)*sec(x));
+tan(x)^2+sec(x)^2/(1-tan(x)*sec(x))$
+trigsimp(%);
+(sin(x)^4+sin(x)^3-1)/(cos(x)^2*sin(x)-cos(x)^4)$
+
+(sin(x)^4-6*cos(x)^2*sin(x)^2+4*(cos(x)^2-sin(x)^2)+8*sin(x)+cos(x)^4+3)/(8*cos(x)^3);
+(sin(x)^4-6*cos(x)^2*sin(x)^2+4*(cos(x)^2-sin(x)^2)+8*sin(x)+cos(x)^4+3)/(8*cos(x)^3)$
+trigsimp(%);
+(sin(x)+cos(x)^4)/cos(x)^3$
+
+
+sech(x)^2*sinh(x)*tanh(x)/coth(x)^2+cosh(x)^2*sech(x)^2*tanh(x)/coth(x)^2+sech(x)^2*tanh(x)/coth(x)^2;
+sech(x)^2*sinh(x)*tanh(x)/coth(x)^2+cosh(x)^2*sech(x)^2*tanh(x)/coth(x)^2+sech(x)^2*tanh(x)/coth(x)^2$
+trigsimp(%);
+(sinh(x)^5+sinh(x)^4+2*sinh(x)^3)/cosh(x)^5$
+
+-sech(x)^5*(sinh(x)^5+2*(sinh(x)^4+6*cosh(x)^2*sinh(x)^2+cosh(x)^4)-13*(sinh(x)^3+3*cosh(x)^2*sinh(x))+10*cosh(x)^2*sinh(x)^3-8*(sinh(x)^2+cosh(x)^2)+5*cosh(x)^4*sinh(x)+34*sinh(x)+6)/16;
+-sech(x)^5*(sinh(x)^5+2*(sinh(x)^4+6*cosh(x)^2*sinh(x)^2+cosh(x)^4)-13*(sinh(x)^3+3*cosh(x)^2*sinh(x))+10*cosh(x)^2*sinh(x)^3-8*(sinh(x)^2+cosh(x)^2)+5*cosh(x)^4*sinh(x)+34*sinh(x)+6)/16$
+trigsimp(%);
+-((sinh(x)^5+sinh(x)^4-2*sinh(x)^3)/cosh(x)^5)$
+
+cos(x)*(sec(x)^2*tan(x)+1)-sec(x)^2*sin(x)-cos(x);
+cos(x)*(sec(x)^2*tan(x)+1)-sec(x)^2*sin(x)-cos(x)$
+trigsimp(%);
+0$
+
+v*cos(x)*sec(x)^2*tan(x)+(-v*sec(x)^2-2*'diff(v,x))*sin(x)+'diff(v,x)*cos(x)*sec(x)+'diff(v,x,2)*cos(x);
+v*cos(x)*sec(x)^2*tan(x)+(-v*sec(x)^2-2*'diff(v,x))*sin(x)+'diff(v,x)*cos(x)*sec(x)+'diff(v,x,2)*cos(x)$
+trigsimp(%);
+-2*'diff(v,x,1)*sin(x)+'diff(v,x,2)*cos(x)+'diff(v,x,1)$
+
+triginverses : all;
+all;
+
+sinh(acosh(x));
+sqrt(x-1)*sqrt(x+1);
+
+sinh(atanh(x));
+x/(sqrt(1-x)*sqrt(x+1));
+
+cosh(asinh(x));
+sqrt(x^2+1);
+
+cosh(atanh(x));
+1/(sqrt(1-x)*sqrt(x+1));
+
+tanh(asinh(x));
+x/sqrt(x^2+1);
+
+tanh(acosh(x));
+sqrt(x-1)*sqrt(x+1)/x;
+
+/* A few checks to see that triginverses false disables the above transformations */
+triginverses: false;
+false;
+
+cos(acosh(x));
+cos(acosh(x));
+
+triginverses : all;
+all;
+
+/* SF bug # 1981518, Calling desolve inside a "for...do" makes it loop endlessly
+ * (protect against endless loop by throw--catch in case bug is triggered)
+ */
+catch (block ([foo:1],
+ for i thru 3 do (ilt (1/s, s, t),
+ if foo > 3 then throw ('i = i) else foo : foo + 1)));
+done;

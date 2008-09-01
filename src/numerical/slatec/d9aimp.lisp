@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((nam20 0)
@@ -417,13 +417,13 @@
            (type (simple-array double-float (60)) am21cs)
            (type (simple-array double-float (53)) ath0cs)
            (type (simple-array double-float (57)) am20cs)
-           (type double-float pi4 xsml)
-           (type f2cl-lib:integer4 nath2 nam22 nath1 nam21 nath0 nam20))
+           (type (double-float) pi4 xsml)
+           (type (integer) nath2 nam22 nath1 nam21 nath0 nam20))
   (setq first$ f2cl-lib:%true%)
   (defun d9aimp (x ampl theta)
-    (declare (type double-float theta ampl x))
+    (declare (type (double-float) theta ampl x))
     (prog ((sqrtx 0.0) (z 0.0) (eta 0.0f0))
-      (declare (type single-float eta) (type double-float z sqrtx))
+      (declare (type (single-float) eta) (type (double-float) z sqrtx))
       (cond
         (first$
          (setf eta (* 0.1f0 (f2cl-lib:freal (f2cl-lib:d1mach 3))))
@@ -459,4 +459,15 @@
       (go end_label)
      end_label
       (return (values nil ampl theta)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::d9aimp
+                 fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo
+           :arg-types '((double-float) (double-float) (double-float))
+           :return-values '(nil fortran-to-lisp::ampl fortran-to-lisp::theta)
+           :calls '(fortran-to-lisp::xermsg fortran-to-lisp::dcsevl
+                    fortran-to-lisp::initds fortran-to-lisp::d1mach))))
 
