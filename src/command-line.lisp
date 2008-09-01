@@ -25,7 +25,7 @@
 ;;   (:export "CL-OPTION" "MAKE-CL-OPTION" "LIST-CL-OPTIONS" "PROCESS-ARGS"
 ;; 	   "GET-APPLICATION-ARGS"))
 
-(in-package "COMMAND-LINE")
+(in-package :command-line)
 
 (defstruct cl-option
   (names nil)
@@ -109,7 +109,13 @@
 (defun get-application-args ()
   #+clisp (rest ext:*args*)
     
+  #+ecl (remove "" (rest (ext:command-args)))
+
   #+cmu (let ((result lisp::lisp-command-line-list))
+	  (do ((removed-arg nil (pop result)))
+	      ((or (equal removed-arg "--") (equal nil result)) result)))
+
+  #+scl (let ((result ext:*command-line-strings*))
 	  (do ((removed-arg nil (pop result)))
 	      ((or (equal removed-arg "--") (equal nil result)) result)))
 
@@ -124,7 +130,8 @@
     ;; Skip the first arg, which is the full path to alisp.
     (rest args))
       
-      
+  #+lispworks (rest system:*line-arguments-list*)
 
-  ;; FIXME: openmcl version missing
+  #+openmcl
+  (rest (ccl::command-line-arguments))
   )

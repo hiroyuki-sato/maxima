@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((ar
@@ -60,48 +60,40 @@
                                        -2813563.226586534 1268365.2733216248
                                        -331645.1724845636 45218.76898136273
                                        -2499.8304818112097 24.380529699556064
-                                       3284469.853072038 -1.9706819118432228e+7
-                                       5.095260249266464e+7
-                                       -7.410514821153265e+7
-                                       6.634451227472903e+7
-                                       -3.756717666076335e+7
-                                       1.3288767166421818e+7
-                                       -2785618.1280864547 308186.4046126624
-                                       -13886.08975371704 110.01714026924674
-                                       -4.932925366450996e+7
-                                       3.2557307418576574e+8
-                                       -9.394623596815784e+8
-                                       1.55359689957058e+9
-                                       -1.6210805521083372e+9
-                                       1.1068428168230145e+9
-                                       -4.958897842750303e+8
-                                       1.420629077975331e+8
-                                       -2.447406272573873e+7 2243768.1779224495
+                                       3284469.853072038 -1.9706819118432228e7
+                                       5.095260249266464e7 -7.410514821153265e7
+                                       6.634451227472903e7 -3.756717666076335e7
+                                       1.3288767166421818e7 -2785618.1280864547
+                                       308186.4046126624 -13886.08975371704
+                                       110.01714026924674 -4.932925366450996e7
+                                       3.2557307418576574e8
+                                       -9.394623596815784e8 1.55359689957058e9
+                                       -1.6210805521083372e9
+                                       1.1068428168230145e9
+                                       -4.958897842750303e8 1.420629077975331e8
+                                       -2.447406272573873e7 2243768.1779224495
                                        -84005.43360302408 551.3358961220206
-                                       8.147890961183121e+8
-                                       -5.866481492051847e+9
-                                       1.8688207509295826e+10
-                                       -3.4632043388158775e+10
-                                       4.1280185579753975e+10
-                                       -3.3026599749800724e+10
-                                       1.79542137311556e+10
-                                       -6.563293792619285e+9
-                                       1.5592798648792574e+9
-                                       -2.2510566188941526e+8
-                                       1.7395107553978164e+7 -549842.3275722887
-                                       3038.090510922384
-                                       -1.4679261247695616e+10
-                                       1.144982377320258e+11
-                                       -3.990961752244665e+11
-                                       8.192186695485773e+11
-                                       -1.0983751560812233e+12
-                                       1.0081581068653821e+12
-                                       -6.453648692453765e+11
-                                       2.879006499061506e+11
-                                       -8.786707217802327e+10
-                                       1.763473060683497e+10
-                                       -2.167164983223795e+9
-                                       1.4315787671888897e+8 -3871833.442572613
+                                       8.147890961183121e8 -5.866481492051847e9
+                                       1.8688207509295826e10
+                                       -3.4632043388158775e10
+                                       4.1280185579753975e10
+                                       -3.3026599749800724e10
+                                       1.79542137311556e10 -6.563293792619285e9
+                                       1.5592798648792574e9
+                                       -2.2510566188941526e8
+                                       1.7395107553978164e7 -549842.3275722887
+                                       3038.090510922384 -1.4679261247695616e10
+                                       1.144982377320258e11
+                                       -3.990961752244665e11
+                                       8.192186695485773e11
+                                       -1.0983751560812233e12
+                                       1.0081581068653821e12
+                                       -6.453648692453765e11
+                                       2.879006499061506e11
+                                       -8.786707217802327e10
+                                       1.763473060683497e10
+                                       -2.167164983223795e9
+                                       1.4315787671888897e8 -3871833.442572613
                                        18257.755474293175)))
       (alfa
        (make-array 180
@@ -519,7 +511,7 @@
       (zeroi 0.0)
       (coner 1.0)
       (conei 0.0))
-  (declare (type double-float conei coner zeroi zeror thpi gpi hpi ex2 ex1)
+  (declare (type (double-float) conei coner zeroi zeror thpi gpi hpi ex2 ex1)
            (type (simple-array double-float (30)) gama)
            (type (simple-array double-float (210)) beta)
            (type (simple-array double-float (180)) alfa)
@@ -528,9 +520,9 @@
   (defun zunhj
          (zr zi fnu ipmtr tol phir phii argr argi zeta1r zeta1i zeta2r zeta2i
           asumr asumi bsumr bsumi)
-    (declare (type f2cl-lib:integer4 ipmtr)
-             (type double-float bsumi bsumr asumi asumr zeta2i zeta2r zeta1i
-                                zeta1r argi argr phii phir tol fnu zi zr))
+    (declare (type (f2cl-lib:integer4) ipmtr)
+             (type (double-float) bsumi bsumr asumi asumr zeta2i zeta2r zeta1i
+                                  zeta1r argi argr phii phir tol fnu zi zr))
     (prog ((ap (make-array 30 :element-type 'double-float))
            (pr (make-array 30 :element-type 'double-float))
            (pi$ (make-array 30 :element-type 'double-float))
@@ -550,18 +542,17 @@
            (tfni 0.0) (tfnr 0.0) (tzai 0.0) (tzar 0.0) (t2i 0.0) (t2r 0.0)
            (wi 0.0) (wr 0.0) (w2i 0.0) (w2r 0.0) (zai 0.0) (zar 0.0) (zbi 0.0)
            (zbr 0.0) (zci 0.0) (zcr 0.0) (zetai 0.0) (zetar 0.0) (zthi 0.0)
-           (zthr 0.0) (ac 0.0) (abs$ 0.0f0))
-      (declare (type single-float abs$)
-               (type (simple-array double-float (14)) upr upi drr dri crr cri)
+           (zthr 0.0) (ac 0.0))
+      (declare (type (simple-array double-float (14)) upr upi drr dri crr cri)
                (type (simple-array double-float (30)) pr pi$ ap)
-               (type double-float ac zthr zthi zetar zetai zcr zci zbr zbi zar
-                                  zai w2r w2i wr wi t2r t2i tzar tzai tfnr tfni
-                                  test sumbr sumbi sumar sumai str sti rzthr
-                                  rzthi rtztr rtzti rfn13 rfnu2 rfnu razth raw2
-                                  raw ptfnr ptfni przthr przthi pp fn23 fn13
-                                  btol azth aw2 atol ang)
-               (type f2cl-lib:integer4 idum m l2 l1 lrp1 lr l ks kp1 kmax k ju
-                                       jr j is ibs ias))
+               (type (double-float) ac zthr zthi zetar zetai zcr zci zbr zbi
+                                    zar zai w2r w2i wr wi t2r t2i tzar tzai
+                                    tfnr tfni test sumbr sumbi sumar sumai str
+                                    sti rzthr rzthi rtztr rtzti rfn13 rfnu2
+                                    rfnu razth raw2 raw ptfnr ptfni przthr
+                                    przthi pp fn23 fn13 btol azth aw2 atol ang)
+               (type (f2cl-lib:integer4) idum m l2 l1 lrp1 lr l ks kp1 kmax k
+                                         ju jr j is ibs ias))
       (setf rfnu (/ 1.0 fnu))
       (setf test (* (f2cl-lib:d1mach 1) 1000.0))
       (setf ac (* fnu test))
@@ -584,38 +575,28 @@
       (setf rfn13 (/ 1.0 fn13))
       (setf w2r (+ (- coner (* zbr zbr)) (* zbi zbi)))
       (setf w2i (- conei (* zbr zbi) (* zbr zbi)))
-      (setf aw2 (zabs w2r w2i))
+      (setf aw2 (coerce (realpart (zabs w2r w2i)) 'double-float))
       (if (> aw2 0.25) (go label130))
       (setf k 1)
-      (f2cl-lib:fset (f2cl-lib:fref pr (1) ((1 30))) coner)
-      (f2cl-lib:fset (f2cl-lib:fref pi$ (1) ((1 30))) conei)
+      (setf (f2cl-lib:fref pr (1) ((1 30))) coner)
+      (setf (f2cl-lib:fref pi$ (1) ((1 30))) conei)
       (setf sumar (f2cl-lib:fref gama (1) ((1 30))))
       (setf sumai zeroi)
-      (f2cl-lib:fset (f2cl-lib:fref ap (1) ((1 30))) 1.0)
+      (setf (f2cl-lib:fref ap (1) ((1 30))) 1.0)
       (if (< aw2 tol) (go label20))
       (f2cl-lib:fdo (k 2 (f2cl-lib:int-add k 1))
                     ((> k 30) nil)
         (tagbody
-          (f2cl-lib:fset (f2cl-lib:fref pr (k) ((1 30)))
-                         (-
-                          (*
-                           (f2cl-lib:fref pr ((f2cl-lib:int-sub k 1)) ((1 30)))
-                           w2r)
-                          (*
-                           (f2cl-lib:fref pi$
-                                          ((f2cl-lib:int-sub k 1))
-                                          ((1 30)))
-                           w2i)))
-          (f2cl-lib:fset (f2cl-lib:fref pi$ (k) ((1 30)))
-                         (+
-                          (*
-                           (f2cl-lib:fref pr ((f2cl-lib:int-sub k 1)) ((1 30)))
-                           w2i)
-                          (*
-                           (f2cl-lib:fref pi$
-                                          ((f2cl-lib:int-sub k 1))
-                                          ((1 30)))
-                           w2r)))
+          (setf (f2cl-lib:fref pr (k) ((1 30)))
+                  (-
+                   (* (f2cl-lib:fref pr ((f2cl-lib:int-sub k 1)) ((1 30))) w2r)
+                   (* (f2cl-lib:fref pi$ ((f2cl-lib:int-sub k 1)) ((1 30)))
+                      w2i)))
+          (setf (f2cl-lib:fref pi$ (k) ((1 30)))
+                  (+
+                   (* (f2cl-lib:fref pr ((f2cl-lib:int-sub k 1)) ((1 30))) w2i)
+                   (* (f2cl-lib:fref pi$ ((f2cl-lib:int-sub k 1)) ((1 30)))
+                      w2r)))
           (setf sumar
                   (+ sumar
                      (* (f2cl-lib:fref pr (k) ((1 30)))
@@ -624,10 +605,8 @@
                   (+ sumai
                      (* (f2cl-lib:fref pi$ (k) ((1 30)))
                         (f2cl-lib:fref gama (k) ((1 30))))))
-          (f2cl-lib:fset (f2cl-lib:fref ap (k) ((1 30)))
-                         (*
-                          (f2cl-lib:fref ap ((f2cl-lib:int-sub k 1)) ((1 30)))
-                          aw2))
+          (setf (f2cl-lib:fref ap (k) ((1 30)))
+                  (* (f2cl-lib:fref ap ((f2cl-lib:int-sub k 1)) ((1 30))) aw2))
           (if (< (f2cl-lib:fref ap (k) ((1 30))) tol) (go label20))
          label10))
       (setf k 30)
@@ -779,7 +758,7 @@
       (setf zeta1i (* zci fnu))
       (setf zeta2r (* wr fnu))
       (setf zeta2i (* wi fnu))
-      (setf azth (zabs zthr zthi))
+      (setf azth (coerce (realpart (zabs zthr zthi)) 'double-float))
       (setf ang thpi)
       (if (and (>= zthr 0.0) (< zthi 0.0)) (go label140))
       (setf ang hpi)
@@ -835,10 +814,8 @@
               (+ (* t2r (f2cl-lib:fref c (2) ((1 105))))
                  (f2cl-lib:fref c (3) ((1 105)))))
       (setf sti (* t2i (f2cl-lib:fref c (2) ((1 105)))))
-      (f2cl-lib:fset (f2cl-lib:fref upr (2) ((1 14)))
-                     (- (* str tfnr) (* sti tfni)))
-      (f2cl-lib:fset (f2cl-lib:fref upi (2) ((1 14)))
-                     (+ (* str tfni) (* sti tfnr)))
+      (setf (f2cl-lib:fref upr (2) ((1 14))) (- (* str tfnr) (* sti tfni)))
+      (setf (f2cl-lib:fref upi (2) ((1 14))) (+ (* str tfni) (* sti tfnr)))
       (setf bsumr (+ (f2cl-lib:fref upr (2) ((1 14))) zcr))
       (setf bsumi (+ (f2cl-lib:fref upi (2) ((1 14))) zci))
       (setf asumr zeror)
@@ -848,8 +825,8 @@
       (setf przthi rzthi)
       (setf ptfnr tfnr)
       (setf ptfni tfni)
-      (f2cl-lib:fset (f2cl-lib:fref upr (1) ((1 14))) coner)
-      (f2cl-lib:fset (f2cl-lib:fref upi (1) ((1 14))) conei)
+      (setf (f2cl-lib:fref upr (1) ((1 14))) coner)
+      (setf (f2cl-lib:fref upi (1) ((1 14))) conei)
       (setf pp 1.0)
       (setf btol (* tol (+ (abs bsumr) (abs bsumi))))
       (setf ks 0)
@@ -882,33 +859,33 @@
               (setf str (- (* ptfnr tfnr) (* ptfni tfni)))
               (setf ptfni (+ (* ptfnr tfni) (* ptfni tfnr)))
               (setf ptfnr str)
-              (f2cl-lib:fset (f2cl-lib:fref upr (kp1) ((1 14)))
-                             (- (* ptfnr zar) (* ptfni zai)))
-              (f2cl-lib:fset (f2cl-lib:fref upi (kp1) ((1 14)))
-                             (+ (* ptfni zar) (* ptfnr zai)))
-              (f2cl-lib:fset (f2cl-lib:fref crr (ks) ((1 14)))
-                             (* przthr
-                                (f2cl-lib:fref br
-                                               ((f2cl-lib:int-add ks 1))
-                                               ((1 14)))))
-              (f2cl-lib:fset (f2cl-lib:fref cri (ks) ((1 14)))
-                             (* przthi
-                                (f2cl-lib:fref br
-                                               ((f2cl-lib:int-add ks 1))
-                                               ((1 14)))))
+              (setf (f2cl-lib:fref upr (kp1) ((1 14)))
+                      (- (* ptfnr zar) (* ptfni zai)))
+              (setf (f2cl-lib:fref upi (kp1) ((1 14)))
+                      (+ (* ptfni zar) (* ptfnr zai)))
+              (setf (f2cl-lib:fref crr (ks) ((1 14)))
+                      (* przthr
+                         (f2cl-lib:fref br
+                                        ((f2cl-lib:int-add ks 1))
+                                        ((1 14)))))
+              (setf (f2cl-lib:fref cri (ks) ((1 14)))
+                      (* przthi
+                         (f2cl-lib:fref br
+                                        ((f2cl-lib:int-add ks 1))
+                                        ((1 14)))))
               (setf str (- (* przthr rzthr) (* przthi rzthi)))
               (setf przthi (+ (* przthr rzthi) (* przthi rzthr)))
               (setf przthr str)
-              (f2cl-lib:fset (f2cl-lib:fref drr (ks) ((1 14)))
-                             (* przthr
-                                (f2cl-lib:fref ar
-                                               ((f2cl-lib:int-add ks 2))
-                                               ((1 14)))))
-              (f2cl-lib:fset (f2cl-lib:fref dri (ks) ((1 14)))
-                             (* przthi
-                                (f2cl-lib:fref ar
-                                               ((f2cl-lib:int-add ks 2))
-                                               ((1 14)))))
+              (setf (f2cl-lib:fref drr (ks) ((1 14)))
+                      (* przthr
+                         (f2cl-lib:fref ar
+                                        ((f2cl-lib:int-add ks 2))
+                                        ((1 14)))))
+              (setf (f2cl-lib:fref dri (ks) ((1 14)))
+                      (* przthi
+                         (f2cl-lib:fref ar
+                                        ((f2cl-lib:int-add ks 2))
+                                        ((1 14)))))
              label160))
           (setf pp (* pp rfnu2))
           (if (= ias 1) (go label180))
@@ -935,7 +912,7 @@
              label170))
           (setf asumr (+ asumr sumar))
           (setf asumi (+ asumi sumai))
-          (setf test (coerce (+ (abs sumar) (abs sumai)) 'double-float))
+          (setf test (+ (abs sumar) (abs sumai)))
           (if (and (< pp tol) (< test tol)) (setf ias 1))
          label180
           (if (= ibs 1) (go label200))
@@ -969,7 +946,7 @@
              label190))
           (setf bsumr (+ bsumr sumbr))
           (setf bsumi (+ bsumi sumbi))
-          (setf test (coerce (+ (abs sumbr) (abs sumbi)) 'double-float))
+          (setf test (+ (abs sumbr) (abs sumbi)))
           (if (and (< pp btol) (< test btol)) (setf ibs 1))
          label200
           (if (and (= ias 1) (= ibs 1)) (go label220))
@@ -1003,4 +980,26 @@
                asumi
                bsumr
                bsumi)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::zunhj fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo
+           :arg-types '((double-float) (double-float) (double-float)
+                        (fortran-to-lisp::integer4) (double-float)
+                        (double-float) (double-float) (double-float)
+                        (double-float) (double-float) (double-float)
+                        (double-float) (double-float) (double-float)
+                        (double-float) (double-float) (double-float))
+           :return-values '(nil nil nil nil nil fortran-to-lisp::phir
+                            fortran-to-lisp::phii fortran-to-lisp::argr
+                            fortran-to-lisp::argi fortran-to-lisp::zeta1r
+                            fortran-to-lisp::zeta1i fortran-to-lisp::zeta2r
+                            fortran-to-lisp::zeta2i fortran-to-lisp::asumr
+                            fortran-to-lisp::asumi fortran-to-lisp::bsumr
+                            fortran-to-lisp::bsumi)
+           :calls '(fortran-to-lisp::zlog fortran-to-lisp::zdiv
+                    fortran-to-lisp::zsqrt fortran-to-lisp::zabs
+                    fortran-to-lisp::d1mach))))
 

@@ -1,22 +1,22 @@
 include $(top_srcdir)/common.mk
 
 if WIN32
-bin_SCRIPTS = maxima maxima.bat
+bin_SCRIPTS = maxima maxima-command.ico maxima.bat set_lang.vbs
 else
 bin_SCRIPTS = maxima rmaxima
 endif
 
 LOADDEFSYSTEM = (load "$(top_srcdir)/lisp-utils/defsystem.lisp")
 LOADMAKEDEPENDS = (load "$(top_srcdir)/lisp-utils/make-depends.lisp")
-DEFSYSTEMCOMPILE = (funcall (intern "OPERATE-ON-SYSTEM" :mk) "maxima" :compile :verbose t)
-DEFSYSTEMLOAD = (funcall (intern "OPERATE-ON-SYSTEM" :mk) "maxima" :load :verbose t)
-DEFSYSTEMTESTLOAD = (funcall (intern "OPERATE-ON-SYSTEM" :mk) "maxima" :load :verbose t :test t)
+DEFSYSTEMCOMPILE = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :compile :verbose t)
+DEFSYSTEMLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t)
+DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t :test t)
 
 if CLISP
 EXECUTECLISP = $(CLISP_NAME) -norc -q -x
 all-local: binary-clisp/maxima.mem
 install-exec-local: install-clisp
-uninstall: uninstall-clisp
+uninstall-hook: uninstall-clisp
 clean: clean-clisp
 distclean: clean-clisp
 
@@ -49,7 +49,7 @@ if CMUCL
 EXECUTECMUCL = $(CMUCL_NAME) -noinit -batch
 all-local: binary-cmucl/maxima.core
 install-exec-local: install-cmucl
-uninstall: uninstall-cmucl
+uninstall-hook: uninstall-cmucl
 clean: clean-cmucl
 distclean: clean-cmucl
 
@@ -81,36 +81,72 @@ include cmucl-depends.mk
 endif
 
 
-if ACL6
-EXECUTEACL6 = $(ACL6_NAME) -batch
-all-local: binary-acl6/maxima.dxl
-install-exec-local: install-acl6
-uninstall: uninstall-acl6
-clean: clean-acl6
-distclean: clean-acl6
+if SCL
+EXECUTESCL = $(SCL_NAME) -noinit -batch
+all-local: binary-scl/maxima.core
+install-exec-local: install-scl
+uninstall-hook: uninstall-scl
+clean: clean-scl
+distclean: clean-scl
 
-acl6:binary-acl6/maxima.dxl
+scl: binary-scl/maxima.core
 
-binary-acl6/maxima.dxl:
-	test -d binary-acl6 || mkdir binary-acl6
-	test -d binary-acl6/numerical || mkdir binary-acl6/numerical
-	test -d binary-acl6/numerical/slatec || mkdir binary-acl6/numerical/slatec
-	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTEACL6)) && \
-	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (excl:dumplisp :name "binary-acl6/maxima.dxl"))' | $(EXECUTEACL6))
+binary-scl/maxima.core:
+	test -d binary-scl || mkdir binary-scl
+	test -d binary-scl/numerical || mkdir binary-scl/numerical
+	test -d binary-scl/numerical/slatec || mkdir binary-scl/numerical/slatec
+	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTESCL)) && \
+	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-scl/maxima.core"))' | $(EXECUTESCL))
 
-install-acl6:
-	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-acl6"
-	$(INSTALL_DATA) binary-acl6/maxima.dxl "$(DESTDIR)$(verpkglibdir)/binary-acl6/maxima.dxl"
+install-scl:
+	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-scl"
+	$(INSTALL_DATA) binary-scl/maxima.core "$(DESTDIR)$(verpkglibdir)/binary-scl/maxima.core"
+	$(INSTALL_PROGRAM) @SCL_RUNTIME_PATH@ "$(DESTDIR)$(verpkglibdir)/binary-scl/@SCL_RUNTIME@"
 
-uninstall-acl6:
-	rm -f "$(DESTDIR)$(verpkglibdir)/binary-acl6/maxima.dxl"
+uninstall-scl:
+	rm -f "$(DESTDIR)$(verpkglibdir)/binary-scl/maxima.core"
+	rm -f "$(DESTDIR)$(verpkglibdir)/binary-scl/@SCL_RUNTIME@"
 
-clean-acl6:
-	rm -rf binary-acl6
-acl6-depends.mk: maxima.system
-	test -d binary-acl6 || mkdir binary-acl6
-	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-acl6/maxima.dxl" "acl6-depends.mk"))' | $(EXECUTEACL6)
-include acl6-depends.mk
+clean-scl:
+	rm -rf binary-scl
+scl-depends.mk: maxima.system
+	test -d binary-scl || mkdir binary-scl
+	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern (symbol-name :create-dependency-file) :mk) "binary-scl/maxima.core" "scl-depends.mk"))' | $(EXECUTESCL)
+
+include scl-depends.mk
+endif
+
+
+if ACL
+EXECUTEACL = $(ACL_NAME) -batch
+all-local: binary-acl/maxima.dxl
+install-exec-local: install-acl
+uninstall-hook: uninstall-acl
+clean: clean-acl
+distclean: clean-acl
+
+acl:binary-acl/maxima.dxl
+
+binary-acl/maxima.dxl:
+	test -d binary-acl || mkdir binary-acl
+	test -d binary-acl/numerical || mkdir binary-acl/numerical
+	test -d binary-acl/numerical/slatec || mkdir binary-acl/numerical/slatec
+	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTEACL)) && \
+	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (excl:dumplisp :name "binary-acl/maxima.dxl"))' | $(EXECUTEACL))
+
+install-acl:
+	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-acl"
+	$(INSTALL_DATA) binary-acl/maxima.dxl "$(DESTDIR)$(verpkglibdir)/binary-acl/maxima.dxl"
+
+uninstall-acl:
+	rm -f "$(DESTDIR)$(verpkglibdir)/binary-acl/maxima.dxl"
+
+clean-acl:
+	rm -rf binary-acl
+acl-depends.mk: maxima.system
+	test -d binary-acl || mkdir binary-acl
+	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-acl/maxima.dxl" "acl-depends.mk"))' | $(EXECUTEACL)
+include acl-depends.mk
 endif
 
 
@@ -118,7 +154,7 @@ if SBCL
 EXECUTESBCL = $(SBCL_NAME) --noinform --noprint --eval
 all-local: binary-sbcl/maxima.core
 install-exec-local: install-sbcl
-uninstall: uninstall-sbcl
+uninstall-hook: uninstall-sbcl
 clean: clean-sbcl
 distclean: clean-sbcl
 
@@ -129,7 +165,7 @@ binary-sbcl/maxima.core:
 	test -d binary-sbcl/numerical || mkdir binary-sbcl/numerical
 	test -d binary-sbcl/numerical/slatec || mkdir binary-sbcl/numerical/slatec
 	$(EXECUTESBCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (sb-ext:quit))' && \
-	$(EXECUTESBCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (sb-ext:save-lisp-and-die "binary-sbcl/maxima.core" :purify t) (sb-ext:quit))'
+	$(EXECUTESBCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (sb-ext:save-lisp-and-die "binary-sbcl/maxima.core") (sb-ext:quit))'
 
 install-sbcl:
 	$(mkinstalldirs) $(DESTDIR)$(verpkglibdir)/binary-sbcl
@@ -151,7 +187,7 @@ if GCL
 EXECUTEGCL = $(GCL_NAME) -batch -eval
 all-local: binary-gcl/maxima
 install-exec-local: install-gcl
-uninstall: uninstall-gcl
+uninstall-hook: uninstall-gcl
 clean: clean-gcl
 distclean: clean-gcl
 
@@ -175,8 +211,13 @@ else
 	test -d binary-gcl || mkdir binary-gcl
 	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
-	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
+if WIN32
+	$(EXECUTEGCL) '(progn (compiler::emit-fn t))' -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
 	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
+else
+	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) (compiler::emit-fn t) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
+	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
+endif	
 endif
 
 install-gcl:
@@ -198,7 +239,7 @@ if OPENMCL
 EXECUTEOPENMCL = $(OPENMCL_NAME) -e
 all-local: binary-openmcl/maxima.image
 install-exec-local: install-openmcl
-uninstall: uninstall-openmcl
+uninstall-hook: uninstall-openmcl
 clean: clean-openmcl
 distclean: clean-openmcl
 
@@ -221,6 +262,44 @@ openmcl-depends.mk: maxima.system
 	test -d binary-openmcl || mkdir binary-openmcl
 	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-openmcl/maxima.image" "openmcl-depends.mk"))'
 include openmcl-depends.mk
+endif
+
+if ECL
+EXECUTEECL = $(ECL_NAME)
+all-local: binary-ecl/maxima
+install-exec-local: install-ecl
+uninstall-hook: uninstall-ecl
+clean: clean-ecl
+distclean: clean-ecl
+
+ecl:binary-ecl/maxima
+
+# We have to do some gymnastics here because ECL puts the
+# compiled application in the file "maxima", which would
+# overwrite the maxima shell script.
+binary-ecl/maxima:
+	test -f maxima && mv maxima maxima-tmp
+	success=true && \
+	$(EXECUTEECL) -eval "(require 'asdf)" -eval "(asdf:make-build \"maxima\" :type :program)" -eval "(ext:quit)" && \
+	mv maxima binary-ecl/maxima || \
+	success=false; \
+	test -f maxima-tmp && mv maxima-tmp maxima ; \
+	test $$success = true
+
+install-ecl:
+	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-ecl"
+	$(INSTALL_PROGRAM) binary-ecl/maxima "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+uninstall-ecl:
+	rm -f "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+clean-ecl:
+	rm -rf binary-ecl libmaxima.a
+
+ecl-depends.mk: maxima.system
+	test -d binary-ecl || mkdir binary-ecl
+	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-ecl/maxima" "ecl-depends.mk"))'
+include ecl-depends.mk
 endif
 
 echo_%:
@@ -247,6 +326,7 @@ command-line.lisp \
 commac.lisp \
 compar.lisp \
 compat.lisp \
+conjugate.lisp \
 cpoly.lisp \
 csimp.lisp \
 csimp2.lisp \
@@ -258,9 +338,11 @@ desoln.lisp \
 displa.lisp \
 displm.lisp \
 dskfn.lisp \
+ecl-port.lisp \
 elim.lisp \
 ellipt.lisp \
 evalw.lisp \
+expintegral.lisp \
 ezgcd.lisp \
 factor.lisp \
 fcall.lisp \
@@ -268,11 +350,13 @@ float.lisp \
 fortra.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
+gnuplot.lisp \
 grind.lisp \
 hayat.lisp \
 homog.lisp \
 hyp.lisp \
 hypgeo.lisp \
+ifactor.lisp \
 init-cl.lisp \
 inmis.lisp \
 intpol.lisp \
@@ -284,7 +368,6 @@ ldisp.lisp \
 lesfac.lisp \
 letmac.lisp \
 limit.lisp \
-linnew.lisp \
 lmdcls.lisp \
 logarc.lisp \
 macdes.lisp \
@@ -298,6 +381,7 @@ matrun.lisp \
 max_ext.lisp \
 maxima-package.lisp \
 maxmac.lisp \
+maxmin.lisp \
 mdebug.lisp \
 mdefun.lisp \
 mdot.lisp \
@@ -305,7 +389,6 @@ merror.lisp \
 mforma.lisp \
 mformt.lisp \
 mhayat.lisp \
-misc.lisp \
 mlisp.lisp \
 mload.lisp \
 mmacro.lisp \
@@ -324,11 +407,9 @@ nparse.lisp \
 nrat4.lisp \
 nregex.lisp \
 nset.lisp \
-numer.lisp \
-numerm.lisp \
+nummod.lisp \
 numth.lisp \
-nusum.lisp \
-ode2.lisp \
+openmath.lisp \
 opers.lisp \
 optim.lisp \
 optimize.lisp \
@@ -340,7 +421,6 @@ plot.lisp \
 pois2.lisp \
 pois3.lisp \
 polyrz.lisp \
-powers.lisp \
 procs.lisp \
 psolve.lisp \
 rand-mt19937.lisp \
@@ -355,7 +435,6 @@ ratpoi.lisp \
 residu.lisp \
 result.lisp \
 risch.lisp \
-rombrg.lisp \
 rpart.lisp \
 runtim.lisp \
 rzmac.lisp \
@@ -390,7 +469,6 @@ transq.lisp \
 transs.lisp \
 trdata.lisp \
 trgred.lisp \
-trgsmp.lisp \
 trigi.lisp \
 trigo.lisp \
 trmode.lisp \
@@ -408,6 +486,7 @@ numerical/slatec/d9aimp.lisp \
 numerical/slatec/d9b0mp.lisp \
 numerical/slatec/d9b1mp.lisp \
 numerical/slatec/d9lgmc.lisp \
+numerical/slatec/d9upak.lisp \
 numerical/slatec/daie.lisp \
 numerical/slatec/dai.lisp \
 numerical/slatec/dasyik.lisp \
@@ -478,6 +557,7 @@ numerical/slatec/dqwgtc.lisp \
 numerical/slatec/dqwgtf.lisp \
 numerical/slatec/dqwgts.lisp \
 numerical/slatec/dyairy.lisp \
+numerical/slatec/dspenc.lisp \
 numerical/slatec/fdump.lisp \
 numerical/slatec/initds.lisp \
 numerical/slatec/j4save.lisp \
@@ -531,4 +611,4 @@ numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
 
-EXTRA_DIST = $(real_lisp_sources) maxima.system clisp-depends.mk  cmucl-depends.mk  gcl-depends.mk acl6-depends.mk openmcl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs

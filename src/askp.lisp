@@ -28,24 +28,20 @@
 ;;;                    ASK-PROP -> ask the user a question about a symbol.
 ;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module askp)
 
-(declare-top(special limitp integer-info)
-	    (fixnum n)
-	    (*expr evod free $numberp maxima-integerp retrieve $featurep
-		   sratsimp ssimplifya ratnump))
-   
-(defmfun $askinteger n
-  (if (or (> n 2) (< n 1)) (wna-err '$askinteger))
-  (if (= n 1) (ask-integer (arg 1) '$integer)
-      (if (memq (arg 2) '($even $odd $integer))
-	  (ask-integer (arg 1) (arg 2))
-	  (improper-arg-err (arg 2) '$askinteger))))
+(declare-top (special limitp integer-info))
+
+(defmfun $askinteger (x &optional (mode '$integer))
+  (if (member mode '($even $odd $integer) :test #'eq)
+      (ask-integer x mode)
+      (improper-arg-err mode '$askinteger)))
 
 (defmfun ask-integer (x even-odd)
   (setq x (sratsimp (sublis '((z** . 0) (*z* . 0)) x)))
-  (cond ((or (not (free x '$%pi)) (not (free x '$%i)) (ratnump x)) '$no)
+  (cond ((ratnump x) '$no)
 	((eq even-odd '$integer) (ask-integerp x))
 	(t (ask-evod x even-odd))))
 
@@ -56,9 +52,7 @@
 	  ((and ($numberp x) (not is-integer)) '$no)
 	  ((and is-integer evod-ans) '$no)
 	  ((eq (setq evod-ans
-		     (ask-prop x
-			       (if (eq even-odd '$even) 'even 'odd)
-			       'number))
+		     (ask-prop x (if (eq even-odd '$even) 'even 'odd) 'number))
 	       '$yes)
 	   (ask-declare x even-odd) '$yes)
 	  ((eq evod-ans '$no) 
@@ -90,28 +84,22 @@
 	((and limitp (eq property '$noninteger))
 	 (setq nonintegerl (cons x nonintegerl)))))
 
-(defun ask-prop (object property fun-or-number)
-  (if fun-or-number (setq fun-or-number (list '| | fun-or-number)))
 ;;; Asks the user a question about the property of an object.
 ;;; Returns only $yes, $no or $unknown.
+(defun ask-prop (object property fun-or-number)
+  (if fun-or-number (setq fun-or-number (list '| | fun-or-number)))
   (do ((end-flag) (answer))
-      (end-flag (cond ((memq answer '($yes $y |$y|)) '$yes)
-		      ((memq answer '($no $n |$n|)) '$no)
-		      ((memq answer '($unknown $uk)) '$unknown)))
+      (end-flag (cond ((member answer '($yes |$Y| |$y|) :test #'eq) '$yes)
+		      ((member answer '($no |$N| |$n|) :test #'eq) '$no)
+		      ((member answer '($unknown $uk) :test #'eq) '$unknown)))
     (setq answer (retrieve
-		  `((mtext) |Is  | ,object 
-		    ,(if (member (getcharn property 1)
-				 '(#\a #\e #\i #\o #\u)
-				 :test #'char-equal)
-			 '|  AN |
-			 '|  A |)
-		    ,property ,@fun-or-number |?|)
+		  `((mtext) "Is " ,object 
+		    ,(if (member (char (symbol-name property) 0)
+				 '(#\a #\e #\i #\o #\u) :test #'char-equal)
+			 " an "
+			 " a ")
+		    ,property ,@fun-or-number "?")
 		  nil))
-    (cond 
-      ((memq answer '($yes $y |$y| |$n| $no $n $unknown $uk))
-       (setq end-flag t))
-      (t (mtell
-	  "~%Acceptable answers are Yes, Y, No, N, Unknown, Uk~%")))))
-
-#-nil
-(declare-top(notype n))
+    (cond ((member answer '($yes |$Y| |$y| |$N| |$n| $no $unknown $uk) :test #'eq)
+	   (setq end-flag t))
+	  (t (mtell "~%Acceptable answers are Yes, Y, No, N, Unknown, Uk~%")))))

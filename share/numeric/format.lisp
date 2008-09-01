@@ -5,9 +5,7 @@
 (macsyma-module format)
 
 (declare (special $floatformat $floatint $floatfrac $floatprec $floatwidth
-		  $floatoptions $aliases stringdisp $lispdisp aliaslist)
-	 (*expr print-fixed-field-floating print-fixed-precision-floating
-		string*1 assqr))
+		  $floatoptions $aliases $stringdisp $lispdisp aliaslist))
 
 (defmvar $floatformat nil)
 (defmvar $floatint 1)
@@ -47,22 +45,22 @@
 (defun makestring (form)
   ((lambda (dummy)
     (cond ((numberp form) (number-exploden form))
-	  ((and (setq dummy (get form 'reversealias)) (not (and (memq form $aliases) (get form 'noun))))
+	  ((and (setq dummy (get form 'reversealias))
+		(not (and (member form $aliases :test #'eq) (get form 'noun))))
 	   (exploden dummy))
 	  (t (setq dummy (exploden form))
 	     (cond ((= #$ (car dummy)) (cdr dummy))
-		   ((and stringdisp (= #& (car dummy))) (cons #" (nconc (cdr dummy) (list #"))))
-		   ((or (= #% (car dummy)) (= #& (car dummy))) (cdr dummy))
+		   ((and $stringdisp (stringp form)) (cons #" (nconc dummy (list #"))))
+		   ((= #% (car dummy)) (cdr dummy))
 		   ($lispdisp (cons #? dummy))
 		   (t dummy)))))
    nil))
 
 (defun string* (x)
- (or (and (numberp x) (number-exploden x))
-     ((lambda (u) (cond (u (string*1 (car u))))) (assqr x aliaslist))
-     (string*1 x)))
+  (or (and (numberp x) (number-exploden x))
+      ((lambda (u) (cond (u (string*1 (car u))))) (assqr x aliaslist))
+      (string*1 x)))
 
 (declare (eval (read)))
-(setsyntax '/# 'macro nil)
 
-(sstatus uuolinks)
+(setsyntax '/# 'macro nil)

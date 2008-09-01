@@ -1,17 +1,17 @@
 @menu
 * Introduction to Program Flow::  
-* Definitions for Program Flow::  
+* Functions and Variables for Program Flow::  
 @end menu
 
-@node Introduction to Program Flow, Definitions for Program Flow, Program Flow, Program Flow
+@node Introduction to Program Flow, Functions and Variables for Program Flow, Program Flow, Program Flow
 @section Introduction to Program Flow
 
 Maxima provides a @code{do} loop for iteration, as well as more primitive
 constructs such as @code{go}.
 
 @c end concepts Program Flow
-@node Definitions for Program Flow,  , Introduction to Program Flow, Program Flow
-@section Definitions for Program Flow
+@node Functions and Variables for Program Flow,  , Introduction to Program Flow, Program Flow
+@section Functions and Variables for Program Flow
 
 @deffn {Function} backtrace ()
 @deffnx {Function} backtrace (@var{n})
@@ -71,6 +71,9 @@ functions, including the currently active function.
 @end example
 @end itemize
 
+@opencatbox
+@category{Debugging}
+@closecatbox
 @end deffn
 
 @deffn {Special operator} do
@@ -102,42 +105,43 @@ or limit.)
 @var{initial_value}, @var{increment}, @var{limit}, and @var{body} can be any
 expressions.  If the increment is 1 then "@code{step 1}" may be omitted.
 
-The execution of the @code{do} statement proceeds by first assigning the
-initial_value to the variable (henceforth called the
+The execution of the @code{do} statement proceeds by first assigning
+the @var{initial_value} to the @var{variable} (henceforth called the
 control-variable). Then: (1) If the control-variable has exceeded the
-limit of a @code{thru} specification, or if the condition of the @code{unless} is
-@code{true}, or if the condition of the @code{while} is @code{false} then the @code{do}
-terminates. (2) The body is evaluated.  (3) The increment is added to
-the control-variable.  The process from (1) to (3) is performed
-repeatedly until the termination condition is satisfied.  One may also
-give several termination conditions in which case the @code{do} terminates
-when any of them is satisfied.
+limit of a @code{thru} specification, or if the condition of the
+@code{unless} is @code{true}, or if the condition of the @code{while}
+is @code{false} then the @code{do} terminates. (2) The @var{body} is
+evaluated.  (3) The increment is added to the control-variable.  The
+process from (1) to (3) is performed repeatedly until the termination
+condition is satisfied.  One may also give several termination
+conditions in which case the @code{do} terminates when any of them is
+satisfied.
 
-In general the @code{thru} test is satisfied when the control-variable is
-greater than the limit if the increment was non-negative, or when the
-control-variable is less than the limit if the increment was negative.
-The increment and limit may be non-numeric expressions as long as this
-inequality can be determined.  However, unless the increment is
-syntactically negative (e.g. is a negative number) at the time the @code{do}
-statement is input, Maxima assumes it will be positive when the @code{do} is
-executed.  If it is not positive, then the @code{do} may not terminate
-properly.
+In general the @code{thru} test is satisfied when the control-variable
+is greater than the @var{limit} if the @var{increment} was
+non-negative, or when the control-variable is less than the
+@var{limit} if the @var{increment} was negative.  The
+@var{increment} and @var{limit} may be non-numeric expressions as
+long as this inequality can be determined.  However, unless the
+@var{increment} is syntactically negative (e.g. is a negative number)
+at the time the @code{do} statement is input, Maxima assumes it will
+be positive when the @code{do} is executed.  If it is not positive,
+then the @code{do} may not terminate properly.
 
-Note that the limit, increment, and termination condition are
+Note that the @var{limit}, @var{increment}, and termination condition are
 evaluated each time through the loop.  Thus if any of these involve
 much computation, and yield a result that does not change during all
-the executions of the body, then it is more efficient to set a
+the executions of the @var{body}, then it is more efficient to set a
 variable to their value prior to the @code{do} and use this variable in the
 @code{do} form.
 
-The value normally returned by a @code{do} statement is the atom @code{done}.
-However, the function
-@code{return} may be used inside the body to exit the @code{do} prematurely and give
-it any desired value.
-Note however that a @code{return} within a @code{do} that
-occurs in a @code{block} will exit only the @code{do} and not the @code{block}.  Note also
-that the @code{go} function may not be used to exit from a @code{do} into a
-surrounding @code{block}.
+The value normally returned by a @code{do} statement is the atom
+@code{done}.  However, the function @code{return} may be used inside
+the @var{body} to exit the @code{do} prematurely and give it any
+desired value. Note however that a @code{return} within a @code{do}
+that occurs in a @code{block} will exit only the @code{do} and not the
+@code{block}. Note also that the @code{go} function may not be used
+to exit from a @code{do} into a surrounding @code{block}.
 
 The control-variable is always local to the @code{do} and thus any
 variable may be used without affecting the value of a variable with
@@ -206,7 +210,7 @@ Instead of always adding a quantity to the control-variable one
 may sometimes wish to change it in some other way for each iteration.
 In this case one may use @code{next @var{expression}} instead of @code{step @var{increment}}.
 This will cause the control-variable to be set to the
-result of evaluating expression each time through the loop.
+result of evaluating @var{expression} each time through the loop.
 
 @example
 (%i6) for count: 2 next 3*count thru 20 do display (count)$
@@ -218,11 +222,12 @@ result of evaluating expression each time through the loop.
 @end example
 
 @c UGH. DO WE REALLY NEED TO MENTION THIS??
-As an alternative to @code{for @var{variable}: @var{value} ...do...} the syntax
-@code{for @var{variable} from @var{value} ...do...}  may be used.  This permits the
-@code{from @var{value}} to be placed after the step or next value or after the
-termination condition.  If @code{from @var{value}} is omitted then 1 is used as
-the initial value.
+As an alternative to @code{for @var{variable}: @var{value} ...do...}
+the syntax @code{for @var{variable} from @var{value} ...do...}  may be
+used.  This permits the @code{from @var{value}} to be placed after the
+@code{step} or @code{next} value or after the termination condition.
+If @code{from @var{value}} is omitted then 1 is used as the initial
+value.
 
 Sometimes one may be interested in performing an iteration where
 the control-variable is never actually used.  It is thus permissible
@@ -239,10 +244,10 @@ square-root of 5 using a poor initial guess.
 (%o4)                   2.23606797749979
 @end example
 
-If it is desired one may even omit the termination conditions
-entirely and just give @code{do @var{body}} which will continue to evaluate the
-body indefinitely.  In this case the function @code{return} should be used to
-terminate execution of the @code{do}.
+If it is desired one may even omit the termination conditions entirely
+and just give @code{do @var{body}} which will continue to evaluate the
+@var{body} indefinitely.  In this case the function @code{return}
+should be used to terminate execution of the @code{do}.
 
 @example
 (%i1) newton (f, x):= ([y, df, dfx], df: diff (f ('x), 'x),
@@ -265,11 +270,12 @@ One other form of the @code{do} is available in Maxima.  The syntax is:
 for @var{variable} in @var{list} @var{end_tests} do @var{body}
 @end example
 
-The elements of @var{list} are any expressions which will
-successively be assigned to the variable on each iteration of the
-body.  The optional termination tests @var{end_tests} can be used to terminate execution of
-the @code{do}; otherwise it will terminate when the list is exhausted or when
-a @code{return} is executed in the body.  (In fact, list may be any
+The elements of @var{list} are any expressions which will successively
+be assigned to the @code{variable} on each iteration of the
+@var{body}.  The optional termination tests @var{end_tests} can be
+used to terminate execution of the @code{do}; otherwise it will
+terminate when the @var{list} is exhausted or when a @code{return} is
+executed in the @var{body}.  (In fact, @code{list} may be any
 non-atomic expression, and successive parts are taken.)
 
 @example
@@ -283,6 +289,9 @@ non-atomic expression, and successive parts are taken.)
 (%o4)                             0.78539816
 @end example
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @deffn {Function} errcatch (@var{expr_1}, ..., @var{expr_n})
@@ -296,6 +305,9 @@ returns the empty list @code{[]} without evaluating any more arguments.
 is useful in @code{batch} files where one suspects an error might occur which
 would terminate the @code{batch} if the error weren't caught.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @deffn {Function} error (@var{expr_1}, ..., @var{expr_n})
@@ -312,6 +324,9 @@ and the remaining elements are the values of any non-string arguments.
 @code{errormsg()} formats and prints @code{error}.
 This is effectively reprinting the most recent error message.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @deffn {Function} errormsg ()
@@ -319,13 +334,20 @@ Reprints the most recent error message.
 The variable @code{error} holds the message,
 and @code{errormsg} formats and prints it.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @c REPHRASE
+@c AT LEAST SHOULD LIST VARIANTS HERE
 @deffn {Special operator} for
 Used in iterations. See @code{do} for a description of
 Maxima's iteration facilities.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @deffn {Function} go (@var{tag})
@@ -342,23 +364,45 @@ The argument to @code{go} must be the name of a tag appearing in the same
 @code{block}.  One cannot use @code{go} to transfer to tag in a @code{block} other than the
 one containing the @code{go}.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION, EXPANSION, EXAMPLES
 @c THIS ITEM IS IMPORTANT
 @deffn {Special operator} if
-The @code{if} statement is used for conditional execution.  The syntax
-is:
+Represents conditional evaluation. Various forms of @code{if} expressions are recognized.
 
-@example
-if <condition> then <expr_1> else <expr_2>
-@end example
+@code{if @var{cond_1} then @var{expr_1} else @var{expr_0}}
+evaluates to @var{expr_1} if @var{cond_1} evaluates to @code{true},
+otherwise the expression evaluates to @var{expr_0}.
 
-The result of an @code{if} statement is @var{expr_1} if condition is @code{true} and
-@var{expr_2} otherwise.  @var{expr_1} and @var{expr_2} are any
-Maxima expressions (including nested @code{if} statements), and @var{condition} is
-an expression which evaluates to @code{true} or @code{false} and is composed of
-relational and logical operators which are as follows:
+@code{if @var{cond_1} then @var{expr_1} elseif @var{cond_2} then @var{expr_2} elseif ... else @var{expr_0}}
+evaluates to @var{expr_k} if @var{cond_k} is @code{true} and all preceding conditions are @code{false}.
+If none of the conditions are @code{true}, the expression evaluates to @code{expr_0}.
+
+A trailing @code{else false} is assumed if @code{else} is missing.
+That is, @code{if @var{cond_1} then @var{expr_1}} is equivalent to
+@code{if @var{cond_1} then @var{expr_1} else false},
+and @code{if @var{cond_1} then @var{expr_1} elseif ... elseif @var{cond_n} then @var{expr_n}}
+is equivalent to
+@code{if @var{cond_1} then @var{expr_1} elseif ... elseif @var{cond_n} then @var{expr_n} else false}.
+
+The alternatives @var{expr_0}, ..., @var{expr_n} may be any Maxima expressions,
+including nested @code{if} expressions.
+The alternatives are neither simplified nor evaluated unless the corresponding condition is @code{true}.
+
+The conditions @var{cond_1}, ..., @var{cond_n} are expressions which potentially or actually
+evaluate to @code{true} or @code{false}.
+When a condition does not actually evaluate to @code{true} or @code{false},
+the behavior of @code{if} is governed by the global flag @code{prederror}.
+When @code{prederror} is @code{true},
+it is an error if any evaluated condition does not evaluate to @code{true} or @code{false}.
+Otherwise, conditions which do not evaluate to @code{true} or @code{false} are accepted,
+and the result is a conditional expression.
+
+Among other elements, conditions may comprise relational and logical operators as follows.
 
 @c - SEEMS LIKE THIS TABLE WANTS TO BE IN A DISCUSSION OF PREDICATE FUNCTIONS; PRESENT LOCATION IS OK I GUESS
 @c - REFORMAT THIS TABLE USING TEXINFO MARKUP (MAYBE)
@@ -380,6 +424,9 @@ or                   or          logical infix
 not                  not         logical prefix
 @end example
 
+@opencatbox
+@category{Programming} @category{Predicate functions}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION
@@ -392,11 +439,13 @@ applying @var{f} to the corresponding subparts of the expressions.  @var{f} is e
 the name of a function of @math{n} arguments
 or is a @code{lambda} form of @math{n} arguments.
 
-@code{maperror} - if @code{false} will cause all of the mapping functions to
-(1) stop when they finish going down the shortest expi if not all of
-the expi are of the same length and (2) apply fn to [exp1, exp2,...]
-if the expi are not all the same type of object. If @code{maperror} is @code{true}
-then an error message will be given in the above two instances.
+@code{maperror} - if @code{false} will cause all of the mapping
+functions to (1) stop when they finish going down the shortest
+@var{expr_i} if not all of the @var{expr_i} are of the same length and
+(2) apply @var{f} to [@var{expr_1}, @var{expr_2}, ...]  if the
+@var{expr_i} are not all the same type of object. If @code{maperror}
+is @code{true} then an error message will be given in the above two
+instances.
 
 One of the uses of this function is to @code{map} a function (e.g. @code{partfrac})
 onto each term of a very large expression where it ordinarily wouldn't
@@ -422,6 +471,10 @@ exhaustion of list storage space in the course of the computation.
 
 
 @end example
+
+@opencatbox
+@category{Function application}
+@closecatbox
 @end deffn
 
 @deffn {Function} mapatom (@var{expr})
@@ -430,6 +483,9 @@ routines as an atom.  "Mapatoms" are atoms, numbers
 (including rational numbers), and subscripted variables.
 @c WHAT ARE "THE MAPPING ROUTINES", AND WHY DO THEY HAVE A SPECIALIZED NOTION OF ATOMS ??
 
+@opencatbox
+@category{Predicate functions}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION
@@ -439,16 +495,36 @@ Default value: @code{true}
 When @code{maperror} is @code{false}, causes all of the mapping functions, for example
 
 @example
-map (f, expr_1, expr_2, ...))
+map (@var{f}, @var{expr_1}, @var{expr_2}, ...)
 @end example
 
-to (1) stop when they finish
-going down the shortest expi if not all of the expi are of the same
-length and (2) apply @code{f} to @code{[expr_1, expr_2, ...]} if the @code{expr_i} are not all
-the same type of object.
+to (1) stop when they finish going down the shortest @var{expr_i} if
+not all of the @var{expr_i} are of the same length and (2) apply
+@var{f} to [@var{expr_1}, @var{expr_2}, ...] if the @var{expr_i} are
+not all the same type of object.
 
 If @code{maperror} is @code{true} then an error message
 is displayed in the above two instances.
+
+@opencatbox
+@category{Function application}
+@closecatbox
+
+@end defvr
+
+@defvr {Option variable} mapprint
+Default value: @code{true}
+
+When @code{mapprint} is @code{true}, various information messages from
+@code{map}, @code{mapl}, and @code{fullmap} are produced in certain
+situations.  These include situations where @code{map} would use
+@code{apply}, or @code{map} is truncating on the shortest list.
+
+If @code{mapprint} is @code{false}, these messages are suppressed.
+
+@opencatbox
+@category{Function application}
+@closecatbox
 
 @end defvr
 
@@ -462,11 +538,14 @@ to the parts of the expressions @var{expr_1}, ..., @var{expr_n}.
 which returns an expression with the same main operator as @var{expr_i} has
 (except for simplifications and the case where @code{map} does an @code{apply}).
 
+@opencatbox
+@category{Function application}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION
 @defvr {Option variable} prederror
-Default value: @code{true}
+Default value: @code{false}
 
 When @code{prederror} is @code{true}, an error message is displayed
 whenever the predicate of an @code{if} statement or an @code{is} function fails to
@@ -479,12 +558,19 @@ however, @code{maybe} is supported in translated code.
 
 See also @code{is} and @code{maybe}.
 
+@opencatbox
+@category{Programming} @category{Predicate functions}
+@closecatbox
+
 @end defvr
 
-@deffn {Function} return (value)
+@deffn {Function} return (@var{value})
 May be used to exit explicitly from a block, bringing
 its argument.  See @code{block} for more information.
 
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION
@@ -501,10 +587,11 @@ desired, for example:
 (%o2)                         (a + 1)  y + x
 @end example
 
-Note the way in which @code{scanmap} applies the given function @code{factor} to the
-constituent subexpressions of @var{expr}; if another form of @var{expr} is presented
-to @code{scanmap} then the result may be different.  Thus, @code{%o2} is not
-recovered when @code{scanmap} is applied to the expanded form of exp:
+Note the way in which @code{scanmap} applies the given function
+@code{factor} to the constituent subexpressions of @var{expr}; if
+another form of @var{expr} is presented to @code{scanmap} then the
+result may be different. Thus, @code{%o2} is not recovered when
+@code{scanmap} is applied to the expanded form of @code{exp}:
 
 @example
 (%i3) scanmap(factor,expand(exp));
@@ -536,6 +623,9 @@ scanmap(f,a*x+b,bottomup) -> f(a)*f(x)+f(b)
 In this case, you get the same answer both
 ways.
 
+@opencatbox
+@category{Function application}
+@closecatbox
 @end deffn
 
 @deffn {Function} throw (@var{expr})
@@ -543,23 +633,44 @@ Evaluates @var{expr} and throws the value back to the most recent
 @code{catch}.  @code{throw} is used with @code{catch} as a nonlocal return
 mechanism.
 
+@opencatbox
+@category{Programming}
+@closecatbox
+@end deffn
+
+@c NEED MORE HERE !!
+@c AT LEAST SHOULD LIST ACCEPTABLE VARIANTS
+@deffn {Special operator} while
+@deffnx {Special operator} unless
+See @code{do}.
+
+@opencatbox
+@category{Programming}
+@closecatbox
 @end deffn
 
 @deffn {Function} outermap (@var{f}, @var{a_1}, ..., @var{a_n})
 Applies the function @var{f} to each one of the elements of the outer product
 @var{a_1} cross @var{a_2} ... cross @var{a_n}.
 
-@var{f} is be the name of a function of @math{n} arguments
+@var{f} is the name of a function of @math{n} arguments
 or a lambda expression of @math{n} arguments.
-The arguments @var{a_1}, ..., @var{a_n} may be lists or nonlists.
-List arguments may have different lengths.
-Arguments other than lists are treated as lists of length 1 for the purpose of constructing
-the outer product.
+Each argument @var{a_k} may be a list or nested list, or a matrix, or any other kind of expression.
 
-The result of applying @var{f} to the outer product is organized as a nested list.
-The depth of nesting is equal to the number of list arguments
-(arguments other than lists do not contribute a nesting level).
-A list at nesting depth @math{k} has the same length as the @math{k}'th list argument.
+The @code{outermap} return value is a nested structure.
+Let @var{x} be the return value.
+Then @var{x} has the same structure as the first list, nested list, or matrix argument,
+@code{@var{x}[i_1]...[i_m]} has the same structure as the second list, nested list, or matrix argument,
+@code{@var{x}[i_1]...[i_m][j_1]...[j_n]} has the same structure as the third list, nested list, or matrix argument,
+and so on,
+where @var{m}, @var{n}, ... are the numbers of indices required to access the
+elements of each argument (one for a list, two for a matrix, one or more for a nested list).
+Arguments which are not lists or matrices have no effect on the structure of the return value.
+
+Note that the effect of @code{outermap} is different from that of applying @var{f}
+to each one of the elements of the outer product returned by @code{cartesian_product}.
+@code{outermap} preserves the structure of the arguments in the return value,
+while @code{cartesian_product} does not.
 
 @code{outermap} evaluates its arguments.
 
@@ -567,30 +678,132 @@ See also @code{map}, @code{maplist}, and @code{apply}.
 @c CROSS REF OTHER FUNCTIONS HERE ??
 
 Examples:
-@c GENERATED FROM:
-@c f (x, y) := x - y$
-@c outermap (f, [2, 3, 5], [a, b, c, d]);
-@c outermap (lambda ([x, y], y/x), [55, 99], [Z, W]);
-@c g: lambda ([x, y, z], x + y*z)$
-@c outermap (g, [a, b, c], %pi, [11, 17]);
-@c flatten (%);
 
+Elementary examples of @code{outermap}.
+To show the argument combinations more clearly, @code{F} is left undefined.
+
+@c ===beg===
+@c outermap (F, [a, b, c], [1, 2, 3]);
+@c outermap (F, matrix ([a, b], [c, d]), matrix ([1, 2], [3, 4]));
+@c outermap (F, [a, b], x, matrix ([1, 2], [3, 4]));
+@c outermap (F, [a, b], matrix ([1, 2]), matrix ([x], [y]));
+@c outermap ("+", [a, b, c], [1, 2, 3]);
+@c ===end===
 @example
-(%i1) f (x, y) := x - y$
-(%i2) outermap (f, [2, 3, 5], [a, b, c, d]);
-(%o2) [[2 - a, 2 - b, 2 - c, 2 - d], 
-      [3 - a, 3 - b, 3 - c, 3 - d], [5 - a, 5 - b, 5 - c, 5 - d]]
-(%i3) outermap (lambda ([x, y], y/x), [55, 99], [Z, W]);
-                        Z   W     Z   W
-(%o3)                 [[--, --], [--, --]]
-                        55  55    99  99
-(%i4) g: lambda ([x, y, z], x + y*z)$
-(%i5) outermap (g, [a, b, c], %pi, [11, 17]);
-(%o5) [[a + 11 %pi, a + 17 %pi], [b + 11 %pi, b + 17 %pi], 
-                                        [c + 11 %pi, c + 17 %pi]]
-(%i6) flatten (%);
-(%o6) [a + 11 %pi, a + 17 %pi, b + 11 %pi, b + 17 %pi, 
-                                          c + 11 %pi, c + 17 %pi]
+(%i1) outermap(F, [a, b, c], [1, 2, 3]);
+(%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)], 
+                                     [F(c, 1), F(c, 2), F(c, 3)]]
+(%i2) outermap(F, matrix([a, b],[c, d]), matrix([1, 2],[3, 4]));
+         [ [ F(a, 1)  F(a, 2) ]  [ F(b, 1)  F(b, 2) ] ]
+         [ [                  ]  [                  ] ]
+         [ [ F(a, 3)  F(a, 4) ]  [ F(b, 3)  F(b, 4) ] ]
+(%o2)    [                                            ]
+         [ [ F(c, 1)  F(c, 2) ]  [ F(d, 1)  F(d, 2) ] ]
+         [ [                  ]  [                  ] ]
+         [ [ F(c, 3)  F(c, 4) ]  [ F(d, 3)  F(d, 4) ] ]
+(%i3) outermap (F, [a, b], x, matrix ([1, 2], [3, 4]));
+       [ F(a, x, 1)  F(a, x, 2) ]  [ F(b, x, 1)  F(b, x, 2) ]
+(%o3) [[                        ], [                        ]]
+       [ F(a, x, 3)  F(a, x, 4) ]  [ F(b, x, 3)  F(b, x, 4) ]
+(%i4) outermap (F, [a, b], matrix ([1, 2]), matrix ([x], [y]));
+       [ [ F(a, 1, x) ]  [ F(a, 2, x) ] ]
+(%o4) [[ [            ]  [            ] ], 
+       [ [ F(a, 1, y) ]  [ F(a, 2, y) ] ]
+                              [ [ F(b, 1, x) ]  [ F(b, 2, x) ] ]
+                              [ [            ]  [            ] ]]
+                              [ [ F(b, 1, y) ]  [ F(b, 2, y) ] ]
+(%i5) outermap ("+", [a, b, c], [1, 2, 3]);
+(%o5) [[a + 1, a + 2, a + 3], [b + 1, b + 2, b + 3], 
+                                           [c + 1, c + 2, c + 3]]
 @end example
 
+A closer examination of the @code{outermap} return value.
+The first, second, and third arguments are a matrix, a list, and a matrix, respectively.
+The return value is a matrix.
+Each element of that matrix is a list,
+and each element of each list is a matrix.
+
+@c ===beg===
+@c arg_1 :  matrix ([a, b], [c, d]);
+@c arg_2 : [11, 22];
+@c arg_3 : matrix ([xx, yy]);
+@c xx_0 : outermap (lambda ([x, y, z], x / y + z), arg_1, 
+@c                                                    arg_2, arg_3);
+@c xx_1 : xx_0 [1][1];
+@c xx_2 : xx_0 [1][1] [1];
+@c xx_3 : xx_0 [1][1] [1] [1][1];
+@c [op (arg_1), op (arg_2), op (arg_3)];
+@c [op (xx_0), op (xx_1), op (xx_2)];
+@c ===end===
+@example
+(%i1) arg_1 :  matrix ([a, b], [c, d]);
+                            [ a  b ]
+(%o1)                       [      ]
+                            [ c  d ]
+(%i2) arg_2 : [11, 22];
+(%o2)                       [11, 22]
+(%i3) arg_3 : matrix ([xx, yy]);
+(%o3)                      [ xx  yy ]
+(%i4) xx_0 : outermap(lambda([x, y, z], x / y + z), arg_1,
+                                                   arg_2, arg_3);
+               [  [      a        a  ]  [      a        a  ]  ]
+               [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+               [  [      11       11 ]  [      22       22 ]  ]
+(%o4)  Col 1 = [                                              ]
+               [  [      c        c  ]  [      c        c  ]  ]
+               [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+               [  [      11       11 ]  [      22       22 ]  ]
+                 [  [      b        b  ]  [      b        b  ]  ]
+                 [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                 [  [      11       11 ]  [      22       22 ]  ]
+         Col 2 = [                                              ]
+                 [  [      d        d  ]  [      d        d  ]  ]
+                 [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                 [  [      11       11 ]  [      22       22 ]  ]
+(%i5) xx_1 : xx_0 [1][1];
+           [      a        a  ]  [      a        a  ]
+(%o5)     [[ xx + --  yy + -- ], [ xx + --  yy + -- ]]
+           [      11       11 ]  [      22       22 ]
+(%i6) xx_2 : xx_0 [1][1] [1];
+                      [      a        a  ]
+(%o6)                 [ xx + --  yy + -- ]
+                      [      11       11 ]
+(%i7) xx_3 : xx_0 [1][1] [1] [1][1];
+                                  a
+(%o7)                        xx + --
+                                  11
+(%i8) [op (arg_1), op (arg_2), op (arg_3)];
+(%o8)                  [matrix, [, matrix]
+(%i9) [op (xx_0), op (xx_1), op (xx_2)];
+(%o9)                  [matrix, [, matrix]
+@end example
+
+@code{outermap} preserves the structure of the arguments in the return value,
+while @code{cartesian_product} does not.
+
+@c ===beg===
+@c outermap (F, [a, b, c], [1, 2, 3]);
+@c setify (flatten (%));
+@c map (lambda ([L], apply (F, L)), 
+@c                      cartesian_product ({a, b, c}, {1, 2, 3}));
+@c is (equal (%, %th (2)));
+@c ===end===
+@example
+(%i1) outermap (F, [a, b, c], [1, 2, 3]);
+(%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)], 
+                                     [F(c, 1), F(c, 2), F(c, 3)]]
+(%i2) setify (flatten (%));
+(%o2) @{F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3), 
+                                       F(c, 1), F(c, 2), F(c, 3)@}
+(%i3) map(lambda([L], apply(F, L)),
+                     cartesian_product(@{a, b, c@}, @{1, 2, 3@}));
+(%o3) @{F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3), 
+                                       F(c, 1), F(c, 2), F(c, 3)@}
+(%i4) is (equal (%, %th (2)));
+(%o4)                         true
+@end example
+
+@opencatbox
+@category{Function application}
+@closecatbox
 @end deffn

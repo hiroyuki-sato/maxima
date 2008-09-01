@@ -11,29 +11,37 @@
 
 ;; A Maxima set package
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module nset)
 
-($put '$nset 1.203 '$version)
+($put '$nset 1.21 '$version)
 
-(defmacro while (cond &rest body)
-  `(do ()
-       ((not ,cond))
-     ,@body))
+;; Display sets as { .. }.
 
-;; Display sets as { .. }. The display code only effects the way sets 
-;; are displayed. Unless a user defines "{" as a matchfix operator,
-;; sets cannot be defined  by
-;;  (c1) {a,b}   <== bogus.
-
-;; For 1d output if you want {...} instead of set(...), include 
-;; (put '$set 'msize-matchfix 'grind) 
-
-;; (put '$set '((#\{ ) #\} ) 'dissym)      <== put doesn't work in commercial Macsyma
-;; (put '$set 'dimension-match 'dimension)
+(defprop $set msize-matchfix grind) 
 
 (setf (get '$set 'dissym) '((#\{ ) #\} ))
 (setf (get '$set  'dimension) 'dimension-match)
+
+;; Parse {a, b, c} into set(a, b, c).
+;; Don't bother with DEF-NUD etc -- matchfix + ::= works just fine.
+;; Well, MDEFMACRO is a little too zealous in this context, since we
+;; don't really want this macro defn to show up on the $MACROS infolist.
+;; (Maybe it would be cleanest to append built-in defns to FOO::$MACROS
+;; where FOO is something other than MAXIMA, but that awaits
+;; regularization of package use within Maxima.)
+
+(eval-when
+    #+gcl (load eval)
+    #-gcl (:load-toplevel :execute)
+    ;; matchfix ("{", "}")
+    (meval '(($matchfix) "{" "}"))
+    ;; "{" ([L]) ::= buildq ([L], set (splice (L)));
+    (let ((new-defn
+	   (meval '((mdefmacro) ((${) ((mlist) $l)) (($buildq) ((mlist) $l) (($set) (($splice) $l)))))))
+      ;; Simpler to patch up $MACROS here, than to replicate the functionality of MDEFMACRO.
+      (setq $macros (delete (cadr new-defn) $macros :test #'equal))))
 
 ;; Support for TeXing sets. If your mactex doesn't TeX the empty set
 ;; correctly, get the latest mactex.lisp.
@@ -63,11 +71,19 @@
   (if (or ($listp x) ($setp x)) (cdr x)
     (merror "Function ~:M expects a list or a set, instead found ~:M" context-string x)))
 
+;; When a is a list, return a list of the unique elements of a.
+;; Otherwise just return a.
+
+(defun $unique (x)
+  (if ($listp x)
+    `((mlist) ,@(sorted-remove-duplicates (sort (copy-list (cdr x)) '$orderlessp)))
+    x))
+
 ;; When a is a list, setify(a) is equivalent to apply(set, a). When a 
 ;; isn't a list, signal an error. 
 
 (defun $setify (a)
-  `(($set) ,@(require-list a "$setify")))
+  (simplifya `(($set) ,@(require-list a "$setify")) nil))
 
 ;; When a is a list, convert a and all of its elements that are lists
 ;; into sets.  When a isn't a list, return a.
@@ -94,18 +110,16 @@
 
 ;; Simplify a set. 
 
-(defun simp-set (a y z)
-  (declare (ignore y))
-  (cond ((not (memq 'simp (car a)))
-	 (setq a (mapcar #'(lambda (x) (simplifya x z)) (cdr a)))
-	 (setq a (sorted-remove-duplicates (sort a '$orderlessp)))
-	 `(($set simp) ,@a))
-	(t a)))
+(defun simp-set (a yy z)
+  (declare (ignore yy))
+  (setq a (mapcar #'(lambda (x) (simplifya x z)) (cdr a)))
+  (setq a (sorted-remove-duplicates (sort a '$orderlessp)))
+  `(($set simp) ,@a))
 
 ;; Return true iff a is an empty set or list
 
 (defun $emptyp (a)
-  (or (like a `(($set))) (like a `((mlist)))))
+  (or (like a `(($set))) (like a `((mlist))) (and ($matrixp a) (every '$emptyp (margs a)))))
 
 ;; Return true iff the operator of a is set.
 
@@ -225,25 +239,36 @@
   (set-disjointp a b))
 
 ;; Return the set of elements of the list or set a for which the predicate 
-;; f evaluates to true; signal an error if a isn't a list or a set.
+;; f evaluates to true; signal an error if a isn't a list or a set. Also,
+;; signal an error if the function f doesn't evaluate to true, false, or
+;; unknown.
 
 (defun $subset (a f)
   (setq a (require-set a "$subset"))
-  (let ((acc))
+  (let ((acc nil) (b))
     (dolist (x a `(($set simp) ,@(nreverse acc)))
-      (if (mfuncall f x) (setq acc (cons x acc))))))
-
-;; Return a list of two sets. The first set is the subset of a for which
-;; the predicate f evaluates to true and the second is the subset of a
-;; for which f evaluates to false.
+      (setq b (mfuncall f x))
+      (cond ((eq t b) (push x acc))
+	    ((not (or (eq b nil) (eq b '$unknown)))
+	     (merror "The function ~:M doesn't evaluate to a boolean for ~:M" f x))))))
+	     
+;; Return a list of three sets. The first set is the subset of a for which
+;; the predicate f evaluates to true, the second is the subset of a
+;; for which f evaluates to false, and the third is the subset of a
+;; for which f evalute to unknown.
 
 (defun $partition_set (a f)
   (setq a (require-set a "$partition_set"))
-  (let ((t-acc) (f-acc))
-    (dolist (x a `((mlist simp) (($set simp) ,@(nreverse f-acc)) 
+  (let ((t-acc) (f-acc) (b))
+    (dolist (x a `((mlist simp) 
+		   (($set simp) ,@(nreverse f-acc)) 
 		   (($set simp) ,@(nreverse t-acc))))
-      (if (mfuncall f x) (setq t-acc (cons x t-acc)) (setq f-acc (cons x f-acc))))))
-
+      (setq b (mfuncall f x))
+      (cond ((eq t b) (push x t-acc))
+	    ((or (eq b nil) (eq b '$unknown)) (push x f-acc))
+	    (t 
+	     (merror "The function ~:M doesn't evaluate to a boolean for ~:M" f x))))))
+	       
 ;; Let a = (a1,a2,...,an), where each ai is either a list or a set.
 ;; Return {x | x is a member of exactly one ai}.  When n = 2, this
 ;; is the standard symmdifference of sets; thus symmdifference(a,b)
@@ -323,7 +348,7 @@
 
 (defun $permutations (a)
   (cond (($listp a) 
-	 (setq a (sort (cdr a) '$orderlessp)))
+	 (setq a (sort (copy-list (cdr a)) '$orderlessp)))
 	(t
 	 (setq a (require-set a "$permutations"))))
   
@@ -387,6 +412,22 @@
 	     (incf j))
 	   p))))
 
+(defun $random_permutation (a)
+  (if ($listp a)
+    (setq a (copy-list (cdr a)))
+    (setq a (copy-list (require-set a "$random_permutation"))))
+
+  (let ((n (length a)))
+    (dotimes (i n)
+      (let
+        ((j (+ i ($random (- n i))))
+         (tmp (nth i a)))
+        (setf (nth i a) (nth j a))
+        (setf (nth j a) tmp))))
+
+  `((mlist) ,@a))
+
+    
 #|
 ;;; Returns 3 values
 ;;; FOUND -- is X in L
@@ -487,76 +528,6 @@
 		  (rplacd l (cddr l))))
       (setq l (cdr l)))))
 
-(defmacro do-merge-symm (list1 list2 eqfun lessfun bothfun onefun)
-  ;; Like do-merge-asym, but calls onefun if an element appears in one but
-  ;; not the other list, regardless of which list it appears in.
-  `(do-merge-asym ,list1 ,list2 ,eqfun ,lessfun ,bothfun ,onefun ,onefun))
-
-(defmacro do-merge-asym
-  (list1 list2 eqfun lessfun bothfun only1fun only2fun)
-  ;; Takes two lists.
-  ;; The element equality function is eqfun, and they must be sorted by lessfun.
-  ;; Calls bothfun on each element that is shared by the two lists;
-  ;; calls only1fun on each element that appears only in the first list;
-  ;; calls only2fun on each element that appears only in the second list.
-  ;; If both/only1/only2 fun are nil, treat as no-op.
-  ;; Initializes the variable "res" to nil; returns its value as the result.
-  (let ((l1var (gensym))
-	(l2var (gensym)))
-    `(do ((,l1var ,list1)
-	  (,l2var ,list2)
-	  res)
-	 ;; The variable RES is for the use of both/only1/only2-fun
-	 ;; do-merge-asym returns (nreverse res)
-	 ((cond ((null ,l1var)
-		 (if ,only2fun
-		     (while ,l2var
-		       (funcall ,only2fun (car ,l2var))
-		       (setq ,l2var (cdr ,l2var))))
-		 t)
-		((null ,l2var)
-		 (if ,only1fun
-		     (while ,l1var
-		       (funcall ,only1fun (car ,l1var))
-		       (setq ,l1var (cdr ,l1var))))
-		 t)
-		((funcall ,eqfun (car ,l1var) (car ,l2var))
-		 (if ,bothfun (funcall ,bothfun (car ,l1var)))
-		 (setq ,l1var (cdr ,l1var) ,l2var (cdr ,l2var))
-		 nil)
-		((funcall ,lessfun (car ,l1var) (car ,l2var))
-		 (if ,only1fun (funcall ,only1fun (car ,l1var)))
-		 (setq ,l1var (cdr ,l1var))
-		 nil)
-		(t
-		 (if ,only2fun (funcall ,only2fun (car ,l2var)))
-		 (setq ,l2var (cdr ,l2var))
-		 nil))
-	  (nreverse res)))))
-
-;;; Test
-; (do-merge-asym '(a a a b c g h k l)
-; 	       '(a b b c c h i j k k)
-; 	       'eq
-; 	       'string<
-; 	       '(lambda (x) (prin0 'both x))
-; 	       '(lambda (x) (prin0 'one1 x))
-; 	       '(lambda (x) (prin0 'one2 x)))
-; both a
-; one1 a
-; one1 a
-; both b
-; one2 b
-; both c
-; one2 c
-; one1 g
-; both h
-; one2 i
-; one2 j
-; both k
-; one2 k
-; nil
-
 (defun set-intersect (l1 l2)
   ;;  Only works for lists of sorted by $orderlessp.
   (do-merge-symm
@@ -593,7 +564,7 @@
      #'like
      #'$orderlessp
      nil
-     #'(lambda (x) (declare (ignore x)) (throw 'subset nil))
+     #'(lambda (xx) (declare (ignore xx)) (throw 'subset nil))
      nil)
     t))
 
@@ -611,7 +582,7 @@
      l1 l2
      #'like
      #'$orderlessp
-     #'(lambda (x) (declare (ignore x)) (throw 'disjoint nil))
+     #'(lambda (xx) (declare (ignore xx)) (throw 'disjoint nil))
      nil)
     t))
    
@@ -711,21 +682,21 @@
 ;;   (2) p1, p2 in P and p1 # p2 implies p1 and p2 are disjoint,
 ;;   (3) union(x | x in P) = S.
 ;; Thus set() is a partition of set().
-      
-(defun $set_partitions (a &optional n)
+
+(defun $set_partitions (a &optional n-sub)
   (setq a (require-set a "$set_partitions"))
-  (cond ((and (integerp n) (> n -1))
-	 `(($set) ,@(set-partitions a n)))
-	((null n)
-	 (setq n (length a))
+  (cond ((and (integerp n-sub) (> n-sub -1))
+	 `(($set) ,@(set-partitions a n-sub)))
+	((null n-sub)
+	 (setq n-sub (length a))
 	 (let ((acc (set-partitions a 0)) (k 1))
-	   (while (<= k n)
+	   (while (<= k n-sub)
 	     (setq acc (append acc (set-partitions a k)))
 	     (incf k))
 	   `(($set) ,@acc)))
 	(t
 	 (merror "The optional second argument to set_partitions must be
-a positive integer; instead found ~:M" n))))
+a positive integer; instead found ~:M" n-sub))))
 
 (defun set-partitions (a n)
   (cond ((= n 0)
@@ -762,10 +733,10 @@ a positive integer; instead found ~:M" n))))
 	   (setq acc (cond ((= n 0) nil)
 			   ((integerp len) (fixed-length-partitions n n len))
 			   (t (integer-partitions n))))
-	   (setq acc (mapcar #'(lambda (x) (cons `(mlist simp) x)) acc))
+	   (setq acc (mapcar #'(lambda (x) (simplify (cons '(mlist) x))) acc))
 	   `(($set simp) ,@acc))
 	  (t
-	   (if len `(($integer_partitions simp) ,n ,len) `(($int_partitions simp) ,n))))))
+	   (if len `(($integer_partitions simp) ,n ,len) `(($integer_partitions simp) ,n))))))
 	 
 (defun integer-partitions (n)
   (let ((p `(,n)) (acc nil) (d) (k) (j) (r))
@@ -840,7 +811,7 @@ a positive integer; instead found ~:M" n))))
 	     `(($num_partitions simp) ,n)))))
 
 (defun $num_distinct_partitions (n &optional lst)
-  (cond ((= n 0) 0)
+  (cond ((eq n 0) 0)
 	((and (integerp n) (> n -1))
 	 (let ((p (make-array (+ n 1)))
 	       (s (make-array (+ n 1)))
@@ -888,23 +859,25 @@ a positive integer; instead found ~:M" n))))
 
 (defprop $kron_delta simp-kron-delta operators)
 
-(eval-when (compile load eval)
-  ;(kind '$kron_delta '$symmetric)) <-- This doesn't work. Why?
-  (meval* '(($declare) $kron_delta $symmetric)))
-
+(eval-when
+    #+gcl (load eval)
+    #-gcl (:load-toplevel :execute)
+    ;; (kind '$kron_delta '$symmetric)) <-- This doesn't work. Why?
+    ;; Put new fact in global context; 
+    ;; otherwise it goes in initial context, which is meant for the user.
+    (let (($context '$global) (context '$global))
+      (meval* '(($declare) $kron_delta $symmetric))))
+		 	
 (defun simp-kron-delta (x y z)
   (twoargcheck x)
-  (setq y (mapcar #'(lambda (s) (simpcheck s z)) (cdr x)))
-  (let ((p (nth 0 y)) (q (nth 1 y)) (sgn) (d))
-    (cond ((like p q) 1)
-	  ((and (symbolp p) (get p 'sysconst) (symbolp q) (get q 'sysconst)) 0)
-	  (t
-	   (setq d (simplify `((mabs) ,(specrepcheck (sub p q)))))
-	   (setq sgn (csign d))
-	   (cond ((eq sgn '$pos) 0)
-		 ((and (eq sgn '$zero) (not (floatp d)) (not ($bfloatp d))) 1)
-		 (t `(($kron_delta simp) ,p ,q)))))))
-		 				
+  (setq y (mapcar #'(lambda (s) (simplifya s z)) (margs x)))
+  (let ((p (nth 0 y))
+	(q (nth 1 y)))
+    (let ((sgn (meqp p q)))
+      (cond ((eq sgn t) 1)
+	    ((eq sgn nil) 0)
+	    (t `(($kron_delta simp) ,p ,q))))))
+			
 (defprop $kron_delta tex-kron-delta tex)
 
 (defun tex-kron-delta (x l r)
@@ -932,8 +905,8 @@ a positive integer; instead found ~:M" n))))
 ;; (5) stirling1 (n + 1, 1) = n!,
 ;; (6) stirling1 (n + 1, 2) = 2^n  - 1.
 
-(defun simp-stirling1 (n y z)
-  (declare (ignore y))
+(defun simp-stirling1 (n yy z)
+  (declare (ignore yy))
   (twoargcheck n)
   (setq n (mapcar #'(lambda (x) (simplifya x z)) (cdr n)))
   (let ((m (nth 1 n)))
@@ -999,12 +972,12 @@ a positive integer; instead found ~:M" n))))
 
 (defun nonnegative-integerp (e)
   (and ($featurep e '$integer)
-       (memq ($sign (specrepcheck e)) `($pos $zero $pz))))
+       (member ($sign (specrepcheck e)) `($pos $zero $pz) :test #'eq)))
       
 (defprop $stirling2 simp-stirling2 operators)
 
-(defun simp-stirling2 (n y z)
-  (declare (ignore y))
+(defun simp-stirling2 (n yy z)
+  (declare (ignore yy))
   (twoargcheck n)
   (setq n (mapcar #'(lambda (x) (simplifya x z)) (cdr n)))
   (let ((m (nth 1 n)))
@@ -1115,10 +1088,10 @@ a positive integer; instead found ~:M" n))))
   `(setf (get ,fn '$nary) (list #'(lambda ,arg ,f-body) ,id)))
 
 (defun xappend (s)
-  #+cmu
+  #+(or cmu scl)
   (cons '(mlist) (apply 'append (mapcar #'(lambda (x) 
 					    (require-list x "$append")) s)))
-  #-cmu
+  #-(or cmu scl)
   (let ((acc))
     (dolist (si s (cons '(mlist) acc))
       (setq acc (append (require-list si "$append") acc)))))
@@ -1138,14 +1111,14 @@ a positive integer; instead found ~:M" n))))
 ;; returns nil) we give up and use rl-reduce with left-associativity.
 
 (defun $xreduce (f s &optional (init 'no-init))
-  (let ((op (if (atom f) ($verbify f) nil)) (id))
-    (cond ((consp (setq id (get op '$nary)))
+  (let ((op (if (atom f) ($verbify f) nil)))
+    (cond ((get op '$nary)
 	   (setq s (require-list-or-set s "$xreduce"))
 	   (if (not (equal init 'no-init)) (setq s (cons init s)))
-	   ;(print "...using nary function")
-	   (funcall (car id) s))
+					;(print "...using nary function")
+	   (mapply1 op s f nil))
 	  (t
-	   (rl-reduce f `((mlist) ,@s) nil init "$xreduce")))))
+	   (rl-reduce f ($listify s) nil init "$xreduce")))))
 
 ;; Extend a function f : S x S -> S to n arguments using a minimum depth tree.
 ;; The function f should be nary (associative); otherwise, the result is somewhat 
@@ -1168,13 +1141,20 @@ a positive integer; instead found ~:M" n))))
       (setq acc nil))
     x))
 
+
+
+;; An identity function -- may see some use in things like
+;;     every(identity, [true, true, false, ..]).
+
+(defun $identity (x) x)
+
 ;; Maxima 'some' and 'every' functions.  The first argument should be
 ;; a predicate (a function that evaluates to true, false, or unknown).
 ;; The functions 'some' and 'every' locally bind $prederror to false.
 ;; Thus within 'some' or 'every,'  is(a < b) evaluates to unknown instead
 ;; of signaling an error (as it would when $prederror is true).
 ;;
-;; Two cases:
+;; Three cases:
 ;;
 ;;  (1) some(f, set(a1,...,an))  If any f(ai) evaluates to true,
 ;;  'some' returns true.  'Some' may or may not evaluate all the
@@ -1188,8 +1168,14 @@ a positive integer; instead found ~:M" n))))
 ;;  evaluate all the f(ai)'s.  Since sequences are ordered, 'some'
 ;;  evaluates in the order of increasing 'i'.
 
+;; (3) some(f, matrix([a111,...],[a121,...],[a1n1...]), matrix(...)). 
+;;  If any f(a1ij, a2ij, ...) evaluates to true, return true.  'Some' 
+;;  may or may not evaluate all the predicates. Since there is no 
+;;  natural order for the entries of a matrix, 'some' is free to 
+;;  evaluate the predicates in any order.
+
 ;;   Notes:
-;;   (a) 'some' and 'every' automatically apply 'is'; thus the following
+;;   (a) 'some' and 'every' automatically apply 'maybe'; thus the following
 ;;   work correctly
 ;;  
 ;;   (C1) some("<",[a,b,5],[1,2,8]);
@@ -1200,53 +1186,83 @@ a positive integer; instead found ~:M" n))))
 ;;  (b) Since 'some' is free to choose the order of evaluation, and
 ;;  possibly stop as soon as any one instance returns true, the
 ;;  predicate f should not normally have side-effects or signal
-;;  errors.
+;;  errors. Similarly, 'every' may halt after one instance returns false;
+;;  however, the function 'maybe' is wrapped inside 'errset' This allows 
+;;  some things to work that would otherwise signal an error:
+
+;;    (%i1) some("<",[i,1],[3,12]);
+;;    (%o1) true
+;;    (%i2) every("<",[i,1],[3,12]);
+;;    (%o2) false
+;;    (%i3) maybe(%i < 3);
+;;    `sign' called on an imaginary argument:
+
 ;;   
-;;   (c) In case (2), if $maperror is true (the default), all lists 
-;;   must have equal length -- otherwise, some or every signals an error.
-;;   When the Maxima flag $maperror is false, the list arguments are
-;;   effectively truncated each to the length of the shortest list. 
-;;   BW doesn't like this feature of every / some; neither does SM.
+;;  (c) The functions 'some' and 'every' effectively use the functions
+;;  'map' and 'matrixmap' to map the predicate over the arguments. The
+;;  option variable 'maperror' modifies the behavior of 'map' and 
+;;  'matrixmap;' similarly, the value of 'maperror' modifies the behavior
+;;  of 'some' and 'every.'
 ;; 
-;;   (d) 'every' behaves similarly to 'some' expect that 'every' returns
+;;   (d) 'every' behaves similarly to 'some' except that 'every' returns
 ;;   true iff every f evaluates to true for all its inputs.
 ;;
-;;   (e) some(f,[]) --> false and every(f,[]) --> true. Thus
-;;   (provided an error doesn't get signaled), we have the identities:
+;;   (e) If emptyp(e) is true, then some(f,e) --> false and every(f,e) --> true. 
+;;   Thus (provided an error doesn't get signaled), we have the identities:
 ;;
 ;;       some(f,s1) or some(f,s2) == some(f, union(s1,s2)), 
 ;;       every(f,s1) and every(f,s2) == every(f, union(s1,s2)).
 ;;   Similarly, some(f) --> false and every(f) --> true.
 
-;; An identity function -- may see some use in things like
-;;     every(identity, [true, true, false, ..]).
-
-(defun $identity (x) x)
-
-(defun $some (f &rest s)
-  (if (null s) nil (every-or-some #'some f s "$some")))
-
-(defun $every (f &rest s)
-  (if (null s) t (every-or-some #'every f s "$every")))
-
-;; If x = t or nil return x; if x = '$unknown return nil; if x # t, nil, 
-;; or $unknown, signal an error. 
- 
-(defun require-boolean (x)
-  (cond ((or (not x) (eq x t)) x)
+(defun checked-and (x)
+  (setq x (mfuncall '$maybe `((mand) ,@x)))
+  (cond ((or (eq x t) (eq x nil) (not $prederror)) x)
 	((eq x '$unknown) nil)
-	(t (merror "Function must be boolean valued; instead found ~:M" x))))
+	(t
+	 (merror "Predicate isn't true/false valued; maybe you want to set 'prederror' to false"))))
+    
+(defun checked-or (x)
+  (setq x (mfuncall '$maybe `((mor) ,@x)))
+  (cond ((or (eq x t) (eq x nil) (not $prederror)) x)
+	((eq x '$unknown) nil)
+	(t
+	 (merror "Predicate isn't true/false valued; maybe you want to set 'prederror' to false"))))
 
-(defun every-or-some (q f s f-str)
-  (let ((ff) ($prederror nil))
-    (setq f (if (symbolp f) ($verbify f) f))
-    (setq ff #'(lambda (&rest x) (require-boolean (mevalp `((,f) ,@x)))))
-    (if (= 1 (length s))
-	(setq s (mapcar #'(lambda (x) (require-list-or-set x f-str)) s))
-      (setq s (mapcar #'(lambda (x) (require-list x f-str)) s)))
-    (if (or (not $maperror) (apply #'= (mapcar #'length s)))
-	(apply q (cons ff s))
-      (merror "Each list argument to \"~:M\" must have the same length" f-str))))
+;; Apply the Maxima function f to x. If an error is signaled, return nil; otherwise
+;; return (list (mfuncall f x)).
+
+(defun ignore-errors-mfuncall (f x)
+  (let ((errcatch t))
+    (declare (special errcatch))
+    (errset (mfuncall f x) lisperrprint)))
+
+(defun $every (f &rest x)
+  (cond ((or (null x) (and (null (cdr x)) ($emptyp (first x)))) t)
+   
+ ((or ($listp (first x)) (and ($setp (first x)) (null (cdr x))))
+  (setq x (margs (simplify (apply #'map1 (cons f x)))))
+  (checked-and (mapcar #'car (mapcar #'(lambda (s) (ignore-errors-mfuncall '$maybe s)) x))))
+   
+ ((every '$matrixp x)
+  (let ((fmaplvl 2))
+    (setq x (margs (simplify (apply #'fmapl1 (cons f x)))))
+    (checked-and (mapcar #'(lambda (s) ($every '$identity s)) x))))
+ 
+ (t (merror "Improper arguments to function 'every'"))))
+
+(defun $some (f &rest x)
+  (cond ((or (null x) (and (null (cdr x)) ($emptyp (first x)))) nil)
+
+ ((or ($listp (first x)) (and ($setp (first x)) (null (cdr x))))
+  (setq x (margs (simplify (apply #'map1 (cons f x)))))
+  (checked-or (mapcar #'car (mapcar #'(lambda (s) (ignore-errors-mfuncall '$maybe s)) x))))
+
+ ((every '$matrixp x)
+  (let ((fmaplvl 2))
+    (setq x (margs (simplify (apply #'fmapl1 (cons f x)))))
+    (checked-or (mapcar #'(lambda (s) ($some '$identity s)) x))))
+
+ (t (merror "Improper arguments to function 'some'"))))
 
 (defun $makeset (f v s)
   (if (or (not ($listp v)) 
@@ -1277,9 +1293,10 @@ a positive integer; instead found ~:M" n))))
   (cond ((or ($listp n) ($setp n) ($matrixp n) (mequalp n))
 	 (thread y (cdr n) (caar n)))
 	((and (integerp n) (not (= n 0)))
-	 (setq n (abs n))
-	 `(($set simp) ,@(sort (mapcar #'(lambda (x) (car x)) 
-				       (divisors (cfactorw n))) '$orderlessp)))
+	 (let (($intfaclim))
+	   (setq n (abs n))
+	   `(($set simp) ,@(sort (mapcar #'(lambda (x) (car x)) 
+					 (divisors (cfactorw n))) '$orderlessp))))
 	(t `(($divisors simp) ,n))))
 
 ;; The Moebius function; it threads over lists, sets, matrices, and equalities.
@@ -1293,12 +1310,22 @@ a positive integer; instead found ~:M" n))))
   (cond ((and (integerp n) (> n 0))
 	 (cond ((= n 1) 1)
 	       (t
-		(setq n (cfactorw n))
-		(if (every #'(lambda (x) (= 1 x)) (odds n 0))
-		    (if (evenp (/ (length n) 2)) 1 -1)
-		  0))))
+		(let (($intfaclim))
+		  (setq n (cfactorw n))
+		  (if (every #'(lambda (x) (= 1 x)) (odds n 0))
+		      (if (evenp (ash (length n) -1)) 1 -1)
+		    0)))))
 	((or ($listp n) ($setp n) ($matrixp n) (mequalp n))
 	 (thread y (cdr n) (caar n)))
 	(t `(($moebius simp) ,n))))
 
+; Find indices of elements which satisfy a predicate.
+; Thanks to Bill Wood (william.wood3@comcast.net) for his help.
+; Released under terms of GNU GPL v2 with Bill's approval.
 
+(defun $sublist_indices (items pred)
+  (let ((items (require-list items "$sublist_indices")))
+    (do ((i 0 (1+ i))
+         (xs items (cdr xs))
+         (acc '() (if (definitely-so (mfuncall pred (car xs))) (cons (1+ i) acc) acc)))
+      ((endp xs) `((mlist) ,@(nreverse acc))))))

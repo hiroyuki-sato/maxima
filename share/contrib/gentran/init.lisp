@@ -6,9 +6,9 @@
 ;*  copyright (c) 1988 kent state univ.  kent, ohio 44242                      *
 ;*                                                                             *
 ;*******************************************************************************
-(in-package "MAXIMA")
+(in-package :maxima)
 
-(cond ((null (fboundp 'wrs)) (include "convmac.l")))
+(cond ((null (fboundp 'wrs)) (include "convmac.lisp")))
 
 (declare-top (special *gentran-dir tempvartype* tempvarname* tempvarnum* genstmtno*
 	genstmtincr* *symboltable* *instk* *stdin* *currin* *outstk*

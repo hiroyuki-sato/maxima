@@ -7,22 +7,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;=============================================================================
-;    (c) copyright 2002  Kent State University
+;    (c) copyright 1999  Kent State University
 ;               all rights reserved.
-;
-; Authors:  Paul S. Wang, Kent State University
-; This work was supported by NSF/USA.
-; Permission to use this work for any purpose is granted provided that
-; the copyright notice, author and support credits above are retained.
-;
 ;=============================================================================
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module mathml)
-
-;; mcmPr-lib must be set as a directory name where your PrMathML 
-;; files are located
-;;
-(setq mcmPr-lib "/usr/local/MP/maxima/")
 
 ;; special variables used in TeXetting
 (declaim (special *row* *indent* ccol mPrport $mPrautolabel $mPrworksheet $lamPrworksheet
@@ -37,8 +26,7 @@
 ;;              prmathml(expr, [,filename[,t (d)]])  on the C-line
 
 (defmfun $prmathml (&rest margs)
-         (prog (ccol *row* *indent* displaytype filename mexplabel mexpress mPrport x
-                     y eqnline)
+         (prog (ccol *row* *indent* filename mexplabel mexpress mPrport x y)
            (setq mexpress (car margs))
            (setq ccol 1 *indent* 0 *row* t)
            (cond
@@ -98,8 +86,9 @@
              (t (cond
                   ($lamPrautolabel
                       (format mPrport "\\begin{equation}~%"))
-                  ($mPrdisplaytype (tprinc "<math>"))
-                  (t (tprinc "<math>")))
+                  ($mPrdisplaytype 
+		    (tprinc "<math  xmlns='http://www.w3.org/1998/Math/MathML'>") )
+                  (t (tprinc "<math  xmlns='http://www.w3.org/1998/Math/MathML'>")))
                 (mPr_engine mexpress 'mparen 'mparen)
                 (cond
                   ($lamPrautolabel
@@ -165,27 +154,26 @@
 ;-              by the crazy top level os routines)
  
 (defun row-begin(str)
-    (myterpri) (princ str  mPrport)
-    (setq *indent* (add1 *indent*))
-    (setq *row* t)
-)
+  (myterpri)
+  (princ str  mPrport)
+  (incf *indent*)
+  (setq *row* t))
 
 (defun myindent()
-    (do ((i *indent*))
-	((equal i  0) nil)
-	(princ "   " mPrport) (setq i (sub1 i))
-    )
-)
+  (do ((i *indent*))
+      ((equal i 0) nil)
+    (princ "   " mPrport)
+    (decf i)))
 
 (defun row-end(str)
-    (setq *indent* (sub1 *indent*)) (myterpri)
-    (princ str mPrport) (setq *row* t)
-)
+  (decf *indent*)
+  (myterpri)
+  (princ str mPrport)
+  (setq *row* t))
 
 (defun tpchar (c)
-   (setq ccol (1+ ccol))
-   (princ c mPrport)
-)
+  (incf ccol)
+  (princ c mPrport))
 
 ;would have exceeded the line length
 ; lead off with a space for safety
@@ -303,17 +291,16 @@
 (defun mPr-atom (chr)
   (cond
     ((numberp chr) (mPr-num chr))
-    ((get chr 'chchr) (tprinc "<mi>") 
-     (tprinc (get chr 'chchr)) (tprinc "</mi>"))
-    (t (tprinc "<mi>")
-       (tprinc (apply 'concat
-           (mapcar #'handle_rsw
-                   (rm '// (explode (fullstrip1 chr))))))
-       (tprinc "</mi>")))
-)
+    ;; pwang 1/2005
+    ;; ((atom chr) (tprinc "<mi>") (tprinc (fullstrip1 chr)) (tprinc "</mi>"))
+    ((safe-get chr 'chchr) (tprinc "<mi>") 
+     (tprinc (safe-get chr 'chchr)) (tprinc "</mi>"))
+    (t
+      (let ((my-atom (if (symbolp chr) (print-invert-case (stripdollar chr)) chr)))
+        (tprinc "<mi>")
+        (tprinc (coerce (mapcar #'handle_rsw (exploden my-atom)) 'string))
+        (tprinc "</mi>")))))
 
-;; it does like remove , but it is written because when compiled, what
-;; a heck remove is added which confuse TeXetting
 (defun rm (a list)
   (do ((l list (cdr l)) (l2 nil)) ((null l) (reverse l2))
     (when (not (equal a (car l))) (setq l2 (cons (car l) l2)))))
@@ -321,11 +308,11 @@
 
 ;;      this fn is called by mPr-atom ,it checks for a reserved char.
 (defun handle_rsw (c)
-  (if (member c '(< > &) :test #'equal) (get c 'char) c)) 
-
-(setf (get '< 'char) '"&lt;")
-(setf (get '> 'char) '"&gt")
-(setf (get '& 'char) '"&amp;")
+  (cond
+    ((equal c #\<) "&lt;")
+    ((equal c #\>) "&gt;")
+    ((equal c #\&) "&amp;")
+    (t c)))
 
 ;;      mPr-binomial :-
 ;;       top level:  binomail(x,y);
@@ -545,7 +532,7 @@
 ;;long form
 (defun mPr-integrate (mexpress)
   (setq mexpress (meval 
-    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF mexpress)))
+    (list '($substitute) '((mminus) $inf) '$minf mexpress)))
   (cond
     ((equal (length mexpress) 3)
      (row-begin "<mrow>")(tprinc "<mo>&Integral;</mo>"))
@@ -565,7 +552,7 @@
 ;;      mPr-limit takes care the "limit(exp,var,val,dir)"
 (defun mPr-limit (mexpress)
   (setq mexpress (meval 
-    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF mexpress)))
+    (list '($substitute) '((mminus) $inf) '$minf mexpress)))
   (row-begin "<mrow>")(tprinc "<munder><mo>lim</mo>")(row-begin "<mrow>")
   (mPr_engine (caddr mexpress) 'mparen 'mparen)
   (tprinc "<mo>&RightArrow;</mo>")
@@ -597,13 +584,17 @@
 
 ;;      mPr-matrix handles matrix function
 (defun mPr-matrix (mexpress)
-  (row-begin "<mrow>")(tprinc "<mo>(</mo><mtable>")
+  (row-begin "<mfenced open='(' close=')'><mtable>")
   (mapc #'(lambda (arg)
 	    (row-begin "<mtr>")
             (do ((l (cdr arg) (cdr l))) ((null l) (row-end "</mtr>"))
-	      (mPr_engine (car l) 'mparen 'mparen)))
+	      (row-begin "<mtd>")
+	      (mPr_engine (car l) 'mparen 'mparen)
+	      (row-end "</mtd>")
+	      ))
         (cdr mexpress))
-  (tprinc "</mtable><mo>)</mo>") (row-end "</mrow>"))
+  (row-end "</mtable></mfenced>")
+)
 
 (defun mPr-mqapply (mexpress)
   (mPr_engine (cadr mexpress) lop 'mfunction)
@@ -684,19 +675,26 @@
 ;;      this function takes care the quotient function or "/" sign
 ;;
 (defun mPr-quotient (mexpress)
-  (tprinc "<mfrac>")
+  (row-begin "<mfrac><mrow>")
   (mPr_engine (cadr mexpress) 'mparen 'mparen)
-  (mPr_engine (caddr mexpress) 'mparen 'mparen)
-  (tprinc "</mfrac>"))
-;;      this mPr-rat is adopted from prof RJF . It performs for
-;;rat function
-(defun mPr-rat (mexpress)
+  (row-end "</mrow>")
   (row-begin "<mrow>")
-  (mPr_engine (cadr mexpress) 'mparen 'mparen)
-  (tprinc "<mo>/</mo>")
   (mPr_engine (caddr mexpress) 'mparen 'mparen)
-  (row-end "</mrow>"))
-;;      this function handle sqrt function
+  (row-end "</mrow></mfrac>"))
+
+(defun mPr-rat (mexpress) (mPr-quotient mexpress))
+
+;;      this function handles binomial coefficients
+;;
+(defun mPr-binomial(mexpress)
+    (row-begin "<mrow><mfenced open='(' close=')'><mfrac linethickness='0'><mrow>")
+       (mPr_engine (cadr mexpress) 'mparen 'mparen)
+       (tprinc "</mrow><mrow>")
+       (mPr_engine (caddr mexpress) 'mparen 'mparen)
+    (row-end  "</mrow></mfrac></mfenced></mrow>")
+)
+
+;;      this function handles sqrt
 ;;
 (defun mPr-sqrt (mexpress)
   (tprinc "<msqrt>")
@@ -716,11 +714,11 @@
   (mPr_engine (caddr mexpress) 'mparen 'mequal)
   (tprinc "<mo>=</mo>")
   (mPr_engine (meval 
-    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF (cadddr mexpress)))
+    (list '($substitute) '((mminus) $inf) '$minf (cadddr mexpress)))
     'mequal 'mparen)
   (row-end "</mrow>")
   (mPr_engine  (meval
-    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF (car (cddddr mexpress))))
+    (list '($substitute) '((mminus) $inf) '$minf (car (cddddr mexpress))))
     'mparen 'mparen)
   (tprinc "</munderover>")
   (mPr_engine (cadr mexpress) 'mparen rop)
@@ -747,7 +745,7 @@
 (setup '(mor (mPrprocess mPr-infix) (mPr-lbp 50) (mPr-rbp 50)
              (chchr "or")))
 
-(setup '(mnot (mPrprocess mPr-prefix) (mPr-rbp 70) (chchr ".NOT."))) ;; ??
+(setup '(mnot (mPrprocess mPr-prefix) (mPr-rbp 70) (chchr "&not;")))
 
 (setup '(mgreaterp (mPrprocess mPr-infix) (mPr-lbp 80) (mPr-rbp 80)
             (chchr "&gt;")))
@@ -837,6 +835,8 @@
 (setup '($sqrt (mPrprocess mPr-sqrt) (chchr "&Sqrt;")))
 
 (setup '(%sqrt (mPrprocess mPr-sqrt) (chchr "&Sqrt;")))
+
+(setup '(%binomial (mPrprocess mPr-binomial)))
 
 (setup '(mquotient (mPrprocess mPr-quotient) (mPr-lbp 122)
             (mPr-rbp 123) (chchr "<mo>/</mo>"))) 

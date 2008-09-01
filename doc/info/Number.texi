@@ -1,10 +1,11 @@
+
 @c end concepts Number Theory
 @menu
-* Definitions for Number Theory::  
+* Functions and Variables for Number Theory::  
 @end menu
 
-@node Definitions for Number Theory,  , Number Theory, Number Theory
-@section Definitions for Number Theory
+@node Functions and Variables for Number Theory,  , Number Theory, Number Theory
+@section Functions and Variables for Number Theory
 
 @deffn {Function} bern (@var{n})
 Returns the @var{n}'th Bernoulli number for integer @var{n}.
@@ -27,12 +28,18 @@ See also @code{burn}.
             2  6    30  66    2730  6    510    798
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} bernpoly (@var{x}, @var{n})
 Returns the @var{n}'th Bernoulli polynomial in the
 variable @var{x}.
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} bfzeta (@var{s}, @var{n})
@@ -40,8 +47,9 @@ Returns the Riemann zeta function for the argument @var{s}.
 The return value is a big float (bfloat);
 @var{n} is the number of digits in the return value.
 
-@code{load ("bffac")} loads this function.
-
+@opencatbox
+@category{Number theory} @category{Numerical evaluation}
+@closecatbox
 @end deffn
 
 @deffn {Function} bfhzeta (@var{s}, @var{h}, @var{n})
@@ -57,15 +65,47 @@ sum ((k+h)^-s, k, 0, inf)
 
 @code{load ("bffac")} loads this function.
 
+@opencatbox
+@category{Number theory} @category{Numerical evaluation}
+@closecatbox
 @end deffn
 
 @deffn {Function} binomial (@var{x}, @var{y})
-The binomial coefficient @code{(@var{x} + @var{y})!/(@var{x}! @var{y}!)}.
+The binomial coefficient @code{@var{x}!/(@var{y}! (@var{x} - @var{y})!)}.
 If @var{x} and @var{y} are integers, then the numerical value of the binomial
 coefficient is computed.
 If @var{y}, or @var{x - y}, is an integer,
 the binomial coefficient is expressed as a polynomial.
 
+Examples:
+
+@c ===beg===
+@c binomial (11, 7);
+@c 11! / 7! / (11 - 7)!;
+@c binomial (x, 7);
+@c binomial (x + 7, x);
+@c binomial (11, y);
+@c ===end===
+@example
+(%i1) binomial (11, 7);
+(%o1)                          330
+(%i2) 11! / 7! / (11 - 7)!;
+(%o2)                          330
+(%i3) binomial (x, 7);
+        (x - 6) (x - 5) (x - 4) (x - 3) (x - 2) (x - 1) x
+(%o3)   -------------------------------------------------
+                              5040
+(%i4) binomial (x + 7, x);
+      (x + 1) (x + 2) (x + 3) (x + 4) (x + 5) (x + 6) (x + 7)
+(%o4) -------------------------------------------------------
+                               5040
+(%i5) binomial (11, y);
+(%o5)                    binomial(11, y)
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} burn (@var{n})
@@ -89,6 +129,9 @@ approximated by (transcendental) zetas with tolerable efficiency.
 
 @code{load ("bffac")} loads this function.
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} cf (@var{expr})
@@ -169,6 +212,10 @@ Maxima does not know about operations on continued fractions outside of @code{cf
 @end example
 
 @end itemize
+
+@opencatbox
+@category{Continued fractions}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION -- MAKE EXPLICIT HOW list IS RELATED TO a, b, c, ...
@@ -191,6 +238,9 @@ from the list representation of a continued fraction @code{[a, b, c, ...]}.
                                       2
 @end example
 
+@opencatbox
+@category{Continued fractions}
+@closecatbox
 @end deffn
 
 @deffn {Function} cfexpand (@var{x})
@@ -200,7 +250,7 @@ last (column 1) and next-to-last (column 2) convergents of the continued fractio
 @example
 (%i1) cf (rat (ev (%pi, numer)));
 
-`rat' replaced 3.141592653589793 by 103993//33102 = 3.141592653011902
+`rat' replaced 3.141592653589793 by 103993/33102 =3.141592653011902
 (%o1)                  [3, 7, 15, 1, 292]
 (%i2) cfexpand (%); 
                          [ 103993  355 ]
@@ -210,6 +260,9 @@ last (column 1) and next-to-last (column 2) convergents of the continued fractio
 (%o3)                   3.141592653011902
 @end example
 
+@opencatbox
+@category{Continued fractions}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} cflength
@@ -230,6 +283,10 @@ period.  Thus the default is to give one period.
 (%i6) cf ((1 + sqrt(5))/2);
 (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
 @end example
+
+@opencatbox
+@category{Continued fractions}
+@closecatbox
 
 @end defvr
 
@@ -252,6 +309,9 @@ raised to the @var{k}'th power.
 (%o4)                          210
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} euler (@var{n})
@@ -264,11 +324,21 @@ For the Euler-Mascheroni constant, see @code{%gamma}.
 (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @defvr {Constant} %gamma
+@ifinfo
+@vrindex Euler-Mascheroni constant
+@end ifinfo
 The Euler-Mascheroni constant, 0.5772156649015329 ....
 @c DOUBTLESS THERE IS MORE TO SAY HERE.
+
+@opencatbox
+@category{Constants}
+@closecatbox
 
 @end defvr
 
@@ -276,6 +346,9 @@ The Euler-Mascheroni constant, 0.5772156649015329 ....
 Represents the factorial function. Maxima treats @code{factorial (@var{x})} the same as @code{@var{x}!}.
 See @code{!}.
 
+@opencatbox
+@category{Gamma and factorial functions}
+@closecatbox
 @end deffn
 
 @deffn {Function} fib (@var{n})
@@ -293,17 +366,23 @@ the Fibonacci number preceding the last one computed.
 (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} fibtophi (@var{expr})
-Expresses Fibonacci numbers in terms of the constant @code{%phi},
+Expresses Fibonacci numbers in @var{expr} in terms of the constant @code{%phi},
 which is @code{(1 + sqrt(5))/2}, approximately 1.61803399.
 
-@c SEEMS MISPLACED -- THIS WANTS TO BE UNDER %phi !!!
-By default, Maxima does not know about @code{%phi}.
-After executing @code{tellrat (%phi^2 - %phi - 1)} and @code{algebraic: true},
-@code{ratsimp} can simplify some expressions containing @code{%phi}.
+Examples:
 
+@c ===beg===
+@c fibtophi (fib (n));
+@c fib (n-1) + fib (n) - fib (n+1);
+@c fibtophi (%);
+@c ratsimp (%);
+@c ===end===
 @example
 (%i1) fibtophi (fib (n));
                            n             n
@@ -312,10 +391,42 @@ After executing @code{tellrat (%phi^2 - %phi - 1)} and @code{algebraic: true},
                            2 %phi - 1
 (%i2) fib (n-1) + fib (n) - fib (n+1);
 (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
-(%i3) ratsimp (fibtophi (%));
-(%o3)                           0
+(%i3) fibtophi (%);
+            n + 1             n + 1       n             n
+        %phi      - (1 - %phi)        %phi  - (1 - %phi)
+(%o3) - --------------------------- + -------------------
+                2 %phi - 1                2 %phi - 1
+                                          n - 1             n - 1
+                                      %phi      - (1 - %phi)
+                                    + ---------------------------
+                                              2 %phi - 1
+(%i4) ratsimp (%);
+(%o4)                           0
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
+@end deffn
+
+@deffn {Function} ifactors (@var{n})
+For a positive integer @var{n} returns the factorization of @var{n}. If
+@code{n=p1^e1..pk^nk} is the decomposition of @var{n} into prime
+factors, ifactors returns @code{[[p1, e1], ... , [pk, ek]]}.
+
+Factorization methods used are trial divisions by primes up to 9973,
+Pollard's rho method and elliptic curve method.
+
+@example
+(%i1) ifactors(51575319651600);
+(%o1)     [[2, 4], [3, 2], [5, 2], [1583, 1], [9050207, 1]]
+(%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
+(%o2)                        51575319651600
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} inrt (@var{x}, @var{n})
@@ -327,6 +438,28 @@ Returns the integer @var{n}'th root of the absolute value of @var{x}.
 (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
+@end deffn
+
+@deffn {Function} inv_mod (@var{n}, @var{m})
+Computes the inverse of @var{n} modulo @var{m}. 
+@code{inv_mod (n,m)} returns @code{false}, 
+if @var{n} is a zero divisor modulo @var{m}.
+
+@example
+(%i1) inv_mod(3, 41);
+(%o1)                           14
+(%i2) ratsimp(3^-1), modulus=41;
+(%o2)                           14
+(%i3) inv_mod(3, 42);
+(%o3)                          false
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} jacobi (@var{p}, @var{q})
@@ -338,6 +471,9 @@ Returns the Jacobi symbol of @var{p} and @var{q}.
 (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} lcm (@var{expr_1}, ..., @var{expr_n})
@@ -346,6 +482,9 @@ The arguments may be general expressions as well as integers.
 
 @code{load ("functs")} loads this function.
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} minfactorial (@var{expr})
@@ -370,6 +509,22 @@ which differ by an integer.
                          (n + 1) (n + 2)
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
+@end deffn
+
+@deffn {Function} next_prime (@var{n})
+Returns the smallest prime bigger than @var{n}.
+
+@example
+(%i1) next_prime(27);
+(%o1)                       29
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} partfrac (@var{expr}, @var{var})
@@ -398,13 +553,72 @@ the expansion falls out.
                     x + 2   x + 1          2
                                     (x + 1)
 @end example
-
 @end deffn
 
-@c IS IT POSSIBLE TO MAKE A DECLARATION SUCH THAT primep RETURNS true ??
-@deffn {Function} primep (@var{n})
-Returns @code{true} if @code{n} is a prime, @code{false} if not.
+@deffn {Function} power_mod (@var{a}, @var{n}, @var{m})
+Uses a modular algorithm to compute @code{a^n mod m} 
+where @var{a} and @var{n} are integers and @var{m} is a positive integer. 
+If @var{n} is negative, @code{inv_mod} is used to find the modular inverse.
 
+@example
+(%i1) power_mod(3, 15, 5);
+(%o1)                          2
+(%i2) mod(3^15,5);
+(%o2)                          2
+(%i3) power_mod(2, -1, 5);
+(%o3)                          3
+(%i4) inv_mod(2,5);
+(%o4)                          3
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
+@end deffn
+
+@deffn {Function} primep (@var{n})
+Primality test. If @code{primep (@var{n})} returns @code{false}, @var{n} is a
+composite number and if it returns @code{true}, @var{n} is a prime number
+with very high probability.
+
+For @var{n} less than 10^16 a deterministic version of Miller-Rabin's
+test is used. If @code{primep (@var{n})} returns @code{true}, then @var{n} is a
+prime number.
+
+For @var{n} bigger than 10^16 @code{primep} uses
+@code{primep_number_of_tests} Miller-Rabin's pseudo-primality tests
+and one Lucas pseudo-primality test. The probability that @var{n} will
+pass one Miller-Rabin test is less than 1/4. Using the default value 25 for
+@code{primep_number_of_tests}, the probability of @var{n} beeing
+composite is much smaller that 10^-15.
+
+@opencatbox
+@category{Predicate functions} @category{Number theory}
+@closecatbox
+@end deffn
+
+@defvr {Option variable} primep_number_of_tests
+Default value: 25
+
+Number of Miller-Rabin's tests used in @code{primep}.
+
+@opencatbox
+@category{Predicate functions} @category{Number theory}
+@closecatbox
+
+@end defvr
+
+@deffn {Function} prev_prime (@var{n})
+Returns the greatest prime smaller than @var{n}.
+
+@example
+(%i1) prev_prime(27);
+(%o1)                       23
+@end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} qunit (@var{n})
@@ -420,12 +634,18 @@ This amounts to solving Pell's equation @code{a^2 - @var{n} b^2 = 1}.
 (%o2)                           1
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @deffn {Function} totient (@var{n})
 Returns the number of integers less than or equal to @var{n} which
 are relatively prime to @var{n}.
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} zerobern
@@ -434,6 +654,10 @@ Default value: @code{true}
 When @code{zerobern} is @code{false},
 @code{bern} excludes the Bernoulli numbers which are equal to zero. 
 See @code{bern}.
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 
 @end defvr
 
@@ -453,6 +677,9 @@ See also @code{bfzeta} and @code{zeta%pi}.
           120       12    2        6              90
 @end example
 
+@opencatbox
+@category{Number theory}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} zeta%pi
@@ -474,5 +701,9 @@ for even integer @code{n}.
 (%i4) zeta (4);
 (%o4)                        zeta(4)
 @end example
+
+@opencatbox
+@category{Number theory}
+@closecatbox
 
 @end defvr

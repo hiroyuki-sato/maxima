@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plot3d.tcl,v 1.8 2004/10/13 12:08:58 vvzhy Exp $
+#       $Id: Plot3d.tcl,v 1.12 2008/04/05 17:26:51 villate Exp $
 #
 ###### Plot3d.tcl ######
 ############################################################
@@ -38,6 +38,8 @@ set plot3dOptions {
     {zoomfactor "1.6 1.6" "Factor to zoom the x and y axis when zooming.  Zoom out will be reciprocal" }
     {screenwindow "20 20 700 700" "Part of canvas on screen"}
     {windowname ".plot3d" "window name"}
+    {psfile "" "A filename where the graph will be saved in PostScript."}
+    {nobox 0 "if not zero, do not draw the box around the plot."}
 }
 
 
@@ -386,7 +388,7 @@ proc plot3d { args } {
 proc replot3d { win } {
     global   printOption plot2dOptions
     makeLocal $win nsteps zfun data c
-    linkLocal $win parameters sliders
+    linkLocal $win parameters sliders psfile nobox
 
     oset $win maintitle    "concat \"Plot of z = [oget $win zfun]\""
     if { [llength $nsteps] == 1 }    {
@@ -398,16 +400,20 @@ proc replot3d { win } {
 	    oset $win [lindex $v 0] [lindex $v 1]
 	}
     }
+
+    set sliders [string trim $sliders]
     if { "$sliders" != "" && ![winfo exists $c.sliders] } {
 	addSliders $win
     }
 
+    set zfun [string trim $zfun]
     if { "$zfun" != "" } {
 	proc _xf {  x  y } "return \[expr { [sparseWithParams $zfun {x y} $parameters ] } \]"
 	addOnePlot3d $win [calculatePlot3data $win _xf  [lindex $nsteps 0] [lindex $nsteps 1]]
 	# calculatePlot3d $win _xf [lindex $nsteps 0] [lindex $nsteps 1]
     }
 
+    set data [string trim $data]
     if { "$data" != "" } {
 	if { 0 } {
 	    puts "here"
@@ -430,10 +436,12 @@ proc replot3d { win } {
     setUpTransforms3d $win
 
     oset $win colorfun plot3dcolorFun
-    #    addAxes $win
+    #   addAxes $win
     oset $win cmap c1
     setupPlot3dColors $win
-    addBbox $win
+    if { $nobox == 0 } {
+	addBbox $win
+    }
     # grab the bbox just as itself
     global maxima_priv
     linkLocal $win lmesh
@@ -455,6 +463,15 @@ proc replot3d { win } {
     }
     oset $win lastAnglesPlotted ""
     setView $win ignore
+
+    # Create a PostScript file, if requested
+    if { $psfile != "" } {
+	set printOption(psfilename) $psfile
+	writePostscript $win
+	$c delete printoptions
+	eval [$win.menubar.close cget -command]
+    }
+
 }
 
 proc setView { win ignore } {
@@ -610,35 +627,29 @@ proc doHelp3d { win } {
     doHelp $win [join [list \
 			[mc {
 
-			       William Schelter's plotter for three dimensional graphics.
+XMAXIMA'S PLOTTER FOR THREE-DIMENSIONAL GRAPHICS
 
-			       To QUIT this HELP click here.
+To quit this help click anywhere on this text.
 
-			       By clicking on Zoom, the mouse now allows you \
-				   to zoom in on a region of the plot.  Each click \
-				   near a point magnifies the plot, keeping the \
-				   center at the point you clicked.  Depressing \
-				   the SHIFT key while clicking zooms in the \
-				   opposite direction.
+Clicking on Config will open a menu where several settings can be changed, \
+such as the function being plotted, the azimuth and elevation angles, \
+and the x and y centers and radii. Replot is used to update the plot with \
+the changes made in the Config menu.
 
-			       Clicking on Rotate, makes the left mouse button  \
-				   cause rotation of the image.   The current position \
-				   can be determined by azimuth and elevation angles \
-				   which are given under the Config menu.   They may also \
-				   be specified on the command line.
+By clicking on Zoom, the mouse will allow you to zoom in on a region \
+of the plot. Each click near a point magnifies the plot, keeping the center \
+at the point you clicked. Depressing the SHIFT key while clicking \
+zooms in the opposite direction.
 
-			       To change the equations enter in the entry \
-				   windows, and click on replot.
+Clicking on Rotate will return the mouse to its default behavior, namely, \
+pressing the left mouse button while the mouse is moved will rotate the \
+graph.
 
-			       You may print to a postscript printer, or save the plot \
-				   as a postscript file, by clicking on save.   To change \
-				   between printing and saving see the Print Options under Config.
+Holding the right mouse button down while moving the mouse will drag \
+(translate) the plot sideways or up and down.
 
-			       Clicking with the right mouse button and dragging may be used \
-				   instead of the scroll bars to slide the plot \
-				   around.
-
-			   } ] $Parser(help)]]
+The plot can be saved as a postscript file, by clicking on Save.
+} ] $Parser(help)]]
 }
 
 proc     makeFrame3d { win } {
@@ -664,7 +675,7 @@ proc mkPlot3d { win  args } {
     #puts "$win width=[oget $win width],args=$args"
     setPrintOptions $args
     set printOption(maintitle) ""
-    set wb $win.buttons
+    set wb $win.menubar
     setupCanvas $win
     # catch { destroy $win }
     makeFrame3d $win
@@ -672,15 +683,15 @@ proc mkPlot3d { win  args } {
     oset $win noaxisticks 1
 
     makeLocal $win buttonFont c
-    bind $c <Motion> "showPosition3d $win %x %y"
+    [winfo parent $c].position config -text {}
+    bind $c <Motion> ""
+#   bind $c <Motion> "showPosition3d $win %x %y"
     button $wb.rotate -text [mc "Rotate"] -command "setForRotate $win" -font $buttonFont
-    setBalloonhelp $win $wb.rotate [mc {Dragging the mouse with the left button depressed will cause the object to rotate.  The rotation keeps the z axis displayed in an upright position (ie parallel to the sides of the screen), but changes the viewpoint.   Moving right and left changes the azimuth (rotation about the z axis), and up and down changes the elevation (inclination of z axis).   The red,blue and green sides of the bounding box are parallel to the X, Y and Z axes, and are on the smaller side.}]
+#    setBalloonhelp $win $wb.rotate [mc {Dragging the mouse with the left button depressed will cause the object to rotate.  The rotation keeps the z axis displayed in an upright position (ie parallel to the sides of the screen), but changes the viewpoint.   Moving right and left changes the azimuth (rotation about the z axis), and up and down changes the elevation (inclination of z axis).   The red,blue and green sides of the bounding box are parallel to the X, Y and Z axes, and are on the smaller side.}]
 
     #$win.position config -width 15
-    pack $wb.rotate -expand 1 -fill x
+    pack $wb.rotate -side left
     setForRotate $win
-
-
 }
 
 proc doConfig3d { win } {
@@ -739,7 +750,7 @@ proc showPosition3d { win x y } {
 	set ll [lindex $mesh $at]
 	set pt [lrange [oget $win points] $ll [expr {$ll + 2}]]
 	# puts pt=$pt
-	catch { $win.plotmenu config -text [eval [concat "format {(%.2f %.2f %.2f)}" $pt]] }	
+	catch { $win.position config -text [eval [concat "format {(%.2f %.2f %.2f)}" $pt]] }	
     }
     #    oset $win position [format {(%.1f %.1f)} $x $y]
     #    oset $win position \
@@ -776,8 +787,6 @@ proc rotateRelative { win x1 x2 y1 y2 } {
     oset $win az [reduceMode360 [expr   {round($az + $fac *  $xx /2.0) }]]
     oset $win el [reduceMode360 [expr   {round($el -  $yy /2.0) }]]
     setView $win ignore
-
-
 }
 
 proc reduceMode360 { n } {
@@ -796,8 +805,6 @@ proc doRotateScreen { win x y } {
     oset $win lastx $x
     oset $win lasty $y
     bind $c <B1-Motion> "doRotateScreenMotion $win %x %y"
-
-
 }
 
 proc doRotateScreenMotion {win x y } {
@@ -808,7 +815,10 @@ proc doRotateScreenMotion {win x y } {
     rotateRelative $win $lastx $x $lasty $y
     oset $win lastx $x
     oset $win lasty $y
-
+    # show values of azimuth and elevation angles
+    set az [oget $win az]
+    set el [oget $win el]
+    catch { $win.position config -text [eval [concat "format {Azimuth: %.2f, Elevation: %.2f}" $az $el]] }
 }
 
 

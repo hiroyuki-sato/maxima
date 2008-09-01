@@ -1,5 +1,5 @@
 /*-*-MACSYMA-*-*/
-EVAL_WHEN(BATCH,TTYOFF:TRUE)$
+eval_when(batch,ttyoff:true)$
 /* Or use the BATCHLOAD command to load this with TTYOFF:TRUE */
 /*  NOTE:  THE CURRENT VERSION OF VECT IS THE ONE DUE TO STOUTEMYER.
 IT WILL BE REPLACED SOON BY AN EXTENDED VERSION WHICH HANDLES BOTH
@@ -84,6 +84,8 @@ define_variable(expandcross,false,boolean)$
 define_variable(expandcrosscross,false,boolean)$
 define_variable(expandcrossplus,false,boolean)$
 define_variable(firstcrossscalar,false,boolean)$
+
+vect_cross: true$
 
 
 ev_diff(x):=apply('ev,[x,'diff])$
@@ -195,7 +197,7 @@ define_variable(expandflags, '[
    expandprod ],list) $
 
 
-apply('declare, ['expandflags, 'evflag]) $
+apply('declare, [expandflags, 'evflag]) $
 
 vectorsimp(expn) := block(
    [dotdistrib, dotscrules, inflag, firstcrossscalar],
@@ -237,12 +239,12 @@ vsimp(expn) :=
          if (expandall or expandgrad or expandgradprod or
             expandprod) and
             not mapatom(pv:inpart(expn,1)) and inpart(pv,0)="*"
-            then expn:apply("+", maplist(lambda([u],gradprod(u,pv)), pv)))
+            then expn:apply("+", maplist(lambda([u],\gradprod(u,pv)), pv)))
       else if piece="div" then(
          if (expandall or expanddiv or expanddivprod or
             expandprod) and not
             mapatom(pv:inpart(expn,1)) and inpart(pv,0)="*" then
-            expn: apply("+", maplist(lambda([u],divprod(u,pv)), pv)))
+            expn: apply("+", maplist(lambda([u],\divprod(u,pv)), pv)))
       else if piece="curl" then (
          if (expandall or expandcurl or expandcurlcurl) and not
             mapatom(pv:inpart(expn,1)) and inpart(pv,0)="curl"
@@ -322,9 +324,9 @@ pvcross(pv,rv,sv) := removecrosssc(pv~rv,pv,rv,sv) $
 
 crossrv(pv,rv,sv) := removecrosssc(pv~rv,pv,rv,sv) $
 
-gradprod(uu,pv) := delete(uu,pv)*grad(uu) $
+\gradprod(uu,pv) := delete(uu,pv)*grad(uu) $
 
-divprod(uu,pv) := block([dotscrules],
+\divprod(uu,pv) := block([dotscrules],
    dotscrules: false,
  
    if nonscalarp(uu) then delete(uu,pv)*div(uu)

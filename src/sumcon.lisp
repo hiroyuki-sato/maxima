@@ -8,12 +8,11 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module sumcon)
 
-(declare-top (special $genindex $niceindicespref $sumexpand)
-	     #-cl
-	     (*lexpr $min $max))
+(declare-top (special $genindex $niceindicespref $sumexpand))
 
 (defmfun $sumcontract (e)	       ; e is assumed to be simplified
   (cond ((atom e) e)
@@ -60,7 +59,7 @@
 		    (setq notsum (cons (car x) notsum)))
 		   ((eq (caaar x) '%sum)
 		    (setq sum (if (null sum)
-				  (car x)
+				  (copy-tree (car x))
 				  (muln (list sum (car x)) t))))
 		   (t (setq notsum (cons ($sumcontract (car x))
 					 notsum))))))
@@ -111,14 +110,15 @@
 		       '(t t t t))
 	       t))
 	(cons new-sum extracted))
-      ($max l1 l2) ($min h1 h2) (cond ((eq i1 i2) i1)
-				      ((free e1 i2) i2)
-				      ((free e2 i1) i1)
-				      (t (get-free-index (list nil
-							       i1 i2
-							       e1 e2
-							       l1 l2
-							       h1 h2))))
+      (simplify `(($max) ,l1 ,l2)) (simplify `(($min) ,h1 ,h2))
+      (cond ((eq i1 i2) i1)
+	    ((free e1 i2) i2)
+	    ((free e2 i1) i1)
+	    (t (get-free-index (list nil
+				     i1 i2
+				     e1 e2
+				     l1 l2
+				     h1 h2))))
       nil nil))
    (car sum1) (car sum2)
    (cadr sum1) (cadr sum2)
@@ -127,30 +127,33 @@
 
 (defmvar $niceindicespref '((mlist simp) $i $j $k $l $m $n))
 
-(defun get-free-index (llist)
+(defun get-free-index (llist &optional i)
   (or (do ((try-list (cdr $niceindicespref) (cdr try-list)))
 	  ((null try-list))
-	(if (free llist (car try-list)) (return (car try-list))))
-      (do ((n 0 (f1+ n)) (try))
+	(if (or (free llist (car try-list))
+		(eq i (car try-list)))
+	    (return (car try-list))))
+      (do ((n 0 (1+ n)) (try))
 	  (nil)
-	(setq try (concat (cadr $niceindicespref) n))
+	(setq try (intern (format nil "~a~d" (cadr $niceindicespref) n)))
 	(if (free llist try) (return try)))))
 
 (defmfun $bashindices (e)	       ; e is assumed to be simplified
   (let (($genindex '$j))
     (cond ((atom e) e)
-	  ((memq (caar e) '(%sum %product))
+	  ((member (caar e) '(%sum %product) :test #'eq)
 	   (sumconsimp (subst (gensumindex) (caddr e) e)))
 	  (t (recur-apply #'$bashindices e)))))
 
 (defmfun $niceindices (e)
   (if (atom e) e
       (let ((e (recur-apply #'$niceindices e)))
-	(if (memq (caar e) '(%sum %product))
-	    (sumconsimp (subst (get-free-index e) (caddr e) e))
-	    e))))
+	(cond ((atom e) e)
+	      ((member (caar e) '(%sum %product) :test #'eq)
+	       (sumconsimp (subst (get-free-index e (caddr e)) (caddr e) e)))
+	      (t e)))))
 
 (defun sumconsimp (e)
-  (if (and (not (atom e)) (memq (caar e) '(%sum %product)))
+  (if (and (not (atom e)) (member (caar e) '(%sum %product) :test #'eq))
       (list* (car e) (sumconsimp (cadr e)) (cddr e))
       (resimplify e)))

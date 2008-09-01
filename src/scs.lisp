@@ -8,19 +8,18 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module scs)
 
-(declare-top (*expr $ratsubst conssize))
-
-(defmfun $scsimp n 
-  (do ((i n (f1- i)) (zrs)) ((= 1 i) (scs (arg 1) zrs))
-    (setq zrs (cons (ifn (eq 'mequal (caar (arg i))) (arg i)
-			 (sub (cadr (arg i)) (caddr (arg i)))) zrs))))
+(defmfun $scsimp (expr &rest rules)
+  (scs expr (mapcar #'meqhk rules)))
 
 (defun scs (x zrs)
-  (do ((flag t) (sz (conssize x)) (nx) (nsz)) ((not flag) x)
-    (do ((l zrs (cdr l))) ((null l) (setq flag nil))
+  (do ((flag t) (sz (conssize x)) (nx) (nsz))
+      ((not flag) x)
+    (do ((l zrs (cdr l)))
+	((null l) (setq flag nil))
       (setq nx (subscs 0 (car l) x) nsz (conssize nx))
       (if (< nsz sz) (return (setq x nx sz nsz))))))
 
@@ -28,12 +27,16 @@
   (cond ((atom b) (subsc a b c))
 	((eq 'mplus (caar b))
 	 (do ((l (cdr b) (cdr l)) (sz (conssize c)) (nl) (nc) (nsz)) ((null l) c)
-	   (setq nc (subscs (sub a (addn (reconc nl (cdr l)) t)) (car l) c)
+	   (setq nc (subscs (sub a (addn (revappend nl (cdr l)) t)) (car l) c)
 		 nsz (conssize nc) nl (cons (car l) nl))
 	   (if (< nsz sz) (setq c nc sz nsz))))
 	(t (subsc a b c))))
 
-(defun subsc (a b c) ($expand ($ratsubst a b c)))
+(defun subsc (a b c)
+  ($expand ($ratsubst a b c)))
+
+(defun dstrb (x l nl)
+  (revappend (mapcar #'(lambda (u) (mul x u)) l) nl))
 
 (defmfun $distrib (exp)
   (cond ((or (mnump exp) (symbolp exp)) exp)
@@ -51,10 +54,7 @@
 	((eq 'mrat (caar exp)) ($distrib (ratdisrep exp)))
 	(t exp)))
 
-(defun dstrb (x l nl)
-  (do () ((null l) nl)
-    (setq nl (cons (mul x (car l)) nl) l (cdr l))))
-
 (defmfun $facout (x y)
-  (ifn (eq 'mplus (caar y)) y
-       (mul x (addn (mapcar #'(lambda (l) (div l x)) (cdr y)) t))))
+  (if (mplusp y)
+      (mul x (addn (mapcar #'(lambda (l) (div l x)) (cdr y)) t))
+      y))

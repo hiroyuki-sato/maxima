@@ -8,50 +8,34 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
+
 (macsyma-module polyrz)
 
-(declare-top(special errrjfflag $programmode varlist 
-		     $ratepsilon $ratprint $factorflag genvar
-		     equations $keepfloat $ratfac $rootsepsilon
-		     $multiplicities))
-
-(declare-top(genprefix a_5))
+(declare-top (special errrjfflag $programmode varlist
+		      $ratepsilon $ratprint $factorflag genvar
+		      equations $keepfloat $ratfac $rootsepsilon
+		      $multiplicities))
 
 (load-macsyma-macros ratmac)
 
-
 ;;	PACKAGE FOR FINDING REAL ZEROS OF UNIVARIATE POLYNOMIALS
 ;;	WITH INTEGER COEFFICIENTS USING STURM SEQUENCES.
 
-;; Better programming technology.  To be installed with new argument
-;; checking scheme.
-;; (DEFMFUN $REALROOTS (EXP (EPS $ROOTSEPSILON))
-;;        (SETQ EXP (MEQHK EXP))
-;;        (IF ($RATP EXP) (SETQ EXP ($RATDISREP EXP)))
-;;        (COND ((OR (NOT (MNUMP EPS)) (MNEGP EPS) (EQUAL EPS 0))
-;; 	      (DISPLA EPS)
-;; 	      (MERROR "Second argument must be a positive number - `realroots'")))
-;;        (LET (($KEEPFLOAT NIL)) (STURMSEQ EXP EPS)))
+(defmfun $realroots (exp &optional (eps $rootsepsilon))
+  (setq exp (meqhk exp))
+  (when ($ratp exp)
+    (setq exp ($ratdisrep exp)))
+  (when (or (not (mnump eps)) (mnegp eps) (equal eps 0))
+    (merror "Second argument to `realroots' was not a positive number: ~M" eps))
+  (let (($keepfloat nil))
+    (sturmseq exp eps)))
 
-(defmfun $realroots n
-  (let ((exp nil) (eps nil)) 
-    (cond ((= n 1) (setq eps $rootsepsilon))
-	  ((= n 2) (setq eps (arg 2)))
-	  (t (merror "Wrong number of arguments - `realroots'")))
-    (setq exp (meqhk (arg 1)))
-    (if ($ratp exp) (setq exp ($ratdisrep exp)))
-    (cond ((or (not (mnump eps)) (mnegp eps) (equal eps 0))
-	   (merror "Second argument to `realroots' was not a~
-		      positive number: ~M" eps)))
-    (let (($keepfloat nil)) (sturmseq exp eps))))
-
-(defun unipoly (exp) 
+(defun unipoly (exp)
   (setq exp (cadr (ratf exp)))
   (cond ((and (not (atom exp))
 	      (loop for v in (cdr exp)
 		     when (not (atom v))
-
 		     do (return nil)
 		     finally (return t)))
 	 ;;(EVERY #'ATOM (CDR EXP)))
@@ -66,7 +50,7 @@
 	((equal (caar pt) 'rat) (cons (cadr pt) (caddr pt)))
 	(t (merror "~M Non-numeric argument" pt))))
 
-(declare-top(special equations))
+(declare-top (special equations))
 
 (defun sturmseq (exp eps)
   (let (varlist equations $factorflag $ratprint $ratfac)
@@ -78,32 +62,32 @@
 				(makrat eps)))
 	     (cons '(mlist) equations)))))
 
-(declare-top(unspecial equations))
+(declare-top (unspecial equations))
 
 (defmfun sturm1 (poly eps &aux b llist)
   (setq b (cons (root-bound (cdr poly)) 1))
-  (setq llist (isolat poly (cons (minus (car b)) (cdr b)) b))
+  (setq llist (isolat poly (cons (- (car b)) (cdr b)) b))
   (mapcar #'(lambda (int) (refine poly (car int) (cdr int) eps)) llist))
 
 (defun root-bound (p)
   (prog (n lcf loglcf coef logb)
      (setq n (car p))
      (setq lcf (abs (cadr p)))
-     (setq loglcf (f1- (log2 lcf)))
+     (setq loglcf (- (integer-length lcf) 2))
      (setq logb 1)
      loop (cond ((null (setq p (cddr p))) (return (expt 2 logb)))
-		((lessp (setq coef (abs (cadr p))) lcf) (go loop)) )
-     (setq logb (max logb (f+ 1 (ceil (f- (log2 coef) loglcf)
-				      (f- n (car p)) )))) 
-     (go loop) ))
+		((< (setq coef (abs (cadr p))) lcf) (go loop)))
+     (setq logb (max logb (1+ (ceil (- (integer-length coef) loglcf 1) (- n (car p))))))
+     (go loop)))
 
-(defun ceil (a b) (plus (quotient a b)	;CEILING FOR POS A,B
-			(signum (remainder a b))))
+(defun ceil (a b)
+  (+ (quotient a b)			;CEILING FOR POS A,B
+     (signum (rem a b))))
 
 (defun sturmapc (fn llist multiplicity)
   (cond ((null llist) nil)
 	(t  (cons (funcall fn (car llist))
-		  (cons  multiplicity 
+		  (cons  multiplicity
 			 (sturmapc fn (cdr llist) multiplicity)))) ))
 
 (defun findroots (l eps)
@@ -121,7 +105,8 @@
 	($float (fpcofrat1 (car pt) (cdr pt)))
 	(t (list '(rat simp) (car pt) (cdr pt))) ))
 
-(defun uprimitive (p) (pquotient p (ucontent p))) ;PRIMITIVE UNIVAR. POLY
+(defun uprimitive (p)
+  (pquotient p (ucontent p)))		;PRIMITIVE UNIVAR. POLY
 
 (defun sturm (p)
   (prog (p1 p2 seq r)
@@ -149,7 +134,7 @@
      a    (cond ((null seq)(return v)))
      (setq s (reval (car seq) pt))
      (setq seq (cdr seq))
-     (cond ((minusp (times s  ls))(setq v (add1 v)))
+     (cond ((minusp (* s  ls))(setq v (1+ v)))
 	   ((not (zerop ls))(go a)))
      (setq ls s)
      (go a) ))
@@ -174,10 +159,10 @@
 	      a    (cond ((equal m (car p)) (setq c (cadr p))
 			  (setq p (cddr p)))
 			 (t (setq c 0)))
-	      (cond ((zerop m) (return (signum (plus v (times bi c))))))
-	      (setq v (times a (plus v (times bi c))))
-	      (setq bi (times bi b))
-	      (setq m (sub1 m))
+	      (cond ((zerop m) (return (signum (+ v (* bi c))))))
+	      (setq v (* a (+ v (* bi c))))
+	      (setq bi (* bi b))
+	      (setq m (1- m))
 	      (go a) ))))
 
 (defun makpoint (pt)
@@ -185,24 +170,22 @@
 	((eq pt '$minf) -1)
 	(t (makrat ((lambda ($numer) (meval pt)) t)))))
 
-(defmfun $nroots n
-  (prog (varlist $keepfloat $ratfac l r)
-     (cond ((= n 1) (setq l '$minf r '$inf))
-	   ((= n 3) (setq l (arg 2) r (arg 3)))
-	   (t (merror "Wrong number of arguments - `nroots'")))
-     (return (nroots (unipoly (meqhk (arg 1))) (makpoint l) (makpoint r)))))
+(defmfun $nroots (exp &optional (l '$minf) (r '$inf))
+  (let (varlist $keepfloat $ratfac)
+    (nroots (unipoly (meqhk exp)) (makpoint l) (makpoint r))))
 
-(defun nroots (p l r) (rootaddup (psqfr p) l r))
+(defun nroots (p l r)
+  (rootaddup (psqfr p) l r))
 
 (defun rootaddup (llist l r)
   (cond ((null llist) 0)
 	((numberp (car llist)) (rootaddup (cddr llist) l r))
-	(t (plus (rootaddup (cddr llist) l r)
-		 (times (cadr llist) (nroot1 (car llist) l r)))) ))
+	(t (+ (rootaddup (cddr llist) l r)
+		 (* (cadr llist) (nroot1 (car llist) l r)))) ))
 
 (defun nroot1 (p l r)
   (let ((seq (sturm p)))
-    (difference (ivar2 seq l) (ivar2 seq r))))
+    (- (ivar2 seq l) (ivar2 seq r))))
 
 ;;	RETURNS ROOT IN INTERVAL OF FORM (A,B])
 
@@ -213,7 +196,7 @@
      (setq rv (ivar seq r))
      (setq tlist (setq islist nil))
      (cond ((equal lv rv) (return nil)))
-     a	(cond ((greaterp (setq rts (difference lv rv)) 1)(go b))
+     a	(cond ((> (setq rts (- lv rv)) 1)(go b))
 	      ((equal rts 1)(setq islist (cons (cons l r) islist))))
      (cond ((null tlist) (return islist)))
      (setq lv (car tlist))
@@ -228,7 +211,7 @@
 	    (setq tlist (append (list lv midv l mid) tlist))))
      (setq l mid)
      (setq lv midv)
-     (go a) ))
+     (go a)))
 
 (defun refine (p l r eps)
   (prog (sr mid smid)
@@ -241,25 +224,25 @@
      (cond ((zerop smid)(return (list mid mid)))
 	   ((equal smid sr)(setq r mid))
 	   (t (setq l mid)) )
-     (go a) ))
+     (go a)))
 
-(defun rhalf (r) (rreduce (car r) (times 2 (cdr r))))
+(defun rhalf (r) (rreduce (car r) (* 2 (cdr r))))
 
-(defun rreduce (a b) 
+(defun rreduce (a b)
   (let ((g (abs (gcd a b))))
-    (cons (quotient a g) (quotient b g))) )
+    (cons (truncate a g) (truncate b g))) )
 
 (defun rplus* (a b)
-  (cons (plus (times (car a) (cdr b))(times (car b) (cdr a)))
-	(times (cdr a) (cdr b))))
+  (cons (+ (* (car a) (cdr b)) (* (car b) (cdr a)))
+	(* (cdr a) (cdr b))))
 
 (defun rdifference* (a b)
-  (rplus* a (cons (minus (car b)) (cdr b))) )
+  (rplus* a (cons (- (car b)) (cdr b))) )
 
 (defun rlessp (a b)
-  (lessp (times (car a) (cdr b))
-	 (times (car b) (cdr a)) ))
-
+  (< (* (car a) (cdr b))
+     (* (car b) (cdr a)) ))
+
 
 ;;; This next function is to do what SOLVE2 should do in programmode
 (defun multout (rootlist)
@@ -275,5 +258,4 @@
     (setq $multiplicities (cons '(mlist)  (cdr rootlist)))
     (car rootlist)))
 
-(declare-top(unspecial equations))
-
+(declare-top (unspecial equations))

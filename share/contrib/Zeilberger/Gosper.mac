@@ -98,15 +98,25 @@ GosperVerboseOpt(f,k,mode) :=
  
 
   /* Computation of the shift quotient */
-  fRat : shiftQuo(f,k),
+  fRat : shiftQuoOnlyHyp(factor(f),k), /* factor might not be necessary */
+  if fRat = [] then
+    (
+    print(f, " is not hypergeometric in ", k),
+    return(NON_HYPERGEOMETRIC)
+    ),
 
   if mode>=verbose then
      print("Shift quotient computed! : " , fRat),
 
 
   /* Computation of the Gosper form */
-  GosperForm: makeGosperFormVerboseOpt(fRat,k,mode-1),
- 
+  GosperForm: makeGosperFormVerboseOpt(factor(fRat),k,mode-1), /* factor ? */
+
+  if GosperForm = NON_HYPERGEOMETRIC then
+    (
+    print(f, " is not proper hypergeometric in ", k),
+    return(NON_HYPERGEOMETRIC)
+    ),
 
   p: takeP(GosperForm),
   q: takeQ(GosperForm),
@@ -123,13 +133,13 @@ GosperVerboseOpt(f,k,mode) :=
   Gpoly : 0,
 
   if AnsatzDegree >= 0 then
-    Gpoly: expand(GosperPoly(p,q,r,k,"c",AnsatzDegree)),
+    Gpoly: expand(GosperPoly(p,q,r,k,'c,AnsatzDegree)),
   if mode>=verbose then 
      print("Gosper polynomial created! : " , Gpoly),
   if Gpoly = 0 then
      return(NO_HYP_SOL),
   
-  sysSol: SolveSysVerboseOpt(Gpoly,"c",AnsatzDegree+1,k,mode-1),
+  sysSol: SolveSysVerboseOpt(Gpoly,'c,AnsatzDegree+1,k,mode-1),
   
   if mode>=very_verbose then
      print("System of equations solved! :  " , sysSol),
@@ -188,12 +198,15 @@ AntiDifferenceVerboseOpt(f,k,mode) :=
   block([gSol],
   gSol : GosperVerboseOpt(f,k,mode),
   if gSol=NO_HYP_SOL then
-    return(no_hyp_antidifference)
+    return(NO_HYP_ANTIDIFFERENCE)
   else
-    if simplified_output then
-       return(factor(f*gSol))
+    if gSol=NON_HYPERGEOMETRIC then
+      return(NON_HYPERGEOMETRIC)
     else
-       return(f*gSol)
+      if simplified_output then
+         return(factor(f*gSol))
+      else
+         return(f*gSol)
   );
        
 
@@ -222,11 +235,17 @@ GosperSumVerboseOpt(f,k,a,b,mode) :=
         [antiDiff],
         
         antiDiff:AntiDifferenceVerboseOpt(f,k,mode),
-        if antiDiff=no_hyp_antidifference then
-           return(nonGosper_summable),
-        if mode>= verbose then
-           print("Anti-difference : ", antiDiff),
-        return(subst(b+1,k,antiDiff)-subst(a,k,antiDiff))
+        if antiDiff=NO_HYP_ANTIDIFFERENCE then
+           return(NON_GOSPER_SUMMABLE)
+        else
+          if antiDiff=NON_HYPERGEOMETRIC then
+             return(NON_HYPERGEOMETRIC)
+          else
+            (
+            if mode>= verbose then              
+              print("Anti-difference : ", antiDiff),
+            return(subst(b+1,k,antiDiff)-subst(a,k,antiDiff))
+            )
        );
 
 /* Gosper summation function */

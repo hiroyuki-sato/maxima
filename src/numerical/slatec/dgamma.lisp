@@ -1,12 +1,12 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2005/06/20 01:53:39 
-;;; Using Lisp CMU Common Lisp Snapshot 2005-06 (19B)
+;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
+;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
 ;;;           (:array-slicing nil) (:declare-common nil)
 ;;;           (:float-format double-float))
 
-(in-package "SLATEC")
+(in-package :slatec)
 
 
 (let ((ngam 0)
@@ -61,15 +61,13 @@
       (first$ nil))
   (declare (type f2cl-lib:logical first$)
            (type (simple-array double-float (42)) gamcs)
-           (type double-float sq2pil pi$ dxrel xmax xmin)
-           (type f2cl-lib:integer4 ngam))
+           (type (double-float) sq2pil pi$ dxrel xmax xmin)
+           (type (integer) ngam))
   (setq first$ f2cl-lib:%true%)
   (defun dgamma (x)
-    (declare (type double-float x))
-    (prog ((sinpiy 0.0) (y 0.0) (dgamma 0.0) (i 0) (n 0) (abs$ 0.0f0))
-      (declare (type single-float abs$)
-               (type f2cl-lib:integer4 n i)
-               (type double-float dgamma y sinpiy))
+    (declare (type (double-float) x))
+    (prog ((sinpiy 0.0) (y 0.0) (dgamma 0.0) (i 0) (n 0))
+      (declare (type (integer) n i) (type (double-float) dgamma y sinpiy))
       (cond
         (first$
          (setf ngam
@@ -82,7 +80,7 @@
            (setf xmax var-1))
          (setf dxrel (f2cl-lib:fsqrt (f2cl-lib:d1mach 4)))))
       (setf first$ f2cl-lib:%false%)
-      (setf y (coerce (abs x) 'double-float))
+      (setf y (abs x))
       (if (> y 10.0) (go label50))
       (setf n (f2cl-lib:int x))
       (if (< x 0.0) (setf n (f2cl-lib:int-sub n 1)))
@@ -128,4 +126,18 @@
       (go end_label)
      end_label
       (return (values dgamma nil)))))
+
+(in-package #-gcl #:cl-user #+gcl "CL-USER")
+#+#.(cl:if (cl:find-package '#:f2cl) '(and) '(or))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (setf (gethash 'fortran-to-lisp::dgamma
+                 fortran-to-lisp::*f2cl-function-info*)
+          (fortran-to-lisp::make-f2cl-finfo :arg-types '((double-float))
+                                            :return-values '(nil)
+                                            :calls '(fortran-to-lisp::d9lgmc
+                                                     fortran-to-lisp::xermsg
+                                                     fortran-to-lisp::dcsevl
+                                                     fortran-to-lisp::dgamlm
+                                                     fortran-to-lisp::initds
+                                                     fortran-to-lisp::d1mach))))
 

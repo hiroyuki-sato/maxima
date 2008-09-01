@@ -1,9 +1,9 @@
 @menu
 * Introduction to Rules and Patterns::  
-* Definitions for Rules and Patterns::  
+* Functions and Variables for Rules and Patterns::  
 @end menu
 
-@node Introduction to Rules and Patterns, Definitions for Rules and Patterns, Rules and Patterns, Rules and Patterns
+@node Introduction to Rules and Patterns, Functions and Variables for Rules and Patterns, Rules and Patterns, Rules and Patterns
 @section Introduction to Rules and Patterns
 
 This section describes user-defined pattern matching and
@@ -22,9 +22,13 @@ by an explicit function call.
 There are additional mechanisms for rules applied to polynomials by @code{tellrat},
 and for commutative and noncommutative algebra in @code{affine} package. 
 
+@opencatbox
+@category{Simplification} @category{Rules and patterns}
+@closecatbox
+
 @c end concepts Rules and Patterns
-@node Definitions for Rules and Patterns,  , Introduction to Rules and Patterns, Rules and Patterns
-@section Definitions for Rules and Patterns
+@node Functions and Variables for Rules and Patterns,  , Introduction to Rules and Patterns, Rules and Patterns
+@section Functions and Variables for Rules and Patterns
 
 @c NEEDS CLARIFICATION AND EXAMPLES
 @deffn {Function} apply1 (@var{expr}, @var{rule_1}, ..., @var{rule_n})
@@ -41,6 +45,9 @@ subexpression, the result is returned.
 
 See also @code{applyb1}, @code{apply2}, and @code{let}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION AND EXAMPLES
@@ -56,6 +63,9 @@ subexpression is reprocessed, starting with the first rule.
 
 See also @code{apply1} and @code{let}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION AND EXAMPLES
@@ -75,6 +85,9 @@ before giving up.
 
 See also @code{apply1}, @code{apply2}, and @code{let}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} current_let_rule_package
@@ -90,6 +103,10 @@ If a call such as @code{letsimp (expr, rule_pkg_name)} is made,
 the rule package @code{rule_pkg_name} is used for that function call only,
 and the value of @code{current_let_rule_package} is not changed.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
+
 @end defvr
 
 @defvr {Option variable} default_let_rule_package
@@ -101,53 +118,66 @@ Default value: @code{default_let_rule_package}
 is not explicitly set by the user with @code{let} or by changing the value of
 @code{current_let_rule_package}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
+
 @end defvr
 
 @deffn {Function} defmatch (@var{progname}, @var{pattern}, @var{x_1}, ..., @var{x_n})
-Creates a function @code{@var{progname} (@var{expr}, @var{y_1}, ..., @var{y_n})}
+@deffnx {Function} defmatch (@var{progname}, @var{pattern})
+Defines a function @code{@var{progname}(@var{expr}, @var{x_1}, ..., @var{x_n})}
 which tests @var{expr} to see if it matches @var{pattern}.
 
-@var{pattern} is an expression
-containing the pattern variables @var{x_1}, ..., @var{x_n}
-and pattern parameters, if any.
-The pattern variables are given
-explicitly as arguments to @code{defmatch} while the pattern parameters
+@var{pattern} is an expression containing the pattern arguments @var{x_1}, ..., @var{x_n} (if any)
+and some pattern variables (if any).
+The pattern arguments are given explicitly as arguments to @code{defmatch} while the pattern variables
 are declared by the @code{matchdeclare} function.
-@c DOES matchdeclare HAVE TO GO BEFORE defmatch ?? OR CAN IT GO AFTER ??
+Any variable not declared as a pattern variable in @code{matchdeclare}
+or as a pattern argument in @code{defmatch} matches only itself.
 
 The first argument to the created function @var{progname} is an expression
-to be matched against the pattern and the other arguments are the
-actual variables @var{y_1}, ..., @var{y_n}
-in the expression which correspond to
-the dummy variables @var{x_1}, ..., @var{x_n}
-in the pattern.
+to be matched against the pattern and the other arguments are the actual arguments
+which correspond to the dummy variables @var{x_1}, ..., @var{x_n} in the pattern.
 
 If the match is successful, @var{progname} returns
 a list of equations whose left sides are the
-pattern variables and pattern parameters, and whose right sides are the expressions
-which the pattern variables and parameters matched.
-The pattern parameters, but not the variables, are assigned the subexpressions they match.
+pattern arguments and pattern variables, and whose right sides are the subexpressions
+which the pattern arguments and variables matched.
+The pattern variables, but not the pattern arguments, are assigned the subexpressions they match.
 If the match fails, @var{progname} returns @code{false}.  
 
-Any variables not declared as pattern parameters in @code{matchdeclare} or as
-variables in @code{defmatch} match only themselves.
-
-A pattern which contains no pattern variables or parameters
+A literal pattern
+(that is, a pattern which contains neither pattern arguments nor pattern variables)
 returns @code{true} if the match succeeds.
 
 See also @code{matchdeclare}, @code{defrule}, @code{tellsimp}, and @code{tellsimpafter}.
 
 Examples:
 
-This @code{defmatch} defines the function @code{linearp (expr, y)}, which
-tests @code{expr} to see if it is of the form @code{a*y + b}
-such that @code{a} and @code{b} do not contain @code{y}.
+Define a function @code{linearp(expr, x)} which
+tests @code{expr} to see if it is of the form @code{a*x + b}
+such that @code{a} and @code{b} do not contain @code{x} and @code{a} is nonzero.
+This match function matches expressions which are linear in any variable,
+because the pattern argument @code{x} is given to @code{defmatch}.
 @c HOW HARD WILL MAXIMA TRY TO COLLECT TERMS AND DO OTHER MUNGEING TO FIT THE PATTERN ??
 
+@c ===beg===
+@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, 
+@c                     freeof(x));
+@c defmatch (linearp, a*x + b, x);
+@c linearp (3*z + (y + 1)*z + y^2, z);
+@c a;
+@c b;
+@c x;
+@c ===end===
 @example
-(%i1) matchdeclare (a, freeof(x), b, freeof(x))$
-(%i2) defmatch (linearp, a*x + b, x)$
-(%i3) linearp (3*z + (y+1)*z + y^2, z);
+(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                    freeof(x));
+(%o1)                         done
+(%i2) defmatch (linearp, a*x + b, x);
+(%o2)                        linearp
+(%i3) linearp (3*z + (y + 1)*z + y^2, z);
                          2
 (%o3)              [b = y , a = y + 4, x = z]
 (%i4) a;
@@ -155,41 +185,80 @@ such that @code{a} and @code{b} do not contain @code{y}.
 (%i5) b;
                                 2
 (%o5)                          y
+(%i6) x;
+(%o6)                           x
 @end example
 
-If the third argument to @code{defmatch} in line (%i2) had
-been omitted, then @code{linear} would only match expressions linear in @var{x},
-not in any other variable.
-@c SHOW THAT IN AN EXAMPLE
+Define a function @code{linearp(expr)} which tests @code{expr}
+to see if it is of the form @code{a*x + b}
+such that @code{a} and @code{b} do not contain @code{x} and @code{a} is nonzero.
+This match function only matches expressions linear in @code{x},
+not any other variable, because no pattern argument is given to @code{defmatch}.
 
+@c ===beg===
+@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, 
+@c                     freeof(x));
+@c defmatch (linearp, a*x + b);
+@c linearp (3*z + (y + 1)*z + y^2);
+@c linearp (3*x + (y + 1)*x + y^2);
+@c ===end===
 @example
-(%i1) matchdeclare ([a, f], true)$
-(%i2) constinterval (l, h) := constantp (h - l)$
-(%i3) matchdeclare (b, constinterval (a))$
-(%i4) matchdeclare (x, atom)$
-(%i5) (remove (integrate, outative),
-          defmatch (checklimits, 'integrate (f, x, a, b)),
-          declare (integrate, outative))$
-(%i6) 'integrate (sin(t), t, %pi + x, 2*%pi + x);
+(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                    freeof(x));
+(%o1)                         done
+(%i2) defmatch (linearp, a*x + b);
+(%o2)                        linearp
+(%i3) linearp (3*z + (y + 1)*z + y^2);
+(%o3)                         false
+(%i4) linearp (3*x + (y + 1)*x + y^2);
+                             2
+(%o4)                  [b = y , a = y + 4]
+@end example
+
+Define a function @code{checklimits(expr)} which tests @code{expr}
+to see if it is a definite integral.
+
+@c ===beg===
+@c matchdeclare ([a, f], true);
+@c constinterval (l, h) := constantp (h - l);
+@c matchdeclare (b, constinterval (a));
+@c matchdeclare (x, atom);
+@c simp : false;
+@c defmatch (checklimits, 'integrate (f, x, a, b));
+@c simp : true;
+@c 'integrate (sin(t), t, %pi + x, 2*%pi + x);
+@c checklimits (%);
+@c ===end===
+@example
+(%i1) matchdeclare ([a, f], true);
+(%o1)                         done
+(%i2) constinterval (l, h) := constantp (h - l);
+(%o2)        constinterval(l, h) := constantp(h - l)
+(%i3) matchdeclare (b, constinterval (a));
+(%o3)                         done
+(%i4) matchdeclare (x, atom);
+(%o4)                         done
+(%i5) simp : false;
+(%o5)                         false
+(%i6) defmatch (checklimits, 'integrate (f, x, a, b));
+(%o6)                      checklimits
+(%i7) simp : true;
+(%o7)                         true
+(%i8) 'integrate (sin(t), t, %pi + x, 2*%pi + x);
                        x + 2 %pi
                       /
                       [
-(%o6)                 I          sin(t) dt
+(%o8)                 I          sin(t) dt
                       ]
                       /
                        x + %pi
-(%i7) checklimits (%);
-(%o7)    [b = x + 2 %pi, a = x + %pi, x = t, f = sin(t)]
-(%i8) a;
-(%o8)                        x + %pi
-(%i9) b;
-(%o9)                       x + 2 %pi
-(%i10) f;
-(%o10)                       sin(t)
-(%i11) x;
-(%o11)                          t
+(%i9) checklimits (%);
+(%o9)    [b = x + 2 %pi, a = x + %pi, x = t, f = sin(t)]
 @end example
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION AND EXAMPLES
@@ -205,8 +274,11 @@ replacement which is then simplified.
 The rules themselves can be
 treated as functions which transform an expression by one
 operation of the pattern match and replacement.
-If the match fails, the original expression is returned.
+If the match fails, the rule function returns @code{false}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @c NEEDS EXAMPLES
@@ -215,14 +287,47 @@ If the match fails, the original expression is returned.
 Display rules with the names @var{rulename_1}, ..., @var{rulename_n},
 as returned by @code{defrule}, @code{tellsimp}, or @code{tellsimpafter},
 or a pattern defined by @code{defmatch}.
-
-@c STRIKE THIS AND MAKE IT AN EXAMPLE INSTEAD
-For example, the first rule modifying @code{sin} is named @code{sinrule1}.
+Each rule is displayed with an intermediate expression label (@code{%t}).
 
 @code{disprule (all)} displays all rules.
 
+@code{disprule} quotes its arguments.
+@code{disprule} returns the list of intermediate expression labels corresponding to the displayed rules.
+
 See also @code{letrules}, which displays rules defined by @code{let}.
 
+Examples:
+
+@c ===beg===
+@c tellsimpafter (foo (x, y), bar (x) + baz (y));
+@c tellsimpafter (x + y, special_add (x, y));
+@c defmatch (quux, mumble (x));
+@c disprule (foorule1, "+rule1", quux);
+@c ''%;
+@c ===end===
+@example
+(%i1) tellsimpafter (foo (x, y), bar (x) + baz (y));
+(%o1)                   [foorule1, false]
+(%i2) tellsimpafter (x + y, special_add (x, y));
+(%o2)                   [+rule1, simplus]
+(%i3) defmatch (quux, mumble (x));
+(%o3)                         quux
+(%i4) disprule (foorule1, "+rule1", quux);
+(%t4)        foorule1 : foo(x, y) -> baz(y) + bar(x)
+
+(%t5)          +rule1 : y + x -> special_add(x, y)
+
+(%t6)                quux : mumble(x) -> []
+
+(%o6)                    [%t4, %t5, %t6]
+(%i6) ''%;
+(%o6) [foorule1 : foo(x, y) -> baz(y) + bar(x), 
+     +rule1 : y + x -> special_add(x, y), quux : mumble(x) -> []]
+@end example
+
+@opencatbox
+@category{Rules and patterns} @category{Display functions}
+@closecatbox
 @end deffn
 
 @deffn {Function} let (@var{prod}, @var{repl}, @var{predname}, @var{arg_1}, ..., @var{arg_n})
@@ -311,6 +416,9 @@ If not otherwise specified,
 @end example
 
 @c NEEDS ADDITIONAL EXAMPLES
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} letrat
@@ -339,6 +447,10 @@ the numerator, denominator, and their quotient are simplified in that order.
 (%o6)                       (a - 1)!
 @end example
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
+
 @end defvr
 
 @c NEEDS EXAMPLES
@@ -346,7 +458,7 @@ the numerator, denominator, and their quotient are simplified in that order.
 @deffnx {Function} letrules (@var{package_name})
 Displays the rules in a rule package.
 @code{letrules ()} displays the rules in the current rule package.
-@code{letrules (@var{package_name})} displays the rules in @code{package_name}.
+@code{letrules (@var{package_name})} displays the rules in @var{package_name}.
 
 The current rule package is named by @code{current_let_rule_package}.
 If not otherwise specified, @code{current_let_rule_package}
@@ -355,6 +467,9 @@ defaults to @code{default_let_rule_package}.
 See also @code{disprule}, which displays rules defined by @code{tellsimp} and @code{tellsimpafter}.
 @c WHAT ABOUT defmatch AND defrule ??
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @deffn {Function} letsimp (@var{expr})
@@ -373,6 +488,9 @@ is equivalent to @code{letsimp (@var{expr}, @var{package_name_1}},
 followed by @code{letsimp (%, @var{package_name_2})}, and so on.
 
 @c NEEDS EXAMPLES
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @defvr {Option variable} let_rule_packages
@@ -380,6 +498,10 @@ Default value: @code{[default_let_rule_package]}
 
 @code{let_rule_packages} is a list of all user-defined let rule packages
 plus the default package @code{default_let_rule_package}.
+
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 
 @end defvr
 
@@ -389,22 +511,22 @@ with a variable or list of variables @var{a_k}
 so that @var{a_k} matches expressions
 for which the predicate returns anything other than @code{false}.
 
-The predicate is the name of a function,
-a function call missing the last argument,
-or @code{true}.
-Any expression matches @code{true}.
-If the predicate is specified as a function call,
+A predicate is the name of a function,
+or a lambda expression,
+or a function call or lambda call missing the last argument,
+or @code{true} or @code{all}.
+Any expression matches @code{true} or @code{all}.
+If the predicate is specified as a function call or lambda call,
 the expression to be tested is appended to the list of arguments;
 the arguments are evaluated at the time the match is evaluated.
-Otherwise, the predicate is specified as a function name,
+Otherwise, the predicate is specified as a function name or lambda expression,
 and the expression to be tested is the sole argument.
 A predicate function need not be defined when @code{matchdeclare} is called;
 the predicate is not evaluated until a match is attempted.
 
-A @code{matchdeclare} predicate cannot be any kind of expression other than a function name or function call.
-In particular, a predicate cannot be a @code{lambda} or @code{block}.
-@c defrule, defmatch, tellsimp/tellsimpafter, let ALL BARF ON LAMBDAS AND OTHER EXPRESSIONS
-@c BUT NOT ENFORCED BY matchdeclare -- THIS IS A BUG
+A predicate may return a Boolean expression as well as @code{true} or @code{false}.
+Boolean expressions are evaluated by @code{is} within the constructed rule function,
+so it is not necessary to call @code{is} within the predicate.
 
 If an expression satisfies a match predicate,
 the match variable is assigned the expression,
@@ -457,14 +579,146 @@ construct rules which test expressions against patterns.
 
 Examples:
 
-@itemize @bullet
-@item
-@code{q} matches an expression not containing @code{x} or @code{%e}.
-@end itemize
+A predicate is the name of a function,
+or a lambda expression,
+or a function call or lambda call missing the last argument,
+or @code{true} or @code{all}.
+
+@c ===beg===
+@c matchdeclare (aa, integerp);
+@c matchdeclare (bb, lambda ([x], x > 0));
+@c matchdeclare (cc, freeof (%e, %pi, %i));
+@c matchdeclare (dd, lambda ([x, y], gcd (x, y) = 1) (1728));
+@c matchdeclare (ee, true);
+@c matchdeclare (ff, all);
+@c ===end===
 @example
-(%i1) matchdeclare (q, freeof (x, %e))$
+(%i1) matchdeclare (aa, integerp);
+(%o1)                         done
+(%i2) matchdeclare (bb, lambda ([x], x > 0));
+(%o2)                         done
+(%i3) matchdeclare (cc, freeof (%e, %pi, %i));
+(%o3)                         done
+(%i4) matchdeclare (dd, lambda ([x, y], gcd (x, y) = 1) (1728));
+(%o4)                         done
+(%i5) matchdeclare (ee, true);
+(%o5)                         done
+(%i6) matchdeclare (ff, all);
+(%o6)                         done
 @end example
 
+If an expression satisfies a match predicate,
+the match variable is assigned the expression.
+
+@c ===beg===
+@c matchdeclare (aa, integerp, bb, atom);
+@c defrule (r1, bb^aa, ["integer" = aa, "atom" = bb]);
+@c r1 (%pi^8);
+@c ===end===
+@example
+(%i1) matchdeclare (aa, integerp, bb, atom);
+(%o1)                         done
+(%i2) defrule (r1, bb^aa, ["integer" = aa, "atom" = bb]);
+                    aa
+(%o2)        r1 : bb   -> [integer = aa, atom = bb]
+(%i3) r1 (%pi^8);
+(%o3)               [integer = 8, atom = %pi]
+@end example
+
+In the case of addition and multiplication,
+the match variable may be assigned a single expression which satisfies the match predicate,
+or a sum or product (respectively) of such expressions.
+
+@c ===beg===
+@c matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
+@c r1 (8 + a*b + sin(x));
+@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
+@c r2 (8 * (a + b) * sin(x));
+@c ===end===
+@example
+(%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+(%o1)                         done
+(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
+bb + aa partitions `sum'
+(%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
+(%i3) r1 (8 + a*b + sin(x));
+(%o3)     [all atoms = 8, all nonatoms = sin(x) + a b]
+(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
+bb aa partitions `product'
+(%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
+(%i5) r2 (8 * (a + b) * sin(x));
+(%o5)    [all atoms = 8, all nonatoms = (b + a) sin(x)]
+@end example
+
+When matching arguments of @code{+} and @code{*},
+if all match predicates are mutually exclusive,
+the match result is insensitive to ordering,
+as one match predicate cannot accept terms matched by another.
+
+@c ===beg===
+@c matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
+@c r1 (8 + a*b + %pi + sin(x) - c + 2^n);
+@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
+@c r2 (8 * (a + b) * %pi * sin(x) / c * 2^n);
+@c ===end===
+@example
+(%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+(%o1)                         done
+(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
+bb + aa partitions `sum'
+(%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
+(%i3) r1 (8 + a*b + %pi + sin(x) - c + 2^n);
+                                                     n
+(%o3) [all atoms = %pi + 8, all nonatoms = sin(x) + 2  - c + a b]
+(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
+bb aa partitions `product'
+(%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
+(%i5) r2 (8 * (a + b) * %pi * sin(x) / c * 2^n);
+                                                  n
+                                         (b + a) 2  sin(x)
+(%o5) [all atoms = 8 %pi, all nonatoms = -----------------]
+                                                 c
+@end example
+
+The functions @code{propvars} and @code{printprops} return information about match variables.
+
+@c ===beg===
+@c matchdeclare ([aa, bb, cc], atom, [dd, ee], integerp);
+@c matchdeclare (ff, floatnump, gg, lambda ([x], x > 100));
+@c propvars (matchdeclare);
+@c printprops (ee, matchdeclare);
+@c printprops (gg, matchdeclare);
+@c printprops (all, matchdeclare);
+@c ===end===
+@example
+(%i1) matchdeclare ([aa, bb, cc], atom, [dd, ee], integerp);
+(%o1)                         done
+(%i2) matchdeclare (ff, floatnump, gg, lambda ([x], x > 100));
+(%o2)                         done
+(%i3) propvars (matchdeclare);
+(%o3)             [aa, bb, cc, dd, ee, ff, gg]
+(%i4) printprops (ee, matchdeclare);
+(%o4)                    [integerp(ee)]
+(%i5) printprops (gg, matchdeclare);
+(%o5)              [lambda([x], x > 100, gg)]
+(%i6) printprops (all, matchdeclare);
+(%o6) [lambda([x], x > 100, gg), floatnump(ff), integerp(ee), 
+                      integerp(dd), atom(cc), atom(bb), atom(aa)]
+@end example
+
+@opencatbox
+@category{Rules and patterns} @category{Declarations and inferences}
+@closecatbox
 @end deffn
 
 @deffn {Function} matchfix (@var{ldelimiter}, @var{rdelimiter})
@@ -495,6 +749,13 @@ but operator functions cannot be defined for built-in operators.
 declares the argument part-of-speech @var{arg_pos} 
 and result part-of-speech @var{pos}, 
 and the delimiters @var{ldelimiter} and @var{rdelimiter}.
+
+"Part of speech", in reference to operator declarations, means expression type.
+Three types are recognized: @code{expr}, @code{clause}, and @code{any},
+indicating an algebraic expression, a Boolean expression, or any kind of expression,
+respectively.
+Maxima can detect some syntax errors by comparing the
+declared part of speech to an actual expression.
 
 @c DUNNO IF WE REALLY NEED TO MENTION BINDING POWER HERE -- AS NOTED IT'S IRRELEVANT
 @c An operator declared by @code{matchfix} is assigned a low binding power.
@@ -528,23 +789,32 @@ Examples:
 @item
 Delimiters may be almost any strings.
 @end itemize
+@c ===beg===
+@c matchfix ("@@", "~");
+@c @@ a, b, c ~;
+@c matchfix (">>", "<<");
+@c >> a, b, c <<;
+@c matchfix ("foo", "oof");
+@c foo a, b, c oof;
+@c >> w + foo x, y oof + z << / @@ p, q ~;
+@c ===end===
 @example
-(%i1) matchfix ("@@", "~");
-(%o1)                          "@@"
-(%i2) @@ a, b, c ~;
-(%o2)                       @@a, b, c~
+(%i1) matchfix ("@@@@", "~");
+(%o1)                          @@@@
+(%i2) @@@@ a, b, c ~;
+(%o2)                      @@@@a, b, c~
 (%i3) matchfix (">>", "<<");
-(%o3)                         ">>"
+(%o3)                          >>
 (%i4) >> a, b, c <<;
 (%o4)                      >>a, b, c<<
 (%i5) matchfix ("foo", "oof");
-(%o5)                         "foo"
+(%o5)                          foo
 (%i6) foo a, b, c oof;
 (%o6)                     fooa, b, coof
-(%i7) >> w + foo x, y oof + z << / @@ p, q ~;
+(%i7) >> w + foo x, y oof + z << / @@@@ p, q ~;
                      >>z + foox, yoof + w<<
 (%o7)                ----------------------
-                             @@p, q~
+                            @@@@p, q~
 @end example
 
 @itemize @bullet
@@ -582,6 +852,10 @@ Matchfix operators are ordinary user-defined functions.
                                 15
 @end example
 
+@opencatbox
+@category{Syntax} @category{Operators}
+@closecatbox
+
 @end deffn
 
 @c NEEDS CLARIFICATION AND EXAMPLES
@@ -589,7 +863,7 @@ Matchfix operators are ordinary user-defined functions.
 @deffnx {Function} remlet ()
 @deffnx {Function} remlet (all)
 @deffnx {Function} remlet (all, @var{name})
-Deletes the substitution rule, prod --> repl, most
+Deletes the substitution rule, @var{prod} --> repl, most
 recently defined by the @code{let} function.  If name is supplied the rule is
 deleted from the rule package name.
 
@@ -605,20 +879,78 @@ called the original substitution rule is revived.
 
 See also @code{remrule}, which removes a rule defined by @code{tellsimp} or @code{tellsimpafter}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @deffn {Function} remrule (@var{op}, @var{rulename})
 @deffnx {Function} remrule (@var{op}, all)
-Removes rules defined by @code{defrule}, @code{defmatch}, @code{tellsimp}, or @code{tellsimpafter}.
+Removes rules defined by @code{tellsimp} or @code{tellsimpafter}.
 
 @code{remrule (@var{op}, @var{rulename})}
-removes the rule with the name @code{rulename} from the operator @var{op}.
+removes the rule with the name @var{rulename} from the operator @var{op}.
+When @var{op} is a built-in or user-defined operator
+(as defined by @code{infix}, @code{prefix}, etc.),
+@var{op} and @var{rulename} must be enclosed in double quote marks.
 
-@code{remrule (@var{function}, all)} removes all rules for the operator @var{op}.
+@code{remrule (@var{op}, all)} removes all rules for the operator @var{op}.
 
 See also @code{remlet}, which removes a rule defined by @code{let}.
 
-@c NEEDS EXAMPLES
+Examples:
+
+@c ===beg===
+@c tellsimp (foo (aa, bb), bb - aa);
+@c tellsimpafter (aa + bb, special_add (aa, bb));
+@c infix ("@@");
+@c tellsimp (aa @@ bb, bb/aa);
+@c tellsimpafter (quux (%pi, %e), %pi - %e);
+@c tellsimpafter (quux (%e, %pi), %pi + %e);
+@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), 
+@c        quux (%e, %pi)];
+@c remrule (foo, foorule1);
+@c remrule ("+", "+rule1");
+@c remrule ("@@", "@@rule1");
+@c remrule (quux, all);
+@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), 
+@c         quux (%e, %pi)];
+@c ===end===
+@example
+(%i1) tellsimp (foo (aa, bb), bb - aa);
+(%o1)                   [foorule1, false]
+(%i2) tellsimpafter (aa + bb, special_add (aa, bb));
+(%o2)                   [+rule1, simplus]
+(%i3) infix ("@@@@");
+(%o3)                          @@@@
+(%i4) tellsimp (aa @@@@ bb, bb/aa);
+(%o4)                   [@@@@rule1, false]
+(%i5) tellsimpafter (quux (%pi, %e), %pi - %e);
+(%o5)                  [quuxrule1, false]
+(%i6) tellsimpafter (quux (%e, %pi), %pi + %e);
+(%o6)             [quuxrule2, quuxrule1, false]
+(%i7) [foo (aa, bb), aa + bb, aa @@@@ bb, quux (%pi, %e),
+       quux (%e, %pi)];
+                                     bb
+(%o7) [bb - aa, special_add(aa, bb), --, %pi - %e, %pi + %e]
+                                     aa
+(%i8) remrule (foo, foorule1);
+(%o8)                          foo
+(%i9) remrule ("+", "+rule1");
+(%o9)                           +
+(%i10) remrule ("@@@@", "@@@@rule1");
+(%o10)                         @@@@
+(%i11) remrule (quux, all);
+(%o11)                        quux
+(%i12) [foo (aa, bb), aa + bb, aa @@@@ bb, quux (%pi, %e),
+        quux (%e, %pi)];
+(%o12) [foo(aa, bb), bb + aa, aa @@@@ bb, quux(%pi, %e), 
+                                         quux(%e, %pi)]
+@end example
+
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @c NEEDS EXPANSION OR MAYBE JUST APPROPRIATE REFS TO tellsimpafter
@@ -684,6 +1016,9 @@ Examples:
 (%o17)                     1 - cos (y)
 @end example
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @deffn {Function} tellsimpafter (@var{pattern}, @var{replacement})
@@ -739,14 +1074,14 @@ However,
 as with all atoms in Maxima,
 the properties of pattern variables (as declared by @code{put} and related functions) are global.
 
-The rule constructed by @code{tellsimpafter} is named after the main operator of @code{pattern}.
+The rule constructed by @code{tellsimpafter} is named after the main operator of @var{pattern}.
 Rules for built-in operators, 
 and user-defined operators 
 defined by @code{infix}, @code{prefix}, @code{postfix}, @code{matchfix}, and @code{nofix},
-have names which are Maxima strings.
+have names which are Lisp identifiers.
 @c SLIGHTLY TOO MUCH DETAIL
-@c (that is, the name begins with ampersand @code{&}).
-Rules for other functions have names which are ordinary Maxima identifiers.
+@c (that is, the name is written with a leading question mark @code{?} in Maxima).
+Rules for other functions have names which are Maxima identifiers.
 @c SLIGHTLY TOO MUCH DETAIL
 @c (that is, the name begins with dollar sign @code{$}).
 
@@ -873,8 +1208,8 @@ Error: bb was declared mode boolean, has value: %e
 @end example
 
 Rules are named after main operators.
-Names of rules for built-in and user-defined operators are strings,
-while names for other functions are ordinary identifiers.
+Names of rules for built-in and user-defined operators are Lisp identifiers,
+while names for other functions are Maxima identifiers.
 
 @c ===beg===
 @c tellsimpafter (foo (%pi + %e), 3*%pi);
@@ -886,10 +1221,9 @@ while names for other functions are ordinary identifiers.
 @c rules;
 @c foorule_name: first (%o1);
 @c plusrule_name: first (%o4);
-@c [?mstringp (foorule_name), symbolp (foorule_name)];
-@c [?mstringp (plusrule_name), symbolp (plusrule_name)];
 @c remrule (foo, foorule1);
-@c remrule ("^", "^rule1");
+@c remrule ("^", ?\^rule1);
+@c rules;
 @c ===end===
 @example
 (%i1) tellsimpafter (foo (%pi + %e), 3*%pi);
@@ -905,27 +1239,60 @@ while names for other functions are ordinary identifiers.
 (%i6) tellsimpafter (foo (9) ^ foo (13), mumble (22));
 (%o6)                  [^rule1, simpexpt]
 (%i7) rules;
-(%o7) [trigrule0, trigrule1, trigrule2, trigrule3, trigrule4, 
-htrigrule1, htrigrule2, htrigrule3, htrigrule4, foorule1, 
-foorule2, foorule3, +rule1, *rule1, ^rule1]
+(%o7) [foorule1, foorule2, foorule3, +rule1, *rule1, ^rule1]
 (%i8) foorule_name: first (%o1);
 (%o8)                       foorule1
 (%i9) plusrule_name: first (%o4);
 (%o9)                        +rule1
-(%i10) [?mstringp (foorule_name), symbolp (foorule_name)];
-(%o10)                    [false, true]
-(%i11) [?mstringp (plusrule_name), symbolp (plusrule_name)];
-(%o11)                    [true, true]
-(%i12) remrule (foo, foorule1);
-(%o12)                         foo
-(%i13) remrule ("^", "^rule1");
-(%o13)                          ^
+(%i10) remrule (foo, foorule1);
+(%o10)                         foo
+(%i11) remrule ("^", ?\^rule1);
+(%o11)                          ^
+(%i12) rules;
+(%o12)        [foorule2, foorule3, +rule1, *rule1]
 @end example
 
+A worked example: anticommutative multiplication.
+
+@c ===beg===
+@c gt (i, j) := integerp(j) and i < j;
+@c matchdeclare (i, integerp, j, gt(i));
+@c tellsimpafter (s[i]^^2, 1);
+@c tellsimpafter (s[i] . s[j], -s[j] . s[i]);
+@c s[1] . (s[1] + s[2]);
+@c expand (%);
+@c factor (expand (sum (s[i], i, 0, 9)^^5));
+@c ===end===
+@example
+(%i1) gt (i, j) := integerp(j) and i < j;
+(%o1)           gt(i, j) := integerp(j) and i < j
+(%i2) matchdeclare (i, integerp, j, gt(i));
+(%o2)                         done
+(%i3) tellsimpafter (s[i]^^2, 1);
+(%o3)                 [^^rule1, simpncexpt]
+(%i4) tellsimpafter (s[i] . s[j], -s[j] . s[i]);
+(%o4)                   [.rule1, simpnct]
+(%i5) s[1] . (s[1] + s[2]);
+(%o5)                    s  . (s  + s )
+                          1     2    1
+(%i6) expand (%);
+(%o6)                      1 - s  . s
+                                2    1
+(%i7) factor (expand (sum (s[i], i, 0, 9)^^5));
+(%o7) 100 (s  + s  + s  + s  + s  + s  + s  + s  + s  + s )
+            9    8    7    6    5    4    3    2    1    0
+@end example
+
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn
 
 @deffn {Function} clear_rules ()
 Executes @code{kill (rules)} and then resets the next rule number to 1
 for addition @code{+}, multiplication @code{*}, and exponentiation @code{^}.
 
+@opencatbox
+@category{Rules and patterns}
+@closecatbox
 @end deffn

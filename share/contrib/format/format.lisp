@@ -9,17 +9,18 @@
 ;;;; FORMAT: Package for restructuring expressions in Macsyma
 ;;;;******************************************************************************************
 
-;(in-package 'climax)				; for Macsyma Inc, Macsyma
+(in-package :maxima)
 
-;;; To run in Schelter's Maxima comment the above and uncomment these:
-(in-package "MAXIMA")
-(defmacro mlist* (arg1 &rest more-args) `(list* '(mlist simp) ,arg1 ,@more-args))
+(defmacro mlist* (arg1 &rest more-args)
+  `(list* '(mlist simp) ,arg1 ,@more-args))
+
 (defun mrelationp (expr)
-  (and (listp expr)(member (caar expr) '(MEQUAL MNOTEQUAL MGREATERP MLESSP MGEQP MLEQP))))
+  (and (listp expr)
+       (member (caar expr) '(mequal mnotequal mgreaterp mlessp mgeqp mleqp))))
 
 ;;;;******************************************************************************************
 ;;; format(expr,template,...)
-;;; Formats EXPR according to the TEMPLATEs given: 
+;;; Formats EXPR according to the TEMPLATEs given:
 
 (defvar *template* nil "The current template")
 (defvar *templates* nil "The current template chain")
@@ -43,7 +44,7 @@
 
 ;;; Format a `piece' of an expression, accounting for any current subtemplates.
 ;;; If NTH is given, use NTH subtemplate for this piece, else use next subtemplate.
-;;; Account for %DITTO'd templates. 
+;;; Account for %DITTO'd templates.
 (defun $format_piece (piece &optional nth)
   (flet ((dittop (ptrn)				; If %ditto form, return repeated template
 	   (and (listp ptrn)(eq (caar ptrn) '$%ditto) (cadr ptrn))))
@@ -63,7 +64,7 @@
   (format-from-chain expr))
 
 ;;; given a candidate format template, return:
-;;; template name, formatter function, parameters (if any) and subtemplates (if any), 
+;;; template name, formatter function, parameters (if any) and subtemplates (if any),
 (defun parse-template (template)
   (let (op name formatter)
     (flet ((getform (symbol)
@@ -88,10 +89,11 @@
 (defmacro def-formatter (names parms &body body)
   (let* ((names (if (listp names) names (list names)))
 	 (fmtr (if (atom parms) parms
-		   (make-symbol (concatenate 'string (string (car names)) "-FORMATTER")))))
-    `(progn 
+		   (make-symbol (concatenate 'string (string (car names))
+					     (symbol-name '#:-formatter))))))
+    `(progn
        ,(unless (atom parms) `(defun ,fmtr ,parms ,@body))
-       ,@(mapcar #'(lambda (name) `(setf (get ',name 'FORMATTER) ',fmtr)) names))))
+       ,@(mapcar #'(lambda (name) `(setf (get ',name 'formatter) ',fmtr)) names))))
 
 ;;;;******************************************************************************************
 ;;; Subtemplate aids.
@@ -135,12 +137,12 @@
 ;;;;******************************************************************************************
 ;;; Control templates
 
-;;; IF ... ELSEIF ... ELSE 
+;;; IF ... ELSEIF ... ELSE
 (def-formatter $%if (expr &rest predicates)
   ($format_piece expr (do ((ps predicates (cdr ps))
 			   (i 1 (1+ i)))
 			  ((or (null ps)(is-boole-check (mfuncall (car ps) expr))) i))))
-    
+
 (def-formatter ($%expr $%expression)(expr)	; format arguments/operands
   (when ($atom expr)
     (merror "FORMAT %EXPR: ~M doesn't have parts" expr))
@@ -158,14 +160,14 @@
 ;;; `Bag' & Relation templates.
 
 ;;; This function tries to get OPER at the top level of EXPR.
-;;; OPER must be a BAG or RELATION, as must the top layers of EXPR 
+;;; OPER must be a BAG or RELATION, as must the top layers of EXPR
 ;;; (down to wherever OPER is found).
-;;; The interpretation is that a list of equations is equivalent to an equation 
+;;; The interpretation is that a list of equations is equivalent to an equation
 ;;; whose rhs & lhs are lists.  (and ditto for all permutations).
 (defun $coerce_bag (oper expr)
   (unless (or (mbagp expr)(mrelationp expr))
     (merror "Error: ~M is not a relation, list or array: can't be made into an ~M" expr oper))
-  (setq oper (or (get oper 'opr) oper))
+  (setq oper (getopr oper))
   (flet ((swap (op x)
 	   (cons (list op)
 		 (mapcar #'(lambda (l)(simplify (cons (car x) l)))
@@ -225,7 +227,7 @@
   (when (and (listp var)(eq (caar var) 'mexpt))
     (setq var (cadr var) n (mul n (caddr var))))
   (let ((coefs ($coeffs expr var)))
-    (add (mul ($format_piece ($get_coef coefs n)) (power (caddadr coefs) n))
+    (add (mul ($format_piece ($get_coef coefs n)) (power (car (cddadr coefs)) n))
 	 ($format_piece ($uncoef (delete n coefs :test #'alike1 :key #'caddr))))))
 
 ;;;;******************************************************************************************
@@ -239,29 +241,29 @@
 		       ($%trig (mapcar #'(lambda (l)(mlist* (mp1 (cdr l))))(cddr clist))))))))
 
 ;; %POLY(vars,...) : express EXPR as a polynomial in VARS, format the coeffs.
-(def-formatter ($%POLY $%P) (expr &rest vars)
+(def-formatter ($%poly $%p) (expr &rest vars)
   (autoldchk '$coeffs)
   (format-clist (apply #'$coeffs expr vars)))
 
 ;; %MONICPOLY : format leading coeff, then poly/lc.
-(def-formatter ($%MONICPOLY $%MP) (expr &rest vars)
+(def-formatter ($%monicpoly $%mp) (expr &rest vars)
   (autoldchk '$coeffs)
   (let* ((cl (apply #'$coeffs expr vars))
 	 (c0 (cadar (last cl))))
     (mul ($format_piece c0)(format-clist cl #'(lambda (c)($format_piece (div c c0)))))))
 
 ;; %TRIG(vars,...): express EXPR as trig. series in VARS, format the coeffs.
-(def-formatter ($%TRIG $%T) (expr &rest vars)
+(def-formatter ($%trig $%t) (expr &rest vars)
   (autoldchk '$trig_coeffs)
   (format-clist (apply #'$trig_coeffs expr vars)))
 
 ;; %SERIES(var,order), %TAYLOR(var,order): expand EXPR as series in VAR to order ORDER,
-;; formats the coeffs.  %SERIES only expands arithmetic expressions. 
-(def-formatter ($%SERIES $%S) (expr var order)
+;; formats the coeffs.  %SERIES only expands arithmetic expressions.
+(def-formatter ($%series $%s) (expr var order)
   (autoldchk '$series_coeffs)
   (format-clist ($series_coeffs expr var order)))
 
-(def-formatter $%TAYLOR (expr var order)
+(def-formatter $%taylor (expr var order)
   (autoldchk '$taylor_coeffs)
   (format-clist ($taylor_coeffs expr var order)))
 
@@ -271,12 +273,12 @@
 (defun format-sum (sum)
   (cond ((atom sum)($format_piece sum))
 	((specrepp sum) (format-sum (specdisrep sum)))
-	((eq (caar sum) 'MPLUS)(simplify (map1 #'format-sum sum)))
-	((eq (caar sum) '%SUM) (cons (car sum) (cons ($format_piece (cadr sum))(cddr sum))))
+	((eq (caar sum) 'mplus)(simplify (map1 #'format-sum sum)))
+	((eq (caar sum) '%sum) (cons (car sum) (cons ($format_piece (cadr sum))(cddr sum))))
 	(t ($format_piece sum))))
 
-(def-formatter $%SUM format-sum)
-(def-formatter ($%PARTFRAC $%PF)(expr var)
+(def-formatter $%sum format-sum)
+(def-formatter ($%partfrac $%pf)(expr var)
   (format-sum ($partfrac expr var)))
 
 ;;;;******************************************************************************************
@@ -286,18 +288,18 @@
   (cond ((atom prod) ($format_piece prod))
 	((specrepp prod) (format-product (specdisrep prod)))
 	(t (case (caar prod)
-	     (MTIMES (simplify (map1 #'format-product prod)))
-	     (MEXPT (power (format-product (second prod))(third prod)))
+	     (mtimes (simplify (map1 #'format-product prod)))
+	     (mexpt (power (format-product (second prod))(third prod)))
 	     (%product (cons (car prod)(cons ($format_piece (cadr prod))(cddr prod))))
 	     (t ($format_piece prod))))))
 
-(def-formatter ($%PRODUCT $%PROD) format-product)
-(def-formatter ($%SQFR $%SF)(expr)
+(def-formatter ($%product $%prod) format-product)
+(def-formatter ($%sqfr $%sf)(expr)
   (format-product ($sqfr expr)))
-(def-formatter ($%FACTOR $%F) (expr &optional minpoly)
+(def-formatter ($%factor $%f) (expr &optional minpoly)
   (format-product (cond (($numberp expr) expr)
 			(minpoly ($factor expr minpoly))
-			(T ($factor expr)))))
+			(t ($factor expr)))))
 
 ;;;;******************************************************************************************
 ;;; Fractions
@@ -306,39 +308,39 @@
   (div ($format_piece ($num frac))
        ($format_piece ($denom frac))))
 
-(def-formatter $%FRAC format-fraction)
-(def-formatter ($%RATSIMP $%R) (expr)
+(def-formatter $%frac format-fraction)
+(def-formatter ($%ratsimp $%r) (expr)
   (format-fraction ($ratsimp expr)))
 
 ;;;;******************************************************************************************
 ;;; Complex number templates.
 
 ;; Express EXPR = A+%I*B; format A & B.
-(def-formatter ($%RECTFORM $%G) (expr)
+(def-formatter ($%rectform $%g) (expr)
   (let ((pair (trisplit expr)))
     (add ($format_piece (car pair))
-	 (mul ($format_piece (cdr pair)) '$%I))))
+	 (mul ($format_piece (cdr pair)) '$%i))))
 
 ;; Express EXPR = R*exp(%I*P); format R & P.
-(def-formatter $%POLARFORM (expr)
+(def-formatter $%polarform (expr)
   (let ((pair (absarg expr)))
     (mul ($format_piece (car pair))
-	 (power '$%E (mul '$%I ($format_piece (cdr pair)))))))
+	 (power '$%e (mul '$%i ($format_piece (cdr pair)))))))
 
 ;;;********************************************************************************
 ;;; Examples of user defined templates:
 ;;; format_piece automatically handles the piecewise templates & remaining templates.
-#|| 
+#||
 put(%myrectform,
      lambda([expr],
        block([pair:rectformlist(expr)],
-          format_piece(pair[1]) +%I* format_piece(pair[2]))),
+	  format_piece(pair[1]) +%I* format_piece(pair[2]))),
      formatter)$
 
 put(%myif,
      lambda([expr,test],
 	if test(expr) then format_piece(expr,1)
-        else               format_piece(expr,2)),
+	else               format_piece(expr,2)),
      formatter)$
 
 put(%part, /* Note workaround for substpart (a special form!) */
@@ -346,4 +348,3 @@ put(%part, /* Note workaround for substpart (a special form!) */
        apply(substpart,cons(format_piece(apply(part,cons(expr,spec))),cons(expr,spec)))),
     formatter)$
 ||#
-
