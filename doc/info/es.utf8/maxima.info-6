@@ -133,11 +133,17 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Selecciona el terminal a utilizar por Gnuplot; valores posibles
      son: `screen' (por defecto), `png', `jpg', `eps', `eps_color',
-     `gif', `animated_gif', `wxt' y `aquaterm'.
+     `pdf', `pdfcairo', `gif', `animated_gif', `wxt' y `aquaterm'.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia. También puede
      usarse como argumento de la función `draw'.
+
+     pdfcairo necesita Gnuplot 4.3. Actualmente (Nov 2008) Gnuplot 4.3
+     es una versión en desarrollo.  pdf necesita que Gnuplot 4.2/4.3
+     haya sido compilado con la opción `--enable-pdf' y libpdf debe
+     estar instalado
+     (`http://www.pdflib.com/en/download/pdflib-family/pdflib-lite/').
 
      Ejemplos:
 
@@ -157,7 +163,13 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                 draw2d(file_name = "myfile",
                        explicit(x^2,x,-1,1),
                        terminal  = 'eps)$
-          (%i6) /* ventana wxwidgets */
+          (%i6) /* pdf file */
+                draw2d(file_name = "mypdf",
+                       pdf_width = 12.0,
+                       pdf_height = 8.0,
+                       explicit(x^2,x,-1,1),
+                       terminal  = 'pdf)$
+          (%i7) /* wxwidgets window */
                 draw2d(explicit(x^2,x,-1,1),
                        terminal  = 'wxt)$
 
@@ -173,7 +185,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
           End of animation sequence
           (%o2)          [gr2d(explicit), gr2d(explicit), gr2d(explicit)]
 
-     La opciób `delay' sólo se activa en caso de gifs animados; se
+     La opción `delay' sólo se activa en caso de gifs animados; se
      ignora en cualquier otro caso.
 
      Véanse también `file_name', `pic_width', `pic_height' y `delay'.
@@ -254,6 +266,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        font_size = 15,
                        label(["Courier-Oblique font, size 15",1,1]),
                        terminal = eps)$
+
+        * pdf: Utiliza las mismas fuentes que Postscript.
+
+        * pdfcairo: Utiliza las mismas fuentes que wxt.
 
         * wxt: La librería pango encuentra las fuentes por medio de la
           utilidad `fontconfig'.
@@ -806,7 +822,8 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Valor por defecto: `"maxima_out"'
 
      `file_name' es el nombre del fichero en el que los terminales
-     `png', `jpg', `eps' y `eps_color' guardarán el gráfico.
+     `png', `jpg', `eps', `pdf' and `pdfcairo' y `eps_color' guardarán
+     el gráfico.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia. También puede
@@ -892,7 +909,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
  -- Opción gráfica: eps_width
      Valor por defecto: 12
 
-     `eps_width' es el ancho (medido en cm) del archivo Postscipt
+     `eps_width' es el ancho (medido en cm) del archivo Postscript
      generado por los terminales `eps' y `eps_color'.
 
      Puesto que ésta es una opción global, su posición dentro de la
@@ -912,7 +929,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
  -- Opción gráfica: eps_height
      Valor por defecto: 8
 
-     `eps_height' es la altura (medida en cm) del archivo Postscipt
+     `eps_height' es la altura (medida en cm) del archivo Postscript
      generado por los terminales `eps' y `eps_color'.
 
      Puesto que ésta es una opción global, su posición dentro de la
@@ -928,6 +945,46 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        explicit(x^2,x,-1,1))$
 
      Véanse también `terminal', `file_name' y `eps_width'.
+
+ -- Opción gráfica: pdf_width
+     Valor por defecto: 21.0 (ancho A4)
+
+     Es el ancho (medida en cm) del documento PDF generado por los
+     terminales `pdf' y `pdfcairo'.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia. También puede
+     usarse como argumento de la función `draw'.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(terminal   = 'pdf,
+                       pdf_width  = 3.0,
+                       pdf_height = 3.0,
+                       explicit(x^2,x,-1,1))$
+
+     Véanse también `terminal', `file_name' y `pdf_height'.
+
+ -- Opción gráfica: pdf_height
+     Valor por defecto: 29.7 (alto A4)
+
+     Es el alto (medida en cm) del documento PDF generado por los
+     terminales `pdf' y `pdfcairo'.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia. También puede
+     usarse como argumento de la función `draw'.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(terminal   = 'pdf,
+                       pdf_width  = 3.0,
+                       pdf_height = 3.0,
+                       explicit(x^2,x,-1,1))$
+
+     Véanse también `terminal', `file_name' y `pdf_width'.
 
  -- Opción gráfica: axis_bottom
      Valor por defecto: `true'
@@ -1108,6 +1165,35 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                    /* en explicit mas abajo:     */
                    enhanced3d   = sin(x*y),
                    explicit(20*exp(-x^2-y^2)-10,x,-3,3,y,-3,3))$
+
+ -- Opción gráfica: meshed_surface
+     Valor por defecto: `false'
+
+     La opción `meshed_surface' sólo tiene efecto cuando la opción
+     `enhanced3d' no es `false'. En tal caso, si `meshed_surface' vale
+     también `false', solamente se dibujará la superficie coloreada. Si
+     su valor es `true', entonces se dibujarán tanto la superficie
+     coloreada como las líneas de la malla.
+
+     Solamente las funciones `explicit' en 3d y los objetos
+     `parametric_surface' se ven afectados por esta opción.
+
+     Véase también `enhanced3d'.
+
+     Ejemplos:
+
+          (%i1) load(draw)$
+          (%i2) draw3d (
+                   enhanced3d     = true,
+                   color          = green,
+                   meshed_surface = true,
+                   explicit(x^2+y^2, x,-2,2,y,-2,2)) $
+          (%i3) draw3d (
+                   enhanced3d     = true,
+                   surface_hide   = true,
+                   color          = green,
+                   meshed_surface = true,
+                   parametric_surface(x^2,y,x+y, x,-2,2,y,-2,2)) $
 
  -- Opción gráfica: point_size
      Valor por defecto: 1
@@ -1539,7 +1625,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véase también `line_type'.
 
  -- Opción gráfica: line_type
-     Valor por defecto: 1
+     Valor por defecto: `solid'
 
      `line_type' indica cómo se van a dibujar las líneas; valores
      posibles son `solid' y `dots'.
@@ -2056,6 +2142,9 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
  -- Objeto gráfico: label ([<string>,<x>,<y>,<z>],...)
      Escribe etiquetas en 2D y 3D.
 
+     Las etiquetas coloreadas sólo trabajan con Gnuplot 4.3. Este es un
+     fallo conocido del paquete `draw'.
+
      Este objeto se ve afectado por las siguientes opciones gráficas:
      `label_alignment', `label_orientation' y `color'.
 
@@ -2164,7 +2253,8 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      tomando valores desde <minval2> hasta <maxval2>.
 
      Este objeto se ve afectado por las siguientes opciones gráficas:
-     `xu_grid', `yv_grid', `line_type', `key' y `color'.
+     `xu_grid', `yv_grid', `line_type', `line_width', `key',
+     `enhanced3d', `meshed_surface' y `color'.
 
      Ejemplo:
 
@@ -2583,7 +2673,8 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      <par2max>.
 
      Este objeto se ve afectado por las siguientes opciones gráficas:
-     `xu_grid', `yv_grid', `line_type', `key' y `color'.
+     `xu_grid', `yv_grid', `line_type', `line_width', `key',
+     `enhanced3d', `meshed_surface' y `color'.
 
      Ejemplo:
 
@@ -2905,7 +2996,7 @@ File: maxima.info,  Node: Funciones y variables para worldmap,  Prev: Funciones 
           (%i6) apply(draw2d, %)$
 
 
-File: maxima.info,  Node: dynamics,  Next: eval_string,  Prev: draw,  Up: Top
+File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: draw,  Up: Top
 
 49 dynamics
 ***********
@@ -3309,62 +3400,847 @@ en t=0:
      (%i21) sol: rk([4-x^2-4*y^2,y^2-x^2+1],[x,y],[-1.25,0.75],[t,0,4,0.02])$
 
 
-File: maxima.info,  Node: eval_string,  Next: f90,  Prev: dynamics,  Up: Top
+File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
 
-50 eval_string
-**************
+50 ezunits
+**********
 
 * Menu:
 
-* Funciones y variables para eval_string::
+* Introducción a ezunits::
+* Introducción a physical_constants::
+* Funciones y variables para ezunits::
 
 
-File: maxima.info,  Node: Funciones y variables para eval_string,  Prev: eval_string,  Up: eval_string
+File: maxima.info,  Node: Introducción a ezunits,  Next: Introducción a physical_constants,  Prev: ezunits,  Up: ezunits
 
-50.1 Funciones y variables para eval_string
-===========================================
+50.1 Introducción a ezunits
+===========================
 
- -- Función: eval_string (<str>)
-     Analiza sintácticamente la cadena <str> interpretándola como una
-     expresión de Maxima y evaluándola a continuación.  El valor dado a
-     <str> debe ser una cadena de Maxima (no de Lisp).  La expresión
-     puede terminar con un carácter de terminación de sentencia (`$' o
-     `;') o carecer de él. Tan solo se analiza y evalúa la primera
-     expresión si hay más de una.
+`ezunits' es un paquete para trabajar con magnitudes dimensionales,
+incluyendo algunas funciones para realizar análisis dimensional.
+`ezunits' puede hacer operaciones aritméticas con magnitudes
+dimensionales y efectuar conversiones entre unidades.  Las unidades que
+se definen son las del Sistema Internacional (SI) y otras comunes en
+los Estados Unidos, siendo posible declarar otras nuevas.
 
-     Si <str> no es una cadena de Maxima se emite un mensaje de error.
+   Véase también `physical_constants', una colección de constantes
+físicas.
+
+   Es necesario ejecutar primero `load(ezunits)' para utilizar este
+paquete.  Con `demo(ezunits)' se podrán ver algunos ejemplos de
+utilización.  La función `known_units' devuelve una lista con todas las
+unidades que están definidas y `display_known_unit_conversions' muestra
+las conversiones conocidas por el sistema en un formato de lectura
+sencilla.
+
+   Una expresión tal como `a ` b' representa una magnitud dimensional,
+siendo `a' una magnitud adimensional y `b' las unidades.  Se puede
+utilizar un símbolo como unidad, sin necesidad de declararlo como tal
+ni de que deba cumplir propiedades especiales.  Tanto la magnitud como
+la unidad de una expresión de la forma `a ` b' pueden extraerse
+invocando las funciones `qty' y `units', respectivamente.
+
+   Una expresión tal como `a ` b `` c' convierte las unidades `b' en
+`c'. El paquete `ezunits' contiene funciones conversoras para unidades
+fundamentales del SI, unidades derivadas, así como algunas otras
+unidades ajenas al SI.  Las conversiones entre unidades que no estén
+programadas en `ezunits' podrán declararse a posteriori.  Las
+conversiones conocidas por `ezunits' están especificadas en la variable
+global `known_unit_conversions', incluyendo tanto las ya declaradas por
+defecto como aquéllas introducidas por el usuario.  Las conversiones
+para los productos, cocientes y potencias de unidades se derivan del
+conjunto de conversiones ya conocidas.
+
+   En general, Maxima prefiere números exactos (enteros o racionales) a
+inexactos (decimales en coma flotante), por lo que `ezunits' respetará
+los exactos cuando aparezcan en expresiones de magnitudes
+dimensionales. Todas las conversiones del paquete se han definido en
+términos de números exactos.
+
+   No hay un sistema de representación de unidades que se considere
+preferible, razón por la cual las unidades no se convierten a otras a
+menos que se indique de forma explícita. `ezunits' reconoce los prefijos
+m-, k-, M y G- para mili-, kilo-, mega- y giga-, respectivamente, tal
+como se utilizan en el SI; estos prefijos sólo se utilizan cuando así
+se indica de forma explícita.
+
+   Las operaciones aritméticas con magnitudes dimensionales se realizan
+de la forma convencional.
+
+   * `(x ` a) * (y ` b)' es igual a `(x * y) ` (a * b)'.
+
+   * `(x ` a) + (y ` a)' es igual a `(x + y) ` a'.
+
+   * `(x ` a)^y' es igual a `x^y ` a^y' si `y' es adimensional.
+
+   `ezunits' no necesita que las unidades en una suma tengan las mismas
+dimensiones; estos términos serán sumados sin emitirse mensaje de error.
+
+   `ezunits' incluye funciones para el análisis dimensional elemental,
+como las dimensiones fundamentales, las unidades fundamentales de una
+magnitud dimensional o el cálculo de magnitudes adimensionales y
+unidades naturales. Las funciones de análisis dimensional son
+adaptaciones de funciones semejantes escritas por Barton Willis en otro
+paquete.
+
+   Con el fin de poder llevar a cabo análisis dimensionales, se
+mantiene una lista de dimensiones fundamentales y otra lista asociada
+de unidades fundamentales; por defecto, las dimensiones fundamentales
+son longitud, masa, tiempo, carga, temperatura y cantidad de materia,
+siendo las unidades fundamentales las propias del Sistema Internacional.
+En cualquier caso, es posible declarar otras dimensiones y unidades
+fundamentales.
+
+
+File: maxima.info,  Node: Introducción a physical_constants,  Next: Funciones y variables para ezunits,  Prev: Introducción a ezunits,  Up: ezunits
+
+50.2 Introducción a physical_constants
+======================================
+
+`physical_constants' contiene constantes físicas recomendadas por el
+CODATA 2006 (`http://physics.nist.gov/constants').  La instrucción
+`load(physical_constants)' carga este paquete en memoria junto con el
+propio `ezunits', si éste no estaba previamente cargado.
+
+   Una constante física se representa por un símbolo con la propiedad
+de ser un valor constante. El valor constante es una magnitud
+dimensional en la sintaxis de `ezunits'. La función `constvalue' extrae
+el valor constante, el cual no es el valor ordinario del símbolo, por
+lo que las constantes físicas se mantienen inalteradas en las
+expresiones evaluadas hasta que sus valores sea extraído con la función
+`constvalue'.
+
+   `physical_constants' incluye cierta información adicional, como la
+descripción de cada constante, una estimación del error de su valor
+numérico y una propiedad para ser representada en TeX.  Para
+identificar constantes físicas, cada símbolo tiene la propiedad
+`physical_constant', de forma que `propvars(physical_constant)' muestra
+la lista de todas las constantes físicas.
+
+   `physical_constants' contiene las siguientes constantes:
+
+`%c'
+     velocidad de la luz en el vacío
+
+`%mu_0'
+     constante magnética
+
+`%e_0'
+     constante eléctrica
+
+`%Z_0'
+     impedancia característica del vacío
+
+`%G'
+     constante gravitatoria de Newton
+
+`%h'
+     constante de Planck
+
+`%h_bar'
+     constante de Planck
+
+`%m_P'
+     masa de Planck
+
+`%T_P'
+     temperature de Planck
+
+`%l_P'
+     longitud de Planck
+
+`%t_P'
+     tiempo de Planck
+
+`%%e'
+     carga elemental
+
+`%Phi_0'
+     flujo magnético cuántico
+
+`%G_0'
+     conductancia cuántica
+
+`%K_J'
+     constante de Josephson
+
+`%R_K'
+     constante de von Klitzing
+
+`%mu_B'
+     magnetón de Bohr
+
+`%mu_N'
+     magnetón nuclear
+
+`%alpha'
+     constante de estructura fina
+
+`%R_inf'
+     constante de Rydberg
+
+`%a_0'
+     radio de Bohr
+
+`%E_h'
+     energía de Hartree
+
+`%ratio_h_me'
+     cuanto de circulación
+
+`%m_e'
+     masa del electrón
+
+`%N_A'
+     número de Avogadro
+
+`%m_u'
+     constante de masa atómica atomic mass constant
+
+`%F'
+     constante de Faraday
+
+`%R'
+     constante molar de los gases
+
+`%%k'
+     constante de Boltzmann
+
+`%V_m'
+     volumen molar del gas ideal
+
+`%n_0'
+     constante de Loschmidt
+
+`%ratio_S0_R'
+     constante de Sackur-Tetrode (constante de entropía absoluta)
+
+`%sigma'
+     constante de Stefan-Boltzmann
+
+`%c_1'
+     primera constante de radiación
+
+`%c_1L'
+     primera constante de radiación para radiancia espectral
+
+`%c_2'
+     segunda constante de radiación
+
+`%b'
+     Constante de la ley del desplazamiento de Wien
+
+`%b_prime'
+     Constante de la ley del desplazamiento de Wien
+
+   Ejemplos:
+
+   Lista de todos los símbolos que tienen la propiedad
+`physical_constant'.
+
+     (%i1) load (physical_constants)$
+     (%i2) propvars (physical_constant);
+     (%o2) [%c, %mu_0, %e_0, %Z_0, %G, %h, %h_bar, %m_P, %T_P, %l_P,
+     %t_P, %%e, %Phi_0, %G_0, %K_J, %R_K, %mu_B, %mu_N, %alpha,
+     %R_inf, %a_0, %E_h, %ratio_h_me, %m_e, %N_A, %m_u, %F, %R, %%k,
+     %V_m, %n_0, %ratio_S0_R, %sigma, %c_1, %c_1L, %c_2, %b, %b_prime]
+
+   Propiedades de la constante física `%c'.
+
+     (%i1) load (physical_constants)$
+     (%i2) constantp (%c);
+     (%o2)                         true
+     (%i3) get (%c, description);
+     (%o3)               speed of light in vacuum
+     (%i4) constvalue (%c);
+                                           m
+     (%o4)                     299792458 ` -
+                                           s
+     (%i5) get (%c, RSU);
+     (%o5)                           0
+     (%i6) tex (%c);
+     $$c$$
+     (%o6)                         false
+
+   Energía equivalente de una libra-masa. El símbolo `%c' se mantiene
+hasta que su valor es extraído con la llamada a la función `constvalue'.
+
+     (%i1) load (physical_constants)$
+     (%i2) m * %c^2;
+                                     2
+     (%o2)                         %c  m
+     (%i3) %, m = 1 ` lbm;
+                                   2
+     (%o3)                       %c  ` lbm
+     (%i4) constvalue (%);
+                                                 2
+                                            lbm m
+     (%o4)              89875517873681764 ` ------
+                                               2
+                                              s
+     (%i5) E : % `` J;
+     Computing conversions to base units; may take a moment.
+                          366838848464007200
+     (%o5)                ------------------ ` J
+                                  9
+     (%i6) E `` GJ;
+                           458548560580009
+     (%o6)                 --------------- ` GJ
+                              11250000
+     (%i7) float (%);
+     (%o7)              4.0759872051556356e+7 ` GJ
+
+
+File: maxima.info,  Node: Funciones y variables para ezunits,  Prev: Introducción a physical_constants,  Up: ezunits
+
+50.3 Funciones y variables para ezunits
+=======================================
+
+ -- Operador: `
+     Operador de magnitud dimensional.  Una expresión tal como `a ` b'
+     representa una magnitud dimensional, siendo `a' una magnitud
+     adimensional y `b' las unidades.  Se puede utilizar un símbolo
+     como unidad, sin necesidad de declararlo como tal ni de que deba
+     cumplir propiedades especiales.  Tanto la magnitud como la unidad
+     de una expresión de la forma `a ` b' pueden extraerse invocando
+     las funciones `qty' y `units', respectivamente.
+
+     Las operaciones aritméticas con magnitudes dimensionales se
+     realizan de la forma convencional.
+
+        * `(x ` a) * (y ` b)' es igual a `(x * y) ` (a * b)'.
+
+        * `(x ` a) + (y ` a)' es igual a `(x + y) ` a'.
+
+        * `(x ` a)^y' es igual a `x^y ` a^y' si `y' es adimensional.
+
+     `ezunits' no necesita que las unidades en una suma tengan las
+     mismas dimensiones; estos términos serán sumados sin emitirse
+     mensaje de error.
+
+     Para utilizar este operador ejecútese primero `load(ezunits)'.
 
      Ejemplos:
 
-          (%i1) eval_string ("foo: 42; bar: foo^2 + baz");
-          (%o1)                       42
-          (%i2) eval_string ("(foo: 42, bar: foo^2 + baz)");
-          (%o2)                   baz + 1764
+     Unidades del Sistema Internacional.
 
-     Véase también `parse_string'.
+          (%i1) load (ezunits)$
+          (%i2) foo : 10 ` m;
+          (%o2)                        10 ` m
+          (%i3) qty (foo);
+          (%o3)                          10
+          (%i4) units (foo);
+          (%o4)                           m
+          (%i5) dimensions (foo);
+          (%o5)                        length
 
- -- Función: parse_string (<str>)
-     Analiza sintácticamente la cadena <str> interpretándola como una
-     expresión de Maxima sin evaluarla.  El valor dado a  <str> debe
-     ser una cadena de Maxima (no de Lisp).  La expresión puede
-     terminar con un carácter de terminación de sentencia (`$' o `;') o
-     carecer de él. Tan solo se analiza y evalúa la primera expresión
-     si hay más de una.
+     Unidades definidas por el usuario.
 
-     Si <str> no es una cadena de Maxima se emite un mensaje de error.
-
-     Ejemplos:
-
-          (%i1) parse_string ("foo: 42; bar: foo^2 + baz");
-          (%o1)                    foo : 42
-          (%i2) parse_string ("(foo: 42, bar: foo^2 + baz)");
+          (%i1) load (ezunits)$
+          (%i2) bar : x ` acre;
+          (%o2)                       x ` acre
+          (%i3) dimensions (bar);
                                              2
-          (%o2)          (foo : 42, bar : foo  + baz)
+          (%o3)                        length
+          (%i4) fundamental_units (bar);
+                                          2
+          (%o4)                          m
 
-     Véase también `eval_string'.
+     Unidades ad hoc.
+
+          (%i1) load (ezunits)$
+          (%i2) baz : 3 ` sheep + 8 ` goat + 1 ` horse;
+          (%o2)           8 ` goat + 3 ` sheep + 1 ` horse
+          (%i3) subst ([sheep = 3*goat, horse = 10*goat], baz);
+          (%o3)                       27 ` goat
+          (%i4) baz2 : 1000`gallon/fortnight;
+                                          gallon
+          (%o4)                   1000 ` ---------
+                                         fortnight
+          (%i5) subst (fortnight = 14*day, baz2);
+                                    500   gallon
+          (%o5)                     --- ` ------
+                                     7     day
+
+     Operaciones aritméticas y magnitudes dimensionales.
+
+          (%i1) load (ezunits)$
+          (%i2) 100 ` kg + 200 ` kg;
+          (%o2)                       300 ` kg
+          (%i3) 100 ` m^3 - 100 ` m^3;
+                                            3
+          (%o3)                        0 ` m
+          (%i4) (10 ` kg) * (17 ` m/s^2);
+                                           kg m
+          (%o4)                      170 ` ----
+                                             2
+                                            s
+          (%i5) (x ` m) / (y ` s);
+                                        x   m
+          (%o5)                         - ` -
+                                        y   s
+          (%i6) (a ` m)^2;
+                                        2    2
+          (%o6)                        a  ` m
+
+
+ -- Operador: "
+     Operador de conversión de unidades.  Una expresión tal como `a ` b
+     `` c' convierte las unidades `b' en `c'. El paquete `ezunits'
+     contiene funciones conversoras para unidades fundamentales del SI,
+     unidades derivadas, así como algunas otras unidades ajenas al SI.
+     Las conversiones entre unidades que no estén programadas en
+     `ezunits' podrán declararse a posteriori.  Las conversiones
+     conocidas por `ezunits' están especificadas en la variable global
+     `known_unit_conversions', incluyendo tanto las ya declaradas por
+     defecto como aquéllas introducidas por el usuario.  Las
+     conversiones para los productos, cocientes y potencias de unidades
+     se derivan del conjunto de conversiones ya conocidas.
+
+     No hay un sistema de representación de unidades que se considere
+     preferible, razón por la cual las unidades no se convierten a
+     otras a menos que se indique de forma explícita. Del mismo modo,
+     `ezunits' no transforma prefijos (milli-, centi-, deci-, etc) a
+     menos que se le indique.
+
+     Para utilizar este operador ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     Conjunto de conversiones conocidas.
+
+          (%i1) load (ezunits)$
+          (%i2) display2d : false$
+          (%i3) known_unit_conversions;
+          (%o3) {acre = 4840*yard^2,Btu = 1055*J,cfm = feet^3/minute,
+                 cm = m/100,day = 86400*s,feet = 381*m/1250,ft = feet,
+                 g = kg/1000,gallon = 757*l/200,GHz = 1000000000*Hz,
+                 GOhm = 1000000000*Ohm,GPa = 1000000000*Pa,
+                 GWb = 1000000000*Wb,Gg = 1000000*kg,Gm = 1000000000*m,
+                 Gmol = 1000000*mol,Gs = 1000000000*s,ha = hectare,
+                 hectare = 100*m^2,hour = 3600*s,Hz = 1/s,inch = feet/12,
+                 km = 1000*m,kmol = 1000*mol,ks = 1000*s,l = liter,
+                 lbf = pound_force,lbm = pound_mass,liter = m^3/1000,
+                 metric_ton = Mg,mg = kg/1000000,MHz = 1000000*Hz,
+                 microgram = kg/1000000000,micrometer = m/1000000,
+                 micron = micrometer,microsecond = s/1000000,
+                 mile = 5280*feet,minute = 60*s,mm = m/1000,
+                 mmol = mol/1000,month = 2629800*s,MOhm = 1000000*Ohm,
+                 MPa = 1000000*Pa,ms = s/1000,MWb = 1000000*Wb,
+                 Mg = 1000*kg,Mm = 1000000*m,Mmol = 1000000000*mol,
+                 Ms = 1000000*s,ns = s/1000000000,ounce = pound_mass/16,
+                 oz = ounce,Ohm = s*J/C^2,
+                 pound_force = 32*ft*pound_mass/s^2,
+                 pound_mass = 200*kg/441,psi = pound_force/inch^2,
+                 Pa = N/m^2,week = 604800*s,Wb = J/A,yard = 3*feet,
+                 year = 31557600*s,C = s*A,F = C^2/J,GA = 1000000000*A,
+                 GC = 1000000000*C,GF = 1000000000*F,GH = 1000000000*H,
+                 GJ = 1000000000*J,GK = 1000000000*K,GN = 1000000000*N,
+                 GS = 1000000000*S,GT = 1000000000*T,GV = 1000000000*V,
+                 GW = 1000000000*W,H = J/A^2,J = m*N,kA = 1000*A,
+                 kC = 1000*C,kF = 1000*F,kH = 1000*H,kHz = 1000*Hz,
+                 kJ = 1000*J,kK = 1000*K,kN = 1000*N,kOhm = 1000*Ohm,
+                 kPa = 1000*Pa,kS = 1000*S,kT = 1000*T,kV = 1000*V,
+                 kW = 1000*W,kWb = 1000*Wb,mA = A/1000,mC = C/1000,
+                 mF = F/1000,mH = H/1000,mHz = Hz/1000,mJ = J/1000,
+                 mK = K/1000,mN = N/1000,mOhm = Ohm/1000,mPa = Pa/1000,
+                 mS = S/1000,mT = T/1000,mV = V/1000,mW = W/1000,
+                 mWb = Wb/1000,MA = 1000000*A,MC = 1000000*C,
+                 MF = 1000000*F,MH = 1000000*H,MJ = 1000000*J,
+                 MK = 1000000*K,MN = 1000000*N,MS = 1000000*S,
+                 MT = 1000000*T,MV = 1000000*V,MW = 1000000*W,
+                 N = kg*m/s^2,R = 5*K/9,S = 1/Ohm,T = J/(m^2*A),V = J/C,
+                 W = J/s}
+
+     Converiones de unidades fundamentales.
+
+          (%i1) load (ezunits)$
+          (%i2) 1 ` ft `` m;
+          Computing conversions to base units; may take a moment.
+                                      381
+          (%o2)                       ---- ` m
+                                      1250
+          (%i3) %, numer;
+          (%o3)                      0.3048 ` m
+          (%i4) 1 ` kg `` lbm;
+                                      441
+          (%o4)                       --- ` lbm
+                                      200
+          (%i5) %, numer;
+          (%o5)                      2.205 ` lbm
+          (%i6) 1 ` W `` Btu/hour;
+                                     720   Btu
+          (%o6)                      --- ` ----
+                                     211   hour
+          (%i7) %, numer;
+                                                  Btu
+          (%o7)               3.412322274881517 ` ----
+                                                  hour
+          (%i8) 100 ` degC `` degF;
+          (%o8)                      212 ` degF
+          (%i9) -40 ` degF `` degC;
+          (%o9)                     (- 40) ` degC
+          (%i10) 1 ` acre*ft `` m^3;
+                                  60228605349    3
+          (%o10)                  ----------- ` m
+                                   48828125
+          (%i11) %, numer;
+                                                    3
+          (%o11)                1233.48183754752 ` m
+
+     Transformando pies a metros y viceversa.
+
+          (%i1) load (ezunits)$
+          (%i2) 100 ` m + 100 ` ft;
+          (%o2)                  100 ` m + 100 ` ft
+          (%i3) (100 ` m + 100 ` ft) `` ft;
+                                     163100
+          (%o3)                      ------ ` ft
+                                      381
+          (%i4) %, numer;
+          (%o4)                428.0839895013123 ` ft
+          (%i5) (100 ` m + 100 ` ft) `` m;
+                                      3262
+          (%o5)                       ---- ` m
+                                       25
+          (%i6) %, numer;
+          (%o6)                      130.48 ` m
+
+     Análisis dimensional para encontrar dimensiones y unidades
+     fundamentales.
+
+          (%i1) load (ezunits)$
+          (%i2) foo : 1 ` acre * ft;
+          (%o2)                      1 ` acre ft
+          (%i3) dimensions (foo);
+                                             3
+          (%o3)                        length
+          (%i4) fundamental_units (foo);
+                                          3
+          (%o4)                          m
+          (%i5) foo `` m^3;
+                                  60228605349    3
+          (%o5)                   ----------- ` m
+                                   48828125
+          (%i6) %, numer;
+                                                    3
+          (%o6)                 1233.48183754752 ` m
+
+     Declaración de conversiones.
+
+          (%i1) load (ezunits)$
+          (%i2) declare_unit_conversion (MMBtu = 10^6*Btu, kW = 1000*W);
+          (%o2)                         done
+          (%i3) declare_unit_conversion (kWh = kW*hour, MWh = 1000*kWh, bell = 1800*s);
+          (%o3)                         done
+          (%i4) 1 ` kW*s `` MWh;
+          Computing conversions to base units; may take a moment.
+                                       1
+          (%o4)                     ------- ` MWh
+                                    3600000
+          (%i5) 1 ` kW/m^2 `` MMBtu/bell/ft^2;
+                                 1306449      MMBtu
+          (%o5)                 ---------- ` --------
+                                8242187500          2
+                                             bell ft
+
+
+ -- Función: constvalue (<x>)
+ -- Función: declare_constvalue (<a>, <x>)
+     Devuelve la constante declarada para un símbolo.  Los valores
+     constantes se declaran con `declare_constvalue'.
+
+     Los valores constantes reconocidos por `constvalue' son distintos
+     de los valores declarados por `numerval' y reconocidos por
+     `constantp'.
+
+     El paquete `physical_units' declara los valores constantes de las
+     constantes físicas.
+
+     Para utilizar estas funciones ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     Valor de una constante física.
+
+          (%i1) load (physical_constants)$
+          (%i2) constvalue (%G);
+                                               3
+                                              m
+          (%o2)                    6.67428 ` -----
+                                                 2
+                                             kg s
+          (%i3) get ('%G, 'description);
+          (%o3)           Newtonian constant of gravitation
+
+     Declarando una nueva constante.
+
+          (%i1) load (ezunits)$
+          (%i2) declare_constvalue (FOO, 100 ` lbm / acre);
+                                           lbm
+          (%o2)                      100 ` ----
+                                           acre
+          (%i3) FOO * (50 ` acre);
+          (%o3)                     50 FOO ` acre
+          (%i4) constvalue (%);
+          (%o4)                      5000 ` lbm
+
+
+ -- Función: units (<x>)
+ -- Función: declare_units (<a>, <u>)
+     Devuelve las unidades de la magnitud dimensional <x>, o 1 en caso
+     de que <x> sea adimensional.
+
+     <x> puede ser una expresión literal dimensional `a ` b', un
+     símbolo con unidades declaradas o una expresión que contenga
+     cualquiera o ambos de los anteriores.
+
+     `declare_constvalue' declara que `units(<a>)' debe devolver <u>,
+     siendo <u> una expresión.
+
+     Para utilizar estas funciones ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     `units' aplicado a expresiones dimensionales literales.
+
+          (%i1) load (ezunits)$
+          (%i2) foo : 100 ` kg;
+          (%o2)                              100 ` kg
+          (%i3) bar : x ` m/s;
+                                                   m
+          (%o3)                                x ` -
+                                                   s
+          (%i4) units (foo);
+          (%o4)                                 kg
+          (%i5) units (bar);
+                                                 m
+          (%o5)                                  -
+                                                 s
+          (%i6) units (foo * bar);
+                                               kg m
+          (%o6)                                ----
+                                                s
+          (%i7) units (foo / bar);
+                                               kg s
+          (%o7)                                ----
+                                                m
+          (%i8) units (foo^2);
+                                                  2
+          (%o8)                                 kg
+
+     `units' aplicado a símbolos con unidades declaradas.
+
+          (%i1) load (ezunits)$
+          (%i2) linenum:0;
+          (%o0)                                  0
+          (%i1) units (aa);
+          (%o1)                                  1
+          (%i2) declare_units (aa, J);
+          (%o2)                                  J
+          (%i3) units (aa);
+          (%o3)                                  J
+          (%i4) units (aa^2);
+                                                 2
+          (%o4)                                 J
+          (%i5) foo : 100 ` kg;
+          (%o5)                              100 ` kg
+          (%i6) units (aa * foo);
+          (%o6)                                kg J
+
+
+ -- Función: qty (<x>)
+ -- Función: declare_qty (<a>, <x>)
+     `qty' devuelve la parte adimensional de la magnitud dimensional
+     <x>, o <x>, si <x> es adimensional.  <x> puede ser una expresión
+     literal dimensional `a ` b', un símbolo con unidades declaradas o
+     una expresión que contenga cualquiera o ambos de los anteriores.
+
+     `declare_qty' declara que `qty(<a>)' debe devolver <x>, siendo <x>
+     una magnitud dimensional.
+
+     Para utilizar estas funciones ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     `qty' aplicado a expresiones dimensionales literales.
+
+          (%i1) load (ezunits)$
+          (%i2) foo : 100 ` kg;
+          (%o2)                       100 ` kg
+          (%i3) qty (foo);
+          (%o3)                          100
+          (%i4) bar : v ` m/s;
+                                            m
+          (%o4)                         v ` -
+                                            s
+          (%i5) foo * bar;
+                                            kg m
+          (%o5)                     100 v ` ----
+                                             s
+          (%i6) qty (foo * bar);
+          (%o6)                         100 v
+
+     `qty' aplicado a símbolos con unidades declaradas.
+
+          (%i1) load (ezunits)$
+          (%i2) declare_qty (aa, xx);
+          (%o2)                          xx
+          (%i3) qty (aa);
+          (%o3)                          xx
+          (%i4) qty (aa^2);
+                                           2
+          (%o4)                          xx
+          (%i5) foo : 100 ` kg;
+          (%o5)                       100 ` kg
+          (%i6) qty (aa * foo);
+          (%o6)                        100 xx
+
+
+ -- Función: unitp (<x>)
+     Devuelve `true' si <x> es una expresión dimensional literal, un
+     símbolo declarado como dimensional o una expresión en la que su
+     operador principal ha sido declarado como dimensional. En
+     cualquier otro caso, `unitp' devuelve `false'.
+
+     Para utilizar esta función ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     `unitp' aplicado a expresiones dimensionales literales.
+
+          (%i1) load (ezunits)$
+          (%i2) unitp (100 ` kg);
+          (%o2)                         true
+
+     `unitp' applied to a symbol declared dimensional.
+
+          (%i1) load (ezunits)$
+          (%i2) unitp (foo);
+          (%o2)                         false
+          (%i3) declare (foo, dimensional);
+          (%o3)                         done
+          (%i4) unitp (foo);
+          (%o4)                         true
+
+     `unitp' aplicado a una expresión en la que el operador principal
+     se declara dimensional.
+
+          (%i1) load (ezunits)$
+          (%i2) unitp (bar (x, y, z));
+          (%o2)                         false
+          (%i3) declare (bar, dimensional);
+          (%o3)                         done
+          (%i4) unitp (bar (x, y, z));
+          (%o4)                         true
+
+
+ -- Función: declare_unit_conversion (<u> = <v>, ...)
+     Añade las ecuaciones <u> = <v>, ... a la lista de conversiones de
+     unidades conocidas por el operador de conversión ```'.  Cada
+     ecuación expresa términos multiplicativos en las que las variables
+     son unidades o expresiones dimensionales literales.
+
+     De momento, es imperativo expresar las conversiones de forma que
+     el miembro izquierdo de cada ecuación sea una unidad simple (en
+     opsición a una expresión multiplicativa) o una expresión
+     dimensional literal con la cantidad igual a 1 y con unidad simple.
+     Está previsto eliminar esta restricción en versiones futuras.
+
+     `known_unit_conversions' es la lista de conversiones de unidades
+     conocidas.
+
+     Para utilizar esta función ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+     Conversión de unidades expresadas por ecuaciones con términos
+     multiplicativos.
+
+          (%i1) load (ezunits)$
+          (%i2) declare_unit_conversion (nautical_mile = 1852 * m, fortnight = 14 * day);
+          (%o2)                         done
+          (%i3) 100 ` nautical_mile / fortnight `` m/s;
+          Computing conversions to base units; may take a moment.
+                                      463    m
+          (%o3)                       ---- ` -
+                                      3024   s
+
+     Conversión de unidades expresadas por ecuaciones con expresiones
+     dimensionales literales.
+
+          (%i1) load (ezunits)$
+          (%i2) declare_unit_conversion (1 ` fluid_ounce = 2 ` tablespoon);
+          (%o2)                         done
+          (%i3) declare_unit_conversion (1 ` tablespoon = 3 ` teaspoon);
+          (%o3)                         done
+          (%i4) 15 ` fluid_ounce `` teaspoon;
+          Computing conversions to base units; may take a moment.
+          (%o4)                     90 ` teaspoon
+
+
+ -- Función: declare_dimensions (<d_1>, <d_2>, <d_3>, ...)
+ -- Función: remove_dimensions (<d_1>, <d_2>, <d_3>, ...)
+
+ -- Función: declare_fundamental_dimensions (<d_1>, <d_2>, <d_3>, ...)
+ -- Función: remove_fundamental_dimensions (<d_1>, <d_2>, <d_3>, ...)
+
+ -- Función: declare_fundamental_units (<u_1>, <u_2>, <u_3>, ...)
+ -- Función: remove_fundamental_units (<u_1>, <u_2>, <u_3>, ...)
+
+ -- Función: dimensions (<x>)
+ -- Función: dimensions_as_list (<x>)
+     `dimensions' devuelve las dimensiones de la magnitud dimensional
+     <x> en forma de expresión que contiene productos y potencias de
+     dimensiones fundamentales.
+
+     `dimensions_as_list' devuelve las dimensiones de la magnitud
+     dimensional <x> en forma de lista, cuyos elementos indican las
+     potencias de las dimensiones fundamentales correspondientes.
+
+     Para utilizar estas funciones ejecútese primero `load(ezunits)'.
+
+     Ejemplos:
+
+          (%i1) load (ezunits)$
+          (%i2) dimensions (1000 ` kg*m^2/s^3);
+                                          2
+                                    length  mass
+          (%o2)                     ------------
+                                           3
+                                       time
+          (%i3) declare_units (foo, acre*ft/hour);
+                                       acre ft
+          (%o3)                        -------
+                                        hour
+          (%i4) dimensions (foo);
+                                             3
+                                       length
+          (%o4)                        -------
+                                        time
+
+          (%i1) load (ezunits)$
+          (%i2) fundamental_dimensions;
+          (%o2)  [length, mass, time, charge, temperature, quantity]
+          (%i3) dimensions_as_list (1000 ` kg*m^2/s^3);
+          (%o3)                 [2, 1, - 3, 0, 0, 0]
+          (%i4) declare_units (foo, acre*ft/hour);
+                                       acre ft
+          (%o4)                        -------
+                                        hour
+          (%i5) dimensions_as_list (foo);
+          (%o5)                 [3, 0, - 1, 0, 0, 0]
+
+
+ -- Función: fundamental_units (<x>)
+
+ -- Función: dimensionless (<x>)
+
+ -- Función: natural_unit (<x>)
 
 
-File: maxima.info,  Node: f90,  Next: ggf,  Prev: eval_string,  Up: Top
+File: maxima.info,  Node: f90,  Next: ggf,  Prev: ezunits,  Up: Top
 
 51 f90
 ******
@@ -3948,7 +4824,9 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
           (%o2)            [2, 2, 2, 2, 2, 2, 3, 3, 3, 3]
 
  -- Función: edge_connectivity (<gr>)
-     Devuelve la conectividad de las aristas del grafo conexto <gr>.
+     Devuelve la conectividad de las aristas del grafo <gr>.
+
+     Véase también `min_edge_cut'.
 
  -- Función: edges (<gr>)
      Devuelve la lista de las aristas (arcos) del grafo (dirigido) <gr>.
@@ -4033,24 +4911,24 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
           (%o3)                          [24, 20, 4, 0]
 
  -- Función: graph_size (<gr>)
-     Devuelve el número de vértices del grafo <gr>.
-
-     Ejemplo:
-
-          (%i1) load (graphs)$
-          (%i2) p : petersen_graph()$
-          (%i3) graph_size(p);
-          (%o3)                                10
-
- -- Función: graph_order (<gr>)
      Devuelve el número de aristas del grafo <gr>.
 
      Ejemplo:
 
           (%i1) load (graphs)$
           (%i2) p : petersen_graph()$
-          (%i3) graph_order(p);
+          (%i3) graph_size(p);
           (%o3)                                15
+
+ -- Función: graph_order (<gr>)
+     Devuelve el número de vértices del grafo <gr>.
+
+     Ejemplo:
+
+          (%i1) load (graphs)$
+          (%i2) p : petersen_graph()$
+          (%i3) graph_order(p);
+          (%o3)                                10
 
  -- Función: girth (<gr>)
      Devuelve la longitud del ciclo más corto del grafo <gr>.
@@ -4375,12 +5253,19 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
           (%o4)                                 9
 
  -- Función: min_edge_cut (<gr>)
-     Devuelve el mínimo edge cut del grafo conexo <gr>. Un edge cut es
-     un conjunto de aristas cuya eliminación aumenta el número de
+     Devuelve el mínimo edge cut del grafo <gr>. Un edge cut es un
+     conjunto de aristas cuya eliminación aumenta el número de
      componentes del grafo.
 
- -- Función: min_vertex_ cover(<gr>)
+     Véase también `edge_connectivity'.
+
+ -- Función: min_vertex_cover (<gr>)
      Devuelve el mínimo nodo covering del grafo <gr>.
+
+ -- Función: min_vertex_cut (<gr>)
+     Devuelve el mínimo vertex cut del grafo <gr>.
+
+     Véase también `vertex_connectivity'.
 
  -- Función: minimum_spanning_tree (<gr>)
      Devuelve el grafo de expansión mínimo del grafo <gr>.
@@ -4563,6 +5448,11 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
                    directed=true)$
           (%i3) topological_sort(g);
           (%o3)                           [1, 2, 5, 3, 4]
+
+ -- Función: vertex_connectivity (<g>)
+     Devuelve la conectividad de los vértices del grafo <g>.
+
+     Véase también `min_vertex_cut'.
 
  -- Función: vertex_degree (<v>, <gr>)
      Devuelve el grado del vértice <v> del grafo <gr>.
@@ -4814,9 +5704,9 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
 
      El algoritmo utilizado para posicionar los vértices se especifica
      con el argumento opcional <program>, cuyo valor por defecto es
-     `program=spring_embedding'.  <spring_embedding> también puede
-     utilizar los programas de graphviz para posicionar los vértices,
-     para lo cual deberá instalarse separadamente el programa graphviz.
+     `program=spring_embedding'.  <draw_graph> también puede utilizar
+     los programas de graphviz para posicionar los vértices, para lo
+     cual deberá instalarse separadamente el programa graphviz.
 
      Los argumentos opcionales de la función <draw_graph> son:
 
@@ -4912,7 +5802,7 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
         * "program=prg": establece el programa para posicionado de
           vértices del grafo. Puede ser cualquiera de los programas
           graphviz (dot, neato, twopi, circ, fdp), <circular> o
-          <spring_embedding> or <planar_embedding>; <planar_embedding>
+          <spring_embedding> o <planar_embedding>; <planar_embedding>
           sl'o está disponible para grafos planares 2-conectados. Si
           `program=spring_embedding', se puede especificar un conjunto
           de vértices de posición fija con la opción <fixed_vertices>.
@@ -5524,26 +6414,48 @@ File: maxima.info,  Node: Funciones y variables para interpol,  Prev: Introducci
           (%i1) load(interpol)$
           (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
           (%i3) lagrange(p);
-                           4        3         2
-                       73 x    701 x    8957 x    5288 x   186
-          (%o3)        ----- - ------ + ------- - ------ + ---
-                        420     210       420      105      5
+                 (x - 7) (x - 6) (x - 3) (x - 1)
+          (%o3)  -------------------------------
+                               35
+             (x - 8) (x - 6) (x - 3) (x - 1)
+           - -------------------------------
+                           12
+             7 (x - 8) (x - 7) (x - 3) (x - 1)
+           + ---------------------------------
+                            30
+             (x - 8) (x - 7) (x - 6) (x - 1)
+           - -------------------------------
+                           60
+             (x - 8) (x - 7) (x - 6) (x - 3)
+           + -------------------------------
+                           84
           (%i4) f(x):=''%;
-                               4        3         2
-                           73 x    701 x    8957 x    5288 x   186
-          (%o4)    f(x) := ----- - ------ + ------- - ------ + ---
-                            420     210       420      105      5
+                         (x - 7) (x - 6) (x - 3) (x - 1)
+          (%o4)  f(x) := -------------------------------
+                                       35
+             (x - 8) (x - 6) (x - 3) (x - 1)
+           - -------------------------------
+                           12
+             7 (x - 8) (x - 7) (x - 3) (x - 1)
+           + ---------------------------------
+                            30
+             (x - 8) (x - 7) (x - 6) (x - 1)
+           - -------------------------------
+                           60
+             (x - 8) (x - 7) (x - 6) (x - 3)
+           + -------------------------------
+                           84
           (%i5) /* Evaluate the polynomial at some points */
-                map(f,[2.3,5/7,%pi]);
-                                       919062
-          (%o5)  [- 1.567534999999992, ------,
-                                       84035
-                                   4          3           2
-                             73 %pi    701 %pi    8957 %pi    5288 %pi   186
-                             ------- - -------- + --------- - -------- + ---]
-                               420       210         420        105       5
+                expand(map(f,[2.3,5/7,%pi]));
+                                            4          3           2
+                              919062  73 %pi    701 %pi    8957 %pi
+          (%o5)  [- 1.567535, ------, ------- - -------- + ---------
+                              84035     420       210         420
+                                                       5288 %pi   186
+                                                     - -------- + ---]
+                                                         105       5
           (%i6) %,numer;
-          (%o6) [- 1.567534999999992, 10.9366573451538, 2.89319655125692]
+          (%o6) [- 1.567535, 10.9366573451538, 2.89319655125692]
           (%i7) load(draw)$  /* load draw package */
           (%i8) /* Plot the polynomial together with points */
                 draw2d(
@@ -5556,10 +6468,21 @@ File: maxima.info,  Node: Funciones y variables para interpol,  Prev: Introducci
                   points(p))$
           (%i9) /* Change variable name */
                 lagrange(p, varname=w);
-                           4        3         2
-                       73 w    701 w    8957 w    5288 w   186
-          (%o9)        ----- - ------ + ------- - ------ + ---
-                        420     210       420      105      5
+                 (w - 7) (w - 6) (w - 3) (w - 1)
+          (%o9)  -------------------------------
+                               35
+             (w - 8) (w - 6) (w - 3) (w - 1)
+           - -------------------------------
+                           12
+             7 (w - 8) (w - 7) (w - 3) (w - 1)
+           + ---------------------------------
+                            30
+             (w - 8) (w - 7) (w - 6) (w - 1)
+           - -------------------------------
+                           60
+             (w - 8) (w - 7) (w - 6) (w - 3)
+           + -------------------------------
+                           84
 
 
  -- Función: charfun2 (<x>, <a>, <b>)
@@ -7113,685 +8036,6 @@ File: maxima.info,  Node: lsquares,  Next: makeOrders,  Prev: linearalgebra,  Up
 * Menu:
 
 * Funciones y variables para lsquares::
-
-
-File: maxima.info,  Node: Funciones y variables para lsquares,  Prev: lsquares,  Up: lsquares
-
-61.1 Funciones y variables para lsquares
-========================================
-
- -- Función: lsquares_estimates (<D>, <x>, <e>, <a>)
- -- Función: lsquares_estimates (<D>, <x>, <e>, <a>, initial = <L>, tol
-          = <t>)
-     Estima los parámetros <a> que mejor se ajusten a la ecuación <e>
-     de variables <x> y <a> a los datos <D> por el método de los
-     mínimos cuadrados. La función `lsquares_estimates' busca primero
-     una solución exacta, y si no la encuentra, buscará una aproximada.
-
-     El resultado es una lista de listas de ecuaciones de la forma `[a
-     = ..., b = ..., c = ...]'. Cada elemento de la lista es un mínimo
-     diferente de error cuadrático medio.
-
-     Los datos deben darse en formato matricial. Cada fila es un dato
-     (el cual suele denominarse `registro' o `caso' en ciertos
-     contextos), y las columnas contienen los valores para cada una de
-     las variables. La lista de variables <x> asigna un nombre a cada
-     una de las columnas de <D>, incluso a aquellas que no intervienen
-     en el análisis. La lista <a> asigna nombres a los parámetros cuyas
-     estimaciones se buscan. El argumento <e> es una expresión o
-     ecuación de variables <x> y <a>; si <e> no es una ecuación (es
-     decir, carece de igualdad), se trata como si fuese  `<e> = 0'.
-
-     Se pueden dar argumentos adicionales a `lsquares_estimates' en
-     forma de ecuaciones, las cuales se pasan tal cual a la función
-     `lbfgs', que es la que se encarga de calcular las estimaciones por
-     el método numérico cuando no encuentra una solución exacta.
-
-     Cuando se pueda encontrar una solución exacta, mediante `solve',
-     los datos en <D> pueden contener valores no numéricos. Sin
-     embargo, cuando no exista solución exacta, todos los elementos de
-     <D> deben ser necesariamente numéricos, lo cual incluye constantes
-     numéricas tales como `%pi' o `%e' y números literales (enteros,
-     racionales y decimales en coma flotante, tanto los de doble
-     precisión como los de precisión arbitraria).  Los cálculos
-     numéricos se realizan en doble precisión con aritmética de punto
-     flotante, por lo que números de cualesquiera otro tipo son
-     convenientemente convertidos antes de proceder con los cálculos.
-
-     Antes de utilizar esta función ejecútese `load(lsquares)'.
-
-     Véanse también `lsquares_estimates_exact',
-     `lsquares_estimates_approximate', `lsquares_mse',
-     `lsquares_residuals' y `lsquares_residual_mse'.
-
-     Ejemplos:
-
-     Un problema con solución exacta.
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                  [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                            [ 1  1  1 ]
-                                            [         ]
-                                            [ 3       ]
-                                            [ -  1  2 ]
-                                            [ 2       ]
-                                            [         ]
-          (%o2)                             [ 9       ]
-                                            [ -  2  1 ]
-                                            [ 4       ]
-                                            [         ]
-                                            [ 3  2  2 ]
-                                            [         ]
-                                            [ 2  2  1 ]
-          (%i3) lsquares_estimates (
-                   M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
-                                   59        27      10921        107
-          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
-                                   16        16      1024         32
-
-     un problema para el que no se encuentra solución exacta, por lo
-     que `lsquares_estimates' recurre a la aproximación numérica.
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix ([1, 1], [2, 7/4], [3, 11/4], [4, 13/4]);
-                                             [ 1  1  ]
-                                             [       ]
-                                             [    7  ]
-                                             [ 2  -  ]
-                                             [    4  ]
-                                             [       ]
-          (%o2)                              [    11 ]
-                                             [ 3  -- ]
-                                             [    4  ]
-                                             [       ]
-                                             [    13 ]
-                                             [ 4  -- ]
-                                             [    4  ]
-          (%i3) lsquares_estimates (
-            M, [x,y], y=a*x^b+c, [a,b,c], initial=[3,3,3], iprint=[-1,0]);
-          (%o3) [[a = 1.387365874920637, b = .7110956639593767,
-                                                  c = - .4142705622439105]]
-
-
- -- Función: lsquares_estimates_exact (<MSE>, <a>)
-     Estima los valores de los parámetros <a> que minimizan el error
-     cuadrático medio <MSE> mediante un sistema de ecuaciones que
-     intentará resolver simbólicamente con `solve'. El error cuadrático
-     medio es una expresión con parámetros <a>, como los devueltos por
-     `lsquares_mse'.
-
-     El valor devuelto por la función es una lista de listas de
-     ecuaciones de la forma `[a = ..., b = ..., c = ...]'. El resultado
-     puede contener cero, uno o más elementos. Cuando la respuesta
-     contiene más de una solución, todas ellas representan mínimos del
-     error cuadrático medio.
-
-     Véanse también `lsquares_estimates',
-     `lsquares_estimates_approximate', `lsquares_mse',
-     `lsquares_residuals' y `lsquares_residual_mse'.
-
-     Ejemplo:
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                     [ 1  1  1 ]
-                                     [         ]
-                                     [ 3       ]
-                                     [ -  1  2 ]
-                                     [ 2       ]
-                                     [         ]
-          (%o2)                      [ 9       ]
-                                     [ -  2  1 ]
-                                     [ 4       ]
-                                     [         ]
-                                     [ 3  2  2 ]
-                                     [         ]
-                                     [ 2  2  1 ]
-          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
-                     5
-                    ====
-                    \                 2                         2
-                     >    ((D + M    )  - C - M     B - M     A)
-                    /            i, 1          i, 3      i, 2
-                    ====
-                    i = 1
-          (%o3)     ---------------------------------------------
-                                          5
-          (%i4) lsquares_estimates_exact (mse, [A, B, C, D]);
-                            59        27      10921        107
-          (%o4)     [[A = - --, B = - --, C = -----, D = - ---]]
-                            16        16      1024         32
-
-
- -- Función: lsquares_estimates_approximate (<MSE>, <a>, initial = <L>,
-          tol = <t>)
-     Estima los valores de los parámetros <a> que minimizan el error
-     cuadrático medio <MSE> mediante el algoritmo numérico `lbfgs'.  El
-     error cuadrático medio es una expresión con parámetros <a>, como
-     los devueltos por `lsquares_mse'.
-
-     La solución devuelta por la función es un mínimo local
-     (posiblemente global) del error cuadrático medio.
-
-     Por consistencia con `lsquares_estimates_exact', el valor devuelto
-     es una lista anidada con un único elemento, consistente en una
-     lista de ecuaciones de la forma `[a = ..., b = ..., c = ...]'.
-
-     Los argumentos adicionales de `lsquares_estimates_approximate' se
-     especifican como ecuaciones y se pasan de esta forma a la función
-     `lbfgs'.
-
-     <MSE> debe devolver un número cuando a sus parámetros se les
-     asignen valores numéricos, lo cual implica que los datos a partir
-     de los cuales se ha generado <MSE> contengan únicamente constantes
-     numéricas tales como `%pi' o `%e' y números literales (enteros,
-     racionales y decimales en coma flotante, tanto los de doble
-     precisión como los de precisión arbitraria).  Los cálculos
-     numéricos se realizan en doble precisión con aritmética de punto
-     flotante, por lo que números de cualesquiera otro tipo son
-     convenientemente convertidos antes de proceder con los cálculos.
-
-     Antes de utilizar esta función ejecútese `load(lsquares)'.
-
-     Véanse también `lsquares_estimates', `lsquares_estimates_exact',
-     `lsquares_mse', `lsquares_residuals' y `lsquares_residual_mse'.
-
-     Ejemplo:
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                     [ 1  1  1 ]
-                                     [         ]
-                                     [ 3       ]
-                                     [ -  1  2 ]
-                                     [ 2       ]
-                                     [         ]
-          (%o2)                      [ 9       ]
-                                     [ -  2  1 ]
-                                     [ 4       ]
-                                     [         ]
-                                     [ 3  2  2 ]
-                                     [         ]
-                                     [ 2  2  1 ]
-          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
-                     5
-                    ====
-                    \                 2                         2
-                     >    ((D + M    )  - C - M     B - M     A)
-                    /            i, 1          i, 3      i, 2
-                    ====
-                    i = 1
-          (%o3)     ---------------------------------------------
-                                          5
-          (%i4) lsquares_estimates_approximate (
-                        mse, [A, B, C, D], iprint = [-1, 0]);
-          (%o4) [[A = - 3.67850494740174, B = - 1.683070351177813,
-                           C = 10.63469950148635, D = - 3.340357993175206]]
-
-
- -- Función: lsquares_mse (<D>, <x>, <e>)
-     Devuelve el error medio cuadrático (MSE) para la ecuación <e> de
-     variables <x> respecto de los datos <D>. El resultado devuelto es
-     una suma, definida como
-
-                              n
-                             ====
-                             \                        2
-                              >    (lhs(e ) - rhs(e ))
-                             /           i         i
-                             ====
-                             i = 1
-                             --------------------------
-                                         n
-
-     siendo <n> el número de datos y `<e>[i]' es la ecuación <e>
-     evaluada cuando a sus variables <x> se le asignan los valores
-     asociados al dato `i'-ésimo `<D>[i]'.
-
-     Antes de utilizar esta función ejecútese `load(lsquares)'.
-
-     Ejemplo:
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                     [ 1  1  1 ]
-                                     [         ]
-                                     [ 3       ]
-                                     [ -  1  2 ]
-                                     [ 2       ]
-                                     [         ]
-          (%o2)                      [ 9       ]
-                                     [ -  2  1 ]
-                                     [ 4       ]
-                                     [         ]
-                                     [ 3  2  2 ]
-                                     [         ]
-                                     [ 2  2  1 ]
-          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
-                     5
-                    ====
-                    \                 2                         2
-                     >    ((D + M    )  - C - M     B - M     A)
-                    /            i, 1          i, 3      i, 2
-                    ====
-                    i = 1
-          (%o3)     ---------------------------------------------
-                                          5
-          (%i4) diff (mse, D);
-                   5
-                  ====
-                  \                             2
-                4  >    (D + M    ) ((D + M    )  - C - M     B - M     A)
-                  /           i, 1         i, 1          i, 3      i, 2
-                  ====
-                  i = 1
-          (%o4) ----------------------------------------------------------
-                                            5
-          (%i5) ''mse, nouns;
-                         2                 2         9 2               2
-          (%o5) (((D + 3)  - C - 2 B - 2 A)  + ((D + -)  - C - B - 2 A)
-                                                     4
-                     2               2         3 2               2
-           + ((D + 2)  - C - B - 2 A)  + ((D + -)  - C - 2 B - A)
-                                               2
-                     2             2
-           + ((D + 1)  - C - B - A) )/5
-
-
- -- Función: lsquares_residuals (<D>, <x>, <e>, <a>)
-     Devuelve los residuos para la ecuación <e> de parámetros <a> y
-     datos <D>.
-
-     <D> es una matriz, <x> una lista de variables y <e> es una ecuación
-     o expresión general; si <e> no es una ecuación (es decir, carece
-     de igualdad), se trata como si fuese  `<e> = 0'. La lista <a>
-     contiene ecuaciones que especifican valores para cualesquiera
-     parámetros de <e> que no estén en <x>.
-
-     Los residuos se definen como
-
-                                  lhs(e ) - rhs(e )
-                                       i         i
-
-     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
-     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
-     las asignaciones indicadas en <a> al resto de variables.
-
-     Antes de utilizar esta función ejecútese `load(lsquares)'.
-
-     Ejemplo:
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                            [ 1  1  1 ]
-                                            [         ]
-                                            [ 3       ]
-                                            [ -  1  2 ]
-                                            [ 2       ]
-                                            [         ]
-          (%o2)                             [ 9       ]
-                                            [ -  2  1 ]
-                                            [ 4       ]
-                                            [         ]
-                                            [ 3  2  2 ]
-                                            [         ]
-                                            [ 2  2  1 ]
-          (%i3) a : lsquares_estimates (
-                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
-                                   59        27      10921        107
-          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
-                                   16        16      1024         32
-          (%i4) lsquares_residuals (
-                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, first(a));
-                                      13    13    13  13  13
-          (%o4)                      [--, - --, - --, --, --]
-                                      64    64    32  64  64
-
-
- -- Función: lsquares_residual_mse (<D>, <x>, <e>, <a>)
-     Devuelve el residuo del error cuadrático medio (MSE) de la
-     ecuación <e> para los valores parámetricos <a> y datos <D>.
-
-     El residuo del error cuadrático medio (MSE) se define como
-
-                              n
-                             ====
-                             \                        2
-                              >    (rhs(e ) - lhs(e ))
-                             /           i         i
-                             ====
-                             i = 1
-                             --------------------------
-                                         n
-
-     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
-     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
-     las asignaciones indicadas en <a> al resto de variables.
-
-     Antes de utilizar esta función ejecútese `load(lsquares)'.
-
-     Ejemplo:
-
-          (%i1) load (lsquares)$
-          (%i2) M : matrix (
-                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
-                                     [ 1  1  1 ]
-                                     [         ]
-                                     [ 3       ]
-                                     [ -  1  2 ]
-                                     [ 2       ]
-                                     [         ]
-          (%o2)                      [ 9       ]
-                                     [ -  2  1 ]
-                                     [ 4       ]
-                                     [         ]
-                                     [ 3  2  2 ]
-                                     [         ]
-                                     [ 2  2  1 ]
-          (%i3) a : lsquares_estimates (
-                       M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
-
-                            59        27      10921        107
-          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
-                            16        16      1024         32
-          (%i4) lsquares_residual_mse (
-                       M, [z,x,y], (z + D)^2 = A*x + B*y + C, first (a));
-                                        169
-          (%o4)                         ----
-                                        2560
-
-
- -- Función: plsquares (<Mat>,<VarList>,<depvars>)
- -- Función: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
- -- Función: plsquares
-          (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
-     Ajuste de una función polinómica multivariante a una tabla de
-     datos por el método de los mínimos cuadrados. <Mat> es la matriz
-     con los datos empíricos, <VarList> es la lista con los nombres de
-     las variables (una por cada columna de <Mat>, pero puede usarse
-     `-' en lugar de los nombres de variables para ignorar las columnas
-     de <Mat>), <depvars> es el nombre de la variable dependiente o una
-     lista con uno o más nombres de variables dependientes (cuyos
-     nombres deben estar también en <VarList>), <maxexpon> es un
-     argumento opcional para indicar el máximo exponente para cada una
-     de las variables independientes (1 por defecto) y  <maxdegree> es
-     otro argumento opcional para el grado del polinomio (<maxexpon>
-     por defecto); nótese que la suma de exponentes de cada término
-     debe ser igual o menor que <maxdegree>. Si `maxdgree = 0' entonces
-     no se aplicará ningún límite.
-
-     Si <depvars> es el nombre de una variable dependiente (no en una
-     lista), `plsquares' devuelve el polinomio ajustado. Si <depvars>
-     es una lista de una o más variables dependientes, `plsquares'
-     devuelve una lista con los polinomios ajustados. Los coeficientes
-     de determinación se muestran en su orden correspondiente para
-     informar sobre la bondad del ajuste. Estos valores se almacenan
-     también en la variable global <DETCOEF> en un formato de lista si
-     <depvars> es a su vez una lista.
-
-     Un ejemplo sencillo de ajuste lineal multivariante:
-
-          (%i1) load("plsquares")$
-
-          (%i2) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
-                          [x,y,z],z);
-               Determination Coefficient for z = .9897039897039897
-                                 11 y - 9 x - 14
-          (%o2)              z = ---------------
-                                        3
-
-     El mismo ejemplo sin restricciones en el grado:
-
-          (%i3) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
-                          [x,y,z],z,1,0);
-               Determination Coefficient for z = 1.0
-                              x y + 23 y - 29 x - 19
-          (%o3)           z = ----------------------
-                                        6
-
-     Cálculo del número de diagonales de un polígono de N lados
-
-          (%i4) plsquares(matrix([3,0],[4,2],[5,5],[6,9],[7,14],[8,20]),
-                          [N,diagonals],diagonals,5);
-               Determination Coefficient for diagonals = 1.0
-                                          2
-                                         N  - 3 N
-          (%o4)              diagonals = --------
-                                            2
-          (%i5) ev(%, N=9);   /* Testing for a 9 sides polygon */
-          (%o5)                 diagonals = 27
-
-     Cálculo del número de formas de colocar dos reinas en un tablero n
-     x n de manera que no se amenacen.
-
-          (%i6) plsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
-                          [n,positions],[positions],4);
-               Determination Coefficient for [positions] = [1.0]
-                                   4       3      2
-                                3 n  - 10 n  + 9 n  - 2 n
-          (%o6)    [positions = -------------------------]
-                                            6
-          (%i7) ev(%[1], n=8); /* Testing for a (8 x 8) chessboard */
-          (%o7)                positions = 1288
-
-     Un ejemplo con seis variables dependientes:
-
-          (%i8) mtrx:matrix([0,0,0,0,0,1,1,1],[0,1,0,1,1,1,0,0],
-                            [1,0,0,1,1,1,0,0],[1,1,1,1,0,0,0,1])$
-          (%i8) plsquares(mtrx,[a,b,_And,_Or,_Xor,_Nand,_Nor,_Nxor],
-                               [_And,_Or,_Xor,_Nand,_Nor,_Nxor],1,0);
-                Determination Coefficient for
-          [_And, _Or, _Xor, _Nand, _Nor, _Nxor] =
-          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-          (%o2) [_And = a b, _Or = - a b + b + a,
-          _Xor = - 2 a b + b + a, _Nand = 1 - a b,
-          _Nor = a b - b - a + 1, _Nxor = 2 a b - b - a + 1]
-
-     Antes de hacer uso de esta función ejecútese  `load("plsquares")'.
-
-
-File: maxima.info,  Node: makeOrders,  Next: mnewton,  Prev: lsquares,  Up: Top
-
-62 makeOrders
-*************
-
-* Menu:
-
-* Funciones y variables para makeOrders::
-
-
-File: maxima.info,  Node: Funciones y variables para makeOrders,  Prev: makeOrders,  Up: makeOrders
-
-62.1 Funciones y variables para makeOrders
-==========================================
-
- -- Función: makeOrders (<indvarlist>,<orderlist>)
-     Devuelve una lista con las potencias de las variables de un
-     polinomio término a término.
-
-          (%i1) load("makeOrders")$
-
-          (%i2) makeOrders([a,b],[2,3]);
-          (%o2) [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
-                      [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]]
-          (%i3) expand((1+a+a^2)*(1+b+b^2+b^3));
-                 2  3      3    3    2  2      2    2    2
-          (%o3) a  b  + a b  + b  + a  b  + a b  + b  + a  b + a b
-                                                            2
-                                                     + b + a  + a + 1
-     donde `[0, 1]' se asocia al término b y `[2, 3]' a a^2 b^3.
-
-     Antes de hacer uso de esta función ejecútese `load("makeOrders")'.
-
-
-File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: makeOrders,  Up: Top
-
-63 mnewton
-**********
-
-* Menu:
-
-* Funciones y variables para mnewton::
-
-
-File: maxima.info,  Node: Funciones y variables para mnewton,  Prev: mnewton,  Up: mnewton
-
-63.1 Funciones y variables para mnewton
-=======================================
-
- -- Variable opcional: newtonepsilon
-     Valor por defecto:  `10.0^(-fpprec/2)'
-
-     Precisión que determina cuando la función `mnewton' ha conseguido
-     una convergencia aceptable.
-
-     Véase también `mnewton'.
-
- -- Variable opcional: newtonmaxiter
-     Valor por defecto:  `50'
-
-     Número máximo de iteraciones para la función `mnewton' en caso de
-     que no se produzca convergencia, o de que ésta se haga muy lenta.
-
-     Véase también `mnewton'.
-
- -- Función: mnewton (<FuncList>,<VarList>,<GuessList>)
-     Resolución de sistemas de ecuaciones no lineales por el método de
-     Newton.  <FuncList> es la lista de ecuaciones a resolver,
-     <VarList> es la lista con los nombres de las incógnitas y
-     <GuessList> es la lista de aproximaciones iniciales.
-
-     La solución se devuelve en el mismo formato que lo hace la función
-     `solve()'.  Si no se le encuentra solución al sistema, se obtiene
-     `[]' como respuesta.
-
-     Esta función se controla con las variables globales
-     `newtonepsilon' y `newtonmaxiter'.
-
-          (%i1) load("mnewton")$
-
-          (%i2) mnewton([x1+3*log(x1)-x2^2, 2*x1^2-x1*x2-5*x1+1],
-                        [x1, x2], [5, 5]);
-          (%o2) [[x1 = 3.756834008012769, x2 = 2.779849592817897]]
-          (%i3) mnewton([2*a^a-5],[a],[1]);
-          (%o3)             [[a = 1.70927556786144]]
-          (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
-          (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
-
-     Antes de hacer uso de esta función ejecútese  `load("mnewton")'.
-     Véanse también `newtonepsilon' y `newtonmaxiter'.
-
-
-File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
-
-64 numericalio
-**************
-
-* Menu:
-
-* Introducción a numericalio::
-* Funciones y variables para entrada y salida en formato texto::
-* Funciones y variables para entrada y salida en formato binario::
-
-
-File: maxima.info,  Node: Introducción a numericalio,  Next: Funciones y variables para entrada y salida en formato texto,  Prev: numericalio,  Up: numericalio
-
-64.1 Introducción a numericalio
-===============================
-
-El paquete `numericalio' define funciones para leer y escribir ficheros
-de datos y flujos. Las funciones de entrada y salida en formato texto
-pueden leer y escribir números (enteros, decimales o decimales
-grandes), símbolos y cadenas.  Las funciones de entrada y salida en
-formato binario sólo pueden leer y escribir números decimales.
-
-   Si ya existe una lista, matriz o array para almacenar los datos de
-entrada, las funciones de entrada de `numericalio' pueden escribir los
-datos directamente en estos objetos. En caso contrario, `numericalio'
-tratará de generar el objeto apropiado para almacenar estos datos.
-
-64.1.1 Entrada y salida en formato texto
-----------------------------------------
-
-In plain-text input and output, it is assumed that each item to read or
-write is an atom:
-
-   En la entrada y salida de datos en formato texto se supone que cada
-dato es un átomo: un número entero, decimal, decimal grande, una cadena
-o un símbolo; no se admiten fracciones, números complejos o cualquier
-otra expresión no atómica. Estas funciones pueden llegar a realizar
-operaciones válidas con expresiones no atómicas, pero estos resultados
-no se documentan y están sujetos a cambios ulteriores.
-
-   Los átomos, tanto en los ficheros de entrada como en los de salida,
-tienen el mismo formato que en los ficheros por lotes de Maxima o en la
-consola interactiva. En particular, las cadenas deben encerrarse entre
-comillas dobles, la barra invertida `\' evita cualquier interpretación
-especial del carácter siguiente, y el símbolo de interrogación `?' se
-reconoce como el comienzo de un símbolo de Lisp. No se reconoce ningún
-carácter de continuación de línea interrumpida.
-
-64.1.2 Separadores válidos para lectura
----------------------------------------
-
-Las funciones para la entrada y salida de datos en formato texto tiene
-un argumento opcional, <separator_flag>, para indicar qué carácter se
-utiliza como separador.
-
-   Para la entrada de texto se reconocen los siguientes valores de la
-variable <separator_flag>: `comma' para los valores separados por
-comas, `pipe' para los valores separados por el carácter de la barra
-vertical `|', `semicolon' para los valores separados por punto y coma
-`;', y `space' para cuando los valores se separan por espacios o
-tabulaciones. Si el nombre del fichero tiene extensión `.csv' y no se
-especifica el argumento <separator_flag>, se tomará por defecto `comma'.
-Si el fichero tiene cualquier otra extensión diferente de `.csv' y no se
-especifica `separator_flag', se usará por defecto `space'.
-
-   En la entrada de texto, varios espacios y tabulaciones sucesivos
-cuentan como un único separador. Sin embargo, varias comas, barras
-verticales o punto y comas sucesivos se interpretan que tienen el
-símbolo `false' entre ellos; por ejemplo, `1234,,Foo' se interpreta lo
-mismo que si fuese `1234,false,Foo'. En la salida, los átomos `false'
-deben escribirse explícitamente, por lo que la lista `[1234, false,
-Foo]' debe escribirse `1234,false,Foo'.
-
-64.1.3 Separadores válidos para escritura
------------------------------------------
-
-Para la entrada de texto se acepta `tab' como valor de <separator_flag>
-para datos separados por tabuladores, así como `comma', `pipe',
-`semicolon' y `space'.
-
-   En la escritura de texto, el átomo`false' se escribe tal cual y una
-lista `[1234, false, Foo]' se escribe `1234,false,Foo'.
-
-64.1.4 Entrada y salida de decimales en formato binario
--------------------------------------------------------
-
-Las funciones de `numericalio' pueden leer y escribir números decimales
-en coma flotante de 8 bytes del estándar IEEE 754. Estos números se
-pueden escribir empezando por el byte menos significativo o por el más
-significativo, según lo indique la variable global
-`assume_external_byte_order'. Por defecto, `numericalio' los almacena
-con el byte más significativo primero.
-
-   Cualesquiera otros tipos de decimales son transformados a 8 bytes.
-El paquete `numericalio' no puede leer ni escribir datos binarios no
-numéricos.
-
-   Ciertos entornos Lisp no reconocen valores especiales del estándar
-IEEE 754 (más o menos infinito, valores no numéricos, valores no
-normales). El efecto que pueda producir la lectura de tales valores por
-parte de `numericalio' es imprevisible.
-
-   `numericalio' incluye funciones para abrir un flujo de lectura o
-escritura de flujos de bytes.
 
 
 

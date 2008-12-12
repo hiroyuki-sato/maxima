@@ -9,6 +9,685 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Funciones y variables para lsquares,  Prev: lsquares,  Up: lsquares
+
+61.1 Funciones y variables para lsquares
+========================================
+
+ -- Función: lsquares_estimates (<D>, <x>, <e>, <a>)
+ -- Función: lsquares_estimates (<D>, <x>, <e>, <a>, initial = <L>, tol
+          = <t>)
+     Estima los parámetros <a> que mejor se ajusten a la ecuación <e>
+     de variables <x> y <a> a los datos <D> por el método de los
+     mínimos cuadrados. La función `lsquares_estimates' busca primero
+     una solución exacta, y si no la encuentra, buscará una aproximada.
+
+     El resultado es una lista de listas de ecuaciones de la forma `[a
+     = ..., b = ..., c = ...]'. Cada elemento de la lista es un mínimo
+     diferente de error cuadrático medio.
+
+     Los datos deben darse en formato matricial. Cada fila es un dato
+     (el cual suele denominarse `registro' o `caso' en ciertos
+     contextos), y las columnas contienen los valores para cada una de
+     las variables. La lista de variables <x> asigna un nombre a cada
+     una de las columnas de <D>, incluso a aquellas que no intervienen
+     en el análisis. La lista <a> asigna nombres a los parámetros cuyas
+     estimaciones se buscan. El argumento <e> es una expresión o
+     ecuación de variables <x> y <a>; si <e> no es una ecuación (es
+     decir, carece de igualdad), se trata como si fuese  `<e> = 0'.
+
+     Se pueden dar argumentos adicionales a `lsquares_estimates' en
+     forma de ecuaciones, las cuales se pasan tal cual a la función
+     `lbfgs', que es la que se encarga de calcular las estimaciones por
+     el método numérico cuando no encuentra una solución exacta.
+
+     Cuando se pueda encontrar una solución exacta, mediante `solve',
+     los datos en <D> pueden contener valores no numéricos. Sin
+     embargo, cuando no exista solución exacta, todos los elementos de
+     <D> deben ser necesariamente numéricos, lo cual incluye constantes
+     numéricas tales como `%pi' o `%e' y números literales (enteros,
+     racionales y decimales en coma flotante, tanto los de doble
+     precisión como los de precisión arbitraria).  Los cálculos
+     numéricos se realizan en doble precisión con aritmética de punto
+     flotante, por lo que números de cualesquiera otro tipo son
+     convenientemente convertidos antes de proceder con los cálculos.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Véanse también `lsquares_estimates_exact',
+     `lsquares_estimates_approximate', `lsquares_mse',
+     `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplos:
+
+     Un problema con solución exacta.
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                  [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                            [ 1  1  1 ]
+                                            [         ]
+                                            [ 3       ]
+                                            [ -  1  2 ]
+                                            [ 2       ]
+                                            [         ]
+          (%o2)                             [ 9       ]
+                                            [ -  2  1 ]
+                                            [ 4       ]
+                                            [         ]
+                                            [ 3  2  2 ]
+                                            [         ]
+                                            [ 2  2  1 ]
+          (%i3) lsquares_estimates (
+                   M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+                                   59        27      10921        107
+          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
+                                   16        16      1024         32
+
+     un problema para el que no se encuentra solución exacta, por lo
+     que `lsquares_estimates' recurre a la aproximación numérica.
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1], [2, 7/4], [3, 11/4], [4, 13/4]);
+                                             [ 1  1  ]
+                                             [       ]
+                                             [    7  ]
+                                             [ 2  -  ]
+                                             [    4  ]
+                                             [       ]
+          (%o2)                              [    11 ]
+                                             [ 3  -- ]
+                                             [    4  ]
+                                             [       ]
+                                             [    13 ]
+                                             [ 4  -- ]
+                                             [    4  ]
+          (%i3) lsquares_estimates (
+            M, [x,y], y=a*x^b+c, [a,b,c], initial=[3,3,3], iprint=[-1,0]);
+          (%o3) [[a = 1.387365874920637, b = .7110956639593767,
+                                                  c = - .4142705622439105]]
+
+
+ -- Función: lsquares_estimates_exact (<MSE>, <a>)
+     Estima los valores de los parámetros <a> que minimizan el error
+     cuadrático medio <MSE> mediante un sistema de ecuaciones que
+     intentará resolver simbólicamente con `solve'. El error cuadrático
+     medio es una expresión con parámetros <a>, como los devueltos por
+     `lsquares_mse'.
+
+     El valor devuelto por la función es una lista de listas de
+     ecuaciones de la forma `[a = ..., b = ..., c = ...]'. El resultado
+     puede contener cero, uno o más elementos. Cuando la respuesta
+     contiene más de una solución, todas ellas representan mínimos del
+     error cuadrático medio.
+
+     Véanse también `lsquares_estimates',
+     `lsquares_estimates_approximate', `lsquares_mse',
+     `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_exact (mse, [A, B, C, D]);
+                            59        27      10921        107
+          (%o4)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+
+
+ -- Función: lsquares_estimates_approximate (<MSE>, <a>, initial = <L>,
+          tol = <t>)
+     Estima los valores de los parámetros <a> que minimizan el error
+     cuadrático medio <MSE> mediante el algoritmo numérico `lbfgs'.  El
+     error cuadrático medio es una expresión con parámetros <a>, como
+     los devueltos por `lsquares_mse'.
+
+     La solución devuelta por la función es un mínimo local
+     (posiblemente global) del error cuadrático medio.
+
+     Por consistencia con `lsquares_estimates_exact', el valor devuelto
+     es una lista anidada con un único elemento, consistente en una
+     lista de ecuaciones de la forma `[a = ..., b = ..., c = ...]'.
+
+     Los argumentos adicionales de `lsquares_estimates_approximate' se
+     especifican como ecuaciones y se pasan de esta forma a la función
+     `lbfgs'.
+
+     <MSE> debe devolver un número cuando a sus parámetros se les
+     asignen valores numéricos, lo cual implica que los datos a partir
+     de los cuales se ha generado <MSE> contengan únicamente constantes
+     numéricas tales como `%pi' o `%e' y números literales (enteros,
+     racionales y decimales en coma flotante, tanto los de doble
+     precisión como los de precisión arbitraria).  Los cálculos
+     numéricos se realizan en doble precisión con aritmética de punto
+     flotante, por lo que números de cualesquiera otro tipo son
+     convenientemente convertidos antes de proceder con los cálculos.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Véanse también `lsquares_estimates', `lsquares_estimates_exact',
+     `lsquares_mse', `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_approximate (
+                        mse, [A, B, C, D], iprint = [-1, 0]);
+          (%o4) [[A = - 3.67850494740174, B = - 1.683070351177813,
+                           C = 10.63469950148635, D = - 3.340357993175206]]
+
+
+ -- Función: lsquares_mse (<D>, <x>, <e>)
+     Devuelve el error medio cuadrático (MSE) para la ecuación <e> de
+     variables <x> respecto de los datos <D>. El resultado devuelto es
+     una suma, definida como
+
+                              n
+                             ====
+                             \                        2
+                              >    (lhs(e ) - rhs(e ))
+                             /           i         i
+                             ====
+                             i = 1
+                             --------------------------
+                                         n
+
+     siendo <n> el número de datos y `<e>[i]' es la ecuación <e>
+     evaluada cuando a sus variables <x> se le asignan los valores
+     asociados al dato `i'-ésimo `<D>[i]'.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) diff (mse, D);
+                   5
+                  ====
+                  \                             2
+                4  >    (D + M    ) ((D + M    )  - C - M     B - M     A)
+                  /           i, 1         i, 1          i, 3      i, 2
+                  ====
+                  i = 1
+          (%o4) ----------------------------------------------------------
+                                            5
+          (%i5) ''mse, nouns;
+                         2                 2         9 2               2
+          (%o5) (((D + 3)  - C - 2 B - 2 A)  + ((D + -)  - C - B - 2 A)
+                                                     4
+                     2               2         3 2               2
+           + ((D + 2)  - C - B - 2 A)  + ((D + -)  - C - 2 B - A)
+                                               2
+                     2             2
+           + ((D + 1)  - C - B - A) )/5
+
+
+ -- Función: lsquares_residuals (<D>, <x>, <e>, <a>)
+     Devuelve los residuos para la ecuación <e> de parámetros <a> y
+     datos <D>.
+
+     <D> es una matriz, <x> una lista de variables y <e> es una ecuación
+     o expresión general; si <e> no es una ecuación (es decir, carece
+     de igualdad), se trata como si fuese  `<e> = 0'. La lista <a>
+     contiene ecuaciones que especifican valores para cualesquiera
+     parámetros de <e> que no estén en <x>.
+
+     Los residuos se definen como
+
+                                  lhs(e ) - rhs(e )
+                                       i         i
+
+     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
+     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
+     las asignaciones indicadas en <a> al resto de variables.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                            [ 1  1  1 ]
+                                            [         ]
+                                            [ 3       ]
+                                            [ -  1  2 ]
+                                            [ 2       ]
+                                            [         ]
+          (%o2)                             [ 9       ]
+                                            [ -  2  1 ]
+                                            [ 4       ]
+                                            [         ]
+                                            [ 3  2  2 ]
+                                            [         ]
+                                            [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (
+                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+                                   59        27      10921        107
+          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
+                                   16        16      1024         32
+          (%i4) lsquares_residuals (
+                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, first(a));
+                                      13    13    13  13  13
+          (%o4)                      [--, - --, - --, --, --]
+                                      64    64    32  64  64
+
+
+ -- Función: lsquares_residual_mse (<D>, <x>, <e>, <a>)
+     Devuelve el residuo del error cuadrático medio (MSE) de la
+     ecuación <e> para los valores parámetricos <a> y datos <D>.
+
+     El residuo del error cuadrático medio (MSE) se define como
+
+                              n
+                             ====
+                             \                        2
+                              >    (rhs(e ) - lhs(e ))
+                             /           i         i
+                             ====
+                             i = 1
+                             --------------------------
+                                         n
+
+     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
+     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
+     las asignaciones indicadas en <a> al resto de variables.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (
+                       M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+
+                            59        27      10921        107
+          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+          (%i4) lsquares_residual_mse (
+                       M, [z,x,y], (z + D)^2 = A*x + B*y + C, first (a));
+                                        169
+          (%o4)                         ----
+                                        2560
+
+
+ -- Función: plsquares (<Mat>,<VarList>,<depvars>)
+ -- Función: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
+ -- Función: plsquares
+          (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
+     Ajuste de una función polinómica multivariante a una tabla de
+     datos por el método de los mínimos cuadrados. <Mat> es la matriz
+     con los datos empíricos, <VarList> es la lista con los nombres de
+     las variables (una por cada columna de <Mat>, pero puede usarse
+     `-' en lugar de los nombres de variables para ignorar las columnas
+     de <Mat>), <depvars> es el nombre de la variable dependiente o una
+     lista con uno o más nombres de variables dependientes (cuyos
+     nombres deben estar también en <VarList>), <maxexpon> es un
+     argumento opcional para indicar el máximo exponente para cada una
+     de las variables independientes (1 por defecto) y  <maxdegree> es
+     otro argumento opcional para el grado del polinomio (<maxexpon>
+     por defecto); nótese que la suma de exponentes de cada término
+     debe ser igual o menor que <maxdegree>. Si `maxdgree = 0' entonces
+     no se aplicará ningún límite.
+
+     Si <depvars> es el nombre de una variable dependiente (no en una
+     lista), `plsquares' devuelve el polinomio ajustado. Si <depvars>
+     es una lista de una o más variables dependientes, `plsquares'
+     devuelve una lista con los polinomios ajustados. Los coeficientes
+     de determinación se muestran en su orden correspondiente para
+     informar sobre la bondad del ajuste. Estos valores se almacenan
+     también en la variable global <DETCOEF> en un formato de lista si
+     <depvars> es a su vez una lista.
+
+     Un ejemplo sencillo de ajuste lineal multivariante:
+
+          (%i1) load("plsquares")$
+
+          (%i2) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z);
+               Determination Coefficient for z = .9897039897039897
+                                 11 y - 9 x - 14
+          (%o2)              z = ---------------
+                                        3
+
+     El mismo ejemplo sin restricciones en el grado:
+
+          (%i3) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z,1,0);
+               Determination Coefficient for z = 1.0
+                              x y + 23 y - 29 x - 19
+          (%o3)           z = ----------------------
+                                        6
+
+     Cálculo del número de diagonales de un polígono de N lados
+
+          (%i4) plsquares(matrix([3,0],[4,2],[5,5],[6,9],[7,14],[8,20]),
+                          [N,diagonals],diagonals,5);
+               Determination Coefficient for diagonals = 1.0
+                                          2
+                                         N  - 3 N
+          (%o4)              diagonals = --------
+                                            2
+          (%i5) ev(%, N=9);   /* Testing for a 9 sides polygon */
+          (%o5)                 diagonals = 27
+
+     Cálculo del número de formas de colocar dos reinas en un tablero n
+     x n de manera que no se amenacen.
+
+          (%i6) plsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
+                          [n,positions],[positions],4);
+               Determination Coefficient for [positions] = [1.0]
+                                   4       3      2
+                                3 n  - 10 n  + 9 n  - 2 n
+          (%o6)    [positions = -------------------------]
+                                            6
+          (%i7) ev(%[1], n=8); /* Testing for a (8 x 8) chessboard */
+          (%o7)                positions = 1288
+
+     Un ejemplo con seis variables dependientes:
+
+          (%i8) mtrx:matrix([0,0,0,0,0,1,1,1],[0,1,0,1,1,1,0,0],
+                            [1,0,0,1,1,1,0,0],[1,1,1,1,0,0,0,1])$
+          (%i8) plsquares(mtrx,[a,b,_And,_Or,_Xor,_Nand,_Nor,_Nxor],
+                               [_And,_Or,_Xor,_Nand,_Nor,_Nxor],1,0);
+                Determination Coefficient for
+          [_And, _Or, _Xor, _Nand, _Nor, _Nxor] =
+          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+          (%o2) [_And = a b, _Or = - a b + b + a,
+          _Xor = - 2 a b + b + a, _Nand = 1 - a b,
+          _Nor = a b - b - a + 1, _Nxor = 2 a b - b - a + 1]
+
+     Antes de hacer uso de esta función ejecútese  `load("plsquares")'.
+
+
+File: maxima.info,  Node: makeOrders,  Next: mnewton,  Prev: lsquares,  Up: Top
+
+62 makeOrders
+*************
+
+* Menu:
+
+* Funciones y variables para makeOrders::
+
+
+File: maxima.info,  Node: Funciones y variables para makeOrders,  Prev: makeOrders,  Up: makeOrders
+
+62.1 Funciones y variables para makeOrders
+==========================================
+
+ -- Función: makeOrders (<indvarlist>,<orderlist>)
+     Devuelve una lista con las potencias de las variables de un
+     polinomio término a término.
+
+          (%i1) load("makeOrders")$
+
+          (%i2) makeOrders([a,b],[2,3]);
+          (%o2) [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
+                      [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]]
+          (%i3) expand((1+a+a^2)*(1+b+b^2+b^3));
+                 2  3      3    3    2  2      2    2    2
+          (%o3) a  b  + a b  + b  + a  b  + a b  + b  + a  b + a b
+                                                            2
+                                                     + b + a  + a + 1
+     donde `[0, 1]' se asocia al término b y `[2, 3]' a a^2 b^3.
+
+     Antes de hacer uso de esta función ejecútese `load("makeOrders")'.
+
+
+File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: makeOrders,  Up: Top
+
+63 mnewton
+**********
+
+* Menu:
+
+* Funciones y variables para mnewton::
+
+
+File: maxima.info,  Node: Funciones y variables para mnewton,  Prev: mnewton,  Up: mnewton
+
+63.1 Funciones y variables para mnewton
+=======================================
+
+ -- Variable opcional: newtonepsilon
+     Valor por defecto:  `10.0^(-fpprec/2)'
+
+     Precisión que determina cuando la función `mnewton' ha conseguido
+     una convergencia aceptable.
+
+     Véase también `mnewton'.
+
+ -- Variable opcional: newtonmaxiter
+     Valor por defecto:  `50'
+
+     Número máximo de iteraciones para la función `mnewton' en caso de
+     que no se produzca convergencia, o de que ésta se haga muy lenta.
+
+     Véase también `mnewton'.
+
+ -- Función: mnewton (<FuncList>,<VarList>,<GuessList>)
+     Resolución de sistemas de ecuaciones no lineales por el método de
+     Newton.  <FuncList> es la lista de ecuaciones a resolver,
+     <VarList> es la lista con los nombres de las incógnitas y
+     <GuessList> es la lista de aproximaciones iniciales.
+
+     La solución se devuelve en el mismo formato que lo hace la función
+     `solve()'.  Si no se le encuentra solución al sistema, se obtiene
+     `[]' como respuesta.
+
+     Esta función se controla con las variables globales
+     `newtonepsilon' y `newtonmaxiter'.
+
+          (%i1) load("mnewton")$
+
+          (%i2) mnewton([x1+3*log(x1)-x2^2, 2*x1^2-x1*x2-5*x1+1],
+                        [x1, x2], [5, 5]);
+          (%o2) [[x1 = 3.756834008012769, x2 = 2.779849592817897]]
+          (%i3) mnewton([2*a^a-5],[a],[1]);
+          (%o3)             [[a = 1.70927556786144]]
+          (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
+          (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
+
+     Antes de hacer uso de esta función ejecútese  `load("mnewton")'.
+     Véanse también `newtonepsilon' y `newtonmaxiter'.
+
+
+File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
+
+64 numericalio
+**************
+
+* Menu:
+
+* Introducción a numericalio::
+* Funciones y variables para entrada y salida en formato texto::
+* Funciones y variables para entrada y salida en formato binario::
+
+
+File: maxima.info,  Node: Introducción a numericalio,  Next: Funciones y variables para entrada y salida en formato texto,  Prev: numericalio,  Up: numericalio
+
+64.1 Introducción a numericalio
+===============================
+
+El paquete `numericalio' define funciones para leer y escribir ficheros
+de datos y flujos. Las funciones de entrada y salida en formato texto
+pueden leer y escribir números (enteros, decimales o decimales
+grandes), símbolos y cadenas.  Las funciones de entrada y salida en
+formato binario sólo pueden leer y escribir números decimales.
+
+   Si ya existe una lista, matriz o array para almacenar los datos de
+entrada, las funciones de entrada de `numericalio' pueden escribir los
+datos directamente en estos objetos. En caso contrario, `numericalio'
+tratará de generar el objeto apropiado para almacenar estos datos.
+
+64.1.1 Entrada y salida en formato texto
+----------------------------------------
+
+In plain-text input and output, it is assumed that each item to read or
+write is an atom:
+
+   En la entrada y salida de datos en formato texto se supone que cada
+dato es un átomo: un número entero, decimal, decimal grande, una cadena
+o un símbolo; no se admiten fracciones, números complejos o cualquier
+otra expresión no atómica. Estas funciones pueden llegar a realizar
+operaciones válidas con expresiones no atómicas, pero estos resultados
+no se documentan y están sujetos a cambios ulteriores.
+
+   Los átomos, tanto en los ficheros de entrada como en los de salida,
+tienen el mismo formato que en los ficheros por lotes de Maxima o en la
+consola interactiva. En particular, las cadenas deben encerrarse entre
+comillas dobles, la barra invertida `\' evita cualquier interpretación
+especial del carácter siguiente, y el símbolo de interrogación `?' se
+reconoce como el comienzo de un símbolo de Lisp. No se reconoce ningún
+carácter de continuación de línea interrumpida.
+
+64.1.2 Separadores válidos para lectura
+---------------------------------------
+
+Las funciones para la entrada y salida de datos en formato texto tiene
+un argumento opcional, <separator_flag>, para indicar qué carácter se
+utiliza como separador.
+
+   Para la entrada de texto se reconocen los siguientes valores de la
+variable <separator_flag>: `comma' para los valores separados por
+comas, `pipe' para los valores separados por el carácter de la barra
+vertical `|', `semicolon' para los valores separados por punto y coma
+`;', y `space' para cuando los valores se separan por espacios o
+tabulaciones. Si el nombre del fichero tiene extensión `.csv' y no se
+especifica el argumento <separator_flag>, se tomará por defecto `comma'.
+Si el fichero tiene cualquier otra extensión diferente de `.csv' y no se
+especifica `separator_flag', se usará por defecto `space'.
+
+   En la entrada de texto, varios espacios y tabulaciones sucesivos
+cuentan como un único separador. Sin embargo, varias comas, barras
+verticales o punto y comas sucesivos se interpretan que tienen el
+símbolo `false' entre ellos; por ejemplo, `1234,,Foo' se interpreta lo
+mismo que si fuese `1234,false,Foo'. En la salida, los átomos `false'
+deben escribirse explícitamente, por lo que la lista `[1234, false,
+Foo]' debe escribirse `1234,false,Foo'.
+
+64.1.3 Separadores válidos para escritura
+-----------------------------------------
+
+Para la entrada de texto se acepta `tab' como valor de <separator_flag>
+para datos separados por tabuladores, así como `comma', `pipe',
+`semicolon' y `space'.
+
+   En la escritura de texto, el átomo`false' se escribe tal cual y una
+lista `[1234, false, Foo]' se escribe `1234,false,Foo'.
+
+64.1.4 Entrada y salida de decimales en formato binario
+-------------------------------------------------------
+
+Las funciones de `numericalio' pueden leer y escribir números decimales
+en coma flotante de 8 bytes del estándar IEEE 754. Estos números se
+pueden escribir empezando por el byte menos significativo o por el más
+significativo, según lo indique la variable global
+`assume_external_byte_order'. Por defecto, `numericalio' los almacena
+con el byte más significativo primero.
+
+   Cualesquiera otros tipos de decimales son transformados a 8 bytes.
+El paquete `numericalio' no puede leer ni escribir datos binarios no
+numéricos.
+
+   Ciertos entornos Lisp no reconocen valores especiales del estándar
+IEEE 754 (más o menos infinito, valores no numéricos, valores no
+normales). El efecto que pueda producir la lectura de tales valores por
+parte de `numericalio' es imprevisible.
+
+   `numericalio' incluye funciones para abrir un flujo de lectura o
+escritura de flujos de bytes.
+
+
 File: maxima.info,  Node: Funciones y variables para entrada y salida en formato texto,  Next: Funciones y variables para entrada y salida en formato binario,  Prev: Introducción a numericalio,  Up: numericalio
 
 64.2 Funciones y variables para entrada y salida en formato texto
@@ -3292,8 +3971,11 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
 ========================================
 
  -- Función: stirling (<z>,<n>)
+ -- Función: stirling (<z>,<n>,<pred>)
      Sustituye `gamma(x)' por la fórmula de Stirling O(1/x^(2n-1)).  Si
-     <n> no es un entero no negativo, emite un mensaje de error.
+     <n> no es un entero no negativo, emite un mensaje de error. Con el
+     tercer argumento opcional `pred', la fórmula de Stirling sólo se
+     aplica si `pred' vale `true'.
 
      Referencia: Abramowitz & Stegun, " Handbook of mathematical
      functions", 6.1.40.
@@ -3330,6 +4012,17 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
           (%o6) sqrt(2) sqrt(%pi) y        %e
                                                         x - 1/2   - x
                                    + sqrt(2) sqrt(%pi) x        %e
+
+     Para aplicar la fórmula de Stirling sólo a aquellos términos que
+     contengan la variable `k', hágase uso del tercer argumento
+     opcional; por ejemplo,
+          (%i7) makegamma(pochhammer(a,k)/pochhammer(b,k));
+          (%o7) (gamma(b)*gamma(k+a))/(gamma(a)*gamma(k+b))
+          (%i8) stirling(%,1, lambda([s], not(freeof(k,s))));
+          (%o8) (%e^(b-a)*gamma(b)*(k+a)^(k+a-1/2)*(k+b)^(-k-b+1/2))/gamma(a)
+
+     Los términos `gamma(a)' y `gamma(b)' no contienen a `k', por lo
+     que la fórmula de Stirling no ha sido aplicada a ellos.
 
      Antes de hacer uso de esta función ejecútese  `load("stirling")'.
 
