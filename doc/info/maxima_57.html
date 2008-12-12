@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on August, 24 2008 by texi2html 1.76 -->
+<!-- Created on December, 2 2008 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima Manual: 57. interpol</title>
+<title>Maxima 5.17.0 Manual: 57. interpol</title>
 
-<meta name="description" content="Maxima Manual: 57. interpol">
-<meta name="keywords" content="Maxima Manual: 57. interpol">
+<meta name="description" content="Maxima 5.17.0 Manual: 57. interpol">
+<meta name="keywords" content="Maxima 5.17.0 Manual: 57. interpol">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -197,12 +197,12 @@ splines methods for polynomial interpolation.
 </p>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Numerical-methods">Numerical methods</a>
+&middot;
+<p>@ref{Category: Numerical methods}
  &middot;
-<a href="maxima_93.html#Category_003a-Share-packages">Share packages</a>
+@ref{Category: Share packages}
  &middot;
-<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+@ref{Category: Package interpol}
 </p>
 </div>
 
@@ -233,10 +233,10 @@ splines methods for polynomial interpolation.
 <p><a name="Item_003a-lagrange"></a>
 </p><dl>
 <dt><u>Function:</u> <b>lagrange</b><i> (<var>points</var>)</i>
-<a name="IDX2116"></a>
+<a name="IDX2132"></a>
 </dt>
 <dt><u>Function:</u> <b>lagrange</b><i> (<var>points</var>, <var>option</var>)</i>
-<a name="IDX2117"></a>
+<a name="IDX2133"></a>
 </dt>
 <dd><p>Computes the polynomial interpolation by the Lagrangian method. Argument <var>points</var> must be either:
 </p>
@@ -253,33 +253,55 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 </p>
 <p>With the <var>option</var> argument it is possible to select the name for the independent variable, which is <code>'x</code> by default; to define another one, write something like <code>varname='z</code>. 
 </p>
-<p>Note that when working with high degree polynomials, floating point evaluations are instable.
+<p>Note that when working with high degree polynomials, floating point evaluations are unstable.
 </p>
 <p>Examples:
 </p>
 <pre class="example">(%i1) load(interpol)$
 (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
 (%i3) lagrange(p);
-                 4        3         2
-             73 x    701 x    8957 x    5288 x   186
-(%o3)        ----- - ------ + ------- - ------ + ---
-              420     210       420      105      5
+       (x - 7) (x - 6) (x - 3) (x - 1)
+(%o3)  -------------------------------
+                     35
+   (x - 8) (x - 6) (x - 3) (x - 1)
+ - -------------------------------
+                 12
+   7 (x - 8) (x - 7) (x - 3) (x - 1)
+ + ---------------------------------
+                  30
+   (x - 8) (x - 7) (x - 6) (x - 1)
+ - -------------------------------
+                 60
+   (x - 8) (x - 7) (x - 6) (x - 3)
+ + -------------------------------
+                 84
 (%i4) f(x):=''%;
-                     4        3         2
-                 73 x    701 x    8957 x    5288 x   186
-(%o4)    f(x) := ----- - ------ + ------- - ------ + ---
-                  420     210       420      105      5
+               (x - 7) (x - 6) (x - 3) (x - 1)
+(%o4)  f(x) := -------------------------------
+                             35
+   (x - 8) (x - 6) (x - 3) (x - 1)
+ - -------------------------------
+                 12
+   7 (x - 8) (x - 7) (x - 3) (x - 1)
+ + ---------------------------------
+                  30
+   (x - 8) (x - 7) (x - 6) (x - 1)
+ - -------------------------------
+                 60
+   (x - 8) (x - 7) (x - 6) (x - 3)
+ + -------------------------------
+                 84
 (%i5) /* Evaluate the polynomial at some points */
-      map(f,[2.3,5/7,%pi]);
-                             919062
-(%o5)  [- 1.567534999999992, ------,
-                             84035
-                         4          3           2
-                   73 %pi    701 %pi    8957 %pi    5288 %pi   186
-                   ------- - -------- + --------- - -------- + ---]
-                     420       210         420        105       5
+      expand(map(f,[2.3,5/7,%pi]));
+                                  4          3           2
+                    919062  73 %pi    701 %pi    8957 %pi
+(%o5)  [- 1.567535, ------, ------- - -------- + ---------
+                    84035     420       210         420
+                                             5288 %pi   186
+                                           - -------- + ---]
+                                               105       5
 (%i6) %,numer;
-(%o6) [- 1.567534999999992, 10.9366573451538, 2.89319655125692]
+(%o6) [- 1.567535, 10.9366573451538, 2.89319655125692]
 (%i7) load(draw)$  /* load draw package */
 (%i8) /* Plot the polynomial together with points */
       draw2d(
@@ -292,15 +314,26 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
         points(p))$
 (%i9) /* Change variable name */
       lagrange(p, varname=w);
-                 4        3         2
-             73 w    701 w    8957 w    5288 w   186
-(%o9)        ----- - ------ + ------- - ------ + ---
-              420     210       420      105      5
+       (w - 7) (w - 6) (w - 3) (w - 1)
+(%o9)  -------------------------------
+                     35
+   (w - 8) (w - 6) (w - 3) (w - 1)
+ - -------------------------------
+                 12
+   7 (w - 8) (w - 7) (w - 3) (w - 1)
+ + ---------------------------------
+                  30
+   (w - 8) (w - 7) (w - 6) (w - 1)
+ - -------------------------------
+                 60
+   (w - 8) (w - 7) (w - 6) (w - 3)
+ + -------------------------------
+                 84
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+&middot;
+<p>@ref{Category: Package interpol}
 </p>
 </div>
 
@@ -311,14 +344,14 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 <p><a name="Item_003a-charfun2"></a>
 </p><dl>
 <dt><u>Function:</u> <b>charfun2</b><i> (<var>x</var>, <var>a</var>, <var>b</var>)</i>
-<a name="IDX2118"></a>
+<a name="IDX2134"></a>
 </dt>
 <dd><p>Returns <code>true</code> if number <var>x</var> belongs to the interval <em>[a, b)</em>, and <code>false</code> otherwise.
 </p>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+&middot;
+<p>@ref{Category: Package interpol}
 </p>
 </div>
 
@@ -329,10 +362,10 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 <p><a name="Item_003a-linearinterpol"></a>
 </p><dl>
 <dt><u>Function:</u> <b>linearinterpol</b><i> (<var>points</var>)</i>
-<a name="IDX2119"></a>
+<a name="IDX2135"></a>
 </dt>
 <dt><u>Function:</u> <b>linearinterpol</b><i> (<var>points</var>, <var>option</var>)</i>
-<a name="IDX2120"></a>
+<a name="IDX2136"></a>
 </dt>
 <dd><p>Computes the polynomial interpolation by the linear method. Argument <var>points</var> must be either:
 </p>
@@ -398,8 +431,8 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+&middot;
+<p>@ref{Category: Package interpol}
 </p>
 </div>
 
@@ -411,10 +444,10 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 <p><a name="Item_003a-cspline"></a>
 </p><dl>
 <dt><u>Function:</u> <b>cspline</b><i> (<var>points</var>)</i>
-<a name="IDX2121"></a>
+<a name="IDX2137"></a>
 </dt>
 <dt><u>Function:</u> <b>cspline</b><i> (<var>points</var>, <var>option1</var>, <var>option2</var>, ...)</i>
-<a name="IDX2122"></a>
+<a name="IDX2138"></a>
 </dt>
 <dd><p>Computes the polynomial interpolation by the cubic splines method. Argument <var>points</var> must be either:
 </p>
@@ -513,8 +546,8 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+&middot;
+<p>@ref{Category: Package interpol}
 </p>
 </div>
 
@@ -524,10 +557,10 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 <p><a name="Item_003a-ratinterpol"></a>
 </p><dl>
 <dt><u>Function:</u> <b>ratinterpol</b><i> (<var>points</var>, <var>numdeg</var>)</i>
-<a name="IDX2123"></a>
+<a name="IDX2139"></a>
 </dt>
 <dt><u>Function:</u> <b>ratinterpol</b><i> (<var>points</var>, <var>numdeg</var>, <var>option1</var>, <var>option2</var>, ...)</i>
-<a name="IDX2124"></a>
+<a name="IDX2140"></a>
 </dt>
 <dd><p>Generates a rational interpolator for data given by <var>points</var> and the degree of the numerator
 being equal to <var>numdeg</var>; the degree of the denominator is calculated
@@ -568,15 +601,16 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-interpol">Package interpol</a>
+&middot;
+<p>@ref{Category: Package interpol}
 </p>
 </div>
 
 
 </dd></dl>
 
-<hr size="6">
+<p><a name="Item_003a-lapack"></a>
+</p><hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC235" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
 <td valign="middle" align="left">[<a href="maxima_58.html#SEC238" title="Next chapter"> &gt;&gt; </a>]</td>
@@ -592,7 +626,7 @@ a list of numbers, <code>p: [4,6,3]</code>, in which case the abscissas will be 
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>August, 24 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>December, 2 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

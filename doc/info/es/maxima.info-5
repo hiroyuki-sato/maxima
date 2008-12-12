@@ -1757,8 +1757,8 @@ File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Int
 
 
  -- Función: return (valor)
-     Puede utilizarse para salir de un bloque, devolviendo su.  Véase
-     `block' para más información.
+     Puede utilizarse para salir de un bloque, devolviendo su argumento.
+     Véase `block' para más información.
 
 
  -- Función: scanmap (<f>, <expr>)
@@ -2427,11 +2427,24 @@ File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev
  -- Función: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
  -- Función: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
           optional_args)
+ -- Función: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>)
+ -- Función: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>, optional_args)
      Devuelve una aproximación del valor mínimo de la expresión <FOM>
      respecto de las variables <xx>, manteniendo las restricciones <C>
      igual a cero. La lista <yy> contiene las soluciones iniciales para
      <xx>.  El algoritmo que se utiliza es el método del lagrangiano
      aumentado (ver referencias [1] y [2]).
+
+     Si <grad> está presente en la llamada a la función, se interpreta
+     como el gradiente de <FOM> respecto de <xx>, representado como una
+     lista de tantas expresiones como variables tenga <xx>. Si el
+     argumento <grad> no está, se calculará de forma automática.
+
+     Tanto <FOM> como cada uno de los elementos de <grad>, si se da
+     como argumento, deben ser expresiones ordinarias; no admitiéndose
+     ni nombres de funciones ni expresiones lambda.
 
      El argumento `optional_args' hace referencia a otros argumentos
      adicionales, los cuales se especifican de la forma `<symbol> =
@@ -2466,7 +2479,7 @@ File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev
 
      [2] `http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf'
 
-     Ejemplo:
+     Ejemplos:
 
           (%i1) load (lbfgs);
           (%o1)     /maxima/share/lbfgs/lbfgs.mac
@@ -2486,6 +2499,28 @@ File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev
           (%o7) [[x = 0.66665984108002, y = 0.33334027245545],
                                            %lambda = [- 1.333337940892525]]
 
+     Mismo ejemplo que en el caso anterior, pero ahora el gradiente se
+     suministra como argumento.
+
+          (%i1) load (lbfgs)$
+          (%i2) load (augmented_lagrangian)$
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o4)                       2 y  + x
+          (%i5) xx: [x, y];
+          (%o5)                        [x, y]
+          (%i6) grad : [2*x, 4*y];
+          (%o6)                      [2 x, 4 y]
+          (%i7) C: [x + y - 1];
+          (%o7)                      [y + x - 1]
+          (%i8) yy: [1, 1];
+          (%o8)                        [1, 1]
+          (%i9) augmented_lagrangian_method ([FOM, grad], xx, C, yy, iprint = [-1, 0]);
+          (%o9) [[x = 0.666659841080025, y = .3333402724554462],
+                                           %lambda = [- 1.333337940892543]]
 
 
 File: maxima.info,  Node: bode,  Next: contrib_ode,  Prev: augmented_lagrangian,  Up: Top
@@ -4953,6 +4988,115 @@ File: maxima.info,  Node: Funciones y variables para distribuciones continuas,  
                                \  n   /
      es una variable aleatoria de Student de <n> grados de libertad,
      t(n).
+
+     Para hacer uso de esta función, ejecútese primero `load(distrib)'.
+
+ -- Función: pdf_noncentral_student_t (<x>,<n>,<ncp>)
+     Devuelve el valor correspondiente a <x> de la función de densidad
+     de una variable aleatoria no central de Student nc_t(n,ncp), con
+     n>0 grados de libertad y parámetro de no centralidad ncp. Para
+     hacer uso de esta función, ejecútese primero `load(distrib)'.
+
+     En ocasiones es necesario hacer algún trabajo extra para obtener
+     el resultado final.
+
+          (%i1) load (distrib)$
+          (%i2) expand(pdf_noncentral_student_t(3,5,0.1));
+                 .01370030107589574 sqrt(5)
+          (%o2)  --------------------------
+                 sqrt(2) sqrt(14) sqrt(%pi)
+             1.654562884111515E-4 sqrt(5)
+           + ----------------------------
+                      sqrt(%pi)
+             .02434921505438663 sqrt(5)
+           + --------------------------
+                        %pi
+          (%i3) float(%);
+          (%o3)          .02080593159405669
+
+ -- Función: cdf_noncentral_student_t (<x>,<n>,<ncp>)
+     Devuelve el valor correspondiente a <x> de la función de
+     distribución de una variable aleatoria no central de Student
+     nc_t(n,ncp), con n>0 grados de libertad y parámetro de no
+     centralidad ncp. Esta función no tiene expresión compacta y se
+     calcula numéricamente si la variable global `numer' vale `true' o
+     si alguno de sus argumentos es un número decimal, en otro caso
+     devuelve una expresión nominal.  Para hacer uso de esta función,
+     ejecútese primero `load(distrib)'.
+
+          (%i1) load (distrib)$
+          (%i2) cdf_noncentral_student_t(-2,5,-5);
+          (%o2) cdf_noncentral_student_t(- 2, 5, - 5)
+          (%i3) cdf_noncentral_student_t(-2.0,5,-5);
+          (%o3)          .9952030093319743
+
+
+ -- Función: quantile_noncentral_student_t (<q>,<n>,<ncp>)
+     Devuelve el <q>-cuantil de una variable aleatoria no central de
+     Student nc_t(n,ncp), con n>0 grados de libertad y parámetro de no
+     centralidad ncp; en otras palabras, se trata de la inversa de
+     `cdf_noncentral_student_t'. El argumento <q> debe ser un número de
+     [0,1]. Para hacer uso de esta función, ejecútese primero
+     `load(distrib)'.
+
+ -- Función: mean_noncentral_student_t (<n>,<ncp>)
+     Devuelve la media de una variable aleatoria no central de Student
+     nc_t(n,ncp), con n>1 grados de libertad y parámetro de no
+     centralidad ncp. Para hacer uso de esta función, ejecútese primero
+     `load(distrib)'.
+
+          (%i1) load (distrib)$
+          (%i2) (assume(df>1), mean_noncentral_student_t(df,k));
+                             df - 1
+                       gamma(------) sqrt(df) k
+                               2
+          (%o2)        ------------------------
+                                        df
+                          sqrt(2) gamma(--)
+                                        2
+
+
+ -- Función: var_noncentral_student_t (<n>,<ncp>)
+     Devuelve la varianza de una variable aleatoria no central de
+     Student nc_t(n,ncp), con n>2 grados de libertad y parámetro de no
+     centralidad ncp. Para hacer uso de esta función, ejecútese primero
+     `load(distrib)'.
+
+ -- Función: std_noncentral_student_t (<n>,<ncp>)
+     Devuelve la desviación típica de una variable aleatoria no central
+     de Student nc_t(n,ncp), con n>2 grados de libertad y parámetro de
+     no centralidad ncp. Para hacer uso de esta función, ejecútese
+     primero `load(distrib)'.
+
+ -- Función: skewness_noncentral_student_t (<n>,<ncp>)
+     Devuelve el coeficiente de asimetría de una variable aleatoria no
+     central de Student nc_t(n,ncp), con n>3 grados de libertad y
+     parámetro de no centralidad ncp. Para hacer uso de esta función,
+     ejecútese primero `load(distrib)'.
+
+ -- Función: kurtosis_noncentral_student_t (<n>,<ncp>)
+     Devuelve el coeficiente de curtosis de una variable aleatoria no
+     central de Student nc_t(n,ncp), con n>4 grados de libertad y
+     parámetro de no centralidad ncp. Para hacer uso de esta función,
+     ejecútese primero `load(distrib)'.
+
+ -- Función: random_noncentral_student_t (<n>,<ncp>)
+ -- Función: random_noncentral_student_t (<n>,<ncp>,<m>)
+     Devuelve un valor aleatorio nc_t(n,ncp), con n>0. Llamando a
+     `random_noncentral_student_t' con un tercer argumento <m>, se
+     obtiene una muestra aleatoria simulada de tamaño <m>.
+
+     El algoritmo utilizado está basado en el hecho de que si <X> es
+     una variable aleatoria normal N(ncp,1) y S^2 es una chi cuadrada
+     de <n> grados de libertad, Chi^2(n), entonces
+                                     X
+                           U = -------------
+                               /   2  \ 1/2
+                               |  S   |
+                               | ---  |
+                               \  n   /
+     es una variable aleatoria no central de Student de <n> grados de
+     libertad y parámetro de no centralidad ncp, nc_t(n,ncp).
 
      Para hacer uso de esta función, ejecútese primero `load(distrib)'.
 

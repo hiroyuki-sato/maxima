@@ -87,6 +87,9 @@ ECHO_T = @ECHO_T@
 ECL_FALSE = @ECL_FALSE@
 ECL_NAME = @ECL_NAME@
 ECL_TRUE = @ECL_TRUE@
+EGREP = @EGREP@
+EMACS = @EMACS@
+EMACSLOADPATH = @EMACSLOADPATH@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -175,6 +178,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lispdir = @lispdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -259,6 +263,7 @@ factor.lisp \
 fcall.lisp \
 float.lisp \
 fortra.lisp \
+gamma.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
 gnuplot.lisp \
@@ -1045,6 +1050,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : nummod.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : conjugate.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : expintegral.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : gamma.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mstuff.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : ratpoi.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : pois2.lisp
@@ -1365,6 +1371,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : nummod.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : conjugate.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : expintegral.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : gamma.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mstuff.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : ratpoi.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : pois2.lisp
@@ -1685,6 +1692,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : nummod.lisp
 @SCL_TRUE@binary-scl/maxima.core : conjugate.lisp
 @SCL_TRUE@binary-scl/maxima.core : expintegral.lisp
+@SCL_TRUE@binary-scl/maxima.core : gamma.lisp
 @SCL_TRUE@binary-scl/maxima.core : mstuff.lisp
 @SCL_TRUE@binary-scl/maxima.core : ratpoi.lisp
 @SCL_TRUE@binary-scl/maxima.core : pois2.lisp
@@ -2003,6 +2011,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : nummod.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : conjugate.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : expintegral.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : gamma.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mstuff.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : ratpoi.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : pois2.lisp
@@ -2322,6 +2331,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : nummod.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : conjugate.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : expintegral.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : gamma.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mstuff.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : ratpoi.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : pois2.lisp
@@ -2660,6 +2670,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : nummod.lisp
 @GCL_TRUE@binary-gcl/maxima : conjugate.lisp
 @GCL_TRUE@binary-gcl/maxima : expintegral.lisp
+@GCL_TRUE@binary-gcl/maxima : gamma.lisp
 @GCL_TRUE@binary-gcl/maxima : mstuff.lisp
 @GCL_TRUE@binary-gcl/maxima : ratpoi.lisp
 @GCL_TRUE@binary-gcl/maxima : pois2.lisp
@@ -2885,6 +2896,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nummod.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : conjugate.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : expintegral.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : gamma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : askp.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sinint.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sin.lisp
@@ -2967,6 +2979,11 @@ uninstall-datafiles:
 @ECL_TRUE@	test -f maxima-tmp && mv maxima-tmp maxima ; \
 @ECL_TRUE@	test $$success = true
 
+# This uses defsystem to build maxima with ecl.
+#binary-ecl/maxima:
+#	test -d binary-ecl || mkdir binary-ecl
+#	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' -eval '(quit)'
+
 @ECL_TRUE@install-ecl:
 @ECL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-ecl"
 @ECL_TRUE@	$(INSTALL_PROGRAM) binary-ecl/maxima "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
@@ -2979,8 +2996,9 @@ uninstall-datafiles:
 
 @ECL_TRUE@ecl-depends.mk: maxima.system
 @ECL_TRUE@	test -d binary-ecl || mkdir binary-ecl
-@ECL_TRUE@	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-ecl/maxima" "ecl-depends.mk"))'
+@ECL_TRUE@	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-ecl/maxima" "ecl-depends.mk") (quit))'
 @ECL_TRUE@binary-ecl/maxima : maxima-package.lisp
+@ECL_TRUE@binary-ecl/maxima : ecl-port.lisp
 @ECL_TRUE@binary-ecl/maxima : autoconf-variables.lisp
 @ECL_TRUE@binary-ecl/maxima : nregex.lisp
 @ECL_TRUE@binary-ecl/maxima : cl-info.lisp
@@ -3254,6 +3272,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : nummod.lisp
 @ECL_TRUE@binary-ecl/maxima : conjugate.lisp
 @ECL_TRUE@binary-ecl/maxima : expintegral.lisp
+@ECL_TRUE@binary-ecl/maxima : gamma.lisp
 @ECL_TRUE@binary-ecl/maxima : mstuff.lisp
 @ECL_TRUE@binary-ecl/maxima : ratpoi.lisp
 @ECL_TRUE@binary-ecl/maxima : pois2.lisp

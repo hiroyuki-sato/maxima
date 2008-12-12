@@ -5,7 +5,7 @@
 (defparameter *autoconf-prefix* "/usr/local")
 (defparameter *autoconf-exec_prefix* "/usr/local")
 (defparameter *autoconf-package* "maxima")
-(defparameter *autoconf-version* "5.16.3")
+(defparameter *autoconf-version* "5.17.0")
 (defparameter *autoconf-libdir* "/usr/local/lib")
 (defparameter *autoconf-libexecdir* "/usr/local/libexec")
 (defparameter *autoconf-datadir* "/usr/local/share")
@@ -13,5 +13,5 @@
 (defparameter *autoconf-host* "i686-pc-linux-gnu")
 (defparameter *autoconf-win32* "false")
  
-(defparameter *maxima-source-root* "/home/robertdodier/tmp/maxima-cvs-build/maxima")
+(defparameter *maxima-source-root* "/home/robertdodier/tmp/maxima-cvs-branch-build/maxima")
 (defparameter *maxima-default-layout-autotools* "true")

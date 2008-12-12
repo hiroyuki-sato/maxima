@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on August, 24 2008 by texi2html 1.76 -->
+<!-- Created on December, 2 2008 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima Manual: 50. ezunits</title>
+<title>Maxima 5.17.0 Manual: 50. ezunits</title>
 
-<meta name="description" content="Maxima Manual: 50. ezunits">
-<meta name="keywords" content="Maxima Manual: 50. ezunits">
+<meta name="description" content="Maxima 5.17.0 Manual: 50. ezunits">
+<meta name="keywords" content="Maxima 5.17.0 Manual: 50. ezunits">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -198,8 +198,13 @@ including some functions for dimensional analysis.
 The built-in units include Systeme Internationale (SI) and US customary units,
 and other units can be declared.
 See also <code>physical_constants</code>, a collection of physical constants.
-<code>load(ezunits)</code> loads this package.
+</p>
+<p><code>load(ezunits)</code> loads this package.
 <code>demo(ezunits)</code> displays several examples.
+The convenience function <code>known_units</code> returns a list of
+the built-in and user-declared units,
+while <code>display_known_unit_conversions</code> displays
+the set of known conversions in an easy-to-read format.
 </p>
 <p>An expression <code>a ` b</code> represents a dimensional quantity,
 with <code>a</code> indicating a nondimensional quantity and <code>b</code> indicating the dimensional units.
@@ -231,9 +236,10 @@ inexact numbers in declared conversions are coerced to exact.
 <p>There is no preferred system for display of units;
 input units are not converted to other units
 unless conversion is explicitly indicated.
-<code>ezunits</code> does not attempt to simplify units by prefixes
-(milli-, centi-, deci-, etc)
-unless such conversion is explicitly indicated.
+<code>ezunits</code> recognizes the prefixes m-, k-, M, and G-
+(for milli-, kilo-, mega-, and giga-)
+as applied to SI base units and SI derived units,
+but such prefixes are applied only when indicated by an explicit conversion.
 </p>
 <p>Arithmetic operations on dimensional quantities are carried out by
 conventional rules for such operations.
@@ -264,12 +270,12 @@ but other fundamental dimensions and units can be declared.
 </p>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Physical-units">Physical units</a>
+&middot;
+<p>@ref{Category: Physical units}
  &middot;
-<a href="maxima_93.html#Category_003a-Share-packages">Share packages</a>
+@ref{Category: Share packages}
  &middot;
-<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -306,11 +312,11 @@ which is the constant value.
 The constant value is a dimensional quantity, as represented by <code>ezunits</code>.
 The function <code>constvalue</code> fetches the constant value;
 the constant value is not the ordinary value of the symbol,
-so the symbols persist in evaluated expressions until the
-value is fetched by <code>constvalue</code>.
+so symbols of physical constants persist in evaluated expressions until their
+values are fetched by <code>constvalue</code>.
 </p>
-<p><code>physical_constants</code> includes some auxilliary information
-such as a description string for each constant,
+<p><code>physical_constants</code> includes some auxilliary information,
+namely, a description string for each constant,
 an estimate of the error of its numerical value,
 and a property for TeX display.
 To identify physical constants, each symbol has the
@@ -445,7 +451,7 @@ of all such symbols.
 </p>
 <p>The list of all symbols which have the <code>physical_constant</code> property.
 </p>
-<pre class="example">(%i1) load (physical_constants);
+<pre class="example">(%i1) load (physical_constants)$
 (%i2) propvars (physical_constant);
 (%o2) [%c, %mu_0, %e_0, %Z_0, %G, %h, %h_bar, %m_P, %T_P, %l_P, 
 %t_P, %%e, %Phi_0, %G_0, %K_J, %R_K, %mu_B, %mu_N, %alpha, 
@@ -454,7 +460,7 @@ of all such symbols.
 </pre>
 <p>Properties of the physical constant <code>%c</code>.
 </p>
-<pre class="example">(%i1) load (physical_constants);
+<pre class="example">(%i1) load (physical_constants)$
 (%i2) constantp (%c);
 (%o2)                         true
 (%i3) get (%c, description);
@@ -471,10 +477,8 @@ $$c$$
 </pre>
 <p>The energy equivalent of 1 pound-mass.
 The symbol <code>%c</code> persists until its value is fetched by <code>constvalue</code>.
-The joules to gigajoules conversion is not built-in,
-so it is declared.
 </p>
-<pre class="example">(%i1) load (physical_constants);
+<pre class="example">(%i1) load (physical_constants)$
 (%i2) m * %c^2;
                                 2
 (%o2)                         %c  m
@@ -488,26 +492,25 @@ so it is declared.
                                           2
                                          s
 (%i5) E : % `` J;
+Computing conversions to base units; may take a moment. 
                      366838848464007200
 (%o5)                ------------------ ` J
                              9
-(%i6) declare_unit_conversion (1 ` GJ = 10^9 ` J);
-(%o6)                         done
-(%i7) E `` GJ;
+(%i6) E `` GJ;
                       458548560580009
-(%o7)                 --------------- ` GJ
+(%o6)                 --------------- ` GJ
                          11250000
-(%i8) float (%);
-(%o8)              4.0759872051556356e+7 ` GJ
+(%i7) float (%);
+(%o7)              4.0759872051556356e+7 ` GJ
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Physical-units">Physical units</a>
+&middot;
+<p>@ref{Category: Physical units}
  &middot;
-<a href="maxima_93.html#Category_003a-Share-packages">Share packages</a>
+@ref{Category: Share packages}
  &middot;
-<a href="maxima_93.html#Category_003a-Package-physical_005fconstants">Package physical_constants</a>
+@ref{Category: Package physical_constants}
 </p>
 </div>
 
@@ -537,7 +540,7 @@ so it is declared.
 <p><a name="Item_003a-_0060"></a>
 </p><dl>
 <dt><u>Operator:</u> <b>`</b>
-<a name="IDX1907"></a>
+<a name="IDX1921"></a>
 </dt>
 <dd><p>The dimensional quantity operator.
 An expression <code>a ` b</code> represents a dimensional quantity,
@@ -565,29 +568,31 @@ such terms are not added together, and no error is reported.
 </p>
 <p>SI (Systeme Internationale) units.
 </p>
-<pre class="example">(%i1) foo : 10 ` m;
-(%o1)                        10 ` m
-(%i2) qty (foo);
-(%o2)                          10
-(%i3) units (foo);
-(%o3)                           m
-(%i4) dimensions (foo);
-(%o4)                        length
+<pre class="example">(%i1) load (ezunits)$
+(%i2) foo : 10 ` m;
+(%o2)                        10 ` m
+(%i3) qty (foo);
+(%o3)                          10
+(%i4) units (foo);
+(%o4)                           m
+(%i5) dimensions (foo);
+(%o5)                        length
 </pre>
 <p>&quot;Customary&quot; units.
 </p>
-<pre class="example">(%i1) bar : x ` acre;
-(%o1)                       x ` acre
-(%i2) dimensions (bar);
+<pre class="example">(%i1) load (ezunits)$
+(%i2) bar : x ` acre;
+(%o2)                       x ` acre
+(%i3) dimensions (bar);
                                    2
-(%o2)                        length
-(%i3) fundamental_units (bar);
+(%o3)                        length
+(%i4) fundamental_units (bar);
                                 2
-(%o3)                          m
+(%o4)                          m
 </pre>
 <p>Units ad hoc.
 </p>
-<pre class="example">(%i1) load (ezunits);
+<pre class="example">(%i1) load (ezunits)$
 (%i2) baz : 3 ` sheep + 8 ` goat + 1 ` horse;
 (%o2)           8 ` goat + 3 ` sheep + 1 ` horse
 (%i3) subst ([sheep = 3*goat, horse = 10*goat], baz);
@@ -596,35 +601,36 @@ such terms are not added together, and no error is reported.
                                 gallon
 (%o4)                   1000 ` ---------
                                fortnight
-(%i5) subst (fortnight = 14*d, baz2);
+(%i5) subst (fortnight = 14*day, baz2);
                           500   gallon
 (%o5)                     --- ` ------
-                           7      d
+                           7     day
 </pre>
 <p>Arithmetic operations on dimensional quantities.
 </p>
-<pre class="example">(%i1) 100 ` kg + 200 ` kg;
-(%o1)                       300 ` kg
-(%i2) 100 ` m^3 - 100 ` m^3;
+<pre class="example">(%i1) load (ezunits)$
+(%i2) 100 ` kg + 200 ` kg;
+(%o2)                       300 ` kg
+(%i3) 100 ` m^3 - 100 ` m^3;
                                   3
-(%o2)                        0 ` m
-(%i3) (10 ` kg) * (17 ` m/s^2);
+(%o3)                        0 ` m
+(%i4) (10 ` kg) * (17 ` m/s^2);
                                  kg m
-(%o3)                      170 ` ----
+(%o4)                      170 ` ----
                                    2
                                   s
-(%i4) (x ` m) / (y ` s);
+(%i5) (x ` m) / (y ` s);
                               x   m
-(%o4)                         - ` -
+(%o5)                         - ` -
                               y   s
-(%i5) (a ` m)^2;
+(%i6) (a ` m)^2;
                               2    2
-(%o5)                        a  ` m
+(%o6)                        a  ` m
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -634,7 +640,7 @@ such terms are not added together, and no error is reported.
 <p><a name="Item_003a-_0060_0060"></a>
 </p><dl>
 <dt><u>Operator:</u> <b>&quot;</b>
-<a name="IDX1908"></a>
+<a name="IDX1922"></a>
 </dt>
 <dd><p>The unit conversion operator.
 An expression <code>a ` b `` c</code> converts from unit <code>b</code> to unit <code>c</code>.
@@ -660,17 +666,46 @@ unless such conversion is explicitly indicated.
 </p>
 <p>The set of known unit conversions.
 </p>
-
 <pre class="example">(%i1) load (ezunits)$
 (%i2) display2d : false$
 (%i3) known_unit_conversions;
-(%o3) {acre = 4840*yd^2,Btu = 1055*J,cfm = ft^3/min,cm = m/100,
-       d = 24*h,ft = 381*m/1250,g = kg/1000,gallon = 757*l/200,
-       h = 60*min,Hz = 1/s,in = ft/12,km = 1000*m,l = m^3/1000,
-       lbf = 32*ft*lbm/s^2,lbm = 200*kg/441,mi = 5280*ft,
-       micron = m/1000000,min = 60*s,mm = m/1000,oz = lbm/16,
-       Ohm = s*J/C^2,psi = lbf/in^2,Pa = N/m^2,Wb = J/A,
-       yd = 3*ft,C = s*A,F = C^2/J,H = J/A^2,J = m*N,
+(%o3) {acre = 4840*yard^2,Btu = 1055*J,cfm = feet^3/minute,
+       cm = m/100,day = 86400*s,feet = 381*m/1250,ft = feet,
+       g = kg/1000,gallon = 757*l/200,GHz = 1000000000*Hz,
+       GOhm = 1000000000*Ohm,GPa = 1000000000*Pa,
+       GWb = 1000000000*Wb,Gg = 1000000*kg,Gm = 1000000000*m,
+       Gmol = 1000000*mol,Gs = 1000000000*s,ha = hectare,
+       hectare = 100*m^2,hour = 3600*s,Hz = 1/s,inch = feet/12,
+       km = 1000*m,kmol = 1000*mol,ks = 1000*s,l = liter,
+       lbf = pound_force,lbm = pound_mass,liter = m^3/1000,
+       metric_ton = Mg,mg = kg/1000000,MHz = 1000000*Hz,
+       microgram = kg/1000000000,micrometer = m/1000000,
+       micron = micrometer,microsecond = s/1000000,
+       mile = 5280*feet,minute = 60*s,mm = m/1000,
+       mmol = mol/1000,month = 2629800*s,MOhm = 1000000*Ohm,
+       MPa = 1000000*Pa,ms = s/1000,MWb = 1000000*Wb,
+       Mg = 1000*kg,Mm = 1000000*m,Mmol = 1000000000*mol,
+       Ms = 1000000*s,ns = s/1000000000,ounce = pound_mass/16,
+       oz = ounce,Ohm = s*J/C^2,
+       pound_force = 32*ft*pound_mass/s^2,
+       pound_mass = 200*kg/441,psi = pound_force/inch^2,
+       Pa = N/m^2,week = 604800*s,Wb = J/A,yard = 3*feet,
+       year = 31557600*s,C = s*A,F = C^2/J,GA = 1000000000*A,
+       GC = 1000000000*C,GF = 1000000000*F,GH = 1000000000*H,
+       GJ = 1000000000*J,GK = 1000000000*K,GN = 1000000000*N,
+       GS = 1000000000*S,GT = 1000000000*T,GV = 1000000000*V,
+       GW = 1000000000*W,H = J/A^2,J = m*N,kA = 1000*A,
+       kC = 1000*C,kF = 1000*F,kH = 1000*H,kHz = 1000*Hz,
+       kJ = 1000*J,kK = 1000*K,kN = 1000*N,kOhm = 1000*Ohm,
+       kPa = 1000*Pa,kS = 1000*S,kT = 1000*T,kV = 1000*V,
+       kW = 1000*W,kWb = 1000*Wb,mA = A/1000,mC = C/1000,
+       mF = F/1000,mH = H/1000,mHz = Hz/1000,mJ = J/1000,
+       mK = K/1000,mN = N/1000,mOhm = Ohm/1000,mPa = Pa/1000,
+       mS = S/1000,mT = T/1000,mV = V/1000,mW = W/1000,
+       mWb = Wb/1000,MA = 1000000*A,MC = 1000000*C,
+       MF = 1000000*F,MH = 1000000*H,MJ = 1000000*J,
+       MK = 1000000*K,MN = 1000000*N,MS = 1000000*S,
+       MT = 1000000*T,MV = 1000000*V,MW = 1000000*W,
        N = kg*m/s^2,R = 5*K/9,S = 1/Ohm,T = J/(m^2*A),V = J/C,
        W = J/s}
 </pre>
@@ -678,25 +713,26 @@ unless such conversion is explicitly indicated.
 </p>
 <pre class="example">(%i1) load (ezunits)$
 (%i2) 1 ` ft `` m;
+Computing conversions to base units; may take a moment. 
                             381
 (%o2)                       ---- ` m
                             1250
-(%i3) %, numer; 
+(%i3) %, numer;
 (%o3)                      0.3048 ` m
-(%i4) 1 ` kg `` lbm; 
+(%i4) 1 ` kg `` lbm;
                             441
 (%o4)                       --- ` lbm
                             200
 (%i5) %, numer;
 (%o5)                      2.205 ` lbm
-(%i6) 1 ` W `` Btu/h;
-                            720   Btu
-(%o6)                       --- ` ---
-                            211    h
+(%i6) 1 ` W `` Btu/hour;
+                           720   Btu
+(%o6)                      --- ` ----
+                           211   hour
 (%i7) %, numer;
-                                         Btu
-(%o7)                3.412322274881517 ` ---
-                                          h
+                                        Btu
+(%o7)               3.412322274881517 ` ----
+                                        hour
 (%i8) 100 ` degC `` degF;
 (%o8)                      212 ` degF
 (%i9) -40 ` degF `` degC;
@@ -715,6 +751,7 @@ unless such conversion is explicitly indicated.
 (%i2) 100 ` m + 100 ` ft;
 (%o2)                  100 ` m + 100 ` ft
 (%i3) (100 ` m + 100 ` ft) `` ft;
+Computing conversions to base units; may take a moment. 
                            163100
 (%o3)                      ------ ` ft
                             381
@@ -739,6 +776,7 @@ unless such conversion is explicitly indicated.
                                 3
 (%o4)                          m
 (%i5) foo `` m^3;
+Computing conversions to base units; may take a moment. 
                         60228605349    3
 (%o5)                   ----------- ` m
                          48828125
@@ -751,9 +789,10 @@ unless such conversion is explicitly indicated.
 <pre class="example">(%i1) load (ezunits)$
 (%i2) declare_unit_conversion (MMBtu = 10^6*Btu, kW = 1000*W);
 (%o2)                         done
-(%i3) declare_unit_conversion (kWh = kW*h, MWh = 1000*kWh, bell = 1800*s);
+(%i3) declare_unit_conversion (kWh = kW*hour, MWh = 1000*kWh, bell = 1800*s);
 (%o3)                         done
 (%i4) 1 ` kW*s `` MWh;
+Computing conversions to base units; may take a moment. 
                              1
 (%o4)                     ------- ` MWh
                           3600000
@@ -765,8 +804,8 @@ unless such conversion is explicitly indicated.
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -776,10 +815,10 @@ unless such conversion is explicitly indicated.
 <p><a name="Item_003a-constvalue"></a>
 </p><dl>
 <dt><u>Function:</u> <b>constvalue</b><i> (<var>x</var>)</i>
-<a name="IDX1909"></a>
+<a name="IDX1923"></a>
 </dt>
 <dt><u>Function:</u> <b>declare_constvalue</b><i> (<var>a</var>, <var>x</var>)</i>
-<a name="IDX1910"></a>
+<a name="IDX1924"></a>
 </dt>
 <dd><p>Returns the declared constant value of a symbol,
 or value of an expression with declared constant values substituted for symbols.
@@ -822,8 +861,8 @@ for a number of physical constants.
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -833,10 +872,10 @@ for a number of physical constants.
 <p><a name="Item_003a-units"></a>
 </p><dl>
 <dt><u>Function:</u> <b>units</b><i> (<var>x</var>)</i>
-<a name="IDX1911"></a>
+<a name="IDX1925"></a>
 </dt>
 <dt><u>Function:</u> <b>declare_units</b><i> (<var>a</var>, <var>u</var>)</i>
-<a name="IDX1912"></a>
+<a name="IDX1926"></a>
 </dt>
 <dd><p>Returns the units of a dimensional quantity <var>x</var>,
 or returns 1 if <var>x</var> is nondimensional.
@@ -856,52 +895,50 @@ where <var>u</var> is an expression.
 </p>
 <pre class="example">(%i1) load (ezunits)$
 (%i2) foo : 100 ` kg;
-(%o2)                              100 ` kg
+(%o2)                       100 ` kg
 (%i3) bar : x ` m/s;
-                                         m
-(%o3)                                x ` -
-                                         s
+                                  m
+(%o3)                         x ` -
+                                  s
 (%i4) units (foo);
-(%o4)                                 kg
+(%o4)                          kg
 (%i5) units (bar);
-                                       m
-(%o5)                                  -
-                                       s
+                                m
+(%o5)                           -
+                                s
 (%i6) units (foo * bar);
-                                     kg m
-(%o6)                                ----
-                                      s
+                              kg m
+(%o6)                         ----
+                               s
 (%i7) units (foo / bar);
-                                     kg s
-(%o7)                                ----
-                                      m
+                              kg s
+(%o7)                         ----
+                               m
 (%i8) units (foo^2);
-                                        2
-(%o8)                                 kg
+                                 2
+(%o8)                          kg
 </pre>
 <p><code>units</code> applied to symbols with declared units.
 </p>
 <pre class="example">(%i1) load (ezunits)$
-(%i2) linenum:0;
-(%o0)                                  0
-(%i1) units (aa);
-(%o1)                                  1
-(%i2) declare_units (aa, J);
-(%o2)                                  J
-(%i3) units (aa);
-(%o3)                                  J
-(%i4) units (aa^2);
-                                       2
-(%o4)                                 J
-(%i5) foo : 100 ` kg;
-(%o5)                              100 ` kg
-(%i6) units (aa * foo);
-(%o6)                                kg J
+(%i2) units (aa);
+(%o2)                           1
+(%i3) declare_units (aa, J);
+(%o3)                           J
+(%i4) units (aa);
+(%o4)                           J
+(%i5) units (aa^2);
+                                2
+(%o5)                          J
+(%i6) foo : 100 ` kg;
+(%o6)                       100 ` kg
+(%i7) units (aa * foo);
+(%o7)                         kg J
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -911,10 +948,10 @@ where <var>u</var> is an expression.
 <p><a name="Item_003a-qty"></a>
 </p><dl>
 <dt><u>Function:</u> <b>qty</b><i> (<var>x</var>)</i>
-<a name="IDX1913"></a>
+<a name="IDX1927"></a>
 </dt>
 <dt><u>Function:</u> <b>declare_qty</b><i> (<var>a</var>, <var>x</var>)</i>
-<a name="IDX1914"></a>
+<a name="IDX1928"></a>
 </dt>
 <dd><p><code>qty</code> returns the nondimensional part of a dimensional quantity <var>x</var>,
 or returns <var>x</var> if <var>x</var> is nondimensional.
@@ -964,8 +1001,8 @@ where <var>x</var> is a nondimensional quantity.
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -975,7 +1012,7 @@ where <var>x</var> is a nondimensional quantity.
 <p><a name="Item_003a-unitp"></a>
 </p><dl>
 <dt><u>Function:</u> <b>unitp</b><i> (<var>x</var>)</i>
-<a name="IDX1915"></a>
+<a name="IDX1929"></a>
 </dt>
 <dd><p>Returns <code>true</code> if <var>x</var> is a literal dimensional expression,
 a symbol declared dimensional,
@@ -1014,8 +1051,8 @@ or an expression in which the main operator is declared dimensional.
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1025,7 +1062,7 @@ or an expression in which the main operator is declared dimensional.
 <p><a name="Item_003a-declare_005funit_005fconversion"></a>
 </p><dl>
 <dt><u>Function:</u> <b>declare_unit_conversion</b><i> (<var>u</var> = <var>v</var>, ...)</i>
-<a name="IDX1916"></a>
+<a name="IDX1930"></a>
 </dt>
 <dd><p>Appends equations <var>u</var> = <var>v</var>, ... to the list of unit conversions
 known to the unit conversion operator <code>``</code>.
@@ -1049,20 +1086,29 @@ It is foreseen that this limitation will be relaxed in future versions.
 <p>Unit conversions expressed by equations of multiplicative terms.
 </p>
 <pre class="example">(%i1) load (ezunits)$
-(%i2) declare_unit_conversion (nautical_mile = 1852 * m, fortnight = 14 * d);
+(%i2) declare_unit_conversion (nautical_mile = 1852 * m, fortnight = 14 * day);
 (%o2)                         done
 (%i3) 100 ` nautical_mile / fortnight `` m/s;
+Computing conversions to base units; may take a moment. 
                             463    m
 (%o3)                       ---- ` -
                             3024   s
 </pre>
 <p>Unit conversions expressed by equations of literal dimensional expressions.
 </p>
-
+<pre class="example">(%i1) load (ezunits)$
+(%i2) declare_unit_conversion (1 ` fluid_ounce = 2 ` tablespoon);
+(%o2)                         done
+(%i3) declare_unit_conversion (1 ` tablespoon = 3 ` teaspoon);
+(%o3)                         done
+(%i4) 15 ` fluid_ounce `` teaspoon;
+Computing conversions to base units; may take a moment. 
+(%o4)                     90 ` teaspoon
+</pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1072,15 +1118,15 @@ It is foreseen that this limitation will be relaxed in future versions.
 <p><a name="Item_003a-declare_005fdimensions"></a>
 </p><dl>
 <dt><u>Function:</u> <b>declare_dimensions</b><i> (<var>d_1</var>, <var>d_2</var>, <var>d_3</var>, ...)</i>
-<a name="IDX1917"></a>
+<a name="IDX1931"></a>
 </dt>
 <dt><u>Function:</u> <b>remove_dimensions</b><i> (<var>d_1</var>, <var>d_2</var>, <var>d_3</var>, ...)</i>
-<a name="IDX1918"></a>
+<a name="IDX1932"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1090,15 +1136,15 @@ It is foreseen that this limitation will be relaxed in future versions.
 <p><a name="Item_003a-declare_005ffundamental_005fdimensions"></a>
 </p><dl>
 <dt><u>Function:</u> <b>declare_fundamental_dimensions</b><i> (<var>d_1</var>, <var>d_2</var>, <var>d_3</var>, ...)</i>
-<a name="IDX1919"></a>
+<a name="IDX1933"></a>
 </dt>
 <dt><u>Function:</u> <b>remove_fundamental_dimensions</b><i> (<var>d_1</var>, <var>d_2</var>, <var>d_3</var>, ...)</i>
-<a name="IDX1920"></a>
+<a name="IDX1934"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1108,15 +1154,15 @@ It is foreseen that this limitation will be relaxed in future versions.
 <p><a name="Item_003a-declare_005ffundamental_005funits"></a>
 </p><dl>
 <dt><u>Function:</u> <b>declare_fundamental_units</b><i> (<var>u_1</var>, <var>u_2</var>, <var>u_3</var>, ...)</i>
-<a name="IDX1921"></a>
+<a name="IDX1935"></a>
 </dt>
 <dt><u>Function:</u> <b>remove_fundamental_units</b><i> (<var>u_1</var>, <var>u_2</var>, <var>u_3</var>, ...)</i>
-<a name="IDX1922"></a>
+<a name="IDX1936"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1126,10 +1172,10 @@ It is foreseen that this limitation will be relaxed in future versions.
 <p><a name="Item_003a-dimensions"></a>
 </p><dl>
 <dt><u>Function:</u> <b>dimensions</b><i> (<var>x</var>)</i>
-<a name="IDX1923"></a>
+<a name="IDX1937"></a>
 </dt>
 <dt><u>Function:</u> <b>dimensions_as_list</b><i> (<var>x</var>)</i>
-<a name="IDX1924"></a>
+<a name="IDX1938"></a>
 </dt>
 <dd><p><code>dimensions</code> returns the dimensions of the dimensional quantity <var>x</var>
 as an expression comprising products and powers of base dimensions.
@@ -1149,10 +1195,10 @@ corresponding base dimension in the dimensions of <var>x</var>.
 (%o2)                     ------------
                                  3
                              time
-(%i3) declare_units (foo, acre*ft/h);
+(%i3) declare_units (foo, acre*ft/hour);
                              acre ft
 (%o3)                        -------
-                                h
+                              hour
 (%i4) dimensions (foo);
                                    3
                              length
@@ -1164,17 +1210,17 @@ corresponding base dimension in the dimensions of <var>x</var>.
 (%o2)  [length, mass, time, charge, temperature, quantity]
 (%i3) dimensions_as_list (1000 ` kg*m^2/s^3);
 (%o3)                 [2, 1, - 3, 0, 0, 0]
-(%i4) declare_units (foo, acre*ft/h);
+(%i4) declare_units (foo, acre*ft/hour);
                              acre ft
 (%o4)                        -------
-                                h
+                              hour
 (%i5) dimensions_as_list (foo);
 (%o5)                 [3, 0, - 1, 0, 0, 0]
 </pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1184,12 +1230,12 @@ corresponding base dimension in the dimensions of <var>x</var>.
 <p><a name="Item_003a-fundamental_005funits"></a>
 </p><dl>
 <dt><u>Function:</u> <b>fundamental_units</b><i> (<var>x</var>)</i>
-<a name="IDX1925"></a>
+<a name="IDX1939"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1199,12 +1245,12 @@ corresponding base dimension in the dimensions of <var>x</var>.
 <p><a name="Item_003a-dimensionless"></a>
 </p><dl>
 <dt><u>Function:</u> <b>dimensionless</b><i> (<var>x</var>)</i>
-<a name="IDX1926"></a>
+<a name="IDX1940"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1214,12 +1260,12 @@ corresponding base dimension in the dimensions of <var>x</var>.
 <p><a name="Item_003a-natural_005funit"></a>
 </p><dl>
 <dt><u>Function:</u> <b>natural_unit</b><i>  (<var>x</var>)</i>
-<a name="IDX1927"></a>
+<a name="IDX1941"></a>
 </dt>
 <dd><div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Package-ezunits">Package ezunits</a>
+&middot;
+<p>@ref{Category: Package ezunits}
 </p>
 </div>
 
@@ -1228,7 +1274,8 @@ corresponding base dimension in the dimensions of <var>x</var>.
 
 
 
-<hr size="6">
+<p><a name="Item_003a-f90"></a>
+</p><hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC206" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
 <td valign="middle" align="left">[<a href="maxima_51.html#SEC210" title="Next chapter"> &gt;&gt; </a>]</td>
@@ -1244,7 +1291,7 @@ corresponding base dimension in the dimensions of <var>x</var>.
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>August, 24 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>December, 2 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

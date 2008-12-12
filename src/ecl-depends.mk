@@ -1,4 +1,5 @@
 binary-ecl/maxima : maxima-package.lisp
+binary-ecl/maxima : ecl-port.lisp
 binary-ecl/maxima : autoconf-variables.lisp
 binary-ecl/maxima : nregex.lisp
 binary-ecl/maxima : cl-info.lisp
@@ -272,6 +273,7 @@ binary-ecl/maxima : maxmin.lisp
 binary-ecl/maxima : nummod.lisp
 binary-ecl/maxima : conjugate.lisp
 binary-ecl/maxima : expintegral.lisp
+binary-ecl/maxima : gamma.lisp
 binary-ecl/maxima : mstuff.lisp
 binary-ecl/maxima : ratpoi.lisp
 binary-ecl/maxima : pois2.lisp

@@ -39,8 +39,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/stamp-vti $(srcdir)/version.texi \
 	$(top_srcdir)/common.mk AUTHORS COPYING ChangeLog INSTALL NEWS \
-	elisp-comp install-sh missing texinfo.tex
+	elisp-comp install-sh mdate-sh missing texinfo.tex
 subdir = interfaces/emacs/imaxima
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -100,6 +101,9 @@ ECHO_T = @ECHO_T@
 ECL_FALSE = @ECL_FALSE@
 ECL_NAME = @ECL_NAME@
 ECL_TRUE = @ECL_TRUE@
+EGREP = @EGREP@
+EMACS = @EMACS@
+EMACSLOADPATH = @EMACSLOADPATH@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -188,6 +192,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lispdir = @lispdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -227,8 +232,8 @@ EXTRA_DIST = imaxima.lisp imaxima.el imath.el imath-example imaxima-autoconf-var
  breqn097a/mathstyle.sty\
  breqn097a/msabm.sym
 
-emacs_DATA = imaxima.el imath.el imaxima.lisp imaxima-autoconf-variables.el
-ELCFILES = imaxima.elc imath.elc imaxima-autoconf-variables.elc
+emacs_DATA = imaxima.el imath.el imaxima.lisp imaxima-autoconf-variables.el setup-imaxima-imath.el
+ELCFILES = imaxima.elc imath.elc imaxima-autoconf-variables.elc setup-imaxima-imath.elc
 info_TEXINFOS = imaxima.texi
 all: all-am
 
@@ -307,10 +312,29 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	    rm -rf $(@:.html=); else rm -Rf $(@:.html=.htp) $@; fi; \
 	  exit 1; \
 	fi
-$(srcdir)/imaxima.info: imaxima.texi 
-imaxima.dvi: imaxima.texi 
-imaxima.pdf: imaxima.texi 
-imaxima.html: imaxima.texi 
+$(srcdir)/imaxima.info: imaxima.texi $(srcdir)/version.texi
+imaxima.dvi: imaxima.texi $(srcdir)/version.texi
+imaxima.pdf: imaxima.texi $(srcdir)/version.texi
+imaxima.html: imaxima.texi $(srcdir)/version.texi
+$(srcdir)/version.texi:  $(srcdir)/stamp-vti
+$(srcdir)/stamp-vti: imaxima.texi $(top_srcdir)/configure
+	@(dir=.; test -f ./imaxima.texi || dir=$(srcdir); \
+	set `$(SHELL) $(srcdir)/mdate-sh $$dir/imaxima.texi`; \
+	echo "@set UPDATED $$1 $$2 $$3"; \
+	echo "@set UPDATED-MONTH $$2 $$3"; \
+	echo "@set EDITION $(VERSION)"; \
+	echo "@set VERSION $(VERSION)") > vti.tmp
+	@cmp -s vti.tmp $(srcdir)/version.texi \
+	  || (echo "Updating $(srcdir)/version.texi"; \
+	      cp vti.tmp $(srcdir)/version.texi)
+	-@rm -f vti.tmp
+	@cp $(srcdir)/version.texi $@
+
+mostlyclean-vti:
+	-rm -f vti.tmp
+
+maintainer-clean-vti:
+	-rm -f $(srcdir)/stamp-vti $(srcdir)/version.texi
 .dvi.ps:
 	$(DVIPS) -o $@ $<
 
@@ -512,11 +536,11 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-aminfo \
-	maintainer-clean-generic
+	maintainer-clean-generic maintainer-clean-vti
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-aminfo mostlyclean-generic
+mostlyclean-am: mostlyclean-aminfo mostlyclean-generic mostlyclean-vti
 
 pdf: pdf-am
 
@@ -535,9 +559,10 @@ uninstall-am: uninstall-emacsDATA uninstall-info-am uninstall-local
 	install-exec-am install-info install-info-am install-man \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-aminfo \
-	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
-	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-emacsDATA uninstall-info-am uninstall-local
+	maintainer-clean-generic maintainer-clean-vti mostlyclean \
+	mostlyclean-aminfo mostlyclean-generic mostlyclean-vti pdf \
+	pdf-am ps ps-am uninstall uninstall-am uninstall-emacsDATA \
+	uninstall-info-am uninstall-local
 
 
 # Support for installation of DATA files in a generic directory
