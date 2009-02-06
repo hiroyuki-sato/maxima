@@ -3,7 +3,7 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name:  $
+;; $Name: version-5_17_1 $
 ;; $Revision: 1.15 $
 ;; $Date: 2007/02/25 16:42:59 $
 ;; Keywords: maxima, font-lock
