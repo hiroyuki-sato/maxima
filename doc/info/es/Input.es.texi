@@ -1,4 +1,4 @@
-@c english version 1.68
+@c english version 1.71
 @menu
 * Comentarios::
 * Archivos::
@@ -809,28 +809,112 @@ n do (for j from i+1 thru n do L[i,j]:0),L)
 @defvr {Variable opcional} ibase
 Valor por defecto: 10
 
-Los enteros que se escriban en Maxima se interpretan como dados en base @code{ibase}.
+@code{ibase} es la base en la que Maxima lee valores enteros.
 
-A la variable @code{ibase} se le puede asignar cualquier entero entre 2 y 35 (decimal), ambos inclusive.
-@c WHY NOT 36, BY THE WAY ??
-Si @code{ibase} es mayor que 10, las cifras ser@'an los n@'umeros decimales entre 0 y 9, m@'as las letras may@'usculas A, B, C, ..., sg@'un sea necesario.
-Las cifras en base 35, la mayor base que acepta Maxima, son los d@'{@dotless{i}}gitos de 0 a 9 y las letras de A a Y.
-@c HOW, EXACTLY, DOES ONE TYPE IN THE LETTERS ??
-@c ibase: 11$ 1A; YIELDS AN ERROR
-@c \1A; #1A; \#1A; DON'T WORK EITHER
+A @code{ibase} se le puede asignar cualquier entero entre
+2 y 36 (base decimal), ambos inclusive.
+Si @code{ibase} es mayor que 10,
+las cifras a utilizar ser@'an los d@'{@dotless{i}}gitos de
+0 a 9, junto con las letras del alfabeto A, B, C, ..., 
+tantas como sean necesarias para completar la base @code{ibase}.
+Las letras se interpretar@'an como cifras s@'olo cuando el 
+primer d@'{@dotless{i}}gito sea un valor entre 9.
+Es indiferente hacer uso de letras may@'usculas o min@'usculas.
+Las cifras para la base 36, la mayor posible, son los 
+d@'{@dotless{i}}gitos num@'ericos de 0 a 9 y las letras desde
+la A hasta la Z.
+
+Cualquiera que sea el valor de @code{ibase}, si un entero termina
+con un punto decimal, se interpretar@'a en base 10.
 
 V@'ease tambi@'en @code{obase}.
 
-@c NEED EXAMPLES HERE
+Ejemplos:
+
+@code{ibase} menor que 10.
+
+@c ===beg===
+@c ibase : 2 $
+@c obase;
+@c 1111111111111111;
+@c ===end===
+@example
+(%i1) ibase : 2 $
+(%i2) obase;
+(%o2)                          10
+(%i3) 1111111111111111;
+(%o3)                         65535
+@end example
+
+@code{ibase} mayor que 10.
+Las letras se interpretan como d@'{@dotless{i}}gitos s@'olo
+si el primer d@'{@dotless{i}}gito es una cifra entre 0 y 9.
+
+@c ===beg===
+@c ibase : 16 $
+@c obase;
+@c 1000;
+@c abcd;
+@c symbolp (abcd);
+@c 0abcd;
+@c symbolp (0abcd);
+@c ===end===
+@example
+(%i1) ibase : 16 $
+(%i2) obase;
+(%o2)                          10
+(%i3) 1000;
+(%o3)                         4096
+(%i4) abcd;
+(%o4)                         abcd
+(%i5) symbolp (abcd);
+(%o5)                         true
+(%i6) 0abcd;
+(%o6)                         43981
+(%i7) symbolp (0abcd);
+(%o7)                         false
+@end example
+
+Independientemente del valor de @code{ibase}, si el entero
+termina con un punto decimal, se interpretar@'a en base
+diez.
+
+@c ===beg===
+@c ibase : 36 $
+@c obase;
+@c 1234;
+@c 1234.;
+@c ===end===
+@example
+(%i1) ibase : 36 $
+(%i2) obase;
+(%o2)                          10
+(%i3) 1234;
+(%o3)                         49360
+(%i4) 1234.;
+(%o4)                         1234
+@end example
 @end defvr
 
 @defvr {Variable opcional} inchar
 Valor por defecto: @code{%i}
 
-La variable @code{inchar} es el prefijo de las etiquetas de las expresiones introducidas por el usuario.
-Maxima crea autom@'aticamente una etiqueta para cada expresi@'on de entrada concatenando @code{inchar} y @code{linenum}; a
-@code{inchar} se le puede asignar cualquier s@'{@dotless{i}}mbolo o cadena, no necesariamente un carac@'acter sencillo.
+La variable @code{inchar} es el prefijo de las etiquetas de las
+expresiones introducidas por el usuario. Maxima crea autom@'aticamente 
+una etiqueta para cada expresi@'on de entrada concatenando @code{inchar} 
+y @code{linenum}.
 
+A @code{inchar} se le puede asignar cualquier s@'{@dotless{i}}mbolo 
+o cadena, no necesariamente un carac@'acter sencillo. Puesto que
+internamente Maxima solo tiene en cuenta el primer car@'acter del
+prefijo, los prefijos @code{inchar}, @code{outchar} y @code{linechar}
+deben comenzar con caracteres diferentes; en caso contrario, sentencias
+como @code{kill(inlables)} pueden dar resultados inesperados.
+
+@c ===beg===
+@c inchar: "input";
+@c expand((a+b)^3);
+@c ===end===
 @example
 (%i1) inchar: "input";
 (%o1)                                input
@@ -912,8 +996,17 @@ V@'ease tambi@'en @code{display}.
 @defvr {Variable opcional} linechar
 Valor por defecto: @code{%t}
 
-La variable @code{linechar} es el prefijo de las etiquetas que genera Maxima para expresiones intermedias. Cuando sea necesario, Maxima crear@'a una etiqueta para cada expresi@'on intermedia concatenando @code{linechar} y @code{linenum}. A 
-@code{linechar} se le puede asignar cualquier cadena o s@'{@dotless{i}}mbolo, no necesariamente un car@'acter simple.
+La variable @code{linechar} es el prefijo de las etiquetas que
+genera Maxima para expresiones intermedias. Cuando sea necesario,
+Maxima crear@'a una etiqueta para cada expresi@'on intermedia 
+concatenando @code{linechar} y @code{linenum}.
+
+A @code{linechar} se le puede asignar cualquier s@'{@dotless{i}}mbolo 
+o cadena, no necesariamente un carac@'acter sencillo. Puesto que
+internamente Maxima solo tiene en cuenta el primer car@'acter del
+prefijo, los prefijos @code{inchar}, @code{outchar} y @code{linechar}
+deben comenzar con caracteres diferentes; en caso contrario, sentencias
+como @code{kill(inlables)} pueden dar resultados inesperados.
 
 Las expresiones intermedias pueden ser mostradas o no.
 V@'eanse tambi@'en @code{programmode} y @code{labels}.
@@ -1004,21 +1097,74 @@ Si @code{loadprint} vale @code{false}, nunca mostrar@'a mensajes.
 @defvr {Variable opcional} obase
 Valor por defecto: 10
 
-La variable @code{obase} es la base de los enteros mostrados por Maxima; se le puede asignar cualquier entero entre 2 y 35 (decimal), ambos inclusive. Si @code{obase} es mayor que 10, las cifras ser@'an los n@'umeros decimales entre 0 y 9, m@'as las letras may@'usculas A, B, C, ..., sg@'un sea necesario.
-Las cifras en base 35, la mayor base que acepta Maxima, son los d@'{@dotless{i}}gitos de 0 a 9 y las letras de A a Y.
+@code{obase} es la base en la que Maxima imprime los n@'umeros enteros.
+
+A @code{obase} se le puede asignar cualquier entero entre
+2 y 36 (base decimal), ambos inclusive.
+Si @code{obase} es mayor que 10,
+las cifras a utilizar ser@'an los d@'{@dotless{i}}gitos de
+0 a 9, junto con las letras del alfabeto A, B, C, ..., 
+tantas como sean necesarias para completar la base @code{obase}.
+Si el primer d@'{@dotless{i}}gito resulta ser una letra, se le
+a@~nadir@'a el cero como prefijo.
+Las cifras para la base 36, la mayor posible, son los 
+d@'{@dotless{i}}gitos num@'ericos de 0 a 9 y las letras desde
+la A hasta la Z.
 
 V@'ease tambi@'en @code{ibase}.
 
-@c NEED EXAMPLES HERE
+Ejemplos:
+
+@c ===beg===
+@c obase : 2;
+@c 2^8 - 1;
+@c obase : 8;
+@c 8^8 - 1;
+@c obase : 16;
+@c 16^8 - 1;
+@c obase : 36;
+@c 36^8 - 1;
+@c ===end===
+@example
+(%i1) obase : 2;
+(%o1)                          10
+(%i2) 2^8 - 1;
+(%o10)                      11111111
+(%i3) obase : 8;
+(%o3)                          10
+(%i4) 8^8 - 1;
+(%o4)                       77777777
+(%i5) obase : 16;
+(%o5)                          10
+(%i6) 16^8 - 1;
+(%o6)                       0FFFFFFFF
+(%i7) obase : 36;
+(%o7)                          10
+(%i8) 36^8 - 1;
+(%o8)                       0ZZZZZZZZ
+@end example
 @end defvr
+
 
 @defvr {Variable opcional} outchar
 Valor por defecto: @code{%o}
 
-La variable @code{outchar} es el prefijo de las etiquetas de las expresiones calculadas por Maxima.
-Maxima crea autom@'aticamente una etiqueta para cada expresi@'on calculada concatenando @code{outchar} y @code{linenum}; a
-@code{outchar} se le puede asignar cualquier s@'{@dotless{i}}mbolo o cadena, no necesariamente un carac@'acter sencillo.
+La variable @code{outchar} es el prefijo de las etiquetas de las 
+expresiones calculadas por Maxima. Maxima crea autom@'aticamente 
+una etiqueta para cada expresi@'on calculada concatenando @code{outchar}
+y @code{linenum}.
 
+A @code{outchar} se le puede asignar cualquier s@'{@dotless{i}}mbolo 
+o cadena, no necesariamente un carac@'acter sencillo. Puesto que
+internamente Maxima solo tiene en cuenta el primer car@'acter del
+prefijo, los prefijos @code{inchar}, @code{outchar} y @code{linechar}
+deben comenzar con caracteres diferentes; en caso contrario, sentencias
+como @code{kill(inlables)} pueden dar resultados inesperados.
+
+@c ===beg===
+@c outchar: "output";
+@c expand((a+b)^3);
+@c ===end===
 @example
 (%i1) outchar: "output";
 (output1)                           output
@@ -1430,7 +1576,25 @@ $$-\cos x$$
 @end deffn
 
 
+@deffn {Funci@'on} tex1 (@var{e})
+Devuelve una cadena con el c@'odigo TeX de la expresi@'on @var{e}.
+El c@'odigo TeX no se encierra entre delimitadores para una ecuaci@'on
+ni cualesquiera otros entornos.
+
+Ejemplo:
+
+@c ===beg===
+@c tex1 (sin(x) + cos(x));
+@c ===end===
+@example
+(%i1) tex1 (sin(x) + cos(x));
+(%o1)                     \sin x+\cos x
+@end example
+@end deffn
+
+
 @deffn {Funci@'on} texput (@var{a}, @var{s})
+@deffnx {Funci@'on} texput (@var{a}, @var{f})
 @deffnx {Funci@'on} texput (@var{a}, @var{s}, @var{operator_type})
 @deffnx {Funci@'on} texput (@var{a}, [@var{s_1}, @var{s_2}], matchfix)
 @deffnx {Funci@'on} texput (@var{a}, [@var{s_1}, @var{s_2}, @var{s_3}], matchfix)
@@ -1440,6 +1604,13 @@ s@'{@dotless{i}}mbolo o el nombre de un operador.
 
 La instrucci@'on @code{texput (@var{a}, @var{s})} hace que la funci@'on
 @code{tex} introduzca @var{s} en la salida TeX en el lugar de @var{a}.
+
+La instrucci@'on @code{texput (@var{a}, @var{f})} hace que @code{tex} llame
+a la funci@'on @var{f} para que genere c@'odigo TeX. La funci@'on @var{f} 
+debe aceptar un @'unico argumento, el cual es una expresi@'on que tenga como
+operador @var{a} y que devuelva una cadena con el c@'odigo TeX. Esta funci@'on
+puede llamar a @code{tex1} para generar el c@'odigo TeX para los argumentos
+de la expresi@'on de entrada.
 
 La instrucci@'on @code{texput (@var{a}, @var{s}, @var{operator_type})},
 en la que @var{operator_type} es @code{prefix}, @code{infix} o
@@ -1464,6 +1635,25 @@ Asigna c@'odigo TeX para una variable.
 @c texput (me,"\\mu_e");
 @c tex (me);
 @c ===end===
+
+Llama a una funci@'on que genera c@'odigo TeX.
+
+@c ===beg===
+@c texfoo (e) := block ([a, b], [a, b] : args (e),
+@c   concat ("\\left[\\stackrel{", tex1 (b), "}{", tex1 (a), "}\\right]"))$
+@c texput (foo, texfoo);
+@c tex (foo (2^x, %pi));
+@c ===end===
+@example
+(%i1) texfoo (e) := block ([a, b], [a, b] : args (e),
+  concat ("\\left[\\stackrel@{", tex1 (b), 
+          "@}@{", tex1 (a), "@}\\right]"))$
+(%i2) texput (foo, texfoo);
+(%o2)                        texfoo
+(%i3) tex (foo (2^x, %pi));
+$$\left[\stackrel@{\pi@}@{2^@{x@}@}\right]$$
+(%o3)                         false
+@end example
 
 @example
 (%i1) texput (me,"\\mu_e");
@@ -1761,7 +1951,8 @@ V@'ease tambi@'en @code{writefile}.
 @c       do print (x, at (f, var=x))),
 @c  system ("echo \"set data style lines; set title '", f,"' ;plot '/tmp/gnu'
 @c ;pause 10 \" | gnuplot"))$
-(%i1) with_stdout ("tmp.out", for i:5 thru 10 do print (i, "! yields", i!))$
+(%i1) with_stdout ("tmp.out", 
+                   for i:5 thru 10 do print (i, "! yields", i!))$
 (%i2) printfile ("tmp.out")$
 5 ! yields 120 
 6 ! yields 720 

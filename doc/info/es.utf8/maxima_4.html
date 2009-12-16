@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on diciembre, 14 2008 by texi2html 1.76 -->
+<!-- Created on diciembre, 13 2009 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -156,7 +156,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 4. L&iacute;nea de Comandos </h1>
@@ -183,7 +183,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 
@@ -193,7 +193,7 @@ div.categorybox
 
 <dl>
 <dt><u>Operador:</u> <b>'</b>
-<a name="IDX14"></a>
+<a name="IDX13"></a>
 </dt>
 <dd><p>El operador comilla simple <code>'</code> evita la evaluaci&oacute;n. 
 </p>
@@ -263,8 +263,9 @@ El resultado es una forma de nombre de la funci&oacute;n llamada.
 (%o5)                          ---
                                 3
 </pre>
-<p>Aplicado a una expresi&oacute;n con par&eacute;ntesis, 
-la comilla simple evita la evaluaci&oacute;n de todos los s&iacute;mbolos y llamadas a funciones que hayan en la expresi&oacute;n. 
+<p>Aplicado a una expresi&oacute;n con par&eacute;ntesis, la comilla simple evita
+la evaluaci&oacute;n de todos los s&iacute;mbolos y llamadas a 
+funciones que haya dentro en la expresi&oacute;n. 
 </p>
 <pre class="example">(%i1) aa: 1024;
 (%o1)                         1024
@@ -284,11 +285,19 @@ la comilla simple evita la evaluaci&oacute;n de todos los s&iacute;mbolos y llam
 (%i2) '(sin (17 * %pi) + cos (17 * %pi));
 (%o2)                          - 1
 </pre>
+<p>Internamente, Maxima considera que las operaciones con n&uacute;meros
+decimales de coma flotante son simples simplificaciones.
+</p>
+<pre class="example">(%i1) sin(1.0);
+(%o1)                          .8414709848078965
+(%i2) '(sin(1.0));
+(%o2)                          .8414709848078965
+</pre>
 </dd></dl>
 
 <dl>
 <dt><u>Operador:</u> <b>&quot;</b>
-<a name="IDX15"></a>
+<a name="IDX14"></a>
 </dt>
 <dd><p>El operador comilla-comilla <code>''</code> (dos comillas simples) modifica la evaluaci&oacute;n
 en las expresiones de entrada.
@@ -348,22 +357,20 @@ el valor de <var>expr</var> sea sustituido por <var>expr</var> en la expresi&oac
 (%i14) '' ''x0;
 (%o14)                         x3
 </pre>
-<p>Aplicado al operador de una expresi&oacute;n, el operador comilla-comilla hace que el operador
-pase de ser un nombre a ser un verbo, a menos que ya sea un verbo.
+<p>Aplicado al operador de una expresi&oacute;n, la
+doble comilla simple hace que el operador
+pase de ser nominal a verbal, a menos que ya sea un verbo.
 </p>
-<pre class="example">(%i1) sin (1);
-(%o1)                        sin(1)
-(%i2) ''sin (1);
-(%o2)                    0.8414709848079
-(%i3) declare (foo, noun);
-(%o3)                         done
-(%i4) foo (x) := x - 1729;
-(%o4)                 ''foo(x) := x - 1729
-(%i5) foo (100);
-(%o5)                       foo(100)
-(%i6) ''foo (100);
-(%o6)                        - 1629
+<pre class="example">(%i1) declare (foo, noun);
+(%o1)                         done
+(%i2) foo (x) := x - 1729;
+(%o2)                 ''foo(x) := x - 1729
+(%i3) foo (100);
+(%o3)                       foo(100)
+(%i4) ''foo (100);
+(%o4)                        - 1629
 </pre>
+
 <p>El operador comilla-comilla es aplicado por el analizador sint&aacute;ctico de entrada;
 no se almacena como una parte de la expresi&oacute;n de entrada analizada.
 </p>
@@ -445,7 +452,7 @@ definici&oacute;n de funciones, expresiones lambda y expresiones comentadas con 
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 
@@ -454,7 +461,7 @@ definici&oacute;n de funciones, expresiones lambda y expresiones comentadas con 
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>alias</b><i> (<var>new_name_1</var>, <var>old_name_1</var>, ..., <var>new_name_n</var>, <var>old_name_n</var>)</i>
-<a name="IDX16"></a>
+<a name="IDX15"></a>
 </dt>
 <dd><p>provee un nombre
 alternativo para una (bien sea definida por el usuario o por el sistema) funci&oacute;n, variable, arreglo, etc. 
@@ -464,7 +471,7 @@ Cualquier n&uacute;mero par de argumentos puede ser usado.
 
 <dl>
 <dt><u>Variable opcional:</u> <b>debugmode</b>
-<a name="IDX17"></a>
+<a name="IDX16"></a>
 </dt>
 <dd><p>Valor por defecto: <code>false</code>
 </p>
@@ -479,7 +486,7 @@ El usuario puede ingresar comandos para examinar la pila de llamadas, los puntos
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>ev</b><i> (<var>expr</var>, <var>arg_1</var>, ..., <var>arg_n</var>)</i>
-<a name="IDX18"></a>
+<a name="IDX17"></a>
 </dt>
 <dd><p>Evalua la expresi&oacute;n <var>expr</var> en el entorno especificado
 por los argumentos <var>arg_1</var>, ..., <var>arg_n</var>.
@@ -515,6 +522,10 @@ Esto es muy &uacute;til en conjunci&oacute;n con otras variables interruptor y c
 <code>diff</code> realiza todas las diferenciaciones indicadas en <var>expr</var>. 
 </li><li>
 <code>derivlist (<var>x</var>, <var>y</var>, <var>z</var>, ...)</code> realiza s&oacute;lo las diferenciaciones con respecto a las variables indicadas. 
+</li><li>
+<code>risch</code> hace que las integrales presentes en <var>expr</var> se eval&uacute;en mediante
+el algoritmo de Risch. V&eacute;ase tambi&eacute;n <code>risch</code>. Cuando se utiliza el 
+s&iacute;mbolo especial <code>nouns</code>, se aplica la rutina est&aacute;ndar de integraci&oacute;n.
 </li><li>
 <code>float</code> provoca la conversi&oacute;n de los n&uacute;meros racionales no-enteros a n&uacute;meros decimales de coma flotante. 
 </li><li>
@@ -566,7 +577,7 @@ secuencia, de izquierda a derecha y las funciones de evaluaci&oacute;n las
 cuales son compuestas, e.g., <code>ev (<var>expr</var>, ratsimp, realpart)</code>
 es manipulada como <code>realpart (ratsimp (<var>expr</var>))</code>. 
 </p>
-<p>Los interruptores <code>simp</code>, <code>numer</code>, <code>float</code> y <code>pred</code> 
+<p>Los interruptores <code>simp</code>, <code>numer</code> y <code>float</code> 
 pueden tambi&eacute;n ser configurados localmente en una sentencia block, o
 globalmente en Maxima para que su efecto permanezca hasta que
 sean reconfiguradas.   
@@ -597,16 +608,17 @@ en ella y que <code>ev(F(x))</code> pueda comportarse como <code>F(ev(x))</code>
 Por cada aparici&oacute;n de <code>eval</code> en los argumentos, se repetir&aacute;n los pasos (3) y (4).
 </li></ol>
 
-<p>Ejemplos
+<p>Ejemplos:
 </p>
 <pre class="example">(%i1) sin(x) + cos(y) + (w+1)^2 + 'diff (sin(w), w);
                                      d                    2
 (%o1)              cos(y) + sin(x) + -- (sin(w)) + (w + 1)
                                      dw
-(%i2) ev (%, sin, expand, diff, x=2, y=1);
-                          2
-(%o2)           cos(w) + w  + 2 w + cos(1) + 1.909297426825682
+(%i2) ev (%, numer, expand, diff, x=2, y=1);
+                               2
+(%o2)                cos(w) + w  + 2 w + 2.449599732693821
 </pre>
+
 <p>Una sintaxis alternativa de alto nivel ha sido proveida para <code>ev</code>, 
 por medio de la cual uno puede escribir solamente sus argumentos, sin 
 el comando <code>ev()</code>. Esto es, una forma sencilla de escritura:
@@ -648,6 +660,30 @@ Soluci&oacute;n
 </pre>
 </dd></dl>
 
+
+<dl>
+<dt><u>S&iacute;mbolo especial:</u> <b>eval</b>
+<a name="IDX18"></a>
+</dt>
+<dd><p>Como argumento en una llamada a <code>ev (<var>expr</var>)</code>, <code>eval</code> 
+fuerza una evaluaci&oacute;n extra de <var>expr</var>.
+</p>
+<p>V&eacute;ase tambi&eacute;n <code>ev</code>.
+</p>
+<p>Ejemplo:
+</p>
+<pre class="example">(%i1) [a:b,b:c,c:d,d:e];
+(%o1)                            [b, c, d, e]
+(%i2) a;
+(%o2)                                  b
+(%i3) ev(a);
+(%o3)                                  c
+(%i4) ev(a),eval;
+(%o4)                                  e
+(%i5) a,eval,eval;
+(%o5)                                  e
+</pre>
+</dd></dl>
 
 
 <dl>
@@ -694,6 +730,7 @@ de la propiedad <code>evflag</code>.
 <code>ratmx</code>,
 <code>ratsimpexpons</code>,
 <code>simp</code>,
+<code>simpproduct</code>,
 <code>simpsum</code>,
 <code>sumexpand</code>, y
 <code>trigexpand</code>.
@@ -1179,37 +1216,74 @@ Muchas, pero no todas, las variables y opciones globales son definidas por <code
 </p>
 </dd></dl>
 
-<dl>
-<dt><u>Funci&oacute;n:</u> <b>sstatus</b><i> (<var>feature</var>, <var>package</var>)</i>
-<a name="IDX53"></a>
-</dt>
-<dd><p>Configura el estado de <var>feature</var> en <var>package</var>. 
-Despu&eacute;s de que <code>sstatus (<var>feature</var>, <var>package</var>)</code> es 
-ejecutado <code>status (<var>feature</var>, <var>package</var>)</code> retorna
-<code>true</code>. 
-Esto puede ser muy &uacute;til para escritores de paquetes, con el 
-objetivo de conservar las pistas de que caracter&iacute;siticas han 
-cargado estos. 
-</p>
-</dd></dl>
 
 <dl>
 <dt><u>Function:</u> <b>to_lisp</b><i> ()</i>
-<a name="IDX54"></a>
+<a name="IDX53"></a>
 </dt>
 <dd><p>Entra en el int&eacute;rprete Lisp bajo Maxima. <code>(to-maxima)</code> retorna de nuevo a Maxima. 
 </p>
-</dd></dl>
+<p>Ejemplo:
+</p>
+<p>Define una funci&oacute;n y entra en el nivel Lisp. La definici&oacute;n
+se consulta en la lista de propiedades, luego se extrae la definici&oacute;n
+de la funci&oacute;n, se factoriza y almacena el resultado en la variable <code>$result</code>.
+Esta variable se puede utilizar luego una vez se haya vuelto al nivel
+de Maxima.
+</p>
+<pre class="example">(%i1) f(x):=x^2+x;
+                                         2
+(%o1)                           f(x) := x  + x
+(%i2) to_lisp();
+Type (to-maxima) to restart, ($quit) to quit Maxima.
+
+MAXIMA&gt; (symbol-plist '$f)
+(MPROPS (NIL MEXPR ((LAMBDA) ((MLIST) $X) ((MPLUS) ((MEXPT) $X 2) $X))))
+MAXIMA&gt; (setq $result ($factor (caddr (mget '$f 'mexpr))))
+((MTIMES SIMP FACTORED) $X ((MPLUS SIMP IRREDUCIBLE) 1 $X))
+MAXIMA&gt; (to-maxima)
+Returning to Maxima
+(%o2)                                true
+(%i3) result;
+(%o3)                              x (x + 1)
+</pre></dd></dl>
+
 
 <dl>
 <dt><u>Variable del sistema:</u> <b>values</b>
-<a name="IDX55"></a>
+<a name="IDX54"></a>
 </dt>
 <dd><p>Valor inicial: <code>[]</code>
 </p>
-<p><code>values</code> es una lista de todas las variables que el usuario ha creado (no constituye las opciones Maxima ni los interruptores). 
-La lista comprende los s&iacute;mbolos <code>:</code> , <code>::</code>, o <code>:=</code>.
+<p><code>values</code> es una lista de todas las variables que el usuario ha creado
+(no incluye las opciones de Maxima ni los interruptores). 
+La lista comprende los s&iacute;mbolos a los que se ha asignado un
+valor mediante <code>:</code> o <code>::</code>.
 </p>
+<p>Si el valor de una variable se borra con cualquiera de las instrucciones
+<code>kill</code>, <code>remove</code> o <code>remvalue</code>, dicha variable desaparece
+de la lista <code>values</code>.
+</p>
+<p>V&eacute;ase <code>functions</code> para una lista de funciones definidas por el
+usuario.
+</p>
+<p>Ejemplos:
+</p>
+<p>Primero, <code>values</code> muestra los s&iacute;mbolos <code>a</code>, 
+<code>b</code> y <code>c</code>, pero no <code>d</code>, pues no tiene valor asignado,
+ni la funci&oacute;n de usuario <code>f</code>. Luego los valores de las variables se
+borran y <code>values</code> queda como una lista vac&iacute;a.
+</p>
+<pre class="example">(%i1) [a:99, b::a-90, c:a-b, d, f(x):= x^2];
+                                                  2
+(%o1)                     [99, 9, 90, d, f(x) := x ]
+(%i2) values;
+(%o2)                              [a, b, c]
+(%i3) [kill(a), remove(b,value), remvalue(c)];
+(%o3)                          [done, done, [c]]
+(%i4) values;
+(%o4)                                 []
+</pre>
 </dd></dl>
 
 <hr size="6">
@@ -1223,12 +1297,12 @@ La lista comprende los s&iacute;mbolos <code>:</code> , <code>::</code>, o <code
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>diciembre, 14 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>diciembre, 13 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

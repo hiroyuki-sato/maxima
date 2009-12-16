@@ -18,6 +18,12 @@
   (:export #:cl-option #:make-cl-option #:list-cl-options #:process-args
 	   #:get-application-args))
 
+;; Kevin Rosenberg's getopt package
+(defpackage getopt
+  (:use :cl)
+  (:export #:match-unique-abbreviation
+	   #:getopt))
+
 ;; GCL has SLOOP built in but it's slightly different now...
 (defpackage :cl-sloop
   (:use :common-lisp)
@@ -25,11 +31,16 @@
 
 (defpackage :maxima
   (:use :common-lisp :command-line)
+  ;; Gcl has DEFINE-COMPILER-MACRO but it's in the SYSTEM package.  So
+  ;; we shadowing import it into our package here.  (Can't just import
+  ;; because there's already a DEFINE-COMPILER-MACRO symbol.)
+  #+gcl
+  (:shadowing-import-from #:system #:define-compiler-macro)
   (:nicknames :cl-macsyma :cl-maxima :macsyma)
   (:import-from :cl-sloop #:sloop)
   (:shadow continue		 ;(macsys): part of the top-level loop
 	   //                           ;(clmacs): arithmetic operator
-	   float		;(clmacs): has 1.0 as default format
+	   float		  ;(clmacs): has 1.0 as default format
 	   functionp                    ;(commac): accepts symbols
 	   array                        ;(commac)
 	   exp			   ;various files declare this special
@@ -78,5 +89,154 @@
        #+cmu #:%random-double-double-float
        #:random-chunk
        #:init-random-state))
+
+(defpackage bigfloat
+  (:use :cl)
+  #+gcl
+  (:shadowing-import-from #:system #:define-compiler-macro)
+  (:shadow #:+
+	   #:-
+	   #:*
+	   #:/
+	   #:1+
+	   #:1-
+	   #:zerop
+	   #:plusp
+	   #:minusp
+	   #:abs
+	   #:sqrt
+	   #:log
+	   #:exp
+	   #:sin
+	   #:cos
+	   #:tan
+	   #:asin
+	   #:acos
+	   #:atan
+	   #:sinh
+	   #:cosh
+	   #:tanh
+	   #:asinh
+	   #:acosh
+	   #:atanh
+	   #:expt
+	   #:=
+	   #:/=
+	   #:<
+	   #:>
+	   #:<=
+	   #:>=
+	   #:scale-float
+	   #:realpart
+	   #:imagpart
+	   #:complex
+	   #:conjugate
+	   #:max
+	   #:min
+	   #:cis
+	   #:phase
+	   #:floor
+	   #:ffloor
+	   #:incf
+	   #:decf
+	   #:realp
+	   #:complexp
+	   #:numberp
+	   #:integer-decode-float
+	   #:decode-float
+	   #:float
+	   #:ceiling
+	   #:fceiling
+	   #:truncate
+	   #:ftruncate
+	   #:round
+	   #:fround
+	   #:random
+	   #:signum
+	   #:float-sign
+	   #:float-digits
+	   #:rational
+	   #:rationalize
+	   #:coerce
+	   )
+  
+  ;; Export types
+  (:export #:bigfloat
+	   #:complex-bigfloat)
+  ;; Export functions
+  (:export #:bigfloat
+	   #:to
+	   #:epsilon
+	   ;; CL equivalents
+	   #:+
+	   #:-
+	   #:*
+	   #:/
+	   #:1+
+	   #:1-
+	   #:zerop
+	   #:plusp
+	   #:minusp
+	   #:abs
+	   #:sqrt
+	   #:log
+	   #:exp
+	   #:sin
+	   #:cos
+	   #:tan
+	   #:asin
+	   #:acos
+	   #:atan
+	   #:sinh
+	   #:cosh
+	   #:tanh
+	   #:asinh
+	   #:acosh
+	   #:atanh
+	   #:expt
+	   #:=
+	   #:/=
+	   #:<
+	   #:>
+	   #:<=
+	   #:>=
+	   #:complex
+	   #:realpart
+	   #:imagpart
+	   #:conjugate
+	   #:max
+	   #:min
+	   #:cis
+	   #:phase
+	   #:floor
+	   #:ffloor
+	   #:incf
+	   #:decf
+	   #:realp
+	   #:complexp
+	   #:numberp
+	   #:integer-decode-float
+	   #:decode-float
+	   #:float
+	   #:ceiling
+	   #:fceiling
+	   #:truncate
+	   #:ftruncate
+	   #:round
+	   #:fround
+	   #:random
+	   #:signum
+	   #:float-sign
+	   #:float-digits
+	   #:rational
+	   #:rationalize
+	   #:coerce
+	   ))
+
+(defpackage :intl
+  (:use :common-lisp)
+  (:export #:setlocale #:textdomain #:gettext #:dgettext
+           #:*translatable-dump-stream* #:*locale*
+	   #:*locale-directories*))
 
 (provide :maxima)

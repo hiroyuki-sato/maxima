@@ -1,6 +1,6 @@
 ;;                 COPYRIGHT NOTICE
 ;;  
-;;  Copyright (C) 2005-2008 Mario Rodriguez Riotorto
+;;  Copyright (C) 2005-2009 Mario Rodriguez Riotorto
 ;;  
 ;;  This program is free software; you can redistribute
 ;;  it and/or modify it under the terms of the
@@ -31,31 +31,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;  Natural logarithm of the gamma function.
-;;  Reference:
-;;     Lanczos, C. 'A precision approximation of the gamma function',
-;;                  J. SIAM Numer. Anal., B, 1, 86-96, 1964.
-;;  Comments: Accurate about 14 significant digits except for small regions
-;;            in the vicinity of 1 and 2.
-;;            Translated from Fortran.
-;;            Sometimes Maxima crashes with built-in functions, i.e. 'numer:true$ log(gamma(333));'
-;;  Conditions: 0<p<1.0e302
+;; Natural logarithm of the gamma function. This function is called from
+;; some numerical routines below.
 (defun lngamma (p)
-   (declare (type flonum p))
-   (cond ((<= p 0) (merror "Argument to lngamma must be positive"))
-         (t (let ((a1 9.999999999995183e-1)   (a2 6.765203681218835e2)
-                 (a3 -1.259139216722289e3)   (a4 7.713234287757674e2)
-                 (a5 -1.766150291498386e2)   (a6 1.250734324009056e1)
-                 (a7 -1.385710331296526e-1)  (a8 9.934937113930748e-6)
-                 (a9 1.659470187408462e-7)   (lnsqrt2pi 9.189385332046727e-1)
-                 (lng 0.0))
-            (declare (type flonum a1 a2 a3 a4 a5 a6 a7 a8 a9 lnsqrt2pi lng))
-            (setf lng (+ a1  (/ a2 p)      (/ a3 (+ p 1.0))    (/ a4 (+ p 2.0))
-                         (/ a5 (+ p 3.0))  (/ a6 (+ p 4.0))    (/ a7 (+ p 5.0))
-                         (/ a8 (+ p 6.0))  (/ a9 (+ p 7.0)) ))
-            (+ (log lng) lnsqrt2pi
-               (- (+ p 6.5))
-               (* (- p 0.5) (log (+ p 6.5)))) ))) )
+  (simplify (list '(%log_gamma) p)))
 
 
 ;;  Natural logarithm of the beta function
@@ -64,212 +43,17 @@
    (+ (lngamma p) (lngamma q) (- (lngamma (+ p q)))) )
 
 
-;;  Incomplete gamma.
-;;  Reference:
-;;     Shea, B.L. (1988) Algorithm AS 239. Chi-squared and Incomplete Gamma Integral.
-;;     Applied Statistics (JRSS C) 37, 466-473.
-;;  Comments: Translated from Fortran.
-;;  Conditions: x>=0; p>0
+;; Lower regularized gamma incomplete. This function is called from
+;; some numerical routines below.
 (defun igamma (x p)
-   (declare (type flonum x p))
-   (if (or (< x 0.0) (<= p 0.0))
-       (merror "Arguments to igamma must be positive"))
-   (let (arg gammad a b c pn1 pn2 pn3 pn4 pn5 pn6 an rn
-         (plimit 1.0e3) (xbig 1.0e8) (tol 1.0e-14) (elimit -8.8e1) (oflo 1.0e37))
-        (cond ((= x 0.0) 0.0)
-              ;; if x is extremely large compared to p then return 1
-              ((> x xbig) 1.0)
-              ;; use normal approximation if p>plimit
-              ;; 1/2+erf((3 * sqrt(p) * ((x/p)^(1/3) + 1 / (9 * p) - 1)) / sqrt(2))/2
-              ((> p plimit)
-                (+ 0.5 (* 0.5
-                         (mfuncall '%erf (* 2.121320343559642 (sqrt p) 
-                                            (+ (/ 1.0 (* 9.0 p)) (- 1.0)
-                                               (expt (/ x p) .3333333333333333)))))))
-              ;; Pearson's series expansion. I use lngamma(z) here, but
-              ;; log(gamma(z)) could be used instead, since p is not large
-              ;; enough to force overflow
-              ((or (<= x 1.0) (< x p))
-                 (setf arg (+ (* p (log x))
-                              (- x)
-                              (- (lngamma (+ p 1.0)))))
-                 (setf c 1.0 gammad 1.0)
-                 (do ((a (+ p 1.0) (1+ a)))
-                     ((<= c tol) '$done)
-                     (setf c (/ (* c x) a))
-                     (setf gammad (+ gammad c)))
-                 (setf arg (+ arg (log gammad)))
-                 (if (>= arg elimit)
-                     (exp arg)
-                     0.0 )  )
-              ;; use a continued fraction expansion
-              (t (setf arg (+ (* p (log x))
-                              (- x)
-                              (- (lngamma p))))
-                 (setf  a (- 1.0 p)
-                       b (+ a x 1.0)
-                       c 0.0
-                       pn1 1.0
-                       pn2 x
-                       pn3 (+ x 1.0)
-                       pn4 (* x b)
-                       gammad (/ pn3 pn4))
-                 (loop (setf a (+ a 1.0)
-                             b (+ b 2.0)
-                             c (+ c 1.0)
-                             an (* a c)
-                             pn5 (- (* b pn3) (* an pn1))
-                             pn6 (- (* b pn4) (* an pn2)))
-                       (if (> (abs pn6) 0.0)
-                           (progn (setf rn (/ pn5 pn6))
-                                  (if (<= (abs (- gammad rn)) (min tol (* tol rn)))
-                                      (return 0.0)
-                                      (setf gammad rn))))
-                       (setf pn1 pn3 pn2 pn4 pn3 pn5 pn4 pn6)
-                       ;; re-escale terms in continued fraction if terms are large
-                       (if (>= (abs pn5) oflo)
-                           (setf pn1 (/ pn1 oflo)
-                                 pn2 (/ pn2 oflo)
-                                 pn3 (/ pn3 oflo)
-                                 pn4 (/ pn4 oflo)))  )
-                 (setf arg (+ arg (log gammad)))
-                 (if (>= arg elimit)
-                     (- 1.0 (exp arg))
-                     1.0) ))))
+  (- 1.0 (simplify (list '(%gamma_incomplete_regularized) p x))) )
 
 
-;;  Continued fraction approximation of the incomplete beta.
-;;  It's called from ibeta.
-;;  Reference:
-;;     Numerical Recipes in C: The Art of Scientific Computing
-;;  Comments: Translated from C.
+;;  Returns incomplete beta regularized in float format.
 ;;  Conditions: 0<=x<=1; a, b>0
-(defun betacf (x a b)
+(defun ibeta (x a b &aux ($numer t))
    (declare (type flonum x a b))
-   (let (m2 aa c d del h qab qam qap
-         (maxit 1.0e3) (eps 1.0e-16) (fpmin 1.0e-300) (m 1.0))
-        (setf qab (+ a b)
-              qap (+ a 1.0)
-              qam (- a 1.0)
-              c 1.0
-              d (- 1.0 (/ (* qab x) qap)))
-        (when (< (abs d) fpmin) (setf d fpmin))
-        (setf d (/ 1.0 d)
-              h d)
-        (loop (setf m2 (* 2.0 m)
-                    aa (/ (* m x (- b m)) (* (+ qam m2) (+ a m2)))
-                    d (+ 1.0 (* aa d)))
-              (when (< (abs d) fpmin) (setf d fpmin))
-              (setf c (+ 1.0 (/ aa c)))
-              (when (< (abs c) fpmin) (setf c fpmin))
-              (setf d (/ 1.0 d)
-                    h (* h d c)
-                    aa (/ (* x (+ qab m) (- (+ a m)))
-                          (* (+ a m2) (+ qap m2)))
-                    d (+ 1.0 (* aa d)))
-              (when (< (abs d) fpmin) (setf d fpmin))
-              (setf c (+ 1.0 (/ aa c)))
-              (when (< (abs c) fpmin) (setf c fpmin))
-              (setf d (/ 1.0 d)
-                    del (* d c)
-                    h (* h del))
-              (if (or (< (abs (- del 1.0)) eps) (= m maxit))
-                  (return h)
-                  (setf m (1+ m))))))
-
-
-;;  Incomplete beta.
-;;  Reference:
-;;     Numerical Recipes in C: The Art of Scientific Computing
-;;  Comments: Translated from C. In R, pbeta(x,a,b)
-;;  Conditions: 0<=x<=1; a, b>0
-(defun ibeta (x a b)
-   (declare (type flonum x a b))
-   (cond ((= x 0) 0.0)
-         ((= x 1) 1.0)
-         (t (let ((bt (exp (+ (- (lnbeta a b))
-                              (* a (log x))
-                              (* b (log (- 1 x)))))))
-                (cond ((< x (/ (+ 1.0 a) (+ a b 2.0)))
-                               (/ (* bt (betacf x a b)) a))
-                      (t (- 1.0 (/ (* bt (betacf (- 1.0 x) b a)) b)))))))) 
-
-
-;;  Produces the normal deviate Z corresponding to a given lower
-;;  tail area of p; Z is accurate to about 1 part in 10**16.
-;;  Reference:
-;;     algorithm as241  appl. statist. (1988) vol. 37, no. 3
-;;  Comments: Translated from Fortran.  In R, qnorm(p,0,1)
-;;  Conditions: 0<p<1
-(defun ppnd16 (p)
-   (declare (type flonum p))
-   (let (  (zero 0.0) (one 1.0) (half 0.5) (split1 0.425) 
-           (split2 5.0) (const1 0.180625) (const2 1.6)
-           (q 0.0) (r 0.0) (ppnd16 0.0)
-
-           ; Coefficients for p close to 0.5
-           (a0 3.3871328727963666080e0)           (a1 1.3314166789178437745e+2)
-           (a2 1.9715909503065514427e+3)          (a3 1.3731693765509461125e+4)
-           (a4 4.5921953931549871457e+4)          (a5 6.7265770927008700853e+4)
-           (a6 3.3430575583588128105e+4)          (a7 2.5090809287301226727e+3)
-           (b1 4.2313330701600911252e+1)          (b2 6.8718700749205790830e+2)
-           (b3 5.3941960214247511077e+3)          (b4 2.1213794301586595867e+4)
-           (b5 3.9307895800092710610e+4)          (b6 2.8729085735721942674e+4)
-           (b7 5.2264952788528545610e+3)           
-
-           ; Coefficients for p not close to 0, 0.5 or 1.
-           (c0 1.42343711074968357734e0)           (c1 4.63033784615654529590e0)
-           (c2 5.76949722146069140550e0)           (c3 3.64784832476320460504e0)
-           (c4 1.27045825245236838258e0)           (c5 2.41780725177450611770e-1)
-           (c6 2.27238449892691845833e-2)          (c7 7.74545014278341407640e-4)
-           (d1 2.05319162663775882187e0)           (d2 1.67638483018380384940e0)
-           (d3 6.89767334985100004550e-1)          (d4 1.48103976427480074590e-1)
-           (d5 1.51986665636164571966e-2)          (d6 5.47593808499534494600e-4)
-           (d7 1.05075007164441684324e-9)
-
-           ; Coefficients for p near 0 or 1.
-           (e0 6.65790464350110377720e0)           (e1 5.46378491116411436990e0)
-           (e2 1.78482653991729133580e0)           (e3 2.96560571828504891230e-1)
-           (e4 2.65321895265761230930e-2)          (e5 1.24266094738807843860e-3)
-           (e6 2.71155556874348757815e-5)          (e7 2.01033439929228813265e-7)
-           (f1 5.99832206555887937690e-1)          (f2 1.36929880922735805310e-1)
-           (f3 1.48753612908506148525e-2)          (f4 7.86869131145613259100e-4)
-           (f5 1.84631831751005468180e-5)          (f6 1.42151175831644588870e-7)
-           (f7 2.04426310338993978564e-15) )
-        (declare (type flonum zero one half split1 split2 const1 const2 q r ppnd16
-                                    a0 a1 a2 a3 a4 a5 a6 a7 b1 b2 b3 b4 b5 b6 b7
-                                    c0 c1 c2 c3 c4 c5 c6 c7 d1 d2 d3 d4 d5 d6 d7
-                                    e0 e1 e2 e3 e4 e5 e6 e7 f1 f2 f3 f4 f5 f6 f7))
-        (setf q (- p half))
-        (cond ((<= (abs q) split1)
-                  (setf r (- const1 (* q q)))
-                  (/ (* q (+ (* (+ (* (+ (*
-                          (+ (* (+ (* (+ (* (+ (* a7 r) a6) r) a5) r) a4) r)
-                           a3) r) a2) r) a1) r) a0))
-                   (+ (* (+ (* (+ (* 
-                         (+ (* (+ (* (+ (* (+ (* b7 r) b6) r) b5) r) b4) r)
-                          b3) r) b2) r) b1) r) one)))
-              (t (if (< q 0)
-                     (setf r p)
-                     (setf r (- one p)))
-                 (setf r (sqrt (- (log r))))
-                 (cond ((<= r split2)
-                           (setf r (- r const2))
-                           (setf ppnd16 (/ (+ (* (+ (* (+ (*
-                                              (+ (* (+ (* (+ (* (+ (* c7 r) c6) r) c5) r) c4) r)
-                                               c3) r) c2) r) c1) r) c0)
-                                        (+ (* (+ (* (+ (*
-                                              (+ (* (+ (* (+ (* (+ (* d7 r) d6) r) d5) r) d4) r)
-                                               d3) r) d2) r) d1) r)
-                                         one))))
-                       (t (setf r (- r split2))
-                          (setf ppnd16 (/ (+ (* (+ (* (+ (*
-                                              (+ (* (+ (* (+ (* (+ (* e7 r) e6) r) e5) r) e4) r)
-                                               e3) r) e2) r) e1) r) e0)
-                                        (+ (* (+ (* (+ (*
-                                              (+ (* (+ (* (+ (* (+ (* f7 r) f6) r) f5) r) f4) r)
-                                               f3) r) f2) r) f1) r) one)))))
-                 (if (< q zero) (- ppnd16) ppnd16)))))
+   (simplify (list '(%beta_incomplete_regularized) a b x)))
 
 
 ;;  Inverse of the incomplete beta function.
@@ -1921,12 +1705,5 @@
          (t (setf sample nil)
             (dotimes (i ss (cons '(mlist simp) sample))
                      (setf sample (cons (rndnegbinom n p 0) sample))) )) )
-
-
-
-
-
-
-
 
 

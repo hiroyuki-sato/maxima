@@ -9,6 +9,7 @@ binary-openmcl/maxima.image : clmacs.lisp
 binary-openmcl/maxima.image : commac.lisp
 binary-openmcl/maxima.image : mormac.lisp
 binary-openmcl/maxima.image : compat.lisp
+binary-openmcl/maxima.image : getopt.lisp
 binary-openmcl/maxima.image : defopt.lisp
 binary-openmcl/maxima.image : defcal.lisp
 binary-openmcl/maxima.image : maxmac.lisp
@@ -126,6 +127,7 @@ binary-openmcl/maxima.image : csimp2.lisp
 binary-openmcl/maxima.image : zero.lisp
 binary-openmcl/maxima.image : logarc.lisp
 binary-openmcl/maxima.image : rpart.lisp
+binary-openmcl/maxima.image : numeric.lisp
 binary-openmcl/maxima.image : macsys.lisp
 binary-openmcl/maxima.image : mload.lisp
 binary-openmcl/maxima.image : suprv1.lisp
@@ -165,6 +167,7 @@ binary-openmcl/maxima.image : trprop.lisp
 binary-openmcl/maxima.image : mdefun.lisp
 binary-openmcl/maxima.image : bessel.lisp
 binary-openmcl/maxima.image : ellipt.lisp
+binary-openmcl/maxima.image : plasma.lisp
 binary-openmcl/maxima.image : intpol.lisp
 binary-openmcl/maxima.image : nparse.lisp
 binary-openmcl/maxima.image : displa.lisp
@@ -176,6 +179,7 @@ binary-openmcl/maxima.image : ezgcd.lisp
 binary-openmcl/maxima.image : option.lisp
 binary-openmcl/maxima.image : macdes.lisp
 binary-openmcl/maxima.image : inmis.lisp
+binary-openmcl/maxima.image : intl.lisp
 binary-openmcl/maxima.image : db.lisp
 binary-openmcl/maxima.image : compar.lisp
 binary-openmcl/maxima.image : maxmin.lisp
@@ -195,6 +199,7 @@ binary-openmcl/maxima.image : trigo.lisp
 binary-openmcl/maxima.image : trgred.lisp
 binary-openmcl/maxima.image : specfn.lisp
 binary-openmcl/maxima.image : mat.lisp
+binary-openmcl/maxima.image : linnew.lisp
 binary-openmcl/maxima.image : matrix.lisp
 binary-openmcl/maxima.image : sprdet.lisp
 binary-openmcl/maxima.image : newinv.lisp
@@ -239,8 +244,8 @@ binary-openmcl/maxima.image : hyp.lisp
 binary-openmcl/maxima.image : todd-coxeter.lisp
 binary-openmcl/maxima.image : mactex.lisp
 binary-openmcl/maxima.image : plot.lisp
-binary-openmcl/maxima.image : gnuplot.lisp
-binary-openmcl/maxima.image : openmath.lisp
+binary-openmcl/maxima.image : gnuplot_def.lisp
+binary-openmcl/maxima.image : xmaxima_def.lisp
 binary-openmcl/maxima.image : autol.lisp
 binary-openmcl/maxima.image : max_ext.lisp
 binary-openmcl/maxima.image : autoconf-variables.lisp

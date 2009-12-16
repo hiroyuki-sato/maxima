@@ -26,7 +26,7 @@
 
 ;; subtitle polylogarithm routines
 
-(declare-top (special $zerobern ivars key-vars tlist))
+(declare-top (special $zerobern ivars key-vars tlist %e-val))
 
 (defun lisimp (exp vestigial z)
   (declare (ignore vestigial))
@@ -186,6 +186,20 @@
 (declare-top (special $maxpsiposint $maxpsinegint $maxpsifracnum $maxpsifracdenom))
 
 (defprop $psi psisimp specsimp)
+
+;; Integral of psi function psi[n](x)
+(putprop '$psi
+  `((n x)
+   nil
+   ,(lambda (n unused)
+     (declare (ignore unused))
+     (cond 
+      ((and ($integerp n) (>= n 0))
+       (cond 
+	((= n 0) '((%log_gamma) x))
+	(t '((mqapply) (($psi array) ((mplus) -1 n)) x))))
+      (t nil))))
+     'integral)
 
 (mapcar #'(lambda (var val)
 	    (and (not (boundp var)) (setf (symbol-value var) val)))
@@ -364,7 +378,7 @@
 
 (defun plygam-ord (subl)
   (if (equal (car subl) -1) (ncons (rcone))
-      `((,(- (1+ (car subl))) . 1))))
+      `((,(m- (m1+ (car subl))) . 1))))
 
 (defun plygam-pole (a c func)
   (if (rcmintegerp c)
@@ -422,17 +436,46 @@
 
 (declare-top (unspecial var subl *last* sign last-exp))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Lambert W
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setf (get '$lambert_w 'grad)  
-      '((x) 
-	((mtimes)
-	 ((mexpt) $%e ((mtimes ) -1 (($lambert_w) x)))
-	 ((mexpt) ((mplus) 1 (($lambert_w) x)) -1))))
+(defun $lambert_w (z)
+  (simplify (list '(%lambert_w) (resimplify z))))
+
+;;; Set properties to give full support to the parser and display
+(defprop $lambert_w %lambert_w alias)
+(defprop $lambert_w %lambert_w verb)
+(defprop %lambert_w $lambert_w reversealias)
+(defprop %lambert_w $lambert_w noun)
+
+;;; lambert_w is a simplifying function
+(defprop %lambert_w simp-lambertw operators)
+
+;;; Derivative of lambert_w
+(defprop %lambert_w
+  ((x) 
+   ((mtimes)
+    ((mexpt) $%e ((mtimes ) -1 ((%lambert_w) x)))
+    ((mexpt) ((mplus) 1 ((%lambert_w) x)) -1)))
+  grad)
+
+;;; Integral of lambert_w
+;;; integrate(W(x),x) := x*(W(x)^2-W(x)+1)/W(x)
+(defprop %lambert_w
+  ((x)
+   ((mtimes)
+    x
+    ((mplus) 
+     ((mexpt) ((%lambert_w) x) 2) 
+     ((mtimes) -1 ((%lambert_w) x))
+     1)
+    ((mexpt) ((%lambert_w) x) -1)))
+  integral)
 
 (defun simp-lambertw (x y z)
   (oneargcheck x)
-  (setq x (cadr x))
+  (setq x (simpcheck (cadr x) z))
   (cond ((equal x 0) 0)
 	((equal x 0.0) 0.0)
 	((zerop1 x) ($bfloat 0))	;bfloat case
@@ -448,27 +491,63 @@
 	((alike1 x '((mtimes) ((rat) -1 2) $%pi))
 	 ;; W(-%pi/2) = %i*%pi/2
 	 '((mtimes simp) ((rat simp) 1 2) $%i $%pi))
-	((or (floatp x)
-	     (and $numer (numberp x)))
+	;; W(x) is real for x real and x > -1/%e
+	((and (float-numerical-eval-p x) (< (- (/ %e-val)) x))
 	 (lambert-w x))
-	(t (list '($lambert_w simp) x))))
+	;; Complex float x or real float x < -1/%e
+	((complex-float-numerical-eval-p x)
+	 (complexify (lambert-w 
+		      (complex ($float ($realpart x)) ($float ($imagpart x))))))
+	((complex-bigfloat-numerical-eval-p x)
+	 (bfloat-lambert-w x))
+	(t (list '(%lambert_w simp) x))))
 
-;; Initial approximation for Lambert W.
-;; http://www.desy.de/~t00fri/qcdins/texhtml/lambertw/
-(defun init-lambert-w (x)
-  (if (<= x 500)
-      (let ((lx1 (log (1+ x))))
-	(+ (* .665 (+ 1 (* .0195 lx1)) lx1)
-	   .04))
-      (- (log (- x 4))
-	 (* (- 1 (/ (log x)))
-	    (log (log x))))))
+;; Complex value of the principal branch of Lambert's W function in 
+;; the entire complex plane with relative error less than 1%, given 
+;; standard branch cuts for sqrt(z) and log(z).
+;;
+;;   Winitzki, S. Uniform Approximations for Transcendental Functions. 
+;;   In Part 1 of Computational Science and its Applications - ICCSA 2003, 
+;;   Lecture Notes in Computer Science, Vol. 2667, Springer-Verlag, 
+;;   Berlin, 2003, 780-789. DOI 10.1007/3-540-44839-X_82
+;;
+;;   From http://homepages.physik.uni-muenchen.de/~Winitzki/papers/
+
+(defun init-lambert-w (z)
+  (let ((A 2.344d0) (B 0.8842d0) (C 0.9294d0) (D 0.5106d0) (E -1.213d0)
+     (y (sqrt (+ (* 2 %e-val z ) 2)) ) )   ; y=sqrt(2*%e*z+2) 
+    ; w = (2*log(1+B*y)-log(1+C*log(1+D*y))+E)/(1+1/(2*log(1+B*y)+2*A)
+     (/ 
+      (+ (* 2 (log (+ 1 (* b y))))
+	 (* -1 (log (+ 1 (* C (log (+ 1 (* D y)))))))
+	 E)
+      (+ 1
+	 (/ 1 (+ (* 2 (log (+ 1 (* B y)))) (* 2 A)))))))
 
 ;; Algorithm based in part on
-;; http://en.wikipedia.org/wiki/Lambert's_W_function.  This can also
-;; be found in
-;; http://www.apmaths.uwo.ca/~djeffrey/Offprints/W-adv-cm.pdf, which
-;; says the iteration is just Halley's iteration applied to w*exp(w).
+;;
+;; Corless, R. M., Gonnet, D. E. G., Jeffrey, D. J., Knuth, D. E. (1996). 
+;; "On the Lambert W function". Advances in Computational Mathematics 5: 
+;; pp 329-359
+;; 
+;;    http://www.apmaths.uwo.ca/~djeffrey/Offprints/W-adv-cm.pdf.
+;; or http://www.apmaths.uwo.ca/~rcorless/frames/PAPERS/LambertW/
+;;
+;; See also http://en.wikipedia.org/wiki/Lambert's_W_function
+;;
+;; It is Halley's iteration applied to w*exp(w).
+;;
+;;
+;;                               w[j] exp(w[j]) - z 
+;; w[j+1] = w[j] - -------------------------------------------------
+;;                                       (w[j]+2)(w[j] exp(w[j]) -z)
+;;                  exp(w[j])(w[j]+1) -  ---------------------------
+;;                                               2 w[j] + 2
+;;
+;; The algorithm has cubic convergence.  Once convergence begins, the 
+;; number of digits correct at step k is roughly 3 times the number 
+;; which were correct at step k-1.
+
 (defun lambert-w (z &key (maxiter 100) (prec 1d-14))
   (let ((w (init-lambert-w z)))
     (dotimes (k maxiter)
@@ -483,3 +562,36 @@
 	  (return w))
 	(decf w delta)))
     w))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; This routine is a translation of the float version for complex
+;;; Bigfloat numbers.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun bfloat-lambert-w (z)
+  (let ((prec (power ($bfloat 10.0) (- $fpprec)))
+        (maxiter 500) ; arbitrarily chosen, we need a better choice
+	(fpprec (add fpprec 8)) ; Increase precision slightly
+        w)
+
+  ;; Get an initial estimate.  
+  ;; if abs(z) < 2^332 ~ 1.0e100 use W(z) ~ lambert_w(float(z))
+  ;; For large z,                    W(z) ~ log(z)-log(log(z))
+  (setq w 
+	(if (eq ($sign (sub ($cabs z) ($bfloat (power 2 332)))) '$neg)
+	    ($bfloat ($lambert_w ($float z)))
+	    (let ((log-z ($log z))) (sub log-z ($log log-z)))))
+
+  (dotimes (k maxiter)
+    (let* ((one ($bfloat 1))
+	   (two ($bfloat 2))
+	   (exp-w ($bfloat ($exp w)))
+	   (we (cmul w exp-w))
+	   (w1e (cmul (add w one ) exp-w))
+	   (delta (cdiv (sub we z)
+		     (sub w1e (cdiv (cmul (add w two)
+				  (sub we z))
+			       (add two (cmul two w)))))))
+      (when (eq ($sign (sub ($cabs (cdiv delta w)) prec)) '$neg)
+	(return w))
+      (setq w (sub w delta))))
+  w))

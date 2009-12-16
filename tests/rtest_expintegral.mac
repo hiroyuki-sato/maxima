@@ -120,6 +120,59 @@ expintegral_e(v,infinity);
 expintegral_e(minf,z);
 expintegral_e(minf,z);
 
+/* Realpart and imagpart for expintegral_e */
+
+(assume(x_pos>0),done);
+done;
+
+/* a positive real value */
+realpart(expintegral_e(v,x_pos));
+expintegral_e(v,x_pos);
+imagpart(expintegral_e(v,x_pos));
+0;
+
+/* a complex value */
+realpart(expintegral_e(v,1+%i));
+1/2*(expintegral_e(v,1-%i)+expintegral_e(v,1+%i));
+imagpart(expintegral_e(v,1+%i));
+1/2*%i*(expintegral_e(v,1-%i)-expintegral_e(v,1+%i));
+
+/* Realpart and imagpart for expintegral_ei */
+
+/* a real value */
+realpart(expintegral_ei(x));
+expintegral_ei(x);
+imagpart(expintegral_ei(x));
+0;
+
+/* a complex value */
+realpart(expintegral_ei(1+%i));
+1/2*(expintegral_ei(1-%i)+expintegral_ei(1+%i));
+imagpart(expintegral_ei(1+%i));
+1/2*%i*(expintegral_ei(1-%i)-expintegral_ei(1+%i));
+
+/* Realpart and imagpart for expintegral_si 
+   expintegral_si has in addition reflection symmetry and
+   for a pure imaginary argument the result is pure imaginary */
+
+/* a real value */
+realpart(expintegral_ei(x));
+expintegral_ei(x);
+imagpart(expintegral_ei(x));
+0;
+
+/* an imaginary value */
+realpart(expintegral_si(%i));
+0;
+imagpart(expintegral_si(%i));
+-%i*expintegral_si(%i);
+
+/* a complex value */
+realpart(expintegral_si(1+%i));
+1/2*(expintegral_si(1-%i)+expintegral_si(1+%i));
+imagpart(expintegral_si(1+%i));
+1/2*%i*(expintegral_si(1-%i)-expintegral_si(1+%i));
+
 /*******************************************************************************
    For a negative integer parameter we expand in a series
 *******************************************************************************/
@@ -157,7 +210,11 @@ test_value(%,expintegral_e(2.5,0.5),15),numer;
 true;
 
 expintegral_e(-5/2,1/2);
+/*
 8*sqrt(2)*(15*sqrt(%pi)*(1-erf(1/sqrt(2)))/8+21/(4*sqrt(2)*sqrt(%e)));
+*/
+
+2^(7/2)*(15*sqrt(%pi)*(1-erf(1/sqrt(2)))/8+(5/sqrt(2)+1/2^(5/2))/sqrt(%e));
 
 test_value(%,expintegral_e(-2.5,0.5),13),numer;
 true;
@@ -168,7 +225,7 @@ true;
 *******************************************************************************/
 
 expintegral_e(3,z);
-z^2*((log(z)+(log(-1/z)-log(-z))/2+expintegral_ei(-z))/-2-(1/(2*z)-1/(2*z^2))*%e^-z);
+-z^2*(log(z)+(log(-1/z)-log(-z))/2+expintegral_ei(-z))/2-(z/2-1/2)*%e^-z;
 
 /* We compare this with numerical values */
 

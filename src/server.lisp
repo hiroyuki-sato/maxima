@@ -1,4 +1,8 @@
-;; very simple server started on port
+;; Connect Maxima to a socket which has been opened by
+;; some third party, typically a GUI program which supplies
+;; input to Maxima.
+;; Note that this code DOES NOT create a Maxima server:
+;; Maxima is the client!
 
 (in-package :maxima)
 
@@ -12,7 +16,7 @@
 (defvar $show_openplot t)
 (defvar *socket-connection*)
 
-(defun setup-server (port &optional (host "localhost"))
+(defun setup-client (port &optional (host "localhost"))
   (let* ((sock (open-socket host port)))
     #+gcl (setq si::*sigpipe-action* 'si::bye)
     (setq *socket-connection* sock)
@@ -31,7 +35,7 @@
     (setq *debug-io* sock))
   (values))
 
-(defun close-server ()
+(defun close-client ()
   #+ecl (setq *standard-input* *old-stdin*
 	      *standard-output* *old-stdout*
 	      *error-output* *old-stderr*
@@ -50,9 +54,13 @@
                                   :format (if bin :binary :text))
     #+clisp (socket:socket-connect port host :element-type
 				   (if bin '(unsigned-byte 8) 'character))
-    #+(or cmu scl) (sys:make-fd-stream (ext:connect-to-inet-socket host port)
-				       :input t :output t :element-type
-				       (if bin '(unsigned-byte 8) 'character))
+    #+scl (sys:make-fd-stream (ext:connect-to-inet-socket host port)
+			      :input t :output t :element-type
+			      (if bin '(unsigned-byte 8) 'character))
+    #+cmu (sys:make-fd-stream (ext:connect-to-inet-socket host port)
+			      :input t :output t :element-type
+			      (if bin '(unsigned-byte 8) 'character)
+			      #+unicode :external-format #+unicode :utf-8)
     #+sbcl (let ((socket (make-instance 'sb-bsd-sockets:inet-socket
 					:type :stream :protocol :tcp)))
 	     (sb-bsd-sockets:socket-connect
@@ -65,16 +73,17 @@
     #+lispworks (comm:open-tcp-stream host port :direction :io :element-type
                                       (if bin 'unsigned-byte 'base-char))
     #+ecl (si::open-client-stream host port)
-    #-(or allegro clisp cmu scl sbcl gcl lispworks ecl)
+    #+ccl (ccl::make-socket :remote-host host :remote-port port)
+    #-(or allegro clisp cmu scl sbcl gcl lispworks ecl ccl)
     (error 'not-implemented :proc (list 'open-socket host port bin))))
 
 
 
-(defun start-server (port &optional (host "localhost"))
-  (format t "jfa: starting server on port ~a~%" port)
+(defun start-client (port &optional (host "localhost"))
+  (format t "Connecting Maxima to server on port ~a~%" port)
   (setq $in_netmath t)
   (setq $show_openplot nil)
-  (setup-server port host))
+  (setup-client port host))
 
 #-gcl
 (defun getpid-from-environment ()
@@ -92,7 +101,8 @@
 #+openmcl (ccl::getpid)
 #+lispworks (system::getpid)
 #+ecl (si:getpid)
-#-(or clisp cmu scl sbcl gcl openmcl lispworks ecl) (getpid-from-environment)
+#+ccl (ccl::getpid)
+#-(or clisp cmu scl sbcl gcl openmcl lispworks ecl ccl) (getpid-from-environment)
 )
 
 #+(or gcl clisp cmu scl sbcl lispworks ecl)

@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
-;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
@@ -15,7 +23,7 @@
       (zeroi 0.0)
       (coner 1.0)
       (conei 0.0))
-  (declare (type (double-float) conei coner zeroi zeror rtpi pi$))
+  (declare (type (double-float) pi$ rtpi zeror zeroi coner conei))
   (defun zasyi (zr zi fnu kode n yr yi nz rl tol elim alim)
     (declare (type (simple-array double-float (*)) yi yr)
              (type (f2cl-lib:integer4) nz n kode)
@@ -45,7 +53,7 @@
       (setf ak1r (* rtpi str raz))
       (setf ak1i (* rtpi sti raz))
       (multiple-value-bind (var-0 var-1 var-2 var-3)
-          (zsqrt ak1r ak1i ak1r ak1i)
+          (zsqrt$ ak1r ak1i ak1r ak1i)
         (declare (ignore var-0 var-1))
         (setf ak1r var-2)
         (setf ak1i var-3))
@@ -243,6 +251,6 @@
            :return-values '(nil nil nil nil nil nil nil fortran-to-lisp::nz nil
                             nil nil nil)
            :calls '(fortran-to-lisp::zdiv fortran-to-lisp::zmlt
-                    fortran-to-lisp::zexp fortran-to-lisp::zsqrt
+                    fortran-to-lisp::zexp fortran-to-lisp::zsqrt$
                     fortran-to-lisp::d1mach fortran-to-lisp::zabs))))
 

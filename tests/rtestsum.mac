@@ -738,8 +738,11 @@ nusum ((2*m)!/(m!*(m + 1)!), m, 0, n);
 sumcontract(sum(k,k,1,n) + sum(k^2, k, 1, n));
 sum(k^2+k,k,1,n);
 
+/* Bug ID: 2770575 - rtestsum test 226
+ * This test simplifies correctly after revision 1.12 of sumcon.lisp.
+ */
 sumcontract(sum(k, k, 1, n) + sum(k, k, 1, n+1));
-n+sum(2*k,k,1,n)+1;
+n+2*sum(k,k,1,n)+1;
 
 /* Tests for bug report [ 1497706 ] sum(1/k^2,k,2,inf), simpsum; */
 
@@ -983,7 +986,7 @@ sum(binomial(n,2*k), k, 1, n), simpsum;
 2^(n-1)-1;
 
 sum(binomial(n+1,k), k, 1, n), simpsum;
-2^(n+1)-n-3;
+2^(n+1)-2;
 
 sum(binomial(n,k), k, -1, n+1), simpsum;
 2^n;
@@ -996,3 +999,37 @@ binomial(h+a+1,-b+a+1)-binomial(l+a+1,-b+a+1);
 
 (forget(n>1), 0);
 0;
+
+/* bug in assume database causes trouble for conditional in summation
+ * see mailing list 2009-07-29 "Fourier Series using fourie.mac"
+ */
+
+/* If ever the assume stuff is revised, this next test can go away.
+ * It's here to ensure the underlying problem is fixed.
+ */
+?dcomp (1, 1.0);
+zero;
+
+(kill (all), assume (xx >= 1), 0);
+0;
+
+is (xx > 1);
+unknown;
+
+if xx > 1 then aa else bb;
+if xx > 1 then aa else bb;
+
+sum (if xx > 1 then aa else bb, xx, 1, 3);
+2*aa + bb;
+
+foo : 'sum (if xx > 1 then aa else bb, xx, 1, 3);
+'sum (if xx > 1 then aa else bb, xx, 1, 3);
+
+ev (foo, nouns);
+2*aa + bb;
+
+foo : sum (if equal (xx, 1) then aa else bb, xx, 1, nn);
+'sum (if equal (xx, 1) then aa else bb, xx, 1, nn);
+
+ev (foo, nouns, nn=3);
+aa + 2*bb;

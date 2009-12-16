@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plot3d.tcl,v 1.12 2008/04/05 17:26:51 villate Exp $
+#       $Id: Plot3d.tcl,v 1.17 2009/11/30 04:37:06 villate Exp $
 #
 ###### Plot3d.tcl ######
 ############################################################
@@ -20,14 +20,14 @@ set plot3dOptions {
     {zcenter 0.0 "see xcenter"}
     {bbox "" "xmin ymin xmax ymax zmin zmax overrides the -xcenter etc"}
     {zradius auto " Height in z direction of the z values"}
-    {az 60 "azimuth angle" }
-    {el 30 "elevantion angle" }
+    {az 30 "azimuth angle" }
+    {el 60 "elevantion angle" }
 
     {thetax 10.0 "ignored is obsolete: use az and el"}
     {thetay 20.0 "ignored is obsolete: use az and el"}
     {thetaz 30.0 "ignored is obsolete: use az and el"}
 
-    {flatten 0 "Flatten surface when zradius exceeded" }
+    {flatten 1 "Flatten surface when zradius exceeded" }
     {zfun "" "a function of z to plot eg: x^2-y^2"}
     {parameters "" "List of parameters and values eg k=3,l=7"}
     {sliders "" "List of parameters ranges k=3:5,u"}
@@ -40,6 +40,13 @@ set plot3dOptions {
     {windowname ".plot3d" "window name"}
     {psfile "" "A filename where the graph will be saved in PostScript."}
     {nobox 0 "if not zero, do not draw the box around the plot."}
+    {hue 0.25 "Default hue value."}
+    {saturation 0.7 "Default saturation value."}
+    {value 0.8 "Default brightness value."}
+    {colorrange 0.5 "Range of colors used."}
+    {ncolors 180 "Number of colors used."}
+    {colorscheme "hue" "Coloring Scheme (hue, saturation, value, gray or 0)."}
+    {mesh_lines "black" "Color for the meshes outline, or 0 for no outline."}
 }
 
 
@@ -233,24 +240,41 @@ proc drawOval { c radius args } {
     eval $com
 }
 
-
 proc plot3dcolorFun {win z } {
-    makeLocal $win zmin zmax
-    set ncolors 180
-    set tem [expr {(180/$ncolors)*round(($z - $zmin)*$ncolors/($zmax - $zmin+.001))}]
-    #puts "tem=$tem,z=[format %3g $z],[format "#%.2x%.2x%.2x" 50 50 $tem]"
-    return [format "#%.2x%.2x%.2x" [expr {180 -$tem}] [expr {240 - $tem}] $tem]
+    makeLocal $win zmin zmax ncolors hue saturation value colorrange colorscheme
+    if { $z < $zmin || $z > $zmax } {
+	return "none"
+    }
+    set h [expr { 360*$hue }]
+    if { ($value > 1) || ($value < 0) } {
+	set value [expr { $value - floor($value) }]
+    }
+    set tem [expr {(double($colorrange)/$ncolors)*round(($z - $zmin)*$ncolors/($zmax - $zmin+.001))}]
+    switch -exact $colorscheme {
+	"hue" { return [hsv2rgb [expr { 360*$tem+$h }] $saturation $value] }
+	"saturation" { return [hsv2rgb $h [expr { $tem+$saturation }] $value] }
+	"value" { return [hsv2rgb $h $saturation [expr {$tem+$value}]] }
+	"gray"  { set g [expr { round( ($tem+$value)*255 ) } ]
+	    return  [format "\#%02x%02x%02x" $g $g $g] }
+	"0" { return "#ffffff" }
+    }
 }
 
-proc setupPlot3dColors { win } {
+proc setupPlot3dColors { win first_mesh} {
     upvar #0 [oarray $win] wvar
     # the default prefix for cmap
     set wvar(cmap) c1
-    set k 0
-    makeLocal $win colorfun points
-    foreach { x y z } $points {
-	catch { set wvar(c1,$k) [$colorfun $win $z] }
-	incr k 3
+    makeLocal $win colorfun points lmesh
+    foreach tem [lrange $lmesh $first_mesh end] {
+        set k [llength $tem]
+	if { $k == 4 } {
+	    set z [expr { ([lindex $points [expr { [lindex $tem 0] + 2 } ]] +
+			   [lindex $points [expr { [lindex $tem 1] + 2 } ]] +
+			   [lindex $points [expr { [lindex $tem 2] + 2 } ]] +
+			   [lindex $points [expr { [lindex $tem 3] + 2 } ]])/
+			  4.0 } ]
+	    catch { set wvar(c1,[lindex $tem 0]) [$colorfun $win $z] }
+	}
     }
 }
 
@@ -386,7 +410,7 @@ proc plot3d { args } {
 }
 
 proc replot3d { win } {
-    global   printOption plot2dOptions
+    global printOption
     makeLocal $win nsteps zfun data c
     linkLocal $win parameters sliders psfile nobox
 
@@ -394,11 +418,6 @@ proc replot3d { win } {
     if { [llength $nsteps] == 1 }    {
 	oset $win nsteps \
 	    [set nsteps  [list [lindex $nsteps 0] [lindex $nsteps 0]]]
-    }
-    foreach v $data {
-	if { "[assq [lindex $v 0] $plot2dOptions notthere]" != "notthere" } {
-	    oset $win [lindex $v 0] [lindex $v 1]
-	}
     }
 
     set sliders [string trim $sliders]
@@ -432,13 +451,8 @@ proc replot3d { win } {
 	addOnePlot3d $win $data
     }
 
-
     setUpTransforms3d $win
 
-    oset $win colorfun plot3dcolorFun
-    #   addAxes $win
-    oset $win cmap c1
-    setupPlot3dColors $win
     if { $nobox == 0 } {
 	addBbox $win
     }
@@ -568,7 +582,7 @@ proc drawMeshes {win canv} {
 	#puts "drawOneMesh $win $canv $k"
 	#puts "drawOneMesh $win $canv $k"
 	set mesh [lindex $lmesh $k]
-	set col gray70
+	set col black
 	catch { set col $ar($cmap,[lindex $mesh 0]) }
 	drawOneMesh $win $canv $k $mesh $col
     }
@@ -593,6 +607,7 @@ proc drawMeshes {win canv} {
 proc drawOneMesh { win  canv k mesh color } {
     #k=i*(ny+1)+j
     # k,k+1,k+1+nyp,k+nyp
+    makeLocal $win mesh_lines
     upvar 1 rotatedxy ptsxy
     set n [llength $mesh]
 
@@ -604,21 +619,25 @@ proc drawOneMesh { win  canv k mesh color } {
 	#desetq "a b" $mesh
 	#puts "<[lrange $points $a [expr {$a +2}]]> <[lrange $points $b [expr {$b +2}]]"
 	if { $n == 2 } {
-	    #	    set color gray70
+	    #	    set color black
 	    #	    catch { set color [oget $win $cmap,$mesh]}
 
 	    eval $canv create line $coords -tags [list [list axis mesh.$k]] \
-		-fill $color -width 5
+		-fill $color -width 2
 	} else {
 	    # puts "doing special $mesh, $coords"
 	    catch { set tem [oget $win special([lindex $mesh 0])]
 		eval [concat $tem $coords]
 	    }
 	}
-    } else {
+    } elseif { [string length $color] < 8 && $color != "none"} {
+	if { $mesh_lines != 0 } {
+	    set outline "-outline $mesh_lines"
+	} else {
+	    set outline ""
+	}
 	eval $canv create polygon $coords -tags [list [list poly mesh.$k]] \
-	    -fill $color \
-	    -outline black
+	    -fill $color $outline
     }
 }
 
@@ -659,8 +678,8 @@ proc     makeFrame3d { win } {
     catch { set top [winfo parent $w]}
     catch {
 
-	wm title $top [mc "Schelter's 3d Plot Window"]
-	wm iconname $top "DF plot"
+	wm title $top [mc "Xmaxima: Plot3d"]
+	wm iconname $top "plot3d"
 	#   wm geometry $top 750x700-0+20
     }
 

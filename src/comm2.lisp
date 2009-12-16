@@ -61,32 +61,32 @@
 	(t ($at (sdiff (cadr e) x) (caddr e)))))
 
 (defmfun diffncexpt (e x)
-  ((lambda (base* pow)
-     (cond ((and (mnump pow) (or (not (eq (ml-typep pow) 'fixnum)) (< pow 0))) ; POW cannot be 0
-	    (diff%deriv (list e x 1)))
-	   ((and (atom base*) (eq base* x) (free pow base*))
-	    (mul2* pow (list '(mncexpt) base* (add2 pow -1))))
-	   ((ml-typep pow 'fixnum)
-	    ((lambda (deriv ans)
-	       (do ((i 0 (1+ i))) ((= i pow))
-		 (setq ans (cons (list '(mnctimes) (list '(mncexpt) base* i)
-				       (list '(mnctimes) deriv
-					     (list '(mncexpt) base* (- pow 1 i))))
-				 ans)))
-	       (addn ans nil))
-	     (sdiff base* x) nil))
-	   ((and (not (depends pow x)) (or (atom pow) (and (atom base*) (free pow base*))))
-	    ((lambda (deriv index)
-	       (simplifya
-		(list '(%sum)
-		      (list '(mnctimes) (list '(mncexpt) base* index)
-			    (list '(mnctimes) deriv
-				  (list '(mncexpt) base*
-					(list '(mplus) pow -1 (list '(mtimes) -1 index)))))
-		      index 0 (list '(mplus) pow -1)) nil))
-	     (sdiff base* x) (gensumindex)))
-	   (t (diff%deriv (list e x 1)))))
-   (cadr e) (caddr e)))
+  (let ((base* (cadr e))
+	(pow (caddr e)))
+    (cond ((and (mnump pow) (or (not (eq (ml-typep pow) 'fixnum)) (< pow 0))) ; POW cannot be 0
+	   (diff%deriv (list e x 1)))
+	  ((and (atom base*) (eq base* x) (free pow base*))
+	   (mul2* pow (list '(mncexpt) base* (add2 pow -1))))
+	  ((ml-typep pow 'fixnum)
+	   (let ((deriv (sdiff base* x))
+		 (ans nil))
+	     (do ((i 0 (1+ i))) ((= i pow))
+	       (push (list '(mnctimes) (list '(mncexpt) base* i)
+			   (list '(mnctimes) deriv
+				 (list '(mncexpt) base* (- pow 1 i))))
+		     ans))
+	     (addn ans nil)))
+	  ((and (not (depends pow x)) (or (atom pow) (and (atom base*) (free pow base*))))
+	   (let ((deriv (sdiff base* x))
+		 (index (gensumindex)))
+	     (simplifya
+	      (list '(%sum)
+		    (list '(mnctimes) (list '(mncexpt) base* index)
+			  (list '(mnctimes) deriv
+				(list '(mncexpt) base*
+				      (list '(mplus) pow -1 (list '(mtimes) -1 index)))))
+		    index 0 (list '(mplus) pow -1)) nil)))
+	  (t (diff%deriv (list e x 1))))))
 
 (defmfun stotaldiff (e)
   (cond ((or (mnump e) (constant e)) 0)
@@ -105,7 +105,7 @@
 	((eq (caar e) 'mncexpt)
 	 (if (and (ml-typep (caddr e) 'fixnum) (> (caddr e) 0))
 	     (stotaldiff (list '(mnctimes) (cadr e)
-			       (ncpower (cadr e) (f1- (caddr e)))))
+			       (ncpower (cadr e) (1- (caddr e)))))
 	     (list '(%derivative) e)))
 	(t (addn (cons 0 (mapcar #'(lambda (x)
 				     (mul2 (sdiff e x) (list '(%del simp) x)))
@@ -139,7 +139,7 @@
     (if (or (mopp fun) (eq fun 'mqapply)) (improper-arg-err exp '$atvalue))
     (atvarschk vl)
     (do ((vl1 vl (cdr vl1)) (l atvars (cdr l))) ((null vl1))
-      (if (and (symbolp (car vl1)) (not (mget (car vl1) '$constant)))
+      (if (and (symbolp (car vl1)) (not (kindp (car vl1) '$constant)))
 	  (setq val (maxima-substitute (car l) (car vl1) val))
 	  (improper-arg-err (cons '(mlist) vl) '$atvalue)))
     (setq eqs (if (eq (caar eqs) 'mequal) (list eqs) (cdr eqs)))
@@ -240,9 +240,19 @@
 		   ((logconcoeffp (car x)) (setq decints (cons (car x) decints)))
 		   (t (setq notlogs (cons (car x) notlogs))))))))
 
-(defun lgcsimp (e)		;; this is to simplify
-  (let (($logexpand nil))	;; log(%e) -> 1 and log(%e^2) -> 2
-    (simpln `((%log) ,e) 1 t)))
+;(defun lgcsimp (e)		;; this is to simplify
+;  (let (($logexpand nil))	;; log(%e) -> 1 and log(%e^2) -> 2
+;    (simpln `((%log) ,e) 1 t)))
+
+(defun lgcsimp (e)
+  (cond ((atom e)
+         ;; e.g. log(1) -> 0, or log(%e) -> 1
+         (simplify (list '(%log) e)))
+        ((and (mexptp e) (eq (cadr e) '$%e))
+         ;; log(%e^expr) -> expr
+         (simplify (list '(%log) e)))
+        (t
+         (list '(%log simp) e))))
 
 (defun lgcsimplep (e)
   (and (eq (caar e) 'mplus)
@@ -293,20 +303,29 @@
 (defmvar $rootsconmode t)
 
 (defun $rootscontract (e)	       ; E is assumed to be simplified
-  ((lambda (radpe $radexpand) (rtcon e))
-   (and $radexpand (not (eq $radexpand '$all)) (eq $domain '$real)) nil))
+  (let ((radpe (and $radexpand (not (eq $radexpand '$all)) (eq $domain '$real)))
+	($radexpand nil))
+    (rtcon e)))
 
 (defun rtcon (e)
   (cond ((atom e) e)
 	((eq (caar e) 'mtimes)
-	 (if (and (not (free e '$%i))
-		  (let ((num ($num e)))
-		    (and (not (alike1 e num))
-			 (or (eq num '$%i)
-			     (and (not (atom num)) (member '$%i num :test #'eq)
-				  (member '$%i (rtcon num) :test #'eq))))))
-	     (setq e (list* (car e) -1 '((mexpt) -1 ((rat simp) -1 2))
-			    (delete '$%i (copy-list (cdr e)) :count 1 :test #'eq))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This code does the substitution %i -> (-1)*(-1)^(-1/2) for expressions
+; like %i/expr. In most cases this causes a wrong result, e.g. 
+; bug ID: 2820202 - rootscontract(%i/2) --> -%i/2. The only case this codes 
+; works is for expressions like %i/sqrt(x) --> -1/sqrt(x). It is doubtful that 
+; this simplification is useful.
+; To get correct results in general, this code is commented out. DK 08/2009.
+; 
+;	 (if (and (not (free e '$%i))
+;		  (let ((num ($num e)))
+;		    (and (not (alike1 e num))
+;			 (or (eq num '$%i)
+;			     (and (not (atom num)) (member '$%i num :test #'eq)
+;				  (member '$%i (rtcon num) :test #'eq))))))
+;	     (setq e (list* (car e) -1 '((mexpt) -1 ((rat simp) -1 2))
+;			    (delete '$%i (copy-list (cdr e)) :count 1 :test #'eq))))
 	 (do ((x (cdr e) (cdr x)) (roots) (notroots) (y))
 	     ((null x)
 	      (cond ((null roots) (subst0 (cons '(mtimes) (nreverse notroots)) e))
@@ -406,7 +425,20 @@
   (let (y x signy signx)
     (setq y (simpcheck (cadr e) z) x (simpcheck (caddr e) z))
     (cond ((and (zerop1 y) (zerop1 x))
-	   (merror "atan2(0,0) has been generated."))
+	   (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
+          ;; Simplifify infinities.
+          ((or (eq x '$inf)
+               (alike1 x '((mtimes) -1 $minf)))
+           ;; The argument x is inf or -minf.
+           0)
+          ((or (eq x '$minf)
+               (alike1 x '((mtimes) -1 $inf)))
+           ;; The argument x is minf or -inf. Determine the sign of y.
+           ;; When unknown, return a noun form.
+           (setq signy ($sign y))
+           (cond ((eq signy '$pos) '$%pi)
+                 ((eq signy '$neg) (mul -1 '$%pi))
+                 (t (eqtest (list '($atan2) y x) e))))
 	  ( ;; float contagion
 	   (and (or (numberp x) (ratnump x)) ; both numbers
 		(or (numberp y) (ratnump y)) ; ...but not bigfloats
@@ -437,7 +469,8 @@
 		      ;; *Atan* should handle sqrt(3) etc., so all cases will work
 		      ((and (equal y 1) (alike1 x '((mexpt simp) 3 ((rat simp) 1 2))))
 		       (mul2* '((rat simp) 1 6) '$%pi)))))
-	  ($logarc (logarc '%atan (div y x)))
+          ($logarc
+           (logarc '%atan2 (list ($logarc y) ($logarc x))))
 	  ((and $trigsign (mminusp* y))
 	   (neg (simplifya (list '($atan2) (neg y) x) t)))
 					; atan2(y,x) = atan(y/x) + pi sign(y) (1-sign(x))/2
@@ -450,11 +483,15 @@
 	  ((and (eq signx '$zero) (eq signy '$zero))
 	   ;; Unfortunately, we'll rarely get here.  For example,
 	   ;; assume(equal(x,0)) atan2(x,x) simplifies via the alike1 case above
-	   (merror "atan2(0,0) has been generated."))
+	   (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
 	  (t (eqtest (list '($atan2) y x) e)))))
 
 (defun atan2negp (e) (eq ($sign e) '$neg))
-(defun atan2posp (e) (eq ($sign e) '$pos))
+
+(defun atan2posp (e)
+  ;; Include $pz for this check. With this extension expessions like
+  ;; abs(z) will be positive and further simplified.
+  (member ($sign e) '($pos $pz)))
 
 ;;;; ARITHF
 
@@ -471,11 +508,11 @@
 
 (defmspec $numerval (l) (setq l (cdr l))
 	  (do ((l l (cddr l)) (x (ncons '(mlist simp)))) ((null l) x)
-	    (cond ((null (cdr l)) (merror "`numerval' takes an even number of args"))
+	    (cond ((null (cdr l)) (merror (intl:gettext "numerval: expected an even number of arguments.")))
 		  ((not (symbolp (car l)))
-		   (merror "~M must be atomic - `numerval'" (car l)))
+		   (merror (intl:gettext "numerval: expected a symbol; found ~M") (car l)))
 		  ((boundp (car l))
-		   (merror "~M is bound - `numerval'" (car l))))
+		   (merror (intl:gettext "numerval: cannot declare a value because ~M is bound.") (car l))))
 	    (mputprop (car l) (cadr l) '$numer)
 	    (add2lnc (car l) $props)
 	    (nconc x (ncons (car l)))))
@@ -548,10 +585,10 @@
 (defmfun scanmap1 (func e &optional (flag nil flag?))
   (let ((arg2 (specrepcheck e)) newarg2)
     (cond ((eq func '$rat)
-	   (merror "`scanmap' results must be in general representation."))
+	   (merror (intl:gettext "scanmap: cannot apply 'rat'.")))
 	  (flag?
 	   (unless (eq flag '$bottomup)
-	     (merror "Only `bottomup' is an acceptable 3rd arg to `scanmap'."))
+	     (merror (intl:gettext "scanmap: third argument must be 'bottomup', if present; found ~M") flag))
 	   (if (mapatom arg2)
 	       (funcer func (ncons arg2))
 	       (subst0 (funcer func
@@ -605,8 +642,11 @@
 		#'(lambda (i j) (meval (list (list a 'array) i j)))
 	      #'(lambda (i j) (mfuncall a i j))))
     
-    (if (or (notevery #'fixnump (list i2 j2 i1 j1)) (> i1 i2) (> j1 j2))
-	(merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1)))
+    (if (notevery #'fixnump (list i2 j2 i1 j1))
+      (merror (intl:gettext "genmatrix: bounds must be integers; found ~M, ~M, ~M, ~M") i2 j2 i1 j1))
+ 	 
+    (if (or (> i1 i2) (> j1 j2))
+      (merror (intl:gettext "genmatrix: upper bounds must be greater than or equal to lower bounds; found ~M, ~M, ~M, ~M") i2 j2 i1 j1))
  	 
     (dotimes (i (1+ (- i2 i1)))
       (nconc l (ncons (ncons '(mlist)))))
@@ -624,12 +664,12 @@
 
 (defmfun $copymatrix (x)
   (unless ($matrixp x)
-    (merror "Argument not a matrix - `copymatrix':~%~M" x))
+    (merror (intl:gettext "copymatrix: argument must be a matrix; found ~M") x))
   (copy-tree x))
 
 (defmfun $copylist (x)
   (unless ($listp x)
-    (merror "Argument not a list - `copylist':~%~M" x))
+    (merror (intl:gettext "copylist: argument must be a list; found ~M") x))
   (copy-tree x))
 
 (defmfun $copy (x)
@@ -639,35 +679,35 @@
 
 (defmfun $addrow (m &rest rows)
   (declare (dynamic-extent rows))
-  (cond ((not ($matrixp m)) (merror "First argument to `addrow' must be a matrix"))
+  (cond ((not ($matrixp m)) (merror (intl:gettext "addrow: first argument must be a matrix; found ~M") m))
 	((null rows) m)
 	(t (dolist (r rows m)
 	     (setq m (addrow m r))))))
 
 (defmfun $addcol (m &rest cols)
   (declare (dynamic-extent cols))
-  (cond ((not ($matrixp m)) (merror "First argument to `addcol' must be a matrix"))
+  (cond ((not ($matrixp m)) (merror (intl:gettext "addcol: first argument must be a matrix; found ~M") m))
 	((null cols) m)
 	(t (let ((m ($transpose m)))
 	     (dolist (c cols ($transpose m))
 	       (setq m (addrow m ($transpose c))))))))
 
 (defun addrow (m r)
-  (cond ((not (mxorlistp r)) (merror "Illegal argument to `addrow' or `addcol'"))
+  (cond ((not (mxorlistp r)) (merror (intl:gettext "addrow or addcol: argument must be a matrix or list; found ~M") r))
 	((and (cdr m)
 	      (or (and (eq (caar r) 'mlist) (not (= (length (cadr m)) (length r))))
 		  (and (eq (caar r) '$matrix)
 		       (not (= (length (cadr m)) (length (cadr r))))
 		       (prog2 (setq r ($transpose r))
 			   (not (= (length (cadr m)) (length (cadr r))))))))
-	 (merror "Incompatible structure - `addrow'//`addcol'")))
+	 (merror (intl:gettext "addrow or addcol: incompatible structure."))))
   (append m (if (eq (caar r) '$matrix) (cdr r) (ncons r))))
 
 ;;;; ARRAYF
 
 (defmfun $arraymake (ary subs)
   (cond ((or (not ($listp subs)) (null (cdr subs)))
-	 (merror "Wrong type argument to `arraymake':~%~M" subs))
+	 (merror (intl:gettext "arraymake: second argument must be a list of one or more elements; found ~M") subs))
 	((eq (ml-typep ary) 'symbol)
 	 (cons (cons (getopr ary) '(array)) (cdr subs)))
 	(t (cons '(mqapply array) (cons ary (cdr subs))))))
@@ -698,7 +738,7 @@
 				(cons '(mlist) (mapcar #'1- dims)))))))
 	 (let ((gen (mgetl sym '(hashar array))) ary1)
 	   (cond ((null gen)
-		  (merror "Not an array - `arrayinfo':~%~M" ary))
+		  (merror (intl:gettext "arrayinfo: ~M is not an array.") ary))
 		 ((mfilep (cadr gen))
 		  (i-$unstore (ncons ary))
 		  (setq gen (mgetl ary '(hashar array)))))
@@ -750,11 +790,11 @@
 		aliaslist))))
 
 (defmspec $ordergreat (l)
-  (if greatorder (merror "Reordering is not allowed."))
+  (if greatorder (merror (intl:gettext "ordergreat: reordering is not allowed.")))
   (makorder (setq greatorder (reverse (cdr l))) '_))
 
 (defmspec $orderless (l)
-  (if lessorder (merror "Reordering is not allowed."))
+  (if lessorder (merror (intl:gettext "orderless: reordering is not allowed.")))
   (makorder (setq lessorder (cdr l)) '|#|))
 
 (defun makorder (l char)
@@ -778,9 +818,9 @@
 
 (defun $concat (&rest l)
   (when (null l)
-    (merror "concat: I need at least one argument."))
+    (merror (intl:gettext "concat: there must be at least one argument.")))
   (let ((result-is-a-string (or (numberp (car l)) (stringp (car l)))))
-    (setq l (mapcan #'(lambda (x) (unless (atom x) (merror "concat: argument is not an atom: ~M" x)) (string* x)) l))
+    (setq l (mapcan #'(lambda (x) (unless (atom x) (merror (intl:gettext "concat: argument must be an atom; found ~M") x)) (string* x)) l))
     (if result-is-a-string
       (coerce l 'string)
       (getalias (implode (cons '#\$ l))))))

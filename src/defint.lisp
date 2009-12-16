@@ -130,7 +130,7 @@
 		      *updn ul ll exp pe* pl* rl* pl*1 rl*1
 		      loopstop* var nn* nd* dn* p*
 		      ind* factors rlm*
-		      plogabs *zexptsimp? *scflag*
+		      plogabs *scflag*
 		      *sin-cos-recur* *rad-poly-recur* *dintlog-recur*
 		      *dintexp-recur* defintdebug *defint-assumptions*
 		      *current-assumptions*
@@ -164,6 +164,10 @@
        (setq real-infinities '($inf $minf))
        (setq infinitesimals '($zeroa $zerob))))
 
+(defmvar $intanalysis t
+  "When @code{true}, definite integration tries to find poles in the integrand 
+in the interval of integration.")
+
 (defmvar defintdebug () "If true Defint prints out debugging information")
 
 (defmvar integerl nil
@@ -185,7 +189,7 @@
 		 (*sin-cos-recur* ())  (*dintexp-recur* ())  (*dintlog-recur* 0.)
 		 (ans nil)  (orig-exp exp)  (orig-var var)
 		 (orig-ll ll)  (orig-ul ul)
-		 (pcprntd nil)  (*nodiverg nil)  ($logabs t)  (limitp t)
+		 (pcprntd nil)  (*nodiverg nil)  ($logabs t)  ; (limitp t)
 		 (rp-polylogp ())
 		 ($domain '$real) ($m1pbranch ())) ;Try this out.
 
@@ -195,21 +199,19 @@
 	     (setq ll (ratdisrep ll))
 	     (setq ul (ratdisrep ul))
 	     (cond (($constantp var)
-		    (merror "Variable of integration not a variable: ~M"
-			    var))
+		    (merror (intl:gettext "defint: variable of integration cannot be a constant; found ~M") var))
 		   (($subvarp var)  (setq var (stripdollar (caar var)))
 		    (setq exp ($substitute var orig-var exp))))
 	     (cond ((not (atom var))
-		    (merror "Improper variable of integration: ~M" var))
+		    (merror (intl:gettext "defint: variable of integration must be a simple or subscripted variable.~%defint: found ~M") var))
 		   ((or (among var ul)
 			(among var ll))
 		    (setq var (stripdollar var))
 		    (setq exp ($substitute var orig-var exp))))
 	     (cond ((not (equal (sratsimp ($imagpart ll)) 0))
-		    (merror "Defint: Lower limit of integration must be real."))
+		    (merror (intl:gettext "defint: lower limit of integration must be real; found ~M") ll))
 		   ((not (equal (sratsimp ($imagpart ul)) 0))
-		    (merror
-		     "Defint: Upper limit of integration must be real.")))
+		    (merror (intl:gettext "defint: upper limit of integration must be real; found ~M") ul)))
 
 	     (cond ((setq ans (defint exp var ll ul))
 		    (setq ans (subst orig-var var ans))
@@ -347,6 +349,7 @@
 				   (t (intcv1 d ind nv))))
 			    ))))
 		 (t
+		  (putprop 'yx t 'internal);; keep var from appearing in questions to user
 		  (solve (m+t 'yx (m*t -1 nv)) var 1.)
 		  (cond (*roots
 			 (setq d (subst var 'yx (caddar *roots)))
@@ -385,7 +388,9 @@
   (setq exp1 (sratsimp (subst var 'yx exp1))))
 
 (defun defint (exp var ll ul)
-  (let ((old-assumptions *defint-assumptions*)  (*current-assumptions* ()))
+  (let ((old-assumptions *defint-assumptions*)  
+        (*current-assumptions* ())
+        (limitp t))
     (unwind-protect
 	 (prog ()
 	    (setq *current-assumptions* (make-defint-assumptions 'noask))
@@ -405,7 +410,11 @@
 				(member ll '($inf $minf) :test #'eq))
 			    (diverg))
 			   (t (setq ans (m* exp (m+ ul (m- ll))))
-			      (return ans)))))
+			      (return ans))))
+                    ;; Look for integrals which involve log and exp functions.
+                    ;; Maxima has a special algorithm to get general results.
+                    ((and (setq ans (defint-log-exp exp var ll ul)))
+                     (return ans)))
 	      (let* ((exp (rmconst1 exp))
 		     (c (car exp))
 		     (exp (%i-out-of-denom (cdr exp))))
@@ -533,8 +542,6 @@
 		(intsubs result ll ul)))
 	  ((and (ratp exp var)
 		(setq result (ratfnt exp))))
-	  ((and (setq result (antideriv exp))
-		(intsubs result ll ul)))
 	  ((and (not *scflag*)
 		(not (eq ul '$inf))
 		(radic exp var)
@@ -567,9 +574,6 @@
 		  (intsubs anti-deriv (m+ (caar previous-pole) 'epsilon)
 			   (m+ (caar current-pole) (m- 'epsilon))))))
 
-  ;;Hack answer to simplify "Correctly".
-  (cond ((not (freeof '%log ans))
-	 (setq ans ($logcontract ans))))
   (setq ans (get-limit (get-limit ans 'epsilon 0 '$plus) 'prin-inf '$inf))
   ;;Return section.
   (cond ((or (null ans)
@@ -646,8 +650,7 @@
     (flet ((try-antideriv (e lo hi)
 	     (let ((ans (antideriv e)))
 	       (when ans
-		 (m- ($substitute hi var ans)
-		     ($substitute lo var ans))))))
+		 (intsubs ans lo hi)))))
 
       (cond ((equal 0. (car e))
 	     ;; No polynomial part
@@ -718,7 +721,7 @@
 
 (defun diverg nil
   (cond (*nodiverg (throw 'divergent 'divergent))
-	(t (merror "Integral is divergent"))))
+	(t (merror (intl:gettext "defint: integral is divergent.")))))
 
 (defun make-defint-assumptions (ask-or-not)
   (cond ((null (order-limits ask-or-not))  ())
@@ -882,7 +885,11 @@
 		;; expression.  If no errors are produced, we're done.
 		(let ((ll-val (no-err-sub ll e))
 		      (ul-val (no-err-sub ul e)))
-		  (cond ((and ll-val ul-val)
+		  (cond ((or (eq ll-val t)
+                             (eq ul-val t))
+                         ;; no-err-sub has returned T. An error was catched.
+                         nil)
+                        ((and ll-val ul-val)
 			 (m- ul-val ll-val))
 			(t nil))))
 	       (t nil)))))
@@ -941,7 +948,8 @@
 		   (do ((l pole (cdr l)) (llist ()))
 		       ((null l)  llist)
 		     (cond
-		       ((eq (caar l) ll)  t) ;Skip this one by definition.
+		       ((zerop1 (m- (caar l) ll)) t)  ; don't worry about discontinuity
+ 		       ((zerop1 (m- (caar l) ul)) t)  ;  at boundary of integration
 		       (t (let ((low-lim ($limit (cadr exp) var (caar l) '$minus))
 				(up-lim ($limit (cadr exp) var (caar l) '$plus)))
 			    (cond ((and (not (eq low-lim up-lim))
@@ -988,7 +996,7 @@
 (defun principal nil
   (cond ($noprincipal (diverg))
 	((not pcprntd)
-	 (princ "Principal Value")
+	 (format t "Principal Value~%")
 	 (setq pcprntd t))))
 
 (defun rib (e s)
@@ -1245,7 +1253,7 @@
 	((setq n (let ((plogabs ()))
 		   (keyhole (m* `((%plog) ,(m- var)) n) d var)))
 	 (m- n))
-	(t (merror "Keyhole failed"))))
+	(t (merror (intl:gettext "defint: keyhole integration failed.")))))
 
 (setq *dflag nil)
 
@@ -1463,7 +1471,7 @@
 	  (return (list (car d)
 			(- (cadr d))
 			(ptimes (cadr f) (caddr d)))))
-     (merror "Bug from `pfrnum' in `residu'")))
+     (merror "defint: bug from PFRNUM in RESIDU.")))
 
 (defun partnum (n dl)
   (let ((n2 1)  ans nl)
@@ -1782,26 +1790,37 @@
 ;;; is zero.
 (defun intsc1 (a b e)
   ;; integrate(e,var,a,b)
-  (let ((limit-diff (m+ b (m* -1 a)))
+  (let ((trigarg (find-first-trigarg e))
+	(var var)
 	($%emode t)
 	($trigsign t)
 	(*sin-cos-recur* t))		;recursion stopper
-    (prog (ans d nzp2 l int-zero-to-d int-nzp2 int-zero-to-c)
+    (prog (ans d nzp2 l int-zero-to-d int-nzp2 int-zero-to-c limit-diff)
+       (let* ((arg (simple-trig-arg trigarg))	;; pattern match sin(cc*x + bb)
+	      (cc (cdras 'c arg))
+	      (bb (cdras 'b arg))
+	      (new-var (gensym "NEW-VAR-")))
+	 (when (or (not arg)
+		   (not (every-trigarg-alike e trigarg)))
+	   (return nil))
+	 (when (not (and (equal cc 1) (equal bb 0)))
+	   (setq e (div (maxima-substitute (div (sub new-var bb) cc)
+					   var e)
+			cc))
+	   (setq var new-var)	;; change of variables to get sin(new-var)
+	   (setq a (add bb (mul a cc)))
+	   (setq b (add bb (mul b cc)))))
+       (setq limit-diff (m+ b (m* -1 a)))
        (when (or (not (period %pi2 e var))
 		 (not (and ($constantp a)
 			   ($constantp b))))
 	 ;; Exit if b or a is not a constant or if the integrand
 	 ;; doesn't appear to have a period of 2 pi.
 	 (return nil))
+       
        ;; Multiples of 2*%pi in limits.
        (cond ((integerp (setq d (let (($float nil))
 				 (m// limit-diff %pi2))))
-	      ;; This looks wrong.  We never multiply by d because of
-	      ;; the return!
-	      #+nil
-	      (setq ans (m* d (cond ((setq ans (intsc e %pi2 var))
-				     (return ans))
-				    (t (return nil)))))
 	      (cond ((setq ans (intsc e %pi2 var))
 		     (return (m* d ans)))
 		    (t (return nil)))))
@@ -3356,7 +3375,7 @@
   (let ((order (ask-greateq ul ll)))
     (cond ((eq order '$yes))
 	  ((eq order '$no) (let ((temp ul)) (setq ul ll ll temp)))
-	  (t (merror "Incorrect limits given to `defint':~%~M"
+	  (t (merror (intl:gettext "defint: failed to order limits of integration:~%~M")
 		     (list '(mlist simp) ll ul)))))
   (if (not (equal ($imagpart place) 0))
       '$no
@@ -3430,3 +3449,209 @@
 				 '$yes)
 			     nil)
 			    (t t)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;  Integrate Definite Integrals involving log and exp functions. The algorithm
+;;;  are taken from the paper "Evaluation of CLasses of Definite Integrals ..."
+;;;  by K.O.Geddes et. al.
+;;;
+;;;  1. CASE: Integrals generated by the Gamma funtion.
+;;;
+;;;    inf
+;;;   /
+;;;   [     w    m            s        - m - 1
+;;;   I    t  log (t) expt(- t ) dt = s        signum(s)
+;;;   ]
+;;;   /
+;;;    0
+;;;                                                                 !
+;;;                                                    m            !
+;;;                                                   d             !
+;;;                                                  (--- (gamma(z))!         )
+;;;                                                     m           !
+;;;                                                   dz            !    w + 1
+;;;                                                                 !z = -----
+;;;                                                                        s
+;;;
+;;;  The integral converges for: 
+;;;  s # 0, m = 0, 1, 2, ... and realpart((w+1)/s) > 0.
+;;;  
+;;;  2. CASE: Integrals generated by the Incomplete Gamma function.
+;;;
+;;;    inf                                                         !
+;;;   /                                m                           !
+;;;   [     w    m           s        d                         s  !
+;;;   I    t  log (t) exp(- t ) dt = (--- (gamma_incomplete(a, x ))!         )
+;;;   ]                                 m                          !
+;;;   /                               da                           !    w + 1
+;;;    x                                                           !z = -----
+;;;                                                                       s
+;;;                                                           - m - 1
+;;;                                                          s        signum(s)
+;;;
+;;;  The integral converges for:
+;;;  s # 0, m = 0, 1, 2, ... and realpart((w+1)/s) > 0.
+;;;  The shown solution is valid for s>0. For s<0 gamma_incomplete has to be 
+;;;  replaced by gamma(a) - gamma_incomplete(a,x^s).
+;;;
+;;;  3. CASE: Integrals generated by the beta function.
+;;;
+;;;    1
+;;;   /
+;;;   [     m               s  r    n
+;;;   I  log (1 - t) (1 - t)  t  log (t) dt = 
+;;;   ]
+;;;   /
+;;;    0
+;;;                                                                  !
+;;;                                                       !          !
+;;;                                   n    m              !          !
+;;;                                  d    d               !          !
+;;;                                  --- (--- (beta(z, w))!         )!
+;;;                                    n    m             !          !
+;;;                                  dz   dw              !          !
+;;;                                                       !w = s + 1 !
+;;;                                                                  !z = r + 1
+;;;
+;;;  The integral converges for:
+;;;  n, m = 0, 1, 2, ..., s > -1 and r > -1.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *debug-defint-log* nil)
+
+;;; Recognize c*z^w*log(z)^m*exp(-t^s)
+
+(defun m2-log-exp-1 (expr)
+  (when *debug-defint-log*
+    (format t "~&M2-LOG-EXP-1 with ~A~%" expr))
+  (m2 expr
+    '((mtimes)
+        (c freevar)
+        ((mexpt) (z varp) (w freevar))
+        ((mexpt) $%e ((mtimes) -1 ((mexpt) (z varp) (s freevar0))))
+        ((mexpt) ((%log) (z varp)) (m freevar)))
+    nil))
+
+;;; Recognize c*z^r*log(z)^n*(1-z)^s*log(1-z)^m
+
+(defun m2-log-exp-2 (expr)
+  (when *debug-defint-log*
+    (format t "~&M2-LOG-EXP-2 with ~A~%" expr))
+  (m2 expr
+    '((mtimes)
+        (c freevar)
+        ((mexpt) (z varp) (r freevar))
+        ((mexpt) ((%log) (z varp)) (n freevar))
+        ((mexpt) ((mplus) 1 ((mtimes) -1 (z varp))) (s freevar))
+        ((mexpt) ((%log) ((mplus) 1 ((mtimes)-1 (z varp)))) (m freevar)))
+    nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun defint-log-exp (expr var ll ul)
+  (let ((x nil)
+        (result nil)
+        (var1 (gensym)))
+    
+    ;; var1 is used as a parameter for differentiation. Add var1>0 to the 
+    ;; database, to get the desired simplification of the differentiation of 
+    ;; the gamma_incomplete function.
+    (setq *global-defint-assumptions*
+          (cons (assume `((mgreaterp) ,var1 0))
+                *global-defint-assumptions*))
+
+    (cond
+      ((and (eq ul '$inf)
+            (setq x (m2-log-exp-1 expr)))
+       ;; The integrand matches the cases 1 and 2.
+       (let ((c (cdras 'c x))
+             (w (cdras 'w x))
+             (m (cdras 'm x))
+             (s (cdras 's x))
+             ($gamma_expand nil)) ; No expansion of Gamma functions.
+
+         (when *debug-defint-log*
+           (format t "~&DEFINT-LOG-EXP-1:~%")
+           (format t "~&   : c = ~A~%" c)
+           (format t "~&   : w = ~A~%" w)
+           (format t "~&   : m = ~A~%" m)
+           (format t "~&   : s = ~A~%" s))
+
+         (cond ((and (zerop1 ll)
+                     (integerp m)
+                     (>= m 0)
+                     (not (eq ($sign s) '$zero))
+                     (eq ($sign (div (add w 1) s)) '$pos))
+                ;; Case 1: Generated by the Gamma function.
+                (setq result 
+                     (mul c
+                          (simplify (list '(%signum) s))
+                          (power s (mul -1 (add m 1)))
+                          ($at ($diff (list '(%gamma) var1) var1 m)
+                               (list '(mequal)
+                                     var1
+                                     (div (add w 1) s))))))
+             ((and (not (eq ($sign ll) '$neg))
+                   (integerp m)
+                   (or (= m 0) (= m 1)) ; Exclude m>1, because Maxima can not
+                                        ; derivate the involved hypergeometric
+                                        ; functions.
+                   (or (and (eq ($sign s) '$neg)
+                            (eq ($sign (div (add 1 w) s)) '$pos))
+                       (and (eq ($sign s) '$pos)
+                            (eq ($sign (div (add 1 w) s)) '$pos))))
+              ;; Case 2: Generated by the Incomplete Gamma function.
+              (if (eq ($sign s) '$pos)
+                  (setq f (list '(%gamma_incomplete) var1 (power ll s)))
+                  (setq f (sub (list '(%gamma) var1)
+                               (list '(%gamma_incomplete) var1 (power ll s)))))
+              (setq result 
+                    (mul c
+                      (simplify (list '(%signum) s))
+                      (power s (mul -1 (add m 1)))
+                      ($at ($diff f var1 m)
+                           (list '(mequal) var1 (div (add 1 w) s))))))
+               (t 
+                (setq result nil)))))
+      ((and (zerop1 ll)
+            (onep1 ul)
+            (setq x (m2-log-exp-2 expr)))
+       ;; Case 3: Generated by the Beta function.
+       (let ((c (cdras 'c x))
+             (r (cdras 'r x))
+             (n (cdras 'n x))
+             (s (cdras 's x))
+             (m (cdras 'm x))
+             (var1 (gensym))
+             (var2 (gensym)))
+
+         (when *debug-defint-log*
+           (format t "~&DEFINT-LOG-EXP-2:~%")
+           (format t "~&   : c = ~A~%" c)
+           (format t "~&   : r = ~A~%" r)
+           (format t "~&   : n = ~A~%" n)
+           (format t "~&   : s = ~A~%" s)
+           (format t "~&   : m = ~A~%" m))
+
+         (cond ((and (integerp m)
+                     (>= m 0)
+                     (integerp n)
+                     (>= n 0)
+                     (eq ($sign (add 1 r)) '$pos)
+                     (eq ($sign (add 1 s)) '$pos))
+                (setq result 
+                      (mul c
+                           ($at ($diff ($at ($diff (list '($beta) var1 var2) 
+                                                   var2 m)
+                                            (list '(mequal) var2 (add 1 s)))
+                                       var1 n)
+                                (list '(mequal) var1 (add 1 r))))))
+              (t 
+               (setq result nil)))))
+      (t 
+       (setq result nil)))
+    ;; Simplify result and set $gamma_expand to global value
+    (let (($gamma_expand $gamma_expand)) (sratsimp result))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

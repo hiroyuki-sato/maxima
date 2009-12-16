@@ -17,7 +17,7 @@
 (declare-top (special var-list expsumsplit $dispflag checkfactors *g
 		      $algebraic equations ;List of E-labels
 		      *power *varb *flg $derivsubst $numer $float
-		      $%emode wflag genvar genpairs varlist broken-not-freeof
+		      $%emode genvar genpairs varlist broken-not-freeof
 		      $factorflag
 		      mult    ;Some crock which tracks multiplicities.
 		      *roots ;alternating list of solutions and multiplicities
@@ -134,10 +134,10 @@
 
      ;; Some sanity checks and warning messages.
      (when (and (null varl) $solvenullwarn)
-       (mtell "~&Got a null variable list, continuing - `solve'~%"))
+       (mtell "~&solve: variable list is empty, continuing anyway.~%"))
 
      (when (and (null eql) $solvenullwarn)
-       (mtell "~&Got a null equation list, continuing - `solve'~%"))
+       (mtell "~&solve: equation list is empty, continuing anyway.~%"))
 
      (when (some #'mnump varl)
        (merror
@@ -220,10 +220,10 @@
 							   (nconc *roots *failures)))))
 		      (setq $multiplicities (make-mlist-l (nreverse multi)))))
 		   (t (when (and *failures (not $solveexplicit))
-			(when $dispflag (mtell "The roots of:~%"))
+			(when $dispflag (mtell "solve: the roots of:~%"))
 			(solve2 *failures))
 		      (when *roots
-			(when $dispflag (mtell "Solution:~%"))
+			(when $dispflag (mtell "solve: solution:~%"))
 			(solve2 *roots))
 		      (make-mlist-l equations)))))))
 
@@ -270,7 +270,7 @@
 		(cond ($solveradcan (setq exp (radcan1 exp))
 				    (if (atom exp) (go a))))
 	      
-		(cond ((easy-cases exp *var)
+		(cond ((easy-cases exp *var mult)
 		       (cond (symbol (setq *roots (subst temp *var *roots))
 				     (setq *failures (subst temp *var *failures))))
 		       (rootsort *roots)
@@ -330,24 +330,27 @@
 ;;; Solve is not fully recursive when it due to globals, $MULTIPLICIES
 ;;; may be screwed here. (Solve should be made recursive)
 
-(defun easy-cases (*exp *var)
+(defun easy-cases (*exp *var mult)
   (cond ((or (atom *exp) (atom (car *exp))) nil)
 	((eq (caar *exp) 'mtimes)
 	 (do ((terms (cdr *exp) (cdr terms)))
 	     ((null terms))
-	   (solve (car terms) *var 1))
-	 'mtimes)))
+	   (solve (car terms) *var mult))
+	 'mtimes)
 
-;; This code is commented out because it exposes a bug in the way
-;; solve (or its friends) handles multiplicities. A previous 
-;; version (1.2) had a typo (caar *exp) 'mexp ...) that prevented this
-;; bug from manifesting.  Barton Willis, 12 May 2004
-
-;;	     ((EQ (CAAR *EXP) 'MEXPT)
-;;	      (COND ((AND (INTEGERP  (CADDR *EXP))
-;;			  (PLUSP (CADDR *EXP)))
-;;		     (SOLVE (CADR *EXP) *VAR (CADDR *EXP))
-;;		     'MEXPRAT)))))
+	;; This code is commented out because it exposes a bug in the way
+	;; solve (or its friends) handles multiplicities. A previous 
+	;; version (1.2) had a typo (caar *exp) 'mexp ...) that prevented this
+	;; bug from manifesting.  Barton Willis, 12 May 2004
+	;;
+	;; In particular it causes test 137 in rtest15 and test 45 in
+	;; rtestint to fail.
+	#+nil
+	((eq (caar *exp) 'mexpt)
+	 (cond ((and (integerp  (caddr *exp))
+		     (plusp (caddr *exp)))
+		(solve (cadr *exp) *var (caddr *exp))
+		'mexprat)))))
 
 ;;; Predicate to test for presence of troublesome trig functions to be
 ;;; canonicalized.  A  table of when to make substitutions should
@@ -865,8 +868,7 @@
 	     ((setq inverse (get op '$inverse))
 	      (when (and $solvetrigwarn
 			 (member op '(%sin %cos %tan %sec %csc %cot %cosh %sech) :test #'eq))
-		(mtell "~&`solve' is using arc-trig functions to get ~
-			    a solution.~%Some solutions will be lost.~%")
+		(mtell "~&solve: using arc-trig functions to get a solution.~%Some solutions will be lost.~%")
 		(setq $solvetrigwarn nil))
 	      `((mplus) ((mminus) ,(cadr *myvar))
 		((,inverse) ,exp)))
@@ -932,7 +934,7 @@
 		  (t (merror "`linsolve' ran into a nonlinear equation.")))))
      (setq ans (tfgeli 'xa* xn* xm*))
      (if (and $linsolvewarn (car ans))
-	 (mtell "~&Dependent equations eliminated:  ~A~%" (car ans)))
+	 (mtell "~&solve: dependent equations eliminated: ~A~%" (car ans)))
      (if (cadr ans)
 	 (return '((mlist simp))))
      (do ((j 0 (1+ j)))

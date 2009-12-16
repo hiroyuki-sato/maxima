@@ -14,7 +14,7 @@
 
 (load-macsyma-macros ratmac)
 
-(declare-top (special rischpf genvar $savefactors checkfactors
+(declare-top (special genvar $savefactors checkfactors
 		      exp var $factorflag $ratfac $logabs $expop $expon
 		      $keepfloat ratform rootfactor pardenom $algebraic
 		      wholepart parnumer varlist logptdx switch1))
@@ -138,7 +138,7 @@
 
 (defun integrate-use-rootsof (f q variable &aux qprime ff qq (dummy (make-param)) lead)
   ;; p2e is squarefree in polynomial in cre form p1e is lower degree
-  (setq lead (p-lc q))
+  (setq lead (disrep (p-lc q)))
   (setq qprime (disrep (pderivative q (p-var q))))
   (setq ff (disrep f) qq (disrep q))
   `((%lsum) ((mtimes)

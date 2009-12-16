@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on diciembre, 14 2008 by texi2html 1.76 -->
+<!-- Created on diciembre, 13 2009 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -156,7 +156,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 2. Detecci&oacute;n e informe de fallos </h1>
@@ -183,38 +183,44 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 2.1 Funciones y variables para la detecci&oacute;n e informe de fallos </h2>
 <dl>
-<dt><u>Funci&oacute;n:</u> <b>run_testsuite</b><i> ()</i>
+<dt><u>Funci&oacute;n:</u> <b>run_testsuite</b><i> ([<var>options</var>])</i>
 <a name="IDX1"></a>
-</dt>
-<dt><u>Funci&oacute;n:</u> <b>run_testsuite</b><i> (<var>boolean</var>)</i>
-<a name="IDX2"></a>
-</dt>
-<dt><u>Funci&oacute;n:</u> <b>run_testsuite</b><i> (<var>boolean</var>, <var>boolean</var>)</i>
-<a name="IDX3"></a>
-</dt>
-<dt><u>Funci&oacute;n:</u> <b>run_testsuite</b><i> (<var>boolean</var>, <var>boolean</var>, <var>list</var>)</i>
-<a name="IDX4"></a>
 </dt>
 <dd><p>Ejecuta el conjunto de pruebas de Maxima. Los tests que producen las 
 respuestas deseadas son considerados como &quot;pruebas superadas&quot;, como
 los tests que no producen las respuestas deseadas, son marcados como
 fallos conocidos. 
 </p>
-<p><code>run_testsuite ()</code> muestra s&oacute;lo los test que no pasaron la prueba.
+<p><code>run_testsuite</code> admite las siguientes opciones:
 </p>
-<p><code>run_testsuite (true)</code> muestra los tests que son marcados como fallos
-conocidos, adem&aacute;s de fallos. 
+<dl compact="compact">
+<dt> <var>display_all</var></dt>
+<dd><p>Muestra todas las pruebas. Normalmente no se muestran las pruebas,
+a menos que produzcan fallos. (Su valor por defecto es <code>false</code>).
+</p></dd>
+<dt> <var>display_known_bugs</var></dt>
+<dd><p>Muestra las pruebas marcadas como fallos ya conocidos. (Su valor
+por defecto es <code>false</code>).
+</p></dd>
+<dt> <var>tests</var></dt>
+<dd><p>Esta es la lista de las pruebas que se deben ejecutar. Cada prueba
+se puede especificar, tanto mediante una cadena de texto como
+por un s&iacute;mbolo. Por defecto, todas las pruebas se ejecutan. El
+conjunto completo de pruebas est&aacute; especificado en <code>testsuite_files</code>.
+</p></dd>
+</dl>
+
+<p>Por ejemplo, <code>run_testsuite(display_known_bugs = true, tests=[rtest5])</code>
+ejecuta la prueba <code>rtest5</code> y muestra si est&aacute; marcada como fallo
+conocido.
 </p>
-<p><code>run_testsuite (true, true)</code> muestra todos los tests. 
-</p>
-<p>Si se incluye el tercer argumento opcional, se ejecutar&aacute; una parte de los tests.
-Los tests a ejecutar se especifican formando una lista con los nombres de los mismos. La
-lista completa de tests est&aacute; en <code>testsuite_files</code>.
+<p><code>run_testsuite(display_all = true, tests=[&quot;rtest1&quot;, rtest1a])</code> ejecutar&aacute;
+las pruebas <code>rtest1</code> y <code>rtest2</code>, mostrando cada una de ellas.
 </p>
 <p><code>run_testsuite</code> cambia el entorno de Maxima. 
 T&iacute;picamente un script de test ejecuta <code>kill</code> para establecer un entorno conocido (ll&aacute;mese uno sin funciones ni variables definidas por el usuario) y entonces define una serie de funciones y variables apropiadas para el test. 
@@ -225,7 +231,7 @@ T&iacute;picamente un script de test ejecuta <code>kill</code> para establecer u
 
 <dl>
 <dt><u>Variable opcional:</u> <b>testsuite_files</b>
-<a name="IDX5"></a>
+<a name="IDX2"></a>
 </dt>
 <dd><p><code>testsuite_files</code> es el conjunto de tests a ejecutar por <code>run_testsuite</code>. Se trata de una lista con los nombres de los ficheros que contienen los tests a ejecutar. Si se sabe que alguno de los tests de un fichero falla, entonces en lugar de listar el nombre del fichero, se utiliza una lista que contiene el nombre del fichero y los n&uacute;meros de los tests que fallan.
 </p>
@@ -239,7 +245,7 @@ T&iacute;picamente un script de test ejecuta <code>kill</code> para establecer u
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>bug_report</b><i> ()</i>
-<a name="IDX6"></a>
+<a name="IDX3"></a>
 </dt>
 <dd><p>Imprime las versiones de Maxima y de Lisp y proporciona un enlace a la
 p&aacute;gina web sobre informe de fallos del proyecto Maxima. 
@@ -255,7 +261,7 @@ dentro del propio informe.
 
 <dl>
 <dt><u>Funci&oacute;n:</u> <b>build_info</b><i> ()</i>
-<a name="IDX7"></a>
+<a name="IDX4"></a>
 </dt>
 <dd><p>Imprime un resumen de los par&aacute;metros que se usaron para construir la
 versi&oacute;n de Maxima que se est&aacute; usando. 
@@ -274,12 +280,12 @@ versi&oacute;n de Maxima que se est&aacute; usando.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_78.html#SEC302" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_78.html#SEC311" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>diciembre, 14 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>diciembre, 13 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

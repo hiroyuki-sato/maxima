@@ -90,6 +90,8 @@ ECL_TRUE = @ECL_TRUE@
 EGREP = @EGREP@
 EMACS = @EMACS@
 EMACSLOADPATH = @EMACSLOADPATH@
+ENABLE_GETTEXT_FALSE = @ENABLE_GETTEXT_FALSE@
+ENABLE_GETTEXT_TRUE = @ENABLE_GETTEXT_TRUE@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -210,6 +212,7 @@ insttestsdir = $(verpkgdatadir)/tests
 @WIN32_FALSE@bin_SCRIPTS = maxima rmaxima
 @WIN32_TRUE@bin_SCRIPTS = maxima maxima-command.ico maxima.bat set_lang.vbs
 LOADDEFSYSTEM = (load "$(top_srcdir)/lisp-utils/defsystem.lisp")
+LOADMAKEPROCLAIM = (load "$(top_srcdir)/lisp-utils/make-proclaim.lisp")
 LOADMAKEDEPENDS = (load "$(top_srcdir)/lisp-utils/make-depends.lisp")
 DEFSYSTEMCOMPILE = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :compile :verbose t)
 DEFSYSTEMLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t)
@@ -221,7 +224,7 @@ DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxi
 @SBCL_TRUE@EXECUTESBCL = $(SBCL_NAME) --noinform --noprint --eval
 @GCL_TRUE@EXECUTEGCL = $(GCL_NAME) -batch -eval
 @OPENMCL_TRUE@EXECUTEOPENMCL = $(OPENMCL_NAME) -e
-@ECL_TRUE@EXECUTEECL = $(ECL_NAME)
+@ECL_TRUE@EXECUTEECL = $(ECL_NAME) -norc
 genericdir = $(instsrcdir)
 real_lisp_sources = acall.lisp \
 airy.lisp \
@@ -267,7 +270,8 @@ fortra.lisp \
 gamma.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
-gnuplot.lisp \
+getopt.lisp \
+gnuplot_def.lisp \
 grind.lisp \
 hayat.lisp \
 homog.lisp \
@@ -276,6 +280,7 @@ hypgeo.lisp \
 ifactor.lisp \
 init-cl.lisp \
 inmis.lisp \
+intl.lisp \
 intpol.lisp \
 invert.lisp \
 irinte.lisp \
@@ -285,6 +290,7 @@ ldisp.lisp \
 lesfac.lisp \
 letmac.lisp \
 limit.lisp \
+linnew.lisp \
 lmdcls.lisp \
 logarc.lisp \
 macdes.lisp \
@@ -325,8 +331,8 @@ nrat4.lisp \
 nregex.lisp \
 nset.lisp \
 nummod.lisp \
+numeric.lisp \
 numth.lisp \
-openmath.lisp \
 opers.lisp \
 optim.lisp \
 optimize.lisp \
@@ -335,6 +341,7 @@ outmis.lisp \
 pade.lisp \
 parse-body.lisp \
 plot.lisp \
+plasma.lisp \
 pois2.lisp \
 pois3.lisp \
 polyrz.lisp \
@@ -395,6 +402,7 @@ trprop.lisp \
 trutil.lisp \
 ufact.lisp \
 utils.lisp \
+xmaxima_def.lisp \
 zero.lisp \
 autoconf-variables.lisp \
 numerical/f2cl-lib.lisp \
@@ -780,6 +788,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : maxima-package.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : autoconf-variables.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : nregex.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : intl.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : cl-info.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : sloop.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : lmdcls.lisp
@@ -789,6 +798,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : commac.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mormac.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : compat.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : getopt.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : command-line.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : defopt.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : defcal.lisp
@@ -948,6 +958,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : zero.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : logarc.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : rpart.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : numeric.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : server.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : macsys.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mload.lisp
@@ -993,6 +1004,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : bessel.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : ellipt.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : airy.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : plasma.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : intpol.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : nparse.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : displa.lisp
@@ -1015,6 +1027,7 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : residu.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : specfn.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mat.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : linnew.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : matrix.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : sprdet.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : newinv.lisp
@@ -1064,8 +1077,8 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : todd-coxeter.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mactex.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : plot.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : gnuplot.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : openmath.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : gnuplot_def.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : xmaxima_def.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : autol.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : max_ext.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : init-cl.lisp
@@ -1101,6 +1114,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : maxima-package.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : autoconf-variables.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : nregex.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : intl.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : cl-info.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sloop.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : lmdcls.lisp
@@ -1110,6 +1124,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : commac.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mormac.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : compat.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : getopt.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : command-line.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : defopt.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : defcal.lisp
@@ -1269,6 +1284,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : zero.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : logarc.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : rpart.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : numeric.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : server.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : macsys.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mload.lisp
@@ -1314,6 +1330,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : bessel.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : ellipt.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : airy.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : plasma.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : intpol.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : nparse.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : displa.lisp
@@ -1336,6 +1353,7 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : residu.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : specfn.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mat.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : linnew.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : matrix.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sprdet.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : newinv.lisp
@@ -1385,8 +1403,8 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : todd-coxeter.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mactex.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : plot.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : gnuplot.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : openmath.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : gnuplot_def.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : xmaxima_def.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : autol.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : max_ext.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : init-cl.lisp
@@ -1431,6 +1449,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : commac.lisp
 @SCL_TRUE@binary-scl/maxima.core : mormac.lisp
 @SCL_TRUE@binary-scl/maxima.core : compat.lisp
+@SCL_TRUE@binary-scl/maxima.core : getopt.lisp
 @SCL_TRUE@binary-scl/maxima.core : command-line.lisp
 @SCL_TRUE@binary-scl/maxima.core : defopt.lisp
 @SCL_TRUE@binary-scl/maxima.core : defcal.lisp
@@ -1590,6 +1609,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : zero.lisp
 @SCL_TRUE@binary-scl/maxima.core : logarc.lisp
 @SCL_TRUE@binary-scl/maxima.core : rpart.lisp
+@SCL_TRUE@binary-scl/maxima.core : numeric.lisp
 @SCL_TRUE@binary-scl/maxima.core : server.lisp
 @SCL_TRUE@binary-scl/maxima.core : macsys.lisp
 @SCL_TRUE@binary-scl/maxima.core : mload.lisp
@@ -1635,6 +1655,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : bessel.lisp
 @SCL_TRUE@binary-scl/maxima.core : ellipt.lisp
 @SCL_TRUE@binary-scl/maxima.core : airy.lisp
+@SCL_TRUE@binary-scl/maxima.core : plasma.lisp
 @SCL_TRUE@binary-scl/maxima.core : intpol.lisp
 @SCL_TRUE@binary-scl/maxima.core : nparse.lisp
 @SCL_TRUE@binary-scl/maxima.core : displa.lisp
@@ -1646,6 +1667,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : option.lisp
 @SCL_TRUE@binary-scl/maxima.core : macdes.lisp
 @SCL_TRUE@binary-scl/maxima.core : inmis.lisp
+@SCL_TRUE@binary-scl/maxima.core : intl.lisp
 @SCL_TRUE@binary-scl/maxima.core : db.lisp
 @SCL_TRUE@binary-scl/maxima.core : compar.lisp
 @SCL_TRUE@binary-scl/maxima.core : askp.lisp
@@ -1657,6 +1679,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : residu.lisp
 @SCL_TRUE@binary-scl/maxima.core : specfn.lisp
 @SCL_TRUE@binary-scl/maxima.core : mat.lisp
+@SCL_TRUE@binary-scl/maxima.core : linnew.lisp
 @SCL_TRUE@binary-scl/maxima.core : matrix.lisp
 @SCL_TRUE@binary-scl/maxima.core : sprdet.lisp
 @SCL_TRUE@binary-scl/maxima.core : newinv.lisp
@@ -1706,8 +1729,8 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : todd-coxeter.lisp
 @SCL_TRUE@binary-scl/maxima.core : mactex.lisp
 @SCL_TRUE@binary-scl/maxima.core : plot.lisp
-@SCL_TRUE@binary-scl/maxima.core : gnuplot.lisp
-@SCL_TRUE@binary-scl/maxima.core : openmath.lisp
+@SCL_TRUE@binary-scl/maxima.core : gnuplot_def.lisp
+@SCL_TRUE@binary-scl/maxima.core : xmaxima_def.lisp
 @SCL_TRUE@binary-scl/maxima.core : autol.lisp
 @SCL_TRUE@binary-scl/maxima.core : max_ext.lisp
 @SCL_TRUE@binary-scl/maxima.core : init-cl.lisp
@@ -1750,6 +1773,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : commac.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mormac.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : compat.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : getopt.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : command-line.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : defopt.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : defcal.lisp
@@ -1909,6 +1933,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : zero.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : logarc.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : rpart.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : numeric.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : server.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : macsys.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mload.lisp
@@ -1954,6 +1979,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : bessel.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : ellipt.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : airy.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : plasma.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : intpol.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : nparse.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : displa.lisp
@@ -1965,6 +1991,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : option.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : macdes.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : inmis.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : intl.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : db.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : compar.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : askp.lisp
@@ -1976,6 +2003,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : residu.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : specfn.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mat.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : linnew.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : matrix.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : sprdet.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : newinv.lisp
@@ -2025,8 +2053,8 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : todd-coxeter.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mactex.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : plot.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : gnuplot.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : openmath.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : gnuplot_def.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : xmaxima_def.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : autol.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : max_ext.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : init-cl.lisp
@@ -2061,6 +2089,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : maxima-package.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : autoconf-variables.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : nregex.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : intl.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : cl-info.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : sloop.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : lmdcls.lisp
@@ -2070,6 +2099,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : commac.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mormac.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : compat.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : getopt.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : command-line.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : defopt.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : defcal.lisp
@@ -2229,6 +2259,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : zero.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : logarc.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : rpart.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : numeric.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : server.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : macsys.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mload.lisp
@@ -2274,6 +2305,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : bessel.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : ellipt.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : airy.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : plasma.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : intpol.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : nparse.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : displa.lisp
@@ -2296,6 +2328,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : residu.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : specfn.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mat.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : linnew.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : matrix.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : sprdet.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : newinv.lisp
@@ -2345,8 +2378,8 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : todd-coxeter.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mactex.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : plot.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : gnuplot.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : openmath.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : gnuplot_def.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : xmaxima_def.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : autol.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : max_ext.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : init-cl.lisp
@@ -2357,11 +2390,11 @@ uninstall-datafiles:
 @GCL_TRUE@distclean: clean-gcl
 
 @GCL_TRUE@sys-proclaim:
-@GCL_TRUE@	rm -r binary-gcl
+@GCL_TRUE@	rm -rf binary-gcl
 @GCL_TRUE@	test -d binary-gcl || mkdir binary-gcl
 @GCL_TRUE@	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 @GCL_TRUE@	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
-@GCL_TRUE@	$(EXECUTEGCL) '(load "generate-sys-proclaim.lisp")'
+@GCL_TRUE@	$(EXECUTEGCL) '(progn $(LOADMAKEPROCLAIM) (load "generate-sys-proclaim.lisp")'
 
 @GCL_TRUE@gcl:binary-gcl/maxima
 
@@ -2374,9 +2407,9 @@ uninstall-datafiles:
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@	test -d binary-gcl || mkdir binary-gcl
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
-@GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_TRUE@	$(EXECUTEGCL) '(progn (compiler::emit-fn t))' -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
+@GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_TRUE@	$(EXECUTEGCL) '(progn (compiler::emit-fn t))' -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) $(LOADMAKEPROCLAIM) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_TRUE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
-@GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_FALSE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) (compiler::emit-fn t) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
+@GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_FALSE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) (compiler::emit-fn t) $(DEFSYSTEMCOMPILE) $(LOADMAKEPROCLAIM) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@@WIN32_FALSE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
 
 @GCL_TRUE@install-gcl:
@@ -2399,6 +2432,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : sys-proclaim.lisp
 @GCL_TRUE@binary-gcl/maxima : autoconf-variables.lisp
 @GCL_TRUE@binary-gcl/maxima : nregex.lisp
+@GCL_TRUE@binary-gcl/maxima : intl.lisp
 @GCL_TRUE@binary-gcl/maxima : cl-info.lisp
 @GCL_TRUE@binary-gcl/maxima : sloop.lisp
 @GCL_TRUE@binary-gcl/maxima : lmdcls.lisp
@@ -2408,6 +2442,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : commac.lisp
 @GCL_TRUE@binary-gcl/maxima : mormac.lisp
 @GCL_TRUE@binary-gcl/maxima : compat.lisp
+@GCL_TRUE@binary-gcl/maxima : getopt.lisp
 @GCL_TRUE@binary-gcl/maxima : command-line.lisp
 @GCL_TRUE@binary-gcl/maxima : defopt.lisp
 @GCL_TRUE@binary-gcl/maxima : defcal.lisp
@@ -2568,6 +2603,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : zero.lisp
 @GCL_TRUE@binary-gcl/maxima : logarc.lisp
 @GCL_TRUE@binary-gcl/maxima : rpart.lisp
+@GCL_TRUE@binary-gcl/maxima : numeric.lisp
 @GCL_TRUE@binary-gcl/maxima : server.lisp
 @GCL_TRUE@binary-gcl/maxima : macsys.lisp
 @GCL_TRUE@binary-gcl/maxima : mload.lisp
@@ -2613,6 +2649,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : bessel.lisp
 @GCL_TRUE@binary-gcl/maxima : ellipt.lisp
 @GCL_TRUE@binary-gcl/maxima : airy.lisp
+@GCL_TRUE@binary-gcl/maxima : plasma.lisp
 @GCL_TRUE@binary-gcl/maxima : intpol.lisp
 @GCL_TRUE@binary-gcl/maxima : nparse.lisp
 @GCL_TRUE@binary-gcl/maxima : displa.lisp
@@ -2635,6 +2672,7 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : residu.lisp
 @GCL_TRUE@binary-gcl/maxima : specfn.lisp
 @GCL_TRUE@binary-gcl/maxima : mat.lisp
+@GCL_TRUE@binary-gcl/maxima : linnew.lisp
 @GCL_TRUE@binary-gcl/maxima : matrix.lisp
 @GCL_TRUE@binary-gcl/maxima : sprdet.lisp
 @GCL_TRUE@binary-gcl/maxima : newinv.lisp
@@ -2684,8 +2722,8 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : todd-coxeter.lisp
 @GCL_TRUE@binary-gcl/maxima : mactex.lisp
 @GCL_TRUE@binary-gcl/maxima : plot.lisp
-@GCL_TRUE@binary-gcl/maxima : gnuplot.lisp
-@GCL_TRUE@binary-gcl/maxima : openmath.lisp
+@GCL_TRUE@binary-gcl/maxima : gnuplot_def.lisp
+@GCL_TRUE@binary-gcl/maxima : xmaxima_def.lisp
 @GCL_TRUE@binary-gcl/maxima : autol.lisp
 @GCL_TRUE@binary-gcl/maxima : max_ext.lisp
 @GCL_TRUE@binary-gcl/maxima : init-cl.lisp
@@ -2698,8 +2736,8 @@ uninstall-datafiles:
 @OPENMCL_TRUE@openmcl:binary-openmcl/maxima.image
 
 @OPENMCL_TRUE@binary-openmcl/maxima.image:
-@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (ccl::quit))' && \
-@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ccl:save-application "binary-openmcl/maxima.image" :toplevel-function (function cl-user::run)) (ccl::quit))'
+@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn (require :defsystem)  $(DEFSYSTEMCOMPILE) (ccl::quit))' && \
+@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn (require :defsystem) $(DEFSYSTEMLOAD) (ccl:save-application "binary-openmcl/maxima.image") (ccl::quit))'
 
 @OPENMCL_TRUE@install-openmcl:
 @OPENMCL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-openmcl"
@@ -2724,6 +2762,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : commac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mormac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : compat.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : getopt.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : defopt.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : defcal.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : maxmac.lisp
@@ -2841,6 +2880,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : zero.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : logarc.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rpart.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numeric.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : macsys.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mload.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : suprv1.lisp
@@ -2880,6 +2920,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mdefun.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : bessel.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ellipt.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : plasma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : intpol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nparse.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : displa.lisp
@@ -2891,6 +2932,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : option.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : macdes.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : inmis.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : intl.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : db.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : compar.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : maxmin.lisp
@@ -2910,6 +2952,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : trgred.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : specfn.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mat.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : linnew.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : matrix.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sprdet.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : newinv.lisp
@@ -2954,8 +2997,8 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : todd-coxeter.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mactex.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : plot.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : gnuplot.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : openmath.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : gnuplot_def.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : xmaxima_def.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : autol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : max_ext.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : autoconf-variables.lisp
@@ -2989,6 +3032,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : ecl-port.lisp
 @ECL_TRUE@binary-ecl/maxima : autoconf-variables.lisp
 @ECL_TRUE@binary-ecl/maxima : nregex.lisp
+@ECL_TRUE@binary-ecl/maxima : intl.lisp
 @ECL_TRUE@binary-ecl/maxima : cl-info.lisp
 @ECL_TRUE@binary-ecl/maxima : sloop.lisp
 @ECL_TRUE@binary-ecl/maxima : lmdcls.lisp
@@ -2998,6 +3042,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : commac.lisp
 @ECL_TRUE@binary-ecl/maxima : mormac.lisp
 @ECL_TRUE@binary-ecl/maxima : compat.lisp
+@ECL_TRUE@binary-ecl/maxima : getopt.lisp
 @ECL_TRUE@binary-ecl/maxima : command-line.lisp
 @ECL_TRUE@binary-ecl/maxima : defopt.lisp
 @ECL_TRUE@binary-ecl/maxima : defcal.lisp
@@ -3157,6 +3202,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : zero.lisp
 @ECL_TRUE@binary-ecl/maxima : logarc.lisp
 @ECL_TRUE@binary-ecl/maxima : rpart.lisp
+@ECL_TRUE@binary-ecl/maxima : numeric.lisp
 @ECL_TRUE@binary-ecl/maxima : server.lisp
 @ECL_TRUE@binary-ecl/maxima : macsys.lisp
 @ECL_TRUE@binary-ecl/maxima : mload.lisp
@@ -3202,6 +3248,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : bessel.lisp
 @ECL_TRUE@binary-ecl/maxima : ellipt.lisp
 @ECL_TRUE@binary-ecl/maxima : airy.lisp
+@ECL_TRUE@binary-ecl/maxima : plasma.lisp
 @ECL_TRUE@binary-ecl/maxima : intpol.lisp
 @ECL_TRUE@binary-ecl/maxima : nparse.lisp
 @ECL_TRUE@binary-ecl/maxima : displa.lisp
@@ -3224,6 +3271,7 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : residu.lisp
 @ECL_TRUE@binary-ecl/maxima : specfn.lisp
 @ECL_TRUE@binary-ecl/maxima : mat.lisp
+@ECL_TRUE@binary-ecl/maxima : linnew.lisp
 @ECL_TRUE@binary-ecl/maxima : matrix.lisp
 @ECL_TRUE@binary-ecl/maxima : sprdet.lisp
 @ECL_TRUE@binary-ecl/maxima : newinv.lisp
@@ -3273,8 +3321,8 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : todd-coxeter.lisp
 @ECL_TRUE@binary-ecl/maxima : mactex.lisp
 @ECL_TRUE@binary-ecl/maxima : plot.lisp
-@ECL_TRUE@binary-ecl/maxima : gnuplot.lisp
-@ECL_TRUE@binary-ecl/maxima : openmath.lisp
+@ECL_TRUE@binary-ecl/maxima : gnuplot_def.lisp
+@ECL_TRUE@binary-ecl/maxima : xmaxima_def.lisp
 @ECL_TRUE@binary-ecl/maxima : autol.lisp
 @ECL_TRUE@binary-ecl/maxima : max_ext.lisp
 @ECL_TRUE@binary-ecl/maxima : init-cl.lisp

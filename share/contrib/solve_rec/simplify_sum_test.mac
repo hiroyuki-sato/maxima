@@ -8,12 +8,13 @@
  *
  ***************************************/
 
-test_sum(sm, ass, use_gamma, smp) := block(
+test_sum(sm, ass, use_gamma, smp, [comment]) := block(
   [product_use_gamma : use_gamma, cs, f],
   if length(ass)>0 then apply(assume, ass),
   cs : simplify_sum(sm),
   for f in smp do cs : apply(f, [cs]),
   print("|----------------------------------------------------------|"),
+  if length(comment)>0 then apply(print, comment),
   if length(ass)>0 then print("Assuming:", ass),
   print(sm = cs),
   print("|----------------------------------------------------------|"),
@@ -301,3 +302,98 @@ test_sum(
   false,
   [lambda([u], scanmap(factor, u, 'bottomup))]
 ), use_zeilberger=false$
+
+test_sum(
+  sum(1/k, k, 1, n),
+  [],
+  false,
+  []
+)$
+
+test_sum(
+  sum(k*harmonic_number(k),k,1,n),
+  [],
+  false,
+  [ratsimp]
+);
+
+test_sum(
+  sum(k^2*harmonic_number(k),k,1,n),
+  [],
+  false,
+  [ratsimp]
+);
+
+test_sum(
+  sum(k^2*harmonic_number(n+k),k,1,n),
+  [],
+  false,
+  [lambda([u], u:ev(u, harmonic_number_expand=true), ratsimp(u))]
+);
+
+test_sum(
+  sum(((-4)^k*binomial(k,m)*binomial(n+k,2*k))*n/(n+k),k,m,n),
+  [m>1, n>0],
+  false,
+  [factcomb, radcan],
+  "With sum_min=m"
+), sum_min=m;
+
+
+test_sum(
+  sum(harmonic_number(n)/2^n, n, 1, inf),
+  [],
+  false,
+  []
+);
+
+test_sum(
+  sum(harmonic_number(n)/n/(n+1), n, 1, inf),
+  [],
+  false,
+  []
+);
+
+test_sum(
+  sum(n*harmonic_number(n)/2^n, n, 1, inf),
+  [],
+  false,
+  []
+);
+
+test_sum(
+  sum(harmonic_number(n)/n/2^n, n, 1, inf),
+  [],
+  false,
+  [],
+  "With sum_by_integral_transforms=[logcontract]"
+), sum_by_integral_transforms=[logcontract];
+
+test_sum(
+  sum(n^2*harmonic_number(2*n)/2^n, n, 1, inf),
+  [],
+  false,
+  []
+);
+
+
+test_sum(
+  sum(((x-1)^(2*n+1)*(x+1)^(-2*n-1))/(2*n+1),n,0,inf),
+  [x<1, x>0],
+  false,
+  [rootscontract, lambda([u], scanmap(factor, u)), ratsimp]
+);
+
+test_sum(
+  sum(-1/(2*k)+1/(2*2*k+1)+1/(2*2*k+3), k, 1, inf),
+  [],
+  false,
+  [ratsimp]
+);
+
+test_sum(
+  sum(k*(k/2)!,k,1,n),
+  [],
+  false,
+  []
+);

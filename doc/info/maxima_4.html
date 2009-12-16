@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on December, 14 2008 by texi2html 1.76 -->
+<!-- Created on December, 13 2009 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima 5.17.1 Manual: 4. Command Line</title>
+<title>Maxima 5.20.1 Manual: 4. Command Line</title>
 
-<meta name="description" content="Maxima 5.17.1 Manual: 4. Command Line">
-<meta name="keywords" content="Maxima 5.17.1 Manual: 4. Command Line">
+<meta name="description" content="Maxima 5.20.1 Manual: 4. Command Line">
+<meta name="keywords" content="Maxima 5.20.1 Manual: 4. Command Line">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -156,7 +156,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC320" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC329" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 4. Command Line </h1>
@@ -185,7 +185,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC320" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC329" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 4.1 Introduction to Command Line </h2>
@@ -193,7 +193,7 @@ div.categorybox
 <p><a name="Item_003a-_0027"></a>
 </p><dl>
 <dt><u>Operator:</u> <b>'</b>
-<a name="IDX14"></a>
+<a name="IDX13"></a>
 </dt>
 <dd><p>The single quote operator <code>'</code> prevents evaluation.
 </p>
@@ -260,7 +260,8 @@ The result is the noun form of the function call.
                                 3
 </pre>
 <p>Applied to a parenthesized expression,
-the single quote prevents evaluation of all symbols and function calls in the expression.
+the single quote prevents evaluation of all symbols and function calls in the 
+expression.
 </p>
 <pre class="example">(%i1) aa: 1024;
 (%o1)                         1024
@@ -280,12 +281,20 @@ the single quote prevents evaluation of all symbols and function calls in the ex
 (%i2) '(sin (17 * %pi) + cos (17 * %pi));
 (%o2)                          - 1
 </pre>
+<p>Maxima considers floating point operations by its in-built mathematical 
+functions to be a simplification.
+</p>
+<pre class="example">(%i1) sin(1.0);
+(%o1)                          .8414709848078965
+(%i2) '(sin(1.0));
+(%o2)                          .8414709848078965
+</pre>
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation">Evaluation</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation">Evaluation</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Operators">Operators</a>
+<a href="maxima_95.html#Category_003a-Operators">Operators</a>
 </p>
 </div>
 
@@ -295,7 +304,7 @@ the single quote prevents evaluation of all symbols and function calls in the ex
 <p><a name="Item_003a-_0027_0027"></a>
 </p><dl>
 <dt><u>Operator:</u> <b>&quot;</b>
-<a name="IDX15"></a>
+<a name="IDX14"></a>
 </dt>
 <dd><p>The quote-quote operator <code>''</code> (two single quote marks) modifies evaluation in input expressions.
 </p>
@@ -354,20 +363,17 @@ to be substituted for <var>expr</var> in the input expression.
 (%o14)                         x3
 </pre>
 <p>Applied to the operator of an expression,
-quote-quote changes the operator from a noun to a verb (if it is not already a verb).
+quote-quote changes the operator from a noun to a verb (if it is not already a 
+verb).
 </p>
-<pre class="example">(%i1) sin (1);
-(%o1)                        sin(1)
-(%i2) ''sin (1);
-(%o2)                    0.8414709848079
-(%i3) declare (foo, noun);
-(%o3)                         done
-(%i4) foo (x) := x - 1729;
-(%o4)                 ''foo(x) := x - 1729
-(%i5) foo (100);
-(%o5)                       foo(100)
-(%i6) ''foo (100);
-(%o6)                        - 1629
+<pre class="example">(%i1) declare (foo, noun);
+(%o1)                         done
+(%i2) foo (x) := x - 1729;
+(%o2)                 ''foo(x) := x - 1729
+(%i3) foo (100);
+(%o3)                       foo(100)
+(%i4) ''foo (100);
+(%o4)                        - 1629
 </pre>
 <p>The quote-quote operator is applied by the input parser;
 it is not stored as part of a parsed input expression.
@@ -434,9 +440,9 @@ such as in function definitions, lambda expressions, and expressions quoted by s
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation">Evaluation</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation">Evaluation</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Operators">Operators</a>
+<a href="maxima_95.html#Category_003a-Operators">Operators</a>
 </p>
 </div>
 
@@ -460,7 +466,7 @@ such as in function definitions, lambda expressions, and expressions quoted by s
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC320" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC329" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 4.2 Functions and Variables for Command Line </h2>
@@ -468,7 +474,7 @@ such as in function definitions, lambda expressions, and expressions quoted by s
 <p><a name="Item_003a-alias"></a>
 </p><dl>
 <dt><u>Function:</u> <b>alias</b><i> (<var>new_name_1</var>, <var>old_name_1</var>, ..., <var>new_name_n</var>, <var>old_name_n</var>)</i>
-<a name="IDX16"></a>
+<a name="IDX15"></a>
 </dt>
 <dd><p>provides an
 alternate name for a (user or system) function, variable, array, etc.
@@ -477,7 +483,7 @@ Any even number of arguments may be used.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
 </p>
 </div>
 
@@ -486,7 +492,7 @@ Any even number of arguments may be used.
 <p><a name="Item_003a-debugmode"></a>
 </p><dl>
 <dt><u>Option variable:</u> <b>debugmode</b>
-<a name="IDX17"></a>
+<a name="IDX16"></a>
 </dt>
 <dd><p>Default value: <code>false</code>
 </p>
@@ -499,9 +505,9 @@ through Maxima code, and so on. See <code>debugging</code> for a list of debugge
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Debugging">Debugging</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Debugging">Debugging</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Global-flags">Global flags</a>
+<a href="maxima_95.html#Category_003a-Global-flags">Global flags</a>
 </p>
 </div>
 
@@ -511,7 +517,7 @@ through Maxima code, and so on. See <code>debugging</code> for a list of debugge
 <p><a name="Item_003a-ev"></a>
 </p><dl>
 <dt><u>Function:</u> <b>ev</b><i> (<var>expr</var>, <var>arg_1</var>, ..., <var>arg_n</var>)</i>
-<a name="IDX18"></a>
+<a name="IDX17"></a>
 </dt>
 <dd><p>Evaluates the expression <var>expr</var> in the environment
 specified by the arguments <var>arg_1</var>, ..., <var>arg_n</var>.
@@ -551,6 +557,10 @@ each element.
 </li><li>
 <code>derivlist (<var>x</var>, <var>y</var>, <var>z</var>, ...)</code> causes only differentiations with respect to
 the indicated variables.
+</li><li>
+<code>risch</code> causes integrals in <var>expr</var> to be evaluated using the Risch
+algorithm. See <code>risch</code>. The standard integration routine is invoked when
+using the special symbol <code>nouns</code>.
 </li><li>
 <code>float</code> causes non-integral rational numbers to be converted to floating
 point.
@@ -605,9 +615,9 @@ substitution equations which are handled in sequence, left to right,
 and evaluation functions which are composed, e.g., <code>ev (<var>expr</var>, ratsimp, realpart)</code> is
 handled as <code>realpart (ratsimp (<var>expr</var>))</code>.
 </p>
-<p>The <code>simp</code>, <code>numer</code>, <code>float</code>, and <code>pred</code> switches may also be set locally in a
-block, or globally in Maxima so that they will
-remain in effect until being reset.
+<p>The <code>simp</code>, <code>numer</code>, and <code>float</code> switches may also be set locally
+in a block, or globally in Maxima so that they will remain in effect until being
+reset.
 </p>
 <p>If <var>expr</var> is a canonical rational expression (CRE),
 then the expression returned by <code>ev</code> is also a CRE,
@@ -639,15 +649,15 @@ it are evaluated and that <code>ev(F(x))</code> thus may behave like <code>F(ev(
 For each instance of <code>eval</code> in the arguments, steps (3) and (4) are repeated.
 </li></ol>
 
-<p>                     Examples
+<p>Examples:
 </p>
 <pre class="example">(%i1) sin(x) + cos(y) + (w+1)^2 + 'diff (sin(w), w);
                                      d                    2
 (%o1)              cos(y) + sin(x) + -- (sin(w)) + (w + 1)
                                      dw
-(%i2) ev (%, sin, expand, diff, x=2, y=1);
-                          2
-(%o2)           cos(w) + w  + 2 w + cos(1) + 1.909297426825682
+(%i2) ev (%, numer, expand, diff, x=2, y=1);
+                               2
+(%o2)                cos(w) + w  + 2 w + 2.449599732693821
 </pre>
 <p>An alternate top level syntax has been provided for <code>ev</code>, whereby one
 may just type in its arguments, without the <code>ev()</code>.  That is, one may
@@ -691,7 +701,37 @@ Solution
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation">Evaluation</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation">Evaluation</a>
+</p>
+</div>
+
+</dd></dl>
+
+<p><a name="Item_003a-eval"></a>
+</p><dl>
+<dt><u>Special symbol:</u> <b>eval</b>
+<a name="IDX18"></a>
+</dt>
+<dd><p>As an argument in a call to <code>ev (<var>expr</var>)</code>, <code>eval</code> causes an extra
+evaluation of <var>expr</var>. See <code>ev</code>.
+</p>
+<p>Example:
+</p>
+<pre class="example">(%i1) [a:b,b:c,c:d,d:e];
+(%o1)                            [b, c, d, e]
+(%i2) a;
+(%o2)                                  b
+(%i3) ev(a);
+(%o3)                                  c
+(%i4) ev(a),eval;
+(%o4)                                  e
+(%i5) a,eval,eval;
+(%o5)                                  e
+</pre>
+<div class=categorybox>
+
+
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation-flags">Evaluation flags</a>
 </p>
 </div>
 
@@ -741,6 +781,7 @@ gives the <code>evflag</code> property to the variable <var>x</var>.
 <code>ratmx</code>,
 <code>ratsimpexpons</code>,
 <code>simp</code>,
+<code>simpproduct</code>,
 <code>simpsum</code>,
 <code>sumexpand</code>, and
 <code>trigexpand</code>.
@@ -786,9 +827,9 @@ gives the <code>evflag</code> property to the variable <var>x</var>.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation-flags">Evaluation flags</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
+<a href="maxima_95.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
 </p>
 </div>
 
@@ -879,7 +920,7 @@ gives the <code>evfun</code> property to the function <var>F</var>.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation-flags">Evaluation flags</a>
 </p>
 </div>
 
@@ -898,7 +939,7 @@ include <code>X='X</code> as an argument to <code>ev</code>.  Of course expressi
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation-flags">Evaluation flags</a>
 </p>
 </div>
 
@@ -986,11 +1027,11 @@ unbind a specific property.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation">Evaluation</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation">Evaluation</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Session-management">Session management</a>
+<a href="maxima_95.html#Category_003a-Session-management">Session management</a>
 </p>
 </div>
 
@@ -1037,11 +1078,11 @@ Some other functions, such as <code>ldisplay</code>, always generate intermediat
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Display-functions">Display functions</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Display-functions">Display functions</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
+<a href="maxima_95.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1058,9 +1099,9 @@ Some other functions, such as <code>ldisplay</code>, always generate intermediat
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1080,11 +1121,11 @@ whether or not they get reset to their default value.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Global-variables">Global variables</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Global-variables">Global variables</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Session-management">Session management</a>
+<a href="maxima_95.html#Category_003a-Session-management">Session management</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1119,9 +1160,9 @@ intermediate expression labels are bound and appended to the <code>labels</code>
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Global-flags">Global flags</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Global-flags">Global flags</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Session-management">Session management</a>
+<a href="maxima_95.html#Category_003a-Session-management">Session management</a>
 </p>
 </div>
 
@@ -1143,11 +1184,11 @@ that the variable he assigned a value to was truly an option variable.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Global-flags">Global flags</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Global-flags">Global flags</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Session-management">Session management</a>
+<a href="maxima_95.html#Category_003a-Session-management">Session management</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1226,9 +1267,9 @@ See <code>grind</code>.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Display-functions">Display functions</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Display-functions">Display functions</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1256,9 +1297,9 @@ properties that cannot otherwise be displayed, i.e. for
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Display-functions">Display functions</a>
+<a href="maxima_95.html#Category_003a-Display-functions">Display functions</a>
 </p>
 </div>
 
@@ -1278,9 +1319,9 @@ properties that cannot otherwise be displayed, i.e. for
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Global-variables">Global variables</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Global-variables">Global variables</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1306,7 +1347,7 @@ See also <code>debugging</code>.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
 
@@ -1337,7 +1378,7 @@ or macro functions (created by <code>::=</code>).
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Function-definition">Function definition</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Function-definition">Function definition</a>
 </p>
 </div>
 
@@ -1358,7 +1399,7 @@ and some variables defined by <code>defmvar</code> are not global variables or o
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Session-management">Session management</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Session-management">Session management</a>
 </p>
 </div>
 
@@ -1384,30 +1425,9 @@ even when <code>showtime</code> is <code>false</code>.
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Debugging">Debugging</a>
-</p>
-</div>
-
-
-</dd></dl>
-
-<p><a name="Item_003a-sstatus"></a>
-</p><dl>
-<dt><u>Function:</u> <b>sstatus</b><i> (<var>feature</var>, <var>package</var>)</i>
-<a name="IDX53"></a>
-</dt>
-<dd><p>Sets the status of <var>feature</var> in <var>package</var>.
-After <code>sstatus (<var>feature</var>, <var>package</var>)</code> is executed,
-<code>status (<var>feature</var>, <var>package</var>)</code> returns <code>true</code>.
-This can be useful for package writers, to
-keep track of what features they have loaded in.
-</p>
-<div class=categorybox>
-
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+<a href="maxima_95.html#Category_003a-Debugging">Debugging</a>
 </p>
 </div>
 
@@ -1417,41 +1437,84 @@ keep track of what features they have loaded in.
 <p><a name="Item_003a-to_005flisp"></a>
 </p><dl>
 <dt><u>Function:</u> <b>to_lisp</b><i> ()</i>
-<a name="IDX54"></a>
+<a name="IDX53"></a>
 </dt>
 <dd><p>Enters the Lisp system under Maxima. <code>(to-maxima)</code> returns to Maxima.
 </p>
+<p>Example:
+</p>
+<p>Define a function and enter the Lisp system under Maxima. The defintion is 
+inspected on the property list, then the function definition is extracted, 
+factored and stored in the variable $result. The variable can be used in Maxima 
+after returning to Maxima.
+</p>
+<pre class="example">(%i1) f(x):=x^2+x;
+                                         2
+(%o1)                           f(x) := x  + x
+(%i2) to_lisp();
+Type (to-maxima) to restart, ($quit) to quit Maxima.
+
+MAXIMA&gt; (symbol-plist '$f)
+(MPROPS (NIL MEXPR ((LAMBDA) ((MLIST) $X) ((MPLUS) ((MEXPT) $X 2) $X))))
+MAXIMA&gt; (setq $result ($factor (caddr (mget '$f 'mexpr))))
+((MTIMES SIMP FACTORED) $X ((MPLUS SIMP IRREDUCIBLE) 1 $X))
+MAXIMA&gt; (to-maxima)
+Returning to Maxima
+(%o2)                                true
+(%i3) result;
+(%o3)                              x (x + 1)
+</pre>
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Console-interaction">Console interaction</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Console-interaction">Console interaction</a>
 </p>
 </div>
-
 
 </dd></dl>
 
 <p><a name="Item_003a-values"></a>
 </p><dl>
 <dt><u>System variable:</u> <b>values</b>
-<a name="IDX55"></a>
+<a name="IDX54"></a>
 </dt>
 <dd><p>Initial value: <code>[]</code>
 </p>
-<p><code>values</code> is a list of all bound user variables (not Maxima options or switches).
-The list comprises symbols bound by <code>:</code> , <code>::</code>, or <code>:=</code>.
+<p><code>values</code> is a list of all bound user variables (not Maxima options or
+switches). The list comprises symbols bound by <code>:</code>, or <code>::</code>.
 </p>
+<p>If the value of a variable is removed with the commands <code>kill</code>, 
+<code>remove</code>, or <code>remvalue</code> the variable is deleted from <code>values</code>.
+</p>
+<p>See <code>functions</code> for a list of user defined functions.
+</p>
+<p>Examples:
+</p>
+<p>First, <code>values</code> shows the symbols <code>a</code>, <code>b</code>, and <code>c</code>, but 
+not <code>d</code>, it is not bound to a value, and not the user function <code>f</code>.
+The values are removed from the variables. <code>values</code> is the empty list.
+</p>
+<pre class="example">(%i1) [a:99, b::a-90, c:a-b, d, f(x):= x^2];
+                                                  2
+(%o1)                     [99, 9, 90, d, f(x) := x ]
+(%i2) values;
+(%o2)                              [a, b, c]
+(%i3) [kill(a), remove(b,value), remvalue(c)];
+(%o3)                          [done, done, [c]]
+(%i4) values;
+(%o4)                                 []
+</pre>
 <div class=categorybox>
 
 
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Evaluation">Evaluation</a>
+<p>Categories:&nbsp;&nbsp;<a href="maxima_95.html#Category_003a-Evaluation">Evaluation</a>
  &middot;
-<a href="maxima_93.html#Category_003a-Global-variables">Global variables</a>
+<a href="maxima_95.html#Category_003a-Global-variables">Global variables</a>
 </p>
 </div>
 
-
 </dd></dl>
+
 
 <p><a name="Item_003a-Operators"></a>
 </p><hr size="6">
@@ -1465,12 +1528,12 @@ The list comprises symbols bound by <code>:</code> , <code>::</code>, or <code>:
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC320" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC329" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>December, 14 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>December, 13 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

@@ -7,17 +7,10 @@
 
 (in-package :maxima)
 
-(eval-when
-    #+gcl (compile load eval)
-    #-gcl (:compile-toplevel :load-toplevel :execute)
-
-    (defmacro defun-prop (f arg &body body)
-      (assert (listp f))
-      #+gcl (eval-when (eval)
-	      (compiler::compiler-def-hook (car f) body))
-      `(progn 'compile
-	(setf (get ',(car f) ',(second f))
-	 #'(lambda ,arg ,@body)))))
+(defmacro defun-prop (f arg &body body)
+  (assert (listp f))
+  #+gcl (eval-when (eval) (compiler::compiler-def-hook (first f) body))
+  `(setf (get ',(first f) ',(second f)) #'(lambda ,arg ,@body)))
 
 (defvar *prin1* nil)		  ;a function called instead of prin1.
 
@@ -353,35 +346,49 @@ values")
 			    (values "~ve" (+ 5 effective-printprec))))
 		   (setq string (format nil form width symb))))
 	     (setq string (string-trim " " string))))
-	  #+(and gcl (not gmp))
-	  ((bignump symb)
-	   (let* ((big symb)
-		  ans rem tem
-		  (chunks
-		   (loop
-		      do (multiple-value-setq (big rem)
-			   (floor big tentochunksize))
-		      collect rem
-		      while (not (eql 0 big)))))
-	     (setq chunks (nreverse chunks))
-	     (setq ans (coerce (format nil "~d" (car chunks)) 'list))
-	     (loop for v in (cdr chunks)
-		do (setq tem (coerce (format nil "~d" v) 'list))
-		(loop for i below (- big-chunk-size (length tem))
-		   do (setq tem (cons #\0 tem)))
-		(setq ans (nconc ans tem)))
-	     (return-from exploden ans)))
+
+      ((integerp symb)
+       ;; When obase > 10, prepend leading zero to
+       ;; ensure that output is readable as a number.
+       (let ((leading-digit (if (> *print-base* 10) #\0)))
+         (cond
+           #+(and gcl (not gmp))
+           ((bignump symb)
+            (let* ((big symb)
+                   ans rem tem
+                   (chunks
+                     (loop
+                       do (multiple-value-setq (big rem)
+                            (floor big tentochunksize))
+                       collect rem
+                       while (not (eql 0 big)))))
+              (setq chunks (nreverse chunks))
+              (setq ans (coerce (format nil "~d" (car chunks)) 'list))
+              (if (and leading-digit (not (digit-char-p (car ans) 10.)))
+                (setq ans (cons leading-digit ans)))
+              (loop for v in (cdr chunks)
+                    do (setq tem (coerce (format nil "~d" v) 'list))
+                    (loop for i below (- big-chunk-size (length tem))
+                          do (setq tem (cons #\0 tem)))
+                    (setq ans (nconc ans tem)))
+              (return-from exploden ans)))
+           (t
+             (setq string (format nil "~A" symb))
+             (setq string (coerce string 'list))
+             (if (and leading-digit (not (digit-char-p (car string) 10.)))
+               (setq string (cons leading-digit string)))
+             (return-from exploden string)))))
+
 	  (t (setq string (format nil "~A" symb))))
     (assert (stringp string))
     (coerce string 'list)))
 
-(defun explodec (symb &aux tem)		;is called for symbols and numbers
-  (loop for v on (setq tem (coerce (print-invert-case symb) 'list))
-	 do (setf (car v) (intern (string (car v)))))
-  tem)
+(defun explodec (symb)		;is called for symbols and numbers
+  (loop for v in (coerce (print-invert-case symb) 'list)
+     collect (intern (string v))))
 
 (defvar *string-for-implode*
-  (make-array 20 :fill-pointer 0 :adjustable t :element-type ' #.(array-element-type "a")))
+  (make-array 20 :fill-pointer 0 :adjustable t :element-type '#.(array-element-type "a")))
 
 ;;; If the 'string is all the same case, invert the case.  Otherwise,
 ;;; do nothing.
@@ -477,25 +484,24 @@ values")
 	       converted-str)))
 	(t (princ-to-string sym))))
 
-(defun implode (lis &aux (ar *string-for-implode*) (leng 0))
-  (declare (type string ar) (fixnum leng))
-  (or (> (array-total-size ar) (setq leng (length lis)))
-      (adjust-array ar (+ leng 20)))
-  (setf (fill-pointer ar) leng)
-  (loop for v in lis
-	 for i below leng
-	 do
-	 (cond ((typep v 'character))
-	       ((symbolp v) (setq v (char (symbol-name v) 0)))
-	       ((numberp v) (setq v (code-char v))))
-	 (setf (aref ar i) v))
-  (intern-invert-case ar))
+(defun implode (lis)
+  (let ((ar *string-for-implode*)
+	(leng (length lis)))
+    (unless (> (array-total-size ar) leng)
+      (setq ar (adjust-array ar (+ leng 20))))
+    (setf (fill-pointer ar) leng)
+    (loop for v in lis
+       for i below leng
+       do
+	 (setf (aref ar i) (cond ((characterp v) v)
+				 ((symbolp v) (char (symbol-name v) 0))
+				 ((numberp v) (code-char v)))))
+    (intern-invert-case ar)))
 
-(defun explode (symb &aux tem)
-  ;; Note:  symb can also be a number, not just a symbol.
-  (loop for v on (setq tem (coerce (format nil "~S" symb) 'list))
-	 do (setf (car v) (intern (string (car v)))))
-  tem)
+;; Note:  symb can also be a number, not just a symbol.
+(defun explode (symb)
+  (loop for v in (coerce (format nil "~S" symb) 'list)
+     collect (intern (string v))))
 
 (defun getcharn (symb i)
   (let ((strin (string symb)))
@@ -555,6 +561,12 @@ values")
 (defvar *read-hang-prompt* "")
 
 (defun tyi-raw (&optional (stream *standard-input*) eof-option)
+  ;; Adding this extra EOF test, because the testsuite generates
+  ;; unexpected end of input-stream with Windows XP and GCL 2.6.8.
+  #+gcl
+  (when (eq (peek-char nil stream nil eof-option) eof-option)
+    (return-from tyi-raw eof-option))
+
   (let ((ch (read-char-no-hang stream nil eof-option)))
     (if ch
 	ch

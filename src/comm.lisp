@@ -117,7 +117,7 @@
 
 ;;Remainder of page is update from F302 --gsb
 
-;;Used only in COMM2 (AT), and below.
+;;Used in COMM2 (AT), limit, and below.
 (defvar dummy-variable-operators '(%product %sum %laplace %integrate %limit %at))
 
 (defun subst1 (z)			; Y is an atom
@@ -126,7 +126,7 @@
 	((eq (caar z) 'bigfloat) z)
 	((and (eq (caar z) 'rat) (or (equal y (cadr z)) (equal y (caddr z))))
 	 (div (subst1 (cadr z)) (subst1 (caddr z))))
-	((at-substp z) z)
+	((at-substp z) (subst-except-second-arg x y z))
 	((and (eq y t) (eq (caar z) 'mcond))
 	 (list (cons (caar z) nil) (subst1 (cadr z)) (subst1 (caddr z))
 	       (cadddr z) (subst1 (car (cddddr z)))))
@@ -145,8 +145,7 @@
 			     ($subvarp x))
 			 (let ((substp 'mqapply))
 			   (subst0 (list* '(mqapply) x margs) z))
-			 (merror "Attempt to MAXIMA-SUBSTITUTE ~M for ~M in ~M~
-			   ~%Illegal substitution for operator of expression" x y z))
+			 (merror (intl:gettext "subst: cannot substitute ~M for operator ~M in expression ~M") x y z))
 		     (subst0 (cons (cons oprx nil) margs) z))
 		 (subst0 (cons (cons (caar z) nil) margs) z))))))
 
@@ -168,6 +167,20 @@
 	     (cond ((null tail) z)
 		   (t (cons (cons (caar z) nil) (cons x (cdr tail)))))))
 	  (t (recur-apply #'subst2 z)))))
+
+;; replace y with x in z, but leave z's second arg unchanged.
+;; This is for cases like at(integrate(x, x, a, b), [x=3])
+;; where second arg of integrate binds a new variable x,
+;; and we do not wish to subst 3 for x inside integrand.
+(defun subst-except-second-arg (x y z)
+  (append 
+   (list (car z)
+	 (if (eq y (third z))	; if (third z) is new var that shadows y
+	     (second z)		; leave (second z) unchanged
+	   (subst1 (second z)))	; otherwise replace y with x in (second z)
+	 (third z))		; never change integration var
+   (mapcar (lambda (z) (subst1 z))	; do subst in limits of integral
+	   (cdddr z))))
 
 (declare-top (unspecial x y oprx opry negxpty timesp))
 
@@ -233,7 +246,7 @@
 
 (defmfun $depends (&rest args)
   (when (oddp (length args))
-    (merror "`depends' takes an even number of arguments."))
+    (merror (intl:gettext "depends: number of arguments must be even.")))
   (do ((args args (cddr args))
        (l))
       ((null args) (i-$dependencies (nreverse l)))
@@ -250,9 +263,9 @@
 
 (defmfun i-$dependencies (l)
   (dolist (z l)
-    (cond ((atom z) (merror "Wrong format.  Try F(X)."))
+    (cond ((atom z) (merror (intl:gettext "depends: argument must be a non-atomic expression; found ~M") z))
 	  ((or (eq (caar z) 'mqapply) (member 'array (cdar z) :test #'eq))
-	   (merror "Improper form for `depends':~%~M" z))
+	   (merror (intl:gettext "depends: argument cannot be a subscripted expression; found ~M") z))
 	  (t (let ((y (mget (caar z) 'depends)))
 	       (mputprop (caar z)
 			 (setq y (union* (reverse (cdr z)) y))
@@ -266,7 +279,7 @@
   (setq l (cdr l))
   (let ((z (car l)) (n 0))
     (cond ((atom z)
-	   (if (not (= (length l) 3)) (merror "Wrong arguments to `gradef'"))
+	   (if (not (= (length l) 3)) (merror (intl:gettext "gradef: expected exactly three arguments.")))
 	   (mputprop z
 		     (cons (cons (cadr l) (meval (caddr l)))
 			   (mget z '$atomgrad))
@@ -275,13 +288,12 @@
 	   (add2lnc z $props)
 	   z)
 	  ((or (mopp1 (caar z)) (member 'array (cdar z) :test #'eq))
-	   (merror "Wrong arguments to `gradef':~%~M" z))
+	   (merror (intl:gettext "gradef: argument cannot be a built-in operator or subscripted expression; found ~M") z))
 	  ((prog2 (setq n (- (length z) (length l))) (minusp n))
 	   (wna-err '$gradef))
 	  (t (do ((zl (cdr z) (cdr zl))) ((null zl))
 	       (if (not (symbolp (car zl)))
-		   (merror "Parameters to `gradef' must be names:~%~M"
-			   (car zl))))
+		   (merror (intl:gettext "gradef: argument must be a symbol; found ~M") (car zl))))
 	     (setq l (nconc (mapcar #'(lambda (x) (remsimp (meval x)))
 				    (cdr l))
 			    (mapcar #'(lambda (x) (list '(%derivative) z x 1))
@@ -317,7 +329,7 @@
 		((null (cddr z)) (wna-err '$diff))
 		((not (eq (ml-typep (caddr z)) 'fixnum)) (go noun))
 		((minusp (setq count (caddr z)))
-		 (merror "Improper count to `diff':~%~M" count)))
+		 (merror (intl:gettext "diff: order of derivative must be a nonnegative integer; found ~M") count)))
      loop1(cond ((zerop count) (rplacd z (cdddr z)) (go loop2))
 		((equal (setq exp (sdiff exp (cadr z))) 0) (return 0)))
      (setq count (1- count))
@@ -366,10 +378,13 @@
     (if (depends u x) (return t))))
 
 (defmfun sdiff (e x) ; The args to SDIFF are assumed to be simplified.
+  ;; Remove a special representation from the variable of differentiation
+  (setq x (specrepcheck x))
   (cond ((alike1 e x) 1)
 	((mnump e) 0)
 	((or (atom e) (member 'array (cdar e) :test #'eq)) (chainrule e x))
 	((eq (caar e) 'mrat) (ratdx e x))
+        ((eq (caar e) 'mpois) ($poisdiff e x)) ; Poisson series
 	((eq (caar e) 'mplus) (addn (sdiffmap (cdr e) x) t))
 	((mbagp e) (cons (car e) (sdiffmap (cdr e) x)))
 	((member (caar e) '(%sum %product) :test #'eq) (diffsumprod e x))
@@ -400,8 +415,9 @@
 	((eq (caar e) '%integrate) (diffint e x))
 	((eq (caar e) '%laplace) (difflaplace e x))
 	((eq (caar e) '%at) (diff-%at e x))
-	((member (caar e) '(%realpart %imagpart) :test #'eq)
-	 (list (cons (caar e) nil) (sdiff (cadr e) x)))
+; This rule is not correct. We cut it out.
+;	((member (caar e) '(%realpart %imagpart) :test #'eq)
+;	 (list (cons (caar e) nil) (sdiff (cadr e) x)))
 	((and (eq (caar e) 'mqapply)
 	      (eq (caaadr e) '$%f))
 	 ;; Handle %f, hypergeometric function
@@ -422,31 +438,63 @@
 	(t (sdiffgrad e x))))
 
 (defun sdiffgrad (e x)
-  (let ((fun (caar e)) grad args)
+  (let ((fun (caar e)) grad args result)
     (cond ((and (eq fun 'mqapply) (oldget (caaadr e) 'grad))
-	   (sdiffgrad (cons (cons (caaadr e) nil) (append (cdadr e) (cddr e)))
-		      x))
+           ;; Change the array function f[n](x) to f(n,x), call sdiffgrad again.
+           (setq result
+	         (sdiffgrad (cons (cons (caaadr e) nil) 
+	                          (append (cdadr e) (cddr e)))
+		            x))
+           ;; If noun form for f(n,x), adjust the noun form for f[n](x)
+           (if (isinop result '%derivative)
+               (if (not (depends e x))
+                   0
+                   (diff%deriv (list e x 1)))
+               result))
 
 	  ;; extension for pdiff.
 	  ((and (get '$pderivop 'operators) (sdiffgrad-pdiff e x)))
 
+	  ;; two line extension for hypergeometric.
+	  ((and (equal fun '$hypergeometric) (get '$hypergeometric 'operators))
+	   (diff-hypergeometric (second e) (third e) (fourth e) x))
+
 	  ((or (eq fun 'mqapply) (null (setq grad (oldget fun 'grad))))
 	   (if (not (depends e x)) 0 (diff%deriv (list e x 1))))
 	  ((not (= (length (cdr e)) (length (car grad))))
-	   (merror "Wrong number of arguments for ~:M" fun))
-	  (t (setq args (sdiffmap (cdr e) x))
-	     (addn (mapcar
-		    #'mul2
-		    (cdr (substitutel
-			  (cdr e) (car grad)
-			  (do ((l1 (cdr grad) (cdr l1))
-			       (args args (cdr args)) (l2))
-			      ((null l1) (cons '(mlist) (nreverse l2)))
-			    (setq l2 (cons (cond ((equal (car args) 0) 0)
-						 (t (car l1)))
-					   l2)))))
-		    args)
-		   t)))))
+	   (merror (intl:gettext "~:M: expected exactly ~M arguments.") 
+	           fun 
+	           (length (car grad))))
+	  (t
+           (setq args (sdiffmap (cdr e) x))
+           (setq result
+                 (addn
+                   (mapcar 
+                     #'mul2
+                     (cdr 
+                       (substitutel
+                         (cdr e) 
+                         (car grad)
+                         (do ((l1 (cdr grad) (cdr l1))
+                              (args args (cdr args)) 
+                              (l2))
+                             ((null l1) (cons '(mlist) (nreverse l2)))
+                           (setq l2
+                                 (cons (cond ((equal (car args) 0) 0)
+                                             ((functionp (car l1))
+                                              ;; Evaluate a lambda expression
+                                              ;; given as a derivative.
+                                              (apply (car l1) (cdr e)))
+                                             (t (car l1)))
+                                       l2)))))
+                     args)
+                   t))
+           (if (or (null result) (not (freeof nil result)))
+               ;; A derivative has returned NIL. Return a noun form.
+               (if (not (depends e x))
+                   0 
+                   (diff%deriv (list e x 1)))
+               result)))))
 
 (defun sdiffmap (e x)
   (mapcar #'(lambda (term) (sdiff term x)) e))
@@ -518,24 +566,27 @@
 	  (mabs ((mtimes) x ((mexpt) ((mabs) x) -1)))
 	  (%erf ((mtimes) 2 ((mexpt) $%pi ((rat) -1 2))
 		 ((mexpt) $%e ((mtimes) -1 ((mexpt) x 2)))))
-	  ;;	   ($LI2 ((MTIMES) -1 ((%LOG) ((MPLUS) 1 ((MTIMES) -1 X))) ((MEXPT) X -1)))
-	  ($ei ((mtimes) ((mexpt) x -1) ((mexpt) $%e x))))))
+	  )))
 
 (defprop $atan2 ((x y) ((mtimes) y ((mexpt) ((mplus) ((mexpt) x 2) ((mexpt) y 2)) -1))
 		 ((mtimes) -1 x ((mexpt) ((mplus) ((mexpt) x 2) ((mexpt) y 2)) -1)))
   grad)
 
-(defprop $%j ((n x) ((%derivative) ((mqapply) (($%j array) n) x) n 1)
-	      ((mplus) ((mqapply) (($%j array) ((mplus) -1 n)) x)
-	       ((mtimes) -1 n ((mqapply) (($%j array) n) x) ((mexpt) x -1))))
+(defprop $li 
+  ((n x)
+; Do not put a noun form on the property list, but NIL.
+; SDIFFGRAD generates the noun form.
+;   ((%derivative) ((mqapply) (($li array) n) x) n 1)
+   nil
+   ((mtimes) ((mqapply) (($li array) ((mplus) -1 n)) x) ((mexpt) x -1)))
   grad)
 
-(defprop $li ((n x) ((%derivative) ((mqapply) (($li array) n) x) n 1)
-	      ((mtimes) ((mqapply) (($li array) ((mplus) -1 n)) x) ((mexpt) x -1)))
-  grad)
-
-(defprop $psi ((n x) ((%derivative) ((mqapply) (($psi array) n) x) n 1)
-	       ((mqapply) (($psi array) ((mplus) 1 n)) x))
+(defprop $psi 
+  ((n x)
+; Do not put a noun form on the property list, but NIL.
+; SDIFFGRAD generates the noun form.
+   nil
+   ((mqapply) (($psi array) ((mplus) 1 n)) x))
   grad)
 
 (defmfun atvarschk (argl)
@@ -553,6 +604,8 @@
 	     (if (not (mequalp u)) (return t))))))
 
 (defmfun substitutel (l1 l2 e)
+  "l1 is a list of expressions.  l2 is a list of variables. For each 
+   element in list l2, substitute corresponding element of l1 into e"
   (do ((l1 l1 (cdr l1))
        (l2 l2 (cdr l2)))
       ((null l1) e)
@@ -590,7 +643,7 @@
   (if (or (mnump e)
 	  (maxima-integerp e)
 	  (and (not (atom e)) (not (eq (caar e) 'mqapply)) (mopp1 (caar e))))
-      (merror "Non-variable 2nd argument to ~:M:~%~M" fn e)))
+      (merror (intl:gettext "~:M: second argument must be a variable; found ~M") fn e)))
 
 (defmspec $ldisplay (form)
   (disp1 (cdr form) t t))
@@ -662,7 +715,7 @@
 
 (defmfun $dispform (e &optional (flag nil flag?))
   (when (and flag? (not (eq flag '$all)))
-    (merror "Incorrect second argument to `dispform'"))
+    (merror (intl:gettext "dispform: second argument, if present, must be 'all'; found ~M") flag))
   (if (or (atom e)
 	  (atom (setq e (if flag? (nformat-all e) (nformat e))))
 	  (member 'simp (cdar e) :test #'eq))
@@ -723,7 +776,7 @@
 		  (t (setq exp (nformat-all exp)))))
 	   ((specrepp exp) (setq exp (specdisrep exp))))
      (when (and (atom exp) (null $partswitch))
-       (merror "~:M called on atom: ~:M" fn exp))
+       (merror (intl:gettext "~:M: argument must be a non-atomic expression; found ~:M") fn exp))
      (when (and inflag specp)
        (setq exp (copy-tree exp)))
      (setq exp* exp)
@@ -732,18 +785,18 @@
 			 0)
 		  (setq arglist (cdr arglist))
 		  (cond ((mnump substitem)
-			 (merror "~M is an invalid operator in ~:M" substitem fn))
+			 (merror (intl:gettext "~:M: argument cannot be a number; found ~M") fn substitem))
 			((and specp arglist)
 			 (if (eq (caar exp) 'mqapply)
 			     (prog2 (setq exp (cadr exp)) (go start))
-			     (merror "Invalid operator in ~:M" fn)))
+                 ;; NOT CLEAR WHAT IS INVALID HERE. OH WELL.
+			     (merror (intl:gettext "~:M: invalid operator.") fn)))
 			(t (setq $piece (getop (mop exp)))
 			   (return
 			     (cond (substflag
 				    (setq substitem (getopr (meval substitem)))
 				    (cond ((mnump substitem)
-					   (merror "Invalid operator in ~:M:~%~M"
-						   fn substitem))
+					   (merror (intl:gettext "~:M: argument cannot be a number; found ~M") fn substitem))
 					  ((not (atom substitem))
 					   (if (not (eq (caar exp) 'mqapply))
 					       (rplaca (rplacd exp (cons (car exp)
@@ -768,7 +821,7 @@
 				      $piece))))))
 		 ((not (atom arg)) (go several))
 		 ((not (fixnump arg))
-		  (merror "Non-integer argument to ~:M:~%~M" fn arg))
+		  (merror (intl:gettext "~:M: argument must be an integer; found ~M") fn arg))
 		 ((< arg 0) (go bad)))
      (if (eq (caar exp) 'mqapply) (setq exp (cdr exp)))
      loop (cond ((not (zerop arg)) (setq arg (1- arg) exp (cdr exp))
@@ -788,9 +841,9 @@
 		((specrepp exp) (setq exp (specdisrep exp))))
      (go start)
      err  (cond ((eq $partswitch 'mapply)
-		 (merror "Improper index to list or matrix"))
+		 (merror (intl:gettext "part: invalid index of list or matrix.")))
 		($partswitch (return (setq $piece '$end)))
-		(t (merror "~:M fell off end." fn)))
+		(t (merror (intl:gettext "~:M: fell off the end.") fn)))
      bad  (improper-arg-err arg fn)
      several
      (if (or (not (member (caar arg) '(mlist $allbut) :test #'eq)) (cdr arglist))
@@ -802,7 +855,7 @@
      (setq arg1 (cdr arg) prevcount 0 exp1 exp)
      (dolist (arg* arg1)
        (if (not (fixnump arg*))
-	   (merror "Non-integer argument to ~:M:~%~M" fn arg*)))
+	   (merror (intl:gettext "~:M: argument must be an integer; found ~M") fn arg*)))
      (when (and specp (eq (caar arg) 'mlist))
        (if substflag (setq lastelem (car (last arg1))))
        (setq arg1 (sort (copy-list arg1) #'<)))
@@ -810,7 +863,7 @@
        (setq n (length exp))
        (dolist (i arg1)
 	 (if (or (< i 1) (> i n))
-	     (merror "Invalid argument to ~:M:~%~M" fn i)))
+	     (merror (intl:gettext "~:M: index must be in range 1 to ~M, inclusive; found ~M") fn n i)))
        (do ((i n (1- i)) (arg2))
 	   ((= i 0) (setq arg1 arg2))
 	 (if (not (member i arg1 :test #'equal)) (setq arg2 (cons i arg2))))
@@ -880,7 +933,7 @@
 			    (atomchk (setq u (specrepcheck u)) '$append nil)
 			    (unless (and (alike1 op (mop u))
 					 (eq arrp (if (member 'array (cdar u) :test #'eq) t)))
-			      (merror "Arguments to `append' are not compatible."))
+			      (merror (intl:gettext "append: operators of arguments must all be the same.")))
 			    (margs u))
 			args))))))
 
@@ -895,7 +948,7 @@
 
 (defmfun atomchk (e fun 2ndp)
   (if (or (atom e) (eq (caar e) 'bigfloat))
-      (merror "~Margument value `~M' to ~:M was not a list" (if 2ndp "2nd " "") e fun)))
+      (merror (intl:gettext "~:M: ~Margument must be a non-atomic expression; found ~M") fun (if 2ndp "2nd " "") e)))
 
 (defmfun format1 (e)
   (cond (($listp e) e)
@@ -904,7 +957,7 @@
 
 (defmfun $first (e)
   (atomchk (setq e (format1 e)) '$first nil)
-  (if (null (cdr e)) (merror "Argument to `first' is empty."))
+  (if (null (cdr e)) (merror (intl:gettext "first: empty argument.")))
   (car (margs e)))
 
 ;; This macro is used to create functions second thru tenth.
@@ -915,7 +968,7 @@
 	       `(defmfun ,sim (e)
 		  (atomchk (setq e (format1 e)) ',sim nil)
 		  (if (< (length (margs e)) ,i)
-		      (merror "There is no ~A element:~%~M" ',si e))
+		      (merror (intl:gettext "~:M: no such element in ~M") ',sim e))
 		  (,si (margs e))))))
 
   (make-nth second  2)
@@ -934,13 +987,13 @@
        (return e))
      (atomchk (setq m (format1 e)) '$rest nil)
      (cond ((and n? (not (fixnump n)))
-	    (merror "2nd argument to `rest' must be an integer: ~M" n))
+	    (merror (intl:gettext "rest: second argument, if present, must be an integer; found ~M") n))
 	   ((minusp n)
 	    (setq n (- n) revp t)))
      (if (< (length (margs m)) n)
 	 (if $partswitch
 	     (return '$end)
-	     (merror "`rest' fell off end.")))
+	     (merror (intl:gettext "rest: fell off the end."))))
      (setq fun (car m))
      (when (eq (car fun) 'mqapply)
        (setq fun1 (cadr m)
@@ -957,7 +1010,7 @@
 (defmfun $last (e)
   (atomchk (setq e (format1 e)) '$last nil)
   (when (null (cdr e))
-    (merror "Argument to `last' is empty."))
+    (merror (intl:gettext "last: empty argument.")))
   (car (last e)))
 
 (defmfun $args (e)
@@ -966,7 +1019,7 @@
 
 (defmfun $delete (x l &optional (n -1 n?))
   (when (and n? (or (not (fixnump n)) (minusp n))) ; if n is set, it must be a nonneg fixnum
-    (merror "Improper 3rd argument to `delete': ~M" n))
+    (merror (intl:gettext "delete: third argument, if present, must be a nonnegative integer; found ~M") n))
   (atomchk (setq l (specrepcheck l)) '$delete t)
   (setq x (specrepcheck x)
 	l (cons (delsimp (car l)) (copy-list (cdr l))))
@@ -982,11 +1035,11 @@
   (setq e (cond (($listp e) e)
 		((or $inflag (not ($ratp e))) (specrepcheck e))
 		(t ($ratdisrep e))))
-  (cond ((symbolp e) (merror "`length' called on atomic symbol ~:M" e))
+  (cond ((symbolp e) (merror (intl:gettext "length: argument cannot be a symbol; found ~:M") e))
 	((or (numberp e) (eq (caar e) 'bigfloat))
 	 (if (and (not $inflag) (mnegp e))
 	     1
-	     (merror "`length' called on number ~:M" e)))
+	     (merror (intl:gettext "length: argument cannot be a number; found ~:M") e)))
 	((or $inflag (not (member (caar e) '(mtimes mexpt) :test #'eq))) (length (margs e)))
 	((eq (caar e) 'mexpt)
 	 (if (and (alike1 (caddr e) '((rat simp) 1 2)) $sqrtdispflag) 1 2))

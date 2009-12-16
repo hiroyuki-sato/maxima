@@ -114,7 +114,7 @@ eigenvectors(mat):=
 		unknowns:endcons(concat(notknwn,index1),unknowns),
 		vectr:columnvector(unknowns),matrx:mat.vectr,
 		nondiagonalizable:false,
-		listall:[eigvals],realonly:false,algebraic:true,
+		eigvecs:[],realonly:false,algebraic:true,
 		for index1 thru count do 
 		(count:mi(count-part(multiplicities,index1)+1),
 		mmatrx:matrx-part(eigvals,1,index1)*vectr,
@@ -132,8 +132,8 @@ eigenvectors(mat):=
 		(print(" "),print("algsys failure: the eigenvector(s) for the",
 		index1,"th eigenvalue will be missing.")),
 		if hermitianmatrix and %rnum>1 then unit:gramschmidt(unit),
-		listall:append(listall,unit)),
-		return(listall)))$
+		eigvecs:append(eigvecs,[unit])),
+		return([eigvals, eigvecs])))$
 
 
 /* the first arg is of the form [r1,r2,r3].
@@ -146,18 +146,21 @@ substvectk(l,n,exp):=(mode_declare(l,list,n,fixnum,exp,any),
                 sublis(sub_list,exp)))$
 
 
-uniteigenvectors(mat):=
-		block([listuevec,listall,index1,unit],
-                mode_declare([listuevec,listall],list,index1,fixnum,unit,any),
-		if knowneigvects then listuevec:listeigvects
-		else listuevec:eigenvectors(mat),
-		if listuevec=[] then return(listuevec)
-		else (listall:[part(listuevec,1)],
-		for index1:2 thru length(listuevec) do 
-		(unit:part(listuevec,index1),
-		unit:ratsimp(unitvector(unit)),
-		listall:endcons(unit,listall)),
-		return(listall)))$
+uniteigenvectors (M):= block ([uv],
+    mode_declare (uv, list, [i, j], fixnum),
+
+    if knowneigvects
+        then uv : copy (listeigvects)
+        else uv : copy (eigenvectors (M)),
+
+    if uv = []
+        then []
+        else
+           (for i thru length (uv[2])
+                do for j thru length (uv[2][i])
+                    /* modification in-place (OK due to copy above) */
+                    do uv[2][i][j] : ratsimp (unitvector (uv[2][i][j])),
+            uv));
 
 
 similaritytransform(mat):=
@@ -165,7 +168,7 @@ similaritytransform(mat):=
                 mode_declare([listvec,listuevec],list),
 		listuevec:uniteigenvectors(mat),
 		if nondiagonalizable then return(listuevec)
-		else (listvec:delete(part(listuevec,1),listuevec),
+		else (listvec: apply (append, listuevec[2]),
 		rightmatrix:transpose(apply('matrix,listvec)),
 		if hermitianmatrix then
 		leftmatrix:conjugate(transpose(rightmatrix))

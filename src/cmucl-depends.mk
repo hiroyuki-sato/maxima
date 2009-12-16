@@ -1,6 +1,7 @@
 binary-cmucl/maxima.core : maxima-package.lisp
 binary-cmucl/maxima.core : autoconf-variables.lisp
 binary-cmucl/maxima.core : nregex.lisp
+binary-cmucl/maxima.core : intl.lisp
 binary-cmucl/maxima.core : cl-info.lisp
 binary-cmucl/maxima.core : sloop.lisp
 binary-cmucl/maxima.core : lmdcls.lisp
@@ -10,6 +11,7 @@ binary-cmucl/maxima.core : clmacs.lisp
 binary-cmucl/maxima.core : commac.lisp
 binary-cmucl/maxima.core : mormac.lisp
 binary-cmucl/maxima.core : compat.lisp
+binary-cmucl/maxima.core : getopt.lisp
 binary-cmucl/maxima.core : command-line.lisp
 binary-cmucl/maxima.core : defopt.lisp
 binary-cmucl/maxima.core : defcal.lisp
@@ -169,6 +171,7 @@ binary-cmucl/maxima.core : csimp2.lisp
 binary-cmucl/maxima.core : zero.lisp
 binary-cmucl/maxima.core : logarc.lisp
 binary-cmucl/maxima.core : rpart.lisp
+binary-cmucl/maxima.core : numeric.lisp
 binary-cmucl/maxima.core : server.lisp
 binary-cmucl/maxima.core : macsys.lisp
 binary-cmucl/maxima.core : mload.lisp
@@ -214,6 +217,7 @@ binary-cmucl/maxima.core : trgred.lisp
 binary-cmucl/maxima.core : bessel.lisp
 binary-cmucl/maxima.core : ellipt.lisp
 binary-cmucl/maxima.core : airy.lisp
+binary-cmucl/maxima.core : plasma.lisp
 binary-cmucl/maxima.core : intpol.lisp
 binary-cmucl/maxima.core : nparse.lisp
 binary-cmucl/maxima.core : displa.lisp
@@ -236,6 +240,7 @@ binary-cmucl/maxima.core : defint.lisp
 binary-cmucl/maxima.core : residu.lisp
 binary-cmucl/maxima.core : specfn.lisp
 binary-cmucl/maxima.core : mat.lisp
+binary-cmucl/maxima.core : linnew.lisp
 binary-cmucl/maxima.core : matrix.lisp
 binary-cmucl/maxima.core : sprdet.lisp
 binary-cmucl/maxima.core : newinv.lisp
@@ -285,8 +290,8 @@ binary-cmucl/maxima.core : hyp.lisp
 binary-cmucl/maxima.core : todd-coxeter.lisp
 binary-cmucl/maxima.core : mactex.lisp
 binary-cmucl/maxima.core : plot.lisp
-binary-cmucl/maxima.core : gnuplot.lisp
-binary-cmucl/maxima.core : openmath.lisp
+binary-cmucl/maxima.core : gnuplot_def.lisp
+binary-cmucl/maxima.core : xmaxima_def.lisp
 binary-cmucl/maxima.core : autol.lisp
 binary-cmucl/maxima.core : max_ext.lisp
 binary-cmucl/maxima.core : init-cl.lisp

@@ -63,14 +63,24 @@
 (defprop mrat mrateval mfexpr*)
 
 (defmfun $ratnumer (x)
-  (setq x (taychk2rat x)) (cons (car x) (cons (cadr x) 1)))
+  (cond ((mbagp x)
+         (cons (car x) (mapcar '$ratnumer (cdr x))))
+        (t
+         (setq x (taychk2rat x))
+         (cons (car x) (cons (cadr x) 1)))))
 
 (defmfun $ratdenom (x)
-  (setq x (taychk2rat x)) (cons (car x) (cons (cddr x) 1)))
+  (cond ((mbagp x)
+         (cons (car x) (mapcar '$ratdenom (cdr x))))
+        (t
+         (setq x (taychk2rat x))
+         (cons (car x) (cons (cddr x) 1)))))
 
 (defun taychk2rat (x)
-  (cond ((and ($ratp x) (member 'trunc (cdar x) :test #'eq)) ($taytorat x)) (t (ratf x))))
-
+  (cond ((and ($ratp x)
+              (member 'trunc (cdar x) :test #'eq))
+         ($taytorat x))
+        (t ($rat x))))
 
 (defmvar tellratlist nil)
 
@@ -141,6 +151,9 @@
 
 (defun fullratsimp (l)
   (let (($expop 0) ($expon 0) (inratsimp t) $ratsimpexpons)
+    (when (not ($ratp l))
+      ;; Not a mrat expression. Remove the special representation.
+      (setq l (specrepcheck l)))
     (setq l ($totaldisrep l))
     (fr1 l varlist)))
 
@@ -891,7 +904,7 @@
 
 (defun prepfloat (f)
   (cond (modulus (merror "Floating point meaningless unless `modulus' = `false'"))
-	($ratprint (mtell "~&`rat' replaced ~A by" f)))
+	($ratprint (mtell "~&rat: replaced ~A by" f)))
   (setq f (maxima-rationalize f))
   (when $ratprint
     (mtell " ~A/~A = ~A~%"  (car f) (cdr f) (fpcofrat1 (car f) (cdr f))))
@@ -965,12 +978,17 @@
 (defmvar $ratdenomdivide t)
 
 (defmfun $ratdisrep (x)
-  (cond ((not ($ratp x)) x)
-	(t (setq x (ratdisrepd x))
-	   (if (and (not (atom x))
-		    (member 'trunc (cdar x) :test #'eq))
-	       (cons (delete 'trunc (copy-list (car x)) :count 1 :test #'eq) (cdr x))
-	       x))))
+  (cond ((mbagp x)
+         ;; Distribute over lists, equations, and matrices.
+         (cons (car x) (mapcar #'$ratdisrep (cdr x))))
+        ((not ($ratp x)) x)
+        (t
+         (setq x (ratdisrepd x))
+         (if (and (not (atom x))
+                  (member 'trunc (cdar x) :test #'eq))
+           (cons (delete 'trunc (copy-list (car x)) :count 1 :test #'eq)
+                 (cdr x))
+           x))))
 
 ;; RATDISREPD is needed by DISPLA. - JPG
 (defun ratdisrepd (x)

@@ -315,7 +315,7 @@
 (defun texnumformat(atom)
   (let (r firstpart exponent)
     (cond ((integerp atom)
-	   atom)
+	   (coerce (exploden atom) 'string))
 	  (t
 	   (setq r (exploden atom))
 	   (setq exponent (member 'e r :test #'string-equal)) ;; is it ddd.ddde+EE
@@ -657,8 +657,11 @@
   (let ((op (cond ((eq (caar x) '%lsum) "\\sum_{")
 		  ;; extend here
 		  ))
-	;; gotta be one of those above 
-	(s1 (tex (cadr x) nil nil 'mparen rop))	;; summand
+	;; gotta be one of those above
+	;; 4th arg of tex is changed from mparen to (caar x)
+	;; to reflect the operator preceedance correctly.
+	;; This change improves the how to put paren.
+	(s1 (tex (cadr x) nil nil (caar x) rop))	;; summand
 	(index ;; "index = lowerlimit"
 	 (tex `((min simp) , (caddr x), (cadddr x))  nil nil 'mparen 'mparen)))
     (append l `( ,op ,@index "}}{" ,@s1 "}") r)))
@@ -669,7 +672,10 @@
 		  ;; extend here
 		  ))
 	;; gotta be one of those above
-	(s1 (tex (cadr x) nil nil 'mparen rop))	;; summand
+	;; 4th arg of tex is changed from mparen to (caar x)
+	;; to reflect the operator preceedance correctly.
+	;; This change improves the how to put paren.
+	(s1 (tex (cadr x) nil nil (caar x) rop))	;; summand
 	(index ;; "index = lowerlimit"
 	 (tex `((mequal simp) ,(caddr x),(cadddr x)) nil nil 'mparen 'mparen))
 	(toplim (tex (car(cddddr x)) nil nil 'mparen 'mparen)))
@@ -1027,6 +1033,30 @@
     (format st "\\end~%"))
   '$done)
 
+;; Construct a Lisp function and attach it to the TEX property of
+;; operator OP. The constructed function calls a Maxima function F
+;; to generate TeX output for OP.
+;; F must take 1 argument (an expression which has operator OP)
+;; and must return a string (the TeX output).
+
+(defun make-maxima-tex-glue (op f)
+  (let
+    ((glue-f (gensym))
+     (f-body `(append l
+                      (list
+                        (let ((f-x (mfuncall ',f x)))
+                          (if (stringp f-x) f-x
+                            (merror (intl:gettext "tex: function ~s did not return a string.~%") ($sconcat ',f)))))
+                      r)))
+    (setf (symbol-function glue-f) (coerce `(lambda (x l r) ,f-body) 'function))
+    (setf (get op 'tex) glue-f))
+  f)
+
+;; Convenience function to allow user to process expression X
+;; and get a string (TeX output for X) in return.
+
+(defun $tex1 (x) (apply #'strcat (tex x nil nil 'mparen 'mparen)))
+
 ;; Undone and trickier:
 ;; handle reserved symbols stuff, just in case someone
 ;; has a macsyma variable named (yuck!!) \over  or has a name with
@@ -1044,16 +1074,24 @@
     ((stringp e)
      (setq e ($verbify e)))
     ((not (symbolp e))
-     (merror "texput: first argument must be a string or a symbol.")))
+     (merror (intl:gettext "texput: first argument must be a string or a symbol; found: ~M") e)))
 
   (setq s (if ($listp s) (margs s) (list s)))
   
-  (cond ((null tx)
-	 (putprop e (nth 0 s) 'texword))
+  (cond
+    ((null tx)
+     ;; texput was called as texput(op, foo) where foo is a string
+     ;; or a symbol; when foo is a string, assign TEXWORD property,
+     ;; when foo is a symbol, construct glue function to call
+     ;; the Maxima function named by foo.
+     (let ((s0 (nth 0 s)))
+       (if (stringp s0)
+         (putprop e s0 'texword)
+         (make-maxima-tex-glue e s0)))) ;; assigns TEX property
 	((eq tx '$matchfix)
 	 (putprop e 'tex-matchfix 'tex)
 	 (cond ((< (length s) 2)
-		(merror "Improper 2nd argument to `texput' for matchfix operator."))
+		(merror (intl:gettext "texput: expected a list of two items for matchfix operator.")))
 	       ((= (length s) 2)
 		(putprop e (list (list (first s)) (second s)) 'texsym))
 	       (t

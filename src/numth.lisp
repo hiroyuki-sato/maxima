@@ -23,7 +23,7 @@
 ;;; Sum of divisors and Totient functions
 
 (defmfun $divsum (n &optional (k 1))
-  (let (($intfaclim nil)) 
+  (let (($intfaclim nil))
     (if (and (integerp k) (integerp n))
 	(let ((n (abs n)))
 	  (cond ((= n 1) 1)
@@ -67,11 +67,6 @@
 
 (defvar *incl* (let ((l (list 2 4))) (nconc l l)))
 
-(defun rtzerl2 (n)
-  (cond ((zerop n) 0)
-	(t (do ((n n (ash n -2)))
-	       ((not (zerop (haipart n -2))) n)))))
-
 (defun imodp (p)
   (cond ((not (= (rem p 4) 1)) nil)
 	((= (rem p 8) 5) (imodp1 2 p))
@@ -83,36 +78,11 @@
 (defun imodp1 (i modulus)
   (abs (cexpt i (ash (1- modulus) -2) )))
 
-(defmfun $jacobi (p q)
-  (cond ((null (and (integerp p) (integerp q)))
-	 (list '($jacobi) p q))
-	((zerop q) (merror "Zero denominator?"))
-	((minusp q) ($jacobi p (- q)))
-	((and (evenp (setq q (rtzerl2 q)))
-	      (setq q (ash q -1))
-	      (evenp p)) 0)
-	((equal q 1) 1)
-	((minusp (setq p (rem p q)))
-	 (jacobi (rtzerl2 (+ p q)) q))
-	(t (jacobi (rtzerl2 p) q))))
-
-(defun jacobi (p q)
-  (do ((r1 p (rtzerl2 (rem r2 r1)))
-       (r2 q r1)
-       (bit2 (haipart q -2))
-       (odd 0 (boole boole-xor odd (boole boole-and bit2 (setq bit2 (haipart r1 -2))))))
-      ((zerop r1) 0)
-    (cond ((evenp r1)
-	   (setq r1 (ash r1 -1))
-	   (setq odd (boole boole-xor odd (ash (expt (haipart r2 -4) 2) -2)))))
-    (and (equal r1 1) (return (expt -1 (boole  boole-and 1 (ash odd -1)))))))
-
 (defun psumsq (p)
-  ((lambda (x)
-     (cond ((equal p 2) (list 1 1))
-	   ((null x) nil)
-	   (t (psumsq1 p x))))
-   (imodp p)))
+  (let ((x (imodp p)))
+    (cond ((equal p 2) (list 1 1))
+	  ((null x) nil)
+	  (t (psumsq1 p x)))))
 
 (defun psumsq1 (p x)
   (do ((sp ($isqrt p))
@@ -149,8 +119,8 @@
 	   (if (equal rp 0)
 	       ip
 	       (list '(mplus) rp ip))))))
-	
-(defun gcfactor (a b &aux tem) 
+
+(defun gcfactor (a b &aux tem)
   (prog (gl cd dc econt p e1 e2 ans plis nl $intfaclim )
      (setq e1 0
 	   e2 0
@@ -198,12 +168,12 @@
      (and (not (zerop e2))
 	  (setq ans (cons (reverse cd) (cons e2 ans)))
 	  (setq e2 0))
-     (go loop) 
+     (go loop)
      ret    (setq cd (gcexpt (list 0 -1)
 			     (rem econt 4)))
      (setq a (gctimes a b (car cd) (cadr cd)))
      ;;a hasn't been divided by p yet..
-     (setq a (mapcar 'signum a)) 
+     (setq a (mapcar 'signum a))
      #+cl (assert (or (zerop (car a))(zerop (second a))))
      (cond ((or (equal (car a) -1) (equal (cadr a) -1))
 	    (setq plis (cons -1 (cons 1 plis)))))

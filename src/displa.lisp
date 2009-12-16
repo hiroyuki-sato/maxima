@@ -267,7 +267,7 @@
 		     (dimension dummy result lop 'mfunction nil 0))))
      (cond ((not (checkfit (setq width (+ w width))))
 	    (return (dimension-function (cons '(subscript) (cons dummy (cdr x))) result)))
-	   ((char= #\) (car bas))
+	   ((and (atom (car bas)) (char= #\ (car bas))) ; Adding the test (atom (car bas))
 	    (setq result (cons (cons 0 (cons (- h) sub)) bas) depth (max (+ h d) depth)))
 	   (t (setq result (cons (cons 0 (cons (- (+ depth h)) sub)) bas)
 		    depth (+ h d depth))))
@@ -1163,7 +1163,7 @@
 	 (do ((l (cdr form) (cdr l)))
 	     ((null l))
 	   (cond ((atom l)
-		  (merror "~S has an atomic cdr - `display'" form))
+		  (merror (intl:gettext "display: not a well-formed Maxima expression: ~S") form))
 		 ((setq form (checkrat (car l)))
 		  (return form)))))))
 
@@ -1174,13 +1174,14 @@
   (cond ((not break))
 	((> (- (setq w (+ w break)) bkptout) linel)
 	 (if (or (null bkpt) (eq result bkpt))
-	     (merror "Expression is too wide to be displayed."))
+	     (merror (intl:gettext "display: failed to break up a long expression.~%display: change 'linel' slightly and try again.")))
 	 (do ((l result (cdr l)))
 	     ;; THE NEED FOR EQUAL HERE IS PROBABLY THE SYMPTOM OF A BUG IN ECL !!
 	     ;; PROBABLY RELATED TO SIDE-EFFECTS OF NRECONC, RPLACD, ETC !!
 	     ((#+ecl equal #-ecl eq bkpt (cdr l)) (rplacd l nil))
 	   (if (null l)
-	       (merror "`checkbreak' not found in `display'")))
+         ;; MEANING OF FOLLOWING MESSAGE IS OBSCURE.
+         (merror (intl:gettext "display: 'checkbreak' not found."))))
 	 (output bkpt 0)
 	 (let ((#.ttyoff (or #.ttyoff more-^w))))
 	 (setq lines (1+ lines)
@@ -1256,7 +1257,8 @@
     ;; to a WRITEFILE (#.writefilep is on) or the terminal is scrolling or
     ;; something else random, then draw equations line by line.
     ((> (+ bkptht bkptdp) 80.)
-     (merror "Expression is too high to be displayed."))
+     ;; IS IT STILL POSSIBLE TO EVER TRIGGER THE FOLLOWING MESSAGE ??
+     (merror (intl:gettext "display: expression is too tall to be displayed.")))
     ((or (not (and smart-tty $cursordisp))
 	 #.writefilep scrollp (> (+ bkptht bkptdp) (- ttyheight 2)))
      (output-linear (nreverse result) w))

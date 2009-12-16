@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2006/12/21 03:42:11 
-;;; Using Lisp CMU Common Lisp CVS Head 2006-12-02 00:15:46 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -14,23 +22,24 @@
            (type (double-float 1.0 1.0) one)
            (type (double-float 2.0 2.0) two)
            (type (double-float 0.5 0.5) half)
-           (type (double-float 8.0 8.0) eight))
-  (let ((locu12
-         (make-array 4
-                     :element-type 'f2cl-lib:integer4
-                     :initial-contents '(3 4 1 2)))
-        (locl21
-         (make-array 4
-                     :element-type 'f2cl-lib:integer4
-                     :initial-contents '(2 1 4 3)))
+           (type (double-float 8.0 8.0) eight)
+           (ignorable zero one two half eight))
+  (let ((bswpiv
+         (make-array 4 :element-type 't :initial-contents '(nil t nil t)))
+        (xswpiv
+         (make-array 4 :element-type 't :initial-contents '(nil nil t t)))
         (locu22
          (make-array 4
                      :element-type 'f2cl-lib:integer4
                      :initial-contents '(4 3 2 1)))
-        (xswpiv
-         (make-array 4 :element-type 't :initial-contents '(nil nil t t)))
-        (bswpiv
-         (make-array 4 :element-type 't :initial-contents '(nil t nil t))))
+        (locl21
+         (make-array 4
+                     :element-type 'f2cl-lib:integer4
+                     :initial-contents '(2 1 4 3)))
+        (locu12
+         (make-array 4
+                     :element-type 'f2cl-lib:integer4
+                     :initial-contents '(3 4 1 2))))
     (declare (type (array f2cl-lib:logical (4)) bswpiv xswpiv)
              (type (array f2cl-lib:integer4 (4)) locu22 locl21 locu12))
     (defun dlasy2

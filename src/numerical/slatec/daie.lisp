@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
-;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
@@ -148,18 +156,17 @@
                                        -1.3445743301455338e-31
                                        3.475709645266011e-32)))
       (first$ nil))
-  (declare (type f2cl-lib:logical first$)
-           (type (simple-array double-float (37)) aip2cs)
+  (declare (type (integer) naif naig naip1 naip2)
+           (type (double-float) x3sml x32sml xbig)
+           (type (simple-array double-float (13)) aifcs aigcs)
            (type (simple-array double-float (57)) aip1cs)
-           (type (simple-array double-float (13)) aigcs aifcs)
-           (type (double-float) xbig x32sml x3sml)
-           (type (integer) naip2 naip1 naig naif))
+           (type (simple-array double-float (37)) aip2cs)
+           (type f2cl-lib:logical first$))
   (setq first$ f2cl-lib:%true%)
   (defun daie (x)
     (declare (type (double-float) x))
-    (prog ((sqrtx 0.0) (theta 0.0) (xm 0.0) (z 0.0) (daie 0.0) (sqrt$ 0.0f0)
-           (eta 0.0f0))
-      (declare (type (single-float) eta sqrt$)
+    (prog ((sqrtx 0.0) (theta 0.0) (xm 0.0) (z 0.0) (daie 0.0) (eta 0.0f0))
+      (declare (type (single-float) eta)
                (type (double-float) daie z xm theta sqrtx))
       (cond
         (first$

@@ -24,8 +24,8 @@
 
 (macsyma-module itensor) ;; added 9/24/82 at UCB
 
-;(cond (($get '$itensor '$version) (merror "ITENSOR already loaded"))
-;      (t ($put '$itensor '$v20041126 '$version)))
+(cond (($get '$itensor '$version) (merror "ITENSOR already loaded"))
+      (t ($put '$itensor '$v20081223 '$version)))
 
 ;    Various functions in Itensor have been parceled out to separate files. A
 ;    function in one of these files will only be loaded in (automatically) if
@@ -424,20 +424,20 @@
           '(mplus)
           (cons
             (idiff e x)
-              (cond
-                (
-                  (or (cdadr e) (cdddr e))
-                  (cons (list '(mtimes) -1.  (cons '(mplus)
-                    (nconc
-                      (mapcar 
-                        #'(lambda (v) 
-                          (list '(mtimes)
-                              (list
-                                (diffop)
-                                (list smlist v x)
-                                (list smlist d)
-                              )
-                              (covsubst d v e)
+            (cond
+              (
+                (or (cdadr e) (cdddr e))
+                (cons (list '(mtimes) -1.  (cons '(mplus)
+                      (nconc
+                        (mapcar 
+                          #'(lambda (v) 
+                            (list '(mtimes)
+                                (list
+                                  (diffop)
+                                  (list smlist v x)
+                                  (list smlist d)
+                                )
+                                (covsubst d v e)
                             )
                           )
                           (cdadr e)
@@ -749,7 +749,7 @@
        (cond ((equal n 0) (merror "LORENTZ_GAUGE requires at least one argument"))
 	     ((equal n 1) (lorentz (arg 1) nil))
 	     (t (lorentz (arg 1)
-			 ((lambda (l) (cond ((sloop for v in  l
+			 ((lambda (l) (cond ((loop for v in  l
 						     always (symbolp v)) l)
 					    (t (merror
 "Invalid tensor name(s) in argument to LORENTZ_GAUGE"))))
@@ -1195,7 +1195,7 @@
     )
 
     ;If g has derivative indices then F must be constant in order to contract it
-    (and e (not (mget (caar f) '$constant)) (return nil))
+    (and e (not (kindp (caar f) '$constant)) (return nil))
 
     ;Contraction property of f is a list of (a.b)'s
     (cond
@@ -1319,7 +1319,8 @@
         (member (car cf) christoffels1)
         (cond
           (
-            (and (eq (length a) 2) (eq (length b) 1))
+            ;;(and (eq (length a) 2) (eq (length b) 1))
+            (and (eq (+ (length (plusi a)) (length (minusi b))) 2) (eq (+ (length (plusi b)) (length (minusi a))) 1))
             (setq cf
               (cons
                 (elt christoffels2 (position (car cf) christoffels1))
@@ -1328,7 +1329,8 @@
             )
           )
           (
-            (not (and (eq (length a) 3) (eq (length b) 0)))
+            ;; (not (and (eq (length a) 3) (eq (length b) 0)))
+            (not (and (eq (+ (length (plusi a)) (length (minusi b))) 3) (eq (+ (length (plusi b)) (length (minusi a))) 0)))
             (return nil)
           )
         )
@@ -1337,7 +1339,8 @@
         (member (car cf) christoffels2)
         (cond
           (
-            (and (eq (length a) 3) (eq (length b) 0))
+            ;;(and (eq (length a) 3) (eq (length b) 0))
+            (and (eq (+ (length (plusi a)) (length (minusi b))) 3) (eq (+ (length (plusi b)) (length (minusi a))) 0))
             (setq cf
               (cons
                 (elt christoffels1 (position (car cf) christoffels2))
@@ -1346,7 +1349,8 @@
             )
           )
           (
-            (not (and (eq (length a) 2) (eq (length b) 1)))
+            ;;(not (and (eq (length a) 2) (eq (length b) 1)))
+            (not (and (eq (+ (length (plusi a)) (length (minusi b))) 2) (eq (+ (length (plusi b)) (length (minusi a))) 1)))
             (return nil)
           )
         )
@@ -1558,7 +1562,7 @@
 	     ((and (alike1 e x) (not (and (rpobj e) (rpobj x)))) 1.)
 	     ((or (atom e) (member 'array (cdar e) :test #'eq))
 	      (chainrule1 e x))
-	     ((mget (caar e) '$constant) 0.)                    ;New line added
+	     ((kindp (caar e) '$constant) 0.)                    ;New line added
 	     ((eq (caar e) 'mrat) (ratdx e x))
 	     ((eq (caar e) 'mplus)
 	      (simplus (cons '(mplus) (sdiffmap (cdr e) x))
@@ -2188,7 +2192,9 @@
     (list (if (pzerop u) 0 (mul2 u (maxima-substitute (cadddr e) y (car e))))
       (if (pzerop v) 0 (mul3 v (maxima-substitute (caddr e) y (car e)) -1)))))
 
-(defun idiff%deriv (e) (let (derivflag) (simplifya (cons '(%idiff) e) t)))
+(defun idiff%deriv (e)
+  (declare (special derivflag))
+  (let (derivflag) (simplifya (cons '(%idiff) e) t)))
 
 (defun ideriv (e)
   (prog (exp z count)
@@ -2288,7 +2294,7 @@
 ;;	      (ichainrule e x))
 ;;        (idiff%deriv (list e x 1)))
           0)
-	     ((mget (caar e) '$constant) 0.)                    ;New line added
+	     ((kindp (caar e) '$constant) 0.)                    ;New line added
 	     ((eq (caar e) 'mrat) (ratdx e x))
 	     ((eq (caar e) 'mplus)
 	      (simplus (cons '(mplus) (idiffmap (cdr e) x))
@@ -2563,7 +2569,7 @@
        (prog (l)          ;objects by zero if they have no derivative indices.
 	     (cond ((< n 2) (merror "FLUSH takes at least 2 arguments"))
 		   ((not
-		      (sloop for v in (setq l (listify (f- 1 n)))
+		      (loop for v in (setq l (listify (f- 1 n)))
 			     always (symbolp v)))
 ;		      (apply 'and (mapcar 'symbolp
 ;					    (setq l (listify (f- 1 n))) ))
@@ -2574,7 +2580,7 @@ indexed objects")) (t (return (flush (arg 1) l t))))))
        (prog (l)          ;objects by zero if they have any derivative indices.
 	     (cond ((< n 2) (merror "FLUSH takes at least 2 arguments"))
 		   ((not
-		      (sloop for v in (setq l (listify (f- 1 n)))
+		      (loop for v in (setq l (listify (f- 1 n)))
 			     always (symbolp v))
 ;		      (apply 'and (mapcar 'symbolp
 ;					     (setq l (listify (f- 1 n)))))
@@ -2837,7 +2843,7 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 (defun checkindex (e f)
   (cond ((and (atom e) (not (eq e f))) e)
 	((and (eq (caar e) 'mlist)
-	      (sloop for v in (cdr e) always (atom v))
+	      (loop for v in (cdr e) always (atom v))
 ;	      (apply 'and (mapcar 'atom (cdr e)))
 	      (not (member f e :test #'eq))) e)
 	(t (merror "Indices must be atoms different from the tensor name"))))
