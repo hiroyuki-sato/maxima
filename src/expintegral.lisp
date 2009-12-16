@@ -16,6 +16,8 @@
 ;;;  $expintegral_shi (z) - Exponential Integral Shi(z)
 ;;;  $expintegral_chi (z) - Exponential Integral Chi(z)
 ;;;
+;;;  $expint (x)          - Exponential Integral E1(x) (depreciated)
+;;;
 ;;;  Global variables for the Maxima User:
 ;;;
 ;;;  $expintrep    - Change the representation of the Exponential Integral to
@@ -33,10 +35,6 @@
 ;;;    The numerical support is fully implemented for the E[n](z) function.
 ;;;    All other functions call E[n](z) for numerical evaluation.
 ;;;
-;;;    Because we have no support for a Gamma function with complex Bigfloat
-;;;    arguments, the numerical evaluation for complex parameters n is not
-;;;    implemented for Complex Bigfloats.
-;;;
 ;;; 2. For a negative integer parameter E[n](z) is automatically expanded in
 ;;;    a finite series in terms of powers and the Exponential function.
 ;;; 
@@ -50,6 +48,11 @@
 ;;;
 ;;; 5. Change the representation of every Exponential Integral through other
 ;;;    Exponential Integrals or the Incomplete Gamma function.
+;;;
+;;; 6. Mirror symmetry for all functions and reflection symmetry for
+;;;    the Exponential Inegral Si and Shi are implemented.
+;;;
+;;; 7. Handling of taylor expansions as argument.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; This library is free software; you can redistribute it and/or modify it
@@ -112,6 +115,11 @@
                        $expintegral_trig $expintegral_hyp %gamma_incomplete)
   "Allowed flags to transform the Exponential Integral.")
 
+(defun simp-domain-error (&rest args)
+  (if errorsw
+      (throw 'errorsw t)
+    (apply #'merror args)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Part 1: The implementation of the Exponential Integral En
@@ -119,7 +127,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_e (v z)
-  (simplify (list '(%expintegral_e) (resimplify v) (resimplify z))))
+  (simplify (list '(%expintegral_e) v z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -133,15 +141,37 @@
 
 (defprop %expintegral_e simp-expintegral-e operators)
 
+;;; Exponential Integral E distributes over bags
+
+(defprop %expintegral_e (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral E has mirror symmetry, 
+;;; but not on the real negative axis.
+
+(defprop %expintegral_e conjugate-expintegral-e conjugate-function)
+
+(defun conjugate-expintegral-e (args)
+  (let ((n (first args))
+        (z (second args)))
+    (cond ((off-negative-real-axisp z)
+           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           (simplify (list '(%expintegral_e)
+                           (simplify (list '($conjugate) n))
+                           (simplify (list '($conjugate) z)))))
+          (t
+            ;; On the negative real axis or no information. Unsimplified.
+            (list '($conjugate simp)
+                  (simplify (list '(%expintegral_e) n z)))))))
+
 ;;; Differentiation of Exponential Integral E
 
 (defprop %expintegral_e 
   ((n z)
     ;; The derivative wrt the parameter n is expressed in terms of the
-    ;; Generalized Hypergeometric function 2F2 (see functions.wolfram.com)
+    ;; Regularized Hypergeometric function 2F2 (see functions.wolfram.com)
     ((mplus)
        ((mtimes) -1
-          (($gen_hypergeometric)
+          (($hypergeometric_regularized)
              ((mlist) 
                ((mplus) 1 ((mtimes) -1 n))
                ((mplus) 1 ((mtimes) -1 n)))
@@ -165,260 +195,256 @@
    ((mtimes) -1 ((%expintegral_e) ((mplus) -1 n) z)))
   grad)
 
+;;; Integral of Exponential Integral E
+
+(defprop %expintegral_e
+  ((n z)
+   nil
+   ((mtimes) -1 ((%expintegral_e) ((mplus) 1 n) z)))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-e (exp ignored z)
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
+
+(defprop %expintegral_e simplim%expintegral_e simplim%function)
+
+(defun simplim%expintegral_e (expr var val)
+  ;; Look for the limit of the arguments.
+  (let ((a (limit (cadr expr) var val 'think))
+        (z (limit (caddr expr) var val 'think)))
+  (cond ((and (onep1 a)
+              (or (eq z '$zeroa)
+                  (eq z '$zerob)
+                  (zerop1 z)))
+         ;; Special case order a=1
+         '$inf)
+         
+        ((member ($sign (add ($realpart a) -1)) '($neg $nz $zero))
+         ; realpart of order < 1
+         (cond ((eq z '$zeroa)
+                ;; from above, always inf
+                '$inf)
+               ((eq z '$zerob)
+                ;; this can be further improved to give a directed infinity
+                '$infinity)
+               ((zerop1 z)
+                ;; no direction, return infinity
+                '$infinity)
+               (t
+                ($expintegral_e a z))))
+        (t
+         ;; All other cases are handled by the simplifier of the function.
+         ($expintegral_e a z)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral-e (expr ignored z)
   (declare (ignore ignored))
-  (twoargcheck exp)
-  (let ((order (simpcheck (cadr exp) z))
-        (arg   (simpcheck (caddr exp) z))
+  (twoargcheck expr)
+  (let ((order (simpcheck (cadr expr) z))
+        (arg   (simpcheck (caddr expr) z))
         (ratorder))
-
-    (when *debug-expintegral* 
-      (format t "~&SIMP-EXPINTEGRAL-E:~%")
-      (format t "~&   : order = ~A~%" order)
-      (format t "~&   : arg   = ~A~%" arg))
-
     (cond
-
+      ;; Check for special values
+      ((or (eq arg '$inf)
+           (alike1 arg '((mtimes) -1 $minf)))
+       ;; arg is inf or -minf, return zero
+       0)
+      
       ((zerop1 arg)
        (let ((sgn ($sign (add ($realpart order) -1))))
          (cond 
            ((eq sgn '$pos)
             ;; we handle the special case E[v](0) = 1/(v-1), for realpart(v)>1
             (inv (add order -1)))
-           ((member sgn '($neg $zero))
-            (merror "expintegral_e(~:M,~:M) is undefined." order arg))
-           (t (eqtest (list '(%expintegral_e) order arg) exp)))))
-
-      ((or (and (symbolp order) (member order infinities :test #'eq))
-           (and (symbolp arg) (member arg infinities :test #'eq)))
-       ;; order or arg is one of the infinities, we return a noun form.
-       (eqtest (list '(%expintegral_e) order arg) exp))
-
+           ((member sgn '($neg $nz $zero))
+            (simp-domain-error 
+              (intl:gettext 
+                "expintegral_e: expintegral_e(~:M,~:M) is undefined.")
+                order arg))
+           (t (eqtest (list '(%expintegral_e) order arg) expr)))))
+      
+      ((or (and (symbolp order) (member order infinities))
+           (and (symbolp arg) (member arg infinities)))
+       ;; order or arg is one of the infinities, we return a noun form,
+       ;; but we have already handled the special value inf for arg.
+       (eqtest (list '(%expintegral_e) order arg) expr))
+      
       ((and (numberp order) (integerp order))
        ;; The parameter of the Exponential integral is an integer. For this 
        ;; case we can do further simplifications or numerical evaluation.
        (cond
-         ((and (= order 0)
-               (not (or (and (numberp arg) (= arg 0))
-                        (and ($bfloatp arg) (equal arg bigfloatzero)))))
+         ((= order 0)
           ;; Special case E[0](z) = %e^(-z)/z, z<>0
+          ;; The case z=0 is already handled.
           (div (power '$%e (mul -1 arg)) arg))
-
-         ((and (= order 0)
-               (or (and (numberp arg) (= arg 0))
-                   (and ($bfloatp arg) (equal arg bigfloatzero))))
-          ;; The remaining cases for E[0](0), give domain-error
-          (domain-error 0.0 '%expintegral_e))
-
-         ((and (= order -1)
-               (not (or (and (numberp arg) (= arg 0))
-                        (and ($bfloatp arg) (equal arg bigfloatzero)))))
+         
+         ((= order -1)
           ;; Special case E[-1](0) = ((z+1)*%e^(-z))/z^2, z<>0
+          ;; The case z=0 is already handled.
           (div (mul (power '$%e (mul -1 arg)) (add arg 1)) (mul arg arg)))
-
-         ((and (< order -1)
-               (not (or (and (numberp arg) (= arg 0))
-                        (and ($bfloatp arg) (equal arg bigfloatzero)))))
+         
+         ((< order -1)
           ;; We expand in a series, z<>0
           (mul
             (factorial (- order))
-            (power arg (add order -1))
+            (power arg (+ order -1))
             (power '$%e (mul -1 arg))
             (let ((index (gensumindex)))
               (dosum 
-                (div (power arg index) `((mfactorial) ,index)) 
-                index 0 (mul -1 order) t))))
-        
-         ((and (> order 0) (complex-float-numerical-eval-p arg))
-          ;; Numerical evaluation for double float real or complex arg.
-          ;; Order is an positive integer.
-          (when *debug-expintegral*
-            (format t "~&Float evaluation for arg = ~A~%" arg))
-          (cond
-            ((and (< order 2) (numberp arg) (= arg 0))
-             (domain-error arg 'expintegral_e))
-            (t
-             ;; order is an integer > 0 and arg <> 0 for order < 2
-             (let* ((carg (complex ($float ($realpart arg)) 
-                                   ($float ($imagpart arg)))))
-               (complexify (expintegral-e order carg))))))
-
-         ((and (> order 0) (complex-bigfloat-numerical-eval-p arg))
+                (div (power arg index)
+                     (simplify (list '(mfactorial) index)))
+                index 0 (- order) t))))
+         
+         ((and (> order 0) 
+               (complex-float-numerical-eval-p arg))
+          ;; Numerical evaluation for double float real or complex arg
+          ;; order is an integer > 0 and arg <> 0 for order < 2
+          (let ((carg (complex ($float ($realpart arg)) 
+                               ($float ($imagpart arg)))))
+            (complexify (expintegral-e order carg))))
+         
+         ((and (> order 0) 
+               (complex-bigfloat-numerical-eval-p arg))
           ;; Numerical evaluation for Bigfloat real or complex arg.
-          (when *debug-expintegral*
-            (format t "~&Bigfloat evaluation for arg = ~A~%" arg))
-          (cond
-            ((and (< order 2) ($bfloatp arg) (equal arg bigfloatzero))
-             ;; domain-error doesn't work with a Bigfloat, we pass a number
-             (domain-error 0.0 'expintegral_e))
-            (t
-             (let* (($ratprint nil)
-                    (carg (add ($bfloat ($realpart arg)) 
-                               (mul '$%i ($bfloat ($imagpart arg)))))
-                    (result (bfloat-expintegral-e order carg)))
-               (simplify 
-                    (list '(mplus) 
-                      (simplify (list '(mtimes) '$%i ($imagpart result)))
-                      ($realpart result)))))))
-
+          (let* (($ratprint nil)
+                 (carg (add ($bfloat ($realpart arg)) 
+                            (mul '$%i ($bfloat ($imagpart arg)))))
+                 (result (bfloat-expintegral-e order carg)))
+            (add ($realpart result) (mul '$%i ($imagpart result)))))
+         
          ((and $expintexpand (> order 0))
-          ;; We only expand in terms of the Exponential Integral Ei when
-          ;; the expand flag is set.
-          (when *debug-expintegral*
-            (format t "~&We expand in terms of Ei for n an integer.~%"))
-          (mul
-            (power arg (- order 1))
-            (add
-              (mul
-                (power -1 order)
-                (inv (factorial (- order 1)))
-                (add
-                  (simplify (list '(%expintegral_ei) (mul -1 arg)))
-                  (mul
-                    (inv 2)
-                    (sub
-                      (simplify (list '(%log) (mul -1 (inv arg))))
-                      (simplify (list '(%log) (mul -1 arg)))))
-                  (simplify (list '(%log) arg))))
-              (mul
-                (power '$%e (mul -1 arg))
-                (let ((index (gensumindex)))
-                  (dosum
-                    (div
-                      (power arg index)
-                      (list '($pochhammer) (sub 1 order) (add index order)))
-                    index 0 (mul -1 order) t)))
-              (mul
-               (mul -1 
-                 (power '$%e (mul -1 arg))  
-                 (let ((index (gensumindex)))
-                   (dosum
-                     (div
-                       (power arg index)
-                       (list '($pochhammer) (sub 1 order) (add index order)))
-                     index (sub 1 order) -1 t)))))))
-
+          ;; We only expand in terms of the Exponential Integral Ei
+          ;; if the expand flag is set.
+          (sub
+            (mul -1
+              (power (mul -1 arg) (- order 1))
+              (inv (factorial (- order 1)))
+              (add
+                ($expintegral_ei (mul -1 arg))
+                (mul
+                  '((rat simp) 1 2)
+                  (sub
+                    (simplify (list '(%log) (mul -1 (inv arg))))
+                    (simplify (list '(%log) (mul -1 arg)))))
+                (simplify (list '(%log) arg))))
+            (mul
+              (power '$%e (mul -1 arg))
+              (let ((index (gensumindex)))
+                (dosum
+                  (div
+                    (power arg (add index -1))
+                    (simplify (list '($pochhammer) (- 1 order) index)))
+                  index 1 (- order 1) t)))))
+         
+         ((eq $expintrep '%gamma_incomplete)
+          ;; We transform to the Incomplete Gamma function.
+          (mul (power arg (- order 1))
+               ($gamma_incomplete (- 1 order) arg)))
+         
          (t
-           (eqtest (list '(%expintegral_e) order arg) exp))))
-
+          (eqtest (list '(%expintegral_e) order arg) expr))))
+      
       ((complex-float-numerical-eval-p order arg)
        (cond
-         ((and (numberp arg) (= arg 0) (< ($realpart order) 1))
-          (domain-error arg '%expintegral_e))
-         ((and (eq ($sign ($imagpart order)) '$zero)
-               (numberp ($realpart order))
-               (> ($realpart order) 0)
-               (= (nth-value 1 (truncate ($realpart order))) 0))
+         ((and (setq z (integer-representation-p order))
+               (plusp z))
           ;; We have a pure real positive order and the realpart is a float 
           ;; representation of an integer value.
           ;; We call the routine for an integer order.
-          (when *debug-expintegral*
-            (format t "~&Order is a float representation of an integer.~%"))
-          (let ((order (truncate ($realpart order)))
-                (carg (complex ($float ($realpart arg)) 
+          (let ((carg (complex ($float ($realpart arg)) 
                                ($float ($imagpart arg)))))
-            (complexify (expintegral-e order carg))))
+            (complexify (expintegral-e z carg))))
          (t
           ;; The general case, order and arg are complex or real.
-          (when *debug-expintegral*
-            (format t "~&Order is a number (not an integer).~%"))
           (let ((corder (complex ($float ($realpart order)) 
                                  ($float ($imagpart order))))
                 (carg (complex ($float ($realpart arg)) 
                                ($float ($imagpart arg)))))
             (complexify (frac-expintegral-e corder carg))))))
-
+      
       ((complex-bigfloat-numerical-eval-p order arg)
        (cond
-         ((and (eq ($sign ($imagpart order)) '$zero)
-               (eq ($sign ($realpart order)) '$pos)
-               (eq ($sign (sub ($realpart order)
-                               ($truncate ($realpart order)))) '$zero))
+         ((and (setq z (integer-representation-p order))
+               (plusp z))
           ;; We have a real positive order and the realpart is a Float or 
           ;; Bigfloat representation of an integer value.
           ;; We call the routine for an integer order.
-          (when *debug-expintegral*
-            (format t "~&Order is a Bfloat representation of an integer.~%"))
           (let* (($ratprint nil)
-                 (order ($fix ($realpart order)))
                  (carg (add ($bfloat ($realpart arg)) 
                             (mul '$%i ($bfloat ($imagpart arg)))))
-                 (result (bfloat-expintegral-e order carg)))
-            (simplify 
-              (list '(mplus) 
-                (simplify (list '(mtimes) '$%i ($imagpart result)))
-                ($realpart result)))))
-
+                 (result (bfloat-expintegral-e z carg)))
+            (add ($realpart result) 
+                 (mul '$%i ($imagpart result)))))
          (t
           ;; the general case, order and arg are bigfloat or complex bigfloat
-          (when *debug-expintegral*
-            (format t "~&Order is a Bigfloat (not an integer).~%"))
           (let* (($ratprint nil)
                  (corder (add ($bfloat ($realpart order))
                               (mul '$%i ($bfloat ($imagpart order)))))
                  (carg (add ($bfloat ($realpart arg))
                             (mul '$%i ($bfloat ($imagpart arg)))))
                  (result (frac-bfloat-expintegral-e corder carg)))
-            (simplify
-              (list '(mplus)
-              (simplify (list '(mtimes) '$%i ($imagpart result)))
-              ($realpart result)))))))
-
-      ((and $expintexpand (setq ratorder (max-numeric-ratio-p order 2)))
+            (add ($realpart result)
+                 (mul '$%i ($imagpart result)))))))
+      
+      ((and $expintexpand 
+            (setq ratorder (max-numeric-ratio-p order 2)))
        ;; We have a half integral order and $expintexpand is not NIL. 
        ;; We expand in a series in terms of the Erfc or Erf function.
-       (when *debug-expintegral* 
-         (format t "Expansion in terms of Erfc or Erf for ~A~%" ratorder))
-       (let ((func (cond 
-                     ((eq $expintexpand '%erf)
-                      (sub 1 (simplify (list '(%erf) (power arg (inv 2))))))
-                     (t
-                      (simplify (list '(%erfc) (power arg (inv 2))))))))
+       (let ((func (cond ((eq $expintexpand '%erf)
+                          (sub 1 ($erf (power arg '((rat simp) 1 2)))))
+                         (t
+                          ($erfc (power arg '((rat simp) 1 2)))))))
          (cond
            ((= ratorder 1/2)
-            (mul (power '$%pi (inv 2)) (inv (power arg (inv 2))) func))
+            (mul (power '$%pi '((rat simp) 1 2))
+                 (power arg '((rat simp) -1 2))
+                 func))
            ((= ratorder -1/2)
             (add
               (mul
-                (power '$%pi (inv 2)) 
-                (inv (mul 2 (power arg '((rat) 3 2))))
+                (power '$%pi '((rat simp) 1 2))
+                (inv (mul 2 (power arg '((rat simp) 3 2))))
                 func)
               (div (power '$%e (mul -1 arg)) arg)))
            (t
             (let ((n (- ratorder 1/2)))
               (mul
-                (power arg (sub n '((rat) 1 2)))
+                (power arg (sub n '((rat simp) 1 2)))
                 (add
-                  (mul func (simplify (list '(%gamma) (sub '((rat) 1 2) n))))
+                  (mul func (simplify (list '(%gamma) 
+                                            (sub '((rat simp) 1 2) n))))
                   (mul
                     (power '$%e (mul -1 arg))
                     (let ((index (gensumindex)))
                       (dosum
                         (div
-                          (power arg (add index '((rat) 1 2)))
-                          (list '($pochhammer) (sub '((rat) 1 2) n)
-                                               (add index n 1)))
+                          (power arg (add index '((rat simp) 1 2)))
+                          (simplify (list '($pochhammer) 
+                                          (sub '((rat simp) 1 2) n)
+                                          (add index n 1))))
                         index 0 (mul -1 (add n 1)) t)))
                   (mul -1
                     (power '$%e (mul -1 arg))
                     (let ((index (gensumindex)))
                       (dosum
                         (div
-                          (power arg (add index '((rat) 1 2)))
-                          (list '($pochhammer) (sub '((rat) 1 2) n)
-                                               (add index n 1)))
+                          (power arg (add index '((rat simp) 1 2)))
+                          (simplify (list '($pochhammer) 
+                                          (sub '((rat simp) 1 2) n)
+                                          (add index n 1))))
                         index (- n) -1 t))))))))))
-
+      
       ((eq $expintrep '%gamma_incomplete)
-       ;; We transform to the Gammincomplete function.
+       ;; We transform to the Incomplete Gamma function.
        (mul
          (power arg (sub order 1))
-         (list '(%gamma_incomplete) (sub 1 order) arg)))
-
+         ($gamma_incomplete (sub 1 order) arg)))
+      
       (t 
-       (eqtest (list '(%expintegral_e) order arg) exp)))))
+       (eqtest (list '(%expintegral_e) order arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral En(z)
@@ -526,7 +552,8 @@
          (do* ((i 1 (+ i 1))
                (a (* -1 n) (* (- i) (+ n1 i))))
               ((> i *expint-maxit*)
-               (merror "Continued fractions failed in expintegral."))
+               (merror 
+                 (intl:gettext "expintegral_e: continued fractions failed.")))
 
            (setq b (+ b 2.0))
            (setq d (/ 1.0 (+ (* a d) b)))
@@ -549,7 +576,7 @@
               (e 0.0))
          (do ((i 1 (+ i 1)))
              ((> i *expint-maxit*)
-              (merror "Series failed in expintegral."))
+              (merror (intl:gettext "expintegral_e: series failed.")))
            (setq f (* -1 f (/ z i)))
            (cond 
              ((= i n1)
@@ -595,7 +622,8 @@
          (do* ((i 1 (+ i 1))
                (a (* -1 n) (* (- i) (+ n1 i))))
               ((> i *expint-maxit*)
-               (merror "Continued fractions failed in expintegral."))
+               (merror 
+                 (intl:gettext "expintegral_e: continued fractions failed.")))
 
            (setq b (+ b 2.0))
            (setq d (/ 1.0 (+ (* a d) b)))
@@ -612,7 +640,7 @@
             (> (realpart n) 0)
             (= (nth-value 1 (truncate (realpart n))) 0))
        ;; We have a positive integer n or an float representation of an 
-       ;; integer. We call expintegral-e which do this calculation.
+       ;; integer. We call expintegral-e which does this calculation.
        (when *debug-expintegral*
          (format t "~&We call expintegral-e.~%"))
        (expintegral-e (truncate (realpart n)) z))
@@ -633,7 +661,7 @@
               (e 0.0))
          (do ((i 1 (+ i 1)))
              ((> i *expint-maxit*)
-              (merror "Series failed in expintegral."))
+              (merror (intl:gettext "expintegral_e: series failed.")))
            (setq f (* -1 f (/ z (float i))))
            (setq e (/ (- f) (- (float i) n1)))
            (setq r (+ r e))
@@ -677,8 +705,8 @@
       (format t "~&   : z = ~A~%" z))
 
     (cond
-      ((and (eq (asksign ($realpart z)) '$positive)
-            (eq (asksign (sub (cabs z) bigfloatone)) '$positive))
+      ((and (eq ($sign ($realpart z)) '$pos)
+            (eq ($sign (sub (cabs z) bigfloatone)) '$pos))
        ;; We expand in continued fractions.
        (when *debug-expintegral*
          (format t "~&We expand in continued fractions.~%"))
@@ -691,7 +719,8 @@
          (do* ((i 1 (+ i 1))
                (a (* -1 n) (* (- i) (+ n1 i))))
               ((> i *expint-maxit*)
-               (merror "Continued fractions failed in expintegral."))
+               (merror 
+                 (intl:gettext "expintegral_e: continued fractions failed.")))
 
            (setq b (add b bigfloattwo))
            (setq d (cdiv bigfloatone (add (mul a d) b)))
@@ -699,8 +728,8 @@
            (setq e (cmul c d))
            (setq h (cmul h e))
             
-           (when (eq (asksign (sub (cabs (sub e bigfloatone)) *expint-eps*))
-                  '$negative)            
+           (when (eq ($sign (sub (cabs (sub e bigfloatone)) *expint-eps*)) 
+                     '$neg)
              (when *debug-expintegral*
                (setq *debug-expint-bfloatmaxit*
                      (max *debug-expint-bfloatmaxit* i)))
@@ -716,7 +745,7 @@
               (e bigfloatzero))
          (do* ((i 1 (+ i 1)))
               ((> i *expint-maxit*)
-               (merror "Series failed in expintegral."))
+               (merror (intl:gettext "expintegral_e: series failed.")))
            (setq f (mul -1 (cmul f (cdiv z i))))
            (cond
              ((= i n1)
@@ -727,8 +756,8 @@
              (t 
               (setq e (cdiv (mul -1 f) (- i n1)))))
            (setq r (add r e))
-           (when (eq (asksign (sub (cabs e) (cmul (cabs r) *expint-eps*)))
-                     '$negative)
+           (when (eq ($sign (sub (cabs e) (cmul (cabs r) *expint-eps*)))
+                     '$neg)
              (when *debug-expintegral*
                (setq *debug-expint-bfloatmaxit*
                      (max *debug-expint-bfloatmaxit* i)))
@@ -754,8 +783,8 @@
       (format t "~&   : z = ~A~%" z))
 
     (cond
-      ((and (eq (asksign ($realpart z)) '$positive)
-            (eq (asksign (sub (cabs z) bigfloatone)) '$positive))
+      ((and (eq ($sign ($realpart z)) '$pos)
+            (eq ($sign (sub (cabs z) bigfloatone)) '$pos))
        ;; We expand in continued fractions.
        (when *debug-expintegral*
              (format t "We expand in continued fractions.~%"))
@@ -768,7 +797,8 @@
          (do* ((i 1 (+ i 1))
                (a (mul -1 n) (cmul (- i) (add n1 i))))
               ((> i *expint-maxit*)
-               (merror "Continued fractions failed in expintegral."))
+               (merror 
+                 (intl:gettext "expintegral_e: continued fractions failed.")))
 
            (setq b (add b bigfloattwo))
            (setq d (cdiv bigfloatone (add (mul a d) b)))
@@ -776,8 +806,8 @@
            (setq e (cmul c d))
            (setq h (cmul h e))
             
-           (when (eq (asksign (sub (cabs (sub e bigfloatone)) *expint-eps*))
-                  '$negative)
+           (when (eq ($sign (sub (cabs (sub e bigfloatone)) *expint-eps*))
+                  '$neg)
              (when *debug-expintegral*
                (setq *debug-expint-fracbfloatmaxit*
                      (max *debug-expint-fracbfloatmaxit* i)))   
@@ -788,7 +818,7 @@
                    (> ($realpart n) 0)
                    (= (nth-value 1 (truncate ($realpart n))) 0))
               (and ($bfloatp n)
-                   (eq (asksign n) '$positive)
+                   (eq ($sign n) '$pos)
                    (equal (sub (mul 2 ($fix n)) (mul 2 n))
                           bigfloatzero)))
        ;; We have a Float or Bigfloat representation of positive integer.
@@ -810,12 +840,12 @@
               (e bigfloatzero))
          (do ((i 1 (+ i 1)))
              ((> i *expint-maxit*)
-              (merror "Series failed in expintegral."))
+              (merror (intl:gettext "expintegral_e: series failed.")))
            (setq f (cmul (mul -1 bigfloatone) (cmul f (cdiv z i))))
            (setq e (cdiv (mul -1 f) (sub i n1)))
            (setq r (add r e))
-           (when (eq (asksign (sub (cabs e) (cmul (cabs r) *expint-eps*)))
-                     '$negative)
+           (when (eq ($sign (sub (cabs e) (cmul (cabs r) *expint-eps*)))
+                     '$neg)
              (when *debug-expintegral*
                (setq *debug-expint-fracbfloatmaxit*
                      (max *debug-expint-fracbfloatmaxit* i)))
@@ -828,7 +858,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_e1 (z)
-  (simplify (list '(%expintegral_e1) (resimplify z))))
+  (simplify (list '(%expintegral_e1) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -842,6 +872,24 @@
 
 (defprop %expintegral_e1 simp-expintegral_e1 operators)
 
+;;; Exponential Integral E1 distributes over bags
+
+(defprop %expintegral_e1 (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral E1 has mirror symmetry, 
+;;; but not on the real negative axis.
+
+(defprop %expintegral_e1 conjugate-expintegral-e1 conjugate-function)
+
+(defun conjugate-expintegral-e1 (args)
+  (let ((z (first args)))
+    (cond ((off-negative-real-axisp z)
+           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           ($expintegral_e1 (simplify (list '($conjugate) z))))
+          (t
+            ;; On the negative real axis or no information. Unsimplified.
+            (list '($conjugate simp) ($expintegral_e1 z))))))
+
 ;;; Differentiation of Exponential Integral E1
 
 (defprop %expintegral_e1
@@ -851,16 +899,50 @@
     ((mexpt) $%e ((mtimes) -1 x))))
   grad)
 
+;;; Integral of Exponential Integral E1
+
+(defprop %expintegral_e1
+  ((z)
+   ((mtimes) -1 ((%expintegral_e) 2 z)))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral_e1 (exp ignored z)
-  (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
-    (cond
-      ((zerop1 arg) 
-       (merror "expintegral_e1(~:M) is undefined." arg))
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
 
+(defprop %expintegral_e1 simplim%expintegral_e1 simplim%function)
+
+(defun simplim%expintegral_e1 (expr var val)
+  ;; Look for the limit of the argument.
+  (let ((z (limit (cadr expr) var val 'think)))
+  (cond
+    ;; Handle an argument 0 at this place
+    ((or (zerop1 z)
+         (eq z '$zeroa)
+         (eq z '$zerob))
+     ;; limit is inf from both sides
+     '$inf)
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%expintegral_e1) z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral_e1 (expr ignored z)
+  (declare (ignore ignored))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
+    (cond
+      ;; Check for special values
+      ((or (eq arg '$inf)
+           (alike1 arg '((mtimes) -1 $minf)))
+       0)
+      ((zerop1 arg)
+       (simp-domain-error
+	(intl:gettext "expintegral_e1: expintegral_e1(~:M) is undefined.") arg))
+
+      ;; Check for numerical evaluation
       ((complex-float-numerical-eval-p arg)
        ;; For E1 we call En(z) with n=1 directly.
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
@@ -872,35 +954,34 @@
               (carg (add ($bfloat ($realpart arg))
                          (mul '$%i ($bfloat ($imagpart arg)))))
               (result (bfloat-expintegral-e 1 carg)))
-         (simplify 
-           (list '(mplus) 
-             (simplify (list '(mtimes) '$%i ($imagpart result)))
-             ($realpart result)))))
+         (add ($realpart result)
+              (mul '$%i ($imagpart result)))))
+
+      ;; Check argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
 
       ((and $expintrep
             (member $expintrep *expintflag* :test #'eq)
             (not (eq $expintrep '%expintegral_e1)))
-       (when *debug-expintegral*
-         (format t "~&Transform E1 to ~A~%" $expintrep))
-
        ;; We have only implemented the Incomplete Gamma and Ei function. 
        ;; Further work is needed.
-
        (case $expintrep
-         (%gamma_incomplete
-           (list '(%gamma_incomplete) 0 arg))
+         (%gamma_incomplete 
+           ($gamma_incomplete 0 arg))
          (%expintegral_ei
            (add
-             (mul -1 (list '(%expintegral_ei) (mul -1 arg)))
+             (mul -1 ($expintegral_ei (mul -1 arg)))
              (mul 
-               (inv 2)
+               '((rat simp) 1 2)
                (sub
-                 (list '(%log) (mul -1 arg))
-                 (list '(%log) (mul -1 (inv arg)))))
-             (mul -1 (list '(%log) arg))))
-         (t (eqtest (list '(%expintegral_e1) arg) exp))))
+                 (list '(%log simp) (mul -1 arg))
+                 (list '(%log simp) (mul -1 (inv arg)))))
+             (mul -1 (list '(%log simp) arg))))
+         (t 
+          (eqtest (list '(%expintegral_e1) arg) expr))))
 
-      (t (eqtest (list '(%expintegral_e1) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_e1) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -909,7 +990,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_ei (z)
-  (simplify (list '(%expintegral_ei) (resimplify z))))
+  (simplify (list '(%expintegral_ei) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -923,6 +1004,14 @@
 
 (defprop %expintegral_ei simp-expintegral-ei operators)
 
+;;; Exponential Integral Ei distributes over bags
+
+(defprop %expintegral_ei (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Ei has mirror symmetry
+
+(defprop %expintegral_ei t commutes-with-conjugate)
+
 ;;; Differentiation of Exponential Integral Ei
 
 (defprop %expintegral_ei
@@ -930,16 +1019,53 @@
    ((mtimes) ((mexpt) x -1) ((mexpt) $%e x)))
   grad)
 
+;;; Integral of Exponential Ei
+
+(defprop %expintegral_ei
+  ((x)
+   ((mplus) 
+      ((mtimes) -1 ((mexpt) $%e x))
+      ((mtimes) x ((%expintegral_ei) x))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-ei (exp ignored z)
-  (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
-    (cond
-      ((zerop1 arg) 
-       (merror "expintegral_ei(~:M) is undefined." arg))
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
 
+(defprop %expintegral_ei simplim%expintegral_ei simplim%function)
+
+(defun simplim%expintegral_ei (expr var val)
+  ;; Look for the limit of the arguments.
+  (let ((z (limit (cadr expr) var val 'think)))
+  (cond
+    ;; Handle an argument 0 at this place
+    ((or (zerop1 z)
+         (eq z '$zeroa)
+         (eq z '$zerob))
+     '$minf)
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%expintegral_ei) z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral-ei (expr ignored z)
+  (declare (ignore ignored))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
+    (cond
+      ;; Check special values
+      ((zerop1 arg) 
+       (simp-domain-error 
+         (intl:gettext "expintegral_ei: expintegral_ei(~:M) is undefined.") 
+         arg))
+      ((eq arg '$inf) '$inf)
+      ((or (eq arg '$minf) (alike1 arg '((mtimes) -1 $inf))) 0)
+      ((alike1 arg '((mtimes) $%i $inf)) (mul '$%i '$%pi))
+      ((alike1 arg '((mtimes) -1 $%i $inf)) (mul -1 '$%i '$%pi))
+
+      ;; Check numerical evaluation
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
          (complexify (expintegral-ei carg))))
@@ -949,61 +1075,62 @@
               (carg (add ($bfloat ($realpart arg))
                          (mul '$%i ($bfloat ($imagpart arg)))))
               (result (bfloat-expintegral-ei carg)))
-         (simplify 
-           (list '(mplus) 
-             (simplify (list '(mtimes) '$%i ($imagpart result)))
-             ($realpart result)))))
+         (add ($realpart result)
+              (mul '$%i ($imagpart result)))))
 
-      ((and $expintrep 
+      ;; Check argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+
+      ((and $expintrep
+            (member $expintrep *expintflag*)
             (not (eq $expintrep '%expintegral_ei)))
-       (when *debug-expintegral*
-         (format t "~&Transform Ei to ~A~%" $expintrep))
        (case $expintrep
          (%gamma_incomplete
            (add
              (mul -1 
-               (list '(%gamma_incomplete) 0 (mul -1 arg)))
+               ($gamma_incomplete 0 (mul -1 arg)))
              (mul 
-               (inv 2) 
+               '((rat simp) 1 2)
                (sub 
-                 (list '(%log) arg) 
-                 (list '(%log) (inv arg))))
+                 (list '(%log simp) arg)
+                 (list '(%log simp) (inv arg))))
              (mul -1  
-               (list '(%log) (mul -1 arg)))))
+               (list '(%log simp) (mul -1 arg)))))
          (%expintegral_e1
            (add
              (mul -1 
-               (list '(%expintegral_e1) (mul -1 arg)))
+               ($expintegral_e1 (mul -1 arg)))
              (mul
-              (inv 2)
+              '((rat simp) 1 2)
               (sub 
-                (list '(%log) arg) 
-                (list '(%log) (inv arg))))
+                (list '(%log simp) arg)
+                (list '(%log simp) (inv arg))))
              (mul -1 
-               (list '(%log) (mul -1 arg)))))
+               (list '(%log simp) (mul -1 arg)))))
          (%expintegral_li
-           (list '(%expintegral_li) (power '$%e arg)))
+           ($expintegral_li (power '$%e arg)))
          ($expintegral_trig
            (add
-             (list '(%expintegral_ci) (mul '$%i arg))
-             (mul -1 '$%i (list '(%expintegral_si) (mul '$%i arg)))
+             ($expintegral_ci (mul '$%i arg))
+             (mul -1 '$%i ($expintegral_si (mul '$%i arg)))
              (mul 
-               (inv -2)
+               '((rat simp) -1 2)
                (sub
-                 (list '(%log) (inv arg))
-                 (list '(%log) arg)))
-             (mul -1 (list '(%log) (mul '$%i arg)))))
+                 (list '(%log simp) (inv arg))
+                 (list '(%log simp) arg)))
+             (mul -1 (list '(%log simp) (mul '$%i arg)))))
          ($expintegral_hyp
            (add
-             (list '(%expintegral_chi) arg)
-             (list '(%expintegral_shi) arg)
+             ($expintegral_chi arg)
+             ($expintegral_shi arg)
              (mul 
-               (inv -2)
+               '((rat simp) -1 2)
                (add
-                 (list '(%log) (inv arg))
-                 (list '(%log) arg)))))))
+                 (list '(%log simp) (inv arg))
+                 (list '(%log simp) arg)))))))
 
-      (t (eqtest (list '(%expintegral_ei) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_ei) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral Ei(z):
@@ -1033,6 +1160,7 @@
 	(complex 0 (- (float pi))))
        ;; Negative real value. No phase factor.
        (t 0))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; We have not modified the algorithm for Bigfloat numbers. It is only
 ;;; generalized for Bigfloats. The calcualtion of the complex phase factor
@@ -1042,14 +1170,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun bfloat-expintegral-ei (z)
-  (let ((mz (mul -1 z))
-        (mbigfloatone (mul -1 bigfloatone))
-        (bigfloathalf (div bigfloatone 2)))
-  (add
-    (cmul mbigfloatone (bfloat-expintegral-e 1 mz))
-    (sub
-      (cmul bigfloathalf (sub ($log z) ($log (cdiv bigfloatone z)))) 
-      ($log mz)))))
+  (let ((mz (mul -1 z)))
+  (add (cmul (mul -1 bigfloatone) 
+             (bfloat-expintegral-e 1 mz))
+       (sub (cmul (div bigfloatone 2)
+                  (sub (simplify (list '(%log) z))
+                       (simplify (list '(%log) (cdiv bigfloatone z)))))
+            (simplify (list '(%log) mz))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1058,7 +1185,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_li (z)
-  (simplify (list '(%expintegral_li) (resimplify z))))
+  (simplify (list '(%expintegral_li) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -1072,6 +1199,24 @@
 
 (defprop %expintegral_li simp-expintegral-li operators)
 
+;;; Exponential Integral Li distributes over bags
+
+(defprop %expintegral_li (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Li has mirror symmetry, 
+;;; but not on the real negative axis.
+
+(defprop %expintegral_li conjugate-expintegral-li conjugate-function)
+
+(defun conjugate-expintegral-li (args)
+  (let ((z (first args)))
+    (cond ((off-negative-real-axisp z)
+           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           ($expintegral_li (simplify (list '($conjugate) z))))
+          (t
+            ;; On the negative real axis or no information. Unsimplified.
+            (list '($conjugate simp) ($expintegral_li z))))))
+
 ;;; Differentiation of Exponential Integral Li 
 
 (defprop %expintegral_li
@@ -1079,16 +1224,45 @@
    ((mtimes) ((mexpt) ((%log) x) -1)))
   grad)
 
+;;; Integral of Exponential Li
+
+(defprop %expintegral_li
+  ((x)
+   ((mplus)
+      ((mtimes) x ((%expintegral_li) x))
+      ((mtimes) -1  ((%expintegral_ei) ((mtimes) 2 ((%log) x))))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-li (exp ignored z)
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
+
+(defprop %expintegral_li simplim%expintegral_li simplim%function)
+
+(defun simplim%expintegral_li (expr var val)
+  ;; Look for the limit of the argument.
+  (let ((z (limit (cadr expr) var val 'think)))
+  (cond
+    ;; Handle an argument 1 at this place
+    ((onep1 z) '$minf)
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%expintegral_li) z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral-li (expr ignored z)
   (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
     (cond
       ((zerop1 arg) arg)
       ((onep1 arg)
-       (merror "expintegral_li(~:M) is undefined." arg))
+       (simp-domain-error
+	(intl:gettext "expintegral_li: expintegral_li(~:M) is undefined.") arg))
+      ((eq arg '$inf) '$inf)
+      ((eq arg '$infinity) '$infinity)
 
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
@@ -1104,58 +1278,56 @@
              (simplify (list '(mtimes) '$%i ($imagpart result)))
              ($realpart result)))))
 
+      ;; Check for argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+
       ((and $expintrep
             (member $expintrep *expintflag*)
             (not (eq $expintrep '%expintegral_li)))
-       (when *debug-expintegral*
-         (format t "~&Transform Li to ~A~%" $expintrep))
-       (let ((logarg (list '(%log) arg)))
+       (let ((logarg (simplify (list '(%log) arg))))
          (case $expintrep
            (%gamma_incomplete
              (add
-               (mul -1 (list '(%gamma_incomplete) 0 (mul -1 logarg)))
+               (mul -1 ($gamma_incomplete 0 (mul -1 logarg)))
                (mul
                 (inv 2)
-                (sub (list '(%log) logarg) 
-                     (list '(%log) (inv logarg))))
+                (sub (list '(%log simp) logarg)
+                     (list '(%log simp) (inv logarg))))
                (mul -1
-                 (list '(%log) (mul -1 logarg)))))
-
+                 (list '(%log simp) (mul -1 logarg)))))
            (%expintegral_e1
              (add
-               (mul -1 (list '(%expintegral_e1) (mul -1 logarg)))
+               (mul -1 ($expintegral_e1 (mul -1 logarg)))
                (mul
                 (inv 2)
-                (sub (list '(%log) logarg) 
-                     (list '(%log) (inv logarg))))
+                (sub (list '(%log simp) logarg) 
+                     (list '(%log simp) (inv logarg))))
                (mul -1
-                 (list '(%log) (mul -1 logarg)))))
-
+                 (list '(%log simp) (mul -1 logarg)))))
            (%expintegral_ei
-             (list '(%expintegral_ei) logarg))
-
+             ($expintegral_ei logarg))
            ($expintegral_trig
              (add
-               (list '(%expintegral_ci) (mul '$%i logarg))
-               (mul -1 '$%i (list '(%expintegral_si) (mul '$%i logarg)))
+               ($expintegral_ci (mul '$%i logarg))
+               (mul -1 '$%i ($expintegral_si (mul '$%i logarg)))
                (mul 
                  (inv -2)
                  (sub
-                   (list '(%log) (inv logarg))
-                   (list '(%log) logarg)))
-               (mul -1 (list '(%log) (mul '$%i logarg)))))
-
+                   (list '(%log simp) (inv logarg))
+                   (list '(%log simp) logarg)))
+               (mul -1 (list '(%log simp) (mul '$%i logarg)))))
            ($expintegral_hyp
              (add
-               (list '(%expintegral_chi) logarg)
-               (list '(%expintegral_shi) logarg)
+               ($expintegral_chi logarg)
+               ($expintegral_shi logarg)
                (mul 
                  (inv -2)
                  (add
-                   (list '(%log) (inv logarg))
-                   (list '(%log) logarg))))))))
+                   (list '(%log simp) (inv logarg))
+                   (list '(%log simp) logarg))))))))
 
-      (t (eqtest (list '(%expintegral_li) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_li) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Expintegral Li
@@ -1178,7 +1350,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_si (z)
-  (simplify (list '(%expintegral_si) (resimplify z))))
+  (simplify (list '(%expintegral_si) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -1192,6 +1364,18 @@
 
 (defprop %expintegral_si simp-expintegral-si operators)
 
+;;; Exponential Integral Si distributes over bags
+
+(defprop %expintegral_si (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Si has mirror symmetry
+
+(defprop %expintegral_si t commutes-with-conjugate)
+
+;;; Exponential Integral Si is a odd function
+
+(defprop %expintegral_si odd-function-reflect reflection-rule)
+
 ;;; Differentiation of Exponential Integral Si
 
 (defprop %expintegral_si
@@ -1199,15 +1383,29 @@
    ((mtimes) ((%sin) x) ((mexpt) x -1)))
   grad)
 
+;;; Integral of Exponential Si
+
+(defprop %expintegral_si
+  ((x)
+   ((mplus)
+      ((%cos) x)
+      ((mtimes) x ((%expintegral_si) x))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-si (exp ignored z)
+(defun simp-expintegral-si (expr ignored z)
   (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
     (cond
+      ;; Check for special values
       ((zerop1 arg) arg)
-     
+      ((eq arg '$inf) (div '$%pi 2))
+      ((eq arg '$minf) (mul -1 (div '$%pi 2)))
+      ((alike1 arg '((mtimes) -1 $inf)) (mul -1 (div '$%pi 2)))
+
+      ;; Check for numerical evaluation     
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
          (complexify (expintegral-si carg))))
@@ -1222,55 +1420,54 @@
              (simplify (list '(mtimes) '$%i ($imagpart result)))
              ($realpart result)))))
 
+      ;; Check for argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+      ((apply-reflection-simp (mop expr) arg $trigsign))
+
       ((and $expintrep
             (member $expintrep *expintflag*)
             (not (eq $expintrep '$expintegral_trig)))
-       (when *debug-expintegral*
-         (format t "~&Transform Si to ~A~%" $expintrep))
        (case $expintrep
          (%gamma_incomplete
            (mul
              (div '$%i 2)
              (add
-               (list '(%gamma_incomplete) 0 (mul -1 '$%i arg))
-               (mul -1 (list '(%gamma_incomplete) 0 (mul '$%i arg)))
-               (list '(%log) (mul -1 '$%i arg))
-               (mul -1 (list '(%log) (mul '$%i arg))))))
-
+               ($gamma_incomplete 0 (mul -1 '$%i arg))
+               (mul -1 ($gamma_incomplete 0 (mul '$%i arg)))
+               (list '(%log simp) (mul -1 '$%i arg))
+               (mul -1 (list '(%log simp) (mul '$%i arg))))))
          (%expintegral_e1
            (mul '$%i (inv 2)
              (add
-               (list '(%expintegral_e1) (mul -1 '$%i arg))
-               (mul -1 (list '(%expintegral_e1) (mul '$%i arg)))
-               (list '(%log) (mul -1 '$%i arg))
-               (mul -1 (list '(%log) (mul '$%i arg))))))
-
+               ($expintegral_e1 (mul -1 '$%i arg))
+               (mul -1 ($expintegral_e1 (mul '$%i arg)))
+               (list '(%log simp) (mul -1 '$%i arg))
+               (mul -1 (list '(%log simp) (mul '$%i arg))))))
          (%expintegral_ei
            (mul '$%i (inv 4)
              (add 
                (mul 2
                  (sub
-                   (list '(%expintegral_ei) (mul -1 '$%i arg))
-                   (list '(%expintegral_ei) (mul '$%i arg))))
-               (list '(%log) (div '$%i arg))
-               (mul -1 (list '(%log) (mul -1 (div '$%i arg))))
-               (mul -1 (list '(%log) (mul -1 '$%i arg)))
-               (list '(%log) (mul '$%i arg)))))
-
+                   ($expintegral_ei (mul -1 '$%i arg))
+                   ($expintegral_ei (mul '$%i arg))))
+               (list '(%log simp) (div '$%i arg))
+               (mul -1 (list '(%log simp) (mul -1 (div '$%i arg))))
+               (mul -1 (list '(%log simp) (mul -1 '$%i arg)))
+               (list '(%log simp) (mul '$%i arg)))))
          (%expintegral_li
            (mul
              (inv (mul 2 '$%i))
              (add
-               (list '(%expintegral_li) (power '$%e (mul '$%i arg)))
+               ($expintegral_li (power '$%e (mul '$%i arg)))
                (mul -1 
-                 (list '(%expintegral_li) (power '$%e (mul -1 '$%e arg))))
+                 ($expintegral_li (power '$%e (mul -1 '$%e arg))))
                (mul (div '$%pi -2)
                     (simplify (list '(%signum) ($realpart arg)))))))
-
          ($expintegral_hyp
-           (mul -1 '$%i (list '(%expintegral_shi) (mul '$%i arg))))))
+           (mul -1 '$%i ($expintegral_shi (mul '$%i arg))))))
 
-      (t (eqtest (list '(%expintegral_si) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_si) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral Si
@@ -1310,7 +1507,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_shi (z)
-  (simplify (list '(%expintegral_shi) (resimplify z))))
+  (simplify (list '(%expintegral_shi) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -1324,6 +1521,18 @@
 
 (defprop %expintegral_shi simp-expintegral-shi operators)
 
+;;; Exponential Integral Shi distributes over bags
+
+(defprop %expintegral_shi (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Shi has mirror symmetry
+
+(defprop %expintegral_si t commutes-with-conjugate)
+
+;;; Exponential Integral Shi is a odd function
+
+(defprop %expintegral_si odd-function-reflect reflection-rule)
+
 ;;; Differentiation of Exponential Integral Shi
 
 (defprop %expintegral_shi
@@ -1331,15 +1540,28 @@
    ((mtimes) ((%sinh) x) ((mexpt) x -1)))
   grad)
 
+;;; Integral of Exponential Shi
+
+(defprop %expintegral_shi
+  ((x)
+   ((mplus)
+      ((mtimes) -1 ((%cosh) x))
+      ((mtimes) x ((%expintegral_shi) x))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-shi (exp ignored z)
+(defun simp-expintegral-shi (expr ignored z)
   (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
     (cond
+      ;; Check for special values
       ((zerop1 arg) arg)
+      ((alike1 arg '((mtimes) '$%i $inf)) (div (mul '$%i '$%pi) 2))
+      ((alike1 arg '((mtimes) -1 '$%i $inf)) (div (mul -1 '$%i '$%pi) 2))
 
+      ;; Check for numrical evaluation
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
          (complexify (expintegral-shi carg))))
@@ -1354,58 +1576,57 @@
              (simplify (list '(mtimes) '$%i ($imagpart result)))
              ($realpart result)))))
 
+      ;; Check for argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+      ((apply-reflection-simp (mop expr) arg $trigsign))
+
       ((and $expintrep
             (member $expintrep *expintflag*)
             (not (eq $expintrep '$expintegral_hyp)))
-       (when *debug-expintegral*
-         (format t "~&Transform Shi to ~A~%" $expintrep))
        (case $expintrep
-           (%gamma_incomplete
+         (%gamma_incomplete
+           (mul
+             (inv 2)
+             (add
+               ($gamma_incomplete 0 arg)
+               (mul -1 ($gamma_incomplete 0 (mul -1 arg)))
+               (mul -1 (list '(%log simp) (mul -1 arg)))
+               (list '(%log simp) arg))))
+         (%expintegral_e1
+           (mul 
+             (inv 2)
+             (add
+               ($expintegral_e1 arg)
+               (mul -1 ($expintegral_e1 (mul -1 arg)))
+               (mul -1 (list '(%log simp) (mul -1 arg)))
+               (list '(%log simp) arg))))
+         (%expintegral_ei
+           (mul 
+             (inv 4)
+             (add 
+               (mul 2
+                 (sub
+                   ($expintegral_ei arg)
+                   ($expintegral_ei (mul -1 arg))))
+               (list '(%log simp) (inv arg))
+               (mul -1 (list '(%log simp) (mul -1 (inv arg))))
+               (list '(%log simp) (mul -1 arg))
+               (mul -1 (list '(%log simp) arg)))))
+         (%expintegral_li
+           (add
              (mul
                (inv 2)
-               (add
-                 (list '(%gamma_incomplete) 0 arg)
-                 (mul -1 (list '(%gamma_incomplete) 0 (mul -1 arg)))
-                 (mul -1 (list '(%log) (mul -1 arg)))
-                 (list '(%log) arg))))
+               (sub
+                 ($expintegral_li (power '$%e arg))
+                 ($expintegral_li (power '$%e (mul -1 arg)))))
+           (mul 
+             (div (mul '$%i '$%pi) -2)
+             (simplify (list '(%signum) ($imagpart arg))))))
+         ($expintegral_trig
+           (mul -1 '$%i ($expintegral_si (mul '$%i arg))))))
 
-           (%expintegral_e1
-             (mul 
-               (inv 2)
-               (add
-                 (list '(%expintegral_e1) arg)
-                 (mul -1 (list '(%expintegral_e1) (mul -1 arg)))
-                 (mul -1 (list '(%log) (mul -1 arg)))
-                 (list '(%log) arg))))
-
-           (%expintegral_ei
-             (mul 
-               (inv 4)
-               (add 
-                 (mul 2
-                   (sub
-                     (list '(%expintegral_ei) arg)
-                     (list '(%expintegral_ei) (mul -1 arg))))
-                 (list '(%log) (inv arg))
-                 (mul -1 (list '(%log) (mul -1 (inv arg))))
-                 (list '(%log) (mul -1 arg))
-                 (mul -1 (list '(%log) arg)))))
-
-           (%expintegral_li
-             (add
-               (mul
-                 (inv 2)
-                 (sub
-                   (list '(%expintegral_li) (power '$%e arg))
-                   (list '(%expintegral_li) (power '$%e (mul -1 arg)))))
-             (mul 
-               (div (mul '$%i '$%pi) -2)
-               (simplify (list '(%signum) ($imagpart arg))))))
-
-           ($expintegral_trig
-             (mul -1 '$%i (list '(%expintegral_si) (mul '$%i arg))))))
-
-      (t (eqtest (list '(%expintegral_shi) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_shi) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral Shi
@@ -1442,7 +1663,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_ci (z)
-  (simplify (list '(%expintegral_ci) (resimplify z))))
+  (simplify (list '(%expintegral_ci) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -1456,6 +1677,24 @@
 
 (defprop %expintegral_ci simp-expintegral-ci operators)
 
+;;; Exponential Integral Ci distributes over bags
+
+(defprop %expintegral_ci (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Ci has mirror symmetry, 
+;;; but not on the real negative axis.
+
+(defprop %expintegral_ci conjugate-expintegral-ci conjugate-function)
+
+(defun conjugate-expintegral-ci (args)
+  (let ((z (first args)))
+    (cond ((off-negative-real-axisp z)
+           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           ($expintegral_ci (simplify (list '($conjugate) z))))
+          (t
+            ;; On the negative real axis or no information. Unsimplified.
+            (list '($conjugate simp) ($expintegral_ci z))))))
+
 ;;; Differentiation of Exponential Integral Ci
 
 (defprop %expintegral_ci
@@ -1463,15 +1702,51 @@
    ((mtimes) ((%cos) x) ((mexpt) x -1)))
   grad)
 
+;;; Integral of Exponential Ci
+
+(defprop %expintegral_ci
+  ((x)
+   ((mplus)
+      ((mtimes) x ((%expintegral_ci) x))
+      ((mtimes) -1 ((%sin) x))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-ci (exp ignored z)
-  (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
-    (cond
-      ((zerop1 arg) (merror "expintegral_ci(~:M) is undefined." arg))
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
 
+(defprop %expintegral_ci simplim%expintegral_ci simplim%function)
+
+(defun simplim%expintegral_ci (expr var val)
+  ;; Look for the limit of the argument.
+  (let ((z (limit (cadr expr) var val 'think)))
+  (cond
+    ;; Handle an argument 0 at this place
+    ((or (zerop1 z)
+         (eq z '$zeroa)
+         (eq z '$zerob))
+     '$minf)
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%expintegral_ci) z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral-ci (expr ignored z)
+  (declare (ignore ignored))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
+    (cond
+      ;; Check for special values
+      ((zerop1 arg)
+       (simp-domain-error
+	(intl:gettext "expintegral_ci: expintegral_ci(~:M) is undefined.") arg))
+      ((eq arg '$inf) 0)
+      ((eq arg '$minf) (mul '$%i '$%pi))
+      ((alike1 arg '((mtimes) -1 $inf)) (mul '$%pi '$%pi))
+
+      ;; Check for numerical evaluation
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
          (complexify (expintegral-ci carg))))
@@ -1486,69 +1761,67 @@
              (simplify (list '(mtimes) '$%i ($imagpart result)))
              ($realpart result)))))
 
+      ;; Check for argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+
       ((and $expintrep
             (member $expintrep *expintflag*)
             (not (eq $expintrep '$expintegral_trig)))
-       (when *debug-expintegral*
-         (format t "~&Transform Ci to ~A~%" $expintrep))
        (case $expintrep
-           (%gamma_incomplete
-             (sub
-               (list '(%log) arg)
-               (mul
-                 (inv 2)
-                 (add
-                   (list '(%gamma_incomplete) 0 (mul -1 '$%i arg))
-                   (list '(%gamma_incomplete) 0 (mul '$%i arg))
-                   (list '(%log) (mul -1 '$%i arg))
-                   (list '(%log) (mul '$%i arg))))))
-
-           (%expintegral_e1
-             (add
-               (mul 
-                 (inv -2)
-                 (add
-                   (list '(%expintegral_e1) (mul -1 '$%i arg))
-                   (list '(%expintegral_e1) (mul '$%i arg)))
-                   (list '(%log) (mul -1 '$%i arg))
-                   (list '(%log) (mul '$%i arg)))
-               (list '(%log) arg))) 
-
-           (%expintegral_ei
-             (add
-               (mul 
-                 (inv 4)
-                 (add 
-                   (mul 2
-                     (add
-                       (list '(%expintegral_ei) (mul -1 '$%i arg))
-                       (list '(%expintegral_ei) (mul '$%i arg))))
-                   (list '(%log) (div '$%i arg))
-                   (list '(%log) (mul -1 '$%i (inv arg)))
-                   (mul -1 (list '(%log) (mul -1 '$%i arg)))
-                   (mul -1 (list '(%log) (mul '$%i arg)))))
-               (list '(%log) arg)))
-
-           (%expintegral_li
-             (add
-               (mul
-                 (inv 2)
-                 (add
-                   (list '(%expintegral_li) (power '$%e (mul -1 '$%i arg)))
-                   (list '(%expintegral_li) (power '$%e (mul '$%i arg)))))
+         (%gamma_incomplete
+           (sub
+             (list '(%log simp) arg)
+             (mul
+               (inv 2)
+               (add
+                 ($gamma_incomplete 0 (mul -1 '$%i arg))
+                 ($gamma_incomplete 0 (mul '$%i arg))
+                 (list '(%log simp) (mul -1 '$%i arg))
+                 (list '(%log simp) (mul '$%i arg))))))
+         (%expintegral_e1
+           (add
+             (mul 
+               (inv -2)
+               (add
+                 ($expintegral_e1 (mul -1 '$%i arg))
+                 ($expintegral_e1 (mul '$%i arg)))
+               (list '(%log simp) (mul -1 '$%i arg))
+               (list '(%log simp) (mul '$%i arg)))
+             (list '(%log simp) arg)))
+         (%expintegral_ei
+           (add
+             (mul 
+               (inv 4)
+               (add 
+                 (mul 2
+                   (add
+                     ($expintegral_ei (mul -1 '$%i arg))
+                     ($expintegral_ei (mul '$%i arg))))
+                 (list '(%log simp) (div '$%i arg))
+                 (list '(%log simp) (mul -1 '$%i (inv arg)))
+                 (mul -1 (list '(%log simp) (mul -1 '$%i arg)))
+                 (mul -1 (list '(%log simp) (mul '$%i arg)))))
+             (list '(%log simp) arg)))
+         (%expintegral_li
+           (add
+             (mul
+               (inv 2)
+               (add
+                 ($expintegral_li (power '$%e (mul -1 '$%i arg)))
+                 ($expintegral_li (power '$%e (mul '$%i arg)))))
              (mul 
                (div (mul '$%i '$%pi) 2)
                (simplify (list '(%signum) ($imagpart arg)))
                (sub 1
                  (simplify (list '(%signum) ($realpart arg)))))))
+         ($expintegral_hyp
+           (add
+             ($expintegral_chi (mul '$%i arg))
+             (mul -1 (list '(%log simp) (mul '$%i arg)))
+             (list '(%log simp) arg)))))
 
-           ($expintegral_hyp
-             (add
-               (list '(%expintegral_chi) (mul '$%i arg))
-               (mul -1 (list '(%log) (mul '$%i arg)))
-               (list '(%log) arg)))))
-
-      (t (eqtest (list '(%expintegral_ci) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_ci) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral Ci
@@ -1588,7 +1861,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $expintegral_chi (z)
-  (simplify (list '(%expintegral_chi) (resimplify z))))
+  (simplify (list '(%expintegral_chi) z)))
 
 ;;; Set properties to give full support to the parser and display
 
@@ -1602,6 +1875,24 @@
 
 (defprop %expintegral_chi simp-expintegral-chi operators)
 
+;;; Exponential Integral Chi distributes over bags
+
+(defprop %expintegral_chi (mlist $matrix mequal) distribute_over)
+
+;;; Exponential Integral Chi has mirror symmetry, 
+;;; but not on the real negative axis.
+
+(defprop %expintegral_chi conjugate-expintegral-chi conjugate-function)
+
+(defun conjugate-expintegral-chi (args)
+  (let ((z (first args)))
+    (cond ((off-negative-real-axisp z)
+           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           ($expintegral_chi (simplify (list '($conjugate) z))))
+          (t
+            ;; On the negative real axis or no information. Unsimplified.
+            (list '($conjugate simp) ($expintegral_chi z))))))
+
 ;;; Differentiation of Exponential Integral Chi
 
 (defprop %expintegral_chi
@@ -1609,17 +1900,52 @@
    ((mtimes) ((%cosh) x) ((mexpt) x -1)))
   grad)
 
+;;; Integral of Exponential Chi
+
+(defprop %expintegral_chi
+  ((x)
+   ((mplus)
+      ((mtimes) x ((%expintegral_chi) x))
+      ((mtimes) -1 ((%sinh) x))))
+  integral)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun simp-expintegral-chi (exp ignored z)
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
+
+(defprop %expintegral_chi simplim%expintegral_chi simplim%function)
+
+(defun simplim%expintegral_chi (expr var val)
+  ;; Look for the limit of the argument.
+  (let ((z (limit (cadr expr) var val 'think)))
+  (cond
+    ;; Handle an argument 0 at this place
+    ((or (zerop1 z)
+         (eq z '$zeroa)
+         (eq z '$zerob))
+     '$minf)
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%expintegral_chi) z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-expintegral-chi (expr ignored z)
   (declare (ignore ignored))
-  (oneargcheck exp)
-  (let ((arg (simpcheck (cadr exp) z)))
+  (oneargcheck expr)
+  (let ((arg (simpcheck (cadr expr) z)))
     (cond
+      ;; Check for special values
       ((zerop1 arg) 
        ;; First check for zero argument. Throw Maxima error.
-       (merror "expintegral_chi(~:M) is undefined." arg))
+       (simp-domain-error
+	(intl:gettext "expintegral_chi: expintegral_chi(~:M) is undefined.") 
+        arg))
+      ((alike1 arg '((mtimes) $%i $inf)) (div (mul '$%pi '$%i) 2))
+      ((alike1 arg '((mtimes) -1 $%i $inf)) (div (mul -1 '$%pi '$%i) 2))
 
+      ;; Check for numerical evaluation
       ((complex-float-numerical-eval-p arg)
        (let ((carg (complex ($float ($realpart arg)) ($float ($imagpart arg)))))
          (complexify (expintegral-chi carg))))
@@ -1634,66 +1960,64 @@
              (simplify (list '(mtimes) '$%i ($imagpart result)))
              ($realpart result)))))
 
+      ;; Check for argument simplifications and transformations
+      ((taylorize (mop expr) (second expr)))
+
       ((and $expintrep
             (member $expintrep *expintflag*)
             (not (eq $expintrep '$expintegral_hyp)))
-       (when *debug-expintegral*
-         (format t "~&Transform Chi to ~A~%" $expintrep))
        (case $expintrep
          (%gamma_incomplete
            (mul
              (inv -2)
              (add
-               (list '(%gamma_incomplete) 0 (mul -1 arg))
-               (list '(%gamma_incomplete) 0 arg)
-               (list '(%log) (mul -1 arg))
-               (mul -1 (list '(%log) arg)))))
-
+               ($gamma_incomplete 0 (mul -1 arg))
+               ($gamma_incomplete 0 arg)
+               (list '(%log simp) (mul -1 arg))
+               (mul -1 (list '(%log simp) arg)))))
          (%expintegral_e1
            (mul 
              (inv -2)
              (add
-               (list '(%expintegral_e1) (mul -1 arg))
-               (list '(%expintegral_e1) arg)
-               (list '(%log) (mul -1 arg))
-               (mul -1 (list '(%log) arg)))))
-
+               ($expintegral_e1 (mul -1 arg))
+               ($expintegral_e1 arg)
+               (list '(%log simp) (mul -1 arg))
+               (mul -1 (list '(%log simp) arg)))))
          (%expintegral_ei
            (mul 
              (inv 4)
              (add 
                (mul 2
                  (add
-                   (list '(%expintegral_ei) (mul -1 arg))
-                   (list '(%expintegral_ei) arg)))
-               (list '(%log) (inv arg))
-               (list '(%log) (mul -1 (inv arg)))
-               (mul -1 (list '(%log) (mul -1 arg)))
-               (mul 3 (list '(%log) arg)))))
-
+                   ($expintegral_ei (mul -1 arg))
+                   ($expintegral_ei arg)))
+               (list '(%log simp) (inv arg))
+               (list '(%log simp) (mul -1 (inv arg)))
+               (mul -1 (list '(%log simp) (mul -1 arg)))
+               (mul 3 (list '(%log simp) arg)))))
          (%expintegral_li
            (add
              (mul
                (inv 2)
                (add
-                 (list '(%expintegral_li) (power '$%e (mul -1 arg)))
-                 (list '(%expintegral_li) (power '$%e arg))))
+                 ($expintegral_li (power '$%e (mul -1 arg)))
+                 ($expintegral_li (power '$%e arg))))
              (mul
                (div (mul '$%i '$%pi) 2)
                (simplify (list '(%signum) ($imagpart arg))))
              (mul 
                (inv 2)
                (add
-                 (list '(%log) (inv arg))
-                 (list '(%log) arg)))))
-               
+                 (list '(%log simp) (inv arg))
+                 (list '(%log simp) arg)))))
          ($expintegral_trig
            (add
-             (list '(%expintegral_ci) (mul '$%i arg))
-             (list '(%log) arg)
-             (mul -1 (list '(%log) (mul '$%i arg)))))))
+             ($expintegral_ci (mul '$%i arg))
+             (list '(%log simp) arg)
+             (mul -1 (list '(%log simp) (mul '$%i arg)))))))
 
-      (t (eqtest (list '(%expintegral_chi) arg) exp)))))
+      (t 
+       (eqtest (list '(%expintegral_chi) arg) expr)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Numerical evaluation of the Exponential Integral Ci
@@ -1724,3 +2048,12 @@
         (mul -1 ($log z))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Moved from bessel.lisp 2008-12-11.  Consider deleting it.
+;;
+;; Exponential integral E1(x).  The Cauchy principal value is used for
+;; negative x.
+(defun $expint (x)
+  (cond ((numberp x)
+	 (values (slatec:de1 (float x))))
+	(t
+	 (list '($expint simp) x))))

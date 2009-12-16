@@ -167,12 +167,21 @@ true$
 (assume(b>0),true);
 true$
 
-ratsimp(specint(t^(3/4)*%e^(-t^2/2/b)*%e^(-p*t),t));
+specint(t^(3/4)*%e^(-t^2/2/b)*%e^(-p*t),t);
+
+/*
 -sqrt(%pi)*b^(5/8)
           *(3*gamma(3/8)*gamma(3/4)*%e^(b*p^2/4)*%m[-5/8,1/4](b*p^2/2)
            -4*gamma(3/4)*gamma(7/8)*%e^(b*p^2/4)
              *%m[-5/8,-1/4](b*p^2/2))
  /(2*2^(5/8)*gamma(3/8)*gamma(7/8)*sqrt(p))$
+ */
+
+3*gamma(3/4)*b^(7/8)
+ *%e^(b*p^2/4)
+ *(2^(19/8)*sqrt(%pi)*%m[-5/8,-1/4](b*p^2/2)/(3*gamma(3/8)*b^(1/4)*sqrt(p))
+  -2^(3/8)*sqrt(%pi)*%m[-5/8,1/4](b*p^2/2)/(gamma(7/8)*b^(1/4)*sqrt(p)))
+ /4;
 
 /*
  * Sec. 4.5, formula (33):
@@ -229,11 +238,12 @@ sqrt(a)*%e^-(a/p)/p^2$
  *
  * (Maxima can't currently compute this transform for general v due to a bug
  * in hyp.lisp.)
+ * This bug is no longer present after correction of legf24 in hyp.lisp.
  */
 factor(ratsimp(specint(t^2*bessel_j(1,a*t)*%e^(-p*t),t)));
 3*a*p/(p^2+a^2)^(5/2) $
 
-(/* This is the Laplace transform of the Struve H_1 function, see
+(/* This is the Laplace transform of the Struve H function, see
   http://dlmf.nist.gov/Draft/ST/about_ST.8.13.html */    
  2/(%pi*p)-2*p*log(p/(sqrt(p^2+1)-1))/(%pi*sqrt(p^2+1)),
  /* And this should be the same as the specint of the next test below */
@@ -241,7 +251,7 @@ factor(ratsimp(specint(t^2*bessel_j(1,a*t)*%e^(-p*t),t)));
  ev(fullratsimp(%%),logexpand:all));
 -((sqrt(p^2+1)*(2*p^2*log(sqrt(p^2+1)-1)-2*p^2*log(p))-2*p^2-2) /(%pi*p^6+2*%pi*p^4+%pi*p^2))$
 
-(ev(fullratsimp(specint(t*hstruve[1](t)*%e^(-p*t),t)),logexpand:all),
+(ev(fullratsimp(specint(t*struve_h(1,t)*%e^(-p*t),t)),logexpand:all),
  ratsimp(%%/%));
 1$
 
@@ -249,11 +259,11 @@ factor(ratsimp(specint(t^2*bessel_j(1,a*t)*%e^(-p*t),t)));
  *
  * From the comments for hstf in hypgeo.lisp:
  *
- * hstruve[1](t) = 2/sqrt(%pi)*(t/2)^2/gamma(1+3/2)*%f[1,2]([1],[3/2,5/2],-t^2/4)
+ * struve_h(1,t) = 2/sqrt(%pi)*(t/2)^2/gamma(1+3/2)*%f[1,2]([1],[3/2,5/2],-t^2/4)
  *
  * So
  *
- * hstruve[1](sqrt(t)) = 2/(3*%pi)*t*%f[1,2]([1],[3/2,5/2],-t/4)
+ * struve_h(1,sqrt(t)) = 2/(3*%pi)*t*%f[1,2]([1],[3/2,5/2],-t/4)
  *
  * and the integrand is
  *
@@ -276,7 +286,7 @@ factor(ratsimp(specint(t^2*bessel_j(1,a*t)*%e^(-p*t),t)));
  * But %f[2,2]([1,5/2],[3/2,5/2],z) = %f[1,1]([1],[3/2],z) 
  * and Maxima knows how to compute this.
  */
-ratsimp(specint(t^(3/2)*hstruve[1](t^(1/2))*%e^(-p*t),t));
+ratsimp(specint(t^(3/2)*struve_h(1,t^(1/2))*%e^(-p*t),t));
 -%e^-(1/(4*p))*(sqrt(%pi)*sqrt(p)
 				*(8*%i*erf(%i/(2*sqrt(p)))*p
 				 -%i*erf(%i/(2*sqrt(p))))
@@ -343,13 +353,19 @@ specint(t^(3/4)*bessel_j(1/2,t)*bessel_j(1/4,t)*%e^(-p*t),t);
  *
  * Unfortunately, the transforms of these two approaches don't agree.
  * Yuck!
+ * After revision 1.65 of hypgeo.lisp it works as expected.
  */
-specint(t^(5/2)*bessel_y(1/2,t^(1/2))^2*%e^(-p*t),t);
--12*((-3*sqrt(%pi)*%i*erf(%i/sqrt(p))*p^(5/2)*%e^-(1/p)/8-sqrt(%pi)*%i*erf 
- (%i/sqrt(p))*p^(3/2)*%e^-(1/p)/2-sqrt(%pi)*%i*erf(%i/sqrt(p))*sqrt(p)*%e^- 
- (1/p)/2-3*p^2/4-p/2)/p^2+2*(sqrt(%pi)*%i*erf(%i/sqrt(p))*p^(3/2)*%e^-(1/p)/4 
- +sqrt(%pi)*%i*erf(%i/sqrt(p))*sqrt(p)*%e^-(1/p)/2+p/2)/p-sqrt(%pi)*%i*erf 
- (%i/sqrt(p))*sqrt(p)*%e^-(1/p)/2)/(%pi*p^4) $
+result:factor(ratsimp(specint(t^(5/2)*bessel_y(1/2,t^(1/2))^2*%e^(-p*t),t)));
+%e^-(1/p)*(16*p^3*%e^(1/p)-18*p^2*%e^(1/p)+4*p*%e^(1/p)
+                                +15*sqrt(%pi)*%i*erf(%i/sqrt(p))*p^(5/2)
+                                -20*sqrt(%pi)*%i*erf(%i/sqrt(p))*p^(3/2)
+                                +4*sqrt(%pi)*%i*erf(%i/sqrt(p))*sqrt(p))
+       /(4*%pi*p^6);
+
+/* This is equal to the Laplace transform of 2/%pi*t^2*cos(sqt(t))^2 */
+expand(result-specint(t^(5/2)*bessel_y(1/2,t^(1/2))^2*%e^(-p*t),t)),
+   besselexpand:true;
+ 0;
 
 /*
  * See formula (42), p. 187:
@@ -422,7 +438,7 @@ factor(ratsimp(specint(t^(1/2)*bessel_i(1,t)*%e^(-p*t),t)));
 3*sqrt(%pi)*assoc_legendre_p(1/2,-1,p/sqrt(p^2-1))/(4*(p^2-1)^(3/4))$
 
 /*
- * %h[2/3,1](sqrt(t)) = bessel_j(2/3,sqrt(t))+%i*bessel_y(2/3,sqrt(t))
+ * hankel_1(2/3,sqrt(t)) = bessel_j(2/3,sqrt(t))+%i*bessel_y(2/3,sqrt(t))
  *
  * Formula (34) below gives:
  *
@@ -443,14 +459,14 @@ factor(ratsimp(specint(t^(1/2)*bessel_i(1,t)*%e^(-p*t),t)));
  *
  */
 
-specint( t*%h[2/3,1](t^(1/2))*%e^(-p*t),t);
+specint(t*hankel_1(2/3,t^(1/2))*%e^(-p*t),t);
 -4*%i*gamma(1/3)*%m[-3/2,1/3](-1/(4*p))*%e^-(1/(8*p))/(3*(-1)^(5/6)*sqrt(3) 
  *gamma(2/3)*p^(3/2))+4*gamma(1/3)*%m[-3/2,1/3](-1/(4*p))*%e^-(1/(8*p))/(3*( 
  -1)^(5/6)*gamma(2/3)*p^(3/2))-8*%i*gamma(2/3)*%m[-3/2,-1/3](-1/(4*p))*%e^- 
  (1/(8*p))/(3*(-1)^(1/6)*sqrt(3)*gamma(1/3)*p^(3/2)) $
-
+ 
 /*
- * H[3/4,2](t) = bessel_j(3/4,t)-%i*bessel_y(3/4,t)
+ * hankel_2(2,t) = bessel_j(3/4,t)-%i*bessel_y(3/4,t)
  *
  * Sec 4.14, formula (9):
  *
@@ -476,15 +492,16 @@ specint( t*%h[2/3,1](t^(1/2))*%e^(-p*t),t);
  *    =  r^(-3/2)*(-gamma(9/4)*assoc_legendre_p(1/2,-3/4,p/r)
  *                  -gamma(3/4)*sqrt(2)*assoc_legendre_p(1/2,3/4,p/r))
  */
-ratsimp(specint( t^(1/2)*%h[3/4,2](t)*%e^(-p*t),t));
+
+ratsimp(specint(t^(1/2)*hankel_2(3/4,t)*%e^(-p*t),t));
 ''(ratsimp(5*gamma(1/4)/16/(p^2+1)^(3/4)*assoc_legendre_p(1/2,-3/4,p/sqrt(p^2+1))
 +sqrt(2)*%i*assoc_legendre_p(1/2,3/4,p/sqrt(p^2+1))*gamma(3/4)
        /(p^2+1)^(3/4)
        +5*%i*gamma(1/4)*assoc_legendre_p(1/2,-3/4,p/sqrt(p^2+1))
-	/(16*(p^2+1)^(3/4))))$
+   /(16*(p^2+1)^(3/4))))$
 
 /*
- * %h[1/2,1](t) = bessel_j(1/2,t)+%i*bessel_y(1/2,t)
+ * hankel_1(1,t) = bessel_j(1/2,t)+%i*bessel_y(1/2,t)
  *
  * So,
  *
@@ -517,7 +534,7 @@ ratsimp(specint( t^(1/2)*%h[3/4,2](t)*%e^(-p*t),t));
  *    -> -sqrt(2)*(p-1)*(p+1)/(sqrt(%pi)*(p^2+1)^2)
  */
 
-ratsimp(specint( t^(3/2)*%h[1/2,1](t)*%e^(-p*t),t));
+ratsimp(specint(t^(3/2)*hankel_1(1/2,t)*%e^(-p*t),t));
 -((sqrt(%pi)*(sqrt(2)*%i*p^2-2*sqrt(2)*p-sqrt(2)*%i))/(%pi*p^4+2*%pi*p^2+%pi))$
 
 /*
@@ -533,12 +550,15 @@ ratsimp(specint( t^(3/2)*%h[1/2,1](t)*%e^(-p*t),t));
  *
  *    -4/%pi/(p^2+a^2)*assoc_legendre_q(3/2,-1,p/sqrt(p^2+a^2))
  *
+ * The expected result is not correct. 
+ * With gamma(1+5/2) = 15*sqrt(%pi)/8 we get:
+ * 
+ * 15/(4*sqrt(%pi))*(p^2+a^2)^(-5/4)*assoc_legendre_q(3/3,1,p/sqrt(p^2+a^2))
  *
+ * That is the result of Maxima too. The example is correct.
  */
-ratsimp(specint( t^(3/2)*bessel_y(1,a*t)*%e^(-t),t));
-''(ratsimp(15*%i*(1/(a^2+1)-1)^(3/4)*(1/(sqrt(a^2+1)+1)^(3/2)+1/(1-sqrt(a^2+1))^(3/2))/ 
- (16*sqrt(a^2+1)))) $
-
+factor(specint(t^(5/2-1)*bessel_y(1,a*t)*%e^(-p*t),t));
+-15*assoc_legendre_q(3/2,-1,p/sqrt(p^2+a^2))/(4*sqrt(%pi)*(p^2+a^2)^(5/4));
 
 /*
  * A&S 13.1.32:
@@ -641,8 +661,14 @@ true$
 true$
 
 radcan(specint(t^u*bessel_j(v,a*t)*exp(-p*t),t));
+/* This is not the correct answer: see the formula above which is correct.
+   We had a bug in the routine legf24 in hyp.lisp.
 assoc_legendre_p(-u-1,-v,p/sqrt(p^2+a^2))*gamma(v+u+1)
 	/((p^2+a^2)^((u+1)/2))$
+ */
+
+assoc_legendre_p(u,-v,p/sqrt(p^2+a^2))*gamma(v+u+1)
+   /((p^2+a^2)^((u+1)/2))$
 
 /*
  * (25)
@@ -792,9 +818,15 @@ a^(v+u)*p^(-v-u-lam)*gamma(v+u+lam)
  * This simplifies to log((1+p/r)/a) = log(p/a+sqrt(1+(p/a)^2)) = asinh(p/a).
  *
  * So we have -2/%pi/sqrt(p^2+a^2)*asinh(p/a).
+ *
+ * With revision 1.64 of hypgeo.lisp we simplify the Legendre Q function. 
+ * The result is equivalent to the above formula. 
  */
 specint(bessel_y(0,a*t)*exp(-p*t),t);
--2/%pi/sqrt(p^2+a^2)*legendre_q(0,p/sqrt(p^2+a^2)) $
+
+/*-2/%pi/sqrt(p^2+a^2)*legendre_q(0,p/sqrt(p^2+a^2)) $*/
+
+ -log((sqrt(p^2+a^2)+p)/(sqrt(p^2+a^2)-p))/(%pi*sqrt(p^2+a^2));
 
 /*
  * (46)
@@ -815,9 +847,14 @@ specint(bessel_y(0,a*t)*exp(-p*t),t);
  *     -2/%pi/(p^2+a^2)*(p/r*log((p+r)/a) - 1)
  *
  *       = 2/%pi/(p^2+a^2)*(1-p/sqrt(p^2+a^2)*log((p+sqrt(p^2+a^2))/a))
+ *
+ * The Legendre Q function simplifes accordingly.
  */
-specint(t*bessel_y(0,a*t)*exp(-p*t),t);
--2/%pi/(p^2+a^2)*legendre_q(1,p/sqrt(p^2+a^2)) $
+factor(specint(t*bessel_y(0,a*t)*exp(-p*t),t));
+/*-2/%pi/(p^2+a^2)*legendre_q(1,p/sqrt(p^2+a^2)) $*/
+
+(p*log((sqrt(p^2+a^2)+p)/(sqrt(p^2+a^2)-p))-2*sqrt(p^2+a^2))
+    /(-%pi*(p^2+a^2)^(3/2));
 
 /*
  * (47)
@@ -848,8 +885,12 @@ specint(t*bessel_y(0,a*t)*exp(-p*t),t);
  * as expected.
  *  
  */
-specint(t*bessel_y(1,a*t)*exp(-p*t),t);
--4/%pi/(p^2+a^2)*assoc_legendre_q(1,-1,p/sqrt(p^2+a^2))$
+factor(specint(t*bessel_y(1,a*t)*exp(-p*t),t));
+/*-4/%pi/(p^2+a^2)*assoc_legendre_q(1,-1,p/sqrt(p^2+a^2))$*/
+
+(a^2*log((sqrt(p^2+a^2)+p)/(sqrt(p^2+a^2)-p))+2*p*sqrt(p^2+a^2))
+        /(%pi*a*(p^2+a^2)^(3/2));
+
 
 /*
  * Some tests for step7
@@ -903,6 +944,18 @@ airy_dbi(x);
 diff(airy_dbi(x),x);
 x*airy_bi(x);
 
+/* Integrals of Airy functions */
+integrate(airy_ai(z),z);
+hypergeometric([1/3],[2/3,4/3],z^3/9)*z/(3^(2/3)*gamma(2/3))
+   -3^(1/6)*gamma(2/3)*hypergeometric([2/3],[4/3,5/3],z^3/9)*z^2/(4*%pi);
+integrate(airy_dai(z),z);
+airy_ai(z);
+integrate(airy_bi(z),z);
+3^(2/3)*gamma(2/3)*hypergeometric([2/3],[4/3,5/3],z^3/9)*z^2/(4*%pi)
+   +hypergeometric([1/3],[2/3,4/3],z^3/9)*z/(3^(1/6)*gamma(2/3));
+integrate(airy_dbi(z),z);
+airy_bi(z);
+
 /* A&S 10.4.1  Airy functions satisfy the Airy differential equation */
 diff(airy_ai(x),x,2)-x*airy_ai(x);
 0;
@@ -920,6 +973,16 @@ true;
 true;
 closeto(airy_dbi(0)/sqrt(3)-c2,1.0e-14);
 true;
+
+/* Exact values A&S 10.4.4 and 10.4.5 */
+airy_ai(0);
+1/(3^(2/3)*gamma(2/3));
+airy_dai(0);
+-(1/(3^(1/3)*gamma(1/3)));
+airy_bi(0);
+1/(3^(1/6)*gamma(2/3));
+airy_dbi(0);
+3^(1/6)/gamma(1/3);
 
 /* A&S 10.4.10 - Wronskian */
 AS_10_4_10(z):=expand(airy_ai(z)*airy_dbi(z)-airy_bi(z)*airy_dai(z)-1/%pi);
@@ -1060,15 +1123,15 @@ specint(t^(-1)*exp(-p*t),t);
 0;
 
 specint(8*t^1*exp(3*t)*bessel_y(3,t)*exp(-p*t),t);
-'specint(8*bessel_y(3,t)*t*%e^(-((p-3)*t)),t)$
+'specint(8*bessel_y(3,t)*t*%e^(3*t-p*t),t)$
 
 /* fail-in-f50cond */
 specint(8*t^1*exp(3*t)*bessel_y(8,7*sqrt(t))*exp(-p*t),t);
-'specint(8*bessel_y(8,7*sqrt(t))*t*exp(-((p-3)*t)),t);
+'specint(8*bessel_y(8,7*sqrt(t))*t*%e^(3*t-p*t),t);
 
 /* fail-in-dionarghyp-y */
 specint(8*t^1*exp(3*t)*bessel_y(8,7*t^(3/2))*exp(-p*t),t);
-'specint(8*bessel_y(8,7*t^(3/2))*t*exp(-((p-3)*t)),t);
+'specint(8*bessel_y(8,7*t^(3/2))*t*%e^(3*t-p*t),t);
 
 /* The additionally phase factor in the calculation vanish, because of
    the modificaton of the transformation to Bessel J in the code. DK.
@@ -1664,4 +1727,187 @@ test_wronskian(w_ik, lambda([n,z], 1/z), 1e-10, 5);
 test_wronskian(lambda([n,z], w_ik(n,z*%i)), lambda([n,z], 1/(z*%i)), 1e-12, 5);
 [];
 
-/******************************************************************************/
+/******************************************************************************
+
+    Integrals of Bessel functions
+
+*******************************************************************************/
+
+integrate(bessel_j(0,x),x);
+x*(bessel_j(0,x)*(2-%pi*struve_h(1,x))+%pi*bessel_j(1,x)*struve_h(0,x))/2;
+
+integrate(bessel_j(1,x),x);
+-bessel_j(0,x);
+
+integrate(bessel_j(2,x),x);
+hypergeometric([3/2],[5/2,3],-x^2/4)*x^3/24;
+
+integrate(bessel_j(1/2,x),x);
+ 2^(3/2)*hypergeometric([3/4],[3/2,7/4],-x^2/4)*x^(3/2)/(3*sqrt(%pi));
+
+/* http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/21/01/01/ */
+integrate(bessel_y(0,x),x);
+%pi*x*(bessel_y(1,x)*struve_h(0,x)+bessel_y(0,x)*struve_h(-1,x))/2;
+
+integrate(bessel_y(1,x),x);
+-bessel_y(0,x);
+
+integrate(bessel_y(2,x),x);
+%pi*x*(bessel_y(1,x)*struve_h(0,x)+bessel_y(0,x)*struve_h(-1,x))/2-2*bessel_y(2,x);
+
+integrate(bessel_y(3,x),x);
+-2*bessel_y(2,x)-bessel_y(0,x);
+
+integrate(bessel_y(10,x),x);
+%pi*x*(bessel_y(1,x)*struve_h(0,x)+bessel_y(0,x)*struve_h(-1,x))/2
+  -2*'sum(bessel_y(2*i,x),i,1,5);
+
+integrate(bessel_y(11,x),x);
+-2*'sum(bessel_y(2*i,x),i,1,5)-bessel_y(0,x);
+
+integrate(bessel_i(0,x),x);
+x*(bessel_i(0,x)*(%pi*struve_l(1,x)+2)-%pi*bessel_i(1,x)*struve_l(0,x))/2;
+
+integrate(bessel_i(1,x),x);
+-bessel_i(0,x);
+
+/* http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/21/01/01/ */
+integrate(bessel_k(0,x),x);
+%pi*x*(bessel_k(1,x)*struve_l(0,x)+bessel_k(0,x)*struve_l(-1,x))/2;
+
+integrate(bessel_k(1,x),x);
+-bessel_k(0,x);
+
+integrate(bessel_k(7,x),x);
+2*(-bessel_k(6,x)+bessel_k(4,x)-bessel_k(2,x))+bessel_k(0,x);
+
+integrate(bessel_k(8,x),x);
+%pi*x*(bessel_k(1,x)*struve_l(0,x)+bessel_k(0,x)*struve_l(-1,x))/2
+      +2*(-bessel_y(7,x)+bessel_y(5,x)-bessel_y(3,x)+bessel_y(1,x));
+
+/******************************************************************************
+
+    Check the handling of realpart and impagpart for special case 
+    of the order and arg of the Bessel functions.
+
+*******************************************************************************/
+
+/* Check for the Bessel J function */
+
+(f(n,x):=[realpart(bessel_j(n,x)),imagpart(bessel_j(n,x))],done);
+done;
+
+(declare(n,integer),assume(x>0),done);
+done;
+
+f(n,x);
+[bessel_j(n,x),0];
+f(n,-x);
+[bessel_j(n,-x),0];
+
+f(n+1/2,x);
+[bessel_j(n+1/2,x),0];
+f(n+1/2,-x);
+[0,bessel_j(n+1/2,-x)];
+
+(declare(n_even,even),declare(n_odd,odd),done);
+done;
+
+f(n_even,%i);
+[bessel_j(n_even,%i),0];
+f(n_odd,%i);
+[0,bessel_j(n_odd,%i)];
+
+f(n_even,x*%i);
+[bessel_j(n_even,x*%i),0];
+f(n_odd,x*%i);
+[0,bessel_j(n_odd,x*%i)];
+
+f(n_even,(x+1)^2*%i);
+[bessel_j(n_even,(x+1)^2*%i),0];
+f(n_odd,(x+1)^2*%i);
+[0,bessel_j(n_odd,(x+1)^2*%i)];
+
+(declare(j,imaginary),done);
+done;
+
+f(n_even,(x+1)^2*j);
+[bessel_j(n_even,(x+1)^2*j),0];
+f(n_odd,(x+1)^2*j);
+[0,bessel_j(n_odd,(x+1)^2*j)];
+
+/* Check the handling of realpart and imagpart for the Bessel I function */
+
+(f(n,x):=[realpart(bessel_i(n,x)),imagpart(bessel_i(n,x))],done);
+done;
+
+f(n,x);
+[bessel_i(n,x),0];
+f(n,-x);
+[bessel_i(n,-x),0];
+
+f(n+1/2,x);
+[bessel_i(n+1/2,x),0];
+f(n+1/2,-x);
+[0,bessel_i(n+1/2,-x)];
+
+f(n_even,%i);
+[bessel_i(n_even,%i),0];
+f(n_odd,%i);
+[0,bessel_i(n_odd,%i)];
+
+f(n_even,x*%i);
+[bessel_i(n_even,x*%i),0];
+f(n_odd,x*%i);
+[0,bessel_i(n_odd,x*%i)];
+
+f(n_even,(x+1)^2*%i);
+[bessel_i(n_even,(x+1)^2*%i),0];
+f(n_odd,(x+1)^2*%i);
+[0,bessel_i(n_odd,(x+1)^2*%i)];
+
+f(n_even,(x+1)^2*j);
+[bessel_i(n_even,(x+1)^2*j),0];
+f(n_odd,(x+1)^2*j);
+[0,bessel_i(n_odd,(x+1)^2*j)];
+
+/* Check the handling of realpart and imagpart for the Bessel K function */
+
+(f(n,x):=[realpart(bessel_k(n,x)),imagpart(bessel_k(n,x))],done);
+done;
+
+f(n,x);
+[bessel_k(n,x),0];
+f(n,-x);
+[realpart(bessel_k(n,-x)),imagpart(bessel_k(n,-x))];
+
+f(n+1/2,x);
+[bessel_k(n+1/2,x),0];
+f(n+1/2,-x);
+[0,bessel_k(n+1/2,-x)];
+
+f(n_even,%i);
+[realpart(bessel_k(n_even,%i)),imagpart(bessel_k(n_even,%i))];
+f(n_odd,%i);
+[realpart(bessel_k(n_odd,%i)),imagpart(bessel_k(n_odd,%i))];
+
+
+/* Check the handling of realpart and imagpart for the Bessel Y function */
+
+(f(n,x):=[realpart(bessel_y(n,x)),imagpart(bessel_y(n,x))],done);
+done;
+
+f(n,x);
+[bessel_y(n,x),0];
+f(n,-x);
+[realpart(bessel_y(n,-x)),imagpart(bessel_y(n,-x))];
+
+f(n+1/2,x);
+[bessel_y(n+1/2,x),0];
+f(n+1/2,-x);
+[0,bessel_y(n+1/2,-x)];
+
+f(n_even,%i);
+[realpart(bessel_y(n_even,%i)),imagpart(bessel_y(n_even,%i))];
+f(n_odd,%i);
+[realpart(bessel_y(n_odd,%i)),imagpart(bessel_y(n_odd,%i))];

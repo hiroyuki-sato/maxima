@@ -110,7 +110,7 @@
 	    (merror "Bad file spec: ~:M" user-object)))))
 
 (defun $batchload (filename &aux expr (*mread-prompt* ""))
-  (declare (special *mread-prompt*))
+  (declare (special *mread-prompt* *prompt-on-read-hang*))
   (setq filename ($file_search1 filename '((mlist) $file_search_maxima)))
   (with-open-file (in-stream filename)
     (when $loadprint
@@ -118,7 +118,7 @@
     (cleanup)
     (newline in-stream)
     (loop while (and
-		  (setq  expr (mread in-stream nil))
+		  (setq  expr (let (*prompt-on-read-hang*) (mread in-stream nil)))
 		  (consp expr))
 	   do (meval* (third expr)))
 		  (cl:namestring (truename in-stream))))
@@ -203,14 +203,18 @@
 	 (with-open-file (in-stream filename)
 	   (format t "~%batching ~A~%"
 		   (truename in-stream))
-	   (continue in-stream demo)
+	   (catch 'macsyma-quit (continue in-stream demo))
 	   (namestring in-stream)))))
 
 ;; Return true if $float converts both a and b to floats and 
-;; |a - b| <= float_approx_equal_tolerance * min(|a|, |b|).
-;; In all other cases, return false.
 
-(defmvar $float_approx_equal_tolerance (* 8 flonum-epsilon))
+;;   |a - b| <= float_approx_equal_tolerance * min(2^n, 2^m), 
+
+;; where a = af * 2^m, |af| < 1, and m is an integer (similarly for b); 
+;; in all other cases, return false. See, Knuth, "The Art of Computer Programming," 3rd edition,
+;; page 233.
+
+(defmvar $float_approx_equal_tolerance (* 16 flonum-epsilon))
 
 (defun $float_approx_equal (a b)
   (setq a (if (floatp a) a ($float a)))
@@ -218,21 +222,28 @@
   (and
    (floatp a)
    (floatp b)
-   (<= (abs (- a b)) (* $float_approx_equal_tolerance (min (abs a) (abs b))))))
+   (<= (abs (- a b)) (* $float_approx_equal_tolerance 
+			(min 
+			 (expt 2 (- (second (multiple-value-list (decode-float a))) 1))
+			 (expt 2 (- (second (multiple-value-list (decode-float b))) 1)))))))
 
-;; Return true if $bfloat converts both a and b to big floats and 
-;; |a - b| <= 8 * big-float-epsilon * min(|a|, |b|). The big float
-;; epsilon is determined by the number with the greatest number of bits.
+;; Big float version of float_approx_equal. But for bfloat_approx_equal, the tolerance isn't
+;; user settable; instead, it is 32 / 2^fpprec. The factor of 32 is too large, I suppose. But
+;; the test suite gives a few errors with a factor of 16. These errors might be due to 
+;; float / big float comparisons.
 
 (defun $bfloat_approx_equal (a b)
   (setq a (if ($bfloatp a) a ($bfloat a)))
   (setq b (if ($bfloatp b) b ($bfloat b)))
-  (and
-   ($bfloatp a)
-   ($bfloatp b)
-   (eq t (mgqp (mul (power 2 (- 8 (max (first (last (first a))) (first (last (first b))))))
-		    (take '($min) (take '(mabs) a) (take '(mabs) b)))
-	       (take '(mabs) (sub a b))))))
+  (let ((m) (bits))
+    (and
+     ($bfloatp a)
+     ($bfloatp b)
+     (setq bits (min (third (first a)) (third (first b))))
+     (setq m (mul 32 (expt 2 (- bits)) (min (expt 2 (- (car (last a)) 1)) (expt 2 (- (car (last b)) 1)))))
+     (setq m (if (rationalp m) (div (numerator m) (denominator m)) m))
+     (eq t (mgqp m (take '(mabs) (sub a b)))))))
+
 
 ;; The first argument 'f' is the expected result; the second argument 
 ;; 'g' is the output of the test. By explicit evaluation, the expected 
@@ -296,11 +307,6 @@
 
 (defvar *collect-errors* t)
 
-(defun in-list (item list)
-  (dolist (element list)
-    (if (equal item element) (return-from in-list t))) nil)
-
-
 (defun test-batch (filename expected-errors
 			    &key (out *standard-output*) (show-expected nil)
 			    (show-all nil))
@@ -342,17 +348,16 @@
 	  
 	    (setq next-result (third next))
 	    (let* ((correct (batch-equal-check next-result result))
-		   (expected-error (in-list i expected-errors))
+		   (expected-error (member i expected-errors))
 		   (pass (or correct expected-error)))
-	      (if (or show-all (not pass) (and correct expected-error)
-		      (and expected-error show-expected))
-		  (progn
-		    (format out "~%********************** Problem ~A ***************" i)
-		    (format out "~%Input:~%" )
-		    (displa (third expr))
-		    (format out "~%~%Result:~%")
-		    (format out "~a" (get-output-stream-string tmp-output))
-		    (displa $%)))
+	      (when (or show-all (not pass) (and correct expected-error)
+			(and expected-error show-expected))
+		(format out "~%********************** Problem ~A ***************" i)
+		(format out "~%Input:~%" )
+		(displa (third expr))
+		(format out "~%~%Result:~%")
+		(format out "~a" (get-output-stream-string tmp-output))
+		(displa $%))
 	      (cond ((and correct expected-error)
 		     (format t "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima.~%"))
 		    (correct
@@ -493,25 +498,33 @@
   ;; strings naming the tests we want to run.  They must match the
   ;; file names in $testsuite_files.  We ignore any items that aren't
   ;; in $testsuite_files.
-  (mapcar #'(lambda (x)
-	      (if (symbolp x)
-		  (subseq (print-invert-case x) 1)
-		  x))
-	  (cond (tests
-		 (intersection (cdr $testsuite_files)
-			       (cdr tests)
-			       :key #'(lambda (x)
-					(maxima-string (if (listp x)
-							   (second x)
-							   x)))
-			       :test #'string=))
-		(t
-		 (cdr $testsuite_files)))))
+  (flet ((remove-dollarsign (x)
+	   ;; Like stripdollar, but less heavy
+	   (if (symbolp x)
+	       (subseq (maxima-string x) 1)
+	       x)))
+    (mapcar #'remove-dollarsign
+	    (cond (tests
+		   (intersection (cdr $testsuite_files)
+				 (mapcar #'remove-dollarsign (cdr tests))
+				 :key #'(lambda (x)
+					  (maxima-string (if (listp x)
+							     (second x)
+							     x)))
+				 :test #'string=))
+		  (t
+		   (cdr $testsuite_files))))))
 
-(defun $run_testsuite (&optional (show-known-bugs nil) (show-all nil) (tests nil))
+(defun run-testsuite (&key display_known_bugs display_all tests)
   (declare (special $file_search_tests))
   (let ((test-file)
 	(expected-failures))
+    ;; Allow only T and NIL for display_known_bugs and display_all
+    (unless (member display_known_bugs '(t nil))
+      (merror "display_known_bugs should be either true or false, not ~M" display_known_bugs))
+    (unless (member display_all  '(t nil))
+      (merror "display_all should be either true or false, not ~M" display_all))
+    
     (setq *collect-errors* nil)
     (unless $testsuite_files
       (load (concatenate 'string *maxima-testsdir* "/" "testsuite.lisp")))
@@ -520,43 +533,82 @@
 	  (tests-to-run (intersect-tests tests)))
       (time 
        (loop with errs = '() for testentry in tests-to-run
-	      do
-	      (if (atom testentry)
-		  (progn
-		    (setf test-file testentry)
-		    (setf expected-failures nil))
-		  (progn
-		    (setf test-file (second testentry))
-		    (setf expected-failures (cddr testentry))))
+	     do
+	     (if (atom testentry)
+		 (progn
+		   (setf test-file testentry)
+		   (setf expected-failures nil))
+		 (progn
+		   (setf test-file (second testentry))
+		   (setf expected-failures (cddr testentry))))
   
-	    (format t "Running tests in ~a: " (if (symbolp test-file)
-						    (subseq (print-invert-case test-file) 1)
-						    test-file))
-	      (or (errset
-		   (progn
-		     (setq testresult 
-			   (rest (test-batch
-				  ($file_search test-file $file_search_tests)
-				  expected-failures
-				  :show-expected show-known-bugs
-				  :show-all show-all)))
-		     (if testresult
-			 (setq errs (append errs (list testresult))))))
+	     (format t "Running tests in ~a: " (if (symbolp test-file)
+						   (subseq (print-invert-case test-file) 1)
+						   test-file))
+	     (or (errset
 		  (progn
-		    (setq error-break-file (format nil "~a" test-file))
-		    (setq errs 
-			  (append errs 
-				  (list (list error-break-file "error break"))))
-		    (format t "~%Caused an error break: ~a~%" test-file)))
-	      finally (cond ((null errs) 
-			     (format t "~%~%No unexpected errors found.~%"))
-			    (t (format t "~%Error summary:~%")
-			       (mapcar
-				#'(lambda (x)
-				    (let ((s (if (> (length (rest x)) 1) "s" "")))
-				      (format t "Error~a found in ~a, problem~a:~%~a~%"
-				       s (first x) s (sort (rest x) #'<))))
-				errs)))))))
+		    (setq testresult 
+			  (rest (test-batch
+				 ($file_search test-file $file_search_tests)
+				 expected-failures
+				 :show-expected display_known_bugs
+				 :show-all display_all)))
+		    (if testresult
+			(setq errs (append errs (list testresult))))))
+		 (progn
+		   (setq error-break-file (format nil "~a" test-file))
+		   (setq errs 
+			 (append errs 
+				 (list (list error-break-file "error break"))))
+		   (format t "~%Caused an error break: ~a~%" test-file)))
+	     finally (cond ((null errs) 
+			    (format t "~%~%No unexpected errors found.~%"))
+			   (t (format t "~%Error summary:~%")
+			      (mapcar
+			       #'(lambda (x)
+				   (let ((s (if (> (length (rest x)) 1) "s" "")))
+				     (format t "Error~a found in ~a, problem~a:~%~a~%"
+					     s (first x) s (sort (rest x) #'<))))
+			       errs)))))))
   '$done)
 
+;; Convert a list of Maxima "keyword" arguments into the corresponding
+;; list of Lisp keyword arguments.  Maxima options look like
+;; opt1=val1, opt2=val2, etc.  These are converted to :opt1 val1 :opt2
+;; val2, which can be directly given to a Lisp function with those
+;; keyword arguments.  If VALID-KEYWORDS is specified, only those
+;; (Maxima) keywords will be recognized.  Unrecognized ones will
+;; signal an error.  If VALID-KEYWORDS is not specified, then all
+;; keywords will be converted, and it is up to the Lisp routine to
+;; decide what to do with the extra keyword arguments.
+(defun lispify-maxima-keyword-options (options &optional valid-keywords)
+  ;; options looks like (((mequal) $opt1 val1) ((mequal) $opt2 val2) ...)
+  ;;
+  ;; Convert to a new list that looks like (:opt1 val1 :opt2 val2 ...)
+  ;;
+  (unless (listp options)
+    (merror "Invalid Maxima keyword options: ~M" options))
+  (when (every #'(lambda (o)
+		   ;; Make sure every option has the right form.
+		   (let ((ok (and (listp o)
+				  (= (length o) 3)
+				  (eq (caar o) 'mequal))))
+		     (unless ok
+		       (merror "Badly formed keyword option: ~M" o))
+		     ok))
+		 options)
+    (mapcan #'(lambda (o)
+	      (destructuring-bind (mequal opt val)
+		  o
+		(declare (ignore mequal))
+		(if (or (null valid-keywords)
+			(member opt valid-keywords))
+		    (flet ((keywordify (x)
+			     (intern (subseq (symbol-name x) 1) :keyword)))
+		      (list (keywordify opt) val))
+		    (merror "Unrecognized keyword: ~M" opt))))
+	    options)))
 
+(defun $run_testsuite (&rest options)
+  (apply #'run-testsuite
+	 (lispify-maxima-keyword-options options '($display_all $display_known_bugs $tests))))

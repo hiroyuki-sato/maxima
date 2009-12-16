@@ -13,8 +13,15 @@
 (defmspec $example (l)
   (declare (special *need-prompt*))
   (let ((example (second l)))
-    (unless (symbolp example)
-      (merror "First arg to example must be a symbol, eg example(functions)"))
+    (when (symbolp example)
+      ;; Coerce a symbol to be a string. Remove the first character,
+      ;; it is a $-char.
+      (setq example (coerce (cdr (exploden example)) 'string)))
+    (unless (stringp example)
+      (merror 
+        (intl:gettext "example: argument must be a symbol or a string; found: ~M") example))
+    ;; Downcase the string. $example is not case sensitive.
+    (setq example (string-downcase example))
     (with-open-file (st ($file_search1 $manual_demo '((mlist) $file_search_demo)))
       (prog (tem all c-tag d-tag)
        again
@@ -27,15 +34,22 @@
 
        (setq tem (read st nil nil))
        (unless tem (go notfound))
-       (setq tem (makealias tem))
-       (cond ((eql tem example)
+       ;; Coerce the topic in tem to be a string.
+       (setq tem (coerce (exploden tem) 'string))
+       (cond ((string= tem example)
 	      (go doit))
 	     (t (push tem all)
 		(go again)))
        ;; at this stage we read maxima forms and print and eval
-       ;; until a peek sees '&' as the first character of next expression.
-       doit
-       (setq tem (peek-char nil st nil))
+       ;; until a peek sees '&' as the first character of next expression,
+       ;; but at first skip over whitespaces.
+       doit       
+       (when (member (setq tem (peek-char nil st nil)) 
+                     '(#\tab #\space #\newline #\linefeed #\return #\page))
+         ;; Found whitespace. Read char and look for next char.
+         ;; The && label can be positioned anywhere before the next topic.
+         (setq tem (read-char st nil))
+         (go doit))
        (cond ((or (null tem) (eql tem #\&))
 	      (setf *need-prompt* t)
 	      (return '$done)))
@@ -53,13 +67,16 @@
        (go doit)
 
        notfound
-       (format t "Not Found.  You can look at:~&")
        (setf *need-prompt* t)
-       (return `((mlist) ,@(nreverse all)))))))
+       (if (= (length l) 1)
+         (return `((mlist) ,@(nreverse all)))
+         (progn
+           (mtell (intl:gettext "example: ~M not found. 'example();' returns the list of known examples.~%") example)
+           (return '$done)))))))
 
 (defun mread-noprompt (&rest read-args)
-  (let ((*mread-prompt* ""))
-    (declare (special *mread-prompt*))
+  (let ((*mread-prompt* "") (*prompt-on-read-hang*))
+    (declare (special *mread-prompt* *prompt-on-read-hang*))
     (unless read-args (setq read-args (list *query-io*)))
     (caddr (apply #'mread read-args))))
 
@@ -74,7 +91,7 @@
 	 (setq var1 (first l)
 	       lis (second l)
 	       l (cddr l))
-	 (unless (symbolp var1) (merror "~A not a symbol" var1))
+	 (unless (symbolp var1) (merror (intl:gettext "create_list: expected a symbol; found: ~A") var1))
  	 (setq lis (meval* lis))
 	 (progv (list var1)
 	     (list nil)
@@ -92,7 +109,7 @@
 		     do (setf (symbol-value var1) v)
 		     append
 		     (apply #'create-list1 form l)))
-		 (t (merror "Bad arg")))))))
+		 (t (merror (intl:gettext "create_list: unexpected arguments."))))))))
 
 ;; The documentation is now in INFO format and can be printed using
 ;; tex, or viewed using info or gnu emacs or using a web browser.  All
@@ -107,5 +124,42 @@
 	(cl-info::info-exact topic)
 	(cl-info::info topic))))
 
-(defun $apropos (s)
-  (cons '(mlist) (apropos-list s :maxima)))
+; The old implementation
+;(defun $apropos (s)
+;  (cons '(mlist) (apropos-list s :maxima)))
+
+;;; Utility function for apropos to filter a list LST with a function FN
+;;; it is semiliar to remove-if-not, but take the return value of the function
+;;; and build up a new list with this values.
+;;; e.g. (filter #'(lambda(x) (if (oddp x) (inc x)) '(1 2 3 4 5)) --> (2 4 6)
+
+(defun filter (fn lst)
+  (let ((acc nil))
+    (dolist (x lst)
+      (let ((val (funcall fn x)))
+        (if val (push val acc))))
+    (nreverse acc)))
+
+(defmspec $apropos (s)
+  (let (acc y)
+    (setq s (car (margs s)))
+    (cond ((stringp s)
+           ;; A list of all Maxima names which contain the string S.
+           (setq acc (append acc (apropos-list (stripdollar s) :maxima)))
+           ;; Filter the names which are Maxima User symbols starting
+           ;; with % or $ and remove duplicates.
+           ($listify
+             ($setify
+               (cons '(mlist)
+                      (filter #'(lambda (x)
+                                  (cond ((eq (getcharn x 1) #\$) x)
+                                        ((eq (getcharn x 1) #\%)
+                                         ;; Change to a verb, when present.
+                                         (if (setq y (get x 'noun))
+                                             y
+                                             x))
+                                        (t nil)))
+                              acc)))))
+          (t
+           (merror
+             (intl:gettext "apropos: argument must be a string; found: ~M") s)))))

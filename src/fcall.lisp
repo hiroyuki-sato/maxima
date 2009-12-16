@@ -74,14 +74,14 @@
       ;;loses if the argl could not be evaluated but macsyma &quote functions
       ;;but the translator should be fixed so that if (mget f 'mfexprp) is t
       ;;then it doesn't translate as an mfunction-call.
-      `(lispm-mfunction-call-aux ', f ',argl (list ,@ argl) nil)))
+      `(lispm-mfunction-call-aux ,f ',argl (list ,@ argl) nil)))
 
 (defun lispm-mfunction-call-aux (f argl list-argl autoloaded-already? &aux f-prop)
   (cond ((functionp f)
 	 (apply f list-argl))
 	((macro-function f)
 	 (eval (cons f list-argl)))
-	((not (symbolp f)) (error "expected symbol or function"))
+	((not (symbolp f)) (merror (intl:gettext "apply: expected symbol or function; found: ~M") f))
 	((setq f-prop (get f 'mfexpr*))
 	 (funcall f-prop (cons nil argl)))
 	((setq f-prop (mget f 'mexpr))
@@ -92,7 +92,7 @@
 		(mlambda f-prop list-argl f nil nil))))
 	((setq f-prop (get f 'autoload))
 	 (cond (autoloaded-already?
-		(merror "~:@M, Function undefined after loading file:~A " f (namestring (get f 'autoload))))
+		(merror (intl:gettext "apply: function ~:@M undefined after loading file ~A") f (namestring (get f 'autoload))))
 	       (t
 		(funcall autoload (cons f f-prop))
 		(lispm-mfunction-call-aux f argl list-argl t))))

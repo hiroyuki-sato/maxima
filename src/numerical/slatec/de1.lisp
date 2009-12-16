@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
-;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
@@ -350,15 +358,15 @@
                                        1.1272598189275103e-31
                                        -5.069814875800461e-32)))
       (first$ nil))
-  (declare (type f2cl-lib:logical first$)
-           (type (simple-array double-float (64)) ae14cs)
-           (type (simple-array double-float (25)) e12cs)
-           (type (simple-array double-float (29)) e11cs)
-           (type (simple-array double-float (41)) ae12cs)
-           (type (simple-array double-float (60)) ae11cs)
-           (type (simple-array double-float (50)) ae13cs ae10cs)
+  (declare (type (integer) ntae10 ntae11 ntae12 nte11 nte12 ntae13 ntae14)
            (type (double-float) xmax)
-           (type (integer) ntae14 ntae13 nte12 nte11 ntae12 ntae11 ntae10))
+           (type (simple-array double-float (50)) ae10cs ae13cs)
+           (type (simple-array double-float (60)) ae11cs)
+           (type (simple-array double-float (41)) ae12cs)
+           (type (simple-array double-float (29)) e11cs)
+           (type (simple-array double-float (25)) e12cs)
+           (type (simple-array double-float (64)) ae14cs)
+           (type f2cl-lib:logical first$))
   (setq first$ f2cl-lib:%true%)
   (defun de1 (x)
     (declare (type (double-float) x))

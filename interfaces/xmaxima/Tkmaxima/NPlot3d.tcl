@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: NPlot3d.tcl,v 1.6 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: NPlot3d.tcl,v 1.9 2009/11/16 22:41:47 villate Exp $
 #
 ###### NPlot3d.tcl ######
 ############################################################
@@ -53,31 +53,13 @@ set sample { matrix_mesh  {  { 0 0 0 0 0 }
 }
 }
 
-
 proc  fixupZ { } {
     uplevel 1 {
 	if { [catch { expr $z + 0 } ] } {
 	    set z nam
-	}  elseif { $dotruncate  &&  ($z > $zzmax || $z < $zzmin) } {
-	    set z nam
-	
-	} else {
-	    if { $flatten } {
-		if { $z > $zzmax } {
-		    set z $zzmax
-		} elseif {$z < $zzmin } {
-		    set z $zzmin
-		}
-	    }
-	    if { $z < $zmin }  {
-		set zmin $z
-	    } elseif {$z > $zmax } {
-		set zmax $z
-	    }
 	}
     }
 }
-
 
 proc vectorLength { v } {
     expr { sqrt(1.0 * [lindex $v 0]*[lindex $v 0] + [lindex $v 1]*[lindex $v 1] + [lindex $v 2]*[lindex $v 2]) }
@@ -120,17 +102,27 @@ proc addOnePlot3d { win data } {
     #puts "data=$data"
     linkLocal $win points zmax zmin zcenter zradius rotationcenter xradius yradius xmin xmax ymin ymax lmesh
     makeLocal $win flatten
+    oset $win colorfun plot3dcolorFun
+    oset $win cmap c1
+    global plot3dOptions
     catch { unset  meshes }
     set points ""
 
-
+    # check whether zradius is a number or "auto"
     set dotruncate [expr ![catch {expr {$zradius + 1} }]]
+    if { $dotruncate } {
+		set zzmax [expr {$zcenter + $zradius}]
+		set zzmin [expr {$zcenter - $zradius}]
+    }
+
     set k [llength $points]
     set type [lindex $data 0]
     # in general the data should be a list of plots..
     if { [lsearch {grid mesh variable_grid matrix_mesh }  $type ]>=0 } {
 	set alldata [list $data]
     } else {set alldata $data}
+    set lmesh {}
+    set first_mesh 0
     foreach data $alldata {	
 	set type [lindex $data 0]
 	if { "$type" == "grid" } {
@@ -143,8 +135,10 @@ proc addOnePlot3d { win data } {
 	    set data [list variable_grid [linspace $xmin $xmax $ncols] \
 			  [linspace $ymin $ymax $nrows] \
 			  $pts ]
+	    set type "variable_grid"
 	}
 	if { "$type" == "variable_grid" } {
+	    set first_mesh [llength $lmesh]
 	    desetq "xrow yrow zmat" [lrange $data 1 end]
 	    # puts "xrow=$xrow,yrow=$yrow,zmat=$zmat"
 	    set nx [expr {[llength $xrow] -1}]
@@ -157,19 +151,12 @@ proc addOnePlot3d { win data } {
 	    desetq "xmin xmax" [minMax $xrow ""]
 	    desetq "ymin ymax" [minMax $yrow ""]
 	    desetq "zmin zmax" [matrixMinMax [list $zmat]]
+	    if { $dotruncate } {
+		set zmax  $zzmax
+		set zmin  $zzmin
+	    }
 	    #	puts "and now"
 	    #	dshow nx xmin xmax ymin ymax zmin zmax
-	    if { $dotruncate } {
-		if { $flatten } { set dotruncate 0 }
-
-		set zzmax [expr {$zcenter + $zradius}]
-		set zzmin [expr {$zcenter - $zradius}]
-		#puts "zzmax=$zzmax,$zzmin"
-	    } else {
-		set flatten 0
-	    }
-
-
 
 	    for {set j 0} { $j <= $ny } { incr j} {
 		set y [lindex $yrow $j]
@@ -188,16 +175,17 @@ proc addOnePlot3d { win data } {
 		    lappend points $x $y $z
 		}
 	    }
+	    setupPlot3dColors $win $first_mesh
 	} elseif { "$type" == "matrix_mesh" } {
-	
+	    set first_mesh [llength $lmesh]
 	    desetq "xmat ymat zmat" [lrange $data 1 end]
 	    foreach v {x y z} {
-		
-		
 		desetq "${v}min ${v}max" [matrixMinMax [list [set ${v}mat]]]
-		
 	    }
-	    #puts "zrange=$zmin,$zmax"
+	    if { $dotruncate } {
+		set zmax  $zzmax
+		set zmin  $zzmin
+	    }
 	    set nj [expr {[llength [lindex $xmat 0]] -1 }]
 	    set ni [expr {[llength $xmat ] -1 }]
 	    set i -1
@@ -223,7 +211,9 @@ proc addOnePlot3d { win data } {
 		    lappend points $x $y $z
 		}
 	    }
+	    setupPlot3dColors $win $first_mesh
 	} elseif { 0 && "$type" == "mesh" } {
+	    set first_mesh [llength $lmesh]
 	    # walk thru compute the xmin, xmax, ymin , ymax...
 	    # and then go thru setting up the mesh array..
 	    # and maybe setting up the color map for these meshes..
@@ -249,9 +239,41 @@ proc addOnePlot3d { win data } {
 		lappend points $x $y $z
 		incr j
 	    }
+	    setupPlot3dColors $win $first_mesh
+	} elseif { "[assq $type $plot3dOptions notthere]" != "notthere" } {
+	    oset $win $type [lindex $data 1]
+	    if { $type == "zradius" } {
+		# check whether zradius is a number or "auto"
+		set dotruncate [expr ![catch {expr {$zradius + 1} }]]
+		if { $dotruncate } {
+		    set zzmax [expr {$zcenter + $zradius}]
+		    set zzmin [expr {$zcenter - $zradius}]
+		}
+	    }
+	}
+	if { $first_mesh != [llength $lmesh] } {
+	    # set up the min/max values for the complete plot
+	    foreach v { x y z } {
+		if { [info exists ${v}gmin] } {
+		    if { [set ${v}min] < [set ${v}gmin] } {
+			set ${v}gmin [set ${v}min]
+		    }
+		} else {
+		    set ${v}gmin [set ${v}min]
+		}
+		if { [info exists ${v}gmax] } {
+		    if { [set ${v}max] > [set ${v}gmax] } {
+			set ${v}gmax [set ${v}max]
+		    }
+		} else {
+		    set ${v}gmax [set ${v}max]
+		}
+	    }
 	}
     }
     foreach v { x y z } {
+	set ${v}min [set ${v}gmin]
+	set ${v}max [set ${v}gmax]
 	set a [set ${v}min]
 	set b  [set ${v}max]
 	if { $a == $b } {
@@ -261,9 +283,7 @@ proc addOnePlot3d { win data } {
 	set ${v}radius [expr {($b - $a)/2.0}]
 	set ${v}center [expr {($b + $a)/2.0}]
     }
-    if { "$rotationcenter" == "" } {
-	set rotationcenter "[expr {.5*($xmax + $xmin)}] [expr {.5*($ymax + $ymin)}]   [expr {.5*($zmax + $zmin)}] "
-    }
+    set rotationcenter "[expr {.5*($xmax + $xmin)}] [expr {.5*($ymax + $ymin)}]   [expr {.5*($zmax + $zmin)}] "
 
     #puts "meshes data=[array get meshes]"
     #global plot3dMeshes.plot3d

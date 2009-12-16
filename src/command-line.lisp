@@ -49,35 +49,32 @@
       (format t "    ~a" (cl-option-description (first names) arg))
       (dolist (name (rest names))
 	(format t ", ~a" (cl-option-description name arg)))
-      (format t ":")
+      (terpri)
       (if help-string
-	  (format t " ~a" help-string))
-      (format t "~%"))))
+	  (format t "        ~a" help-string))
+      (terpri))))
 
-(defun in-list (item list)
-  (dolist (element list)
-    (if (equal item element)
-	(return-from in-list t)))
-  nil)
-
+;; Old argument processing.  Leaving this here for now, but if getopts
+;; works well enough, then these should be removed.
+#+(or)
+(progn
 (defun parse-args (args cl-option-list)
   (if (null args)
       nil
       (let ((arg (pop args))
 	    (arg-matched nil))
 	(dolist (opt cl-option-list)
-	  (if (in-list arg (cl-option-names opt))
-	      (progn
-		(cond ((and (cl-option-action opt) (cl-option-argument opt))
-		       (funcall (cl-option-action opt) (pop args)))
-		      ((cl-option-action opt)
-		       (funcall (cl-option-action opt)))
-		      ((cl-option-argument opt)
-		       (pop args)))
-		(setf arg-matched t)
-		(return t))))
-	(if (and (not arg-matched) (not (equal arg "")))
-	    (format t "Warning: argument ~a not recognized~%" arg))
+	  (when (member arg (cl-option-names opt) :test #'equal)
+	    (cond ((and (cl-option-action opt) (cl-option-argument opt))
+		   (funcall (cl-option-action opt) (pop args)))
+		  ((cl-option-action opt)
+		   (funcall (cl-option-action opt)))
+		  ((cl-option-argument opt)
+		   (pop args)))
+	    (setf arg-matched t)
+	    (return t)))
+	(unless (or arg-matched (equal arg ""))
+	  (format t "Warning: argument ~a not recognized~%" arg))
 	(parse-args args cl-option-list))))
 
 (defun expand-compound-arg (arg)
@@ -105,35 +102,96 @@
 
 (defun process-args (args cl-option-list)
   (parse-args (expand-args args) cl-option-list))
+)
+
+(defun process-args (args cl-option-list)
+  (flet ((fixup (options)
+	   ;; Massage cl-option into the format wanted by getopt.
+	   ;; Basically, remove any leading dashes, and if the
+	   ;; cl-option includes an argument, treat it as a required
+	   ;; argument.
+	   (let ((opts nil))
+	     (dolist (o options)
+	       (dolist (name (cl-option-names o))
+		 (push (list (string-left-trim "-" name)
+			     (if (cl-option-argument o)
+				 :required
+				 :none)
+			     nil)
+		       opts)))
+	     (nreverse opts))))
+    (let ((options (fixup cl-option-list)))
+      (multiple-value-bind (non-opts opts errors)
+	  (getopt:getopt args options :allow-exact-match t)
+	;; Look over all of opts and run the action
+
+	#+nil
+	(format t "opts = ~S~%" opts)
+	(dolist (o opts)
+	  ;; Try to find the corresponding cl-option.
+	  (let ((cl-opt (find (car o)
+			      cl-option-list
+			      :test #'(lambda (desired e)
+					;; Strip off any leading
+					;; dashes from the option name
+					;; and compare with the
+					;; desired option.
+					(member desired (cl-option-names e)
+						:test #'equal
+						:key #'(lambda (e)
+							 (string-left-trim "-" e)))))))
+	    #+nil
+	    (format t "Processing ~S -> ~S~%" o cl-opt)
+	    (if cl-opt
+		(cond ((and (cl-option-action cl-opt) (cl-option-argument cl-opt))
+		       (funcall (cl-option-action cl-opt) (cdr o)))
+		      ((cl-option-action cl-opt)
+		       (funcall (cl-option-action cl-opt))))
+		(warn "Could not find option ~S in cl-options: ~S.~%Please report this bug."
+		      o cl-option-list))))
+	(dolist (o errors)
+	  (format t "Warning: argument ~A not recognized~%" o))
+	;; What do we do about non-option arguments?  We just ignore them for now.
+	))))
+
 
 (defun get-application-args ()
-  #+clisp (rest ext:*args*)
+  #+clisp
+  (rest ext:*args*)
     
-  #+ecl (let ((result (ext:command-args)))
-	  (do ((removed-arg nil (pop result)))
-	      ((or (equal removed-arg "--") (equal nil result)) result)))
+  #+ecl
+  (let ((result (ext:command-args)))
+    (do ((removed-arg nil (pop result)))
+	((or (equal removed-arg "--") (equal nil result)) result)))
 
-  #+cmu (let ((result lisp::lisp-command-line-list))
-	  (do ((removed-arg nil (pop result)))
-	      ((or (equal removed-arg "--") (equal nil result)) result)))
+  #+cmu
+  (let ((result lisp::lisp-command-line-list))
+    (do ((removed-arg nil (pop result)))
+	((or (equal removed-arg "--") (equal nil result)) result)))
 
-  #+scl (let ((result ext:*command-line-strings*))
-	  (do ((removed-arg nil (pop result)))
-	      ((or (equal removed-arg "--") (equal nil result)) result)))
+  #+scl
+  (let ((result ext:*command-line-strings*))
+    (do ((removed-arg nil (pop result)))
+	((or (equal removed-arg "--") (equal nil result)) result)))
 
-  #+sbcl (rest sb-ext:*posix-argv*)
+  #+sbcl
+  (rest sb-ext:*posix-argv*)
 
-  #+gcl  (let ((result  si::*command-args*))
-	   (do ((removed-arg nil (pop result)))
-	       ((or (equal removed-arg "--") (equal nil result)) result)))
+  #+gcl
+  (let ((result  si::*command-args*))
+    (do ((removed-arg nil (pop result)))
+	((or (equal removed-arg "--") (equal nil result)) result)))
 
   #+allegro
   (let ((args (system:command-line-arguments :application t)))
     ;; Skip the first arg, which is the full path to alisp.
     (rest args))
       
-  #+lispworks (rest system:*line-arguments-list*)
+  #+lispworks
+  (rest system:*line-arguments-list*)
 
   #+openmcl
-  (rest (ccl::command-line-arguments))
+  (let ((result  (rest (ccl::command-line-arguments))))
+    (do ((removed-arg nil (pop result)))
+	((or (equal removed-arg "--") (equal nil result)) result)))
   )

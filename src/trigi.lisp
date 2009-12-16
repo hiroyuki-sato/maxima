@@ -18,7 +18,7 @@
 
 (defmvar $%piargs t)
 (defmvar $%iargs t)
-(defmvar $triginverses '$all)
+(defmvar $triginverses t)
 (defmvar $trigexpand nil)
 (defmvar $trigexpandplus t)
 (defmvar $trigexpandtimes t)
@@ -86,6 +86,14 @@
 (defprop %acoth simp-%acoth operators)
 (defprop %acsch simp-%acsch operators)
 (defprop %asech simp-%asech operators)
+
+;;; The trigonometric functions distribute of lists, matrices and equations.
+
+(dolist (x '(%sin   %cos   %tan   %cot   %csc   %sec
+             %sinh  %cosh  %tanh  %coth  %csch  %sech
+             %asin  %acos  %atan  %acot  %acsc  %asec
+             %asinh %acosh %atanh %acoth %acsch %asech))
+  (setf (get x 'distribute_over) '(mlist $matrix mequal)))
 
 (defun domain-error (x f)
   (merror "The number ~:M isn't in the domain of ~A" (complexify x) f))
@@ -264,7 +272,7 @@
 		     (if y y (domain-error x 'acoth)))))
 
   (frob %mabs #'cl:abs)
-  (frob $exp #'cl:exp)
+  (frob %exp #'cl:exp)
   (frob mexpt #'cl:expt)
   (frob %sqrt #'cl:sqrt)
   (frob %log #'(lambda (x)
@@ -282,7 +290,7 @@
   (frob $imagpart #'cl:imagpart)
   (frob $max #'cl:max)
   (frob $min #'cl:min)
-  (frob %signnum #'cl:signum)
+  (frob %signum #'cl:signum)
   (frob $atan2 #'cl:atan)
   (frob %log #'(lambda (x)
 		 (let ((y (ignore-errors (cl:log x))))
@@ -711,8 +719,19 @@
 			 (alike1 y (div (power* 3 1//2) -3)))
 		     (div '$%pi -6)))))
 	((and $%iargs (multiplep y '$%i)) (mul '$%i (cons-exp '%atanh (coeff y '$%i 1))))
+	((and (not (atom y)) (member (caar y) '(%cot %tan))
+	      (if ($constantp (cadr y))
+		  (let ((y-val (mfuncall '$mod 
+					 (if (eq (caar y) '%tan) (cadr y) (m- %pi//2 (cadr y)))
+					 '$%pi)))
+		    (cond ((eq (mlsp y-val %pi//2) t) y-val)
+			  ((eq (mlsp y-val '$%pi) t) (m- y-val '$%pi)))))))
 	((and (eq $triginverses '$all) (not (atom y))
 	      (if (eq (caar y) '%tan) (cadr y))))
+	((and (eq $triginverses t) (not (atom y)) (eq (caar y) '%tan)
+	      (if (and (member (csign (m- (cadr y) %pi//2)) '($nz $neg) :test #'eq)
+		       (member (csign (m+ (cadr y) %pi//2)) '($pz $pos) :test #'eq))
+		  (cadr y))))
 	($logarc (logarc '%atan y))
 	((apply-reflection-simp (mop form) y $trigsign))
 	;((and $trigsign (mminusp* y)) (neg (cons-exp '%atan (neg y))))

@@ -10,33 +10,7 @@
 (defmacro get-integrand (fun var)
   `(coerce-float-fun ,fun `((mlist) ,,var)))
 
-(defun lispify-maxima-keyword-options (options &optional valid-keywords)
-  ;; options looks like (((mequal) $opt1 val1) ((mequal) $opt2 val2) ...)
-  ;;
-  ;; Convert to a new list that looks like ($opt1 val1 $opt2 val2 ...)
-  ;;
-  (unless (listp options)
-    (merror "Invalid Maxima keyword options: ~M" options))
-  (when (every #'(lambda (o)
-		   ;; Make sure every option has the right form.
-		   (let ((ok (and (listp o)
-				  (= (length o) 3)
-				  (eq (caar o) 'mequal))))
-		     (unless ok
-		       (merror "Badly formed keyword option: ~M" o))
-		     ok))
-		 options)
-    (mapcan #'(lambda (o)
-	      (destructuring-bind (mequal opt val)
-		  o
-		(declare (ignore mequal))
-		(if (or (null valid-keywords)
-			(member opt valid-keywords))
-		    (flet ((keywordify (x)
-			     (intern (subseq (symbol-name x) 1) :keyword)))
-		      (list (keywordify opt) val))
-		    (merror "Unrecognized keyword: ~M" opt))))
-	  options)))
+
 
 (defun quad-qag (fun var a b key &key
 		 (epsrel 1e-8)
@@ -65,7 +39,7 @@
 			 limit lenw 0 iwork work)
 	  (declare (ignore junk z-a z-b z-epsabs z-epsrel z-key z-limit z-lenw last))
 	  (list '(mlist) result abserr neval ier))
-      (error (e)
+      (error ()
 	`(($quad_qag) ,fun ,var ,a ,b ,key
 	  ((mequal) $epsrel ,epsrel)
 	  ((mequal) $epsabs ,epsabs)
@@ -165,7 +139,7 @@
 	      (declare (ignore junk z-bound z-inf z-epsabs z-epsrel
 			       z-limit z-lenw last))
 	      (list '(mlist) result abserr neval ier))
-	  (error (e)
+	  (error ()
 	    `(($quad_qagi) ,fun ,var ,a ,b
 	      ((mequal) $epsrel ,epsrel)
 	      ((mequal) $epsabs ,epsabs)
@@ -199,7 +173,7 @@
 			  limit lenw 0 iwork work)
 	  (declare (ignore junk z-a z-b z-c z-epsabs z-epsrel z-limit z-lenw last))
 	  (list '(mlist) result abserr neval ier))
-      (error (e)
+      (error ()
 	`(($quad_qawc) ,fun ,var ,c ,a ,b
 	  ((mequal) $epsrel ,epsrel)
 	  ((mequal) $epsabs ,epsabs)
@@ -237,7 +211,7 @@
 	  (declare (ignore junk z-a z-omega z-integr epsabs z-limlst z-lst
 			   z-leniw z-maxp1 z-lenw))
 	  (list '(mlist) result abserr neval ier))
-      (error (e)
+      (error ()
 	`(($quad_qawf) ,fun ,var ,a ,omega ,trig
 	  ((mequal) $epsabs ,epsabs)
 	  ((mequal) $limit ,limit)
@@ -280,7 +254,7 @@
 	  (declare (ignore junk z-a z-b z-omega z-integr z-epsabs z-epsrel
 			   z-lst z-leniw z-maxp1 z-lenw))
 	  (list '(mlist) result abserr neval ier))
-      (error (e)
+      (error ()
 	`(($quad_qawo) ,fun ,var ,a ,b ,omega ,trig
 	  ((mequal) $epsrel ,epsrel)
 	  ((mequal) $epsabs ,epsabs)
@@ -320,7 +294,7 @@
 	  (declare (ignore junk z-a z-b z-alfa z-beta z-int z-epsabs z-epsrel
 			   z-limit z-lenw last))
 	  (list '(mlist) result abserr neval ier))
-      (error (e)
+      (error ()
 	`(($quad_qaws) ,fun ,var ,a ,b ,alfa ,beta ,wfun
 	  ((mequal) $epsrel ,epsrel)
 	  ((mequal) $epsabs ,epsabs)
@@ -347,9 +321,10 @@
 	      (options (gensym "OPTIONS-")))
 	 `(defun ,mname (,@args &rest ,options)
 	    (let
-          ((,keylist (lispify-maxima-keyword-options ,options ',valid-keys))
-           ;; BIND EVIL SPECIAL VARIABLE *PLOT-REALPART* HERE ...
-           (*plot-realpart* nil))
+		((,keylist (lispify-maxima-keyword-options ,options ',valid-keys))
+		 ;; BIND EVIL SPECIAL VARIABLE *PLOT-REALPART* HERE ...
+		 (*plot-realpart* nil))
+	      (declare (special *plot-realpart*))
 	      (apply ',iname ,@args ,keylist))))))
   (frob $quad_qag quad-qag (fun var a b key) ($epsrel $limit $epsabs))
   (frob $quad_qags quad-qags (fun var a b) ($epsrel $limit $epsabs))

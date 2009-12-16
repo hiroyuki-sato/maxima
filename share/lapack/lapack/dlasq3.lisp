@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2006/12/21 03:42:11 
-;;; Using Lisp CMU Common Lisp CVS Head 2006-12-02 00:15:46 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -22,15 +30,16 @@
            (type (double-float 0.5 0.5) half)
            (type (double-float 1.0 1.0) one)
            (type (double-float 2.0 2.0) two)
-           (type (double-float 100.0 100.0) hundrd))
-  (let ((ttype 0)
-        (f2cl-lib:dmin1 zero)
-        (dmin2 zero)
-        (dn zero)
-        (dn1 zero)
+           (type (double-float 100.0 100.0) hundrd)
+           (ignorable cbias zero qurtr half one two hundrd))
+  (let ((tau zero)
         (dn2 zero)
-        (tau zero))
-    (declare (type (double-float) tau dn2 dn1 dn dmin2 f2cl-lib:dmin1)
+        (dn1 zero)
+        (dn zero)
+        (dmin2 zero)
+        (dmin1$ zero)
+        (ttype 0))
+    (declare (type (double-float) tau dn2 dn1 dn dmin2 dmin1$)
              (type (f2cl-lib:integer4) ttype))
     (defun dlasq3 (i0 n0 z pp dmin sigma desig qmax nfail iter ndiv ieee)
       (declare (type f2cl-lib:logical ieee)
@@ -39,9 +48,9 @@
                (type (f2cl-lib:integer4) ndiv iter nfail pp n0 i0))
       (f2cl-lib:with-multi-array-data
           ((z double-float z-%data% z-%offset%))
-        (prog ((eps 0.0) (s 0.0) (safmin 0.0) (temp 0.0) (tol 0.0) (tol2 0.0)
-               (ipn4 0) (j4 0) (n0in 0) (nn 0) (t$ 0.0))
-          (declare (type (double-float) t$ eps s safmin temp tol tol2)
+        (prog ((eps 0.0) (s 0.0) (safmin 0.0) (t$ 0.0) (temp 0.0) (tol 0.0)
+               (tol2 0.0) (ipn4 0) (j4 0) (n0in 0) (nn 0))
+          (declare (type (double-float) eps s safmin t$ temp tol tol2)
                    (type (f2cl-lib:integer4) ipn4 j4 n0in nn))
           (setf n0in n0)
           (setf eps (dlamch "Precision"))
@@ -499,8 +508,8 @@
                (multiple-value-bind
                      (var-0 var-1 var-2 var-3 var-4 var-5 var-6 var-7 var-8
                       var-9 var-10 var-11 var-12)
-                   (dlasq4 i0 n0 z pp n0in dmin f2cl-lib:dmin1 dmin2 dn dn1 dn2
-                    tau ttype)
+                   (dlasq4 i0 n0 z pp n0in dmin dmin1$ dmin2 dn dn1 dn2 tau
+                    ttype)
                  (declare (ignore var-0 var-1 var-2 var-3 var-4 var-5 var-6
                                   var-7 var-8 var-9 var-10))
                  (setf tau var-11)
@@ -509,10 +518,10 @@
                (multiple-value-bind
                      (var-0 var-1 var-2 var-3 var-4 var-5 var-6 var-7 var-8
                       var-9 var-10 var-11)
-                   (dlasq5 i0 n0 z pp tau dmin f2cl-lib:dmin1 dmin2 dn dn1 dn2
-                    ieee)
-                 (declare (ignore var-0 var-1 var-2 var-3 var-4 var-6 var-11))
+                   (dlasq5 i0 n0 z pp tau dmin dmin1$ dmin2 dn dn1 dn2 ieee)
+                 (declare (ignore var-0 var-1 var-2 var-3 var-4 var-11))
                  (setf dmin var-5)
+                 (setf dmin1$ var-6)
                  (setf dmin2 var-7)
                  (setf dn var-8)
                  (setf dn1 var-9)
@@ -524,10 +533,10 @@
                                           2)))
                (setf iter (f2cl-lib:int-add iter 1))
                (cond
-                 ((and (>= dmin zero) (> f2cl-lib:dmin1 zero))
+                 ((and (>= dmin zero) (> dmin1$ zero))
                   (go label100))
                  ((and (< dmin zero)
-                       (> f2cl-lib:dmin1 zero)
+                       (> dmin1$ zero)
                        (<
                         (f2cl-lib:fref z
                                        ((f2cl-lib:int-add
@@ -558,7 +567,7 @@
                   (cond
                     ((< ttype (f2cl-lib:int-sub 22))
                      (setf tau zero))
-                    ((> f2cl-lib:dmin1 zero)
+                    ((> dmin1$ zero)
                      (setf tau (* (+ tau dmin) (- one (* two eps))))
                      (setf ttype (f2cl-lib:int-sub ttype 11)))
                     (t
@@ -573,9 +582,10 @@
          label90
           (multiple-value-bind
                 (var-0 var-1 var-2 var-3 var-4 var-5 var-6 var-7 var-8 var-9)
-              (dlasq6 i0 n0 z pp dmin f2cl-lib:dmin1 dmin2 dn dn1 dn2)
-            (declare (ignore var-0 var-1 var-2 var-3 var-5))
+              (dlasq6 i0 n0 z pp dmin dmin1$ dmin2 dn dn1 dn2)
+            (declare (ignore var-0 var-1 var-2 var-3))
             (setf dmin var-4)
+            (setf dmin1$ var-5)
             (setf dmin2 var-6)
             (setf dn var-7)
             (setf dn1 var-8)

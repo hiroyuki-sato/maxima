@@ -131,29 +131,29 @@ hgfred([a,a+1/2],[2*a],z);
 2^(2*a-1)/sqrt(1-z)*(1+sqrt(1-z))^(1-2*a)$
 
 /* A&S 15.1.15 */
-hgfred([a,1-a],[3/2],sin(z)^2);
+hgfred([a,1-a],[3/2],sin(z)^2),triginverses:all;
 sin((1-2*a)*z)/sin(z)/(1-2*a)$
 
 /* A&S 15.1.16 */
-hgfred([a,2-a],[3/2],sin(z)^2);
+hgfred([a,2-a],[3/2],sin(z)^2),triginverses:all;
 sin((2-2*a)*z)/(2-2*a)/(sin(z)*cos(z))$
 
 /* A&S 15.1.17 */
 assume(not(equal(sin(z),0)));
 [not equal(sin(z),0)]$
 
-hgfred([-a,a],[1/2],sin(z)^2);
+hgfred([-a,a],[1/2],sin(z)^2),triginverses:all;
 cos(2*a*z)$
 
 /* A&S 15.1.18 */
-hgfred([a,1-a],[1/2],sin(z)^2);
+hgfred([a,1-a],[1/2],sin(z)^2),triginverses:all;
 cos((2*a-1)*z)/cos(z)$
 
 /* A&S 15.1.19 */
 assume(not(equal(tan(z),0)));
 [not equal(tan(z), 0)]$
 
-hgfred([a,a+1/2],[1/2],-tan(z)^2);
+hgfred([a,a+1/2],[1/2],-tan(z)^2),triginverses:all;
 cos(z)^(2*a)*cos(2*a*z)$
 
 /* A&S 15.4.3 */
@@ -215,10 +215,16 @@ assume(zg1 > 1);
 [zg1 > 1];
 radcan(hgfred([a,a+1/2],[c],zg1)*2^(1-c)*zg1^(c/2-1/2)*(1-zg1)^(1/2+a-c/2)/gamma(c));
 /* Use A&S 8.2.1 to get this */
-assoc_legendre_p(c-2*a-1,1-c,1/sqrt(1-zg1))$
+/* The following is not the correct answer. See the formula above.
+   assoc_legendre_p(c-2*a-1,1-c,1/sqrt(1-zg1))$ 
+   We get the correct answer after a bug fix in the routine legf24. */
+assoc_legendre_p(2*a-c,1-c,1/sqrt(1-zg1))$
 
 radcan(2^u*(zg1^2-1)^(-u/2)*zg1^(v+u)/gamma(1-u)*hgfred([-v/2-u/2,1/2-v/2-u/2],[1-u],1-1/zg1^2));
-assoc_legendre_p(v,u,zg1)$
+/* The following answer is not correct.
+   assoc_legendre_p(v,u,zg1)$  
+   We get the correct answer after a bug fix in the routine legf24. */
+assoc_legendre_p(-v-1,u,zg1)$
 
 /* A&S 15.4.12
  *
@@ -328,7 +334,8 @@ hgfred([-4,-2],[],z);
 /* Test 2F1 polynomials */
 
 hgfred([-2,1],[1/2],z);
-8*jacobi_p(2,-1/2,-3/2,1-2*z)/3$
+/*8*jacobi_p(2,-1/2,-3/2,1-2*z)/3$*/
+8*z^2/3-4*z+1$
 
 /* F(a,b;c;z) = F(b,a;c;z) */
 hgfred([1,2],[3],z);
@@ -431,9 +438,10 @@ hgfred([3,3],[4],z);
 declare(ia,integer,ib,integer,ic,integer);
 done$
 
-hgfred([2,ib],[3],z);
-2*jacobi_p(1,1-ib,ib-2,1-2*(1-1/z))*gamma(ib-1)*(1-z)^(1-ib)/((2-ib)*gamma(ib)*z)
-	+2*gamma(1-ib)/(gamma(3-ib)*z^2)$
+hgfred([2,ib],[3],z),gamma_expand:true; /*Expand gamma function */
+/*2*jacobi_p(1,1-ib,ib-2,1-2*(1-1/z))*gamma(ib-1)*(1-z)^(1-ib)/((2-ib)*gamma(ib)*z)
+	+2*gamma(1-ib)/(gamma(3-ib)*z^2)$*/
+2*((1/z-1)/(2-ib)+1)*(1-z)^(1-ib)/((ib-1)*z)+2/((1-ib)*(2-ib)*z^2);
 
 /*
  * Test of step4, which handles F(a,b;c;z) when a+b is an integer and
@@ -787,24 +795,34 @@ a^(u+1/2)*(p+a/2)^(-v-u-1/2)*gamma(v-u+1/2)*gamma(v+u+1/2)
 /*
  * Bug 1376865 
  * Formula 24, p. 178.
+ * The symbol %ei has gone. The new function is expintegral_ei.
  */
-ratsimp(specint(%ei(-t)*exp(-p*t),t));
--log(p+1)/p;
+specint(expintegral_ei(t)*exp(-p*t),t);
+-log(p-1)/p;
 
 /*
  * Formula 25, p. 178 
  *
- * t^(-1/2)*%ei(-t)
+ * t^(-1/2)*expintegral_ei(-t)
  * -> -2*%pi/sqrt(p)*log(sqrt(p)+sqrt(p+1))
+ * This is equivalent to:
+ * -> -2*%pi/sqrt(p)*asinh(sqrt(p))
  *
- * Maxima will ask for the sign of 2*psey-1.  If you answer pos, you'll get the answer below.
+ * The result of Maxima is equivalent to
+ * -> -2*sqrt(%pi)/sqrt(p)*asinh(sqrt(p))
  *
+ * This differs by a factor sqrt(%pi) from the result above.
+ * I (DK) think Maxima is correct.
+ *
+ * Maxima will ask for the sign of 2*psey-1.  
+ * We add this fact to the database and get the a result.
  */
-/*
-ratsimp(specint(t^(-1/2)*%ei(-t)*exp(-p*t),t));
--sqrt(%pi)*log(-(sqrt(p)*sqrt(p+1)+p+1)/(sqrt(p)*sqrt(p+1)-p-1))
-	/sqrt(p);
-*/
+(assume(2*?psey-1>0),done);
+done;
+ratsimp(specint(t^(-1/2)*expintegral_ei(-t)*exp(-p*t),t));
+-sqrt(%pi)*(log(sqrt(p+1)+sqrt(p))-log(sqrt(p+1)-sqrt(p)))/sqrt(p);
+(forget(2*?psey-1>0),done);
+done;
 
 /*
  * Formula 26, p. 178 
@@ -812,7 +830,7 @@ ratsimp(specint(t^(-1/2)*%ei(-t)*exp(-p*t),t));
  * sin(a*t)*%ei(-t)
  * -> -(p^2+a^2)^(-1)*(a/2*log((p+1)^2+a^2) - p*atan(a/(p+1)))
  */
-ratsimp(rectform(specint(sin(a*t)*%ei(-t)*exp(-p*t),t)));
+ratsimp(rectform(specint(sin(a*t)*expintegral_ei(-t)*exp(-p*t),t)));
 (2*p*atan(a/(p+1))-a*log(p^2+2*p+a^2+1))/(2*p^2+2*a^2);
 
 /*
@@ -821,7 +839,7 @@ ratsimp(rectform(specint(sin(a*t)*%ei(-t)*exp(-p*t),t)));
  * cos(a*t)*%ei(-t)
  * -> -(p^2+a^2)^(-1)*(p/2*log((p+1)^2+a^2) + a*atan(a/(p+1)))
  */
-ratsimp(rectform(specint(cos(a*t)*%ei(-t)*exp(-p*t),t)));
+ratsimp(rectform(specint(cos(a*t)*expintegral_ei(-t)*exp(-p*t),t)));
 -((2*a*atan(a/(p+1))+p*log(p^2+2*p+a^2+1))/(2*p^2+2*a^2));
 
 /*
@@ -1682,3 +1700,34 @@ ratsimp(factor(hgfred([-1/2,3,3],[1,2],z))
 ratsimp(factor(hgfred([-1/2,3,3],[2,2],z))
 -(25*z^2-42*z+16)/16/(1-z)^(3/2));
 0;
+
+/******************************************************************************* 
+ * Bug ID: 2847387 - hgfred([3/2,-b],[5/2],-1) bogus and
+ * Bug ID: 2876277 - hgfred([3/2,-2],[5/2],-x) not fully simplified
+ *
+ * Some examples to show that we get correct and simple results.
+ * Reference: wolframalpha.com
+ */
+
+hgfred([3/2,3],[5/2],-1);
+3*%pi/32;
+
+hgfred([3/2,-2],[5/2],-1);
+92/35;
+
+hgfred([3/2,-2],[5/2],1);
+8/35;
+
+declare(a,noninteger);
+done;
+
+ratsimp(hgfred([a,-2],[5/2],-1));
+1/35*(4*a^2+32*a+35);
+
+ratsimp(hgfred([a,-2],[5/2],1));
+1/35*(4*a^2-24*a+35);
+
+ratsimp(hgfred([-2,1],[1/2],z));
+(8*z^2-12*z+3)/3;
+
+/******************************************************************************/

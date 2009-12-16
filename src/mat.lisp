@@ -36,7 +36,8 @@
      (if (or (atom (car cc))
 	     (not (equal (cdar cc) '(1 1)))
 	     (not (equal 1 (cdr cc))))
-	 (merror "Unacceptable variable to `solve':~%~M" *c))
+     ;; NOTE TO TRANSLATORS: NOT CLEAR WHAT IS "UNACCEPTABLE" HERE
+	 (merror (intl:gettext "solve: unacceptable variable: ~M") *c))
      (setq answer (ratreduce (prodcoef (car cc) (car m)) (cdr m)))
      (if (not flag) (return answer))
      (setq leftover
@@ -351,7 +352,7 @@
      (cond ((do ((i k (1+ i)) (isallzero t))
 		((> i nrow) isallzero)
 	     loop (cond ((zerop/row ax i k nvar)
-			 (cond (*inv* (merror "Singular"))
+			 (cond (*inv* (merror (intl:gettext "solve: singular matrix.")))
 			       (t (exchangerow i nrow)
 				  (decf nrow)))
 			 (unless (> i nrow) (go loop)))
@@ -436,7 +437,7 @@
 		   (nconc equations (list (displine equatn))))
 	     (push multipl $multiplicities)
 	     (if (and (> multipl 1) $dispflag)
-		 (mtell "Multiplicity ~A~%" multipl)))
+		 (mtell (intl:gettext "solve: multiplicity ~A~%") multipl)))
 	 llist)
   (setq $multiplicities (cons '(mlist simp) (nreverse $multiplicities))))
 
@@ -452,3 +453,6 @@
 		     (timeorg tim))
 	  (t (putprop linelable t 'nodisp)))
     linelable))
+
+(declare-top (unspecial permsign a rank delta nrow nvar n m variableorder
+			dependentrows inconsistentrows l k))

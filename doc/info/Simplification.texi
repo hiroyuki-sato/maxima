@@ -82,6 +82,75 @@ both be true at the same time.
 @closecatbox
 @end deffn
 
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} distribute_over
+Default value: @code{true}
+
+@code{distribute_over} controls the mapping of functions over bags like lists, 
+matrices, and equations. At this time this feature is implemented for the
+trigonometric functions, the exponential integrals, and the integer 
+functions like @code{mod}, @code{floor}, @code{ceiling}, @code{round}.
+
+The mapping of functions is switched off, when setting @code{distribute_over} 
+to the value @code{false}.
+
+Examples:
+
+The @code{sin} function maps over a list:
+
+@c ===beg===
+@c sin([x,1,1.0]);
+@c ===end===
+@example
+(%i1) sin([x,1,1.0]);
+(%o1)                 [sin(x), sin(1), .8414709848078965]
+@end example
+
+@code{mod} is a function with two arguments which maps over lists. Mapping over 
+nested lists is possible too:
+
+@c ===beg===
+@c mod([x,11,2*a],10);
+@c mod([[x,y,z],11,2*a],10);
+@c ===end===
+@example
+(%i2) mod([x,11,2*a],10);
+(%o2)                    [mod(x, 10), 1, 2 mod(a, 5)]
+(%i3) mod([[x,y,z],11,2*a],10);
+(%o3)       [[mod(x, 10), mod(y, 10), mod(z, 10)], 1, 2 mod(a, 5)]
+@end example
+
+Mapping of the @code{floor} function over a matrix and an equation:
+
+@c ===beg===
+@c floor(matrix([a,b],[c,d]));
+@c floor(a=b);
+@c ===end===
+@example
+(%i4) floor(matrix([a,b],[c,d]));
+                            [ floor(a)  floor(b) ]
+(%o4)                       [                    ]
+                            [ floor(c)  floor(d) ]
+(%i5) floor(a=b);
+(%o5)                         floor(a) = floor(b)
+@end example
+
+Functions with more than one argument map over any of the arguments or all
+arguments:
+
+@c ===beg===
+@c expintegral_e([1,2],[x,y]);
+@c ===end===
+@example
+(%i6) expintegral_e([1,2],[x,y]);
+(%o6) [[expintegral_e(1, x), expintegral_e(1, y)], 
+       [expintegral_e(2, x), expintegral_e(2, y)]]
+@end example
+
+@opencatbox
+@category{Simplification flags and variables}
+@closecatbox
+@end defvr
 
 @defvr {Option variable} domain
 Default value: @code{real}
@@ -493,7 +562,9 @@ evaluates them.  See also @code{noun}, @code{nounify}, @code{verb}, and @code{ve
 @c WHAT ARE THE FUNCTIONS WHICH ARE EVALUATED IN FLOATING POINT ??
 @c WHAT IS A "NUMERVAL" ?? (SOMETHING DIFFERENT FROM A NUMERIC VALUE ??)
 @c NEED TO MENTION THIS IS AN evflag
-@defvr {Special symbol} numer
+
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} numer
 @code{numer} causes some mathematical functions (including exponentiation)
 with numerical arguments to be evaluated in floating point. It causes
 variables in @code{expr} which have been given numerals to be replaced by
@@ -501,8 +572,23 @@ their values.  It also sets the @code{float} switch on.
 
 See also @code{%enumer}.
 
+Examples:
+
+@c ===beg===
+@c [sqrt(2), sin(1), 1/(1+sqrt(3))];
+@c [sqrt(2), sin(1), 1/(1+sqrt(3))],numer;
+@c ===end===
+@example
+(%i1) [sqrt(2), sin(1), 1/(1+sqrt(3))];
+                                               1
+(%o1)                   [sqrt(2), sin(1), -----------]
+                                          sqrt(3) + 1
+(%i2) [sqrt(2), sin(1), 1/(1+sqrt(3))],numer;
+(%o2)      [1.414213562373095, .8414709848078965, .3660254037844387]
+@end example
+
 @opencatbox
-@category{Numerical evaluation}
+@category{Numerical evaluation} @category{Evaluation flags}
 @closecatbox
 @end defvr
 
@@ -590,34 +676,79 @@ to @code{a * f(g(x), x)} for @code{a} free of @code{x}.
 @closecatbox
 @end defvr
 
-@deffn {Function} radcan (@var{expr})
-Simplifies @var{expr}, which can contain logs, exponentials, and
-radicals, by converting it into a form which is canonical over a large
-class of expressions and a given ordering of variables; that is, all
-functionally equivalent forms are mapped into a unique form.  For a
-somewhat larger class of expressions, @code{radcan} produces a regular form.
-Two equivalent expressions in this class do not necessarily have the
-same appearance, but their difference can be simplified by @code{radcan} to
-zero.
+@c -----------------------------------------------------------------------------
+@defvr {Special symbol} pred
+As an argument in a call to @code{ev (@var{expr})}, @code{pred} causes 
+predicates (expressions which evaluate to @code{true} or @code{false}) to be 
+evaluated. See @code{ev}.
 
-For some expressions @code{radcan} is quite time consuming.  This
-is the cost of exploring certain relationships among the components of
-the expression for simplifications based on factoring and
-partial-fraction expansions of exponents.  
+Example:
+
+@c ===beg===
+@c 1<2;
+@c 1<2,pred;
+@c ===end===
+@example
+(%i1) 1<2;
+(%o1)                                1 < 2
+(%i2) 1<2,pred;
+(%o2)                                true
+@end example
+
+@opencatbox
+@category{Evaluation flags}
+@closecatbox
+@end defvr
+
+@c -----------------------------------------------------------------------------
+@deffn {Function} radcan (@var{expr})
+Simplifies @var{expr}, which can contain logs, exponentials, and radicals, by 
+converting it into a form which is canonical over a large class of expressions 
+and a given ordering of variables; that is, all functionally equivalent forms 
+are mapped into a unique form.  For a somewhat larger class of expressions, 
+@code{radcan} produces a regular form. Two equivalent expressions in this class 
+do not necessarily have the same appearance, but their difference can be 
+simplified by @code{radcan} to zero.
+
+For some expressions @code{radcan} is quite time consuming.  This is the cost 
+of exploring certain relationships among the components of the expression for 
+simplifications based on factoring and partial-fraction expansions of exponents.  
 
 @c %e_to_numlog NEEDS ITS OWN @defvar !!!
-@c DOESN'T APPEAR TO AFFECT radcan !!!
-When @code{%e_to_numlog} is @code{true}, 
-@code{%e^(r*log(expr))} simplifies to @code{expr^r} if @code{r} is a rational number.
 
-When @code{radexpand} is @code{false}, certain transformations are inhibited.
-@code{radcan (sqrt (1-x))} remains @code{sqrt (1-x)}
-and is not simplified to @code{%i sqrt (x-1)}. 
-@code{radcan (sqrt (x^2 - 2*x + 1))} remains @code{sqrt (x^2 - 2*x + 1)}
-and is not simplified to @code{x - 1}.
+@c %e_to_numlog HAS NO EFFECT ON RADCAN. RADCAN ALWAYS SIMPLIFIES 
+@c exp(a*log(x)) --> x^a. Commenting the following out. 11/2009
+@c When @code{%e_to_numlog} is @code{true}, @code{%e^(r*log(expr))} simplifies 
+@c to @code{expr^r} if @code{r} is a rational number.
 
-@c MERGE EXAMPLES INTO THIS FILE
-@code{example (radcan)} displays some examples.
+@c RADEXPAND CONTROLS THE SIMPLIFICATION OF THE POWER FUNCTION, E.G.
+@c (x*y)^a --> x^a*y^a AND (x^a)^b --> x^(a*b), IF RADEXPAND HAS THE VALUE 'ALL.
+@c THE VALUE OF RADEXPAND HAS NO EFFECT ON RADCAN. RADCAN ALWAYS SIMPLIFIES
+@c THE ABOVE EXPRESSIONS. COMMENTING THE FOLLOWING OUT. 11/2009
+@c When @code{radexpand} is @code{false}, certain transformations are inhibited.
+@c @code{radcan (sqrt (1-x))} remains @code{sqrt (1-x)} and is not simplified 
+@c to @code{%i sqrt (x-1)}. @code{radcan (sqrt (x^2 - 2*x + 1))} remains 
+@c @code{sqrt (x^2 - 2*x + 1)} and is not simplified to @code{x - 1}.
+
+Examples:
+
+@c ===beg===
+@c radcan((log(x+x^2)-log(x))^a/log(1+x)^(a/2));
+@c radcan((log(1+2*a^x+a^(2*x))/log(1+a^x)));
+@c radcan((%e^x-1)/(1+%e^(x/2)));
+@c ===end===
+@example
+(%i1) radcan((log(x+x^2)-log(x))^a/log(1+x)^(a/2));
+                                           a/2
+(%o1)                            log(x + 1)
+
+(%i2) radcan((log(1+2*a^x+a^(2*x))/log(1+a^x)));
+(%o2)                                  2
+
+(%i3) radcan((%e^x-1)/(1+%e^(x/2)));
+                                     x/2
+(%o3)                              %e    - 1
+@end example
 
 @opencatbox
 @category{Simplification functions}
@@ -697,6 +828,63 @@ the original answer.
 @category{Simplification functions}
 @closecatbox
 @end deffn
+
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} simp
+Default value: @code{true}
+
+@code{simp} enables simplification. This is the standard. @code{simp} is also 
+an @code{evflag}, which is recognized by the function @code{ev}. See @code{ev}.
+
+When @code{simp} is used as an @code{evflag} with a value @code{false}, the 
+simplification is suppressed only during the evaluation phase of an expression. 
+The flag can not suppress the simplification which follows the evaluation 
+phase.
+
+Examples:
+
+The simplification is switched off globally. The expression @code{sin(1.0)} is 
+not simplified to its numerical value. The @code{simp}-flag switches the 
+simplification on.
+
+@c ===beg===
+@c simp:false;
+@c sin(1.0);
+@c sin(1.0),simp;
+@c ===end===
+@example
+(%i1) simp:false;
+(%o1)                                false
+(%i2) sin(1.0);
+(%o2)                              sin(1.0)
+(%i3) sin(1.0),simp;
+(%o3)                          .8414709848078965
+@end example
+
+The simplification is switched on again. The @code{simp}-flag cannot suppress 
+the simplification completely. The output shows a simplified expression, but 
+the variable @code{x} has an unsimplified expression as a value, because the 
+assignment has occurred during the evaluation phase of the expression.
+
+@c ===beg===
+@c simp:true;
+@c x:sin(1.0),simp:false;
+@c :lisp $x
+@c ===end===
+@example
+(%i4) simp:true;
+(%o4)                                true
+(%i5) x:sin(1.0),simp:false;
+(%o5)                          .8414709848078965
+(%i6) :lisp $X
+((%SIN) 1.0)
+@end example
+
+@opencatbox
+@category{Evaluation flags}
+@closecatbox
+@end defvr
+
 
 @c NEEDS CLARIFICATION, EXAMPLES
 @defvr {Option variable} simpsum

@@ -10,6 +10,7 @@ binary-scl/maxima.core : clmacs.lisp
 binary-scl/maxima.core : commac.lisp
 binary-scl/maxima.core : mormac.lisp
 binary-scl/maxima.core : compat.lisp
+binary-scl/maxima.core : getopt.lisp
 binary-scl/maxima.core : command-line.lisp
 binary-scl/maxima.core : defopt.lisp
 binary-scl/maxima.core : defcal.lisp
@@ -169,6 +170,7 @@ binary-scl/maxima.core : csimp2.lisp
 binary-scl/maxima.core : zero.lisp
 binary-scl/maxima.core : logarc.lisp
 binary-scl/maxima.core : rpart.lisp
+binary-scl/maxima.core : numeric.lisp
 binary-scl/maxima.core : server.lisp
 binary-scl/maxima.core : macsys.lisp
 binary-scl/maxima.core : mload.lisp
@@ -214,6 +216,7 @@ binary-scl/maxima.core : trgred.lisp
 binary-scl/maxima.core : bessel.lisp
 binary-scl/maxima.core : ellipt.lisp
 binary-scl/maxima.core : airy.lisp
+binary-scl/maxima.core : plasma.lisp
 binary-scl/maxima.core : intpol.lisp
 binary-scl/maxima.core : nparse.lisp
 binary-scl/maxima.core : displa.lisp
@@ -225,6 +228,7 @@ binary-scl/maxima.core : ezgcd.lisp
 binary-scl/maxima.core : option.lisp
 binary-scl/maxima.core : macdes.lisp
 binary-scl/maxima.core : inmis.lisp
+binary-scl/maxima.core : intl.lisp
 binary-scl/maxima.core : db.lisp
 binary-scl/maxima.core : compar.lisp
 binary-scl/maxima.core : askp.lisp
@@ -236,6 +240,7 @@ binary-scl/maxima.core : defint.lisp
 binary-scl/maxima.core : residu.lisp
 binary-scl/maxima.core : specfn.lisp
 binary-scl/maxima.core : mat.lisp
+binary-scl/maxima.core : linnew.lisp
 binary-scl/maxima.core : matrix.lisp
 binary-scl/maxima.core : sprdet.lisp
 binary-scl/maxima.core : newinv.lisp
@@ -285,8 +290,8 @@ binary-scl/maxima.core : hyp.lisp
 binary-scl/maxima.core : todd-coxeter.lisp
 binary-scl/maxima.core : mactex.lisp
 binary-scl/maxima.core : plot.lisp
-binary-scl/maxima.core : gnuplot.lisp
-binary-scl/maxima.core : openmath.lisp
+binary-scl/maxima.core : gnuplot_def.lisp
+binary-scl/maxima.core : xmaxima_def.lisp
 binary-scl/maxima.core : autol.lisp
 binary-scl/maxima.core : max_ext.lisp
 binary-scl/maxima.core : init-cl.lisp

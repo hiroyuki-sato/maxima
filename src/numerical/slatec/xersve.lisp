@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
-;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
@@ -10,15 +18,15 @@
 
 
 (let* ((lentab 10))
-  (declare (type (integer 10 10) lentab))
-  (let ((libtab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (8) nil))
-        (subtab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (8) nil))
-        (mestab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (20) nil))
-        (nertab (make-array lentab :element-type 'f2cl-lib:integer4))
-        (levtab (make-array lentab :element-type 'f2cl-lib:integer4))
-        (kount (make-array lentab :element-type 'f2cl-lib:integer4))
+  (declare (type (integer 10 10) lentab) (ignorable lentab))
+  (let ((nmsg 0)
         (kountx 0)
-        (nmsg 0))
+        (kount (make-array lentab :element-type 'f2cl-lib:integer4))
+        (levtab (make-array lentab :element-type 'f2cl-lib:integer4))
+        (nertab (make-array lentab :element-type 'f2cl-lib:integer4))
+        (mestab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (20) nil))
+        (subtab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (8) nil))
+        (libtab (f2cl-lib:f2cl-init-string ((+ 1 (- lentab 1))) (8) nil)))
     (declare (type (integer) nmsg kountx)
              (type (simple-array f2cl-lib:integer4 (*)) kount levtab nertab)
              (type (simple-array (simple-array character (20)) (*)) mestab)
@@ -54,8 +62,7 @@
                (f2cl-lib:fformat iunit
                                  ("0          ERROR MESSAGE SUMMARY" "~%"
                                   " LIBRARY    SUBROUTINE MESSAGE START             NERR"
-                                  "     LEVEL     COUNT" "~%")
-                                 nil)
+                                  "     LEVEL     COUNT" "~%"))
                (f2cl-lib:fdo (i 1 (f2cl-lib:int-add i 1))
                              ((> i nmsg) nil)
                  (tagbody
@@ -74,7 +81,7 @@
                                      ("0OTHER ERRORS NOT INDIVIDUALLY TABULATED = "
                                       1 (("~10D")) "~%")
                                      kountx))
-               (f2cl-lib:fformat iunit ("~1@T" "~%") nil)
+               (f2cl-lib:fformat iunit ("~1@T" "~%"))
               label20))
            (cond
              ((= kflag 0)

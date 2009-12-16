@@ -10,7 +10,7 @@
 ;; Copyright (C) 2006 Stephen Eglen (imaxima-print-buffer)
 ;; Copyright (C) 2007, 2008 Yasuaki Honda (imaxima-to-html, inline graph)
 
-;; $Id: imaxima.el,v 1.3 2008/11/03 06:16:23 yasu-honda Exp $
+;; $Id: imaxima.el,v 1.7 2009/02/22 09:18:27 yasu-honda Exp $
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -735,9 +735,10 @@ cleardictstack 0 get restore\n")
 			   (imaxima-bp-to-mm width))))
 	    (when (< ratio 1.0)
 	      ;; image is wider than the buffer
-	      (if (and imaxima-max-scale
-			 (or (eq imaxima-max-scale t)
-			     (> ratio imaxima-max-scale)))
+	      (if (or (eql eps-or-latex 'eps)
+		      (and imaxima-max-scale
+			   (or (eq imaxima-max-scale t)
+			       (> ratio imaxima-max-scale))))
 		  ;; scale image
 		  (multiple-value-setq (bb width height)
 		    (imaxima-eps-scale psfilename bb ratio))
@@ -923,12 +924,103 @@ temporary files.  Use linearized form if LINEAR is non-nil."
 
 (defvar continuation nil)
 
-(defun imaxima-filter (str)
+;;; if *debug-imaxima-filter* is set to t, the str is
+;;; appended to the last of buffer *imaxima-work*.
+(defvar *debug-imaxima-filter* nil)
+
+(defun debug-imaxima-filter (str)
+  (if *debug-imaxima-filter*
+      (with-current-buffer (get-buffer-create "*imaxima-work*")
+	(insert str))))
+
+(defvar imaxima-filter-running nil)
+
+(defun* imaxima-filter (str)
+  "Parse output from Maxima and make image from TeX parts.
+Argument STR contains output received from Maxima.
+
+   imaxima-filter needs to be written in re-entrant manner.
+   This is because during the creation of latex image, there
+   observed a reentrant call of imaxima-filter. yhonda"
+  (if imaxima-filter-running
+      (progn
+	(setq imaxima-output (concat imaxima-output str))
+	(debug-imaxima-filter "reenter")
+	(return-from imaxima-filter "")))
+  (setq imaxima-filter-running t)
+  (debug-imaxima-filter str)
+  (let* ((len (length str))
+	 main-output)
+    (if (zerop len)
+	(progn
+	  (setq imaxima-filter-running nil)
+	  (return-from imaxima-filter ""))
+      (setq imaxima-output (concat imaxima-output str))
+      (let ((lastchar (aref str (1- len)))
+	    (output ""))
+	(when (and (char-equal lastchar ?\n) (> len 1))
+	  (setq lastchar (aref str (- len 2))))
+
+	(message "Processing Maxima output...")
+	(while (not (string= imaxima-output ""))
+	  (let ((1stchar (substring imaxima-output 0 1)))
+	    (cond ((string= 1stchar "")
+		   (if (string-match "\\([^]*\\)\\(\\(.\\|\n\\)*\\)" imaxima-output)
+		       (let ((iprompt (match-string 1 imaxima-output))
+			     (rest (match-string 2 imaxima-output)))
+			 (setq imaxima-output rest)
+			 (setq output (concat output iprompt))
+			 ;; All the output for a maxima command are processed.
+			 ;; We can call continuation if necessary.
+			 (cond ((and continuation main-output)
+				(funcall (car continuation) main-output))
+			       ((and continuation (null main-output))
+				(funcall (car continuation) ""))))
+		     ;; imaxima-output is incomplete.
+		     (setq imaxima-filter-running nil)
+		     (return-from imaxima-filter output)))
+		  ((string= 1stchar "")
+		   (if (string-match "\\([^]*\\)\\(\\(.\\|\n\\)*\\)" imaxima-output)
+		       (let ((match (match-string 1 imaxima-output))
+			     (rest (match-string 2 imaxima-output))
+			     image)
+			 (setq imaxima-output rest)
+			 (setq output (concat output (setq image (imaxima-make-image match 'latex))))
+			 ;; Remember the image into main-output if this is the first output.
+			 ;; This will be passed to continuation
+			 (if (null main-output)
+			     (setq main-output image)))
+		     ;; imaxima-output is incomplete.
+		     (setq imaxima-filter-running nil)
+		     (return-from imaxima-filter output)))
+		  ((string= 1stchar "")
+		   (if (string-match "\\([^]*\\)\\(\\(.\\|\n\\)*\\)" imaxima-output)
+		       (let ((match (match-string 1 imaxima-output))
+			     (rest (match-string 2 imaxima-output)))
+			 (setq imaxima-output rest)
+			 (setq output (concat output (imaxima-make-image match 'latex))))
+		     ;; imaxima-output is incomplete.
+		     (setq imaxima-filter-running nil)
+		     (return-from imaxima-filter output)))
+		  (t (if (string-match "\\([^]*\\)\\(\\(.\\|\n\\)*\\)" imaxima-output)
+			 (let ((match (match-string 1 imaxima-output))
+			       (rest (match-string 2 imaxima-output)))
+			   (setq imaxima-output rest)
+			   (setq output (concat output match)))
+		       ;; This should not happen.
+		       (message "Unexpected error encountered in imaxima-filter"))))))
+	(message "Processing Maxima output...done")
+	(setq imaxima-filter-running nil)
+	(return-from imaxima-filter output)))))
+
+(defun imaxima-filter1 (str)
   "Parse output from Maxima and make image from TeX parts.
 Argument STR contains output received from Maxima."
-;;; Uncomment to debug:
-;;;  (with-current-buffer (get-buffer-create "*imaxima-work*")
-;;;   (insert str))
+  (if *debug-imaxima-filter*
+      (with-current-buffer (get-buffer-create "*imaxima-work*")
+	(insert "****new string****
+")
+	(insert str)))
   (let* ((len (length str)))
     (if (zerop len)
 	""
@@ -941,15 +1033,17 @@ Argument STR contains output received from Maxima."
 	 ((string-match "\\`[^]+\\'" imaxima-output)
 	  (prog1 imaxima-output
 	    (setq imaxima-output "")))
-	 ((char-equal lastchar ?)
-	  (string-match "\\([^]*\\)\\([^]*\\)$" imaxima-output)
-	  (let ((prompt (concat "" (match-string 2 imaxima-output)))
+	 ((or (char-equal lastchar ?) (char-equal lastchar ?))
+	  (let ((prompt "")
 		(newline-char "
 ")
 		(output "")
-		(rest (match-string 1 imaxima-output))
+		(rest imaxima-output)
 		text match)
 	    (message "Processing Maxima output...")
+	    (if (string-match "\\([^]*\\)\\([^]*\\)$" imaxima-output)
+		(setq prompt (concat "" (match-string 2 imaxima-output))
+		      rest (match-string 1 imaxima-output)))
 	    (while (string-match "\\(\\([^]*\\)\\([^]*\\)\\)"
 				 rest)
 	      (setq text (match-string 2 rest))

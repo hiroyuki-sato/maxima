@@ -17,7 +17,7 @@
 
 (load-macsyma-macros ratmac)
 
-(declare-top (special $float $keepfloat $algebraic $ratfac *alpha genvar))
+(declare-top (special $float $keepfloat $algebraic $ratfac genvar))
 
 ;; List of GCD algorithms.  Default one is first.
 (defmvar *gcdl* '($spmod $subres $ez $red $mod $algebraic))
@@ -419,56 +419,52 @@
 	   return (ptzero)
 	   finally (return u))))
 
+(defun rtzerl2 (n)
+  (cond ((zerop n) 0)
+	(t (do ((n n (ash n -2)))
+	       ((not (zerop (haipart n -2))) n)))))
+
+(defmfun $jacobi (p q)
+  (cond ((null (and (integerp p) (integerp q)))
+	 (list '($jacobi) p q))
+	((zerop q) (merror "Zero denominator?"))
+	((minusp q) ($jacobi p (- q)))
+	((and (evenp (setq q (rtzerl2 q)))
+	      (setq q (ash q -1))
+	      (evenp p)) 0)
+	((equal q 1) 1)
+	((minusp (setq p (rem p q)))
+	 (jacobi (rtzerl2 (+ p q)) q))
+	(t (jacobi (rtzerl2 p) q))))
+
+(defun jacobi (p q)
+  (do ((r1 p (rtzerl2 (rem r2 r1)))
+       (r2 q r1)
+       (bit2 (haipart q -2))
+       (odd 0 (boole boole-xor odd (boole boole-and bit2 (setq bit2 (haipart r1 -2))))))
+      ((zerop r1) 0)
+    (cond ((evenp r1)
+	   (setq r1 (ash r1 -1))
+	   (setq odd (boole boole-xor odd (ash (expt (haipart r2 -4) 2) -2)))))
+    (and (equal r1 1) (return (expt -1 (boole  boole-and 1 (ash odd -1)))))))
+
+;; it is convenient to have the *bigprimes* be actually less than
+;; half the size of the most positive fixnum, so that arithmetic is easier
+
+(defvar *bigprimes* (loop with p = (ash most-positive-fixnum -1) repeat 20 do
+			 (setq p (next-prime (1- p) -1))
+		       collect p))
+
+(defmvar *alpha (car *bigprimes*))
 
 (defun newprime (p)
-  (declare (special bigprimes))		;defined later on
-  (cond ((null p) (car bigprimes))
-	(t (do ((pl bigprimes (cdr pl)))
-	       ((null pl) (setq p (fnewprime p))
-		(setq bigprimes (nconc bigprimes (list p)))
-		p)
-	     (if (< (car pl) p) (return (car pl)))))))
-
-(defun fnewprime (p)	     ; Finds biggest prime less than fixnum P.
-  (do ((pp (if (oddp p) (- p 2) (- p 1)) (- pp 2))) ((< pp 0))
-    (if (primep pp) (return pp))))
-
-;; #O <form> reads <form> in octal (base 8)
-
-(defvar bigprimes nil)
-
-(eval-when
-    #+gcl (load eval)
-    #-gcl (:load-toplevel :execute)
-
-    ;; it is convenient to have the bigprimes be actually less than
-    ;; half the size of the most positive fixnum, so that arithmetic is
-    ;; easier
-    #.(case most-positive-fixnum
-	(2147483647
-	 '(setq bigprimes
-	   '(1073741789 1073741783 1073741741 1073741723 1073741719 1073741717
-	     1073741689 1073741671 1073741663 1073741651 1073741621 1073741567
-	     1073741561 1073741527 1073741503 1073741477 1073741467 1073741441
-	     1073741419 1073741399)))
-	(1152921504606846975
-	 '(setq bigprimes
-	   '(576460752303423433 576460752303423389 576460752303423263
-	     576460752303423061 576460752303422971 576460752303422881
-	     576460752303422839 576460752303422801 576460752303422627
-	     576460752303422617 576460752303422599 576460752303422557
-	     576460752303422543 576460752303422533 576460752303422501
-	     576460752303422479 576460752303422431 576460752303422429
-	     576460752303422369 576460752303422309)))
-	;; Could always use the following, but it takes several seconds to compute
-	;; so if we want to autoload this file, it is tiresome.
-	(t '(do ((i 0 (1+ i))
-		 (p (ash most-positive-fixnum -1) (newprime p)))
-	     ((= i 20)))))
-
-    (setq *alpha (car bigprimes)))
-
-(defmvar *alpha (car bigprimes))
+  (do ((pl *bigprimes* (cdr pl)))
+      ((null pl)
+       (setq p (next-prime (1- p) -1))
+       (setq *bigprimes* (nconc *bigprimes* (list p)))
+       p)
+    (when (< (car pl) p)
+      (return (car pl)))))
 
 (defun leadcoefficient (p)
   (if (pcoefp p) p (leadcoefficient (caddr p))))

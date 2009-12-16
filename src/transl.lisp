@@ -98,7 +98,7 @@
   (cond ((eq (symbol-value var) '$obsolete))
 	(t
 	 (setf (symbol-value var) '$obsolete)
-	 (mtell "~%Warning, setting obsolete variable: ~:M~%" var))))
+	 (mtell "warning: assigning to obsolete variable: ~:M~%" var))))
 
 (putprop '$transbind #'obsolete-variable 'assign)
 
@@ -719,6 +719,10 @@ APPLY means like APPLY.")
   ;; Also: think about calling the simplifier here.
   (cond ((atom form)
 	 (cond ((symbolp form)
+        ;; FOLLOWING CODE APPEARS TO BE BROKEN; NOT SURE WHAT WAS THE INTENT.
+        ;; FOLLOWING CODE ALWAYS RETURNS SYMBOL ITSELF EVEN WHEN '$CONSTANTP IS A PROPERTY
+        ;; IS IT SUPPOSED TO FETCH A DECLARED CONSTANT VALUE ??
+        ;; JUST LEAVE IT BE FOR NOW; DO NOT TRY TO REVISE WITH KINDP
 		(let ((v (getl (mget form '$props) '($constant))))
 		  (if v (cadr v) form)))
 	       (t form)))
@@ -1407,10 +1411,10 @@ APPLY means like APPLY.")
       (setq var (tunbind (cond ((cadr form)) (t 'mdo))))
       `(,mode do ((,var ,(cdr init) ,(cdr next))
 		  ,@ init-end-var )
-	      (,test '$done) . 
+	      (,test '$done) . ((declare (special ,var)) .
 	      ,(cond ((atom (cdr action)) nil)
 		     ((eq 'progn (cadr action)) (cddr action))
-		     (t (list (cdr action))))))))
+		     (t (list (cdr action)))))))))
 
 (setq shit nil)
 
@@ -1433,11 +1437,11 @@ APPLY means like APPLY.")
        (tunbind 'mdo) (tunbind (cadr form))
        (return
 	 `(,mode do ((,var) (mdo (cdr ,init) (cdr mdo)))
-		 ((null mdo) '$done)
-		 (setq ,var (car mdo)) . 
+		 ((null mdo) '$done) .
+		  ((declare (special ,var)) (setq ,var (car mdo)) .
 		 ,(cond ((atom (cdr action)) nil)
 			((eq 'progn (cadr action)) (cddr action))
-			(t (list (cdr action)))))))))
+			(t (list (cdr action))))))))))
 
 
 (defun lambda-wrap1 (tn val form)

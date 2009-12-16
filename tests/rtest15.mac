@@ -7,8 +7,10 @@ done$
 fpprec:16;
 16;
 
-/* apropos function added 7 april 2002 */
-apropos('tr_optimize_max_loop);
+/* apropos function added 7 april 2002 
+   changed to accept only a string as an argument 06/2009
+*/
+apropos("tr_optimize_max_loop");
 [tr_optimize_max_loop]$
 
 /* test introduced 7 april 2002. bug fix incorporated 9 june 2002 */
@@ -48,7 +50,7 @@ block([context:'foobar],
 []$
 
 error;
-''([sconcat("Integral is divergent")])$
+["defint: integral is divergent."];
 
 killcontext('foobar);
 done$
@@ -469,7 +471,10 @@ integrate(log(x)/(x^2+1)^2,x,0,inf);
  * Fixed 2006/03/13.  Solution needs work, though.
  */
 integrate(1/x^5,x,1,2^(1/78));
-1/4-1/(4*2^(2/39));
+1/4-(1/8)*2^(37/39);
+
+integrate(1/x^3, x, 1, inf);
+1/2;
 
 /*
  * Bug 938235: integrate((1/2)*u^2-1/u^5,u,1,sqrt(2))
@@ -554,7 +559,7 @@ limit (abs(x), x, 0);
  * n*integrate(1/(sin(x)^2+1),x,0,2*%pi), for positive integer n.  We
  * were just returning the same value.  
  */
-integrate(1/(sin(x)^2+1),x,0,2*%pi);
+factor(integrate(1/(sin(x)^2+1),x,0,2*%pi));
 sqrt(2)*%pi;
 
 integrate(1/(sin(x)^2+1),x,0,4*%pi);
@@ -580,7 +585,7 @@ integrate(sqrt(x^3/(2*a-x)),x,0,2*a);
  *
  * But there are other bugs related to this one.
  */
-integrate(1/(sin(x)^2+1),x,0,3*%pi);
+factor(integrate(1/(sin(x)^2+1),x,0,3*%pi));
 (3 / 2) * sqrt(2)*%pi;
 
 /*
@@ -624,20 +629,37 @@ logcontract(ratsimp(factor(integrate (1/((x-3)^4+1), x,0,1)))),algebraic;
  */
 (load(sqdnst), true);
 true;
-factor(expand(sqrtdenest(integrate (1/((x-3)^4+1/2), x,0,1))));
+factor(expand(sqrtdenest(integrate (1/((x-3)^4+1/2), x,0,1))))
+/* we factor the result and subtract it */
+-factor(-(2*atan((2^(13/4)+2^(5/2)+2^(3/4))/(-2^(13/4)+2^(3/4)-98))
+ +2*atan((-2^(13/4)+2^(5/2)-2^(3/4))/(-2^(13/4)+2^(3/4)+98))
+ +log((3*2^(9/4)-2^(3/4)+sqrt(2)+73)/33)
+ -log((-3*2^(9/4)+2^(3/4)+sqrt(2)+73)/33))
+ /2^(7/4));
+0;
+
+/*
 (2*atan((sqrt(2)-4*2^(1/4)+8)/(49*2^(3/4)+sqrt(2)-8))
  -log((2^(3/4)+12*sqrt(2)+73*2^(1/4)-2)/(33*2^(1/4)))
  +log((2^(3/4)-12*sqrt(2)+73*2^(1/4)+2)/(33*2^(1/4)))
  -2*atan((sqrt(2)+4*2^(1/4)+8)/(-49*2^(3/4)+sqrt(2)-8)))
  /(2*2^(3/4))$
+ */
 
 /*
  * Bug [ 1607567 ] trigreduce([atan(sin(a)/cos(a))]) => [ atan(tan(a)) ] (FIX)
  */
+(assume(a>-%pi/2, a<%pi/2),0);
+0;
+
 trigreduce(atan(sin(a)/cos(a)));
 a;
 trigreduce([atan(sin(a)/cos(a))]);
 [a];
+
+(forget(a>-%pi/2, a<%pi/2),0);
+0;
+
 trigreduce([sin(x)^2]);
 [(1-cos(2*x))/2];
 
@@ -787,8 +809,11 @@ integrate( (x^3+1)/(x^4 + 4*x + 1), x, 0, 1);
 log(6)/4;
 
 /* [ 1884711 ] bug when adding fractions involving square roots */
-sqrt(2)/6-2*sqrt(2)/6;
+factor(sqrt(2)/6-2*sqrt(2)/6);
 -sqrt(2)/6;
+
+sqrt(3)/12 - 5*sqrt(3)/12;
+-1/sqrt(3);
 
 /* Bug reported to mailing list 2008-03-23
  * Bug causes a Lisp error in FREEL (eventually called by $DEFINT).
@@ -946,8 +971,9 @@ makelist (foo (float (1/7), float (2/7)), foo, F2);
  'inverse_jacobi_nd(8/7,9/7),'inverse_jacobi_ns(8/7,9/7)];
 
 ev (Y2, numer);
-[.5422366033071744, .4814049171519623, .4750213033941648, 
-1.645105736576537, 1.91297202083972, 0.51387624945997];
+[.5422366033071744, 1.9430926302695156045465694, 
+1.969205044088928940255018036, 0.53608536161539688257016016, 
+0.461019342719434980049828553, 1.7162052237576627569674777881];
 
 [inverse_jacobi_dc (float (8/7), float (1/7)),
  inverse_jacobi_dn (float (1/7), float (8/7)),
@@ -955,8 +981,9 @@ ev (Y2, numer);
  inverse_jacobi_nc (float (8/7), float (9/7)),
  inverse_jacobi_nd (float (8/7), float (9/7)),
  inverse_jacobi_ns (float (8/7), float (9/7))];
-[.5422366033071744, .4814049171519623, .4750213033941648, 
-1.645105736576537, 1.91297202083972, 0.51387624945997];
+[.5422366033071744, 1.9430926302695156045465694, 
+1.969205044088928940255018036, 0.53608536161539688257016016, 
+0.461019342719434980049828553, 1.7162052237576627569674777881];
 
 /* (3) FUNCTIONS OF 3 ARGUMENTS */
 (Y3 : elliptic_pi (1/2, 1/3, 1/4),
@@ -1001,3 +1028,6 @@ errcatch (bfloat (2*bar));
 errcatch (bfloat (2*foo + 3*bar));
 [];
 
+/* Test that sinh(-x) for large x doesn't crash */
+sinh(-100b0)+sinh(100b0);
+0b0;

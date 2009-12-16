@@ -13,10 +13,9 @@
 (macsyma-module combin)
 
 (declare-top (special *mfactl *factlist donel nn* dn* *ans* *var*
-		      dict ans var
-		      a* $zerobern *a *n $cflength *a* $prevfib hi lo
+		      ans var $zerobern *n $cflength *a* $prevfib hi lo
 		      *infsumsimp *times *plus sum usum makef
-		      varlist genvar $sumsplitfact gensim $ratfac $simpsum
+		      varlist genvar $sumsplitfact $ratfac $simpsum
 		      $prederror $listarith
 		      $ratprint $zeta%pi $bftorat))
 
@@ -345,11 +344,11 @@
 			(aref *eu* (1- (ash %n -1))))
 		       ((eq $zerobern '%$/#&)
 			(euler %n))
-		       ((adjust-array *eu* (1+ (ash %n -1))) 
+		       ((setq *eu* (adjust-array *eu* (1+ (ash %n -1))))
 			(euler %n))))
 		((<= %n (get '*eu* 'lim))
 		 (aref *eu* (1- %n)))
-		((adjust-array *eu* (1+ %n))
+		((setq *eu* (adjust-array *eu* (1+ %n)))
 		 (euler (* 2 %n))))))
   (simplify s))
 
@@ -367,7 +366,7 @@
      (incf e (* nom ($euler %k)))
      (go a)))
 
-(defmfun simpeuler (x vestigial z) 
+(defmfun simpeuler (x vestigial z)
   (declare (ignore vestigial))
   (oneargcheck x)
   (let ((u (simpcheck (cadr x) z)))
@@ -376,7 +375,7 @@
 	(eqtest (list '($euler) u) x))))
 
 (defmfun $bern (s)
-  (setq s 
+  (setq s
 	(let ((%n 0) $float)
 	  (cond ((or (not (fixnump s)) (< s 0)) (list '($bern) s))
 		((= (setq %n s) 0) 1)
@@ -387,12 +386,16 @@
 		       ((null (> (setq %n (1- (ash %n -1))) (get 'bern 'lim)))
 			(list '(rat) (aref *bn* %n) (aref *bd* %n)))
 		       ((eq $zerobern '$/#&) (bern  (* 2 (1+ %n))))
-		       (t (adjust-array *bn* (setq %n (1+ %n)))
-			  (adjust-array *bd* %n) (bern  (* 2 %n)))))
+		       (t
+			(setq *bn* (adjust-array *bn* (setq %n (1+ %n))))
+			(setq *bd* (adjust-array *bd* %n))
+			(bern  (* 2 %n)))))
 		((null (> %n (get 'bern 'lim)))
 		 (list '(rat) (aref *bn* %n) (aref *bd* %n)))
-		(t (adjust-array *bn* (1+ %n)) (adjust-array *bd* (1+ %n))
-		   (bern %n)))))
+		(t
+		 (setq *bn* (adjust-array *bn* (1+ %n)))
+		 (setq *bd* (adjust-array *bd* (1+ %n)))
+		 (bern %n)))))
   (simplify s))
 
 (defun bern (%a*)
@@ -419,7 +422,7 @@
      (setq a (*red a b) b (denom1 a) a (num1 a))
      (go a)))
 
-(defmfun simpbern (x vestigial z) 
+(defmfun simpbern (x vestigial z)
   (declare (ignore vestigial))
   (oneargcheck x)
   (let ((u (simpcheck (cadr x) z)))
@@ -445,7 +448,72 @@
 
 ;; zeta and fibonacci stuff
 
-(defmfun $zeta (s)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Implementation of the Riemann Zeta function as a simplifying function
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun $zeta (z)
+  (simplify (list '(%zeta) z)))
+
+;;; Set properties to give full support to the parser and display
+
+(defprop $zeta %zeta alias)
+(defprop $zeta %zeta verb)
+
+(defprop %zeta $zeta reversealias)
+(defprop %zeta $zeta noun)
+
+;;; The Riemann Zeta function is a simplifying function
+
+(defprop %zeta simp-zeta operators)
+
+;;; The Riemann Zeta functon has mirror symmetry
+
+(defprop %zeta t commutes-with-conjugate)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun simp-zeta (expr z simpflag)
+  (oneargcheck expr)
+  (setq z (simpcheck (cadr expr) simpflag))
+  (cond
+
+    ;; Check for special values
+    ((eq z '$inf) 1)
+    ((zerop1 z) 
+     (cond (($bfloatp z) ($bfloat '((rat) -1 2)))
+           ((floatp z) -0.5)
+           (t '((rat) -1 2))))
+    ((onep1 z) '$infinity)
+
+    ;; Check for numerical evaluation
+    (($bfloatp z) (mfuncall '$bfzeta z $fpprec))
+    ((or (floatp z) (and (or $numer $float) (integerp z)))
+         (let (($float2bf t))
+           ($float (mfuncall '$bfzeta z 18))))
+
+    ;; Check for transformations and argument simplifications
+    ((integerp z)
+     (cond
+       ((oddp z)
+        (cond ((> z 1)
+               (eqtest (list '(%zeta) z) expr))
+              ((setq z (sub 1 z))
+               (mul -1 (div ($bern z) z)))))
+       ((minusp z) 0)
+       ((not $zeta%pi) (eqtest (list '(%zeta) z) expr))
+       (t (let ($numer $float)
+            (mul (power '$%pi z)
+                 (mul (div (expt 2 (1- z)) 
+                           (simplify (list '(mfactorial) z)))
+                      (simplify (list '(mabs) ($bern z)))))))))
+    (t
+     (eqtest (list '(%zeta) z) expr))))
+
+;;; The original algorithm
+(defmfun $zeta-old (s)
   (cond (($bfloatp s) (mfuncall '$bfzeta s $fpprec))
 	((or (floatp s) (and (or $numer $float) (integerp s)))
 	 (let (($float2bf t))
@@ -466,31 +534,38 @@
 				   (simpabs (list 'mabs ($bern s)) 1 nil)))))
 	   (resimplify s))))
 
-(defmfun $fib (n) 
-  (cond ((fixnump n) (ffib n))
-	(t (setq $prevfib (list '($fib) (add2* n -1)))
-	   (list '($fib) n))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun ffib (%n) 
-  (cond ((or (eql %n -1) (zerop %n))
-	 (setq $prevfib (boole boole-ior %n 1) *a (- %n)))
+(defmfun $fib (n)
+  (cond ((fixnump n) (ffib n))
+	(t (setq $prevfib `(($fib) ,(add2* n -1)))
+	   `(($fib) ,n))))
+
+(defun ffib (%n)
+  (declare (fixnum %n))
+  (cond ((= %n -1)
+	 (setq $prevfib -1)
+	 1)
+	((zerop %n)
+	 (setq $prevfib 1)
+	 0)
 	(t
-	 (let ((x (+ (ffib (ash (boole  boole-andc2 %n 1) -1)) $prevfib))
-	       (y (* $prevfib $prevfib))
-	       (z (* *a *a)))
-	   (setq *a (- (* x x) y)
-		 $prevfib (+ y z)))
-	 (cond ((oddp %n)
-		(setq *a (prog1
-			     (+ *a $prevfib)
-			   (setq $prevfib *a))))
-	       (*a)))))
+	 (let* ((f2 (ffib (ash (logandc2 %n 1) -1))) ; f2 = fib(n/2) or fib((n-1)/2)
+		(x (+ f2 $prevfib))
+		(y (* $prevfib $prevfib))
+		(z (* f2 f2)))
+	   (setq f2 (- (* x x) y)
+		 $prevfib (+ y z))
+	   (when (oddp %n)
+	     (psetq $prevfib f2
+		    f2 (+ f2 $prevfib)))
+	   f2))))
 
 ;; continued fraction stuff
 
 (defmfun $cfdisrep (a)
   (cond ((not ($listp a))
-	 (merror "Arg to `cfdisrep' not a list: ~M" a))
+	 (merror (intl:gettext "cfdisrep: argument must be a list; found ~M") a))
 	((null (cddr a)) (cadr a))
 	((equal (cadr a) 0)
 	 (list '(mexpt) (cfdisrep1 (cddr a)) -1))
@@ -509,7 +584,7 @@
   (cond ((integerp a) (list a))
 	((eq (caar a) 'mlist) (cdr a))
 	((eq (caar a) 'rat) (ratcf (cadr a) (caddr a)))
-	((merror "Continued fractions must be lists or integers"))))
+	((merror (intl:gettext "cf: continued fractions must be lists or integers; found ~M") a))))
 
 (defun makcf (a)
   (cond ((null (cdr a)) (car a))
@@ -524,9 +599,9 @@
 ;; Definition of cfratsimp as given in SF bug report # 620928.
 (defun cfratsimp (a)
   (cond ((atom a) a)
-        ((member 'cf (car a) :test #'eq) a)
-        (t (cons '(mlist cf simp)
-                 (apply 'find-cf (cf-back-recurrence (cdr a)))))))
+	((member 'cf (car a) :test #'eq) a)
+	(t (cons '(mlist cf simp)
+		 (apply 'find-cf (cf-back-recurrence (cdr a)))))))
 
 ; Code to expand nth degree roots of integers into continued fraction
 ; approximations. E.g. cf(2^(1/3))
@@ -550,7 +625,7 @@
 	     (setq a (bigfloat2rat a))
 	     (cons '(mlist cf) (ratcf (car a) (cdr a)))))
 	  ((atom a)
-	   (merror "~:M - not a continued fraction" a))
+	   (merror (intl:gettext "cf: ~:M is not a continued fraction.") a))
 	  ((eq (caar a) 'rat)
 	   (cons '(mlist cf) (ratcf (cadr a) (caddr a))))
 	  ((eq (caar a) 'mlist)
@@ -577,7 +652,7 @@
 	   (cf (cfeval (cadr a)) (cddr a) (cdr temp)))
 	  ((eq (caar a) 'mrat)
 	   (cfeval ($ratdisrep a)))
-	  (t (merror "Not a continued fraction:~%~M" a)))))
+	  (t (merror (intl:gettext "cf: ~:M is not a continued fraction.") a)))))
 
 (defun cf (a l fun)
   (cond ((null l) a)
@@ -606,7 +681,7 @@
 (defun cfexpt (b e)
   (setq b (cfmak b))
   (cond ((null (integerp e))
-	 (merror "Can't raise continued fraction to non-integral powers"))
+	 (merror (intl:gettext "cf: can't raise continued fraction to non-integral power ~M") e))
 	((let ((n (abs e)))
 	   (do ((n (ash n -1) (ash n -1))
 		(s (cond ((oddp n) b)
@@ -649,7 +724,7 @@
      (setq cf (cddr cf))
      (loop for i from 2 to n
 	    while cf
-	    do 
+	    do
 	    (push (+  (* (car cf) (car pp))
 		      (second pp)) pp)
 	    (push (+  (* (car cf) (car qq))
@@ -664,12 +739,12 @@
 	  ((zerop rem) (return-from find-cf1 (cons quot so-far))))
     (setq so-far (cons quot so-far))
     (find-cf1 q rem so-far)))
- 
+
 (defun find-cf (p q)
   "returns the continued fraction for p and q integers, q not zero"
   (cond  ((zerop q) (maxima-error "find-cf: quotient by zero"))
 	 ((< q 0) (setq p (- p)) (setq q (- q))))
-  (nreverse (find-cf1 p q ()))) 
+  (nreverse (find-cf1 p q ())))
 
 (defun cf-back-recurrence (cf &aux tem (num-gg 0)(den-gg 1))
   "converts CF (a continued fraction list) to a list of numerator
@@ -749,7 +824,7 @@
 
 (defun cfsqrt (n)
   (cond ((cddr n)			;A non integer
-	 (merror "Can't take square roots of non-integers yet"))
+	 (merror (intl:gettext "cf: argument of sqrt must be an integer; found ~M") n))
 	((setq n (cadr n))))
   (setq n (sqcont n))
   (cond ((= $cflength 1)
@@ -757,14 +832,20 @@
 	((do ((i 2 (1+ i))
 	      (a (copy-tree (cdr n))))
 	     ((> i $cflength) (cons '(mlist simp) n))
-	   (setq n (nconc n (copy-tree a)))))))	
+	   (setq n (nconc n (copy-tree a)))))))
 
 (defmfun $qunit (n)
-  (let ((l (sqcont n)))
-    (list '(mplus) (pelso1 l 0 1) 
-	  (list '(mtimes) 
-		(list '(mexpt) n '((rat) 1 2))
-		(pelso1 l 1 0)))))
+  (let ((isqrtn ($isqrt n)))
+    (when (or (not (integerp n))
+              (minusp n)
+              (= (* isqrtn isqrtn) n))
+      (merror
+        (intl:gettext "qunit: Argument must be a positive non quadratic integer.")))
+    (let ((l (sqcont n)))
+      (list '(mplus) (pelso1 l 0 1)
+            (list '(mtimes)
+                  (list '(mexpt) n '((rat) 1 2))
+                  (pelso1 l 1 0))))))
 
 (defun pelso1 (l a b)
   (do ((i l (cdr i))) (nil)
@@ -773,7 +854,7 @@
 
 (defun sqcont (n)
   (prog (q q1 q2 m m1 a0 a l)
-     (setq a0 ($isqrt n) a (list a0) q2 1 m1 a0 
+     (setq a0 ($isqrt n) a (list a0) q2 1 m1 a0
 	   q1 (- n (* m1 m1)) l (* 2 a0))
      a	(setq a (cons (truncate (+ m1 a0) q1) a))
      (cond ((equal (car a) l)
@@ -829,7 +910,7 @@
      (cond ((eq ($sign (setq u (m- hi lo))) '$neg)
 	    (if (equal u -1)
 		(return 0)
-		(merror "Lower bound to sum is > upper bound")))
+		(merror (intl:gettext "sum: lower bound ~M greater than upper bound ~M") lo hi)))
 	   ((free exp i)
 	    (return (m+l (cons (freesum exp lo hi *times) *plus))))
 
@@ -843,12 +924,12 @@
   (let (sum usum)
     (cond ((eq hi '$inf)
 	   (cond (*infsumsimp (isum e))
-		 ((setq usum (list e))))) 
+		 ((setq usum (list e)))))
 	  ((sum e 1)))
     (cond ((eq sum nil)
 	   (return-from sumsum (list '(%sum) e *var* lo hi))))
     (setq *plus
-	  (nconc (mapcar 
+	  (nconc (mapcar
 		  #'(lambda (q) (simptimes (list '(mtimes) *times q) 1 nil))
 		  sum)
 		 *plus))
@@ -882,7 +963,7 @@
   (cond ((isum-giveup e)
 	 (setq sum nil usum (list e)))
 	((eq (catch 'isumout (isum1 e)) 'divergent)
-	 (merror "Sum is divergent"))))
+	 (merror (intl:gettext "sum: sum is divergent.")))))
 
 (defun isum1 (e)
   (cond ((or (free e *var*) (atom e))
@@ -911,9 +992,9 @@
 	 (throw 'isumout 'divergent)))
   (and (null (equal lo 1))
        (let ((sign sign) ($simpsum t))
-         (adsum `((%sum)
-                  ((mtimes) ,a -1 ((mexpt) ,*var* ,n))
-                  ,*var* 1 ((mplus) -1 ,lo)))))
+	 (adsum `((%sum)
+		  ((mtimes) ,a -1 ((mexpt) ,*var* ,n))
+		  ,*var* 1 ((mplus) -1 ,lo)))))
   (cond ((eq sign '$negative)
 	 (list '(mtimes) a ($zeta (meval (list '(mtimes) -1 n)))))
 	((throw 'isumout 'divergent))))
@@ -921,7 +1002,7 @@
 (defun fsgeo (e y)
   (let ((r ($ratsimp (div* (maxima-substitute (list '(mplus) *var* 1) *var* e) e))))
     (cond ((free r *var*)
-	   (adsum 
+	   (adsum
 	    (list '(mtimes) y
 		  (maxima-substitute 0 *var* e)
 		  (list '(mplus)
@@ -944,19 +1025,24 @@
 	 (adsum (list '(mtimes) a
 		      (list '(mexpt) (list '(mplus) 1 (list '(mtimes) -1 r)) -1))))))
 
+
+;; Sums of polynomials using
+;;   bernpoly(x+1, n) - bernpoly(x, n) = n*x^(n-1)
+;; which implies
+;;   sum(k^n, k, A, B) = 1/(n+1)*(bernpoly(B+1, n+1) - bernpoly(A, n+1))
+;;
+;; fpoly1 returns 1/(n+1)*(bernpoly(foo+1, n+1) - bernpoly(0, n+1)) for each power
+;; in the polynomial e
+
 (defun fpolysum (e)			;returns *ans*
   (let ((a (fpoly1 (setq e ($expand ($ratdisrep ($rat e *var*))))))
-	(b) ($prederror))
+	($prederror))
     (cond ((null a) 0)
 	  ((member lo '(0 1))
 	   (maxima-substitute hi 'foo a))
-	  ((or (equal t (mevalp (list '(mgeqp) lo 0)))
-	       (member (asksign lo) '($zero $positive) :test #'eq))
-	   (list '(mplus) (maxima-substitute hi 'foo a)
-		 (list '(mtimes) -1 (maxima-substitute (list '(mplus) lo -1) 'foo a))))
 	  (t
-	   (setq b (fpoly1 (maxima-substitute (list '(mtimes) -1 *var*) *var* e)))
-	   (list '(mplus) (maxima-substitute hi 'foo a) (maxima-substitute lo 'foo b))))))
+	   (list '(mplus) (maxima-substitute hi 'foo a)
+		 (list '(mtimes) -1 (maxima-substitute (list '(mplus) lo -1) 'foo a)))))))
 
 (defun fpoly1 (e)
   (cond ((smono e *var*)
@@ -996,7 +1082,7 @@
      ;; binomial(a+b*k,c+b*k) -> binomial(a+b*k, a-c)
      (when (equal (cdr n) (cdr d))
        (setq d (cons (m- (car n) (car d)) 0)))
-     
+
      (cond
        ;; substitute k with -k in sum(binomial(a+b*k, c-d*k))
        ;; and sum(binomial(a-b*k,c))
@@ -1027,9 +1113,9 @@
 		   (integerp c))
 	      (progn
 		(adsum (m* y (m^ 2 (car n))))
-		(when (member (asksign (m- h1 (car n))) '($zero $negative) :test #'eq)
+		(when (member (asksign (m- (m+ h1 c) (car n))) '($zero $negative) :test #'eq)
 		  (adsum (m* -1 y (dosum (list '(%binomial) (car n) *var*)
-					 *var* (m+ h1 1) (car n) t :evaluate-summand nil))))
+					 *var* (m+ h1 c 1) (car n) t :evaluate-summand nil))))
 		(when (> c 0)
 		  (adsum (m* -1 y (dosum (list '(%binomial) (car n) *var*)
 					 *var* 0 (m- c 1) t :evaluate-summand nil)))))
@@ -1061,17 +1147,13 @@
 	      (r1 (if (oddp (car d)) 1 0))
 	      (l1 (if (oddp (car d))
 		      (m+ l (truncate (1- (car d)) 2))
-		      (m+ l (truncate (car d) 2))))
-	      (h1 (if (oddp (car d))
-		      (m+ h (truncate (1- (car d)) 2))
-		      (m+ h (truncate (car d) 2)))))
-	  (if (and (integerp l1)
-		   (member (asksign (m- a hi)) '($zero $positive) :test #'eq))
-	      (progn
-		(adsum (m* y (m^ 2 (m- a 1))))
-		(when (> l1 0)
-		  (adsum (m* -1 y (dosum (list '(%binomial) a (m+ *var* *var* r1))
-					 *var* 0 (m- l1 1) t :evaluate-summand nil))))))))
+		      (m+ l (truncate (car d) 2)))))
+	  (when (and (integerp l1)
+		     (member (asksign (m- a hi)) '($zero $positive) :test #'eq))
+	    (adsum (m* y (m^ 2 (m- a 1))))
+	    (when (> l1 0)
+	      (adsum (m* -1 y (dosum (list '(%binomial) a (m+ *var* *var* r1))
+				     *var* 0 (m- l1 1) t :evaluate-summand nil)))))))
 
        ;; other sums we can't do
        (t
@@ -1081,7 +1163,7 @@
 
 (defmspec $product (l)
   (setq l (cdr l))
-  (cond ((not (= (length l) 4)) (merror "Wrong no. of args to product"))
+  (cond ((not (= (length l) 4)) (merror (intl:gettext "product: expected exactly four arguments.")))
 	((dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) nil :evaluate-summand t))))
 
 (declare-top (special $ratsimpexpons))
@@ -1100,7 +1182,7 @@
 (defmfun $taytorat (e)
   (cond ((mbagp e) (cons (car e) (mapcar #'$taytorat (cdr e))))
 	((or (atom e) (not (member 'trunc (cdar e) :test #'eq))) (ratf e))
-	((catch 'srrat (srrat e))) 
+	((catch 'srrat (srrat e)))
 	(t (ratf ($ratdisrep e)))))
 
 (defun srrat (e)
@@ -1131,7 +1213,7 @@
   (prog (fun series param op ops)
    a	(when (null (setq l (cdr l))) (return (cons '(mlist) ops)))
    (setq fun (meval (car l)) series (meval (cadr l)) l (cdr l) param () )
-   (when (or (atom fun) 
+   (when (or (atom fun)
 	     (if (eq (caar fun) 'mqapply)
 		 (or (cdddr fun)	; must be one parameter
 		     (null (cddr fun))	; must have exactly one
@@ -1148,9 +1230,9 @@
 		   (or (and (oldget op 'op) (not (eq op 'mfactorial)))
 		       (not (atom (cadr fun)))
 		       (not (= (length fun) 2))))))
-     (merror "Bad argument to `deftaylor':~%~M" fun))
+     (merror (intl:gettext "deftaylor: don't know how to handle this function: ~M") fun))
    (when (oldget op 'sp2)
-     (mtell "~:M being redefined in `deftaylor'.~%" op))
+     (mtell (intl:gettext "deftaylor: redefining ~:M.~%") op))
    (when param (setq series (subst 'sp2var param series)))
    (setq series (subsum '*index series))
    (putprop op series 'sp2)
@@ -1166,7 +1248,7 @@
   (cond ((atom e) e)
 	((eq (caar e) '%sum)
 	 (if (null (smonop (cadr e) 'sp2var))
-	     (merror "Argument to `deftaylor' must be power series at 0.")
+	     (merror (intl:gettext "deftaylor: argument must be a power series at 0."))
 	     (subst *i (caddr e) e)))
 	(t (recur-apply #'susum1 e))))
 
@@ -1180,13 +1262,13 @@
 	  *var* (cdr (ratf v)))
     (cond ((or (null (cdr *var*))
 	       (null (equal (cdar *var*) '(1 1))))
-	   (merror "Second arg to `polydecomp' must be an atom"))
+	   (merror (intl:gettext "polydecomp: second argument must be an atom; found ~M") v))
 	  (t (setq *var* (caar *var*))))
     (cond ((or (pcoefp (cdr p))
 	       (null (eq (cadr p) *var*)))
 	   (setq den (cdr p)
 		 p (car p)))
-	  (t (merror "Cannot `polydecomp' a rational function")))
+	  (t (merror (intl:gettext "polydecomp: cannot apply 'polydecomp' to a rational function."))))
     (cons '(mlist)
 	  (cond ((or (pcoefp p)
 		     (null (eq (car p) *var*)))
@@ -1225,7 +1307,7 @@
 ;;; and conversions to/from general representation which SOLVE doesn't
 ;;; want/need on a general basis.
 ;;; It is used in the SOLVE package and as such it should have an autoload
-;;; property 
+;;; property
 
 (defun polydecomp (p *var*)
   (let ($factorflag $ratfac)
@@ -1316,8 +1398,8 @@
 
 (defun pdecprimep (x)
   (setq x (cfactorw x))
-  (and (null (cddr x)) (equal (cadr x) 1))) 
-       
+  (and (null (cddr x)) (equal (cadr x) 1)))
+
 (defun pdecpow (p *var*)
   (setq p (car p))
   (let ((p1 (pderivative p *var*))
@@ -1341,5 +1423,5 @@
 	       (cons lin 1)))))
 
 (declare-top (unspecial *mfactl *factlist donel nn* dn* ans var
-			dict *var* *ans* a* *a *n *a*  hi lo
-			*infsumsimp *times *plus sum usum makef gensim))
+			*var* *ans* *n *a* hi lo
+			*infsumsimp *times *plus sum usum makef))

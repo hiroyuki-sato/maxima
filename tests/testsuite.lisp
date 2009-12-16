@@ -8,13 +8,13 @@
 (setf $testsuite_files
       '((mlist simp)
 	"rtestnset" "rtest1" "rtest1a" "rtest2" "rtest4"  
-	((mlist) "rtest5" 48)
+        "rtest5"
 	"rtest6" "rtest6a" "rtest6b" "rtest7"
-    ((mlist) "rtest9" 80)
+        ((mlist) "rtest9" 80)
 	"rtest9a"
 	((mlist) "rtest10" 24 25)
 	"rtest11" "rtest13" "rtest13s"
-	((mlist simp) "rtest14" 57 63)
+	"rtest14"
 	((mlist simp) "rtest15")
 	"rtest16"
 	"rtestode" "rtestode_zp"
@@ -35,11 +35,11 @@
 	"rtestint"
 	"rtestifactor"
 	((mlist) "rtest_equal" 157 160)
-	((mlist) "rtest_abs" 42 43)
-	((mlist) "rtest_taylor" 66 67 72 88 91 94 96 99 104 118 119 120 121 123 124)
+	"rtest_abs"
+	((mlist) "rtest_taylor" 88 91 94 96 99 104 118 119 120 121 123 124)
 	((mlist) "rtest_dot")
 	"rtest_mset"
-	((mlist) "rtest_boolean" 100 101)
+	"rtest_boolean"
 	((mlist) "rtest_round")
 	((mlist) "rtest_map" 2 3 4)
 	((mlist) "rtest_sign" 21 25 30 40 62 63 65 72 77 79 84)
@@ -47,4 +47,9 @@
         "rtest_gamma"
         "rtest_expintegral"
 	"rtest_signum"
+        "rtest_lambert_w"
+	"rtest_elliptic"
+	"rtest_integrate"
+	"rtest_integrate_special"
+        "rtest_ask"
 	))

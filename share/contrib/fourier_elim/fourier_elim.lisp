@@ -10,7 +10,8 @@
 
 
 ($load '$polynomialp)
-($load '$topoly)
+(if (not ($get '$to_poly '$version)) ($load '$topoly))
+
 (mfuncall '$declare '$one_to_one '$feature)
 (mfuncall '$declare '$sinh '$one_to_one)
 (mfuncall '$declare '$log  '$one_to_one)
@@ -122,7 +123,7 @@
 	   
 (defun freeof-floats (e)
   (if ($mapatom e) (not (or (floatp e) ($bfloatp e)))
-    (every 'freeof-floats (margs e))))
+    (every 'freeof-floats (margs (ratdisrep e)))))
 
 ;; Splitify an expression; this does e -> ((e1, boolean) (e2, boolean), ...). Examples:
 
@@ -257,9 +258,13 @@
      ;; If compare says a = b, return true.
      ((equal sgn "=") t)          
      
-     ;; If comare says a # b, return false.
+     ;; If compare says a # b, return false.
      ((member sgn '("<" ">" "#") :test 'equal) nil)
           
+     ;; for complex numbers, look at the real and imaginary parts.
+     ((and (complex-number-p a '$numberp) (complex-number-p b '$numberp))
+      (take '(mand) (m= ($realpart a) ($realpart b)) (m= ($imagpart a) ($imagpart b))))
+
      ;; z^n = 0 --> false if n <= 0 else z = 0.
      ((and (op-equalp z 'mexpt) (mnump (third z)))
       (if (member (number-sign (third z)) '($neg $zero) :test #'eq) nil (m= (second z) 0)))
@@ -284,10 +289,15 @@
      (t (take '(mequal) z 0)))))
 
 (defun m-neq (a b)
-  (let ((sgn  (compare-using-empty-context a b)))
-    (cond ((member sgn '("#" "<" ">" $notcomparable) :test 'equal) t)
-	  ((equal sgn "=") nil)
-	  (t (opcons 'mor (m> a b  t) (m> b a t))))))
+  (let ((save-context $context) (new-context (gensym)) (sgn))
+    (unwind-protect
+     (progn
+       (setq sgn (mnqp a b))
+       (cond ((or (eq sgn t) (eq sgn nil)) sgn)
+	     ((eq $domain '$real) (opcons 'mor (m> a b t) (m> b a t)))
+	     (t (take '(mnot) (m= a b)))))
+     (if ($member new-context $contexts) ($killcontext new-context))
+     (setq $context save-context))))
 	  
 (defun m>= (a b)
   (let ((sgn (compare-using-empty-context a b)))
@@ -335,7 +345,7 @@
 	  	   
 (defun $fourier_elim (l vars)
  
-  (let ((eq-list nil) (pos-list nil) (other-list nil) (acc) (elim-vars) ($listconstvars nil) ($ratprint nil))
+  (let ((eq-list nil) (pos-list nil) (other-list nil) (acc) ($listconstvars nil) ($ratprint nil))
     
     ;; Check the arguments
 
@@ -383,7 +393,7 @@
 	   
 	   (cond ((eq '$emptyset eq-list) (setq pos-list '$emptyset))
 		 (t
-		  (setq elim-vars ($third eq-list))
+		  ;;;(setq elim-vars ($third eq-list))
 		  (setq other-list (append other-list (margs ($second eq-list))))
 		  (setq eq-list ($first eq-list))
 		  (setq pos-list ($substitute eq-list pos-list))

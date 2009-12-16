@@ -95,7 +95,8 @@ The result is the noun form of the function call.
 @end example
 
 Applied to a parenthesized expression,
-the single quote prevents evaluation of all symbols and function calls in the expression.
+the single quote prevents evaluation of all symbols and function calls in the 
+expression.
 
 @c ===beg===
 @c aa: 1024;
@@ -128,6 +129,20 @@ The single quote does not prevent simplification.
 (%o1)                          - 1
 (%i2) '(sin (17 * %pi) + cos (17 * %pi));
 (%o2)                          - 1
+@end example
+
+Maxima considers floating point operations by its in-built mathematical 
+functions to be a simplification.
+
+@c ===beg===
+@c sin(1.0);
+@c '(sin(1.0));
+@c ===end===
+@example
+(%i1) sin(1.0);
+(%o1)                          .8414709848078965
+(%i2) '(sin(1.0));
+(%o2)                          .8414709848078965
 @end example
 
 @opencatbox
@@ -215,29 +230,24 @@ to be substituted for @var{expr} in the input expression.
 @end example
 
 Applied to the operator of an expression,
-quote-quote changes the operator from a noun to a verb (if it is not already a verb).
+quote-quote changes the operator from a noun to a verb (if it is not already a 
+verb).
 
 @c ===beg==
-@c sin (1);
-@c ''sin (1);
 @c declare (foo, noun);
 @c foo (x) := x - 1729;
 @c foo (100);
 @c ''foo (100);
 @c ===end==
 @example
-(%i1) sin (1);
-(%o1)                        sin(1)
-(%i2) ''sin (1);
-(%o2)                    0.8414709848079
-(%i3) declare (foo, noun);
-(%o3)                         done
-(%i4) foo (x) := x - 1729;
-(%o4)                 ''foo(x) := x - 1729
-(%i5) foo (100);
-(%o5)                       foo(100)
-(%i6) ''foo (100);
-(%o6)                        - 1629
+(%i1) declare (foo, noun);
+(%o1)                         done
+(%i2) foo (x) := x - 1729;
+(%o2)                 ''foo(x) := x - 1729
+(%i3) foo (100);
+(%o3)                       foo(100)
+(%i4) ''foo (100);
+(%o4)                        - 1629
 @end example
 
 The quote-quote operator is applied by the input parser;
@@ -406,6 +416,10 @@ each element.
 @code{derivlist (@var{x}, @var{y}, @var{z}, ...)} causes only differentiations with respect to
 the indicated variables.
 @item
+@code{risch} causes integrals in @var{expr} to be evaluated using the Risch
+algorithm. See @code{risch}. The standard integration routine is invoked when
+using the special symbol @code{nouns}.
+@item
 @code{float} causes non-integral rational numbers to be converted to floating
 point.
 @item
@@ -459,9 +473,9 @@ substitution equations which are handled in sequence, left to right,
 and evaluation functions which are composed, e.g., @code{ev (@var{expr}, ratsimp, realpart)} is
 handled as @code{realpart (ratsimp (@var{expr}))}.
 
-The @code{simp}, @code{numer}, @code{float}, and @code{pred} switches may also be set locally in a
-block, or globally in Maxima so that they will
-remain in effect until being reset.
+The @code{simp}, @code{numer}, and @code{float} switches may also be set locally
+in a block, or globally in Maxima so that they will remain in effect until being
+reset.
 
 If @var{expr} is a canonical rational expression (CRE),
 then the expression returned by @code{ev} is also a CRE,
@@ -493,16 +507,20 @@ it are evaluated and that @code{ev(F(x))} thus may behave like @code{F(ev(x))}.
 For each instance of @code{eval} in the arguments, steps (3) and (4) are repeated.
 @end enumerate
 
-                     Examples
+Examples:
 
+@c ===beg===
+@c sin(x) + cos(y) + (w+1)^2 + 'diff (sin(w), w);
+@c ev (%, numer, expand, diff, x=2, y=1);
+@c ===end===
 @example
 (%i1) sin(x) + cos(y) + (w+1)^2 + 'diff (sin(w), w);
                                      d                    2
 (%o1)              cos(y) + sin(x) + -- (sin(w)) + (w + 1)
                                      dw
-(%i2) ev (%, sin, expand, diff, x=2, y=1);
-                          2
-(%o2)           cos(w) + w  + 2 w + cos(1) + 1.909297426825682
+(%i2) ev (%, numer, expand, diff, x=2, y=1);
+                               2
+(%o2)                cos(w) + w  + 2 w + 2.449599732693821
 @end example
 
 An alternate top level syntax has been provided for @code{ev}, whereby one
@@ -553,6 +571,38 @@ Solution
 @closecatbox
 @end deffn
 
+@c -----------------------------------------------------------------------------
+@defvr {Special symbol} eval
+As an argument in a call to @code{ev (@var{expr})}, @code{eval} causes an extra
+evaluation of @var{expr}. See @code{ev}.
+
+Example:
+
+@c ===beg===
+@c [a:b,b:c,c:d,d:e];
+@c a;
+@c ev(a);
+@c ev(a),eval;
+@c a,eval,eval;
+@c ===end===
+@example
+(%i1) [a:b,b:c,c:d,d:e];
+(%o1)                            [b, c, d, e]
+(%i2) a;
+(%o2)                                  b
+(%i3) ev(a);
+(%o3)                                  c
+(%i4) ev(a),eval;
+(%o4)                                  e
+(%i5) a,eval,eval;
+(%o5)                                  e
+@end example
+
+@opencatbox
+@category{Evaluation flags}
+@closecatbox
+@end defvr
+
 @defvr {Property} evflag
 When a symbol @var{x} has the @code{evflag} property,
 the expressions @code{ev(@var{expr}, @var{x})} and @code{@var{expr}, @var{x}}
@@ -595,6 +645,8 @@ The flags which have the @code{evflag} property by default are the following:
 @code{ratmx},
 @code{ratsimpexpons},
 @code{simp},
+@c added 10/2009 (DK)
+@code{simpproduct},
 @code{simpsum},
 @code{sumexpand}, and
 @code{trigexpand}.
@@ -1108,39 +1160,78 @@ See also @code{timer}.
 
 @end defvr
 
-@c IS THIS ANY DIFFERENT FROM ASSIGNING A PROPERTY ??
-@c THIS REALLY SEEMS LIKE A HACK
-@deffn {Function} sstatus (@var{feature}, @var{package})
-Sets the status of @var{feature} in @var{package}.
-After @code{sstatus (@var{feature}, @var{package})} is executed,
-@code{status (@var{feature}, @var{package})} returns @code{true}.
-This can be useful for package writers, to
-keep track of what features they have loaded in.
-
-@opencatbox
-@category{Declarations and inferences}
-@closecatbox
-
-@end deffn
-
-@c NEEDS EXPANSION, EXAMPLES
+@c -----------------------------------------------------------------------------
 @deffn {Function} to_lisp ()
 Enters the Lisp system under Maxima. @code{(to-maxima)} returns to Maxima.
+
+Example:
+
+Define a function and enter the Lisp system under Maxima. The defintion is 
+inspected on the property list, then the function definition is extracted, 
+factored and stored in the variable $result. The variable can be used in Maxima 
+after returning to Maxima.
+
+@example
+(%i1) f(x):=x^2+x;
+                                         2
+(%o1)                           f(x) := x  + x
+(%i2) to_lisp();
+Type (to-maxima) to restart, ($quit) to quit Maxima.
+
+MAXIMA> (symbol-plist '$f)
+(MPROPS (NIL MEXPR ((LAMBDA) ((MLIST) $X) ((MPLUS) ((MEXPT) $X 2) $X))))
+MAXIMA> (setq $result ($factor (caddr (mget '$f 'mexpr))))
+((MTIMES SIMP FACTORED) $X ((MPLUS SIMP IRREDUCIBLE) 1 $X))
+MAXIMA> (to-maxima)
+Returning to Maxima
+(%o2)                                true
+(%i3) result;
+(%o3)                              x (x + 1)
+@end example
 
 @opencatbox
 @category{Console interaction}
 @closecatbox
-
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @defvr {System variable} values
 Initial value: @code{[]}
 
-@code{values} is a list of all bound user variables (not Maxima options or switches).
-The list comprises symbols bound by @code{:} , @code{::}, or @code{:=}.
+@code{values} is a list of all bound user variables (not Maxima options or
+switches). The list comprises symbols bound by @code{:}, or @code{::}.
+
+If the value of a variable is removed with the commands @code{kill}, 
+@code{remove}, or @code{remvalue} the variable is deleted from @code{values}.
+
+See @code{functions} for a list of user defined functions.
+
+Examples:
+
+First, @code{values} shows the symbols @code{a}, @code{b}, and @code{c}, but 
+not @code{d}, it is not bound to a value, and not the user function @code{f}.
+The values are removed from the variables. @code{values} is the empty list.
+
+@c ===beg===
+@c [a:99, b:: a-90, c:a-b, d, f(x):=x^2];
+@c values;
+@c [kill(a), remove(b,value), remvalue(c)];
+@c values;
+@c ===end===
+@example
+(%i1) [a:99, b::a-90, c:a-b, d, f(x):= x^2];
+                                                  2
+(%o1)                     [99, 9, 90, d, f(x) := x ]
+(%i2) values;
+(%o2)                              [a, b, c]
+(%i3) [kill(a), remove(b,value), remvalue(c)];
+(%o3)                          [done, done, [c]]
+(%i4) values;
+(%o4)                                 []
+@end example
 
 @opencatbox
 @category{Evaluation} @category{Global variables}
 @closecatbox
-
 @end defvr
+

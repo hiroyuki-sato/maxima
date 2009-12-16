@@ -67,7 +67,8 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = src lisp-utils tests doc interfaces share demo plotting \
+	locale
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -110,6 +111,8 @@ ECL_TRUE = @ECL_TRUE@
 EGREP = @EGREP@
 EMACS = @EMACS@
 EMACSLOADPATH = @EMACSLOADPATH@
+ENABLE_GETTEXT_FALSE = @ENABLE_GETTEXT_FALSE@
+ENABLE_GETTEXT_TRUE = @ENABLE_GETTEXT_TRUE@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -215,7 +218,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 win32 = @win32@
-SUBDIRS = src lisp-utils tests doc interfaces share demo plotting
+@ENABLE_GETTEXT_TRUE@LOCALE_DIR = locale
+SUBDIRS = src lisp-utils tests doc interfaces share demo plotting $(LOCALE_DIR)
 EXTRA_DIST = \
   common.mk maxima.iss.in \
   README.lisps README.rpms README.i18n README.external \
@@ -223,7 +227,8 @@ EXTRA_DIST = \
   configure.lisp  maxima-local.in xmaxima-local.in \
   ChangeLog-5.9.2 ChangeLog-5.9.3 ChangeLog-5.10.0 ChangeLog-5.11.0 \
   ChangeLog-5.12.0 ChangeLog-5.13.0 ChangeLog-5.14.0 ChangeLog-5.15.0 \
-  ChangeLog-5.16 ChangeLog-5.17 ChangeLog-5.17-special-functions
+  ChangeLog-5.16 ChangeLog-5.17 ChangeLog-5.17-special-functions \
+  ChangeLog-5.18 ChangeLog-5.19 ChangeLog-5.20
 
 verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
@@ -683,7 +688,7 @@ uninstall-datafiles:
 
 extradocinstall:
 	test -d "$(docdir)" || mkdir -p "$(docdir)"
-	for file in AUTHORS COPYING INSTALL README README.lisps ; \
+	for file in AUTHORS COPYING LICENSES/getopt-license.txt INSTALL README README.lisps ; \
             do \
             $(INSTALL_DATA) $$file "$(docdir)" ; \
             done

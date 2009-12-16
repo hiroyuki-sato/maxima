@@ -1,6 +1,7 @@
 binary-sbcl/maxima.core : maxima-package.lisp
 binary-sbcl/maxima.core : autoconf-variables.lisp
 binary-sbcl/maxima.core : nregex.lisp
+binary-sbcl/maxima.core : intl.lisp
 binary-sbcl/maxima.core : cl-info.lisp
 binary-sbcl/maxima.core : sloop.lisp
 binary-sbcl/maxima.core : lmdcls.lisp
@@ -10,6 +11,7 @@ binary-sbcl/maxima.core : clmacs.lisp
 binary-sbcl/maxima.core : commac.lisp
 binary-sbcl/maxima.core : mormac.lisp
 binary-sbcl/maxima.core : compat.lisp
+binary-sbcl/maxima.core : getopt.lisp
 binary-sbcl/maxima.core : command-line.lisp
 binary-sbcl/maxima.core : defopt.lisp
 binary-sbcl/maxima.core : defcal.lisp
@@ -169,6 +171,7 @@ binary-sbcl/maxima.core : csimp2.lisp
 binary-sbcl/maxima.core : zero.lisp
 binary-sbcl/maxima.core : logarc.lisp
 binary-sbcl/maxima.core : rpart.lisp
+binary-sbcl/maxima.core : numeric.lisp
 binary-sbcl/maxima.core : server.lisp
 binary-sbcl/maxima.core : macsys.lisp
 binary-sbcl/maxima.core : mload.lisp
@@ -214,6 +217,7 @@ binary-sbcl/maxima.core : trgred.lisp
 binary-sbcl/maxima.core : bessel.lisp
 binary-sbcl/maxima.core : ellipt.lisp
 binary-sbcl/maxima.core : airy.lisp
+binary-sbcl/maxima.core : plasma.lisp
 binary-sbcl/maxima.core : intpol.lisp
 binary-sbcl/maxima.core : nparse.lisp
 binary-sbcl/maxima.core : displa.lisp
@@ -236,6 +240,7 @@ binary-sbcl/maxima.core : defint.lisp
 binary-sbcl/maxima.core : residu.lisp
 binary-sbcl/maxima.core : specfn.lisp
 binary-sbcl/maxima.core : mat.lisp
+binary-sbcl/maxima.core : linnew.lisp
 binary-sbcl/maxima.core : matrix.lisp
 binary-sbcl/maxima.core : sprdet.lisp
 binary-sbcl/maxima.core : newinv.lisp
@@ -285,8 +290,8 @@ binary-sbcl/maxima.core : hyp.lisp
 binary-sbcl/maxima.core : todd-coxeter.lisp
 binary-sbcl/maxima.core : mactex.lisp
 binary-sbcl/maxima.core : plot.lisp
-binary-sbcl/maxima.core : gnuplot.lisp
-binary-sbcl/maxima.core : openmath.lisp
+binary-sbcl/maxima.core : gnuplot_def.lisp
+binary-sbcl/maxima.core : xmaxima_def.lisp
 binary-sbcl/maxima.core : autol.lisp
 binary-sbcl/maxima.core : max_ext.lisp
 binary-sbcl/maxima.core : init-cl.lisp

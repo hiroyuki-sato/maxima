@@ -3,9 +3,9 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name: version-5_17_1 $
-;; $Revision: 1.15 $
-;; $Date: 2007/02/25 16:42:59 $
+;; $Name: version-5_20_1 $
+;; $Revision: 1.16 $
+;; $Date: 2009/01/08 04:47:51 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -1069,7 +1069,6 @@
    "verbify"
    "weyl"
    "writefile"
-   "xgraph_curves"
    "xthru"
    "zeroequiv"
    "zeromatrix"

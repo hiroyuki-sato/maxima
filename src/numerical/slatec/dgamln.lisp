@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2007/05/04 17:29:50 
-;;; Using Lisp CMU Common Lisp Snapshot 2007-05 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':simple-array)
@@ -84,9 +92,9 @@
                                        4.887880647930793e14
                                        -2.1320333960919372e16)))
       (con 1.8378770664093456))
-  (declare (type (double-float) con)
+  (declare (type (simple-array double-float (100)) gln)
            (type (simple-array double-float (22)) cf)
-           (type (simple-array double-float (100)) gln))
+           (type (double-float) con))
   (defun dgamln (z ierr)
     (declare (type (f2cl-lib:integer4) ierr) (type (double-float) z))
     (prog ((i 0) (i1m 0) (k 0) (mz 0) (nz 0) (fln 0.0) (fz 0.0) (rln 0.0)

@@ -6,6 +6,10 @@
 
 (in-package :asdf)
 
+;; Don't try to optimize so much in ECL.
+;; Therefore functions can be redefined (essential for share libraries).
+#+ecl (declaim (optimize (debug 2)))
+
 (defvar *binary-output-dir* "binary-ecl")
 
 (defmethod output-files :around ((operation compile-op) (c source-file))
@@ -44,10 +48,11 @@
   :components (
 	       (:module package :pathname ""
 			:components (#-gcl(:file "maxima-package")
-					  (:file "ecl-port")
+					  #+ecl (:file "ecl-port")
 					  (:file "autoconf-variables" :depends-on ("maxima-package"))))
 	       (:module info :pathname ""
 			:components ((:file "nregex")
+                     (:file "intl")
 				     (:file "cl-info")))
 	       (:module sloop :pathname ""
 			:components ((:file "sloop")))
@@ -63,7 +68,10 @@
                (:module prerequisites :pathname ""
                         :components ((:file "mormac") 
                                      (:file "compat")))
+	       (:module getopt :pathname ""
+			:components ((:file "getopt")))
 	       (:module command-line :pathname ""
+			:depends-on (getopt)
 			:components ((:file "command-line")))
                (:module fundamental-macros :pathname ""
                         :components ((:file "defopt") 
@@ -386,6 +394,8 @@
                                      (:file "zero")
                                      (:file "logarc") 
                                      (:file "rpart")))
+	       (:module numeric-bigfloat :pathname ""
+			:components ((:file "numeric")))
 	       (:module server :pathname ""
 			:components ((:file "server")))
                (:module i-o :pathname ""
@@ -450,6 +460,7 @@
 				     (:file "ellipt")
 				     (:file "airy"
 					    :depends-on ("ellipt"))
+				     (:file "plasma")
 				     (:file "intpol")))
 
 	       (:module reader :pathname ""
@@ -487,6 +498,7 @@
 			:components ((:file "specfn")))
 	       (:module matrix-algebra :pathname ""
 			:components ((:file "mat") 
+                     (:file "linnew")
 				     (:file "matrix")))
 	       (:module determinants :pathname ""
 			:components ((:file "sprdet") 
@@ -546,8 +558,8 @@
 			 (:file "mactex")
 			 (:file "plot")))
 	       (:module graphics-drivers :pathname ""
-			:components ((:file "gnuplot")
-				     (:file "openmath")))
+			:components ((:file "gnuplot_def")
+				     (:file "xmaxima_def")))
 
 	       (:module final :pathname ""
 			;; These are not compiled, for whatever reason
