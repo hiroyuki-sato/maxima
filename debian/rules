@@ -42,26 +42,30 @@ build-stamp:
 	aclocal-1.9
 	automake-1.9
 
-	GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '#-native-reloc(princ "--enable-gcl-alt-link")(bye)') \
+	GCL_ANSI=t gcl -batch -eval '(bye #+ia64 1)' || \
+	echo '(setq compiler::*opt-three* "-O0" compiler::*opt-two* "-O0")(si::save-system "gcl")' | GCL_ANSI=t gcl
+
+	PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '#-native-reloc(princ "--enable-gcl-alt-link")(bye)') \
 		--prefix=/usr \
 		--libexec=/usr/lib \
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info 
 
-	GCL_ANSI=t $(MAKE)
+	PATH=$$(pwd):$$PATH GCL_ANSI=t $(MAKE)
 
 # This sets up some reasonable readline command completion by default
 
-	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
+	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")#+(or sparc sparc64)(fmakunbound (quote si::sgc-on))(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
 
 
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
 
 	chmod +x ./maxima-local
-	./maxima-local --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
+	echo '(bye #-(or sparc sparc64) 1)' | gcl || \
+	(./maxima-local --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
-		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
+		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j)
 
 #	cat tmp tests/tests-gcl.log >debian/test_results.out
 
@@ -73,7 +77,7 @@ build-stamp:
 
 	cat tmp >debian/test_results.out
 
-	grep -q "No unexpected errors found." debian/test_results.out
+	echo '(bye #-(or sparc sparc64) 1)' | gcl || grep -q "No unexpected errors found." debian/test_results.out
 
 	rm -f tmp
 
