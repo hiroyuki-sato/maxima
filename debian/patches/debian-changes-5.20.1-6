@@ -1,0 +1,108 @@
+Description: Upstream changes introduced in version 5.20.1-6
+ This patch has been created by dpkg-source during the package build.
+ Here's the last changelog entry, hopefully it gives details on why
+ those changes were made:
+ .
+ maxima (5.20.1-6) unstable; urgency=low
+ .
+   * fix testsuite on sparc
+   * lintian fixes
+   * 3.0 (quilt) source format
+   * activate scimax trigger
+   * Bug fix: "Please reduce recommends from maxima to maxima-emacs to
+     suggests", thanks to Petter Reinholdtsen (Closes: #574171).
+   * Bug fix: "Please consider the use of dpkg-trigger for Maxima", thanks
+     to Sylvestre Ledru (Closes: #576699).
+   * Bug fix: "Improve LAPACK support", thanks to Hendrik Weimer (Closes:
+     #503128).  GCL non longer required to use lapack, files built in home
+     dir.
+ .
+ The person named in the Author field signed this changelog entry.
+Author: Camm Maguire <camm@debian.org>
+Bug-Debian: http://bugs.debian.org/503128
+Bug-Debian: http://bugs.debian.org/574171
+Bug-Debian: http://bugs.debian.org/576699
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- maxima-5.20.1.orig/interfaces/emacs/misc/bookmode.el
++++ maxima-5.20.1/interfaces/emacs/misc/bookmode.el
+@@ -680,7 +680,7 @@ file")
+ 		
+ 		  (and tem
+ 		       (list (concat "View "(nth 1 tem))
+-			     'call-process  "ghostview" nil nil nil
++			     'call-process  "gv" nil nil nil
+ 			     (expand-file-name(nth 1 tem))
+ 			     ))
+ 		  (list "Cancel")
+@@ -705,7 +705,7 @@ file")
+ 			 (concat
+ 			  (cond ((looking-at "%PS") "")
+ 				(t "gzip -dc | "))
+-			  "ghostview -")
++			  "gv -")
+ 			 
+ 	)))
+ 	 
+--- maxima-5.20.1.orig/interfaces/emacs/imaxima/stamp-vti
++++ maxima-5.20.1/interfaces/emacs/imaxima/stamp-vti
+@@ -1,4 +1,4 @@
+-@set UPDATED 2 November 2008
++@set UPDATED 3 November 2008
+ @set UPDATED-MONTH November 2008
+ @set EDITION 5.20.1
+ @set VERSION 5.20.1
+--- maxima-5.20.1.orig/interfaces/emacs/imaxima/version.texi
++++ maxima-5.20.1/interfaces/emacs/imaxima/version.texi
+@@ -1,4 +1,4 @@
+-@set UPDATED 2 November 2008
++@set UPDATED 3 November 2008
+ @set UPDATED-MONTH November 2008
+ @set EDITION 5.20.1
+ @set VERSION 5.20.1
+--- maxima-5.20.1.orig/interfaces/xmaxima/Tkmaxima/Constants.tcl
++++ maxima-5.20.1/interfaces/xmaxima/Tkmaxima/Constants.tcl
+@@ -143,7 +143,7 @@ set maxima_priv(urlHandlers) {
+     image/gif  netmath
+     image/png  netmath
+     image/jpeg netmath
+-    application/postscript "ghostview -safer %s"
++    application/postscript "gv -safer %s"
+     application/pdf "acroread %s"
+     application/x-dvi "xdvi %s"
+ }
+--- maxima-5.20.1.orig/src/init-cl.lisp
++++ maxima-5.20.1/src/init-cl.lisp
+@@ -519,8 +519,9 @@ When one changes, the other does too."
+     ;; Autoload for Maxima documantation index file
+     (let ((subdir-bit (if (null *maxima-lang-subdir*) "." *maxima-lang-subdir*)))
+       ;; Assign AUTOLOAD property instead of binding a function (the result of AUTOF).
+-      (setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
+-	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp")))))
++      (unless (get 'cl-info::cause-maxima-index-to-load 'autoload)
++	(setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
++	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp"))))))
+ 
+ (defun get-dirs (path)
+   #+(or :clisp :sbcl :ecl :openmcl)
+--- maxima-5.20.1.orig/lisp-utils/defsystem.lisp
++++ maxima-5.20.1/lisp-utils/defsystem.lisp
+@@ -4663,6 +4663,7 @@ the system definition, if provided."
+ 			  source-pname
+ 			  :output-file
+ 			  output-file
++			  #+gcl :system-p #+gcl t
+ 			  #+(or :cmu :scl) :error-file
+ 			  #+(or :cmu :scl) (and *cmu-errors-to-file*
+ 						(component-full-pathname component

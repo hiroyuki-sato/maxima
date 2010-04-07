@@ -32,9 +32,23 @@ ifeq ($(DEB_BUILD_ARCH),powerpc)
 NO_STRIP:=-Xmaxima
 endif
 
+SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/stamp-vti\
+	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
+	 src/sys-proclaim.lisp)
+
+debian/save/%: %
+	mkdir -p $(@D)
+	cp $< $@
+
+save: $(SAVES)
+
+restore: 
+	! [ -d debian/save ] || ( cd debian/save && for i in $$(find -type f); do cp $$i ../../$$i; done )
+	rm -rf debian/save
+
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
 build: build-stamp
-build-stamp: 
+build-stamp: save
 	dh_testdir
 
 	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do [ -e $$i.ori ] || cp $$i $$i.ori; done
@@ -55,17 +69,17 @@ build-stamp:
 
 # This sets up some reasonable readline command completion by default
 
-	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")#+(or sparc sparc64)(fmakunbound (quote si::sgc-on))(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
+	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
 
 
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
 
 	chmod +x ./maxima-local
-	echo '(bye #-(or sparc sparc64) 1)' | gcl || \
-	(./maxima-local --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
+#	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
+	./maxima-local --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
-		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j)
+		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
 
 #	cat tmp tests/tests-gcl.log >debian/test_results.out
 
@@ -78,7 +92,8 @@ build-stamp:
 	touch tmp
 	cat tmp >debian/test_results.out
 
-	echo '(bye #-(or sparc sparc64) 1)' | gcl || grep -q "No unexpected errors found." debian/test_results.out
+#	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
+	grep -q "No unexpected errors found." debian/test_results.out
 
 	rm -f tmp
 
@@ -92,7 +107,7 @@ build-stamp:
 
 BOOK:=debian/maximabook-19-Sept-2004.pdf
 
-clean:
+clean:  restore
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp install-stamp
@@ -117,6 +132,10 @@ clean:
 	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
 	rm -rf doc/info/maxima.html
 	rm -rf src/binary-gcl
+	rm -f doc/man/ru/maxima.1
+	rm -f tests/rtest14.ERR
+	rm -f doc/info/include-maxima.texi
+	rm -f configure.lineno
 	dh_clean
 
 
