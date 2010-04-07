@@ -4663,6 +4663,7 @@ the system definition, if provided."
 			  source-pname
 			  :output-file
 			  output-file
+			  #+gcl :system-p #+gcl t
 			  #+(or :cmu :scl) :error-file
 			  #+(or :cmu :scl) (and *cmu-errors-to-file*
 						(component-full-pathname component
