@@ -3,9 +3,9 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name: version-5_20_1 $
-;; $Revision: 1.16 $
-;; $Date: 2009/01/08 04:47:51 $
+;; $Name: version-5_21_1 $
+;; $Revision: 1.19 $
+;; $Date: 2010/03/24 19:53:40 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -950,6 +950,7 @@
    "resolvante_unitaire"
    "resolvante_vierer"
    "rest"
+   "restart"
    "restore"
    "resultant"
    "return"
@@ -1086,7 +1087,12 @@
 (defvar maxima-const-1
   (list
    "%e"
-   "%pi"))
+   "%i"
+   "%gamma"
+   "%phi"
+   "%pi"
+   "zeroa"
+   "zerob"))
 
 
 (defvar maxima-match-constants-1
@@ -1098,6 +1104,7 @@
 (defvar maxima-const-2
   (list
    "false"
+   "ind"
    "inf"
    "infinity"
    "minf"
@@ -1178,6 +1185,7 @@
   (list
    "do"
    "else"
+   "elseif"
    "for"
    "if"
    "in"
@@ -1381,13 +1389,14 @@
 (defvar maxima-font-lock-keywords-3
   (append maxima-font-lock-keywords-2
     (list 
-     (list "^\\(.*\\)(\\(.*\\)) *:="
+     (list "^[[:space:]]*\\([%_[:alnum:]]+\\)(\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*)[[:space:]]*:*:="
            '(1 font-lock-function-name-face))
-     (list "^.*(\\(.*\\)):="
+     (list "^[[:space:]]*\\(?:[%_[:alnum:]]+\\)(\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*)[[:space:]]*:*:="
            '(1 font-lock-variable-name-face))))
   "Gaudy level highlighting for Maxima mode.")
+;;"^.*[[(]\\([^])]*\\)[])][ \t\n\f\r]*:*:="
 
-(defvar maxima-font-lock-keywords maxima-font-lock-keywords-1
+(defvar maxima-font-lock-keywords maxima-font-lock-keywords-3
   "Default expressions to highlight in Maxima mode.")
 
 (defun maxima-font-setup ()
@@ -1409,7 +1418,7 @@
         (setq maxima-preamble-fontlock nil)
         (let ((beg (point-min)) 
               (end))
-          (if (search-forward "(C1)" limit)
+          (if (search-forward "(%i1)" limit)
               (progn
                 (forward-line -1)
                 (setq end (maxima-line-end-position))
@@ -1429,7 +1438,7 @@
   (append maxima-font-lock-keywords-3
     '((maxima-match-preamble (0 font-lock-string-face t t)))))
 
-(defvar inferior-maxima-font-lock-keywords inferior-maxima-font-lock-keywords-1
+(defvar inferior-maxima-font-lock-keywords inferior-maxima-font-lock-keywords-3
   "Default expressions to highlight in Maxima mode.")
 
 (defun inferior-maxima-font-setup ()

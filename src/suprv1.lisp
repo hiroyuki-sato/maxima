@@ -290,6 +290,7 @@
   ;; Should really get the truename of FILE.
   (if printp (format t "~%~A being loaded.~%" file))
   (let* ((path (pathname file))
+	 ($load_pathname path)
 	 (tem (errset #-sbcl (load (pathname file)) #+sbcl (with-compilation-unit nil (load (pathname file))))))
     (or tem (merror "Load failed for ~A" (namestring path)))
     (namestring path)))
@@ -816,6 +817,7 @@
     (merror "verbify: argument must be a symbol or a string."))
   (setq x (amperchk x))
   (cond ((get x 'noun))
+        ((eq x '||) x)
 	((and (char= (char (symbol-name x) 0) #\%)
 	      (prog2
 		  ($nounify (implode (cons #\$ (cdr (exploden x)))))

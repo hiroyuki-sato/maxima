@@ -42,7 +42,7 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/acl-depends.mk $(srcdir)/autoconf-variables.lisp.in \
 	$(srcdir)/clisp-depends.mk $(srcdir)/cmucl-depends.mk \
 	$(srcdir)/ecl-depends.mk $(srcdir)/gcl-depends.mk \
-	$(srcdir)/maxima.bat.in $(srcdir)/maxima.in \
+	$(srcdir)/lisp.in $(srcdir)/maxima.bat.in $(srcdir)/maxima.in \
 	$(srcdir)/openmcl-depends.mk $(srcdir)/rmaxima.in \
 	$(srcdir)/sbcl-depends.mk $(srcdir)/scl-depends.mk \
 	$(top_srcdir)/common.mk
@@ -52,7 +52,8 @@ am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = maxima maxima.bat rmaxima autoconf-variables.lisp
+CONFIG_CLEAN_FILES = maxima maxima.bat rmaxima autoconf-variables.lisp \
+	lisp
 am__installdirs = "$(DESTDIR)$(bindir)"
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(bin_SCRIPTS)
@@ -219,6 +220,11 @@ DEFSYSTEMLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" 
 DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t :test t)
 @CLISP_TRUE@EXECUTECLISP = $(CLISP_NAME) -norc -q -x
 @CMUCL_TRUE@EXECUTECMUCL = $(CMUCL_NAME) -noinit -batch
+# Newer versions of CMUCL have an INTL package that is compatible with
+# maxima's.  We just bind intl::*default-domain* here so that when we
+# compile the files, we will get appropriate translations.  (Otherwise
+# we have to put (intl:textdomain "maxima") in each Lisp file.
+@CMUCL_TRUE@INITINTL = (when (find-package "INTL") (set (find-symbol "*DEFAULT-DOMAIN*" "INTL") "maxima"))
 @SCL_TRUE@EXECUTESCL = $(SCL_NAME) -noinit -batch
 @ACL_TRUE@EXECUTEACL = $(ACL_NAME) -batch
 @SBCL_TRUE@EXECUTESBCL = $(SBCL_NAME) --noinform --noprint --eval
@@ -534,7 +540,7 @@ numerical/slatec/zuoik.lisp \
 numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
-EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs lisp
 all: all-am
 
 .SUFFIXES:
@@ -574,6 +580,8 @@ maxima.bat: $(top_builddir)/config.status $(srcdir)/maxima.bat.in
 rmaxima: $(top_builddir)/config.status $(srcdir)/rmaxima.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 autoconf-variables.lisp: $(top_builddir)/config.status $(srcdir)/autoconf-variables.lisp.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+lisp: $(top_builddir)/config.status $(srcdir)/lisp.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
@@ -1094,13 +1102,13 @@ uninstall-datafiles:
 @CMUCL_TRUE@	test -d binary-cmucl || mkdir binary-cmucl
 @CMUCL_TRUE@	test -d binary-cmucl/numerical || mkdir binary-cmucl/numerical
 @CMUCL_TRUE@	test -d binary-cmucl/numerical/slatec || mkdir binary-cmucl/numerical/slatec
-@CMUCL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTECMUCL)) && \
+@CMUCL_TRUE@	(echo '(progn $(INITINTL) $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTECMUCL)) && \
 @CMUCL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima.core"))' | $(EXECUTECMUCL))
 
 @CMUCL_TRUE@install-cmucl:
 @CMUCL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-cmucl"
 @CMUCL_TRUE@	$(INSTALL_DATA) binary-cmucl/maxima.core "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
-@CMUCL_TRUE@	$(INSTALL_PROGRAM) @CMUCL_RUNTIME_PATH@ "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
+@CMUCL_TRUE@	$(INSTALL_PROGRAM) lisp "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
 
 @CMUCL_TRUE@uninstall-cmucl:
 @CMUCL_TRUE@	rm -f "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
@@ -2394,7 +2402,7 @@ uninstall-datafiles:
 @GCL_TRUE@	test -d binary-gcl || mkdir binary-gcl
 @GCL_TRUE@	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 @GCL_TRUE@	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
-@GCL_TRUE@	$(EXECUTEGCL) '(progn $(LOADMAKEPROCLAIM) (load "generate-sys-proclaim.lisp")'
+@GCL_TRUE@	$(EXECUTEGCL) '(progn $(LOADMAKEPROCLAIM) (load "generate-sys-proclaim.lisp"))'
 
 @GCL_TRUE@gcl:binary-gcl/maxima
 
@@ -2750,9 +2758,11 @@ uninstall-datafiles:
 @OPENMCL_TRUE@	rm -rf binary-openmcl
 @OPENMCL_TRUE@openmcl-depends.mk: maxima.system
 @OPENMCL_TRUE@	test -d binary-openmcl || mkdir binary-openmcl
-@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-openmcl/maxima.image" "openmcl-depends.mk"))'
+@OPENMCL_TRUE@	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-openmcl/maxima.image" "openmcl-depends.mk") (ccl:quit))'
 @OPENMCL_TRUE@binary-openmcl/maxima.image : maxima-package.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : autoconf-variables.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nregex.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : intl.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : cl-info.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sloop.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : lmdcls.lisp
@@ -2763,6 +2773,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mormac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : compat.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : getopt.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : command-line.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : defopt.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : defcal.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : maxmac.lisp
@@ -2869,10 +2880,51 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/d9aimp.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/daie.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dai.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dbie.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dbi.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/zbiry.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/derfc.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/derf.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/de1.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dei.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/d9upak.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dspenc.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqwgtf.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqcheb.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk15w.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqwgts.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqwgtc.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dgtsl.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk15.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk31.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk41.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk51.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk61.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk21.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqk15i.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqelg.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqpsrt.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqc25s.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqmomo.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqc25c.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqc25f.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqage.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqagie.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqagpe.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqagse.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawoe.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawfe.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawse.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawce.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqng.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqag.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqags.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqagi.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawf.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawo.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqaws.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/dqawc.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : numerical/slatec/quadpack.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : simp.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : float.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : csimp.lisp
@@ -2881,6 +2933,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : logarc.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rpart.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : numeric.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : server.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : macsys.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mload.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : suprv1.lisp
@@ -2891,6 +2944,7 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nalgfa.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ufact.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : result.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : ifactor.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rat3a.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rat3b.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rat3d.lisp
@@ -2918,8 +2972,12 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : evalw.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : trprop.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mdefun.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : trigi.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : trigo.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : trgred.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : bessel.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ellipt.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : airy.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : plasma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : intpol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nparse.lisp
@@ -2932,14 +2990,8 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : option.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : macdes.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : inmis.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : intl.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : db.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : compar.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : maxmin.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : nummod.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : conjugate.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : expintegral.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : gamma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : askp.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sinint.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sin.lisp
@@ -2947,9 +2999,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : hayat.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : defint.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : residu.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : trigi.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : trigo.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : trgred.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : specfn.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mat.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : linnew.lisp
@@ -2985,6 +3034,11 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : combin.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nset.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rand-mt19937.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : maxmin.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : nummod.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : conjugate.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : expintegral.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : gamma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mstuff.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ratpoi.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : pois2.lisp
@@ -3001,7 +3055,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : xmaxima_def.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : autol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : max_ext.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : autoconf-variables.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : init-cl.lisp
 @ECL_TRUE@all-local: binary-ecl/maxima
 @ECL_TRUE@install-exec-local: install-ecl

@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.20 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -4481,19 +4481,32 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
  -- Opción gráfica: colorbox
      Valor por defecto: `true'
 
-     Cuando `colorbox' vale `true', se dibuja una escala de color al
-     lado de los objetos `image'.
+     Cuando `colorbox' vale `true', se dibuja una escala de colores sin
+     título al lado de los objetos `image' en 2D o de objetos
+     coloreados en 3D. Cuando `colorbox' vale `false', no se presenta
+     la escala de colores. Cuando `colorbox' es una cadena de
+     caracteres, se mostrará la escala de colores con un título.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
 
      Ejemplo:
 
+     Escala de colores e imágenes.
+
           (%i1) load(draw)$
           (%i2) im: apply('matrix,
                            makelist(makelist(random(200),i,1,30),i,1,30))$
           (%i3) draw2d(image(im,0,0,30,30))$
-          (%i4) draw2d(colorbox=false, image(im,0,0,30,30))$
+          (%i4) draw2d(colorbox = false, image(im,0,0,30,30))$
+
+     Escala de colores y objeto 3D coloreado.
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  colorbox   = "Magnitude",
+                  enhanced3d = true,
+                  explicit(x^2+y^2,x,-1,1,y,-1,1))$
 
      Véase también `palette'.
 
@@ -5231,6 +5244,22 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      `z_voxel' es el número de voxels en la dirección z a utilizar por
      el algoritmo marching cubes implementado por el objeto `implicit'
      tridimensional.
+
+ -- Opción gráfica: tube_extremes
+     Valor por defecto: `[open, open]'
+
+     Una lista de dos elementos, `open' y `closed', indicando si los
+     extremos de un objeto gráfico `tube' permanece abiertos o si deben
+     ser cerrados. Por defecto, ambos extremos se dejan abiertos.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  tube_extremes = [open, closed],
+                  tube(0, 0, a, 1,
+                       a, 0, 8) )$
+
 
  -- Función: set_draw_defaults (<Opción gráfica>, ..., <Opción
           gráfica>, ...)
@@ -6142,6 +6171,30 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                                      0.5*u*sin(u)*(cos(v)+1),
                                      u*sin(v) - ((u+3)/8*%pi)^2 - 20,
                                      u, 0, 13*%pi, v, -%pi, %pi) )$
+
+ -- Objeto gráfico: tube (<xfun>,<yfun>,<zfun>,<rfun>,<p>,<pmin>,<pmax>)
+     Dibuja un tubo en 3D de diámetro variable.
+
+     3D
+
+     `[<xfun>,<yfun>,<zfun>]' es la curva paramétrica de parámetro <p>,
+     el cual toma valores entre <pmin> y <pmax>. Se colocan círculos de
+     radio <rfun> con sus centros sobre la curva paramétrica y
+     perpendiculares a ella.
+
+     Este objeto se ve afectado por las siguientes opciones gráficas:
+     `xu_grid', `yv_grid', `line_type', `line_width', `key',
+     `enhanced3d', `color' y `tube_extremes'.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  enhanced3d = true,
+                  xu_grid = 50,
+                  tube(cos(a), a, 0, cos(a/10)^2,
+                       a, 0, 4*%pi) )$
+
 
  -- Función: draw (<gr2d>, ..., <gr3d>, ..., <options>, ...)
      Representa gráficamente una serie de escenas; sus argumentos son

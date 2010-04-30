@@ -1502,8 +1502,11 @@
 		       (let ((re (maxima::$realpart maxima-num))
 			     (im (maxima::$imagpart maxima-num)))
 			 (to re im)))))
+	       ((or (typep maxima-num 'bigfloat)
+		    (typep maxima-num 'complex-bigfloat))
+		maxima-num)
 	       (t
-		(maxima::merror "BIGFLOAT:  Unable to convert ~M to a CL or BIGFLOAT number" maxima-num))))))
+		(maxima::merror (intl:gettext "BIGFLOAT: unable to convert ~M to a CL or BIGFLOAT number.") maxima-num))))))
 
 ;;; EPSILON - External
 ;;;
@@ -1659,7 +1662,7 @@
     ;; exponent is 128 or higher, we have an overflow.
     (let ((e (+ exponent (- precision) maxima::*m fpprec)))
       (if (>= (abs e) 129)
-	  (maxima::merror "Floating point overflow in converting ~:M to flonum" l)
+	  (maxima::merror (intl:gettext "FP2SINGLE: floating point overflow converting ~:M to float.") l)
 	  (cl:scale-float mantissa e)))))
 
 
@@ -1898,3 +1901,25 @@
 		  (coerce-error))))
 	  (t
 	   (cl:coerce obj type)))))
+
+;;; %PI - External
+;;;
+;;;   Return a value of pi with the same precision as the argument.
+;;;   For rationals, we return a single-float approximation.
+(defmethod %pi ((x cl:rational))
+  (declare (ignore x))
+  (cl:coerce cl:pi 'single-float))
+
+(defmethod %pi ((x cl:float))
+  (cl:float cl:pi x))
+
+(defmethod %pi ((x bigfloat))
+  (declare (ignore x))
+  (to (maxima::bcons (maxima::fppi))))
+
+(defmethod %pi ((x cl:complex))
+  (pi (realpart x)))
+
+(defmethod %pi ((x complex-bigfloat))
+  (declare (ignore x))
+  (to (maxima::bcons (maxima::fppi))))

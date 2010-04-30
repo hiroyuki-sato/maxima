@@ -779,7 +779,7 @@ in the interval of integration.")
   (setq *global-defint-assumptions*
 	(cons (assume '((mlessp) epsilon 1.0e-8))
 	      *global-defint-assumptions*))
-  ;; EPSILON is used in principal vaule code to denote the familiar
+  ;; EPSILON is used in principal value code to denote the familiar
   ;; mathematical entity.
   (setq *global-defint-assumptions*
 	(cons (assume '((mgreaterp) prin-inf 1.0e+8))
@@ -999,6 +999,9 @@ in the interval of integration.")
 	 (format t "Principal Value~%")
 	 (setq pcprntd t))))
 
+;; e is of form poly(x)*exp(m*%i*x)
+;; s is degree of denominator
+;; adds e to bptu or bptd according to sign of m
 (defun rib (e s)
   (let (*updn c)
     (cond ((or (mnump e) (constant e))
@@ -1013,9 +1016,10 @@ in the interval of integration.")
 		      (cond (*updn (setq bptu (cons e bptu)))
 			    (t (setq bptd (cons e bptd))))))))))
 
+;; check term is of form poly(x)*exp(m*%i*x)
+;; n is degree of denominator
 (defun ptimes%e (term n)
-  (cond ((polyinx term var nil) term)
-	((and (mexptp term)
+  (cond ((and (mexptp term)
 	      (eq (cadr term) '$%e)
 	      (polyinx (caddr term) var nil)
 	      (eq ($sign (m+ (deg ($realpart (caddr term))) -1))
@@ -1065,7 +1069,7 @@ in the interval of integration.")
 					   (cadr n))
 					  (t 0.))))))))
 
-
+;; exponentialize sin and cos
 (defun sconvert (e)
   (cond ((atom e) e)
 	((polyinx e var nil) e)
@@ -1107,10 +1111,19 @@ in the interval of integration.")
 	   (t (return (simplify (cons (list (caar e))
 				      (mapcar #'esap (cdr e)))))))))
 
+;; computes integral from minf to inf for expressions of the form
+;; exp(%i*m*x)*r(x) by residues on either the upper half
+;;		  plane or the lower half plane, depending on whether
+;;		  m is positive or negative.  [wang p. 77]
+;;
+;; exponentializes sin and cos before applying residue method.
+;; can handle some expressions with poles on real line, such as
+;; sin(x)*cos(x)/x.
 (defun mtosc (grand)
   (numden grand)
   (let ((n nn*)
 	(d dn*)
+	ratterms ratans
 	plf bptu bptd s upans downans)
     (cond ((not (or (polyinx d var nil)
 		    (and (setq grand (%einvolve d))
@@ -1127,25 +1140,32 @@ in the interval of integration.")
 				       (t (sconvert n)))))
 		(cond ((mplusp n)  (setq n (cdr n)))
 		      (t (setq n (list n))))
-		(do ((do-var n (cdr do-var)))
-		    ((null do-var) t)
-		  (cond ((rib (car do-var) s))
+		(dolist (term n t)
+		  (cond ((polyinx term var nil)
+			 ;; call to $expand can create rational terms
+			 ;; with no exp(m*%i*x)
+			 (setq ratterms (cons term ratterms)))
+			((rib term s))
 			(t (return nil))))
 ;;;Function RIB sets up the values of BPTU and BPTD
 		(cond ((car plf)
 		       (setq bptu (subst (car plf) 'x* bptu))
 		       (setq bptd (subst (car plf) 'x* bptd))
+		       (setq ratterms (subst (car plf) 'x* ratterms))
 		       t)	 ;CROCK, CROCK. This is TERRIBLE code.
 		      (t t))
 ;;;If there is BPTU then CSEMIUP must succeed.
 ;;;Likewise for BPTD.
-		(cond (bptu (cond ((setq upans (csemiup (m+l bptu) d var)))
-				  (t nil)))
+		(cond (ratterms (setq ratans 
+				      (defint (m// (m+l ratterms) d) var '$minf '$inf)))
+		      (t (setq ratans 0)))
+		(cond (bptu (setq upans (csemiup (m+l bptu) d var)))
 		      (t (setq upans 0)))
-		(cond (bptd (cond ((setq downans (csemidown (m+l bptd) d var)))
-				  (t nil)))
+		(cond (bptd (setq downans (csemidown (m+l bptd) d var)))
 		      (t (setq downans 0))))
-	   (sratsimp (m* '$%pi (m+ upans (m- downans))))))))
+	   
+	   (sratsimp (m+ ratans
+			 (m* '$%pi (m+ upans (m- downans)))))))))
 
 
 (defun evenfn (e var)
@@ -1576,16 +1596,23 @@ in the interval of integration.")
 
 ;; integrate(a*sc(r*x)^k/x^n,x,0,inf).
 (defun ssp (exp)
-  (prog (u n c)
-     (when (notinvolve exp '(%sin %cos))
+  (prog (u n c arg)
+     ;; Get the argument of the involved trig function.
+     (when (null (setq arg (involve exp '(%sin %cos))))
        (return nil))
      ;; I don't think this needs to be special.
      #+nil
      (declare (special n))
-     ;; Replace (1-cos(x)^2) with sin(x)^2.
-     (setq exp ($substitute (m^t `((%sin) ,var) 2.)
-			    (m+t 1. (m- (m^t `((%cos) ,var) 2.)))
-			    exp))
+     ;; Replace (1-cos(arg)^2) with sin(arg)^2.
+     (setq exp ($substitute ;(m^t `((%sin) ,var) 2.)
+                            ;(m+t 1. (m- (m^t `((%cos) ,var) 2.)))
+                            ;; The code from above generates expressions with
+                            ;; a missing simp flag. Furthermore, the 
+                            ;; substitution has to be done for the complete
+                            ;; argument of the trig function. (DK 02/2010)
+                            `((mexpt simp) ((%sin simp) ,arg) 2)
+                            `((mplus) 1 ((mtimes) -1 ((mexpt) ((%cos) ,arg) 2)))
+                            exp))
      (numden exp)
      (setq u nn*)
      (cond ((and (setq n (findp dn*))
@@ -1639,10 +1666,15 @@ in the interval of integration.")
 	      (m^ r (m+ n -1))
 	      `((%signum) ,r)
 	      recursion)
-	  ;; Recursion failed.  Return the integrand
-	  (let ((integrand (div (pow `((%sin) ,(m* r var))
-				     k)
-				(pow var n))))
+          ;; Recursion failed.  Return the integrand
+          ;; The following code generates expressions with a missing simp flag 
+          ;; for the sin function. Use better simplifying code. (DK 02/2010)
+;	  (let ((integrand (div (pow `((%sin) ,(m* r var))
+;				     k)
+;				(pow var n))))
+          (let ((integrand (div (power (take '(%sin) (mul r var))
+                                       k)
+                                (power var n))))
 	    (m* mult
 		`((%integrate) ,integrand ,var ,ll ,ul)))))))
 
@@ -1995,7 +2027,7 @@ in the interval of integration.")
 	  #+nil
 	  ((not (equal ($asksign denom) '$zero))
 	   0)
-	  ((equal ($asksign denom) '$zero)
+	  ((equal ($csign denom) '$zero)
 	   '$undefined)
 	  (t (intsubs exp ll ul)))))
 
@@ -2272,14 +2304,26 @@ in the interval of integration.")
     (cond (result (sratsimp (m* (m- '$%i) result)))
 	  (t nil))))
 
+;; Evaluates the contour integral of GRAND around the unit circle
+;; using residues.
 (defun unitcir (grand var)
   (numden grand)
-  (let ((result (princip (res nn* dn* #'(lambda (pt)
-					  (ratgreaterp 1 (cabs pt)))
-			      #'(lambda (pt)
-				  (alike1 1 (cabs pt)))))))
-    (cond (result (m* '$%pi result))
-	  (t nil))))
+  (let* ((sgn nil)
+	 (result (princip (res nn* dn* 
+			       #'(lambda (pt)
+				   ;; Is pt stricly inside the unit circle?
+				   (setq sgn (let ((limitp nil))
+					       ($asksign (m+ -1 (cabs pt)))))
+				   (eq sgn '$neg))
+			       #'(lambda (pt)
+				   ;; Is pt on the unit circle?  (Use
+				   ;; the cached value computed
+				   ;; above.)
+				   (prog1
+				       (eq sgn '$zero)
+				       (setq sgn nil)))))))
+    (when result
+      (m* '$%pi result))))
 
 
 (defun logx1 (exp ll ul)
@@ -2802,11 +2846,12 @@ in the interval of integration.")
 	      ;; Make the substitution y=1/x.  If the integrand has
 	      ;; exactly the same form, the answer has to be 0.
 	      (return 0.))
+	     ((setq ans (logx1 exp ll ul))
+	      (return ans))
 	     ((setq ans (antideriv exp))
 	      ;; It's easy if we have the antiderivative.
-	      (return (intsubs ans ll ul)))
-	     ((setq ans (logx1 exp ll ul))
-	      (return ans)))
+	      ;; but intsubs sometimes gives results containing %limit
+	      (return (intsubs ans ll ul))))
        ;; Ok, the easy cases didn't work.  We now try integration by
        ;; parts.  Set ANS to f(x).
        (setq ans (m// exp `((%log) ,arg)))

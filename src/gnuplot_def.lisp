@@ -162,12 +162,13 @@
 
 (defun gnuplot-print-header (dest features)
   (let ((gnuplot-out-file nil) (meshcolor '$black) (colorbox nil)
+	(colors (cddr ($get_plot_option '$color)))
         preamble palette meshcolor_opt colorbox_opt)
     (setq preamble (get-plot-option-string '$gnuplot_preamble))
     (if (and ($get_plot_option '$gnuplot_preamble) (> (length preamble) 0))
       (format dest "~a~%" preamble)
       (progn
-        (when (eql (getf features :type) 'plot3d)
+        (when (string= (getf features :type) "plot3d")
           (format dest "set ticslevel 0~%")
           (if (setq palette ($get_plot_option '$palette 2))
               (progn
@@ -187,7 +188,9 @@
 		(unless colorbox (format dest "unset colorbox~%"))
                 (format dest "set palette ~a~%"
                         (gnuplot-palette (rest palette))))
-              (format dest "set hidden3d~%"))
+              (format dest "set hidden3d offset ~d~%"
+		      (- (gnuplot-color (nth (mod 1 (length colors)) colors))
+			 (gnuplot-color (first colors)))))
           (let ((elev ($get_plot_option '$elevation))
                 (azim ($get_plot_option '$azimuth)))
               (when (or elev azim)
@@ -227,25 +230,25 @@
        (format dest "~a~%" 
                (get-plot-option-string '$gnuplot_ps_term_command))
        (if gnuplot-out-file
-           (format dest "set out '~a'~%" gnuplot-out-file)))
+           (format dest "set out ~s~%" gnuplot-out-file)))
       ($dumb
        (format dest "~a~%" 
                (get-plot-option-string '$gnuplot_dumb_term_command))
        (if gnuplot-out-file
-           (format dest "set out '~a'~%" gnuplot-out-file)))
+           (format dest "set out ~s~%" gnuplot-out-file)))
       (t
        (format dest "set term ~a~%" 
                (get-plot-option-string '$gnuplot_term))
        (if gnuplot-out-file
-           (format dest "set out '~a'~%" gnuplot-out-file))) )
+           (format dest "set out ~s~%" gnuplot-out-file))) )
     (when (getf features :log-x) (format dest "set log x~%"))
     (when (getf features :log-y) (format dest "set log y~%"))
     (when (getf features :xlabel)
-      (format dest "set xlabel \"~a\"~%" (getf features :xlabel)))
+      (format dest "set xlabel ~s~%" (getf features :xlabel)))
     (when (getf features :ylabel)
-      (format dest "set ylabel \"~a\"~%" (getf features :ylabel)))
+      (format dest "set ylabel ~s~%" (getf features :ylabel)))
     (when (getf features :zlabel)
-      (format dest "set zlabel \"~a\"~%" (getf features :zlabel)))
+      (format dest "set zlabel ~s~%" (getf features :zlabel)))
     (when
         (and (getf features :legend)
              (not (first (getf features :legend))))
@@ -261,23 +264,25 @@
     (when (and (getf features :zmin) (getf features :zmax))
       (format dest "set zrange [~g : ~g]~%"
               (getf features :zmin) (getf features :zmax)))
-    (when (and (eql (getf features :type) 'plot2d) (getf features :axes))
+    (when (and (string= (getf features :type) "plot2d") (getf features :axes))
       (case (getf features :axes)
         ($x (format dest "set xzeroaxis~%"))
         ($y (format dest "set yzeroaxis~%"))
         (t (format dest "set zeroaxis~%"))))
-              (format dest "set datafile missing \"~a\"~%"
-		      *missing-data-indicator*)))
+    (format dest "set datafile missing ~s~%" *missing-data-indicator*)))
 
-(defun gnuplot-plot3d-command (file title)
-  (if ($get_plot_option '$palette 2)
-      (format nil "splot '~a' title '~a' with pm3d~%" file title)
-      (progn
-        (if ($get_plot_option '$gnuplot_curve_styles)
-            (format nil
-                    "splot '~a' title '~a' ~a~%" file title 
-                    (get-plot-option-string '$gnuplot_curve_styles 1))
-            (format nil
-                    "splot '~a' title '~a' with lines lt ~a~%" file title
-                    (gnuplot-color ($get_plot_option '$color 2)))))))
+(defun gnuplot-plot3d-command (file titles n) 
+(let (title (style "with pm3d")
+	    (palette ($get_plot_option '$palette 2))
+	    (gstyles (cddr ($get_plot_option '$gnuplot_curve_styles))))
+  (with-output-to-string (out)
+    (format out "splot ")
+  (do ((i 1 (+ i 1))) ((> i n) (format out "~%"))
+    (unless palette
+      (if gstyles
+	  (setq style (ensure-string (nth (mod i (length gstyles)) gstyles)))
+	  (setq style (format nil "with lines lt ~a" (gnuplot-colors i)))))
+    (when (> i 1) (format out ", "))
+    (setq title (nth (mod i (length titles)) titles))
+    (format out "~s title ~s ~a" file title style)))))
 

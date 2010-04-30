@@ -11,7 +11,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.20.1 Manual
+Maxima 5.21.1 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -175,7 +175,11 @@ Simplification
 Plotting
 
 * Introduction to Plotting::
+* Plotting Formats::
 * Functions and Variables for Plotting::
+* Plotting Options::
+* Gnuplot Options::
+* Gnuplot_pipes Format Functions::
 
 Input and Output
 
@@ -751,6 +755,12 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
           specified by either a string or a symbol.  By default, all
           tests are run.  The complete set of tests is specified by
           `testsuite_files'.
+
+    <time>
+          Display time information.  If `true', the time taken for each
+          test file is displayed.  If `all', the time for each
+          individual test is shown if `display_all' is `true'.  The
+          default is `false', so no timing information is shown.
 
      For example `run_testsuite(display_known_bugs = true,
      tests=[rtest5])' runs just test `rtest5' and displays the test
@@ -3722,13 +3732,13 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
  -- Function: sort (<L>)
      Sorts a list <L> according to a predicate `P' of two arguments,
      such that `<P> (<L>[k], <L>[k + 1])' is `true' for any two
-     successive elements.  The predicate may be specified as the name
-     of a function or binary infix operator, or as a `lambda'
-     expression.  If specified as the name of an operator, the name is
-     enclosed in "double quotes".
+     successive elements. The predicate may be specified as the name of
+     a function or binary infix operator, or as a `lambda' expression.
+     If specified as the name of an operator, the name is enclosed in
+     "double quotes".
 
      The sorted list is returned as a new object; the argument <L> is
-     not modified.  To construct the return value, `sort' makes a
+     not modified. To construct the return value, `sort' makes a
      shallow copy of the elements of <L>.
 
      If the predicate <P> is not a total order on the elements of <L>,
@@ -3738,10 +3748,16 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
      `sort (<L>)' is equivalent to `sort (<L>, orderlessp)'.  That is,
      the default sorting order is ascending, as determined by
-     `orderlessp'.  All Maxima atoms and expressions are comparable
-     under `orderlessp', although there are isolated examples of
-     expressions for which `orderlessp' is not transitive; this is a
-     bug.
+     `orderlessp'. All Maxima atoms and expressions are comparable under
+     `orderlessp'.
+
+     The predicate `ordergreatp' sorts a list in descending order. The
+     predicate `ordermagnitudep' sorts Maxima numbers, constant symbols
+     with a numerical value, or expressions which can be evaluated to a
+     constant by magnitude. All other elements of the list <L> are
+     sorted by `orderlessp'. The predicate `"<"' allows the ordering by
+     magnitude too, but does not order completely if elements in the
+     list <L> are not comparable under `"<"'.
 
      Examples:
 
@@ -3766,6 +3782,13 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           (%i7) sort (my_list, lambda ([a, b], orderlessp (reverse (a),
                 reverse (b))));
           (%o7) [[%pi, %e], [ee, cc], [zz, xx, mm, cc], [aa, hh, uu]]
+
+     Order Maxima numbers, constants, and constants expressions by
+     magnitude, and all other elements in ascending sorting order:
+
+          (%i8) sort([%i,1+%i,2*x,minf,inf,%e,sin(1),0,1,2,3,1.0,1.0b0],
+                ordermagnitudep);
+          (%o8)  [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i, %i + 1, 2 x]
 
 
  -- Function: sqrt (<x>)
@@ -5387,6 +5410,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
      `%pi', `%i', and any variables declared constant in the list it
      returns if they appear in <expr>.  The default is to omit these.
 
+     See also the option variable `listdummyvars' to exclude or include
+     "dummy variables" in the list of variables.
+
           (%i1) listofvars (f (x[1]+y) / g^(2+a));
           (%o1)                     [g, a, x , y]
                                             1
@@ -6233,6 +6259,11 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      `expop' then executing `expand ((x+1)^n)' will work only if
      `maxposex' is not less than `n'.
 
+     `expand(expr, 0, 0)' causes a resimplification of `expr'. `expr'
+     is not reevaluated. In distinction from `ev(expr, noeval)' a
+     special representation (e. g. a CRE form) is removed. See also
+     `ev'.
+
      The `expand' flag used with `ev' causes expansion.
 
      The file `simplification/facexp.mac' contains several related
@@ -6243,6 +6274,53 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      Brief function descriptions are available in
      `simplification/facexp.usg'.  A demo is available by doing
      `demo("facexp")'.
+
+     Examples:
+          (%i1) expr:(x+1)^2*(y+1)^3;
+                                                2        3
+          (%o1)                          (x + 1)  (y + 1)
+          (%i2) expand(expr);
+                 2  3        3    3      2  2        2      2      2
+          (%o2) x  y  + 2 x y  + y  + 3 x  y  + 6 x y  + 3 y  + 3 x  y
+                                                           2
+                                          + 6 x y + 3 y + x  + 2 x + 1
+
+          (%i3) expand(expr,2);
+                                2        3              3          3
+          (%o3)                x  (y + 1)  + 2 x (y + 1)  + (y + 1)
+
+          (%i4) expr:(x+1)^-2*(y+1)^3;
+                                                    3
+                                             (y + 1)
+          (%o4)                              --------
+                                                    2
+                                             (x + 1)
+          (%i5) expand(expr);
+                           3               2
+                          y             3 y            3 y             1
+          (%o5)      ------------ + ------------ + ------------ + ------------
+                      2              2              2              2
+                     x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1
+
+          (%i6) expand(expr,2,2);
+                                                    3
+                                             (y + 1)
+          (%o6)                            ------------
+                                            2
+                                           x  + 2 x + 1
+
+     Resimplify an expression without expansion:
+
+          (%i7) expr:(1+x)^2*sin(x);
+                                                 2
+          (%o7)                           (x + 1)  sin(x)
+          (%i8) exponentialize:true;
+          (%o8)                                true
+          (%i9) expand(expr,0,0);
+                                             2    %i x     - %i x
+                                   %i (x + 1)  (%e     - %e      )
+          (%o9)                  - -------------------------------
+                                                  2
 
 
  -- Function: expandwrt (<expr>, <x_1>, ..., <x_n>)
@@ -6729,323 +6807,386 @@ File: maxima.info,  Node: Plotting,  Next: Input and Output,  Prev: Simplificati
 * Menu:
 
 * Introduction to Plotting::
+* Plotting Formats::
 * Functions and Variables for Plotting::
+* Plotting Options::
+* Gnuplot Options::
+* Gnuplot_pipes Format Functions::
 
 
-File: maxima.info,  Node: Introduction to Plotting,  Next: Functions and Variables for Plotting,  Prev: Plotting,  Up: Plotting
+File: maxima.info,  Node: Introduction to Plotting,  Next: Plotting Formats,  Prev: Plotting,  Up: Plotting
 
 8.1 Introduction to Plotting
 ============================
 
 Maxima uses an external plotting package to make the plots (see the
-section on Plotting Interfaces below). Maxima calculates set of points
-to be plotted and pass the to the plotting package together with a set
-of commands; the commands and plot data are passed to the external
-program either through a pipe or by saving them into a file with the
-extension `maxout.interface', where `interface' is the name of the
-plotting interface being used.
+section on Plotting formats). The plotting functions calculate a set of
+points and pass them to the plotting package together with a set of
+commands. That information can be passed to the external program either
+through a pipe or by calling the program with the name of a file where
+the data has been saved. The data file is given the name
+`maxout.interface', where `interface' is the name of the plotting
+interface being used (gnuplot, xmaxima, mgnuplot or gnuplot_pipes).
 
    The `maxout.interface' file, in the cases when it is used, is
-created in the directory specified by the variable <temp_dir>. That
-location can be changed; by assigning to that variable a string that
-represents a valid directory where Maxima can create new files.
+created in the directory specified by the system variable
+<maxima_tempdir>. That location can be changed; by assigning to that
+variable a string that represents a valid directory where Maxima can
+create new files.
 
-   After a plot has been obtained, the file `maxout.interface' can be
+   After a plot has been created, the file `maxout.interface' can be
 executed again with the appropriate external program. If a Maxima
 plotting command fails to show anything, that file can be inspected to
 look for possible sources of problems.
 
-8.1.1 Plotting Interfaces
--------------------------
+
+File: maxima.info,  Node: Plotting Formats,  Next: Functions and Variables for Plotting,  Prev: Introduction to Plotting,  Up: Plotting
 
-Currently, Maxima can one of two external plotting programs: Gnuplot or
-Xmaxima. There are various different interfaces for those programs,
-which can be selected with the option `[plot_format,interface]', where
-`interface' is one of the following:
+8.2 Plotting Formats
+====================
 
-   * Value: `gnuplot' default on Windows
+There are currently two external plotting programs that Maxima use:
+Gnuplot and Xmaxima. There are various different formats for those
+programs, which can be selected with the option `plot_format' (see the
+Plotting Options section).
 
-     Gnuplot is the most advanced plotting package among the packages
-     available in Maxima. It requires an external gnuplot installation.
-     All plotting commands and data are passed in a file
-     `maxout.gnuplot'.
+   The plotting formats are the following:
 
-   * Value: `gnuplot_pipes' default on non-Windows platforms
+   * *gnuplot* (default on Windows)
 
-     Similar to the `gnuplot' format except that the commands are sent
-     to gnuplot is done through a pipe; the data is passed via a file
-     `maxout.gnuplot_pipes'. It should be used to plot on screen, for
+     Used to launch the external program gnuplot, which must be
+     installed in your system. All plotting commands and data are saved
+     into the file `maxout.gnuplot'.
+
+   * *gnuplot_pipes* (default on non-Windows platforms)
+
+     This format is not available in Windows platforms.  It is similar
+     to the `gnuplot' format except that the commands are sent to
+     gnuplot through a pipe, while the data are saved into the file
+     `maxout.gnuplot_pipes'. A single gnuplot process is kept open and
+     subsequent plot commands will be sent to the same process,
+     replacing previous plots, unless the gnuplot pipe is closed with
+     the function `gnuplot_close()'. When this format is used, the
+     function `gnuplot_replot' can be used to modify a plot that has
+     already displayed on the screen (see `gnuplot_replot').
+
+     This format should only be used to plot to the screen; for
      plotting to files it is better to use the `gnuplot' format.
 
-   * Value: `mgnuplot'
+   * *mgnuplot*
 
      Mgnuplot is a Tk-based wrapper around gnuplot. It is included in
      the Maxima distribution. Mgnuplot offers a rudimentary GUI for
      gnuplot, but has fewer overall features than the plain gnuplot
-     interface. Mgnuplot requires an external gnuplot installation and
-     Tcl/Tk.
+     interface. Mgnuplot requires an external gnuplot installation and,
+     in Unix systems, the Tcl/Tk system.
 
-   * Value: `openmath'
+   * *xmaxima*
 
-     Openmath is a Tcl/Tk GUI plotting program. This format is provided
-     by Xmaxima, which is distributed together with Maxima; in order to
-     use this format you should install the package Xmaxima, and it
-     will work not only from Xmaxima itself, but also from the command
-     line and other GUI's for Maxima. If it is used from within
-     Xmaxima, all commands and data are passed using the same socket
-     used for the communication between Maxima and Xmaxima. If it is
-     used from the console or other interface different from Xmaxima,
-     the commands and data will be save in a file named
-     `maxout.openmath'.
+     Xmaxima is a Tcl/Tk graphical interface for Maxima that can also
+     be used to display plots created when Maxima is run from the
+     console or from other graphical interfaces. To use this format,
+     the xmaxima program, which is distributed together with Maxima,
+     should be installed. If Maxima is being run from xmaxima itself,
+     this format will make the plot functions send the data and
+     commands through the same socket used for the communication
+     between Maxima and Xmaxima. When used from the console or from
+     other interface, the commands and data will be saved in the file
+     `maxout.xmaxima', and the xmaxima program will be launched with the
+     name of the location of that file as argument.
+
+     In previous versions this format used to be called `openmath'; that
+     old name will still be accepted as a synonym for `xmaxima'.
 
 
 
-File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Introduction to Plotting,  Up: Plotting
+File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting Options,  Prev: Plotting Formats,  Up: Plotting
 
-8.2 Functions and Variables for Plotting
+8.3 Functions and Variables for Plotting
 ========================================
 
  -- Function: contour_plot (<expr>, <x_range>, <y_range>, <options>,
           ...)
-     Plots the contours (curves of equal value) of <expr> over the
+     It plots the contours (curves of equal value) of <expr> over the
      region <x_range> by <y_range>.  Any additional arguments are
      treated the same as in `plot3d'.
 
-     `contour_plot' only works when the plot format is `gnuplot' or
-     `gnuplot_pipes'.
-
-     See also `implicit_plot'.
+     This function only works when the plot format is either `gnuplot'
+     or `gnuplot_pipes'. The additional package `implicit_plot' can
+     also be used to plot contours and it works for any format. See
+     `implicit_plot'.
 
      Examples:
 
-          (%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4]);
-          (%o1)
-          (%i2) contour_plot (sin(y) * cos(x)^2, [x, -4, 4], [y, -4, 4]);
-          (%o2)
-          (%i3) F(x, y) := x^3 + y^2;
+          (%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4])$
+
+          (%i1) F(x, y) := x^3 + y^2;
                                              3    2
-          (%o3)                  F(x, y) := x  + y
-          (%i4) contour_plot (F, [u, -4, 4], [v, -4, 4]);
-          (%o4)
-          (%i5) contour_plot (F, [u, -4, 4], [v, -4, 4], [gnuplot_preamble,
-                "set size ratio -1"]);
-          (%o5)
-          (%i6) set_plot_option ([gnuplot_preamble,
-                                  "set cntrparam levels 12"])$
+          (%o1)                  F(x, y) := x  + y
+          (%i2) contour_plot (F, [u, -4, 4], [v, -4, 4])$
 
-          (%i7) contour_plot (F, [u, -4, 4], [v, -4, 4]);
+     You can add any options accepted by `plot3d'; for instance, the
+     option `legend' with a value of false, to remove the legend.
+     Gnuplot chooses, by default, 3 contours to show. to increase the
+     number of levels, it is necessary to specify a custom gnuplot
+     preamble:
 
-
- -- Option variable: in_netmath
-     Default value: `false'
-
-     When `in_netmath' is `true', `plot3d' prints OpenMath output to
-     the console if `plot_format' is `openmath'; otherwise `in_netmath'
-     (even if `true') has no effect.  `in_netmath' has no effect on
-     `plot2d'.
+          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
+          (%i2) [legend,false], [gnuplot_preamble,"set cntrparam levels 12"])$
 
 
- -- Function: plot2d (<expr>, <x_range>, ..., <options>, ...)
- -- Function: plot2d ([<expr_1>, ..., <expr_n>], ..., <options>, ...)
- -- Function: plot2d ([<expr_1>, ..., <expr_n>], <x_range>,...,
+ -- Function: get_plot_option (<keyword>, <index>)
+     Returns a value of the option with name <keyword>, stored in the
+     global variable `plot_options'. A value of 1 for the index will
+     return the keyword itself; a value of 2 turn returns the first
+     parameter following the keyword, and so on.
+
+     See also `plot_options', `set_plot_option' and the section on
+     Plotting Options.
+
+
+ -- Function: make_transform ([<var1>, <var2>, <var3>], <fx>, <fy>,
+          <fz>)
+     Returns a function suitable to be used in the option `transform_xy'
+     of plot3d. The three variables <var1>, <var2>, <var3> are three
+     dummy variable names, which represent the 3 variables given by the
+     plot3d command (first the two independent variables and then the
+     function that depends on those two variables). The three functions
+     <fx>, <fy>, <fz> must depend only on those 3 variables, and will
+     give the corresponding x, y and z coordinates that should be
+     plotted. There are two transformations defined by default:
+     `polar_to_xy' and `spherical_to_xyz'; see the documentation for
+     those two transformations.
+
+
+ -- System function: polar_to_xy
+     It can be given as value for the `transform_xy' option of plot3d.
+     Its effect will be to interpret the two independent variables in
+     plot3d as the distance from the z axis and the azimuthal angle
+     (polar coordinates), and transform them into x and y coordinates.
+
+
+ -- Function: plot2d (<plot>, <x_range>, ..., <options>, ...)
+ -- Function: plot2d ([<plot_1>, ..., <plot_n>], ..., <options>, ...)
+ -- Function: plot2d ([<plot_1>, ..., <plot_n>], <x_range>,...,
           <options>, ...)
-     Where <expr>, <expr_1>, ..., <expr_n> can be either expressions,
-     or Maxima or Lisp functions or operators, or a list with the any
-     of the forms: `[discrete, [<x1>, ..., <xn>], [<y1>, ..., <yn>]]',
-     `[discrete, [[<x1>, <y1>], ..., [<xn>, ..., <yn>]]' or
-     `[parametric, <x_expr>, <y_expr>, <t_range>]'.
+     Where <plot>, <plot_1>, ..., <plot_n> can be either expressions,
+     function names or a list with the any of the forms: `[discrete,
+     [<x1>, ..., <xn>], [<y1>, ..., <yn>]]', `[discrete, [[<x1>, <y1>],
+     ..., [<xn>, ..., <yn>]]' or `[parametric, <x_expr>, <y_expr>,
+     <t_range>]'.
 
      Displays a plot of one or more expressions as a function of one
-     variable.
+     variable or parameter.
 
-     `plot2d' plots one expression <expr> or several expressions
-     `[<name_1>, ..., <name_n>]'. The expressions that are not of the
-     parametic or discrete types should all depend only on one variable
-     <var> and it will be mandatory the use of <x_range> to name that
-     variable and gives its minimum and maximum values, using the
-     syntax: `[<variable>, <min>, <max>]'. The plot will show the
-     horizontal axis bound by the values of <min> and <max>.
+     `plot2d' displays one or several plots in two dimensions. When
+     expressions or function name are used to define the plots, they
+     should all depend on only one variable <var> and the use of
+     <x_range> will be mandatory, to provide the name of the variable
+     and its minimum and maximum values; the syntax for <x_range> is:
+     `[<variable>, <min>, <max>]'.
 
-     A expression to be plotted can also be given in the discrete or
-     parametric forms. Namely, as a list starting with the word
-     "discrete" or "parametric". The keyword <discrete> must be
-     followed by two lists of values, both with the same length, which
-     are the horizontal and vertical coordinates of a set of points;
-     alternatively, the coordinates of each point can be put into a
-     list with two values, and all the coordinates of the points should
-     be inside another list. The keyword <parametric> must be followed
-     by two expressions <x_expr> and <y_expr>, and a range of the form
-     `[<param>, <min>, <max>]'. The two expressions must depend only on
-     the parameter <param>, and the plot will show the path traced out
-     by the point with coordinates (<x_expr>, <y_expr>) as <param>
-     increases from <min> to <max>.
+     A plot can also be defined in the discrete or parametric forms. The
+     discrete form is used to plot a set of points with given
+     coordinates. A discrete plot is defined by a list starting with
+     the keyword <discrete>, followed by one or two lists of values. If
+     two lists are given, they must have the same length; the first
+     list will be interpreted as the x coordinates of the points to be
+     plotted and the second list as the y coordinates. If only one list
+     is given after the <discrete> keyword, each element on the list
+     should also be a list with two values that correspond to the x and
+     y coordinates of a point.
 
-     The range of the vertical axis is not mandatory. It is one more of
-     the options for the command, with the syntax: `[y, <min>, <max>]'.
-     If that option is used, the plot will show that entire range, even
-     if the expressions do not reach all that range. Otherwise, if a
-     vertical range is not specified by `set_plot_option', the
-     boundaries of the vertical axis will be set up automatically.
+     A parametric plot is defined by a list starting with the keyword
+     <parametric>, followed by two expressions or function names and a
+     range for the parameter. The range for the parameter must be a
+     list with the name of the parameter followed by its minimum and
+     maximum values: `[<param>, <min>, <max>]'. The plot will show the
+     path traced out by the point with coordinates given by the two
+     expressions or functions, as <param> increases from <min> to <max>.
 
-     All other options should also be lists, starting with the name of
-     the option. The option <xlabel> can be used to give a label for the
-     horizontal axis; if that option is not used, the horizontal axis
-     will be labeled with the name of the variable specified in
-     <x_range>, or with the expression <x_expr> in the case of just one
-     parametric expression, or it will be left blank otherwise.
+     A range for the vertical axis is an optional argument with the
+     form: `[y, <min>, <max>]' (the keyword <y> is always used for the
+     vertical axis). If that option is used, the plot will show that
+     exact vertical range, independently of the values reached by the
+     plot.  If the vertical range is not specified, it will be set up
+     according to the minimum and maximum values of the second
+     coordinate of the plot points.
 
-     A label for the vertical axis can be given with the <ylabel>
-     option. If there is only one expression to be plotted and the
-     <ylabel> option was not used, the vertical axis will be labeled
-     with that expression, unless it is too large, or with the
-     expression <y_expr> if the expression is parametric, or with the
-     text "discrete data" if the expression is discrete.
+     All other options should also be lists, starting with a keyword and
+     followed by one or more values. See `plot_options'.
 
-     The options `[logx]' and `[logy]' do not need any parameters. They
-     will make the horizontal and vertical axes be scaled
-     logarithmically.
+     If there are several plots to be plotted, a legend will be written
+     to identiy each of the expressions. The labels that should be used
+     in that legend can be given with the option <legend>. If that
+     option is not used, Maxima will create labels from the expressions
+     or function names.
 
-     If there are several expressions to be plotted, a legend will be
-     written to identiy each of the expressions. The labels that should
-     be used in that legend can be given with the option <legend>. If
-     that option is not used, Maxima will create labels from the
-     expressions.
+     *Examples:*
 
-     By default, the expressions are plotted as a set of line segments
-     joining adjacent points within a set of points which is either
-     given in the <discrete> form, or calculated automatically from the
-     expression given, using an algorithm that automatically adapts the
-     steps among points using as an initial estimate of the total
-     number of points the value set with the <nticks> option. The
-     option <style> can be used to make one of the expressions to be
-     represented as a set of isolated points, or as points and line
-     segments.
+     Plot of a common function:
+          (%i1) plot2d (sin(x), [x, -%pi, %pi])$
 
-     There are several global options stored in the list <plot_options>
-     which can be modified with the function `set_plot_option'; any of
-     those global options can be overriden with options given in the
-     <plot2d> command. There are also other options which are not part
-     of the global options array <plot_options> and which can be given
-     only as part of the <plot2d> command; those options are: <logx>,
-     <logy>, <box>, <legend>, <xlabel>, <ylabel>, <psfile> and <style>.
+     If the functions grows too fast, it might be necessary to limit the
+     values in the vertical axis using the y option:
+          (%i1) plot2d (sec(x), [x, -2, 2], [y, -20, 20])$
+          plot2d: some values were clipped.
 
-     A function to be plotted may be specified as the name of a Maxima
-     or Lisp function or operator, a Maxima lambda expression, or a
-     general Maxima expression.  If specified as a name or a lambda
-     expression, the function must be a function of one argument.
+     The aspect of the plot might be different depending on the plotting
+     program used. For instance, when the plot box is disable, Xmaxima
+     will plot the axes using arrows:
+          (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10], [box, false],
+                     [plot_format, xmaxima])$
 
-     Examples:
+     A plot with a logarithmic scale:
+          (%i1) plot2d (exp(3*s), [s, -2, 2], [logy])$
 
-     Plots of common functions.
-
-          (%i1) plot2d (sin(x), [x, -5, 5])$
-
-          (%i2) plot2d (sec(x), [x, -2, 2], [y, -20, 20], [nticks, 200])$
-
-     Plotting functions by name.
-
-          (%i3) F(x) := x^2 $
-
-          (%i4) :lisp (defun |$g| (x) (m* x x x))
-
+     Plotting functions by name:
+          (%i1) F(x) := x^2 $
+          (%i2) :lisp (defun |$g| (x) (m* x x x))
           $g
-          (%i5) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
+          (%i2) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
+          (%i3) plot2d ([F, G, H], [u, -1, 1], [y, -1.5, 1.5])$
 
-          (%i6) plot2d (F, [u, -1, 1])$
+     A plot of the butterfly curve, defined parametrically:
+          (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
+          (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t, -8*%pi, 8*%pi],
+                   [nticks, 2000]])$
 
-          (%i7) plot2d ([F, G, H], [u, -1, 1], [y, -1.5, 1.5])$
+     A "circle" with two turns, when plotted with only 7 points:
 
-     We can plot a circle using a parametric plot with a parameter <t>.
-     It is not necessary to give a range for the horizontal range,
-     since the range of the parameter <t> determines the domain.
-     However, since the graph's horizontal and vertical axes lengths
-     are in the 4 to 3 proportion, we will use the <xrange> option to
-     obtain the same scaling in both axes:
+          (%i1) plot2d ([parametric, cos(t), sin(t), [t, -2*%pi, 2*%pi],
+                     [nticks, 8]])$
 
-          (%i8) plot2d ([parametric, cos(t), sin(t), [t,-%pi,%pi],
-                [nticks,80]], [x, -4/3, 4/3])$
+     Plot of a common function together with the parametric
+     representation of a circle. The size of the plot has been adjusted
+     with the x and y options, to make the circle look round and not
+     deformed as an ellipse.  These values work well for the Postscript
+     terminal used to produce this plot; you might have to adjust the
+     values for your screen.
 
-     If we repeat that plot with only 8 points and extending the range
-     of the parameter to give two turns, we will obtain the plot of a
-     star:
+          (%i1) plot2d([[parametric, cos(t), sin(t) ,[t,0,2*%pi],
+                 [nticks, 80]], abs(x)], [x,-2,2], [y, -1.5, 1.5])$
+          plot2d: some values were clipped.
 
-          (%i9) plot2d ([parametric, cos(t), sin(t), [t, -%pi*2, %pi*2],
-                  [nticks, 8]], [x, -2, 2], [y, -1.5, 1.5])$
+     A plot of a discrete set of points, defining x and y coordinates
+     separately:
+          (%i1) plot2d ( [ discrete, [10, 20, 30, 40, 50],
+                         [.6, .9, 1.1, 1.3, 1.4]] )$
 
-     Combination of an ordinary plot of a cubic polynomial with a
-     parametric plot of a circle:
+     The same points shown in the previous example, defining each point
+     separately and without any lines joining the points:
+          (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1], [40, 1.3],
+                             [50, 1.4]]], [style, points])$
 
-          (%i10) plot2d ([x^3+2, [parametric, cos(t), sin(t), [t, -5, 5],
-                  [nticks, 80]]], [x, -3, 3])$
+     In this example, a table with three columns is saved in a file
+     "data.txt" which is then read and the second and third column are
+     plotted on the two axes:
+          (%i1) with_stdout ("data.txt",
+                   for x:0 thru 10 do print (x, x^2, x^3))$
+          (%i2) data: transpose ( read_matrix ("data.txt"))$
+          (%i3) plot2d ([discrete, data[2], data[3]],
+                  [style,points], [point_type,diamond], [color,red])$
 
-     Example of a logarithmic plot:
-          (%i11) plot2d (exp(3*s), [s, -2, 2], [logy])$
+     A plot of experimental data points together with the theoretical
+     function that predicts the data:
+          (%i1) xy: [[10, .6], [20, .9], [30, 1.1], [40, 1.3], [50, 1.4]]$
+          (%i2) plot2d([[discrete, xy], 2*%pi*sqrt(l/980)], [l,0,50],
+             [style, points, lines], [color, red, blue],
+             [point_type, asterisk], [legend, "experiment", "theory"],
+             [xlabel, "pendulum's length (cm)"], [ylabel, "period (s)"])$
 
-     To show some examples of discrete plots, we will start by entering
-     the coordinates of 5 points, in the two different ways that can be
-     used:
+     See also the section about Plotting Options.
 
-          (%i12) xx:[10, 20, 30, 40, 50]$
-          (%i13) yy:[.6, .9, 1.1, 1.3, 1.4]$
-          (%i14) xy:[[10,.6], [20,.9], [30,1.1], [40,1.3], [50,1.4]]$
 
-     To plot those data points, joined with line segments, we use:
-          (%i15) plot2d([discrete,xx,yy])$
+ -- Function: plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
+ -- Function: plot3d ([<expr_1>, ..., <expr_n>], <x_range>, <y_range>,
+          ..., <options>, ...)
+     Displays a plot of one or more surfaces defined as functions of two
+     variables or in parametric form.
 
-     We will now show the plot with only points, and illustrating the
-     use of the second way of giving the points coordinates:
+     The functions to be plotted may be specified as expressions or
+     function names.  The mouse can be used to rotate the plot looking
+     at the surface from different sides.
 
-          (%i16) plot2d([discrete, xy], [style, points])$
+     *Examples:*
 
-     The plot of the data points can be shown together with a plot of
-     the theoretical function that predicts the data:
+     Plot of a common function:
+          (%i1) plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2])$
 
-          (%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-                  [style, [points,5,2,6], [lines,1,1]],
-                  [legend,"experiment","theory"],
-                  [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
+     Use of the z option to limit a function that goes to infinity (in
+     this case the function is minus infinity on the x and y axes);
+     this also shows how to plot with only lines and no shading:
+          (%i1) plot3d ( log ( x^2*y^2 ), [x, -2, 2], [y, -2, 2], [z, -8, 4],
+                   [palette, false], [color, magenta, blue])$
 
-     The meaning of the three numbers after the "points" style option
-     are as follows; 5: radius of the points, 2: index of color used
-     (red), 6: type of objects used (solid squares). The two numbers
-     after the "lines" style option give the thickness of the line (1
-     point) and the color (1 corresponds to blue).
+     The infinite values of z can also be avoided by choosing a grid
+     that does not fall on any asymptotes; this example also shows how
+     to select one of the predefined palettes, in this case the fourth
+     one:
+          (%i1) plot3d(log(x^2*y^2), [x, -2, 2], [y, -2, 2], [grid, 29, 29],
+                [palette, get_plot_option(palette,5)])$
 
-     To save a plot of `sin(x)' to the file `sin.ps', one can use:
-          (%i18) plot2d (sin(x), [x, 0, 2*%pi], [psfile, "sin.eps"])$
+     Two surfaces in the same plot, sharing the same domain; in gnuplot
+     the two surfaces will use the same palette:
+          (%i1) plot3d ( [2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2),
+                   [x, -3, 3], [y, -2, 2]])$
 
-     The next example uses the y option to chop off singularities and
-     the gnuplot_preamble option to put the key at the bottom of the
-     plot instead of the top.
-          (%i19) plot2d ([gamma(x), 1/gamma(x)], [x, -4.5, 5], [y, -10, 10],
-                               [gnuplot_preamble, "set key bottom"])$
+     The same two surfaces, but now with different domains; in xmaxima
+     each surface will use a different palette, chosen from the list
+     defined by the option palette:
+          (%i1) plot3d ( [[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]],
+                   4*sin(3*(x^2+y^2))/(x^2+y^2), [x, -3, 3], [y, -2, 2]],
+                   [plot_format,xmaxima])$
 
-     We can also use a `gnuplot_preamble' to produce fancy x-axis
-     labels.  (Note that the `gnuplot_preamble' string must be entered
-     without any line breaks.)
-          (%i20) my_preamble: "set xtics ('-2pi' -6.283, \
-          '-3pi/2' -4.712, '-pi' -3.1415, '-pi/2' -1.5708, '0' 0, \
-          'pi/2' 1.5708, 'pi' 3.1415,'3pi/2' 4.712, '2pi' 6.283)"$
+     Plot of a Klein bottle, defined parametrically:
+          (%i1) e_1: 5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)-10.0$
+          (%i2) e_2: -5*sin(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)$
+          (%i3) e_3: 5*(-sin(x/2)*cos(y)+cos(x/2)*sin(2*y))$
+          (%i4) plot3d ([e_1, e_2, e_3], [x, -%pi, %pi],
+                  [y, -%pi, %pi], [grid, 40, 40])$
 
-          (%i21) plot2d([cos(x), sin(x), tan(x), cot(x)],
-                 [x, -2*%pi, 2.1*%pi], [y, -2, 2], [axes, x],
-                 [gnuplot_preamble, my_preamble]);
+     Plot of a spherical harmonic, using of the predefined
+     transformations, `spherical_to_xyz', to transform from spherical
+     to rectangular coordinates. See the documentation for
+     `spherical_to_xyz'.
+          (%i1) plot3d (sin(2*theta)*cos(phi), [theta,0,%pi], [phi,0,2*%pi],
+                  [transform_xy, spherical_to_xyz], [grid,30,60])$
 
-     This example uses a `gnuplot_preamble' to produce fancy x-axis
-     labels, and produces PostScript output that takes advantage of the
-     advanced text formatting available in gnuplot.  (Note that the
-     `gnuplot_preamble' string must be entered without any line breaks.)
-          (%i22) my_preamble: "set xtics ('-2{/Symbol p}' \
-          -6.283, '-3{/Symbol p}/2' -4.712, '-{/Symbol p}' -3.1415, \
-          '-{/Symbol p}/2' -1.5708, '0' 0,'{/Symbol p}/2' 1.5708, \
-          '{/Symbol p}' 3.1415,'3{/Symbol p}/2' 4.712, '2{/Symbol p}' \
-          6.283)"$
+     Use of the predefined function `polar_to_xy' to transform from
+     cylindrical to rectangular coordinates. See the documentation for
+     `polar_to_xy'. This example also shows how to eliminate the
+     bounding box and the legend.
+          (%i1) plot3d(r^.33*cos(th/3), [r,0,1], [th,0,6*%pi], [grid,12,80],
+                 [transform_xy, polar_to_xy], [box, false], [legend,false])$
 
-          (%i23) plot2d ([cos(x), sin(x), tan(x)], [x, -2*%pi, 2*%pi],
-              [y, -2, 2], [gnuplot_preamble, my_preamble],
-              [psfile, "trig.eps"]);
+     Plot of a sphere using the transformation from spherical to
+     rectangular coordinates. In xmaxima the three axes are scaled in
+     the same proportion, maintaining the symmetric shape of the
+     sphere. A palette with different shades of a single color is used:
+          (%i1) plot3d (5, [theta, 0, %pi], [phi, 0, 2*%pi],
+           [transform_xy, spherical_to_xyz], [plot_format,xmaxima],
+           [palette,[value,0.65,0.7,0.1,0.9]])$
 
-     See also `plot_options', which describes plotting options.
+     Definition of a function of two-variables using a matrix. Notice
+     the single quote in the definition of the function, to prevent
+     plot3d from failing when it realizes that the matrix will require
+     integer indices.
+          (%i1) M: matrix([1,2,3,4], [1,2,3,2], [1,2,3,4], [1,2,3,3])$
+          (%i2) f(x, y) := float('M [round(x), round(y)])$
+          (%i3) plot3d (f(x,y), [x, 1, 4], [y, 1, 4], [grid, 4, 4])$
+          apply: subscript must be an integer; found: round(x)
+
+     By setting the elevation equal to zero, a surface can be seen as a
+     map in which each color represents a different level. The option
+     `colorbox' is used to show the correspondence among colors and
+     levels, and the mesh lines are disabled to make the colors easier
+     to see.
+          (%i1) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+                  [mesh_lines_color, false], [elevation, 0], [azimuth, 0],
+                  [colorbox, true], [grid, 150, 150])$
+
+     See also the section about Plotting Options.
 
 
  -- System variable: plot_options
@@ -7056,508 +7197,476 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Introduct
      `set_plot_option'. There are other local options specific to each
      plotting command, and not included in this list of global options.
 
-     Each element of `plot_options' is a list of two or more items.
-     The first item is the name of an option, and the remainder
-     comprises the value or values assigned to the option.  In some
-     cases the, the assigned value is a list, which may comprise
-     several items.
-
-     The plot options which are recognized by `plot2d' and `plot3d' are
-     the following:
-
-        * Option: `plot_format'
-
-          Determines which graphic interface is used by `plot2d' and
-          `plot3d'. It can be either `gnuplot', `gnuplot_pipes',
-          `mgnuplot' or `openmath'
-
-        * Option: `run_viewer'
-
-          Controls whether or not the appropriate viewer for the plot
-          format should be run.
-
-             * Default value: `true'
-
-               Execute the viewer program.
-
-             * Value: `false'
-
-               Do not execute the viewer program.
-
-        * Option: `y'
-
-          The vertical range of the plot.
-
-          Example:
-
-               [y, - 3, 3]
-          Sets the vertical range to [-3, 3].
-
-        * Option: `plot_realpart'
-
-          When `plot_realpart' is `true', the real part of a complex
-          value <x> is plotted; this is equivalent to plotting
-          `realpart(<x>)' instead of <x>.  Otherwise, only values with
-          imaginary part equal to 0 are plotted, and complex values are
-          ignored.
-
-          Example:
-
-               plot2d (log(x), [x, -5, 5], [plot_realpart, false]);
-               plot2d (log(x), [x, -5, 5], [plot_realpart, true]);
-          The default value is `false'.
-
-        * Option: `nticks'
-
-          In plot2d, it is gives the initial number of points used by
-          the adaptive plotting routine for plotting functions. It is
-          also the number of points that will be shown in a parametric
-          plot.
-
-          Example:
-
-               [nticks, 20]
-          The default for `nticks' is 29.
-
-        * Option: `adapt_depth'
-
-          The maximum number of splittings used by the adaptive
-          plotting routine.
-
-          Example:
-
-               [adapt_depth, 5]
-          The default for `adapt_depth' is 10.
-
-        * Option: `xlabel'
-
-          The label for the horizontal axis in a 2d plot.
-
-          Example:
-               [xlabel, "Time in seconds"]
-
-        * Option: `ylabel'
-
-          The label of the vertical axis in a 2d plot.
-
-          Example:
-               [ylabel, "Temperature"]
-
-        * Option: `logx'
-
-          It makes the horizontal axis of a 2d plot to be rendered in a
-          logarithmic scale. It does not need any aditional parameters.
-
-        * Option: `logy'
-
-          It makes the vertical axis of a 2d plot to be rendered in a
-          logarithmic scale. It does not need any aditional parameters.
-
-        * Option: `legend'
-
-          The labels for the various expressions in a 2d plot with
-          several expressions. If there are more expressions than the
-          number of labels given, they will be repeated. If legend is
-          followed by the word _false_, no legend will be shown. By
-          default, the names of the expressions or functions will be
-          used, or the words discrete1, discrete2, ..., for discrete
-          sets of points.
-
-          Example:
-               [legend, "Set 1", "Set 2", "Set 3"]
-
-        * Option: `box'
-
-          Currently, this option can only be followed by the word
-          _false_, and it will be used to supress the box around the
-          plot.
-
-          Example:
-               [box, false]
-
-        * Option: `style'
-
-          The styles that will be used for the various functions or
-          sets of data in a 2d plot. The word <style> must be followed
-          by one or more styles. If there are more functions and data
-          sets than the styles given, the styles will be repeated. Each
-          style can be either <lines> for line segments, <points> for
-          isolated points, <linespoints> for segments and points, or
-          <dots> for small isolated dots. Gnuplot accepts also an
-          <impulses> style.
-
-          Each of the styles can be enclosed inside a list with some
-          aditional parameters. <lines> accepts one or two numbers: the
-          width of the line and an integer that identifies a color. The
-          default color codes are: 1: blue, 2: red, 3: magenta, 4:
-          orange, 5: brown, 6: lime and 7: aqua. If you use Gnuplot
-          with a terminal different than X11, those colors might be
-          different; for example, if you use the option
-          [<gnuplot_term>,<ps>], color index 4 will correspond to black,
-          instead of orange.
-
-          <points> accepts one two or three parameters; the first
-          parameter is the radius of the points, the second parameter
-          is an integer that selects the color, using the same code
-          used for <lines> and the third parameter is currently used
-          only by Gnuplot and it corresponds to several objects instead
-          of points. The default types of objects are: 1: filled
-          circles, 2: open circles, 3: plus signs, 4: x, 5: *, 6:
-          filled squares, 7: open squares, 8: filled triangles, 9: open
-          triangles, 10: filled inverted triangles, 11: open inverted
-          triangles, 12: filled lozenges and 13: open lozenges.
-
-          <linesdots> accepts up to four parameters: line width, points
-          radius, color and type of object to replace the points.
-
-          Example:
-               [style,[lines,2,3],[points,1,4,3]]
-
-          This will plot the first (and third, fifth, etc) expression
-          with magenta line segments of width 2, and the second (and
-          fourth, sixth, etc) expression with orange plus signs of size
-          1 (orange circles in the case of Openmath).
-
-          The default for the style option is <lines> with a width of
-          1, and different colors.
-
-        * Option: `psfile'
-
-          This option is used to save the plots created by plot2d or
-          plot3d into a Postscript file. The option should be given one
-          parameter, which must be a valid name for a Postscript file.
-          By default, that file will be created in the directory
-          defined by the variable <maxima_tempdir>; the value of that
-          variable can be changed to save the file in a different
-          directory.
-
-          Example:
-               [psfile, "plot1.ps"]
-
-        * Option: `axes'
-
-          This is a global option used only by plot2d. By default it
-          has the value _true_, which means that the two axis, x and y,
-          will be displayed. It can be changed to _x_, to show only the
-          x axis, or to _y_, which will show only the y axis, or to
-          _false_ to skip the display of the axes.
-
-          Example:
-               [axes, 'x]
-
-        * Option: `grid'
-
-          Sets the number of grid points to use in the x- and
-          y-directions for three-dimensional plotting.
-
-          Example:
-               [grid, 50, 50]
-          sets the grid to 50 by 50 points. The default grid is 30 by
-          30.
-
-        * Option: `transform_xy'
-
-          Allows transformations to be applied to three-dimensional
-          plots.
-
-          Example:
-               [transform_xy, false]
-          The default `transform_xy' is `false'. If it is not `false',
-          it should be the output of
-
-               make_transform([x,y,z], f1(x,y,z), f2(x,y,z), f3(x,y,z))$
-          The `polar_xy' transformation is built in. It gives the same
-          transformation as
-               make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
-
-     Gnuplot options:
-
-     There are several plot options specific to gnuplot.  Some of these
-     options are raw gnuplot commands, specified as strings. Refer to
-     the gnuplot documentation for more details. In most cases, these
-     options can be replaced by one of the more general options above;
-     in those cases we recommend that you use the most general form.
-
-        * Option: `gnuplot_term'
-
-          Sets the output terminal type for gnuplot.
-             * Default value: `default'
-
-               Gnuplot output is displayed in a separate graphical
-               window.
-
-             * Value: `dumb'
-
-               Gnuplot output is displayed in the Maxima console by an
-               "ASCII art" approximation to graphics.
-
-             * Value: `ps'
-
-               Gnuplot generates commands in the PostScript page
-               description language.  If the option `gnuplot_out_file'
-               is set to <filename>, gnuplot writes the PostScript
-               commands to <filename>.  Otherwise, it is saved as
-               `maxplot.ps' file.
-
-             * Value: any other valid gnuplot term specification
-
-               Gnuplot can generate output in many other graphical
-               formats such as png, jpeg, svg etc.  To create plot in
-               all these formats the `gnuplot_term' can be set to any
-               supported gnuplot term name (symbol) or even full
-               gnuplot term specification with any valid options
-               (string).  For example `[gnuplot_term,png]' creates
-               output in PNG (Portable Network Graphics) format while
-               `[gnuplot_term,"png size 1000,1000"]' creates PNG of
-               1000x1000 pixels size.  If the option `gnuplot_out_file'
-               is set to <filename>, gnuplot writes the output to
-               <filename>. Otherwise, it is saved as `maxplot.<term>'
-               file, where <term> is gnuplot terminal name.
-
-        * Option: `gnuplot_out_file'
-
-          When used in conjunction with the `gnuplot_term' option, it
-          can be used to save the plot in a file, in one of the graphic
-          formats supported by Gnuplot. If you want to create a
-          Postscript file, you can use the option `psfile' instead,
-          which will also work in Openmath, and does the same thing
-          with just one option.
-
-               [gnuplot_term, png], [gnuplot_out_file, "graph3.png"]
-
-        * Option: `gnuplot_pm3d'
-
-          Controls the usage PM3D mode, which has advanced 3D features.
-          PM3D is only available in gnuplot versions after 3.7. The
-          default value for `gnuplot_pm3d' is `false'.
-
-          Example:
-
-               [gnuplot_pm3d, true]
-
-        * Option: `gnuplot_preamble'
-
-          Inserts gnuplot commands before the plot is drawn. Any valid
-          gnuplot commands may be used. Multiple commands should be
-          separated with a semi-colon. The example shown produces a log
-          scale plot. The default value for `gnuplot_preamble' is the
-          empty string `""'.
-
-          Example:
-
-               [gnuplot_preamble, "set size ratio -1"]
-
-        * Option: `gnuplot_curve_titles'
-
-          This is an old option that has been replaced by _legend_
-          described above.
-
-        * Option: `gnuplot_curve_styles'
-
-          This is an old option that has been replaced by _style_
-          described above.
-
-        * Option: `gnuplot_default_term_command'
-
-          The gnuplot command to set the terminal type for the default
-          terminal. The default value is `set term windows "Verdana"
-          15' in Windows systems, and `set term x11 font
-          "Helvetica,16"' in X11 windows systems.
-
-          Example:
-
-               [gnuplot_default_term_command, "set term x11"]
-
-        * Option: `gnuplot_dumb_term_command'
-
-          The gnuplot command to set the terminal type for the dumb
-          terminal. The default value is `"set term dumb 79 22"', which
-          makes the text output 79 characters by 22 characters.
-
-          Example:
-
-               [gnuplot_dumb_term_command, "set term dumb 132 50"]
-
-        * Option: `gnuplot_ps_term_command'
-
-          The gnuplot command to set the terminal type for the
-          PostScript terminal. The default value is `"set size 1.5,
-          1.5;set term postscript eps enhanced color solid 24"', which
-          sets the size to 1.5 times gnuplot's default, and the font
-          size to 24, among other things. See the gnuplot documentation
-          for `set term postscript' for more information.
-
-          Example:
-
-          All the figures in the examples for the <plot2d> function in
-          this manual were obtained from Postscript files that were
-          generated after setting `gnuplot_ps_term_command' as:
-
-               [gnuplot_ps_term_command, "set size 1.3, 1.3; \
-                       set term postscript eps color solid lw 2.5 30"]
-
-
-
- -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_range>,
-          <y_range>, ..., <options>, ...)
- -- Function: plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
- -- Function: plot3d (<name>, <x_range>, <y_range>, ..., <options>, ...)
- -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_rge>, <y_rge>)
- -- Function: plot3d ([<name_1>, <name_2>, <name_3>], <x_range>,
-          <y_range>, ..., <options>, ...)
-     Displays a plot of one or three expressions as functions of two
-     variables.
-
-          (%i1) plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2]);
-
-     plots `z = 2^(-u^2+v^2)' with `u' and `v' varying in [-3,3] and
-     [-2,2] respectively, and with <u> on the x axis, and `v' on the y
-     axis.
-
-     The same graph can be plotted using openmath (if Xmaxima is
-     installed):
-
-          (%i2)  plot3d (2^(-u^2 + v^2), [u, -3, 3], [v, -2, 2],
-                         [plot_format, openmath]);
-
-     in this case the mouse can be used to rotate the plot to look at
-     the surface from different sides.
-
-     An example of the third pattern of arguments is
-
-          (%i3) plot3d ([cos(x)*(3 + y*cos(x/2)), sin(x)*(3 + y*cos(x/2)),
-             y*sin(x/2)], [x, -%pi, %pi], [y, -1, 1], ['grid, 50, 15]);
-
-     which plots a Moebius band, parametrized by the three expressions
-     given as the first argument to `plot3d'.  An additional optional
-     argument `['grid, 50, 15]' gives the grid number of rectangles in
-     the x direction and y direction.
-
-     The function to be plotted may be specified as the name of a
-     Maxima or Lisp function or operator, a Maxima lambda expression,
-     or a general Maxima expression.  In the form `plot3d (<f>, ...)'
-     where <f> is the name of a function or a lambda expression, the
-     function must be a function of two arguments.  In the form `plot3d
-     ([<f_1>, <f_2>, <f_3>], ...)' where <f_1>, <f_2>, and <f_3> are
-     names of functions or lambda expressions, each function must be a
-     function of three arguments.
-
-     This example shows a plot of the real part of `z^1/3', using polar
-     coordinates. The options `box' and `legend' were also used to
-     suppress the title and the axes box.
-
-          (%i4) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
-                ['grid, 12, 80], ['transform_xy, polar_to_xy],
-                [box, false],[legend,false]);
-
-     Other examples are the Klein bottle:
-
-          (%i5) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y)
-                + 3.0) - 10.0$
-          (%i6) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y)
-                + 3.0)$
-          (%i7) expr_3: 5*(-sin(x/2)*cos(y) + cos(x/2)*sin(2*y))$
-
-          (%i8) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
-                [y, -%pi, %pi], ['grid, 40, 40]);
-
-     and a torus:
-
-          (%i9) expr_1: cos(y)*(10.0+6*cos(x))$
-          (%i10) expr_2: sin(y)*(10.0+6*cos(x))$
-          (%i11) expr_3: -6*sin(x)$
-          (%i12) plot3d ([expr_1, expr_2, expr_3], [x, 0, 2*%pi],
-                 [y, 0, 2*%pi], ['grid, 40, 40]);
-
-     Sometimes it is necessary to define a function to plot the
-     expression. All the arguments to plot3d are evaluated before being
-     passed to plot3d, and so trying to make an expression which does
-     just what is needed may be difficult, and it is just easier to
-     make a function.
-
-          (%i13) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],
-                 [1, 2, 3, 3])$
-          (%i14) f(x, y) := float (M [?round(x), ?round(y)])$
-          (%i15) plot3d (f, [x, 1, 4], [y, 1, 4], ['grid, 4, 4])$
-
-     Here is a three-dimensional plot using the gnuplot pm3d terminal.
-          (%i7) plot3d (atan (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-                  [grid, 50, 50], [gnuplot_pm3d, true])$
-
-     And a three-dimensional plot without a mesh and with contours
-     projected on the bottom plane.  (Note that the `gnuplot_preamble'
-     string must be entered without any line breaks.)
-
-          (%i8) my_preamble: "set pm3d at s;unset surface;set contour;\
-          set cntrparam levels 20;unset key"$
-          (%i9) plot3d(atan(-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-              [grid, 50, 50], [gnuplot_pm3d, true],
-              [gnuplot_preamble, my_preamble])$
-
-     Finally, a plot where the z-axis is represented by color only.
-          (%i10) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-              [gnuplot_preamble, "set view map; unset surface"],
-              [gnuplot_pm3d, true], [grid, 150, 150])$
-
-     See the available options in `plot_options'.
-
-
- -- Function: make_transform (<vars>, <fx>, <fy>, <fz>)
-     Returns a function suitable for the transform function in plot3d.
-     Use with the plot option `transform_xy'.
-          make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
-     is a transformation to polar coordinates.
+     Each element of `plot_options' is a list of two or more items.  The
+     first item is the name of the option, and the remainder comprises
+     the value or values assigned to the option.  In some cases, the
+     assigned value is a list, which may include several items.
+
+     See also `set_plot_option', `get_option' and the section on
+     Plotting Options.
 
 
  -- Function: set_plot_option (<option>)
-     Assigns one of the global variables for plotting.  <option> is
-     specified as a list of two or more elements, in which the first
-     element is one of the keywords on the `plot_options' list.
+     Accepts most of the options listed in the section Plotting
+     Options, and saves them into the global variable `plot_options'.
 
      `set_plot_option' evaluates its argument and returns the complete
-     list `plot_options' (after modifying one of its elements).
+     list `plot_options' (after modifying the option given).
 
-     See also `plot_options', `plot2d', and `plot3d'.
+     See also `plot_options', `get_option' and the section on Plotting
+     Options.
 
-     Examples:
+     Example:
 
-     Modify the `grid' and `x' values.  When a `plot_options' keyword
-     has an assigned value, quote it to prevent evaluation.
+     Modification of the `grid' values.
 
           (%i1) set_plot_option ([grid, 30, 40]);
-          (%o1) [[x, - 1.755559702014E+305, 1.755559702014E+305],
-          [y, - 1.755559702014E+305, 1.755559702014E+305], [t, - 3, 3],
-          [grid, 30, 40], [transform_xy, false], [run_viewer, true],
-          [plot_format, gnuplot], [gnuplot_term, default],
-          [gnuplot_out_file, false], [nticks, 10], [adapt_depth, 10],
-          [gnuplot_pm3d, false], [gnuplot_preamble, ],
-          [gnuplot_curve_titles, [default]],
-          [gnuplot_curve_styles, [with lines 3, with lines 1,
-          with lines 2, with lines 5, with lines 4, with lines 6,
-          with lines 7]], [gnuplot_default_term_command, ],
-          [gnuplot_dumb_term_command, set term dumb 79 22],
-          [gnuplot_ps_term_command, set size 1.5, 1.5;set term postscript #
-          eps enhanced color solid 24]]
-          (%i2) x: 42;
-          (%o2)                          42
-          (%i3) set_plot_option (['x, -100, 100]);
-          (%o3) [[x, - 100.0, 100.0], [y, - 1.755559702014E+305,
-          1.755559702014E+305], [t, - 3, 3], [grid, 30, 40],
-          [transform_xy, false], [run_viewer, true],
-          [plot_format, gnuplot], [gnuplot_term, default],
-          [gnuplot_out_file, false], [nticks, 10], [adapt_depth, 10],
-          [gnuplot_pm3d, false], [gnuplot_preamble, ],
-          [gnuplot_curve_titles, [default]],
-          [gnuplot_curve_styles, [with lines 3, with lines 1,
-          with lines 2, with lines 5, with lines 4, with lines 6,
-          with lines 7]], [gnuplot_default_term_command, ],
-          [gnuplot_dumb_term_command, set term dumb 79 22],
-          [gnuplot_ps_term_command, set size 1.5, 1.5;set term postscript #
-          eps enhanced color solid 24]]
+          (%o1) [[t, - 3, 3], [grid, 30, 40], [transform_xy, false],
+          [run_viewer, true], [axes, true], [plot_format, gnuplot_pipes],
+          [color, blue, red, green, magenta, black, cyan],
+          [point_type, bullet, circle, plus, times, asterisk, box, square,
+          triangle, delta, wedge, nabla, diamond, lozenge],
+          [palette, [hue, 0.25, 0.7, 0.8, 0.5],
+          [hue, 0.65, 0.8, 0.9, 0.55], [hue, 0.55, 0.8, 0.9, 0.4],
+          [hue, 0.95, 0.7, 0.8, 0.5]], [gnuplot_term, default],
+          [gnuplot_out_file, false], [nticks, 29], [adapt_depth, 5],
+          [gnuplot_preamble, ], [gnuplot_default_term_command,
+          set term pop], [gnuplot_dumb_term_command, set term dumb 79 22],
+          [gnuplot_ps_term_command, set size 1.5, 1.5;set term postscript \
+          eps enhanced color solid 24], [plot_realpart, false]]
 
 
-8.2.1 Functions for working with the gnuplot_pipes format
----------------------------------------------------------
+ -- System function: spherical_to_xyz
+     It can be given as value for the `transform_xy' option of plot3d.
+     Its effect will be to interpret the two independent variables and
+     the function in plot3d as the spherical coordinates of a point
+     (first, the angle with the z axis, then the angle of the xy
+     projection with the x axis and finally the distance from the
+     origin) and transform them into x, y and z coordinates.
+
+
+
+File: maxima.info,  Node: Plotting Options,  Next: Gnuplot Options,  Prev: Functions and Variables for Plotting,  Up: Plotting
+
+8.4 Plotting Options
+====================
+
+All options consist of a list starting with one of the keywords in this
+section, followed by one or more values. Most of the options can be used
+in any of the plotting commands (<plot2d>, <plot3d>, <contour_plot>,
+<implicit_plot>) or in the function <set_plot_option>; the exceptions
+will be specified in the following list.
+
+ -- Plot option: adapth_depth [adapth_depth, <integer>]
+     The maximum number of splittings used by the adaptive plotting
+     routine.
+
+     Default value: 5
+
+
+ -- Plot option: axes [axes, <symbol>]
+     Where <symbol> can be either `true', `false', `x' or `y'.  If
+     `false', no axes will be shown; if equal to `x' or `y' only the x
+     or y axis will be shown, and if it is equal to `true', both axes
+     will be shown. This option is used only by plot2d and
+     implicit_plot.
+
+     Default value: true
+
+
+ -- Plot option: azimut [azimuth, <number>]
+     A plot3d plot can be thought of as starting with its x and y axis
+     in the horizontal and vertical axis, as in plot2d, and the z axis
+     coming out of the paper perpendicularly. The z axis is then rotated
+     around the x axis an angle equals to `elevation' and then the xy
+     plane is rotated around the new z axis an angle `azimuth'. This
+     option sets the value for the azimuth, in degrees.
+
+     Default value: 30
+
+     See also  `elevation'.
+
+
+ -- Plot option: box [box, <symbol>]
+     If set to `true', a bounding box will be drawn for the plot; if set
+     to `false', no box will be drawn.
+
+     Default value: `true'
+
+
+ -- Plot option: color [color, <color_1>, ..., <color_n>]
+     In plot2d and implicit_plot, it defines the color (or colors) for
+     the various curves. In plot3d, it defines the colors used for the
+     mesh lines of the surfaces, when no palette is being used; one
+     side of the surface will have color <color_1> and the other
+     <color_2> (or the same color if there is only one color).
+
+     If there are more curves or surfaces than colors, the colors will
+     be repeated in sequence. When using gnuplot, the colors could be:
+     blue, red, green, magenta, black, cyan or black; in xmaxima the
+     colors can be those or a string starting with the character # and
+     followed by six hexadecimal digits: two for the red component, two
+     for green component and two for the blue component. If given the
+     name of an unknown color, black will be used instead.
+
+     Default value: blue, red, green, magenta, black, cyan
+
+
+ -- Plot option: colorbox [colorbox, <symbol>]
+     Where <symbol> can be either `true' or `false'. If `true',
+     whenever plot3d uses a palette of different colors to represent
+     the different values of z, a box will be shown on the right,
+     indicating the colors used according to the scale of values of z.
+     This option does not work in xmaxima.
+
+     Default value: `false'
+
+
+ -- Plot option: elevation [elevation, <number>]
+     A plot3d plot can be thought of as starting with its x and y axis
+     in the horizontal and vertical axis, as in plot2d, and the z axis
+     coming out of the paper perpendicularly. The z axis is then rotated
+     around the x axis an angle equals to `elevation' and then the xy
+     plane is rotated around the new z axis an angle `azimuth'. This
+     option sets the value for the elevation, in degrees.
+
+     Default value: 60
+
+     See also  `azimuth'.
+
+
+ -- Plot option: grid [grid, <integer>, <integer>]
+     Sets the number of grid points to use in the x- and y-directions
+     for three-dimensional plotting.
+
+     Default value: 30, 30
+
+
+ -- Plot option: legend [legend, <string_1>, ..., <string_n>]
+ -- Plot option: legend [legend, <false>]
+     It specifies the labels for the plots when various plots are
+     shown. If there are more plots than the number of labels given,
+     they will be repeated. If given the value `false', no legends will
+     be shown. By default, the names of the expressions or functions
+     will be used, or the words discrete1, discrete2, ..., for discrete
+     sets of points. This option can not be set with <set_plot_option>.
+
+
+ -- Plot option: logx [logx]
+     Makes the horizontal axes to be scaled logarithmically. It can not
+     be used with <set_plot_option>.
+
+
+ -- Plot option: logy [logy]
+     Makes the vertical axes to be scaled logarithmically. It can not
+     be used with <set_plot_option>.
+
+
+ -- Plot option: mesh_lines_color [mesh_lines_color, <color>]
+     It sets the color used by plot3d to draw the mesh lines, when a
+     palette is being used. It accepts the same colors as for the
+     option `color' (see the list of allowed colors in `color'). It can
+     also be given a value `false' to eliminate completely the mesh
+     lines.
+
+     Default value: black
+
+
+ -- Plot option: nticks [nticks, <integer>]
+     When plotting functions with plot2d, it is gives the initial
+     number of points used by the adaptive plotting routine for plotting
+     functions. When plotting parametric functions with plot2d or
+     plot3d, it sets the number of points that will be shown for the
+     plot.
+
+     Default value: 29
+
+
+ -- Plot option: palette [palette, [<palette_1>], ..., [<palette_n>]]
+ -- Plot option: palette [palette, <false>]
+     It can consist of one palette or a list of several palettes. Each
+     palette is a list with a keyword followed by four numbers. The
+     first three numbers, which must be between 0 and 1, define the
+     hue, saturation and value of a basic color to be assigned to the
+     minimum value of z. The keyword specifies which of the three
+     attributes (hue, saturation or value) will be increased according
+     to the values of z. The last number indicates the increase
+     corresponding to the maximum value of z. That last number can be
+     bigger than 1 or negative; the corresponding values of the
+     modified attribute will be rounded modulo 1.
+
+     Gnuplot only uses the first palette in the list; xmaxima will use
+     the palettes in the list sequentially, when several surfaces are
+     plotted together; if the number of palettes is exhausted, they
+     will be repeated sequentially.
+
+     The color of the mesh lines will be given by the option
+     `mesh_lines_color'.  If `palette' is given the value `false', the
+     surfaces will not be shaded but represented with a mesh of curves
+     only. In that case, the colors of the lines will be determined by
+     the option `color'.
+
+     Default value: [hue, 0.25, 0.7, 0.8, 0.5], [hue, 0.65, 0.8, 0.9,
+     0.55], [hue, 0.55, 0.8, 0.9, 0.4], [hue, 0.95, 0.7, 0.8, 0.5]
+
+
+ -- Plot option: plot_format [plot_format, <format>]
+     Where <format> is one of the following: gnuplot, xmaxima, mgnuplot
+     or gnuplot_pipes.
+
+     It sets the format to be used for plotting.
+
+     Default value: gnuplot, in Windows systems, or gnuplot_pipes in
+     other systems.
+
+
+ -- Plot option: plot_real_part [plot_realpart, <symbol>]
+     When set to `true', the functions to be plotted will be considered
+     as complex functions whose real value should be plotted; this is
+     equivalent to plotting `realpart(<function>)'. I set to `false',
+     nothing will be plotted when the function does not give a real
+     value. For instance, when `x' is negative, `log(x)' gives a
+     complex value, with real value equal to `log(abs(x))'; if
+     `plot_real_part' were `true', `log(-5)' would be plotted as
+     `log(5)', while nothing would be plotted if `plot_real_part' were
+     `false'.
+
+     Default value: `false'
+
+
+ -- Plot option: point_type [point_type, <type_1>, ..., <type_n>]
+     In gnuplot, each set of points to be plotted with the style
+     "points" or "linespoints" will be represented with objects taken
+     from this list, in sequential order. If there are more sets of
+     points than objects in this list, they will be repeated
+     sequentially.  The possible objects that can be used are: bullet,
+     circle, plus, times, asterisk, box, square,triangle, delta, wedge,
+     nabla, diamond or lozenge
+
+     Default value: bullet, circle, plus, times, asterisk, box,
+     square,triangle, delta, wedge, nabla, diamond, lozenge
+
+
+ -- Plot option: psfile [psfile, <string>]
+     Saves the plot into a Postscript file with name equal to <string>,
+     rather than showing it in the screen. By default, the file will be
+     created in the directory defined by the variable <maxima_tempdir>;
+     the value of that variable can be changed to save the file in a
+     different directory.
+
+
+ -- Plot option: run_viewer [run_viewer, <symbol>]
+     Controls whether or not the appropriate viewer for the plot format
+     should be run.
+
+     Default value: `true'
+
+
+ -- Plot option: style [style, <type_1>, ..., <type1_n>]
+ -- Plot option: style [style, [<style_1>], ..., [<style_n>]]
+     The styles that will be used for the various functions or sets of
+     data in a 2d plot. The word <style> must be followed by one or more
+     styles. If there are more functions and data sets than the styles
+     given, the styles will be repeated. Each style can be either
+     <lines> for line segments, <points> for isolated points,
+     <linespoints> for segments and points, or <dots> for small
+     isolated dots. Gnuplot accepts also an <impulses> style.
+
+     Each of the styles can be enclosed inside a list with some
+     aditional parameters. <lines> accepts one or two numbers: the
+     width of the line and an integer that identifies a color. The
+     default color codes are: 1: blue, 2: red, 3: magenta, 4: orange,
+     5: brown, 6: lime and 7: aqua. If you use Gnuplot with a terminal
+     different than X11, those colors might be different; for example,
+     if you use the option [<gnuplot_term>,<ps>], color index 4 will
+     correspond to black, instead of orange.
+
+     <points> accepts one two or three parameters; the first parameter
+     is the radius of the points, the second parameter is an integer
+     that selects the color, using the same code used for <lines> and
+     the third parameter is currently used only by Gnuplot and it
+     corresponds to several objects instead of points. The default
+     types of objects are: 1: filled circles, 2: open circles, 3: plus
+     signs, 4: x, 5: *, 6: filled squares, 7: open squares, 8: filled
+     triangles, 9: open triangles, 10: filled inverted triangles, 11:
+     open inverted triangles, 12: filled lozenges and 13: open lozenges.
+
+     <linesdots> accepts up to four parameters: line width, points
+     radius, color and type of object to replace the points.
+
+     Default value: <lines> (will plot all sets of points joined with
+     lines of thickness 1 and the first color given by the option
+     `color').
+
+     See also `color' and `point_type'.
+
+
+ -- Plot option: t [t, <min>, <max>]
+     Default range for parametric plots.
+
+     Default value: -3, 3
+
+
+ -- Plot option: transform_xy [transform_xy, <symbol>]
+     Where <symbol> is either `false' or the result obtained by using
+     the function `transform_xy'. If different from `false', it will be
+     used to transform the 3 coordinates in plot3d.
+
+     Default value: `false'
+
+     See `make_transform', `polar_to_xy' and `spherical_to_xyz'.
+
+
+ -- Plot option: x [x, <min>, <max>]
+     When used as the first option in a 2d-plotting command (or any of
+     the first two in plot3d), it indicates that the first independent
+     variable is x and it sets its range. It can also be used again
+     after the first option (or after the second option in plot3d) to
+     define the effective horizontal domain that will be shown in the
+     plot.
+
+
+ -- Plot option: xlabel [xlabel, <string>]
+     Specifies the <string> that will label the first axis; if this
+     option is not used, that label will be the name of the independent
+     variable, when plotting functions with plot2d or implicit_plot, or
+     the name of the first variable, when plotting surfaces with plot3d
+     or contours with contour_plot, or the first expression in the case
+     of a parametric plot. It can not be used with <set_plot_option>.
+
+
+ -- Plot option: y [y, <min>, <max>]
+     When used as one of the first two options in plot3d, it indicates
+     that one of the independent variables is y and it sets its range.
+     Otherwise, It defines the effective domain of the second variable
+     that will be shown in the plot.
+
+
+ -- Plot option: ylabel [ylabel, <string>]
+     Specifies the <string> that will label the second axis; if this
+     option is not used, that label will be "y", when plotting functions
+     with plot2d or implicit_plot, or the name of the second variable,
+     when plotting surfaces with plot3d or contours with contour_plot,
+     or the second expression in the case of a parametric plot. It can
+     not be used with <set_plot_option>.
+
+
+ -- Plot option: z [z, <min>, <max>]
+     Used in plot3d to set the effective range of values of z that will
+     be shown in the plot.
+
+
+ -- Plot option: zlabel [zlabel, <string>]
+     Specifies the <string> that will label the third axis, when using
+     plot3d. If this option is not used, that label will be "z", when
+     plotting surfaces, or the third expression in the case of a
+     parametric plot. It can not be used with <set_plot_option> and it
+     will be ignored by plot2d and implicit_plot.
+
+
+
+File: maxima.info,  Node: Gnuplot Options,  Next: Gnuplot_pipes Format Functions,  Prev: Plotting Options,  Up: Plotting
+
+8.5 Gnuplot Options
+===================
+
+There are several plot options specific to gnuplot. All of them consist
+of a keyword (the name of the option), followed by a string that should
+be a valid gnuplot command, to be passed directly to gnuplot. In most
+cases, there exist a corresponding plotting option that will produce a
+similar result and whose use is more recommended than the gnuplot
+specific option.
+
+ -- Plot option: gnuplot_term
+     Sets the output terminal type for gnuplot.
+        * *default* (default value)
+
+          Gnuplot output is displayed in a separate graphical window.
+
+        * *dumb*
+
+          Gnuplot output is displayed in the Maxima console by an
+          "ASCII art" approximation to graphics.
+
+        * *ps*
+
+          Gnuplot generates commands in the PostScript page description
+          language.  If the option `gnuplot_out_file' is set to
+          <filename>, gnuplot writes the PostScript commands to
+          <filename>.  Otherwise, it is saved as `maxplot.ps' file.
+
+        * any other valid gnuplot term specification
+
+          Gnuplot can generate output in many other graphical formats
+          such as png, jpeg, svg etc.  To create plot in all these
+          formats the `gnuplot_term' can be set to any supported
+          gnuplot term name (symbol) or even full gnuplot term
+          specification with any valid options (string).  For example
+          `[gnuplot_term,png]' creates output in PNG (Portable Network
+          Graphics) format while `[gnuplot_term,"png size 1000,1000"]'
+          creates PNG of 1000x1000 pixels size.  If the option
+          `gnuplot_out_file' is set to <filename>, gnuplot writes the
+          output to <filename>. Otherwise, it is saved as
+          `maxplot.<term>' file, where <term> is gnuplot terminal name.
+
+
+ -- Plot option: gnuplot_out_file
+     When used in conjunction with the `gnuplot_term' option, it can be
+     used to save the plot in a file, in one of the graphic formats
+     supported by Gnuplot. If you want to create a Postscript file, you
+     can use the option `psfile' instead, which will also work in
+     Openmath, and does the same thing with just one option.
+
+          [gnuplot_term, png], [gnuplot_out_file, "graph3.png"]
+
+
+ -- Plot option: gnuplot_pm3d
+     With a value of `false', it can be used to prevent the usage of
+     PM3D mode, which is enabled by default.
+
+
+ -- Plot option: gnuplot_preamble
+     Inserts gnuplot commands before the plot is drawn. Any valid
+     gnuplot commands may be used. Multiple commands should be
+     separated with a semi-colon. The example shown produces a log
+     scale plot. The default value for `gnuplot_preamble' is the empty
+     string `""'.
+
+
+ -- Plot option: gnuplot_curve_titles
+     This is an old option that has been replaced by _legend_ described
+     above.
+
+
+ -- Plot option: gnuplot_curve_styles
+     This is an obsolete option that has been replaced by _style_.
+
+
+ -- Plot option: gnuplot_default_term_command
+     The gnuplot command to set the terminal type for the default
+     terminal. The default value is `set term pop'.
+
+
+ -- Plot option: gnuplot_dumb_term_command
+     The gnuplot command to set the terminal type for the dumb
+     terminal. The default value is `"set term dumb 79 22"', which
+     makes the text output 79 characters by 22 characters.
+
+
+ -- Plot option: gnuplot_ps_term_command
+     The gnuplot command to set the terminal type for the PostScript
+     terminal. The default value is `"set size 1.5, 1.5;set term
+     postscript eps enhanced color solid 24"', which sets the size to
+     1.5 times gnuplot's default, and the font size to 24, among other
+     things. See the gnuplot documentation for `set term postscript' for
+     more information.
+
+
+
+File: maxima.info,  Node: Gnuplot_pipes Format Functions,  Prev: Gnuplot Options,  Up: Plotting
+
+8.6 Gnuplot_pipes Format Functions
+==================================
 
  -- Function: gnuplot_start ()
      Opens the pipe to gnuplot used for plotting with the
@@ -9510,6 +9619,35 @@ File: maxima.info,  Node: Functions and Variables for Floating Point,  Prev: Flo
      `fpprintprec' cannot be 1.
 
 
+ -- Option variable: numer_pbranch
+     Default value: `false'
+
+     The option variable `numer_pbranch' controls the numerical
+     evaluation of the power of a negative integer, rational, or
+     floating point number. When `numer_pbranch' is `true' and the
+     exponent is a floating point number or the option variable `numer'
+     is `true' too, Maxima evaluates the numerical result using the
+     principal branch. Otherwise a simplified, but not an evaluated
+     result is returned.
+
+     Examples:
+
+          (%i1) (-2)^0.75;
+          (%o1) (-2)^0.75
+
+          (%i2) (-2)^0.75,numer_pbranch:true;
+          (%o2) 1.189207115002721*%i-1.189207115002721
+
+          (%i3) (-2)^(3/4);
+          (%o3) (-1)^(3/4)*2^(3/4)
+
+          (%i4) (-2)^(3/4),numer;
+          (%o4) 1.681792830507429*(-1)^0.75
+
+          (%i5) (-2)^(3/4),numer,numer_pbranch:true;
+          (%o5) 1.189207115002721*%i-1.189207115002721
+
+
 
 File: maxima.info,  Node: Contexts,  Next: Polynomials,  Prev: Floating Point,  Up: Top
 
@@ -9569,6 +9707,10 @@ File: maxima.info,  Node: Functions and Variables for Contexts,  Prev: Contexts,
      Maxima's deduction mechanism is not very strong; there are many
      obvious consequences which cannot be determined by `is'.  This is
      a known weakness.
+
+     `assume' does not handle predicates with complex numbers. If a
+     predicate contains a complex number `assume' returns
+     `inconsistent' or `redunant'.
 
      `assume' evaluates its arguments.
 
@@ -9950,19 +10092,93 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
 
 
  -- Function: coeff (<expr>, <x>, <n>)
-     Returns the coefficient of `<x>^<n>' in <expr>.  <n> may be
-     omitted if it is 1.  <x> may be an atom, or complete subexpression
-     of <expr> e.g., `sin(x)', `a[i+1]', `x + y', etc. (In the last
-     case the expression `(x + y)' should occur in <expr>).  Sometimes
-     it may be necessary to expand or factor <expr> in order to make
-     `<x>^<n>' explicit.  This is not done automatically by `coeff'.
+ -- Function: coeff (<expr>, <x>)
+     Returns the coefficient of `<x>^<n>' in <expr>, where <expr> is a
+     polynomial or a monomial term in <x>.
+
+     `coeff(<expr>, <x>^<n>)' is equivalent to `coeff(<expr>, <x>,
+     <n>)'.  `coeff(<expr>, <x>, 0)' returns the remainder of <expr>
+     which is free of <x>.  If omitted, <n> is assumed to be 1.
+
+     <x> may be a simple variable or a subscripted variable, or a
+     subexpression of <expr> which comprises an operator and all of its
+     arguments.
+
+     It may be possible to compute coefficients of expressions which
+     are equivalent to <expr> by applying `expand' or `factor'.
+     `coeff' itself does not apply `expand' or `factor' or any other
+     function.
+
+     `coeff' distributes over lists, matrices, and equations.
 
      Examples:
 
-          (%i1) coeff (2*a*tan(x) + tan(x) + b = 5*tan(x) + 3, tan(x));
-          (%o1)                      2 a + 1 = 5
-          (%i2) coeff (y + x*%e^x + 1, x, 0);
-          (%o2)                         y + 1
+     `coeff' returns the coefficient `<x>^<n>' in <expr>.
+
+          (%i1) coeff (b^3*a^3 + b^2*a^2 + b*a + 1, a^3);
+                                          3
+          (%o1)                          b
+
+     `coeff(<expr>, <x>^<n>)' is equivalent to `coeff(<expr>, <x>,
+     <n>)'.
+
+          (%i1) coeff (c[4]*z^4 - c[3]*z^3 - c[2]*z^2 + c[1]*z, z, 3);
+          (%o1)                         - c
+                                           3
+          (%i2) coeff (c[4]*z^4 - c[3]*z^3 - c[2]*z^2 + c[1]*z, z^3);
+          (%o2)                         - c
+                                           3
+
+     `coeff(<expr>, <x>, 0)' returns the remainder of <expr> which is
+     free of <x>.
+
+          (%i1) coeff (a*u + b^2*u^2 + c^3*u^3, b, 0);
+                                      3  3
+          (%o1)                      c  u  + a u
+
+     <x> may be a simple variable or a subscripted variable, or a
+     subexpression of <expr> which comprises an operator and all of its
+     arguments.
+
+          (%i1) coeff (h^4 - 2*%pi*h^2 + 1, h, 2);
+          (%o1)                        - 2 %pi
+          (%i2) coeff (v[1]^4 - 2*%pi*v[1]^2 + 1, v[1], 2);
+          (%o2)                        - 2 %pi
+          (%i3) coeff (sin(1 + x)*sin(x) + sin(1 + x)^3*sin(x)^3, sin(1 + x)^3);
+                                          3
+          (%o3)                        sin (x)
+          (%i4) coeff ((d - a)^2*(b + c)^3 + (a + b)^4*(c - d), a + b, 4);
+          (%o4)                         c - d
+
+     `coeff' itself does not apply `expand' or `factor' or any other
+     function.
+
+          (%i1) coeff (c*(a + b)^3, a);
+          (%o1)                           0
+          (%i2) expand (c*(a + b)^3);
+                           3          2        2        3
+          (%o2)           b  c + 3 a b  c + 3 a  b c + a  c
+          (%i3) coeff (%, a);
+                                          2
+          (%o3)                        3 b  c
+          (%i4) coeff (b^3*c + 3*a*b^2*c + 3*a^2*b*c + a^3*c, (a + b)^3);
+          (%o4)                           0
+          (%i5) factor (b^3*c + 3*a*b^2*c + 3*a^2*b*c + a^3*c);
+                                            3
+          (%o5)                      (b + a)  c
+          (%i6) coeff (%, (a + b)^3);
+          (%o6)                           c
+
+     `coeff' distributes over lists, matrices, and equations.
+
+          (%i1) coeff ([4*a, -3*a, 2*a], a);
+          (%o1)                      [4, - 3, 2]
+          (%i2) coeff (matrix ([a*x, b*x], [-c*x, -d*x]), x);
+                                    [  a    b  ]
+          (%o2)                     [          ]
+                                    [ - c  - d ]
+          (%i3) coeff (a*u - b*v = 7*u + 3*v, u);
+          (%o3)                         a = 7
 
 
  -- Function: combine (<expr>)
@@ -10449,6 +10665,29 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      When `keepfloat' is `true', prevents floating point numbers from
      being rationalized when expressions which contain them are
      converted to canonical rational expression (CRE) form.
+
+     Note that the function `solve' and those functions calling it
+     (`eigenvalues', for example) currently ignore this flag, converting
+     floating point numbers anyway.
+
+     Examples:
+
+          (%i1) rat(x/2.0);
+
+          `rat' replaced 0.5 by 1/2 = 0.5
+                                                 x
+          (%o1)/R/                               -
+                                                 2
+          (%i2) rat(x/2.0), keepfloat;
+
+          (%o2)/R/                             0.5 x
+
+     `solve' ignores `keepfloat':
+
+          (%i3) solve(1.0-x,x), keepfloat;
+
+          `rat' replaced 1.0 by 1/1 = 1.0
+          (%o3)                               [x = 1]
 
 
  -- Function: lratsubst (<L>, <expr>)
@@ -12377,22 +12616,23 @@ Mathematical Functions, Chapter 6.
      The natural logarithm of the gamma function.
 
 
- -- Function: gamma_incomplete (<a>,<z>)
-     The incomplete upper gamma function A&S 6.5.2:
-     gamma_incomplete(a, x) = integrate(exp(-t)*t^(a-1), t, 0, x)
+ -- Function: gamma_incomplete (<a>, <z>)
+     The incomplete upper gamma function A&S 6.5.2: gamma_incomplete(a,
+     z) = integrate(exp(-t)*t^(a-1), t, z, inf)
 
 
  -- Function: gamma_incomplete_regularized (<a>,<z>)
      The regularized incomplete upper gamma function A&S 6.5.1.
 
-     `gamma_incomplete_regularized(a,z)=gamma_incomplete(a,z)/gamma(a)'
+     `gamma_incomplete_regularized(a,z) =
+     gamma_incomplete(a,z)/gamma(a)'
 
 
  -- Function: gamma_incomplete_generalized (<a>,<z1>,<z1> )
      The generalized incomplete gamma function.
 
-     ` gamma_incomplete_generalized(a,z) =  integrate(t^(a-1)*exp(-t),
-     z, z1,z2) '
+     `gamma_incomplete_generalized(a,z) = integrate(t^(a-1)*exp(-t), z,
+     z1,z2) '
 
 
  -- Option variable: gammalim
@@ -13665,6 +13905,16 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
      infinity) and `minf' (negative infinity).  On output it may also
      use `und' (undefined), `ind' (indefinite but bounded) and
      `infinity' (complex infinity).
+
+     `infinity' (complex infinity) is returned when the limit of the
+     absolute value of the expression is positive infinity, but the
+     limit of the expression itself is not positive infinity or
+     negative infinity.  This includes cases where the limit of the
+     complex argument is a constant, as in `limit(log(x), x, minf)',
+     cases where the complex argument oscillates, as in `limit((-2)^x,
+     x, inf)', and cases where the complex argument is different for
+     either side of a two-sided limit, as in `limit(1/x, x, 0)' and
+     `limit(log(x), x, 0)'.
 
      `lhospitallim' is the maximum number of times L'Hospital's rule is
      used in `limit'.  This prevents infinite looping in cases like
@@ -17199,8 +17449,9 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      `find_root_abs' and `find_root_rel' are both zero.
 
      `find_root' expects the function in question to have a different
-     sign at the endpoints of the search interval.  If this condition
-     is not met, the behavior of `find_root' is governed by
+     sign at the endpoints of the search interval.  When the function
+     evaluates to a number at both endpoints and these numbers have the
+     same sign, the behavior of `find_root' is governed by
      `find_root_error'.  When `find_root_error' is `true', `find_root'
      prints an error message.  Otherwise `find_root' returns the value
      of `find_root_error'.  The default value of `find_root_error' is
@@ -24304,16 +24555,16 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      composite number and if it returns `true', <n> is a prime number
      with very high probability.
 
-     For <n> less than 10^16 a deterministic version of Miller-Rabin's
-     test is used. If `primep (<n>)' returns `true', then <n> is a
-     prime number.
+     For <n> less than 341550071728321 a deterministic version of
+     Miller-Rabin's test is used. If `primep (<n>)' returns `true',
+     then <n> is a prime number.
 
-     For <n> bigger than 10^16 `primep' uses `primep_number_of_tests'
-     Miller-Rabin's pseudo-primality tests and one Lucas
-     pseudo-primality test. The probability that <n> will pass one
-     Miller-Rabin test is less than 1/4. Using the default value 25 for
-     `primep_number_of_tests', the probability of <n> beeing composite
-     is much smaller that 10^-15.
+     For <n> bigger than 341550071728321 `primep' uses
+     `primep_number_of_tests' Miller-Rabin's pseudo-primality tests and
+     one Lucas pseudo-primality test. The probability that <n> will pass
+     one Miller-Rabin test is less than 1/4. Using the default value 25
+     for `primep_number_of_tests', the probability of <n> beeing
+     composite is much smaller that 10^-15.
 
 
  -- Option variable: primep_number_of_tests
@@ -24350,30 +24601,51 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      Default value: `true'
 
      When `zerobern' is `false', `bern' excludes the Bernoulli numbers
-     which are equal to zero.  See `bern'.
+     and `euler' excludes the Euler numbers which are equal to zero.
+     See `bern' and `euler'.
 
 
  -- Function: zeta (<n>)
-     Returns the Riemann zeta function if <x> is a negative integer, 0,
-     1, or a positive even number, and returns a noun form `zeta (<n>)'
-     for all other arguments, including rational noninteger, floating
-     point, and complex arguments.
+     Returns the Riemann zeta function. If <n> is a negative integer,
+     0, or a positive even integer, the Riemann zeta function
+     simplifies to an exact value.  For a positive even integer the
+     option variable `zeta%pi' has to be `true' in addition (See
+     `zeta%pi'). For a floating point or bigfloat number the Riemann
+     zeta function is evaluated numerically. Maxima returns a noun form
+     `zeta (<n>)' for all other arguments, including rational
+     noninteger, and complex arguments, or for even integers, if
+     `zeta%pi' has the value `false'.
+
+     `zeta(1)' is undefined, but Maxima knows the limit `limit(zeta(x),
+     x, 1)' from above and below.
+
+     The Riemann zeta function distributes over lists, matrices, and
+     equations.
 
      See also `bfzeta' and `zeta%pi'.
 
-          (%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
-                                               2              4
-                     1        1     1       %pi            %pi
-          (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
-                    120       12    2        6              90
+     Examples:
+
+          (%i1) zeta([-2,-1,0,0.5,2,3,1+%i]);
+                                                        2
+                       1     1                       %pi
+          (%o1)  [0, - --, - -, - 1.460354508809587, ----, zeta(3), zeta(%i + 1)]
+                       12    2                        6
+
+          (%i2) limit(zeta(x),x,1,plus);
+          (%o2)                                 inf
+          (%i3) limit(zeta(x),x,1,minus);
+          (%o3)                                minf
 
 
  -- Option variable: zeta%pi
      Default value: `true'
 
      When `zeta%pi' is `true', `zeta' returns an expression
-     proportional to `%pi^n' for even integer `n'.  Otherwise, `zeta'
+     proportional to `%pi^n' for even integer `n'. Otherwise, `zeta'
      returns a noun form `zeta (n)' for even integer `n'.
+
+     Examples:
 
           (%i1) zeta%pi: true$
           (%i2) zeta (4);
@@ -24428,1044 +24700,4 @@ the following papers:
   4. The'orie de Galois Constructive. Annick Valibouze. Me'moire
      d'habilitation a` diriger les recherches (HDR), Universite' P. et
      M. Curie (Paris VI), 1994.
-
-
-File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Introduction to Symmetries,  Up: Symmetries
-
-32.2 Functions and Variables for Symmetries
-===========================================
-
-32.2.1 Changing bases
----------------------
-
- -- Function: comp2pui (<n>, <L>)
-     implements passing from the complete symmetric functions given in
-     the list <L> to the elementary symmetric functions from 0 to <n>.
-     If the list <L> contains fewer than <n+1> elements, it will be
-     completed with formal values of the type <h1>, <h2>, etc. If the
-     first element of the list <L> exists, it specifies the size of the
-     alphabet, otherwise the size is set to <n>.
-
-          (%i1) comp2pui (3, [4, g]);
-                                  2                    2
-          (%o1)    [4, g, 2 h2 - g , 3 h3 - g h2 + g (g  - 2 h2)]
-
-
- -- Function: ele2pui (<m>, <L>)
-     goes from the elementary symmetric functions to the complete
-     functions.  Similar to `comp2ele' and `comp2pui'.
-
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: ele2comp (<m>, <L>)
-     Goes from the elementary symmetric functions to the compete
-     functions.  Similar to `comp2ele' and `comp2pui'.
-
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: elem (<ele>, <sym>, <lvar>)
-     decomposes the symmetric polynomial <sym>, in the variables
-     contained in the list <lvar>, in terms of the elementary symmetric
-     functions given in the list <ele>.  If the first element of <ele>
-     is given, it will be the size of the alphabet, otherwise the size
-     will be the degree of the polynomial <sym>.  If values are missing
-     in the list <ele>, formal values of the type <e1>, <e2>, etc. will
-     be added.  The polynomial <sym> may be given in three different
-     forms: contracted (`elem' should then be 1, its default value),
-     partitioned (`elem' should be 3), or extended (i.e. the entire
-     polynomial, and `elem' should then be 2).  The function `pui' is
-     used in the same way.
-
-     On an alphabet of size 3 with <e1>, the first elementary symmetric
-     function, with value 7, the symmetric polynomial in 3 variables
-     whose contracted form (which here depends on only two of its
-     variables) is <x^4-2*x*y> decomposes as follows in elementary
-     symmetric functions:
-
-          (%i1) elem ([3, 7], x^4 - 2*x*y, [x, y]);
-          (%o1) 7 (e3 - 7 e2 + 7 (49 - e2)) + 21 e3
-
-                                                   + (- 2 (49 - e2) - 2) e2
-          (%i2) ratsimp (%);
-                                        2
-          (%o2)             28 e3 + 2 e2  - 198 e2 + 2401
-
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: mon2schur (<L>)
-     The list <L> represents the Schur function S_L: we have L = [i_1,
-     i_2, ..., i_q], with i_1 <= i_2 <= ... <= i_q.  The Schur function
-     S_[i_1, i_2, ..., i_q] is the minor of the infinite matrix
-     h_[i-j], i <= 1, j <= 1, consisting of the q first rows and the
-     columns 1 + i_1, 2 + i_2, ..., q + i_q.
-
-     This Schur function can be written in terms of monomials by using
-     `treinat' and `kostka'.  The form returned is a symmetric
-     polynomial in a contracted representation in the variables
-     x_1,x_2,...
-
-          (%i1) mon2schur ([1, 1, 1]);
-          (%o1)                       x1 x2 x3
-          (%i2) mon2schur ([3]);
-                                            2        3
-          (%o2)                x1 x2 x3 + x1  x2 + x1
-          (%i3) mon2schur ([1, 2]);
-                                                2
-          (%o3)                  2 x1 x2 x3 + x1  x2
-
-     which means that for 3 variables this gives:
-
-             2 x1 x2 x3 + x1^2 x2 + x2^2 x1 + x1^2 x3 + x3^2 x1
-              + x2^2 x3 + x3^2 x2
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: multi_elem (<l_elem>, <multi_pc>, <l_var>)
-     decomposes a multi-symmetric polynomial in the multi-contracted
-     form <multi_pc> in the groups of variables contained in the list
-     of lists <l_var> in terms of the elementary symmetric functions
-     contained in <l_elem>.
-
-          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3,
-                [[x, y], [a, b]]);
-                                                            3
-          (%o1)         - 2 f2 + f1 (f1 + e1) - 3 e1 e2 + e1
-          (%i2) ratsimp (%);
-                                   2                       3
-          (%o2)         - 2 f2 + f1  + e1 f1 - 3 e1 e2 + e1
-
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: multi_pui
-     is to the function `pui' what the function `multi_elem' is to the
-     function `elem'.
-
-          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3,
-                [[x, y], [a, b]]);
-                                                      3
-                                          3 p1 p2   p1
-          (%o1)              t2 + p1 t1 + ------- - ---
-                                             2       2
-
-
- -- Function: pui (<L>, <sym>, <lvar>)
-     decomposes the symmetric polynomial <sym>, in the variables in the
-     list <lvar>, in terms of the power functions in the list <L>.  If
-     the first element of <L> is given, it will be the size of the
-     alphabet, otherwise the size will be the degree of the polynomial
-     <sym>.  If values are missing in the list <L>, formal values of
-     the type <p1>, <p2> , etc. will be added. The polynomial <sym> may
-     be given in three different forms: contracted (`elem' should then
-     be 1, its default value), partitioned (`elem' should be 3), or
-     extended (i.e. the entire polynomial, and `elem' should then be
-     2). The function `pui' is used in the same way.
-
-          (%i1) pui;
-          (%o1)                           1
-          (%i2) pui ([3, a, b], u*x*y*z, [x, y, z]);
-                                 2
-                             a (a  - b) u   (a b - p3) u
-          (%o2)              ------------ - ------------
-                                  6              3
-          (%i3) ratsimp (%);
-                                                 3
-                                (2 p3 - 3 a b + a ) u
-          (%o3)                 ---------------------
-                                          6
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: pui2comp (<n>, <lpui>)
-     renders the list of the first <n> complete functions (with the
-     length first) in terms of the power functions given in the list
-     <lpui>. If the list <lpui> is empty, the cardinal is <n>,
-     otherwise it is its first element (as in `comp2ele' and
-     `comp2pui').
-
-          (%i1) pui2comp (2, []);
-                                                 2
-                                          p2 + p1
-          (%o1)                   [2, p1, --------]
-                                             2
-          (%i2) pui2comp (3, [2, a1]);
-                                                      2
-                                           a1 (p2 + a1 )
-                                   2  p3 + ------------- + a1 p2
-                            p2 + a1              2
-          (%o2)     [2, a1, --------, --------------------------]
-                               2                  3
-          (%i3) ratsimp (%);
-                                      2                     3
-                               p2 + a1   2 p3 + 3 a1 p2 + a1
-          (%o3)        [2, a1, --------, --------------------]
-                                  2               6
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: pui2ele (<n>, <lpui>)
-     effects the passage from power functions to the elementary
-     symmetric functions.  If the flag `pui2ele' is `girard', it will
-     return the list of elementary symmetric functions from 1 to <n>,
-     and if the flag is `close', it will return the <n>-th elementary
-     symmetric function.
-
-     Other functions for changing bases: `comp2ele'.
-
-
- -- Function: puireduc (<n>, <lpui>)
-     <lpui> is a list whose first element is an integer <m>.
-     `puireduc' gives the first <n> power functions in terms of the
-     first <m>.
-
-          (%i1) puireduc (3, [2]);
-                                                   2
-                                             p1 (p1  - p2)
-          (%o1)          [2, p1, p2, p1 p2 - -------------]
-                                                   2
-          (%i2) ratsimp (%);
-                                                     3
-                                         3 p1 p2 - p1
-          (%o2)              [2, p1, p2, -------------]
-                                               2
-
-
- -- Function: schur2comp (<P>, <l_var>)
-     <P> is a polynomial in the variables of the list <l_var>.  Each of
-     these variables represents a complete symmetric function.  In
-     <l_var> the <i>-th complete symmetric function is represented by
-     the concatenation of the letter `h' and the integer <i>: `h<i>'.
-     This function expresses <P> in terms of Schur functions.
-
-          (%i1) schur2comp (h1*h2 - h3, [h1, h2, h3]);
-          (%o1)                         s
-                                         1, 2
-          (%i2) schur2comp (a*h3, [h3]);
-          (%o2)                         s  a
-                                         3
-
-
-32.2.2 Changing representations
--------------------------------
-
- -- Function: cont2part (<pc>, <lvar>)
-     returns the partitioned polynomial associated to the contracted
-     form <pc> whose variables are in <lvar>.
-
-          (%i1) pc: 2*a^3*b*x^4*y + x^5;
-                                     3    4      5
-          (%o1)                   2 a  b x  y + x
-          (%i2) cont2part (pc, [x, y]);
-                                             3
-          (%o2)              [[1, 5, 0], [2 a  b, 4, 1]]
-
-
- -- Function: contract (<psym>, <lvar>)
-     returns a contracted form (i.e. a monomial orbit under the action
-     of the symmetric group) of the polynomial <psym> in the variables
-     contained in the list <lvar>.  The function `explose' performs the
-     inverse operation.  The function `tcontract' tests the symmetry of
-     the polynomial.
-
-          (%i1) psym: explose (2*a^3*b*x^4*y, [x, y, z]);
-                   3      4      3      4      3    4        3    4
-          (%o1) 2 a  b y z  + 2 a  b x z  + 2 a  b y  z + 2 a  b x  z
-
-                                                     3      4      3    4
-                                                + 2 a  b x y  + 2 a  b x  y
-          (%i2) contract (psym, [x, y, z]);
-                                        3    4
-          (%o2)                      2 a  b x  y
-
-
- -- Function: explose (<pc>, <lvar>)
-     returns the symmetric polynomial associated with the contracted
-     form <pc>. The list <lvar> contains the variables.
-
-          (%i1) explose (a*x + 1, [x, y, z]);
-          (%o1)                  a z + a y + a x + 1
-
-
- -- Function: part2cont (<ppart>, <lvar>)
-     goes from the partitioned form to the contracted form of a
-     symmetric polynomial.  The contracted form is rendered with the
-     variables in <lvar>.
-
-          (%i1) part2cont ([[2*a^3*b, 4, 1]], [x, y]);
-                                        3    4
-          (%o1)                      2 a  b x  y
-
-
- -- Function: partpol (<psym>, <lvar>)
-     <psym> is a symmetric polynomial in the variables of the list
-     <lvar>. This function retturns its partitioned representation.
-
-          (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
-          (%o1)               [[3, 1, 1], [- a, 1, 0]]
-
-
- -- Function: tcontract (<pol>, <lvar>)
-     tests if the polynomial <pol> is symmetric in the variables of the
-     list <lvar>.  If so, it returns a contracted representation like
-     the function `contract'.
-
-
- -- Function: tpartpol (<pol>, <lvar>)
-     tests if the polynomial <pol> is symmetric in the variables of the
-     list <lvar>.  If so, it returns its partitioned representation like
-     the function `partpol'.
-
-
-32.2.3 Groups and orbits
-------------------------
-
- -- Function: direct ([<p_1>, ..., <p_n>], <y>, <f>, [<lvar_1>, ...,
-          <lvar_n>])
-     calculates the direct image (see M. Giusti, D. Lazard et A.
-     Valibouze, ISSAC 1988, Rome) associated to the function <f>, in
-     the lists of variables <lvar_1>, ..., <lvar_n>, and in the
-     polynomials <p_1>, ..., <p_n> in a variable <y>.  The arity of the
-     function <f> is important for the calulation.  Thus, if the
-     expression for <f> does not depend on some variable, it is useless
-     to include this variable, and not including it will also
-     considerably reduce the amount of computation.
-
-          (%i1) direct ([z^2  - e1* z + e2, z^2  - f1* z + f2],
-                        z, b*v + a*u, [[u, v], [a, b]]);
-                 2
-          (%o1) y  - e1 f1 y
-
-                                           2            2             2   2
-                            - 4 e2 f2 - (e1  - 2 e2) (f1  - 2 f2) + e1  f1
-                          + -----------------------------------------------
-                                                   2
-          (%i2) ratsimp (%);
-                        2                2                   2
-          (%o2)        y  - e1 f1 y + (e1  - 4 e2) f2 + e2 f1
-          (%i3) ratsimp (direct ([z^3-e1*z^2+e2*z-e3,z^2  - f1* z + f2],
-                        z, b*v + a*u, [[u, v], [a, b]]));
-                 6            5         2                        2    2   4
-          (%o3) y  - 2 e1 f1 y  + ((2 e1  - 6 e2) f2 + (2 e2 + e1 ) f1 ) y
-
-                                    3                               3   3
-           + ((9 e3 + 5 e1 e2 - 2 e1 ) f1 f2 + (- 2 e3 - 2 e1 e2) f1 ) y
-
-                   2       2        4    2
-           + ((9 e2  - 6 e1  e2 + e1 ) f2
-
-                              2       2       2                   2    4
-           + (- 9 e1 e3 - 6 e2  + 3 e1  e2) f1  f2 + (2 e1 e3 + e2 ) f1 )
-
-            2          2                      2     3          2
-           y  + (((9 e1  - 27 e2) e3 + 3 e1 e2  - e1  e2) f1 f2
-
-                           2            2    3                5
-           + ((15 e2 - 2 e1 ) e3 - e1 e2 ) f1  f2 - 2 e2 e3 f1 ) y
-
-                     2                   3           3     2   2    3
-           + (- 27 e3  + (18 e1 e2 - 4 e1 ) e3 - 4 e2  + e1  e2 ) f2
-
-                   2      3                   3    2   2
-           + (27 e3  + (e1  - 9 e1 e2) e3 + e2 ) f1  f2
-
-                             2    4        2   6
-           + (e1 e2 e3 - 9 e3 ) f1  f2 + e3  f1
-
-     Finding the polynomial whose roots are the sums a+u where a is a
-     root of z^2 - e_1 z + e_2 and u is a root of z^2 - f_1 z + f_2.
-
-          (%i1) ratsimp (direct ([z^2 - e1* z + e2, z^2 - f1* z + f2],
-                                    z, a + u, [[u], [a]]));
-                 4                    3             2
-          (%o1) y  + (- 2 f1 - 2 e1) y  + (2 f2 + f1  + 3 e1 f1 + 2 e2
-
-               2   2                              2               2
-           + e1 ) y  + ((- 2 f1 - 2 e1) f2 - e1 f1  + (- 2 e2 - e1 ) f1
-
-                            2                     2            2
-           - 2 e1 e2) y + f2  + (e1 f1 - 2 e2 + e1 ) f2 + e2 f1  + e1 e2 f1
-
-               2
-           + e2
-
-     `direct' accepts two flags: `elementaires' and `puissances'
-     (default) which allow decomposing the symmetric polynomials
-     appearing in the calculation into elementary symmetric functions,
-     or power functions, respectively.
-
-     Functions of `sym' used in this function:
-
-     `multi_orbit' (so `orbit'), `pui_direct', `multi_elem' (so
-     `elem'), `multi_pui' (so `pui'), `pui2ele', `ele2pui' (if the flag
-     `direct' is in `puissances').
-
-
- -- Function: multi_orbit (<P>, [<lvar_1>, <lvar_2>,..., <lvar_p>])
-     <P> is a polynomial in the set of variables contained in the lists
-     <lvar_1>, <lvar_2>, ..., <lvar_p>. This function returns the orbit
-     of the polynomial <P> under the action of the product of the
-     symmetric groups of the sets of variables represented in these <p>
-     lists.
-
-          (%i1) multi_orbit (a*x + b*y, [[x, y], [a, b]]);
-          (%o1)                [b y + a x, a y + b x]
-          (%i2) multi_orbit (x + y + 2*a, [[x, y], [a, b, c]]);
-          (%o2)        [y + x + 2 c, y + x + 2 b, y + x + 2 a]
-     Also see: `orbit' for the action of a single symmetric group.
-
-
- -- Function: multsym (<ppart_1>, <ppart_2>, <n>)
-     returns the product of the two symmetric polynomials in <n>
-     variables by working only modulo the action of the symmetric group
-     of order <n>. The polynomials are in their partitioned form.
-
-     Given the 2 symmetric polynomials in <x>, <y>:  `3*(x + y) +
-     2*x*y' and `5*(x^2 + y^2)' whose partitioned forms are `[[3, 1],
-     [2, 1, 1]]' and `[[5, 2]]', their product will be
-
-          (%i1) multsym ([[3, 1], [2, 1, 1]], [[5, 2]], 2);
-          (%o1)         [[10, 3, 1], [15, 3, 0], [15, 2, 1]]
-     that is `10*(x^3*y + y^3*x) + 15*(x^2*y + y^2*x) + 15*(x^3 +
-     y^3)'.
-
-     Functions for changing the representations of a symmetric
-     polynomial:
-
-     `contract', `cont2part', `explose', `part2cont', `partpol',
-     `tcontract', `tpartpol'.
-
-
- -- Function: orbit (<P>, <lvar>)
-     computes the orbit of the polynomial <P> in the variables in the
-     list <lvar> under the action of the symmetric group of the set of
-     variables in the list <lvar>.
-
-          (%i1) orbit (a*x + b*y, [x, y]);
-          (%o1)                [a y + b x, b y + a x]
-          (%i2) orbit (2*x + x^2, [x, y]);
-                                  2         2
-          (%o2)                 [y  + 2 y, x  + 2 x]
-     See also `multi_orbit' for the action of a product of
-     symmetric groups on a polynomial.
-
-
- -- Function: pui_direct (<orbite>, [<lvar_1>, ..., <lvar_n>], [<d_1>,
-          <d_2>, ..., <d_n>])
-     Let <f> be a polynomial in <n> blocks of variables <lvar_1>, ...,
-     <lvar_n>.  Let <c_i> be the number of variables in <lvar_i>, and
-     <SC> be the product of <n> symmetric groups of degree <c_1>, ...,
-     <c_n>. This group acts naturally on <f>.  The list <orbite> is the
-     orbit, denoted `<SC>(<f>)', of the function <f> under the action
-     of <SC>. (This list may be obtained by the function
-     `multi_orbit'.)  The <di> are integers s.t.  c_1 <= d_1, c_2 <=
-     d_2, ..., c_n <= d_n.
-
-     Let <SD> be the product of the symmetric groups S_[d_1] x S_[d_2]
-     x ... x S_[d_n].  The function `pui_direct' returns the first <n>
-     power functions of `<SD>(<f>)' deduced from the power functions of
-     `<SC>(<f>)', where <n> is the size of `<SD>(<f>)'.
-
-     The result is in multi-contracted form w.r.t. <SD>, i.e. only one
-     element is kept per orbit, under the action of <SD>.
-
-          (%i1) l: [[x, y], [a, b]];
-          (%o1)                   [[x, y], [a, b]]
-          (%i2) pui_direct (multi_orbit (a*x + b*y, l), l, [2, 2]);
-                                                 2  2
-          (%o2)               [a x, 4 a b x y + a  x ]
-          (%i3) pui_direct (multi_orbit (a*x + b*y, l), l, [3, 2]);
-                                       2  2     2    2        3  3
-          (%o3) [2 a x, 4 a b x y + 2 a  x , 3 a  b x  y + 2 a  x ,
-
-              2  2  2  2      3    3        4  4
-          12 a  b  x  y  + 4 a  b x  y + 2 a  x ,
-
-              3  2  3  2      4    4        5  5
-          10 a  b  x  y  + 5 a  b x  y + 2 a  x ,
-
-              3  3  3  3       4  2  4  2      5    5        6  6
-          40 a  b  x  y  + 15 a  b  x  y  + 6 a  b x  y + 2 a  x ]
-          (%i4) pui_direct ([y + x + 2*c, y + x + 2*b, y + x + 2*a],
-                [[x, y], [a, b, c]], [2, 3]);
-                                       2              2
-          (%o4) [3 x + 2 a, 6 x y + 3 x  + 4 a x + 4 a ,
-
-                           2                   3        2       2        3
-                        9 x  y + 12 a x y + 3 x  + 6 a x  + 12 a  x + 8 a ]
-
-
-32.2.4 Partitions
------------------
-
- -- Function: kostka (<part_1>, <part_2>)
-     written by P. Esperet, calculates the Kostka number of the
-     partition <part_1> and <part_2>.
-
-          (%i1) kostka ([3, 3, 3], [2, 2, 2, 1, 1, 1]);
-          (%o1)                           6
-
-
- -- Function: lgtreillis (<n>, <m>)
-     returns the list of partitions of weight <n> and length <m>.
-
-          (%i1) lgtreillis (4, 2);
-          (%o1)                   [[3, 1], [2, 2]]
-     Also see: `ltreillis', `treillis' and `treinat'.
-
-
- -- Function: ltreillis (<n>, <m>)
-     returns the list of partitions of weight <n> and length less than
-     or equal to <m>.
-
-          (%i1) ltreillis (4, 2);
-          (%o1)               [[4, 0], [3, 1], [2, 2]]
-     Also see: `lgtreillis', `treillis' and `treinat'.
-
-
- -- Function: treillis (<n>)
-     returns all partitions of weight <n>.
-
-          (%i1) treillis (4);
-          (%o1)    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]]
-
-     See also: `lgtreillis', `ltreillis' and `treinat'.
-
-
- -- Function: treinat (<part>)
-     retruns the list of partitions inferior to the partition <part>
-     w.r.t.  the natural order.
-
-          (%i1) treinat ([5]);
-          (%o1)                         [[5]]
-          (%i2) treinat ([1, 1, 1, 1, 1]);
-          (%o2) [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1],
-
-                                                           [1, 1, 1, 1, 1]]
-          (%i3) treinat ([3, 2]);
-          (%o3)                 [[5], [4, 1], [3, 2]]
-
-     See also: `lgtreillis', `ltreillis' and `treillis'.
-
-
-32.2.5 Polynomials and their roots
-----------------------------------
-
- -- Function: ele2polynome (<L>, <z>)
-     returns the polynomial in <z> s.t. the elementary symmetric
-     functions of its roots are in the list `<L> = [<n>, <e_1>, ...,
-     <e_n>]', where <n> is the degree of the polynomial and <e_i> the
-     <i>-th elementary symmetric function.
-
-          (%i1) ele2polynome ([2, e1, e2], z);
-                                    2
-          (%o1)                    z  - e1 z + e2
-          (%i2) polynome2ele (x^7 - 14*x^5 + 56*x^3  - 56*x + 22, x);
-          (%o2)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
-          (%i3) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
-                            7       5       3
-          (%o3)            x  - 14 x  + 56 x  - 56 x + 22
-     The inverse: `polynome2ele (<P>, <z>)'.
-
-     Also see: `polynome2ele', `pui2polynome'.
-
-
- -- Function: polynome2ele (<P>, <x>)
-     gives the list `<l> = [<n>, <e_1>, ..., <e_n>]' where <n> is the
-     degree of the polynomial <P> in the variable <x> and <e_i> is the
-     <i>-the elementary symmetric function of the roots of <P>.
-
-          (%i1) polynome2ele (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x);
-          (%o1)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
-          (%i2) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
-                            7       5       3
-          (%o2)            x  - 14 x  + 56 x  - 56 x + 22
-     The inverse: `ele2polynome (<l>, <x>)'
-
-
- -- Function: prodrac (<L>, <k>)
-     <L> is a list containing the elementary symmetric functions on a
-     set <A>. `prodrac' returns the polynomial whose roots are the <k>
-     by <k> products of the elements of <A>.
-
-     Also see `somrac'.
-
-
- -- Function: pui2polynome (<x>, <lpui>)
-     calculates the polynomial in <x> whose power functions of the roots
-     are given in the list <lpui>.
-
-          (%i1) pui;
-          (%o1)                           1
-          (%i2) kill(labels);
-          (%o0)                         done
-          (%i1) polynome2ele (x^3 - 4*x^2 + 5*x - 1, x);
-          (%o1)                     [3, 4, 5, 1]
-          (%i2) ele2pui (3, %);
-          (%o2)                     [3, 4, 6, 7]
-          (%i3) pui2polynome (x, %);
-                                  3      2
-          (%o3)                  x  - 4 x  + 5 x - 1
-     See also: `polynome2ele', `ele2polynome'.
-
-
- -- Function: somrac (<L>, <k>)
-     The list <L> contains elementary symmetric functions of a
-     polynomial <P> . The function computes the polynomial whose roots
-     are the <k> by <k> distinct sums of the roots of <P>.
-
-     Also see `prodrac'.
-
-
-32.2.6 Resolvents
------------------
-
- -- Function: resolvante (<P>, <x>, <f>, [<x_1>,..., <x_d>])
-     calculates the resolvent of the polynomial <P> in <x> of degree
-     <n> >= <d> by the function <f> expressed in the variables <x_1>,
-     ..., <x_d>.  For efficiency of computation it is important to not
-     include in the list `[<x_1>, ..., <x_d>]' variables which do not
-     appear in the transformation function <f>.
-
-     To increase the efficiency of the computation one may set flags in
-     `resolvante' so as to use appropriate algorithms:
-
-     If the function <f> is unitary:
-        * A polynomial in a single variable,
-
-        *   linear,
-
-        *   alternating,
-
-        *   a sum,
-
-        *   symmetric,
-
-        *   a product,
-
-        * the function of the Cayley resolvent (usable up to degree 5)
-
-               (x1*x2 + x2*x3 + x3*x4 + x4*x5 + x5*x1 -
-                    (x1*x3 + x3*x5 + x5*x2 + x2*x4 + x4*x1))^2
-
-          general,
-     the flag of `resolvante' may be, respectively:
-        *   unitaire,
-
-        *   lineaire,
-
-        *   alternee,
-
-        *   somme,
-
-        *   produit,
-
-        *   cayley,
-
-        *   generale.
-
-          (%i1) resolvante: unitaire$
-          (%i2) resolvante (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x, x^3 - 1,
-                [x]);
-
-          " resolvante unitaire " [7, 0, 28, 0, 168, 0, 1120, - 154, 7840,
-                                   - 2772, 56448, - 33880,
-
-          413952, - 352352, 3076668, - 3363360, 23114112, - 30494464,
-
-          175230832, - 267412992, 1338886528, - 2292126760]
-            3       6      3       9      6      3
-          [x  - 1, x  - 2 x  + 1, x  - 3 x  + 3 x  - 1,
-
-           12      9      6      3       15      12       9       6      3
-          x   - 4 x  + 6 x  - 4 x  + 1, x   - 5 x   + 10 x  - 10 x  + 5 x
-
-                 18      15       12       9       6      3
-           - 1, x   - 6 x   + 15 x   - 20 x  + 15 x  - 6 x  + 1,
-
-           21      18       15       12       9       6      3
-          x   - 7 x   + 21 x   - 35 x   + 35 x  - 21 x  + 7 x  - 1]
-          [- 7, 1127, - 6139, 431767, - 5472047, 201692519, - 3603982011]
-                 7      6        5         4          3           2
-          (%o2) y  + 7 y  - 539 y  - 1841 y  + 51443 y  + 315133 y
-
-                                                        + 376999 y + 125253
-          (%i3) resolvante: lineaire$
-          (%i4) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3]);
-
-          " resolvante lineaire "
-                 24       20         16            12             8
-          (%o4) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
-
-                                                              4
-                                                 + 344489984 y  + 655360000
-          (%i5) resolvante: general$
-          (%i6) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3]);
-
-          " resolvante generale "
-                 24       20         16            12             8
-          (%o6) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
-
-                                                              4
-                                                 + 344489984 y  + 655360000
-          (%i7) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3, x4]);
-
-          " resolvante generale "
-                 24       20         16            12             8
-          (%o7) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
-
-                                                              4
-                                                 + 344489984 y  + 655360000
-          (%i8) direct ([x^4 - 1], x, x1 + 2*x2 + 3*x3, [[x1, x2, x3]]);
-                 24       20         16            12             8
-          (%o8) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
-
-                                                              4
-                                                 + 344489984 y  + 655360000
-          (%i9) resolvante :lineaire$
-          (%i10) resolvante (x^4 - 1, x, x1 + x2 + x3, [x1, x2, x3]);
-
-          " resolvante lineaire "
-                                        4
-          (%o10)                       y  - 1
-          (%i11) resolvante: symetrique$
-          (%i12) resolvante (x^4 - 1, x, x1 + x2 + x3, [x1, x2, x3]);
-
-          " resolvante symetrique "
-                                        4
-          (%o12)                       y  - 1
-          (%i13) resolvante (x^4 + x + 1, x, x1 - x2, [x1, x2]);
-
-          " resolvante symetrique "
-                                     6      2
-          (%o13)                    y  - 4 y  - 1
-          (%i14) resolvante: alternee$
-          (%i15) resolvante (x^4 + x + 1, x, x1 - x2, [x1, x2]);
-
-          " resolvante alternee "
-                      12      8       6        4        2
-          (%o15)     y   + 8 y  + 26 y  - 112 y  + 216 y  + 229
-          (%i16) resolvante: produit$
-          (%i17) resolvante (x^7 - 7*x + 3, x, x1*x2*x3, [x1, x2, x3]);
-
-          " resolvante produit "
-                  35      33         29        28         27        26
-          (%o17) y   - 7 y   - 1029 y   + 135 y   + 7203 y   - 756 y
-
-                   24           23          22            21           20
-           + 1323 y   + 352947 y   - 46305 y   - 2463339 y   + 324135 y
-
-                    19           18             17              15
-           - 30618 y   - 453789 y   - 40246444 y   + 282225202 y
-
-                       14              12             11            10
-           - 44274492 y   + 155098503 y   + 12252303 y   + 2893401 y
-
-                        9            8            7             6
-           - 171532242 y  + 6751269 y  + 2657205 y  - 94517766 y
-
-                      5             3
-           - 3720087 y  + 26040609 y  + 14348907
-          (%i18) resolvante: symetrique$
-          (%i19) resolvante (x^7 - 7*x + 3, x, x1*x2*x3, [x1, x2, x3]);
-
-          " resolvante symetrique "
-                  35      33         29        28         27        26
-          (%o19) y   - 7 y   - 1029 y   + 135 y   + 7203 y   - 756 y
-
-                   24           23          22            21           20
-           + 1323 y   + 352947 y   - 46305 y   - 2463339 y   + 324135 y
-
-                    19           18             17              15
-           - 30618 y   - 453789 y   - 40246444 y   + 282225202 y
-
-                       14              12             11            10
-           - 44274492 y   + 155098503 y   + 12252303 y   + 2893401 y
-
-                        9            8            7             6
-           - 171532242 y  + 6751269 y  + 2657205 y  - 94517766 y
-
-                      5             3
-           - 3720087 y  + 26040609 y  + 14348907
-          (%i20) resolvante: cayley$
-          (%i21) resolvante (x^5 - 4*x^2 + x + 1, x, a, []);
-
-          " resolvante de Cayley "
-                  6       5         4          3            2
-          (%o21) x  - 40 x  + 4080 x  - 92928 x  + 3772160 x  + 37880832 x
-
-                                                                 + 93392896
-
-     For the Cayley resolvent, the 2 last arguments are neutral and the
-     input polynomial must necessarily be of degree 5.
-
-     See also:
-
-     `resolvante_bipartite', `resolvante_produit_sym',
-     `resolvante_unitaire', `resolvante_alternee1', `resolvante_klein',
-     `resolvante_klein3', `resolvante_vierer', `resolvante_diedrale'.
-
-
- -- Function: resolvante_alternee1 (<P>, <x>)
-     calculates the transformation `<P>(<x>)' of degree <n> by the
-     function product(x_i - x_j, 1 <= i < j <= n - 1).
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire', `resolvante' ,
-     `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
-     `resolvante_diedrale', `resolvante_bipartite'.
-
-
- -- Function: resolvante_bipartite (<P>, <x>)
-     calculates the transformation of `<P>(<x>)' of even degree <n> by
-     the function x_1 x_2 ... x_[n/2] + x_[n/2 + 1] ... x_n.
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire', `resolvante' ,
-     `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
-     `resolvante_diedrale', `resolvante_alternee1'.
-
-          (%i1) resolvante_bipartite (x^6 + 108, x);
-                        10        8           6             4
-          (%o1)        y   - 972 y  + 314928 y  - 34012224 y
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire', `resolvante',
-     `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
-     `resolvante_diedrale', `resolvante_alternee1'.
-
-
- -- Function: resolvante_diedrale (<P>, <x>)
-     calculates the transformation of `<P>(<x>)' by the function `<x_1>
-     <x_2> + <x_3> <x_4>'.
-
-          (%i1) resolvante_diedrale (x^5 - 3*x^4 + 1, x);
-                 15       12       11       10        9         8         7
-          (%o1) x   - 21 x   - 81 x   - 21 x   + 207 x  + 1134 x  + 2331 x
-
-                  6         5          4          3          2
-           - 945 x  - 4970 x  - 18333 x  - 29079 x  - 20745 x  - 25326 x
-
-           - 697
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire',
-     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
-     `resolvante_vierer', `resolvante'.
-
-
- -- Function: resolvante_klein (<P>, <x>)
-     calculates the transformation of `<P>(<x>)' by the function `<x_1>
-     <x_2> <x_4> + <x_4>'.
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire',
-     `resolvante_alternee1', `resolvante', `resolvante_klein3',
-     `resolvante_vierer', `resolvante_diedrale'.
-
-
- -- Function: resolvante_klein3 (<P>, <x>)
-     calculates the transformation of `<P>(<x>)' by the function `<x_1>
-     <x_2> <x_4> + <x_4>'.
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire',
-     `resolvante_alternee1', `resolvante_klein', `resolvante',
-     `resolvante_vierer', `resolvante_diedrale'.
-
-
- -- Function: resolvante_produit_sym (<P>, <x>)
-     calculates the list of all product resolvents of the polynomial
-     `<P>(<x>)'.
-
-          (%i1) resolvante_produit_sym (x^5 + 3*x^4 + 2*x - 1, x);
-                  5      4             10      8       7       6       5
-          (%o1) [y  + 3 y  + 2 y - 1, y   - 2 y  - 21 y  - 31 y  - 14 y
-
-              4       3      2       10      8       7    6       5       4
-           - y  + 14 y  + 3 y  + 1, y   + 3 y  + 14 y  - y  - 14 y  - 31 y
-
-                 3      2       5      4
-           - 21 y  - 2 y  + 1, y  - 2 y  - 3 y - 1, y - 1]
-          (%i2) resolvante: produit$
-          (%i3) resolvante (x^5 + 3*x^4 + 2*x - 1, x, a*b*c, [a, b, c]);
-
-          " resolvante produit "
-                 10      8       7    6        5       4       3     2
-          (%o3) y   + 3 y  + 14 y  - y  - 14 y  - 31 y  - 21 y  - 2 y  + 1
-
-     See also:
-
-     `resolvante', `resolvante_unitaire', `resolvante_alternee1',
-     `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
-     `resolvante_diedrale'.
-
-
- -- Function: resolvante_unitaire (<P>, <Q>, <x>)
-     computes the resolvent of the polynomial `<P>(<x>)' by the
-     polynomial `<Q>(<x>)'.
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante', `resolvante_alternee1',
-     `resolvante_klein', `resolvante_klein3', `resolvante_vierer',
-     `resolvante_diedrale'.
-
-
- -- Function: resolvante_vierer (<P>, <x>)
-     computes the transformation of `<P>(<x>)' by the function `<x_1>
-     <x_2> - <x_3> <x_4>'.
-
-     See also:
-
-     `resolvante_produit_sym', `resolvante_unitaire',
-     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
-     `resolvante', `resolvante_diedrale'.
-
-
-32.2.7 Miscellaneous
---------------------
-
- -- Function: multinomial (<r>, <part>)
-     where <r> is the weight of the partition <part>.  This function
-     returns the associate multinomial coefficient: if the parts of
-     <part> are <i_1>, <i_2>, ..., <i_k>, the result is `<r>!/(<i_1>!
-     <i_2>! ... <i_k>!)'.
-
-
- -- Function: permut (<L>)
-     returns the list of permutations of the list <L>.
-
-
-
-File: maxima.info,  Node: Groups,  Next: Runtime Environment,  Prev: Symmetries,  Up: Top
-
-33 Groups
-*********
-
-* Menu:
-
-* Functions and Variables for Groups::
-
-
-File: maxima.info,  Node: Functions and Variables for Groups,  Prev: Groups,  Up: Groups
-
-33.1 Functions and Variables for Groups
-=======================================
-
- -- Function: todd_coxeter (<relations>, <subgroup>)
- -- Function: todd_coxeter (<relations>)
-     Find the order of G/H where G is the Free Group modulo
-     <relations>, and H is the subgroup of G generated by <subgroup>.
-     <subgroup> is an optional argument, defaulting to [].  In doing
-     this it produces a multiplication table for the right action of G
-     on G/H, where the cosets are enumerated [H,Hg2,Hg3,...].  This can
-     be seen internally in the variable `todd_coxeter_state'.
-
-     Example:
-
-          (%i1) symet(n):=create_list(
-                  if (j - i) = 1 then (p(i,j))^^3 else
-                      if (not i = j) then (p(i,j))^^2 else
-                          p(i,i) , j, 1, n-1, i, 1, j);
-                                                                 <3>
-          (%o1) symet(n) := create_list(if j - i = 1 then p(i, j)
-
-                                          <2>
-           else (if not i = j then p(i, j)    else p(i, i)), j, 1, n - 1,
-
-          i, 1, j)
-          (%i2) p(i,j) := concat(x,i).concat(x,j);
-          (%o2)        p(i, j) := concat(x, i) . concat(x, j)
-          (%i3) symet(5);
-                   <2>           <3>    <2>           <2>           <3>
-          (%o3) [x1   , (x1 . x2)   , x2   , (x1 . x3)   , (x2 . x3)   ,
-
-                      <2>           <2>           <2>           <3>    <2>
-                    x3   , (x1 . x4)   , (x2 . x4)   , (x3 . x4)   , x4   ]
-          (%i4) todd_coxeter(%o3);
-
-          Rows tried 426
-          (%o4)                          120
-          (%i5) todd_coxeter(%o3,[x1]);
-
-          Rows tried 213
-          (%o5)                          60
-          (%i6) todd_coxeter(%o3,[x1,x2]);
-
-          Rows tried 71
-          (%o6)                          20
-
-
-
-File: maxima.info,  Node: Runtime Environment,  Next: Miscellaneous Options,  Prev: Groups,  Up: Top
-
-34 Runtime Environment
-**********************
-
-* Menu:
-
-* Introduction for Runtime Environment::
-* Interrupts::
-* Functions and Variables for Runtime Environment::
-
-
-File: maxima.info,  Node: Introduction for Runtime Environment,  Next: Interrupts,  Prev: Runtime Environment,  Up: Runtime Environment
-
-34.1 Introduction for Runtime Environment
-=========================================
-
-`maxima-init.mac' is a file which is loaded automatically when Maxima
-starts.  You can use `maxima-init.mac' to customize your Maxima
-environment.  `maxima-init.mac', if it exists, is typically placed in
-the directory named by `maxima_userdir', although it can be in any
-directory searched by the function `file_search'.
-
-   Here is an example `maxima-init.mac' file:
-
-     setup_autoload ("specfun.mac", ultraspherical, assoc_legendre_p);
-     showtime:all;
-
-   In this example, `setup_autoload' tells Maxima to load the specified
-file (`specfun.mac') if any of the functions (`ultraspherical',
-`assoc_legendre_p') are called but not yet defined.  Thus you needn't
-remember to load the file before calling the functions.
-
-   The statement `showtime: all' tells Maxima to set the `showtime'
-variable.  The `maxima-init.mac' file can contain any other assignments
-or other Maxima statements.
-
-
-File: maxima.info,  Node: Interrupts,  Next: Functions and Variables for Runtime Environment,  Prev: Introduction for Runtime Environment,  Up: Runtime Environment
-
-34.2 Interrupts
-===============
-
-The user can stop a time-consuming computation with the ^C (control-C)
-character.  The default action is to stop the computation and print
-another user prompt.  In this case, it is not possible to restart a
-stopped computation.
-
-   If the Lisp variable `*debugger-hook*' is set to `nil', by executing
-
-     :lisp (setq *debugger-hook* nil)
-
-then upon receiving ^C, Maxima will enter the Lisp debugger, and the
-user may use the debugger to inspect the Lisp environment.  The stopped
-computation can be restarted by entering `continue' in the Lisp
-debugger.  The means of returning to Maxima from the Lisp debugger
-(other than running the computation to completion) is different for
-each version of Lisp.
-
-   On Unix systems, the character ^Z (control-Z) causes Maxima to stop
-altogether, and control is returned to the shell prompt.  The `fg'
-command causes Maxima to resume from the point at which it was stopped.
 

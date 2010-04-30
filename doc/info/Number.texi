@@ -605,14 +605,14 @@ Primality test. If @code{primep (@var{n})} returns @code{false}, @var{n} is a
 composite number and if it returns @code{true}, @var{n} is a prime number
 with very high probability.
 
-For @var{n} less than 10^16 a deterministic version of Miller-Rabin's
-test is used. If @code{primep (@var{n})} returns @code{true}, then @var{n} is a
-prime number.
+For @var{n} less than 341550071728321 a deterministic version of
+Miller-Rabin's test is used. If @code{primep (@var{n})} returns
+@code{true}, then @var{n} is a prime number.
 
-For @var{n} bigger than 10^16 @code{primep} uses
-@code{primep_number_of_tests} Miller-Rabin's pseudo-primality tests
-and one Lucas pseudo-primality test. The probability that @var{n} will
-pass one Miller-Rabin test is less than 1/4. Using the default value 25 for
+For @var{n} bigger than 341550071728321 @code{primep} uses
+@code{primep_number_of_tests} Miller-Rabin's pseudo-primality tests and
+one Lucas pseudo-primality test. The probability that @var{n} will pass
+one Miller-Rabin test is less than 1/4. Using the default value 25 for
 @code{primep_number_of_tests}, the probability of @var{n} beeing
 composite is much smaller that 10^-15.
 
@@ -672,33 +672,55 @@ are relatively prime to @var{n}.
 @closecatbox
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @defvr {Option variable} zerobern
 Default value: @code{true}
 
-When @code{zerobern} is @code{false},
-@code{bern} excludes the Bernoulli numbers which are equal to zero. 
-See @code{bern}.
+When @code{zerobern} is @code{false}, @code{bern} excludes the Bernoulli numbers
+and @code{euler} excludes the Euler numbers which are equal to zero. 
+See @code{bern} and @code{euler}.
 
 @opencatbox
 @category{Number theory}
 @closecatbox
-
 @end defvr
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} zeta (@var{n})
-Returns the Riemann zeta function if @var{x} is a negative integer, 0, 1,
-or a positive even number,
-and returns a noun form @code{zeta (@var{n})} for all other arguments,
-including rational noninteger, floating point, and complex arguments.
+Returns the Riemann zeta function. If @var{n} is a negative integer, 0, or a 
+positive even integer, the Riemann zeta function simplifies to an exact value.
+For a positive even integer the option variable @code{zeta%pi} has to be
+@code{true} in addition (See @code{zeta%pi}). For a floating point or bigfloat 
+number the Riemann zeta function is evaluated numerically. Maxima returns a noun
+form @code{zeta (@var{n})} for all other arguments, including rational 
+noninteger, and complex arguments, or for even integers, if @code{zeta%pi} has 
+the value @code{false}.
+
+@code{zeta(1)} is undefined, but Maxima knows the limit 
+@code{limit(zeta(x), x, 1)} from above and below.
+
+The Riemann zeta function distributes over lists, matrices, and equations.
 
 See also @code{bfzeta} and @code{zeta%pi}.
 
+Examples:
+
+@c ===beg===
+@c zeta([-2,-1,0,0.5,2,3,1+%i]);
+@c limit(zeta(x),x,1,plus);
+@c limit(zeta(x),x,1,minus);
+@c ===end===
 @example
-(%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
-                                     2              4
-           1        1     1       %pi            %pi
-(%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
-          120       12    2        6              90
+(%i1) zeta([-2,-1,0,0.5,2,3,1+%i]);
+                                              2
+             1     1                       %pi
+(%o1)  [0, - --, - -, - 1.460354508809587, ----, zeta(3), zeta(%i + 1)]
+             12    2                        6 
+
+(%i2) limit(zeta(x),x,1,plus);
+(%o2)                                 inf
+(%i3) limit(zeta(x),x,1,minus);
+(%o3)                                minf
 @end example
 
 @opencatbox
@@ -706,14 +728,22 @@ See also @code{bfzeta} and @code{zeta%pi}.
 @closecatbox
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @defvr {Option variable} zeta%pi
 Default value: @code{true}
 
-When @code{zeta%pi} is @code{true}, @code{zeta} returns an expression
-proportional to @code{%pi^n} for even integer @code{n}.
-Otherwise, @code{zeta} returns a noun form @code{zeta (n)}
-for even integer @code{n}.
+When @code{zeta%pi} is @code{true}, @code{zeta} returns an expression 
+proportional to @code{%pi^n} for even integer @code{n}. Otherwise, @code{zeta} 
+returns a noun form @code{zeta (n)} for even integer @code{n}.
 
+Examples:
+
+@c ===beg===
+@c zeta%pi: true$
+@c zeta (4);
+@c zeta%pi: false$
+@c zeta (4);
+@c ===end===
 @example
 (%i1) zeta%pi: true$
 (%i2) zeta (4);
@@ -729,5 +759,5 @@ for even integer @code{n}.
 @opencatbox
 @category{Number theory}
 @closecatbox
-
 @end defvr
+

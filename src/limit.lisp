@@ -533,12 +533,12 @@ It appears in LIMIT and DEFINT.......")
   (let ((arg (involve exp '(%sin %cos))))
     (cond
       ((null arg) exp)
-      (t (let ((new-exp ($substitute (m+t 1 (m- (m^t `((%sin) ,arg) 2)))
-				     (m^t `((%cos) ,arg) 2)
-				     ($substitute
-				      (m+t 1 (m- (m^t `((%cos) ,arg) 2)))
-				      (m^t `((%sin) ,arg) 2)
-				      exp))))
+      (t (let ((new-exp ($substitute (m+t 1 (m- (m^t `((%sin simp) ,arg) 2)))
+                                     (m^t `((%cos simp) ,arg) 2)
+                                     ($substitute
+                                      (m+t 1 (m- (m^t `((%cos simp) ,arg) 2)))
+                                      (m^t `((%sin simp) ,arg) 2)
+                                      exp))))
 	   (cond ((not (involve new-exp '(%sin %cos)))  new-exp)
 		 (t exp)))))))
 
@@ -619,7 +619,7 @@ It appears in LIMIT and DEFINT.......")
 	(t (cons (car ex) (mapcar #'hyperex0 (cdr ex))))))
 
 (defun hyperex1 (ex)
-  (ssimplifya ex))
+  (resimplify ex))
 
 ;;Used by tlimit also.
 (defmfun limit1 (exp var val)
@@ -702,7 +702,17 @@ It appears in LIMIT and DEFINT.......")
      (cond ((or (eq d1 '$und)
 		(and (eq n1 '$und) (not (real-infinityp d1))))
 	    (return '$und))
-	   ((eq d1 '$ind) (return '$und))
+           ((eq d1 '$ind)
+	    ;; At this point we have n1/$ind. Look if n1 is one of the
+	    ;; infinities or zero.
+	    (cond ((and (infinityp n1) (eq ($sign dn) '$pos))
+		   (return n1))
+		  ((and (infinityp n1) (eq ($sign dn) '$neg))
+		   (return (simpinf (m* -1 n1))))
+		  ((and (not (eq n1 '$ind))
+			(eq ($csign n1) '$zero))
+		   (return 0))
+		  (t (return '$und))))
 	   ((eq n1 '$ind) (return (cond ((infinityp d1) 0)
 					((equal d1 0) '$und)
 					(t '$ind)))) ;SET LB
@@ -1257,8 +1267,9 @@ It appears in LIMIT and DEFINT.......")
 	     (do ((ct 0 (1+ ct))
 		  (exp (sratsimp (sdiff exp var)) (sratsimp (sdiff exp var)))
 		  (n () (not n))
-		  (ans ()))
-		 ((> ct 4) 0)		;This do wins by a return.
+		  (ans ()))	; This do wins by a return.
+		 ((> ct 0) 0)	; This loop used to run up to 5 times,
+		 ;; but the size of some expressions would blow up.
 	       (setq ans (no-err-sub val exp)) ;Why not do an EVENFN and ODDFN
 					;test here.
 	       (cond ((eq ans t)
@@ -1508,7 +1519,7 @@ It appears in LIMIT and DEFINT.......")
 	((free expr var) (cons expr 1))
 	((mtimesp expr)
 	 (do ((l (cdr expr) (cdr l))
-	      (const 1)  (varl 1)  (lim ()))
+	      (const 1)  (varl 1))
 	     ((null l)  (cons const varl))
 	   (cond ((free (car l) var)
 		  (setq const (m* (car l) const)))
@@ -1863,6 +1874,14 @@ It appears in LIMIT and DEFINT.......")
 		     (cond (infl (cond ((null minfl) (return '$inf))
 				       (t (go oon))))
 			   (minfl (return '$minf))
+                           (indl
+                            ;; At this point we have a sum of '$ind. We factor 
+                            ;; the sum and try again. This way we get the limit 
+                            ;; of expressions like (a-b)*ind, where (a-b)--> 0.
+                            (cond ((not (alike1 (setq y ($factorsum exp)) exp))
+                                   (return (limit y var val 'think)))
+                                  (t
+                                   (return '$ind))))		       
 			   (t (return '$ind))))
 		    (t (setq infl (append infl infinityl))))))
 
@@ -2829,6 +2848,14 @@ It appears in LIMIT and DEFINT.......")
       0
       `((%inverse_jacobi_ds) ,arg ,m)))
 
+(setf (get '%signum 'simplim%function) 'simplim%signum)
+
+(defun simplim%signum (e x pt)
+  (let* ((e (limit (cadr e) x pt 'think)) (sgn (mnqp e 0)))
+    (cond ((eq t sgn) (take '(%signum) e)) ;; limit of argument of signum is not zero
+	  ((eq nil sgn) '$und)             ;; limit of argument of signum is zero (noncontinuous)
+	  (t (throw 'limit nil)))))        ;; don't know
+
 ;; more functions for limit to handle
 
 (defun lfibtophi (e)
@@ -3050,7 +3077,7 @@ It appears in LIMIT and DEFINT.......")
 	  l))
 
 (defun mrv-movedown (l var)
-  (mapcar (lambda (exp) (syntactic-substitute `((%log) ,var) var exp))
+  (mapcar (lambda (exp) (syntactic-substitute `((%log simp) ,var) var exp))
 	  l))
 
 ;; test whether sub is a subexpression of exp

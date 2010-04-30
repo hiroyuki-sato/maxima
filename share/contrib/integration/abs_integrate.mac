@@ -1,5 +1,5 @@
 /*
-  Copyright 2008, 2009 by Barton Willis
+  Copyright 2008, 2009, 2010 by Barton Willis
   Maxima code for integration of signum, abs, max, min, and unit_step.
 
   This is free software; you can redistribute it and/or
@@ -21,36 +21,42 @@ load("unwind_protect");
 load("to_poly_solve_extra");
 load("partition");
 
-matchdeclare(x, symbolp, q, true, [a,b], lambda([s], numberp(s) or is(s = 'minf) or is(s = 'inf)));
+matchdeclare(x, symbolp, [q,a,b], lambda([s], true));
 block([simp : false], tellsimpafter('integrate(q,x), extra_integrate(q,x)),
 	     	      tellsimpafter('integrate(q,x,a,b), extra_definite_integrate(q,x,a,b)));
 
 extra_integration_methods : ['intfudu, 'intfugudu, 'signum_int, 'abs_integrate_use_if, 'floor_int, 'if_int];
 
-extra_integrate(q,x) := block([i, ii : funmake(nounify('integrate),[q,x])],
-  for f in extra_integration_methods do (
-    i : apply(f, [q,x]),
-    if (i # false) then if freeof('integrate, i) then return(ii : i) else ii : i),
+extra_integrate(q,x) := block([l, i, ii : funmake(nounify('integrate),[q,x])],
+  l : extra_integration_methods,
+  while l # [ ] do (
+    i : first(l)(q,x),
+    l : rest(l),
+    if (i # false) then (
+      ii : i, /* accept i as a simplification of ii. */
+      if freeof('integrate, i) then l : [])),
   ii);
 
 extra_definite_integration_methods : ['abs_defint];
 
-extra_definite_integrate(q,x,lo,hi) := block([i, ii : funmake(nounify('integrate),[q,x, lo, hi])],
-  for f in extra_definite_integration_methods do (
-    i : apply(f, [q,x, lo, hi]),
+extra_definite_integrate(q,x,lo,hi) := block([l,i, ii : funmake(nounify('integrate),[q,x, lo, hi])],
+  l : extra_definite_integration_methods,
+  while l # [] do (
+    i : first(l)(q,x, lo, hi),
+    l : rest(l),
     if (i # false) and freeof('integrate, i) then return(ii : i)),
   ii);
 
 /* The conditional gradefs work OK, but they complicate testing and they can generate messy expressions. */
 /* gradef(signum(x),%if(x # 0, 0, 'und)); */
-gradef(signum(x),0);
+gradef(signum(x),0); 
 
 /* gradef(abs(x), %if(x # 0, abs(x) / x, 'und)); */
 gradef(abs(x), abs(x) / x);
 
 safe_op(e) := block([inflag : true], if mapatom(e) then false else op(e));
 
-/* If e factors into a product of linear factors, return the list of factors; otherwise return false */
+/* If e factors into a product of linear factors, return the list of factors; otherwise return false. */
 real_linear_factors(e,x) := (
   e : factor(e),
   e : if (safe_op(e) = "*") then args(e) else [e],
@@ -70,14 +76,15 @@ convert_to_signum(e) := block([opsubst : true],
 /* Do signum(a) * signum(b) --> signum(a * b). Maybe it should, but when n is a positive integer,
    apply_signum_mult doesn't do signum(a)^n --> signum(a^n).*/
    
-apply_signum_mult_id (e) := block([p : 1, q : 1, inflag : true],
- if mapatom(e) then e
- else if (safe_op(e) = "*") then (
-   for ek in e do (
-     if (safe_op(ek) = 'signum) then p : p * first(ek) else q : q * ek),
-   signum(p) * q)
- else map('apply_signum_mult_id, e));
 
+apply_signum_mult_id (e) :=
+  subst(["*" = lambda([[x]], block([p : [], q : []],
+        for xk in x do (
+          if safe_op(xk) = 'signum then p : cons(first(xk),p) else q : cons(xk,q)),
+	p : xreduce("*",p),
+        q : xreduce("*",q),
+        q * signum(p)))],e);
+ 
 /* Do unit_step(a) * unit_step(b) --> unit_step(min(a,b)). This is an identity
 for either a left or right continuous unit_step. */
 
@@ -125,14 +132,10 @@ partition_as_signum(e,x) := block([w : 1, acc : [], OK : true, inflag : true, sg
 linear_in_p(e,x) :=
   polynomialp(e,[x], lambda([s], freeof(x,s)), lambda([k], is(k=0) or is(k = 1))) and numberp(diff(e,x));
 
-signum_int(q,x) := block([w : 1, acc : [], sgn, v, inflag : true, f, listconstvars : true],
+signum_int(q,x) := block([w : 1, acc : [], sgn, v, f, listconstvars : true],
   q : convert_to_signum(q),
-  
-  /* maybe expand */
   v : listofvars(q),
-  if safe_op(q) = "*" and not every(lambda([s], polynomialp(s,v) or safe_op(s) = 'signum), args(q)) then (
-    q : ratexpand(q)),
-
+  q : block([expandwrt_denom : true], expandwrt(q,'signum)),
   if (f : abs_int_extra(q,x)) # false then f
   else if (f : partition_as_signum(q,x)) # false then (
     w : first(f),
@@ -171,28 +174,31 @@ dint(e,x,l) := block([xo, acc : 0, i],
   xo : first(l),
   l : rest(l),
   for xi in l do (
-    i : errcatch(integrate(e,x,xo,xi)),
+    i : errcatch(integrate(simp_assuming(e,xo < x, x < xi, xo < xi),x,xo,xi)),
     if i = [ ] then return(acc : false) else acc : acc + first(i),
     xo : xi),
   acc);
 
-abs_defint(e,x,lo,hi) := block([l, knots, noun_int : nounify('integrate), f, es : e],
-  if (numberp(lo) or lo = 'minf or hi = 'inf) and (numberp(hi) or hi = 'minf or hi = 'inf) then (
-    if (hi < lo) then abs_defint(-es,x,hi,lo)
-    else if (lo = hi) then 0
-    else (
-      e : convert_to_signum(e),
-      l : flatten(gatherargs(e, 'signum)),
-      knots : flatten(map(lambda([s], real_linear_factors(s,x)), l)),
-      if every('numberp, knots) then (
-        knots : listify(setify(knots)),
-        knots : sublist(knots, lambda([s], is(s > lo) and is(s < hi))),
-        knots : append([lo, hi], knots),
-        f : dint(e,x, sort(knots, lambda([a,b], is(compare(a,b) = "<")))),
-        if f = false then funmake(noun_int,[es,x,lo,hi]) else f)
-      else funmake(noun_int,[es,x,lo,hi])))
-  else funmake(noun_int,[es,x,lo,hi]));
+partitions_interval_p(l,[endpts]) := (
+  if listp(l) then (
+    l : listify(setify(append(endpts, l))),
+    l : sort(l, lambda([a,b], is(a < b) = true)),
+    if every(lambda([a,b], is(a <= b)=true), l, endcons('inf, rest(l))) then l else false)
+  else false);
 
+abs_defint(e,x,lo,hi) := block([f,l],
+  if is(hi < lo)=true then -abs_defint(e,x,hi,lo)
+  else if is(lo = hi) then 0
+  else (
+    e : convert_to_signum(e),
+    l : xreduce('append, (gatherargs(e, 'signum))),
+    l : flatten(map(lambda([s], real_linear_factors(s,x)), l)), /* flatten([[1], false]) --> [1,false] */
+    l : partitions_interval_p(l,lo,hi),
+    if l # false then (
+      f : dint(e,x,l),
+      if f = false then false else f)
+    else false));
+ 
 /* The idea that of using a macro is due to Stavros Macrakis; the use of buildq is due to Robert Dodier.*/
 
 simp_assuming(e, [fcts]) ::= 
@@ -208,7 +214,7 @@ so subst([x = 0], %if(x < 1, 5, log(x))) --> error. */
 
 abs_int_extra(q,x) := block([q1,q2,k,xo,kk],
   q : convert_to_signum(q),
-  k : gatherargs(q,'signum),
+  k : sublist(gatherargs(q,'signum),lambda([s], not freeof(x,s))),
   if k # [] and emptyp(rest(k)) then (
     k : first(first(k)),
     if polynomialp(k, [x], lambda([s], freeof(x,s)),lambda([k],is(k=0 or k=1))) then (
@@ -237,8 +243,8 @@ abs_integrate_use_if(q,x) := block([k,%x,xo],
     %x : make_dummy(q,x),
     q : sublis([x = %x],q),
     k : listify(setify(k)),
-    k : sort(k, lambda([a,b], is(compare(a,b) = "<"))),
-    q : errcatch(interval_integrate(q,%x,k)),
+    k : partitions_interval_p(k),
+    q : if k # false then errcatch(interval_integrate(q,%x,k)) else [],
     if q = [] then false else subst(%x = x, first(q)))
   else false);
 

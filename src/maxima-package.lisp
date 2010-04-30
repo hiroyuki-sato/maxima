@@ -167,6 +167,7 @@
   (:export #:bigfloat
 	   #:to
 	   #:epsilon
+	   #:%pi
 	   ;; CL equivalents
 	   #:+
 	   #:-
@@ -236,7 +237,11 @@
 (defpackage :intl
   (:use :common-lisp)
   (:export #:setlocale #:textdomain #:gettext #:dgettext
+	   #:ngettext #:dngettext
            #:*translatable-dump-stream* #:*locale*
-	   #:*locale-directories*))
+	   #:*locale-directories*
+	   #:read-translatable-string)
+  #+gcl
+  (:shadowing-import-from #:system #:define-compiler-macro))
 
 (provide :maxima)
