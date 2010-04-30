@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.20 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -4512,27 +4512,44 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev: T
      Devuelve el número de enteros menores o iguales a <n> que son
      primos relativos con <n>.
 
-
  -- Variable opcional: zerobern
      Valor por defecto: `true'
 
-     Si `zerobern' vale `false', `bern' excluye los números de
-     Bernoulli iguales a cero.  See `bern'.
-
+     Si `zerobern' vale `false', `bern' excluye los números de Bernoulli
+     y `euler' excluye los números de Euler que sean iguales a cero.
+     Véase `bern' y `euler'.
 
  -- Función: zeta (<n>)
-     Devuelve la función zeta de Riemann para <x> entero negativo, 0, 1
-     o número par positivo. No se evalúa `zeta (<n>)' para cualesquiera
-     otros argumentos, incluyendo racionales no enteros, números en
-     coma flotante o argumentos complejos.
+     Devuelve la función zeta de Riemann. Si <n> es entero negativo, 0
+     o número par positivo, la función zeta de Riemann devuelve un
+     valor exacto; en el caso de número par positivo, la variable
+     opcional `zeta%pi', además, tiene que tener el valor `true' (véase
+     `zeta%pi').  Cuando el argumento es un número decimal o bigfloat,
+     entonces la función zeta de Riemann se calcula numéricamente.
+     Maxima devuelve una forma nominal `zeta (<n>)' para cualesquiera
+     otros argumentos, incluidos los racionales no enteros, los números
+     complejos y los enteros pares si `zeta%pi' vale `false'.
+
+     `zeta(1)' no está definida, pero Maxima conce el límite de
+     `limit(zeta(x), x, 1)' por ambos lados.
+
+     La función zeta de Riemann se distribuye sobre las listas, matrices
+     y ecuaciones.
 
      Véanse también `bfzeta' y `zeta%pi'.
 
-          (%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
-                                               2              4
-                     1        1     1       %pi            %pi
-          (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
-                    120       12    2        6              90
+     Ejemplos:
+
+          (%i1) zeta([-2,-1,0,0.5,2,3,1+%i]);
+                                                        2
+                       1     1                       %pi
+          (%o1)  [0, - --, - -, - 1.460354508809587, ----, zeta(3), zeta(%i + 1)]
+                       12    2                        6
+
+          (%i2) limit(zeta(x),x,1,plus);
+          (%o2)                                 inf
+          (%i3) limit(zeta(x),x,1,minus);
+          (%o3)                                minf
 
 
  -- Variable opcional: zeta%pi
@@ -4542,6 +4559,8 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev: T
      proporcional a `%pi^n' si `n' es un número par positivo. En caso
      contrario, `zeta' no se evalúa y devuelve la forma nominal `zeta
      (n)'.
+
+     Ejemplos:
 
           (%i1) zeta%pi: true$
           (%i2) zeta (4);

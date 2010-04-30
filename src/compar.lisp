@@ -122,7 +122,9 @@ relational knowledge is contained in the default context GLOBAL.")
 ;;; No argument implies the current context.
 
 (defmfun $facts (&optional (ctxt $context))
-  (facts1 ctxt))
+  (if (member ctxt (cdr $contexts))
+      (facts1 ctxt)
+      (facts2 ctxt)))
 
 (defun facts1 (con)
   (contextmark)
@@ -134,6 +136,24 @@ relational knowledge is contained in the default context GLOBAL.")
       (setq u (intext (caaar l) (cdaar l)))
       (unless (memalike u nl)
 	(push u nl)))))
+
+;; Look up facts from the database which contain expr. expr can be a symbol or 
+;; a more general expression.
+(defun facts2 (expr)
+  (labels ((among (x l)
+             (cond ((null l) nil)
+                   ((atom l) (eq x l))
+                   ((alike1 x l) t)
+                   (t
+                    (do ((ll (cdr l) (cdr ll)))
+                        ((null ll) nil)
+                      (if (among x (car ll)) (return t)))))))
+  (do ((facts (cdr ($facts $context)) (cdr facts))
+       (ans))
+      ((null facts) (return (cons '(mlist) (reverse ans))))
+    (when (or (among expr (cadar facts))
+              (among expr (caddar facts)))
+      (push (car facts) ans)))))
 
 (defun intext (rel body)
   (setq body (mapcar #'doutern body))
@@ -893,16 +913,23 @@ relational knowledge is contained in the default context GLOBAL.")
 	     (setq ans (ask "Is  " $askexp dom)))
 	   (if minus (flip sign) sign))))
 
+;; During one evaluation phase asksign writes answers from the user into the
+;; global context '$initial. These facts are removed by clearsign after
+;; finishing the evaluation phase. clearsign is called from the top-level
+;; evaluation function meval*. The facts which have to be removed are stored
+;; in the global variable locals.
+
 (defun clearsign ()
-  (do ()
-      ((null locals))
-    (cond ((eq '$pos (cdar locals)) (daddgr nil (caar locals)))
-	  ((eq '$neg (cdar locals)) (daddgr nil (neg (caar locals))))
-	  ((eq '$zero (cdar locals)) (daddeq nil (caar locals)))
-	  ((eq '$pn (cdar locals)) (daddnq nil (caar locals)))
-	  ((eq '$pz (cdar locals)) (daddgq nil (caar locals)))
-	  ((eq '$nz (cdar locals)) (daddgq nil (neg (caar locals)))))
-    (setq locals (cdr locals))))
+  (let ((context '$initial))
+    (do ()
+        ((null locals))
+      (cond ((eq '$pos (cdar locals)) (daddgr nil (caar locals)))
+            ((eq '$neg (cdar locals)) (daddgr nil (neg (caar locals))))
+            ((eq '$zero (cdar locals)) (daddeq nil (caar locals)))
+            ((eq '$pn (cdar locals)) (daddnq nil (caar locals)))
+            ((eq '$pz (cdar locals)) (daddgq nil (caar locals)))
+            ((eq '$nz (cdar locals)) (daddgq nil (neg (caar locals)))))
+      (setq locals (cdr locals)))))
 
 (defmfun like (x y)
   (alike1 (specrepcheck x) (specrepcheck y)))
@@ -1169,6 +1196,7 @@ relational knowledge is contained in the default context GLOBAL.")
   (cond ((floatp x) 'float)
 	((numberp x) 'numer)
 	((symbolp x) (if (member x '($%pi $%e $%phi $%gamma) :test #'eq) 'symbol))
+    ((atom x) nil)
 	((eq (caar x) 'rat) 'numer)
 	((eq (caar x) 'bigfloat) 'bigfloat)
 	((specrepp x) (constp (specdisrep x)))
@@ -1317,6 +1345,16 @@ relational knowledge is contained in the default context GLOBAL.")
 		   (eq (sign* (sub (cadr xlhs) 1)) '$pos)
 		   (eq (sign* (sub (caddr xlhs) (caddr xrhs))) '$pos)))
       (setq sgn '$pos))
+
+    ;; sign(sin(x)+c)
+    (when (and (not (atom xlhs))
+	       (member (caar xlhs) '(%sin %cos))
+	       (zerop1 ($imagpart (cadr xlhs))))
+      (cond ((eq (sign* (add xrhs 1)) '$neg)	;; c > 1
+	     (setq sgn '$pos))
+	    ((eq (sign* (add xrhs -1)) '$pos)	;; c < -1
+	     (setq sgn '$neg))))
+	   
     (when (and $useminmax (or (minmaxp xlhs) (minmaxp xrhs)))
       (setq sgn (signdiff-minmax xlhs xrhs)))
     (when sgn (setq sign sgn minus nil odds nil evens nil)
@@ -1484,14 +1522,19 @@ relational knowledge is contained in the default context GLOBAL.")
 	 (setf sign '$imaginary))
 	;; log(x) is positive for x > 1
 	((eq t (mgrp x 1)) (setf sign '$pos))
+	((eq t (mgqp x 1)) (setf sign '$pz))
 	;; log(x) is negative for 0 < x < 1.
 	((and (eq t (mgrp x 0)) (eq t (mgrp 1 x))) (setf sign '$neg))
-	;; Nothing is known, so return return $pnz. For the complex case, returning $complex
-	;; instead of $pnz causes some problems with the testsuite.
-	(*complexsign* (setf sign '$pnz)) 
+
+	;; log(x) is real for x > 0
+	((eq t (mgrp x 0)) (setf sign '$pnz))
+
+	;; Nothing is known.  Return $complex if allowed, 
+	;;  otherwise pnz
+	(*complexsign* (setf sign '$complex)) 
 	(t (setf sign '$pnz)))
   sign)
-	  
+
 (defun sign-mabs (x)
   (sign (cadr x))
   (cond ((member sign '($pos $zero) :test #'eq))
@@ -1548,7 +1591,7 @@ relational knowledge is contained in the default context GLOBAL.")
 	 ((or (eq s1 '$neg) (eq s2 '$neg)) '$neg)
 	 ((or (eq s1 '$nz) (eq s2 '$nz)) '$nz)
 	 ((eq s1 '$zero) (if (eq s2 '$pz) '$zero '$nz))
-	 ((eq s2 '$zero) (if (eq s2 '$pz) '$zero '$nz))
+	 ((eq s2 '$zero) (if (eq s1 '$pz) '$zero '$nz))
 	 (t '$pnz))))
 
 (defun minmaxp (ex)
@@ -1695,21 +1738,60 @@ relational knowledge is contained in the default context GLOBAL.")
 		   ((or ($featurep ($verbify x-op) '$integervalued)
 			(get x-op 'integer-valued))))))))
 
-;; Look into the database for symbols which are declared to be equal 
-;; to an integer or an expression which is an integer.
-(defun check-integer-facts (x)
-  (do ((factsl (cdr (facts1 x)) (cdr factsl)))
+;; When called with mode 'integer look into the database for symbols which are 
+;; declared to be equal to an integer or an expression which is an integer.
+;; In mode 'evod look for odd and even expressions.
+(defun check-integer-facts (x &optional (mode 'integer))
+  (do ((factsl (cdr (facts1 x)) (cdr factsl))
+       fact)
       ((null factsl) nil)
-    (cond ((and (not (atom (car factsl)))
-                (eq (caar (car factsl)) '$equal))
-           (cond ((and (symbolp (cadr (car factsl)))
-                       (eq (cadr (car factsl)) x))
+    (setq fact (car factsl))
+    (cond ((and (not (atom fact))
+                (eq (caar fact) '$equal))
+           (cond ((and (symbolp (cadr fact))
+                       (eq (cadr fact) x))
                   ;; Case equal(x,expr): Test expr to be an integer.
-                  (return (maxima-integerp (caddr (car factsl)))))
-                 ((and (symbolp (caddr (car factsl)))
-                       (eq (caddr (car factsl)) x))
+                  (cond ((symbolp (caddr fact))
+                         (cond ((and (eq mode 'integer)
+                                     (or (kindp (caddr fact) '$integer)
+                                         (kindp (caddr fact) '$odd)
+                                         (kindp (caddr fact) '$even)))
+                                (return t))
+                               ((eq mode 'evod)
+                                (cond ((kindp (caddr fact) '$odd)
+                                       (return '$odd))
+                                      ((kindp (caddr fact) '$even)
+                                       (return '$even))
+                                      (t (return nil))))
+                               (t (return nil))))
+                        (t
+                         (cond ((eq mode 'integer)
+                                (return (maxima-integerp (caddr fact))))
+                               ((eq mode 'evod)
+                                (return (evod (caddr fact))))
+                               (t (return nil))))))
+                 ((and (symbolp (caddr fact))
+                       (eq (caddr fact) x))
                   ;; Case equal(expr,x): Test expr to be an integer.
-                  (return (maxima-integerp (cadr (car factsl))))))))))
+                  (cond ((symbolp (caddr fact))
+                         (cond ((and (eq mode 'integer)
+                                     (or (kindp (cadr fact) '$integer)
+                                         (kindp (cadr fact) '$odd)
+                                         (kindp (cadr fact) '$even)))
+                                (return t))
+                               ((eq mode 'evod)
+                                (cond ((kindp (cadr fact) '$odd)
+                                       (return '$odd))
+                                      ((kindp (cadr fact) '$even)
+                                       (return '$even))
+                                      (t (return nil))))
+                               (t (return nil))))
+                        (t
+                         (cond ((eq mode 'integer)
+                                (return (maxima-integerp (cadr fact))))
+                               ((eq mode 'evod)
+                                (return (evod (cadr fact))))
+                               (t (return nil)))))))))))
 
 (defmfun nonintegerp (e)
   (let (num)
@@ -1739,11 +1821,19 @@ relational knowledge is contained in the default context GLOBAL.")
            (cond ((and (symbolp (cadr (car factsl)))
                        (eq (cadr (car factsl)) x))
                   ;; Case equal(x,expr): Test expr to be a noninteger.
-                  (return (nonintegerp (caddr (car factsl)))))
+                  (cond ((symbolp  (caddr (car factsl)))
+                         (if (kindp (caddr (car factsl)) '$noninteger)
+                             (return t)))
+                        (t
+                         (return (nonintegerp (caddr (car factsl)))))))
                  ((and (symbolp (caddr (car factsl)))
                        (eq (caddr (car factsl)) x))
                   ;; Case equal(expr,x): Test expr to be a noninteger.
-                  (return (nonintegerp (cadr (car factsl))))))))))
+                  (cond ((symbolp  (cadr (car factsl)))
+                         (if (kindp (cadr (car factsl)) '$noninteger)
+                             (return t)))
+                        (t
+                         (return (nonintegerp (cadr (car factsl))))))))))))
 
 (defun intp (l)
   (every #'maxima-integerp (cdr l)))
@@ -1767,7 +1857,11 @@ relational knowledge is contained in the default context GLOBAL.")
 (defmfun evod (e)
   (cond ((integerp e) (if (oddp e) '$odd '$even))
 	((mnump e) nil)
-	((atom e) (cond ((kindp e '$odd) '$odd) ((kindp e '$even) '$even)))
+        ((atom e)
+         (cond ((kindp e '$odd) '$odd)
+	       ((kindp e '$even) '$even)
+	       ;; Check the database for facts.
+	       ((symbolp e) (check-integer-facts e 'evod))))
 	((eq 'mtimes (caar e)) (evod-mtimes e))
 	((eq 'mplus (caar e)) (evod-mplus e))
 	((eq 'mabs (caar e)) (evod (cadr e))) ;; extra code
@@ -1955,25 +2049,38 @@ relational knowledge is contained in the default context GLOBAL.")
 	  (t (mdata flag 'mnqp (dintern lhs) (dintern rhs))))
     (list '(mnot) (list '($equal) lhs rhs))))
 
+;; The following functions are used by asksign to write answers into the 
+;; database. We make sure that these answers are written into the global 
+;; context '$initial and not in a local context which might be generated during
+;; the evaluation phase and which will be destroyed before the evaluation has 
+;; finshed.
+;; The additional facts are removed from the global context '$initial after 
+;; finishing the evaluation phase of meval with a call to clearsign.
+
 (defun tdpos (x)
-  (daddgr t x)
-  (push (cons x '$pos) locals))
+  (let ((context '$initial))
+    (daddgr t x)
+    (push (cons x '$pos) locals)))
 
 (defun tdneg (x)
-  (daddgr t (neg x))
-  (push (cons x '$neg) locals))
+  (let ((context '$initial))
+    (daddgr t (neg x))
+    (push (cons x '$neg) locals)))
 
 (defun tdzero (x)
-  (daddeq t x)
-  (push (cons x '$zero) locals))
+  (let ((context '$initial))
+    (daddeq t x)
+    (push (cons x '$zero) locals)))
 
 (defun tdpn (x)
-  (daddnq t x)
-  (push (cons x '$pn) locals))
+  (let ((context '$initial))
+    (daddnq t x)
+    (push (cons x '$pn) locals)))
 
 (defun tdpz (x)
-  (daddgq t x)
-  (push (cons x '$pz) locals))
+  (let ((context '$initial))
+    (daddgq t x)
+    (push (cons x '$pz) locals)))
 
 (defun compsplt-eq (x)
   (compsplt x)

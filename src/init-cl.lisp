@@ -27,22 +27,24 @@
 (defvar *maxima-htmldir*)
 (defvar *maxima-layout-autotools*)
 (defvar *maxima-userdir*)
+(defvar *maxima-initmac* "maxima-init.mac")
+(defvar *maxima-initlisp* "maxima-init.lisp")
 (defvar *maxima-tempdir*)
-(defvar *maxima-lang-subdir*)
+(defvar *maxima-lang-subdir* nil)
 (defvar *maxima-demodir*)
 (defvar *maxima-objdir*)		;; Where to store object (fasl) files.
 
-(eval-when (load compile eval)
-(defmacro def-lisp-shadow (root-name)
-  "Create a maxima variable $root_name that is an alias for the lisp name *root-name*.
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (defmacro def-lisp-shadow (root-name)
+    "Create a maxima variable $root_name that is an alias for the lisp name *root-name*.
 When one changes, the other does too."
-  (let ((maxima-name (intern (concatenate 'string "$"
-					  (substitute #\_ #\- (string root-name)))))
-	(lisp-name (intern (concatenate 'string "*" (string root-name) "*"))))
-  `(progn
-    (defmvar ,maxima-name)
-    (putprop ',maxima-name 'shadow-string-assignment 'assign)
-    (putprop ',maxima-name ',lisp-name 'lisp-shadow)))))
+    (let ((maxima-name (intern (concatenate 'string "$"
+					    (substitute #\_ #\- (string root-name)))))
+	  (lisp-name (intern (concatenate 'string "*" (string root-name) "*"))))
+      `(progn
+	 (defmvar ,maxima-name)
+	 (putprop ',maxima-name 'shadow-string-assignment 'assign)
+	 (putprop ',maxima-name ',lisp-name 'lisp-shadow)))))
 
 (def-lisp-shadow maxima-tempdir)
 (def-lisp-shadow maxima-userdir)
@@ -301,7 +303,7 @@ When one changes, the other does too."
 	;; Sort in alphabetical order
 	(sort dir-list #'string-lessp))))
 
-#+ecl
+#+(or ecl sbcl)
 (defun share-subdirs-list ()
   ;; This doesn't work yet on windows.  Give up in that case and use
   ;; the default list.
@@ -405,7 +407,7 @@ When one changes, the other does too."
     "utils"
     "vector"))
 
-#-(or cmu clisp ecl)
+#-(or cmu clisp ecl sbcl)
 (defun share-subdirs-list ()
   (default-share-subdirs-list))
 
@@ -519,8 +521,9 @@ When one changes, the other does too."
     ;; Autoload for Maxima documantation index file
     (let ((subdir-bit (if (null *maxima-lang-subdir*) "." *maxima-lang-subdir*)))
       ;; Assign AUTOLOAD property instead of binding a function (the result of AUTOF).
-      (setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
-	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp")))))
+      (unless (get 'cl-info::cause-maxima-index-to-load 'autoload)
+	(setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
+	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp"))))))
 
 (defun get-dirs (path)
   #+(or :clisp :sbcl :ecl :openmcl)
@@ -631,7 +634,23 @@ When one changes, the other does too."
 	   (make-cl-option :names '("--userdir")
 			   :argument "<directory>"
 			   :action nil
-			   :help-string "Use  <directory> for user directory (default is $HOME/.maxima)")
+			   :help-string "Use  <directory> for user directory (default is $HOME/maxima for Windows, and $HOME/.maxima for others)")
+ 	   (make-cl-option :names '("--init")
+			   :argument "<file>"
+			   :action #'(lambda (file)
+				       (setf *maxima-initmac* (concatenate 'string file ".mac"))
+				       (setf *maxima-initlisp* (concatenate 'string file ".lisp")))
+			   :help-string (format nil "Set the name of the Maxima & Lisp initialization files to <file>.mac & <file>.lisp (default is ~a)" (subseq *maxima-initmac* 0 (- (length *maxima-initmac*) 4))))
+ 	   (make-cl-option :names '("--init-mac")
+			   :argument "<file>"
+			   :action #'(lambda (file)
+				       (setf *maxima-initmac* file))
+			   :help-string (format nil "Set the name of the Maxima initialization file (default is ~a)" *maxima-initmac*))
+ 	   (make-cl-option :names '("--init-lisp")
+			   :argument "<file>"
+			   :action #'(lambda (file)
+				       (setf *maxima-initlisp* file))
+			   :help-string (format nil "Set the name of the Lisp initialization file (default is ~a)" *maxima-initlisp*))
 	   (make-cl-option :names '("-l" "--lisp")
 			   :argument "<lisp>"
 			   :action nil
@@ -711,7 +730,10 @@ When one changes, the other does too."
       (adjust-character-encoding)
       (set-pathnames)
       (when (boundp '*maxima-prefix*)
-	(push (pathname (concatenate 'string *maxima-prefix* "/share/locale/"))
+	(push (pathname (concatenate 'string *maxima-prefix*
+				     (if *maxima-layout-autotools*
+					 "/share/locale/"
+					 "/locale/")))
 	      intl::*locale-directories*))
       (setf (values input-stream batch-flag)
 	    (process-maxima-args input-stream batch-flag))
@@ -760,15 +782,14 @@ When one changes, the other does too."
   (declare (ignore dummy))
   $help)
 
-(eval-when
-	#+gcl (load eval)
-	#-gcl (:load-toplevel :execute)
+(eval-when (:load-toplevel :execute)
     (let ((context '$global))
       (declare (special context))
-      (mapc #'(lambda (x) (kind x '$constant) (setf (get x 'sysconst) t))
-            '($%pi $%i $%e $%phi %i $%gamma ;numeric constants
+      (dolist (x '($%pi $%i $%e $%phi %i $%gamma  ;numeric constants
                    $inf $minf $und $ind $infinity ;pseudo-constants
-                   t nil)))) ;logical constants (Maxima names: true, false)
+                   t nil))                        ;logical constants (Maxima names: true, false)
+	(kind x '$constant)
+	(setf (get x 'sysconst) t))))
 
 ;;; Now that all of maxima has been loaded, define the various lists
 ;;; and hashtables of builtin symbols and values.
@@ -811,15 +832,3 @@ When one changes, the other does too."
   "Return the directory part of *load-pathname*."
   (make-pathname :directory (pathname-directory #-gcl *load-pathname*
 						#+gcl sys:*load-pathname*)))
-
-;; Work around: ABCL handles special variables incorrectly
-;; unless they have DEFVAR or DEFPARAMETER.
-
-#+abcl (defvar msg)
-#+abcl (defvar flag)
-#+abcl (defvar print?)
-#+abcl (defvar errcatch)
-#+abcl (defvar mcatch)
-#+abcl (defvar *trigreduce)
-#+abcl (defvar *noexpand)
-#+abcl (defvar $verbose)

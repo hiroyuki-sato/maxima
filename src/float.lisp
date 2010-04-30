@@ -81,6 +81,9 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defmvar bigfloat%gamma '((bigfloat simp 56.) 41592772053807304. 0)
   "Bigfloat representation of %gamma")
 
+(defmvar bigfloat_log2 '((bigfloat simp 56.) 49946518145322874. 0)
+  "Bigfloat representation of log(2)")
+
 ;; Internal specials
 
 ;; Number of bits of precision in the mantissa of newly created bigfloats.
@@ -104,6 +107,8 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defvar max-bfloat-%pi bigfloat%pi)
 (defvar max-bfloat-%e  bigfloat%e)
 (defvar max-bfloat-%gamma bigfloat%gamma)
+(defvar max-bfloat-log2 bigfloat_log2)
+
 
 (declare-top (special *cancelled $float $bfloat $ratprint $ratepsilon $domain $m1pbranch adjust))
 
@@ -385,6 +390,8 @@ One extra decimal digit in actual representation for rounding purposes.")
 	       (exptbigfloat ($bfloat (cadr x)) (caddr x))))
 	  ((eq (caar x) 'mncexpt)
 	   (list '(mncexpt) ($bfloat (cadr x)) (caddr x)))
+	  ((eq (caar x) 'rat)
+	   (ratbigfloat (cdr x)))
 	  ((setq y (safe-get (caar x) 'floatprog))
 	   (funcall y (mapcar #'$bfloat (cdr x))))
 	  ((or (trigp (caar x)) (arcp (caar x)) (eq (caar x) '$entier))
@@ -424,8 +431,76 @@ One extra decimal digit in actual representation for rounding purposes.")
 		   ((equal fans tst) nfans)
 		   (t (simplify (list '(mplus) fans nfans)))))))
 
-(defmfun ratbigfloat (l)
-  (bcons (fpquotient (cdar l) (cdadr l))))
+(defmfun ratbigfloat (r)
+  ;; R is a Maxima ratio, represented as a list of the numerator and
+  ;; denominator.  FLOAT-RATIO doesn't like it if the numerator is 0,
+  ;; so handle that here.
+  (if (zerop (car r))
+      (bcons (list 0 0))
+      (bcons (float-ratio r))))
+
+;; This is borrowed from CMUCL (float-ratio-float), and modified for
+;; converting ratios to Maxima's bfloat numbers.
+(defun float-ratio (x)
+  (let* ((signed-num (first x))
+	 (plusp (plusp signed-num))
+	 (num (if plusp signed-num (- signed-num)))
+	 (den (second x))
+	 (digits fpprec)
+	 (scale 0))
+    (declare (fixnum digits scale))
+    ;;
+    ;; Strip any trailing zeros from the denominator and move it into the scale
+    ;; factor (to minimize the size of the operands.)
+    (let ((den-twos (1- (integer-length (logxor den (1- den))))))
+      (declare (fixnum den-twos))
+      (decf scale den-twos)
+      (setq den (ash den (- den-twos))))
+    ;;
+    ;; Guess how much we need to scale by from the magnitudes of the numerator
+    ;; and denominator.  We want one extra bit for a guard bit.
+    (let* ((num-len (integer-length num))
+	   (den-len (integer-length den))
+	   (delta (- den-len num-len))
+	   (shift (1+ (the fixnum (+ delta digits))))
+	   (shifted-num (ash num shift)))
+      (declare (fixnum delta shift))
+      (decf scale delta)
+      (labels ((float-and-scale (bits)
+		 (let* ((bits (ash bits -1))
+			(len (integer-length bits)))
+		   (cond ((> len digits)
+			  (assert (= len (the fixnum (1+ digits))))
+			  (multiple-value-bind (f0)
+			      (floatit (ash bits -1))
+			    (list (first f0) (+ (second f0)
+						(1+ scale)))))
+			 (t
+			  (multiple-value-bind (f0)
+			      (floatit bits)
+			    (list (first f0) (+ (second f0) scale)))))))
+	       (floatit (bits)
+		 (let ((sign (if plusp 1 -1)))
+		   (list (* sign bits) 0))))
+	(loop
+	  (multiple-value-bind (fraction-and-guard rem)
+	      (truncate shifted-num den)
+	    (let ((extra (- (integer-length fraction-and-guard) digits)))
+	      (declare (fixnum extra))
+	      (cond ((/= extra 1)
+		     (assert (> extra 1)))
+		    ((oddp fraction-and-guard)
+		     (return
+		       (if (zerop rem)
+			   (float-and-scale
+			    (if (zerop (logand fraction-and-guard 2))
+				fraction-and-guard
+				(1+ fraction-and-guard)))
+			   (float-and-scale (1+ fraction-and-guard)))))
+		    (t
+		     (return (float-and-scale fraction-and-guard)))))
+	    (setq shifted-num (ash shifted-num -1))
+	    (incf scale)))))))
 
 (defun decimalsin (x)
   (do ((i (quotient (* 59. x) 196.) (1+ i))) ;log[10](2)=.301029
@@ -684,36 +759,65 @@ One extra decimal digit in actual representation for rounding purposes.")
     (mapc #'(lambda (u) (if (fpgreaterp u max) (setq max u))) args)
     max))
 
-;; (FPE) RETURN BIG FLOATING POINT %E.  IT RETURNS (CDR BIGFLOAT%E) IF RIGHT
-;; PRECISION.  IT RETURNS TRUNCATED BIGFLOAT%E IF POSSIBLE, ELSE RECOMPUTES.
-;; IN ANY CASE, BIGFLOAT%E IS SET TO LAST USED VALUE.
+;; The following functions compute bigfloat values for %e, %pi,
+;; %gamma, and log(2).  For each precision, the computed value is
+;; cached in a hash table so it doesn't need to be computed again.
+;; There are functions to return the hash table or clear the hash
+;; table, for debugging.
+;;
+;; Note that each of these return a bigfloat number, but without the
+;; bigfloat tag.
+;;
+;; See
+;; https://sourceforge.net/tracker/?func=detail&atid=104933&aid=2910437&group_id=4933
+;; for an explanation.
+(let ((table (make-hash-table)))
+  (defun fpe ()
+    (let ((value (gethash fpprec table)))
+      (if value
+	  value
+	  (setf (gethash fpprec table) (cdr (fpe1))))))
+  (defun fpe-table ()
+    table)
+  (defun clear_fpe_table ()
+    (clrhash table)))
 
-(defun fpe ()
-  (cond ((= fpprec (caddar bigfloat%e)) (cdr bigfloat%e))
-	((< fpprec (caddar bigfloat%e))
-	 (cdr (setq bigfloat%e (bigfloatp bigfloat%e))))
-	((< fpprec (caddar max-bfloat-%e))
-	 (cdr (setq bigfloat%e (bigfloatp max-bfloat-%e))))
-   (t (cdr (setq max-bfloat-%e (setq bigfloat%e (fpe1)))))))
+(let ((table (make-hash-table)))
+  (defun fppi ()
+    (let ((value (gethash fpprec table)))
+      (if value
+	  value
+	  (setf (gethash fpprec table) (cdr (fppi1))))))
+  (defun fppi-table ()
+    table)
+  (defun clear_fppi_table ()
+    (clrhash table)))
 
-(defun fppi ()
-  (cond ((= fpprec (caddar bigfloat%pi)) (cdr bigfloat%pi))
-	((< fpprec (caddar bigfloat%pi))
-	 (cdr (setq bigfloat%pi (bigfloatp bigfloat%pi))))
-	((< fpprec (caddar max-bfloat-%pi))
-	 (cdr (setq bigfloat%pi (bigfloatp max-bfloat-%pi))))
-	(t (cdr (setq max-bfloat-%pi (setq bigfloat%pi (fppi1)))))))
+(let ((table (make-hash-table)))
+  (defun fpgamma ()
+    (let ((value (gethash fpprec table)))
+      (if value
+	  value
+	  (setf (gethash fpprec table) (cdr (fpgamma1))))))
+  (defun fpgamma-table ()
+    table)
+  (defun clear_fpgamma_table ()
+    (clrhash table)))
 
-(defun fpgamma ()
-  (cond ((= fpprec (caddar bigfloat%gamma))
-	 (cdr bigfloat%gamma))
-	((< fpprec (caddar bigfloat%gamma))
-	 (cdr (setq bigfloat%gamma (bigfloatp bigfloat%gamma))))
-	((< fpprec (caddar max-bfloat-%gamma))
-	 (cdr (setq bigfloat%gamma (bigfloatp max-bfloat-%gamma))))
-	(t
-	 (cdr (setq max-bfloat-%gamma (setq bigfloat%gamma (fpgamma1)))))))
+(let ((table (make-hash-table)))
+  (defun fplog2 ()
+    (let ((value (gethash fpprec table)))
+      (if value
+	  value
+	  (setf (gethash fpprec table) (comp-log2)))))
+  (defun fplog2-table ()
+    table)
+  (defun clear_fplog2_table ()
+    (clrhash table)))
 
+;; This doesn't need a hash table because there's never a problem with
+;; using a high precision value and rounding to a lower precision
+;; value because 1 is always an exact bfloat.
 (defun fpone ()
   (cond (*decfp (intofp 1))
 	((= fpprec (caddar bigfloatone)) (cdr bigfloatone))
@@ -931,6 +1035,41 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defun fpgamma1 ()
   ;; Use a few extra bits of precision
   (bcons (list (fpround (first (comp-bf%gamma (+ fpprec 8)))) 0)))
+
+(defun comp-log2 ()
+  ;; This is the algorithm given in http://numbers.computation.free.fr/Constants/constants.html
+  ;; log(2) = 18*L(26) - 2*L(4801) + 8*L(8749)
+  ;; L(k) = atanh(1/k) = 1/2*log((k+1)/(k-1))
+  ;;      = sum(x^(2*m+1)/(2*m+1), m, 0, inf)
+  ;;
+  ;; So
+  ;;
+  ;; log(2) = 18*atanh(1/26)-2*atanh(1/4801)+8*atanh(8749)
+  (flet ((fast-atanh (k)
+	   ;; Compute atanh(x) using Taylor series:
+	   ;;
+	   ;; atanh(x) = sum(x^(2*n+1)/(2*n+1), n, 0, inf)
+	   (let* ((term (fpquotient (intofp 1) (intofp k)))
+		  (fact (fptimes* term term))
+		  (oldsum (intofp 0))
+		  (sum term))
+	     (loop for m from 3 by 2
+		until (equal oldsum sum)
+		do
+		  (setf oldsum sum)
+		  (setf term (fptimes* term fact))
+		  (setf sum (fpplus sum (fpquotient term (intofp m)))))
+	     sum)))
+    ;; Compute log(2) using the formula above.  We also use 8 extra
+    ;; bits of precision.
+    (let ((result
+	   (let* ((fpprec (+ fpprec 8)))
+	     (fpplus (fpdifference (fptimes* (intofp 18) (fast-atanh 26))
+				   (fptimes* (intofp 2) (fast-atanh 4801)))
+		     (fptimes* (intofp 8) (fast-atanh 8749))))))
+      (list (fpround (car result))
+	    (+ -8 *m)))))
+
 
 (defun fpdifference (a b)
   (fpplus a (fpminus b)))
@@ -1217,24 +1356,11 @@ One extra decimal digit in actual representation for rounding purposes.")
 		 (* (car f) (expt 2 (- m)))))))
 
 (defun logbigfloat (a)
-  (let ((minus nil))
-    (setq a (let ((fpprec (+ 2 fpprec)))
-	      (cond (($bfloatp (car a))
-		     (setq a ($bfloat (car a)))
-		     (cond ((zerop (cadr a)) (merror (intl:gettext "log: log(0.0b0) is undefined.")))
-			   ((minusp (cadr a))
-			    (setq minus t) (fplog (list (- (cadr a)) (caddr a))))
-			   (t (fplog (cdr a)))))
-		    (t
-		     (list '(%log) (car a))))))
-    (when (numberp (car a))
-      (setq a (if (zerop (car a))
-		  (list 0 0)
-		  (list (fpround (car a)) (+ -2 *m (cadr a)))))
-      (setq a (bcons a)))
-    (if minus
-	(add a (mul '$%i ($bfloat '$%pi)))
-	a)))
+  (cond (($bfloatp (car a))
+	 (big-float-log ($bfloat (car a))))
+	(t
+	 (list '(%log) (car a)))))
+
 
 ;;; Computes the log of a bigfloat number.
 ;;;
@@ -1371,11 +1497,18 @@ One extra decimal digit in actual representation for rounding purposes.")
   ;;
   ;; But for negative x, use sinh(x) = -sinh(-x) because D(x)
   ;; approaches -1 for large negative x.
-  (if (fpposp (cdr x))
-      (let ((d (fpexpm1 (cdr (bigfloatp x)))))
-	(bcons (fpquotient (fpplus d (fpquotient d (fpplus d (fpone))))
-			   (intofp 2))))
-      (bcons (fpminus (cdr (fpsinh (bcons (fpminus (cdr (bigfloatp x))))))))))
+  (cond ((equal 0 (cadr x))
+         ;; Special case: x=0. Return immediately.
+         (bigfloatp x))
+        ((fpposp (cdr x))
+         ;; x is positive.
+         (let ((d (fpexpm1 (cdr (bigfloatp x)))))
+           (bcons (fpquotient (fpplus d (fpquotient d (fpplus d (fpone))))
+                              (intofp 2)))))
+        (t
+         ;; x is negative.
+         (bcons 
+           (fpminus (cdr (fpsinh (bcons (fpminus (cdr (bigfloatp x)))))))))))
 
 (defun big-float-sinh (x &optional y)
   ;; The rectform for sinh for complex args should be numerically
@@ -1755,13 +1888,30 @@ One extra decimal digit in actual representation for rounding purposes.")
   (if y
       (multiple-value-bind (u v) (complex-log x y)
 	(add (bcons u) (mul '$%i (bcons v))))
-      (let ((fp-x (cdr (bigfloatp x))))
-	(if (fplessp fp-x (intofp 0))
-	    ;; ??? Do we want to return an exact %i*%pi or a float
-	    ;; approximation?
-	    (add (bcons (fplog (fpminus fp-x)))
-		 (mul '$%i (bcons (fppi))))
-	    (bcons (fplog fp-x))))))
+      (flet ((%log (x)
+	       ;; x is (mantissa exp), where mantissa = frac*2^fpprec,
+	       ;; with 1/2 < frac <= 1 and x is frac*2^exp.  To
+	       ;; compute log(x), use log(x) = log(frac)+ exp*log(2).
+	       (cdr
+		(let* ((extra 8)
+		       (fpprec (+ fpprec extra))
+		       (log-frac
+			(fplog #+nil
+			       (cdr ($bfloat
+				     (cl-rat-to-maxima (/ (car x)
+							  (ash 1 (- fpprec 8))))))
+			       (list (ash (car x) extra) 0)))
+		       (log-exp (fptimes* (intofp (second x)) (fplog2)))
+		       (result (bcons (fpplus log-frac log-exp))))
+		  (let ((fpprec (- fpprec extra)))
+		    (bigfloatp result))))))
+	(let ((fp-x (cdr (bigfloatp x))))
+	  (if (fplessp fp-x (intofp 0))
+	      ;; ??? Do we want to return an exact %i*%pi or a float
+	      ;; approximation?
+	      (add (bcons (%log (fpminus fp-x)))
+		   (mul '$%i (bcons (fppi))))
+	      (bcons (%log fp-x)))))))
 
 (defun big-float-sqrt (x &optional y)
   (if y

@@ -10,7 +10,7 @@
 	"rtestnset" "rtest1" "rtest1a" "rtest2" "rtest4"  
         "rtest5"
 	"rtest6" "rtest6a" "rtest6b" "rtest7"
-        ((mlist) "rtest9" 80)
+        ((mlist) "rtest9" 82)
 	"rtest9a"
 	((mlist) "rtest10" 24 25)
 	"rtest11" "rtest13" "rtest13s"
@@ -21,7 +21,7 @@
 	"rtest3" "rtest8"
 	((mlist) "rtest12" 76 78)
 	"rexamples"
-	"rtesthyp"
+	((mlist) "rtesthyp" 103 104 105 112 113 123 124 128)
         ((mlist) "rtest_hypgeo" 143 226)
 	"rtestmt19937"
 	((mlist) "rtest_allnummod" 135 136 417 418)
@@ -42,7 +42,7 @@
 	"rtest_boolean"
 	((mlist) "rtest_round")
 	((mlist) "rtest_map" 2 3 4)
-	((mlist) "rtest_sign" 21 25 30 40 62 63 65 72 77 79 84)
+	((mlist) "rtest_sign" 21 25 30 40 65 72 77 79 84)
 	((mlist) "rtest_algebraic")
         "rtest_gamma"
         "rtest_expintegral"
@@ -52,4 +52,5 @@
 	"rtest_integrate"
 	"rtest_integrate_special"
         "rtest_ask"
+        ((mlist) "rtest_sqrt" 76 78 79 80 86)
 	))

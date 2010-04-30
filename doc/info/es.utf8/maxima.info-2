@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.20 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -2811,6 +2811,34 @@ File: maxima.info,  Node: Funciones y variables para la aritmética de punto flo
 
      La variable `fpprintprec' no admite el valor 1.
 
+ -- Variable opcional: numer_pbranch
+     Valor por defecto: `false'
+
+     La variable opcional `numer_pbranch' controla la evaluación
+     numérica de las potencias de números enteros, racionales y
+     decimales negativos. Si `numer_pbranch' vale `true' y el exponente
+     es decimal o la variable opcional `numer' vale `true', Maxima
+     evalúa el resultado numérico utilizando la rama principal. En caso
+     contrario, se devuleve un resultado simplificado pero no evaluado.
+
+     Ejemplos:
+
+          (%i1) (-2)^0.75;
+          (%o1) (-2)^0.75
+
+          (%i2) (-2)^0.75,numer_pbranch:true;
+          (%o2) 1.189207115002721*%i-1.189207115002721
+
+          (%i3) (-2)^(3/4);
+          (%o3) (-1)^(3/4)*2^(3/4)
+
+          (%i4) (-2)^(3/4),numer;
+          (%o4) 1.681792830507429*(-1)^0.75
+
+          (%i5) (-2)^(3/4),numer,numer_pbranch:true;
+          (%o5) 1.189207115002721*%i-1.189207115002721
+
+
 
 File: maxima.info,  Node: Contextos,  Next: Polinomios,  Prev: Aritmética de punto flotante,  Up: Top
 
@@ -2870,6 +2898,10 @@ File: maxima.info,  Node: Funciones y variables para Contextos,  Prev: Contextos
      El mecanismo deductivo de Maxima no es muy potente; existen muchas
      consecuencias que, siendo obvias, no pueden ser obtenidas por `is'.
      Se trata de una debilidad reconocida.
+
+     `assume' no gestiona predicados con números complejos. Si un
+     predicado contiene un número complejo, `assume' devuelve
+     `inconsistent' o `redunant'.
 
      La función `assume' evalúa sus argumentos.
 
@@ -3117,9 +3149,7 @@ File: maxima.info,  Node: Funciones y variables para Contextos,  Prev: Contextos
  -- Función: forget (<L>)
      Borra los predicados establecidos por `assume'. Los predicados
      pueden ser expresiones equivalentes, pero no necesariamente
-     idénticas, a las establecidas por `assume'.  The predicates may be
-     expressions equivalent to (but not necessarily identical to) those
-     previously assumed.
+     idénticas, a las establecidas por `assume'.
 
      La llamada `forget (<L>)', siendo <L> una lista de predicados,
      borra todos los predicados contenidos en ella.
@@ -3264,21 +3294,93 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
 
 
  -- Función: coeff (<expr>, <x>, <n>)
-     Devuelve el coeficiente de `<x>^<n>' en <expr>. El argumento <n>
-     puede omitirse si es igual a la unidad. El argumento <x> puede ser
-     un átomo  o una subexpresión completa de <expr>, por ejemplo
-     `sin(x)', `a[i+1]', `x + y', etc. (En este último caso, la
-     expresión `(x + y)' debe aparecer en <expr>).  En ocasiones puede
-     ser necesario expandir o factorizar <expr> para hacer `<x>^<n>'
-     explícito, lo cual no hace `coeff' automáticamente.
+ -- Función: coeff (<expr>, <x>)
+     Devuelve el coeficiente de `<x>^<n>' en <expr>, donde <expr> es un
+     polinomio o monomio en <x>.
+
+     `coeff(<expr>, <x>^<n>)' es equivalente a `coeff(<expr>, <x>,
+     <n>)'.  `coeff(<expr>, <x>, 0)' devuelve el resto de <expr>, el
+     cual no contiene a <x>. En caso de omisión, se entiende que <n> es
+     igual a 1.
+
+     <x> puede ser tanto el nombre de una variable simple como el de
+     una variable con subíndice, o también una subexpresión de <expr>
+     que contenga un operador junto con todos sus argumentos.
+
+     En ocasiones, es posible calcular los coeficientes de expresiones
+     equivalentes a <expr> aplicando `expand' o `factor'.  `coeff' no
+     aplica ni `expand', ni `factor', ni ninguna otra función.
+
+     `coeff' se distribuye sobre listas, matrices y ecuaciones.
 
      Ejemplos:
 
-          (%i1) coeff (2*a*tan(x) + tan(x) + b = 5*tan(x) + 3, tan(x));
-          (%o1)                      2 a + 1 = 5
-          (%i2) coeff (y + x*%e^x + 1, x, 0);
-          (%o2)                         y + 1
+     `coeff' devuelve el coeficiente de `<x>^<n>' en <expr>.
 
+          (%i1) coeff (b^3*a^3 + b^2*a^2 + b*a + 1, a^3);
+                                          3
+          (%o1)                          b
+
+     `coeff(<expr>, <x>^<n>)' es equivalente a `coeff(<expr>, <x>,
+     <n>)'.
+
+          (%i1) coeff (c[4]*z^4 - c[3]*z^3 - c[2]*z^2 + c[1]*z, z, 3);
+          (%o1)                         - c
+                                           3
+          (%i2) coeff (c[4]*z^4 - c[3]*z^3 - c[2]*z^2 + c[1]*z, z^3);
+          (%o2)                         - c
+                                           3
+
+     `coeff(<expr>, <x>, 0)' devuelve el resto de <expr>, el cual no
+     contiene a <x>.
+
+          (%i1) coeff (a*u + b^2*u^2 + c^3*u^3, b, 0);
+                                      3  3
+          (%o1)                      c  u  + a u
+
+     <x> puede ser tanto el nombre de una variable simple como el de
+     una variable con subíndice, o también una subexpresión de <expr>
+     que contenga un operador junto con todos sus argumentos.
+
+          (%i1) coeff (h^4 - 2*%pi*h^2 + 1, h, 2);
+          (%o1)                        - 2 %pi
+          (%i2) coeff (v[1]^4 - 2*%pi*v[1]^2 + 1, v[1], 2);
+          (%o2)                        - 2 %pi
+          (%i3) coeff (sin(1 + x)*sin(x) + sin(1 + x)^3*sin(x)^3, sin(1 + x)^3);
+                                          3
+          (%o3)                        sin (x)
+          (%i4) coeff ((d - a)^2*(b + c)^3 + (a + b)^4*(c - d), a + b, 4);
+          (%o4)                         c - d
+
+     `coeff' no aplica ni `expand', ni `factor', ni ninguna otra
+     función.
+
+          (%i1) coeff (c*(a + b)^3, a);
+          (%o1)                           0
+          (%i2) expand (c*(a + b)^3);
+                           3          2        2        3
+          (%o2)           b  c + 3 a b  c + 3 a  b c + a  c
+          (%i3) coeff (%, a);
+                                          2
+          (%o3)                        3 b  c
+          (%i4) coeff (b^3*c + 3*a*b^2*c + 3*a^2*b*c + a^3*c, (a + b)^3);
+          (%o4)                           0
+          (%i5) factor (b^3*c + 3*a*b^2*c + 3*a^2*b*c + a^3*c);
+                                            3
+          (%o5)                      (b + a)  c
+          (%i6) coeff (%, (a + b)^3);
+          (%o6)                           c
+
+     `coeff' se distribuye sobre listas, matrices y ecuaciones.
+
+          (%i1) coeff ([4*a, -3*a, 2*a], a);
+          (%o1)                      [4, - 3, 2]
+          (%i2) coeff (matrix ([a*x, b*x], [-c*x, -d*x]), x);
+                                    [  a    b  ]
+          (%o2)                     [          ]
+                                    [ - c  - d ]
+          (%i3) coeff (a*u - b*v = 7*u + 3*v, u);
+          (%o3)                         a = 7
 
  -- Función: combine (<expr>)
      Simplifica la suma <expr> combinando términos de con igual
@@ -3763,6 +3865,28 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
      no se racionalizan cuando las expresiones que los contienen se
      convierten al formato canónico racional (CRE).
 
+     Nótese que la función `solve' y todas aquellas otras que la
+     invocan (por ejemplo, `eigenvalues') ignoran esta variable, por lo
+     que hacen la conversión de los números decimales.
+
+     Ejemplos:
+
+          (%i1) rat(x/2.0);
+
+          `rat' replaced 0.5 by 1/2 = 0.5
+                                                 x
+          (%o1)/R/                               -
+                                                 2
+          (%i2) rat(x/2.0), keepfloat;
+
+          (%o2)/R/                             0.5 x
+
+     `solve' ignora `keepfloat':
+
+          (%i3) solve(1.0-x,x), keepfloat;
+
+          `rat' replaced 1.0 by 1/1 = 1.0
+          (%o3)                               [x = 1]
 
  -- Función: lratsubst (<L>, <expr>)
      Esta función es similar a `subst (<L>, <expr>)', excepto por el
@@ -5705,7 +5829,7 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
 
  -- Función: gamma_incomplete (<a>,<z>)
      Función gamma incompleta superior, A&S 6.5.2: gamma_incomplete(a,
-     x) = integrate(exp(-t)*t^(a-1), t, 0, x)
+     z) = integrate(exp(-t)*t^(a-1), t, z, inf)
 
  -- Función: gamma_incomplete_regularized (<a>,<z>)
      Función gamma incompleta superior regularizada, A&S 6.5.1.
@@ -5715,8 +5839,8 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
  -- Función: gamma_incomplete_generalized (<a>,<z1>,<z1>)
      Función gamma incompleta generalizada.
 
-     ` gamma_incomplete_generalized(a,z) =  integrate(t^(a-1)*exp(-t),
-     z, z1,z2) '
+     `gamma_incomplete_generalized(a,z) = integrate(t^(a-1)*exp(-t), z,
+     z1,z2) '
 
  -- Variable optativa: gammalim
      Valor por defecto: 1000000
@@ -6947,6 +7071,16 @@ File: maxima.info,  Node: Funciones y variables para límites,  Prev: Límites, 
      `inf' (más infinito) y `minf' (menos infinito). En el resultado
      también puede hacer uso de `und' (indefinido), `ind' (indefinido
      pero acotado) y `infinity' (infinito complejo).
+
+     `infinity' (infinito complejo) es el resultado que se obtiene
+     cuando el límite del módulo de la expresión es infinito positivo,
+     pero el propio límite de la expresión no es infinito positivo ni
+     negativo. Esto sucede, por ejemplo, cuando el límite del argumento
+     complejo es una constante, como en `limit(log(x), x, minf)', o
+     cuando el argumento complejo oscila, como en `limit((-2)^x, x,
+     inf)', o en aquellos casos en los que el argumento complejo es
+     diferente por cualquiera de los lados de un límite, como en
+     `limit(1/x, x, 0)' o `limit(log(x), x, 0)'.
 
      La variable `lhospitallim' guarda el número máximo de veces que la
      regla de L'Hopital es aplicada en la función `limit', evitando

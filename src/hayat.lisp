@@ -208,6 +208,8 @@
  "A function of one argument which TAYLOR uses to simplify coefficients
   of power series.")
 
+(defvar taylor_simplifier nil)
+
 ;;;		 Subtitle General Macsyma Free Predicates
 
 (defun zfree (e x)
@@ -1277,14 +1279,16 @@
 
 (defun stronger-var? (v1 v2)
   (let ((e1 (rcone)) (e2 (rcone)) reverse? ans)
-    (when (alike1 v1 v2) (break "stronger-var? called on equal vars"))
+    (when (alike1 v1 v2)
+      (tay-err (intl:gettext "taylor: stronger-var? called on equal vars.")))
     (when (and (mexptp v1) ($ratnump (caddr v1)))
       (setq e1 (prep1 (caddr v1)) v1 (cadr v1)))
     (when (and (mexptp v2) ($ratnump (caddr v2)))
       (setq e2 (prep1 (caddr v2)) v2 (cadr v2)))
     (if (alike1 v1 v2)
 	(if (equal e1 e2)
-	    (break "= vars in stronger-var?")
+            (tay-err 
+              (intl:gettext "taylor: stronger-var? called on equal vars."))
 	    (e> e1 e2))
 	(progn
 	  (when (eq (tvar-lim v2) '$finite)
@@ -1309,11 +1313,12 @@
 					     (n2 (cdr (data-gvar-o (get-datum v2 t)))))
 					 (> n1 n2)))
 				      ((mfree v2 (ncons v1))
-				       (break "Unhandled multivar datum comparison"))
+				       (tay-err 
+				         (intl:gettext "taylor: Unhandled multivar datum comparison.")))
 				      ((eq (caar v2) '%log) 't)
 				      ((and (eq (caar v2) 'mexpt) (eq (cadr v2) '$%e))
 				       (stronger-var? `((%log) ,v1) (caddr v2)))
-				      (t (break "Unhandled var in stronger-var?")))
+				      (t (tay-err (intl:gettext "taylor: Unhandled var in stronger-var?."))))
 				(progn
 				  (when (eq (caar v2) '%log)
 				    (exch v1 v2) (exch e1 e2) (setq reverse? (not reverse?)))
@@ -1322,11 +1327,11 @@
 					     (stronger-var? (cadr v1) (cadr v2)))
 					    ((and (eq (caar v2) 'mexpt) (eq (cadr v2) '$%e))
 					     (stronger-var? `((%log) ,v1) (caddr v2)))
-					    (t (break "Unhandled var in stronger-var?")))
+					    (t (tay-err (intl:gettext "taylor: Unhandled var in stronger-var?"))))
 				      (if (and (eq (caar v1) 'mexpt) (eq (cadr v1) '$%e)
 					       (eq (caar v2) 'mexpt) (eq (cadr v2) '$%e))
 					  (stronger-var? (caddr v1) (caddr v2))
-					  (break "Unhandled var in stronger-var?"))))))))
+					  (tay-err (intl:gettext "taylor: Unhandled var in stronger-var?")))))))))
 		(if reverse? (not ans) ans)))))))
 
 (defun neg-monom? (exp)
@@ -1969,7 +1974,8 @@
   (setq tlist (tlist-merge (nconc (find-tlists e) tlist)))
   (prog ($zerobern $simp $algebraic genpairs varlist tvars sing-tvars
 	 log-1 log%i ivars key-vars ans full-log last-exp
-	 mainvar-datum zerolist taylor_simplifier least_term? tvar-limits)
+	 mainvar-datum zerolist taylor_simplifier least_term? tvar-limits 
+         genvar)
 	(setq tlist (mapcan #'(lambda (d)
 				(if (tvar? (datum-var d))
 				    (ncons d)

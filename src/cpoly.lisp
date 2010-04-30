@@ -111,8 +111,8 @@
      (setq *qpr-sl* (make-array *nn* :initial-element 0.0))
      (setq *hr-sl*  (make-array degree :initial-element 0.0))
      (setq *qhr-sl* (make-array degree :initial-element 0.0))
+     (setq *qpi-sl* (make-array *nn* :initial-element 0.0))
      (when complex
-       (setq *qpi-sl* (make-array *nn* :initial-element 0.0))
        (setq *hi-sl*  (make-array degree :initial-element 0.0))
        (setq *qhi-sl* (make-array degree :initial-element 0.0)))
      (setq *nn* degree)
@@ -175,10 +175,10 @@
 	(*infin* most-positive-flonum)
 	(*are* flonum-epsilon)
 	(*mre* 0.0)
-	(xx 0.7071067811865475244008443621048490392848359376884740365883398689953662392310535194251937671638207863675069231154561485124624180279253686063220607485499679157066113329637527963778999752505763910302857350547799858029851372672984310073642587093204445993047761646152421543571607254198813018139976257039948436267) ;; sqrt(0.5)
+	(xx (sqrt 0.5))
 	(yy 0.0)
-	(cosr -0.0697564737441253007759588351941433286009032016527965250436172961370711270667891229125378568280742923028942076107741717160209821557740512756197740925891665208235244345674420755726285778495732000059330205461129612198466216775458241726113210999152981126990497403794217445425671287263223529689424188857433131142804) ;; cos(94deg)
-	(sinr 0.9975640502598242476131626806442550263693776603842215362259956088982191814110818430852892116754760376426967121558233963175758546629687044962793968705262246733087781690124900795021134880736278349857522534853084644420433826380899280074903993378273609249428279246573946968632240992430211366514177713203298481315) ;; sin(94deg)
+	(cosr (cos (float (* 94/180 pi))))
+	(sinr (sin (float (* 94/180 pi))))
 	(*cr* 0.0) (*ci* 0.0)
 	(*sr* 0.0) (*si* 0.0)
 	(*tr* 0.0) (*ti* 0.0)
@@ -387,6 +387,11 @@
 	  (+ *are* *mre*))
       (* mp *mre*)))
 
+;; Compute a lower bound on the roots of the polynomial.  Let the
+;; polynomial be sum(a[k]*x^k,k,0,n).  Then the lower bound is the
+;; smallest real root of sum(|a[k]|*x^k,k,0,n-1)-a[n].  For our
+;; purposes, this lower bound is computed to an accuracy of .005 or
+;; so.
 (defun cauchy-sl ()
   (let ((x (exp (/ (- (log (aref *shr-sl* *nn*)) (log (aref *shr-sl* 0))) (float *nn*))))
 	(xm 0.0))
@@ -408,6 +413,17 @@
 	(setq *f* (+ (* *f* x) (aref *shr-sl* i)) df (+ (* df x) *f*)))
       (setq *f* (+ (* *f* x) (aref *shr-sl* *nn*)) dx (/ *f* df) x (- x dx)))))
 
+;; Scale the coefficients of the polynomial to reduce the chance of
+;; overflow or underflow.  This is different from the algorithm given
+;; in TOMS 419 and 493 which just scales the coefficients by some
+;; fixed factor.  Instead, this algorithm computes a scale factor for
+;; the roots and adjusts the coefficients of the polynomial
+;; appropriately.
+;;
+;; The scale factor for the roots is in *polysc1*.  The roots are
+;; scaled by 2^(*polysc1*).  There is an additional scaling *polysc*
+;; such that the coefficients of the polynomial are all scaled by
+;; 2^(*polysc*).
 (defun scale-sl ()
   (do ((i 0 (1+ i)) (j 0) (x 0.0) (dx 0.0))
       ((> i *nn*)
@@ -447,7 +463,7 @@
 	ai (abs ai))
   (cond ((> ai ar) (setq ar (/ ar ai)) (* ai (sqrt (1+ (* ar ar)))))
 	((> ar ai) (setq ai (/ ai ar)) (* ar (sqrt (1+ (* ai ai)))))
-	((* 1.4142135623730950488016887242096980785696718753769480731766797379907324784621070388503875343276415727350138462309122970249248360558507372126441214970999358314132226659275055927557999505011527820605714701095599716059702745345968620147285174186408891986095523292304843087143214508397626036279952514079896872534 ; sqrt(2.0)
+	((* (sqrt 2.0)
 	  ar))))
 
 ;;; This is the algorithm for doing real polynomials.  It is algorithm
@@ -463,10 +479,10 @@
 	(*infin* most-positive-flonum)
 	(*are* flonum-epsilon)
 	(*mre* 0.0)
-	(xx 0.7071067811865475244008443621048490392848359376884740365883398689953662392310535194251937671638207863675069231154561485124624180279253686063220607485499679157066113329637527963778999752505763910302857350547799858029851372672984310073642587093204445993047761646152421543571607254198813018139976257039948436267) ;; sqrt(0.5)
+	(xx (sqrt 0.5)) ;; sqrt(0.5)
 	(yy 0.0)
-	(cosr -0.0697564737441253007759588351941433286009032016527965250436172961370711270667891229125378568280742923028942076107741717160209821557740512756197740925891665208235244345674420755726285778495732000059330205461129612198466216775458241726113210999152981126990497403794217445425671287263223529689424188857433131142804) ;; cos(94deg)
-	(sinr 0.9975640502598242476131626806442550263693776603842215362259956088982191814110818430852892116754760376426967121558233963175758546629687044962793968705262246733087781690124900795021134880736278349857522534853084644420433826380899280074903993378273609249428279246573946968632240992430211366514177713203298481315) ;; sin(94deg)
+	(cosr (cos (float (* 94/180 pi))))
+	(sinr (sin (float (* 94/180 pi))))
 	(aa 0.0)
 	(cc 0.0)
 	(bb 0.0)
@@ -488,9 +504,11 @@
     (setq degree *nn*)
     (do ((i 0 (1+ i))) ((> i *nn*)) (setf (aref *shr-sl* i) (abs (aref *pr-sl* i))))
     (if (> *nn* 0) (scale-sl))
+    ;; Loop to find all roots
     (do nil
 	((< *nn* 3)
 	 (cond ((= *nn* 2)
+		;; Solve the final quadratic polynomial
 		(quad-sl (aref *pr-sl* 0.) (aref *pr-sl* 1) (aref *pr-sl* 2))
 		(cond ((and $polyfactor (not (zerop *szi*)))
 		       (setf (aref *pr-sl* 2) (/ (aref *pr-sl* 2) (aref *pr-sl* 0)))
@@ -500,15 +518,21 @@
 			 (setf (aref *pi-sl* 2) *szi*)
 			 (setf (aref *pr-sl* 1) *lzr*)
 			 (setf (aref *pi-sl* 1) *lzi*))))
-	       (t (setf (aref *pr-sl* 1) (- (/ (aref *pr-sl* 1) (aref *pr-sl* 0))))))
+	       (t
+		;; Solve the final linear polynomial 
+		(setf (aref *pr-sl* 1) (- (/ (aref *pr-sl* 1) (aref *pr-sl* 0))))))
 	 (setq *nn* 0))
+      ;; Calculate a lower bound on the modulus of the zeros.
       (do ((i 0 (1+ i))) ((> i *nn*)) (setf (aref *shr-sl* i) (abs (aref *pr-sl* i))))
       (setq bnd (cauchy-sl))
+
+      ;; Compute derivative of polynomial.  Save result in *hr-sl*.
       (do ((i 1 (1+ i)))
 	  ((> i *n*))
 	(setf (aref *hr-sl* i) (/ (* (float (- *n* i)) (aref *pr-sl* i)) (float *n*))))
       (setf (aref *hr-sl* 0) (aref *pr-sl* 0))
       (setq aa (aref *pr-sl* *nn*) bb (aref *pr-sl* *n*) zerok (zerop (aref *hr-sl* *n*)))
+      ;; Do 5 steps with no shift.
       (do ((jj 1 (1+ jj)))
 	  ((> jj 5.))
 	(setq cc (aref *hr-sl* *n*))
@@ -640,23 +664,15 @@
 
 (defun quadit-sl nil
   (setq *nz* 0 *u* *ui* *v* *vi*)
-  (do ((tried) (j 0) (ee) (zm) (t1) (mp) (relstp) (omp))
+  (do ((tried) (j 0) (ee) (mp) (relstp) (omp) (ms))
       (nil)
     (quad-sl 1.0 *u* *v*)
     (and (> (abs (- (abs *szr*) (abs *lzr*))) (* 1e-2 (abs *lzr*)))
 	 (return nil))
     (quadsd-sl)
-    (setq mp (+ (abs (- *a* (* *szr* *b*))) (abs (* *szi* *b*)))
-	  zm (sqrt (abs *v*))
-	  ee (* 2.0 (abs (aref *qpr-sl* 0)))
-	  t1 (- (* *szr* *b*)))
-    (do ((i 1 (1+ *n*)))
-	((> i *n*)) (setq ee (+ (* ee zm) (abs (aref *qpr-sl* i)))))
-    (setq ee (+ (* ee zm) (abs (+ *a* t1)))
-	  ee (- (* (+ (* 5.0 *mre*) (* 4.0 *are*)) ee)
-		 (* (+ (* 5.0 *mre*) (* 2.0 *are*))
-		     (+ (abs (+ *a* t1)) (* (abs *b*) zm)))
-		 (* -2.0 *are* (abs t1))))
+    (setf mp (+ (abs (- *a* (* *szr* *b*))) (abs (* *szi* *b*))))
+    (setf ms (cmod-sl *szr* *szi*))
+    (setf ee (errev-sl ms mp))
     (cond ((not (> mp (* 2e1 ee))) (setq *nz* 2)
 	   (return nil)))
     (setq j (1+ j))
@@ -814,6 +830,9 @@
 		       *vi* (* *v* (1+ (/ c4 c1)))))))
     nil))
 
+;; Divide the polynomial in *pr-sl* by the quadratic x^2 + (*u*)*x +
+;; (*v*).  Place the quotient in *qpr-sl* and the remainder in *a* and
+;; *b*.  I (rtoy) think the remainder polynomial is (*b*)*x + (*a*).
 (defun quadsd-sl ()
   (setq *b* (aref *pr-sl* 0))
   (setf (aref *qpr-sl* 0) *b*)
@@ -827,29 +846,35 @@
     (setq *b* *a*
 	  *a* c0)))
 
+;; Compute the zeros of the quadratic a0*z^2+b1*z+c0.  The larger zero
+;; is returned in *szr* and *szi*.  The smaller zero is in *lzr* and
+;; *lzi*.
 (defun quad-sl (a0 b1 c0)
   (setq *szr* 0.0 *szi* 0.0 *lzr* 0.0 *lzi* 0.0)
   (let ((b0 0.0)
 	(l0 0.0)
 	(*e* 0.0))
+    ;; Handle the degenerate cases of a0 = 0 or c0 = 0 first.
     (cond ((zerop a0) (or (zerop b1) (setq *szr* (- (/ c0 b1)))))
 	  ((zerop c0) (setq *lzr* (- (/ b1 a0))))
-	  (t (setq b0 (/ b1 2.0))
-	     (cond ((< (abs b0) (abs c0))
-		    (setq *e* a0)
-		    (and (< c0 0.0) (setq *e* (- a0)))
-		    (setq *e* (- (* b0 (/ b0 (abs c0))) *e*)
-			  l0 (* (sqrt (abs *e*)) (sqrt (abs c0)))))
-		   (t (setq *e* (- 1.0 (* (/ a0 b0) (/ c0 b0)))
-			    l0 (* (sqrt (abs *e*)) (abs b0)))))
-	     (cond ((< *e* 0.0)
-		    (setq *szr* (- (/ b0 a0))
-			  *lzr* *szr*
-			  *szi* (abs (/ l0 a0))
-			  *lzi* (- *szi*)))
-		   (t (or (< b0 0.0) (setq l0 (- l0)))
-		      (setq *lzr* (/ (- l0 b0) a0))
-		      (or (zerop *lzr*) (setq *szr* (/ c0 *lzr* a0)))))))
+	  (t
+	   ;; Quadratic formula.
+	   (setq b0 (/ b1 2.0))
+	   (cond ((< (abs b0) (abs c0))
+		  (setq *e* a0)
+		  (and (< c0 0.0) (setq *e* (- a0)))
+		  (setq *e* (- (* b0 (/ b0 (abs c0))) *e*)
+			l0 (* (sqrt (abs *e*)) (sqrt (abs c0)))))
+		 (t (setq *e* (- 1.0 (* (/ a0 b0) (/ c0 b0)))
+			  l0 (* (sqrt (abs *e*)) (abs b0)))))
+	   (cond ((< *e* 0.0)
+		  (setq *szr* (- (/ b0 a0))
+			*lzr* *szr*
+			*szi* (abs (/ l0 a0))
+			*lzi* (- *szi*)))
+		 (t (or (< b0 0.0) (setq l0 (- l0)))
+		    (setq *lzr* (/ (- l0 b0) a0))
+		    (or (zerop *lzr*) (setq *szr* (/ c0 *lzr* a0)))))))
     nil))
 
 ;; This is a very straightforward conversion of $allroots to use
@@ -1378,9 +1403,9 @@
      (setq *qpr-sl* (make-array *nn* :initial-element (intofp 0)))
      (setq *hr-sl*  (make-array degree :initial-element (intofp 0)))
      (setq *qhr-sl* (make-array degree :initial-element (intofp 0)))
+     (setq *qpi-sl* (make-array *nn* :initial-element (intofp 0)))
 
      (when complex
-       (setq *qpi-sl* (make-array *nn* :initial-element (intofp 0)))
        (setq *hi-sl*  (make-array degree :initial-element (intofp 0)))
        (setq *qhi-sl* (make-array degree :initial-element (intofp 0))))
      (setq *nn* degree)
@@ -1394,7 +1419,7 @@
      (setq res nil)
      (cond ((not (zerop *nn*))
 	    (mtell (intl:gettext "bfallroots: only ~S out of ~S roots found.~%") (- degree *nn*) degree)
-	    (setq expr (intofp 0))
+	    (setq expr (bcons (intofp 0)))
 	    (do ((i 0 (1+ i)))
 		((> i *nn*))
 	      (setq expr
@@ -1486,7 +1511,7 @@
 	((< *nn* 3)
 	 (cond ((= *nn* 2)
 		(bf-quad-sl (aref *pr-sl* 0.) (aref *pr-sl* 1) (aref *pr-sl* 2))
-		(cond ((and $polyfactor (not (zerop *szi*)))
+		(cond ((and $polyfactor (not (fpzerop *szi*)))
 		       (setf (aref *pr-sl* 2) (fpquotient (aref *pr-sl* 2)
 							  (aref *pr-sl* 0)))
 		       (setf (aref *pr-sl* 1) (fpquotient (aref *pr-sl* 1)
@@ -1554,10 +1579,10 @@
 	       (cond ((= *nz* 2)
 		      (setf (aref *pr-sl* *n*) *lzr*)
 		      (setf (aref *pi-sl* *n*) *lzi*)
-		      (cond ((and $polyfactor (not (zerop *szi*)))
+		      (cond ((and $polyfactor (not (fpzerop *szi*)))
 			     (setf (aref *pr-sl* *nn*) *v*)
 			     (setf (aref *pr-sl* *n*) *u*)
-			     (setf (aref *pi-sl* *nn*) 1.0)))))
+			     (setf (aref *pi-sl* *nn*) (intofp 1))))))
 	       (setq *nn* (- *nn* *nz*) *n* (1- *nn*))
 	       (do ((i 0 (1+ i))) ((> i *nn*)) (setf (aref *pr-sl* i) (aref *qpr-sl* i)))
 	       (return nil)))
@@ -1566,7 +1591,7 @@
     (cond ($polyfactor
 	   (do ((i degree (1- i)))
 	       ((= i *nn*))
-	     (cond ((zerop (aref *pi-sl* i))
+	     (cond ((fpzerop (aref *pi-sl* i))
 		    (setf (aref *pr-sl* i) (bf-scale-float (aref *pr-sl* i) *polysc1*)))
 		   (t (setf (aref *pr-sl* i) (bf-scale-float (aref *pr-sl* i) (* 2 *polysc1*)))
 		      (setq i (1- i))
@@ -1685,11 +1710,10 @@
   (do ((tried)
        (j 0)
        (ee)
-       (zm)
-       (t1)
        (mp)
        (relstp)
-       (omp))
+       (omp)
+       (ms))
       (nil)
     (bf-quad-sl (intofp 1) *u* *v*)
     (and (fpgreaterp (fpabs (fpdifference (fpabs *szr*)
@@ -1699,26 +1723,8 @@
     (bf-quadsd-sl)
     (setq mp (fpplus (fpabs (fpdifference *a* (fptimes* *szr* *b*)))
 		     (fpabs (fptimes* *szi* *b*)))
-	  zm (fpsqrt (fpabs *v*))
-	  ee (fptimes* (intofp 2)
-		       (fpabs (aref *qpr-sl* 0)))
-	  t1 (fpminus (fptimes* *szr* *b*)))
-    (do ((i 1 (1+ *n*)))
-	((> i *n*))
-      (setq ee (fpplus (fptimes* ee zm)
-		       (fpabs (aref *qpr-sl* i)))))
-    (setq ee (fpplus (fptimes* ee zm)
-		     (fpabs (fpplus *a* t1)))
-	  ee (fpdifference
-	      (fpdifference (fptimes* (fpplus (fptimes* (intofp 5) *mre*)
-					      (fptimes* (intofp 4) *are*))
-				      ee)
-			    (fptimes* (fpplus (fptimes* (intofp 5) *mre*)
-					      (fptimes* (intofp 2) *are*))
-				      (fpplus (fpabs (fpplus *a* t1))
-					      (fptimes* (fpabs *b*) zm))))
-	      (fptimes* (intofp -2)
-			(fptimes* *are* (fpabs t1)))))
+	  ms (bf-cmod-sl *szr* *szi*)
+	  ee (bf-errev-sl ms mp))
     (cond ((not (fpgreaterp mp (fptimes* (intofp 2e1) ee)))
 	   (setq *nz* 2)
 	   (return nil)))
