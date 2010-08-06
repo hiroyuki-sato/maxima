@@ -61,6 +61,7 @@
 	  ((eql line 'eof))
 	(if (search "AM_INIT_AUTOMAKE" line)
 	    (progn 
+              #+openmcl (setq line (string-trim '(#\Return) line))
 	      (setf version 
 		    (replace-substring line "AM_INIT_AUTOMAKE(maxima," ""))
 	      (setf version
@@ -138,7 +139,7 @@
 			      (cons "@VERSION@" (get-version))
 			      (cons "@win32@" win32-string)
 			      (cons "@default_layout_autotools@" "false")
-			      (cons "@POSIX_SHELL@" "/bin/sh")
+			      (cons "@POSIX_SHELL@" shell)
 			      (cons "@expanded_top_srcdir@" 
 				    (replace-substring prefix "\\" "\\\\"))
 			      (cons "@DEFAULTLISP@" *maxima-lispname*)

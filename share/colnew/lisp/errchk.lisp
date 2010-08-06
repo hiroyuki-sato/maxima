@@ -1,13 +1,13 @@
 ;;; Compiled by f2cl version:
-;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;; ("f2cl1.l,v 1.221 2010/05/26 19:25:52 rtoy Exp $"
 ;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
-;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl5.l,v 1.204 2010/02/23 05:21:30 rtoy Exp $"
 ;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
-;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+;;;  "macros.l,v 1.114 2010/05/17 01:42:14 rtoy Exp $")
 
-;;; Using Lisp CMU Common Lisp 19f (19F)
+;;; Using Lisp CMU Common Lisp CVS Head 2010-05-25 18:21:07 (20A Unicode)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -18,13 +18,13 @@
 
 
 (defun errchk (xi z dmz valstr ifin)
-  (declare (type (integer) ifin)
+  (declare (type (f2cl-lib:integer4) ifin)
            (type (array double-float (*)) valstr dmz z xi))
   (let ((colord-m
          (make-array 20
                      :element-type 'f2cl-lib:integer4
-                     :displaced-to (colord-part-1 *colord-common-block*)
-                     :displaced-index-offset 0))
+                     :displaced-to (colord-part-0 *colord-common-block*)
+                     :displaced-index-offset 5))
         (colbas-asave
          (make-array 112
                      :element-type 'double-float
@@ -58,7 +58,7 @@
                       (wgterr colest-wgterr)
                       (tolin colest-tolin)
                       (ltol colest-ltol)
-                      (ntol (aref (colest-part-2 *colest-common-block*) 0)))
+                      (ntol (aref (colest-part-1 *colest-common-block*) 80)))
       (f2cl-lib:with-multi-array-data
           ((xi double-float xi-%data% xi-%offset%)
            (z double-float z-%data% z-%offset%)
@@ -72,7 +72,8 @@
           (declare (type (array double-float (40)) err errest)
                    (type (array double-float (1)) dummy)
                    (type double-float x)
-                   (type (integer) j iback i knew kstore l ltolj ltjz lj mj))
+                   (type (f2cl-lib:integer4) j iback i knew kstore l ltolj ltjz
+                                             lj mj))
           (setf ifin 1)
           (setf mshflg 1)
           (f2cl-lib:fdo (j 1 (f2cl-lib:int-add j 1))
@@ -259,7 +260,7 @@
           (fortran-to-lisp::make-f2cl-finfo
            :arg-types '((array double-float (1)) (array double-float (1))
                         (array double-float (1)) (array double-float (1))
-                        (integer))
+                        (fortran-to-lisp::integer4))
            :return-values '(nil nil nil nil fortran-to-lisp::ifin)
            :calls '(fortran-to-lisp::approx))))
 

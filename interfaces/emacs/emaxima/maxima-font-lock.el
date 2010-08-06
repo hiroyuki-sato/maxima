@@ -3,9 +3,9 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name: version-5_21_1 $
-;; $Revision: 1.19 $
-;; $Date: 2010/03/24 19:53:40 $
+;; $Name: RELEASE-5_22-BRANCH $
+;; $Revision: 1.20 $
+;; $Date: 2010/04/15 14:23:58 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -1389,9 +1389,9 @@
 (defvar maxima-font-lock-keywords-3
   (append maxima-font-lock-keywords-2
     (list 
-     (list "^[[:space:]]*\\([%_[:alnum:]]+\\)(\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*)[[:space:]]*:*:="
+     (list "^[[:space:]]*\\([%_[:alnum:]]+\\)[[(]\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*[])][[:space:]]*:*:="
            '(1 font-lock-function-name-face))
-     (list "^[[:space:]]*\\(?:[%_[:alnum:]]+\\)(\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*)[[:space:]]*:*:="
+     (list "^[[:space:]]*\\(?:[%_[:alnum:]]+\\)[[(]\\([[:space:],%_[:alnum:]]+\\(?:\\[[%_[:alnum:]]+\\]\\)*\\)[:space:]*[])][[:space:]]*:*:="
            '(1 font-lock-variable-name-face))))
   "Gaudy level highlighting for Maxima mode.")
 ;;"^.*[[(]\\([^])]*\\)[])][ \t\n\f\r]*:*:="

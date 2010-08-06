@@ -84,6 +84,11 @@ calculus/taylor1.mac\
 combinatorics/README\
 colnew/colnew-package.lisp\
 colnew/colnew-lisp.system\
+colnew/colnew.system\
+colnew/colnew-if.lisp\
+colnew/colnew.mac\
+colnew/prob1.mac\
+colnew/prob2.mac\
 colnew/lisp/approx.lisp\
 colnew/lisp/appsln.lisp\
 colnew/lisp/colnew.lisp\
@@ -232,6 +237,7 @@ contrib/topoly-user-doc.html\
 contrib/f90.lisp\
 contrib/finance/finance.mac\
 contrib/finance/finance.texi\
+contrib/finance/finance.es.texi\
 contrib/format/README\
 contrib/format/autoload-m.macsyma\
 contrib/format/autoload-mp.macsyma\
@@ -481,6 +487,8 @@ contrib/rand/vandpol.usg\
 contrib/rtest_opproperties.mac\
 contrib/rtestdefstruct.mac\
 contrib/rtest_lsquares.mac\
+contrib/rtest_mnewton.mac\
+contrib/rtest_solve_rat_ineq.mac\
 contrib/rtest_z_transform.mac\
 contrib/sarag/aliases.mac\
 contrib/sarag/arag_test.mac\
@@ -1067,6 +1075,7 @@ trigonometry/spangl.usg\
 trigonometry/trgsmp.mac\
 trigonometry/trigrat.lisp\
 utils/mactex-utilities.lisp\
+vector/rtest_vect.mac\
 vector/vect.dem\
 vector/vect.mac\
 vector/vect.usg\
@@ -1082,6 +1091,7 @@ genericdirDATA = \
 maxima-init.lisp\
 share.usg\
 template.texi\
+template-standalone.texi\
 builtins-list.txt\
 share_testsuite.mac\
 $(sharefiles)

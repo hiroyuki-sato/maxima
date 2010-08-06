@@ -615,9 +615,62 @@ x^2/12+2*x/3+1$
 hypergeometric([-1],[-2],x), expand_hypergeometric : true;
 x/2+1$
 
+
+/* regression: Unevaluated numerical hypergeometric() call - ID: 2996065 */
+
+close_p(hypergeometric([-1/4,1/4],[1],16.0/25),0.95126303911614,15);
+true$
+
+close_p(hypergeometric([1,1],[2], 0.998),6.227062222867928,15);
+true$
+
+close_p(hypergeometric([1/2,-1/2],[1], 0.64), 0.812549610282201,15);
+true$
+
+/* tests for new code for x near exp(%i * %pi / 3) */
+
+close_p(hypergeometric([1/2,2/3],[6], 0.5b0+%i * sqrt(3.0b0)/2),
+  5.56090808176771804282797055039701904767032b-2*%i
+  +1.01996502902735430283851818152075979159011b0, fpprec-2);
+true$
+
+close_p(hypergeometric([1/2,2/3],[6], 0.5b0 - %i * sqrt(3.0b0)/2),
+	-5.56090808176771804282797055039701904767032b-2*%i
+        	+1.01996502902735430283851818152075979159011b0, fpprec-2);
+true$
+
+/* tests aimed toward increasing code coverage*/
+
+(remvalue(id,a,b,c,d,x,z,f),0);
+0$
+
+conjugate(hypergeometric([1/2, 6],[9], 1/2 + %i/8));
+hypergeometric([1/2, 6],[9], 1/2 - %i/8)$
+
+conjugate(hypergeometric([a,b,c,d],[f], 8 + %i));
+'(conjugate(hypergeometric([a,b,c,d],[f], 8 + %i)))$
+
+block([fpprec : 20], close_p(hypergeometric([5/8],[], 1.97b0), nfloat(1/(1-x)^(5/8),[x = 1.97b0],20), 18));
+true$
+
+close_p(hypergeometric([-1],[3/4],0.5), 1/3, 15);
+true$
+
+block([expand_hypergeometric : true], hypergeometric([-2, 1/2 + %i/7],[%i/9],x));
+(29241/16072-108783*%i/16072)*x^2+(9*%i-18/7)*x+1$
+
+tex(hypergeometric([2],[9],x),false);
+"$$F\\left( \\left. \\begin{array}{c}2\\\\9\\end{array} \\right |,x\\right)$$
+"$
+
+tex(hypergeometric([a,b],[c],x),false);
+"$$F\\left( \\left. \\begin{array}{c}a,\\;b\\\\c\\end{array} \\right |,x
+ \\right)$$
+"$
+
 (time : (absolute_real_time ()- start), print(time), is(time < 40));
 true$
 
-(remvalue(id,z,start,f), reset(domain, fpprec, expand_hypergeometric, max_fpprec), 
+(remvalue(start), reset(domain, fpprec, expand_hypergeometric, max_fpprec), 
  remfunction(fake_hg, close_p, check_id),0);
 0$

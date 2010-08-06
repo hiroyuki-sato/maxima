@@ -109,11 +109,11 @@
 	((zerop (car p)) (cadr p))
 	(t (constcoef (cddr p)))))
 
-(setq *radsubst nil ratsubvl t)		;SUBST ON VARLIST
+(setq *radsubst nil ratsubvl t)         ; SUBST ON VARLIST
 
-(defmfun $ratsubst (a b c)		;NEEDS CODE FOR FAC. FORM
-  (prog (varlist newvarlist dontdisrepit $ratfac genvar)
-     ;;hard to maintain user ordering info.
+(defmfun $ratsubst (a b c)              ; NEEDS CODE FOR FAC. FORM
+  (prog (varlist newvarlist dontdisrepit $ratfac genvar $keepfloat)
+     ;; hard to maintain user ordering info.
      (if ($ratp c) (setq dontdisrepit t))
      (when (and $radsubstflag
 		(prog2 (newvar b) (some #'mexptp varlist)))
@@ -125,7 +125,7 @@
 	 (fnewvar c)
 	 (setq *exp (cdr (ratrep* b)))
 	 (setq *exp2 (cdr (ratrep* c)))
-	 ;;	since *radsubst is t, both *exp and *exp2 will be radcan simplified
+	 ;; since *radsubst is t, both *exp and *exp2 will be radcan simplified
 	 (setq *radsubst t)
 	 (spc0)
 	 (setq b (rdis *exp) c (rdis *exp2))
@@ -363,10 +363,9 @@
   (cond ((alike1 var e) nil)
 	((atom e) t)
 	((and (not argsfreeofp)
-	  (or
-	    (alike1 var ($verbify (caar e)))
-	    (alike1 var ($nounify (caar e)))))
-     nil)
+              (or (alike1 var ($verbify (caar e)))
+                  (alike1 var ($nounify (caar e)))))
+         nil)
 	((and (or (member (caar e) '(%product %sum %laplace) :test #'eq)
 		  (and (eq (caar e) '%integrate) (cdddr e))
 		  (and (eq (caar e) '%limit) (cddr e)))
@@ -377,6 +376,10 @@
 	       ((not (freeofl var (hand-side (caddr e) 'l))) t)
 	       (t (freeof var (cadr e)))))
 	((and (eq (caar e) 'lambda) (member var (cdadr e) :test #'eq)) t)
+        ;; Check for a local variable in a block.
+        ((and (eq (caar e) 'mprog) (member var (cdadr e) :test #'eq)) t)
+        ;; Check for a loop variable.
+        ((and (eq (caar e) 'mdo) (alike1 var (cadr e))) t)
 	(argsfreeofp (freeofl var (margs e)))
 	(t (freeofl var (cdr e)))))
 

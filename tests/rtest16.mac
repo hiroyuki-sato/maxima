@@ -1,5 +1,5 @@
-kill (all);
-done;
+(kill (all), values);
+[];
 
 /* make sure things work after a reset().  ID: 1986726 and ID: 2787047 */
 (reset(),0);
@@ -1159,7 +1159,7 @@ limit(cos(1/x)*sin(x)-sin(x),x,inf);
 limit(cos(1/x)*sin(x)-sin(x)+a,x,inf);
 a;
 
-/* Bug ID: 2914176  	 Conversion of rational to bfloat is inaccurate
+/* Bug ID: 2914176 - Conversion of rational to bfloat is inaccurate
  *
  * The difference should be 1/262144, but we don't check for that.
  */
@@ -1319,7 +1319,8 @@ orderlessp([rat(x)],[rat(x)]);
 false;
 
 /* Bug ID: 781657 - binomial(x,x) => 1, but binomial(-1,-1) => 0
- * binomial(x,x) simplifies to 1 only if the sign of x is known not to be zero.
+ * binomial(x,x) simplifies to 1 only if the sign of x is known not to be 
+ * negative.
  */
 is(equal(binomial(x,x),1));
 'unknown;
@@ -1448,3 +1449,298 @@ exp((1.5+x)*%pi*%i);
 -%i*exp(1.0*%i*%pi*x);
 exp((1.5b0+x)*%pi*%i);
 -%i*exp(1.0b0*%i*%pi*x);
+
+/* Bug ID: 2781127 - bfpsi0 of complex
+ *
+ * (The result was not in rectangular form but it should be.)
+ */
+bfpsi0(4.5 + %i,15);
+2.43845477527606b-1*%i + 1.41875534014717b0;
+
+/* Bug ID: 2988190 - atan2(1b20,-1b0); badly wrong
+ * It's really a bug in atan for x < -1, so test both.
+ */
+(fpprec:16, atan(-1b20));
+-1.570796326794897b0;
+atan2(1b20,-1b0);
+1.570796326794897b0;
+
+/*
+ * Bug ID: 2991924 - Incorrect integration of rational functions
+ */
+integrate(1/(x^4-2),x,0,1) - integrate(1/(x^2-sqrt(2))/(x^2+sqrt(2)),x,0,1);
+0;
+
+integrate(1/(x^6-4),x,0,1) - integrate(1/(x^3-2)/(x^3+2),x,0,1);
+0;
+
+/* BUG ID:  2113751 - Incomprehensible behavior of coeff()
+ */
+coeff(2*%e^x, x, 0);
+2*%e^x;
+
+/* Bug ID: 2997276 - zeta(3),numer; gives Lisp error 
+ * 
+ * Also add a test for complex rational argument, which wasn't handled
+ * correctly either.
+ */
+block([numer:true], is(abs(zeta(3)-1.202056903159594) < 1e-15));
+true;
+block([numer:true], is(abs(zeta(3+%i)-(1.10721440843141 - .1482908671781754*%i)) < 1e-15));
+true;
+
+/* Bug ID: 2997401 - float(log(200!)) produces an error
+ *
+ */
+is(abs(float(log(200!))-863.2319871924054) < 1e-15);
+true;
+
+is(abs(float(log((1+200!)/7))-861.2860770433501) < 1e-15);
+true;
+
+/* Additional tests */
+is(abs(float(log(-1))-float(%pi)*%i) < 1e-15);
+true;
+
+is(abs(float(log((1+200!)/(-7))) - (3.141592653589793*%i + 861.2860770433501)) < 1e-14);
+true;
+
+is(abs(float(log((1+200!)+(1+199!)*%i))- (.004999958333958322*%i + 863.2319996922491)) < 1e-15);
+true;
+
+is(abs(float(log((1+200!)/7+(1+199!)/11*%i)) - (.003181807444342708*%i + 869.9736929490153)) < 1e-15);
+true;
+
+/* Bug ID: 221642 limit needs %piargs to be true
+ * The implementation of simp-%atan and simpatan2 has been revised.
+ * We get more limits independent of the value of %piargs.
+ */
+%piargs:false;
+false;
+limit(atan2(0,y),y,0,plus);
+atan(0);
+limit(atan2(0,y),y,0,minus);
+%pi;
+limit(atan2(x,0),x,0,plus);
+%pi/2;
+limit(atan2(x,0),x,0,minus);
+-%pi/2;
+reset(%piargs);
+[%piargs];
+
+/* Bug ID: 2306402 - scalarp bug
+ * Bug ID: 1985748 - array and scalar declarations yield inconsistent results
+ * Examples from the bug report to show consistent behavior of scalarp
+ */
+ 
+declare(x,scalar);
+done;
+scalarp(foo(x));
+true;
+scalarp(foo(1));
+true;
+scalarp(foo(x,1));
+true;
+
+scalarp(x);
+true;
+scalarp(x[1]);
+true;
+array(x,5);
+x;
+scalarp(x);
+true;
+scalarp(x[1]);
+true;
+nonscalarp(x);
+false;
+
+kill(x);
+done;
+
+/* Bug ID:1723548 - gradef for variables: not used in diff
+ * Show that the total differential of f works in expressions too.
+ */
+depends(f,[x,y]);
+[f(x,y)];
+diff(f);
+'diff(f,y,1)*del(y)+'diff(f,x,1)*del(x)$
+diff(3*f);
+3*'diff(f,y,1)*del(y)+3*'diff(f,x,1)*del(x)$
+diff(a*f);
+a*'diff(f,y,1)*del(y)+a*'diff(f,x,1)*del(x)+f*del(a)$
+remove(f,dependency);
+done;
+
+/* Bug ID: 1089719 addrow creates strange matrix
+ */
+m:matrix([0,0]);
+matrix([0,0]);
+m:addrow(m,m);
+matrix([0,0],[0,0])$
+m[1,1]:11;
+11;
+m;
+matrix([11,0],[0,0])$
+kill(m);
+done;
+
+/* Bug ID: 1663385 - declare multiplicative - wrong simplification
+ */
+declare(f,additive,f,multiplicative);
+done;
+f(a*b+c);
+f(a)*f(b)+f(c);
+kill(f);
+done;
+
+/* Bug ID: 816808 - subst(in)part of rat -- internal errs
+ */
+substpart(x,2/3,2);
+2/x;
+substinpart(4,2/3,2);
+1/2;
+
+/* Bug ID: 1117533 - letsimp complains about assignment to %pi
+ */
+matchdeclare(a,true);
+done;
+(let(%pi*a,foo(a)),done);
+done;
+letsimp(%pi*x);
+foo(x);
+remlet(%pi*a);
+done;
+
+/* Bug ID: 3002971 - limit fails where rat+subst works
+ */
+limit(min(x,x+2,sin(x)/x),x,0);
+0;
+limit(max(x,x+2,sin(x)/x),x,0);
+2;
+
+/* Bug ID: 2805600 depends() partially prevents diff() to work
+ */
+depends(t,x);
+[t(x)];
+diff(f(t),z);
+0;
+remove(t,dependency);
+done;
+
+/* Bug ID: 1184718 - AT needs soime basic simplifications
+ */
+'at(2,x=0);
+2;
+
+/* Bug ID: 2998227 - spurious at(0,A=0)
+ */
+taylor(integrate(gamma(x+1),x,0,A),A,0,3),nouns;
+A-%gamma*A^2/2+(6*%gamma^2+%pi^2)*A^3/36;
+
+/* Bug ID: 3010829 - numerical evaluation of elliptic_ec fails for argument > 1
+ */
+elliptic_ec(2.0);
+.5990701173677959*%i+0.599070117367796$
+
+/* Bug ID: 1929287 - 0.0 + [0] ---> [0]
+ */
+0.0+[0];
+[0.0];
+0.0b0+[0];
+[0.0b0];
+0.0+matrix([0,1/2,1,x]);
+matrix([0.0,0.5,1.0,x]);
+0.0b0+matrix([0,1/2,1,x]);
+matrix([0.0b0,5.0b-1,1.0b0,x]);
+
+/* Bug ID: 2996106 - at(diff(f(x,y),x,1,y,1),[x=a,y=b]) is wrong
+ */
+at(diff(f(x,y),x,1,y,1),[x=a,y=b]);
+'at('diff(f(x,y),x,1,y,1),[x = a,y = b]);
+
+/* Bug ID: 1969790 - limits and subscripts
+ */
+limit(mu[inf],x,inf);
+mu[inf];
+
+/* Bug report ID: 2556133 - "at" should do parallel substitutions
+ */
+errcatch(at(atan2(y^2+1,x),[y=%i,x=0]));
+[];
+errcatch(at(atan2(y^2+1,x),[x=0,y=%i]));
+[];
+
+/* Bug report ID: 2014941 - compositions of 'at'
+ */
+at(at(diff(f(x),x),[x=b]),[b=y]);
+'at('at('diff(f(x),x,1),[x = b]),[b = y]);
+
+at(diff(f(x,y),x,1,y,1),[x=a,y=b]) - at(diff(f(x,y),x,1,y,1),[y=b,x=a]);
+0;
+
+/* Bug report ID: 1677217 - composistions of 'at'
+ */
+depends(y,[x,z]);
+[y(x,z)];
+at(at(diff(y,x),x=a),z=b);
+'at('at('diff(y,x,1),x = a),z = b);
+remove(y,dependency);
+done;
+
+/* Bug report ID: 3023978 - integrate(x^x+x,x) is wrong
+ */
+integrate(x^x+x,x);
+'integrate(exp(x*log(x)),x)+x^2/2;
+
+/* Bug report ID: 2465066 - unsimplified result from integrate
+ */
+matchdeclare(x, symbolp);
+done;
+(tellsimpafter('integrate(f(x),x), g(x)),done);
+done;
+integrate(5*f(x) + 7,x);
+5*g(x)+7*x;
+kill(rules);
+done;
+
+/* Bug report ID: 2789110 - solve, tan and atan depend on order of variables
+ */
+solve(tan(x - atan(a/b)) = 0, x);
+[x = atan(a/b)];
+solve(tan(x - atan(b/a)) = 0, x);
+[x = atan(b/a)];
+
+/* Bug report ID: 1961494 - translated functions & values list
+ */
+(kill(all), f():= x:2, translate(f));
+[f];
+f();
+2;
+values;
+[x];
+kill(f,x);
+done;
+/* The value of x has been removed. */
+x;
+'x;
+
+/* Bug report ID: 3025038 - gruntz needs logexpand:true
+ */
+gruntz( (x + 2^x) / 3^x, x, inf),logexpand:false;
+0;
+
+/* Bug report ID: 2977217 - maxima can not integrate x*exp(-1/2*(x-m)^2)
+ */
+integrate(x*exp(-1/2*(x-m)^2),x);
+%i*(sqrt(2)*%i*gamma_incomplete(1,(m-x)^2/2)*(m-x)^2/(x-m)^2
+   -%i*gamma_incomplete(1/2,(m-x)^2/2)*m*(m-x)/abs(x-m))/sqrt(2);
+
+/* Bug report ID: 2996542 - log(x) integration is incorrect
+ */
+assume(a>0);
+[a>0];
+integrate(log(x),x,0,a);
+a*log(a)-a;
+forget(a>0);
+[a>0];

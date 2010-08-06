@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -9,9 +9,779 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Funciones y variables para simplification,  Prev: Introducción a simplification,  Up: simplification
+
+71.2 Funciones y variables para simplification
+==============================================
+
+71.2.1 Paquete absimp
+---------------------
+
+El paquete `absimp' contiene reglas para aplicar patrones que extienden
+el sistema de reglas nativo de Maxima para las funciones `abs' y
+`signum', respetando las relaciones establecidas con la función
+`assume' o con declaraciones tales como `modedeclare (m, even, n, odd)'
+para enteros pares o impares.
+
+   En el paquete `absimp' se definen las funciones `unitramp' y
+`unitstep' en términos de `abs' y `signum'.
+
+   La instrucción `load (absimp)' carga este paquete y `demo (absimp)'
+desarrolla una demostración sobre el uso del mismo.
+
+   Ejemplos:
+
+     (%i1) load (absimp)$
+     (%i2) (abs (x))^2;
+                                            2
+     (%o2)                                 x
+     (%i3) diff (abs (x), x);
+                                           x
+     (%o3)                               ------
+                                         abs(x)
+     (%i4) cosh (abs (x));
+     (%o4)                               cosh(x)
+
+71.2.2 Paquete facexp
+---------------------
+
+El paquete `facexp' contiene varias funciones que le aportan al usuario
+la posibilidad de estructurar expresiones controlando su expansión.
+Esta capacidad es especialmente útil cuando la expresión contiene
+variables con significado físico, ya que se suele dar el caso de que la
+forma más sencilla para estas expresiones se obtiene cuando se expanden
+respecto de estas variables y luego se factoriza respecto de sus
+coeficientes. Si bien es cierto que este procedimiento no es difícil de
+llevar a cabo con las funciones estándar de Maxima, pueden ser
+necesarios algunos retoques adicionales que sí pueden ser más difíciles
+de hacer.
+
+   La función `facsum' y sus formas relacionadas proporcionan un método
+para controlar la estructura de expresiones. La función `collectterms'
+puede usarse para añadir dos o más expresiones que ya hayan sido
+simplificadas de la forma indicada, sin necesidad de volver a
+simplificar la expresión completa.  Esta función puede ser útil cuando
+las expresiones sean largas.
+
+   La instrucción `load (facexp)' carga este paquete y `demo (facexp)'
+hace una demostración sobre su uso.
+
+ -- Función: facsum (<expr>, <arg_1>, ..., <arg_n>)
+     Devuelve una expresión equivalente a <expr>, la cual depende de
+     los argumentos <arg_1>, ..., <arg_n>, y éstos pueden ser de
+     cualquiera de las formas aceptables para `ratvars', o listas de
+     estas formas. Si los argumentos no son listas, la forma devuelta
+     se expande completamente con respecto de los argumentos, siendo los
+     coeficientes de tales argumentos factorizados. Estos coeficientes
+     no contienen a ninguno de los argumentos, excepto quizás de una
+     forma no racional.
+
+     En caso de que cualquiera de los argumentos sea una lista, entonces
+     todos ellos se combinan en una única lista, y en lugar de llamar a
+     `factor' para los coeficientes de los argumentos, `facsum' se
+     llama a sí misma utilizando esta nueva lista única como lista de
+     argumentos.
+
+     Es posible que se quiera utilizar `facsum' con respecto a
+     expresiones más complicadas, tales como `log (x + y)'. Estos
+     argumentos son también admisibles.
+
+     En ocasiones puede ser necesario obtener cualquiera de las formas
+     anteriores especificadas por sus operadores principales. Por
+     ejemplo, se puede querer aplicar `facsum' con respecto a todos los
+     `log'; en este caso, se puede incluir entre los argumentos bien
+     los `log' específicos que se quieran tratar de esta manera, bien
+     la expresión `operator (log)' o `'operator (log)'.  Si se quiere
+     aplicar `facsum' a <expr> con respecto a los operadores <op_1>,
+     ..., <op_n>, se debe evaluar `facsum (<expr>, operator (<op_1>,
+     ..., <op_n>))'.  La forma `operator' puede aparecer también dentro
+     de las listas de argumentos.
+
+     Además, dándole valores a las variables opcionales `facsum_combine'
+     y `nextlayerfactor' se puede controlar el resultado de `facsum'.
+
+ -- Variable global: nextlayerfactor
+     Valor por defecto: `false'
+
+     Si `nextlayerfactor' vale `true', las llamadas recursivas de
+     `facsum' se aplican a los factores de la forma factorizada de los
+     coeficientes de los argumentos.
+
+     Si vale `false', `facsum' se aplica a cada coeficiente como un
+     todo cada vez que se efectúen llamadas recursivas a `facsum'.
+
+     La inclusión del átomo `nextlayerfactor' en la lista de argumentos
+     de `facsum' tiene el mismo efecto que `nextlayerfactor: true',
+     pero solamente para el siguiente nivel de la expresión. Puesto que
+     `nextlayerfactor' toma siempre uno de los valores `true' o
+     `false', debe aparecer comentado (comilla simple) cada vez que
+     aparezca en la lista de argumentos de `facsum'.
+
+ -- Variable global: facsum_combine
+     Valor por defecto: `true'
+
+     La variable `facsum_combine' controla la forma del resultado final
+     devuelto por `facsum' si su argumento es un cociente de polinomios.
+     Si `facsum_combine' vale `false', el resultado será una suma
+     completamente expandida, pero si vale `true', la expresión devuelta
+     es un cociente de polinomios.
+
+
+ -- Función: factorfacsum (<expr>, <arg_1>, ... <arg_n>)
+     Devuelve una expresión equivalente a <expr> obtenida aplicando
+     `facsum' a los factores de <expr>, de argumentos <arg_1>, ...
+     <arg_n>. Si alguno de los factores de <expr> se eleva a una
+     potencia, tanto el factor como el exponente se procesarán de esta
+     manera.
+
+ -- Función: collectterms (<expr>, <arg_1>, ..., <arg_n>)
+     Si algunas expresiones fueron ya simplificadas con `facsum',
+     `factorfacsum', `factenexpand',  `facexpten' o `factorfacexpten',
+     debiendo ser luego sumadas, puede ser conveniente combinarlas
+     utilizando la función `collecterms', la cual admite como
+     argumentos todos aquéllos que se puedan pasar a las anteriormente
+     citadas funciones, con la excepción de `nextlayerfactor', que no
+     tiene efecto alguno sobre `collectterms'.  La ventaja de
+     `collectterms' es que devuelve una forma similar a la de `facsum',
+     pero debido a que suma expresiones que ya han sido previamente
+     procesadas, no necesita repetir esta operación, lo cual resulta
+     ser especialmente útil cuando las expresiones a sumar son muy
+     grandes.
+
+71.2.3 Paquete functs
+---------------------
+
+ -- Función: rempart (<expr>, <n>)
+     Elimina la parte <n> de la expresión <expr>.
+
+     Si <n> es una lista de la forma `[<l>, <m>]', entonces las partes
+     desde <l> a <m> serán eliminadas.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: wronskian ([<f_1>, ..., <f_n>], <x>)
+     Devuelve la matriz wronskiana de las expresiones <f_1>, ..., <f_n>
+     dependeientes de la variable <x>.  El determinante de la matriz
+     wronskiana es el determinante wronskiano de la lista de
+     expresiones.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+     Ejemplo:
+
+          (%i1) load(functs)$
+          (%i2) wronskian([f(x), g(x)],x);
+          (%o2) matrix([f(x),g(x)],['diff(f(x),x,1),'diff(g(x),x,1)])
+
+ -- Función: tracematrix (<M>)
+     Devuelve la traza (suma de los elementos de la diagonal) de la
+     matriz <M>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: rational (<z>)
+     Multiplica el numerador y denominador de <z> por el complejo
+     conjugado del denominador, racionalizando así el denominador.
+     Devuelve la expresión canónica racional (canonical rational
+     expression, CRE) si el argumento <z> es de esta forma, en caso
+     contrario devuelve una expresión en formato común.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: logand (<x>,<y>)
+     Devuelve el "y" lógico binario de los argumentos <x> e <y>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: logor (<x>,<y>)
+     Devuelve el "o" lógico binario de los argumentos <x> e <y>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: logxor (<x>,<y>)
+     Devuelve el "o-excusivo" lógico binario de los argumentos <x> e
+     <y>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: nonzeroandfreeof (<x>, <expr>)
+     Devuelve `true' si <expr> es diferente de cero y `freeof (<x>,
+     <expr>)' devuelve `true'.  En caso contrario devuelve `false'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: linear (<expr>, <x>)
+     Si <expr> es una expresión lineal respecto de la variable <x>,
+     `linear' devuelve `<a>*<x> + <b>', siendo <a> no nula y, junto con
+     <b>, no incluye a <x>. En otro caso, `linear' devuelve <expr>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: gcdivide (<p>, <q>)
+     Si `takegcd' vale `true', `gcdivide' divide los polinomios <p> y
+     <q> por su máximo común divisor y devuelve el cociente de los
+     resultados.
+
+     Si `takegcd' vale `false', `gcdivide' devuelve el cociente
+     `<p>/<q>'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: arithmetic (<a>, <d>, <n>)
+     Devuelve el <n>-ésimo término de la progresión aritmética `<a>,
+     <a> + <d>, <a> + 2*<d>, ..., <a> + (<n> - 1)*<d>'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: geometric (<a>, <r>, <n>)
+     Devuelve el <n>-ésimo término de la progresión geométrica `<a>,
+     <a>*<r>, <a>*<r>^2, ..., <a>*<r>^(<n> - 1)'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: harmonic (<a>, <b>, <c>, <n>)
+     Devuelve el <n>-ésimo término de la progresión armónica `<a>/<b>,
+     <a>/(<b> + <c>), <a>/(<b> + 2*<c>), ..., <a>/(<b> + (<n> -
+     1)*<c>)'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: arithsum (<a>, <d>, <n>)
+     Devuelve la suma de la progresión aritmética desde hasta el
+     <n>-ésimo término.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: geosum (<a>, <r>, <n>)
+     Devuelve la suma de la sucesión geométrica hasta el <n>-ésimo
+     término.  Si <n> es infinito (`inf') la suma será finita sólo si
+     el valor absoluto de <r> es menor que 1.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: gaussprob (<x>)
+     Devuelve la función de densidad de probabilidad, normal
+     `%e^(-<x>^2/2) / sqrt(2*%pi)'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: gd (<x>)
+     Devuelve la función de Gudermann, `2*atan(%e^x)-%pi/2'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: agd (<x>)
+     Devuelve la inversa de la función de Gudermann, `log (tan (%pi/4 +
+     x/2)))'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: vers (<x>)
+     Devuelve `1 - cos (x)'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: covers (<x>)
+     Devuelve `1 - sin (<x>)'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: exsec (<x>)
+     Devuelve `sec (<x>) - 1'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: hav (<x>)
+     Devuelve `(1 - cos(x))/2'.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: combination (<n>, <r>)
+     Calcula el número de combinaciones de <n> objetos tomados de <r>
+     en <r>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+ -- Función: permutation (<n>, <r>)
+     Calcula el número de permutaciones de <r>, seleccionados de un
+     conjunto de <n>.
+
+     Para hacer uso de esta función ejecutar `load(functs)'.
+
+71.2.4 Paquete ineq
+-------------------
+
+El paquete `ineq' contiene reglas de simplificación para desigualdades
+
+   Una sesión de ejemplo:
+
+     (%i1) load(ineq)$
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
+     (%i2) a>=4;  /* a sample inequality */
+     (%o2)                               a >= 4
+     (%i3) (b>c)+%; /* add a second, strict inequality */
+     (%o3)                            b + a > c + 4
+     (%i4) 7*(x<y); /* multiply by a positive number */
+     (%o4)                              7 x < 7 y
+     (%i5) -2*(x>=3*z); /* multiply by a negative number */
+     (%o5)                           - 2 x <= - 6 z
+     (%i6) (1+a^2)*(1/(1+a^2)<=1); /* Maxima knows that 1+a^2 > 0 */
+                                             2
+     (%o6)                             1 <= a  + 1
+     (%i7) assume(x>0)$ x*(2<3); /* assuming x>0 */
+     (%o7)                              2 x < 3 x
+     (%i8) a>=b; /* another inequality */
+     (%o8)                               a >= b
+     (%i9) 3+%; /* add something */
+     (%o9)                           a + 3 >= b + 3
+     (%i10) %-3; /* subtract it out */
+     (%o10)                              a >= b
+     (%i11) a>=c-b; /* yet another inequality */
+     (%o11)                            a >= c - b
+     (%i12) b+%; /* add b to both sides */
+     (%o12)                            b + a >= c
+     (%i13) %-c; /* subtract c from both sides */
+     (%o13)                         - c + b + a >= 0
+     (%i14) -%;  /* multiply by -1 */
+     (%o14)                          c - b - a <= 0
+     (%i15) (z-1)^2>-2*z; /* determining truth of assertion */
+                                           2
+     (%o15)                         (z - 1)  > - 2 z
+     (%i16) expand(%)+2*z; /* expand this and add 2*z to both sides */
+                                        2
+     (%o16)                            z  + 1 > 0
+     (%i17) %,pred;
+     (%o17)                               true
+
+   Debe tenerse cuidado con el uso de paréntesis que incluyan
+desigualdades; si se escribe `(A > B) + (C = 5)' el resultado es `A + C
+> B + 5', pero `A > B + C = 5' es un error sintáctico y `(A > B + C) =
+5' es una cosa completamente diferente.
+
+   Ejecútese `disprule (all)' para ver la lista completa de las reglas
+definidas.
+
+   Maxima preguntará al usuario cuando desconozca el signo de una
+cantidad que multiplica a una desigualdad.
+
+   Los fallos más comunes son:
+
+     eq: a > b;
+     2*eq;
+     % - eq;
+
+   Otro problema es el producto de una desigualdad por cero.  Si se
+escribe `x*<some_inequality>' y Maxima pregunta por el signo de `x' y
+se responde que vale `zero' (o `z'), el programa devuelve
+`x*<some_inequality>' sin hacer uso de la información de que `x' es 0.
+En tal caso se debería escribir `ev (%, x: 0)', ya que la base de datos
+sólo será utilizada para fines comparativos y no para evaluar `x'.
+
+   El usuario puede apreciar que las respuestas son más lentas al
+cargarse este paquete, ya que el simplificador deberá examinar más
+reglas que cuando no se hace uso del paquete, por lo que puede ser
+conveniente borrar estas reglas cuando ya no se haga uso de ellas.
+Ejecútese `kill (rules)' para eliminar todas las reglas (incluidas las
+definidas por el usuario); también es posible eliminar parte de ellas o
+utilizar `remrule' sobre una reglas específica.
+
+   Nótese que si se carga este paquete después de haber definido otras
+reglas de igual nombre,se borrarán las antiguas. Las reglas de este
+paquete son: `*rule1', ..., `*rule8', `+rule1', ..., `+rule18',
+debiéndose encerrar entre comillas el nombre de la reglas para
+referenciarse a ellas, como en `remrule ("+", "+rule1")' para eliminar
+la primera regla sobre `"+"', o `disprule ("*rule2")' para mostrar la
+definición de la segunda regla multiplicativa.
+
+71.2.5 Paquete rducon
+---------------------
+
+ -- Función: reduce_consts (<expr>)
+     Sustituye subexpresiones constantes de <expr> por átomos,
+     guardando la definición de todos ellos en la lista de ecuaciones
+     `const_eqns' y devolviendo el expresión <expr> ya modificada. Se
+     consideran partes constantes de <expr> aquellas que devuelven
+     `true' cuando se les aplica la función `constantp', por lo que
+     antes de llamar a `reduce_consts' se debe ejecutar
+
+          declare ([<objetos a los que se quiera dar la propiedad de ser constantes>], constant)$
+
+     para crear la base de datos de las cantidades constantes presentes
+     en la expresión.
+
+     Si se pretende generar código Fortran después de estos cálculos
+     simbólicos, una de las primeras secciones del código debe ser el
+     cálculo de las constantes. Para generar este segmento de código
+     hacer
+
+          map ('fortran, const_eqns)$
+
+     Junto a `const_eqns', otras variables que afectan a
+     `reduce_consts' son:
+
+     `const_prefix' (Valor por defecto: `xx') es la cadena de
+     caracteres utilizada como prefijo para todos los símbolos
+     generados por `reduce_consts' para representar subexpresiones
+     constantes.
+
+     `const_counter' (Valor por defecto: 1) es el índice entero
+     utilizado para generar los símbolos que representen a las
+     subexpresiones constantes encontradas por `reduce_consts'.
+
+     La instrucción `load (rducon)' carga esta función y `demo (rducon)'
+     hace una demostración sobre su uso.
+
+71.2.6 Paquete scifac
+---------------------
+
+ -- Función: gcfac (<expr>)
+     Es una función de factorización que intenta aplicar la misma
+     heurística que los humanos cuando tratan de hacer las expresiones
+     más simples, limitándose a la factorización de monomios. En caso
+     de sumas, `gcfac' hace lo siguiente:
+
+       1. Factoriza los enteros.
+
+       2. Factoriza las potencias mayores de los términos que aparecen
+          como coeficientes, independientemente de su complejidad.
+
+       3. Utiliza (1) y (2) en la factorización de pares de términos
+          adyacentes.
+
+       4. Aplica estas técnicas repetida y recursivamente hasta que la
+          expresión deje de sufrir cambios.
+
+     En general, el apartado (3) no hace una factorización óptima
+     debido a la naturaleza combinatoria y compleja de encontrar cuál
+     de todas las ordenaciones posibles de los pares da lugar a la
+     expresión más compacta.
+
+     La instrucción `load (scifac)' carga esta función y `demo (scifac)'
+     hace una demostración sobre su uso.
+
+71.2.7 Paquete sqdnst
+---------------------
+
+ -- Función: sqrtdenest (<expr>)
+     Reduce expresiones en las que se encuentren raíces cuadradas
+     anidadas, siempre que sea posible
+
+     Ejemplo:
+
+          (%i1) load (sqdnst)$
+          (%i2) sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
+                                              sqrt(3)
+                                         sqrt(------- + 1)
+                                                 2
+          (%o2)                        ---------------------
+                                       sqrt(11 sqrt(2) - 12)
+          (%i3) sqrtdenest(%);
+                                            sqrt(3)   1
+                                            ------- + -
+                                               2      2
+          (%o3)                            -------------
+                                              1/4    3/4
+                                           3 2    - 2
+
+     A veces conviene aplicar `sqrtdenest' más de una vez, como en el
+     caso `(19601-13860 sqrt(2))^(7/4)'.
+
+     La sentencia `load (sqdnst)' carga esta función.
+
+
+File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: Top
+
+72 solve_rec
+************
+
+* Menu:
+
+* Introducción a solve_rec::
+* Funciones y variables para solve_rec::
+
+
+File: maxima.info,  Node: Introducción a solve_rec,  Next: Funciones y variables para solve_rec,  Prev: solve_rec,  Up: solve_rec
+
+72.1 Introducción a solve_rec
+=============================
+
+El paquete `solve_rec' resuelve expresiones recurrentes lineales con
+coeficientes polinomiales.
+
+   Ejecútese `demo(solve_rec);' para ver una demostración sobre la
+utilización de este paquete.
+
+   Ejemplo:
+
+     (%i1) load("solve_rec")$
+     (%i2) solve_rec((n+4)*s[n+2] + s[n+1] - (n+1)*s[n], s[n]);
+                                         n
+                      %k  (2 n + 3) (- 1)          %k
+                        1                            2
+     (%o2)       s  = -------------------- + ---------------
+                  n     (n + 1) (n + 2)      (n + 1) (n + 2)
+
+
+File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducción a solve_rec,  Up: solve_rec
+
+72.2 Funciones y variables para solve_rec
+=========================================
+
+ -- Función: reduce_order (<rec>, <sol>, <var>)
+     Reduce el orden de la expresión recurrente lineal <rec> cuando se
+     conoce una solución particular <sol>. La recurrencia reducida
+     puede utilizarse para obterner más soluciones.
+
+     Ejemplo:
+
+          (%i3) rec: x[n+2] = x[n+1] + x[n]/n;
+                                                x
+                                                 n
+          (%o3)               x      = x      + --
+                               n + 2    n + 1   n
+          (%i4) solve_rec(rec, x[n]);
+          WARNING: found some hypergeometrical solutions!
+          (%o4)                    x  = %k  n
+                                    n     1
+          (%i5) reduce_order(rec, n, x[n]);
+          (%t5)                    x  = n %z
+                                    n       n
+
+                                     n - 1
+                                     ====
+                                     \
+          (%t6)                %z  =  >     %u
+                                 n   /        %j
+                                     ====
+                                     %j = 0
+
+          (%o6)             (- n - 2) %u     - %u
+                                        n + 1     n
+          (%i6) solve_rec((n+2)*%u[n+1] + %u[n], %u[n]);
+                                               n
+                                      %k  (- 1)
+                                        1
+          (%o6)                 %u  = ----------
+                                  n    (n + 1)!
+
+          So the general solution is
+
+                       n - 1
+                       ====        j
+                       \      (- 1)
+                 %k  n  >    -------- + %k  n
+                   2   /     (j + 1)!     1
+                       ====
+                       j = 0
+
+
+ -- Variable opcional: simplify_products
+     Valor por defecto: `true'
+
+     Si `simplify_products' vale `true', `solve_rec' intentará
+     simplificar los productos del resultado.
+
+     Véase también `solve_rec'.
+
+
+ -- Función: simplify_sum (<expr>)
+     Intenta reducir todas las sumas que aparecen en <expr> a una forma
+     cerrada.
+
+     Para utilizar esta función cárguese previamente el paquete
+     `simplify_sum' ejecutando la instrucción `load(simplify_sum)'.
+
+     Ejemplo:
+
+          (%i1) load("simplify_sum")$
+          (%i2) sum(binom(n+k,k)/2^k, k, 0, n) +
+                    sum(binom(2*n, 2*k), k, 0, n);
+                   n                            n
+                  ====                         ====
+                  \      binomial(n + k, k)    \
+          (%o2)    >     ------------------ +   >    binomial(2 n, 2 k)
+                  /               k            /
+                  ====           2             ====
+                  k = 0                        k = 0
+          (%i3) simplify_sum(%);
+                                         n
+                                        4     n
+          (%o3)                         -- + 2
+                                        2
+
+
+ -- Función: solve_rec (<eqn>, <var>, [<init>])
+     Obtiene las soluciones hipergeométricas de la expresión recurrente
+     <eqn> con coeficientes lineales en la variable <var>. Los
+     argumentos opcionales <init> son condiciones iniciales.
+
+     La función `solve_rec' puede resolver expresiones recurrentes con
+     coeficientes constantes, encuentra soluciones hipergeométricas de
+     expresiones recurrentes lineales homogéneas con coeficientes
+     polinomiales, obtiene soluciones racionales de expresiones
+     recurrentes lineales con coeficientes lineales y resuelve también
+     expresiones recurrentes de Ricatti.
+
+     Nótese que el tiempo de ejecución del algoritmo para encontrar
+     soluciones hipergeométricas es exponencial respecto del grado del
+     coeficiente principal.
+
+     Para hacer uso de esta función ejecútese previamente
+     `load(solve_rec);'.
+
+     Ejemplo de recurrencia lineal con coeficientes constantes:
+
+          (%i2) solve_rec(a[n]=a[n-1]+a[n-2]+n/2^n, a[n]);
+                                  n          n
+                     (sqrt(5) - 1)  %k  (- 1)
+                                      1           n
+          (%o2) a  = ------------------------- - ----
+                 n               n                  n
+                                2                5 2
+                                                          n
+                                             (sqrt(5) + 1)  %k
+                                                              2    2
+                                           + ------------------ - ----
+                                                      n              n
+                                                     2            5 2
+
+     Ejemplo de recurrencia lineal con coeficientes polinomiales:
+
+          (%i7) 2*x*(x+1)*y[x] - (x^2+3*x-2)*y[x+1] + (x-1)*y[x+2];
+                                   2
+          (%o7) (x - 1) y      - (x  + 3 x - 2) y      + 2 x (x + 1) y
+                         x + 2                   x + 1                x
+          (%i8) solve_rec(%, y[x], y[1]=1, y[3]=3);
+                                        x
+                                     3 2    x!
+          (%o9)                 y  = ---- - --
+                                 x    4     2
+
+     Ejemplo de recurrencia de Ricatti:
+
+          (%i2) x*y[x+1]*y[x] - y[x+1]/(x+2) + y[x]/(x-1) = 0;
+                                      y         y
+                                       x + 1     x
+          (%o2)         x y  y      - ------ + ----- = 0
+                           x  x + 1   x + 2    x - 1
+          (%i3) solve_rec(%, y[x], y[3]=5)$
+          (%i4) ratsimp(minfactorial(factcomb(%)));
+                                             3
+                                         30 x  - 30 x
+          (%o4) y  = - -------------------------------------------------
+                 x        6      5       4       3       2
+                       5 x  - 3 x  - 25 x  + 15 x  + 20 x  - 12 x - 1584
+
+     Véanse también `solve_rec_rat', `simplify_products' y
+     `product_use_gamma'.
+
+
+ -- Función: solve_rec_rat (<eqn>, <var>, [<init>])
+     Calcula las soluciones racionales de las expresiones recurrentes
+     lineales.  Véase `solve_rec' para la descripción de sus argumentos.
+
+     Para hacer uso de esta función ejecútese previamente
+     `load(solve_rec);'.
+
+     Ejemplo:
+
+          (%i1) (x+4)*a[x+3] + (x+3)*a[x+2] - x*a[x+1] + (x^2-1)*a[x];
+          (%o1)  (x + 4) a      + (x + 3) a      - x a
+                          x + 3            x + 2      x + 1
+                                                             2
+                                                         + (x  - 1) a
+                                                                      x
+          (%i2) solve_rec_rat(% = (x+2)/(x+1), a[x]);
+                                 1
+          (%o2)      a  = ---------------
+                      x   (x - 1) (x + 1)
+
+     Véase también `solve_rec'.
+
+
+ -- Variable opcional: product_use_gamma
+     Valor por defecto:`true'
+
+     Si `product_use_gamma' vale `true',  `solve_rec' introduce la
+     función gamma en la expresión del resultado cuando se simplifican
+     productos.
+
+     Véanse también `simplify_products' y `solve_rec'.
+
+
+ -- Función: summand_to_rec (<summand>, <k>, <n>)
+     Devuelve la expresión recurrente que satisface la suma
+
+              inf
+              ====
+              \
+               >     sumando
+              /
+              ====
+            k = minf
+
+     donde el sumando es hipergeométrico en  <k> y <n>.
+
+     Para hacer uso de esta función deben cargarse previamente los
+     paquetes `zeilberger' y `solve_rec' mediante la ejecución de las
+     sentencias `load(solve_rec)' y `load(zeilberger)'.
+
+          (%i17) load("zeilberger")$
+          (%i18) summand: binom(3*k+1,k)*binom(3*(n-k),n-k)/(3*k+1)$
+          (%i19) summand_to_rec(summand, k, n);
+          Dependent equations eliminated:  (3 2)
+          (%o19) - 4 (n + 2) (2 n + 3) (2 n + 5) sm
+                                                   n + 2
+                              2
+           + 12 (2 n + 3) (9 n  + 27 n + 22) sm
+                                               n + 1
+           - 81 (n + 1) (3 n + 2) (3 n + 4) sm
+                                              n
+          (%i21) sum(''summand, k, 0, n), n=0;
+          (%o21)                       1
+          (%i22) sum(''summand, k, 0, n), n=1;
+          (%o22)                       4
+          (%i23) product_use_gamma: false$
+          (%i24) solve_rec(%o19, sm[n], sm[0]=1, sm[1]=4);
+                        n - 1               n - 1
+                        /===\               /===\
+                         ! !                 ! !                n
+                       ( ! !   (3 %j + 2)) ( ! !   (3 %j + 4)) 3
+                         ! !                 ! !
+                        %j = 0              %j = 0
+          (%o24) sm  = ------------------------------------------
+                   n            n - 1
+                                /===\
+                                 ! !                n
+                               ( ! !   (2 %j + 3)) 2  n!
+                                 ! !
+                                %j = 0
+
+
+
+File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
+
+73 stats
+********
+
+* Menu:
+
+* Introducción a stats::
+* Funciones y variables para inference_result::
+* Funciones y variables para stats::
+* Funciones y variables para distribuciones especiales::
+
+
 File: maxima.info,  Node: Introducción a stats,  Next: Funciones y variables para inference_result,  Prev: Top,  Up: Top
 
-72.1 Introducción a stats
+73.1 Introducción a stats
 =========================
 
 El paquete `stats' contiene procedimientos clásicos sobre inferencia
@@ -41,7 +811,7 @@ paquete `numericalio' para leer datos de ficheros en texto plano. Véanse
 
 File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Funciones y variables para stats,  Prev: Introducción a stats,  Up: Top
 
-72.2 Funciones y variables para inference_result
+73.2 Funciones y variables para inference_result
 ================================================
 
  -- Función: inference_result (<title>, <values>, <numbers>)
@@ -157,7 +927,7 @@ File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Fu
 
 File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para inference_result,  Up: Top
 
-72.3 Funciones y variables para stats
+73.3 Funciones y variables para stats
 =====================================
 
  -- Variable opcional: stats_numer
@@ -1107,7 +1877,7 @@ File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y v
 
 File: maxima.info,  Node: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para stats,  Up: Top
 
-72.4 Funciones y variables para distribuciones especiales
+73.4 Funciones y variables para distribuciones especiales
 =========================================================
 
  -- Función: pdf_signed_rank (<x>, <n>)
@@ -1141,7 +1911,7 @@ File: maxima.info,  Node: Funciones y variables para distribuciones especiales, 
 
 File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
-73 stirling
+74 stirling
 ***********
 
 * Menu:
@@ -1151,7 +1921,7 @@ File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling,  Up: stirling
 
-73.1 Funciones y variables para stirling
+74.1 Funciones y variables para stirling
 ========================================
 
  -- Función: stirling (<z>,<n>)
@@ -1213,7 +1983,7 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
 
 File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
-74 stringproc
+75 stringproc
 *************
 
 * Menu:
@@ -1226,7 +1996,7 @@ File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
 File: maxima.info,  Node: Introducción al procesamiento de cadenas,  Next: Funciones y variables para entrada y salida,  Prev: stringproc,  Up: stringproc
 
-74.1 Introducción al procesamiento de cadenas
+75.1 Introducción al procesamiento de cadenas
 =============================================
 
 El paquete `stringproc' amplía las capacidades de Maxima para manipular
@@ -1333,7 +2103,7 @@ del fichero.
 
 File: maxima.info,  Node: Funciones y variables para entrada y salida,  Next: Funciones y variables para caracteres,  Prev: Introducción al procesamiento de cadenas,  Up: stringproc
 
-74.2 Funciones y variables para entrada y salida
+75.2 Funciones y variables para entrada y salida
 ================================================
 
 Ejemplo:
@@ -1482,7 +2252,7 @@ Ejemplo:
 
 File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funciones y variables para cadenas,  Prev: Funciones y variables para entrada y salida,  Up: stringproc
 
-74.3 Funciones y variables para caracteres
+75.3 Funciones y variables para caracteres
 ==========================================
 
  -- Función: alphacharp (<char>)
@@ -1573,7 +2343,7 @@ File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funcione
 
 File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y variables para caracteres,  Up: stringproc
 
-74.4 Funciones y variables para cadenas
+75.4 Funciones y variables para cadenas
 =======================================
 
  -- Función: stringp (<obj>)
@@ -1901,7 +2671,7 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
 
 File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
 
-75 unit
+76 unit
 *******
 
 * Menu:
@@ -1912,7 +2682,7 @@ File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
 
 File: maxima.info,  Node: Introducción a units,  Next: Funciones y variables para units,  Prev: unit,  Up: unit
 
-75.1 Introducción a units
+76.1 Introducción a units
 =========================
 
 El paquete `unit' permite al usuario hacer cambios de unidades y llevar
@@ -1980,7 +2750,7 @@ Dodier.
 
 File: maxima.info,  Node: Funciones y variables para units,  Prev: Introducción a units,  Up: unit
 
-75.2 Funciones y variables para units
+76.2 Funciones y variables para units
 =====================================
 
  -- Función: setunits (<list>)
@@ -2407,7 +3177,7 @@ File: maxima.info,  Node: Funciones y variables para units,  Prev: Introducción
 
 File: maxima.info,  Node: zeilberger,  Next: Índice de Funciones y Variables,  Prev: unit,  Up: Top
 
-76 zeilberger
+77 zeilberger
 *************
 
 * Menu:
@@ -2418,7 +3188,7 @@ File: maxima.info,  Node: zeilberger,  Next: Índice de Funciones y Variables,  
 
 File: maxima.info,  Node: Introducción a zeilberger,  Next: Funciones y variables para zeilberger,  Prev: zeilberger,  Up: zeilberger
 
-76.1 Introducción a zeilberger
+77.1 Introducción a zeilberger
 ==============================
 
 El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
@@ -2431,7 +3201,7 @@ por filtrado desarrollado por Axel Riese.
    Antes de hacer uso de las funciones aquí definidas, ejecútese la
 sentencia `load (zeilberger)'.
 
-76.1.0.1 El problema de la suma indefinida
+77.1.0.1 El problema de la suma indefinida
 ..........................................
 
 El paquete `zeilberger' implementa el algoritmo de Gosper para la suma
@@ -2441,7 +3211,7 @@ hipergeométrica, esto es, el término hipergeométrico tal que
 
    F_k = f_(k+1) - f_k.
 
-76.1.0.2 El problema de la suma definida
+77.1.0.2 El problema de la suma definida
 ........................................
 
 El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
@@ -2456,7 +3226,7 @@ que
    donde Delta_k es el k-ésimo operador diferencia hacia adelante, esto
 es, Delta_k(t_k) := t_(k+1) - t_k.
 
-76.1.1 Niveles de información
+77.1.1 Niveles de información
 -----------------------------
 
 Hay versiones extendidas de los nombres de las instrucciones, que se
@@ -2481,7 +3251,7 @@ construyen añadiendo uno de los siguientes prefijos:
 
 File: maxima.info,  Node: Funciones y variables para zeilberger,  Prev: Introducción a zeilberger,  Up: zeilberger
 
-76.2 Funciones y variables para zeilberger
+77.2 Funciones y variables para zeilberger
 ==========================================
 
  -- Función: AntiDifference (<F_k>, <k>)
