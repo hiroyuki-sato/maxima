@@ -112,19 +112,26 @@
 				 (extractvars (margs e))))
 		 t))))
 
-(defun extractvars (e)
+(defun extractvars (e &aux vars)
   (cond ((null e) nil)
 	((atom (car e))
-	 (if (not (maxima-constantp (car e)))
-	     (union* (ncons (car e)) (extractvars (cdr e)))
-	     (extractvars (cdr e))))
-	((member 'array (cdaar e) :test #'eq) (union* (ncons (car e)) (extractvars (cdr e))))
+	 (cond ((not (maxima-constantp (car e)))
+	        (cond ((setq vars (mget (car e) 'depends))
+	               ;; The symbol has dependencies. Put the dependencies on
+	               ;; the list of extracted vars.
+	               (union* vars (extractvars (cdr e))))
+	              (t
+	               ;; Put the symbol on the list of extracted vars.
+	               (union* (ncons (car e)) (extractvars (cdr e))))))
+	     (t (extractvars (cdr e)))))
+	((member 'array (cdaar e) :test #'eq)
+	 (union* (ncons (car e)) (extractvars (cdr e))))
 	(t (union* (extractvars (cdar e)) (extractvars (cdr e))))))
 
 ;;;; AT
 
 ;;dummy-variable-operators is defined in COMM, which uses it inside of SUBST1.
-(declare-top (special atvars ateqs atp munbound dummy-variable-operators))
+(declare-top (special atvars ateqs *atp* munbound dummy-variable-operators))
 
 (defmfun $atvalue (exp eqs val)
   (let (dl vl fun)
@@ -158,64 +165,87 @@
     (add2lnc fun $props)
     val))
 
-(defmfun $at (exp ateqs)
+(defprop %at simp-%at operators)
+
+(defun simp-%at (expr ignored simp-flag)
+  (declare (ignore ignored))
+  (twoargcheck expr)
+  (let ((arg (simpcheck (cadr expr) simp-flag))
+        (eqn (if ($listp (caddr expr))
+                 (cons '(mlist simp) (cdr ($sort (caddr expr))))
+                 (caddr expr))))
+    (cond (($constantp arg) arg)
+          ((alike1 eqn '((mlist))) arg)
+          (t (eqtest (list '(%at) arg eqn) expr)))))
+
+(defmfun $at (expr ateqs)
   (if (notloreq ateqs) (improper-arg-err ateqs '$at))
-  (atscan (let ((atp t)) ($substitute ateqs exp))))
+  (atscan (let ((*atp* t)) ($psubstitute ateqs expr))))
 
-(defun atscan (exp)
-  (cond ((or (atom exp) (member (caar exp) '(%at mrat) :test #'eq) (like ateqs '((mlist)))) exp)
-	((eq (caar exp) '%derivative)
-	 (or (and (not (atom (cadr exp)))
-		  (let ((vl (cdadr exp)) dl)
-		    (dolist (v vl)
-		      (setq dl (nconc dl (ncons (or (getf (cddr exp) v)
-						    0)))))
-		    (atfind (caaadr exp)
-			    (cdr ($substitute ateqs (cons '(mlist) vl)))
-			    dl)))
-	     (list '(%at) exp ateqs)))
-	((member (caar exp) dummy-variable-operators :test #'eq) (list '(%at) exp ateqs))
-	((at1 exp))
-	(t (recur-apply #'atscan exp))))
+(defun atscan (expr)
+  (cond ((or (atom expr)
+             (eq (caar expr) 'mrat)
+             (like ateqs '((mlist))))
+         expr)
+        ((eq (caar expr) '%derivative)
+         (or (and (not (atom (cadr expr)))
+                  (let ((vl (cdadr expr)) dl)
+                    (dolist (v vl)
+                      (setq dl (nconc dl (ncons (or (getf (cddr expr) v) 0)))))
+                    (atfind (caaadr expr)
+                            (cdr ($psubstitute ateqs (cons '(mlist) vl)))
+                            dl)))
+             (list '(%at) expr ateqs)))
+        ((member (caar expr) dummy-variable-operators :test #'eq)
+         (list '(%at) expr ateqs))
+        ((at1 expr))
+        (t (recur-apply #'atscan expr))))
 
-(defun at1 (exp) (atfind (caar exp) (cdr exp) (listof0s (cdr exp))))
+(defun at1 (expr)
+  (atfind (caar expr) (cdr expr) (listof0s (cdr expr))))
 
 (defun atfind (fun vl dl)
-  (do ((atvalues (mget fun 'atvalues) (cdr atvalues))) ((null atvalues))
+  (do ((atvalues (mget fun 'atvalues) (cdr atvalues)))
+      ((null atvalues))
     (and (equal (caar atvalues) dl)
 	 (do ((l (cadar atvalues) (cdr l)) (vl vl (cdr vl)))
 	     ((null l) t)
 	   (if (and (not (equal (car l) (car vl)))
 		    (not (eq (car l) munbound)))
 	       (return nil)))
-	 (return (prog2 (atvarschk vl)
-		     (substitutel vl atvars (caddar atvalues)))))))
+         (return (prog2
+                    (atvarschk vl)
+                    (substitutel vl atvars (caddar atvalues)))))))
 
 (defun listof0s (llist)
-  (do ((llist llist (cdr llist)) (l nil (cons 0 l))) ((null llist) l)))
+  (do ((llist llist (cdr llist)) (l nil (cons 0 l)))
+      ((null llist) l)))
 
 (declare-top (special $ratfac genvar varlist $keepfloat *e*))
-
 
 (defmvar $logconcoeffp nil)
 (defmvar superlogcon t)
 (defmvar $superlogcon t)
 
-(defmfun $logcontract (e) (lgccheck (logcon e))) ; E is assumed to be simplified.
+(defmfun $logcontract (e)
+  (lgccheck (logcon e))) ; E is assumed to be simplified.
 
 (defun logcon (e)
   (cond ((atom e) e)
 	((member (caar e) '(mplus mtimes) :test #'eq)
 	 (if (and $superlogcon (not (lgcsimplep e))) (setq e (lgcsort e)))
-	 (cond ((mplusp e) (lgcplus e)) ((mtimesp e) (lgctimes e)) (t (logcon e))))
+         (cond ((mplusp e) (lgcplus e))
+               ((mtimesp e) (lgctimes e))
+               (t (logcon e))))
 	(t (recur-apply #'logcon e))))
 
 (defun lgcplus (e)
   (do ((x (cdr e) (cdr x)) (log) (notlogs) (y))
       ((null x)
        (cond ((null log) (subst0 (cons '(mplus) (nreverse notlogs)) e))
-	     (t (setq log (sratsimp (muln log t)))
-		(addn (cons (lgcsimp log) notlogs) t))))
+             (t
+              (setq log (let (($ratfac t)) (sratsimp (muln log t))))
+              (addn (cons (lgcsimp log) notlogs) t))))
     (cond ((atom (car x)) (setq notlogs (cons (car x) notlogs)))
 	  ((eq (caaar x) '%log) (setq log (cons (logcon (cadar x)) log)))
 	  ((eq (caaar x) 'mtimes)
@@ -239,10 +269,6 @@
 		    (setq log (cadar x)))
 		   ((logconcoeffp (car x)) (setq decints (cons (car x) decints)))
 		   (t (setq notlogs (cons (car x) notlogs))))))))
-
-;(defun lgcsimp (e)		;; this is to simplify
-;  (let (($logexpand nil))	;; log(%e) -> 1 and log(%e^2) -> 2
-;    (simpln `((%log) ,e) 1 t)))
 
 (defun lgcsimp (e)
   (cond ((atom e)
@@ -291,7 +317,6 @@
 	   (list '(mtimes simp) -1
 		 (list '(%log simp) (if (= (car num) 1) denom (neg denom)))))
 	  (t (recur-apply #'lgccheck e)))))
-
 
 (defun logconcoeffp (e)
   (if $logconcoeffp (let ((*e* e)) (is '(($logconcoeffp) *e*))) (maxima-integerp e)))
@@ -417,81 +442,79 @@
 
 ;;;; ATAN2
 
-(declare-top (special $numer $%piargs $logarc $trigsign half%pi fourth%pi))
+(declare-top (special $numer $logarc $trigsign))
 
-(defun simpatan2 (e vestigial z)	; atan2(y,x) ~ atan(y/x)
+(defun simpatan2 (expr vestigial z)     ; atan2(y,x) ~ atan(y/x)
   (declare (ignore vestigial))
-  (twoargcheck e)
+  (twoargcheck expr)
   (let (y x signy signx)
-    (setq y (simpcheck (cadr e) z) x (simpcheck (caddr e) z))
+    (setq y (simpcheck (cadr expr) z)
+          x (simpcheck (caddr expr) z))
     (cond ((and (zerop1 y) (zerop1 x))
-	   (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
-          ;; Simplifify infinities.
+           (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
+          ( ;; float contagion
+           (and (or (numberp x) (ratnump x))       ; both numbers
+                (or (numberp y) (ratnump y))       ; ... but not bigfloats
+                (or $numer (floatp x) (floatp y))) ; at least one float
+           (atan2 ($float y) ($float x)))
+          ( ;; bfloat contagion
+           (and (mnump x)
+                (mnump y)
+                (or ($bfloatp x) ($bfloatp y)))    ; at least one bfloat
+           (setq x ($bfloat x)
+                 y ($bfloat y))
+           (*fpatan y (list x)))
+          ;; Simplifify infinities
           ((or (eq x '$inf)
                (alike1 x '((mtimes) -1 $minf)))
-           ;; The argument x is inf or -minf.
+           ;; Simplify atan2(y,inf) -> 0
            0)
           ((or (eq x '$minf)
                (alike1 x '((mtimes) -1 $inf)))
-           ;; The argument x is minf or -inf. Determine the sign of y.
-           ;; When unknown, return a noun form.
-           (setq signy ($sign y))
-           (cond ((eq signy '$pos) '$%pi)
+           ;; Simplify atan2(y,minf) -> %pi for realpart(y)>=0 or 
+           ;; -%pi for realpart(y)<0. When sign of y unknwon, return noun form.
+           (cond ((member (setq signy ($sign ($realpart x))) '($pos $pz $zero)) 
+                  '$%pi)
                  ((eq signy '$neg) (mul -1 '$%pi))
-                 (t (eqtest (list '($atan2) y x) e))))
-	  ( ;; float contagion
-	   (and (or (numberp x) (ratnump x)) ; both numbers
-		(or (numberp y) (ratnump y)) ; ...but not bigfloats
-		(or $numer (floatp x) (floatp y))) ;at least one float
-	   (atan2 ($float y) ($float x)))
-	  ( ;; bfloat contagion
-	   (and (mnump x)
-		(mnump y)
-		(or ($bfloatp x) ($bfloatp y))) ;at least one bfloat
-	   (setq x ($bfloat x)
-		 y ($bfloat y))
-	   (*fpatan y (list x)))
-	  ((and $%piargs (free x '$%i) (free y '$%i)
-		(cond ((zerop1 y)
-		       (cond ((atan2negp x) (simplify '$%pi))
-			     ((atan2posp x) 0)))
-		      ((zerop1 x)
-		       (cond ((atan2negp y) (mul2* -1 half%pi))
-			     ((atan2posp y) (simplify half%pi))))
-		      ((alike1 y x)
-		       (cond ((atan2negp x) (mul2* -3 fourth%pi))
-			     ((atan2posp x) (simplify fourth%pi))))
-		      ((alike1 y (mul2 -1 x))
-		       (cond ((atan2negp x) (mul2* 3 fourth%pi))
-			     ((atan2posp x) (mul2* -1 fourth%pi))))
-		      ;; Why is atan2(1,sqrt(3)) super-special-cased here?!?!
-		      ;; It doesn't even handle atan2(1,-sqrt(3));
-		      ;; *Atan* should handle sqrt(3) etc., so all cases will work
-		      ((and (equal y 1) (alike1 x '((mexpt simp) 3 ((rat simp) 1 2))))
-		       (mul2* '((rat simp) 1 6) '$%pi)))))
+                 (t (eqtest (list '($atan2) y x) expr))))
+          ((or (eq y '$inf)
+               (alike1 y '((mtimes) -1 $minf)))
+           ;; Simplify atan2(inf,x) -> %pi/2
+           (div '$%pi 2))
+          ((or (eq y '$minf)
+               (alike1 y '((mtimes -1 $inf))))
+           ;; Simplify atan2(minf,x) -> -%pi/2
+           (div '$%pi -2))
+          ((and (free x '$%i) (setq signx ($sign x))
+                (free y '$%i) (setq signy ($sign y))
+                (cond ((zerop1 y)
+                       (cond ((eq signx '$neg) '$%pi)
+                             ((member signx '($pos $pz)) 0)))
+                      ((zerop1 x)
+                       (cond ((eq signy '$neg) (div '$%pi -2))
+                             ((member signy '($pos $pz)) (div '$%pi 2))))
+                      ((alike1 y x)
+                       (cond ((eq signx '$neg) (mul -3 (div '$%pi 4)))
+                             ((member signx '($pos $pz)) (div '$%pi 4))))
+                      ((alike1 y (mul -1 x))
+                       (cond ((eq signx '$neg) (mul 3 (div '$%pi 4)))
+                             ((member signx '($pos $pz)) (div '$%pi -4)))))))
           ($logarc
            (logarc '%atan2 (list ($logarc y) ($logarc x))))
-	  ((and $trigsign (mminusp* y))
-	   (neg (simplifya (list '($atan2) (neg y) x) t)))
-					; atan2(y,x) = atan(y/x) + pi sign(y) (1-sign(x))/2
-	  ((and (free x '$%i) (eq (setq signx ($sign x)) '$pos))
-	   (simplifya (list '(%atan) (div y x)) t))
-	  ((and (eq signx '$neg) (free y '$%i)
-		(member (setq signy ($sign y)) '($pos $neg) :test #'eq))
-	   (add2 (simplifya (list '(%atan) (div y x)) t)
-		 (porm (eq signy '$pos) (simplify '$%pi))))
-	  ((and (eq signx '$zero) (eq signy '$zero))
-	   ;; Unfortunately, we'll rarely get here.  For example,
-	   ;; assume(equal(x,0)) atan2(x,x) simplifies via the alike1 case above
-	   (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
-	  (t (eqtest (list '($atan2) y x) e)))))
-
-(defun atan2negp (e) (eq ($sign e) '$neg))
-
-(defun atan2posp (e)
-  ;; Include $pz for this check. With this extension expessions like
-  ;; abs(z) will be positive and further simplified.
-  (member ($sign e) '($pos $pz)))
+          ((and $trigsign (mminusp* y))
+           (neg (take '($atan2) (neg y) x)))
+          ;; atan2(y,x) = atan(y/x) + pi sign(y) (1-sign(x))/2
+          ((eq signx '$pos)
+           (take '(%atan) (div y x)))
+          ((and (eq signx '$neg)
+                (member (setq signy ($csign y)) '($pos $neg) :test #'eq))
+           (add (take '(%atan) (div y x))
+                (porm (eq signy '$pos) '$%pi)))
+          ((and (eq signx '$zero) (eq signy '$zero))
+           ;; Unfortunately, we'll rarely get here.  For example,
+           ;; assume(equal(x,0)) atan2(x,x) simplifies via the alike1 case above
+           (merror (intl:gettext "atan2: atan2(0,0) is undefined.")))
+          (t (eqtest (list '($atan2) y x) expr)))))
 
 ;;;; ARITHF
 
@@ -516,7 +539,6 @@
 	    (mputprop (car l) (cadr l) '$numer)
 	    (add2lnc (car l) $props)
 	    (nconc x (ncons (car l)))))
-
 
 (declare-top (special powers var depvar))
 
@@ -683,10 +705,15 @@
 
 (defmfun $addrow (m &rest rows)
   (declare (dynamic-extent rows))
-  (cond ((not ($matrixp m)) (merror (intl:gettext "addrow: first argument must be a matrix; found ~M") m))
-	((null rows) m)
-	(t (dolist (r rows m)
-	     (setq m (addrow m r))))))
+  (cond ((not ($matrixp m))
+         (merror
+           (intl:gettext "addrow: first argument must be a matrix; found ~M")
+          m))
+        ((null rows) m)
+        (t
+         (let ((m (copy-tree m)))
+           (dolist (r rows m)
+             (setq m (addrow m r)))))))
 
 (defmfun $addcol (m &rest cols)
   (declare (dynamic-extent cols))

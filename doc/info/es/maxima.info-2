@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1087,14 +1087,24 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
      Véase también `%'.
 
-
  -- Variable opcional: %edispflag
      Valor por defecto: `false'
 
      Si `%edispflag' vale `true', Maxima muestra `%e' elevado a un
-     exponente negativo como un cociente.  Por ejemplo, `%e^-x' se
+     exponente negativo como un cociente. Por ejemplo, `%e^-x' se
      muestra como `1/%e^x'.
 
+     Ejemplo:
+
+          (%i1) %e^-10;
+                                         - 10
+          (%o1)                        %e
+          (%i2) %edispflag:true$
+          (%i3) %e^-10;
+                                         1
+          (%o3)                         ----
+                                          10
+                                        %e
 
  -- Función: %th (<i>)
      Es el valor de la expresión de la <i>-ésima salida anterior.  Esto
@@ -1285,20 +1295,31 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
           (%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
 
-
  -- Función: disp (<expr_1>, <expr_2>, ...)
      Es como `display' pero sólo se muestran los valores de los
      argumentos, no las ecuaciones. Es útil para argumentos complicados
      que no tienen nombre o en situaciones en las que solamente es de
      interés el valor del argumento pero no su nombre.
 
+     Ejemplos:
+
+          (%i1) b[1,2]:x-x^2$
+          (%i2) x:123$
+          (%i3) disp(x, b[1,2], sin(1.0));
+                                         123
+
+                                            2
+                                       x - x
+
+                                  .8414709848078965
+
+          (%o3)                         done
 
  -- Función: dispcon (<tensor_1>, <tensor_2>, ...)
  -- Función: dispcon (all)
      Muestra las propiedades contractivas de sus argumentos tal como
      fueron asignadas por `defcon'. La llamada `dispcon (all)' muestra
      todas propiedades contractivas que fueron definidas.
-
 
  -- Función: display (<expr_1>, <expr_2>, ...)
      Muestra las ecuaciones cuyos miembros izquierdos son <expr_i> sin
@@ -1308,12 +1329,20 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      argumentos de `display' suelen ser átomos, variables subindicadas
      o llamadas a funciones. Véase también `disp'.
 
-          (%i1) display(B[1,2]);
-                                                2
-                                   B     = X - X
-                                    1, 2
-          (%o1)                            done
+     Ejemplos:
 
+          (%i1) b[1,2]:x-x^2$
+          (%i2) x:123$
+          (%i3) display(x, b[1,2], sin(1.0));
+                                       x = 123
+
+                                                2
+                                   b     = x - x
+                                    1, 2
+
+                            sin(1.0) = .8414709848078965
+
+          (%o3)                         done
 
  -- Variable opcional: display2d
      Valor por defecto: `true'
@@ -1321,6 +1350,16 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      Si `display2d' vale `false', la salida por consola es una cadena
      unidimensional, en lugar de una expresión bidimensional.
 
+     Ejemplo:
+
+          (%i1) x/(x^2+1);
+                                         x
+          (%o1)                        ------
+                                        2
+                                       x  + 1
+          (%i2) display2d:false$
+          (%i3) x/(x^2+1);
+          (%o3) x/(x^2+1)
 
  -- Variable opcional: display_format_internal
      Valor por defecto: `false'
@@ -1489,10 +1528,11 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      La función `file_search' es llamada por `load' con los directorios
      de búsqueda `file_search_maxima' y `file_search_lisp'.
 
-
  -- Variable opcional: file_search_maxima
  -- Variable opcional: file_search_lisp
  -- Variable opcional: file_search_demo
+ -- Variable opcional: file_search_usage
+ -- Variable opcional: file_search_tests
      Estas variables especifican listas de directorios en los que deben
      buscar la funciones  `load', `demo' y algunas otras. Los valores
      por defecto de estas variables nombran directorios de la
@@ -1526,7 +1566,6 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      se interpreta como `/home/wfs/neumann.lisp',
      `/home/gcj/neumann.lisp', `/home/wfs/neumann.mac' y
      `/home/gcj/neumann.mac'.
-
 
  -- Función: file_type (<filename>)
      Devuelve una descripción del contenido de <filename> basada en la
@@ -3614,12 +3653,22 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
      Si `factorflag' vale `false' se evita la factorización de factores
      enteros de expresiones racionales.
 
-
  -- Función: factorout (<expr>, <x_1>, <x_2>, ...)
      Reorganiza la suma <expr> como una suma de términos de la forma `f
-     (<x_1>, <x_2>, ...)*g' donde `g' es un producto de expresiones que
-     no contienen ningún <x_i> y `f' se factoriza.
+     (<x_1>, <x_2>, ...)*g', donde `g' es un producto de expresiones
+     que no contienen ningún <x_i> y `f' se factoriza.
 
+     Nótese que `factorout' ignora la variable opcional `keepfloat'.
+
+     Ejemplo:
+
+          (%i1) expand (a*(x+1)*(x-1)*(u+1)^2);
+                       2  2          2      2      2
+          (%o1)     a u  x  + 2 a u x  + a x  - a u  - 2 a u - a
+          (%i2) factorout(%,x);
+                   2
+          (%o2) a u  (x - 1) (x + 1) + 2 a u (x - 1) (x + 1)
+                                                        + a (x - 1) (x + 1)
 
  -- Función: factorsum (<expr>)
      Intenta agrupar términos en los factores de <expr> que son sumas
@@ -4386,7 +4435,6 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
      Si `ratsimpexpons' vale `true', `ratsimp' se aplica a los
      exponentes de las expresiones durante la simplificación.
 
-
  -- Función: ratsubst (<a>, <b>, <c>)
      Sustituye <b> por <a> en <c> y devuelve la expresión resultante.
      El argumento <b> puede ser una suma, un producto, una potencia,
@@ -4399,6 +4447,9 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
 
      Si `radsubstflag' vale `true', `ratsubst' sustituye radicales en
      expresiones que no los contienen explícitamente.
+
+     `ratsubst' ignora el valor `true' de la variable opcional
+     `keepfloat'.
 
      Ejemplos:
 
@@ -4421,7 +4472,6 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
           (%i8) ratsubst (u, sqrt(x), x);
                                           2
           (%o8)                          u
-
 
  -- Función: ratvars (<x_1>, ..., <x_n>)
  -- Función: ratvars ()
@@ -4774,7 +4824,6 @@ File: maxima.info,  Node: Funciones y variables para logaritmos,  Prev: Logaritm
      transformaciones, así como otras más complicadas. La instrucción
      `logcontract' "contrae" expresiones que contienen algún `log'.
 
-
  -- Función: li [<s>] (<z>)
      Representa la función polilogarítmica de orden <s> y argumento <z>,
      definida por la serie infinita
@@ -4841,34 +4890,41 @@ File: maxima.info,  Node: Funciones y variables para logaritmos,  Prev: Logaritm
      otras bases. El usuario puede hacer uso de la definición `log10(x)
      := log(x) / log(10)'.
 
-     La simplificación y evaluación de logaritmos se controla cciertas
-     variables globales:
+     La simplificación y evaluación de logaritmos se controla con
+     ciertas variables globales:
 
-     `logexpand' - hace que `log(a^b)' se convierta en `b*log(a)'.  Si
-     toma el valor `all', `log(a*b)' también se reducirá a
-     `log(a)+log(b)'.  Si toma el valor `super', entonces `log(a/b)'
-     también se reducirá a `log(a)-log(b)', siendo `a/b' racional y
-     `a#1',  (la expresión `log(1/b)', para `b' entero, se simplifica
-     siempre).  Si toma el valor  `false', se desactivarán todas estas
-     simplificaciones.
+    ``logexpand''
+          hace que `log(a^b)' se convierta en `b*log(a)'.  Si toma el
+          valor `all', `log(a*b)' también se reducirá a
+          `log(a)+log(b)'.  Si toma el valor `super', entonces
+          `log(a/b)' también se reducirá a `log(a)-log(b)', siendo
+          `a/b' racional con `a#1', (la expresión `log(1/b)', para `b'
+          entero, se simplifica siempre).  Si toma el valor  `false',
+          se desactivarán todas estas simplificaciones.
 
-     `logsimp' - si vale `false', entonces no se transforma `%e' a
-     potencias que contengan logaritmos.
+    ``logsimp''
+          si vale `false', entonces no se transforma `%e' a potencias
+          que contengan logaritmos.
 
-     `lognumer' - si vale `true', entonces los argumentos de `log' que
-     sean números decimales negativos en coma flotante se convertirán
-     siempre a su valor absoluto antes de aplicar `log'.  Si `numer'
-     vale también `true', entonces los argumentos enteros negativos de
-     `log' también se convertirán en su valor absoluto.
+    ``lognumer''
+          si vale `true', entonces los argumentos de `log' que sean
+          números decimales negativos en coma flotante se convertirán
+          siempre a su valor absoluto antes de aplicar `log'.  Si
+          `numer' vale también `true', entonces los argumentos enteros
+          negativos de `log' también se convertirán en su valor
+          absoluto.
 
-     `lognegint' - si vale `true' se aplica la regla `log(-n)' ->
-     `log(n)+%i*%pi' siendo `n' un entero positivo.
+    ``lognegint''
+          si vale `true' se aplica la regla `log(-n)' ->
+          `log(n)+%i*%pi', siendo `n' un entero positivo.
 
-     `%e_to_numlog' - si vale `true', `r' es un número racional y `x'
-     una expresión, `%e^(r*log(x))' se reduce a `x^r' .  Téngase en
-     cuenta que la instrucción `radcan' también hace este tipo de
-     transformaciones, así como otras más complicadas. La instrucción
-     `logcontract' "contrae" expresiones que contienen algún `log'.
+    ``%e_to_numlog''
+          si vale `true', `r' es un número racional y `x' una expresión,
+          `%e^(r*log(x))' se reduce a `x^r'. Téngase en cuenta que la
+          instrucción `radcan' también hace este tipo de
+          transformaciones, así como otras más complicadas. La
+          instrucción `logcontract' "contrae" expresiones que contengan
+          algún `log'.
 
 
  -- Variable opcional: logabs
@@ -4929,16 +4985,15 @@ File: maxima.info,  Node: Funciones y variables para logaritmos,  Prev: Logaritm
 
 
  -- Variable opcional: logexpand
-     Valor por defecto: `true'
+     Valor por defecto: `false'
 
      Si `logexpand' vale `true' hace que `log(a^b)' se convierta en
-     `b*log(a)'.  Si toma el valor `all', `log(a*b)' también se
-     reducirá a  `log(a)+log(b)'.  Si toma el valor `super', entonces
-     `log(a/b)' también se reducirá a `log(a)-log(b)', siendo `a/b'
-     racional y `a#1',  (la expresión `log(1/b)', para `b' entero, se
-     simplifica siempre).  Si toma el valor  `false', se desactivarán
-     todas estas simplificaciones.
-
+     `b*log(a)'. Si toma el valor `all', `log(a*b)' también se reducirá
+     a  `log(a)+log(b)'. Si toma el valor `super', entonces `log(a/b)'
+     también se reducirá a `log(a)-log(b)', siendo `a/b' racional con
+     `a#1',  (la expresión `log(1/b)', para `b' entero, se simplifica
+     siempre). Si toma el valor  `false', que es el valor por defecto,
+     se desactivarán todas estas simplificaciones.
 
  -- Variable opcional: lognegint
      Valor por defecto: `false'
@@ -6429,7 +6484,7 @@ capítulo 5 de Abramowitz y Stegun, Handbook of Mathematical Functions.
  -- Función: expintegral_ei (<z>)
      La integral exponencial Ei(z) (A&S 5.1.2)
 
- -- Función: expintegral_li (<n>,<z>)
+ -- Función: expintegral_li (<z>)
      La integral exponencial Li(z)  (A&S 5.1.3)
 
  -- Función: expintegral_e (<n>,<z>)

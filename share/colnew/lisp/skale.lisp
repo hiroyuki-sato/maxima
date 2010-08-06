@@ -1,13 +1,13 @@
 ;;; Compiled by f2cl version:
-;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;; ("f2cl1.l,v 1.221 2010/05/26 19:25:52 rtoy Exp $"
 ;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
-;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl5.l,v 1.204 2010/02/23 05:21:30 rtoy Exp $"
 ;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
-;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+;;;  "macros.l,v 1.114 2010/05/17 01:42:14 rtoy Exp $")
 
-;;; Using Lisp CMU Common Lisp 19f (19F)
+;;; Using Lisp CMU Common Lisp CVS Head 2010-05-25 18:21:07 (20A Unicode)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -20,12 +20,12 @@
 (defun skale (n mstar kd z xi scale dscale)
   (declare (type (array double-float (*)) xi)
            (type (array double-float (*)) dscale scale z)
-           (type (integer) kd mstar n))
+           (type (f2cl-lib:integer4) kd mstar n))
   (let ((colord-m
          (make-array 20
                      :element-type 'f2cl-lib:integer4
-                     :displaced-to (colord-part-1 *colord-common-block*)
-                     :displaced-index-offset 0)))
+                     :displaced-to (colord-part-0 *colord-common-block*)
+                     :displaced-index-offset 5)))
     (symbol-macrolet ((ncomp (aref (colord-part-0 *colord-common-block*) 1))
                       (mmax (aref (colord-part-0 *colord-common-block*) 4))
                       (m colord-m))
@@ -38,7 +38,7 @@
                (iz 0) (j 0) (basm (make-array 5 :element-type 'double-float)))
           (declare (type (array double-float (5)) basm)
                    (type double-float h scal)
-                   (type (integer) j iz l icomp mj idmz np1))
+                   (type (f2cl-lib:integer4) j iz l icomp mj idmz np1))
           (setf (f2cl-lib:fref basm (1) ((1 5))) 1.0)
           (f2cl-lib:fdo (j 1 (f2cl-lib:int-add j 1))
                         ((> j n) nil)
@@ -127,7 +127,8 @@
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (setf (gethash 'fortran-to-lisp::skale fortran-to-lisp::*f2cl-function-info*)
           (fortran-to-lisp::make-f2cl-finfo
-           :arg-types '((integer) (integer) (integer) (array double-float (*))
+           :arg-types '((fortran-to-lisp::integer4) (fortran-to-lisp::integer4)
+                        (fortran-to-lisp::integer4) (array double-float (*))
                         (array double-float (1)) (array double-float (*))
                         (array double-float (*)))
            :return-values '(nil nil nil nil nil nil nil)

@@ -1,13 +1,13 @@
 ;;; Compiled by f2cl version:
-;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;; ("f2cl1.l,v 1.221 2010/05/26 19:25:52 rtoy Exp $"
 ;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
-;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl5.l,v 1.204 2010/02/23 05:21:30 rtoy Exp $"
 ;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
-;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+;;;  "macros.l,v 1.114 2010/05/17 01:42:14 rtoy Exp $")
 
-;;; Using Lisp CMU Common Lisp 19f (19F)
+;;; Using Lisp CMU Common Lisp CVS Head 2010-05-25 18:21:07 (20A Unicode)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -18,15 +18,13 @@
 
 
 (defun subbak (w nrow ncol last$ x)
-  (declare (type (f2cl-lib:integer4) last$)
-           (type (integer) ncol nrow)
+  (declare (type (f2cl-lib:integer4) last$ ncol nrow)
            (type (array double-float (*)) x w))
   (f2cl-lib:with-multi-array-data
       ((w double-float w-%data% w-%offset%)
        (x double-float x-%data% x-%offset%))
     (prog ((t$ 0.0) (i 0) (j 0) (k 0) (km1 0) (lm1 0) (lp1 0) (kb 0))
-      (declare (type (integer) kb)
-               (type (f2cl-lib:integer4) lp1 lm1 km1 k j i)
+      (declare (type (f2cl-lib:integer4) kb lp1 lm1 km1 k j i)
                (type (double-float) t$))
       (setf lp1 (f2cl-lib:int-add last$ 1))
       (if (> lp1 ncol) (go label30))
@@ -94,8 +92,9 @@
   (setf (gethash 'fortran-to-lisp::subbak
                  fortran-to-lisp::*f2cl-function-info*)
           (fortran-to-lisp::make-f2cl-finfo
-           :arg-types '((array double-float (*)) (integer) (integer)
-                        (fortran-to-lisp::integer4) (array double-float (*)))
+           :arg-types '((array double-float (*)) (fortran-to-lisp::integer4)
+                        (fortran-to-lisp::integer4) (fortran-to-lisp::integer4)
+                        (array double-float (*)))
            :return-values '(nil nil nil nil nil)
            :calls 'nil)))
 

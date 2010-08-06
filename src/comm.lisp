@@ -14,10 +14,14 @@
 
 (declare-top (special $exptsubst $linechar $nolabels $inflag $piece $dispflag
 		      $gradefs $props $dependencies derivflag derivlist
-		      $linenum $partswitch linelable nn* dn* islinp
-		      $powerdisp atvars atp $errexp $derivsubst $dotdistrib
+		      $linenum $partswitch linelable nn* dn*
+		      $powerdisp atvars $errexp $derivsubst $dotdistrib
 		      $opsubst $subnumsimp $transrun in-p substp $sqrtdispflag
 		      $pfeformat dummy-variable-operators))
+
+(defvar *islinp* nil) ; When T, sdiff is called from the function islinear.
+(defvar *atp* nil)    ; When T, prevents substitution from applying to vars 
+                      ; bound by %sum, %product, %integrate, %limit
 
 ;; op and opr properties
 
@@ -53,15 +57,12 @@
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'op))
       '((mqapply $subvar) (bigfloat $bfloat)))
 
-
 (setq $exptsubst nil
       $partswitch nil
       $inflag nil
       $gradefs '((mlist simp))
       $dependencies '((mlist simp))
       atvars '($@1 $@2 $@3 $@4)
-      atp nil
-      islinp nil
       lnorecurse nil
       $derivsubst nil
       timesp nil
@@ -72,7 +73,6 @@
 (defmvar $vect_cross nil
   "If TRUE allows DIFF(X~Y,T) to work where ~ is defined in
 	  SHARE;VECT where VECT_CROSS is set to TRUE.")
-
 
 (defmfun $substitute (old new &optional (expr nil three-arg?))
   (cond (three-arg? (maxima-substitute old new expr))
@@ -85,6 +85,53 @@
 		 (t (do ((l (cdr l) (cdr l)))
 			((null l) z)
 		      (setq z ($substitute (car l) z)))))))))
+
+;; Define an alias $psubst and a reversealias for $psubstitute
+(defprop $psubst $psubstitute alias)
+(defprop $psubstitute $psubst reversealias)
+
+;; $psubstitute is similar to $substitute. In distinction from $substitute
+;; the function $psubstitute does parallel substitution, if the first argument
+;; is a list of equations.
+(defun $psubstitute (old new &optional (expr nil three-arg?))
+  (cond (three-arg? (maxima-substitute old new expr))
+        (t
+         (let ((l old) (z new))
+           (cond ((and ($listp l)
+                       ($listp (cadr l))
+                       (null (cddr l)))
+                  ;; A nested list.
+                  ($psubstitute (cadr l) z))
+                 ((and ($listp l)
+                       (eq (caar (cadr l)) 'mequal)
+                       (null (cddr l)))
+                  ;; A list with one equation.
+                  ($psubstitute (cadr l) z))
+                 ((notloreq l) (improper-arg-err l '$psubstitute))
+                 ((eq (caar l) 'mequal)
+                  ;; Do a substitution for one equation.
+                  (maxima-substitute (caddr l) (cadr l) z))
+                 (t
+                  ;; We have a list of equations. We do parallel subsitution.
+                  (let (gensymbol genlist eqn ($simp nil))
+                    ;; At first substitute a gensym for the expressions of
+                    ;; the left hand side of the equations.
+                    (do ((l (cdr l) (cdr l)))
+                        ((null l) z)
+                      (setq eqn (car l))
+                      (when (not (eq 'mequal (caar eqn)))
+                        (improper-arg-err old '$substitute))
+                      (setq gensymbol (gensym))
+                      ;; Store the gensym and the new expression into a list.
+                      (push (cons gensymbol (caddr eqn)) genlist)
+                      ;; Substitute a gensym for the old expression.
+                      (setq z (maxima-substitute gensymbol (cadr eqn) z)))
+                      ;; Substitute the new expressions for the gensyms.
+                      (do ((l genlist (cdr l)))
+                          ((null l)
+                           ;; Resimplify the result.
+                           (let (($simp t)) (resimplify z)))
+                        (setq z (maxima-substitute (cdar l) (caar l) z))))))))))
 
 (declare-top (special x y oprx opry negxpty timesp))
 
@@ -153,7 +200,7 @@
   (let (newexpt)
     (cond ((atom z) z)
 	  ((specrepp z) (subst2 (specdisrep z)))
-	  ((and atp (member (caar z) '(%derivative %laplace) :test #'eq)) z)
+	  ((and *atp* (member (caar z) '(%derivative %laplace) :test #'eq)) z)
 	  ((at-substp z) z)
 	  ((alike1 y z) x)
 	  ((and timesp (eq (caar z) 'mtimes) (alike1 y (setq z (nformat z)))) x)
@@ -173,14 +220,17 @@
 ;; where second arg of integrate binds a new variable x,
 ;; and we do not wish to subst 3 for x inside integrand.
 (defun subst-except-second-arg (x y z)
-  (append 
-   (list (car z)
-	 (if (eq y (third z))	; if (third z) is new var that shadows y
-	     (second z)		; leave (second z) unchanged
-	   (subst1 (second z)))	; otherwise replace y with x in (second z)
-	 (third z))		; never change integration var
-   (mapcar (lambda (z) (subst1 z))	; do subst in limits of integral
-	   (cdddr z))))
+  (cond 
+    ((member (caar z) '(%integrate %sum %product %limit))
+     (append 
+       (list (car z)
+             (if (eq y (third z))     ; if (third z) is new var that shadows y
+                 (second z)           ; leave (second z) unchanged
+                 (subst1 (second z))) ; otherwise replace y with x in (second z)
+             (third z))               ; never change integration var
+       (mapcar (lambda (z) (subst1 z)); do subst in limits of integral
+               (cdddr z))))
+    (t z)))
 
 (declare-top (unspecial x y oprx opry negxpty timesp))
 
@@ -233,8 +283,10 @@
 
 ;;This probably should be a subst or macro.
 (defun at-substp (z)
-  (and atp (or (member (caar z) '(%derivative %del) :test #'eq)
-	       (member (caar z) dummy-variable-operators :test #'eq))))
+  (and *atp*
+       (or (member (caar z) '(%derivative %del) :test #'eq)
+           (member (caar z) dummy-variable-operators :test #'eq))))
+
 (defmfun recur-apply (fun e)
   (cond ((eq (caar e) 'bigfloat) e)
 	((specrepp e) (funcall fun (specdisrep e)))
@@ -356,11 +408,13 @@
 
 (defun chainrule (e x)
   (let (w)
-    (cond (islinp (if (and (not (atom e))
-			   (eq (caar e) '%derivative)
-			   (not (freel (cdr e) x)))
-		      (diff%deriv (list e x 1))
-		      0))
+    (cond (*islinp*
+           ;; sdiff is called from the function islinear.
+           (if (and (not (atom e))
+                    (eq (caar e) '%derivative)
+                    (not (freel (cdr e) x)))
+               (diff%deriv (list e x 1))
+               0))
 	  ((atomgrad e x))
 	  ((not (setq w (mget (cond ((atom e) e)
 				    ((member 'array (cdar e) :test #'eq) (caar e))
@@ -386,10 +440,13 @@
     (and (atom e) (setq y (mget e '$atomgrad)) (assolike x y))))
 
 (defun depends (e x)
+  (setq e (specrepcheck e))
   (cond ((alike1 e x) t)
-	((mnump e) nil)
-	((atom e) (mget e 'depends))
-	(t (or (depends (caar e) x) (dependsl (cdr e) x)))))
+        ((mnump e) nil)
+        ((and (symbolp e) (member x (mget e 'depends))) t)
+        ((atom e) nil)
+        (t (or (depends (caar e) x)
+               (dependsl (cdr e) x)))))
 
 (defun dependsl (l x)
   (dolist (u l)
@@ -801,6 +858,9 @@
        (merror (intl:gettext "~:M: argument must be a non-atomic expression; found ~:M") fn exp))
      (when (and inflag specp)
        (setq exp (copy-tree exp)))
+     (when substflag
+       ;; Replace all ocurrences of 'rat with 'mquotient when in subst.
+       (setq exp (let (($simp nil)) (maxima-substitute 'mquotient 'rat exp))))
      (setq exp* exp)
      start (cond ((or (atom exp) (eq (caar exp) 'bigfloat)) (go err))
 		 ((equal (setq arg (if substflag (meval (car arglist)) (car arglist)))
@@ -1109,7 +1169,60 @@
 	 (let ((res (recur-apply #'$float e)))
 	   (if (floatp res)
 	       res
-	     (list (ncons (caar e)) ($float (cadr e)) (caddr e)))))
+	       (list (ncons (caar e)) ($float (cadr e)) (caddr e)))))
+	((and (eq (caar e) '%log)
+	      (complex-number-p (second e) '$ratnump))
+	 ;; Basically we try to compute float(log(x)) as directly as
+	 ;; possible, expecting Lisp to return some error if it can't.
+	 ;; Then we do a more complicated approach to compute the
+	 ;; result.  However, gcl and ecl don't signal errors in these
+	 ;; cases, so we always use the complicated approach for these lisps.
+	 (let ((n (second e)))
+	   (cond ((integerp n)
+		  ;; float(log(int)).  First try to compute (log
+		  ;; (float n)).  If that works, we're done.
+		  ;; Otherwise we need to do more.  
+		  (to (or #-(or gcl ecl) (ignore-errors (log (float n)))
+			  (let ((m (integer-length n)))
+			    ;; Write n as (n/2^m)*2^m where m is the number of
+			    ;; bits in n.  Then log(n) = log(2^m) + log(n/2^m).
+			    ;; n/2^m is approximately 1, so converting that to a
+			    ;; float is no problem.  log(2^m) = m * log(2).
+			    (+ (* m (log 2d0))
+			       (log (float (/ n (ash 1 m)))))))))
+		 (($ratnump n)
+		  ;; float(log(n/m)) where n and m are integers.  Try computing
+		  ;; it first.  If it fails, compute as log(n) - log(m).
+		  (let ((try #-(or gcl ecl)
+			     (ignore-errors (log (fpcofrat n)))))
+		    (if try
+			(to try)
+			(sub  ($float `((%log) ,(second n)))
+			      ($float `((%log) ,(third n)))))))
+		 ((complex-number-p n 'integerp)
+		  ;; float(log(n+m*%i)).
+		  (let ((re ($realpart n))
+			(im ($imagpart n)))
+		    (to (or #-(or gcl ecl)
+			    (ignore-errors (log (complex (float re)
+							 (float im))))
+			    (let* ((size (max (integer-length re)
+					      (integer-length im)))
+				   (scale (ash 1 size)))
+			      (+ (* size (log 2d0))
+				 (log (complex (float (/ re scale))
+					       (float (/ im scale))))))))))
+		 (t
+		  ;; log(n1/d1 + n2/d2*%i) =
+		  ;;   log(s*(n+m*%i)) = log(s) + log(n+m*%i)
+		  ;;
+		  ;; where s = lcm(d1, d2), n and m are integers
+		  ;;
+		  (let* ((s (lcm ($denom ($realpart n))
+				 ($denom ($imagpart n))))
+			 (p ($expand (mul s n))))
+		    (add ($float `((%log) ,s))
+			 ($float `((%log) ,p))))))))
 	(t (recur-apply #'$float e))))
 
 (defmfun $coeff (e x &optional (n 1))
@@ -1117,7 +1230,7 @@
       (coeff e x 0)
       (coeff e (power x n) 1)))
 
-(defmfun coeff (e var pow)
+(defun coeff (e var pow)
   (simplify
    (cond ((alike1 e var) (if (equal pow 1) 1 0))
 	 ((atom e) (if (equal pow 0) e 0))
@@ -1130,11 +1243,21 @@
 	  (cons (if (eq (caar e) 'mplus) '(mplus) (car e))
 		(mapcar #'(lambda (e) (coeff e var pow)) (cdr e))))
 	 ((eq (caar e) 'mrat) (ratcoeff e var pow))
-	 ((equal pow 0) (if (free e var) e 0))
+         ((equal pow 0) (if (coeff-contains-powers e var) 0 e))
 	 ((eq (caar e) 'mtimes)
 	  (let ((term (if (equal pow 1) var (power var pow))))
 	    (if (memalike term (cdr e)) ($delete term e 1) 0)))
 	 (t 0))))
+
+(defun coeff-contains-powers (e var)
+  (cond ((alike1 e var) t)
+        ((atom e) nil)
+        ((eq (caar e) 'mexpt)
+         (alike1 (cadr e) var))
+        ((eq (caar e) 'mtimes)
+         (member t (mapcar #'(lambda (e)
+                               (coeff-contains-powers e var)) (cdr e))))
+        (t nil)))
 
 (declare-top (special powers var hiflg num flag))
 

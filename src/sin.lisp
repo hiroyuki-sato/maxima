@@ -22,7 +22,7 @@
 
 (declare-top (special ratform exptsum $radexpand $%e_to_numlog
 		      exptind quotind splist l ans splist arcpart coef
-		      aa dict exptflag base* powerlist *a* *b* k stack
+		      aa dict powerlist *a* *b* k stack
 		      ratroot rootlist square e w y expres arg var
 		      *powerl* *c* *d* exp varlist genvar repswitch $liflag
 		      noparts top maxparts numparts blank $opsubst))
@@ -37,48 +37,118 @@
 (defmacro op (frob)
   `(get ,frob 'operators))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Predicate functions
+
 (defun integerp1 (x)
   "Returns 2*x if 2*x is an integer, else nil"
   (integerp2 (mul2* 2 x)))
 
-(defun superexpt (exp var base*)
-  (prog (exptflag y w)
-	(setq y (elemxpt exp))
-	(when exptflag (return nil))
-	(return
-	 (substint
-	  (list '(mexpt) base* var)
-	  var
-	  (integrator (div y (mul2 var (simplog (list base*)))) var)))))
+(defun integerp2 (x)
+  "Returns x if x is an integer, else false"
+  (let (u)
+    (cond ((not (numberp x)) nil)
+	  ((not (floatp x)) x)
+	  ((prog2 (setq u (maxima-rationalize x))
+	       (equal (cdr u) 1)) (car u)))))
 
-(defun elemxpt (exp)
-  (cond ((freevar exp) exp)
-	((atom exp) (setq exptflag t))
-	((not (eq (caar exp) 'mexpt))
-	 (cons (car exp)
-	       (mapcar #'(lambda (c) (elemxpt c)) (cdr exp))))
-	((not (freevar (cadr exp)))
-	 (list '(mexpt)
-	       (elemxpt (cadr exp))
-	       (elemxpt (caddr exp))))
-	((not (eq (cadr exp) base*))
-	 (elemxpt (list '(mexpt)
-			base*
-			(simplify (list '(mtimes)
-					(list '(mexpt) (list '(%log) base*) -1)
-					(list '(%log) (cadr exp))
-					(caddr exp))))))
-	((not (setq w (m2 (caddr exp)
-			  '((mplus)
-			    ((coeffpt) (a freevar) (var varp))
-			    ((coeffpt) (b freevar)))
-			  nil)))
-	 (list (car exp) base* (elemxpt (caddr exp))))
-	(t (maxima-substitute base*
-			      'base*
-			      (subliss w '((mtimes)
-					   ((mexpt) base* b)
-					   ((mexpt) var a)))))))
+;; This predicate is used with m2 pattern matcher.
+;; A rational expression in var.
+(defun rat8 (ex)
+  (cond ((or (alike1 ex var) (freevar ex))
+	 t)
+	((member (caar ex) '(mplus mtimes) :test #'eq)
+	 (do ((u (cdr ex) (cdr u)))
+	     ((null u) t)
+	   (if (not (rat8 (car u)))
+	       (return nil))))
+	((not (eq (caar ex) 'mexpt))
+	 nil)
+	((integerp (caddr ex))
+	 (rat8 (cadr ex)))))
+
+(defun rat8prime (c)
+  (and (rat8 c)
+       (or (not (mnump c))
+           (not (zerop1 c)))))
+
+(defun elem (a)
+  (cond ((freevar a) t)
+	((atom a) nil)
+	((m2 a expres nil) t)
+	(t (eval (cons 'and (mapcar #'elem (cdr a)))))))
+
+(defun freevar (a)
+  (cond ((atom a) (not (eq a var)))
+	((alike1 a var) nil)
+	((and (not (atom (car a)))
+	      (member 'array (cdar a) :test #'eq))
+	 (cond ((freevar (cdr a)) t)
+	       (t (merror "Variable of integration appeared in subscript"))))
+	(t (and (freevar (car a)) (freevar (cdr a))))))
+
+(defun varp (x)
+  (alike1 x var))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II
+;;; Implementation of Method 1: Elementary function of exponentials
+;;;
+;;; The following examples are integrated with this method:
+;;;
+;;;   integrate(exp(x)/(2+3*exp(2*x)),x)
+;;;   integrate(exp(x+1)/(1+exp(x)),x)
+;;;   integrate(10^x*exp(x),x)
+
+(defvar *base* nil)      ; the common base
+(defvar *exptflag* nil)  ; When T, the substitution is not possible
+
+(defun superexpt (exp var *base*)
+  (declare (special *exptflag*))
+  (prog (y *exptflag*)
+    ;; Transform the integrand.
+    (setq y (elemxpt exp))
+    (when *exptflag* (return nil))
+    ;; Integrate the transformed integrand and substitute back.
+    (return (substint
+              (list '(mexpt) *base* var)
+              var
+              (integrator (div y (mul var (take '(%log) *base*))) var)))))
+
+;; Transform expressions like g^(b*x+a) to the common base *base* and
+;; do the substitution y = *base*^(b*x+a) in the expr.
+(defun elemxpt (expr)
+  (declare (special *exptflag* *base*))
+  (cond ((freevar expr) expr)
+        ;; var is the base of a subexpression. The transformation fails.
+        ((atom expr) (setq *exptflag* t))
+        ((not (eq (caar expr) 'mexpt))
+         (cons (car expr)
+               (mapcar #'(lambda (c) (elemxpt c)) (cdr expr))))
+        ((not (freevar (cadr expr)))
+         (list '(mexpt)
+               (elemxpt (cadr expr))
+               (elemxpt (caddr expr))))
+        ;; Transform the expression to the common base *base*.
+        ((not (eq (cadr expr) *base*))
+         (elemxpt (list '(mexpt)
+                        *base*
+                        (mul (power (take '(%log) *base*) -1)
+                             (take '(%log) (cadr expr))
+                             (caddr expr)))))
+        ;; The exponent must be linear in the variable of integration.
+        ((not (setq w (m2-b*x+a (caddr expr))))
+         (list (car exp) *base* (elemxpt (caddr expr))))
+        ;; Do the substitution y = g^(b*x+a) = g^a*g^(b*x).
+        (t (maxima-substitute *base*
+                              '*base*
+                              (subliss w '((mtimes)
+                                           ((mexpt) *base* a)
+                                           ((mexpt) x b)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun subst10 (ex)
   (cond ((atom ex) ex)
@@ -91,59 +161,75 @@
   (let ((ex (simplify ($factor x))))
     (if (not (alike1 ex x)) ex)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II of the Integrator
+;;;
+;;; Check if the problem can be transformed or solved by special methods.
+;;; 11 Methods are implemented by Moses, some more have been added.
+
 (defun intform (expres)
-  (declare (special *chebyform* *ratrootform*))
   (cond ((freevar expres) nil)
-	((atom expres) nil)
+        ((atom expres) nil)
+        
+        ;; Map the function intform over the arguments of a sum or a product
 	((member (caar expres) '(mplus mtimes) :test #'eq)
 	 (let ((l (cdr expres)))
 	   (prog (y)
 	    loop (cond ((setq y (intform (car l))) (return y))
 		       ((not (setq l (cdr l))) (return nil))
-		       (t (go loop))))))
-	((or (eq (caar expres) '%log) (arcp (caar expres)))
-	 (cond
+	           (t (go loop))))))
+        
+        ((or (eq (caar expres) '%log)
+             (arcp (caar expres)))
+         (cond
+           ;; Method 9: Rational function times a log or arctric function
 	   ((setq arg (m2 exp
 			  `((mtimes) ((,(caar expres)) (b rat8))
 			    ((coefftt) (c rat8prime)))
-			  nil))
+	                  nil))
+	    ;; Integrand is of the form R(x)*F(S(x)) where F is a log, or 
+	    ;; arctric function and R(x) and S(x) are rational functions.
 	    (ratlog exp var (cons (cons 'a expres) arg)))
 	   (t
 	    (prog (y z)
 	       (cond
-		 ((setq y (intform (cadr expres))) (return y))
+	         ((setq y (intform (cadr expres))) (return y))
+	         
+	         ;; Method 10: Rational function times log(b*x+a)
 		 ((and (eq (caar expres) '%log)
-		       (setq z (m2 (cadr expres) *c* nil))
+		       (setq z (m2-b*x+a (cadr expres)))
 		       (setq y (m2 exp
 				   '((mtimes)
 				     ((coefftt) (c rat8))
 				     ((coefftt) (d elem)))
 				   nil)))
 		  (return
-		    (let ((*a* (cdr (sassq 'a z 'nill)))
-			  (*b* (cdr (sassq 'b z 'nill)))
-			  (*c* (cdr (sassq 'c y 'nill)))
-			  (*d* (cdr (sassq 'd y 'nill)))
-			  (newvar (gensym "intform")))
-		      (putprop newvar t 'internal)
+		    (let ((a (cdr (sassq 'a z 'nill)))
+			  (b (cdr (sassq 'b z 'nill)))
+			  (c (cdr (sassq 'c y 'nill)))
+			  (d (cdr (sassq 'd y 'nill)))
+		          (newvar (gensym "intform")))
 		      ;; keep var from appearing in questions to user
-		      (substint		;; change of variables
+		      (putprop newvar t 'internal)
+		      ;; Substitute y = log(b*x+a) and integrate again
+		      (substint
 		       expres
 		       newvar
 		       (integrator
 			(muln
 			 (list (maxima-substitute
 				`((mquotient) ((mplus) ((mexpt) $%e ,newvar)
-					       ((mtimes) -1 ,*a*))
-				  ,*b*)
+					       ((mtimes) -1 ,a))
+				  ,b)
 				var
-				*c*)
-			       `((mquotient) ((mexpt) $%e ,newvar) ,*b*)
-			       (maxima-substitute newvar expres *d*))
+				c)
+			       `((mquotient) ((mexpt) $%e ,newvar) ,b)
+			       (maxima-substitute newvar expres d))
 			 nil)
 			newvar)))))
 		 (t (return nil)))))))
-
+      
       ;; We have a special function with an integral on the property list.
       ;; After the integral property was defined for the trig functions,
       ;; in rev 1.52, need to exclude trig functions here.
@@ -166,43 +252,64 @@
 	 ;; allows a substitution for the argument.
 	 ((intform (cadr expres)))
 	 (t nil)))
-
+        
+        ;; Method 6: Elementary function of trigonometric functions
 	((optrig (caar expres))
-	 (cond ((not (setq w (m2 (cadr expres) *c* nil)))
+	 (cond ((not (setq w (m2-b*x+a (cadr expres))))
 		(intform (cadr expres)))
 	       (t
 		(prog2
-		    (setq *powerl* t)
-		    (monstertrig exp var (cadr expres))))))
+		  (setq *powerl* t)
+		  (monstertrig exp var (cadr expres))))))
+        
 	((and (eq (caar expres) '%derivative)
 	      (eq (caar exp) (caar expres))
 	      (or (atom (cadr exp))
 		  (not (eq (caaadr exp) 'mqapply))
 		  (merror "Invalid arg to `integrate':~%~M" exp))
 	      (checkderiv exp)))
-	((not (eq (caar expres) 'mexpt)) nil)
-	((integerp (caddr expres)) (intform (cadr expres)))
-	((freevar (cadr expres))
-	 (cond ((m2 (caddr expres) *c* nil)
-		(superexpt exp var (cadr expres)))
-	       ((intform (caddr expres)))
-	       (t (let* (($%e_to_numlog t)
-			 (nexp (resimplify exp)))
-		    (cond ((alike1 exp nexp) nil)
-			  (t (intform (setq exp nexp))))))))
+        
+        ;; Stop intform if we have not a power function.
+        ((not (eq (caar expres) 'mexpt)) nil)
+        
+        ;; Method 2: Substitution for an integral power
+        ((integerp (caddr expres)) (intform (cadr expres)))
+        
+        ;; Method 1: Elementary function of exponentials
+        ((freevar (cadr expres))
+         (cond ((m2-b*x+a (caddr expres))
+                (superexpt exp var (cadr expres)))
+               ((intform (caddr expres)))
+               ((and (eq '$%e (cadr expres))
+                     (isinop (caddr expres) '%log))
+                ;; Found something like exp(r*log(x))
+                (let* (($%e_to_numlog t)
+                       ($radexpand nil) ; do not simplify sqrt(x^2) -> abs(x)
+                       (nexp (resimplify exp)))
+                  (cond ((alike1 exp nexp) nil)
+                        (t (integrator (setq exp nexp) var)))))
+               (t nil)))
+        
+        ;; The base is not a rational function. Try to get a clue for the base.
 	((not (rat8 (cadr expres)))
 	 (intform (cadr expres)))
-	((and (setq w (m2 (cadr expres) *ratrootform* nil)) ;e*(a*x+b) / (c*x+d)
-	      (denomfind (caddr expres))) ;expon is ratnum
+        
+        ;; Method 3: Substitution for a rational root
+	((and (setq w (m2-ratrootform (cadr expres))) ; e*(a*x+b) / (c*x+d)
+	      (denomfind (caddr expres))) ; expon is ratnum
 	 (cond ((setq w (prog2
-			    (setq *powerl* t)
-			    (ratroot exp var (cadr expres) w))) w)
-	       (t (inte exp var))))
-	((not (integerp1 (caddr expres))) ;2*exponent not integer
-	 (cond ((m2 exp *chebyform* nil)
+			  (setq *powerl* t)
+			  (ratroot exp var (cadr expres) w))) w)
+	   (t (inte exp var))))
+        
+        ;; Method 4: Binomial - Chebyschev
+	((not (integerp1 (caddr expres))) ; 2*exponent not integer
+	 (cond ((m2-chebyform exp)
 		(chebyf exp var))
 	       (t (intform (cadr expres)))))
-	((setq w (m2 (cadr expres) *d* nil)) ;sqrt(c*x^2+b*x+a)
+        
+        ;; Method 5: Arctrigonometric substitution
+	((setq w (m2-c*x^2+b*x+a (cadr expres))) ; sqrt(c*x^2+b*x+a)
 	 #+nil
 	 (format t "expres = sqrt(c*x^2+b*x+a)~%")
 	 ;; I think this is method 5, arctrigonometric substitutions.
@@ -210,12 +317,21 @@
 	 ;; R(x,sqrt(c*x^2+b*x+a)).  This method first eliminates the b
 	 ;; term of the quadratic, and then uses an arctrig substitution.
 	 (inte exp var))
-	((m2 exp *chebyform* nil)
+        
+        ;; Method 4: Binomial - Chebyschev
+	((m2-chebyform exp )
 	 (chebyf exp var))
+        
+        ;; Expand expres.
+        ;; Substitute the expanded factor into the integrand and try again.
 	((not (m2 (setq w ($expand (cadr expres)))
 		  (cadr expres) nil))
-	 (prog2 (setq exp (maxima-substitute w (cadr expres) exp))
-	     (intform (simplify (list '(mexpt) w (caddr expres))))))
+	 (prog2
+	   (setq exp (maxima-substitute w (cadr expres) exp))
+	   (intform (simplify (list '(mexpt) w (caddr expres))))))
+        
+        ;; Factor expres.
+        ;; Substitute the factored factor into the integrand and try again.
 	((setq w (rationalizer (cadr expres)))
 	 ;; The forms below used to have $radexpand set to $all.  But I
 	 ;; don't think we really want to do that here because that makes
@@ -228,6 +344,8 @@
 		     (maxima-substitute w (cadr expres) exp)))
 	 (intform (let (($radexpand '$all))
 		    (simplify (list '(mexpt) w (caddr expres))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun separc (ex)
   (cond ((arcfuncp ex) (setq arcpart ex coef 1))
@@ -246,24 +364,89 @@
 (defun arcfuncp (ex)
   (and (not (atom ex))
        (or (arcp (caar ex))
-	   (eq (caar ex) '%log)	     ; Experimentally treat logs also.
+	   (eq (caar ex) '%log)     ; Experimentally treat logs also.
 	   (and (eq (caar ex) 'mexpt)
 		(integerp2 (caddr ex))
 		(> (integerp2 (caddr ex)) 0)
 		(arcfuncp (cadr ex))))))
 
-;; This is the main integration routine.  It is called from sinint.
-;; exp is guaranteed to be a product
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Five pattern for the Integrator and other routines.
+
+;; This is matching the pattern e*(a*x+b)/(c*x+d), where
+;; a, b, c, d, and e are free of x, and x is the variable of integration.
+(defun m2-ratrootform (expr)
+  (m2 expr
+      `((mtimes)
+        ((coefftt) (e freevar))
+        ((mplus)
+         ((coeffpt) (a freevar) (var varp))
+         ((coeffpt) (b freevar)))
+        ((mexpt)
+         ((mplus)
+          ((coeffpt) (c freevar) (var varp))
+          ((coeffpt) (d freevar)))
+         -1))
+      nil))
+
+;; This is for matching the pattern a*x^r1*(c1+c2*x^q)^r2.
+(defun m2-chebyform (expr)
+  (m2 expr
+      `((mtimes)
+        ((mexpt) (var varp) (r1 numberp))
+        ((mexpt)
+         ((mplus)
+          ((mtimes)
+           ((coefftt) (c2 freevar))
+           ((mexpt) (var varp) (q free1)))
+          ((coeffpp) (c1 freevar)))
+         (r2 numberp))
+        ((coefftt) (a freevar)))
+      nil))
+
+;; Pattern to match b*x + a
+(defun m2-b*x+a (expr)
+  (m2 expr
+      `((mplus)
+        ((coeffpt) (b freevar) (x varp))
+        ((coeffpt) (a freevar)))
+      nil))
+
+;; This is the pattern c*x^2 + b * x + a.
+(defun m2-c*x^2+b*x+a (expr)
+  (m2 expr
+      `((mplus)
+        ((coeffpt) (c freevar) ((mexpt) (x varp) 2))
+        ((coeffpt) (b freevar) (x varp))
+        ((coeffpt) (a freevar)))
+      nil))
+
+;; This is the pattern (a*x+b)*(c*x+d)
+(defun m2-a*x+b/c*x+d (expr)
+  (m2 expr
+      `((mtimes)
+        ((mplus)
+         ((coeffpt) (a freevar) (var varp))
+         ((coeffpt) (b freevar)))
+        ((mplus)
+         ((coeffpt) (c freevar) (var varp))
+         ((coeffpt) (d freevar))))
+      nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; This is the main integration routine.  It is called from sinint.
+
 (defun integrator (exp var)
-  (prog (y arg *powerl* const *b* w *c* *d* e *ratrootform*
-	 *chebyform* arcpart coef integrand result)
-     (declare (special *ratrootform* *chebyform* *integrator-level*))
+  (prog (y arg *powerl* const *b* w arcpart coef integrand result)
+     (declare (special *integrator-level*))
      ;; Increment recursion counter
      (incf *integrator-level*)
-
+     
      ;; Trivial case. exp is not a function of var.
      (if (freevar exp) (return (mul2* exp var)))
-
+     
      ;; Remove constant factors
      (setq w (partition exp var 1))
      (setq const (car w))
@@ -273,80 +456,40 @@
        (format t "w = ~A~%" w)
        (format t "const = ~A~%" const)
        (format t "exp = ~A~%" exp))
-
-     (cond ((mplusp exp)
-	    (return (mul2* const (integrate1 (cdr exp)))))
-
-	   ;; Convert atan2(a,b) to atan(a/b) and try again.
-	   ((and (not (atom exp))
-		 (eq (caar exp) '$atan2))
-	    (return (mul2* const (integrator
-				  (simplifya (list '(%atan) (div (cadr exp) (caddr exp))) t)
-				  var))))
-
-	   ;; Integrate sums.
+     
+     (cond ;; First stage, Method I: Integrate a sum.
+           ((mplusp exp)
+            (return (mul2* const (integrate1 (cdr exp)))))
+           
+           ;; Convert atan2(a,b) to atan(a/b) and try again.
+           ((setq w (isinop exp '$atan2))
+            (setq exp
+                  (maxima-substitute (take '(%atan) (div (cadr w) (caddr w)))
+                                     w
+                                     exp))
+            (return (mul* const
+                          (integrator exp var))))
+           
+           ;; First stage, Method II: Integrate sums.
 	   ((and (not (atom exp))
 		 (eq (caar exp) '%sum))
-	    (return (mul2* const (intsum exp var)))))
-
-     ;; Try derivative-divides method.
-     ;; This is the workhorse that solves many integrals.
-     (cond ((setq y (diffdiv exp var))
+	    (return (mul2* const (intsum exp var))))
+           
+           ;; First stage, Method III: Try derivative-divides method.
+           ;; This is the workhorse that solves many integrals.
+           ((setq y (diffdiv exp var))
 	    (return (mul2* const y))))
-
+     
      ;; At this point, we have EXP as a product of terms.  Make Y a
      ;; list of the terms of the product.
      (setq y (cond ((eq (caar exp) 'mtimes)
 		    (cdr exp))
 		   (t
 		    (list exp))))
-
-     #+nil
-     (format t "y = ~S~%" y)
-     ;; Pattern to match b*x + a
-     (setq *c* '((mplus)
-		 ((coeffpt) (b freevar) (x varp))
-		 ((coeffpt) (a freevar))))
-     ;; I think this is matching the pattern e*(a*x+b)/(c*x+d), where
-     ;; a, b, c, d, and e are free of x, and x is the variable of
-     ;; integration.
-     (setq *ratrootform* '((mtimes)
-			   ((coefftt) (e freevar))
-			   ((mplus)
-			    ((coeffpt) (a freevar) (var varp))
-			    ((coeffpt) (b freevar)))
-			   ((mexpt)
-			    ((mplus)
-			     ((coeffpt) (c freevar) (var varp))
-			     ((coeffpt) (d freevar)))
-			    -1)))
-     ;; This is for matching the pattern a*x^r1*(c1+c2*x^q)^r2.
-     (setq *chebyform* '((mtimes)
-			 ((mexpt) (var varp) (r1 numberp))
-			 ((mexpt)
-			  ((mplus)
-			   ((mtimes)
-			    ((coefftt) (c2 freevar))
-			    ((mexpt) (var varp) (q free1)))
-			   ((coeffpp) (c1 freevar)))
-			  (r2 numberp))
-			 ((coefftt) (a freevar))))
-     ;; This is the pattern c*x^2 + b * x + a.
-     (setq *d* '((mplus)
-		 ((coeffpt) (c freevar) ((mexpt) (x varp) 2))
-		 ((coeffpt) (b freevar) (x varp))
-		 ((coeffpt) (a freevar))))
-     ;; This is the pattern (a*x+b)*(c*x+d)
-     (setq e '((mtimes)
-	       ((mplus)
-		((coeffpt) (a freevar) (var varp))
-		((coeffpt) (b freevar)))
-	       ((mplus)
-		((coeffpt) (c freevar) (var varp))
-		((coeffpt) (d freevar)))))
-     ;; Not sure what this loop is meant to do, but we're looking at
-     ;; each term of the product and doing something with it if we
-     ;; can.
+     
+     ;; Second stage:
+     ;; We're looking at each term of the product and check if we can
+     ;; apply one of the special methods.
      loop
      #+nil
      (progn
@@ -374,16 +517,19 @@
      skip
      (setq y (cdr y))
      (cond ((null y)
+            ;; Method 8: Rational functions
 	    (return (mul2* const (cond ((setq y (powerlist exp var)) y)
 				       (t (ratint exp var)))))))
      (go loop)
+        
      special
-
+     ;; Third stage: Try more general methods
+     
      ;; SEPARC SETQS ARCPART AND COEF SUCH THAT
      ;; COEF*ARCEXP=EXP WHERE ARCEXP IS OF THE FORM
      ;; ARCFUNC^N AND COEF IS ITS ALGEBRAIC COEFFICIENT
      (separc exp)
-
+     
      #+nil
      (progn
        (format t "arcpart = ~A~%" arcpart)
@@ -410,9 +556,8 @@
 	    (return (add* (list '(mtimes) const w arcpart)
 			  (list '(mtimes) -1 const y))))
 	   (t
-	    ;;(format t "t part~%")
 	    (return
-		(mul2 const
+		(mul* const
 		      (cond ((setq y (scep exp var))
 			     (cond ((cddr y)
 				    #+nil
@@ -462,23 +607,13 @@
 				 result
 				 (list '(%integrate) exp var))))))))))
 
-;; This predicate is used with m2 pattern matcher.
-;; A rational expression in var.
-(defun rat8 (ex)
-  (cond ((or (alike1 ex var) (freevar ex))
-	 t)
-	((member (caar ex) '(mplus mtimes) :test #'eq)
-	 (do ((u (cdr ex) (cdr u)))
-	     ((null u) t)
-	   (if (not (rat8 (car u)))
-	       (return nil))))
-	((not (eq (caar ex) 'mexpt))
-	 nil)
-	((integerp (caddr ex))
-	 (rat8 (cadr ex)))))
-
 (defun optrig (x)
   (member x '(%sin %cos %sec %tan %csc %cot) :test #'eq))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage I
+;;; Implementation of Method 1: Integrate a sum
 
 ;;after finding a non-integrable summand usually better to pass rest to risch
 (defun integrate1 (exp)
@@ -550,24 +685,6 @@
 	((null (cddr wrt)) () )		;Say it doesn't apply here
 	(t (checkderiv1 expr (cddr wrt)	;Else we check later terms
 			(list* (cadr wrt) (car wrt) old-wrt)))))
-
-(defun elem (a)
-  (cond ((freevar a) t)
-	((atom a) nil)
-	((m2 a expres nil) t)
-	(t (eval (cons 'and (mapcar #'elem (cdr a)))))))
-
-(defun freevar (a)
-  (cond ((atom a) (not (eq a var)))
-	((alike1 a var) nil)
-	((and (not (atom (car a)))
-	      (member 'array (cdar a) :test #'eq))
-	 (cond ((freevar (cdr a)) t)
-	       (t (merror "Variable of integration appeared in subscript"))))
-	(t (and (freevar (car a)) (freevar (cdr a))))))
-
-(defun varp (x)
-  (alike1 x var))
 
 (defun integrallookups (exp)
   (let (form dummy-args real-args)
@@ -676,14 +793,6 @@
       (ratint ex var)
       (integrator ex var)))
 
-(defun integerp2 (x)
-  "Returns x if x is an integer, else false"
-  (let (u)
-    (cond ((not (numberp x)) nil)
-	  ((not (floatp x)) x)
-	  ((prog2 (setq u (maxima-rationalize x))
-	       (equal (cdr u) 1)) (car u)))))
-
 (defun rat3 (ex ind)
   (cond ((freevar ex) t)
 	((atom ex) ind)
@@ -722,6 +831,12 @@
 	((not (numberp x)) nil)
 	((not (floatp x)) 1)
 	(t (cdr (maxima-rationalize x)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II
+;;; Implementation of Method 3:
+;;; Substitution for a rational root of a linear fraction of x
 
 ;; EXP = f(t,u) where f is some function with, say, VAR = t,
 ;; u^k = RATROOT = e*(a*t+b)/(c*t+d), where the smallest possible k
@@ -773,6 +888,11 @@
 (defun subst41 (exp *a* *b*)
   (subst4 exp))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II
+;;; Implementation of Method 4: Binomial Chebyschev
+
 ;; exp = a*t^r1*(c1+c2*t^q)^r2, where var = t.
 ;;
 ;; G&S 2.202 has says this integral can be expressed by elementary
@@ -782,27 +902,12 @@
 ;; 2. (r1+1)/q is an integer
 ;; 3. (r1+1)/q+r2 is an integer.
 ;;
-;; I (rtoy) think that for this code to work, r1, r2, and q must be
-;; numbers.
+;; I (rtoy) think that for this code to work, r1, r2, and q must be numbers.
 (defun chebyf (exp var)
   (prog (r1 r2 d1 d2 n1 n2 w q)
      ;; Return NIL if the expression doesn't match.
-     (cond ((not (setq w
-		       (m2 exp
-			   ;; Why aren't we using *chebyform* here?
-			   ;; This pattern is the same as *chebyform*.
-			   '((mtimes)
-			     ((mexpt) (var varp) (r1 numberp))
-			     ((mexpt)
-			      ((mplus)
-			       ((mtimes)
-				((coefftt) (c2 freevar))
-				((mexpt) (var varp) (q free1)))
-			       ((coeffpp) (c1 freevar)))
-			      (r2 numberp))
-			     ((coefftt) (a freevar)))
-			   nil)))
-	    (return nil)))
+     (when (not (setq w (m2-chebyform exp)))
+       (return nil))
      #+nil
      (format t "w = ~A~%" w)
      (when (zerop1 (cdr (sassq 'c1 w #'nill)))
@@ -1042,12 +1147,8 @@
 	((member (caar exp)
 	       '(%sin %cos %tan %sec %cot %csc) :test #'eq)
 	 (cond ((m2 (cadr exp) *trigarg* nil) t)
-	       ((m2 (cadr exp)
-		    '((mplus)
-		      ((coeffpt) (b freevar) (x varp))
-		      ((coeffpt) (a freevar)))
-		    nil)
-		(and (setq *notsame* t) nil))
+               ((m2-b*x+a (cadr exp))
+                (and (setq *notsame* t) nil))
 	       (t (supertrig (cadr exp)))))
 	(t (supertrig (cadr exp)))))
 
@@ -1066,6 +1167,10 @@
 	    ((coeffpp) (b freevar)))
       nil))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II
+;;; Implementation of Method 6: Elementary function of trigonometric functions
 
 (defun monstertrig (exp var *trigarg*)
   (declare (special *trigarg*))
@@ -1084,138 +1189,125 @@
 		    (new-var (gensym "NEW-VAR-"))
 		    (new-exp (maxima-substitute (div (sub new-var b) c)
 						var exp))
-		    (new-int
-		     (if (every-trigarg-alike new-exp new-var)
-			 ;; avoid endless recursion when more than one
-			 ;; trigarg exists or c is a float
-			 (div ($integrate new-exp new-var) c)
-		       (rischint exp var))))
-		 (return-from monstertrig (maxima-substitute *trigarg* new-var new-int))))
+		    (new-int (if (every-trigarg-alike new-exp new-var)
+                                 ;; avoid endless recursion when more than one
+                                 ;; trigarg exists or c is a float
+		                 (div (integrator new-exp new-var) c)
+		                 (rischint exp var))))
+	       (return-from monstertrig 
+	         (maxima-substitute *trigarg* new-var new-int))))
 	    (t
 	     (return-from monstertrig (rischint exp var))))))
-  (prog (*notsame* w *a* *b* y *d*)
+  (prog (*notsame* w a b y d)
      (declare (special *notsame*))
-	(cond
-	 ((supertrig exp) (go a))
-	 ((null *notsame*) (return nil))
-	 ((not (setq y (m2 exp
-			   '((mtimes)
-			     ((coefftt) (a freevar))
-			     (((b trig1))
-			      ((mtimes)
-			       (x varp)
-			       ((coefftt) (m freevar))))
-			     (((d trig1))
-			      ((mtimes)
-			       (x varp)
-			       ((coefftt) (n freevar)))))
-			   nil)))
-	  (go b))
-	 ((not (and (member (car (setq *b* (cdr (sassq 'b y 'nill))))
-			  '(%sin %cos) :test #'eq)
-		    (member (car (setq *d* (cdr (sassq 'd y 'nill))))
-			  '(%sin %cos) :test #'eq)))
-	  (return nil))
-	 ((and (eq (car *b*) '%sin) (eq (car *d*) '%sin))
-	  (return (subvar (subliss y
-				   '((mtimes)
-				     a
-				     ((mplus)
-				      ((mquotient)
-				       ((%sin)
-					((mtimes)
-					 ((mplus) m ((mtimes) -1 n))
-					 x))
-				       ((mtimes)
-					2
-					((mplus) m ((mtimes) -1 n))))
-				      ((mtimes)
-				       -1
-				       ((mquotient)
-					((%sin)
-					 ((mtimes) ((mplus) m n) x))
-					((mtimes)
-					 2
-					 ((mplus) m n))))))))))
-	 ((and (eq (car *b*) '%cos) (eq (car *d*) '%cos))
-	  (return (subvar (subliss y
-				   '((mtimes)
-				     a
-				     ((mplus)
-				      ((mquotient)
-				       ((%sin)
-					((mtimes)
-					 ((mplus) m ((mtimes) -1 n))
-					 x))
-				       ((mtimes)
-					2
-					((mplus) m ((mtimes) -1 n))))
-				      ((mquotient)
-				       ((%sin)
-					((mtimes) ((mplus) m n) x))
-				       ((mtimes)
-					2
-					((mplus) m n)))))))))
-	 ((or (and (eq (car *b*) '%cos)
-		   (setq w (cdr (sassq 'm y 'nill)))
-		   (rplacd (sassq 'm y 'nill)
-			   (cdr (sassq 'n y 'nill)))
-		   (rplacd (sassq 'n y 'nill) w))
-	      t)
-	  (return (subvar (subliss y
-				   '((mtimes)
-				     -1
-				     a
-				     ((mplus)
-				      ((mquotient)
-				       ((%cos)
-					((mtimes)
-					 ((mplus) m ((mtimes) -1 n))
-					 x))
-				       ((mtimes)
-					2
-					((mplus) m ((mtimes) -1 n))))
-				      ((mquotient)
-				       ((%cos)
-					((mtimes) ((mplus) m n) x))
-				       ((mtimes)
-					2
-					((mplus) m n))))))))))
-   b    (cond ((not (setq y (prog2 (setq *trigarg* var)
-				   (m2 exp
-				       '((mtimes)
-					 ((coefftt) (a freevar))
-					 (((b trig1))
-					  ((mtimes)
-					   (x varp)
-					   ((coefftt) (n integerp2))))
-					 ((coefftt) (c supertrig)))
-				       nil))))
-	       (return nil)))
-	(return
-	 (integrator
-	  ($expand
-	   (list '(mtimes)
-		 (sch-replace y 'a)
-		 (sch-replace y 'c)
-		 (cond ((eq (car (setq *b* (sch-replace y 'b))) '%cos)
-			(maxima-substitute var 'x (supercosnx (sch-replace y 'n))))
-		       (t (maxima-substitute var 'x (supersinx (sch-replace y 'n)))))))
-	  var))
-   a    (setq w (subst2s exp *trigarg*))
-	(setq *b* (cdr (sassq 'b
-			    (m2 *trigarg*
-				'((mplus)
-				  ((coeffpt) (b freevar) (x varp))
-				  ((coeffpt) (a freevar)))
-				nil)
-			    'nill)))
-	(setq *a* (substint *trigarg*
-			    var
-			    (trigint (div* w *b*) var)))
-   (cond ((m2 *a* '((mtimes) ((coefftt) (d freevar)) ((%integrate) (b true) (c true))) nil)
-	 (return (list '(%integrate) exp var))))
-   (return *a*)))
+     (cond
+       ((supertrig exp) (go a))
+       ((null *notsame*) (return nil))
+       ;; Check for an expression like a*trig1(m*x)*trig2(n*x),
+       ;; where trig1 and trig2 are sin or cos.
+       ((not (setq y (m2 exp
+                         '((mtimes)
+                           ((coefftt) (a freevar))
+                           (((b trig1))
+                            ((mtimes)
+                             (x varp)
+                             ((coefftt) (m freevar))))
+                           (((d trig1))
+                            ((mtimes)
+                             (x varp)
+                             ((coefftt) (n freevar)))))
+                         nil)))
+        (go b))
+; This check has been done with the pattern match.
+;       ((not (and (member (car (setq b (cdr (sassq 'b y 'nill))))
+;                          '(%sin %cos) :test #'eq)
+;                  (member (car (setq d (cdr (sassq 'd y 'nill))))
+;                          '(%sin %cos) :test #'eq)))
+;        (return nil))
+       ((and (eq (car (setq b (cdras 'b y))) '%sin)
+             (eq (car (setq d (cdras 'd y))) '%sin))
+        ;; We have a*sin(m*x)*sin(n*x).
+        ;; The integral is: a*(sin((m-n)*x)/(2*(m-n))-sin((m+n)*x)/(2*(m+n))
+        (return (subliss y
+                         '((mtimes) a
+                           ((mplus)
+                            ((mquotient)
+                             ((%sin) ((mtimes) ((mplus) m ((mtimes) -1 n)) x))
+                             ((mtimes) 2 ((mplus) m ((mtimes) -1 n))))
+                            ((mtimes) -1
+                             ((mquotient)
+                              ((%sin) ((mtimes) ((mplus) m n) x))
+                              ((mtimes) 2 ((mplus) m n)))))))))
+       ((and (eq (car b) '%cos) (eq (car d) '%cos))
+        ;; We have a*cos(m*x)*cos(n*x).
+        ;; The integral is: a*(sin((m-n)*x)/(2*(m-n))+sin((m+n)*x)/(2*(m+n))
+        (return (subliss y
+                         '((mtimes) a
+                           ((mplus)
+                            ((mquotient)
+                             ((%sin) ((mtimes) ((mplus) m ((mtimes) -1 n)) x))
+                             ((mtimes) 2
+                              ((mplus) m ((mtimes) -1 n))))
+                            ((mquotient)
+                             ((%sin) ((mtimes) ((mplus) m n) x))
+                             ((mtimes) 2 ((mplus) m n))))))))
+       ((or (and (eq (car b) '%cos)
+                 (setq w (cdras 'm y ))
+                 (rplacd (assoc 'm y) (cdras 'n y))
+                 (rplacd (assoc 'n y) w))
+            t)
+        ;; We have a*cos(n*x)*sin(m*x).
+        ;; The integral is: -a*(cos((m-n)*x)/(2*(m-n))+cos((m+n)*x)/(2*(m+n))
+        (return (subliss y
+                         '((mtimes) -1 a
+                           ((mplus)
+                            ((mquotient)
+                             ((%cos) ((mtimes) ((mplus) m ((mtimes) -1 n)) x))
+                             ((mtimes) 2 ((mplus) m ((mtimes) -1 n))))
+                            ((mquotient)
+                             ((%cos) ((mtimes) ((mplus) m n) x))
+                             ((mtimes) 2 ((mplus) m n)))))))))
+  b  ;; At this point we have trig functions with different arguments,
+     ;; but not a product of sin and cos.
+     (cond ((not (setq y (prog2 
+                           (setq *trigarg* var)
+                           (m2 exp
+                               '((mtimes)
+                                 ((coefftt) (a freevar))
+                                 (((b trig1))
+                                  ((mtimes) 
+                                   (x varp)
+                                   ((coefftt) (n integerp2))))
+                                 ((coefftt) (c supertrig)))
+                               nil))))
+            (return nil)))
+     ;; We have a product of trig functions: trig1(n*x)*trig2(y).
+     ;; trig1 is sin or cos, where n is a numerical integer. trig2 is not a sin
+     ;; or cos. The cos or sin function is expanded.
+     (return
+       (integrator
+         ($expand
+           (list '(mtimes)
+                 (cdras 'a y)                             ; constant factor
+                 (cdras 'c y)                             ; trig functions
+                 (cond ((eq (car (cdras 'b y)) '%cos)     ; expand cos(n*x)
+                        (maxima-substitute var
+                                           'x
+                                           (supercosnx (cdras 'n y))))
+                       (t                                 ; expand sin(x*x)
+                        (maxima-substitute var
+                                           'x
+                                           (supersinx (cdras 'n y)))))))
+         var))
+  a  ;; A product of trig functions and all trig functions have the same
+     ;; argument *trigarg*. Maxima substitutes *trigarg* with the variable var
+     ;; of integration and calls trigint to integrate the new problem.
+     (setq w (subst2s exp *trigarg*))
+     (setq b (cdras 'b (m2-b*x+a *trigarg*)))
+     (setq a (substint *trigarg* var (trigint (div* w b) var)))
+     (return (if (isinop a '%integrate)
+                 (list '(%integrate) exp var)
+                 a))))
 
 (defun trig2 (x)
   (member (car x) '(%sin %cos %tan %cot %sec %csc) :test #'eq))
@@ -1272,7 +1364,6 @@
 	      (f3 y))
 	     (t (cons (car exp) (mapcar #'(lambda (g) (rats g)) (cdr exp))))))))
 
-
 (defun f3 (y)
   (maxima-substitute *c*
 		     'c
@@ -1306,8 +1397,7 @@
 	      (cons (maxima-substitute var 'x (car m)) (cdr m)))
 	  x))
 
-;; This appears to be the implementation of Method 6, pp.82 in Moses'
-;; thesis.
+;; This appears to be the implementation of Method 6, pp.82 in Moses' thesis.
 
 (defun trigint (exp var)
   (prog (y repl y1 y2 *yy* z m n *c* *yz* *a* *b* )
@@ -1321,177 +1411,160 @@
 				 (((%cot) x) . ((mexpt) tan* -1))
 				 (((%sec) x) . sec*)
 				 (((%csc) x) . ((mexpt) sin* -1))))
-		    (simplifya exp nil)))
-     #+nil
-     (progn
-       (format t "y2 = ~%")
-       (maxima-display y2))
+		    exp))
+     
+     (when *debug-integrate*
+       (format t "~& in TRIGINT:~%")
+       (format t "~&   : y2 = ~A~%" y2))
+     
      ;; Now transform tan to sin/cos and sec to 1/cos.
-     (setq y1 (setq y (simplify (subliss '((tan* . ((mtimes) sin*
-						    ((mexpt) cos* -1)))
-					   (sec* . ((mexpt) cos* -1)))
-					 y2))))
-     #+nil
-     (progn
-       (format t "y  =~%")
-       (maxima-display y))
-     (cond ((null (setq z (m2 y
-			      '((mtimes)
-				((coefftt) (b trigfree))
-				((mexpt) sin* (m poseven))
-				((mexpt) cos* (n poseven)))
-			      nil)))
-	    ;; Go if y is not of the form sin^m*cos^n for positive
-	    ;; even m and n.
-	    #+nil
-	    (format t "Not of form sin^m*cos^n, for m, n non-negative and even.~%")
-	    (go l1)))
-
+     (setq y1 (setq y (subliss '((tan* . ((mtimes) sin*
+                                          ((mexpt) cos* -1)))
+                                 (sec* . ((mexpt) cos* -1)))
+                               y2)))
+     
+     (when *debug-integrate* (format t "~&   : y  = ~A~%" y))
+     
+     (when (null (setq z
+                       (m2 y
+                           '((mtimes)
+                             ((coefftt) (b trigfree))
+                             ((mexpt) sin* (m poseven))
+                             ((mexpt) cos* (n poseven)))
+                           nil)))
+       ;; Go if y is not of the form sin^m*cos^n for positive even m and n.
+       (go l1))
+     
      ;; Case III:
-     ;;
-     ;; Handle the case of sin^m*cos^n, m, n both non-negative and
-     ;; even.
-
-     #+nil
-     (format t "Case III~%")
-     (setq m (cdr (sassq 'm z 'nill)))
-     (setq n (cdr (sassq 'n z 'nill)))
+     ;; Handle the case of sin^m*cos^n, m, n both non-negative and even.
+     
+     (setq m (cdras 'm z))
+     (setq n (cdras 'n z))
      (setq *a* (integerp2 (* 0.5 (if (< m n) 1 -1) (+ n (* -1 m)))))
      (setq z (cons (cons 'a *a*) z))
-     #+nil
-     (progn
-       (format t "m, n = ~A ~A~%" m n)
-       (format t "a = ~A~%" a)
-       (format t "z = ~A~%" z))
+     (setq z (cons (cons 'x var) z))
+     
+     (when *debug-integrate*
+       (format t "~& CASE III:~%")
+       (format t "~&   : m, n = ~A ~A~%" m n)
+       (format t "~&   : a    = ~A~%" *a*)
+       (format t "~&   : z    = ~A~%" z))
+     
      ;; integrate(sin(y)^m*cos(y)^n,y) is transformed to the following form:
      ;;
-     ;; m < n:
-     ;;   integrate((sin(2*y)/2)^n*(1/2+1/2*cos(2*y)^((n-m)/2),y)
-     ;;
-     ;; m >= n:
-     ;;
-     ;;   integrate((sin(2*y)/2)^n*(1/2-1/2*cos(2*y)^((m-n)/2),y)
+     ;; m < n:  integrate((sin(2*y)/2)^n*(1/2+1/2*cos(2*y)^((n-m)/2),y)
+     ;; m >= n: integrate((sin(2*y)/2)^n*(1/2-1/2*cos(2*y)^((m-n)/2),y)
      (return
-       (simplify
-	(list
-	 '(mtimes)
-	 (cdr (sassq 'b z 'nill))
-	 '((rat simp) 1 2)
-	 (substint
-	  (list '(mtimes) 2 var)
-	  'x
-	  (integrator (simplify (cond ((< m n)
-				       (subliss z
-						'((mtimes)
-						  ((mexpt)
-						   ((mtimes)
-						    ((rat simp) 1 2)
-						    ((%sin) x))
-						   m)
-						  ((mexpt)
-						   ((mplus)
-						    ((rat simp) 1 2)
-						    ((mtimes)
-						     ((rat simp) 1 2)
-						     ((%cos) x)))
-						   a))))
-				      (t (subliss z
-						  '((mtimes)
-						    ((mexpt)
-						     ((mtimes)
-						      ((rat simp) 1 2)
-						      ((%sin) x))
-						     n)
-						    ((mexpt)
-						     ((mplus)
-						      ((rat simp) 1 2)
-						      ((mtimes)
-						       ((rat simp)
-							-1
-							2)
-						       ((%cos) x)))
-						     a))))))
-		      'x)))))
-     l1
+       (mul (cdras 'b z)
+            (div 1 2)
+            (substint 
+              (mul 2 var)
+              var
+              (integrator 
+                (cond ((< m n)
+                       (subliss z
+                                '((mtimes)
+                                  ((mexpt)
+                                   ((mtimes) ((rat simp) 1 2) ((%sin) x))
+                                   m)
+                                  ((mexpt)
+                                   ((mplus)
+                                    ((rat simp) 1 2)
+                                    ((mtimes)
+                                     ((rat simp) 1 2) ((%cos) x))) a))))
+                      (t
+                       (subliss z
+                                '((mtimes)
+                                  ((mexpt)
+                                   ((mtimes) ((rat simp) 1 2) ((%sin) x))
+                                   n)
+                                  ((mexpt)
+                                   ((mplus)
+                                    ((rat simp) 1 2)
+                                    ((mtimes)
+                                     ((rat simp) -1 2) 
+                                     ((%cos) x))) a)))))
+                var))))
+  l1 
+     ;; Case IV:
      ;; I think this is case IV, working on the expression in terms of
      ;; sin and cos.
-
+     ;;
      ;; Elem(x) means constants, x, trig functions of x, log and
      ;; inverse trig functions of x, and which are closed under
      ;; addition, multiplication, exponentiation, and substitution.
      ;;
      ;; Elem(f(x)) is the same as Elem(x), but f(x) replaces x in the
      ;; definition.
-
-     #+nil
-     (format t "Case IV~%")
+     
+     (when *debug-integrate* (format t "~& Case IV:~%"))
+     
      (setq *c* -1)
      (setq *a* 'sin*)
      (setq *b* 'cos*)
-     (cond ((and (m2 y '((coeffpt) (c rat1) ((mexpt) cos* (n odd1))) nil)
-		 (setq repl (list '(%sin) var)))
-	    ;; The case cos^(2*n+1)*Elem(cos^2,sin).  Use the
-	    ;; substitution z = sin.
-	    #+nil
-	    (format t "Case cos^(2*n+1)*Elem(cos^2,sin)~%")
-	    (go getout)))
+     (when (and (m2 y '((coeffpt) (c rat1) ((mexpt) cos* (n odd1))) nil)
+                (setq repl (list '(%sin) var)))
+       ;; The case cos^(2*n+1)*Elem(cos^2,sin).  Use the substitution z = sin.
+       (go getout))
      (setq *a* *b*)
      (setq *b* 'sin*)
-     (cond ((and (m2 y '((coeffpt) (c rat1) ((mexpt) sin* (n odd1))) nil)
-		 (setq repl (list '(%cos) var)))
-	    ;; The case sin^(2*n+1)*Elem(sin^2,cos).  Use the
-	    ;; substitution z = cos.
-	    #+nil
-	    (format t "Case sin^(2*n+1)*Elem(sin^2,cos)~%")
-	    (go get3)))
-     ;; Case V
-     ;;
+     (when (and (m2 y '((coeffpt) (c rat1) ((mexpt) sin* (n odd1))) nil)
+                (setq repl (list '(%cos) var)))
+       ;; The case sin^(2*n+1)*Elem(sin^2,cos).  Use the substitution z = cos.
+       (go get3))
+     
+     ;; Case V:
      ;; Transform sin and cos to tan and sec to see if the integral is
-     ;; of the form Elem(tan, sec^2).  If so, use the substitution z =
-     ;; tan.
-     #+nil
-     (format t "Case V~%")
-     (setq y (simplify (subliss '((sin* (mtimes) tan* ((mexpt) sec* -1))
-				  (cos* (mexpt) sec* -1))
-				y2)))
+     ;; of the form Elem(tan, sec^2).  If so, use the substitution z = tan.
+     
+     (when *debug-integrate* (format t "~& Case V:~%"))
+     
+     (setq y (subliss '((sin* (mtimes) tan* ((mexpt) sec* -1))
+                        (cos* (mexpt) sec* -1))
+                      y2))
      (setq *c* 1)
      (setq *a* 'tan*)
      (setq *b* 'sec*)
-     (cond ((and (rat1 y) (setq repl (list '(%tan) var)))
-	    (go get1)))
+     (when (and (rat1 y) (setq repl (list '(%tan) var)))
+       (go get1))
      (setq *a* *b*)
      (setq *b* 'tan*)
-     (cond ((and (m2 y '((coeffpt) (c rat1) ((mexpt) tan* (n odd1))) nil)
-		 (setq repl (list '(%sec) var)))
-	    (go getout)))
-     (cond ((not (alike1 (setq repl ($expand exp)) exp))
-	   (return (integrator repl var))))
-     (setq y (simplify (subliss '((sin* (mtimes)
-				   2
-				   x
-				   ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1))
-				  (cos* (mtimes)
-				   ((mplus)
-				    1
-				    ((mtimes) -1 ((mexpt) x 2)))
-				   ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1)))
-				y1)))
-     (setq y (list '(mtimes) y '((mtimes) 2 ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1))))
-     (setq repl (subvar '((mquotient)
-			  ((%sin) x)
-			  ((mplus) 1 ((%cos) x)))))
+     (when (and (m2 y '((coeffpt) (c rat1) ((mexpt) tan* (n odd1))) nil)
+           (setq repl (list '(%sec) var)))
+       (go getout))
+     (when (not (alike1 (setq repl ($expand exp)) exp))
+       (return (integrator repl var)))
+     (setq y (subliss '((sin* (mtimes) 2 x
+                              ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1))
+                        (cos* (mtimes)
+                              ((mplus) 1 ((mtimes) -1 ((mexpt) x 2)))
+                              ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1)))
+                      y1))
+     (setq y (list '(mtimes) 
+                   y 
+                   '((mtimes) 2 ((mexpt) ((mplus) 1 ((mexpt) x 2)) -1))))
+     (setq repl (subvar '((mquotient) ((%sin) x) ((mplus) 1 ((%cos) x)))))
      (go get2)
-     get3 (setq y (list '(mtimes) -1 *yy* *yz*))
+  get3
+     (setq y (list '(mtimes) -1 *yy* *yz*))
      (go get2)
-     get1 (setq y (list '(mtimes) '((mexpt) ((mplus) 1 ((mexpt) x 2)) -1) *yy*))
+  get1
+     (setq y (list '(mtimes) '((mexpt) ((mplus) 1 ((mexpt) x 2)) -1) *yy*))
      (go get2)
-     getout
+  getout
      (setq y (list '(mtimes) *yy* *yz*))
-     get2 (setq y (simplify y))
+  get2
+     (setq y (maxima-substitute var 'x y))
+     
+     (when *debug-integrate*
+       (format t "~& Call the INTEGRATOR with:~%")
+       (format t "~&   : y    = ~A~%" y)
+       (format t "~&   : repl = ~A~%" repl))
+     
      ;; See Bug 2880797.  We want atan(tan(x)) to simplify to x, so
      ;; set $triginverses to '$all.
      (return (let (($triginverses '$all))
-	       (substint repl 'x (integrator y 'x))))))
+	       (substint repl var (integrator y var))))))
 
 (defmvar $integration_constant_counter 0)
 (defmvar $integration_constant '$%c)
@@ -1540,6 +1613,11 @@
 	((freeof var ans) t)
 	(t nil)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage I
+;;; Implementation of Method 2: Integrate a summation
+
 (defun intsum (form var)
   (prog (exp idx ll ul pair val)
      (setq exp (cadr form)
@@ -1568,35 +1646,37 @@
       (assume (list '(mgeqp) ul idx)))
   (simplifya (list '(%sum) (integrator exp var) idx ll ul) t))
 
-(defun rat8prime (c)
-  (and (rat8 c)
-       (or (not (mnump c))
-	   (not (zerop1 c)))))
-
 (defun finds (x)
   (if (atom x)
       (member x '(%log %integrate %atan) :test #'eq)
       (or (finds (car x)) (finds (cdr x)))))
 
-;;; ratlog is called for an expression containing the log or atan function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage II
+;;; Implementation of Method 9:
+;;; Rational function times a log or arctric function
+
+;;; ratlog is called for an expression containing a log or arctrig function
 ;;; The integrand is like log(x)*f'(x). To obtain the result the technique of
 ;;; partial integration is applied: log(x)*f(x)-integrate(1/x*f(x),x)
 
 (defun ratlog (exp var form)
-  (prog (*a* *b* *c* *d* y z w)
+  (prog (b c d y z w)
      (setq y form)
-     (setq *b* (cdr (sassq 'b y 'nill)))
-     (setq *c* (cdr (sassq 'c y 'nill)))
-     (setq y (integrator *c* var))
+     (setq b (cdr (sassq 'b y 'nill)))
+     (setq c (cdr (sassq 'c y 'nill)))
+     (setq y (integrator c var))
      (cond ((finds y) (return nil)))
-     (setq *d* (sdiff (cdr (sassq 'a form 'nill))
-		    var))
-
-     (setq z (integrator (mul2* y *d*) var))
-     (setq *d* (cdr (sassq 'a form 'nill)))
+     (setq d (sdiff (cdr (sassq 'a form 'nill)) var))
+     
+     (setq z (integrator (mul2* y d) var))
+     (setq d (cdr (sassq 'a form 'nill)))
      (return (simplify (list '(mplus)
-			     (list '(mtimes) y *d*)
+			     (list '(mtimes) y d)
 			     (list '(mtimes) -1 z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; partial-integration is an extension of the algorithm of ratlog to support
 ;;; the technique of partial integration for more cases. The integrand
@@ -1641,7 +1721,6 @@
 		   (find-first-trigarg exp))
 		 (cdr y)))))
 
-
 (defun matchsum (alist blist)
   (prog (r s *c* *d*)
      (setq s (m2 (car alist)
@@ -1675,9 +1754,6 @@
 (defun timesloop (a b)
   (cons '(mplus) (mapcar #'(lambda (c) (mul2* a c)) b)))
 
-(defun simplog (a)
-  (simplifya (cons '(%log) a) nil))
-
 (defun expands (aa b)
   (addn (mapcar #'(lambda (c) (timesloop c aa)) b) nil))
 
@@ -1704,6 +1780,11 @@
 				    (list '(mexpt) var (1- (quotient (1+ *c*) *d*)))
 				    (subst10 *b*)))
 		    var)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Stage I
+;;; Implementation of Method 3: Derivative-divides algorithm
 
 ;; This is the derivative-divides algorithm of Moses.
 ;;
@@ -1843,7 +1924,7 @@
 (defun m2-exp-type-2 (expr)
   (m2 expr
     '((mtimes)
-	((mexpt) (z varp) (v nonzerp))
+        ((mexpt) (z varp) (v freevar0))
 	((mexpt)
 	   (a freevar0)
 	   ((mplus)
@@ -2525,14 +2606,16 @@
     (cond
       ((mexptp (car l))
        ;; Found an power function. Factor the exponent with facsum.
-       (setq result
-	     (cons
-	       (cons
-		 (list 'mexpt)
-		 (cons
-		   (cadr (car l))
-		   (list (mfuncall '$facsum (caddr (car l)) var))))
-	       result)))
+       (let* ((fac (mfuncall '$facsum (caddr (car l)) var))
+              (num ($num fac))
+              (den ($denom fac)))
+         (setq result
+               (cons (cons (list 'mexpt) 
+                           (cons (cadr (car l))
+                                 (if (equal 1 den)
+                                     (list num)
+                                     (list ($multthru (inv den) num)))))
+                     result))))
       (t
        ;; Nothing to do.
        (setq result (cons (car l) result))))))

@@ -39,12 +39,6 @@
 
 (defvar *windows-OS* (string= *autoconf-win32* "true"))
 
-;; this variable is used when working with
-;; multiple windows. Empty string means
-;; we are working with only one window
-(defvar *terminal-number* "")
-
-
 (defmacro write-font-type ()
    '(if (string= (get-option '$font) "")
       ""
@@ -204,11 +198,14 @@
       (gethash '$xaxis_secondary *gr-options*) nil
       (gethash '$yaxis_secondary *gr-options*) nil
 
+      ; transformation option
+      (gethash '$transform *gr-options*) '$none
+
       ; 3d options
       (gethash '$xu_grid *gr-options*)        30
       (gethash '$yv_grid *gr-options*)        30
       (gethash '$surface_hide *gr-options*)   nil
-      (gethash '$enhanced3d *gr-options*)     nil     ; false, true (z levels) or an expression
+      (gethash '$enhanced3d *gr-options*)     '$none
       (gethash '$contour *gr-options*)        '$none  ; other options are: $base, $surface, $both and $map
       (gethash '$contour_levels *gr-options*) 5       ; 1-50, [lowest_level,step,highest_level] or {z1,z2,...}
       (gethash '$colorbox *gr-options*)       t       ; in pm3d mode, always show colorbox
@@ -219,11 +216,254 @@
   ) )
 
 
+
+;; Returns value of option
+(defun get-option (opt) (gethash opt *gr-options*))
+
+
+
+
+
+
+;; update options color, fill_color, xaxis_color, yaxis_color, $zaxis_color
+;; ------------------------------------------------------------------------
+;; defined as a color name or hexadecimal #rrggbb
+(defun update-color (opt val)
+  (let ((str (substitute
+                #\- #\_ 
+                (string-downcase
+                  (string-trim 
+                     "\""
+                     (coerce (mstring val) 'string))))))
+      (cond
+        ((some #'(lambda (z) (string= z str))
+               '("white" "black" "gray0" "grey0" "gray10" "grey10" "gray20" "grey20"
+                 "gray30" "grey30"   "gray40" "grey40" "gray50" "grey50" "gray60" 
+                 "grey60" "gray70" "grey70" "gray80" "grey80" "gray90" "grey90" 
+                 "gray100" "grey100" "gray" "grey" "light-gray" "light-grey" 
+                 "dark-gray" "dark-grey" "red" "light-red" "dark-red" "yellow" 
+                 "light-yellow" "dark-yellow" "green" "light-green" "dark-green" 
+                 "spring-green" "forest-green" "sea-green" "blue" "light-blue" 
+                 "dark-blue" "midnight-blue" "navy" "medium-blue" "royalblue" 
+                 "skyblue" "cyan" "light-cyan" "dark-cyan" "magenta" "light-magenta"
+                 "dark-magenta" "turquoise" "light-turquoise" "dark-turquoise"
+                 "pink" "light-pink" "dark-pink" "coral" "light-coral" "orange-red"
+                 "salmon" "light-salmon" "dark-salmon" "aquamarine" "khaki" 
+                 "dark-khaki" "goldenrod" "light-goldenrod" "dark-goldenrod" "gold"
+                 "beige" "brown" "orange" "dark-orange" "violet" "dark-violet"
+                 "plum" "purple"))
+           (setf (gethash opt *gr-options*) (format nil "rgb '~a'" str)))
+        ((and (= (length str) 7)
+              (char= (schar str 0) #\#)
+              (every #'(lambda (z) (position z "0123456789abcdef"))
+                     (subseq str 1)))
+           (setf (gethash opt *gr-options*) (format nil "rgb '~a'" str)))
+        (t
+           (merror "draw: illegal color specification: ~M" str)))))
+
+
+
+
+
+
+;; update option terminal
+;; ----------------------
+;; *draw-terminal-number* is used when working with
+;; multiple windows. Empty string means
+;; we are working with only one window
+(defvar *draw-terminal-number* "")
+
+(defun update-terminal (val)
+  (let ((terms '($screen $png $jpg $gif $eps $eps_color $svg
+                 $pdf $pdfcairo $wxt $animated_gif $aquaterm)))
+     (cond
+       ((member val terms)
+          (setf (gethash '$terminal *gr-options*) val
+                *draw-terminal-number* ""))
+       ((and ($listp val)
+             (= ($length val) 2)
+             (member (cadr val) '($screen $wxt $aquaterm))
+             (integerp (caddr val))
+             (>= (caddr val) 0))
+          (setf (gethash '$terminal *gr-options*) (cadr val)
+                *draw-terminal-number* (caddr val)))
+       (t
+          (merror "draw: illegal terminal specification: ~M" val)))))
+
+
+
+
+
+
+
+;; update option transform
+;; -----------------------
+(defvar *draw-transform-dimensions* 0)
+(defvar *draw-transform-f1* nil)
+(defvar *draw-transform-f2* nil)
+(defvar *draw-transform-f3* nil)
+
+(defmacro transform-point (n)
+  (if (= n 2)
+    '(when (> *draw-transform-dimensions* 0)
+        (let ((xold xx)
+              (yold yy))
+          (setf xx (funcall *draw-transform-f1* xold yold)
+                yy (funcall *draw-transform-f2* xold yold))))
+    '(when (> *draw-transform-dimensions* 0)
+        (let ((xold xx)
+              (yold yy)
+              (zold zz))
+          (setf xx (funcall *draw-transform-f1* xold yold zold)
+                yy (funcall *draw-transform-f2* xold yold zold)
+                zz (funcall *draw-transform-f3* xold yold zold)  )))))
+
+(defmacro transform-lists (n)
+  (if (= n 2)
+    '(when (> *draw-transform-dimensions* 0)
+        (let ((xold x)
+              (yold y))
+          (setf x (mapcar #'(lambda (u1 u2) (funcall *draw-transform-f1* u1 u2))
+                          xold yold)
+                y (mapcar #'(lambda (u1 u2) (funcall *draw-transform-f2* u1 u2))
+                          xold yold)) ))
+    '(when (> *draw-transform-dimensions* 0)
+        (let ((xold x)
+              (yold y)
+              (zold z))
+          (setf x (mapcar #'(lambda (u1 u2 u3) (funcall *draw-transform-f1* u1 u2 u3))
+                          xold yold zold)
+                y (mapcar #'(lambda (u1 u2 u3) (funcall *draw-transform-f2* u1 u2 u3))
+                          xold yold zold)
+                z (mapcar #'(lambda (u1 u2 u3) (funcall *draw-transform-f3* u1 u2 u3))
+                          xold yold zold))) )))
+
+(defun update-transform (val)
+  (let (vars)
+    (cond
+      ((equal val '$none)
+        (setf (gethash '$transform *gr-options*) '$none
+              *draw-transform-dimensions* 0
+              *draw-transform-f1* nil
+              *draw-transform-f2* nil
+              *draw-transform-f3* nil))
+      ((and ($listp val)
+            (= ($length val) 4)
+            ($subsetp ($union ($setify ($listofvars ($first val)))
+                              ($setify ($listofvars ($second val))))
+                      ($setify (list '(mlist) ($third val) ($fourth val)))) )
+         ; transformation in 2d
+         (setf vars (list '(mlist) ($third val) ($fourth val)))
+         (setf (gethash '$transform *gr-options*) val
+               *draw-transform-dimensions* 2
+               *draw-transform-f1* (coerce-float-fun ($first val) vars)
+               *draw-transform-f2* (coerce-float-fun ($second val) vars) ))
+      ((and ($listp val)
+            (= ($length val) 6)
+            ($subsetp ($union ($setify ($listofvars ($first val)))
+                              ($setify ($listofvars ($second val)))
+                              ($setify ($listofvars ($third val))))
+                      ($setify (list '(mlist) ($fourth val) ($fifth val) ($sixth val)))) )
+         ; transformation in 3d
+         (setf vars (list '(mlist) ($fourth val) ($fifth val) ($sixth val)))
+         (setf (gethash '$transform *gr-options*) val
+               *draw-transform-dimensions* 3
+               *draw-transform-f1* (coerce-float-fun ($first val) vars)
+               *draw-transform-f2* (coerce-float-fun ($second val) vars)
+               *draw-transform-f3* (coerce-float-fun ($third val) vars)))
+      (t
+         (merror "draw: illegal transform definition")) )))
+
+
+
+
+
+
+
+
+;; update option enhanced3d
+;; ------------------------
+(defvar *draw-enhanced3d-type* 0)
+(defvar *draw-enhanced3d-fun* nil)
+
+(defun check-enhanced3d-model (grobj lis)
+  (when (null (position *draw-enhanced3d-type* lis))
+    (merror (format nil "draw (~a): unacceptable enhanced3d model" grobj))))
+
+(defun update-enhanced3d-expression (vars)
+  (let ((texture (gethash '$enhanced3d *gr-options*)))
+    (when (not ($subsetp ($setify ($listofvars texture))
+                         ($setify vars)))
+      (merror "draw: incompatible variables in enhanced3d expression"))
+    (setf *draw-enhanced3d-fun* (coerce-float-fun texture vars))))
+
+(defun update-enhanced3d (val)
+  (cond
+    ((or (null val)
+         (equal val '$none))
+      (setf (gethash '$enhanced3d *gr-options*) '$none
+            *draw-enhanced3d-type* 0
+            *draw-enhanced3d-fun* nil))
+    ((equal val t)
+      (let ((model '((mlist) $z $x $y $z)))
+        (setf (gethash '$enhanced3d *gr-options*) model
+              *draw-enhanced3d-type* 3
+              *draw-enhanced3d-fun* (coerce-float-fun
+                              ($first model)
+                              (list '(mlist) ($second model) ($third model) ($fourth model))))))
+    ((and ($listp val)
+          ($subsetp ($setify ($listofvars ($first val)))
+                    ($setify ($rest val))))
+       (case ($length val)
+         (2 (setf (gethash '$enhanced3d *gr-options*) val
+                  *draw-enhanced3d-type* 1
+                  *draw-enhanced3d-fun* (coerce-float-fun
+                              ($first val)
+                              (list '(mlist) ($second val)))))
+         (3 (setf (gethash '$enhanced3d *gr-options*) val
+                  *draw-enhanced3d-type* 2
+                  *draw-enhanced3d-fun* (coerce-float-fun
+                                  ($first val)
+                                  (list '(mlist) ($second val) ($third val)))))
+         (4 (setf (gethash '$enhanced3d *gr-options*) val
+                  *draw-enhanced3d-type* 3
+                  *draw-enhanced3d-fun* (coerce-float-fun
+                                  ($first val)
+                                  (list '(mlist) ($second val) ($third val) ($fourth val)))))
+         (otherwise (merror "draw: illegal length of enhanced3d"))))
+    ((not ($listp val))
+       ; enhanced3d is given an expression without 
+       ; explicit declaration of its variables.
+       ; Each graphic object must check for them.
+       (setf (gethash '$enhanced3d *gr-options*) val
+             *draw-enhanced3d-type* 99
+             *draw-enhanced3d-fun* nil))
+    (t
+        (merror "draw: illegal enhanced3d definition")) ) )
+
+
+
+(defun ini-local-option-variables ()
+  (setf ; global variables
+       *draw-transform-dimensions* 0
+       *draw-transform-f1* nil
+       *draw-transform-f2* nil
+       *draw-transform-f3* nil
+       *draw-enhanced3d-type* 0
+       *draw-enhanced3d-fun* nil)  )
+
+
+
+
 ;; Sets default values to global options
 (defun ini-global-options ()
   (setf ; global options
       (gethash '$columns *gr-options*)      1
-      (gethash '$terminal *gr-options*)     '$screen
+      (gethash '$terminal *gr-options*)     '$screen  ; defined as screen, png, jpg, gif, svg,
+                                                      ; eps, eps_color, pdf, pdfcairo, wxt or
+                                                      ; aquaterm. A list of type [term, number]
+                                                      ; is also admited if term is screen, wxt
+                                                      ; or aquaterm
       (gethash '$pic_width *gr-options*)    640    ; points for bitmap pictures
       (gethash '$pic_height *gr-options*)   480    ; points for bitmap pictures
       (gethash '$eps_width *gr-options*)    12     ; cm for eps pictures
@@ -233,22 +473,13 @@
       (gethash '$file_name *gr-options*)         "maxima_out"
       (gethash '$gnuplot_file_name *gr-options*) "maxout.gnuplot"
       (gethash '$data_file_name *gr-options*)    "data.gnuplot"
-      (gethash '$file_bgcolor *gr-options*) "xffffff"
+      (gethash '$file_bgcolor *gr-options*)      "xffffff"
       (gethash '$delay *gr-options*)        5      ; delay for animated gif's, default 5*(1/100) sec
-   ) )
+   )
+ )
 
 
-;; Initialize defaults
-(ini-gr-options)
-(ini-global-options)
-
-
-;; Gives value of option
-(defun get-option (opt) (gethash opt *gr-options*))
-
-
-
-;; Sets new values to global options
+;; Sets new values to graphic options
 (defun update-gr-option (opt val)
    (case opt
       ($rot_vertical ; in range [0, 180]
@@ -359,9 +590,14 @@
                     (equal val nil))
                 (setf (gethash opt *gr-options*) val)
                 (merror "draw: non boolean value: ~M " val)))
-      (($filled_func $enhanced3d) ; true, false or an expression
+      ($filled_func  ; true, false or an expression
          (setf (gethash opt *gr-options*) val))
-      (($xtics $ytics $xtics_secondary $ytics_secondary $ztics $cbtics)  ; $auto or t, $none or nil, number, increment, set, set of pairs
+      ($transform
+         (update-transform val))
+      ($enhanced3d
+         (update-enhanced3d val))
+      (($xtics $ytics $xtics_secondary $ytics_secondary $ztics $cbtics)
+        ; $auto or t, $none or nil, number, increment, set, set of pairs
             (cond ((member val '($none nil))   ; nil is maintained for back-portability
                      (setf (gethash opt *gr-options*) nil))
                   ((member val '($auto t))     ; t is maintained for back-portability
@@ -407,22 +643,8 @@
                                          ")")))))
                   (t
                      (merror "draw: illegal tics allocation: ~M" val)) ))
-      ($terminal ; defined as screen, png, jpg, gif, eps, eps_color, pdf, pdfcairo, wxt or aquaterm.
-                 ; A list of type [term, number] is also admited if term is screen, wxt or aquaterm
-            (let ((terms '($screen $png $jpg $gif $eps $eps_color $pdf $pdfcairo $wxt $animated_gif $aquaterm)))
-              (cond
-                ((member val terms)
-                   (setf (gethash opt *gr-options*) val
-                         *terminal-number* ""))
-                ((and ($listp val)
-                      (= ($length val) 2)
-                      (member (cadr val) '($screen $wxt $aquaterm))
-                      (integerp (caddr val))
-                      (>= (caddr val) 0))
-                   (setf (gethash opt *gr-options*) (cadr val)
-                         *terminal-number* (caddr val)))
-                (t
-                   (merror "draw: illegal terminal specification: ~M" val)))))
+      ($terminal
+        (update-terminal val))
       ($head_type ; defined as $filled, $empty and $nofilled
             (if (member val '($filled $empty $nofilled))
                 (setf (gethash opt *gr-options*) val)
@@ -497,33 +719,8 @@
                   (t
                     (merror "draw: illegal palette description: ~M" val)))  )
       (($color $fill_color $xaxis_color $yaxis_color
-        $zaxis_color)  ; defined as a color name or hexadecimal #rrggbb
-        (let ((str (string-downcase (string-trim "\"" (coerce (mstring val) 'string)))))
-            (cond
-              ((some #'(lambda (z) (string= z str))
-                     '("white" "black" "gray0" "grey0" "gray10" "grey10" "gray20" "grey20"
-                       "gray30" "grey30"   "gray40" "grey40" "gray50" "grey50" "gray60" 
-                       "grey60" "gray70" "grey70" "gray80" "grey80" "gray90" "grey90" 
-                       "gray100" "grey100" "gray" "grey" "light-gray" "light-grey" 
-                       "dark-gray" "dark-grey" "red" "light-red" "dark-red" "yellow" 
-                       "light-yellow" "dark-yellow" "green" "light-green" "dark-green" 
-                       "spring-green" "forest-green" "sea-green" "blue" "light-blue" 
-                       "dark-blue" "midnight-blue" "navy" "medium-blue" "royalblue" 
-                       "skyblue" "cyan" "light-cyan" "dark-cyan" "magenta" "light-magenta"
-                       "dark-magenta" "turquoise" "light-turquoise" "dark-turquoise"
-                       "pink" "light-pink" "dark-pink" "coral" "light-coral" "orange-red"
-                       "salmon" "light-salmon" "dark-salmon" "aquamarine" "khaki" 
-                       "dark-khaki" "goldenrod" "light-goldenrod" "dark-goldenrod" "gold"
-                       "beige" "brown" "orange" "dark-orange" "violet" "dark-violet"
-                       "plum" "purple"))
-                 (setf (gethash opt *gr-options*) (format nil "rgb '~a'" str)))
-              ((and (= (length str) 7)
-                    (char= (schar str 0) #\#)
-                    (every #'(lambda (z) (position z "0123456789abcdef"))
-                           (subseq str 1)))
-                 (setf (gethash opt *gr-options*) (format nil "rgb '~a'" str)))
-              (t
-                 (merror "draw: illegal color specification: ~M" str)))))
+        $zaxis_color)
+        (update-color opt val))
       ($file_bgcolor ; defined as hexadecimal #rrggbb
         (let ((str (string-downcase (string-trim "\"" (coerce (mstring val) 'string)))))
             (if (and (= (length str) 7)
@@ -570,6 +767,23 @@
 (defun update-ranges-3d (xmin xmax ymin ymax zmin zmax)
    (update-ranges-2d xmin xmax ymin ymax)
    (update-range '$zrange zmin zmax))
+
+(defmacro check-extremes-x ()
+  '(let ()
+    (when (< xx xmin) (setf xmin xx))
+    (when (> xx xmax) (setf xmax xx))))
+
+(defmacro check-extremes-y ()
+  '(let ()
+    (when (< yy ymin) (setf ymin yy))
+    (when (> yy ymax) (setf ymax yy))))
+
+(defmacro check-extremes-z ()
+  '(let ()
+    (when (< zz zmin) (setf zmin zz))
+    (when (> zz zmax) (setf zmax zz))))
+
+
 
 
 
@@ -623,6 +837,7 @@
 ;;     color
 ;;     xaxis_secondary
 ;;     yaxis_secondary
+;;     transform
 (defun points-command ()
   (let ((opt (get-option '$points_joined)))
     (cond
@@ -651,10 +866,10 @@
                  (axes-to-plot))))) )
 
 (defun points-array-2d (arg)
-   (let ((xmin 1.75555970201398e+305)
-         (xmax -1.75555970201398e+305)
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
+   (let ((xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
          (pos -1)
          (dim (array-dimensions arg))
          n xx yy pts twocolumns)
@@ -675,10 +890,9 @@
                   yy ($float (aref arg k 1)))
             (setf xx ($float (aref arg 0 k))
                   yy ($float (aref arg 1 k))))
-         (when (< xx xmin) (setf xmin xx))
-         (when (> xx xmax) (setf xmax xx))
-         (when (< yy ymin) (setf ymin yy))
-         (when (> yy ymax) (setf ymax yy))
+         (transform-point 2)
+         (check-extremes-x)
+         (check-extremes-y)
          (setf (aref pts (incf pos)) xx)
          (setf (aref pts (incf pos)) yy))
       (update-ranges-2d xmin xmax ymin ymax)
@@ -689,10 +903,10 @@
          :points (list pts))))
 
 (defun points-array-1d (arg1 &optional (arg2 nil))
-   (let ((xmin 1.75555970201398e+305)
-         (xmax -1.75555970201398e+305)
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
+   (let ((xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
          (pos -1)
          (dim (array-dimensions arg1))
          n x y xx yy pts)
@@ -717,10 +931,9 @@
       (loop for k below n do
          (setf xx ($float (aref x k))
                yy ($float (aref y k)))
-         (when (< xx xmin) (setf xmin xx))
-         (when (> xx xmax) (setf xmax xx))
-         (when (< yy ymin) (setf ymin yy))
-         (when (> yy ymax) (setf ymax yy))
+         (transform-point 2)
+         (check-extremes-x)
+         (check-extremes-y)
          (setf (aref pts (incf pos)) xx)
          (setf (aref pts (incf pos)) yy))
       (update-ranges-2d xmin xmax ymin ymax)
@@ -770,13 +983,14 @@
                   (null arg2))            ; two-row matrix
                (setf x (map 'list #'$float (cdadr arg1))
                      y (map 'list #'$float (cdaddr arg1))))
-            (t (merror "draw (points2d): bad input format"))  )
-      (setf pts (make-array (* 2 (length x)) :element-type 'flonum
-                                             :initial-contents (mapcan #'list x y)))
+            (t (merror "draw (points2d): bad input format")))
+      (transform-lists 2)
       (setf xmin ($tree_reduce 'min (cons '(mlist simp) x))
             xmax ($tree_reduce 'max (cons '(mlist simp) x))
             ymin ($tree_reduce 'min (cons '(mlist simp) y))
             ymax ($tree_reduce 'max (cons '(mlist simp) y)) )
+      (setf pts (make-array (* 2 (length x)) :element-type 'flonum
+                                             :initial-contents (mapcan #'list x y)))
       ;; update x-y ranges if necessary
       (update-ranges-2d xmin xmax ymin ymax)
       (make-gr-object
@@ -791,6 +1005,7 @@
          (points-array-2d arg1)
          (points-array-1d arg1 arg2))
       (points-list arg1 arg2)))
+
 
 
 
@@ -813,16 +1028,17 @@
 ;;     line_type
 ;;     color
 ;;     enhanced3d
-
+;;     transform
 (defun points3d-command ()
-  (let ((opt (get-option '$points_joined)))
+  (let ((opt (get-option '$points_joined))
+        (pal (if (> *draw-enhanced3d-type* 0) "palette" (get-option '$color) )))
     (cond
       ((null opt) ; draws isolated points
          (format nil " ~a w p ps ~a pt ~a lc ~a"
                  (make-obj-title (get-option '$key))
                  (get-option '$point_size)
                  (get-option '$point_type)
-                 (if (get-option '$enhanced3d) "palette" (get-option '$color) ) ))
+                 pal ))
       ((eq opt t) ; draws joined points
          (format nil " ~a w lp ps ~a pt ~a lw ~a lt ~a lc ~a"
                  (make-obj-title (get-option '$key))
@@ -830,17 +1046,17 @@
                  (get-option '$point_type)
                  (get-option '$line_width)
                  (get-option '$line_type)
-                 (if (get-option '$enhanced3d) "palette" (get-option '$color) ) ))
+                 pal ))
       (t  ; draws impulses
          (format nil " ~a w i lw ~a lt ~a lc ~a"
                  (make-obj-title (get-option '$key))
                  (get-option '$line_width)
                  (get-option '$line_type)
-                 (if (get-option '$enhanced3d) "palette" (get-option '$color) ) )))))
+                 pal )))))
 
 (defun points3d (arg1 &optional (arg2 nil) (arg3 nil))
-   (let (pts x y z xmin xmax ymin ymax zmin zmax ncols
-        (c (get-option '$enhanced3d)))
+   (let (pts x y z xmin xmax ymin ymax zmin zmax ncols col)
+      (check-enhanced3d-model "points" '(0 1 3))
       (cond (($listp arg1)   ; list input
                (cond ((and (every #'$listp (rest arg1))   ; xyz format
                            (null arg2)
@@ -877,16 +1093,22 @@
                            (= (first dim) 3)
                            (null arg2)
                            (null arg3))
-                        (setf x (loop for k from 0 below (second dim) collect ($float (aref arg1 0 k)))
-                              y (loop for k from 0 below (second dim) collect ($float (aref arg1 1 k)))
-                              z (loop for k from 0 below (second dim) collect ($float (aref arg1 2 k))) ))
+                        (setf x (loop for k from 0 below (second dim)
+                                    collect ($float (aref arg1 0 k)))
+                              y (loop for k from 0 below (second dim)
+                                    collect ($float (aref arg1 1 k)))
+                              z (loop for k from 0 below (second dim)
+                                    collect ($float (aref arg1 2 k))) ))
                      ((and (= (length dim) 2)   ; three-column array
                            (= (second dim) 3)
                            (null arg2)
                            (null arg3))
-                        (setf x (loop for k from 0 below (first dim) collect ($float (aref arg1 k 0)))
-                              y (loop for k from 0 below (first dim) collect ($float (aref arg1 k 1)))
-                              z (loop for k from 0 below (first dim) collect ($float (aref arg1 k 2))) ))
+                        (setf x (loop for k from 0 below (first dim)
+                                    collect ($float (aref arg1 k 0)))
+                              y (loop for k from 0 below (first dim)
+                                    collect ($float (aref arg1 k 1)))
+                              z (loop for k from 0 below (first dim)
+                                    collect ($float (aref arg1 k 2))) ))
                      ((and (= (length dim) 1)   ; three 1d arrays
                            (arrayp arg2)
                            (arrayp arg3)
@@ -896,32 +1118,27 @@
                               y (map 'list #'$float arg2)
                               z (map 'list #'$float arg3) ) )
                      (t (merror "draw (points3d): bad array input format")) ) ) )
-            (t (merror "draw (points3d): bad input format")) )
-      (cond ((member c '(nil t))
+            (t (merror "draw (points3d): bad input format")))
+      (transform-lists 3)
+      ; set pm3d colors
+      (cond ((= *draw-enhanced3d-type* 0)
                 (setf ncols 3)
                 (setf pts (make-array (* ncols (length x))
                                       :element-type 'flonum
                                       :initial-contents (mapcan #'list x y z))))
-            (t
-                (cond ((and ($listp c)   ; list color coordinates
-                            (= (length (cdr c)) (length x)) )
-                         (setf c (map 'list #'$float (rest c))))
-                      ((and ($matrixp c)   ; 1 row matrix color coordinates
-                            (= ($length c) 1)
-                            (= (length (cdadr c)) (length x)) )
-                         (setf c (map 'list #'$float (cdadr c))))
-                      ((and ($matrixp c)   ; 1 column matrix color coordinates
-                            (= (length (cadr c)) 2)
-                            (= (length (cdr c)) (length x)) )
-                         (setf c (map 'list #'$float (map 'list #'second (rest c)))))
-                      ((and (arrayp c)   ; 1 dimension array color coordinates
-                            (equal (array-dimensions c) (list (length x)) ) )
-                         (setf c (map 'list #'$float c)) )
-                      (t (merror "draw (points3d): bad color coordinate (enhanced3d) input")) )
+            ((= *draw-enhanced3d-type* 1)
+                (setf col (loop for k from 1 to (length x)
+                                collect (funcall *draw-enhanced3d-fun* k)))
                 (setf ncols 4)
                 (setf pts (make-array (* ncols (length x))
                                       :element-type 'flonum
-                                      :initial-contents (mapcan #'list x y z c))) ) )
+                                      :initial-contents (mapcan #'list x y z col))))
+            ((= *draw-enhanced3d-type* 3)
+                (setf col (mapcar #'(lambda (xx yy zz) (funcall *draw-enhanced3d-fun* xx yy zz)) x y z))
+                (setf ncols 4)
+                (setf pts (make-array (* ncols (length x))
+                                      :element-type 'flonum
+                                      :initial-contents (mapcan #'list x y z col)))) )
       (setf xmin ($tree_reduce 'min (cons '(mlist simp) x))
             xmax ($tree_reduce 'max (cons '(mlist simp) x))
             ymin ($tree_reduce 'min (cons '(mlist simp) y))
@@ -941,6 +1158,7 @@
 
 
 
+
 ;; Object: 'polygon'
 ;; Usage:
 ;;     polygon([[x1,y1], [x2,y2], [x3,y3],...])
@@ -955,6 +1173,7 @@
 ;;     key
 ;;     xaxis_secondary
 ;;     yaxis_secondary
+;;     transform
 (defun polygon (arg1 &optional (arg2 nil))
    (if (and (gethash '$transparent  *gr-options*)
             (not (gethash '$border  *gr-options*)))
@@ -972,6 +1191,7 @@
                (setf x (map 'list #'$float (rest arg1))
                      y (map 'list #'$float (rest arg2))) )
             (t (merror "draw (polygon): bad input format"))  )
+      (transform-lists 2)
       (setf xmin ($tree_reduce 'min (cons '(mlist simp) x))
             xmax ($tree_reduce 'max (cons '(mlist simp) x))
             ymin ($tree_reduce 'min (cons '(mlist simp) y))
@@ -1030,6 +1250,95 @@
 
 
 
+
+;; Object: 'triangle'
+;; Usage:
+;;     triangle([x1,y1], [x2,y2], [x3,y3])
+;; Options:
+;;     transparent
+;;     fill_color
+;;     border
+;;     line_width
+;;     line_type
+;;     color
+;;     key
+;;     xaxis_secondary
+;;     yaxis_secondary
+;;     transform
+(defun triangle (arg1 arg2 arg3)
+   (if (or (not ($listp arg1))
+           (not (= ($length arg1) 2))
+           (not ($listp arg2))
+           (not (= ($length arg2) 2))
+           (not ($listp arg3))
+           (not (= ($length arg3) 2)))
+       (merror "draw2d (triangle): vertices are not correct"))
+   (let* ((x1 ($float (cadr arg1)))
+          (y1 ($float (caddr arg1)))
+          (x2 ($float (cadr arg2)))
+          (y2 ($float (caddr arg2)))
+          (x3 ($float (cadr arg3)))
+          (y3 ($float (caddr arg3)))
+          (grobj (polygon `((mlist simp)
+                            ((mlist simp) ,x1 ,y1)
+                            ((mlist simp) ,x2 ,y2)
+                            ((mlist simp) ,x3 ,y3)
+                            ((mlist simp) ,x1 ,y1)))))
+      (setf (gr-object-name grobj) 'triangle)
+      grobj))
+
+
+
+
+
+
+;; Object: 'quadrilateral'
+;; Usage:
+;;     quadrilateral([x1,y1], [x2,y2], [x3,y3], [x4,y4])
+;; Options:
+;;     transparent
+;;     fill_color
+;;     border
+;;     line_width
+;;     line_type
+;;     color
+;;     key
+;;     xaxis_secondary
+;;     yaxis_secondary
+;;     transform
+(defun quadrilateral (arg1 arg2 arg3 arg4)
+   (if (or (not ($listp arg1))
+           (not (= ($length arg1) 2))
+           (not ($listp arg2))
+           (not (= ($length arg2) 2))
+           (not ($listp arg3))
+           (not (= ($length arg3) 2))
+           (not ($listp arg4))
+           (not (= ($length arg4) 2)))
+       (merror "draw2d (quadrilateral): vertices are not correct"))
+   (let* ((x1 ($float (cadr arg1)))
+          (y1 ($float (caddr arg1)))
+          (x2 ($float (cadr arg2)))
+          (y2 ($float (caddr arg2)))
+          (x3 ($float (cadr arg3)))
+          (y3 ($float (caddr arg3)))
+          (x4 ($float (cadr arg4)))
+          (y4 ($float (caddr arg4)))
+          (grobj (polygon `((mlist simp)
+                            ((mlist simp) ,x1 ,y1)
+                            ((mlist simp) ,x2 ,y2)
+                            ((mlist simp) ,x3 ,y3)
+                            ((mlist simp) ,x4 ,y4)
+                            ((mlist simp) ,x1 ,y1)))))
+      (setf (gr-object-name grobj) 'quadrilateral)
+      grobj))
+
+
+
+
+
+
+
 ;; Object: 'rectangle'
 ;; Usage:
 ;;     rectangle([x1,y1], [x2,y2]), being [x1,y1] & [x2,y2] opposite vertices
@@ -1043,12 +1352,13 @@
 ;;     key
 ;;     xaxis_secondary
 ;;     yaxis_secondary
+;;     transform
 (defun rectangle (arg1 arg2)
    (if (or (not ($listp arg1))
            (not (= ($length arg1) 2))
            (not ($listp arg2))
            (not (= ($length arg2) 2)))
-       (merror "draw (rectangle): vertices are not correct"))
+       (merror "draw2d (rectangle): vertices are not correct"))
    (let* ((x1 ($float (cadr arg1)))
           (y1 ($float (caddr arg1)))
           (x2 ($float (cadr arg2)))
@@ -1061,7 +1371,6 @@
                             ((mlist simp) ,x1 ,y1)))))
       (setf (gr-object-name grobj) 'rectangle)
       grobj))
-
 
 
 
@@ -1083,10 +1392,11 @@
 ;;     color
 ;;     xaxis_secondary
 ;;     yaxis_secondary
+;;     transform
 (defun ellipse (xc yc a b ang1 ang2)
   (if (and (gethash '$transparent  *gr-options*)
            (not (gethash '$border  *gr-options*)))
-      (merror "draw (ellipse): transparent is true and border is false; this is not consistent"))
+      (merror "draw2d (ellipse): transparent is true and border is false; this is not consistent"))
   (let ((fxc ($float xc))
         (fyc ($float yc))
         (fa ($float a))
@@ -1094,12 +1404,12 @@
         (fang1 ($float ang1))
         (fang2 ($float ang2))
         (nticks (gethash '$nticks  *gr-options*))
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305)
+        (xmin most-positive-double-float)
+        (xmax most-negative-double-float)
+        (ymin most-positive-double-float)
+        (ymax most-negative-double-float)
         (result nil)
-        pts grps tmin tmax eps x y tt pltcmd)
+        pts grps tmin tmax eps xx yy tt pltcmd)
     (when (or (notevery #'floatp (list fxc fyc fa fb fang1 fang2))
               (<= fa 0.0)
               (<= fb 0.0))
@@ -1112,16 +1422,20 @@
           eps (/ (- tmax tmin) (- nticks 1)))
     (setf tt tmin)
     (loop
-      (setf x (+ fxc (* fa (cos tt))))
-      (if (> x xmax) (setf xmax x))
-      (if (< x xmin) (setf xmin x))
-      (setf y (+ fyc (* fb (sin tt))))
-      (if (> y ymax) (setf ymax y))
-      (if (< y ymin) (setf ymin y))
-      (setf result (append (list x y) result))
+      (setf xx (+ fxc (* fa (cos tt))))
+      (setf yy (+ fyc (* fb (sin tt))))
+      (transform-point 2)
+      (check-extremes-x)
+      (check-extremes-y)
+      (setf result (append (list xx yy) result))
       (if (>= tt tmax) (return))
       (setf tt (+ tt eps))
       (if (>= tt tmax) (setq tt tmax)) )
+    (when (> *draw-transform-dimensions* 0)
+      (let ((xold fxc)
+            (yold fyc))
+        (setf fxc (funcall *draw-transform-f1* xold yold)
+              fyc (funcall *draw-transform-f2* xold yold))) )
     ; update x-y ranges if necessary
     (setf xmin (min fxc xmin)
           xmax (max fxc xmax)
@@ -1133,7 +1447,7 @@
            (setf pltcmd (format nil " ~a w l lw ~a lt ~a lc ~a axis ~a"
                                     (make-obj-title (get-option '$key))
                                     (get-option '$line_width)
-                                    (get-option '$line_type)
+                                    (get-option '$line_tyype)
                                     (get-option '$color)
                                     (axes-to-plot)))
            (setf grps '((2 0)))
@@ -1179,7 +1493,7 @@
 
 ;; Object: 'label'
 ;; Usage in 2d:
-;;     label([string1,x1,y1],[string2,x2,y2],...)
+;;     label([string1,xx1,y1],[string2,xx2,y2],...)
 ;; Usage in 3d:
 ;;     label([string1,x1,y1,z1],[string2,x2,y2,z2],...)
 ;; Options:
@@ -1188,7 +1502,7 @@
 ;;     color
 ;;     xaxis_secondary
 ;;     yaxis_secondary
-(defun label (lab)
+(defun label (&rest lab)
   (let ((n (length lab))
         (result nil)
         is2d)
@@ -1258,13 +1572,13 @@
 ;;     line_width
 ;;     xaxis_secondary
 ;;     yaxis_secondary
-(defun bars (boxes)
+(defun bars (&rest boxes)
   (let ((n (length boxes))
         (count -1)
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305)
+        (xmin most-positive-double-float)
+        (xmax most-negative-double-float)
+        (ymin most-positive-double-float)
+        (ymax most-negative-double-float)
         result x h w w2)
     (when (= n 0) 
       (merror "draw2d (bars): no arguments in object bars"))
@@ -1286,7 +1600,7 @@
     (update-ranges-2d xmin xmax ymin ymax)
     (make-gr-object
        :name 'bars
-       :command (format nil " ~a w boxes fs solid ~a border lw ~a lc ~a axis ~a"
+       :command (format nil " ~a w boxes fs solid ~a lw ~a lc ~a axis ~a"
                             (make-obj-title (get-option '$key))
                             (get-option '$fill_density)
                             (get-option '$line_width)
@@ -1440,18 +1754,18 @@
   (let* ((nticks (gethash '$nticks  *gr-options*))
          (depth (gethash '$adapt_depth  *gr-options*))
          ($numer t)
-         (xstart ($float minval))
-         (xend ($float maxval))
-         (x-step (/ (- xend xstart) ($float nticks) 2))
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
+         (xmin ($float minval))
+         (xmax ($float maxval))
+         (x-step (/ (- xmax xmin) ($float nticks) 2))
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
          x-samples y-samples yy result pltcmd result-array)
     (setq fcn (coerce-float-fun fcn `((mlist) ,var)))
-    (if (< xend xstart)
+    (if (< xmax xmin)
        (merror "draw2d (explicit): illegal range"))
     (flet ((fun (x) (funcall fcn x)))
       (dotimes (k (1+ (* 2 nticks)))
-        (let* ((x (+ xstart (* k x-step)))
+        (let* ((x (+ xmin (* k x-step)))
                (y (fun x)))
           (when (numberp y)    ; check for non numeric y, as in 1/0
              (push x x-samples)
@@ -1478,16 +1792,40 @@
               ((null lst) 'done)
             (when (numberp (second lst))
               (setf result (append result (list (first lst) (second lst)))))))))
+
       (cond ((null (get-option '$filled_func))
-               (do ((y (cdr result) (cddr y)))
-                   ((null y))
-                  (setf yy (car y))
-                  (if (> yy ymax) (setf ymax yy))
-                  (if (< yy ymin) (setf ymin yy)))
-               (update-ranges-2d xstart xend ymin ymax)
-               (setf result-array (make-array (length result)
-                                              :element-type 'flonum 
-                                              :initial-contents result))
+               (cond
+                 ((> *draw-transform-dimensions* 0)
+                    ; With geometric transformation.
+                    ; When option filled_func in not nil,
+                    ; geometric transformation is ignored
+                    (setf result-array (make-array (length result)
+                                                   :element-type 'flonum))
+                    (setf xmin most-positive-double-float
+                          xmax most-negative-double-float)
+                    (let (xold yold x y (count -1))
+                      (do ((lis result (cddr lis)))
+                          ((null lis))
+                        (setf xold (first lis)
+                              yold (second lis))
+                        (setf x (funcall *draw-transform-f1* xold yold)
+                              y (funcall *draw-transform-f2* xold yold))
+                        (if (> x xmax) (setf xmax x))
+                        (if (< x xmin) (setf xmin x))
+                        (if (> y ymax) (setf ymax y))
+                        (if (< y ymin) (setf ymin y))
+                        (setf (aref result-array (incf count)) x)
+                        (setf (aref result-array (incf count)) y)  )  ) )
+                 (t
+                    ; No geometric transformation invoked.
+                    (do ((y (cdr result) (cddr y)))
+                        ((null y))
+                      (setf yy (car y))
+                      (check-extremes-y))
+                    (setf result-array (make-array (length result)
+                                                   :element-type 'flonum 
+                                                   :initial-contents result))))
+               (update-ranges-2d xmin xmax ymin ymax)
                (setf pltcmd (format nil " ~a w l lw ~a lt ~a lc ~a axis ~a"
                                         (make-obj-title (get-option '$key))
                                         (get-option '$line_width)
@@ -1503,9 +1841,8 @@
                (do ((y (cdr result) (cddr y)))
                    ((null y))
                   (setf yy (car y))
-                  (if (> yy ymax) (setf ymax yy))
-                  (if (< yy ymin) (setf ymin yy)))
-               (update-ranges-2d xstart xend ymin ymax)
+                  (check-extremes-y))
+               (update-ranges-2d xmin xmax ymin ymax)
                (setf result-array (make-array (length result)
                                               :element-type 'flonum 
                                               :initial-contents result))
@@ -1521,7 +1858,7 @@
             (t
                (let (fcn2 yy2 (count -1))
                   (setf result-array (make-array (* (/ (length result) 2) 3) :element-type 'flonum))
-                  (setq fcn2 (coerce-float-fun ($float (get-option '$filled_func)) `((mlist), var)))
+                  (setq fcn2 (coerce-float-fun (get-option '$filled_func) `((mlist), var)))
                   (flet ((fun (x) (funcall fcn2 x)))
                     (do ((xx result (cddr xx)))
                       ((null xx))
@@ -1532,7 +1869,7 @@
                       (setf (aref result-array (incf count)) (first xx)
                             (aref result-array (incf count)) yy
                             (aref result-array (incf count)) yy2) )  ))
-               (update-ranges-2d xstart xend ymin ymax)
+               (update-ranges-2d xmin xmax ymin ymax)
                (setf pltcmd (format nil " ~a w filledcurves lc ~a axis ~a"
                                         (make-obj-title (get-option '$key))
                                         (get-option '$fill_color)
@@ -1651,7 +1988,7 @@
 	 (ssample (make-array `(,(1+ ($first ip-grid-in))
 				,(1+ ($second ip-grid-in))))) )
     
-    (setq e (coerce-float-fun ($float (imp-pl-prepare-expr expr))
+    (setq e (coerce-float-fun (imp-pl-prepare-expr expr)
 			      `((mlist simp)
 				,x ,y)))
     (update-ranges-2d xmin xmax ymin ymax)
@@ -1682,8 +2019,6 @@
        :groups '((2 2))
        :points  `(,(make-array (length pts) :element-type 'flonum
                                             :initial-contents pts)) ) ))
-
-
 
 
 
@@ -1741,7 +2076,7 @@
         (t
           (append (list (car lis)) (flatten (cdr lis))))))
 
-(defun implicit3d (expr x xmin xmax y ymin ymax z zmin zmax)
+(defun implicit3d (expr par1 xmin xmax par2 ymin ymax par3 zmin zmax)
   (let* ((nx (gethash '$x_voxel  *gr-options*))
          (ny (gethash '$y_voxel  *gr-options*))
          (nz (gethash '$z_voxel  *gr-options*))
@@ -1751,21 +2086,25 @@
          (ymax ($float ymax))
          (zmin ($float zmin))
          (zmax ($float zmax))
-         (dx ($float (/ (- xmax xmin) nx)))
-         (dy ($float (/ (- ymax ymin) ny)))
-         (dz ($float (/ (- zmax zmin) nz)))
-         (fcn (coerce-float-fun ($float (m- ($lhs expr) ($rhs expr))) `((mlist),x ,y ,z)))
+         (dx (/ (- xmax xmin) nx))
+         (dy (/ (- ymax ymin) ny))
+         (dz (/ (- zmax zmin) nz))
+         (fcn (coerce-float-fun (m- ($lhs expr) ($rhs expr)) `((mlist) ,par1 ,par2 ,par3)))
          ($numer t)
          (vertices '())
          (pts '())
          pltcmd
          (grouping '())
+         ncols
          (px (make-array (+ nx 1) :element-type 'flonum))
          (py (make-array (+ ny 1) :element-type 'flonum))
          (pz (make-array (+ nz 1) :element-type 'flonum))
          (oldval (make-array `(,(+ nx 1) ,(+ ny 1)) :element-type 'flonum))
          (newval (make-array `(,(+ nx 1) ,(+ ny 1)) :element-type 'flonum)) )
-
+    (check-enhanced3d-model "implicit" '(0 3 99))
+    (when (= *draw-enhanced3d-type* 99)
+       (update-enhanced3d-expression (list '(mlist) par1 par2 par3)))
+    (setf ncols (if (= *draw-enhanced3d-type* 0) 3 4))
     ; initialize coordinate arrays
     (loop for i to nx do (setf (aref px i) (+ xmin (* i dx))))
     (loop for j to ny do (setf (aref py j) (+ ymin (* j dy))))
@@ -1835,29 +2174,41 @@
       ; make oldval a copy of newval
       (setf oldval (copy-array newval)))
 
-
     (when (null vertices)
       (merror "draw3d (implicit): no surface within these ranges"))
     (update-ranges-3d xmin xmax ymin ymax zmin zmax)
     (setf pltcmd
-          (cons (format nil " ~a w l lt ~a lc ~a"
+          (cons (format nil " ~a w ~a lw ~a lt ~a lc ~a"
                         (make-obj-title (get-option '$key))
+                        (if (equal (get-option '$enhanced3d) '$none) "l" "pm3d")
+                        (get-option '$line_width)
                         (get-option '$line_type)
                         (get-option '$color))
                 (make-list (- (/ (length vertices) 3) 1)
                            :initial-element (format nil " t '' w ~a lw ~a lt ~a lc ~a"
-                                              (if (get-option '$enhanced3d) "pm3d" "l")
+                                              (if (equal (get-option '$enhanced3d) '$none) "l" "pm3d")
                                               (get-option '$line_width)
                                               (get-option '$line_type)
                                               (get-option '$color) ))))
     (do ((v vertices (cdddr v)))
         ((null v) 'done)
-      (push (make-array 12 :element-type 'flonum
-                          :initial-contents (flatten (list (first v) (second v) (first v) (third v))))
-            pts)
-      (push '(3 2)
+      (case ncols
+        (3 (push (make-array 12 :element-type 'flonum
+                                :initial-contents (flatten (list (first v) (second v) (first v) (third v))))
+                 pts))
+        (4 (let (v1 v2 v3
+                 color1 color2 color3)
+             (setf v1 (first v)
+                   v2 (second v)
+                   v3 (third v))
+             (setf color1 (funcall *draw-enhanced3d-fun* (car v1) (cadr v1) (caddr v1))
+                   color2 (funcall *draw-enhanced3d-fun* (car v2) (cadr v2) (caddr v2))
+                   color3 (funcall *draw-enhanced3d-fun* (car v3) (cadr v3) (caddr v3)) )
+             (push (make-array 16 :element-type 'flonum
+                                  :initial-contents (flatten (list v1 color1 v2 color2 v1 color1 v3 color3)))
+                    pts))) )
+      (push `(,ncols 2)
             grouping) )
-
     (make-gr-object
        :name    'implicit
        :command pltcmd
@@ -1870,10 +2221,9 @@
 
 
 
-
 ;; Object: 'explicit3d'
 ;; Usage:
-;;     explicit(fcn,var1,minval1,maxval1,var2,minval2,maxval2)
+;;     explicit(fcn,par1,minval1,maxval1,par2,minval2,maxval2)
 ;; Options:
 ;;     xu_grid
 ;;     yv_grid
@@ -1883,55 +2233,69 @@
 ;;     key
 ;;     enhanced3d
 ;;     surface_hide
-;; Note: implements a clon of draw3d (plot.lisp) with some
-;;       mutations to fit the draw environment.
-;;       Read source in plot.lisp for more information
-(defun explicit3d (fcn var1 minval1 maxval1 var2 minval2 maxval2)
+;;     transform
+(defun explicit3d (fcn par1 minval1 maxval1 par2 minval2 maxval2)
   (let* ((xu_grid (gethash '$xu_grid  *gr-options*))
          (yv_grid (gethash '$yv_grid  *gr-options*))
          (fminval1 ($float minval1))
          (fminval2 ($float minval2))
          (fmaxval1 ($float maxval1))
          (fmaxval2 ($float maxval2))
-         (epsx ($float (/ (- fmaxval1 fminval1) xu_grid)))
-         (epsy ($float (/ (- fmaxval2 fminval2) yv_grid)))
-         (x 0.0)
-         (y 0.0)
-         (zmin 1.75555970201398e+305)
-         (zmax -1.75555970201398e+305)
+         (epsx (/ (- fmaxval1 fminval1) xu_grid))
+         (epsy (/ (- fmaxval2 fminval2) yv_grid))
+         (xx 0.0) (uu 0.0)
+         (yy 0.0) (vv 0.0)
+         (zz 0.0)
+         (xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
+         (zmin most-positive-double-float)
+         (zmax most-negative-double-float)
          (nx (+ xu_grid 1))
          (ny (+ yv_grid 1))
          ($numer t)
          (count -1)
-         (enhanced4d (not (member (get-option '$enhanced3d) '(nil t))))
-         (ncols (if enhanced4d 4 3))
-         result z fcn4d)
-    (setq fcn (coerce-float-fun ($float fcn) `((mlist) ,var1 ,var2)))
-    (if enhanced4d
-       (setq fcn4d (coerce-float-fun ($float (get-option '$enhanced3d))
-                                     `((mlist) ,var1 ,var2))))
+         ncols result)
+    (check-enhanced3d-model "explicit" '(0 2 3 99))
+    (when (= *draw-enhanced3d-type* 99)
+       (update-enhanced3d-expression (list '(mlist) par1 par2)))
+    (setq fcn (coerce-float-fun fcn `((mlist) ,par1 ,par2)))
+    (setf ncols (if (= *draw-enhanced3d-type* 0) 3 4))
     (setf result (make-array (* ncols nx ny) :element-type 'flonum))
     (loop for j below ny
-           initially (setq y fminval2)
-           do (setq x fminval1)
+           initially (setf vv fminval2)
+           do (setf uu fminval1)
            (loop for i below nx
                   do
-                  (setf z (funcall fcn x y))
-                  (if (> z zmax) (setf zmax z))
-                  (if (< z zmin) (setf zmin z))
-                  (setf (aref result (incf count)) x)
-                  (setf (aref result (incf count)) y)
-                  (setf (aref result (incf count)) z)
-                  (when enhanced4d
-                     (setf (aref result (incf count)) (funcall fcn4d x y)))
-                  (setq x (+ x epsx)))
-           (setq y (+ y epsy)))
+                  (setf xx uu
+                        yy vv)
+                  (setf zz (funcall fcn xx yy))
+                  (transform-point 3)
+                  (when (> *draw-transform-dimensions* 0)
+                    (check-extremes-x) 
+                    (check-extremes-y))
+                  (check-extremes-z)
+                  (setf (aref result (incf count)) xx
+                        (aref result (incf count)) yy
+                        (aref result (incf count)) zz)
+                  ; check texture model
+                  (case *draw-enhanced3d-type*
+                    ((2 99) (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy)))
+                    (3  (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy zz))) )
+                  (setq uu (+ uu epsx)))
+           (setq vv (+ vv epsy)))
+    (when (> *draw-transform-dimensions* 0)
+      (setf fminval1 xmin
+            fmaxval1 xmax
+            fminval2 ymin
+            fmaxval2 ymax))
     (update-ranges-3d fminval1 fmaxval1 fminval2 fmaxval2 zmin zmax)
     (make-gr-object
        :name   'explicit
        :command (format nil " ~a w ~a lw ~a lt ~a lc ~a"
                             (make-obj-title (get-option '$key))
-                            (if (get-option '$enhanced3d) "pm3d" "l")
+                            (if (> *draw-enhanced3d-type* 0) "pm3d" "l")
                             (get-option '$line_width)
                             (get-option '$line_type)
                             (get-option '$color))
@@ -1945,61 +2309,250 @@
 
 
 
-;; Object: 'mesh'
+;; Object: 'elevation_grid'
 ;; Usage:
-;;     mesh(mat,x0,y0,width,height)
+;;     elevation_grid(mat,x0,y0,width,height)
 ;; Options:
 ;;     line_type
 ;;     line_width
 ;;     color
 ;;     key
 ;;     enhanced3d
-
-(defun mesh (mat x0 y0 width height)
+;;     transform
+(defun elevation_grid (mat x0 y0 width height)
   (let ( (fx0 ($float x0))
          (fy0 ($float y0))
          (fwidth ($float width))
          (fheight ($float height))
-         (zmin 1.75555970201398e+305)
-         (zmax -1.75555970201398e+305)
-         result nrows ncols )
+         (xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
+         (zmin most-positive-double-float)
+         (zmax most-negative-double-float)
+         ncols-file result nrows ncols)
+    (check-enhanced3d-model "elevation_grid" '(0 2 3))
     (cond (($matrixp mat)
              (let ((xi 0.0)
                    (yi (+ fy0 fheight))
-                   (zi 0.0)
+                   (xx 0.0)
+                   (yy 0.0)
+                   (zz 0.0)
                    (count -1)
                    dx dy)
                 (setf ncols (length (cdadr mat))
                       nrows (length (cdr mat)))
                 (setf dx (/ fwidth ncols)
                       dy (/ fheight nrows))
-                (setf result (make-array (* 3 ncols nrows) :element-type 'flonum))
+                (setf ncols-file (if (= *draw-enhanced3d-type* 0) 3 4))
+                (setf result (make-array (* ncols nrows ncols-file) :element-type 'flonum))
                 (loop for row on (cdr mat) by #'cdr do
                    (setf xi fx0)
                    (loop for col on (cdar row) by #'cdr do
-                      (setf zi ($float (car col)))
-                      (if (> zi zmax) (setf zmax zi))
-                      (if (< zi zmin) (setf zmin zi))
-                      (setf (aref result (incf count)) xi
-                            (aref result (incf count)) yi
-                            (aref result (incf count)) zi)
+                      (setf xx xi
+                            yy yi)
+                      (setf zz ($float (car col)))
+                      (transform-point 3)
+                      (when (> *draw-transform-dimensions* 0) 
+                        (check-extremes-x)
+                        (check-extremes-y))
+                      (check-extremes-z)
+                      (setf (aref result (incf count)) xx
+                            (aref result (incf count)) yy
+                            (aref result (incf count)) zz)
+                      ; check texture model
+                      (case *draw-enhanced3d-type*
+                        (2 (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy)))
+                        (3 (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy zz))) )
                       (setf xi (+ xi dx)))
                    (setf yi (- yi dy)))))
           (t
-             (merror "draw3d (mesh): Argument not recognized")))
-    (update-ranges-3d fx0 (+ fx0 fwidth) fy0 (+ fy0 fheight) zmin zmax)
+             (merror "draw3d (elevation_grid): Argument not recognized")))
+    (when (= *draw-transform-dimensions* 0)
+       (setf xmin fx0
+             xmax (+ fx0 fwidth)
+             ymin fy0
+             ymax (+ fy0 fheight)))
+    (update-ranges-3d xmin xmax ymin ymax zmin zmax)
     (make-gr-object
-       :name   'mesh
+       :name   'elevation_grid
        :command (format nil " ~a w ~a lw ~a lt ~a lc ~a"
                             (make-obj-title (get-option '$key))
-                            (if (get-option '$enhanced3d) "pm3d" "l")
+                            (if (> *draw-enhanced3d-type* 0) "pm3d" "l")
                             (get-option '$line_width)
                             (get-option '$line_type)
                             (get-option '$color))
-       :groups `((3 ,ncols))
+       :groups `((,ncols-file ,ncols))
        :points  (list result)) ))
 
 
+
+
+
+
+
+
+;; Object: 'mesh'
+;; Usage:
+;;     mesh([[x_11,y_11,z_11], ...,[x_1n,y_1n,z_1n]],
+;;          [[x_21,y_21,z_21], ...,[x_2n,y_2n,z_2n]], 
+;;          ...,
+;;          [[x_m1,y_m1,z_m1], ...,[x_mn,y_mn,z_mn]])
+;; Options:
+;;     line_type
+;;     line_width
+;;     color
+;;     key
+;;     enhanced3d
+;;     transform
+(defun mesh (&rest row)
+  (let (result xx yy zz
+        (xmin most-positive-double-float)
+        (xmax most-negative-double-float)
+        (ymin most-positive-double-float)
+        (ymax most-negative-double-float)
+        (zmin most-positive-double-float)
+        (zmax most-negative-double-float)
+        m n ncols-file col-num row-num
+        (count -1))
+    (cond
+      ; let's see if the user wants to use mesh in the old way,
+      ; what we now call elevation_grid
+      ((and (= (length row) 5)
+            ($matrixp (first row)))
+        (print "WARNING: Seems like you want to draw an elevation_grid object...")
+        (print "         Please, see documentation for object elevation_grid.")
+        (apply #'elevation_grid row))
+      (t
+        (check-enhanced3d-model "mesh" '(0 2 3))
+        (when (or (< (length row) 2)
+                  (not (every #'$listp row)))
+          (merror "draw3d (mesh): Arguments must be two or more lists"))
+        (setf ncols-file (if (= *draw-enhanced3d-type* 0) 3 4))
+        (setf m (length row)
+              n ($length (first row)))
+        (setf result (make-array (* m n ncols-file) :element-type 'flonum))
+        (setf row-num 0)
+        (dolist (r row)
+          (incf row-num)
+          (setf col-num 0)
+          (dolist (c (rest r))
+            (incf col-num)
+            (setf xx ($float ($first c))
+                  yy ($float ($second c))
+                  zz ($float ($third c)))
+            (transform-point 3)
+            (check-extremes-x)
+            (check-extremes-y)
+            (check-extremes-z)
+            (setf (aref result (incf count)) xx
+                  (aref result (incf count)) yy
+                  (aref result (incf count)) zz)
+            ; check texture model
+            (case *draw-enhanced3d-type*
+              (2 (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* row-num col-num)))
+              (3 (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy zz))))  )   )
+        (update-ranges-3d xmin xmax ymin ymax zmin zmax)
+        (make-gr-object
+          :name   'mesh
+          :command (format nil " ~a w ~a lw ~a lt ~a lc ~a"
+                           (make-obj-title (get-option '$key))
+                           (if (> *draw-enhanced3d-type* 0) "pm3d" "l")
+                           (get-option '$line_width)
+                           (get-option '$line_type)
+                           (get-option '$color))
+          :groups `((,ncols-file ,n))
+          :points  (list result))))))
+
+
+
+
+
+
+
+;; Object: 'triangle3d'
+;; Usage:
+;;     triangle([x1,y1,z1], [x2,y2,z2], [x3,y3,z3])
+;; Options:
+;;     line_type
+;;     line_width
+;;     color
+;;     key
+;;     enhanced3d
+;;     transform
+(defun triangle3d (arg1 arg2 arg3)
+   (if (or (not ($listp arg1))
+           (not (= ($length arg1) 3))
+           (not ($listp arg2))
+           (not (= ($length arg2) 3))
+           (not ($listp arg3))
+           (not (= ($length arg3) 3)))
+       (merror "draw3d (triangle): vertices are not correct"))
+   (let* ((x1 ($float (cadr arg1)))
+          (y1 ($float (caddr arg1)))
+          (z1 ($float (cadddr arg1)))
+          (x2 ($float (cadr arg2)))
+          (y2 ($float (caddr arg2)))
+          (z2 ($float (cadddr arg2)))
+          (x3 ($float (cadr arg3)))
+          (y3 ($float (caddr arg3)))
+          (z3 ($float (cadddr arg3)))
+          (grobj (mesh `((mlist simp)
+                            ((mlist simp) ,x1 ,y1 ,z1)
+                            ((mlist simp) ,x1 ,y1 ,z1) )
+
+                       `((mlist simp)
+                            ((mlist simp) ,x2 ,y2 ,z2)
+                            ((mlist simp) ,x3 ,y3 ,z3) ) )))
+      (setf (gr-object-name grobj) 'triangle)
+      grobj))
+
+
+
+
+
+
+
+;; Object: 'quadrilateral3d'
+;; Usage:
+;;     quadrilateral([x1,y1,z1], [x2,y2,z2], [x3,y3,z3], [x4,y4,z4])
+;; Options:
+;;     line_type
+;;     line_width
+;;     color
+;;     key
+;;     enhanced3d
+;;     transform
+(defun quadrilateral3d (arg1 arg2 arg3 arg4)
+   (if (or (not ($listp arg1))
+           (not (= ($length arg1) 3))
+           (not ($listp arg2))
+           (not (= ($length arg2) 3))
+           (not ($listp arg3))
+           (not (= ($length arg3) 3))
+           (not ($listp arg4))
+           (not (= ($length arg4) 3)))
+       (merror "draw3d (quadrilateral): vertices are not correct"))
+   (let* ((x1 ($float (cadr arg1)))
+          (y1 ($float (caddr arg1)))
+          (z1 ($float (cadddr arg1)))
+          (x2 ($float (cadr arg2)))
+          (y2 ($float (caddr arg2)))
+          (z2 ($float (cadddr arg2)))
+          (x3 ($float (cadr arg3)))
+          (y3 ($float (caddr arg3)))
+          (z3 ($float (cadddr arg3)))
+          (x4 ($float (cadr arg4)))
+          (y4 ($float (caddr arg4)))
+          (z4 ($float (cadddr arg4)))
+          (grobj (mesh `((mlist simp)
+                         ((mlist simp) ,x1 ,y1 ,z1)
+                         ((mlist simp) ,x2 ,y2 ,z2))
+                       `((mlist simp)
+                         ((mlist simp) ,x3 ,y3 ,z3)
+                         ((mlist simp) ,x4 ,y4 ,z4)))))
+      (setf (gr-object-name grobj) 'quadrilateral)
+      grobj))
 
 
 
@@ -2018,33 +2571,33 @@
 ;;     color
 ;;     xaxis_secondary
 ;;     yaxis_secondary
+;;     transform
 ;; Note: similar to draw2d-parametric in plot.lisp
 (defun parametric (xfun yfun par parmin parmax)
   (let* ((nticks (gethash '$nticks  *gr-options*))
          ($numer t)
          (tmin ($float parmin))
          (tmax ($float parmax))
-         (xmin 1.75555970201398e+305)
-         (xmax -1.75555970201398e+305)
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
+         (xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
          (tt ($float parmin))
          (eps (/ (- tmax tmin) (- nticks 1)))
-         result f1 f2 x y)
+         result f1 f2 xx yy)
     (if (< tmax tmin)
        (merror "draw2d (parametric): illegal range"))
-    (setq f1 (coerce-float-fun ($float xfun) `((mlist), par)))
-    (setq f2 (coerce-float-fun ($float yfun) `((mlist), par)))
+    (setq f1 (coerce-float-fun xfun `((mlist), par)))
+    (setq f2 (coerce-float-fun yfun `((mlist), par)))
     (setf result
        (loop
-          do (setf x ($float (funcall f1 tt)))
-             (if (> x xmax) (setf xmax x))
-             (if (< x xmin) (setf xmin x))
-             (setf y ($float (funcall f2 tt)))
-             (if (> y ymax) (setf ymax y))
-             (if (< y ymin) (setf ymin y))
-          collect x
-          collect y
+          do (setf xx ($float (funcall f1 tt)))
+             (setf yy ($float (funcall f2 tt)))
+             (transform-point 2)
+             (check-extremes-x)
+             (check-extremes-y)
+          collect xx
+          collect yy
           when (>= tt tmax) do (loop-finish)
           do (setq tt (+ tt eps))
              (if (>= tt tmax) (setq tt tmax)) ))
@@ -2095,7 +2648,7 @@
 
 ;; Object: 'spherical'
 ;; Usage:
-;;     spherical(radius,azi,minazi,maxazi,zen,minzen,maxzen)
+;;     spherical(radius,az,minazi,maxazi,zen,minzen,maxzen)
 ;; Options:
 ;;     xu_grid
 ;;     yv_grid
@@ -2154,7 +2707,7 @@
 
 ;; Object: 'parametric3d'
 ;; Usage:
-;;     parametric(xfun,yfun,zfun,par,parmin,parmax)
+;;     parametric(xfun,yfun,zfun,par1,parmin,parmax)
 ;; Options:
 ;;     nticks
 ;;     line_width
@@ -2163,45 +2716,48 @@
 ;;     key
 ;;     enhanced3d
 ;;     surface_hide
-(defun parametric3d (xfun yfun zfun par parmin parmax)
+;;     transform
+(defun parametric3d (xfun yfun zfun par1 parmin parmax)
   (let* ((nticks (gethash '$nticks  *gr-options*))
          ($numer t)
          (tmin ($float parmin))
          (tmax ($float parmax))
-         (xmin 1.75555970201398e+305)
-         (xmax -1.75555970201398e+305)
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
-         (zmin 1.75555970201398e+305)
-         (zmax -1.75555970201398e+305)
-         (tt parmin)
+         (xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
+         (zmin most-positive-double-float)
+         (zmax most-negative-double-float)
+         (tt tmin)
          (eps (/ (- tmax tmin) (- nticks 1)))
-         (enhanced4d (not (member (get-option '$enhanced3d) '(nil t))))
-         (ncols (if enhanced4d 4 3))
-         result f1 f2 f3 x y z fcn4d)
+         (count -1)
+         ncols result f1 f2 f3 xx yy zz)
+    (check-enhanced3d-model "parametric" '(0 1 3 99))
+    (when (= *draw-enhanced3d-type* 99)
+       (update-enhanced3d-expression (list '(mlist) par1)))
     (if (< tmax tmin)
        (merror "draw3d (parametric): illegal range"))
-    (setq f1 (coerce-float-fun ($float xfun) `((mlist) ,par)))
-    (setq f2 (coerce-float-fun ($float yfun) `((mlist) ,par)))
-    (setq f3 (coerce-float-fun ($float zfun) `((mlist) ,par)))
-    (if enhanced4d
-       (setq fcn4d (coerce-float-fun ($float (get-option '$enhanced3d)) `((mlist) ,par))))
-    (loop
-       do (setf x (funcall f1 tt))
-          (if (> x xmax) (setf xmax x))
-          (if (< x xmin) (setf xmin x))
-          (setf y (funcall f2 tt))
-          (if (> y ymax) (setf ymax y))
-          (if (< y ymin) (setf ymin y))
-          (setf z (funcall f3 tt))
-          (if (> z zmax) (setf zmax z))
-          (if (< z zmin) (setf zmin z))
-          (if enhanced4d
-             (setf result (append result (list x y z (funcall fcn4d tt))))
-             (setf result (append result (list x y z))) )
-          when (>= tt tmax) do (loop-finish)
-          do (setq tt (+ tt eps))
-             (if (>= tt tmax) (setq tt tmax)) )
+    (setq f1 (coerce-float-fun xfun `((mlist) ,par1)))
+    (setq f2 (coerce-float-fun yfun `((mlist) ,par1)))
+    (setq f3 (coerce-float-fun zfun `((mlist) ,par1)))
+    (setf ncols (if (= *draw-enhanced3d-type* 0) 3 4))
+    (setf result (make-array (* ncols nticks) :element-type 'flonum))
+    (dotimes (k nticks)
+      (setf xx (funcall f1 tt))
+      (setf yy (funcall f2 tt))
+      (setf zz (funcall f3 tt))
+      (transform-point 3)
+      (check-extremes-x)
+      (check-extremes-y)
+      (check-extremes-z)
+      (setf (aref result (incf count)) xx)
+      (setf (aref result (incf count)) yy)
+      (setf (aref result (incf count)) zz)
+      ; check texture model
+      (case *draw-enhanced3d-type*
+        ((1 99) (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* tt)))
+        (3      (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy zz))))
+      (setf tt (+ tt eps)) )
     ; update x-y ranges if necessary
     (update-ranges-3d xmin xmax ymin ymax zmin zmax)
     (make-gr-object
@@ -2210,11 +2766,9 @@
                             (make-obj-title (get-option '$key))
                             (get-option '$line_width)
                             (get-option '$line_type)
-                            (if (get-option '$enhanced3d) "palette" (get-option '$color)) )
-       :groups `((,ncols 0))  ; numbers are sent to gnuplot in groups of 4 or 3 
-                              ; (depending on colored 4th dimension or not), without blank lines
-       :points `(,(make-array (length result) :element-type 'flonum
-                                              :initial-contents result))  )) )
+                            (if (> *draw-enhanced3d-type* 0) "palette" (get-option '$color)) )
+       :groups `((,ncols 0))
+       :points (list result) )) )
 
 
 
@@ -2235,6 +2789,7 @@
 ;;     key
 ;;     enhanced3d
 ;;     surface_hide
+;;     transform
 (defun parametric_surface (xfun yfun zfun par1 par1min par1max par2 par2min par2max)
   (let* ((ugrid (gethash '$xu_grid  *gr-options*))
          (vgrid (gethash '$yv_grid  *gr-options*))
@@ -2243,45 +2798,48 @@
          (umax ($float par1max))
          (vmin ($float par2min))
          (vmax ($float par2max))
-         (xmin 1.75555970201398e+305)
-         (xmax -1.75555970201398e+305)
-         (ymin 1.75555970201398e+305)
-         (ymax -1.75555970201398e+305)
-         (zmin 1.75555970201398e+305)
-         (zmax -1.75555970201398e+305)
+         (xmin most-positive-double-float)
+         (xmax most-negative-double-float)
+         (ymin most-positive-double-float)
+         (ymax most-negative-double-float)
+         (zmin most-positive-double-float)
+         (zmax most-negative-double-float)
          (ueps (/ (- umax umin) (- ugrid 1)))
          (veps (/ (- vmax vmin) (- vgrid 1)))
          (nu (+ ugrid 1))
          (nv (+ vgrid 1))
-         (enhanced4d (not (member (get-option '$enhanced3d) '(nil t))))
-         (ncols (if enhanced4d 4 3))
-         result f1 f2 f3 x y z uu vv fcn4d)
+         (count -1)
+         ncols result f1 f2 f3 xx yy zz uu vv)
+    (check-enhanced3d-model "parametric_surface" '(0 2 3 99))
+    (when (= *draw-enhanced3d-type* 99)
+       (update-enhanced3d-expression (list '(mlist) par1 par2)))
     (if (or (< umax umin)
             (< vmax vmin))
        (merror "draw3d (parametric_surface): illegal range"))
-    (setq f1 (coerce-float-fun ($float xfun) `((mlist) ,par1 ,par2)))
-    (setq f2 (coerce-float-fun ($float yfun) `((mlist) ,par1 ,par2)))
-    (setq f3 (coerce-float-fun ($float zfun) `((mlist) ,par1 ,par2)))
-    (if enhanced4d
-       (setq fcn4d (coerce-float-fun ($float (get-option '$enhanced3d))
-                                     `((mlist) ,par1 ,par2))))
+    (setq f1 (coerce-float-fun xfun `((mlist) ,par1 ,par2)))
+    (setq f2 (coerce-float-fun yfun `((mlist) ,par1 ,par2)))
+    (setq f3 (coerce-float-fun zfun `((mlist) ,par1 ,par2)))
+    (setf ncols (if (= *draw-enhanced3d-type* 0) 3 4))
+    (setf result (make-array (* ncols nu nv) :element-type 'flonum))
     (loop for j below nv
            initially (setq vv vmin)
            do (setq uu umin)
            (loop for i below nu
                   do
-                  (setf x (funcall f1 uu vv))
-                  (if (> x xmax) (setf xmax x))
-                  (if (< x xmin) (setf xmin x))
-                  (setf y (funcall f2 uu vv))
-                  (if (> y ymax) (setf ymax y))
-                  (if (< y ymin) (setf ymin y))
-                  (setf z (funcall f3 uu vv))
-                  (if (> z zmax) (setf zmax z))
-                  (if (< z zmin) (setf zmin z))
-                  (if enhanced4d
-                     (setf result (append result (list x y z (funcall fcn4d uu vv))))
-                     (setf result (append result (list x y z))) )
+                  (setf xx (funcall f1 uu vv))
+                  (setf yy (funcall f2 uu vv))
+                  (setf zz (funcall f3 uu vv))
+                  (transform-point 3)
+                  (check-extremes-x)
+                  (check-extremes-y)
+                  (check-extremes-z)
+                  (setf (aref result (incf count)) xx)
+                  (setf (aref result (incf count)) yy)
+                  (setf (aref result (incf count)) zz)
+                  ; check texture model
+                  (case *draw-enhanced3d-type*
+                    ((2 99) (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* uu vv)))
+                    (3      (setf (aref result (incf count)) (funcall *draw-enhanced3d-fun* xx yy zz))) )
                   (setq uu (+ uu ueps))
                   (if (> uu umax) (setf uu umax)))
            (setq vv (+ vv veps))
@@ -2292,13 +2850,12 @@
        :name 'parametric_surface
        :command (format nil " ~a w ~a lw ~a lt ~a lc ~a"
                             (make-obj-title (get-option '$key))
-                            (if (get-option '$enhanced3d) "pm3d" "l")
+                            (if (> *draw-enhanced3d-type* 0) "pm3d" "l")
                             (get-option '$line_width)
                             (get-option '$line_type)
                             (get-option '$color))
        :groups `((,ncols ,nu)) ; ncols is 4 or 3, depending on colored 4th dimension or not
-       :points `(,(make-array (length result) :element-type 'flonum
-                                              :initial-contents result)))))
+       :points (list result))))
 
 
 
@@ -2308,7 +2865,7 @@
 
 ;; Object: 'tube'
 ;; Usage:
-;;     tube(xfun,yfun,zfun,rad,par,parmin,parmax)
+;;     tube(xfun,yfun,zfun,rad,par1,parmin,parmax)
 ;; Options:
 ;;     xu_grid
 ;;     yv_grid
@@ -2318,16 +2875,24 @@
 ;;     key
 ;;     enhanced3d
 ;;     surface_hide
-
+;;     transform
 (defmacro check-tube-extreme (ex cx cy cz circ)
-  `(when (equal (nth ,ex (get-option '$tube_extremes)) '$closed)
-     (if enhanced4d
-       (setf ,circ (list ,cx ,cy ,cz (funcall fcn4d tt)))
-       (setf ,circ (list ,cx ,cy ,cz)))
-     (dotimes (k vgrid)
-       (setf result (append result ,circ)))))
+    `(when (equal (nth ,ex (get-option '$tube_extremes)) '$closed)
+       (let ((cxx ,cx)
+             (cyy ,cy)
+             (czz ,cz))
+          (when (> *draw-transform-dimensions* 0)
+            (setf cxx (funcall *draw-transform-f1* ,cx ,cy ,cz)
+                  cyy (funcall *draw-transform-f2* ,cx ,cy ,cz)
+                  czz (funcall *draw-transform-f3* ,cx ,cy ,cz)))
+          (case *draw-enhanced3d-type*
+            (0      (setf ,circ (list cxx cyy czz)))
+            ((1 99) (setf ,circ (list cxx cyy czz (funcall *draw-enhanced3d-fun* tt))))
+            (3      (setf ,circ (list cxx cyy czz (funcall *draw-enhanced3d-fun* cxx cyy czz)))))
+          (dotimes (k vgrid)
+            (setf result (append result ,circ))))))
 
-(defun tube (xfun yfun zfun rad par parmin parmax)
+(defun tube (xfun yfun zfun rad par1 parmin parmax)
   (let* ((ugrid (get-option '$xu_grid))
          (vgrid (get-option '$yv_grid))
          ($numer t)
@@ -2343,27 +2908,24 @@
          (teps (/ (- tmax tmin) (- ugrid 1)))
          (veps (/ vmax (- vgrid 1)))
          (tt tmin)
-         (enhanced4d (not (member (get-option '$enhanced3d) '(nil t))))
-         (ncols (if enhanced4d 4 3))
-         circ
-         result
-         f1 f2 f3 fcn4d radius
+         ncols circ result
+         f1 f2 f3 radius
          cx cy cz nx ny nz
          ux uy uz vx vy vz
-         x y z module r vv rcos rsin
+         xx yy zz module r vv rcos rsin
          cxold cyold czold
-         uxold uyold uzold ttnext )
+         uxold uyold uzold ttnext)
     (when (< tmax tmin)
        (merror "draw3d (tube): illegal range"))
-    (setq f1 (coerce-float-fun ($float xfun) `((mlist) ,par)))
-    (setq f2 (coerce-float-fun ($float yfun) `((mlist) ,par)))
-    (setq f3 (coerce-float-fun ($float zfun) `((mlist) ,par)))
-    (if enhanced4d
-       (setq fcn4d
-             (coerce-float-fun ($float (get-option '$enhanced3d))
-                               `((mlist) ,par))))
+    (check-enhanced3d-model "tube" '(0 1 3 99))
+    (when (= *draw-enhanced3d-type* 99)
+       (update-enhanced3d-expression (list '(mlist) par1)))
+    (setq f1 (coerce-float-fun xfun `((mlist) ,par1)))
+    (setq f2 (coerce-float-fun yfun `((mlist) ,par1)))
+    (setq f3 (coerce-float-fun zfun `((mlist) ,par1)))
+    (setf ncols (if (= *draw-enhanced3d-type* 0) 3 4))
     (setf radius
-          (coerce-float-fun ($float rad) `((mlist) ,par)))
+          (coerce-float-fun rad `((mlist) ,par1)))
     (loop do
       ; calculate center and radius of circle
       (cond
@@ -2421,7 +2983,7 @@
       (setf uxold ux
             uyold uy
             uzold uz)
-      ; vector v = nxu
+      ; vector v = n times u
       (setf vx (- (* ny uz) (* nz uy))
             vy (- (* nz ux) (* nx uz))
             vz (- (* nx uy) (* ny ux)))
@@ -2434,18 +2996,18 @@
       (loop for i below vgrid do
         (setf rcos (* r (cos vv))
               rsin (* r (sin vv)))
-        (setf x (+ cx (* rcos ux) (* rsin vx))
-              y (+ cy (* rcos uy) (* rsin vy))
-              z (+ cz (* rcos uz) (* rsin vz)))
-        (when (> x xmax) (setf xmax x))
-        (when (< x xmin) (setf xmin x))
-        (when (> y ymax) (setf ymax y))
-        (when (< y ymin) (setf ymin y))
-        (when (> z zmax) (setf zmax z))
-        (when (< z zmin) (setf zmin z))
-        (if enhanced4d
-          (setf circ (cons (list x y z (funcall fcn4d tt)) circ))
-          (setf circ (cons (list x y z) circ)) )
+        (setf xx (+ cx (* rcos ux) (* rsin vx))
+              yy (+ cy (* rcos uy) (* rsin vy))
+              zz (+ cz (* rcos uz) (* rsin vz)))
+        (transform-point 3)
+        (check-extremes-x)
+        (check-extremes-y)
+        (check-extremes-z)
+        ; check texture model
+        (case *draw-enhanced3d-type*
+          (0      (setf circ (cons (list xx yy zz) circ)))
+          ((1 99) (setf circ (cons (list xx yy zz (funcall *draw-enhanced3d-fun* tt)) circ)))
+          (3      (setf circ (cons (list xx yy zz (funcall *draw-enhanced3d-fun* xx yy zz)) circ))))
         (setf vv (+ vv veps))
         (when (> vv vmax) (setf vv vmax))  ) ; loop for
       (setf result (append result (apply #'append circ)))
@@ -2459,7 +3021,7 @@
        :name 'tube
        :command (format nil " ~a w ~a lw ~a lt ~a lc ~a"
                             (make-obj-title (get-option '$key))
-                            (if (get-option '$enhanced3d) "pm3d" "l")
+                            (if (> *draw-enhanced3d-type* 0) "pm3d" "l")
                             (get-option '$line_width)
                             (get-option '$line_type)
                             (get-option '$color))
@@ -2566,405 +3128,55 @@
 
 
 
-;; Object: 'geomap'
-;; Usage:
-;;     geomap([integer1, integer2,....]), where integers correspond to the
-;;           polygonal segments stored in array 'boundaries_array'.
-;; Options:
-;;     line_width
-;;     color
-;;     line_type
-
-(defvar $boundaries_array nil)
-
-;; x and y are the longitude and latitude coordinates
-(defun longitude_latitude_projection_2d (lis)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                x y count)
-           (setf resi (make-array (* 2 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf x (aref polyseg (* 2 k))
-                   y (aref polyseg (+ (* 2 k) 1))  )
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y)))
-         collect resi))
-     (update-ranges-2d xmin xmax ymin ymax)
-     res ))
-
-;; Mercator cylindrical projection
-;; This is experimental and not documented
-(defun mercator_projection_2d (lis)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433) ; = %pi / 180
-                lon lat x y count)
-           (setf resi (make-array (* 2 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf lon (aref polyseg (* 2 k))
-                   lat (* c (aref polyseg (+ (* 2 k) 1))))
-             (setf x lon
-                   y (log (+ (cl:tan lat) (/ 1 (cos lat)))) )
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y)))
-         collect resi))
-     (update-ranges-2d xmin xmax ymin ymax)
-     res ))
-
-;; Miller cylindrical projection
-;; This is experimental and not documented
-(defun miller_projection_2d (lis)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433) ; = %pi / 180
-                (c1 .7853981633974483) ; = %pi / 4
-                x y count)
-           (setf resi (make-array (* 2 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf x (aref polyseg (* 2 k))
-                   y (* 1.25 (log (cl:tan (+ c1 (* 0.4 c (aref polyseg (+ (* 2 k) 1))))))))
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y)))
-         collect resi))
-     (update-ranges-2d xmin xmax ymin ymax)
-     res ))
-
-;; Kavrayskiy VII pseudocylindrical projection
-;; This is experimental and not documented
-(defun kavrayskiy_projection_2d (lis)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433)  ; = %pi / 180
-                (c1 0.4774648292756861) ; = 3 / (2 * %pi)
-                (c2 3.289868133696452)  ; = %pi^2 / 3
-                lon lat x y count)
-           (setf resi (make-array (* 2 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf lon (aref polyseg (* 2 k))
-                   lat (aref polyseg (+ (* 2 k) 1)))
-             (setf x (* c1 lon (sqrt (- c2 (* c c lat lat))))
-                   y lat )
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y)))
-         collect resi))
-     (update-ranges-2d xmin xmax ymin ymax)
-     res ))
-
-(defun geomap (lis &optional (proj nil))
-   (when (null $boundaries_array)
-     (merror "draw2d (geomap): variable boundaries_array not yet defined"))
-   (when (not ($listp lis))
-     (merror "draw2d (geomap): first argument must be a list of integers"))
-   (when (and (not (null proj))
-              (not ($listp proj)))
-     (merror "draw2d (geomap): second optional argument must be a list"))
-   (setf lis (rest ($setify ($flatten lis))))
-   (let ((nsegments (- (array-dimension $boundaries_array 0) 1)))
-     (when (some #'(lambda (z) (or (not (integerp z))
-                                   (< z 0)
-                                   (> z nsegments) ))
-                  lis)
-         (merror "draw2d (geomap): non integer argument or out of range (0-~M)" nsegments)))
-   (make-gr-object
-      :name 'geomap
-      :command (make-list (length lis) 
-                  :initial-element
-                     (format nil " t '' w l lw ~a lt ~a lc ~a"
-                             (get-option '$line_width)
-                             (get-option '$line_type)
-                             (get-option '$color)))
-      :groups (make-list (length lis) :initial-element '(2 0)) ; numbers are sent to gnuplot in groups of 2
-      :points (cond ((or (null proj)
-                         (and (equal (cadr proj) '$longitude_latitude_projection)
-                              (= ($length proj) 1)) )
-                       (longitude_latitude_projection_2d lis))
-                    ((and (equal (cadr proj) '$mercator_projection)
-                          (= ($length proj) 1))
-                       (mercator_projection_2d lis))
-                    ((and (equal (cadr proj) '$miller_projection)
-                          (= ($length proj) 1))
-                       (miller_projection_2d lis))
-                    ((and (equal (cadr proj) '$kavrayskiy_projection)
-                          (= ($length proj) 1))
-                       (kavrayskiy_projection_2d lis))
-                    (t
-                       (merror "draw2d (geomap): unknown projection or not well defined"))) ) )
 
 
 
 
+;; transforms arguments to make-scene-2d, make-scene-3d
+;; and draw to a unique list. With this piece of code,
+;; gr2d, gr3d and draw admit as arguments lists of options
+;; and graphic objects.
+(defmacro make-list-of-arguments ()
+   '(setf largs (rest (apply 
+                         #'$append
+                        (map 
+                          'list #'(lambda (z) (if ($listp z) z (list '(mlist) z)))
+                          args)))))
 
+(defvar *2d-graphic-objects* (make-hash-table))
 
-
-
-;; Object: 'geomap3d'
-;; Usage:
-;;     geomap([integer1, integer2,....])
-;;     geomap([integer1, integer2,....], [3d_proyection_type,param1,param2,...]), where integers correspond to the
-;;           polygonal segments stored in array 'boundaries_array'. Spherical 3d projection is default.
-;; Options:
-;;     line_width
-;;     color
-;;     line_type
-
-;; sphere of radius r and center (cx,cy,cz)
-(defun spherical_projection_3d (lis cx cy cz r)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305)
-        (zmin 1.75555970201398e+305)
-        (zmax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433) ; = %pi / 180
-                lon lat x y z count)
-           (setf resi (make-array (* 3 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf lon (* c (aref polyseg (* 2 k)))
-                   lat (* c (aref polyseg (+ (* 2 k) 1))))
-             (setf x (+ cx (* r (cos lat) (cos lon)))
-                   y (+ cy (* r (cos lat) (sin lon)))
-                   z (+ cz (* r (sin lat))) )
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (cond
-               ((< z zmin) (setf zmin z))
-               ((> z zmax) (setf zmax z)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y
-                   (aref resi (incf count)) z)))
-         collect resi))
-     (update-ranges-3d xmin xmax ymin ymax zmin zmax)
-     res ))
-
-;; cylinder of radius rc with its axis passing through the poles of the sphere
-;; of radius r and center (cx,cy,cz). In future versions, the axis should be
-;; selected by the user, giving the coordinates (long,lati) of one of the points
-;; of intersection with the sphere.
-(defun cylindrical_projection_3d (lis cx cy cz r rc)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305)
-        (zmin 1.75555970201398e+305)
-        (zmax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433) ; = %pi / 180
-                lon lat x y z count)
-           (setf resi (make-array (* 3 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf lon (* c (aref polyseg (* 2 k)))
-                   lat (* c (aref polyseg (+ (* 2 k) 1))))
-             (setf x (+ cx (* rc (cos lon)))
-                   y (+ cy (* rc (sin lon)))
-                   z (+ cz (* r (sin lat))) )
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (cond
-               ((< z zmin) (setf zmin z))
-               ((> z zmax) (setf zmax z)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y
-                   (aref resi (incf count)) z)))
-         collect resi))
-     (update-ranges-3d xmin xmax ymin ymax zmin zmax)
-     res ))
-
-;; cone with angle a and axis passing through the poles of the sphere
-;; of radius r and center (cx,cy,cz). The cone is tangent to the globe.
-(defun conic_projection_3d (lis cx cy cz r a)
-  (let (res resi
-        (xmin 1.75555970201398e+305)
-        (xmax -1.75555970201398e+305)
-        (ymin 1.75555970201398e+305)
-        (ymax -1.75555970201398e+305)
-        (zmin 1.75555970201398e+305)
-        (zmax -1.75555970201398e+305) )
-    (setf res
-       (loop for i on lis by #'cdr do
-         (let* ((polyseg (aref $boundaries_array (car i)))
-                (ni (- (/ (length polyseg) 2) 1))
-                (c 0.0174532925199433)  ; = %pi / 180
-                (cte (- 1.570796326794897 (* c a 0.5))) ; = %pi / 2 - c*a /2
-                north lon lat x y z p count)
-           (setf resi (make-array (* 3 (/ (length polyseg) 2)) :element-type 'flonum))
-           (setf count -1)
-           (loop for k from 0 to ni do
-             (setf lon (* c (aref polyseg (* 2 k)))
-                   lat (* c (aref polyseg (+ (* 2 k) 1))))
-             (setf north (>= lat 0))
-             (setf lat (abs lat))
-             (setf p (/ r
-                        (sin (+ cte lat))))
-             (setf x (+ cx (* p (cos lat) (cos lon)))
-                   y (+ cy (* p (cos lat) (sin lon)))  )
-             (if north
-                (setf z (+ cz (* p (sin lat))))
-                (setf z (+ cz (* -1.0 p (sin lat)))))
-             (cond
-               ((< x xmin) (setf xmin x))
-               ((> x xmax) (setf xmax x)))
-             (cond
-               ((< y ymin) (setf ymin y))
-               ((> y ymax) (setf ymax y)))
-             (cond
-               ((< z zmin) (setf zmin z))
-               ((> z zmax) (setf zmax z)))
-             (setf (aref resi (incf count)) x
-                   (aref resi (incf count)) y
-                   (aref resi (incf count)) z)))
-         collect resi))
-     (update-ranges-3d xmin xmax ymin ymax zmin zmax)
-     res ))
-
-(defun geomap3d (lis &optional (proj nil))
-   (when (null $boundaries_array)
-     (merror "draw3d (geomap): variable boundaries_array not yet defined"))
-   (when (not ($listp lis))
-     (merror "draw3d (geomap): first argument must be a list of integers"))
-   (when (and (not (null proj))
-              (not ($listp proj)))
-     (merror "draw3d (geomap): second optional argument must be a list"))
-   (setf lis (rest ($setify ($flatten lis))))
-   (let ((nsegments (- (array-dimension $boundaries_array 0) 1)))
-     (when (some #'(lambda (z) (or (not (integerp z))
-                                   (< z 0)
-                                   (> z nsegments) ))
-                  lis)
-         (merror "draw3d (geomap): non integer argument or out of range (0-~M)" nsegments)))
-   (make-gr-object
-      :name 'geomap
-      :command (make-list (length lis) 
-                  :initial-element
-                     (format nil " t '' w l lw ~a lt ~a lc ~a"
-                             (get-option '$line_width)
-                             (get-option '$line_type)
-                             (get-option '$color)))
-      :groups (make-list (length lis) :initial-element '(3 0)) ; numbers are sent to gnuplot in groups of 3
-                                                               ; without blank lines
-      :points (cond ((null proj)   ; default: spherical projection with r=1 and center (0,0,0)
-                       (spherical_projection_3d lis 0 0 0 1))
-                    ((and (equal (cadr proj) '$spherical_projection)
-                          (= ($length proj) 5))
-                       (spherical_projection_3d lis (nth 2 proj) (nth 3 proj) (nth 4 proj) (nth 5 proj)))
-                    ((and (equal (cadr proj) '$cylindrical_projection)
-                          (= ($length proj) 6))
-                       (cylindrical_projection_3d lis (nth 2 proj) (nth 3 proj) (nth 4 proj) (nth 5 proj) (nth 6 proj)))
-                    ((and (equal (cadr proj) '$conic_projection)
-                          (= ($length proj) 6)
-                          (> (nth 6 proj) 0)
-                          (< (nth 6 proj) 180))
-                       (conic_projection_3d lis (nth 2 proj) (nth 3 proj) (nth 4 proj) (nth 5 proj) (nth 6 proj)))
-                    (t
-                       (merror "draw3d (geomap): unknown projection or not well defined"))) ) )
-
-
-
-
-
-
+; table of basic 2d graphic objects
+(setf (gethash '$points        *2d-graphic-objects*) 'points
+      (gethash '$polygon       *2d-graphic-objects*) 'polygon
+      (gethash '$ellipse       *2d-graphic-objects*) 'ellipse
+      (gethash '$triangle      *2d-graphic-objects*) 'triangle
+      (gethash '$rectangle     *2d-graphic-objects*) 'rectangle
+      (gethash '$quadrilateral *2d-graphic-objects*) 'quadrilateral
+      (gethash '$explicit      *2d-graphic-objects*) 'explicit
+      (gethash '$implicit      *2d-graphic-objects*) 'implicit
+      (gethash '$parametric    *2d-graphic-objects*) 'parametric
+      (gethash '$vector        *2d-graphic-objects*) 'vect
+      (gethash '$label         *2d-graphic-objects*) 'label
+      (gethash '$bars          *2d-graphic-objects*) 'bars
+      (gethash '$polar         *2d-graphic-objects*) 'polar
+      (gethash '$image         *2d-graphic-objects*) 'image
+      (gethash '$points        *2d-graphic-objects*) 'points )
 
 (defun make-scene-2d (args)
    (let ((objects nil)
-         plotcmd)
+         plotcmd largs)
       (ini-gr-options)
+      (ini-local-option-variables)
       (user-defaults)
+      (make-list-of-arguments)
       ; update option values and detect objects to be plotted
-      (dolist (x args)
+      (dolist (x largs)
          (cond ((equal ($op x) "=")
                    (update-gr-option ($lhs x) ($rhs x)))
                (t  (setf objects
                          (append
                             objects 
-                            (list (case (caar x)
-                                     ($points      (apply #'points (rest x)))
-                                     ($polygon     (apply #'polygon (rest x)))
-                                     ($ellipse     (apply #'ellipse (rest x)))
-                                     ($rectangle   (apply #'rectangle (rest x)))
-                                     ($explicit    (apply #'explicit (rest x)))
-                                     ($implicit    (apply #'implicit (rest x)))
-                                     ($parametric  (apply #'parametric (rest x)))
-                                     ($vector      (apply #'vect (rest x)))
-                                     ($label       (funcall #'label (rest x)))
-                                     ($bars        (funcall #'bars (rest x)))
-                                     ($polar       (apply #'polar (rest x)))
-                                     ($image       (apply #'image (rest x)))
-                                     ($geomap      (apply #'geomap (rest x)))
-                                     (otherwise (merror "draw: graphical 2d object ~M is not recognized" x)))))))))
+                            (list (apply (gethash (caar x) *2d-graphic-objects*) (rest x))))))))
       ; save in plotcmd the gnuplot preamble
       (setf plotcmd
          (concatenate 'string
@@ -3091,42 +3303,48 @@
          2       ; it's a 2d scene
          plotcmd ; gnuplot preamble
          objects ; list of objects to be plotted
-         )  ))
+         )))
 
 
 
 
 
 
+(defvar *3d-graphic-objects* (make-hash-table))
+
+; table of basic 3d graphic objects
+(setf (gethash '$points             *3d-graphic-objects*) 'points3d
+      (gethash '$elevation_grid     *3d-graphic-objects*) 'elevation_grid
+      (gethash '$mesh               *3d-graphic-objects*) 'mesh
+      (gethash '$triangle           *3d-graphic-objects*) 'triangle3d
+      (gethash '$quadrilateral      *3d-graphic-objects*) 'quadrilateral3d
+      (gethash '$explicit           *3d-graphic-objects*) 'explicit3d
+      (gethash '$implicit           *3d-graphic-objects*) 'implicit3d
+      (gethash '$parametric         *3d-graphic-objects*) 'parametric3d
+      (gethash '$vector             *3d-graphic-objects*) 'vect3d
+      (gethash '$label              *3d-graphic-objects*) 'label
+      (gethash '$parametric_surface *3d-graphic-objects*) 'parametric_surface
+      (gethash '$tube               *3d-graphic-objects*) 'tube
+      (gethash '$spherical          *3d-graphic-objects*) 'spherical
+      (gethash '$cylindrical        *3d-graphic-objects*) 'cylindrical )
 
 ;; This function builds a 3d scene by calling the 
 ;; graphic objects constructors.
 (defun make-scene-3d (args)
    (let ((objects nil)
-         plotcmd)
+         plotcmd largs)
       (ini-gr-options)
+      (ini-local-option-variables)
       (user-defaults)
+      (make-list-of-arguments)
       ; update option values and detect objects to be plotted
-      (dolist (x args)
+      (dolist (x largs)
          (cond ((equal ($op x) "=")
                   (update-gr-option ($lhs x) ($rhs x)))
                (t  (setf objects
                          (append
                             objects 
-                            (list (case (caar x)
-                                     ($points             (apply #'points3d (rest x)))
-                                     ($mesh               (apply #'mesh (rest x)))
-                                     ($explicit           (apply #'explicit3d (rest x)))
-                                     ($implicit           (apply #'implicit3d (rest x)))
-                                     ($vector             (apply #'vect3d (rest x)))
-                                     ($parametric         (apply #'parametric3d (rest x)))
-                                     ($parametric_surface (apply #'parametric_surface (rest x)))
-                                     ($tube               (apply #'tube (rest x)))
-                                     ($spherical          (apply #'spherical (rest x)))
-                                     ($cylindrical        (apply #'cylindrical (rest x)))
-                                     ($geomap             (apply #'geomap3d (rest x)))
-                                     ($label              (funcall #'label (rest x)))
-                                     (otherwise (merror "draw: graphical 3d object ~M is not recognized" x)))))))))
+                            (list (apply (gethash (caar x) *3d-graphic-objects*) (rest x))))))))
       ; save in plotcmd the gnuplot preamble
       (setf plotcmd
          (concatenate 'string
@@ -3231,14 +3449,13 @@
                             (get-option '$rot_vertical)
                             (get-option '$rot_horizontal)
                             (case (get-option '$proportional_axes)
-                               ($xy       "" )       ; TODO: change "" for "set view equal xy " when GP4.3
-                               ($xyz      "")        ; TODO: change "" for "set view equal xyz" when GP4.3
-                               (otherwise ""  )) ) ) ; TODO: change "" for "set view noequal" when Gp4.3
+                               ($xy       "set view equal xy" )
+                               ($xyz      "set view equal xyz")
+                               (otherwise ""))))
             (if (not (get-option '$axis_3d))
                 (format nil "set border 0~%"))
             (format nil "set pm3d at s depthorder explicit~%")
-            (if (and (null (get-option '$enhanced3d))
-                     (get-option '$surface_hide))
+            (if (get-option '$surface_hide)
                (format nil "set hidden3d nooffset~%"))
             (if (get-option '$xyplane)
                (format nil "set xyplane at ~a~%" (get-option '$xyplane)))
@@ -3305,8 +3522,10 @@
         datastorage ; file data.gnuplot
         datapath    ; path to data.gnuplot
         ncols nrows width height ; multiplot parameters
-        isanimatedgif is1stobj biglist grouplist )
-    (dolist (x args)
+        isanimatedgif is1stobj biglist grouplist largs)
+
+    (make-list-of-arguments)
+    (dolist (x largs)
       (cond ((equal ($op x) "=")
               (case ($lhs x)
                 ($terminal          (update-gr-option '$terminal ($rhs x)))
@@ -3324,15 +3543,9 @@
                 ($delay             (update-gr-option '$delay ($rhs x)))
                 (otherwise (merror "draw: unknown global option ~M " ($lhs x)))))
             ((equal (caar x) '$gr3d)
-              (setf scenes
-                    (append scenes
-                            (list (funcall #'make-scene-3d
-                                           (draw-transform (rest x) '$draw3d_transform))))))
+              (setf scenes (append scenes (list (funcall #'make-scene-3d (rest x))))))
             ((equal (caar x) '$gr2d)
-              (setf scenes
-                    (append scenes
-                            (list (funcall #'make-scene-2d
-                                           (draw-transform (rest x) '$draw2d_transform))))))
+              (setf scenes (append scenes (list (funcall #'make-scene-2d (rest x))))))
             (t
               (merror "draw: item ~M is not recognized" x)))   )
 
@@ -3355,14 +3568,14 @@
     ; when one multiplot window is active, change of terminal is not allowed
     (if (not *multiplot-is-active*)
     (case (gethash '$terminal *gr-options*)
-        ($png (format cmdstorage "set terminal png ~a size ~a, ~a ~a~%set out '~a.png'"
+        ($png (format cmdstorage "set terminal png truecolor ~a size ~a, ~a ~a~%set out '~a.png'"
                            (write-font-type)
                            (get-option '$pic_width)
                            (get-option '$pic_height)
                            (get-option '$file_bgcolor)
                            (get-option '$file_name) ) )
         ($eps (format cmdstorage "set terminal postscript eps enhanced ~a size ~acm, ~acm~%set out '~a.eps'"
-                           (write-font-type) ; other alternatives are Arial, Courier
+                           (write-font-type)
                            (get-option '$eps_width)
                            (get-option '$eps_height)
                            (get-option '$file_name)))
@@ -3393,6 +3606,11 @@
                            (get-option '$pic_height)
                            (get-option '$file_bgcolor)
                            (get-option '$file_name)))
+        ($svg (format cmdstorage "set terminal svg enhanced ~a size ~a, ~a~%set out '~a.svg'"
+                           (write-font-type)
+                           (get-option '$pic_width)
+                           (get-option '$pic_height)
+                           (get-option '$file_name)))
         ($animated_gif (format cmdstorage "set terminal gif animate ~a size ~a, ~a delay ~a ~a~%set out '~a.gif'"
                            (write-font-type)
                            (get-option '$pic_width)
@@ -3401,10 +3619,10 @@
                            (get-option '$file_bgcolor)
                            (get-option '$file_name)))
         ($aquaterm (format cmdstorage "set terminal aqua ~a ~a~%"
-                           *terminal-number*
+                           *draw-terminal-number*
                            (write-font-type)))
         ($wxt (format cmdstorage "set terminal wxt ~a ~a~%"
-                           *terminal-number*
+                           *draw-terminal-number*
                            (write-font-type)))
         (otherwise ; default screen output
           (cond
@@ -3413,7 +3631,7 @@
                           (write-font-type)))
             (t  ; other platforms
               (format cmdstorage "set terminal x11 ~a ~a~%"
-                           *terminal-number*
+                           *draw-terminal-number*
                            (write-font-type))))) ))
 
     ; compute some parameters for multiplot
@@ -3508,15 +3726,19 @@
           (t ; non animated gif
              ; command file maxout.gnuplot is now ready
              (format cmdstorage "~%")
-
              (cond ((> (length scenes) 1)
                       (format cmdstorage "unset multiplot~%"))
                    ; if we want to save the coordinates in a file,
                    ; print them when hitting the x key after clicking the mouse button
                    ((not (string= (gethash '$xy_file *gr-options*) ""))
-                      (format cmdstorage "set print \"~a\" append~%bind x \"print MOUSE_X,MOUSE_Y\"~%"
-                                   (gethash '$xy_file *gr-options*))) )
+                      (format cmdstorage
+                              "set print \"~a\" append~%bind x \"print MOUSE_X,MOUSE_Y\"~%"
+                              (gethash '$xy_file *gr-options*))) )
 
+             ; in svg format, unset output to force
+             ; Gnuplot to write </svg> at the end of the file
+             (when (equal (get-option '$terminal) '$svg)
+                (format cmdstorage "unset output~%"))
              (close cmdstorage)
 
              ; get the plot
@@ -3549,17 +3771,6 @@
 ;; Equivalent to draw3d(opt & obj)
 (defun $draw3d (&rest args)
    ($draw (cons '($gr3d) args)) )
-
-(defun draw-transform-one (expr transform)
-  (if (atom expr)
-      (list expr)
-      (if ($get (caar expr) transform)
-          (cdr (mfuncall ($get (caar expr) transform) expr))
-          (list expr))))
-
-(defun draw-transform (expr transform)
-  (if (null expr) ()
-      (append (draw-transform-one (car expr) transform) (draw-transform (cdr expr) transform))))
 
 ;; This function transforms an integer number into
 ;; a string, adding zeros at the left side until the
@@ -3615,6 +3826,11 @@
                            (get-option '$pic_height)
                            (get-option '$file_bgcolor)
                            (get-option '$file_name))))
+      ($svg (format cmdstorage "set terminal svg enhanced ~a size ~a, ~a~%set out '~a.svg'"
+                           (write-font-type)
+                           (get-option '$pic_width)
+                           (get-option '$pic_height)
+                           (get-option '$file_name)))
       (otherwise (merror "draw: unknown file format" )))
    (send-gnuplot-command (format nil "~a~%replot" str)) ))
 

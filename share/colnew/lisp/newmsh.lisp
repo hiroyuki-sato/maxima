@@ -1,13 +1,13 @@
 ;;; Compiled by f2cl version:
-;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;; ("f2cl1.l,v 1.221 2010/05/26 19:25:52 rtoy Exp $"
 ;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
 ;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
-;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl5.l,v 1.204 2010/02/23 05:21:30 rtoy Exp $"
 ;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
-;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+;;;  "macros.l,v 1.114 2010/05/17 01:42:14 rtoy Exp $")
 
-;;; Using Lisp CMU Common Lisp 19f (19F)
+;;; Using Lisp CMU Common Lisp CVS Head 2010-05-25 18:21:07 (20A Unicode)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -20,12 +20,12 @@
 (defun newmsh (mode xi xiold z dmz valstr slope accum nfxpnt fixpnt)
   (declare (type (array double-float (*)) fixpnt accum slope valstr dmz z xiold
                                           xi)
-           (type (integer) nfxpnt mode))
+           (type (f2cl-lib:integer4) nfxpnt mode))
   (let ((colord-m
          (make-array 20
                      :element-type 'f2cl-lib:integer4
-                     :displaced-to (colord-part-1 *colord-common-block*)
-                     :displaced-index-offset 0))
+                     :displaced-to (colord-part-0 *colord-common-block*)
+                     :displaced-index-offset 5))
         (colbas-asave
          (make-array 112
                      :element-type 'double-float
@@ -77,7 +77,7 @@
                       (root colest-root)
                       (jtol colest-jtol)
                       (ltol colest-ltol)
-                      (ntol (aref (colest-part-2 *colest-common-block*) 0)))
+                      (ntol (aref (colest-part-1 *colest-common-block*) 80)))
       (f2cl-lib:with-multi-array-data
           ((xi double-float xi-%data% xi-%offset%)
            (xiold double-float xiold-%data% xiold-%offset%)
@@ -100,9 +100,10 @@
                    (type (array double-float (40)) d1 d2)
                    (type double-float xleft xright dx hd6 x hiold oneovh slphmx
                                       temp avrg degequ accl accr tsum)
-                   (type (integer) nfxp1 noldp1 i j np1 ileft iright nmin nregn
-                                   n2 kstore jj jz iflip naccum nmx nmax2 in
-                                   lold lnew l lcarry))
+                   (type (f2cl-lib:integer4) nfxp1 noldp1 i j np1 ileft iright
+                                             nmin nregn n2 kstore jj jz iflip
+                                             naccum nmx nmax2 in lold lnew l
+                                             lcarry))
           (setf nfxp1 (f2cl-lib:int-add nfxpnt 1))
           (f2cl-lib:computed-goto (label180 label100 label50 label20 label10)
                                   mode)
@@ -664,11 +665,11 @@
   (setf (gethash 'fortran-to-lisp::newmsh
                  fortran-to-lisp::*f2cl-function-info*)
           (fortran-to-lisp::make-f2cl-finfo
-           :arg-types '((integer) (array double-float (1))
+           :arg-types '((fortran-to-lisp::integer4) (array double-float (1))
                         (array double-float (1)) (array double-float (1))
                         (array double-float (1)) (array double-float (1))
                         (array double-float (1)) (array double-float (1))
-                        (integer) (array double-float (1)))
+                        (fortran-to-lisp::integer4) (array double-float (1)))
            :return-values '(fortran-to-lisp::mode nil nil nil nil nil nil nil
                             nil nil)
            :calls '(fortran-to-lisp::horder fortran-to-lisp::approx))))

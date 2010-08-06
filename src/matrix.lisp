@@ -38,13 +38,14 @@
 (defun mcx (x)
   (mapcar #'cdr x))			; MACSYMA to Matrix conversion
 
-(defun transpose (m)
-  (prog (b nn len)
-     (setq len (length (car m)) nn 1)
-     loop (when (> nn len) (return b)) 
-     (setq b (nconc b (ncons (nthcol m nn))))
-     (incf nn)
-     (go loop)))
+;; Transpose a list of lists ll. Example: ((1 2) (3 4)) --> ((1 3) (2 4)).
+
+(defun transpose (ll)
+  (let ((acc nil))
+    (while (car ll)
+      (push (mapcar #'car ll) acc)
+      (setq ll (mapcar #'cdr ll)))
+    (nreverse acc)))
 
 (defun nthcol (x nn)
   (if (or (null x) (> nn (length (car x))))
@@ -142,10 +143,15 @@
       (mapcar #'ratplus a b))) 
 
 (defmfun $determinant (mat)
-  (cond ((not (or (mbagp mat) ($matrixp mat))) (if ($scalarp mat) mat (list '(%determinant) mat)))
+  (cond ((not (or (mbagp mat) ($matrixp mat))) 
+         (if ($scalarp mat) mat (list '(%determinant) mat)))
 	(t (setq mat (check mat))
 	   (unless  (= (length mat) (length (cadr mat)))
-	     (merror (intl:gettext "determinant: matrix must be square; found ~M rows, ~M columns.") (length mat) (length (cadr mat))))
+             (merror 
+               (intl:gettext
+                 "determinant: matrix must be square; found ~M rows, ~M columns.")
+               (length (cdr mat))
+               (length (cdadr mat))))
            (cond ((not $ratmx) (det1 (mcx (cdr mat))))
 	         (t (newvarmat1 mat) (determinant1 (mcx (cdr mat))))))))
 

@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -111,6 +111,7 @@ Paquetes adicionales
 * linearalgebra::               Funciones de álgebra lineal.
 * lsquares::                    Mínimos cuadrados.
 * makeOrders::                  Utilidad sobre polinomios.
+* minpack::                     Funciones MINPACK para optimización y cálculo de raíces
 * mnewton::                     Método de Newton.
 * numericalio::                 Lectura y escritura de ficheros.
 * opsubst::                     Utilidad para sustituciones.
@@ -372,8 +373,7 @@ descriptive
 
 * Introducción a descriptive::
 * Funciones y variables para el tratamiento de datos::
-* Funciones y variables de valores descriptivos::
-* Funciones y variables de valores descriptivos multivariantes::
+* Funciones y variables de parámetros descriptivos::
 * Funciones y variables para gráficos estadísticos::
 
 diag
@@ -457,6 +457,11 @@ lsquares
 makeOrders
 
 * Funciones y variables para makeOrders::
+
+minpack
+
+* Introducción a minpack::
+* Funciones y variables para minpack::
 
 mnewton
 
@@ -3146,6 +3151,8 @@ macro.
      Devuelve el valor absoluto de <expr>. Si la expresión es compleja,
      retorna el módulo de <expr>.
 
+     `abs' se distribuye sobre listas, matrices y ecuaciones.  Véase
+     también `distribute_over'.
 
  -- Clave: additive
      Si `declare(f,additive)' ha sido ejecutado, entonces:
@@ -3679,6 +3686,26 @@ macro.
      Devuelve `true' si <expr> es un entero impar y `false' en caso
      contrario.
 
+ -- Función: psubst (<list>, <expr>)
+ -- Función: psubst (<a>, <b>, <expr>)
+     `psubst(<a>, <b>, <expr>)' es parecido a `subst'.  Véase `subst'.
+
+     A diferencia de `subst', la función `psubst' hace sustituciones en
+     paralelo si el primer argumento, <list>, es una lista de
+     ecuaciones.
+
+     Véase también `sublis' para sustituciones en paralelo.
+
+     Ejemplo:
+
+     El primer ejemplo muestra la sustitución en paralelo con `psubst'.
+     El segundo ejemplo muestra el resultado devuelto por la función
+     `subst', la cual hace las sustituciones secuencialmente.
+
+          (%i4) psubst ([a^2=b, b=a], sin(a^2) + sin(b));
+          (%o4)                           sin(b) + sin(a)
+          (%i5) subst ([a^2=b, b=a], sin(a^2) + sin(b));
+          (%o5)                              2 sin(a)
 
  -- Función: make_random_state (<n>)
  -- Función: make_random_state (<s>)
@@ -3932,18 +3959,20 @@ macro.
      Si `sqrtdispflag' vale `false', hará que `sqrt' se muestre con el
      exponente 1/2.
 
-
  -- Función: sublis (<list>, <expr>)
-     Realiza sustituciones  múltiples en paralelo en una expresión.
+     Realiza sustituciones múltiples en paralelo en una expresión.
+     <list> es una lista de ecuaciones. Los miembros de la izquierda de
+     las ecuaciones deben ser átomos.
 
      La variable `sublis_apply_lambda' controla la simplificación
      después de `sublis'.
+
+     Véase también `psubst' para sustituciones en paralelo.
 
      Ejemplo:
 
           (%i1) sublis ([a=b, b=a], sin(a) + cos(b));
           (%o1)                    sin(b) + cos(a)
-
 
  -- Función: sublist (<list>, <p>)
      Devuelve la lista de elementos de <list> para los cuales el
@@ -3985,10 +4014,12 @@ macro.
      La función `subst' es sinónimo de `substitute'.
 
      La llamada `subst (<eq_1>, <expr>)' o `subst ([<eq_1>, ...,
-     <eq_k>], <expr>)' están permitidas.  Las <eq_i> son ecuaciones que
+     <eq_k>], <expr>)' están permitidas. Las <eq_i> son ecuaciones que
      indican las sustituciones a realizar.  Para cada ecuación, el
-     miembro derecho será sustituida por la expresión del miembro
-     izquierdo en <expr>.
+     miembro izquierdo será sustituido por la expresión del miembro
+     derecho en <expr>. Las ecuaciones se sustituyen secuencialmente de
+     izquierda a derecha en <expr>. Véanse las funciones `sublis' y
+     `psubst' para sustituciones en paralelo.
 
      Si la variable `exptsubst' vale `true' se permiten ciertas
      sustituciones de exponentes; por ejemplo, sustituir `y' por `%e^x'
@@ -4005,6 +4036,14 @@ macro.
           (%o1)                      y + x + a
           (%i2) subst (-%i, %i, a + b*%i);
           (%o2)                       a - %i b
+
+     La sustitución se hace secuencialmente según una lista de
+     ecuaciones. Compárese con la sustitución en paralelo.
+
+          (%i3) subst([a=b, b=c], a+b);
+          (%o3)                                 2 c
+          (%i4) sublis([a=b, b=c], a+b);
+          (%o4)                                c + b
 
      Para más ejemplos, ejecútese `example (subst)'.
 
@@ -4103,28 +4142,6 @@ macro.
      and not numberp(x)'.
 
      Véase también `Identifiers'.
-
-
- -- Función: unorder ()
-     Desactiva las asociaciones creadas por la última utilización de
-     los comandos de ordenación `ordergreat' y `orderless', los cuales
-     no pueden ser utilizados más de una vez sin invocar a `unorder'.
-     Véase también `ordergreat' y `orderless'.
-
-          (%i1) unorder();
-          (%o1)                          []
-          (%i2) b*x + a^2;
-                                             2
-          (%o2)                       b x + a
-          (%i3) ordergreat (a);
-          (%o3)                         done
-          (%i4) b*x + a^2;
-           %th(1) - %th(3);
-                                       2
-          (%o4)                       a  + b x
-          (%i5) unorder();
-                                        2    2
-          (%o5)                        a  - a
 
 
  -- Función: vectorpotential (<givencurl>)
@@ -4708,10 +4725,8 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
      La función `carg' es computacional, no simplificativa.
 
-     La función `carg' ignora la declaración `declare (<x>, complex)',
-     y trata a <x> como una variable real.  Se trata de un fallo
-     conocido en Maximo.  Véanse también `abs' (módulo complejo),
-     `polarform', `rectform', `realpart' y `imagpart'.
+     Véanse también `abs' (módulo complejo), `polarform', `rectform',
+     `realpart' y `imagpart'.
 
      Ejemplos:
 
@@ -5216,7 +5231,7 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
 
  -- Función: freeof (<x_1>, ..., <x_n>, <expr>)
-     `freeof (<x_1>, <expr>)' Devuelve `true' si ninguna subexpresión
+     `freeof (<x_1>, <expr>)' devuelve `true' si ninguna subexpresión
      de <expr> coincide con <x_1>, o si <x_1> aparece como variable
      muda en <expr>, o si <x_1> no es ni una forma nominal ni verbal de
      cualesquiera operadores presentes en <expr>, devolviendo `false'
@@ -5227,8 +5242,9 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
      Los argumentos <x_1>, ..., <x_n> pueden seer nombres de funciones
      y variables, nombres subindicados, operadores (encerrados entre
-     comillas dobles) o expresiones generales.  La función `freeof'
-     evalúa sus argumentos.
+     comillas dobles) o expresiones generales.
+
+     La función `freeof' evalúa sus argumentos.
 
      Una variable es una variable muda en una expresión si no tiene
      valor asignado fuera de la expresión.  Variable mudas reconocidas
@@ -5236,72 +5252,70 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
      límite en `limit', la variable de integración en la versión de
      integral definida de `integrate', la variable original en
      `laplace', variables formales en expresiones `at' y los argumentos
-     de las expresiones  `lambda'.  Las variables locales en  `block'
-     no son reconocidas por `freeof' como variables mudas; esto es un
-     fallo de Maxima.
+     de las expresiones  `lambda'.
 
      La versión indefinida de  `integrate' no está libre de su variable
      de integración.
 
-        * Los argumentos son nombres de funciones, variables, nombres
-          subindicados, operaores y expresiones. La llamada `freeof (a,
-          b, expr)' equivale a `freeof (a, expr) and freeof (b, expr)'.
+     Ejemplos:
 
-               (%i1) expr: z^3 * cos (a[1]) * b^(c+d);
-                                                d + c  3
-               (%o1)                   cos(a ) b      z
-                                            1
-               (%i2) freeof (z, expr);
-               (%o2)                         false
-               (%i3) freeof (cos, expr);
-               (%o3)                         false
-               (%i4) freeof (a[1], expr);
-               (%o4)                         false
-               (%i5) freeof (cos (a[1]), expr);
-               (%o5)                         false
-               (%i6) freeof (b^(c+d), expr);
-               (%o6)                         false
-               (%i7) freeof ("^", expr);
-               (%o7)                         false
-               (%i8) freeof (w, sin, a[2], sin (a[2]), b*(c+d), expr);
-               (%o8)                         true
+     Los argumentos son nombres de funciones, variables, nombres
+     subindicados, operaores y expresiones. La llamada `freeof (a, b,
+     expr)' equivale a `freeof (a, expr) and freeof (b, expr)'.
 
-        * `freeof' evalúa sus argumentos.
+          (%i1) expr: z^3 * cos (a[1]) * b^(c+d);
+                                           d + c  3
+          (%o1)                   cos(a ) b      z
+                                       1
+          (%i2) freeof (z, expr);
+          (%o2)                         false
+          (%i3) freeof (cos, expr);
+          (%o3)                         false
+          (%i4) freeof (a[1], expr);
+          (%o4)                         false
+          (%i5) freeof (cos (a[1]), expr);
+          (%o5)                         false
+          (%i6) freeof (b^(c+d), expr);
+          (%o6)                         false
+          (%i7) freeof ("^", expr);
+          (%o7)                         false
+          (%i8) freeof (w, sin, a[2], sin (a[2]), b*(c+d), expr);
+          (%o8)                         true
 
-               (%i1) expr: (a+b)^5$
-               (%i2) c: a$
-               (%i3) freeof (c, expr);
-               (%o3)                         false
+     `freeof' evalúa sus argumentos.
 
-        * `freeof' no considera funciones equivalentes.  La
-          simplificación puede dar una expresión equivalente pero
-          diferente.
+          (%i1) expr: (a+b)^5$
+          (%i2) c: a$
+          (%i3) freeof (c, expr);
+          (%o3)                         false
 
-               (%i1) expr: (a+b)^5$
-               (%i2) expand (expr);
-                         5        4       2  3       3  2      4      5
-               (%o2)    b  + 5 a b  + 10 a  b  + 10 a  b  + 5 a  b + a
-               (%i3) freeof (a+b, %);
-               (%o3)                         true
-               (%i4) freeof (a+b, expr);
-               (%o4)                         false
-               (%i5) exp (x);
-                                                x
-               (%o5)                          %e
-               (%i6) freeof (exp, exp (x));
-               (%o6)                         true
+     `freeof' no considera funciones equivalentes.  La simplificación
+     puede dar una expresión equivalente pero diferente.
 
-        * Un sumatorio o integral definida está libre de su variable
-          muda.  Una integral indefinida de  `integrate' no está libre
-          de su variable de integración
+          (%i1) expr: (a+b)^5$
+          (%i2) expand (expr);
+                    5        4       2  3       3  2      4      5
+          (%o2)    b  + 5 a b  + 10 a  b  + 10 a  b  + 5 a  b + a
+          (%i3) freeof (a+b, %);
+          (%o3)                         true
+          (%i4) freeof (a+b, expr);
+          (%o4)                         false
+          (%i5) exp (x);
+                                           x
+          (%o5)                          %e
+          (%i6) freeof (exp, exp (x));
+          (%o6)                         true
 
-               (%i1) freeof (i, 'sum (f(i), i, 0, n));
-               (%o1)                         true
-               (%i2) freeof (x, 'integrate (x^2, x, 0, 1));
-               (%o2)                         true
-               (%i3) freeof (x, 'integrate (x^2, x));
-               (%o3)                         false
+     Un sumatorio o integral definida está libre de su variable muda.
+     Una integral indefinida de  `integrate' no está libre de su
+     variable de integración.
 
+          (%i1) freeof (i, 'sum (f(i), i, 0, n));
+          (%o1)                         true
+          (%i2) freeof (x, 'integrate (x^2, x, 0, 1));
+          (%o2)                         true
+          (%i3) freeof (x, 'integrate (x^2, x));
+          (%o3)                         false
 
  -- Función: genfact (<x>, <y>, <z>)
      Devuelve el factorial generalizado, definido como `x (x-z) (x - 2
@@ -6250,6 +6264,42 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
                                              3
                                i in rootsof(x  - 1)
 
+ -- Función: unorder ()
+     Desactiva las asociaciones creadas por la última utilización de
+     los comandos de ordenación `ordergreat' y `orderless', los cuales
+     no pueden ser utilizados más de una vez sin invocar a `unorder'.
+
+     `unorder' no sustituye en expresiones los símbolos originales por
+     los alias introducidos por `ordergreat' y `orderless'. Es por ello
+     que tras la ejecuciÃ³n de `unorder' los alias aparecen en
+     expresiones anteriores.
+
+     Véase también `ordergreat' y `orderless'.
+
+     Ejemplos:
+
+     `ordergreat(a)' introduce un alias para el símbolo `a', razón por
+     la cual la diferencia de `%o2' y `%o4' no se anula.  `unorder' no
+     restablece el símbolo `a' y el alias aparece en el resultado `%o7'.
+
+          (%i1)
+          (%o1)                          []
+          (%i2) b*x+a^2;
+                                             2
+          (%o2)                       b x + a
+          (%i3) ordergreat(a);
+          (%o3)                         done
+          (%i4) b*x+a^2;
+                                       2
+          (%o4)                       a  + b x
+          (%i5) %th(1)-%th(3);
+                                        2    2
+          (%o5)                        a  - a
+          (%i6) unorder();
+          (%o6)                          [a]
+          (%i7) %th(2);
+                                          2    2
+          (%o7)                      _101a  - a
 
  -- Función: verbify (<f>)
      Devuelve la forma verbal del nombre de función <f>.
@@ -6336,10 +6386,10 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Simp
      Valor por defecto: `true'
 
      `distribute_over' controla la distribución de funciones sobre
-     estructuras como listas, matrices y ecuaciones. Actualmente, este
-     control sólo es aplicable a las funciones trigonométricas,
-     integrales exponenciales y a las funciones para enteros, como
-     `mod', `floor', `ceiling' y `round'.
+     estructuras como listas, matrices y ecuaciones. Actualmente, no
+     todas las funciones de Maxima tienen esta propiedad. Es posible
+     consultar si una función tiene esta propiedad con la instrucción
+     `properties'.
 
      La propiedad distributiva se desactiva asignándole a
      `distribute_over' el valor `false'.
@@ -6374,6 +6424,11 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Simp
           (%i6) expintegral_e([1,2],[x,y]);
           (%o6) [[expintegral_e(1, x), expintegral_e(1, y)],
                  [expintegral_e(2, x), expintegral_e(2, y)]]
+
+     Comprueba si una función tiene la propiedad `distribute_over':
+
+          (%i7) properties(abs);
+          (%o7) [integral, distributes over bags, noun, rule, gradef]
 
  -- Variable opcional: domain
      Valor por defecto: `real'
