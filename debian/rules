@@ -33,13 +33,11 @@ NO_STRIP:=-Xmaxima
 endif
 
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
-RESTORE:=aclocal.m4 src/sys-proclaim.lisp configure interfaces/emacs/imaxima/stamp-vti interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi src/lisp 
-
 build: build-stamp
 build-stamp: 
 	dh_testdir
 
-	for i in $(RESTORE) ; do [ -e $$i.ori ] || cp $$i $$i.ori; done
+	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do [ -e $$i.ori ] || cp $$i $$i.ori; done
 
 	aclocal-1.9
 	automake-1.9
@@ -117,9 +115,9 @@ clean:
 	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
 			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
 	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
-	for i in $(RESTORE) ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
-	rm -rf doc/info/maxima.html doc/info/include-maxima.texi doc/info/extract_categories.sh.debdiff
-	rm -rf src/binary-gcl doc/man/ru/maxima.1 tests/rtest14.ERR
+	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
+	rm -rf doc/info/maxima.html
+	rm -rf src/binary-gcl
 	dh_clean
 
 
