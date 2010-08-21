@@ -2495,7 +2495,7 @@ if completion is ambiguous."
     (define-key map "\C-c\)" 'maxima-check-parens)
     (define-key map [(control c) (control \))] 'maxima-check-form-parens)
 ;    (define-key map "\C-cC-\)" 'maxima-check-form-parens)
-;    (define-key map "\177" 'backward-delete-char-untabify)
+    (define-key map "\177" 'backward-delete-char-untabify)
     (setq maxima-mode-map map)))
 
 ;;;; Menu
@@ -3317,7 +3317,7 @@ To scroll through previous commands,
 (define-key inferior-maxima-mode-map [(meta control tab)] 
   'inferior-maxima-input-complete)
 (define-key inferior-maxima-mode-map "\e\t" 'inferior-maxima-complete)
-;(define-key inferior-maxima-mode-map "\177" 'backward-delete-char-untabify)
+(define-key inferior-maxima-mode-map "\177" 'backward-delete-char-untabify)
 (define-key inferior-maxima-mode-map "\C-c\C-k" 'maxima-stop)
 (define-key inferior-maxima-mode-map "\C-c\C-d" maxima-help-map)
 
