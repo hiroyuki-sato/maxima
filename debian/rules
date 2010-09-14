@@ -32,12 +32,24 @@ ifeq ($(DEB_BUILD_ARCH),powerpc)
 NO_STRIP:=-Xmaxima
 endif
 
-MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
-build: build-stamp
-build-stamp: 
-	dh_testdir
+SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/stamp-vti\
+	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
+	 src/sys-proclaim.lisp src/lisp)
 
-	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do [ -e $$i.ori ] || cp $$i $$i.ori; done
+debian/save/%: %
+	mkdir -p $(@D)
+	[ -e $@ ] || cp $< $@
+
+debian/save: $(SAVES)
+
+restore: 
+	! [ -d debian/save ] || ( cd debian/save && for i in $$(find -type f); do cp $$i ../../$$i; done )
+	rm -rf debian/save
+
+MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
+build: debian/save build-stamp
+build-stamp:
+	dh_testdir
 
 	aclocal-1.9
 	automake-1.9
@@ -93,7 +105,7 @@ build-stamp:
 
 BOOK:=debian/maximabook-19-Sept-2004.pdf
 
-clean:
+clean: restore
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp install-stamp
@@ -118,6 +130,10 @@ clean:
 	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
 	rm -rf doc/info/maxima.html
 	rm -rf src/binary-gcl
+	rm -f doc/man/ru/maxima.1
+	rm -f tests/rtest14.ERR
+	rm -f doc/info/include-maxima.texi
+	rm -f configure.lineno doc/info/extract_categories.sh.debdiff
 	dh_clean
 
 
