@@ -38,17 +38,17 @@ SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/st
 
 debian/save/%: %
 	mkdir -p $(@D)
-	cp $< $@
+	[ -e $@ ] || cp $< $@
 
-save: $(SAVES)
+debian/save: $(SAVES)
 
 restore: 
 	! [ -d debian/save ] || ( cd debian/save && for i in $$(find -type f); do cp $$i ../../$$i; done )
 	rm -rf debian/save
 
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
-build: build-stamp
-build-stamp: save
+build: debian/save build-stamp
+build-stamp:
 	dh_testdir
 
 	aclocal-1.9
