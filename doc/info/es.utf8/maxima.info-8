@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -9,12 +9,797 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Funciones y variables para polinomios ortogonales,  Prev: Introducción a polinomios ortogonales,  Up: orthopoly
+
+71.2 Funciones y variables para polinomios ortogonales
+======================================================
+
+ -- Función: assoc_legendre_p (<n>, <m>, <x>)
+     Función asociada de Legendre de primera especie de grado <n> y
+     orden <m>.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 22.5.37, página 779,
+     8.6.6 (segunda ecuación), página 334 y  8.2.5, página 333.
+
+ -- Función: assoc_legendre_q (<n>, <m>, <x>)
+     Función asociada de Legendre de segunda especie de grado <n> y
+     orden <m>.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 8.5.3 y 8.1.8.
+
+ -- Función: chebyshev_t (<n>, <x>)
+     Función de Chebyshev de primera especie.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.47, página 779.
+
+ -- Función: chebyshev_u (<n>, <x>)
+     Función de Chebyshev de segunda especie.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.48, página 779.
+
+ -- Función: gen_laguerre (<n>, <a>, <x>)
+     Polinomio de Laguerre generalizado de grado <n>.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.54, página 780.
+
+ -- Función: hermite (<n>, <x>)
+     Polinomio de Hermite.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.55, página 780.
+
+ -- Función: intervalp (<e>)
+     Devuelve `true' si la entrada es un intervalo y `false' en caso
+     contrario.
+
+ -- Función: jacobi_p (<n>, <a>, <b>, <x>)
+     Polinomio de Jacobi.
+
+     Los polinomios de Jacobi están definidos para todo <a> y <b>; sin
+     embargo, el peso `(1 - <x>)^<a> (1 + <x>)^<b>' no es integrable
+     para `<a> <= -1' o `<b> <= -1'.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.42, página 779.
+
+ -- Función: laguerre (<n>, <x>)
+     Polinomio de Laguerre.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 22.5.16 y 22.5.54,
+     página 780.
+
+ -- Función: legendre_p (<n>, <x>)
+     Polinomio de Legendre de primera especie.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 22.5.50 y 22.5.51,
+     página 779.
+
+ -- Función: legendre_q (<n>, <x>)
+     Polinomio de Legendre de segunda especie.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 8.5.3 y 8.1.8.
+
+ -- Función: orthopoly_recur (<f>, <args>)
+     Devuelve una relación recursiva para la familia de funciones
+     ortogonales <f> con argumentos <args>. La recursión se hace con
+     respecto al grado del polinomio.
+
+          (%i1) orthopoly_recur (legendre_p, [n, x]);
+                          (2 n - 1) P     (x) x + (1 - n) P     (x)
+                                     n - 1                 n - 2
+          (%o1)   P (x) = -----------------------------------------
+                   n                          n
+
+     El segundo argumento de `orthopoly_recur' debe ser una lista con
+     el número correcto de argumentos para la función <f>; si no lo es,
+     Maxima emite un mensaje de error.
+
+          (%i1) orthopoly_recur (jacobi_p, [n, x]);
+
+          Function jacobi_p needs 4 arguments, instead it received 2
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     Además, si <f> no es el nombre de ninguna de las familias de
+     polinomios ortogonales, se emite otro mensaje de error.
+
+          (%i1) orthopoly_recur (foo, [n, x]);
+
+          A recursion relation for foo isn't known to Maxima
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+ -- Variable opcional: orthopoly_returns_intervals
+     Valor por defecto: `true'
+
+     Si `orthopoly_returns_intervals' vale `true', los números
+     decimales en coma flotante se retornan con el formato `interval
+     (<c>, <r>)', donde <c> es el centro del intervalo y <r> su radio.
+     El centro puede ser un número complejo, en cuyo caso el intervalo
+     es un disco en el plano complejo.
+
+ -- Función: orthopoly_weight (<f>, <args>)
+     Devuelve una lista con tres elementos; el primer elemento es la
+     fórmula del peso para la familia de polinomios ortogonales <f> con
+     los argumentos dados por la lista <args>; el segundo y tercer
+     elementos son los extremos inferior y superior del intervalo de
+     ortogonalidad. Por ejemplo,
+
+          (%i1) w : orthopoly_weight (hermite, [n, x]);
+                                      2
+                                   - x
+          (%o1)                 [%e    , - inf, inf]
+          (%i2) integrate (w[1] * hermite (3, x) * hermite (2, x), x, w[2], w[3]);
+          (%o2)                           0
+
+     La variable principal de <f> debe ser un símbolo, en caso
+     contrario Maxima emite un mensaje de error.
+
+ -- Función: pochhammer (<n>, <x>)
+     Símbolo de Pochhammer. Para enteros no negativos <n> con `<n> <=
+     pochhammer_max_index', la expresión `pochhammer (<x>, <n>)' se
+     evalúa como el producto `<x> (<x> + 1) (<x> + 2) ... (<x> + n -
+     1)' si `<n> > 0' y como 1 si `<n> = 0'. Para <n> negativo,
+     `pochhammer (<x>, <n>)' se define como `(-1)^<n> / pochhammer (1 -
+     <x>, -<n>)'.  Así por ejemplo,
+
+          (%i1) pochhammer (x, 3);
+          (%o1)                   x (x + 1) (x + 2)
+          (%i2) pochhammer (x, -3);
+                                           1
+          (%o2)               - -----------------------
+                                (1 - x) (2 - x) (3 - x)
+
+     A fin de convertir el símbolo de Pochhammer en un cociente de
+     funciones gamma (véase Abramowitz y Stegun, ecuación 6.1.22),
+     hágase uso de `makegamma'. Por ejemplo,
+
+          (%i1) makegamma (pochhammer (x, n));
+                                    gamma(x + n)
+          (%o1)                     ------------
+                                      gamma(x)
+
+     Si <n> es mayor que `pochhammer_max_index' o si <n> es simbólico,
+     `pochhammer' devuelve una forma nominal.
+
+          (%i1) pochhammer (x, n);
+          (%o1)                         (x)
+                                           n
+
+ -- Variable opcional: pochhammer_max_index
+     Valor por defecto: 100
+
+     `pochhammer (<n>, <x>)' se evalúa como un producto si y sólo si
+     `<n> <= pochhammer_max_index'.
+
+     Ejemplos:
+
+          (%i1) pochhammer (x, 3), pochhammer_max_index : 3;
+          (%o1)                   x (x + 1) (x + 2)
+          (%i2) pochhammer (x, 4), pochhammer_max_index : 3;
+          (%o2)                         (x)
+                                           4
+
+     Referencia: Abramowitz y Stegun, ecuación 6.1.16, página 256.
+
+ -- Función: spherical_bessel_j (<n>, <x>)
+     Función de Bessel esférica de primera especie.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 10.1.8, página 437 y
+     10.1.15, página 439.
+
+ -- Función: spherical_bessel_y (<n>, <x>)
+     Función de Bessel esférica de segunda especie.
+
+     Referencia: Abramowitz y Stegun, ecuaciones 10.1.9, página 437 y
+     10.1.15, página 439.
+
+ -- Función: spherical_hankel1 (<n>, <x>)
+     Función esférica de Hankel de primera especie.
+
+     Referencia: Abramowitz y Stegun, ecuación 10.1.36, página 439.
+
+ -- Función: spherical_hankel2 (<n>, <x>)
+     Función esférica de Hankel de segunda especie.
+
+     Referencia: Abramowitz y Stegun, ecuación 10.1.17, página 439.
+
+ -- Función: spherical_harmonic (<n>, <m>, <x>, <y>)
+     Función armónica esférica.
+
+     Referencia: Merzbacher 9.64.
+
+ -- Función: unit_step (<x>)
+     Función de escalón unidad continua por la izquierda, definida de
+     tal forma que `unit_step (<x>)' se anula para `<x> <= 0' y es
+     igual a 1 para `<x> > 0'.
+
+     En caso de ser necesaria una función escalón unidad que tome el
+     valor 1/2 en el origen, utilícese `(1 + signum (<x>))/2'.
+
+ -- Función: ultraspherical (<n>, <a>, <x>)
+     Polinomio ultraesférico o de Gegenbauer.
+
+     Referencia: Abramowitz y Stegun, ecuación 22.5.46, página 779.
+
+
+File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
+
+72 plotdf
+*********
+
+* Menu:
+
+* Introducción a plotdf::
+* Funciones y variables para plotdf::
+
+
+File: maxima.info,  Node: Introducción a plotdf,  Next: Funciones y variables para plotdf,  Prev: plotdf,  Up: plotdf
+
+72.1 Introducción a plotdf
+==========================
+
+La función `plotdf' crea un gráfico del campo de direcciones para una
+Ecuación Diferencial Ordinaria (EDO) de primer orden, o para un sistema
+de dos EDO's autónomas, de primer orden.
+
+   Como se trata de un paquete adicional, para poder usarlo debe
+cargarlo primero con el comando `load("plotdf")'. También es necesario
+que Xmaxima esté instalado, a pesar de que ejecute Maxima desde otra
+interface diferente.
+
+   Para dibujar el campo de direcciones de una única EDO, esa ecuación
+deberá escribirse en la forma siguiente:
+            dy
+            -- = F(x,y)
+            dx
+
+   y la función <F> será dada como argumento para el comando `plotdf'.
+La variable independiente tiene que ser siempre <x> y la variable
+dependiente <y>. A esas dos variables no podrá estar asociado ningún
+valor numérico.
+
+   Para dibujar el campo de direcciones de un sistema autónomo de dos
+EDO's, Las dos ecuaciones deben ser escritas en la forma siguiente
+            dx             dy
+            -- = G(x,y)    -- = F(x,y)
+            dt             dt
+
+   y el argumento para el comando `plotdf' será una lista con dos
+expresiones para las funciones <F> y <G>.
+
+   Cuando se trabaja con una única ecuación, `plotdf' asume
+implícitamente que `x=t' y `G(x,y)=1', transformando la ecuación en un
+sistema autónomo con dos ecuaciones.
+
+
+File: maxima.info,  Node: Funciones y variables para plotdf,  Prev: Introducción a plotdf,  Up: plotdf
+
+72.2 Funciones y variables para plotdf
+======================================
+
+ -- Function: plotdf (<dydx>,...opciones...)
+ -- Function: plotdf (`['<dxdt>,<dydt>`]',...opciones...)
+     Dibuja un campo de direcciones en dos dimensiones <x> y <y>.
+
+     <dydx>, <dxdt> y <dydt> son expresiones que dependen de <x> y <y>.
+     Además de esas dos variables, las dos expresiones pueden depender
+     de un conjunto de parámetros, con valores numéricos que son dados
+     por medio de la opción `parameters' (la sintaxis de esa opción se
+     explica mas al frente), o con un rango de posibles valores
+     definidos con la opción <sliders>.
+
+     Varias otras opciones se pueden incluir dentro del comando, o
+     seleccionadas en el menú.  Haciendo click en un punto del gráfico
+     se puede hacer que sea dibujada la curva integral que pasa por ese
+     punto; lo mismo puede ser hecho dando las coordenadas del punto
+     con la opción `trajectory_at' dentro del comando plotdf. La
+     dirección de integración se puede controlar con la opción
+     `direction', que acepta valores de _forward_, _backward_ ou
+     _both_. El número de pasos realizado en la integración numérica se
+     controla con la opción `nsteps' y el incremento del tiempo en cada
+     paso con la opción `tstep'. Se usa el método de Adams Moulton para
+     hacer la integración numérica; también es posible cambiar para el
+     método de Runge-Kutta de cuarto orden con ajuste de pasos.
+
+     Menú de la ventana del gráfico:
+
+     El menú de la ventana gráfica dispone de las siguientes opciones:
+     _Zoom_, que permite cambiar el comportamiento del ratón, de manera
+     que hará posible el hacer zoom en la región del gráfico haciendo
+     clic con el botón izquierdo. Cada clic agranda la imagen
+     manteniendo como centro de la misma el punto sobre el cual se ha
+     hecho clic. Manteniendo pulsada la tecla <Shift> mientras se hace
+     clic, retrocede al tamaño anterior. Para reanudar el cálculo de las
+     trayectorias cuando se hace clic, seleccine la opción _Integrate_
+     del menú.
+
+     La opción _Config_ del menú se puede utilizar para cambiar la(s)
+     EDO(S) y algunos otros ajustes. Después de hacer los cambios, se
+     debe utilizar la opción _Replot_ para activar los nuevos ajustes.
+     Si en el campo _Trajectory at_ del menú de diálogo de _Config_ se
+     introducen un par de coordenadas y luego se pulsa la tecla
+     <retorno>, se mostrará una nueva curva integral, además de las ya
+     dibujadas.  Si se selecciona la opción _Replot_, sólo se mostrará
+     la última curva integral seleccionada.
+
+     Manteniendo pulsado el botón derecho del ratón mientras se mueve el
+     cursor, se puede arrastrar el gráfico horizontal y verticalmente.
+     Otros parámetros, como pueden ser el número de pasos, el valor
+     inicial de <t>, las coordenadas del centro y el radio, pueden
+     cambiarse en el submenú de la opción _Config_.
+
+     Con la opción _Save_, se puede obtener una copia del gráfico en
+     una impresora Postscript o guardarlo en un fichero Postscript. Para
+     optar entre la impresión o guardar en fichero, se debe seleccionar
+     _Print Options_ en la ventana de diálogo de _Config_. Una vez
+     cubiertos los campos de la ventana de diálogo de _Save_, será
+     necesario seleccionar la opción _Save_ del primer menú para crear
+     el fichero o imprimir el gráfico.
+
+     Opciones gráficas:
+
+     La función `plotdf' admite varias opciones, cada una de las cuales
+     es una lista de dos o más elementos. El primer elemento es el
+     nombre de la opción, y el resto está formado por el valor o
+     valores asignados a dicha opción.
+
+     La función `plotdf' reconoce las siguientes opciones:
+
+        * "tstep" establece la amplitud de los incrementos en la
+          variable independiente <t>, utilizados para calcular la curva
+          integral. Si se aporta sólo una expresión <dydx>, la variable
+          <x> será directamente proporcional a <t>.  El valor por
+          defecto es 0.1.
+
+        * "nsteps" establece el número de pasos de longitud `tstep' que
+          se utilizarán en la variable independiente para calcular la
+          curva integral.  El valor por defecto es 100.
+
+        * "direction" establece la dirección de la variable
+          independiente que será seguida para calcular una curva
+          integral.  Valores posibles son: `forward', para hacer que la
+          variable independiente aumente `nsteps' veces, con
+          incrementos `tstep'; `backward', para hacer que la variable
+          independiente disminuya; `both', para extender la curva
+          integral `nsteps' pasos hacia adelante y `nsteps' pasos hacia
+          atrás.  Las palabras `right' y `left' se pueden utilizar como
+          sinónimos de `forward' y `backward'.  El valor por defecto es
+          `both'.
+
+        * "tinitial" establece el valor inicial de la variable <t>
+          utilizado para calcular curvas integrales. Puesto que las
+          ecuaciones diferenciales son autónomas, esta opción sólo
+          aparecerá en los gráficos de las curvas como funciones de <t>.
+          El valor por defecto es 0.
+
+        * "versus_t" se utiliza para crear una segunda ventana gráfica,
+          con el gráfico de una curva integral, como dos funciones <x>,
+          <y>, de variable independiente <t>. Si se le da a `versus_t'
+          cualquier valor diferente de 0, se mostrará la segunda
+          ventana gráfica, la cual incluye otro menú, similar al de la
+          ventana principal.  El valor por defecto es 0.
+
+        * "trajectory_at" establece las coordenadas <xinitial> y
+          <yinitial> para el extremo inicial de la curva integral.  No
+          tiene asignado valor por defecto.
+
+        * "parameters" establece una lista de parámetros, junto con sus
+          valores numéricos, que son utilizados en la definición de la
+          ecuación diferencial. Los nombres de los parámetros y sus
+          valores deben escribirse en formato de cadena de caracteres
+          como una secuencia de pares `nombre=valor' separados por
+          comas.
+
+        * "sliders" establece una lista de parámetros que se cambiarán
+          interactivamente utilizando barras de deslizamiento, así como
+          los rangos de variación de dichos parámetros.  Los nombres de
+          los parámetros y sus rangos deben escribirse en formato de
+          cadena de caracteres como una secuencia de pares
+          `nombre=min:max' separados por comas.
+
+        * "xfun" establece una cadena de caracteres con funciones de
+          <x> separadas por puntos y comas para ser representadas por
+          encima del campo de direcciones. Estas funciones serán
+          interpretadas por Tcl, no por Maxima.
+
+        * "xradius" es la mitad de la longitud del rango de valores a
+          representar en la dirección x.  El valor por defecto es 10.
+
+        * "yradius" es la mitad de la longitud del rango de valores a
+          representar en la dirección y.  El valor por defecto es 10.
+
+        * "xcenter" es la coordenada x del punto situado en el centro
+          del gráfico.  El valor por defecto es 0.
+
+        * "ycenter" es la coordenada y del punto situado en el centro
+          del gráfico.  El valor por defecto es 0.
+
+        * "width" establece el ancho de la ventana gráfica en píxeles.
+          El valor por defecto es 500.
+
+        * "height" establece la altura de la ventana gráfica en píxeles.
+          El valor por defecto es 500.
+
+
+     Ejemplos:
+
+     NOTA: Dependiendo de la interface que se use para Maxima, las
+     funciones que usan `openmath', incluida `plotdf', pueden
+     desencadenar un fallo si terminan en punto y coma, en vez del
+     símbolo de dólar. Para evitar problemas, se usará el símbolo de
+     dólar en todos ejemplos.
+
+        * Para mostrar el campo de direcciones de la ecuación
+          diferencial y' = exp(-x) + y y la solución que pasa por (2,
+          -0.1):
+               (%i1) load("plotdf")$
+
+               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1]);
+
+        * Para mostrar el campo de direcciones de la ecuación diff(y,x)
+          = x - y^2 y la solución de condición inicial y(-1) = 3, se
+          puede utilizar la sentencia:
+               (%i3) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
+                         [trajectory_at,-1,3], [direction,forward],
+                         [yradius,5],[xcenter,6]);
+          El gráfico también muestra la función y = sqrt(x).
+
+        * El siguiente ejemplo muestra el campo de direcciones de un
+          oscilador armónico, definido por las ecuaciones dx/dt = y y
+          dy/dt = -k*x/m, y la curva integral que pasa por (x,y) =
+          (6,0), con una barra de deslizamiento que permitirá cambiar
+          el valor de m interactivamente (k permanece fijo a 2):
+               (%i4) plotdf([y,-k*x/m],[parameters,"m=2,k=2"],
+                           [sliders,"m=1:5"], [trajectory_at,6,0]);
+
+        * Para representar el campo de direcciones de la ecuación de
+          Duffing, m*x"+c*x'+k*x+b*x^3 = 0, se introduce la variable
+          y=x' y se hace:
+               (%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
+                             [parameters,"k=-1,m=1.0,c=0,b=1"],
+                             [sliders,"k=-2:2,m=-1:1"],[tstep,0.1]);
+
+        * El campo de direcciones de un péndulo amortiguado, incluyendo
+          la solución para condiciones iniciales dadas, con una barra
+          de deslizamiento que se puede utilizar para cambiar el valor
+          de la masa, m, y con el gráfico de las dos variables de
+          estado como funciones del tiempo:
+
+               (%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
+                        [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
+                        [trajectory_at,1.05,-9],[tstep,0.01],
+                        [xradius,6],[yradius,14],
+                        [xcenter,-4],[direction,forward],[nsteps,300],
+                        [sliders,"m=0.1:1"], [versus_t,1]);
+
+
+
+
+File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
+
+73 romberg
+**********
+
+* Menu:
+
+* Funciones y variables para romberg::
+
+
+File: maxima.info,  Node: Funciones y variables para romberg,  Prev: Top,  Up: Top
+
+73.1 Funciones y variables para romberg
+=======================================
+
+ -- Función: romberg (<expr>, <x>, <a>, <b>)
+ -- Función: romberg (<F>, <a>, <b>)
+     Integra numéricamente por el método de Romberg.
+
+     La llamada `romberg(<expr>, <x>, <a>, <b>)' devuelve una
+     estimación de la integral `integrate(<expr>, <x>, <a>, <b>)'.  El
+     argumento <expr> debe ser una expresión reducible a un valor
+     decimal en coma flotante cuando <x> es a su vez un número decimal.
+
+     La llamada `romberg(<F>, <a>, <b>)' devuelve una estimación de la
+     integral `integrate(<F>(x), x, <a>, <b>)', siendo `x' el único
+     argumento de <F>. El argumento <F> debe ser una función en Lisp o
+     en Maxima que devuelva un valor decimal en coma flotante cuando
+     <x> es a su vez un número decimal; <F> puede ser el nombre de una
+     función de Maxima traducida o compilada.
+
+     La exactitud de `romberg' se controla con las variables globales
+     `rombergabs' y `rombergtol'. La función `romberg' termina con
+     éxito su cálculo cuando la diferencia absoluta entre sucesivas
+     aproximaciones es menor que `rombergabs', o cuando la diferencia
+     relativa de sucesivas aproximaciones es menor que `rombergtol'.
+     Así, cuando `rombergabs' vale 0.0 (su valor por defecto) sólo
+     tiene efecto el test del error relativo basado en `romberg'.
+
+     La función `romberg' reduce a mitades sucesivas la amplitud del
+     paso un máximo de `rombergit' veces antes de abandonar el cómputo;
+     el número máximo de evaluaciones del integrando es, por
+     consiguiente, igual a `2^rombergit'.  De no satisfacerse el
+     criterio de error establecido por `rombergabs' y `rombergtol',
+     `romberg' devuelve un mensaje de error.  La función `romberg' hace
+     siempre al menos `rombergmin' iteraciones; se trata de una
+     heurística para evitar la finalización prematura cuando el
+     integrando oscila mucho.
+
+     La función `romberg' evalúa el integrando repetidamente tras
+     asignarle a la variable de integración un valor específico. Este
+     criterio permite anidar llamadas a `romberg' para calcular
+     integrales múltiples.  Sin embargo, los errores de cálculo no
+     tienen en cuenta los errores de las integraciones anidadas, por lo
+     que tales errores pueden subestimarse.  Por otro lado, métodos
+     especialmente desarrollados para integraciones múltiples pueden
+     dar la misma exactitud con menos evaluaciones del integrando.
+
+     Para hacer uso de esta función ejecútese primero `load(romberg)'.
+
+     Véase también `QUADPACK', un conjunto de funciones para
+     integración numérica.
+
+     Ejemplos:
+
+     Una integración unidimensional.
+
+          (%i1) load (romberg);
+          (%o1)    /usr/share/maxima/5.11.0/share/numeric/romberg.lisp
+          (%i2) f(x) := 1/((x - 1)^2 + 1/100) + 1/((x - 2)^2 + 1/1000)
+                          + 1/((x - 3)^2 + 1/200);
+                              1                 1                1
+          (%o2) f(x) := -------------- + --------------- + --------------
+                               2    1           2    1            2    1
+                        (x - 1)  + ---   (x - 2)  + ----   (x - 3)  + ---
+                                   100              1000              200
+          (%i3) rombergtol : 1e-6;
+          (%o3)                 9.9999999999999995E-7
+          (%i4) rombergit : 15;
+          (%o4)                          15
+          (%i5) estimate : romberg (f(x), x, -5, 5);
+          (%o5)                   173.6730736617464
+          (%i6) exact : integrate (f(x), x, -5, 5);
+          (%o6) 10 sqrt(10) atan(70 sqrt(10))
+           + 10 sqrt(10) atan(30 sqrt(10)) + 10 sqrt(2) atan(80 sqrt(2))
+           + 10 sqrt(2) atan(20 sqrt(2)) + 10 atan(60) + 10 atan(40)
+          (%i7) abs (estimate - exact) / exact, numer;
+          (%o7)                7.5527060865060088E-11
+
+     Una integración bidimensional, implementada mediante llamadas
+     anidadas a `romberg'.
+
+          (%i1) load (romberg);
+          (%o1)    /usr/share/maxima/5.11.0/share/numeric/romberg.lisp
+          (%i2) g(x, y) := x*y / (x + y);
+                                              x y
+          (%o2)                   g(x, y) := -----
+                                             x + y
+          (%i3) rombergtol : 1e-6;
+          (%o3)                 9.9999999999999995E-7
+          (%i4) estimate : romberg (romberg (g(x, y), y, 0, x/2), x, 1, 3);
+          (%o4)                   0.81930239628356
+          (%i5) assume (x > 0);
+          (%o5)                        [x > 0]
+          (%i6) integrate (integrate (g(x, y), y, 0, x/2), x, 1, 3);
+                                                    3
+                                              2 log(-) - 1
+                              9                     2        9
+          (%o6)       - 9 log(-) + 9 log(3) + ------------ + -
+                              2                    6         2
+          (%i7) exact : radcan (%);
+                              26 log(3) - 26 log(2) - 13
+          (%o7)             - --------------------------
+                                          3
+          (%i8) abs (estimate - exact) / exact, numer;
+          (%o8)                1.3711979871851024E-10
+
+
+ -- Variable opcional: rombergabs
+     Valor por defecto: 0.0
+
+     La exactitud de `romberg' se controla con las variables globales
+     `rombergabs' y `rombergtol'. La función `romberg' termina con
+     éxito su cálculo cuando la diferencia absoluta entre sucesivas
+     aproximaciones es menor que `rombergabs', o cuando la diferencia
+     relativa de sucesivas aproximaciones es menor que `rombergtol'.
+     Así, cuando `rombergabs' vale 0.0 (su valor por defecto) sólo
+     tiene efecto el test del error relativo basado en `romberg'.
+
+     Véanse también `rombergit' y `rombergmin'.
+
+
+ -- Variable opcional: rombergit
+     Valor por defecto: 11
+
+     La función `romberg' reduce a mitades sucesivas la amplitud del
+     paso un máximo de `rombergit' veces antes de abandonar el cómputo;
+     el número máximo de evaluaciones del integrando es, por
+     consiguiente, igual a `2^rombergit'.  La función `romberg' hace
+     siempre al menos `rombergmin' iteraciones; se trata de una
+     heurística para evitar la finalización prematura cuando el
+     integrando oscila mucho.
+
+     Véanse también `rombergabs' y `rombergtol'.
+
+
+ -- Variable opcional: rombergmin
+     Valor por defecto: 0
+
+     La función `romberg' hace siempre al menos `rombergmin'
+     iteraciones; se trata de una heurística para evitar la
+     finalización prematura cuando el integrando oscila mucho.
+
+     Véanse también `rombergit', `rombergabs' y `rombergtol'.
+
+
+ -- Variable opcional: rombergtol
+     Valor por defecto: 1e-4
+
+     La exactitud de `romberg' se controla con las variables globales
+     `rombergabs' y `rombergtol'. La función `romberg' termina con
+     éxito su cálculo cuando la diferencia absoluta entre sucesivas
+     aproximaciones es menor que `rombergabs', o cuando la diferencia
+     relativa de sucesivas aproximaciones es menor que `rombergtol'.
+     Así, cuando `rombergabs' vale 0.0 (su valor por defecto) sólo
+     tiene efecto el test del error relativo basado en `romberg'.
+
+     Véanse también `rombergit' y `rombergmin'.
+
+
+
+File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
+
+74 simplex
+**********
+
+* Menu:
+
+* Introducción a simplex::
+* Funciones y variables para simplex::
+
+
+File: maxima.info,  Node: Introducción a simplex,  Next: Funciones y variables para simplex,  Prev: simplex,  Up: simplex
+
+74.1 Introducción a simplex
+===========================
+
+El paquete `simplex' utiliza el algoritmo simplex para programación
+lineal.
+
+   Ejemplo:
+
+     (%i1) load("simplex")$
+     (%i2) minimize_lp(x+y, [3*x+2*y>2, x+4*y>3]);
+                            9        7       1
+     (%o2)                 [--, [y = --, x = -]]
+                            10       10      5
+
+
+File: maxima.info,  Node: Funciones y variables para simplex,  Prev: Introducción a simplex,  Up: simplex
+
+74.2 Funciones y variables para simplex
+=======================================
+
+ -- Variable opcional: epsilon_lp
+     Valor por defecto: `10^-8'
+
+     Error epsilon utilizado en los cálculos numéricos de
+     `linear_program'.
+
+     Véase también `linear_program'.
+
+
+ -- Función: linear_program (<A>, <b>, <c>)
+     La función `linear_program' es una implementación del algoritmo
+     simplex. La instrucción `linear_program(A, b, c)' calcula un
+     vector <x> tal que minimiza `c.x' bajo las restricciones `A.x = b'
+     y `x >= 0'. El argumento <A> es una matriz y los argumentos <b> y
+     <c> son listas.
+
+     La función `linear_program' devuelve una lista que contiene el
+     vector solución <x> y el valor mínimo de `c.x'.  Si el problema no
+     está acotado, devuelve el mensaje "Problem not bounded!"  y si el
+     problema no es factible, devuelve el mensaje "Problem not
+     feasible!".
+
+     Para usar esta función, cárguese primero el paquete con la
+     instrucción `load(simplex);'.
+
+     Ejemplo:
+
+          (%i2) A: matrix([1,1,-1,0], [2,-3,0,-1], [4,-5,0,0])$
+          (%i3) b: [1,1,6]$
+          (%i4) c: [1,-2,0,0]$
+          (%i5) linear_program(A, b, c);
+                             13     19        3
+          (%o5)            [[--, 4, --, 0], - -]
+                             2      2         2
+
+     Véanse también `minimize_lp', `scale_lp' y `epsilon_lp'.
+
+
+ -- Función: maximize_lp (<obj>, <cond>, [<pos>])
+     Maximiza la función objetivo lineal <obj> sujeta a ciertas
+     restricciones lineales <cond>. Véase `minimize_lp' para una
+     descripción detallada de los argumentos y de la respuesta dada por
+     esta función.
+
+
+ -- Función: minimize_lp (<obj>, <cond>, [<pos>])
+     Minimiza la función objetivo lineal <obj> sujeta a ciertas
+     restricciones lineales <cond>, siendo ésta una lista de ecuaciones
+     o inecuaciones lineales.  En las inecuaciones estrictas se
+     reemplaza `>' por `>=' y `<' por `<='. El argumento opcional <pos>
+     es una lista de variables de decisión que se suponen positivas.
+
+     Si el mínimo existe, `minimize_lp' devuelve una lista que contiene
+     el valor mínimo de la función objetivo y una lista de valores para
+     las variables de decisión con los que se alcanza el mínimo.  Si el
+     problema no está acotado, devuelve el mensaje "Problem not
+     bounded!"  y si el problema no es factible, devuelve el mensaje
+     "Problem not feasible!".
+
+     Las variables de decisión no se suponen no negativas. Si todas las
+     variables de decisión son no negativas, asígnese el valor `true' a
+     la variable `nonegative_lp'. Si sólo algunas de las variables de
+     decisión son positivas, lístense en el argumento opcional <pos>,
+     lo cual es más eficiente que añadir restricciones.
+
+     La función `minimize_lp' utiliza el algoritmo simplex implementado
+     en la función `linear_program' de Maxima.
+
+     Para usar esta función, cárguese primero el paquete con la
+     instrucción `load(simplex);'.
+
+     Ejemplos:
+
+          (%i1) minimize_lp(x+y, [3*x+y=0, x+2*y>2]);
+                                4       6        2
+          (%o1)                [-, [y = -, x = - -]]
+                                5       5        5
+          (%i2) minimize_lp(x+y, [3*x+y>0, x+2*y>2]), nonegative_lp=true;
+          (%o2)                [1, [y = 1, x = 0]]
+          (%i3) minimize_lp(x+y, [3*x+y=0, x+2*y>2]), nonegative_lp=true;
+          (%o3)                Problem not feasible!
+          (%i4) minimize_lp(x+y, [3*x+y>0]);
+          (%o4)                Problem not bounded!
+
+     Véanse también `maximize_lp', `nonegative_lp' y `epsilon_lp'.
+
+
+ -- Variable opcional: nonegative_lp
+     Valor por defecto: `false'
+
+     Si `nonegative_lp' vale `true' todas las variables de decisión
+     pasadas a `minimize_lp' y a `maximize_lp' se suponen positivas.
+
+     Véase también `minimize_lp'.
+
+
+
+File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
+
+75 simplification
+*****************
+
+* Menu:
+
+* Introducción a simplification::
+* Funciones y variables para simplification::
+
+
+File: maxima.info,  Node: Introducción a simplification,  Next: Funciones y variables para simplification,  Prev: simplification,  Up: simplification
+
+75.1 Introducción a simplification
+==================================
+
+El directorio `maxima/share/simplification' contiene programas que
+implementan algunas reglas y funciones para simplificar expresiones,
+así como ciertas funciones no relacionadas con la simplificación.
+
+
 File: maxima.info,  Node: Funciones y variables para simplification,  Prev: Introducción a simplification,  Up: simplification
 
-71.2 Funciones y variables para simplification
+75.2 Funciones y variables para simplification
 ==============================================
 
-71.2.1 Paquete absimp
+75.2.1 Paquete absimp
 ---------------------
 
 El paquete `absimp' contiene reglas para aplicar patrones que extienden
@@ -42,7 +827,7 @@ desarrolla una demostración sobre el uso del mismo.
      (%i4) cosh (abs (x));
      (%o4)                               cosh(x)
 
-71.2.2 Paquete facexp
+75.2.2 Paquete facexp
 ---------------------
 
 El paquete `facexp' contiene varias funciones que le aportan al usuario
@@ -148,7 +933,7 @@ hace una demostración sobre su uso.
      ser especialmente útil cuando las expresiones a sumar son muy
      grandes.
 
-71.2.3 Paquete functs
+75.2.3 Paquete functs
 ---------------------
 
  -- Función: rempart (<expr>, <n>)
@@ -308,7 +1093,7 @@ hace una demostración sobre su uso.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
 
-71.2.4 Paquete ineq
+75.2.4 Paquete ineq
 -------------------
 
 El paquete `ineq' contiene reglas de simplificación para desigualdades
@@ -400,7 +1185,7 @@ referenciarse a ellas, como en `remrule ("+", "+rule1")' para eliminar
 la primera regla sobre `"+"', o `disprule ("*rule2")' para mostrar la
 definición de la segunda regla multiplicativa.
 
-71.2.5 Paquete rducon
+75.2.5 Paquete rducon
 ---------------------
 
  -- Función: reduce_consts (<expr>)
@@ -438,7 +1223,7 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (rducon)' carga esta función y `demo (rducon)'
      hace una demostración sobre su uso.
 
-71.2.6 Paquete scifac
+75.2.6 Paquete scifac
 ---------------------
 
  -- Función: gcfac (<expr>)
@@ -466,7 +1251,7 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (scifac)' carga esta función y `demo (scifac)'
      hace una demostración sobre su uso.
 
-71.2.7 Paquete sqdnst
+75.2.7 Paquete sqdnst
 ---------------------
 
  -- Función: sqrtdenest (<expr>)
@@ -498,7 +1283,7 @@ definición de la segunda regla multiplicativa.
 
 File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: Top
 
-72 solve_rec
+76 solve_rec
 ************
 
 * Menu:
@@ -509,7 +1294,7 @@ File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: T
 
 File: maxima.info,  Node: Introducción a solve_rec,  Next: Funciones y variables para solve_rec,  Prev: solve_rec,  Up: solve_rec
 
-72.1 Introducción a solve_rec
+76.1 Introducción a solve_rec
 =============================
 
 El paquete `solve_rec' resuelve expresiones recurrentes lineales con
@@ -531,7 +1316,7 @@ utilización de este paquete.
 
 File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducción a solve_rec,  Up: solve_rec
 
-72.2 Funciones y variables para solve_rec
+76.2 Funciones y variables para solve_rec
 =========================================
 
  -- Función: reduce_order (<rec>, <sol>, <var>)
@@ -601,20 +1386,18 @@ File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducc
      Ejemplo:
 
           (%i1) load("simplify_sum")$
-          (%i2) sum(binom(n+k,k)/2^k, k, 0, n) +
-                    sum(binom(2*n, 2*k), k, 0, n);
-                   n                            n
-                  ====                         ====
-                  \      binomial(n + k, k)    \
-          (%o2)    >     ------------------ +   >    binomial(2 n, 2 k)
-                  /               k            /
-                  ====           2             ====
-                  k = 0                        k = 0
+          (%i2) sum(binomial(n+k,k)/2^k,k,1,n)+sum(binomial(2*n,2*k),k,1,n);
+                  n                          n
+                 ====                       ====
+                 \     binomial(n + k, k)   \
+          (%o2)   >    ------------------ +  >    binomial(2 n, 2 k)
+                 /              k           /
+                 ====          2            ====
+                 k = 1                      k = 1
           (%i3) simplify_sum(%);
-                                         n
-                                        4     n
-          (%o3)                         -- + 2
-                                        2
+
+                                   2 n - 1    n
+          (%o3)                   2        + 2  - 2
 
 
  -- Función: solve_rec (<eqn>, <var>, [<init>])
@@ -768,7 +1551,7 @@ File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducc
 
 File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
-73 stats
+77 stats
 ********
 
 * Menu:
@@ -781,7 +1564,7 @@ File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
 File: maxima.info,  Node: Introducción a stats,  Next: Funciones y variables para inference_result,  Prev: Top,  Up: Top
 
-73.1 Introducción a stats
+77.1 Introducción a stats
 =========================
 
 El paquete `stats' contiene procedimientos clásicos sobre inferencia
@@ -811,7 +1594,7 @@ paquete `numericalio' para leer datos de ficheros en texto plano. Véanse
 
 File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Funciones y variables para stats,  Prev: Introducción a stats,  Up: Top
 
-73.2 Funciones y variables para inference_result
+77.2 Funciones y variables para inference_result
 ================================================
 
  -- Función: inference_result (<title>, <values>, <numbers>)
@@ -927,7 +1710,7 @@ File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Fu
 
 File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para inference_result,  Up: Top
 
-73.3 Funciones y variables para stats
+77.3 Funciones y variables para stats
 =====================================
 
  -- Variable opcional: stats_numer
@@ -1877,7 +2660,7 @@ File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y v
 
 File: maxima.info,  Node: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para stats,  Up: Top
 
-73.4 Funciones y variables para distribuciones especiales
+77.4 Funciones y variables para distribuciones especiales
 =========================================================
 
  -- Función: pdf_signed_rank (<x>, <n>)
@@ -1911,7 +2694,7 @@ File: maxima.info,  Node: Funciones y variables para distribuciones especiales, 
 
 File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
-74 stirling
+78 stirling
 ***********
 
 * Menu:
@@ -1921,7 +2704,7 @@ File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling,  Up: stirling
 
-74.1 Funciones y variables para stirling
+78.1 Funciones y variables para stirling
 ========================================
 
  -- Función: stirling (<z>,<n>)
@@ -1983,7 +2766,7 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
 
 File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
-75 stringproc
+79 stringproc
 *************
 
 * Menu:
@@ -1996,7 +2779,7 @@ File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
 File: maxima.info,  Node: Introducción al procesamiento de cadenas,  Next: Funciones y variables para entrada y salida,  Prev: stringproc,  Up: stringproc
 
-75.1 Introducción al procesamiento de cadenas
+79.1 Introducción al procesamiento de cadenas
 =============================================
 
 El paquete `stringproc' amplía las capacidades de Maxima para manipular
@@ -2103,7 +2886,7 @@ del fichero.
 
 File: maxima.info,  Node: Funciones y variables para entrada y salida,  Next: Funciones y variables para caracteres,  Prev: Introducción al procesamiento de cadenas,  Up: stringproc
 
-75.2 Funciones y variables para entrada y salida
+79.2 Funciones y variables para entrada y salida
 ================================================
 
 Ejemplo:
@@ -2252,7 +3035,7 @@ Ejemplo:
 
 File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funciones y variables para cadenas,  Prev: Funciones y variables para entrada y salida,  Up: stringproc
 
-75.3 Funciones y variables para caracteres
+79.3 Funciones y variables para caracteres
 ==========================================
 
  -- Función: alphacharp (<char>)
@@ -2343,7 +3126,7 @@ File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funcione
 
 File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y variables para caracteres,  Up: stringproc
 
-75.4 Funciones y variables para cadenas
+79.4 Funciones y variables para cadenas
 =======================================
 
  -- Función: stringp (<obj>)
@@ -2671,7 +3454,7 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
 
 File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
 
-76 unit
+80 unit
 *******
 
 * Menu:
@@ -2682,7 +3465,7 @@ File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
 
 File: maxima.info,  Node: Introducción a units,  Next: Funciones y variables para units,  Prev: unit,  Up: unit
 
-76.1 Introducción a units
+80.1 Introducción a units
 =========================
 
 El paquete `unit' permite al usuario hacer cambios de unidades y llevar
@@ -2750,7 +3533,7 @@ Dodier.
 
 File: maxima.info,  Node: Funciones y variables para units,  Prev: Introducción a units,  Up: unit
 
-76.2 Funciones y variables para units
+80.2 Funciones y variables para units
 =====================================
 
  -- Función: setunits (<list>)
@@ -3177,7 +3960,7 @@ File: maxima.info,  Node: Funciones y variables para units,  Prev: Introducción
 
 File: maxima.info,  Node: zeilberger,  Next: Índice de Funciones y Variables,  Prev: unit,  Up: Top
 
-77 zeilberger
+81 zeilberger
 *************
 
 * Menu:
@@ -3188,7 +3971,7 @@ File: maxima.info,  Node: zeilberger,  Next: Índice de Funciones y Variables,  
 
 File: maxima.info,  Node: Introducción a zeilberger,  Next: Funciones y variables para zeilberger,  Prev: zeilberger,  Up: zeilberger
 
-77.1 Introducción a zeilberger
+81.1 Introducción a zeilberger
 ==============================
 
 El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
@@ -3201,7 +3984,7 @@ por filtrado desarrollado por Axel Riese.
    Antes de hacer uso de las funciones aquí definidas, ejecútese la
 sentencia `load (zeilberger)'.
 
-77.1.0.1 El problema de la suma indefinida
+81.1.0.1 El problema de la suma indefinida
 ..........................................
 
 El paquete `zeilberger' implementa el algoritmo de Gosper para la suma
@@ -3211,7 +3994,7 @@ hipergeométrica, esto es, el término hipergeométrico tal que
 
    F_k = f_(k+1) - f_k.
 
-77.1.0.2 El problema de la suma definida
+81.1.0.2 El problema de la suma definida
 ........................................
 
 El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
@@ -3226,7 +4009,7 @@ que
    donde Delta_k es el k-ésimo operador diferencia hacia adelante, esto
 es, Delta_k(t_k) := t_(k+1) - t_k.
 
-77.1.1 Niveles de información
+81.1.1 Niveles de información
 -----------------------------
 
 Hay versiones extendidas de los nombres de las instrucciones, que se
@@ -3251,7 +4034,7 @@ construyen añadiendo uno de los siguientes prefijos:
 
 File: maxima.info,  Node: Funciones y variables para zeilberger,  Prev: Introducción a zeilberger,  Up: zeilberger
 
-77.2 Funciones y variables para zeilberger
+81.2 Funciones y variables para zeilberger
 ==========================================
 
  -- Función: AntiDifference (<F_k>, <k>)

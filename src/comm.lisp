@@ -353,7 +353,10 @@
 		     (cons (cons (cadr l) (meval (caddr l)))
 			   (mget z '$atomgrad))
 		     '$atomgrad)
-	   (i-$dependencies (cons (list (ncons z) (cadr l)) nil))
+	   (i-$dependencies (cons (cons (ncons z)
+	                                ;; Append existing dependencies
+	                                (cons (cadr l) (mget z 'depends)))
+	                          nil))
 	   (add2lnc z $props)
 	   z)
 	  ((or (mopp1 (caar z)) (member 'array (cdar z) :test #'eq))
@@ -439,11 +442,14 @@
   (let (y)
     (and (atom e) (setq y (mget e '$atomgrad)) (assolike x y))))
 
-(defun depends (e x)
+(defun depends (e x &aux l)
   (setq e (specrepcheck e))
   (cond ((alike1 e x) t)
         ((mnump e) nil)
-        ((and (symbolp e) (member x (mget e 'depends))) t)
+        ((and (symbolp e) (setq l (mget e 'depends)))
+         ;; Go recursively through the list of dependencies.
+         ;; This code detects indirect dependencies like a(x) and x(t).
+         (dependsl l x))
         ((atom e) nil)
         (t (or (depends (caar e) x)
                (dependsl (cdr e) x)))))

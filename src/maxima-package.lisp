@@ -90,7 +90,12 @@
        #:random-chunk
        #:init-random-state))
 
-(defpackage bigfloat
+;; This package is for the implmentation of the BIGFLOAT routines that
+;; make working with Maxima's bfloat objects somewhat easier by
+;; extending the standard CL numeric functions to work with BIGFLOAT
+;; and COMPLEX-BIGFLOAT objects.  See src/numeric.lisp for the
+;; implementation.
+(defpackage bigfloat-impl
   (:use :cl)
   #+gcl
   (:shadowing-import-from #:system #:define-compiler-macro)
@@ -159,6 +164,8 @@
 	   #:rationalize
 	   #:coerce
 	   )
+  ;; If any of these exported symbols are updated, update the
+  ;; shadowing-import-from list for BIGFLOAT-USER too!
   
   ;; Export types
   (:export #:bigfloat
@@ -166,6 +173,7 @@
   ;; Export functions
   (:export #:bigfloat
 	   #:to
+	   #:maybe-to
 	   #:epsilon
 	   #:%pi
 	   ;; CL equivalents
@@ -201,9 +209,10 @@
 	   #:>
 	   #:<=
 	   #:>=
-	   #:complex
+	   #:scale-float
 	   #:realpart
 	   #:imagpart
+	   #:complex
 	   #:conjugate
 	   #:max
 	   #:min
@@ -233,6 +242,104 @@
 	   #:rationalize
 	   #:coerce
 	   ))
+
+;; BIGFLOAT is the package intended to be used for applications
+;; using the routines from the BIGFLOAT-IMPL.
+(defpackage bigfloat
+  (:use :cl :bigfloat-impl)
+  #+gcl
+  (:shadowing-import-from #:system #:define-compiler-macro)
+  ;; This list should match the SHADOWING-IMPORT-FROM list in
+  ;; BIGFLOAT-IMPL.
+  (:shadowing-import-from #:bigfloat-impl
+			  #:+
+			  #:-
+			  #:*
+			  #:/
+			  #:1+
+			  #:1-
+			  #:zerop
+			  #:plusp
+			  #:minusp
+			  #:abs
+			  #:sqrt
+			  #:log
+			  #:exp
+			  #:sin
+			  #:cos
+			  #:tan
+			  #:asin
+			  #:acos
+			  #:atan
+			  #:sinh
+			  #:cosh
+			  #:tanh
+			  #:asinh
+			  #:acosh
+			  #:atanh
+			  #:expt
+			  #:=
+			  #:/=
+			  #:<
+			  #:>
+			  #:<=
+			  #:>=
+			  #:scale-float
+			  #:realpart
+			  #:imagpart
+			  #:complex
+			  #:conjugate
+			  #:max
+			  #:min
+			  #:cis
+			  #:phase
+			  #:floor
+			  #:ffloor
+			  #:incf
+			  #:decf
+			  #:realp
+			  #:complexp
+			  #:numberp
+			  #:integer-decode-float
+			  #:decode-float
+			  #:float
+			  #:ceiling
+			  #:fceiling
+			  #:truncate
+			  #:ftruncate
+			  #:round
+			  #:fround
+			  #:random
+			  #:signum
+			  #:float-sign
+			  #:float-digits
+			  #:rational
+			  #:rationalize
+			  #:coerce
+			  ))
+
+;; Export all the external symbols in BIGFLOAT-IMPL from BIGFLOAT too.
+(do-external-symbols (s '#:bigfloat-impl)
+  (export s '#:bigfloat))
+
+;; For CMUCL, we lock the bigfloat-impl package so we don't
+;; accidentally modify the implementation.
+#+cmu
+(defun lock-maxima-packages ()
+  (let ((package-names '(#:bigfloat-impl)))
+    (dolist (p package-names)
+      (let ((p (find-package p)))
+	(when p
+          (setf (package-definition-lock p) t)
+          (setf (package-lock p) t)))))
+  (values))
+
+
+#+cmu
+(progn
+  (lock-maxima-packages)
+  (pushnew 'lock-maxima-packages ext:*after-save-initializations*))
+
 
 (defpackage :intl
   (:use :common-lisp)

@@ -130,6 +130,7 @@
 		      *updn ul ll exp pe* pl* rl* pl*1 rl*1
 		      loopstop* var nn* nd* dn* p*
 		      ind* factors rlm*
+		      $trigexpandplus $trigexpandtimes
 		      plogabs *scflag*
 		      *sin-cos-recur* *rad-poly-recur* *dintlog-recur*
 		      *dintexp-recur* defintdebug *defint-assumptions*
@@ -191,6 +192,7 @@ in the interval of integration.")
 		 (orig-ll ll)  (orig-ul ul)
 		 (pcprntd nil)  (*nodiverg nil)  ($logabs t)  ; (limitp t)
 		 (rp-polylogp ())
+                 ($%edispflag nil) ; to get internal representation
 		 ($domain '$real) ($m1pbranch ())) ;Try this out.
 
 	     (make-global-assumptions) ;sets *global-defint-assumptions*
@@ -212,7 +214,14 @@ in the interval of integration.")
 		    (merror (intl:gettext "defint: lower limit of integration must be real; found ~M") ll))
 		   ((not (equal (sratsimp ($imagpart ul)) 0))
 		    (merror (intl:gettext "defint: upper limit of integration must be real; found ~M") ul)))
-
+	     ;; Distribute $defint over equations, lists, and matrices.
+	     (cond ((mbagp exp)
+	            (return-from $defint
+	              (simplify
+	                (cons (car exp)
+	                      (mapcar #'(lambda (e)
+	                                  (simplify ($defint e var ll ul)))
+	                              (cdr exp)))))))
 	     (cond ((setq ans (defint exp var ll ul))
 		    (setq ans (subst orig-var var ans))
 		    (cond ((atom ans)  ans)
@@ -344,7 +353,7 @@ in the interval of integration.")
 		      d
 		    (let ((root (power* (div (sub 'yx a) b) (inv n))))
 		      (cond (t
-			     (setq d (subst var 'yx root))
+			     (setq d root)
 			     (cond (flag (intcv2 d ind nv))
 				   (t (intcv1 d ind nv))))
 			    ))))
@@ -352,17 +361,23 @@ in the interval of integration.")
 		  (putprop 'yx t 'internal);; keep var from appearing in questions to user
 		  (solve (m+t 'yx (m*t -1 nv)) var 1.)
 		  (cond (*roots
-			 (setq d (subst var 'yx (caddar *roots)))
+			 (setq d (caddar *roots))
 			 (cond (flag (intcv2 d ind nv))
 			       (t (intcv1 d ind nv))))
 			(t ()))))))))
 
+;; d: original variable (var) as a function of 'yx
+;; ind: boolean flag
+;; nv: new variable ('yx) as a function of original variable (var)
 (defun intcv1 (d ind nv)
   (cond ((and (intcv2 d ind nv)
+	      (equal ($imagpart *ll1*) 0)
+	      (equal ($imagpart *ul1*) 0)
 	      (not (alike1 *ll1* *ul1*)))
 	 (let ((*def2* t))
-	   (defint exp1 var *ll1* *ul1*)))))
+	   (defint exp1 'yx *ll1* *ul1*)))))
 
+;; converts limits of integration to values for new variable 'yx
 (defun intcv2 (d ind nv)
   (intcv3 d ind nv)
   (and (cond ((and (zerop1 (m+ ll ul))
@@ -382,13 +397,18 @@ in the interval of integration.")
 		    (among '$und ans)))
 	   ans))))
 
+;; rewrites exp, the integrand in terms of var,
+;; into exp1, the integrand in terms of 'yx.
 (defun intcv3 (d ind nv)
-  (setq nn* (sratsimp (sdiff d var)))
-  (setq exp1 (subst 'yx nv exp))
-  (setq exp1 (m* nn* (cond (ind exp)
-			   (t (subst d var exp1)))))
-  (setq exp1 (sratsimp (subst var 'yx exp1))))
+  (setq exp1 (m* (sdiff d 'yx)
+		 (cond (ind (subst 'yx var exp))
+		       (t (subst d var (subst 'yx nv exp))))))
+  (setq exp1 (sratsimp exp1)))
 
+(defun integrand-changevar (d newvar exp var)
+  (m* (sdiff d newvar)
+      (subst d var exp)))
+  
 (defun defint (exp var ll ul)
   (let ((old-assumptions *defint-assumptions*)  
         (*current-assumptions* ())
@@ -528,7 +548,10 @@ in the interval of integration.")
 		(setq arg (%einvolve exp))
 		(dintexp exp var)))
 	  ((and (not (ratp exp var))
-		(setq ans ($expand exp))
+		(setq ans (let (($trigexpandtimes nil)
+				($trigexpandplus t))
+			    ($trigexpand exp)))
+		(setq ans ($expand ans))
 		(not (alike1 ans exp))
 		(intbyterm ans t)))
 	  ((setq ans (antideriv exp))
@@ -628,9 +651,9 @@ in the interval of integration.")
       ;; See Bugs 938235 and 941457.  These fail because $FACTOR is
       ;; unable to factor the transformed result.  This needs more
       ;; work (in other places).
-      (let ((trans (intcv3 (m// (m+t 'll (m*t 'ul var))
-				(m+t 1. var))
-			   nil 'yx)))
+      (let ((trans (integrand-changevar (m// (m+t 'll (m*t 'ul 'yx))
+					     (m+t 1. 'yx))
+					'yx exp var)))
 	;; If the limit is a number, use $substitute so we simplify
 	;; the result.  Do we really want to do this?
 	(setf trans (if (mnump ll)
@@ -639,7 +662,7 @@ in the interval of integration.")
 	(setf trans (if (mnump ul)
 			($substitute ul 'ul trans)
 			(subst ul 'ul trans)))
-	(method-by-limits trans var 0. '$inf))
+	(method-by-limits trans 'yx 0. '$inf))
       ()))
 
 ;; Integrate rational functions over a finite interval by doing the
@@ -854,15 +877,11 @@ in the interval of integration.")
 			    (trisplit e))
 			   (t (cons e 0))))
 	     (cond ((not (equal (sratsimp ipart) 0))
-		    (let ((rans (cond ((limit-subs rpart a b))
-				      (t (m-
-					  `((%limit) ,rpart ,var ,b $minus)
-					  `((%limit) ,rpart ,var ,a $plus)))))
-			  (ians (cond ((limit-subs ipart a b))
-				      (t (m-
-					  `((%limit) ,ipart ,var ,b $minus)
-					  `((%limit) ,ipart ,var ,a $plus))))))
-		      (m+ rans (m* '$%i ians))))
+		    (let ((rans (or (limit-subs rpart a b)
+				    (same-sheet-subs rpart a b)))
+			  (ians (limit-subs ipart a b)))
+		      (if (and rans ians)
+			  (m+ rans (m* '$%i ians)))))
 		   (t (setq rpart (sratsimp rpart))
 		      (cond ((limit-subs rpart a b))
 			    (t (same-sheet-subs rpart a b)))))))))
@@ -874,12 +893,18 @@ in the interval of integration.")
 	 nil)
 	(t
 	 (cond ((or (polyinx e var ())
-		    (and (not (involve e '(%log %asin %acos %atan %asinh %acosh %atanh %atan2)))
+		    (and (not (involve e '(%log %asin %acos %atan %asinh %acosh %atanh %atan2
+						%gamma_incomplete %expintegral_ei)))
 			 (free ($denom e) var)))
 		;; It's easy if we have a polynomial.  I (rtoy) think
 		;; it's also easy if the denominator is free of the
 		;; integration variable and also if the expression
 		;; doesn't involve inverse functions.
+		;;
+		;; gamma_incomplete and expintegral_ie
+		;; included because of discontinuity in
+		;; gamma_incomplete(0, exp(%i*x)) and 
+		;; expintegral_ei(exp(%i*x))
 		;;
 		;; XXX:  Are there other cases we've forgotten about?
 		;;
@@ -897,7 +922,8 @@ in the interval of integration.")
 	       (t nil)))))
 
 (defun limit-subs (e ll ul)
-  (cond ((not (free e '%atan))  ())
+  (cond ((involve e '(%atan %gamma_incomplete %expintegral_ei))
+	 ())	; functions with discontinuities
 	(t (setq e ($multthru e))
 	   (let ((a1 ($limit e var ll '$plus))
 		 (a2 ($limit e var ul '$minus)))
@@ -2026,20 +2052,8 @@ in the interval of integration.")
 
 (defun sin-cos-intsubs1 (exp)
   (let* ((rat-exp ($rat exp))
-	 (num (pdis (cadr rat-exp)))
 	 (denom (pdis (cddr rat-exp))))
-    (cond ((not (equal (intsubs num ll ul) 0.))
-	   (intsubs exp ll ul))
-	  ;; Why do we want to return zero when the denom is not zero?
-	  ;; That doesn't seem to make sense to me (rtoy).  Checking
-	  ;; for a zero denominator makes sense, but what we should
-	  ;; return in that case?  0 seems like a bad choice.  $inf or
-	  ;; $undefined seem like better choices.  Or maybe just
-	  ;; signaling an error?
-	  #+nil
-	  ((not (equal ($asksign denom) '$zero))
-	   0)
-	  ((equal ($csign denom) '$zero)
+    (cond ((equal ($csign denom) '$zero)
 	   '$undefined)
 	  (t (intsubs exp ll ul)))))
 
@@ -2347,8 +2361,8 @@ in the interval of integration.")
        (cond ((eq arg var)
 	      (cond ((ratgreaterp 1. ll)
 		     (cond ((not (eq ul '$inf))
-			    (intcv1 (m^t '$%e (m- var)) () (m- `((%log) ,var))))
-			   (t (intcv1 (m^t '$%e var) () `((%log) ,var)))))))
+			    (intcv1 (m^t '$%e (m- 'yx)) () (m- `((%log) ,var))))
+			   (t (intcv1 (m^t '$%e 'yx) () `((%log) ,var)))))))
 	     (t (intcv arg nil nil)))))))
 
 
@@ -3651,7 +3665,7 @@ in the interval of integration.")
                                (list '(mequal)
                                      var1
                                      (div (add w 1) s))))))
-             ((and (not (eq ($sign ll) '$neg))
+             ((and (member ($sign ll) '($pos $pz))
                    (integerp m)
                    (or (= m 0) (= m 1))	; Exclude m>1, because Maxima can not
                                         ; derivate the involved hypergeometric

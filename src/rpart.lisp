@@ -28,6 +28,8 @@
 
 (defmvar generate-atan2 t "Controls whether RPART will generate ATAN's
 			or ATAN2's, default is to make ATAN2's")
+;; generate-atan2 is set to nil when doing integration to avoid
+;; generating discontinuities that defint can't handle.
 
 ;;; Realpart gives the real part of an expr.
 
@@ -154,7 +156,7 @@
 ;; Some objects can only appear at the top level of a legal simplified
 ;; expression: CRE forms and equations in particular.
 
-(defmfun trisplit (el)			;Top level of risplit
+(defun trisplit (el) ; Top level of risplit
   (cond ((atom el) (risplit el))
 	((specrepp el) (trisplit (specdisrep el)))
 	((eq (caar el) 'mequal) (dot-sp-ri (cdr el) '(mequal simp)))
@@ -419,8 +421,11 @@
 	  ((and (member (caar l) '(%atan %csc %sec %cot %csch %sech %coth) :test #'eq)
 		(=0 (cdr (risplit (cadr l)))))
 	   (cons l 0))
-	  ((and (eq (caar l) '$atan2) (=0 (cdr (risplit (div (cadr l) (caddr l))))))
-	   (cons l 0))
+          ((and (eq (caar l) '$atan2)
+                (not (zerop1 (caddr l)))
+                (=0 (cdr (risplit (div (cadr l) (caddr l))))))
+           ;; Case atan2(y,x) and y/x a real expression.
+           (cons l 0))
 	  ((or (arcp (caar l)) (eq (caar l) '$atan2))
 	   (let ((ans (risplit (let (($logarc t))
 				 (resimplify l)))))
@@ -679,14 +684,29 @@
 	   (unless n
 	     (return (cons (muln absl t) (2pistrip (addn argl t)))))
 	   (setq abars (absarg (car n) absflag))))
-	((eq (caar l) 'mexpt)
-	 (let ((aa (absarg (cadr l) nil)) ; we always need arg of base of exponent
-	       (sp (risplit (caddr l)))
-	       ($radexpand nil))
-	   (cons (mul (powers (car aa) (car sp))
-		      (powers '$%e (neg (mul (cdr aa) (cdr sp)))))
-		 (add (mul (cdr aa) (car sp))
-		      (mul (cdr sp) (take '(%log) (car aa)))))))
+        ((eq (caar l) 'mexpt)
+         ;; An expression z^a
+         (let ((aa (absarg (cadr l) nil)) ; (abs(z) . arg(z))
+               (sp (risplit (caddr l)))   ; (realpart(a) . imagpart(a))
+               ($radexpand nil))
+           (cond ((and (zerop1 (cdr sp))
+                       (eq ($sign (sub 1 (take '(mabs) (car sp)))) '$pos))
+                  ;; Special case: a is real and abs(a) < 1.
+                  ;; This simplifies e.g. carg(sqrt(z)) -> carg(z)/2
+                  (cons (mul (power (car aa) (car sp))
+                             (power '$%e (neg (mul (cdr aa) (cdr sp)))))
+                        (mul (caddr l) (cdr aa))))
+                 (t
+                  ;; General case for z and a
+                  (let ((arg (add (mul (cdr sp) (take '(%log) (car aa)))
+                                  (mul (cdr aa) (car sp)))))
+                    (cons (mul (power (car aa) (car sp))
+                               (power '$%e (neg (mul (cdr aa) (cdr sp)))))
+                          (if generate-atan2
+			      (take '($atan2)
+				    (take '(%sin) arg)
+				    (take '(%cos) arg))
+			    (take '(%atan) (take '(%tan) arg)))))))))
 	((and (member (caar l) '(%tan %tanh) :test #'eq)
 	      (not (=0 (cdr (risplit (cadr l))))))
 	 (let* ((sp (risplit (cadr l)))
@@ -722,9 +742,11 @@
 
 (defun genatan (num den)
   (let ((arg (take '($atan2) num den)))
-    (if (or generate-atan2 (free arg '$atan2))
-	arg
-	(take '(%atan) (m// num den)))))
+    (if (or generate-atan2
+            (zerop1 den)
+            (free arg '$atan2))
+        arg
+        (take '(%atan) (div num den)))))
 
 (defun absarg-mabs (l)
   (cond ((eq (csign l) t)

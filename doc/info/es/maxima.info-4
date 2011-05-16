@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1167,9 +1167,9 @@ referencia `ifb' si la variable `iframe_bracket_form' vale `false':
 
 
  -- Variable: ifc2
-     Coeficiente del sistema de referencia de primera especie. Este
+     Coeficiente del sistema de referencia de segunda especie. Este
      tensor representa la contribución de la métrica del sistema de
-     referencia al coeficiente de conexión de primera especie, definido
+     referencia al coeficiente de conexión de segunda especie, definido
      como
 
 
@@ -2271,8 +2271,8 @@ fichero `share/tensor/petrov.dem'.
 
  -- Función: psi (<dis>)
      Calcula los cinco coeficientes de Newman-Penrose
-     `psi[0]'...`psi[4]'. Si `psi' vale `true', se muestran estos
-     coeficientes. Véase `petrov' para un ejemplo.
+     `psi[0]'...`psi[4]'.  Si `dis' vale `true', se muestran estos
+     coeficientes.  Véase `petrov' para un ejemplo.
 
      Estos coeficientes se calculan a partir del tensor de Weyl.
 
@@ -4149,17 +4149,25 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev: T
           (%o5)                    binomial(11, y)
 
  -- Función: burn (<n>)
-     Devuelve el <n>-ésimo número de Bernoulli del entero <n>. La
-     función `burn' puede ser más eficiente que `bern' para <n> grande
-     (mayor que 105, por ejemplo), pues `bern' calcula todos los
-     números de Bernoulli hasta <n> antes de devolver el resultado.
+     Siendo <n> entero, Devuelve un número racional que aproxima el
+     <n>-ésimo número de Bernoulli. La función `burn' aprovecha el
+     hecho de que los números de Bernoulli racionales se pueden
+     aproximar con notable precisión gracias a
 
-     La función `burn' se beneficia del hecho de que los números
-     racionales de Bernoulli pueden aproximarse por funciones zeta con
-     una eficiencia aceptable.
+                             n - 1  1 - 2 n
+                        (- 1)      2        zeta(2 n) (2 n)!
+               B(2 n) = ------------------------------------
+                                          2 n
+                                       %pi
 
-     Es necesario cargar en memoria esta función haciendo `load
-     ("bffac")'.
+     La función `burn' puede ser más eficiente que `bern' cuando <n> es
+     un número grande, ya que `bern' calcula todos los números de
+     Bernoulli hasta el <n>-ésimo. Por el contrario, `burn' hace uso de
+     la aproximación para enteros pares <n> > 255. En caso de enteros
+     impares y <n> <= 255, se hace uso de la función `bern'.
+
+     Para utilizar esta función hay que cargarla antes en memoria
+     escribiendo `load ("bffac")'. Véase también `bern'.
 
 
  -- Función: cf (<expr>)
@@ -6162,6 +6170,8 @@ File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones, 
      de <átomo>; <indicador> puede ser el nombre de cualquier propiedad
      y no solamente de aquellas definidas por el sistema.
 
+     `rem' deshace la asignación realizada por `put'.
+
      La función `put' evalúa sus argumentos y devuelve <valor>.
 
      Ejemplos:
@@ -6205,7 +6215,12 @@ File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones, 
 
 
  -- Función: rem (<átomo>, <indicador>)
-     Elimina del <átomo> la propiedad indicada por <indicador>.
+     Elimina del <átomo> la propiedad indicada por <indicador>.  `rem'
+     deshace la asignación realizada por `put'.
+
+     `rem' devuelve `done' si <átomo> tenía la propiedad <indicador>
+     cuando `rem' fue invocado, devolviendo `false' si carecía tal
+     propiedad.
 
 
  -- Función: remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
@@ -6226,8 +6241,8 @@ File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones, 
      los átomos que la tengan.
 
      Las propiedades eliminadas pueden ser de las que define el
-     sistema, como `function', `macro' o `mode_declare', o de las que
-     define el usuario.
+     sistema, como `function', `macro' o `mode_declare'; `remove' no
+     elimina las propiedades definidas por `put'.
 
      La llamada `remove ("<a>", operator)' o su equivalente `remove
      ("<a>", op)' elimina de  <a> las propiedades de operador
@@ -6267,7 +6282,7 @@ File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones, 
      Antes de utilizar esta función ejecútese `load(rncomb)'.
 
  -- Función: scalarp (<expr>)
-     Devuelve `true' si <expr> is un número, constante  o variable
+     Devuelve `true' si <expr> es un número, constante  o variable
      declarada como `scalar' con `declare', o compuesta completamente
      de tales números, constantes o variables, pero que no contengan
      matrices ni listas.

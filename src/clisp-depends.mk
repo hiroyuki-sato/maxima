@@ -19,7 +19,6 @@ binary-clisp/maxima.mem : maxmac.lisp
 binary-clisp/maxima.mem : mopers.lisp
 binary-clisp/maxima.mem : mforma.lisp
 binary-clisp/maxima.mem : mrgmac.lisp
-binary-clisp/maxima.mem : procs.lisp
 binary-clisp/maxima.mem : rzmac.lisp
 binary-clisp/maxima.mem : strmac.lisp
 binary-clisp/maxima.mem : displm.lisp
@@ -29,7 +28,6 @@ binary-clisp/maxima.mem : opers.lisp
 binary-clisp/maxima.mem : utils.lisp
 binary-clisp/maxima.mem : sumcon.lisp
 binary-clisp/maxima.mem : sublis.lisp
-binary-clisp/maxima.mem : runtim.lisp
 binary-clisp/maxima.mem : merror.lisp
 binary-clisp/maxima.mem : mformt.lisp
 binary-clisp/maxima.mem : mutils.lisp
@@ -294,5 +292,6 @@ binary-clisp/maxima.mem : gnuplot_def.lisp
 binary-clisp/maxima.mem : xmaxima_def.lisp
 binary-clisp/maxima.mem : autol.lisp
 binary-clisp/maxima.mem : max_ext.lisp
+binary-clisp/maxima.mem : share-subdirs.lisp
 binary-clisp/maxima.mem : init-cl.lisp
 

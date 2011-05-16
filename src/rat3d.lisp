@@ -100,11 +100,6 @@
 	    (t (cond ((< (car v2) (car v1))
 		      (rplaca v1 (car v2)))))))))
 
-(defun nzeros (n l)
-  (do ((j n (1- j))
-       (l l (cons 0 l)))
-      ((= 0 j) l)))
-
 (defun quick-sqfr-check (p var)
   (let ((gv (delete var (listovars p) :test #'equal))
 	(modulus (or modulus *alpha))
@@ -255,16 +250,16 @@
 (defun iroot (a n)   ; computes a^(1/n)  see Fitch, SIGSAM Bull Nov 74
   (cond ((< (integer-length a) n) (list 1 (1- a)))
 	(t				;assumes integer a>0 n>=2
-	 (do ((x (expt 2 (1+ (quotient (integer-length a) n)))
-		 (- x (quotient (+ n1 bk) n)))
+	 (do ((x (expt 2 (1+ (truncate (integer-length a) n)))
+		 (- x (truncate (+ n1 bk) n)))
 	      (n1 (1- n)) (xn) (bk))
 	     (nil)
-	   (cond ((signp le (setq bk (- x (*quo a (setq xn (expt x n1))))))
+	   (cond ((signp le (setq bk (- x (truncate a (setq xn (expt x n1))))))
 		  (return (list x (- a (* x xn))))))))))
 
 (defmfun $nthroot(p n)
   (cond ((setq n (pnthrootp (cadr ($rat p)) n)) (pdis n))
-	(t (merror "Not an nth power"))))
+	(t (merror (intl:gettext "nthroot: ~M is not a ~M-th power") p n))))
 
 (defun pnthrootp (p n)
   (let ((errrjfflag t))

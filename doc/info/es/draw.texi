@@ -1,4 +1,4 @@
-@c version 1.51
+@c version 1.58
 @menu
 * Introducci@'on a draw::
 * Funciones y variables para draw::
@@ -22,9 +22,9 @@ Tres son las funciones principales a utilizar a nivel de Maxima:
 S@'{@dotless{i}}gase este enlace para ver ejemplos m@'as elaborados
 de este paquete:
 
-@url{http://www.telefonica.net/web2/biomates/maxima/gpdraw}
+@url{http://riotorto.users.sourceforge.net/gnuplot}
 
-Se necesita tener instalado Gnuplot 4.2 para ejecutar este paquete.
+Se necesita tener instalado Gnuplot 4.2 o superior para ejecutar este paquete.
 
 
 
@@ -97,8 +97,7 @@ Representa gr@'aficamente una serie de escenas; sus argumentos son objetos
 Por defecto, las escenas se representan en una columna.
 
 La funci@'on @code{draw} acepta las siguientes opciones globales: @code{terminal},
-@code{columns}, @code{pic_width}, @code{pic_height}, @code{eps_width},
-@code{eps_height}, @code{file_name} y @code{delay}.
+@code{columns}, @code{dimensions}, @code{file_name} y @code{delay}.
 
 Las funciones @code{draw2d} y @code{draw3d} son atajos a utilizar
 cuando se quiere representar una @'unica escena en dos o tres
@@ -179,8 +178,8 @@ V@'eanse tambi@'en @code{draw} y @code{gr3d}.
 @deffn {Funci@'on} draw_file (@var{Opci@'on gr@'afica}, ..., @var{Opci@'on gr@'afica}, ...)
 
 Almacena el gr@'afico actual en un fichero. Las opciones gr@'aficas que
-acepta son: @code{terminal}, @code{pic_width}, @code{pic_height}, 
-@code{eps_width}, @code{eps_height}, @code{file_name} y @code{file_bgcolor}. 
+acepta son: @code{terminal}, @code{dimensions},
+@code{file_name} y @code{background_color}. 
 
 Ejemplo:
 
@@ -188,10 +187,9 @@ Ejemplo:
 (%i1) load(draw)$
 (%i2) /* dibujo en pantalla */
       draw(gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$
-(%i3) /* mismo dibujo en formato eps */
+(%i3) /* same plot in eps format */
       draw_file(terminal  = eps,
-                eps_width = 5,
-                eps_height = 5) $
+                dimensions = [5,5]) $
 @end example
 @end deffn
 
@@ -393,6 +391,18 @@ V@'eanse tambi@'en @code{axis_bottom},  @code{axis_left}, @code{axis_right} y @c
 
 
 
+@defvr {Opci@'on gr@'afica} background_color
+Valor por defecto: @code{white}
+
+Establece el color de fondo en los terminales @code{gif}, @code{png}, @code{jpg}
+y @code{gif}. El color de fondo por defecto es blanco.
+
+V@'ease tambi@'en @code{color}.
+@end defvr
+
+
+
+
 @defvr {Opci@'on gr@'afica} border
 Valor por defecto: @code{true}
 
@@ -485,7 +495,7 @@ See also @code{enhanced3d}, @code{colorbox} and @code{cbrange}.
 
 
 @defvr {Opci@'on gr@'afica} color
-Valor por defecto: @code{black}
+Valor por defecto: @code{blue}
 
 @code{color} especifica el color para dibujar l@'{@dotless{i}}neas,
 puntos, bordes de pol@'{@dotless{i}}gonos y etiquetas.
@@ -767,7 +777,60 @@ End of animation sequence
 La opci@'ob @code{delay} s@'olo se activa en caso de gifs animados; se ignora en
 cualquier otro caso.
 
-V@'eanse tambi@'en @code{terminal}, @code{pic_width} y @code{pic_height}.
+V@'eanse tambi@'en @code{terminal}, @code{dimensions}.
+@end defvr
+
+
+
+@defvr {Opci@'on gr@'afica} dimensions
+Valor por defecto: @code{[600,500]}
+
+Dimensiones del terminal de salida. Su valor es una lista formada
+por el ancho y el alto. El significado de estos dos n@'umeros
+depende del terminal con el que se est@'e trabajando.
+
+Con los terminales @code{gif}, @code{animated_gif}, @code{png}, @code{jpg},
+@code{svg}, @code{screen}, @code{wxt} y @code{aquaterm}, los enteros
+representan n@'umeros de puntos en cada direcci@'on. Si no son enteros
+se redondean.
+
+Con los terminales @code{eps}, @code{eps_color}, @code{pdf} y
+@code{pdfcairo}, los n@'umeros representan cent@'esimas de cm,
+lo que significa que, por defecto, las im@'agenes en estos
+formatos tienen 6 cm de ancho por 5 cm de alto.
+
+Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
+descripci@'on de la escena no reviste importancia. Tambi@'en puede
+usarse como argumento de la funci@'on @code{draw}.
+
+Ejemplos:
+
+La opci@'on @code{dimensions} aplicada a un fichero de salida y al
+lienzo wxt.
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        dimensions = [300,300],
+        terminal   = 'png,
+        explicit(x^4,x,-1,1)) $
+(%i3) draw2d(
+        dimensions = [300,300],
+        terminal   = 'wxt,
+        explicit(x^4,x,-1,1)) $
+@end example
+
+La opci@'on @code{dimensions} aplicada a una salida eps.
+En este caso queremos un fichero eps con dimensiones A4.
+
+@example
+(%i1) load(draw)$
+(%i2) A4portrait: 100*[21, 29.7]$
+(%i3) draw3d(
+        dimensions = A4portrait,
+        terminal   = 'eps,
+        explicit(x^2-y^2,x,-2,2,y,-2,2)) $
+@end example
 @end defvr
 
 
@@ -924,72 +987,19 @@ el modelo @code{[f(k), k]}, siendo @code{k} un par@'ametro de orden.
          points_joined = true,
          points(m)) $
 @end example
-
 @end defvr
 
 
 
-@defvr {Opci@'on gr@'afica} eps_height
-Valor por defecto: 8
+@defvr {Opci@'on gr@'afica} error_type
+Valor por defecto: @code{y}
 
-@code{eps_height} es la altura (medida en cm) del archivo Postscript
-generado por los terminales @code{eps} y @code{eps_color}.
+Dependiendo de su valor, el cual puede ser @code{x}, @code{y} o @code{xy},
+el objeto gr@'afico @code{errors} dibujar@'a puntos con barras de error horizontales,
+verticales, o ambas. Si @code{error_type=boxes}, se dibujar@'an cajas en lugar de cruces.
 
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw2d(terminal   = 'eps,
-             eps_width  = 3,
-             eps_height = 3,
-             explicit(x^2,x,-1,1))$
-@end example
-
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{eps_width}.
+V@'ease tambi@'en @code{errors}.
 @end defvr
-
-
-
-
-@defvr {Opci@'on gr@'afica} eps_width
-Valor por defecto: 12
-
-@code{eps_width} es el ancho (medido en cm) del archivo Postscript
-generado por los terminales @code{eps} y @code{eps_color}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw2d(terminal   = 'eps,
-             eps_width  = 3,
-             eps_height = 3,
-             explicit(x^2,x,-1,1))$
-@end example
-
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{eps_height}.
-@end defvr
-
-
-
-
-@defvr {Opci@'on gr@'afica} file_bgcolor
-Valor por defecto: @code{"xffffff"}
-
-Establece el color de fondo en los terminales @code{gif}, @code{png}, @code{jpg}
-y @code{gif}. Los colores deben definirse en c@'odigo hexadecimal @i{rgb}.
-Nombres de colores no est@'an permitidos. El color de fondo
-por defecto es blanco.
-@end defvr
-
 
 
 
@@ -1013,7 +1023,7 @@ Ejemplo:
              terminal  = 'png)$
 @end example
 
-V@'eanse tambi@'en @code{terminal}, @code{pic_width} y @code{pic_height}.
+V@'eanse tambi@'en @code{terminal}, @code{dimensions}.
 @end defvr
 
 
@@ -1193,7 +1203,7 @@ La documentaci@'on de gnuplot es una importante fuente de informaci@'on sobre te
 
 
 @defvr {Opci@'on gr@'afica} font_size
-Valor por defecto: 12
+Valor por defecto: 10
 
 Esta opci@'on permite seleccionar el tama@~no de la fuente a utilizar por el
 terminal. S@'olo se puede utilizar un tipo de fuente y tama@~no por
@@ -1703,10 +1713,14 @@ Ejemplo:
 @defvr {Opci@'on gr@'afica} palette
 Valor por defecto: @code{color}
 
-@code{palette} indica c@'omo transformar los valores reales de una
-matriz pasada al objeto @code{image} en componentes crom@'aticas.
+@code{palette} indica c@'omo transformar niveles de gris en componentes crom@'aticas.
+Trabaja conjuntamente con la opci@'on @code{enhanced3d} en gr@'aficos 3D, la cual asocia cada punto
+de una superficie con un n@'umero real o nivel de gris. Tambi@'en trabaja con im@'agenes grises.
+Con @code{palette}, estos niveles se transforman en colores.
 
-@code{palette} es un vector de longitud tres con sus componentes tomando
+Hay dos formas de definir estas transformaciones.
+
+En primer lugar, @code{palette} puede ser un vector de longitud tres con sus componentes tomando
 valores enteros en el rango desde -36 a +36; cada valor es un 
 @'{@dotless{i}}ndice para seleccionar una f@'ormula que transforma los niveles
 num@'ericos en las componentes crom@'aticas rojo, verde y azul:
@@ -1727,14 +1741,32 @@ num@'ericos en las componentes crom@'aticas rojo, verde y azul:
 @end example
 los n@'umeros negativos se interpretan como colores invertidos
 de las componentes crom@'aticas.
-
 @code{palette = gray} y @code{palette = color} son atajos para
 @code{palette = [3,3,3]} y @code{palette = [7,5,15]}, respectivamente.
+
+En segundo lugar, @code{palette} puede ser una paleta de colores definida
+por el usuario. En este caso, el formato para crear una paleta de longitud
+@code{n} es @code{palette=[color_1, color_2, ..., color_n]}, 
+donde @code{color_i} es un color correctamente definido (v@'ease la opci@'on
+@code{color}), de tal manera que @code{color_1} se asigna al valor m@'as bajo
+del nivel y @code{color_n} al m@'as alto. El resto de colores se interpolan.
 
 Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
 descripci@'on de la escena no reviste importancia.
 
 Ejemplos:
+
+Trabaja conjuntamente con la opci@'on @code{enhanced3d} en gr@'aficos 3D.
+
+@example
+(%i1) load(draw)$
+(%i2) draw3d(
+        enhanced3d = [z-x+2*y,x,y,z],
+        palette = [32, -8, 17],
+        explicit(20*exp(-x^2-y^2)-10,x,-3,3,y,-3,3))$
+@end example
+
+Tambi@'en trabaja con im@'agenes grises.
 
 @example
 (%i1) load(draw)$
@@ -1749,111 +1781,20 @@ Ejemplos:
              image(im,0,0,30,30))$
 @end example
 
-V@'ease tambi@'en @code{colorbox}.
-@end defvr
-
-
-
-@defvr {Opci@'on gr@'afica} pdf_height
-Valor por defecto: 29.7 (alto A4)
-
-Es el alto (medida en cm) del documento PDF generado por los
-terminales @code{pdf} y @code{pdfcairo}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
+@code{palette} puede ser una paleta de colores definida
+por el usuario. En este ejemplo, valores bajos de @code{x}
+se colorean en rojo y altos en amarillo.
 
 @example
 (%i1) load(draw)$
-(%i2) draw2d(terminal   = 'pdf,
-             pdf_width  = 3.0,
-             pdf_height = 3.0,
-             explicit(x^2,x,-1,1))$
+(%i2) draw3d(
+         palette = [red, blue, yellow],
+         enhanced3d = x,
+         explicit(x^2+y^2,x,-1,1,y,-1,1)) $
 @end example
 
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{pdf_width}.
+V@'ease tambi@'en @code{colorbox} y @code{enhanced3d}.
 @end defvr
-
-
-
-@defvr {Opci@'on gr@'afica} pdf_width
-Valor por defecto: 21.0 (ancho A4)
-
-Es el ancho (medida en cm) del documento PDF generado por los
-terminales @code{pdf} y @code{pdfcairo}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw2d(terminal   = 'pdf,
-             pdf_width  = 3.0,
-             pdf_height = 3.0,
-             explicit(x^2,x,-1,1))$
-@end example
-
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{pdf_height}.
-@end defvr
-
-
-
-
-@defvr {Opci@'on gr@'afica} pic_height
-Valor por defecto: 640
-
-@code{pic_height} es la altura del fichero de imagen de bits generado por
-los terminales @code{gif}, @code{png}, @code{jpg} y @code{svg}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw2d(terminal   = 'png,
-             pic_width  = 300,
-             pic_height = 300,
-             explicit(x^2,x,-1,1))$
-@end example
-
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{pic_width}.
-@end defvr
-
-
-
-
-@defvr {Opci@'on gr@'afica} pic_width
-Valor por defecto: 640
-
-@code{pic_width} es la anchura del fichero de imagen de bits generado por
-los terminales @code{gif}, @code{png}, @code{jpg} y @code{svg}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia. Tambi@'en puede
-usarse como argumento de la funci@'on @code{draw}.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw2d(terminal   = 'png,
-             pic_width  = 300,
-             pic_height = 300,
-             explicit(x^2,x,-1,1))$
-@end example
-
-V@'eanse tambi@'en @code{terminal}, @code{file_name} y @code{pic_height}.
-@end defvr
-
 
 
 
@@ -2025,59 +1966,6 @@ Multiplot.
 
 
 
-@defvr {Opci@'on gr@'afica} rot_horizontal
-Valor por defecto: 30
-
-@code{rot_horizontal} es el @'angulo (en grados) de la rotaci@'on horizontal
-(alrededor del eje @var{z}) para situar el punto del observador en las
-escenas 3d.
-
-El @'angulo debe pertenecer al intervalo @math{[0, 360]}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw3d(rot_vertical = 170,
-             rot_horizontal = 360,
-             explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
-@end example
-
-V@'ease tambi@'en @code{rot_vertical}.
-@end defvr
-
-
-
-
-@defvr {Opci@'on gr@'afica} rot_vertical
-Valor por defecto: 60
-
-@code{rot_vertical} es el @'angulo (en grados) de la rotaci@'on vertical
-(alrededor del eje @var{x}) para situar el punto del observador en las
-escenas 3d.
-
-El @'angulo debe pertenecer al intervalo @math{[0, 180]}.
-
-Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
-descripci@'on de la escena no reviste importancia.
-
-Ejemplo:
-
-@example
-(%i1) load(draw)$
-(%i2) draw3d(rot_vertical = 170,
-             explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
-@end example
-
-V@'ease tambi@'en @code{rot_horizontal}.
-@end defvr
-
-
-
-
 @defvr {Opci@'on gr@'afica} surface_hide
 Valor por defecto: @code{false}
 
@@ -2105,7 +1993,7 @@ Ejemplo:
 Valor por defecto: @code{screen}
 
 Selecciona el terminal a utilizar por Gnuplot; valores posibles son:
-@code{screen} (por defecto), @code{png}, @code{jpg}, @code{eps}, @code{eps_color},
+@code{screen} (por defecto), @code{png}, @code{pngcairo}, @code{jpg}, @code{eps}, @code{eps_color},
 @code{pdf}, @code{pdfcairo}, @code{gif}, @code{animated_gif}, @code{wxt}, @code{svg}
 y @code{aquaterm}.
 
@@ -2131,12 +2019,10 @@ Ejemplos:
       draw2d(explicit(x^2,x,-1,1))$
 (%i3) /* png file */
       draw2d(terminal  = 'png,
-             pic_width = 300,
              explicit(x^2,x,-1,1))$
 (%i4) /* jpg file */
       draw2d(terminal   = 'jpg,
-             pic_width  = 300,
-             pic_height = 300,
+             dimensions = [300,300],
              explicit(x^2,x,-1,1))$
 (%i5) /* eps file */
       draw2d(file_name = "myfile",
@@ -2144,8 +2030,7 @@ Ejemplos:
              terminal  = 'eps)$
 (%i6) /* pdf file */
       draw2d(file_name = "mypdf",
-             pdf_width = 12.0,
-             pdf_height = 8.0,
+             dimensions = 100*[12.0,8.0],
              explicit(x^2,x,-1,1),
              terminal  = 'pdf)$
 (%i7) /* wxwidgets window */
@@ -2354,13 +2239,36 @@ pero es posible activarlo haciendo uso de la opci@'on @code{user_preamble},
 
 
 
+@defvr {Opci@'on gr@'afica} view
+Valor por defecto: @code{[60,30]}
+
+Un par de @'angulos, medidos en grados, indicando la dirección del 
+observador en una escena 3D. El primer @'angulo es la rotaci@'on 
+vertical alrededor del eje @var{x}, dentro del intervalo @math{[0, 180]}.
+El segundo es la rotaci@'on horizontal alrededor del eje @var{z}, dentro
+del intervalo @math{[0, 360]}.
+
+Puesto que @'esta es una opci@'on global, su posici@'on dentro de la
+descripci@'on de la escena no reviste importancia.
+
+Ejemplo:
+
+@example
+(%i1) load(draw)$
+(%i2) draw3d(view = [170, 360],
+             explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
+@end example
+@end defvr
+
+
 
 @defvr {Opci@'on gr@'afica} x_voxel
 Valor por defecto: 10
 
 @code{x_voxel} es el n@'umero de voxels en la direcci@'on x a utilizar
 por el algoritmo @i{marching cubes} implementado por el objeto 
-@code{implicit} tridimensional.
+@code{implicit} tridimensional. Tambi@'en se utiliza como opci@'on
+del objeto gr@'afico @code{region}.
 @end defvr
 
 
@@ -2768,7 +2676,8 @@ Valor por defecto: 10
 
 @code{y_voxel} es el n@'umero de voxels en la direcci@'on y a utilizar
 por el algoritmo @i{marching cubes} implementado por el objeto 
-@code{implicit} tridimensional.
+@code{implicit} tridimensional. Tambi@'en se utiliza como opci@'on
+del objeto gr@'afico @code{region}.
 @end defvr
 
 
@@ -3428,6 +3337,51 @@ Ejemplo:
 
 
 
+@deffn  {Objeto gr@'afico} errors ([@var{x1},@var{x2},...], [@var{y1},@var{y2},...])
+Dibuja puntos con barras de error asociadas horizontales, verticales o de
+ambos tipos, seg@'un sea el valor de la opci@'on @code{error_type}.
+
+@b{2D}
+
+Si @code{error_type=x}, los argumentos a @code{errors} deben ser de la forma 
+@code{[x,y,xdelta]} o @code{[x,y,xlow,xhigh]}. Si @code{error_type=y}, 
+los argumentos deben ser del tipo @code{[x,y,ydelta]} o @code{[x,y,ylow,yhigh]}.
+Si @code{error_type=xy} o @code{error_type=boxes}, los argumentos deben ser de la
+forma @code{[x,y,xdelta,ydelta]} o @code{[x,y,xlow,xhigh,ylow,yhigh]}.
+
+V@'ease tambi@'en @code{error_type}.
+
+Este objeto se ve afectado por las siguientes @i{opciones gr@'aficas}: @code{error_type}, 
+@code{points_joined}, @code{line_width}, @code{key}, @code{line_type}, 
+@code{color}, @code{fill_density}, @code{xaxis_secondary} y @code{yaxis_secondary}.
+
+La opci@'on @code{fill_density} solo es relevante cuando @code{error_type=boxes}.
+
+Ejemplos:
+
+Barras de error horizontales.
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        error_type = y,
+        errors([[1,2,1], [3,5,3], [10,3,1], [17,6,2]]))$
+@end example
+
+Barras de error horizontales y verticales.
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        error_type = xy,
+        points_joined = true,
+        color = blue,
+        errors([[1,2,1,2], [3,5,2,1], [10,3,1,1], [17,6,1/2,2]])); 
+@end example
+
+@end deffn
+
+
 
 @deffn  {Objeto gr@'afico} explicit (@var{fcn},@var{var},@var{minval},@var{maxval})
 @deffnx {Objeto gr@'afico} explicit (@var{fcn},@var{var1},@var{minval1},@var{maxval1},@var{var2},@var{minval2},@var{maxval2})
@@ -3818,8 +3772,7 @@ Ejemplo:
 (%i2) draw3d(title          = "Sea shell",
              xu_grid        = 100,
              yv_grid        = 25,
-             rot_vertical   = 100,
-             rot_horizontal = 20,
+             view           = [100,20],
              surface_hide   = true,
              parametric_surface(0.5*u*cos(u)*(cos(v)+1),
                            0.5*u*sin(u)*(cos(v)+1),
@@ -4000,6 +3953,18 @@ Array bidimensional coloreado,
          points(xyz)) $
 @end example
 
+N@'umeros de colores especificados expl@'{@dotless{i}}citamente
+por el usuario.
+@example
+(%i1) load(draw)$
+(%i2) pts: makelist([t,t^2,cos(t)], t, 0, 15)$
+(%i3) col_num: makelist(k, k, 1, length(pts))$
+(%i4) draw3d(
+        enhanced3d = ['part(col_num,k),k],
+        point_size = 3,
+        point_type = filled_circle,
+        points(pts))$
+@end example
 @end deffn
 
 
@@ -4126,6 +4091,35 @@ Ejemplo:
              rectangle([9,4],[2,-1.5]),
              xrange      = [-3,10],
              yrange      = [-3,4.5] )$
+@end example
+@end deffn
+
+
+
+
+
+
+@deffn  {Objeto gr@'afico} region (@var{expr},@var{var1},@var{minval1},@var{maxval1},@var{var2},@var{minval2},@var{maxval2})
+Dibuja una regi@'on del plano definida por desigualdades.
+
+@b{2D}
+@var{expr} es una expresi@'on formada por desigualdades y los operadores l@'ogicos
+@code{and}, @code{or} y @code{not}. La regi@'on est@'a acotada por el rect@'angulo
+definido por @math{[@var{minval1}, @var{maxval1}]} y
+@math{[@var{minval2}, @var{maxval2}]}.
+
+Este objeto se ve afectado por las siguientes @i{opciones gr@'aficas}: @code{fill_color}, 
+@code{key}, @code{x_voxel} y @code{y_voxel}.
+
+Ejemplo:
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        x_voxel = 30,
+        y_voxel = 30,
+        region(x^2+y^2<1 and x^2+y^2 > 1/2,
+               x, -1.5, 1.5, y, -1.5, 1.5));
 @end example
 @end deffn
 

@@ -183,11 +183,14 @@ It appears in LIMIT and DEFINT.......")
 	      ;; Transform the limit value.
 	      (unless (infinityp val)
 		(unless (zerop2 val)
-		  (setq exp 
-			(let ((*atp* t))
-			  ;; *atp* prevents substitution from applying to vars 
-			  ;; bound by %sum, %product, %integrate, %limit
-			  (subin (m+ var val) exp))))
+		  (let ((*atp* t) (realvar var))
+		    ;; *atp* prevents substitution from applying to vars 
+		    ;; bound by %sum, %product, %integrate, %limit
+		    (setq var (gensym))
+		    (setq limit-assumptions (cons (assume `(($equal) ,realvar ,(m+ val var)))
+						  limit-assumptions))
+		    (setq exp (maxima-substitute (m+ val var) realvar exp))
+		    (putprop var realvar 'limitsub)))
 		(setq val (cond ((eq dr '$plus) '$zeroa)
 				((eq dr '$minus) '$zerob)
 				(t 0)))
@@ -215,7 +218,8 @@ It appears in LIMIT and DEFINT.......")
 		       (or (real-epsilonp val)		;; if direction of limit specified
 			   (real-infinityp val)))
 		  (setq ans (catch 'taylor-catch
-			      (let ((silent-taylor-flag t))
+		              (let ((silent-taylor-flag t))
+		                (declare (special silent-taylor-flag))       
 				(gruntz1 exp var val)))))
 
 	      ;; try taylor series expansion if simple limit didn't work
@@ -355,11 +359,11 @@ It appears in LIMIT and DEFINT.......")
 	(t e)))
 
 ;; returns 1, 0, -1
-;; or nil if sign unknown
+;; or nil if sign unknown or complex
 (defun getsignl (z)
   (let ((z (ridofab z)))
     (if (not (free z var)) (setq z ($limit z var val)))
-    (let ((sign ($sign z)))
+    (let ((sign ($csign z)))
       (cond ((eq sign '$pos) 1)
 	    ((eq sign '$neg) -1)
 	    ((eq sign '$zero) 0)))))
@@ -465,20 +469,18 @@ It appears in LIMIT and DEFINT.......")
 		(t nexp)))
 	 (t nexp))))))
 
+;; Simplify expression with zeroa or zerob.
 (defun simpab (small)
   (cond ((null small) ())
 	((member small '($zeroa $zerob $inf $minf $infinity) :test #'eq) small)
 	((not (free small '$ind)) '$ind) ;Not exactly right but not
 	((not (free small '$und)) '$und) ;causing trouble now.
 	((mapatom small)  small)
-	((and (not (free-infp small))
-	      (or (not (free small '$zeroa))
-		  (not (free small '$zerob))))
-	 (throw 'limit t))		;Terrible loss, can do better
 	(t (let ((preserve-direction t)
-		 (new-small (subst 'lim-epsilon '$zeroa
-				   (subst (m- 'lim-epsilon) '$zerob small))))
-	     (limit new-small 'lim-epsilon '$zeroa 'think)))))
+		  (new-small (subst (m^ '$inf -1) '$zeroa
+				       (subst (m^ '$minf -1) '$zerob small))))
+	          (simpinf new-small)))))
+    
 
 ;;;*I* INDICATES: T => USE LIMIT1,THINK, NIL => USE SIMPLIMIT.
 (defmfun limit (exp var val *i*)
@@ -508,28 +510,24 @@ It appears in LIMIT and DEFINT.......")
 			    (t (simplimit exp var val)))))))
 
 (defun limitsimp (exp var)
-  (limitsimp-dispatch (sin-sq-cos-sq-sub exp) var))
+  (limitsimp-expt (sin-sq-cos-sq-sub exp) var))
 ;;Hack for sin(x)^2+cos(x)^2.
 
-(defun limitsimp-dispatch (exp var)
+;; if var appears in base and power of expt,
+;; push var into power of of expt
+(defun limitsimp-expt (exp var)
   (cond ((or (atom exp)
 	     (mnump exp)
 	     (freeof var exp))   exp)
-	((mexptp exp)
-	 (limitsimp-expt exp var))
-	(t (subst0 (cons (cons (caar exp) ())
-			 (mapcar #'(lambda (x)
-				     (limitsimp-dispatch x var))
-				 (cdr exp)))
-		   exp))))
-
-
-(defun limitsimp-expt (exp var)
-  (cond ((and (mexptp exp)
+	((and (mexptp exp)
 	      (not (freeof var (cadr exp)))
 	      (not (freeof var (caddr exp))))
 	 (m^ '$%e (simplify `((%log) ,exp))))
-	(t exp)))
+	(t (subst0 (cons (cons (caar exp) ())
+			 (mapcar #'(lambda (x)
+				     (limitsimp-expt x var))
+				 (cdr exp)))
+		   exp))))
 
 (defun sin-sq-cos-sq-sub (exp)		;Hack ... Hack
   (let ((arg (involve exp '(%sin %cos))))
@@ -999,7 +997,8 @@ It appears in LIMIT and DEFINT.......")
     (cond ((involve e '(mfactorial)) nil)
 
 	  ;; functions that are defined at their discontinuities
-	  ((amongl '($atan2 $floor $round $ceiling %signum %integrate)
+	  ((amongl '($atan2 $floor $round $ceiling %signum %integrate
+			    %gamma_incomplete)
 		   e) nil)
 
 	  ;; substitute value into expression
@@ -1906,8 +1905,7 @@ It appears in LIMIT and DEFINT.......")
 ;; Limit n/d, using heuristics on the order of growth.
 (defun sheur0 (n d)
   (let ((orig-n n))
-    (cond ((/#alike n d) 1)
-	  ((and (free n var)
+    (cond ((and (free n var)
 		(free d var))
 	   (m// n d))
 	  (t (setq n (cpa n d nil))
@@ -2024,13 +2022,13 @@ It appears in LIMIT and DEFINT.......")
   (declare (special var))
   (cond ((atom e) nil)
 	((mnump e) nil)
-	((and (member (caar e) nn* :test #'eq) (among var (cadr e))) (cadr e))
+	((and (member (caar e) nn* :test #'eq) (among var (cdr e))) (cadr e))
 	(t (some #'(lambda (j) (involve j nn*)) (cdr e)))))
 
 (defun notinvolve (exp nn*)
   (cond ((atom exp) t)
 	((mnump exp) t)
-	((member (caar exp) nn* :test #'eq) (not (among var (cadr exp))))
+	((member (caar exp) nn* :test #'eq) (not (among var (cdr exp))))
 	((every #'(lambda (j) (notinvolve j nn*))
 		(cdr exp)))))
 
@@ -3157,6 +3155,7 @@ It appears in LIMIT and DEFINT.......")
     (setq ans
           (catch 'taylor-catch
             (let ((silent-taylor-flag t))
+              (declare (special silent-taylor-flag))
               (gruntz1 expr var val dir))))
      (if (or (null ans) (eq ans t))
          (if dir
