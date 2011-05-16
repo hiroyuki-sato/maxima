@@ -45,15 +45,15 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/lisp.in $(srcdir)/maxima.bat.in $(srcdir)/maxima.in \
 	$(srcdir)/openmcl-depends.mk $(srcdir)/rmaxima.in \
 	$(srcdir)/sbcl-depends.mk $(srcdir)/scl-depends.mk \
-	$(top_srcdir)/common.mk
+	$(srcdir)/share-subdirs.lisp.in $(top_srcdir)/common.mk
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = maxima maxima.bat rmaxima autoconf-variables.lisp \
-	lisp
+CONFIG_CLEAN_FILES = share-subdirs.lisp maxima maxima.bat rmaxima \
+	autoconf-variables.lisp lisp
 am__installdirs = "$(DESTDIR)$(bindir)"
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(bin_SCRIPTS)
@@ -74,6 +74,9 @@ CLISP_NAME = @CLISP_NAME@
 CLISP_RUNTIME = @CLISP_RUNTIME@
 CLISP_RUNTIME_PATH = @CLISP_RUNTIME_PATH@
 CLISP_TRUE = @CLISP_TRUE@
+CMUCL_EXEC = @CMUCL_EXEC@
+CMUCL_EXEC_FALSE = @CMUCL_EXEC_FALSE@
+CMUCL_EXEC_TRUE = @CMUCL_EXEC_TRUE@
 CMUCL_FALSE = @CMUCL_FALSE@
 CMUCL_NAME = @CMUCL_NAME@
 CMUCL_RUNTIME = @CMUCL_RUNTIME@
@@ -98,10 +101,15 @@ GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
 GCL_NAME = @GCL_NAME@
 GCL_TRUE = @GCL_TRUE@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LANG_DE_FALSE = @LANG_DE_FALSE@
+LANG_DE_TRUE = @LANG_DE_TRUE@
+LANG_DE_UTF8_FALSE = @LANG_DE_UTF8_FALSE@
+LANG_DE_UTF8_TRUE = @LANG_DE_UTF8_TRUE@
 LANG_ES_FALSE = @LANG_ES_FALSE@
 LANG_ES_TRUE = @LANG_ES_TRUE@
 LANG_ES_UTF8_FALSE = @LANG_ES_UTF8_FALSE@
@@ -147,7 +155,6 @@ VERSION = @VERSION@
 WIN32_FALSE = @WIN32_FALSE@
 WIN32_TRUE = @WIN32_TRUE@
 WISH = @WISH@
-ac_ct_STRIP = @ac_ct_STRIP@
 acl_found = @acl_found@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
@@ -161,7 +168,11 @@ build_vendor = @build_vendor@
 clisp_found = @clisp_found@
 cmucl_found = @cmucl_found@
 datadir = @datadir@
+datarootdir = @datarootdir@
 default_layout_autotools = @default_layout_autotools@
+default_sharedirs = @default_sharedirs@
+docdir = $(verpkgdatadir)/doc
+dvidir = @dvidir@
 ecl_found = @ecl_found@
 exec_prefix = @exec_prefix@
 expanded_datadir = @expanded_datadir@
@@ -176,6 +187,7 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 iconv_found = @iconv_found@
 includedir = @includedir@
 infodir = @infodir@
@@ -183,13 +195,16 @@ install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
 lispdir = @lispdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 openmcl_found = @openmcl_found@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 recode_found = @recode_found@
 sbcl_found = @sbcl_found@
 sbindir = @sbindir@
@@ -201,7 +216,6 @@ win32 = @win32@
 verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
 verpkgdatadir = $(pkgdatadir)/@VERSION@
-docdir = $(verpkgdatadir)/doc
 dochtmldir = $(docdir)/html
 docsharedir = $(docdir)/share
 demodir = $(verpkgdatadir)/demo
@@ -218,6 +232,14 @@ DEFSYSTEMCOMPILE = (funcall (intern (symbol-name :operate-on-system) :mk) "maxim
 DEFSYSTEMLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t)
 DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t :test t)
 @CLISP_TRUE@EXECUTECLISP = $(CLISP_NAME) -norc -q -x
+@CMUCL_EXEC_FALSE@CMU_MAXIMA = binary-cmucl/maxima.core
+@CMUCL_EXEC_TRUE@CMU_MAXIMA = binary-cmucl/maxima
+@CMUCL_EXEC_FALSE@CMU_BUILD = (echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima.core"))' | $(EXECUTECMUCL))
+@CMUCL_EXEC_TRUE@CMU_BUILD = (echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima" :executable t :init-function '\''cl-user::run))' | $(EXECUTECMUCL))
+@CMUCL_EXEC_FALSE@CMU_INST_BIN = $(INSTALL_PROGRAM) lisp "$(DESTDIR)$(verpkglibdir)/binary-cmucl/lisp"
+@CMUCL_EXEC_TRUE@CMU_INST_BIN = true
+@CMUCL_EXEC_FALSE@CMU_INST_MAXIMA = $(INSTALL_DATA) $(CMU_MAXIMA) "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
+@CMUCL_EXEC_TRUE@CMU_INST_MAXIMA = $(INSTALL_PROGRAM) $(CMU_MAXIMA) "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
 @CMUCL_TRUE@EXECUTECMUCL = $(CMUCL_NAME) -noinit -batch
 # Newer versions of CMUCL have an INTL package that is compatible with
 # maxima's.  We just bind intl::*default-domain* here so that when we
@@ -344,13 +366,11 @@ optimize.lisp \
 option.lisp \
 outmis.lisp \
 pade.lisp \
-parse-body.lisp \
 plot.lisp \
 plasma.lisp \
 pois2.lisp \
 pois3.lisp \
 polyrz.lisp \
-procs.lisp \
 psolve.lisp \
 rand-mt19937.lisp \
 rat3a.lisp \
@@ -365,7 +385,6 @@ residu.lisp \
 result.lisp \
 risch.lisp \
 rpart.lisp \
-runtim.lisp \
 rzmac.lisp \
 schatc.lisp \
 scs.lisp \
@@ -539,7 +558,7 @@ numerical/slatec/zuoik.lisp \
 numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
-EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs lisp
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs lisp sharefiles.mk
 all: all-am
 
 .SUFFIXES:
@@ -572,6 +591,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+share-subdirs.lisp: $(top_builddir)/config.status $(srcdir)/share-subdirs.lisp.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 maxima: $(top_builddir)/config.status $(srcdir)/maxima.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 maxima.bat: $(top_builddir)/config.status $(srcdir)/maxima.bat.in
@@ -764,7 +785,7 @@ uninstall-datafiles:
 	list='$(genericdirDATA)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
-@CLISP_TRUE@all-local: binary-clisp/maxima.mem
+@CLISP_TRUE@all-local: sharefiles.mk  binary-clisp/maxima.mem
 @CLISP_TRUE@install-exec-local: install-clisp
 @CLISP_TRUE@uninstall-hook: uninstall-clisp
 @CLISP_TRUE@clean: clean-clisp
@@ -813,7 +834,6 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : mopers.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mforma.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mrgmac.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : procs.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : rzmac.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : strmac.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : displm.lisp
@@ -823,7 +843,6 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : utils.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : sumcon.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : sublis.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : runtim.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : merror.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mformt.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mutils.lisp
@@ -1088,40 +1107,40 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : xmaxima_def.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : autol.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : max_ext.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : share-subdirs.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : init-cl.lisp
-@CMUCL_TRUE@all-local: binary-cmucl/maxima.core
+@CMUCL_TRUE@all-local: sharefiles.mk  $(CMU_MAXIMA)
 @CMUCL_TRUE@install-exec-local: install-cmucl
 @CMUCL_TRUE@uninstall-hook: uninstall-cmucl
 @CMUCL_TRUE@clean: clean-cmucl
 @CMUCL_TRUE@distclean: clean-cmucl
 
-@CMUCL_TRUE@cmucl: binary-cmucl/maxima.core
+@CMUCL_TRUE@cmucl: $(CMU_MAXIMA)
 
-@CMUCL_TRUE@binary-cmucl/maxima.core:
+@CMUCL_TRUE@$(CMU_MAXIMA):
 @CMUCL_TRUE@	test -d binary-cmucl || mkdir binary-cmucl
 @CMUCL_TRUE@	test -d binary-cmucl/numerical || mkdir binary-cmucl/numerical
 @CMUCL_TRUE@	test -d binary-cmucl/numerical/slatec || mkdir binary-cmucl/numerical/slatec
 @CMUCL_TRUE@	(echo '(progn $(INITINTL) $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTECMUCL)) && \
-@CMUCL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima.core"))' | $(EXECUTECMUCL))
+@CMUCL_TRUE@	$(CMU_BUILD)
 
 @CMUCL_TRUE@install-cmucl:
 @CMUCL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-cmucl"
-@CMUCL_TRUE@	$(INSTALL_DATA) binary-cmucl/maxima.core "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
-@CMUCL_TRUE@	$(INSTALL_PROGRAM) lisp "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
+@CMUCL_TRUE@	$(CMU_INST_MAXIMA)
+@CMUCL_TRUE@	$(CMU_INST_BIN)
 
 @CMUCL_TRUE@uninstall-cmucl:
-@CMUCL_TRUE@	rm -f "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
+@CMUCL_TRUE@	rm -f "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
 @CMUCL_TRUE@	rm -f "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
 
 @CMUCL_TRUE@clean-cmucl:
 @CMUCL_TRUE@	rm -rf binary-cmucl
 @CMUCL_TRUE@cmucl-depends.mk: maxima.system
 @CMUCL_TRUE@	test -d binary-cmucl || mkdir binary-cmucl
-@CMUCL_TRUE@	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-cmucl/maxima.core" "cmucl-depends.mk"))' | $(EXECUTECMUCL)
+@CMUCL_TRUE@	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "$(CMU_MAXIMA)" "cmucl-depends.mk"))' | $(EXECUTECMUCL)
 @CMUCL_TRUE@binary-cmucl/maxima.core : maxima-package.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : autoconf-variables.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : nregex.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : intl.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : cl-info.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sloop.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : lmdcls.lisp
@@ -1139,7 +1158,6 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : mopers.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mforma.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mrgmac.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : procs.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : rzmac.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : strmac.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : displm.lisp
@@ -1149,7 +1167,6 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : utils.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sumcon.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sublis.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : runtim.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : merror.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mformt.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mutils.lisp
@@ -1414,8 +1431,9 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : xmaxima_def.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : autol.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : max_ext.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : share-subdirs.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : init-cl.lisp
-@SCL_TRUE@all-local: binary-scl/maxima.core
+@SCL_TRUE@all-local: sharefiles.mk  binary-scl/maxima.core
 @SCL_TRUE@install-exec-local: install-scl
 @SCL_TRUE@uninstall-hook: uninstall-scl
 @SCL_TRUE@clean: clean-scl
@@ -1464,7 +1482,6 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : mopers.lisp
 @SCL_TRUE@binary-scl/maxima.core : mforma.lisp
 @SCL_TRUE@binary-scl/maxima.core : mrgmac.lisp
-@SCL_TRUE@binary-scl/maxima.core : procs.lisp
 @SCL_TRUE@binary-scl/maxima.core : rzmac.lisp
 @SCL_TRUE@binary-scl/maxima.core : strmac.lisp
 @SCL_TRUE@binary-scl/maxima.core : displm.lisp
@@ -1474,7 +1491,6 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : utils.lisp
 @SCL_TRUE@binary-scl/maxima.core : sumcon.lisp
 @SCL_TRUE@binary-scl/maxima.core : sublis.lisp
-@SCL_TRUE@binary-scl/maxima.core : runtim.lisp
 @SCL_TRUE@binary-scl/maxima.core : merror.lisp
 @SCL_TRUE@binary-scl/maxima.core : mformt.lisp
 @SCL_TRUE@binary-scl/maxima.core : mutils.lisp
@@ -1741,7 +1757,7 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : autol.lisp
 @SCL_TRUE@binary-scl/maxima.core : max_ext.lisp
 @SCL_TRUE@binary-scl/maxima.core : init-cl.lisp
-@ACL_TRUE@all-local: binary-acl/maxima.dxl
+@ACL_TRUE@all-local: sharefiles.mk  binary-acl/maxima.dxl
 @ACL_TRUE@install-exec-local: install-acl
 @ACL_TRUE@uninstall-hook: uninstall-acl
 @ACL_TRUE@clean: clean-acl
@@ -1788,7 +1804,6 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : mopers.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mforma.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mrgmac.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : procs.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : rzmac.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : strmac.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : displm.lisp
@@ -1798,7 +1813,6 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : utils.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : sumcon.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : sublis.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : runtim.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : merror.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mformt.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mutils.lisp
@@ -2065,7 +2079,7 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : autol.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : max_ext.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : init-cl.lisp
-@SBCL_TRUE@all-local: binary-sbcl/maxima.core
+@SBCL_TRUE@all-local: sharefiles.mk  binary-sbcl/maxima.core
 @SBCL_TRUE@install-exec-local: install-sbcl
 @SBCL_TRUE@uninstall-hook: uninstall-sbcl
 @SBCL_TRUE@clean: clean-sbcl
@@ -2114,7 +2128,6 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : mopers.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mforma.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mrgmac.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : procs.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : rzmac.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : strmac.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : displm.lisp
@@ -2124,7 +2137,6 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : utils.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : sumcon.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : sublis.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : runtim.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : merror.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mformt.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mutils.lisp
@@ -2390,7 +2402,7 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : autol.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : max_ext.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : init-cl.lisp
-@GCL_TRUE@all-local: binary-gcl/maxima
+@GCL_TRUE@all-local: sharefiles.mk  binary-gcl/maxima
 @GCL_TRUE@install-exec-local: install-gcl
 @GCL_TRUE@uninstall-hook: uninstall-gcl
 @GCL_TRUE@clean: clean-gcl
@@ -2457,7 +2469,6 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : mopers.lisp
 @GCL_TRUE@binary-gcl/maxima : mforma.lisp
 @GCL_TRUE@binary-gcl/maxima : mrgmac.lisp
-@GCL_TRUE@binary-gcl/maxima : procs.lisp
 @GCL_TRUE@binary-gcl/maxima : rzmac.lisp
 @GCL_TRUE@binary-gcl/maxima : strmac.lisp
 @GCL_TRUE@binary-gcl/maxima : displm.lisp
@@ -2468,7 +2479,6 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : utils.lisp
 @GCL_TRUE@binary-gcl/maxima : sumcon.lisp
 @GCL_TRUE@binary-gcl/maxima : sublis.lisp
-@GCL_TRUE@binary-gcl/maxima : runtim.lisp
 @GCL_TRUE@binary-gcl/maxima : merror.lisp
 @GCL_TRUE@binary-gcl/maxima : mformt.lisp
 @GCL_TRUE@binary-gcl/maxima : mutils.lisp
@@ -2733,8 +2743,9 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : xmaxima_def.lisp
 @GCL_TRUE@binary-gcl/maxima : autol.lisp
 @GCL_TRUE@binary-gcl/maxima : max_ext.lisp
+@GCL_TRUE@binary-gcl/maxima : share-subdirs.lisp
 @GCL_TRUE@binary-gcl/maxima : init-cl.lisp
-@OPENMCL_TRUE@all-local: binary-openmcl/maxima.image
+@OPENMCL_TRUE@all-local: sharefiles.mk  binary-openmcl/maxima.image
 @OPENMCL_TRUE@install-exec-local: install-openmcl
 @OPENMCL_TRUE@uninstall-hook: uninstall-openmcl
 @OPENMCL_TRUE@clean: clean-openmcl
@@ -2779,7 +2790,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mopers.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mforma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mrgmac.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : procs.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : rzmac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : strmac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : displm.lisp
@@ -2789,7 +2799,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : utils.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sumcon.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sublis.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : runtim.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : merror.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mformt.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mutils.lisp
@@ -3054,8 +3063,9 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : xmaxima_def.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : autol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : max_ext.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : share-subdirs.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : init-cl.lisp
-@ECL_TRUE@all-local: binary-ecl/maxima
+@ECL_TRUE@all-local: sharefiles.mk  binary-ecl/maxima
 @ECL_TRUE@install-exec-local: install-ecl
 @ECL_TRUE@uninstall-hook: uninstall-ecl
 @ECL_TRUE@clean: clean-ecl
@@ -3102,7 +3112,6 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : mopers.lisp
 @ECL_TRUE@binary-ecl/maxima : mforma.lisp
 @ECL_TRUE@binary-ecl/maxima : mrgmac.lisp
-@ECL_TRUE@binary-ecl/maxima : procs.lisp
 @ECL_TRUE@binary-ecl/maxima : rzmac.lisp
 @ECL_TRUE@binary-ecl/maxima : strmac.lisp
 @ECL_TRUE@binary-ecl/maxima : displm.lisp
@@ -3112,7 +3121,6 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : utils.lisp
 @ECL_TRUE@binary-ecl/maxima : sumcon.lisp
 @ECL_TRUE@binary-ecl/maxima : sublis.lisp
-@ECL_TRUE@binary-ecl/maxima : runtim.lisp
 @ECL_TRUE@binary-ecl/maxima : merror.lisp
 @ECL_TRUE@binary-ecl/maxima : mformt.lisp
 @ECL_TRUE@binary-ecl/maxima : mutils.lisp
@@ -3377,11 +3385,24 @@ uninstall-datafiles:
 @ECL_TRUE@binary-ecl/maxima : xmaxima_def.lisp
 @ECL_TRUE@binary-ecl/maxima : autol.lisp
 @ECL_TRUE@binary-ecl/maxima : max_ext.lisp
+@ECL_TRUE@binary-ecl/maxima : share-subdirs.lisp
 @ECL_TRUE@binary-ecl/maxima : init-cl.lisp
 
 echo_%:
 	@echo "$(subst echo_,,$@)=$($(subst echo_,,$@))"
 	@echo "origin $(subst echo_,,$@) returns $(origin $(subst echo_,,$@))"
+
+# Create the list of files that will be installed.  If there is no
+# difference between what make_share_list computes and the original
+# file, do nothing.  Otherwise, update the original with the new
+# output of make_share_list.  The update will cause share/Makefile to
+# be rebuilt, and thus have the correct list of files to be installed.
+
+sharefiles.mk : FORCE
+	../admin/make_share_list
+
+# Should we use GNU make .PHONY instead?
+FORCE :
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

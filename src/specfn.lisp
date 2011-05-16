@@ -203,7 +203,7 @@
 (defun pole-err (exp)
   (declare (special errorsw))
   (cond (errorsw (throw 'errorsw t))
-	(t (merror "Pole encountered in: ~M" exp))))
+	(t (merror (intl:gettext "Pole encountered in: ~M") exp))))
 
 
 (declare-top (special $maxpsiposint $maxpsinegint $maxpsifracnum $maxpsifracdenom))
@@ -398,7 +398,7 @@
 	(t (prog1
 	       (cons (* sign *last*) 1)
 	     (setq *last*
-		   (*quo (* *last* (+ subl (1+ k)))
+		   (quot (* *last* (+ subl (1+ k)))
 			 (1+ k)))))))
 
 (defun plygam-ord (subl)

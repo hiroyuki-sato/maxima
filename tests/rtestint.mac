@@ -41,7 +41,8 @@ integrate(1/x/sqrt(-x^2+x-1),x);
  * Test of denn, 1/sqrt(R^(2*p+1))
  */
 
-(assume(4*a*c-b^2>0), assume(c > 0), assume(a > 0), assume(b > 0), 0);
+(assume(4*a*c-b^2>0), assume(c > 0), assume(a > 0), assume(b > 0), 
+ assume(R > 0), 0);
 0;
 
 /* 1/sqrt(R), repeated roots */
@@ -237,12 +238,12 @@ integrate(1/sqrt(R-a)/x^3,x);
 -16*c^2*sqrt(c*x^2+b*x)/(15*b^3*x)+8*c*sqrt(c*x^2+b*x)/(15*b^2*x^2)
 					  -2*sqrt(c*x^2+b*x)/(5*b*x^3);
 
-integrate(1/sqrt((R-a)^3)/x^2,x);
+integrate(1/sqrt((R-a)^3)/x^2,x),radexpand:all;
 -32*c^3*x/(5*b^4*sqrt(c*x^2+b*x))+4*c/(5*b^2*x*sqrt(c*x^2+b*x))
 					 -2/(5*b*x^2*sqrt(c*x^2+b*x))
 					 -16*c^2/(5*b^3*sqrt(c*x^2+b*x));
 
-integrate(1/sqrt((R-a)^3)/x^3,x);
+integrate(1/sqrt((R-a)^3)/x^3,x),radexpand:all;
 256*c^4*x/(35*b^5*sqrt(c*x^2+b*x))-32*c^2/(35*b^3*x*sqrt(c*x^2+b*x))
 					  +16*c/(35*b^2*x^2*sqrt(c*x^2+b*x))
 					  -2/(7*b*x^3*sqrt(c*x^2+b*x))
@@ -980,8 +981,11 @@ ratsimp(integrate(1/(sin(x-3)^2+1),x,3,11));
 (atan(sqrt(2)*sin(8)/cos(8))+3*%pi)/sqrt(2);
 
 /* defint log(sqrt(q^2-1)+1) asks about YX - ID: 924868 */
-ratsimp(integrate( log(sqrt(q^2-1)+1),q,0,1));
--((4*asinh(1)+(2-sqrt(2))*%i*%pi+(-2^(3/2)))/2^(3/2));
+integrate( log(sqrt(q^2-1)+1),q,0,1);
+'integrate( log(sqrt(q^2-1)+1),q,0,1);
+/*  should be 
+ *  ((4*asinh(1)+(2-sqrt(2))*%i*%pi+(-2^(3/2)))/2^(3/2));
+ */
 
 /* Bug 1748168 */
 integrate(1/(2+cos(x)),x,-%pi/2,%pi/2);
@@ -1043,7 +1047,7 @@ integrate(1/cosh(x/a)^2,x,-inf,inf);
 
 /* [ 1860487 ] MONSTERTRIG endless recursion */
 integrate (x*(cos(2*x) + sin(x)), x);
-(2*x*sin(2*x)+cos(2*x)+4*sin(x)-4*x*cos(x))/4;
+(2*x*sin(2*x)+cos(2*x))/4+sin(x)-x*cos(x);
 
 /* [ 1631094 ] integrate(sin(n*x)*x, x) => linear time when n is an integer */
 integrate(sin(1000000000*x)*x, x);
@@ -1092,7 +1096,7 @@ integrate(exp(sqrt(x^3)),x,0,1);
 (sqrt(3)*%i+1)*(gamma(2/3)-gamma_incomplete(2/3,-1))/-3;
 
 integrate(exp(sqrt(x)),x,1,5);
-2*(sqrt(5)-1)*%e^sqrt(5);
+2*(sqrt(5)*%e^sqrt(5)-%e^sqrt(5));
 
  /* [ 1899352 ] integrate asks about (y-1)(y+1) after assume(y^2>1) */
 (assume(y^2>1),0);
@@ -1299,6 +1303,12 @@ integrate((exp(3/2*log(x))+1)/sqrt(x),x);
 integrate(3*sqrt(x)*exp(3/2*log(x)),x);
 x^3;
 
+/* someday this should return 2*%pi */
+/* that would require handling the discontinuity in
+   gamma_incomplete(0, exp(%i*x))				*/
+integrate(exp(cos(x))*cos(sin(x)),x,0,2*%pi);
+'integrate(exp(cos(x))*cos(sin(x)),x,0,2*%pi);
+
 /* Bug ID: 3039452 - integrate(sqrt(t^c)/(t*(b*t^c+a)),t) hangs
  */
 /* These assumptions are already present. Consider to delete it more early.
@@ -1308,3 +1318,40 @@ integrate(sqrt(t^c)/(t*(b*t^c+a)),t);
 2*atan(sqrt(b)*%e^(c*log(t)/2)/sqrt(a))/(sqrt(a)*sqrt(b)*c);
 forget(a>0,b>0);
 [a>0,b>0];
+
+/* Bug ID: 3045559 integrate(exp(-u^2), u, minf, x) => incorrect gamma_incomple
+ */
+integrate(exp(-u^2),u,minf,x);
+sqrt(%pi)*erf(x)/2+sqrt(%pi)/2;
+
+/* integration error - ID: 3085498 */
+integrate(sqrt(1-cos(t)),t,0,2*%pi);
+2^(5/2);
+
+/* incorrect integration - ID: 3153533 */
+assume(x>2);
+[x>2];
+integrate(1/(x-z),z,1,x-1);
+log(x-1);
+forget(x>2);
+[x>2];
+
+/* integrate(x^2*exp(x)/(1+exp(x))^2, x, minf, inf); - ID: 3158526 */
+integrate(x^2*exp(x)/(1+exp(x))^2, x, minf, inf);
+%pi^2/3;
+
+/* integrate(abs(sin(x)),x,0,2*%pi) wrong result - ID: 3165872 */
+integrate(abs(sin(x)),x,0,2*%pi);
+'integrate(abs(sin(x)),x,0,2*%pi);
+
+/* integrate(sin(2x)atan(sin(x)),x) - ID: 3199708 */
+integrate(sin(2*x)*atan(sin(x)),x,0,%pi/2);
+%pi/2 - 1;
+
+/* wrong integration answer - ID: 2989983 */
+integrate(cos(w+T)/(1+1/2*cos(T))^2,T,0,2*%pi);
+-8*%pi*cos(w)/3^(3/2);
+
+/* wrong sign for integral of e^(-1/x^2) - ID: 3211937 */
+integrate(%e^(-1/x^2),x,0,1);
+%e^-1*(sqrt(%pi)*%e*erf(1)+1)-sqrt(%pi);

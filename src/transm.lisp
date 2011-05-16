@@ -14,11 +14,6 @@
 
 (macsyma-module transm macro)
 
-(eval-when (:execute :compile-toplevel :load-toplevel)
-  (load-macsyma-macros procs))
-
-;(load-macsyma-macros-at-runtime 'procs)
-
 (defvar transl-modules nil)
 
 ;;; Simple but effective single-level module definitions
@@ -81,8 +76,6 @@
   (unless (member name transl-modules :test #'eq)
     (maxima-error "Not a `transl-module', see TRANSM")))
 
-(def-def-property translate (form))
-
 (defmacro def%tr (name lambda-list &body body &aux definition)
   (setq definition
 	(if (and (null body) (symbolp lambda-list))
@@ -97,11 +90,6 @@
     (or (get ',same-as 'translate)
      (maxima-error "No TRANSLATE property to alias. ~a" ',same-as))
     'translate))
-
-(defmacro def%tr-inherit (from &rest others)
-  `(let ((tr-prop (or (get ',from 'translate)
-		      (maxima-error "No TRANSLATE property to alias. ~a" ',from))))
-    (mapc #'(lambda (name) (putprop name tr-prop 'translate))',others)))
 
 ;;; declarations for the TRANSL PACKAGE.
 
@@ -128,7 +116,7 @@
 
 	     ;; these special declarations are for before DEFMVAR
 	     (special $errexp $loadprint $numer $savedef $nolabels $functions $props
-		      $filename $filenum $direc $device munbound $values $transrun
+		      munbound $values $transrun
 		      st oldst  $version
 		      rephrase $packagefile
 		      dskfnp))

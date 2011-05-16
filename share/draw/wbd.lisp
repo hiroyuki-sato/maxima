@@ -28,7 +28,7 @@
 ;;; to contact me at
 ;;; mario @@@ edu DOT xunta DOT es
 
-(setf $boundaries_array
+(defvar $boundaries_array
 '#(#(-121.3553 64.812187 -121.1681 64.813873 -121.0692 64.904137 
   -120.6781 64.981087 -120.3947 65.097473 -120.0433 65.195534 
   -119.8853 65.336639 -119.4747 65.32164 -119.5442 65.431374 
@@ -29504,7 +29504,7 @@
                      (format nil " t '' w l lw ~a lt ~a lc ~a"
                              (get-option '$line_width)
                              (get-option '$line_type)
-                             (get-option '$color)))
+                             (hex-to-rgb (get-option '$color))))
       :groups (make-list (length lis) :initial-element '(2 0)) ; numbers are sent to gnuplot in groups of 2
       :points (cond ((or (null proj)
                          (and (equal (cadr proj) '$longitude_latitude_projection)
@@ -29689,7 +29689,7 @@
                      (format nil " t '' w l lw ~a lt ~a lc ~a"
                              (get-option '$line_width)
                              (get-option '$line_type)
-                             (get-option '$color)))
+                             (hex-to-rgb (get-option '$color))))
       :groups (make-list (length lis) :initial-element '(3 0)) ; numbers are sent to gnuplot in groups of 3
                                                                ; without blank lines
       :points (cond ((null proj)   ; default: spherical projection with r=1 and center (0,0,0)

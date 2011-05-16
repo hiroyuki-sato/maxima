@@ -51,7 +51,7 @@
 	  $breakup $cauchysum $change_filedefaults $compgrind $context
 	  $contexts $current_let_rule_package $cursordisp $debugmode
 	  $default_let_rule_package $demoivre $dependencies $derivabbrev
-	  $derivsubst $detout $direc $dispflag $display2d $displayset
+	  $derivsubst $detout $dispflag $display2d $displayset
 	  $display_format_internal $doallmxops $domain $domxexpt $domxmxops
 	  $domxnctimes $domxplus $domxtimes $dontfactor $doscmxops
 	  $doscmxplus $dot0nscsimp $dot0simp $dot1simp $dotassoc
@@ -59,7 +59,7 @@
 	  $erfflag $errexp $error $error_size $error_syms $expon
 	  $exponentialize $expop $exptdispflag $exptisolate $exptsubst
 	  $facexpand $factorflag $features $file_search
-	  $file_types $float $float2bf $floatformat $floatfrac $floatint
+	  $float $float2bf $floatformat $floatfrac $floatint
 	  $floatoptions $floatprec $floatwidth $fortfloat $fortindent
 	  $fortspaces $fpprec $fpprintprec $fptrunc $functions $gammalim $gcd
 	  $genindex $gensumnum $globalsolve $gradefs $halfangles $homog_hack
@@ -78,14 +78,15 @@
 	  $pagepause $parsewindow $partswitch $pfeformat $piece $pointbound
 	  $poislim $powerdisp $prederror $programmode $props
 	  $radexpand $ratalgdenom $ratdenomdivide $ratepsilon $ratexpand
-	  $ratfac $ratmx $ratprint $ratsimpexpons $ratvars $ratweights
+          $ratfac $ratmx $ratprint $ratsimpexpons $ratvars $ratvarswitch
+          $ratweights
 	  $ratwtlvl $realonly $refcheck $resultant $rmxchar $rootsconmode
 	  $rules $savedef $savefactors $scalarmatrixp $setcheck
 	  $setcheckbreak $setval $showtime $signbfloat $simp $simpsum
 	  $solvedecomposes $solveexplicit $solvefactors $solvenullwarn
 	  $solveradcan $solvetrigwarn $sparse
-	  $special $sqrtdispflag $stardisp $storenum $sublis_apply_lambda
-	  $subnumsimp $subscrmap $sumexpand $sumsplitfact
+	  $special $sqrtdispflag $stardisp $sublis_apply_lambda
+	  $subnumsimp $sumexpand $sumsplitfact
 	  $superlogcon $suspend $taylor_logexpand
 	  $taylor_truncate_polynomials $timer $timer_devalue
 	  $to_call_lisp_compiler $trace $trace_break_arg $trace_max_indent
@@ -107,13 +108,13 @@
 	  *transl-debug* *transl-file-debug* *warned-fexprs*
 	  *warned-mode-vars* *warned-un-declared-vars* *zexptsimp? |-1//2|
 	  -sqrt3//2 |1//2| adn* aexprp algfac* algnotexact
-	  aliaslist alpha *alphabet* arrays aryp assigns *atp* atvars baktrcl
+	  aliaslist alpha *alphabet* arrays aryp assigns *atp* atvars *baktrcl*
 	  bfhalf bfmhalf bigfloat%e bigfloat%pi bigfloatone bigfloatzero
 	  bindlist bvars *mdebug*
 	  declares defined_variables defintdebug derivflag derivlist
 	  derivsimp displayp dn* dosimp dsksetp dummy-variable-operators
 	  dumping envlist errorsw errrjfflag evarrp evp expandflag expandp
-	  exprs exptrlsw factlist featurel fexprerrp fexprs fmaplvl
+	  exprs exptrlsw factlist featurel fexprs fmaplvl
 	  forms-to-compile-queue fourth%pi fr-factor fundefsimp gauss
 	  generate-atan2 genpairs genvar half%pi half%pi3 hmodulus
 	  implicit-real in-p infinitesimals infinities inratsimp inside-mprog
@@ -122,9 +123,9 @@
 	  meta-prop-l meta-prop-p mfexprp minpoly* mlocp mm* modulus *mopl*
 	  mplc* mprogp mproplist mspeclist mspeclist2 msump munbindp
 	  need-prog? negprods negsums nn* noevalargs noitems nonintegerl
-	  nounl nounsflag opers opers-list opexprp outargs1 outargs2 outfiles
-	  plusflag preserve-direction prods putl radcanp radpe rd*
-	  real-infinities realonlyratnum refchkl return-mode returns rulefcnl
+	  *nounl* *nounsflag* opers opers-list outargs1 outargs2 outfiles
+	  preserve-direction prods putl radcanp radpe rd*
+	  real-infinities realonlyratnum *refchkl* return-mode returns rulefcnl
 	  rulesw scanmapp sfindex sign-imag-errp simplimplus-problems
 	  *small-primes* specials sqrt3//2 state-pdl $stringdisp substp
 	  sums tellratlist timesinp timesp tr-abort tr-progret tr-unique

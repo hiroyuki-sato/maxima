@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -2945,6 +2945,15 @@ File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuac
           (%i12) ev (%th(2), %[1]);
           (%o12)                          0
 
+     Los í `%r' se utilizan para indicar parámetros en las soluciones.
+
+          (%i1) solve([x+y=1,2*x+2*y=2],[x,y]);
+
+          solve: dependent equations eliminated: (2)
+          (%o1)                      [[x = 1 - %r1, y = %r1]]
+
+     Véanse `algsys' y `%rnum_list' para más información.
+
 
  -- Variable opcional: solvedecomposes
      Valor por defecto: `true'
@@ -3536,8 +3545,10 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Nex
           (%o4)                       7.0E+154
 
 
- -- Función: find_root (<expr>, <x>, <a>, <b>)
- -- Función: find_root (<f>, <a>, <b>)
+ -- Función: find_root (<expr>, <x>, <a>, <b>, [<abserr>, <relerr>])
+ -- Función: find_root (<f>, <a>, <b>, [<abserr>, <relerr>])
+ -- Función: bf_find_root (<expr>, <x>, <a>, <b>, [<abserr>, <relerr>])
+ -- Función: bf_find_root (<f>, <a>, <b>, [<abserr>, <relerr>])
  -- Variable opcional: find_root_error
  -- Variable opcional: find_root_abs
  -- Variable opcional: find_root_rel
@@ -3548,17 +3559,34 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Nex
 
      Dado que Maxima puede evaluar <expr> o <f> en [<a>, <b>],
      entonces, si <expr> o <f> es continua, `find_root' encuentrará la
-     raíz buscada; o raíces en caso de existir varias.
+     raíz buscada, o raíces, en caso de existir varias.
 
-     La función `find_root' aplica al principio la búsqueda binaria. Si
-     la expresión es lo suficientemente suave, entonces `find_root'
-     aplicará el método de interpolación lineal.
+     La función `find_root' aplica al principio la búsqueda por
+     bipartición. Si la expresión es lo suficientemente suave, entonces
+     `find_root' aplicará el método de interpolación lineal.
 
-     La precisión del resultado se controla con `find_root_abs' y
-     `find_root_rel'. La búsqueda se detiene cuando la función alcanza
-     valores menores o iguales a `find_root_abs', o cuando dos
-     soluciones sucesivas <x_0> y <x_1> se diferencian en una cantidad
-     menor o igual a `find_root_rel * max(abs(x_0), abs(x_1))'.  Los
+     `bf_find_root' es una versión de `find_root' para números reales
+     de precisión arbitraria (bigfloat). La función se evalúa
+     utilizando la aritmética de estos números, devolviendo un
+     resultado numérico de este tipo. En cualquier otro aspecto,
+     `bf_find_root' es idéntica a `find_root', siendo la explicación
+     que sigue igualmente válida para `bf_find_root'.
+
+     La precisión de `find_root' está controlada por `abserr' y
+     `relerr', que son claves opcionales para `find_root'.  Estas
+     claves toman la forma `key=val'. Las claves disponibles son:
+
+    <abserr>
+          Error absoluto deseado de la función en la raíz. El valor por
+          defecto es `find_root_abs'.
+
+    <relerr>
+          Error relativo deseado de la raíz. El valor por defecto es
+          `find_root_rel'.
+
+     `find_root' se detiene cuando la función alcanza un valor menor o
+     igual que `abserr', o si las sucesivas aproximaciones <x_0>, <x_1>
+     difieren en no más que `relerr * max(abs(x_0), abs(x_1))'. Los
      valores por defecto de `find_root_abs' y `find_root_rel' son ambos
      cero.
 
@@ -3599,6 +3627,13 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Nex
           (%o7)                   2.302585092994046
           (%i8) log (10.0);
           (%o8)                   2.302585092994046
+          (%i9) fpprec:32;
+          (%o9)                           32
+          (%i10) bf_find_root (exp(x) = y, x, 0, 100), y = 10;
+          (%o10)                  2.3025850929940456840179914546844b0
+          (%i11) log(10b0);
+          (%o11)                  2.3025850929940456840179914546844b0
+
 
  -- Función: newton (<expr>, <x>, <x_0>, <eps>)
      Devuelve una solución aproximada de `<expr> = 0' obtenida por el
@@ -4365,6 +4400,37 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra l
                                  [ a    b      c   ]
 
 
+ -- Función: cauchy_matrix ([<x_1>,<x_2>, ..., <x_m>], [<y_1>,<y_2>,
+          ..., <y_n>])
+ -- Función: cauchy_matrix ([<x_1>,<x_2>, ..., <x_n>])
+     Devuelve una matriz de Cauchy <n> by <m> de elementos <a[i,j]> =
+     1/(<x_i>+<y_i>).  El segundo elemento de `cauchy_matrix' es
+     opcional, y en caso de no estar presente, los elementos serán de
+     la forma <a[i,j]> = 1/(<x_i>+<x_j>).
+
+     Observación: en la literatura, la matriz de Cauchy se define a
+     veces con sus elementos de la forma <a[i,j]> = 1/(<x_i>-<y_i>).
+
+     Ejemplos:
+
+          (%i1) cauchy_matrix([x1,x2],[y1,y2]);
+                                [    1        1    ]
+                                [ -------  ------- ]
+                                [ y1 + x1  y2 + x1 ]
+          (%o1)                 [                  ]
+                                [    1        1    ]
+                                [ -------  ------- ]
+                                [ y1 + x2  y2 + x2 ]
+
+          (%i2) cauchy_matrix([x1,x2]);
+                                [   1         1    ]
+                                [  ----    ------- ]
+                                [  2 x1    x2 + x1 ]
+          (%o2)                 [                  ]
+                                [    1       1     ]
+                                [ -------   ----   ]
+                                [ x2 + x1   2 x2   ]
+
  -- Función: charpoly (<M>, <x>)
      Calcula el polinomio característico de la matriz <M> respecto de
      la variable <x>. Esto es, `determinant (<M> - diagmatrix (length
@@ -5014,14 +5080,24 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra l
      La implementación actual no es eficiente para matrices de orden
      grande.
 
-     Cuando `detout' vale `true', el determinante queda fuera de la
+     Cuando `detout' vale `true', el determinante se deja  fuera de la
      inversa a modo de factor escalar.
 
      Los elementos de la matriz inversa no se expanden. Si <M> tiene
      elementos polinómicos, se puede mejorar el aspecto del resultado
-     haciendo `expand (invert (m)), detout'.  Véase la descripción de
-     `^^' (exponente no conmutativo) para información sobre otro método
-     para invertir matrices.
+     haciendo `expand (invert (m)), detout'.
+
+     Véase la descripción de `^^' (exponente no conmutativo) para
+     información sobre otro método para invertir matrices.
+
+
+ -- Función: list_matrix_entries (<M>)
+     Devuelve una lista con todos los elementos de la matriz <M>.
+
+     Ejemplo:
+
+          (%i1) list_matrix_entries(matrix([a,b],[c,d]));
+          (%o1)                     [a, b, c, d]
 
 
  -- Variable opcional: lmxchar

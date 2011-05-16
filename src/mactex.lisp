@@ -1,3 +1,5 @@
+;;; -*-  Mode: Lisp; Package: Maxima; Syntax: Common-Lisp; Base: 10 -*- ;;;;
+
 (in-package :maxima)
 
 ;; TeX-printing
@@ -464,7 +466,12 @@
 (defprop $alpha "\\alpha" texword)
 (defprop $beta "\\beta" texword)
 (defprop $gamma "\\gamma" texword)
-(defprop %gamma "\\Gamma" texword)  ; THIS IS UNFORTUNATE ...
+(defprop %gamma "\\gamma" texword)
+
+(defprop %gamma tex-gamma tex)
+(defun tex-gamma (x l r)
+ (tex (cadr x) (append l '("\\Gamma\\left(")) (append '("\\right)") r) 'mparen 'mparen))
+
 (defprop $%gamma "\\gamma" texword)
 (defprop $delta "\\delta" texword)
 (defprop $epsilon "\\varepsilon" texword)
@@ -937,14 +944,51 @@
 	((= c 1)(cons (car n)(odds (cdr n) 0)))
 	((= c 0)(odds (cdr n) 1))))
 
+;;
+;; The format of MCOND expressions is documented above the definition
+;; of DIM-MCOND in displa.lisp.  Here are some examples:
+;;
+;;   ((%mcond) $a $b t nil)         <==>  'if a then b
+;;   ((%mcond) $a $b t $d)          <==>  'if a then b else d
+;;   ((%mcond) $a $b $c nil t nil)  <==>  'if a then b elseif c then false
+;;   ((%mcond) $a $b $c $d t nil)   <==>  'if a then b elseif c then d
+;;   ((%mcond) $a $b $c $d t $f)    <==>  'if a then b elseif c then d else f
+;; 
+;; Note that DIM-MCOND omits display of the final "else" in three
+;; cases illustrated below, so we do the same here:
+;; 
+;;   ((%mcond) $a $b $c $d t $false)  <==>  '(if a then b elseif c then d)
+;;   ((%mcond) $a $b $c $d t nil)     <==>   'if a then b elseif c then d
+;;   ((%mcond) $a $b $c $d)            ==>   'if a then b elseif c then d
+;;
+;; The first two cases occur in practice, as can be seen by evaluating
+;; ?print('(if a then b)) and ?print(if a then b).  The parser
+;; produces the first case, which is transformed into the second case
+;; during evaluation.  The third case is handled equivalently by the
+;; evaluator and DIM-MCOND, and might plausibly be created by some
+;; code, so we handle it here as well.
+;;
+;; The use of '$false (instead of nil) may be a hack that is no longer
+;; needed.  For more information on this, search for $false in
+;; PARSE-CONDITION of nparse.lisp and DIM-MCOND of displa.lisp.  Also
+;; see the mailing list thread with subject "Bugs in tex-mcond" which
+;; took place in January 2011.  -MHW
+;;
 (defun tex-mcond (x l r)
-  (append l
-	  (tex (cadr x) '("\\mathbf{if}\\;")
-	       '("\\;\\mathbf{then}\\;") 'mparen 'mparen)
-	  (if (eql (fifth x) '$false)
-	      (tex (caddr x) nil r 'mcond rop)
-	      (append (tex (caddr x) nil nil 'mparen 'mparen)
-		      (tex (fifth x) '("\\;\\mathbf{else}\\;") r 'mcond rop)))))
+  (labels
+      ((recurse (x l)
+	 (append
+	  (tex (car x) l '("\\;\\mathbf{then}\\;") 'mparen 'mparen)
+	  (cond ((member (cddr x) '(() (t nil) (t $false)) :test #'equal)
+		 (tex (second x) nil r 'mcond rop))
+		((and (eq (third x) t) (null (nthcdr 4 x)))
+		 (append
+		  (tex (second x) nil nil 'mparen 'mparen)
+		  (tex (fourth x) '("\\;\\mathbf{else}\\;") r 'mcond rop)))
+		(t (append
+		    (tex (second x) nil nil 'mparen 'mparen)
+		    (recurse (cddr x) '("\\;\\mathbf{elseif}\\;"))))))))
+  (append l (recurse (cdr x) '("\\mathbf{if}\\;")))))
 
 (defprop mdo tex-mdo tex)
 (defprop mdoin tex-mdoin tex)
