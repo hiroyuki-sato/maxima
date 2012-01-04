@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: EHref.tcl,v 1.3 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: EHref.tcl,v 1.3 2004-10-13 12:08:57 vvzhy Exp $
 #
 ###### EHref.tcl ######
 ############################################################

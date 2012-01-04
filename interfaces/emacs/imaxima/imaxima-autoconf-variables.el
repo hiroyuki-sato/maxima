@@ -2,7 +2,7 @@
 ;; Copyright (C) 2007, 2008 Yasuaki Honda
 
 ;; Author: Yasuaki Honda (yhonda@mac.com)
-;; $Id: imaxima-autoconf-variables.el,v 1.7 2009/03/07 13:38:25 yasu-honda Exp $
+;; $Id: imaxima-autoconf-variables.el,v 1.7 2009-03-07 13:38:25 yasu-honda Exp $
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as

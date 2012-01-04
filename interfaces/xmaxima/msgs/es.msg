@@ -1,5 +1,5 @@
 # Spanish xmaxima translation by Juan Pablo Romero Bernal
-### $Id: es.msg,v 1.4 2006/12/05 04:21:15 villate Exp $
+### $Id: es.msg,v 1.4 2006-12-05 04:21:15 villate Exp $
 
 ### Menu.tcl
 mcset es "Edit" "Editar"

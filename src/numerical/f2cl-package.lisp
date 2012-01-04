@@ -65,9 +65,9 @@
 ;;;-------------------------------------------------------------------------
 ;;; end of f2cl0.l
 ;;;
-;;; $Id: f2cl-package.lisp,v 1.11 2009/01/08 18:25:34 rtoy Exp $
+;;; $Id: f2cl-package.lisp,v 1.11 2009-01-08 18:25:34 rtoy Exp $
 ;;; $Log: f2cl-package.lisp,v $
-;;; Revision 1.11  2009/01/08 18:25:34  rtoy
+;;; Revision 1.11  2009-01-08 18:25:34  rtoy
 ;;; Update f2cl to latest version of f2cl, and regenerate all of the lisp
 ;;; code.
 ;;;

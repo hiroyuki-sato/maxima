@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Tkmaxima.tcl,v 1.7 2011/03/21 09:17:17 villate Exp $
+#       $Id: Tkmaxima.tcl,v 1.7 2011-03-21 09:17:17 villate Exp $
 #
 
 #mike The following files are prepended, and could be sourced instead.

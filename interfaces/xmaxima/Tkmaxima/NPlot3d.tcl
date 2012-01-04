@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: NPlot3d.tcl,v 1.9 2009/11/16 22:41:47 villate Exp $
+#       $Id: NPlot3d.tcl,v 1.9 2009-11-16 22:41:47 villate Exp $
 #
 ###### NPlot3d.tcl ######
 ############################################################

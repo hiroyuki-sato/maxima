@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Parse.tcl,v 1.8 2009/03/27 00:14:45 villate Exp $
+#       $Id: Parse.tcl,v 1.8 2009-03-27 00:14:45 villate Exp $
 #
 ###### Parse.tcl ######
 ############################################################

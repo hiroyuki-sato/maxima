@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Constants.tcl,v 1.29 2011/03/20 23:14:57 villate Exp $
+#       $Id: Constants.tcl,v 1.29 2011-03-20 23:14:57 villate Exp $
 #
 
 proc cMAXINITBeforeIni {} {

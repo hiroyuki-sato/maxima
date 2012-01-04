@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plot3d.tcl,v 1.19 2011/03/12 17:29:04 villate Exp $
+#       $Id: Plot3d.tcl,v 1.19 2011-03-12 17:29:04 villate Exp $
 #
 ###### Plot3d.tcl ######
 ############################################################

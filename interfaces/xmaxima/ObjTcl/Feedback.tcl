@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#	$Id: Feedback.tcl,v 1.1 2002/09/19 16:13:50 mikeclarkson Exp $
+#	$Id: Feedback.tcl,v 1.1 2002-09-19 16:13:50 mikeclarkson Exp $
 #
 # Id: feedback.tcl,v 1.3 1995/02/23 00:23:04 sls Exp
 #

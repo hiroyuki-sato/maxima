@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Getdata1.tcl,v 1.7 2004/10/13 12:08:57 vvzhy Exp $
+#       $Id: Getdata1.tcl,v 1.7 2004-10-13 12:08:57 vvzhy Exp $
 #
 ###### getdata1.tcl ######
 ############################################################

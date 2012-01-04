@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Sep 2003
 ;;;;
-;;;; $Id: getopt.lisp,v 1.1 2009/07/13 15:25:24 rtoy Exp $
+;;;; $Id: getopt.lisp,v 1.1 2009-07-13 15:25:24 rtoy Exp $
 ;;;;
 ;;;; *************************************************************************
 
