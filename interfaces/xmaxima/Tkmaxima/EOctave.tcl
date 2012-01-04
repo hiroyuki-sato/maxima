@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: EOctave.tcl,v 1.3 2011/03/19 23:17:20 villate Exp $
+#       $Id: EOctave.tcl,v 1.3 2011-03-19 23:17:20 villate Exp $
 #
 ###### EOctave.tcl ######
 ############################################################

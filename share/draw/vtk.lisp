@@ -128,9 +128,12 @@
       (format nil "  [~a GetProperty] SetOpacity ~a~%"
               an
               (gethash '$opacity *gr-options*) )
-      (format nil "  [~a GetProperty] SetLineWidth ~a~%~%"
+      (format nil "  [~a GetProperty] SetLineWidth ~a~%"
               an
-              (gethash '$line_width *gr-options*)) )))
+              (gethash '$line_width *gr-options*))
+      (if (not (null (gethash '$wired_surface *gr-options*)))
+        (format nil "  [~a GetProperty] EdgeVisibilityOn~%  [~a GetProperty] SetEdgeColor 0 0 0~%~%" an an)
+        (format nil "~%")) )))
 
 (defun vtktubefilter-code (tn fn lt)
   (concatenate 'string
@@ -757,6 +760,7 @@
         (head-length  (gethash '$head_length  *gr-options*))
         (head-angle   (gethash '$head_angle   *gr-options*))
         (line-width   (gethash '$line_width   *gr-options*))
+        (unit-vectors (gethash '$unit_vectors *gr-options*))
         (x ($float (cadr arg1)))
         (y ($float (caddr arg1)))
         (z ($float (cadddr arg1)))
@@ -775,10 +779,8 @@
           ndy (/ dy module)
           ndz (/ dz module))
     ; transform into unitary vector when unit_vectors=true
-    (setf dx ndx
-          dy ndy
-          dz ndz
-          module 1)
+    (when unit-vectors
+      (setf module 1))
     ; head parameters
     (setf radians (* head-angle 0.0174532925199433)) ; 0.017..=%pi/180
     (setf tiplength (* head-length ($float ($cos radians))))
@@ -799,7 +801,7 @@
       (format nil "  ~a SetTipRadius ~a~%" source-name (/ radius module))
       (format nil "  ~a SetTipLength ~a~%" source-name (/ tiplength module))
       (format nil "  ~a SetShaftResolution ~a~%" source-name 10)
-      (format nil "  ~a SetShaftRadius ~a~%" source-name line-width)
+      (format nil "  ~a SetShaftRadius ~a~%" source-name (/ line-width module))
       (vtktransform-code trans-name)
       (format nil "  ~a Translate ~a ~a ~a~%" trans-name x y z)
       (format nil "  ~a RotateWXYZ ~a ~a ~a ~a~%" trans-name rotangle 0 (- ndz) ndy)
@@ -989,7 +991,7 @@
                          (0 "0x0001")
                          (1 "0xFFFF")
                          (2 "0xFF00")
-                         (3 "0xFE10")))
+                         (6 "0xFE10")))
               "")     )))
       (t ; isolated points
         (setf output-string
@@ -1256,7 +1258,7 @@
                    (0 "0x0001")
                    (1 "0xFFFF")
                    (2 "0xFF00")
-                   (3 "0xFE10")))
+                   (6 "0xFE10")))
         ""))) )
 
 
@@ -1779,6 +1781,7 @@
                 ($point_type       (update-pointtype                            ($rhs x)))
                 ($point_size       (update-nonnegative-float '$point_size       ($rhs x)))
                 ($enhanced3d       (update-enhanced3d                           ($rhs x)))
+                ($wired_surface    (update-boolean-option    '$wired_surface    ($rhs x)))
                 ($terminal         (update-terminal                             ($rhs x)))
                 ($x_voxel          (update-positive-integer  '$x_voxel          ($rhs x)))
                 ($y_voxel          (update-positive-integer  '$y_voxel          ($rhs x)))

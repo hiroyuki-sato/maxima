@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Base64.tcl,v 1.3 2002/09/14 17:25:34 mikeclarkson Exp $
+#       $Id: Base64.tcl,v 1.3 2002-09-14 17:25:34 mikeclarkson Exp $
 #
 ###### Base64.tcl ######
 ############################################################

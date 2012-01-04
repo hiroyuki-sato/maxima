@@ -3,9 +3,9 @@
 ;; Copyright: (C) 2001 Jay Belanger
 
 ;; Author: Jay Belanger <belanger@truman.edu>
-;; $Name: RELEASE-5_24-BRANCH $
+;; $Name:  $
 ;; $Revision: 1.21 $
-;; $Date: 2010/11/21 21:42:45 $
+;; $Date: 2010-11-21 21:42:45 $
 ;; Keywords: maxima, font-lock
 
 ;; This program is free software; you can redistribute it and/or
@@ -149,7 +149,6 @@
    "tr_warn_mode"
    "tr_warn_undeclared"
    "tr_warn_undefined_variable"
-   "tr_windy"
    "use_fast_arrays"))
    
    
@@ -370,7 +369,6 @@
    "sumsplitfact"
    "taylordepth"
    "tlimswitch"
-   "transbind"
    "transcompile"
    "transrun"
    "trigexpandplus"

@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: EOpenplot.tcl,v 1.7 2011/03/19 23:15:44 villate Exp $
+#       $Id: EOpenplot.tcl,v 1.7 2011-03-19 23:15:44 villate Exp $
 #
 ###### EOpenplot.tcl ######
 ############################################################

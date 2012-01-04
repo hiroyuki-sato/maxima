@@ -1,6 +1,6 @@
 # -*- mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#	$Id: Object.tcl,v 1.3 2006/10/01 23:59:47 villate Exp $
+#	$Id: Object.tcl,v 1.3 2006-10-01 23:59:47 villate Exp $
 #
 # Original Id: object.tcl,v 1.7 1995/02/10 08:32:50 sls Exp sls
 #

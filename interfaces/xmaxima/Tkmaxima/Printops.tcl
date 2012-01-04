@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Printops.tcl,v 1.11 2006/08/24 07:03:23 vvzhy Exp $
+#       $Id: Printops.tcl,v 1.11 2006-08-24 07:03:23 vvzhy Exp $
 #
 ###### Printops.tcl ######
 ############################################################

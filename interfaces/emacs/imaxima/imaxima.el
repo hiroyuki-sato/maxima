@@ -10,7 +10,7 @@
 ;; Copyright (C) 2006 Stephen Eglen (imaxima-print-buffer)
 ;; Copyright (C) 2007, 2008 Yasuaki Honda (imaxima-to-html, inline graph)
 
-;; $Id: imaxima.el,v 1.7 2009/02/22 09:18:27 yasu-honda Exp $
+;; $Id: imaxima.el,v 1.7 2009-02-22 09:18:27 yasu-honda Exp $
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as

@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plotdf.tcl,v 1.23 2011/03/20 16:33:16 villate Exp $
+#       $Id: Plotdf.tcl,v 1.23 2011-03-20 16:33:16 villate Exp $
 #
 ###### Plotdf.tcl ######
 #######################################################################

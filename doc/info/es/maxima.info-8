@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -9,9 +9,3506 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Funciones y variables para interpol,  Prev: Introducción a interpol,  Up: interpol
+
+58.2 Funciones y variables para interpol
+========================================
+
+ -- Función: lagrange (<points>)
+ -- Función: lagrange (<points>, <option>)
+     Calcula el polinomio de interpolación por el método de Lagrange.
+     El argumento <points> debe ser:
+
+        * una matriz de dos columnas, `p:matrix([2,4],[5,6],[9,3])',
+
+        * una lista de pares de números, `p: [[2,4],[5,6],[9,3]]',
+
+        * una lista de números, `p: [4,6,3]', en cuyo caso las abscisas
+          se asignarán automáticamente a 1, 2, 3, etc.
+
+     En los dos primeros casos los pares se ordenan con respecto a la
+     primera coordenada antes de proceder a los cálculos.
+
+     Mediante el argumento <option> es posible seleccionar el nombre de
+     la variable independiente, que por defecto es `'x'; para definir
+     otra, escríbase algo como `varname='z'.
+
+     Téngase en cuenta que cuando se trabaja con polinomios de grado
+     alto, los cálculos con números decimales en coma flotante pueden
+     ser muy inestables.
+
+     Ejemplos:
+
+          (%i1) load(interpol)$
+          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
+          (%i3) lagrange(p);
+                 (x - 7) (x - 6) (x - 3) (x - 1)
+          (%o3)  -------------------------------
+                               35
+             (x - 8) (x - 6) (x - 3) (x - 1)
+           - -------------------------------
+                           12
+             7 (x - 8) (x - 7) (x - 3) (x - 1)
+           + ---------------------------------
+                            30
+             (x - 8) (x - 7) (x - 6) (x - 1)
+           - -------------------------------
+                           60
+             (x - 8) (x - 7) (x - 6) (x - 3)
+           + -------------------------------
+                           84
+          (%i4) f(x):=''%;
+                         (x - 7) (x - 6) (x - 3) (x - 1)
+          (%o4)  f(x) := -------------------------------
+                                       35
+             (x - 8) (x - 6) (x - 3) (x - 1)
+           - -------------------------------
+                           12
+             7 (x - 8) (x - 7) (x - 3) (x - 1)
+           + ---------------------------------
+                            30
+             (x - 8) (x - 7) (x - 6) (x - 1)
+           - -------------------------------
+                           60
+             (x - 8) (x - 7) (x - 6) (x - 3)
+           + -------------------------------
+                           84
+          (%i5) /* Evaluate the polynomial at some points */
+                expand(map(f,[2.3,5/7,%pi]));
+                                            4          3           2
+                              919062  73 %pi    701 %pi    8957 %pi
+          (%o5)  [- 1.567535, ------, ------- - -------- + ---------
+                              84035     420       210         420
+                                                       5288 %pi   186
+                                                     - -------- + ---]
+                                                         105       5
+          (%i6) %,numer;
+          (%o6) [- 1.567535, 10.9366573451538, 2.89319655125692]
+          (%i7) load(draw)$  /* load draw package */
+          (%i8) /* Plot the polynomial together with points */
+                draw2d(
+                  color      = red,
+                  key        = "Lagrange polynomial",
+                  explicit(f(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+          (%i9) /* Change variable name */
+                lagrange(p, varname=w);
+                 (w - 7) (w - 6) (w - 3) (w - 1)
+          (%o9)  -------------------------------
+                               35
+             (w - 8) (w - 6) (w - 3) (w - 1)
+           - -------------------------------
+                           12
+             7 (w - 8) (w - 7) (w - 3) (w - 1)
+           + ---------------------------------
+                            30
+             (w - 8) (w - 7) (w - 6) (w - 1)
+           - -------------------------------
+                           60
+             (w - 8) (w - 7) (w - 6) (w - 3)
+           + -------------------------------
+                           84
+
+
+ -- Función: charfun2 (<x>, <a>, <b>)
+     Devuelve `true' si el número <x> pertenece al intervalo [a, b), y
+     `false' en caso contrario.
+
+ -- Función: linearinterpol (<points>)
+ -- Función: linearinterpol (<points>, <option>)
+     Calcula rectas de interpolación. El argumento <points> debe ser:
+
+        * una matriz de dos columnas, `p:matrix([2,4],[5,6],[9,3])',
+
+        * una lista de pares de números, `p: [[2,4],[5,6],[9,3]]',
+
+        * una lista de números, `p: [4,6,3]', en cuyo caso las abscisas
+          se asignarán automáticamente a 1, 2, 3, etc.
+
+     En los dos primeros casos los pares se ordenan con respecto a la
+     primera coordenada antes de proceder a los cálculos.
+
+     Mediante el argumento <option> es posible seleccionar el nombre de
+     la variable independiente, que por defecto es `'x'; para definir
+     otra, escríbase algo como `varname='z'.
+
+     Ejemplos:
+
+          (%i1) load(interpol)$
+          (%i2) p: matrix([7,2],[8,3],[1,5],[3,2],[6,7])$
+          (%i3) linearinterpol(p);
+                  13   3 x
+          (%o3)  (-- - ---) charfun2(x, minf, 3)
+                  2     2
+           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
+              5 x
+           + (--- - 3) charfun2(x, 3, 6)
+               3
+
+          (%i4) f(x):=''%;
+                          13   3 x
+          (%o4)  f(x) := (-- - ---) charfun2(x, minf, 3)
+                          2     2
+           + (x - 5) charfun2(x, 7, inf) + (37 - 5 x) charfun2(x, 6, 7)
+              5 x
+           + (--- - 3) charfun2(x, 3, 6)
+               3
+          (%i5)  /* Evaluate the polynomial at some points */
+                 map(f,[7.3,25/7,%pi]);
+                                      62  5 %pi
+          (%o5)                 [2.3, --, ----- - 3]
+                                      21    3
+          (%i6) %,numer;
+          (%o6)  [2.3, 2.952380952380953, 2.235987755982989]
+          (%i7) load(draw)$  /* load draw package */
+          (%i8)  /* Plot the polynomial together with points */
+                 draw2d(
+                   color      = red,
+                   key        = "Linear interpolator",
+                   explicit(f(x),x,-5,20),
+                   point_size = 3,
+                   color      = blue,
+                   key        = "Sample points",
+                   points(args(p)))$
+          (%i9)  /* Change variable name */
+                 linearinterpol(p, varname='s);
+                 13   3 s
+          (%o9) (-- - ---) charfun2(s, minf, 3)
+                 2     2
+           + (s - 5) charfun2(s, 7, inf) + (37 - 5 s) charfun2(s, 6, 7)
+              5 s
+           + (--- - 3) charfun2(s, 3, 6)
+               3
+
+
+ -- Función: cspline (<points>)
+ -- Función: cspline (<points>, <option1>, <option2>, ...)
+     Calcula el polinomio de interpolación por el método de los splines
+     cúbicos. El argumento <points> debe ser:
+
+        * una matriz de dos columnas, `p:matrix([2,4],[5,6],[9,3])',
+
+        * una lista de pares de números, `p: [[2,4],[5,6],[9,3]]',
+
+        * una lista de números, `p: [4,6,3]', en cuyo caso las abscisas
+          se asignarán automáticamente a 1, 2, 3, etc.
+
+     En los dos primeros casos los pares se ordenan con respecto a la
+     primera coordenada antes de proceder a los cálculos.
+
+     Esta función dispone de tres opciones para acomodarse a
+     necesidades concretas:
+
+        * `'d1', por defecto `'unknown', es la primera derivada en x_1;
+          si toma el valor `'unknown', la segunda derivada en x_1 se
+          iguala a 0 (spline cúbico natural); en caso de tomar un valor
+          numérico, la segunda derivada se calcula en base a este
+          número.
+
+        * `'dn', por defecto `'unknown', es la primera derivada en x_n;
+          si toma el valor `'unknown', la segunda derivada en x_n se
+          iguala a 0 (spline cúbico natural); en caso de tomar un valor
+          numérico, la segunda derivada se calcula en base a este
+          número.
+
+        * `'varname', por defecto `'x', es el nombre de la variable
+          independiente.
+
+     Ejemplos:
+
+          (%i1) load(interpol)$
+          (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
+          (%i3) /* Unknown first derivatives at the extremes
+                   is equivalent to natural cubic splines */
+                cspline(p);
+                        3         2
+                  1159 x    1159 x    6091 x   8283
+          (%o3)  (------- - ------- - ------ + ----) charfun2(x, minf, 3)
+                   3288      1096      3288    1096
+                      3         2
+                2587 x    5174 x    494117 x   108928
+           + (- ------- + ------- - -------- + ------) charfun2(x, 7, inf)
+                 1644       137       1644      137
+                    3          2
+              4715 x    15209 x    579277 x   199575
+           + (------- - -------- + -------- - ------) charfun2(x, 6, 7)
+               1644       274        1644      274
+                      3         2
+                3287 x    2223 x    48275 x   9609
+           + (- ------- + ------- - ------- + ----) charfun2(x, 3, 6)
+                 4932       274      1644     274
+
+          (%i4) f(x):=''%$
+          (%i5) /* Some evaluations */
+                map(f,[2.3,5/7,%pi]), numer;
+          (%o5) [1.991460766423356, 5.823200187269903, 2.227405312429507]
+          (%i6) load(draw)$  /* load draw package */
+          (%i7) /* Plotting interpolating function */
+                draw2d(
+                  color      = red,
+                  key        = "Cubic splines",
+                  explicit(f(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+          (%i8) /* New call, but giving values at the derivatives */
+                cspline(p,d1=0,dn=0);
+                        3          2
+                  1949 x    11437 x    17027 x   1247
+          (%o8)  (------- - -------- + ------- + ----) charfun2(x, minf, 3)
+                   2256       2256      2256     752
+                      3          2
+                1547 x    35581 x    68068 x   173546
+           + (- ------- + -------- - ------- + ------) charfun2(x, 7, inf)
+                  564       564        141      141
+                   3          2
+              607 x    35147 x    55706 x   38420
+           + (------ - -------- + ------- - -----) charfun2(x, 6, 7)
+               188       564        141      47
+                      3         2
+                3895 x    1807 x    5146 x   2148
+           + (- ------- + ------- - ------ + ----) charfun2(x, 3, 6)
+                 5076       188      141      47
+          (%i8) /* Defining new interpolating function */
+                g(x):=''%$
+          (%i9) /* Plotting both functions together */
+                draw2d(
+                  color      = black,
+                  key        = "Cubic splines (default)",
+                  explicit(f(x),x,0,10),
+                  color      = red,
+                  key        = "Cubic splines (d1=0,dn=0)",
+                  explicit(g(x),x,0,10),
+                  point_size = 3,
+                  color      = blue,
+                  key        = "Sample points",
+                  points(p))$
+
+ -- Función: ratinterpol (<points>, <numdeg>)
+ -- Función: ratinterpol (<points>, <numdeg>, <option1>, <option2>, ...)
+     Genera el interpolador racional para los datos dados por <points>
+     y con grado <numdeg> en el numerador; el grado del denominador se
+     calcula automáticamente. El argumento <points> debe ser:
+
+        * una matriz de dos columnas, `p:matrix([2,4],[5,6],[9,3])',
+
+        * una lista de pares de números, `p: [[2,4],[5,6],[9,3]]',
+
+        * una lista de números, `p: [4,6,3]', en cuyo caso las abscisas
+          se asignarán automáticamente a 1, 2, 3, etc.
+
+     En los dos primeros casos los pares se ordenan con respecto a la
+     primera coordenada antes de proceder a los cálculos.
+
+     Esta función dispone de dos opciones para acomodarse a necesidades
+     concretas:
+        * `'denterm', por defecto `1', es el término independente del
+          polinomio en el denominador.
+
+        * `'varname', por defecto `'x', es el nombre de la variable
+          independiente.
+
+     Ejemplos:
+
+          (%i1) load(interpol)$
+          (%i2) load(draw)$
+          (%i3) p:[[7.2,2.5],[8.5,2.1],[1.6,5.1],[3.4,2.4],[6.7,7.9]]$
+          (%i4) for k:0 thru length(p)-1 do
+                  draw2d(
+                    explicit(ratinterpol(p,k),x,0,9),
+                    point_size = 3,
+                    points(p),
+                    title = concat("Grado del numerador = ",k),
+                    yrange=[0,10])$
+
+
+File: maxima.info,  Node: lapack,  Next: lbfgs,  Prev: interpol,  Up: Top
+
+59 lapack
+*********
+
+* Menu:
+
+* Introducción a lapack::
+* Funciones y variables para lapack::
+
+
+File: maxima.info,  Node: Introducción a lapack,  Next: Funciones y variables para lapack,  Prev: lapack,  Up: lapack
+
+59.1 Introducción a lapack
+==========================
+
+`lapack' es una traducción automática a Common Lisp (con el programa
+`f2c') de la librería LAPACK escrita en Fortran.
+
+
+File: maxima.info,  Node: Funciones y variables para lapack,  Prev: Introducción a lapack,  Up: lapack
+
+59.2 Funciones y variables para lapack
+======================================
+
+ -- Función: dgeev (<A>)
+ -- Función: dgeev (<A>, <right_p>, <left_p>)
+     Calcula los autovalores y, opcionalmente, también los autovectores
+     de la matriz <A>.  Todos los elementos de <A> deben ser enteros o
+     números decimales en coma flotante.  Además, <A> debe ser cuadrada
+     (igual número de filas que de columnas) y puede ser o no simétrica.
+
+     `dgeev(<A>)' calcula sólo los autovalores de <A>.  `dgeev(<A>,
+     <right_p>, <left_p>)' calcula los autovalores de <A> y los
+     autovectores por la derecha cuando <right_p> = `true', y los
+     autovectores por la izquierda cuando <left_p> = `true'.
+
+     La función devuelve una lista de tres elementos.  El primer
+     elemento es una lista con los autovalores.  El segundo elemento es
+     `false' o la matriz de autovectores por la derecha.  El tercer
+     elemento es `false' o la matriz de autovectores por la izquierda.
+
+     El autovector por la derecha v(j) (la j-ésima columna de la matriz
+     de autovectores por la derecha) satisface
+
+     A . v(j) = lambda(j) . v(j)
+
+     donde lambda(j) es su autovalor asociado.
+
+     El autovector por la izquierda u(j) (la j-ésima columna de la
+     matriz de autovectores por la izquierda) satisface
+
+     u(j)**H . A = lambda(j) . u(j)**H
+
+     donde u(j)**H denota la transpuesta conjugada de u(j).
+
+     La función de Maxima `ctranspose' calcula la transpuesta conjugada.
+
+     Los autovectores calculados están normalizados para que su norma
+     euclídea valga 1 y su componente mayor tenga su parte imaginaria
+     igual a cero.
+
+     Ejemplo:
+
+          (%i1) load (lapack)$
+          (%i2) fpprintprec : 6;
+          (%o2)                           6
+          (%i3) M : matrix ([9.5, 1.75], [3.25, 10.45]);
+                                   [ 9.5   1.75  ]
+          (%o3)                    [             ]
+                                   [ 3.25  10.45 ]
+          (%i4) dgeev (M);
+          (%o4)          [[7.54331, 12.4067], false, false]
+          (%i5) [L, v, u] : dgeev (M, true, true);
+                                     [ - .666642  - .515792 ]
+          (%o5) [[7.54331, 12.4067], [                      ],
+                                     [  .745378   - .856714 ]
+                                                  [ - .856714  - .745378 ]
+                                                  [                      ]]
+                                                  [  .515792   - .666642 ]
+          (%i6) D : apply (diag_matrix, L);
+                                [ 7.54331     0    ]
+          (%o6)                 [                  ]
+                                [    0     12.4067 ]
+          (%i7) M . v - v . D;
+                          [      0.0       - 8.88178E-16 ]
+          (%o7)           [                              ]
+                          [ - 8.88178E-16       0.0      ]
+          (%i8) transpose (u) . M - D . transpose (u);
+                               [ 0.0  - 4.44089E-16 ]
+          (%o8)                [                    ]
+                               [ 0.0       0.0      ]
+
+ -- Función: dgeqrf (<A>)
+     Calcula la descomposición QR de la matriz <A>.  Todos los
+     elementos de <A> deben ser enteros o números reales. No es
+     necesario que <A> tenga el mismo número de filas que de columnas.
+
+     La función devuelve una lista con dos elementos; el primero es la
+     matriz cuadrada ortonormal <Q>, con el mismo número de filas que
+     <A>, y el segundo es la matriz triangular superior <R>, de iguales
+     dimensiones que <A>. El producto `<Q> . <R>', siendo "." el
+     operador de la multiplicación matricial, es igual a <A>, ignorando
+     errores de redondeo.
+
+          (%i1) load (lapack) $
+          (%i2) fpprintprec : 6 $
+          (%i3) M : matrix ([1, -3.2, 8], [-11, 2.7, 5.9]) $
+          (%i4) [q, r] : dgeqrf (M);
+                 [ - .0905357  .995893  ]
+          (%o4) [[                      ],
+                 [  .995893    .0905357 ]
+                                         [ - 11.0454   2.97863   5.15148 ]
+                                         [                               ]]
+                                         [     0      - 2.94241  8.50131 ]
+          (%i5) q . r - M;
+                   [ - 7.77156E-16   1.77636E-15   - 8.88178E-16 ]
+          (%o5)    [                                             ]
+                   [      0.0       - 1.33227E-15   8.88178E-16  ]
+          (%i6) mat_norm (%, 1);
+          (%o6)                      3.10862E-15
+
+
+ -- Función: dgesv (<A>, <b>)
+     Calcula la solución <x> de la ecuación <A> <x> = <b>, siendo <A>
+     una matriz cuadrada y <b> otra matriz con el mismo número de filas
+     que <A> y un número arbitrario de columnas. Las dimensiones de la
+     solución <x> son las mismas de <b>.
+
+     Los elementos de <A> y <b> deben ser reducibles a números decimales
+     si se les aplica la función `float', por lo que tales elementos
+     pueden en principio ser de cualquier tipo numérico, constantes
+     numéricas simbólicas o cualesquiera expresiones reducibles a un
+     número decimal.  Los elementos de <x> son siempre números
+     decimales. Todas las operaciones aritméticas se realizan en coma
+     flotante.
+
+     `dgesv' calcula la solución mediante la descomposición LU de <A>.
+
+     Ejemplos:
+
+     `dgesv' calcula la solución <x> de la ecuación <A> <x> = <b>.
+
+          (%i1) A : matrix ([1, -2.5], [0.375, 5]);
+                                         [   1    - 2.5 ]
+          (%o1)                          [              ]
+                                         [ 0.375    5   ]
+          (%i2) b : matrix ([1.75], [-0.625]);
+                                            [  1.75   ]
+          (%o2)                             [         ]
+                                            [ - 0.625 ]
+          (%i3) x : dgesv (A, b);
+                                      [  1.210526315789474  ]
+          (%o3)                       [                     ]
+                                      [ - 0.215789473684211 ]
+          (%i4) dlange (inf_norm, b - A.x);
+          (%o4)                                 0.0
+
+     <b> una matriz con el mismo número de filas que <A> y un número
+     arbitrario de columnas. Las dimensiones de <x> son las mismas de
+     <b>.
+
+          (%o0)                                done
+          (%i1) A : matrix ([1, -0.15], [1.82, 2]);
+                                         [  1    - 0.15 ]
+          (%o1)                          [              ]
+                                         [ 1.82    2    ]
+          (%i2) b : matrix ([3.7, 1, 8], [-2.3, 5, -3.9]);
+                                        [  3.7   1    8   ]
+          (%o2)                         [                 ]
+                                        [ - 2.3  5  - 3.9 ]
+          (%i3) x : dgesv (A, b);
+                  [  3.103827540695117   1.20985481742191    6.781786185657722  ]
+          (%o3)   [                                                             ]
+                  [ - 3.974483062032557  1.399032116146062  - 8.121425428948527 ]
+          (%i4) dlange (inf_norm, b - A . x);
+          (%o4)                       1.1102230246251565E-15
+
+     Los elementos de <A> y <b> deben ser reducibles a números
+     decimales.
+
+          (%i1) A : matrix ([5, -%pi], [1b0, 11/17]);
+                                         [   5    - %pi ]
+                                         [              ]
+          (%o1)                          [         11   ]
+                                         [ 1.0b0   --   ]
+                                         [         17   ]
+          (%i2) b : matrix ([%e], [sin(1)]);
+                                            [   %e   ]
+          (%o2)                             [        ]
+                                            [ sin(1) ]
+          (%i3) x : dgesv (A, b);
+                                       [ 0.690375643155986 ]
+          (%o3)                        [                   ]
+                                       [ 0.233510982552952 ]
+          (%i4) dlange (inf_norm, b - A . x);
+          (%o4)                        2.220446049250313E-16
+
+
+ -- Función: dgesvd (<A>)
+ -- Función: dgesvd (<A>, <left_p>, <right_p>)
+     Calcula la descomposición singular (SVD, en inglés) de la matriz
+     <A>, que contiene los valores singulares y, opcionalmente, los
+     vectores singulares por la derecha o por la izquierda. Todos los
+     elementos de <A> deben ser enteros o números decimales en coma
+     flotante. La matriz <A> puede ser cuadrada o no (igual número de
+     filas que de columnas).
+
+     Sea m el número de filas y n el de columnas de <A>.  La
+     descomposición singular de <A> consiste en calcular tres matrices:
+     <U>, <Sigma> y <V^T>, tales que
+
+     <A> = <U> . <Sigma> . <V>^T
+
+     donde <U> es una matriz unitaria m-por-m, <Sigma> es una matriz
+     diagonal m-por-n y <V^T> es una matriz unitaria n-por-n.
+
+     Sea sigma[i] un elemento diagonal de Sigma, esto es, <Sigma>[i, i]
+     = <sigma>[i]. Los elementos sigma[i] se llaman valores singulares
+     de <A>, los cuales son reales y no negativos, siendo devueltos por
+     la función `dgesvd' en orden descendente.
+
+     Las primeras min(m, n) columnas de <U> y <V> son los vectores
+     singulares izquierdo y derecho de <A>. Nótese que `dgesvd'
+     devuelve la transpuesta de <V>, no la propia matriz <V>.
+
+     `dgesvd(<A>)' calcula únicamente los valores singulares de <A>.
+     `dgesvd(<A>, <left_p>, <right_p>)' calcula los valores singulares
+     de <A> y los vectores sigulares por la izquierda cuando <left_p> =
+     `true', y los vectores sigulares por la derecha cuando <right_p> =
+     `true'.
+
+     La función devuelve una lista de tres elementos.  El primer
+     elemento es una lista con los valores singulares.  El segundo
+     elemento es `false' o la matriz de vectores singulares por la
+     izquierda.  El tercer elemento es `false' o la matriz de vectores
+     singulares por la derecha.
+
+     Ejemplo:
+
+          (%i1) load (lapack)$
+          (%i2) fpprintprec : 6;
+          (%o2)                           6
+          (%i3) M: matrix([1, 2, 3], [3.5, 0.5, 8], [-1, 2, -3], [4, 9, 7]);
+                                  [  1    2    3  ]
+                                  [               ]
+                                  [ 3.5  0.5   8  ]
+          (%o3)                   [               ]
+                                  [ - 1   2   - 3 ]
+                                  [               ]
+                                  [  4    9    7  ]
+          (%i4) dgesvd (M);
+          (%o4)      [[14.4744, 6.38637, .452547], false, false]
+          (%i5) [sigma, U, VT] : dgesvd (M, true, true);
+          (%o5) [[14.4744, 6.38637, .452547],
+          [ - .256731  .00816168   .959029    - .119523 ]
+          [                                             ]
+          [ - .526456   .672116   - .206236   - .478091 ]
+          [                                             ],
+          [  .107997   - .532278  - .0708315  - 0.83666 ]
+          [                                             ]
+          [ - .803287  - .514659  - .180867    .239046  ]
+          [ - .374486  - .538209  - .755044 ]
+          [                                 ]
+          [  .130623   - .836799   0.5317   ]]
+          [                                 ]
+          [ - .917986   .100488    .383672  ]
+          (%i6) m : length (U);
+          (%o6)                           4
+          (%i7) n : length (VT);
+          (%o7)                           3
+          (%i8) Sigma:
+                  genmatrix(lambda ([i, j], if i=j then sigma[i] else 0),
+                            m, n);
+                            [ 14.4744     0        0    ]
+                            [                           ]
+                            [    0     6.38637     0    ]
+          (%o8)             [                           ]
+                            [    0        0     .452547 ]
+                            [                           ]
+                            [    0        0        0    ]
+          (%i9) U . Sigma . VT - M;
+                    [  1.11022E-15        0.0       1.77636E-15 ]
+                    [                                           ]
+                    [  1.33227E-15    1.66533E-15       0.0     ]
+          (%o9)     [                                           ]
+                    [ - 4.44089E-16  - 8.88178E-16  4.44089E-16 ]
+                    [                                           ]
+                    [  8.88178E-16    1.77636E-15   8.88178E-16 ]
+          (%i10) transpose (U) . U;
+                 [     1.0      5.55112E-17    2.498E-16     2.77556E-17  ]
+                 [                                                        ]
+                 [ 5.55112E-17      1.0       5.55112E-17    4.16334E-17  ]
+          (%o10) [                                                        ]
+                 [  2.498E-16   5.55112E-17       1.0       - 2.08167E-16 ]
+                 [                                                        ]
+                 [ 2.77556E-17  4.16334E-17  - 2.08167E-16       1.0      ]
+          (%i11) VT . transpose (VT);
+                    [      1.0           0.0      - 5.55112E-17 ]
+                    [                                           ]
+          (%o11)    [      0.0           1.0       5.55112E-17  ]
+                    [                                           ]
+                    [ - 5.55112E-17  5.55112E-17       1.0      ]
+
+
+ -- Función: dlange (<norm>, <A>)
+ -- Función: zlange (<norm>, <A>)
+     Calcula una norma o seudonorma de la matriz <A>.
+
+    `max'
+          Calcula max(abs(A(i, j))), siendo i y j números de filas y
+          columnas, respectivamente, de <A>.  Nótese que esta función
+          no es una norma matricial.
+
+    `one_norm'
+          Calcula la norma L[1] de <A>, esto es, el máximo de la suma
+          de los valores absolutos de los elementos de cada columna.
+
+    `inf_norm'
+          Calcula la norma L[inf] de <A>, esto es, el máximo de la suma
+          de los valores absolutos de los elementos de cada fila.
+
+    `frobenius'
+          Calcula la norma de Frobenius de <A>, esto es, la raíz
+          cuadrada de la suma de los cuadrados de los elementos de la
+          matriz.
+
+ -- Función: dgemm (<A>, <B>)
+ -- Función: dgemm (<A>, <B>, <options>)
+     Calcula el producto de dos matrices y, opcionalmente, suma este
+     producto con una tercera matriz.
+
+     En su forma más simple, `dgemm(<A>, <B>)' calcula el producto de
+     las matrices reales <A> y <B>.
+
+     En la segunda forma, `dgemm' calcula <alpha> * <A> * <B> + <beta>
+     * <C>, donde <A>, <B> y <C> son matrices reales de dimensiones
+     apropiadas, siendo <alpha> y <beta> números reales. De forma
+     opcional, tanto <A> como <B> pueden transponerse antes de calcular
+     su producto. Los parámetros adicionales se pueden especificar en
+     cualquier orden, siendo su sintaxis de la forma `clave=valor'. Las
+     claves reconocidas son:
+
+    <C>
+          La matriz <C> que debe ser sumada. El valor por defecto es
+          `false', lo que significa que no se sumará ninguna matriz.
+
+    <alpha>
+          El producto de <A> por <B> se multiplicará por este vaalor.
+          El valor por defecto es 1.
+
+    <beta>
+          Si se da la matriz <C>, se multiplicará por este valor antes
+          de ser sumada.  El valor por defecto es 0, lo que significa
+          que <C> no se suma, incluso estando presente. Por lo tanto,
+          téngase cuidado en especificar un valor no nulo para <beta>.
+
+    <transpose_a>
+          Si toma el valor `true', se utilizará la transpuesta de <A>,
+          en lugar de la propia matriz <A>, en el producto. El valor
+          por defecto es `false'.
+
+    <transpose_b>
+          Si toma el valor `true', se utilizará la transpuesta de <B>,
+          en lugar de la propia matriz <B>, en el producto. El valor
+          por defecto es `false'.
+
+          (%i1) load (lapack)$
+          (%i2) A : matrix([1,2,3],[4,5,6],[7,8,9]);
+                                            [ 1  2  3 ]
+                                            [         ]
+          (%o2)                             [ 4  5  6 ]
+                                            [         ]
+                                            [ 7  8  9 ]
+          (%i3) B : matrix([-1,-2,-3],[-4,-5,-6],[-7,-8,-9]);
+                                         [ - 1  - 2  - 3 ]
+                                         [               ]
+          (%o3)                          [ - 4  - 5  - 6 ]
+                                         [               ]
+                                         [ - 7  - 8  - 9 ]
+          (%i4) C : matrix([3,2,1],[6,5,4],[9,8,7]);
+                                            [ 3  2  1 ]
+                                            [         ]
+          (%o4)                             [ 6  5  4 ]
+                                            [         ]
+                                            [ 9  8  7 ]
+          (%i5) dgemm(A,B);
+                                   [ - 30.0   - 36.0   - 42.0  ]
+                                   [                           ]
+          (%o5)                    [ - 66.0   - 81.0   - 96.0  ]
+                                   [                           ]
+                                   [ - 102.0  - 126.0  - 150.0 ]
+          (%i6) A . B;
+                                      [ - 30   - 36   - 42  ]
+                                      [                     ]
+          (%o6)                       [ - 66   - 81   - 96  ]
+                                      [                     ]
+                                      [ - 102  - 126  - 150 ]
+          (%i7) dgemm(A,B,transpose_a=true);
+                                   [ - 66.0  - 78.0   - 90.0  ]
+                                   [                          ]
+          (%o7)                    [ - 78.0  - 93.0   - 108.0 ]
+                                   [                          ]
+                                   [ - 90.0  - 108.0  - 126.0 ]
+          (%i8) transpose(A) . B;
+                                     [ - 66  - 78   - 90  ]
+                                     [                    ]
+          (%o8)                      [ - 78  - 93   - 108 ]
+                                     [                    ]
+                                     [ - 90  - 108  - 126 ]
+          (%i9) dgemm(A,B,c=C,beta=1);
+                                   [ - 27.0  - 34.0   - 41.0  ]
+                                   [                          ]
+          (%o9)                    [ - 60.0  - 76.0   - 92.0  ]
+                                   [                          ]
+                                   [ - 93.0  - 118.0  - 143.0 ]
+          (%i10) A . B + C;
+                                      [ - 27  - 34   - 41  ]
+                                      [                    ]
+          (%o10)                      [ - 60  - 76   - 92  ]
+                                      [                    ]
+                                      [ - 93  - 118  - 143 ]
+          (%i11) dgemm(A,B,c=C,beta=1, alpha=-1);
+                                      [ 33.0   38.0   43.0  ]
+                                      [                     ]
+          (%o11)                      [ 72.0   86.0   100.0 ]
+                                      [                     ]
+                                      [ 111.0  134.0  157.0 ]
+          (%i12) -A . B + C;
+                                         [ 33   38   43  ]
+                                         [               ]
+          (%o12)                         [ 72   86   100 ]
+                                         [               ]
+                                         [ 111  134  157 ]
+
+
+File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: lapack,  Up: Top
+
+60 lbfgs
+********
+
+* Menu:
+
+* Introducción a lbfgs::
+* Funciones y variables para lbfgs::
+
+
+File: maxima.info,  Node: Introducción a lbfgs,  Next: Funciones y variables para lbfgs,  Prev: Top,  Up: Top
+
+60.1 Introducción a lbfgs
+=========================
+
+La función `lbfgs' implementa el llamado algoritmo L-BFGS [1] para
+resolver problemas de minimización sin restricciones mediante una
+técnica cuasi-Newton con memoria limitada (BFGS). El término memoria
+limitada procede del hecho de que se almacena una aproximación de rango
+bajo de la inversa de la matriz hessiana, en lugar de la matriz
+completa. El programa fue originalmente escrito en Fortran [2] por
+Jorge Nocedal, incorporando algunas funciones escritas originalmente
+por Jorge J. Moré y David J. Thuente, traducidas posteriormente a Lisp
+automáticamente con el programa `f2cl'. El paquete `lbfgs' contiene el
+código traducido, junto con una función interfaz que para controlar
+ciertos detalles.
+
+   Referencias:
+
+   [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
+large scale optimization". Mathematical Programming B 45:503-528 (1989)
+
+   [2] `http://netlib.org/opt/lbfgs_um.shar'
+
+
+File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción a lbfgs,  Up: Top
+
+60.2 Funciones y variables para lbfgs
+=====================================
+
+ -- Función: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
+ -- Function: lbfgs ([<FOM>, <grad>] <X>, <X0>, <epsilon>, <iprint>)
+     Encuentra una solución aproximada para el problema de minimización
+     sin restricciones de la función objetivo <FOM> para la lista de
+     variables <X>, partiendo de los estimadores iniciales <X0>, de tal
+     manera que norm(grad(FOM)) < epsilon*max(1, norm(X)).
+
+     El argumento <grad> es el gradiente de <FOM> respecto de las
+     variables <X>. <grad> es una lista con el mismo número de
+     elementos que <X>. Si no se pasa este argumento, el gradiente se
+     calcula automáticamente mediante derivación simbólica.
+
+     El algoritmo utilizado es una técnica cuasi-Newton con memoria
+     limitada (BFGS) [1]. El término memoria limitada procede del hecho
+     de que se almacena una aproximación de rango bajo de la inversa de
+     la matriz hessiana, en lugar de la matriz completa.  Cada
+     iteración del algoritmo es una búsqueda a lo largo de una recta,
+     cuya dirección se calcula a partir de la matriz inversa aproximada
+     del hessiano. La función objetivo decrece siempre tras cada
+     búsqueda exitosa a lo largo de la recta; además, casi siempre
+     decrece también el módulo del gradiente de la función.
+
+     El argumento <iprint> controla los mensajes de progreso que envía
+     la función `lbfgs'.
+
+    `iprint[1]'
+          `<iprint>[1]' controla la frecuencia con la que se emiten los
+          mensajes.
+         `iprint[1] < 0'
+               No se envían mensajes.
+
+         `iprint[1] = 0'
+               Mensajes únicamente en la primera y última iteraciones.
+
+         `iprint[1] > 0'
+               Imprime un mensaje cada `<iprint>[1]' iteraciones.
+
+    `iprint[2]'
+          `<iprint>[2]' controla la cantidad de información contenida
+          en los mensajes.
+         `iprint[2] = 0'
+               Imprime contador de iteraciones, número de evaluaciones
+               de <FOM>, valor de <FOM>, módulo del gradiente de <FOM>
+               y amplitud del paso.
+
+         `iprint[2] = 1'
+               Igual que `<iprint>[2] = 0', incluyendo <X0> y el
+               gradiente de <FOM> evaluado en <X0>.
+
+         `iprint[2] = 2'
+               Igual que `<iprint>[2] = 1', incluyendo los valores de
+               <X> en cada iteración.
+
+         `iprint[2] = 3'
+               Igual que `<iprint>[2] = 2', incluyendo el gradiente de
+               <FOM> en cada iteración.
+
+     Las columnas devueltas por `lbfgs' son las siguientes:
+
+    `I'
+          Número de iteraciones. Se incremente tras cada búsqueda a lo
+          largo de una recta.
+
+    `NFN'
+          Número de evaluaciones de la función objetivo.
+
+    `FUNC'
+          Valor de la función objetivo al final de cada iteración.
+
+    `GNORM'
+          Módulo del gradiente de la función objetivo al final de cada
+          iteración.
+
+    `STEPLENGTH'
+          Un parámetro interno del algoritmo de búsqueda.
+
+     Para más información sobre el algoritmo se puede acudir a los
+     comentarios en el código original en Fortran [2].
+
+     Véanse también `lbfgs_nfeval_max' y `lbfgs_ncorrections'.
+
+     Referencias:
+
+     [1] D. Liu and J. Nocedal. "On the limited memory BFGS method for
+     large scale optimization". Mathematical Programming B 45:503-528
+     (1989)
+
+     [2] `http://netlib.org/opt/lbfgs_um.shar'
+
+     Ejemplos:
+
+     La misma función objetivo utilizada por FGCOMPUTE en el programa
+     sdrive.f del paquete LBFGS de Netlib. Nótese que las variables en
+     cuestión están subindicadas. La función objetivo tiene un mínimo
+     exacto igual a cero en u[k] = 1, para k = 1, ..., 8.
+          (%i1) load (lbfgs);
+          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i2) t1[j] := 1 - u[j];
+          (%o2)                     t1  := 1 - u
+                                      j         j
+          (%i3) t2[j] := 10*(u[j + 1] - u[j]^2);
+                                                    2
+          (%o3)                t2  := 10 (u      - u )
+                                 j         j + 1    j
+          (%i4) n : 8;
+          (%o4)                           8
+          (%i5) FOM : sum (t1[2*j - 1]^2 + t2[2*j - 1]^2, j, 1, n/2);
+                           2 2           2              2 2           2
+          (%o5) 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
+                      8    7           7           6    5           5
+                               2 2           2              2 2           2
+                  + 100 (u  - u )  + (1 - u )  + 100 (u  - u )  + (1 - u )
+                          4    3           3           2    1           1
+          (%i6) lbfgs (FOM, '[u[1],u[2],u[3],u[4],u[5],u[6],u[7],u[8]],
+                 [-1.2, 1, -1.2, 1, -1.2, 1, -1.2, 1], 1e-3, [1, 0]);
+          *************************************************
+            N=    8   NUMBER OF CORRECTIONS=25
+                 INITIAL VALUES
+           F=  9.680000000000000D+01   GNORM=  4.657353755084532D+02
+          *************************************************
+
+           I NFN   FUNC                    GNORM                   STEPLENGTH
+
+           1   3   1.651479526340304D+01   4.324359291335977D+00   7.926153934390631D-04
+           2   4   1.650209316638371D+01   3.575788161060007D+00   1.000000000000000D+00
+           3   5   1.645461701312851D+01   6.230869903601577D+00   1.000000000000000D+00
+           4   6   1.636867301275588D+01   1.177589920974980D+01   1.000000000000000D+00
+           5   7   1.612153014409201D+01   2.292797147151288D+01   1.000000000000000D+00
+           6   8   1.569118407390628D+01   3.687447158775571D+01   1.000000000000000D+00
+           7   9   1.510361958398942D+01   4.501931728123680D+01   1.000000000000000D+00
+           8  10   1.391077875774294D+01   4.526061463810632D+01   1.000000000000000D+00
+           9  11   1.165625686278198D+01   2.748348965356917D+01   1.000000000000000D+00
+          10  12   9.859422687859137D+00   2.111494974231644D+01   1.000000000000000D+00
+          11  13   7.815442521732281D+00   6.110762325766556D+00   1.000000000000000D+00
+          12  15   7.346380905773160D+00   2.165281166714631D+01   1.285316401779533D-01
+          13  16   6.330460634066370D+00   1.401220851762050D+01   1.000000000000000D+00
+          14  17   5.238763939851439D+00   1.702473787613255D+01   1.000000000000000D+00
+          15  18   3.754016790406701D+00   7.981845727704576D+00   1.000000000000000D+00
+          16  20   3.001238402309352D+00   3.925482944716691D+00   2.333129631296807D-01
+          17  22   2.794390709718290D+00   8.243329982546473D+00   2.503577283782332D-01
+          18  23   2.563783562918759D+00   1.035413426521790D+01   1.000000000000000D+00
+          19  24   2.019429976377856D+00   1.065187312346769D+01   1.000000000000000D+00
+          20  25   1.428003167670903D+00   2.475962450826961D+00   1.000000000000000D+00
+          21  27   1.197874264861340D+00   8.441707983493810D+00   4.303451060808756D-01
+          22  28   9.023848941942773D-01   1.113189216635162D+01   1.000000000000000D+00
+          23  29   5.508226405863770D-01   2.380830600326308D+00   1.000000000000000D+00
+          24  31   3.902893258815567D-01   5.625595816584421D+00   4.834988416524465D-01
+          25  32   3.207542206990315D-01   1.149444645416472D+01   1.000000000000000D+00
+          26  33   1.874468266362791D-01   3.632482152880997D+00   1.000000000000000D+00
+          27  34   9.575763380706598D-02   4.816497446154354D+00   1.000000000000000D+00
+          28  35   4.085145107543406D-02   2.087009350166495D+00   1.000000000000000D+00
+          29  36   1.931106001379290D-02   3.886818608498966D+00   1.000000000000000D+00
+          30  37   6.894000721499670D-03   3.198505796342214D+00   1.000000000000000D+00
+          31  38   1.443296033051864D-03   1.590265471025043D+00   1.000000000000000D+00
+          32  39   1.571766603154336D-04   3.098257063980634D-01   1.000000000000000D+00
+          33  40   1.288011776581970D-05   1.207784183577257D-02   1.000000000000000D+00
+          34  41   1.806140173752971D-06   4.587890233385193D-02   1.000000000000000D+00
+          35  42   1.769004645459358D-07   1.790537375052208D-02   1.000000000000000D+00
+          36  43   3.312164100763217D-10   6.782068426119681D-04   1.000000000000000D+00
+
+
+           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
+           IFLAG = 0
+          (%o6) [u  = 1.000005339815974, u  = 1.000009942839805,
+                  1                       2
+          u  = 1.000005339815974, u  = 1.000009942839805,
+           3                       4
+          u  = 1.000005339815974, u  = 1.000009942839805,
+           5                       6
+          u  = 1.000005339815974, u  = 1.000009942839805]
+           7                       8
+
+     Un problema de regresión. La función objetivo es el cuadrado medio
+     de la diferencia entre la predicción F(X[i]) y el valor observado
+     Y[i]. La función F es monótona y acotada (llamada en ocasiones
+     "sigmoidal"). En este ejemplo, `lbfgs' calcula valores aproximados
+     para los parámetros de F y `plot2d' hace una representación gráfica
+     comparativa de F junto con los datos observados.
+
+          (%i1) load (lbfgs);
+          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i2) FOM : '((1/length(X))*sum((F(X[i]) - Y[i])^2, i, 1,
+                                                          length(X)));
+                                         2
+                         sum((F(X ) - Y ) , i, 1, length(X))
+                                 i     i
+          (%o2)          -----------------------------------
+                                      length(X)
+          (%i3) X : [1, 2, 3, 4, 5];
+          (%o3)                    [1, 2, 3, 4, 5]
+          (%i4) Y : [0, 0.5, 1, 1.25, 1.5];
+          (%o4)                [0, 0.5, 1, 1.25, 1.5]
+          (%i5) F(x) := A/(1 + exp(-B*(x - C)));
+                                             A
+          (%o5)            F(x) := ----------------------
+                                   1 + exp((- B) (x - C))
+          (%i6) ''FOM;
+                          A               2            A                2
+          (%o6) ((----------------- - 1.5)  + (----------------- - 1.25)
+                    - B (5 - C)                  - B (4 - C)
+                  %e            + 1            %e            + 1
+                      A             2            A               2
+           + (----------------- - 1)  + (----------------- - 0.5)
+                - B (3 - C)                - B (2 - C)
+              %e            + 1          %e            + 1
+                       2
+                      A
+           + --------------------)/5
+                - B (1 - C)     2
+             (%e            + 1)
+          (%i7) estimates : lbfgs (FOM, '[A, B, C], [1, 1, 1], 1e-4, [1, 0]);
+          *************************************************
+            N=    3   NUMBER OF CORRECTIONS=25
+                 INITIAL VALUES
+           F=  1.348738534246918D-01   GNORM=  2.000215531936760D-01
+          *************************************************
+
+          I  NFN  FUNC                    GNORM                   STEPLENGTH
+          1    3  1.177820636622582D-01   9.893138394953992D-02   8.554435968992371D-01
+          2    6  2.302653892214013D-02   1.180098521565904D-01   2.100000000000000D+01
+          3    8  1.496348495303005D-02   9.611201567691633D-02   5.257340567840707D-01
+          4    9  7.900460841091139D-03   1.325041647391314D-02   1.000000000000000D+00
+          5   10  7.314495451266917D-03   1.510670810312237D-02   1.000000000000000D+00
+          6   11  6.750147275936680D-03   1.914964958023047D-02   1.000000000000000D+00
+          7   12  5.850716021108205D-03   1.028089194579363D-02   1.000000000000000D+00
+          8   13  5.778664230657791D-03   3.676866074530332D-04   1.000000000000000D+00
+          9   14  5.777818823650782D-03   3.010740179797255D-04   1.000000000000000D+00
+
+
+           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
+           IFLAG = 0
+          (%o7) [A = 1.461933911464101, B = 1.601593973254802,
+                                                     C = 2.528933072164854]
+          (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
+          (%o8)
+
+     Especificando el gradiente de la función objetivo en lugar de
+     calcularlo simbólicamente.
+
+          (%i1) load (lbfgs)$
+          (%i2) F(a, b, c) := (a - 5)^2 + (b - 3)^4 + (c - 2)^6;
+                                         2          4          6
+          (%o2)     F(a, b, c) := (a - 5)  + (b - 3)  + (c - 2)
+          (%i3) F_grad : map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]);
+                                              3           5
+          (%o3)          [2 (a - 5), 4 (b - 3) , 6 (c - 2) ]
+          (%i4) estimates : lbfgs ([F(a, b, c), F_grad], [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
+          *************************************************
+            N=    3   NUMBER OF CORRECTIONS=25
+                 INITIAL VALUES
+           F=  1.700000000000000D+02   GNORM=  2.205175729958953D+02
+          *************************************************
+
+             I  NFN     FUNC                    GNORM                   STEPLENGTH
+
+             1    2     6.632967565917638D+01   6.498411132518770D+01   4.534785987412505D-03
+             2    3     4.368890936228036D+01   3.784147651974131D+01   1.000000000000000D+00
+             3    4     2.685298972775190D+01   1.640262125898521D+01   1.000000000000000D+00
+             4    5     1.909064767659852D+01   9.733664001790506D+00   1.000000000000000D+00
+             5    6     1.006493272061515D+01   6.344808151880209D+00   1.000000000000000D+00
+             6    7     1.215263596054294D+00   2.204727876126879D+00   1.000000000000000D+00
+             7    8     1.080252896385334D-02   1.431637116951849D-01   1.000000000000000D+00
+             8    9     8.407195124830908D-03   1.126344579730013D-01   1.000000000000000D+00
+             9   10     5.022091686198527D-03   7.750731829225274D-02   1.000000000000000D+00
+            10   11     2.277152808939775D-03   5.032810859286795D-02   1.000000000000000D+00
+            11   12     6.489384688303218D-04   1.932007150271008D-02   1.000000000000000D+00
+            12   13     2.075791943844548D-04   6.964319310814364D-03   1.000000000000000D+00
+            13   14     7.349472666162257D-05   4.017449067849554D-03   1.000000000000000D+00
+            14   15     2.293617477985237D-05   1.334590390856715D-03   1.000000000000000D+00
+            15   16     7.683645404048675D-06   6.011057038099201D-04   1.000000000000000D+00
+
+
+           THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
+           IFLAG = 0
+          (%o4) [a = 5.000086823042934, b = 3.05239542970518,
+                                                     c = 1.927980629919583]
+
+
+ -- Variable: lbfgs_nfeval_max
+     Valor por defecto: 100
+
+     La variable `lbfgs_nfeval_max' almacena el número máximo de
+     evaluaciones de la función objetivo en `lbfgs'. Cuando se alcanza
+     el valor `lbfgs_nfeval_max', `lbfgs' devuelve el resultado logrado
+     en la última iteración exitosa.
+
+
+ -- Variable: lbfgs_ncorrections
+     Valor por defecto: 25
+
+     La variable `lbfgs_ncorrections' almacena el número de correcciones
+     aplicadas a la matriz inversa aproximada del hessiano, la cual es
+     gestionada por `lbfgs'.
+
+
+
+File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
+
+61 lindstedt
+************
+
+* Menu:
+
+* Funciones y variables para lindstedt::
+
+
+File: maxima.info,  Node: Funciones y variables para lindstedt,  Prev: lindstedt,  Up: lindstedt
+
+61.1 Funciones y variables para lindstedt
+=========================================
+
+ -- Función: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
+     Este es el primer paso hacia un programa para resolver ecuaciones
+     de Lindstedt.  Puede resolver problemas con condiciones iniciales,
+     las cuales pueden ser constantes arbitrarias (no pueden usarse
+     <%k1> ni <%k2>) donde las condiciones iniciales sobre las
+     ecuaciones de perturbación son z[i]=0, z'[i]=0 para i>0.  El
+     argumento <ic> es la lista de condiciones iniciales.
+
+     Ejemplo:
+          (%i1) load("makeOrders")$
+
+          (%i2) load("lindstedt")$
+
+          (%i3) Lindstedt('diff(x,t,2)+x-(e*x^3)/6,e,2,[1,0]);
+                    2
+                   e  (cos(5 T) - 24 cos(3 T) + 23 cos(T))
+          (%o3) [[[---------------------------------------
+                                    36864
+             e (cos(3 T) - cos(T))
+           - --------------------- + cos(T)],
+                      192
+                    2
+                 7 e    e
+          T = (- ---- - -- + 1) t]]
+                 3072   16
+
+     Antes de hacer uso de esta función ejecútense
+     `load("makeOrders")' y `load("lindstedt")'.
+
+
+File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
+
+62 linearalgebra
+****************
+
+* Menu:
+
+* Introducción a linearalgebra::
+* Funciones y variables para linearalgebra::
+
+
+File: maxima.info,  Node: Introducción a linearalgebra,  Next: Funciones y variables para linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
+
+62.1 Introducción a linearalgebra
+=================================
+
+El paquete `linearalgebra' contiene una batería de funciones para
+álgebra lineal.
+
+   Ejemplo:
+
+     (%i1) M : matrix ([1, 2], [1, 2]);
+                                 [ 1  2 ]
+     (%o1)                       [      ]
+                                 [ 1  2 ]
+     (%i2) nullspace (M);
+                                    [  1  ]
+                                    [     ]
+     (%o2)                     span([   1 ])
+                                    [ - - ]
+                                    [   2 ]
+     (%i3) columnspace (M);
+                                     [ 1 ]
+     (%o3)                      span([   ])
+                                     [ 1 ]
+     (%i4) ptriangularize (M - z*ident(2), z);
+                              [ 1   2 - z   ]
+     (%o4)                    [             ]
+                              [           2 ]
+                              [ 0  3 z - z  ]
+     (%i5) M : matrix ([1, 2, 3], [4, 5, 6], [7, 8, 9]) - z*ident(3);
+                          [ 1 - z    2      3   ]
+                          [                     ]
+     (%o5)                [   4    5 - z    6   ]
+                          [                     ]
+                          [   7      8    9 - z ]
+     (%i6) MM : ptriangularize (M, z);
+                   [ 4  5 - z            6            ]
+                   [                                  ]
+                   [                2                 ]
+                   [     66        z    102 z   132   ]
+                   [ 0   --      - -- + ----- + ---   ]
+     (%o6)         [     49        7     49     49    ]
+                   [                                  ]
+                   [               3        2         ]
+                   [           49 z    245 z    147 z ]
+                   [ 0    0    ----- - ------ - ----- ]
+                   [            264      88      44   ]
+     (%i7) algebraic : true;
+     (%o7)                         true
+     (%i8) tellrat (MM [3, 3]);
+                              3       2
+     (%o8)                  [z  - 15 z  - 18 z]
+     (%i9) MM : ratsimp (MM);
+                    [ 4  5 - z           6           ]
+                    [                                ]
+                    [                2               ]
+     (%o9)          [     66      7 z  - 102 z - 132 ]
+                    [ 0   --    - ------------------ ]
+                    [     49              49         ]
+                    [                                ]
+                    [ 0    0             0           ]
+     (%i10) nullspace (MM);
+                             [        1         ]
+                             [                  ]
+                             [   2              ]
+                             [  z  - 14 z - 16  ]
+                             [  --------------  ]
+     (%o10)             span([        8         ])
+                             [                  ]
+                             [    2             ]
+                             [   z  - 18 z - 12 ]
+                             [ - -------------- ]
+                             [         12       ]
+     (%i11) M : matrix ([1, 2, 3, 4], [5, 6, 7, 8],
+                        [9, 10, 11, 12], [13, 14, 15, 16]);
+                            [ 1   2   3   4  ]
+                            [                ]
+                            [ 5   6   7   8  ]
+     (%o11)                 [                ]
+                            [ 9   10  11  12 ]
+                            [                ]
+                            [ 13  14  15  16 ]
+     (%i12) columnspace (M);
+                                [ 1  ]  [ 2  ]
+                                [    ]  [    ]
+                                [ 5  ]  [ 6  ]
+     (%o12)                span([    ], [    ])
+                                [ 9  ]  [ 10 ]
+                                [    ]  [    ]
+                                [ 13 ]  [ 14 ]
+     (%i13) apply ('orthogonal_complement, args (nullspace (transpose (M))));
+                                [ 0 ]  [  1  ]
+                                [   ]  [     ]
+                                [ 1 ]  [  0  ]
+     (%o13)                span([   ], [     ])
+                                [ 2 ]  [ - 1 ]
+                                [   ]  [     ]
+                                [ 3 ]  [ - 2 ]
+
+
+File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Introducción a linearalgebra,  Up: linearalgebra
+
+62.2 Funciones y variables para linearalgebra
+=============================================
+
+ -- Función: addmatrices (<f>, <M_1>, ..., <M_n>)
+     Utiliza la función <f> como una función aditiva, devolviendo la
+     suma de las matrices <M_1>, ..., <M_n>. La función <f> debe ser
+     tal que acepte un número arbitrario de argumentos; en otras
+     palabras, será una función n-aria de Maxima.
+
+     Ejemplos:
+
+          (%i1) m1 : matrix([1,2],[3,4])$
+          (%i2) m2 : matrix([7,8],[9,10])$
+          (%i3) addmatrices('max,m1,m2);
+          (%o3) matrix([7,8],[9,10])
+          (%i4) addmatrices('max,m1,m2,5*m1);
+          (%o4) matrix([7,10],[15,20])
+
+
+ -- Función: blockmatrixp (<M>)
+     Devuelve el valor `true' si y solo si <M> es una matriz cuyos
+     elementos son a su vez matrices.
+
+
+ -- Función: columnop (<M>, <i>, <j>, <theta>)
+     Si <M> es una matriz, devuelve la matriz que resulta de hacer la
+     operación columna `C_i <- C_i - <theta> * C_j'. Si <M> carece de
+     cualquiera de las filas <i> o <j>, devuelve un mensaje de error.
+
+
+ -- Función: columnswap (<M>, <i>, <j>)
+     Si <M> es una matriz, intercambia las columnas <i> y <j>.  Si <M>
+     carece de cualquiera de las filas <i> o <j>, devuelve un mensaje
+     de error.
+
+
+ -- Función: columnspace (<M>)
+     Si <M> es una matriz, devuelve `span (v_1, ..., v_n)', donde el
+     conjunto `{v_1, ..., v_n}' es la base del espacio generado por las
+     columnas de <M>.
+
+
+ -- Función: copy (<e>)
+     Devuelve una copia de la expresión <e> de Maxima. Aunque <e> puede
+     ser cualquier expresión de Maxima, la función `copy' es
+     especialmente útil cuando <e> es una lista o una matriz.
+     Considérese el siguiente ejemplo:
+          (%i1) m : [1,[2,3]]$
+          (%i2) mm : m$
+          (%i3) mm[2][1] : x$
+          (%i4) m;
+          (%o4)                      [1,[x,3]]
+          (%i5) mm;
+          (%o5)                      [1,[x,3]]
+     Veamos el mismo ejemplo siendo ahora <mm> una copia de <m>
+          (%i6) m : [1,[2,3]]$
+          (%i7) mm : copy(m)$
+          (%i8) mm[2][1] : x$
+          (%i9) m;
+          (%o9)                     [1,[2,3]]
+          (%i10) mm;
+          (%o10)                    [1,[x,3]]
+     En esta ocasión, la asignación a <mm> no cambia el valor de <m>.
+
+
+ -- Función: cholesky (<M>)
+ -- Función: cholesky (<M>, <field>)
+     Devuelve la factorización de Cholesky de la matriz autoadjunta (o
+     hermítica) <M>. El valor por defecto del segundo argumento es
+     <generalring>. Para una descripción de los posibles valores para
+     <field>, véase `lu_factor'.
+
+
+ -- Función: ctranspose (<M>)
+     Devuelve la transpuesta compleja conjugada de la matriz <M>. La
+     función `ctranspose' utiliza `matrix_element_transpose' para
+     transponer cada elemento de la matriz.
+
+
+ -- Función: diag_matrix (<d_1>, <d_2>,...,<d_n>)
+     Devuelve una matriz diagonal con los elementos de la diagonal
+     iguales a <d_1>, <d_2>,...,<d_n>; cuando éstos son matrices, los
+     elementos nulos de la matriz devuelta son matrices nulas de tamaño
+     apropiado. Por ejemplo:
+          (%i1) diag_matrix(diag_matrix(1,2),diag_matrix(3,4));
+
+                                      [ [ 1  0 ]  [ 0  0 ] ]
+                                      [ [      ]  [      ] ]
+                                      [ [ 0  2 ]  [ 0  0 ] ]
+          (%o1)                       [                    ]
+                                      [ [ 0  0 ]  [ 3  0 ] ]
+                                      [ [      ]  [      ] ]
+                                      [ [ 0  0 ]  [ 0  4 ] ]
+          (%i2) diag_matrix(p,q);
+
+                                             [ p  0 ]
+          (%o2)                              [      ]
+                                             [ 0  q ]
+
+ -- Función: dotproduct (<u>, <v>)
+     Devuelve el producto escalar de los vectores <u> y <v>. Equivale a
+     `conjugate (transpose (<u>)) . <v>'. Los argumentos <u> y <v>
+     deben ser vectores columna.
+
+
+ -- Función: eigens_by_jacobi (<A>)
+ -- Función: eigens_by_jacobi (<A>, <field_type>)
+     Calcula los valores y vectores propios de <A> por el método de las
+     rotaciones de Jacobi. <A> debe ser una matriz simétrica (aunque no
+     necesariamente definida o semidefinida positiva).  El argumento
+     <field_type> indica el tipo numérico sobre el que se realizan los
+     cálculos, que puede ser tanto `floatfield' como `bigfloatfield'.
+     En caso de que no se especifique <field_type>, su valor por
+     defecto será `floatfield'.
+
+     Los elementos de <A> deben ser números o expresiones reducibles a
+     números mediante la ejecución de `float' o `bfloat', según sea el
+     valor de <field_type>.
+
+     Ejemplos:
+
+          (%i1) S : matrix ([1/sqrt(2), 1/sqrt(2)], [- 1/sqrt(2), 1/sqrt(2)]);
+                               [     1         1    ]
+                               [  -------   ------- ]
+                               [  sqrt(2)   sqrt(2) ]
+          (%o1)                [                    ]
+                               [      1        1    ]
+                               [ - -------  ------- ]
+                               [   sqrt(2)  sqrt(2) ]
+          (%i2) L : matrix ([sqrt(3), 0], [0, sqrt(5)]);
+                                [ sqrt(3)     0    ]
+          (%o2)                 [                  ]
+                                [    0     sqrt(5) ]
+          (%i3) M : S . L . transpose (S);
+                      [ sqrt(5)   sqrt(3)  sqrt(5)   sqrt(3) ]
+                      [ ------- + -------  ------- - ------- ]
+                      [    2         2        2         2    ]
+          (%o3)       [                                      ]
+                      [ sqrt(5)   sqrt(3)  sqrt(5)   sqrt(3) ]
+                      [ ------- - -------  ------- + ------- ]
+                      [    2         2        2         2    ]
+          (%i4) eigens_by_jacobi (M);
+          The largest percent change was 0.1454972243679
+          The largest percent change was 0.0
+          number of sweeps: 2
+          number of rotations: 1
+          (%o4) [[1.732050807568877, 2.23606797749979],
+                                  [  0.70710678118655   0.70710678118655 ]
+                                  [                                      ]]
+                                  [ - 0.70710678118655  0.70710678118655 ]
+          (%i5) float ([[sqrt(3), sqrt(5)], S]);
+          (%o5) [[1.732050807568877, 2.23606797749979],
+                                  [  0.70710678118655   0.70710678118655 ]
+                                  [                                      ]]
+                                  [ - 0.70710678118655  0.70710678118655 ]
+          (%i6) eigens_by_jacobi (M, bigfloatfield);
+          The largest percent change was 1.454972243679028b-1
+          The largest percent change was 0.0b0
+          number of sweeps: 2
+          number of rotations: 1
+          (%o6) [[1.732050807568877b0, 2.23606797749979b0],
+                          [  7.071067811865475b-1   7.071067811865475b-1 ]
+                          [                                              ]]
+                          [ - 7.071067811865475b-1  7.071067811865475b-1 ]
+
+
+ -- Función: get_lu_factors (<x>)
+     Cuando `<x> = lu_factor (<A>)', entonces `get_lu_factors' devuelve
+     una lista de la forma `[P, L, U]', donde <P> es una matriz
+     permutación, <L> es triangular inferior con unos en la diagonal y
+     <U> es triangular superior, verificándose que `<A> = <P> <L> <U>'.
+
+
+ -- Función: hankel (<col>)
+ -- Función: hankel (<col>, <row>)
+     Devuelve la matriz de Hankel <H>. La primera columna de <H>
+     coincide con <col>, excepto en el primer elemento, la última fila
+     de <H> es <row>. El valor por defecto para <row> es el vector nulo
+     con igual número de elementos que <col>.
+
+
+ -- Función: hessian (<f>, <x>)
+     Devuelve la matriz hessiana de <f> con respecto de la lista de
+     variables <x>. El elemento `(i, j)'-ésimo de la matriz hessiana es
+     `diff(<f>, <x>[i], 1, <x>[j], 1)'.
+
+     Ejemplos:
+
+          (%i1) hessian (x * sin (y), [x, y]);
+                               [   0       cos(y)   ]
+          (%o1)                [                    ]
+                               [ cos(y)  - x sin(y) ]
+          (%i2) depends (F, [a, b]);
+          (%o2)                       [F(a, b)]
+          (%i3) hessian (F, [a, b]);
+                                  [   2      2   ]
+                                  [  d F    d F  ]
+                                  [  ---   ----- ]
+                                  [    2   da db ]
+                                  [  da          ]
+          (%o3)                   [              ]
+                                  [   2      2   ]
+                                  [  d F    d F  ]
+                                  [ -----   ---  ]
+                                  [ da db     2  ]
+                                  [         db   ]
+
+ -- Función: hilbert_matrix (<n>)
+     Devuelve la matriz de Hilbert <n> por <n>. Si <n> no es un entero
+     positivo, emite un mensaje de error.
+
+
+ -- Función: identfor (<M>)
+ -- Función: identfor (<M>, <fld>)
+     Devuelve una matriz identidad con la misma forma que la matriz
+     <M>. Los elementos de la diagonal de la matriz identidad son la
+     identidad multiplicativa del campo <fld>; el valor por defecto
+     para <fld> es <generalring>.
+
+     El primer argumento <M> debe ser una matriz cuadrada o no ser
+     matriz en absoluto. Si <M> es una matriz, sus elementos pueden ser
+     matrices cuadradas. La matriz puede tener bloques a cualquier nivel
+     finito de profundidad.
+
+     Véase también `zerofor'
+
+
+ -- Función: invert_by_lu (<M>, <(rng generalring)>)
+     Invierte la matriz <M> mediante la factorización LU, la cual se
+     hace utilizando el anillo <rng>.
+
+
+ -- Función: jacobian (<f>, <x>)
+     Devuelve la matriz jacobiana de la lista de funciones <f> respecto
+     de la lista de variables <x>. El elemento `(i, j)'-ésimo de la
+     matriz jacobiana es `diff(<f>[i], <x>[j])'.
+
+     Ejemplos:
+
+          (%i1) jacobian ([sin (u - v), sin (u * v)], [u, v]);
+                            [ cos(v - u)  - cos(v - u) ]
+          (%o1)             [                          ]
+                            [ v cos(u v)   u cos(u v)  ]
+          (%i2) depends ([F, G], [y, z]);
+          (%o2)                  [F(y, z), G(y, z)]
+          (%i3) jacobian ([F, G], [y, z]);
+                                     [ dF  dF ]
+                                     [ --  -- ]
+                                     [ dy  dz ]
+          (%o3)                      [        ]
+                                     [ dG  dG ]
+                                     [ --  -- ]
+                                     [ dy  dz ]
+
+ -- Función: kronecker_product (<A>, <B>)
+     Devuelve el producto de Kroneckerde las matrices <A> y <B>.
+
+
+ -- Función: listp (<e>, <p>)
+ -- Función: listp (<e>)
+     Dado el argumento opcional <p>, devuelve `true' si <e> es una
+     lista de Maxima y <p> toma el valor `true' al aplicarlo a cada
+     elemento de la lista. Si a `listp' no se le suministra el
+     argumento opcional, devuelve `true' si <e> es una lista de Maxima.
+     En cualquier otro caso, el resultado es `false'.
+
+
+ -- Función: locate_matrix_entry (<M>, <r_1>, <c_1>, <r_2>, <c_2>, <f>,
+          <rel>)
+     El primer argumento debe ser una matriz, mientras que los
+     argumentos desde <r_1> hasta <c_2> determinan la submatriz de <M>
+     tomando las filas desde <r_1> hasta <r_2> y las columnas desde
+     <c_1> hasta <c_2>.
+
+     La función `locate_matrix_entry' busca en la submatriz de <M> un
+     elemento que satisfaga cierta propiedad. hay tres posibilidades:
+
+     (1) `<rel> = 'bool' y <f> es un predicado:
+
+     Rastrea la submatriz de izquierda a derecha y de arriba hacia
+     abajo, devolviendo el índice del primer elemento que satisface el
+     predicado <f>; si ningún elemento lo satisface, el resultado es
+     `false'.
+
+     (2) `<rel> = 'max' y <f> una función real:
+
+     Rastrea la submatriz buscando el elemento que maximice <f>,
+     devolviendo el índice correspondiente.
+
+     (3) `<rel> = 'min' y <f> una función real:
+
+     Rastrea la submatriz buscando el elemento que minimice <f>,
+     devolviendo el índice correspondiente.
+
+
+ -- Función: lu_backsub (<M>, <b>)
+     Si `<M> = lu_factor (<A>, <field>)', entonces `lu_backsub (<M>,
+     <b>)' resuelve el sistema de ecuaciones lineales `<A> <x> = <b>'.
+
+
+ -- Función: lu_factor (<M>, <field>)
+     Devuelve una lista de la forma `[<LU>, <perm>, <fld>]', o `[<LU>,
+     <perm>, <fld>, <lower-cnd> <upper-cnd>]', donde
+
+        * La matriz <LU> contiene la factorización de <M> de forma
+          empaquetada, lo que significa tres cosas. En primer lugar,
+          que las filas de <LU> están permutadas de acuerdo con la
+          lista <perm>; por ejemplo, si <perm> es la lista `[3,2,1]',
+          la primera fila de la factorización <LU> es la tercera fila
+          de la matriz <LU>.  En segundo lugar, el factor triangular
+          inferior de <M> es la parte triangular inferior de <LU> con
+          los elementos de la diagonal sustituidos por unos. Por
+          último, el factor triangular superior de <M> es la parte
+          triangular superior de <LU>.
+
+        * Si el campo es `floatfield' o `complexfield', los números
+          <lower-cnd> y <upper-cnd> son las cotas inferior y superior
+          del número de condición de la norma infinita de <M>. El
+          número de condición no se puede estimar para todos los campos,
+          en cuyo caso `lu_factor' devuelve una lista de dos elementos.
+          Tanto la cota inferior como la superior pueden diferir de sus
+          valores verdaderos. Véase también `mat_cond'.
+
+
+     El argumento <M> debe ser una matriz cuadrada.
+
+     El argumento opcional <fld> debe ser un símbolo que determine un
+     anillo o un campo. Los anillos y campos predefinidos son:
+
+       a. `generalring' - el anillo de las expresiones de Maxima
+
+       b. `floatfield' - el campo de los números decimales en coma
+          flotante de doble precisión
+
+       c. `complexfield' - el campo de los números complejos decimales
+          en coma flotante de doble precisión
+
+       d. `crering'  - el anillo de las expresiones canónicas
+          racionales (Canonical Rational Expression o CRE) de Maxima
+
+       e. `rationalfield' - el campo de los números racionales
+
+       f. `runningerror' - controla los errores de redondeo de las
+          operaciones en coma flotante
+
+       g. `noncommutingring' - el anillo de las expresiones de Maxima
+          en las que el producto es el operador no conmutativo "."
+
+
+     Si el campo es `floatfield', `complexfield' o `runningerror', el
+     algoritmo utiliza pivoteo parcial; para los demás campos, las
+     filas se cambian cuando se necesita evitar pivotes nulos.
+
+     La suma aritmética en coma flotante no es asociativa, por lo que el
+     significado de 'campo' no coincide exactamente con su definición
+     matemática.
+
+     Un elemento del campo `runningerror' consiste en una lista de
+     Maxima de la forma `[x,n]', donde <x> es un número decimal en coma
+     flotante y `n' un enetro. La diferencia relativa entre el valor
+     real de `x' y `x' está aproximadamente acotado por el valor
+     epsilon de la máquina multiplicado por `n'.
+
+     No es posible la definición de un nuevo campo por parte del
+     usuario, a menos que éste tenga conocimientos de Common Lisp. Para
+     hacerlo, el usuario debe definir funciones para las operaciones
+     aritméticas y para convertir de la representación del campo a
+     Maxima y al revés. Además, en los campos ordenados, donde se hace
+     uso del pivoteo parcial, el usuario debe definir funciones para el
+     módulo y para comparar números del campo. Después de lo anterior,
+     tan solo queda definir una estructura Common Lisp `mring'. El
+     fichero `mring' tiene muchos ejemplos.
+
+     Para calcular la factorización, la primera tarea consiste en
+     convertir cada elemento de la matriz a un elemento del campo
+     especificado. Si la conversión no es posible, la factorización se
+     detiene con un mensaje de error. Los elementos del campo no
+     necesitan ser expresiones de Maxima; por ejemplo, los elementos de
+     `complexfield' son números complejos de Common Lisp. Tras la
+     factorización, los elementos de la matriz deben convertirse
+     nuevamente a expresiones de Maxima.
+
+     Véase también  `get_lu_factors'.
+
+     Ejemplos:
+
+          (%i1) w[i,j] := random (1.0) + %i * random (1.0);
+          (%o1)          w     := random(1.) + %i random(1.)
+                          i, j
+          (%i2) showtime : true$
+          Evaluation took 0.00 seconds (0.00 elapsed)
+          (%i3) M : genmatrix (w, 100, 100)$
+          Evaluation took 7.40 seconds (8.23 elapsed)
+          (%i4) lu_factor (M, complexfield)$
+          Evaluation took 28.71 seconds (35.00 elapsed)
+          (%i5) lu_factor (M, generalring)$
+          Evaluation took 109.24 seconds (152.10 elapsed)
+          (%i6) showtime : false$
+
+          (%i7) M : matrix ([1 - z, 3], [3, 8 - z]);
+                                  [ 1 - z    3   ]
+          (%o7)                   [              ]
+                                  [   3    8 - z ]
+          (%i8) lu_factor (M, generalring);
+                    [ 1 - z         3        ]
+                    [                        ]
+          (%o8)    [[   3            9       ], [1, 2], generalring]
+                    [ -----  - z - ----- + 8 ]
+                    [ 1 - z        1 - z     ]
+          (%i9) get_lu_factors (%);
+                            [   1    0 ]  [ 1 - z         3        ]
+                  [ 1  0 ]  [          ]  [                        ]
+          (%o9)  [[      ], [   3      ], [                9       ]]
+                  [ 0  1 ]  [ -----  1 ]  [   0    - z - ----- + 8 ]
+                            [ 1 - z    ]  [              1 - z     ]
+          (%i10) %[1] . %[2] . %[3];
+                                  [ 1 - z    3   ]
+          (%o10)                  [              ]
+                                  [   3    8 - z ]
+
+
+ -- Función: mat_cond (<M>, 1)
+ -- Función: mat_cond (<M>, inf)
+     Devuelve el número de condición de la <p>-norma de la matriz <M>.
+     Los valores admisibles para  <p> son 1 y <inf>. Esta función
+     utiliza la factorización LU para invertir la matriz <M>, por lo
+     que el tiempo de ejecución de `mat_cond' es proporcional al cubo
+     del tamaño de la matriz; `lu_factor' determina las cotas inferior
+     y superior para el número de condición de la norma infinita en un
+     tiempo proporcional al cuadrado del tamaño de la matriz.
+
+
+ -- Función: mat_norm (<M>, 1)
+ -- Función: mat_norm (<M>, inf)
+ -- Función: mat_norm (<M>, frobenius)
+     Devuelve la <p>-norma de la matriz <M>. Los valores admisibles
+     para <p> son 1, `inf' y `frobenius' (la norma matricial de
+     Frobenius).  La matriz <M> no debe contener bloques.
+
+ -- Función: matrixp (<e>, <p>)
+ -- Función: matrixp (<e>)
+     Dado el argumento opcional <p>, devuelve `true' si <e> es una
+     matriz y <p> toma el valor `true' al aplicarlo a cada elemento de
+     la matriz. Si a `matrixp' no se le suministra el argumento
+     opcional, devuelve `true' si <e> es una matriz.  En cualquier otro
+     caso, el resultado es `false'.
+
+     Véase también `blockmatrixp'
+
+
+ -- Función: matrix_size (<M>)
+     Devuelve una lista con el número de filas y columnas de la matriz
+     <M>.
+
+
+ -- Función: mat_fullunblocker (<M>)
+     Si <M> es una matriz de bloques, transforma la matriz llevando
+     todos los elementos de los bloques al primer nivel. Si <M> es una
+     matriz, devuelve <M>; en cualquier otro caso, envía un mensaje de
+     error.
+
+
+ -- Función: mat_trace (<M>)
+     Calcula la traza de la matriz <M>. Si <M> no es una matriz,
+     devuelve una forma nominal. Si <M> es una matriz de bloques,
+     `mat_trace(M)' calcula el mismo valor que
+     `mat_trace(mat_unblocker(m))'.
+
+
+ -- Función: mat_unblocker (<M>)
+     Si <M> es una matriz de bloques, deshace los bloques de un nivel.
+     Si <M> es una matriz, `mat_unblocker (M)' devuelve <M>; en
+     cualquier otro caso, envía un mensaje de error.
+
+     Si todos los elementos de <M> son matrices, `mat_unblocker (M)'
+     devuelve una matriz sin bloques, pero si los elementos de <M> son
+     a su vez matrices de bloques, `mat_unblocker (M)' devuelve una
+     matriz con el nivel de bloques disminuido en uno.
+
+     En caso de trabajar con matrices de bloques, quizás sea
+     conveniente darle a `matrix_element_mult' el valor `"."' y a
+     `matrix_element_transpose' el valor `'transpose'. Véase también
+     `mat_fullunblocker'.
+
+     Ejemplo:
+
+          (%i1) A : matrix ([1, 2], [3, 4]);
+                                      [ 1  2 ]
+          (%o1)                       [      ]
+                                      [ 3  4 ]
+          (%i2) B : matrix ([7, 8], [9, 10]);
+                                      [ 7  8  ]
+          (%o2)                       [       ]
+                                      [ 9  10 ]
+          (%i3) matrix ([A, B]);
+                               [ [ 1  2 ]  [ 7  8  ] ]
+          (%o3)                [ [      ]  [       ] ]
+                               [ [ 3  4 ]  [ 9  10 ] ]
+          (%i4) mat_unblocker (%);
+                                   [ 1  2  7  8  ]
+          (%o4)                    [             ]
+                                   [ 3  4  9  10 ]
+
+
+ -- Función: nullspace (<M>)
+     Si <M> es una matriz, devuelve `span (v_1, ..., v_n)', siendo
+     `{v_1, ..., v_n}' la base del espacio nulo de <M>. Si el espacio
+     nulo contiene un único elemento, devuelve `span ()'.
+
+
+ -- Función: nullity (<M>)
+     Si <M> es una matriz, devuelve la dimensión del espacio nulo de
+     <M>.
+
+
+ -- Función: orthogonal_complement (<v_1>, ..., <v_n>)
+     Devuelve `span (u_1, ..., u_m)', siendo `{u_1, ..., u_m}' la base
+     del complemento ortogonal del conjunto `(v_1, ..., v_n)', cuyos
+     elementos deben ser vectores columna.
+
+
+ -- Función: polynomialp (<p>, <L>, <coeffp>, <exponp>)
+ -- Función: polynomialp (<p>, <L>, <coeffp>)
+ -- Función: polynomialp (<p>, <L>)
+     Devuelve `true' si <p> es un polinomio cuyas variables son las de
+     la lista <L>, el predicado <coeffp> toma el valor `true' al
+     aplicarlo a cada coeficiente y el predicado <exponp> también
+     alcanza el valor `true' al ser aplicado a los exponentes de las
+     variables listadas en <L>. En caso de necesitar que <exponp> no
+     sea un predicado por defecto, se deberá especificar también el
+     predicado <coeffp>, aunque aquí se desee su comportamiento por
+     defecto.
+
+     `polynomialp (<p>, <L>, <coeffp>)' equivale a `polynomialp (<p>,
+     <L>, <coeffp>, 'nonnegintegerp)'.
+
+     `polynomialp (<p>, <L>)' equivale a `polynomialp (<p>, L<,>
+     'constantp, 'nonnegintegerp)'.
+
+     No es necesario expandir el polinomio:
+
+          (%i1) polynomialp ((x + 1)*(x + 2), [x]);
+          (%o1)                         true
+          (%i2) polynomialp ((x + 1)*(x + 2)^a, [x]);
+          (%o2)                         false
+
+     Un ejemplo utilizando valores distintos a los utilizados por
+     defecto en <coeffp> y en <exponp>:
+
+          (%i1) polynomialp ((x + 1)*(x + 2)^(3/2), [x],
+                             numberp, numberp);
+          (%o1)                         true
+          (%i2) polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x],
+                             numberp, numberp);
+          (%o2)                         true
+
+     Polinomios con dos variables:
+
+          (%i1) polynomialp (x^2 + 5*x*y + y^2, [x]);
+          (%o1)                         false
+          (%i2) polynomialp (x^2 + 5*x*y + y^2, [x, y]);
+          (%o2)                         true
+
+
+ -- Función: polytocompanion (<p>, <x>)
+     Si <p> es un polinomio en <x>, devuelve la matriz compañera de
+     <p>. Para un polinomio mónico <p> de grado <n> se tiene `<p> =
+     (-1)^<n> charpoly (polytocompanion (<p>, <x>))'.
+
+     Si <p> no es un polinomio en  <x>, se devuelve un mensaje de error.
+
+
+ -- Función: ptriangularize (<M>, <v>)
+     Si <M> es una matriz en la que sus elementos son polinomios en <v>,
+     devuelve una matriz <M2> tal que
+
+       1. <M2> es triangular superior,
+
+       2. `<M2> = <E_n> ... <E_1> <M>', donde <E_1>, ..., <E_n> son
+          matrices elementales cuyos elementos son polinomios en <v>,
+
+       3. `|det (<M>)| = |det (<M2>)|',
+
+     Nota: esta función no comprueba si los elementos de la matriz son
+     polinomios en <v>.
+
+ -- Función: rowop (<M>, <i>, <j>, <theta>)
+     Si <M> es una matriz, devuelve la matriz que resulta de relizar la
+     transformación `R_i <- R_i - theta * R_j' con las filas `R_i' y
+     `R_j'. Si <M> no tiene estas filas, devuelve un mensaje de error.
+
+
+ -- Función: rank (<M>)
+     Calcula el rango de la matriz <M>. El rango es la dimensión del
+     espacio columna. Ejemplo:
+          (%i1) rank(matrix([1,2],[2,4]));
+          (%o1)                                  1
+          (%i2) rank(matrix([1,b],[c,d]));
+          Proviso:  {d - b c # 0}
+          (%o2)                                  2
+
+
+ -- Función: rowswap (<M>, <i>, <j>)
+     Si <M> es una matriz, intercambia las filas  <i> y <j>. Si <M>
+     carece de estas filas, devuelve un mensaje de error.
+
+
+ -- Función: toeplitz (<col>)
+ -- Función: toeplitz (<col>, <row>)
+     Devuelve una  matriz de Toeplitz <T>. La primera columna de <T> es
+     <col>, excepto su primer elemento. La primera fila de <T> es
+     <row>. El valor por defecto para <row> es el complejo conjugado de
+     <col>. Ejemplo:
+          (%i1)  toeplitz([1,2,3],[x,y,z]);
+
+                                            [ 1  y  z ]
+                                            [         ]
+          (%o1)                             [ 2  1  y ]
+                                            [         ]
+                                            [ 3  2  1 ]
+          (%i2)  toeplitz([1,1+%i]);
+
+                                        [   1     1 - %I ]
+          (%o2)                         [                ]
+                                        [ %I + 1    1    ]
+
+
+ -- Función: vandermonde_matrix ([<x_1>, ..., <x_n>])
+     Devuelve una matriz <n> por <n>, cuya <i>-ésima fila es `[1,
+     <x_i>, <x_i>^2, ... <x_i>^(<n>-1)]'.
+
+
+ -- Función: zerofor (<M>)
+ -- Función: zerofor (<M>, <fld>)
+     Devuelve la matriz nula con la misma estructura que la matriz <M>.
+     Cada elemento de la matriz nula es la identidad aditiva del campo
+     <fld>; el valor por defecto de <fld> es <generalring>.
+
+     El primer argumento de <M> debe ser una matriz cuadrada o no ser
+     matriz en absoluto. Si <M> es una matriz, cada uno de sus
+     elementos puede ser una matriz cuadrada, por lo que <M> puede ser
+     una matriz de Maxima definida por bloques.
+
+     Véase también `identfor'.
+
+
+ -- Función: zeromatrixp (<M>)
+     Si <M> no es una matriz definida por bloques, devuelve `true' si
+     `is (equal (<e>, 0))' es verdadero para todo elemento <e> de <M>.
+     Si <M> es una matriz por bloques, devuelve `true' si `zeromatrixp'
+     devuelve a su vez `true' para cada elemento de <e>.
+
+
+
+File: maxima.info,  Node: lsquares,  Next: makeOrders,  Prev: linearalgebra,  Up: Top
+
+63 lsquares
+***********
+
+* Menu:
+
+* Funciones y variables para lsquares::
+
+
+File: maxima.info,  Node: Funciones y variables para lsquares,  Prev: lsquares,  Up: lsquares
+
+63.1 Funciones y variables para lsquares
+========================================
+
+ -- Función: lsquares_estimates (<D>, <x>, <e>, <a>)
+ -- Función: lsquares_estimates (<D>, <x>, <e>, <a>, initial = <L>, tol
+          = <t>)
+     Estima los parámetros <a> que mejor se ajusten a la ecuación <e>
+     de variables <x> y <a> a los datos <D> por el método de los
+     mínimos cuadrados. La función `lsquares_estimates' busca primero
+     una solución exacta, y si no la encuentra, buscará una aproximada.
+
+     El resultado es una lista de listas de ecuaciones de la forma `[a
+     = ..., b = ..., c = ...]'. Cada elemento de la lista es un mínimo
+     diferente de error cuadrático medio.
+
+     Los datos deben darse en formato matricial. Cada fila es un dato
+     (el cual suele denominarse `registro' o `caso' en ciertos
+     contextos), y las columnas contienen los valores para cada una de
+     las variables. La lista de variables <x> asigna un nombre a cada
+     una de las columnas de <D>, incluso a aquellas que no intervienen
+     en el análisis. La lista <a> asigna nombres a los parámetros cuyas
+     estimaciones se buscan. El argumento <e> es una expresión o
+     ecuación de variables <x> y <a>; si <e> no es una ecuación (es
+     decir, carece de igualdad), se trata como si fuese  `<e> = 0'.
+
+     Se pueden dar argumentos adicionales a `lsquares_estimates' en
+     forma de ecuaciones, las cuales se pasan tal cual a la función
+     `lbfgs', que es la que se encarga de calcular las estimaciones por
+     el método numérico cuando no encuentra una solución exacta.
+
+     Cuando se pueda encontrar una solución exacta, mediante `solve',
+     los datos en <D> pueden contener valores no numéricos. Sin
+     embargo, cuando no exista solución exacta, todos los elementos de
+     <D> deben ser necesariamente numéricos, lo cual incluye constantes
+     numéricas tales como `%pi' o `%e' y números literales (enteros,
+     racionales y decimales en coma flotante, tanto los de doble
+     precisión como los de precisión arbitraria).  Los cálculos
+     numéricos se realizan en doble precisión con aritmética de punto
+     flotante, por lo que números de cualesquiera otro tipo son
+     convenientemente convertidos antes de proceder con los cálculos.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Véanse también `lsquares_estimates_exact',
+     `lsquares_estimates_approximate', `lsquares_mse',
+     `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplos:
+
+     Un problema con solución exacta.
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                  [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                            [ 1  1  1 ]
+                                            [         ]
+                                            [ 3       ]
+                                            [ -  1  2 ]
+                                            [ 2       ]
+                                            [         ]
+          (%o2)                             [ 9       ]
+                                            [ -  2  1 ]
+                                            [ 4       ]
+                                            [         ]
+                                            [ 3  2  2 ]
+                                            [         ]
+                                            [ 2  2  1 ]
+          (%i3) lsquares_estimates (
+                   M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+                                   59        27      10921        107
+          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
+                                   16        16      1024         32
+
+     un problema para el que no se encuentra solución exacta, por lo
+     que `lsquares_estimates' recurre a la aproximación numérica.
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix ([1, 1], [2, 7/4], [3, 11/4], [4, 13/4]);
+                                             [ 1  1  ]
+                                             [       ]
+                                             [    7  ]
+                                             [ 2  -  ]
+                                             [    4  ]
+                                             [       ]
+          (%o2)                              [    11 ]
+                                             [ 3  -- ]
+                                             [    4  ]
+                                             [       ]
+                                             [    13 ]
+                                             [ 4  -- ]
+                                             [    4  ]
+          (%i3) lsquares_estimates (
+            M, [x,y], y=a*x^b+c, [a,b,c], initial=[3,3,3], iprint=[-1,0]);
+          (%o3) [[a = 1.387365874920637, b = .7110956639593767,
+                                                  c = - .4142705622439105]]
+
+
+ -- Función: lsquares_estimates_exact (<MSE>, <a>)
+     Estima los valores de los parámetros <a> que minimizan el error
+     cuadrático medio <MSE> mediante un sistema de ecuaciones que
+     intentará resolver simbólicamente con `solve'. El error cuadrático
+     medio es una expresión con parámetros <a>, como los devueltos por
+     `lsquares_mse'.
+
+     El valor devuelto por la función es una lista de listas de
+     ecuaciones de la forma `[a = ..., b = ..., c = ...]'. El resultado
+     puede contener cero, uno o más elementos. Cuando la respuesta
+     contiene más de una solución, todas ellas representan mínimos del
+     error cuadrático medio.
+
+     Véanse también `lsquares_estimates',
+     `lsquares_estimates_approximate', `lsquares_mse',
+     `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_exact (mse, [A, B, C, D]);
+                            59        27      10921        107
+          (%o4)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+
+
+ -- Función: lsquares_estimates_approximate (<MSE>, <a>, initial = <L>,
+          tol = <t>)
+     Estima los valores de los parámetros <a> que minimizan el error
+     cuadrático medio <MSE> mediante el algoritmo numérico `lbfgs'.  El
+     error cuadrático medio es una expresión con parámetros <a>, como
+     los devueltos por `lsquares_mse'.
+
+     La solución devuelta por la función es un mínimo local
+     (posiblemente global) del error cuadrático medio.
+
+     Por consistencia con `lsquares_estimates_exact', el valor devuelto
+     es una lista anidada con un único elemento, consistente en una
+     lista de ecuaciones de la forma `[a = ..., b = ..., c = ...]'.
+
+     Los argumentos adicionales de `lsquares_estimates_approximate' se
+     especifican como ecuaciones y se pasan de esta forma a la función
+     `lbfgs'.
+
+     <MSE> debe devolver un número cuando a sus parámetros se les
+     asignen valores numéricos, lo cual implica que los datos a partir
+     de los cuales se ha generado <MSE> contengan únicamente constantes
+     numéricas tales como `%pi' o `%e' y números literales (enteros,
+     racionales y decimales en coma flotante, tanto los de doble
+     precisión como los de precisión arbitraria).  Los cálculos
+     numéricos se realizan en doble precisión con aritmética de punto
+     flotante, por lo que números de cualesquiera otro tipo son
+     convenientemente convertidos antes de proceder con los cálculos.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Véanse también `lsquares_estimates', `lsquares_estimates_exact',
+     `lsquares_mse', `lsquares_residuals' y `lsquares_residual_mse'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) lsquares_estimates_approximate (
+                        mse, [A, B, C, D], iprint = [-1, 0]);
+          (%o4) [[A = - 3.67850494740174, B = - 1.683070351177813,
+                           C = 10.63469950148635, D = - 3.340357993175206]]
+
+
+ -- Función: lsquares_mse (<D>, <x>, <e>)
+     Devuelve el error medio cuadrático (MSE) para la ecuación <e> de
+     variables <x> respecto de los datos <D>. El resultado devuelto es
+     una suma, definida como
+
+                              n
+                             ====
+                         1   \                        2
+                         -    >    (lhs(e ) - rhs(e ))
+                         n   /           i         i
+                             ====
+                             i = 1
+
+     siendo <n> el número de datos y `<e>[i]' es la ecuación <e>
+     evaluada cuando a sus variables <x> se le asignan los valores
+     asociados al dato `i'-ésimo `<D>[i]'.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) mse : lsquares_mse (M, [z, x, y], (z + D)^2 = A*x + B*y + C);
+                     5
+                    ====
+                    \                 2                         2
+                     >    ((D + M    )  - C - M     B - M     A)
+                    /            i, 1          i, 3      i, 2
+                    ====
+                    i = 1
+          (%o3)     ---------------------------------------------
+                                          5
+          (%i4) diff (mse, D);
+                   5
+                  ====
+                  \                             2
+                4  >    (D + M    ) ((D + M    )  - C - M     B - M     A)
+                  /           i, 1         i, 1          i, 3      i, 2
+                  ====
+                  i = 1
+          (%o4) ----------------------------------------------------------
+                                            5
+          (%i5) ''mse, nouns;
+                         2                 2         9 2               2
+          (%o5) (((D + 3)  - C - 2 B - 2 A)  + ((D + -)  - C - B - 2 A)
+                                                     4
+                     2               2         3 2               2
+           + ((D + 2)  - C - B - 2 A)  + ((D + -)  - C - 2 B - A)
+                                               2
+                     2             2
+           + ((D + 1)  - C - B - A) )/5
+
+
+ -- Función: lsquares_residuals (<D>, <x>, <e>, <a>)
+     Devuelve los residuos para la ecuación <e> de parámetros <a> y
+     datos <D>.
+
+     <D> es una matriz, <x> una lista de variables y <e> es una ecuación
+     o expresión general; si <e> no es una ecuación (es decir, carece
+     de igualdad), se trata como si fuese  `<e> = 0'. La lista <a>
+     contiene ecuaciones que especifican valores para cualesquiera
+     parámetros de <e> que no estén en <x>.
+
+     Los residuos se definen como
+
+                                  lhs(e ) - rhs(e )
+                                       i         i
+
+     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
+     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
+     las asignaciones indicadas en <a> al resto de variables.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                            [ 1  1  1 ]
+                                            [         ]
+                                            [ 3       ]
+                                            [ -  1  2 ]
+                                            [ 2       ]
+                                            [         ]
+          (%o2)                             [ 9       ]
+                                            [ -  2  1 ]
+                                            [ 4       ]
+                                            [         ]
+                                            [ 3  2  2 ]
+                                            [         ]
+                                            [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (
+                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+                                   59        27      10921        107
+          (%o3)            [[A = - --, B = - --, C = -----, D = - ---]]
+                                   16        16      1024         32
+          (%i4) lsquares_residuals (
+                    M, [z,x,y], (z+D)^2 = A*x+B*y+C, first(a));
+                                      13    13    13  13  13
+          (%o4)                      [--, - --, - --, --, --]
+                                      64    64    32  64  64
+
+
+ -- Función: lsquares_residual_mse (<D>, <x>, <e>, <a>)
+     Devuelve el residuo del error cuadrático medio (MSE) de la
+     ecuación <e> para los valores parámetricos <a> y datos <D>.
+
+     El residuo del error cuadrático medio (MSE) se define como
+
+                              n
+                             ====
+                         1   \                        2
+                         -    >    (lhs(e ) - rhs(e ))
+                         n   /           i         i
+                             ====
+                             i = 1
+
+     siendo `<e>[i]' la ecuación <e> evaluada cuando las variables <x>
+     toman los valores asociados al dato `i'-ésimo `<D>[i]', y haciendo
+     las asignaciones indicadas en <a> al resto de variables.
+
+     Antes de utilizar esta función ejecútese `load(lsquares)'.
+
+     Ejemplo:
+
+          (%i1) load (lsquares)$
+          (%i2) M : matrix (
+                   [1,1,1], [3/2,1,2], [9/4,2,1], [3,2,2], [2,2,1]);
+                                     [ 1  1  1 ]
+                                     [         ]
+                                     [ 3       ]
+                                     [ -  1  2 ]
+                                     [ 2       ]
+                                     [         ]
+          (%o2)                      [ 9       ]
+                                     [ -  2  1 ]
+                                     [ 4       ]
+                                     [         ]
+                                     [ 3  2  2 ]
+                                     [         ]
+                                     [ 2  2  1 ]
+          (%i3) a : lsquares_estimates (
+                       M, [z,x,y], (z+D)^2 = A*x+B*y+C, [A,B,C,D]);
+
+                            59        27      10921        107
+          (%o3)     [[A = - --, B = - --, C = -----, D = - ---]]
+                            16        16      1024         32
+          (%i4) lsquares_residual_mse (
+                       M, [z,x,y], (z + D)^2 = A*x + B*y + C, first (a));
+                                        169
+          (%o4)                         ----
+                                        2560
+
+
+ -- Función: plsquares (<Mat>,<VarList>,<depvars>)
+ -- Función: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
+ -- Función: plsquares
+          (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
+     Ajuste de una función polinómica multivariante a una tabla de
+     datos por el método de los mínimos cuadrados. <Mat> es la matriz
+     con los datos empíricos, <VarList> es la lista con los nombres de
+     las variables (una por cada columna de <Mat>, pero puede usarse
+     `-' en lugar de los nombres de variables para ignorar las columnas
+     de <Mat>), <depvars> es el nombre de la variable dependiente o una
+     lista con uno o más nombres de variables dependientes (cuyos
+     nombres deben estar también en <VarList>), <maxexpon> es un
+     argumento opcional para indicar el máximo exponente para cada una
+     de las variables independientes (1 por defecto) y  <maxdegree> es
+     otro argumento opcional para el grado del polinomio (<maxexpon>
+     por defecto); nótese que la suma de exponentes de cada término
+     debe ser igual o menor que <maxdegree>. Si `maxdgree = 0' entonces
+     no se aplicará ningún límite.
+
+     Si <depvars> es el nombre de una variable dependiente (no en una
+     lista), `plsquares' devuelve el polinomio ajustado. Si <depvars>
+     es una lista de una o más variables dependientes, `plsquares'
+     devuelve una lista con los polinomios ajustados. Los coeficientes
+     de determinación se muestran en su orden correspondiente para
+     informar sobre la bondad del ajuste. Estos valores se almacenan
+     también en la variable global <DETCOEF> en un formato de lista si
+     <depvars> es a su vez una lista.
+
+     Un ejemplo sencillo de ajuste lineal multivariante:
+
+          (%i1) load("plsquares")$
+
+          (%i2) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z);
+               Determination Coefficient for z = .9897039897039897
+                                 11 y - 9 x - 14
+          (%o2)              z = ---------------
+                                        3
+
+     El mismo ejemplo sin restricciones en el grado:
+
+          (%i3) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z,1,0);
+               Determination Coefficient for z = 1.0
+                              x y + 23 y - 29 x - 19
+          (%o3)           z = ----------------------
+                                        6
+
+     Cálculo del número de diagonales de un polígono de N lados
+
+          (%i4) plsquares(matrix([3,0],[4,2],[5,5],[6,9],[7,14],[8,20]),
+                          [N,diagonals],diagonals,5);
+               Determination Coefficient for diagonals = 1.0
+                                          2
+                                         N  - 3 N
+          (%o4)              diagonals = --------
+                                            2
+          (%i5) ev(%, N=9);   /* Testing for a 9 sides polygon */
+          (%o5)                 diagonals = 27
+
+     Cálculo del número de formas de colocar dos reinas en un tablero n
+     x n de manera que no se amenacen.
+
+          (%i6) plsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
+                          [n,positions],[positions],4);
+               Determination Coefficient for [positions] = [1.0]
+                                   4       3      2
+                                3 n  - 10 n  + 9 n  - 2 n
+          (%o6)    [positions = -------------------------]
+                                            6
+          (%i7) ev(%[1], n=8); /* Testing for a (8 x 8) chessboard */
+          (%o7)                positions = 1288
+
+     Un ejemplo con seis variables dependientes:
+
+          (%i8) mtrx:matrix([0,0,0,0,0,1,1,1],[0,1,0,1,1,1,0,0],
+                            [1,0,0,1,1,1,0,0],[1,1,1,1,0,0,0,1])$
+          (%i8) plsquares(mtrx,[a,b,_And,_Or,_Xor,_Nand,_Nor,_Nxor],
+                               [_And,_Or,_Xor,_Nand,_Nor,_Nxor],1,0);
+                Determination Coefficient for
+          [_And, _Or, _Xor, _Nand, _Nor, _Nxor] =
+          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+          (%o2) [_And = a b, _Or = - a b + b + a,
+          _Xor = - 2 a b + b + a, _Nand = 1 - a b,
+          _Nor = a b - b - a + 1, _Nxor = 2 a b - b - a + 1]
+
+     Antes de hacer uso de esta función ejecútese  `load("plsquares")'.
+
+
+File: maxima.info,  Node: makeOrders,  Next: minpack,  Prev: lsquares,  Up: Top
+
+64 makeOrders
+*************
+
+* Menu:
+
+* Funciones y variables para makeOrders::
+
+
+File: maxima.info,  Node: Funciones y variables para makeOrders,  Prev: makeOrders,  Up: makeOrders
+
+64.1 Funciones y variables para makeOrders
+==========================================
+
+ -- Función: makeOrders (<indvarlist>,<orderlist>)
+     Devuelve una lista con las potencias de las variables de un
+     polinomio término a término.
+
+          (%i1) load("makeOrders")$
+
+          (%i2) makeOrders([a,b],[2,3]);
+          (%o2) [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
+                      [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]]
+          (%i3) expand((1+a+a^2)*(1+b+b^2+b^3));
+                 2  3      3    3    2  2      2    2    2
+          (%o3) a  b  + a b  + b  + a  b  + a b  + b  + a  b + a b
+                                                            2
+                                                     + b + a  + a + 1
+     donde `[0, 1]' se asocia al término b y `[2, 3]' a a^2 b^3.
+
+     Antes de hacer uso de esta función ejecútese `load("makeOrders")'.
+
+
+File: maxima.info,  Node: minpack,  Next: mnewton,  Prev: makeOrders,  Up: Top
+
+65 minpack
+**********
+
+* Menu:
+
+* Introducción a minpack::
+* Funciones y variables para minpack::
+
+
+File: maxima.info,  Node: Introducción a minpack,  Next: Funciones y variables para minpack,  Up: minpack
+
+65.1 Introducción a minpack
+===========================
+
+`Minpack' es una traducción a Common Lisp (via `f2cl') de la librería
+MINPACK escrita en Fortran, tal como se puede obtener de Netlib.
+
+
+File: maxima.info,  Node: Funciones y variables para minpack,  Prev: Introducción a minpack,  Up: minpack
+
+65.2 Funciones y variables para minpack
+=======================================
+
+ -- Función: minpack_lsquares (<flist>, <varlist>, <guess> [,
+          <tolerance>, <jacobian>])
+     Calcula el punto `x' que minimiza la suma de los cuadrados de las
+     funciones de la lista <flist>. Las variables se escriben en la
+     lista `varlist'. El argumento <guess> debe guardar una estimación
+     inicial del punto óptimo.
+
+     Los argumentos opcionales <tolerance> y <jacobian> permiten
+     mantener cierto control sobre el algoritmo; <tolerance> es el
+     error relativo estimado que se desea en la suma de cuadrados,
+     mientras que <jacobian> puede utilizarse para especificar el
+     jacobiano. Si <jacobian> no se suministra, o se le da el valor
+     `true', el que ya tiene por defecto, el jacobiano se calcula a
+     partir de <flist>. Si <jacobian> vale `false', se utilizará una
+     aproximación numérica.
+
+     `minpack_lsquares' devuelve una lista, siendo su primer elemento
+     la solución estimada, el segundo la suma de cuadrados y el tercero
+     indica la bondad del algoritmo, siendo sus posibles valores los
+     siguientes:
+
+    `0'
+          Número incorrecto de parámetros.
+
+    `1'
+          El algoritmo estima que el error relativo de la suma de
+          cuadrados es, como mucho, igual a `tolerance'.
+
+    `2'
+          El algoritmo estima que el error relativo entre <x> y la
+          solución es, como mucho, igual a `tolerance'.
+
+    `3'
+          Las dos condiciones anteriores se cumplen.
+
+    `4'
+          El vector formado por las funciones evaluadas en el punto <x>
+          es ortogonal a las columnas del jacobiano dentro de la
+          precisión de la máquina.
+
+    `5'
+          El número de llamadas a las funciones ha alcanzado 100*(n+1),
+          siendo n el número de variables.
+
+    `6'
+          La tolerancia es demasiado pequeña, no siendo posible reducir
+          más la suma de cuadrados.
+
+    `7'
+          La tolerancia es demasiado pequeña, no siendo posible mejorar
+          la solución aproximada <x>.
+
+          /* Problem 6: Powell singular function */
+          (%i1) powell(x1,x2,x3,x4) :=
+                   [x1+10*x2, sqrt(5)*(x3-x4), (x2-2*x3)^2,
+                        sqrt(10)*(x1-x4)^2]$
+          (%i2) minpack_lsquares(powell(x1,x2,x3,x4), [x1,x2,x3,x4],
+                                 [3,-1,0,1]);
+          (%o2) [[1.652117596168394e-17, - 1.652117596168393e-18,
+                  2.643388153869468e-18, 2.643388153869468e-18],
+                 6.109327859207777e-34, 4]
+
+          /* Same problem but use numerical approximation to Jacobian */
+          (%i3) minpack_lsquares(powell(x1,x2,x3,x4), [x1,x2,x3,x4],
+                                 [3,-1,0,1], jacobian = false);
+          (%o3) [[5.060282149485331e-11, - 5.060282149491206e-12,
+                  2.179447843547218e-11, 2.179447843547218e-11],
+                 3.534491794847031e-21, 5]
+
+ -- Función: minpack_solve (<flist>, <varlist>, <guess> [, <tolerance>,
+          <jacobian>])
+     Resuelve un sistema de `n' ecuaciones con `n' incógnitas.  Las `n'
+     ecuaciones forman la lista <flist>, estando la lista <varlist>
+     formada por las incógnitas. El argumento <guess> es una estimación
+     inicial de la solución.
+
+     Los argumentos opcionales <tolerance> y <jacobian> permiten
+     mantener cierto control sobre el algoritmo; <tolerance> es el
+     error relativo estimado que se desea en la suma de cuadrados,
+     mientras que <jacobian> puede utilizarse para especificar el
+     jacobiano. Si <jacobian> no se suministra, o se le da el valor
+     `true', el que ya tiene por defecto, el jacobiano se calcula a
+     partir de <flist>. Si <jacobian> vale `false', se utilizará una
+     aproximación numérica.
+
+     `minpack_solve' devuelve una lista, siendo su primer elemento la
+     solución estimada, el segundo la suma de cuadrados y el tercero
+     indica la bondad del algoritmo, siendo sus posibles valores los
+     siguientes:
+
+    `0'
+          Número incorrecto de parámetros.
+
+    `1'
+          El algoritmo estima que el error relativo de la suma de
+          cuadrados es, como mucho, igual a `tolerance'.
+
+    `2'
+          El número de llamadas a las funciones ha alcanzado 100*(n+1),
+          siendo n el número de incógnitas.
+
+    `3'
+          La tolerancia es demasiado pequeña, no siendo posible reducir
+          más la suma de cuadrados.
+
+    `4'
+          El algoritmo no progresa adecuadamente.
+
+
+File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: minpack,  Up: Top
+
+66 mnewton
+**********
+
+* Menu:
+
+* Funciones y variables para mnewton::
+
+
+File: maxima.info,  Node: Funciones y variables para mnewton,  Prev: mnewton,  Up: mnewton
+
+66.1 Funciones y variables para mnewton
+=======================================
+
+ -- Variable opcional: newtonepsilon
+     Valor por defecto:  `10.0^(-fpprec/2)'
+
+     Precisión que determina cuando la función `mnewton' ha conseguido
+     una convergencia aceptable. Si `newtonepsilon' es un número
+     decimal grande (bigfloat), entonces `mnewton' realiza los cálculos
+     en ese formato.
+
+     Véase también `mnewton'.
+
+ -- Variable opcional: newtonmaxiter
+     Valor por defecto:  `50'
+
+     Número máximo de iteraciones para la función `mnewton' en caso de
+     que no se produzca convergencia, o de que ésta se haga muy lenta.
+
+     Véase también `mnewton'.
+
+ -- Función: mnewton (<FuncList>,<VarList>,<GuessList>)
+     Resolución de sistemas de ecuaciones no lineales por el método de
+     Newton.  <FuncList> es la lista de ecuaciones a resolver,
+     <VarList> es la lista con los nombres de las incógnitas y
+     <GuessList> es la lista de aproximaciones iniciales.
+
+     La solución se devuelve en el mismo formato que lo hace la función
+     `solve()'.  Si no se le encuentra solución al sistema, se obtiene
+     `[]' como respuesta.
+
+     Esta función se controla con las variables globales
+     `newtonepsilon' y `newtonmaxiter'.
+
+          (%i1) load("mnewton")$
+
+          (%i2) mnewton([x1+3*log(x1)-x2^2, 2*x1^2-x1*x2-5*x1+1],
+                        [x1, x2], [5, 5]);
+          (%o2) [[x1 = 3.756834008012769, x2 = 2.779849592817897]]
+          (%i3) mnewton([2*a^a-5],[a],[1]);
+          (%o3)             [[a = 1.70927556786144]]
+          (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
+          (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
+
+     Antes de hacer uso de esta función ejecútese  `load("mnewton")'.
+     Véanse también `newtonepsilon' y `newtonmaxiter'.
+
+
+File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
+
+67 numericalio
+**************
+
+* Menu:
+
+* Introducción a numericalio::
+* Funciones y variables para entrada y salida en formato texto::
+* Funciones y variables para entrada y salida en formato binario::
+
+
+File: maxima.info,  Node: Introducción a numericalio,  Next: Funciones y variables para entrada y salida en formato texto,  Prev: numericalio,  Up: numericalio
+
+67.1 Introducción a numericalio
+===============================
+
+El paquete `numericalio' define funciones para leer y escribir ficheros
+de datos y flujos. Las funciones de entrada y salida en formato texto
+pueden leer y escribir números (enteros, decimales o decimales
+grandes), símbolos y cadenas.  Las funciones de entrada y salida en
+formato binario sólo pueden leer y escribir números decimales.
+
+   Si ya existe una lista, matriz o array para almacenar los datos de
+entrada, las funciones de entrada de `numericalio' pueden escribir los
+datos directamente en estos objetos. En caso contrario, `numericalio'
+tratará de generar el objeto apropiado para almacenar estos datos.
+
+67.1.1 Entrada y salida en formato texto
+----------------------------------------
+
+In plain-text input and output, it is assumed that each item to read or
+write is an atom:
+
+   En la entrada y salida de datos en formato texto se supone que cada
+dato es un átomo: un número entero, decimal, decimal grande, una cadena
+o un símbolo; no se admiten fracciones, números complejos o cualquier
+otra expresión no atómica. Estas funciones pueden llegar a realizar
+operaciones válidas con expresiones no atómicas, pero estos resultados
+no se documentan y están sujetos a cambios ulteriores.
+
+   Los átomos, tanto en los ficheros de entrada como en los de salida,
+tienen el mismo formato que en los ficheros por lotes de Maxima o en la
+consola interactiva. En particular, las cadenas deben encerrarse entre
+comillas dobles, la barra invertida `\' evita cualquier interpretación
+especial del carácter siguiente, y el símbolo de interrogación `?' se
+reconoce como el comienzo de un símbolo de Lisp. No se reconoce ningún
+carácter de continuación de línea interrumpida.
+
+67.1.2 Separadores válidos para lectura
+---------------------------------------
+
+Las funciones para la entrada y salida de datos en formato texto tiene
+un argumento opcional, <separator_flag>, para indicar qué carácter se
+utiliza como separador.
+
+   Para la entrada de texto se reconocen los siguientes valores de la
+variable <separator_flag>: `comma' para los valores separados por
+comas, `pipe' para los valores separados por el carácter de la barra
+vertical `|', `semicolon' para los valores separados por punto y coma
+`;', y `space' para cuando los valores se separan por espacios o
+tabulaciones. Si el nombre del fichero tiene extensión `.csv' y no se
+especifica el argumento <separator_flag>, se tomará por defecto `comma'.
+Si el fichero tiene cualquier otra extensión diferente de `.csv' y no se
+especifica `separator_flag', se usará por defecto `space'.
+
+   En la entrada de texto, varios espacios y tabulaciones sucesivos
+cuentan como un único separador. Sin embargo, varias comas, barras
+verticales o punto y comas sucesivos se interpretan que tienen el
+símbolo `false' entre ellos; por ejemplo, `1234,,Foo' se interpreta lo
+mismo que si fuese `1234,false,Foo'. En la salida, los átomos `false'
+deben escribirse explícitamente, por lo que la lista `[1234, false,
+Foo]' debe escribirse `1234,false,Foo'.
+
+67.1.3 Separadores válidos para escritura
+-----------------------------------------
+
+Para la entrada de texto se acepta `tab' como valor de <separator_flag>
+para datos separados por tabuladores, así como `comma', `pipe',
+`semicolon' y `space'.
+
+   En la escritura de texto, el átomo`false' se escribe tal cual y una
+lista `[1234, false, Foo]' se escribe `1234,false,Foo'.
+
+67.1.4 Entrada y salida de decimales en formato binario
+-------------------------------------------------------
+
+Las funciones de `numericalio' pueden leer y escribir números decimales
+en coma flotante de 8 bytes del estándar IEEE 754. Estos números se
+pueden escribir empezando por el byte menos significativo o por el más
+significativo, según lo indique la variable global
+`assume_external_byte_order'. Por defecto, `numericalio' los almacena
+con el byte más significativo primero.
+
+   Cualesquiera otros tipos de decimales son transformados a 8 bytes.
+El paquete `numericalio' no puede leer ni escribir datos binarios no
+numéricos.
+
+   Ciertos entornos Lisp no reconocen valores especiales del estándar
+IEEE 754 (más o menos infinito, valores no numéricos, valores no
+normales). El efecto que pueda producir la lectura de tales valores por
+parte de `numericalio' es imprevisible.
+
+   `numericalio' incluye funciones para abrir un flujo de lectura o
+escritura de flujos de bytes.
+
+
+File: maxima.info,  Node: Funciones y variables para entrada y salida en formato texto,  Next: Funciones y variables para entrada y salida en formato binario,  Prev: Introducción a numericalio,  Up: numericalio
+
+67.2 Funciones y variables para entrada y salida en formato texto
+=================================================================
+
+ -- Función: read_matrix (<S>)
+ -- Función: read_matrix (<S>, <M>)
+ -- Función: read_matrix (<S>, <separator_flag>)
+ -- Función: read_matrix (<S>, <M>, <separator_flag>)
+     `read_matrix(<S>)' lee la fuente <S> y devuelve su contenido
+     completo en forma de matriz. El tamaño de la matriz se deduce de
+     los datos de entrada: cada fila del fichero forma una fila de la
+     matriz. Si hay filas con diferente número de elementos,
+     `read_matrix' emite un mensaje de error.
+
+     `read_matrix(<S>, <M>)' lee la fuente <S> y va almacenando su
+     contenido en la matriz <M>, hasta que <M> esté llena o hasta que
+     se consuma la fuente.  Los datos se almacenan fila a fila. Los
+     datos de entrada no necesitan tener el mismo número de filas y
+     columnas que <M>.
+
+     La fuente <S> puede ser el nombre de un fichero o de un flujo.
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+
+ -- Función: read_array (<S>, <A>)
+ -- Función: read_array (<S>, <A>, <separator_flag>)
+     Guarda el contenido de la fuente <S> en el array <A>, hasta que
+     <A> esté lleno o hasta que se consuma la fuente.  Los datos se
+     almacenan fila a fila. Los datos de entrada no necesitan tener el
+     mismo número de filas y columnas que <A>.
+
+     La fuente <S> puede ser el nombre de un fichero o de un flujo.
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+
+ -- Función: read_hashed_array (<S>, <A>)
+ -- Función: read_hashed_array (<S>, <A>, <separator_flag>)
+     Lee la fuente <S> y devuelve su contenido completo en forma de
+     array de claves.  La fuente <S> puede ser el nombre de un fichero
+     o de un flujo.
+
+     `read_hashed_array' interpreta el primer elemento de cada fila
+     como una clave, asociando el resto de la fila, en formato de
+     lista, a la clave. Por ejemplo, la secuencia `567 12 17 32 55'
+     equivale a `A[567]: [12, 17, 32, 55]$'.  Las filas no necesitan
+     tener todas ellas el mismo número de elementos.
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+ -- Función: read_nested_list (<S>)
+ -- Función: read_nested_list (<S>, <separator_flag>)
+     Lee la fuente <S> y devuelve su contenido completo en forma de
+     lista anidada.  La fuente <S> puede ser el nombre de un fichero o
+     de un flujo.
+
+     `read_nested_list' devuelve una lista que tiene una sublista por
+     cada fila de entrada. Los filas de entrada no necesitan tener
+     todas ellas el mismo número de elementos. Las filas en blanco no
+     se ignoran, sino que se convierten en listas vacías
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+ -- Función: read_list (<S>)
+ -- Función: read_list (<S>, <L>)
+ -- Función: read_list (<S>, <separator_flag>)
+ -- Función: read_list (<S>, <L>, <separator_flag>)
+     `read_list(<S>)' lee la fuente <S> y devuelve su contenido como
+     una lista simple.
+
+     `read_list(<S>, <L>)' guarda el contenido de la fuente <S> en la
+     lista <L>, hasta que <L> esté llena o hasta que se consuma la
+     fuente.
+
+     La fuente <S> puede ser el nombre de un fichero o de un flujo.
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+ -- Función: write_data (<X>, <D>)
+ -- Función: write_data (<X>, <D>, <separator_flag>)
+     Escribe el objeto <X> en el destino <D>.
+
+     `write_data' escribe una matriz fila a fila; cada línea de entrada
+     se corresponde con una fila.
+
+     `write_data' escribe un array creado por `array' o `make_array'
+     fila a fila, con una nueva línea al final de cada bloque de datos.
+     Los bloques de mayores dimensiones se separan con líneas
+     adicionales.
+
+     `write_data' escribe un array de claves con cada clave seguida de
+     su lista asociada en una sola línea.
+
+     `write_data' escribe una lista anidada con una sublista por línea.
+
+     `write_data' escribe una lista simple en una única fila.
+
+     El destino <D> puede ser el nombre de un fichero o un flujo; en el
+     primer caso, la variable global `file_output_append' controla si
+     el fichero de salida es ampliado con la nueva información o si se
+     borra antes; en el segundo caso, no se realiza ningún tipo de
+     acción por parte de `write_data' después de que se hayan escrito
+     los datos; en particular, el flujo se mantiene abierto.
+
+     Los valores aceptados para <separator_flag> son: `comma', `pipe',
+     `semicolon' y `space'.  Si no se especifica un valor para
+     <separator_flag>, se supone que los datos están separados por
+     espacios.
+
+
+File: maxima.info,  Node: Funciones y variables para entrada y salida en formato binario,  Prev: Funciones y variables para entrada y salida en formato texto,  Up: numericalio
+
+67.3 Funciones y variables para entrada y salida en formato binario
+===================================================================
+
+ -- Función: assume_external_byte_order (<byte_order_flag>)
+     Le indica a `numericalio' el orden de los bytes en que debe leer y
+     escribir los datos.  Los valores que reconoce <byte_order_flag>
+     son dos: `lsb', que indica que el byte menos significativo debe
+     ser el primero, y `msb', que indica que el byte más significativo
+     es el que debe ir en primer lugar.
+
+     En caso de no hacer ninguna selección, `numericalio' interpreta
+     que es el byte más significativo el que se debe leer o escribir
+     primero.
+
+ -- Función: openr_binary (<file_name>)
+     Devuelve un flujo de entrada de bytes no signados para la lectura
+     del fichero de nombre <file_name>.
+
+
+ -- Función: openw_binary (<file_name>)
+     Devuelve un flujo de entrada de bytes no signados para la
+     escritura en el fichero de nombre <file_name>.
+
+
+ -- Función: opena_binary (<file_name>)
+     Devuelve un flujo de entrada de bytes no signados para añadir
+     datos al fichero de nombre <file_name>.
+
+
+ -- Función: read_binary_matrix (<S>, <M>)
+     Lee números decimales en coma flotante de 8 bytes desde la fuente
+     <S> y los va almacenando en la matriz <M>, bien hasta que <M> se
+     llene, o bien hasta que la fuente se haya consumido. La matriz <M>
+     se rellena fila a fila.
+
+     La fuente <S> puede ser el nombre de un fichero o un flujo.
+
+     El orden de los bytes de los datos procedentes de la fuente se
+     especifican mediante `assume_external_byte_order'.
+
+
+ -- Función: read_binary_array (<S>, <A>)
+     Lee números decimales en coma flotante de 8 bytes desde la fuente
+     <S> y los va almacenando en el array <A>, bien hasta que <A> se
+     llene, o bien hasta que la fuente se haya consumido. <A> debe ser
+     un array creado por `array' o por `make_array'. El array <A> se
+     rellena fila a fila.
+
+     La fuente <S> puede ser el nombre de un fichero o un flujo.
+
+     El orden de los bytes de los datos procedentes de la fuente se
+     especifican mediante `assume_external_byte_order'.
+
+
+ -- Función: read_binary_list (<S>)
+ -- Función: read_binary_list (<S>, <L>)
+     `read_binary_list(<S>)' lee el contenido completo de la fuente de
+     datos <S> como una secuencia de números decimales en coma flotante
+     de 8 bytes en formato binario, devolviéndolos en forma de lista.
+
+     La fuente <S> puede ser el nombre de un fichero o un flujo.
+
+     `read_binary_list(<S>, <L>)' lee números decimales en coma
+     flotante de 8 bytes en formato binario desde la fuente <S> y los
+     almacena en la lista <L>, bien hasta que ésta esté llena, o bien
+     hasta que se consuman los datos de la fuente.
+
+     El orden de los bytes de los datos procedentes de la fuente se
+     especifican mediante `assume_external_byte_order'.
+
+ -- Función: write_binary_data (<X>, <D>)
+     Escribe el objeto <X>, que contiene números decimales en coma
+     flotante de 8 bytes del estándar IEEE 754, en el destino <D>.
+     Cualesquiera otros tipos de decimales son transformados a 8 bytes.
+     `write_binary_data' no puede escribir datos no numéricos.
+
+     El objeto <X> puede ser una lista, una lista anidada, una matriz,
+     o un array creado con `array' o `make_array'; <X> no puede ser ni
+     un array no declarado ni cualquier otro tipo de objeto distinto a
+     los citados.  `write_binary_data' escribe las listas anidadas, las
+     matrices y los arrays fila a fila.
+
+     El destino <D> puede ser el nombre de un fichero o un flujo; en el
+     primer caso, la variable global `file_output_append' controla si
+     el fichero de salida es ampliado con la nueva información o si se
+     borra antes; en el segundo caso, no se realiza ningún tipo de
+     acción por parte de `write_binary_data' después de que se hayan
+     escrito los datos; en particular, el flujo se mantiene abierto.
+
+     El orden de los bytes de los datos procedentes de la fuente se
+     especifican mediante `assume_external_byte_order'.
+
+
+
+File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: Top
+
+68 opsubst
+**********
+
+* Menu:
+
+* Funciones y variables para opsubst::
+
+
+File: maxima.info,  Node: Funciones y variables para opsubst,  Prev: opsubst,  Up: opsubst
+
+68.1 Funciones y variables para opsubst
+=======================================
+
+ -- Función: opsubst (<f>,<g>,<e>)
+ -- Función: opsubst (<g>=<f>,<e>)
+ -- Función: opsubst ([<g1>=<f1>,<g2>=<f2>,..., <gn>=<fn>],<e>)
+     La función `opsubst' es similar a la función `subst', excepto por
+     el hecho de que `opsubst'  tan solo hace sustituciones de
+     operadores en las expresiones. En general, si <f> es un operador en
+     la expresión <e>, lo cambia por <g> en la expresión <e>.
+
+     Para determinar el operador, `opsubst' asigna a `inflag' el valor
+     `true', lo cual significa que `opsubst' sustituye el operador
+     interno de la expresión, no el mostrado en la salida formateada.
+
+     Ejemplo:
+          (%i1) load (opsubst)$
+
+          (%i2) opsubst(f,g,g(g(x)));
+          (%o2)                     f(f(x))
+          (%i3) opsubst(f,g,g(g));
+          (%o3)                       f(g)
+          (%i4) opsubst(f,g[x],g[x](z));
+          (%o4)                       f(z)
+          (%i5) opsubst(g[x],f, f(z));
+          (%o5)                      g (z)
+                                      x
+          (%i6) opsubst(tan, sin, sin(sin));
+          (%o6)                     tan(sin)
+          (%i7) opsubst([f=g,g=h],f(x));
+          (%o7)                       h(x)
+
+     Internamente, Maxima no hace uso de los operadores de negación
+     unaria, de división ni de la resta, por lo que:
+          (%i8) opsubst("+","-",a-b);
+          (%o8)                     a - b
+          (%i9) opsubst("f","-",-a);
+          (%o9)                      - a
+          (%i10) opsubst("^^","/",a/b);
+                                       a
+          (%o10)                       -
+                                       b
+
+     La representación interna de -a*b es *(-1,a,b), de modo que
+          (%i11) opsubst("[","*", -a*b);
+          (%o11)                  [- 1, a, b]
+
+     Si alguno de los operadores no es un símbolo de Maxima, se emitirá
+     un mensaje de error:
+          (%i12) opsubst(a+b,f, f(x));
+
+          Improper name or value in functional position:
+          b + a
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     Sin embargo se permiten operadores subindicados:
+          (%i13) opsubst(g[5],f, f(x));
+          (%o13)                     g (x)
+                                      5
+
+     Antes de hacer uso de esta función ejecútese  `load("opsubst")'.
+
+
+File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
+
+69 orthopoly
+************
+
+* Menu:
+
+* Introducción a polinomios ortogonales::
+* Funciones y variables para polinomios ortogonales::
+
+
+File: maxima.info,  Node: Introducción a polinomios ortogonales,  Next: Funciones y variables para polinomios ortogonales,  Prev: orthopoly,  Up: orthopoly
+
+69.1 Introducción a polinomios ortogonales
+==========================================
+
+El paquete `orthopoly' contiene funciones para la evaluación simbólica
+y numérica de diversos tipos de polinomios ortogonales, como los de
+Chebyshev, Laguerre, Hermite, Jacobi, Legendre y ultraesféricos
+(Gegenbauer). Además, `orthopoly' soporta las funciones esféricas de
+Bessel, Hankel y armónicas.
+
+   Referencias:
+   * Abramowitz y Stegun, Handbook of Mathematical Functions, (1972,
+     décima reimpresión, capítulo 22)
+
+   * Gradshteyn y Ryzhik, Table of Integrals, Series y  Products,
+     (1980, edición corregida y ampliada)
+
+   * Eugen Merzbacher, Quantum Mechanics, (1970, segunda edición)
+
+
+   El paquete `orthopoly', junto con su documentación, fue escrito por
+Barton Willis de la Universidad de Nebraska en Kearney. El paquete se
+distribuye con la licencia GNU General Public License (GPL).
+
+69.1.1 Iniciándose con orthopoly
+--------------------------------
+
+`load (orthopoly)' carga el paquete `orthopoly'.
+
+   Para obtener el polinomio de Legendre de tercer orden,
+
+     (%i1) legendre_p (3, x);
+                           3             2
+                  5 (1 - x)    15 (1 - x)
+     (%o1)      - ---------- + ----------- - 6 (1 - x) + 1
+                      2             2
+
+   Para expresarlo como una suma de potencias de <x>, aplíquese
+<ratsimp> o <rat> al resultado.
+
+     (%i2) [ratsimp (%), rat (%)];
+                             3           3
+                          5 x  - 3 x  5 x  - 3 x
+     (%o2)/R/            [----------, ----------]
+                              2           2
+
+   De forma alternativa, conviértase el segundo argumento de to
+`legendre_p' (su variable  "principal") a una expresión racional
+canónica (canonical rational expression, CRE)).
+
+     (%i1) legendre_p (3, rat (x));
+                                   3
+                                5 x  - 3 x
+     (%o1)/R/                   ----------
+                                    2
+
+   Para la evaluación numérica,  `orthopoly' hace uso del análisis de
+error de ejecución para estimar una cota superior del error. Por
+ejemplo,
+
+     (%i1) jacobi_p (150, 2, 3, 0.2);
+     (%o1) interval(- 0.062017037936715, 1.533267919277521E-11)
+
+   Los intervalos tienen la forma `interval (<c>, <r>)', donde <c> es
+el centro y <r> el radio del intervalo. Puesto que Maxima no soporta
+aritmética de intervalos, en algunas situaciones, como en los gráficos,
+puede ser necesario ignorar el error y utilizar el centro del
+intervalo. Para conseguirlo conviene asignar a la variable
+`orthopoly_returns_intervals' el valor `false'.
+
+     (%i1) orthopoly_returns_intervals : false;
+     (%o1)                         false
+     (%i2) jacobi_p (150, 2, 3, 0.2);
+     (%o2)                  - 0.062017037936715
+
+   Véase la sección Evaluación numérica para más información.
+
+   La mayor parte de las funciones de `orthopoly' tienen una propiedad
+`gradef'; así,
+
+     (%i1) diff (hermite (n, x), x);
+     (%o1)                     2 n H     (x)
+                                    n - 1
+     (%i2) diff (gen_laguerre (n, a, x), x);
+                   (a)               (a)
+                n L   (x) - (n + a) L     (x) unit_step(n)
+                   n                 n - 1
+     (%o2)      ------------------------------------------
+                                    x
+
+   La función `unit_step' del segundo ejemplo evita el error que
+aparecería al evaluar la expresión con <n> igual a 0.
+
+     (%i3) ev (%, n = 0);
+     (%o3)                           0
+
+   La propiedad "gradef" sólo se aplica a la variable principal;
+derivadas respecto de las otras variables darán lugar normalmente a
+mensajes de error; por ejemplo,
+
+     (%i1) diff (hermite (n, x), x);
+     (%o1)                     2 n H     (x)
+                                    n - 1
+     (%i2) diff (hermite (n, x), n);
+
+     Maxima doesn't know the derivative of hermite with
+     respect the first argument
+      -- an error.  Quitting.  To debug this try debugmode(true);
+
+   Generalmente, las funciones de `orthopoly' se distribuyen sobre
+listas y matrices. Al objeto de que la evaluación se realice
+completamente, las variables opcionales `doallmxops' y `listarith'
+deben valer ambas `true', que es el valor por defecto. Para ilustrar la
+distribución sobre matrices sirve el siguiente ejemplo
+
+     (%i1) hermite (2, x);
+                                          2
+     (%o1)                    - 2 (1 - 2 x )
+     (%i2) m : matrix ([0, x], [y, 0]);
+                                 [ 0  x ]
+     (%o2)                       [      ]
+                                 [ y  0 ]
+     (%i3) hermite (2, m);
+                    [                             2  ]
+                    [      - 2        - 2 (1 - 2 x ) ]
+     (%o3)          [                                ]
+                    [             2                  ]
+                    [ - 2 (1 - 2 y )       - 2       ]
+
+   En el segundo ejemplo, el elemento `i, j'-ésimo es `hermite (2,
+m[i,j])', que no es lo mismo que calcular `-2 + 4 m . m', según se ve
+en el siguiente ejemplo.
+
+     (%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
+                         [ 4 x y - 2      0     ]
+     (%o4)               [                      ]
+                         [     0      4 x y - 2 ]
+
+   Si se evalúa una función en un punto fuera de su dominio de
+definición, generalmente `orthopoly' devolverá la función sin evaluar.
+Por ejemplo,
+
+     (%i1) legendre_p (2/3, x);
+     (%o1)                        P   (x)
+                                   2/3
+
+   `orthopoly' da soporte a la traducción de expresiones al formato TeX
+y la representación bidimensional en el terminal.
+
+     (%i1) spherical_harmonic (l, m, theta, phi);
+                               m
+     (%o1)                    Y (theta, phi)
+                               l
+     (%i2) tex (%);
+     $$Y_{l}^{m}\left(\vartheta,\varphi\right)$$
+     (%o2)                         false
+     (%i3) jacobi_p (n, a, a - b, x/2);
+                               (a, a - b) x
+     (%o3)                    P          (-)
+                               n          2
+     (%i4) tex (%);
+     $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
+     (%o4)                         false
+
+69.1.2 Limitaciones
+-------------------
+
+Cuando una expresión contenga varios polinomios ortogonales con órdenes
+simbólicos, es posible que aunque la expresión sea nula, Maxima sea
+incapaz de simplificarla a cero, por lo que si se divide por esta
+cantidad, aparecerán problemas. Por ejemplo, la siguiente expressión se
+anula para enteros <n> mayores que 1, no pudiendo Maxima reducirla a
+cero.
+
+     (%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x)
+                     + (1 - n) * legendre_p (n - 2, x);
+     (%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
+                       n - 1           n               n - 2
+
+   Para un valor específico de <n> se puede reducir la expresión a cero.
+
+     (%i2) ev (% ,n = 10, ratsimp);
+     (%o2)                           0
+
+   Generalmente, la forma polinomial de un polinomio ortogonal no es la
+más apropiada para su evaluación numérica. Aquí un ejemplo.
+
+     (%i1) p : jacobi_p (100, 2, 3, x)$
+     (%i2) subst (0.2, x, p);
+     (%o2)                3.4442767023833592E+35
+     (%i3) jacobi_p (100, 2, 3, 0.2);
+     (%o3)  interval(0.18413609135169, 6.8990300925815987E-12)
+     (%i4) float(jacobi_p (100, 2, 3, 2/10));
+     (%o4)                   0.18413609135169
+
+   Este resultado se puede mejorar expandiendo el polinomio y evaluando
+a continuación, lo que da una aproximación mejor.
+     (%i5) p : expand(p)$
+     (%i6) subst (0.2, x, p);
+     (%o6) 0.18413609766122982
+
+   Sin embargo esto no vale como regla general; la expansión del
+polinomio no siempre da como resultado una expresión más fácil de
+evaluar numéricamente. Sin duda, la mejor manera de hacer la evaluación
+numérica consiste en hacer que uno o más de los argumentos de la
+función sean decimales en coma flotante; de esta forma se utilizarán
+algoritmos decimales especializados para hacer la evaluación.
+
+   La función `float' de Maxima trabaja de forma indiscriminada; si se
+aplica `float' a una expresión que contenga un polinomio ortogonal con
+el grado u orden simbólico, éstos se pueden transformar en decimales y
+la expresión no ser evaluada de forma completa. Considérese
+
+     (%i1) assoc_legendre_p (n, 1, x);
+                                    1
+     (%o1)                         P (x)
+                                    n
+     (%i2) float (%);
+                                   1.0
+     (%o2)                        P   (x)
+                                   n
+     (%i3) ev (%, n=2, x=0.9);
+                                  1.0
+     (%o3)                       P   (0.9)
+                                  2
+
+   La expresión en `(%o3)' no da como resultado un decimal en coma
+flotante; `orthopoly' no reconoce decimales donde espera que haya
+enteros. De forma semejante, la evaluación numérica de la función
+`pochhammer' para órdenes que excedan `pochhammer_max_index' puede ser
+problemática; considérese
+
+     (%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
+     (%o1)                         (1)
+                                      10
+
+   Aplicando `float' no da para <x> un valor decimal
+
+     (%i2) float (x);
+     (%o2)                       (1.0)
+                                      10.0
+
+   A fin de evaluar <x> como decimal, es necesario asignar a
+`pochhammer_max_index' en valor 11 o mayor y aplicar `float' a <x>.
+
+     (%i3) float (x), pochhammer_max_index : 11;
+     (%o3)                       3628800.0
+
+   El valor por defecto de `pochhammer_max_index' es 100; cámbiese este
+valor tras cargar el paquete `orthopoly'.
+
+   Por último, téngase en cuenta que las referencias bibliográficas no
+coinciden a la hora de definir los polinomios ortogonales; en
+`orthopoly' se han utilizado normalmente las convenciones seguidas por
+Abramowitz y Stegun.
+
+   Cuando se sospeche de un fallo en `orthopoly', compruébense algunos
+casos especiales a fin de determinar si las definiciones de las que el
+usuario parte coinciden con las utilizadas por el paquete `orthopoly'.
+A veces las definiciones difieren por un factor de normalización;
+algunos autores utilizan versiones que hacen que las familias sean
+ortogonales en otros intervalos diferentes de (-1, 1). Así por ejemplo,
+para definir un polinomio de Legendre ortogonal en (0, 1) defínase
+
+     (%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
+
+     (%i2) shifted_legendre_p (2, rat (x));
+                                 2
+     (%o2)/R/                 6 x  - 6 x + 1
+     (%i3) legendre_p (2, rat (x));
+                                    2
+                                 3 x  - 1
+     (%o3)/R/                    --------
+                                    2
+
+69.1.3 Evaluación numérica
+--------------------------
+
+La mayor parte de las funciones de `orthopoly' realizan análisis de
+errores en tiempo de ejecución para estimar el error en la evaluación
+decimal, a excepción de las funciones esféricas de Bessel y los
+polinomios asociados de Legendre de segunda especie. Para la evaluación
+numérica, las funciones esféricas de Bessel hacen uso de funciones
+SLATEC. No se lleva a cabo ningún método especial de evaluación
+numérica para los polinomios asociados de Legendre de segunda especie.
+
+   Es posible, aunque improbable, que el error obtenido en las
+evaluaciones numéricas exceda al error estimado.
+
+   Los intervalos tienen la forma `interval (<c>, <r>)', siendo <c> el
+centro del intervalo y <r> su radio. El centro del intervalo puede ser
+un número complejo, pero el radio será siempre un número real positivo.
+
+   He aquí un ejemplo:
+
+     (%i1) fpprec : 50$
+     (%i2) y0 : jacobi_p (100, 2, 3, 0.2);
+     (%o2) interval(0.1841360913516871, 6.8990300925815987E-12)
+     (%i3) y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
+     (%o3) 1.8413609135168563091370224958913493690868904463668b-1
+
+   Se comprueba que el error es menor que el estimado
+
+     (%i4) is (abs (part (y0, 1) - y1) < part (y0, 2));
+     (%o4)                         true
+
+   En este ejemplo el error estimado es una cota superior para el error
+verdadero.
+
+   Maxima no da soporte a la aritmética de intervalos.
+
+     (%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
+     (%o1) interval(0.18032072148437508, 3.1477135311021797E-15)
+             + interval(- 0.19949294375000004, 3.3769353084291579E-15)
+
+   El usuario puede definir operadores aritméticos para los intervalos.
+Para definir la suma de intervalos se puede hacer
+
+     (%i1) infix ("@+")$
+
+     (%i2) "@+"(x,y) := interval (part (x, 1) + part (y, 1),
+                                   part (x, 2) + part (y, 2))$
+     (%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
+     (%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
+
+   Las rutinas especiales para cálculo numérico son llamadas cuando los
+argumentos son complejos. Por ejemplo,
+
+     (%i1) legendre_p (10, 2 + 3.0*%i);
+     (%o1) interval(- 3.876378825E+7 %i - 6.0787748E+7,
+                                                1.2089173052721777E-6)
+
+   Compárese con el valor verdadero.
+
+     (%i1) float (expand (legendre_p (10, 2 + 3*%i)));
+     (%o1)          - 3.876378825E+7 %i - 6.0787748E+7
+
+   Además, cuando los argumentos son números decimales grandes (big
+floats), se realizan llamadas a las rutinas numéricas especiales; sin
+embargo, los decimales grandes se convierten previamente a doble
+precisión y de este tipo serán también los resultados.
+
+     (%i1) ultraspherical (150, 0.5b0, 0.9b0);
+     (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
+
+69.1.4 Gráficos y orthopoly
+---------------------------
+
+Para representar gráficamente expresiones que contengan polinomios
+ortogonales se deben hacer dos cosas:
+  1. Asignar a la variable opcional `orthopoly_returns_intervals' el
+     valor `false',
+
+  2. Comentar (con apóstrofo) las llamadas a las funciones de
+     `orthopoly'.
+        Si las llamadas a las funciones no se comentan, Maxima las
+evalúa a polinomios antes de hacer el gráfico, por lo que el código
+especializado en el cálculo numérico no es llamado. Aquí hay un ejemplo
+de cómo se debe hacer para representar gráficamente una expresión que
+contiene un polinomio de Legendre:
+
+     (%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]),
+           orthopoly_returns_intervals : false;
+     (%o1)
+
+   La expresión `legendre_p (5, x)' se comenta completamente, que no es
+lo mismo que comentar el nombre de la función, como en `'legendre_p (5,
+<x>)'.
+
+69.1.5 Miscelánea de funciones
+------------------------------
+
+El paquete `orthopoly' define el símbolo de Pochhammer y la función de
+escalón unidad en sentencias gradef.
+
+   Para convertir los símbolos de Pochhammer en cocientes o funciones
+gamma, hágase uso de `makegamma'.
+
+     (%i1) makegamma (pochhammer (x, n));
+                               gamma(x + n)
+     (%o1)                     ------------
+                                 gamma(x)
+     (%i2) makegamma (pochhammer (1/2, 1/2));
+                                     1
+     (%o2)                       ---------
+                                 sqrt(%pi)
+
+   Las derivadas del símbolo de Pochhammer se dan en términos de la
+función `psi'.
+
+     (%i1) diff (pochhammer (x, n), x);
+     (%o1)             (x)  (psi (x + n) - psi (x))
+                          n     0             0
+     (%i2) diff (pochhammer (x, n), n);
+     (%o2)                   (x)  psi (x + n)
+                                n    0
+
+   Es necesario tener cuidado con la expresión en `(%o1)', pues la
+diferencia de las funciones `psi' tiene polos cuando `<x> = -1, -2, ..,
+-<n>'.  Estos polos se cancelan con factores de `pochhammer (<x>, <n>)'
+haciendo que la derivada sea un polinomio de grado `<n> - 1' si <n> es
+entero positivo.
+
+   El símbolo de Pochhammer se define para órdenes negativos a través
+de su representación como cociente de funciones gamma. Considérese
+
+     (%i1) q : makegamma (pochhammer (x, n));
+                               gamma(x + n)
+     (%o1)                     ------------
+                                 gamma(x)
+     (%i2) sublis ([x=11/3, n= -6], q);
+                                    729
+     (%o2)                        - ----
+                                    2240
+
+   De forma alternativa, es posible llegar a este resultado
+directamente.
+
+     (%i1) pochhammer (11/3, -6);
+                                    729
+     (%o1)                        - ----
+                                    2240
+
+   La función de escalón unidad es continua por la izquierda; así,
+
+     (%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
+     (%o1)                       [0, 0, 1]
+
+   En caso de ser necesaria una función escalón unidad que no sea
+continua ni por la izquierda ni por la derecha en el origen, se puede
+definir haciendo uso de `signum'; por ejemplo,
+
+     (%i1) xunit_step (x) := (1 + signum (x))/2$
+
+     (%i2) [xunit_step (-1/10), xunit_step (0), xunit_step (1/10)];
+                                     1
+     (%o2)                       [0, -, 1]
+                                     2
+
+   No se debe redefinir la función `unit_step', ya que parte del código
+de `orthopoly' requiere que la función escalón sea continua por la
+izquierda.
+
+69.1.6 Algoritmos
+-----------------
+
+En general, el paquete `orthopoly' gestiona la evaluación simbólica a
+través de la representación hipergeométrica de los polinomios
+ortogonales. Las funciones hipergeométricas se evalúan utilizando las
+funciones (no documentadas) `hypergeo11' y `hypergeo21'. Excepciones
+son las funciones de Bessel de índice semi-entero y las funciones
+asociadas de Legendre de segunda especie; las funciones de Bessel de
+índice semi-entero se evalúan utilizando una representación explícita,
+mientras que la función asociada de Legendre de segunda especie se
+evalúa recursivamente.
+
+   En cuanto a la evaluación numérica, la mayor parte de las funciones
+se convierten a su forma hipergeométrica, evaluándolas mediante
+recursión.  Además, las excepciones son las funciones de Bessel de
+índice semi-entero y las funciones asociadas de Legendre de segunda
+especie.  Las funciones de Bessel de índice semi-entero se evalúan
+numéricamente con código SLATEC.
+
+
 File: maxima.info,  Node: Funciones y variables para polinomios ortogonales,  Prev: Introducción a polinomios ortogonales,  Up: orthopoly
 
-71.2 Funciones y variables para polinomios ortogonales
+69.2 Funciones y variables para polinomios ortogonales
 ======================================================
 
  -- Función: assoc_legendre_p (<n>, <m>, <x>)
@@ -221,7 +3718,7 @@ File: maxima.info,  Node: Funciones y variables para polinomios ortogonales,  Pr
 
 File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
 
-72 plotdf
+70 plotdf
 *********
 
 * Menu:
@@ -232,7 +3729,7 @@ File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
 
 File: maxima.info,  Node: Introducción a plotdf,  Next: Funciones y variables para plotdf,  Prev: plotdf,  Up: plotdf
 
-72.1 Introducción a plotdf
+70.1 Introducción a plotdf
 ==========================
 
 La función `plotdf' crea un gráfico del campo de direcciones para una
@@ -271,7 +3768,7 @@ sistema autónomo con dos ecuaciones.
 
 File: maxima.info,  Node: Funciones y variables para plotdf,  Prev: Introducción a plotdf,  Up: plotdf
 
-72.2 Funciones y variables para plotdf
+70.2 Funciones y variables para plotdf
 ======================================
 
  -- Function: plotdf (<dydx>,...opciones...)
@@ -474,7 +3971,7 @@ File: maxima.info,  Node: Funciones y variables para plotdf,  Prev: Introducción
 
 File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
-73 romberg
+71 romberg
 **********
 
 * Menu:
@@ -484,7 +3981,7 @@ File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para romberg,  Prev: Top,  Up: Top
 
-73.1 Funciones y variables para romberg
+71.1 Funciones y variables para romberg
 =======================================
 
  -- Función: romberg (<expr>, <x>, <a>, <b>)
@@ -645,7 +4142,7 @@ File: maxima.info,  Node: Funciones y variables para romberg,  Prev: Top,  Up: T
 
 File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
 
-74 simplex
+72 simplex
 **********
 
 * Menu:
@@ -656,7 +4153,7 @@ File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: T
 
 File: maxima.info,  Node: Introducción a simplex,  Next: Funciones y variables para simplex,  Prev: simplex,  Up: simplex
 
-74.1 Introducción a simplex
+72.1 Introducción a simplex
 ===========================
 
 El paquete `simplex' utiliza el algoritmo simplex para programación
@@ -673,7 +4170,7 @@ lineal.
 
 File: maxima.info,  Node: Funciones y variables para simplex,  Prev: Introducción a simplex,  Up: simplex
 
-74.2 Funciones y variables para simplex
+72.2 Funciones y variables para simplex
 =======================================
 
  -- Variable opcional: epsilon_lp
@@ -775,7 +4272,7 @@ File: maxima.info,  Node: Funciones y variables para simplex,  Prev: Introducció
 
 File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
 
-75 simplification
+73 simplification
 *****************
 
 * Menu:
@@ -786,7 +4283,7 @@ File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up:
 
 File: maxima.info,  Node: Introducción a simplification,  Next: Funciones y variables para simplification,  Prev: simplification,  Up: simplification
 
-75.1 Introducción a simplification
+73.1 Introducción a simplification
 ==================================
 
 El directorio `maxima/share/simplification' contiene programas que
@@ -796,10 +4293,10 @@ así como ciertas funciones no relacionadas con la simplificación.
 
 File: maxima.info,  Node: Funciones y variables para simplification,  Prev: Introducción a simplification,  Up: simplification
 
-75.2 Funciones y variables para simplification
+73.2 Funciones y variables para simplification
 ==============================================
 
-75.2.1 Paquete absimp
+73.2.1 Paquete absimp
 ---------------------
 
 El paquete `absimp' contiene reglas para aplicar patrones que extienden
@@ -827,7 +4324,7 @@ desarrolla una demostración sobre el uso del mismo.
      (%i4) cosh (abs (x));
      (%o4)                               cosh(x)
 
-75.2.2 Paquete facexp
+73.2.2 Paquete facexp
 ---------------------
 
 El paquete `facexp' contiene varias funciones que le aportan al usuario
@@ -933,7 +4430,7 @@ hace una demostración sobre su uso.
      ser especialmente útil cuando las expresiones a sumar son muy
      grandes.
 
-75.2.3 Paquete functs
+73.2.3 Paquete functs
 ---------------------
 
  -- Función: rempart (<expr>, <n>)
@@ -1093,7 +4590,7 @@ hace una demostración sobre su uso.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
 
-75.2.4 Paquete ineq
+73.2.4 Paquete ineq
 -------------------
 
 El paquete `ineq' contiene reglas de simplificación para desigualdades
@@ -1185,7 +4682,7 @@ referenciarse a ellas, como en `remrule ("+", "+rule1")' para eliminar
 la primera regla sobre `"+"', o `disprule ("*rule2")' para mostrar la
 definición de la segunda regla multiplicativa.
 
-75.2.5 Paquete rducon
+73.2.5 Paquete rducon
 ---------------------
 
  -- Función: reduce_consts (<expr>)
@@ -1223,7 +4720,7 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (rducon)' carga esta función y `demo (rducon)'
      hace una demostración sobre su uso.
 
-75.2.6 Paquete scifac
+73.2.6 Paquete scifac
 ---------------------
 
  -- Función: gcfac (<expr>)
@@ -1251,7 +4748,7 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (scifac)' carga esta función y `demo (scifac)'
      hace una demostración sobre su uso.
 
-75.2.7 Paquete sqdnst
+73.2.7 Paquete sqdnst
 ---------------------
 
  -- Función: sqrtdenest (<expr>)
@@ -1283,7 +4780,7 @@ definición de la segunda regla multiplicativa.
 
 File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: Top
 
-76 solve_rec
+74 solve_rec
 ************
 
 * Menu:
@@ -1294,7 +4791,7 @@ File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: T
 
 File: maxima.info,  Node: Introducción a solve_rec,  Next: Funciones y variables para solve_rec,  Prev: solve_rec,  Up: solve_rec
 
-76.1 Introducción a solve_rec
+74.1 Introducción a solve_rec
 =============================
 
 El paquete `solve_rec' resuelve expresiones recurrentes lineales con
@@ -1316,7 +4813,7 @@ utilización de este paquete.
 
 File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducción a solve_rec,  Up: solve_rec
 
-76.2 Funciones y variables para solve_rec
+74.2 Funciones y variables para solve_rec
 =========================================
 
  -- Función: reduce_order (<rec>, <sol>, <var>)
@@ -1551,7 +5048,7 @@ File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducc
 
 File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
-77 stats
+75 stats
 ********
 
 * Menu:
@@ -1564,7 +5061,7 @@ File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
 File: maxima.info,  Node: Introducción a stats,  Next: Funciones y variables para inference_result,  Prev: Top,  Up: Top
 
-77.1 Introducción a stats
+75.1 Introducción a stats
 =========================
 
 El paquete `stats' contiene procedimientos clásicos sobre inferencia
@@ -1594,7 +5091,7 @@ paquete `numericalio' para leer datos de ficheros en texto plano. Véanse
 
 File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Funciones y variables para stats,  Prev: Introducción a stats,  Up: Top
 
-77.2 Funciones y variables para inference_result
+75.2 Funciones y variables para inference_result
 ================================================
 
  -- Función: inference_result (<title>, <values>, <numbers>)
@@ -1710,7 +5207,7 @@ File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Fu
 
 File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para inference_result,  Up: Top
 
-77.3 Funciones y variables para stats
+75.3 Funciones y variables para stats
 =====================================
 
  -- Variable opcional: stats_numer
@@ -2660,7 +6157,7 @@ File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y v
 
 File: maxima.info,  Node: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para stats,  Up: Top
 
-77.4 Funciones y variables para distribuciones especiales
+75.4 Funciones y variables para distribuciones especiales
 =========================================================
 
  -- Función: pdf_signed_rank (<x>, <n>)
@@ -2694,7 +6191,7 @@ File: maxima.info,  Node: Funciones y variables para distribuciones especiales, 
 
 File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
-78 stirling
+76 stirling
 ***********
 
 * Menu:
@@ -2704,7 +6201,7 @@ File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling,  Up: stirling
 
-78.1 Funciones y variables para stirling
+76.1 Funciones y variables para stirling
 ========================================
 
  -- Función: stirling (<z>,<n>)
@@ -2764,9 +6261,9 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
      Antes de hacer uso de esta función ejecútese  `load("stirling")'.
 
 
-File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
+File: maxima.info,  Node: stringproc,  Next: to_poly_solve,  Prev: stirling,  Up: Top
 
-79 stringproc
+77 stringproc
 *************
 
 * Menu:
@@ -2779,7 +6276,7 @@ File: maxima.info,  Node: stringproc,  Next: unit,  Prev: stirling,  Up: Top
 
 File: maxima.info,  Node: Introducción al procesamiento de cadenas,  Next: Funciones y variables para entrada y salida,  Prev: stringproc,  Up: stringproc
 
-79.1 Introducción al procesamiento de cadenas
+77.1 Introducción al procesamiento de cadenas
 =============================================
 
 El paquete `stringproc' amplía las capacidades de Maxima para manipular
@@ -2886,7 +6383,7 @@ del fichero.
 
 File: maxima.info,  Node: Funciones y variables para entrada y salida,  Next: Funciones y variables para caracteres,  Prev: Introducción al procesamiento de cadenas,  Up: stringproc
 
-79.2 Funciones y variables para entrada y salida
+77.2 Funciones y variables para entrada y salida
 ================================================
 
 Ejemplo:
@@ -3035,7 +6532,7 @@ Ejemplo:
 
 File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funciones y variables para cadenas,  Prev: Funciones y variables para entrada y salida,  Up: stringproc
 
-79.3 Funciones y variables para caracteres
+77.3 Funciones y variables para caracteres
 ==========================================
 
  -- Función: alphacharp (<char>)
@@ -3126,7 +6623,7 @@ File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funcione
 
 File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y variables para caracteres,  Up: stringproc
 
-79.4 Funciones y variables para cadenas
+77.4 Funciones y variables para cadenas
 =======================================
 
  -- Función: stringp (<obj>)
@@ -3452,747 +6949,14 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
 
 
 
-File: maxima.info,  Node: unit,  Next: zeilberger,  Prev: stringproc,  Up: Top
+File: maxima.info,  Node: to_poly_solve,  Next: unit,  Prev: stringproc,  Up: Top
 
-80 unit
-*******
-
-* Menu:
-
-* Introducción a units::
-* Funciones y variables para units::
-
-
-File: maxima.info,  Node: Introducción a units,  Next: Funciones y variables para units,  Prev: unit,  Up: unit
-
-80.1 Introducción a units
-=========================
-
-El paquete `unit' permite al usuario hacer cambios de unidades y llevar
-a cabo el análisis dimensional de las ecuaciones. La forma de operar de
-este paquete es radicalmente diferente de la del paquete original de
-Maxima; mientras que en el paquete original era tan solo una lista de
-definiciones, aquí se utiliza un conjunto de reglas que permiten
-seleccionar al usuario en qué unidades debe devolverse la expresión
-final.
-
-   Junto con el análisis dimensional, el paquete aporta una serie de
-herramientas para controlar las opciones de conversión y simplificación.
-Además de la conversión automática adaptable a las necesidades del
-usuario, el paquete `unit' permite hacer conversiones a la manera
-tradicional.
-
-   Nota: Cuando los factores de conversión no son exactos, Maxima los
-transformará a fracciones como consecuencia de la metodología utilizada
-para simplificar las unidades. Los mensajes de aviso concernientes a
-estas transformaciones están desactivados por defecto en el caso de las
-unidades (lo habitual es que estén activados en otros contextos) debido
-a que al ser una operación muy frecuente, serían un estorbo.  El estado
-previo de la variable `ratprint' queda restaurado tras la conversión de
-las unidades, de manera que se mantendrá la opción seleccionada por el
-usuario; en caso de que éste necesite ver dichos avisos, podrá hacer la
-asignación `unitverbose:on' para reactivarlos desde el proceso de
-conversión de unidades.
-
-   El paquete `unit' se aloja en el directorio `share/contrib/unit' y
-se ajusta a las convenciones de Maxima para la carga de paquetes:
-
-     (%i1) load("unit")$
-     *******************************************************************
-     *                       Units version 0.50                        *
-     *          Definitions based on the NIST Reference on             *
-     *              Constants, Units, and Uncertainty                  *
-     *       Conversion factors from various sources including         *
-     *                   NIST and the GNU units package                *
-     *******************************************************************
-
-     Redefining necessary functions...
-     WARNING: DEFUN/DEFMACRO:
-              redefining function TOPLEVEL-MACSYMA-EVAL ...
-     WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
-     WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
-     WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
-     Initializing unit arrays...
-     Done.
-
-   Los avisos del tipo `WARNING' son normales y no deben interpretarse
-como errores; tan solo indican que el paquete `unit' está redefiniendo
-funciones que ya estaban definidas en Maxima. Esto es necesario para
-que las unidades se gestionen de forma correcta. El usuario debe tener
-en cuenta que si otros paquetes han cambiado las definiciones de estas
-funciones, tales cambios serán ignorados por el proceso de carga de
-`unit'.
-
-   El paquete `unit' también carga el fichero de Lisp
-`unit-functions.lisp', el cual contiene las funciones Lisp necesarias.
-
-   El autor principal de este paquete es Clifford Yapp, quien ha
-recibido ayuda y asistencia, entre otros, de Barton Willis y Robert
-Dodier.
-
-
-File: maxima.info,  Node: Funciones y variables para units,  Prev: Introducción a units,  Up: unit
-
-80.2 Funciones y variables para units
-=====================================
-
- -- Función: setunits (<list>)
-     El paquete `unit' no utiliza por defecto dimensiones derivadas,
-     pero convierte todas las unidades a las siete fundamentales en
-     unidades MKS.
-
-          (%i2) N;
-                                               kg m
-          (%o2)                                ----
-                                                 2
-                                                s
-          (%i3) dyn;
-                                             1      kg m
-          (%o3)                           (------) (----)
-                                           100000     2
-                                                     s
-          (%i4) g;
-                                              1
-          (%o4)                             (----) (kg)
-                                             1000
-          (%i5) centigram*inch/minutes^2;
-                                            127        kg m
-          (%o5)                       (-------------) (----)
-                                       1800000000000     2
-                                                        s
-
-     Este es el comportamiento que se desea en ciertos casos. Si el
-     usuario necesita utilizar otras unidades, habrá de utilizar la
-     instrucción `setunits':
-          (%i6) setunits([centigram,inch,minute]);
-          (%o6)                                done
-          (%i7) N;
-                                      1800000000000   %in cg
-          (%o7)                      (-------------) (------)
-                                           127            2
-                                                      %min
-          (%i8) dyn;
-                                         18000000   %in cg
-          (%o8)                         (--------) (------)
-                                           127          2
-                                                    %min
-          (%i9) g;
-          (%o9)                             (100) (cg)
-          (%i10) centigram*inch/minutes^2;
-                                              %in cg
-          (%o10)                              ------
-                                                  2
-                                              %min
-
-     La especificación de las variables es relativamente flexible.  Por
-     ejemplo, si se quiere volver a utilizar kilogramos, metros y
-     segundos como unidades por defecto, podemos hacer:
-          (%i11) setunits([kg,m,s]);
-          (%o11)                               done
-          (%i12) centigram*inch/minutes^2;
-                                            127        kg m
-          (%o12)                      (-------------) (----)
-                                       1800000000000     2
-                                                        s
-
-     Las unidades derivadas también se controlan con esta misma
-     instrucción:
-          (%i17) setunits(N);
-          (%o17)                               done
-          (%i18) N;
-          (%o18)                                 N
-          (%i19) dyn;
-                                              1
-          (%o19)                           (------) (N)
-                                            100000
-          (%i20) kg*m/s^2;
-          (%o20)                                 N
-          (%i21) centigram*inch/minutes^2;
-                                              127
-          (%o21)                        (-------------) (N)
-                                         1800000000000
-
-     Téngase en cuenta que el paquete `unit' reconoce que la
-     combinación de masa, longitud e inversa del cuadrado del tiempo da
-     lugar a una fuerza, convirtiéndola a newtons. Esta es la forma
-     general en la que trabaja Maxima. Si el usuario prefiere dinas a
-     newtons, tan solo tendrá que hacer lo siguiente:
-          (%i22) setunits(dyn);
-          (%o22)                               done
-          (%i23) kg*m/s^2;
-          (%o23)                          (100000) (dyn)
-          (%i24) centigram*inch/minutes^2;
-                                            127
-          (%o24)                         (--------) (dyn)
-                                          18000000
-
-     Para desactivar una unidad se utiliza la instrucción `uforget':
-          (%i26) uforget(dyn);
-          (%o26)                               false
-          (%i27) kg*m/s^2;
-                                               kg m
-          (%o27)                               ----
-                                                 2
-                                                s
-          (%i28) centigram*inch/minutes^2;
-                                            127        kg m
-          (%o28)                      (-------------) (----)
-                                       1800000000000     2
-                                                        s
-     Esto también hubiese funcionado con `uforget(N)' o
-     `uforget(%force)'.
-
-     Véase también `uforget'. Para hacer uso de esta función ejecútese
-     `load("unit")'.
-
- -- Función: uforget (<list>)
-     Por defecto, el paquete `unit' convierte todas las unidades a las
-     siete fundamentales del sistema MKS. Este comportamiento puede
-     alterarse mediante la instrucción `setunits'. Después, si el
-     usuario quiere restaurar el comportamiento por defecto podrá
-     hacerlo para una dimensión determinada haciendo uso de la
-     instrucción `uforget':
-          (%i13) setunits([centigram,inch,minute]);
-          (%o13)                               done
-          (%i14) centigram*inch/minutes^2;
-                                              %in cg
-          (%o14)                              ------
-                                                  2
-                                              %min
-          (%i15) uforget([cg,%in,%min]);
-          (%o15)                     [false, false, false]
-          (%i16) centigram*inch/minutes^2;
-                                            127        kg m
-          (%o16)                      (-------------) (----)
-                                       1800000000000     2
-                                                        s
-
-     La instrucción `uforget' opera sobre dimensiones, no sobre
-     unidades, de modo que valdrá para cualquier unidad de una
-     dimensión concreta. La propia dimensión es una argumento válido
-     para esta función.
-
-     Véase también `setunits'. Para hacer uso de esta función ejecútese
-     `load("unit")'.
-
- -- Función: convert (<expr>, <list>)
-     La función `convert' permite conversiones de una sola vez sin
-     alterar el entorno global de ejecución. Acepta tanto un único
-     argumento como una lista de unidades a utilizar en las
-     conversiones. Cuando se realiza una llamada a `convert' se ignora
-     el sistema global de evaluación, con el fin de evitar que el
-     resultado deseado sea nuevamente transformado.  Como consecuencia
-     de esto, en los cálculos con decimales, los avisos de tipo `rat'
-     se harán visibles si la variable global `ratprint' vale `true'.
-     Otra propiedad de `convert' es que permite al usuario hacer
-     conversiones al sistema fundamental de dimensiones incluso cuando
-     el entorno ha sido ajustado para simplificar a una dimensión
-     derivada.
-          (%i2) kg*m/s^2;
-                                               kg m
-          (%o2)                                ----
-                                                 2
-                                                s
-          (%i3) convert(kg*m/s^2,[g,km,s]);
-                                               g km
-          (%o3)                                ----
-                                                 2
-                                                s
-          (%i4) convert(kg*m/s^2,[g,inch,minute]);
-
-          `rat' replaced 39.37007874015748 by 5000/127 = 39.37007874015748
-                                        18000000000   %in g
-          (%o4)                        (-----------) (-----)
-                                            127           2
-                                                      %min
-          (%i5) convert(kg*m/s^2,[N]);
-          (%o5)                                  N
-          (%i6) convert(kg*m^2/s^2,[N]);
-          (%o6)                                 m N
-          (%i7) setunits([N,J]);
-          (%o7)                                done
-          (%i8) convert(kg*m^2/s^2,[N]);
-          (%o8)                                 m N
-          (%i9) convert(kg*m^2/s^2,[N,inch]);
-
-          `rat' replaced 39.37007874015748 by 5000/127 = 39.37007874015748
-                                           5000
-          (%o9)                           (----) (%in N)
-                                           127
-          (%i10) convert(kg*m^2/s^2,[J]);
-          (%o10)                                 J
-          (%i11) kg*m^2/s^2;
-          (%o11)                                 J
-          (%i12) setunits([g,inch,s]);
-          (%o12)                               done
-          (%i13) kg*m/s^2;
-          (%o13)                                 N
-          (%i14) uforget(N);
-          (%o14)                               false
-          (%i15) kg*m/s^2;
-                                          5000000   %in g
-          (%o15)                         (-------) (-----)
-                                            127       2
-                                                     s
-          (%i16) convert(kg*m/s^2,[g,inch,s]);
-
-          `rat' replaced 39.37007874015748 by 5000/127 = 39.37007874015748
-                                          5000000   %in g
-          (%o16)                         (-------) (-----)
-                                            127       2
-                                                     s
-
-     Véanse también `setunits' y `uforget'.  Para hacer uso de esta
-     función ejecútese `load("unit")'.
-
- -- Variable opcional: usersetunits
-     Valor por defecto: ninguno
-
-     En caso de que el usuario desee que el comportamiento por defecto
-     del paquete `unit' sea distinto del descrito, puede hacer uso del
-     fichero `maxima-init.mac' y de la variable global `usersetunits'.
-     El paquete `unit' comprobará al ser cargado si se le ha dado a esta
-     variable una lista de unidades; en caso afirmativo, aplicará
-     `setunits' a las unidades de esta lista y las utilizará por
-     defecto. Una llamada a la función `uforget' permitirá retornar al
-     comportamiento establecido por defecto por el usuario. Por
-     ejemplo, si en el archivo `maxima-init.mac' se tiene el siguiente
-     código:
-          usersetunits : [N,J];
-
-     observaríamos el siguiente comportamiento:
-          (%i1) load("unit")$
-          *******************************************************************
-          *                       Units version 0.50                        *
-          *          Definitions based on the NIST Reference on             *
-          *              Constants, Units, and Uncertainty                  *
-          *       Conversion factors from various sources including         *
-          *                   NIST and the GNU units package                *
-          *******************************************************************
-
-          Redefining necessary functions...
-          WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
-          WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
-          WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
-          WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
-          Initializing unit arrays...
-          Done.
-          User defaults found...
-          User defaults initialized.
-          (%i2) kg*m/s^2;
-          (%o2)                                  N
-          (%i3) kg*m^2/s^2;
-          (%o3)                                  J
-          (%i4) kg*m^3/s^2;
-          (%o4)                                 J m
-          (%i5) kg*m*km/s^2;
-          (%o5)                             (1000) (J)
-          (%i6) setunits([dyn,eV]);
-          (%o6)                                done
-          (%i7) kg*m/s^2;
-          (%o7)                           (100000) (dyn)
-          (%i8) kg*m^2/s^2;
-          (%o8)                     (6241509596477042688) (eV)
-          (%i9) kg*m^3/s^2;
-          (%o9)                    (6241509596477042688) (eV m)
-          (%i10) kg*m*km/s^2;
-          (%o10)                   (6241509596477042688000) (eV)
-          (%i11) uforget([dyn,eV]);
-          (%o11)                           [false, false]
-          (%i12) kg*m/s^2;
-          (%o12)                                 N
-          (%i13) kg*m^2/s^2;
-          (%o13)                                 J
-          (%i14) kg*m^3/s^2;
-          (%o14)                                J m
-          (%i15) kg*m*km/s^2;
-          (%o15)                            (1000) (J)
-
-     De no haber hecho uso de `usersetunits', las entradas iniciales
-     hubiesen sido convertidas a unidades MKS y cualquier llamada a
-     `uforget' hubiese retornado también a MKS. Sin embargo, las
-     preferencias establecidas por el usuario se respetan en ambos
-     casos. Para eliminar las preferencias del usuario y volver a
-     utilizar las establecidas por defecto por el paquete `unit', debe
-     utilizarse la instrucción `dontusedimension'. La función `uforget'
-     puede restaurar nuevamente las preferencias del usuario, pero sólo
-     si `usedimension' mantiene su valor. Alternativamente,
-     `kill(usersetunits)'  eliminará completamente cualquier vestigio
-     de las preferencias del usuario durante la sesión actual. Véanse a
-     continuación algunos ejemplos de aplicación de estas opciones:
-          (%i2) kg*m/s^2;
-          (%o2)                                  N
-          (%i3) kg*m^2/s^2;
-          (%o3)                                  J
-          (%i4) setunits([dyn,eV]);
-          (%o4)                                done
-          (%i5) kg*m/s^2;
-          (%o5)                           (100000) (dyn)
-          (%i6) kg*m^2/s^2;
-          (%o6)                     (6241509596477042688) (eV)
-          (%i7) uforget([dyn,eV]);
-          (%o7)                            [false, false]
-          (%i8) kg*m/s^2;
-          (%o8)                                  N
-          (%i9) kg*m^2/s^2;
-          (%o9)                                  J
-          (%i10) dontusedimension(N);
-          (%o10)                             [%force]
-          (%i11) dontusedimension(J);
-          (%o11)                         [%energy, %force]
-          (%i12) kg*m/s^2;
-                                               kg m
-          (%o12)                               ----
-                                                 2
-                                                s
-          (%i13) kg*m^2/s^2;
-                                                   2
-                                               kg m
-          (%o13)                               -----
-                                                 2
-                                                s
-          (%i14) setunits([dyn,eV]);
-          (%o14)                               done
-          (%i15) kg*m/s^2;
-                                               kg m
-          (%o15)                               ----
-                                                 2
-                                                s
-          (%i16) kg*m^2/s^2;
-                                                   2
-                                               kg m
-          (%o16)                               -----
-                                                 2
-                                                s
-          (%i17) uforget([dyn,eV]);
-          (%o17)                         [false, false]
-          (%i18) kg*m/s^2;
-                                               kg m
-          (%o18)                               ----
-                                                 2
-                                                s
-          (%i19) kg*m^2/s^2;
-                                                   2
-                                               kg m
-          (%o19)                               -----
-                                                 2
-                                                s
-          (%i20) usedimension(N);
-          Done.  To have Maxima simplify to this dimension,
-            use setunits([unit]) to select a unit.
-          (%o20)                               true
-          (%i21) usedimension(J);
-          Done.  To have Maxima simplify to this dimension,
-            use setunits([unit])
-          to select a unit.
-          (%o21)                               true
-          (%i22) kg*m/s^2;
-                                               kg m
-          (%o22)                               ----
-                                                 2
-                                                s
-          (%i23) kg*m^2/s^2;
-                                                   2
-                                               kg m
-          (%o23)                               -----
-                                                 2
-                                                s
-          (%i24) setunits([dyn,eV]);
-          (%o24)                               done
-          (%i25) kg*m/s^2;
-          (%o25)                          (100000) (dyn)
-          (%i26) kg*m^2/s^2;
-          (%o26)                    (6241509596477042688) (eV)
-          (%i27) uforget([dyn,eV]);
-          (%o27)                           [false, false]
-          (%i28) kg*m/s^2;
-          (%o28)                                 N
-          (%i29) kg*m^2/s^2;
-          (%o29)                                 J
-          (%i30) kill(usersetunits);
-          (%o30)                               done
-          (%i31) uforget([dyn,eV]);
-          (%o31)                          [false, false]
-          (%i32) kg*m/s^2;
-                                               kg m
-          (%o32)                               ----
-                                                 2
-                                                s
-          (%i33) kg*m^2/s^2;
-                                                   2
-                                               kg m
-          (%o33)                               -----
-                                                 2
-                                                s
-
-     Desafortunadamente, esta amplia variedad de opciones puede resultar
-     confusa en un primer momento, pero una vez se practica un poco con
-     ellas, el usuario comprobará que tiene un control absoluto sobre
-     su entorno de trabajo.
-
-
- -- Función: metricexpandall (<x>)
-     Reconstruye automáticamente las listas globales de unidades
-     creando todas los múltiplos y submúltiplos métricos necesarios. El
-     argumento numérico <x> se utiliza para especificar cuántos
-     prefijos numéricos quiere utilizar el usuario. Los argumentos son
-     los siguientes:
-                         0 - none. Only base units
-                         1 - kilo, centi, milli
-          (por defecto)  2 - giga, mega, kilo, hecto, deka, deci, centi,
-                             milli, micro, nano
-                         3 - peta, tera, giga, mega, kilo, hecto, deka,
-                             deci, centi, milli, micro, nano, pico,
-                             femto
-                         4 - todos
-
-     Normalmente, Maxima no definirá el juego completo de múltiplos y
-     submúltiplos, lo que implica un número muy grande de unidades, pero
-     `metricexpandall' puede utilizarse para reconstruir la lista. La
-     variable fundamental del paquete `unit' es `%unitexpand'.
-
- -- Variable opcional: %unitexpand
-     Valor por defecto: `2'
-
-     Es el valor suministrado a `metricexpandall' durante la carga del
-     paquete `unit'.
-
-
-File: maxima.info,  Node: zeilberger,  Next: Índice de Funciones y Variables,  Prev: unit,  Up: Top
-
-81 zeilberger
-*************
+78 to_poly_solve
+****************
 
 * Menu:
 
-* Introducción a zeilberger::
-* Funciones y variables para zeilberger::
-
-
-File: maxima.info,  Node: Introducción a zeilberger,  Next: Funciones y variables para zeilberger,  Prev: zeilberger,  Up: zeilberger
-
-81.1 Introducción a zeilberger
-==============================
-
-El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
-suma hipergeométrica definida y el algoritmo de Gosper para la suma
-hipergeométrica indefinida. Además, hace uso del método de optimización
-por filtrado desarrollado por Axel Riese.
-
-   El autor de este paquete es Fabrizio Caruso.
-
-   Antes de hacer uso de las funciones aquí definidas, ejecútese la
-sentencia `load (zeilberger)'.
-
-81.1.0.1 El problema de la suma indefinida
-..........................................
-
-El paquete `zeilberger' implementa el algoritmo de Gosper para la suma
-hipergeométrica indefinida.  Dado el término general hipergeométrico
-F_k de índice k, se plantea el problema de encontrar su antidiferencia
-hipergeométrica, esto es, el término hipergeométrico tal que
-
-   F_k = f_(k+1) - f_k.
-
-81.1.0.2 El problema de la suma definida
-........................................
-
-El paquete `zeilberger' implementa el algoritmo de Zeilberger para la
-suma hipergeométrica definida.  Dados el término hipergeométrico propio
-F_(n,k), de índices n y k, y el entero positivo d, se plantea el
-problema de encontrar una expresión recurrente lineal de orden d con
-coeficientes polinomiales en n y una función racional R en n y k tales
-que
-
-   a_0 F_(n,k) + ... + a_d F_(n+d),k = Delta_K(R(n,k) F_(n,k))
-
-   donde Delta_k es el k-ésimo operador diferencia hacia adelante, esto
-es, Delta_k(t_k) := t_(k+1) - t_k.
-
-81.1.1 Niveles de información
------------------------------
-
-Hay versiones extendidas de los nombres de las instrucciones, que se
-construyen añadiendo uno de los siguientes prefijos:
-
-`Summary'
-     Tan solo muestra un sumario al final
-
-`Verbose'
-     Alguna información en los niveles intermedios
-
-`VeryVerbose'
-     Más información
-
-`Extra'
-     Aún más información, incluida alguna sobre el sistema lineal en el
-     algoritmo de Zeilberger.
-
-   Por ejemplo: `GosperVerbose', `parGosperVeryVerbose',
-`ZeilbergerExtra', `AntiDifferenceSummary'.
-
-
-File: maxima.info,  Node: Funciones y variables para zeilberger,  Prev: Introducción a zeilberger,  Up: zeilberger
-
-81.2 Funciones y variables para zeilberger
-==========================================
-
- -- Función: AntiDifference (<F_k>, <k>)
-     Returns the hypergeometric anti-difference of F_k, if it exists.
-     Otherwise `AntiDifference' returns `no_hyp_antidifference'.
-
- -- Función: Gosper (<F_k>, <k>)
-     Devuelve, si existe, el elemento racional asociado a <F_k>, esto
-     es, la función racional que verifica
-
-     F_k = R(k+1) F_(k+1) - R(k) F_k,
-
-     En caso de no existir este elemento, `Gosper' devuelve
-     `no_hyp_sol'.
-
- -- Función: GosperSum (<F_k>, <k>, <a>, <b>)
-     Devuelve la suma de los términos F_k desde <k> = <a> hasta <k> =
-     <b> si F_k tiene una antidiferencia hipergeométrica. En caso
-     contrario, `GosperSum' devuelve `nongosper_summable'.
-
-     Ejemplos:
-
-          (%i1) load (zeilberger)$
-          (%i2) GosperSum ((-1)^k*k / (4*k^2 - 1), k, 1, n);
-          Dependent equations eliminated:  (1)
-                                     3       n + 1
-                                (n + -) (- 1)
-                                     2               1
-          (%o2)               - ------------------ - -
-                                            2        4
-                                2 (4 (n + 1)  - 1)
-          (%i3) GosperSum (1 / (4*k^2 - 1), k, 1, n);
-                                          3
-                                    - n - -
-                                          2       1
-          (%o3)                  -------------- + -
-                                          2       2
-                                 4 (n + 1)  - 1
-          (%i4) GosperSum (x^k, k, 1, n);
-                                    n + 1
-                                   x          x
-          (%o4)                    ------ - -----
-                                   x - 1    x - 1
-          (%i5) GosperSum ((-1)^k*a! / (k!*(a - k)!), k, 1, n);
-                                          n + 1
-                          a! (n + 1) (- 1)              a!
-          (%o5)       - ------------------------- - ----------
-                        a (- n + a - 1)! (n + 1)!   a (a - 1)!
-          (%i6) GosperSum (k*k!, k, 1, n);
-          Dependent equations eliminated:  (1)
-          (%o6)                     (n + 1)! - 1
-          (%i7) GosperSum ((k + 1)*k! / (k + 1)!, k, 1, n);
-                            (n + 1) (n + 2) (n + 1)!
-          (%o7)             ------------------------ - 1
-                                    (n + 2)!
-          (%i8) GosperSum (1 / ((a - k)!*k!), k, 1, n);
-          (%o8)                  NON_GOSPER_SUMMABLE
-
-
- -- Función: parGosper (<F_{n,k}>, <k>, <n>, <d>)
-     Intenta calcular una recurrecia de orden <d> para <F_{n,k}>.
-
-     El algoritmo devuelve una secuencia [s_1, s_2, ..., s_m] de
-     soluciones, cada una de las cuales tiene la forma
-
-     [R(n, k), [a_0, a_1, ..., a_d]].
-
-     La función `parGosper' devuelve `[]' si no encuentra ninguna
-     recurrencia.
-
- -- Función: Zeilberger (<F_{n,k}>, <k>, <n>)
-     Intenta calcular la suma hipergeométrica indefinida de <F_{n,k}>.
-
-     La función `Zeilberger' invoca en primer lugar a `Gosper', y en
-     caso de no encontrar una solución, llama después a `parGosper' con
-     los órdenes 1, 2, 3, ..., hasta `max_ord'. Si `Zeilberger'
-     encuentra una solución antes de alcanzar `max_ord', se detiene su
-     ejecución y devuelve el resultado.
-
-     El algoritmo devuelve una secuencia [s_1, s_2, ..., s_m] de
-     soluciones, cada una de las cuales tiene la forma
-
-     [R(n, k), [a_0, a_1, ..., a_d]].
-
-     La función `Zeilberger' devuelve `[]' si no encuentra ninguna
-     solución.
-
-     La función `Zeilberger' llama a `Gosper' sólo si
-     `Gosper_in_Zeilberger' tiene el valor `true'.
-
- -- Variable opcional: max_ord
-     Valor por defecto: 5
-
-     `max_ord' es el máximo orden de recurrencia que ensayará la
-     función `Zeilberger'.
-
- -- Variable opcional: simplified_output
-     Valor por defecto: `false'
-
-     Si `simplified_output' vale `true', las funciones del paquete
-     `zeilberger' tratan de presentar las soluciones simplificadas.
-
- -- Variable opcional: linear_solver
-     Valor por defecto: `linsolve'
-
-     La variable `linear_solver' guarda el nombre de la función que se
-     utilizará para resolver el sistema de ecuaciones del algoritmo de
-     Zeilberger.
-
- -- Variable opcional: warnings
-     Valor por defecto: `true'
-
-     Si `warnings' vale `true', las funciones del paquete `zeilberger'
-     emiten mensajes de aviso durante su ejecución.
-
- -- Variable opcional: Gosper_in_Zeilberger
-     Valor por defecto: `true'
-
-     Si `Gosper_in_Zeilberger' vale `true', la función `Zeilberger'
-     llama a la función `Gosper' antes de llamar a `parGosper'.  En
-     caso contrario, `Zeilberger' invoca inmediatamente a `parGosper'.
-
- -- Variable opcional: trivial_solutions
-     Valor por defecto: `true'
-
-     Si `trivial_solutions' vale `true', la función `Zeilberger'
-     devuelve soluciones triviales.
-
- -- Variable opcional: mod_test
-     Valor por defecto: `false'
-
-     Si `mod_test' vale `true', la función `parGosper' ejecuta una
-     prueba modular para descartar sistemas sin soluciones.
-
- -- Variable opcional: modular_linear_solver
-     Valor por defecto: `linsolve'
-
-     La variable `modular_linear_solver' guarda el nombre de la función
-     que deberá ser llamada por la prueba modular de `parGosper' para
-     resolver sistemas lineales.
-
- -- Variable opcional: ev_point
-     Valor por defecto: `big_primes[10]'
-
-     La variable `ev_point' guarda el valor para el que debe evaluarse
-     <n> durante la ejecución de la prueba modular de `parGosper'.
-
- -- Variable opcional: mod_big_prime
-     Valor por defecto: `big_primes[1]'
-
-     La variable `mod_big_prime' guarda el módulo utilizado por la
-     prueba modular de `parGosper'.
-
- -- Variable opcional: mod_threshold
-     Valor por defecto: 4
-
-     La variable `mod_threshold' es el máximo orden que ensaya la
-     prueba modular de `parGosper'.
+* Funciones y variables para to_poly_solve::
 
 
 

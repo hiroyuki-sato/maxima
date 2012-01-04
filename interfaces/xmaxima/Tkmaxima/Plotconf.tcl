@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plotconf.tcl,v 1.26 2011/03/15 01:16:10 villate Exp $
+#       $Id: Plotconf.tcl,v 1.26 2011-03-15 01:16:10 villate Exp $
 #
 ###### plotconf.tcl ######
 ############################################################

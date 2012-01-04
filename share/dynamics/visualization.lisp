@@ -17,7 +17,7 @@
 ;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ;; MA  02110-1301, USA.
 ;;
-;; $Id: visualization.lisp,v 1.1 2011/03/09 11:32:39 villate Exp $
+;; $Id: visualization.lisp,v 1.1 2011-03-09 11:32:39 villate Exp $
 
 (in-package :maxima)
 
