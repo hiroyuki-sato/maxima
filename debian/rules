@@ -47,7 +47,9 @@ restore:
 	rm -rf debian/save
 
 MVERS:=$(shell head -n 1 debian/changelog | cut -f2 -d\  | tr -d '()' | cut -f1 -d-)
-build: debian/save build-stamp
+build: build-arch build-indep
+build-arch: debian/save build-stamp
+build-indep: debian/save build-stamp
 build-stamp:
 	dh_testdir
 
@@ -134,7 +136,7 @@ clean: restore
 	rm -f tests/rtest14.ERR
 	rm -f doc/info/include-maxima.texi
 	rm -f configure.lineno doc/info/extract_categories.sh.debdiff
-	rm -f raw_ff_map
+	rm -f raw_ff_map src/share-subdirs.lisp
 	dh_clean
 
 
@@ -283,4 +285,4 @@ source diff:
 	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+.PHONY: build build-arch build-indep clean binary-indep binary-arch binary install
