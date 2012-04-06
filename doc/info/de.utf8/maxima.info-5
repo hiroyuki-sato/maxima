@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -1014,41 +1014,6 @@ File: maxima.info,  Node: Funktionen und Variablen für die schnelle Fourier-Tra
           (%i8) log (10.0);
           (%o8)                   2.302585092994046
 
- -- Funktion: newton (<expr>, <x>, <x_0>, <eps>)
-     Gibt eine Näherungslösung der Gleichung `<expr> = 0' zurück, die
-     mit dem Newton-Algorithmus berechnet wird.  Der Ausdruck <expr>
-     ist eine Funktion einer Variablen <x>.  Der Anfangswert ist ` <x>
-     = <x_0>'.  Der Algorithmus bricht ab, wenn `abs(<expr>) < <eps>',
-     wobei der Ausdruck <expr> für den aktuellen Näherungswert <x>
-     ausgewertet wird.
-
-     `newton' erlaubt symbolische Variablen im Ausdruck <expr>, wenn der
-     Ausdruck `abs(<expr>) < <eps>' zu `true' oder `false' ausgewertet
-     werden kann.  Daher ist es nicht notwendig, dass der Ausdruck
-     <expr> zu einer Zahl ausgewertet werden kann.
-
-     Das Kommando `load(newton1)' lädt die Funktion.
-
-     Siehe auch die Funktionen `realroots',  `allroots',
-
-     `find_root'  und `mnewton'.
-
-     Beispiele:
-
-          (%i1) load (newton1);
-          (%o1) /usr/share/maxima/5.10.0cvs/share/numeric/newton1.mac
-          (%i2) newton (cos (u), u, 1, 1/100);
-          (%o2)                   1.570675277161251
-          (%i3) ev (cos (u), u = %);
-          (%o3)                 1.2104963335033528E-4
-          (%i4) assume (a > 0);
-          (%o4)                        [a > 0]
-          (%i5) newton (x^2 - a^2, x, a/2, a^2/100);
-          (%o5)                  1.00030487804878 a
-          (%i6) ev (x^2 - a^2, x = %);
-                                                     2
-          (%o6)                6.098490481853958E-4 a
-
 
 File: maxima.info,  Node: Einführung in Fourierreihen,  Next: Funktionen und Variablen für Fourierreihen,  Prev: Funktionen und Variablen für die schnelle Fourier-Transformation,  Up: Fourier-Transformationen
 
@@ -1315,25 +1280,28 @@ File: maxima.info,  Node: Einführung in Muster und Regeln,  Next: Funktionen un
 24.1 Einführung in Muster und Regeln
 ====================================
 
-Dieses Kapitel beschreibt die nutzerdefinierte Mustererkennung und
-Vereinfachungsregeln.  Es gibt zwei verschiedene Gruppen an Funktionen,
-die eine etwas unterschiedliche Mustererkennung implementieren.  Die
-eine Gruppe enthält die Funktionen `tellsimp',  `tellsimpafter',
+Dieses Kapitel beschreibt nutzerdefinierte Muster und Regeln für die
+Vereinfachung von Ausdrücken.  Es gibt zwei verschiedene Gruppen von
+Funktionen, die einen unterschiedlichen Musterabgleich implementieren.
+Die eine Gruppe enthält die Funktionen `tellsimp',
 
-`defmatch',  `defrule',  `apply1',  `applyb1'  und `apply2'.    In der
-anderen Gruppe sind die Funktionen `let'  und `letsimp'  enthalten.
-Beide Mustererkennungsverfahren verwenden die Funktion `matchdeclare',
-um Muster zu definieren.
+`tellsimpafter',  `defmatch',  `defrule',
+
+`apply1',  `applyb1'  und `apply2'.    In der anderen Gruppe sind die
+Funktionen `let'  und `letsimp'  enthalten.  Beide Methoden verwenden
+Mustervariablen, die mit der Funktion `matchdeclare'  definiert werden.
 
 Regeln, die mit den Funktionen `tellsimp' und `tellsimpafter' definiert
 werden, werden von Maxima automatisch bei der Vereinfachung von
-Ausdrücken angewendet.  Regeln die mit den Funktionen `defmatch',
+Ausdrücken angewendet.  Regeln, die mit den Funktionen `defmatch',
 `defrule' oder `let' definiert werden, werden durch den Aufruf einer
-Funktion angewendet.
+Funktion auf einen Ausdruck angewendet.
 
-Es gibt zusätzliche Mechanismen wie `tellrat',  um Regeln auf Polynome
-anzuwenden und weitere Funktionen der kommutativen und
-nicht-kommutativen Algebra in dem `affine' -Paket.
+Maxima kennt weitere Methoden wie die Definition von minimalen
+Polynomen mit der Funktion `tellrat',  um Einfluss auf die
+Vereinfachung von Polynomen zu nehmen, oder Funktionen der kommutativen
+und nicht-kommutativen Algebra, die in dem Paket *Note affine::
+definiert sind.
 
 
 File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev: Einführung in Muster und Regeln,  Up: Muster und Regeln
@@ -1341,19 +1309,51 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
 24.2 Funktionen und Variablen für Muster und Regeln
 ===================================================
 
+ -- Optionsvariable: announce_rules_firing
+     Standardwert: `false'
+
+     Hat die Optionsvariable `announce_rules_firing' den Wert `true' und
+     wird mit den Funktionen `tellsimp'  oder `tellsimpafter'  eine
+     Regel definiert, dann wird immer dann eine Meldung ausgegeben,
+     wenn die Regel angewendet wird.  `announce_rules_firing' hat
+     keinen Einfluss auf Regeln, die bereits definiert sind.  Die
+     Meldung von Regeln kann auch nicht durch das Setzen von
+     `announce_rules_firing' auf den Wert `false' abgeschaltet werden.
+
+     Diese Optionsvariable ist nützlich, wenn die Anwendung von
+     nutzerdefinierten Regeln für die Fehlersuche kontrolliert werden
+     soll.
+
+     Beispiel:
+
+          (%i1) announce_rules_firing:true;
+          (%o1)                         true
+          (%i2) tellsimpafter(tan(x), sin(x)/cos(x));
+          (%o2)                 [tanrule1, simp-%tan]
+          (%i3) tan(x);
+
+          By tanrule1 , tan(x) --> sin(x)/cos(x)
+                                       sin(x)
+          (%o3)                        ------
+                                       cos(x)
+
  -- Funktion: apply1 (<expr>, <rule_1>, ..., <rule_n>)
      Wendet die Regel <rule_1> auf den Ausdruck <expr> solange an, bis
-     die Anwendung fehlschlägt.  Dann wird die Regel von links nach
-     rechts auf alle Teilausdrücke von <expr> angewendet.  Ist <expr_2>
-     das Ergebnis, dann wird die Regel <rule_2> auf gleiche Weise auf
-     den Ausdruck <expr_2> angewendet.  Zuletzt wird die Regel <rule_n>
-     angewendet.  Das letzte Ergebnis wird zurückgegeben.
+     sich das Ergebnis nicht mehr ändert.  Die Regel wird zuerst auf
+     der obersten Ebene des Ausdrucks und dann nacheinander von links
+     nach rechts auf die Teilausdrücke angewendet.  Ist <expr_1> das
+     Ergebnis der Anwendung der Regel <rule_1>, dann wird die Regel
+     <rule_2> auf gleiche Weise auf den Ausdruck <expr_1> angewendet.
+     Zuletzt wird die Regel <rule_n> angewendet.  Das letzte Ergebnis
+     wird zurückgegeben.
 
-     Die Optionsvariable `maxapplydepth'  ist die größte
-     Verschachtelungstiefe für die die Funktionen `apply1' und `apply2'
-     auf einen Ausdruck angewendet werden.
+     Die Optionsvariable `maxapplydepth'  enthält die größte
+     Verschachtelungstiefe, für die die Funktionen `apply1' und
+     `apply2' auf einen Ausdruck angewendet werden.
 
-     Siehe auch `applyb1',  `apply2'  und `let'.
+     Siehe auch die Funktionen `applyb1'  und `apply2',  um Regeln auf
+     einen Ausdruck anzuwenden, die mit der Funktion `defrule'
+     definiert sind.
 
      Beispiele:
 
@@ -1374,21 +1374,60 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o4)                        ------
                                        sin(x)
 
+     Die folgenden Beispiele zeigen, wie mit der Optionsvariablen
+     `maxapplydepth' die Tiefe kontrolliert wird, in der eine Regel auf
+     die Teilausdrücke angewendet wird.
+
+          (%i1) expr: tan(x)+exp(a+2*tan(x));
+                                          2 tan(x) + a
+          (%o1)                tan(x) + %e
+          (%i2) defrule(trig, tan(x), sin(x)/cos(x));
+                                                sin(x)
+          (%o2)                trig : tan(x) -> ------
+                                                cos(x)
+          (%i3) maxapplydepth: 1;
+          (%o3)                           1
+          (%i4) apply1(expr, trig);
+                               sin(x)     2 tan(x) + a
+          (%o4)                ------ + %e
+                               cos(x)
+          (%i5) maxapplydepth: 4;
+          (%o5)                           4
+          (%i6) apply1(expr, trig);
+                                          2 sin(x)
+                                          -------- + a
+                               sin(x)      cos(x)
+          (%o6)                ------ + %e
+                               cos(x)
+
  -- Funktion: apply2 (<expr>, <rule_1>, ..., <rule_n>)
      Zunächst werden nacheinander die Regeln <rule_1>, <rule_2>, ...
-     auf einen Ausdruck angewendet.  Schlägt die Anwendung aller Regeln
-     fehl, dann werden die Regeln nacheinander auf Teilausdrücke von
-     <expr> angewendet.  Kann eine der Regeln erfolgreich angewendet
-     werden, wird die Anwendung aller Regeln auf den Teilausdruck
-     wiederholt.
+     auf den Ausdruck <expr> angewendet.  Schlägt die Anwendung aller
+     Regeln fehl, werden die Regeln nacheinander auf die Teilausdrücke
+     des Argumentes <expr> angewendet.  Kann eine der Regeln
+     erfolgreich angewendet werden, wird die Anwendung aller Regeln auf
+     den Teilausdruck wiederholt.
 
-     Die Optionsvariable `maxapplydepth'  ist die größte
-     Verschachtelungstiefe für die die Funktionen `apply1'  und `apply2'
+     Im Unterschied zur Funktion `apply1'  werden von der Funktion
+     `apply2' immer alle Regeln angewendet.  Sind jedoch die Regeln,
+     die als Argumente übergeben werden, zirkulär definiert, so führt
+     Maxima eine Endlosschleife aus.  Siehe dazu auch das Beispiel
+     unten.
+
+     Die Optionsvariable `maxapplydepth'  enthält die größte
+     Verschachtelungstiefe, für die die Funktionen `apply1' und `apply2'
      auf einen Ausdruck angewendet werden.
 
-     Siehe auch `apply1',  `applyb1'  und `let'.
+     Siehe auch die Funktionen `apply1'  und `applyb1',  um Regeln auf
+     einen Ausdruck anzuwenden, die mit der Funktion `defrule'
+     definiert sind.
 
      Beispiele:
+
+     Im Unterschied zur Funktion `apply1'  ist in diesem Fall das
+     Ergebnis immer `sin(x)/cos(x)', da alle Regeln wiederholt auf
+     einen Teilausdruck angewendet werden, wenn sich der Ausdruck für
+     eine Regel ändert.
 
           (%i1) defrule(trig1, tan(x), sin(x)/cos(x));
                                                 sin(x)
@@ -1407,90 +1446,232 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o4)                        ------
                                        sin(x)
 
+     Das folgende Beispiel zeigt eine zirkuläre Definition der Regeln
+     `trig1' und `trig2'.  Mit der Funktion `apply1' hängt das Ergebnis
+     von der Reihenfolge der Anwendung der Regeln ab.  Die Anwendung
+     der Funktion `apply2' führt für dieses Beispiel zu einer
+     Endlosschleife.
+
+          (%i1) defrule(trig1, tan(x), sin(x)/cos(x));
+                                                sin(x)
+          (%o1)               trig1 : tan(x) -> ------
+                                                cos(x)
+          (%i2) defrule(trig2, sin(x)/cos(x), tan(x));
+                                      sin(x)
+          (%o2)               trig2 : ------ -> tan(x)
+                                      cos(x)
+          (%i3) expr: tan(x) + exp(sin(x)/cos(x));
+                                             sin(x)
+                                             ------
+                                             cos(x)
+          (%o3)                   tan(x) + %e
+          (%i4) apply1(expr, trig1, trig2);
+                                             tan(x)
+          (%o4)                   tan(x) + %e
+          (%i5) apply1(expr, trig2, trig1);
+                                             sin(x)
+                                             ------
+                                  sin(x)     cos(x)
+          (%o5)                   ------ + %e
+                                  cos(x)
+
  -- Funktion: applyb1 (<expr>, <rule_1>, ..., <rule_n>)
-     Wendet wiederholt die Regel <rule_1> auf den tiefsten Teilausdruck
-     an.  Schlägt die Anwendung fehlt, wird der Teilausdruck eine Ebene
-     höher betrachtet, bis <rule_1> auf die oberste Ebene des Ausdrucks
-     <expr> angewendet wird.  Danach wird auf gleiche Weise die Regel
-     <rule_2> auf den Ausdruck <expr> angewendet.  Nachdem die letzte
-     Regel <rule_n> angewendet wurde, wird das Ergebnis zurückgegeben.
+     Wendet die Regel <rule_1> auf den tiefsten Teilausdruck in der
+     Baumstruktur eines Ausdrucks an.  Schlägt die Anwendung fehl, wird
+     der Teilausdruck eine Ebene höher betrachtet, bis <rule_1> auf die
+     oberste Ebene des Ausdrucks <expr> angewendet wird.  Danach wird
+     auf gleiche Weise die Regel <rule_2> auf den Ausdruck <expr>
+     angewendet.  Nachdem die letzte Regel <rule_n> angewendet wurde,
+     wird das Ergebnis zurückgegeben.
 
      `applyb1' ist vergleichbar mit `apply1'  mit dem Unterschied, dass
-     die Regeln Bottum-Up angewendet werden.
+     die Regeln Bottom-Up angewendet werden.
 
-     `maxapplyheight'  ist die größte Verschachtelungstiefe für die
-     `applyb1' angewendet wird.
+     Die Optionsvariable `maxapplyheight'  enthält den Wert der größten
+     Verschachtelungstiefe, für die `applyb1' angewendet wird.
 
-     Siehe auch `apply1',  `apply2'  und `let'.
+     Siehe auch die Funktionen `apply1'  und `apply2',  um Regeln auf
+     einen Ausdruck anzuwenden, die mit der Funktion `defrule'
+     definiert sind.
 
+     Beispiel:
+
+     Das folgende Beispiel zeigt, wie die Regel `trig' zuerst auf die
+     unterste Ebene des Ausdrucks angewendet wird.  Dazu wird die
+     Optionsvariable `maxapplyheight' zunächst auf den Wert `1' gesetzt
+     und dann auf den Wert `4' erhöht.
+
+          (%i1) matchdeclare(x, true);
+          (%o1)                         done
+          (%i2) defrule(trig, tan(x), sin(x)/cos(x));
+                                                sin(x)
+          (%o2)                trig : tan(x) -> ------
+                                                cos(x)
+          (%i3) expr: exp(a+2*tan(b+exp(tan(x))));
+                                        tan(x)
+                                2 tan(%e       + b) + a
+          (%o3)               %e
+          (%i4) maxapplyheight: 1;
+          (%o4)                           1
+          (%i5) applyb1(expr, trig);
+                                        sin(x)
+                                        ------
+                                        cos(x)
+                                2 tan(%e       + b) + a
+          (%o5)               %e
+          (%i6) maxapplyheight: 4;
+          (%o6)                           4
+          (%i7) applyb1(expr, trig);
+                                        sin(x)
+                                        ------
+                                        cos(x)
+                                2 sin(%e       + b)
+                                ------------------- + a
+                                       sin(x)
+                                       ------
+                                       cos(x)
+                                 cos(%e       + b)
+          (%o7)               %e
 
  -- Funktion: clear_rules ()
-     Führt das Kommando `kill(rules)' aus und setzt den Zähler für die
-     Benennung der Regeln der Addition, der Multiplikation und der
-     Exponentiation zurück.  Siehe auch `kill'.
+     Führt das Kommando `kill(rules)' aus und setzt die internen Zähler
+     für die Benennung der Regeln für die Addition, die Multiplikation
+     und die Exponentiation auf den Anfangswert zurück.  Mit dem
+     Kommando `kill(rules)' werden alle Regeln entfernt, ohne dass die
+     internen Zähler zurückgesetzt werden.  Siehe auch die Funktion
+     `kill'.
 
+     Beispiel:
+
+          (%i1) tellsimpafter(a+b, add(a,b));
+          (%o1)                   [+rule1, simplus]
+          (%i2) tellsimpafter(a*b, mul(a,b));
+          (%o2)                  [*rule1, simptimes]
+          (%i3) tellsimpafter(a^b, expt(a,b));
+          (%o3)                  [^rule1, simpexpt]
+          (%i4) rules;
+          (%o4)               [+rule1, *rule1, ^rule1]
+          (%i5) clear_rules();
+          (%o5)                         done
+          (%i6) rules;
+          (%o6)                          []
+
+     Das folgende Beispiel zeigt einen Programmfehler von Maxima.  Die
+     Funktion `trigsimp'  ist mit Hilfe von Regeln implementiert.  Die
+     Regeln werden automatisch beim ersten Aufruf der Funktion
+     `trigsimp' geladen und in die Liste `rules'  eingetragen.  Werden
+     die Regeln mit der Funktion `clear_rules' oder `kill' gelöscht,
+     führt der nächste Aufruf der Funktion `trigsimp' zu einem Fehler.
+
+          (%i1) trigsimp(sin(x)^2+cos(x)^2);
+          (%o1)                           1
+          (%i2) rules;
+          (%o2) [trigrule1, trigrule2, trigrule3, trigrule4, htrigrule1,
+                                        htrigrule2, htrigrule3, htrigrule4]
+          (%i3) disprule(trigrule1, trigrule2, trigrule3, trigrule4)$
+                                                  sin(a)
+          (%t3)             trigrule1 : tan(a) -> ------
+                                                  cos(a)
+
+                                                    1
+          (%t4)             trigrule2 : sec(a) -> ------
+                                                  cos(a)
+
+                                                    1
+          (%t5)             trigrule3 : csc(a) -> ------
+                                                  sin(a)
+
+                                                  cos(a)
+          (%t6)             trigrule4 : cot(a) -> ------
+                                                  sin(a)
+
+          (%i7) clear_rules();
+          (%o7)                         done
+          (%i8) rules;
+          (%o8)                          []
+          (%i9) trigsimp(sin(x)^2+cos(x)^2);
+
+          apply1: no such rule: trigrule1
+          #0: trigsimp(x=sin(x)^2+cos(x)^2)(trgsmp.mac line 71)
+           -- an error. To debug this try: debugmode(true);
 
  -- Optionsvariable: current_let_rule_package
      Standardwert: `default_let_rule_package'
 
-     `current_let_rule_package' enthält den Namen des Regel-Paketes,
-     das von den `let'-Funktionen verwendet wird.  Der Optionsvariablen
-     kann jedes mit dem Kommando `let' definierte Regelpaket zugewiesen
-     werden.
+     Die Optionsvariable `current_let_rule_package' enthält den Namen
+     des aktuellen Regelpaketes, das von den Funktionen `let',
 
-     Wird das Kommando `letsimp(expr, rule_pkg_name' ausgeführt, dann
+     `letrules',  `letsimp'  und `remlet'  verwendet wird.  Der
+     Optionsvariablen kann jedes mit der Funktion `let' definierte
+     Regelpaket zugewiesen werden.
+
+     Wird das Kommando `letsimp(expr, rule_pkg_name)' ausgeführt, dann
      wird für das aktuelle Kommando das Paket `rule_pkg_name'
      verwendet.  Der Wert der Variablen `current_let_rule_package' wird
      nicht geändert.
 
+     Siehe auch die Optionsvariable `default_let_rule_package'.
+
+
  -- Optionsvariable: default_let_rule_package
      Standardwert: `default_let_rule_package'
 
-     `default_let_rule_package' ist der Name des Regelpaketes, das
-     verwendet wird, wenn kein Regelpaket mit der Funktion `let'
-     explizit definiert wurde.
+     Die Optionsvariable `default_let_rule_package' bezeichnet das
+     Regelpaket, das verwendet wird, wenn kein Regelpaket mit der
+     Funktion `let' explizit definiert und der Wert der
+     Optionsvariablen `current_let_rule_package'
+
+     nicht geändert wurde.
 
  -- Funktion: defmatch (<progname>, <pattern>, <x_1>, ..., <x_n>)
  -- Funktion: defmatch (<progname>, <pattern>)
-     Definiert eine Aussagefunktion `<progname>(<expr>, <x_1>, ...,
-     <x_n>)', die einen Ausdruck <expr> testet, um zu prüfen, ob dieser
-     das Muster <pattern> enthält.
+     Definiert eine Aussagefunktion `<progname>(<expr>)' oder
+     `<progname>(<expr>, <x_1>, ..., <x_n>)', die einen Ausdruck <expr>
+     testet, um zu prüfen, ob dieser das Muster <pattern> enthält.
 
-     <pattern> ist ein Ausdruck, der die Musterargumente <x_1>, ...,
-     <x_n> enthält, sowie weitere Mustervariablen enthalten kann, die
-     mit der Funktion `matchdeclare'  deklariert sind.  Alle Variable,
-     die nicht als Musterargumente der Funktion `defmatch' oder als
-     Mustervariable mit `matchdeclare' definiert sind, entsprechen sich
-     selbst.
+     Das Argument <pattern> ist ein Ausdruck mit den Musterargumenten
+     <x_1>, ..., <x_n>.  Die Musterargumente können entfallen.  Der
+     Ausdruck kann weiterhin Mustervariablen enthalten, die mit der
+     Funktion `matchdeclare'  definiert sind.  Alle anderen Variablen
+     und Bezeichner entsprechen sich selbst bei einem Musterabgleich.
 
-     Das erste Argument der definierten Aussagefunktion <progname> ist
-     ein Ausdruck, für den das Muster geprüft wird.  Die weiteren
-     Argumente sind die Variablen, die den Musterargumenten <x_1>, ...,
-     <x_n> des Musters <pattern> entsprechen.
+     Das erste Argument der Aussagefunktion <progname> ist ein Ausdruck
+     <expr>, für den geprüft wird, ob das Muster <pattern> enthalten
+     ist.  Die weiteren Argumente der Funktion `progname' sind die
+     Variablen, die den Musterargumenten <x_1>, ..., <x_n> des Musters
+     <pattern> entsprechen.
 
-     Ist der Test erfolgreich, gibt die Aussagefunktion <progname> eine
-     Liste mit Gleichungen zurück.  Die linke Seite der Gleichungen
-     sind die Musterargumente und Mustervariablen und die rechte Seite
-     sind die Teilausdrücke für die eine Übereinstimmung gefunden
-     wurde.  Den Mustervariablen, jedoch nicht den Musterargumenten,
-     werden die Ergebnisse zugewiesen.  Ist der Test nicht erfolgreich,
-     ist die Rückgabe `false'.
+     Ist der Musterabgleich erfolgreich, gibt die Aussagefunktion
+     <progname> eine Liste mit Gleichungen zurück.  Die linken Seiten
+     der Gleichungen sind die Musterargumente und Mustervariablen und
+     die rechten Seiten sind die Teilausdrücke, für die der
+     Musterabgleich eine Übereinstimmung gefunden hat.  Die erhaltenen
+     Ergebnisse des Musterabgleichs werden den mit `matchdeclare'
+     definierten Mustervariablen, jedoch nicht den Musterargumenten der
+     Funktion `defmatch' zugewiesen.  Ist der Musterabgleich nicht
+     erfolgreich, ist die Rückgabe `false'.
 
-     Ein Muster, dass keine Musterargumente oder Mustervariablen
-     enthält, hat den Rückgabewert `true', wenn der Test erfolgreich
-     ist.
+     Ein Muster, das keine Musterargumente oder Mustervariablen
+     enthält, hat den Rückgabewert `true', wenn der Musterabgleich
+     erfolgreich ist.
 
-     Siehe auch `matchdeclare',  `defrule',  `tellsimp'  und
-     `tellsimpafter'.
+     Die Aussagefunktion `progname' wird in die Informationsliste
+     `rules'  eingetragen.
+
+     Siehe auch die Funktionen `matchdeclare',  `defrule',
+
+     `tellsimp'  und `tellsimpafter'.
 
      Beispiele:
 
-     Definiere eine Funktion `linearp(expr, x)', die testet, ob ein
+     Definition einer Funktion `linearp(expr, x)', die prüft, ob ein
      Ausdruck <expr> die Form `a*x+b' hat, wobei `a' und `b' die
      Variable <x> nicht enthalten und `a' von Null verschieden ist.
      Die Definition enthält das Musterargument <x>, so dass die
      Linearität des Ausdrucks für eine beliebige Variable getestet
-     werden kann.
+     werden kann.  Den Mustervariablen `a' und `b' werden die
+     Teilausdrücke des Musterabgleichs zugewiesen, nicht jedoch dem
+     Musterargument `x'.
 
           (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)),
                               b, freeof(x));
@@ -1508,11 +1689,11 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%i6) x;
           (%o6)                           x
 
-     Wie oben wird eine Testfunktion definiert, die prüft ob ein
-     Ausdruck <expr> linear ist.  In diesem Fall wird kein
-     Musterargument angegeben.  Der Test kann nur feststellen, ob ein
-     Ausdruck linear in der Variablen <x> ist.  Eine andere Variable
-     ist nicht möglich.
+     Wie im letzten Beispiel wird eine Aussagefunktion definiert, die
+     prüft, ob ein Ausdruck <expr> linear ist.  In diesem Fall wird
+     kein Musterargument angegeben.  Der Musterabgleich kann nur
+     feststellen, ob ein Ausdruck linear in der Variablen <x> ist.
+     Eine andere Variable ist nicht möglich.
 
           (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
                               freeof(x));
@@ -1525,8 +1706,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
                                        2
           (%o4)                  [b = y , a = y + 4]
 
-     Definiere eine Testfunktion `checklimits(expr)', die prüft, ob ein
-     Ausdruck <expr> ein bestimmtes Integral ist.
+     Definition eine Aussagefunktion `checklimits(expr)', die prüft, ob
+     ein Ausdruck <expr> ein bestimmtes Integral ist.
 
           (%i1) matchdeclare ([a, f], true);
           (%o1)                         done
@@ -1554,22 +1735,30 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o9)    [b = x + 2 %pi, a = x + %pi, x = t, f = sin(t)]
 
  -- Funktion: defrule (<rulename>, <pattern>, <replacement>)
-     Definiert eine Regeln, um das Muster <pattern> durch den Ausdruck
-     <replacement> zu ersetzen.  Wird die Regeln mit dem Namen
-     <rulename> mit den Funktionen `apply1',  `apply2'  oder `applyb1'
-     auf einen Ausdruck angewendet, wird alle Teilausdrücke, die dem
-     Muster <pattern> entsprechen durch den Ausdruck <replacement>
-     ersetzt.
+     Definiert eine Regel, um das Muster <pattern> durch den Ausdruck
+     <replacement> zu ersetzen.  Wird die Regel mit dem Namen <rulename>
+     mit den Funktionen `apply1',  `apply2'  oder `applyb1'  auf einen
+     Ausdruck angewendet, werden alle Teilausdrücke, die dem Muster
+     <pattern> entsprechen, durch den Ausdruck <replacement> ersetzt.
+     Sind Mustervariablen vorhanden, die durch den Musterabgleich einen
+     Wert erhalten haben, werden die Werte eingesetzt und der Ausdruck
+     wird vereinfacht.
 
-     Die Regel <rulename> kann auch als eine Funktion angewendet
-     werden, die, falls vorhanden, das Muster <pattern> durch
-     <replacement> ersetzt.
+     Die Regel <rulename> kann als eine Funktion aufgefasst werden, die
+     einen Ausdruck durch Anwendung eines Musterabgleichs
+     transformiert.  Die Regel kann wie ein Funktionsaufruf auf einen
+     Ausdruck angewendet werden.
+
+     Schlägt der Musterabgleich fehl, gibt die Regel den Wert `false'
+     zurück.
+
+     Die Regel wird in die Informationsliste `rules'  eingetragen.
 
      Beispiele:
 
-     Es wird eine Regel definiert, um den Ausdruck `sin(x)^2' nach
-     `1-cos(x)^2' transformiert.  Diese Definition funktioniert nur für
-     einen Ausdruck <sin(x)^2>.
+     Es wird eine Regel `trig' definiert, die den Ausdruck `sin(x)^2'
+     nach `1-cos(x)^2' transformiert.  Diese Definition funktioniert
+     nur, wenn das Argument der Sinusfunktion das Symbol `x' ist.
 
           (%i1) defrule(trig, sin(x)^2, 1-cos(x)^2);
                                       2              2
@@ -1580,11 +1769,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%i3) trig(sin(y)^2);
           (%o3)                         false
 
-     In diesem Fall wird zunächst mit der Funktion `matchdeclare'  eine
-     Mustervariable <a> definiert, der jeder Ausdruck zugewiesen werden
-     kann und die als Argument der Ersetzungsregel verwendet wird.
-     Jetzt kann das Argument der Sinusfunktion ein beliebiger Ausdruck
-     sein.
+     In diesem Beispiel wird zunächst mit der Funktion `matchdeclare'
+     eine Mustervariable `a' definiert, der jeder Ausdruck zugewiesen
+     werden kann und die als Argument der Regel verwendet wird.  Jetzt
+     kann das Argument der Sinusfunktion ein beliebiger Ausdruck sein.
 
           (%i1) matchdeclare(a, true);
           (%o1)                         done
@@ -1598,8 +1786,9 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
                                            2   x
           (%o4)                     1 - cos (%e )
 
-     Die Ersetzungsregel kann mit der Funktion `apply1'  auf
-     verschachtelte Ausdrücke angewendet werden.
+     Die Regel kann mit der Funktion `apply1'  auf Ausdrücke angewendet
+     werden, wobei Teilausdrücke, die das Muster enthalten
+     transformiert werden.
 
           (%i5) trig(exp(sin(x)^2));
           (%o5)                         false
@@ -1608,20 +1797,26 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
                                       1 - cos (x)
           (%o6)                     %e
 
- -- Funktion: disprule (<rulename_1>, ..., <rulename_2>)
+ -- Funktion: disprule (<rulename_1>, ..., <rulename_n>)
  -- Funktion: disprule (all)
-     Zeigt die Regeln mit den Namen <rulename_1>, ..., <rulename_n> an.
-     Den einzelnen Regeln werden mit einer Zwischenmarke `%t'
+     Zeigt die Regeln mit den Namen <rulename_1>, ..., <rulename_n> an,
+     die mit den Funktionen `defrule',  `tellsimp'  oder `tellsimpafter'
+     definiert sind, oder ein Muster, das mit der Funktion `defmatch'
+     definiert ist.  Die Regeln werden mit einer Zwischenmarke `%t'
      angezeigt.
 
-     Mit dem Kommando `disprule(all)' werden alle Regeln angezeigt.
+     Mit dem Kommando `disprule(all)' werden alle Regeln und Muster
+     angezeigt, die der Nutzer definiert hat und in der
+     Informationsliste `rules'
+
+     enthalten sind.
 
      `disprule' wertet die Argumente nicht aus.  Der Rückgabewert ist
      eine Liste mit den Zwischenmarken, denen eine Regel zugewiesen
      wurde.
 
-     Sieh auch die Funktion `letrules',  die die Regeln ausgibt, die mit
-     der Funktion `let'  definiert wurden.
+     Siehe auch die Funktion `letrules',  die die Regeln anzeigt, die
+     mit der Funktion `let'  definiert sind.
 
      Beispiele:
 
@@ -1643,35 +1838,42 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o6) [foorule1 : foo(x, y) -> baz(y) + bar(x),
                +rule1 : y + x -> special_add(x, y), quux : mumble(x) -> []]
 
+ -- Funktion: let (<prod>, <repl>)
  -- Funktion: let (<prod>, <repl>, <predname>, <arg_1>, ..., <arg_n>)
  -- Funktion: let ([<prod>, <repl>, <predname>, <arg_1>, ..., <arg_n>],
           <package_name>)
-     Definiert eine Ersetzungsregel, die mit der Funktion `letsimp'
-     auf einen Ausdruck angewendet wird, so dass <prod> durch <repl>
+     Definiert eine Regel, die mit der Funktion `letsimp'  auf einen
+     Ausdruck angewendet werden kann, so dass <prod> durch <repl>
      ersetzt wird.  Das Argument <prod> ist ein Produkt von positiven
      oder negativen Potenzen der folgenden Terme:
 
         * Atome, nach denen die Funktion `letsimp' wörtlich sucht, wenn
-          kein Muster mit der Funktion `matchdeclare'  definiert wurde,
-          sowie Atome, denen mit der Funktion `matchdeclare' eine
-          Aussagefunktion zugeordnet wurde.
+          diese keine Mustervariablen sind, die mit Funktion
+          `matchdeclare'  definiert sind, sowie Atome, die
+          Mustervariablen sind.  In diesem Fall führt die Funktion
+          `letsimp' einen Musterabgleich für die Atome durch, auf die
+          die mit der Funktion `matchdeclare' zugeordnete
+          Aussagefunktion zutrifft.
 
-        * Terme wie `sin(x)', `n!' oder `f(x,y)'.  Wie für Atome sucht
+        * Terme wie `sin(x)', `n!' oder `f(x,y)':  wie für Atome sucht
           die Funktion `letsimp' nach wörtlichen Übereinstimmungen,
-          sowie nach Übereinstimmungen, die mit der Funktion
-          `matchdeclare' für einen Ausdruck definiert wurde.
+          außer wenn die Argumente der Terme Mustervariablen sind, die
+          mit der Funktion `matchdeclare'  definiert sind.  In diesem
+          Fall wird ein Musterabgleich ausgeführt.
 
      Ein Term mit einer positiven Potenz stimmt mit einem Ausdruck nur
      dann überein, wenn dieser mindestens dieselbe Potenz hat.
      Entsprechend gilt für einen Term mit einer negativen Potenz, dass
      dieser dann mit einem Ausdruck übereinstimmt, wenn dieser
      mindestens dieselbe negative Potenz hat.  Für negative Potenzen
-     muss weiterhin die Optionsvariable `letrat'  den Wert `true' haben.
+     wird eine Übereinstimmung nur dann gefunden, wenn die
+     Optionsvariable `letrat'  den Wert `true' hat.
 
-     Hat die Funktion `let' eine Aussagefunktion <predname> als
-     Argument, mit dem Argumenten <arg_1>, ..., <arg_n>, wird eine
-     vorläufige Übereinstimmung dann festgestellt wenn der Ausdruck
-     `predname(arg_1', ..., arg_n')' das Ergebnis `true' hat.  Die
+     Hat die Funktion `let' eine Aussagefunktion <predname> als Argument
+     mit den Argumenten <arg_1>, ..., <arg_n>, wird eine
+     Übereinstimmung dann festgestellt, wenn der Ausdruck
+     `predname(arg_1', ..., arg_n')' das Ergebnis `true' hat.  Dabei
+     sind die Argumente <arg_i'> die Werte aus dem Musterabgleich.  Die
      Argumente <arg_i> können die Namen von Variablen oder Termen sein,
      die im Ausdruck <pred> auftreten.  <repl> kann ein beliebiger
      rationaler Ausdruck sein.  Treten irgendwelche der Symbole oder
@@ -1682,18 +1884,14 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
      Quotienten durch `letsimp'.    Hat `letrat' den Wert `false',
      werden der Zähler und der Nenner eines Bruches einzeln
      vereinfacht.  Der Bruch als ganzes wird dagegen nicht vereinfacht.
-     Hat die Optionsvariable `letrat' den Wert `false', werden
+     Hat die Optionsvariable `letrat' den Wert `true', werden
      nacheinander der Zähler, der Nenner und dann der Bruch vereinfacht.
 
      Die Funktion `letsimp'  kann mit verschiedenen Regelpaketen
-     arbeiten.  Jedes Regelpaket kann eine beliebige Anzahl an
-     `let'-Regeln enthalten und erhält vom Nutzer einen Namen.  Das
-     Kommando `let([<prod>, <repl>, <predname>, <arg_1>, ..., <arg_n>],
-     <package_name>)' fügt die Regel <predname> dem Paket
-     <package_name> hinzu.  Das Kommando `letsimp(<expr>,
-     <package_name1>, <package_name2>, ...)' ist äquivalent zu
-     `letsimp(<expr>, <package_name1>)', dem das Kommando `letsimp(%,
-     <package_name2>)', ... folgt.
+     arbeiten.  Jedes Regelpaket kann eine beliebige Anzahl an Regeln
+     enthalten.  Das Kommando `let([<prod>, <repl>, <predname>,
+     <arg_1>, ..., <arg_n>], <package_name>)' fügt die Regel <predname>
+     dem Paket <package_name> hinzu.
 
      Die Optionsvariable `current_let_rule_package'  enthält den Namen
      des Regelpaketes, das aktuell von der Funktion `letsimp' verwendet
@@ -1705,7 +1903,33 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
      anders spezifiziert, hat `current_let_rule_package' den
      Standardwert `default_let_rule_package'.
 
+     Die Informationsliste `let_rule_packages'  enthält die definierten
+     Regelpakete.  Mit der Funktion `letrules'  können alle definierten
+     Regeln oder Regeln einzelner Pakete angezeigt werden.
+
      Beispiele:
+
+     Die Funktion `isintegerp' prüft auch, ob Variablen oder Ausdrücke
+     eine ganze Zahl repräsentieren.  Es wird eine Regel definiert, die
+     dann angewendet wird, wenn das Argument eine ganze Zahl
+     repräsentiert.
+
+          (%i1) isintegerp(x) := featurep(x, integer)$
+
+          (%i2) let(tan(x), sin(x)/cos(x), isintegerp, x);
+          (%o2) tan(x) --> sin(x)/cos(x) where isintegerp(x)
+
+          (%i3) letsimp(tan(x));
+          (%o3) tan(x)
+
+          (%i4) declare(x, integer)$
+
+          (%i5) letsimp(tan(x));
+          (%o5) sin(x)/cos(x)
+          (%i6) letsimp(tan(1));
+          (%o6) tan(1)
+
+     Weitere Beispiele:
 
           (%i1) matchdeclare ([a, a1, a2], true)$
           (%i2) oneless (x, y) := is (x = y-1)$
@@ -1725,14 +1949,20 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
                                   4           2
           (%o8)                cos (x) - 2 cos (x) + 1
 
+ -- Optionsvariable: let_rule_packages
+     Standardwert: `[default_let_rule_package]'
+
+     `let_rule_packages' ist eine Informationsliste mit den vom Nutzer
+     mit der Funktion `let'  definierten Regelpaketen.
+
  -- Optionsvariable: letrat
      Standardwert: `false'
 
-     Hat die Optionsvariable `letrat' den Wert `false', werden der
-     Zähler und der Nenner eines Bruches einzeln vereinfacht.  Der
-     Bruch als ganzes wird dagegen nicht vereinfacht.
+     Hat die Optionsvariable `letrat' den Wert `false', werden von der
+     Funktion `letsimp'  der Zähler und der Nenner eines Bruches einzeln
+     vereinfacht.  Der Bruch als ganzes wird dagegen nicht vereinfacht.
 
-     Hat die Optionsvariable `letrat' den Wert `false', werden
+     Hat die Optionsvariable `letrat' den Wert `true', werden
      nacheinander der Zähler, der Nenner und dann der Bruch vereinfacht.
 
      Beispiele:
@@ -1753,18 +1983,20 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
 
  -- Funktion: letrules ()
  -- Funktion: letrules (<package_name>)
-     Zeigt die Regeln eines Regel-Paketes an.  Das Kommando
-     `letrules()' zeigt die Regeln des aktuellen Regel-Paketes an, das
-     in der Optionsvariablen `current_let_rule_package'  enthalten ist.
-     Das Kommando `letrules(<package_name>)' zeigt die Regeln des
-     Paketes <package_name> an.
+     Zeigt die Regeln eines Regelpaketes an.  Das Kommando `letrules()'
+     zeigt die Regeln des aktuellen Regelpaketes an, das durch die
+     Optionsvariable `current_let_rule_package'  bezeichnet wird.  Das
+     Kommando `letrules(<package_name>)' zeigt die Regeln des Paketes
+     <package_name> an.
 
-     Wenn der Optionsvariablen `current_let_rule_package' kein Paket
-     zugewiesen wurde, enthält es den Standardwert
+     Wenn der Optionsvariablen `current_let_rule_package' kein Name
+     eines Paketes zugewiesen wurde, enthält es den Standardwert
      `default_let_rule_package'.
 
      Siehe auch die Funktion `disprule',  um Regeln anzuzeigen, die mit
-     `tellsimp',  `tellsimpafter'  und `defrule'  definiert wurden.
+     den Funktionen `tellsimp',  `tellsimpafter'  und `defrule'
+
+     definiert wurden.
 
      Beispiel:
 
@@ -1808,103 +2040,113 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
  -- Funktion: letsimp (<expr>)
  -- Funktion: letsimp (<expr>, <package_name>)
  -- Funktion: letsimp (<expr>, <package_name_1>, ..., <package_name_n>)
-     Wendet die Substitutionsregeln, die mit der Funktion `let'
-     definiert sind, solange an, bis sich das Argument <expr> nicht
-     mehr ändert.  `letsimp(<expr>)' wendet die Regeln der
-     Optionsvariablen `current_let_rule_package'  an.
+     Wendet die Regeln, die mit der Funktion `let'  definiert sind,
+     solange an, bis sich das Argument <expr> nicht mehr ändert.
+     `letsimp(<expr>)' wendet die aktuellen Regeln an, die mit der
+     Optionsvariablen `current_let_rule_package'  bezeichnet werden.
 
-     `letsimp(<expr>), <package_name>)' wendet die Regeln des
-     Argumentes <package_name> an.  Die Optionsvariable
-     `current_let_rule_package' ändert ihren Wert nicht.
+     `letsimp(<expr>, <package_name>)' wendet die Regeln des Argumentes
+     <package_name> an.  Die Optionsvariable `current_let_rule_package'
+     ändert ihren Wert nicht.  Es können auch mehrere Regelpakete
+     <package_name_1>, ..., <package_name_n> angegeben werden.
 
-     `letsimp(<expr>, <package_name_1>, ..., <package_name_n>)' ist
-     äquivalent zum Kommando `letsimp(<expr>, <package_name_1>)' dem
-     `letsimp(%, <package_name_2>)' folgt u.s.w.
-
- -- Optionsvariable: let_rule_packages
-     Standardwert: `[default_let_rule_package]'
-
-     `let_rule_packages' ist eine Informationsliste mit den vom Nutzer
-     definierten `let'-Regeln.
+     Die Optionsvariable `letrat'  kontrolliert die Vereinfachung von
+     Quotienten durch `letsimp'.  Hat `letrat' den Wert `false', werden
+     der Zähler und der Nenner eines Bruches einzeln vereinfacht.  Der
+     Bruch als ganzes wird dagegen nicht vereinfacht.  Hat die
+     Optionsvariable `letrat' den Wert `true', werden nacheinander der
+     Zähler, der Nenner und dann der Bruch vereinfacht.
 
  -- Funktion: matchdeclare (<a_1>, <pred_1>, ..., <a_n>, <pred_n>)
-     Assoziiert eine Aussage <pred_k> mit einer Variable oder eine
-     Liste von Variablen <a_k>, so dass <a_k> mit Ausdrücken
-     übereinstimmt, für die die Aussage ein anderes Ergebnis als
-     `false' zurück gibt.
+     Mit der Funktion `matchdeclare' werden Mustervariablen definiert.
+     `matchdeclare' ordnet eine Aussagefunktion <pred_k> einer Variable
+     oder eine Liste von Variablen <a_k> zu, so dass <a_k> bei einem
+     Musterabgleich mit Ausdrücken übereinstimmt, für die die Aussage
+     ein anderes Ergebnis als `false' hat.
 
-     Eine Aussage ist der Name einer Funktion, ein Lambda-Ausdruck, ein
-     Funktionsaufruf, ein Lambda-Ausdruck, dem das letzte Argument
-     fehlt, oder die Werte `true' oder `all'.  Ist die Aussage ein
+     Eine Aussagefunktion <pred_i> kann durch den Namen einer Funktion,
+     einen Lambda-Ausdruck, einen Funktionsaufruf, einen
+     Lambda-Ausdruck, dem das letzte Argument fehlt, oder die Werte
+     `true' oder `all' bezeichnet werden.  Ist die Aussagefunktion ein
      Funktionsaufruf oder ein Lambda-Aufruf, dann wird der zu testende
-     Ausdruck an die Liste der Argumente angefügt.  Die Argumente
-     werden ausgewertet, wenn die Übereinstimmung ausgewertet wird.
-     Ist die Aussage der Name einer Funktion oder ein Lambda-Ausdruck,
-     ist die zu testende Aussage das einzige Argument.  Eine
-     Aussagefunktion braucht nicht definiert zu sein, wenn
-     `matchdeclare' aufgerufen wird.  Die Aussage wird nicht eher
-     ausgewertet, bevor eine Übereinstimmung getestet wird.
+     Ausdruck der Liste der Argumente hinzugefügt.  Die Argumente
+     werden ausgewertet, wenn der Musterabgleich ausgeführt wird.  Ist
+     die Aussage der Name einer Funktion oder ein Lambda-Ausdruck, ist
+     die zu testende Aussage das einzige Argument.  Die Aussagefunktion
+     braucht noch nicht definiert zu sein, wenn mit `matchdeclare' eine
+     Mustervariable definiert wird, da die Aussagefunktion erst
+     aufgerufen wird, wenn ein Musterabgleich durchgeführt wird.
 
-     Eine Aussage kann einen logischen Ausdruck oder die Werte `true'
-     oder `false' zurück geben.  Logische Ausdrücke werden von `is'
+     Eine Aussagefunktion kann einen logischen Ausdruck oder die Werte
+     `true' oder `false' zurückgeben.  Logische Ausdrücke werden von
+     der Funktion `is'  ausgewertet, wenn die Regel angewendet wird.
+     Daher ist es nicht notwendig, dass die Aussagefunktion selbst die
+     Funktion `is' aufruft.
 
-     von der definierten Regel ausgewertet.  Daher ist es nicht
-     notwendig, dass die Aussage selbst die Funktion `is' aufruft.
+     Wenn für einen Ausdruck eine Übereinstimmung bei einem
+     Musterabgleich gefunden wird, wird der Mustervariablen der
+     Ausdruck zugewiesen.  Jedoch nicht für Mustervariablen, die
+     Argumente der Addition `+' oder Multiplikation `*' sind.  Diese
+     Operatoren werden besonders behandelt.  Andere Maxima oder vom
+     Nutzer definierte N-ary-Operatoren werden dagegen wie normale
+     Funktionen behandelt.
 
-     Wenn für ein Ausdruck eine Übereinstimmung gefunden wird, wird der
-     Mustervariablen der Ausdruck zugewiesen.  Jedoch nicht für
-     Mustervariablen, die Argumente der Addition `+' oder
-     Multiplikation `*' sind.  Diese Operatoren werden besonders
-     behandelt.  Andere Maxima oder vom Nutzer definierte
-     N-ary-Operatoren werden dagegen wie andere Funktionen behandelt.
+     Im Falle der Addition und der Multiplikation kann der
+     Mustervariablen ein einzelner Term zugewiesen werden, für den der
+     Musterabgleich zu einer Überstimmung führt, oder auch eine Summe
+     oder ein Produkt von Termen.  Die mehrfache Übereinstimmung hat
+     Vorrang.  Aussagefunktionen werden in der Reihenfolge ausgewertet,
+     in der die der Aussagefunktion zugeordneten Mustervariablen im
+     Muster auftreten.  Führt der Musterabgleich für einen Term zu
+     einer Übereinstimmung mit mehreren Aussagefunktionen, dann wird der
+     Term der Mustervariablen zugeordnet für den die erste
+     Aussagefunktion zutrifft.  Jede Aussagefunktion wird zunächst auf
+     alle Argumente einer Summe oder eines Produktes angewendet, bevor
+     die nächste Aussagefunktion ausgewertet wird.  Wird für die Zahlen
+     0 oder 1 eine Übereinstimmung gefunden und es sind keine weiteren
+     Terme vorhanden, wird der Mustervariablen 0 oder 1 zugewiesen.
 
-     Im Falle der Addition und Multiplikation kann der Mustervariablen
-     ein einzelner Term zugewiesen werden, welcher mit der Aussage
-     übereinstimmt, aber auch eine Summe oder ein Produkt solcher
-     Ausdrücke.  Die mehrfache Übereinstimmung ist vorrangig: Aussagen
-     werden in der Reihenfolge ausgewertet, in der die Mustervariablen
-     im Musterausdruck auftreten.  Stimmt ein Termin mit mehreren
-     Aussagen überein, wird der Term der ersten Aussage zugeordnet, die
-     zutrifft.  Jede Aussage wird zunächst auf alle Argumente einer
-     Summe oder eines Produktes angewendet, bevor die nächste Aussage
-     ausgewertet wird.  Wird für die Zahlen 0 oder 1 eine
-     Übereinstimmung gefunden und es sind keine weiteren Terme
-     vorhanden, wird der Mustervariablen 0 oder 1 zugewiesen.
-
-     Der Algorithmus, um Muster mit der Addition und Multiplikation zu
-     verarbeiten, ist für manche Übereinstimmungen abhängig von der
-     Anordnung der Terme im Muster und im Ausdruck für den eine
-     Übereinstimmung gesucht wird.  Solange sich jedoch die einzelnen
-     Muster gegeneinander ausschließen, wird das Ergebnis nicht von der
-     Reihenfolge der Argumente beeinflußt.
+     Der Algorithmus, um Muster abzugleichen, die die Addition oder die
+     Multiplikation als Operanden enthalten, kann von der Anordnung der
+     Terme im Muster oder im zu prüfenden Ausdruck abhängen.  Solange
+     sich jedoch die einzelnen Aussagefunktionen gegeneinander
+     ausschließen, wird das Ergebnis nicht von der Reihenfolge der
+     Argumente beeinflußt.
 
      Der Aufruf von `matchdeclare' für eine Variable <a> überschreibt
-     einen vorhergehenden Aufruf von `matchdeclare' für diese Variable.
-     Nur die letzte Definition ist wirksam, wenn eine Regel definiert
-     wird.  Spätere Änderungen der `matchdeclare'-Eigenschaft eines
-     Symbols haben keinen Einfluss auf definierte Regeln.
+     eine vorhergehende Definition für diese Variable.  Wird eine Regel
+     definiert, ist die letzte mit `matchdeclare' definierte Zuordnung
+     zu einer Aussagefunktion wirksam.  Der erneute Aufruf von
+     `matchdeclare' für eine Variable hat keinen Einfluss auf bereits
+     vorhandene Regeln.
 
      Das Kommando `propvars(matchdeclare)' gibt eine Liste der Variablen
-     zurück, für die eine `matchdeclare'-Eigenschaft definiert ist.
-     `printprops(<a>, matchdeclare)' gibt die der Variable zugeordnete
-     Aussage zurück.  `printprops(all, matchdeclare)' gibt die Aussagen
-     aller Variablen mit einer `matchdeclare'-Eigenschaft zurück.
-     `remove(<a>, matchdeclare)' entfernt die
-     `matchdeclare'-Eigenschaft für die Variable <a>.
+     zurück, die mit `matchdeclare' als Mustervariable definiert sind.
+     `printprops(<a>, matchdeclare)' gibt die der Variable <a>
+     zugeordnete Aussagefunktion zurück.  `printprops(all,
+     matchdeclare)' gibt die Aussagefunktionen aller Mustervariablen
+     zurück.  Mit dem Kommando `remove(<a>, matchdeclare)' wird die
+     Definition von <a> als Mustervariable entfernt.  Siehe auch die
+     Funktionen `propvars',
 
-     Die Funktion `defmatch',  `defrule',  `tellsimp',
+     `printprops'  und `remove'.
 
-     `tellsimpafter'  und `let'  konstruieren Regeln, die Ausdrücke
-     gegen Muster testen.
+     Mit den Funktionen `defmatch',  `defrule',
+
+     `tellsimp',  `tellsimpafter'  und `let'  werden Regeln definiert,
+     die für Ausdrücke einen Musterabgleich ausführen, wobei die
+     Mustervariablen mit den Werten belegt werden, für die eine
+     Übereinstimmung gefunden wird.
 
      `matchdeclare' wertet die Argumente nicht aus.  `matchdeclare' gibt
      immer `done' als Ergebnis zurück.
 
      Beispiele:
 
-     Eine Aussage ist der Name einer Funktion, ein Lambda-Ausdruck, ein
-     Funktionsaufruf, ein Lambda-Ausdruck, dem das letzte Argument
-     fehlt, oder die Werte `true' oder `all'.
+     Eine Aussagefunktion kann mit dem Namen einer Funktion, einem
+     Lambda-Ausdruck, einem Funktionsaufruf, einem Lambda-Ausdruck, dem
+     das letzte Argument fehlt, oder den Werten `true' oder `all'
+     bezeichnet werden.
 
           (%i1) matchdeclare (aa, integerp);
           (%o1)                         done
@@ -1919,8 +2161,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%i6) matchdeclare (ff, all);
           (%o6)                         done
 
-     Stimmt ein Ausdruck mit einer Musteraussage überein, wird der
-     Ausdruck der Mustervariable zugewiesen.
+     Wird für einen Ausdruck beim Musterabgleich eine Übereinstimmung
+     gefunden, wird dieser der Mustervariablen zugewiesen.
 
           (%i1) matchdeclare (aa, integerp, bb, atom);
           (%o1)                         done
@@ -1951,8 +2193,9 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o5)    [all atoms = 8, all nonatoms = (b + a) sin(x)]
 
      Wird nach Übereinstimmungen für die Argumente der Operatoren `+'
-     oder `*' gesucht und schließen sich die Aussagen gegeneinander
-     aus, ist das Ergebnis unabhängig von der Anordnung der Terme.
+     oder `*' gesucht und schließen sich die Aussagefunktionen
+     gegeneinander aus, ist das Ergebnis unabhängig von der Anordnung
+     der Terme.
 
           (%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
           (%o1)                         done
@@ -1974,7 +2217,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
                                                            c
 
      Die Funktionen `propvars'  und `printprops'  geben Informationen
-     über Mustervariablen.
+     über Mustervariablen aus.
 
           (%i1) matchdeclare ([aa, bb, cc], atom, [dd, ee], integerp);
           (%o1)                         done
@@ -1993,47 +2236,51 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
  -- Optionsvariable: maxapplydepth
      Standardwert: 10000
 
-     `maxapplydepth' ist die maximale Tiefe für die die Funktionen
-     `apply1'  und `apply2'  rekursiv auf einen Ausdruck angewendet
-     werden.
+     `maxapplydepth' ist die maximale Verschachtelungstiefe für die die
+     Funktionen `apply1'  und `apply2'  auf die Baumstruktur eines
+     Ausdrucks angewendet werden.
 
  -- Optionsvariable: maxapplyheight
      Standardwert: 10000
 
-     `maxapplyheight' ist die maximale Größe die `applyb1' erreichen
-     kann, bevor die Funktion aufgibt.
+     `maxapplyheight' ist die maximale Verschachtelungstiefe für die die
+     Funktion `applyb1'  Bottom-up auf die Baumstruktur eines Ausdrucks
+     angewendet wird.
 
  -- Funktion: remlet (<prod>, <package_name>)
  -- Funktion: remlet ()
  -- Funktion: remlet (all)
  -- Funktion: remlet (all, <package_name>)
-     Entfernt die Ersetzungsregel <prod> -> <repl> die zuletzt mit der
-     Funktion `let'  definiert wurde.  Wird mit dem Argument
-     <package_name> ein Paket angegeben, wird die Regeln aus dem Paket
-     entsprechenden Paket entfernt.
+     Entfernt die Regel <prod> -> <repl>, die zuletzt mit der Funktion
+     `let'  definiert wurde.  Wird mit dem Argument <package_name> ein
+     Paket angegeben, wird die Regeln aus dem entsprechenden Paket
+     entfernt.
 
-     `remlet()' und `remlet(all)' entfernen alle Ersetzungsregeln aus
-     dem aktuellen Paket, das in `current_let_rule_package'  enthalten
-     ist.  Wird ein Regelpaket als Argument angegeben, werden
-     zusätzlich die Regeln dieses Paketes entfernt.
+     `remlet()' und `remlet(all)' entfernen alle Regeln aus dem
+     aktuellen Paket, das mit `current_let_rule_package'  bezeichnet
+     ist.  Wird der Name eines Regelpaketes als Argument angegeben,
+     werden zusätzlich die Regeln dieses Paketes entfernt.
 
-     Soll eine vorhandene Ersetzungsregel durch eine neue Definition
-     ersetzt werden, muss die Regel zuvor nicht mit `remlet' entfernt
-     werden.  Die neue Definition überschreibt eine vorhandene Regel.
+     Soll eine vorhandene Regel durch eine neue Definition ersetzt
+     werden, muss die Regel nicht zuvor mit `remlet' entfernt werden.
+     Die neue Definition überschreibt eine vorhandene Regel.  Wurde
+     eine vorhandene Regel überschrieben und wird die letzte Regel
+     entfernt, dann ist die vorhergehende Regel wieder aktiv.
 
-     Siehe auch `remrule',  um Regeln zu entfernen, die mit `tellsimp'
-     oder `tellsimpafter'  definiert sind.
+     Siehe auch die Funktion `remrule',  um Regeln zu entfernen, die mit
+     den Funktionen `tellsimp'  oder `tellsimpafter'  definiert sind.
 
  -- Funktion: remrule (<op>, <rulename>)
  -- Funktion: remrule (<op>, all)
-     Entfernt Regeln die mit den Funktionen `tellsimp'  oder
-     `tellsimpafter'.   definiert wurden.
+     Entfernt Regeln, die mit den Funktionen `tellsimp'  oder
+     `tellsimpafter'  definiert sind.
 
      `remrule(<op>, <rulename>)' entfernt die Regel mit dem Namen
      <rulename> vom Operator <op>.  Ist der Operator <op> ein
      Maxima-Operator oder ein nutzerdefinierter Operator, der mit
      Funktionen wie `infix'  oder `prefix'  definiert wurde, muss der
-     Name des Operators <op> in Anführungszeichen angegeben werden.
+     Name des Operators <op> als eine Zeichenkette in Anführungszeichen
+     angegeben werden.
 
      `remrule(<op>, all)' entfernt alle Regeln des Operators <op>.
 
@@ -2075,30 +2322,37 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
  -- Systemvariable: rules
      Standardwert: `[]'
 
-     Enthält die vom Nutzer mit den Funktionen `tellsimp',
-     `tellsimpafter', `defmatch' oder `defrule' definierten Regeln.
-     Siehe auch `infolists'.
+     `rules' ist eine Informationsliste, die die vom Nutzer mit den
+     Funktionen `tellsimp', `tellsimpafter', `defmatch' oder `defrule'
+     definierten Regeln enthält.
+
+     Regeln, die mit der Funktion `let'  definiert sind, sind nicht in
+     der Liste `rules' enthalten.  Diese Regeln werden in Paketen
+     organisiert, die in der Systemvariablen `let_rule_packages'
+     aufgelistet und mit der Funktion `letrules'  angezeigt werden.
+
+     Siehe auch die Systemvariable `infolists'.
 
 
  -- Funktion: tellsimp (<pattern>, <replacement>)
      `tellsimp' ist vergleichbar mit der Funktion `tellsimpafter',
 
-     wobei `tellsimp' die Vereinfachungsregel vor der Anwendung der
-     eingebauten Vereinfachungen ausgeführt wird.
+     wobei mit `tellsimp' Regeln für die Vereinfachung von Ausdrücken
+     definiert werden, die noch vor den Regeln angewendet werden, die
+     intern in Maxima bekannt sind.
 
-     `tellsimp' wird eingesetzt, wenn Maxima Regeln für die
+     `tellsimp' wird daher eingesetzt, wenn Maxima Regeln für die
      Vereinfachung des Ausdruckes kennt, es jedoch notwendig ist, noch
      vor Anwendung dieser Regeln den Ausdruck auf eine andere Art zu
      modifizieren.  Für den Fall das Maxima den Ausdruck nicht
-     ausreichend vereinfacht, kann es besser sein, eine
-     Vereinfachungsregel mit `tellsimpafter'  zu definieren.
+     ausreichend vereinfacht, kann es besser sein, eine Regel mit der
+     Funktion `tellsimpafter'  zu definieren.
 
-     Das Argument <pattern> kann keine Summe, Produkte, eine einzelne
-     Variable oder eine Zahl sein.
+     Das Argument <pattern> kann keine Summe, kein Produkt, keine
+     einzelne Variable und keine Zahl sein.
 
-     `rules' ist eine Informationsliste, die alle Regeln enthält die
-     mit den `tellsimpafter',  `defrule',  `defmatch'  und `tellsimp'
-     definiert sind.
+     Regeln die mit `tellsimp' definiert werden, werden in die
+     Informationsliste `rules'  aufgenommen.
 
      Beispiele:
 
@@ -2142,78 +2396,78 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o17)                     1 - cos (y)
 
  -- Funktion: tellsimpafter (<pattern>, <replacement>)
-     Definiert eine Vereinfachungsregel, die nach Anwendung der
-     eingebauten Regeln angewendet wird.  <pattern> ist ein Ausdruck,
-     der Mustervariablen enthält, die mit der Funktion `matchdeclare'
-     definiert werden und weitere Symbole und Operatoren, für die die
-     wörtliche Übereinstimmung in einem Ausdruck angenommen wird.
-     <replacement> wird in den Ausdruck substituiert, wenn <pattern> im
-     Ausdruck gefunden wird.  Mustervariablen in <replacement> werden
-     die Werte des geprüften Ausdrucks zugewiesen.
+     Definiert eine Regel für die Vereinfachung eines Ausdrucks, die
+     nach Anwendung der Regeln angewendet wird, die Maxima intern
+     kennt.  <pattern> ist ein Ausdruck, der Mustervariablen enthält,
+     die mit der Funktion `matchdeclare'  definiert sind und weitere
+     Symbole und Operatoren, für die die wörtliche Übereinstimmung bei
+     einem Musterabgleich angenommen wird.  <replacement> wird in den
+     Ausdruck substituiert, wenn der Musterabgleich das Muster
+     <pattern> im Ausdruck findet.  Den Mustervariablen in
+     <replacement> werden die Werte des Musterabgleichs zugewiesen.
 
-     Das Argument <pattern> kann ein beliebiger Ausdruck sein, in dem
-     der Hauptoperator keine Mustervariable ist.  Die
-     Vereinfachungsregel wird mit dem Hauptoperator assoziiert.  Der
+     Das Muster <pattern> kann ein beliebiger Ausdruck sein, in dem der
+     Hauptoperator keine Mustervariable ist.  Die neue Regel wird nach
+     dem Hauptoperator des Musters benannt und diesem zugeordnet.  Der
      Name von Funktionen, mit einer unten beschriebenen Ausnahme,
-     Listen und Arrays können in <pattern> nur als eine wörtliche
-     Übereinstimmung und nicht in Mustervariablen auftreten.  Daher
-     können Ausdrücke wie `aa(x)' oder `bb[y]' nicht als Muster
-     verwendet werden, wenn `aa' oder `bb' Mustervariablen sind.  Die
-     Namen von Funktionen, Listen und Arrays, welche Mustervariablen
-     sind, können dann in <pattern> auftreten, wenn sie nicht der
-     Hauptoperator sind.
+     Listen und Arrays können in <pattern> nicht als eine
+     Mustervariable auftreten.  Daher können Ausdrücke wie `aa(x)' oder
+     `bb[y]' nicht als Muster verwendet werden, wenn `aa' oder `bb'
+     Mustervariablen sind.  Die Namen von Funktionen, Listen und
+     Arrays, welche Mustervariablen sind, können dann in dem Muster
+     <pattern> auftreten, wenn sie nicht der Hauptoperator sind.
 
      Es gibt eine Ausnahme der oben genannten Einschränkung für die
      Verwendung von Funktionsnamen.  Der Name einer indizierten
      Funktion wie `aa[x](y)' kann eine Mustervariable sein, da der
-     Hauptoperator nicht `aa' ist, sondern das Lisp-Symbol `mqapply'.
-     Dies ist eine Konsequenz der internen Darstellung einer
-     indizierten Funktion.
+     Hauptoperator nicht `aa' ist, sondern das interne Symbol
+     `mqapply'.  Dies ist eine Konsequenz der internen Darstellung
+     einer indizierten Funktion.
 
      Regeln für die Vereinfachung werden nach der Auswertung eines
-     Ausdrucks angewendet, sofern die Auswertung zum Beispiel mit dem
-     Schalter `noeval'  nicht unterdrückt wurde.  Regeln, die mit
-     `tellsimpafter' definiert sind, werden nach den vorhandenen
-     Maxima-Regeln und in der Reihenfolge angewendet werden, in der sie
-     definiert sind.  Die Regeln für die Vereinfachung werden zunächst
-     für Teilausdrücke und zuletzt für den ganzen Ausdruck angewendet.
-     Es kann notwendig sein, Regeln für die Vereinfachung mehrfach zum
-     Beispiel mit dem Quote-Quote-Operator
+     Ausdrucks angewendet, sofern die Auswertung, zum Beispiel mit dem
+     Schalter `noeval',  nicht unterdrückt wurde.  Regeln, die mit
+     `tellsimpafter' definiert sind, werden nach den internen Regeln
+     und in der Reihenfolge angewendet, in der sie definiert sind.  Die
+     Regeln für die Vereinfachung werden zunächst für Teilausdrücke und
+     zuletzt für den ganzen Ausdruck angewendet.  Es kann notwendig
+     sein, Regeln für die Vereinfachung mehrfach zum Beispiel mit dem
+     Quote-Quote-Operator
 
-     `''' oder dem Schalter `infeval'  anzuwenden, um sicher zu gehen,
-     dass alle Regeln angewendet werden.
+     `''' oder dem Auswertungsschalter `infeval'  anzuwenden, um zu
+     erreichen, dass alle Regeln angewendet werden.
 
-     Mustervariable werden als lokale Variablen in Vereinfachungsregeln
-     behandelt.  Sobald eine Regel definiert ist, beeinflusst die
-     Zuweisung eines Wertes an die Mustervariable nicht die Regel und
-     die Variable wird nicht von der Regel beeinflusst.  Die Zuweisung
-     an eine Mustervariable, die aufgrund einer erfolgreichen
-     Übereinstimmung des Musters mit einem Ausdruck vorgenommen wird,
-     beeinflusst nicht den aktuellen Wert der Variablen.  Jedoch sind
-     die Eigenschaften der Mustervariablen, wie sie zum Beispiel auch
-     mit der Funktion `put'  definiert werden können, global in Maxima.
+     Mustervariable werden als lokale Variablen in Regeln für die
+     Vereinfachung behandelt.  Sobald eine Regel definiert ist,
+     beeinflusst die Zuweisung eines Wertes an die Mustervariable nicht
+     die Regel und die Variable wird nicht von der Regel beeinflusst.
+     Die Zuweisung an eine Mustervariable, die aufgrund eines
+     erfolgreichen Musterabgleichs vorgenommen wird, beeinflusst nicht
+     den aktuellen Wert der Variablen.  Jedoch sind die Eigenschaften
+     der Mustervariablen, wie sie zum Beispiel auch mit der Funktion
+     `put'  definiert werden können, global in Maxima.
 
-     Die mit `tellsimpafter' definierte Regel wird nach dem
-     Hauptoperator des Argumentes <pattern> benannt.  Regeln der
-     Maxima-Operatoren und mit den Funktionen `infix',  `prefix',
+     Eine mit `tellsimpafter' definierte Regel wird nach dem
+     Hauptoperator des Musters <pattern> benannt.  Regeln für
+     Maxima-Operatoren und für Funktionen, die mit `infix',  `prefix',
      `postfix',
 
-     `matchfix'  und `nofix'  definierte Operatoren haben einen
-     Lisp-Bezeichner als Namen.  Alle anderen Regeln haben
+     `matchfix'  und `nofix'  als Operator definiert sind, haben einen
+     Lisp-Bezeichner als Namen.  Alle anderen Regeln erhalten einen
      Maxima-Bezeichner als Namen.
 
-     `tellsimpafter' werden die Argumente nicht aus.  `tellsimpafter'
-     gibt eine Liste der Regeln des Hauptoperators des Argumentes
-     <pattern> einschließlich der neu definierten Regeln zurück.
+     `tellsimpafter' wertet die Argumente nicht aus.  `tellsimpafter'
+     gibt eine Liste der Regeln zurück, die für den Hauptoperator des
+     Musters <pattern> definiert sind.
 
-     Siehe auch `matchdeclare',  `defmatch',  `defrule',
+     Siehe auch die Funktionen `matchdeclare',  `defmatch',
 
-     `tellsimp',  `kill',  `remrule'  und `clear_rules'.
+     `defrule',  `tellsimp',  `remrule'  und `clear_rules'.
 
      Beispiele:
 
      Das Muster <pattern> kann ein beliebiger Ausdruck sein, in dem der
-     Hauptoperator nicht die Mustervariable ist.
+     Hauptoperator keine Mustervariable ist.
 
           (%i1) matchdeclare (aa, atom, [ll, mm], listp, xx, true)$
           (%i2) tellsimpafter (sin (ll), map (sin, ll));
@@ -2233,8 +2487,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%o7)                    bar(foo(u - v))
 
      Regeln werden in der Reihenfolge angewendet, in der sie definiert
-     wurden.  Können zwei Regeln mit einem Ausdruck übereinstimmen,
-     wird die zuerst definierte Regel angewendet.
+     sind.  Treffen zwei Regeln bei einem Musterabgleich zu, wird die
+     zuerst definierte Regel angewendet.
 
           (%i1) matchdeclare (aa, integerp);
           (%o1)                         done
@@ -2245,9 +2499,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
           (%i4) foo (42);
           (%o4)                       bar_1(42)
 
-     Mustervariable werden als lokale Variable in Vereinfachungsregeln
-     behandelt.  Im Unterschied dazu behandelt `defmatch'
-     Mustervariable als globale Variable.
+     Mustervariable werden als lokale Variable beim Musterabgleich der
+     mit der Funktion `tellsimpafter' definierten Regel behandelt.  Im
+     Unterschied dazu werden von Regeln, die mit `defmatch'  definiert
+     sind, Mustervariable als globale Variable behandelt.
 
           (%i1) matchdeclare (aa, integerp, bb, atom);
           (%o1)                         done
@@ -2278,7 +2533,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Muster und Regeln,  Prev
            -- an error.  Quitting.  To debug this try debugmode(true);
 
      Regeln werden nach dem Hauptoperator benannt.  Die Namen der
-     Regeln für Maxima-Funktionen und nutzerdefinierten Operatoren sind
+     Regeln für Maxima-Funktionen und nutzerdefinierte Operatoren sind
      Lisp-Bezeichner.  Alle anderen Namen sind Maxima-Bezeichner.
 
           (%i1) tellsimpafter (foo (%pi + %e), 3*%pi);
@@ -2334,39 +2589,33 @@ File: maxima.info,  Node: Funktionsdefinitionen,  Next: Laufzeitumgebung,  Prev:
 
 * Menu:
 
-* Einführung in Funktionsdefinitionen::
 * Funktionen::
 * Makros::
 * Funktionen und Variablen für Funktionsdefinitionen::
 
 
-File: maxima.info,  Node: Einführung in Funktionsdefinitionen,  Next: Funktionen,  Prev: Funktionsdefinitionen,  Up: Funktionsdefinitionen
+File: maxima.info,  Node: Funktionen,  Next: Makros,  Prev: Funktionsdefinitionen,  Up: Funktionsdefinitionen
 
-25.1 Einführung in Funktionsdefinitionen
-========================================
-
-
-File: maxima.info,  Node: Funktionen,  Next: Makros,  Prev: Einführung in Funktionsdefinitionen,  Up: Funktionsdefinitionen
-
-25.2 Funktionen
+25.1 Funktionen
 ===============
 
-25.2.1 Gewöhnliche Funktionen
+25.1.1 Gewöhnliche Funktionen
 -----------------------------
 
-Eine Maxima-Funktion wird mit dem Operator `:=' definiert.  Im folgenden
-wird die Funktion `f' definiert:
+Eine Maxima-Funktion wird mit dem Operator `:='  oder der Funktion
+`define'  definiert.  Im folgenden wird die Funktion `f' mit dem
+Operator `:=' definiert:
 
      f(x) := sin(x)
 
-Funktionen, die mit der Funktion `lambda' definiert werden, sind anonyme
-Funktionen, die keinen Namen haben.  Diese werden auch
+Funktionen, die mit der Funktion `lambda'  definiert werden, sind
+anonyme Funktionen, die keinen Namen haben.  Diese werden auch
 `lambda'-Ausdrücke genannt:
 
      lambda ([i, j], ...)
 
 Anonyme Funktionen können überall dort verwendet werden, wo eine
-Funktion als Argument erwartet wird.  Das folgene Beispiel gibt eine
+Funktion als Argument erwartet wird.  Das folgende Beispiel gibt eine
 Liste zurück, bei der jedes Element der Liste `L' mit 1 addiert wird:
 
      map (lambda ([i], i+1), L)
@@ -2385,14 +2634,14 @@ Element, kann eine variable Anzahl an Argumenten an die Funktion
      (%o4)                 [1, 2, [3, 4, 5, 6]]
 
 Die rechte Seite einer Funktionsdefinition ist ein Ausdruck.  Mehrere
-Ausdrücke werden durch Kommata getrennt und mit Klammern umgegeben.  Das
-Ergebnis der Funktion ist der Wert des letzten Ausdrucks <exprn>:
+Ausdrücke werden durch Kommata getrennt und mit Klammern umgeben.  Das
+Ergebnis der Funktion ist der Wert des letzten Ausdrucks `exprn':
 
      f(x) := (expr1, expr2, ...., exprn);
 
-Ein Rücksprung mit der Anweisung `return' aus einer Funktion ist
+Ein Rücksprung mit der Anweisung `return'  aus einer Funktion ist
 möglich, wenn die Definition der Funktion in einen Block eingefügt wird.
-Ein Block wird mit der `block'-Anweisung definiert.  Das folgende
+Ein Block wird mit der `block' -Anweisung definiert.  Das folgende
 Beispiel hat entweder den Wert `a' oder den Wert des Ausdrucks <exprn>
 als Ergebnis:
 
@@ -2428,11 +2677,13 @@ hat denselben Effekt wie der folgende Block:
 
      block ([x: 1], expr1, ..., exprn)
 
-Muss die rechte Seite einer Funktionsdefinition ausgewertet werden,
-kann es sinnvoll sein, die Funktionen `define' oder `buildq' zu
-verwenden.
+Soll die rechte Seite einer Funktionsdefinition ausgewertet werden,
+kann die Funktionen `define'  für die Definition der Funktion verwendet
+werden.  Mit der Funktion `buildq'  kann die Definition einer Funktion
+konstruiert werden, wobei die Auswertung gezielt kontrolliert werden
+kann.
 
-25.2.2 Array-Funktionen
+25.1.2 Array-Funktionen
 -----------------------
 
 Eine Array-Funktion speichert bei dem ersten Aufruf den Funktionswert
@@ -2440,35 +2691,69 @@ zu dem Argument.  Wird die Array-Funktion mit demselben Argument
 aufgerufen, wird der gespeicherte Wert zurückgeben, ohne diesen neu zu
 berechnen.  Dies wird auch Memoisation genannt.
 
-Die Namen der Array-Funktionen werden in die Informationsliste `arrays'
-und nicht in die Liste `functions' eingetragen.  `arrayinfo' gibt eine
-Liste der Argumente zurück, für die Werte gespeichert sind und
-`listarrays' gibt die Werte zurück.  `dispfun' und `fundef' geben die
-Definition der Array-Funktion zurück.
+Beispiel:
 
-`arraymake' erzeugt den Aufruf einer Array-Funktion.  Dies ist analog zu
-der Funktion `funmake' für gewöhnliche Funktionen.  `arrayapply' wendet
-eine Array-Funktion auf die Argumente an.  Dies entspricht der Funktion
-`apply' für gewöhnliche Funktionen.  Die Funktion `map' hat keine
-Entsprechung für Array-Funktionen.  Vergleichbare Konstruktionen sind
-`map(lambda([<x>], <a>[<x>]), <L>)' oder `makelist(<a>[<x>], <x>,
+Das folgende Beispiel zeigt die Definition einer Array-Funktion `f', die
+die Fakultät einer Zahl faktorisiert.  Im ersten Aufruf der Funktion
+mit dem Argument `25000' wird eine Rechenzeit von etwa 24 Sekunden
+benötigt.  Der zweite Aufruf mit demselben Argument gibt sofort den
+abgespeicherten Wert zurück.
+
+     (%i1) f[x]:=factor(x!);
+     (%o1)                   f  := factor(x!)
+                              x
+     (%i2) showtime:true;
+     Evaluation took 0.0000 seconds (0.0000 elapsed) using 0 bytes.
+     (%o2)                         true
+     (%i3) f[25000]$
+     Evaluation took 23.9250 seconds (26.0790 elapsed) using 3829.778 MB.
+     (%i4) f[25000]$
+     Evaluation took 0.0000 seconds (0.0000 elapsed) using 0 bytes.
+
+Die Namen der Array-Funktionen werden in die Informationsliste `arrays'
+
+und nicht in die Liste `functions'  eingetragen.  `arrayinfo'  gibt eine
+Liste der Argumente zurück, für die Werte gespeichert sind und
+`listarray'  gibt die Werte zurück.  Die Funktionen `dispfun'  und
+`fundef'  geben die Definition der Array-Funktion zurück.
+
+Beispiele:
+
+Mit dem obigen Beispiel werden die folgenden Ergebnisse ausgegeben.
+
+     (%i5) arrays;
+     (%o5)                          [f]
+     (%i6) arrayinfo(f);
+     (%o6)                 [hashed, 1, [25000]]
+     (%i7) dispfun(f);
+     (%t7)                   f  := factor(x!)
+                              x
+     (%o7)                         [%t7]
+
+`arraymake'  erzeugt den Aufruf einer Array-Funktion.  Dies ist analog
+zu der Funktion `funmake'  für gewöhnliche Funktionen.  `arrayapply'
+wendet eine Array-Funktion auf die Argumente an.  Dies entspricht der
+Funktion `apply'  für gewöhnliche Funktionen.  Die Funktion `map'  hat
+keine Entsprechung für Array-Funktionen.  Vergleichbare Konstruktionen
+sind `map(lambda([<x>], <a>[<x>]), <L>)' oder `makelist(<a>[<x>], <x>,
 <L>)', wobei <L> eine Liste ist.
 
-`remarray' entfernt die Definition einer Array-Funktion einschließlich
-der gespeicherten Werte.  Dies entspricht `remfunction' für gewöhnliche
+`remarray'  entfernt die Definition einer Array-Funktion einschließlich
+der gespeicherten Werte.  Dies entspricht `remfunction'  für gewöhnliche
 Funktionen.
 
 `kill(<a>[<x>])' entfernt den für das Argument <x> gespeicherten Wert
 einer Array-Funktion <a>.  Beim nächsten Aufruf von <a> mit dem
 Argument <x> wird der Funktionswert neu berechnet.  Es gibt keine
-Möglichkeit, alle gespeicherten Werte zu löschen.  Die Kommandos
-`kill(<a>)' und `remarray(<a>)' löschen alle Werte einschließlich der
-Definition der Funktion.
+Möglichkeit, alle gespeicherten Werte zu löschen, ohne dass die
+Definition der Funktion entfernt wird.  Die Kommandos `kill(<a>)' und
+`remarray(<a>)' löschen alle Werte einschließlich der Definition der
+Funktion.
 
 
 File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktionsdefinitionen,  Prev: Funktionen,  Up: Funktionsdefinitionen
 
-25.3 Makros
+25.2 Makros
 ===========
 
  -- Funktion: buildq (<L>, <expr>)
@@ -2477,10 +2762,10 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
      Ergebnis der Substitution wird vereinfacht, aber nicht ausgewertet.
 
      Die Elemente der Liste <L> sind Symbole oder Zuweisungen der Form
-     `<symbol>: <value>'.  Zuweisungen werden parallel ausgewertet.
+     `<symbol>: <value>'.  Die Zuweisungen werden parallel ausgewertet.
      Der Wert einer Variablen auf der rechten Seite einer Zuweisung ist
      der globale Wert in dem Kontext in dem `buildq' aufgerufen wird
-     und nicht der lokale Wert einer vorhergenden Zuweisung.  Erhält
+     und nicht der lokale Wert einer vorhergehenden Zuweisung.  Erhält
      eine Variable keinen Wert, dann behält die Variable den globalen
      Wert.
 
@@ -2489,10 +2774,12 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
 
      Enthält <expr> Ausdrücke der Form `splice(<x>)', muss die Variable
      <x> eine Liste sein.  Die Liste wird in den Ausdruck eingefügt.
+     Siehe auch `splice'.
 
-     Variablen in <expr>, die nicht in <L> enthalten sind, werden nicht
-     durch einen Wert ersetzt, auch wenn es eine globale Variable mit
-     demselben Namen gibt.
+     Variablen in in dem Ausdruck <expr>, die nicht in <L> enthalten
+     sind, werden nicht durch einen Wert ersetzt, auch wenn es eine
+     globale Variable mit demselben Namen gibt, da der Ausdruck nicht
+     ausgewertet wird.
 
      Beispiele:
 
@@ -2527,7 +2814,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
      Die Variablen der Liste <L> erhalten ihren Wert parallel,
      ansonsten wäre das erste Ergebnis `foo(b,b)'.  Substitutionen
      werden parallel ausgeführt.  Im Gegensatz dazu werden die
-     Substitutionen mit der Funktion `subst' nacheinander ausgeführt.
+     Substitutionen mit der Funktion `subst'  nacheinander ausgeführt.
 
           (%i1) buildq ([a: b, b: a], foo (a, b));
           (%o1)                       foo(b, a)
@@ -2540,11 +2827,10 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
 
      Konstruktion einer Liste mit Gleichungen mit Variablen oder
      Ausdrücken auf der linken Seite und deren Werten auf der rechten
-     Seite.  Die Funktion `macroexpand' expandiert das Makro
+     Seite.  Die Funktion `macroexpand'  expandiert das Makro
      `show_values'.
 
-          (%i1) show_values ([L]) ::= buildq ([L], map ("=", 'L, L));
-          (%o1)   show_values([L]) ::= buildq([L], map("=", 'L, L))
+          (%i1) show_values ([L]) ::= buildq ([L], map ("=", 'L, L))$
           (%i2) (a: 17, b: 29, c: 1729)$
           (%i3) show_values (a, b, c - a - b);
           (%o3)          [a = 17, b = 29, c - b - a = 1683]
@@ -2561,7 +2847,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
           (%o3)                       3 (b + a)
 
  -- Funktion: macroexpand (<expr>)
-     Ist <expr> eine Makrodefinition, wird das Makro expandiert, ohne
+     Ist das Argument <expr> ein Makro, wird das Makro expandiert, ohne
      dass es ausgewertet wird.  Ansonsten wird <expr> zurückgegeben.
 
      Ist die Expansion des Makros selbst ein Makro, wird dieses Makro
@@ -2570,7 +2856,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
      `macroexpand' wertet das Argument <expr> nicht aus.  Hat die
      Expansion des Makros Seiteneffekte, dann werden diese ausgeführt.
 
-     Siehe auch `::=',  `Makros'  und `macroexpand1'.
+     Siehe auch `::='  und `macroexpand1'.
 
      Beispiele:
 
@@ -2602,7 +2888,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
      Enthält die Expansion <expr> wiederum Makros, werden diese im
      Unterschied zur Funktion `macroexpand' nicht expandiert.
 
-     Siehe auch `::=',  `Makros'  und `macroexpand'.
+     Siehe auch `::='  und `macroexpand'.
 
      Beispiele:
 
@@ -2610,8 +2896,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
                                               x
           (%o1)                      g(x) ::= --
                                               99
-          (%i2) h (x) ::= buildq ([x], g (x - a));
-          (%o2)            h(x) ::= buildq([x], g(x - a))
+          (%i2) h (x) ::= buildq ([x], g (x - a))$
           (%i3) a: 1234;
           (%o3)                         1234
           (%i4) macroexpand1 (h (y));
@@ -2624,11 +2909,11 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
  -- Optionsvariable: macroexpansion
      Standardwert: `false'
 
-     `macroexpansion' kontrolliert die Expansion von Makro-Funktionen.
+     `macroexpansion' kontrolliert die Expansion von Makros.
 
     `false'
-          Die Expansion der Makro-Funktion wird nicht für die
-          aufrufende Funktion ersetzt.
+          Die Expansion des Makros wird nicht für die aufrufende
+          Funktion ersetzt.
 
     `expand'
           Wird die Makro-Funktion das erste Mal ausgewertet, wird die
@@ -2639,7 +2924,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
           Ausdrücke, die das Makro ebenfalls aufrufen.
 
     `displace'
-          Wird die Makro-Funktion das erstemal ausgewertet, wird die
+          Wird die Makro-Funktion das erste mal ausgewertet, wird die
           Expansion des Makros in den aufrufenden Ausdruck eingesetzt.
           Weitere Aufrufe werten das Makro nicht erneut aus.
           Seiteneffekte, wie Zuweisungen an globale Variablen, werden
@@ -2650,7 +2935,7 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
      Beispiele:
 
      Hat `macroexpansion' den Wert `false', wird eine Makro-Funktion
-     jedesmal aufgerufen, wenn der aufrufende Ausdruck ausgewertet
+     jedes mal aufgerufen, wenn der aufrufende Ausdruck ausgewertet
      wird.  Der aufrufende Ausdruck wird nicht modifiziert.
 
           (%i1) f (x) := h (x) / g (x);
@@ -2758,19 +3043,21 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
  -- Systemvariable: macros
      Standardwert: `[]'
 
-     `macros' ist eine Informationsliste, die die vom Nutzer mit dem
-     Operator `::=' definierten Makro-Funktionen enthält.  Wird die
-     Makro-Funktion mit einer der Funktionen `kill', `remove' oder
-     `remfunction' gelöscht, wird der Eintrag aus der Informationsliste
-     entfernt.  Siehe auch `infolists'.
+     Die Systemvariable `macros' ist eine Informationsliste, die die
+     vom Nutzer mit dem Operator `::='  definierten Makros enthält.
+     Wird das Makro mit einer der Funktionen `kill',  `remove'  oder
+     `remfunction'
+
+     gelöscht, wird der Eintrag aus der Informationsliste entfernt.
+     Siehe auch die Systemvariable `infolists'.
 
 
  -- Funktion: splice (<a>)
      Die Funktion `splice' kann nur im Zusammenhang mit der Funktion
-     `buildq' verwendet werden.  Das Argument <a> bezeichnet eine
+     `buildq'  verwendet werden.  Das Argument <a> bezeichnet eine
      Liste, die an Stelle von `splice(a)' in einen Ausdruck eingefügt
-     wird.  <a> kann nicht selbst eine Liste sein oder ein Ausdruck
-     sein, der zu einer Liste auswertet.
+     wird.  <a> kann nicht selbst eine Liste oder ein Ausdruck sein,
+     der zu einer Liste auswertet.
 
      Beispiele:
 
@@ -2787,11 +3074,10 @@ File: maxima.info,  Node: Makros,  Next: Funktionen und Variablen für Funktions
           (%i4) buildq ([x: [1, %pi, z - y]], "<>" (splice (x)));
           (%o4)                   <>1, %pi, z - y<>
 
-
 
 File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  Prev: Makros,  Up: Funktionsdefinitionen
 
-25.4 Funktionen und Variablen für Funktionsdefinitionen
+25.3 Funktionen und Variablen für Funktionsdefinitionen
 =======================================================
 
  -- Funktion: apply (<F>, [<x_1>, ..., <x_n>])
@@ -2801,13 +3087,13 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      `apply' versucht nicht Array-Funktionen von gewöhnlichen
      Funktionen zu unterscheiden.  Ist <F> der Name eine
      Array-Funktion, wertet `apply' den Ausdruck `<F>(...)' aus.
-     `arrayapply' entspricht der Funktion `apply', wenn <F> eine
+     `arrayapply'  entspricht der Funktion `apply', wenn <F> eine
      Array-Funktion ist.
 
      Beispiele:
 
      `apply' wertet die Argumente aus.  In diesem Beispiel wird die
-     Funktion `min' auf die Liste `L' angewendet.
+     Funktion `min'  auf die Liste `L' angewendet.
 
           (%i1) L : [1, 5, -10.2, 4, 3];
           (%o1)                 [1, 5, - 10.2, 4, 3]
@@ -2863,7 +3149,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      ..., <x_n> und der Funktionsdefinition <expr>.  `define' wertet
      das zweite Argument immer aus.
 
-     Ist das letzte oder einzige Argument <v_n> eine Liste mit einem
+     Ist das letzte oder einzige Argument <x_n> eine Liste mit einem
      Element, dann akzeptiert die Funktion eine variable Anzahl an
      Argumenten.  Die Argumente der Funktion werden nacheinander den
      Variablen <x_1>, ..., <x_(n-1)> zugewiesen.  Sind weitere
@@ -2877,13 +3163,13 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      eine Funktion mit dem Namen <f> gibt.
 
      Das erste Argument wird dann ausgewertet, wenn es ein Ausdruck mit
-     den Funktionen `funmake', `arraymake' oder `ev' ist.
+     den Funktionen `funmake',  `arraymake'  oder `ev'  ist.
 
      Alle Funktionsdefinitionen treten in demselben Namensraum auf.
      Die Definition einer Funktion `g' innerhalb einer Funktion `f'
      führt nicht automatisch zu einer lokalen Definition.  Um eine
      lokale Funktion zu erhalten, kann `lokal(g)' innerhalb der
-     Funktion `f' ausgeführt werden.
+     Funktion `f' ausgeführt werden.  Siehe auch `local'.
 
      Ist eines der Argumente <x_k> nach der Auswertung ein quotiertes
      Symbol, wertet die mit `define' definierte Funktion das Argument
@@ -2979,7 +3265,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
 
      Beispiele:
 
-     `foo' ist eine boolsche Variable mit dem Wert `true'.
+     `foo' ist eine boolesche Variable mit dem Wert `true'.
 
           (%i1) define_variable (foo, true, boolean);
           (%o1)                         true
@@ -3047,8 +3333,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      Array-Funktionen oder indizierte Funktionen sein.
 
      `dispfun(all)' zeigt die Definitionen aller nutzerdefinierten
-     Funktionen an, die in den Informationslisten `functions', `arrays'
-     oder `macros' enthalten sind.
+     Funktionen an, die in den Informationslisten `functions',  `arrays'
+     oder `macros'  enthalten sind.
 
      `dispfun' erzeugt Zwischenmarken `%t' für jede einzelne
      anzuzeigende Funktion und weist die Funktionsdefinitionen den
@@ -3119,9 +3405,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
                                           5             10
 
  -- Funktion: fullmap (<f>, <expr_1>, ...)
-     Die Funktion `fullmap' ist vergleichbar mit der Funktion `map'.  Im
-     Unterschied zu der Funktion `map' kann `fullmap' auf verschachtelte
-     Audrücke angewendet werden.
+     Die Funktion `fullmap' ist vergleichbar mit der Funktion `map'.
+
+     Im  Unterschied zu der Funktion `map' kann `fullmap' auf
+     verschachtelte Ausdrücke angewendet werden.
 
      Intern wird `fullmap' von Maxima für die Vereinfachung von Matrizen
      aufgerufen.  Daher können bei der Vereinfachung von Matrizen
@@ -3139,6 +3426,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
 
  -- Funktion: fullmapl (<f>, <list_1>, ...)
      Die Funktion `fullmapl' ist vergleichbar mit `fullmap'.
+
      `fullmapl' kann jedoch nur auf Matrizen und Listen angewendet
      werden kann.
 
@@ -3151,12 +3439,14 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      Standardwert: `[]'
 
      `functions' ist eine Informationsliste, die die vom Nutzer mit dem
-     Operator <:=> oder der Funktion `define' definierten Funktionen
-     enthält.  Siehe `infolists'.
+     Operator `:='  oder der Funktion `define'  definierten Funktionen
+     enthält.  Siehe auch die Systemvariable `infolists'.
 
      Array-Funktionen und indizierte Funktionen werden nicht in die
-     Informationsliste `functions', sondern in die Informationsliste
-     `arrays' eingetragen.  Siehe `arrays'.
+     Informationsliste `functions',  sondern in die Informationsliste
+     `arrays'
+
+     eingetragen.
 
      Beispiele:
 
@@ -3206,7 +3496,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      Funktionen zu unterscheiden.  Ist <F> der Name einer
      Array-Funktion, dann gibt `funmake' einen Ausdruck der Form
      `<F>(...)' zurück.  Für Array-Funktionen kann die Funktion
-     `arraymake' verwendet werden.
+     `arraymake'  verwendet werden.
 
      `funmake' wertet die Argumente aus.
 
@@ -3286,14 +3576,14 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
  -- Funktion: lambda ([[<L>]], <expr_1>, ..., <expr_n>)
  -- Funktion: lambda ([<x_1>, ..., <x_m>, [<L>]], <expr_1>, ...,
           <expr_n>)
-     Definiert einen Lambda-Ausdruck, auch als anonyme Funktion
-     bezeichnet, und gibt diesen zurück.  Die Funktion kann Argumente
-     <x_1>, ..., <x_m> und optionale Argumente <L> haben.  Die Rückgabe
-     der Funktion ist das Ergebnis des Ausdrucks <exprn>.  Ein
-     Lambda-Ausdruck kann einer Variablen zugewiesen werden und wertet
-     wie eine gewöhnliche Funktion aus.  Ein Lambda-Ausdruck kann an
-     solchen Stellen verwendet werden, wo der Name einer Funktion
-     erwartet wird.
+     Definiert einen Lambda-Ausdruck, der auch als anonyme Funktion
+     bezeichnet wird, und gibt diesen zurück.  Die Funktion kann
+     Argumente <x_1>, ..., <x_m> und optionale Argumente <L> haben.
+     Die Rückgabe der Funktion ist das Ergebnis des Ausdrucks <exprn>.
+     Ein Lambda-Ausdruck kann einer Variablen zugewiesen werden und
+     wertet wie eine gewöhnliche Funktion aus.  Ein Lambda-Ausdruck
+     kann an solchen Stellen verwendet werden, wo der Name einer
+     Funktion erwartet wird.
 
      Wird der Lambda-Ausdruck ausgewertet, werden lokale Variablen
      <x_1>, ..., <x_m> erzeugt.  `lambda' kann innerhalb von Blöcken
@@ -3302,22 +3592,23 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      Variablen erzeugt.  Die lokalen Variablen sind jeweils global zu
      jeder eingeschlossenen `block'-Anweisung oder zu jedem
      eingeschlossenen Lambda-Ausdruck.  Ist eine Variable innerhalb von
-     `block' oder `lambda' nicht lokal, hat sie den Wert der
-     nächsthöheren Anweisung, die ihr einen Wert gibt oder den globalen
-     Wert der Maxima-Umgebung.
+     `block' oder `lambda' nicht lokal, hat sie den Wert der nächst
+     höheren Anweisung, die ihr einen Wert gibt oder den globalen Wert
+     der Maxima-Umgebung.
 
      Nachdem die lokalen Variablen erzeugt sind, werden die Ausdrücke
      <expr_1>, ..., <expr_n> nacheinander ausgewertet.  Die
      Systemvariable `%%', welche das Ergebnis eines vorhergehendes
      Ausdrucks enthält, kann verwendet werden.  In einem
-     Lambda-Ausdruck können die Anweisungen `catch' und `throw'
+     Lambda-Ausdruck können die Anweisungen `catch'  und `throw'
      verwendet werden.
 
-     Die `return'-Anweisung kann in einem Lambda-Ausdruck nur verwendet
-     werden, wenn sie von einer `block'-Anweisung eingeschlossen wird.
-     Die `return'-Anweisung definiert jedoch den Rückgabewert des
-     Blocks und nicht des Lambda-Ausdrucks.  Auch die `go'-Anweisung
-     kann in einem Lambda-Ausdrucks nur in einem Block verwendet werden.
+     Die `return' -Anweisung kann in einem Lambda-Ausdruck nur
+     verwendet werden, wenn sie von einer `block'-Anweisung
+     eingeschlossen wird.  Die `return'-Anweisung definiert jedoch den
+     Rückgabewert des Blocks und nicht des Lambda-Ausdrucks.  Auch die
+     `go' -Anweisung kann in einem Lambda-Ausdrucks nur in einem Block
+     verwendet werden.
 
      `lambda' wertet die Argumente nicht aus.
 
@@ -3382,8 +3673,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
 
      Da `lambda' die Argumente nicht auswertet, definiert der unten
      angegebene Ausdruck `i' keine Funktion "multipliziere mit `a'".
-     Solch eine Funktion kann mit Hilfe der Funktion `buildq' definiert
-     werden.
+     Solch eine Funktion kann mit Hilfe der Funktion `buildq'
+     definiert werden.
 
           (%i16) i: lambda ([a], lambda ([x], a*x));
           (%o16)            lambda([a], lambda([x], a x))
@@ -3419,7 +3710,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      des Ausdrucks sind.  <f> ist entweder der Name einer Funktion mit
      n Argumenten oder ein Lambda-Ausdruck mit n Argumenten.
 
-     Hat `maperror' den Wert `false', wird die Anwendung der Funktion
+     Hat `maperror'  den Wert `false', wird die Anwendung der Funktion
      <f> gestoppt, (1) wenn die Anwendung auf den kürzesten Ausdruck
      <expr_i> beendet ist und die Ausdrücke nicht alle dieselbe Länge
      haben oder (2) wenn die Ausdrücke <expr_i> einen verschiedenen Typ
@@ -3463,10 +3754,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      Standardwert: `true'
 
      Hat `mapprint' den Wert `true', werden verschiedene Informationen
-     von den Funktionen `map', `mapl' und `fullmap' ausgegeben.  Dies
-     ist der Fall, wenn die Funktion `map' die Funktion `apply' aufruft
-     oder wenn für die Funktion `map' die Argumente eine verschiedene
-     Länge haben.
+     von den Funktionen `map',  `maplist'  und `fullmap'  ausgegeben.
+     Dies ist der Fall, wenn die Funktion `map' die Funktion `apply'
+     aufruft oder wenn für die Funktion `map' die Argumente eine
+     verschiedene Länge haben.
 
      Hat `mapprint' den Wert `false', werden diese Meldungen
      unterdrückt.
@@ -3476,7 +3767,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Funktionsdefinitionen,  
      an und gibt das Ergebnis als eine Liste zurück.  <f> ist der Name
      einer Funktion oder ein lambda-Ausdruck.
 
-     Im Unterschied zu `maplist' gibt die Funktion `map' einen Ausdruck
+     Im Unterschied zu `maplist' gibt die Funktion `map'  einen Ausdruck
      zurück, der denselben Hauptoperator wie die Ausdrücke <expr_i> hat.
 
  -- Funktion: outermap (<f>, <a_1>, ..., <a_n>)
@@ -3651,47 +3942,256 @@ File: maxima.info,  Node: Laufzeitumgebung,  Next: Programmierung,  Prev: Funkti
 
 * Menu:
 
-* Einführung in die Laufzeitumgebung::
+* Initialisierung von Maxima::
 * Interrupts::
 * Funktionen und Variablen der Laufzeitumgebung::
 
 
-File: maxima.info,  Node: Einführung in die Laufzeitumgebung,  Next: Interrupts,  Prev: Laufzeitumgebung,  Up: Laufzeitumgebung
+File: maxima.info,  Node: Initialisierung von Maxima,  Next: Interrupts,  Prev: Laufzeitumgebung,  Up: Laufzeitumgebung
 
-26.1 Einführung in die Laufzeitumgebung
-=======================================
+26.1 Initialisierung von Maxima
+===============================
 
-Die Datei `maxima-init.mac' wird automatisch geladen, wenn Maxima
-startet.  Die Datei `maxima-init.mac' kann genutzt werden, um bevorzugte
-Einstellungen vorzunehmen.  Die Datei wird üblicherweise in dem
-Verzeichnis `maxima_userdir' abgelegt.  Sie kann aber auch in jedes
-andere Verzeichnis abgelegt werden, das von der Funktion `file_search'
-gefunden wird.
+Wenn Maxima startet, werden die beiden Dateien `maxima-init.mac' und
+`maxima-init.lisp' automatisch geladen, sofern diese vorhanden sind.
+Die Datei `maxima-init.mac' wird mit der Funktion `batchload'  von
+Maxima geladen und kann beliebige Maxima-Ausdrücke enthalten, die beim
+Starten von Maxima ausgeführt werden.  Die Datei `maxima-init.lisp'
+wird mit der Funktion `load'  geladen und kann entsprechende
+Lisp-Anweisungen enthalten.  Beide Dateien erlauben es dem Nutzer,
+globale Variablen zu setzen, Funktionen zu definieren oder sonstige
+Aktionen auszuführen, um zum Beispiel die Maxima-Umgebung anzupassen.
 
-Dies ist eine Beispiel für eine `maxima-init.mac'-Datei:
+Die Dateien `maxima-init.mac' und `maxima-init.lisp' können in jedem
+Verzeichnis abgelegt werden, das von der Funktion `file_search'
+gefunden wird.  Üblicherweise wird das Verzeichnis gewählt, das in der
+Optionsvariablen `maxima_userdir'  enthalten ist und die von Maxima beim
+Starten entsprechend dem Betriebssystem mit einem Standardwert
+initialisiert wird.
 
-     setup_autoload ("specfun.mac", ultraspherical, assoc_legendre_p);
-     showtime:all;
+Beispiel:
+
+Im Folgenden wird ein Beispiel für den Inhalt einer Datei
+`maxima-init.mac' gezeigt.  In diesem Beispiel werden einige globale
+Werte auf neue Anfangswerte gesetzt.
+
+     /* maxima-init.mac */
+     print(" Lade ", file_search("maxima-init.mac"), " ...")$
+     linel:65$      /* 65 Zeichen pro Zeile */
+     leftjust:true$ /* Linksbündige Ausgabe */
+     algebraic:true$ /* Vereinfache algebraische Zahlen */
+     fpprec:25$      /* große Gleitkommazahlen mit 25 Stellen */
+     print (" maxima-init.mac ist geladen.")$
+
+Die Optionsvariable `maxima_userdir' enthält ein geeignetes Verzeichnis,
+um die Datei `maxima-init.mac' abzulegen.  Mit der Funktion
+`file_search' kann geprüft werden, ob die Datei von Maxima gefunden
+wird.
+
+     (%i1) maxima_userdir;
+     (%o1)                 /home/dieter/.maxima
+     (%i2) file_search("maxima-init.mac");
+     (%o2)         /home/dieter/.maxima/maxima-init.mac
+
+Im Folgenden wird Maxima mit einer Datei `maxima-init.mac' gestartet,
+die die oben angegebenen Maxima Kommandos enthält.
+
+     dieter@dieter:~/Maxima/maxima$ rmaxima
+     Maxima 5.25.1 http://maxima.sourceforge.net
+     Mit Lisp SBCL 1.0.53
+     Lizensiert unter der GNU Public License. Siehe die Datei COPYING.
+     Gewidmet dem Andenken an William Schelter.
+     Die Funktion bug_report() gibt Informationen zum Berichten von Fehlern.
+      Lade  /home/dieter/.maxima/maxima-init.mac  ...
+      maxima-init.mac ist geladen.
+     (%i1)
+
+Die Sitzung wird fortgesetzt, die Variablen enthalten die gewünschten
+neuen Standardwerte und die Anzeige ist linksbündig formatiert.
+
+     (%i1) linel;
+     (%o1) 65
+     (%i2) algebraic;
+     (%o2) true
+     (%i3) fpprec;
+     (%o3) 25
+
+_Hinweis:_
+
+Mit dem Kommando `reset'  werden die Optionsvariablen nicht auf die
+Werte der Datei `maxima-init.mac' zurückgesetzt, sondern auf die
+ursprünglichen in Maxima festgelegten Standardwerte.  Wird das Kommando
+`kill'  ausgeführt, gehen weiterhin alle in der Initialisierungsdatei
+definierten Variablen und Funktionen verloren.  In beiden Fällen muss
+die Datei `maxima-init.mac' erneut zum Beispiel mit der Funktion `load'
+geladen werden.
+
+Die obige Sitzung wird fortgesetzt.  Die Variablen werden mit `reset'
+zurückgesetzt.  Dann wird die Datei `maxima-init.mac' mit der Funktion
+`load' geladen.
+
+     (%i4) reset();
+     (%o1) [features, fpprec, _, __, labels, %, linenum, algebraic,
+                                        tr-unique, leftjust, lispdisp]
+     (%i2) fpprec;
+     (%o2)                          16
+     (%i3) load("maxima-init.mac");
+      Lade  /home/dieter/.maxima/maxima-init.mac  ...
+      maxima-init.mac ist geladen.
+     (%o3) /home/dieter/.maxima/maxima-init.mac
+     (%i4) fpprec;
+     (%o4) 25
+
+Die obigen Ausführungen treffen auf gleiche Weise auf die Datei
+`maxima-init.lisp' zu, wobei in diesem Fall die Datei Lisp-Anweisungen
+enthält.
+
+Beispiel:
+
+Das folgende Beispiel zeigt die Übersetzung des obigen Beispiels für die
+Datei `maxima-init.mac' in Lisp-Anweisungen.
+
+     ;;; maxima-init.lisp
+     (format t " Lade ~A ...~%" ($file_search "maxima-init.lisp"))
+     (setq $linel 65)
+     (setq $leftjust t)
+     (setq $algebraic t)
+     (setq $fpprec 25)
+     (fpprec1 nil $fpprec)
+     (format t " maxima-init.lisp ist geladen.~%")
+
+Die Datei `maxima-init.lisp' ist im besonderen dazu geeignet, einen
+Patch in Maxima einzuspielen, um einen Programmierfehler zu beheben.
 
 
-File: maxima.info,  Node: Interrupts,  Next: Funktionen und Variablen der Laufzeitumgebung,  Prev: Einführung in die Laufzeitumgebung,  Up: Laufzeitumgebung
+File: maxima.info,  Node: Interrupts,  Next: Funktionen und Variablen der Laufzeitumgebung,  Prev: Initialisierung von Maxima,  Up: Laufzeitumgebung
 
 26.2 Interrupts
 ===============
 
 Eine Berechnung kann mit dem Kommando `^c' (`control-c') abgebrochen
 werden.  Standardmäßig kehrt Maxima zu der Eingabeaufforderung der
-Konsole zurück.
+Konsole zurück.  In diesem Fall ist es nicht möglich, die Berechnung
+fortzusetzen.
 
-Wird die Lisp-Variable `*debugger-hook*' mit dem folgenden Kommando
-`:lisp (setq *debugger-hook* nil)' auf den Wert `nil' gesetzt, dann
-startet Maxima den Lisp-Debugger, wenn das Kommando `^c' ausgeführt
-wird.  Im Lisp-Debugger kann mit dem Kommando `continue' zu Maxima
-zurückgekehrt werden.
+Beispiel:
+
+Eine lange Rechnung wird mit `^c' abgebrochen.  Maxima kehrt zur
+Eingabeaufforderung zurück.
+
+     (%i1) factor(factorial(10000))$
+
+     Maxima encountered a Lisp error:
+      Interactive interrupt at #x9224192.
+
+     Automatically continuing.
+     To enable the Lisp debugger set *debugger-hook* to nil.
+     (%i2)
+
+Wird die Lisp-Variable `*debugger-hook*' mit dem Kommando `:lisp (setq
+*debugger-hook* nil)' auf den Wert `nil' gesetzt, dann startet Maxima
+den Lisp-Debugger, wenn das Kommando `^c' ausgeführt wird.  Mit dem
+Kommando `continue' im Lisp-Debugger kann die unterbrochene Berechnung
+fortgesetzt werden.
+
+Beispiel:
+
+Die Variable `*debugger-hook*' wird auf den Wert `nil' gesetzt.  Der
+Abbruch der Rechnung startet in diesem Fall den Lisp-Debugger.  Die
+Rechnung kann mit der Auswahl `0' für das Kommando `continue'
+fortgesetzt werden.
+
+     (%i2) :lisp (setq *debugger-hook* nil)
+     NIL
+     (%i2) factor(factorial(10000))$
+
+     debugger invoked on a SB-SYS:INTERACTIVE-INTERRUPT
+          in thread #<THREAD
+          "initial thread" RUNNING
+          {C597F49}>:
+       Interactive interrupt at #x9224192.
+
+     Type HELP for debugger help, or (SB-EXT:QUIT) to exit from SBCL.
+
+     restarts (invokable by number or by possibly-abbreviated name):
+       0: [CONTINUE    ] Return from SB-UNIX:SIGINT.
+       1: [MACSYMA-QUIT] Maxima top-level
+       2: [ABORT       ] Exit debugger, returning to top level.
+
+     (SB-BIGNUM:BIGNUM-TRUNCATE #<unavailable argument>
+                                #<unavailable argument>)
+     0] 0
+
+     (%i3)
+
+Hinweis:
+
+Mit dem Kommando `:lisp (setq *debugger-hook* 'maxima-lisp-debugger)'
+kann das Standardverhalten von Maxima wiederhergestellt werden.
 
 In Unix-Systemen kann die Ausführung auch mit Kommando `^z'
 (`control-z') abgebrochen werden.  In diesem Fall wird eine Unix-Shell
 gestartet.  Das Kommando `fg' kehrt zu Maxima zurück.
+
+Wie mit dem Kommando `^c' kann auch ein Lisp-Fehler zu einem Abbruch
+der Berechnung führen.  Maxima meldet den Lisp-Fehler und kehrt
+standardmäßig zu der Eingabeaufforderung zurück.  Wurde die
+Lisp-Variable `*debugger-hook*' auf den Wert `nil' gesetzt, startet
+Maxima den Lisp-Debugger.
+
+Beispiel:
+
+Es wird eine Lisp-Funktion `$sqr' definiert, die aus Maxima mit `sqr'
+aufgerufen werden kann und ihr Argument quadriert.  Wird die Funktion
+mit mehr als einem Argument aufgerufen, wird ein Lisp-Fehler generiert
+und Maxima kehrt zu der Eingabeaufforderung zurück.
+
+     (%i1) :lisp (defun $sqr (x) (* x x))
+     $SQR
+     (%i1) sqr(3);
+     (%o1)                           9
+     (%i2) sqr(2,3);
+
+     Maxima encountered a Lisp error:
+
+      invalid number of arguments: 2
+
+     Automatically continuing.
+     To enable the Lisp debugger set *debugger-hook* to nil.
+
+     (%i3)
+
+Jetzt wird die Lisp-Variable `*debugger-hook*' auf den Wert `nil'
+gesetzt.  In diesem Fall wird der Lisp-Debugger aufgerufen.  Die
+Ausführung kann in diesem Fall nicht mit dem Kommando `continue'
+fortgesetzt werden, da ein Syntax-Fehler aufgetreten ist.  Jedoch ist
+es möglich, Maxima mit dem Kommando `(run)' vom Lisp-Prompt neu zu
+starten.
+
+     (%i3) :lisp (setq *debugger-hook* nil)
+     NIL
+     (%i3) sqr(2,3);
+
+     debugger invoked on a SB-INT:
+        SIMPLE-PROGRAM-ERROR in thread #<THREAD
+        "initial thread" RUNNING {C597F49}>:
+       invalid number of arguments: 2
+
+     Type HELP for debugger help, or (SB-EXT:QUIT) to exit from SBCL.
+
+     restarts (invokable by number or by possibly-abbreviated name):
+       0: [MACSYMA-QUIT] Maxima top-level
+       1: [CONTINUE    ] Ignore runtime option --eval "(cl-user::run)".
+       2: [ABORT       ] Skip rest of --eval and --load options.
+       3:                Skip to toplevel READ/EVAL/PRINT loop.
+       4: [QUIT        ] Quit SBCL (calling #'QUIT, killing the process).
+
+     ($SQR 2)[:EXTERNAL]
+     0] continue
+
+     * (run)
+     Maxima restarted.
+     (%i4)
 
 
 File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: Interrupts,  Up: Laufzeitumgebung
@@ -3700,26 +4200,31 @@ File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: 
 ==================================================
 
  -- Systemvariable: maxima_tempdir
-     Die Systemvariable `maxima_tempdir' enthält das Verzeichnis in dem
-     Maxima temporäre Dateien abgelegt.  Insbesondere werden temporäre
-     Grafikausgaben in diesem Verzeichnis abgelegt.  Der Standardwert
-     von `maxima_tempdir' ist das Home-Verzeichnis des Nutzers, sofern
-     Maxima dieses feststellen kann.  Andernfalls initialisiert Maxima
-     die Systemvariable `maxima_tempdir' mit einer geeigneten Annahme.
+     Die Systemvariable `maxima_tempdir' enthält das Verzeichnis, in dem
+     Maxima temporäre Dateien ablegt.  Insbesondere werden temporäre
+     Grafikausgaben von Funktionen wie `plot2d'  und `plot3d'  in diesem
+     Verzeichnis abgelegt.  Der Standardwert von `maxima_tempdir' ist
+     das Home-Verzeichnis des Nutzers, sofern Maxima dieses feststellen
+     kann.  Andernfalls initialisiert Maxima die Systemvariable
+     `maxima_tempdir' mit einer geeigneten Annahme.
 
      Der Systemvariablen `maxima_tempdir' kann eine Zeichenkette
      zugewiesen werden, die ein Verzeichnis bezeichnet.
 
  -- Systemvariable: maxima_userdir
      Die Systemvariable `maxima_userdir' enthält ein Verzeichnis, das
-     Maxima durchsucht, um Maxima- und Lisp-Dateien zu finden.  Maxima
-     sucht in weiteren Verzeichnissen.  Die vollständige Liste der
-     Suchverzeichnisse ist den Variablen `file_search_maxima'  und
-     `file_search_lisp'  enthalten.  Der Standardwert der
-     Systemvariablen `maxima_userdir' ist ein Unterverzeichnis des
-     Home-Verzeichnis des Nutzers, sofern Maxima dieses bestimmen kann.
-     Ansonsten initialisiert Maxima die Systemvariable `maxima_userdir'
-     mit einer geeigneten Annahme.
+     Maxima durchsucht, um Maxima- oder Lisp-Dateien zu finden.  Der
+     Standardwert der Systemvariablen `maxima_userdir' ist ein
+     Unterverzeichnis des Home-Verzeichnis des Nutzers, sofern Maxima
+     dieses bestimmen kann.  Ansonsten initialisiert Maxima die
+     Systemvariable `maxima_userdir' mit einer geeigneten Annahme.
+     Dieses Verzeichnis ist zum Beispiel geeignet, um die
+     Initialisisierungsdateien `maxima-init.mac' und `maxima-init.lisp'
+     abzulegen.
+
+     Maxima sucht in weiteren Verzeichnissen nach Dateien.  Die
+     vollständige Liste der Suchverzeichnisse ist den Variablen
+     `file_search_maxima'  und `file_search_lisp'  enthalten.
 
      Der Systemvariablen `maxima_userdir' kann eine Zeichenkette
      zugewiesen werden, die ein Verzeichnis bezeichnet.  Wenn der Wert
@@ -3731,27 +4236,19 @@ File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: 
  -- Funktion: room (true)
  -- Funktion: room (false)
      Gibt eine Beschreibung der Speicherplatznutzung aus.  Die
-     Darstellung und der Inhalt der Informationen hängen von dem Maxima
-     zugrundeliegenden Lisp ab.  Mit den Argumenten `true' und `false'
-     wird der Umfang der auszugebenen Information kontrolliert.  Mit
-     dem Argument `true' wird die umfangreichste Darstellung ausgegeben
-     und mit dem Argument `false' die kürzeste.
+     Darstellung und der Inhalt der Beschreibung hängt von dem Maxima
+     zugrunde liegendem Lisp ab.  Mit den Argumenten `true' und `false'
+     kann der Umfang der auszugebenden Information kontrolliert werden,
+     sofern die Option vom verwendeten Lisp unterstützt wird.  Mit dem
+     Argument `true' wird die umfangreichste Darstellung ausgegeben und
+     mit dem Argument `false' die kürzeste.
 
      Beispiel:
 
      Das folgende Beispiel zeigt die Ausgabe auf einem Linux-System mit
      der Lisp-Implementierung SBCL 1.0.45.
 
-          (%i1) build_info();
-
-          Maxima version: 5.22post
-          Maxima build date: 18:52 12/28/2010
-          Host type: i686-pc-linux-gnu
-          Lisp implementation type: SBCL
-          Lisp implementation version: 1.0.45
-          (%o1)
-
-          (%i2) room(false);
+          (%i1) room(false);
           Dynamic space usage is:   63,719,856 bytes.
           Read-only space usage is:      3,512 bytes.
           Static space usage is:         2,256 bytes.
@@ -3765,16 +4262,16 @@ File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: 
      Hat das Argument <keyword> den Wert `feature', wird das Argument
      <item> der internen Lisp-Eigenschaftsliste `*features*'
      hinzugefügt.  Das Kommando `status(feature, item)' hat dann das
-     Ergebnis `true'.  Hat das Argument <keyword> den Wert `false',
+     Ergebnis `true'.  Hat das Argument <keyword> den Wert `nofeature',
      wird das Argument <item> von der internen Lisp-Eigenschaftsliste
      `*features*' entfernt.
 
-     Siehe auch `status'.
+     Siehe auch die Funktion `status'.
 
 
  -- Funktion: status (`feature')
  -- Funktion: status (`feature', <item>)
-     `status(feature)' gibt die vollständige interne
+     Das Kommando `status(feature)' gibt die interne
      Lisp-Eigenschaftsliste `*features*' zurück.
      `status(feature,item)' gibt `true' zurück, wenn das Argument
      <item> in der internen Lisp-Eigenschaftsliste `*features*'
@@ -3783,31 +4280,21 @@ File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: 
      die Sonderzeichen wie `-' oder `*' enthält, muss als Zeichenkette
      angegeben werden.
 
-     Siehe auch `sstatus'.
+     Siehe auch die Funktion `sstatus'.
 
-     Die Systemvariable `features' enthält eine Liste mit
-     Eigenschaften, die einer mathematischen Funktionen zugeordnet
-     werden können.  Siehe `features'  und `featurep'.
+     Die Lisp-Variable `*features*' steht in keinem Zusammenhang mit der
+     Maxima-Systemvariablen `features',  die eine Liste mit
+     mathematischen Eigenschaften enthält, die Funktionen und Variablen
+     erhalten können.
 
      Beispiel:
 
      Das folgende Beispiel zeigt die Ausgabe für ein Linux-System mit
-     SBCL als Lisp.
+     SBCL als Lisp.  Die Ausgabe ist abgekürzt.
 
           (%i1) status(feature);
           (%o1) [sb-bsd-sockets-addrinfo, asdf2, asdf, cl, mk-defsystem,
-          cltl2, ansi-cl, common-lisp, sbcl, sb-doc, sb-test, sb-ldb,
-          sb-package-locks, sb-unicode, sb-eval, sb-source-locations,
-          ieee-floating-point, x86, unix, elf, linux, sb-thread,
-          largefile, gencgc, stack-grows-downward-not-upward,
-          c-stack-is-control-stack, compare-and-swap-vops,
-          unwind-to-frame-and-call-vop, raw-instance-init-vops,
-          stack-allocatable-closures, stack-allocatable-vectors,
-          stack-allocatable-lists, stack-allocatable-fixed-objects,
-          alien-callbacks, cycle-counter, inline-constants,
-          memory-barrier-vops, linkage-table, os-provides-dlopen,
-          os-provides-dladdr, os-provides-putwc, os-provides-suseconds-t,
-          os-provides-getprotoby-r, os-provides-poll]
+          cltl2, ansi-cl, common-lisp, sbcl, ...]
 
           (%i2) status(feature,"ansi-cl");
           (%o2)                         true
@@ -3831,15 +4318,12 @@ File: maxima.info,  Node: Funktionen und Variablen der Laufzeitumgebung,  Prev: 
      Beispiel:
 
      Die Zeit für die Berechnung der Fakultät einer großen ganzen Zahl
-     wird mit `time' ausgegeben.  Das Ergebnis muss nicht angezeigt
-     werden.  Das Ergebnis hat 456573 Stellen.
+     wird mit `time' ausgegeben.
 
           (%i1) factorial(100000)$
 
           (%i2) time(%o1);
-          (%o2)                        [7.585]
-          (%i3) bfloat(%o1);
-          (%o3)               2.824229407960348b456573
+          (%o2)                        [7.589]
 
  -- Funktion: timedate ()
      Gibt eine Zeichenkette zurück, die das aktuelle Datum und die
@@ -3911,25 +4395,58 @@ File: maxima.info,  Node: Lisp und Maxima,  Next: Einführung in die Programmier
 27.1 Lisp und Maxima
 ====================
 
-Maxima ist in Lisp programmiert.  Es ist einfach Lisp-Funktionen und
+Lisp- und Maxima-Bezeichner
+---------------------------
+
+Maxima ist in Lisp programmiert.  Es ist einfach, Lisp-Funktionen und
 Lisp-Variable in Maxima zu verwenden.  Umgekehrt können
 Maxima-Funktionen und Maxima-Variablen in Lisp verwendet werden.  Ein
 Lisp-Symbol, das mit einem Dollarzeichen `$' beginnt, entspricht einem
 Maxima-Symbol ohne einem Dollarzeichen.  Umgekehrt entspricht einem
-Maxima-Symbol, das mit einem Fragezeichen `?' beginnt, einem
-Lisp-Symbol ohne das Fragezeichen.  Zum Beispiel entspricht dem
-Maxima-Symbol `foo' das Lisp-Symbol `$foo' und dem Maxima-Symbol `?foo'
-entspricht das Lisp-Symbol `foo'.
+Maxima-Symbol, das mit einem Fragezeichen `?' beginnt, ein Lisp-Symbol
+ohne das Fragezeichen.  Zum Beispiel entspricht dem Maxima-Symbol `foo'
+das Lisp-Symbol `$foo' und dem Maxima-Symbol `?foo' entspricht das
+Lisp-Symbol `foo'.
 
 Speziellen Zeichen wie einem Trennstrich `-' oder einem Stern `*' in
 Lisp-Symbolen muss ein Backslash `\' vorangestellt werden, um diese in
 Maxima zu verwenden.  Zum Beispiel entspricht dem Lisp-Symbol
 `*foo-bar*' das Maxima-Symbol `?\*foo\-bar\*'.
 
-Lisp-Code kann von einer Maxima-Kommandozeile ausgeführt werden.  Eine
-einzelne Zeile Lisp-Code kann mit dem Unterbrechungskommando `:lisp'
-ausgeführt werden.  Siehe das Kapitel Debugger-Kommandos  für weitere
-Informationen zu Unterbrechungskommandos.
+Im Gegensatz zu Lisp unterscheidet Maxima Groß- und Kleinschreibung.  Es
+gibt einige Regeln, die eine Übersetzung von Namen zwischen Lisp und
+Maxima betreffen:
+
+  1. Ein Lisp-Bezeichner, der nicht von senkrechten Strichen
+     eingeschlossen ist, entspricht einem klein geschriebenen
+     Maxima-Bezeichner.  Die Schreibweise des Lisp-Bezeichners wird
+     dabei ignoriert.  Zum Beispiel entspricht den folgenden
+     Lisp-Bezeichnern `$foo', `$FOO' und `$Foo' jeweils der
+     Maxima-Bezeichner `foo'.
+
+  2. Ein Lisp-Bezeichner, der vollständig groß oder klein geschrieben
+     ist und von senkrechten Strichen eingeschlossen wird, entspricht
+     einem Maxima-Bezeichner in der umgekehrten Schreibweise.  Ein
+     klein geschriebener Lisp-Bezeichner wird also zu einem
+     großgeschriebenen Maxima-Bezeichner und umgekehrt.  Zum Beispiel
+     entsprechen den Lisp-Bezeichnern `|$FOO|' und `|$foo|' die
+     Maxima-Bezeichner `foo' und `FOO'.
+
+  3. Ein Lisp-Bezeichner in gemischter Schreibweise, der von
+     senkrechten Strichen eingeschlossen ist, entspricht einem
+     Maxima-Bezeichner in der gleichen Schreibweise.  Zum Beispiel
+     entspricht dem Lisp-Bezeichner `|$Foo|' der Maxima-Bezeichner
+     `Foo'.
+
+Für die Syntax von Maxima-Bezeichnern siehe auch *Note Bezeichner::.
+
+Ausführung von Lisp-Code in Maxima
+----------------------------------
+
+Lisp-Code kann mit dem Unterbrechungskommando `:lisp' von einer
+Maxima-Kommandozeile ausgeführt werden.  Siehe *Note
+Debugger-Kommandos:: für weitere Unterbrechungskommandos und deren
+Beschreibung.
 
 Beispiele:
 
@@ -3977,40 +4494,12 @@ Form von Maxima-Ausdrücken anzuzeigen.
 Das Kommando `:lisp' kann in einer Kommandozeile und in Dateien
 verwendet werden, die mit den Funktionen `batch'  oder `demo'  geladen
 werden.  Dagegen kann das Kommando `:lisp' nicht in Dateien verwendet
-werden, die mit den Funktionen `load',  `batchload',  `translate_file'
-oder `compile_file'  geladen werden.
+werden, die mit den Funktionen `load',  `batchload',
 
-Mit dem Kommando `to_lisp()'  kann von einer Maxima-Kommandozeile eine
-Lisp-Sitzung geöffnet werden.  Mit dem Kommando `(TO-MAXIMA)' wird die
-Lisp-Sitzung beendet und nach Maxima zurückgekehrt.
+`translate_file'  oder `compile_file'  geladen werden.
 
-Lisp-Funktionen und Lisp-Variablen, welche in Maxima verwendet werden,
-sollten mit einem Dollarzeichen `$' beginnen.
-
-Im Gegensatz zu Lisp unterscheidet Maxima Groß- und Kleinschreibung.  Es
-gibt einige Regeln, die eine Übersetzung von Namen zwischen Lisp und
-Maxima betreffen:
-
-  1. Ein Lisp-Bezeichner, der nicht von senkrechten Strichen
-     eingeschlossen ist, entspricht einem klein geschriebenen
-     Maxima-Bezeichner.  Die Schreibweise des Lisp-Bezeichners wird
-     dabei ignoriert.  Zum Beispiel entspricht den folgenden
-     Lisp-Bezeichnern `$foo', `$FOO' und `$Foo' jeweils der
-     Maxima-Bezeichner `foo'.
-
-  2. Ein Lisp-Bezeichner, der vollständig groß oder klein geschrieben
-     ist und von senkrechten Strichen eingeschlossen wird, entspricht
-     einem Maxima-Bezeichner in der umgekehrten Schreibweise.  Ein
-     klein geschriebener Lisp-Bezeichner wird also zu einem
-     großgeschriebenen Maxima-Bezeichner und umgekehrt.  Zum Beispiel
-     entsprechen den Lisp-Bezeichnern `|$FOO|' und `|$foo|' die
-     Maxima-Bezeichner `foo' und `FOO'.
-
-  3. Ein Lisp-Bezeichner in gemischter Schreibweise, der von
-     senkrechten Strichen eingeschlossen ist, entspricht einem
-     Maxima-Bezeichner in der gleichen Schreibweise.  Zum Beispiel
-     entspricht dem Lisp-Bezeichner `|$Foo|' der Maxima-Bezeichner
-     `Foo'.
+Ausführung von Maxima-Code in Lisp
+----------------------------------
 
 Das Lisp-Makro `#$' erlaubt die Nutzung von Maxima-Ausdrücken in
 Lisp-Code.  `#$<expr>$' wird zu einem Lisp-Ausdruck expandiert, der dem
@@ -4034,11 +4523,10 @@ Maxima-Kommando.
      (%o1)                      sin(x) + a
 
 In diesem Beispiel wird zunächst ein Maxima-Ausdruck der Variablen
-<$VAR> zugewiesen und dann mit der Lisp-Funktion `DISPLA' ausgegeben.
+`$VAR' zugewiesen und dann mit der Lisp-Funktion `DISPLA' ausgegeben.
 
      (%i1) :lisp (setq $var #$'integrate(f(x), x)$)
      ((%INTEGRATE SIMP) (($F SIMP) $X) $X)
-
      (%i1) :lisp (displa $var)
      /
      [
@@ -4052,13 +4540,20 @@ in Lisp-Code aufzurufen, kann die Lisp-Funktion `MFUNCALL' aufgerufen
 werden.
 
      (%i1) f(x,y) := x^2 + sin(y)$
-
      (%i2) :lisp (mfuncall '$f '$a 10)
      ((MPLUS SIMP) ((%SIN SIMP) 10) ((MEXPT SIMP) $A 2))
 
+Öffnen einer Lisp-Sitzung
+-------------------------
+
+Mit dem Kommando `to_lisp()' kann von einer Maxima-Kommandozeile eine
+Lisp-Sitzung geöffnet werden.  Mit dem Kommando `(TO-MAXIMA)' wird die
+Lisp-Sitzung beendet und nach Maxima zurückgekehrt.  Siehe auch
+`to_lisp'  für ein Beispiel.
+
 Die folgenden Lisp-Funktionen können in Maxima nicht verwendet werden:
 
-`complement', `continue', `//', `float', `functionp', `array', `exp',
+`complement', `continue', `/', `float', `functionp', `array', `exp',
 `listen', `signum', `atan', `asin', `acos', `asinh', `acosh', `atanh',
 `tanh', `cosh', `sinh', `tan', `break', und `gcd'.
 
@@ -4104,12 +4599,13 @@ Maxima kennt die folgenden Anweisungen und Variablen um Programme zu
 definieren:
 
 
-   backtrace   block        break
-   catch       do           errcatch
-   error       error_size   error_syms
-   errormsg    for          go
-   if          local        return
-   throw       unless       while
+   backtrace    block        break
+   catch        do           eval_when
+   errcatch     error        error_size
+   error_syms   errormsg     for
+   go           if           local
+   return       throw        unless
+   while
 
 
 File: maxima.info,  Node: Funktionen und Variablen der Programmierung,  Prev: Einführung in die Programmierung,  Up: Programmierung
@@ -4441,6 +4937,142 @@ File: maxima.info,  Node: Funktionen und Variablen der Programmierung,  Prev: Ei
           (%i4) ev(%t3,numer);
           (%o4)                             0.78539816
 
+ -- Funktion: eval_when (<keyword>, <expr_1>, ..., <expr_n>)
+ -- Funktion: eval_when ([<keyword_1>, <keyword_2>, ...], <expr_1>,
+          ..., <expr_n>)
+     Ein Ausdruck mit der Funktion `eval_when' wird an oberster Stelle
+     in einer Datei definiert und erlaubt die bedingte Auswertung von
+     Ausdrücken beim Laden, Übersetzen oder Kompilieren einer Datei.
+     Das Argument <keyword> ist eines der Schlüsselworte `batch',
+     `translate', `compile' oder `loadfile'.  Das erste Argument kann
+     ein einzelnes Schlüsselwort oder ein Liste mit mehreren
+     Schlüsselworten sein.  Trifft die mit dem Schlüsselwort angegebene
+     Bedingung zu, wird eine oder mehrere der folgenden Aktionen
+     ausgeführt:
+
+    `batch'
+          Wird die Datei mit einer der Funktionen `load',  `batch',
+
+          `batchload'  oder `demo'  geladen und ist `batch' in der
+          Liste der Schlüsselworte enthalten, dann werden die Ausdrücke
+          <expr1>, ..., <expr_n> genau einmal beim Laden der Datei
+          ausgewertet.  Die Rückgabe der Funktion `eval_when' ist ein
+          Ausdruck `evaluated_when(<result)>', wobei <result> das
+          Ergebnis der Auswertung ist.  Ist das Schlüsselwort `batch'
+          nicht vorhanden, ist die Rückgabe das Symbol
+          `not_evaluated_when'.
+
+    `translate'
+          Wird die Datei mit dem Kommando `translate_file'  oder
+          `compile_file'  geladen und ist `translate' unter den
+          Schlüsselworten, dann werden die Ausdrücke <expr_1>, ...,
+          <expr_n> sofort ausgewertet.  Seiteneffekte wie Zuweisungen
+          von Werten an Optionsvariablen oder Deklarationen sind für
+          die folgende Übersetzung der Datei nach Lisp wirksam.  Die
+          Ausdrücke sind jedoch nicht Teil des übersetzten Programms.
+
+    `loadfile'
+          Wird die Datei mit dem Kommando `translate_file'  oder dem
+          Kommando `compile_file'  geladen und ist `loadfile' unter den
+          Schlüsselworten, dann werden die Ausdrücke <expr_1>, ...,
+          <expr_n> nach Lisp übersetzt und als Block der Form `(PROGN
+          EXPR_1 ... EXPR_N)' in das Lisp Programm eingesetzt.  Hier
+          sind die Anweisungen <EXPR_I> die nach Lisp übersetzten
+          Maxima-Ausdrücke <expr_i>.
+
+    `compile'
+          Wird die Datei mit dem Kommando `translate_file'  oder
+          `compile_file'  geladen und ist `compile' unter den
+          Schlüsselworten, dann werden die Ausdrücke <expr_1>, ...,
+          <expr_n> nach Lisp übersetzt und als eine Lisp-Anweisung in
+          das Lisp-Programm eingesetzt, die die Form `(EVAL-WHEN
+          (:COMPILE-TOPLEVEL) (EXPR_1 ... EXPR_N))' hat.  Das
+          Schlüsselwort `compile' kann nicht mit dem Schlüsselwort
+          `loadfile' in einem `eval_when'-Ausdruck kombiniert werden.
+          In diesem Fall wird das Schlüsselwort `compile' ignoriert.
+
+     Beispiele:
+
+     Für die folgende Beispiele ist eine Datei mit den Namen
+     `eval_when.mac' definiert, die verschiedene `eval_when'-Anweisungen
+     enthält.
+
+          (%i1) file: file_search("eval_when.mac");
+          (%o1)        /home/dieter/.maxima/eval_when.mac
+          (%i2) printfile(file);
+
+          eval_when(batch,     print("called in mode BATCH"));
+          eval_when(loadfile,  print("called in mode LOADFILE"));
+          eval_when(compile,   print("called in mode COMPILE"));
+          eval_when(translate, print("called in mode TRANSLATE"));
+
+          (%o2)        /home/dieter/.maxima/eval_when.mac
+
+     Die Datei wird mit dem Kommando `load' geladen.  Die Anweisung mit
+     dem Schlüsselwort `batch' wird beim Laden einmal ausgeführt.
+
+          (%i1) file: file_search("eval_when.mac");
+          (%o1)        /home/dieter/.maxima/eval_when.mac
+          (%i2) load(file);
+          called in mode BATCH
+          (%o2)        /home/dieter/.maxima/eval_when.mac
+
+     In diesem Fall wird die Datei mit dem Befehl `batch' geladen.  Die
+     Anweisung mit dem Schlüsselwort `batch' wird einmal ausgeführt.
+     Die anderen `eval_when'-Anweisungen werten jeweils zum Ergebnis
+     `not_evaluated_when' aus.
+
+          (%i3) batch(file);
+
+          read and interpret file: /home/dieter/.maxima/eval_when.mac
+          (%i4)     eval_when(batch, print(called in mode BATCH))
+          called in mode BATCH
+          (%o4)         evaluated_when(called in mode BATCH)
+          (%i5)  eval_when(loadfile, print(called in mode LOADFILE))
+          (%o5)                  not_evaluated_when
+          (%i6)   eval_when(compile, print(called in mode COMPILE))
+          (%o6)                  not_evaluated_when
+          (%i7) eval_when(translate, print(called in mode TRANSLATE))
+          (%o7)                  not_evaluated_when
+          (%o7)        /home/dieter/.maxima/eval_when.mac
+
+     Jetzt wird die Datei mit dem Kommando `translate_file' geladen und
+     nach Lisp übersetzt.  Der Ausdruck mit dem Schlüsselwort
+     `translate' wird sofort ausgewertet.  Das übersetzte Programm wird
+     in die Ausgabedatei `eval_when.LISP' geschrieben.  Die
+     `eval_when'-Anweisung zum Schlüsselwort wird nicht ausgewertet.
+
+          (%i1) file: file_search("eval_when.mac");
+          (%o1)        /home/dieter/.maxima/eval_when.mac
+          (%i2) translate_file(file);
+          translator: begin translating /home/dieter/.maxima/eval_when.mac.
+          called in mode TRANSLATE
+          (%o2) [/home/dieter/.maxima/eval_when.mac,
+          /home/dieter/.maxima/eval_when.LISP,
+          /home/dieter/.maxima/eval_when.UNLISP]
+
+     Dies ist der Inhalt der Ausgabedatei `eval_when.LISP'.  Die
+     Ausgabedatei enthält eine `PROGN'-Anweisung mit dem Ausdruck
+     `($print '"called in mode LOADFILE")' für den `eval_when'-Ausdruck
+     zum Schlüsselwort `loadfile' sowie eine `EVAL-WHEN'-Anweisung mit
+     dem Ausdruck `($print '"called in mode COMPILE")' für den
+     `eval_when'-Ausdruck mit dem Schlüsselwort `compile'.
+
+
+     ;;; -*- Mode: Lisp; package:maxima; syntax:common-lisp ;Base: 10 -*- ;;;
+     ;;; Translated on: 2011-10-02 13:35:37+02:00
+     ;;; Maxima version: 5.25post
+     ;;; Lisp implementation: SBCL
+     ;;; Lisp version: 1.0.45
+     (in-package :maxima)
+
+     [...]
+
+     nil
+     (progn ($print '"called in mode LOADFILE"))
+     (eval-when (:compile-toplevel) ($print '"called in mode COMPILE"))
+     nil
+
  -- Funktion: errcatch (<expr_1>, ..., <expr_n>)
      Wertet die Ausdrücke <expr_1>, ..., <expr_n> nacheinander aus und
      gibt das Ergebnis des letzten Ausdrucks als eine Liste `[<expr_n>]'
@@ -4735,19 +5367,19 @@ File: maxima.info,  Node: Funktionen und Variablen des Übersetzers,  Prev: Einf
  -- Funktion: compfile (<filename>, functions)
  -- Funktion: compfile (<filename>, all)
      Übersetzt Maxima-Funktionen nach Lisp und schreibt den übersetzten
-     Code in die Datei <filename>.
-
-     `compfile(<filename>, <f_1>, ..., <f_n>)' übersetzt die Funktionen
-     <f_1>, ..., <f_n>.  `compfile(<filename>, functions)' und
-     `compfile(<filename>, all)' übersetzen alle nutzerdefinierten
-     Funktionen.
+     Code in die Datei <filename>.  Mit dem Kommando
+     `compfile(<filename> <f_1>, ..., <f_n>)' werden die als Argument
+     angegebenen Funktionen <f_1>, ..., <f_n> übersetzt.  Die Kommandos
+     `compfile(<filename>, functions)' oder `compfile(<filename>, all)'
+     übersetzen dagegen alle vom Nutzer definierten Funktionen.
 
      Die Lisp-Übersetzungen werden nicht ausgewertet.  Auch wird die
-     Ausgabedatei nicht kompiliert.  `translate' generiert und wertert
+     Ausgabedatei nicht kompiliert.  `translate' generiert und wertet
      Lisp-Übersetzungen aus.  Die Funktion `compile_file' übersetzt
      Maxima nach Lisp und führt dann den Lisp-Compiler aus.
 
-     Siehe auch `translate',  `translate_file'  und `compile_file'.
+     Siehe auch die Funktionen `translate',  `translate_file'  und
+     `compile_file'.
 
 
  -- Funktion: compile (<f_1>, ..., <f_n>)
@@ -5733,6 +6365,47 @@ File: maxima.info,  Node: Funktionen und Variablen für Verschiedenes,  Prev: Sh
      Es war einmal möglich, die Variable `askexp' nach einer
      Unterbrechnung mit Control-A zu inspezieren.
 
+ -- Function: gensym ()
+ -- Function: gensym (<x>)
+     `gensym()' creates and returns a fresh symbol.
+
+     The name of the new-symbol is the concatenation of a prefix, which
+     defaults to "g", and a suffix, which is the decimal representation
+     of a number that defaults to the value of a Lisp internal counter.
+
+     If <x> is supplied, and is a string, then that string is used as a
+     prefix instead of "g" for this call to gensym only.
+
+     If <x> is supplied, and is an integer, then that integer, instead
+     of the value of the internal Lisp integer, is used as the suffix
+     for this call to gensym only.
+
+     If and only if no explicit suffix is supplied, the Lisp internal
+     integer is incremented after it is used.
+
+     Examples:
+
+          (%i1) gensym();
+          (%o1)                         g887
+          (%i2) gensym("new");
+          (%o2)                        new888
+          (%i3) gensym(123);
+          (%o3)                         g123
+
+ -- Option variable: packagefile
+     Default value: `false'
+
+     Package designers who use `save'  or `translate'  to create
+     packages (files) for others to use may want to set `packagefile:
+     true' to prevent information from being added to Maxima's
+     information-lists (e.g.  `values',  `functions' ) except where
+     necessary when the file is loaded in.  In this way, the contents
+     of the package will not get in the user's way when he adds his own
+     data.  Note that this will not solve the problem of possible name
+     conflicts.  Also note that the flag simply affects what is output
+     to the package file.  Setting the flag to `true' is also useful for
+     creating Maxima init files.
+
  -- Funktion: remvalue (<name_1>, ..., <name_n>)
  -- Funktion: remvalue (all)
      Entfernt die Werte von nutzerdefinierten Variablen <name_1>, ...,
@@ -6712,860 +7385,6 @@ File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bo
 
           (%i18) block ([bode_phase_unwrap : true],
                         bode_phase (H8 (s), [w, 1/1000, 1000]));
-
-
-File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
-
-37 cobyla
-*********
-
-* Menu:
-
-* Introduction to cobyla::
-* Functions and Variables for cobyla::
-* Examples for cobyla::
-
-
-File: maxima.info,  Node: Introduction to cobyla,  Next: Functions and Variables for cobyla,  Prev: cobyla,  Up: cobyla
-
-37.1 Introduction to cobyla
-===========================
-
-`fmin_cobyla' is a Common Lisp translation (via `f2cl') of the Fortran
-constrained optimization routine COBYLA by Powell[1][2][3].
-
-COBYLA minimizes an objective function F(X) subject to M inequality
-constraints of the form g(X) >= 0 on X, where X is a vector of
-variables that has N components.
-
-Equality constraints g(X)=0 can often be implemented by a pair of
-inequality constraints g(X)>=0 and -g(X)>= 0.  Maxima's interface to
-COBYLA allows equality constraints and internally converts the equality
-constraints to a pair of inequality constraints.
-
-The algorithm employs linear approximations to the objective and
-constraint functions, the approximations being formed by linear
-interpolation at N+1 points in the space of the variables.  The
-interpolation points are regarded as vertices of a simplex.  The
-parameter RHO controls the size of the simplex and it is reduced
-automatically from RHOBEG to RHOEND.  For each RHO the subroutine tries
-to achieve a good vector of variables for the current size, and then
-RHO is reduced until the value RHOEND is reached.  Therefore RHOBEG and
-RHOEND should be set to reasonable initial changes to and the required
-accuracy in the variables respectively, but this accuracy should be
-viewed as a subject for experimentation because it is not guaranteed.
-The routine treats each constraint individually when calculating a
-change to the variables, rather than lumping the constraints together
-into a single penalty function.  The name of the subroutine is derived
-from the phrase Constrained Optimization BY Linear Approximations.
-
-References:
-
-[1] Fortran Code is from `http://plato.asu.edu/sub/nlores.html#general'
-
-[2] M. J. D. Powell, "A direct search optimization method that models
-the objective and constraint functions by linear interpolation," in
-Advances in Optimization and Numerical Analysis, eds. S. Gomez and
-J.-P. Hennart (Kluwer Academic: Dordrecht, 1994), p. 51-67.
-
-[3] M. J. D. Powell, "Direct search algorithms for optimization
-calculations," Acta Numerica 7, 287-336 (1998).  Also available as
-University of Cambridge, Department of Applied Mathematics and
-Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
-`http://www.damtp.cam.ac.uk/user/na/reports.html'
-
-
-File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples for cobyla,  Prev: Introduction to cobyla,  Up: cobyla
-
-37.2 Functions and Variables for cobyla
-=======================================
-
- -- Function: fmin_cobyla (<F>, <X>, <Y>)
- -- Function: fmin_cobyla (<F>, <X>, <Y>, optional_args)
-     Returns an approximate minimum of the expression <F> with respect
-     to the variables <X>, subject to an optional set of constraints.
-     <Y> is a list of initial guesses for <X>.
-
-     <F> must be an ordinary expressions, not names of functions or
-     lambda expressions.
-
-     `optional_args' represents additional arguments, specified as
-     `<symbol> = <value>'.  The optional arguments recognized are:
-
-    `constraints'
-          List of inequality and equality constraints that must be
-          satisfied by <X>.  The inequality constraints must be actual
-          inequalities of the form `g(<X>) >= h(<X>)' or `g(<X>) <=
-          h(<X>)'.  The equality constraints must be of the form
-          `g(<X>) = h(<X>)'.
-
-    `rhobeg'
-          Initial value of the internal RHO variable which controls the
-          size of simplex.  (Defaults to 1.0)
-
-    `rhoend'
-          The desired final value rho parameter.  It is approximately
-          the accuracy in the variables.  (Defaults to 1d-6.)
-
-    `iprint'
-          Verbose output level.  (Defaults to 0)
-             * 0 - No output
-
-             * 1 - Summary at the end of the calculation
-
-             * 2 - Each new value of RHO and SIGMA is printed, including
-               the vector of variables, some function information when
-               RHO is reduced.
-
-             * 3 - Like 2, but information is printed when F(X) is
-               computed.
-
-    `maxfun'
-          The maximum number of function evaluations.  (Defaults to
-          1000).
-
-     On return, a vector is given:
-
-       1. The value of the variables giving the minimum.  This is a
-          list of elements of the form `<var> = <value>' for each of the
-          variables listed in <X>.
-
-       2. The minimized function value
-
-       3. The number of function evaluations.
-
-       4. Return code with the following meanings
-            1.  0 - No errors.
-
-            2.  1 - Limit on maximum number of function evaluations
-               reached.
-
-            3.  2 - Rounding errors inhibiting progress.
-
-     `load(fmin_cobyla)' loads this function.
-
- -- Function: bf_fmin_cobyla (<F>, <X>, <Y>)
- -- Function: bf_fmin_cobyla (<F>, <X>, <Y>, optional_args)
-     This function is identical to `fmin_cobyla', except that bigfloat
-     operations are used, and the default value for <rhoend> is
-     `10^(fpprec/2)'.
-
-     See `fmin_cobyla' for more information.
-
-     `load(fmin_cobyla)' loads this function.
-
-
-File: maxima.info,  Node: Examples for cobyla,  Prev: Functions and Variables for cobyla,  Up: cobyla
-
-37.3 Examples for cobyla
-========================
-
-Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
-1/sqrt(2), x2 = -1/sqrt(2).
-
-     (%i1) load(fmin_cobyla)$
-
-     (%i2) fmin_cobyla(x1*x2, [x1, x2], [1,1],
-                              constraints = [x1^2+x2^2<=1], iprint=1);
-
-        Normal return from subroutine COBYLA
-
-        NFVALS =   66   F =-5.000000E-01    MAXCV = 1.999956E-12
-        X = 7.071058E-01  -7.071077E-01
-     (%o2) [[x1 = .7071058493484819, x2 = - .7071077130247994],
-                                           - .499999999999263
-
-There are additional examples in the share/cobyla/ex directory.
-
-
-File: maxima.info,  Node: contrib_ode,  Next: Package descriptive,  Prev: cobyla,  Up: Top
-
-38 contrib_ode
-**************
-
-* Menu:
-
-* Introduction to contrib_ode::
-* Functions and Variables for contrib_ode::
-* Possible improvements to contrib_ode::
-* Test cases for contrib_ode::
-* References for contrib_ode::
-
-
-File: maxima.info,  Node: Introduction to contrib_ode,  Next: Functions and Variables for contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
-
-38.1 Introduction to contrib_ode
-================================
-
-Maxima's ordinary differential equation (ODE) solver `ode2' solves
-elementary linear ODEs of first and second order.  The function
-`contrib_ode' extends `ode2' with additional methods for linear and
-non-linear first order ODEs and linear homogeneous second order ODEs.
-The code is still under development and the calling sequence may change
-in future releases.  Once the code has stabilized it may be moved from
-the contrib directory and integrated into Maxima.
-
-This package must be loaded with the command `load('contrib_ode)'
-before use.
-
-The calling convention for `contrib_ode' is identical to `ode2'.  It
-takes three arguments: an ODE (only the left hand side need be given if
-the right hand side is 0), the dependent variable, and the independent
-variable.  When successful, it returns a list of solutions.
-
-The form of the solution differs from `ode2'.  As non-linear equations
-can have multiple solutions, `contrib_ode' returns a list of solutions.
-Each solution can have a number of forms:
-
-   * an explicit solution for the dependent variable,
-
-   * an implicit solution for the dependent variable,
-
-   * a parametric solution in terms of variable `%t', or
-
-   * a tranformation into another ODE in variable `%u'.
-
-`%c' is used to represent the constant of integration for first order
-equations.  `%k1' and `%k2' are the constants for second order
-equations.  If `contrib_ode' cannot obtain a solution for whatever
-reason, it returns `false', after perhaps printing out an error message.
-
-It is necessary to return a list of solutions, as even first order
-non-linear ODEs can have multiple solutions.  For example:
-
-     (%i1) load('contrib_ode)$
-     (%i2) eqn:x*'diff(y,x)^2-(1+x*y)*'diff(y,x)+y=0;
-
-                         dy 2             dy
-     (%o2)            x (--)  - (x y + 1) -- + y = 0
-                         dx               dx
-     (%i3) contrib_ode(eqn,y,x);
-                                                  x
-     (%o3)             [y = log(x) + %c, y = %c %e ]
-     (%i4) method;
-     (%o4)                        factor
-
-Nonlinear ODEs can have singular solutions without constants of
-integration, as in the second solution of the following example:
-
-     (%i1) load('contrib_ode)$
-     (%i2) eqn:'diff(y,x)^2+x*'diff(y,x)-y=0;
-                            dy 2     dy
-     (%o2)                 (--)  + x -- - y = 0
-                            dx       dx
-     (%i3) contrib_ode(eqn,y,x);
-                                                2
-                                      2        x
-     (%o3)              [y = %c x + %c , y = - --]
-                                               4
-     (%i4) method;
-     (%o4)                       clairault
-
-The following ODE has two parametric solutions in terms of the dummy
-variable `%t'.  In this case the parametric solutions can be manipulated
-to give explicit solutions.
-
-     (%i1) load('contrib_ode)$
-     (%i2) eqn:'diff(y,x)=(x+y)^2;
-
-                               dy          2
-     (%o2)                     -- = (y + x)
-                               dx
-     (%i3) contrib_ode(eqn,y,x);
-     (%o3) [[x = %c - atan(sqrt(%t)), y = - x - sqrt(%t)],
-                          [x = atan(sqrt(%t)) + %c, y = sqrt(%t) - x]]
-     (%i4) method;
-     (%o4)                       lagrange
-
-The following example (Kamke 1.112) demonstrates an implicit solution.
-
-     (%i1) load('contrib_ode)$
-     (%i2) assume(x>0,y>0);
-     (%o2)                    [x > 0, y > 0]
-     (%i3) eqn:x*'diff(y,x)-x*sqrt(y^2+x^2)-y;
-
-                          dy           2    2
-     (%o3)              x -- - x sqrt(y  + x ) - y
-                          dx
-     (%i4) contrib_ode(eqn,y,x);
-                                       y
-     (%o4)                  [x - asinh(-) = %c]
-                                       x
-     (%i5) method;
-     (%o5)                          lie
-
-The following Riccati equation is transformed into a linear second
-order ODE in the variable `%u'.  Maxima is unable to solve the new ODE,
-so it is returned unevaluated.
-
-     (%i1) load('contrib_ode)$
-     (%i2) eqn:x^2*'diff(y,x)=a+b*x^n+c*x^2*y^2;
-
-                         2 dy      2  2      n
-     (%o2)              x  -- = c x  y  + b x  + a
-                           dx
-     (%i3) contrib_ode(eqn,y,x);
-
-                    d%u
-                    ---                            2
-                    dx        2     n - 2   a     d %u
-     (%o3)  [[y = - ----, %u c  (b x      + --) + ---- c = 0]]
-                    %u c                     2      2
-                                            x     dx
-     (%i4) method;
-     (%o4)                        riccati
-
-For first order ODEs `contrib_ode' calls `ode2'.  It then tries the
-following methods: factorization, Clairault, Lagrange, Riccati, Abel
-and Lie symmetry methods.  The Lie method is not attempted on Abel
-equations if the Abel method fails, but it is tried if the Riccati
-method returns an unsolved second order ODE.
-
-For second order ODEs `contrib_ode' calls `ode2' then `odelin'.
-
-Extensive debugging traces and messages are displayed if the command
-`put('contrib_ode,true,'verbose)' is executed.
-
-
-File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possible improvements to contrib_ode,  Prev: Introduction to contrib_ode,  Up: contrib_ode
-
-38.2 Functions and Variables for contrib_ode
-============================================
-
- -- Function: contrib_ode (<eqn>, <y>, <x>)
-     Returns a list of solutions of the ODE <eqn> with independent
-     variable <x> and dependent variable <y>.
-
- -- Function: odelin (<eqn>, <y>, <x>)
-     `odelin' solves linear homogeneous ODEs of first and second order
-     with independent variable <x> and dependent variable <y>.  It
-     returns a fundamental solution set of the ODE.
-
-     For second order ODEs, `odelin' uses a method, due to Bronstein and
-     Lafaille, that searches for solutions in terms of given special
-     functions.
-
-          (%i1) load('contrib_ode);
-
-          (%i2) odelin(x*(x+1)*'diff(y,x,2)+(x+5)*'diff(y,x,1)+(-4)*y,y,x);
-          ...trying factor method
-          ...solving 7 equations in 4 variables
-          ...trying the Bessel solver
-          ...solving 1 equations in 2 variables
-          ...trying the F01 solver
-          ...solving 1 equations in 3 variables
-          ...trying the spherodial wave solver
-          ...solving 1 equations in 4 variables
-          ...trying the square root Bessel solver
-          ...solving 1 equations in 2 variables
-          ...trying the 2F1 solver
-          ...solving 9 equations in 5 variables
-                 gauss_a(- 6, - 2, - 3, - x)  gauss_b(- 6, - 2, - 3, - x)
-          (%o2) {---------------------------, ---------------------------}
-                              4                            4
-                             x                            x
-
- -- Function: ode_check (<eqn>, <soln>)
-     Returns the value of ODE <eqn> after substituting a possible
-     solution <soln>.  The value is equivalent to zero if <soln> is a
-     solution of <eqn>.
-
-          (%i1) load('contrib_ode)$
-          (%i2) eqn:'diff(y,x,2)+(a*x+b)*y;
-
-                                   2
-                                  d y
-          (%o2)                   --- + (a x + b) y
-                                    2
-                                  dx
-          (%i3) ans:[y = bessel_y(1/3,2*(a*x+b)^(3/2)/(3*a))*%k2*sqrt(a*x+b)
-                   +bessel_j(1/3,2*(a*x+b)^(3/2)/(3*a))*%k1*sqrt(a*x+b)];
-
-                                            3/2
-                              1  2 (a x + b)
-          (%o3) [y = bessel_y(-, --------------) %k2 sqrt(a x + b)
-                              3       3 a
-                                                    3/2
-                                      1  2 (a x + b)
-                           + bessel_j(-, --------------) %k1 sqrt(a x + b)]
-                                      3       3 a
-          (%i4) ode_check(eqn,ans[1]);
-          (%o4)                           0
-
- -- System variable: method
-     The variable `method' is set to the successful solution method.
-
- -- Variable: %c
-     `%c' is the integration constant for first order ODEs.
-
- -- Variable: %k1
-     `%k1' is the first integration constant for second order ODEs.
-
- -- Variable: %k2
-     `%k2' is the second integration constant for second order ODEs.
-
- -- Function: gauss_a (<a>, <b>, <c>, <x>)
-     `gauss_a(a,b,c,x)' and `gauss_b(a,b,c,x)' are 2F1 geometric
-     functions.  They represent any two independent solutions of the
-     hypergeometric differential equation `x(1-x) diff(y,x,2) +
-     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
-
-     The only use of these functions is in solutions of ODEs returned by
-     `odelin' and `contrib_ode'.  The definition and use of these
-     functions may change in future releases of Maxima.
-
-     See also `gauss_b', `dgauss_a' and `gauss_b'.
-
- -- Function: gauss_b (<a>, <b>, <c>, <x>)
-     See `gauss_a'.
-
- -- Function: dgauss_a (<a>, <b>, <c>, <x>)
-     The derivative with respect to <x> of `gauss_a(<a>, <b>, <c>,
-     <x>)'.
-
- -- Function: dgauss_b (<a>, <b>, <c>, <x>)
-     The derivative with respect to <x> of `gauss_b(<a>, <b>, <c>,
-     <x>)'.
-
- -- Function: kummer_m (<a>, <b>, <x>)
-     Kummer's M function, as defined in Abramowitz and Stegun, Handbook
-     of Mathematical Functions, Section 13.1.2.
-
-     The only use of this function is in solutions of ODEs returned by
-     `odelin' and `contrib_ode'.  The definition and use of this
-     function may change in future releases of Maxima.
-
-     See also `kummer_u', `dkummer_m' and `dkummer_u'.
-
- -- Function: kummer_u (<a>, <b>, <x>)
-     Kummer's U function, as defined in Abramowitz and Stegun, Handbook
-     of Mathematical Functions, Section 13.1.3.
-
-     See `kummer_m'.
-
- -- Function: dkummer_m (<a>, <b>, <x>)
-     The derivative with respect to <x> of `kummer_m(<a>, <b>, <x>)'.
-
- -- Function: dkummer_u (<a>, <b>, <x>)
-     The derivative with respect to <x> of `kummer_u(<a>, <b>, <x>)'.
-
-
-File: maxima.info,  Node: Possible improvements to contrib_ode,  Next: Test cases for contrib_ode,  Prev: Functions and Variables for contrib_ode,  Up: contrib_ode
-
-38.3 Possible improvements to contrib_ode
-=========================================
-
-These routines are work in progress.  I still need to:
-
-   * Extend the FACTOR method `ode1_factor' to work for multiple roots.
-
-   * Extend the FACTOR method `ode1_factor' to attempt to solve higher
-     order factors.  At present it only attemps to solve linear
-     factors.
-
-   * Fix the LAGRANGE routine `ode1_lagrange' to prefer real roots over
-      complex roots.
-
-   * Add additional methods for Riccati equations.
-
-   * Improve the detection of Abel equations of second kind.  The
-     exisiting   pattern matching is weak.
-
-   * Work on the Lie symmetry group routine `ode1_lie'.  There are
-     quite a   few problems with it: some parts are unimplemented; some
-     test cases   seem to run forever; other test cases crash; yet
-     others return very   complex "solutions".  I wonder if it really
-     ready for release yet.
-
-   * Add more test cases.
-
-
-File: maxima.info,  Node: Test cases for contrib_ode,  Next: References for contrib_ode,  Prev: Possible improvements to contrib_ode,  Up: contrib_ode
-
-38.4 Test cases for contrib_ode
-===============================
-
-The routines have been tested on a approximately one thousand  test
-cases from Murphy, Kamke, Zwillinger and elsewhere.  These are included
-in the tests subdirectory.
-
-   * The Clairault routine `ode1_clairault' finds all known solutions,
-     including singular solutions, of the Clairault equations in
-     Murphy and   Kamke.
-
-   * The other routines often return a single solution when multiple
-     solutions exist.
-
-   * Some of the "solutions" from `ode1_lie' are overly complex and
-     impossible to check.
-
-   * There are some crashes.
-
-
-File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for contrib_ode,  Up: contrib_ode
-
-38.5 References for contrib_ode
-===============================
-
-  1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
-     Vol 1,     Geest & Portig, Leipzig, 1961
-
-  2. G. M. Murphy, Ordinary Differential Equations and Their Solutions,
-        Van Nostrand, New York, 1960
-
-  3. D. Zwillinger, Handbook of Differential Equations, 3rd edition,
-     Academic Press, 1998
-
-  4. F. Schwarz, Symmetry Analysis of Abel's Equation, Studies in
-     Applied Mathematics, 100:269-294 (1998)
-
-  5. F. Schwarz, Algorithmic Solution of Abel's Equation,     Computing
-     61, 39-49 (1998)
-
-  6. E. S. Cheb-Terrab, A. D. Roche, Symmetries and First Order     ODE
-     Patterns, Computer Physics Communications 113 (1998), p 239.
-     (`http://lie.uwaterloo.ca/papers/ode_vii.pdf')
-
-  7. E. S. Cheb-Terrab, T. Kolokolnikov,  First Order ODEs,
-     Symmetries and Linear Transformations, European Journal of
-     Applied Mathematics, Vol. 14, No. 2, pp. 231-246 (2003).
-     (`http://arxiv.org/abs/math-ph/0007023',
-     `http://lie.uwaterloo.ca/papers/ode_iv.pdf')
-  8. G. W. Bluman, S. C. Anco, Symmetry and Integration Methods for
-     Differential Equations, Springer, (2002)
-
-  9. M. Bronstein, S. Lafaille, Solutions of linear ordinary
-     differential equations in terms of special functions, Proceedings
-     of ISSAC 2002, Lille, ACM Press, 23-28.
-
-
-File: maxima.info,  Node: Package descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
-
-39 Package descriptive
-**********************
-
-* Menu:
-
-* Introduction to descriptive::
-* Functions and Variables for data manipulation::
-* Functions and Variables for descriptive statistics::
-* Functions and Variables for specific multivariate descriptive statistics::
-* Functions and Variables for statistical graphs::
-
-
-File: maxima.info,  Node: Introduction to descriptive,  Next: Functions and Variables for data manipulation,  Prev: Package descriptive,  Up: Package descriptive
-
-39.1 Introduction to descriptive
-================================
-
-Package `descriptive' contains a set of functions for making descriptive
-statistical computations and graphing.  Together with the source code
-there are three data sets in your Maxima tree: `pidigits.data',
-`wind.data' and `biomed.data'.
-
-Any statistics manual can be used as a reference to the functions in
-package `descriptive'.
-
-For comments, bugs or suggestions, please contact me at <'mario AT edu
-DOT xunta DOT es'>.
-
-Here is a simple example on how the descriptive functions in
-`descriptive' do they work, depending on the nature of their arguments,
-lists or matrices,
-
-     (%i1) load (descriptive)$
-     (%i2) /* univariate sample */   mean ([a, b, c]);
-                                 c + b + a
-     (%o2)                       ---------
-                                     3
-     (%i3) matrix ([a, b], [c, d], [e, f]);
-                                 [ a  b ]
-                                 [      ]
-     (%o3)                       [ c  d ]
-                                 [      ]
-                                 [ e  f ]
-     (%i4) /* multivariate sample */ mean (%);
-                           e + c + a  f + d + b
-     (%o4)                [---------, ---------]
-                               3          3
-
-Note that in multivariate samples the mean is calculated for each
-column.
-
-In case of several samples with possible different sizes, the Maxima
-function `map' can be used to get the desired results for each sample,
-
-     (%i1) load (descriptive)$
-     (%i2) map (mean, [[a, b, c], [d, e]]);
-                             c + b + a  e + d
-     (%o2)                  [---------, -----]
-                                 3        2
-
-In this case, two samples of sizes 3 and 2 were stored into a list.
-
-Univariate samples must be stored in lists like
-
-     (%i1) s1 : [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5];
-     (%o1)           [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
-
-and multivariate samples in matrices as in
-
-     (%i1) s2 : matrix ([13.17, 9.29], [14.71, 16.88], [18.50, 16.88],
-                  [10.58, 6.63], [13.33, 13.25], [13.21,  8.12]);
-                             [ 13.17  9.29  ]
-                             [              ]
-                             [ 14.71  16.88 ]
-                             [              ]
-                             [ 18.5   16.88 ]
-     (%o1)                   [              ]
-                             [ 10.58  6.63  ]
-                             [              ]
-                             [ 13.33  13.25 ]
-                             [              ]
-                             [ 13.21  8.12  ]
-
-In this case, the number of columns equals the random variable
-dimension and the number of rows is the sample size.
-
-Data can be introduced by hand, but big samples are usually stored in
-plain text files.  For example, file `pidigits.data' contains the first
-100 digits of number `%pi':
-           3
-           1
-           4
-           1
-           5
-           9
-           2
-           6
-           5
-           3 ...
-
-In order to load these digits in Maxima,
-
-     (%i1) s1 : read_list (file_search ("pidigits.data"))$
-     (%i2) length (s1);
-     (%o2)                          100
-
-On the other hand, file `wind.data' contains daily average wind speeds
-at 5 meteorological stations in the Republic of Ireland (This is part
-of a data set taken at 12 meteorological stations.  The original file
-is freely downloadable from the StatLib Data Repository and its
-analysis is discused in Haslett, J., Raftery, A. E. (1989) <Space-time
-Modelling with Long-memory Dependence: Assessing Ireland's Wind Power
-Resource, with Discussion>.  Applied Statistics 38, 1-50).  This loads
-the data:
-
-     (%i1) s2 : read_matrix (file_search ("wind.data"))$
-     (%i2) length (s2);
-     (%o2)                          100
-     (%i3) s2 [%]; /* last record */
-     (%o3)            [3.58, 6.0, 4.58, 7.62, 11.25]
-
-Some samples contain non numeric data.  As an example, file
-`biomed.data' (which is part of another bigger one downloaded from the
-StatLib Data Repository) contains four blood measures taken from two
-groups of patients, `A' and `B', of different ages,
-
-     (%i1) s3 : read_matrix (file_search ("biomed.data"))$
-     (%i2) length (s3);
-     (%o2)                          100
-     (%i3) s3 [1]; /* first record */
-     (%o3)            [A, 30, 167.0, 89.0, 25.6, 364]
-
-The first individual belongs to group `A', is 30 years old and his/her
-blood measures were 167.0, 89.0, 25.6 and 364.
-
-One must take care when working with categorical data.  In the next
-example, symbol `a' is asigned a value in some previous moment and then
-a sample with categorical value `a' is taken,
-
-     (%i1) a : 1$
-     (%i2) matrix ([a, 3], [b, 5]);
-                                 [ 1  3 ]
-     (%o2)                       [      ]
-                                 [ b  5 ]
-
-
-File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: Functions and Variables for descriptive statistics,  Prev: Introduction to descriptive,  Up: Package descriptive
-
-39.2 Functions and Variables for data manipulation
-==================================================
-
- -- Function: continuous_freq (<list>)
- -- Function: continuous_freq (<list>, <m>)
-     The argument of `continuous_freq' must be a list of numbers.
-     Divides the range in intervals and counts how many values are
-     inside them.  The second argument is optional and either equals
-     the number of classes we want, 10 by default, or equals a list
-     containing the class limits and the number of classes we want, or
-     a list containing only the limits.  Argument <list> must be a list
-     of (2 or 3) real numbers.  If sample values are all equal, this
-     function returns only one class of amplitude 2.
-
-     Examples:
-
-     Optional argument indicates the number of classes we want.  The
-     first list in the output contains the interval limits, and the
-     second the corresponding counts: there are 16 digits inside the
-     interval `[0, 1.8]', 24 digits in `(1.8, 3.6]', and so on.
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) continuous_freq (s1, 5);
-          (%o3) [[0, 1.8, 3.6, 5.4, 7.2, 9.0], [16, 24, 18, 17, 25]]
-
-     Optional argument indicates we want 7 classes with limits -2 and
-     12:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) continuous_freq (s1, [-2,12,7]);
-          (%o3) [[- 2, 0, 2, 4, 6, 8, 10, 12], [8, 20, 22, 17, 20, 13, 0]]
-
-     Optional argument indicates we want the default number of classes
-     with limits -2 and 12:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) continuous_freq (s1, [-2,12]);
-                          3  4  11  18     32  39  46  53
-          (%o3)  [[- 2, - -, -, --, --, 5, --, --, --, --, 12],
-                          5  5  5   5      5   5   5   5
-                         [0, 8, 20, 12, 18, 9, 8, 25, 0, 0]]
-
- -- Function: discrete_freq (<list>)
-     Counts absolute frequencies in discrete samples, both numeric and
-     categorical.  Its unique argument is a list,
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) discrete_freq (s1);
-          (%o3) [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                       [8, 8, 12, 12, 10, 8, 9, 8, 12, 13]]
-
-     The first list gives the sample values and the second their
-     absolute frequencies.  Commands `? col' and `? transpose' should
-     help you to understand the last input.
-
- -- Function: subsample (<data_matrix>, <predicate_function>)
- -- Function: subsample (<data_matrix>, <predicate_function>,
-          <col_num1>, <col_num2>, ...)
-     This is a sort of variant of the Maxima `submatrix' function.  The
-     first argument is the data matrix, the second is a predicate
-     function and optional additional arguments are the numbers of the
-     columns to be taken.  Its behaviour is better understood with
-     examples.
-
-     These are multivariate records in which the wind speed in the first
-     meteorological station were greater than 18.  See that in the
-     lambda expression the <i>-th component is refered to as `v[i]'.
-
-          (%i1) load (descriptive)$
-          (%i2) s2 : read_matrix (file_search ("wind.data"))$
-          (%i3) subsample (s2, lambda([v], v[1] > 18));
-                        [ 19.38  15.37  15.12  23.09  25.25 ]
-                        [                                   ]
-                        [ 18.29  18.66  19.08  26.08  27.63 ]
-          (%o3)         [                                   ]
-                        [ 20.25  21.46  19.95  27.71  23.38 ]
-                        [                                   ]
-                        [ 18.79  18.96  14.46  26.38  21.84 ]
-
-     In the following example, we request only the first, second and
-     fifth components of those records with wind speeds greater or
-     equal than 16 in station number 1 and less than 25 knots in
-     station number 4.  The sample contains only data from stations 1,
-     2 and 5.  In this case, the predicate function is defined as an
-     ordinary Maxima function.
-
-          (%i1) load (descriptive)$
-          (%i2) s2 : read_matrix (file_search ("wind.data"))$
-          (%i3) g(x):= x[1] >= 16 and x[4] < 25$
-          (%i4) subsample (s2, g, 1, 2, 5);
-                               [ 19.38  15.37  25.25 ]
-                               [                     ]
-                               [ 17.33  14.67  19.58 ]
-          (%o4)                [                     ]
-                               [ 16.92  13.21  21.21 ]
-                               [                     ]
-                               [ 17.25  18.46  23.87 ]
-
-     Here is an example with the categorical variables of `biomed.data'.
-     We want the records corresponding to those patients in group `B'
-     who are older than 38 years.
-
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) h(u):= u[1] = B and u[2] > 38 $
-          (%i4) subsample (s3, h);
-                          [ B  39  28.0  102.3  17.1  146 ]
-                          [                               ]
-                          [ B  39  21.0  92.4   10.3  197 ]
-                          [                               ]
-                          [ B  39  23.0  111.5  10.0  133 ]
-                          [                               ]
-                          [ B  39  26.0  92.6   12.3  196 ]
-          (%o4)           [                               ]
-                          [ B  39  25.0  98.7   10.0  174 ]
-                          [                               ]
-                          [ B  39  21.0  93.2   5.9   181 ]
-                          [                               ]
-                          [ B  39  18.0  95.0   11.3  66  ]
-                          [                               ]
-                          [ B  39  39.0  88.5   7.6   168 ]
-
-     Probably, the statistical analysis will involve only the blood
-     measures,
-
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) subsample (s3, lambda([v], v[1] = B and v[2] > 38),
-                           3, 4, 5, 6);
-                             [ 28.0  102.3  17.1  146 ]
-                             [                        ]
-                             [ 21.0  92.4   10.3  197 ]
-                             [                        ]
-                             [ 23.0  111.5  10.0  133 ]
-                             [                        ]
-                             [ 26.0  92.6   12.3  196 ]
-          (%o3)              [                        ]
-                             [ 25.0  98.7   10.0  174 ]
-                             [                        ]
-                             [ 21.0  93.2   5.9   181 ]
-                             [                        ]
-                             [ 18.0  95.0   11.3  66  ]
-                             [                        ]
-                             [ 39.0  88.5   7.6   168 ]
-
-     This is the multivariate mean of `s3',
-
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) mean (s3);
-                 65 B + 35 A  317          6 NA + 8144.999999999999
-          (%o3) [-----------, ---, 87.178, ------------------------,
-                     100      10                     100
-                                                              3 NA + 19587
-                                                      18.123, ------------]
-                                                                  100
-
-     Here, the first component is meaningless, since `A' and `B' are
-     categorical, the second component is the mean age of individuals
-     in rational form, and the fourth and last values exhibit some
-     strange behaviour.  This is because symbol `NA' is used here to
-     indicate <non available> data, and the two means are nonsense.  A
-     possible solution would be to take out from the matrix those rows
-     with `NA' symbols, although this deserves some loss of information.
-
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) g(v):= v[4] # NA and v[6] # NA $
-          (%i4) mean (subsample (s3, g, 3, 4, 5, 6));
-          (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813,
-                                                                      2514
-                                                                      ----]
-                                                                       13
 
 
 

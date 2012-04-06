@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -7,6 +7,812 @@ This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  Up: opsubst
+
+64.1 Functions and Variables for opsubst
+========================================
+
+ -- Function: opsubst (<f>, <g>, <e>)
+ -- Function: opsubst (<g> = <f>, <e>)
+ -- Function: opsubst ([<g1> = <f1>, <g2> = <f2>, ..., <gn> = <fn>],
+          <e>)
+     The function `opsubst' is similar to the function `subst', except
+     that `opsubst' only makes substitutions for the operators in an
+     expression.  In general, when <f> is an operator in the expression
+     <e>, substitute <g> for <f> in the expression <e>.
+
+     To determine the operator, `opsubst' sets `inflag' to true.  This
+     means `opsubst' substitutes for the internal, not the displayed,
+     operator in the expression.
+
+     To use this function write first `load("opsubst")'.
+
+     Examples:
+
+          (%i1) load("opsubst")$
+
+          (%i2) opsubst(f, g, g(g(x)));
+          (%o2)                     f(f(x))
+          (%i3) opsubst(f, g, g(g));
+          (%o3)                       f(g)
+          (%i4) opsubst(f, g[x], g[x](z));
+          (%o4)                       f(z)
+          (%i5) opsubst(g[x], f, f(z));
+          (%o5)                      g (z)
+                                      x
+          (%i6) opsubst(tan, sin, sin(sin));
+          (%o6)                     tan(sin)
+          (%i7) opsubst([f=g, g=h], f(x));
+          (%o7)                       h(x)
+
+     Internally, Maxima does not use the unary negation, division, or
+     the subtraction operators; thus:
+
+          (%i8) opsubst("+", "-", a-b);
+          (%o8)                     a - b
+          (%i9) opsubst("f", "-", -a);
+          (%o9)                      - a
+          (%i10) opsubst("^^", "/", a/b);
+                                       a
+          (%o10)                       -
+                                       b
+
+     The internal representation of `-a*b' is `*(-1,a,b)'; thus
+
+          (%i11) opsubst("[", "*", -a*b);
+          (%o11)                  [- 1, a, b]
+
+     When either operator isn't a Maxima symbol, generally some other
+     function will signal an error:
+
+          (%i12) opsubst(a+b, f, f(x));
+
+          Improper name or value in functional position:
+          b + a
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     However, subscripted operators are allowed:
+
+          (%i13) opsubst(g[5], f, f(x));
+          (%o13)                     g (x)
+                                      5
+
+
+File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
+
+65 orthopoly
+************
+
+* Menu:
+
+* Introduction to orthogonal polynomials::
+* Functions and Variables for orthogonal polynomials::
+
+
+File: maxima.info,  Node: Introduction to orthogonal polynomials,  Next: Functions and Variables for orthogonal polynomials,  Prev: orthopoly,  Up: orthopoly
+
+65.1 Introduction to orthogonal polynomials
+===========================================
+
+`orthopoly' is a package for symbolic and numerical evaluation of
+several kinds of orthogonal polynomials, including Chebyshev, Laguerre,
+Hermite, Jacobi, Legendre, and ultraspherical (Gegenbauer) polynomials.
+Additionally, `orthopoly' includes support for the spherical Bessel,
+spherical Hankel, and spherical harmonic functions.
+
+For the most part, `orthopoly' follows the conventions of Abramowitz and
+Stegun Handbook of Mathematical Functions, Chapter 22 (10th printing,
+December 1972); additionally, we use Gradshteyn and Ryzhik, Table of
+Integrals, Series, and Products (1980 corrected and enlarged edition),
+and Eugen Merzbacher Quantum Mechanics (2nd edition, 1970).
+
+Barton Willis of the University of Nebraska at Kearney (UNK) wrote the
+`orthopoly' package and its documentation.  The package is released
+under the GNU General Public License (GPL).
+
+65.1.1 Getting Started with orthopoly
+-------------------------------------
+
+`load (orthopoly)' loads the `orthopoly' package.
+
+To find the third-order Legendre polynomial,
+
+     (%i1) legendre_p (3, x);
+                           3             2
+                  5 (1 - x)    15 (1 - x)
+     (%o1)      - ---------- + ----------- - 6 (1 - x) + 1
+                      2             2
+
+To express this as a sum of powers of <x>, apply `ratsimp'  or `rat'
+to the result.
+
+     (%i2) [ratsimp (%), rat (%)];
+                             3           3
+                          5 x  - 3 x  5 x  - 3 x
+     (%o2)/R/            [----------, ----------]
+                              2           2
+
+Alternatively, make the second argument to `legendre_p' (its "main"
+variable) a canonical rational expression (CRE).
+
+     (%i1) legendre_p (3, rat (x));
+                                   3
+                                5 x  - 3 x
+     (%o1)/R/                   ----------
+                                    2
+
+For floating point evaluation, `orthopoly' uses a running error analysis
+to estimate an upper bound for the error.  For example,
+
+     (%i1) jacobi_p (150, 2, 3, 0.2);
+     (%o1) interval(- 0.062017037936715, 1.533267919277521E-11)
+
+Intervals have the form `interval (<c>, <r>)', where <c> is the center
+and <r> is the radius of the interval.  Since Maxima does not support
+arithmetic on intervals, in some situations, such as graphics, you want
+to suppress the error and output only the center of the interval.  To
+do this, set the option variable `orthopoly_returns_intervals'  to
+`false'.
+
+     (%i1) orthopoly_returns_intervals : false;
+     (%o1)                         false
+     (%i2) jacobi_p (150, 2, 3, 0.2);
+     (%o2)                  - 0.062017037936715
+
+Refer to the section *Note Floating point Evaluation:: for more
+information.
+
+Most functions in `orthopoly' have a `gradef'  property; thus
+
+     (%i1) diff (hermite (n, x), x);
+     (%o1)                     2 n H     (x)
+                                    n - 1
+     (%i2) diff (gen_laguerre (n, a, x), x);
+                   (a)               (a)
+                n L   (x) - (n + a) L     (x) unit_step(n)
+                   n                 n - 1
+     (%o2)      ------------------------------------------
+                                    x
+
+The unit step function in the second example prevents an error that
+would otherwise arise by evaluating with <n> equal to 0.
+
+     (%i3) ev (%, n = 0);
+     (%o3)                           0
+
+The `gradef' property only applies to the "main" variable; derivatives
+with respect other arguments usually result in an error message; for
+example
+
+     (%i1) diff (hermite (n, x), x);
+     (%o1)                     2 n H     (x)
+                                    n - 1
+     (%i2) diff (hermite (n, x), n);
+
+     Maxima doesn't know the derivative of hermite with respect the first
+     argument
+      -- an error.  Quitting.  To debug this try debugmode(true);
+
+Generally, functions in `orthopoly' map over lists and matrices.  For
+the mapping to fully evaluate, the option variables `doallmxops'  and
+`listarith'  must both be `true' (the defaults).  To illustrate the
+mapping over matrices, consider
+
+     (%i1) hermite (2, x);
+                                          2
+     (%o1)                    - 2 (1 - 2 x )
+     (%i2) m : matrix ([0, x], [y, 0]);
+                                 [ 0  x ]
+     (%o2)                       [      ]
+                                 [ y  0 ]
+     (%i3) hermite (2, m);
+                    [                             2  ]
+                    [      - 2        - 2 (1 - 2 x ) ]
+     (%o3)          [                                ]
+                    [             2                  ]
+                    [ - 2 (1 - 2 y )       - 2       ]
+
+In the second example, the `i, j' element of the value is `hermite (2,
+m[i,j])'; this is not the same as computing `-2 + 4 m . m', as seen in
+the next example.
+
+     (%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
+                         [ 4 x y - 2      0     ]
+     (%o4)               [                      ]
+                         [     0      4 x y - 2 ]
+
+If you evaluate a function at a point outside its domain, generally
+`orthopoly' returns the function unevaluated.  For example,
+
+     (%i1) legendre_p (2/3, x);
+     (%o1)                        P   (x)
+                                   2/3
+
+`orthopoly' supports translation into TeX; it also does two-dimensional
+output on a terminal.
+
+     (%i1) spherical_harmonic (l, m, theta, phi);
+                               m
+     (%o1)                    Y (theta, phi)
+                               l
+     (%i2) tex (%);
+     $$Y_{l}^{m}\left(\vartheta,\varphi\right)$$
+     (%o2)                         false
+     (%i3) jacobi_p (n, a, a - b, x/2);
+                               (a, a - b) x
+     (%o3)                    P          (-)
+                               n          2
+     (%i4) tex (%);
+     $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
+     (%o4)                         false
+
+65.1.2 Limitations
+------------------
+
+When an expression involves several orthogonal polynomials with
+symbolic orders, it's possible that the expression actually vanishes,
+yet Maxima is unable to simplify it to zero.  If you divide by such a
+quantity, you'll be in trouble.  For example, the following expression
+vanishes for integers <n> greater than 1, yet Maxima is unable to
+simplify it to zero.
+
+     (%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x)
+           + (1 - n) * legendre_p (n - 2, x);
+     (%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
+                       n - 1           n               n - 2
+
+For a specific <n>, we can reduce the expression to zero.
+
+     (%i2) ev (% ,n = 10, ratsimp);
+     (%o2)                           0
+
+Generally, the polynomial form of an orthogonal polynomial is ill-suited
+for floating point evaluation.  Here's an example.
+
+     (%i1) p : jacobi_p (100, 2, 3, x)$
+
+     (%i2) subst (0.2, x, p);
+     (%o2)                3.4442767023833592E+35
+     (%i3) jacobi_p (100, 2, 3, 0.2);
+     (%o3)  interval(0.18413609135169, 6.8990300925815987E-12)
+     (%i4) float(jacobi_p (100, 2, 3, 2/10));
+     (%o4)                   0.18413609135169
+
+The true value is about 0.184; this calculation suffers from extreme
+subtractive cancellation error.  Expanding the polynomial and then
+evaluating, gives a better result.
+
+     (%i5) p : expand(p)$
+     (%i6) subst (0.2, x, p);
+     (%o6) 0.18413609766122982
+
+This isn't a general rule; expanding the polynomial does not always
+result in an expression that is better suited for numerical evaluation.
+By far, the best way to do numerical evaluation is to make one or more
+of the function arguments floating point numbers.  By doing that,
+specialized floating point algorithms are used for evaluation.
+
+Maxima's `float'  function is somewhat indiscriminate; if you apply
+`float' to an expression involving an orthogonal polynomial with a
+symbolic degree or order parameter, these parameters may be converted
+into floats; after that, the expression will not evaluate fully.
+Consider
+
+     (%i1) assoc_legendre_p (n, 1, x);
+                                    1
+     (%o1)                         P (x)
+                                    n
+     (%i2) float (%);
+                                   1.0
+     (%o2)                        P   (x)
+                                   n
+     (%i3) ev (%, n=2, x=0.9);
+                                  1.0
+     (%o3)                       P   (0.9)
+                                  2
+
+The expression in (%o3) will not evaluate to a float; `orthopoly'
+doesn't recognize floating point values where it requires an integer.
+Similarly, numerical evaluation of the `pochhammer'  function for
+orders that exceed `pochhammer_max_index'  can be troublesome; consider
+
+     (%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
+     (%o1)                         (1)
+                                      10
+
+Applying `float' doesn't evaluate <x> to a float
+
+     (%i2) float (x);
+     (%o2)                       (1.0)
+                                      10.0
+
+To evaluate <x> to a float, you'll need to bind `pochhammer_max_index'
+to 11 or greater and apply `float' to <x>.
+
+     (%i3) float (x), pochhammer_max_index : 11;
+     (%o3)                       3628800.0
+
+The default value of `pochhammer_max_index' is 100; change its value
+after loading `orthopoly'.
+
+Finally, be aware that reference books vary on the definitions of the
+orthogonal polynomials; we've generally used the conventions of
+conventions of Abramowitz and Stegun.
+
+Before you suspect a bug in orthopoly, check some special cases to
+determine if your definitions match those used by `orthopoly'.
+Definitions often differ by a normalization; occasionally, authors use
+"shifted" versions of the functions that makes the family orthogonal on
+an interval other than (-1, 1).  To define, for example, a Legendre
+polynomial that is orthogonal on (0, 1), define
+
+     (%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
+
+     (%i2) shifted_legendre_p (2, rat (x));
+                                 2
+     (%o2)/R/                 6 x  - 6 x + 1
+     (%i3) legendre_p (2, rat (x));
+                                    2
+                                 3 x  - 1
+     (%o3)/R/                    --------
+                                    2
+
+65.1.3 Floating point Evaluation
+--------------------------------
+
+Most functions in `orthopoly' use a running error analysis to estimate
+the error in floating point evaluation; the exceptions are the
+spherical Bessel functions and the associated Legendre polynomials of
+the second kind.  For numerical evaluation, the spherical Bessel
+functions call SLATEC functions.  No specialized method is used for
+numerical evaluation of the associated Legendre polynomials of the
+second kind.
+
+The running error analysis ignores errors that are second or higher
+order in the machine epsilon (also known as unit roundoff).  It also
+ignores a few other errors.  It's possible (although unlikely) that the
+actual error exceeds the estimate.
+
+Intervals have the form `interval (<c>, <r>)', where <c> is the center
+of the interval and <r> is its radius.  The center of an interval can
+be a complex number, and the radius is always a positive real number.
+
+Here is an example.
+
+     (%i1) fpprec : 50$
+
+     (%i2) y0 : jacobi_p (100, 2, 3, 0.2);
+     (%o2) interval(0.1841360913516871, 6.8990300925815987E-12)
+     (%i3) y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
+     (%o3) 1.8413609135168563091370224958913493690868904463668b-1
+
+Let's test that the actual error is smaller than the error estimate
+
+     (%i4) is (abs (part (y0, 1) - y1) < part (y0, 2));
+     (%o4)                         true
+
+Indeed, for this example the error estimate is an upper bound for the
+true error.
+
+Maxima does not support arithmetic on intervals.
+
+     (%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
+     (%o1) interval(0.18032072148437508, 3.1477135311021797E-15)
+             + interval(- 0.19949294375000004, 3.3769353084291579E-15)
+
+A user could define arithmetic operators that do interval math.  To
+define interval addition, we can define
+
+     (%i1) infix ("@+")$
+
+     (%i2) "@+"(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2)
+           + part (y, 2))$
+
+     (%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
+     (%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
+
+The special floating point routines get called when the arguments are
+complex.  For example,
+
+     (%i1) legendre_p (10, 2 + 3.0*%i);
+     (%o1) interval(- 3.876378825E+7 %i - 6.0787748E+7,
+                                                1.2089173052721777E-6)
+
+Let's compare this to the true value.
+
+     (%i1) float (expand (legendre_p (10, 2 + 3*%i)));
+     (%o1)          - 3.876378825E+7 %i - 6.0787748E+7
+
+Additionally, when the arguments are big floats, the special floating
+point routines get called; however, the big floats are converted into
+double floats and the final result is a double.
+
+     (%i1) ultraspherical (150, 0.5b0, 0.9b0);
+     (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
+
+65.1.4 Graphics and `orthopoly'
+-------------------------------
+
+To plot expressions that involve the orthogonal polynomials, you must
+do two things:
+  1. Set the option variable `orthopoly_returns_intervals'  to `false',
+
+  2. Quote any calls to `orthopoly' functions.
+
+If function calls aren't quoted, Maxima evaluates them to polynomials
+before plotting; consequently, the specialized floating point code
+doesn't get called.  Here is an example of how to plot an expression
+that involves a Legendre polynomial.
+
+     (%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]),
+                             orthopoly_returns_intervals : false;
+     (%o1)
+
+The entire expression `legendre_p (5, x)' is quoted; this is different
+than just quoting the function name using `'legendre_p (5, <x>)'.
+
+65.1.5 Miscellaneous Functions
+------------------------------
+
+The `orthopoly' package defines the Pochhammer symbol and a unit step
+function.  `orthopoly' uses the Kronecker delta function and the unit
+step function in `gradef'  statements.
+
+To convert Pochhammer symbols into quotients of gamma functions, use
+`makegamma'.
+
+     (%i1) makegamma (pochhammer (x, n));
+                               gamma(x + n)
+     (%o1)                     ------------
+                                 gamma(x)
+     (%i2) makegamma (pochhammer (1/2, 1/2));
+                                     1
+     (%o2)                       ---------
+                                 sqrt(%pi)
+
+Derivatives of the Pochhammer symbol are given in terms of the `psi'
+
+function.
+
+     (%i1) diff (pochhammer (x, n), x);
+     (%o1)             (x)  (psi (x + n) - psi (x))
+                          n     0             0
+     (%i2) diff (pochhammer (x, n), n);
+     (%o2)                   (x)  psi (x + n)
+                                n    0
+
+You need to be careful with the expression in (%o1); the difference of
+the `psi' functions has polynomials when `<x> = -1, -2, .., -<n>'.
+These polynomials cancel with factors in `pochhammer (<x>, <n>)' making
+the derivative a degree `<n> - 1' polynomial when <n> is a positive
+integer.
+
+The Pochhammer symbol is defined for negative orders through its
+representation as a quotient of gamma functions.  Consider
+
+     (%i1) q : makegamma (pochhammer (x, n));
+                               gamma(x + n)
+     (%o1)                     ------------
+                                 gamma(x)
+     (%i2) sublis ([x=11/3, n= -6], q);
+                                    729
+     (%o2)                        - ----
+                                    2240
+
+Alternatively, we can get this result directly.
+
+     (%i1) pochhammer (11/3, -6);
+                                    729
+     (%o1)                        - ----
+                                    2240
+
+The unit step function is left-continuous; thus
+
+     (%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
+     (%o1)                       [0, 0, 1]
+
+If you need a unit step function that is neither left or right
+continuous at zero, define your own using `signum',  for example,
+
+     (%i1) xunit_step (x) := (1 + signum (x))/2$
+
+     (%i2) [xunit_step (-1/10), xunit_step (0), xunit_step (1/10)];
+                                     1
+     (%o2)                       [0, -, 1]
+                                     2
+
+Do not redefine `unit_step'  itself; some code in `orthopoly' requires
+that the unit step function be left-continuous.
+
+65.1.6 Algorithms
+-----------------
+
+Generally, `orthopoly' does symbolic evaluation by using a hypergeometic
+representation of the orthogonal polynomials.  The hypergeometic
+functions are evaluated using the (undocumented) functions `hypergeo11'
+and `hypergeo21'.  The exceptions are the half-integer Bessel functions
+and the associated Legendre function of the second kind.  The
+half-integer Bessel functions are evaluated using an explicit
+representation, and the associated Legendre function of the second kind
+is evaluated using recursion.
+
+For floating point evaluation, we again convert most functions into a
+hypergeometic form; we evaluate the hypergeometic functions using
+forward recursion.  Again, the exceptions are the half-integer Bessel
+functions and the associated Legendre function of the second kind.
+Numerically, the half-integer Bessel functions are evaluated using the
+SLATEC code.
+
+
+File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  Prev: Introduction to orthogonal polynomials,  Up: orthopoly
+
+65.2 Functions and Variables for orthogonal polynomials
+=======================================================
+
+ -- Function: assoc_legendre_p (<n>, <m>, <x>)
+     The associated Legendre function of the first kind of degree <n>
+     and order <m>.
+
+     Reference: Abramowitz and Stegun, equations 22.5.37, page 779,
+     8.6.6 (second equation), page 334, and 8.2.5, page 333.
+
+ -- Function: assoc_legendre_q (<n>, <m>, <x>)
+     The associated Legendre function of the second kind of degree <n>
+     and order <m>.
+
+     Reference: Abramowitz and Stegun, equation 8.5.3 and 8.1.8.
+
+ -- Function: chebyshev_t (<n>, <x>)
+     The Chebyshev function of the first kind.
+
+     Reference: Abramowitz and Stegun, equation 22.5.47, page 779.
+
+ -- Function: chebyshev_u (<n>, <x>)
+     The Chebyshev function of the second kind.
+
+     Reference: Abramowitz and Stegun, equation 22.5.48, page 779.
+
+ -- Function: gen_laguerre (<n>, <a>, <x>)
+     The generalized Laguerre polynomial of degree <n>.
+
+     Reference: Abramowitz and Stegun, equation 22.5.54, page 780.
+
+ -- Function: hermite (<n>, <x>)
+     The Hermite polynomial.
+
+     Reference: Abramowitz and Stegun, equation 22.5.55, page 780.
+
+ -- Function: intervalp (<e>)
+     Return `true' if the input is an interval and return false if it
+     isn't.
+
+ -- Function: jacobi_p (<n>, <a>, <b>, <x>)
+     The Jacobi polynomial.
+
+     The Jacobi polynomials are actually defined for all <a> and <b>;
+     however, the Jacobi polynomial weight `(1 - <x>)^<a> (1 +
+     <x>)^<b>' isn't integrable for `<a> <= -1' or `<b> <= -1'.
+
+     Reference: Abramowitz and Stegun, equation 22.5.42, page 779.
+
+ -- Function: laguerre (<n>, <x>)
+     The Laguerre polynomial.
+
+     Reference: Abramowitz and Stegun, equations 22.5.16 and 22.5.54,
+     page 780.
+
+ -- Function: legendre_p (<n>, <x>)
+     The Legendre polynomial of the first kind.
+
+     Reference: Abramowitz and Stegun, equations 22.5.50 and 22.5.51,
+     page 779.
+
+ -- Function: legendre_q (<n>, <x>)
+     The Legendre polynomial of the first kind.
+
+     Reference: Abramowitz and Stegun, equations 8.5.3 and 8.1.8.
+
+ -- Function: orthopoly_recur (<f>, <args>)
+     Returns a recursion relation for the orthogonal function family
+     <f> with arguments <args>.  The recursion is with respect to the
+     polynomial degree.
+
+          (%i1) orthopoly_recur (legendre_p, [n, x]);
+                          (2 n - 1) P     (x) x + (1 - n) P     (x)
+                                     n - 1                 n - 2
+          (%o1)   P (x) = -----------------------------------------
+                   n                          n
+
+     The second argument to `orthopoly_recur' must be a list with the
+     correct number of arguments for the function <f>; if it isn't,
+     Maxima signals an error.
+
+          (%i1) orthopoly_recur (jacobi_p, [n, x]);
+
+          Function jacobi_p needs 4 arguments, instead it received 2
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     Additionally, when <f> isn't the name of one of the families of
+     orthogonal polynomials, an error is signalled.
+
+          (%i1) orthopoly_recur (foo, [n, x]);
+
+          A recursion relation for foo isn't known to Maxima
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+ -- Variable: orthopoly_returns_intervals
+     Default value: `true'
+
+     When `orthopoly_returns_intervals' is `true', floating point
+     results are returned in the form `interval (<c>, <r>)', where <c>
+     is the center of an interval and <r> is its radius.  The center
+     can be a complex number; in that case, the interval is a disk in
+     the complex plane.
+
+ -- Function: orthopoly_weight (<f>, <args>)
+     Returns a three element list; the first element is the formula of
+     the weight for the orthogonal polynomial family <f> with arguments
+     given by the list <args>; the second and third elements give the
+     lower and upper endpoints of the interval of orthogonality.  For
+     example,
+
+          (%i1) w : orthopoly_weight (hermite, [n, x]);
+                                      2
+                                   - x
+          (%o1)                 [%e    , - inf, inf]
+          (%i2) integrate(w[1]*hermite(3, x)*hermite(2, x), x, w[2], w[3]);
+          (%o2)                           0
+
+     The main variable of <f> must be a symbol; if it isn't, Maxima
+     signals an error.
+
+ -- Function: pochhammer (<n>, <x>)
+     The Pochhammer symbol. For nonnegative integers <n> with `<n> <=
+     pochhammer_max_index', the expression `pochhammer (<x>, <n>)'
+     evaluates to the product `<x> (<x> + 1) (<x> + 2) ... (<x> + n -
+     1)' when `<n> > 0' and to 1 when `<n> = 0'.  For negative <n>,
+     `pochhammer (<x>, <n>)' is defined as `(-1)^<n> / pochhammer (1 -
+     <x>, -<n>)'.  Thus
+
+          (%i1) pochhammer (x, 3);
+          (%o1)                   x (x + 1) (x + 2)
+          (%i2) pochhammer (x, -3);
+                                           1
+          (%o2)               - -----------------------
+                                (1 - x) (2 - x) (3 - x)
+
+     To convert a Pochhammer symbol into a quotient of gamma functions,
+     (see Abramowitz and Stegun, equation 6.1.22) use `makegamma',  for
+     example
+
+          (%i1) makegamma (pochhammer (x, n));
+                                    gamma(x + n)
+          (%o1)                     ------------
+                                      gamma(x)
+
+     When <n> exceeds `pochhammer_max_index'  or when <n> is symbolic,
+     `pochhammer' returns a noun form.
+
+          (%i1) pochhammer (x, n);
+          (%o1)                         (x)
+                                           n
+
+ -- Variable: pochhammer_max_index
+     Default value: 100
+
+     `pochhammer (<n>, <x>)' expands to a product if and only if `<n>
+     <= pochhammer_max_index'.
+
+     Examples:
+
+          (%i1) pochhammer (x, 3), pochhammer_max_index : 3;
+          (%o1)                   x (x + 1) (x + 2)
+          (%i2) pochhammer (x, 4), pochhammer_max_index : 3;
+          (%o2)                         (x)
+                                           4
+
+     Reference: Abramowitz and Stegun, equation 6.1.16, page 256.
+
+ -- Function: spherical_bessel_j (<n>, <x>)
+     The spherical Bessel function of the first kind.
+
+     Reference: Abramowitz and Stegun, equations 10.1.8, page 437 and
+     10.1.15, page 439.
+
+ -- Function: spherical_bessel_y (<n>, <x>)
+     The spherical Bessel function of the second kind.
+
+     Reference: Abramowitz and Stegun, equations 10.1.9, page 437 and
+     10.1.15, page 439.
+
+ -- Function: spherical_hankel1 (<n>, <x>)
+     The spherical Hankel function of the first kind.
+
+     Reference: Abramowitz and Stegun, equation 10.1.36, page 439.
+
+ -- Function: spherical_hankel2 (<n>, <x>)
+     The spherical Hankel function of the second kind.
+
+     Reference: Abramowitz and Stegun, equation 10.1.17, page 439.
+
+ -- Function: spherical_harmonic (<n>, <m>, <x>, <y>)
+     The spherical harmonic function.
+
+     Reference: Merzbacher 9.64.
+
+ -- Function: unit_step (<x>)
+     The left-continuous unit step function; thus `unit_step (<x>)'
+     vanishes for `<x> <= 0' and equals 1 for `<x> > 0'.
+
+     If you want a unit step function that takes on the value 1/2 at
+     zero, use `(1 + signum (<x>))/2'.
+
+ -- Function: ultraspherical (<n>, <a>, <x>)
+     The ultraspherical polynomial (also known as the Gegenbauer
+     polynomial).
+
+     Reference: Abramowitz and Stegun, equation 22.5.46, page 779.
+
+
+File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
+
+66 plotdf
+*********
+
+* Menu:
+
+* Introduction to plotdf::
+* Functions and Variables for plotdf::
+
+
+File: maxima.info,  Node: Introduction to plotdf,  Next: Functions and Variables for plotdf,  Prev: plotdf,  Up: plotdf
+
+66.1 Introduction to plotdf
+===========================
+
+The function `plotdf' creates a plot of the direction field (also
+called slope field) for a first-order Ordinary Differential Equation
+(ODE) or a system of two autonomous first-order ODE's.
+
+Plotdf requires Xmaxima.  It can be used from the console or any other
+interface to Maxima, but the resulting file will be sent to Xmaxima for
+plotting.  Please make sure you have installed Xmaxima before trying to
+use plotdf.
+
+To plot the direction field of a single ODE, the ODE must be written in
+the form:
+
+            dy
+            -- = F(x,y)
+            dx
+
+and the function <F> should be given as the argument for `plotdf'.  If
+the independent and dependent variables are not <x>, and <y>, as in the
+equation above, then those two variables should be named explicitly in
+a list given as an argument to the plotdf command (see the examples).
+
+To plot the direction field of a set of two autonomous ODE's, they must
+be written in the form
+
+            dx             dy
+            -- = G(x,y)    -- = F(x,y)
+            dt             dt
+
+and the argument for `plotdf' should be a list with the two functions
+<G> and <F>, in that order; namely, the first expression in the list
+will be taken to be the time derivative of the variable represented on
+the horizontal axis, and the second expression will be the time
+derivative of the variable represented on the vertical axis.  Those two
+variables do not have to be <x> and <y>, but if they are not, then the
+second argument given to plotdf must be another list naming the two
+variables, first the one on the horizontal axis and then the one on the
+vertical axis.
+
+If only one ODE is given, `plotdf' will implicitly admit `x=t', and
+`G(x,y)=1', transforming the non-autonomous equation into a system of
+two autonomous equations.
 
 
 File: maxima.info,  Node: Functions and Variables for plotdf,  Prev: Introduction to plotdf,  Up: plotdf
@@ -219,20 +1025,20 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
      translated or compiled Maxima function.
 
      The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
-     when the absolute difference between successive approximations is
-     less than `rombergabs', or the relative difference in successive
-     approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
-     on `romberg'.
+     `rombergabs'  and `rombergtol'.    `romberg' terminates
+     successfully when the absolute difference between successive
+     approximations is less than `rombergabs', or the relative
+     difference in successive approximations is less than `rombergtol'.
+     Thus when `rombergabs' is `0.0' (the default) only the relative
+     error test has any effect on `romberg'.
 
-     `romberg' halves the stepsize at most `rombergit' times before it
+     `romberg' halves the stepsize at most `rombergit'  times before it
      gives up; the maximum number of function evaluations is therefore
      `2^rombergit'.  If the error criterion established by `rombergabs'
      and `rombergtol' is not satisfied, `romberg' prints an error
-     message.  `romberg' always makes at least `rombergmin' iterations;
-     this is a heuristic intended to prevent spurious termination when
-     the integrand is oscillatory.
+     message.  `romberg' always makes at least `rombergmin'
+     iterations; this is a heuristic intended to prevent spurious
+     termination when the integrand is oscillatory.
 
      `romberg' repeatedly evaluates the integrand after binding the
      variable of integration to a specific value (and not before).
@@ -245,8 +1051,8 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
 
      `load(romberg)' loads this function.
 
-     See also `QUADPACK', a collection of numerical integration
-     functions.
+     See also *Note Einführung in QUADPACK::, a collection of numerical
+     integration functions.
 
      Examples:
 
@@ -302,55 +1108,55 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
           (%i8) abs (estimate - exact) / exact, numer;
           (%o8)                1.3711979871851024E-10
 
-
  -- Option variable: rombergabs
-     Default value: 0.0
+     Default value: `0.0'
 
-     The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
-     when the absolute difference between successive approximations is
-     less than `rombergabs', or the relative difference in successive
-     approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
-     on `romberg'.
+     The accuracy of `romberg'  is governed by the global variables
+     `rombergabs' and `rombergtol'.    `romberg' terminates
+     successfully when the absolute difference between successive
+     approximations is less than `rombergabs', or the relative
+     difference in successive approximations is less than `rombergtol'.
+     Thus when `rombergabs' is `0.0' (the default) only the relative
+     error test has any effect on `romberg'.
 
-     See also `rombergit' and `rombergmin'.
+     See also `rombergit'  and `rombergmin'.
 
 
  -- Option variable: rombergit
-     Default value: 11
+     Default value: `11'
 
-     `romberg' halves the stepsize at most `rombergit' times before it
+     `romberg'  halves the stepsize at most `rombergit' times before it
      gives up; the maximum number of function evaluations is therefore
      `2^rombergit'.  `romberg' always makes at least `rombergmin'
+
      iterations; this is a heuristic intended to prevent spurious
      termination when the integrand is oscillatory.
 
-     See also `rombergabs' and `rombergtol'.
+     See also `rombergabs'  and `rombergtol'.
 
 
  -- Option variable: rombergmin
-     Default value: 0
+     Default value: `0'
 
-     `romberg' always makes at least `rombergmin' iterations; this is a
+     `romberg'  always makes at least `rombergmin' iterations; this is a
      heuristic intended to prevent spurious termination when the
      integrand is oscillatory.
 
-     See also `rombergit', `rombergabs', and `rombergtol'.
+     See also `rombergit',  `rombergabs',  and `rombergtol'.
 
 
  -- Option variable: rombergtol
-     Default value: 1e-4
+     Default value: `1e-4'
 
-     The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
+     The accuracy of `romberg'  is governed by the global variables
+     `rombergabs'  and `rombergtol'.  `romberg' terminates successfully
      when the absolute difference between successive approximations is
      less than `rombergabs', or the relative difference in successive
      approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
+     is `0.0' (the default) only the relative error test has any effect
      on `romberg'.
 
-     See also `rombergit' and `rombergmin'.
+     See also `rombergit'  and `rombergmin'.
 
 
 
@@ -2519,8 +3325,9 @@ tests for strings.
      (%o2)                         true
 
 Characters are represented as strings of length 1.  These are not Lisp
-characters.  Tests can be done with `charp' (respectively `lcharp' and
-conversion from Lisp to Maxima characters with `cunlisp').
+characters.  Tests can be done with `charp'  (respectively `lcharp'
+
+and conversion from Lisp to Maxima characters with `cunlisp' ).
 
      (%i1) c: "e";
      (%o1)                           e
@@ -2532,24 +3339,24 @@ conversion from Lisp to Maxima characters with `cunlisp').
      (%o4)                         true
 
 All functions in `stringproc.lisp' that return characters, return
-Maxima-characters.  Due to the fact, that the introduced characters are
+Maxima characters.  Due to the fact, that the introduced characters are
 strings of length 1, you can use a lot of string functions also for
-characters.  As seen, `supcase' is one example.
+characters.  As seen, `supcase'  is one example.
 
-It is important to know, that the first character in a Maxima-string is
+It is important to know, that the first character in a Maxima string is
 at position 1.  This is designed due to the fact that the first element
-in a Maxima-list is at position 1 too.  See definitions of `charat' and
-`charlist' for examples.
+in a Maxima list is at position 1 too.  See definitions of `charat'  and
+`charlist'  for examples.
 
-In applications string-functions are often used when working with files.
-You will find some useful stream- and print-functions in
+In applications string functions are often used when working with files.
+You will find some useful stream and print functions in
 `stringproc.lisp'.  The following example shows some of the here
 introduced functions at work.
 
 Example:
 
-`openw' returns an output stream to a file, `printf' then allows
-formatted writing to this file. See `printf' for details.
+`openw'  returns an output stream to a file, `printf' then allows
+formatted writing to this file.  See `printf'  for details.
 
      (%i1) s: openw("E:/file.txt");
      (%o1)                    #<output stream E:/file.txt>
@@ -2562,9 +3369,9 @@ formatted writing to this file. See `printf' for details.
      (%o4)                                true
 
 After closing the stream you can open it again, this time with input
-direction.  `readline' returns the entire line as one string. The
+direction.  `readline'  returns the entire line as one string.  The
 `stringproc' package now offers a lot of functions for manipulating
-strings. Tokenizing can be done by `split' or `tokens'.
+strings.  Tokenizing can be done by `split'  or `tokens'.
 
      (%i5) s: openr("E:/file.txt");
      (%o5)                     #<input stream E:/file.txt>
@@ -2628,9 +3435,10 @@ Example:
      Writes a new line (to <stream>), if the position is not at the
      beginning of a line.  See also `newline'.
 
+
  -- Function: newline ()
  -- Function: newline (<stream>)
-     Writes a new line (to <stream>).  See `sprint' for an example of
+     Writes a new line (to <stream>).  See `sprint'  for an example of
      using `newline()'.  Note that there are some cases, where
      `newline()' does not work as expected.
 
@@ -2683,7 +3491,7 @@ Example:
              ~[       selection, ~] terminates
              ~{       iteration, ~} terminates
 
-     Note that the selection directive `~[' is zero-indexed.  Also note
+     Note that the selection directive `~[' is zero indexed.  Also note
      that the directive ~* is not supported.
 
           (%i1) printf( false, "~a ~a ~4f ~a ~@r",
@@ -2712,7 +3520,7 @@ Example:
      Evaluates and displays its arguments one after the other `on a
      line' starting at the leftmost position.  The numbers are printed
      with the '-' right next to the number, and it disregards line
-     length. `newline()', which will be autoloaded from
+     length.  `newline()', which will be autoloaded from
      `stringproc.lisp' might be useful, if you whish to place
      intermediate line breaking.
 
@@ -2754,17 +3562,17 @@ File: maxima.info,  Node: Functions and Variables for characters,  Next: Functio
      Returns `true' if <char_1> and <char_2> are the same.
 
  -- Function: cequalignore (<char_1>, <char_2>)
-     Like `cequal' but ignores case.
+     Like `cequal'  but ignores case.
 
  -- Function: cgreaterp (<char_1>, <char_2>)
      Returns `true' if the ASCII number of <char_1> is greater than the
      number of <char_2>.
 
  -- Function: cgreaterpignore (<char_1>, <char_2>)
-     Like `cgreaterp' but ignores case.
+     Like `cgreaterp'  but ignores case.
 
  -- Function: charp (<obj>)
-     Returns `true' if <obj> is a Maxima-character.  See introduction
+     Returns `true' if <obj> is a Maxima character.  See introduction
      for example.
 
  -- Function: cint (<char>)
@@ -2775,7 +3583,7 @@ File: maxima.info,  Node: Functions and Variables for characters,  Next: Functio
      number of <char_2>.
 
  -- Function: clesspignore (<char_1>, <char_2>)
-     Like `clessp' but ignores case.
+     Like `clessp'  but ignores case.
 
  -- Function: constituent (<char>)
      Returns `true' if <char> is a graphic character and not the space
@@ -2792,14 +3600,14 @@ File: maxima.info,  Node: Functions and Variables for characters,  Next: Functio
           d e f g h i j k l m n o p q r s t u v w x y z { | } ~
 
  -- Function: cunlisp (<lisp_char>)
-     Converts a Lisp-character into a Maxima-character.  (You won't
+     Converts a Lisp character into a Maxima character.  (You won't
      need it.)
 
  -- Function: digitcharp (<char>)
      Returns `true' if <char> is a digit.
 
  -- Function: lcharp (<obj>)
-     Returns `true' if <obj> is a Lisp-character.  (You won't need it.)
+     Returns `true' if <obj> is a Lisp character.  (You won't need it.)
 
  -- Function: lowercasep (<char>)
      Returns `true' if <char> is a lowercase character.
@@ -2885,7 +3693,7 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: sdowncase (<string>)
  -- Function: sdowncase (<string>, <start>)
  -- Function: sdowncase (<string>, <start>, <end>)
-     Like `supcase', but uppercase characters are converted to
+     Like `supcase',  but uppercase characters are converted to
      lowercase.
 
  -- Function: sequal (<string_1>, <string_2>)
@@ -2893,10 +3701,11 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      and contain the same characters.
 
  -- Function: sequalignore (<string_1>, <string_2>)
-     Like `sequal' but ignores case.
+     Like `sequal'  but ignores case.
 
  -- Function: sexplode (<string>)
      `sexplode' is an alias for function `charlist'.
+
 
  -- Function: simplode (<list>)
  -- Function: simplode (<list>, <delim>)
@@ -2954,8 +3763,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: smismatch (<string_1>, <string_2>, <test>)
      Returns the position of the first character of <string_1> at which
      <string_1> and <string_2> differ or `false'.  Default test function
-     for matching is `sequal'.  If `smismatch' should ignore case, use
-     `sequalignore' as test.
+     for matching is `sequal'.    If `smismatch' should ignore case, use
+     `sequalignore'  as test.
 
      Example:
 
@@ -2985,14 +3794,15 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      matches <char>.  The first character in <string> is in position 1.
      For matching characters ignoring case see `ssearch'.
 
+
  -- Function: sremove (<seq>, <string>)
  -- Function: sremove (<seq>, <string>, <test>)
  -- Function: sremove (<seq>, <string>, <test>, <start>)
  -- Function: sremove (<seq>, <string>, <test>, <start>, <end>)
      Returns a string like <string> but without all substrings matching
-     <seq>.  Default test function for matching is `sequal'.  If
+     <seq>.  Default test function for matching is `sequal'.    If
      `sremove' should ignore case while searching for <seq>, use
-     `sequalignore' as test.  Use <start> and <end> to limit searching.
+     `sequalignore'  as test.  Use <start> and <end> to limit searching.
      Note that the first character in <string> is in position 1.
 
      Examples:
@@ -3019,8 +3829,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: ssearch (<seq>, <string>, <test>, <start>, <end>)
      Returns the position of the first substring of <string> that
      matches the string <seq>.  Default test function for matching is
-     `sequal'.  If `ssearch' should ignore case, use `sequalignore' as
-     test.  Use <start> and <end> to limit searching.  Note that the
+     `sequal'.    If `ssearch' should ignore case, use `sequalignore'
+     as test.  Use <start> and <end> to limit searching.  Note that the
      first character in <string> is in position 1.
 
      Example:
@@ -3033,9 +3843,12 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      Returns a string that contains all characters from <string> in an
      order such there are no two successive characters <c> and <d> such
      that `test (<c>, <d>)' is `false' and `test (<d>, <c>)' is `true'.
-     Default test function for sorting is <clessp>.  The set of test
-     functions is `{clessp, clesspignore, cgreaterp, cgreaterpignore,
-     cequal, cequalignore}'.
+     Default test function for sorting is `clessp'.    The set of test
+     functions is `{`clessp',
+
+     `clesspignore',  `cgreaterp',  `cgreaterpignore',
+
+     `cequal',  `cequalignore' }'.
 
      Example:
 
@@ -3051,8 +3864,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      Returns a string like <string> except that all substrings matching
      <old> are replaced by <new>.  <old> and <new> need not to be of
      the same length.  Default test function for matching is `sequal'.
-     If `ssubst' should ignore case while searching for old, use
-     `sequalignore' as test.  Use <start> and <end> to limit searching.
+      If `ssubst' should ignore case while searching for old, use
+     `sequalignore'  as test.  Use <start> and <end> to limit searching.
      Note that the first character in <string> is in position 1.
 
      Examples:
@@ -3067,7 +3880,7 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>)
  -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>,
           <end>)
-     Like `subst' except that only the first substring that matches
+     Like `subst'  except that only the first substring that matches
      <old> is replaced.
 
  -- Function: strim (<seq>,<string>)
@@ -3083,10 +3896,10 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
           (%o3)                           7
 
  -- Function: striml (<seq>, <string>)
-     Like `strim' except that only the left end of <string> is trimmed.
+     Like `strim'  except that only the left end of <string> is trimmed.
 
  -- Function: strimr (<seq>, <string>)
-     Like `strim' except that only the right end of string is trimmed.
+     Like `strim'  except that only the right end of string is trimmed.
 
  -- Function: substring (<string>, <start>)
  -- Function: substring (<string>, <start>, <end>)
@@ -3118,13 +3931,16 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
 
  -- Function: tokens (<string>)
  -- Function: tokens (<string>, <test>)
-     Returns a list of tokens, which have been extracted from <string>.
-     The tokens are substrings whose characters satisfy a certain test
-     function.  If test is not given, <constituent> is used as the
-     default test.  `{constituent, alphacharp, digitcharp, lowercasep,
-     uppercasep, charp, characterp, alphanumericp}' is the set of test
-     functions.  (The Lisp-version of `tokens' is written by Paul
-     Graham. ANSI Common Lisp, 1996, page 67.)
+     Returns a list of tokens, which have been extracted from the
+     argument <string>.  The tokens are substrings, whose characters
+     satisfy a certain test function.  If the argument <test> is not
+     given, the test `constituent' is used as the default test.  The
+     set of test functions is `{`constituent',  `alphacharp',
+
+     `digitcharp',  `lowercasep',  `uppercasep',
+
+     `charp',  `alphanumericp' }'.  (The Lisp-version of `tokens' is
+     written by Paul Graham.  ANSI Common Lisp, 1996, page 67.)
 
      Examples:
 
@@ -4102,13 +4918,13 @@ File: maxima.info,  Node: Functions and Variables for to_poly_solve,  Prev: to_p
 75.1 Functions and Variables for to_poly_solve
 ==============================================
 
-The packages `topoly' and `to_poly_solve' are experimental; the
+The packages `to_poly' and `to_poly_solve' are experimental; the
 specifications of the functions in these packages might change or the
 some of the functions in these packages might be merged into other
 Maxima functions.
 
 Barton Willis (Professor of Mathematics, University of Nebraska at
-Kearney) wrote the `topoly' and `to_poly_solve' packages and the
+Kearney) wrote the `to_poly' and `to_poly_solve' packages and the
 English language user documentation for these packages.
 
  -- Operator: %and
@@ -4176,7 +4992,7 @@ English language user documentation for these packages.
      There is no support for distributing `%and' over `%or'; neither is
      there support for distributing a logical negation over `%and'.
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Related functions: `%or, %if, and, or, not'
 
@@ -4220,7 +5036,7 @@ English language user documentation for these packages.
      inequations that are readily convertible to an equivalent linear
      inequation.
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The operator `%if' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -4291,7 +5107,7 @@ English language user documentation for these packages.
      neither is there support for distributing a logical negation over
      `%or'.
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Related functions: `%or, %if, and, or, not'
 
@@ -4315,7 +5131,7 @@ English language user documentation for these packages.
 
      Related functions: `isreal_p'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The operator `complex_number_p' is experimental; its
      specifications might change and its functionality might be merged
@@ -4349,7 +5165,7 @@ English language user documentation for these packages.
 
           funmake: first argument must be a symbol, subscripted symbol,
           string, or lambda expression; found: a < b
-          #0: compose_functions(l=[a < b])(to_poly_solver.mac line 40)
+          #0: compose_functions(l=[a < b])(to_poly_solve.mac line 40)
            -- an error. To debug this try: debugmode(true);
 
         * To avoid name conflicts, the independent variable is
@@ -4367,7 +5183,7 @@ English language user documentation for these packages.
           (%i8) is(equal(%o6,%o7));
           (%o8)                         true
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status:  The function `compose_functions' is experimental; its
      specifications might change and its functionality might be merged
@@ -4396,7 +5212,7 @@ English language user documentation for these packages.
 
      Related functions: `float, bfloat'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `dfloat' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -4510,7 +5326,7 @@ English language user documentation for these packages.
 
      Related functions: `elim, eliminate, elim_allbut'
 
-     To use: `load(topoly)'
+     To use: `load(to_poly)'
 
      Status: The function `eliminate_using' is experimental; its
      specifications might change and its functionality might be merged
@@ -4618,7 +5434,7 @@ English language user documentation for these packages.
           (%i5) isreal_p(log(x));
           (%o5)                   isreal_p(log(x))
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Related functions: `complex_number_p'
 
@@ -4664,7 +5480,7 @@ English language user documentation for these packages.
 
      Related functions: `nicedummies'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `new_variable' is experimental; its
      specifications might change and its functionality might be merged
@@ -4683,7 +5499,7 @@ English language user documentation for these packages.
 
      Related functions: `new_variable'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `nicedummies' is experimental; its
      specifications might change and its functionality might be merged
@@ -4725,7 +5541,7 @@ English language user documentation for these packages.
 
      Related function: `carg, isreal_p'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `parg' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -4743,7 +5559,7 @@ English language user documentation for these packages.
           (%o2)     ---------------- - --------------------- = 3
                            2                     2
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `real_imagpart_to_conjugate' is experimental;
      its specifications might change and its functionality might be
@@ -4766,7 +5582,7 @@ English language user documentation for these packages.
           (%o3)             ------------ + %i atan2(b, a)
                                  2
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `rectform_log_if_constant' is experimental;
      the specifications of this function might change might change and
@@ -4801,7 +5617,7 @@ English language user documentation for these packages.
      to an expression.  See Abramowitz and Stegun, Eqs. 4.4.6 through
      4.4.8 and 4.6.4 through 4.6.6.
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `standardize_inverse_trig' is experimental;
      its specifications might change and its functionality might be
@@ -4812,7 +5628,7 @@ English language user documentation for these packages.
      the right hand side of each equation for the left hand side.  The
      substitutions are made in parallel; for example
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) subst_parallel([x=y,y=x], [x,y]);
           (%o2)                        [y, x]
@@ -4868,7 +5684,7 @@ English language user documentation for these packages.
      solutions to the equation `e'.  Informally, `to_poly' attempts to
      polynomialize the equation <e>; an example might clarify:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly(sqrt(x) = 3, [x]);
                                       2
@@ -4940,7 +5756,7 @@ English language user documentation for these packages.
      When `to_poly_solve' is able to determine the solution set, each
      member of the solution set is a list in a `%union' object:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly_solve(x*(x-1) = 0, x);
           (%o2)               %union([x = 0], [x = 1])
@@ -4950,7 +5766,7 @@ English language user documentation for these packages.
 
           (%i3) to_poly_solve(x^k + 2* x + 1 = 0, x);
 
-          Nonalgebraic argument given to 'topoly'
+          Nonalgebraic argument given to 'to_poly'
           unable to solve
                                     k
           (%o3)            %solve([x  + 2 x + 1 = 0], [x])
@@ -4997,7 +5813,7 @@ English language user documentation for these packages.
      Also, some it can solve some equations that are solvable in in
      terms of the Lambert W function; some examples:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly_solve(set(max(x,y) = 5, x+y = 2), set(x,y));
           (%o2)      %union([x = - 3, y = 5], [x = 5, y = - 3])
@@ -5131,10 +5947,10 @@ English language user documentation for these packages.
           (%o12) %union(%if(a - 1 = 0, [x = %c0], %union()),
                                          %if(a - 1 # 0, [x = 0], %union()))
 
-     The `to_poly_solver' uses data stored in the hashed array
+     The `to_poly_solve' uses data stored in the hashed array
      `one_to_one_reduce' to solve equations of the form f(a) = f(b).
      The assignment `one_to_one_reduce['f,'f] : lambda([a,b], a=b)'
-     tells `to_poly_solver' that the solution set of f(a) = f(b) equals
+     tells `to_poly_solve' that the solution set of f(a) = f(b) equals
      the solution set of a=b; for example
 
           (%i13) one_to_one_reduce['f,'f] : lambda([a,b], a=b)$
@@ -5143,7 +5959,7 @@ English language user documentation for these packages.
           (%o14)             %union([x = - 1], [x = 1])
 
      More generally, the assignment `one_to_one_reduce['f,'g] :
-     lambda([a, b], w(a, b) = 0' tells `to_poly_solver' that the
+     lambda([a, b], w(a, b) = 0' tells `to_poly_solve' that the
      solution set of `f(a) = f(b)' equals the solution set of `w(a,b) =
      0'; for example
 
@@ -5152,10 +5968,10 @@ English language user documentation for these packages.
           (%i16) to_poly_solve(f(x) - g(x),x);
           (%o16)                   %union([x = 2])
 
-     Additionally, the function `to_poly_solver' uses data stored in
-     the hashed array `function_inverse' to solve equations of the form
+     Additionally, the function `to_poly_solve' uses data stored in the
+     hashed array `function_inverse' to solve equations of the form
      `f(a) = b'.  The assignment `function_inverse['f] : lambda([s],
-     g(s))' informs  `to_poly_solver' that the solution set to `f(x) =
+     g(s))' informs  `to_poly_solve' that the solution set to `f(x) =
      b' equals the solution set to `x = g(b)'; two examples:
 
           (%i17) function_inverse['Q] : lambda([s], P(s))$
@@ -5196,7 +6012,7 @@ English language user documentation for these packages.
                                         2              2
 
         * For an equation that involves the absolute value function, the
-          `to_poly_solver' consults the fact database to decide if the
+          `to_poly_solve' consults the fact database to decide if the
           argument to the absolute value is complex valued.  When
 
           (%i1) to_poly_solve(abs(x) = 6, x);
@@ -5215,7 +6031,7 @@ English language user documentation for these packages.
 
      Related functions: `to_poly'
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The function `to_poly_solve' is experimental; its
      specifications might change and its functionality might be merged
@@ -5987,9 +6803,12 @@ _Aussage - predicate_
      Ausdrücke, die zu den booleschen Werten `true' oder `false'
      auswerten.
 
+_Aussagefunktion - predicate function_
+
+
 _Auswertung - evaluation_
-     Ausdrücke werden zunächst ausgewertet. Funktionen werden
-     aufgerufen,        die Werte von Variablen werden eingesetzt. Die
+     Ausdrücke werden zunächst ausgewertet.  Funktionen werden
+     aufgerufen,        die Werte von Variablen werden eingesetzt.  Die
      Auswertung wird von        der Vereinfachung (Simplification)
      unterschieden und wird vor der        Vereinfachung ausgeführt.
 
@@ -6036,14 +6855,36 @@ _Konsole Ein- und Ausgabe - console interaction_
 _Marke - label_
      Die Eingaben und Ausgaben werden von Maxima in globale Variablen,
      die als        Marken bezeichnet werden, mit den Namen `%i' und
-     `%o' sowie        `%t' für Zwischenergebnisse abgelegt. Die Marken
-     werden        fortlaufend numeriert.
+     `%o' sowie        `%t' für Zwischenergebnisse abgelegt.  Die
+     Marken werden        fortlaufend numeriert.
 
 _Matrix, schwachbesetzt - sparse matrix_
 
 
+_Musterargument - pattern argument_
+
+
+_Mustervariable - pattern variable_
+     Mustervariable werden mit der Funktion `matchdeclare'  definiert.
+           Mustervariable werden bei der Definition von Mustern
+     verwendet.  Den        Mustervariablen werden bei Erkennung eines
+     Musters die TeilausdrÃ¼cke        zugewiesen, fÃ¼r die eine
+     Ãbereinstimmung vorliegt.  Von den        Mustervariablen sind
+     die Musterargumente zu unterscheiden.
+
 _Optionsvariable - option variable_
 
+
+_Muster - pattern_
+
+
+_Musterabgleich - pattern matching_
+
+
+_N-ary-Operator - n-ary operator_
+     Ein N-ary-Operator kann ein beliebige Anzahl an Operanden haben.
+          Beispiele fÃ¼r N-Ary-Operatoren sind die Addition `+' und die
+           Multiplikation `*'.
 
 _Pipe - pipe_
      Eine Pipe (englisch für Rohr, Röhre) bezeichnet einen gepufferten
@@ -6056,6 +6897,9 @@ _Programmfehler - bug_
 
 _Prompt - prompt_
      Kann auch als Eingabeaufforderung übersetzt werden.
+
+_Regelpaket - rule package_
+
 
 _Schlüsselwort - keyword_
 
@@ -6077,6 +6921,11 @@ _Substantivform - noun form_
      vereinfachter Ausdruck.
 
 _Systemvariable - system variable_
+     Systemvariablen enthalten von Maxima verwaltete globale Werte.
+        Systemvariablen sollten vom Nutzer, auch wenn es möglich ist,
+     nicht        genutzt werden.
+
+_Teilausdruck - subexpression_
 
 
 _Token - token_
@@ -6091,8 +6940,8 @@ _Verbform - verb form_
 
 _Vereinfachung - simplification_
      Mathematischen Funktionen, algebraische Ausdrücke oder Gleichungen
-           werden nach der Auswertung vereinfacht. Ein Großteil dieser
-           Vereinfachungen geschieht automatisch. Für weitere
+           werden nach der Auswertung vereinfacht.  Ein Großteil dieser
+           Vereinfachungen geschieht automatisch.  Für weitere
      Vereinfachungen gibt        es spezielle Funktionen und eine
      Vielzahl von Schaltern, mit denen        gezielt bestimmte
      Ergebnisse erzielt werden können.
@@ -6104,12 +6953,12 @@ _Zwischenraumzeichen - whitespace_
      Zwischenraumzeichen ist eine Bezeichnung für Zeichen in einem
      Text, die        im Texteditor oder Textverarbeitungsprogramm
      nicht dargestellt        werden und dennoch (Speicher-)Platz in
-     Anspruch nehmen. Sie dienen        vorrangig dazu, Wörter oder
+     Anspruch nehmen.  Sie dienen        vorrangig dazu, Wörter oder
      Zeilen voneinander abzugrenzen.
 
 _Wortart - part of speech_
      Beim Einlesen eines Ausdrucks prüft der Parser, ob die Argumente
-     eines        Operators die korrekte Wortart haben. Maxima kennt
+     eines        Operators die korrekte Wortart haben.  Maxima kennt
      die Wortarten        `expr', `clause' und `any'.
 
 

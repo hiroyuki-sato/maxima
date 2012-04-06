@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -7,6 +7,339 @@ This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Nutzerdefinierte Operatoren,  Prev: Zuweisungsoperatoren,  Up: Operatoren
+
+7.7 Nutzerdefinierte Operatoren
+===============================
+
+* Menu:
+
+* Einführung in nutzerdefinierte Operatoren::
+* Funktionen und Variablen für nutzerdefinierte Operatoren::
+
+
+File: maxima.info,  Node: Einführung in nutzerdefinierte Operatoren,  Next: Funktionen und Variablen für nutzerdefinierte Operatoren,  Prev: Nutzerdefinierte Operatoren,  Up: Nutzerdefinierte Operatoren
+
+7.7.1 Einführung in nutzerdefinierte Operatoren
+-----------------------------------------------
+
+Es ist möglich neue Operatoren zu definieren, vorhandene Operatoren zu
+entfernen oder deren Eigenschaften zu ändern.  Jede Funktion kann als
+ein Operator definiert werden, die Funktion kann, muss aber nicht
+definiert sein.
+
+Im Folgenden werden die Operatoren `dd' und `"<-"' definiert.  Nach der
+Definition als Operatoren ist `dd a' gleichbedeutend mit `"dd"(a)' und
+`a <- b' entspricht dem Funktionsaufruf `"<-"(a,b)'.  In diesem
+Beispiel sind die Funktionen `"dd"' und `"<-"' nicht definiert.
+
+     (%i1) prefix ("dd");
+     (%o1)                          dd
+     (%i2) dd a;
+     (%o2)                         dd a
+     (%i3) "dd" (a);
+     (%o3)                         dd a
+     (%i4) infix ("<-");
+     (%o4)                          <-
+     (%i5) a <- dd b;
+     (%o5)                      a <- dd b
+     (%i6) "<-" (a, "dd" (b));
+     (%o6)                      a <- dd b
+
+Maxima kennt die folgenden Funktionen, um Operatoren zu definieren:
+`prefix', `postfix', `infix', `nary', `matchfix' und `nofix'.
+
+Der Vorrang eines Operators <op> vor anderen Operatoren leitet sich aus
+dem links- und rechtsseitigen Vorrang des Operators ab.  Sind die
+links- und rechtsseitigen Vorränge von <op> beide größer als der links-
+und rechtsseitige Vorrang eines anderen Operators, dann hat <op>
+Vorrang vor diesem Operator.  Sind die Vorränge nicht beide größer oder
+kleiner, werden weitere Regeln zur Bestimmung des Vorrangs herangezogen.
+
+Maxima kennt die Wortart eines Operanden und des Ergebnisses eines
+Operanden.  Wortart bedeutet hier, den Typ eines Operanden.  Maxima
+kennt die drei Typen `expr', `clause' und `any'.  Diese stehen für einen
+algebraischen Ausdruck, einen logischen Ausdruck und einen beliebigen
+Ausdruck.  Mit Hilfe der für einen Operator definierten Wortart kann
+der Parser beim Einlesen eines Ausdrucks Syntaxfehler feststellen.
+
+Die Assoziativität eines Operators <op> hängt ab von seinem Vorrang.
+Ein größerer linksseitiger Vorrang hat zur Folge, dass der Operator
+<op> vor einem anderen Operator auf seiner linken Seite ausgewertet
+wird.  Während ein größerer rechtsseitiger Vorrang zur Folge hat, dass
+der Operator vor anderen Operatoren auf der rechten Seite ausgewertet
+wird.  Daraus folgt, dass ein größerer linksseitiger Vorrang <lbp>
+einen Operator <op> rechts-assoziativ und eine größerer rechtsseitiger
+Vorrang <rbp> den Operator links-assoziativ macht.  Sind der links- und
+rechtsseitige Vorrang gleich groß, ist der Operator <op>
+links-assoziativ.
+
+Mit den Befehlen `remove'  und `kill'  können Operatoreigenschaften von
+einem Symbol entfernt werden.  `remove("<a>", op)' entfernt die
+Operatoreigenschaften des Symbols <a>.  `kill("<a>")' entfernt alle
+Eigenschaften einschließich der Operator-Eigenschaften des Symbols <a>.
+In diesem Fall steht der Name des Symbols in Anführungszeichen.
+
+     (%i1) infix ("##");
+     (%o1)                          ##
+     (%i2) "##" (a, b) := a^b;
+                                          b
+     (%o2)                     a ## b := a
+     (%i3) 5 ## 3;
+     (%o3)                          125
+     (%i4) remove ("##", op);
+     (%o4)                         done
+     (%i5) 5 ## 3;
+     Incorrect syntax: # is not a prefix operator
+     5 ##
+       ^
+     (%i5) "##" (5, 3);
+     (%o5)                          125
+     (%i6) infix ("##");
+     (%o6)                          ##
+     (%i7) 5 ## 3;
+     (%o7)                          125
+     (%i8) kill ("##");
+     (%o8)                         done
+     (%i9) 5 ## 3;
+     Incorrect syntax: # is not a prefix operator
+     5 ##
+       ^
+     (%i9) "##" (5, 3);
+     (%o9)                       ##(5, 3)
+
+
+File: maxima.info,  Node: Funktionen und Variablen für nutzerdefinierte Operatoren,  Prev: Einführung in nutzerdefinierte Operatoren,  Up: Nutzerdefinierte Operatoren
+
+7.7.2 Funktionen und Variablen für nutzerdefinierte Operatoren
+--------------------------------------------------------------
+
+ -- Funktion: infix (<op>)
+ -- Funktion: infix (<op>, <lbp>, <rbp>)
+ -- Funktion: infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)
+     Deklariert <op> als einen Infix-Operator.  Ein Infix-Operator hat
+     eine Funktionsdefinition mit zwei Argumenten.  Der Infix-Operator
+     steht zwischen den Operanden.  Zum Beispiel ist die Subtraktion `-'
+     ein Infix-Operator.
+
+     `infix(<op>)' deklariert <op> als einen Infix-Operator mit einem
+     links- und rechtsseitigen Vorrang von jeweils 180.
+
+     `infix(<op>, <lbp>, <rbp>)' deklariert <op> als einen
+     Infix-Operator mit den angegebenen Werten für den links- und
+     rechtsseitigen Vorrang.
+
+     `infix(<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)' deklariert <op>
+     als einen Infix-Operator mit den angegebenen Vorrängen sowie den
+     Wortarten <lpos>, <rpos> und <pos> für den linken und den rechten
+     Operanden sowie das Ergebnis des Operators.
+
+     Beispiele:
+
+     Sind die rechtsseitigen und linksseitigen Vorränge eines Operators
+     <op> größer als die entsprechenden Vorränge eines anderen
+     Operators, dann hat der Operator <op> Vorrang.
+
+          (%i1) :lisp (get '$+ 'lbp)
+          100
+          (%i1) :lisp (get '$+ 'rbp)
+          100
+          (%i1) infix ("##", 101, 101);
+          (%o1)                          ##
+          (%i2) "##"(a, b) := sconcat("(", a, ",", b, ")");
+          (%o2)       (a ## b) := sconcat("(", a, ",", b, ")")
+          (%i3) 1 + a ## b + 2;
+          (%o3)                       (a,b) + 3
+          (%i4) infix ("##", 99, 99);
+          (%o4)                          ##
+          (%i5) 1 + a ## b + 2;
+          (%o5)                       (a+1,b+2)
+
+     Ein größerer linksseitige Vorrang <lbp> bewirkt, dass der Operator
+     <op> rechts-assoziativ ist.  Ein größerer rechtsseitiger Vorrang
+     macht dagegen den Operator <op> links-assoziativ.
+
+          (%i1) infix ("##", 100, 99);
+          (%o1)                          ##
+          (%i2) "##"(a, b) := sconcat("(", a, ",", b, ")")$
+          (%i3) foo ## bar ## baz;
+          (%o3)                    (foo,(bar,baz))
+          (%i4) infix ("##", 100, 101);
+          (%o4)                          ##
+          (%i5) foo ## bar ## baz;
+          (%o5)                    ((foo,bar),baz)
+
+     Maxima kann Syntaxfehler beim Einlesen eines Ausdrucks
+     feststellen, wenn der eingelesene Operand nicht die für den
+     Operator definierte Wortart hat.
+
+          (%i1) infix ("##", 100, 99, expr, expr, expr);
+          (%o1)                          ##
+          (%i2) if x ## y then 1 else 0;
+          Incorrect syntax: Found algebraic expression where
+          logical expression expected
+          if x ## y then
+                       ^
+          (%i2) infix ("##", 100, 99, expr, expr, clause);
+          (%o2)                          ##
+          (%i3) if x ## y then 1 else 0;
+          (%o3)                if x ## y then 1 else 0
+
+ -- Funktion: matchfix (<ldelimiter>, <rdelimiter>)
+ -- Funktion: matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)
+     Deklariert einen Matchfix-Operator mit dem linksseitigen
+     Begrenzungszeichen <ldelimiter> und dem rechtsseitigen
+     Begrenzungszeichen <rdelimiter>.
+
+     Ein Matchfix-Operator hat eine beliebige Anzahl an Argumenten, die
+     zwischen dem linksseitigen und dem rechtsseitigen
+     Begrenzungszeichen stehen.  Das Begrenzungszeichen kann eine
+     beliebige Zeichenkette sein.  Einige Zeichen wie `%', `,', `$' und
+     `;' können nicht als Begrenzungszeichen definiert werden.
+
+     Ein linksseitiges Begrenzungszeichen kann nicht verschiedene
+     rechtsseitige Begrenzungszeichen haben.
+
+     Maxima-Operatoren können als Matchfix-Operatoren definiert werden,
+     ohne dass sich die sonstigen Operatoreigenschaften ändern.  So
+     kann zum Beispiel der Operator `+' als Matchfix-Operator definiert
+     werden.
+
+     `matchfix(<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)' definiert
+     die Wortarten für die Argumente <arg_pos> und das Ergebnis <pos>
+     sowie das linksseitige <ldelimiter> und rechtsseitige <rdelimiter>
+     Begrenzungszeichen.
+
+     Die zu einem Matchfix-Operator zugehörige Funktion kann jede
+     nutzerdefinierte Funktion sein, die mit `:='  oder `define'
+     definiert wird.  Die Definition der Funktion kann mit
+     `dispfun(<ldelimiter>)' ausgegeben werden.
+
+     Maxima kennt nur den Operator für Listen `[ ]' als
+     Matchfix-Operator.  Klammern `( )' und Anführungszeichen `" "'
+     arbeiten wie Matchfix-Operatoren, werden aber vom Parser nicht als
+     Matchfix-Operatoren behandelt.
+
+     `matchfix'  wertet die Argumente aus.  `matchfix' gibt das erste
+     Argument <ldelimiter> als Ergebnis zurück.
+
+     Beispiele:
+
+     Begrenzungszeichen können eine beliebige Zeichenkette sein.
+
+          (%i1) matchfix ("@@", "~");
+          (%o1)                          @@
+          (%i2) @@ a, b, c ~;
+          (%o2)                      @@a, b, c~
+          (%i3) matchfix (">>", "<<");
+          (%o3)                          >>
+          (%i4) >> a, b, c <<;
+          (%o4)                      >>a, b, c<<
+          (%i5) matchfix ("foo", "oof");
+          (%o5)                          foo
+          (%i6) foo a, b, c oof;
+          (%o6)                     fooa, b, coof
+          (%i7) >> w + foo x, y oof + z << / @@ p, q ~;
+                               >>z + foox, yoof + w<<
+          (%o7)                ----------------------
+                                      @@p, q~
+
+     Matchfix-Operatoren können für nutzerdefinierte Funktionen
+     definiert werden.
+
+          (%i1) matchfix ("!-", "-!");
+          (%o1)                         "!-"
+          (%i2) !- x, y -! := x/y - y/x;
+                                              x   y
+          (%o2)                   !-x, y-! := - - -
+                                              y   x
+          (%i3) define (!-x, y-!, x/y - y/x);
+                                              x   y
+          (%o3)                   !-x, y-! := - - -
+                                              y   x
+          (%i4) define ("!-" (x, y), x/y - y/x);
+                                              x   y
+          (%o4)                   !-x, y-! := - - -
+                                              y   x
+          (%i5) dispfun ("!-");
+                                              x   y
+          (%t5)                   !-x, y-! := - - -
+                                              y   x
+
+          (%o5)                         done
+          (%i6) !-3, 5-!;
+                                          16
+          (%o6)                         - --
+                                          15
+          (%i7) "!-" (3, 5);
+                                          16
+          (%o7)                         - --
+                                          15
+
+ -- Funktion: nary (<op>)
+ -- Funktion: nary (<op>, <bp>, <arg_pos>, <pos>)
+     `nary(<op>)' definiert einen `N-ary'-Operator <op> mit einem
+     linksseitigen Vorrang von 180.  Der rechtsseitige Vorrang wird
+     nicht benötigt.
+
+     `nary(<op>, <bp>, <arg_pos>, <pos>)' definiert einen
+     `N-ary'-Operator <op> mit einem rechtsseitigen Vorrang von <bp> und
+     der Wortart <arg_pos> für den Operanden und der Wortart <pos> fÃ¼r
+     das Ergebnis.
+
+     Ein `N-ary'-Operator ist ein Operator, der eine beliebige Anzahl an
+     Argumenten haben kann.  Die Argumente werden durch den Operator
+     voneinander getrennt, so ist zum Beispiel `+' ein `N-ary'-Operator
+     und `A+B+C'.
+
+     Im Unterschied zur Definition eines Operators kann eine Funktion
+     `f' auch als `nary'  mit der Funktion `declare'  deklariert
+     werden.  Die Deklaration hat Auswirkung auf die Vereinfachung der
+     Funktion.  Zum Beispiel wird ein Ausdruck `j(j(a,b),j(c,d)' zu
+     `j(a,b,c,d)' vereinfacht.
+
+ -- Funktion: nofix (<op>)
+ -- Funktion: nofix (<op>, <pos>)
+     `nofix(<op>)' definiert den Operator <op> als einen Nofix-Operator.
+
+     `nofix(<op>, <pos>)' definiert einen Nofix-Operator mit der
+     Wortart <pos> für das Ergebnis.
+
+     Nofix-Operatoren sind Operatoren, die kein Argument haben.  Tritt
+     ein solcher Operator allein auf, wird die dazugehörige Funktion
+     ausgewertet.  Zum Beispiel beendet die Funktion `quit()' eine
+     Maxima-Sitzung.  Wird diese Funktion mit `nofix("quit")' als ein
+     Nofix-Operator definiert, genügt die Eingabe von `quit', um eine
+     Maxima-Sitzung zu beenden.
+
+ -- Funktion: postfix (<op>)
+ -- Funktion: postfix (<op>, <lbp>, <lpos>, <pos>)
+     `postfix (<op>)' definiert einen Postfix-Operator <op>.
+
+     `postfix (<op>, <lbp>, <lpos>, <pos>)' definiert einen
+     Postfix-Operator <op> mit einem linksseitigem Vorrang von <lbp>
+     sowie den Wortarten <lpos> für den Operanden und <pos> für das
+     Ergebnis.
+
+     Ein Postfix-Operator hat einen Operanden, der dem Operator
+     vorangestellt ist.  Ein Beispiel ist der `!'-Operator mit `3!'.
+     Die Funktion `postfix("x")' erweitert die Maxima-Syntax um den
+     Postfix-Operator `x'.
+
+ -- Funktion: prefix (<op>)
+ -- Funktion: prefix (<op>, <rbp>, <rpos>, <pos>)
+     `prefix (<op>)' definiert einen Prefix-Operator <op>.
+
+     `prefix (<op>, <lbp>, <lpos>, <pos>)' definiert einen
+     Prefix-Operator <op> mit einem rechtsseitigem Vorrang von <rbp>
+     sowie den Wortarten <rpos> für den Operanden und <pos> für das
+     Ergebnis.
+
+     Ein Prefix-Operator hat einen Operanden, der dem Operator
+     nachfolgt.  Mit `prefix("x")' wird die Maxima-Syntax um einen
+     Prefix-Operator `x' erweitert.
 
 
 File: maxima.info,  Node: Auswertung,  Next: Vereinfachung,  Prev: Operatoren,  Up: Top
@@ -605,7 +938,7 @@ File: maxima.info,  Node: Funktionen und Variablen für die Auswertung,  Prev: E
         float               halfangles      infeval
         isolate_wrt_times   keepfloat       letrat
         listarith           logabs          logarc
-        logexpand           lognegint       lognumer
+        logexpand           lognegint
         m1pbranch           numer_pbranch   programmode
         radexpand           ratalgdenom     ratfac
         ratmx               ratsimpexpons   simp
@@ -2093,7 +2426,7 @@ File: maxima.info,  Node: Funktionen für komplexe Zahlen,  Next: Funktionen der
      Unterschied zu der Funktion `abs',  zerlegt die Funktion `cabs'
      einen komplexen Ausdruck immer in einen Realteil und Imaginärteil,
      um den komplexen Betrag zu berechnen.  Sind <x> und <y> zwei
-     reelle Variablen oder Ausdrücke berechnet die Funktion `cabs' den
+     reelle Variablen oder Ausdrücke, berechnet die Funktion `cabs' den
      Betrag des komplexen Ausdrucks `x + %i*y' als:
                                      2    2
                                sqrt(y  + x )
@@ -2952,14 +3285,14 @@ File: maxima.info,  Node: Wurzel-, Exponential- und Logarithmusfunktion,  Next: 
      Auswertung der Logarithmusfunktion:
 
     `logexpand'
-          `log(a^b)' wird zu `b*log(a)' vereinfacht.  Hat `logexpand'
-          den Wert `all', wird zusätzlich `log(a*b)' zu `log(a)+log(b)'
+          Hat die Optionsvariable `logexpand' den Wert `true', dann wird
+          `log(a^b)' zu `b*log(a)' vereinfacht.  Hat `logexpand' den
+          Wert `all', wird zusätzlich `log(a*b)' zu `log(a)+log(b)'
           vereinfacht.  Mit den Wert `super' vereinfacht Maxima
           weiterhin `log(a/b)' zu `log(a)-log(b)', wobei `a/b' eine
           rationale Zahl ist.  `log(1/b' wird für eine ganze Zahl `b'
           immer vereinfacht.  Hat die Optionsvariable `logexpand' den
-          Wert `false' werden alle obigen Vereinfachungen
-          ausgeschaltet.  Das ist der Standardwert.
+          Wert `false' werden alle obigen Vereinfachungen ausgeschaltet.
 
     `logsimp'
           Hat die Optionsvariable `logsimp' den Wert `false', werden
@@ -3104,13 +3437,13 @@ File: maxima.info,  Node: Wurzel-, Exponential- und Logarithmusfunktion,  Next: 
      Die Optionsvariable `logexpand' kontrolliert die Vereinfachung der
      Logarithmusfunktion `log'.
 
-     `log(a^b)' wird zu `b*log(a)' vereinfacht.  Hat `logexpand' den
-     Wert `all', wird zusätzlich `log(a*b)' zu `log(a)+log(b)'
-     vereinfacht.  Mit den Wert `super' vereinfacht Maxima weiterhin
-     `log(a/b)' zu `log(a)-log(b)', wobei `a/b' eine rationale Zahl
-     ist.  `log(1/b' wird für eine ganze Zahl `b' immer vereinfacht.
-     Hat die Optionsvariable `logexpand' den Wert `false' werden alle
-     obigen Vereinfachungen ausgeschaltet.
+     Hat `logexpand' den Wert `true', wird `log(a^b)' zu `b*log(a)'
+     vereinfacht.  Hat `logexpand' den Wert `all', wird zusätzlich
+     `log(a*b)' zu `log(a)+log(b)' vereinfacht.  Mit dem Wert `super'
+     vereinfacht Maxima weiterhin `log(a/b)' zu `log(a)-log(b)', wobei
+     `a/b' eine rationale Zahl ist.  `log(1/b' wird für eine ganze Zahl
+     `b' immer vereinfacht.  Hat die Optionsvariable `logexpand' den
+     Wert `false' werden alle obigen Vereinfachungen ausgeschaltet.
 
  -- Optionsvariable: lognegint
      Standardwert: `false'
@@ -4592,15 +4925,174 @@ File: maxima.info,  Node: Funktionen und Variablen für Eigenschaften,  Next: Fu
           (%o2)                         done
 
  -- Funktion: properties (<a>)
-     Gibt eine Liste mit den Eigenschaften zurück, die das Atom <a> von
-     Maxima oder dem Nutzer erhalten hat.
+     Gibt eine Liste mit den Eigenschaften zurück, die das Symbol <a>
+     von Maxima oder dem Nutzer erhalten hat.  Die Rückgabe kann jede
+     Eigenschaft enthalten, die mit der Funktion `declare'  einem
+     Symbol zugewiesen ist.  Diese Eigenschaften sind:
 
+
+        linear         additive       multiplicative
+        outative       commutative    symmetric
+        antisymmetric  nary           lassociativ
+        rassociative   evenfun        oddfun
+        bindtest       feature        alphabetic
+        scalar         nonscalar      nonarray
+        constant       integer        noninteger
+        even           odd            rational
+        irrational     real           imaginary
+        complex        increasing     decreasing
+        posfun         integervalued
+
+     Die folgenden Einträge beschreiben Eigenschaften, die Variablen
+     haben können:
+
+    `value'
+          Der Variable ist mit dem Operatoren `:'  oder `::'  ein Wert
+          zugewiesen.
+
+    `system value'
+          Die Variable ist eine Optionsvariable oder Systemvariable,
+          die von Maxima definiert ist.
+
+    `numer'
+          Die Variable hat einen numerischen Wert auf der
+          Eigenschaftsliste, der mit der Funktion `numerval'
+          zugewiesen ist.
+
+    `assign property'
+          Die Variable hat eine eine Funktion auf der
+          Eigenschaftsliste, die die Zuweisung eines Wertes
+          kontrolliert.
+
+     Einträge, die die Eigenschaften von Funktionen beschreiben:
+
+    `function'
+          Eine mit dem Operator `:='  oder der Funktion `define'
+          definierte Nutzerfunktion.
+
+    `macro'
+          Eine mit dem Operator `::='  definierte Makrofunktion.
+
+    `system function'
+          Ein interne Maxima-Funktion.
+
+    `special evaluation form'
+          Eine Maxima-Spezialform, die die Argumente nicht auswertet.
+
+    `transfun'
+          Wird eine Nutzerfunktion mit `translate'  übersetzt oder mit
+          der Funktion `compile'  kompiliert, erhält sie die
+          Eigenschaft `transfun'.  Interne Maxima-Funktionen, die mit
+          dem Lisp-Makro `defmfun' definiert werden, haben ebenfalls
+          diese Eigenschaft.
+
+    `deftaylor'
+          Für die Funktion ist eine Taylorreihenentwicklung definiert.
+
+    `gradef'
+          Die Funktion hat eine Ableitung.
+
+    `integral'
+          Die Funktion hat eine Stammfunktion.
+
+    `distribute over bags'
+          Ist das Argument der Funktion eine Liste, Matrix oder
+          Gleichung so wird die Funktion auf die Elemente oder beide
+          Seiten der Gleichung angewendet.
+
+    `limit function'
+          Es existiert eine Funktion für die Behandlung spezieller
+          Grenzwerte.
+
+    `conjugate function'
+          Es existiert eine Funktion, um die konjugiert komplexe
+          Funktion für spezielle Wertebereiche zu ermitteln.
+
+    `mirror symmetry'
+          Die Funktion hat die Eigenschaft der Spiegelsymmetrie.
+
+    `complex characteristic'
+          Es existiert eine Funktion, um den Realteil und den
+          Imaginärteil der Funktion für spezielle Wertebereiche zu
+          ermitteln.
+
+    `user autoload function'
+          Die Funktion wird automatisch beim ersten Aufruf aus einer
+          Datei geladen.  Der Nutzer kann mit dem Funktion
+          `setup_autoload'  eine solche Funktion definieren.
+
+     Weitere Eigenschaften, die Symbole erhalten können:
+
+    `operator'
+          Das Symbol ist ein Maxima-Operator oder ein nutzerdefinierte
+          Operator.
+
+    `rule'
+          Die Funktion oder der Operator haben eine Regel für die
+          Vereinfachung.
+
+    `alias'
+
+    `database info'
+          Das Symbol hat Einträge in Maximas Datenbank.
+
+    `hashed array, declared array, complete array'
+          Ein Hashed-Array, ein deklariertes Array oder ein Array
+          dessen Elemente einen bestimmten Typ haben.
+
+    `array function'
+          Eine Array-Funktion die mit dem Operator `:='  definiert ist.
+
+    `atvalue'
+          Dem Symbol ist mit der Funktion `atvalue'  ein Wert an einer
+          Stelle zugewiesen.
+
+    `atomgrad'
+          Für das Symbol ist mit der Funktion `gradef'  eine Ableitung
+          definiert.
+
+    `dependency'
+          Für das Symbol ist eine Abhängigkeit mit der Funktion
+          `depends'
+
+          definiert.
+
+    `matchdeclare'
+          Das Symbol ist eine mit `matchdeclare'  definierte
+          Mustervariable, der eine Aussagefunktion zugeordnet ist.
+
+    `modedeclare'
+          Für das Symbol ist mit der Funktion `mode_declare'  ein Typ
+          definiert.
+
+    `user properties'
+
+    `context'
+          Das Symbol bezeichnet einen Kontext.
+
+    `activecontext'
+          Das Symbol bezeichnet einen aktiven Kontextes.
 
  -- Systemvariable: props
      Standardwert: `[]'
 
-     `props' ist eine Liste der Symbole, die eine Eigenschaft mit den
-     Funktionen `declare', `atvalue' oder `matchdeclare' erhalten haben.
+     `props' ist eine Liste der Symbole, die vom Nutzer eine Eigenschaft
+     erhalten haben, die in die Lisp-Eigenschaftsliste des Symbols
+     eingetragen wird.  Neben den Funktionen `put'  und `qput',  mit
+     denen der Nutzer direkt eine Eigenschaft zu einem Symbol in die
+     Lisp-Eigenschaftsliste eintragen kann, legen auch
+     Maxima-Funktionen Eigenschaften zu Symbolen in der
+     Eigenschaftsliste ab und tragen diese Symbole in die
+     Systemvariable `props' ein.  Zu diesen Funktionen gehören zum
+     Beispiel `declare',
+
+     `numerval',  `matchdeclare',  `mode_declare',
+
+     `gradef'  oder `setup_autoload'.
+
+     Nach dem Start von Maxima sollte die Systemvariable `props' keine
+     Symbole enthalten.  Das ist jedoch nicht der Fall und kann als ein
+     Fehler betrachtet werden, der in Zukunft zu beheben ist.
 
  -- Funktion: propvars (<prop>)
      Gibt eine Liste mit den Atomen zurück, die in der Informationsliste
@@ -4692,9 +5184,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Eigenschaften,  Next: Fu
 
      `remove("<a>", operator)' oder `remove("<a>", op)' entfernen vom
      Atom <a> die Operatoreigenschaften, die mit den Funktionen
-     `prefix', `infix', `nary', `postfix', `matchfix' oder `nofix'
-     definiert wurden.  Die Namen von Operatoren müssen als eine
-     Zeichenkette angegeben werden.
+     `prefix',  `infix',  `nary',  `postfix',
+
+     `matchfix'  oder `nofix'  definiert wurden.  Die Namen von
+     Operatoren müssen als eine Zeichenkette angegeben werden.
 
      `remove' gibt immer `done' zurück.
 
@@ -6213,17 +6706,17 @@ werden.  Auf Ausnahmen wird im Folgenden hingewiesen.
      `gnuplot_pipes' annehmen.  Siehe das Kapitel Grafikformate.
 
 
- -- Grafikoption: plot_real_part [plot_realpart, <symbol>]
+ -- Grafikoption: plot_realpart [plot_realpart, <symbol>]
      Standardwert: `false'
 
-     Hat `plot_real_part' den Wert `true', werden Funktionen als komplex
+     Hat `plot_realpart' den Wert `true', werden Funktionen als komplex
      angenommen und der Realteil wird gezeichnet.  Das entspricht dem
      Aufruf der Grafikfunktion mit dem Ausdruck `realpart(<function>)'.
-     Hat `plot_real_part' den Wert `false', wird keine Grafik
+     Hat `plot_realpart' den Wert `false', wird keine Grafik
      gezeichnet, wenn die Funktion keinen Realteil hat.  Zum Beispiel
-     ist `log(x)' komplex, wenn <x> negativ ist.  Hat `plot_real_part'
+     ist `log(x)' komplex, wenn <x> negativ ist.  Hat `plot_realpart'
      den Wert `true', wird der Wert `log(-5)' als `log(5)' gezeichnet.
-     Hat `plot_real_part' den Wert `false' wird kein Wert gezeichnet.
+     Hat `plot_realpart' den Wert `false' wird kein Wert gezeichnet.
 
  -- Grafikoption: point_type [point_type, <type_1>, ..., <type_n>]
      Standardwert: `[bullet, circle, plus, times, asterisk, box, square,
@@ -6486,7 +6979,7 @@ File: maxima.info,  Node: Eingabe und Ausgabe,  Next: Mengen,  Prev: Grafische D
 * Kommentare::
 * Dateien::
 * Funktionen und Variablen für die Eingabe und Ausgabe::
-* Funktionen und Variablen für die Tex-Ausgabe::
+* Funktionen und Variablen für die TeX-Ausgabe::
 * Funktionen und Variablen für die Fortran-Ausgabe::
 
 
@@ -6527,18 +7020,19 @@ File: maxima.info,  Node: Dateien,  Next: Funktionen und Variablen für die Eing
 
 Folgende Funktionen und Variablen arbeiten mit Dateien:
 
-     appendfile           batch                 batchload
-     closefile            file_output_append    filename_merge
-     file_search          file_search_maxima    file_search_lisp
-     file_search_demo     file_search_usage     file_search_tests
-     file_type            load                  load_pathname
-     loadfile             loadprint             printfile
-     pathname_directory   pathname_name         pathname_type
-     save                 stringout             with_stdout
-     writefile
+
+   appendfile           batch                 batchload
+   closefile            file_output_append    filename_merge
+   file_search          file_search_maxima    file_search_lisp
+   file_search_demo     file_search_usage     file_search_tests
+   file_type            file_type_lisp        file_type_maxima
+   load                 load_pathname         loadfile
+   loadprint            pathname_directory    pathname_name
+   pathname_type        printfile             save
+   stringout            with_stdout           writefile
 
 
-File: maxima.info,  Node: Funktionen und Variablen für die Eingabe und Ausgabe,  Next: Funktionen und Variablen für die Tex-Ausgabe,  Prev: Dateien,  Up: Eingabe und Ausgabe
+File: maxima.info,  Node: Funktionen und Variablen für die Eingabe und Ausgabe,  Next: Funktionen und Variablen für die TeX-Ausgabe,  Prev: Dateien,  Up: Eingabe und Ausgabe
 
 13.3 Funktionen und Variablen für die Eingabe und Ausgabe
 =========================================================
@@ -7027,284 +7521,6 @@ File: maxima.info,  Node: Funktionen und Variablen für die Eingabe und Ausgabe,
      Maxima-Funktionen.
 
      Mit `closefile'  wird die Aufzeichnung beendet.
-
-
-File: maxima.info,  Node: Funktionen und Variablen für die Tex-Ausgabe,  Next: Funktionen und Variablen für die Fortran-Ausgabe,  Prev: Funktionen und Variablen für die Eingabe und Ausgabe,  Up: Eingabe und Ausgabe
-
-13.4 Funktionen und Variablen für die Tex-Ausgabe
-=================================================
-
- -- Function: tex (<expr>)
- -- Function: tex (<expr>, <destination>)
- -- Function: tex (<expr>, false)
- -- Function: tex (<label>)
- -- Function: tex (<label>, <destination>)
- -- Function: tex (<label>, false)
-     Prints a representation of an expression suitable for the TeX
-     document preparation system. The result is a fragment of a
-     document, which can be copied into a larger document but not
-     processed by itself.
-
-     `tex (<expr>)' prints a TeX representation of <expr> on the
-     console.
-
-     `tex (<label>)' prints a TeX representation of the expression
-     named by <label> and assigns it an equation label (to be displayed
-     to the left of the expression). The TeX equation label is the same
-     as the Maxima label.
-
-     <destination> may be an output stream or file name. When
-     <destination> is a file name, `tex' appends its output to the
-     file. The functions `openw' and `opena' create output streams.
-
-     `tex (<expr>, false)' and `tex (<label>, false)' return their TeX
-     output as a string.
-
-     `tex' evaluates its first argument after testing it to see if it
-     is a label. Quote-quote `''' forces evaluation of the argument,
-     thereby defeating the test and preventing the label.
-
-     See also `texput'.
-
-     Examples:
-
-          (%i1) integrate (1/(1+x^3), x);
-                                              2 x - 1
-                            2            atan(-------)
-                       log(x  - x + 1)        sqrt(3)    log(x + 1)
-          (%o1)      - --------------- + ------------- + ----------
-                              6             sqrt(3)          3
-          (%i2) tex (%o1);
-          $$-{{\log \left(x^2-x+1\right)}\over{6}}+{{\arctan \left({{2\,x-1
-           }\over{\sqrt{3}}}\right)}\over{\sqrt{3}}}+{{\log \left(x+1\right)
-           }\over{3}}\leqno{\tt (\%o1)}$$
-          (%o2)                          (\%o1)
-          (%i3) tex (integrate (sin(x), x));
-          $$-\cos x$$
-          (%o3)                           false
-          (%i4) tex (%o1, "foo.tex");
-          (%o4)                          (\%o1)
-
-     `tex (<expr>, false)' returns its TeX output as a string.
-
-          (%i1) S : tex (x * y * z, false);
-          (%o1) $$x\,y\,z$$
-          (%i2) S;
-          (%o2) $$x\,y\,z$$
-
- -- Function: tex1 (<e>)
-     Returns a string which represents the TeX output for the
-     expressions <e>.  The TeX output is not enclosed in delimiters for
-     an equation or any other environment.
-
-     Examples:
-
-          (%i1) tex1 (sin(x) + cos(x));
-          (%o1)                     \sin x+\cos x
-
- -- Function: texput (<a>, <s>)
- -- Function: texput (<a>, <f>)
- -- Function: texput (<a>, <s>, <operator_type>)
- -- Function: texput (<a>, [<s_1>, <s_2>], matchfix)
- -- Function: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
-     Assign the TeX output for the atom <a>, which can be a symbol or
-     the name of an operator.
-
-     `texput (<a>, <s>)' causes the `tex' function to interpolate the
-     string <s> into the TeX output in place of <a>.
-
-     `texput (<a>, <f>)' causes the `tex' function to call the function
-     <f> to generate TeX output. <f> must accept one argument, which is
-     an expression which has operator <a>, and must return a string
-     (the TeX output). <f> may call `tex1' to generate TeX output for
-     the arguments of the input expression.
-
-     `texput (<a>, <s>, <operator_type>)', where <operator_type> is
-     `prefix', `infix', `postfix', `nary', or `nofix', causes the `tex'
-     function to interpolate <s> into the TeX output in place of <a>,
-     and to place the interpolated text in the appropriate position.
-
-     `texput (<a>, [<s_1>, <s_2>], matchfix)' causes the `tex' function
-     to interpolate <s_1> and <s_2> into the TeX output on either side
-     of the arguments of <a>. The arguments (if more than one) are
-     separated by commas.
-
-     `texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)' causes the `tex'
-     function to interpolate <s_1> and <s_2> into the TeX output on
-     either side of the arguments of <a>, with <s_3> separating the
-     arguments.
-
-     Examples:
-
-     Assign TeX output for a variable.
-
-          (%i1) texput (me,"\\mu_e");
-          (%o1)                         \mu_e
-          (%i2) tex (me);
-          $$\mu_e$$
-          (%o2)                         false
-
-     Assign TeX output for an ordinary function (not an operator).
-
-          (%i1) texput (lcm, "\\mathrm{lcm}");
-          (%o1)                     \mathrm{lcm}
-          (%i2) tex (lcm (a, b));
-          $$\mathrm{lcm}\left(a , b\right)$$
-          (%o2)                         false
-
-     Call a function to generate TeX output.
-
-          (%i1) texfoo (e) := block ([a, b], [a, b] : args (e),
-            concat ("\\left[\\stackrel{", tex1 (b),
-                    "}{", tex1 (a), "}\\right]"))$
-          (%i2) texput (foo, texfoo);
-          (%o2)                        texfoo
-          (%i3) tex (foo (2^x, %pi));
-          $$\left[\stackrel{\pi}{2^{x}}\right]$$
-          (%o3)                         false
-
-     Assign TeX output for a prefix operator.
-
-          (%i1) prefix ("grad");
-          (%o1)                         grad
-          (%i2) texput ("grad", " \\nabla ", prefix);
-          (%o2)                        \nabla
-          (%i3) tex (grad f);
-          $$ \nabla f$$
-          (%o3)                         false
-
-     Assign TeX output for an infix operator.
-
-          (%i1) infix ("~");
-          (%o1)                           ~
-          (%i2) texput ("~", " \\times ", infix);
-          (%o2)                        \times
-          (%i3) tex (a ~ b);
-          $$a \times b$$
-          (%o3)                         false
-
-     Assign TeX output for a postfix operator.
-
-          (%i1) postfix ("##");
-          (%o1)                          ##
-          (%i2) texput ("##", "!!", postfix);
-          (%o2)                          !!
-          (%i3) tex (x ##);
-          $$x!!$$
-          (%o3)                         false
-
-     Assign TeX output for a nary operator.
-
-          (%i1) nary ("@@");
-          (%o1)                          @@
-          (%i2) texput ("@@", " \\circ ", nary);
-          (%o2)                         \circ
-          (%i3) tex (a @@ b @@ c @@ d);
-          $$a \circ b \circ c \circ d$$
-          (%o3)                         false
-
-     Assign TeX output for a nofix operator.
-
-          (%i1) nofix ("foo");
-          (%o1)                          foo
-          (%i2) texput ("foo", "\\mathsc{foo}", nofix);
-          (%o2)                     \mathsc{foo}
-          (%i3) tex (foo);
-          $$\mathsc{foo}$$
-          (%o3)                         false
-
-     Assign TeX output for a matchfix operator.
-
-          (%i1) matchfix ("<<", ">>");
-          (%o1)                          <<
-          (%i2) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
-          (%o2)                [ \langle ,  \rangle ]
-          (%i3) tex (<<a>>);
-          $$ \langle a \rangle $$
-          (%o3)                         false
-          (%i4) tex (<<a, b>>);
-          $$ \langle a , b \rangle $$
-          (%o4)                         false
-          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"],
-                matchfix);
-          (%o5)           [ \langle ,  \rangle ,  \, | \,]
-          (%i6) tex (<<a>>);
-          $$ \langle a \rangle $$
-          (%o6)                         false
-          (%i7) tex (<<a, b>>);
-          $$ \langle a \, | \,b \rangle $$
-          (%o7)                         false
-
- -- Function: get_tex_environment (<op>)
- -- Function: set_tex_environment (<op>, <before>, <after>)
-     Customize the TeX environment output by `tex'.  As maintained by
-     these functions, the TeX environment comprises two strings: one is
-     printed before any other TeX output, and the other is printed
-     after.
-
-     Only the TeX environment of the top-level operator in an expression
-     is output; TeX environments associated with other operators are
-     ignored.
-
-     `get_tex_environment' returns the TeX enviroment which is applied
-     to the operator <op>; returns the default if no other environment
-     has been assigned.
-
-     `set_tex_environment' assigns the TeX environment for the operator
-     <op>.
-
-     Examples:
-
-          (%i1) get_tex_environment (":=");
-          (%o1) [
-          \begin{verbatim}
-          , ;
-          \end{verbatim}
-          ]
-          (%i2) tex (f (x) := 1 - x);
-
-          \begin{verbatim}
-          f(x):=1-x;
-          \end{verbatim}
-
-          (%o2)                         false
-          (%i3) set_tex_environment (":=", "$$", "$$");
-          (%o3)                       [$$, $$]
-          (%i4) tex (f (x) := 1 - x);
-          $$f(x):=1-x$$
-          (%o4)                         false
-
- -- Function: get_tex_environment_default ()
- -- Function: set_tex_environment_default (<before>, <after>)
-     Customize the TeX environment output by `tex'.  As maintained by
-     these functions, the TeX environment comprises two strings: one is
-     printed before any other TeX output, and the other is printed
-     after.
-
-     `get_tex_environment_default' returns the TeX environment which is
-     applied to expressions for which the top-level operator has no
-     specific TeX environment (as assigned by `set_tex_environment').
-
-     `set_tex_environment_default' assigns the default TeX environment.
-
-     Examples:
-
-          (%i1) get_tex_environment_default ();
-          (%o1)                       [$$, $$]
-          (%i2) tex (f(x) + g(x));
-          $$g\left(x\right)+f\left(x\right)$$
-          (%o2)                         false
-          (%i3) set_tex_environment_default ("\\begin{equation}
-          ", "
-          \\end{equation}");
-          (%o3) [\begin{equation}
-          ,
-          \end{equation}]
-          (%i4) tex (f(x) + g(x));
-          \begin{equation}
-          g\left(x\right)+f\left(x\right)
-          \end{equation}
-          (%o4)                         false
 
 
 

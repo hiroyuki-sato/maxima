@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -9,16 +9,294 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Funktionen und Variablen für die Fortran-Ausgabe,  Prev: Funktionen und Variablen für die Tex-Ausgabe,  Up: Eingabe und Ausgabe
+File: maxima.info,  Node: Funktionen und Variablen für die TeX-Ausgabe,  Next: Funktionen und Variablen für die Fortran-Ausgabe,  Prev: Funktionen und Variablen für die Eingabe und Ausgabe,  Up: Eingabe und Ausgabe
+
+13.4 Funktionen und Variablen für die TeX-Ausgabe
+=================================================
+
+ -- Function: tex (<expr>)
+ -- Function: tex (<expr>, <destination>)
+ -- Function: tex (<expr>, false)
+ -- Function: tex (<label>)
+ -- Function: tex (<label>, <destination>)
+ -- Function: tex (<label>, false)
+     Prints a representation of an expression suitable for the TeX
+     document preparation system. The result is a fragment of a
+     document, which can be copied into a larger document but not
+     processed by itself.
+
+     `tex (<expr>)' prints a TeX representation of <expr> on the
+     console.
+
+     `tex (<label>)' prints a TeX representation of the expression
+     named by <label> and assigns it an equation label (to be displayed
+     to the left of the expression). The TeX equation label is the same
+     as the Maxima label.
+
+     <destination> may be an output stream or file name. When
+     <destination> is a file name, `tex' appends its output to the
+     file. The functions `openw' and `opena' create output streams.
+
+     `tex (<expr>, false)' and `tex (<label>, false)' return their TeX
+     output as a string.
+
+     `tex' evaluates its first argument after testing it to see if it
+     is a label. Quote-quote `''' forces evaluation of the argument,
+     thereby defeating the test and preventing the label.
+
+     See also `texput'.
+
+     Examples:
+
+          (%i1) integrate (1/(1+x^3), x);
+                                              2 x - 1
+                            2            atan(-------)
+                       log(x  - x + 1)        sqrt(3)    log(x + 1)
+          (%o1)      - --------------- + ------------- + ----------
+                              6             sqrt(3)          3
+          (%i2) tex (%o1);
+          $$-{{\log \left(x^2-x+1\right)}\over{6}}+{{\arctan \left({{2\,x-1
+           }\over{\sqrt{3}}}\right)}\over{\sqrt{3}}}+{{\log \left(x+1\right)
+           }\over{3}}\leqno{\tt (\%o1)}$$
+          (%o2)                          (\%o1)
+          (%i3) tex (integrate (sin(x), x));
+          $$-\cos x$$
+          (%o3)                           false
+          (%i4) tex (%o1, "foo.tex");
+          (%o4)                          (\%o1)
+
+     `tex (<expr>, false)' returns its TeX output as a string.
+
+          (%i1) S : tex (x * y * z, false);
+          (%o1) $$x\,y\,z$$
+          (%i2) S;
+          (%o2) $$x\,y\,z$$
+
+ -- Function: tex1 (<e>)
+     Returns a string which represents the TeX output for the
+     expressions <e>.  The TeX output is not enclosed in delimiters for
+     an equation or any other environment.
+
+     Examples:
+
+          (%i1) tex1 (sin(x) + cos(x));
+          (%o1)                     \sin x+\cos x
+
+ -- Function: texput (<a>, <s>)
+ -- Function: texput (<a>, <f>)
+ -- Function: texput (<a>, <s>, <operator_type>)
+ -- Function: texput (<a>, [<s_1>, <s_2>], matchfix)
+ -- Function: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
+     Assign the TeX output for the atom <a>, which can be a symbol or
+     the name of an operator.
+
+     `texput (<a>, <s>)' causes the `tex' function to interpolate the
+     string <s> into the TeX output in place of <a>.
+
+     `texput (<a>, <f>)' causes the `tex' function to call the function
+     <f> to generate TeX output. <f> must accept one argument, which is
+     an expression which has operator <a>, and must return a string
+     (the TeX output). <f> may call `tex1' to generate TeX output for
+     the arguments of the input expression.
+
+     `texput (<a>, <s>, <operator_type>)', where <operator_type> is
+     `prefix', `infix', `postfix', `nary', or `nofix', causes the `tex'
+     function to interpolate <s> into the TeX output in place of <a>,
+     and to place the interpolated text in the appropriate position.
+
+     `texput (<a>, [<s_1>, <s_2>], matchfix)' causes the `tex' function
+     to interpolate <s_1> and <s_2> into the TeX output on either side
+     of the arguments of <a>. The arguments (if more than one) are
+     separated by commas.
+
+     `texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)' causes the `tex'
+     function to interpolate <s_1> and <s_2> into the TeX output on
+     either side of the arguments of <a>, with <s_3> separating the
+     arguments.
+
+     Examples:
+
+     Assign TeX output for a variable.
+
+          (%i1) texput (me,"\\mu_e");
+          (%o1)                         \mu_e
+          (%i2) tex (me);
+          $$\mu_e$$
+          (%o2)                         false
+
+     Assign TeX output for an ordinary function (not an operator).
+
+          (%i1) texput (lcm, "\\mathrm{lcm}");
+          (%o1)                     \mathrm{lcm}
+          (%i2) tex (lcm (a, b));
+          $$\mathrm{lcm}\left(a , b\right)$$
+          (%o2)                         false
+
+     Call a function to generate TeX output.
+
+          (%i1) texfoo (e) := block ([a, b], [a, b] : args (e),
+            concat ("\\left[\\stackrel{", tex1 (b),
+                    "}{", tex1 (a), "}\\right]"))$
+          (%i2) texput (foo, texfoo);
+          (%o2)                        texfoo
+          (%i3) tex (foo (2^x, %pi));
+          $$\left[\stackrel{\pi}{2^{x}}\right]$$
+          (%o3)                         false
+
+     Assign TeX output for a prefix operator.
+
+          (%i1) prefix ("grad");
+          (%o1)                         grad
+          (%i2) texput ("grad", " \\nabla ", prefix);
+          (%o2)                        \nabla
+          (%i3) tex (grad f);
+          $$ \nabla f$$
+          (%o3)                         false
+
+     Assign TeX output for an infix operator.
+
+          (%i1) infix ("~");
+          (%o1)                           ~
+          (%i2) texput ("~", " \\times ", infix);
+          (%o2)                        \times
+          (%i3) tex (a ~ b);
+          $$a \times b$$
+          (%o3)                         false
+
+     Assign TeX output for a postfix operator.
+
+          (%i1) postfix ("##");
+          (%o1)                          ##
+          (%i2) texput ("##", "!!", postfix);
+          (%o2)                          !!
+          (%i3) tex (x ##);
+          $$x!!$$
+          (%o3)                         false
+
+     Assign TeX output for a nary operator.
+
+          (%i1) nary ("@@");
+          (%o1)                          @@
+          (%i2) texput ("@@", " \\circ ", nary);
+          (%o2)                         \circ
+          (%i3) tex (a @@ b @@ c @@ d);
+          $$a \circ b \circ c \circ d$$
+          (%o3)                         false
+
+     Assign TeX output for a nofix operator.
+
+          (%i1) nofix ("foo");
+          (%o1)                          foo
+          (%i2) texput ("foo", "\\mathsc{foo}", nofix);
+          (%o2)                     \mathsc{foo}
+          (%i3) tex (foo);
+          $$\mathsc{foo}$$
+          (%o3)                         false
+
+     Assign TeX output for a matchfix operator.
+
+          (%i1) matchfix ("<<", ">>");
+          (%o1)                          <<
+          (%i2) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+          (%o2)                [ \langle ,  \rangle ]
+          (%i3) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o3)                         false
+          (%i4) tex (<<a, b>>);
+          $$ \langle a , b \rangle $$
+          (%o4)                         false
+          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"],
+                matchfix);
+          (%o5)           [ \langle ,  \rangle ,  \, | \,]
+          (%i6) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o6)                         false
+          (%i7) tex (<<a, b>>);
+          $$ \langle a \, | \,b \rangle $$
+          (%o7)                         false
+
+ -- Function: get_tex_environment (<op>)
+ -- Function: set_tex_environment (<op>, <before>, <after>)
+     Customize the TeX environment output by `tex'.  As maintained by
+     these functions, the TeX environment comprises two strings: one is
+     printed before any other TeX output, and the other is printed
+     after.
+
+     Only the TeX environment of the top-level operator in an expression
+     is output; TeX environments associated with other operators are
+     ignored.
+
+     `get_tex_environment' returns the TeX enviroment which is applied
+     to the operator <op>; returns the default if no other environment
+     has been assigned.
+
+     `set_tex_environment' assigns the TeX environment for the operator
+     <op>.
+
+     Examples:
+
+          (%i1) get_tex_environment (":=");
+          (%o1) [
+          \begin{verbatim}
+          , ;
+          \end{verbatim}
+          ]
+          (%i2) tex (f (x) := 1 - x);
+
+          \begin{verbatim}
+          f(x):=1-x;
+          \end{verbatim}
+
+          (%o2)                         false
+          (%i3) set_tex_environment (":=", "$$", "$$");
+          (%o3)                       [$$, $$]
+          (%i4) tex (f (x) := 1 - x);
+          $$f(x):=1-x$$
+          (%o4)                         false
+
+ -- Function: get_tex_environment_default ()
+ -- Function: set_tex_environment_default (<before>, <after>)
+     Customize the TeX environment output by `tex'.  As maintained by
+     these functions, the TeX environment comprises two strings: one is
+     printed before any other TeX output, and the other is printed
+     after.
+
+     `get_tex_environment_default' returns the TeX environment which is
+     applied to expressions for which the top-level operator has no
+     specific TeX environment (as assigned by `set_tex_environment').
+
+     `set_tex_environment_default' assigns the default TeX environment.
+
+     Examples:
+
+          (%i1) get_tex_environment_default ();
+          (%o1)                       [$$, $$]
+          (%i2) tex (f(x) + g(x));
+          $$g\left(x\right)+f\left(x\right)$$
+          (%o2)                         false
+          (%i3) set_tex_environment_default ("\\begin{equation}
+          ", "
+          \\end{equation}");
+          (%o3) [\begin{equation}
+          ,
+          \end{equation}]
+          (%i4) tex (f(x) + g(x));
+          \begin{equation}
+          g\left(x\right)+f\left(x\right)
+          \end{equation}
+          (%o4)                         false
+
+
+File: maxima.info,  Node: Funktionen und Variablen für die Fortran-Ausgabe,  Prev: Funktionen und Variablen für die TeX-Ausgabe,  Up: Eingabe und Ausgabe
 
 13.5 Funktionen und Variablen für die Fortran-Ausgabe
 =====================================================
 
  -- Option variable: fortindent
-     Default value: 0
+     Default value: `0'
 
      `fortindent' controls the left margin indentation of expressions
-     printed out by the `fortran' command.  0 gives normal printout
+     printed out by the `fortran'  command.  `0' gives normal printout
      (i.e., 6 spaces), and positive values will causes the expressions
      to be printed farther to the right.
 
@@ -36,18 +314,21 @@ File: maxima.info,  Node: Funktionen und Variablen für die Fortran-Ausgabe,  Pr
      statement for each element of the matrix.
 
      If <expr> is not something recognized by `fortran', the expression
-     is printed in `grind' format without complaint.  `fortran' does
+     is printed in `grind'  format without complaint.  `fortran' does
      not know about lists, arrays, or functions.
 
-     `fortindent' controls the left margin of the printed lines.  0 is
-     the normal margin (i.e., indented 6 spaces). Increasing
+     `fortindent' controls the left margin of the printed lines.  `0'
+     is the normal margin (i.e., indented 6 spaces). Increasing
      `fortindent' causes expressions to be printed further to the right.
 
-     When `fortspaces' is `true', `fortran' fills out each printed line
-     with spaces to 80 columns.
+     When `fortspaces'  is `true', `fortran' fills out each printed
+     line with spaces to 80 columns.
 
      `fortran' evaluates its arguments; quoting an argument defeats
      evaluation.  `fortran' always returns `done'.
+
+     See also the function `f90'  for printing one or more expressions
+     as a Fortran 90 program.
 
      Examples:
 
@@ -3507,14 +3788,6 @@ File: maxima.info,  Node: Funktionen und Variablen der Differentiation,  Next: I
           ... to be used.  If `coordinates' has not been assigned a
           value, then the variables will be treated as in (1) above.
 
- -- Funktion: dscalar (<f>)
-     Wendet den d'Alembert-Operator auf eine skalare Funktion <f> an.
-     Der d'Alembert-Operator ist die Verallgemeinerung des Gradienten
-     auf den vierdimensionalen Minkowski-Raum.
-
-     Das Kommando `load(ctensor)' lädt die Funktion.
-
-
  -- Funktion: gradef (<f>(<x_1>, ..., <x_n>), <g_1>, ..., <g_m>)
  -- Funktion: gradef (<a>, <x>, <expr>)
      Definiert eine partielle Ableitung der Funktion <f> oder Variablen
@@ -4252,6 +4525,11 @@ Weitere Informationen über das QUADPACK-Paket sind in dem QUADPACK-Buch
      c im Teilbereich enthalten ist.  Andernfalls wird eine globale
      adaptive Strategie mit einem Gauß-Kronrod-Formelpaar angewendet.
 
+`quad_qagp'
+     Basically the same as `quad_qags' but points of singularity or
+     discontinuity of the integrand must be supplied.  This makes it
+     easier for the integrator to produce a good solution.
+
 ---------- Footnotes ----------
 
 (1) Applied Mathematics and Programming Division, K.U. Leuven
@@ -4920,6 +5198,107 @@ File: maxima.info,  Node: Funktionen und Variablen für QUADPACK,  Prev: Einfüh
           (%i3) ev (%, alpha=4, numer);
           (%o3)                     8.750097361672829
 
+ -- Function: quad_qagp (<f(x)>, <x>, <a>, <b>, <points>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Function: quad_qagp (<f>, <x>, <a>, <b>, <points>, [<epsrel>,
+          <epsabs>, <limit>])
+     Integration of a general function over a finite interval.
+     `quad_qagp' implements globally adaptive interval subdivision with
+     extrapolation (de Doncker, 1978) by the Epsilon algorithm (Wynn,
+     1956).
+
+     `quad_qagp' computes the integral
+
+     integrate (f(x), x, a, b)
+
+     The function to be integrated is <f(x)>, with dependent variable
+     <x>, and the function is to be integrated between the limits <a>
+     and <b>.
+
+     The integrand may be specified as the name of a Maxima or Lisp
+     function or operator, a Maxima lambda expression, or a general
+     Maxima expression.
+
+     To help the integrator, the user must supply a list of points where
+     the integrand is singular or discontinous.
+
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-8.
+
+    <epsabs>
+          Desired absolute error of approximation.  Default is 0.
+
+    <limit>
+          Size of internal work array.  <limit> is the maximum number
+          of subintervals to use.  Default is 200.
+
+     `quad_qagp' returns a list of four elements:
+
+        * an approximation to the integral,
+
+        * the estimated absolute error of the approximation,
+
+        * the number integrand evaluations,
+
+        * an error code.
+
+     The error code (fourth element of the return value) can have the
+     values:
+
+    `0'
+          no problems were encountered;
+
+    `1'
+          too many sub-intervals were done;
+
+    `2'
+          excessive roundoff error is detected;
+
+    `3'
+          extremely bad integrand behavior occurs;
+
+    `4'
+          failed to converge
+
+    `5'
+          integral is probably divergent or slowly convergent
+
+    `6'
+          if the input is invalid.
+
+     Examples:
+
+          (%i1) quad_qagp(x^3*log(abs((x^2-1)*(x^2-2))),x,0,3,[1,sqrt(2)]);
+          (%o1)   [52.74074838347143, 2.6247632689546663e-7, 1029, 0]
+          (%i2) quad_qags(x^3*log(abs((x^2-1)*(x^2-2))), x, 0, 3);
+          (%o2)   [52.74074847951494, 4.088443219529836e-7, 1869, 0]
+
+     The integrand has singularities at 1 and sqrt(2) so we supply these
+     points to `quad_qagp'.  We also note that `quad_qagp' is more
+     accurate and more efficient that `quad_qags'.
+
+ -- Function: quad_control (<parameter>, [<value>])
+     Control error handling for quadpack.  The parameter should be one
+     of the following symbols:
+
+    `current_error'
+          The current error number
+
+    `control'
+          Controls if messages are printed or not.  If it is set to
+          zero or less, messages are suppressed.
+
+    `max_message'
+          The maximum number of times any message is to be printed.
+
+     If <value> is not given, then the current value of the <parameter>
+     is returned.  If <value> is given, the value of <parameter> is set
+     to the given value.
+
 
 File: maxima.info,  Node: Differentialgleichungen,  Next: Einführung in Differentialgleichungen,  Prev: Integration,  Up: Analysis
 
@@ -5173,7 +5552,9 @@ Zähler und den Nenner darstellen.  Diesem Paar geht eine Liste mit der
 Ordnung der Variablen im Ausdruck voraus.  Ein Ausdruck in einer
 CRE-Form oder der CRE-Formen enthält, wird in der Ausgabe mit dem
 Symbol `/R/' gekennzeichnet.  Mit der Funktion `rat'  können allgemeine
-Ausdrücke in eine CRE-Form transformiert werden.
+Ausdrücke in eine CRE-Form transformiert werden.  Umgekehrt wird ein
+Ausdruck in einer CRE-Form mit der Funktion `ratdisrep'  in eine
+allgemeine Form transformiert.
 
 Für die Darstellung von Taylor-Polynomen der Funktion `taylor'  wird
 eine erweiterte CRE-Form verwendet.  In dieser Darstellung können die
@@ -5191,16 +5572,40 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
  -- Optionsvariable: algebraic
      Standardwert: `false'
 
-     Die Optionsvariable `algebraic' muss den Wert `true' haben, damit
-     algebraische Zahlen vereinfacht werden.
+     Hat die Optionsvariable `algebraic' den Wert `true', wird beim
+     Umwandeln von Ausdrücken in die CRE-Form und beim Rechnen mit
+     Ausdrücken in einer CRE-Form der Ausdruck so vereinfacht, dass der
+     Nenner frei von algebraischen Zahlen (das sind Wurzeln von ganzen
+     Zahlen) ist.
+
+     Beispiele:
+
+     Im zweiten Beispiel wird der Ausdruck automatisch mit `sqrt(2)'
+     erweitert, um den Nenner frei von der algebraischen Zahl `sqrt(2)'
+     zu machen.
+
+          (%i1) algebraic:false;
+          (%o1)                         false
+          (%i2) rat(x^2+x)/sqrt(2);
+                                        2
+                                       x  + x
+          (%o2)/R/                     -------
+                                       sqrt(2)
+          (%i3) algebraic:true;
+          (%o3)                         true
+          (%i4) rat(x^2+x)/sqrt(2);
+                                        2
+                               sqrt(2) x  + sqrt(2) x
+          (%o4)/R/             ----------------------
+                                         2
 
  -- Optionsvariable: berlefact
      Standardwert: `true'
 
      Hat die Optionsvariable `berlefact' den Wert `false', dann wird der
-     Kronecker-Algorithmus für die Faktorisierung genutzt.  Ansonsten
-     wird der Berlekamp-Algorithmus genutzt.  Der Standardwert ist
-     `true'.
+     Kronecker-Algorithmus von der Funktion `factor'  für die
+     Faktorisierung genutzt.  Ansonsten wird der Berlekamp-Algorithmus
+     genutzt.  Der Standardwert ist `true'.
 
  -- Funktion: bezout (<p1>, <p2>, <x>)
      Die Rückgabe ist die Sylvestermatrix der zwei Polynome <p1> und
@@ -5251,17 +5656,17 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
 
  -- Funktion: coeff (<expr>, <x>, <n>)
  -- Funktion: coeff (<expr>, <x>)
-     Gibt den Koeffizienten von `<x>^<n>' des Ausdrucks <expr> zurück,
-     wobei <expr> ein Polynom ist.
+     Gibt den Koeffizienten von `<x>^<n>' des Ausdrucks <expr> zurück.
+     Das Argument <expr> ist ein Polynom in der Variablen <x>.
 
      Das Kommando `coeff(<expr>, <x>^<n>)' ist äquivalent zu
      `coeff(<expr>, <x>, <n>)'.  Das Kommando `coeff(<expr>, <x>, 0)'
-     gibt den Rest des Ausdrucks <expr> zurück, der frei von der
-     Variablen <x> ist.  Wenn nicht angegeben, wird <n> als 1
-     angenommen.
+     gibt den Teil des Ausdrucks <expr> zurück, der frei von der
+     Variablen <x> ist.  Wenn nicht angegeben, wird das Argument <n>
+     als `1' angenommen.
 
-     <x> kann auch eine indizierte Variable oder ein Teilausdruck von
-     <expr> sein.
+     Das Argument <x> kann auch eine indizierte Variable oder ein
+     Teilausdruck von <expr> sein.
 
      `coeff' wendet weder die Funktion `expand' noch die Funktion
      `factor' an, um einen Ausdruck zu expandieren oder zu
@@ -5293,7 +5698,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
           (%o2)                         - c
                                            3
 
-     `coeff(<expr>, <x>, 0)' gibt den Rest des Ausdrucks <expr> zurück,
+     `coeff(<expr>, <x>, 0)' gibt den Teil des Ausdrucks <expr> zurück,
      der frei von der Variablen <x> ist.
 
           (%i1) coeff(a*u + b^2*u^2 + c^3*u^3, b, 0);
@@ -5353,8 +5758,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      um die Liste zu invertieren.
 
           coeff_list(a,x) :=
-             block([liste],
-                liste:[],
+             block([liste:[]],
                 for i:0 thru hipow(a,x) do
                 (
                   liste : cons(coeff(a,x,i),liste)
@@ -5661,7 +6065,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      Zahlen faktorisieren.  Wird der Körper um das minimale Polynom
      `a^2+1' erweitert, ist die Faktorisierung möglich.  Die
      Nullstellen des minimalen Polynoms sind die imaginäre Einheit `%i'
-     und `- %i'.  Das Ergebnis entspricht der Faktorisierung mit der
+     und `-%i'.  Das Ergebnis entspricht der Faktorisierung mit der
      Funktion `gfactor'.
 
           (%i1) factor(x^4+1);
@@ -5978,7 +6382,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      Gibt den größten Exponenten des Arguments <x> zurück, der im
      Ausdruck <expr> auftritt.  Treten symbolische Exponenten auf, wird
      ein Ausdruck mit `max' zurückgegeben.  Ist das Argument <x> nicht
-     im Ausdruck vorhanden, ist die Rückgabe 0.
+     im Ausdruck vorhanden, ist die Rückgabe `0'.
 
      Die Funktion `hipow' betrachtet keine äquivalenten Ausdrücke.
      Daher können die Ausdrücke `expand(<expr>)' und <expr> ein
@@ -6099,7 +6503,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
  -- Optionsvariable: modulus
      Standardwert: `false'
 
-     Hat die Optionsvariable `modulus' eine positive Zahl <p> als Wert
+     Hat die Optionsvariable `modulus' eine positive Zahl <p> als Wert,
      werden Operationen für rationale Zahlen, wie von der Funktion `rat'
      und verwandte Funktionen, modulo <p> ausgeführt.
 
@@ -6118,7 +6522,31 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      Typischerweise erhält die Optionsvariable `modulus' eine Primzahl
      als Wert.  Erhält `modulus' eine positive ganze Zahl als Wert, die
      nicht eine Primzahl ist, wird die Zuweisung akzeptiert, jedoch
-     eine Warnung ausgegeben.
+     eine Warnung ausgegeben.  Wird Null oder eine negative Zahl
+     zugewiesen signalisiert Maxima einen Fehler.
+
+     Beispiele:
+
+          (%i1) modulus:7;
+          (%o1)                           7
+          (%i2) polymod([0,1,2,3,4,5,6,7]);
+          (%o2)            [0, 1, 2, 3, - 3, - 2, - 1, 0]
+          (%i3) modulus:false;
+          (%o3)                         false
+          (%i4) poly:x^6+x^2+1;
+                                      6    2
+          (%o4)                      x  + x  + 1
+          (%i5) factor(poly);
+                                      6    2
+          (%o5)                      x  + x  + 1
+          (%i6) modulus:13;
+          (%o6)                          13
+          (%i7) factor(poly);
+                                2        4      2
+          (%o7)               (x  + 6) (x  - 6 x  - 2)
+          (%i8) polymod(%);
+                                      6    2
+          (%o8)                      x  + x  + 1
 
  -- Funktion: num (<expr>)
      Gibt den Zähler des Ausdrucks <expr> zurück, wenn dieser ein
@@ -6251,7 +6679,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
  -- Funktion: rat (<expr>)
  -- Funktion: rat (<expr>, <x_1>, ..., <x_n>)
      Konvertiert einen Ausdruck <expr> in die CRE-Form.  Der Ausdruck
-     wird so expandiert und so gruppiert, dass alle Terme einen
+     wird so expandiert und gruppiert, dass alle Terme einen
      gemeinsamen Nenner haben und der größte gemeinsame Teiler gekürzt
      ist.  Weiterhin werden Gleitkommazahlen in rationale Zahlungen
      umgewandelt.  Die Toleranz der Umwandlung wird von der
@@ -6283,7 +6711,10 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      Hat die Optionsvariable `keepfloat'  den Wert `true', werden
      Gleitkommazahlen nicht in rationale Zahlen umgewandelt.
 
-     Siehe auch die Funktionen `ratexpand'  und `ratsimp'.
+     Siehe auch die Funktionen `ratexpand'  und `ratsimp',  um
+     Ausdrücke zu vereinfachen, sowie die Funktion `ratdisrep',  um
+     einen Ausdruck von einer CRE-Form in eine allgemeine Form zu
+     transformieren.
 
      Beispiele:
 
@@ -6818,7 +7249,6 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
           (%o3)                        9 - 6 x
 
  -- Funktion: resultant (<p_1>, <p_2>, <x>)
- -- Optionsvariable: resultant
      Berechnet die Resultante der Polynome <p_1> und <p_2> und
      eliminiert die unabhängige Variable <x>.  Die Resultante ist die
      Determinante der Sylvestermatrix für die beiden Polynome.  Das
@@ -6829,17 +7259,8 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
      von Vorteil sein, die Faktorisierung zuvor auszuführen.
 
      Die Optionsvariable `resultant' kontrolliert, welcher Algorithmus
-     für die Berechnung der Resultante von Maxima genutzt wird.  Die
-     möglichen Werte sind:
-
-    `subres'
-          Subresultanten-Algorithmus
-
-    `mod'
-          Modularer Resultanten-Algorithmus
-
-    `red'
-          Reduzierter Subresultanten-Algorithmus
+     für die Berechnung der Resultante von Maxima genutzt wird.  Siehe
+     die Optionsvariable `resultant'.
 
      Die Funktion `bezout'  berechnet die Sylvestermatrix der Polynome
      <p_1> und <p_2>.  Die Determinante der Sylvestermatrix ist die
@@ -6863,6 +7284,25 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
                                   [  c      2    ]
           (%i6) determinant(%);
           (%o6)                   4 a - (2 b - c) c
+
+ -- Optionsvariable: resultant
+     Standardwert: `subres'
+
+     Die Optionsvariable `resultant' kontrolliert, welcher Algorithmus
+     für die Berechnung der Resultante mit der Funktion `resultant'
+     von Maxima genutzt wird.  Die möglichen Werte sind:
+
+    `subres'
+          Subresultanten-Algorithmus
+
+    `mod'
+          Modularer Resultanten-Algorithmus
+
+    `red'
+          Reduzierter Subresultanten-Algorithmus
+
+     Der Standwert `subres' ist für die meisten Probleme geeignet.  Für
+     große Polynome in einer oder zwei Variablen kann `mod' besser sein.
 
  -- Optionsvariable: savefactors
      Standardwert: `false'

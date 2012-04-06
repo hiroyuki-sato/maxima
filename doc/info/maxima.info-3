@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -8,6 +8,267 @@ INFO-DIR-SECTION Math
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     A computer algebra system.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Functions and Variables for solve_rec,  Prev: Introduction to solve_rec,  Up: solve_rec
+
+75.2 Functions and Variables for solve_rec
+==========================================
+
+ -- Function: reduce_order (<rec>, <sol>, <var>)
+     Reduces the order of linear recurrence <rec> when a particular
+     solution <sol> is known. The reduced reccurence can be used to get
+     other solutions.
+
+     Example:
+
+          (%i3) rec: x[n+2] = x[n+1] + x[n]/n;
+                                                x
+                                                 n
+          (%o3)               x      = x      + --
+                               n + 2    n + 1   n
+          (%i4) solve_rec(rec, x[n]);
+          WARNING: found some hypergeometrical solutions!
+          (%o4)                    x  = %k  n
+                                    n     1
+          (%i5) reduce_order(rec, n, x[n]);
+          (%t5)                    x  = n %z
+                                    n       n
+
+                                     n - 1
+                                     ====
+                                     \
+          (%t6)                %z  =  >     %u
+                                 n   /        %j
+                                     ====
+                                     %j = 0
+
+          (%o6)             (- n - 2) %u     - %u
+                                        n + 1     n
+          (%i6) solve_rec((n+2)*%u[n+1] + %u[n], %u[n]);
+                                               n
+                                      %k  (- 1)
+                                        1
+          (%o6)                 %u  = ----------
+                                  n    (n + 1)!
+
+          So the general solution is
+
+                       n - 1
+                       ====        j
+                       \      (- 1)
+                 %k  n  >    -------- + %k  n
+                   2   /     (j + 1)!     1
+                       ====
+                       j = 0
+
+
+ -- Option variable: simplify_products
+     Default value: `true'
+
+     If `simplify_products' is `true', `solve_rec' will try to simplify
+     products in result.
+
+     See also: `solve_rec'.
+
+
+ -- Function: simplify_sum (<expr>)
+     Tries to simplify all sums appearing in <expr> to a closed form.
+
+     To use this function first load the `simplify_sum' package with
+     `load(simplify_sum)'.
+
+     Example:
+
+          (%i1) load("simplify_sum")$
+          (%i2) sum(binomial(n+k,k)/2^k,k,1,n)+sum(binomial(2*n,2*k),k,1,n);
+                  n                          n
+                 ====                       ====
+                 \     binomial(n + k, k)   \
+          (%o2)   >    ------------------ +  >    binomial(2 n, 2 k)
+                 /              k           /
+                 ====          2            ====
+                 k = 1                      k = 1
+          (%i3) simplify_sum(%);
+
+                                   2 n - 1    n
+          (%o3)                   2        + 2  - 2
+
+
+ -- Function: solve_rec (<eqn>, <var>, [<init>])
+     Solves for hypergeometrical solutions to linear recurrence <eqn>
+     with polynomials coefficient in variable <var>. Optional arguments
+     <init> are initial conditions.
+
+     `solve_rec' can solve linear recurrences with constant
+     coefficients, finds hypergeometrical solutions to homogeneous
+     linear recurrences with polynomial coefficients, rational
+     solutions to linear recurrences with polynomial coefficients and
+     can solve Ricatti type recurrences.
+
+     Note that the running time of the algorithm used to find
+     hypergeometrical solutions is exponential in the degree of the
+     leading and trailing coefficient.
+
+     To use this function first load the `solve_rec' package with
+     `load(solve_rec);'.
+
+     Example of linear recurrence with constant coefficients:
+
+          (%i2) solve_rec(a[n]=a[n-1]+a[n-2]+n/2^n, a[n]);
+                                  n          n
+                     (sqrt(5) - 1)  %k  (- 1)
+                                      1           n
+          (%o2) a  = ------------------------- - ----
+                 n               n                  n
+                                2                5 2
+                                                          n
+                                             (sqrt(5) + 1)  %k
+                                                              2    2
+                                           + ------------------ - ----
+                                                      n              n
+                                                     2            5 2
+
+     Example of linear recurrence with polynomial coefficients:
+
+          (%i7) 2*x*(x+1)*y[x] - (x^2+3*x-2)*y[x+1] + (x-1)*y[x+2];
+                                   2
+          (%o7) (x - 1) y      - (x  + 3 x - 2) y      + 2 x (x + 1) y
+                         x + 2                   x + 1                x
+          (%i8) solve_rec(%, y[x], y[1]=1, y[3]=3);
+                                        x
+                                     3 2    x!
+          (%o9)                 y  = ---- - --
+                                 x    4     2
+
+     Example of Ricatti type recurrence:
+
+          (%i2) x*y[x+1]*y[x] - y[x+1]/(x+2) + y[x]/(x-1) = 0;
+                                      y         y
+                                       x + 1     x
+          (%o2)         x y  y      - ------ + ----- = 0
+                           x  x + 1   x + 2    x - 1
+          (%i3) solve_rec(%, y[x], y[3]=5)$
+          (%i4) ratsimp(minfactorial(factcomb(%)));
+                                             3
+                                         30 x  - 30 x
+          (%o4) y  = - -------------------------------------------------
+                 x        6      5       4       3       2
+                       5 x  - 3 x  - 25 x  + 15 x  + 20 x  - 12 x - 1584
+
+     See also: `solve_rec_rat', `simplify_products', and
+     `product_use_gamma'.
+
+
+ -- Function: solve_rec_rat (<eqn>, <var>, [<init>])
+     Solves for rational solutions to linear recurrences. See solve_rec
+     for description of arguments.
+
+     To use this function first load the `solve_rec' package with
+     `load(solve_rec);'.
+
+     Example:
+
+          (%i1) (x+4)*a[x+3] + (x+3)*a[x+2] - x*a[x+1] + (x^2-1)*a[x];
+          (%o1)  (x + 4) a      + (x + 3) a      - x a
+                          x + 3            x + 2      x + 1
+                                                             2
+                                                         + (x  - 1) a
+                                                                      x
+          (%i2) solve_rec_rat(% = (x+2)/(x+1), a[x]);
+                                 1
+          (%o2)      a  = ---------------
+                      x   (x - 1) (x + 1)
+
+     See also: `solve_rec'.
+
+
+ -- Option variable: product_use_gamma
+     Default value: `true'
+
+     When simplifying products, `solve_rec' introduces gamma function
+     into the expression if `product_use_gamma' is `true'.
+
+     See also: `simplify_products', `solve_rec'.
+
+
+ -- Function: summand_to_rec (<summand>, <k>, <n>)
+ -- Function: summand_to_rec (<summand>, [<k>, <lo>, <hi>], <n>)
+     Returns the recurrence sattisfied by the sum
+
+               hi
+              ====
+              \
+               >     summand
+              /
+              ====
+            k = lo
+
+     where summand is hypergeometrical in <k> and <n>. If <lo> and <hi>
+     are omited, they are assumed to be `lo = -inf' and `hi = inf'.
+
+     To use this function first load the `simplify_sum' package with
+     `load(simplify_sum)'.
+
+     Example:
+
+          (%i1) load("simplify_sum")$
+          (%i2) summand: binom(n,k);
+          (%o2)                           binomial(n, k)
+          (%i3) summand_to_rec(summand,k,n);
+          (%o3)                      2 sm  - sm      = 0
+                                         n     n + 1
+          (%i7) summand: binom(n, k)/(k+1);
+                                          binomial(n, k)
+          (%o7)                           --------------
+                                              k + 1
+          (%i8) summand_to_rec(summand, [k, 0, n], n);
+          (%o8)               2 (n + 1) sm  - (n + 2) sm      = - 1
+                                          n             n + 1
+
+
+
+File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
+
+76 stats
+********
+
+* Menu:
+
+* Introduction to stats::
+* Functions and Variables for inference_result::
+* Functions and Variables for stats::
+* Functions and Variables for special distributions::
+
+
+File: maxima.info,  Node: Introduction to stats,  Next: Functions and Variables for inference_result,  Prev: Top,  Up: Top
+
+76.1 Introduction to stats
+==========================
+
+Package `stats' contains a set of classical statistical inference and
+hypothesis testing procedures.
+
+   All these functions return an `inference_result' Maxima object which
+contains the necessary results for population inferences and decision
+making.
+
+   Global variable `stats_numer' controls whether results are given in
+floating point or symbolic and rational format; its default value is
+`true' and results are returned in floating point format.
+
+   Package `descriptive' contains some utilities to manipulate data
+structures (lists and matrices); for example, to extract subsamples. It
+also contains some examples on how to use package `numericalio' to read
+data from plain text files. See `descriptive' and `numericalio' for
+more details.
+
+   Package `stats' loads packages `descriptive', `distrib' and
+`inference_result'.
+
+   For comments, bugs or suggestions, please contact the author at
+
+   <'mario AT edu DOT xunta DOT es'>.
 
 
 File: maxima.info,  Node: Functions and Variables for inference_result,  Next: Functions and Variables for stats,  Prev: Introduction to stats,  Up: Top
@@ -1856,13 +2117,13 @@ File: maxima.info,  Node: Functions and Variables for to_poly_solve,  Prev: to_p
 79.1 Functions and Variables for to_poly_solve
 ==============================================
 
-The packages `topoly' and `to_poly_solve' are experimental; the
+The packages `to_poly' and `to_poly_solve' are experimental; the
 specifications of the functions in these packages might change or the
 some of the functions in these packages might be merged into other
 Maxima functions.
 
    Barton Willis (Professor of Mathematics, University of Nebraska at
-Kearney) wrote the `topoly' and `to_poly_solve' packages and the
+Kearney) wrote the `to_poly' and `to_poly_solve' packages and the
 English language user documentation for these packages.
 
  -- Operator: %and
@@ -1931,7 +2192,7 @@ English language user documentation for these packages.
      There is no support for distributing `%and' over `%or'; neither is
      there support for distributing a logical negation over `%and'.
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Related functions `%or, %if, and, or, not'
 
@@ -1976,7 +2237,7 @@ English language user documentation for these packages.
      inequations that are readily convertible to an equivalent linear
      inequation.
 
-     To use: `load(to_poly_solver)'
+     To use: `load(to_poly_solve)'
 
      Status: The operator `%if' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -2049,7 +2310,7 @@ English language user documentation for these packages.
      neither is there support for distributing a logical negation over
      `%or'.
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Related functions `%or, %if, and, or, not'
 
@@ -2074,7 +2335,7 @@ English language user documentation for these packages.
 
      Related functions `isreal_p'
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The operator `complex_number_p' is experimental; its
      specifications might change and its functionality might be merged
@@ -2109,7 +2370,7 @@ English language user documentation for these packages.
 
           funmake: first argument must be a symbol, subscripted symbol,
           string, or lambda expression; found: a < b
-          #0: compose_functions(l=[a < b])(to_poly_solver.mac line 40)
+          #0: compose_functions(l=[a < b])(to_poly_solve.mac line 40)
            -- an error. To debug this try: debugmode(true);
 
         * To avoid name conflicts, the independent variable is
@@ -2127,7 +2388,7 @@ English language user documentation for these packages.
           (%i8) is(equal(%o6,%o7));
           (%o8)                         true
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status  The function `compose_functions' is experimental; its
      specifications might change and its functionality might be merged
@@ -2157,7 +2418,7 @@ English language user documentation for these packages.
 
      Related functions `float, bfloat'
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `dfloat' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -2274,7 +2535,7 @@ English language user documentation for these packages.
 
      Related functions elim, eliminate, elim_allbut
 
-     To use `load(topoly)'
+     To use `load(to_poly)'
 
      Status The function `eliminate_using' is experimental; its
      specifications might change and its functionality might be merged
@@ -2384,7 +2645,7 @@ English language user documentation for these packages.
           (%i5) isreal_p(log(x));
           (%o5)                   isreal_p(log(x))
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Related functions complex_number_p
 
@@ -2430,7 +2691,7 @@ English language user documentation for these packages.
 
      Related functions nicedummies
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `new_variable' is experimental; its
      specifications might change and its functionality might be merged
@@ -2450,7 +2711,7 @@ English language user documentation for these packages.
 
      Related functions new_variable
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `nicedummies' is experimental; its
      specifications might change and its functionality might be merged
@@ -2493,7 +2754,7 @@ English language user documentation for these packages.
 
      Related function carg, isreal_p
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `parg' is experimental; its specifications
      might change and its functionality might be merged into other
@@ -2512,7 +2773,7 @@ English language user documentation for these packages.
           (%o2)     ---------------- - --------------------- = 3
                            2                     2
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `real_imagpart_to_conjugate' is experimental;
      its specifications might change and its functionality might be
@@ -2536,7 +2797,7 @@ English language user documentation for these packages.
           (%o3)             ------------ + %i atan2(b, a)
                                  2
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `rectform_log_if_constant' is experimental;
      the specifications of this function might change might change and
@@ -2573,7 +2834,7 @@ English language user documentation for these packages.
      to an expression.  See Abramowitz and Stegun, Eqs. 4.4.6 through
      4.4.8 and 4.6.4 through 4.6.6.
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status The function `standardize_inverse_trig' is experimental; its
      specifications might change and its functionality might be merged
@@ -2584,7 +2845,7 @@ English language user documentation for these packages.
      the right hand side of each equation for the left hand side.  The
      substitutions are made in parallel; for example
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) subst_parallel([x=y,y=x], [x,y]);
           (%o2)                        [y, x]
@@ -2641,7 +2902,7 @@ English language user documentation for these packages.
      solutions to the equation `e'.  Informally, `to_poly' attempts to
      polynomialize the equation <e>; an example might clarify:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly(sqrt(x) = 3, [x]);
                                       2
@@ -2714,7 +2975,7 @@ English language user documentation for these packages.
      When `to_poly_solve' is able to determine the solution set, each
      member of the solution set is a list in a `%union' object:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly_solve(x*(x-1) = 0, x);
           (%o2)               %union([x = 0], [x = 1])
@@ -2724,7 +2985,7 @@ English language user documentation for these packages.
 
           (%i3) to_poly_solve(x^k + 2* x + 1 = 0, x);
 
-          Nonalgebraic argument given to 'topoly'
+          Nonalgebraic argument given to 'to_poly'
           unable to solve
                                     k
           (%o3)            %solve([x  + 2 x + 1 = 0], [x])
@@ -2771,7 +3032,7 @@ English language user documentation for these packages.
      Also, some it can solve some equations that are solvable in in
      terms of the Lambert W function; some examples:
 
-          (%i1) load(to_poly_solver)$
+          (%i1) load(to_poly_solve)$
 
           (%i2) to_poly_solve(set(max(x,y) = 5, x+y = 2), set(x,y));
           (%o2)      %union([x = - 3, y = 5], [x = 5, y = - 3])
@@ -2905,10 +3166,10 @@ English language user documentation for these packages.
           (%o12) %union(%if(a - 1 = 0, [x = %c0], %union()),
                                          %if(a - 1 # 0, [x = 0], %union()))
 
-     The `to_poly_solver' uses data stored in the hashed array
+     The `to_poly_solve' uses data stored in the hashed array
      `one_to_one_reduce' to solve equations of the form f(a) = f(b).
      The assignment `one_to_one_reduce['f,'f] : lambda([a,b], a=b)'
-     tells `to_poly_solver' that the solution set of f(a) = f(b) equals
+     tells `to_poly_solve' that the solution set of f(a) = f(b) equals
      the solution set of a=b; for example
 
           (%i13) one_to_one_reduce['f,'f] : lambda([a,b], a=b)$
@@ -2917,19 +3178,19 @@ English language user documentation for these packages.
           (%o14)             %union([x = - 1], [x = 1])
 
      More generally, the assignment `one_to_one_reduce['f,'g] :
-     lambda([a,b], w(a, b) = 0' tells `to_poly_solver' that the
-     solution set of f(a) = f(b) equals the solution set of w(a,b) = 0;
-     for example
+     lambda([a,b], w(a, b) = 0' tells `to_poly_solve' that the solution
+     set of f(a) = f(b) equals the solution set of w(a,b) = 0; for
+     example
 
           (%i15) one_to_one_reduce['f,'g] : lambda([a,b], a = 1 + b/2)$
 
           (%i16) to_poly_solve(f(x) - g(x),x);
           (%o16)                   %union([x = 2])
 
-     Additionally, the function `to_poly_solver' uses data stored in
-     the hashed array `function_inverse' to solve equations of the form
+     Additionally, the function `to_poly_solve' uses data stored in the
+     hashed array `function_inverse' to solve equations of the form
      f(a) = b.  The assignment `function_inverse['f] : lambda([s],
-     g(s))' informs  `to_poly_solver' that the solution set to `f(x) =
+     g(s))' informs  `to_poly_solve' that the solution set to `f(x) =
      b' equals the solution set to `x = g(b)'; two examples:
 
           (%i17) function_inverse['Q] : lambda([s], P(s))$
@@ -2970,7 +3231,7 @@ English language user documentation for these packages.
                                         2              2
 
         * For an equation that involves the absolute value function, the
-          `to_poly_solver' consults the fact database to decide if the
+          `to_poly_solve' consults the fact database to decide if the
           argument to the absolute value is complex valued.  When
 
           (%i1) to_poly_solve(abs(x) = 6, x);
@@ -2989,7 +3250,7 @@ English language user documentation for these packages.
 
      Related functions to_poly
 
-     To use `load(to_poly_solver)'
+     To use `load(to_poly_solve)'
 
      Status: The function `to_poly_solve' is experimental; its
      specifications might change and its functionality might be merged
@@ -3961,6 +4222,8 @@ Appendix A Function and Variable Index
                                                              (line  143)
 * allbut:                                Functions and Variables for Expressions.
                                                              (line   21)
+* allocation:                            Functions and Variables for draw.
+                                                             (line  204)
 * allroots:                              Functions and Variables for Equations.
                                                              (line  155)
 * allsym:                                Functions and Variables for itensor.
@@ -4084,18 +4347,18 @@ Appendix A Function and Variable Index
                                                              (line  377)
 * axes:                                  Plotting Options.   (line   22)
 * axis_3d:                               Functions and Variables for draw.
-                                                             (line  204)
+                                                             (line  244)
 * axis_bottom:                           Functions and Variables for draw.
-                                                             (line  223)
+                                                             (line  263)
 * axis_left:                             Functions and Variables for draw.
-                                                             (line  240)
+                                                             (line  280)
 * axis_right:                            Functions and Variables for draw.
-                                                             (line  257)
+                                                             (line  297)
 * axis_top:                              Functions and Variables for draw.
-                                                             (line  274)
+                                                             (line  314)
 * azimuth:                               Plotting Options.   (line   32)
 * background_color:                      Functions and Variables for draw.
-                                                             (line  291)
+                                                             (line  331)
 * backslash:                             Introduction to Strings.
                                                              (line    6)
 * backsubst:                             Functions and Variables for Equations.
@@ -4103,7 +4366,7 @@ Appendix A Function and Variable Index
 * backtrace:                             Functions and Variables for Program Flow.
                                                              (line    7)
 * bars:                                  Functions and Variables for draw.
-                                                             (line 2591)
+                                                             (line 2631)
 * barsplot:                              Functions and Variables for statistical graphs.
                                                              (line    8)
 * barsplot_description:                  Functions and Variables for statistical graphs.
@@ -4199,7 +4462,7 @@ Appendix A Function and Variable Index
 * bode_phase:                            Functions and Variables for bode.
                                                              (line   53)
 * border:                                Functions and Variables for draw.
-                                                             (line  300)
+                                                             (line  340)
 * bothcoef:                              Functions and Variables for Polynomials.
                                                              (line   40)
 * boundaries_array:                      Functions and Variables for worldmap.
@@ -4247,9 +4510,9 @@ Appendix A Function and Variable Index
 * cbffac:                                Gamma and factorial Functions.
                                                              (line   27)
 * cbrange:                               Functions and Variables for draw.
-                                                             (line  320)
+                                                             (line  360)
 * cbtics:                                Functions and Variables for draw.
-                                                             (line  348)
+                                                             (line  388)
 * cdf_bernoulli:                         Functions and Variables for discrete distributions.
                                                              (line  257)
 * cdf_beta:                              Functions and Variables for continuous distributions.
@@ -4317,13 +4580,13 @@ Appendix A Function and Variable Index
 * cequalignore:                          Functions and Variables for characters.
                                                              (line   30)
 * cf:                                    Functions and Variables for Number Theory.
-                                                             (line   74)
+                                                             (line   95)
 * cfdisrep:                              Functions and Variables for Number Theory.
-                                                             (line  140)
+                                                             (line  164)
 * cfexpand:                              Functions and Variables for Number Theory.
-                                                             (line  157)
+                                                             (line  181)
 * cflength:                              Functions and Variables for Number Theory.
-                                                             (line  174)
+                                                             (line  198)
 * cframe_flag:                           Functions and Variables for ctensor.
                                                              (line 1100)
 * cgeodesic:                             Functions and Variables for ctensor.
@@ -4358,6 +4621,8 @@ Appendix A Function and Variable Index
                                                              (line   97)
 * checkdiv:                              Functions and Variables for ctensor.
                                                              (line  785)
+* chinese:                               Functions and Variables for Number Theory.
+                                                             (line   74)
 * cholesky:                              Functions and Variables for linearalgebra.
                                                              (line   72)
 * christof:                              Functions and Variables for ctensor.
@@ -4402,15 +4667,15 @@ Appendix A Function and Variable Index
                                                              (line  133)
 * collectterms:                          Package facexp.     (line  106)
 * color <1>:                             Functions and Variables for draw.
-                                                             (line  372)
+                                                             (line  412)
 * color:                                 Plotting Options.   (line   52)
 * colorbox <1>:                          Functions and Variables for draw.
-                                                             (line  422)
+                                                             (line  462)
 * colorbox:                              Plotting Options.   (line   70)
 * columnop:                              Functions and Variables for linearalgebra.
                                                              (line   27)
 * columns:                               Functions and Variables for draw.
-                                                             (line  454)
+                                                             (line  494)
 * columnspace:                           Functions and Variables for linearalgebra.
                                                              (line   38)
 * columnswap:                            Functions and Variables for linearalgebra.
@@ -4485,9 +4750,9 @@ Appendix A Function and Variable Index
 * contortion:                            Functions and Variables for ctensor.
                                                              (line  664)
 * contour:                               Functions and Variables for draw.
-                                                             (line  474)
+                                                             (line  514)
 * contour_levels:                        Functions and Variables for draw.
-                                                             (line  505)
+                                                             (line  545)
 * contour_plot:                          Functions and Variables for Plotting.
                                                              (line    8)
 * contract <1>:                          Functions and Variables for Symmetries.
@@ -4586,9 +4851,9 @@ Appendix A Function and Variable Index
 * cycle_graph:                           Functions and Variables for graphs.
                                                              (line  112)
 * cylindrical:                           Functions and Variables for draw.
-                                                             (line 2620)
+                                                             (line 2660)
 * data_file_name:                        Functions and Variables for draw.
-                                                             (line  557)
+                                                             (line  597)
 * days360:                               Functions and Variables for finance.
                                                              (line    7)
 * dblint:                                Functions and Variables for Integration.
@@ -4644,7 +4909,7 @@ Appendix A Function and Variable Index
 * del:                                   Functions and Variables for Differentiation.
                                                              (line  231)
 * delay:                                 Functions and Variables for draw.
-                                                             (line  570)
+                                                             (line  610)
 * delete:                                Functions and Variables for Lists.
                                                              (line  101)
 * deleten:                               Functions and Variables for ctensor.
@@ -4724,7 +4989,7 @@ Appendix A Function and Variable Index
 * dimensions <1>:                        Functions and Variables for ezunits.
                                                              (line  593)
 * dimensions:                            Functions and Variables for draw.
-                                                             (line  598)
+                                                             (line  638)
 * dimensions_as_list:                    Functions and Variables for ezunits.
                                                              (line  594)
 * direct:                                Functions and Variables for Symmetries.
@@ -4770,7 +5035,7 @@ Appendix A Function and Variable Index
 * divisors:                              Functions and Variables for Sets.
                                                              (line  122)
 * divsum:                                Functions and Variables for Number Theory.
-                                                             (line  192)
+                                                             (line  216)
 * dkummer_m:                             Functions and Variables for contrib_ode.
                                                              (line  133)
 * dkummer_u:                             Functions and Variables for contrib_ode.
@@ -4836,7 +5101,7 @@ Appendix A Function and Variable Index
 * draw_graph_program:                    Functions and Variables for graphs.
                                                              (line 1509)
 * draw_realpart:                         Functions and Variables for draw.
-                                                             (line  643)
+                                                             (line  683)
 * drawdf:                                Functions and Variables for drawdf.
                                                              (line   10)
 * dscalar <1>:                           Functions and Variables for ctensor.
@@ -4891,7 +5156,7 @@ Appendix A Function and Variable Index
                                                              (line  165)
 * elevation:                             Plotting Options.   (line   80)
 * elevation_grid:                        Functions and Variables for draw.
-                                                             (line 2641)
+                                                             (line 2681)
 * elim:                                  Functions and Variables for to_poly_solve.
                                                              (line  315)
 * elim_allbut:                           Functions and Variables for to_poly_solve.
@@ -4901,7 +5166,7 @@ Appendix A Function and Variable Index
 * eliminate_using:                       Functions and Variables for to_poly_solve.
                                                              (line  400)
 * ellipse:                               Functions and Variables for draw.
-                                                             (line 2669)
+                                                             (line 2709)
 * elliptic_e:                            Functions and Variables for Elliptic Integrals.
                                                              (line   15)
 * elliptic_ec:                           Functions and Variables for Elliptic Integrals.
@@ -4923,7 +5188,7 @@ Appendix A Function and Variable Index
 * endcons:                               Functions and Variables for Lists.
                                                              (line  170)
 * enhanced3d:                            Functions and Variables for draw.
-                                                             (line  667)
+                                                             (line  707)
 * entermatrix:                           Functions and Variables for Matrices and Linear Algebra.
                                                              (line  533)
 * entertensor:                           Functions and Variables for itensor.
@@ -4958,13 +5223,13 @@ Appendix A Function and Variable Index
 * error_syms:                            Functions and Variables for Program Flow.
                                                              (line  316)
 * error_type:                            Functions and Variables for draw.
-                                                             (line  806)
+                                                             (line  846)
 * errormsg:                              Functions and Variables for Program Flow.
                                                              (line  332)
 * errors:                                Functions and Variables for draw.
-                                                             (line 2701)
+                                                             (line 2741)
 * euler:                                 Functions and Variables for Number Theory.
-                                                             (line  209)
+                                                             (line  233)
 * Euler's number:                        Functions and Variables for Constants.
                                                              (line    7)
 * Euler-Mascheroni constant:             Functions and Variables for Constants.
@@ -5028,7 +5293,7 @@ Appendix A Function and Variable Index
 * expintrep:                             Exponential Integrals.
                                                              (line   42)
 * explicit:                              Functions and Variables for draw.
-                                                             (line 2741)
+                                                             (line 2781)
 * explose:                               Functions and Variables for Symmetries.
                                                              (line  253)
 * expon:                                 Functions and Variables for Simplification.
@@ -5079,6 +5344,8 @@ Appendix A Function and Variable Index
                                                              (line  152)
 * factorout:                             Functions and Variables for Polynomials.
                                                              (line  386)
+* factors_only:                          Functions and Variables for Number Theory.
+                                                             (line  242)
 * factorsum:                             Functions and Variables for Polynomials.
                                                              (line  405)
 * facts:                                 Functions and Variables for Facts.
@@ -5108,15 +5375,15 @@ Appendix A Function and Variable Index
 * fft:                                   Functions and Variables for fast Fourier transform.
                                                              (line  102)
 * fib:                                   Functions and Variables for Number Theory.
-                                                             (line  218)
+                                                             (line  253)
 * fibtophi:                              Functions and Variables for Number Theory.
-                                                             (line  230)
+                                                             (line  265)
 * fifth:                                 Functions and Variables for Lists.
                                                              (line  176)
 * file_name <1>:                         Functions and Variables for graphs.
                                                              (line 1662)
 * file_name:                             Functions and Variables for draw.
-                                                             (line  816)
+                                                             (line  856)
 * file_output_append:                    Functions and Variables for File Input and Output.
                                                              (line   88)
 * file_search:                           Functions and Variables for File Input and Output.
@@ -5140,13 +5407,13 @@ Appendix A Function and Variable Index
 * filename_merge:                        Functions and Variables for File Input and Output.
                                                              (line  103)
 * fill_color:                            Functions and Variables for draw.
-                                                             (line  837)
+                                                             (line  877)
 * fill_density:                          Functions and Variables for draw.
-                                                             (line  846)
+                                                             (line  886)
 * fillarray:                             Functions and Variables for Arrays.
                                                              (line  217)
 * filled_func:                           Functions and Variables for draw.
-                                                             (line  854)
+                                                             (line  894)
 * find_root:                             Functions and Variables for fast Fourier transform.
                                                              (line  233)
 * find_root_abs:                         Functions and Variables for fast Fourier transform.
@@ -5190,9 +5457,9 @@ Appendix A Function and Variable Index
 * fmin_cobyla:                           Functions and Variables for cobyla.
                                                              (line    7)
 * font:                                  Functions and Variables for draw.
-                                                             (line  887)
+                                                             (line  927)
 * font_size:                             Functions and Variables for draw.
-                                                             (line  974)
+                                                             (line 1014)
 * for:                                   Functions and Variables for Program Flow.
                                                              (line  373)
 * forget:                                Functions and Variables for Facts.
@@ -5360,7 +5627,7 @@ Appendix A Function and Variable Index
 * gnuplot_default_term_command:          Gnuplot Options.    (line   79)
 * gnuplot_dumb_term_command:             Gnuplot Options.    (line   84)
 * gnuplot_file_name:                     Functions and Variables for draw.
-                                                             (line  988)
+                                                             (line 1028)
 * gnuplot_out_file:                      Gnuplot Options.    (line   47)
 * gnuplot_pm3d:                          Gnuplot Options.    (line   57)
 * gnuplot_preamble:                      Gnuplot Options.    (line   62)
@@ -5429,7 +5696,7 @@ Appendix A Function and Variable Index
 * Greater than or equal:                 Relational operators.
                                                              (line    9)
 * grid <1>:                              Functions and Variables for draw.
-                                                             (line 1011)
+                                                             (line 1051)
 * grid:                                  Plotting Options.   (line   94)
 * grid_graph:                            Functions and Variables for graphs.
                                                              (line  163)
@@ -5456,15 +5723,15 @@ Appendix A Function and Variable Index
 * head_angle <1>:                        Functions and Variables for graphs.
                                                              (line 1638)
 * head_angle:                            Functions and Variables for draw.
-                                                             (line 1026)
+                                                             (line 1066)
 * head_both:                             Functions and Variables for draw.
-                                                             (line 1062)
+                                                             (line 1102)
 * head_length <1>:                       Functions and Variables for graphs.
                                                              (line 1644)
 * head_length:                           Functions and Variables for draw.
-                                                             (line 1083)
+                                                             (line 1123)
 * head_type:                             Functions and Variables for draw.
-                                                             (line 1107)
+                                                             (line 1147)
 * heawood_graph:                         Functions and Variables for graphs.
                                                              (line  179)
 * Help:                                  Functions and Variables for Help.
@@ -5539,7 +5806,7 @@ Appendix A Function and Variable Index
 * if:                                    Functions and Variables for Program Flow.
                                                              (line  391)
 * ifactors:                              Functions and Variables for Number Theory.
-                                                             (line  256)
+                                                             (line  291)
 * ifb:                                   Functions and Variables for itensor.
                                                              (line 1105)
 * ifc1:                                  Functions and Variables for itensor.
@@ -5561,7 +5828,7 @@ Appendix A Function and Variable Index
 * ifs:                                   Functions and Variables for dynamics.
                                                              (line   45)
 * igcdex:                                Functions and Variables for Number Theory.
-                                                             (line  270)
+                                                             (line  313)
 * igeodesic_coords:                      Functions and Variables for itensor.
                                                              (line  990)
 * igeowedge_flag:                        Functions and Variables for itensor.
@@ -5573,7 +5840,7 @@ Appendix A Function and Variable Index
 * ilt:                                   Functions and Variables for Integration.
                                                              (line  127)
 * image:                                 Functions and Variables for draw.
-                                                             (line 2791)
+                                                             (line 2831)
 * imaginary:                             Functions and Variables for Properties.
                                                              (line  549)
 * Imaginary unit:                        Functions and Variables for Constants.
@@ -5583,7 +5850,7 @@ Appendix A Function and Variable Index
 * imetric:                               Functions and Variables for itensor.
                                                              (line  894)
 * implicit:                              Functions and Variables for draw.
-                                                             (line 2880)
+                                                             (line 2920)
 * implicit_derivative:                   Functions and Variables for impdiff.
                                                              (line    8)
 * implicit_plot:                         Functions and Variables for Plotting.
@@ -5637,7 +5904,7 @@ Appendix A Function and Variable Index
 * inprod:                                Functions and Variables for Matrices and Linear Algebra.
                                                              (line  692)
 * inrt:                                  Functions and Variables for Number Theory.
-                                                             (line  291)
+                                                             (line  334)
 * intanalysis:                           Functions and Variables for Integration.
                                                              (line  171)
 * integer:                               Functions and Variables for Properties.
@@ -5667,7 +5934,7 @@ Appendix A Function and Variable Index
 * intopois:                              Poisson series.     (line    7)
 * intosum:                               Sums and Products.  (line   36)
 * inv_mod:                               Functions and Variables for Number Theory.
-                                                             (line  299)
+                                                             (line  342)
 * invariant1:                            Functions and Variables for ctensor.
                                                              (line  811)
 * invariant2:                            Functions and Variables for ctensor.
@@ -5703,9 +5970,9 @@ Appendix A Function and Variable Index
 * invert_by_lu:                          Functions and Variables for linearalgebra.
                                                              (line  234)
 * ip_grid:                               Functions and Variables for draw.
-                                                             (line 1132)
+                                                             (line 1172)
 * ip_grid_in:                            Functions and Variables for draw.
-                                                             (line 1140)
+                                                             (line 1180)
 * irr:                                   Functions and Variables for finance.
                                                              (line  228)
 * irrational:                            Functions and Variables for Properties.
@@ -5745,7 +6012,7 @@ Appendix A Function and Variable Index
 * isomorphism:                           Functions and Variables for graphs.
                                                              (line  656)
 * isqrt:                                 Functions and Variables for Number Theory.
-                                                             (line  311)
+                                                             (line  354)
 * isreal_p:                              Functions and Variables for to_poly_solve.
                                                              (line  505)
 * items_inference:                       Functions and Variables for inference_result.
@@ -5753,7 +6020,7 @@ Appendix A Function and Variable Index
 * itr:                                   Functions and Variables for itensor.
                                                              (line 1291)
 * jacobi:                                Functions and Variables for Number Theory.
-                                                             (line  316)
+                                                             (line  359)
 * jacobi_cd:                             Functions and Variables for Elliptic Functions.
                                                              (line   39)
 * jacobi_cn:                             Functions and Variables for Elliptic Functions.
@@ -5803,7 +6070,7 @@ Appendix A Function and Variable Index
 * keepfloat:                             Functions and Variables for Polynomials.
                                                              (line  683)
 * key:                                   Functions and Variables for draw.
-                                                             (line 1149)
+                                                             (line 1189)
 * kill:                                  Functions and Variables for Command Line.
                                                              (line  291)
 * killcontext:                           Functions and Variables for Facts.
@@ -5875,13 +6142,13 @@ Appendix A Function and Variable Index
 * kurtosis_weibull:                      Functions and Variables for continuous distributions.
                                                              (line 1182)
 * label:                                 Functions and Variables for draw.
-                                                             (line 2932)
+                                                             (line 2972)
 * label_alignment <1>:                   Functions and Variables for graphs.
                                                              (line 1528)
 * label_alignment:                       Functions and Variables for draw.
-                                                             (line 1172)
+                                                             (line 1212)
 * label_orientation:                     Functions and Variables for draw.
-                                                             (line 1198)
+                                                             (line 1238)
 * labels:                                Functions and Variables for Command Line.
                                                              (line  355)
 * lagrange:                              Functions and Variables for interpol.
@@ -5915,7 +6182,7 @@ Appendix A Function and Variable Index
 * lcharp:                                Functions and Variables for characters.
                                                              (line   83)
 * lcm:                                   Functions and Variables for Number Theory.
-                                                             (line  324)
+                                                             (line  367)
 * ldefint:                               Functions and Variables for Integration.
                                                              (line  498)
 * ldisp:                                 Functions and Variables for Display.
@@ -5974,9 +6241,9 @@ Appendix A Function and Variable Index
 * line_graph:                            Functions and Variables for graphs.
                                                              (line  210)
 * line_type:                             Functions and Variables for draw.
-                                                             (line 1224)
+                                                             (line 1264)
 * line_width:                            Functions and Variables for draw.
-                                                             (line 1248)
+                                                             (line 1288)
 * linear <1>:                            Package functs.     (line   68)
 * linear:                                Functions and Variables for Simplification.
                                                              (line  347)
@@ -6054,7 +6321,7 @@ Appendix A Function and Variable Index
 * logarc:                                Root Exponential and Logarithmic Functions.
                                                              (line  167)
 * logcb:                                 Functions and Variables for draw.
-                                                             (line 1272)
+                                                             (line 1312)
 * logconcoeffp:                          Root Exponential and Logarithmic Functions.
                                                              (line  177)
 * logcontract:                           Root Exponential and Logarithmic Functions.
@@ -6074,14 +6341,14 @@ Appendix A Function and Variable Index
 * logsimp:                               Root Exponential and Logarithmic Functions.
                                                              (line  228)
 * logx <1>:                              Functions and Variables for draw.
-                                                             (line 1298)
+                                                             (line 1338)
 * logx:                                  Plotting Options.   (line  112)
 * logxor:                                Package functs.     (line   55)
 * logy <1>:                              Functions and Variables for draw.
-                                                             (line 1316)
+                                                             (line 1356)
 * logy:                                  Plotting Options.   (line  117)
 * logz:                                  Functions and Variables for draw.
-                                                             (line 1334)
+                                                             (line 1374)
 * lopow:                                 Functions and Variables for Polynomials.
                                                              (line  714)
 * lorentz_gauge:                         Functions and Variables for itensor.
@@ -6308,7 +6575,7 @@ Appendix A Function and Variable Index
 * member:                                Functions and Variables for Lists.
                                                              (line  293)
 * mesh:                                  Functions and Variables for draw.
-                                                             (line 2974)
+                                                             (line 3014)
 * mesh_lines_color:                      Plotting Options.   (line  122)
 * method:                                Functions and Variables for contrib_ode.
                                                              (line   72)
@@ -6345,7 +6612,7 @@ Appendix A Function and Variable Index
 * mnewton:                               Functions and Variables for mnewton.
                                                              (line   25)
 * mod:                                   Functions and Variables for Number Theory.
-                                                             (line  331)
+                                                             (line  374)
 * mod_big_prime:                         Functions and Variables for zeilberger.
                                                              (line  164)
 * mod_test:                              Functions and Variables for zeilberger.
@@ -6449,7 +6716,7 @@ Appendix A Function and Variable Index
 * newtonmaxiter:                         Functions and Variables for mnewton.
                                                              (line   16)
 * next_prime:                            Functions and Variables for Number Theory.
-                                                             (line  359)
+                                                             (line  402)
 * nextlayerfactor:                       Package facexp.     (line   65)
 * nicedummies:                           Functions and Variables for to_poly_solve.
                                                              (line  588)
@@ -6520,7 +6787,7 @@ Appendix A Function and Variable Index
 * nthroot:                               Functions and Variables for Equations.
                                                              (line  605)
 * nticks <1>:                            Functions and Variables for draw.
-                                                             (line 1352)
+                                                             (line 1392)
 * nticks:                                Plotting Options.   (line  133)
 * ntrig:                                 Functions and Variables for Trigonometric.
                                                              (line  225)
@@ -6633,14 +6900,14 @@ Appendix A Function and Variable Index
 * pade:                                  Functions and Variables for Series.
                                                              (line  196)
 * palette <1>:                           Functions and Variables for draw.
-                                                             (line 1373)
+                                                             (line 1413)
 * palette:                               Plotting Options.   (line  143)
 * parabolic_cylinder_d:                  Parabolic Cylinder Functions.
                                                              (line   13)
 * parametric:                            Functions and Variables for draw.
-                                                             (line 3021)
+                                                             (line 3061)
 * parametric_surface:                    Functions and Variables for draw.
-                                                             (line 3063)
+                                                             (line 3103)
 * parg:                                  Functions and Variables for to_poly_solve.
                                                              (line  608)
 * parGosper:                             Functions and Variables for zeilberger.
@@ -6652,7 +6919,7 @@ Appendix A Function and Variable Index
 * part2cont:                             Functions and Variables for Symmetries.
                                                              (line  261)
 * partfrac:                              Functions and Variables for Number Theory.
-                                                             (line  366)
+                                                             (line  409)
 * partition:                             Functions and Variables for Expressions.
                                                              (line  755)
 * partition_set:                         Functions and Variables for Sets.
@@ -6781,14 +7048,14 @@ Appendix A Function and Variable Index
 * pochhammer_max_index:                  Functions and Variables for orthogonal polynomials.
                                                              (line  170)
 * point_size:                            Functions and Variables for draw.
-                                                             (line 1449)
+                                                             (line 1489)
 * point_type <1>:                        Functions and Variables for draw.
-                                                             (line 1471)
+                                                             (line 1511)
 * point_type:                            Plotting Options.   (line  196)
 * points:                                Functions and Variables for draw.
-                                                             (line 3092)
+                                                             (line 3132)
 * points_joined:                         Functions and Variables for draw.
-                                                             (line 1514)
+                                                             (line 1554)
 * poisdiff:                              Poisson series.     (line   19)
 * poisexpt:                              Poisson series.     (line   24)
 * poisint:                               Poisson series.     (line   29)
@@ -6801,7 +7068,7 @@ Appendix A Function and Variable Index
 * poistimes:                             Poisson series.     (line   85)
 * poistrim:                              Poisson series.     (line   89)
 * polar:                                 Functions and Variables for draw.
-                                                             (line 3256)
+                                                             (line 3296)
 * polar_to_xy:                           Functions and Variables for Plotting.
                                                              (line   83)
 * polarform:                             Functions for Complex Numbers.
@@ -6899,7 +7166,7 @@ Appendix A Function and Variable Index
 * polyfactor:                            Functions and Variables for Equations.
                                                              (line  613)
 * polygon:                               Functions and Variables for draw.
-                                                             (line 3281)
+                                                             (line 3321)
 * polymod:                               Functions and Variables for Polynomials.
                                                              (line  855)
 * polynome2ele:                          Functions and Variables for Symmetries.
@@ -6917,7 +7184,7 @@ Appendix A Function and Variable Index
 * potential:                             Functions and Variables for Integration.
                                                              (line  512)
 * power_mod:                             Functions and Variables for Number Theory.
-                                                             (line  391)
+                                                             (line  434)
 * powerdisp:                             Functions and Variables for Display.
                                                              (line  531)
 * powers:                                Functions and Variables for Polynomials.
@@ -6933,7 +7200,7 @@ Appendix A Function and Variable Index
 * prefix:                                User defined operators.
                                                              (line  245)
 * prev_prime:                            Functions and Variables for Number Theory.
-                                                             (line  429)
+                                                             (line  472)
 * Previous input:                        Functions and Variables for Command Line.
                                                              (line   47)
 * Previous output:                       Functions and Variables for Command Line.
@@ -6941,9 +7208,9 @@ Appendix A Function and Variable Index
 * Previous result in compound expression: Functions and Variables for Command Line.
                                                              (line  106)
 * primep:                                Functions and Variables for Number Theory.
-                                                             (line  406)
+                                                             (line  449)
 * primep_number_of_tests:                Functions and Variables for Number Theory.
-                                                             (line  423)
+                                                             (line  466)
 * print:                                 Functions and Variables for Display.
                                                              (line  556)
 * print_graph:                           Functions and Variables for graphs.
@@ -6969,7 +7236,7 @@ Appendix A Function and Variable Index
 * properties:                            Functions and Variables for Properties.
                                                              (line  465)
 * proportional_axes:                     Functions and Variables for draw.
-                                                             (line 1546)
+                                                             (line 1586)
 * props:                                 Functions and Variables for Properties.
                                                              (line  470)
 * propvars:                              Functions and Variables for Properties.
@@ -7028,7 +7295,7 @@ Appendix A Function and Variable Index
 * quad_qaws:                             Functions and Variables for QUADPACK.
                                                              (line  527)
 * quadrilateral:                         Functions and Variables for draw.
-                                                             (line 3307)
+                                                             (line 3347)
 * quantile:                              Functions and Variables for descriptive statistics.
                                                              (line  233)
 * quantile_bernoulli:                    Functions and Variables for discrete distributions.
@@ -7088,7 +7355,7 @@ Appendix A Function and Variable Index
 * quit:                                  Functions and Variables for Command Line.
                                                              (line  544)
 * qunit:                                 Functions and Variables for Number Theory.
-                                                             (line  436)
+                                                             (line  479)
 * Quote operator:                        Functions and Variables for Evaluation.
                                                              (line    7)
 * Quote-quote operator:                  Functions and Variables for Evaluation.
@@ -7282,7 +7549,7 @@ Appendix A Function and Variable Index
 * rearray:                               Functions and Variables for Arrays.
                                                              (line  403)
 * rectangle:                             Functions and Variables for draw.
-                                                             (line 3339)
+                                                             (line 3379)
 * rectform:                              Functions for Complex Numbers.
                                                              (line  145)
 * rectform_log_if_constant:              Functions and Variables for to_poly_solve.
@@ -7299,7 +7566,7 @@ Appendix A Function and Variable Index
 * refcheck:                              Functions and Variables for Debugging.
                                                              (line   18)
 * region:                                Functions and Variables for draw.
-                                                             (line 3369)
+                                                             (line 3409)
 * region_boundaries:                     Functions and Variables for worldmap.
                                                              (line  122)
 * region_boundaries_plus:                Functions and Variables for worldmap.
@@ -7712,7 +7979,7 @@ Appendix A Function and Variable Index
 * specint:                               Functions and Variables for Special Functions.
                                                              (line    7)
 * spherical:                             Functions and Variables for draw.
-                                                             (line 3390)
+                                                             (line 3430)
 * spherical_bessel_j:                    Functions and Variables for orthogonal polynomials.
                                                              (line  187)
 * spherical_bessel_y:                    Functions and Variables for orthogonal polynomials.
@@ -7902,7 +8169,7 @@ Appendix A Function and Variable Index
 * supcontext:                            Functions and Variables for Facts.
                                                              (line  418)
 * surface_hide:                          Functions and Variables for draw.
-                                                             (line 1585)
+                                                             (line 1625)
 * symbolp:                               Functions and Variables for Expressions.
                                                              (line 1206)
 * symmdifference:                        Functions and Variables for Sets.
@@ -7961,7 +8228,7 @@ Appendix A Function and Variable Index
 * terminal <1>:                          Functions and Variables for graphs.
                                                              (line 1657)
 * terminal:                              Functions and Variables for draw.
-                                                             (line 1603)
+                                                             (line 1643)
 * test_mean:                             Functions and Variables for stats.
                                                              (line   15)
 * test_means_difference:                 Functions and Variables for stats.
@@ -8005,7 +8272,7 @@ Appendix A Function and Variable Index
 * timer_info:                            Functions and Variables for Debugging.
                                                              (line  131)
 * title:                                 Functions and Variables for draw.
-                                                             (line 1674)
+                                                             (line 1714)
 * tldefint:                              Functions and Variables for Integration.
                                                              (line  564)
 * tlimit:                                Functions and Variables for Limits.
@@ -8031,7 +8298,7 @@ Appendix A Function and Variable Index
 * totalfourier:                          Functions and Variables for Fourier series.
                                                              (line   85)
 * totient:                               Functions and Variables for Number Theory.
-                                                             (line  448)
+                                                             (line  491)
 * tpartpol:                              Functions and Variables for Symmetries.
                                                              (line  285)
 * tr:                                    Functions and Variables for ctensor.
@@ -8076,14 +8343,14 @@ Appendix A Function and Variable Index
 * transcompile:                          Functions and Variables for Function Definition.
                                                              (line 1053)
 * transform:                             Functions and Variables for draw.
-                                                             (line 1690)
+                                                             (line 1730)
 * transform_xy:                          Plotting Options.   (line  271)
 * translate:                             Functions and Variables for Function Definition.
                                                              (line 1063)
 * translate_file:                        Functions and Variables for Function Definition.
                                                              (line 1118)
 * transparent:                           Functions and Variables for draw.
-                                                             (line 1731)
+                                                             (line 1771)
 * transpose:                             Functions and Variables for Matrices and Linear Algebra.
                                                              (line 1215)
 * transrun:                              Functions and Variables for Function Definition.
@@ -8097,7 +8364,7 @@ Appendix A Function and Variable Index
 * treinat:                               Functions and Variables for Symmetries.
                                                              (line  506)
 * triangle:                              Functions and Variables for draw.
-                                                             (line 3411)
+                                                             (line 3451)
 * triangularize:                         Functions and Variables for Matrices and Linear Algebra.
                                                              (line 1228)
 * trigexpand:                            Functions and Variables for Trigonometric.
@@ -8133,9 +8400,9 @@ Appendix A Function and Variable Index
 * ttyoff:                                Functions and Variables for Display.
                                                              (line  606)
 * tube:                                  Functions and Variables for draw.
-                                                             (line 3442)
+                                                             (line 3482)
 * tube_extremes:                         Functions and Variables for draw.
-                                                             (line 1749)
+                                                             (line 1789)
 * tutte_graph:                           Functions and Variables for graphs.
                                                              (line  346)
 * ueivects:                              Functions and Variables for Matrices and Linear Algebra.
@@ -8163,7 +8430,7 @@ Appendix A Function and Variable Index
 * unit_step:                             Functions and Variables for orthogonal polynomials.
                                                              (line  219)
 * unit_vectors:                          Functions and Variables for draw.
-                                                             (line 1765)
+                                                             (line 1805)
 * uniteigenvectors:                      Functions and Variables for Matrices and Linear Algebra.
                                                              (line 1251)
 * unitp:                                 Functions and Variables for ezunits.
@@ -8199,7 +8466,7 @@ Appendix A Function and Variable Index
 * use_fast_arrays:                       Functions and Variables for Arrays.
                                                              (line  458)
 * user_preamble:                         Functions and Variables for draw.
-                                                             (line 1786)
+                                                             (line 1826)
 * usersetunits:                          Functions and Variables for Units.
                                                              (line  216)
 * uvect:                                 Functions and Variables for Matrices and Linear Algebra.
@@ -8265,7 +8532,7 @@ Appendix A Function and Variable Index
 * vect_cross:                            Functions and Variables for Matrices and Linear Algebra.
                                                              (line 1335)
 * vector:                                Functions and Variables for draw.
-                                                             (line 3466)
+                                                             (line 3506)
 * vectorpotential:                       Functions and Variables for Matrices and Linear Algebra.
                                                              (line 1290)
 * vectorsimp:                            Functions and Variables for Matrices and Linear Algebra.
@@ -8304,7 +8571,7 @@ Appendix A Function and Variable Index
 * vertices_to_path:                      Functions and Variables for graphs.
                                                              (line 1680)
 * view:                                  Functions and Variables for draw.
-                                                             (line 1809)
+                                                             (line 1849)
 * warnings:                              Functions and Variables for zeilberger.
                                                              (line  117)
 * Wedge product:                         Functions and Variables for itensor.
@@ -8318,7 +8585,7 @@ Appendix A Function and Variable Index
 * wiener_index:                          Functions and Variables for graphs.
                                                              (line 1224)
 * wired_surface:                         Functions and Variables for draw.
-                                                             (line 1827)
+                                                             (line 1867)
 * with_stdout:                           Functions and Variables for File Input and Output.
                                                              (line  445)
 * write_binary_data:                     Functions and Variables for binary input and output.
@@ -8330,91 +8597,91 @@ Appendix A Function and Variable Index
 * wronskian:                             Package functs.     (line   16)
 * x:                                     Plotting Options.   (line  281)
 * x_voxel:                               Functions and Variables for draw.
-                                                             (line 1845)
+                                                             (line 1885)
 * xaxis:                                 Functions and Variables for draw.
-                                                             (line 1853)
+                                                             (line 1893)
 * xaxis_color:                           Functions and Variables for draw.
-                                                             (line 1871)
+                                                             (line 1911)
 * xaxis_secondary:                       Functions and Variables for draw.
-                                                             (line 1890)
+                                                             (line 1930)
 * xaxis_type:                            Functions and Variables for draw.
-                                                             (line 1917)
+                                                             (line 1957)
 * xaxis_width:                           Functions and Variables for draw.
-                                                             (line 1936)
+                                                             (line 1976)
 * xlabel <1>:                            Functions and Variables for draw.
-                                                             (line 1955)
+                                                             (line 1995)
 * xlabel:                                Plotting Options.   (line  290)
 * xrange:                                Functions and Variables for draw.
-                                                             (line 1974)
+                                                             (line 2014)
 * xrange_secondary:                      Functions and Variables for draw.
-                                                             (line 1995)
+                                                             (line 2035)
 * xreduce:                               Functions and Variables for Sets.
                                                              (line 1305)
 * xthru:                                 Functions and Variables for Simplification.
                                                              (line  650)
 * xtics:                                 Functions and Variables for draw.
-                                                             (line 2010)
+                                                             (line 2050)
 * xtics_axis:                            Functions and Variables for draw.
-                                                             (line 2071)
-* xtics_rotate:                          Functions and Variables for draw.
-                                                             (line 2082)
-* xtics_rotate_secondary:                Functions and Variables for draw.
-                                                             (line 2092)
-* xtics_secondary:                       Functions and Variables for draw.
-                                                             (line 2102)
-* xtics_secondary_axis:                  Functions and Variables for draw.
                                                              (line 2111)
-* xu_grid:                               Functions and Variables for draw.
+* xtics_rotate:                          Functions and Variables for draw.
                                                              (line 2122)
-* xy_file:                               Functions and Variables for draw.
+* xtics_rotate_secondary:                Functions and Variables for draw.
+                                                             (line 2132)
+* xtics_secondary:                       Functions and Variables for draw.
                                                              (line 2142)
+* xtics_secondary_axis:                  Functions and Variables for draw.
+                                                             (line 2151)
+* xu_grid:                               Functions and Variables for draw.
+                                                             (line 2162)
+* xy_file:                               Functions and Variables for draw.
+                                                             (line 2182)
 * xyplane:                               Functions and Variables for draw.
-                                                             (line 2153)
+                                                             (line 2193)
 * y:                                     Plotting Options.   (line  300)
 * y_voxel:                               Functions and Variables for draw.
-                                                             (line 2171)
+                                                             (line 2211)
 * yaxis:                                 Functions and Variables for draw.
-                                                             (line 2179)
+                                                             (line 2219)
 * yaxis_color:                           Functions and Variables for draw.
-                                                             (line 2197)
+                                                             (line 2237)
 * yaxis_secondary:                       Functions and Variables for draw.
-                                                             (line 2216)
+                                                             (line 2256)
 * yaxis_type:                            Functions and Variables for draw.
-                                                             (line 2240)
+                                                             (line 2280)
 * yaxis_width:                           Functions and Variables for draw.
-                                                             (line 2259)
+                                                             (line 2299)
 * ylabel <1>:                            Functions and Variables for draw.
-                                                             (line 2278)
+                                                             (line 2318)
 * ylabel:                                Plotting Options.   (line  307)
 * yrange:                                Functions and Variables for draw.
-                                                             (line 2297)
+                                                             (line 2337)
 * yrange_secondary:                      Functions and Variables for draw.
-                                                             (line 2319)
+                                                             (line 2359)
 * ytics:                                 Functions and Variables for draw.
-                                                             (line 2346)
-* ytics_axis:                            Functions and Variables for draw.
-                                                             (line 2355)
-* ytics_rotate:                          Functions and Variables for draw.
-                                                             (line 2366)
-* ytics_rotate_secondary:                Functions and Variables for draw.
-                                                             (line 2376)
-* ytics_secondary:                       Functions and Variables for draw.
                                                              (line 2386)
-* ytics_secondary_axis:                  Functions and Variables for draw.
+* ytics_axis:                            Functions and Variables for draw.
                                                              (line 2395)
-* yv_grid:                               Functions and Variables for draw.
+* ytics_rotate:                          Functions and Variables for draw.
                                                              (line 2406)
+* ytics_rotate_secondary:                Functions and Variables for draw.
+                                                             (line 2416)
+* ytics_secondary:                       Functions and Variables for draw.
+                                                             (line 2426)
+* ytics_secondary_axis:                  Functions and Variables for draw.
+                                                             (line 2435)
+* yv_grid:                               Functions and Variables for draw.
+                                                             (line 2446)
 * z:                                     Plotting Options.   (line  316)
 * z_voxel:                               Functions and Variables for draw.
-                                                             (line 2426)
+                                                             (line 2466)
 * zaxis:                                 Functions and Variables for draw.
-                                                             (line 2434)
+                                                             (line 2474)
 * zaxis_color:                           Functions and Variables for draw.
-                                                             (line 2454)
+                                                             (line 2494)
 * zaxis_type:                            Functions and Variables for draw.
-                                                             (line 2475)
+                                                             (line 2515)
 * zaxis_width:                           Functions and Variables for draw.
-                                                             (line 2495)
+                                                             (line 2535)
 * Zeilberger:                            Functions and Variables for zeilberger.
                                                              (line   73)
 * zeroa:                                 Functions and Variables for Constants.
@@ -8422,7 +8689,7 @@ Appendix A Function and Variable Index
 * zerob:                                 Functions and Variables for Constants.
                                                              (line  144)
 * zerobern:                              Functions and Variables for Number Theory.
-                                                             (line  453)
+                                                             (line  496)
 * zeroequiv:                             Functions and Variables for Predicates.
                                                              (line  189)
 * zerofor:                               Functions and Variables for linearalgebra.
@@ -8432,22 +8699,36 @@ Appendix A Function and Variable Index
 * zeromatrixp:                           Functions and Variables for linearalgebra.
                                                              (line  640)
 * zeta:                                  Functions and Variables for Number Theory.
-                                                             (line  461)
+                                                             (line  504)
 * zeta%pi:                               Functions and Variables for Number Theory.
-                                                             (line  494)
+                                                             (line  537)
 * zlabel <1>:                            Functions and Variables for draw.
-                                                             (line 2515)
+                                                             (line 2555)
 * zlabel:                                Plotting Options.   (line  321)
 * zlange:                                Functions and Variables for lapack.
                                                              (line  278)
+* zn_log:                                Functions and Variables for Number Theory.
+                                                             (line  557)
+* zn_order:                              Functions and Variables for Number Theory.
+                                                             (line  614)
+* zn_primroot:                           Functions and Variables for Number Theory.
+                                                             (line  663)
+* zn_primroot_limit:                     Functions and Variables for Number Theory.
+                                                             (line  721)
+* zn_primroot_p:                         Functions and Variables for Number Theory.
+                                                             (line  730)
+* zn_primroot_pretest:                   Functions and Variables for Number Theory.
+                                                             (line  772)
+* zn_primroot_verbose:                   Functions and Variables for Number Theory.
+                                                             (line  785)
 * zrange:                                Functions and Variables for draw.
-                                                             (line 2535)
+                                                             (line 2575)
 * ztics:                                 Functions and Variables for draw.
-                                                             (line 2558)
+                                                             (line 2598)
 * ztics_axis:                            Functions and Variables for draw.
-                                                             (line 2567)
+                                                             (line 2607)
 * ztics_rotate:                          Functions and Variables for draw.
-                                                             (line 2578)
+                                                             (line 2618)
 * |:                                     Functions and Variables for itensor.
                                                              (line 1428)
 * ~:                                     Functions and Variables for itensor.
