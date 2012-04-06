@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -7,6 +7,677 @@ This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw
+
+42.3 Functions and Variables for pictures
+=========================================
+
+ -- Function: get_pixel (<pic>, <x>, <y>)
+     Returns pixel from picture.  Coordinates <x> and <y> range from 0
+     to `width-1' and `height-1', respectively.
+
+ -- Function: make_level_picture (<data>)
+ -- Function: make_level_picture (<data>, <width>, <height>)
+     Returns a levels <picture> object.  `make_level_picture(<data>)'
+     builds the <picture> object from matrix <data>.
+     `make_level_picture(<data>, <width>, <height>)' builds the object
+     from a list of numbers; in this case, both the <width> and the
+     <height> must be given.
+
+     The returned <picture> object contains the following four parts:
+
+       1. symbol `level'
+
+       2. image width
+
+       3. image height
+
+       4. an integer array with pixel data ranging from 0 to 255.
+          Argument <data> must contain only numbers ranged from 0 to
+          255; negative numbers are substituted by 0, and those which
+          are greater than 255 are set to 255.
+
+     Example:
+
+     Level picture from matrix.
+          (%i1) load(draw)$
+          (%i2) make_level_picture(matrix([3,2,5],[7,-9,3000]));
+          (%o2)         picture(level, 3, 2, {Array:  #(3 2 5 7 0 255)})
+
+     Level picture from numeric list.
+          (%i1) load(draw)$
+          (%i2) make_level_picture([-2,0,54,%pi],2,2);
+          (%o2)            picture(level, 2, 2, {Array:  #(0 0 54 3)})
+
+ -- Function: make_rgb_picture (<redlevel>, <greenlevel>, <bluelevel>)
+     Returns an rgb-coloured <picture> object.  All three arguments must
+     be levels picture; with red, green and blue levels.
+
+     The returned <picture> object contains the following four parts:
+
+       1. symbol `rgb'
+
+       2. image width
+
+       3. image height
+
+       4. an integer array of length <3*width*height> with pixel data
+          ranging from 0 to 255.  Each pixel is represented by three
+          consecutive numbers (red, green, blue).
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
+          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
+          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
+          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
+          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
+          (%i5) make_rgb_picture(red,green,blue);
+          (%o5) picture(rgb, 2, 2,
+                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
+
+ -- Function: negative_picture (<pic>)
+     Returns the negative of a (<level> or <rgb>) picture.
+
+ -- Function: picture_equalp (<x>,<y>)
+     Returns `true' in case of equal pictures, and `false' otherwise.
+
+ -- Function: picturep (<x>)
+     Returns `true' if the argument is a well formed image, and `false'
+     otherwise.
+
+ -- Function: read_xpm (<xpm_file>)
+     Reads a file in xpm and returns a picture object.
+
+ -- Function: rgb2level (<pic>)
+     Transforms an <rgb> picture into a <level> one by averaging the
+     red, green and blue channels.
+
+ -- Function: take_channel (<im>,<color>)
+     If argument <color> is `red', `green' or `blue', function
+     `take_channel' returns the corresponding color channel of picture
+     <im>.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
+          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
+          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
+          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
+          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
+          (%i5) make_rgb_picture(red,green,blue);
+          (%o5) picture(rgb, 2, 2,
+                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
+          (%i6) take_channel(%,'green);  /* simple quote!!! */
+          (%o6)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
+
+
+File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions and Variables for pictures,  Up: draw
+
+42.4 Functions and Variables for worldmap
+=========================================
+
+This package automatically loads package `draw'.
+
+42.4.1 Variables and Functions
+------------------------------
+
+ -- Global variable: boundaries_array
+     Default value: `false'
+
+     `boundaries_array' is where the graphic object `geomap' looks for
+     boundaries coordinates.
+
+     Each component of `boundaries_array' is an array of floating point
+     quantities, the coordinates of a polygonal segment or map boundary.
+
+     See also `geomap'.
+
+ -- Function: numbered_boundaries (<nlist>)
+     Draws a list of polygonal segments (boundaries), labeled by its
+     numbers (`boundaries_array' coordinates).  This is of great help
+     when building new geographical entities.
+
+     Example:
+
+     Map of Europe labeling borders with their component number in
+     `boundaries_array'.
+          (%i1) load(worldmap)$
+          (%i2) european_borders:
+                     region_boundaries(-31.81,74.92,49.84,32.06)$
+          (%i3) numbered_boundaries(european_borders)$
+
+ -- Function: make_poly_continent (<continent_name>)
+ -- Function: make_poly_continent (<country_list>)
+     Makes the necessary polygons to draw a colored continent or a list
+     of countries.
+
+     Example:
+
+          (%i1) load(worldmap)$
+          (%i2) /* A continent */
+                make_poly_continent(Africa)$
+          (%i3) apply(draw2d, %)$
+          (%i4) /* A list of countries */
+                make_poly_continent([Germany,Denmark,Poland])$
+          (%i5) apply(draw2d, %)$
+
+ -- Function: make_poly_country (<country_name>)
+     Makes the necessary polygons to draw a colored country.  If
+     islands exist, one country can be defined with more than just one
+     polygon.
+
+     Example:
+
+          (%i1) load(worldmap)$
+          (%i2) make_poly_country(India)$
+          (%i3) apply(draw2d, %)$
+
+ -- Function: make_polygon (<nlist>)
+     Returns a `polygon' object from boundary indices.  Argument
+     <nlist> is a list of components of `boundaries_array'.
+
+     Example:
+
+     Bhutan is defined by boundary numbers 171, 173 and 1143, so that
+     `make_polygon([171,173,1143])' appends arrays of coordinates
+     `boundaries_array[171]', `boundaries_array[173]' and
+     `boundaries_array[1143]' and returns a `polygon' object suited to
+     be plotted by `draw'.  To avoid an error message, arrays must be
+     compatible in the sense that any two consecutive arrays have two
+     coordinates in the extremes in common.  In this example, the two
+     first components of `boundaries_array[171]' are equal to the last
+     two coordinates of `boundaries_array[173]', and the two first of
+     `boundaries_array[173]' are equal to the two first of
+     `boundaries_array[1143]'; in conclussion, boundary numbers 171,
+     173 and 1143 (in this order) are compatible and the colored
+     polygon can be drawn.
+
+          (%i1) load(worldmap)$
+          (%i2) Bhutan;
+          (%o2)                        [[171, 173, 1143]]
+          (%i3) boundaries_array[171];
+          (%o3) {Array:
+                 #(88.750549 27.14727 88.806351 27.25305 88.901367 27.282221
+                   88.917877 27.321039)}
+          (%i4) boundaries_array[173];
+          (%o4) {Array:
+                 #(91.659554 27.76511 91.6008 27.66666 91.598022 27.62499
+                   91.631348 27.536381 91.765533 27.45694 91.775253 27.4161
+                   92.007751 27.471939 92.11441 27.28583 92.015259 27.168051
+                   92.015533 27.08083 92.083313 27.02277 92.112183 26.920271
+                   92.069977 26.86194 91.997192 26.85194 91.915253 26.893881
+                   91.916924 26.85416 91.8358 26.863331 91.712479 26.799999
+                   91.542191 26.80444 91.492188 26.87472 91.418854 26.873329
+                   91.371353 26.800831 91.307457 26.778049 90.682457 26.77417
+                   90.392197 26.903601 90.344131 26.894159 90.143044 26.75333
+                   89.98996 26.73583 89.841919 26.70138 89.618301 26.72694
+                   89.636093 26.771111 89.360786 26.859989 89.22081 26.81472
+                   89.110237 26.829161 88.921631 26.98777 88.873016 26.95499
+                   88.867737 27.080549 88.843307 27.108601 88.750549
+                   27.14727)}
+          (%i5) boundaries_array[1143];
+          (%o5) {Array:
+                 #(91.659554 27.76511 91.666924 27.88888 91.65831 27.94805
+                   91.338028 28.05249 91.314972 28.096661 91.108856 27.971109
+                   91.015808 27.97777 90.896927 28.05055 90.382462 28.07972
+                   90.396088 28.23555 90.366074 28.257771 89.996353 28.32333
+                   89.83165 28.24888 89.58609 28.139999 89.35997 27.87166
+                   89.225517 27.795 89.125793 27.56749 88.971077 27.47361
+                   88.917877 27.321039)}
+          (%i6) Bhutan_polygon: make_polygon([171,173,1143])$
+          (%i7) draw2d(Bhutan_polygon)$
+
+ -- Function: region_boundaries (<x1>, <y1>, <x2>, <y2>)
+     Detects polygonal segments of global variable `boundaries_array'
+     fully contained in the rectangle with vertices (<x1>, <y1>) -upper
+     left- and (<x2>, <y2>) -bottom right-.
+
+     Example:
+
+     Returns segment numbers for plotting southern Italy.
+          (%i1) load(worldmap)$
+          (%i2) region_boundaries(10.4,41.5,20.7,35.4);
+          (%o2)                [1846, 1863, 1864, 1881, 1888, 1894]
+          (%i3) draw2d(geomap(%))$
+
+ -- Function: region_boundaries_plus (<x1>, <y1>, <x2>, <y2>)
+     Detects polygonal segments of global variable `boundaries_array'
+     containing at least one vertex in the rectangle defined by
+     vertices (<x1>, <y1>) -upper left- and (<x2>, <y2>) -bottom right-.
+
+     Example:
+
+          (%i1) load(worldmap)$
+          (%i2) region_boundaries_plus(10.4,41.5,20.7,35.4);
+          (%o2) [1060, 1062, 1076, 1835, 1839, 1844, 1846, 1858,
+                 1861, 1863, 1864, 1871, 1881, 1888, 1894, 1897]
+          (%i3) draw2d(geomap(%))$
+
+42.4.2 Graphic objects
+----------------------
+
+ -- Graphic object: geomap (<numlist>)
+ -- Graphic object: geomap (<numlist>, <3Dprojection>)
+     Draws cartographic maps in 2D and 3D.
+
+     2D
+
+     This function works together with global variable
+     `boundaries_array'.
+
+     Argument <numlist> is a list containing numbers or lists of
+     numbers.  All these numbers must be integers greater or equal than
+     zero, representing the components of global array
+     `boundaries_array'.
+
+     Each component of `boundaries_array' is an array of floating point
+     quantities, the coordinates of a polygonal segment or map boundary.
+
+     `geomap (<numlist>)' flattens its arguments and draws the
+     associated boundaries in `boundaries_array'.
+
+     This object is affected by the following graphic options:
+     `line_width', `line_type' and `color'.
+
+     Examples:
+
+     A simple map defined by hand:
+
+          (%i1) load(worldmap)$
+          (%i2) /* Vertices of boundary #0: {(1,1),(2,5),(4,3)} */
+             ( bnd0: make_array(flonum,6),
+               bnd0[0]:1.0, bnd0[1]:1.0, bnd0[2]:2.0,
+               bnd0[3]:5.0, bnd0[4]:4.0, bnd0[5]:3.0 )$
+          (%i3) /* Vertices of boundary #1: {(4,3),(5,4),(6,4),(5,1)} */
+             ( bnd1: make_array(flonum,8),
+               bnd1[0]:4.0, bnd1[1]:3.0, bnd1[2]:5.0, bnd1[3]:4.0,
+               bnd1[4]:6.0, bnd1[5]:4.0, bnd1[6]:5.0, bnd1[7]:1.0)$
+          (%i4) /* Vertices of boundary #2: {(5,1), (3,0), (1,1)} */
+             ( bnd2: make_array(flonum,6),
+               bnd2[0]:5.0, bnd2[1]:1.0, bnd2[2]:3.0,
+               bnd2[3]:0.0, bnd2[4]:1.0, bnd2[5]:1.0 )$
+          (%i5) /* Vertices of boundary #3: {(1,1), (4,3)} */
+             ( bnd3: make_array(flonum,4),
+               bnd3[0]:1.0, bnd3[1]:1.0, bnd3[2]:4.0, bnd3[3]:3.0)$
+          (%i6) /* Vertices of boundary #4: {(4,3), (5,1)} */
+             ( bnd4: make_array(flonum,4),
+               bnd4[0]:4.0, bnd4[1]:3.0, bnd4[2]:5.0, bnd4[3]:1.0)$
+          (%i7) /* Pack all together in boundaries_array */
+             ( boundaries_array: make_array(any,5),
+               boundaries_array[0]: bnd0, boundaries_array[1]: bnd1,
+               boundaries_array[2]: bnd2, boundaries_array[3]: bnd3,
+               boundaries_array[4]: bnd4 )$
+          (%i8) draw2d(geomap([0,1,2,3,4]))$
+
+     The auxiliary package `worldmap' sets the global variable
+     `boundaries_array' to the real world boundaries in coordinates.
+     The data is in the public domain and come from
+     `http://www-cger.nies.go.jp/grid-e/gridtxt/grid19.html'.  The
+     package `worldmap' defines also boundaries for countries,
+     continents and coastlines as lists with the necessary components of
+     `boundaries_array' (see file `share/draw/worldmap.mac' for more
+     information).  The package `worldmap' automatically loads package
+     `worldmap'.
+
+          (%i1) load(worldmap)$
+          (%i2) c1: gr2d(geomap(Canada,United_States,
+                                Mexico,Cuba))$
+          (%i3) c2: gr2d(geomap(Africa))$
+          (%i4) c3: gr2d(geomap(Oceania,China,Japan))$
+          (%i5) c4: gr2d(geomap(France,Portugal,Spain,
+                                Morocco,Western_Sahara))$
+          (%i6) draw(columns  = 2,
+                     c1,c2,c3,c4)$
+
+     Package `worldmap' is also useful for plotting countries as
+     polygons.  In this case, graphic object `geomap' is no longer
+     necessary and the `polygon' object is used instead.  Since lists
+     are now used and not arrays, maps rendering will be slower.  See
+     also `make_poly_country' and `make_poly_continent' to understand
+     the following code.
+
+          (%i1) load(worldmap)$
+          (%i2) mymap: append(
+             [color      = white],  /* borders are white */
+             [fill_color = red],             make_poly_country(Bolivia),
+             [fill_color = cyan],            make_poly_country(Paraguay),
+             [fill_color = green],           make_poly_country(Colombia),
+             [fill_color = blue],            make_poly_country(Chile),
+             [fill_color = "#23ab0f"],       make_poly_country(Brazil),
+             [fill_color = goldenrod],       make_poly_country(Argentina),
+             [fill_color = "midnight-blue"], make_poly_country(Uruguay))$
+          (%i3) apply(draw2d, mymap)$
+
+     3D
+
+     `geomap(<numlist>)' projects map boundaries on the sphere of
+     radius 1 centered at (0,0,0).  It is possible to change the sphere
+     or the projection type by using `geomap(<numlist>,<3Dprojection>)'.
+
+     Available 3D projections:
+
+        * `[spherical_projection,<x>, <y>, <z>, <r>]': projects map
+          boundaries on the sphere of radius <r> centered at (<x>, <y>,
+          <z>).
+
+               (%i1) load(worldmap)$
+               (%i2) draw3d(geomap(Australia), /* default projection */
+                            geomap(Australia,
+                                   [spherical_projection,2,2,2,3]))$
+
+        * `[cylindrical_projection, <x>, <y>, <z>, <r>, <rc>]':
+          re-projects spherical map boundaries on the cylinder of
+          radius <rc> and axis passing through the poles of the globe
+          of radius <r> centered at (<x>, <y>, <z>).
+
+               (%i1) load(worldmap)$
+               (%i2) draw3d(geomap([America_coastlines,Eurasia_coastlines],
+                                   [cylindrical_projection,2,2,2,3,4]))$
+
+        * `[conic_projection, <x>, <y>, <z>, <r>, <alpha>]':
+          re-projects spherical map boundaries on the cones of angle
+          <alpha>, with axis passing through the poles of the globe of
+          radius <r> centered at (<x>, <y>, <z>).  Both the northern
+          and southern cones are tangent to sphere.
+
+               (%i1) load(worldmap)$
+               (%i2) draw3d(geomap(World_coastlines,
+                                   [conic_projection,0,0,0,1,90]))$
+
+     See also
+     `http://www.telefonica.net/web2/biomates/maxima/gpdraw/geomap' for
+     more elaborated examples.
+
+
+File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
+
+43 drawdf
+*********
+
+* Menu:
+
+* Introduction to drawdf::
+* Functions and Variables for drawdf::
+
+
+File: maxima.info,  Node: Introduction to drawdf,  Next: Functions and Variables for drawdf,  Prev: drawdf,  Up: drawdf
+
+43.1 Introduction to drawdf
+===========================
+
+The function `drawdf' draws the direction field of a first-order
+Ordinary Differential Equation (ODE) or a system of two autonomous
+first-order ODE's.
+
+Since this is an additional package, in order to use it you must first
+load it with `load(drawdf)'.  Drawdf is built upon the `draw' package,
+which requires Gnuplot 4.2.
+
+To plot the direction field of a single ODE, the ODE must be written in
+the form:
+            dy
+            -- = F(x,y)
+            dx
+
+and the function <F> should be given as the argument for `drawdf'. If
+the independent and dependent variables are not <x>, and <y>, as in the
+equation above, then those two variables should be named explicitly in
+a list given as an argument to the drawdf command (see the examples).
+
+To plot the direction field of a set of two autonomous ODE's, they must
+be written in the form
+            dx             dy
+            -- = G(x,y)    -- = F(x,y)
+            dt             dt
+
+and the argument for `drawdf' should be a list with the two functions
+<G> and <F>, in that order; namely, the first expression in the list
+will be taken to be the time derivative of the variable represented on
+the horizontal axis, and the second expression will be the time
+derivative of the variable represented on the vertical axis. Those two
+variables do not have to be <x> and <y>, but if they are not, then the
+second argument given to drawdf must be another list naming the two
+variables, first the one on the horizontal axis and then the one on the
+vertical axis.
+
+If only one ODE is given, `drawdf' will implicitly admit `x=t', and
+`G(x,y)=1', transforming the non-autonomous equation into a system of
+two autonomous equations.
+
+
+File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introduction to drawdf,  Up: drawdf
+
+43.2 Functions and Variables for drawdf
+=======================================
+
+43.2.1 Functions
+----------------
+
+ -- Function: drawdf (<dydx>, ...options and objects...)
+ -- Function: drawdf (<dvdu>, `['<u>,<v>`]', ...options and objects...)
+ -- Function: drawdf (<dvdu>, `['<u>,<umin>,<umax>`]',
+          `['<v>,<vmin>,<vmax>`]', ...options and objects...)
+ -- Function: drawdf (`['<dxdt>,<dydt>`]', ...options and objects...)
+ -- Function: drawdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options
+          and objects...)
+ -- Function: drawdf (`['<dudt>,<dvdt>`]', `['<u>,<umin>,<umax>`]',
+          `['<v>,<vmin>,<vmax>`]', ...options and objects...)
+     Function `drawdf' draws a 2D direction field with optional
+     solution curves and other graphics using the `draw' package.
+
+     The first argument specifies the derivative(s), and must be either
+     an expression or a list of two expressions.  <dydx>, <dxdt> and
+     <dydt> are expressions that depend on <x> and <y>.  <dvdu>, <dudt>
+     and <dvdt> are expressions that depend on <u> and <v>.
+
+     If the independent and dependent variables are not <x> and <y>,
+     then their names must be specified immediately following the
+     derivative(s), either as a list of two names `['<u>,<v>`]', or as
+     two lists of the form `['<u>,<umin>,<umax>`]' and
+     `['<v>,<vmin>,<vmax>`]'.
+
+     The remaining arguments are graphic options, graphic objects, or
+     lists containing graphic options and objects, nested to arbitrary
+     depth.  The set of graphic options and objects supported by
+     `drawdf' is a superset of those supported by `draw2d' and `gr2d'
+     from the `draw' package.
+
+     The arguments are interpreted sequentially: graphic options affect
+     all following graphic objects.  Furthermore, graphic objects are
+     drawn on the canvas in order specified, and may obscure graphics
+     drawn earlier.  Some graphic options affect the global appearence
+     of the scene.
+
+     The additional graphic objects supported by `drawdf' include:
+     `solns_at', `points_at', `saddles_at', `soln_at', `point_at', and
+     `saddle_at'.
+
+     The additional graphic options supported by `drawdf' include:
+     `field_degree', `soln_arrows', `field_arrows', `field_grid',
+     `field_color', `show_field', `tstep', `nsteps', `duration',
+     `direction', `field_tstep', `field_nsteps', and `field_duration'.
+
+     Commonly used graphic objects inherited from the `draw' package
+     include: `explicit', `implicit', `parametric', `polygon',
+     `points', `vector', `label', and all others supported by `draw2d'
+     and `gr2d'.
+
+     Commonly used graphic options inherited from the `draw' package
+     include:
+     `points_joined', `color',
+     `point_type', `point_size', `line_width',
+     `line_type', `key', `title', `xlabel',
+     `ylabel', `user_preamble', `terminal',
+     `dimensions', `file_name', and all
+     others supported by `draw2d' and `gr2d'.
+
+     See also `draw2d'.
+
+     Users of wxMaxima or Imaxima may optionally use `wxdrawdf', which
+     is identical to `drawdf' except that the graphics are drawn within
+     the notebook using `wxdraw'.
+
+     To make use of this function, write first `load(drawdf)'.
+
+     Examples:
+
+          (%i1) load(drawdf)$
+          (%i2) drawdf(exp(-x)+y)$        /* default vars: x,y */
+          (%i3) drawdf(exp(-t)+y, [t,y])$ /* default range: [-10,10] */
+          (%i4) drawdf([y,-9*sin(x)-y/5], [x,1,5], [y,-2,2])$
+
+     For backward compatibility, `drawdf' accepts most of the
+     parameters supported by plotdf.
+
+          (%i5) drawdf(2*cos(t)-1+y, [t,y], [t,-5,10], [y,-4,9],
+                       [trajectory_at,0,0])$
+
+     `soln_at' and `solns_at' draw solution curves passing through the
+     specified points, using a slightly enhanced 4th-order Runge Kutta
+     numerical integrator.
+
+          (%i6) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
+                       solns_at([0,0.1],[0,-0.1]),
+                       color=blue, soln_at(0,0))$
+
+     `field_degree=2' causes the field to be composed of quadratic
+     splines, based on the first and second derivatives at each grid
+     point.  `field_grid=['<COLS>,<ROWS>`]' specifies the number of
+     columns and rows in the grid.
+
+          (%i7) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
+                       field_degree=2, field_grid=[20,15],
+                       solns_at([0,0.1],[0,-0.1]),
+                       color=blue, soln_at(0,0))$
+
+     `soln_arrows=true' adds arrows to the solution curves, and (by
+     default) removes them from the direction field.  It also changes
+     the default colors to emphasize the solution curves.
+
+          (%i8) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
+                       soln_arrows=true,
+                       solns_at([0,0.1],[0,-0.1],[0,0]))$
+
+     `duration=40' specifies the time duration of numerical integration
+     (default 10).  Integration will also stop automatically if the
+     solution moves too far away from the plotted region, or if the
+     derivative becomes complex or infinite.  Here we also specify
+     `field_degree=2' to plot quadratic splines.  The equations below
+     model a predator-prey system.
+
+          (%i9) drawdf([x*(1-x-y), y*(3/4-y-x/2)], [x,0,1.1], [y,0,1],
+                       field_degree=2, duration=40,
+                       soln_arrows=true, point_at(1/2,1/2),
+                       solns_at([0.1,0.2], [0.2,0.1], [1,0.8], [0.8,1],
+                                [0.1,0.1], [0.6,0.05], [0.05,0.4],
+                                [1,0.01], [0.01,0.75]))$
+
+     `field_degree='solns' causes the field to be composed of many
+     small solution curves computed by 4th-order Runge Kutta, with
+     better results in this case.
+
+          (%i10) drawdf([x*(1-x-y), y*(3/4-y-x/2)], [x,0,1.1], [y,0,1],
+                        field_degree='solns, duration=40,
+                        soln_arrows=true, point_at(1/2,1/2),
+                        solns_at([0.1,0.2], [0.2,0.1], [1,0.8],
+                                 [0.8,1], [0.1,0.1], [0.6,0.05],
+                                 [0.05,0.4], [1,0.01], [0.01,0.75]))$
+
+     `saddles_at' attempts to automatically linearize the equation at
+     each saddle, and to plot a numerical solution corresponding to each
+     eigenvector, including the separatrices.  `tstep=0.05' specifies
+     the maximum time step for the numerical integrator (the default is
+     0.1).  Note that smaller time steps will sometimes be used in
+     order to keep the x and y steps small.  The equations below model
+     a damped pendulum.
+
+          (%i11) drawdf([y,-9*sin(x)-y/5], tstep=0.05,
+                        soln_arrows=true, point_size=0.5,
+                        points_at([0,0], [2*%pi,0], [-2*%pi,0]),
+                        field_degree='solns,
+                        saddles_at([%pi,0], [-%pi,0]))$
+
+     `show_field=false' suppresses the field entirely.
+
+          (%i12) drawdf([y,-9*sin(x)-y/5], tstep=0.05,
+                        show_field=false, soln_arrows=true,
+                        point_size=0.5,
+                        points_at([0,0], [2*%pi,0], [-2*%pi,0]),
+                        saddles_at([3*%pi,0], [-3*%pi,0],
+                                   [%pi,0], [-%pi,0]))$
+
+     `drawdf' passes all unrecognized parameters to `draw2d' or `gr2d',
+     allowing you to combine the full power of the `draw' package with
+     `drawdf'.
+
+          (%i13) drawdf(x^2+y^2, [x,-2,2], [y,-2,2], field_color=gray,
+                        key="soln 1", color=black, soln_at(0,0),
+                        key="soln 2", color=red, soln_at(0,1),
+                        key="isocline", color=green, line_width=2,
+                        nticks=100, parametric(cos(t),sin(t),t,0,2*%pi))$
+
+     `drawdf' accepts nested lists of graphic options and objects,
+     allowing convenient use of makelist and other function calls to
+     generate graphics.
+
+          (%i14) colors : ['red,'blue,'purple,'orange,'green]$
+          (%i15) drawdf([x-x*y/2, (x*y - 3*y)/4],
+                        [x,2.5,3.5], [y,1.5,2.5],
+                        field_color = gray,
+                        makelist([ key   = concat("soln",k),
+                                   color = colors[k],
+                                   soln_at(3, 2 + k/20) ],
+                                 k,1,5))$
+
+
+
+File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
+
+44 dynamics
+***********
+
+* Menu:
+
+* Introduction to dynamics::
+* Functions and Variables for dynamics::
+
+
+File: maxima.info,  Node: Introduction to dynamics,  Next: Functions and Variables for dynamics,  Prev: dynamics,  Up: dynamics
+
+44.1 Introduction to dynamics
+=============================
+
+The additional package `dynamics' includes several functions to create
+various graphical representations of discrete dynamical systems and
+fractals, and an implementation of the Runge-Kutta 4th-order numerical
+method for solving systems of differential equations.
+
+To use the functions in this package you must first load it with
+`load("dynamics")'.
+
+Starting with Maxima 5.12, the dynamics package now uses the function
+`plot2d' to do the graphs.  The commands that produce graphics (with
+the exception of `julia' and `mandelbrot') now accept any options of
+`plot2d', including the option to change among the various graphical
+interfaces, using different plot styles and colors, and representing
+one or both axes in a logarithmic scale.  The old options <domain>,
+<pointsize>, <xcenter>, <xradius>, <ycenter>, <yradius>, <xaxislabel>
+and <yaxislabel> are not accepted in this new version.
+
+All programs will now accept any variables names, and not just <x> and
+<y> as in the older versions.  Two required parameters have changes in
+two of the programs: `evolution2d' now requires a list naming
+explicitely the two independent variables, and the horizontal range for
+`orbits' no longer requires a step size; the range should only specify
+the variable name, and the minimum and maximum values; the number of
+steps can now be changed with the option <nticks>.
 
 
 File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduction to dynamics,  Up: dynamics
@@ -1370,7 +2041,7 @@ File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
      Long lines are split at a fixed width with the ampersand `&'
      continuation character.
 
-     `load(f90)' loads this function.
+     `load(f90)' loads this function.  See also the function `fortran'.
 
      Examples:
 
@@ -1389,7 +2060,7 @@ File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
           (%o3)                         false
 
      Multiple expressions.  Capture standard output into a file via the
-     `with_stdout' function.
+     `with_stdout'  function.
 
           (%i1) load (f90)$
           (%i2) foo : sin (3*x + 1) - cos (7*x - 2);
@@ -6674,52 +7345,61 @@ File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: minpack,  Up: Top
 
 * Menu:
 
-* Introduction to mnewton::
-* Functions and Variables for mnewton::
+* Einführung in mnewton::
+* Funktionen und Variablen für mnewton::
 
 
-File: maxima.info,  Node: Introduction to mnewton,  Next: Functions and Variables for mnewton,  Prev: mnewton,  Up: mnewton
+File: maxima.info,  Node: Einführung in mnewton,  Next: Funktionen und Variablen für mnewton,  Prev: mnewton,  Up: mnewton
 
-62.1 Introduction to mnewton
-============================
+62.1 Einführung in mnewton
+==========================
 
-`mnewton' is an implementation of Newton's method for solving nonlinear
-equations in one or more variables.
+Das Paket mnewton implementiert das Newton-Verfahren mit der Funktion
+`mnewton'  für das numerische Lösen nichtlinear Gleichungen in einer
+oder mehrerer Variablen.  Die Funktion `newton'  ist eine weitere
+Implementierung, die im Paket newton1 enthalten ist.
 
 
-File: maxima.info,  Node: Functions and Variables for mnewton,  Prev: Introduction to mnewton,  Up: mnewton
+File: maxima.info,  Node: Funktionen und Variablen für mnewton,  Prev: Einführung in mnewton,  Up: mnewton
 
-62.2 Functions and Variables for mnewton
-========================================
+62.2 Funktionen und Variablen für mnewton
+=========================================
 
- -- Option variable: newtonepsilon
-     Default value: `10.0^(-fpprec/2)'
+ -- Optionsvariable: newtonepsilon
+     Standardwert: `1.0e-8'
 
-     Precision to determine when the `mnewton' function has converged
-     towards the solution. See also `mnewton'.
+     Genauigkeit mit der getestet wird, wie gut die Funktion `mnewton'
+     sich der Lösung angenähert hat.  Unterschreitet die Änderung der
+     Approximation den Wert `newtonepsilon', bricht der Algorithmus ab
+     und gibt das Ergebnis zurück.
 
+ -- Optionsvariable: newtonmaxiter
+     Standardwert: `50'
 
- -- Option variable: newtonmaxiter
-     Default value: `50'
+     Obere Grenze für die Anzahl an Iterationen, falls die Funktion
+     `mnewton'  nicht oder sehr langsam konvergiert.
 
-     Maximum number of iterations to stop the `mnewton' function if it
-     does not converge or if it converges too slowly. See also
-     `mnewton'.
+ -- Funktion: mnewton (<FuncList>, <VarList>, <GuessList>)
+     Implementation des Newton-Verfahrens für das numerische Lösen von
+     Gleichungen in mehreren Variablen.  Das Argument <FuncList> ist
+     die Liste der Gleichungen, für die eine numerische Lösung gesucht
+     wird.  Das Argument <VarList> ist eine Liste der Variablen und das
+     Argument <GuessList> ist eine Liste mit den Startwerten des
+     Newton-Verfahrens.
 
+     Die Lösungen werden als eine Liste zurückgegeben.  Kann keine
+     Lösung gefunden werden, ist die Rückgabe eine leere Liste `[]'.
 
- -- Function: mnewton (<FuncList>,<VarList>,<GuessList>)
-     Multiple nonlinear functions solution using the Newton method.
-     <FuncList> is the list of functions to solve, <VarList> is the
-     list of variable names, and <GuessList> is the list of initial
-     approximations.
+     `mnewton' wird von den Funktionen `newtonepsilon'  und
+     `newtonmaxiter'  kontrolliert.
 
-     The solution is returned in the same format that `solve()' returns.
-     If the solution isn't found, `[]' is returned.
+     Die Funktion wird mit dem Kommando `load(mnewton)' geladen.  Siehe
+     die Funktion `newton'  für eine alternative Implementierung des
+     Newton-Verfahrens.
 
-     This function is controlled by global variables `newtonepsilon' and
-     `newtonmaxiter'.
+     Beispiele:
 
-          (%i1) load("mnewton")$
+          (%i1) load(mnewton)$
 
           (%i2) mnewton([x1+3*log(x1)-x2^2, 2*x1^2-x1*x2-5*x1+1],
                         [x1, x2], [5, 5]);
@@ -6729,9 +7409,59 @@ File: maxima.info,  Node: Functions and Variables for mnewton,  Prev: Introducti
           (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
           (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
 
-     To use this function write first `load("mnewton")'. See also
-     `newtonepsilon' and `newtonmaxiter'.
+     Die Optionsvariable `newtonepsilon'  kontrolliert die Genauigkeit
+     der Approximation.  Weiterhin kontrolliert die Optionsvariable, ob
+     die Berechnung mit Gleitkommazahlen in doppelter oder großer
+     Genauigkeit durchgeführt wird.
 
+          (%i1) load(mnewton)$
+
+          (%i2) (fpprec : 25, newtonepsilon : bfloat(10^(-fpprec+5)))$
+
+          (%i3) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
+          (%o3) [[u = 1.066618389595406772591173b0,
+                                         v = 1.552564766841786450100418b0]]
+
+ -- Funktion: newton (<expr>, <x>, <x_0>, <eps>)
+     Die Funktion `newton' gibt eine Näherungslösung der Gleichung
+     `<expr> = 0' zurück, die mit dem Newton-Verfahren berechnet wird.
+     Der Ausdruck <expr> ist eine Funktion einer Variablen <x>.  Der
+     Anfangswert ist ` <x> = <x_0>'.  Der Algorithmus bricht ab, wenn
+     `abs(<expr>) < <eps>', wobei der Ausdruck <expr> für den aktuellen
+     Näherungswert <x> ausgewertet wird.
+
+     `newton' erlaubt symbolische Variablen im Ausdruck <expr>, wenn der
+     Ausdruck `abs(<expr>) < <eps>' zu `true' oder `false' ausgewertet
+     werden kann.  Daher ist es nicht notwendig, dass der Ausdruck
+     <expr> zu einer Zahl ausgewertet werden kann.
+
+     Das Kommando `load(newton1)' lädt die Funktion.
+
+     Siehe auch die Funktionen `realroots',  `allroots'  und
+     `find_root',  um numerische Lösungen von Gleichungen zu finden.
+     Das Paket mnewton enthält mit der Funktion `mnewton'  eine weitere
+     Implementation des Newton-Verfahrens.
+
+     Achtung: Auch mit `load(newton)' wird eine Funktion mit dem Namen
+     `newton' geladen, die sich jedoch in ihrer Syntax von der hier
+     beschriebenen Funktion unterscheidet und auch nicht dokumentiert
+     ist.
+
+     Beispiele:
+
+          (%i1) load (newton1);
+          (%o1) /usr/share/maxima/5.10.0cvs/share/numeric/newton1.mac
+          (%i2) newton (cos (u), u, 1, 1/100);
+          (%o2)                   1.570675277161251
+          (%i3) ev (cos (u), u = %);
+          (%o3)                 1.2104963335033528E-4
+          (%i4) assume (a > 0);
+          (%o4)                        [a > 0]
+          (%i5) newton (x^2 - a^2, x, a/2, a^2/100);
+          (%o5)                  1.00030487804878 a
+          (%i6) ev (x^2 - a^2, x = %);
+                                                     2
+          (%o6)                6.098490481853958E-4 a
 
 
 File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
@@ -7052,812 +7782,6 @@ File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: To
 * Menu:
 
 * Functions and Variables for opsubst::
-
-
-File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  Up: opsubst
-
-64.1 Functions and Variables for opsubst
-========================================
-
- -- Function: opsubst (<f>,<g>,<e>)
- -- Function: opsubst (<g>=<f>,<e>)
- -- Function: opsubst ([<g1>=<f1>,<g2>=<f2>,..., <gn>=<fn>],<e>)
-     The function `opsubst' is similar to the function `subst', except
-     that `opsubst' only makes substitutions for the operators in an
-     expression. In general, when <f> is an operator in the expression
-     <e>, substitute <g> for <f> in the expression <e>.
-
-     To determine the operator, `opsubst' sets `inflag' to true. This
-     means `opsubst' substitutes for the internal, not the displayed,
-     operator in the expression.
-
-     Examples:
-
-          (%i1) load (opsubst)$
-
-          (%i2) opsubst(f,g,g(g(x)));
-          (%o2)                     f(f(x))
-          (%i3) opsubst(f,g,g(g));
-          (%o3)                       f(g)
-          (%i4) opsubst(f,g[x],g[x](z));
-          (%o4)                       f(z)
-          (%i5) opsubst(g[x],f, f(z));
-          (%o5)                      g (z)
-                                      x
-          (%i6) opsubst(tan, sin, sin(sin));
-          (%o6)                     tan(sin)
-          (%i7) opsubst([f=g,g=h],f(x));
-          (%o7)                       h(x)
-
-     Internally, Maxima does not use the unary negation, division, or
-     the subtraction operators; thus:
-
-          (%i8) opsubst("+","-",a-b);
-          (%o8)                     a - b
-          (%i9) opsubst("f","-",-a);
-          (%o9)                      - a
-          (%i10) opsubst("^^","/",a/b);
-                                       a
-          (%o10)                       -
-                                       b
-
-     The internal representation of -a*b is *(-1,a,b); thus
-
-          (%i11) opsubst("[","*", -a*b);
-          (%o11)                  [- 1, a, b]
-
-     When either operator isn't a Maxima symbol, generally some other
-     function will signal an error:
-
-          (%i12) opsubst(a+b,f, f(x));
-
-          Improper name or value in functional position:
-          b + a
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
-     However, subscripted operators are allowed:
-
-          (%i13) opsubst(g[5],f, f(x));
-          (%o13)                     g (x)
-                                      5
-
-     To use this function write first `load("opsubst")'.
-
-
-
-File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
-
-65 orthopoly
-************
-
-* Menu:
-
-* Introduction to orthogonal polynomials::
-* Functions and Variables for orthogonal polynomials::
-
-
-File: maxima.info,  Node: Introduction to orthogonal polynomials,  Next: Functions and Variables for orthogonal polynomials,  Prev: orthopoly,  Up: orthopoly
-
-65.1 Introduction to orthogonal polynomials
-===========================================
-
-`orthopoly' is a package for symbolic and numerical evaluation of
-several kinds of orthogonal polynomials, including Chebyshev, Laguerre,
-Hermite, Jacobi, Legendre, and ultraspherical (Gegenbauer) polynomials.
-Additionally, `orthopoly' includes support for the spherical Bessel,
-spherical Hankel, and spherical harmonic functions.
-
-For the most part, `orthopoly' follows the conventions of Abramowitz and
-Stegun Handbook of Mathematical Functions, Chapter 22 (10th printing,
-December 1972); additionally, we use Gradshteyn and Ryzhik, Table of
-Integrals, Series, and Products (1980 corrected and enlarged edition),
-and Eugen Merzbacher Quantum Mechanics (2nd edition, 1970).
-
-Barton Willis of the University of Nebraska at Kearney (UNK) wrote the
-`orthopoly' package and its documentation.  The package is released
-under the GNU General Public License (GPL).
-
-65.1.1 Getting Started with orthopoly
--------------------------------------
-
-`load (orthopoly)' loads the `orthopoly' package.
-
-To find the third-order Legendre polynomial,
-
-     (%i1) legendre_p (3, x);
-                           3             2
-                  5 (1 - x)    15 (1 - x)
-     (%o1)      - ---------- + ----------- - 6 (1 - x) + 1
-                      2             2
-
-To express this as a sum of powers of <x>, apply `ratsimp'  or `rat'
-to the result.
-
-     (%i2) [ratsimp (%), rat (%)];
-                             3           3
-                          5 x  - 3 x  5 x  - 3 x
-     (%o2)/R/            [----------, ----------]
-                              2           2
-
-Alternatively, make the second argument to `legendre_p' (its "main"
-variable) a canonical rational expression (CRE).
-
-     (%i1) legendre_p (3, rat (x));
-                                   3
-                                5 x  - 3 x
-     (%o1)/R/                   ----------
-                                    2
-
-For floating point evaluation, `orthopoly' uses a running error analysis
-to estimate an upper bound for the error.  For example,
-
-     (%i1) jacobi_p (150, 2, 3, 0.2);
-     (%o1) interval(- 0.062017037936715, 1.533267919277521E-11)
-
-Intervals have the form `interval (<c>, <r>)', where <c> is the center
-and <r> is the radius of the interval.  Since Maxima does not support
-arithmetic on intervals, in some situations, such as graphics, you want
-to suppress the error and output only the center of the interval.  To
-do this, set the option variable `orthopoly_returns_intervals'  to
-`false'.
-
-     (%i1) orthopoly_returns_intervals : false;
-     (%o1)                         false
-     (%i2) jacobi_p (150, 2, 3, 0.2);
-     (%o2)                  - 0.062017037936715
-
-Refer to the section *Note Floating point Evaluation:: for more
-information.
-
-Most functions in `orthopoly' have a `gradef'  property; thus
-
-     (%i1) diff (hermite (n, x), x);
-     (%o1)                     2 n H     (x)
-                                    n - 1
-     (%i2) diff (gen_laguerre (n, a, x), x);
-                   (a)               (a)
-                n L   (x) - (n + a) L     (x) unit_step(n)
-                   n                 n - 1
-     (%o2)      ------------------------------------------
-                                    x
-
-The unit step function in the second example prevents an error that
-would otherwise arise by evaluating with <n> equal to 0.
-
-     (%i3) ev (%, n = 0);
-     (%o3)                           0
-
-The `gradef' property only applies to the "main" variable; derivatives
-with respect other arguments usually result in an error message; for
-example
-
-     (%i1) diff (hermite (n, x), x);
-     (%o1)                     2 n H     (x)
-                                    n - 1
-     (%i2) diff (hermite (n, x), n);
-
-     Maxima doesn't know the derivative of hermite with respect the first
-     argument
-      -- an error.  Quitting.  To debug this try debugmode(true);
-
-Generally, functions in `orthopoly' map over lists and matrices.  For
-the mapping to fully evaluate, the option variables `doallmxops'  and
-`listarith'  must both be `true' (the defaults).  To illustrate the
-mapping over matrices, consider
-
-     (%i1) hermite (2, x);
-                                          2
-     (%o1)                    - 2 (1 - 2 x )
-     (%i2) m : matrix ([0, x], [y, 0]);
-                                 [ 0  x ]
-     (%o2)                       [      ]
-                                 [ y  0 ]
-     (%i3) hermite (2, m);
-                    [                             2  ]
-                    [      - 2        - 2 (1 - 2 x ) ]
-     (%o3)          [                                ]
-                    [             2                  ]
-                    [ - 2 (1 - 2 y )       - 2       ]
-
-In the second example, the `i, j' element of the value is `hermite (2,
-m[i,j])'; this is not the same as computing `-2 + 4 m . m', as seen in
-the next example.
-
-     (%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
-                         [ 4 x y - 2      0     ]
-     (%o4)               [                      ]
-                         [     0      4 x y - 2 ]
-
-If you evaluate a function at a point outside its domain, generally
-`orthopoly' returns the function unevaluated.  For example,
-
-     (%i1) legendre_p (2/3, x);
-     (%o1)                        P   (x)
-                                   2/3
-
-`orthopoly' supports translation into TeX; it also does two-dimensional
-output on a terminal.
-
-     (%i1) spherical_harmonic (l, m, theta, phi);
-                               m
-     (%o1)                    Y (theta, phi)
-                               l
-     (%i2) tex (%);
-     $$Y_{l}^{m}\left(\vartheta,\varphi\right)$$
-     (%o2)                         false
-     (%i3) jacobi_p (n, a, a - b, x/2);
-                               (a, a - b) x
-     (%o3)                    P          (-)
-                               n          2
-     (%i4) tex (%);
-     $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
-     (%o4)                         false
-
-65.1.2 Limitations
-------------------
-
-When an expression involves several orthogonal polynomials with
-symbolic orders, it's possible that the expression actually vanishes,
-yet Maxima is unable to simplify it to zero.  If you divide by such a
-quantity, you'll be in trouble.  For example, the following expression
-vanishes for integers <n> greater than 1, yet Maxima is unable to
-simplify it to zero.
-
-     (%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x)
-           + (1 - n) * legendre_p (n - 2, x);
-     (%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
-                       n - 1           n               n - 2
-
-For a specific <n>, we can reduce the expression to zero.
-
-     (%i2) ev (% ,n = 10, ratsimp);
-     (%o2)                           0
-
-Generally, the polynomial form of an orthogonal polynomial is ill-suited
-for floating point evaluation.  Here's an example.
-
-     (%i1) p : jacobi_p (100, 2, 3, x)$
-
-     (%i2) subst (0.2, x, p);
-     (%o2)                3.4442767023833592E+35
-     (%i3) jacobi_p (100, 2, 3, 0.2);
-     (%o3)  interval(0.18413609135169, 6.8990300925815987E-12)
-     (%i4) float(jacobi_p (100, 2, 3, 2/10));
-     (%o4)                   0.18413609135169
-
-The true value is about 0.184; this calculation suffers from extreme
-subtractive cancellation error.  Expanding the polynomial and then
-evaluating, gives a better result.
-
-     (%i5) p : expand(p)$
-     (%i6) subst (0.2, x, p);
-     (%o6) 0.18413609766122982
-
-This isn't a general rule; expanding the polynomial does not always
-result in an expression that is better suited for numerical evaluation.
-By far, the best way to do numerical evaluation is to make one or more
-of the function arguments floating point numbers.  By doing that,
-specialized floating point algorithms are used for evaluation.
-
-Maxima's `float'  function is somewhat indiscriminate; if you apply
-`float' to an expression involving an orthogonal polynomial with a
-symbolic degree or order parameter, these parameters may be converted
-into floats; after that, the expression will not evaluate fully.
-Consider
-
-     (%i1) assoc_legendre_p (n, 1, x);
-                                    1
-     (%o1)                         P (x)
-                                    n
-     (%i2) float (%);
-                                   1.0
-     (%o2)                        P   (x)
-                                   n
-     (%i3) ev (%, n=2, x=0.9);
-                                  1.0
-     (%o3)                       P   (0.9)
-                                  2
-
-The expression in (%o3) will not evaluate to a float; `orthopoly'
-doesn't recognize floating point values where it requires an integer.
-Similarly, numerical evaluation of the `pochhammer'  function for
-orders that exceed `pochhammer_max_index'  can be troublesome; consider
-
-     (%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
-     (%o1)                         (1)
-                                      10
-
-Applying `float' doesn't evaluate <x> to a float
-
-     (%i2) float (x);
-     (%o2)                       (1.0)
-                                      10.0
-
-To evaluate <x> to a float, you'll need to bind `pochhammer_max_index'
-to 11 or greater and apply `float' to <x>.
-
-     (%i3) float (x), pochhammer_max_index : 11;
-     (%o3)                       3628800.0
-
-The default value of `pochhammer_max_index' is 100; change its value
-after loading `orthopoly'.
-
-Finally, be aware that reference books vary on the definitions of the
-orthogonal polynomials; we've generally used the conventions of
-conventions of Abramowitz and Stegun.
-
-Before you suspect a bug in orthopoly, check some special cases to
-determine if your definitions match those used by `orthopoly'.
-Definitions often differ by a normalization; occasionally, authors use
-"shifted" versions of the functions that makes the family orthogonal on
-an interval other than (-1, 1).  To define, for example, a Legendre
-polynomial that is orthogonal on (0, 1), define
-
-     (%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
-
-     (%i2) shifted_legendre_p (2, rat (x));
-                                 2
-     (%o2)/R/                 6 x  - 6 x + 1
-     (%i3) legendre_p (2, rat (x));
-                                    2
-                                 3 x  - 1
-     (%o3)/R/                    --------
-                                    2
-
-65.1.3 Floating point Evaluation
---------------------------------
-
-Most functions in `orthopoly' use a running error analysis to estimate
-the error in floating point evaluation; the exceptions are the
-spherical Bessel functions and the associated Legendre polynomials of
-the second kind.  For numerical evaluation, the spherical Bessel
-functions call SLATEC functions.  No specialized method is used for
-numerical evaluation of the associated Legendre polynomials of the
-second kind.
-
-The running error analysis ignores errors that are second or higher
-order in the machine epsilon (also known as unit roundoff).  It also
-ignores a few other errors.  It's possible (although unlikely) that the
-actual error exceeds the estimate.
-
-Intervals have the form `interval (<c>, <r>)', where <c> is the center
-of the interval and <r> is its radius.  The center of an interval can
-be a complex number, and the radius is always a positive real number.
-
-Here is an example.
-
-     (%i1) fpprec : 50$
-
-     (%i2) y0 : jacobi_p (100, 2, 3, 0.2);
-     (%o2) interval(0.1841360913516871, 6.8990300925815987E-12)
-     (%i3) y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
-     (%o3) 1.8413609135168563091370224958913493690868904463668b-1
-
-Let's test that the actual error is smaller than the error estimate
-
-     (%i4) is (abs (part (y0, 1) - y1) < part (y0, 2));
-     (%o4)                         true
-
-Indeed, for this example the error estimate is an upper bound for the
-true error.
-
-Maxima does not support arithmetic on intervals.
-
-     (%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
-     (%o1) interval(0.18032072148437508, 3.1477135311021797E-15)
-             + interval(- 0.19949294375000004, 3.3769353084291579E-15)
-
-A user could define arithmetic operators that do interval math.  To
-define interval addition, we can define
-
-     (%i1) infix ("@+")$
-
-     (%i2) "@+"(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2)
-           + part (y, 2))$
-
-     (%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
-     (%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
-
-The special floating point routines get called when the arguments are
-complex.  For example,
-
-     (%i1) legendre_p (10, 2 + 3.0*%i);
-     (%o1) interval(- 3.876378825E+7 %i - 6.0787748E+7,
-                                                1.2089173052721777E-6)
-
-Let's compare this to the true value.
-
-     (%i1) float (expand (legendre_p (10, 2 + 3*%i)));
-     (%o1)          - 3.876378825E+7 %i - 6.0787748E+7
-
-Additionally, when the arguments are big floats, the special floating
-point routines get called; however, the big floats are converted into
-double floats and the final result is a double.
-
-     (%i1) ultraspherical (150, 0.5b0, 0.9b0);
-     (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
-
-65.1.4 Graphics and `orthopoly'
--------------------------------
-
-To plot expressions that involve the orthogonal polynomials, you must
-do two things:
-  1. Set the option variable `orthopoly_returns_intervals'  to `false',
-
-  2. Quote any calls to `orthopoly' functions.
-
-If function calls aren't quoted, Maxima evaluates them to polynomials
-before plotting; consequently, the specialized floating point code
-doesn't get called.  Here is an example of how to plot an expression
-that involves a Legendre polynomial.
-
-     (%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]),
-                             orthopoly_returns_intervals : false;
-     (%o1)
-
-The entire expression `legendre_p (5, x)' is quoted; this is different
-than just quoting the function name using `'legendre_p (5, <x>)'.
-
-65.1.5 Miscellaneous Functions
-------------------------------
-
-The `orthopoly' package defines the Pochhammer symbol and a unit step
-function.  `orthopoly' uses the Kronecker delta function and the unit
-step function in `gradef'  statements.
-
-To convert Pochhammer symbols into quotients of gamma functions, use
-`makegamma'.
-
-     (%i1) makegamma (pochhammer (x, n));
-                               gamma(x + n)
-     (%o1)                     ------------
-                                 gamma(x)
-     (%i2) makegamma (pochhammer (1/2, 1/2));
-                                     1
-     (%o2)                       ---------
-                                 sqrt(%pi)
-
-Derivatives of the Pochhammer symbol are given in terms of the `psi'
-
-function.
-
-     (%i1) diff (pochhammer (x, n), x);
-     (%o1)             (x)  (psi (x + n) - psi (x))
-                          n     0             0
-     (%i2) diff (pochhammer (x, n), n);
-     (%o2)                   (x)  psi (x + n)
-                                n    0
-
-You need to be careful with the expression in (%o1); the difference of
-the `psi' functions has polynomials when `<x> = -1, -2, .., -<n>'.
-These polynomials cancel with factors in `pochhammer (<x>, <n>)' making
-the derivative a degree `<n> - 1' polynomial when <n> is a positive
-integer.
-
-The Pochhammer symbol is defined for negative orders through its
-representation as a quotient of gamma functions.  Consider
-
-     (%i1) q : makegamma (pochhammer (x, n));
-                               gamma(x + n)
-     (%o1)                     ------------
-                                 gamma(x)
-     (%i2) sublis ([x=11/3, n= -6], q);
-                                    729
-     (%o2)                        - ----
-                                    2240
-
-Alternatively, we can get this result directly.
-
-     (%i1) pochhammer (11/3, -6);
-                                    729
-     (%o1)                        - ----
-                                    2240
-
-The unit step function is left-continuous; thus
-
-     (%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
-     (%o1)                       [0, 0, 1]
-
-If you need a unit step function that is neither left or right
-continuous at zero, define your own using `signum',  for example,
-
-     (%i1) xunit_step (x) := (1 + signum (x))/2$
-
-     (%i2) [xunit_step (-1/10), xunit_step (0), xunit_step (1/10)];
-                                     1
-     (%o2)                       [0, -, 1]
-                                     2
-
-Do not redefine `unit_step'  itself; some code in `orthopoly' requires
-that the unit step function be left-continuous.
-
-65.1.6 Algorithms
------------------
-
-Generally, `orthopoly' does symbolic evaluation by using a hypergeometic
-representation of the orthogonal polynomials.  The hypergeometic
-functions are evaluated using the (undocumented) functions `hypergeo11'
-and `hypergeo21'.  The exceptions are the half-integer Bessel functions
-and the associated Legendre function of the second kind.  The
-half-integer Bessel functions are evaluated using an explicit
-representation, and the associated Legendre function of the second kind
-is evaluated using recursion.
-
-For floating point evaluation, we again convert most functions into a
-hypergeometic form; we evaluate the hypergeometic functions using
-forward recursion.  Again, the exceptions are the half-integer Bessel
-functions and the associated Legendre function of the second kind.
-Numerically, the half-integer Bessel functions are evaluated using the
-SLATEC code.
-
-
-File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  Prev: Introduction to orthogonal polynomials,  Up: orthopoly
-
-65.2 Functions and Variables for orthogonal polynomials
-=======================================================
-
- -- Function: assoc_legendre_p (<n>, <m>, <x>)
-     The associated Legendre function of the first kind of degree <n>
-     and order <m>.
-
-     Reference: Abramowitz and Stegun, equations 22.5.37, page 779,
-     8.6.6 (second equation), page 334, and 8.2.5, page 333.
-
- -- Function: assoc_legendre_q (<n>, <m>, <x>)
-     The associated Legendre function of the second kind of degree <n>
-     and order <m>.
-
-     Reference: Abramowitz and Stegun, equation 8.5.3 and 8.1.8.
-
- -- Function: chebyshev_t (<n>, <x>)
-     The Chebyshev function of the first kind.
-
-     Reference: Abramowitz and Stegun, equation 22.5.47, page 779.
-
- -- Function: chebyshev_u (<n>, <x>)
-     The Chebyshev function of the second kind.
-
-     Reference: Abramowitz and Stegun, equation 22.5.48, page 779.
-
- -- Function: gen_laguerre (<n>, <a>, <x>)
-     The generalized Laguerre polynomial of degree <n>.
-
-     Reference: Abramowitz and Stegun, equation 22.5.54, page 780.
-
- -- Function: hermite (<n>, <x>)
-     The Hermite polynomial.
-
-     Reference: Abramowitz and Stegun, equation 22.5.55, page 780.
-
- -- Function: intervalp (<e>)
-     Return `true' if the input is an interval and return false if it
-     isn't.
-
- -- Function: jacobi_p (<n>, <a>, <b>, <x>)
-     The Jacobi polynomial.
-
-     The Jacobi polynomials are actually defined for all <a> and <b>;
-     however, the Jacobi polynomial weight `(1 - <x>)^<a> (1 +
-     <x>)^<b>' isn't integrable for `<a> <= -1' or `<b> <= -1'.
-
-     Reference: Abramowitz and Stegun, equation 22.5.42, page 779.
-
- -- Function: laguerre (<n>, <x>)
-     The Laguerre polynomial.
-
-     Reference: Abramowitz and Stegun, equations 22.5.16 and 22.5.54,
-     page 780.
-
- -- Function: legendre_p (<n>, <x>)
-     The Legendre polynomial of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 22.5.50 and 22.5.51,
-     page 779.
-
- -- Function: legendre_q (<n>, <x>)
-     The Legendre polynomial of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 8.5.3 and 8.1.8.
-
- -- Function: orthopoly_recur (<f>, <args>)
-     Returns a recursion relation for the orthogonal function family
-     <f> with arguments <args>.  The recursion is with respect to the
-     polynomial degree.
-
-          (%i1) orthopoly_recur (legendre_p, [n, x]);
-                          (2 n - 1) P     (x) x + (1 - n) P     (x)
-                                     n - 1                 n - 2
-          (%o1)   P (x) = -----------------------------------------
-                   n                          n
-
-     The second argument to `orthopoly_recur' must be a list with the
-     correct number of arguments for the function <f>; if it isn't,
-     Maxima signals an error.
-
-          (%i1) orthopoly_recur (jacobi_p, [n, x]);
-
-          Function jacobi_p needs 4 arguments, instead it received 2
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
-     Additionally, when <f> isn't the name of one of the families of
-     orthogonal polynomials, an error is signalled.
-
-          (%i1) orthopoly_recur (foo, [n, x]);
-
-          A recursion relation for foo isn't known to Maxima
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
- -- Variable: orthopoly_returns_intervals
-     Default value: `true'
-
-     When `orthopoly_returns_intervals' is `true', floating point
-     results are returned in the form `interval (<c>, <r>)', where <c>
-     is the center of an interval and <r> is its radius.  The center
-     can be a complex number; in that case, the interval is a disk in
-     the complex plane.
-
- -- Function: orthopoly_weight (<f>, <args>)
-     Returns a three element list; the first element is the formula of
-     the weight for the orthogonal polynomial family <f> with arguments
-     given by the list <args>; the second and third elements give the
-     lower and upper endpoints of the interval of orthogonality.  For
-     example,
-
-          (%i1) w : orthopoly_weight (hermite, [n, x]);
-                                      2
-                                   - x
-          (%o1)                 [%e    , - inf, inf]
-          (%i2) integrate(w[1]*hermite(3, x)*hermite(2, x), x, w[2], w[3]);
-          (%o2)                           0
-
-     The main variable of <f> must be a symbol; if it isn't, Maxima
-     signals an error.
-
- -- Function: pochhammer (<n>, <x>)
-     The Pochhammer symbol. For nonnegative integers <n> with `<n> <=
-     pochhammer_max_index', the expression `pochhammer (<x>, <n>)'
-     evaluates to the product `<x> (<x> + 1) (<x> + 2) ... (<x> + n -
-     1)' when `<n> > 0' and to 1 when `<n> = 0'.  For negative <n>,
-     `pochhammer (<x>, <n>)' is defined as `(-1)^<n> / pochhammer (1 -
-     <x>, -<n>)'.  Thus
-
-          (%i1) pochhammer (x, 3);
-          (%o1)                   x (x + 1) (x + 2)
-          (%i2) pochhammer (x, -3);
-                                           1
-          (%o2)               - -----------------------
-                                (1 - x) (2 - x) (3 - x)
-
-     To convert a Pochhammer symbol into a quotient of gamma functions,
-     (see Abramowitz and Stegun, equation 6.1.22) use `makegamma',  for
-     example
-
-          (%i1) makegamma (pochhammer (x, n));
-                                    gamma(x + n)
-          (%o1)                     ------------
-                                      gamma(x)
-
-     When <n> exceeds `pochhammer_max_index'  or when <n> is symbolic,
-     `pochhammer' returns a noun form.
-
-          (%i1) pochhammer (x, n);
-          (%o1)                         (x)
-                                           n
-
- -- Variable: pochhammer_max_index
-     Default value: 100
-
-     `pochhammer (<n>, <x>)' expands to a product if and only if `<n>
-     <= pochhammer_max_index'.
-
-     Examples:
-
-          (%i1) pochhammer (x, 3), pochhammer_max_index : 3;
-          (%o1)                   x (x + 1) (x + 2)
-          (%i2) pochhammer (x, 4), pochhammer_max_index : 3;
-          (%o2)                         (x)
-                                           4
-
-     Reference: Abramowitz and Stegun, equation 6.1.16, page 256.
-
- -- Function: spherical_bessel_j (<n>, <x>)
-     The spherical Bessel function of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 10.1.8, page 437 and
-     10.1.15, page 439.
-
- -- Function: spherical_bessel_y (<n>, <x>)
-     The spherical Bessel function of the second kind.
-
-     Reference: Abramowitz and Stegun, equations 10.1.9, page 437 and
-     10.1.15, page 439.
-
- -- Function: spherical_hankel1 (<n>, <x>)
-     The spherical Hankel function of the first kind.
-
-     Reference: Abramowitz and Stegun, equation 10.1.36, page 439.
-
- -- Function: spherical_hankel2 (<n>, <x>)
-     The spherical Hankel function of the second kind.
-
-     Reference: Abramowitz and Stegun, equation 10.1.17, page 439.
-
- -- Function: spherical_harmonic (<n>, <m>, <x>, <y>)
-     The spherical harmonic function.
-
-     Reference: Merzbacher 9.64.
-
- -- Function: unit_step (<x>)
-     The left-continuous unit step function; thus `unit_step (<x>)'
-     vanishes for `<x> <= 0' and equals 1 for `<x> > 0'.
-
-     If you want a unit step function that takes on the value 1/2 at
-     zero, use `(1 + signum (<x>))/2'.
-
- -- Function: ultraspherical (<n>, <a>, <x>)
-     The ultraspherical polynomial (also known as the Gegenbauer
-     polynomial).
-
-     Reference: Abramowitz and Stegun, equation 22.5.46, page 779.
-
-
-File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
-
-66 plotdf
-*********
-
-* Menu:
-
-* Introduction to plotdf::
-* Functions and Variables for plotdf::
-
-
-File: maxima.info,  Node: Introduction to plotdf,  Next: Functions and Variables for plotdf,  Prev: plotdf,  Up: plotdf
-
-66.1 Introduction to plotdf
-===========================
-
-The function `plotdf' creates a plot of the direction field (also
-called slope field) for a first-order Ordinary Differential Equation
-(ODE) or a system of two autonomous first-order ODE's.
-
-Plotdf requires Xmaxima.  It can be used from the console or any other
-interface to Maxima, but the resulting file will be sent to Xmaxima for
-plotting.  Please make sure you have installed Xmaxima before trying to
-use plotdf.
-
-To plot the direction field of a single ODE, the ODE must be written in
-the form:
-
-            dy
-            -- = F(x,y)
-            dx
-
-and the function <F> should be given as the argument for `plotdf'.  If
-the independent and dependent variables are not <x>, and <y>, as in the
-equation above, then those two variables should be named explicitly in
-a list given as an argument to the plotdf command (see the examples).
-
-To plot the direction field of a set of two autonomous ODE's, they must
-be written in the form
-
-            dx             dy
-            -- = G(x,y)    -- = F(x,y)
-            dt             dt
-
-and the argument for `plotdf' should be a list with the two functions
-<G> and <F>, in that order; namely, the first expression in the list
-will be taken to be the time derivative of the variable represented on
-the horizontal axis, and the second expression will be the time
-derivative of the variable represented on the vertical axis.  Those two
-variables do not have to be <x> and <y>, but if they are not, then the
-second argument given to plotdf must be another list naming the two
-variables, first the one on the horizontal axis and then the one on the
-vertical axis.
-
-If only one ODE is given, `plotdf' will implicitly admit `x=t', and
-`G(x,y)=1', transforming the non-autonomous equation into a system of
-two autonomous equations.
 
 
 

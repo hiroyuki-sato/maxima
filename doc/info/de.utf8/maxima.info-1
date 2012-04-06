@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -88,7 +88,7 @@ Fortgeschrittene Möglichkeiten und Programmierung
 * Funktionsdefinitionen::       Definition von Maxima-Funktionen.
 * Laufzeitumgebung::            Anpassung der Maxima-Umgebung.
 * Programmierung::              Maxima-Programme schreiben.
-* Übersetzer::                Maxima-Programme übersetzen und komplieren.
+* Übersetzer::                Maxima-Programme übersetzen und kompilieren.
 * Fehlersuche::                 Fehlersuche in Programmen.
 * Verschiedenes::               Sonstige Funktionen und Variablen.
 
@@ -127,7 +127,7 @@ Zusätzliche Pakete (Englisch)
 * lsquares::                    Least squares.
 * makeOrders::                  Polynomial utility.
 * minpack::                     MINPACK functions for minimization and roots
-* mnewton::                     Newton's method.
+* mnewton::                     Newton-Verfahren
 * numericalio::                 Reading and writing files.
 * opsubst::                     Substitutions utility.
 * orthopoly::                   Orthogonal polynomials.
@@ -232,7 +232,7 @@ Eingabe und Ausgabe
 * Kommentare::
 * Dateien::
 * Funktionen und Variablen für die Eingabe und Ausgabe::
-* Funktionen und Variablen für die Tex-Ausgabe::
+* Funktionen und Variablen für die TeX-Ausgabe::
 * Funktionen und Variablen für die Fortran-Ausgabe::
 
 Mengen
@@ -267,12 +267,10 @@ Lineare Algebra
 * Funktionen und Variablen der linearen Algebra::
 
 Tensoren
-* Introduction to itensor::
-* Functions and Variables for itensor::
-* Introduction to ctensor::
-* Functions and Variables for ctensor::
-* Introduction to atensor::
-* Functions and Variables for atensor::
+* Tensorpakete in Maxima::
+* Paket itensor::
+* Paket ctensor::
+* Paket atensor::
 
 Zahlentheorie
 * Funktionen und Variablen der Zahlentheorie::
@@ -298,13 +296,12 @@ Muster und Regeln
 * Funktionen und Variablen für Muster und Regeln::
 
 Funktionsdefinitionen
-* Einführung in Funktionsdefinitionen::
 * Funktionen::
 * Makros::
 * Funktionen und Variablen für Funktionsdefinitionen::
 
 Laufzeitumgebung
-* Einführung in die Laufzeitumgebung::
+* Initialisierung von Maxima::
 * Interrupts::
 * Funktionen und Variablen der Laufzeitumgebung::
 
@@ -452,8 +449,8 @@ makeOrders
 * Functions and Variables for makeOrders::
 
 mnewton
-* Introduction to mnewton::
-* Functions and Variables for mnewton::
+* Einführung in mnewton::
+* Funktionen und Variablen für mnewton::
 
 numericalio
 * Introduction to numericalio::
@@ -2061,6 +2058,9 @@ File: maxima.info,  Node: Funktionen und Variablen der Ausgabe,  Prev: Funktione
      Hat `display2d' den Wert `false', werden Ausdrücke auf der Konsole
      linear und nicht zweidimensional angezeigt.
 
+     Siehe auch die Optionsvariable `leftjust',  um Formeln linksbündig
+     auszugeben.
+
      Beispiel:
 
           (%i1) x/(x^2+1);
@@ -2322,6 +2322,25 @@ File: maxima.info,  Node: Funktionen und Variablen der Ausgabe,  Prev: Funktione
           (%i5) %t4;
                                  3        2      2      3
           (%o5)             f = b  + 3 a b  + 3 a  b + a
+
+ -- Optionsvariable: leftjust
+     Standardwert: `false'
+
+     Hat die Optionsvariable `leftjust' den Wert `true', werden Formeln
+     linksbündig und nicht zentriert ausgegeben.
+
+     Siehe auch die Optionsvariable `display2d',  um zwischen der 1D-
+     und 2D-Anzeige umzuschalten.
+
+     Beispiel:
+
+          (%i1) expand((x+1)^3);
+                                  3      2
+          (%o1)                  x  + 3 x  + 3 x + 1
+          (%i2) leftjust:true$
+          (%i3) expand((x+1)^3);
+                 3      2
+          (%o3) x  + 3 x  + 3 x + 1
 
  -- Optionsvariable: linel
      Standardwert: `79'
@@ -2665,11 +2684,28 @@ File: maxima.info,  Node: Funktionen und Variablen für Zahlen,  Prev: Einführu
 
      Die Optionsvariable `bftorat' kontrolliert die Umwandlung von
      großen Gleitkommazahlen in rationale Zahlen.  Hat `bftorat' den
-     Wert `true', wird die Genauigkeit der Umwandlung von der
-     Optionsvariablen `ratepsilon'  kontrolliert.  In diesem Fall ist
-     das Ergebnis der Umwandlung eine relativ kleine rationale Zahl.
-     Hat dagegen `bftorat' den Wert `false', wird die große
-     Gleitkommazahl exakt durch die rationale Zahl repräsentiert..
+     Wert `false', wird die Genauigkeit der Umwandlung von der
+     Optionsvariablen `ratepsilon'  kontrolliert.  Hat dagegen
+     `bftorat' den Wert `true', wird die große Gleitkommazahl exakt
+     durch die rationale Zahl repräsentiert.
+
+     Hinweis: `bftorat' hat keinen Einfluss auf die Umwandlung in
+     rationale Zahlen mit der Funktion `rationalize'.
+
+     Beispiel:
+
+          (%i1) ratepsilon:1e-4;
+          (%o1)                         1.e-4
+          (%i2) rat(bfloat(11111/111111)), bftorat:false;
+          `rat' replaced 9.99990999991B-2 by 1/10 = 1.0B-1
+                                         1
+          (%o2)/R/                       --
+                                         10
+          (%i3) rat(bfloat(11111/111111)), bftorat:true;
+          `rat' replaced 9.99990999991B-2 by 11111/111111 = 9.99990999991B-2
+                                       11111
+          (%o3)/R/                     ------
+                                       111111
 
  -- Optionsvariable: bftrunc
      Standardwert: `true'
@@ -3062,11 +3098,12 @@ File: maxima.info,  Node: Funktionen und Variablen für Zahlen,  Prev: Einführu
           (%o5)                         true
 
  -- Optionsvariable: ratepsilon
-     Standardwert: 2.0e-8
+     Standardwert: `2.0e-15'
 
-     `ratepsilon' kontrolliert die Genauigkeit, mit der
-     Gleitkommazahlen in rationale Zahlen umgewandelt werden.  Siehe
-     auch `bftorat'.
+     Die Optionsvariable `ratepsilon' kontrolliert die Genauigkeit, mit
+     der Gleitkommazahlen in rationale Zahlen umgewandelt werden, wenn
+     die Optionsvariable `bftorat' den Wert `false' hat.  Für ein
+     Beispiel siehe die Optionsvariable `bftorat'.
 
 
  -- Funktion: rationalize (<expr>)
@@ -6945,6 +6982,32 @@ _Nofix_
      es möglich, Maxima allein mit `quit' anstatt dem Funktionsaufruf
      `quit()' zu beenden.
 
+Maxima unterscheidet das Symbol eines Operators, wie zum Beispiel `+'
+für die Addition, von dem Namen eines Operators, der eine Zeichenkette
+ist.  Der Additionsoperator hat den Namen `"+"'.  Mit dem Namen des
+Operators kann der Operator als eine Funktion eingegeben werden.  Im
+folgenden wird ein Beispiel für den binären Infix-Operator der
+Exponentiation gezeigt:
+
+     (%i1) a^b;
+                                     b
+     (%o1)                          a
+     (%i2) "^"(a,b);
+                                     b
+     (%o2)                          a
+
+Der Name des Operators kann immer dann verwendet werden, wenn eine
+Funktion als Argument benötigt wird.  Beispiele sind die Funktionen
+`map',  `apply'  oder auch die Substitution mit `subst'.
+
+     (%i3) apply("+", [a,b,c]);
+     (%o3)                       c + b + a
+     (%i4) map("^", [a,b,c],[1,2,3]);
+                                     2   3
+     (%o4)                      [a, b , c ]
+     (%i5) subst("*"="+", 10*a*b*c);
+     (%o5)                    c + b + a + 10
+
 In *Note Nutzerdefinierte Operatoren:: wird beschrieben, wie interne
 Maxima-Operatoren umdefiniert oder neue Operatoren definiert werden.
 
@@ -6976,9 +7039,7 @@ File: maxima.info,  Node: Arithmetische Operatoren,  Next: Relationale Operatore
 
      Die Subtraktion `a - b' wird von Maxima intern als Addition `a +
      (- b)' dargestellt.  In der Ausgabe wird der Ausdruck `a + (- b)'
-     als Subtraktion `a - b' angezeigt.  Maxima erkennt `"-"' nur als
-     den Namen der unären Negation, nicht jedoch als den binären
-     Operator der Subtraktion.
+     als Subtraktion `a - b' angezeigt.
 
      Die Division `a / b' wird von Maxima intern als Multiplikation `a
      * b^(- 1)' dargestellt.  In der Ausgabe wird der Ausdruck `a *
@@ -6993,7 +7054,7 @@ File: maxima.info,  Node: Arithmetische Operatoren,  Next: Relationale Operatore
      konstruiert eine kanonische Darstellung.  Maxima unterscheidet die
      interne Sortierung von der externen Sortierung für die Anzeige.
      Die interne Sortierung wird von der Aussagefunktion `orderlessp'
-     bestimmt.  Die externe Sortierung für die Anzeige wird mit der
+     bestimmt.  Die externe Sortierung für die Anzeige wird von der
      Aussagefunktion `ordergreatp'  festgelegt.  Ausnahme ist die
      Multiplikation.  Für diese sind die interne und die externe
      Sortierung identisch.
@@ -7002,12 +7063,10 @@ File: maxima.info,  Node: Arithmetische Operatoren,  Next: Relationale Operatore
      Zahlen, Gleitkommazahlen und großen Gleitkommazahlen) werden als
      eine Vereinfachung und nicht als Auswertung  ausgeführt.  Mit
      Ausnahme der Exponentiation werden alle arithmetischen Operationen
-     mit Zahlen zu Zahlen vereinfacht.  Die Exponentiation vereinfacht
-     zu einer Zahl, wenn einer der Operanden eine Gleitkommazahl ist,
-     oder wenn das Ergebnis eine ganze oder rationale Zahl ist.  In
-     anderen Fällen kann die Exponentiation zum Beispiel zu einer
-     Wurzelfunktion `sqrt'  oder wiederum zu einer Exponentiation
-     vereinfachen.
+     mit Zahlen zu Zahlen vereinfacht.  Exponentiationen von Zahlen wie
+     zum Beispiel `(1/3)^(1/2)' werden nicht notwendigerweise zu Zahlen
+     vereinfacht.  In diesem Beispiel ist das Ergebnis der
+     Vereinfachung `1/sqrt(3)'.
 
      Bei einer arithmetischen Rechnung kann es zur Umwandlung in
      Gleitkommazahlen kommen.  Ist eines der Argumente eine große
@@ -7019,8 +7078,8 @@ File: maxima.info,  Node: Arithmetische Operatoren,  Next: Relationale Operatore
 
      Da arithmetische Rechnungen Vereinfachungen und keine Auswertungen
      sind, werden arithmetische Rechnungen auch dann ausgeführt, wenn
-     die Auswertung des Ausdrucks mit dem Quote-Operator  `''
-     unterdrückt ist.
+     die Auswertung des Ausdrucks zum Beispiel mit dem `Quote-Operator'
+     `'' unterdrückt ist.
 
      Arithmetische Operatoren werden elementweise auf Listen
      angewendet, wenn die Optionsvariable `listarith'  den Wert `true'
@@ -7137,7 +7196,7 @@ File: maxima.info,  Node: Arithmetische Operatoren,  Next: Relationale Operatore
      `^'.
 
      Die Funktion `fortran'  zeigt den Operator der Exponentiation
-     immer als `**' an, unabhängig davon ob `**' oder `^' eingegeben
+     immer als `**' an, unabhängig davon, ob `**' oder `^' eingegeben
      wird.
 
      Beispiele:
@@ -7238,9 +7297,10 @@ File: maxima.info,  Node: Relationale Operatoren,  Next: Logische Operatoren,  P
           (%o5)                         5050
 
      Relationale Ausdrücke werden ansonsten nicht zu booleschen Werten
-     ausgewertet oder vereinfacht, auch wenn die Argumente eines
-     relationalen Ausdruckes ausgewertet werden.
+     ausgewertet oder vereinfacht, jedoch werden die Operanden eines
+     relationalen Ausdruckes ausgewertet.
 
+          (%i1) [x, y, z] : [123, 456, 789];
           (%o1)                    [123, 456, 789]
           (%i2) [x < y, y <= z, z >= y, y > z];
           (%o2)    [123 < 456, 456 <= 789, 789 >= 456, 456 > 789]
@@ -7255,66 +7315,127 @@ File: maxima.info,  Node: Logische Operatoren,  Next: Operatoren für Gleichunge
 
  -- Operator: and
      Ist der logische Operator der Konjunktion.  `and' ist ein
-     N-ary-Operator.  Die Argumente sind boolesche Ausdrücke und das
+     N-ary-Operator.  Die Operanden sind boolesche Ausdrücke und das
      Ergebnis ist ein boolescher Wert.
 
      Der Operator `and' erzwingt die Auswertung aller oder einen Teil
-     der Argumente.  Die Argumente werden in der Reihenfolge
+     der Operanden.  Die Operanden werden in der Reihenfolge
      ausgewertet, in der sie auftreten.  `and' wertet nur so viele
-     Argumente aus, wie nötig sind, um das Ergebnis des Ausdrucks zu
+     Operanden aus, wie nötig sind, um das Ergebnis des Ausdrucks zu
      bestimmen.  Hat irgendein Argument den Wert `false', ist das
      Ergebnis `false' und die weiteren Argumente werden nicht
      ausgewertet.
 
      Die Optionsvariable `prederror'  kontrolliert das Verhalten von
-     `and' für den Fall, dass ein Argument nicht zu `true' oder `false'
-     ausgewertet werden kann.  `and' gibt eine Fehlermeldung, wenn
-     `prederror' den Wert `true' hat.  Andernfalls werden Argumente
+     `and' für den Fall, dass ein Operand nicht zu `true' oder `false'
+     ausgewertet werden kann.  `and' gibt eine Fehlermeldung aus, wenn
+     `prederror' den Wert `true' hat.  Andernfalls werden Operanden
      akzeptiert, die nicht zu `true' oder `false' ausgewertet werden
      können und das Ergebnis ist ein boolescher Ausdruck.
 
      `and' ist nicht kommutativ, da aufgrund von nicht ausgewerteten
-     Argumenten die Ausdrücke `a and b' und `b and a' ein
+     Operanden die Ausdrücke `a and b' und `b and a' ein
      unterschiedliches Ergebnis haben können.
 
+     Beispiele:
+
+          (%i1) n:2;
+          (%o1)                           2
+          (%i2) integerp(n) and evenp(n);
+          (%o2)                         true
+          (%i3) not(a=b) and 1=1 and integerp(2);
+          (%o3)                         true
+          (%i4) not(a=b) and 1=1 and oddp(2);
+          (%o4)                         false
+          (%i5) a and b;
+          (%o5)                        a and b
+          (%i6) prederror:true$
+          (%i7) a and b;
+
+          Unable to evaluate predicate a
+           -- an error. To debug this try: debugmode(true);
+
+     Da `and' nur so viele Operanden auswertet wie notwendig sind, um
+     das Ergebnis festzustellen, führt der syntaktische Fehler im
+     zweiten Operanden nicht zu einer Fehlermeldung, das das Ergebnis
+     bereits mit dem ersten Operanden feststeht.
+
+          (%i8) a=b and sin(2,2);
+          (%o8)                         false
 
  -- Operator: or
      Ist der logische Operator der Disjunktion.  `or' ist ein
-     N-ary-Operator.  Die Argumente sind boolesche Ausdrücke und das
+     N-ary-Operator.  Die Operanden sind boolesche Ausdrücke und das
      Ergebnis ist ein boolescher Wert.
 
      Der Operator `or' erzwingt die Auswertung aller oder einen Teil der
-     Argumente.  Die Argumente werden in der Reihenfolge ausgewertet,
-     in der sie auftreten.  `or' wertet nur so viele Argumente aus, wie
+     Operanden.  Die Operanden werden in der Reihenfolge ausgewertet,
+     in der sie auftreten.  `or' wertet nur so viele Operanden aus wie
      nötig sind, um das Ergebnis des Ausdrucks zu bestimmen.  Hat
-     irgendein Argument den Wert `true', ist das Ergebnis `true' und
-     die weiteren Argumente werden nicht ausgewertet.
+     irgendein Operand den Wert `true', ist das Ergebnis `true' und die
+     weiteren Operanden werden nicht ausgewertet.
 
      Die Optionsvariable `prederror'  kontrolliert das Verhalten von
-     `or' für den Fall, dass ein Argument nicht zu `true' oder `false'
+     `or' für den Fall, dass ein Operand nicht zu `true' oder `false'
      ausgewertet werden kann.  `or' gibt eine Fehlermeldung, wenn
-     `prederror' den Wert `true' hat.  Andernfalls werden Argumente
+     `prederror' den Wert `true' hat.  Andernfalls werden Operanden
      akzeptiert, die nicht zu `true' oder `false' ausgewertet werden
      können und das Ergebnis ist ein boolescher Ausdruck.
 
      `or' ist nicht kommutativ, da aufgrund von nicht ausgewerteten
-     Argumenten die Ausdrücke `a or b' und `b or a' ein
+     Operanden die Ausdrücke `a or b' und `b or a' ein
      unterschiedliches Ergebnis haben können.
 
+     Beispiele:
+
+          (%i1) n:2;
+          (%o1)                           2
+          (%i2) oddp(n) or evenp(n);
+          (%o2)                         true
+          (%i3) a=b or not(1=1) or integerp(2);
+          (%o3)                         true
+          (%i4) a or b;
+          (%o4)                        a or b
+          (%i5) prederror:true$
+          (%i6) a or b;
+
+          Unable to evaluate predicate a
+           -- an error. To debug this try: debugmode(true);
+
+     Da `or' nur so viele Operanden auswertet wie notwendig sind, um das
+     Ergebnis festzustellen, führt der syntaktische Fehler im zweiten
+     Operanden nicht zu einer Fehlermeldung, da das Ergebnis bereits
+     mit dem ersten Operanden feststeht.
+
+          (%i7) integerp(2) or sin(2,2);
+          (%o7)                         true
 
  -- Operator: not
-     Ist die logische Negation.  `not' ist ein Prefix-Operator.  Das
-     Argument ist ein boolescher Ausdruck und das Ergebnis ein
+     Ist die logische Negation.  `not' ist ein Prefix-Operator.  Der
+     Operand ist ein boolescher Ausdruck und das Ergebnis ein
      boolescher Wert.
 
-     Der Operator `not' erzwingt die Auswertung der Argumente.  Die
+     Der Operator `not' erzwingt die Auswertung des Operanden.  Die
      Optionsvariable `prederror'  kontrolliert das Verhalten von `not'
-     für den Fall, dass das Argument nicht zu `true' oder `false'
+     für den Fall, dass der Operand nicht zu `true' oder `false'
      ausgewertet werden kann.  `not' gibt eine Fehlermeldung, wenn
-     `prederror' den Wert `true' hat.  Andernfalls wird ein Argument,
-     das nicht zu `true' oder `false' ausgewertet werden kann,
-     akzeptiert und das Ergebnis ist ein boolescher Ausdruck.
+     `prederror' den Wert `true' hat.  Andernfalls wird ein Operand
+     akzeptiert, der nicht zu `true' oder `false' ausgewertet werden
+     kann, und das Ergebnis ist ein boolescher Ausdruck.
 
+     Beispiele:
+
+          (%i1) not integerp(2);
+          (%o1)                         false
+          (%i2) not (a=b);
+          (%o2)                         true
+          (%i3) not a;
+          (%o3)                         not a
+          (%i4) prederror:true$
+          (%i5) not a;
+
+          Unable to evaluate predicate a
+           -- an error. To debug this try: debugmode(true);
 
 
 File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperatoren,  Prev: Logische Operatoren,  Up: Operatoren
@@ -7323,18 +7444,30 @@ File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperator
 ==============================
 
  -- Operator: #
-     Ist der Operator für eine Ungleichung.
+     Ist der Operator für eine Ungleichung.  `#' ist ein Infix-Operator
+     mit zwei Operanden.
+
+     Mit dem Operator `#' wird eine Ungleichung `a # b' formuliert,
+     wobei die Operanden `a' und `b' jeweils die linke und die rechte
+     Seite der Ungleichung sind und beliebige Ausdrücke sein können.
+     Die Operanden werden ausgewertet, nicht jedoch die Ungleichung
+     selbst.
+
+     Die Funktionen `is',  `maybe',  die logischen Operatoren `and',
+     `or'  und `not'  sowie die Funktionen für die Definition von
+     Programmanweisungen wie `if',  `while'  oder `unless'  erzwingen
+     die Auswertung einer Ungleichung.
 
      Wegen der Regeln für die Auswertung von Aussagen und weil `not
-     <expr>' die Auswertung des Argumentes <expr> bewirkt, ist der
-     Ausdruck `not (<a> = <b>)' äquivalent zu `is(<a> # <b>)' und nicht
-     zu `<a> # <b>'.
+     expr' die Auswertung des Argumentes `expr' bewirkt, ist der
+     Ausdruck `not (a = b)' äquivalent zu `is(a # b)' und nicht zu `a #
+     b'.
 
      Die Funktionen `rhs'  und `lhs'  geben die rechte und die linke
      Seite einer Gleichung oder Ungleichung zurück.
 
-     Siehe auch den Operator `='  für Gleichungen sowie die Funktionen
-     `equal'  und `notequal'.
+     Siehe auch den Operator `=',  um eine Gleichung zu formulieren,
+     sowie die Funktionen `equal'  und `notequal'.
 
      Beispiele:
 
@@ -7352,39 +7485,42 @@ File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperator
           (%o6)                         true
 
  -- Operator: =
-     Ist der Operator für eine Gleichung.
+     Ist der Operator für eine Gleichung.  `=' ist ein Infix-Operator
+     mit zwei Operanden.
 
-     Ein Ausdruck `<a> = <b>' repräsentiert eine nicht ausgewertete
-     Gleichung, welche zutreffen kann oder auch nicht.  Nicht
-     ausgewertete Gleichungen können zum Beispiel als Argument der
-     Funktionen `solve'  und `algsys'  auftreten.
+     Mit dem Operator `=' wird eine Gleichung `a = b' formuliert, wobei
+     die Operanden `a' und `b' jeweils die linke und die rechte Seite
+     der Gleichung sind und beliebige Ausdrücke sein können.  Die
+     Operanden werden ausgewertet, nicht jedoch die Gleichung selbst.
+     Nicht ausgewertete Gleichungen können als Argument von Funktionen
+     wie zum Beispiel den Funktionen `solve',  `algsys'  oder `ev'
+     auftreten.
 
      Die Funktion `is'  wertet eine Gleichung `=' zu einem booleschen
-     Wert aus.  `is(<a> = <b>)' wertet die Gleichung `<a> = <b>' zum
-     Wert `true' aus, wenn <a> und <b> identische Ausdrücke sind.  Das
-     trifft zu, wenn <a> und <b> identische Atome sind oder wenn ihre
-     Operatoren sowie die Argumente identisch sind.  In jedem anderen
-     Fall ist das Ergebnis `false'.  Das Ergebnis der Auswertung ist
-     nie `unkown'.  Hat `is(<a> = <b>)' das Ergebnis `true', werden `a'
-     und `b' als syntaktisch gleich bezeichnet.  Im Unterschied dazu
-     gilt für äquivalente Ausdrücke, dass `is(equal(<a>, <b>))' den Wert
-     `true' hat.  Ausdrücke können äquivalent aber syntaktisch
-     verschieden sein.
+     Wert aus.  `is(a = b)' wertet die Gleichung `a = b' zum Wert `true'
+     aus, wenn `a' und `b' identische Ausdrücke sind.  Das trifft zu,
+     wenn `a' und `b' identische Atome sind oder wenn ihre Operatoren
+     sowie die Operanden identisch sind.  In jedem anderen Fall ist das
+     Ergebnis `false'.  Das Ergebnis der Auswertung ist nie `unkown'.
+     Hat `is(a = b)' das Ergebnis `true', werden `a' und `b' als
+     syntaktisch gleich bezeichnet.  Im Unterschied dazu gilt für
+     äquivalente Ausdrücke, dass `is(equal(a, b))' den Wert `true' hat.
+     Ausdrücke können äquivalent aber syntaktisch verschieden sein.
 
      Eine Ungleichung wird mit dem Operator `#'  formuliert.  Wie für
-     den Operator `=' wird ein Ausdruck `<a> # <b>' nicht ausgewertet.
-     Eine Auswertung erfolgt mit `is(<a> # <b>)', welche die Werte
-     `true' oder `false' als Ergebnis hat.
+     den Operator `=' für eine Gleichung wird eine Ungleichung `a # b'
+     nicht ausgewertet.  Eine Auswertung erfolgt mit `is(a # b)',
+     welche die Werte `true' oder `false' als Ergebnis hat.
 
      Neben `is' werten auch die Operatoren `if',  `and',
 
-     `or'  und `not'  die Operatoren `=' und `#' zu den Werten `true'
-     oder `false' aus.
+     `or'  und `not'  Gleichungen mit dem Operator `=' oder
+     Ungleichungen mit dem Operator `#' zu den Werten `true' oder
+     `false' aus.
 
      Wegen der Regeln für die Auswertung von Aussagen und weil im
-     Ausdruck `not <expr>' das Argument <expr> ausgewertet wird, ist
-     `not <a> = <b>' äquivalent zu `is(<a> # <b>)' und nicht zu `<a> #
-     <b>'.
+     Ausdruck `not expr' der Operand `expr' ausgewertet wird, ist `not
+     a = b' äquivalent zu `is(a # b)' und nicht zu `a # b'.
 
      Die Funktionen `rhs'  und `lhs'  geben die rechte und die linke
      Seite einer Gleichung oder Ungleichung zurück.
@@ -7394,7 +7530,7 @@ File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperator
 
      Beispiele:
 
-     Ein Ausdruck `<a> = <b>' repräsentiert eine nicht ausgewertete
+     Ein Ausdruck `a = b' repräsentiert eine nicht ausgewertete
      Gleichung.
 
           (%i1) eq_1 : a * x - 5 * y = 17;
@@ -7415,9 +7551,9 @@ File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperator
           (%i5) ratsimp (%);
           (%o5)                  [17 = 17, 29 = 29]
 
-     `is(<a> = <b>)' wertet die Gleichung `<a> = <b>' zu `true' aus,
-     wenn <a> und <b> syntaktisch gleich sind.  Ausdrücke können
-     äquivalent sein, ohne syntaktisch gleich zu sein.
+     `is(a = b)' wertet die Gleichung `a = b' zu `true' aus, wenn `a'
+     und `b' syntaktisch gleich sind.  Ausdrücke können äquivalent
+     sein, ohne syntaktisch gleich zu sein.
 
           (%i1) a : (x + 1) * (x - 1);
           (%o1)                    (x - 1) (x + 1)
@@ -7442,8 +7578,8 @@ File: maxima.info,  Node: Operatoren für Gleichungen,  Next: Zuweisungsoperator
           (%i4) [eq_3 and eq_4, eq_3 or eq_4, not eq_3];
           (%o4)                  [false, true, true]
 
-     Da ` not <expr> ' die Auswertung des Ausdrucks <expr> bewirkt, ist
-     `not (<a> = <b>)' äquivalent zu ` is(<a> # <b>)'.
+     Da `not expr' die Auswertung des Ausdrucks `expr' bewirkt, ist
+     `not (a = b)' äquivalent zu `is(a # b)'.
 
           (%i1) [2 * x # 3 * x, not (2 * x = 3 * x)];
           (%o1)                   [2 x # 3 x, true]
@@ -7729,339 +7865,6 @@ File: maxima.info,  Node: Zuweisungsoperatoren,  Next: Nutzerdefinierte Operator
           (%o3)                          200
           (%i4) foo (100);
           (%o4)                         - 99
-
-
-File: maxima.info,  Node: Nutzerdefinierte Operatoren,  Prev: Zuweisungsoperatoren,  Up: Operatoren
-
-7.7 Nutzerdefinierte Operatoren
-===============================
-
-* Menu:
-
-* Einführung in nutzerdefinierte Operatoren::
-* Funktionen und Variablen für nutzerdefinierte Operatoren::
-
-
-File: maxima.info,  Node: Einführung in nutzerdefinierte Operatoren,  Next: Funktionen und Variablen für nutzerdefinierte Operatoren,  Prev: Nutzerdefinierte Operatoren,  Up: Nutzerdefinierte Operatoren
-
-7.7.1 Einführung in nutzerdefinierte Operatoren
------------------------------------------------
-
-Es ist möglich neue Operatoren zu definieren, vorhandene Operatoren zu
-entfernen oder deren Eigenschaften zu ändern.  Jede Funktion kann als
-ein Operator definiert werden, die Funktion kann, muss aber nicht
-definiert sein.
-
-Im Folgenden werden die Operatoren `dd' und `"<-"' definiert.  Nach der
-Definition als Operatoren ist `dd a' gleichbedeutend mit `"dd"(a)' und
-`a <- b' entspricht dem Funktionsaufruf `"<-"(a,b)'.  In diesem
-Beispiel sind die Funktionen `"dd"' und `"<-"' nicht definiert.
-
-     (%i1) prefix ("dd");
-     (%o1)                          dd
-     (%i2) dd a;
-     (%o2)                         dd a
-     (%i3) "dd" (a);
-     (%o3)                         dd a
-     (%i4) infix ("<-");
-     (%o4)                          <-
-     (%i5) a <- dd b;
-     (%o5)                      a <- dd b
-     (%i6) "<-" (a, "dd" (b));
-     (%o6)                      a <- dd b
-
-Maxima kennt die folgenden Funktionen, um Operatoren zu definieren:
-`prefix', `postfix', `infix', `nary', `matchfix' und `nofix'.
-
-Der Vorrang eines Operators <op> vor anderen Operatoren leitet sich aus
-dem links- und rechtsseitigen Vorrang des Operators ab.  Sind die
-links- und rechtsseitigen Vorränge von <op> beide größer als der links-
-und rechtsseitige Vorrang eines anderen Operators, dann hat <op>
-Vorrang vor diesem Operator.  Sind die Vorränge nicht beide größer oder
-kleiner, werden weitere Regeln zur Bestimmung des Vorrangs herangezogen.
-
-Maxima kennt die Wortart eines Operanden und des Ergebnisses eines
-Operanden.  Wortart bedeutet hier, den Typ eines Operanden.  Maxima
-kennt die drei Typen `expr', `clause' und `any'.  Diese stehen für einen
-algebraischen Ausdruck, einen logischen Ausdruck und einen beliebigen
-Ausdruck.  Mit Hilfe der für einen Operator definierten Wortart kann
-der Parser beim Einlesen eines Ausdrucks Syntaxfehler feststellen.
-
-Die Assoziativität eines Operators <op> hängt ab von seinem Vorrang.
-Ein größerer linksseitiger Vorrang hat zur Folge, dass der Operator
-<op> vor einem anderen Operator auf seiner linken Seite ausgewertet
-wird.  Während ein größerer rechtsseitiger Vorrang zur Folge hat, dass
-der Operator vor anderen Operatoren auf der rechten Seite ausgewertet
-wird.  Daraus folgt, dass ein größerer linksseitiger Vorrang <lbp>
-einen Operator <op> rechts-assoziativ und eine größerer rechtsseitiger
-Vorrang <rbp> den Operator links-assoziativ macht.  Sind der links- und
-rechtsseitige Vorrang gleich groß, ist der Operator <op>
-links-assoziativ.
-
-Mit den Befehlen `remove'  und `kill'  können Operatoreigenschaften von
-einem Symbol entfernt werden.  `remove("<a>", op)' entfernt die
-Operatoreigenschaften des Symbols <a>.  `kill("<a>")' entfernt alle
-Eigenschaften einschließich der Operator-Eigenschaften des Symbols <a>.
-In diesem Fall steht der Name des Symbols in Anführungszeichen.
-
-     (%i1) infix ("##");
-     (%o1)                          ##
-     (%i2) "##" (a, b) := a^b;
-                                          b
-     (%o2)                     a ## b := a
-     (%i3) 5 ## 3;
-     (%o3)                          125
-     (%i4) remove ("##", op);
-     (%o4)                         done
-     (%i5) 5 ## 3;
-     Incorrect syntax: # is not a prefix operator
-     5 ##
-       ^
-     (%i5) "##" (5, 3);
-     (%o5)                          125
-     (%i6) infix ("##");
-     (%o6)                          ##
-     (%i7) 5 ## 3;
-     (%o7)                          125
-     (%i8) kill ("##");
-     (%o8)                         done
-     (%i9) 5 ## 3;
-     Incorrect syntax: # is not a prefix operator
-     5 ##
-       ^
-     (%i9) "##" (5, 3);
-     (%o9)                       ##(5, 3)
-
-
-File: maxima.info,  Node: Funktionen und Variablen für nutzerdefinierte Operatoren,  Prev: Einführung in nutzerdefinierte Operatoren,  Up: Nutzerdefinierte Operatoren
-
-7.7.2 Funktionen und Variablen für nutzerdefinierte Operatoren
---------------------------------------------------------------
-
- -- Funktion: infix (<op>)
- -- Funktion: infix (<op>, <lbp>, <rbp>)
- -- Funktion: infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)
-     Deklariert <op> als einen Infix-Operator.  Ein Infix-Operator hat
-     eine Funktionsdefinition mit zwei Argumenten.  Der Infix-Operator
-     steht zwischen den Operanden.  Zum Beispiel ist die Subtraktion `-'
-     ein Infix-Operator.
-
-     `infix(<op>)' deklariert <op> als einen Infix-Operator mit einem
-     links- und rechtsseitigen Vorrang von jeweils 180.
-
-     `infix(<op>, <lbp>, <rbp>)' deklariert <op> als einen
-     Infix-Operator mit den angegebenen Werten für den links- und
-     rechtsseitigen Vorrang.
-
-     `infix(<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)' deklariert <op>
-     als einen Infix-Operator mit den angegebenen Vorrängen sowie den
-     Wortarten <lpos>, <rpos> und <pos> für den linken und den rechten
-     Operanden sowie das Ergebnis des Operators.
-
-     Beispiele:
-
-     Sind die rechtsseitigen und linksseitigen Vorränge eines Operators
-     <op> größer als die entsprechenden Vorränge eines anderen
-     Operators, dann hat der Operator <op> Vorrang.
-
-          (%i1) :lisp (get '$+ 'lbp)
-          100
-          (%i1) :lisp (get '$+ 'rbp)
-          100
-          (%i1) infix ("##", 101, 101);
-          (%o1)                          ##
-          (%i2) "##"(a, b) := sconcat("(", a, ",", b, ")");
-          (%o2)       (a ## b) := sconcat("(", a, ",", b, ")")
-          (%i3) 1 + a ## b + 2;
-          (%o3)                       (a,b) + 3
-          (%i4) infix ("##", 99, 99);
-          (%o4)                          ##
-          (%i5) 1 + a ## b + 2;
-          (%o5)                       (a+1,b+2)
-
-     Ein größerer linksseitige Vorrang <lbp> bewirkt, dass der Operator
-     <op> rechts-assoziativ ist.  Ein größerer rechtsseitiger Vorrang
-     macht dagegen den Operator <op> links-assoziativ.
-
-          (%i1) infix ("##", 100, 99);
-          (%o1)                          ##
-          (%i2) "##"(a, b) := sconcat("(", a, ",", b, ")")$
-          (%i3) foo ## bar ## baz;
-          (%o3)                    (foo,(bar,baz))
-          (%i4) infix ("##", 100, 101);
-          (%o4)                          ##
-          (%i5) foo ## bar ## baz;
-          (%o5)                    ((foo,bar),baz)
-
-     Maxima kann Syntaxfehler beim Einlesen eines Ausdrucks
-     feststellen, wenn der eingelesene Operand nicht die für den
-     Operator definierte Wortart hat.
-
-          (%i1) infix ("##", 100, 99, expr, expr, expr);
-          (%o1)                          ##
-          (%i2) if x ## y then 1 else 0;
-          Incorrect syntax: Found algebraic expression where
-          logical expression expected
-          if x ## y then
-                       ^
-          (%i2) infix ("##", 100, 99, expr, expr, clause);
-          (%o2)                          ##
-          (%i3) if x ## y then 1 else 0;
-          (%o3)                if x ## y then 1 else 0
-
- -- Funktion: matchfix (<ldelimiter>, <rdelimiter>)
- -- Funktion: matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)
-     Deklariert einen Matchfix-Operator mit dem linksseitigen
-     Begrenzungszeichen <ldelimiter> und dem rechtsseitigen
-     Begrenzungszeichen <rdelimiter>.
-
-     Ein Matchfix-Operator hat eine beliebige Anzahl an Argumenten, die
-     zwischen dem linksseitigen und dem rechtsseitigen
-     Begrenzungszeichen stehen.  Das Begrenzungszeichen kann eine
-     beliebige Zeichenkette sein.  Einige Zeichen wie `%', `,', `$' und
-     `;' können nicht als Begrenzungszeichen definiert werden.
-
-     Ein linksseitiges Begrenzungszeichen kann nicht verschiedene
-     rechtsseitige Begrenzungszeichen haben.
-
-     Maxima-Operatoren können als Matchfix-Operatoren definiert werden,
-     ohne dass sich die sonstigen Operatoreigenschaften ändern.  So
-     kann zum Beispiel der Operator `+' als Matchfix-Operator definiert
-     werden.
-
-     `matchfix(<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)' definiert
-     die Wortarten für die Argumente <arg_pos> und das Ergebnis <pos>
-     sowie das linksseitige <ldelimiter> und rechtsseitige <rdelimiter>
-     Begrenzungszeichen.
-
-     Die zu einem Matchfix-Operator zugehörige Funktion kann jede
-     nutzerdefinierte Funktion sein, die mit `:='  oder `define'
-     definiert wird.  Die Definition der Funktion kann mit
-     `dispfun(<ldelimiter>)' ausgegeben werden.
-
-     Maxima kennt nur den Operator für Listen `[ ]' als
-     Matchfix-Operator.  Klammern `( )' und Anführungszeichen `" "'
-     arbeiten wie Matchfix-Operatoren, werden aber vom Parser nicht als
-     Matchfix-Operatoren behandelt.
-
-     `matchfix'  wertet die Argumente aus.  `matchfix' gibt das erste
-     Argument <ldelimiter> als Ergebnis zurück.
-
-     Beispiele:
-
-     Begrenzungszeichen können eine beliebige Zeichenkette sein.
-
-          (%i1) matchfix ("@@", "~");
-          (%o1)                          @@
-          (%i2) @@ a, b, c ~;
-          (%o2)                      @@a, b, c~
-          (%i3) matchfix (">>", "<<");
-          (%o3)                          >>
-          (%i4) >> a, b, c <<;
-          (%o4)                      >>a, b, c<<
-          (%i5) matchfix ("foo", "oof");
-          (%o5)                          foo
-          (%i6) foo a, b, c oof;
-          (%o6)                     fooa, b, coof
-          (%i7) >> w + foo x, y oof + z << / @@ p, q ~;
-                               >>z + foox, yoof + w<<
-          (%o7)                ----------------------
-                                      @@p, q~
-
-     Matchfix-Operatoren können für nutzerdefinierte Funktionen
-     definiert werden.
-
-          (%i1) matchfix ("!-", "-!");
-          (%o1)                         "!-"
-          (%i2) !- x, y -! := x/y - y/x;
-                                              x   y
-          (%o2)                   !-x, y-! := - - -
-                                              y   x
-          (%i3) define (!-x, y-!, x/y - y/x);
-                                              x   y
-          (%o3)                   !-x, y-! := - - -
-                                              y   x
-          (%i4) define ("!-" (x, y), x/y - y/x);
-                                              x   y
-          (%o4)                   !-x, y-! := - - -
-                                              y   x
-          (%i5) dispfun ("!-");
-                                              x   y
-          (%t5)                   !-x, y-! := - - -
-                                              y   x
-
-          (%o5)                         done
-          (%i6) !-3, 5-!;
-                                          16
-          (%o6)                         - --
-                                          15
-          (%i7) "!-" (3, 5);
-                                          16
-          (%o7)                         - --
-                                          15
-
- -- Funktion: nary (<op>)
- -- Funktion: nary (<op>, <bp>, <arg_pos>, <pos>)
-     `nary(<op>)' definiert einen `N-ary'-Operator <op> mit einem
-     linksseitigen Vorrang von 180.  Der rechtsseitige Vorrang wird
-     nicht benötigt.
-
-     `nary(<op>, <bp>, <arg_pos>, <pos>)' definiert einen
-     `N-ary'-Operator <op> mit einem rechtsseitigen Vorrang von <bp> und
-     der Wortart <arg_pos> für den Operanden und der Wortart <pos> fÃ¼r
-     das Ergebnis.
-
-     Ein `N-ary'-Operator ist ein Operator, der eine beliebige Anzahl an
-     Argumenten haben kann.  Die Argumente werden durch den Operator
-     voneinander getrennt, so ist zum Beispiel `+' ein `N-ary'-Operator
-     und `A+B+C'.
-
-     Im Unterschied zur Definition eines Operators kann eine Funktion
-     `f' auch als `nary'  mit der Funktion `declare'  deklariert
-     werden.  Die Deklaration hat Auswirkung auf die Vereinfachung der
-     Funktion.  Zum Beispiel wird ein Ausdruck `j(j(a,b),j(c,d)' zu
-     `j(a,b,c,d)' vereinfacht.
-
- -- Funktion: nofix (<op>)
- -- Funktion: nofix (<op>, <pos>)
-     `nofix(<op>)' definiert den Operator <op> als einen Nofix-Operator.
-
-     `nofix(<op>, <pos>)' definiert einen Nofix-Operator mit der
-     Wortart <pos> für das Ergebnis.
-
-     Nofix-Operatoren sind Operatoren, die kein Argument haben.  Tritt
-     ein solcher Operator allein auf, wird die dazugehörige Funktion
-     ausgewertet.  Zum Beispiel beendet die Funktion `quit()' eine
-     Maxima-Sitzung.  Wird diese Funktion mit `nofix("quit")' als ein
-     Nofix-Operator definiert, genügt die Eingabe von `quit', um eine
-     Maxima-Sitzung zu beenden.
-
- -- Funktion: postfix (<op>)
- -- Funktion: postfix (<op>, <lbp>, <lpos>, <pos>)
-     `postfix (<op>)' definiert einen Postfix-Operator <op>.
-
-     `postfix (<op>, <lbp>, <lpos>, <pos>)' definiert einen
-     Postfix-Operator <op> mit einem linksseitigem Vorrang von <lbp>
-     sowie den Wortarten <lpos> für den Operanden und <pos> für das
-     Ergebnis.
-
-     Ein Postfix-Operator hat einen Operanden, der dem Operator
-     vorangestellt ist.  Ein Beispiel ist der `!'-Operator mit `3!'.
-     Die Funktion `postfix("x")' erweitert die Maxima-Syntax um den
-     Postfix-Operator `x'.
-
- -- Funktion: prefix (<op>)
- -- Funktion: prefix (<op>, <rbp>, <rpos>, <pos>)
-     `prefix (<op>)' definiert einen Prefix-Operator <op>.
-
-     `prefix (<op>, <lbp>, <lpos>, <pos>)' definiert einen
-     Prefix-Operator <op> mit einem rechtsseitigem Vorrang von <rbp>
-     sowie den Wortarten <rpos> für den Operanden und <pos> für das
-     Ergebnis.
-
-     Ein Prefix-Operator hat einen Operanden, der dem Operator
-     nachfolgt.  Mit `prefix("x")' wird die Maxima-Syntax um einen
-     Prefix-Operator `x' erweitert.
 
 
 

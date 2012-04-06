@@ -188,8 +188,8 @@
 ;; communication.  The FORTRAN program rebinds them to #/( and #/) since
 ;; Fortran array references are printed with parens instead of brackets.
 
-(defvar lb #\[)
-(defvar rb #\])
+(defvar *lb* #\[)
+(defvar *rb* #\])
 
 (defun msize-array (x l r &aux f)
   (if (eq (caar x) 'mqapply) (setq f (cadr x) x (cdr x)) (setq f (caar x)))
@@ -200,8 +200,8 @@
 	      (not (member (caar x) (cdr $aliases) :test #'eq))
 	      (not (get (caar x) 'reversealias)))
 	 (setq l (cons #\' l))))
-  (setq l (msize f l (list lb) lop 'mfunction)
-	r (msize-list (cdr x) nil (cons rb r)))
+  (setq l (msize f l (list *lb*) lop 'mfunction)
+	r (msize-list (cdr x) nil (cons *rb* r)))
   (cons (+ (car l) (car r)) (cons l (cdr r))))
 
 (defun msize-function (x l r op)
@@ -297,12 +297,12 @@
       (msz nil l r)
       (do ((nl) (w 0))
           ((null (cdr x))
-           (setq nl (cons (if (atom (car x))
+           (setq nl (cons (if (stringp (car x))
                               (msz (makestring (car x)) l r)
                               (msize (car x) l r lop rop))
                           nl))
            (cons (+ w (caar nl)) (nreverse nl)))
-        (setq nl (cons (if (atom (car x))
+        (setq nl (cons (if (stringp (car x))
                            (msz (makestring (car x)) l r)
                            (msize (car x) l r lop rop))
                        nl)

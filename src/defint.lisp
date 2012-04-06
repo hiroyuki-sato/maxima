@@ -193,7 +193,7 @@ in the interval of integration.")
 		 (pcprntd nil)  (*nodiverg nil)  ($logabs t)  ; (limitp t)
 		 (rp-polylogp ())
                  ($%edispflag nil) ; to get internal representation
-		 ($domain '$real) ($m1pbranch ())) ;Try this out.
+		 ($m1pbranch ())) ;Try this out.
 
 	     (make-global-assumptions) ;sets *global-defint-assumptions*
 	     (setq exp (ratdisrep exp))
@@ -373,8 +373,10 @@ in the interval of integration.")
 			       (do* ((roots *roots (cddr roots))
 				     (root (caddar roots) (caddar roots)))
 				    ((null root) nil)
-				    (if (or (real-infinityp ll)
-					    (test-inverse nv var root 'yx ll))
+				    (if (and (or (real-infinityp ll)
+						 (test-inverse nv var root 'yx ll))
+					     (or (real-infinityp ul)
+						 (test-inverse nv var root 'yx ul)))
 					(return root))))
 			 (cond (flag (intcv2 d ind nv))
 			       (t (intcv1 d ind nv))))
@@ -588,9 +590,8 @@ in the interval of integration.")
 		(setq result (cv exp))))
 	  (t ()))))
 
-;;; LIMIT loss can't set logabs to true for these cases.
 (defun principal-value-integral (exp var ll ul poles)
-  (let (($logabs ())  (anti-deriv ()))
+  (let ((anti-deriv ()))
     (cond ((not (null (setq anti-deriv (antideriv exp))))
 	   (cond ((not (null poles))
 		  (order-limits 'ask)
@@ -1026,7 +1027,10 @@ in the interval of integration.")
     (setq ll-ans (limcp exp var ll '$plus))
     (setq exp (sratsimp ($substitute poles exp)))
     (setq ul-ans (limcp exp var ul '$minus))
-    (if (and ll-ans ul-ans)
+    (if (and ll-ans 
+	     ul-ans
+	     (not (member ll-ans infinities))
+	     (not (member ul-ans infinities)))
 	(m- ul-ans ll-ans)
       nil)))
 
@@ -1256,9 +1260,18 @@ in the interval of integration.")
 		      (t t))
 ;;;If there is BPTU then CSEMIUP must succeed.
 ;;;Likewise for BPTD.
-		(cond (ratterms (setq ratans 
-				      (defint (m// (m+l ratterms) d) var '$minf '$inf)))
-		      (t (setq ratans 0)))
+		(setq ratans
+		      (if ratterms
+			  (let (($intanalysis nil))
+			    ;; The original integrand was already
+			    ;; determined to have no poles by initial-analysis.
+			    ;; If individual terms of the expansion have poles, the poles 
+			    ;; must cancel each other out, so we can ignore them.
+			    (try-defint (m// (m+l ratterms) d) var '$minf '$inf))
+			0))
+		;; if integral of ratterms is divergent, ratans is nil, 
+		;; and mtosc returns nil
+
 		(cond (bptu (setq upans (csemiup (m+l bptu) d var)))
 		      (t (setq upans 0)))
 		(cond (bptd (setq downans (csemidown (m+l bptd) d var)))
@@ -2126,7 +2139,21 @@ in the interval of integration.")
 	 (denom (pdis (cddr rat-exp))))
     (cond ((equal ($csign denom) '$zero)
 	   '$undefined)
-	  (t (intsubs exp ll ul)))))
+	  (t (try-intsubs exp ll ul)))))
+
+(defun try-intsubs (exp ll ul)
+  (let* ((*nodiverg t)
+	 (ans (catch 'divergent (intsubs exp ll ul))))
+    (if (eq ans 'divergent)
+	nil
+      ans)))
+
+(defun try-defint (exp var ll ul)
+  (let* ((*nodiverg t)
+	 (ans (catch 'divergent (defint exp var ll ul))))
+    (if (eq ans 'divergent)
+	nil
+      ans)))
 
 ;; Determine whether E is of the form sin(x)^m*cos(x)^n and return the
 ;; list (m n).
@@ -2771,8 +2798,6 @@ in the interval of integration.")
        (cons (m+l ans) cl))
     (setq ans (cons (m* c (m^t var i)) ans))
     (setq cl (cons c cl))))
-
-;;(declare-top(special *failflag *lhflag lhv *indicator cnt *disconflag))
 
 #+nil
 (defun %e-integer-coeff (exp)
