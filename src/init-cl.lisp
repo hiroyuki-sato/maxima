@@ -356,8 +356,9 @@ When one changes, the other does too."
     ;; Autoload for Maxima documantation index file
     (let ((subdir-bit (if (null *maxima-lang-subdir*) "." *maxima-lang-subdir*)))
       ;; Assign AUTOLOAD property instead of binding a function (the result of AUTOF).
-      (setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
-	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp")))))
+      (unless (get 'cl-info::cause-maxima-index-to-load 'autoload)
+	(setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
+	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp"))))))
 
 (defun get-dirs (path)
   #+(or :clisp :sbcl :ecl :openmcl)
