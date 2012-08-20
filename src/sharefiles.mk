@@ -157,6 +157,7 @@ colnew/prob2.mac \
 colnew/prob3.mac \
 colnew/prob4.mac \
 combinatorics/README \
+contrib/aes.mac \
 contrib/altsimp/altsimp.lisp \
 contrib/augmented_lagrangian.mac \
 contrib/bitwise/bitwise.lisp \
@@ -255,11 +256,11 @@ contrib/fresnel/randi.mac \
 contrib/fresnel/readme.txt \
 contrib/gentran/convmac.lisp \
 contrib/gentran/fdata.lisp \
+contrib/gentran/gentran.lisp \
 contrib/gentran/global.lisp \
 contrib/gentran/gtfix.lisp \
 contrib/gentran/init.lisp \
 contrib/gentran/intrfc.lisp \
-contrib/gentran/local.gtload.lisp \
 contrib/gentran/lspc.lisp \
 contrib/gentran/lspfor.lisp \
 contrib/gentran/lsprat.lisp \

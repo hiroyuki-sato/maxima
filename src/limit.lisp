@@ -31,7 +31,7 @@
 		      *indicator half%pi nn* dn* numer denom exp var val varlist
 		      *zexptsimp? $tlimswitch $logarc taylored logcombed
 		      $exponentialize lhp? lhcount $ratfac genvar complex-limit lnorecurse
-		      loginprod? $limsubst $logabs a context global-assumptions limit-assumptions
+		      loginprod? $limsubst $logabs a context limit-assumptions
 		      limit-top limitp integer-info old-integer-info $keepfloat $logexpand))
 
 (defconstant +behavior-count+ 4)
@@ -98,12 +98,11 @@ It appears in LIMIT and DEFINT.......")
 	  ans))))
 
 (defmfun $limit (&rest args)
-  (let ((global-assumptions ())
-	(limit-assumptions ())
+  (let ((limit-assumptions ())
 	(old-integer-info ())
 	($keepfloat t)
 	(limit-top t))
-    (declare (special global-assumptions limit-assumptions old-integer-info
+    (declare (special limit-assumptions old-integer-info
 		      $keepfloat limit-top))
     (unless limitp
       (setq old-integer-info integer-info)
@@ -246,19 +245,19 @@ It appears in LIMIT and DEFINT.......")
 
 (defun limit-context (var val direction) ;Only works on entry!
   (cond (limit-top
-	 (if (atom var)	; declare and facts don't work on subscripted vars
-	     (mapc #'forget (setq global-assumptions (cdr ($facts var)))))
+;	 (if (atom var)	; declare and facts don't work on subscripted vars
+;	     (mapc #'forget (setq global-assumptions (cdr ($facts var)))))
 	 (assume '((mgreaterp) lim-epsilon 0))
 	 (assume '((mlessp) lim-epsilon 1e-8))
 	 (assume '((mgreaterp) prin-inf 1e+8))
-	 (setq limit-assumptions (make-limit-assumptions global-assumptions var val direction))
+	 (setq limit-assumptions (make-limit-assumptions var val direction))
 	 (setq limit-top ()))
 	(t ()))
   limit-assumptions)
 
-(defun make-limit-assumptions (old-assumptions var val direction)
-  (let ((new-assumptions (use-old-context old-assumptions var val)))
-    (mapc #'assume new-assumptions)
+(defun make-limit-assumptions (var val direction)
+  (let ((new-assumptions)); (use-old-context old-assumptions var val)))
+;    (mapc #'assume new-assumptions)
     (cond ((or (null var) (null val))
 	   ())
 	  ((and (not (infinityp val)) (null direction))
@@ -276,34 +275,6 @@ It appears in LIMIT and DEFINT.......")
 	  (t
 	   ()))))
 
-(defun use-old-context (old-assumptions var val)
-  (setq var (ridofab var))
-  (cond ((null old-assumptions) ())
-	((not (infinityp val))
-	 (do ((list old-assumptions (cdr list))
-	      (pred) (part1) (part2) (assumptions))
-	     ((null list) assumptions)
-	   (setq pred (caar (car list))
-		 part1 (cadr (car list))
-		 part2 (caddr (car list)))
-	   (if (member pred '(mgreaterp mlessp) :test #'eq)
-	       (push (make-assump pred part1 part2 var val)
-		     assumptions))))))
-
-(defun make-assump (pred part1 part2 var val)
-  (cond ((eq part1 var)
-	 (cond ((and (free part2 '$inf)
-		     (free part2 '$minf)
-		     (free part2 '$infinity))
-		`((,pred) ,part1 ,(m+t part2 (m*t -1 val))))
-	       (t `((,pred) ,part1 ,part2))))
-	((eq part2 var)
-	 (cond ((and (free part1 '$inf)
-		     (free part1 '$minf)
-		     (free part1 '$infinity))
-		`((,pred) ,(m+t part1 (m*t -1 val)) ,part2))
-	       (t `((,pred) ,part1 ,part2))))))
-
 (defun restore-assumptions ()
 ;;;Hackery until assume and forget take reliable args. Nov. 9 1979.
 ;;;JIM.
@@ -318,10 +289,7 @@ It appears in LIMIT and DEFINT.......")
 	 (do ((list integer-info (cdr list)))
 	     ((null list) t)
 	   (i-$remove `(,(cadar list) ,(caddar list))))
-	 (setq integer-info old-integer-info)))
-  (do ((assumption-list global-assumptions (cdr assumption-list)))
-      ((null assumption-list) t)
-    (assume (car assumption-list))))
+	 (setq integer-info old-integer-info))))
 
 ;; The optional arg allows the caller to decide on the value of
 ;; preserve-direction.  Default is T, like it used to be.
@@ -1523,12 +1491,13 @@ It appears in LIMIT and DEFINT.......")
 		 (t (setq varl (m* (car l) varl))))))
 	(t (cons 1 expr))))
 
+;; if term goes to non-zero constant, replace with constant
 (defun lhsimp (term var val)
   (cond ((atom term)  term)
 	(t
-	 (let ((term-value (limit term var val 'think)))
+	 (let ((term-value (ridofab (limit term var val 'think))))
 	   (cond ((not (member term-value
-			       '($inf $minf $und $ind $infinity $zeroa $zerob 0)))
+			       '($inf $minf $und $ind $infinity 0)))
 		  term-value)
 		 (t term))))))
 
@@ -1690,6 +1659,7 @@ It appears in LIMIT and DEFINT.......")
      (simplimsc exp (caar exp) (limit (cadr exp) var val 'think)))
     ((eq (caar exp) '%tan) (simplim%tan (cadr exp)))
     ((eq (caar exp) '%atan) (simplim%atan (limit (cadr exp) var val 'think)))
+    ((eq (caar exp) '$atan2) (simplim%atan2 exp))
     ((member (caar exp) '(%sinh %cosh) :test #'eq)
      (simplimsch (caar exp) (limit (cadr exp) var val 'think)))
     ((eq (caar exp) 'mfactorial)
@@ -2685,6 +2655,39 @@ It appears in LIMIT and DEFINT.......")
 	 (m*t -1. half%pi))
 	(t `((%atan) ,exp1))))
 
+;; Most instances of atan2 are simplified to expressions in atan 
+;; by simpatan2 before we get to this point.  This routine handles
+;; tricky cases such as limit(atan2((x^2-2), x^3-2*x), x, sqrt(2), minus).
+;; Taylor and Gruntz cannot handle the discontinuity at atan(0, -1)
+(defun simplim%atan2 (exp)
+  (let* ((exp1 (cadr exp))
+	 (exp2 (caddr exp))
+	 (lim1 (limit (cadr exp) var val 'think))
+	 (lim2 (limit (caddr exp) var val 'think))
+	 (sign2 ($csign lim2)))
+    (cond ((and (zerop2 lim1)		;; atan2( 0+, + )
+		(eq sign2 '$pos))
+	   lim1)	;; result is zeroa or zerob
+	  ((and (eq lim1 '$zeroa)
+		(eq sign2 '$neg))
+	   '$%pi)
+	  ((and (eq lim1 '$zerob)	;; atan2( 0-, - )
+		(eq sign2 '$neg))
+	   (m- '$%pi))
+	  ((and (eq lim1 '$zeroa)	;; atan2( 0+, 0 )
+		(zerop2 lim2))
+	   (simplim%atan (limit (m// exp1 exp2) var val 'think)))
+	  ((and (eq lim1 '$zerob)	;; atan2( 0-, 0 )
+		(zerop2 lim2))
+	   (m+ (porm (eq lim2 '$zeroa) '$%pi)
+	       (simplim%atan (limit (m// exp1 exp2) var val 'think))))
+	  ((member lim1 '($und $infinity) :test #'eq)
+	   (throw 'limit ()))
+	  ((eq lim1 '$inf) half%pi)
+	  ((eq lim1 '$minf)
+	   (m*t -1. half%pi))
+	  (t `(($atan2) ,lim1 ,lim2)))))
+
 (defun simplimsch (sch arg)
   (cond ((real-infinityp arg)
 	 (cond ((eq sch '%sinh) arg) (t '$inf)))
@@ -2974,6 +2977,10 @@ It appears in LIMIT and DEFINT.......")
 	 (mrv (cadr exp) var))
 	((equal (length (cdr exp)) 1)
 	 (mrv (cadr exp) var))
+	((equal (length (cdr exp)) 2)
+	 (mrv-max (mrv (cadr exp) var)
+		  (mrv (caddr exp) var)
+		  var))
 	(t (tay-error "mrv not implemented" exp))))
 
 ;; takes two lists of expresions, f and g, and limit variable var.
@@ -3082,10 +3089,13 @@ It appears in LIMIT and DEFINT.......")
 				 exp)
 	      exp)))
 
+;; Generate $lhospitallim terms of taylor expansion.
+;; Ideally we would use a lazy series representation that generates
+;; more terms as higher order terms cancel.
 (defun calculate-series (exp var)
   (assume `((mgreaterp) ,var 0))
   (putprop var t 'internal);; keep var from appearing in questions to user
-  (let ((series ($taylor exp var 0 2)))
+  (let ((series ($taylor exp var 0 $lhospitallim)))
     (forget `((mgreaterp) ,var 0))
     series))
 

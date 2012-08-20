@@ -318,23 +318,6 @@ in the interval of integration.")
     (setq ans (catch 'errorsw (apply #'$limit argvec)))
     (if (eq ans t) nil ans)))
 
-#+nil
-(defun intcv (nv ind flag)
-  (let ((d (bx**n+a nv))
-	(*roots ())  (*failures ())  ($breakup ()))
-    (cond ((and (eq ul '$inf)
-		(equal ll 0)
-		(equal (cadr d) 1)) ())
-	  (t (solve (m+t 'yx (m*t -1 nv)) var 1)
-	     (format t "*roots = ~A~%" *roots)
-	     (format t "subst ~A~%" (caddar *roots))
-	     (cond (*roots
-		    (setq d (subst var 'yx (caddar *roots)))
-		    (format t "d = ~A~%" d)
-		    (cond (flag (intcv2 d ind nv))
-			  (t (intcv1 d ind nv))))
-		   (t ()))))))
-
 ;; test whether fun2 is inverse of fun1 at val
 (defun test-inverse (fun1 var1 fun2 var2 val)
   (let* ((out1 (let ((var var1))
@@ -344,12 +327,14 @@ in the interval of integration.")
     (alike1 val out2)))
 
 ;; integration change of variable
-(defun intcv (nv ind flag)
+(defun intcv (nv flag)
   (let ((d (bx**n+a nv))
 	(*roots ())  (*failures ())  ($breakup ()))
     (cond ((and (eq ul '$inf)
 		(equal ll 0)
 		(equal (cadr d) 1)) ())
+	  ((eq var 'yx)		; new var cannot be same as old var
+	   ())
 	  (t
 	   ;; This is a hack!  If nv is of the form b*x^n+a, we can
 	   ;; solve the equation manually instead of using solve.
@@ -363,8 +348,8 @@ in the interval of integration.")
 		    (let ((root (power* (div (sub 'yx a) b) (inv n))))
 		      (cond (t
 			     (setq d root)
-			     (cond (flag (intcv2 d ind nv))
-				   (t (intcv1 d ind nv))))
+			     (cond (flag (intcv2 d nv))
+				   (t (intcv1 d nv))))
 			    ))))
 		 (t
 		  (putprop 'yx t 'internal);; keep var from appearing in questions to user
@@ -378,15 +363,15 @@ in the interval of integration.")
 					     (or (real-infinityp ul)
 						 (test-inverse nv var root 'yx ul)))
 					(return root))))
-			 (cond (flag (intcv2 d ind nv))
-			       (t (intcv1 d ind nv))))
+			 (cond (flag (intcv2 d nv))
+			       (t (intcv1 d nv))))
 			(t ()))))))))
 
 ;; d: original variable (var) as a function of 'yx
 ;; ind: boolean flag
 ;; nv: new variable ('yx) as a function of original variable (var)
-(defun intcv1 (d ind nv)
-  (cond ((and (intcv2 d ind nv)
+(defun intcv1 (d nv)
+  (cond ((and (intcv2 d nv)
 	      (equal ($imagpart *ll1*) 0)
 	      (equal ($imagpart *ul1*) 0)
 	      (not (alike1 *ll1* *ul1*)))
@@ -394,8 +379,8 @@ in the interval of integration.")
 	   (defint exp1 'yx *ll1* *ul1*)))))
 
 ;; converts limits of integration to values for new variable 'yx
-(defun intcv2 (d ind nv)
-  (intcv3 d ind nv)
+(defun intcv2 (d nv)
+  (intcv3 d nv)
   (and (cond ((and (zerop1 (m+ ll ul))
 		   (evenfn nv var))
 	      (setq exp1 (m* 2 exp1)
@@ -415,10 +400,9 @@ in the interval of integration.")
 
 ;; rewrites exp, the integrand in terms of var,
 ;; into exp1, the integrand in terms of 'yx.
-(defun intcv3 (d ind nv)
+(defun intcv3 (d nv)
   (setq exp1 (m* (sdiff d 'yx)
-		 (cond (ind (subst 'yx var exp))
-		       (t (subst d var (subst 'yx nv exp))))))
+		 (subst d var (subst 'yx nv exp))))
   (setq exp1 (sratsimp exp1)))
 
 (defun integrand-changevar (d newvar exp var)
@@ -648,14 +632,6 @@ in the interval of integration.")
 ;; x = (b*y+a)/(y+1).
 ;;
 ;; (I'm guessing CV means Change Variable here.)
-#+nil
-(defun cv (exp)
-  (if (not (or (real-infinityp ll) (real-infinityp ul)))
-      (method-by-limits (intcv3 (m// (m+t ll (m*t ul var))
-				     (m+t 1. var)) nil 'yx)
-			var 0. '$inf)
-      ()))
-
 (defun cv (exp)
   (if (not (or (real-infinityp ll) (real-infinityp ul)))
       ;; FIXME!  This is a hack.  We apply the transformation with
@@ -1887,16 +1863,6 @@ in the interval of integration.")
        ;; means there was no error
        (not (eq e t))))
 
-#+nil
-(defun infr (a)
-  ;; a is the upper limit of a trig integral.
-  (let ((var '$%i)
-	(r (subin 0. a))
-	c)
-    (setq c (subin 1. (m+ a (m*t -1. r))))
-    (setq a (igprt (m* '((rat) 1. 2.) c)))
-    (cons a (m+ r (m*t (m+ c (m* -2. a)) '$%pi)))))
-
 ; returns cons of (integer_part . fractional_part) of a
 (defun infr (a)
   ;; I think we really want to compute how many full periods are in a
@@ -2044,15 +2010,6 @@ in the interval of integration.")
 
 ;; integrate(sc, var, 0, b), where sc is f(sin(x), cos(x)).  I (rtoy)
 ;; think this expects b to be less than 2*%pi.
-#+nil
-(defun intsc (sc b var)
-  (cond ((eq ($sign b) '$neg)
-	 (setq b (m*t -1 b))
-	 (setq sc (m* -1 (subin (m*t -1 var) sc)))))
-  (setq sc (partition sc var 1))
-  (cond ((setq b (intsc0 (cdr sc) b var))
-	 (m* (resimplify (car sc)) b))))
-
 (defun intsc (sc b var)
   (if (zerop1 b)
       0
@@ -2459,9 +2416,9 @@ in the interval of integration.")
        (cond ((eq arg var)
 	      (cond ((ratgreaterp 1. ll)
 		     (cond ((not (eq ul '$inf))
-			    (intcv1 (m^t '$%e (m- 'yx)) () (m- `((%log) ,var))))
-			   (t (intcv1 (m^t '$%e 'yx) () `((%log) ,var)))))))
-	     (t (intcv arg nil nil)))))))
+			    (intcv1 (m^t '$%e (m- 'yx)) (m- `((%log) ,var))))
+			   (t (intcv1 (m^t '$%e 'yx) `((%log) ,var)))))))
+	     (t (intcv arg nil)))))))
 
 
 ;; Wang 81-83.  Unfortunately, the pdf version has page 82 as all
@@ -2799,15 +2756,6 @@ in the interval of integration.")
     (setq ans (cons (m* c (m^t var i)) ans))
     (setq cl (cons c cl))))
 
-#+nil
-(defun %e-integer-coeff (exp)
-  (cond ((mapatom exp) t)
-	((and (mexptp exp)
-	      (eq (cadr exp) '$%e)
-	      (eq (ask-integer ($coeff (caddr exp) var) '$integer)
-		  '$yes))  t)
-	(t (andmapc '%e-integer-coeff (cdr exp)))))
-
 ;; Check to see if each term in exp that is of the form exp(k*x) has
 ;; an integer value for k.
 (defun %e-integer-coeff (exp)
@@ -2944,15 +2892,13 @@ in the interval of integration.")
 		       (eq ul '$inf))
 		  ;; Use the substitution s + 1 = exp(k*x).  The
 		  ;; integral becomes integrate(f(s+1)/(s+1),s,0,inf)
-		  (setq exp (subin (m+t 1. arg) (car ans)))
 		  (setq ans (m+t -1 (cadr ans))))
 		 (t
 		  ;; Use the substitution y=exp(k*x) because the
 		  ;; limits are minf to inf.
-		  (setq exp (car ans))
 		  (setq ans (cadr ans))))
 	   ;; Apply the substitution and integrate it.
-	   (intcv ans t nil)))))
+	   (intcv ans nil)))))
 
 ;; integrate(log(g(x))*f(x),x,0,inf)
 (defun dintlog (exp arg)
@@ -3079,48 +3025,6 @@ in the interval of integration.")
 ;;   integrate(y^((m+1)/n-1)*exp(-y),y,0,inf)/(n*k^((m+1)/n))
 ;;
 ;; which is the same form above.
-#+nil
-(defun ggr (e ind)
-  (prog (c *zd* zn nn* dn* nd* dosimp $%emode)
-     (declare (special *zd*))
-     (setq nd* 0.)
-     (cond (ind (setq e ($expand e))
-		(cond ((and (mplusp e)
-			    (let ((*nodiverg t))
-			      (setq e (catch 'divergent
-					(andmapcar
-					 #'(lambda (j)
-					     (ggr j nil))
-					 (cdr e))))))
-		       (cond ((eq e 'divergent) nil)
-			     (t (return (sratsimp (cons '(mplus) e)))))))))
-     (setq e (rmconst1 e))
-     (setq c (car e))
-     (setq e (cdr e))
-     (cond ((setq e (ggr1 e var))
-	    ;; e = (m b n a).  I think we want to compute
-	    ;; gamma((m+1)/n)/k^((m+1)/n)/n.
-	    ;;
-	    ;; FIXME: If n > m + 1, the integral converges.  We need
-	    ;; to check for this.
-	    (progn
-	      (format t "e = ~A~%" e)
-	      (format t "asksign ~A = ~A~%"
-		      (sub (third e) (add ($realpart (first e)) 1))
-		      ($asksign (sub (third e) (add ($realpart (first e)) 1)))))
-
-	    (setq e (apply #'gamma1 e))
-	    ;; NOTE: *zd* (Ick!) is special and might be set by maybpc.
-	    (when *zd*
-	      ;; FIXME: Why do we set %emode here?  Shouldn't we just
-	      ;; bind it?  And why do we want it bound to T anyway?
-	      ;; Shouldn't the user control that?  The same goes for
-	      ;; dosimp.
-	      ;;(setq $%emode t)
-	      (setq dosimp t)
-	      (setq e (m* *zd* e)))))
-     (cond (e (return (m* c e))))))
-
 (defun ggr (e ind)
   (prog (c *zd* zn nn* dn* nd* dosimp $%emode)
      (declare (special *zd*))
@@ -3401,16 +3305,6 @@ in the interval of integration.")
 
 ;;; Temporary fix for a lacking in taylor, which loses with %i in denom.
 ;;; Besides doesn't seem like a bad thing to do in general.
-#+nil
-(defun %i-out-of-denom (exp)
-  (let ((denom ($denom exp))
-	(den-conj nil))
-    (cond ((among '$%i denom)
-	   (setq den-conj (maxima-substitute (m- '$%i) '$%i denom))
-	   (setq exp (m* den-conj (sratsimp (m// exp den-conj))))
-	   (setq exp (simplify ($multthru  (sratsimp exp)))))
-	  (t exp))))
-
 (defun %i-out-of-denom (exp)
   (let ((denom ($denom exp)))
     (cond ((among '$%i denom)

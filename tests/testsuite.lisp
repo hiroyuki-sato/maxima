@@ -37,7 +37,7 @@
         "rtestifactor"
         ((mlist simp) "rtest_equal" 157 160)
         "rtest_abs"
-        ((mlist simp) "rtest_taylor" 88 91 94 96 99 118 119 120 121 123 124)
+        ((mlist simp) "rtest_taylor" 88 91 94 99 118 119 120 121 123 124)
         ((mlist simp) "rtest_dot")
         "rtest_mset"
         "rtest_boolean"
@@ -45,7 +45,7 @@
         ((mlist simp) "rtest_map" 2 3 4)
         ((mlist simp) "rtest_sign" 21 25 30 40 65 72 77 79)
         "rtest_algebraic"
-        ((mlist simp) "rtest_gamma" 473 474)
+        "rtest_gamma"
         "rtest_expintegral"
         "rtest_signum"
         "rtest_lambert_w"
