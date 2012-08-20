@@ -49,20 +49,6 @@ When one changes, the other does too."
 (def-lisp-shadow maxima-tempdir)
 (def-lisp-shadow maxima-userdir)
 (def-lisp-shadow maxima-objdir)
-#+nil
-(progn
-  (defmvar $maxima_tempdir)
-  (putprop '$maxima_tempdir 'shadow-string-assignment 'assign)
-  (putprop '$maxima_tempdir '*maxima-tempdir* 'lisp-shadow)
-
-  (defmvar $maxima_userdir)
-  (putprop '$maxima_userdir 'shadow-string-assignment 'assign)
-  (putprop '$maxima_userdir '*maxima-userdir* 'lisp-shadow)
-
-  (defmvar $maxima_objdir)
-  (putprop '$maxima_objdir 'shadow-string-assignment 'assign)
-  (putprop '$maxima_objdir '*maxima-objdir* 'lips-shadow)
-  )
 
 (defun shadow-string-assignment (var value)
   (cond
@@ -547,6 +533,17 @@ When one changes, the other does too."
 (defun cl-user::run ()
   "Run Maxima in its own package."
   (in-package :maxima)
+  (initialize-runtime-globals)
+  (let ((input-stream *standard-input*)
+	(batch-flag nil))
+    (catch 'to-lisp
+      (setf (values input-stream batch-flag)
+	    (process-maxima-args input-stream batch-flag))
+      (loop
+	 (with-simple-restart (macsyma-quit "Maxima top-level")
+	   (macsyma-top-level input-stream batch-flag))))))
+
+(defun initialize-runtime-globals ()
   (setf *load-verbose* nil)
   (setf *debugger-hook* #'maxima-lisp-debugger)
   ;; See discussion on the maxima list
@@ -569,30 +566,23 @@ When one changes, the other does too."
     ;; variable.  Hence we need to set it here to get our desired
     ;; behavior.
     (setf *read-default-float-format* 'double-float))
-  (let ((input-stream *standard-input*)
-	(batch-flag nil))
-    #+allegro
-    (progn
-      (set-readtable-for-macsyma)
-      (setf *read-default-float-format* 'lisp::double-float))
 
-    (catch 'to-lisp
-      (initialize-real-and-run-time)
-      (intl::setlocale)
-      (set-locale-subdir)
-      (adjust-character-encoding)
-      (set-pathnames)
-      (when (boundp '*maxima-prefix*)
-	(push (pathname (concatenate 'string *maxima-prefix*
-				     (if *maxima-layout-autotools*
-					 "/share/locale/"
-					 "/locale/")))
-	      intl::*locale-directories*))
-      (setf (values input-stream batch-flag)
-	    (process-maxima-args input-stream batch-flag))
-      (loop
-	 (with-simple-restart (macsyma-quit "Maxima top-level")
-	   (macsyma-top-level input-stream batch-flag))))))
+  #+allegro
+  (progn
+    (set-readtable-for-macsyma)
+    (setf *read-default-float-format* 'lisp::double-float))
+
+  (initialize-real-and-run-time)
+  (intl::setlocale)
+  (set-locale-subdir)
+  (adjust-character-encoding)
+  (set-pathnames)
+  (when (boundp '*maxima-prefix*)
+    (push (pathname (concatenate 'string *maxima-prefix*
+                                 (if *maxima-layout-autotools*
+                                     "/share/locale/"
+                                     "/locale/")))
+          intl::*locale-directories*)))
 
 (defun adjust-character-encoding ()
   (ignore-errors

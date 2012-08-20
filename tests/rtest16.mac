@@ -174,7 +174,7 @@ string ('"+"(a, b, '"."(c, d), '"^"(e, f)));
 
 /* Bug 626697 */
 limit(atan2(y,x),y,minf);
-'limit(atan2(y,x),y,minf);
+-%pi/2;
 
 /* Bug 1548643 */
 limit(abs(sqrt(1-1/x)-1),x,0);
@@ -422,6 +422,25 @@ limit(atan2(x,-1), x, 0);
 und;
 /* ideally should be ind */
 
+/* limit of atan2 - ID: 3539699 */
+limit(atan2(x^2-2,x^3-3*x), x, sqrt(2), minus);
+-%pi;
+
+limit(atan2(x^2-2,x^3-3*x), x, sqrt(2), plus);
+%pi;
+
+limit(atan2((x^2-2), x^3-2*x), x, sqrt(2), minus);
+atan(1/sqrt(2))-%pi;
+
+limit(atan2((x^2-2), x^3-2*x), x, sqrt(2), plus);
+atan(1/sqrt(2));
+
+limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), minus);
+%pi-atan(1/sqrt(2));
+
+limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), plus);
+-atan(1/sqrt(2));
+
 /* [ 1587235 ] limit(floor(x),x,1) wrong */
 limit(floor(x),x,0);
 und;
@@ -451,6 +470,16 @@ limit( gamma_incomplete(-1/2, -%i*x^2), x, inf);
 /* should be complex infinity */
 limit( gamma_incomplete(2, -%i*x), x, inf);
 'limit(gamma_incomplete(2,-%i*x),x,inf);
+
+/* Error integrating exp(-x)*sinh(sqrt(x)) with domain: complex - ID: 3529144 */
+/* need taylor expansion of gamma_incomplete(1/2, x) at x=0 */
+limit(gamma_incomplete(1/2,(1-2*sqrt(x))^2/4)*(1-2*sqrt(x))
+                 /(sqrt((1-2*sqrt(x))^2)), x, 1/4, minus),domain:complex;
+sqrt(%pi);
+
+limit(gamma_incomplete(1/2,(1-2*sqrt(x))^2/4)*(1-2*sqrt(x))
+                 /(sqrt((1-2*sqrt(x))^2)), x, 1/4, plus),domain:complex;
+-sqrt(%pi);
 
 /* [ 635606 ] limit(abs(log(x))) internal error, UND */
 limit(abs(log(x)), x, 0);
@@ -489,6 +518,10 @@ limit(x*expintegral_ei(x), x, 0);
 /* Limit of the factorial function - 4 problems - ID: 2841504 */
 limit(factorial(x),x,-2,plus);
 minf;
+
+/* Calculus mistake: wrong answer: limit - ID: 3534858 */
+limit((sin(x)-tan(x))/(x*(cos(x)-1)),x,0);
+1;
 
 limit(1/psi[1](x), x, inf);
 inf;
@@ -2221,3 +2254,32 @@ true;
  */
 limit(tanh(x), x, 0);
 0;
+
+/*
+ * Bug 3526111 - float erf (%i) not working
+ */
+
+closeto(float(erf(%i)) - 1.650425758797543*%i, 1e-15);
+true;
+
+/*
+ * Bug 3529992: Shi (sinh integral) wrong branch, integrate inconsistent
+ */
+closeto(float(expintegral_shi(1/2) - 0.50699674981966719583), 3e-16);
+true;
+
+/* integrate changes k[0] --> k(0) - ID: 3530767 */
+integrate(x * (x^2 + k[0])/(1 + x^2),x);
+((k[0]-1)*log(x^2+1))/2+x^2/2$
+
+/* polarform error on simple case - ID: 3517034 */
+polarform((a+1)/2 - a/2 - 1/2);
+0$
+
+polarform((a+1)/2 - a/2 - 0.5);
+0.0$
+
+polarform((a+1)/2 - a/2 - 0.5b0);
+0.0b0$
+
+

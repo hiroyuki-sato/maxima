@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -340,6 +340,9 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Establece el color de fondo en los terminales `gif', `png', `jpg'
      y `gif'. El color de fondo por defecto es blanco.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
 
      Véase también `color'.
 
@@ -5065,7 +5068,8 @@ File: maxima.info,  Node: Funciones y variables para ezunits,  Prev: Introducci�
           (%i1) load (ezunits)$
           (%i2) declare_unit_conversion (MMBtu = 10^6*Btu, kW = 1000*W);
           (%o2)                         done
-          (%i3) declare_unit_conversion (kWh = kW*hour, MWh = 1000*kWh, bell = 1800*s);
+          (%i3) declare_unit_conversion (kWh = kW*hour, MWh = 1000*kWh,
+                                         bell = 1800*s);
           (%o3)                         done
           (%i4) 1 ` kW*s `` MWh;
           Computing conversions to base units; may take a moment.
@@ -5077,7 +5081,6 @@ File: maxima.info,  Node: Funciones y variables para ezunits,  Prev: Introducci�
           (%o5)                 ---------- ` --------
                                 8242187500          2
                                              bell ft
-
 
  -- Función: constvalue (<x>)
  -- Función: declare_constvalue (<a>, <x>)
@@ -5295,7 +5298,8 @@ File: maxima.info,  Node: Funciones y variables para ezunits,  Prev: Introducci�
      multiplicativos.
 
           (%i1) load (ezunits)$
-          (%i2) declare_unit_conversion (nautical_mile = 1852 * m, fortnight = 14 * day);
+          (%i2) declare_unit_conversion (nautical_mile = 1852 * m,
+                                         fortnight = 14 * day);
           (%o2)                         done
           (%i3) 100 ` nautical_mile / fortnight `` m/s;
           Computing conversions to base units; may take a moment.
@@ -5398,7 +5402,8 @@ File: maxima.info,  Node: Funciones y variables para ezunits,  Prev: Introducci�
           (%i1) load (ezunits) $
           (%i2) declare_fundamental_dimensions (money, cattle, happiness);
           (%o2)                         done
-          (%i3) declare_fundamental_units (dollar, money, goat, cattle, smile, happiness);
+          (%i3) declare_fundamental_units (dollar, money, goat, cattle,
+                                           smile, happiness);
           (%o3)                 [dollar, goat, smile]
           (%i4) dimensions (100 ` dollar/goat/km^2);
                                        money
@@ -5564,6 +5569,8 @@ File: maxima.info,  Node: Funciones y variables para f90,  Prev: f90,  Up: f90
 
      Ejecútese `load(f90)' antes de utilizar esta función.
 
+     Véase también `fortran'.
+
      Ejemplos:
 
           (%i1) load (f90)$
@@ -5586,7 +5593,8 @@ File: maxima.info,  Node: Funciones y variables para f90,  Prev: f90,  Up: f90
           (%i1) load (f90)$
           (%i2) foo : sin (3*x + 1) - cos (7*x - 2);
           (%o2)              sin(3 x + 1) - cos(7 x - 2)
-          (%i3) with_stdout ("foo.f90", f90 (x = 0.25, y = 0.625, 'foo = foo, 'stop, 'end));
+          (%i3) with_stdout ("foo.f90",
+                             f90 (x=0.25, y=0.625, 'foo=foo, 'stop, 'end));
           (%o3)                         false
           (%i4) printfile ("foo.f90");
           x = 0.25
@@ -6157,9 +6165,9 @@ File: maxima.info,  Node: Introducción a graphs,  Next: Funciones y variables p
 
 El paquete `graphs' permite trabajar con estructuras de grafos y
 digrafos en Maxima. Tanto los grafos como los digrafos son de
-estructura simples (no tienen ni aristas mÃºltiples ni bucles), pero
-los digrafos pueden tener una arista dirigida desde <u> hasta <v> y
-otra desde <v> hasta <u>.
+estructura simples (no tienen ni aristas mÃºltiples ni bucles), pero los
+digrafos pueden tener una arista dirigida desde <u> hasta <v> y otra
+desde <v> hasta <u>.
 
    Los grafos se representan internamente como listas de adyacencia y se
 implementan como estructuras de lisp. Los vértices se identifican por
@@ -7634,7 +7642,8 @@ File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducció
           (%i1) load(graphs)$
           (%i2) t: tutte_graph();
           (%o2)                         GRAPH
-          (%i3) draw_graph(t, redraw=true, fixed_vertices=[1,2,3,4,5,6,7,8,9]);
+          (%i3) draw_graph(t, redraw=true,
+                              fixed_vertices=[1,2,3,4,5,6,7,8,9]);
           (%o3)                         done
 
 
@@ -7808,10 +7817,6 @@ File: maxima.info,  Node: Introducción a grobner,  Next: Funciones y variables 
 ===========================
 
 `grobner' es un paquete para operar con bases de Groebner en Maxima.
-
-Se puede encontrar un tutorial sobre _Bases de Groebner_ en
-
-`http://www.geocities.com/CapeCanaveral/Hall/3131/'
 
 Para hacer uso de las funciones de este paquete es necesario cargar
 previamente el archivo `grobner.lisp':
@@ -8139,6 +8144,20 @@ pertence a I }.
 
  -- Función: poly_gcd (<poly1>, <poly2>, <varlist>)
      Devuelve el MCD de <poly1> y <poly2>.
+
+     Véanse también `ezgcd', `gcd', `gcdex' y `gcdivide'.
+
+     Ejemplo:
+
+          (%i1) p1:6*x^3+19*x^2+19*x+6;
+                                  3       2
+          (%o1)                6 x  + 19 x  + 19 x + 6
+          (%i2) p2:6*x^5+13*x^4+12*x^3+13*x^2+6*x;
+                            5       4       3       2
+          (%o2)          6 x  + 13 x  + 12 x  + 13 x  + 6 x
+          (%i3) poly_gcd(p1, p2, [x]);
+                                      2
+          (%o3)                    6 x  + 13 x + 6
 
  -- Función: poly_grobner_equal (<polylist1>, <polylist2>, <varlist>)
      `poly_grobner_equal' comprueba si dos bases de Groebner generan el

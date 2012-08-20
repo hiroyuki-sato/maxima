@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1064,16 +1064,6 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra 
      Calcula el determinante de la matriz <M> por el algoritmo del
      árbol menor de Johnson-Gentleman. El resultado devuelto por
      `newdet' tiene formato CRE.
-
- -- Declaración: nonscalar
-     Hace que los átomos se comporten como hace una lista o matriz con
-     respecto del operador `.' del la multiplicación no conmutativa.
-
-
- -- Función: nonscalarp (<expr>)
-     Devuelve `true' si <expr> no es escalar, es decir, si contiene
-     átomos declarados como no escalares, listas o matrices.
-
 
  -- Función: permanent (<M>)
      Calcula la permanente de la matriz <M> por el algoritmo del árbol
@@ -4212,7 +4202,7 @@ continuación:
 
  -- Función: cograd ()
      Calcula el gradiente covariante de una función escalar permitiendo
-     al usuario elegir el nombre del vector correspondiente, como
+     al usuario elegir el nombre del vector correspondiente, tal como
      ilustra el ejemplo que acompaña a la definición de la función
      `contragrad'.
 
@@ -5048,11 +5038,11 @@ File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series, 
 ======================
 
  -- Función: bashindices (<expr>)
-     Transforma la expresión <expr> dándole a cada suma y producto un
-     único índice. Esto le da a `changevar' mayor precisión cuando
+     Transforma la expresión <expr> dándole a cada sumatorio y producto
+     un único índice. Esto le da a `changevar' mayor precisión cuando
      opera con sumas y productos. La forma del único índice es
      `j<number>'. La cantidad <number> se determina en función de
-     `gensumnum', valor que puede cambiar el usuario.  Por ejemplo,
+     `gensumnum', valor que puede cambiar el usuario. Por ejemplo,
      haciendo `gensumnum:0$'.
 
 
@@ -5078,14 +5068,32 @@ File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series, 
 
  -- Función: intosum (<expr>)
      Mueve los factores multiplicativos que están fuera de un sumatorio
-     hacia dentro de éste. Si el índice aparece en la expresión
-     exterior, entonce `intosum' busca un índice razonable, lo mismo
-     que hace con `sumcontract'. Se trata de la operación contraria a
-     extraer factores comunes de los sumatorios.
+     hacia dentro de éste. Si el índice del sumatorio aparece en la
+     expresión exterior, entonces `intosum' busca un índice razonable,
+     lo mismo que hace con `sumcontract'. Se trata de la operación
+     contraria a extraer factores comunes de los sumatorios.
 
      En algunos caos puede ser necesario hacer `scanmap (multthru,
      <expr>)' antes que `intosum'.
 
+     Ejemplo:
+
+          (%i1) sum(2*x^2*n^k, k , 0, inf);
+                                         inf
+                                         ====
+                                       2 \      k
+          (%o1)                     2 x   >    n
+                                         /
+                                         ====
+                                         k = 0
+          (%i2) intosum(%);
+                                    inf
+                                    ====
+                                    \        k  2
+          (%o2)                      >    2 n  x
+                                    /
+                                    ====
+                                    k = 0
 
  -- Función: product (<expr>, <i>, <i_0>, <i_1>)
      Representa el producto de los valores de `expr' según el índice
@@ -5152,8 +5160,8 @@ File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series, 
      Valor por defecto: `false'
 
      Si `simpsum' vale `true', se simplifica el resultado de un
-     sumatorio `sum'. Esta simplificación podrá producir en ocasiones
-     una expresión compacta.  Si `simpsum' vale `false' o si se utiliza
+     sumatorio `sum'.  Esta simplificación podrá producir en ocasiones
+     una expresión compacta. Si `simpsum' vale `false' o si se utiliza
      la forma apostrofada `'sum', el valor es una forma nominal que
      representa la notación sigma habitual en matemáticas.
 
@@ -5263,16 +5271,36 @@ File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series, 
 
 
  -- Función: sumcontract (<expr>)
-     Combina todos los sumatorios de una suma cuyos límites inferiores
-     y superiores difieren por constantes. El resultado es una
-     expresión que contiene un sumatorio para conjunto de tales
-     sumatorios. La función `sumcontract' combina todos los sumatorios
-     compatibles y utiliza uno de los índices de uno de los sumatorios
-     si puede, si no formará un índice que sea razonable.
+     Combina todos los sumatorios de una suma cuyos límites inferiores y
+     superiores difieren por constantes. El resultado es una expresión
+     que contiene un sumatorio por cada conjunto de tales sumatorios,
+     más todos los demás términos adicionales que tuvieron que
+     extraerse para formar la suma. La función `sumcontract' combina
+     todos los sumatorios compatibles y utiliza uno de los índices de
+     uno de los sumatorios si puede, si no formará un índice que sea
+     razonable.
 
      Puede ser necesario hacer `intosum (<expr>)' antes que
      `sumcontract'.
 
+     Ejemplo:
+
+          (%i1) 'sum(1/l,l,1,n)+'sum(k,k,1,n+2);
+                                   n        n + 2
+                                  ====      ====
+                                  \     1   \
+          (%o1)                    >    - +  >    k
+                                  /     l   /
+                                  ====      ====
+                                  l = 1     k = 1
+          (%i2) sumcontract(%);
+                                      n
+                                     ====
+                                     \          1
+          (%o2)                2 n +  >    (l + -) + 3
+                                     /          l
+                                     ====
+                                     l = 1
 
  -- Variable opcional: sumexpand
      Valor por defecto: `false'
@@ -6147,15 +6175,40 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
      escribiendo `load ("bffac")'. Véase también `bern'.
 
 
+ -- Función: chinese ([<r_1>, ..., <r_n>], [<m_1>, ..., <m_n>])
+     Resulve el sistema de congruencias `x = r_1 mod m_1', ..., `x =
+     r_n mod m_n'.  Los restos <r_n> pueden ser enteros arbitrarios,
+     mientras que los módulos <m_n> deben ser positivos y primos dos a
+     dos.
+
+          (%i1) mods : [1000, 1001, 1003, 1007];
+          (%o1)                   [1000, 1001, 1003, 1007]
+          (%i2) lreduce('gcd, mods);
+          (%o2)                               1
+          (%i3) x : random(apply("*", mods));
+          (%o3)                         685124877004
+          (%i4) rems : map(lambda([z], mod(x, z)), mods);
+          (%o4)                       [4, 568, 54, 624]
+          (%i5) chinese(rems, mods);
+          (%o5)                         685124877004
+          (%i6) chinese([1, 2], [3, n]);
+          (%o6)                    chinese([1, 2], [3, n])
+          (%i7) %, n = 4;
+          (%o7)                              10
+
  -- Función: cf (<expr>)
-     Transforma <expr> a fracciones continuas. La expresión <expr> debe
-     contener fracciones continuas y raíces cuadradas de números
-     enteros. Los operandos de la expresión pueden combinarse con
-     operadores aritméticos. Además de fracciones continuas y raíces
-     cuadradas, los factores de la expresión deben ser enteros o
-     números racionales. Maxima no tiene más conocimiento sobre
-     operaciones con fracciones continuas que el que aporta la función
-     `cf'.
+     Calcula aproximaciones con fracciones continuas. <expr> es una
+     expresión que contiene fracciones continuas, raíces cuadradas de
+     enteros, y números reales (enteros, racionales, decimales en coma
+     flotante y decimales de precisión arbitraria). `cf' calcula
+     expansiones exactas de números racionales, pero las expansiones de
+     nÃºmeros decimales de coma flotante se truncan de acuerdo con el
+     valor de `ratepsilon', y la de los de decimales de precisión
+     arbitraria (bigfloats) lo hacen respecto de `10^(-fpprec)'.
+
+     En las expresiones se pueden combinar operandos con operadores
+     aritméticos.  Maxima no conoce operaciones con fracciones
+     continuas más allá de la función `cf'.
 
      La función `cf' evalúa sus argumentos después de asignar a la
      variable `listarith' el valor `false', retornando una fracción
@@ -6163,10 +6216,10 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
 
      Una fracción continua `a + 1/(b + 1/(c + ...))' se representa como
      la lista `[a, b, c, ...]', donde los elementos `a', `b', `c', ...
-     se evalúan como enteros. La expresión <expr> puede contener
-     también  `sqrt (n)' donde `n' es un entero; en tal caso, `cf'
-     devolverá tantos términos de la fracción continua como indique el
-     valor de la variable `cflength' multiplicado por el período.
+     se evalúan como enteros. La expresión <expr> puede contener también
+     `sqrt (n)' donde `n' es un entero; en tal caso, `cf' devolverá
+     tantos términos de la fracción continua como indique el valor de
+     la variable `cflength' multiplicado por el período.
 
      Una fracción continua puede reducirse a un número evaluando la
      representación aritmética que devuelve `cfdisrep'. Véase también
@@ -6295,6 +6348,17 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
           (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
 
 
+ -- Variable opcional: factors_only
+     Valor por defecto: `false'
+
+     Controla el resultado devuelto por `ifactors'. El valor por defecto
+     `false' hace que `ifactors' no dé información sobre las
+     multiplicidades de los factores primos calculados. Cuando
+     `factors_only' vale `true', `ifactors' solo devuelve la lista de
+     factores primos.
+
+     Para ejemplos, véase `ifactors'.
+
  -- Función: fib (<n>)
      Devuelve el <n>-ésimo número de Fibonacci. La llamada `fib(0)' es
      igual a 0, `fib(1)' devuelve 1 y `fib (-<n>)' es igual a
@@ -6335,19 +6399,26 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
 
 
  -- Función: ifactors (<n>)
-     Devuelve la factorización del argumento <n>, siendo éste un número
-     entero positivo. Si `n=p1^e1..pk^nk' es la descomposición de <n>
-     en números primos, `ifactors' devuelve `[[p1, e1], ... , [pk,
-     ek]]'.
+     Devuelve la factorización del entero positivo <n>. Si
+     `n=p1^e1..pk^nk' es la descomposición de <n> en números primos,
+     `ifactors' devuelve `[[p1, e1], ... , [pk, ek]]'.
 
-     Los métodos de factorización son las divisones tentativas hasta el
-     9973, así como los  métodos rho de Pollard y el de la curva
-     elíptica.
+     Los métodos de factorización se basan en divisiones tentativas con
+     números primos hasta 9973, en los métodos rho y p-1 de Pollard y
+     en curvas elípticas.
+
+     La respuesta que se obtiene de `ifactors' está controlada por la
+     variable opcional `factors_only'. El valor por defecto `false'
+     hace que `ifactors' no dé información sobre las multiplicidades de
+     los factores primos calculados.  Cuando `factors_only' vale
+     `true', `ifactors' solo devuelve la lista de factores primos.
 
           (%i1) ifactors(51575319651600);
           (%o1)     [[2, 4], [3, 2], [5, 2], [1583, 1], [9050207, 1]]
           (%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
           (%o2)                        51575319651600
+          (%i3) ifactors(51575319651600), factors_only : true;
+          (%o3)                   [2, 3, 5, 1583, 9050207]
 
 
  -- Función: igcdex (<n>, <k>)
@@ -6501,11 +6572,11 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
      determinística de la prueba de Miller-Rabin. En tal caso, si
      `primep (<n>)' devuelve `true', entonces <n> es un número primo.
 
-     Para <n> mayor que 341550071728321 `primep' realiza un número de
-     pruebas de seudo-primalidad de Miller-Rabin igual a
-     `primep_number_of_tests' y una prueba de seudo-primalidad de
-     Lucas. La probabilidad de que <n> pase una prueba de Miller-Rabin
-     es menor que 1/4. Con el valor por defecto de
+     Para <n> mayor que 341550071728321 `primep' realiza
+     `primep_number_of_tests' pruebas de seudo-primalidad de
+     Miller-Rabin y una prueba de seudo-primalidad de Lucas. La
+     probabilidad de que un número compuesto <n> pase una prueba de
+     Miller-Rabin es menor que 1/4. Con el valor por defecto de
      `primep_number_of_tests', que es 25, la probabilidad de que <n>
      sea compuesto es menor que 10^-15.
 

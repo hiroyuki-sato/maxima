@@ -1431,9 +1431,14 @@
 	      (typep b 'complex-bigfloat))
 	  (complex (bigfloat 1))
 	  (bigfloat 1))
-      (if (and (zerop a) (plusp (realpart b)))
-	  (* a b)
-	  (exp (* b (log a))))))
+      (cond ((and (zerop a) (plusp (realpart b)))
+	     (* a b))
+	    ((= b (truncate b))
+	     ;; Use the numeric^number method because it can be much
+	     ;; more accurate when b is an integer.
+	     (expt a (truncate b)))
+	    (t
+	     (exp (* b (log a)))))))
 
 (defmethod expt ((a cl:number) (b numeric))
   (if (zerop b)
@@ -1442,9 +1447,12 @@
 	      (typep b 'complex-bigfloat))
 	  (complex (bigfloat 1))
 	  (bigfloat 1))
-      (if (and (zerop a) (plusp (realpart b)))
-	  (* a b)
-	  (exp (* b (log (bigfloat a)))))))
+      (cond ((and (zerop a) (plusp (realpart b)))
+	     (* a b))
+	    ((= b (truncate b))
+	     (expt a (truncate b)))
+	    (t
+	     (exp (* b (log (bigfloat a))))))))
 
 (defmethod expt ((a numeric) (b cl:number))
   (if (zerop b)
@@ -1998,3 +2006,103 @@
 (defmethod %pi ((x complex-bigfloat))
   (declare (ignore x))
   (to (maxima::bcons (maxima::fppi))))
+
+;;; %e - External
+;;;
+;;;   Return a value of e with the same precision as the argument.
+;;;   For rationals, we return a single-float approximation.
+(defmethod %e ((x cl:rational))
+  (declare (ignore x))
+  (cl:coerce maxima::%e-val 'single-float))
+
+(defmethod %e ((x cl:float))
+  (cl:float maxima::%e-val x))
+
+(defmethod %e ((x bigfloat))
+  (declare (ignore x))
+  (to (maxima::bcons (maxima::fpe))))
+
+(defmethod %e ((x cl:complex))
+  (cl:float maxima::%e-val (realpart x)))
+
+(defmethod %e ((x complex-bigfloat))
+  (declare (ignore x))
+  (to (maxima::bcons (maxima::fpe))))
+
+;;;; Useful routines
+
+;;; Evaluation of continued fractions
+
+(defvar *debug-cf-eval*
+  nil
+  "When true, enable some debugging prints when evaluating a
+  continued fraction.")
+
+;; Max number of iterations allowed when evaluating the continued
+;; fraction.  When this is reached, we assume that the continued
+;; fraction did not converge.
+(defvar *max-cf-iterations*
+  10000
+  "Max number of iterations allowed when evaluating the continued
+  fraction.  When this is reached, we assume that the continued
+  fraction did not converge.")
+
+;; Lentz's algorithm for evaluating continued fractions.
+;;
+;; Let the continued fraction be:
+;;
+;;      a1    a2    a3
+;; b0 + ----  ----  ----
+;;      b1 +  b2 +  b3 +
+;;
+;;
+;; Then LENTZ expects two functions, each taking a single fixnum
+;; index.  The first returns the b term and the second returns the a
+;; terms as above for a give n.
+(defun lentz (bf af)
+  (let ((tiny-value-count 0))
+    (flet ((value-or-tiny (v)
+	     ;; If v is zero, return a "tiny" number.
+	     (if (zerop v)
+		 (progn
+		   (incf tiny-value-count)
+		   (etypecase v
+		     ((or double-float cl:complex)
+		      (sqrt least-positive-normalized-double-float))
+		     ((or bigfloat complex-bigfloat)
+		      ;; What is a "tiny" bigfloat?  Bigfloats of
+		      ;; unbounded exponents, so we need small, but
+		      ;; not zero.  Arbitrarily choose an exponent of
+		      ;; 50 times the precision.
+		      (expt 10 (- (* 50 maxima::$fpprec))))))
+		 v)))
+      (let* ((f (value-or-tiny (funcall bf 0)))
+	     (c f)
+	     (d 0)
+	     (eps (epsilon f)))
+	(loop
+	   for j from 1 upto *max-cf-iterations*
+	   for an = (funcall af j)
+	   for bn = (funcall bf j)
+	   do (progn
+		(setf d (value-or-tiny (+ bn (* an d))))
+		(setf c (value-or-tiny (+ bn (/ an c))))
+		(when *debug-cf-eval*
+		  (format t "~&j = ~d~%" j)
+		  (format t "  an = ~s~%" an)
+		  (format t "  bn = ~s~%" bn)
+		  (format t "  c  = ~s~%" c)
+		  (format t "  d  = ~s~%" d))
+		(let ((delta (/ c d)))
+		  (setf d (/ d))
+		  (setf f (* f delta))
+		  (when *debug-cf-eval*
+		    (format t "  dl= ~S (|dl - 1| = ~S)~%" delta (abs (1- delta)))
+		    (format t "  f = ~S~%" f))
+		  (when (<= (abs (- delta 1)) eps)
+		    (return-from lentz (values f j tiny-value-count)))))
+	   finally
+	     (error 'simple-error
+		    :format-control "~<Continued fraction failed to converge after ~D iterations.~%    Delta = ~S~>"
+		    :format-arguments (list *max-cf-iterations* (/ c d))))))))
+

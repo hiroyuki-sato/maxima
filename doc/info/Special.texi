@@ -634,6 +634,13 @@ The incomplete upper gamma function A&S 6.5.2:
 $$\Gamma\left(a , z\right)=\int_{z}^{\infty }{t^{a-1}\,e^ {- t }\;dt}$$
 @end tex
 
+See also @code{gamma_expand} for controlling how
+@code{gamma_incomplete} is expressed in terms of elementary functions
+and @code{erfc}.
+
+Also see the related functions @code{gamma_incomplete_regularized} and
+@code{gamma_incomplete_generalized}.
+
 @opencatbox
 @category{Gamma and factorial functions} @category{Special functions}
 @closecatbox
@@ -655,6 +662,12 @@ gamma_incomplete_regularized(a, z) =
 @tex
 $${\it Q}\left(a , z\right)={{\Gamma\left(a , z\right)}\over{\Gamma\left(a\right)}}$$
 @end tex
+
+See also @code{gamma_expand} for controlling how
+@code{gamma_incomplete} is expressed in terms of elementary functions
+and @code{erfc}.
+
+Also see @code{gamma_incomplete}.
 
 @opencatbox
 @category{Gamma and factorial functions} @category{Special functions}
@@ -682,11 +695,44 @@ gamma_incomplete_generalized(a, z1, z2) =
 $$\Gamma\left(a , z_{1}, z_{2}\right)=\int_{z_{1}}^{z_{2}}{t^{a-1}\,e^ {- t }\;dt}$$
 @end tex
 
+Also see @code{gamma_incomplete} and @code{gamma_incomplete_regularized}.
+
 @opencatbox
 @category{Gamma and factorial functions} @category{Special functions}
 @closecatbox
 @end deffn
 
+
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} gamma_expand
+Default value: @code{false}
+
+@code{gamma_expand} controls expansion of @code{gamma_incomplete}.
+When @code{gamma_expand} is @code{true}, @code{gamma_incomplete(v,z)}
+is expanded in terms of
+@code{z}, @code{exp(z)}, and @code{erfc(z)} when possible.
+
+@example
+(%i1) gamma_incomplete(2,z);
+(%o1)                       gamma_incomplete(2, z)
+(%i2) gamma_expand:true;
+(%o2)                                true
+(%i3) gamma_incomplete(2,z);
+                                           - z
+(%o3)                            (z + 1) %e
+@group
+(%i4) gamma_incomplete(3/2,z);
+                              - z   sqrt(%pi) erfc(sqrt(z))
+(%o4)               sqrt(z) %e    + -----------------------
+                                               2
+@end group
+@end example
+
+@opencatbox
+@category{Gamma and factorial functions} @category{Simplification flags and variables}
+@closecatbox
+
+@end defvr
 @c -----------------------------------------------------------------------------
 @anchor{gammalim}
 @defvr {Option variable} gammalim
@@ -1919,12 +1965,26 @@ shows.  Note that @var{L} is the generalized Laguerre polynomial.
 @end deffn
 
 @deffn {Function} lambert_w (@var{z})
-The principal branch of Lambert's W funtion W(z), the solution of 
-@code{z = W(z) * exp(W(z))}.
+The principal branch of Lambert's W function W(z), the solution of 
+@code{z = W(z) * exp(W(z))}.  (DLMF 4.13)
 @opencatbox
 @category{Special functions}
 @closecatbox
 @end deffn
+
+@deffn {Function} generalized_lambert_w (@var{k}, @var{z})
+The @var{k}-th branch of Lambert's W function W(z), the solution of 
+@code{z = W(z) * exp(W(z))}. (DLMF 4.13)
+
+The principal branch, denoted Wp(z) in DLMF, is @code{lambert_w(z) = generalized_lambert_w(0,z)}.
+
+The other branch with real values, denoted Wm(z) in DLMF, is @code{generalized_lambert_w(-1,z)}.
+@opencatbox
+@category{Special functions}
+@closecatbox
+@end deffn
+
+
 
 @deffn {Function} nzeta (@var{z})
 The Plasma Dispersion Function 

@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -238,6 +238,8 @@ Lectura y escritura
 * Comentarios::
 * Archivos::
 * Funciones y variables para lectura y escritura::
+* Funciones y variables para salida TeX::
+* Funciones y variables para salida Fortran::
 
 Polinomios
 
@@ -550,7 +552,13 @@ simplex
 simplification
 
 * Introducción a simplification::
-* Funciones y variables para simplification::
+* Paquete absimp::
+* Paquete facexp::
+* Paquete functs::
+* Paquete ineq::
+* Paquete rducon::
+* Paquete scifac::
+* Paquete sqdnst::
 
 solve_rec
 
@@ -621,9 +629,10 @@ ejemplo de sesión:
      (%i4) quit();
      [wfs@chromium]$
 
-   Maxima puede buscar en las páginas info. La instrucción `describe'
-mostrará el comando o comandos que contengan una cierta cadena. La
-interrogación `?' (búsqueda exacta) y la doble interrogación `??'
+   Maxima puede hacer consultas en la documentación. La instrucción
+`describe' mostrará información sobre una función o la lista de todas
+las funciones y variables que contengan el texto pasado a `describe'.
+La interrogación `?' (búsqueda exacta) y la doble interrogación `??'
 (búsqueda aproximada) son abreviaturas de la instrucción `describe':
 
      (%i1) ?? integ
@@ -685,10 +694,10 @@ interrogación `?' (búsqueda exacta) y la doble interrogación `??'
 
      (%o1)                                true
 
-   Para usar un resultado de forma posterior, usted puede asignar dicho
+   Para usar posteriormente un resultado, se puede asignar dicho
 resultado a una variable o referirse a él por medio de la etiqueta
-asociada (%i* o %o*). Adicionalmente  puede usar `%' para referirse al
-último resultado obtenido.
+asociada (`%i*' o `%o*').  Además, se puede utilizar `%' para referirse
+al último resultado obtenido.
 
      (%i1) u: expand ((x + y)^6);
             6        5       2  4       3  3       4  2      5      6
@@ -848,10 +857,42 @@ File: maxima.info,  Node: Funciones y variables para la detección e informe de f
      `bug_report' retorna una cadena vacía `""'.
 
  -- Función: build_info ()
-     Imprime un resumen de los parámetros que se usaron para construir
-     la versión de Maxima que se está usando.
+     Devuelve un resumen de los parÃ¡metros con los que se ha compilado
+     Maxima en formato de estructura `defstruct'. Los campos de la
+     estructura son: `version', `timestamp', `host', `lisp_name' y
+     `lisp_version'.  Cuando `display2d' toma el valor `true', la
+     estructura se muestra como una pequeña tabla.
 
-     `build_info' retorna una cadena vacía  `""'.
+     Véase también `bug_report'.
+
+     Ejemplos:
+
+          (%i1) build_info ();
+          (%o1)
+          Maxima version: "5.26.0_16_gb72c64c_dirty"
+          Maxima build date: "2012-01-29 12:29:04"
+          Host type: "i686-pc-linux-gnu"
+          Lisp implementation type: "CMU Common Lisp"
+          Lisp implementation version: "CVS release-19a 19a-release-20040728 + minimal debian patches"
+          (%i2) x : build_info ()$
+          (%i3) x@version;
+          (%o3)               5.26.0_16_gb72c64c_dirty
+          (%i4) x@timestamp;
+          (%o4)                  2012-01-29 12:29:04
+          (%i5) x@host;
+          (%o5)                   i686-pc-linux-gnu
+          (%i6) x@lisp_name;
+          (%o6)                    CMU Common Lisp
+          (%i7) x@lisp_version;
+          (%o7)
+              CVS release-19a 19a-release-20040728 + minimal debian patches
+          (%i8) x;
+          (%o8)
+          Maxima version: "5.26.0_16_gb72c64c_dirty"
+          Maxima build date: "2012-01-29 12:29:04"
+          Host type: "i686-pc-linux-gnu"
+          Lisp implementation type: "CMU Common Lisp"
+          Lisp implementation version: "CVS release-19a 19a-release-20040728 + minimal debian patches"
 
 
 File: maxima.info,  Node: Ayuda,  Next: Línea de comandos,  Prev: Detección e informe de fallos,  Up: Top
@@ -1219,7 +1260,6 @@ sistema almacenan el último resultado devuelto por Maxima o la última
 entrada efectuada por el usuario. Los siguientes símbolos indican
 variables y funciones para la gestión de las marcas:
 
-
    __          _
    %           %%           %th
    inchar      linechar     outchar
@@ -1234,13 +1274,11 @@ las listas `labels', `values' y `myoptions'.  Los siguientes símbolos
 indican variables y funciones relacionadas con las listas informativas
 y variables opcionales.
 
-
    infolists     labels        values
    myoptions     optionset
 
    Otras listas informativas, que se describirán en otros capítulos,
 son:
-
 
    functions      arrays         macros
    rules          aliases        dependencies
@@ -1255,7 +1293,6 @@ haya variables o funciones definidas, o en el que se eliminen
 hipótesis, propiedades o definiciones concretas, se dispone de las
 siguientes funciones:
 
-
    kill     reset     reset_verbosely
 
 Otras instrucciones
@@ -1268,7 +1305,6 @@ sesión de Maxima o para cambiar a una sesión de Lisp. También es
 posible conocer el tiempo que ha necesitado Maxima para realizar un
 cálculo. Para este tipo de cuestiones, Maxima dispone de las siguientes
 instrucciones:
-
 
    ?            ??
    playback     prompt     showtime
@@ -1288,7 +1324,6 @@ del valor que guarde la variable opcional `sqrtdispflag'.
    Los siguientes símbolos y variables opcionales controlan la salida
 de resultados por consola:
 
-
    %edispflag         absboxchar       display2d
    display_format_internal             exptdispflag
    expt               nexpt            ibase
@@ -1297,7 +1332,6 @@ de resultados por consola:
    sqrtdispflag       stardisp         ttyoff
 
    Con las siguientes funciones es posible formatear los resultados:
-
 
    disp               display          dispterms
    grind              ldisp            ldisplay
@@ -1416,13 +1450,13 @@ File: maxima.info,  Node: Funciones y variables para la línea de comandos,  Next
 
  -- Variable del sistema: %%
      En una sentencia compuesta, como `block', `lambda' o `(<s_1>, ...,
-     <s_n>)', `%%' es el valor de la sentencia previa.  Por ejemplo,
+     <s_n>)', `%%' es el valor de la sentencia previa.
 
-     Cuando se escribe al comienzo de una sentencia compuesta, o fuera
-     de ella, `%%' no está definido.
+     La variable `%%' no estÃ¡ definida cuando se utiliza en la primera
+     sentencia, o fuera de una sentencia compuesta.
 
-     `%%' es reconocido por `batch' y `load', interpretándose de la
-     misma manera que se acaba de indicar.
+     `%%' se puede utilizar con `batch' y `load', manteniendo en ambos
+     casos el mismo significado que en el modo interactivo.
 
      Véase también `%'
 
@@ -1450,8 +1484,8 @@ File: maxima.info,  Node: Funciones y variables para la línea de comandos,  Next
 
      Dentro de una sentencia compuesta, el valor de `%%' puede
      inspeccionarse en un punto de interrupción que se abra ejecutando
-     la función `break'. Por ejemplo, escribiendo `%%;' en el siguiente
-     ejemplo se obtiene `42'.
+     la función `break'.  Por ejemplo, escribiendo `%%;' en el
+     siguiente ejemplo se obtiene `42'.
 
           (%i4) block (a: 42, break ())$
 
@@ -1459,7 +1493,6 @@ File: maxima.info,  Node: Funciones y variables para la línea de comandos,  Next
           _%%;
           42
           _
-
 
  -- Función: %th (<i>)
      Es el valor de la expresión de la <i>-ésima salida anterior.  Esto
@@ -2092,6 +2125,9 @@ File: maxima.info,  Node: Funciones y variables para la impresión,  Prev: Funcio
      Si `display2d' vale `false', la salida por consola es una cadena
      unidimensional, en lugar de una expresión bidimensional.
 
+     Véase también `leftjust' para cambiar la justificación a la
+     izquierda o el centrado de la ecuación.
+
      Ejemplo:
 
           (%i1) x/(x^2+1);
@@ -2644,7 +2680,6 @@ capacidades de memoria del sistema.
 
    Funciones disponibles para los números enteros y racionales:
 
-
    integerp       numberp       nonnegintegerp
    oddp           evenp
    ratnump        rationalize
@@ -2689,7 +2724,6 @@ decimal de doble precisión, o de precisión arbitraria, respectivamente:
 
    Funciones y variables disponibles para números decimales:
 
-
    float        floatnump
    bfloat       bfloatp       fpprec
    float2bf     bftorat       ratepsilon
@@ -2712,7 +2746,6 @@ multiplicación de números complejos se puede utilizar la función
 `expand'.
 
    Funciones disponibles para los números complejos:
-
 
    realpart     imagpart      rectform     polarform
    cabs         carg          conjugate    csign
@@ -3393,8 +3426,8 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
      `[' y `]' marcan, respectivamente, el comienzo y el final de una
      lista.
 
-     `[' y `]' también sse utilizan para indicar los subíndices de una
-     lista no de un array.
+     `[' y `]' también se utilizan para indicar los subíndices de una
+     lista o de un array.
 
      Ejemplos:
 
@@ -3462,27 +3495,27 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
      valores liga <x_2> con cada elemento de <list_2>, .... El número
      de elementos en el resultado será el producto del número de
      elementos en cada lista. Cada variable <x_i> debe ser un símbolo y
-     no será evaluado. La lista de argumentos será evaluada una vez al
+     no será evaluado.  La lista de argumentos será evaluada una vez al
      comienzo de la iteración.
 
-     Por ejemplo:
-          (%i1) create_list(x^i,i,[1,3,7]);
-                           3   7
-          (%o1)       [x, x , x ]
+     Ejemplos:
+
+          (%i1) create_list (x^i, i, [1, 3, 7]);
+                                          3   7
+          (%o1)                      [x, x , x ]
 
      Con una doble iteración:
 
-          (%i1) create_list([i,j],i,[a,b],j,[e,f,h]);
-          (%o1) [[a, e], [a, f], [a, h], [b, e], [b, f], [b, h]]
+          (%i1) create_list ([i, j], i, [a, b], j, [e, f, h]);
+          (%o1)   [[a, e], [a, f], [a, h], [b, e], [b, f], [b, h]]
 
      En lugar de <list_i> se pueden suministrar dos argumentos cada uno
      de los cuales debería poder evaluarse a un número, los cuales
      serán los límites inferior y superior, ambos inclusive, para cada
      iteración.
 
-     Por ejemplo:
-          (%i1) create_list([i,j],i,[1,2,3],j,1,i);
-          (%o1) [[1, 1], [2, 1], [2, 2], [3, 1], [3, 2], [3, 3]]
+          (%i1) create_list ([i, j], i, [1, 2, 3], j, 1, i);
+          (%o1)   [[1, 1], [2, 1], [2, 2], [3, 1], [3, 2], [3, 3]]
 
      Nótese que los límites o lista para la variable `j' pueden depender
      del valor actual de `i'.
@@ -3535,8 +3568,7 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
      eliminados.
 
           (%i1) [is (equal (0, 0)), is (equal (0, 0.0)), is (equal (0, 0b0))];
-
-          `rat' replaced 0.0 by 0/1 = 0.0
+          rat: replaced 0.0 by 0/1 = 0.0
           `rat' replaced 0.0B0 by 0/1 = 0.0B0
           (%o1)                  [true, true, true]
           (%i2) [is (0 = 0), is (0 = 0.0), is (0 = 0b0)];
@@ -3644,26 +3676,46 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
      contrario.
 
 
- -- Función: makelist (<expr>, <i>, <i_0>, <i_1>)
+ -- Función: makelist ()
+ -- Función: makelist (<expr>, <n>)
+ -- Función: makelist (<expr>, <i>, <i_max>)
+ -- Función: makelist (<expr>, <i>, <i_0>, <i_max>)
+ -- Función: makelist (<expr>, <i>, <i_0>, <i_max>, <step>)
  -- Función: makelist (<expr>, <x>, <list>)
-     Construye y devuelve una lista, siendo cada uno de sus elementos
-     generados por <expr>.
+     El primer formato, `makelist ()', crea una lista vacía. El segundo
+     formato, `makelist (<expr>)', crea una lista con <expr> como único
+     elemento. `makelist (<expr>, <n>)' crea una lista de <n> elementos
+     generados a partir de <expr>.
 
-     La llamada `makelist (<expr>, <i>, <i_0>, <i_1>)' devuelve una
-     lista cuyo `j'-ésimo elemento es igual a `ev (<expr>, <i>=j)',
-     tomando  `j' los valores enteros entre  <i_0> y <i_1>.
+     El formato más general, `makelist (<expr>, <i>, <i_0>, <i_max>,
+     <step>)', devuelve la lista de elementos obtenidos al aplicar `ev
+     (<expr>, <i>=<j>)' a los elementos <j> de la secuencia <i_0>,
+     <i_0> + <step>, <i_0> + 2*<step>, ..., siendo <|j|> menor o igual
+     que <|i_max|>.
 
-     La llamada `makelist (<expr>, <x>, <list>)' devuelve una lista
-     cuyo `j'-ésimo elemento es igual a `ev (<expr>, <x>=<list>[j])',
-     tomando  `j' los valores enteros entre  1 through `length
-     (<list>)'.
+     El incremento <step> puede ser un número (positivo o negativo) o
+     una expresión. En caso de omitirse, se utilizará 1 como valor por
+     defecto.  Si se omiten  <i_0> y <step>, se le asignará a ambos 1
+     como valor por defecto.
+
+     `makelist (<expr>, <x>, <list>)' devuelve una lista, cuyo
+     `j'-ésimo elemento es igual a `ev (<expr>, <x>=<list>[j])' tomando
+     `j' valores desde 1 hasta `length (<list>)'.
 
      Ejemplos:
 
-          (%i1) makelist(concat(x,i),i,1,6);
+          (%i1) makelist (concat (x,i), i, 6);
           (%o1)               [x1, x2, x3, x4, x5, x6]
-          (%i2) makelist(x=y,y,[a,b,c]);
+          (%i2) makelist (x=y, y, [a, b, c]);
           (%o2)                 [x = a, x = b, x = c]
+          (%i3) makelist (x^2, x, 3, 2*%pi, 2);
+          (%o3)                        [9, 25]
+          (%i4) makelist (random(6), 4);
+          (%o4)                     [2, 0, 2, 5]
+          (%i5) flatten (makelist (makelist (i^2, 3), i, 4));
+          (%o5)        [1, 1, 1, 4, 4, 4, 9, 9, 9, 16, 16, 16]
+          (%i6) flatten (makelist (makelist (i^2, i, 3), 4));
+          (%o6)         [1, 4, 9, 1, 4, 9, 1, 4, 9, 1, 4, 9]
 
 
  -- Función: member (<expr_1>, <expr_2>)
@@ -3731,42 +3783,29 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
 
      Ejemplos:
 
-          (%i1) ll:[];
-          (%o1)                          []
-          (%i2) push(x,ll);
-          (%o2)                          [x]
-          (%i3) push(x^2+y,ll);
+          (%i1) load ("basic")$
+          (%i2) ll: [];
+          (%o2)                          []
+          (%i3) push (x, ll);
+          (%o3)                          [x]
+          (%i4) push (x^2+y, ll);
                                            2
-          (%o3)                      [y + x , x]
-          (%i4) a:push("string",ll);
+          (%o4)                      [y + x , x]
+          (%i5) a: push ("string", ll);
                                                2
-          (%o4)                  [string, y + x , x]
-          (%i5) pop(ll);
-          (%o5)                        string
-          (%i6) pop(ll);
+          (%o5)                  [string, y + x , x]
+          (%i6) pop (ll);
+          (%o6)                        string
+          (%i7) pop (ll);
                                             2
-          (%o6)                        y + x
-          (%i7) pop(ll);
-          (%o7)                           x
-          (%i8) ll;
-          (%o8)                          []
-          (%i9) a;
+          (%o7)                        y + x
+          (%i8) pop (ll);
+          (%o8)                           x
+          (%i9) ll;
+          (%o9)                          []
+          (%i10) a;
                                                2
-          (%o9)                  [string, y + x , x]
-
- -- Función: unique (<L>)
-     Devuelve la lista <L> sin redundancias, es decir, sin elementos
-     repetidos
-
-     Cuando ninguno de los elementos de <L> está repetido, `unique'
-     devuelve una réplica de <L>, no la propia <L>.
-
-     Si <L> no es una lista, `unique' devuelve <L>.
-
-     Ejemplo:
-
-          (%i1) unique ([1, %pi, a + b, 2, 1, %e, %pi, a + b, [1]]);
-          (%o1)              [1, 2, %e, %pi, [1], b + a]
+          (%o10)                 [string, y + x , x]
 
  -- Función: rest (<expr>, <n>)
  -- Función: rest (<expr>)
@@ -3799,68 +3838,139 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
 
  -- Función: sort (<L>, <P>)
  -- Función: sort (<L>)
-     Ordena la lista <L> de acuerdo con el predicado `P' de dos
-     argumentos, de tal manera que `<P> (<L>[k], <L>[k + 1])' es `true'
-     (verdadero) para cualesquiera dos elementos sucesivos.  El
-     predicado se puede especificar como nombre de una función o de un
-     operador infijo binario, o como una expresión `lambda'.  Si se
-     especifica con el nombre de un operador, este nombre debe
-     encerrarse con "comillas dobles".
+     `sort(<L>, <P>)' ordena la lista <L> de acuerdo con el predicado
+     `P' de dos argumentos, el cual define un preorden total sobre los
+     elementos de <L>.  Si `<P>(a, b)' vale `true', entonces `a'
+     aparece antes que `b' en el resultado. Si ninguna de las
+     expresiones `<P>(a, b)' y `<P>(b, a)' valen `true', entonces `a' y
+     `b' son equivalentes y aparecen en el resultado en el mismo orden
+     que a la entrada; esto es, `sort' es un orden estable.
 
-     La lista ordenada se devuelve como un objeto nuevo, de manera que
-     el argumento <L> no se ve alterado.  A fin de construir el valor
-     de retorno, `sort' hace una copia previa de los elementos de <L>.
+     Si tanto `<P>(a, b)' como `<P>(b, a)' valen ambos `true' para
+     algunos elementos de <L>, entonces <P> no es un predicado de orden
+     correcto, siento entonces el resultado indefinido. Si `<P>(a, b)'
+     toma un valor diferente a `true' o `false', entonces `sort'
+     devuelve un error.
 
-     Si el predicado <P> no ordena totalmente los elementos de <L>,
-     entonces `sort' puede seguir ejecutándose hasta el final sin emitir
-     errores, pero el resultado no es predecible.  La función muestra
-     un mensaje de error en caso de que el predicado devuelva algo
-     diferente de `true' o `false'.
+     El predicado puede especificarse como el nombre de una función, de
+     una operación binaria infija o como una expresión `lambda'. Si se
+     especifica con el nombre de un operador, dicho nombre debe
+     encerrarse con comillas dobles.
 
-     La llamada `sort (<L>)' equivale a `sort (<L>, orderlessp)'; esto
-     es, el orden por defecto es el ascendente, tal como queda definido
-     por `orderlessp'. Todos los átomos y expresiones de Maxima son
-     comparables para `orderlessp'.
+     La lista ordenada se devuelve como un nuevo objeto, no
+     modificándose el argumento <L>.
 
-     El predicado `ordergreatp' ordena una lista en sentido
-     descendente. El predicado `ordermagnitudep' ordena según sus
-     respectivas normas, números, símbolos constantes con valores
-     numéricos y expresiones con valores constantes. Cualesquiera otros
-     elementos de la lista <L> se ordenan con `orderlessp'. El
-     predicado `"<"' permite también la ordenación por norma, pero no
-     ordena completamente los elementos de la lista <L> que no sean
-     comparables respecto de `"<"'.
+     `sort(<L>)' equivale a `sort(<L>, orderlessp)'.
+
+     La ordenación por defecto es ascendente, tal como queda
+     determinada por `orderlessp'.  El predicado `ordergreatp' ordena
+     las listas en orden descendente.
+
+     Todos los átomos y expresiones de Maxima son comparables respecto
+     de los predicados `orderlessp' y `ordergreatp'.
+
+     Los operadores `<' y `>' ordenan números, constantes y expresiones
+     constantes por magnitud. Nótese que `orderlessp' y `ordergreatp'
+     no ordenan números, constantes y expresiones constantes por
+     magnitud.
+
+     `ordermagnitudep' ordena números, constantes y expresiones
+     constantes de igual modo que lo hace `<', y cualesquiera otros
+     elementos lo hace igual que `orderlessp'.
 
      Ejemplos:
 
-          (%i1) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x]);
-                         5
-          (%o1) [- 17, - -, 3, 7.55, 11, 2.9b1, b + a, 9 c, 19 - 3 x]
-                         2
-          (%i2) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x],
-                    ordergreatp);
-                                                             5
-          (%o2) [19 - 3 x, 9 c, b + a, 2.9b1, 11, 7.55, 3, - -, - 17]
-                                                             2
-          (%i3) sort ([%pi, 3, 4, %e, %gamma]);
-          (%o3)                [3, 4, %e, %gamma, %pi]
-          (%i4) sort ([%pi, 3, 4, %e, %gamma], "<");
-          (%o4)                [%gamma, %e, 3, %pi, 4]
-          (%i5) my_list : [[aa, hh, uu], [ee, cc], [zz, xx, mm, cc], [%pi, %e]];
-          (%o5) [[aa, hh, uu], [ee, cc], [zz, xx, mm, cc], [%pi, %e]]
-          (%i6) sort (my_list);
-          (%o6) [[%pi, %e], [aa, hh, uu], [ee, cc], [zz, xx, mm, cc]]
-          (%i7) sort (my_list, lambda ([a, b],
-                                       orderlessp (reverse (a), reverse (b))));
-          (%o7) [[%pi, %e], [ee, cc], [zz, xx, mm, cc], [aa, hh, uu]]
+     `sort' ordena una lista respecto de un predicado de dos argumentos
+     que define un preorden total en los elementos de la lista.
 
-     Ordena según sus normas números, constantes y expresiones, así
-     como cualesquiera otros elementos en orden ascendente:
+          (%i1) sort ([1, a, b, 2, 3, c], 'orderlessp);
+          (%o1)                  [1, 2, 3, a, b, c]
+          (%i2) sort ([1, a, b, 2, 3, c], 'ordergreatp);
+          (%o2)                  [c, b, a, 3, 2, 1]
 
-          (%i8) sort([%i,1+%i,2*x,minf,inf,%e,sin(1),0,1,2,3,1.0,1.0b0],
-                ordermagnitudep);
-          (%o8)  [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i, %i + 1, 2 x]
+     El predicado puede especificarse con el nombre de una función, de
+     un operador binario infijo o una expresión `lambda'. Si se
+     especifica con el nombre de un operador, dicho nombre debe
+     encerrarse con comillas dobles.
 
+          (%i1) L : [[1, x], [3, y], [4, w], [2, z]];
+          (%o1)           [[1, x], [3, y], [4, w], [2, z]]
+          (%i2) foo (a, b) := a[1] > b[1];
+          (%o2)                 foo(a, b) := a  > b
+                                              1    1
+          (%i3) sort (L, 'foo);
+          (%o3)           [[4, w], [3, y], [2, z], [1, x]]
+          (%i4) infix (">>");
+          (%o4)                          >>
+          (%i5) a >> b := a[1] > b[1];
+          (%o5)                   a >> b := a  > b
+                                             1    1
+          (%i6) sort (L, ">>");
+          (%o6)           [[4, w], [3, y], [2, z], [1, x]]
+          (%i7) sort (L, lambda ([a, b], a[1] > b[1]));
+          (%o7)           [[4, w], [3, y], [2, z], [1, x]]
+
+     `sort(<L>)' equivale a `sort(<L>, orderlessp)'.
+
+          (%i1) L : [a, 2*b, -5, 7, 1 + %e, %pi];
+          (%o1)             [a, 2 b, - 5, 7, %e + 1, %pi]
+          (%i2) sort (L);
+          (%o2)             [- 5, 7, %e + 1, %pi, a, 2 b]
+          (%i3) sort (L, 'orderlessp);
+          (%o3)             [- 5, 7, %e + 1, %pi, a, 2 b]
+
+     La ordenación por defecto es ascendente, tal como queda
+     determinada por `orderlessp'.  El predicado `ordergreatp' ordena
+     las listas en orden descendente.
+
+          (%i1) L : [a, 2*b, -5, 7, 1 + %e, %pi];
+          (%o1)                    [a, 2 b, - 5, 7, %e + 1, %pi]
+          (%i2) sort (L);
+          (%o2)                    [- 5, 7, %e + 1, %pi, a, 2 b]
+          (%i3) sort (L, 'ordergreatp);
+          (%o3)                    [2 b, a, %pi, %e + 1, 7, - 5]
+
+     Todos los átomos y expresiones de Maxima son comparables respecto
+     de los predicados `orderlessp' y `ordergreatp'.
+
+          (%i1) L : [11, -17, 29b0, 9*c, 7.55, foo(x, y), -5/2, b + a];
+                                                           5
+          (%o1)  [11, - 17, 2.9b1, 9 c, 7.55, foo(x, y), - -, b + a]
+                                                           2
+          (%i2) sort (L, orderlessp);
+                          5
+          (%o2)  [- 17, - -, 7.55, 11, 2.9b1, b + a, 9 c, foo(x, y)]
+                          2
+          (%i3) sort (L, ordergreatp);
+                                                            5
+          (%o3)  [foo(x, y), 9 c, b + a, 2.9b1, 11, 7.55, - -, - 17]
+                                                            2
+
+     Los operadores `<' y `>' ordenan números, constantes y expresiones
+     constantes por magnitud. Nótese que `orderlessp' y `ordergreatp'
+     no ordenan números, constantes y expresiones constantes por
+     magnitud.
+
+          (%i1) L : [%pi, 3, 4, %e, %gamma];
+          (%o1)                [%pi, 3, 4, %e, %gamma]
+          (%i2) sort (L, ">");
+          (%o2)                [4, %pi, 3, %e, %gamma]
+          (%i3) sort (L, ordergreatp);
+          (%o3)                [%pi, %gamma, %e, 4, 3]
+
+     `ordermagnitudep' ordena números, constantes y expresiones
+     constantes de igual modo que lo hace `<', y cualesquiera otros
+     elementos lo hace igual que `orderlessp'.
+
+          (%i1) L : [%i, 1+%i, 2*x, minf, inf, %e, sin(1), 0, 1, 2, 3, 1.0, 1.0b0];
+          (%o1) [%i, %i + 1, 2 x, minf, inf, %e, sin(1), 0, 1, 2, 3, 1.0,
+                                                                     1.0b0]
+          (%i2) sort (L, ordermagnitudep);
+          (%o2) [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i,
+                                                               %i + 1, 2 x]
+          (%i3) sort (L, orderlessp);
+          (%o3) [0, 1, 1.0, 2, 3, %e, %i, %i + 1, inf, minf, sin(1),
+                                                                1.0b0, 2 x]
 
  -- Función: sublist (<list>, <p>)
      Devuelve la lista de elementos de <list> para los cuales el
@@ -3883,13 +3993,12 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
      Ejemplos:
 
           (%i1) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b],
-                              lambda ([x], x='b));
+                                 lambda ([x], x='b));
           (%o1)                     [2, 3, 7, 9]
-          (%i2) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b],
-                              symbolp);
+          (%i2) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], symbolp);
           (%o2)                  [1, 2, 3, 4, 7, 9]
           (%i3) sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0],
-                              identity);
+                                 identity);
           (%o3)                       [1, 4, 5]
           (%i4) assume (x < -1);
           (%o4)                       [x < - 1]
@@ -3898,6 +4007,20 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
           (%i6) sublist_indices ([x > 0, x < 0, x < -2], identity);
           (%o6)                          [2]
 
+
+ -- Función: unique (<L>)
+     Devuelve la lista <L> sin redundancias, es decir, sin elementos
+     repetidos
+
+     Cuando ninguno de los elementos de <L> está repetido, `unique'
+     devuelve una réplica de <L>, no la propia <L>.
+
+     Si <L> no es una lista, `unique' devuelve <L>.
+
+     Ejemplo:
+
+          (%i1) unique ([1, %pi, a + b, 2, 1, %e, %pi, a + b, [1]]);
+          (%o1)              [1, 2, %e, %pi, [1], b + a]
 
  -- Función: tenth (<expr>)
      Devuelve el décimo elemento de la lista o expresión <expr>. Véase
@@ -3985,7 +4108,6 @@ valores de funciones, y de funciones subindicadas.
    Se puede encontrar más información en las descripciones de las
 funciones. Los siguientes símbolos y funciones de Maxima permiten
 trabajar con arrays:
-
 
    array         arrayapply     arrayinfo
    arraymake     arrays         fillarray
@@ -4213,6 +4335,12 @@ File: maxima.info,  Node: Funciones y variables para los arrays,  Prev: Introduc
           (%i5) arrays;
           (%o5)                     [aa, bb, cc]
 
+
+ -- Función: arraysetapply (<A>, [<i_1>, ..., <i_n>], <x>)
+     Asigna <x> a `<A>[<i_1>, ..., <i_n>]', siendo <A> un array y
+     <i_1>, ..., <i_n> enteros.
+
+     `arraysetapply' evalúa sus argumentos..
 
  -- Función: fillarray (<A>, <B>)
      Rellena el array <A> con los valores de <B>, que puede ser una
@@ -4671,7 +4799,6 @@ capítulo, en la que se incluye el nombre del operador, el rango de
 enlace por la izquierda `lbp', el rango de enlace por la derecha `rbp',
 el tipo de operador y un ejemplo, para finalizar, en cada caso, con su
 formato interno tal como es leída por el analizador sintáctico.
-
 
 
 Operador  lbp rbp  Tipo     Ejemplo  Formato interno
@@ -6385,14 +6512,13 @@ File: maxima.info,  Node: Funciones y variables para la evaluación,  Prev: Intro
 
      Los interruptores que tienen la propiedad `evflag' son:
 
-
         algebraic           cauchysum       demoivre
         dotscrules          %emode          %enumer
         exponentialize      exptisolate     factorflag
         float               halfangles      infeval
         isolate_wrt_times   keepfloat       letrat
         listarith           logabs          logarc
-        logexpand           lognegint       lognumer
+        logexpand           lognegint
         m1pbranch           numer_pbranch   programmode
         radexpand           ratalgdenom     ratfac
         ratmx               ratsimpexpons   simp
@@ -6451,7 +6577,6 @@ File: maxima.info,  Node: Funciones y variables para la evaluación,  Prev: Intro
      propiedad `evfun'.
 
      Las funciones que tienen la propiedad `evfun' por defecto son:
-
 
         bfloat          factor       fullratsimp
         logcontract     polarform    radcan
@@ -6689,12 +6814,12 @@ alfabéticos son las letras de `A' a `Z' y `a' a `z', junto con  `%' y
 `_'.
 
    Maxima distingue minúsculas y mayúsculas. Los identificadores `foo',
-`FOO' y `Foo' son distintos.  Véase *Note Lisp y Maxima:: para más
+`FOO' y `Foo' son distintos.  Véase *note Lisp y Maxima:: para más
 información.
 
    Un identificador en Maxima es un símbolo Lisp que comienza con el
 símbolo dólar `$'.  Cualquier otro símbolo de Lisp va precedido de la
-interrogación `?' cuando aparece en Maxima.  Véase *Note Lisp y
+interrogación `?' cuando aparece en Maxima.  Véase *note Lisp y
 Maxima:: para más información.
 
    Ejemplos:
