@@ -49,7 +49,7 @@
 	  $aliases $arrays $askexp $assumescalar $backsubst $berlefact
 	  $beta_args_sum_to_integer $bftorat $bftrunc $boxchar
 	  $breakup $cauchysum $change_filedefaults $compgrind $context
-	  $contexts $current_let_rule_package $cursordisp $debugmode
+	  $contexts $current_let_rule_package $debugmode
 	  $default_let_rule_package $demoivre $dependencies $derivabbrev
 	  $derivsubst $detout $dispflag $display2d $displayset
 	  $display_format_internal $doallmxops $domain $domxexpt $domxmxops
@@ -65,7 +65,7 @@
 	  $genindex $gensumnum $globalsolve $gradefs $halfangles $homog_hack
 	  $inchar $infeval $inflag $intfaclim
 	  $isolate_wrt_times $keepfloat $labels $leftjust $letrat $letvarsimp
-	  $let_rule_packages $liflag $linechar $linedisp $linenum $linel
+	  $let_rule_packages $liflag $linechar $linenum $linel
 	  $linsolvewarn $linsolve_params $lispdisp $listarith $listconstvars
 	  $lmxchar $logarc $logconcoeffp $logexpand $lognegint $lognumer
 	  $logsimp $m1pbranch $macroexpansion $macros $maperror $mapprint
@@ -108,7 +108,7 @@
 	  *transl-debug* *transl-file-debug* *warned-fexprs*
 	  *warned-mode-vars* *warned-un-declared-vars* *zexptsimp? |-1//2|
 	  -sqrt3//2 |1//2| adn* aexprp algfac* algnotexact
-	  aliaslist alpha *alphabet* arrays aryp assigns *atp* atvars *baktrcl*
+	  alpha *alphabet* arrays aryp assigns *atp* atvars *baktrcl*
 	  bfhalf bfmhalf bigfloat%e bigfloat%pi bigfloatone bigfloatzero
 	  bindlist bvars *mdebug*
 	  declares defined_variables defintdebug derivflag derivlist
@@ -119,16 +119,16 @@
 	  generate-atan2 genpairs genvar half%pi half%pi3 hmodulus
 	  implicit-real in-p infinitesimals infinities inratsimp inside-mprog
 	  integerl *islinp* lexprs limit-answers limitp linel
-	  linelable lnorecurse local loclist low* maplp master-mesfile mdop
+	  *linelabel* local loclist low* maplp master-mesfile mdop
 	  meta-prop-l meta-prop-p mfexprp minpoly* mlocp mm* modulus *mopl*
 	  mplc* mprogp mproplist mspeclist mspeclist2 msump munbindp
 	  need-prog? negprods negsums nn* noevalargs noitems nonintegerl
 	  *nounl* *nounsflag* opers opers-list outargs1 outargs2 outfiles
-	  preserve-direction prods putl radcanp radpe rd*
+	  preserve-direction prods putl radcanp rd*
 	  real-infinities realonlyratnum *refchkl* return-mode returns rulefcnl
 	  rulesw scanmapp sfindex sign-imag-errp simplimplus-problems
 	  *small-primes* specials sqrt3//2 state-pdl $stringdisp substp
-	  sums tellratlist timesinp timesp tr-abort tr-progret tr-unique
+	  sums tellratlist timesinp tr-abort tr-progret tr-unique
 	  transl-file translate-time-evalables transp
 	  tstack typel user-mesfile user-timesofar varlist wflag
 	  $wtlevel $cflength $weightlevels *trunclist $taylordepth

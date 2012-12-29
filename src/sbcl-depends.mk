@@ -11,9 +11,9 @@ $(SBCL_MAXIMA) : clmacs.lisp
 $(SBCL_MAXIMA) : commac.lisp
 $(SBCL_MAXIMA) : mormac.lisp
 $(SBCL_MAXIMA) : compat.lisp
+$(SBCL_MAXIMA) : transm.lisp
 $(SBCL_MAXIMA) : getopt.lisp
 $(SBCL_MAXIMA) : command-line.lisp
-$(SBCL_MAXIMA) : defopt.lisp
 $(SBCL_MAXIMA) : defcal.lisp
 $(SBCL_MAXIMA) : maxmac.lisp
 $(SBCL_MAXIMA) : mopers.lisp
@@ -190,7 +190,6 @@ $(SBCL_MAXIMA) : rat3c.lisp
 $(SBCL_MAXIMA) : rat3e.lisp
 $(SBCL_MAXIMA) : nrat4.lisp
 $(SBCL_MAXIMA) : ratout.lisp
-$(SBCL_MAXIMA) : transm.lisp
 $(SBCL_MAXIMA) : transl.lisp
 $(SBCL_MAXIMA) : transs.lisp
 $(SBCL_MAXIMA) : trans1.lisp
@@ -221,7 +220,6 @@ $(SBCL_MAXIMA) : intpol.lisp
 $(SBCL_MAXIMA) : nparse.lisp
 $(SBCL_MAXIMA) : displa.lisp
 $(SBCL_MAXIMA) : nforma.lisp
-$(SBCL_MAXIMA) : ldisp.lisp
 $(SBCL_MAXIMA) : grind.lisp
 $(SBCL_MAXIMA) : spgcd.lisp
 $(SBCL_MAXIMA) : ezgcd.lisp

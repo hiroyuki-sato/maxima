@@ -189,7 +189,8 @@
 	       (cond ((cdr p)
 		      (setq leftover (cons (car p) leftover))
 		      (setq p (cdr p))
-		      (go a1)))
+		      (go a1))
+                      (leftover (setq leftover (cons (car p) leftover)) (setq p nil) (go a1)))
 	       (setq boundlist (cons (caaar p) boundlist))
 	       (emit (list 'msetq
 			   (caaar p)
@@ -285,7 +286,8 @@
 	       (cond ((cdr p)
 		      (setq leftover (cons (car p) leftover))
 		      (setq p (cdr p))
-		      (go a1)))
+		      (go a1))
+                     (leftover (setq leftover (cons (car p) leftover)) (setq p nil) (go a1)))
 	       (setq boundlist (cons (caaar p) boundlist))
 	       (emit (list 'msetq
 			   (caaar p)
@@ -664,36 +666,6 @@
 	   ((atom p) (compileatom e p))
 	   ((eq (caar p) 'mplus) (compileplus e p))
 	   ((eq (caar p) 'mtimes) (compiletimes e p))
-	   ((and (eq (caar p) 'mexpt)
-		 (fixedmatchp (cadr p)))
-	    (emit (list 'setq
-			(genref)
-			(list 'findexpon
-			      e
-			      (memqargs (cadr p))
-			      ''mexpt)))
-	    (compilematch (car reflist) (caddr p)))
-	   ((and (eq (caar p) 'mexpt)
-		 (fixedmatchp (cadr p)))
-	    (emit (list 'setq
-			(genref)
-			(list 'findbase
-			      e
-			      (memqargs (caddr p))
-			      ''mexpt)))
-	    (compilematch (car reflist) (cadr p)))
-	   ((eq (caar p) 'mexpt)
-	    (emit (list 'setq
-			(genref)
-			(list 'findbe e)))
-	    (emit (list 'setq
-			(genref)
-			(list 'kar (cadr reflist))))
-	    (compilematch (car reflist) (cadr p))
-	    (emit (list 'setq
-			(cadr reflist)
-			(list 'kdr (cadr reflist))))
-	    (compilematch (cadr reflist) (caddr p)))
 	   (t (compileatom (list 'kaar e)
 			   (caar p))
 	      (emit (list 'setq

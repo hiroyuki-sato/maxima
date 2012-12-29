@@ -374,8 +374,7 @@
 
 (putprop '%gamma_incomplete
   `((a z)
-    ,(lambda (a unused)
-       (declare (ignore unused))
+    ,(lambda (a z)
        (cond ((member ($sign a) '($pos $pz))
               ;; The derivative wrt a in terms of hypergeometric_regularized 2F2
               ;; function and the Generalized Incomplete Gamma function 
@@ -947,8 +946,8 @@
 		(merror (intl:gettext "gamma_incomplete: continued fractions failed for gamma_incomplete(~:M, ~:M).") a x))
 	    (when *debug-gamma* 
 	      (format t "~&in coninued fractions:~%")
-	      (format t "~&   : i = ~A~%" i)
-	      (format t "~&   : h = ~A~%" h))
+	      (mformat t "~&   : i = ~M~%" i)
+	      (mformat t "~&   : h = ~M~%" h))
 	    (setq d (add (mul an d) b))
 	    (when (eq ($sign (sub (simplify (list '(mabs) d)) gm-min)) '$neg)
 	      (setq d gm-min))
@@ -998,15 +997,15 @@
              (merror (intl:gettext "gamma_incomplete: series expansion failed for gamma_incomplete(~:M, ~:M).") a x))
          (when *debug-gamma* 
            (format t "~&GAMMA-INCOMPLETE in series:~%")
-           (format t "~&   : i    = ~A~%" i)
-           (format t "~&   : ap   = ~A~%" ap)
-           (format t "~&   : x/ap = ~A~%" (div x ap))
-           (format t "~&   : del  = ~A~%" del)
-           (format t "~&   : sum  = ~A~%" sum))
+           (mformat t "~&   : i    = ~M~%" i)
+           (mformat t "~&   : ap   = ~M~%" ap)
+           (mformat t "~&   : x/ap = ~M~%" (div x ap))
+           (mformat t "~&   : del  = ~M~%" del)
+           (mformat t "~&   : sum  = ~M~%" sum))
          (when (eq ($sign (sub (simplify (list '(mabs) del)) 
                                (mul (simplify (list '(mabs) sum)) gm-eps)))
                    '$neg)
-           (when *debug-gamma* (format t "~&Series converged.~%"))
+           (when *debug-gamma* (mformat t "~&Series converged to ~M.~%" sum))
            (return 
              (sub (simplify (list '(%gamma) a))
                   ($rectform
@@ -1886,15 +1885,15 @@
     ;; Check for numerical evaluation
 
     ((float-numerical-eval-p z)
-     (erf ($float z)))
+     (bigfloat::bf-erf ($float z)))
     ((complex-float-numerical-eval-p z)
      (complexify 
-       (complex-erf (complex ($float ($realpart z)) ($float ($imagpart z))))))
+       (bigfloat::bf-erf (complex ($float ($realpart z)) ($float ($imagpart z))))))
     ((bigfloat-numerical-eval-p z)
-     (bfloat-erf ($bfloat z)))
+     (to (bigfloat::bf-erf (bigfloat:to ($bfloat z)))))
     ((complex-bigfloat-numerical-eval-p z)
-     (complex-bfloat-erf
-       (add ($bfloat ($realpart z)) (mul '$%i ($bfloat ($imagpart z))))))
+     (to (bigfloat::bf-erf
+	  (bigfloat:to (add ($bfloat ($realpart z)) (mul '$%i ($bfloat ($imagpart z))))))))
 
     ;; Argument simplification
     
@@ -1936,19 +1935,40 @@
   ;; We use the slatec routine for float values.
   (slatec:derf (float z)))
 
-;;; This would be the code when using gamma-incomplete.
-;  (realpart
-;    (*
-;      (signum z)
-;      (- 1.0 
-;        (* (/ (sqrt (float pi))) (gamma-incomplete 0.5 (expt z 2.0)))))))
+;; Compute erf(z) using the relationship
+;;
+;;   erf(z) = sqrt(z^2)/z*(1 - gamma_incomplete(1/2,z^2)/sqrt(%pi))
+;;
+;; When z is real sqrt(z^2)/z is signum(z).  For complex z,
+;; sqrt(z^2)/z = 1 if -%pi/2 < arg(z) <= %pi/2 and -1 otherwise.
+;;
+;; This relationship has serious round-off issues when z is small
+;; because gamma_incomplete(1/2,z^2)/sqrt(%pi) is near 1.
+;;
+;; complex-erf is for (lisp) complex numbers; bfloat-erf is for real
+;; bfloats, and complex-bfloat-erf is for complex bfloats.  Care is
+;; taken to return real results for real arguments and imaginary
+;; results for imaginary arguments
+;;
+;; Pure imaginary z with Im(z) < 0 causes trouble for Lisp implementations
+;; which recognize signed zero, so just avoid Im(z) < 0 altogether.
 
 (defun complex-erf (z)
+  (if (< (imagpart z) 0.0)
+    (conjugate (complex-erf-upper-half-plane (conjugate z)))
+    (complex-erf-upper-half-plane z)))
+
+(defun complex-erf-upper-half-plane (z)
   (let ((result
           (*
-            (/ (sqrt (expt z 2)) z)
+	    (if (< (realpart z) 0.0) ;; only test needed in upper half plane
+		-1
+	      1)
             (- 1.0 
-              (* (/ (sqrt (float pi))) (gamma-incomplete 0.5 (expt z 2.0)))))))
+              ;; GAMMA-INCOMPLETE returns conjugate when z is pure imaginary
+              ;; with Im(z) < 0 and Lisp implementation recognizes signed zero.
+              ;; Good thing we are in the upper half plane.
+              (* (/ (sqrt (float pi))) (gamma-incomplete 0.5 (* z z)))))))
     (cond
       ((= (imagpart z) 0.0)
        ;; Pure real argument, the result is real
@@ -1960,6 +1980,7 @@
         result))))
 
 (defun bfloat-erf (z)
+  ;; Warning!  This has round-off problems when abs(z) is very small.
   (let ((1//2 ($bfloat '((rat simp) 1 2))))
   ;; The argument is real, the result is real too
     ($realpart
@@ -1971,6 +1992,7 @@
             (bfloat-gamma-incomplete 1//2 ($bfloat (power z 2)))))))))
 
 (defun complex-bfloat-erf (z)
+  ;; Warning!  This has round-off problems when abs(z) is very small.
   (let* (($ratprint nil)
          (1//2 ($bfloat '((rat simp) 1 2)))
          (result
@@ -1992,6 +2014,77 @@
       (t
        ;; A general complex result
        result))))
+
+(in-package :bigfloat)
+
+;; Erf(z) for all z.  Z must be a CL real or complex number or a
+;; BIGFLOAT or COMPLEX-BIGFLOAT object.  The result will be of the
+;; same type as Z.
+(defun bf-erf (z)
+  (cond ((typep z 'cl:real)
+	 ;; Use Slatec derf, which should be faster than the series.
+	 (maxima::erf z))
+	((<= (abs z) 0.476936)
+	 ;; Use the series A&S 7.1.5 for small x:
+	 ;; 
+	 ;; erf(z) = 2*z/sqrt(%pi) * sum((-1)^n*z^(2*n)/n!/(2*n+1), n, 0, inf)
+	 ;;
+	 ;; The threshold is approximately erf(x) = 0.5.  (Doesn't
+	 ;; have to be super accurate.)  This gives max accuracy when
+	 ;; using the identity  erf(x) = 1 - erfc(x).
+	 (let ((z^2 (* z z)))
+	   (/ (* 2 z (sum-power-series z^2
+				       #'(lambda (k)
+					   (let ((2k (+ k k)))
+					     (- (/ (- 2k 1)
+						   k
+						   (+ 2k 1)))))))
+	      (sqrt (%pi z)))))
+	(t
+	 ;; The general case.
+	 (etypecase z
+	   (cl:real (maxima::erf z))
+	   (cl:complex (maxima::complex-erf z))
+	   (bigfloat
+	    (bigfloat (maxima::$bfloat (maxima::$expand (maxima::bfloat-erf (maxima::to z))))))
+	   (complex-bigfloat
+	    (bigfloat (maxima::$bfloat (maxima::$expand (maxima::complex-bfloat-erf (maxima::to z))))))))))
+
+(defun bf-erfc (z)
+  ;; Compute erfc(z) via 1 - erf(z) is not very accurate if erf(z) is
+  ;; near 1.  Wolfram says
+  ;;
+  ;; erfc(z) = 1 - sqrt(z^2)/z * (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2, z^2))
+  ;;
+  ;; For real(z) > 0, sqrt(z^2)/z is 1 so
+  ;;
+  ;; erfc(z) = 1 - (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2))
+  ;;         = 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2)
+  ;;
+  ;; For real(z) < 0, sqrt(z^2)/z is -1 so
+  ;;
+  ;; erfc(z) = 1 + (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2))
+  ;;         = 2 - 1/sqrt(pi)*gamma_incomplete(1/2,z^2)
+  (flet ((gamma-inc (z)
+	   (etypecase z
+	     (cl:number
+	      (maxima::gamma-incomplete 0.5 z))
+	     (bigfloat
+	      (bigfloat:to (maxima::$bfloat
+			    (maxima::bfloat-gamma-incomplete (maxima::$bfloat maxima::1//2)
+							     (maxima::to z)))))
+	     (complex-bigfloat
+	      (bigfloat:to (maxima::$bfloat
+			    (maxima::complex-bfloat-gamma-incomplete (maxima::$bfloat maxima::1//2)
+								     (maxima::to z))))))))
+  (if (>= (realpart z) 0)
+      (/ (gamma-inc (* z z))
+	 (sqrt (%pi z)))
+      (- 2
+	 (/ (gamma-inc (* z z))
+	    (sqrt (%pi z)))))))
+
+(in-package :maxima)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -2102,24 +2195,25 @@
       ;; Check for numerical evaluation. Use erf(z1,z2) = erf(z2)-erf(z1)
 
       ((float-numerical-eval-p z1 z2)
-       (- (erf ($float z2)) (erf ($float z1))))
+       (- (bigfloat::bf-erf ($float z2))
+	  (bigfloat::bf-erf ($float z1))))
       ((complex-float-numerical-eval-p z1 z2)
        (complexify 
          (- 
-           (complex-erf 
+           (bigfloat::bf-erf 
              (complex ($float ($realpart z2)) ($float ($imagpart z2))))
-           (complex-erf 
+           (bigfloat::bf-erf 
              (complex ($float ($realpart z1)) ($float ($imagpart z1)))))))
       ((bigfloat-numerical-eval-p z1 z2)
-       (sub
-         (bfloat-erf ($bfloat z2))
-         (bfloat-erf ($bfloat z1))))
+       (to (bigfloat:-
+	    (bigfloat::bf-erf (bigfloat:to ($bfloat z2)))
+	    (bigfloat::bf-erf (bigfloat:to ($bfloat z1))))))
       ((complex-bigfloat-numerical-eval-p z1 z2)
-       (sub
-         (complex-bfloat-erf 
-           (add ($bfloat ($realpart z2)) (mul '$%i ($bfloat ($imagpart z2)))))
-         (complex-bfloat-erf 
-           (add ($bfloat ($realpart z1)) (mul '$%i ($bfloat ($imagpart z1)))))))
+       (to (bigfloat:-
+	    (bigfloat::bf-erf 
+	     (bigfloat:to (add ($bfloat ($realpart z2)) (mul '$%i ($bfloat ($imagpart z2))))))
+	    (bigfloat::bf-erf 
+	     (bigfloat:to (add ($bfloat ($realpart z1)) (mul '$%i ($bfloat ($imagpart z1)))))))))
 
       ;; Argument simplification
       
@@ -2211,21 +2305,13 @@
     ((eq z '$inf) 0)
     ((eq z '$minf) 2)
 
-    ;; Check for numerical evaluation. Use erfc(z) = 1-erf(z).
+    ;; Check for numerical evaluation.
 
-    ((float-numerical-eval-p z)
-     (- 1.0 (erf ($float z))))
-    ((complex-float-numerical-eval-p z)
-     (complexify 
-       (- 1.0 
-         (complex-erf 
-           (complex ($float ($realpart z)) ($float ($imagpart z)))))))
-    ((bigfloat-numerical-eval-p z)
-     (sub 1.0 (bfloat-erf ($bfloat z))))
-    ((complex-bigfloat-numerical-eval-p z)
-     (sub 1.0
-       (complex-bfloat-erf 
-         (add ($bfloat ($realpart z)) (mul '$%i ($bfloat ($imagpart z)))))))
+    ((or (float-numerical-eval-p z)
+	 (complex-float-numerical-eval-p z)
+	 (bigfloat-numerical-eval-p z)
+	 (complex-bigfloat-numerical-eval-p z))
+     (to (bigfloat::bf-erfc (bigfloat:to z))))
 
     ;; Argument simplification
 
@@ -2482,30 +2568,11 @@
      (simp-domain-error 
        (intl:gettext "inverse_erf: inverse_erf(~:M) is undefined.") z))
     ((zerop1 z) z)
-    ((float-numerical-eval-p z)
-     (let ((x (gensym))
-           (z ($float z)))
-       (cond ((and (> z -1) (< z 1))
-              (float-newton (sub ($erf x) z) 
-                            x 
-                            ($float (div (mul z (power '$%pi '((rat simp) 1 2)))
-                                         2))
-                            ;; Adjusted so that newton will converge within
-                            ;; the valid intervall.
-                            1.2e-16))
-             (t
-              (eqtest (list '(%inverse_erf) z) expr)))))
-    ((bigfloat-numerical-eval-p z)
-     (let ((x (gensym))
-           (z ($bfloat z)))
-       (cond ((eq ($sign (sub 1 (simplify (list '(mabs) z)))) '$pos)
-              (bfloat-newton (sub ($erf x) z)
-                             x
-                             ($bfloat 
-                               (div (mul z (power '$%pi '((rat simp) 1 2))) 2))
-                             (power ($bfloat 10) (- $fpprec))))
-             (t
-              (eqtest (list '(%inverse_erf) z) expr)))))
+    ((or (float-numerical-eval-p z)
+	 (bigfloat-numerical-eval-p z)
+	 (complex-float-numerical-eval-p z)
+	 (complex-bigfloat-numerical-eval-p z))
+     (to (bigfloat::bf-inverse-erf (bigfloat:to z))))
     ((taylorize (mop expr) (cadr expr)))
     (t
      (eqtest (list '(%inverse_erf) z) expr))))
@@ -2599,32 +2666,11 @@
      (simp-domain-error 
        (intl:gettext "inverse_erfc: inverse_erfc(~:M) is undefined.") z))
     ((onep1 z) 0)
-    ((float-numerical-eval-p z)
-     (let ((x (gensym))
-           (z ($float z)))
-       (cond ((and (> z 0) (< z 2))
-              (float-newton (sub ($erfc x) z)
-                            x
-                            ($float (div (mul (sub 1 z) 
-                                              (power '$%pi '((rat simp) 1 2))) 
-                            2))
-                            ;; Adjusted so that newton will converge within
-                            ;; the valid intervall.
-                            1.2e-16))
-             (t
-              (eqtest (list '(%inverse_erfc) z) expr)))))
-    ((bigfloat-numerical-eval-p z)
-     (let ((x (gensym))
-           (z ($bfloat z)))
-       (cond ((eq ($sign (sub 2 z)) '$pos)
-              (bfloat-newton (sub ($erfc x) z)
-                             x
-                             ($bfloat (div (mul (sub 1 z) 
-                                                (power '$%pi '((rat simp) 1 2))) 
-                                           2))
-                             (power ($bfloat 10) (- $fpprec))))
-             (t
-              (eqtest (list '(%inverse_erfc) z) expr)))))
+    ((or (float-numerical-eval-p z)
+	 (bigfloat-numerical-eval-p z)
+	 (complex-float-numerical-eval-p z)
+	 (complex-bigfloat-numerical-eval-p z))
+     (to (bigfloat::bf-inverse-erfc (bigfloat:to z))))
     ((taylorize (mop expr) (cadr expr)))
     (t
      (eqtest (list '(%inverse_erfc) z) expr))))
@@ -2637,6 +2683,7 @@
 
 (defvar *debug-newton* nil)
 (defvar *newton-maxcount* 1000)
+(defvar *newton-epsilon-factor* 50)
 
 (defun float-newton (expr var x0 eps)
   (do ((s (sdiff expr var))
@@ -2664,6 +2711,136 @@
       (return xn))
     (when *debug-newton* (format t "~&xn = ~A~%" xn))
     (setq xn ($bfloat (sub xn (div sn (maxima-substitute xn var s)))))))
+
+
+(in-package :bigfloat)
+
+;; Compute inverse_erf(z) for z a real or complex number, including
+;; bigfloat objects.  The value is computing using a Newton iteration
+;; to solve erf(x) = z.
+(defun bf-inverse-erf (z)
+  (cond ((zerop z)
+	 z)
+	((= (abs z) 1)
+	 (maxima::merror
+	  (intl:gettext "bf-inverse-erf: inverse_erf(~M) is undefined")
+	  z))
+	((minusp (realpart z))
+	 ;; inverse_erf is odd because erf is.
+	 (- (bf-inverse-erf (- z))))
+	(t
+	 (labels
+	     ((approx (z)
+		;; Find an approximate solution for x = inverse_erf(z).
+		(let ((result
+			(cond ((<= (abs z) 1)
+			       ;; For small z, inverse_erf(z) = z*sqrt(%pi)/2
+			       ;; + O(z^3).  Thus, x = z*sqrt(%pi)/2 is our
+			       ;; initial starting point.
+			       (* z (sqrt (%pi z)) 1/2))
+			      (t
+			       ;; For |z| > 1 and realpart(z) >= 0, we have
+			       ;; the asymptotic series z = erf(x) = 1 -
+			       ;; exp(-x^2)/x/sqrt(%pi).
+			       ;;
+			       ;; Then
+			       ;;   x = sqrt(-log(x*sqrt(%pi)*(1-z))
+			       ;;
+			       ;; We can use this as a fixed-point iteration
+			       ;; to find x, and we can start the iteration at
+			       ;; x = 1.  Just do one more iteration.  I (RLT)
+			       ;; think that's close enough to get the Newton
+			       ;; algorithm to converge.
+			       (let* ((sp (sqrt (%pi z)))
+				      (a (sqrt (- (log (* sp (- 1 z)))))))
+				 (setf a (sqrt (- (log (* a sp (- 1 z))))))
+				 (setf a (sqrt (- (log (* a sp (- 1 z)))))))))))
+		  (when maxima::*debug-newton*
+		    (format t "approx = ~S~%" result))
+		  result)))
+	   (let ((two/sqrt-pi (/ 2 (sqrt (%pi z))))
+		 (eps
+		   ;; Try to pick a reasonable epsilon value for the
+		   ;; Newton iteration.
+		   (cond ((<= (abs z) 1)
+			  (typecase z
+			    (cl:real (* 2 maxima::flonum-epsilon))
+			    (t (* maxima::*newton-epsilon-factor* (epsilon z)))))
+			 (t
+			  (* maxima::*newton-epsilon-factor* (epsilon z))))))
+	     (when maxima::*debug-newton*
+	       (format t "eps = ~S~%" eps))
+	     (flet ((diff (x)
+		      ;; Derivative of erf(x)
+		      (* two/sqrt-pi (exp (- (* x x))))))
+	       (bf-newton #'bf-erf
+			  #'diff
+			  z
+			  (approx z)
+			  eps)))))))
+
+(defun bf-inverse-erfc (z)
+  (cond ((zerop z)
+	 (maxima::merror
+	  (intl:gettext "bf-inverse-erf: inverse_erf(~M) is undefined")
+	  z))
+	((= z 1)
+	 (float 0 z))
+	(t
+	 (flet
+	     ((approx (z)
+		;; Find an approximate solution for x =
+		;; inverse_erfc(z).  We have inverse_erfc(z) =
+		;; inverse_erf(1-z), so that's a good starting point.
+		;; We don't need full precision, so a float value is
+		;; good enough.  But if 1-z is 1, inverse_erf is
+		;; undefined, so we need to do something else.
+		(let ((result
+			(let ((1-z (float (- 1 z) 0.0)))
+			  (cond ((= 1 1-z)
+				 (if (minusp (realpart z))
+				     (bf-inverse-erf (+ 1 (* 5 maxima::flonum-epsilon)))
+				     (bf-inverse-erf (- 1 (* 5 maxima::flonum-epsilon)))))
+				(t
+				 (bf-inverse-erf 1-z))))))
+		  (when maxima::*debug-newton*
+		    (format t "approx = ~S~%" result))
+		  result)))
+	   (let ((-two/sqrt-pi (/ -2 (sqrt (%pi z))))
+		 (eps (* maxima::*newton-epsilon-factor* (epsilon z))))
+	     (when maxima::*debug-newton*
+	       (format t "eps = ~S~%" eps))
+	     (flet ((diff (x)
+		      ;; Derivative of erfc(x)
+		      (* -two/sqrt-pi (exp (- (* x x))))))
+	       (bf-newton #'bf-erfc
+			  #'diff
+			  z
+			  (approx z)
+			  eps)))))))
+
+;; Newton iteration for solving f(x) = z, given f and the derivative
+;; of f.
+(defun bf-newton (f df z start eps)
+  (do ((x start)
+       (delta (/ (- (funcall f start) z)
+		 (funcall df start))
+	      (/ (- (funcall f x) z)
+		 (funcall df x)))
+       (count 0 (1+ count)))
+      ((or (< (abs delta) (* (abs x) eps))
+	   (> count maxima::*newton-maxcount*))
+       (if (> count maxima::*newton-maxcount*)
+	   (maxima::merror 
+	    (intl:gettext "bf-newton: failed to converge after ~M iterations: delta = ~S,  x = ~S")
+	    count delta x)
+	   x))
+    (when maxima::*debug-newton*
+      (format t "x = ~S, abs(delta) = ~S relerr = ~S~%"
+	      x (abs delta) (/ (abs delta) (abs x))))
+    (setf x (- x delta))))
+
+(in-package :maxima)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

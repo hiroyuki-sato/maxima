@@ -12,9 +12,9 @@ binary-ecl/maxima : clmacs.lisp
 binary-ecl/maxima : commac.lisp
 binary-ecl/maxima : mormac.lisp
 binary-ecl/maxima : compat.lisp
+binary-ecl/maxima : transm.lisp
 binary-ecl/maxima : getopt.lisp
 binary-ecl/maxima : command-line.lisp
-binary-ecl/maxima : defopt.lisp
 binary-ecl/maxima : defcal.lisp
 binary-ecl/maxima : maxmac.lisp
 binary-ecl/maxima : mopers.lisp
@@ -191,7 +191,6 @@ binary-ecl/maxima : rat3c.lisp
 binary-ecl/maxima : rat3e.lisp
 binary-ecl/maxima : nrat4.lisp
 binary-ecl/maxima : ratout.lisp
-binary-ecl/maxima : transm.lisp
 binary-ecl/maxima : transl.lisp
 binary-ecl/maxima : transs.lisp
 binary-ecl/maxima : trans1.lisp
@@ -222,7 +221,6 @@ binary-ecl/maxima : intpol.lisp
 binary-ecl/maxima : nparse.lisp
 binary-ecl/maxima : displa.lisp
 binary-ecl/maxima : nforma.lisp
-binary-ecl/maxima : ldisp.lisp
 binary-ecl/maxima : grind.lisp
 binary-ecl/maxima : spgcd.lisp
 binary-ecl/maxima : ezgcd.lisp

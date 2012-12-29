@@ -12,7 +12,7 @@
 
 (macsyma-module grind)
 
-(declare-top (special lop rop *grind-charlist* chrps $aliases aliaslist linel))
+(declare-top (special lop rop *grind-charlist* chrps $aliases linel))
 
 (defun chrct* () (- linel chrps))
 
@@ -154,8 +154,6 @@
            ((and (setq y (safe-get x 'reversealias))
                  (not (and (member x $aliases :test #'eq) (get x 'noun))))
             (setq y (exploden (stripdollar y))))
-           ((setq y (rassoc x aliaslist :test #'eq))
-            (return (msize (car y) l r lop rop)))
            ((null (setq y (exploden x))))
            ((safe-get x 'noun) (return (msize-atom (get x 'noun) l r)))
            ((char= #\$ (car y)) (setq y (slash (cdr y))))
@@ -275,11 +273,11 @@
 
 ;;; ----------------------------------------------------------------------------
 
-;; Formating a mlable-expression
+;; Formating a mlabel-expression
 
-(defprop mlable msize-mlable grind)
+(defprop mlabel msize-mlabel grind)
 
-(defun msize-mlable (x l r)
+(defun msize-mlabel (x l r)
   (declare (special *display-labels-p*))
   (if *display-labels-p*
       (setq l (cons (msize (cadr x) (list #\( ) (list #\) #\ ) nil nil) l)))
