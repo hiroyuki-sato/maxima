@@ -20,25 +20,13 @@
 			;file opened by UWRITE.  People learning
 			;Lisp: there are better ways of doing IO
 			;than this -- don't copy this scheme.
-  smart-tty		;LOADER sets this flag.  If T,
-			;then this console can do cursor movement
-			;and equations can be drawn in two dimensions.
-  rubout-tty	        ;If T, then console either is selectively erasable
-			;or is a glass tty.  Characters can be rubbed
-			;out in either case.
-  scrollp		;If T, then the console is scrolling.
-			;This should almost always be equal to
-			;(NOT SMART-TTY) except when somebody has
-			;done :TCTYP SCROLL on a display console.
-			;This is the %TSROL bit of the TTYSTS word.
-
   linel			;Width of screen.
   ttyheight		;Height of screen.
 
   width height depth maxht maxdp level size lop rop break right
   bkpt bkptwd bkptht bkptdp bkptlevel bkptout lines 
   oldrow oldcol display-file in-p
-  mratp $aliases aliaslist))
+  mratp $aliases))
 
 ;;; macros for the DISPLA package.
 

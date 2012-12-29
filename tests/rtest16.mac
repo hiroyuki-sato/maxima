@@ -198,6 +198,10 @@ limit(sin(x)/x,x,0,minus);
 numer:false;
 false;
 
+/* #2504 wrong answer for simple limit, limit(sin(x)+1/x, x, inf)=0 */
+limit(1/x + sin(x), x, inf);
+ind;
+
 /* Bug 593344 */
 limit(abs(infinity));
 inf;
@@ -440,6 +444,12 @@ limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), minus);
 
 limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), plus);
 -atan(1/sqrt(2));
+
+limit(floor(x), x, 5, minus);
+4;
+
+limit(floor(x), x, 5, plus);
+5;
 
 /* [ 1587235 ] limit(floor(x),x,1) wrong */
 limit(floor(x),x,0);
@@ -1151,6 +1161,10 @@ declare(n,integer);
 done;
 limit ((sin(n*x) - n*x*cos(n*x))/n^2, x, %pi);
 -%pi*(-1)^n/n;
+
+/* #2503 Declaring x as an integer changes result of limit from 3 to inf */
+limit((2^n+3^n)^(1/n), n,inf);
+3;
 
 /* Bug ID: 2835634 - logcontract broken
  * Bug ID: 1467368 - logcontract returns unsimplified expr
@@ -2282,4 +2296,50 @@ polarform((a+1)/2 - a/2 - 0.5);
 polarform((a+1)/2 - a/2 - 0.5b0);
 0.0b0$
 
+/*
+ * ID: 3440046: elliptic_f(0.5,1) signals error
+ *
+ * Add a few more tests for invalid values.
+ */
+closeto(elliptic_f(0.5,1)-elliptic_f(1/2,1), 1e-15);
+true;
 
+closeto(elliptic_f(0.5b0,1) - bfloat(elliptic_f(1/2,1)), 1b-16);
+true;
+
+errcatch(elliptic_f(2.0,1));
+[];
+
+errcatch(elliptic_f(2b0,1));
+[];
+
+/*
+ * Bug 3428734:  integrate(bessel_y(1,z),z)  with ?z : 1
+ */
+
+(?z:1, 0);
+0;
+
+integrate(bessel_y(1,z),z);
+-bessel_y(0,z);
+
+integrate(bessel_j(1,z),z);
+-bessel_j(0,z);
+
+integrate(bessel_k(1,z),z);
+-bessel_k(0,z);
+
+integrate(bessel_i(1,z),z);
+bessel_i(0,z);
+
+/*
+ * Bug 3381301: log(-1.0b0) has small realpart
+ */
+realpart(log(-1b0));
+0;
+
+/*
+ * Bug 3559064: elliptic_f(2,1) is wrong.
+ */
+errcatch(elliptic_f(2,1));
+[];

@@ -131,7 +131,7 @@
 ;;;; AT
 
 ;;dummy-variable-operators is defined in COMM, which uses it inside of SUBST1.
-(declare-top (special atvars ateqs *atp* munbound dummy-variable-operators))
+(declare-top (special atvars *atp* munbound dummy-variable-operators))
 
 (defmfun $atvalue (exp eqs val)
   (let (dl vl fun)
@@ -170,19 +170,20 @@
 (defun simp-%at (expr ignored simp-flag)
   (declare (ignore ignored))
   (twoargcheck expr)
-  (let ((arg (simpcheck (cadr expr) simp-flag))
-        (eqn (if ($listp (caddr expr))
-                 (cons '(mlist simp) (cdr ($sort (caddr expr))))
-                 (caddr expr))))
+  (let* ((arg (simpcheck (cadr expr) simp-flag))
+        (e (resimplify (caddr expr)))
+        (eqn (if ($listp e)
+                 (cons '(mlist simp) (cdr ($sort e)))
+                 e)))
     (cond (($constantp arg) arg)
           ((alike1 eqn '((mlist))) arg)
           (t (eqtest (list '(%at) arg eqn) expr)))))
 
 (defmfun $at (expr ateqs)
   (if (notloreq ateqs) (improper-arg-err ateqs '$at))
-  (atscan (let ((*atp* t)) ($psubstitute ateqs expr))))
+  (atscan (let ((*atp* t)) ($psubstitute ateqs expr)) ateqs))
 
-(defun atscan (expr)
+(defun atscan (expr ateqs)
   (cond ((or (atom expr)
              (eq (caar expr) 'mrat)
              (like ateqs '((mlist))))
@@ -199,7 +200,7 @@
         ((member (caar expr) dummy-variable-operators :test #'eq)
          (list '(%at) expr ateqs))
         ((at1 expr))
-        (t (recur-apply #'atscan expr))))
+        (t (recur-apply #'(lambda (x) (atscan x ateqs)) expr))))
 
 (defun at1 (expr)
   (atfind (caar expr) (cdr expr) (listof0s (cdr expr))))
@@ -323,34 +324,18 @@
 
 ;;;; RTCON
 
-(declare-top (special $radexpand $domain radpe))
+(declare-top (special $radexpand $domain))
 
 (defmvar $rootsconmode t)
 
 (defun $rootscontract (e)	       ; E is assumed to be simplified
   (let ((radpe (and $radexpand (not (eq $radexpand '$all)) (eq $domain '$real)))
 	($radexpand nil))
-    (rtcon e)))
+    (rtcon e radpe)))
 
-(defun rtcon (e)
+(defun rtcon (e radpe)
   (cond ((atom e) e)
 	((eq (caar e) 'mtimes)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; This code does the substitution %i -> (-1)*(-1)^(-1/2) for expressions
-; like %i/expr. In most cases this causes a wrong result, e.g. 
-; bug ID: 2820202 - rootscontract(%i/2) --> -%i/2. The only case this codes 
-; works is for expressions like %i/sqrt(x) --> -1/sqrt(x). It is doubtful that 
-; this simplification is useful.
-; To get correct results in general, this code is commented out. DK 08/2009.
-; 
-;	 (if (and (not (free e '$%i))
-;		  (let ((num ($num e)))
-;		    (and (not (alike1 e num))
-;			 (or (eq num '$%i)
-;			     (and (not (atom num)) (member '$%i num :test #'eq)
-;				  (member '$%i (rtcon num) :test #'eq))))))
-;	     (setq e (list* (car e) -1 '((mexpt) -1 ((rat simp) -1 2))
-;			    (delete '$%i (copy-list (cdr e)) :count 1 :test #'eq))))
 	 (do ((x (cdr e) (cdr x)) (roots) (notroots) (y))
 	     ((null x)
 	      (cond ((null roots) (subst0 (cons '(mtimes) (nreverse notroots)) e))
@@ -365,7 +350,7 @@
 						 (rtcon
 						  (rtc-fixitup
 						   (rtc-divide-by-gcd roots gcd)
-						   nil))
+						   nil) radpe)
 						 1)
 					   nil)))
 				   ((eq $rootsconmode '$all)
@@ -379,16 +364,16 @@
 		 ((and (eq (caaar x) 'mexpt) (ratnump (setq y (caddar x))))
 		  (setq roots (rt-separ (list (caddr y)
 					      (list '(mexpt)
-						    (rtcon (cadar x)) (cadr y)))
+						    (rtcon (cadar x) radpe) (cadr y)))
 					roots)))
 
 		 ((and radpe (eq (caaar x) 'mabs))
-		  (setq roots (rt-separ (list 2 `((mexpt) ,(rtcon (cadar x)) 2) 1)
+		  (setq roots (rt-separ (list 2 `((mexpt) ,(rtcon (cadar x) radpe) 2) 1)
 					roots)))
-		 (t (setq notroots (cons (rtcon (car x)) notroots))))))
+		 (t (setq notroots (cons (rtcon (car x) radpe) notroots))))))
 	((and radpe (eq (caar e) 'mabs))
-	 (power (power (rtcon (cadr e)) 2) '((rat simp) 1 2)))
-	(t (recur-apply #'rtcon e))))
+	 (power (power (rtcon (cadr e) radpe) 2) '((rat simp) 1 2)))
+	(t (recur-apply #'(lambda (x) (rtcon x radpe)) e))))
 
 ;; RT-SEPAR separates like roots into their appropriate "buckets",
 ;; where a bucket looks like:
@@ -521,16 +506,14 @@
 
 ;;;; ARITHF
 
-(declare-top (special lnorecurse))
-
-(defmfun $fibtophi (e)
+(defmfun $fibtophi (e &optional (lnorecurse nil))
   (cond ((atom e) e)
 	((eq (caar e) '$fib)
-	 (setq e (cond (lnorecurse (cadr e)) (t ($fibtophi (cadr e)))))
+	 (setq e (cond (lnorecurse (cadr e)) (t ($fibtophi (cadr e) lnorecurse))))
 	 (let ((phi (meval '$%phi)))
 	   (div (add2 (power phi e) (neg (power (add2 1 (neg phi)) e)))
 		(add2 -1 (mul2 2 phi)))))
-	(t (recur-apply #'$fibtophi e))))
+	(t (recur-apply #'(lambda (x) ($fibtophi x lnorecurse)) e))))
 
 (defmspec $numerval (l) (setq l (cdr l))
 	  (do ((l l (cddr l)) (x (ncons '(mlist simp)))) ((null l) x)
@@ -543,21 +526,20 @@
 	    (add2lnc (car l) $props)
 	    (nconc x (ncons (car l)))))
 
-(declare-top (special powers var depvar))
+(let (my-powers)
+  (declare (special my-powers))
 
-(defmfun $derivdegree (e depvar var)
-  (let (powers) (derivdeg1 e) (if (null powers) 0 (maximin powers '$max))))
+  (defmfun $derivdegree (e depvar var)
+    (let (my-powers) (declare (special my-powers)) (derivdeg1 e depvar var) (if (null my-powers) 0 (maximin my-powers '$max))))
 
-(defun derivdeg1 (e)
-  (cond ((or (atom e) (specrepp e)))
-	((eq (caar e) '%derivative)
-	 (cond ((alike1 (cadr e) depvar)
-		(do ((l (cddr e) (cddr l))) ((null l))
-		  (cond ((alike1 (car l) var)
-			 (return (setq powers (cons (cadr l) powers)))))))))
-	(t (mapc 'derivdeg1 (cdr e)))))
-
-(declare-top (unspecial powers var depvar))
+  (defun derivdeg1 (e depvar var)
+    (cond ((or (atom e) (specrepp e)))
+	  ((eq (caar e) '%derivative)
+	   (cond ((alike1 (cadr e) depvar)
+		  (do ((l (cddr e) (cddr l))) ((null l))
+		    (cond ((alike1 (car l) var)
+			   (return (setq my-powers (cons (cadr l) my-powers)))))))))
+	  (t (mapc #'(lambda (x) (derivdeg1 x depvar var)) (cdr e))))))
 
 ;;;; BOX
 
@@ -586,22 +568,18 @@
       x
       (coerce (mstring x) 'string)))
 
-(declare-top (special label))
-
 (defmfun $rembox (e &optional (l nil l?))
   (let ((label (if l? (box-label l) '(nil))))
-    (rembox1 e)))
+    (rembox1 e label)))
 
-(defun rembox1 (e)
+(defun rembox1 (e label)
   (cond ((atom e) e)
 	((or (and (eq (caar e) 'mbox)
 		  (or (equal label '(nil)) (member label '($unlabelled $unlabeled) :test #'eq)))
 	     (and (eq (caar e) 'mlabox)
 		  (or (equal label '(nil)) (equal label (caddr e)))))
-	 (rembox1 (cadr e)))
-	(t (recur-apply #'rembox1 e))))
-
-(declare-top (unspecial label))
+	 (rembox1 (cadr e) label))
+	(t (recur-apply #'(lambda (x) (rembox1 x label)) e))))
 
 ;;;; MAPF
 
@@ -801,28 +779,7 @@
 
 ;;;; ALIAS
 
-(declare-top (special aliaslist aliascntr greatorder lessorder))
-
-(defmspec $makeatomic (l)
-  (setq l (cdr l))
-  (do ((l l (cdr l)) (bas) (x))
-      ((null l) '$done)
-    (if (or (atom (car l))
-	    (not (or (setq x (member (caaar l) '(mexpt mncexpt) :test #'eq))
-		     (member 'array (cdaar l) :test #'eq))))
-	(improper-arg-err (car l) '$makeatomic))
-    (if x
-	(setq bas (cadar l) x (and (atom (caddar l)) (caddar l)))
-	(setq bas (caaar l) x (and (atom (cadar l)) (cadar l))))
-    (unless (atom bas)
-      (improper-arg-err (car l) '$makeatomic))
-    (setq aliaslist
-	  (cons (cons (car l)
-		      (implode
-		       (nconc (exploden bas)
-			      (or (and x (exploden x)) (ncons '| |))
-			      (cons '$ (mexploden (incf aliascntr))))))
-		aliaslist))))
+(declare-top (special greatorder lessorder))
 
 (defmspec $ordergreat (l)
   (if greatorder (merror (intl:gettext "ordergreat: reordering is not allowed.")))

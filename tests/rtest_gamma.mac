@@ -2490,7 +2490,7 @@ closeto(
   erf(-0.75+%i),
   (-1.372897192365736489613456241111589390954675856186764729607156305b0 
   + 0.539788632227100129936591912063260716699852732091113612337142798b0*%i),
-  5.0e-15);
+  6.0e-15);
 true;
 
 closeto(
@@ -2512,6 +2512,13 @@ closeto(
   ( 1.372897192365736489613456241111589390954675856186764729607156305b0 
   + 0.539788632227100129936591912063260716699852732091113612337142798b0*%i),
   6.0e-15);
+true;
+
+/* Bug 3587184: erf inaccurate for small float values */
+relerror(
+  erf(1d-10),
+  float(2d-10/sqrt(%pi)),
+  1d-15);
 true;
 
 /* Erf with bigfloat precision */
@@ -2563,6 +2570,51 @@ closeto(
   ( 1.372897192365736489613456241111589390954675856186764729607156305b0 
   + 0.539788632227100129936591912063260716699852732091113612337142798b0*%i),
   1b-61);
+true;
+
+/* Bug 3587191: erf inaccurate for small bigfloat values */
+relerror(
+  erf(1b-40),
+  bfloat(2b-40/sqrt(%pi)),
+  1b-65);
+true;
+
+/* Bug 3587304 erfc(x) for x > 6 is wrong */
+relerror(
+  erfc(6.0),
+  2.15197367124989131659335039918738463047751406e-17,
+  2e-15);
+true;
+
+relerror(
+  erfc(-4.0),
+  2-erfc(4.0),
+  1e-15);
+true;
+
+relerror(
+  erfc(6b0),
+  2.1519736712498913116593350399187384630477514061688542100527892051056337238484927860b-17,
+  1b-64);
+true;
+
+relerror(
+  erfc(-6b0),
+  1.9999999999999999784802632875010868834066496008126153695224859383114578994b0,
+  1b-64);
+true;
+
+/* Bug 3587362 inverse_erfc(1d-40) wrong */
+relerror(
+  inverse_erfc(1d-40),
+  9.448789766720855,
+  1d-15);
+true;
+
+relerror(
+  inverse_erfc(1b-50),
+  10.59209016952736518902166392532979911559420645541709912588406440119671044289134079569127583320351428635b0,
+  1d-64);
 true;
 
 /* We have done a check for the numerical algorithm of the Erf function which
@@ -3501,7 +3553,7 @@ true;
 relerror(
   gamma_incomplete(10,-100d0+%i),
   subst(x=-100d0+%i, block([gamma_expand : true], gamma_incomplete(10,x))),
-  7.0e-15);
+  8.1e-15);
 true;
       
 relerror(
@@ -3509,6 +3561,85 @@ relerror(
   subst(x=-100b0+%i, block([gamma_expand : true], gamma_incomplete(10,x))),
   2.04b-64);
 true;
+
+relerror(
+ erf(inverse_erf(.5)),
+ 0.5,
+ 1.4d-14);
+true;
       
+relerror(
+ erf(inverse_erf(-.5)),
+ -0.5,
+ 1.4e-14);
+true;
+
+relerror(
+ erf(inverse_erf(.5b0)),
+ 0.5b0,
+ 2b-64);
+true;
+
+relerror(
+ erf(inverse_erf(-.5b0)),
+ -0.5b0,
+ 2b-64);
+true;
+
+relerror(
+ erf(inverse_erf(2.0)),
+ 2.0,
+ 7.9d-15);
+true;
+
+relerror(
+ erf(inverse_erf(-2.0)),
+ -2.0,
+ 7.9d-15);
+true;
+
+/* These are a bit slow if fpprec is large.  Make fpprec a bit smaller */
+fpprec:24;
+24;
+
+relerror(
+ erf(inverse_erf(2b0)),
+ 2b0,
+ 2.9b-24);
+true;
+
+relerror(
+ erf(inverse_erf(-2b0)),
+ -2b0,
+ 2.9b-24);
+true;
+
+relerror(
+ erf(inverse_erf(2b0+2b0*%i)),
+ 2b0+2b0*%i,
+ 6.6b-25);
+true;
+
+relerror(
+ erf(inverse_erf(-2b0-2b0*%i)),
+ -2b0-2b0*%i,
+ 6.6b-25);
+true;
+
+relerror(
+ erf(inverse_erf(10b0+1000b0*%i)),
+ 10b0+1000b0*%i,
+ 2b-23);
+true;
+
+
+/* From the mailing list.  This should not signal an error and should give a simplifed answer */
+relerror(
+ expand(bfloat(erf((sqrt(2)*%i-sqrt(2))/2))),
+ 4.74147636640994245161681b-1 * %i - 9.69264211944215930381491b-1,
+ 1b-23);
+true;
+
 (fpprec:oldfpprec,done);
 done;
+

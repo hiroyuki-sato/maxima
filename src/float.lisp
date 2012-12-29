@@ -110,7 +110,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defvar max-bfloat-log2 bigfloat_log2)
 
 
-(declare-top (special *cancelled $float $bfloat $ratprint $ratepsilon $domain $m1pbranch adjust))
+(declare-top (special *cancelled $float $bfloat $ratprint $ratepsilon $domain $m1pbranch))
 
 ;; Representation of a Bigfloat:  ((BIGFLOAT SIMP precision) mantissa exponent)
 ;; precision -- number of bits of precision in the mantissa.
@@ -615,7 +615,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 ;; in a PROG list as this will confuse stepping programs.
 
 (defun fpround (l &aux (*print-base* 10.) *print-radix*)
-  (prog ()
+  (prog (adjust)
      (cond
        ((null *decfp)
 	;;*M will be positive if the precision of the argument is greater than
@@ -1906,12 +1906,17 @@ One extra decimal digit in actual representation for rounding purposes.")
 		  (let ((fpprec (- fpprec extra)))
 		    (bigfloatp result))))))
 	(let ((fp-x (cdr (bigfloatp x))))
-	  (if (fplessp fp-x (intofp 0))
-	      ;; ??? Do we want to return an exact %i*%pi or a float
-	      ;; approximation?
-	      (add (bcons (%log (fpminus fp-x)))
-		   (mul '$%i (bcons (fppi))))
-	      (bcons (%log fp-x)))))))
+	  (cond ((onep1 x)
+		 ;; Special case for log(1).  See Bug 3381301:
+		 ;; https://sourceforge.net/tracker/?func=detail&aid=3381301&group_id=4933&atid=104933
+		 (bcons (intofp 0)))
+		((fplessp fp-x (intofp 0))
+		 ;; ??? Do we want to return an exact %i*%pi or a float
+		 ;; approximation?
+		 (add (big-float-log (bcons (fpminus fp-x)))
+		      (mul '$%i (bcons (fppi)))))
+		(t
+		 (bcons (%log fp-x))))))))
 
 (defun big-float-sqrt (x &optional y)
   (if y

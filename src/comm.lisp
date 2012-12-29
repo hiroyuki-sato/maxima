@@ -14,7 +14,7 @@
 
 (declare-top (special $exptsubst $linechar $nolabels $inflag $piece $dispflag
 		      $gradefs $props $dependencies derivflag derivlist
-		      $linenum $partswitch linelable nn* dn*
+		      $linenum $partswitch *linelabel* nn* dn*
 		      $powerdisp atvars $errexp $derivsubst $dotdistrib
 		      $opsubst $subnumsimp $transrun in-p substp $sqrtdispflag
 		      $pfeformat dummy-variable-operators))
@@ -63,9 +63,7 @@
       $gradefs '((mlist simp))
       $dependencies '((mlist simp))
       atvars '($@1 $@2 $@3 $@4)
-      lnorecurse nil
       $derivsubst nil
-      timesp nil
       $opsubst t
       in-p nil
       substp nil)
@@ -133,17 +131,14 @@
                            (let (($simp t)) (resimplify z)))
                         (setq z (maxima-substitute (cdar l) (caar l) z))))))))))
 
-(declare-top (special x y oprx opry negxpty timesp))
-
 (defmfun maxima-substitute (x y z) ; The args to SUBSTITUTE are assumed to be simplified.
-  (declare (special x y ))
   (let ((in-p t) (substp t))
     (if (and (mnump y) (= (signum1 y) 1))
 	(let ($sqrtdispflag ($pfeformat t)) (setq z (nformat-all z))))
     (simplifya
      (if (atom y)
 	 (cond ((equal y -1)
-		(setq y '((mminus) 1)) (subst2 (nformat-all z)))
+		(setq y '((mminus) 1)) (subst2 x y (nformat-all z) nil nil)) ;; negxpty and timesp don't matter in this call since (caar y) != 'mexpt
 	       (t
 		(cond ((and (not (symbolp x))
 			    (functionp x))
@@ -151,15 +146,12 @@
 			 (setf (get  tem  'operators) 'application-operator)
 			 (setf (symbol-function tem) x)
 			 (setq x tem))))
-		(let ((oprx (getopr x)) (opry (getopr y)))
-		  (declare (special oprx opry ))
-		  (subst1 z))))
+		(subst1 x y z)))
 	 (let ((negxpty (if (and (eq (caar y) 'mexpt)
 				 (= (signum1 (caddr y)) 1))
 			    (mul2 -1 (caddr y))))
 	       (timesp (if (eq (caar y) 'mtimes) (setq y (nformat y)))))
-	   (declare (special negxpty timesp))
-	   (subst2 z)))
+	   (subst2 x y z negxpty timesp)))
      nil)))
 
 ;;Remainder of page is update from F302 --gsb
@@ -167,17 +159,18 @@
 ;;Used in COMM2 (AT), limit, and below.
 (defvar dummy-variable-operators '(%product %sum %laplace %integrate %limit %at))
 
-(defun subst1 (z)			; Y is an atom
+(defun subst1 (x y z)			; Y is an atom
   (cond ((atom z) (if (equal y z) x z))
-	((specrepp z) (subst1 (specdisrep z)))
+	((specrepp z) (subst1 x y (specdisrep z)))
 	((eq (caar z) 'bigfloat) z)
 	((and (eq (caar z) 'rat) (or (equal y (cadr z)) (equal y (caddr z))))
-	 (div (subst1 (cadr z)) (subst1 (caddr z))))
+	 (div (subst1 x y (cadr z)) (subst1 x y (caddr z))))
 	((at-substp z) (subst-except-second-arg x y z))
 	((and (eq y t) (eq (caar z) 'mcond))
-	 (list (cons (caar z) nil) (subst1 (cadr z)) (subst1 (caddr z))
-	       (cadddr z) (subst1 (car (cddddr z)))))
-	(t (let ((margs (mapcar #'subst1 (cdr z))))
+	 (list (cons (caar z) nil) (subst1 x y (cadr z)) (subst1 x y (caddr z))
+	       (cadddr z) (subst1 x y (car (cddddr z)))))
+	(t (let ((margs (mapcar #'(lambda (z1) (subst1 x y z1)) (cdr z)))
+                 (oprx (getopr x)) (opry (getopr y)))
 	     (if (and $opsubst
 		      (or (eq opry (caar z))
 			  (and (eq (caar z) 'rat) (eq opry 'mquotient))))
@@ -196,10 +189,10 @@
 		     (subst0 (cons (cons oprx nil) margs) z))
 		 (subst0 (cons (cons (caar z) nil) margs) z))))))
 
-(defun subst2 (z)
+(defun subst2 (x y z negxpty timesp)
   (let (newexpt)
     (cond ((atom z) z)
-	  ((specrepp z) (subst2 (specdisrep z)))
+	  ((specrepp z) (subst2 x y (specdisrep z) negxpty timesp))
 	  ((and *atp* (member (caar z) '(%derivative %laplace) :test #'eq)) z)
 	  ((at-substp z) z)
 	  ((alike1 y z) x)
@@ -213,7 +206,7 @@
 	   (let ((tail (subst-diff-match (cddr y) (cdr z))))
 	     (cond ((null tail) z)
 		   (t (cons (cons (caar z) nil) (cons x (cdr tail)))))))
-	  (t (recur-apply #'subst2 z)))))
+	  (t (recur-apply #'(lambda (z1) (subst2 x y z1 negxpty timesp)) z)))))
 
 ;; replace y with x in z, but leave z's second arg unchanged.
 ;; This is for cases like at(integrate(x, x, a, b), [x=3])
@@ -226,13 +219,11 @@
        (list (car z)
              (if (eq y (third z))     ; if (third z) is new var that shadows y
                  (second z)           ; leave (second z) unchanged
-                 (subst1 (second z))) ; otherwise replace y with x in (second z)
+                 (subst1 x y (second z))) ; otherwise replace y with x in (second z)
              (third z))               ; never change integration var
-       (mapcar (lambda (z) (subst1 z)); do subst in limits of integral
+       (mapcar (lambda (z) (subst1 x y z)); do subst in limits of integral
                (cdddr z))))
     (t z)))
-
-(declare-top (unspecial x y oprx opry negxpty timesp))
 
 (defmfun subst0 (new old)
   (cond ((atom new) new)
@@ -755,7 +746,7 @@
     (setq tim (get-internal-run-time))
     (let ((*display-labels-p* nil))
       (declare (special *display-labels-p*))
-      (displa (list '(mlable) (if lablist linelable) ans)))
+      (displa (list '(mlabel) (if lablist *linelabel*) ans)))
     (mterpri)
     (timeorg tim)))
 
@@ -780,8 +771,8 @@
   (if (not (checklabel $linechar)) (setq $linenum (1+ $linenum)))
   (let (($nolabels nil)) ; <-- This is pretty ugly. MAKELABEL should take another argument.
     (makelabel $linechar))
-  (setf (symbol-value linelable) e)
-  linelable)
+  (setf (symbol-value *linelabel*) e)
+  *linelabel*)
 
 (defmfun $dispterms (e)
   (cond ((or (atom e) (eq (caar e) 'bigfloat)) (displa e))
@@ -1289,40 +1280,40 @@
                                (coeff-contains-powers e var)) (cdr e))))
         (t nil)))
 
-(declare-top (special powers var hiflg num flag))
+(let (my-powers my-num my-flag)
+  (declare (special my-powers my-num my-flag))
 
-(defmfun $hipow (e var)
-  (findpowers e t))
-
-;; These work best on expanded "simple" expressions.
-
-(defmfun $lopow (e var)
-  (findpowers e nil))
-
-(defun findpowers (e hiflg)
-  (let (powers num flag)
-    (findpowers1 e)
-    (cond ((null powers) (if (null num) 0 num))
-	  (t (when num (setq powers (cons num powers)))
-	     (maximin powers (if hiflg '$max '$min))))))
-
-(defun findpowers1 (e)
-  (cond ((alike1 e var) (checkpow 1))
-	((atom e))
-	((eq (caar e) 'mplus)
-	 (cond ((not (freel (cdr e) var))
-		(do ((e (cdr e) (cdr e))) ((null e))
-		  (setq flag nil) (findpowers1 (car e))
-		  (if (null flag) (checkpow 0))))))
-	((and (eq (caar e) 'mexpt) (alike1 (cadr e) var)) (checkpow (caddr e)))
-	((specrepp e) (findpowers1 (specdisrep e)))
-	(t (mapc #'findpowers1 (cdr e)))))
-
-(defun checkpow (pow)
-  (setq flag t)
-  (cond ((not (numberp pow)) (setq powers (cons pow powers)))
-	((null num) (setq num pow))
-	(hiflg (if (> pow num) (setq num pow)))
-	((< pow num) (setq num pow))))
-
-(declare-top (unspecial powers var hiflg num flag))
+  (defmfun $hipow (e var)
+    (findpowers e t var))
+  
+  ;; These work best on expanded "simple" expressions.
+  
+  (defmfun $lopow (e var)
+    (findpowers e nil var))
+  
+  (defun findpowers (e hiflg var)
+    (let (my-powers my-num my-flag)
+      (declare (special my-powers my-num my-flag))
+      (findpowers1 e hiflg var)
+      (cond ((null my-powers) (if (null my-num) 0 my-num))
+  	  (t (when my-num (setq my-powers (cons my-num my-powers)))
+  	     (maximin my-powers (if hiflg '$max '$min))))))
+  
+  (defun findpowers1 (e hiflg var)
+    (cond ((alike1 e var) (checkpow 1 hiflg))
+  	((atom e))
+  	((eq (caar e) 'mplus)
+  	 (cond ((not (freel (cdr e) var))
+  		(do ((e (cdr e) (cdr e))) ((null e))
+  		  (setq my-flag nil) (findpowers1 (car e) hiflg var)
+  		  (if (null my-flag) (checkpow 0 hiflg))))))
+  	((and (eq (caar e) 'mexpt) (alike1 (cadr e) var)) (checkpow (caddr e) hiflg))
+  	((specrepp e) (findpowers1 (specdisrep e) hiflg var))
+  	(t (mapc #'(lambda (x) (findpowers1 x hiflg var)) (cdr e)))))
+  
+  (defun checkpow (pow hiflg)
+    (setq my-flag t)
+    (cond ((not (numberp pow)) (setq my-powers (cons pow my-powers)))
+  	((null my-num) (setq my-num pow))
+  	(hiflg (if (> pow my-num) (setq my-num pow)))
+  	((< pow my-num) (setq my-num pow)))))

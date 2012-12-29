@@ -648,6 +648,7 @@ host_cpu
 host_vendor
 host_os
 EXEEXT
+win32
 WIN32_TRUE
 WIN32_FALSE
 clisp_found
@@ -2162,7 +2163,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=maxima
- VERSION=5.28.0
+ VERSION=5.29.1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2505,6 +2506,7 @@ case "$host" in
                 mingw=false
                 EXEEXT=
 esac
+
 
  if test x$win32 = xtrue; then
   WIN32_TRUE=
@@ -4891,6 +4893,11 @@ ac_config_files="$ac_config_files maxima-local"
 
 ac_config_files="$ac_config_files xmaxima-local"
 
+
+# Convert maxima.bat to DOS line ending
+# sed-3.02 in old mingw distribution doesn't support -i or \r
+# dos2unix may not be present, but perl is required elsewhere
+# perl -i interferes with binmode so need to use a temporary file
 ac_config_files="$ac_config_files src/maxima.bat"
 
 
@@ -5834,6 +5841,7 @@ host_cpu!$host_cpu$ac_delim
 host_vendor!$host_vendor$ac_delim
 host_os!$host_os$ac_delim
 EXEEXT!$EXEEXT$ac_delim
+win32!$win32$ac_delim
 WIN32_TRUE!$WIN32_TRUE$ac_delim
 WIN32_FALSE!$WIN32_FALSE$ac_delim
 clisp_found!$clisp_found$ac_delim
@@ -5859,7 +5867,6 @@ LANG_PT_TRUE!$LANG_PT_TRUE$ac_delim
 LANG_PT_FALSE!$LANG_PT_FALSE$ac_delim
 LANG_PT_UTF8_TRUE!$LANG_PT_UTF8_TRUE$ac_delim
 LANG_PT_UTF8_FALSE!$LANG_PT_UTF8_FALSE$ac_delim
-LANG_PT_BR_TRUE!$LANG_PT_BR_TRUE$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -5901,6 +5908,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+LANG_PT_BR_TRUE!$LANG_PT_BR_TRUE$ac_delim
 LANG_PT_BR_FALSE!$LANG_PT_BR_FALSE$ac_delim
 LANG_PT_BR_UTF8_TRUE!$LANG_PT_BR_UTF8_TRUE$ac_delim
 LANG_PT_BR_UTF8_FALSE!$LANG_PT_BR_UTF8_FALSE$ac_delim
@@ -5980,7 +5988,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 77; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 78; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -6292,7 +6300,7 @@ which seems to be undefined.  Please make sure it is defined." >&2;}
   case $ac_file$ac_mode in
     "maxima-local":F) chmod +x maxima-local ;;
     "xmaxima-local":F) chmod +x xmaxima-local ;;
-    "src/maxima.bat":F) sed -i -e 's/$/\r/' src/maxima.bat ;;
+    "src/maxima.bat":F) (perl -ne 'BEGIN{binmode(STDOUT,":crlf")};' -e 'print' < src/maxima.bat > src/maxima.bat.tmp; mv src/maxima.bat.tmp src/maxima.bat) ;;
 
   esac
 done # for ac_tag

@@ -338,9 +338,11 @@
 (defvar *draw-terminal-number* "")
 
 (defun update-terminal (val)
-  (let ((terms '($screen $png $pngcairo $jpg $gif $eps $eps_color $svg
+  (let ((terms '($screen $png $pngcairo $jpg $gif $eps $eps_color 
+                 $epslatex $epslatex_standalone $svg $x11
                  $dumb $dumb_file $pdf $pdfcairo $wxt $animated_gif
-                 $aquaterm $tiff $vrml $obj $pnm)))
+                 $multipage_pdfcairo $multipage_pdf $multipage_eps 
+                 $multipage_eps_color $aquaterm $tiff $vrml $obj $pnm)))
      (cond
        ((member val terms)
           (when (and (eq val '$png) $draw_use_pngcairo)
@@ -552,8 +554,8 @@
        (let ((rv ($float (cadr val)))
              (rh ($float (caddr val))) )
          (unless
-           (and (numberp rv) (>= rv 0) (<= rv 180) )
-           (merror "draw: vertical rotation angle must be in [0, 180]"))
+           (and (numberp rv) (>= rv 0) (<= rv 360) )
+           (merror "draw: vertical rotation angle must be in [0, 360]"))
          (unless
            (and (numberp rh) (>= rh 0) (<= rh 360) )
            (merror "draw: horizontal rotation angle must be in [0, 360]"))

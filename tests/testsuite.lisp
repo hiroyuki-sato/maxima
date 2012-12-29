@@ -21,7 +21,7 @@
         "rtest3" "rtest8"
         ((mlist simp) "rtest12" 76 78)
         "rexamples"
-        ((mlist simp) "rtesthyp" 103 104 105 112 113 123 124 128)
+        ((mlist simp) "rtesthyp" 105 112 113 123 124 128)
         ((mlist simp) "rtest_hypgeo" 143)
         "rtestmt19937"
         "rtest_allnummod"
@@ -55,6 +55,8 @@
         "rtest_ask"
         ((mlist simp) "rtest_sqrt" 89)
         ((mlist simp) "rtest_carg" 40 41)
-        ((mlist simp) "rtest_log" 11)
+        ((mlist simp) "rtest_log")
         ((mlist simp) "rtest_power" 19 20 26 58 62 65)
+        "rtestdefstruct"
+        ((mlist) "rtest_laplace" 29 49 50 51 54 59 60 61 62 78 80)
 	))

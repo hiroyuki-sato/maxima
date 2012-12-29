@@ -16,9 +16,9 @@ binary-gcl/maxima : clmacs.lisp
 binary-gcl/maxima : commac.lisp
 binary-gcl/maxima : mormac.lisp
 binary-gcl/maxima : compat.lisp
+binary-gcl/maxima : transm.lisp
 binary-gcl/maxima : getopt.lisp
 binary-gcl/maxima : command-line.lisp
-binary-gcl/maxima : defopt.lisp
 binary-gcl/maxima : defcal.lisp
 binary-gcl/maxima : maxmac.lisp
 binary-gcl/maxima : mopers.lisp
@@ -196,7 +196,6 @@ binary-gcl/maxima : rat3c.lisp
 binary-gcl/maxima : rat3e.lisp
 binary-gcl/maxima : nrat4.lisp
 binary-gcl/maxima : ratout.lisp
-binary-gcl/maxima : transm.lisp
 binary-gcl/maxima : transl.lisp
 binary-gcl/maxima : transs.lisp
 binary-gcl/maxima : trans1.lisp
@@ -227,7 +226,6 @@ binary-gcl/maxima : intpol.lisp
 binary-gcl/maxima : nparse.lisp
 binary-gcl/maxima : displa.lisp
 binary-gcl/maxima : nforma.lisp
-binary-gcl/maxima : ldisp.lisp
 binary-gcl/maxima : grind.lisp
 binary-gcl/maxima : spgcd.lisp
 binary-gcl/maxima : ezgcd.lisp

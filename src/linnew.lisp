@@ -243,7 +243,7 @@
 	 (push name labels)
 	 (setq result (cdr result))
 	 (when $dispflag
-	   (mtell-open "~M" (nconc (ncons '(mlable))
+	   (mtell-open "~M" (nconc (ncons '(mlabel))
 				   (ncons name)
 				   (ncons (eval name)))))))))
 
@@ -348,7 +348,7 @@
 
 (defun tmstore (name x)
   (cond ((< n *threshold*)
-	 (eval (list 'store name (list 'quote x))))
+	 (eval `(setf ,name ',x)))
 	(t
 	 (mset name (list '(mquote simp) x))
 	 x)))

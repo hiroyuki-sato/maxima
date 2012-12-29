@@ -31,9 +31,9 @@
 		       varlist genvar
 		       $gensumnum checkfactors $features featurel
 		       $weightlevels tellratlist $dontfactor
-		       dispflag savefile $%% $error smart-tty
+		       dispflag savefile $%% $error
 		       opers *ratweights $ratweights
-		       $stringdisp $lispdisp defaultf command
+		       $stringdisp $lispdisp command
 		       transp $contexts $setcheck $macros autoload))
 
 (mapc #'(lambda (x) (setf (symbol-value (car x))
@@ -55,7 +55,7 @@
 (defvar lessorder nil)
 (defvar greatorder nil)
 (defvar *in-translate-file* nil)
-(defvar linelable nil)
+(defvar *linelabel* nil)
 (defvar rephrase nil)
 (defvar st nil)
 (defvar oldst nil)
@@ -107,10 +107,6 @@
 
 (defmvar user-timesofar nil)
 
-(defmvar aliaslist nil
-  "is used by the `makeatomic' scheme which has never been completed"
-  no-reset)
-
 ;; This version of meval* makes sure, that the facts from the global variable
 ;; locals are cleared with a call to clearsign. The facts are added by asksign
 ;; and friends. The function meval* is only used for top level evaluations.
@@ -128,17 +124,17 @@
     (clearsign)))
 
 (defmfun makelabel (x)
-  (setq linelable ($concat '|| x $linenum))
+  (setq *linelabel* ($concat '|| x $linenum))
   (unless $nolabels
     (when (or (null (cdr $labels))
-	      (when (member linelable (cddr $labels) :test #'equal)
-		(setf $labels (delete linelable $labels :count 1 :test #'eq)) t)
-	      (not (eq linelable (cadr $labels))))
-      (setq $labels (cons (car $labels) (cons linelable (cdr $labels))))))
-  linelable)
+	      (when (member *linelabel* (cddr $labels) :test #'equal)
+		(setf $labels (delete *linelabel* $labels :count 1 :test #'eq)) t)
+	      (not (eq *linelabel* (cadr $labels))))
+      (setq $labels (cons (car $labels) (cons *linelabel* (cdr $labels))))))
+  *linelabel*)
 
 (defmfun printlabel ()
-  (mtell-open "(~A) " (subseq (print-invert-case linelable) 1)))
+  (mtell-open "(~A) " (subseq (print-invert-case *linelabel*) 1)))
 
 (defmfun mexploden (x)
   (let (*print-radix*
@@ -521,7 +517,7 @@
 	     (incharp (char= (getlabcharn (car l1)) inchar)))
 	 (errset
 	  (cond ((and (not nostringp) incharp)
-		 (let ((linelable (car l1))) (mterpri) (printlabel))
+		 (let ((*linelabel* (car l1))) (mterpri) (printlabel))
 		 (if grindp
 		     (mgrind (meval1 (car l1)) nil)
 		     (mapc #'(lambda (x) (write-char x)) (mstring (meval1 (car l1))))) ;gcl doesn't like a
@@ -535,7 +531,7 @@
 			      (if x (mtell (intl:gettext "  GC time = ~A seconds") (cdr l)))
 			      (mterpri))
 			 (not (or inputp (get (car l1) 'nodisp)))))
-		 (mterpri) (displa (list '(mlable) (car l1) (meval1 (car l1)))))
+		 (mterpri) (displa (list '(mlabel) (car l1) (meval1 (car l1)))))
 		(t (go a)))))
        (when (and slowp (cdr l1) (not (continuep)))
 	 (return '$terminated))
@@ -601,14 +597,10 @@
 (defmfun fullstrip1 (x)
   (or (and (numberp x) x)
       (let ((y (get x 'reversealias))) (if y (stripdollar y)))
-      (let ((u (rassoc x aliaslist :test #'eq)))
-	(if u (implode (string*1 (car u)))))
       (stripdollar x)))
 
 (defun string* (x)
   (or (and (numberp x) (exploden x))
-      (let ((u (rassoc x aliaslist :test #'eq)))
-	(if u (string*1 (car u))))
       (string*1 x)))
 
 (defun string*1 (x)
@@ -838,16 +830,8 @@
 
 ;; File-processing stuff.
 
-;; This prevents single blank lines from appearing at the top of video
-;; terminals.  If at the upper left corner and we want to print a blank
-;; line, leave the cursor there and send the blank line to transcript
-;; files only.
-
 (defmfun mterpri ()
-  (if smart-tty
-      (let ((#.ttyoff t))
-	(terpri))
-      (terpri)))
+   (terpri))
 
 (defmspec $status (form)
   (setq form (cdr form))
