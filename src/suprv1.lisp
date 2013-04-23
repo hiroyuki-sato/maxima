@@ -108,9 +108,9 @@
 (defmvar user-timesofar nil)
 
 ;; This version of meval* makes sure, that the facts from the global variable
-;; locals are cleared with a call to clearsign. The facts are added by asksign
-;; and friends. The function meval* is only used for top level evaluations.
-;; For other cases the function meval can be used.
+;; *local-signs* are cleared with a call to clearsign. The facts are added by
+;; asksign and friends. The function meval* is only used for top level
+;; evaluations.  For other cases the function meval can be used.
 
 (defmvar $ratvarswitch t) ; If T, start an evaluation with a fresh list VARLIST.
 
@@ -189,7 +189,7 @@
 		   #+lispworks (pathname-type (compile-file-pathname "foo.lisp"))
 		   #-(or gcl cmu clisp allegro openmcl lispworks) ""))
       (if (member type (list bin-ext "lisp" "lsp")  :test 'equalp)
-	  #-sbcl (load file) #+sbcl (with-compilation-unit nil (load file))
+	  (let ((*read-base* 10.)) #-sbcl (load file) #+sbcl (with-compilation-unit nil (load file)))
 	  ($load file)))))
 
 (defvar autoload 'generic-autoload)
@@ -232,6 +232,7 @@
   (if printp (format t (intl:gettext "loadfile: loading ~A.~%") file))
   (let* ((path (pathname file))
 	 ($load_pathname path)
+	 (*read-base* 10.)
 	 (tem (errset #-sbcl (load (pathname file)) #+sbcl (with-compilation-unit nil (load (pathname file))))))
     (or tem (merror (intl:gettext "loadfile: failed to load ~A") (namestring path)))
     (namestring path)))
@@ -669,7 +670,7 @@
         ($ibase *read-base* *read-base*) ($obase *print-base* obase)
         ($nopoint *nopoint nopoint)
 	($modulus modulus modulus) ($zunderflow zunderflow zunderflow)
-	($ttyoff #.ttyoff ttyoff) ($writefile_on #.writefilep writefile_on)
+	($ttyoff #.ttyoff ttyoff)
 	($mode_declare $modedeclare mode_declare)))
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'alias))

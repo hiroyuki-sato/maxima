@@ -5,11 +5,16 @@
 ;; author:      Liam Healy <Liam.Healy@nrl.navy.mil>
 ;;********************************************************
 
-(in-package :maxima)
-
 ;;; An ANSI-CL portable initializer to replace init_max1.lisp
 
-#+ecl (defvar cl-user::*maxima-build-time* '#.(multiple-value-list (get-decoded-time)))
+;; CL-USER:*MAXIMA-BUILD-TIME* is defined in maxima.asd and maxima.system,
+;; but I guess ECL doesn't see that, so define it here.
+#+ecl (progn
+  (in-package :cl-user)
+  (defvar *maxima-build-time* '#.(multiple-value-list (get-decoded-time)))
+  (export '*maxima-build-time*))
+
+(in-package :maxima)
 
 ;;; Locations of various types of files. These variables are discussed
 ;;; in more detail in the file doc/implementation/dir_vars.txt. Since
@@ -299,6 +304,7 @@ When one changes, the other does too."
 	      "")
 	 (lisp-patterns (concatenate 'string "$$$.{" ext ",lisp,lsp}"))
 	 (maxima-patterns "$$$.{mac,mc}")
+	 (lisp+maxima-patterns (concatenate 'string "$$$.{" ext ",lisp,lsp,mac,mc}"))
 	 (demo-patterns "$$$.{dem,dm1,dm2,dm3,dmt}")
 	 (usage-patterns "$$.{usg,texi}")
 	 (share-subdirs-list (share-subdirs-list))
@@ -331,19 +337,14 @@ When one changes, the other does too."
 		(combine-path *maxima-sharedir* share-subdirs usage-patterns)
 		(combine-path *maxima-docdir* usage-patterns)))
     (setq $file_search_tests
-	  `((mlist) ,(combine-path *maxima-testsdir* maxima-patterns)))
+	  `((mlist) ,(combine-path *maxima-testsdir* lisp+maxima-patterns)))
 
     ;; If *maxima-lang-subdir* is not nil test whether corresponding info directory
     ;; with some data really exists.  If not this probably means that required
     ;; language pack wasn't installed and we reset *maxima-lang-subdir* to nil.
     (when (and *maxima-lang-subdir*
 	       (not (probe-file (combine-path *maxima-infodir* *maxima-lang-subdir* "maxima-index.lisp"))))
-       (setq *maxima-lang-subdir* nil))
-    ;; Autoload for Maxima documantation index file
-    (let ((subdir-bit (if (null *maxima-lang-subdir*) "." *maxima-lang-subdir*)))
-      ;; Assign AUTOLOAD property instead of binding a function (the result of AUTOF).
-      (setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
-	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp")))))
+       (setq *maxima-lang-subdir* nil))))
 
 (defun get-dirs (path)
   #+(or :clisp :sbcl :ecl :openmcl)
@@ -576,6 +577,7 @@ When one changes, the other does too."
   (set-locale-subdir)
   (adjust-character-encoding)
   (set-pathnames)
+  (cl-info::load-primary-index)   
   (when (boundp '*maxima-prefix*)
     (push (pathname (concatenate 'string *maxima-prefix*
                                  (if *maxima-layout-autotools*

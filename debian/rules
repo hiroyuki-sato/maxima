@@ -53,8 +53,8 @@ build-indep: debian/save build-stamp
 build-stamp:
 	dh_testdir
 
-	aclocal-1.9
-	automake-1.9
+	aclocal-1.11
+	automake-1.11
 
 	GCL_ANSI=t gcl -batch -eval '(bye #+ia64 1)' || \
 	echo '(setq compiler::*opt-three* "-O0" compiler::*opt-two* "-O0")(si::save-system "gcl")' | GCL_ANSI=t gcl
@@ -68,9 +68,6 @@ build-stamp:
 	PATH=$$(pwd):$$PATH GCL_ANSI=t $(MAKE)
 
 # This sets up some reasonable readline command completion by default
-
-	cd src/binary-gcl && echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil)(si::putprop (quote cl-info::cause-maxima-index-to-load) "/usr/share/doc/maxima-doc/info/maxima-index.lisp"  (quote autoload))(si::save-system "foo")' | ./maxima -eval '(run)' && mv foo maxima
-
 
 # Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
@@ -102,6 +99,8 @@ build-stamp:
 #		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
 #		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
 #		dvips -o maxima.ps maxima
+
+	echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil maxima::*maxima-index-dir* "/usr/share/doc/maxima-doc/info/")(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
 
 	touch build-stamp
 
@@ -217,10 +216,10 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 		mv debian/foo debian/tmp/usr/share/man/man1/maxima.1
 
 	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
-	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips} -name "*.uu") ; do \
+	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.uu") ; do \
 		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
 
-	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips} -name "*.shtml") ; do \
+	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.shtml") ; do \
 		mv $$i $${i%.shtml}.html ; done
 
 	for i in $$(find debian/tmp/usr/share/info -name "maxima-index.lisp") ; do \

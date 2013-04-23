@@ -470,6 +470,16 @@ limit((%pi*4^N*N!^2)/(2*2^(2*N)*gamma(N+1/2)*gamma(N+3/2)), N, inf);
 limit(log(gamma(x+1))/x, x, 0);
 -%gamma;
 
+/* log has a branch cut on negative real axis */
+limit(log(-1+x*%i), x, 0, plus);
+%i*%pi;
+
+limit(log(-1+x*%i), x, 0, minus);
+-%i*%pi;
+
+limit((log(y+h)-log(y))/h,h,0,plus);
+1/y;
+
 /* limit of incomplete gamma */
 /* function simplim%gamma_incomplete in gamma.lisp */
 
@@ -1140,6 +1150,18 @@ infinity;
 limit((2+cos(x))/(x^3*sin(x))-3/x^4,x,0,plus);
 1/60;
 
+/* #2527 exponent too big in limit */
+limit ((cosh(sqrt(x+1))-cosh(sqrt(x)))^(1/sqrt(x)),x,inf );
+%e;
+
+/* #2561 limit(log(x^2),x,-20) gives 2*log(-20) */
+limit(log(x^2),x,-20),logexpand:false;
+log(400);
+
+/* #2412 Problems with integral (x/(exp(x)+1),x,0,inf) */
+limit(-x*log(%e^x+1)-li[2](-%e^x)+x^2/2, x, inf);
+%pi^2/6;
+
 /* Bug ID: 2872738 - sign(-(1/n)*(-1)^n)
  * We got the error because of the simplification
  *  (-1)^n*(-1) -> (-1)^(n+1) and not -(-1)^n
@@ -1338,7 +1360,7 @@ limit(x/(2+sin(1/x)),x,0);
 limit(x/sin(x)^2,x,inf);
 und;
 
-/* Bug ID: 777564 - subtraction \"-\"(a,b) should work/FIX */
+/* Bug ID: 777564 - subtraction "-"(a,b) should work/FIX */
 
 "-"();
 0;
@@ -2164,6 +2186,29 @@ x^5-5*x^4/2+5*x^3/3-x/6$
 reset(zerobern);
 [zerobern];
 
+/* Show that bern no longer fails with zerobern:false.
+ *
+ * The compared values are from A&S p810, Table 23.2.
+ */
+bern(28);
+-23749461029/870$
+bern(40);
+-261082718496449122051/13530$
+euler(16);
+19391512145$
+
+zerobern:false;
+false$
+bern(17);
+-7709321041217/510$
+bern(24);
+596451111593912163277961/282$
+euler(10);
+370371188237525$
+
+reset(zerobern);
+[zerobern]$
+
 /* -----------------------------------------------------------------------------
  * Bug ID: 2905929 - gcdex
  * -------------------------------------------------------------------------- */
@@ -2296,6 +2341,16 @@ polarform((a+1)/2 - a/2 - 0.5);
 polarform((a+1)/2 - a/2 - 0.5b0);
 0.0b0$
 
+
+/* #2531 Integration with inf */
+errcatch(integrate((1+1/x)^(1/2),x,1,inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+
+
 /*
  * ID: 3440046: elliptic_f(0.5,1) signals error
  *
@@ -2343,3 +2398,28 @@ realpart(log(-1b0));
  */
 errcatch(elliptic_f(2,1));
 [];
+
+/* bug 2535: stack exhausted when computing limit(log(..)) */
+
+limit(log(-1/3125*((-1/2*sqrt(5) + 1/2)^n - (1/2*sqrt(5) +
+1/2)^n)^9*sqrt(5))/log(-1/5*((-1/2*sqrt(5) + 1/2)^(8*n) - (1/2*sqrt(5) +
+1/2)^(8*n))*((-1/2*sqrt(5) + 1/2)^n - (1/2*sqrt(5) + 1/2)^n) -
+1/5*((-1/2*sqrt(5) + 1/2)^(9*n) - (1/2*sqrt(5) +
+1/2)^(9*n))*sqrt(5)),n,inf);
+'limit(log(-1/3125*((-1/2*sqrt(5) + 1/2)^n - (1/2*sqrt(5) +
+1/2)^n)^9*sqrt(5))/log(-1/5*((-1/2*sqrt(5) + 1/2)^(8*n) - (1/2*sqrt(5) +
+1/2)^(8*n))*((-1/2*sqrt(5) + 1/2)^n - (1/2*sqrt(5) + 1/2)^n) -
+1/5*((-1/2*sqrt(5) + 1/2)^(9*n) - (1/2*sqrt(5) +
+1/2)^(9*n))*sqrt(5)),n,inf);
+
+/*
+ * Bug 2528: A variable should be real if it is both real and complex
+ */
+(declare(foo, real), declare(foo, complex), 0);
+0$
+
+[realpart(foo), imagpart(foo)];
+[foo, 0]$
+
+(kill(foo), 0);
+0$
