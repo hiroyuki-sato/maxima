@@ -170,6 +170,7 @@ contrib/clebsh-gordan.tex \
 contrib/colorterm.lisp \
 contrib/devine.mac \
 contrib/diag.mac \
+contrib/diag_test.mac \
 contrib/diffequations/contrib_ode.mac \
 contrib/diffequations/contrib_ode.usg \
 contrib/diffequations/de-test.txt \
@@ -525,13 +526,14 @@ diff_form/surface_example.txt \
 distrib/distrib.mac \
 distrib/numdistrib.lisp \
 distrib/rtest_distrib.mac \
+draw/draw_gnuplot.dem \
 draw/draw.lisp \
+draw/draw.system \
 draw/drawutils.mac \
 draw/drawutils.texi \
+draw/gnuplot.lisp \
 draw/grcommon.lisp \
-draw/implicit3d.lisp \
 draw/picture.lisp \
-draw/rtest_draw.mac \
 draw/vtk.lisp \
 draw/wbd.lisp \
 draw/worldmap.mac \
@@ -549,6 +551,7 @@ ezunits/ezunits.mac \
 ezunits/physical_constants.mac \
 ezunits/rtest_ezunits_frink.mac \
 ezunits/rtestezunits.mac \
+ezunits/rtest_ezunits_solve.mac \
 finance/finance.mac \
 fourier_elim/fourier_elim.lisp \
 fourier_elim/rtest_fourier_elim.mac \
@@ -958,6 +961,7 @@ numeric/newton1.mac \
 numeric/newton.mac \
 numeric/riemsum.mac \
 numeric/romberg.lisp \
+numeric/rtest_bffac.mac \
 numeric/rtest_fft.mac \
 numeric/rtest_interpol.mac \
 numeric/rtest_romberg.mac \

@@ -112,14 +112,14 @@ It appears in LIMIT and DEFINT.......")
 	 (let ((exp1 ()) (rd* t) (lhcount $lhospitallim) (*behavior-count-now* 0)
 	       (exp ()) (var ()) (val ()) (dr ())
 	       (*indicator ()) (taylored ()) (origval ())
-	       (logcombed ()) (lhp? ()) ($logexpand t)
+	       (logcombed ()) (lhp? ())
 	       (varlist ()) (ans ()) (genvar ()) (loginprod? ())
 	       (limit-answers ()) (limitp t) (simplimplus-problems ())
 	       (lenargs (length args))
 	       (genfoo ()))
 	   (declare (special lhcount *behavior-count-now* exp var val *indicator
 			     taylored origval logcombed lhp?
-			     $logexpand varlist genvar loginprod? limitp))
+			     varlist genvar loginprod? limitp))
 	   (prog ()
 	      (unless (or (= lenargs 3) (= lenargs 4) (= lenargs 1))
 		(wna-err '$limit))
@@ -241,8 +241,6 @@ It appears in LIMIT and DEFINT.......")
 
 (defun limit-context (var val direction) ;Only works on entry!
   (cond (limit-top
-;	 (if (atom var)	; declare and facts don't work on subscripted vars
-;	     (mapc #'forget (setq global-assumptions (cdr ($facts var)))))
 	 (assume '((mgreaterp) lim-epsilon 0))
 	 (assume '((mlessp) lim-epsilon 1e-8))
 	 (assume '((mgreaterp) prin-inf 1e+8))
@@ -252,8 +250,7 @@ It appears in LIMIT and DEFINT.......")
   limit-assumptions)
 
 (defun make-limit-assumptions (var val direction)
-  (let ((new-assumptions)); (use-old-context old-assumptions var val)))
-;    (mapc #'assume new-assumptions)
+  (let ((new-assumptions))
     (cond ((or (null var) (null val))
 	   ())
 	  ((and (not (infinityp val)) (null direction))
@@ -912,6 +909,8 @@ It appears in LIMIT and DEFINT.......")
 	  ((eq (caar ans) '%limit)  ())
 	  (t ans))))
 
+;; substitute asymptotic approximations for gamma, factorial, and
+;; polylogarithm
 (defun stirling0 (e)
   (cond ((atom e) e)
 	((and (setq e (cons (car e) (mapcar 'stirling0 (cdr e))))
@@ -922,6 +921,12 @@ It appears in LIMIT and DEFINT.......")
 	((and (eq (caar e) 'mfactorial)
 	      (eq (limit (cadr e) var val 'think) '$inf))
 	 (m* (cadr e) (stirling (cadr e))))
+	((and (eq (caar e) 'mqapply)		;; polylogarithm
+	      (eq (subfunname e) '$li)
+	      (integerp (car (subfunsubs e))))
+	 (li-asymptotic-expansion (m- (car (subfunsubs e)) 1) 
+				   (car (subfunsubs e))
+				   (car (subfunargs e))))
 	(t e)))
 
 (defun stirling (x)
@@ -2538,26 +2543,17 @@ It appears in LIMIT and DEFINT.......")
 
 (defun simplimln (expr var val)
   ;; We need to be careful with log because of the branch cut on the
-  ;; negative real axis.  So we look at the imagpart of the log.  If
+  ;; negative real axis.  So we look at the imagpart of the argument.  If
   ;; it's not identically zero, we compute the limit of the real and
   ;; imaginary parts and combine them.  Otherwise, we can use the
   ;; original method for real limits.
-  (destructuring-let* ((arglim (limit (cadr expr) var val 'think))
-                       (log-form `((%log) ,(cadr expr)))
-                       ((rp . ip) (cond ((member arglim infinities)
-                                         ;; Treat infinities as real.
-                                         (cons arglim 0))
-                                        ((or (and (mnump arglim)
-                                                  (ratgreaterp arglim 0))
-					  (eq arglim '$zeroa))
-                                         ;; if limit is real pos
-                                         ;; avoid asking user q's
-                                         (cons arglim 0))
-                                        (t
-                                         ;; otherwise find real part
-                                         (trisplit log-form)))))
-    (cond ((and (numberp ip) (zerop ip))
-           ;; Limit of the argument is real.
+  (let ((arglim (limit (cadr expr) var val 'think)))
+    (cond ((eq arglim '$inf) '$inf)
+	  ((member arglim '($minf $infinity) :test #'eq)
+	   '$infinity)
+	  ((member arglim '($ind $und) :test #'eq) '$und)
+	  ((equal ($imagpart (cadr expr)) 0)
+           ;; argument is real.
 	   (let* ((real-lim (ridofab arglim)))
 	     (if (=0 real-lim)
 		 (cond ((eq arglim '$zeroa)  '$minf)
@@ -2566,11 +2562,7 @@ It appears in LIMIT and DEFINT.......")
 			    (cond ((equal dir 1) '$minf)
 				  ((equal dir -1) '$infinity)
 				  (t (throw 'limit t))))))
-		 (cond ((eq arglim '$inf) '$inf)
-                       ((member arglim '($minf $infinity) :test #'eq)
-		        '$infinity)
-		       ((member arglim '($ind $und) :test #'eq) '$und)
-		       ((equal arglim 1)
+		 (cond ((equal arglim 1)
 			(let ((dir (behavior (cadr expr) var val)))
 			  (if (equal dir 1) '$zeroa 0)))
 		       (t
@@ -2578,12 +2570,13 @@ It appears in LIMIT and DEFINT.......")
 		         ;; of the argument. 
 		         (simplify `((%log) ,real-lim)))))))
 	  (t
-	   ;; Limit of the argument is complex.
-           (if (eq (setq rp (limit rp var val 'think)) '$minf)
-               ;; Realpart is minf, do not return minf+%i*ip but infinity.
-               '$infinity
-               ;; Return a complex limit value.
-               (add rp (mul '$%i (limit ip var val 'think))))))))
+	   ;; argument is complex.
+	   (destructuring-let* (((rp . ip) (trisplit expr)))
+			       (if (eq (setq rp (limit rp var val 'think)) '$minf)
+				   ;; Realpart is minf, do not return minf+%i*ip but infinity.
+				   '$infinity
+				 ;; Return a complex limit value.
+				 (add rp (mul '$%i (limit ip var val 'think)))))))))
 
 ;;; Limit of the Factorial function
 

@@ -205,6 +205,18 @@
       (and (not (atom x)) (not (atom (car x)))
 	   (member (caar x) '(rat bigfloat)))))
 
+;; is there a bfloat anywhere in x?
+(defun some-bfloatp (x)
+  (or ($bfloatp x)
+      (and (consp x)
+	   (some #'some-bfloatp (cdr x)))))
+
+;; is there a float anywhere in x?
+(defun some-floatp (x)
+  (or (floatp x)
+      (and (consp x)
+	   (some #'some-floatp (cdr x)))))
+
 ;; EVEN works for any arbitrary lisp object since it does an integer
 ;; check first.  In other cases, you may want the Lisp EVENP function
 ;; which only works for integers.
@@ -2982,6 +2994,8 @@
 	     (member (caar y) '(mtimes mplus mexpt %del) :test #'eq))
 	 (ordfn x y))
 	((and (eq (caar x) 'bigfloat) (eq (caar y) 'bigfloat)) (mgrp x y))
+	((or (eq (caar x) 'mrat) (eq (caar y) 'mrat))
+	 (error "GREAT: internal error: unexpected MRAT argument"))
 	(t (do ((x1 (margs x) (cdr x1)) (y1 (margs y) (cdr y1))) (())
 	     (cond ((null x1)
 		    (return (cond (y1 nil)
@@ -3017,11 +3031,17 @@
 
        (t (equal x y))))
 	((atom y) nil)
-	(t (and (not (atom (car x)))
-		(not (atom (car y)))
-		(eq (caar x) (caar y))
-		(eq (memqarr (cdar x)) (memqarr (cdar y)))
-		(alike (cdr x) (cdr y))))))
+	((and
+	  (not (atom (car x)))
+	  (not (atom (car y)))
+	  (eq (caar x) (caar y)))
+         (cond
+	  ((eq (caar x) 'mrat)
+	   ;; Punt back to LIKE, which handles CREs.
+	   (like x y))
+	  (t (and
+	      (eq (memqarr (cdar x)) (memqarr (cdar y)))
+	      (alike (cdr x) (cdr y))))))))
 
 (defun lisp-array-alike1 (x y)
   (and
@@ -3054,6 +3074,7 @@
         ((and (constant a)
               (not (member (caar e) '(mplus mtimes mexpt) :test #'eq)))
 	 (not (member (caar e) '(rat bigfloat) :test #'eq)))
+	((eq (caar e) 'mrat)) ;; all MRATs succeed all atoms
 	((null (margs e)) nil)
 	((eq (caar e) 'mexpt)
 	 (cond ((and (maxima-constantp (cadr e))

@@ -15,16 +15,22 @@
 		 adj i j))))
     adj))
 
-(defmfun $invert (mat)
-  (let* ((adj (simplify ($adjoint mat)))
-	 (ans (let (($scalarmatrixp t))
-		(div adj
-		     (ncmul2 (simplify ($row mat 1))
-			     (simplify ($col adj 1)))))))
-    (if (and (like (trd-msymeval $scalarmatrixp '$scalarmatrixp) t)
-	     (eql ($length mat) 1))
-	(maref ans 1 1)
-	ans)))
-
 (add2lnc '$adjoint $props)
-(add2lnc '$invert $props)
+
+(defun $invert (m &optional (field-name (if $ratmx '$crering '$generalring)))
+  (declare (special $ratmx $detout))
+  ;; Call functions from package linearalgebra via MFUNCALL to autoload them if necessary.
+  (if $detout
+    (let*
+      ((field (mfuncall '$require_ring field-name "$second" "$invert"))
+       (d-i (invert-by-lu-with-determinant m field-name))
+       (d (first d-i))
+       (i (second d-i))
+       (d-times-i (multiply-matrix-elements d (mring-mult field) i))
+       (d^-1 (funcall (mring-reciprocal field) d)))
+      (list '(mtimes) d^-1 d-times-i))
+    (mfuncall '$invert_by_lu m field-name)))
+
+;; I wonder if this function already exists somewhere. Oh well.
+(defun multiply-matrix-elements (a multiply m)
+  (cons (car m) (mapcar #'(lambda (row) (cons (car row) (mapcar #'(lambda (x) (funcall multiply a x)) (cdr row)))) (cdr m))))

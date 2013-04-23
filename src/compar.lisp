@@ -57,13 +57,18 @@ relational knowledge is contained in the default context GLOBAL.")
 (defmvar $assume_pos_pred nil)
 
 (defmvar factored nil)
-(defmvar locals nil)
+
+;; The *LOCAL-SIGNS* variable contains a list of facts that are local to the
+;; current evaluation. These are stored in the assume database (in the global
+;; context) by asksign1 when the user answers questions. A "top-level"
+;; evaluation is run by MEVAL* and that function calls CLEARSIGN when it
+;; finishes to discard them.
+(defmvar *local-signs* nil)
+
 (defmvar sign nil)
 (defmvar minus nil)
 (defmvar odds nil)
 (defmvar evens nil)
-(defmvar lhs nil)
-(defmvar rhs nil)
 
 (defvar $useminmax t)
 
@@ -75,9 +80,6 @@ relational knowledge is contained in the default context GLOBAL.")
 ;; reset at the end of the file via a call to ($newcontext '$initial).
 (setq $context '$global
       $contexts '((mlist) $global))
-
-(defmacro ask (&rest x)
-  `(retrieve (list '(mtext) ,@x) nil))
 
 (defmacro pow (&rest x)
   `(power ,@x))
@@ -758,20 +760,22 @@ relational knowledge is contained in the default context GLOBAL.")
     ($sign z)))
 
 (defmfun $sign (x)
-  (let ((x (specrepcheck x))
-	sign minus odds evens factored)
-    (sign01 (cond (limitp (restorelim x))
-		  (*complexsign*
-		   ;; No rectform in Complex mode. Rectform ask unnecessary
-		   ;; questions about complex expressions and can not handle
-		   ;; imaginary expressions completely. Thus $csign can not
-		   ;; handle something like (1+%i)*(1-%i) which is real.
-		   ;; After improving rectform, we can change this. (12/2008)
-		   (when *debug-compar*
-		     (format t "~&$SIGN with ~A~%" x))
-		   x)
-		  ((not (free x '$%i)) ($rectform x))
-		  (t x)))))
+  (unwind-protect
+    (let ((x (specrepcheck x))
+	  sign minus odds evens factored)
+      (sign01 (cond (limitp (restorelim x))
+		    (*complexsign*
+		     ;; No rectform in Complex mode. Rectform ask unnecessary
+		     ;; questions about complex expressions and can not handle
+		     ;; imaginary expressions completely. Thus $csign can not
+		     ;; handle something like (1+%i)*(1-%i) which is real.
+		     ;; After improving rectform, we can change this. (12/2008)
+		     (when *debug-compar*
+		       (format t "~&$SIGN with ~A~%" x))
+		     x)
+		    ((not (free x '$%i)) ($rectform x))
+		    (t x))))
+    (clearsign)))
 
 (defun sign01 (a)
   (let ((e (sign-prep a)))
@@ -882,61 +886,81 @@ relational knowledge is contained in the default context GLOBAL.")
   (let ($radexpand)
     (declare (special $radexpand))
     (sign1 $askexp))
-  (cond ((has-int-symbols $askexp)
-	 '$pnz)
+  (cond ((has-int-symbols $askexp) '$pnz)
 	((member sign '($pos $neg $zero $imaginary) :test #'eq) sign)
 	((null odds)
 	 (setq $askexp (lmul evens)
-	       sign (cdr (assol $askexp locals)))
-	 (do ()
-	     (nil)
-	   (cond ((member sign '($zero |$Z| |$z| 0 0.0) :test #'equal)
-		  (tdzero $askexp) (setq sign '$zero) (return t))
-		 ((member sign '($pn $nonzero |$N| |$n| $nz $nonz $non0) :test #'eq)
-		  (tdpn $askexp) (setq sign '$pos) (return t))
-		 ((member sign '($pos |$P| |$p| $positive) :test #'eq)
-		  (tdpos $askexp) (setq sign '$pos) (return t))
-		 ((member sign '($neg |$N| |$n| $negative) :test #'eq)
-		  (tdneg $askexp) (setq sign '$pos) (return t)))
-	   (setq sign (ask "Is  " $askexp "  zero or nonzero?")))
-	 (if minus (flip sign) sign))
-	(t (if minus (setq sign (flip sign)))
-	   (setq $askexp (lmul (nconc odds (mapcar #'(lambda (l) (pow l 2)) evens))))
-	   (do ((dom (cond ((eq '$pz sign) "  positive or zero?")
-			   ((eq '$nz sign) "  negative or zero?")
-			   ((eq '$pn sign) "  positive or negative?")
-			   (t "  positive, negative, or zero?")))
-		(ans (cdr (assol $askexp locals))))
-	       (nil)
-	     (cond ((and (member ans '($pos |$P| |$p| $positive) :test #'eq)
-			 (member sign '($pz $pn $pnz) :test #'eq))
-		    (tdpos $askexp) (setq sign '$pos) (return t))
-		   ((and (member ans '($neg |$N| |$n| $negative) :test #'eq)
-			 (member sign '($nz $pn $pnz) :test #'eq))
-		    (tdneg $askexp) (setq sign '$neg) (return t))
-		   ((and (member ans '($zero |$Z| |$z| 0 0.0) :test #'equal)
-			 (member sign '($pz $nz $pnz) :test #'eq))
-		    (tdzero $askexp) (setq sign '$zero) (return t)))
-	     (setq ans (ask "Is  " $askexp dom)))
-	   (if minus (flip sign) sign))))
+	       sign (cdr (assol $askexp *local-signs*)))
+         (ensure-sign $askexp '$znz))
+	(t
+         (if minus (setq sign (flip sign)))
+         (setq $askexp
+               (lmul (nconc odds (mapcar #'(lambda (l) (pow l 2)) evens))))
+         (let ((domain sign))
+           (setf sign (assol $askexp *local-signs*))
+           (ensure-sign $askexp domain)))))
+
+(defun match-sign (sgn domain expression)
+  "If SGN makes sense for DOMAIN store the result (see ENSURE-SIGN) and return
+it. Otherwise, return NIL."
+  ;; We have a hit if the answer (sign) is one of the first list and the
+  ;; question (domain) was one of the second.
+  (let* ((behaviour
+          '((($pos |$P| |$p| $positive) (nil $znz $pz $pn $pnz) tdpos $pos)
+            (($neg |$N| |$n| $negative) (nil $znz $nz $pn $pnz) tdneg $neg)
+            (($zero |$Z| |$z| 0 0.0) (nil $znz $pz $nz $pnz) tdzero $zero)
+            (($pn $nonzero $nz $nonz $non0) ($znz) tdpn $pn)))
+         (hit (find-if (lambda (bh)
+                         (and (member sgn (first bh) :test #'equal)
+                              (member domain (second bh) :test #'eq)))
+                       behaviour)))
+    (when hit
+      (funcall (third hit) expression)
+      (setq sign
+            (if minus (flip (fourth hit)) (fourth hit))))))
+
+(defun ensure-sign (expr &optional domain)
+  "Try to determine the sign of EXPR. If DOMAIN is not one of the special values
+described below, we try to tell whether EXPR is positive, negative or zero. It
+can be more specialised ($pz => positive or zero; $nz => negative or zero; $pn
+=> positive or negative; $znz => zero or nonzero).
+
+When calling ENSURE-SIGN, set the special variable SIGN to the best current
+guess for the sign of EXPR. The function returns the sign, calls one of (TDPOS
+TDNEG TDZERO TDPN) to store it, and also sets SIGN."
+  (loop
+     (let ((new-sign (match-sign sign domain expr)))
+       (when new-sign (return new-sign)))
+     (setf sign (retrieve
+                 (list '(mtext)
+                       "Is " expr
+                       (or (second
+                            (assoc domain
+                                   '(($znz " zero or nonzero?")
+                                     ($pz  " positive or zero?")
+                                     ($nz  " negative or zero?")
+                                     ($pn  " positive or negative?"))))
+                           " positive, negative or zero?"))
+                 nil))))
 
 ;; During one evaluation phase asksign writes answers from the user into the
 ;; global context '$initial. These facts are removed by clearsign after
 ;; finishing the evaluation phase. clearsign is called from the top-level
 ;; evaluation function meval*. The facts which have to be removed are stored
-;; in the global variable locals.
+;; in the global variable *local-signs*.
 
 (defun clearsign ()
   (let ((context '$initial))
-    (do ()
-        ((null locals))
-      (cond ((eq '$pos (cdar locals)) (daddgr nil (caar locals)))
-            ((eq '$neg (cdar locals)) (daddgr nil (neg (caar locals))))
-            ((eq '$zero (cdar locals)) (daddeq nil (caar locals)))
-            ((eq '$pn (cdar locals)) (daddnq nil (caar locals)))
-            ((eq '$pz (cdar locals)) (daddgq nil (caar locals)))
-            ((eq '$nz (cdar locals)) (daddgq nil (neg (caar locals)))))
-      (setq locals (cdr locals)))))
+    (dolist (cons-pair *local-signs*)
+      (destructuring-bind (x . sgn) cons-pair
+        (cond
+          ((eq '$pos sgn) (daddgr nil x))
+          ((eq '$neg sgn) (daddgr nil (neg x)))
+          ((eq '$zero sgn) (daddeq nil x))
+          ((eq '$pn sgn) (daddnq nil x))
+          ((eq '$pz sgn) (daddgq nil x))
+          ((eq '$nz sgn) (daddgq nil (neg x))))))
+    (setf *local-signs* nil)))
 
 (defmfun like (x y)
   (alike1 (specrepcheck x) (specrepcheck y)))
@@ -1155,6 +1179,16 @@ relational knowledge is contained in the default context GLOBAL.")
       e
       (infsimp e)))
 
+;; Like WITH-COMPSPLT, but runs COMPSPLT-EQ instead
+(defmacro with-compsplt-eq ((lhs rhs x) &body forms)
+  `(multiple-value-bind (,lhs ,rhs) (compsplt-eq ,x)
+     ,@forms))
+
+;; Call FORMS with LHS and RHS bound to the splitting of EXPR by COMPSPLT.
+(defmacro with-compsplt ((lhs rhs expr) &body forms)
+  `(multiple-value-bind (,lhs ,rhs) (compsplt ,expr)
+     ,@forms))
+
 (defun sign1 (x)
   (setq x (specrepcheck x))
   (setq x (infsimp* x))
@@ -1183,18 +1217,18 @@ relational knowledge is contained in the default context GLOBAL.")
 		  (t (setq sign '$pnz evens nil odds (ncons x) minus nil)
 		     (return sign)))))
      (or (and (not (atom x)) (not (mnump x)) (equal x exp)
-	      (let (s o e m lhs rhs)
-		(compsplt x)
-		(dcompare lhs rhs)
-		(cond ((member sign '($pos $neg $zero) :test #'eq))
-		      ((eq sign '$pnz) nil)
-		      (t (setq s sign o odds e evens m minus)
-			 (sign x)
-			 (if (not (strongp sign s))
-			     (if (and (eq sign '$pnz) (eq s '$pn))
-				 (setq sign s)
-				 (setq sign s odds o evens e minus m)))
-			 t))))
+	      (let (s o e m)
+                (with-compsplt (lhs rhs x)
+                  (dcompare lhs rhs)
+                  (cond ((member sign '($pos $neg $zero) :test #'eq))
+                        ((eq sign '$pnz) nil)
+                        (t (setq s sign o odds e evens m minus)
+                           (sign x)
+                           (if (not (strongp sign s))
+                               (if (and (eq sign '$pnz) (eq s '$pn))
+                                   (setq sign s)
+                                   (setq sign s odds o evens e minus m)))
+                           t)))))
 	 (sign exp))
      (return sign)))
 
@@ -1326,27 +1360,27 @@ relational knowledge is contained in the default context GLOBAL.")
 
 (defun signdiff (x)
   (setq sign '$pnz)
-  (compsplt x)
-  (if (and (mplusp lhs) (equal rhs 0)
-	   (null (cdddr lhs))
-	   (negp (cadr lhs)) (not (negp (caddr lhs))))
-      (setq rhs (neg (cadr lhs)) lhs (caddr lhs)))
-  (let (dum)
-    (cond ((or (equal rhs 0) (mplusp lhs)) nil)
-	  ((and (member (constp rhs) '(numer symbol) :test #'eq)
-		(numberp (setq dum (numer rhs)))
-		(prog2 (setq rhs dum) nil)))
-	  ((mplusp rhs) nil)
-	  ((and (dcompare lhs rhs) (member sign '($pos $neg $zero) :test #'eq)))
-	  ((and (not (atom lhs)) (not (atom rhs))
-		(eq (caar lhs) (caar rhs))
-		(kindp (caar lhs) '$increasing))
-	   (sign (sub (cadr lhs) (cadr rhs)))
-	   t)
-	  ((and (not (atom lhs)) (eq (caar lhs) 'mabs)
-		(alike1 (cadr lhs) rhs))
-	   (setq sign '$pz minus nil odds nil evens nil) t)
-	  ((signdiff-special lhs rhs)))))
+  (with-compsplt (lhs rhs x)
+    (if (and (mplusp lhs) (equal rhs 0)
+             (null (cdddr lhs))
+             (negp (cadr lhs)) (not (negp (caddr lhs))))
+        (setq rhs (neg (cadr lhs)) lhs (caddr lhs)))
+    (let (dum)
+      (cond ((or (equal rhs 0) (mplusp lhs)) nil)
+            ((and (member (constp rhs) '(numer symbol) :test #'eq)
+                  (numberp (setq dum (numer rhs)))
+                  (prog2 (setq rhs dum) nil)))
+            ((mplusp rhs) nil)
+            ((and (dcompare lhs rhs) (member sign '($pos $neg $zero) :test #'eq)))
+            ((and (not (atom lhs)) (not (atom rhs))
+                  (eq (caar lhs) (caar rhs))
+                  (kindp (caar lhs) '$increasing))
+             (sign (sub (cadr lhs) (cadr rhs)))
+             t)
+            ((and (not (atom lhs)) (eq (caar lhs) 'mabs)
+                  (alike1 (cadr lhs) rhs))
+             (setq sign '$pz minus nil odds nil evens nil) t)
+            ((signdiff-special lhs rhs))))))
 
 (defun signdiff-special (xlhs xrhs)
   ;; xlhs may be a constant
@@ -1564,46 +1598,52 @@ relational knowledge is contained in the default context GLOBAL.")
 	   (cond ((eq sign-base '$neg)
 		  (setq odds (ncons x) sign '$pn))))
 	  ((eq sign-expt '$pn))
-	  (t (cond ((ratnump expt)
-		    (cond ((mevenp (cadr expt))
-			   (cond ((member sign-base '($pn $neg) :test #'eq)
-				  (setq sign-base '$pos))
-				 ((member sign-base '($pnz $nz) :test #'eq)
-				  (setq sign-base '$pz)))
-			   (setq evens (nconc odds evens)
-				 odds nil minus nil))
-			  ((mevenp (caddr expt))
-			   (cond ((and *complexsign* (eq sign-base '$neg))
-				  ;; In Complex Mode the sign is $complex.
-				  (setq sign-base (setq sign-expt '$complex)))
-				 (complexsign
-				  ;; The only place the variable complexsign
-				  ;; is used. Unfortunately, one routine in
-				  ;; to_poly.lisp in /share/to_poly_solve depends on
-				  ;; this piece of code. Perhaps we can remove
-				  ;; the dependency. (12/2008)
-				  (setq sign-base (setq sign-expt '$pnz)))
-				 ((eq sign-base '$neg) (imag-err x))
-				 ((eq sign-base '$pn)
-				  (setq sign-base '$pos)
-				  (tdpos base1))
-				 ((eq sign-base '$nz)
-				  (setq sign-base '$zero)
-				  (tdzero base1))
-				 (t (setq sign-base '$pz)
-				    (tdpz base1)))))))
-	     (cond ((eq sign-expt '$neg)
-		    (cond ((eq sign-base '$zero) (dbzs-err x))
-			  ((eq sign-base '$pz)
-			   (setq sign-base '$pos)
-			   (tdpos base1))
-			  ((eq sign-base '$nz)
-			   (setq sign-base '$neg)
-			   (tdneg base1))
-			  ((eq sign-base '$pnz)
-			   (setq sign-base '$pn)
-			   (tdpn base1)))))
-	     (setq sign sign-base)))))
+	  ((ratnump expt)
+	   (cond ((mevenp (cadr expt))
+		  (cond ((member sign-base '($pn $neg) :test #'eq)
+			 (setq sign-base '$pos))
+			((member sign-base '($pnz $nz) :test #'eq)
+			 (setq sign-base '$pz)))
+		  (setq evens (nconc odds evens)
+			odds nil minus nil))
+		 ((mevenp (caddr expt))
+		  (cond ((and *complexsign* (eq sign-base '$neg))
+			 ;; In Complex Mode the sign is $complex.
+			 (setq sign-base (setq sign-expt '$complex)))
+			(complexsign
+			 ;; The only place the variable complexsign
+			 ;; is used. Unfortunately, one routine in
+			 ;; to_poly.lisp in /share/to_poly_solve depends on
+			 ;; this piece of code. Perhaps we can remove
+			 ;; the dependency. (12/2008)
+			 (setq sign-base (setq sign-expt '$pnz)))
+			((eq sign-base '$neg) (imag-err x))
+			((eq sign-base '$pn)
+			 (setq sign-base '$pos)
+			 (tdpos base1))
+			((eq sign-base '$nz)
+			 (setq sign-base '$zero)
+			 (tdzero base1))
+			(t (setq sign-base '$pz)
+			   (tdpz base1)))))
+	   (cond ((eq sign-expt '$neg)
+		  (cond ((eq sign-base '$zero) (dbzs-err x))
+			((eq sign-base '$pz)
+			 (setq sign-base '$pos)
+			 (tdpos base1))
+			((eq sign-base '$nz)
+			 (setq sign-base '$neg)
+			 (tdneg base1))
+			((eq sign-base '$pnz)
+			 (setq sign-base '$pn)
+			 (tdpn base1)))))
+	   (setq sign sign-base))
+	  ((eq sign-base '$pos)
+	   (setq sign '$pos))
+	  ((eq sign-base '$neg)
+	   (if (eq evod '$odd)
+	       (setq sign '$neg)
+	     (setq sign (if *complexsign* '$complex '$pn)))))))
 
 ;;; Determine the sign of log(expr). This function changes the special variable sign.
 
@@ -2111,40 +2151,36 @@ relational knowledge is contained in the default context GLOBAL.")
 	 nil)))
 
 (defun daddgr (flag x)
-  (let (lhs rhs)
-    (compsplt x)
+  (with-compsplt (lhs rhs x)
     (mdata flag 'mgrp (dintern lhs) (dintern rhs))
     (if (or (mnump lhs) (constant lhs))
-	(list '(mlessp) rhs lhs)
-	(list '(mgreaterp) lhs rhs))))
+        (list '(mlessp) rhs lhs)
+        (list '(mgreaterp) lhs rhs))))
 
 (defun daddgq (flag x)
-  (let (lhs rhs)
-    (compsplt x)
+  (with-compsplt (lhs rhs x)
     (mdata flag 'mgqp (dintern lhs) (dintern rhs))
     (if (or (mnump lhs) (constant lhs))
-	(list '(mleqp) rhs lhs)
-	(list '(mgeqp) lhs rhs))))
+        (list '(mleqp) rhs lhs)
+        (list '(mgeqp) lhs rhs))))
 
 (defun daddeq (flag x)
-  (let (lhs rhs)
-    (compsplt-eq x)
+  (with-compsplt-eq (lhs rhs x)
     (mdata flag 'meqp (dintern lhs) (dintern rhs))
     (list '($equal) lhs rhs)))
 
 (defun daddnq (flag x)
-  (let (lhs rhs)
-    (compsplt-eq x)
+  (with-compsplt-eq (lhs rhs x)
     (cond ((and (mtimesp lhs) (equal rhs 0))
-	   (dolist (term (cdr lhs)) (daddnq flag term)))
-	  ((and (mexptp lhs) (mexptp rhs)
-		(integerp (caddr lhs)) (integerp (caddr rhs))
-		(equal (caddr lhs) (caddr rhs)))
-	   (mdata flag 'mnqp (dintern (cadr lhs)) (dintern (cadr rhs)))
-	   (cond ((not (oddp (caddr lhs)))
-		  (mdata flag 'mnqp (dintern (cadr lhs))
-			 (dintern (neg (cadr rhs)))))))
-	  (t (mdata flag 'mnqp (dintern lhs) (dintern rhs))))
+           (dolist (term (cdr lhs)) (daddnq flag term)))
+          ((and (mexptp lhs) (mexptp rhs)
+                (integerp (caddr lhs)) (integerp (caddr rhs))
+                (equal (caddr lhs) (caddr rhs)))
+           (mdata flag 'mnqp (dintern (cadr lhs)) (dintern (cadr rhs)))
+           (cond ((not (oddp (caddr lhs)))
+                  (mdata flag 'mnqp (dintern (cadr lhs))
+                         (dintern (neg (cadr rhs)))))))
+          (t (mdata flag 'mnqp (dintern lhs) (dintern rhs))))
     (list '(mnot) (list '($equal) lhs rhs))))
 
 ;; The following functions are used by asksign to write answers into the 
@@ -2158,39 +2194,39 @@ relational knowledge is contained in the default context GLOBAL.")
 (defun tdpos (x)
   (let ((context '$initial))
     (daddgr t x)
-    (push (cons x '$pos) locals)))
+    (push (cons x '$pos) *local-signs*)))
 
 (defun tdneg (x)
   (let ((context '$initial))
     (daddgr t (neg x))
-    (push (cons x '$neg) locals)))
+    (push (cons x '$neg) *local-signs*)))
 
 (defun tdzero (x)
   (let ((context '$initial))
     (daddeq t x)
-    (push (cons x '$zero) locals)))
+    (push (cons x '$zero) *local-signs*)))
 
 (defun tdpn (x)
   (let ((context '$initial))
     (daddnq t x)
-    (push (cons x '$pn) locals)))
+    (push (cons x '$pn) *local-signs*)))
 
 (defun tdpz (x)
   (let ((context '$initial))
     (daddgq t x)
-    (push (cons x '$pz) locals)))
+    (push (cons x '$pz) *local-signs*)))
 
 (defun compsplt-eq (x)
-  (compsplt x)
-  (when (equal lhs 0)
-    (setq lhs rhs
-	  rhs 0))
-  (if (and (equal rhs 0)
-	   (or (mexptp lhs)
-	       (and (not (atom lhs))
-		    (kindp (caar lhs) '$oddfun)
-		    (kindp (caar lhs) '$increasing))))
-      (setq lhs (cadr lhs))))
+  (with-compsplt (lhs rhs x)
+    (when (equal lhs 0)
+      (setq lhs rhs rhs 0))
+    (if (and (equal rhs 0)
+             (or (mexptp lhs)
+                 (and (not (atom lhs))
+                      (kindp (caar lhs) '$oddfun)
+                      (kindp (caar lhs) '$increasing))))
+        (setq lhs (cadr lhs)))
+    (values lhs rhs)))
 
 (defun mdata (flag r x y)
   (if flag
@@ -2268,39 +2304,65 @@ relational knowledge is contained in the default context GLOBAL.")
 
 ;;;  These functions reformat expressions to be stored in the data base.
 
-(defun compsplt (x)
-  (cond ((atom x) (setq lhs x rhs 0))
-	((atom (car x)) (setq lhs x rhs 0))
-        ((not (null (cdr (symbols x)))) (compsplt2 x))
-	(t (compsplt1 x))))
+;; Return a list of all the atoms in X that aren't either numbers or constants
+;; whose numerical value we know.
+(defun unknown-atoms (x)
+  (let (($listconstvars t))
+    (declare (special $listconstvars))
+    (remove-if (lambda (sym) (mget sym '$numer))
+               (cdr ($listofvars x)))))
 
-(defun compsplt1 (x)
+;; COMPSPLT
+;;
+;; Split X into (values LHS RHS) so that X>0 <=> LHS > RHS. This is supposed to
+;; be a canonical form for X that can be stored in the database and then looked
+;; up in future.
+;;
+;; This uses two worker routines: COMPSPLT-SINGLE and COMPSPLT-GENERAL. The
+;; former assumes that X only contains one symbol value is not known (eg not %e,
+;; %pi etc.). The latter tries to deal with arbitrary collections of variables.
+(defun compsplt (x)
+  (cond
+    ((or (atom x) (atom (car x))) (values x 0))
+    ((null (cdr (unknown-atoms x))) (compsplt-single x))
+    (t (compsplt-general x))))
+
+(defun compsplt-single (x)
   (do ((exp (list x 0)) (success nil))
-      ((or success (symbols (cadr exp))) (setq lhs (car exp) rhs (cadr exp)))
+      ((or success (symbols (cadr exp))) (values (car exp) (cadr exp)))
     (cond ((atom (car exp)) (setq success t))
 	  ((eq (caaar exp) 'mplus)  (setq exp (splitsum exp)))
 	  ((eq (caaar exp) 'mtimes) (setq exp (splitprod exp)))
 	  (t (setq success t)))))
 
-(defun compsplt2 (x)
-  (cond ((or (atom x) (atom (car x))) ; If x is an atom or a single level
-	 (setq lhs x rhs 0))	;    list then we won't change it any.
-	((negp x)	    ; If x is a negative expression but not a
-	 (setq lhs 0 rhs (neg x))) ; sum, then get rid of the negative sign.
-	((or (cdddr x)		      ; If x is not a sum, or is a sum
-	     (not (eq (caar x) 'mplus))	; with more than 2 terms, or has
-	     (intersect* (symbols (cadr x)) (symbols (caddr x))))
-					; some symbols common to both summands, then do nothing.
-	 (setq lhs x rhs 0))
-	((and (or (negp (cadr x)) (mnump (cadr x)))
-	      (not (negp (caddr x))))
-	 (setq lhs (caddr x) rhs (neg (cadr x))))
-	((and (not (negp (cadr x)))
-	      (or (negp (caddr x)) (mnump (caddr x))))
-	 (setq lhs (cadr x) rhs (neg (caddr x))))
-	((and (negp (cadr x)) (negp (caddr x)))
-	 (setq lhs 0 rhs (neg x)))
-	(t (setq lhs x rhs 0))))
+(defun compsplt-general (x)
+  (cond
+    ;; If x is an atom or a single level list then we won't change it any.
+    ((or (atom x) (atom (car x)))
+     (values x 0))
+    ;; If x is a negative expression but not a sum, then get rid of the
+    ;; negative sign.
+    ((negp x) (values 0 (neg x)))
+    ;; If x is not a sum, or is a sum with more than 2 terms, or has some
+    ;; symbols common to both summands, then do nothing.
+    ((or (cdddr x)
+         (not (eq (caar x) 'mplus))
+         (intersect* (symbols (cadr x)) (symbols (caddr x))))
+     (values x 0))
+    ;; -x + y gives (y, x)
+    ((and (or (negp (cadr x)) (mnump (cadr x)))
+          (not (negp (caddr x))))
+     (values (caddr x) (neg (cadr x))))
+    ;; x - y gives (x, y)
+    ((and (not (negp (cadr x)))
+          (or (negp (caddr x)) (mnump (caddr x))))
+     (values (cadr x) (neg (caddr x))))
+    ;; - x - y gives (0, x+y)
+    ((and (negp (cadr x)) (negp (caddr x)))
+     (values 0 (neg x)))
+    ;; Give up! (x, 0)
+    (t
+     (values x 0))))
 
 (defun negp (x)
   (and (mtimesp x) (mnegp (cadr x))))
@@ -2335,9 +2397,9 @@ relational knowledge is contained in the default context GLOBAL.")
        (odds))
       ((null llist)
        (if (mtimesp lhs1) (setq success t))
-       (cond (flipsign (compsplt (sub lhs1 rhs1))
-		       (setq success t)
-		       (list rhs1 lhs1))
+       (cond (flipsign
+              (setq success t)
+              (list rhs1 lhs1))
 	     (t (list lhs1 rhs1))))
     (when (null (symbols (car llist)))
       (sign (car llist))

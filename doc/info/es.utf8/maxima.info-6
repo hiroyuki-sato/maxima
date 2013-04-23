@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.30 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -839,6 +839,61 @@ File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  N
 
 44.2 Funciones y variables para el tratamiento de datos
 =======================================================
+
+ -- Función: build_sample (<list>)
+ -- Función: build_sample (<matrix>)
+     Construye una muestra a partir de una tabla de frecuencias
+     absolutas.  La tabla de entrada puede ser una una matriz o una
+     lista de listas, todas ellas de igual tamaño. El número de
+     columnas o la longitud de las listas debe ser mayor que la unidad.
+     El último elemento de cada fila o lista se interpreta como la
+     frecuencia absoluta.  El resultado se devuelve siempre en formato
+     de matriz.
+
+     Ejemplos:
+
+     Tabla de frecuencias univariante.
+
+          (%i1) load (descriptive)$
+          (%i2) sam1: build_sample([[6,1], [j,2], [2,1]]);
+                                 [ 6 ]
+                                 [   ]
+                                 [ j ]
+          (%o2)                  [   ]
+                                 [ j ]
+                                 [   ]
+                                 [ 2 ]
+          (%i3) mean(sam1);
+                                2 j + 8
+          (%o3)                [-------]
+                                   4
+          (%i4) barsplot(sam1) $
+
+     Tabla de frecuencias multivariante.
+
+          (%i1) load (descriptive)$
+          (%i2) sam2: build_sample([[6,3,1], [5,6,2], [u,2,1],[6,8,2]]) ;
+                                     [ 6  3 ]
+                                     [      ]
+                                     [ 5  6 ]
+                                     [      ]
+                                     [ 5  6 ]
+          (%o2)                      [      ]
+                                     [ u  2 ]
+                                     [      ]
+                                     [ 6  8 ]
+                                     [      ]
+                                     [ 6  8 ]
+          (%i3) cov(sam2);
+                 [   2                 2                            ]
+                 [  u  + 158   (u + 28)     2 u + 174   11 (u + 28) ]
+                 [  -------- - ---------    --------- - ----------- ]
+          (%o3)  [     6          36            6           12      ]
+                 [                                                  ]
+                 [ 2 u + 174   11 (u + 28)            21            ]
+                 [ --------- - -----------            --            ]
+                 [     6           12                 4             ]
+          (%i4) barsplot(sam2, grouping=stacked) $
 
  -- Función: continuous_freq (<list>)
  -- Función: continuous_freq (<list>, <m>)

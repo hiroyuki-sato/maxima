@@ -1,6 +1,6 @@
 (in-package :cl-info)
-(defun cause-maxima-index-to-load () nil)
-(defparameter *info-deffn-defvr-pairs* '(
+(let (
+(deffn-defvr-pairs '(
 ; CONTENT: (<INDEX TOPIC> . (<FILENAME> <BYTE OFFSET> <LENGTH IN CHARACTERS> <NODE NAME>))
 ("!" . ("maxima.info-1" 85982 2475 "Operadores Geral"))
 ("!!" . ("maxima.info-1" 88459 764 "Operadores Geral"))
@@ -1879,7 +1879,7 @@
 ("|" . ("maxima.info-3" 181332 1384 "Funções e Variáveis Definidas para itensor"))
 ("~" . ("maxima.info-3" 179717 1613 "Funções e Variáveis Definidas para itensor"))
 ))
-(defparameter *info-section-pairs* '(
+(section-pairs '(
 ; CONTENT: (<NODE NAME> . (<FILENAME> <BYTE OFFSET> <LENGTH IN CHARACTERS>))
 ("Arquivos" . ("maxima.info-1" 279139 395))
 ("Casos de teste para contrib_ode" . ("maxima.info-5" 63752 685))
@@ -2034,5 +2034,5 @@
 ("Seqüências de caracteres" . ("maxima.info-1" 150394 2816))
 ("Sintaxe" . ("maxima.info-1" 153623 4247))
 ("Substantivos e Verbos" . ("maxima.info-1" 145446 2483))
-))
-(load-info-hashtables)
+)))
+(load-info-hashtables (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*) deffn-defvr-pairs section-pairs))

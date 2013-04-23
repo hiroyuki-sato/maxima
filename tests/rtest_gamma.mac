@@ -2169,8 +2169,13 @@ true;
 
 /* Specialized values */
 
-gamma_incomplete_regularized(a,0);
-gamma_incomplete_regularized(a,0);
+/* Check that gamma_incomplete_regularized (a, 0) just returns a noun
+   form (the correct one!) */
+block ([result_a0: gamma_incomplete_regularized(a,0)],
+  is (not (atom (result_a0)) and
+      op (result_a0) = 'gamma_incomplete_regularized and
+      args (result_a0) = [a, 0]));
+true$
 
 (assume(ap>0,am<0),done);
 done;
@@ -2957,7 +2962,7 @@ true;
 relerror(
   fresnel_s(2.0b0),
   0.3434156783636982421953008159580684568865418122025247675792689204b0,
-  5.0b-64);
+  5.3b-64);
 true;
 
 relerror(
@@ -3122,13 +3127,13 @@ true;
 relerror(
   fresnel_c(10.0),
   0.4998986942055157236141518477356211143923468402262626572074674093b0,
-  1e-15);
+  1.73e-15);
 true;
 
 relerror(
   fresnel_c(10.0b0),
   0.4998986942055157236141518477356211143923468402262626572074674093b0,
-  1b-64);
+  2.47b-64);
 true;
 
 /* Complex argument 0.25+%i,0.50+%i,1.0+%i,2.0+%i,5.0+%i */
@@ -3201,6 +3206,31 @@ relerror(
   38439.4093777740143202918713550472184235160647415045418329908291b0 
   + 204453.0505063119004499308897858846121088557663560705550579996093b0*%i,
   4.0b-63);
+true;
+
+/* Bug #2509 fresnel_s incorrect for small values */
+relerror(
+  fresnel_c(1d-20),
+  1d-20,
+  1d-15);
+true;
+
+relerror(
+  fresnel_c(1b-40),
+  1b-40,
+  5b-63);
+true;
+
+relerror(
+  fresnel_s(1d-20),
+  float(%pi/6*(1d-20)^3),
+  1d-15);
+true;
+
+relerror(
+  fresnel_s(1b-40),
+  bfloat(%pi/6*(1b-40)^3),
+  5b-63);
 true;
 
 /******************************************************************************

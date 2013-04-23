@@ -11,10 +11,792 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Poisson series,  Prev: Functions and Variables for Series,  Up: Sums Products and Series
+File: maxima.info,  Node: Introduction to Series,  Next: Functions and Variables for Series,  Prev: Functions and Variables for Sums and Products,  Up: Sums Products and Series
 
-28.4 Poisson series
-===================
+28.2 Introduction to Series
+===========================
+
+Maxima contains functions `taylor' and `powerseries' for finding the
+series of differentiable functions.  It also has tools such as `nusum'
+capable of finding the closed form of some series.  Operations such as
+addition and multiplication work as usual on series.  This section
+presents the global variables which control the expansion.
+
+
+File: maxima.info,  Node: Functions and Variables for Series,  Next: Introduction to Fourier series,  Prev: Introduction to Series,  Up: Sums Products and Series
+
+28.3 Functions and Variables for Series
+=======================================
+
+ -- Option variable: cauchysum
+     Default value: `false'
+
+     When multiplying together sums with `inf' as their upper limit, if
+     `sumexpand' is `true' and `cauchysum' is `true' then the Cauchy
+     product will be used rather than the usual product.  In the Cauchy
+     product the index of the inner summation is a function of the
+     index of the outer one rather than varying independently.
+
+     Example:
+
+          (%i1) sumexpand: false$
+          (%i2) cauchysum: false$
+          (%i3) s: sum (f(i), i, 0, inf) * sum (g(j), j, 0, inf);
+                                inf         inf
+                                ====        ====
+                                \           \
+          (%o3)                ( >    f(i))  >    g(j)
+                                /           /
+                                ====        ====
+                                i = 0       j = 0
+          (%i4) sumexpand: true$
+          (%i5) cauchysum: true$
+          (%i6) ''s;
+                           inf     i1
+                           ====   ====
+                           \      \
+          (%o6)             >      >     g(i1 - i2) f(i2)
+                           /      /
+                           ====   ====
+                           i1 = 0 i2 = 0
+
+
+ -- Function: deftaylor (<f_1>(<x_1>), <expr_1>, ..., <f_n>(<x_n>),
+          <expr_n>)
+     For each function <f_i> of one variable <x_i>, `deftaylor' defines
+     <expr_i> as the Taylor series about zero.  <expr_i> is typically a
+     polynomial in <x_i> or a summation; more general expressions are
+     accepted by `deftaylor' without complaint.
+
+     `powerseries (<f_i>(<x_i>), <x_i>, 0)' returns the series defined
+     by `deftaylor'.
+
+     `deftaylor' returns a list of the functions <f_1>, ..., <f_n>.
+     `deftaylor' evaluates its arguments.
+
+     Example:
+
+          (%i1) deftaylor (f(x), x^2 + sum(x^i/(2^i*i!^2), i, 4, inf));
+          (%o1)                          [f]
+          (%i2) powerseries (f(x), x, 0);
+                                inf
+                                ====      i1
+                                \        x         2
+          (%o2)                  >     -------- + x
+                                /       i1    2
+                                ====   2   i1!
+                                i1 = 4
+          (%i3) taylor (exp (sqrt (f(x))), x, 0, 4);
+                                2         3          4
+                               x    3073 x    12817 x
+          (%o3)/T/     1 + x + -- + ------- + -------- + . . .
+                               2     18432     307200
+
+
+ -- Option variable: maxtayorder
+     Default value: `true'
+
+     When `maxtayorder' is `true', then during algebraic manipulation
+     of (truncated) Taylor series, `taylor' tries to retain as many
+     terms as are known to be correct.
+
+
+ -- Function: niceindices (<expr>)
+     Renames the indices of sums and products in <expr>.  `niceindices'
+     attempts to rename each index to the value of
+     `niceindicespref[1]', unless that name appears in the summand or
+     multiplicand, in which case `niceindices' tries the succeeding
+     elements of `niceindicespref' in turn, until an unused variable is
+     found.  If the entire list is exhausted, additional indices are
+     constructed by appending integers to the value of
+     `niceindicespref[1]', e.g., `i0', `i1', `i2', ...
+
+     `niceindices' returns an expression.  `niceindices' evaluates its
+     argument.
+
+     Example:
+
+          (%i1) niceindicespref;
+          (%o1)                  [i, j, k, l, m, n]
+          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
+                           inf    inf
+                          /===\   ====
+                           ! !    \
+          (%o2)            ! !     >      f(bar i j + foo)
+                           ! !    /
+                          bar = 1 ====
+                                  foo = 1
+          (%i3) niceindices (%);
+                               inf  inf
+                              /===\ ====
+                               ! !  \
+          (%o3)                ! !   >    f(i j l + k)
+                               ! !  /
+                              l = 1 ====
+                                    k = 1
+
+
+ -- Option variable: niceindicespref
+     Default value: `[i, j, k, l, m, n]'
+
+     `niceindicespref' is the list from which `niceindices' takes the
+     names of indices for sums and products.
+
+     The elements of `niceindicespref' are typically names of variables,
+     although that is not enforced by `niceindices'.
+
+     Example:
+
+          (%i1) niceindicespref: [p, q, r, s, t, u]$
+          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
+                           inf    inf
+                          /===\   ====
+                           ! !    \
+          (%o2)            ! !     >      f(bar i j + foo)
+                           ! !    /
+                          bar = 1 ====
+                                  foo = 1
+          (%i3) niceindices (%);
+                               inf  inf
+                              /===\ ====
+                               ! !  \
+          (%o3)                ! !   >    f(i j q + p)
+                               ! !  /
+                              q = 1 ====
+                                    p = 1
+
+
+ -- Function: nusum (<expr>, <x>, <i_0>, <i_1>)
+     Carries out indefinite hypergeometric summation of <expr> with
+     respect to <x> using a decision procedure due to R.W. Gosper.
+     <expr> and the result must be expressible as products of integer
+     powers, factorials, binomials, and rational functions.
+
+     The terms "definite" and "indefinite summation" are used
+     analogously to "definite" and "indefinite integration".  To sum
+     indefinitely means to give a symbolic result for the sum over
+     intervals of variable length, not just e.g. 0 to inf.  Thus, since
+     there is no formula for the general partial sum of the binomial
+     series, `nusum' can't do it.
+
+     `nusum' and `unsum' know a little about sums and differences of
+     finite products.  See also `unsum'.
+
+     Examples:
+
+          (%i1) nusum (n*n!, n, 0, n);
+
+          Dependent equations eliminated:  (1)
+          (%o1)                     (n + 1)! - 1
+          (%i2) nusum (n^4*4^n/binomial(2*n,n), n, 0, n);
+                               4        3       2              n
+                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
+          (%o2) ------------------------------------------------ - ------
+                              693 binomial(2 n, n)                 3 11 7
+          (%i3) unsum (%, n);
+                                        4  n
+                                       n  4
+          (%o3)                   ----------------
+                                  binomial(2 n, n)
+          (%i4) unsum (prod (i^2, i, 1, n), n);
+                              n - 1
+                              /===\
+                               ! !   2
+          (%o4)              ( ! !  i ) (n - 1) (n + 1)
+                               ! !
+                              i = 1
+          (%i5) nusum (%, n, 1, n);
+
+          Dependent equations eliminated:  (2 3)
+                                      n
+                                    /===\
+                                     ! !   2
+          (%o5)                      ! !  i  - 1
+                                     ! !
+                                    i = 1
+
+
+ -- Function: pade (<taylor_series>, <numer_deg_bound>,
+          <denom_deg_bound>)
+     Returns a list of all rational functions which have the given
+     Taylor series expansion where the sum of the degrees of the
+     numerator and the denominator is less than or equal to the
+     truncation level of the power series, i.e.  are "best"
+     approximants, and which additionally satisfy the specified degree
+     bounds.
+
+     <taylor_series> is a univariate Taylor series.  <numer_deg_bound>
+     and <denom_deg_bound> are positive integers specifying degree
+     bounds on the numerator and denominator.
+
+     <taylor_series> can also be a Laurent series, and the degree
+     bounds can be `inf' which causes all rational functions whose total
+     degree is less than or equal to the length of the power series to
+     be returned.  Total degree is defined as `<numer_deg_bound> +
+     <denom_deg_bound>'.  Length of a power series is defined as
+     `"truncation level" + 1 - min(0, "order of series")'.
+
+          (%i1) taylor (1 + x + x^2 + x^3, x, 0, 3);
+                                        2    3
+          (%o1)/T/             1 + x + x  + x  + . . .
+          (%i2) pade (%, 1, 1);
+                                           1
+          (%o2)                       [- -----]
+                                         x - 1
+          (%i3) t: taylor(-(83787*x^10 - 45552*x^9 - 187296*x^8
+                             + 387072*x^7 + 86016*x^6 - 1507328*x^5
+                             + 1966080*x^4 + 4194304*x^3 - 25165824*x^2
+                             + 67108864*x - 134217728)
+                 /134217728, x, 0, 10);
+                              2    3       4       5       6        7
+                       x   3 x    x    15 x    23 x    21 x    189 x
+          (%o3)/T/ 1 - - + ---- - -- - ----- + ----- - ----- - ------
+                       2    16    32   1024    2048    32768   65536
+
+                                            8         9          10
+                                      5853 x    2847 x    83787 x
+                                    + ------- + ------- - --------- + . . .
+                                      4194304   8388608   134217728
+          (%i4) pade (t, 4, 4);
+          (%o4)                          []
+
+     There is no rational function of degree 4 numerator/denominator,
+     with this power series expansion.  You must in general have degree
+     of the numerator and degree of the denominator adding up to at
+     least the degree of the power series, in order to have enough
+     unknown coefficients to solve.
+
+          (%i5) pade (t, 5, 5);
+                               5                4                 3
+          (%o5) [- (520256329 x  - 96719020632 x  - 489651410240 x
+
+                            2
+           - 1619100813312 x  - 2176885157888 x - 2386516803584)
+
+                         5                 4                  3
+          /(47041365435 x  + 381702613848 x  + 1360678489152 x
+
+                            2
+           + 2856700692480 x  + 3370143559680 x + 2386516803584)]
+
+
+ -- Function: powerseries (<expr>, <x>, <a>)
+     Returns the general form of the power series expansion for <expr>
+     in the variable <x> about the point <a> (which may be `inf' for
+     infinity):
+                     inf
+                     ====
+                     \               n
+                      >    b  (x - a)
+                     /      n
+                     ====
+                     n = 0
+
+     If `powerseries' is unable to expand <expr>, `taylor' may give the
+     first several terms of the series.
+
+     When `verbose' is `true', `powerseries' prints progress messages.
+
+          (%i1) verbose: true$
+          (%i2) powerseries (log(sin(x)/x), x, 0);
+          can't expand
+                                           log(sin(x))
+          so we'll try again after applying the rule:
+                                                  d
+                                                / -- (sin(x))
+                                                [ dx
+                                  log(sin(x)) = i ----------- dx
+                                                ]   sin(x)
+                                                /
+          in the first simplification we have returned:
+                                       /
+                                       [
+                                       i cot(x) dx - log(x)
+                                       ]
+                                       /
+                              inf
+                              ====        i1  2 i1             2 i1
+                              \      (- 1)   2     bern(2 i1) x
+                               >     ------------------------------
+                              /                i1 (2 i1)!
+                              ====
+                              i1 = 1
+          (%o2)                -------------------------------------
+                                                2
+
+
+ -- Option variable: psexpand
+     Default value: `false'
+
+     When `psexpand' is `true', an extended rational function
+     expression is displayed fully expanded.  The switch `ratexpand'
+     has the same effect.
+
+     When `psexpand' is `false', a multivariate expression is displayed
+     just as in the rational function package.
+
+     When `psexpand' is  `multi', then terms with the same total degree
+     in the variables are grouped together.
+
+
+ -- Function: revert (<expr>, <x>)
+ -- Function: revert2 (<expr>, <x>, <n>)
+     These functions return the reversion of <expr>, a Taylor series
+     about zero in the variable <x>.  `revert' returns a polynomial of
+     degree equal to the highest power in <expr>.  `revert2' returns a
+     polynomial of degree <n>, which may be greater than, equal to, or
+     less than the degree of <expr>.
+
+     `load ("revert")' loads these functions.
+
+     Examples:
+
+          (%i1) load ("revert")$
+          (%i2) t: taylor (exp(x) - 1, x, 0, 6);
+                             2    3    4    5     6
+                            x    x    x    x     x
+          (%o2)/T/      x + -- + -- + -- + --- + --- + . . .
+                            2    6    24   120   720
+          (%i3) revert (t, x);
+                         6       5       4       3       2
+                     10 x  - 12 x  + 15 x  - 20 x  + 30 x  - 60 x
+          (%o3)/R/ - --------------------------------------------
+                                          60
+          (%i4) ratexpand (%);
+                               6    5    4    3    2
+                              x    x    x    x    x
+          (%o4)             - -- + -- - -- + -- - -- + x
+                              6    5    4    3    2
+          (%i5) taylor (log(x+1), x, 0, 6);
+                              2    3    4    5    6
+                             x    x    x    x    x
+          (%o5)/T/       x - -- + -- - -- + -- - -- + . . .
+                             2    3    4    5    6
+          (%i6) ratsimp (revert (t, x) - taylor (log(x+1), x, 0, 6));
+          (%o6)                           0
+          (%i7) revert2 (t, x, 4);
+                                    4    3    2
+                                   x    x    x
+          (%o7)                  - -- + -- - -- + x
+                                   4    3    2
+
+
+ -- Function: taylor (<expr>, <x>, <a>, <n>)
+ -- Function: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
+ -- Function: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
+ -- Function: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...],
+          [<n_1>, <n_2>, ...])
+ -- Function: taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>,
+          <n_2>], ...)
+     `taylor (<expr>, <x>, <a>, <n>)' expands the expression <expr> in
+     a truncated Taylor or Laurent series in the variable <x> around
+     the point <a>, containing terms through `(<x> - <a>)^<n>'.
+
+     If <expr> is of the form `<f>(<x>)/<g>(<x>)' and `<g>(<x>)' has no
+     terms up to degree <n> then `taylor' attempts to expand `<g>(<x>)'
+     up to degree `2 <n>'.  If there are still no nonzero terms,
+     `taylor' doubles the degree of the expansion of `<g>(<x>)' so long
+     as the degree of the expansion is less than or equal to `<n>
+     2^taylordepth'.
+
+     `taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)' returns a
+     truncated power series of degree <n> in all variables <x_1>,
+     <x_2>, ...  about the point `(<a>, <a>, ...)'.
+
+     `taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>, <n_2>],
+     ...)' returns a truncated power series in the variables <x_1>,
+     <x_2>, ... about the point `(<a_1>, <a_2>, ...)', truncated at
+     <n_1>, <n_2>, ...
+
+     `taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...], [<n_1>,
+     <n_2>, ...])' returns a truncated power series in the variables
+     <x_1>, <x_2>, ... about the point `(<a_1>, <a_2>, ...)', truncated
+     at <n_1>, <n_2>, ...
+
+     `taylor (<expr>, [<x>, <a>, <n>, 'asymp])' returns an expansion of
+     <expr> in negative powers of `<x> - <a>'.  The highest order term
+     is `(<x> - <a>)^<-n>'.
+
+     When `maxtayorder' is `true', then during algebraic manipulation
+     of (truncated) Taylor series, `taylor' tries to retain as many
+     terms as are known to be correct.
+
+     When `psexpand' is `true', an extended rational function
+     expression is displayed fully expanded.  The switch `ratexpand'
+     has the same effect.  When `psexpand' is `false', a multivariate
+     expression is displayed just as in the rational function package.
+     When `psexpand' is  `multi', then terms with the same total degree
+     in the variables are grouped together.
+
+     See also the `taylor_logexpand' switch for controlling expansion.
+
+     Examples:
+
+          (%i1) taylor (sqrt (sin(x) + a*x + 1), x, 0, 3);
+                                     2             2
+                       (a + 1) x   (a  + 2 a + 1) x
+          (%o1)/T/ 1 + --------- - -----------------
+                           2               8
+
+                                             3      2             3
+                                         (3 a  + 9 a  + 9 a - 1) x
+                                       + -------------------------- + . . .
+                                                     48
+          (%i2) %^2;
+                                              3
+                                             x
+          (%o2)/T/           1 + (a + 1) x - -- + . . .
+                                             6
+          (%i3) taylor (sqrt (x + 1), x, 0, 5);
+                                 2    3      4      5
+                            x   x    x    5 x    7 x
+          (%o3)/T/      1 + - - -- + -- - ---- + ---- + . . .
+                            2   8    16   128    256
+          (%i4) %^2;
+          (%o4)/T/                  1 + x + . . .
+          (%i5) product ((1 + x^i)^2.5, i, 1, inf)/(1 + x^2);
+                                   inf
+                                  /===\
+                                   ! !    i     2.5
+                                   ! !  (x  + 1)
+                                   ! !
+                                  i = 1
+          (%o5)                   -----------------
+                                        2
+                                       x  + 1
+          (%i6) ev (taylor(%, x,  0, 3), keepfloat);
+                                         2           3
+          (%o6)/T/    1 + 2.5 x + 3.375 x  + 6.5625 x  + . . .
+          (%i7) taylor (1/log (x + 1), x, 0, 3);
+                                         2       3
+                           1   1   x    x    19 x
+          (%o7)/T/         - + - - -- + -- - ----- + . . .
+                           x   2   12   24    720
+          (%i8) taylor (cos(x) - sec(x), x, 0, 5);
+                                          4
+                                     2   x
+          (%o8)/T/                - x  - -- + . . .
+                                         6
+          (%i9) taylor ((cos(x) - sec(x))^3, x, 0, 5);
+          (%o9)/T/                    0 + . . .
+          (%i10) taylor (1/(cos(x) - sec(x))^3, x, 0, 5);
+                                                         2          4
+                      1     1       11      347    6767 x    15377 x
+          (%o10)/T/ - -- + ---- + ------ - ----- - ------- - --------
+                       6      4        2   15120   604800    7983360
+                      x    2 x    120 x
+
+                                                                    + . . .
+          (%i11) taylor (sqrt (1 - k^2*sin(x)^2), x, 0, 6);
+                         2  2       4      2   4
+                        k  x    (3 k  - 4 k ) x
+          (%o11)/T/ 1 - ----- - ----------------
+                          2            24
+
+                                              6       4       2   6
+                                         (45 k  - 60 k  + 16 k ) x
+                                       - -------------------------- + . . .
+                                                    720
+          (%i12) taylor ((x + 1)^n, x, 0, 4);
+                                2       2     3      2         3
+                              (n  - n) x    (n  - 3 n  + 2 n) x
+          (%o12)/T/ 1 + n x + ----------- + --------------------
+                                   2                 6
+
+                                         4      3       2         4
+                                       (n  - 6 n  + 11 n  - 6 n) x
+                                     + ---------------------------- + . . .
+                                                    24
+          (%i13) taylor (sin (y + x), x, 0, 3, y, 0, 3);
+                         3                 2
+                        y                 y
+          (%o13)/T/ y - -- + . . . + (1 - -- + . . .) x
+                        6                 2
+
+                              3                       2
+                         y   y            2      1   y            3
+                    + (- - + -- + . . .) x  + (- - + -- + . . .) x  + . . .
+                         2   12                  6   12
+          (%i14) taylor (sin (y + x), [x, y], 0, 3);
+                               3        2      2      3
+                              x  + 3 y x  + 3 y  x + y
+          (%o14)/T/   y + x - ------------------------- + . . .
+                                          6
+          (%i15) taylor (1/sin (y + x), x, 0, 3, y, 0, 3);
+                    1   y              1    1               1            2
+          (%o15)/T/ - + - + . . . + (- -- + - + . . .) x + (-- + . . .) x
+                    y   6               2   6                3
+                                       y                    y
+
+                                                     1            3
+                                                + (- -- + . . .) x  + . . .
+                                                      4
+                                                     y
+          (%i16) taylor (1/sin (y + x), [x, y], 0, 3);
+                                       3         2       2        3
+                      1     x + y   7 x  + 21 y x  + 21 y  x + 7 y
+          (%o16)/T/ ----- + ----- + ------------------------------- + . . .
+                    x + y     6                   360
+
+
+ -- Option variable: taylordepth
+     Default value: 3
+
+     If there are still no nonzero terms, `taylor' doubles the degree
+     of the expansion of `<g>(<x>)' so long as the degree of the
+     expansion is less than or equal to `<n> 2^taylordepth'.
+
+
+ -- Function: taylorinfo (<expr>)
+     Returns information about the Taylor series <expr>.  The return
+     value is a list of lists.  Each list comprises the name of a
+     variable, the point of expansion, and the degree of the expansion.
+
+     `taylorinfo' returns `false' if <expr> is not a Taylor series.
+
+     Example:
+
+          (%i1) taylor ((1 - y^2)/(1 - x), x, 0, 3, [y, a, inf]);
+                            2                       2
+          (%o1)/T/ - (y - a)  - 2 a (y - a) + (1 - a )
+
+                   2                        2
+           + (1 - a  - 2 a (y - a) - (y - a) ) x
+
+                   2                        2   2
+           + (1 - a  - 2 a (y - a) - (y - a) ) x
+
+                   2                        2   3
+           + (1 - a  - 2 a (y - a) - (y - a) ) x  + . . .
+          (%i2) taylorinfo(%);
+          (%o2)               [[y, a, inf], [x, 0, 3]]
+
+
+ -- Function: taylorp (<expr>)
+     Returns `true' if <expr> is a Taylor series, and `false' otherwise.
+
+
+ -- Option variable: taylor_logexpand
+     Default value: `true'
+
+     `taylor_logexpand' controls expansions of logarithms in `taylor'
+     series.
+
+     When `taylor_logexpand' is `true', all logarithms are expanded
+     fully so that zero-recognition problems involving logarithmic
+     identities do not disturb the expansion process.  However, this
+     scheme is not always mathematically correct since it ignores
+     branch information.
+
+     When `taylor_logexpand' is set to `false', then the only expansion
+     of logarithms that occur is that necessary to obtain a formal
+     power series.
+
+
+ -- Option variable: taylor_order_coefficients
+     Default value: `true'
+
+     `taylor_order_coefficients' controls the ordering of coefficients
+     in a Taylor series.
+
+     When `taylor_order_coefficients' is `true', coefficients of taylor
+     series are ordered canonically.
+
+
+ -- Function: taylor_simplifier (<expr>)
+     Simplifies coefficients of the power series <expr>.  `taylor'
+     calls this function.
+
+
+ -- Option variable: taylor_truncate_polynomials
+     Default value: `true'
+
+     When `taylor_truncate_polynomials' is `true', polynomials are
+     truncated based upon the input truncation levels.
+
+     Otherwise, polynomials input to `taylor' are considered to have
+     infinite precison.
+
+
+ -- Function: taytorat (<expr>)
+     Converts <expr> from `taylor' form to canonical rational expression
+     (CRE) form.  The effect is the same as `rat (ratdisrep (<expr>))',
+     but faster.
+
+
+ -- Function: trunc (<expr>)
+     Annotates the internal representation of the general expression
+     <expr> so that it is displayed as if its sums were truncated
+     Taylor series.  <expr> is not otherwise modified.
+
+     Example:
+
+          (%i1) expr: x^2 + x + 1;
+                                      2
+          (%o1)                      x  + x + 1
+          (%i2) trunc (expr);
+                                          2
+          (%o2)                  1 + x + x  + . . .
+          (%i3) is (expr = trunc (expr));
+          (%o3)                         true
+
+
+ -- Function: unsum (<f>, <n>)
+     Returns the first backward difference `<f>(<n>) - <f>(<n> - 1)'.
+     Thus `unsum' in a sense is the inverse of `sum'.
+
+     See also `nusum'.
+
+     Examples:
+
+          (%i1) g(p) := p*4^n/binomial(2*n,n);
+                                               n
+                                            p 4
+          (%o1)               g(p) := ----------------
+                                      binomial(2 n, n)
+          (%i2) g(n^4);
+                                        4  n
+                                       n  4
+          (%o2)                   ----------------
+                                  binomial(2 n, n)
+          (%i3) nusum (%, n, 0, n);
+                               4        3       2              n
+                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
+          (%o3) ------------------------------------------------ - ------
+                              693 binomial(2 n, n)                 3 11 7
+          (%i4) unsum (%, n);
+                                        4  n
+                                       n  4
+          (%o4)                   ----------------
+                                  binomial(2 n, n)
+
+
+ -- Option variable: verbose
+     Default value: `false'
+
+     When `verbose' is `true', `powerseries' prints progress messages.
+
+
+
+File: maxima.info,  Node: Introduction to Fourier series,  Next: Functions and Variables for Fourier series,  Prev: Functions and Variables for Series,  Up: Sums Products and Series
+
+28.4 Introduction to Fourier series
+===================================
+
+The `fourie' package comprises functions for the symbolic computation
+of Fourier series.  There are functions in the `fourie' package to
+calculate Fourier integral coefficients and some functions for
+manipulation of expressions.
+
+
+File: maxima.info,  Node: Functions and Variables for Fourier series,  Next: Functions and Variables for Poisson series,  Prev: Introduction to Fourier series,  Up: Sums Products and Series
+
+28.5 Functions and Variables for Fourier series
+===============================================
+
+ -- Function: equalp (<x>, <y>)
+     Returns `true' if `equal (<x>, <y>)' otherwise `false' (doesn't
+     give an error message like `equal (x, y)' would do in this case).
+
+
+ -- Function: remfun (<f>, <expr>)
+ -- Function: remfun (<f>, <expr>, <x>)
+     `remfun (<f>, <expr>)' replaces all occurrences of `<f> (<arg>)'
+     by <arg> in <expr>.
+
+     `remfun (<f>, <expr>, <x>)' replaces all occurrences of `<f>
+     (<arg>)' by <arg> in <expr> only if <arg> contains the variable
+     <x>.
+
+
+ -- Function: funp (<f>, <expr>)
+ -- Function: funp (<f>, <expr>, <x>)
+     `funp (<f>, <expr>)' returns `true' if <expr> contains the
+     function <f>.
+
+     `funp (<f>, <expr>, <x>)' returns `true' if <expr> contains the
+     function <f> and the variable <x> is somewhere in the argument of
+     one of the instances of <f>.
+
+
+ -- Function: absint (<f>, <x>, <halfplane>)
+ -- Function: absint (<f>, <x>)
+ -- Function: absint (<f>, <x>, <a>, <b>)
+     `absint (<f>, <x>, <halfplane>)' returns the indefinite integral
+     of <f> with respect to <x> in the given halfplane (`pos', `neg',
+     or `both').  <f> may contain expressions of the form `abs (x)',
+     `abs (sin (x))', `abs (a) * exp (-abs (b) * abs (x))'.
+
+     `absint (<f>, <x>)' is equivalent to `absint (<f>, <x>, pos)'.
+
+     `absint (<f>, <x>, <a>, <b>)' returns the definite integral of <f>
+     with respect to <x> from <a> to <b>.  <f> may include absolute
+     values.
+
+
+ -- Function: fourier (<f>, <x>, <p>)
+     Returns a list of the Fourier coefficients of `<f>(<x>)' defined
+     on the interval `[-p, p]'.
+
+
+ -- Function: foursimp (<l>)
+     Simplifies `sin (n %pi)' to 0 if `sinnpiflag' is `true' and `cos
+     (n %pi)' to `(-1)^n' if `cosnpiflag' is `true'.
+
+
+ -- Option variable: sinnpiflag
+     Default value: `true'
+
+     See `foursimp'.
+
+
+ -- Option variable: cosnpiflag
+     Default value: `true'
+
+     See `foursimp'.
+
+
+ -- Function: fourexpand (<l>, <x>, <p>, <limit>)
+     Constructs and returns the Fourier series from the list of Fourier
+     coefficients <l> up through <limit> terms (<limit> may be `inf').
+     <x> and <p> have same meaning as in `fourier'.
+
+
+ -- Function: fourcos (<f>, <x>, <p>)
+     Returns the Fourier cosine coefficients for `<f>(<x>)' defined on
+     `[0, <p>]'.
+
+
+ -- Function: foursin (<f>, <x>, <p>)
+     Returns the Fourier sine coefficients for `<f>(<x>)' defined on
+     `[0, <p>]'.
+
+
+ -- Function: totalfourier (<f>, <x>, <p>)
+     Returns `fourexpand (foursimp (fourier (<f>, <x>, <p>)), <x>, <p>,
+     'inf)'.
+
+
+ -- Function: fourint (<f>, <x>)
+     Constructs and returns a list of the Fourier integral coefficients
+     of `<f>(<x>)' defined on `[minf, inf]'.
+
+
+ -- Function: fourintcos (<f>, <x>)
+     Returns the Fourier cosine integral coefficients for `<f>(<x>)' on
+     `[0, inf]'.
+
+
+ -- Function: fourintsin (<f>, <x>)
+     Returns the Fourier sine integral coefficients for `<f>(<x>)' on
+     `[0, inf]'.
+
+
+
+File: maxima.info,  Node: Functions and Variables for Poisson series,  Prev: Functions and Variables for Fourier series,  Up: Sums Products and Series
+
+28.6 Functions and Variables for Poisson series
+===============================================
 
  -- Function: intopois (<a>)
      Converts <a> into a Poisson encoding.
@@ -137,14 +919,14 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
           (%i1) zerobern: true$
           (%i2) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                            1  1       1      1        1
-          (%o2)       [1, - -, -, 0, - --, 0, --, 0, - --]
-                            2  6       30     42       30
+                                1  1       1      1        1
+          (%o2)           [1, - -, -, 0, - --, 0, --, 0, - --]
+                                2  6       30     42       30
           (%i3) zerobern: false$
           (%i4) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                      1  1    1   5     691   7    3617  43867
-          (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
-                      2  6    30  66    2730  6    510    798
+                                1  1    1   1     1   5     691   7
+          (%o4)           [1, - -, -, - --, --, - --, --, - ----, -]
+                                2  6    30  42    30  66    2730  6
 
 
  -- Function: bernpoly (<x>, <n>)
@@ -357,22 +1139,28 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
  -- Function: euler (<n>)
      Returns the <n>'th Euler number for nonnegative integer <n>.
+     Euler numbers equal to zero are suppressed if `zerobern' is
+     `false'.
 
      For the Euler-Mascheroni constant, see `%gamma'.
 
-          (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
+          (%i1) zerobern: true$
+          (%i2) map (euler, [0, 1, 2, 3, 4, 5, 6]);
+          (%o2)               [1, 0, - 1, 0, 5, 0, - 61]
+          (%i3) zerobern: false$
+          (%i4) map (euler, [0, 1, 2, 3, 4, 5, 6]);
+          (%o4)               [1, - 1, 5, - 61, 1385, - 50521, 2702765]
 
 
  -- Option variable: factors_only
      Default value: `false'
 
-     Controls the value returned by `ifactors'.  . The default `false'
+     Controls the value returned by `ifactors' . The default `false'
      causes `ifactors' to provide information about multiplicities of
      the computed prime factors. If `factors_only' is set to `true',
      `ifactors' returns nothing more than a list of prime factors.
 
-     Example: See `ifactors'.  .
+     Example: See `ifactors' .
 
 
  -- Function: fib (<n>)
@@ -422,7 +1210,7 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      9973, Pollard's rho and p-1 method and elliptic curves.
 
      The value returned by `ifactors' is controlled by the option
-     variable `factors_only'.  .  The default `false' causes `ifactors'
+     variable `factors_only' .  The default `false' causes `ifactors'
      to provide information about the multiplicities of the computed
      prime factors. If `factors_only' is set to `true', `ifactors'
      simply returns the list of prime factors.
@@ -846,8 +1634,8 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
  -- Option variable: zn_primroot_limit
      Default value: `1000'
 
-     If `zn_primroot'.   cannot find a primitve root, it stops at this
-     upper bound.  If the option variable `zn_primroot_verbose'.
+     If `zn_primroot'  cannot find a primitve root, it stops at this
+     upper bound.  If the option variable `zn_primroot_verbose'
      (default: `false') is set to `true', a message will be printed
      when `zn_primroot_limit' is reached.
 
@@ -901,7 +1689,7 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      `2', `4', `p^k' or `2*p^k', where `p' is prime and greater than
      `2' and `k' is a natural number.
 
-     `zn_primroot_pretest' controls whether `zn_primroot'.   will check
+     `zn_primroot_pretest' controls whether `zn_primroot'  will check
      if one of these cases occur before it computes the smallest
      primitive root.  Only if `zn_primroot_pretest' is set to `true'
      this pretest will be performed.
@@ -910,8 +1698,8 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
  -- Option variable: zn_primroot_verbose
      Default value: `false'
 
-     Controls whether `zn_primroot'.   prints a message when reaching
-     `zn_primroot_limit'.  .
+     Controls whether `zn_primroot'  prints a message when reaching
+     `zn_primroot_limit' .
 
 
 
@@ -9036,6 +9824,61 @@ File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: 
 45.2 Functions and Variables for data manipulation
 ==================================================
 
+ -- Function: build_sample (<list>)
+ -- Function: build_sample (<matrix>)
+     Builds a sample from a table of absolute frequencies.  The input
+     table can be a matrix or a list of lists, all of them of equal
+     size. The number of columns or the length of the lists must be
+     greater than 1. The last element of each row or list is
+     interpreted as the absolute frequency.  The output is always a
+     sample in matrix form.
+
+     Examples:
+
+     Univariate frequency table.
+
+          (%i1) load (descriptive)$
+          (%i2) sam1: build_sample([[6,1], [j,2], [2,1]]);
+                                 [ 6 ]
+                                 [   ]
+                                 [ j ]
+          (%o2)                  [   ]
+                                 [ j ]
+                                 [   ]
+                                 [ 2 ]
+          (%i3) mean(sam1);
+                                2 j + 8
+          (%o3)                [-------]
+                                   4
+          (%i4) barsplot(sam1) $
+
+     Multivariate frequency table.
+
+          (%i1) load (descriptive)$
+          (%i2) sam2: build_sample([[6,3,1], [5,6,2], [u,2,1],[6,8,2]]) ;
+                                     [ 6  3 ]
+                                     [      ]
+                                     [ 5  6 ]
+                                     [      ]
+                                     [ 5  6 ]
+          (%o2)                      [      ]
+                                     [ u  2 ]
+                                     [      ]
+                                     [ 6  8 ]
+                                     [      ]
+                                     [ 6  8 ]
+          (%i3) cov(sam2);
+                 [   2                 2                            ]
+                 [  u  + 158   (u + 28)     2 u + 174   11 (u + 28) ]
+                 [  -------- - ---------    --------- - ----------- ]
+          (%o3)  [     6          36            6           12      ]
+                 [                                                  ]
+                 [ 2 u + 174   11 (u + 28)            21            ]
+                 [ --------- - -----------            --            ]
+                 [     6           12                 4             ]
+          (%i4) barsplot(sam2, grouping=stacked) $
+
+
  -- Function: continuous_freq (<list>)
  -- Function: continuous_freq (<list>, <m>)
      The argument of `continuous_freq' must be a list of numbers.
@@ -13713,6 +14556,9 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Since this is a global graphics option, its position in the scene
      description does not matter.
 
+     This option das not work with terminals `epslatex' and
+     `epslatex_standalone'.
+
      See also `color'.
 
 
@@ -17738,50 +18584,6 @@ File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduct
      the sequence evolve <n1> iterations.
 
 
- -- Function: rk (<ODE>, <var>, <initial>, <domain>)
- -- Function: rk ([<ODE1>,...,<ODEm>], [<v1>,...,<vm>],
-          [<init1>,...,<initm>], <domain>)
-     The first form solves numerically one first-order ordinary
-     differential equation, and the second form solves a system of m of
-     those equations, using the 4th order Runge-Kutta method. <var>
-     represents the dependent variable. <ODE> must be an expression
-     that depends only on the independent and dependent variables and
-     defines the derivative of the dependent variable with respect to
-     the independent variable.
-
-     The independent variable is specified with `domain', which must be
-     a list of four elements as, for instance:
-          [t, 0, 10, 0.1]
-     the first element of the list identifies the independent variable,
-     the second and third elements are the initial and final values for
-     that variable, and the last element sets the increments that
-     should be used within that interval.
-
-     If <m> equations are going to be solved, there should be <m>
-     dependent variables <v1>, <v2>, ..., <vm>. The initial values for
-     those variables will be <init1>, <init2>, ..., <initm>.  There
-     will still be just one independent variable defined by `domain',
-     as in the previous case. <ODE1>, ..., <ODEm> are the expressions
-     that define the derivatives of each dependent variable in terms of
-     the independent variable. The only variables that may appear in
-     those expressions are the independent variable and any of the
-     dependent variables. It is important to give the derivatives
-     <ODE1>, ..., <ODEm> in the list in exactly the same order used for
-     the dependent variables; for instance, the third element in the
-     list will be interpreted as the derivative of the third dependent
-     variable.
-
-     The program will try to integrate the equations from the initial
-     value of the independent variable until its last value, using
-     constant increments. If at some step one of the dependent
-     variables takes an absolute value too large, the integration will
-     be interrupted at that point. The result will be a list with as
-     many elements as the number of iterations made. Each element in
-     the results list is itself another list with <m>+1 elements: the
-     value of the independent variable, followed by the values of the
-     dependent variables corresponding to that point.
-
-
  -- Function: staircase (<F>, <y0>, <n>, ...options...);
      Draws a staircase diagram for the sequence defined by the
      recurrence relation
@@ -17947,26 +18749,6 @@ with:
 the region from -0.3 to 0.3 in the x direction, and from 0.3 to 0.9 in
 the y direction. 36 colors will be used, starting with blue and ending
 with yellow.
-
-   To solve numerically the differential equation
-
-               dx/dt = t - x^2
-
-   With initial value x(t=0) = 1, in the interval of t from 0 to 8 and
-with increments of 0.1 for t, use:
-
-     (%i20) results: rk(t-x^2,x,1,[t,0,8,0.1])$
-
-   the results will be saved in the list `results'.
-
-   To solve numerically the system:
-
-             dx/dt = 4-x^2-4*y^2     dy/dt = y^2-x^2+1
-
-   for t between 0 and 4, and with values of -1.25 and 0.75 for x and y
-at t=0:
-
-     (%i21) sol: rk([4-x^2-4*y^2,y^2-x^2+1],[x,y],[-1.25,0.75],[t,0,4,0.02])$
 
 
 File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
@@ -22112,8 +22894,7 @@ File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduct
 
 
  -- Function: ratinterpol (<points>, <numdeg>)
- -- Function: ratinterpol (<points>, <numdeg>, <option1>, <option2>,
-          ...)
+ -- Function: ratinterpol (<points>, <numdeg>, <option1>)
      Generates a rational interpolator for data given by <points> and
      the degree of the numerator being equal to <numdeg>; the degree of
      the denominator is calculated automatically. Argument <points>
@@ -22129,10 +22910,7 @@ File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduct
      In the first two cases the pairs are ordered with respect to the
      first coordinate before making computations.
 
-     There are two options to fit specific needs:
-        * `'denterm', default `1', is the independent term of the
-          polynomial in the denominator.
-
+     There is one option to fit specific needs:
         * `'varname', default `'x', is the name of the independent
           variable.
 
@@ -24840,7 +25618,7 @@ File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  
 
 
 
-File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
+File: maxima.info,  Node: orthopoly,  Next: romberg,  Prev: opsubst,  Up: Top
 
 70 orthopoly
 ************
@@ -25538,240 +26316,9 @@ File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  P
 
 
 
-File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
+File: maxima.info,  Node: romberg,  Next: simplex,  Prev: orthopoly,  Up: Top
 
-71 plotdf
-*********
-
-* Menu:
-
-* Introduction to plotdf::
-* Functions and Variables for plotdf::
-
-
-File: maxima.info,  Node: Introduction to plotdf,  Next: Functions and Variables for plotdf,  Prev: plotdf,  Up: plotdf
-
-71.1 Introduction to plotdf
-===========================
-
-The function `plotdf' creates a plot of the direction field (also
-called slope field) for a first-order Ordinary Differential Equation
-(ODE) or a system of two autonomous first-order ODE's.
-
-   Plotdf requires Xmaxima. It can be used from the console or any other
-interface to Maxima, but the resulting file will be sent to Xmaxima for
-plotting. Please make sure you have installed Xmaxima before trying to
-use plotdf.
-
-   To plot the direction field of a single ODE, the ODE must be written
-in the form:
-            dy
-            -- = F(x,y)
-            dx
-
-   and the function <F> should be given as the argument for `plotdf'.
-If the independent and dependent variables are not <x>, and <y>, as in
-the equation above, then those two variables should be named explicitly
-in a list given as an argument to the plotdf command (see the examples).
-
-   To plot the direction field of a set of two autonomous ODE's, they
-must be written in the form
-            dx             dy
-            -- = G(x,y)    -- = F(x,y)
-            dt             dt
-
-   and the argument for `plotdf' should be a list with the two
-functions <G> and <F>, in that order; namely, the first expression in
-the list will be taken to be the time derivative of the variable
-represented on the horizontal axis, and the second expression will be
-the time derivative of the variable represented on the vertical axis.
-Those two variables do not have to be <x> and <y>, but if they are not,
-then the second argument given to plotdf must be another list naming
-the two variables, first the one on the horizontal axis and then the
-one on the vertical axis.
-
-   If only one ODE is given, `plotdf' will implicitly admit `x=t', and
-`G(x,y)=1', transforming the non-autonomous equation into a system of
-two autonomous equations.
-
-
-File: maxima.info,  Node: Functions and Variables for plotdf,  Prev: Introduction to plotdf,  Up: plotdf
-
-71.2 Functions and Variables for plotdf
-=======================================
-
- -- Function: plotdf (<dydx>, ...options...)
- -- Function: plotdf (<dvdu>, `['<u>,<v>`]', ...options...)
- -- Function: plotdf (`['<dxdt>,<dydt>`]', ...options...)
- -- Function: plotdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options...)
-     Displays a direction field in two dimensions <x> and <y>.
-
-     <dydx>, <dxdt> and <dydt> are expressions that depend on <x> and
-     <y>. <dvdu>, <dudt> and <dvdt> are expressions that depend on <u>
-     and <v>. In addition to those two variables, the expressions can
-     also depend on a set of parameters, with numerical values given
-     with the `parameters' option (the option syntax is given below),
-     or with a range of allowed values specified by a <sliders> option.
-
-     Several other options can be given within the command, or selected
-     in the menu. Integral curves can be obtained by clicking on the
-     plot, or with the option `trajectory_at'. The direction of the
-     integration can be controlled with the `direction' option, which
-     can have values of _forward_, _backward_ or _both_. The number of
-     integration steps is given by `nsteps' and the time interval
-     between them is set up with the `tstep' option. The Adams Moulton
-     method is used for the integration; it is also possible to switch
-     to an adaptive Runge-Kutta 4th order method.
-
-     Plot window menu:
-
-     The menu in the plot window has the following options: _Zoom_, will
-     change the behavior of the mouse so that it will allow you to zoom
-     in on a region of the plot by clicking with the left button. Each
-     click near a point magnifies the plot, keeping the center at the
-     point where you clicked. Holding the <Shift> key while clicking,
-     zooms out to the previous magnification. To resume computing
-     trajectories when you click on a point, select _Integrate_ from
-     the menu.
-
-     The option _Config_ in the menu can be used to change the ODE(s) in
-     use and various other settings. After configuration changes are
-     made, the menu option _Replot_ should be selected, to activate the
-     new settings.  If a pair of coordinates are entered in the field
-     _Trajectory at_ in the _Config_ dialog menu, and the <enter> key
-     is pressed, a new integral curve will be shown, in addition to the
-     ones already shown. When _Replot_ is selected, only the last
-     integral curve entered will be shown.
-
-     Holding the right mouse button down while the cursor is moved, can
-     be used to drag the plot sideways or up and down. Additional
-     parameters such as the number of steps, the initial value of <t>
-     and the x and y centers and radii, may be set in the Config menu.
-
-     A copy of the plot can be saved as a postscript file, using the
-     menu option _Save_.
-
-     Plot options:
-
-     The `plotdf' command may include several commands, each command is
-     a list of two or more items.  The first item is the name of the
-     option, and the remainder comprises the value or values assigned
-     to the option.
-
-     The options which are recognized by `plotdf' are the following:
-
-        * "tstep" defines the length of the increments on the
-          independent variable <t>, used to compute an integral curve.
-          If only one expression <dydx> is given to `plotdf', the <x>
-          variable will be directly proportional to <t>.  The default
-          value is 0.1.
-
-        * "nsteps" defines the number of steps of length `tstep' that
-          will be used for the independent variable, to compute an
-          integral curve.  The default value is 100.
-
-        * "direction" defines the direction of the independent variable
-          that will be followed to compute an integral curve. Possible
-          values are `forward', to make the independent variable
-          increase `nsteps' times, with increments `tstep', `backward',
-          to make the independent variable decrease, or `both' that
-          will lead to an integral curve that extends `nsteps' forward,
-          and `nsteps' backward. The keywords `right' and `left' can be
-          used as synonyms for `forward' and `backward'.  The default
-          value is `both'.
-
-        * "tinitial" defines the initial value of variable <t> used to
-          compute integral curves. Since the differential equations are
-          autonomous, that setting will only appear in the plot of the
-          curves as functions of <t>.  The default value is 0.
-
-        * "versus_t" is used to create a second plot window, with a
-          plot of an integral curve, as two functions <x>, <y>, of the
-          independent variable <t>. If `versus_t' is given any value
-          different from 0, the second plot window will be displayed.
-          The second plot window includes another menu, similar to the
-          menu of the main plot window.  The default value is 0.
-
-        * "trajectory_at" defines the coordinates <xinitial> and
-          <yinitial> for the starting point of an integral curve.  The
-          option is empty by default.
-
-        * "parameters" defines a list of parameters, and their
-          numerical values, used in the definition of the differential
-          equations. The name and values of the parameters must be
-          given in a string with a comma-separated sequence of pairs
-          `name=value'.
-
-        * "sliders" defines a list of parameters that will be changed
-          interactively using slider buttons, and the range of
-          variation of those parameters. The names and ranges of the
-          parameters must be given in a string with a comma-separated
-          sequence of elements `name=min:max'
-
-        * "xfun" defines a string with semi-colon-separated sequence of
-          functions of <x> to be displayed, on top of the direction
-          field.  Those functions will be parsed by Tcl and not by
-          Maxima.
-
-        * "x" should be followed by two numbers, which will set up the
-          minimum and maximum values shown on the horizontal axis. If
-          the variable on the horizontal axis is not <x>, then this
-          option should have the name of the variable on the horizontal
-          axis.  The default horizontal range is from -10 to 10.
-
-        * "y" should be followed by two numbers, which will set up the
-          minimum and maximum values shown on the vertical axis. If the
-          variable on the vertical axis is not <y>, then this option
-          should have the name of the variable on the vertical axis.
-          The default vertical range is from -10 to 10.
-
-     *Examples:*
-
-        * To show the direction field of the differential equation y' =
-          exp(-x) + y and the solution that goes through (2, -0.1):
-               (%i1) plotdf(exp(-x)+y,[trajectory_at,2,-0.1])$
-
-        * To obtain the direction field for the equation diff(y,x) = x
-          - y^2 and the solution with initial condition y(-1) = 3, we
-          can use the command:
-               (%i1) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
-                        [trajectory_at,-1,3], [direction,forward],
-                        [y,-5,5], [x,-4,16])$
-
-          The graph also shows the function y = sqrt(x).
-
-        * The following example shows the direction field of a harmonic
-          oscillator, defined by the two equations dz/dt = v and dv/dt
-          = -k*z/m, and the integral curve through (z,v) = (6,0), with
-          a slider that will allow you to change the value of m
-          interactively (k is fixed at 2):
-               (%i1) plotdf([v,-k*z/m], [z,v], [parameters,"m=2,k=2"],
-                          [sliders,"m=1:5"], [trajectory_at,6,0])$
-
-        * To plot the direction field of the Duffing equation,
-          m*x"+c*x'+k*x+b*x^3 = 0, we introduce the variable y=x' and
-          use:
-               (%i1) plotdf([y,-(k*x + c*y + b*x^3)/m],
-                            [parameters,"k=-1,m=1.0,c=0,b=1"],
-                            [sliders,"k=-2:2,m=-1:1"],[tstep,0.1])$
-
-        * The direction field for a damped pendulum, including the
-          solution for the given initial conditions, with a slider that
-          can be used to change the value of the mass m, and with a
-          plot of the two state variables as a function of time:
-
-               (%i1) plotdf([w,-g*sin(a)/l - b*w/m/l], [a,w],
-                       [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
-                       [trajectory_at,1.05,-9],[tstep,0.01],
-                       [a,-10,2], [w,-14,14], [direction,forward],
-                       [nsteps,300], [sliders,"m=0.1:1"], [versus_t,1])$
-
-
-
-
-File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
-
-72 romberg
+71 romberg
 **********
 
 * Menu:
@@ -25781,7 +26328,7 @@ File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: Top
 
-72.1 Functions and Variables for romberg
+71.1 Functions and Variables for romberg
 ========================================
 
  -- Function: romberg (<expr>, <x>, <a>, <b>)
@@ -25933,521 +26480,5 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
      on `romberg'.
 
      See also `rombergit' and `rombergmin'.
-
-
-
-File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
-
-73 simplex
-**********
-
-* Menu:
-
-* Introduction to simplex::
-* Functions and Variables for simplex::
-
-
-File: maxima.info,  Node: Introduction to simplex,  Next: Functions and Variables for simplex,  Prev: simplex,  Up: simplex
-
-73.1 Introduction to simplex
-============================
-
-`simplex' is a package for linear optimization using the simplex
-algorithm.
-
-   Example:
-
-     (%i1) load("simplex")$
-     (%i2) minimize_lp(x+y, [3*x+2*y>2, x+4*y>3]);
-                       9        7       1
-     (%o2)            [--, [y = --, x = -]]
-                       10       10      5
-
-
-File: maxima.info,  Node: Functions and Variables for simplex,  Prev: Introduction to simplex,  Up: simplex
-
-73.2 Functions and Variables for simplex
-========================================
-
- -- Option variable: epsilon_lp
-     Default value: `10^-8'
-
-     Epsilon used for numerical computations in `linear_program'.
-
-     See also: `linear_program'.
-
-
- -- Function: linear_program (<A>, <b>, <c>)
-     `linear_program' is an implementation of the simplex algorithm.
-     `linear_program(A, b, c)' computes a vector <x> for which `c.x' is
-     minimum possible among vectors for which `A.x = b' and `x >= 0'.
-     Argument <A> is a matrix and arguments <b> and <c> are lists.
-
-     `linear_program' returns a list which contains the minimizing
-     vector <x> and the minimum value `c.x'. If the problem is not
-     bounded, it returns "Problem not bounded!" and if the problem is
-     not feasible, it returns "Problem not feasible!".
-
-     To use this function first load the `simplex' package with
-     `load(simplex);'.
-
-     Example:
-
-          (%i2) A: matrix([1,1,-1,0], [2,-3,0,-1], [4,-5,0,0])$
-          (%i3) b: [1,1,6]$
-          (%i4) c: [1,-2,0,0]$
-          (%i5) linear_program(A, b, c);
-                             13     19        3
-          (%o5)            [[--, 4, --, 0], - -]
-                             2      2         2
-
-     See also: `minimize_lp', `scale_lp', and `epsilon_lp'.
-
-
- -- Function: maximize_lp (<obj>, <cond>, [<pos>])
-     Maximizes linear objective function <obj> subject to some linear
-     constraints <cond>. See `minimize_lp' for detailed description of
-     arguments and return value.
-
-     See also: `minimize_lp'.
-
-
- -- Function: minimize_lp (<obj>, <cond>, [<pos>])
-     Minimizes a linear objective function <obj> subject to some linear
-     constraints <cond>. <cond> a list of linear equations or
-     inequalities. In strict inequalities `>' is replaced by `>=' and
-     `<' by `<='. The optional argument <pos> is a list of decision
-     variables which are assumed to be positive.
-
-     If the minimum exists, `minimize_lp' returns a list which contains
-     the minimum value of the objective function and a list of decision
-     variable values for which the minimum is attained. If the problem
-     is not bounded, `minimize_lp' returns "Problem not bounded!" and
-     if the problem is not feasible, it returns "Problem not feasible!".
-
-     The decision variables are not assumed to be nonegative by
-     default. If all decision variables are nonegative, set
-     `nonegative_lp' to `true'.  If only some of decision variables are
-     positive, list them in the optional argument <pos> (note that this
-     is more efficient than adding constraints).
-
-     `minimize_lp' uses the simplex algorithm which is implemented in
-     maxima `linear_program' function.
-
-     To use this function first load the `simplex' package with
-     `load(simplex);'.
-
-     Examples:
-
-          (%i1) minimize_lp(x+y, [3*x+y=0, x+2*y>2]);
-                                4       6        2
-          (%o1)                [-, [y = -, x = - -]]
-                                5       5        5
-          (%i2) minimize_lp(x+y, [3*x+y>0, x+2*y>2]), nonegative_lp=true;
-          (%o2)                [1, [y = 1, x = 0]]
-          (%i3) minimize_lp(x+y, [3*x+y=0, x+2*y>2]), nonegative_lp=true;
-          (%o3)                Problem not feasible!
-          (%i4) minimize_lp(x+y, [3*x+y>0]);
-          (%o4)                Problem not bounded!
-
-     See also: `maximize_lp', `nonegative_lp', `epsilon_lp'.
-
-
- -- Option variable: nonegative_lp
-     Default value: `false'
-
-     If `nonegative_lp' is true all decision variables to `minimize_lp'
-     and `maximize_lp' are assumed to be positive.
-
-     See also: `minimize_lp'.
-
-
-
-File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
-
-74 simplification
-*****************
-
-* Menu:
-
-* Introduction to simplification::
-* Package absimp::
-* Package facexp::
-* Package functs::
-* Package ineq::
-* Package rducon::
-* Package scifac::
-* Package sqdnst::
-
-
-File: maxima.info,  Node: Introduction to simplification,  Next: Package absimp,  Prev: simplification,  Up: simplification
-
-74.1 Introduction to simplification
-===================================
-
-The directory `maxima/share/simplification' contains several scripts
-which implement simplification rules and functions, and also some
-functions not related to simplification.
-
-
-File: maxima.info,  Node: Package absimp,  Next: Package facexp,  Prev: Introduction to simplification,  Up: simplification
-
-74.2 Package absimp
-===================
-
-The `absimp' package contains pattern-matching rules that extend the
-built-in simplification rules for the `abs' and `signum' functions.
-`absimp' respects relations established with the built-in `assume'
-function and by declarations such as  `modedeclare (m, even, n, odd)'
-for even or odd integers.
-
-   `absimp' defines `unitramp' and `unitstep' functions in terms of
-`abs' and `signum'.
-
-   `load (absimp)' loads this package.  `demo (absimp)' shows a
-demonstration of this package.
-
-   Examples:
-
-     (%i1) load (absimp)$
-     (%i2) (abs (x))^2;
-                                            2
-     (%o2)                                 x
-     (%i3) diff (abs (x), x);
-                                           x
-     (%o3)                               ------
-                                         abs(x)
-     (%i4) cosh (abs (x));
-     (%o4)                               cosh(x)
-
-
-File: maxima.info,  Node: Package facexp,  Next: Package functs,  Prev: Package absimp,  Up: simplification
-
-74.3 Package facexp
-===================
-
-The `facexp' package contains several related  functions that provide
-the user with the ability to structure expressions by controlled
-expansion.   This capability  is especially  useful when  the expression
-contains variables that have physical meaning, because it is  often true
-that the most economical form  of such an expression can be  obtained by
-fully expanding the expression with respect to those variables, and then
-factoring their coefficients.  While it is  true that this  procedure is
-not difficult to carry out using standard Maxima  functions, additional
-fine-tuning may also  be desirable, and  these finishing touches  can be
-more  difficult to  apply.
-
-   The  function `facsum'  and its  related forms provide a convenient
-means for controlling the structure  of expressions in this way.
-Another function, `collectterms', can be used to add  two or more
-expressions that have already been simplified to this form, without
-resimplifying the whole expression again.  This function may be useful
-when the expressions are very large.
-
-   `load (facexp)' loads this package.  `demo (facexp)' shows a
-demonstration of this package.
-
- -- Function: facsum (<expr>, <arg_1>, ..., <arg_n>)
-     Returns  a form  of <expr>  which depends  on the arguments
-     <arg_1>, ..., <arg_n>.  The arguments can be any form suitable for
-     `ratvars', or they can be lists  of such  forms.  If  the
-     arguments  are not  lists, then  the form returned is  fully
-     expanded with respect  to the arguments,  and the coefficients of
-     the arguments are factored.  These  coefficients are free of the
-     arguments, except perhaps in a non-rational sense.
-
-     If any of the arguments are  lists, then all such lists are
-     combined into  a  single  list,   and  instead  of  calling
-     `factor'   on  the coefficients  of  the  arguments,  `facsum'
-     calls  itself   on  these coefficients, using  this newly
-     constructed  single list as  the new argument list  for this
-     recursive  call.  This  process can  be  repeated to arbitrary
-     depth by nesting the desired elements in lists.
-
-     It is possible that one may wish to `facsum' with respect  to more
-     complicated subexpressions,  such as  `log (x + y)'.  Such
-     arguments are also  permissible.
-
-     Occasionally the user may wish to obtain any of the  above forms
-     for expressions which are specified only by their leading
-     operators.  For example, one may wish  to `facsum' with respect to
-     all  `log''s.  In this situation, one may  include among the
-     arguments either  the specific `log''s which are to be treated in
-     this way, or  alternatively, either the expression  `operator
-     (log)' or `'operator (log)'.   If one  wished to `facsum' the
-     expression <expr> with respect to the operators <op_1>, ...,
-     <op_n>, one   would  evaluate  `facsum (<expr>, operator (<op_1>,
-     ..., <op_n>))'.  The `operator' form may also appear inside list
-     arguments.
-
-     In  addition,  the  setting  of  the  switches   `facsum_combine'
-     and `nextlayerfactor' may affect the result of `facsum'.
-
-
- -- Global variable: nextlayerfactor
-     Default value: `false'
-
-     When `nextlayerfactor' is `true', recursive calls  of `facsum' are
-     applied  to  the  factors  of  the  factored  form   of  the
-     coefficients of the arguments.
-
-     When  `false', `facsum' is applied to each coefficient as a whole
-     whenever recusive calls to  `facsum' occur.
-
-     Inclusion   of   the  atom `nextlayerfactor' in  the argument
-     list of `facsum'  has the  effect of `nextlayerfactor: true', but
-     for the next level of the expression only.  Since
-     `nextlayerfactor' is  always bound to  either `true' or  `false',
-     it must be presented single-quoted whenever it appears in the
-     argument list of `facsum'.
-
-
- -- Global variable: facsum_combine
-     Default value: `true'
-
-     `facsum_combine' controls the form  of the final result  returned
-     by `facsum'  when  its  argument  is  a  quotient  of
-     polynomials.   If `facsum_combine' is `false'  then the form will
-     be returned as  a fully expanded  sum  as described  above,  but
-     if  `true',  then  the expression returned is a ratio of
-     polynomials, with each polynomial in the form described above.
-
-     The `true' setting of this switch is useful when one wants to
-     `facsum' both  the numerator and  denominator of  a rational
-     expression,  but  does not  want  the denominator  to  be
-     multiplied through the terms of the numerator.
-
-
- -- Function: factorfacsum (<expr>, <arg_1>, ... <arg_n>)
-     Returns a  form of <expr>  which is obtained by calling  `facsum'
-     on the factors  of <expr> with <arg_1>, ... <arg_n> as arguments.
-     If any of the factors of <expr> is raised to a  power, both the
-     factor and the exponent will be processed in this way.
-
-
- -- Function: collectterms (<expr>, <arg_1>, ..., <arg_n>)
-     If several expressions have been simplified  with the following
-     functions `facsum', `factorfacsum', `factenexpand', `facexpten' or
-     `factorfacexpten', and they are to be added together, it may be
-     desirable to combine them using the function  `collecterms'.
-     `collecterms' can take as arguments all of the arguments that can
-     be given to these other associated functions with the exception of
-     `nextlayerfactor', which has no effect on `collectterms'.  The
-     advantage of `collectterms' is that it returns a form  similar to
-     `facsum', but since it is adding forms that have already been
-     processed by `facsum', it does not need to repeat that effort.
-     This capability is especially useful when the expressions to be
-     summed are very large.
-
-
-
-File: maxima.info,  Node: Package functs,  Next: Package ineq,  Prev: Package facexp,  Up: simplification
-
-74.4 Package functs
-===================
-
- -- Function: rempart (<expr>, <n>)
-     Removes part <n> from the expression <expr>.
-
-     If <n> is a list of the form `[<l>, <m>]' then parts <l> thru <m>
-     are removed.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: wronskian ([<f_1>, ..., <f_n>], <x>)
-     Returns the Wronskian matrix of the list of expressions [<f_1>,
-     ..., <f_n>] in the variable <x>.  The determinant of the Wronskian
-     matrix is the Wronskian determinant of the list of expressions.
-
-     To use `wronskian', first `load(functs)'. Example:
-
-          (%i1) load(functs)$
-          (%i2) wronskian([f(x), g(x)],x);
-          (%o2) matrix([f(x),g(x)],['diff(f(x),x,1),'diff(g(x),x,1)])
-
-
- -- Function: tracematrix (<M>)
-     Returns the trace (sum of the diagonal elements) of matrix <M>.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: rational (`z')
-     Multiplies numerator and denominator of <z> by the complex
-     conjugate of denominator, thus rationalizing the denominator.
-     Returns canonical rational expression (CRE) form if given one,
-     else returns general form.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: logand (`x',`y')
-     Returns logical (bit-wise) "and" of arguments x and y.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: logor (`x',`y')
-     Returns logical (bit-wise) "or" of arguments x and y.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: logxor (`x',`y')
-     Returns logical (bit-wise) exclusive-or of arguments x and y.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: nonzeroandfreeof (<x>, <expr>)
-     Returns `true' if <expr> is nonzero and `freeof (<x>, <expr>)'
-     returns `true'.  Returns `false' otherwise.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: linear (<expr>, <x>)
-     When <expr> is an expression linear in variable <x>, `linear'
-     returns `<a>*<x> + <b>' where <a> is nonzero, and <a> and <b> are
-     free of <x>.  Otherwise, `linear' returns <expr>.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: gcdivide (<p>, <q>)
-     When the option variable `takegcd' is `true' which is the default,
-     `gcdivide' divides the polynomials <p> and <q> by their greatest
-     common divisor and returns the ratio of the results.  `gcdivde'
-     calls the function `ezgcd'  to divide the polynomials by the
-     greatest common divisor.
-
-     When `takegcd' is `false', `gcdivide' returns the ratio `<p>/<q>'.
-
-     To use this function write first `load(functs)'.
-
-     See also `ezgcd',  `gcd',  `gcdex',  and `poly_gcd'.
-
-     Example:
-
-          (%i1) load(functs)$
-
-          (%i2) p1:6*x^3+19*x^2+19*x+6;
-                                  3       2
-          (%o2)                6 x  + 19 x  + 19 x + 6
-          (%i3) p2:6*x^5+13*x^4+12*x^3+13*x^2+6*x;
-                            5       4       3       2
-          (%o3)          6 x  + 13 x  + 12 x  + 13 x  + 6 x
-          (%i4) gcdivide(p1, p2);
-                                       x + 1
-          (%o4)                        ------
-                                        3
-                                       x  + x
-          (%i5) takegcd:false;
-          (%o5)                         false
-          (%i6) gcdivide(p1, p2);
-                                 3       2
-                              6 x  + 19 x  + 19 x + 6
-          (%o6)          ----------------------------------
-                            5       4       3       2
-                         6 x  + 13 x  + 12 x  + 13 x  + 6 x
-          (%i7) ratsimp(%);
-                                       x + 1
-          (%o7)                        ------
-                                        3
-                                       x  + x
-
-
- -- Function: arithmetic (<a>, <d>, <n>)
-     Returns the <n>-th term of the arithmetic series `<a>, <a> + <d>,
-     <a> + 2*<d>, ..., <a> + (<n> - 1)*<d>'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: geometric (<a>, <r>, <n>)
-     Returns the <n>-th term of the geometric series `<a>, <a>*<r>,
-     <a>*<r>^2, ..., <a>*<r>^(<n> - 1)'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: harmonic (<a>, <b>, <c>, <n>)
-     Returns the <n>-th term of the harmonic series `<a>/<b>, <a>/(<b>
-     + <c>), <a>/(<b> + 2*<c>), ..., <a>/(<b> + (<n> - 1)*<c>)'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: arithsum (<a>, <d>, <n>)
-     Returns the sum of the arithmetic series from 1 to <n>.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: geosum (<a>, <r>, <n>)
-     Returns the sum of the geometric series from 1 to <n>.  If <n> is
-     infinity (`inf') then a sum is finite only if the absolute value
-     of <r> is less than 1.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: gaussprob (<x>)
-     Returns the Gaussian probability function `%e^(-<x>^2/2) /
-     sqrt(2*%pi)'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: gd (<x>)
-     Returns the Gudermannian function `2*atan(%e^x)-%pi/2'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: agd (<x>)
-     Returns the inverse Gudermannian function `log (tan (%pi/4 +
-     x/2)))'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: vers (<x>)
-     Returns the versed sine `1 - cos (x)'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: covers (<x>)
-     Returns the coversed sine `1 - sin (<x>)'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: exsec (<x>)
-     Returns the exsecant `sec (<x>) - 1'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: hav (<x>)
-     Returns the haversine `(1 - cos(x))/2'.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: combination (<n>, <r>)
-     Returns the number of combinations of <n> objects taken <r> at a
-     time.
-
-     To use this function write first `load(functs)'.
-
-
- -- Function: permutation (<n>, <r>)
-     Returns the number of permutations of <r> objects selected from a
-     set of <n> objects.
-
-     To use this function write first `load(functs)'.
 
 

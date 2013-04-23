@@ -17,10 +17,8 @@
 ;; General purpose macros which are used in Lisp code, but not widely enough
 ;; accepted to be a part of Lisp systems.
 
-;; 'writefilep' and 'ttyoff' are system independent ways of expressing
-;; the Maclisp ^R and ^W.
+;; 'ttyoff' is a system independent way of expressing the Maclisp ^W.
 
-(defvar writefilep '^r)
 (defvar ttyoff    '^w)
 
 ;; Like PUSH, but works at the other end.
@@ -51,17 +49,12 @@
   (apply #'load-macsyma-macros-at-runtime macro-files)
   (values))
 
-;; Used to temporarily bind contexts in such a way as to not cause
-;; the context garbage collector to run. Used when you don't want to
-;; stash away contexts for later use, but simply want to run a piece
-;; of code in a new context which will be destroyed when the code finishes.
-;; Note that this code COULD use an unwind-protect to be safe but since
-;; it will not cause out and out errors we leave it out.
-
 (defmacro with-new-context (sub-context &rest forms)
-  `(let ((context (context ,@sub-context)))
-     (prog1 ,@forms
-       (context-unwinder))))
+  `(let ((my-context (gensym "$CTXT")))
+     (mfuncall '$supcontext my-context ,@sub-context)
+     (unwind-protect
+       (prog1 ,@forms)
+       ($killcontext my-context))))
 
 ;; For creating a macsyma evaluator variable binding context.
 ;; (MBINDING (VARIABLES &OPTIONAL VALUES FUNCTION-NAME)

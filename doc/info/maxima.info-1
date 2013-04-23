@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.29.1 Manual
+Maxima 5.30.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -59,7 +59,7 @@ Support for specific areas of mathematics
 * Equations::                   Defining and solving equations.
 * Differential Equations::      Defining and solving differential equations.
 * Numerical::                   Numerical integration, Fourier
-                                transforms, etc.
+                                transforms, Equations, ODE's, etc.
 * Matrices and Linear Algebra:: Matrix operations.
 * Affine::
 * itensor::                     Indicial Tensor Manipulation.
@@ -113,7 +113,6 @@ Additional packages
 * numericalio::                 Reading and writing files.
 * opsubst::                     Substitutions utility.
 * orthopoly::                   Orthogonal polynomials.
-* plotdf::                      Direction fields plots.
 * romberg::                     Romberg method for numerical integration.
 * simplex::                     Linear programming.
 * simplification::              Simplification rules and functions.
@@ -245,8 +244,9 @@ Differential Equations
 Numerical
 * Introduction to fast Fourier transform::
 * Functions and Variables for fast Fourier transform::
-* Introduction to Fourier series::
-* Functions and Variables for Fourier series::
+* Functions for numerical solution of equations::
+* Introduction to numerical solution of differential equations::
+* Functions for numerical solution of differential equations::
 
 Matrices and Linear Algebra
 * Introduction to Matrices and Linear Algebra::
@@ -272,10 +272,11 @@ atensor
 * Functions and Variables for atensor::
 
 Sums, Products, and Series
-* Sums and Products::
+* Functions and Variables for Sums and Products::
 * Introduction to Series::
 * Functions and Variables for Series::
-* Poisson series::
+* Introduction to Fourier series::
+* Functions and Variables for Fourier series::
 
 Number Theory
 * Functions and Variables for Number Theory::
@@ -451,10 +452,6 @@ opsubst
 orthopoly
 * Introduction to orthogonal polynomials::
 * Functions and Variables for orthogonal polynomials::
-
-plotdf
-* Introduction to plotdf::
-* Functions and Variables for plotdf::
 
 romberg
 * Functions and Variables for romberg::
@@ -2435,7 +2432,7 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
 
      When `float2bf' is `false', a warning message is printed when a
      floating point number is converted into a bigfloat number (since
-     this may lead to loss of precision).  The default value is `true'.
+     this may lead to loss of precision).
 
 
  -- Function: floatnump (<expr>)
@@ -7718,7 +7715,7 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
  -- Property: evenfun
  -- Property: oddfun
-     `declare(f, evenfun' or `declare(f, oddfun' tells Maxima to
+     `declare(f, evenfun)' or `declare(f, oddfun)' tells Maxima to
      recognize the function `f' as an even or odd function.
 
      Examples:
@@ -8485,7 +8482,7 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
  -- Function: signum (<x>)
      For either real or complex numbers <x>, the signum function returns
      0 if <x> is zero; for a nonzero numeric input <x>, the signum
-     function returns `abs(x)/x'.
+     function returns `x/abs(x)'.
 
      For non-numeric inputs, Maxima attempts to determine the sign of
      the input.  When the sign is negative, zero, or positive, `signum'
@@ -9733,7 +9730,8 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
      flags `featurep(<object>, <feature>)' returns `true' if <object>
      has been declared to have <feature>.
 
-     See also `features'.
+     For more information about the features system, see `features'.
+     To remove a property from an atom, use `remove'.
 
      `declare' recognizes the following properties:
 
@@ -14468,10 +14466,10 @@ Special function notation follows:
      assoc_legendre_q[v,u] (z)      Legendre function, 2nd kind
 
      %f[p,q] ([], [], expr)         Generalized Hypergeometric function
-     gamma()                        Gamma function
-     gammagreek(a,z)                Incomplete gamma function
-     gammaincomplete(a,z)           Tail of incomplete gamma function
-     hypergeometric(l1, l2, z)      Hypergeometric function
+     gamma (z)                      Gamma function
+     gamma_greek (a,z)              Incomplete gamma function
+     gamma_incomplete (a,z)         Tail of incomplete gamma function
+     hypergeometric (l1, l2, z)     Hypergeometric function
      slommel
      %m[u,k] (z)                    Whittaker function, 1st kind
      %w[u,k] (z)                    Whittaker function, 2nd kind
@@ -14763,7 +14761,7 @@ Mathematical Functions, Chapter 6.
      simplification for rational numbers is controlled by `gammalim' to
      avoid internal overflow. See `factlim' and `gammalim'.
 
-     For negative integers `gamma' is not definied.
+     For negative integers `gamma' is not defined.
 
      Maxima can evalute `gamma' numerically for real and complex values
      in float and bigfloat precision.
@@ -15010,7 +15008,7 @@ Mathematical Functions, Chapter 6.
           (%o7)              [------------, ----------------------, -]
                                  b + a              a - 1           b
 
-     Beta is not definied, when one of the arguments is zero:
+     Beta is not defined, when one of the arguments is zero:
 
           (%i7) beta(0,b);
           beta: expected nonzero arguments; found 0, b
@@ -15749,7 +15747,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      `%m[u,k](z)' and of the second kind `%w[u,k](z)'.
 
      The result may be in terms of special functions and can include
-     unsimplified hypergeomtric functions.
+     unsimplified hypergeometric functions.
 
      When `laplace' fails to find a Laplace transform, `specint' is
      called.  Because `laplace' knows more general rules for Laplace
@@ -16188,7 +16186,7 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
 =======================================
 
  -- Option variable: lhospitallim
-     Default: 4
+     Default value: 4
 
      `lhospitallim' is the maximum number of times L'Hospital's rule is
      used in `limit'.  This prevents infinite looping in cases like
@@ -19595,8 +19593,9 @@ File: maxima.info,  Node: Numerical,  Next: Matrices and Linear Algebra,  Prev: 
 
 * Introduction to fast Fourier transform::
 * Functions and Variables for fast Fourier transform::
-* Introduction to Fourier series::
-* Functions and Variables for Fourier series::
+* Functions for numerical solution of equations::
+* Introduction to numerical solution of differential equations::
+* Functions for numerical solution of differential equations::
 
 
 File: maxima.info,  Node: Introduction to fast Fourier transform,  Next: Functions and Variables for fast Fourier transform,  Prev: Numerical,  Up: Numerical
@@ -19608,7 +19607,7 @@ The `fft' package comprises functions for the numerical (not symbolic)
 computation of the fast Fourier transform.
 
 
-File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  Next: Introduction to Fourier series,  Prev: Introduction to fast Fourier transform,  Up: Numerical
+File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  Next: Functions for numerical solution of equations,  Prev: Introduction to fast Fourier transform,  Up: Numerical
 
 22.2 Functions and Variables for fast Fourier transform
 =======================================================
@@ -19667,7 +19666,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      `x' be the output of the inverse transform.  Then for `j' from 0
      through `n - 1',
 
-          x[j] = sum(y[k] exp(+2 %i %pi j k / n), k, 0, n - 1)
+          x[j] = sum(y[k] exp(-2 %i %pi j k / n), k, 0, n - 1)
 
      `load(fft)' loads this function.
 
@@ -19723,7 +19722,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      The discrete Fourier transform is defined as follows.  Let `y' be
      the output of the transform.  Then for `k' from 0 through `n - 1',
 
-          y[k] = (1/n) sum(x[j] exp(-2 %i %pi j k / n), j, 0, n - 1)
+          y[k] = (1/n) sum(x[j] exp(+2 %i %pi j k / n), j, 0, n - 1)
 
      When the data <x> are real, real coefficients `a' and `b' can be
      computed such that
@@ -19812,6 +19811,12 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%o18)      [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
 
 
+
+File: maxima.info,  Node: Functions for numerical solution of equations,  Next: Introduction to numerical solution of differential equations,  Prev: Functions and Variables for fast Fourier transform,  Up: Numerical
+
+22.3 Functions for numerical solution of equations
+==================================================
+
  -- Function: horner (<expr>, <x>)
  -- Function: horner (<expr>)
      Returns a rearranged representation of <expr> as in Horner's rule,
@@ -19825,18 +19830,18 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
 
           (%i1) expr: 1e-155*x^2 - 5.5*x + 5.2e155;
                                      2
-          (%o1)            1.0E-155 x  - 5.5 x + 5.2E+155
+          (%o1)             1.e-155 x  - 5.5 x + 5.2e+155
           (%i2) expr2: horner (%, x), keepfloat: true;
-          (%o2)            (1.0E-155 x - 5.5) x + 5.2E+155
+          (%o2)         1.0 ((1.e-155 x - 5.5) x + 5.2e+155)
           (%i3) ev (expr, x=1e155);
           Maxima encountered a Lisp error:
 
-           floating point overflow
+           arithmetic error FLOATING-POINT-OVERFLOW signalled
 
           Automatically continuing.
-          To reenable the Lisp debugger set *debugger-hook* to nil.
+          To enable the Lisp debugger set *debugger-hook* to nil.
           (%i4) ev (expr2, x=1e155);
-          (%o4)                       7.0E+154
+          (%o4)                 7.00000000000001e+154
 
 
  -- Function: find_root (<expr>, <x>, <a>, <b>, [<abserr>, <relerr>])
@@ -19946,133 +19951,330 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      Examples:
 
           (%i1) load (newton1);
-          (%o1) /usr/share/maxima/5.10.0cvs/share/numeric/newton1.mac
+          (%o1)  /maxima/share/numeric/newton1.mac
           (%i2) newton (cos (u), u, 1, 1/100);
           (%o2)                   1.570675277161251
           (%i3) ev (cos (u), u = %);
-          (%o3)                 1.2104963335033528E-4
+          (%o3)                 1.2104963335033529e-4
           (%i4) assume (a > 0);
           (%o4)                        [a > 0]
           (%i5) newton (x^2 - a^2, x, a/2, a^2/100);
           (%o5)                  1.00030487804878 a
           (%i6) ev (x^2 - a^2, x = %);
                                                      2
-          (%o6)                6.098490481853958E-4 a
+          (%o6)                6.098490481853958e-4 a
 
 
 
-File: maxima.info,  Node: Introduction to Fourier series,  Next: Functions and Variables for Fourier series,  Prev: Functions and Variables for fast Fourier transform,  Up: Numerical
+File: maxima.info,  Node: Introduction to numerical solution of differential equations,  Next: Functions for numerical solution of differential equations,  Prev: Functions for numerical solution of equations,  Up: Numerical
 
-22.3 Introduction to Fourier series
-===================================
+22.4 Introduction to numerical solution of differential equations
+=================================================================
 
-The `fourie' package comprises functions for the symbolic computation
-of Fourier series.  There are functions in the `fourie' package to
-calculate Fourier integral coefficients and some functions for
-manipulation of expressions.
+The Ordinary Differential Equations (ODE) solved by the functions in
+this section should have the form,
+            dy
+            -- = F(x,y)
+            dx
+   which is a first-order ODE. Higher order differential equations of
+order <n> must be written as a system of <n> first-order equations of
+that kind. For instance, a second-order ODE should be written as a
+system of two equations
+            dx               dy
+            -- = G(x,y,t)    -- = F(x,y,t)
+            dt               dt
+
+   The first argument in the functions will be a list with the
+expressions on the right-side of the ODE's. The variables whose
+derivatives are represented by those expressions should be given in a
+second list. In the case above those variables are <x> and <y>. The
+independent variable, <t> in the examples above, might be given in a
+separated option. If the expressions given do not depend on that
+independent variable, the system is called autonomous.
 
 
-File: maxima.info,  Node: Functions and Variables for Fourier series,  Prev: Introduction to Fourier series,  Up: Numerical
+File: maxima.info,  Node: Functions for numerical solution of differential equations,  Prev: Introduction to numerical solution of differential equations,  Up: Numerical
 
-22.4 Functions and Variables for Fourier series
-===============================================
+22.5 Functions for numerical solution of differential equations
+===============================================================
 
- -- Function: equalp (<x>, <y>)
-     Returns `true' if `equal (<x>, <y>)' otherwise `false' (doesn't
-     give an error message like `equal (x, y)' would do in this case).
+ -- Function: plotdf (<dydx>, ...options...)
+ -- Function: plotdf (<dvdu>, `['<u>,<v>`]', ...options...)
+ -- Function: plotdf (`['<dxdt>,<dydt>`]', ...options...)
+ -- Function: plotdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options...)
+     The function `plotdf' creates a two-dimensional plot of the
+     direction field (also called slope field) for a first-order
+     Ordinary Differential Equation (ODE) or a system of two autonomous
+     first-order ODE's.
+
+     Plotdf requires Xmaxima, even if its run from a Maxima session in
+     a console, since the plot will be created by the Tk scripts in
+     Xmaxima.  If Xmaxima is not installed plotdf will not work.
+
+     <dydx>, <dxdt> and <dydt> are expressions that depend on <x> and
+     <y>. <dvdu>, <dudt> and <dvdt> are expressions that depend on <u>
+     and <v>. In addition to those two variables, the expressions can
+     also depend on a set of parameters, with numerical values given
+     with the `parameters' option (the option syntax is given below),
+     or with a range of allowed values specified by a <sliders> option.
+
+     Several other options can be given within the command, or selected
+     in the menu. Integral curves can be obtained by clicking on the
+     plot, or with the option `trajectory_at'. The direction of the
+     integration can be controlled with the `direction' option, which
+     can have values of _forward_, _backward_ or _both_. The number of
+     integration steps is given by `nsteps' and the time interval
+     between them is set up with the `tstep' option. The Adams Moulton
+     method is used for the integration; it is also possible to switch
+     to an adaptive Runge-Kutta 4th order method.
+
+     Plot window menu:
+
+     The menu in the plot window has the following options: _Zoom_, will
+     change the behavior of the mouse so that it will allow you to zoom
+     in on a region of the plot by clicking with the left button. Each
+     click near a point magnifies the plot, keeping the center at the
+     point where you clicked. Holding the <Shift> key while clicking,
+     zooms out to the previous magnification. To resume computing
+     trajectories when you click on a point, select _Integrate_ from
+     the menu.
+
+     The option _Config_ in the menu can be used to change the ODE(s) in
+     use and various other settings. After configuration changes are
+     made, the menu option _Replot_ should be selected, to activate the
+     new settings.  If a pair of coordinates are entered in the field
+     _Trajectory at_ in the _Config_ dialog menu, and the <enter> key
+     is pressed, a new integral curve will be shown, in addition to the
+     ones already shown. When _Replot_ is selected, only the last
+     integral curve entered will be shown.
+
+     Holding the right mouse button down while the cursor is moved, can
+     be used to drag the plot sideways or up and down. Additional
+     parameters such as the number of steps, the initial value of <t>
+     and the x and y centers and radii, may be set in the Config menu.
+
+     A copy of the plot can be saved as a postscript file, using the
+     menu option _Save_.
+
+     Plot options:
+
+     The `plotdf' command may include several options, each one being a
+     list of two or more elements. The first element in each option is
+     the name of the option, and the remainder is the value or values
+     assigned to the option.
+
+     The options which are recognized by `plotdf' are the following:
+
+        * "tstep" defines the length of the increments on the
+          independent variable <t>, used to compute an integral curve.
+          If only one expression <dydx> is given to `plotdf', the <x>
+          variable will be directly proportional to <t>.  The default
+          value is 0.1.
+
+        * "nsteps" defines the number of steps of length `tstep' that
+          will be used for the independent variable, to compute an
+          integral curve.  The default value is 100.
+
+        * "direction" defines the direction of the independent variable
+          that will be followed to compute an integral curve. Possible
+          values are `forward', to make the independent variable
+          increase `nsteps' times, with increments `tstep', `backward',
+          to make the independent variable decrease, or `both' that
+          will lead to an integral curve that extends `nsteps' forward,
+          and `nsteps' backward. The keywords `right' and `left' can be
+          used as synonyms for `forward' and `backward'.  The default
+          value is `both'.
+
+        * "tinitial" defines the initial value of variable <t> used to
+          compute integral curves. Since the differential equations are
+          autonomous, that setting will only appear in the plot of the
+          curves as functions of <t>.  The default value is 0.
+
+        * "versus_t" is used to create a second plot window, with a
+          plot of an integral curve, as two functions <x>, <y>, of the
+          independent variable <t>. If `versus_t' is given any value
+          different from 0, the second plot window will be displayed.
+          The second plot window includes another menu, similar to the
+          menu of the main plot window.  The default value is 0.
+
+        * "trajectory_at" defines the coordinates <xinitial> and
+          <yinitial> for the starting point of an integral curve.  The
+          option is empty by default.
+
+        * "parameters" defines a list of parameters, and their
+          numerical values, used in the definition of the differential
+          equations. The name and values of the parameters must be
+          given in a string with a comma-separated sequence of pairs
+          `name=value'.
+
+        * "sliders" defines a list of parameters that will be changed
+          interactively using slider buttons, and the range of
+          variation of those parameters. The names and ranges of the
+          parameters must be given in a string with a comma-separated
+          sequence of elements `name=min:max'
+
+        * "xfun" defines a string with semi-colon-separated sequence of
+          functions of <x> to be displayed, on top of the direction
+          field.  Those functions will be parsed by Tcl and not by
+          Maxima.
+
+        * "x" should be followed by two numbers, which will set up the
+          minimum and maximum values shown on the horizontal axis. If
+          the variable on the horizontal axis is not <x>, then this
+          option should have the name of the variable on the horizontal
+          axis.  The default horizontal range is from -10 to 10.
+
+        * "y" should be followed by two numbers, which will set up the
+          minimum and maximum values shown on the vertical axis. If the
+          variable on the vertical axis is not <y>, then this option
+          should have the name of the variable on the vertical axis.
+          The default vertical range is from -10 to 10.
+
+        * "xaxislabel" will be used to identify the horizontal axis.
+          Its default value is the name of the first state variable.
+
+        * "yaxislabel" will be used to identify the vertical axis. Its
+          default value is the name of the second state variable.
 
 
- -- Function: remfun (<f>, <expr>)
- -- Function: remfun (<f>, <expr>, <x>)
-     `remfun (<f>, <expr>)' replaces all occurrences of `<f> (<arg>)'
-     by <arg> in <expr>.
+     *Examples:*
 
-     `remfun (<f>, <expr>, <x>)' replaces all occurrences of `<f>
-     (<arg>)' by <arg> in <expr> only if <arg> contains the variable
-     <x>.
+        * To show the direction field of the differential equation y' =
+          exp(-x) + y and the solution that goes through (2, -0.1):
+               (%i1) plotdf(exp(-x)+y,[trajectory_at,2,-0.1])$
 
+        * To obtain the direction field for the equation diff(y,x) = x
+          - y^2 and the solution with initial condition y(-1) = 3, we
+          can use the command:
+               (%i1) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
+                        [trajectory_at,-1,3], [direction,forward],
+                        [y,-5,5], [x,-4,16])$
 
- -- Function: funp (<f>, <expr>)
- -- Function: funp (<f>, <expr>, <x>)
-     `funp (<f>, <expr>)' returns `true' if <expr> contains the
-     function <f>.
+          The graph also shows the function y = sqrt(x).
 
-     `funp (<f>, <expr>, <x>)' returns `true' if <expr> contains the
-     function <f> and the variable <x> is somewhere in the argument of
-     one of the instances of <f>.
+        * The following example shows the direction field of a harmonic
+          oscillator, defined by the two equations dz/dt = v and dv/dt
+          = -k*z/m, and the integral curve through (z,v) = (6,0), with
+          a slider that will allow you to change the value of m
+          interactively (k is fixed at 2):
+               (%i1) plotdf([v,-k*z/m], [z,v], [parameters,"m=2,k=2"],
+                          [sliders,"m=1:5"], [trajectory_at,6,0])$
 
+        * To plot the direction field of the Duffing equation,
+          m*x"+c*x'+k*x+b*x^3 = 0, we introduce the variable y=x' and
+          use:
+               (%i1) plotdf([y,-(k*x + c*y + b*x^3)/m],
+                            [parameters,"k=-1,m=1.0,c=0,b=1"],
+                            [sliders,"k=-2:2,m=-1:1"],[tstep,0.1])$
 
- -- Function: absint (<f>, <x>, <halfplane>)
- -- Function: absint (<f>, <x>)
- -- Function: absint (<f>, <x>, <a>, <b>)
-     `absint (<f>, <x>, <halfplane>)' returns the indefinite integral
-     of <f> with respect to <x> in the given halfplane (`pos', `neg',
-     or `both').  <f> may contain expressions of the form `abs (x)',
-     `abs (sin (x))', `abs (a) * exp (-abs (b) * abs (x))'.
+        * The direction field for a damped pendulum, including the
+          solution for the given initial conditions, with a slider that
+          can be used to change the value of the mass m, and with a
+          plot of the two state variables as a function of time:
 
-     `absint (<f>, <x>)' is equivalent to `absint (<f>, <x>, pos)'.
-
-     `absint (<f>, <x>, <a>, <b>)' returns the definite integral of <f>
-     with respect to <x> from <a> to <b>.  <f> may include absolute
-     values.
-
-
- -- Function: fourier (<f>, <x>, <p>)
-     Returns a list of the Fourier coefficients of `<f>(<x>)' defined
-     on the interval `[-p, p]'.
-
-
- -- Function: foursimp (<l>)
-     Simplifies `sin (n %pi)' to 0 if `sinnpiflag' is `true' and `cos
-     (n %pi)' to `(-1)^n' if `cosnpiflag' is `true'.
+               (%i1) plotdf([w,-g*sin(a)/l - b*w/m/l], [a,w],
+                       [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
+                       [trajectory_at,1.05,-9],[tstep,0.01],
+                       [a,-10,2], [w,-14,14], [direction,forward],
+                       [nsteps,300], [sliders,"m=0.1:1"], [versus_t,1])$
 
 
- -- Option variable: sinnpiflag
-     Default value: `true'
 
-     See `foursimp'.
+ -- Function: ploteq (<exp>, ...options...)
+     Plots equipotential curves for <exp>, which should be an expression
+     depending on two variables. The curves are obtained by integrating
+     the differential equation that define the ortogonal trajetories to
+     the solutions of the autonomous system obtained from the gradient
+     of the expression given.  The plot can also show the integral
+     curves for that gradient system (option fieldlines).
 
+     This program also requires Xmaxima, even if its run from a Maxima
+     session in a console, since the plot will be created by the Tk
+     scripts in Xmaxima.  By default, the plot region will be empty
+     until the user clicks in a point (or gives its coordinate with in
+     the set-up menu or via the trajectory_at option).
 
- -- Option variable: cosnpiflag
-     Default value: `true'
+     Most options accepted by plotdf can also be used for ploteq and
+     the plot interface is the same that was described in plotdf.
 
-     See `foursimp'.
+     Example:
 
+          (%i1) V: 900/((x+1)^2+y^2)^(1/2)-900/((x-1)^2+y^2)^(1/2)$
+          (%i2) ploteq(V,[x,-2,2],[y,-2,2],[fieldlines,"blue"])$
 
- -- Function: fourexpand (<l>, <x>, <p>, <limit>)
-     Constructs and returns the Fourier series from the list of Fourier
-     coefficients <l> up through <limit> terms (<limit> may be `inf').
-     <x> and <p> have same meaning as in `fourier'.
-
-
- -- Function: fourcos (<f>, <x>, <p>)
-     Returns the Fourier cosine coefficients for `<f>(<x>)' defined on
-     `[0, <p>]'.
-
-
- -- Function: foursin (<f>, <x>, <p>)
-     Returns the Fourier sine coefficients for `<f>(<x>)' defined on
-     `[0, <p>]'.
-
-
- -- Function: totalfourier (<f>, <x>, <p>)
-     Returns `fourexpand (foursimp (fourier (<f>, <x>, <p>)), <x>, <p>,
-     'inf)'.
+     clicking on a point will plot the equipotential curve that passes
+     by that point (in red) and the ortogonal trajectory (in blue).
 
 
- -- Function: fourint (<f>, <x>)
-     Constructs and returns a list of the Fourier integral coefficients
-     of `<f>(<x>)' defined on `[minf, inf]'.
+ -- Function: rk (<ODE>, <var>, <initial>, <domain>)
+ -- Function: rk ([<ODE1>,...,<ODEm>], [<v1>,...,<vm>],
+          [<init1>,...,<initm>], <domain>)
+     The first form solves numerically one first-order ordinary
+     differential equation, and the second form solves a system of m of
+     those equations, using the 4th order Runge-Kutta method. <var>
+     represents the dependent variable. <ODE> must be an expression
+     that depends only on the independent and dependent variables and
+     defines the derivative of the dependent variable with respect to
+     the independent variable.
 
+     The independent variable is specified with `domain', which must be
+     a list of four elements as, for instance:
+          [t, 0, 10, 0.1]
+     the first element of the list identifies the independent variable,
+     the second and third elements are the initial and final values for
+     that variable, and the last element sets the increments that
+     should be used within that interval.
 
- -- Function: fourintcos (<f>, <x>)
-     Returns the Fourier cosine integral coefficients for `<f>(<x>)' on
-     `[0, inf]'.
+     If <m> equations are going to be solved, there should be <m>
+     dependent variables <v1>, <v2>, ..., <vm>. The initial values for
+     those variables will be <init1>, <init2>, ..., <initm>.  There
+     will still be just one independent variable defined by `domain',
+     as in the previous case. <ODE1>, ..., <ODEm> are the expressions
+     that define the derivatives of each dependent variable in terms of
+     the independent variable. The only variables that may appear in
+     those expressions are the independent variable and any of the
+     dependent variables. It is important to give the derivatives
+     <ODE1>, ..., <ODEm> in the list in exactly the same order used for
+     the dependent variables; for instance, the third element in the
+     list will be interpreted as the derivative of the third dependent
+     variable.
 
+     The program will try to integrate the equations from the initial
+     value of the independent variable until its last value, using
+     constant increments. If at some step one of the dependent
+     variables takes an absolute value too large, the integration will
+     be interrupted at that point. The result will be a list with as
+     many elements as the number of iterations made. Each element in
+     the results list is itself another list with <m>+1 elements: the
+     value of the independent variable, followed by the values of the
+     dependent variables corresponding to that point.
 
- -- Function: fourintsin (<f>, <x>)
-     Returns the Fourier sine integral coefficients for `<f>(<x>)' on
-     `[0, inf]'.
+     To solve numerically the differential equation
+
+                    dx/dt = t - x^2
+
+     With initial value x(t=0) = 1, in the interval of t from 0 to 8
+     and with increments of 0.1 for t, use:
+
+          (%i1) results: rk(t-x^2,x,1,[t,0,8,0.1])$
+          (%i2) plot2d ([discrete, results])$
+
+     the results will be saved in the list `results' and the plot will
+     show the solution obtained, with <t> on the horizontal axis and
+     <x> on the vertical axis.
+
+     To solve numerically the system:
+
+                  dx/dt = 4-x^2-4*y^2     dy/dt = y^2-x^2+1
+
+     for t between 0 and 4, and with values of -1.25 and 0.75 for x and
+     y at t=0:
+
+          (%i1) sol: rk([4-x^2-4*y^2,y^2-x^2+1],[x,y],[-1.25,0.75],[t,0,4,0.02])$
+          (%i2) plot2d ([discrete,makelist([p[1],p[3]],p,sol)], [xlabel,"t"],[ylabel,"y"])$
+
+     The plot will show the solution for variable <y> as a function of
+     <t>.
 
 
 
@@ -20883,34 +21085,29 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
 
  -- Function: invert (<M>)
-     Returns the inverse of the matrix <M>.  The inverse is computed by
-     the adjoint method.
+     Returns the inverse of the matrix <M>.  The inverse is computed
+     via the LU decomposition.
 
-     This allows a user to compute the inverse of a matrix with bfloat
-     entries or polynomials with floating point coefficients without
-     converting to cre-form.
+     When `ratmx'  is `true', elements of <M> are converted to
+     canonical rational expressions (CRE), and the elements of the
+     return value are also CRE.
 
-     Cofactors are computed by the `determinant'  function, so if
-     `ratmx'  is `false' the inverse is computed without changing the
-     representation of the elements.
-
-     The current implementation is inefficient for matrices of high
-     order.
+     When `ratmx'  is `false', elements of <M> are not converted to a
+     common representation.  In particular, float and bigfloat elements
+     are not converted to rationals.
 
      When `detout'  is `true', the determinant is factored out of the
-     inverse.
+     inverse.  The global flags `doallmxops'  and `doscmxops'  must be
+     `false' to prevent the determinant from being absorbed into the
+     inverse.  `xthru'  can multiply the determinant into the inverse.
 
-     The elements of the inverse are not automatically expanded.  If
-     <M> has polynomial elements, better appearing output can be
-     generated by `expand (invert (m)), detout'.  If it is desirable to
-     then divide through by the determinant this can be accomplished by
-     `xthru (%)' or alternatively from scratch by
+     `invert'  does not apply any simplifications to the elements of
+     the inverse apart from the default arithmetic simplifications.
+     `ratsimp'  and `expand'  can apply additional simplifications.  In
+     particular, when <M> has polynomial elements,
+     `expand(invert(<M>))' might be preferable.
 
-          expand (adjoint (m)) / expand (determinant (m))
-          invert (m) := adjoint (m) / determinant (m)
-
-     See `^^' (noncommutative exponent) for another method of inverting
-     a matrix.
+     `invert(<M>)' is equivalent to `<M>^^-1'.
 
 
  -- Function: list_matrix_entries (<M>)
@@ -20957,6 +21154,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      multiplication operator `.'.  The corresponding noncommutative
      exponentiation operator is `^^'.  For a matrix `<A>', `<A>.<A> =
      <A>^^2' and `<A>^^-1' is the inverse of <A>, if it exists.
+     `<A>^^-1' is equivalent to `invert(<A>)'.
 
      There are switches for controlling simplification of expressions
      involving dot and matrix-list operations.  These are `doallmxops',
@@ -22101,9 +22299,11 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
 
  -- Option variable: flipflag
-     Default: `false'. If `false' then the indices will be renamed
-     according to the order of the contravariant indices, otherwise
-     according to the order of the covariant indices.
+     Default value: `false'
+
+     If `false' then the indices will be renamed according to the order
+     of the contravariant indices, otherwise according to the order of
+     the covariant indices.
 
      If `flipflag' is `false' then `rename' forms a list of the
      contravariant indices as they are encountered from left to right
@@ -22482,11 +22682,13 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 ------------------------
 
  -- Option variable: allsym
-     Default: `false'. if `true' then all indexed objects are assumed
-     symmetric in all of their covariant and contravariant indices. If
-     `false' then no symmetries of any kind are assumed in these
-     indices. Derivative indices are always taken to be symmetric
-     unless `iframe_flag' is set to `true'.
+     Default value: `false'
+
+     If `true' then all indexed objects are assumed symmetric in all of
+     their covariant and contravariant indices. If `false' then no
+     symmetries of any kind are assumed in these indices. Derivative
+     indices are always taken to be symmetric unless `iframe_flag' is
+     set to `true'.
 
 
  -- Function: decsym (<tensor>, <m>, <n>, [<cov_1>, <cov_2>, ...],
@@ -25320,16 +25522,18 @@ File: maxima.info,  Node: Sums Products and Series,  Next: Number Theory,  Prev:
 
 * Menu:
 
-* Sums and Products::
+* Functions and Variables for Sums and Products::
 * Introduction to Series::
 * Functions and Variables for Series::
-* Poisson series::
+* Introduction to Fourier series::
+* Functions and Variables for Fourier series::
+* Functions and Variables for Poisson series::
 
 
-File: maxima.info,  Node: Sums and Products,  Next: Introduction to Series,  Prev: Sums Products and Series,  Up: Sums Products and Series
+File: maxima.info,  Node: Functions and Variables for Sums and Products,  Next: Introduction to Series,  Prev: Sums Products and Series,  Up: Sums Products and Series
 
-28.1 Sums and Products
-======================
+28.1 Functions and Variables for Sums and Products
+==================================================
 
  -- Function: bashindices (<expr>)
      Transforms the expression <expr> by giving each summation and
@@ -25582,672 +25786,5 @@ File: maxima.info,  Node: Sums and Products,  Next: Introduction to Series,  Pre
                               /      /
                               ====   ====
                               i3 = 0 i4 = 0
-
-
-
-File: maxima.info,  Node: Introduction to Series,  Next: Functions and Variables for Series,  Prev: Sums and Products,  Up: Sums Products and Series
-
-28.2 Introduction to Series
-===========================
-
-Maxima contains functions `taylor' and `powerseries' for finding the
-series of differentiable functions.  It also has tools such as `nusum'
-capable of finding the closed form of some series.  Operations such as
-addition and multiplication work as usual on series.  This section
-presents the global variables which control the expansion.
-
-
-File: maxima.info,  Node: Functions and Variables for Series,  Next: Poisson series,  Prev: Introduction to Series,  Up: Sums Products and Series
-
-28.3 Functions and Variables for Series
-=======================================
-
- -- Option variable: cauchysum
-     Default value: `false'
-
-     When multiplying together sums with `inf' as their upper limit, if
-     `sumexpand' is `true' and `cauchysum' is `true' then the Cauchy
-     product will be used rather than the usual product.  In the Cauchy
-     product the index of the inner summation is a function of the
-     index of the outer one rather than varying independently.
-
-     Example:
-
-          (%i1) sumexpand: false$
-          (%i2) cauchysum: false$
-          (%i3) s: sum (f(i), i, 0, inf) * sum (g(j), j, 0, inf);
-                                inf         inf
-                                ====        ====
-                                \           \
-          (%o3)                ( >    f(i))  >    g(j)
-                                /           /
-                                ====        ====
-                                i = 0       j = 0
-          (%i4) sumexpand: true$
-          (%i5) cauchysum: true$
-          (%i6) ''s;
-                           inf     i1
-                           ====   ====
-                           \      \
-          (%o6)             >      >     g(i1 - i2) f(i2)
-                           /      /
-                           ====   ====
-                           i1 = 0 i2 = 0
-
-
- -- Function: deftaylor (<f_1>(<x_1>), <expr_1>, ..., <f_n>(<x_n>),
-          <expr_n>)
-     For each function <f_i> of one variable <x_i>, `deftaylor' defines
-     <expr_i> as the Taylor series about zero.  <expr_i> is typically a
-     polynomial in <x_i> or a summation; more general expressions are
-     accepted by `deftaylor' without complaint.
-
-     `powerseries (<f_i>(<x_i>), <x_i>, 0)' returns the series defined
-     by `deftaylor'.
-
-     `deftaylor' returns a list of the functions <f_1>, ..., <f_n>.
-     `deftaylor' evaluates its arguments.
-
-     Example:
-
-          (%i1) deftaylor (f(x), x^2 + sum(x^i/(2^i*i!^2), i, 4, inf));
-          (%o1)                          [f]
-          (%i2) powerseries (f(x), x, 0);
-                                inf
-                                ====      i1
-                                \        x         2
-          (%o2)                  >     -------- + x
-                                /       i1    2
-                                ====   2   i1!
-                                i1 = 4
-          (%i3) taylor (exp (sqrt (f(x))), x, 0, 4);
-                                2         3          4
-                               x    3073 x    12817 x
-          (%o3)/T/     1 + x + -- + ------- + -------- + . . .
-                               2     18432     307200
-
-
- -- Option variable: maxtayorder
-     Default value: `true'
-
-     When `maxtayorder' is `true', then during algebraic manipulation
-     of (truncated) Taylor series, `taylor' tries to retain as many
-     terms as are known to be correct.
-
-
- -- Function: niceindices (<expr>)
-     Renames the indices of sums and products in <expr>.  `niceindices'
-     attempts to rename each index to the value of
-     `niceindicespref[1]', unless that name appears in the summand or
-     multiplicand, in which case `niceindices' tries the succeeding
-     elements of `niceindicespref' in turn, until an unused variable is
-     found.  If the entire list is exhausted, additional indices are
-     constructed by appending integers to the value of
-     `niceindicespref[1]', e.g., `i0', `i1', `i2', ...
-
-     `niceindices' returns an expression.  `niceindices' evaluates its
-     argument.
-
-     Example:
-
-          (%i1) niceindicespref;
-          (%o1)                  [i, j, k, l, m, n]
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j l + k)
-                               ! !  /
-                              l = 1 ====
-                                    k = 1
-
-
- -- Option variable: niceindicespref
-     Default value: `[i, j, k, l, m, n]'
-
-     `niceindicespref' is the list from which `niceindices' takes the
-     names of indices for sums and products.
-
-     The elements of `niceindicespref' are typically names of variables,
-     although that is not enforced by `niceindices'.
-
-     Example:
-
-          (%i1) niceindicespref: [p, q, r, s, t, u]$
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j q + p)
-                               ! !  /
-                              q = 1 ====
-                                    p = 1
-
-
- -- Function: nusum (<expr>, <x>, <i_0>, <i_1>)
-     Carries out indefinite hypergeometric summation of <expr> with
-     respect to <x> using a decision procedure due to R.W. Gosper.
-     <expr> and the result must be expressible as products of integer
-     powers, factorials, binomials, and rational functions.
-
-     The terms "definite" and "indefinite summation" are used
-     analogously to "definite" and "indefinite integration".  To sum
-     indefinitely means to give a symbolic result for the sum over
-     intervals of variable length, not just e.g. 0 to inf.  Thus, since
-     there is no formula for the general partial sum of the binomial
-     series, `nusum' can't do it.
-
-     `nusum' and `unsum' know a little about sums and differences of
-     finite products.  See also `unsum'.
-
-     Examples:
-
-          (%i1) nusum (n*n!, n, 0, n);
-
-          Dependent equations eliminated:  (1)
-          (%o1)                     (n + 1)! - 1
-          (%i2) nusum (n^4*4^n/binomial(2*n,n), n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o2) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i3) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o3)                   ----------------
-                                  binomial(2 n, n)
-          (%i4) unsum (prod (i^2, i, 1, n), n);
-                              n - 1
-                              /===\
-                               ! !   2
-          (%o4)              ( ! !  i ) (n - 1) (n + 1)
-                               ! !
-                              i = 1
-          (%i5) nusum (%, n, 1, n);
-
-          Dependent equations eliminated:  (2 3)
-                                      n
-                                    /===\
-                                     ! !   2
-          (%o5)                      ! !  i  - 1
-                                     ! !
-                                    i = 1
-
-
- -- Function: pade (<taylor_series>, <numer_deg_bound>,
-          <denom_deg_bound>)
-     Returns a list of all rational functions which have the given
-     Taylor series expansion where the sum of the degrees of the
-     numerator and the denominator is less than or equal to the
-     truncation level of the power series, i.e.  are "best"
-     approximants, and which additionally satisfy the specified degree
-     bounds.
-
-     <taylor_series> is a univariate Taylor series.  <numer_deg_bound>
-     and <denom_deg_bound> are positive integers specifying degree
-     bounds on the numerator and denominator.
-
-     <taylor_series> can also be a Laurent series, and the degree
-     bounds can be `inf' which causes all rational functions whose total
-     degree is less than or equal to the length of the power series to
-     be returned.  Total degree is defined as `<numer_deg_bound> +
-     <denom_deg_bound>'.  Length of a power series is defined as
-     `"truncation level" + 1 - min(0, "order of series")'.
-
-          (%i1) taylor (1 + x + x^2 + x^3, x, 0, 3);
-                                        2    3
-          (%o1)/T/             1 + x + x  + x  + . . .
-          (%i2) pade (%, 1, 1);
-                                           1
-          (%o2)                       [- -----]
-                                         x - 1
-          (%i3) t: taylor(-(83787*x^10 - 45552*x^9 - 187296*x^8
-                             + 387072*x^7 + 86016*x^6 - 1507328*x^5
-                             + 1966080*x^4 + 4194304*x^3 - 25165824*x^2
-                             + 67108864*x - 134217728)
-                 /134217728, x, 0, 10);
-                              2    3       4       5       6        7
-                       x   3 x    x    15 x    23 x    21 x    189 x
-          (%o3)/T/ 1 - - + ---- - -- - ----- + ----- - ----- - ------
-                       2    16    32   1024    2048    32768   65536
-
-                                            8         9          10
-                                      5853 x    2847 x    83787 x
-                                    + ------- + ------- - --------- + . . .
-                                      4194304   8388608   134217728
-          (%i4) pade (t, 4, 4);
-          (%o4)                          []
-
-     There is no rational function of degree 4 numerator/denominator,
-     with this power series expansion.  You must in general have degree
-     of the numerator and degree of the denominator adding up to at
-     least the degree of the power series, in order to have enough
-     unknown coefficients to solve.
-
-          (%i5) pade (t, 5, 5);
-                               5                4                 3
-          (%o5) [- (520256329 x  - 96719020632 x  - 489651410240 x
-
-                            2
-           - 1619100813312 x  - 2176885157888 x - 2386516803584)
-
-                         5                 4                  3
-          /(47041365435 x  + 381702613848 x  + 1360678489152 x
-
-                            2
-           + 2856700692480 x  + 3370143559680 x + 2386516803584)]
-
-
- -- Function: powerseries (<expr>, <x>, <a>)
-     Returns the general form of the power series expansion for <expr>
-     in the variable <x> about the point <a> (which may be `inf' for
-     infinity):
-                     inf
-                     ====
-                     \               n
-                      >    b  (x - a)
-                     /      n
-                     ====
-                     n = 0
-
-     If `powerseries' is unable to expand <expr>, `taylor' may give the
-     first several terms of the series.
-
-     When `verbose' is `true', `powerseries' prints progress messages.
-
-          (%i1) verbose: true$
-          (%i2) powerseries (log(sin(x)/x), x, 0);
-          can't expand
-                                           log(sin(x))
-          so we'll try again after applying the rule:
-                                                  d
-                                                / -- (sin(x))
-                                                [ dx
-                                  log(sin(x)) = i ----------- dx
-                                                ]   sin(x)
-                                                /
-          in the first simplification we have returned:
-                                       /
-                                       [
-                                       i cot(x) dx - log(x)
-                                       ]
-                                       /
-                              inf
-                              ====        i1  2 i1             2 i1
-                              \      (- 1)   2     bern(2 i1) x
-                               >     ------------------------------
-                              /                i1 (2 i1)!
-                              ====
-                              i1 = 1
-          (%o2)                -------------------------------------
-                                                2
-
-
- -- Option variable: psexpand
-     Default value: `false'
-
-     When `psexpand' is `true', an extended rational function
-     expression is displayed fully expanded.  The switch `ratexpand'
-     has the same effect.
-
-     When `psexpand' is `false', a multivariate expression is displayed
-     just as in the rational function package.
-
-     When `psexpand' is  `multi', then terms with the same total degree
-     in the variables are grouped together.
-
-
- -- Function: revert (<expr>, <x>)
- -- Function: revert2 (<expr>, <x>, <n>)
-     These functions return the reversion of <expr>, a Taylor series
-     about zero in the variable <x>.  `revert' returns a polynomial of
-     degree equal to the highest power in <expr>.  `revert2' returns a
-     polynomial of degree <n>, which may be greater than, equal to, or
-     less than the degree of <expr>.
-
-     `load ("revert")' loads these functions.
-
-     Examples:
-
-          (%i1) load ("revert")$
-          (%i2) t: taylor (exp(x) - 1, x, 0, 6);
-                             2    3    4    5     6
-                            x    x    x    x     x
-          (%o2)/T/      x + -- + -- + -- + --- + --- + . . .
-                            2    6    24   120   720
-          (%i3) revert (t, x);
-                         6       5       4       3       2
-                     10 x  - 12 x  + 15 x  - 20 x  + 30 x  - 60 x
-          (%o3)/R/ - --------------------------------------------
-                                          60
-          (%i4) ratexpand (%);
-                               6    5    4    3    2
-                              x    x    x    x    x
-          (%o4)             - -- + -- - -- + -- - -- + x
-                              6    5    4    3    2
-          (%i5) taylor (log(x+1), x, 0, 6);
-                              2    3    4    5    6
-                             x    x    x    x    x
-          (%o5)/T/       x - -- + -- - -- + -- - -- + . . .
-                             2    3    4    5    6
-          (%i6) ratsimp (revert (t, x) - taylor (log(x+1), x, 0, 6));
-          (%o6)                           0
-          (%i7) revert2 (t, x, 4);
-                                    4    3    2
-                                   x    x    x
-          (%o7)                  - -- + -- - -- + x
-                                   4    3    2
-
-
- -- Function: taylor (<expr>, <x>, <a>, <n>)
- -- Function: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
- -- Function: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
- -- Function: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...],
-          [<n_1>, <n_2>, ...])
- -- Function: taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>,
-          <n_2>], ...)
-     `taylor (<expr>, <x>, <a>, <n>)' expands the expression <expr> in
-     a truncated Taylor or Laurent series in the variable <x> around
-     the point <a>, containing terms through `(<x> - <a>)^<n>'.
-
-     If <expr> is of the form `<f>(<x>)/<g>(<x>)' and `<g>(<x>)' has no
-     terms up to degree <n> then `taylor' attempts to expand `<g>(<x>)'
-     up to degree `2 <n>'.  If there are still no nonzero terms,
-     `taylor' doubles the degree of the expansion of `<g>(<x>)' so long
-     as the degree of the expansion is less than or equal to `<n>
-     2^taylordepth'.
-
-     `taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)' returns a
-     truncated power series of degree <n> in all variables <x_1>,
-     <x_2>, ...  about the point `(<a>, <a>, ...)'.
-
-     `taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>, <n_2>],
-     ...)' returns a truncated power series in the variables <x_1>,
-     <x_2>, ... about the point `(<a_1>, <a_2>, ...)', truncated at
-     <n_1>, <n_2>, ...
-
-     `taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...], [<n_1>,
-     <n_2>, ...])' returns a truncated power series in the variables
-     <x_1>, <x_2>, ... about the point `(<a_1>, <a_2>, ...)', truncated
-     at <n_1>, <n_2>, ...
-
-     `taylor (<expr>, [<x>, <a>, <n>, 'asymp])' returns an expansion of
-     <expr> in negative powers of `<x> - <a>'.  The highest order term
-     is `(<x> - <a>)^<-n>'.
-
-     When `maxtayorder' is `true', then during algebraic manipulation
-     of (truncated) Taylor series, `taylor' tries to retain as many
-     terms as are known to be correct.
-
-     When `psexpand' is `true', an extended rational function
-     expression is displayed fully expanded.  The switch `ratexpand'
-     has the same effect.  When `psexpand' is `false', a multivariate
-     expression is displayed just as in the rational function package.
-     When `psexpand' is  `multi', then terms with the same total degree
-     in the variables are grouped together.
-
-     See also the `taylor_logexpand' switch for controlling expansion.
-
-     Examples:
-
-          (%i1) taylor (sqrt (sin(x) + a*x + 1), x, 0, 3);
-                                     2             2
-                       (a + 1) x   (a  + 2 a + 1) x
-          (%o1)/T/ 1 + --------- - -----------------
-                           2               8
-
-                                             3      2             3
-                                         (3 a  + 9 a  + 9 a - 1) x
-                                       + -------------------------- + . . .
-                                                     48
-          (%i2) %^2;
-                                              3
-                                             x
-          (%o2)/T/           1 + (a + 1) x - -- + . . .
-                                             6
-          (%i3) taylor (sqrt (x + 1), x, 0, 5);
-                                 2    3      4      5
-                            x   x    x    5 x    7 x
-          (%o3)/T/      1 + - - -- + -- - ---- + ---- + . . .
-                            2   8    16   128    256
-          (%i4) %^2;
-          (%o4)/T/                  1 + x + . . .
-          (%i5) product ((1 + x^i)^2.5, i, 1, inf)/(1 + x^2);
-                                   inf
-                                  /===\
-                                   ! !    i     2.5
-                                   ! !  (x  + 1)
-                                   ! !
-                                  i = 1
-          (%o5)                   -----------------
-                                        2
-                                       x  + 1
-          (%i6) ev (taylor(%, x,  0, 3), keepfloat);
-                                         2           3
-          (%o6)/T/    1 + 2.5 x + 3.375 x  + 6.5625 x  + . . .
-          (%i7) taylor (1/log (x + 1), x, 0, 3);
-                                         2       3
-                           1   1   x    x    19 x
-          (%o7)/T/         - + - - -- + -- - ----- + . . .
-                           x   2   12   24    720
-          (%i8) taylor (cos(x) - sec(x), x, 0, 5);
-                                          4
-                                     2   x
-          (%o8)/T/                - x  - -- + . . .
-                                         6
-          (%i9) taylor ((cos(x) - sec(x))^3, x, 0, 5);
-          (%o9)/T/                    0 + . . .
-          (%i10) taylor (1/(cos(x) - sec(x))^3, x, 0, 5);
-                                                         2          4
-                      1     1       11      347    6767 x    15377 x
-          (%o10)/T/ - -- + ---- + ------ - ----- - ------- - --------
-                       6      4        2   15120   604800    7983360
-                      x    2 x    120 x
-
-                                                                    + . . .
-          (%i11) taylor (sqrt (1 - k^2*sin(x)^2), x, 0, 6);
-                         2  2       4      2   4
-                        k  x    (3 k  - 4 k ) x
-          (%o11)/T/ 1 - ----- - ----------------
-                          2            24
-
-                                              6       4       2   6
-                                         (45 k  - 60 k  + 16 k ) x
-                                       - -------------------------- + . . .
-                                                    720
-          (%i12) taylor ((x + 1)^n, x, 0, 4);
-                                2       2     3      2         3
-                              (n  - n) x    (n  - 3 n  + 2 n) x
-          (%o12)/T/ 1 + n x + ----------- + --------------------
-                                   2                 6
-
-                                         4      3       2         4
-                                       (n  - 6 n  + 11 n  - 6 n) x
-                                     + ---------------------------- + . . .
-                                                    24
-          (%i13) taylor (sin (y + x), x, 0, 3, y, 0, 3);
-                         3                 2
-                        y                 y
-          (%o13)/T/ y - -- + . . . + (1 - -- + . . .) x
-                        6                 2
-
-                              3                       2
-                         y   y            2      1   y            3
-                    + (- - + -- + . . .) x  + (- - + -- + . . .) x  + . . .
-                         2   12                  6   12
-          (%i14) taylor (sin (y + x), [x, y], 0, 3);
-                               3        2      2      3
-                              x  + 3 y x  + 3 y  x + y
-          (%o14)/T/   y + x - ------------------------- + . . .
-                                          6
-          (%i15) taylor (1/sin (y + x), x, 0, 3, y, 0, 3);
-                    1   y              1    1               1            2
-          (%o15)/T/ - + - + . . . + (- -- + - + . . .) x + (-- + . . .) x
-                    y   6               2   6                3
-                                       y                    y
-
-                                                     1            3
-                                                + (- -- + . . .) x  + . . .
-                                                      4
-                                                     y
-          (%i16) taylor (1/sin (y + x), [x, y], 0, 3);
-                                       3         2       2        3
-                      1     x + y   7 x  + 21 y x  + 21 y  x + 7 y
-          (%o16)/T/ ----- + ----- + ------------------------------- + . . .
-                    x + y     6                   360
-
-
- -- Option variable: taylordepth
-     Default value: 3
-
-     If there are still no nonzero terms, `taylor' doubles the degree
-     of the expansion of `<g>(<x>)' so long as the degree of the
-     expansion is less than or equal to `<n> 2^taylordepth'.
-
-
- -- Function: taylorinfo (<expr>)
-     Returns information about the Taylor series <expr>.  The return
-     value is a list of lists.  Each list comprises the name of a
-     variable, the point of expansion, and the degree of the expansion.
-
-     `taylorinfo' returns `false' if <expr> is not a Taylor series.
-
-     Example:
-
-          (%i1) taylor ((1 - y^2)/(1 - x), x, 0, 3, [y, a, inf]);
-                            2                       2
-          (%o1)/T/ - (y - a)  - 2 a (y - a) + (1 - a )
-
-                   2                        2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   3
-           + (1 - a  - 2 a (y - a) - (y - a) ) x  + . . .
-          (%i2) taylorinfo(%);
-          (%o2)               [[y, a, inf], [x, 0, 3]]
-
-
- -- Function: taylorp (<expr>)
-     Returns `true' if <expr> is a Taylor series, and `false' otherwise.
-
-
- -- Option variable: taylor_logexpand
-     Default value: `true'
-
-     `taylor_logexpand' controls expansions of logarithms in `taylor'
-     series.
-
-     When `taylor_logexpand' is `true', all logarithms are expanded
-     fully so that zero-recognition problems involving logarithmic
-     identities do not disturb the expansion process.  However, this
-     scheme is not always mathematically correct since it ignores
-     branch information.
-
-     When `taylor_logexpand' is set to `false', then the only expansion
-     of logarithms that occur is that necessary to obtain a formal
-     power series.
-
-
- -- Option variable: taylor_order_coefficients
-     Default value: `true'
-
-     `taylor_order_coefficients' controls the ordering of coefficients
-     in a Taylor series.
-
-     When `taylor_order_coefficients' is `true', coefficients of taylor
-     series are ordered canonically.
-
-
- -- Function: taylor_simplifier (<expr>)
-     Simplifies coefficients of the power series <expr>.  `taylor'
-     calls this function.
-
-
- -- Option variable: taylor_truncate_polynomials
-     Default value: `true'
-
-     When `taylor_truncate_polynomials' is `true', polynomials are
-     truncated based upon the input truncation levels.
-
-     Otherwise, polynomials input to `taylor' are considered to have
-     infinite precison.
-
-
- -- Function: taytorat (<expr>)
-     Converts <expr> from `taylor' form to canonical rational expression
-     (CRE) form.  The effect is the same as `rat (ratdisrep (<expr>))',
-     but faster.
-
-
- -- Function: trunc (<expr>)
-     Annotates the internal representation of the general expression
-     <expr> so that it is displayed as if its sums were truncated
-     Taylor series.  <expr> is not otherwise modified.
-
-     Example:
-
-          (%i1) expr: x^2 + x + 1;
-                                      2
-          (%o1)                      x  + x + 1
-          (%i2) trunc (expr);
-                                          2
-          (%o2)                  1 + x + x  + . . .
-          (%i3) is (expr = trunc (expr));
-          (%o3)                         true
-
-
- -- Function: unsum (<f>, <n>)
-     Returns the first backward difference `<f>(<n>) - <f>(<n> - 1)'.
-     Thus `unsum' in a sense is the inverse of `sum'.
-
-     See also `nusum'.
-
-     Examples:
-
-          (%i1) g(p) := p*4^n/binomial(2*n,n);
-                                               n
-                                            p 4
-          (%o1)               g(p) := ----------------
-                                      binomial(2 n, n)
-          (%i2) g(n^4);
-                                        4  n
-                                       n  4
-          (%o2)                   ----------------
-                                  binomial(2 n, n)
-          (%i3) nusum (%, n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o3) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i4) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o4)                   ----------------
-                                  binomial(2 n, n)
-
-
- -- Option variable: verbose
-     Default value: `false'
-
-     When `verbose' is `true', `powerseries' prints progress messages.
 
 
