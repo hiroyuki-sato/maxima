@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.30 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.31 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -675,26 +675,26 @@ File: maxima.info,  Node: Funciones y variables para lapack,  Prev: Introducción
      cualquier orden, siendo su sintaxis de la forma `clave=valor'. Las
      claves reconocidas son:
 
-    <C>
+    `C'
           La matriz <C> que debe ser sumada. El valor por defecto es
           `false', lo que significa que no se sumará ninguna matriz.
 
-    <alpha>
+    `alpha'
           El producto de <A> por <B> se multiplicará por este vaalor.
           El valor por defecto es 1.
 
-    <beta>
+    `beta'
           Si se da la matriz <C>, se multiplicará por este valor antes
           de ser sumada.  El valor por defecto es 0, lo que significa
           que <C> no se suma, incluso estando presente. Por lo tanto,
           téngase cuidado en especificar un valor no nulo para <beta>.
 
-    <transpose_a>
+    `transpose_a'
           Si toma el valor `true', se utilizará la transpuesta de <A>,
           en lugar de la propia matriz <A>, en el producto. El valor
           por defecto es `false'.
 
-    <transpose_b>
+    `transpose_b'
           Si toma el valor `true', se utilizará la transpuesta de <B>,
           en lugar de la propia matriz <B>, en el producto. El valor
           por defecto es `false'.
@@ -816,10 +816,13 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
      variables <X>, partiendo de los estimadores iniciales <X0>, de tal
      manera que norm(grad(FOM)) < epsilon*max(1, norm(X)).
 
-     El argumento <grad> es el gradiente de <FOM> respecto de las
-     variables <X>. <grad> es una lista con el mismo número de
-     elementos que <X>. Si no se pasa este argumento, el gradiente se
-     calcula automáticamente mediante derivación simbólica.
+     Si el argumento <grad> está presente, debe ser el gradiente de
+     <FOM> respecto de las variables <X>. <grad> puede ser una lista o
+     una función que devuelva una lista con igual número de elementos
+     que <X>.  Si el argumento no está presente, el gradiente se
+     calcula automáticamente mediante derivación simbólica. Si <FOM> es
+     una función, el gradiente <grad> debe ser suministrado por el
+     usuario.
 
      El algoritmo utilizado es una técnica cuasi-Newton con memoria
      limitada (BFGS) [1]. El término memoria limitada procede del hecho
@@ -904,8 +907,8 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
      sdrive.f del paquete LBFGS de Netlib. Nótese que las variables en
      cuestión están subindicadas. La función objetivo tiene un mínimo
      exacto igual a cero en u[k] = 1, para k = 1, ..., 8.
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+
+          (%i1) load (lbfgs)$
           (%i2) t1[j] := 1 - u[j];
           (%o2)                     t1  := 1 - u
                                       j         j
@@ -927,7 +930,7 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
           *************************************************
             N=    8   NUMBER OF CORRECTIONS=25
                  INITIAL VALUES
-           F=  9.680000000000000D+01   GNORM=  4.657353755084532D+02
+           F=  9.680000000000000D+01   GNORM=  4.657353755084533D+02
           *************************************************
 
            I NFN   FUNC                    GNORM                   STEPLENGTH
@@ -938,47 +941,47 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
            4   6   1.636867301275588D+01   1.177589920974980D+01   1.000000000000000D+00
            5   7   1.612153014409201D+01   2.292797147151288D+01   1.000000000000000D+00
            6   8   1.569118407390628D+01   3.687447158775571D+01   1.000000000000000D+00
-           7   9   1.510361958398942D+01   4.501931728123680D+01   1.000000000000000D+00
-           8  10   1.391077875774294D+01   4.526061463810632D+01   1.000000000000000D+00
-           9  11   1.165625686278198D+01   2.748348965356917D+01   1.000000000000000D+00
-          10  12   9.859422687859137D+00   2.111494974231644D+01   1.000000000000000D+00
-          11  13   7.815442521732281D+00   6.110762325766556D+00   1.000000000000000D+00
-          12  15   7.346380905773160D+00   2.165281166714631D+01   1.285316401779533D-01
-          13  16   6.330460634066370D+00   1.401220851762050D+01   1.000000000000000D+00
-          14  17   5.238763939851439D+00   1.702473787613255D+01   1.000000000000000D+00
-          15  18   3.754016790406701D+00   7.981845727704576D+00   1.000000000000000D+00
-          16  20   3.001238402309352D+00   3.925482944716691D+00   2.333129631296807D-01
-          17  22   2.794390709718290D+00   8.243329982546473D+00   2.503577283782332D-01
-          18  23   2.563783562918759D+00   1.035413426521790D+01   1.000000000000000D+00
-          19  24   2.019429976377856D+00   1.065187312346769D+01   1.000000000000000D+00
-          20  25   1.428003167670903D+00   2.475962450826961D+00   1.000000000000000D+00
-          21  27   1.197874264861340D+00   8.441707983493810D+00   4.303451060808756D-01
-          22  28   9.023848941942773D-01   1.113189216635162D+01   1.000000000000000D+00
-          23  29   5.508226405863770D-01   2.380830600326308D+00   1.000000000000000D+00
-          24  31   3.902893258815567D-01   5.625595816584421D+00   4.834988416524465D-01
-          25  32   3.207542206990315D-01   1.149444645416472D+01   1.000000000000000D+00
-          26  33   1.874468266362791D-01   3.632482152880997D+00   1.000000000000000D+00
-          27  34   9.575763380706598D-02   4.816497446154354D+00   1.000000000000000D+00
-          28  35   4.085145107543406D-02   2.087009350166495D+00   1.000000000000000D+00
-          29  36   1.931106001379290D-02   3.886818608498966D+00   1.000000000000000D+00
-          30  37   6.894000721499670D-03   3.198505796342214D+00   1.000000000000000D+00
-          31  38   1.443296033051864D-03   1.590265471025043D+00   1.000000000000000D+00
-          32  39   1.571766603154336D-04   3.098257063980634D-01   1.000000000000000D+00
-          33  40   1.288011776581970D-05   1.207784183577257D-02   1.000000000000000D+00
-          34  41   1.806140173752971D-06   4.587890233385193D-02   1.000000000000000D+00
-          35  42   1.769004645459358D-07   1.790537375052208D-02   1.000000000000000D+00
-          36  43   3.312164100763217D-10   6.782068426119681D-04   1.000000000000000D+00
+           7   9   1.510361958398942D+01   4.501931728123679D+01   1.000000000000000D+00
+           8  10   1.391077875774293D+01   4.526061463810630D+01   1.000000000000000D+00
+           9  11   1.165625686278198D+01   2.748348965356907D+01   1.000000000000000D+00
+          10  12   9.859422687859144D+00   2.111494974231706D+01   1.000000000000000D+00
+          11  13   7.815442521732282D+00   6.110762325764183D+00   1.000000000000000D+00
+          12  15   7.346380905773044D+00   2.165281166715009D+01   1.285316401779678D-01
+          13  16   6.330460634066464D+00   1.401220851761508D+01   1.000000000000000D+00
+          14  17   5.238763939854303D+00   1.702473787619218D+01   1.000000000000000D+00
+          15  18   3.754016790406625D+00   7.981845727632704D+00   1.000000000000000D+00
+          16  20   3.001238402313225D+00   3.925482944745832D+00   2.333129631316462D-01
+          17  22   2.794390709722064D+00   8.243329982586480D+00   2.503577283802312D-01
+          18  23   2.563783562920545D+00   1.035413426522664D+01   1.000000000000000D+00
+          19  24   2.019429976373283D+00   1.065187312340952D+01   1.000000000000000D+00
+          20  25   1.428003167668592D+00   2.475962450735100D+00   1.000000000000000D+00
+          21  27   1.197874264859232D+00   8.441707983339661D+00   4.303451060697367D-01
+          22  28   9.023848942003913D-01   1.113189216665625D+01   1.000000000000000D+00
+          23  29   5.508226405855795D-01   2.380830599637816D+00   1.000000000000000D+00
+          24  31   3.902893258879521D-01   5.625595817143044D+00   4.834988416747262D-01
+          25  32   3.207542206881058D-01   1.149444645298493D+01   1.000000000000000D+00
+          26  33   1.874468266118200D-01   3.632482152347445D+00   1.000000000000000D+00
+          27  34   9.575763380282112D-02   4.816497449000391D+00   1.000000000000000D+00
+          28  35   4.085145106760390D-02   2.087009347116811D+00   1.000000000000000D+00
+          29  36   1.931106005512628D-02   3.886818624052740D+00   1.000000000000000D+00
+          30  37   6.894000636920714D-03   3.198505769992936D+00   1.000000000000000D+00
+          31  38   1.443296008850287D-03   1.590265460381961D+00   1.000000000000000D+00
+          32  39   1.571766574930155D-04   3.098257002223532D-01   1.000000000000000D+00
+          33  40   1.288011779655132D-05   1.207784334505595D-02   1.000000000000000D+00
+          34  41   1.806140190993455D-06   4.587890258846915D-02   1.000000000000000D+00
+          35  42   1.769004612050548D-07   1.790537363138099D-02   1.000000000000000D+00
+          36  43   3.312164244118216D-10   6.782068546986653D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o6) [u  = 1.000005339815974, u  = 1.000009942839805,
+          (%o6) [u  = 1.000005339816132, u  = 1.000009942840108,
                   1                       2
-          u  = 1.000005339815974, u  = 1.000009942839805,
+          u  = 1.000005339816132, u  = 1.000009942840108,
            3                       4
-          u  = 1.000005339815974, u  = 1.000009942839805,
+          u  = 1.000005339816132, u  = 1.000009942840108,
            5                       6
-          u  = 1.000005339815974, u  = 1.000009942839805]
+          u  = 1.000005339816132, u  = 1.000009942840108]
            7                       8
 
      Un problema de regresión. La función objetivo es el cuadrado medio
@@ -988,8 +991,7 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
      para los parámetros de F y `plot2d' hace una representación gráfica
      comparativa de F junto con los datos observados.
 
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i1) load (lbfgs)$
           (%i2) FOM : '((1/length(X))*sum((F(X[i]) - Y[i])^2, i, 1,
                                                           length(X)));
                                          2
@@ -1029,19 +1031,19 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
           I  NFN  FUNC                    GNORM                   STEPLENGTH
           1    3  1.177820636622582D-01   9.893138394953992D-02   8.554435968992371D-01
           2    6  2.302653892214013D-02   1.180098521565904D-01   2.100000000000000D+01
-          3    8  1.496348495303005D-02   9.611201567691633D-02   5.257340567840707D-01
-          4    9  7.900460841091139D-03   1.325041647391314D-02   1.000000000000000D+00
-          5   10  7.314495451266917D-03   1.510670810312237D-02   1.000000000000000D+00
-          6   11  6.750147275936680D-03   1.914964958023047D-02   1.000000000000000D+00
-          7   12  5.850716021108205D-03   1.028089194579363D-02   1.000000000000000D+00
-          8   13  5.778664230657791D-03   3.676866074530332D-04   1.000000000000000D+00
-          9   14  5.777818823650782D-03   3.010740179797255D-04   1.000000000000000D+00
+          3    8  1.496348495303004D-02   9.611201567691624D-02   5.257340567840710D-01
+          4    9  7.900460841091138D-03   1.325041647391314D-02   1.000000000000000D+00
+          5   10  7.314495451266914D-03   1.510670810312226D-02   1.000000000000000D+00
+          6   11  6.750147275936668D-03   1.914964958023037D-02   1.000000000000000D+00
+          7   12  5.850716021108202D-03   1.028089194579382D-02   1.000000000000000D+00
+          8   13  5.778664230657800D-03   3.676866074532179D-04   1.000000000000000D+00
+          9   14  5.777818823650780D-03   3.010740179797108D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o7) [A = 1.461933911464101, B = 1.601593973254802,
-                                                     C = 2.528933072164854]
+          (%o7) [A = 1.461933911464101, B = 1.601593973254801,
+                                                     C = 2.528933072164855]
           (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
           (%o8)
 
@@ -1049,14 +1051,11 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
      calcularlo simbólicamente.
 
           (%i1) load (lbfgs)$
-          (%i2) F(a, b, c) := (a - 5)^2 + (b - 3)^4 + (c - 2)^6;
-                                         2          4          6
-          (%o2)     F(a, b, c) := (a - 5)  + (b - 3)  + (c - 2)
-          (%i3) F_grad : map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]);
-                                              3           5
-          (%o3)          [2 (a - 5), 4 (b - 3) , 6 (c - 2) ]
-          (%i4) estimates : lbfgs ([F(a, b, c), F_grad],
-                                   [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
+          (%i2) F(a, b, c) := (a - 5)^2 + (b - 3)^4 + (c - 2)^6$
+          (%i3) define(F_grad(a, b, c),
+                       map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]))$
+          (%i4) estimates : lbfgs ([F, F_grad],
+                             [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
           *************************************************
             N=    3   NUMBER OF CORRECTIONS=25
                  INITIAL VALUES
@@ -1065,26 +1064,26 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
 
              I  NFN     FUNC                    GNORM                   STEPLENGTH
 
-             1    2     6.632967565917638D+01   6.498411132518770D+01   4.534785987412505D-03
+             1    2     6.632967565917637D+01   6.498411132518770D+01   4.534785987412505D-03
              2    3     4.368890936228036D+01   3.784147651974131D+01   1.000000000000000D+00
-             3    4     2.685298972775190D+01   1.640262125898521D+01   1.000000000000000D+00
+             3    4     2.685298972775191D+01   1.640262125898520D+01   1.000000000000000D+00
              4    5     1.909064767659852D+01   9.733664001790506D+00   1.000000000000000D+00
              5    6     1.006493272061515D+01   6.344808151880209D+00   1.000000000000000D+00
-             6    7     1.215263596054294D+00   2.204727876126879D+00   1.000000000000000D+00
-             7    8     1.080252896385334D-02   1.431637116951849D-01   1.000000000000000D+00
-             8    9     8.407195124830908D-03   1.126344579730013D-01   1.000000000000000D+00
-             9   10     5.022091686198527D-03   7.750731829225274D-02   1.000000000000000D+00
-            10   11     2.277152808939775D-03   5.032810859286795D-02   1.000000000000000D+00
-            11   12     6.489384688303218D-04   1.932007150271008D-02   1.000000000000000D+00
-            12   13     2.075791943844548D-04   6.964319310814364D-03   1.000000000000000D+00
-            13   14     7.349472666162257D-05   4.017449067849554D-03   1.000000000000000D+00
-            14   15     2.293617477985237D-05   1.334590390856715D-03   1.000000000000000D+00
-            15   16     7.683645404048675D-06   6.011057038099201D-04   1.000000000000000D+00
+             6    7     1.215263596054292D+00   2.204727876126877D+00   1.000000000000000D+00
+             7    8     1.080252896385329D-02   1.431637116951845D-01   1.000000000000000D+00
+             8    9     8.407195124830860D-03   1.126344579730008D-01   1.000000000000000D+00
+             9   10     5.022091686198525D-03   7.750731829225275D-02   1.000000000000000D+00
+            10   11     2.277152808939775D-03   5.032810859286796D-02   1.000000000000000D+00
+            11   12     6.489384688303218D-04   1.932007150271009D-02   1.000000000000000D+00
+            12   13     2.075791943844547D-04   6.964319310814365D-03   1.000000000000000D+00
+            13   14     7.349472666162258D-05   4.017449067849554D-03   1.000000000000000D+00
+            14   15     2.293617477985238D-05   1.334590390856715D-03   1.000000000000000D+00
+            15   16     7.683645404048675D-06   6.011057038099202D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o4) [a = 5.000086823042934, b = 3.05239542970518,
+          (%o4) [a = 5.000086823042934, b = 3.052395429705181,
                                                      c = 1.927980629919583]
 
 
@@ -3049,7 +3048,7 @@ File: maxima.info,  Node: Funciones y variables para opsubst,  Prev: opsubst,  U
      Antes de hacer uso de esta función ejecútese  `load("opsubst")'.
 
 
-File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
+File: maxima.info,  Node: orthopoly,  Next: romberg,  Prev: opsubst,  Up: Top
 
 69 orthopoly
 ************
@@ -3735,262 +3734,9 @@ File: maxima.info,  Node: Funciones y variables para polinomios ortogonales,  Pr
      Referencia: Abramowitz y Stegun, ecuación 22.5.46, página 779.
 
 
-File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
+File: maxima.info,  Node: romberg,  Next: simplex,  Prev: orthopoly,  Up: Top
 
-70 plotdf
-*********
-
-* Menu:
-
-* Introducción a plotdf::
-* Funciones y variables para plotdf::
-
-
-File: maxima.info,  Node: Introducción a plotdf,  Next: Funciones y variables para plotdf,  Prev: plotdf,  Up: plotdf
-
-70.1 Introducción a plotdf
-==========================
-
-La función `plotdf' crea un gráfico del campo de direcciones para una
-Ecuación Diferencial Ordinaria (EDO) de primer orden, o para un sistema
-de dos EDO's autónomas, de primer orden.
-
-   Como se trata de un paquete adicional, para poder usarlo debe
-cargarlo primero con el comando `load("plotdf")'. También es necesario
-que Xmaxima esté instalado, a pesar de que ejecute Maxima desde otra
-interface diferente.
-
-   Para dibujar el campo de direcciones de una única EDO, esa ecuación
-deberá escribirse en la forma siguiente:
-            dy
-            -- = F(x,y)
-            dx
-
-   y la función <F> será dada como argumento para el comando `plotdf'.
-La variable independiente tiene que ser siempre <x> y la variable
-dependiente <y>. A esas dos variables no podrá estar asociado ningún
-valor numérico.
-
-   Para dibujar el campo de direcciones de un sistema autónomo de dos
-EDO's, Las dos ecuaciones deben ser escritas en la forma siguiente
-            dx             dy
-            -- = G(x,y)    -- = F(x,y)
-            dt             dt
-
-   y el argumento para el comando `plotdf' será una lista con dos
-expresiones para las funciones <F> y <G>.
-
-   Cuando se trabaja con una única ecuación, `plotdf' asume
-implícitamente que `x=t' y `G(x,y)=1', transformando la ecuación en un
-sistema autónomo con dos ecuaciones.
-
-
-File: maxima.info,  Node: Funciones y variables para plotdf,  Prev: Introducción a plotdf,  Up: plotdf
-
-70.2 Funciones y variables para plotdf
-======================================
-
- -- Function: plotdf (<dydx>,...opciones...)
- -- Function: plotdf (`['<dxdt>,<dydt>`]',...opciones...)
-     Dibuja un campo de direcciones en dos dimensiones <x> y <y>.
-
-     <dydx>, <dxdt> y <dydt> son expresiones que dependen de <x> y <y>.
-     Además de esas dos variables, las dos expresiones pueden depender
-     de un conjunto de parámetros, con valores numéricos que son dados
-     por medio de la opción `parameters' (la sintaxis de esa opción se
-     explica mas al frente), o con un rango de posibles valores
-     definidos con la opción <sliders>.
-
-     Varias otras opciones se pueden incluir dentro del comando, o
-     seleccionadas en el menú.  Haciendo click en un punto del gráfico
-     se puede hacer que sea dibujada la curva integral que pasa por ese
-     punto; lo mismo puede ser hecho dando las coordenadas del punto
-     con la opción `trajectory_at' dentro del comando plotdf. La
-     dirección de integración se puede controlar con la opción
-     `direction', que acepta valores de _forward_, _backward_ ou
-     _both_. El número de pasos realizado en la integración numérica se
-     controla con la opción `nsteps' y el incremento del tiempo en cada
-     paso con la opción `tstep'. Se usa el método de Adams Moulton para
-     hacer la integración numérica; también es posible cambiar para el
-     método de Runge-Kutta de cuarto orden con ajuste de pasos.
-
-     Menú de la ventana del gráfico:
-
-     El menú de la ventana gráfica dispone de las siguientes opciones:
-     _Zoom_, que permite cambiar el comportamiento del ratón, de manera
-     que hará posible el hacer zoom en la región del gráfico haciendo
-     clic con el botón izquierdo. Cada clic agranda la imagen
-     manteniendo como centro de la misma el punto sobre el cual se ha
-     hecho clic. Manteniendo pulsada la tecla <Shift> mientras se hace
-     clic, retrocede al tamaño anterior. Para reanudar el cálculo de las
-     trayectorias cuando se hace clic, seleccine la opción _Integrate_
-     del menú.
-
-     La opción _Config_ del menú se puede utilizar para cambiar la(s)
-     EDO(S) y algunos otros ajustes. Después de hacer los cambios, se
-     debe utilizar la opción _Replot_ para activar los nuevos ajustes.
-     Si en el campo _Trajectory at_ del menú de diálogo de _Config_ se
-     introducen un par de coordenadas y luego se pulsa la tecla
-     <retorno>, se mostrará una nueva curva integral, además de las ya
-     dibujadas.  Si se selecciona la opción _Replot_, sólo se mostrará
-     la última curva integral seleccionada.
-
-     Manteniendo pulsado el botón derecho del ratón mientras se mueve el
-     cursor, se puede arrastrar el gráfico horizontal y verticalmente.
-     Otros parámetros, como pueden ser el número de pasos, el valor
-     inicial de <t>, las coordenadas del centro y el radio, pueden
-     cambiarse en el submenú de la opción _Config_.
-
-     Con la opción _Save_, se puede obtener una copia del gráfico en
-     una impresora Postscript o guardarlo en un fichero Postscript. Para
-     optar entre la impresión o guardar en fichero, se debe seleccionar
-     _Print Options_ en la ventana de diálogo de _Config_. Una vez
-     cubiertos los campos de la ventana de diálogo de _Save_, será
-     necesario seleccionar la opción _Save_ del primer menú para crear
-     el fichero o imprimir el gráfico.
-
-     Opciones gráficas:
-
-     La función `plotdf' admite varias opciones, cada una de las cuales
-     es una lista de dos o más elementos. El primer elemento es el
-     nombre de la opción, y el resto está formado por el valor o
-     valores asignados a dicha opción.
-
-     La función `plotdf' reconoce las siguientes opciones:
-
-        * "tstep" establece la amplitud de los incrementos en la
-          variable independiente <t>, utilizados para calcular la curva
-          integral. Si se aporta sólo una expresión <dydx>, la variable
-          <x> será directamente proporcional a <t>.  El valor por
-          defecto es 0.1.
-
-        * "nsteps" establece el número de pasos de longitud `tstep' que
-          se utilizarán en la variable independiente para calcular la
-          curva integral.  El valor por defecto es 100.
-
-        * "direction" establece la dirección de la variable
-          independiente que será seguida para calcular una curva
-          integral.  Valores posibles son: `forward', para hacer que la
-          variable independiente aumente `nsteps' veces, con
-          incrementos `tstep'; `backward', para hacer que la variable
-          independiente disminuya; `both', para extender la curva
-          integral `nsteps' pasos hacia adelante y `nsteps' pasos hacia
-          atrás.  Las palabras `right' y `left' se pueden utilizar como
-          sinónimos de `forward' y `backward'.  El valor por defecto es
-          `both'.
-
-        * "tinitial" establece el valor inicial de la variable <t>
-          utilizado para calcular curvas integrales. Puesto que las
-          ecuaciones diferenciales son autónomas, esta opción sólo
-          aparecerá en los gráficos de las curvas como funciones de <t>.
-          El valor por defecto es 0.
-
-        * "versus_t" se utiliza para crear una segunda ventana gráfica,
-          con el gráfico de una curva integral, como dos funciones <x>,
-          <y>, de variable independiente <t>. Si se le da a `versus_t'
-          cualquier valor diferente de 0, se mostrará la segunda
-          ventana gráfica, la cual incluye otro menú, similar al de la
-          ventana principal.  El valor por defecto es 0.
-
-        * "trajectory_at" establece las coordenadas <xinitial> y
-          <yinitial> para el extremo inicial de la curva integral.  No
-          tiene asignado valor por defecto.
-
-        * "parameters" establece una lista de parámetros, junto con sus
-          valores numéricos, que son utilizados en la definición de la
-          ecuación diferencial. Los nombres de los parámetros y sus
-          valores deben escribirse en formato de cadena de caracteres
-          como una secuencia de pares `nombre=valor' separados por
-          comas.
-
-        * "sliders" establece una lista de parámetros que se cambiarán
-          interactivamente utilizando barras de deslizamiento, así como
-          los rangos de variación de dichos parámetros.  Los nombres de
-          los parámetros y sus rangos deben escribirse en formato de
-          cadena de caracteres como una secuencia de pares
-          `nombre=min:max' separados por comas.
-
-        * "xfun" establece una cadena de caracteres con funciones de
-          <x> separadas por puntos y comas para ser representadas por
-          encima del campo de direcciones. Estas funciones serán
-          interpretadas por Tcl, no por Maxima.
-
-        * "xradius" es la mitad de la longitud del rango de valores a
-          representar en la dirección x.  El valor por defecto es 10.
-
-        * "yradius" es la mitad de la longitud del rango de valores a
-          representar en la dirección y.  El valor por defecto es 10.
-
-        * "xcenter" es la coordenada x del punto situado en el centro
-          del gráfico.  El valor por defecto es 0.
-
-        * "ycenter" es la coordenada y del punto situado en el centro
-          del gráfico.  El valor por defecto es 0.
-
-        * "width" establece el ancho de la ventana gráfica en píxeles.
-          El valor por defecto es 500.
-
-        * "height" establece la altura de la ventana gráfica en píxeles.
-          El valor por defecto es 500.
-
-
-     Ejemplos:
-
-     NOTA: Dependiendo de la interface que se use para Maxima, las
-     funciones que usan `openmath', incluida `plotdf', pueden
-     desencadenar un fallo si terminan en punto y coma, en vez del
-     símbolo de dólar. Para evitar problemas, se usará el símbolo de
-     dólar en todos ejemplos.
-
-        * Para mostrar el campo de direcciones de la ecuación
-          diferencial y' = exp(-x) + y y la solución que pasa por (2,
-          -0.1):
-               (%i1) load("plotdf")$
-
-               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1]);
-
-        * Para mostrar el campo de direcciones de la ecuación diff(y,x)
-          = x - y^2 y la solución de condición inicial y(-1) = 3, se
-          puede utilizar la sentencia:
-               (%i3) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
-                         [trajectory_at,-1,3], [direction,forward],
-                         [yradius,5],[xcenter,6]);
-          El gráfico también muestra la función y = sqrt(x).
-
-        * El siguiente ejemplo muestra el campo de direcciones de un
-          oscilador armónico, definido por las ecuaciones dx/dt = y y
-          dy/dt = -k*x/m, y la curva integral que pasa por (x,y) =
-          (6,0), con una barra de deslizamiento que permitirá cambiar
-          el valor de m interactivamente (k permanece fijo a 2):
-               (%i4) plotdf([y,-k*x/m],[parameters,"m=2,k=2"],
-                           [sliders,"m=1:5"], [trajectory_at,6,0]);
-
-        * Para representar el campo de direcciones de la ecuación de
-          Duffing, m*x"+c*x'+k*x+b*x^3 = 0, se introduce la variable
-          y=x' y se hace:
-               (%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
-                             [parameters,"k=-1,m=1.0,c=0,b=1"],
-                             [sliders,"k=-2:2,m=-1:1"],[tstep,0.1]);
-
-        * El campo de direcciones de un péndulo amortiguado, incluyendo
-          la solución para condiciones iniciales dadas, con una barra
-          de deslizamiento que se puede utilizar para cambiar el valor
-          de la masa, m, y con el gráfico de las dos variables de
-          estado como funciones del tiempo:
-
-               (%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
-                        [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
-                        [trajectory_at,1.05,-9],[tstep,0.01],
-                        [xradius,6],[yradius,14],
-                        [xcenter,-4],[direction,forward],[nsteps,300],
-                        [sliders,"m=0.1:1"], [versus_t,1]);
-
-
-
-
-File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
-
-71 romberg
+70 romberg
 **********
 
 * Menu:
@@ -4000,7 +3746,7 @@ File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para romberg,  Prev: Top,  Up: Top
 
-71.1 Funciones y variables para romberg
+70.1 Funciones y variables para romberg
 =======================================
 
  -- Función: romberg (<expr>, <x>, <a>, <b>)
@@ -4161,7 +3907,7 @@ File: maxima.info,  Node: Funciones y variables para romberg,  Prev: Top,  Up: T
 
 File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
 
-72 simplex
+71 simplex
 **********
 
 * Menu:
@@ -4172,7 +3918,7 @@ File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: T
 
 File: maxima.info,  Node: Introducción a simplex,  Next: Funciones y variables para simplex,  Prev: simplex,  Up: simplex
 
-72.1 Introducción a simplex
+71.1 Introducción a simplex
 ===========================
 
 El paquete `simplex' utiliza el algoritmo simplex para programación
@@ -4189,7 +3935,7 @@ lineal.
 
 File: maxima.info,  Node: Funciones y variables para simplex,  Prev: Introducción a simplex,  Up: simplex
 
-72.2 Funciones y variables para simplex
+71.2 Funciones y variables para simplex
 =======================================
 
  -- Variable opcional: epsilon_lp
@@ -4291,7 +4037,7 @@ File: maxima.info,  Node: Funciones y variables para simplex,  Prev: Introducció
 
 File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
 
-73 simplification
+72 simplification
 *****************
 
 * Menu:
@@ -4308,7 +4054,7 @@ File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up:
 
 File: maxima.info,  Node: Introducción a simplification,  Next: Paquete absimp,  Prev: simplification,  Up: simplification
 
-73.1 Introducción a simplification
+72.1 Introducción a simplification
 ==================================
 
 El directorio `maxima/share/simplification' contiene programas que
@@ -4318,7 +4064,7 @@ así como ciertas funciones no relacionadas con la simplificación.
 
 File: maxima.info,  Node: Paquete absimp,  Next: Paquete facexp,  Prev: Introducción a simplification,  Up: simplification
 
-73.2 Paquete absimp
+72.2 Paquete absimp
 ===================
 
 El paquete `absimp' contiene reglas para aplicar patrones que extienden
@@ -4349,7 +4095,7 @@ desarrolla una demostración sobre el uso del mismo.
 
 File: maxima.info,  Node: Paquete facexp,  Next: Paquete functs,  Prev: Paquete absimp,  Up: simplification
 
-73.3 Paquete facexp
+72.3 Paquete facexp
 ===================
 
 El paquete `facexp' contiene varias funciones que le aportan al usuario
@@ -4458,7 +4204,7 @@ hace una demostración sobre su uso.
 
 File: maxima.info,  Node: Paquete functs,  Next: Paquete ineq,  Prev: Paquete facexp,  Up: simplification
 
-73.4 Paquete functs
+72.4 Paquete functs
 ===================
 
  -- Función: rempart (<expr>, <n>)
@@ -4521,18 +4267,29 @@ File: maxima.info,  Node: Paquete functs,  Next: Paquete ineq,  Prev: Paquete fa
      Para hacer uso de esta función ejecutar `load(functs)'.
 
  -- Función: linear (<expr>, <x>)
-     Si <expr> es una expresión lineal respecto de la variable <x>,
-     `linear' devuelve `<a>*<x> + <b>', siendo <a> no nula y, junto con
-     <b>, no incluye a <x>. En otro caso, `linear' devuelve <expr>.
+     Si <expr> es una expresión de la forma `<a>*<x> + <b>', siendo <a>
+     no nulo y los argumentos <a> y <b> no contienen a <x>, `linear'
+     devuelve una lista con tres ecuaciones, una por cada variable <b>,
+     <a> y <x>. Si no se cumple la condición anterior, `linear'
+     devuelve `false'.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
 
+     Ejemplo:
+
+          (%i1) load (antid);
+          (%o1)        /usr/share/maxima/5.29.1/share/integration/antid.mac
+          (%i2) linear ((1 - w)*(1 - x)*z, z);
+          (%o2)  [bargumentb = 0, aargumenta = (w - 1) x - w + 1, xargumentx = z]
+          (%i3) linear (cos(u - v) + cos(u + v), u);
+          (%o3)                                false
+
  -- Función: gcdivide (<p>, <q>)
-     Si `takegcd' vale `true', que es su valor por defecto, `gcdivide'
-     divide los polinomios <p> y <q> por su máximo común divisor y
-     devuelve el cociente de los resultados.  `gcdivide' hace una
-     llamada a la función `ezgcd' para dividir los polinomios por su
-     máximo común divisor.
+     Si la variable opcional `takegcd' vale `true', que es su valor por
+     defecto, `gcdivide' divide los polinomios <p> y <q> por su máximo
+     común divisor y devuelve el cociente de los resultados.
+     `gcdivide' hace una llamada a la función `ezgcd' para dividir los
+     polinomios por su máximo común divisor.
 
      Si `takegcd' vale `false', `gcdivide' devuelve el cociente
      `<p>/<q>'.
@@ -4615,7 +4372,7 @@ File: maxima.info,  Node: Paquete functs,  Next: Paquete ineq,  Prev: Paquete fa
 
  -- Función: agd (<x>)
      Devuelve la inversa de la función de Gudermann, `log (tan (%pi/4 +
-     x/2)))'.
+     x/2))'.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
 
@@ -4654,7 +4411,7 @@ File: maxima.info,  Node: Paquete functs,  Next: Paquete ineq,  Prev: Paquete fa
 
 File: maxima.info,  Node: Paquete ineq,  Next: Paquete rducon,  Prev: Paquete functs,  Up: simplification
 
-73.5 Paquete ineq
+72.5 Paquete ineq
 =================
 
 El paquete `ineq' contiene reglas de simplificación para desigualdades
@@ -4749,7 +4506,7 @@ definición de la segunda regla multiplicativa.
 
 File: maxima.info,  Node: Paquete rducon,  Next: Paquete scifac,  Prev: Paquete ineq,  Up: simplification
 
-73.6 Paquete rducon
+72.6 Paquete rducon
 ===================
 
  -- Función: reduce_consts (<expr>)
@@ -4790,7 +4547,7 @@ File: maxima.info,  Node: Paquete rducon,  Next: Paquete scifac,  Prev: Paquete 
 
 File: maxima.info,  Node: Paquete scifac,  Next: Paquete sqdnst,  Prev: Paquete rducon,  Up: simplification
 
-73.7 Paquete scifac
+72.7 Paquete scifac
 ===================
 
  -- Función: gcfac (<expr>)
@@ -4821,7 +4578,7 @@ File: maxima.info,  Node: Paquete scifac,  Next: Paquete sqdnst,  Prev: Paquete 
 
 File: maxima.info,  Node: Paquete sqdnst,  Prev: Paquete scifac,  Up: simplification
 
-73.8 Paquete sqdnst
+72.8 Paquete sqdnst
 ===================
 
  -- Función: sqrtdenest (<expr>)
@@ -4853,7 +4610,7 @@ File: maxima.info,  Node: Paquete sqdnst,  Prev: Paquete scifac,  Up: simplifica
 
 File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: Top
 
-74 solve_rec
+73 solve_rec
 ************
 
 * Menu:
@@ -4864,7 +4621,7 @@ File: maxima.info,  Node: solve_rec,  Next: stats,  Prev: simplification,  Up: T
 
 File: maxima.info,  Node: Introducción a solve_rec,  Next: Funciones y variables para solve_rec,  Prev: solve_rec,  Up: solve_rec
 
-74.1 Introducción a solve_rec
+73.1 Introducción a solve_rec
 =============================
 
 El paquete `solve_rec' resuelve expresiones recurrentes lineales con
@@ -4886,7 +4643,7 @@ utilización de este paquete.
 
 File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducción a solve_rec,  Up: solve_rec
 
-74.2 Funciones y variables para solve_rec
+73.2 Funciones y variables para solve_rec
 =========================================
 
  -- Función: reduce_order (<rec>, <sol>, <var>)
@@ -5121,7 +4878,7 @@ File: maxima.info,  Node: Funciones y variables para solve_rec,  Prev: Introducc
 
 File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
-75 stats
+74 stats
 ********
 
 * Menu:
@@ -5134,7 +4891,7 @@ File: maxima.info,  Node: stats,  Next: stirling,  Prev: solve_rec,  Up: Top
 
 File: maxima.info,  Node: Introducción a stats,  Next: Funciones y variables para inference_result,  Prev: Top,  Up: Top
 
-75.1 Introducción a stats
+74.1 Introducción a stats
 =========================
 
 El paquete `stats' contiene procedimientos clásicos sobre inferencia
@@ -5164,7 +4921,7 @@ paquete `numericalio' para leer datos de ficheros en texto plano. Véanse
 
 File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Funciones y variables para stats,  Prev: Introducción a stats,  Up: Top
 
-75.2 Funciones y variables para inference_result
+74.2 Funciones y variables para inference_result
 ================================================
 
  -- Función: inference_result (<title>, <values>, <numbers>)
@@ -5280,7 +5037,7 @@ File: maxima.info,  Node: Funciones y variables para inference_result,  Next: Fu
 
 File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para inference_result,  Up: Top
 
-75.3 Funciones y variables para stats
+74.3 Funciones y variables para stats
 =====================================
 
  -- Variable opcional: stats_numer
@@ -6221,7 +5978,7 @@ File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y v
 
 File: maxima.info,  Node: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para stats,  Up: Top
 
-75.4 Funciones y variables para distribuciones especiales
+74.4 Funciones y variables para distribuciones especiales
 =========================================================
 
  -- Función: pdf_signed_rank (<x>, <n>)
@@ -6255,7 +6012,7 @@ File: maxima.info,  Node: Funciones y variables para distribuciones especiales, 
 
 File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
-76 stirling
+75 stirling
 ***********
 
 * Menu:
@@ -6265,7 +6022,7 @@ File: maxima.info,  Node: stirling,  Next: stringproc,  Prev: stats,  Up: Top
 
 File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling,  Up: stirling
 
-76.1 Funciones y variables para stirling
+75.1 Funciones y variables para stirling
 ========================================
 
  -- Función: stirling (<z>,<n>)
@@ -6327,7 +6084,7 @@ File: maxima.info,  Node: Funciones y variables para stirling,  Prev: stirling, 
 
 File: maxima.info,  Node: stringproc,  Next: to_poly_solve,  Prev: stirling,  Up: Top
 
-77 stringproc
+76 stringproc
 *************
 
 * Menu:
@@ -6340,14 +6097,15 @@ File: maxima.info,  Node: stringproc,  Next: to_poly_solve,  Prev: stirling,  Up
 
 File: maxima.info,  Node: Introducción al procesamiento de cadenas,  Next: Funciones y variables para entrada y salida,  Prev: stringproc,  Up: stringproc
 
-77.1 Introducción al procesamiento de cadenas
+76.1 Introducción al procesamiento de cadenas
 =============================================
 
 El paquete `stringproc' amplía las capacidades de Maxima para manipular
 cadenas de caracteres, al tiempo que añade algunas funciones útiles
 para la lectura y escritura de ficheros.
 
-   Para dudas y fallos, por favor contáctese con van.nek at arcor.de .
+   Para dudas y fallos, por favor contáctese con `volkervannek at gmail
+dot com'.
 
    En Maxima, una cadena de caracteres se construye fácilmente
 escribiéndola entre comillas dobles, como en `"texto"'.  La función
@@ -6447,7 +6205,7 @@ del fichero.
 
 File: maxima.info,  Node: Funciones y variables para entrada y salida,  Next: Funciones y variables para caracteres,  Prev: Introducción al procesamiento de cadenas,  Up: stringproc
 
-77.2 Funciones y variables para entrada y salida
+76.2 Funciones y variables para entrada y salida
 ================================================
 
 Ejemplo:
@@ -6475,16 +6233,16 @@ Ejemplo:
 
 
  -- Función: flength (<stream>)
-     Devuelve el número de elementos en el flujo de datos <stream>.
-
+     Devuelve el número de elementos en <stream>, el cual debe ser un
+     flujo de datos desde o hacia un fichero.
 
  -- Función: fposition (<stream>)
  -- Función: fposition (<stream>, <pos>)
      Devuelve la posición actual en el flujo de datos <stream> si no se
-     utiliza <pos>.  Si se utiliza <pos>, `fposition' ajusta la
-     posición en <stream>.  El argumento <pos> debe ser un número
-     positivo, ocupando el primer elemento en <stream> la posición 1.
-
+     utiliza <pos>.  Si se utiliza <pos>, `fposition' fija la posición
+     en <stream>.  <stream> debe ser un flujo de datos desde o hacia un
+     fichero y <pos> debe ser un entero positivo que hace corresponder
+     al primer elemento de <stream> la posición 1.
 
  -- Función: freshline ()
  -- Función: freshline (<stream>)
@@ -6493,6 +6251,50 @@ Ejemplo:
 
      Véase también `newline'.
 
+ -- Función: get_output_stream_string (<stream>)
+     Devuelve una cadena con todos los caracteres presentes en <stream>,
+     que debe ser un flujo de datos de salida abiero.  Los caracteres
+     devueltos son eliminados de <stream>.
+
+     Para un ejemplo, véase `make_string_output_stream' .
+
+ -- Función: make_string_input_stream (<string>)
+ -- Función: make_string_input_stream (<string>, <start>)
+ -- Función: make_string_input_stream (<string>, <start>, <end>)
+     Devuelve un flujo de entrada que contiene partes de <string> junto
+     con el carácter de final de fichero. Sin argumentos opcionales, el
+     flujo contiene la cadena entera y se posiciona frente al primer
+     carácter.  Los argumentos <start> y <end> definen la subcadena
+     contenida en el flujo. El primer carácter está disponible en la
+     posición 1.
+
+     Ejemplo:
+
+          (%i1) istream : make_string_input_stream("text", 1, 4);
+          (%o1)              #<string-input stream from "text">
+          (%i2) (while (c : readchar(istream)) # false do sprint(c), newline())$
+          t e x
+          (%i3) close(istream)$
+
+ -- Función: make_string_output_stream ()
+     Devuelve un flujo de salida que acepta caracteres. Los caracteres
+     de este flujo podrán obtenerse con `get_output_stream_string'.
+
+     Ejemplo:
+
+          (%i1) ostream : make_string_output_stream();
+          (%o1)               #<string-output stream 09622ea0>
+          (%i2) printf(ostream, "foo")$
+
+          (%i3) printf(ostream, "bar")$
+
+          (%i4) string : get_output_stream_string(ostream);
+          (%o4)                            foobar
+          (%i5) printf(ostream, "baz")$
+
+          (%i6) string : get_output_stream_string(ostream);
+          (%o6)                              baz
+          (%i7) close(ostream)$
 
  -- Función: newline ()
  -- Función: newline (<stream>)
@@ -6520,12 +6322,32 @@ Ejemplo:
 
  -- Función: printf (<dest>, <string>)
  -- Función: printf (<dest>, <string>, <expr_1>, ..., <expr_n>)
-     Pone al alcance de Maxima la función FORMAT de Common Lisp.
+     Genera una cadena de caracteres a partir de la cadena de control
+     <string>, teniendo en cuenta que las tildes introducen directivas.
+     El carácter que va después de la tilde, posiblemente precedido por
+     parámetros y modificadores, especifica el tipo de formato que se
+     desea. La mayor parte de las directivas usan uno o más elementos
+     de los argumentos <expr_1>, ..., <expr_n> para crear la salida.
 
-     Véanse las referencias de Lisp para más información.
+     Si <dest> es un flujo o vale `true', entonces `printf' devuelve
+     `false'.  En otro caso, `printf' devuelve una cadena conteniendo
+     la salida.
 
-     La siguiente descripción y los ejemplos pueden dar una idea de
-     cómo usar `printf'.
+     `printf' da acceso a la función `format' de Common Lisp.  El
+     siguiente ejemplo muestra la relación entre estas dos funciones.
+
+          (%i1) printf(true, "R~dD~d~%", 2, 2);
+          R2D2
+          (%o1)                                false
+          (%i2) :lisp (format t "R~dD~d~%" 2 2)
+          R2D2
+          NIL
+
+     La siguiente descripción es un simple resumen de las posibilidades
+     de `printf'.  La función `format' de Common Lisp se encuentra
+     descrita en detalle en muchas referencias, como el manual libre
+     "Common Lisp the Language" de Guy L. Steele; en particular, el
+     capítulo 22.3.3.
 
              ~%       nueva línea
              ~&       línea de refresco
@@ -6550,31 +6372,77 @@ Ejemplo:
              ~[       selección, ~] termina
              ~{       iteración, ~} termina
 
-     La directiva `~[' está indexada a partir del cero.  Téngase en
-     cuenta que la directiva `~*' no está soportada.
+     La directiva `~h' para números decimales grandes no pertenece al
+     estándar de Lisp, por lo que se ilustra más abajo.
+
+     La directiva `~*' no está soportada.
+
+     Ejemplos:
+
+     Si <dest> es un flujo o vale `true', entonces `printf' devuelve
+     `false'.  En otro caso, `printf' devuelve una cadena conteniendo
+     la salida.
 
           (%i1) printf( false, "~a ~a ~4f ~a ~@r",
                         "String",sym,bound,sqrt(12),144), bound = 1.234;
           (%o1)                 String sym 1.23 2*sqrt(3) CXLIV
           (%i2) printf( false,"~{~a ~}",["one",2,"THREE"] );
           (%o2)                          one 2 THREE
-          (%i3) printf( true,"~{~{~9,1f ~}~%~}",mat ),
-                        mat = args( matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]) )$
+          (%i3) printf(true,"~{~{~9,1f ~}~%~}",mat ),
+                    mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
                 1.1       2.0       3.3
                 4.0       5.0       6.0
                 7.0       8.9       9.0
           (%i4) control: "~:(~r~) bird~p ~[is~;are~] singing."$
-          (%i5) printf( false,control, n,n,if n=1 then 0 else 1 ), n=2;
+          (%i5) printf( false,control, n,n,if n=1 then 1 else 2 ), n=2;
           (%o5)                    Two birds are singing.
 
-     Si <dest> es un flujo de datos o `true', entonces `printf'
-     devuelve `false'. En otro caso, `printf' devuelve una cadena con
-     la salida.
+     La directiva `~h' se ha introducido para formatear decimales
+     grandes.
+
+          ~w,d,e,x,o,p@H
+           w : width
+           d : decimal digits behind floating point
+           e : minimal exponent digits
+           x : preferred exponent
+           o : overflow character
+           p : padding character
+           @ : display sign for positive numbers
+
+          (%i1) fpprec : 1000$
+          (%i2) printf(true, "|~h|~%", 2.b0^-64)$
+          |0.0000000000000000000542101086242752217003726400434970855712890625|
+          (%i3) fpprec : 26$
+          (%i4) printf(true, "|~h|~%", sqrt(2))$
+          |1.4142135623730950488016887|
+          (%i5) fpprec : 24$
+          (%i6) printf(true, "|~h|~%", sqrt(2))$
+          |1.41421356237309504880169|
+          (%i7) printf(true, "|~28h|~%", sqrt(2))$
+          |   1.41421356237309504880169|
+          (%i8) printf(true, "|~28,,,,,'*h|~%", sqrt(2))$
+          |***1.41421356237309504880169|
+          (%i9) printf(true, "|~,18h|~%", sqrt(2))$
+          |1.414213562373095049|
+          (%i10) printf(true, "|~,,,-3h|~%", sqrt(2))$
+          |1414.21356237309504880169b-3|
+          (%i11) printf(true, "|~,,2,-3h|~%", sqrt(2))$
+          |1414.21356237309504880169b-03|
+          (%i12) printf(true, "|~20h|~%", sqrt(2))$
+          |1.41421356237309504880169|
+          (%i13) printf(true, "|~20,,,,'+h|~%", sqrt(2))$
+          |++++++++++++++++++++|
+
+ -- Función: readchar (<stream>)
+     Elimina y devuelve el primer carácter de <stream>.  Si se ha
+     alcanzado el final del fichero, `readchar' devuelve `false'.
+
+     Para un ejemplo, véase `make_string_input_stream'.
 
  -- Función: readline (<stream>)
      Devuelve una cadena con los caracteres desde la posición actual en
      el flujo de datos <stream> hasta el final de la línea, o `false'
-     si está al final del fichero.
+     si se ha alcanzado el final del fichero.
 
  -- Función: sprint (<expr_1>, ..., <expr_n>)
      Evalúa y muestra sus argumentos uno tras otro en un renglón
@@ -6596,7 +6464,7 @@ Ejemplo:
 
 File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funciones y variables para cadenas,  Prev: Funciones y variables para entrada y salida,  Up: stringproc
 
-77.3 Funciones y variables para caracteres
+76.3 Funciones y variables para caracteres
 ==========================================
 
  -- Función: alphacharp (<char>)
@@ -6687,12 +6555,25 @@ File: maxima.info,  Node: Funciones y variables para caracteres,  Next: Funcione
 
 File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y variables para caracteres,  Up: stringproc
 
-77.4 Funciones y variables para cadenas
+76.4 Funciones y variables para cadenas
 =======================================
 
- -- Función: stringp (<obj>)
-     Devuelve `true' si <obj> es una cadena.  Véase un ejemplo en la
-     introducción.
+ -- Función: base64 (<string>)
+     Devuelve la representación en base 64 de <string> en formato de
+     cadena de caracteres.
+
+     Ejemplo:
+
+          (%i1) base64 : base64("foo bar baz");
+          (%o1)                       Zm9vIGJhciBiYXo=
+          (%i2) string : base64_decode(base64);
+          (%o2)                          foo bar baz
+
+ -- Función: base64_decode (<base64-string>)
+     Decodifica la cadena de caracteres <base64-string>, codificada en
+     base 64, y devuelve la cadena original.
+
+     Para un ejemplo, véase `base64'.
 
  -- Función: charat (<string>, <n>)
      Devuelve el <n>-ésimo carácter de <string>.  Al primer carácter de
@@ -6728,6 +6609,21 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
           (%o2)                   baz + 1764
 
      Véase también `parse_string'.
+
+ -- Función: md5sum (<string>)
+     Devuelve, en formato de cadena de caracteres, el resultado de la
+     suma de verificación md5 del argumento <string>. Para obtener el
+     valor devuelto por la función como número entero, fijar la base
+     numérica de entrada a 16 y a~nadir como prefijo el cero.
+
+     Ejemplo:
+
+          (%i1) string : md5sum("foo bar baz");
+          (%o1)                  ab07acbb1e496801937adfa772424bf7
+          (%i2) ibase : obase : 16.$
+
+          (%i3) integer : parse_string(sconcat(0, string));
+          (%o3)                 0ab07acbb1e496801937adfa772424bf7
 
  -- Función: parse_string (<str>)
      Analiza sintácticamente la cadena <str> como una expresión de
@@ -6969,6 +6865,10 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
      Actúa de forma similar a `strim', pero sólo recorta en el extremo
      inicial de <string>.
 
+ -- Función: stringp (<obj>)
+     Devuelve `true' si <obj> es una cadena.  Véase un ejemplo en la
+     introducción.
+
  -- Función: substring (<string>, <start>)
  -- Función: substring (<string>, <start>, <end>)
      Devuelve la subcadena de <string> que comienza en la posición
@@ -7015,7 +6915,7 @@ File: maxima.info,  Node: Funciones y variables para cadenas,  Prev: Funciones y
 
 File: maxima.info,  Node: to_poly_solve,  Next: unit,  Prev: stringproc,  Up: Top
 
-78 to_poly_solve
+77 to_poly_solve
 ****************
 
 * Menu:

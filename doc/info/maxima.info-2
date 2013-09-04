@@ -11,6 +11,265 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Functions and Variables for Sums and Products,  Next: Introduction to Series,  Prev: Sums Products and Series,  Up: Sums Products and Series
+
+28.1 Functions and Variables for Sums and Products
+==================================================
+
+ -- Function: bashindices (<expr>)
+     Transforms the expression <expr> by giving each summation and
+     product a unique index.  This gives `changevar' greater precision
+     when it is working with summations or products.  The form of the
+     unique index is `j<number>'. The quantity <number> is determined
+     by referring to `gensumnum', which can be changed by the user.
+     For example, `gensumnum:0$' resets it.
+
+
+ -- Function: lsum (<expr>, <x>, <L>)
+     Represents the sum of <expr> for each element <x> in <L>.  A noun
+     form `'lsum' is returned if the argument <L> does not evaluate to
+     a list.
+
+     Examples:
+
+          (%i1) lsum (x^i, i, [1, 2, 7]);
+                                      7    2
+          (%o1)                      x  + x  + x
+          (%i2) lsum (i^2, i, rootsof (x^3 - 1));
+                               ====
+                               \      2
+          (%o2)                 >    i
+                               /
+                               ====
+                                             3
+                               i in rootsof(x  - 1)
+
+
+ -- Function: intosum (<expr>)
+     Moves multiplicative factors outside a summation to inside.  If
+     the index is used in the outside expression, then the function
+     tries to find a reasonable index, the same as it does for
+     `sumcontract'.  This is essentially the reverse idea of the
+     `outative' property of summations, but note that it does not
+     remove this property, it only bypasses it.
+
+     In some cases, a `scanmap (multthru, <expr>)' may be necessary
+     before the `intosum'.
+
+
+ -- Function: product (<expr>, <i>, <i_0>, <i_1>)
+     Represents a product of the values of <expr> as the index <i>
+     varies from <i_0> to <i_1>.  The noun form `'product' is displayed
+     as an uppercase letter pi.
+
+     `product' evaluates <expr> and lower and upper limits <i_0> and
+     <i_1>, `product' quotes (does not evaluate) the index <i>.
+
+     If the upper and lower limits differ by an integer, <expr> is
+     evaluated for each value of the index <i>, and the result is an
+     explicit product.
+
+     Otherwise, the range of the index is indefinite.  Some rules are
+     applied to simplify the product.  When the global variable
+     `simpproduct' is `true', additional rules are applied.  In some
+     cases, simplification yields a result which is not a product;
+     otherwise, the result is a noun form `'product'.
+
+     See also `nouns' and `evflag'.
+
+     Examples:
+
+          (%i1) product (x + i*(i+1)/2, i, 1, 4);
+          (%o1)           (x + 1) (x + 3) (x + 6) (x + 10)
+          (%i2) product (i^2, i, 1, 7);
+          (%o2)                       25401600
+          (%i3) product (a[i], i, 1, 7);
+          (%o3)                 a  a  a  a  a  a  a
+                                 1  2  3  4  5  6  7
+          (%i4) product (a(i), i, 1, 7);
+          (%o4)          a(1) a(2) a(3) a(4) a(5) a(6) a(7)
+          (%i5) product (a(i), i, 1, n);
+                                       n
+                                     /===\
+                                      ! !
+          (%o5)                       ! !  a(i)
+                                      ! !
+                                     i = 1
+          (%i6) product (k, k, 1, n);
+                                         n
+                                       /===\
+                                        ! !
+          (%o6)                         ! !  k
+                                        ! !
+                                       k = 1
+          (%i7) product (k, k, 1, n), simpproduct;
+          (%o7)                          n!
+          (%i8) product (integrate (x^k, x, 0, 1), k, 1, n);
+                                       n
+                                     /===\
+                                      ! !    1
+          (%o8)                       ! !  -----
+                                      ! !  k + 1
+                                     k = 1
+          (%i9) product (if k <= 5 then a^k else b^k, k, 1, 10);
+                                        15  40
+          (%o9)                        a   b
+
+
+ -- Option variable: simpsum
+     Default value: `false'
+
+     When `simpsum' is `true', the result of a `sum' is simplified.
+     This simplification may sometimes be able to produce a closed
+     form.  If `simpsum' is `false' or if the quoted form `'sum' is
+     used, the value is a sum noun form which is a representation of
+     the sigma notation used in mathematics.
+
+
+ -- Function: sum (<expr>, <i>, <i_0>, <i_1>)
+     Represents a summation of the values of <expr> as the index <i>
+     varies from <i_0> to <i_1>.  The noun form `'sum' is displayed as
+     an uppercase letter sigma.
+
+     `sum' evaluates its summand <expr> and lower and upper limits <i_0>
+     and <i_1>, `sum' quotes (does not evaluate) the index <i>.
+
+     If the upper and lower limits differ by an integer, the summand
+     <expr> is evaluated for each value of the summation index <i>, and
+     the result is an explicit sum.
+
+     Otherwise, the range of the index is indefinite.  Some rules are
+     applied to simplify the summation.  When the global variable
+     `simpsum' is `true', additional rules are applied.  In some cases,
+     simplification yields a result which is not a summation;
+     otherwise, the result is a noun form `'sum'.
+
+     When the `evflag' (evaluation flag) `cauchysum' is `true', a
+     product of summations is expressed as a Cauchy product, in which
+     the index of the inner summation is a function of the index of the
+     outer one, rather than varying independently.
+
+     The global variable `genindex' is the alphabetic prefix used to
+     generate the next index of summation, when an automatically
+     generated index is needed.
+
+     `gensumnum' is the numeric suffix used to generate the next index
+     of summation, when an automatically generated index is needed.
+     When `gensumnum' is `false', an automatically-generated index is
+     only `genindex' with no numeric suffix.
+
+     See also `sumcontract', `intosum', `bashindices', `niceindices',
+     `nouns', `evflag', and `zeilberger'.
+
+     Examples:
+
+          (%i1) sum (i^2, i, 1, 7);
+          (%o1)                          140
+          (%i2) sum (a[i], i, 1, 7);
+          (%o2)           a  + a  + a  + a  + a  + a  + a
+                           7    6    5    4    3    2    1
+          (%i3) sum (a(i), i, 1, 7);
+          (%o3)    a(7) + a(6) + a(5) + a(4) + a(3) + a(2) + a(1)
+          (%i4) sum (a(i), i, 1, n);
+                                      n
+                                     ====
+                                     \
+          (%o4)                       >    a(i)
+                                     /
+                                     ====
+                                     i = 1
+          (%i5) sum (2^i + i^2, i, 0, n);
+                                    n
+                                   ====
+                                   \       i    2
+          (%o5)                     >    (2  + i )
+                                   /
+                                   ====
+                                   i = 0
+          (%i6) sum (2^i + i^2, i, 0, n), simpsum;
+                                        3      2
+                             n + 1   2 n  + 3 n  + n
+          (%o6)             2      + --------------- - 1
+                                            6
+          (%i7) sum (1/3^i, i, 1, inf);
+                                      inf
+                                      ====
+                                      \     1
+          (%o7)                        >    --
+                                      /      i
+                                      ====  3
+                                      i = 1
+          (%i8) sum (1/3^i, i, 1, inf), simpsum;
+                                          1
+          (%o8)                           -
+                                          2
+          (%i9) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf);
+                                        inf
+                                        ====
+                                        \     1
+          (%o9)                      30  >    --
+                                        /      2
+                                        ====  i
+                                        i = 1
+          (%i10) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf), simpsum;
+                                            2
+          (%o10)                       5 %pi
+          (%i11) sum (integrate (x^k, x, 0, 1), k, 1, n);
+                                      n
+                                     ====
+                                     \       1
+          (%o11)                      >    -----
+                                     /     k + 1
+                                     ====
+                                     k = 1
+          (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10);
+                    10    9    8    7    6    5    4    3    2
+          (%o12)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
+
+
+ -- Function: sumcontract (<expr>)
+     Combines all sums of an addition that have upper and lower bounds
+     that differ by constants.  The result is an expression containing
+     one summation for each set of such summations added to all
+     appropriate extra terms that had to be extracted to form this sum.
+     `sumcontract' combines all compatible sums and uses one of the
+     indices from one of the sums if it can, and then try to form a
+     reasonable index if it cannot use any supplied.
+
+     It may be necessary to do an `intosum (<expr>)' before the
+     `sumcontract'.
+
+
+ -- Option variable: sumexpand
+     Default value: `false'
+
+     When `sumexpand' is `true', products of sums and exponentiated
+     sums simplify to nested sums.
+
+     See also `cauchysum'.
+
+     Examples:
+
+          (%i1) sumexpand: true$
+          (%i2) sum (f (i), i, 0, m) * sum (g (j), j, 0, n);
+                               m      n
+                              ====   ====
+                              \      \
+          (%o2)                >      >     f(i1) g(i2)
+                              /      /
+                              ====   ====
+                              i1 = 0 i2 = 0
+          (%i3) sum (f (i), i, 0, m)^2;
+                               m      m
+                              ====   ====
+                              \      \
+          (%o3)                >      >     f(i3) f(i4)
+                              /      /
+                              ====   ====
+                              i3 = 0 i4 = 0
+
+
+
 File: maxima.info,  Node: Introduction to Series,  Next: Functions and Variables for Series,  Prev: Functions and Variables for Sums and Products,  Up: Sums Products and Series
 
 28.2 Introduction to Series
@@ -1164,15 +1423,15 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
 
  -- Function: fib (<n>)
-     Returns the <n>'th Fibonacci number.  `fib(0)' equal to 0 and
+     Returns the <n>'th Fibonacci number.  `fib(0)' is equal to 0 and
      `fib(1)' equal to 1, and `fib (-<n>)' equal to `(-1)^(<n> + 1) *
      fib(<n>)'.
 
-     After calling `fib', `prevfib' is equal to `fib (<x> - 1)', the
+     After calling `fib', `prevfib' is equal to `fib(<n> - 1)', the
      Fibonacci number preceding the last one computed.
 
-          (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+          (%i1) map (fib, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+          (%o1)           [- 3, 2, - 1, 1, 0, 1, 1, 2, 3, 5, 8, 13, 21]
 
 
  -- Function: fibtophi (<expr>)
@@ -1258,7 +1517,7 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
           (%i1) inv_mod(3, 41);
           (%o1)                           14
-          (%i2) ratsimp(3^-1), modulus=41;
+          (%i2) ratsimp(3^-1), modulus = 41;
           (%o2)                           14
           (%i3) inv_mod(3, 42);
           (%o3)                          false
@@ -1282,6 +1541,26 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      may be general expressions as well as integers.
 
      `load ("functs")' loads this function.
+
+
+ -- Function: lucas (<n>)
+     Returns the <n>'th Lucas number.  `lucas(0)' is equal to 2 and
+     `lucas(1)' equal to 1, and `lucas(-<n>)' equal to `(-1)^(-<n>) *
+     lucas(<n>)'.
+
+          (%i1) map (lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+          (%o1)             [7, - 4, 3, - 1, 2, 1, 3, 4, 7, 11, 18, 29, 47]
+
+     After calling `lucas', the global variable `next_lucas' is equal
+     to `lucas (<n> + 1)', the Lucas number following the last
+     returned. The example shows how Fibonacci numbers can be computed
+     via `lucas' and `next_lucas'.
+
+          (%i1) fib_via_lucas(n) :=
+                   block([lucas : lucas(n)],
+                   signum(n) * (2*next_lucas - lucas)/5 )$
+          (%i2) map (fib_via_lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+          (%o2)             [- 3, 2, - 1, 1, 0, 1, 1, 2, 3, 5, 8, 13, 21]
 
 
  -- Function: mod (<x>, <y>)
@@ -1467,6 +1746,66 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
           (%o4)                        zeta(4)
 
 
+ -- Function: zn_add_table (<n>)
+     Shows an addition table of all elements in (Z/<n>Z).
+
+     See also `zn_mult_table' , `zn_power_table' .
+
+
+ -- Function: zn_determinant (<matrix>, <p>)
+     Uses the technique of LU-decomposition to compute the determinant
+     of <matrix> over (Z/<p>Z). <p> must be a prime.
+
+     However if the determinant is equal to zero the LU-decomposition
+     might fail.  In that case `zn_determinant' computes the
+     determinant non-modular and reduces thereafter.
+
+     See also `zn_invert_by_lu' .
+
+     Examples:
+
+          (%i1) m : matrix([1,3],[2,4]);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 2  4 ]
+          (%i2) zn_determinant(m, 5);
+          (%o2)                               3
+          (%i3) m : matrix([2,4,1],[3,1,4],[4,3,2]);
+                                         [ 2  4  1 ]
+                                         [         ]
+          (%o3)                          [ 3  1  4 ]
+                                         [         ]
+                                         [ 4  3  2 ]
+          (%i4) zn_determinant(m, 5);
+          (%o4)                               0
+
+
+ -- Function: zn_invert_by_lu (<matrix>, <p>)
+     Uses the technique of LU-decomposition to compute the modular
+     inverse of <matrix> over (Z/<p>Z). <p> must be a prime and <matrix>
+     invertible. `zn_invert_by_lu' returns `false' if <matrix> is not
+     invertible.
+
+     See also `zn_determinant' .
+
+     Example:
+
+          (%i1) m : matrix([1,3],[2,4]);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 2  4 ]
+          (%i2) zn_determinant(m, 5);
+          (%o2)                               3
+          (%i3) mi : zn_invert_by_lu(m, 5);
+                                          [ 3  4 ]
+          (%o3)                           [      ]
+                                          [ 1  2 ]
+          (%i4) matrixmap(lambda([a], mod(a, 5)), m . mi);
+                                          [ 1  0 ]
+          (%o4)                           [      ]
+                                          [ 0  1 ]
+
+
  -- Function: zn_log (<a>, <g>, <n>)
  -- Function: zn_log (<a>, <g>, <n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
      Computes the discrete logarithm. Let (Z/<n>Z)* be a cyclic group,
@@ -1524,6 +1863,31 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
           (%o8)                              37
 
 
+ -- Function: zn_mult_table (<n>)
+ -- Function: zn_mult_table (<n>, all)
+     Without the optional argument <all> `zn_mult_table(n)' shows a
+     multiplication table of all elements in (Z/<n>Z)* which are all
+     elements invertible modulo <n>.
+
+     The optional argument <all> causes the table to be printed for all
+     non-zero elements.
+
+     See also `zn_add_table' , `zn_power_table' .
+
+     Examples:
+
+          (%i1) zn_mult_table(4);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 3  1 ]
+          (%i2) zn_mult_table(4, all);
+                                         [ 1  2  3 ]
+                                         [         ]
+          (%o2)                          [ 2  0  2 ]
+                                         [         ]
+                                         [ 3  2  1 ]
+
+
  -- Function: zn_order (<x>, <n>)
  -- Function: zn_order (<x>, <n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
      Returns the order of <x> if it is a unit of the finite group
@@ -1571,6 +1935,39 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
           (%o4)                             true
           (%i5) map(lambda([x], ord_3/zn_order(x, p, ifs)), makelist(i,i,2,15));
           (%o5)        [22, 1, 44, 10, 5, 2, 22, 2, 8, 2, 1, 1, 20, 1]
+
+
+ -- Function: zn_power_table (<n>)
+ -- Function: zn_power_table (<n>, all)
+     Without the optional argument <all> `zn_power_table(n)' shows a
+     power table of all elements in (Z/<n>Z)* which are all elements
+     invertible modulo <n>.  The exponent loops from `1' to
+     `totient(n)' and the table ends with a column of ones on the right
+     side.
+
+     The optional argument <all> causes the table to be printed for all
+     non-zero elements. In this case the exponent loops from `1' to
+     `totient(n) + 1' and the last column is therefore equal to the
+     first.
+
+     See also `zn_add_table' , `zn_mult_table' .
+
+     Examples:
+
+          (%i1) zn_power_table(6);
+                                          [ 1  1 ]
+          (%o1)                           [      ]
+                                          [ 5  1 ]
+          (%i2) zn_power_table(6, all);
+                                         [ 1  1  1 ]
+                                         [         ]
+                                         [ 2  4  2 ]
+                                         [         ]
+          (%o2)                          [ 3  3  3 ]
+                                         [         ]
+                                         [ 4  4  4 ]
+                                         [         ]
+                                         [ 5  1  5 ]
 
 
  -- Function: zn_primroot (<n>)
@@ -5602,7 +5999,7 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
      value.
 
      When the optional argument <s_0> is present, the result is
-     equivalent `tree_reduce(<F>, cons(<s_0>, <s>)'.
+     equivalent `tree_reduce(<F>, cons(<s_0>, <s>))'.
 
      For addition of floating point numbers, `tree_reduce' may return a
      sum that has a smaller rounding error than either `rreduce' or
@@ -5786,8 +6183,8 @@ entered the block, but before `a' was bound.  Thus doing something like
    will protect the external value of `a' from being altered, but would
 let you access what that value was.  Thus the right hand side of the
 assignments, is evaluated in the entering context, before any binding
-occurs.  Using just `block ([x], ...' would cause the `x' to have itself
-as value, just as if it would have if you entered a fresh Maxima
+occurs.  Using just `block ([x], ...)' would cause the `x' to have
+itself as value, just as if it would have if you entered a fresh Maxima
 session.
 
    The actual arguments to a function are treated in exactly same way as
@@ -9529,7 +9926,7 @@ File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possib
      `gauss_a(a,b,c,x)' and `gauss_b(a,b,c,x)' are 2F1 geometric
      functions.  They represent any two independent solutions of the
      hypergeometric differential equation `x(1-x) diff(y,x,2) +
-     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
+     [c-(a+b+1)x] diff(y,x) - aby = 0' (A&S 15.5.1).
 
      The only use of these functions is in solutions of ODEs returned by
      `odelin' and `contrib_ode'.  The definition and use of these
@@ -11434,8 +11831,12 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
 =====================================
 
  -- Function: diag (<lm>)
-     Constructs a square matrix with the matrices of <lm> in the
-     diagonal. <lm> is a list of matrices or scalars.
+     Constructs a matrix that is the block sum of the elements of <lm>.
+     The elements of <lm> are assumed to be matrices; if an element is
+     scalar, it treated as a 1 by 1 matrix.
+
+     The resulting matrix will be square if each of the elements of
+     <lm> is square.
 
      Example:
           (%i1) load("diag")$
@@ -11456,6 +11857,10 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
                              [ 0  0  0  0  1  1 ]
                              [                  ]
                              [ 0  0  0  0  1  0 ]
+          (%i5) diag ([matrix([1,2]), 3]);
+                                  [ 1  2  0 ]
+          (%o5)                   [         ]
+                                  [ 0  0  3 ]
 
      To use this function write first `load("diag")'.
 
@@ -11485,49 +11890,61 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
 
 
  -- Function: jordan (<mat>)
-     Returns the Jordan form of matrix <mat>, but codified in a Maxima
-     list.  To get the corresponding matrix, call function `dispJordan'
-     using as argument the output of `jordan'.
+     Returns the Jordan form of matrix <mat>, encoded as a list in a
+     particular format. To get the corresponding matrix, call the
+     function `dispJordan' using the output of `jordan' as the argument.
+
+     The elements of the returned list are themselves lists. The first
+     element of each is an eigenvalue of <mat>. The remaining elements
+     are positive integers which are the lengths of the Jordan blocks
+     for this eigenvalue. These integers are listed in decreasing
+     order. Eigenvalues are not repeated.
+
+     The functions `dispJordan', `minimalPoly' and `ModeMatrix' expect
+     the output of a call to `jordan' as an argument. If you construct
+     this argument by hand, rather than by calling `jordan', you must
+     ensure that each eigenvalue only appears once and that the block
+     sizes are listed in decreasing order, otherwise the functions
+     might give incorrect answers.
 
      Example:
           (%i1) load("diag")$
-
-          (%i3) a:matrix([2,0,0,0,0,0,0,0],
-                         [1,2,0,0,0,0,0,0],
-                         [-4,1,2,0,0,0,0,0],
-                         [2,0,0,2,0,0,0,0],
-                         [-7,2,0,0,2,0,0,0],
-                         [9,0,-2,0,1,2,0,0],
-                         [-34,7,1,-2,-1,1,2,0],
-                         [145,-17,-16,3,9,-2,0,3])$
-
-          (%i34) jordan(a);
-          (%o4)             [[2, 3, 3, 1], [3, 1]]
-          (%i5) dispJordan(%);
-                          [ 2  1  0  0  0  0  0  0 ]
-                          [                        ]
-                          [ 0  2  1  0  0  0  0  0 ]
-                          [                        ]
-                          [ 0  0  2  0  0  0  0  0 ]
-                          [                        ]
-                          [ 0  0  0  2  1  0  0  0 ]
-          (%o5)           [                        ]
-                          [ 0  0  0  0  2  1  0  0 ]
-                          [                        ]
-                          [ 0  0  0  0  0  2  0  0 ]
-                          [                        ]
-                          [ 0  0  0  0  0  0  2  0 ]
-                          [                        ]
-                          [ 0  0  0  0  0  0  0  3 ]
+          (%i2) A: matrix([2,0,0,0,0,0,0,0],
+                          [1,2,0,0,0,0,0,0],
+                          [-4,1,2,0,0,0,0,0],
+                          [2,0,0,2,0,0,0,0],
+                          [-7,2,0,0,2,0,0,0],
+                          [9,0,-2,0,1,2,0,0],
+                          [-34,7,1,-2,-1,1,2,0],
+                          [145,-17,-16,3,9,-2,0,3])$
+          (%i3) jordan (A);
+          (%o3)                [[2, 3, 3, 1], [3, 1]]
+          (%i4) dispJordan (%);
+                             [ 2  1  0  0  0  0  0  0 ]
+                             [                        ]
+                             [ 0  2  1  0  0  0  0  0 ]
+                             [                        ]
+                             [ 0  0  2  0  0  0  0  0 ]
+                             [                        ]
+                             [ 0  0  0  2  1  0  0  0 ]
+          (%o4)              [                        ]
+                             [ 0  0  0  0  2  1  0  0 ]
+                             [                        ]
+                             [ 0  0  0  0  0  2  0  0 ]
+                             [                        ]
+                             [ 0  0  0  0  0  0  2  0 ]
+                             [                        ]
+                             [ 0  0  0  0  0  0  0  3 ]
 
      To use this function write first `load("diag")'. See also
      `dispJordan' and `minimalPoly'.
 
 
  -- Function: dispJordan (<l>)
-     Returns the Jordan matrix associated to the codification given by
-     the Maxima list <l>, which is the output given by function
-     `jordan'.
+     Returns a matrix in Jordan canonical form (JCF) corresponding to
+     the list of eigenvalues and multiplicities given by <l>. This list
+     should be in the format given by the `jordan' function. See
+     `jordan' for details of this format.
 
      Example:
           (%i1) load("diag")$
@@ -11556,9 +11973,9 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
 
 
  -- Function: minimalPoly (<l>)
-     Returns the minimal polynomial associated to the codification
-     given by the Maxima list <l>, which is the output given by
-     function `jordan'.
+     Returns the minimal polynomial of the matrix whose Jordan form is
+     described by the list <l>. This list should be in the format given
+     by the `jordan' function. See `jordan' for details of this format.
 
      Example:
           (%i1) load("diag")$
@@ -11578,254 +11995,130 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
      and `dispJordan'.
 
 
- -- Function: ModeMatrix (<A>,<l>)
-     Returns the matrix <M> such that (M^^-1).A.M=J, where <J> is the
-     Jordan form of <A>. The Maxima list <l> is the codified form of
-     the Jordan form as returned by function `jordan'.
+ -- Function: ModeMatrix (<A>, [<jordan_info>])
+     Returns an invertible matrix <M> such that (M^^-1).A.M is the
+     Jordan form of <A>.
+
+     To calculate this, Maxima must find the Jordan form of <A>, which
+     might be quite computationally expensive. If that has already been
+     calculated by a previous call to `jordan', pass it as a second
+     argument, <jordan_info>. See `jordan' for details of the required
+     format.
 
      Example:
           (%i1) load("diag")$
+          (%i2) A: matrix([2,1,2,0], [-2,2,1,2], [-2,-1,-1,1], [3,1,2,-1])$
+          (%i3) M: ModeMatrix (A);
+                                [  1    - 1   1   1 ]
+                                [                   ]
+                                [   1               ]
+                                [ - -   - 1   0   0 ]
+                                [   9               ]
+                                [                   ]
+          (%o3)                 [   13              ]
+                                [ - --   1   - 1  0 ]
+                                [   9               ]
+                                [                   ]
+                                [  17               ]
+                                [  --   - 1   1   1 ]
+                                [  9                ]
+          (%i4) is ((M^^-1) . A . M = dispJordan (jordan (A)));
+          (%o4)                         true
 
-          (%i2) a:matrix([2,1,2,0],
-                    [-2,2,1,2],
-                    [-2,-1,-1,1],
-                    [3,1,2,-1])$
-
-          (%i3) jordan(a);
-          (%o3)               [[- 1, 1], [1, 3]]
-          (%i4) M: ModeMatrix(a,%);
-                            [  1    - 1   1   1 ]
-                            [                   ]
-                            [   1               ]
-                            [ - -   - 1   0   0 ]
-                            [   9               ]
-                            [                   ]
-          (%o4)             [   13              ]
-                            [ - --   1   - 1  0 ]
-                            [   9               ]
-                            [                   ]
-                            [  17               ]
-                            [  --   - 1   1   1 ]
-                            [  9                ]
-          (%i5) is(  (M^^-1).a.M = dispJordan(%o3)  );
-          (%o5)                      true
-     Note that `dispJordan(%o3)' is the Jordan form of matrix `a'.
+     Note that, in this example, the Jordan form of `A' is computed
+     twice. To avoid this, we could have stored the output of
+     `jordan(A)' in a variable and passed that to both `ModeMatrix' and
+     `dispJordan'.
 
      To use this function write first `load("diag")'. See also `jordan'
      and `dispJordan'.
 
 
- -- Function: mat_function (<f>,<mat>)
-     Returns f(mat), where <f> is an analytic function and <mat> a
-     matrix. This computation is based on Cauchy's integral formula,
-     which states that if `f(x)' is analytic and
-
-          mat = diag([JF(m1,n1),...,JF(mk,nk)]),
-
-     then
-
-          f(mat) = ModeMatrix*diag([f(JF(m1,n1)), ..., f(JF(mk,nk))])
-                                                        *ModeMatrix^^(-1)
-
-     Note that there are about 6 or 8 other methods for this
-     calculation.
-
-     Some examples follow.
+ -- Function: mat_function (<f>,<A>)
+     Returns f(A), where <f> is an analytic function and <A> a matrix.
+     This computation is based on the Taylor expansion of <f>. It is
+     not efficient for numerical evaluation, but can give symbolic
+     answers for small matrices.
 
      Example 1:
+
+     The exponential of a matrix. We only give the first row of the
+     answer, since the output is rather large.
           (%i1) load("diag")$
-
-          (%i2) b2:matrix([0,1,0], [0,0,1], [-1,-3,-3])$
-
-          (%i3) mat_function(exp,t*b2);
-                         2   - t
-                        t  %e          - t     - t
-          (%o3) matrix([-------- + t %e    + %e   ,
-                           2
-                  - t     - t                           - t
-           2    %e      %e        - t           - t   %e
-          t  (- ----- - ----- + %e   ) + t (2 %e    - -----)
-                  t       2                             t
-                         t
-                                   - t          - t     - t
-                 - t       - t   %e        2  %e      %e
-           + 2 %e   , t (%e    - -----) + t  (----- - -----)
-                                   t            2       t
-                         2   - t            - t     - t
-               - t      t  %e        2    %e      %e        - t
-           + %e   ], [- --------, - t  (- ----- - ----- + %e   ),
-                           2                t       2
-                                                   t
-                  - t     - t      2   - t
-             2  %e      %e        t  %e          - t
-          - t  (----- - -----)], [-------- - t %e   ,
-                  2       t          2
-                  - t     - t                           - t
-           2    %e      %e        - t           - t   %e
-          t  (- ----- - ----- + %e   ) - t (2 %e    - -----),
-                  t       2                             t
-                         t
-                - t     - t                 - t
-           2  %e      %e            - t   %e
-          t  (----- - -----) - t (%e    - -----)])
-                2       t                   t
-          (%i4) ratsimp(%);
-                         [   2              - t ]
-                         [ (t  + 2 t + 2) %e    ]
-                         [ -------------------- ]
-                         [          2           ]
-                         [                      ]
-                         [         2   - t      ]
-          (%o4)  Col 1 = [        t  %e         ]
-                         [      - --------      ]
-                         [           2          ]
-                         [                      ]
-                         [     2          - t   ]
-                         [   (t  - 2 t) %e      ]
-                         [   ----------------   ]
-                         [          2           ]
-                   [      2        - t    ]
-                   [    (t  + t) %e       ]
-                   [                      ]
-           Col 2 = [     2            - t ]
-                   [ - (t  - t - 1) %e    ]
-                   [                      ]
-                   [     2          - t   ]
-                   [   (t  - 3 t) %e      ]
-                   [        2   - t       ]
-                   [       t  %e          ]
-                   [       --------       ]
-                   [          2           ]
-                   [                      ]
-                   [      2          - t  ]
-           Col 3 = [    (t  - 2 t) %e     ]
-                   [  - ----------------  ]
-                   [           2          ]
-                   [                      ]
-                   [   2              - t ]
-                   [ (t  - 4 t + 2) %e    ]
-                   [ -------------------- ]
-                   [          2           ]
+          (%i2) A: matrix ([0,1,0], [0,0,1], [-1,-3,-3])$
+          (%i3) ratsimp (mat_function (exp, t*A)[1]);
+                     2              - t                   2   - t
+                   (t  + 2 t + 2) %e       2        - t  t  %e
+          (%o3)   [--------------------, (t  + t) %e   , --------]
+                            2                               2
 
      Example 2:
-          (%i5) b1:matrix([0,0,1,1,1],
-                          [0,0,0,1,1],
-                          [0,0,0,0,1],
-                          [0,0,0,0,0],
-                          [0,0,0,0,0])$
 
-          (%i6) mat_function(exp,t*b1);
-                            [              2     ]
-                            [             t      ]
-                            [ 1  0  t  t  -- + t ]
-                            [             2      ]
-                            [                    ]
-          (%o6)             [ 0  1  0  t    t    ]
-                            [                    ]
-                            [ 0  0  1  0    t    ]
-                            [                    ]
-                            [ 0  0  0  1    0    ]
-                            [                    ]
-                            [ 0  0  0  0    1    ]
-          (%i7) minimalPoly(jordan(b1));
-                                       3
-          (%o7)                       x
-          (%i8) ident(5)+t*b1+1/2*(t^2)*b1^^2;
-                            [              2     ]
-                            [             t      ]
-                            [ 1  0  t  t  -- + t ]
-                            [             2      ]
-                            [                    ]
-          (%o8)             [ 0  1  0  t    t    ]
-                            [                    ]
-                            [ 0  0  1  0    t    ]
-                            [                    ]
-                            [ 0  0  0  1    0    ]
-                            [                    ]
-                            [ 0  0  0  0    1    ]
-          (%i9) mat_function(exp,%i*t*b1);
-                       [                           2 ]
-                       [                          t  ]
-                       [ 1  0  %i t  %i t  %i t - -- ]
-                       [                          2  ]
-                       [                             ]
-          (%o9)        [ 0  1   0    %i t    %i t    ]
-                       [                             ]
-                       [ 0  0   1     0      %i t    ]
-                       [                             ]
-                       [ 0  0   0     1        0     ]
-                       [                             ]
-                       [ 0  0   0     0        1     ]
-          (%i10) mat_function(cos,t*b1)+%i*mat_function(sin,t*b1);
-                        [                           2 ]
-                        [                          t  ]
-                        [ 1  0  %i t  %i t  %i t - -- ]
-                        [                          2  ]
-                        [                             ]
-          (%o10)        [ 0  1   0    %i t    %i t    ]
-                        [                             ]
-                        [ 0  0   1     0      %i t    ]
-                        [                             ]
-                        [ 0  0   0     1        0     ]
-                        [                             ]
-                        [ 0  0   0     0        1     ]
+     Comparison with the Taylor series for the exponential and also
+     comparing `exp(%i*A)' with sine and cosine.
+          (%i1) load("diag")$
+          (%i2) A: matrix ([0,1,1,1],
+                           [0,0,0,1],
+                           [0,0,0,1],
+                           [0,0,0,0])$
+          (%i3) ratsimp (mat_function (exp, t*A));
+                                 [           2     ]
+                                 [ 1  t  t  t  + t ]
+                                 [                 ]
+          (%o3)                  [ 0  1  0    t    ]
+                                 [                 ]
+                                 [ 0  0  1    t    ]
+                                 [                 ]
+                                 [ 0  0  0    1    ]
+          (%i4) minimalPoly (jordan (A));
+                                          3
+          (%o4)                          x
+          (%i5) ratsimp (ident(4) + t*A + 1/2*(t^2)*A^^2);
+                                 [           2     ]
+                                 [ 1  t  t  t  + t ]
+                                 [                 ]
+          (%o5)                  [ 0  1  0    t    ]
+                                 [                 ]
+                                 [ 0  0  1    t    ]
+                                 [                 ]
+                                 [ 0  0  0    1    ]
+          (%i6) ratsimp (mat_function (exp, %i*t*A));
+                            [                        2 ]
+                            [ 1  %i t  %i t  %i t - t  ]
+                            [                          ]
+          (%o6)             [ 0   1     0      %i t    ]
+                            [                          ]
+                            [ 0   0     1      %i t    ]
+                            [                          ]
+                            [ 0   0     0        1     ]
+          (%i7) ratsimp (mat_function (cos, t*A) + %i*mat_function (sin, t*A));
+                            [                        2 ]
+                            [ 1  %i t  %i t  %i t - t  ]
+                            [                          ]
+          (%o7)             [ 0   1     0      %i t    ]
+                            [                          ]
+                            [ 0   0     1      %i t    ]
+                            [                          ]
+                            [ 0   0     0        1     ]
 
      Example 3:
-          (%i11) a1:matrix([2,1,0,0,0,0],
-                           [-1,4,0,0,0,0],
-                           [-1,1,2,1,0,0],
-                           [-1,1,-1,4,0,0],
-                           [-1,1,-1,1,3,0],
-                           [-1,1,-1,1,1,2])$
 
-          (%i12) fpow(x):=block([k],declare(k,integer),x^k)$
-
-          (%i13) mat_function(fpow,a1);
-                          [  k      k - 1 ]         [      k - 1    ]
-                          [ 3  - k 3      ]         [   k 3         ]
-                          [               ]         [               ]
-                          [       k - 1   ]         [  k      k - 1 ]
-                          [  - k 3        ]         [ 3  + k 3      ]
-                          [               ]         [               ]
-                          [       k - 1   ]         [      k - 1    ]
-                          [  - k 3        ]         [   k 3         ]
-          (%o13)  Col 1 = [               ] Col 2 = [               ]
-                          [       k - 1   ]         [      k - 1    ]
-                          [  - k 3        ]         [   k 3         ]
-                          [               ]         [               ]
-                          [       k - 1   ]         [      k - 1    ]
-                          [  - k 3        ]         [   k 3         ]
-                          [               ]         [               ]
-                          [       k - 1   ]         [      k - 1    ]
-                          [  - k 3        ]         [   k 3         ]
-                   [       0       ]         [       0       ]
-                   [               ]         [               ]
-                   [       0       ]         [       0       ]
-                   [               ]         [               ]
-                   [  k      k - 1 ]         [      k - 1    ]
-                   [ 3  - k 3      ]         [   k 3         ]
-                   [               ]         [               ]
-           Col 3 = [       k - 1   ] Col 4 = [  k      k - 1 ]
-                   [  - k 3        ]         [ 3  + k 3      ]
-                   [               ]         [               ]
-                   [       k - 1   ]         [      k - 1    ]
-                   [  - k 3        ]         [   k 3         ]
-                   [               ]         [               ]
-                   [       k - 1   ]         [      k - 1    ]
-                   [  - k 3        ]         [   k 3         ]
-                   [    0    ]
-                   [         ]         [ 0  ]
-                   [    0    ]         [    ]
-                   [         ]         [ 0  ]
-                   [    0    ]         [    ]
-                   [         ]         [ 0  ]
-           Col 5 = [    0    ] Col 6 = [    ]
-                   [         ]         [ 0  ]
-                   [    k    ]         [    ]
-                   [   3     ]         [ 0  ]
-                   [         ]         [    ]
-                   [  k    k ]         [  k ]
-                   [ 3  - 2  ]         [ 2  ]
+     Power operations.
+          (%i1) load("diag")$
+          (%i2) A: matrix([1,2,0], [0,1,0], [1,0,1])$
+          (%i3) integer_pow(x) := block ([k], declare (k, integer), x^k)$
+          (%i4) mat_function (integer_pow, A);
+                                 [ 1     2 k     0 ]
+                                 [                 ]
+          (%o4)                  [ 0      1      0 ]
+                                 [                 ]
+                                 [ k  (k - 1) k  1 ]
+          (%i5) A^^20;
+                                   [ 1   40   0 ]
+                                   [            ]
+          (%o5)                    [ 0    1   0 ]
+                                   [            ]
+                                   [ 20  380  1 ]
 
      To use this function write first `load("diag")'.
 
@@ -15843,7 +16136,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                        xrange = [0,1],
                        yrange = [0,2],
                        proportional_axes=xy),
-                  gr2d(explicit(x^2,x,0,1))
+                  gr2d(explicit(x^2,x,0,1)))$
 
 
  -- Graphic option: surface_hide
@@ -22138,7 +22431,7 @@ Marek Rychlik
 `http://alamos.math.arizona.edu'
 
 and is released 2002-05-24 under the terms of the General Public
-License(GPL) (see file `grobner.lisp'.  This documentation was
+License(GPL) (see file `grobner.lisp').  This documentation was
 extracted from the files
 `README', `grobner.lisp', `grobner.demo', `grobner-demo.output'
 
@@ -23266,25 +23559,25 @@ File: maxima.info,  Node: Functions and Variables for lapack,  Prev: Introductio
      in any order.  They all take the form `key=val'.  The keyword
      arguments are:
 
-    <C>
+    `C'
           The matrix <C> that should be added.  The default is `false',
           which means no matrix is added.
 
-    <alpha>
+    `alpha'
           The product of <A> and <B> is multiplied by this value.  The
           default is 1.
 
-    <beta>
+    `beta'
           If a matrix <C> is given, this value multiplies <C> before it
           is added.  The default value is 0, which implies that <C> is
           not added, even if <C> is given.  Hence, be sure to specify a
           non-zero value for <beta>.
 
-    <transpose_a>
+    `transpose_a'
           If `true', the transpose of <A> is used instead of <A> for
           the product.  The default is `false'.
 
-    <transpose_b>
+    `transpose_b'
           If `true', the transpose of <B> is used instead of <B> for
           the product.  The default is `false'.
 
@@ -23406,9 +23699,11 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
      epsilon*max(1, norm(X)).
 
      <grad>, if present, is the gradient of <FOM> with respect to the
-     variables <X>.  <grad> is a list, with one element for each
-     element of <X>.  If not present, the gradient is computed
-     automatically by symbolic differentiation.
+     variables <X>.  <grad> may be a list or a function that returns a
+     list, with one element for each element of <X>.  If not present,
+     the gradient is computed automatically by symbolic differentiation.
+     If <FOM> is a function, the gradient <grad> must be supplied by
+     the user.
 
      The algorithm applied is a limited-memory quasi-Newton (BFGS)
      algorithm [1].  It is called a limited-memory method because a
@@ -23491,8 +23786,7 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
      question are subscripted variables.  The FOM has an exact minimum
      equal to zero at u[k] = 1 for k = 1, ..., 8.
 
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i1) load (lbfgs)$
           (%i2) t1[j] := 1 - u[j];
           (%o2)                     t1  := 1 - u
                                       j         j
@@ -23514,7 +23808,7 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
           *************************************************
             N=    8   NUMBER OF CORRECTIONS=25
                  INITIAL VALUES
-           F=  9.680000000000000D+01   GNORM=  4.657353755084532D+02
+           F=  9.680000000000000D+01   GNORM=  4.657353755084533D+02
           *************************************************
 
            I NFN   FUNC                    GNORM                   STEPLENGTH
@@ -23525,47 +23819,47 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
            4   6   1.636867301275588D+01   1.177589920974980D+01   1.000000000000000D+00
            5   7   1.612153014409201D+01   2.292797147151288D+01   1.000000000000000D+00
            6   8   1.569118407390628D+01   3.687447158775571D+01   1.000000000000000D+00
-           7   9   1.510361958398942D+01   4.501931728123680D+01   1.000000000000000D+00
-           8  10   1.391077875774294D+01   4.526061463810632D+01   1.000000000000000D+00
-           9  11   1.165625686278198D+01   2.748348965356917D+01   1.000000000000000D+00
-          10  12   9.859422687859137D+00   2.111494974231644D+01   1.000000000000000D+00
-          11  13   7.815442521732281D+00   6.110762325766556D+00   1.000000000000000D+00
-          12  15   7.346380905773160D+00   2.165281166714631D+01   1.285316401779533D-01
-          13  16   6.330460634066370D+00   1.401220851762050D+01   1.000000000000000D+00
-          14  17   5.238763939851439D+00   1.702473787613255D+01   1.000000000000000D+00
-          15  18   3.754016790406701D+00   7.981845727704576D+00   1.000000000000000D+00
-          16  20   3.001238402309352D+00   3.925482944716691D+00   2.333129631296807D-01
-          17  22   2.794390709718290D+00   8.243329982546473D+00   2.503577283782332D-01
-          18  23   2.563783562918759D+00   1.035413426521790D+01   1.000000000000000D+00
-          19  24   2.019429976377856D+00   1.065187312346769D+01   1.000000000000000D+00
-          20  25   1.428003167670903D+00   2.475962450826961D+00   1.000000000000000D+00
-          21  27   1.197874264861340D+00   8.441707983493810D+00   4.303451060808756D-01
-          22  28   9.023848941942773D-01   1.113189216635162D+01   1.000000000000000D+00
-          23  29   5.508226405863770D-01   2.380830600326308D+00   1.000000000000000D+00
-          24  31   3.902893258815567D-01   5.625595816584421D+00   4.834988416524465D-01
-          25  32   3.207542206990315D-01   1.149444645416472D+01   1.000000000000000D+00
-          26  33   1.874468266362791D-01   3.632482152880997D+00   1.000000000000000D+00
-          27  34   9.575763380706598D-02   4.816497446154354D+00   1.000000000000000D+00
-          28  35   4.085145107543406D-02   2.087009350166495D+00   1.000000000000000D+00
-          29  36   1.931106001379290D-02   3.886818608498966D+00   1.000000000000000D+00
-          30  37   6.894000721499670D-03   3.198505796342214D+00   1.000000000000000D+00
-          31  38   1.443296033051864D-03   1.590265471025043D+00   1.000000000000000D+00
-          32  39   1.571766603154336D-04   3.098257063980634D-01   1.000000000000000D+00
-          33  40   1.288011776581970D-05   1.207784183577257D-02   1.000000000000000D+00
-          34  41   1.806140173752971D-06   4.587890233385193D-02   1.000000000000000D+00
-          35  42   1.769004645459358D-07   1.790537375052208D-02   1.000000000000000D+00
-          36  43   3.312164100763217D-10   6.782068426119681D-04   1.000000000000000D+00
+           7   9   1.510361958398942D+01   4.501931728123679D+01   1.000000000000000D+00
+           8  10   1.391077875774293D+01   4.526061463810630D+01   1.000000000000000D+00
+           9  11   1.165625686278198D+01   2.748348965356907D+01   1.000000000000000D+00
+          10  12   9.859422687859144D+00   2.111494974231706D+01   1.000000000000000D+00
+          11  13   7.815442521732282D+00   6.110762325764183D+00   1.000000000000000D+00
+          12  15   7.346380905773044D+00   2.165281166715009D+01   1.285316401779678D-01
+          13  16   6.330460634066464D+00   1.401220851761508D+01   1.000000000000000D+00
+          14  17   5.238763939854303D+00   1.702473787619218D+01   1.000000000000000D+00
+          15  18   3.754016790406625D+00   7.981845727632704D+00   1.000000000000000D+00
+          16  20   3.001238402313225D+00   3.925482944745832D+00   2.333129631316462D-01
+          17  22   2.794390709722064D+00   8.243329982586480D+00   2.503577283802312D-01
+          18  23   2.563783562920545D+00   1.035413426522664D+01   1.000000000000000D+00
+          19  24   2.019429976373283D+00   1.065187312340952D+01   1.000000000000000D+00
+          20  25   1.428003167668592D+00   2.475962450735100D+00   1.000000000000000D+00
+          21  27   1.197874264859232D+00   8.441707983339661D+00   4.303451060697367D-01
+          22  28   9.023848942003913D-01   1.113189216665625D+01   1.000000000000000D+00
+          23  29   5.508226405855795D-01   2.380830599637816D+00   1.000000000000000D+00
+          24  31   3.902893258879521D-01   5.625595817143044D+00   4.834988416747262D-01
+          25  32   3.207542206881058D-01   1.149444645298493D+01   1.000000000000000D+00
+          26  33   1.874468266118200D-01   3.632482152347445D+00   1.000000000000000D+00
+          27  34   9.575763380282112D-02   4.816497449000391D+00   1.000000000000000D+00
+          28  35   4.085145106760390D-02   2.087009347116811D+00   1.000000000000000D+00
+          29  36   1.931106005512628D-02   3.886818624052740D+00   1.000000000000000D+00
+          30  37   6.894000636920714D-03   3.198505769992936D+00   1.000000000000000D+00
+          31  38   1.443296008850287D-03   1.590265460381961D+00   1.000000000000000D+00
+          32  39   1.571766574930155D-04   3.098257002223532D-01   1.000000000000000D+00
+          33  40   1.288011779655132D-05   1.207784334505595D-02   1.000000000000000D+00
+          34  41   1.806140190993455D-06   4.587890258846915D-02   1.000000000000000D+00
+          35  42   1.769004612050548D-07   1.790537363138099D-02   1.000000000000000D+00
+          36  43   3.312164244118216D-10   6.782068546986653D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o6) [u  = 1.000005339815974, u  = 1.000009942839805,
+          (%o6) [u  = 1.000005339816132, u  = 1.000009942840108,
                   1                       2
-          u  = 1.000005339815974, u  = 1.000009942839805,
+          u  = 1.000005339816132, u  = 1.000009942840108,
            3                       4
-          u  = 1.000005339815974, u  = 1.000009942839805,
+          u  = 1.000005339816132, u  = 1.000009942840108,
            5                       6
-          u  = 1.000005339815974, u  = 1.000009942839805]
+          u  = 1.000005339816132, u  = 1.000009942840108]
            7                       8
 
      A regression problem.  The FOM is the mean square difference
@@ -23575,8 +23869,7 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
      approximate values for the parameters of F and `plot2d' displays a
      comparison of F with the observed data.
 
-          (%i1) load (lbfgs);
-          (%o1)   /usr/share/maxima/5.10.0cvs/share/lbfgs/lbfgs.mac
+          (%i1) load (lbfgs)$
           (%i2) FOM : '((1/length(X))*sum((F(X[i]) - Y[i])^2, i, 1,
                                                           length(X)));
                                          2
@@ -23616,34 +23909,32 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
           I  NFN  FUNC                    GNORM                   STEPLENGTH
           1    3  1.177820636622582D-01   9.893138394953992D-02   8.554435968992371D-01
           2    6  2.302653892214013D-02   1.180098521565904D-01   2.100000000000000D+01
-          3    8  1.496348495303005D-02   9.611201567691633D-02   5.257340567840707D-01
-          4    9  7.900460841091139D-03   1.325041647391314D-02   1.000000000000000D+00
-          5   10  7.314495451266917D-03   1.510670810312237D-02   1.000000000000000D+00
-          6   11  6.750147275936680D-03   1.914964958023047D-02   1.000000000000000D+00
-          7   12  5.850716021108205D-03   1.028089194579363D-02   1.000000000000000D+00
-          8   13  5.778664230657791D-03   3.676866074530332D-04   1.000000000000000D+00
-          9   14  5.777818823650782D-03   3.010740179797255D-04   1.000000000000000D+00
+          3    8  1.496348495303004D-02   9.611201567691624D-02   5.257340567840710D-01
+          4    9  7.900460841091138D-03   1.325041647391314D-02   1.000000000000000D+00
+          5   10  7.314495451266914D-03   1.510670810312226D-02   1.000000000000000D+00
+          6   11  6.750147275936668D-03   1.914964958023037D-02   1.000000000000000D+00
+          7   12  5.850716021108202D-03   1.028089194579382D-02   1.000000000000000D+00
+          8   13  5.778664230657800D-03   3.676866074532179D-04   1.000000000000000D+00
+          9   14  5.777818823650780D-03   3.010740179797108D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o7) [A = 1.461933911464101, B = 1.601593973254802,
-                                                     C = 2.528933072164854]
+          (%o7) [A = 1.461933911464101, B = 1.601593973254801,
+                                                     C = 2.528933072164855]
           (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
           (%o8)
 
      Gradient of FOM is specified (instead of computing it
-     automatically).
+     automatically).  Both the FOM and its gradient are passed as
+     functions to `lbfgs'.
 
           (%i1) load (lbfgs)$
-          (%i2) F(a, b, c) := (a - 5)^2 + (b - 3)^4 + (c - 2)^6;
-                                         2          4          6
-          (%o2)     F(a, b, c) := (a - 5)  + (b - 3)  + (c - 2)
-          (%i3) F_grad : map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]);
-                                              3           5
-          (%o3)          [2 (a - 5), 4 (b - 3) , 6 (c - 2) ]
-          (%i4) estimates : lbfgs ([F(a, b, c), F_grad],
-                                   [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
+          (%i2) F(a, b, c) := (a - 5)^2 + (b - 3)^4 + (c - 2)^6$
+          (%i3) define(F_grad(a, b, c),
+                       map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]))$
+          (%i4) estimates : lbfgs ([F, F_grad],
+                             [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
           *************************************************
             N=    3   NUMBER OF CORRECTIONS=25
                  INITIAL VALUES
@@ -23652,26 +23943,26 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
 
              I  NFN     FUNC                    GNORM                   STEPLENGTH
 
-             1    2     6.632967565917638D+01   6.498411132518770D+01   4.534785987412505D-03
+             1    2     6.632967565917637D+01   6.498411132518770D+01   4.534785987412505D-03
              2    3     4.368890936228036D+01   3.784147651974131D+01   1.000000000000000D+00
-             3    4     2.685298972775190D+01   1.640262125898521D+01   1.000000000000000D+00
+             3    4     2.685298972775191D+01   1.640262125898520D+01   1.000000000000000D+00
              4    5     1.909064767659852D+01   9.733664001790506D+00   1.000000000000000D+00
              5    6     1.006493272061515D+01   6.344808151880209D+00   1.000000000000000D+00
-             6    7     1.215263596054294D+00   2.204727876126879D+00   1.000000000000000D+00
-             7    8     1.080252896385334D-02   1.431637116951849D-01   1.000000000000000D+00
-             8    9     8.407195124830908D-03   1.126344579730013D-01   1.000000000000000D+00
-             9   10     5.022091686198527D-03   7.750731829225274D-02   1.000000000000000D+00
-            10   11     2.277152808939775D-03   5.032810859286795D-02   1.000000000000000D+00
-            11   12     6.489384688303218D-04   1.932007150271008D-02   1.000000000000000D+00
-            12   13     2.075791943844548D-04   6.964319310814364D-03   1.000000000000000D+00
-            13   14     7.349472666162257D-05   4.017449067849554D-03   1.000000000000000D+00
-            14   15     2.293617477985237D-05   1.334590390856715D-03   1.000000000000000D+00
-            15   16     7.683645404048675D-06   6.011057038099201D-04   1.000000000000000D+00
+             6    7     1.215263596054292D+00   2.204727876126877D+00   1.000000000000000D+00
+             7    8     1.080252896385329D-02   1.431637116951845D-01   1.000000000000000D+00
+             8    9     8.407195124830860D-03   1.126344579730008D-01   1.000000000000000D+00
+             9   10     5.022091686198525D-03   7.750731829225275D-02   1.000000000000000D+00
+            10   11     2.277152808939775D-03   5.032810859286796D-02   1.000000000000000D+00
+            11   12     6.489384688303218D-04   1.932007150271009D-02   1.000000000000000D+00
+            12   13     2.075791943844547D-04   6.964319310814365D-03   1.000000000000000D+00
+            13   14     7.349472666162258D-05   4.017449067849554D-03   1.000000000000000D+00
+            14   15     2.293617477985238D-05   1.334590390856715D-03   1.000000000000000D+00
+            15   16     7.683645404048675D-06   6.011057038099202D-04   1.000000000000000D+00
 
 
            THE MINIMIZATION TERMINATED WITHOUT DETECTING ERRORS.
            IFLAG = 0
-          (%o4) [a = 5.000086823042934, b = 3.05239542970518,
+          (%o4) [a = 5.000086823042934, b = 3.052395429705181,
                                                      c = 1.927980629919583]
 
 
@@ -26081,404 +26372,4 @@ forward recursion. Again, the exceptions are the half-integer Bessel
 functions and the associated Legendre function of the second kind.
 Numerically, the half-integer Bessel functions are evaluated using the
 SLATEC code.
-
-
-File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  Prev: Introduction to orthogonal polynomials,  Up: orthopoly
-
-70.2 Functions and Variables for orthogonal polynomials
-=======================================================
-
- -- Function: assoc_legendre_p (<n>, <m>, <x>)
-     The associated Legendre function of the first kind of degree <n>
-     and order <m>.
-
-     Reference: Abramowitz and Stegun, equations 22.5.37, page 779,
-     8.6.6 (second equation), page 334, and 8.2.5, page 333.
-
-
- -- Function: assoc_legendre_q (<n>, <m>, <x>)
-     The associated Legendre function of the second kind of degree <n>
-     and order <m>.
-
-     Reference: Abramowitz and Stegun, equation 8.5.3 and 8.1.8.
-
-
- -- Function: chebyshev_t (<n>, <x>)
-     The Chebyshev function of the first kind.
-
-     Reference: Abramowitz and Stegun, equation 22.5.47, page 779.
-
-
- -- Function: chebyshev_u (<n>, <x>)
-     The Chebyshev function of the second kind.
-
-     Reference: Abramowitz and Stegun, equation 22.5.48, page 779.
-
-
- -- Function: gen_laguerre (<n>, <a>, <x>)
-     The generalized Laguerre polynomial of degree <n>.
-
-     Reference: Abramowitz and Stegun, equation 22.5.54, page 780.
-
-
- -- Function: hermite (<n>, <x>)
-     The Hermite polynomial.
-
-     Reference: Abramowitz and Stegun, equation 22.5.55, page 780.
-
-
- -- Function: intervalp (<e>)
-     Return `true' if the input is an interval and return false if it
-     isn't.
-
-
- -- Function: jacobi_p (<n>, <a>, <b>, <x>)
-     The Jacobi polynomial.
-
-     The Jacobi polynomials are actually defined for all <a> and <b>;
-     however, the Jacobi polynomial weight `(1 - <x>)^<a> (1 +
-     <x>)^<b>' isn't integrable for `<a> <= -1' or `<b> <= -1'.
-
-     Reference: Abramowitz and Stegun, equation 22.5.42, page 779.
-
-
- -- Function: laguerre (<n>, <x>)
-     The Laguerre polynomial.
-
-     Reference: Abramowitz and Stegun, equations 22.5.16 and 22.5.54,
-     page 780.
-
-
- -- Function: legendre_p (<n>, <x>)
-     The Legendre polynomial of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 22.5.50 and 22.5.51,
-     page 779.
-
-
- -- Function: legendre_q (<n>, <x>)
-     The Legendre polynomial of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 8.5.3 and 8.1.8.
-
-
- -- Function: orthopoly_recur (<f>, <args>)
-     Returns a recursion relation for the orthogonal function family
-     <f> with arguments <args>. The recursion is with respect to the
-     polynomial degree.
-
-          (%i1) orthopoly_recur (legendre_p, [n, x]);
-                              (2 n + 1) P (x) x - n P     (x)
-                                         n           n - 1
-          (%o1)   P     (x) = -------------------------------
-                   n + 1                   n + 1
-
-     The second argument to `orthopoly_recur' must be a list with the
-     correct number of arguments for the function <f>; if it isn't,
-     Maxima signals an error.
-
-          (%i1) orthopoly_recur (jacobi_p, [n, x]);
-
-          Function jacobi_p needs 4 arguments, instead it received 2
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
-     Additionally, when <f> isn't the name of one of the families of
-     orthogonal polynomials, an error is signalled.
-
-          (%i1) orthopoly_recur (foo, [n, x]);
-
-          A recursion relation for foo isn't known to Maxima
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
-
- -- Variable: orthopoly_returns_intervals
-     Default value: `true'
-
-     When `orthopoly_returns_intervals' is `true', floating point
-     results are returned in the form `interval (<c>, <r>)', where <c>
-     is the center of an interval and <r> is its radius. The center can
-     be a complex number; in that case, the interval is a disk in the
-     complex plane.
-
-
- -- Function: orthopoly_weight (<f>, <args>)
-     Returns a three element list; the first element is the formula of
-     the weight for the orthogonal polynomial family <f> with arguments
-     given by the list <args>; the second and third elements give the
-     lower and upper endpoints of the interval of orthogonality. For
-     example,
-
-          (%i1) w : orthopoly_weight (hermite, [n, x]);
-                                      2
-                                   - x
-          (%o1)                 [%e    , - inf, inf]
-          (%i2) integrate(w[1]*hermite(3, x)*hermite(2, x), x, w[2], w[3]);
-          (%o2)                           0
-
-     The main variable of <f> must be a symbol; if it isn't, Maxima
-     signals an error.
-
-
- -- Function: pochhammer (<n>, <x>)
-     The Pochhammer symbol. For nonnegative integers <n> with `<n> <=
-     pochhammer_max_index', the expression `pochhammer (<x>, <n>)'
-     evaluates to the product `<x> (<x> + 1) (<x> + 2) ... (<x> + n -
-     1)' when `<n> > 0' and to 1 when `<n> = 0'. For negative <n>,
-     `pochhammer (<x>, <n>)' is defined as `(-1)^<n> / pochhammer (1 -
-     <x>, -<n>)'.  Thus
-
-          (%i1) pochhammer (x, 3);
-          (%o1)                   x (x + 1) (x + 2)
-          (%i2) pochhammer (x, -3);
-                                           1
-          (%o2)               - -----------------------
-                                (1 - x) (2 - x) (3 - x)
-
-     To convert a Pochhammer symbol into a quotient of gamma functions,
-     (see Abramowitz and Stegun, equation 6.1.22) use `makegamma'; for
-     example
-
-          (%i1) makegamma (pochhammer (x, n));
-                                    gamma(x + n)
-          (%o1)                     ------------
-                                      gamma(x)
-
-     When <n> exceeds `pochhammer_max_index' or when <n> is symbolic,
-     `pochhammer' returns a noun form.
-
-          (%i1) pochhammer (x, n);
-          (%o1)                         (x)
-                                           n
-
-
- -- Variable: pochhammer_max_index
-     Default value: 100
-
-     `pochhammer (<n>, <x>)' expands to a product if and only if `<n>
-     <= pochhammer_max_index'.
-
-     Examples:
-
-          (%i1) pochhammer (x, 3), pochhammer_max_index : 3;
-          (%o1)                   x (x + 1) (x + 2)
-          (%i2) pochhammer (x, 4), pochhammer_max_index : 3;
-          (%o2)                         (x)
-                                           4
-
-     Reference: Abramowitz and Stegun, equation 6.1.16, page 256.
-
-
- -- Function: spherical_bessel_j (<n>, <x>)
-     The spherical Bessel function of the first kind.
-
-     Reference: Abramowitz and Stegun, equations 10.1.8, page 437 and
-     10.1.15, page 439.
-
-
- -- Function: spherical_bessel_y (<n>, <x>)
-     The spherical Bessel function of the second kind.
-
-     Reference: Abramowitz and Stegun, equations 10.1.9, page 437 and
-     10.1.15, page 439.
-
-
- -- Function: spherical_hankel1 (<n>, <x>)
-     The spherical Hankel function of the first kind.
-
-     Reference: Abramowitz and Stegun, equation 10.1.36, page 439.
-
-
- -- Function: spherical_hankel2 (<n>, <x>)
-     The spherical Hankel function of the second kind.
-
-     Reference: Abramowitz and Stegun, equation 10.1.17, page 439.
-
-
- -- Function: spherical_harmonic (<n>, <m>, <x>, <y>)
-     The spherical harmonic function.
-
-     Reference: Merzbacher 9.64.
-
-
- -- Function: unit_step (<x>)
-     The left-continuous unit step function; thus `unit_step (<x>)'
-     vanishes for `<x> <= 0' and equals 1 for `<x> > 0'.
-
-     If you want a unit step function that takes on the value 1/2 at
-     zero, use `(1 + signum (<x>))/2'.
-
-
- -- Function: ultraspherical (<n>, <a>, <x>)
-     The ultraspherical polynomial (also known as the Gegenbauer
-     polynomial).
-
-     Reference: Abramowitz and Stegun, equation 22.5.46, page 779.
-
-
-
-File: maxima.info,  Node: romberg,  Next: simplex,  Prev: orthopoly,  Up: Top
-
-71 romberg
-**********
-
-* Menu:
-
-* Functions and Variables for romberg::
-
-
-File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: Top
-
-71.1 Functions and Variables for romberg
-========================================
-
- -- Function: romberg (<expr>, <x>, <a>, <b>)
- -- Function: romberg (<F>, <a>, <b>)
-     Computes a numerical integration by Romberg's method.
-
-     `romberg(<expr>, <x>, <a>, <b>)' returns an estimate of the
-     integral `integrate(<expr>, <x>, <a>, <b>)'.  <expr> must be an
-     expression which evaluates to a floating point value when <x> is
-     bound to a floating point value.
-
-     `romberg(<F>, <a>, <b>)' returns an estimate of the integral
-     `integrate(<F>(x), x, <a>, <b>)' where `x' represents the unnamed,
-     sole argument of <F>; the actual argument is not named `x'.  <F>
-     must be a Maxima or Lisp function which returns a floating point
-     value when the argument is a floating point value.  <F> may name a
-     translated or compiled Maxima function.
-
-     The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
-     when the absolute difference between successive approximations is
-     less than `rombergabs', or the relative difference in successive
-     approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
-     on `romberg'.
-
-     `romberg' halves the stepsize at most `rombergit' times before it
-     gives up; the maximum number of function evaluations is therefore
-     `2^rombergit'.  If the error criterion established by `rombergabs'
-     and `rombergtol' is not satisfied, `romberg' prints an error
-     message.  `romberg' always makes at least `rombergmin' iterations;
-     this is a heuristic intended to prevent spurious termination when
-     the integrand is oscillatory.
-
-     `romberg' repeatedly evaluates the integrand after binding the
-     variable of integration to a specific value (and not before).
-     This evaluation policy makes it possible to nest calls to
-     `romberg', to compute multidimensional integrals.  However, the
-     error calculations do not take the errors of nested integrations
-     into account, so errors may be underestimated.  Also, methods
-     devised especially for multidimensional problems may yield the
-     same accuracy with fewer function evaluations.
-
-     `load(romberg)' loads this function.
-
-     See also `QUADPACK', a collection of numerical integration
-     functions.
-
-     Examples:
-
-     A 1-dimensional integration.
-
-          (%i1) load (romberg);
-          (%o1)    /usr/share/maxima/5.11.0/share/numeric/romberg.lisp
-          (%i2) f(x) := 1/((x - 1)^2 + 1/100) + 1/((x - 2)^2 + 1/1000)
-                        + 1/((x - 3)^2 + 1/200);
-                              1                 1                1
-          (%o2) f(x) := -------------- + --------------- + --------------
-                               2    1           2    1            2    1
-                        (x - 1)  + ---   (x - 2)  + ----   (x - 3)  + ---
-                                   100              1000              200
-          (%i3) rombergtol : 1e-6;
-          (%o3)                 9.9999999999999995E-7
-          (%i4) rombergit : 15;
-          (%o4)                          15
-          (%i5) estimate : romberg (f(x), x, -5, 5);
-          (%o5)                   173.6730736617464
-          (%i6) exact : integrate (f(x), x, -5, 5);
-          (%o6) 10 sqrt(10) atan(70 sqrt(10))
-           + 10 sqrt(10) atan(30 sqrt(10)) + 10 sqrt(2) atan(80 sqrt(2))
-           + 10 sqrt(2) atan(20 sqrt(2)) + 10 atan(60) + 10 atan(40)
-          (%i7) abs (estimate - exact) / exact, numer;
-          (%o7)                7.5527060865060088E-11
-
-     A 2-dimensional integration, implemented by nested calls to
-     `romberg'.
-
-          (%i1) load (romberg);
-          (%o1)    /usr/share/maxima/5.11.0/share/numeric/romberg.lisp
-          (%i2) g(x, y) := x*y / (x + y);
-                                              x y
-          (%o2)                   g(x, y) := -----
-                                             x + y
-          (%i3) rombergtol : 1e-6;
-          (%o3)                 9.9999999999999995E-7
-          (%i4) estimate : romberg (romberg (g(x, y), y, 0, x/2), x, 1, 3);
-          (%o4)                   0.81930239628356
-          (%i5) assume (x > 0);
-          (%o5)                        [x > 0]
-          (%i6) integrate (integrate (g(x, y), y, 0, x/2), x, 1, 3);
-                                                    3
-                                              2 log(-) - 1
-                              9                     2        9
-          (%o6)       - 9 log(-) + 9 log(3) + ------------ + -
-                              2                    6         2
-          (%i7) exact : radcan (%);
-                              26 log(3) - 26 log(2) - 13
-          (%o7)             - --------------------------
-                                          3
-          (%i8) abs (estimate - exact) / exact, numer;
-          (%o8)                1.3711979871851024E-10
-
-
- -- Option variable: rombergabs
-     Default value: 0.0
-
-     The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
-     when the absolute difference between successive approximations is
-     less than `rombergabs', or the relative difference in successive
-     approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
-     on `romberg'.
-
-     See also `rombergit' and `rombergmin'.
-
-
- -- Option variable: rombergit
-     Default value: 11
-
-     `romberg' halves the stepsize at most `rombergit' times before it
-     gives up; the maximum number of function evaluations is therefore
-     `2^rombergit'.  `romberg' always makes at least `rombergmin'
-     iterations; this is a heuristic intended to prevent spurious
-     termination when the integrand is oscillatory.
-
-     See also `rombergabs' and `rombergtol'.
-
-
- -- Option variable: rombergmin
-     Default value: 0
-
-     `romberg' always makes at least `rombergmin' iterations; this is a
-     heuristic intended to prevent spurious termination when the
-     integrand is oscillatory.
-
-     See also `rombergit', `rombergabs', and `rombergtol'.
-
-
- -- Option variable: rombergtol
-     Default value: 1e-4
-
-     The accuracy of `romberg' is governed by the global variables
-     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
-     when the absolute difference between successive approximations is
-     less than `rombergabs', or the relative difference in successive
-     approximations is less than `rombergtol'.  Thus when `rombergabs'
-     is 0.0 (the default) only the relative error test has any effect
-     on `romberg'.
-
-     See also `rombergit' and `rombergmin'.
-
 
