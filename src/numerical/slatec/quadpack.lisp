@@ -337,17 +337,14 @@
 (defun $quad_control (parameter &rest new-value)
   (quad-control parameter (if new-value (car new-value))))
 
+
 (macrolet
     ((frob (mname iname args valid-keys)
-       (let* ((keylist (gensym "KEY-LIST-"))
-	      (options (gensym "OPTIONS-")))
-	 `(defun ,mname (,@args &rest ,options)
-	    (let
-		((,keylist (lispify-maxima-keyword-options ,options ',valid-keys))
-		 ;; BIND EVIL SPECIAL VARIABLE *PLOT-REALPART* HERE ...
-		 (*plot-realpart* nil))
-	      (declare (special *plot-realpart*))
-	      (apply ',iname ,@args ,keylist))))))
+       `(defun-checked ,mname ((,@args) ,@valid-keys)
+	  ;; BIND EVIL SPECIAL VARIABLE *PLOT-REALPART* HERE ...
+	  (let ((*plot-realpart* nil))
+	    (declare (special *plot-realpart*))
+	    (apply ',iname ,@args keylist)))))
   (frob $quad_qag quad-qag (fun var a b key) ($epsrel $limit $epsabs))
   (frob $quad_qags quad-qags (fun var a b) ($epsrel $limit $epsabs))
   (frob $quad_qagi quad-qagi (fun var a b) ($epsrel $limit $epsabs))
@@ -356,7 +353,7 @@
   (frob $quad_qawo quad-qawo (fun var a b omega trig) ($epsrel $limit $epsabs $maxp1))
   (frob $quad_qaws quad-qaws (fun var a b alfa beta wfun) ($epsrel $limit $epsabs))
   (frob $quad_qagp quad-qagp (fun var a b points) ($epsrel $limit $epsabs)))
-  
+
 ;; Tests
 ;;
 ;; These tests were taken from the QUADPACK book.

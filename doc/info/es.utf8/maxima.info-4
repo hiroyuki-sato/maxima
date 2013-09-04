@@ -1,12 +1,394 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.30 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.31 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).  Un sistema de cálculo simbólico
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Funciones para la resolución numérica de ecuaciones diferenciales,  Prev: Introducción a la resolución numérica de ecuaciones diferenciales,  Up: Métodos numéricos
+
+22.4 Funciones para la resolución numérica de ecuaciones diferenciales
+======================================================================
+
+ -- Función: plotdf (<dydx>, ...options...)
+ -- Función: plotdf (<dvdu>, `['<u>,<v>`]', ...options...)
+ -- Función: plotdf (`['<dxdt>,<dydt>`]', ...options...)
+ -- Función: plotdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options...)
+     Dibuja un campo de direcciones en dos dimensiones <x> y <y>.
+
+     <dydx>, <dxdt> y <dydt> son expresiones que dependen de <x> y <y>.
+     Además de esas dos variables, las dos expresiones pueden depender
+     de un conjunto de parámetros, con valores numéricos que son dados
+     por medio de la opción `parameters' (la sintaxis de esa opción se
+     explica mas al frente), o con un rango de posibles valores
+     definidos con la opción <sliders>.
+
+     Varias otras opciones se pueden incluir dentro del comando, o
+     seleccionadas en el menú.  Haciendo click en un punto del gráfico
+     se puede hacer que sea dibujada la curva integral que pasa por ese
+     punto; lo mismo puede ser hecho dando las coordenadas del punto
+     con la opción `trajectory_at' dentro del comando plotdf. La
+     dirección de integración se puede controlar con la opción
+     `direction', que acepta valores de _forward_, _backward_ ou
+     _both_. El número de pasos realizado en la integración numérica se
+     controla con la opción `nsteps' y el incremento del tiempo en cada
+     paso con la opción `tstep'. Se usa el método de Adams Moulton para
+     hacer la integración numérica; también es posible cambiar para el
+     método de Runge-Kutta de cuarto orden con ajuste de pasos.
+
+     Menú de la ventana del gráfico:
+
+     El menú de la ventana gráfica dispone de las siguientes opciones:
+     _Zoom_, que permite cambiar el comportamiento del ratón, de manera
+     que hará posible el hacer zoom en la región del gráfico haciendo
+     clic con el botón izquierdo. Cada clic agranda la imagen
+     manteniendo como centro de la misma el punto sobre el cual se ha
+     hecho clic. Manteniendo pulsada la tecla <Shift> mientras se hace
+     clic, retrocede al tamaño anterior. Para reanudar el cálculo de las
+     trayectorias cuando se hace clic, seleccine la opción _Integrate_
+     del menú.
+
+     La opción _Config_ del menú se puede utilizar para cambiar la(s)
+     EDO(S) y algunos otros ajustes. Después de hacer los cambios, se
+     debe utilizar la opción _Replot_ para activar los nuevos ajustes.
+     Si en el campo _Trajectory at_ del menú de diálogo de _Config_ se
+     introducen un par de coordenadas y luego se pulsa la tecla
+     <retorno>, se mostrará una nueva curva integral, además de las ya
+     dibujadas.  Si se selecciona la opción _Replot_, sólo se mostrará
+     la última curva integral seleccionada.
+
+     Manteniendo pulsado el botón derecho del ratón mientras se mueve el
+     cursor, se puede arrastrar el gráfico horizontal y verticalmente.
+     Otros parámetros, como pueden ser el número de pasos, el valor
+     inicial de <t>, las coordenadas del centro y el radio, pueden
+     cambiarse en el submenú de la opción _Config_.
+
+     Con la opción _Save_, se puede obtener una copia del gráfico en
+     una impresora Postscript o guardarlo en un fichero Postscript. Para
+     optar entre la impresión o guardar en fichero, se debe seleccionar
+     _Print Options_ en la ventana de diálogo de _Config_. Una vez
+     cubiertos los campos de la ventana de diálogo de _Save_, será
+     necesario seleccionar la opción _Save_ del primer menú para crear
+     el fichero o imprimir el gráfico.
+
+     Opciones gráficas:
+
+     La función `plotdf' admite varias opciones, cada una de las cuales
+     es una lista de dos o más elementos. El primer elemento es el
+     nombre de la opción, y el resto está formado por el valor o
+     valores asignados a dicha opción.
+
+     La función `plotdf' reconoce las siguientes opciones:
+
+        * "tstep" establece la amplitud de los incrementos en la
+          variable independiente <t>, utilizados para calcular la curva
+          integral. Si se aporta sólo una expresión <dydx>, la variable
+          <x> será directamente proporcional a <t>.  El valor por
+          defecto es 0.1.
+
+        * "nsteps" establece el número de pasos de longitud `tstep' que
+          se utilizarán en la variable independiente para calcular la
+          curva integral.  El valor por defecto es 100.
+
+        * "direction" establece la dirección de la variable
+          independiente que será seguida para calcular una curva
+          integral.  Valores posibles son: `forward', para hacer que la
+          variable independiente aumente `nsteps' veces, con
+          incrementos `tstep'; `backward', para hacer que la variable
+          independiente disminuya; `both', para extender la curva
+          integral `nsteps' pasos hacia adelante y `nsteps' pasos hacia
+          atrás.  Las palabras `right' y `left' se pueden utilizar como
+          sinónimos de `forward' y `backward'.  El valor por defecto es
+          `both'.
+
+        * "tinitial" establece el valor inicial de la variable <t>
+          utilizado para calcular curvas integrales. Puesto que las
+          ecuaciones diferenciales son autónomas, esta opción sólo
+          aparecerá en los gráficos de las curvas como funciones de <t>.
+          El valor por defecto es 0.
+
+        * "versus_t" se utiliza para crear una segunda ventana gráfica,
+          con el gráfico de una curva integral, como dos funciones <x>,
+          <y>, de variable independiente <t>. Si se le da a `versus_t'
+          cualquier valor diferente de 0, se mostrará la segunda
+          ventana gráfica, la cual incluye otro menú, similar al de la
+          ventana principal.  El valor por defecto es 0.
+
+        * "trajectory_at" establece las coordenadas <xinitial> y
+          <yinitial> para el extremo inicial de la curva integral.  No
+          tiene asignado valor por defecto.
+
+        * "parameters" establece una lista de parámetros, junto con sus
+          valores numéricos, que son utilizados en la definición de la
+          ecuación diferencial. Los nombres de los parámetros y sus
+          valores deben escribirse en formato de cadena de caracteres
+          como una secuencia de pares `nombre=valor' separados por
+          comas.
+
+        * "sliders" establece una lista de parámetros que se cambiarán
+          interactivamente utilizando barras de deslizamiento, así como
+          los rangos de variación de dichos parámetros.  Los nombres de
+          los parámetros y sus rangos deben escribirse en formato de
+          cadena de caracteres como una secuencia de pares
+          `nombre=min:max' separados por comas.
+
+        * "xfun" establece una cadena de caracteres con funciones de
+          <x> separadas por puntos y comas para ser representadas por
+          encima del campo de direcciones. Estas funciones serán
+          interpretadas por Tcl, no por Maxima.
+
+        * "xradius" es la mitad de la longitud del rango de valores a
+          representar en la dirección x.  El valor por defecto es 10.
+
+        * "yradius" es la mitad de la longitud del rango de valores a
+          representar en la dirección y.  El valor por defecto es 10.
+
+        * "xcenter" es la coordenada x del punto situado en el centro
+          del gráfico.  El valor por defecto es 0.
+
+        * "ycenter" es la coordenada y del punto situado en el centro
+          del gráfico.  El valor por defecto es 0.
+
+        * "width" establece el ancho de la ventana gráfica en píxeles.
+          El valor por defecto es 500.
+
+        * "height" establece la altura de la ventana gráfica en píxeles.
+          El valor por defecto es 500.
+
+
+     Ejemplos:
+
+     NOTA: Dependiendo de la interface que se use para Maxima, las
+     funciones que usan `openmath', incluida `plotdf', pueden
+     desencadenar un fallo si terminan en punto y coma, en vez del
+     símbolo de dólar. Para evitar problemas, se usará el símbolo de
+     dólar en todos ejemplos.
+
+        * Para mostrar el campo de direcciones de la ecuación
+          diferencial y' = exp(-x) + y y la solución que pasa por (2,
+          -0.1):
+               (%i1) load("plotdf")$
+
+               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1]);
+
+        * Para mostrar el campo de direcciones de la ecuación diff(y,x)
+          = x - y^2 y la solución de condición inicial y(-1) = 3, se
+          puede utilizar la sentencia:
+               (%i3) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
+                         [trajectory_at,-1,3], [direction,forward],
+                         [yradius,5],[xcenter,6]);
+          El gráfico también muestra la función y = sqrt(x).
+
+        * El siguiente ejemplo muestra el campo de direcciones de un
+          oscilador armónico, definido por las ecuaciones dx/dt = y y
+          dy/dt = -k*x/m, y la curva integral que pasa por (x,y) =
+          (6,0), con una barra de deslizamiento que permitirá cambiar
+          el valor de m interactivamente (k permanece fijo a 2):
+               (%i4) plotdf([y,-k*x/m],[parameters,"m=2,k=2"],
+                           [sliders,"m=1:5"], [trajectory_at,6,0]);
+
+        * Para representar el campo de direcciones de la ecuación de
+          Duffing, m*x"+c*x'+k*x+b*x^3 = 0, se introduce la variable
+          y=x' y se hace:
+               (%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
+                             [parameters,"k=-1,m=1.0,c=0,b=1"],
+                             [sliders,"k=-2:2,m=-1:1"],[tstep,0.1]);
+
+        * El campo de direcciones de un péndulo amortiguado, incluyendo
+          la solución para condiciones iniciales dadas, con una barra
+          de deslizamiento que se puede utilizar para cambiar el valor
+          de la masa, m, y con el gráfico de las dos variables de
+          estado como funciones del tiempo:
+
+               (%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
+                        [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
+                        [trajectory_at,1.05,-9],[tstep,0.01],
+                        [xradius,6],[yradius,14],
+                        [xcenter,-4],[direction,forward],[nsteps,300],
+                        [sliders,"m=0.1:1"], [versus_t,1]);
+
+
+
+ -- Función: ploteq (<exp>, ...options...)
+     Dibuja curvas equipotenciales para <exp>, que debe ser una
+     expresión dependiente de dos variables. Las curvas se obtienen
+     integrando la ecuación diferencial que define las trayectorias
+     ortogonales a las soluciones del sistema autónomo que se obtiene
+     del gradiente de la expresión dada.  El dibujo también puede
+     mostrar las curvas integrales de ese sistema de gradientes (opción
+     `fieldlines').
+
+     Este programa también necesita Xmaxima, incluso si se ejecuta
+     Maxima desde una consola, pues el dibujo se creará por el código
+     Tk de Xmaxima.  Por defecto, la región dibujada estará vacía hasta
+     que el usuario haga clic en un punto, dé sus coordenadas a través
+     del menú o mediante la opción `trajectory_at'.
+
+     La mayor parte de opciones aceptadas por `plotdf' se pueden
+     utilizar también con `ploteq' y el aspecto del interfaz es el
+     mismo que el descrito para `plotdf'.
+
+     Ejemplo:
+
+          (%i1) V: 900/((x+1)^2+y^2)^(1/2)-900/((x-1)^2+y^2)^(1/2)$
+          (%i2) ploteq(V,[x,-2,2],[y,-2,2],[fieldlines,"blue"])$
+
+     Haciendo clic sobre un punto se dibujará la curva equipotencial
+     que pasa por ese punto (en rojo) y la trayectoria ortogonal (en
+     azul).
+
+
+ -- Función: rk (<ODE>, <var>, <initial>, <dominio>)
+ -- Función: rk ([<ODE1>,...,<ODEm>], [<v1>,...,<vm>],
+          [<init1>,...,<initm>], <dominio>)
+     La primera forma se usa para resolver numéricamente una ecuación
+     diferencial ordinaria de primer orden (EDO), y la segunda forma
+     resuelve numéricamente un sistema de <m> de esas ecuaciones,
+     usando el método de Runge-Kutta de cuarto orden. <var> representa
+     la variable dependiente.  EDO debe ser una expresión que dependa
+     únicamente de las variables independiente y dependente, y define
+     la derivada de la variable dependiente en función de la variable
+     independiente.
+
+     La variable independiente se representa con <dominio>, que debe ser
+     una lista con cuatro elementos, como por ejemplo:
+          [t, 0, 10, 0.1]
+     el primer elemento de la lista identifica la variable
+     independiente, el segundo y tercer elementos son los valores
+     inicial y final para esa variable, y el último elemento da el
+     valor de los incrementos que deberán ser usados dentro de ese
+     intervalo.
+
+     Si se van a resolver <m> ecuaciones, deberá haber <m> variables
+     dependientes <v1>, <v2>, ..., <vm>. Los valores iniciales para
+     esas variables serán <inic1>, <inic2>, ..., <inicm>. Continuará
+     existiendo apenas una variable independiente definida por la lista
+     <domain>, como en el caso anterior. <EDO1>, ..., <EDOm> son las
+     expresiones que definen las derivadas de cada una de las variables
+     dependientes en función de la variable independiente. Las únicas
+     variables que pueden aparecer en cada una de esas expresiones son
+     la variable independiente y cualquiera de las variables
+     dependientes. Es importante que las derivadas <EDO1>, ..., <EDOm>
+     sean colocadas en la lista en el mismo orden en que fueron
+     agrupadas las variables dependientes; por ejemplo, el tercer
+     elemento de la lista será interpretado como la derivada de la
+     tercera variable dependiente.
+
+     El programa intenta integrar las ecuaciones desde el valor inicial
+     de la variable independiente, hasta el valor final, usando
+     incrementos fijos. Si en algún paso una de las variables
+     dependientes toma un valor absoluto muy grande, la integración
+     será suspendida en ese punto.  El resultado será una lista con un
+     número de elementos igual al número de iteraciones realizadas.
+     Cada elemento en la lista de resultados es también una lista con
+     <m>+1 elementos: el valor de la variable independiente, seguido de
+     los valores de las variables dependientes correspondientes a ese
+     punto.
+
+
+
+File: maxima.info,  Node: Matrices y Álgebra Lineal,  Next: Afines,  Prev: Métodos numéricos,  Up: Top
+
+23 Matrices y Álgebra Lineal
+****************************
+
+* Menu:
+
+* Introducción a las matrices y el álgebra lineal::
+* Funciones y variables para las matrices y el álgebra lineal::
+
+
+File: maxima.info,  Node: Introducción a las matrices y el álgebra lineal,  Next: Funciones y variables para las matrices y el álgebra lineal,  Prev: Matrices y Álgebra Lineal,  Up: Matrices y Álgebra Lineal
+
+23.1 Introducción a las matrices y el álgebra lineal
+====================================================
+
+* Menu:
+
+* Operador punto::
+* Vectores::
+* Paquete eigen::
+
+
+File: maxima.info,  Node: Operador punto,  Next: Vectores,  Prev: Introducción a las matrices y el álgebra lineal,  Up: Introducción a las matrices y el álgebra lineal
+
+23.1.1 Operador punto
+---------------------
+
+El operador  `.' realiza la multiplicación matricial y el producto
+escalar.  Cuando los operandos son dos matrices columna o matrices fila
+`a' y `b', la expresión `a.b' es equivalente a `sum (a[i]*b[i], i, 1,
+length(a))'.  Si `a' y `b' no son complejos, estamos en el caso del
+producto escalar.  En caso de ser `a' y `b' vectores en el campo
+complejo, el producto escalar se define como `conjugate(a).b'; la
+función `innerproduct' del paquete `eigen' realiza el producto escalar
+complejo.
+
+   Cuando los operandos son matrices de índole más general, el
+resultado que se obtiene es el producto matricial de `a' por `b'.  El
+número de filas de `b' debe ser igual al número de columnas de `a', y
+el resultado tiene un número de filas igual al de `a' y un número de
+columnas igual al de `b'.
+
+   Al objeto de distinguir `.' como operador aritmético del punto
+decimal de la notación en coma flotante, puede ser necesario dejar
+espacios a ambos lados.  Por ejemplo, `5.e3' es `5000.0' pero `5 . e3'
+es `5' por `e3'.
+
+   Hay algunas variables globales que controlan la simplificación de
+expresiones que contengan al operador `.', a saber, `dot',
+`dot0nscsimp', `dot0simp', `dot1simp', `dotassoc', `dotconstrules',
+`dotdistrib', `dotexptsimp', `dotident', y `dotscrules'.
+
+
+File: maxima.info,  Node: Vectores,  Next: Paquete eigen,  Prev: Operador punto,  Up: Introducción a las matrices y el álgebra lineal
+
+23.1.2 Vectores
+---------------
+
+El paquete `vect' define funciones para análisis vectorial. Para cargar
+el paquete en memoria se debe hacer `load ("vect")'  y con `demo
+("vect")' se presenta una demostración sobre las funciones del paquete.
+
+   El paquete de análisis vectorial puede combinar y simplificar
+expresiones simbólicas que incluyan productos escalares y vectoriales,
+junto con los operadores de gradiente, divergencia, rotacional y
+laplaciano. La distribución de estos operadores sobre sumas o productos
+se gobierna por ciertas variables, al igual que otras transformaciones,
+incluida la expansión en componentes en cualquier sistema de
+coordenadas especificado.  También hay funciones para obtener el
+potencial escalar o vectorial de un campo.
+
+   El paquete `vect' contiene las siguientes funciones: `vectorsimp',
+`scalefactors', `express', `potential' y `vectorpotential'.
+
+   Por defecto, el paquete `vect' no declara el operador `.' como
+conmutativo.  Para transformarlo en conmutativo, se debe ejecutar
+previamente la instrucción `declare(".", commutative)'.
+
+
+File: maxima.info,  Node: Paquete eigen,  Prev: Vectores,  Up: Introducción a las matrices y el álgebra lineal
+
+23.1.3 Paquete eigen
+--------------------
+
+El paquete `eigen' contiene funciones para el cálculo simbólico de
+valores y vectores propios. Maxima carga el paquete automáticamente si
+se hace una llamada a cualquiera de las dos funciones `eigenvalues' o
+`eigenvectors'. El paquete se puede cargar de forma explícita mediante
+`load ("eigen")'.
+
+   La instrucción `demo ("eigen")' hace una demostración de las
+funciones de este paquete; `batch ("eigen")' realiza la misma
+demostración pero sin pausas entre los sucesivos cálculos.
+
+   Las funciones del paquete `eigen' son `innerproduct', `unitvector',
+`columnvector', `gramschmidt', `eigenvalues', `eigenvectors',
+`uniteigenvectors' y `similaritytransform'.
 
 
 File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra lineal,  Prev: Introducción a las matrices y el álgebra lineal,  Up: Matrices y Álgebra Lineal
@@ -4772,7 +5154,7 @@ y no deberían redefinirse:
        yesp()
 
 
-File: maxima.info,  Node: atensor,  Next: Series,  Prev: ctensor,  Up: Top
+File: maxima.info,  Node: atensor,  Next: Sumas productos y series,  Prev: ctensor,  Up: Top
 
 27 atensor
 **********
@@ -5019,23 +5401,25 @@ File: maxima.info,  Node: Funciones y variables para atensor,  Prev: Introducci�
 
 
 
-File: maxima.info,  Node: Series,  Next: Teoría de Números,  Prev: atensor,  Up: Top
+File: maxima.info,  Node: Sumas productos y series,  Next: Teoría de Números,  Prev: atensor,  Up: Top
 
-28 Series
-*********
+28 Sumas productos y series
+***************************
 
 * Menu:
 
-* Sumas y productos::
+* Funciones y variables para sumas y productos::
 * Introducción a las series::
 * Funciones y variables para las series::
-* Series de Poisson::
+* Introducción a las series de Fourier::
+* Funciones y variables para series de Fourier::
+* Funciones y variables para series de Poisson::
 
 
-File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series,  Prev: Series,  Up: Series
+File: maxima.info,  Node: Funciones y variables para sumas y productos,  Next: Introducción a las series,  Prev: Sumas productos y series,  Up: Sumas productos y series
 
-28.1 Sumas y productos
-======================
+28.1 Funciones y variables para sumas y productos
+=================================================
 
  -- Función: bashindices (<expr>)
      Transforma la expresión <expr> dándole a cada sumatorio y producto
@@ -5332,7 +5716,7 @@ File: maxima.info,  Node: Sumas y productos,  Next: Introducción a las series, 
 
 
 
-File: maxima.info,  Node: Introducción a las series,  Next: Funciones y variables para las series,  Prev: Sumas y productos,  Up: Series
+File: maxima.info,  Node: Introducción a las series,  Next: Funciones y variables para las series,  Prev: Funciones y variables para sumas y productos,  Up: Sumas productos y series
 
 28.2 Introducción a las series
 ==============================
@@ -5340,12 +5724,12 @@ File: maxima.info,  Node: Introducción a las series,  Next: Funciones y variabl
 Maxima dispone de las funciones `taylor' y `powerseries' para calcular
 las series de las funciones diferenciables. También tiene herramientas
 como `nusum' capaces de encontrar la expresión compacta de algunas
-series. Operaciones como la suma y la multiplicación operan de la forma
-habitual en el contexto de las series. Esta sección presenta las
+series.  Operaciones como la suma y la multiplicación operan de la
+forma habitual en el contexto de las series. Esta sección presenta las
 variables globales que controlan la expansión.
 
 
-File: maxima.info,  Node: Funciones y variables para las series,  Next: Series de Poisson,  Prev: Introducción a las series,  Up: Series
+File: maxima.info,  Node: Funciones y variables para las series,  Next: Introducción a las series de Fourier,  Prev: Introducción a las series,  Up: Sumas productos y series
 
 28.3 Funciones y variables para las series
 ==========================================
@@ -6006,10 +6390,112 @@ File: maxima.info,  Node: Funciones y variables para las series,  Next: Series d
 
 
 
-File: maxima.info,  Node: Series de Poisson,  Prev: Funciones y variables para las series,  Up: Series
+File: maxima.info,  Node: Introducción a las series de Fourier,  Next: Funciones y variables para series de Fourier,  Prev: Funciones y variables para las series,  Up: Sumas productos y series
 
-28.4 Series de Poisson
-======================
+28.4 Introducción a las series de Fourier
+=========================================
+
+El paquete `fourie' contiene funciones para el cálculo simbólico de
+series de Fourier. Hay funciones en el paquete `fourie' para calcular
+los coeficientes y para manipular las expresiones.
+
+
+File: maxima.info,  Node: Funciones y variables para series de Fourier,  Next: Funciones y variables para series de Poisson,  Prev: Introducción a las series de Fourier,  Up: Sumas productos y series
+
+28.5 Funciones y variables para series de Fourier
+=================================================
+
+ -- Función: equalp (<x>, <y>)
+     Devuelve `true' si `equal (<x>, <y>)', en otro caso devuelve
+     `false'. No devuelve el mensaje de error que se obtiene de  `equal
+     (x, y)' en un caso como éste.
+
+ -- Función: remfun (<f>, <expr>)
+ -- Función: remfun (<f>, <expr>, <x>)
+     La llamada `remfun (<f>, <expr>)' reemplaza todas las
+     subexpresiones `<f> (<arg>)' por <arg> en <expr>.
+
+     La llamada `remfun (<f>, <expr>, <x>)' reemplaza todas las
+     subexpresiones `<f> (<arg>)' por <arg> en <expr> sólo si <arg>
+     contiene a la variable <x>.
+
+ -- Función: funp (<f>, <expr>)
+ -- Función: funp (<f>, <expr>, <x>)
+     La llamada `funp (<f>, <expr>)' devuelve `true' si <expr> contiene
+     la función <f>.
+
+     La llamada `funp (<f>, <expr>, <x>)' devuelve `true' si <expr>
+     contiene la función <f> y la variable <x> está presente en el
+     argumento de alguna de las presencias de <f>.
+
+ -- Función: absint (<f>, <x>, <halfplane>)
+ -- Función: absint (<f>, <x>)
+ -- Función: absint (<f>, <x>, <a>, <b>)
+     La llamada `absint (<f>, <x>, <halfplane>)' devuelve la integral
+     indefinida de <f> con respecto a <x> en el semiplano dado (`pos',
+     `neg' o `both'). La función <f> puede contener expresiones de la
+     forma `abs (x)', `abs (sin (x))', `abs (a) * exp (-abs (b) * abs
+     (x))'.
+
+     La llamada `absint (<f>, <x>)' equivale a `absint (<f>, <x>, pos)'.
+
+     La llamada `absint (<f>, <x>, <a>, <b>)' devuelve la integral
+     definida de <f> con respecto a  <x> de <a> a <b>.
+
+ -- Función: fourier (<f>, <x>, <p>)
+     Devuelve una lista con los coeficientes de Fourier de `<f>(<x>)'
+     definida en el intervalo `[-p, p]'.
+
+ -- Función: foursimp (<l>)
+     Simplifica `sin (n %pi)' a 0 si `sinnpiflag' vale `true' y `cos (n
+     %pi)' a `(-1)^n' si `cosnpiflag' vale `true'.
+
+ -- Variable opcional: sinnpiflag
+     Valor por defecto: `true'
+
+     Véase `foursimp'.
+
+ -- Variable opcional: cosnpiflag
+     Valor por defecto: `true'
+
+     Véase `foursimp'.
+
+
+ -- Función: fourexpand (<l>, <x>, <p>, <limit>)
+     Calcula y devuelve la serie de Fourier a partir de la lista de los
+     coeficientes de Fourier <l> hasta el término <limit> (<limit>
+     puede ser `inf'). Los argumentos <x> y <p> tienen el mismo
+     significado que en `fourier'.
+
+ -- Función: fourcos (<f>, <x>, <p>)
+     Devuelve los coeficientes de los cosenos de Fourier de `<f>(<x>)'
+     definida en `[0, <p>]'.
+
+ -- Función: foursin (<f>, <x>, <p>)
+     Devuelve los coeficientes de los senos de Fourier de `<f>(<x>)'
+     definida en `[0, <p>]'.
+
+ -- Función: totalfourier (<f>, <x>, <p>)
+     Devuelve `fourexpand (foursimp (fourier (<f>, <x>, <p>)), <x>,
+     <p>, 'inf)'.
+
+ -- Función: fourint (<f>, <x>)
+     Calcula y devuelve la lista de los coeficientes integrales de
+     Fourier de `<f>(<x>)' definida en `[minf, inf]'.
+
+ -- Función: fourintcos (<f>, <x>)
+     Devuelve los coeficientes integrales de los cosenos  `<f>(<x>)' en
+     `[0, inf]'.
+
+ -- Función: fourintsin (<f>, <x>)
+     Devuelve los coeficientes integrales de los senos  `<f>(<x>)' en
+     `[0, inf]'.
+
+
+File: maxima.info,  Node: Funciones y variables para series de Poisson,  Prev: Funciones y variables para series de Fourier,  Up: Sumas productos y series
+
+28.6 Funciones y variables para series de Poisson
+=================================================
 
  -- Función: intopois (<a>)
      Convierte <a> en un codificado Poisson.
@@ -6088,7 +6574,7 @@ File: maxima.info,  Node: Series de Poisson,  Prev: Funciones y variables para l
 
 
 
-File: maxima.info,  Node: Teoría de Números,  Next: Simetrías,  Prev: Series,  Up: Top
+File: maxima.info,  Node: Teoría de Números,  Next: Simetrías,  Prev: Sumas productos y series,  Up: Top
 
 29 Teoría de Números
 ********************
@@ -6096,611 +6582,6 @@ File: maxima.info,  Node: Teoría de Números,  Next: Simetrías,  Prev: Series,
 * Menu:
 
 * Funciones y variables para teoría de números::
-
-
-File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev: Teoría de Números,  Up: Teoría de Números
-
-29.1 Funciones y variables para teoría de números
-=================================================
-
- -- Función: bern (<n>)
-     Devuelve el <n>-ésimo número de Bernoulli del entero <n>.  Los
-     números de Bernoulli iguales a cero son suprimidos si `zerobern'
-     vale `false'.
-
-     Véase también `burn'.
-
-          (%i1) zerobern: true$
-          (%i2) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                            1  1       1      1        1
-          (%o2)       [1, - -, -, 0, - --, 0, --, 0, - --]
-                            2  6       30     42       30
-          (%i3) zerobern: false$
-          (%i4) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-                      1  1    1   5     691   7    3617  43867
-          (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
-                      2  6    30  66    2730  6    510    798
-
-
- -- Función: bernpoly (<x>, <n>)
-     Devuelve el <n>-ésimo polinomio de Bernoulli de variable <x>.
-
-
- -- Función: bfzeta (<s>, <n>)
-     Devuelve la función zeta de Riemann para el argumento <s>. El
-     valor que devuelve es del tipo "big float" (bfloat) y <n>  es su
-     número de dígitos.
-
-     Es necesario cargar en memoria esta función haciendo `load
-     ("bffac")'.
-
-
- -- Función: bfhzeta (<s>, <h>, <n>)
-     Devuelve la función zeta de Hurwitz para los argumentos <s> y <h>.
-     El valor que devuelve es del tipo "big float" (bfloat) y <n>  es
-     su número de dígitos.
-
-     La función zeta de Hurwitz se define como
-
-                                  inf
-                                  ====
-                                  \        1
-                   zeta (s,h)  =   >    --------
-                                  /            s
-                                  ====  (k + h)
-                                  k = 0
-
-     Ejecútese `load (bffac)' antes de hacer uso de esta función.
-
-
- -- Función: burn (<n>)
-     Siendo <n> entero, Devuelve un número racional que aproxima el
-     <n>-ésimo número de Bernoulli. La función `burn' aprovecha el
-     hecho de que los números de Bernoulli racionales se pueden
-     aproximar con notable precisión gracias a
-
-                             n - 1  1 - 2 n
-                        (- 1)      2        zeta(2 n) (2 n)!
-               B(2 n) = ------------------------------------
-                                          2 n
-                                       %pi
-
-     La función `burn' puede ser más eficiente que `bern' cuando <n> es
-     un número grande, ya que `bern' calcula todos los números de
-     Bernoulli hasta el <n>-ésimo. Por el contrario, `burn' hace uso de
-     la aproximación para enteros pares <n> > 255. En caso de enteros
-     impares y <n> <= 255, se hace uso de la función `bern'.
-
-     Para utilizar esta función hay que cargarla antes en memoria
-     escribiendo `load ("bffac")'. Véase también `bern'.
-
-
- -- Función: chinese ([<r_1>, ..., <r_n>], [<m_1>, ..., <m_n>])
-     Resulve el sistema de congruencias `x = r_1 mod m_1', ..., `x =
-     r_n mod m_n'.  Los restos <r_n> pueden ser enteros arbitrarios,
-     mientras que los módulos <m_n> deben ser positivos y primos dos a
-     dos.
-
-          (%i1) mods : [1000, 1001, 1003, 1007];
-          (%o1)                   [1000, 1001, 1003, 1007]
-          (%i2) lreduce('gcd, mods);
-          (%o2)                               1
-          (%i3) x : random(apply("*", mods));
-          (%o3)                         685124877004
-          (%i4) rems : map(lambda([z], mod(x, z)), mods);
-          (%o4)                       [4, 568, 54, 624]
-          (%i5) chinese(rems, mods);
-          (%o5)                         685124877004
-          (%i6) chinese([1, 2], [3, n]);
-          (%o6)                    chinese([1, 2], [3, n])
-          (%i7) %, n = 4;
-          (%o7)                              10
-
- -- Función: cf (<expr>)
-     Calcula aproximaciones con fracciones continuas. <expr> es una
-     expresión que contiene fracciones continuas, raíces cuadradas de
-     enteros, y números reales (enteros, racionales, decimales en coma
-     flotante y decimales de precisión arbitraria). `cf' calcula
-     expansiones exactas de números racionales, pero las expansiones de
-     nÃºmeros decimales de coma flotante se truncan de acuerdo con el
-     valor de `ratepsilon', y la de los de decimales de precisión
-     arbitraria (bigfloats) lo hacen respecto de `10^(-fpprec)'.
-
-     En las expresiones se pueden combinar operandos con operadores
-     aritméticos.  Maxima no conoce operaciones con fracciones
-     continuas más allá de la función `cf'.
-
-     La función `cf' evalúa sus argumentos después de asignar a la
-     variable `listarith' el valor `false', retornando una fracción
-     continua en forma de lista.
-
-     Una fracción continua `a + 1/(b + 1/(c + ...))' se representa como
-     la lista `[a, b, c, ...]', donde los elementos `a', `b', `c', ...
-     se evalúan como enteros. La expresión <expr> puede contener también
-     `sqrt (n)' donde `n' es un entero; en tal caso, `cf' devolverá
-     tantos términos de la fracción continua como indique el valor de
-     la variable `cflength' multiplicado por el período.
-
-     Una fracción continua puede reducirse a un número evaluando la
-     representación aritmética que devuelve `cfdisrep'. Véase también
-     `cfexpand', que es otra alternativa para evaluar fracciones
-     continuas.
-
-     Véanse asimismo `cfdisrep', `cfexpand' y `cflength'.
-
-     Ejemplos:
-
-        * La expresión <expr> contiene fracciones continuas y raíces
-          cuadradas de enteros.
-
-               (%i1) cf ([5, 3, 1]*[11, 9, 7] + [3, 7]/[4, 3, 2]);
-               (%o1)               [59, 17, 2, 1, 1, 1, 27]
-               (%i2) cf ((3/17)*[1, -2, 5]/sqrt(11) + (8/13));
-               (%o2)        [0, 1, 1, 1, 3, 2, 1, 4, 1, 9, 1, 9, 2]
-
-        * La variable `cflength' controla cuantos períodos de la
-          fracción continua se calculan para números irracionales
-          algebraicos.
-
-               (%i1) cflength: 1$
-               (%i2) cf ((1 + sqrt(5))/2);
-               (%o2)                    [1, 1, 1, 1, 2]
-               (%i3) cflength: 2$
-               (%i4) cf ((1 + sqrt(5))/2);
-               (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-               (%i5) cflength: 3$
-               (%i6) cf ((1 + sqrt(5))/2);
-               (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-        * Una fracción continua puede calcularse evaluando la
-          representación aritmética que devuelve `cfdisrep'.
-
-               (%i1) cflength: 3$
-               (%i2) cfdisrep (cf (sqrt (3)))$
-               (%i3) ev (%, numer);
-               (%o3)                   1.731707317073171
-
-        * Maxima no sabe sobre operaciones con fracciones continuas más
-          de lo que aporta la función `cf'.
-
-               (%i1) cf ([1,1,1,1,1,2] * 3);
-               (%o1)                     [4, 1, 5, 2]
-               (%i2) cf ([1,1,1,1,1,2]) * 3;
-               (%o2)                  [3, 3, 3, 3, 3, 6]
-
-
- -- Función: cfdisrep (<lista>)
-     Construye y devuelve una expresión aritmética ordinaria de la
-     forma  `a + 1/(b + 1/(c + ...))' a partir de la representación en
-     formato lista de la fracción continua  `[a, b, c, ...]'.
-
-          (%i1) cf ([1, 2, -3] + [1, -2, 1]);
-          (%o1)                     [1, 1, 1, 2]
-          (%i2) cfdisrep (%);
-                                            1
-          (%o2)                     1 + ---------
-                                              1
-                                        1 + -----
-                                                1
-                                            1 + -
-                                                2
-
-
- -- Función: cfexpand (<x>)
-     Devuelve la matriz con los numeradores y denominadores de la
-     última (columna 1) y penúltima (columna 2) convergentes de la
-     fracción continua <x>.
-
-          (%i1) cf (rat (ev (%pi, numer)));
-
-          `rat' replaced 3.141592653589793 by 103993/33102 =3.141592653011902
-          (%o1)                  [3, 7, 15, 1, 292]
-          (%i2) cfexpand (%);
-                                   [ 103993  355 ]
-          (%o2)                    [             ]
-                                   [ 33102   113 ]
-          (%i3) %[1,1]/%[2,1], numer;
-          (%o3)                   3.141592653011902
-
-
- -- Variable opcional: cflength
-     Valor por defecto: 1
-
-     La variable `cflength' controla el número de términos de la
-     fracción continua que devuelve la función `cf', que será
-     `cflength' multiplicado por el período. Así, el valor por defecto
-     será el de un período.
-
-          (%i1) cflength: 1$
-          (%i2) cf ((1 + sqrt(5))/2);
-          (%o2)                    [1, 1, 1, 1, 2]
-          (%i3) cflength: 2$
-          (%i4) cf ((1 + sqrt(5))/2);
-          (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
-          (%i5) cflength: 3$
-          (%i6) cf ((1 + sqrt(5))/2);
-          (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
-
-
- -- Función: divsum (<n>, <k>)
- -- Función: divsum (<n>)
-     La llamada `divsum (<n>, <k>)' devuelve la suma de los divisores
-     de <n> elevados a la <k>-ésima potencia.
-
-     La llamada `divsum (<n>)' devuelve la suma de los divisores de <n>.
-
-          (%i1) divsum (12);
-          (%o1)                          28
-          (%i2) 1 + 2 + 3 + 4 + 6 + 12;
-          (%o2)                          28
-          (%i3) divsum (12, 2);
-          (%o3)                          210
-          (%i4) 1^2 + 2^2 + 3^2 + 4^2 + 6^2 + 12^2;
-          (%o4)                          210
-
-
- -- Función: euler (<n>)
-     Devuelve el <n>-ésimo número de Euler del entero no negativo <n>.
-
-     Para la constante de Euler-Mascheroni, véase `%gamma'.
-
-          (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
-
-
- -- Variable opcional: factors_only
-     Valor por defecto: `false'
-
-     Controla el resultado devuelto por `ifactors'. El valor por defecto
-     `false' hace que `ifactors' no dé información sobre las
-     multiplicidades de los factores primos calculados. Cuando
-     `factors_only' vale `true', `ifactors' solo devuelve la lista de
-     factores primos.
-
-     Para ejemplos, véase `ifactors'.
-
- -- Función: fib (<n>)
-     Devuelve el <n>-ésimo número de Fibonacci. La llamada `fib(0)' es
-     igual a 0, `fib(1)' devuelve 1 y `fib (-<n>)' es igual a
-     `(-1)^(<n> + 1) * fib(<n>)'.
-
-     Después de llamar a `fib', la variable `prevfib' toma el valor
-     `fib (<x> - 1)', que es el número de Fibonacci que precede al
-     último calculado.
-
-          (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
-
-
- -- Función: fibtophi (<expr>)
-     Expresa los números de Fibonacci en <expr> en términos de la razón
-     áurea `%phi', que es `(1 + sqrt(5))/2', aproximadamente 1.61803399.
-
-     Ejemplos:
-
-          (%i1) fibtophi (fib (n));
-                                     n             n
-                                 %phi  - (1 - %phi)
-          (%o1)                  -------------------
-                                     2 %phi - 1
-          (%i2) fib (n-1) + fib (n) - fib (n+1);
-          (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
-          (%i3) fibtophi (%);
-                      n + 1             n + 1       n             n
-                  %phi      - (1 - %phi)        %phi  - (1 - %phi)
-          (%o3) - --------------------------- + -------------------
-                          2 %phi - 1                2 %phi - 1
-                                                    n - 1             n - 1
-                                                %phi      - (1 - %phi)
-                                              + ---------------------------
-                                                        2 %phi - 1
-          (%i4) ratsimp (%);
-          (%o4)                           0
-
-
- -- Función: ifactors (<n>)
-     Devuelve la factorización del entero positivo <n>. Si
-     `n=p1^e1..pk^nk' es la descomposición de <n> en números primos,
-     `ifactors' devuelve `[[p1, e1], ... , [pk, ek]]'.
-
-     Los métodos de factorización se basan en divisiones tentativas con
-     números primos hasta 9973, en los métodos rho y p-1 de Pollard y
-     en curvas elípticas.
-
-     La respuesta que se obtiene de `ifactors' está controlada por la
-     variable opcional `factors_only'. El valor por defecto `false'
-     hace que `ifactors' no dé información sobre las multiplicidades de
-     los factores primos calculados.  Cuando `factors_only' vale
-     `true', `ifactors' solo devuelve la lista de factores primos.
-
-          (%i1) ifactors(51575319651600);
-          (%o1)     [[2, 4], [3, 2], [5, 2], [1583, 1], [9050207, 1]]
-          (%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
-          (%o2)                        51575319651600
-          (%i3) ifactors(51575319651600), factors_only : true;
-          (%o3)                   [2, 3, 5, 1583, 9050207]
-
-
- -- Función: igcdex (<n>, <k>)
-     Devuelve la lista `[<a>, <b>, <u>]', donde <u> es el máximo común
-     divisor de <n> y <k>, siendo <u> igual a `<a> <n> + <b> <k>'. Los
-     argumentos <n> y <k> deben ser enteros.
-
-     `igcdex' implementa el algoritmo de Euclides. Véase también
-     `gcdex'.
-
-     La instrucción `load(gcdex)' carga esta función.
-
-     Ejemplos:
-
-          (%i1) load(gcdex)$
-
-          (%i2) igcdex(30,18);
-          (%o2)                      [- 1, 2, 6]
-          (%i3) igcdex(1526757668, 7835626735736);
-          (%o3)            [845922341123, - 164826435, 4]
-          (%i4) igcdex(fib(20), fib(21));
-          (%o4)                   [4181, - 2584, 1]
-
-
- -- Función: inrt (<x>, <n>)
-     Devuelve la raíz entera <n>-ésima del valor absoluto de  <x>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], inrt (10^a, 3)), l);
-          (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
-
-
- -- Función: inv_mod (<n>, <m>)
-     Calcula el inverso de <n> módulo <m>.  La llamada `inv_mod (n,m)'
-     devuelve `false' si <n> es un divisor nulo módulo <m>.
-
-          (%i1) inv_mod(3, 41);
-          (%o1)                           14
-          (%i2) ratsimp(3^-1), modulus=41;
-          (%o2)                           14
-          (%i3) inv_mod(3, 42);
-          (%o3)                          false
-
-
- -- Función: isqrt (<x>)
-     Devuelve la "raíz cuadrada entera" del valor absoluto de <x>, el
-     cual debe ser un entero.
-
-
- -- Función: jacobi (<p>, <q>)
-     Devuelve el símbolo de Jacobi para <p> y <q>.
-
-          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
-          (%i2) map (lambda ([a], jacobi (a, 9)), l);
-          (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
-
-
- -- Función: lcm (<expr_1>, ..., <expr_n>)
-     Devuelve el mínimo común múltiplo de sus argumentos. Los
-     argumentos pueden ser tanto expresiones en general como enteros.
-
-     Es necesario cargar en memoria esta función haciendo `load
-     ("functs")'.
-
-
- -- Función: mod (<x>, <y>)
-     Si <x> e <y> son números reales e <y> es distinto de cero,
-     devuelve `<x> - <y> * floor(<x> / <y>)'.  Para todos los reales
-     <x>, se tiene `mod (<x>, 0) = <x>'. Para información sobre la
-     definición de  `mod (<x>, 0) = <x>', véase la sección 3.4 de
-     "Concrete Mathematics", by Graham, Knuth, and Patashnik. La
-     función `mod (<x>, 1)' es de diente de sierra con periodo unidad y
-     con `mod (1, 1) = 0' y `mod (0, 1) = 0'.
-
-     Para encontrar el argumento principal (un número del intervalo
-     `(-%pi, %pi]') de un número complejo, hágase uso de la función
-     `<x> |-> %pi - mod (%pi - <x>, 2*%pi)', donde <x> es un argumento.
-
-     Si <x> e <y> son expresiones constantes (por ejemplo, `10 * %pi'),
-     `mod' utiliza el mismo esquema de evaluación basado en números
-     grandes en coma flotante (big floats) que `floor' y `ceiling'.
-     También es posible, pero improbable, que `mod' pueda retornar un
-     valor erróneo en tales casos.
-
-     Para argumentos no numéricos <x> o <y>, `mod' aplica algunas
-     reglas de simplificación:
-
-          (%i1) mod (x, 0);
-          (%o1)                           x
-          (%i2) mod (a*x, a*y);
-          (%o2)                      a mod(x, y)
-          (%i3) mod (0, x);
-          (%o3)                           0
-
- -- Función: next_prime (<n>)
-     Devuelve el menor de los primos mayores que <n>.
-
-          (%i1) next_prime(27);
-          (%o1)                       29
-
-
- -- Función: partfrac (<expr>, <var>)
-     Expande la expresión <expr> en fracciones parciales respecto de la
-     variable principal <var>. La función `partfrac' hace una
-     descomposición completa en fracciones parciales. El algoritmo que
-     se utiliza se basa en el hecho de que los denominadores de la
-     expansión en fracciones parciales (los factores del denominador
-     original) son primos relativos. Los numeradores se pueden escribir
-     como combinaciones lineales de los denominadores.
-
-          (%i1) 1/(1+x)^2 - 2/(1+x) + 2/(2+x);
-                                2       2        1
-          (%o1)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-          (%i2) ratsimp (%);
-                                           x
-          (%o2)                 - -------------------
-                                   3      2
-                                  x  + 4 x  + 5 x + 2
-          (%i3) partfrac (%, x);
-                                2       2        1
-          (%o3)               ----- - ----- + --------
-                              x + 2   x + 1          2
-                                              (x + 1)
-
-
- -- Función: power_mod (<a>, <n>, <m>)
-     Utiliza un algoritmo modular para calcular `a^n mod m', siendo <a>
-     y <n> enteros cualesquiera y <m> un entero positivo.  Si <n> es
-     negativo, se utilizará `inv_mod' para encontrar el inverso modular.
-
-          (%i1) power_mod(3, 15, 5);
-          (%o1)                          2
-          (%i2) mod(3^15,5);
-          (%o2)                          2
-          (%i3) power_mod(2, -1, 5);
-          (%o3)                          3
-          (%i4) inv_mod(2,5);
-          (%o4)                          3
-
-
- -- Función: primep (<n>)
-     Comprueba si el número entero <n> es o no primo, devolviendo `true'
-     o `false' según el caso.
-
-     Cuando el resultado de `primep (<n>)' es `false', <n> es un número
-     compuesto, y si es `true', <n> es primo con alta probabilidad.
-
-     Si <n> es menor que 341550071728321, se utiliza una versión
-     determinística de la prueba de Miller-Rabin. En tal caso, si
-     `primep (<n>)' devuelve `true', entonces <n> es un número primo.
-
-     Para <n> mayor que 341550071728321 `primep' realiza
-     `primep_number_of_tests' pruebas de seudo-primalidad de
-     Miller-Rabin y una prueba de seudo-primalidad de Lucas. La
-     probabilidad de que un número compuesto <n> pase una prueba de
-     Miller-Rabin es menor que 1/4. Con el valor por defecto de
-     `primep_number_of_tests', que es 25, la probabilidad de que <n>
-     sea compuesto es menor que 10^-15.
-
-
- -- Variable opcional: primep_number_of_tests
-     Valor por defecto: 25
-
-     Número de pruebas de Miller-Rabin a realizar por `primep'.
-
- -- Función: prev_prime (<n>)
-     Devuelve el mayor de los primos menores que <n>.
-
-          (%i1) prev_prime(27);
-          (%o1)                       23
-
- -- Función: qunit (<n>)
-     Devuelve la unidad principal de `sqrt (<n>)', siendo <n> un
-     entero; consiste en la resolución de la ecuación de Pell  `a^2 -
-     <n> b^2 = 1'.
-
-          (%i1) qunit (17);
-          (%o1)                     sqrt(17) + 4
-          (%i2) expand (% * (sqrt(17) - 4));
-          (%o2)                           1
-
-
- -- Función: totient (<n>)
-     Devuelve el número de enteros menores o iguales a <n> que son
-     primos relativos con <n>.
-
- -- Variable opcional: zerobern
-     Valor por defecto: `true'
-
-     Si `zerobern' vale `false', `bern' excluye los números de Bernoulli
-     y `euler' excluye los números de Euler que sean iguales a cero.
-     Véase `bern' y `euler'.
-
- -- Función: zeta (<n>)
-     Devuelve la función zeta de Riemann. Si <n> es entero negativo, 0
-     o número par positivo, la función zeta de Riemann devuelve un
-     valor exacto; en el caso de número par positivo, la variable
-     opcional `zeta%pi', además, tiene que tener el valor `true' (véase
-     `zeta%pi').  Cuando el argumento es un número decimal o bigfloat,
-     entonces la función zeta de Riemann se calcula numéricamente.
-     Maxima devuelve una forma nominal `zeta (<n>)' para cualesquiera
-     otros argumentos, incluidos los racionales no enteros, los números
-     complejos y los enteros pares si `zeta%pi' vale `false'.
-
-     `zeta(1)' no está definida, pero Maxima conce el límite de
-     `limit(zeta(x), x, 1)' por ambos lados.
-
-     La función zeta de Riemann se distribuye sobre las listas, matrices
-     y ecuaciones.
-
-     Véanse también `bfzeta' y `zeta%pi'.
-
-     Ejemplos:
-
-          (%i1) zeta([-2,-1,0,0.5,2,3,1+%i]);
-                                                        2
-                       1     1                       %pi
-          (%o1)  [0, - --, - -, - 1.460354508809587, ----, zeta(3), zeta(%i + 1)]
-                       12    2                        6
-
-          (%i2) limit(zeta(x),x,1,plus);
-          (%o2)                                 inf
-          (%i3) limit(zeta(x),x,1,minus);
-          (%o3)                                minf
-
-
- -- Variable opcional: zeta%pi
-     Valor por defecto: `true'
-
-     Si `zeta%pi' vale `true', `zeta' devuelve una expresión
-     proporcional a `%pi^n' si `n' es un número par positivo. En caso
-     contrario, `zeta' no se evalúa y devuelve la forma nominal `zeta
-     (n)'.
-
-     Ejemplos:
-
-          (%i1) zeta%pi: true$
-          (%i2) zeta (4);
-                                           4
-                                        %pi
-          (%o2)                         ----
-                                         90
-          (%i3) zeta%pi: false$
-          (%i4) zeta (4);
-          (%o4)                        zeta(4)
-
-
-
-File: maxima.info,  Node: Simetrías,  Next: Grupos,  Prev: Teoría de Números,  Up: Top
-
-30 Simetrías
-************
-
-* Menu:
-
-* Funciones y variables para simetrías::
-
-   Paquete escrito para Macsyma-Symbolics por Annick Valibouze
-(`http://www-calfor.lip6.fr/~avb/').  Los algoritmos están descritos en
-los siguientes artículos:
-
-  1. Fonctions symétriques et changements de bases. Annick Valibouze.
-     EUROCAL'87 (Leipzig, 1987), 323-332, Lecture Notes in Comput. Sci
-     378.  Springer, Berlin, 1989.
-     `http://www.stix.polytechnique.fr/publications/1984-1994.html'
-
-  2. Résolvantes et fonctions symétriques. Annick Valibouze.
-     Proceedings of the ACM-SIGSAM 1989 International Symposium on
-     Symbolic and Algebraic Computation, ISSAC'89 (Portland, Oregon).
-     ACM Press, 390-399, 1989.
-     `http://www-calfor.lip6.fr/~avb/DonneesTelechargeables/MesArticles/issac89ACMValibouze.pdf'
-
-  3. Symbolic computation with symmetric polynomials, an extension to
-     Macsyma.  Annick Valibouze. Computers and Mathematics (MIT, USA,
-     June 13-17, 1989), Springer-Verlag, New York Berlin, 308-320, 1989.
-     `http://www.stix.polytechnique.fr/publications/1984-1994.html'
-
-  4. Théorie de Galois Constructive. Annick Valibouze. Mémoire
-     d'habilitation à diriger les recherches (HDR), Université P. et M.
-     Curie (Paris VI), 1994
 
 
 

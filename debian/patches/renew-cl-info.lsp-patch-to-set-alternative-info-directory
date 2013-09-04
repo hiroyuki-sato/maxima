@@ -1,0 +1,44 @@
+Description: Allow relocation of maxima-index.lisp
+ Debian policy does not allow lisp source in /usr/share/info.  This
+ patch establishes a variable maxima::*maxima-index-dir* which when
+ set will provide an alternative location for the file, currently
+ /usr/share/doc/maxima/info.
+ .
+ maxima (5.31.0-1) unstable; urgency=low
+ .
+   * New upstream release
+Author: Camm Maguire <camm@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- maxima-5.31.0.orig/src/cl-info.lisp
++++ maxima-5.31.0/src/cl-info.lisp
+@@ -52,6 +52,8 @@
+ 
+ ; ------------------ search help topics ------------------
+ 
++(defvar maxima::*maxima-index-dir* nil)
++
+ (defun load-primary-index ()
+   ;; Load the index, but make sure we use a sensible *read-base*.
+   ;; See bug 1951964.  GCL doesn't seem to have
+@@ -59,7 +61,7 @@
+   ;; with-standard-io-syntax too much for what we want?
+   (let*
+       ((subdir-bit (or maxima::*maxima-lang-subdir* "."))
+-       (path-to-index (maxima::combine-path maxima::*maxima-infodir* subdir-bit "maxima-index.lisp")))
++       (path-to-index (maxima::combine-path (or maxima::*maxima-index-dir* maxima::*maxima-infodir*) subdir-bit "maxima-index.lisp")))
+     (handler-case
+ 	#-gcl
+       (with-standard-io-syntax (load path-to-index))

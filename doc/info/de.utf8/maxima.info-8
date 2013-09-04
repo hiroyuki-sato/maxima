@@ -3315,7 +3315,7 @@ File: maxima.info,  Node: Introduction to string processing,  Next: Functions an
 `stringproc.lisp' enlarges Maximas capabilities of working with strings
 and adds some useful functions for file in/output.
 
-For questions and bugs please mail to van.nek at arcor.de .
+For questions and bugs please mail to volkervannek at gmail dot com .
 
 In Maxima a string is easily constructed by typing "text".  `stringp'
 tests for strings.
@@ -3422,13 +3422,15 @@ Example:
      Closes <stream> and returns `true' if <stream> had been open.
 
  -- Function: flength (<stream>)
-     Returns the number of elements in <stream>.
+     Returns the number of elements in <stream> where <stream> has to
+     be a stream from or to a file.
 
  -- Function: fposition (<stream>)
  -- Function: fposition (<stream>, <pos>)
-     Returns the current position in <stream>, if <pos> is not used.  If
-     <pos> is used, `fposition' sets the position in <stream>.  <pos>
-     has to be a positive number, the first element in <stream> is in
+     Returns the current position in <stream>, if <pos> is not used.
+     If <pos> is used, `fposition' sets the position in <stream>.
+     <stream> has to be a stream from or to a file and <pos> has to be
+     a positive number where the first element in <stream> is in
      position 1.
 
  -- Function: freshline ()
@@ -3436,6 +3438,50 @@ Example:
      Writes a new line (to <stream>), if the position is not at the
      beginning of a line.  See also `newline'.
 
+
+ -- Funktion: get_output_stream_string (<stream>)
+     Gibt Buchstaben, aktuell in dem geöffneten Datenstrom <stream>
+     enthalten sind, in einer Zeichenkette zurück. Die zurück gegebenen
+     Buchstaben werden dabei aus dem Datenstrom entfernt. <stream> muss
+     durch `make_string_output_stream' erzeugt worden sein.
+
+     Beispiel: Siehe *note make_string_output_stream:: .
+
+ -- Funktion: make_string_input_stream (<string>)
+ -- Funktion: make_string_input_stream (<string>, <start>)
+ -- Funktion: make_string_input_stream (<string>, <start>, <end>)
+     Gibt einen Datenstrom zurück, der Teile der Zeichenkette <string>
+     und ein Dateiende enthält.  Ohne optionale Argumente enthält der
+     Strom die gesamte Zeichenkette und ist vor dem ersten Buchstaben
+     positioniert. Mit den optionalen Argumenten <start> und <end>
+     lässt sich der Abschnitt der Zeichenkette festlegen, den der
+     Datenstrom enthält. Der erste Buchstabe befindet sich dabei an der
+     Position 1.
+
+          (%i1) istream : make_string_input_stream("text", 1, 4);
+          (%o1)              #<string-input stream from "text">
+          (%i2) (while (c : readchar(istream)) # false do sprint(c), newline())$
+          t e x
+          (%i3) close(istream)$
+
+ -- Funktion: make_string_output_stream ()
+     Gibt einen Datenstrom zurück, der Buchstaben aufnehmen kann. Die
+     aktuell im Strom enthaltenden Buchstaben können mit *note
+     get_output_stream_string:: entnommen werden.
+
+          (%i1) ostream : make_string_output_stream();
+          (%o1)               #<string-output stream 09622ea0>
+          (%i2) printf(ostream, "foo")$
+
+          (%i3) printf(ostream, "bar")$
+
+          (%i4) string : get_output_stream_string(ostream);
+          (%o4)                            foobar
+          (%i5) printf(ostream, "baz")$
+
+          (%i6) string : get_output_stream_string(ostream);
+          (%o6)                              baz
+          (%i7) close(ostream)$
 
  -- Function: newline ()
  -- Function: newline (<stream>)
@@ -3458,16 +3504,37 @@ Example:
 
  -- Function: printf (<dest>, <string>)
  -- Function: printf (<dest>, <string>, <expr_1>, ..., <expr_n>)
-     Makes the Common Lisp function FORMAT available in Maxima.  (From
-     gcl.info: "format produces formatted output by outputting the
-     characters of control-string string and observing that a tilde
-     introduces a directive.  The character after the tilde, possibly
-     preceded by prefix parameters and modifiers, specifies what kind
-     of formatting is desired.  Most directives use one or more
-     elements of args to create their output.")
+     Erzeugt eine formatierte Ausgabe. Der Zielparameter <dest> gibt
+     an, wo die Ausgabe erfolgen soll. Möglich sind hier ein
+     Ausgabestrom oder die globalen Variablen `true' und `false'.
+     `true' bewirkt eine Ausgabe im Terminal.  Der Rückgabewert von
+     `printf' ist in diesem Fall `false'.  `false' als Zielparameter
+     bewirkt die Ausgabe im Rückgabewert.
 
-     The following description and the examples may give an idea of
-     using `printf'.  See a Lisp reference for more information.
+     Die Buchstaben des Kontrollparameters <string> werden der Reihe
+     nach ausgegeben, wobei jedoch eine Tilde eine Direktive einleitet.
+     Die Direktiven verwenden dann im Allgemeinen die nachstehenden
+     Parameter <expr_1>, ..., <expr_n>, um die Ausgabe zu erzeugen. Der
+     Buchstabe nach der Tilde gibt dabei an, welche Art der
+     Formatierung gewünscht ist.
+
+     `printf' stellt die Common Lisp Funktion `format' in Maxima zur
+     Verfügung.  Das folgende Beispiel zeigt die grundsätzliche
+     Beziehung zwischen diesen beiden Funktionen.
+
+          (%i1) printf(true, "R~dD~d~%", 2, 2);
+          R2D2
+          (%o1)                                false
+          (%i2) :lisp (format t "R~dD~d~%" 2 2)
+          R2D2
+          NIL
+
+     Die folgende Beschreibung und die Beispiele beschränken sich auf
+     eine grobe Skizze der Verwendungsmöglichkeiten von `printf'.  Die
+     Lisp Funktion `format' ist in vielen Referenzbüchern ausführlich
+     beschrieben. Eine hilfreiche Quelle ist z.B. das frei verfügbare
+     Online-Manual "Common Lisp the Language" von Guy L. Steele. Siehe
+     dort das Kapitel 22.3.3.
 
              ~%       new line
              ~&       fresh line
@@ -3492,29 +3559,76 @@ Example:
              ~[       selection, ~] terminates
              ~{       iteration, ~} terminates
 
-     Note that the selection directive `~[' is zero indexed.  Also note
-     that the directive ~* is not supported.
+     Die Direktive ~h für Gleitkommazahlen mit beliebiger Genauigkeit
+     entspricht nicht dem Lisp-Standard und wird daher unten näher
+     beschrieben.
+
+     Die Direktive ~* wird nicht unterstützt.
+
+     Ist <dest> ein Datenstrom oder `true', gibt `printf' `false'
+     zurück. Andernfalls ist der Rückgabewert eine Zeichenkette.
 
           (%i1) printf( false, "~a ~a ~4f ~a ~@r",
                         "String",sym,bound,sqrt(12),144), bound = 1.234;
           (%o1)                 String sym 1.23 2*sqrt(3) CXLIV
           (%i2) printf( false,"~{~a ~}",["one",2,"THREE"] );
           (%o2)                          one 2 THREE
-          (%i3) printf(true,"~{~{~9,1f ~}~%~}",mat ),
+          (%i3) printf( true,"~{~{~9,1f ~}~%~}",mat ),
                     mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
                 1.1       2.0       3.3
                 4.0       5.0       6.0
                 7.0       8.9       9.0
           (%i4) control: "~:(~r~) bird~p ~[is~;are~] singing."$
-          (%i5) printf( false,control, n,n,if n=1 then 0 else 1 ), n=2;
+          (%i5) printf( false, control, n,n, if n = 1 then 1 else 2 ), n = 2;
           (%o5)                    Two birds are singing.
 
-     If <dest> is a stream or `true', then `printf' returns `false'.
-     Otherwise, `printf' returns a string containing the output.
+     Die Direktive ~h wurde für Gleitkommazahlen mit beliebiger
+     Genauigkeit eingeführt.
+
+          ~w,d,e,x,o,p@H
+           w : width
+           d : decimal digits behind floating point
+           e : minimal exponent digits
+           x : preferred exponent
+           o : overflow character
+           p : padding character
+           @ : display sign for positive numbers
+
+          (%i1) fpprec : 1000$
+          (%i2) printf(true, "|~h|~%", 2.b0^-64)$
+          |0.0000000000000000000542101086242752217003726400434970855712890625|
+          (%i3) fpprec : 26$
+          (%i4) printf(true, "|~h|~%", sqrt(2))$
+          |1.4142135623730950488016887|
+          (%i5) fpprec : 24$
+          (%i6) printf(true, "|~h|~%", sqrt(2))$
+          |1.41421356237309504880169|
+          (%i7) printf(true, "|~28h|~%", sqrt(2))$
+          |   1.41421356237309504880169|
+          (%i8) printf(true, "|~28,,,,,'*h|~%", sqrt(2))$
+          |***1.41421356237309504880169|
+          (%i9) printf(true, "|~,18h|~%", sqrt(2))$
+          |1.414213562373095049|
+          (%i10) printf(true, "|~,,,-3h|~%", sqrt(2))$
+          |1414.21356237309504880169b-3|
+          (%i11) printf(true, "|~,,2,-3h|~%", sqrt(2))$
+          |1414.21356237309504880169b-03|
+          (%i12) printf(true, "|~20h|~%", sqrt(2))$
+          |1.41421356237309504880169|
+          (%i13) printf(true, "|~20,,,,'+h|~%", sqrt(2))$
+          |++++++++++++++++++++|
+
+
+ -- Funktion: readchar (<stream>)
+     Entfernt und gibt den ersten Buchstaben in <stream> zurück.  Falls
+     das Ende des Streams erreicht sein sollte, gibt `readchar' `false'
+     zurück.
+
+     Beispiel: Siehe *note make_string_input_stream::.
 
  -- Function: readline (<stream>)
      Returns a string containing the characters from the current
-     position in <stream> up to the end of the line or <false> if the
+     position in <stream> up to the end of the line or `false' if the
      end of the file is encountered.
 
  -- Function: sprint (<expr_1>, ..., <expr_n>)
@@ -3631,22 +3745,43 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
 73.4 Functions and Variables for strings
 ========================================
 
- -- Function: stringp (<obj>)
-     Returns `true' if <obj> is a string.  See introduction for example.
+ -- Funktion: base64 (<string>)
+     Gibt einen String zurück, der die Base64-Darstellung von <string>
+     zeigt.
 
- -- Function: charat (<string>, <n>)
-     Returns the <n>-th character of <string>.  The first character in
-     <string> is returned with <n> = 1.
+     Sind in <string> Umlaute oder Eszett enthalten, ist das Ergebnis
+     von der verwendeten Plattform abhängig. Es wird aber durch eine
+     Anwendung von *note base64_decode:: in jedem Fall wieder in den
+     ursprünglichen String zurück verwandelt.
 
-     Example:
+     Beispiel:
 
-          (%i1) charat("Lisp",1);
+          (%i1) base64 : base64("foo bar baz");
+          (%o1)                       Zm9vIGJhciBiYXo=
+          (%i2) string : base64_decode(base64);
+          (%o2)                          foo bar baz
+          (%i3) base64_decode(base64("äöü"));
+          (%o3)                            äöü
+
+ -- Funktion: base64_decode (<base64-string>)
+     Dekodiert den Base64-kodierten String <base64-string> wieder
+     zurück in den ursprünglichen String.
+
+     Beispiel: Siehe *note base64::.
+
+ -- Funktion: charat (<string>, <n>)
+     Gibt den <n>-ten Buchstaben in <string> zurück.  Den ersten
+     Buchstaben in <string> erhält man mit <n> = 1.
+
+     Beispiel:
+
+          (%i1) charat("Lisp", 1);
           (%o1)                           L
 
- -- Function: charlist (<string>)
-     Returns the list of all characters in <string>.
+ -- Funktion: charlist (<string>)
+     Gibt eine Liste mit allen Buchstaben in <string> zurück.
 
-     Example:
+     Beispiel:
 
           (%i1) charlist("Lisp");
           (%o1)                     [L, i, s, p]
@@ -3669,6 +3804,20 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
           (%o1)                       42
           (%i2) eval_string ("(foo: 42, bar: foo^2 + baz)");
           (%o2)                   baz + 1764
+
+ -- Funktion: md5sum (<string>)
+     Gibt die md5-Prüfsumme von <string> als String zurück.  Um den
+     Rückgabewert in eine natürliche Zahl zu parsen, setzen Sie bitte
+     die Eingabebasis auf 16 und fügen eine Null vor den String.
+
+     Beispiel:
+
+          (%i1) string : md5sum("foo bar baz");
+          (%o1)               ab07acbb1e496801937adfa772424bf7
+          (%i2) ibase : obase : 16.$
+
+          (%i3) integer : parse_string(sconcat(0, string));
+          (%o3)              0ab07acbb1e496801937adfa772424bf7
 
  -- Function: parse_string (<str>)
      Parse the string <str> as a Maxima expression (do not evaluate
@@ -3901,6 +4050,9 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
 
  -- Function: strimr (<seq>, <string>)
      Like `strim'  except that only the right end of string is trimmed.
+
+ -- Function: stringp (<obj>)
+     Returns `true' if <obj> is a string.  See introduction for example.
 
  -- Function: substring (<string>, <start>)
  -- Function: substring (<string>, <start>, <end>)
@@ -4953,7 +5105,7 @@ English language user documentation for these packages.
 
      Any argument of an `%and' expression that is an inequation (that
      is, an inequality or equation), is simplified using the Fourier
-     elimination package. The Fourier elimination simplifier has a
+     elimination package.  The Fourier elimination simplifier has a
      pre-processor that converts some, but not all, nonlinear
      inequations into linear inequations; for example the Fourier
      elimination code simplifies `abs(x) + 1 > 0' to true, so
@@ -4961,7 +5113,7 @@ English language user documentation for these packages.
           (%i4) (x < 1) %and (abs(x) + 1 > 0);
           (%o4)                         x < 1
 
-     Notes:
+     Notes
         * The option variable `prederror' does not alter the
           simplification `%and' expressions.
 
@@ -4969,11 +5121,12 @@ English language user documentation for these packages.
           involving the operators `%and, %or', and `not' should be
           fully parenthesized.
 
-        * The Maxima operators and and or are both short-circuited.
-          Thus and isn't associative or commutative.
+        * The Maxima operators `and' and `or' are both short-circuited.
+          Thus `and' isn't associative or commutative.
 
-     Limitations: The conjunction `%and' simplifies inequations
-     locally, not globally.  This means that conjunctions such as
+
+     Limitations The conjunction `%and' simplifies inequations locally,
+     not globally.  This means that conjunctions such as
 
           (%i5) (x < 1) %and (x > 1);
           (%o5)                 (x > 1) %and (x < 1)
@@ -4992,17 +5145,18 @@ English language user documentation for these packages.
      There is no support for distributing `%and' over `%or'; neither is
      there support for distributing a logical negation over `%and'.
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Related functions: `%or, %if, and, or, not'
+     Related functions `%or, %if, and, or, not'
 
-     Status: The operator `%and' is experimental; the specifications of
+     Status The operator `%and' is experimental; the specifications of
      this function might change and its functionality might be merged
      into other Maxima functions.
 
- -- Operator: %if ( <bool>, <a>, <b>)
+
+ -- Operator: %if (<bool>, <a>, <b>)
      The operator `%if' is a simplifying conditional.  The conditional
-     bool should be boolean-valued.  When the conditional is true,
+     <bool> should be boolean-valued.  When the conditional is true,
      return the second argument; when the conditional is false, return
      the third; in all other cases, return a noun form.
 
@@ -5021,7 +5175,7 @@ English language user documentation for these packages.
      If the conditional involves an inequation, Maxima simplifies it
      using the Fourier elimination package.
 
-     Notes:
+     Notes
 
         * If the conditional is manifestly non-boolean, Maxima returns
           a noun form:
@@ -5032,7 +5186,7 @@ English language user documentation for these packages.
         * The Maxima operator `if' is nary, the operator `%if' isn't
           nary.
 
-     Limitations: The Fourier elimination code only simplifies nonlinear
+     Limitations The Fourier elimination code only simplifies nonlinear
      inequations that are readily convertible to an equivalent linear
      inequation.
 
@@ -5041,6 +5195,7 @@ English language user documentation for these packages.
      Status: The operator `%if' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
+
 
  -- Operator: %or
      The operator `%or' is a simplifying nonshort-circuited logical
@@ -5074,7 +5229,7 @@ English language user documentation for these packages.
           (%i4) (x < 1) %or (abs(x) + 1 > 0);
           (%o4)                         true
 
-     Notes:
+     Notes
         * The option variable `prederror' does not alter the
           simplification of `%or' expressions.
 
@@ -5082,10 +5237,11 @@ English language user documentation for these packages.
           operators `%and, %or', and `not'; the binding powers of these
           operators might not match your expectations.
 
-        * The Maxima operators and and or are both short-circuited.
-          Thus or isn't associative or commutative.
+        * The Maxima operators `and' and `or' are both short-circuited.
+          Thus `or' isn't associative or commutative.
 
-     Limitations: The conjunction `%or' simplifies inequations locally,
+
+     Limitations The conjunction `%or' simplifies inequations locally,
      not globally.  This means that conjunctions such as
 
           (%i1) (x < 1) %or (x >= 1);
@@ -5107,13 +5263,14 @@ English language user documentation for these packages.
      neither is there support for distributing a logical negation over
      `%or'.
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Related functions: `%or, %if, and, or, not'
+     Related functions `%or, %if, and, or, not'
 
-     Status: The operator `%or' is experimental; the specifications of
+     Status The operator `%or' is experimental; the specifications of
      this function might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: complex_number_p (<x>)
      The predicate `complex_number_p' returns true if its argument is
@@ -5129,13 +5286,14 @@ English language user documentation for these packages.
           (%i3) complex_number_p(cos(5 - 2 * %i));
           (%o3)                         false
 
-     Related functions: `isreal_p'
+     Related functions `isreal_p'
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The operator `complex_number_p' is experimental; its
+     Status The operator `complex_number_p' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: compose_functions (<l>)
      The function call `compose_functions(l)' returns a lambda form
@@ -5171,21 +5329,21 @@ English language user documentation for these packages.
         * To avoid name conflicts, the independent variable is
           determined by the function `new_variable'.
 
-          (%i6) compose_functions([%g0]);
-          (%o6)              lambda([%g154], %g0(%g154))
-          (%i7) compose_functions([%g0]);
-          (%o7)              lambda([%g155], %g0(%g155))
+               (%i6) compose_functions([%g0]);
+               (%o6)              lambda([%g154], %g0(%g154))
+               (%i7) compose_functions([%g0]);
+               (%o7)              lambda([%g155], %g0(%g155))
 
           Although the independent variables are different, Maxima is
           able to to deduce that these lambda forms are semantically
           equal:
 
-          (%i8) is(equal(%o6,%o7));
-          (%o8)                         true
+               (%i8) is(equal(%o6,%o7));
+               (%o8)                         true
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status:  The function `compose_functions' is experimental; its
+     Status  The function `compose_functions' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
 
@@ -5200,7 +5358,7 @@ English language user documentation for these packages.
           (%i2) dfloat(4.5^(1 + %i));
           (%o2)        4.48998802962884 %i + .3000124893895671
 
-     Notes:
+     Notes
 
         * The rectangular form of an expression might be poorly suited
           for numerical evaluation-for example, the rectangular form
@@ -5210,13 +5368,15 @@ English language user documentation for these packages.
         * The identifier `float' is both an option variable (default
           value false) and a function name.
 
-     Related functions: `float, bfloat'
 
-     To use: `load(to_poly_solve)'
+     Related functions `float, bfloat'
 
-     Status: The function `dfloat' is experimental; its specifications
+     To use `load(to_poly_solve)'
+
+     Status The function `dfloat' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
+
 
  -- Function: elim (<l>, <x>)
      The function `elim' eliminates the variables in the set or list
@@ -5271,15 +5431,16 @@ English language user documentation for these packages.
           Thus, the triangularized equations can have spurious
           solutions.
 
-     Related functions: `elim_allbut, eliminate_using, eliminate'
+     Related functions elim_allbut, eliminate_using, eliminate
 
-     Option variables: `resultant'
+     Option variables resultant
 
-     To use: `load(to_poly)'
+     To use `load(to_poly)'
 
-     Status: The function `elim' is experimental; its specifications
+     Status The function `elim' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
+
 
  -- Function: elim_allbut (<l>, <x>)
      This function is similar to `elim', except that it eliminates all
@@ -5291,15 +5452,16 @@ English language user documentation for these packages.
           (%i2) elim_allbut([x+y = 1, x - 5*y = 1],[x]);
           (%o2)                [[x - 1], [y + x - 1]]
 
-     To use: `load(to_poly)'
+     To use `load(to_poly)'
 
-     Option variables: `resultant'
+     Option variables resultant
 
-     Related functions: `elim, eliminate_using, eliminate'
+     Related functions elim, eliminate_using, eliminate
 
-     Status: The function `elim_allbut' is experimental; its
+     Status The function `elim_allbut' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: eliminate_using (<l>, <e>, <x>)
      Using `e' as the pivot, eliminate the symbol `x' from the list or
@@ -5322,15 +5484,16 @@ English language user documentation for these packages.
                   2            2       3              2      2      3    2
           (%o4) {y  - 3 x y + x  + 5, y  + (1 - 3 x) y  + 3 x  y - x  - x }
 
-     Option variables: `resultant'
+     Option variables resultant
 
-     Related functions: `elim, eliminate, elim_allbut'
+     Related functions elim, eliminate, elim_allbut
 
-     To use: `load(to_poly)'
+     To use `load(to_poly)'
 
-     Status: The function `eliminate_using' is experimental; its
+     Status The function `eliminate_using' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: fourier_elim ([<eq1>, <eq2>, ...], [<var1>, <var>, ...])
      Fourier elimination is the analog of Gauss elimination for linear
@@ -5402,7 +5565,8 @@ English language user documentation for these packages.
           (%i12) fourier_elim([x^2 - 1 # 0],[x]);
           (%o12)      [- 1 < x, x < 1] or [1 < x] or [x < - 1]
 
-     To use: `load(fourier_elim)'
+     To use `load(fourier_elim)'
+
 
  -- Function: isreal_p (<e>)
      The predicate `isreal_p' returns true when Maxima is able to
@@ -5426,7 +5590,7 @@ English language user documentation for these packages.
           (%i4) isreal_p(z);
           (%o4)                      isreal_p(z)
 
-     Limitations: Too often, `isreal_p' returns a noun form when it
+     Limitations Too often, `isreal_p' returns a noun form when it
      should be able to return false; a simple example: the logarithm
      function isn't real-valued on the entire real line, so
      `isreal_p(log(x))' should return false; however
@@ -5434,18 +5598,18 @@ English language user documentation for these packages.
           (%i5) isreal_p(log(x));
           (%o5)                   isreal_p(log(x))
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Related functions: `complex_number_p'
+     Related functions complex_number_p
 
-     Status: The function `real_p' is experimental; its specifications
+     Status The function `isreal_p' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
 
  -- Function: new_variable (type)
-     Return a unique symbol of the form `%[z,n,r,c,g]k', where k is an
-     integer.  The allowed values for type are `integer,
-     natural_number, real, natural_number,' and `general'.  (By natural
+     Return a unique symbol of the form `%[z,n,r,c,g]k', where `k' is
+     an integer.  The allowed values for type are integer,
+     natural_number, real, natural_number, and general.  (By natural
      number, we mean the nonnegative integers; thus zero is a natural
      number.  Some, but not all,definitions of natural number exclude
      zero.)
@@ -5468,7 +5632,7 @@ English language user documentation for these packages.
           (%i6) featurep(%c0, 'complex);
           (%o6)                         true
 
-     Note: Generally, the argument to `new_variable' should be quoted.
+     Note Generally, the argument to `new_variable' should be quoted.
      The quote will protect against errors similar to
 
           (%i7) integer : 12$
@@ -5478,13 +5642,14 @@ English language user documentation for these packages.
           (%i9) new_variable('integer);
           (%o9)                         %z150
 
-     Related functions: `nicedummies'
+     Related functions nicedummies
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `new_variable' is experimental; its
+     Status The function `new_variable' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: nicedummies
      Starting with zero, the function `nicedummies' re-indexes the
@@ -5497,13 +5662,14 @@ English language user documentation for these packages.
           (%i3) nicedummies(%);
           (%o3)                       %z0 - %z1
 
-     Related functions: `new_variable'
+     Related functions new_variable
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `nicedummies' is experimental; its
+     Status The function `nicedummies' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: parg (<x>)
      The function `parg' is a simplifying version of the complex
@@ -5525,7 +5691,7 @@ English language user documentation for these packages.
      input.  Here are two examples:
 
           (%i3) parg(abs(x));
-          (%o3)                     parg(abs(x))
+          (%o3) 0
           (%i4) parg(-x^2-1);
           (%o4)                          %pi
 
@@ -5534,18 +5700,19 @@ English language user documentation for these packages.
      are declared to be complex, the `parg' can return incorrect
      values; for example
 
-          (%i5) declare(x, complex)$
+          (%i1) declare(x,complex)$
 
-          (%i6) parg(x^2 + 1);
-          (%o6) 0
+          (%i2) parg(x^2 + 1);
+          (%o2) 0
 
-     Related function: `carg, isreal_p'
+     Related function carg, isreal_p
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `parg' is experimental; its specifications
+     Status The function `parg' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
+
 
  -- Function: real_imagpart_to_conjugate (<e>)
      The function `real_imagpart_to_conjugate' replaces all occurrences
@@ -5559,16 +5726,17 @@ English language user documentation for these packages.
           (%o2)     ---------------- - --------------------- = 3
                            2                     2
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `real_imagpart_to_conjugate' is experimental;
+     Status The function `real_imagpart_to_conjugate' is experimental;
      its specifications might change and its functionality might be
      merged into other Maxima functions.
 
+
  -- Function: rectform_log_if_constant (<e>)
-     The function `rectform_if_constant' converts all terms of the form
-     `log(c)' to  `rectform(log(c))', where `c' is either a declared
-     constant expression or explicitly declared constant
+     The function `rectform_log_if_constant' converts all terms of the
+     form ` log(c)' to  `rectform(log(c))', where `c' is either a
+     declared constant expression or explicitly declared constant
 
           (%i1) rectform_log_if_constant(log(1-%i) - log(x - %i));
                                            log(2)   %i %pi
@@ -5582,17 +5750,18 @@ English language user documentation for these packages.
           (%o3)             ------------ + %i atan2(b, a)
                                  2
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `rectform_log_if_constant' is experimental;
+     Status The function `rectform_log_if_constant' is experimental;
      the specifications of this function might change might change and
      its functionality might be merged into other Maxima functions.
+
 
  -- Function: simp_inequality (<e>)
      The function `simp_inequality' applies some simplifications to
      conjunctions and disjunctions of inequations.
 
-     Limitations: The function `simp_inequality' is limited in at least
+     Limitations The function `simp_inequality' is limited in at least
      two ways; first, the simplifications are local; thus
 
           (%i1) simp_inequality((x > minf) %and (x < 0));
@@ -5605,11 +5774,12 @@ English language user documentation for these packages.
           (%i3) simp_inequality(x > 0);
           (%o3)                         x > 0
 
-     To use: `load(fourier_elim)'
+     To use `load(fourier_elim)'
 
-     Status: The function `simp_inequality' is experimental; its
+     Status The function `simp_inequality' is experimental; its
      specifications might change and its functionality might be merged
      into other Maxima functions.
+
 
  -- Function: standardize_inverse_trig (<e>)
      This function applies the identities `cot(x) = atan(1/x), acsc(x)
@@ -5617,11 +5787,11 @@ English language user documentation for these packages.
      to an expression.  See Abramowitz and Stegun, Eqs. 4.4.6 through
      4.4.8 and 4.6.4 through 4.6.6.
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
-     Status: The function `standardize_inverse_trig' is experimental;
-     its specifications might change and its functionality might be
-     merged into other Maxima functions.
+     Status The function `standardize_inverse_trig' is experimental; its
+     specifications might change and its functionality might be merged
+     into other Maxima functions.
 
  -- Function: subst_parallel (<l>, <e>)
      When `l' is a single equation or a list of equations, substitute
@@ -5650,8 +5820,8 @@ English language user documentation for these packages.
            -- an error. To debug this try: debugmode(true);
 
      The substitutions made by `subst_parallel' are literal, not
-     semantic; thus `subst_parallel' does not recognize that `x * y' is
-     a subexpression of `x^2 * y'
+     semantic; thus `subst_parallel' does not recognize that x * y is a
+     subexpression of x^2 * y
 
           (%i6) subst_parallel([x * y = a], x^2 * y);
                                          2
@@ -5669,13 +5839,14 @@ English language user documentation for these packages.
           log: encountered log(0).
            -- an error. To debug this try: debugmode(true);
 
-     Related functions: `subst, sublis, ratsubst'
+     Related functions subst, sublis, ratsubst
 
-     To use: `load(to_poly_solve_extra.lisp)'
+     To use `load(to_poly_solve_extra.lisp)'
 
-     Status: The function `subst_parallel' is experimental; the
+     Status The function `subst_parallel' is experimental; the
      specifications of this function might change might change and its
      functionality might be merged into other Maxima functions.
+
 
  -- Function: to_poly (<e>, <l>)
      The function `to_poly' attempts to convert the equation `e' into a
@@ -5693,10 +5864,10 @@ English language user documentation for these packages.
                              [- --- < parg(%g130), parg(%g130) <= ---], []]
                                  2                                 2
 
-     The conditions `-%pi/2<parg(%g6),parg(%g6)<=%pi/2' tell us that
-     `%g6' is in the range of the square root function.  When this is
+     The conditions `-%pi/2<parg(%g130),parg(%g130)<=%pi/2' tell us that
+     `%g130' is in the range of the square root function.  When this is
      true, the solution set to `sqrt(x) = 3' is the same as the
-     solution set to `%g6-3,x=%g6^2'.
+     solution set to `%g130-3,x=%g130^2'.
 
      To polynomialize trigonometric expressions, it is necessary to
      introduce a non algebraic substitution; these non algebraic
@@ -5719,7 +5890,7 @@ English language user documentation for these packages.
                              [- --- < parg(%g132), parg(%g132) <= ---], []]
                                  2                                 2
 
-     To generate a polynomial with `sqrt(5) + sqrt(7)' as one of its
+     To generate a polynomial with sqrt(5) + sqrt(7) as one of its
      roots, use the commands
 
           (%i6) first(elim_allbut(first(to_poly(x = sqrt(5) + sqrt(7),
@@ -5727,13 +5898,14 @@ English language user documentation for these packages.
                                     4       2
           (%o6)                   [x  - 24 x  + 4]
 
-     Related functions: `to_poly_solve'
+     Related functions to_poly_solve
 
-     To use: `load(to_poly)'
+     To use `load(to_poly)'
 
      Status: The function `to_poly' is experimental; its specifications
      might change and its functionality might be merged into other
      Maxima functions.
+
 
  -- Function: to_poly_solve (<e>, <l>, [options])
      The function `to_poly_solve' tries to solve the equations e for
@@ -5777,7 +5949,7 @@ English language user documentation for these packages.
           (%i4) subst(k = 2, %);
           (%o4)                   %union([x = - 1])
 
-     Especially for  trigonometric equations, the solver sometimes needs
+     Especially for trigonometric equations, the solver sometimes needs
      to introduce an arbitary integer.  These arbitary integers have the
      form `%zXXX', where `XXX' is an integer; for example
 
@@ -5866,40 +6038,40 @@ English language user documentation for these packages.
      Each optional argument to `to_poly_solve' must be an equation;
      generally, the order of these options does not matter.
 
-        * `simpfuncs = l', where l is a list of functions.  Apply the
+        * `simpfuncs = l', where `l' is a list of functions.  Apply the
           composition of the members of l to each solution.
 
-          (%i1) to_poly_solve(x^2=%i,x);
-                                         1/4             1/4
-          (%o1)       %union([x = - (- 1)   ], [x = (- 1)   ])
-          (%i2) to_poly_solve(x^2= %i,x, 'simpfuncs = ['rectform]);
-                                %i         1             %i         1
-          (%o2) %union([x = - ------- - -------], [x = ------- + -------])
-                              sqrt(2)   sqrt(2)        sqrt(2)   sqrt(2)
+               (%i1) to_poly_solve(x^2=%i,x);
+                                              1/4             1/4
+               (%o1)       %union([x = - (- 1)   ], [x = (- 1)   ])
+               (%i2) to_poly_solve(x^2= %i,x, 'simpfuncs = ['rectform]);
+                                     %i         1             %i         1
+               (%o2) %union([x = - ------- - -------], [x = ------- + -------])
+                                   sqrt(2)   sqrt(2)        sqrt(2)   sqrt(2)
 
           Sometimes additional simplification can revert a
           simplification; for example
 
-          (%i3) to_poly_solve(x^2=1,x);
-          (%o3)              %union([x = - 1], [x = 1])
-          (%i4) to_poly_solve(x^2= 1,x, 'simpfuncs = [polarform]);
-                                                  %i %pi
-          (%o4)            %union([x = 1], [x = %e      ]
+               (%i3) to_poly_solve(x^2=1,x);
+               (%o3)              %union([x = - 1], [x = 1])
+               (%i4) to_poly_solve(x^2= 1,x, 'simpfuncs = [polarform]);
+                                                       %i %pi
+               (%o4)            %union([x = 1], [x = %e      ]
 
           Maxima doesn't try to check that each member of the function
           list `l' is purely a simplification; thus
 
-          (%i5) to_poly_solve(x^2 = %i,x, 'simpfuncs = [lambda([s],s^2)]);
-          (%o5)                   %union([x = %i])
+               (%i5) to_poly_solve(x^2 = %i,x, 'simpfuncs = [lambda([s],s^2)]);
+               (%o5)                   %union([x = %i])
 
           To convert each solution to a double float, use `simpfunc =
           ['dfloat]':
 
-          (%i6) to_poly_solve(x^3 +x + 1 = 0,x,
-                              'simpfuncs = ['dfloat]), algexact : true;
-          (%o6) %union([x = - .6823278038280178],
-          [x = .3411639019140089 - 1.161541399997251 %i],
-          [x = 1.161541399997251 %i + .3411639019140089])
+               (%i6) to_poly_solve(x^3 +x + 1 = 0,x,
+                                   'simpfuncs = ['dfloat]), algexact : true;
+               (%o6) %union([x = - .6823278038280178],
+               [x = .3411639019140089 - 1.161541399997251 %i],
+               [x = 1.161541399997251 %i + .3411639019140089])
 
         * `use_grobner = true' With this option, the function
           `poly_reduced_grobner' is applied to the equations before
@@ -5907,45 +6079,45 @@ English language user documentation for these packages.
           workaround for weakness in the function `algsys'.  Here is an
           example of such a workaround:
 
-          (%i7) to_poly_solve([x^2+y^2=2^2,(x-1)^2+(y-1)^2=2^2],[x,y],
-                              'use_grobner = true);
-                              sqrt(7) - 1      sqrt(7) + 1
-          (%o7) %union([x = - -----------, y = -----------],
-                                   2                2
-                                           sqrt(7) + 1        sqrt(7) - 1
-                                      [x = -----------, y = - -----------])
-                                                2                  2
-          (%i8) to_poly_solve([x^2+y^2=2^2,(x-1)^2+(y-1)^2=2^2],[x,y]);
-          (%o8)                       %union()
+               (%i7) to_poly_solve([x^2+y^2=2^2,(x-1)^2+(y-1)^2=2^2],[x,y],
+                                   'use_grobner = true);
+                                   sqrt(7) - 1      sqrt(7) + 1
+               (%o7) %union([x = - -----------, y = -----------],
+                                        2                2
+                                                sqrt(7) + 1        sqrt(7) - 1
+                                           [x = -----------, y = - -----------])
+                                                     2                  2
+               (%i8) to_poly_solve([x^2+y^2=2^2,(x-1)^2+(y-1)^2=2^2],[x,y]);
+               (%o8)                       %union()
 
-        * `maxdepth = k', where k is a positive integer.  This function
-          controls the maximum recursion depth for the solver.  The
-          default value for `maxdepth' is five.  When the recursions
-          depth is exceeded, the solver signals an error:
+        * `maxdepth = k', where `k' is a positive integer.  This
+          function controls the maximum recursion depth for the solver.
+          The default value for `maxdepth' is five.  When the
+          recursions depth is exceeded, the solver signals an error:
 
-          (%i9) to_poly_solve(cos(x) = x,x, 'maxdepth = 2);
+               (%i9) to_poly_solve(cos(x) = x,x, 'maxdepth = 2);
 
-          Unable to solve
-          Unable to solve
-          (%o9)        %solve([cos(x) = x], [x], maxdepth = 2)
+               Unable to solve
+               Unable to solve
+               (%o9)        %solve([cos(x) = x], [x], maxdepth = 2)
 
-        * `parameters = l', where l is a list of symbols.  The solver
+        * `parameters = l', where `l' is a list of symbols.  The solver
           attempts to return a solution that is valid for all members
-          of the list l; for example:
+          of the list `l'; for example:
 
-          (%i10) to_poly_solve(a * x = x, x);
-          (%o10)                   %union([x = 0])
-          (%i11) to_poly_solve(a * x = x, x, 'parameters = [a]);
-          (%o11) %union(%if(a - 1 = 0, [x = %c111], %union()),
-                                         %if(a - 1 # 0, [x = 0], %union()))
+               (%i10) to_poly_solve(a * x = x, x);
+               (%o10)                   %union([x = 0])
+               (%i11) to_poly_solve(a * x = x, x, 'parameters = [a]);
+               (%o11) %union(%if(a - 1 = 0, [x = %c111], %union()),
+                                              %if(a - 1 # 0, [x = 0], %union()))
 
           In `(%o2)', the solver introduced a dummy variable; to
           re-index the these dummy variables, use the function
           `nicedummies':
 
-          (%i12) nicedummies(%);
-          (%o12) %union(%if(a - 1 = 0, [x = %c0], %union()),
-                                         %if(a - 1 # 0, [x = 0], %union()))
+               (%i12) nicedummies(%);
+               (%o12) %union(%if(a - 1 = 0, [x = %c0], %union()),
+                                              %if(a - 1 # 0, [x = 0], %union()))
 
      The `to_poly_solve' uses data stored in the hashed array
      `one_to_one_reduce' to solve equations of the form f(a) = f(b).
@@ -5959,9 +6131,9 @@ English language user documentation for these packages.
           (%o14)             %union([x = - 1], [x = 1])
 
      More generally, the assignment `one_to_one_reduce['f,'g] :
-     lambda([a, b], w(a, b) = 0' tells `to_poly_solve' that the
-     solution set of `f(a) = f(b)' equals the solution set of `w(a,b) =
-     0'; for example
+     lambda([a,b], w(a, b) = 0' tells `to_poly_solve' that the solution
+     set of f(a) = f(b) equals the solution set of w(a,b) = 0; for
+     example
 
           (%i15) one_to_one_reduce['f,'g] : lambda([a,b], a = 1 + b/2)$
 
@@ -5970,7 +6142,7 @@ English language user documentation for these packages.
 
      Additionally, the function `to_poly_solve' uses data stored in the
      hashed array `function_inverse' to solve equations of the form
-     `f(a) = b'.  The assignment `function_inverse['f] : lambda([s],
+     f(a) = b.  The assignment `function_inverse['f] : lambda([s],
      g(s))' informs  `to_poly_solve' that the solution set to `f(x) =
      b' equals the solution set to `x = g(b)'; two examples:
 
@@ -5983,11 +6155,11 @@ English language user documentation for these packages.
           (%i20) to_poly_solve(G(x - a) = b,x);
           (%o20)             %union([x = b + a + %z125])
 
-     Notes:
+     Notes
 
-        * The solve variables needn't be symbols; when `fullratsubst'
-          is able to appropriately make substitutions, the solve
-          variables can be nonsymbols:
+        * The solve variables needn't be symbols; when `fullratsubst' is
+          able to appropriately make substitutions, the solve variables
+          can be nonsymbols:
 
           (%i1) to_poly_solve([x^2 + y^2 + x * y = 5, x * y = 8],
                               [x^2 + y^2, x * y]);
@@ -6015,23 +6187,23 @@ English language user documentation for these packages.
           `to_poly_solve' consults the fact database to decide if the
           argument to the absolute value is complex valued.  When
 
-          (%i1) to_poly_solve(abs(x) = 6, x);
-          (%o1)              %union([x = - 6], [x = 6])
-          (%i2) declare(z,complex)$
+               (%i1) to_poly_solve(abs(x) = 6, x);
+               (%o1)              %union([x = - 6], [x = 6])
+               (%i2) declare(z,complex)$
 
-          (%i3) to_poly_solve(abs(z) = 6, z);
-          (%o3) %union(%if((%c11 # 0) %and (%c11 conjugate(%c11) - 36 =
-                                                 0), [z = %c11], %union()))
+               (%i3) to_poly_solve(abs(z) = 6, z);
+               (%o3) %union(%if((%c11 # 0) %and (%c11 conjugate(%c11) - 36 =
+                                                      0), [z = %c11], %union()))
 
           This is the only situation that the solver consults the fact
           database.  If a solve variable is declared to be an integer,
           for example, `to_poly_solve' ignores this declaration.
 
-     Relevant option variables: `algexact, resultant, algebraic'
+     Relevant option variables algexact, resultant, algebraic
 
-     Related functions: `to_poly'
+     Related functions to_poly
 
-     To use: `load(to_poly_solve)'
+     To use `load(to_poly_solve)'
 
      Status: The function `to_poly_solve' is experimental; its
      specifications might change and its functionality might be merged

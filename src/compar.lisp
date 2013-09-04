@@ -712,7 +712,7 @@ relational knowledge is contained in the default context GLOBAL.")
 	(not x)
 	`((mnot) ,x))))
 
-;;;Toplevel functions- $ASKSIGN, $SIGN.
+;;;Toplevel functions- $askequal, $asksign, and $sign.
 ;;;Switches- LIMITP If TRUE $ASKSIGN and $SIGN will look for special
 ;;;		     symbols such as EPSILON, $INF, $MINF and attempt
 ;;;		     to do the correct thing. In addition calls to
@@ -725,6 +725,22 @@ relational knowledge is contained in the default context GLOBAL.")
 
 (setq limitp nil)
 
+(defun $askequal (a b)
+  (let ((answer (meqp (sratsimp a) (sratsimp b)))) ; presumably handles mbags and extended reals.
+    (cond ((eq answer t) '$yes)
+	  ((eq answer nil) '$no)
+	  (t
+	   (setq answer (retrieve `((mtext) ,(intl:gettext "Is ") ,a ,(intl:gettext " equal to ") ,b ,(intl:gettext "?")) nil))
+	   (cond ((member answer '($no |$n| |$N|) :test #'eq)
+		  (tdpn (sub b a))
+		  '$no)
+		 ((member answer '($yes |$y| |$Y|) :test #'eq)
+		  (tdzero (sub a b))
+		  '$yes)
+		 (t  
+		  (mtell (intl:gettext "Acceptable answers are yes, y, Y, no, n, N. ~%"))
+		  ($askequal a b)))))))
+	   
 (defmfun $asksign (exp)
   (let (sign minus odds evens factored)
     (asksign01 (cond (limitp (restorelim exp))
@@ -886,50 +902,65 @@ relational knowledge is contained in the default context GLOBAL.")
   (let ($radexpand)
     (declare (special $radexpand))
     (sign1 $askexp))
-  (cond ((has-int-symbols $askexp) '$pnz)
-	((member sign '($pos $neg $zero $imaginary) :test #'eq) sign)
-	((null odds)
-	 (setq $askexp (lmul evens)
-	       sign (cdr (assol $askexp *local-signs*)))
-         (ensure-sign $askexp '$znz))
-	(t
-         (if minus (setq sign (flip sign)))
-         (setq $askexp
-               (lmul (nconc odds (mapcar #'(lambda (l) (pow l 2)) evens))))
-         (let ((domain sign))
-           (setf sign (assol $askexp *local-signs*))
-           (ensure-sign $askexp domain)))))
+  (cond
+    ((has-int-symbols $askexp) '$pnz)
+    ((member sign '($pos $neg $zero $imaginary) :test #'eq) sign)
+    (t
+     (let ((domain sign) (squared nil))
+       (cond
+         ((null odds)
+          (setq $askexp (lmul evens)
+                domain '$znz
+                squared t))
+         (t
+          (if minus (setq sign (flip sign)))
+          (setq $askexp
+                (lmul (nconc odds (mapcar #'(lambda (l) (pow l 2)) evens))))))
+       (setq sign (cdr (assol $askexp *local-signs*)))
+       (ensure-sign $askexp domain squared)))))
 
-(defun match-sign (sgn domain expression)
+(defun match-sign (sgn domain expression squared)
   "If SGN makes sense for DOMAIN store the result (see ENSURE-SIGN) and return
-it. Otherwise, return NIL."
-  ;; We have a hit if the answer (sign) is one of the first list and the
-  ;; question (domain) was one of the second.
+it. Otherwise, return NIL. If SQUARED is true, we are actually looking for the
+sign of the square, so any negative results are converted to positive."
+  ;; The entries in BEHAVIOUR are of the form
+  ;;   (MATCH DOMAINS REGISTRAR SIGN SIGN-SQ)
+  ;;
+  ;; The algorithm goes as follows:
+  ;;
+  ;; Look for SGN in MATCH. If found, use REGISTRAR to store SIGN for the
+  ;; expression and then return SIGN if SQUARED is false or SIGN-SQ if it is
+  ;; true.
   (let* ((behaviour
-          '((($pos |$P| |$p| $positive) (nil $znz $pz $pn $pnz) tdpos $pos)
-            (($neg |$N| |$n| $negative) (nil $znz $nz $pn $pnz) tdneg $neg)
-            (($zero |$Z| |$z| 0 0.0) (nil $znz $pz $nz $pnz) tdzero $zero)
-            (($pn $nonzero $nz $nonz $non0) ($znz) tdpn $pn)))
+          '((($pos |$P| |$p| $positive) (nil $znz $pz $pn $pnz) tdpos $pos $pos)
+            (($neg |$N| |$n| $negative) (nil $znz $nz $pn $pnz) tdneg $neg $pos)
+            (($zero |$Z| |$z| 0 0.0) (nil $znz $pz $nz $pnz) tdzero $zero $zero)
+            (($pn $nonzero $nz $nonz $non0) ($znz) tdpn $pn $pos)))
          (hit (find-if (lambda (bh)
                          (and (member sgn (first bh) :test #'equal)
                               (member domain (second bh) :test #'eq)))
                        behaviour)))
     (when hit
-      (funcall (third hit) expression)
-      (setq sign
-            (if minus (flip (fourth hit)) (fourth hit))))))
+      (let ((registrar (third hit))
+            (found-sign (if squared (fifth hit) (fourth hit))))
+        (funcall registrar expression)
+        (setq sign
+              (if (and minus (not squared)) (flip found-sign) found-sign))))))
 
-(defun ensure-sign (expr &optional domain)
+(defun ensure-sign (expr &optional domain squared)
   "Try to determine the sign of EXPR. If DOMAIN is not one of the special values
 described below, we try to tell whether EXPR is positive, negative or zero. It
 can be more specialised ($pz => positive or zero; $nz => negative or zero; $pn
 => positive or negative; $znz => zero or nonzero).
 
+If SQUARED is true, then we're actually interested in the sign of EXPR^2. As
+such, a nonzero sign should be regarded as positive.
+
 When calling ENSURE-SIGN, set the special variable SIGN to the best current
 guess for the sign of EXPR. The function returns the sign, calls one of (TDPOS
 TDNEG TDZERO TDPN) to store it, and also sets SIGN."
   (loop
-     (let ((new-sign (match-sign sign domain expr)))
+     (let ((new-sign (match-sign sign domain expr squared)))
        (when new-sign (return new-sign)))
      (setf sign (retrieve
                  (list '(mtext)
@@ -1841,8 +1872,6 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 
 (setf (get '$floor 'integer-valued) t)
 (setf (get '$ceiling 'integer-valued) t)
-(setf (get '%signum  'integer-valued) t)
-(setf (get '$signum 'integer-valued) t)
 (setf (get '$charfun 'integer-valued) t)
 
 (defun maxima-integerp (x)
@@ -1934,23 +1963,14 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
                                 (return (evod (cadr fact))))
                                (t (return nil)))))))))))
 
-(defmfun nonintegerp (e)
-  (let (num)
-    (cond ((integerp e) nil)
-	  ((mnump e) t)
-          ((atom e)
-           (or (kindp e '$noninteger)
-               (check-noninteger-facts e)))
-	  ((specrepp e) (nonintegerp (specdisrep e)))
-	  ((and (eq (caar e) 'mplus) (ratnump (cadr e)) (intp (cdr e))) t)
-	  ((and (integerp (setq num ($num e)))
-		(prog2
-		    (setq e ($denom e))
-		    (or (eq (csign (sub e num)) '$pos)
-			(eq (csign (add2 e num)) '$neg)))) t)
-          ;; Assumes a simplified sqrt of a number is not an integer.
-          ((and (mexptp e) (mnump (second e)) (alike1 (third e) 1//2)) t)
-	  (t nil))))
+(defun nonintegerp (e)
+  (cond ((and (symbolp e) (or (kindp e '$noninteger) (check-noninteger-facts e) (kindp e '$irrational)))) ;declared noninteger
+    ((mnump e)
+     (if (integerp e) nil t)) ;all floats are noninteger and integers are not nonintegers
+    (($ratp e)
+     (nonintegerp ($ratdisrep e)))
+    (t (eq t (mgrp e (take '($floor) e))))))
+
 
 ;; Look into the database for symbols which are declared to be equal 
 ;; to a noninteger or an expression which is a noninteger.
@@ -2445,7 +2465,10 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
           (kind $%gamma $real)
           (kind $%phi   $noninteger)
           (kind $%phi   $real)
-          
+          (kind $%pi $irrational)
+	  (kind $%e $irrational)
+	  (kind $%phi $irrational)
+	  
           ;; Declarations for functions
 	  (kind %log $increasing)
 	  (kind %atan $increasing) (kind %atan $oddfun)

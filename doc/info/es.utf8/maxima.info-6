@@ -1,12 +1,1470 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.30 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.31 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).  Un sistema de cálculo simbólico
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Introducción a la programación,  Up: Programación
+
+37.4 Funciones y variables para la programación
+===============================================
+
+ -- Función: backtrace ()
+ -- Función: backtrace (<n>)
+     Devuelve la pila de llamadas, esto es, la lista de funciones que
+     han llamado a la función actualmente activa.
+
+     La llamada a `backtrace()' devuelve la pila completa de llamadas.
+
+     Ejemplos:
+
+          (%i1) h(x) := g(x/7)$
+          (%i2) g(x) := f(x-11)$
+          (%i3) f(x) := e(x^2)$
+          (%i4) e(x) := (backtrace(), 2*x + 13)$
+          (%i5) h(10);
+          #0: e(x=4489/49)
+          #1: f(x=-67/7)
+          #2: g(x=10/7)
+          #3: h(x=10)
+                                        9615
+          (%o5)                         ----
+                                         49
+
+     La llamada `backtrace (<n>)' devuelve las <n> funciones más
+     recientes, incluyendo a la función actualmente activa.
+
+     Ejemplos:
+
+          (%i1) h(x) := (backtrace(1), g(x/7))$
+          (%i2) g(x) := (backtrace(1), f(x-11))$
+          (%i3) f(x) := (backtrace(1), e(x^2))$
+          (%i4) e(x) := (backtrace(1), 2*x + 13)$
+          (%i5) h(10);
+          #0: h(x=10)
+          #0: g(x=10/7)
+          #0: f(x=-67/7)
+          #0: e(x=4489/49)
+                                        9615
+          (%o5)                         ----
+                                         49
+
+
+ -- Operador especial: do
+     La sentencia `do' se utiliza para realizar iteraciones.  Debido a
+     su generalidad la sentencia `do' se describirá en dos partes. En
+     primer lugar se mostrará su forma más usual, análoga a la de otros
+     lenguajes de programación (Fortran, Algol, PL/I, etc.); después se
+     mencionarán otras formas de uso.
+
+     Hay tres variantes de esta sentencia que se diferencian entre sí
+     únicamente por las condiciones de fin de bucle. Son las siguientes:
+
+        * `for <variable>: <valor_inicial> step <incremento>       thru
+          <límite> do <cuerpo>'
+
+        * `for <variable>: <valor_inicial> step <incremento>
+          while <condición> do <cuerpo>'
+
+        * `for <variable>: <valor_inicial> step <incremento>
+          unless <condición> do <cuerpo>'
+
+     El <valor_inicial>, el <incremento>, el <límite> y el <cuerpo>
+     pueden ser cualquier tipo de expresión válida de Maxima. Si el
+     incremento es igual a la unidad (1) entonces "`step 1'" puede
+     omitirse.
+
+     La ejecución de la sentencia `do' se realiza asignando el
+     valor_inicial a la variable (llamada de aquí en adelante
+     variable-control). A continuación: (1) si la variable-control ha
+     excedido el límite de la especificación dada por un `thru', o si
+     la condición impuesta por `unless' es verdadera (`true'), o si la
+     condición dada por `while' es falsa (`false') entonces la
+     iteración `do' termina. (2) El cuerpo se evalúa.  (3) El
+     incremento es sumado a la variable-control. El proceso de (1) a
+     (3) se repite hasta que la condición de fin de iteración se
+     satisfaga. También es posible especificar varias condiciones de
+     terminación del bucle, en cuyo caso `do' terminará cuando se
+     satisfaga alguna de ellas.
+
+     En general la condición `thru' se satisfará cuando la
+     variable-control sea mayor que el límite si el incremento es no
+     negativo, o cuando la variable-control sea menor que el límite
+     cuando el incremento es negativo. El incremento y el límite pueden
+     ser expresiones no numéricas, tanto en cuanto esta desigualdad
+     pueda quedar determinada. Sin embargo, a menos que el incremento
+     sea un número negativo en el momento de comenzar el cómputo de
+     `do', Maxima supondrá que se evaluará a una cantidad positiva. En
+     caso de no ser efectivamente positivo, la sentencia `do' puede dar
+     un resultado inesperado.
+
+     Nótese que el límite, el incremento y la condición de terminación
+     se evalúan en cada iteración del bucle. Así, si alguna de
+     expresiones necesitan de muchos cálculos y devuelven un resultado
+     que no va a cambiar durante toda la ejecución del cuerpo, será más
+     eficiente dar este valor a una variable antes de comenzar la
+     sentencia `do' y utilizarla luego durante su ejecución.
+
+     El valor que habitualmente devuelva la sentencia `do' será el
+     átomo `done'. Sin embargo, la función `return' puede usarse dentro
+     del cuerpo para salir de `do' de forma prematura retornando un
+     valor determinado.  Nótese no obstante que un `return' dentro de
+     un `do' que está dentro de un bloque (`block') provocará una
+     salida de `do' pero no de `block'. Repárese también en que la
+     función `go' no puede usarse para salir de `do' e ir a algún lugar
+     de `block'.
+
+     La variable-control es siempre local respecto de `do', por lo que
+     se puede utilizar cualquier nombre de variable sin afectar el
+     valor de cualquier otra variable externa a `do' y que tenga el
+     mismo nombre. La variable-control no tendrá asignado ningún valor
+     una vez se haya concluido el `do'.
+
+          (%i1) for a:-3 thru 26 step 7 do display(a)$
+                                       a = - 3
+
+                                        a = 4
+
+                                       a = 11
+
+                                       a = 18
+
+                                       a = 25
+
+          (%i1) s: 0$
+          (%i2) for i: 1 while i <= 10 do s: s+i;
+          (%o2)                         done
+          (%i3) s;
+          (%o3)                          55
+
+     Nótese que la condición `while i <= 10' es equivalente a `unless i
+     > 10' y a `thru 10'.
+
+          (%i1) series: 1$
+          (%i2) term: exp (sin (x))$
+          (%i3) for p: 1 unless p > 7 do
+                    (term: diff (term, x)/p,
+                     series: series + subst (x=0, term)*x^p)$
+          (%i4) series;
+                            7    6     5    4    2
+                           x    x     x    x    x
+          (%o4)            -- - --- - -- - -- + -- + x + 1
+                           90   240   15   8    2
+
+     lo que da ocho términos del desarrollo de Taylor de la función
+     `e^sin(x)'.
+
+          (%i1) poly: 0$
+          (%i2) for i: 1 thru 5 do
+                    for j: i step -1 thru 1 do
+                        poly: poly + i*x^j$
+          (%i3) poly;
+                            5      4       3       2
+          (%o3)          5 x  + 9 x  + 12 x  + 14 x  + 15 x
+          (%i4) guess: -3.0$
+          (%i5) for i: 1 thru 10 do
+                    (guess: subst (guess, x, 0.5*(x + 10/x)),
+                     if abs (guess^2 - 10) < 0.00005 then return (guess));
+          (%o5)                  - 3.162280701754386
+
+     Este ejemplo calcula la raíz cuadrada negativa de 10 haciendo 10
+     iteraciones del método de Newton-Raphson. De no haberse alcanzado
+     el criterio de convergencia el valor devuelto hubiese sido `done'.
+
+     En lugar de añadir siempre una cantidad a la variable-control a
+     veces se puede querer que cambie en cada iteración siguiendo algún
+     otro criterio. En tal caso se puede hacer uso de `next
+     <expresión>' en lugar de `step <incremento>'. Esto hará que a la
+     variable-control se le asigne el resultado de evaluar la expresión
+     en cada iteración del bucle.
+
+          (%i6) for count: 2 next 3*count thru 20 do display (count)$
+                                      count = 2
+
+                                      count = 6
+
+                                     count = 18
+
+     En ocasiones puede interesar realizar una iteración en la que la
+     variable-control no se utilice nunca. Se podrá entonces dar
+     únicamente las condiciones de terminación del bucle omitiendo la
+     inicialización y actualizando la información, tal como se hace en
+     el siguiente ejemplo para calcular la raíz cuadrada de 5
+     utilizando un valor inicial alejado de la solución.
+
+          (%i1) x: 1000$
+          (%i2) thru 20 do x: 0.5*(x + 5.0/x)$
+          (%i3) x;
+          (%o3)                   2.23606797749979
+          (%i4) sqrt(5), numer;
+          (%o4)                   2.23606797749979
+
+     Si así se quiere, incluso es posible omitir las condiciones de
+     terminación completamente y escribir únicamente `do <body>', lo
+     que provocará entrar en un bucle infinito. En tal caso, debería
+     usarse la función `return' a fin de terminar con la ejecución de
+     `do'.
+
+          (%i1) newton (f, x):= ([y, df, dfx], df: diff (f ('x), 'x),
+                    do (y: ev(df), x: x - f(x)/y,
+                        if abs (f (x)) < 5e-6 then return (x)))$
+          (%i2) sqr (x) := x^2 - 5.0$
+          (%i3) newton (sqr, 1000);
+          (%o3)                   2.236068027062195
+
+     (En este ejemplo, cuando se ejecuta `return' obliga a que sea `x'
+     el valor devuelto por `do'. Al salirse del bloque, `x' es también
+     el valor que devuelve `block' por ser `do' la última sentencia del
+     bloque.)
+
+     Hay todavía otra forma de `do' en Maxima. Su sintaxis es:
+
+          for <variable> in <lista> <test_de_parada> do <cuerpo>
+
+     Los elementos de <list> son cualesquiera expresiones que se irán
+     asignando sucesivamente a la variable en cada repetición del
+     cuerpo. El test de parada <end_tests> (que es opcional) puede
+     usarse para terminar la ejecución de `do'; de otro modo las
+     iteraciones se pararán cuando la lista se haya agotado o cuando se
+     ejecute un `return' dentro del cuerpo.  (De hecho, la lista puede
+     ser cualquier expresión no atómica, de la cual se irán extrayendo
+     de forma sucesiva sus diferentes partes.)
+
+          (%i1)  for f in [log, rho, atan] do ldisp(f(1))$
+          (%t1)                                  0
+          (%t2)                                rho(1)
+                                               %pi
+          (%t3)                                 ---
+                                                4
+          (%i4) ev(%t3,numer);
+          (%o4)                             0.78539816
+
+
+ -- Función: errcatch (<expr_1>, ..., <expr_n>)
+     Evalúa las expresiones <expr_1>, ..., <expr_n> una a una y
+     devuelve `[<expr_n>]' (una lista) en caso de que no ocurra ningún
+     error. En caso de aparecer algún error durante el cálculo de
+     alguno de los argumentos, `errcatch' evita que el error se
+     propague y devuelve la lista vacía `[]' sin evaluar más argumentos.
+
+     La función `errcatch' es útil en ficheros `batch' donde se
+     sospeche que pueda aparecer algún error, el cual provocaría la
+     terminación de la ejecución del `batch' de no ser previamente
+     detectado.
+
+
+ -- Función: error (<expr_1>, ..., <expr_n>)
+ -- Variable del sistema: error
+     Calcula y devuelve <expr_1>, ..., <expr_n>, enviando
+     posteriormente una seãl de error a Maxima o al `errcatch' más
+     cercano.
+
+     A la variable `error' se le asigna una lista con la descripción
+     del error. El primer elemento de `error' es una cadena de formato,
+     la cual une todas las cadenas de los argumentos <expr_1>, ...,
+     <expr_n>, siendo los demás elementos de la lista los valores de
+     los argumentos que no son cadenas.
+
+     La llamada a `errormsg()' formatea e imprime `error'. Se reimprime
+     así el mensaje de error más reciente.
+
+
+ -- Variable opcional: error_size
+     Valor por defecto: 10
+
+     La variable `error_size' modifica los mensajes de error de acuerdo
+     con el tamaño de las expresiones que aparecen en él. Si el tamaño
+     de una expresión (tal como lo determina la función Lisp
+     `ERROR-SIZE') es mayor que `error_size', la expresión se reemplaza
+     en el mensaje por un símbolo, asignándole a éste una expresión.
+     Los símbolos se toman de la lista `error_syms'.
+
+     En caso contrario, si la expresión es menor que `error_size', la
+     expresión se muestra en el propio mensaje.
+
+     Véanse también `error' y `error_syms'.
+
+     Ejemplo:
+
+     El tamaño de `U', tal como lo determina `ERROR-SIZE', es 24.
+
+          (%i1) U: (C^D^E + B + A)/(cos(X-1) + 1)$
+
+          (%i2) error_size: 20$
+
+          (%i3) error ("Example expression is", U);
+
+          Example expression is errexp1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i4) errexp1;
+                                      E
+                                     D
+                                    C   + B + A
+          (%o4)                    --------------
+                                   cos(X - 1) + 1
+          (%i5) error_size: 30$
+
+          (%i6) error ("Example expression is", U);
+
+                                   E
+                                  D
+                                 C   + B + A
+          Example expression is --------------
+                                cos(X - 1) + 1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+
+ -- Variable opcional: error_syms
+     Valor por defecto: `[errexp1, errexp2, errexp3]'
+
+     En los mensajes de error, las expresiones mayores que `error_size'
+     son reemplazadas por símbolos a los cuales se les asignas estas
+     expresiones.  Los símbolos se toman de la lista `error_syms'. La
+     primera expresión que resulte ser demasiado larga se reemplaza por
+     `error_syms[1]', la segunda por `error_syms[2]' y así
+     sucesivamente.
+
+     Si hay más expresiones largas que elementos en `error_syms', los
+     símbolos se construyen automáticamente, siendo el <n>-ésimo
+     símbolo equivalente a `concat ('errexp, <n>)'.
+
+     Véanse también `error' y `error_size'.
+
+
+ -- Función: errormsg ()
+     Reimprime el mensaje de error más reciente. La variable `error'
+     guarda el mensaje y `errormsg' lo formatea e imprime.
+
+
+ -- Variable opcional: errormsg
+     Valor por defecto: `true'
+
+     Cuando `errormsg' vale `false' se suprimen los contenidos de los
+     mensajes de error.
+
+     La variable `errormsg' no se puede asignar a un valor local dentro
+     de un bloque. El valor global de `errormsg' está siempre presente.
+
+     Ejemplos:
+
+          (%i1) errormsg;
+          (%o1)                                true
+          (%i2) sin(a,b);
+          Wrong number of arguments to sin
+           -- an error. To debug this try: debugmode(true);
+          (%i3) errormsg:false;
+          (%o3)                                false
+          (%i4) sin(a,b);
+
+           -- an error. To debug this try: debugmode(true);
+
+     La variable `errormsg' no se puede asignar a un valor local dentro
+     de un bloque.
+
+          (%i1) f(bool):=block([errormsg:bool],
+                               print ("value of errormsg is",errormsg))$
+          (%i2) errormsg:true;
+          (%o2)                                true
+          (%i3) f(false);
+          value of errormsg is true
+          (%o3)                                true
+          (%i4) errormsg:false;
+          (%o4)                                false
+          (%i5) f(true);
+          value of errormsg is false
+          (%o5)                                false
+
+ -- Operador especial: for
+     Utilizado en las iteraciones. Véase `do' para una descripción de
+     las técnicas de iteración en Maxima.
+
+
+ -- Función: go (<etiqueta>)
+     Se utiliza dentro de un bloque (`block') para transferir el
+     control a la sentencia del bloque que esté etiquetada con el
+     argumento de `go'. Una sentencia queda etiquetada cuando está
+     precedida por un argumento de tipo átomo como cualquier otra
+     sentencia de `block'.  Por ejemplo:
+
+          block ([x], x:1, tururu, x+1, ..., go(tururu), ...)
+
+     El argumento de `go' debe ser el nombre de una etiqueta que
+     aparezca en el mismo bloque (`block'). No se puede utilizar `go'
+     para transferir el control a un bloque que no sea aquel que
+     contenga la sentencia `go'.
+
+
+ -- Operador especial: if
+     Evaluación condicionada. Se reconocen varias formas de expresiones
+     `if'.
+
+     La expresión `if <cond_1> then <expr_1> else <expr_0>' devuelve
+     <expr_1> si <cond_1> vale `true', en caso contrario la respuesta
+     es `expr_0'.
+
+     La expresión `if <cond_1> then <expr_1> elseif <cond_2> then
+     <expr_2> elseif ... else <expr_0>' devuelve <expr_k> si <cond_k>
+     vale `true' y todas las condiciones anteriores toman el valor
+     `false'.  Si ninguna de las condiciones vale `true', la respuesta
+     es `expr_0'.
+
+     La falta de un `else' final se interpreta como un `else false';
+     esto es, la expresión `if <cond_1> then <expr_1>' equivale a `if
+     <cond_1> then <expr_1> else false', y `if <cond_1> then <expr_1>
+     elseif ... elseif <cond_n> then <expr_n>' equivale a su vez a `if
+     <cond_1> then <expr_1> elseif ... elseif <cond_n> then <expr_n>
+     else false'.
+
+     Las alternativas <expr_0>, ..., <expr_n> pueden ser expresiones
+     válidas de Maxima, incluidas expresiones `if' anidadas.  Las
+     alternativas ni se simplifican ni se evalúan, a menos que su
+     condición asociada valga `true'.
+
+     Las condiciones <cond_1>, ..., <cond_n> deben ser expresiones
+     capaces de dar como resultado `true' o `false' al ser evaluadas.
+     Si en un momento dado una condición no da como resultado un valor
+     de verdad (`true' o `false'), el comportamiento de `if' se controla
+     con la variable global `prederror'. Si `prederror' vale `true', se
+     considera un error que la condición evaluada no dé como resultado
+     un valor de verdad; en caso contrario, las condiciones que no den
+     como resultado un valor de verdad se aceptan, dándose el resultado
+     como una expresión condicional.
+
+     Las condiciones pueden contener operadores lógicos y relacionales,
+     así como otros elementos, tal como se indica a continuación:
+
+          Operación               Símbolo     Tipo
+
+          menor que               <           operador relacional infijo
+          menor o igual que       <=          operador relacional infijo
+          igualdad (sintáctica)   =           operador relacional infijo
+          negación de =           #           operador relacional infijo
+          igualdad (por valor)    equal       operador relacional infijo
+          negación de equal       notequal    operador relacional infijo
+          mayor o igual que       >=          operador relacional infijo
+          mayor que               >           operador relacional infijo
+          y                       and         operador lógico infijo
+          o                       or          operador lógico infijo
+          no                      not         operador lógico prefijo
+
+
+ -- Función: map (<f>, <expr_1>, ..., <expr_n>)
+     Devuelve una expresión cuyo operador principal es el mismo que
+     aparece en las expresiones <expr_1>, ..., <expr_n> pero cuyas
+     subpartes son los resultados de aplicar <f> a cada una de las
+     subpartes de las expresiones;  <f> puede ser tanto el nombre de
+     una función de n argumentos como una expresión `lambda' de n
+     argumentos.
+
+     Uno de los usos que tiene `map' es la de aplicar (o mapear) una
+     función (por ejemplo, `partfrac') sobre cada término de una
+     expresión extensa en la que normalmente no se podría utilizar la
+     función debido a insuficiencias en el espacio de almacenamiento
+     durante el curso de un cálculo.
+
+          (%i1) map(f,x+a*y+b*z);
+          (%o1)                        f(b z) + f(a y) + f(x)
+          (%i2) map(lambda([u],partfrac(u,x)),x+1/(x^3+4*x^2+5*x+2));
+                                     1       1        1
+          (%o2)                     ----- - ----- + -------- + x
+                                   x + 2   x + 1          2
+                                                   (x + 1)
+          (%i3) map(ratsimp, x/(x^2+x)+(y^2+y)/y);
+                                                1
+          (%o3)                            y + ----- + 1
+                                              x + 1
+          (%i4) map("=",[a,b],[-0.5,3]);
+          (%o4)                          [a = - 0.5, b = 3]
+
+     Véase también `maperror' .
+
+ -- Función: mapatom (<expr>)
+     Devuelve `true' si y sólo <expr> es tratado por las rutinas de
+     mapeo como un átomo.
+
+ -- Variable opcional: maperror
+     Valor por defecto: `true'
+
+     Cuando `maperror' toma el valor `false', hace que todas las
+     funciones de mapeo, como por ejemplo
+
+          map (f, <expr_1>, <expr_2>, ...)
+
+     (1) paren cuando hayan terminado de procesar la <expr_i> más corta,
+     a menos que todas ellas sean del mismo tamaño y (2) apliquen  `f'
+     a `[expr_1, expr_2, ...]' si es el caso que las `expr_i' no son
+     todas del mismo tipo de objeto.
+
+     Cuando `maperror' toma el valor `true' entonces se emite un
+     mensaje de error cuando se presenta cualquiera de los dos casos
+     anteriores.
+
+
+ -- Variable opcional: mapprint
+     Valor por defecto: `true'
+
+     Si `mapprint' vale `true', se producirán ciertos mensajes por
+     parte de las funciones `map', `mapl' y `fullmap' en determinadas
+     situaciones, como cuando `map' hace uso de `apply'.
+
+     Si `mapprint' vale `false', no se emitirán tales mensajes.
+
+ -- Función: maplist (<f>, <expr_1>, ..., <expr_n>)
+     Devuelve una lista con las aplicaciones de <f> a las partes de las
+     expresiones <expr_1>, ..., <expr_n>; <f> es el nombre de una
+     función ou una expresión lambda.
+
+     La función `maplist' difiere de `map (<f>, <expr_1>, ...,
+     <expr_n>)', la cual devuelve una expresión con el mismo operador
+     principal que tenga <expr_i>, excepto en simplificaciones y en el
+     caso en el que `map' hace un `apply'.
+
+
+ -- Variable opcional: prederror
+     Valor por defecto: `false'
+
+     Cuando `prederror' toma el valor `true', se emite un mensaje de
+     error siempre que el predicado de una sentencia  `if' o de una
+     función `is' no se pueda evaluar ni a verdadero (`true') ni  a
+     falso (`false').
+
+     Si toma el valor `false', se devuelve bajo las mismas
+     circunstancias anteriores el valor `unknown'. El modo `prederror:
+     false' no está soportado en el código traducido; sin embargo,
+     `maybe' está soportado en código traducido.
+
+     Véanse también `is' y `maybe'.
+
+
+ -- Función: return (valor)
+     Puede utilizarse para salir de un bloque, devolviendo su argumento.
+     Véase `block' para más información.
+
+
+ -- Función: scanmap (<f>, <expr>)
+ -- Función: scanmap (<f>, <expr>, bottomup)
+     Aplica recursivamente <f> sobre <expr>, de arriba hacia abajo.
+     Esto es más útil cuando se busca una factorización completa, por
+     ejemplo:
+
+          (%i1) exp:(a^2+2*a+1)*y + x^2$
+          (%i2) scanmap(factor,exp);
+                                              2      2
+          (%o2)                         (a + 1)  y + x
+
+     Nótese que cómo `scanmap' aplica la función dada `factor' a las
+     subexpresiones que forman a <expr>; si se presenta otra forma de
+     <expr> a `scanmap' entonces el resultado puede ser diferente. Así,
+     `%o2' no se restaura cuando `scanmap' se aplica a la forma
+     expandida de exp:
+
+          (%i3) scanmap(factor,expand(exp));
+                                     2                  2
+          (%o3)                      a  y + 2 a y + y + x
+
+     Aquí hay otro ejemplo de la forma en que `scanmap' aplica
+     recursivamente una función dada a todas las subexpresiones,
+     incluyendo exponentes:
+
+          (%i4) expr : u*v^(a*x+b) + c$
+          (%i5) scanmap('f, expr);
+                              f(f(f(a) f(x)) + f(b))
+          (%o5) f(f(f(u) f(f(v)                      )) + f(c))
+
+     `scanmap (<f>, <expr>, bottomup)' aplica <f> a <expr> de abajo
+     hacia arriba. Por ejemplo, para `f' no definida,
+
+          scanmap(f,a*x+b) ->
+             f(a*x+b) -> f(f(a*x)+f(b)) -> f(f(f(a)*f(x))+f(b))
+          scanmap(f,a*x+b,bottomup) -> f(a)*f(x)+f(b)
+              -> f(f(a)*f(x))+f(b) ->
+               f(f(f(a)*f(x))+f(b))
+
+     En este caso se obtiene la misma respuesta por cualquiera de los
+     dos métodos.
+
+
+ -- Función: throw (<expr>)
+     Evalúa <expr> y devuelve el valor del `catch' más reciente. La
+     función `throw' se utiliza junto con `catch' como un mecanismo de
+     retorno no local.
+
+
+ -- Operador especial: while
+ -- Operador especial: unless
+     Véase `do'.
+
+
+ -- Función: outermap (<f>, <a_1>, ..., <a_n>)
+     Aplica la función <f> a cada uno de los elementos del producto
+     vectorial <a_1> por <a_2> ... por <a_n>.
+
+     El argumento <f> debe ser el nombre de una función de n argumentos,
+     o una expresión lambda de n argumentos.  Cada uno de los
+     argumentos <a_k> puede ser una lista, una lista anidada, una
+     matriz o cualquier otro tipo de expresión.
+
+     El valor devuelto por `outermap' es una estructura anidada. Si <x>
+     es la respuesta dada por `outermap', entonces tiene la misma
+     estructura que la primera lista, lista anidada o matriz,
+     `<x>[i_1]...[i_m]' tiene la misma estructura que la segunda lista,
+     lista anidada o matriz, `<x>[i_1]...[i_m][j_1]...[j_n]' tiene la
+     misma estructura que la tercera lista, lista anidada o matriz, y
+     así sucesivamente, siendo <m>, <n>, ... los números índice
+     necesarios para acceder a los elementos de cada argumento: uno
+     para las listas, dos para las matrices y uno o más para las listas
+     anidadas.  Aquellos argumentos que no sean listas ni matrices no
+     tienen efecto alguno sobre la estructura del valor retornado.
+
+     Nótese que el efecto producido por `outermap' es diferente del que
+     se obtiene al aplicar <f> a cada uno de los elementos del producto
+     devuelto por `cartesian_product'. La función `outermap' mantiene
+     la estructura de los argumentos en la respuesta, miemtras que
+     `cartesian_product' no lo hace.
+
+     La función `outermap' evalúa sus argumentos.
+
+     Véanse también `map', `maplist' y `apply'.
+
+     Ejemplos:
+
+     Ejemplos elementales de uso de `outermap'.  Con el fin de mostrar
+     con mayor claridad las combinaciones del argumento, se mantiene
+     sin definir `F'.
+
+          (%i1) outermap (F, [a, b, c], [1, 2, 3]);
+          (%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)],
+                                               [F(c, 1), F(c, 2), F(c, 3)]]
+          (%i2) outermap (F, matrix ([a, b], [c, d]), matrix ([1, 2], [3, 4]));
+                   [ [ F(a, 1)  F(a, 2) ]  [ F(b, 1)  F(b, 2) ] ]
+                   [ [                  ]  [                  ] ]
+                   [ [ F(a, 3)  F(a, 4) ]  [ F(b, 3)  F(b, 4) ] ]
+          (%o2)    [                                            ]
+                   [ [ F(c, 1)  F(c, 2) ]  [ F(d, 1)  F(d, 2) ] ]
+                   [ [                  ]  [                  ] ]
+                   [ [ F(c, 3)  F(c, 4) ]  [ F(d, 3)  F(d, 4) ] ]
+          (%i3) outermap (F, [a, b], x, matrix ([1, 2], [3, 4]));
+                 [ F(a, x, 1)  F(a, x, 2) ]  [ F(b, x, 1)  F(b, x, 2) ]
+          (%o3) [[                        ], [                        ]]
+                 [ F(a, x, 3)  F(a, x, 4) ]  [ F(b, x, 3)  F(b, x, 4) ]
+          (%i4) outermap (F, [a, b], matrix ([1, 2]), matrix ([x], [y]));
+                 [ [ F(a, 1, x) ]  [ F(a, 2, x) ] ]
+          (%o4) [[ [            ]  [            ] ],
+                 [ [ F(a, 1, y) ]  [ F(a, 2, y) ] ]
+                                        [ [ F(b, 1, x) ]  [ F(b, 2, x) ] ]
+                                        [ [            ]  [            ] ]]
+                                        [ [ F(b, 1, y) ]  [ F(b, 2, y) ] ]
+          (%i5) outermap ("+", [a, b, c], [1, 2, 3]);
+          (%o5) [[a + 1, a + 2, a + 3], [b + 1, b + 2, b + 3],
+                                                     [c + 1, c + 2, c + 3]]
+
+     El siguiente ejemplo permite hacer un análisis más profundo del
+     valor retornado por `outermap'.  Los tres primeros argumentos son
+     una matriz, una lista y otra matriz, en este orden. El valor
+     devuelto es una matriz, cuyos elementos son listas y cada elemento
+     de cada una de estas listas es a su vez una matriz.
+
+          (%i1) arg_1 :  matrix ([a, b], [c, d]);
+                                      [ a  b ]
+          (%o1)                       [      ]
+                                      [ c  d ]
+          (%i2) arg_2 : [11, 22];
+          (%o2)                       [11, 22]
+          (%i3) arg_3 : matrix ([xx, yy]);
+          (%o3)                      [ xx  yy ]
+          (%i4) xx_0 : outermap(lambda([x, y, z], x / y + z), arg_1,
+                                                             arg_2, arg_3);
+                         [  [      a        a  ]  [      a        a  ]  ]
+                         [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                         [  [      11       11 ]  [      22       22 ]  ]
+          (%o4)  Col 1 = [                                              ]
+                         [  [      c        c  ]  [      c        c  ]  ]
+                         [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                         [  [      11       11 ]  [      22       22 ]  ]
+                           [  [      b        b  ]  [      b        b  ]  ]
+                           [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                           [  [      11       11 ]  [      22       22 ]  ]
+                   Col 2 = [                                              ]
+                           [  [      d        d  ]  [      d        d  ]  ]
+                           [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
+                           [  [      11       11 ]  [      22       22 ]  ]
+          (%i5) xx_1 : xx_0 [1][1];
+                     [      a        a  ]  [      a        a  ]
+          (%o5)     [[ xx + --  yy + -- ], [ xx + --  yy + -- ]]
+                     [      11       11 ]  [      22       22 ]
+          (%i6) xx_2 : xx_0 [1][1] [1];
+                                [      a        a  ]
+          (%o6)                 [ xx + --  yy + -- ]
+                                [      11       11 ]
+          (%i7) xx_3 : xx_0 [1][1] [1] [1][1];
+                                            a
+          (%o7)                        xx + --
+                                            11
+          (%i8) [op (arg_1), op (arg_2), op (arg_3)];
+          (%o8)                  [matrix, [, matrix]
+          (%i9) [op (xx_0), op (xx_1), op (xx_2)];
+          (%o9)                  [matrix, [, matrix]
+
+     La función `outermap' mantiene la estructura de los argumentos en
+     su respuesta, mientras que `cartesian_product' no lo hace.
+
+          (%i1) outermap (F, [a, b, c], [1, 2, 3]);
+          (%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)],
+                                               [F(c, 1), F(c, 2), F(c, 3)]]
+          (%i2) setify (flatten (%));
+          (%o2) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3),
+                                                 F(c, 1), F(c, 2), F(c, 3)}
+          (%i3) map (lambda ([L], apply (F, L)), cartesian_product ({a, b, c}, {1, 2, 3}));
+          (%o3) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3),
+                                                 F(c, 1), F(c, 2), F(c, 3)}
+          (%i4) is (equal (%, %th (2)));
+          (%o4)                         true
+
+
+
+File: maxima.info,  Node: Depurado,  Next: augmented_lagrangian,  Prev: Programación,  Up: Top
+
+38 Depurado
+***********
+
+* Menu:
+
+* Depuración del código fuente::
+* Claves de depuración::
+* Funciones y variables para depurado::
+
+
+File: maxima.info,  Node: Depuración del código fuente,  Next: Claves de depuración,  Up: Depurado
+
+38.1 Depuración del código fuente
+=================================
+
+Maxima es capaz de dar asistencia en la depuración del código fuente.
+Un usuario puede establecer un punto de referencia dentro del código de
+una función a partir del cual se siga la ejecución línea a línea. La
+compliación puede ser posteriormente examinada, conjuntamente con los
+valores que se han ido asignando a las variables.
+
+   La instrucción `:help', o `:h', muestra la lista de comandos para la
+depuración. (En general, los comandos pueden abreviarse; en algunos
+casos la lista de alternativas podrá ser listada.) Dentro del
+depurador, el usuario podrá examinar también cualquier función propia
+de Maxima, definirla y manipular variables y expresiones.
+
+   El punto de referencia se establecerá con la instrucción `:br'. Ya
+dentro del depurador, el usuario podrá avanzar una línea de cada vez
+utilizando la instrucción `:n' (de "next", en inglés). La orden `:bt'
+(de "backtrace") muestra la lista de la pila. Finalmente, con el
+comando `:r' ("resume") se abandona el depurador continuando con la
+ejecución. El uso de estas instrucciones se muestra en el siguiente
+ejemplo.
+
+     (%i1) load ("/tmp/foobar.mac");
+
+     (%o1)                           /tmp/foobar.mac
+
+     (%i2) :br foo
+     Turning on debugging debugmode(true)
+     Bkpt 0 for foo (in /tmp/foobar.mac line 1)
+
+     (%i2) bar (2,3);
+     Bkpt 0:(foobar.mac 1)
+     /tmp/foobar.mac:1::
+
+     (dbm:1) :bt                  <-- pulsando :bt se retrocede
+     #0: foo(y=5)(foobar.mac line 1)
+     #1: bar(x=2,y=3)(foobar.mac line 9)
+
+     (dbm:1) :n                   <-- pulsando :n se avanza una línea
+     (foobar.mac 2)
+     /tmp/foobar.mac:2::
+
+     (dbm:1) :n                   <-- pulsando :n se avanza otra línea
+     (foobar.mac 3)
+     /tmp/foobar.mac:3::
+
+     (dbm:1) u;                   <-- se pide el valor de u
+     28
+
+     (dbm:1) u: 33;               <-- se cambia el valor de u a 33
+     33
+
+     (dbm:1) :r                   <-- pulsando :r se termina la depuración
+
+     (%o2)                                1094
+
+   El fichero `/tmp/foobar.mac' contiene lo siguiente:
+
+     foo(y) := block ([u:y^2],
+       u: u+3,
+       u: u^2,
+       u);
+
+     bar(x,y) := (
+       x: x+2,
+       y: y+2,
+       x: foo(y),
+       x+y);
+
+   USO DEL DEPURADOR EN EMACS
+
+   Si el usuario está corriendo el código bajo GNU emacs en un entorno
+de texto (dbl shell), o está ejecutando el  entorno gráfico `xmaxima',
+entonces cuando una función pare en el punto de referencia, podrá
+observar su posición actual en el archivo fuente, el cual será mostrado
+en la otra mitad de la ventana, bien resaltada en rojo, o con una
+pequeña flecha apuntando a la línea correcta. El usuario puede avanzar
+líneas simples tecleando M-n (Alt-n).
+
+   Bajo Emacs se debe ejecutar el programa en una ventana de texto
+`dbl', la cual requiere el archivo `dbl.el' que está en el directorio
+elisp. El usuario debe instalar los archivos elisp o agregar el
+directorio elisp de Maxima a la ruta de búsqueda: por ejemplo, se puede
+añadir lo siguiente al archivo `.emacs' o al `site-init.el'
+
+     (setq load-path (cons "/usr/share/maxima/5.9.1/emacs" load-path))
+     (autoload 'dbl "dbl")
+
+   entonces en emacs
+
+     M-x dbl
+
+   debería abrir una ventana del sistema en la cual se pueden ejecutar
+programas, por ejemplo Maxima, gcl, gdb, etc.  En esta ventana también
+se puede ejecutar el depurador, mostrando el código fuente en la otra
+ventana.
+
+   El usuario puede colocar un punto de referencia en una línea
+determinada sin más que teclear `C-x space'. Con esto se le hace saber
+al depurador en qué función está el cursor y en qué línea del mismo. Si
+el cursor está en la línea 2 de `foo', entonces insertará en la otra
+ventana la instrucción "`:br foo 2'", a fin de detener `foo' justo en
+la segunda línea. Para tener esto operativo, el usuario debe tener
+activo maxima-mode.el (modo-maxima.el) en la ventana en la que está
+`foobar.mac'. Hay otros comandos disponibles en la ventana, como
+evaluar la función dentro de Maxima tecleando `Alt-Control-x'.
+
+
+File: maxima.info,  Node: Claves de depuración,  Next: Funciones y variables para depurado,  Prev: Depuración del código fuente,  Up: Depurado
+
+38.2 Claves de depuración
+=========================
+
+Las claves de depuración son palabras que no son interpretadas como
+expresiones de Maxima. Una clave de depuración puede introducirse
+dentro de Maxima o del depurador. Las claves de depuración comienzan
+con dos puntos, ':'. Por ejemplo, para evaluar una expresión Lisp, se
+puede teclear `:lisp' seguido de la expresión a ser evaluada.
+
+     (%i1) :lisp (+ 2 3)
+     5
+
+   El número de argumentos depende del comando en particular. Además,
+tampoco es necesario teclear el nombre completo de la instrucción, tan
+solo lo justo para diferenciarla de las otras instrucciones. Así, `:br'
+sería suficiente para `:break'.
+
+   Las claves de depuración se listan a continuación.
+
+`:break F n'
+     Establece un punto de referencia en la función `F' en la línea `n'
+     contando a partir del comienzo de la función. Si `F' es una
+     cadena, entonces se entiende que se trata de un fichero, siendo
+     entonces `n' el número de línea a partir del comienzo del fichero.
+     El valor `n' es opcional; en caso de no ser suministrado, se
+     entenderá que vale cero (primera línea de la función o fichero).
+
+`:bt'
+     Retrocede en la pila.
+
+`:continue'
+     Continua el cómputo de la función.
+
+`:delete'
+     Borra los punto de referencia especificados, o todos si no se
+     especifica ninguno.
+
+`:disable'
+     Deshabilita los puntos de referencia especificados, o todos si no
+     se especifica ninguno.
+
+`:enable'
+     Habilita los puntos de referencia especificados, o todos si no se
+     especifica ninguno.
+
+`:frame n'
+     Imprime el elemento `n' de la pila, o el actualmente activo si no
+     se especifica ninguno.
+
+`:help'
+     Imprime la ayuda sobre un comando del depurador, o de todos los
+     comandos si no se especifica ninguno.
+
+`:info'
+     Imprime información sobre un elemento.
+
+`:lisp expresión'
+     Evalúa la `expresión' Lisp.
+
+`:lisp-quiet expresión'
+     Evalúa la `expresión' Lisp sin devolver el resultado.
+
+`:next'
+     Como `:step', excepto que `:next' se salta las llamadas a
+     funciones.
+
+`:quit'
+     Sale del nivel actual del depurador sin completar el cómputo.
+
+`:resume'
+     Continúa con el cómputo.
+
+`:step'
+     Sigue con el cómputo de la función o fichero hasta que alcance una
+     nueva línea fuente.
+
+`:top'
+     Retorna a Maxima desde cualquier nivel del depurador sin completar
+     el cómputo.
+
+
+File: maxima.info,  Node: Funciones y variables para depurado,  Prev: Claves de depuración,  Up: Depurado
+
+38.3 Funciones y variables para depurado
+========================================
+
+ -- Variable opcional: debugmode
+     Valor por defecto: `false'
+
+     Cuando en Maxima ocurre un error, Maxima inicializará el depurador
+     si `debugmode' tiene el valor `true'.  El usuario puede ingresar
+     comandos para examinar la pila de llamadas, los puntos de
+     interrupción; en pocas palabras ir a través del código de Maxima.
+     Vea `debugging' para una lista de los comandos del depurador.
+
+     Habilitando `debugmode' no se capturarán los errores tipo Lisp.
+
+
+ -- Variable opcional: refcheck
+     Valor por defecto: `false'
+
+     Cuando `refcheck' vale `true', Maxima imprime un mensaje cada vez
+     que una variable es utilizada por vez primera en un cálculo.
+
+
+ -- Variable opcional: setcheck
+     Valor por defecto: `false'
+
+     Cuando el valor de `setcheck' es una lista de variables (se admite
+     que tengan subíndices) Maxima devuelve un mensaje indicando si los
+     valores que han sido asignados a las variables lo han sido con el
+     operador ordinario `:', o con el operador de asignación `::' o
+     como resultado de haberse realizado una llamada de función, pero
+     en ningún caso cuando la asignación haya sido hecha mediante los
+     operadores `:=' o `::='. El mensaje contiene el nombre de la
+     variable y su valor.
+
+     La variable `setcheck' admite también los valores `all' o `true'
+     con lo que el informe incluirá todas las variables.
+
+     Cada nueva asignación de `setcheck' establece una nueva lista de
+     variables a ser monitorizada, de forma que cualquier otra variable
+     previamente asignada a `setcheck' es olvidada.
+
+     Los nombres asignados a `setcheck' deben estar precedidos del
+     apóstrofo `'' a fin de evitar que las variables sean evaluadas
+     antes de ser almacenadas en `setcheck'. Por ejemplo, si `x', `y' y
+     `z' ya guardan algún valor entoces se hará
+
+          setcheck: ['x, 'y, 'z]$
+
+     para colocarlas en la lista de variables a monitorizar.
+
+     No se generará ninguna salida cuando una variable de la lista
+     `setcheck' sea asignada a ella misma, como en `X: 'X'.
+
+
+ -- Variable opcional: setcheckbreak
+     Valor por defecto: `false'
+
+     Si `setcheckbreak' es igual `true', Maxima se detendrá siempre que
+     a una variable de la lista `setcheck' se le asigne un nuevo valor.
+     La detención tendrá lugar justo antes de hacerse la asignación. En
+     ese momento `setval' guarda el valor que se le va a dar a la
+     variable. Entonces el usuario podrá darle un valor diferente
+     pasándoselo a la variable `setval'.
+
+     Véanse también `setcheck' y `setval'.
+
+
+ -- Variable del sistema: setval
+     Guarda el valor que va a ser asignado a una variable cuando
+     `setcheckbreak' realiza una detención. Entonces se podrá asignarle
+     otro valor pasándoselo previamente a `setval'.
+
+     Véanse también `setcheck' y `setcheckbreak'.
+
+
+ -- Función: timer (<f_1>, ..., <f_n>)
+ -- Función: timer (all)
+ -- Función: timer ()
+     Dadas las funciones <f_1>, ..., <f_n>, `timer' coloca cada una de
+     ellas en la lista de funciones para las cuales se generarán
+     estadísticas relativas al tiempo de cómputo. Así, `timer(f)$
+     timer(g)$' coloca a `f' y luego a `g' en dicha lista de forma
+     acumulativa.
+
+     La sentencia `timer(all)' coloca todas las funciones de usuario
+     (las referenciadas por la variable global `functions') en la lista
+     de funciones cuyos tiempos de ejecución se quieren monitorizar.
+
+     Si no se le pasan argumentos a `timer' se obtendrá la lista de
+     funciones cuyos tiempos de ejecución se quieren monitorizar.
+
+     Maxima almacena la duración del cómputo de cada función de la
+     lista, de forma que `timer_info' devolverá las estadísticas
+     correspondientes, incluyendo el tiempo medio de cada llamada a la
+     función, el número de llamadas realizadas y el tiempo total
+     transcurrido. La instrucción `untimer' borra las funciones de la
+     lista.
+
+     La función `timer' no evalúa sus argumentos, de forma que `f(x) :=
+     x^2$ g:f$ timer(g)$' no coloca a `f' en la lista.
+
+     Si `trace(f)' está activada, entonces `timer(f)' está desactivada;
+     `trace' y `timer' no pueden estar operativas al mismo tiempo.
+
+     Véase también `timer_devalue'.
+
+
+ -- Función: untimer (<f_1>, ..., <f_n>)
+ -- Función: untimer ()
+     Dadas las funciones <f_1>, ..., <f_n>, `untimer' las elimina de la
+     lista de funciones cuyos tiempos de ejecución se quiere
+     monitorizar.
+
+     Si no se le suministran argumentos, `untimer' borra completamente
+     la lista.
+
+     Tras la ejecución de `untimer (f)', `timer_info (f)' aún devuelve
+     las estadísticas de tiempo previamente registradas, pero
+     `timer_info()' (sin argumentos) no devuelve información sobre
+     aquellas funciones que ya no están en la lista. La ejecución de
+     `timer (f)' inicializa todas las estadísticas a cero y coloca `f'
+     nuevamente en la lista.
+
+
+ -- Variable opcional: timer_devalue
+     Valor por defecto: `false'
+
+     Si `timer_devalue' es igual a `true', Maxima le resta a cada
+     función cuyos tiempos de ejecución se quiere monitorizar el tiempo
+     gastado en llamadas a otras funciones presentes también en la
+     lista de monitorización. En caso contrario, los tiempos que se
+     obtienen para cada función incluyen también los consumidos en
+     otras funciones. Nótese que el tiempo consumido en llamadas a
+     otras funciones que no están en la lista de monitorización no se
+     resta del tiempo total.
+
+     Véanse también `timer' y `timer_info'.
+
+
+ -- Función: timer_info (<f_1>, ..., <f_n>)
+ -- Función: timer_info ()
+     Dadas las funciones <f_1>, ..., <f_n>, `timer_info' devuelve una
+     matriz con información relativa a los tiempos de ejecución de cada
+     una de estas funciones. Sin argumentos, `timer_info' devuelve la
+     información asociada a todas las funciones cuyos tiempos de
+     ejecución se quiere monitorizar.
+
+     La matriz devuelta por `timer_info' incluye los nombres de las
+     funciones, tiempo de ejecución en cada llamada, número de veces
+     que ha sido llamada, tiempo total de ejecución y tiempo consumido
+     en la recolección de basura, `gctime' (del inglés, "garbage
+     collection time") en la versión original de Macsyma, aunque ahora
+     toma el valor constante cero.
+
+     Los datos con los que `timer_info' construye su respuesta pueden
+     obtenerse también con la función `get':
+
+          get(f, 'calls);  get(f, 'runtime);  get(f, 'gctime);
+
+     Véase también `timer'.
+
+
+ -- Función: trace (<f_1>, ..., <f_n>)
+ -- Función: trace (all)
+ -- Función: trace ()
+     Dadas las funciones <f_1>, ..., <f_n>, `trace' imprime información
+     sobre depuración cada vez que estas funciones son llamadas;
+     `trace(f)$ trace(g)$' coloca de forma acumulativa a `f' y luego a
+     `g' en la lista de funciones a ser rastradas.
+
+     La sentencia `trace(all)' coloca todas las funciones de usuario
+     (las referenciadas por la variable global `functions') en la lista
+     de funciones a ser rastreadas.
+
+     Si no se suministran argumentos, `trace' devuelve una lista con
+     todas las funciones a ser rastreadas.
+
+     La función `untrace' desactiva el rastreo. Véase también
+     `trace_options'.
+
+     La función `trace' no evalúa sus argumentos, de forma que `f(x) :=
+     x^2$ g:f$ trace(g)$' no coloca a `f' en la lista de rastreo.
+
+     Cuando una función se redefine es eliminada de la lista de
+     rastreo. Así, tras  `timer(f)$ f(x) := x^2$', la función `f'
+     dejará de estar en dicha lista.
+
+     Si `timer (f)' está activado, entonces `trace (f)' está
+     desactivado, ya que `trace' y `timer' no pueden estar ambos
+     activos para la misma función.
+
+
+ -- Función: trace_options (<f>, <option_1>, ..., <option_n>)
+ -- Función: trace_options (<f>)
+     Establece las opciones de rastreo para la función <f>. Cualquier
+     otra opción previamente especificada queda reemplazada por las
+     nuevas. La ejecución de `trace_options (<f>, ...)' no tiene ningún
+     efecto, a menos que se haya invocado previamente a `trace (<f>)'
+     (es indiferente que esta invocación sea anterior o posterior a
+     `trace_options').
+
+     `trace_options (<f>)' inicializa todas las opciones a sus valores
+     por defecto.
+
+     Las claves de opciones son:
+
+        * `noprint': No se imprime mensaje alguno ni a la entrada ni a
+          la salida de la función.
+
+        * `break': Coloca un punto de referencia antes de que la
+          función comience a ejecutarse y otro después de que termine
+          su ejecución. Véase `break'.
+
+        * `lisp_print': Muestra los argumentos y valores retornados
+          como objetos de Lisp.
+
+        * `info': Imprime `-> true' tanto a la entrada como a la salida
+          de la función.
+
+        * `errorcatch': Detecta errores, otorgando la posibilidad de
+          marcar un error, reintentar la llamada a la función o
+          especificar un valor de retorno.
+
+     Las opciones de rastreo se especifican de dos formas. La única
+     presencia de la clave de opción ya activa la opción. (Nótese que
+     la opción <foo> no se activa mediante `<foo>: true' u otra forma
+     similar; se tendrá en cuenta también que las claves no necesitan
+     ir precedidas del apóstrofo.) Especificando la clave de opción
+     junto con una función de predicado se hace que la opción quede
+     condicionada al predicado.
+
+     La lista de argumentos para las funciones de predicado es siempre
+     `[level, direction, function, item]' donde `level' es el nivel de
+     recursión para la función,  `direction' puede ser tanto `enter'
+     como `exit', `function' es el nombre de la función  y `item' es la
+     lista de argumentos (a la entrada) o el valor de retorno (a la
+     salida).
+
+     A continuación un ejemplo de opciones de rastreo no condicionales:
+
+          (%i1) ff(n) := if equal(n, 0) then 1 else n * ff(n - 1)$
+
+          (%i2) trace (ff)$
+
+          (%i3) trace_options (ff, lisp_print, break)$
+
+          (%i4) ff(3);
+
+     Para la misma función, con la opción `break' condicionada a un
+     predicado:
+
+          (%i5) trace_options (ff, break(pp))$
+
+          (%i6) pp (level, direction, function, item) := block (print (item),
+              return (function = 'ff and level = 3 and direction = exit))$
+
+          (%i7) ff(6);
+
+
+ -- Función: untrace (<f_1>, ..., <f_n>)
+ -- Función: untrace ()
+     Dadas las funciones <f_1>, ..., <f_n>, `untrace' desactiva el
+     rastreo previamente activado por la función `trace'. Si no se
+     aportan argumentos, `untrace' desactiva el rastreo de todas las
+     funciones.
+
+     La llamada a `untrace' devuelve una lista con las funciones para
+     las que el rastreo se ha desactivado.
+
+
+
+File: maxima.info,  Node: augmented_lagrangian,  Next: Bernstein,  Prev: Depurado,  Up: Top
+
+39 augmented_lagrangian
+***********************
+
+* Menu:
+
+* Funciones y variables para augmented_lagrangian::
+
+
+File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
+
+39.1 Funciones y variables para augmented_lagrangian
+====================================================
+
+ -- Función: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
+ -- Función: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
+          optional_args)
+ -- Función: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>)
+ -- Función: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>, optional_args)
+     Devuelve una aproximación del valor mínimo de la expresión <FOM>
+     respecto de las variables <xx>, manteniendo las restricciones <C>
+     igual a cero. La lista <yy> contiene las soluciones iniciales para
+     <xx>.  El algoritmo que se utiliza es el método del lagrangiano
+     aumentado (ver referencias [1] y [2]).
+
+     Si <grad> está presente en la llamada a la función, se interpreta
+     como el gradiente de <FOM> respecto de <xx>, representado como una
+     lista de tantas expresiones como variables tenga <xx>. Si el
+     argumento <grad> no está, se calculará de forma automática.
+
+     Tanto <FOM> como cada uno de los elementos de <grad>, si se da
+     como argumento, deben ser expresiones ordinarias; no admitiéndose
+     ni nombres de funciones ni expresiones lambda.
+
+     El argumento `optional_args' hace referencia a otros argumentos
+     adicionales, los cuales se especifican de la forma `<symbol> =
+     <value>'.  Los argumentos opcionales reconocidos son:
+
+    `niter'
+          Número de iteraciones del algoritmo.
+
+    `lbfgs_tolerance'
+          Tolerancia que se pasa a LBFGS.
+
+    `iprint'
+          Parámetro IPRINT (lista de dos enteros que controlan la
+          frecuencia de mensajes) que se pasa a LBFGS.
+
+    `%lambda'
+          Valor inicial de `%lambda' que será utilizado para calcular el
+          lagrangiano aumentado.
+
+     Esta función minimiza el lagrangiano aumentado haciendo uso del
+     algoritmo LBFGS, que es un método de los llamados quasi-Newton.
+
+     Antes de hacer uso de esta función ejecútense
+     `load("augmented_lagrangian")'.
+
+     Véase también `lbfgs'.
+
+     Referencias:
+
+     [1]
+     `http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html'
+
+     [2] `http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf'
+
+     Ejemplos:
+
+          (%i1) load (lbfgs);
+          (%o1)     /maxima/share/lbfgs/lbfgs.mac
+          (%i2) load (augmented_lagrangian);
+          (%o2)
+             /maxima/share/contrib/augmented_lagrangian.mac
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) xx: [x, y];
+          (%o4)                        [x, y]
+          (%i5) C: [x + y - 1];
+          (%o5)                      [y + x - 1]
+          (%i6) yy: [1, 1];
+          (%o6)                        [1, 1]
+          (%i7) augmented_lagrangian_method(FOM, xx, C, yy, iprint=[-1,0]);
+          (%o7) [[x = 0.66665984108002, y = 0.33334027245545],
+                                           %lambda = [- 1.333337940892525]]
+
+     Mismo ejemplo que en el caso anterior, pero ahora el gradiente se
+     suministra como argumento.
+
+          (%i1) load (lbfgs)$
+          (%i2) load (augmented_lagrangian)$
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o4)                       2 y  + x
+          (%i5) xx: [x, y];
+          (%o5)                        [x, y]
+          (%i6) grad : [2*x, 4*y];
+          (%o6)                      [2 x, 4 y]
+          (%i7) C: [x + y - 1];
+          (%o7)                      [y + x - 1]
+          (%i8) yy: [1, 1];
+          (%o8)                        [1, 1]
+          (%i9) augmented_lagrangian_method ([FOM, grad], xx, C, yy,
+                                             iprint = [-1, 0]);
+          (%o9) [[x = 0.666659841080025, y = .3333402724554462],
+                                           %lambda = [- 1.333337940892543]]
+
+
+File: maxima.info,  Node: Bernstein,  Next: bode,  Prev: augmented_lagrangian,  Up: Top
+
+40 Bernstein
+************
+
+* Menu:
+
+* Funciones y variables para Bernstein::
+
+
+File: maxima.info,  Node: Funciones y variables para Bernstein,  Prev: Bernstein,  Up: Bernstein
+
+40.1 Funciones y variables para Bernstein
+=========================================
+
+ -- Función: bernstein_poly (<k>, <n>, <x>)
+     Si `k' no es un entero negativo, los polinomios de Bernstein se
+     definen como `bernstein_poly(k,n,x) = binomial(n,k) x^k
+     (1-x)^(n-k)'; en cambio, si `k' es un entero negativo, el
+     polinomio de Bernstein `bernstein_poly(k,n,x)' se anula. Cuando o
+     bien `k' o `n' no son enteros, la variable opcional
+     `bernstein_explicit' controla la expansión de los polinomios de
+     Bernstein a su forma explícita.
+
+     Ejemplo:
+
+          (%i1) load(bernstein)$
+
+          (%i2) bernstein_poly(k,n,x);
+          (%o2)                bernstein_poly(k, n, x)
+          (%i3) bernstein_poly(k,n,x), bernstein_explicit : true;
+                                                 n - k  k
+          (%o3)            binomial(n, k) (1 - x)      x
+
+     Los polinomios de Bernstein tienen definidas su derivada e
+     integral:
+
+          (%i4) diff(bernstein_poly(k,n,x),x);
+          (%o4) (bernstein_poly(k - 1, n - 1, x)
+                                           - bernstein_poly(k, n - 1, x)) n
+          (%i5) integrate(bernstein_poly(k,n,x),x);
+          (%o5)
+                                                                      k + 1
+           hypergeometric([k + 1, k - n], [k + 2], x) binomial(n, k) x
+           ----------------------------------------------------------------
+                                        k + 1
+
+     Cuando los argumentos contienen números decimales en coma
+     flotante, los polinomios de Bernstein también devuelven resultados
+     decimales.
+
+          (%i6) bernstein_poly(5,9, 1/2 + %i);
+                                  39375 %i   39375
+          (%o6)                   -------- + -----
+                                    128       256
+          (%i7) bernstein_poly(5,9, 0.5b0 + %i);
+          (%o7)           3.076171875b2 %i + 1.5380859375b2
+
+     Para hacer uso de `bernstein_poly', ejecútese primero
+     `load("bernstein")'.
+
+
+ -- Variable opcional: bernstein_explicit
+     Valor por defecto: `false'
+
+     Cuando o bien `k' o `n' no son enteros, la variable opcional
+     `bernstein_explicit' controla la expansión de los polinomios de
+     Bernstein a su forma explícita.
+
+     Ejemplo:
+
+          (%i1) bernstein_poly(k,n,x);
+          (%o1)                       bernstein_poly(k, n, x)
+          (%i2) bernstein_poly(k,n,x), bernstein_explicit : true;
+                                                        n - k  k
+          (%o2)                   binomial(n, k) (1 - x)      x
+
+     Cuando tanto `k' como `n' son enteros, `bernstein(k,n,x)' se
+     expande siempre a su forma explícita.
+
+
+ -- Función: multibernstein_poly (<[k1,k2,...,kp]>,<[n1,n2,...,
+          np]>,<[x1,x2,..., xp]>)
+     La sentencia `multibernstein_poly (<[k1,k2,...,kp]>,<[n1,n2,...,
+     np]>,<[x1,x2,..., xp]>)' es el producto de polinomios de Bernstein
+     `bernstein_poly(k1,n1,x1) bernstein_poly(k2,n2,x2) ...
+     bernstein_poly(kp,np,xp)'.
+
+     Para hacer uso de `multibernstein_poly', ejecútese primero
+     `load("bernstein")'.
+
+
+ -- Función: bernstein_approx (<f>,<[x1,x1,...,xn]>,n)
+     Devuelve el polinomio de Bernstein uniforme de `n'-ésimo orden que
+     aproxima la función `(x1,x2,..xn) |--> f'.
+
+     Ejemplos:
+
+          (%i1) bernstein_approx(f(x),[x], 2);
+                                  2       1                          2
+          (%o1)             f(1) x  + 2 f(-) (1 - x) x + f(0) (1 - x)
+                                          2
+          (%i2) bernstein_approx(f(x,y),[x,y], 2);
+                         2  2       1                2                  2  2
+          (%o2) f(1, 1) x  y  + 2 f(-, 1) (1 - x) x y  + f(0, 1) (1 - x)  y
+                                    2
+                    1   2                 1  1
+           + 2 f(1, -) x  (1 - y) y + 4 f(-, -) (1 - x) x (1 - y) y
+                    2                     2  2
+                    1         2                      2        2
+           + 2 f(0, -) (1 - x)  (1 - y) y + f(1, 0) x  (1 - y)
+                    2
+                 1                      2                  2        2
+           + 2 f(-, 0) (1 - x) x (1 - y)  + f(0, 0) (1 - x)  (1 - y)
+                 2
+
+     Para hacer uso de `bernstein_approx', ejecútese primero
+     `load("bernstein")'.
+
+
+ -- Función: bernstein_expand (<e>, <[x1,x1,...,xn]>)
+     Expresa el polinomio `e' como una combinación lineal de polinomios
+     de Bernstein multivariantes.
+
+          (%i1) bernstein_expand(x*y+1,[x,y]);
+          (%o1)           2 x y + (1 - x) y + x (1 - y) + (1 - x) (1 - y)
+          (%i2) expand(%);
+          (%o2)                               x y + 1
+
+     Maxima devuelve un error si el primer argumento no es un polinomio.
+
+     Para hacer uso de `bernstein_expand', ejecútese primero
+     `load("bernstein")'.
+
+
+
+File: maxima.info,  Node: bode,  Next: cobyla,  Prev: Bernstein,  Up: Top
+
+41 bode
+*******
+
+* Menu:
+
+* Funciones y variables para bode::
 
 
 File: maxima.info,  Node: Funciones y variables para bode,  Prev: bode,  Up: bode
@@ -546,7 +2004,7 @@ File: maxima.info,  Node: Funciones y variables para contrib_ode,  Next: Posible
      `gauss_a(a,b,c,x)' y `gauss_b(a,b,c,x)' son funciones geométricas
      2F1 . Representan dos soluciones independientes cualesquiera de la
      ecuación diferencial hipergeométrica `x(1-x) diff(y,x,2) +
-     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
+     [c-(a+b+1)x] diff(y,x) - aby = 0' (A&S 15.5.1).
 
      El único uso que se hace de estas funciones es en las soluciones de
      EDOs que devuelven `odelin' y `contrib_ode'. La definición y

@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.30 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.31 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -84,7 +84,7 @@ Soporte para campos más específicos de las matemáticas
 * itensor::                            Manipulación indexada de tensores
 * ctensor::                            Manipulación por componentes de tensores
 * atensor::                            Manipulación algebraica de tensores
-* Series::                             Series de potencias y de Taylor.
+* Sumas productos y series::           Sumas, productos, Taylor y series de potencias.
 * Teoría de Números::  Teoría de números.
 * Simetrías::
 * Grupos::                             Álgebra abstracta.
@@ -133,7 +133,6 @@ Paquetes adicionales
 * numericalio::                 Lectura y escritura de ficheros.
 * opsubst::                     Utilidad para sustituciones.
 * orthopoly::                   Polinomios ortogonales.
-* plotdf::                      Dibuja campos de direcciones con Openmath.
 * romberg::                     Integración numérica por el método de Romberg.
 * simplex::                     Programación lineal.
 * simplification::              Reglas y funciones de simplificación.
@@ -289,10 +288,11 @@ Ecuaciones Diferenciales
 
 Métodos numéricos
 
-* Introducción a los métodos numéricos::
-* Series de Fourier::
-* Funciones y variables para los métodos numéricos::
-* Funciones y variables para las series de Fourier::
+* Introducción a la transformada rápida de Fourier::
+* Funciones y variables para la transformada rápida de Fourier::
+* Funciones para la resolución numérica de ecuaciones::
+* Introducción a la resolución numérica de ecuaciones diferenciales::
+* Funciones para la resolución numérica de ecuaciones diferenciales::
 
 Matrices y Álgebra Lineal
 
@@ -318,12 +318,14 @@ atensor
 * Introducción a atensor::
 * Funciones y variables para atensor::
 
-Series
+Sumas productos y series
 
-* Sumas y productos::
+* Funciones y variables para sumas y productos::
 * Introducción a las series::
 * Funciones y variables para las series::
-* Series de Poisson::
+* Introducción a las series de Fourier
+* Funciones y variables para series de Fourier::
+* Funciones y variables para series de Poisson::
 
 Teoría de Números
 
@@ -535,10 +537,6 @@ orthopoly
 
 * Introducción a polinomios ortogonales::
 * Funciones y variables para polinomios ortogonales::
-
-plotdf
-
-* Funciones y variables para plotdf::
 
 romberg
 
@@ -789,23 +787,23 @@ File: maxima.info,  Node: Funciones y variables para la detección e informe de 
 
      `run_testsuite' admite las siguientes opciones:
 
-    <display_all>
+    `display_all'
           Muestra todas las pruebas. Normalmente no se muestran las
           pruebas, a menos que produzcan fallos. (Su valor por defecto
           es `false').
 
-    <display_known_bugs>
+    `display_known_bugs'
           Muestra las pruebas marcadas como fallos ya conocidos. (Su
           valor por defecto es `false').
 
-    <tests>
+    `tests'
           Esta es la lista de las pruebas que se deben ejecutar. Cada
           prueba se puede especificar, tanto mediante una cadena de
           texto como por un símbolo. Por defecto, todas las pruebas se
           ejecutan. El conjunto completo de pruebas está especificado
           en `testsuite_files'.
 
-    <time>
+    `time'
           Muestra información sobre tiempos de ejecución. Si vale
           `true', se muestran los tiempos de los ficheros de prueba. Si
           vale `all', se muestran los tiempos de cada prueba individual
@@ -3032,40 +3030,6 @@ File: maxima.info,  Node: Funciones y variables para los números,  Prev: Introd
           (%o7)                     sin(-- + --)
                                         10   5
 
-     Ejemplo de uso:
-
-          (%i1) unitfrac(r) := block([uf : [], q],
-              if not(ratnump(r)) then
-                 error("The input to 'unitfrac' must be a rational number"),
-              while r # 0 do (
-                  uf : cons(q : 1/ceiling(1/r), uf),
-                  r : r - q),
-              reverse(uf))$
-          (%i2) unitfrac (9/10);
-                                      1  1  1
-          (%o2)                      [-, -, --]
-                                      2  3  15
-          (%i3) apply ("+", %);
-                                         9
-          (%o3)                          --
-                                         10
-          (%i4) unitfrac (-9/10);
-                                            1
-          (%o4)                       [- 1, --]
-                                            10
-          (%i5) apply ("+", %);
-                                          9
-          (%o5)                         - --
-                                          10
-          (%i6) unitfrac (36/37);
-                                  1  1  1  1    1
-          (%o6)                  [-, -, -, --, ----]
-                                  2  3  8  69  6808
-          (%i7) apply ("+", %);
-                                         36
-          (%o7)                          --
-                                         37
-
  -- Función: ratnump (<expr>)
      Devuelve `true' si <expr> es un entero literal o una fracción de
      enteros literales, en caso contrario devuelve `false'.
@@ -4340,7 +4304,7 @@ File: maxima.info,  Node: Funciones y variables para los arrays,  Prev: Introduc
      Asigna <x> a `<A>[<i_1>, ..., <i_n>]', siendo <A> un array y
      <i_1>, ..., <i_n> enteros.
 
-     `arraysetapply' evalúa sus argumentos..
+     `arraysetapply' evalúa sus argumentos.
 
  -- Función: fillarray (<A>, <B>)
      Rellena el array <A> con los valores de <B>, que puede ser una
@@ -4564,7 +4528,7 @@ File: maxima.info,  Node: Funciones y variables para los arrays,  Prev: Introduc
 
      La función `subvar' evalúa sus argumentos.
 
-     La instrucción `arraymake (<x>, [<i>]' construye la expresión
+     La instrucción `arraymake (<x>, [<i>])' construye la expresión
      `<x>[<i>]', pero no la evalúa.
 
      Ejemplos:

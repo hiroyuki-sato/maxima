@@ -368,7 +368,6 @@ contrib/noninteractive/noninteractive.lisp \
 contrib/noninteractive/noninteractive.mac \
 contrib/noninteractive/rtest_noninteractive.mac \
 contrib/opsubst.lisp \
-contrib/powers.lisp \
 contrib/prim/prim-ex1.mac \
 contrib/prim/prim-ex.mac \
 contrib/prim/prim.mac \
@@ -1058,7 +1057,9 @@ stats/inference_result.lisp \
 stats/numstats.lisp \
 stats/rtest_stats.mac \
 stats/stats.mac \
+stringproc/base64.lisp \
 stringproc/eval_string.lisp \
+stringproc/md5.lisp \
 stringproc/pregexp.lisp \
 stringproc/printf.lisp \
 stringproc/rtestprintf.mac \
