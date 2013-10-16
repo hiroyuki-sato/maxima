@@ -223,6 +223,7 @@ install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
 lispdir = @lispdir@
+lisps_enabled = @lisps_enabled@
 localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
@@ -818,10 +819,10 @@ uninstall-datafiles:
 	done
 
 extradocinstall:
-	test -d "$(docdir)" || mkdir -p "$(docdir)"
+	test -d "$(DESTDIR)$(docdir)" || mkdir -p "$(DESTDIR)$(docdir)"
 	for file in AUTHORS COPYING INSTALL README README.lisps ; \
             do \
-            $(INSTALL_DATA) $$file "$(docdir)" ; \
+            $(INSTALL_DATA) $$file "$(DESTDIR)$(docdir)" ; \
             done
 
 $(distdir).tar.gz: Makefile.am
@@ -841,7 +842,10 @@ rpm: $(distdir).tar.gz
 # Install the gnuplot binary files
 @WIN32_TRUE@gnuplot: 
 @WIN32_TRUE@	mkdir -p $(prefix)/gnuplot
-@WIN32_TRUE@	cp -rf $(GNUPLOTDIR)/bin/* $(prefix)/gnuplot
+@WIN32_TRUE@	cp -rf $(GNUPLOTDIR)/bin $(prefix)/gnuplot
+@WIN32_TRUE@	cp -rf $(GNUPLOTDIR)/share $(prefix)/gnuplot
+@WIN32_TRUE@	cp -rf $(GNUPLOTDIR)/etc $(prefix)/gnuplot
+@WIN32_TRUE@	cp -rf $(GNUPLOTDIR)/license $(prefix)/gnuplot
 
 # Install wxMaxima
 @WIN32_TRUE@wxmaxima:
