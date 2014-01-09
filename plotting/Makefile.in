@@ -38,6 +38,9 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/mgnuplot.in $(top_srcdir)/common.mk
+
+##### Windows only ####
+@XMAXIMA_EXE_TRUE@am__append_1 = mgnuplot.exe
 subdir = plotting
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -224,7 +227,8 @@ sharedir = $(verpkgdatadir)/share
 instsrcdir = $(verpkgdatadir)/src
 xmaximadir = $(verpkgdatadir)/xmaxima
 insttestsdir = $(verpkgdatadir)/tests
-verpkglibexec_SCRIPTS = mgnuplot
+verpkglibexec_SCRIPTS = mgnuplot $(am__append_1)
+CLEANFILES = mgnuplot.kit mgnuplot.exe
 all: all-am
 
 .SUFFIXES:
@@ -359,6 +363,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -369,7 +374,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -435,9 +440,9 @@ uninstall-am: uninstall-local uninstall-verpkglibexecSCRIPTS
 
 .MAKE: install-am install-strip
 
-.PHONY: all all-am check check-am clean clean-generic distclean \
-	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
+.PHONY: all all-am check check-am clean clean-generic clean-local \
+	distclean distclean-generic distdir dvi dvi-am html html-am \
+	info info-am install install-am install-data install-data-am \
 	install-data-local install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \
@@ -481,6 +486,19 @@ uninstall-datafiles:
 	list='$(genericdirDATA)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
+
+mgnuplot.exe: mgnuplot.vfs mgnuplot.kit
+	$(TCLKITSH) $(SDXKIT) wrap $@ -runtime $(TCLKIT_RUNTIME) mgnuplot.kit
+
+mgnuplot.kit: mgnuplot
+	$(TCLKITSH) $(SDXKIT) qwrap  $<
+
+mgnuplot.vfs: mgnuplot.kit
+	-rm -rf $@
+	$(TCLKITSH) $(SDXKIT) unwrap $<
+
+clean-local:
+	-rm -rf mgnuplot.vfs
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
