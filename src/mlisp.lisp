@@ -868,6 +868,8 @@ wrapper for this."
 ;; !! (define-symbol "@") 
 (defprop $@ dimension-infix dimension) 
 (defprop $@ (#\@) dissym) 
+(defprop $@ tex-infix tex)
+(defprop $@ ("@") texsym)
 (defprop $@ msize-infix grind) 
 (defprop $@ 200 lbp) 
 (defprop $@ 201 rbp) 
@@ -910,7 +912,10 @@ wrapper for this."
   (setq tlist
         `((mlist)
           ,@(mapcar
-              #'(lambda (x) (if (or (symbolp x) ($listp x)) x `(,(car x) ((mquote) ,@(mapcar #'meval (cdr x))))))
+              #'(lambda (x)
+                        (if (or (symbolp x) (get (caar x) 'mset_extension_operator))
+                            x
+                            `(,(car x) ,@(mapcar #'meval (cdr x)))))
               (cdr tlist))))
   (unless (and (listp vlist)
 	   (eq (caar vlist) 'mlist))
@@ -1379,7 +1384,9 @@ wrapper for this."
   (unless (or (symbolp ind) (stringp ind))
     (merror (intl:gettext "~:M: indicator must be a symbol or a string; found: ~M") fun ind))
   (unless (symbolp atom)
-    (setq atom (intern atom)))
+    (if (symbolp (getopr atom))
+      (setq atom (getopr atom))
+      (setq atom (intern atom))))
   (unless (symbolp ind)
     (setq ind (intern ind)))
   (let ((u (mget atom '$props)))

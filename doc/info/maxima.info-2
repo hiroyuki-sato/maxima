@@ -8022,7 +8022,7 @@ File: maxima.info,  Node: Macros,  Next: Functions and Variables for Function De
      Typically `splice' supplies the arguments for a function or
      operator.  For a function `f', the expression `f (splice (<a>))'
      within `buildq' expands to `f (<a>[1], <a>[2], <a>[3], ...)'.  For
-     an operator `o', the expression `"o" (splice (<a>)' within
+     an operator `o', the expression `"o" (splice (<a>))' within
      `buildq' expands to `"o" (<a>[1], <a>[2], <a>[3], ...)', where `o'
      may be any type of operator (typically one which takes multiple
      arguments).  Note that the operator must be enclosed in double
@@ -8331,9 +8331,7 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
        2. If the variable is unbound, <default_value> is assigned to
           <name>.
 
-       3. `declare (<name>, special)' declares it special.
-
-       4. Associates <name> with a test function to ensure that <name>
+       3. Associates <name> with a test function to ensure that <name>
           is only assigned values of the declared mode.
 
      The `value_check' property can be assigned to any variable which
@@ -10279,7 +10277,7 @@ File: maxima.info,  Node: Functions and Variables for Program Flow,  Prev: Intro
 
 
 
-File: maxima.info,  Node: Debugging,  Next: asympa,  Prev: Program Flow,  Up: Top
+File: maxima.info,  Node: Debugging,  Next: alt-display,  Prev: Program Flow,  Up: Top
 
 38 Debugging
 ************
@@ -10719,9 +10717,295 @@ File: maxima.info,  Node: Functions and Variables for Debugging,  Prev: Keyword 
 
 
 
-File: maxima.info,  Node: asympa,  Next: augmented_lagrangian,  Prev: Debugging,  Up: Top
+File: maxima.info,  Node: alt-display,  Next: asympa,  Prev: Debugging,  Up: Top
 
-39 asympa
+39 alt-display
+**************
+
+* Menu:
+
+* Introduction to alt-display::
+* Functions and Variables for alt-display::
+
+
+File: maxima.info,  Node: Introduction to alt-display,  Next: Functions and Variables for alt-display,  Prev: alt-display,  Up: alt-display
+
+39.1 Introduction to alt-display
+================================
+
+The _alt-display_ package provides a means to change the way that
+Maxima displays its output. The <*alt-display1d*> and <*alt-display2d*>
+Lisp hooks were introduced to Maxima in 2002, but were not easily
+accessible from the Maxima REPL until the introduction of this package.
+
+   The package provides a general purpose function to define alternative
+display functions, and a separate function to set the display function.
+The package also provides customized display functions to produce
+output in TeX, Texinfo, XML and all three output formats within Texinfo.
+
+   Here is a sample session:
+
+  (%i1) load("alt-display.mac")$
+  (%i2) set_alt_display(2,tex_display)$
+
+  (%i3) x/(x^2+y^2) = 1;
+  \mbox{\tt\red({\it \%o_3}) \black}$${{x}\over{y^2+x^2}}=1$$
+
+  (%i4) set_alt_display(2,mathml_display)$
+
+  (%i5) x/(x^2+y^2) = 1;
+  <math xmlns="http://www.w3.org/1998/Math/MathML"> <mi>mlabel</mi>
+   <mfenced separators=""><msub><mi>%o</mi> <mn>5</mn></msub>
+   <mo>,</mo><mfrac><mrow><mi>x</mi> </mrow> <mrow><msup><mrow>
+   <mi>y</mi> </mrow> <mn>2</mn> </msup> <mo>+</mo> <msup><mrow>
+   <mi>x</mi> </mrow> <mn>2</mn> </msup> </mrow></mfrac> <mo>=</mo>
+   <mn>1</mn> </mfenced> </math>
+
+  (%i6) set_alt_display(2,multi_display_for_texinfo)$
+
+  (%i7) x/(x^2+y^2) = 1;
+
+  @iftex
+  @tex
+  \mbox{\tt\red({\it \%o_7}) \black}$${{x}\over{y^2+x^2}}=1$$
+  @end tex
+  @end iftex
+  @ifhtml
+  @html
+
+   <math xmlns="http://www.w3.org/1998/Math/MathML"> <mi>mlabel</mi>
+   <mfenced separators=""><msub><mi>%o</mi> <mn>7</mn></msub>
+   <mo>,</mo><mfrac><mrow><mi>x</mi> </mrow> <mrow><msup><mrow>
+   <mi>y</mi> </mrow> <mn>2</mn> </msup> <mo>+</mo> <msup><mrow>
+   <mi>x</mi> </mrow> <mn>2</mn> </msup> </mrow></mfrac> <mo>=</mo>
+   <mn>1</mn> </mfenced> </math>
+  @end html
+  @end ifhtml
+  @ifinfo
+  @example
+  (%o7) x/(y^2+x^2) = 1
+  @end example
+  @end ifinfo
+
+   If the alternative display function causes an error, the error is
+trapped and the display function is reset to the default display. In the
+following example, the `error' function is set to display the output.
+This throws an error, which is handled by resetting the 2d-display to
+the default.
+
+  (%i8) set_alt_display(2,?error)$
+
+  (%i9) x;
+
+  Error in *alt-display2d*.
+  Messge: Condition designator ((MLABEL) $%O9 $X) is not of type (OR SYMBOL STRING
+                                                             FUNCTION).
+  *alt-display2d* reset to nil.
+   -- an error. To debug this try: debugmode(true);
+
+  (%i10) x;
+  (%o10)                                 x
+
+
+File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introduction to alt-display,  Up: alt-display
+
+39.2 Functions and Variables for alt-display
+============================================
+
+ -- Function: define_alt_display (<function>(<input>), <expr>)
+     This function is similar to `define': it evaluates its arguments
+     and expands into a function definition. The <function> is a
+     function of a single input <input>. For convenience, a substitution
+     is applied to <expr> after evaluation, to provide easy access to
+     Lisp variable names.
+
+     Set a time-stamp on each prompt:
+          (%i1) load("alt-display.mac")$
+
+          (%i2) display2d:false$
+
+          (%i3) define_alt_display(time_stamp(x),
+                             block([alt_display1d:false,alt_display2d:false],
+                                   prompt_prefix:printf(false,"~a~%",timedate()),
+                                   displa(x)));
+
+          (%o3) time_stamp(x):=block([simp:false],
+                           block([?\*alt\-display1d\*:false,?\*alt\-display2d\*:false],
+                                 ?\*prompt\-prefix\*:printf(false,"~a~%",timedate()),
+                                 ?displa(x)))
+          (%i4) set_alt_display(1,time_stamp);
+
+          (%o4) done
+          2014-01-07 13:41:50-05:00
+          (%i5)
+
+     The input line `%i3' defines `time_stamp' using
+     `define_alt_display'. The output line `%o3' shows that the Maxima
+     variable names `alt_display1d', `alt_display2d' and
+     `prompt_prefix' have been replaced by their Lisp translations, as
+     has `displa' been replaced by `?displa' (the display function).
+
+     The display variables `alt_display1d' and `alt_display2d' are both
+     bound to `false' in the body of `time_stamp' to prevent an
+     infinite recursion in `displa'.
+
+
+ -- Function: info_display (<form>)
+     This is an alias for the default 1-d display function. It may be
+     used as an alternative 1-d or 2-d display function.
+
+          (%i1) load("alt-display.mac")$
+
+          (%i2) set_alt_display(2,info_display);
+
+          (%o2) done
+          (%i3) x/y;
+
+          (%o3) x/y
+
+
+ -- Function: mathml_display (<form>)
+     Produces MathML output.
+
+     (%i1) load("alt-display.mac")$
+
+     (%i2) set_alt_display(2,mathml_display);
+     <math xmlns="http://www.w3.org/1998/Math/MathML"> <mi>mlabel</mi>
+      <mfenced separators=""><msub><mi>%o</mi> <mn>2</mn></msub>
+      <mo>,</mo><mi>done</mi> </mfenced> </math>
+
+
+ -- Function: tex_display (<form>)
+     Produces TeX output.
+
+     (%i2) set_alt_display(2,tex_display);
+     \mbox{\tt\red({\it \%o_2}) \black}$$\mathbf{done}$$
+     (%i3) x/(x^2+y^2);
+     \mbox{\tt\red({\it \%o_3}) \black}$${{x}\over{y^2+x^2}}$$
+
+
+ -- Function: multi_display_for_texinfo (<form>)
+     Produces Texinfo output using all three display functions.
+
+       (%i2) set_alt_display(2,multi_display_for_texinfo)$
+
+       (%i3) x/(x^2+y^2);
+
+       @iftex
+       @tex
+       \mbox{\tt\red({\it \%o_3}) \black}$${{x}\over{y^2+x^2}}$$
+       @end tex
+       @end iftex
+       @ifhtml
+       @html
+
+        <math xmlns="http://www.w3.org/1998/Math/MathML"> <mi>mlabel</mi>
+        <mfenced separators=""><msub><mi>%o</mi> <mn>3</mn></msub>
+        <mo>,</mo><mfrac><mrow><mi>x</mi> </mrow> <mrow><msup><mrow>
+        <mi>y</mi> </mrow> <mn>2</mn> </msup> <mo>+</mo> <msup><mrow>
+        <mi>x</mi> </mrow> <mn>2</mn> </msup> </mrow></mfrac> </mfenced> </math>
+       @end html
+       @end ifhtml
+       @ifinfo
+       @example
+       (%o3) x/(y^2+x^2)
+       @end example
+       @end ifinfo
+
+
+ -- Functions: reset_displays ()
+     Resets the prompt prefix and suffix to the empty string, and sets
+     both 1-d and 2-d display functions to the default.
+
+
+ -- Function: set_alt_display (<num>, <display-function>)
+     The input <num> is the display to set; it may be either 1 or 2. The
+     second input <display-function> is the display function to use. The
+     display function may be either a Maxima function or a `lambda'
+     expression.
+
+     Here is an example where the display function is a `lambda'
+     expression; it just displays the result as TeX.
+          (%i1) load("alt-display.mac")$
+
+          (%i2) set_alt_display(2, lambda([form], tex(?caddr(form))))$
+
+          (%i3) integrate(exp(-t^2),t,0,inf);
+          $${{\sqrt{\pi}}\over{2}}$$
+
+     A user-defined display function should take care that it _prints_
+     its output. A display function that returns a string will appear to
+     display nothing, nor cause any errors.
+
+
+ -- Function: set_prompt (<fix>, <expr>)
+     Set the prompt prefix or suffix to <expr>. The input <fix> must
+     evaluate to one of `prefix', `suffix', `general', `prolog' or
+     `epilog'. The input <expr> must evaluate to either a string or
+     `false'; if `false', the <fix> is reset to the default value.
+
+          (%i1) load("alt-display.mac")$
+          (%i2) set_prompt('prefix,printf(false,"It is now: ~a~%",timedate()))$
+
+          It is now: 2014-01-07 15:23:23-05:00
+          (%i3)
+
+     The following example shows the effect of each option, except
+     `prolog'. Note that the `epilog' prompt is printed as Maxima
+     closes down. The `general' is printed between the end of input and
+     the output, unless the input line ends in `$'.
+
+     Here is an example to show where the prompt strings are placed.
+
+          (%i1) load("alt-display.mac")$
+
+          (%i2) set_prompt(prefix,"<<prefix>> ",suffix,"<<suffix>> ",general,
+                     printf(false,"<<general>>~%"),epilog,printf(false,"<<epilog>>~%"));
+
+          (%o2)                                done
+          <<prefix>> (%i3) <<suffix>> x/y;
+          <<general>>
+                                                 x
+          (%o3)                                  -
+                                                 y
+          <<prefix>> (%i4) <<suffix>> quit();
+          <<general>>
+          <<epilog>>
+
+     Here is an example that shows how to colorize the input and output
+     when Maxima is running in a terminal or terminal emulator like
+     Emacs(1).
+
+          (%i1) load("alt-display.mac")$
+
+          (%i2) cs(s) := printf(false,"~c[~am",ascii(27),s)$
+
+          (%i3) set_prompt(prefix,cs("1;31"),suffix,cs("0;32"),general,cs("1;34"),epilog,cs("00;"));
+          (%o3)                                done
+          [1;31m(%i4)[0;32m integrate(exp(-x^2),x,0,inf);[1;34m
+                                             sqrt(%pi)
+          (%o4)                              ---------
+                                                 2
+          [1;31m(%i5)[00;m
+
+     Each prompt string starts with the ASCII escape character (27)
+     followed by an open square bracket (91); each string ends with a
+     lower-case m (109). The webpages
+     `http://misc.flogisoft.com/bash/tip_colors_and_formatting' and
+     `http://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html' provide
+     information on how to use control strings to set the terminal
+     colors.
+
+
+   ---------- Footnotes ----------
+
+   (1) Readers using the `info' reader in `Emacs' will see the actual
+prompt strings; other readers will see the colorized output
+
+
+File: maxima.info,  Node: asympa,  Next: augmented_lagrangian,  Prev: alt-display,  Up: Top
+
+40 asympa
 *********
 
 * Menu:
@@ -10732,7 +11016,7 @@ File: maxima.info,  Node: asympa,  Next: augmented_lagrangian,  Prev: Debugging,
 
 File: maxima.info,  Node: Introduction to asympa,  Next: Functions and variables for asympa,  Prev: asympa,  Up: asympa
 
-39.1 Introduction to asympa
+40.1 Introduction to asympa
 ===========================
 
  -- Function: asympa
@@ -10747,13 +11031,13 @@ File: maxima.info,  Node: Introduction to asympa,  Next: Functions and variables
 
 File: maxima.info,  Node: Functions and variables for asympa,  Prev: Introduction to asympa,  Up: asympa
 
-39.2 Functions and variables for asympa
+40.2 Functions and variables for asympa
 =======================================
 
 
 File: maxima.info,  Node: augmented_lagrangian,  Next: Bernstein,  Prev: asympa,  Up: Top
 
-40 augmented_lagrangian
+41 augmented_lagrangian
 ***********************
 
 * Menu:
@@ -10763,7 +11047,7 @@ File: maxima.info,  Node: augmented_lagrangian,  Next: Bernstein,  Prev: asympa,
 
 File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
 
-40.1 Functions and Variables for augmented_lagrangian
+41.1 Functions and Variables for augmented_lagrangian
 =====================================================
 
  -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
@@ -10865,7 +11149,7 @@ File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Pre
 
 File: maxima.info,  Node: Bernstein,  Next: bode,  Prev: augmented_lagrangian,  Up: Top
 
-41 Bernstein
+42 Bernstein
 ************
 
 * Menu:
@@ -10875,7 +11159,7 @@ File: maxima.info,  Node: Bernstein,  Next: bode,  Prev: augmented_lagrangian,  
 
 File: maxima.info,  Node: Functions and Variables for Bernstein,  Prev: Bernstein,  Up: Bernstein
 
-41.1 Functions and Variables for Bernstein
+42.1 Functions and Variables for Bernstein
 ==========================================
 
  -- Function: bernstein_poly (<k>, <n>, <x>)
@@ -10991,7 +11275,7 @@ File: maxima.info,  Node: Functions and Variables for Bernstein,  Prev: Bernstei
 
 File: maxima.info,  Node: bode,  Next: cobyla,  Prev: Bernstein,  Up: Top
 
-42 bode
+43 bode
 *******
 
 * Menu:
@@ -11001,7 +11285,7 @@ File: maxima.info,  Node: bode,  Next: cobyla,  Prev: Bernstein,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bode
 
-42.1 Functions and Variables for bode
+43.1 Functions and Variables for bode
 =====================================
 
  -- Function: bode_gain (<H>, <range>, ...<plot_opts>...)
@@ -11105,7 +11389,7 @@ File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bo
 
 File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
 
-43 cobyla
+44 cobyla
 *********
 
 * Menu:
@@ -11117,7 +11401,7 @@ File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
 
 File: maxima.info,  Node: Introduction to cobyla,  Next: Functions and Variables for cobyla,  Prev: cobyla,  Up: cobyla
 
-43.1 Introduction to cobyla
+44.1 Introduction to cobyla
 ===========================
 
 `fmin_cobyla' is a Common Lisp translation (via `f2cl') of the Fortran
@@ -11167,7 +11451,7 @@ Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
 
 File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples for cobyla,  Prev: Introduction to cobyla,  Up: cobyla
 
-43.2 Functions and Variables for cobyla
+44.2 Functions and Variables for cobyla
 =======================================
 
  -- Function: fmin_cobyla (<F>, <X>, <Y>)
@@ -11248,7 +11532,7 @@ File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples fo
 
 File: maxima.info,  Node: Examples for cobyla,  Prev: Functions and Variables for cobyla,  Up: cobyla
 
-43.3 Examples for cobyla
+44.3 Examples for cobyla
 ========================
 
 Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
@@ -11269,7 +11553,7 @@ Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
 
 File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: Top
 
-44 contrib_ode
+45 contrib_ode
 **************
 
 * Menu:
@@ -11283,7 +11567,7 @@ File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: T
 
 File: maxima.info,  Node: Introduction to contrib_ode,  Next: Functions and Variables for contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
 
-44.1 Introduction to contrib_ode
+45.1 Introduction to contrib_ode
 ================================
 
 Maxima's ordinary differential equation (ODE) solver `ode2' solves
@@ -11434,7 +11718,7 @@ method returns an unsolved second order ODE.
 
 File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possible improvements to contrib_ode,  Prev: Introduction to contrib_ode,  Up: contrib_ode
 
-44.2 Functions and Variables for contrib_ode
+45.2 Functions and Variables for contrib_ode
 ============================================
 
  -- Function: contrib_ode (<eqn>, <y>, <x>)
@@ -11574,7 +11858,7 @@ File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possib
 
 File: maxima.info,  Node: Possible improvements to contrib_ode,  Next: Test cases for contrib_ode,  Prev: Functions and Variables for contrib_ode,  Up: contrib_ode
 
-44.3 Possible improvements to contrib_ode
+45.3 Possible improvements to contrib_ode
 =========================================
 
 These routines are work in progress.  I still need to:
@@ -11604,7 +11888,7 @@ These routines are work in progress.  I still need to:
 
 File: maxima.info,  Node: Test cases for contrib_ode,  Next: References for contrib_ode,  Prev: Possible improvements to contrib_ode,  Up: contrib_ode
 
-44.4 Test cases for contrib_ode
+45.4 Test cases for contrib_ode
 ===============================
 
 The routines have been tested on a approximately one thousand  test
@@ -11627,7 +11911,7 @@ in the tests subdirectory.
 
 File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for contrib_ode,  Up: contrib_ode
 
-44.5 References for contrib_ode
+45.5 References for contrib_ode
 ===============================
 
   1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
@@ -11667,7 +11951,7 @@ File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for cont
 
 File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
-45 descriptive
+46 descriptive
 **************
 
 * Menu:
@@ -11680,7 +11964,7 @@ File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
 File: maxima.info,  Node: Introduction to descriptive,  Next: Functions and Variables for data manipulation,  Prev: descriptive,  Up: descriptive
 
-45.1 Introduction to descriptive
+46.1 Introduction to descriptive
 ================================
 
 Package `descriptive' contains a set of functions for making
@@ -11814,7 +12098,7 @@ a sample with categorical value `a' is taken,
 
 File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: Functions and Variables for descriptive statistics,  Prev: Introduction to descriptive,  Up: descriptive
 
-45.2 Functions and Variables for data manipulation
+46.2 Functions and Variables for data manipulation
 ==================================================
 
  -- Function: build_sample (<list>)
@@ -12090,7 +12374,7 @@ File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: 
 
 File: maxima.info,  Node: Functions and Variables for descriptive statistics,  Next: Functions and Variables for statistical graphs,  Prev: Functions and Variables for data manipulation,  Up: descriptive
 
-45.3 Functions and Variables for descriptive statistics
+46.3 Functions and Variables for descriptive statistics
 =======================================================
 
  -- Function: mean (<list>)
@@ -12904,7 +13188,7 @@ File: maxima.info,  Node: Functions and Variables for descriptive statistics,  N
 
 File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev: Functions and Variables for descriptive statistics,  Up: descriptive
 
-45.4 Functions and Variables for statistical graphs
+46.4 Functions and Variables for statistical graphs
 ===================================================
 
  -- Function: barsplot (<data1>, <data2>, ..., <option_1>, <option_2>,
@@ -13015,7 +13299,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                   makelist([Yes, No, Maybe][random(3)+1],k,1,50),
                   title  = "Asking for something to four groups",
                   ylabel = "# of individuals",
-                  grouping     = stacked,,
+                  grouping     = stacked,
                   fill_density = 0.5,
                   ordering     = ordergreatp)$
 
@@ -13413,7 +13697,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
 File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
-46 diag
+47 diag
 *******
 
 * Menu:
@@ -13423,7 +13707,7 @@ File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: diag
 
-46.1 Functions and Variables for diag
+47.1 Functions and Variables for diag
 =====================================
 
  -- Function: diag (<lm>)
@@ -13722,7 +14006,7 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
 
 File: maxima.info,  Node: distrib,  Next: draw,  Prev: diag,  Up: Top
 
-47 distrib
+48 distrib
 **********
 
 * Menu:
@@ -13734,7 +14018,7 @@ File: maxima.info,  Node: distrib,  Next: draw,  Prev: diag,  Up: Top
 
 File: maxima.info,  Node: Introduction to distrib,  Next: Functions and Variables for continuous distributions,  Prev: distrib,  Up: distrib
 
-47.1 Introduction to distrib
+48.1 Introduction to distrib
 ============================
 
 Package `distrib' contains a set of functions for making probability
@@ -13905,7 +14189,7 @@ by typing
 
 File: maxima.info,  Node: Functions and Variables for continuous distributions,  Next: Functions and Variables for discrete distributions,  Prev: Introduction to distrib,  Up: distrib
 
-47.2 Functions and Variables for continuous distributions
+48.2 Functions and Variables for continuous distributions
 =========================================================
 
  -- Function: pdf_normal (<x>,<m>,<s>)
@@ -15448,7 +15732,7 @@ File: maxima.info,  Node: Functions and Variables for continuous distributions, 
 
 File: maxima.info,  Node: Functions and Variables for discrete distributions,  Prev: Functions and Variables for continuous distributions,  Up: distrib
 
-47.3 Functions and Variables for discrete distributions
+48.3 Functions and Variables for discrete distributions
 =======================================================
 
  -- Function: pdf_general_finite_discrete (<x>,<v>)
@@ -16079,7 +16363,7 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
 
 File: maxima.info,  Node: draw,  Next: drawdf,  Prev: distrib,  Up: Top
 
-48 draw
+49 draw
 *******
 
 * Menu:
@@ -16092,7 +16376,7 @@ File: maxima.info,  Node: draw,  Next: drawdf,  Prev: distrib,  Up: Top
 
 File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables for draw,  Prev: draw,  Up: draw
 
-48.1 Introduction to draw
+49.1 Introduction to draw
 =========================
 
 `draw' is a Maxima-Gnuplot interface.
@@ -16109,10 +16393,10 @@ File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables f
 
 File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and Variables for pictures,  Prev: Introduction to draw,  Up: draw
 
-48.2 Functions and Variables for draw
+49.2 Functions and Variables for draw
 =====================================
 
-48.2.1 Scenes
+49.2.1 Scenes
 -------------
 
  -- Scene constructor: gr2d (<graphic option>, ..., <graphic object>,
@@ -16157,7 +16441,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      To make use of this object, write first `load(draw)'.
 
 
-48.2.2 Functions
+49.2.2 Functions
 ----------------
 
  -- Function: draw (<gr2d>, ..., <gr3d>, ..., <options>, ...)
@@ -16297,7 +16581,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      To make use of this function, write first `load(draw)'.
 
 
-48.2.3 Graphics options
+49.2.3 Graphics options
 -----------------------
 
  -- Graphic option: adapt_depth
@@ -17758,8 +18042,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
      Selects the terminal to be used by Gnuplot; possible values are:
      `screen' (default), `png', `pngcairo', `jpg', `gif', `eps',
-     `eps_color', `epslatex', `epslatex_standalone', `svg', `dumb',
-     `dumb_file', `pdf', `pdfcairo', `wxt', `animated_gif',
+     `eps_color', `epslatex', `epslatex_standalone', `svg', `canvas',
+     `dumb', `dumb_file', `pdf', `pdfcairo', `wxt', `animated_gif',
      `multipage_pdfcairo', `multipage_pdf', `multipage_eps',
      `multipage_eps_color', and `aquaterm'.
 
@@ -18749,7 +19033,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      description does not matter.
 
 
-48.2.4 Graphics objects
+49.2.4 Graphics objects
 -----------------------
 
  -- Graphic object: bars ([<x1>,<h1>,<w1>], [<x2>,<h2>,<w2>, ...])
@@ -19671,7 +19955,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
 File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw
 
-48.3 Functions and Variables for pictures
+49.3 Functions and Variables for pictures
 =========================================
 
  -- Function: get_pixel (<pic>,<x>,<y>)
@@ -19787,12 +20071,12 @@ File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions
 
 File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions and Variables for pictures,  Up: draw
 
-48.4 Functions and Variables for worldmap
+49.4 Functions and Variables for worldmap
 =========================================
 
 This package automatically loads package `draw'.
 
-48.4.1 Variables and Functions
+49.4.1 Variables and Functions
 ------------------------------
 
  -- Global variable: boundaries_array
@@ -19933,7 +20217,7 @@ This package automatically loads package `draw'.
           (%i3) draw2d(geomap(%))$
 
 
-48.4.2 Graphic objects
+49.4.2 Graphic objects
 ----------------------
 
  -- Graphic object: geomap (<numlist>)
@@ -20067,7 +20351,7 @@ This package automatically loads package `draw'.
 
 File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
 
-49 drawdf
+50 drawdf
 *********
 
 * Menu:
@@ -20078,7 +20362,7 @@ File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
 
 File: maxima.info,  Node: Introduction to drawdf,  Next: Functions and Variables for drawdf,  Prev: drawdf,  Up: drawdf
 
-49.1 Introduction to drawdf
+50.1 Introduction to drawdf
 ===========================
 
 The function `drawdf' draws the direction field of a first-order
@@ -20123,10 +20407,10 @@ two autonomous equations.
 
 File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introduction to drawdf,  Up: drawdf
 
-49.2 Functions and Variables for drawdf
+50.2 Functions and Variables for drawdf
 =======================================
 
-49.2.1 Functions
+50.2.1 Functions
 ----------------
 
  -- Function: drawdf (<dydx>, ...options and objects...)
@@ -20307,7 +20591,7 @@ File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introductio
 
 File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
 
-50 dynamics
+51 dynamics
 ***********
 
 * Menu:
@@ -20318,7 +20602,7 @@ File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
 
 File: maxima.info,  Node: Introduction to dynamics,  Next: Functions and Variables for dynamics,  Prev: dynamics,  Up: dynamics
 
-50.1 Introduction to dynamics
+51.1 Introduction to dynamics
 =============================
 
 The additional package `dynamics' includes several functions to create
@@ -20335,7 +20619,7 @@ by `plot2d' and some additional ones.
 
 File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduction to dynamics,  Up: dynamics
 
-50.2 Functions and Variables for dynamics
+51.2 Functions and Variables for dynamics
 =========================================
 
  -- Function: chaosgame (`[['<x1>, <y1>`]'...`['<xm>, <ym>`]]',
@@ -20507,7 +20791,7 @@ in the Plotting section.
 
 File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
 
-51 ezunits
+52 ezunits
 **********
 
 * Menu:
@@ -20519,7 +20803,7 @@ File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
 
 File: maxima.info,  Node: Introduction to ezunits,  Next: Introduction to physical_constants,  Prev: ezunits,  Up: ezunits
 
-51.1 Introduction to ezunits
+52.1 Introduction to ezunits
 ============================
 
 `ezunits' is a package for working with dimensional quantities,
@@ -20593,7 +20877,7 @@ SI units, but other fundamental dimensions and units can be declared.
 
 File: maxima.info,  Node: Introduction to physical_constants,  Next: Functions and Variables for ezunits,  Prev: Introduction to ezunits,  Up: ezunits
 
-51.2 Introduction to physical_constants
+52.2 Introduction to physical_constants
 =======================================
 
 `physical_constants' is a collection of physical constants, copied from
@@ -20793,7 +21077,7 @@ until its value is fetched by `constvalue'.
 
 File: maxima.info,  Node: Functions and Variables for ezunits,  Prev: Introduction to physical_constants,  Up: ezunits
 
-51.3 Functions and Variables for ezunits
+52.3 Functions and Variables for ezunits
 ========================================
 
  -- Operator: `
@@ -21505,7 +21789,7 @@ File: maxima.info,  Node: Functions and Variables for ezunits,  Prev: Introducti
 
 File: maxima.info,  Node: f90,  Next: finance,  Prev: ezunits,  Up: Top
 
-52 f90
+53 f90
 ******
 
 * Menu:
@@ -21515,7 +21799,7 @@ File: maxima.info,  Node: f90,  Next: finance,  Prev: ezunits,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
 
-52.1 Functions and Variables for f90
+53.1 Functions and Variables for f90
 ====================================
 
  -- Function: f90 (<expr_1>, ..., <expr_n>)
@@ -21566,7 +21850,7 @@ File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
 
 File: maxima.info,  Node: finance,  Next: fractals,  Prev: f90,  Up: Top
 
-53 finance
+54 finance
 **********
 
 * Menu:
@@ -21577,7 +21861,7 @@ File: maxima.info,  Node: finance,  Next: fractals,  Prev: f90,  Up: Top
 
 File: maxima.info,  Node: Introduction to finance,  Next: Functions and Variables for finance,  Prev: finance,  Up: finance
 
-53.1 Introduction to finance
+54.1 Introduction to finance
 ============================
 
 This is the Finance Package (Ver 0.1).
@@ -21595,7 +21879,7 @@ have to load it writing `load(finance)$'.
 
 File: maxima.info,  Node: Functions and Variables for finance,  Prev: Introduction to finance,  Up: finance
 
-53.2 Functions and Variables for finance
+54.2 Functions and Variables for finance
 ========================================
 
  -- Function: days360 (<year1>,<month1>,<day1>,<year2>,<month2>,<day2>)
@@ -21849,7 +22133,7 @@ File: maxima.info,  Node: Functions and Variables for finance,  Prev: Introducti
 
 File: maxima.info,  Node: fractals,  Next: ggf,  Prev: finance,  Up: Top
 
-54 fractals
+55 fractals
 ***********
 
 * Menu:
@@ -21863,7 +22147,7 @@ File: maxima.info,  Node: fractals,  Next: ggf,  Prev: finance,  Up: Top
 
 File: maxima.info,  Node: Introduction to fractals,  Next: Definitions for IFS fractals,  Prev: fractals,  Up: fractals
 
-54.1 Introduction to fractals
+55.1 Introduction to fractals
 =============================
 
 This package defines some well known fractals:
@@ -21887,7 +22171,7 @@ at
 
 File: maxima.info,  Node: Definitions for IFS fractals,  Next: Definitions for complex fractals,  Prev: Introduction to fractals,  Up: fractals
 
-54.2 Definitions for IFS fractals
+55.2 Definitions for IFS fractals
 =================================
 
 Some fractals can be generated by iterative applications of contractive
@@ -21941,7 +22225,7 @@ contraction ratio.
 
 File: maxima.info,  Node: Definitions for complex fractals,  Next: Definitions for Koch snowflakes,  Prev: Definitions for IFS fractals,  Up: Top
 
-54.3 Definitions for complex fractals
+55.3 Definitions for complex fractals
 =====================================
 
  -- Function: mandelbrot_set (<x>, <y>)
@@ -22012,7 +22296,7 @@ File: maxima.info,  Node: Definitions for complex fractals,  Next: Definitions f
 
 File: maxima.info,  Node: Definitions for Koch snowflakes,  Next: Definitions for Peano maps,  Prev: Definitions for complex fractals,  Up: Top
 
-54.4 Definitions for Koch snowflakes
+55.4 Definitions for Koch snowflakes
 ====================================
 
  -- Function: snowmap (<ent>, <nn>)
@@ -22036,7 +22320,7 @@ File: maxima.info,  Node: Definitions for Koch snowflakes,  Next: Definitions fo
 
 File: maxima.info,  Node: Definitions for Peano maps,  Prev: Definitions for Koch snowflakes,  Up: fractals
 
-54.5 Definitions for Peano maps
+55.5 Definitions for Peano maps
 ===============================
 
 Continuous curves that cover an area. Warning: the number of points
@@ -22065,7 +22349,7 @@ exponentially grows with <n>.
 
 File: maxima.info,  Node: ggf,  Next: graphs,  Prev: fractals,  Up: Top
 
-55 ggf
+56 ggf
 ******
 
 * Menu:
@@ -22075,7 +22359,7 @@ File: maxima.info,  Node: ggf,  Next: graphs,  Prev: fractals,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf,  Up: ggf
 
-55.1 Functions and Variables for ggf
+56.1 Functions and Variables for ggf
 ====================================
 
  -- Option variable: GGFINFINITY
@@ -22126,7 +22410,7 @@ File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf,  Up: ggf
 
 File: maxima.info,  Node: graphs,  Next: grobner,  Prev: ggf,  Up: Top
 
-56 graphs
+57 graphs
 *********
 
 * Menu:
@@ -22137,7 +22421,7 @@ File: maxima.info,  Node: graphs,  Next: grobner,  Prev: ggf,  Up: Top
 
 File: maxima.info,  Node: Introduction to graphs,  Next: Functions and Variables for graphs,  Prev: graphs,  Up: graphs
 
-56.1 Introduction to graphs
+57.1 Introduction to graphs
 ===========================
 
 The `graphs' package provides graph and digraph data structure for
@@ -22162,10 +22446,10 @@ package.
 
 File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introduction to graphs,  Up: graphs
 
-56.2 Functions and Variables for graphs
+57.2 Functions and Variables for graphs
 =======================================
 
-56.2.1 Building graphs
+57.2.1 Building graphs
 ----------------------
 
  -- Function: create_graph (<v_list>, <e_list>)
@@ -22516,7 +22800,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Returns the wheel graph on <n+1> vertices.
 
 
-56.2.2 Graph properties
+57.2.2 Graph properties
 -----------------------
 
  -- Function: adjacency_matrix (<gr>)
@@ -23390,7 +23674,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
           (%o2)                          500
 
 
-56.2.3 Modifying graphs
+57.2.3 Modifying graphs
 -----------------------
 
  -- Function: add_edge (<e>, <gr>)
@@ -23510,7 +23794,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Removes the vertex <v> from the graph <gr>.
 
 
-56.2.4 Reading and writing to files
+57.2.4 Reading and writing to files
 -----------------------------------
 
  -- Function: dimacs_export (<gr>, <fl>)
@@ -23559,7 +23843,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Returns a list of graphs from the file <fl> in the sparse6 format.
 
 
-56.2.5 Visualization
+57.2.5 Visualization
 --------------------
 
  -- Function: draw_graph (<graph>)
@@ -23851,7 +24135,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
 
 File: maxima.info,  Node: grobner,  Next: impdiff,  Prev: graphs,  Up: Top
 
-57 grobner
+58 grobner
 **********
 
 * Menu:
@@ -23862,7 +24146,7 @@ File: maxima.info,  Node: grobner,  Next: impdiff,  Prev: graphs,  Up: Top
 
 File: maxima.info,  Node: Introduction to grobner,  Next: Functions and Variables for grobner,  Prev: Top,  Up: Top
 
-57.1 Introduction to grobner
+58.1 Introduction to grobner
 ============================
 
 `grobner' is a package for working with Groebner bases in Maxima.
@@ -23881,7 +24165,7 @@ Some of the calculation in the demo will take a lot of time therefore
 the output `grobner-demo.output' of the demo can be found in the same
 directory as the demo file.
 
-57.1.1 Notes on the grobner package
+58.1.1 Notes on the grobner package
 -----------------------------------
 
 The package was written by
@@ -23904,7 +24188,7 @@ Jean-Charles Fauge`re
 LIP6/CNRS Universite' Paris VI
 January 20, 1999
 
-57.1.2 Implementations of admissible monomial orders in grobner
+58.1.2 Implementations of admissible monomial orders in grobner
 ---------------------------------------------------------------
 
    * `lex'
@@ -23927,10 +24211,10 @@ January 20, 1999
 
 File: maxima.info,  Node: Functions and Variables for grobner,  Prev: Introduction to grobner,  Up: Top
 
-57.2 Functions and Variables for grobner
+58.2 Functions and Variables for grobner
 ========================================
 
-57.2.1 Global switches for grobner
+58.2.1 Global switches for grobner
 ----------------------------------
 
  -- Option variable: poly_monomial_order
@@ -24010,7 +24294,7 @@ File: maxima.info,  Node: Functions and Variables for grobner,  Prev: Introducti
      reduction.
 
 
-57.2.2 Simple operators in grobner
+58.2.2 Simple operators in grobner
 ----------------------------------
 
 `poly_add', `poly_subtract', `poly_multiply' and `poly_expt' are the
@@ -24060,7 +24344,7 @@ _maxima_ general form.
      the case in rings which are not fields.
 
 
-57.2.3 Other functions in grobner
+58.2.3 Other functions in grobner
 ---------------------------------
 
  -- Function: poly_expand (<poly>, <varlist>)
@@ -24143,7 +24427,7 @@ _maxima_ general form.
      polynomials and returns the resulting Groebner basis.
 
 
-57.2.4 Standard postprocessing of Groebner Bases
+58.2.4 Standard postprocessing of Groebner Bases
 ------------------------------------------------
 
 The _k-th elimination Ideal_ I_k of an Ideal I over K[ x[1],...,x[n] ]
@@ -24316,7 +24600,7 @@ I }.
 
 File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: grobner,  Up: Top
 
-58 impdiff
+59 impdiff
 **********
 
 * Menu:
@@ -24326,7 +24610,7 @@ File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: grobner,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for impdiff,  Prev: impdiff,  Up: impdiff
 
-58.1 Functions and Variables for impdiff
+59.1 Functions and Variables for impdiff
 ========================================
 
  -- Function: implicit_derivative
@@ -24343,7 +24627,7 @@ File: maxima.info,  Node: Functions and Variables for impdiff,  Prev: impdiff,  
 
 File: maxima.info,  Node: interpol,  Next: lapack,  Prev: impdiff,  Up: Top
 
-59 interpol
+60 interpol
 ***********
 
 * Menu:
@@ -24354,7 +24638,7 @@ File: maxima.info,  Node: interpol,  Next: lapack,  Prev: impdiff,  Up: Top
 
 File: maxima.info,  Node: Introduction to interpol,  Next: Functions and Variables for interpol,  Prev: interpol,  Up: interpol
 
-59.1 Introduction to interpol
+60.1 Introduction to interpol
 =============================
 
 Package `interpol' defines the Lagrangian, the linear and the cubic
@@ -24366,7 +24650,7 @@ edu DOT xunta DOT es'>.
 
 File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduction to interpol,  Up: interpol
 
-59.2 Functions and Variables for interpol
+60.2 Functions and Variables for interpol
 =========================================
 
  -- Function: lagrange (<points>)
@@ -24687,7 +24971,7 @@ File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduct
 
 File: maxima.info,  Node: lapack,  Next: lbfgs,  Prev: interpol,  Up: Top
 
-60 lapack
+61 lapack
 *********
 
 * Menu:
@@ -24698,7 +24982,7 @@ File: maxima.info,  Node: lapack,  Next: lbfgs,  Prev: interpol,  Up: Top
 
 File: maxima.info,  Node: Introduction to lapack,  Next: Functions and Variables for lapack,  Prev: lapack,  Up: lapack
 
-60.1 Introduction to lapack
+61.1 Introduction to lapack
 ===========================
 
 `lapack' is a Common Lisp translation (via the program `f2cl') of the
@@ -24707,7 +24991,7 @@ Fortran library LAPACK, as obtained from the SLATEC project.
 
 File: maxima.info,  Node: Functions and Variables for lapack,  Prev: Introduction to lapack,  Up: lapack
 
-60.2 Functions and Variables for lapack
+61.2 Functions and Variables for lapack
 =======================================
 
  -- Function: dgeev (<A>)
@@ -25130,7 +25414,7 @@ File: maxima.info,  Node: Functions and Variables for lapack,  Prev: Introductio
 
 File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: lapack,  Up: Top
 
-61 lbfgs
+62 lbfgs
 ********
 
 * Menu:
@@ -25141,7 +25425,7 @@ File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: lapack,  Up: Top
 
 File: maxima.info,  Node: Introduction to lbfgs,  Next: Functions and Variables for lbfgs,  Prev: Top,  Up: Top
 
-61.1 Introduction to lbfgs
+62.1 Introduction to lbfgs
 ==========================
 
 `lbfgs' is an implementation of the L-BFGS algorithm [1] to solve
@@ -25165,7 +25449,7 @@ large scale optimization". Mathematical Programming B 45:503-528 (1989)
 
 File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction to lbfgs,  Up: Top
 
-61.2 Functions and Variables for lbfgs
+62.2 Functions and Variables for lbfgs
 ======================================
 
  -- Function: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
@@ -25462,7 +25746,7 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
 
 File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
 
-62 lindstedt
+63 lindstedt
 ************
 
 * Menu:
@@ -25472,7 +25756,7 @@ File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: To
 
 File: maxima.info,  Node: Functions and Variables for lindstedt,  Prev: lindstedt,  Up: lindstedt
 
-62.1 Functions and Variables for lindstedt
+63.1 Functions and Variables for lindstedt
 ==========================================
 
  -- Function: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
@@ -25513,7 +25797,7 @@ File: maxima.info,  Node: Functions and Variables for lindstedt,  Prev: lindsted
 
 File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
 
-63 linearalgebra
+64 linearalgebra
 ****************
 
 * Menu:
@@ -25524,7 +25808,7 @@ File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up:
 
 File: maxima.info,  Node: Introduction to linearalgebra,  Next: Functions and Variables for linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
 
-63.1 Introduction to linearalgebra
+64.1 Introduction to linearalgebra
 ==================================
 
 `linearalgebra' is a collection of functions for linear algebra.
@@ -25623,7 +25907,7 @@ File: maxima.info,  Node: Introduction to linearalgebra,  Next: Functions and Va
 
 File: maxima.info,  Node: Functions and Variables for linearalgebra,  Prev: Introduction to linearalgebra,  Up: linearalgebra
 
-63.2 Functions and Variables for linearalgebra
+64.2 Functions and Variables for linearalgebra
 ==============================================
 
  -- Function: addmatrices (<f>, <M_1>, ..., <M_n>)
@@ -26265,24 +26549,4 @@ File: maxima.info,  Node: Functions and Variables for linearalgebra,  Prev: Intr
      block matrix, return `true' if `zeromatrixp' evaluates to `true'
      for each element of <e>.
 
-
-
-File: maxima.info,  Node: lsquares,  Next: minpack,  Prev: linearalgebra,  Up: Top
-
-64 lsquares
-***********
-
-* Menu:
-
-* Introduction to lsquares::
-* Functions and Variables for lsquares::
-
-
-File: maxima.info,  Node: Introduction to lsquares,  Next: Functions and Variables for lsquares,  Prev: lsquares,  Up: lsquares
-
-64.1 Introduction to lsquares
-=============================
-
-`lsquares' is a collection of functions to implement the method of
-least squares to estimate parameters for a model from numerical data.
 
