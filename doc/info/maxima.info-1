@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.32.1 Manual
+Maxima 5.33.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -81,7 +81,8 @@ Advanced facilities and programming
 * Debugging::                   Debugging Maxima programs.
 
 Additional packages
-* asympa::                      Asymptotic analysis package
+* alt-display::                 Alternative display package.
+* asympa::                      Asymptotic analysis package.
 * augmented_lagrangian::        augmented_lagrangian package.
 * Bernstein::                   Bernstein polynomials.
 * bode::                        Bode gain and phase plots.
@@ -320,6 +321,10 @@ Program Flow
 
 Debugging
 * Functions and Variables for Debugging::
+
+alt-display
+* Introduction to alt-display::
+* Functions and Variables for alt-display::
 
 asympa
 * Introduction to asympa::
@@ -2338,6 +2343,38 @@ functions of complex expressions can usually be accomplished by using
 the `realpart', `imagpart', `rectform', `polarform', `abs', `carg'
 functions.
 
+Floating point numbers
+----------------------
+
+Maxima has two types of floating point number. The first is just called
+a "float" (but will be called a "machine float" for the rest of this
+section to avoid ambiguity). This is stored in the underlying lisp's
+DOUBLE-FLOAT type which will almost certainly be IEEE 754 double
+precision floating point. To type a literal floating point number, just
+type its decimal expansion (for example, `0.01') or type it with an
+explicit exponent (such as `1e-2' or `0.1e-1').
+
+   The second type of floating point number in Maxima is called a
+"bigfloat". Bigfloats are stored as a mantissa and exponent in the same
+way as machine floats but the exponent is an arbitrary precision
+integer, so they can represent arbitrarily large or small numbers. The
+user can also customise the precision of bigfloat arithmetic (which
+corresponds to choosing the range of the mantissa). See `fpprec' for
+more information. To type a literal bigfloat, use the exponent notation
+as above but with the character `b' in place of `e'. The example of
+`0.01' from above could be entered as a bigfloat with `1b-2' or
+`0.001b0'.
+
+   Calculations using machine floats can be significantly faster than
+using bigfloats since modern computer processors have dedicated
+hardware for them. This is particularly noticeable with compiled Maxima
+code. However, machine floats suffer from the problem of overflow,
+where a number can become too large for its exponent to be represented
+in the bits available. In interpreted code, the default behaviour is
+that a calculation that would cause a floating point overflow instead
+generates a bigfloat number. To configure this, see the
+`promote_float_to_bigfloat' variable.
+
 
 File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introduction to Numbers,  Up: Numbers
 
@@ -2590,6 +2627,22 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
  -- Function: oddp (<expr>)
      is `true' if <expr> is an odd integer.  `false' is returned in all
      other cases.
+
+
+ -- Option variable: promote_float_to_bigfloat
+     Default value: `true'
+
+     When `promote_float_to_bigfloat' is true, the result of any
+     floating point calculation that would normally cause a floating
+     point overflow is replaced by a bigfloat number that represents the
+     result. Note that this automatic promotion only happens in
+     interpreted code: compiled code is not affected.
+
+     This automatic conversion is often convenient, but can be
+     unhelpful in some cases. For example, it can actually cause a loss
+     of precision if `fpprec' is currently smaller than the precision
+     in a floating point number. To disable this behaviour, set
+     `promote_float_to_bigfloat' to false.
 
 
  -- Option variable: ratepsilon
@@ -7010,6 +7063,37 @@ File: maxima.info,  Node: Functions and Variables for Evaluation,  Prev: Evaluat
           (%i2) '(sin(1.0));
           (%o2)                          .8414709848078965
 
+     When the global flag `noundisp' is `true', nouns display with a
+     single quote.
+
+          (%i1) x:%pi;
+          (%o1)                                 %pi
+          (%i2) bfloat(x);
+          (%o2)                         3.141592653589793b0
+          (%i3) sin(x);
+          (%o3)                                  0
+          (%i4) noundisp;
+          (%o4)                                false
+          (%i5) 'bfloat(x);
+          (%o5)                             bfloat(%pi)
+          (%i6) bfloat('x);
+          (%o6)                                  x
+          (%i7) 'sin(x);
+          (%o7)                                  0
+          (%i8) sin('x);
+          (%o8)                               sin(x)
+          (%i9) noundisp : not noundisp;
+          (%o9)                                true
+          (%i10) 'bfloat(x);
+          (%o10)                           'bfloat(%pi)
+          (%i11) bfloat('x);
+          (%o11)                                 x
+          (%i12) 'sin(x);
+          (%o12)                                 0
+          (%i13) sin('x);
+          (%o13)                              sin(x)
+          (%i14)
+
 
  -- Operator: "
      The quote-quote operator `''' (two single quote marks) modifies
@@ -7591,11 +7675,37 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      Simplifies the sum <expr> by combining terms with the same
      denominator into a single term.
 
+     Example:
+
+          (%i1) 1*f/2*b + 2*c/3*a + 3*f/4*b +c/5*b*a;
+                                       5 b f   a b c   2 a c
+          (%o1)                        ----- + ----- + -----
+                                         4       5       3
+          (%i2) combine (%);
+                                   75 b f + 4 (3 a b c + 10 a c)
+          (%o2)                    -----------------------------
+                                                60
+
 
  -- Property: commutative
      If `declare(h, commutative)' is done, this tells the simplifier
      that `h' is a commutative function.  E.g.  `h(x, z, y)' will
      simplify to `h(x, y, z)'.  This is the same as `symmetric'.
+
+     Exemplo:
+
+          (%i1) S (b, a);
+          (%o1)                               S(b, a)
+          (%i2) S (a, b) + S (b, a);
+          (%o2)                          S(b, a) + S(a, b)
+          (%i3) declare (S, commutative);
+          (%o3)                                done
+          (%i4) S (b, a);
+          (%o4)                               S(a, b)
+          (%i5) S (a, b) + S (b, a);
+          (%o5)                              2 S(a, b)
+          (%i6) S (a, c, e, d, b);
+          (%o6)                          S(a, b, c, d, e)
 
 
  -- Function: demoivre (<expr>)
@@ -7683,6 +7793,19 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
           (%i7) properties(abs);
           (%o7) [integral, distributes over bags, noun, rule, gradef]
+
+     The mapping of functions is switched off, when setting
+     `distribute_over' to the value `false'.
+
+          (%i1) distribute_over;
+          (%o1)                                true
+          (%i2) sin([x,1,1.0]);
+          (%o2)                [sin(x), sin(1), 0.8414709848078965]
+          (%i3) distribute_over : not distribute_over;
+          (%o3)                                false
+          (%i4) sin([x,1,1.0]);
+          (%o4)                          sin([x, 1, 1.0])
+          (%i5)
 
 
  -- Option variable: domain
@@ -7884,6 +8007,17 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      as in the case of `sum' or `integrate', i.e., `f (a*x + b, x)'
      yields `a*f(x,x) + b*f(1,x)' for `a' and `b' free of `x'.
 
+     Example:
+
+          (%i1) declare (f, linear);
+          (%o1)                                done
+          (%i2) f(x+y);
+          (%o2)                             f(y) + f(x)
+          (%i3) declare (a, constant);
+          (%o3)                                done
+          (%i4) f(a*x);
+          (%o4)                               a f(x)
+
      `linear' is equivalent to `additive' and `outative'.  See also
      `opproperties'.
 
@@ -8024,13 +8158,27 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      you do not want to set to `false' as a matter of course or
      necessarily for other than local use in your Maxima.
 
+     Example:
+
+          (%i1) negdistrib;
+          (%o1)                                true
+          (%i2) -(x+y);
+          (%o2)                               - y - x
+          (%i3) negdistrib : not negdistrib ;
+          (%o3)                                false
+          (%i4) -(x+y);
+          (%o4)                              - (y + x)
+
 
  -- System variable: opproperties
      `opproperties' is the list of the special operator properties
-     recognized by the Maxima simplifier: `linear', `additive',
-     `multiplicative', `outative', `evenfun', `oddfun', `commutative',
-     `symmetric', `antisymmetric', `nary', `lassociative',
-     `rassociative'.
+     recognized by the Maxima simplifier:
+
+     Example:
+
+          (%i1) opproperties;
+          (%o1) [linear, additive, multiplicative, outative, evenfun, oddfun,.
+                 commutative, symmetric, antisymmetric, nary, lassociative, rassociative]
 
 
  -- Property: outative
@@ -8346,9 +8494,11 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
           $$\left \lceil a \right \rceil$$
           (%o7)                         false
 
-     The function `ceiling' does not automatically map over lists or
-     matrices.  Finally, for all inputs that are manifestly complex,
-     `ceiling' returns a noun form.
+     The `ceiling' function distributes over lists, matrices and
+     equations.  See `distribute_over'.
+
+     Finally, for all inputs that are manifestly complex, `ceiling'
+     returns a noun form.
 
      If the range of a function is a subset of the integers, it can be
      declared to be `integervalued'.  Both the `ceiling' and `floor'
@@ -8431,9 +8581,11 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
           $$\left \lfloor a \right \rfloor$$
           (%o7)                         false
 
-     The function `floor' does not automatically map over lists or
-     matrices.  Finally, for all inputs that are manifestly complex,
-     `floor' returns a noun form.
+     The `floor' function distributes over lists, matrices and
+     equations.  See `distribute_over'.
+
+     Finally, for all inputs that are manifestly complex, `floor'
+     returns a noun form.
 
      If the range of a function is a subset of the integers, it can be
      declared to be `integervalued'.  Both the `ceiling' and `floor'
@@ -8491,6 +8643,9 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
      Multiples of 1/2 are rounded to the nearest even integer.
      Evaluation of <x> is similar to `floor' and `ceiling'.
 
+     The `round' function distributes over lists, matrices and
+     equations.  See `distribute_over'.
+
 
  -- Function: signum (<x>)
      For either real or complex numbers <x>, the signum function returns
@@ -8507,6 +8662,15 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
 
      The `signum' function distributes over a list, a matrix, or an
      equation.  See `distribute_over'.
+
+
+ -- Function: truncate (<x>)
+     When <x> is a real number, return the closest integer to <x> not
+     greater in absolute value than <x>.  Evaluation of <x> is similar
+     to `floor' and `ceiling'.
+
+     The `truncate' function distributes over lists, matrices and
+     equations.  See `distribute_over'.
 
 
 
@@ -8636,10 +8800,35 @@ File: maxima.info,  Node: Functions for Complex Numbers,  Next: Combinatorial Fu
 
      See also `abs', `carg', `polarform', `rectform', and `realpart'.
 
+     Example:
+
+          (%i1) imagpart (a+b*%i);
+          (%o1)                                  b
+          (%i2) imagpart (1+sqrt(2)*%i);
+          (%o2)                               sqrt(2)
+          (%i3) imagpart (1);
+          (%o3)                                  0
+          (%i4) imagpart (sqrt(2)*%i);
+          (%o4)                               sqrt(2)
+
 
  -- Function: polarform (<expr>)
      Returns an expression `r %e^(%i theta)' equivalent to <expr>, such
      that `r' and `theta' are purely real.
+
+     Example:
+
+          (%i1) polarform(a+b*%i);
+                                        2    2    %i atan2(b, a)
+          (%o1)                   sqrt(b  + a ) %e
+          (%i2) polarform(1+%i);
+                                                   %i %pi
+                                                   ------
+                                                     4
+          (%o2)                          sqrt(2) %e
+          (%i3) polarform(1+2*%i);
+                                                 %i atan(2)
+          (%o3)                        sqrt(5) %e
 
 
  -- Function: realpart (<expr>)
@@ -8647,10 +8836,30 @@ File: maxima.info,  Node: Functions for Complex Numbers,  Next: Combinatorial Fu
      work on expressions involving trigonometric and hyperbolic
      functions, as well as square root, logarithm, and exponentiation.
 
+     Example:
+
+          (%i1) realpart (a+b*%i);
+          (%o1)                                  a
+          (%i2) realpart (1+sqrt(2)*%i);
+          (%o2)                                  1
+          (%i3) realpart (sqrt(2)*%i);
+          (%o3)                                  0
+          (%i4) realpart (1);
+          (%o4)                                  1
+
 
  -- Function: rectform (<expr>)
      Returns an expression `a + b %i' equivalent to <expr>, such that
      <a> and <b> are purely real.
+
+     Example:
+
+          (%i1) rectform(sqrt(2)*%e^(%i*%pi/4));
+          (%o1)                               %i + 1
+          (%i2) rectform(sqrt(b^2+a^2)*%e^(%i*atan2(b, a)));
+          (%o2)                              %i b + a
+          (%i3) rectform(sqrt(5)*%e^(%i*atan(2)));
+          (%o3)                              2 %i + 1
 
 
 
@@ -8707,6 +8916,23 @@ File: maxima.info,  Node: Combinatorial Functions,  Next: Root Exponential and L
 
      `sumsplitfact' if set to `false' will cause `minfactorial' to be
      applied after a `factcomb'.
+
+     Example:
+
+          (%i1) sumsplitfact;
+          (%o1)                                true
+          (%i2) (n + 1)*(n + 1)*n!;
+                                                   2
+          (%o2)                             (n + 1)  n!
+          (%i3) factcomb (%);
+          (%o3)                         (n + 2)! - (n + 1)!
+          (%i4) sumsplitfact: not sumsplitfact;
+          (%o4)                                false
+          (%i5) (n + 1)*(n + 1)*n!;
+                                                    2
+          (%o5)                             (n + 1)  n!
+          (%i6) factcomb (%);
+          (%o6)                        n (n + 1)! + (n + 1)!
 
 
  -- Function: factorial
@@ -8813,8 +9039,8 @@ File: maxima.info,  Node: Combinatorial Functions,  Next: Root Exponential and L
 
  -- Function: genfact (<x>, <y>, <z>)
      Returns the generalized factorial, defined as `x (x-z) (x - 2 z)
-     ... (x - (y - 1) z)'.  Thus, for integral <x>, `genfact (x, x, 1)
-     = x!' and `genfact (x, x/2, 2) = x!!'.
+     ... (x - (y - 1) z)'.  Thus, when <x> is an integer, `genfact (x,
+     x, 1) = x!' and `genfact (x, x/2, 2) = x!!'.
 
 
  -- Function: minfactorial (<expr>)
@@ -9655,7 +9881,7 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
 
 
  -- Property: bindtest
-     The command `declare(<x>, bindtest') tells Maxima to trigger an
+     The command `declare(<x>, bindtest)' tells Maxima to trigger an
      error when the symbol <x> is evaluated unbound.
 
           (%i1) aa + bb;
@@ -14796,9 +15022,9 @@ File: maxima.info,  Node: Bessel Functions,  Next: Airy Functions,  Prev: Introd
 
              bessel_j(v,z) + %i * bessel_y(v,z)
 
-     Maxima evaluates `hankel_1' numerically for a real order v and
+     Maxima evaluates `hankel_1' numerically for a complex order v and
      complex argument z in float precision. The numerical evaluation in
-     bigfloat precision and for a complex order v is not supported.
+     bigfloat precision is not supported.
 
      When `besselexpand' is `true', `hankel_1' is expanded in terms of
      elementary functions when the order v is half of an odd integer.
@@ -14811,33 +15037,28 @@ File: maxima.info,  Node: Bessel Functions,  Next: Airy Functions,  Prev: Introd
      Numerical evaluation:
 
           (%i1) hankel_1(1,0.5);
-          (%o1)              .2422684576748738 - 1.471472392670243 %i
+          (%o1)        0.24226845767487 - 1.471472392670243 %i
           (%i2) hankel_1(1,0.5+%i);
-          (%o2)             - .2558287994862166 %i - 0.239575601883016
-
-     A complex order v is not supported. Maxima returns a noun form:
-
-          (%i3) hankel_1(%i,0.5+%i);
-          (%o3)                       hankel_1(%i, %i + 0.5)
+          (%o2)       - 0.25582879948621 %i - 0.23957560188301
 
      Expansion of `hankel_1' when `besselexpand' is `true':
 
-          (%i4) hankel_1(1/2,z),besselexpand:true;
-                                sqrt(2) sin(z) - sqrt(2) %i cos(z)
-          (%o4)                 ----------------------------------
-                                        sqrt(%pi) sqrt(z)
+          (%i1) hankel_1(1/2,z),besselexpand:true;
+                         sqrt(2) sin(z) - sqrt(2) %i cos(z)
+          (%o1)          ----------------------------------
+                                 sqrt(%pi) sqrt(z)
 
      Derivative of `hankel_1' wrt the argument z. The derivative wrt the
      order v is not supported. Maxima returns a noun form:
 
-          (%i5) diff(hankel_1(v,z),z);
-                              hankel_1(v - 1, z) - hankel_1(v + 1, z)
-          (%o5)               ---------------------------------------
-                                                 2
-          (%i6) diff(hankel_1(v,z),v);
-                                       d
-          (%o6)                        -- (hankel_1(v, z))
-                                       dv
+          (%i1) diff(hankel_1(v,z),z);
+                       hankel_1(v - 1, z) - hankel_1(v + 1, z)
+          (%o1)        ---------------------------------------
+                                          2
+          (%i2) diff(hankel_1(v,z),v);
+                                 d
+          (%o2)                  -- (hankel_1(v, z))
+                                 dv
 
 
  -- Function: hankel_2 (<v>, <z>)
@@ -14846,9 +15067,9 @@ File: maxima.info,  Node: Bessel Functions,  Next: Airy Functions,  Prev: Introd
 
              bessel_j(v,z) - %i * bessel_y(v,z)
 
-     Maxima evaluates `hankel_2' numerically for a real order v and
+     Maxima evaluates `hankel_2' numerically for a complex order v and
      complex argument z in float precision. The numerical evaluation in
-     bigfloat precision and for a complex order v is not supported.
+     bigfloat precision is not supported.
 
      When `besselexpand' is `true', `hankel_2' is expanded in terms of
      elementary functions when the order v is half of an odd integer.
@@ -15996,7 +16217,6 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      computed by `specint'.
 
      Examples:
-
           (%i1) assume (p > 0, a > 0)$
           (%i2) specint (t^(1/2) * exp(-a*t/4) * exp(-p*t), t);
                                      sqrt(%pi)
