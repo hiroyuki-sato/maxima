@@ -49,6 +49,8 @@
 
 ; ------------------ search help topics ------------------
 
+(defvar maxima::*maxima-index-dir* nil)
+
 (defun load-primary-index ()
   ;; Load the index, but make sure we use a sensible *read-base*.
   ;; See bug 1951964.  GCL doesn't seem to have
@@ -56,7 +58,7 @@
   ;; with-standard-io-syntax too much for what we want?
   (let*
       ((subdir-bit (or maxima::*maxima-lang-subdir* "."))
-       (path-to-index (maxima::combine-path maxima::*maxima-infodir* subdir-bit "maxima-index.lisp")))
+       (path-to-index (maxima::combine-path (or maxima::*maxima-index-dir* maxima::*maxima-infodir*) subdir-bit "maxima-index.lisp")))
     (handler-case
 	#-gcl
       (with-standard-io-syntax (load path-to-index))
