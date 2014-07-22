@@ -196,7 +196,6 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	mkdir -p debian/tmp/usr/share/pixmaps
 	ln -s /usr/share/doc/xmaxima/maxima-icon.png debian/tmp/usr/share/pixmaps/maxima-icon.png
 
-
 # GCL must be able to write to directory in which tests are run
 #	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
 #	cat debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp | sed "s,@MVERS@,$(MVERS),g" >tmp && \
@@ -219,12 +218,12 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 		sed 's,^.TH MAXIMA 1L,.TH MAXIMA 1,1' >debian/foo && \
 		mv debian/foo debian/tmp/usr/share/man/man1/maxima.1
 
-	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
-	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.uu") ; do \
-		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
-
-	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.shtml") ; do \
-		mv $$i $${i%.shtml}.html ; done
+#	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
+#	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.uu") ; do \
+#		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
+#
+#	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.shtml") ; do \
+#		mv $$i $${i%.shtml}.html ; done
 
 	for i in $$(find debian/tmp/usr/share/info -name "maxima-index.lisp") ; do \
 		mkdir -p debian/tmp/usr/share/doc/maxima/$$(basename $$(dirname $$i)) && \
@@ -236,7 +235,7 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 
 	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/lurkmathml/mathmltest
 
-	rm -f debian/tmp/usr/share/info/dir debian/tmp/usr/share/maxima/5.32.1/share/logic/COPYING
+	rm -f debian/tmp/usr/share/info/dir debian/tmp/usr/share/maxima/$(MVERS)/share/logic/COPYING
 
 	dh_install
 
