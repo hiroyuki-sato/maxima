@@ -114,7 +114,7 @@
                   ;; Do a substitution for one equation.
                   (maxima-substitute (caddr l) (cadr l) z))
                  (t
-                  ;; We have a list of equations. We do parallel subsitution.
+                  ;; We have a list of equations. We do parallel substitution.
                   (let (gensymbol genlist eqn ($simp nil))
                     ;; At first substitute a gensym for the expressions of
                     ;; the left hand side of the equations.
@@ -860,7 +860,7 @@
      (when (and inflag specp)
        (setq exp (copy-tree exp)))
      (when substflag
-       ;; Replace all ocurrences of 'rat with 'mquotient when in subst.
+       ;; Replace all occurrences of 'rat with 'mquotient when in subst.
        (setq exp (let (($simp nil)) (maxima-substitute 'mquotient 'rat exp))))
      (setq exp* exp)
      start (cond ((or (atom exp) (eq (caar exp) 'bigfloat)) (go err))
@@ -991,11 +991,11 @@
        (eq (caar x) 'mlist)))
 
 (defmfun $cons (x e)
-  (atomchk (setq e (specrepcheck e)) '$cons t)
+  (atomchk (setq e (format1 e)) '$cons t)
   (mcons-exp-args e (cons x (margs e))))
 
 (defmfun $endcons (x e)
-  (atomchk (setq e (specrepcheck e)) '$endcons t)
+  (atomchk (setq e (format1 e)) '$endcons t)
   (mcons-exp-args e (append (margs e) (ncons x))))
 
 (defmfun $reverse (e)
@@ -1321,3 +1321,60 @@
   	((null my-num) (setq my-num pow))
   	(hiflg (if (> pow my-num) (setq my-num pow)))
   	((< pow my-num) (setq my-num pow)))))
+
+;; push(x,l): The argument l must be a mapatom that is bound to a list. Prepend x to 
+;; the value of l and return this list. The arguments to push are evaluated from left to right.
+ 
+;; We assume that if each member of a list is simplified, the list members are still simplified 
+;; after pushing onto (or popping) the list. Just before returning, the code calls simplifya 
+;; with second argument true. Without this call to simplifya, the general simplifier would simplify 
+;; every list member after returning. (Barton Willis, author of $push and $pop)
+
+(defmspec $push (z)
+  (let* ((o (car (pop z)))
+	 (x (if z (pop z) (wna-err o)))
+	 (l (if z (pop z) (wna-err o)))
+	 (ll) (lo))
+
+    (if z (wna-err o))
+    (setq x (meval x))
+    (cond (($subvarp l)
+	   (setq lo (simplifya (cons (list (meval (mop l)) 'array) (mevalargs (margs l))) t))
+	   (setq ll (let ((noevalargs t)) (meval lo))))
+	  (t
+	   (setq lo l)
+	   (setq ll (meval l))))
+    (if (and ($mapatom lo) ($listp ll))
+	(progn
+	  (setq ll (cons x (cdr ll)))
+	  (mset lo (simplifya (cons '(mlist) ll) t)))
+      (merror "Second argument to push must be a mapatom that is bound to a list"))))
+
+;; pop(l): The argument l must be a mapatom that is bound to a list. Remove the 
+;; first member of the value of l and return it. 
+
+;; We assume that if each member of a list is simplified, the list members are still simplified 
+;; after popping (or pushing onto) the list. Just before returning, the code calls simplifya 
+;; with second argument true. Without this call to simplifya, the general simplifier would simplify 
+;; every list member after returning.
+
+(defmspec $pop (z)
+  (let* ((o (car (pop z)))
+	 (l (if z (pop z) (wna-err o)))
+	 (ll) (lo))
+    (if z (wna-err o))
+    (cond (($subvarp l)
+	   (setq lo (simplifya (cons (list (meval (mop l)) 'array) (mevalargs (margs l))) t))
+	   (setq ll (let ((noevalargs t)) (meval lo))))
+	  (t
+	   (setq lo l)
+	   (setq ll (meval lo))))
+    (setq ll (meval l))
+    (cond ((and ($mapatom lo) ($listp ll))
+	   (if ($emptyp ll) (merror "Pop called on an empty list")
+	     (prog2
+		 (setq ll (cdr ll))
+		 (pop ll)
+	       (mset lo (simplifya (cons '(mlist) ll) t)))))
+	  (t (merror "Argument to pop must be a mapatom that is bound to a list")))))
+

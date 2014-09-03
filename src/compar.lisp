@@ -335,11 +335,12 @@ relational knowledge is contained in the default context GLOBAL.")
 	`((,(caar x) simp) ,a))))
 
 (defmspec $is (form)
-  (let* ((pat (cadr form))
-	 (x (mevalp1 pat))
-	 (ans (car x))
-	 (patevalled (cadr x)))
-    (cond ((member ans '(t nil) :test #'eq) ans)
+  (unless (= 1 (length (rest form)))
+    (merror (intl:gettext "is() expects a single argument. Found ~A")
+            (length (rest form))))
+  (destructuring-bind (answer patevalled)
+      (mevalp1 (cadr form))
+    (cond ((member answer '(t nil) :test #'eq) answer)
 	  ;; I'D RATHER HAVE ($PREDERROR ($THROW `(($PREDERROR) ,PATEVALLED))) HERE
 	  ($prederror (pre-err patevalled))
 	  (t '$unknown))))
@@ -1081,6 +1082,10 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 		 ((or (and (mexptp a) (not (eq '$minf (third a))) (zerop1 b) (eq t (mnqp (second a) 0)))
 		      (and (mexptp b) (not (eq '$minf (third b))) (zerop1 a) (eq t (mnqp (second b) 0))))
 		  nil)
+
+		 ;; DCOMPARE emits new stuff (via DINTERNP) into the assume database.
+		 ;; Let's avoid littering the database with numbers.
+		 ((and (mnump a) (mnump b)) (zerop1 (sub a b)))
 
 		 ;; lookup in assumption database
 		 ((and (dcompare a b) (eq '$zero sign)))	; dcompare sets sign
@@ -1832,11 +1837,11 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
            (intl:gettext "featurep: second argument must be a symbol; found ~M")
           ind))
         ;; Properties not related to the assume database.
-        ((and (member ind opers) (get e ind)))
+        ((and (member ind opers) (safe-get e ind)))
         ((and (member ind '($evfun $evflag $bindtest $nonarray))
-              (get e (stripdollar ind))))
+              (safe-get e (stripdollar ind))))
         ((and (eq ind '$noun)
-              (get e (stripdollar ind))
+              (safe-get e (stripdollar ind))
               t))
         ((and (member ind '($scalar $nonscalar $mainvar))
               (mget e ind)))
@@ -2265,23 +2270,25 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 (defun mkind (x y)
   (kind (dintern x) (dintern y)))
 
+;; To guess from the previous incarnation of this code,
+;; each argument is assumed to be a float, bigfloat, integer, or Maxima rational.
+;; Convert Maxima rationals to Lisp rationals to make them comparable to others.
+
 (defmfun rgrp (x y)
-  (cond ((or ($bfloatp x) ($bfloatp y))
-	 (setq x (let (($float2bf t))
-		   (declare (special $float2bf))
-		   (cadr ($bfloat (sub x y)))) y 0))
-	((numberp x)
-	 (cond ((numberp y))
-	       (t (setq x (* x (caddr y))
-			y (cadr y)))))
-	((numberp y)
-	 (setq y (* (caddr x) y) x (cadr x)))
-	(t (let ((dummy x))
-	     (setq x (* (cadr x) (caddr y)))
-	     (setq y (* (caddr dummy) (cadr y))))))
-  (cond ((> x y) '$pos)
-	((> y x) '$neg)
-	(t '$zero)))
+  (when (or ($bfloatp x) ($bfloatp y))
+    (setq
+          x (let (($float2bf t))
+              (declare (special $float2bf))
+              (cadr ($bfloat (sub x y))))
+          y 0))
+  (if (not (numberp x))
+    (setq x (/ (cadr x) (caddr x))))
+  (if (not (numberp y))
+    (setq y (/ (cadr y) (caddr y))))
+  (cond
+    ((> x y) '$pos)
+    ((> y x) '$neg)
+    (t '$zero)))
 
 (defun mcons (x l)
   (cons (car l) (cons x (cdr l))))

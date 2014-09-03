@@ -114,6 +114,41 @@ tellsimpafter (aa% ` cc%, aa%*cc%);
 tellsimpafter (uu% ` nd%, qty (uu%) ` (units (uu%) * nd%));
 tellsimpafter (abs (aa% ` bb%), abs (aa%) ` bb%);
 tellsimpafter (aa% ` abs (bb%), aa% ` bb%);
+
+/* RULES FOR RELATIONAL EXPRESSIONS HERE !! NOTIFY GUNTER KOENIGSMANN */
+matchdeclare (uu%, unitp, vv%, lambda ([e], unitp(e) and dimensions(e) = dimensions(uu%)));
+tellsimpafter (uu% < vv%, qty (uu%) < qty (vv% `` units (uu%)));
+tellsimpafter (uu% <= vv%, qty (uu%) <= qty (vv% `` units (uu%)));
+tellsimpafter (uu% >= vv%, qty (uu%) >= qty (vv% `` units (uu%)));
+tellsimpafter (uu% > vv%, qty (uu%) > qty (vv% `` units (uu%)));
+/* SIMPLIFICATION OF DIMENSIONAL "=" CAUSES TROUBLE FOR EXISTING FUNCTIONALITY !!
+ * ALSO IT SEEMS REALLY HEAVYHANDED TO RULE OUT FOO`M = BAR`FOOT !!
+tellsimpafter (uu% = vv%, qty (uu%) = qty (vv% `` units (uu%)));
+tellsimpafter (uu% # vv%, qty (uu%) # qty (vv% `` units (uu%)));
+ */
+tellsimpafter (equal (uu%, vv%), equal (qty (uu%), qty (vv% `` units (uu%))));
+tellsimpafter (notequal (uu%, vv%), notequal (qty (uu%), qty (vv% `` units (uu%))));
+/* I'M NOT COMFORTABLE WITH IMPLICIT CONVERSION OF 0 TO DIMENSIONAL !!
+ * I REMEMBER NOW THAT THE JUSTIFICATION IS THAT 0 IS AN ELEMENT OF EVERY DIMENSIONAL LINE !!
+ * IS THAT ENOUGH TO GO ON ??
+tellsimpafter (uu% < 0, qty (uu%) < 0);
+tellsimpafter (0 < uu%, 0 < qty (uu%));
+tellsimpafter (uu% <= 0, qty (uu%) <= 0);
+tellsimpafter (0 <= uu%, 0 <= qty (uu%));
+tellsimpafter (uu% >= 0, qty (uu%) >= 0);
+tellsimpafter (0 >= uu%, 0 >= qty (uu%));
+tellsimpafter (uu% > 0, qty (uu%) > 0);
+tellsimpafter (0 > uu%, 0 > qty (uu%));
+tellsimpafter (uu% = 0, qty (uu%) = 0);
+tellsimpafter (0 = uu%, 0 = qty (uu%));
+tellsimpafter (uu% # 0, qty (uu%) # 0);
+tellsimpafter (0 # uu%, 0 # qty (uu%));
+tellsimpafter (equal (uu%, 0), equal (qty (uu%), 0));
+tellsimpafter (equal (0, uu%), equal (0, qty (uu%)));
+tellsimpafter (notequal (uu%, 0), notequal (qty (uu%), 0));
+tellsimpafter (notequal (0, uu%), notequal (0, qty (uu%)));
+ */
+
 simp: true$
 
 matchdeclare (uu%, lambda ([e], unitp (e) and not unitop_p (e)));
@@ -499,8 +534,9 @@ display_known_unit_conversions () :=
 simp : false;
 
 matchdeclare ([uu%, vv%, aa%, bb%], unitop_p);
+matchdeclare (nn%, integerp);
 
-tellsimp ('diff (uu%, vv%, 1), 'diff (qty (uu%), qty (vv%), 1) ` (units (uu%) / units (vv%)));
+tellsimp ('diff (uu%, vv%, nn%), 'diff (qty (uu%), qty (vv%), nn%) ` (units (uu%) / (units (vv%))^nn%));
 
 tellsimp ('integrate (uu%, vv%), 'integrate (qty (uu%), qty (vv%)) ` (units (uu%) * units (vv%)));
 
@@ -512,39 +548,32 @@ tellsimp
 
 simp : true;
 
-/* Rules to unit-ify solve.
+/* Rules to handle arbitrary Maxima expressions dimensionally
+ * by replacing expressions a`b with a*gensymized(b).
  */
 
 matchdeclare (uu%, unitop_p);
-defrule (rununitify, uu%, subst_qty (uu%) * subst_units (uu%));
-
-subst_qty (u) := block ([v : listofvars (qty (u)), substs],
-  for v1 in v do if qty_gensyms [v1] = false then qty_gensyms [v1] : gensym (),
-  substs : makelist (v1 = qty_gensyms [v1], v1, v),
-  subst (substs, qty (u)));
+defrule (rununitify, uu%, qty (uu%) * subst_units (uu%));
 
 subst_units (u) := block ([v : listofvars (units (u)), substs],
-  for v1 in v do if units_gensyms [v1] = false then units_gensyms [v1] : gensym (),
+  for v1 in v do 
+   (if units_gensyms [v1] = false then units_gensyms [v1] : gensym (),
+    assume (units_gensyms [v1] > 0)),
   substs : makelist (v1 = units_gensyms [v1], v1, v),
   subst (substs, units (u)));
 
-matchdeclare (gg%, unit_gensym_p);
-unit_gensym_p (e) := member (e, listarray (units_gensyms));
-defrule (rreunitify, gg%, 1 ` gg%); /* apply via applyb1 only to avoid infinite recursion !! */
-
-solve_dimensional (e%, v%) := solve_dimensional1 (if not listp (e%) then [e%] else e%, if not listp (v%) then [v%] else v%);
-
-solve_dimensional1 (e%, v%) := block
-([qty_gensyms : make_array ('hashed),
-  units_gensyms : make_array ('hashed)],
-  applyb1 (e%, rununitify),
-  /* ENSURE QTY_GENSYMS AND UNITS_GENSYMS KEY SETS ARE DISJOINT ?? */
-  subst (gensym_map (qty_gensyms), [%%, v%]),
-  subst (gensym_map (units_gensyms), %%),
-  apply (solve, %%),
-  applyb1 (%%, rreunitify),
-  subst (inverse_gensym_map (units_gensyms), %%),
-  subst (inverse_gensym_map (qty_gensyms), %%));
+dimensionally (e%) ::=
+  buildq ([e%_op : op (e%), e%_args : args (e%), context_name : gensym ()],
+    block
+     ([units_gensyms, unitless_args, reunitification_eqs, reunitified],
+      supcontext (context_name),
+      context : context_name,
+      units_gensyms : make_array ('hashed), 
+      unitless_args : applyb1 (e%_args, rununitify),
+      reunitification_eqs : map (lambda ([e], lhs (e) = 1 ` rhs (e)), inverse_gensym_map (units_gensyms)),
+      reunitified : subst (reunitification_eqs, apply (e%_op, unitless_args)),
+      killcontext (context_name),
+      reunitified));
 
 gensym_map (h) := map ("=", rest (arrayinfo (h), 2), listarray (h));
 inverse_gensym_map (h) := map ("=", listarray (h), rest (arrayinfo (h), 2));

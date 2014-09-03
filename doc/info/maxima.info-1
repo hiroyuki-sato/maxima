@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/maxima/maxima-code/doc/info//include-maxima.texi.
+/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info//include-maxima.texi.
 
 This is a Texinfo Maxima Manual
 
@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.33.0 Manual
+Maxima 5.34.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -86,6 +86,7 @@ Additional packages
 * augmented_lagrangian::        augmented_lagrangian package.
 * Bernstein::                   Bernstein polynomials.
 * bode::                        Bode gain and phase plots.
+* clebsch_gordan::              Clebsch-Gordan and Wigner coefficients
 * cobyla::                      Nonlinear optimization with inequality constraints.
 * contrib_ode::                 Additional routines for ODEs
 * descriptive::                 Descriptive statistics.
@@ -338,6 +339,9 @@ Bernstein
 
 bode
 * Functions and Variables for bode::
+
+clebsch_gordan
+* Functions and Variables for clebsch_gordan::
 
 cobyla
 * Introduction to cobyla::
@@ -1227,6 +1231,30 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
      otherwise it is not recognized as a request for documentation.
      See also `describe'.
 
+
+ -- Input terminator: $
+     The dollar sign `$' terminates an input expression, and the most
+     recent output `%' and an output label, e.g. `%o1', are assigned
+     the result, but the result is not displayed.
+
+     See also `;'.
+
+     Example:
+          (%i1) 1 + 2 + 3 $
+          (%i2) %;
+          (%o2)                           6
+          (%i3) %o1;
+          (%o3)                           6
+
+ -- Input terminator: ;
+     The semicolon `;' terminates an input expression, and the
+     resulting output is displayed.
+
+     See also `$'.
+
+     Example:
+          (%i1) 1 + 2 + 3;
+          (%o1)                           6
 
  -- Option variable: inchar
      Default value: `%i'
@@ -2131,7 +2159,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
 
      When `lispdisp' is `true', Lisp symbols are displayed with a
      leading question mark `?'.  Otherwise, Lisp symbols are displayed
-     with no leading mark.
+     with no leading mark. This has the same effect for 1-d and 2-d
+     display.
 
      Examples:
 
@@ -2482,6 +2511,10 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
      `fpprec' (inclusive), the number of digits printed is equal to
      `fpprintprec'.  Otherwise, `fpprintprec' is 0, or greater than
      `fpprec', and the number of digits printed is equal to `fpprec'.
+
+     For both ordinary floats and bigfloats, trailing zero digits are
+     suppressed.  The actual number of digits printed is less than
+     `fpprintprec' if there are trailing zero digits.
 
      `fpprintprec' cannot be 1.
 
@@ -3116,9 +3149,35 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
 
 
  -- Function: cons (<expr>, <list>)
-     Returns a new list constructed of the element <expr> as its first
-     element, followed by the elements of <list>.  `cons' also works on
-     other expressions, e.g. `cons(x, f(a,b,c));'  ->  `f(x,a,b,c)'.
+ -- Function: cons (<expr_1>, <expr_2>)
+     `cons (<expr>, <list>)' returns a new list constructed of the
+     element <expr> as its first element, followed by the elements of
+     <list>. This is analogous to the Lisp language construction
+     operation "cons".
+
+     The Maxima function `cons' can also be used where the second
+     argument is other than a list and this might be useful. In this
+     case, `cons (<expr_1>, <expr_2>)' returns an expression with same
+     operator as <expr_2> but with argument `cons(expr_1,
+     args(expr_2))'.  Examples:
+          (%i1) cons(a,[b,c,d]);
+          (%o1)                            [a, b, c, d]
+          (%i2) cons(a,f(b,c,d));
+          (%o2)                            f(a, b, c, d)
+
+     In general, `cons' applied to a nonlist doesn't make sense. For
+     instance, `cons(a,b^c)' results in an illegal expression, since
+     '^' cannot take three arguments.
+
+     When `inflag' is true, `cons' operates on the internal structure
+     of an expression, otherwise `cons' operates on the displayed form.
+     Especially when `inflag' is true, `cons' applied to a nonlist
+     sometimes gives a surprising result; for example
+          (%i1) cons(a,-a), inflag : true;
+                                                  2
+          (%o1)                                - a
+          (%i2) cons(a,-a), inflag : false;
+          (%o2)                                  0
 
 
  -- Function: copylist (<list>)
@@ -3225,9 +3284,31 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
 
 
  -- Function: endcons (<expr>, <list>)
-     Returns a new list consisting of the elements of `list' followed by
-     <expr>.  `endcons' also works on general expressions, e.g.
-     `endcons(x, f(a,b,c));'  ->  `f(a,b,c,x)'.
+ -- Function: endcons (<expr_1>, <expr_2>)
+     `endcons (<expr>, <list>)' returns a new list constructed of the
+     elements of <list> followed by <expr>. The Maxima function
+     `endcons' can also be used where the second argument is other than
+     a list and this might be useful. In this case, `endcons (<expr_1>,
+     <expr_2>)' returns an expression with same operator as <expr_2>
+     but with argument `endcons(expr_1, args(expr_2))'. Examples:
+          (%i1) endcons(a,[b,c,d]);
+          (%o1)                            [b, c, d, a]
+          (%i2) endcons(a,f(b,c,d));
+          (%o2)                            f(b, c, d, a)
+
+     In general, `endcons' applied to a nonlist doesn't make sense. For
+     instance, `endcons(a,b^c)' results in an illegal expression, since
+     '^' cannot take three arguments.
+
+     When `inflag' is true, `endcons' operates on the internal
+     structure of an expression, otherwise `endcons' operates on the
+     displayed form. Especially when `inflag' is true, `endcons' applied
+     to a nonlist sometimes gives a surprising result; for example
+          (%i1) endcons(a,-a),inflag : true;
+                                                  2
+          (%o1)                                - a
+          (%i2) endcons(a,-a),inflag : false;
+          (%o2)                                  0
 
 
  -- Function: fifth (<expr>)
@@ -3389,65 +3470,67 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
 
 
  -- Function: pop (<list>)
-     `pop' removes the first element from the list <list> and returns
-     this element.  <list> must be a symbol, which is bound to a list
-     and not the list itself.
-
-     If the argument <list> is not bound to a list or the list is
-     empty, Maxima generates an error message.
-
-     See also `push' for examples.
-
-     To use this function, the additional package "basic" must be loaded
-     first: `load("basic")'.
+     `pop' removes and returns the first element from the list <list>.
+     The second argument <list> must be a mapatom that is bound to a
+     nonempty list. If the argument <list> is not bound to a nonempty
+     list, Maxima signals an error. For examples, see `push'.
 
 
  -- Function: push (<item>, <list>)
      `push' prepends the item <item> to the list <list> and returns a
-     copy of the new list.  <list> must be a symbol, which is bound to
-     a list and not the list itself.  <item> can be any Maxima symbol
-     or expression.
+     copy of the new list.  The second argument <list> must be a
+     mapatom that is bound to a list. The first argument <item> can be
+     any Maxima symbol or expression. If the argument <list> is not
+     bound to a list, Maxima signals an error.
 
-     If the argument <list> is not bound to a list, Maxima generates an
-     error message.
-
-     See also `pop' to remove the first item from a list.
-
-     `load("basic")' loads this function.
+     To remove the first item from a list, see `pop'.
 
      Examples:
 
-          (%i1) load ("basic")$
-          (%i2) ll: [];
-          (%o2)                          []
-          (%i3) push (x, ll);
-          (%o3)                          [x]
-          (%i4) push (x^2+y, ll);
-                                           2
-          (%o4)                      [y + x , x]
-          (%i5) a: push ("string", ll);
-                                               2
-          (%o5)                  [string, y + x , x]
-          (%i6) pop (ll);
-          (%o6)                        string
-          (%i7) pop (ll);
-                                            2
-          (%o7)                        y + x
-          (%i8) pop (ll);
-          (%o8)                           x
-          (%i9) ll;
-          (%o9)                          []
-          (%i10) a;
-                                               2
-          (%o10)                 [string, y + x , x]
+          (%i1) ll : [];
+          (%o1)                                 []
+          (%i2) push(x,ll);
+          (%o2)                                 [x]
+          (%i3) push(x^2+y,ll);
+                                                  2
+          (%o3)                             [y + x , x]
+          (%i4) push("string",ll);
+                                                      2
+          (%o4)                         [string, y + x , x]
+          (%i5) pop(ll);
+          (%o5)                               string
+          (%i6) pop(ll);
+                                                   2
+          (%o6)                               y + x
+          (%i7) pop(ll);
+          (%o7)                                  x
+          (%i8) ll;
+          (%o8)                                 []
+          (%i9)
 
 
  -- Function: rest (<expr>, <n>)
  -- Function: rest (<expr>)
      Returns <expr> with its first <n> elements removed if <n> is
      positive and its last `- <n>' elements removed if <n> is negative.
-     If <n> is 1 it may be omitted.  <expr> may be a list, matrix, or
-     other expression.
+     If <n> is 1 it may be omitted. The first argument <expr> may be a
+     list, matrix, or other expression. When <expr> is a mapatom,
+     `rest' signals an error; when <expr> is an empty list and
+     `partswitch' is false, `rest' signals an error. When <expr> is an
+     empty list and `partswitch' is true, `rest' returns `end'.
+
+     Applying `rest' to expression such as `f(a,b,c)' returns `f(b,c)'.
+     In general, applying `rest' to an nonlist doesn't make sense. For
+     example, because '^' requires two arguments, `rest(a^b)' results
+     in an error message. The functions `args' and `op' may be useful
+     as well, since `args(a^b)' returns `[a,b]' and `op(a^b)' returns ^.
+
+          (%i1) rest(a+b+c);
+          (%o1) b+a
+          (%i2) rest(a+b+c,2);
+          (%o2) a
+          (%i3) rest(a+b+c,-2);
+          (%o3) c
 
 
  -- Function: reverse (<list>)
@@ -6627,13 +6710,27 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
 
 
  -- Operator: :=
-     The function definition operator.  `<f>(<x_1>, ..., <x_n>) :=
-     <expr>' defines a function named <f> with arguments <x_1>, ...,
-     <x_n> and function body <expr>.  `:=' never evaluates the function
-     body (unless explicitly evaluated by quote-quote `''').  The
-     function so defined may be an ordinary Maxima function (with
-     arguments enclosed in parentheses) or an array function (with
-     arguments enclosed in square brackets).
+     The function definition operator.
+
+     `<f>(<x_1>, ..., <x_n>) := <expr>' defines a function named <f>
+     with arguments <x_1>, ..., <x_n> and function body <expr>.  `:='
+     never evaluates the function body (unless explicitly evaluated by
+     quote-quote `''').  The function body is evaluated every time the
+     function is called.
+
+     `<f>[<x_1>, ..., <x_n>] := <expr>' defines a so-called array
+     function.  Its function body is evaluated just once for each
+     distinct value of its arguments, and that value is returned,
+     without evaluating the function body, whenever the arguments have
+     those values again.  (A function of this kind is commonly known as
+     a "memoizing function".)
+
+     `<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>) := <expr>' is a special
+     case of an array function.  `<f>[<x_1>, ..., <x_n>]' is an array
+     function which returns a lambda expression with arguments `<y_1>,
+     ..., <y_m>'.  The function body is evaluated once for each
+     distinct value of `<x_1>, ..., <x_n>', and the body of the lambda
+     expression is that value.
 
      When the last or only function argument <x_n> is a list of one
      element, the function defined by `:=' accepts a variable number of
@@ -6669,14 +6766,60 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
           (%i5) F2 (a, b);
           (%o5)                    cos(b) - sin(a)
 
-     The function defined by `:=' may be an ordinary Maxima function or
-     an array function.
+     `f(<x_1>, ..., <x_n>) := ...' defines an ordinary function.
 
-          (%i1) G1 (x, y) := x.y - y.x;
-          (%o1)               G1(x, y) := x . y - y . x
-          (%i2) G2 [x, y] := x.y - y.x;
-          (%o2)                G2     := x . y - y . x
-                                 x, y
+          (%i1) G1(x, y) := (print ("Evaluating G1 for x=", x, "and y=", y), x.y - y.x);
+          (%o1) G1(x, y) := (print("Evaluating G1 for x=", x, "and y=",
+                                                         y), x . y - y . x)
+          (%i2) G1([1, a], [2, b]);
+          Evaluating G1 for x= [1, a] and y= [2, b]
+          (%o2)                           0
+          (%i3) G1([1, a], [2, b]);
+          Evaluating G1 for x= [1, a] and y= [2, b]
+          (%o3)                           0
+
+     `f[<x_1>, ..., <x_n>] := ...' defines an array function.
+
+          (%i1) G2[a] := (print ("Evaluating G2 for a=", a), a^2);
+                                                               2
+          (%o1)     G2  := (print("Evaluating G2 for a=", a), a )
+                      a
+          (%i2) G2[1234];
+          Evaluating G2 for a= 1234
+          (%o2)                        1522756
+          (%i3) G2[1234];
+          (%o3)                        1522756
+          (%i4) G2[2345];
+          Evaluating G2 for a= 2345
+          (%o4)                        5499025
+          (%i5) arrayinfo (G2);
+          (%o5)              [hashed, 1, [1234], [2345]]
+          (%i6) listarray (G2);
+          (%o6)                  [1522756, 5499025]
+
+     `<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>) := <expr>' is a special
+     case of an array function.
+
+          (%i1) G3[n](x) := (print ("Evaluating G3 for n=", n), diff (sin(x)^2, x, n));
+          (%o1) G3 (x) := (print("Evaluating G3 for n=", n),
+                  n
+                                                               2
+                                                       diff(sin (x), x, n))
+          (%i2) G3[2];
+          Evaluating G3 for n= 2
+                                          2           2
+          (%o2)          lambda([x], 2 cos (x) - 2 sin (x))
+          (%i3) G3[2];
+                                          2           2
+          (%o3)          lambda([x], 2 cos (x) - 2 sin (x))
+          (%i4) G3[2](1);
+                                     2           2
+          (%o4)                 2 cos (1) - 2 sin (1)
+          (%i5) arrayinfo (G3);
+          (%o5)                   [hashed, 1, [2]]
+          (%i6) listarray (G3);
+                                          2           2
+          (%o6)         [lambda([x], 2 cos (x) - 2 sin (x))]
 
      When the last or only function argument <x_n> is a list of one
      element, the function defined by `:=' accepts a variable number of
@@ -8063,15 +8206,17 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
        1. If `f' is univariate, whenever the simplifier encounters `f'
           applied to a product, `f' distributes over that product.
-          E.g., `f(x*y)' simplifies to `f(x)*f(y)'.
+          E.g., `f(x*y)' simplifies to `f(x)*f(y)'.  This
+          simplification is not applied to expressions of the form
+          `f('product(...))'.
 
        2. If `f' is a function of 2 or more arguments, multiplicativity
           is defined as multiplicativity in the first argument to `f',
           e.g., `f (g(x) * h(x), x)' simplifies to `f (g(x) ,x) * f
           (h(x), x)'.
 
-     This simplification does not occur when `f' is applied to
-     expressions of the form `product (x[i], i, m, n)'.
+     `declare(nounify(product), multiplicative)' tells Maxima to
+     simplify symbolic products.
 
      Example:
 
@@ -8081,6 +8226,26 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
           (%o2)                         done
           (%i3) F2 (a * b * c);
           (%o3)                   F2(a) F2(b) F2(c)
+
+     `declare(nounify(product), multiplicative)' tells Maxima to
+     simplify symbolic products.
+
+          (%i1) product (a[i] * b[i], i, 1, n);
+                                              n
+                                            /===\
+                                             ! !
+          (%o1)                              ! !  a  b
+                                             ! !   i  i
+                                            i = 1
+          (%i2) declare (nounify (product), multiplicative);
+          (%o2)                                done
+          (%i3) product (a[i] * b[i], i, 1, n);
+                                           n         n
+                                         /===\     /===\
+                                          ! !       ! !
+          (%o3)                         ( ! !  a )  ! !  b
+                                          ! !   i   ! !   i
+                                         i = 1     i = 1
 
 
  -- Function: multthru (<expr>)
@@ -9064,6 +9229,27 @@ File: maxima.info,  Node: Combinatorial Functions,  Next: Root Exponential and L
      When `sumsplitfact' is `false', `minfactorial' is applied after a
      `factcomb'.
 
+          (%i1) sumsplitfact
+          (%o1)                                true
+          (%i2) n!/(2+n)!
+                                                n!
+          (%o2)                              --------
+                                             (n + 2)!
+          (%i3) factcomb(%)
+                                                n!
+          (%o3)                              --------
+                                             (n + 2)!
+          (%i4) sumsplitfact:not sumsplitfact
+          (%o4)                                false
+          (%i5) n!/(2+n)!
+                                                n!
+          (%o5)                              --------
+                                             (n + 2)!
+          (%i6) factcomb(%)
+                                                 1
+          (%o6)                           ---------------
+                                          (n + 1) (n + 2)
+
 
 
 File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Trigonometric Functions,  Prev: Combinatorial Functions,  Up: Mathematical Functions
@@ -9097,6 +9283,30 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
      When `%emode' is `false', no special simplification of `%e^(%pi %i
      x)' is carried out.
 
+          (%i1) %emode
+          (%o1)                                true
+          (%i2) %e^(%pi*%i*1)
+          (%o2)                                 - 1
+          (%i3) %e^(%pi*%i*216/144)
+          (%o3)                                - %i
+          (%i4) %e^(%pi*%i*192/144)
+                                           sqrt(3) %i   1
+          (%o4)                          - ---------- - -
+                                               2        2
+          (%i5) %e^(%pi*%i*180/144)
+                                            %i         1
+          (%o5)                         - ------- - -------
+                                          sqrt(2)   sqrt(2)
+          (%i6) %e^(%pi*%i*120/144)
+                                           %i   sqrt(3)
+          (%o6)                            -- - -------
+                                           2       2
+          (%i7) %e^(%pi*%i*121/144)
+                                             121 %i %pi
+                                             ----------
+                                                144
+          (%o7)                            %e
+
 
  -- Option variable: %enumer
      Default value: `false'
@@ -9108,6 +9318,26 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
      if the exponent in `%e^x' evaluates to a number.
 
      See also `ev' and `numer'.
+
+          (%i1) %enumer
+          (%o1)                                false
+          (%i2) numer
+          (%o2)                                false
+          (%i3) 2*%e
+          (%o3)                                2 %e
+          (%i4) %enumer:not %enumer
+          (%o4)                                true
+          (%i5) 2*%e
+          (%o5)                                2 %e
+          (%i6) numer:not numer
+          (%o6)                                true
+          (%i7) 2*%e
+          (%o7)                          5.43656365691809
+          (%i8) 2*%e^1
+          (%o8)                          5.43656365691809
+          (%i9) 2*%e^x
+                                                         x
+          (%o9)                       2 2.718281828459045
 
 
  -- Function: exp (<x>)
@@ -9123,6 +9353,17 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
 
      `%enumer', when `true' causes `%e' to be replaced by 2.718...
      whenever `numer' is `true'.  See `%enumer'.
+
+          (%i1) demoivre;
+          (%o1)                                false
+          (%i2) %e^(a + b*%i);
+                                              %i b + a
+          (%o2)                             %e
+          (%i3) demoivre: not demoivre;
+          (%o3)                                true
+          (%i4) %e^(a + b*%i);
+                                       a
+          (%o4)                      %e  (%i sin(b) + cos(b))
 
 
  -- Function: li [<s>] (<z>)
@@ -9966,17 +10207,17 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
 
     `additive'
           Tells Maxima to simplify <a_i> expressions by the substitution
-               `<a_i>(x + y + z + ...)' `-->'       `<a_i>(x) +
-          <a_i>(y) + <a_i>(z) + ...'.        The substitution is
-          carried out on the first argument only.
+          `<a_i>(x + y + z + ...)' `-->' `<a_i>(x) + <a_i>(y) +
+          <a_i>(z) + ...'.  The substitution is carried out on the
+          first argument only.
 
     `alphabetic'
           Tells Maxima to recognize all characters in <a_i> (which must
-          be a       string) as alphabetic characters.
+          be a string) as alphabetic characters.
 
     `antisymmetric, commutative, symmetric'
           Tells Maxima to recognize <a_i> as a symmetric or
-          antisymmetric       function.  `commutative' is the same as
+          antisymmetric function.  `commutative' is the same as
           `symmetric'.
 
     `bindtest'
@@ -9995,21 +10236,21 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
 
     `evflag'
           Makes <a_i> known to the `ev' function so that <a_i> is bound
-               to `true' during the execution of `ev' when <a_i>
-          appears as       a flag argument of `ev'.  See `evflag'.
+          to `true' during the execution of `ev' when <a_i> appears as
+          a flag argument of `ev'.  See `evflag'.
 
     `evfun'
           Makes <a_i> known to `ev' so that the function named by <a_i>
-               is applied when <a_i> appears as a flag argument of `ev'.
-               See `evfun'.
+          is applied when <a_i> appears as a flag argument of `ev'.
+          See `evfun'.
 
     `feature'
           Tells Maxima to recognize <a_i> as the name of a feature.
-            Other atoms may then be declared to have the <a_i> property.
+          Other atoms may then be declared to have the <a_i> property.
 
     `increasing, decreasing'
           Tells Maxima to recognize <a_i> as an increasing or decreasing
-               function.
+          function.
 
     `integer, noninteger'
           Tells Maxima to recognize <a_i> as an integer or noninteger
@@ -10020,69 +10261,67 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
 
     `lassociative, rassociative'
           Tells Maxima to recognize <a_i> as a right-associative or
-           left-associative function.
+          left-associative function.
 
     `linear'
-          Equivalent to declaring <a_i> both `outative' and
-          `additive'.
+          Equivalent to declaring <a_i> both `outative' and `additive'.
 
     `mainvar'
           Tells Maxima to consider <a_i> a "main variable".  A main
-          variable       succeeds all other constants and variables in
-          the canonical ordering of       Maxima expressions, as
-          determined by `ordergreatp'.
+          variable succeeds all other constants and variables in the
+          canonical ordering of Maxima expressions, as determined by
+          `ordergreatp'.
 
     `multiplicative'
           Tells Maxima to simplify <a_i> expressions by the substitution
-               `<a_i>(x * y * z * ...)' `-->'       `<a_i>(x) *
-          <a_i>(y) * <a_i>(z) * ...'.        The substitution is
-          carried out on the first argument only.
+          `<a_i>(x * y * z * ...)' `-->' `<a_i>(x) * <a_i>(y) *
+          <a_i>(z) * ...'.  The substitution is carried out on the
+          first argument only.
 
     `nary'
           Tells Maxima to recognize <a_i> as an n-ary function.
 
           The `nary' declaration is not the same as calling the `nary'
-              function.  The sole effect of `declare(foo, nary)' is to
-          instruct the       Maxima simplifier to flatten nested
-          expressions, for example, to simplify       `foo(x, foo(y,
-          z))' to `foo(x, y, z)'.
+          function.  The sole effect of `declare(foo, nary)' is to
+          instruct the Maxima simplifier to flatten nested expressions,
+          for example, to simplify `foo(x, foo(y, z))' to `foo(x, y,
+          z)'.
 
     `nonarray'
           Tells Maxima to consider <a_i> not an array.  This declaration
-               prevents multiple evaluation of a subscripted variable
-          name.
+          prevents multiple evaluation of a subscripted variable name.
 
     `nonscalar'
           Tells Maxima to consider <a_i> a nonscalar variable.  The
-          usual       application is to declare a variable as a
-          symbolic vector or matrix.
+          usual application is to declare a variable as a symbolic
+          vector or matrix.
 
     `noun'
           Tells Maxima to parse <a_i> as a noun.  The effect of this is
-          to       replace instances of <a_i> with `'<a_i>' or
+          to replace instances of <a_i> with `'<a_i>' or
           `nounify(<a_i>)', depending on the context.
 
     `outative'
           Tells Maxima to simplify <a_i> expressions by pulling
-          constant factors       out of the first argument.
+          constant factors out of the first argument.
 
           When <a_i> has one argument, a factor is considered constant
-          if it is       a literal or declared constant.
+          if it is a literal or declared constant.
 
           When <a_i> has two or more arguments, a factor is considered
-          constant       if the second argument is a symbol and the
-          factor is free of the second       argument.
+          constant if the second argument is a symbol and the factor is
+          free of the second argument.
 
     `posfun'
           Tells Maxima to recognize <a_i> as a positive function.
 
     `rational, irrational'
           Tells Maxima to recognize <a_i> as a rational or irrational
-          real       variable.
+          real variable.
 
     `real, imaginary, complex'
           Tells Maxima to recognize <a_i> as a real, pure imaginary, or
-          complex       variable.
+          complex variable.
 
     `scalar'
           Tells Maxima to consider <a_i> a scalar variable.
@@ -10180,8 +10419,9 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
         real           imaginary       complex
         analytic       increasing      decreasing
         oddfun         evenfun         posfun
-        commutative    lassociative    rassociative
-        symmetric      antisymmetric
+        constant       commutative     lassociative
+        rassociative   symmetric       antisymmetric
+        integervalued
 
      plus any user-defined features.
 
@@ -11269,10 +11509,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
  -- System variable: gnuplot_file_args
      When the a graphic file is going to be created using `gnuplot',
      this variable is used to specify the way the file name should be
-     passed to gnuplot. Its default value is "~s", which means that
-     that the name of the file will be passed directly. The contents of
-     this variable can be changed in order to add options for the
-     gnuplot program, adding those options before the string "~s".
+     passed to gnuplot. Its default value is "~s", which means that the
+     name of the file will be passed directly. The contents of this
+     variable can be changed in order to add options for the gnuplot
+     program, adding those options before the string "~s".
 
 
  -- System variable: gnuplot_view_args
@@ -11434,7 +11674,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      plotted and the second list as the y coordinates.  If only one
      list is given after the <discrete> keyword, each element on the
      list could also be a list with two values that correspond to the x
-     and y coordinates of a point, or it could be a sequence o
+     and y coordinates of a point, or it could be a sequence of
      numerical values which will be plotted at consecutive integer
      values (1,2,3,...) on the x axis.
 
@@ -11773,7 +12013,7 @@ names. For instance, typing logx as an option is equivalent to writing
      the increments and the third is the last value where a mark is
      placed. The second and third numbers can be omitted. When only one
      number is given, it will be used as the increment from an initial
-     value that will be chosen automatically
+     value that will be chosen automatically.
 
 
  -- Plot option: elevation [elevation, <number>]
@@ -11930,7 +12170,7 @@ names. For instance, typing logx as an option is equivalent to writing
      `gnuplot_pdf_term_command' is also given, it will be used to set up
      Gnuplot's PDF terminal; otherwise, Gnuplot's pdfcairo terminal
      will be used with solid colored lines of width 3, plot size of
-     17.2 cm, 12.9 cm and font of 18 points.
+     17.2 cm by 12.9 cm and font of 18 points.
 
 
  -- Plot option: png_file [png_file, <file_name>]
@@ -21558,6 +21798,14 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      `load ("eigen")' loads this function.
 
      `inprod' is a synonym for `innerproduct'.
+
+
+ -- Function: invert_by_adjoint (<M>)
+     Returns the inverse of the matrix <M>.  The inverse is computed by
+     the adjoint method.
+
+     `invert_by_adjoint' honors the `ratmx' and `detout' flags, the
+     same as `invert'.
 
 
  -- Function: invert (<M>)

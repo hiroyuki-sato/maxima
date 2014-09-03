@@ -1,6 +1,6 @@
 ;;;                 COPYRIGHT NOTICE
 ;;;  
-;;;  Copyright (C) 2007-2013 Mario Rodriguez Riotorto
+;;;  Copyright (C) 2007-2014 Mario Rodriguez Riotorto
 ;;;  
 ;;;  This program is free software; you can redistribute
 ;;;  it and/or modify it under the terms of the
@@ -50,12 +50,12 @@
       ($screen
         ($multiplot_mode '$none)
         (send-gnuplot-command
-          (format nil "set terminal x11 ~a~%set multiplot~%" (write-font-type)))
+          (format nil "set terminal x11 dashed ~a~%set multiplot~%" (write-font-type)))
         (setf *multiplot-is-active* t))
       ($wxt
         ($multiplot_mode '$none)
         (send-gnuplot-command
-          (format nil "set terminal wxt ~a~%set multiplot~%" (write-font-type)))
+          (format nil "set terminal wxt dashed ~a~%set multiplot~%" (write-font-type)))
         (setf *multiplot-is-active* t))
       ($none
         (send-gnuplot-command
@@ -1197,9 +1197,11 @@
          (ymax most-negative-double-float)
          (*plot-realpart* *plot-realpart*)
          x-samples y-samples yy result pltcmd result-array)
-    (setq *plot-realpart* (get-option '$draw_realpart))
-    (if (< xmax xmin)
+    (when (< xmax xmin)
        (merror "draw2d (explicit): illegal range"))
+    (when (not (subsetp (rest ($listofvars fcn)) (list var)))
+       (merror "draw2d (explicit): non defined variable"))
+    (setq *plot-realpart* (get-option '$draw_realpart))
     (setf fcn ($float fcn))
     (cond 
       ((floatp fcn) ; if function is a constant, we only need the end points
@@ -1351,6 +1353,9 @@
          (barr (make-array (list (1+ nx) (1+ ny)) :element-type 'boolean))
          (pts '())
          pltcmd grouping x y)
+
+    (when (not (subsetp (rest ($listofvars ineq)) (list x-var y-var)))
+       (merror "draw2d (region): non defined variable"))
 
     ; build 2d arrays: x, y and boolean
     (labels ((fun (xx yy)  ; evaluates boolean expression
@@ -1580,12 +1585,13 @@
 			       ,(1+ ($second ip-grid)))))
 	 (ssample (make-array `(,(1+ ($first ip-grid-in))
 				,(1+ ($second ip-grid-in))))) )
-    
+
+    (when (not (subsetp (rest ($listofvars expr)) (list x y)))
+       (merror "draw2d (implicit): non defined variable"))
     (setq e (coerce-float-fun (imp-pl-prepare-expr expr)
 			      `((mlist simp)
 				,x ,y)))
     (update-ranges-2d xmin xmax ymin ymax)
-
     (sample-data e xmin xmax ymin ymax sample ip-grid)
     (do ((i 0 (1+ i)))
 	((= i ($first ip-grid)))
@@ -1642,6 +1648,8 @@
         (pts '())
         (grouping '())
         pltcmd ncols vertices)
+    (when (not (subsetp (rest ($listofvars expr)) (list par1 par2 par3)))
+       (merror "draw3d (implicit): non defined variable"))
     (check-enhanced3d-model "implicit" '(0 3 99))
     (when (= *draw-enhanced3d-type* 99)
        (update-enhanced3d-expression (list '(mlist) par1 par2 par3)))
@@ -1733,6 +1741,8 @@
          ($numer t)
          (count -1)
          ncols result)
+    (when (not (subsetp (rest ($listofvars fcn)) (list par1 par2)))
+       (merror "draw2d (explicit): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "explicit" '(0 2 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -2065,9 +2075,11 @@
          (tt ($float parmin))
          (eps (/ (- tmax tmin) (- nticks 1)))
          result f1 f2 xx yy)
-    (setq *plot-realpart* (get-option '$draw_realpart))
-    (if (< tmax tmin)
+    (when (< tmax tmin)
        (merror "draw2d (parametric): illegal range"))
+    (when (not (subsetp (append (rest ($listofvars xfun)) (rest ($listofvars yfun))) (list par)))
+       (merror "draw2d (parametric): non defined variable"))
+    (setq *plot-realpart* (get-option '$draw_realpart))
     (setq f1 (coerce-float-fun xfun `((mlist), par)))
     (setq f2 (coerce-float-fun yfun `((mlist), par)))
     (setf result
@@ -2216,6 +2228,8 @@
          (eps (/ (- tmax tmin) (- nticks 1)))
          (count -1)
          ncols result f1 f2 f3 xx yy zz)
+     (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1)))
+        (merror "draw3d (parametric): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "parametric" '(0 1 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -2299,6 +2313,8 @@
          (nv (+ vgrid 1))
          (count -1)
          ncols result f1 f2 f3 xx yy zz uu vv)
+     (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1 par2)))
+        (merror "draw3d (parametric_surface): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "parametric_surface" '(0 2 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -2408,6 +2424,10 @@
          uxold uyold uzold ttnext)
     (when (< tmax tmin)
        (merror "draw3d (tube): illegal range"))
+    (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun)
+                                       ($listofvars zfun) ($listofvars rad)))
+                        (list par1)))
+       (merror "draw3d (tube): non defined variable"))
     (check-enhanced3d-model "tube" '(0 1 3 99))
     (when (= *draw-enhanced3d-type* 99)
        (update-enhanced3d-expression (list '(mlist) par1)))
@@ -2736,9 +2756,30 @@
             (if (get-option '$logx)
                (format nil "set logscale x~%")
                (format nil "unset logscale x~%"))
+
+            (if (get-option '$logx_secondary)
+               (format nil "set logscale x2~%")
+               (format nil "unset logscale x2~%"))
+
+
+
+
+
+
             (if (get-option '$logy)
                (format nil "set logscale y~%")
                (format nil "unset logscale y~%"))
+
+
+
+            (if (get-option '$logy_secondary)
+               (format nil "set logscale y2~%")
+               (format nil "unset logscale y2~%"))
+
+
+
+
+
             (if (get-option '$logcb)
                (format nil "set logscale cb~%")
                (format nil "unset logscale cb~%") )
@@ -2754,6 +2795,9 @@
               (if (get-option '$axis_top) (setf suma (+ suma 4)))
               (if (get-option '$axis_right) (setf suma (+ suma 8)))
               (format nil "set border ~a~%" suma) )
+            (if (get-option '$key_pos)
+              (format nil "set key ~a~%" (get-option '$key_pos))
+              (format nil "set key top right~%") )
             (if (get-option '$xaxis)
                (format nil "set xzeroaxis lw ~a lt ~a lc ~a~%"
                            (get-option '$xaxis_width)
@@ -2766,30 +2810,30 @@
                            (get-option '$yaxis_type)
                            (hex-to-rgb (get-option '$yaxis_color)) )
                (format nil "unset yzeroaxis~%"))
-            (if (null (get-option '$xtics))
-               (format nil "unset xtics~%")
-               (format nil "set xtics ~a ~a ~a~%" 
-                       (if (get-option '$xtics_rotate) "rotate" "norotate")
-                       (if (get-option '$xtics_axis) "axis" "border")
-                       (get-option '$xtics)))
             (if (null (get-option '$xtics_secondary))
                (format nil "unset x2tics~%")
                (format nil "set xtics nomirror~%set x2tics ~a ~a ~a~%"
                        (if (get-option '$xtics_secondary_rotate) "rotate" "norotate")
                        (if (get-option '$xtics_secondary_axis) "axis" "border")
                        (get-option '$xtics_secondary)))
-            (if (null (get-option '$ytics))
-               (format nil "unset ytics~%")
-               (format nil "set ytics ~a ~a ~a~%"
-                       (if (get-option '$ytics_rotate) "rotate" "norotate")
-                       (if (get-option '$ytics_axis) "axis" "border")
-                       (get-option '$ytics)))
+            (if (null (get-option '$xtics))
+               (format nil "unset xtics~%")
+               (format nil "set xtics ~a ~a ~a~%" 
+                       (if (get-option '$xtics_rotate) "rotate" "norotate")
+                       (if (get-option '$xtics_axis) "axis" "border")
+                       (get-option '$xtics)))
             (if (null (get-option '$ytics_secondary))
                (format nil "unset y2tics~%")
                (format nil "set ytics nomirror~%set y2tics ~a ~a ~a~%"
                        (if (get-option '$ytics_secondary_rotate) "rotate" "norotate")
                        (if (get-option '$ytics_secondary_axis) "axis" "border")
                        (get-option '$ytics_secondary)))
+            (if (null (get-option '$ytics))
+               (format nil "unset ytics~%")
+               (format nil "set ytics ~a ~a ~a~%"
+                       (if (get-option '$ytics_rotate) "rotate" "norotate")
+                       (if (get-option '$ytics_axis) "axis" "border")
+                       (get-option '$ytics)))
             (if (null (get-option '$cbtics))
                (format nil "unset cbtics~%")
                (format nil "set cbtics ~a~%" (get-option '$cbtics) ))
@@ -2895,7 +2939,9 @@
             (format nil "set title '~a'~%"  (get-option '$title))
             (format nil "set xlabel '~a'~%" (get-option '$xlabel))
             (format nil "set ylabel '~a'~%" (get-option '$ylabel))
-            (format nil "set zlabel '~a'~%" (get-option '$zlabel))
+            (if (< (length (get-option '$zlabel)) 5)
+               (format nil "set zlabel '~a'~%" (get-option '$zlabel))
+               (format nil "set zlabel '~a' rotate~%" (get-option '$zlabel)) )
             (format nil "set datafile missing 'NIL'~%")
             (if (get-option '$logx)
                (format nil "set logscale x~%")
@@ -2906,6 +2952,9 @@
             (if (get-option '$logz)
                (format nil "set logscale z~%")
                (format nil "unset logscale z~%"))
+            (if (get-option '$key_pos)
+               (format nil "set key ~a~%" (get-option '$key_pos))
+               (format nil "set key top center~%") )
             (if (get-option '$logcb)
                (format nil "set logscale cb~%")
                (format nil "unset logscale cb~%") )
@@ -3094,17 +3143,17 @@
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name) ) )
-        ($pngcairo (format cmdstorage "set terminal pngcairo enhanced truecolor ~a size ~a, ~a~%set out '~a.png'"
+        ($pngcairo (format cmdstorage "set terminal pngcairo dashed enhanced truecolor ~a size ~a, ~a~%set out '~a.png'"
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name) ) )
-        (($eps $multipage_eps) (format cmdstorage "set terminal postscript eps enhanced ~a size ~acm, ~acm~%set out '~a.eps'"
+        (($eps $multipage_eps) (format cmdstorage "set terminal postscript dashed eps enhanced ~a size ~acm, ~acm~%set out '~a.eps'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-        (($eps_color $multipage_eps_color) (format cmdstorage "set terminal postscript eps enhanced ~a color size ~acm, ~acm~%set out '~a.eps'"
+        (($eps_color $multipage_eps_color) (format cmdstorage "set terminal postscript dashed eps enhanced ~a color size ~acm, ~acm~%set out '~a.eps'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
@@ -3114,17 +3163,17 @@
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-        ($epslatex_standalone (format cmdstorage "set terminal epslatex standalone ~a color size ~acm, ~acm~%set out '~a.tex'"
+        ($epslatex_standalone (format cmdstorage "set terminal epslatex dashed standalone ~a color size ~acm, ~acm~%set out '~a.tex'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-        (($pdf $multipage_pdf) (format cmdstorage "set terminal pdf enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
+        (($pdf $multipage_pdf) (format cmdstorage "set terminal pdf dashed enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-        (($pdfcairo $multipage_pdfcairo) (format cmdstorage "set terminal pdfcairo enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
+        (($pdfcairo $multipage_pdfcairo) (format cmdstorage "set terminal pdfcairo dashed enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
@@ -3139,7 +3188,7 @@
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name)))
-        ($svg (format cmdstorage "set terminal svg enhanced ~a size ~a, ~a~%set out '~a.svg'"
+        ($svg (format cmdstorage "set terminal svg dashed enhanced ~a size ~a, ~a~%set out '~a.svg'"
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
@@ -3155,12 +3204,12 @@
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))))
-        ($wxt (format cmdstorage "set terminal wxt enhanced ~a ~a size ~a, ~a~%"
+        ($wxt (format cmdstorage "set terminal wxt dashed enhanced ~a ~a size ~a, ~a~%"
                            *draw-terminal-number*
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))))
-        ($x11 (format cmdstorage "set terminal x11 enhanced ~a ~a size ~a, ~a~%"
+        ($x11 (format cmdstorage "set terminal x11 dashed enhanced ~a ~a size ~a, ~a~%"
                            *draw-terminal-number*
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
@@ -3173,7 +3222,7 @@
                           (round (first (get-option '$dimensions)))
                           (round (second (get-option '$dimensions)))))
             (t  ; other platforms
-              (format cmdstorage "set terminal x11 enhanced ~a ~a size ~a, ~a~%"
+              (format cmdstorage "set terminal x11 dashed enhanced ~a ~a size ~a, ~a~%"
                            *draw-terminal-number*
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
@@ -3379,37 +3428,37 @@
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name) ) ))
-      ($pngcairo (setf str (format nil "set terminal pngcairo enhanced truecolor ~a size ~a, ~a~%set out '~a.png'"
+      ($pngcairo (setf str (format nil "set terminal pngcairo dashed enhanced truecolor ~a size ~a, ~a~%set out '~a.png'"
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name) ) ))
-      ($eps (setf str (format nil "set terminal postscript eps enhanced ~a size ~acm, ~acm~%set out '~a.eps'"
+      ($eps (setf str (format nil "set terminal postscript dashed eps enhanced ~a size ~acm, ~acm~%set out '~a.eps'"
                            (write-font-type) ; other alternatives are Arial, Courier
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name))))
-      ($epslatex (format str "set terminal epslatex ~a color size ~acm, ~acm~%set out '~a.tex'"
+      ($epslatex (format str "set terminal epslatex ~a color dashed size ~acm, ~acm~%set out '~a.tex'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-      ($epslatex_standalone (format str "set terminal epslatex standalone ~a color size ~acm, ~acm~%set out '~a.tex'"
+      ($epslatex_standalone (format str "set terminal epslatex dashed standalone ~a color size ~acm, ~acm~%set out '~a.tex'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name)))
-      ($eps_color (setf str (format nil "set terminal postscript eps enhanced ~a color size ~acm, ~acm~%set out '~a.eps'"
+      ($eps_color (setf str (format nil "set terminal postscript dashed eps enhanced ~a color size ~acm, ~acm~%set out '~a.eps'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name))))
-      ($pdf (setf str (format nil "set terminal pdf enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
+      ($pdf (setf str (format nil "set terminal pdf dashed enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
                            (get-option '$file_name))))
-      ($pdfcairo (setf str (format nil "set terminal pdfcairo enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
+      ($pdfcairo (setf str (format nil "set terminal pdfcairo dashed enhanced ~a color size ~acm, ~acm~%set out '~a.pdf'"
                            (write-font-type)
                            (/ (first (get-option '$dimensions)) 100.0)
                            (/ (second (get-option '$dimensions)) 100.0)
@@ -3424,7 +3473,7 @@
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))
                            (get-option '$file_name))))
-      ($svg (setf str (format nil "set terminal svg enhanced ~a size ~a, ~a~%set out '~a.svg'"
+      ($svg (setf str (format nil "set terminal svg dashed enhanced ~a size ~a, ~a~%set out '~a.svg'"
 			   (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))

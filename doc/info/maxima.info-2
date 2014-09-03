@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/maxima/maxima-code/doc/info//include-maxima.texi.
+/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info//include-maxima.texi.
 
 This is a Texinfo Maxima Manual
 
@@ -848,8 +848,13 @@ connection coefficients.
      Returns `true' if <M> is a diagonal matrix or (2D) array.
 
 
- -- Function: symmetricp (<M>)
-     Returns `true' if <M> is a symmetric matrix or (2D) array.
+ -- Function: symmetricp (<M>, <n>)
+     Returns `true' if <M> is a <n> by <n> symmetric matrix or
+     two-dimensional array, otherwise `false'.
+
+     If <n> is less than the size of <M>, `symmetricp' considers only
+     the <n> by <n> submatrix (respectively, subarray) comprising rows
+     1 through <n> and columns 1 through <n>.
 
 
  -- Function: ntermst (<f>)
@@ -5037,9 +5042,9 @@ File: maxima.info,  Node: Functions and Variables for Miscellaneous Options,  Pr
      If <x> is supplied, and is a string, then that string is used as a
      prefix instead of "g" for this call to gensym only.
 
-     If <x> is supplied, and is an integer, then that integer, instead
-     of the value of the internal Lisp integer, is used as the suffix
-     for this call to gensym only.
+     If <x> is supplied, and is a nonnegative integer, then that
+     integer, instead of the value of the internal Lisp integer, is
+     used as the suffix for this call to gensym only.
 
      If and only if no explicit suffix is supplied, the Lisp internal
      integer is incremented after it is used.
@@ -7400,35 +7405,33 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
 
      When <n> and <m> are nonnegative integers, the magnitude of
      `stirling1 (<n>, <m>)' is the number of permutations of a set with
-     <n> members that have <m> cycles.  For details, see Graham, Knuth
-     and Patashnik Concrete Mathematics.  Maxima uses a recursion
-     relation to define `stirling1 (<n>, <m>)' for <m> less than 0; it
-     is undefined for <n> less than 0 and for non-integer arguments.
+     <n> members that have <m> cycles.
 
      `stirling1' is a simplifying function.  Maxima knows the following
-     identities.
+     identities:
 
-       1. stirling1(0, n) = kron_delta(0, n) (Ref. [1])
+       1. stirling1(1,k) = kron_delta(1,k), k >= 0,(see
+          `http://dlmf.nist.gov/26.8.E2')
 
-       2. stirling1(n, n) = 1 (Ref. [1])
+       2. stirling1(n,n) = 1, n >= 0 (see
+          `http://dlmf.nist.gov/26.8.E1')
 
-       3. stirling1(n, n - 1) = binomial(n, 2) (Ref. [1])
+       3. stirling1(n,n-1) = -binomial(n,2), n >= 1, (see
+          `http://dlmf.nist.gov/26.8.E16')
 
-       4. stirling1(n + 1, 0) = 0 (Ref. [1])
+       4. stirling1(n,0) = kron_delta(n,0), n >=0  (see
+          `http://dlmf.nist.gov/26.8.E14' and
+          `http://dlmf.nist.gov/26.8.E1')
 
-       5. stirling1(n + 1, 1) = n! (Ref. [1])
+       5. stirling1(n,1) =(-1)^(n-1) (n-1)!, n >= 1 (see
+          `http://dlmf.nist.gov/26.8.E14')
 
-       6. stirling1(n + 1, 2) = 2^n  - 1 (Ref. [1])
+       6. stirling1(n,k) = 0, n >= 0 and k > n.
 
      These identities are applied when the arguments are literal
      integers or symbols declared as integers, and the first argument
      is nonnegative.  `stirling1' does not simplify for non-integer
      arguments.
-
-     References:
-
-     [1] Donald Knuth, The Art of Computer Programming, third edition,
-     Volume 1, Section 1.2.6, Equations 48, 49, and 50.
 
      Examples:
 
@@ -7437,67 +7440,38 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
           (%i3) stirling1 (n, n);
           (%o3)                           1
 
-     `stirling1' does not simplify for non-integer arguments.
-
-          (%i1) stirling1 (sqrt(2), sqrt(2));
-          (%o1)              stirling1(sqrt(2), sqrt(2))
-
-     Maxima applies identities to `stirling1'.
-
-          (%i1) declare (n, integer)$
-          (%i2) assume (n >= 0)$
-          (%i3) stirling1 (n + 1, n);
-                                      n (n + 1)
-          (%o3)                       ---------
-                                          2
-          (%i4) stirling1 (n + 1, 1);
-          (%o4)                          n!
-
 
  -- Function: stirling2 (<n>, <m>)
      Represents the Stirling number of the second kind.
 
      When <n> and <m> are nonnegative integers, `stirling2 (<n>, <m>)'
      is the number of ways a set with cardinality <n> can be
-     partitioned into <m> disjoint subsets.  Maxima uses a recursion
-     relation to define `stirling2 (<n>, <m>)' for <m> less than 0; it
-     is undefined for <n> less than 0 and for non-integer arguments.
+     partitioned into <m> disjoint subsets.
 
      `stirling2' is a simplifying function.  Maxima knows the following
      identities.
 
-       1. stirling2(0, n) = kron_delta(0, n) (Ref. [1])
+       1. stirling2(n,0) = 1, n >= 1 (see
+          `http://dlmf.nist.gov/26.8.E17' and stirling2(0,0) = 1)
 
-       2. stirling2(n, n) = 1 (Ref. [1])
+       2. stirling2(n,n) = 1, n >= 0, (see
+          `http://dlmf.nist.gov/26.8.E4')
 
-       3. stirling2(n, n - 1) = binomial(n, 2) (Ref. [1])
+       3. stirling2(n,1) = 1, n >= 1, (see
+          `http://dlmf.nist.gov/26.8.E17' and stirling2(0,1) = 0)
 
-       4. stirling2(n + 1, 1) = 1 (Ref. [1])
+       4. stirling2(n,2) = 2^(n-1) -1, n >= 1, (see
+          `http://dlmf.nist.gov/26.8.E17')
 
-       5. stirling2(n + 1, 2) = 2^n  - 1 (Ref. [1])
+       5. stirling2(n,n-1) = binomial(n,2), n>= 1 (see
+          `http://dlmf.nist.gov/26.8.E16')
 
-       6. stirling2(n, 0) = kron_delta(n, 0) (Ref. [2])
-
-       7. stirling2(n, m) = 0 when m > n (Ref. [2])
-
-       8. stirling2(n, m) = sum((-1)^(m - k) binomial(m k) k^n,i,1,m) /
-          m!  when m and n are integers, and n is nonnegative. (Ref.
-          [3])
+       6. stirling2(n,k) = 0, n >= 0 and k > n.
 
      These identities are applied when the arguments are literal
      integers or symbols declared as integers, and the first argument
      is nonnegative.  `stirling2' does not simplify for non-integer
      arguments.
-
-     References:
-
-     [1] Donald Knuth. The Art of Computer Programming, third edition,
-     Volume 1, Section 1.2.6, Equations 48, 49, and 50.
-
-     [2] Graham, Knuth, and Patashnik. Concrete Mathematics, Table 264.
-
-     [3] Abramowitz and Stegun. Handbook of Mathematical Functions,
-     Section 24.1.4.
 
      Examples:
 
@@ -7510,18 +7484,6 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
 
           (%i1) stirling2 (%pi, %pi);
           (%o1)                  stirling2(%pi, %pi)
-
-     Maxima applies identities to `stirling2'.
-
-          (%i1) declare (n, integer)$
-          (%i2) assume (n >= 0)$
-          (%i3) stirling2 (n + 9, n + 8);
-                                   (n + 8) (n + 9)
-          (%o3)                    ---------------
-                                          2
-          (%i4) stirling2 (n + 1, 2);
-                                        n
-          (%o4)                        2  - 1
 
 
  -- Function: subset (<a>, <f>)
@@ -8227,6 +8189,7 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
 
  -- Function: define (<f>(<x_1>, ..., <x_n>), <expr>)
  -- Function: define (<f>[<x_1>, ..., <x_n>], <expr>)
+ -- Function: define (<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>), <expr>)
  -- Function: define (funmake (<f>, [<x_1>, ..., <x_n>]), <expr>)
  -- Function: define (arraymake (<f>, [<x_1>, ..., <x_n>]), <expr>)
  -- Function: define (ev (<expr_1>), <expr_2>)
@@ -9611,6 +9574,7 @@ File: maxima.info,  Node: Functions and Variables for Program Flow,  Prev: Intro
 
 
  -- Special operator: do
+ -- Special operator: in
      The `do' statement is used for performing iteration.  Due to its
      great generality the `do' statement will be described in two parts.
      First the usual form will be given which is analogous to that used
@@ -11273,7 +11237,7 @@ File: maxima.info,  Node: Functions and Variables for Bernstein,  Prev: Bernstei
 
 
 
-File: maxima.info,  Node: bode,  Next: cobyla,  Prev: Bernstein,  Up: Top
+File: maxima.info,  Node: bode,  Next: clebsch_gordan,  Prev: Bernstein,  Up: Top
 
 43 bode
 *******
@@ -11387,9 +11351,53 @@ File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bo
 
 
 
-File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
+File: maxima.info,  Node: clebsch_gordan,  Next: cobyla,  Prev: bode,  Up: Top
 
-44 cobyla
+44 clebsch_gordan
+*****************
+
+* Menu:
+
+* Functions and Variables for clebsch_gordan::
+
+
+File: maxima.info,  Node: Functions and Variables for clebsch_gordan,  Prev: clebsch_gordan,  Up: clebsch_gordan
+
+44.1 Functions and Variables for clebsch_gordan
+===============================================
+
+ -- Function: clebsch_gordan (<j1>, <j2>, <m1>, <m2>, <j>, <m>)
+     Compute the Clebsch-Gordan coefficient <j1, j2, m1, m2 | j, m>.
+
+
+ -- Function: racah_v (<a>, <b>, <c>, <a1>, <b1>, <c1>)
+     Compute Racah's V coefficient (computed in terms of a related
+     Clebsch-Gordan coefficient).
+
+
+ -- Function: racah_w (<j1>, <j2>, <j5>, <j4>, <j3>, <j6>)
+     Compute Racah's W coefficient (computed in terms of a Wigner 6j
+     symbol)
+
+
+ -- Function: wigner_3j (<j1>, <j2>, <j3>, <m1>, <m2>, <m3>)
+     Compute Wigner's 3j symbol (computed in terms of a related
+     Clebsch-Gordan coefficient).
+
+
+ -- Function: wigner_6j (<j1>, <j2>, <j3>, <j4>, <j5>, <j6>)
+     Compute Wigner's 6j symbol.
+
+
+ -- Function: wigner_9j (<a>, <b>, <c>, <d>, <e>, <f>, <g>, <h>, <i>,
+          <j>,)
+     Compute Wigner's 9j symbol.
+
+
+
+File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: clebsch_gordan,  Up: Top
+
+45 cobyla
 *********
 
 * Menu:
@@ -11401,7 +11409,7 @@ File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
 
 File: maxima.info,  Node: Introduction to cobyla,  Next: Functions and Variables for cobyla,  Prev: cobyla,  Up: cobyla
 
-44.1 Introduction to cobyla
+45.1 Introduction to cobyla
 ===========================
 
 `fmin_cobyla' is a Common Lisp translation (via `f2cl') of the Fortran
@@ -11451,7 +11459,7 @@ Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
 
 File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples for cobyla,  Prev: Introduction to cobyla,  Up: cobyla
 
-44.2 Functions and Variables for cobyla
+45.2 Functions and Variables for cobyla
 =======================================
 
  -- Function: fmin_cobyla (<F>, <X>, <Y>)
@@ -11526,13 +11534,13 @@ File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples fo
 
      See `fmin_cobyla' for more information.
 
-     `load(fmin_cobyla)' loads this function.
+     `load(bf_fmin_cobyla)' loads this function.
 
 
 
 File: maxima.info,  Node: Examples for cobyla,  Prev: Functions and Variables for cobyla,  Up: cobyla
 
-44.3 Examples for cobyla
+45.3 Examples for cobyla
 ========================
 
 Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
@@ -11553,7 +11561,7 @@ Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
 
 File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: Top
 
-45 contrib_ode
+46 contrib_ode
 **************
 
 * Menu:
@@ -11567,7 +11575,7 @@ File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: T
 
 File: maxima.info,  Node: Introduction to contrib_ode,  Next: Functions and Variables for contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
 
-45.1 Introduction to contrib_ode
+46.1 Introduction to contrib_ode
 ================================
 
 Maxima's ordinary differential equation (ODE) solver `ode2' solves
@@ -11718,7 +11726,7 @@ method returns an unsolved second order ODE.
 
 File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possible improvements to contrib_ode,  Prev: Introduction to contrib_ode,  Up: contrib_ode
 
-45.2 Functions and Variables for contrib_ode
+46.2 Functions and Variables for contrib_ode
 ============================================
 
  -- Function: contrib_ode (<eqn>, <y>, <x>)
@@ -11858,7 +11866,7 @@ File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possib
 
 File: maxima.info,  Node: Possible improvements to contrib_ode,  Next: Test cases for contrib_ode,  Prev: Functions and Variables for contrib_ode,  Up: contrib_ode
 
-45.3 Possible improvements to contrib_ode
+46.3 Possible improvements to contrib_ode
 =========================================
 
 These routines are work in progress.  I still need to:
@@ -11888,7 +11896,7 @@ These routines are work in progress.  I still need to:
 
 File: maxima.info,  Node: Test cases for contrib_ode,  Next: References for contrib_ode,  Prev: Possible improvements to contrib_ode,  Up: contrib_ode
 
-45.4 Test cases for contrib_ode
+46.4 Test cases for contrib_ode
 ===============================
 
 The routines have been tested on a approximately one thousand  test
@@ -11911,7 +11919,7 @@ in the tests subdirectory.
 
 File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for contrib_ode,  Up: contrib_ode
 
-45.5 References for contrib_ode
+46.5 References for contrib_ode
 ===============================
 
   1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
@@ -11951,7 +11959,7 @@ File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for cont
 
 File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
-46 descriptive
+47 descriptive
 **************
 
 * Menu:
@@ -11964,7 +11972,7 @@ File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
 File: maxima.info,  Node: Introduction to descriptive,  Next: Functions and Variables for data manipulation,  Prev: descriptive,  Up: descriptive
 
-46.1 Introduction to descriptive
+47.1 Introduction to descriptive
 ================================
 
 Package `descriptive' contains a set of functions for making
@@ -12098,7 +12106,7 @@ a sample with categorical value `a' is taken,
 
 File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: Functions and Variables for descriptive statistics,  Prev: Introduction to descriptive,  Up: descriptive
 
-46.2 Functions and Variables for data manipulation
+47.2 Functions and Variables for data manipulation
 ==================================================
 
  -- Function: build_sample (<list>)
@@ -12374,7 +12382,7 @@ File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: 
 
 File: maxima.info,  Node: Functions and Variables for descriptive statistics,  Next: Functions and Variables for statistical graphs,  Prev: Functions and Variables for data manipulation,  Up: descriptive
 
-46.3 Functions and Variables for descriptive statistics
+47.3 Functions and Variables for descriptive statistics
 =======================================================
 
  -- Function: mean (<list>)
@@ -13188,7 +13196,7 @@ File: maxima.info,  Node: Functions and Variables for descriptive statistics,  N
 
 File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev: Functions and Variables for descriptive statistics,  Up: descriptive
 
-46.4 Functions and Variables for statistical graphs
+47.4 Functions and Variables for statistical graphs
 ===================================================
 
  -- Function: barsplot (<data1>, <data2>, ..., <option_1>, <option_2>,
@@ -13697,7 +13705,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
 File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
-47 diag
+48 diag
 *******
 
 * Menu:
@@ -13707,7 +13715,7 @@ File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: diag
 
-47.1 Functions and Variables for diag
+48.1 Functions and Variables for diag
 =====================================
 
  -- Function: diag (<lm>)
@@ -14006,7 +14014,7 @@ File: maxima.info,  Node: Functions and Variables for diag,  Prev: diag,  Up: di
 
 File: maxima.info,  Node: distrib,  Next: draw,  Prev: diag,  Up: Top
 
-48 distrib
+49 distrib
 **********
 
 * Menu:
@@ -14018,7 +14026,7 @@ File: maxima.info,  Node: distrib,  Next: draw,  Prev: diag,  Up: Top
 
 File: maxima.info,  Node: Introduction to distrib,  Next: Functions and Variables for continuous distributions,  Prev: distrib,  Up: distrib
 
-48.1 Introduction to distrib
+49.1 Introduction to distrib
 ============================
 
 Package `distrib' contains a set of functions for making probability
@@ -14189,7 +14197,7 @@ by typing
 
 File: maxima.info,  Node: Functions and Variables for continuous distributions,  Next: Functions and Variables for discrete distributions,  Prev: Introduction to distrib,  Up: distrib
 
-48.2 Functions and Variables for continuous distributions
+49.2 Functions and Variables for continuous distributions
 =========================================================
 
  -- Function: pdf_normal (<x>,<m>,<s>)
@@ -15732,7 +15740,7 @@ File: maxima.info,  Node: Functions and Variables for continuous distributions, 
 
 File: maxima.info,  Node: Functions and Variables for discrete distributions,  Prev: Functions and Variables for continuous distributions,  Up: distrib
 
-48.3 Functions and Variables for discrete distributions
+49.3 Functions and Variables for discrete distributions
 =======================================================
 
  -- Function: pdf_general_finite_discrete (<x>,<v>)
@@ -16363,7 +16371,7 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
 
 File: maxima.info,  Node: draw,  Next: drawdf,  Prev: distrib,  Up: Top
 
-49 draw
+50 draw
 *******
 
 * Menu:
@@ -16376,7 +16384,7 @@ File: maxima.info,  Node: draw,  Next: drawdf,  Prev: distrib,  Up: Top
 
 File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables for draw,  Prev: draw,  Up: draw
 
-49.1 Introduction to draw
+50.1 Introduction to draw
 =========================
 
 `draw' is a Maxima-Gnuplot interface.
@@ -16393,10 +16401,10 @@ File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables f
 
 File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and Variables for pictures,  Prev: Introduction to draw,  Up: draw
 
-49.2 Functions and Variables for draw
+50.2 Functions and Variables for draw
 =====================================
 
-49.2.1 Scenes
+50.2.1 Scenes
 -------------
 
  -- Scene constructor: gr2d (<graphic option>, ..., <graphic object>,
@@ -16441,7 +16449,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      To make use of this object, write first `load(draw)'.
 
 
-49.2.2 Functions
+50.2.2 Functions
 ----------------
 
  -- Function: draw (<gr2d>, ..., <gr3d>, ..., <options>, ...)
@@ -16581,7 +16589,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      To make use of this function, write first `load(draw)'.
 
 
-49.2.3 Graphics options
+50.2.3 Graphics options
 -----------------------
 
  -- Graphic option: adapt_depth
@@ -17606,6 +17614,37 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                        explicit(cos(x),x,0,10) )$
 
 
+ -- Graphic option: key_pos
+     Default value: `""' (empty string)
+
+     `key_pos' defines at which position the legend will be drawn. If
+     `key' is an empty string, `"top_right"' is used.  Available
+     position specifiers are: `top_left', `top_center', `top_right',
+     `center_left', `center', `center_right', `bottom_left',
+     `bottom_center', and `bottom_right'.
+
+     Since this is a global graphics option, its position in the scene
+     description does not matter.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  key_pos = top_left,
+                  key   = "x",
+                  explicit(x,  x,0,10),
+                  color= red,
+                  key   = "x squared",
+                  explicit(x^2,x,0,10))$
+          (%i3) draw3d(
+                  key_pos = center,
+                  key   = "x",
+                  explicit(x+y,x,0,10,y,0,10),
+                  color= red,
+                  key   = "x squared",
+                  explicit(x^2+y^2,x,0,10,y,0,10))$
+
+
  -- Graphic option: label_alignment
      Default value: `center'
 
@@ -17662,7 +17701,10 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Default value: `solid'
 
      `line_type' indicates how lines are displayed; possible values are
-     `solid' and `dots'.
+     `solid' and `dots', both available in all terminals, and `dashes',
+     `short_dashes', `short_long_dashes', `short_short_long_dashes',
+     and `dot_dash', which are not available in `png', `jpg', and `gif'
+     terminals.
 
      This option affects the following graphic objects:
         * `gr2d': `points', `polygon', `rectangle', `ellipse',
@@ -17747,7 +17789,36 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
           (%i2) draw2d(explicit(log(x),x,0.01,5),
                        logx = true)$
 
-     See also `logy' and `logz'.
+     See also `logy', `logx_secondary', `logy_secondary', and `logz'.
+
+
+ -- Graphic option: logx_secondary
+     Default value: `false'
+
+     If `logx_secondary' is `true', the secondary <x> axis will be
+     drawn in the logarithmic scale.
+
+     This option is relevant only for 2d scenes.
+
+     Since this is a global graphics option, its position in the scene
+     description does not matter.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  grid = true,
+                  key="x^2, linear scale",
+                  color=red,
+                  explicit(x^2,x,1,100),
+                  xaxis_secondary = true,
+                  xtics_secondary = true,
+                  logx_secondary  = true,
+                  key = "x^2, logarithmic x scale",
+                  color = blue,
+                  explicit(x^2,x,1,100) )$
+
+     See also `logx', `logy', `logy_secondary', and `logz'.
 
 
  -- Graphic option: logy
@@ -17765,7 +17836,36 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
           (%i2) draw2d(logy = true,
                        explicit(exp(x),x,0,5))$
 
-     See also `logx' and `logz'.
+     See also `logx', `logx_secondary', `logy_secondary', and `logz'.
+
+
+ -- Graphic option: logy_secondary
+     Default value: `false'
+
+     If `logy_secondary' is `true', the secondary <y> axis will be
+     drawn in the logarithmic scale.
+
+     This option is relevant only for 2d scenes.
+
+     Since this is a global graphics option, its position in the scene
+     description does not matter.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  grid = true,
+                  key="x^2, linear scale",
+                  color=red,
+                  explicit(x^2,x,1,100),
+                  yaxis_secondary = true,
+                  ytics_secondary = true,
+                  logy_secondary  = true,
+                  key = "x^2, logarithmic y scale",
+                  color = blue,
+                  explicit(x^2,x,1,100) )$
+
+     See also `logx', `logy', `logx_secondary', and `logz'.
 
 
  -- Graphic option: logz
@@ -18246,12 +18346,13 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
      Example:
 
-     The dumb terminal is not supported by package `draw', but it is
-     possible to set it by making use of option `user_preamble',
+     Tell Gnuplot to draw axes on top of graphics objects,
           (%i1) load(draw)$
-          (%i2) draw2d(explicit(exp(x)-1,x,-1,1),
-                       parametric(cos(u),sin(u),u,0,2*%pi),
-                       user_preamble="set terminal dumb")$
+          (%i2) draw2d(
+                  xaxis =true, xaxis_type=solid,
+                  yaxis =true, yaxis_type=solid,
+                  user_preamble="set grid front",
+                  region(x^2+y^2<1 ,x,-1.5,1.5,y,-1.5,1.5))$
 
 
  -- Graphic option: view
@@ -18456,16 +18557,16 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
 
  -- Graphic option: xtics
-     Default value: `auto'
+     Default value: `true'
 
      This graphic option controls the way tic marks are drawn on the
      <x> axis.
 
-        * When option `xtics' is bounded to symbol <auto>, tic marks are
+        * When option `xtics' is bounded to symbol <true>, tic marks are
           drawn automatically.
 
-        * When option `xtics' is bounded to symbol <none>, tic marks are
-          not drawn.
+        * When option `xtics' is bounded to symbol <false>, tic marks
+          are not drawn.
 
         * When option `xtics' is bounded to a positive number, this is
           the distance between two consecutive tic marks.
@@ -18490,7 +18591,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
      Disable tics.
           (%i1) load(draw)$
-          (%i2) draw2d(xtics = 'none,
+          (%i2) draw2d(xtics = 'false,
                        explicit(x^3,x,-1,1)  )$
 
      Tics every 1/4 units.
@@ -18792,7 +18893,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
 
  -- Graphic option: ytics
-     Default value: `auto'
+     Default value: `true'
 
      This graphic option controls the way tic marks are drawn on the
      <y> axis.
@@ -19004,7 +19105,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
 
  -- Graphic option: ztics
-     Default value: `auto'
+     Default value: `true'
 
      This graphic option controls the way tic marks are drawn on the
      <z> axis.
@@ -19033,7 +19134,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      description does not matter.
 
 
-49.2.4 Graphics objects
+50.2.4 Graphics objects
 -----------------------
 
  -- Graphic object: bars ([<x1>,<h1>,<w1>], [<x2>,<h2>,<w2>, ...])
@@ -19955,7 +20056,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
 File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw
 
-49.3 Functions and Variables for pictures
+50.3 Functions and Variables for pictures
 =========================================
 
  -- Function: get_pixel (<pic>,<x>,<y>)
@@ -20071,12 +20172,12 @@ File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions
 
 File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions and Variables for pictures,  Up: draw
 
-49.4 Functions and Variables for worldmap
+50.4 Functions and Variables for worldmap
 =========================================
 
 This package automatically loads package `draw'.
 
-49.4.1 Variables and Functions
+50.4.1 Variables and Functions
 ------------------------------
 
  -- Global variable: boundaries_array
@@ -20217,7 +20318,7 @@ This package automatically loads package `draw'.
           (%i3) draw2d(geomap(%))$
 
 
-49.4.2 Graphic objects
+50.4.2 Graphic objects
 ----------------------
 
  -- Graphic object: geomap (<numlist>)
@@ -20351,7 +20452,7 @@ This package automatically loads package `draw'.
 
 File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
 
-50 drawdf
+51 drawdf
 *********
 
 * Menu:
@@ -20362,7 +20463,7 @@ File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
 
 File: maxima.info,  Node: Introduction to drawdf,  Next: Functions and Variables for drawdf,  Prev: drawdf,  Up: drawdf
 
-50.1 Introduction to drawdf
+51.1 Introduction to drawdf
 ===========================
 
 The function `drawdf' draws the direction field of a first-order
@@ -20407,10 +20508,10 @@ two autonomous equations.
 
 File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introduction to drawdf,  Up: drawdf
 
-50.2 Functions and Variables for drawdf
+51.2 Functions and Variables for drawdf
 =======================================
 
-50.2.1 Functions
+51.2.1 Functions
 ----------------
 
  -- Function: drawdf (<dydx>, ...options and objects...)
@@ -20591,7 +20692,7 @@ File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introductio
 
 File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
 
-51 dynamics
+52 dynamics
 ***********
 
 * Menu:
@@ -20602,7 +20703,7 @@ File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
 
 File: maxima.info,  Node: Introduction to dynamics,  Next: Functions and Variables for dynamics,  Prev: dynamics,  Up: dynamics
 
-51.1 Introduction to dynamics
+52.1 Introduction to dynamics
 =============================
 
 The additional package `dynamics' includes several functions to create
@@ -20619,7 +20720,7 @@ by `plot2d' and some additional ones.
 
 File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduction to dynamics,  Up: dynamics
 
-51.2 Functions and Variables for dynamics
+52.2 Functions and Variables for dynamics
 =========================================
 
  -- Function: chaosgame (`[['<x1>, <y1>`]'...`['<xm>, <ym>`]]',
@@ -20791,7 +20892,7 @@ in the Plotting section.
 
 File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
 
-52 ezunits
+53 ezunits
 **********
 
 * Menu:
@@ -20803,7 +20904,7 @@ File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
 
 File: maxima.info,  Node: Introduction to ezunits,  Next: Introduction to physical_constants,  Prev: ezunits,  Up: ezunits
 
-52.1 Introduction to ezunits
+53.1 Introduction to ezunits
 ============================
 
 `ezunits' is a package for working with dimensional quantities,
@@ -20877,7 +20978,7 @@ SI units, but other fundamental dimensions and units can be declared.
 
 File: maxima.info,  Node: Introduction to physical_constants,  Next: Functions and Variables for ezunits,  Prev: Introduction to ezunits,  Up: ezunits
 
-52.2 Introduction to physical_constants
+53.2 Introduction to physical_constants
 =======================================
 
 `physical_constants' is a collection of physical constants, copied from
@@ -21077,7 +21178,7 @@ until its value is fetched by `constvalue'.
 
 File: maxima.info,  Node: Functions and Variables for ezunits,  Prev: Introduction to physical_constants,  Up: ezunits
 
-52.3 Functions and Variables for ezunits
+53.3 Functions and Variables for ezunits
 ========================================
 
  -- Operator: `
@@ -21789,7 +21890,7 @@ File: maxima.info,  Node: Functions and Variables for ezunits,  Prev: Introducti
 
 File: maxima.info,  Node: f90,  Next: finance,  Prev: ezunits,  Up: Top
 
-53 f90
+54 f90
 ******
 
 * Menu:
@@ -21799,7 +21900,7 @@ File: maxima.info,  Node: f90,  Next: finance,  Prev: ezunits,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
 
-53.1 Functions and Variables for f90
+54.1 Functions and Variables for f90
 ====================================
 
  -- Function: f90 (<expr_1>, ..., <expr_n>)
@@ -21850,7 +21951,7 @@ File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
 
 File: maxima.info,  Node: finance,  Next: fractals,  Prev: f90,  Up: Top
 
-54 finance
+55 finance
 **********
 
 * Menu:
@@ -21861,7 +21962,7 @@ File: maxima.info,  Node: finance,  Next: fractals,  Prev: f90,  Up: Top
 
 File: maxima.info,  Node: Introduction to finance,  Next: Functions and Variables for finance,  Prev: finance,  Up: finance
 
-54.1 Introduction to finance
+55.1 Introduction to finance
 ============================
 
 This is the Finance Package (Ver 0.1).
@@ -21879,7 +21980,7 @@ have to load it writing `load(finance)$'.
 
 File: maxima.info,  Node: Functions and Variables for finance,  Prev: Introduction to finance,  Up: finance
 
-54.2 Functions and Variables for finance
+55.2 Functions and Variables for finance
 ========================================
 
  -- Function: days360 (<year1>,<month1>,<day1>,<year2>,<month2>,<day2>)
@@ -22133,7 +22234,7 @@ File: maxima.info,  Node: Functions and Variables for finance,  Prev: Introducti
 
 File: maxima.info,  Node: fractals,  Next: ggf,  Prev: finance,  Up: Top
 
-55 fractals
+56 fractals
 ***********
 
 * Menu:
@@ -22147,7 +22248,7 @@ File: maxima.info,  Node: fractals,  Next: ggf,  Prev: finance,  Up: Top
 
 File: maxima.info,  Node: Introduction to fractals,  Next: Definitions for IFS fractals,  Prev: fractals,  Up: fractals
 
-55.1 Introduction to fractals
+56.1 Introduction to fractals
 =============================
 
 This package defines some well known fractals:
@@ -22171,7 +22272,7 @@ at
 
 File: maxima.info,  Node: Definitions for IFS fractals,  Next: Definitions for complex fractals,  Prev: Introduction to fractals,  Up: fractals
 
-55.2 Definitions for IFS fractals
+56.2 Definitions for IFS fractals
 =================================
 
 Some fractals can be generated by iterative applications of contractive
@@ -22225,7 +22326,7 @@ contraction ratio.
 
 File: maxima.info,  Node: Definitions for complex fractals,  Next: Definitions for Koch snowflakes,  Prev: Definitions for IFS fractals,  Up: Top
 
-55.3 Definitions for complex fractals
+56.3 Definitions for complex fractals
 =====================================
 
  -- Function: mandelbrot_set (<x>, <y>)
@@ -22296,7 +22397,7 @@ File: maxima.info,  Node: Definitions for complex fractals,  Next: Definitions f
 
 File: maxima.info,  Node: Definitions for Koch snowflakes,  Next: Definitions for Peano maps,  Prev: Definitions for complex fractals,  Up: Top
 
-55.4 Definitions for Koch snowflakes
+56.4 Definitions for Koch snowflakes
 ====================================
 
  -- Function: snowmap (<ent>, <nn>)
@@ -22320,7 +22421,7 @@ File: maxima.info,  Node: Definitions for Koch snowflakes,  Next: Definitions fo
 
 File: maxima.info,  Node: Definitions for Peano maps,  Prev: Definitions for Koch snowflakes,  Up: fractals
 
-55.5 Definitions for Peano maps
+56.5 Definitions for Peano maps
 ===============================
 
 Continuous curves that cover an area. Warning: the number of points
@@ -22349,7 +22450,7 @@ exponentially grows with <n>.
 
 File: maxima.info,  Node: ggf,  Next: graphs,  Prev: fractals,  Up: Top
 
-56 ggf
+57 ggf
 ******
 
 * Menu:
@@ -22359,7 +22460,7 @@ File: maxima.info,  Node: ggf,  Next: graphs,  Prev: fractals,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf,  Up: ggf
 
-56.1 Functions and Variables for ggf
+57.1 Functions and Variables for ggf
 ====================================
 
  -- Option variable: GGFINFINITY
@@ -22410,7 +22511,7 @@ File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf,  Up: ggf
 
 File: maxima.info,  Node: graphs,  Next: grobner,  Prev: ggf,  Up: Top
 
-57 graphs
+58 graphs
 *********
 
 * Menu:
@@ -22421,7 +22522,7 @@ File: maxima.info,  Node: graphs,  Next: grobner,  Prev: ggf,  Up: Top
 
 File: maxima.info,  Node: Introduction to graphs,  Next: Functions and Variables for graphs,  Prev: graphs,  Up: graphs
 
-57.1 Introduction to graphs
+58.1 Introduction to graphs
 ===========================
 
 The `graphs' package provides graph and digraph data structure for
@@ -22446,10 +22547,10 @@ package.
 
 File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introduction to graphs,  Up: graphs
 
-57.2 Functions and Variables for graphs
+58.2 Functions and Variables for graphs
 =======================================
 
-57.2.1 Building graphs
+58.2.1 Building graphs
 ----------------------
 
  -- Function: create_graph (<v_list>, <e_list>)
@@ -22800,7 +22901,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Returns the wheel graph on <n+1> vertices.
 
 
-57.2.2 Graph properties
+58.2.2 Graph properties
 -----------------------
 
  -- Function: adjacency_matrix (<gr>)
@@ -23674,7 +23775,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
           (%o2)                          500
 
 
-57.2.3 Modifying graphs
+58.2.3 Modifying graphs
 -----------------------
 
  -- Function: add_edge (<e>, <gr>)
@@ -23794,7 +23895,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Removes the vertex <v> from the graph <gr>.
 
 
-57.2.4 Reading and writing to files
+58.2.4 Reading and writing to files
 -----------------------------------
 
  -- Function: dimacs_export (<gr>, <fl>)
@@ -23843,7 +23944,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
      Returns a list of graphs from the file <fl> in the sparse6 format.
 
 
-57.2.5 Visualization
+58.2.5 Visualization
 --------------------
 
  -- Function: draw_graph (<graph>)
@@ -24135,7 +24236,7 @@ File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introductio
 
 File: maxima.info,  Node: grobner,  Next: impdiff,  Prev: graphs,  Up: Top
 
-58 grobner
+59 grobner
 **********
 
 * Menu:
@@ -24146,7 +24247,7 @@ File: maxima.info,  Node: grobner,  Next: impdiff,  Prev: graphs,  Up: Top
 
 File: maxima.info,  Node: Introduction to grobner,  Next: Functions and Variables for grobner,  Prev: Top,  Up: Top
 
-58.1 Introduction to grobner
+59.1 Introduction to grobner
 ============================
 
 `grobner' is a package for working with Groebner bases in Maxima.
@@ -24165,7 +24266,7 @@ Some of the calculation in the demo will take a lot of time therefore
 the output `grobner-demo.output' of the demo can be found in the same
 directory as the demo file.
 
-58.1.1 Notes on the grobner package
+59.1.1 Notes on the grobner package
 -----------------------------------
 
 The package was written by
@@ -24188,7 +24289,7 @@ Jean-Charles Fauge`re
 LIP6/CNRS Universite' Paris VI
 January 20, 1999
 
-58.1.2 Implementations of admissible monomial orders in grobner
+59.1.2 Implementations of admissible monomial orders in grobner
 ---------------------------------------------------------------
 
    * `lex'
@@ -24211,10 +24312,10 @@ January 20, 1999
 
 File: maxima.info,  Node: Functions and Variables for grobner,  Prev: Introduction to grobner,  Up: Top
 
-58.2 Functions and Variables for grobner
+59.2 Functions and Variables for grobner
 ========================================
 
-58.2.1 Global switches for grobner
+59.2.1 Global switches for grobner
 ----------------------------------
 
  -- Option variable: poly_monomial_order
@@ -24294,7 +24395,7 @@ File: maxima.info,  Node: Functions and Variables for grobner,  Prev: Introducti
      reduction.
 
 
-58.2.2 Simple operators in grobner
+59.2.2 Simple operators in grobner
 ----------------------------------
 
 `poly_add', `poly_subtract', `poly_multiply' and `poly_expt' are the
@@ -24344,7 +24445,7 @@ _maxima_ general form.
      the case in rings which are not fields.
 
 
-58.2.3 Other functions in grobner
+59.2.3 Other functions in grobner
 ---------------------------------
 
  -- Function: poly_expand (<poly>, <varlist>)
@@ -24427,7 +24528,7 @@ _maxima_ general form.
      polynomials and returns the resulting Groebner basis.
 
 
-58.2.4 Standard postprocessing of Groebner Bases
+59.2.4 Standard postprocessing of Groebner Bases
 ------------------------------------------------
 
 The _k-th elimination Ideal_ I_k of an Ideal I over K[ x[1],...,x[n] ]
@@ -24600,7 +24701,7 @@ I }.
 
 File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: grobner,  Up: Top
 
-59 impdiff
+60 impdiff
 **********
 
 * Menu:
@@ -24610,7 +24711,7 @@ File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: grobner,  Up: Top
 
 File: maxima.info,  Node: Functions and Variables for impdiff,  Prev: impdiff,  Up: impdiff
 
-59.1 Functions and Variables for impdiff
+60.1 Functions and Variables for impdiff
 ========================================
 
  -- Function: implicit_derivative
@@ -24627,7 +24728,7 @@ File: maxima.info,  Node: Functions and Variables for impdiff,  Prev: impdiff,  
 
 File: maxima.info,  Node: interpol,  Next: lapack,  Prev: impdiff,  Up: Top
 
-60 interpol
+61 interpol
 ***********
 
 * Menu:
@@ -24638,7 +24739,7 @@ File: maxima.info,  Node: interpol,  Next: lapack,  Prev: impdiff,  Up: Top
 
 File: maxima.info,  Node: Introduction to interpol,  Next: Functions and Variables for interpol,  Prev: interpol,  Up: interpol
 
-60.1 Introduction to interpol
+61.1 Introduction to interpol
 =============================
 
 Package `interpol' defines the Lagrangian, the linear and the cubic
@@ -24650,7 +24751,7 @@ edu DOT xunta DOT es'>.
 
 File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduction to interpol,  Up: interpol
 
-60.2 Functions and Variables for interpol
+61.2 Functions and Variables for interpol
 =========================================
 
  -- Function: lagrange (<points>)
@@ -24971,7 +25072,7 @@ File: maxima.info,  Node: Functions and Variables for interpol,  Prev: Introduct
 
 File: maxima.info,  Node: lapack,  Next: lbfgs,  Prev: interpol,  Up: Top
 
-61 lapack
+62 lapack
 *********
 
 * Menu:
@@ -24982,7 +25083,7 @@ File: maxima.info,  Node: lapack,  Next: lbfgs,  Prev: interpol,  Up: Top
 
 File: maxima.info,  Node: Introduction to lapack,  Next: Functions and Variables for lapack,  Prev: lapack,  Up: lapack
 
-61.1 Introduction to lapack
+62.1 Introduction to lapack
 ===========================
 
 `lapack' is a Common Lisp translation (via the program `f2cl') of the
@@ -24991,7 +25092,7 @@ Fortran library LAPACK, as obtained from the SLATEC project.
 
 File: maxima.info,  Node: Functions and Variables for lapack,  Prev: Introduction to lapack,  Up: lapack
 
-61.2 Functions and Variables for lapack
+62.2 Functions and Variables for lapack
 =======================================
 
  -- Function: dgeev (<A>)
@@ -25414,7 +25515,7 @@ File: maxima.info,  Node: Functions and Variables for lapack,  Prev: Introductio
 
 File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: lapack,  Up: Top
 
-62 lbfgs
+63 lbfgs
 ********
 
 * Menu:
@@ -25425,7 +25526,7 @@ File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: lapack,  Up: Top
 
 File: maxima.info,  Node: Introduction to lbfgs,  Next: Functions and Variables for lbfgs,  Prev: Top,  Up: Top
 
-62.1 Introduction to lbfgs
+63.1 Introduction to lbfgs
 ==========================
 
 `lbfgs' is an implementation of the L-BFGS algorithm [1] to solve
@@ -25449,7 +25550,7 @@ large scale optimization". Mathematical Programming B 45:503-528 (1989)
 
 File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction to lbfgs,  Up: Top
 
-62.2 Functions and Variables for lbfgs
+63.2 Functions and Variables for lbfgs
 ======================================
 
  -- Function: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
@@ -25746,7 +25847,7 @@ File: maxima.info,  Node: Functions and Variables for lbfgs,  Prev: Introduction
 
 File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
 
-63 lindstedt
+64 lindstedt
 ************
 
 * Menu:
@@ -25756,7 +25857,7 @@ File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: To
 
 File: maxima.info,  Node: Functions and Variables for lindstedt,  Prev: lindstedt,  Up: lindstedt
 
-63.1 Functions and Variables for lindstedt
+64.1 Functions and Variables for lindstedt
 ==========================================
 
  -- Function: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
@@ -25797,7 +25898,7 @@ File: maxima.info,  Node: Functions and Variables for lindstedt,  Prev: lindsted
 
 File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
 
-64 linearalgebra
+65 linearalgebra
 ****************
 
 * Menu:
@@ -25808,7 +25909,7 @@ File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up:
 
 File: maxima.info,  Node: Introduction to linearalgebra,  Next: Functions and Variables for linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
 
-64.1 Introduction to linearalgebra
+65.1 Introduction to linearalgebra
 ==================================
 
 `linearalgebra' is a collection of functions for linear algebra.
@@ -25907,7 +26008,7 @@ File: maxima.info,  Node: Introduction to linearalgebra,  Next: Functions and Va
 
 File: maxima.info,  Node: Functions and Variables for linearalgebra,  Prev: Introduction to linearalgebra,  Up: linearalgebra
 
-64.2 Functions and Variables for linearalgebra
+65.2 Functions and Variables for linearalgebra
 ==============================================
 
  -- Function: addmatrices (<f>, <M_1>, ..., <M_n>)
