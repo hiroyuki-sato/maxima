@@ -18,16 +18,10 @@
 
 (declare-top (special $true $false))
 
-(declare-top (special var *par* checkcoefsignlist $exponentialize $bestriglim 
+(declare-top (special var *par* checkcoefsignlist $exponentialize
                       $radexpand))
 
 (defvar *debug-hyp* nil)
-
-;; I (rtoy) don't know what the default should be. but $hgfred sets it
-;; to 3.  But we also need to define it because some of the specint
-;; demos need it set.
-;;
-(defmvar $bestriglim 3)
 
 (defmvar $prefer_whittaker nil)
 
@@ -3193,11 +3187,11 @@
 	      arg n)))
 
 ;; Transform F(a,b;c;z) to F(a-n, b; c-n; z)
-(defun as-15.2.8 (a b c n arg fun)
+(defun as-15.2.8 (axax b c n arg fun)
   ;; A&S 15.2.8
   ;;  F(a-n,b;c-n;z) = 1/poch(c-n,n)/(z^(c-n-1)*(1-z)^(b-c))
   ;;                    *diff(z^(c-1)*(1-z^(b-c+n)*fun, z, n))
-  (declare (ignore a))
+  (declare (ignore axax))
   (assert (>= n 0))
   (mul (inv (factf (sub c n) n))
        (inv (mul (power arg (sub (sub c n) 1))

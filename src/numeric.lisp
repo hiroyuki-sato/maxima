@@ -2071,21 +2071,18 @@
 ;;;   Return a value of pi with the same precision as the argument.
 ;;; For rationals, we return a single-float approximation.
 (defmethod %pi ((x cl:rational))
-  (declare (ignore x))
   (cl:coerce cl:pi 'single-float))
 
 (defmethod %pi ((x cl:float))
   (cl:float cl:pi x))
 
 (defmethod %pi ((x bigfloat))
-  (declare (ignore x))
   (to (maxima::bcons (maxima::fppi))))
 
 (defmethod %pi ((x cl:complex))
   (cl:float cl:pi (realpart x)))
 
 (defmethod %pi ((x complex-bigfloat))
-  (declare (ignore x))
   (to (maxima::bcons (maxima::fppi))))
 
 ;;; %e - External
@@ -2093,21 +2090,18 @@
 ;;;   Return a value of e with the same precision as the argument.
 ;;;   For rationals, we return a single-float approximation.
 (defmethod %e ((x cl:rational))
-  (declare (ignore x))
   (cl:coerce maxima::%e-val 'single-float))
 
 (defmethod %e ((x cl:float))
   (cl:float maxima::%e-val x))
 
 (defmethod %e ((x bigfloat))
-  (declare (ignore x))
   (to (maxima::bcons (maxima::fpe))))
 
 (defmethod %e ((x cl:complex))
   (cl:float maxima::%e-val (realpart x)))
 
 (defmethod %e ((x complex-bigfloat))
-  (declare (ignore x))
   (to (maxima::bcons (maxima::fpe))))
 
 ;;;; Useful routines
@@ -2211,3 +2205,126 @@
 	  sum)
       #+nil
       (format t "~4d: ~S ~S ~S~%" k sum term (funcall f k)))))
+
+;; Format bigfloats using ~E format. This is suitable as a ~// format.
+;;
+;; NOTE: This is a modified version of FORMAT-EXPONENTIAL from CMUCL to
+;; support printing of bfloats.
+
+(defun format-e (stream number colonp atp
+		 &optional w d e k
+		   overflowchar padchar exponentchar)
+  (typecase number
+    (bigfloat
+     (maxima::bfloat-format-e stream (real-value number) colonp atp
+			      w d e (or k 1)
+			      overflowchar
+			      (or padchar #\space)
+			      (or exponentchar #\b)))
+    (complex-bigfloat
+     ;; FIXME: Do something better than this since this doesn't honor
+     ;; any of the parameters.
+     (princ number stream))
+    (otherwise
+     ;; We were given some other kind of object. Just use CL's normal
+     ;; ~E printer to print it.
+     (let ((f
+	     (with-output-to-string (s)
+	       ;; Construct a suitable ~E format string from the given
+	       ;; parameters. First, handle w,d,e,k.
+	       (write-string "~V,V,V,V," s)
+	       (if overflowchar
+		   (format s "'~C," overflowchar)
+		   (write-string "," s))
+	       (if padchar
+		   (format s "'~C," padchar)
+		   (write-string "," s))
+	       (when exponentchar
+		 (format s "'~C" exponentchar))
+	       (when colonp
+		 (write-char #\: s))
+	       (when atp
+		 (write-char #\@ s))
+	       (write-char #\E s))))
+       (format stream f w d e k number)))))
+
+;; Format bigfloats using ~F format. This is suitable as a ~// format.
+;;
+;; NOTE: This is a modified version of FORMAT-FIXED from CMUCL to
+;; support printing of bfloats.
+
+(defun format-f (stream number colonp atp
+		 &optional w d k overflowchar padchar)
+  (typecase number
+    (bigfloat
+     (maxima::bfloat-format-f stream (real-value number) colonp atp
+			      w d (or k 0)
+			      overflowchar
+			      (or padchar #\space)))
+    (complex-bigfloat
+     ;; FIXME: Do something better than this since this doesn't honor
+     ;; any of the parameters.
+     (princ number stream))
+    (otherwise
+     ;; We were given some other kind of object. Just use CL's normal
+     ;; ~F printer to print it.
+     (let ((f
+	     (with-output-to-string (s)
+	       ;; Construct a suitable ~F format string from the given
+	       ;; parameters.  First handle w,d,k.
+	       (write-string "~V,V,V," s)
+	       (if overflowchar
+		   (format s "'~C," overflowchar)
+		   (write-string "," s))
+	       (if (char= padchar #\space)
+		   (write-string "," s)
+		   (format s "'~C," padchar))
+	       (when colonp
+		 (write-char #\: s))
+	       (when atp
+		 (write-char #\@ s))
+	       (write-char #\F s))))
+       (format stream f w d k number)))))
+
+;; Format bigfloats using ~G format. This is suitable as a ~// format.
+;;
+;; NOTE: This is a modified version of FORMAT-GENERAL from CMUCL to
+;; support printing of bfloats.
+
+(defun format-g (stream number colonp atp
+		 &optional w d e k overflowchar padchar marker)
+  (typecase number
+    (bigfloat
+     (maxima::bfloat-format-g stream (real-value number) colonp atp
+			      w d e (or k 1) 
+			      overflowchar
+			      (or padchar #\space)
+			      (or marker #\b)))
+    (complex-bigfloat
+     ;; FIXME: Do something better than this since this doesn't honor
+     ;; any of the parameters.
+     (princ number stream))
+    (otherwise
+     ;; We were given some other kind of object. Just use CL's normal
+     ;; ~G printer to print it.
+     (let ((f
+	     (with-output-to-string (s)
+	       ;; Construct a suitable ~E format string from the given
+	       ;; parameters. First, handle w,d,e,k.
+	       (write-string "~V,V,V,V," s)
+	       (if overflowchar
+		   (format s "'~C," overflowchar)
+		   (write-string "," s))
+	       (if padchar
+		   (format s "'~C," padchar)
+		   (write-string "," s))
+	       (when marker
+		 (format s "'~C" marker))
+	       (when colonp
+		 (write-char #\: s))
+	       (when atp
+		 (write-char #\@ s))
+	       (write-char #\G s))))
+       (format stream f w d e k number)))))
+     
+     

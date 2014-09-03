@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-Ver. 5.31 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.34 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1222,6 +1222,38 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        color = red,
                        explicit(cos(x),x,0,10) )$
 
+ -- Opción gráfica: key_pos
+     Valor por defecto: `""' (cadena vacía)
+
+     La opción `key_pos' establece en qué posición se colocará la
+     leyenda.  Si `key' es una cadena vacía, entonces se utilizará por
+     defecto la posición `"top_right"'.  Los valores disponibles para
+     esta opción son: `top_left', `top_center', `top_right',
+     `center_left', `center', `center_right', `bottom_left',
+     `bottom_center' y `bottom_right'.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
+
+     Ejemplos:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  key_pos = top_left,
+                  key   = "x",
+                  explicit(x,  x,0,10),
+                  color= red,
+                  key   = "x squared",
+                  explicit(x^2,x,0,10))$
+          (%i3) draw3d(
+                  key_pos = center,
+                  key   = "x",
+                  explicit(x+y,x,0,10,y,0,10),
+                  color= red,
+                  key   = "x squared",
+                  explicit(x^2+y^2,x,0,10,y,0,10))$
+
+
  -- Opción gráfica: label_alignment
      Valor por defecto: `center'
 
@@ -1278,7 +1310,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Valor por defecto: `solid'
 
      `line_type' indica cómo se van a dibujar las líneas; valores
-     posibles son `solid' y `dots'.
+     posibles son `solid' y `dots', que están disponibles en todos los
+     terminales, y `dashes', `short_dashes', `short_long_dashes',
+     `short_short_long_dashes' y `dot_dash', que no esán disponibles en
+     los terminales `png', `jpg' y `gif'.
 
      Esta opción afecta a los siguientes objetos gráficos:
         * `gr2d': `points', `polygon', `rectangle', `ellipse',
@@ -1360,7 +1395,35 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
           (%i2) draw2d(explicit(log(x),x,0.01,5),
                        logx = true)$
 
-     Véanse también `logy' y `logz'.
+     Véanse también `logy', `logx_secondary', `logy_secondary' y `logz'.
+
+
+ -- Opción gráfica: logx_secondary
+     Valor por defecto: `false'
+
+     Si `logx_secondary' vale `true', el eje secundario de <x> se
+     dibuja en la escala logarítmica.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  grid = true,
+                  key="x^2, linear scale",
+                  color=red,
+                  explicit(x^2,x,1,100),
+                  xaxis_secondary = true,
+                  xtics_secondary = true,
+                  logx_secondary  = true,
+                  key = "x^2, logarithmic x scale",
+                  color = blue,
+                  explicit(x^2,x,1,100) )$
+
+     Véanse también `logx', `logy', `logy_secondary' y `logz'.
+
 
  -- Opción gráfica: logy
      Valor por defecto: `false'
@@ -1377,7 +1440,34 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
           (%i2) draw2d(logy = true,
                        explicit(exp(x),x,0,5))$
 
-     Véanse también `logx' y `logz'.
+     Véanse también `logx', `logx_secondary', `logy_secondary' y `logz'.
+
+ -- Opción gráfica: logy_secondary
+     Valor por defecto: `false'
+
+     Si `logy_secondary' vale `true', el eje secundario de <y> se
+     dibuja en la escala logarítmica.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  grid = true,
+                  key="x^2, linear scale",
+                  color=red,
+                  explicit(x^2,x,1,100),
+                  yaxis_secondary = true,
+                  ytics_secondary = true,
+                  logy_secondary  = true,
+                  key = "x^2, logarithmic y scale",
+                  color = blue,
+                  explicit(x^2,x,1,100) )$
+
+     Véanse también `logx', `logy', `logx_secondary' y `logz'.
+
 
  -- Opción gráfica: logz
      Valor por defecto: `false'
@@ -1394,7 +1484,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
           (%i2) draw3d(logz = true,
                        explicit(exp(u^2+v^2),u,-2,2,v,-2,2))$
 
-     Véanse también `logx' y `logy'.
+     Véanse también `logx' and `logy'.
 
  -- Opción gráfica: nticks
      Valor por defecto: 29
@@ -1857,12 +1947,14 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Ejemplo:
 
-     El terminal dumb no está soportado por el paquete `draw', pero es
-     posible activarlo haciendo uso de la opción `user_preamble',
+     Se le indica a Gnuplot que dibuje los ejes encima de todos los
+     demás objetos,
           (%i1) load(draw)$
-          (%i2) draw2d(explicit(exp(x)-1,x,-1,1),
-                       parametric(cos(u),sin(u),u,0,2*%pi),
-                       user_preamble="set terminal dumb")$
+          (%i2) draw2d(
+                  xaxis =true, xaxis_type=solid,
+                  yaxis =true, yaxis_type=solid,
+                  user_preamble="set grid front",
+                  region(x^2+y^2<1 ,x,-1.5,1.5,y,-1.5,1.5))$
 
  -- Opción gráfica: view
      Valor por defecto: `[60,30]'
@@ -2060,16 +2152,16 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `xrange', `yrange', `zrange' y `yrange_secondary'.
 
  -- Opción gráfica: xtics
-     Valor por defecto: `auto'
+     Valor por defecto: `true'
 
      Esta opción gráfica controla la forma en la que se dibujarán las
      marcas del eje <x>.
 
-        * Cuando a `xtics' se le da el valor <auto>, las marcas se
+        * Cuando a `xtics' se le da el valor <true>, las marcas se
           dibujarán de forma automática.
 
-        * Cuando a `xtics' se le da el valor <none>, no habrá marcas en
-          los ejes.
+        * Cuando a `xtics' se le da el valor <false>, no habrá marcas
+          en los ejes.
 
         * Cuando a `xtics' se le da un valor numérico positivo, se
           interpretará como la distancia entre dos marcas consecutivas.
@@ -2094,7 +2186,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Marcas desactivadas.
           (%i1) load(draw)$
-          (%i2) draw2d(xtics = 'none,
+          (%i2) draw2d(xtics = 'false,
                        explicit(x^3,x,-1,1)  )$
 
      Marcas cada 1/4 unidades.
@@ -2380,7 +2472,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `xrange', `yrange' y `zrange'.
 
  -- Opción gráfica: ytics
-     Valor por defecto: `auto'
+     Valor por defecto: `true'
 
      Esta opción gráfica controla la forma en la que se dibujarán las
      marcas del eje <y>.
@@ -2578,7 +2670,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `xrange' y `yrange'.
 
  -- Opción gráfica: ztics
-     Valor por defecto: `auto'
+     Valor por defecto: `true'
 
      Esta opción gráfica controla la forma en la que se dibujarán las
      marcas del eje <z>.

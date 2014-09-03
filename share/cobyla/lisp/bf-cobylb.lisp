@@ -78,7 +78,7 @@
       (if (>= iprint 2)
           (f2cl-lib:fformat t
                             ("~%" "~3@T" "The initial value of RHO is" 1
-                             (("~13,6,2,1,'*,,'EE")) "~2@T"
+                             (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~2@T"
                              "and PARMU is set to zero." "~%")
                             rho))
       (setf nfvals 0)
@@ -145,9 +145,9 @@
              (= iprint 3))
          (f2cl-lib:fformat t
                            ("~%" "~3@T" "NFVALS =" 1 (("~5D")) "~3@T" "F =" 1
-                            (("~13,6,2,1,'*,,'EE")) "~4@T" "MAXCV =" 1
-                            (("~13,6,2,1,'*,,'EE")) "~%" "~3@T" "X =" 1
-                            (("~13,6,2,1,'*,,'EE")) 4 (("~15,6,2,1,'*,,'EE"))
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~4@T" "MAXCV =" 1
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~%" "~3@T" "X =" 1
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) 4 (("~15,6,2,1,'*,,'E/bigfloat:format-e/"))
                             "~%")
                            nfvals
                            f
@@ -161,8 +161,8 @@
                               %ret)))
          (if (< iptem n)
              (f2cl-lib:fformat t
-                               (1 (("~19,6,2,1,'*,,'EE")) 4
-                                (("~15,6,2,1,'*,,'EE")) "~%")
+                               (1 (("~19,6,2,1,'*,,'E/bigfloat:format-e/")) 4
+                                (("~15,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                                (do ((i iptemp (f2cl-lib:int-add i 1))
                                     (%ret nil))
                                    ((> i n) (nreverse %ret))
@@ -756,7 +756,7 @@
          (if (>= iprint 2)
              (f2cl-lib:fformat t
                                ("~%" "~3@T" "Increase in PARMU to" 1
-                                (("~13,6,2,1,'*,,'EE")) "~%")
+                                (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                                parmu))
          (setf phi
                  (+
@@ -1058,18 +1058,18 @@
          (if (>= iprint 2)
              (f2cl-lib:fformat t
                                ("~%" "~3@T" "Reduction in RHO to" 1
-                                (("~13,6,2,1,'*,,'EE")) "  and PARMU =" 1
-                                (("~13,6,2,1,'*,,'EE")) "~%")
+                                (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "  and PARMU =" 1
+                                (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                                rho
                                parmu))
          (cond
            ((= iprint 2)
             (f2cl-lib:fformat t
                               ("~%" "~3@T" "NFVALS =" 1 (("~5D")) "~3@T" "F ="
-                               1 (("~13,6,2,1,'*,,'EE")) "~4@T" "MAXCV =" 1
-                               (("~13,6,2,1,'*,,'EE")) "~%" "~3@T" "X =" 1
-                               (("~13,6,2,1,'*,,'EE")) 4
-                               (("~15,6,2,1,'*,,'EE")) "~%")
+                               1 (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~4@T" "MAXCV =" 1
+                               (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~%" "~3@T" "X =" 1
+                               (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) 4
+                               (("~15,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                               nfvals
                               (f2cl-lib:fref datmat-%data%
                                              (mp np)
@@ -1091,8 +1091,8 @@
                                  %ret)))
             (if (< iptem n)
                 (f2cl-lib:fformat t
-                                  (1 (("~19,6,2,1,'*,,'EE")) 4
-                                   (("~15,6,2,1,'*,,'EE")) "~%")
+                                  (1 (("~19,6,2,1,'*,,'E/bigfloat:format-e/")) 4
+                                   (("~15,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                                   (do ((i iptemp (f2cl-lib:int-add i 1))
                                        (%ret nil))
                                       ((> i n) (nreverse %ret))
@@ -1137,9 +1137,9 @@
         ((>= iprint 1)
          (f2cl-lib:fformat t
                            ("~%" "~3@T" "NFVALS =" 1 (("~5D")) "~3@T" "F =" 1
-                            (("~13,6,2,1,'*,,'EE")) "~4@T" "MAXCV =" 1
-                            (("~13,6,2,1,'*,,'EE")) "~%" "~3@T" "X =" 1
-                            (("~13,6,2,1,'*,,'EE")) 4 (("~15,6,2,1,'*,,'EE"))
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~4@T" "MAXCV =" 1
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) "~%" "~3@T" "X =" 1
+                            (("~13,6,2,1,'*,,'E/bigfloat:format-e/")) 4 (("~15,6,2,1,'*,,'E/bigfloat:format-e/"))
                             "~%")
                            nfvals
                            f
@@ -1153,8 +1153,8 @@
                               %ret)))
          (if (< iptem n)
              (f2cl-lib:fformat t
-                               (1 (("~19,6,2,1,'*,,'EE")) 4
-                                (("~15,6,2,1,'*,,'EE")) "~%")
+                               (1 (("~19,6,2,1,'*,,'E/bigfloat:format-e/")) 4
+                                (("~15,6,2,1,'*,,'E/bigfloat:format-e/")) "~%")
                                (do ((i iptemp (f2cl-lib:int-add i 1))
                                     (%ret nil))
                                    ((> i n) (nreverse %ret))

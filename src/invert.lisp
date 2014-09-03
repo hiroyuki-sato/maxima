@@ -15,9 +15,43 @@
 		 adj i j))))
     adj))
 
-(add2lnc '$adjoint $props)
+(defmfun $invert_by_adjoint (mat)
+  (let* ((adj (simplify ($adjoint mat)))
+	 (ans (let (($scalarmatrixp t))
+		(div adj
+		     (ncmul2 (simplify ($row mat 1))
+			     (simplify ($col adj 1)))))))
+    (if (and (like (trd-msymeval $scalarmatrixp '$scalarmatrixp) t)
+	     (eql ($length mat) 1))
+	(maref ans 1 1)
+	ans)))
 
-(defun $invert (m &optional (field-name (if $ratmx '$crering '$generalring)))
+(add2lnc '$adjoint $props)
+(add2lnc '$invert_by_adjoint $props)
+
+(defmvar $invert_method nil)
+(defmvar $invert_by_adjoint_size_limit 8)
+
+(defun $invert (&rest args)
+  (case $invert_method
+    (($lu) (apply #'invert-via-$invert_by_lu args))
+    (($gausselim) (apply #'$invert_by_gausselim args))
+    (($adjoint) (apply #'$invert_by_adjoint args))
+    ((nil)
+      ;; Select a method appropriate for the matrix.
+      ;; This could be more sophisticated.
+      (let*
+        ((my-matrix (first args))
+         (size (length (rest my-matrix))))
+        (if (<= size $invert_by_adjoint_size_limit)
+          (apply #'$invert_by_adjoint args)
+          (apply #'$invert_by_gausselim args))))
+    (t
+      (mtell "invert: unrecognized invert_method=~M; assume default.~%" $invert_method)
+      (let (($invert_method nil))
+        (apply #'$invert args)))))
+
+(defun invert-via-$invert_by_lu (m &optional (field-name (if $ratmx '$crering '$generalring)))
   (declare (special $ratmx $detout))
   ;; Call functions from package linearalgebra via MFUNCALL to autoload them if necessary.
   (if $detout
