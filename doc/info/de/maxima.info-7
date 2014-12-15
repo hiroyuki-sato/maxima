@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info/de//include-maxima.de.texi.
+/home/robert/maxima/maxima-code/doc/info/de//include-maxima.de.texi.
 
 Das ist ein Texinfo Maxima Manual
 
@@ -735,53 +735,6 @@ File: maxima.info,  Node: Functions and Variables for dynamics,  Prev: Introduct
      instance if there are 3 points with probabilities 0.2, 0.5 and
      0.3, the weights <r1>, <r2> and <r3> could be 2, 7 and 10.
 
- -- Function: julia (<x>, <y>, ..., <options>, ...)
-     Creates a graphics file with the representation of the Julia set
-     for the complex number (<x> + i <y>).  The parameters <x> and <y>
-     must be real.  The file is created in the current directory or in
-     the user's directory, using the XPM graphics format.  The program
-     may take several seconds to run and after it is finished, a
-     message will be printed with the name of the file created.
-
-     The points which do not belong to the Julia set are assigned
-     different colors, according to the number of iterations it takes
-     the sequence starting at that point to move out of the convergence
-     circle of radius 2.  The maximum number of iterations is set with
-     the option <levels>; after that number of iterations, if the
-     sequence is still inside the convergence circle, the point will be
-     painted with the color defined by the option <color>.
-
-     All the colors used for the points that do not belong to the Julia
-     set will have the same <saturation> and <value>, but with different
-     hue angles distributed uniformly between <hue> and (<hue> +
-     <huerange>).
-
-     <options> is an optional sequence of options.  The list of accepted
-     options is given in a section below.
-
- -- Function: mandelbrot (<options>)
-     Creates a graphics file with the representation of the Mandelbrot
-     set.  The file is created in the current directory or in the user's
-     directory, using the XPM graphics format.  The program may take
-     several seconds to run and after it is finished, a message will be
-     printed with the name of the file created.
-
-     The points which do not belong to the Mandelbrot set are assigned
-     different colors, according to the number of iterations it takes
-     the sequence generated with that point to move out of the
-     convergence circle o radius 2.  The maximum number of iterations
-     is set with the option <levels>; after that number of iterations,
-     if the sequence is still inside the convergence circle, the point
-     will be painted with the color defined by the option <color>.
-
-     All the colors used for the points that do not belong to the
-     Mandelbrot set will have the same <saturation> and <value>, but
-     with different hue angles distributed uniformly between <hue> and
-     (<hue> + <huerange>).
-
-     <options> is an optional sequence of options.  The list of accepted
-     options is given in a section below.
-
  -- Function: orbits (<F>, <y0>, <n1>, <n2>, [<x>, <x0>, <xf>,
           <xstep>], ..., options, ...)
      Draws the orbits diagram for a family of one-dimensional discrete
@@ -866,64 +819,6 @@ options for `plot2d'.  In addition to those options, `orbits' accepts
 and extra option <pixels> that sets up the maximum number of different
 points that will be represented in the vertical direction.
 
-The following options are accepted by the functions `julia' and
-`mandelbrot':
-
-   * "size" takes either one or two arguments.  If only one argument is
-     given, the width and height of the graphic file created will be
-     equal to that value, in pixels.  If two arguments are given, they
-     will define the width and height.  The default value is 400 pixels
-     for both the width and height.  If the two values are not equal,
-     the set will appear distorted.
-
-   * "levels" defines the maximum number of iterations, which is also
-     equal to the number of colors used for points not belonging to the
-     set.  The default value is 12; larger values mean much longer
-     processing times.
-
-   * "huerange" defines the range of hue angles used for the hue of
-     points not belonging to the set.  The default value is 360, which
-     means that the colors will expand all the range of hues.  Values
-     bigger than 360, will mean repeated ranges of the hue, and negative
-     values can be used to make the hue angle decrease as the number of
-     iterations increases.
-
-   * "hue" sets the hue, in degrees, of the first color used for the
-     points which do not belong to the set.  Its default value is 300
-     degrees, which corresponds to magenta; the values for other
-     standard colors are 0 for red, 45 for orange, 60 for yellow, 120
-     for green, 180 for cyan and 240 for blue.  See also option
-     <huerange>.
-
-   * "saturation" sets the value of the saturation used for points not
-     belonging to the set.  It must be between 0 and 1.  The default is
-     0.46.
-
-   * "value" sets the value of the colors used for points not belonging
-     to the set.  It must be between 0 and 1; the higher the value, the
-     brighter the colors.  The default is 0.96
-
-   * "color" must be followed by three parameters that define the hue,
-     saturation and value, for the color used to represent the points
-     of the set.  The default value is 0 for the three parameters,
-     which corresponds to black.  For an explanation of the range of
-     allowed values, see options <hue>, <saturation> and <value>.
-
-   * "center" must be followed by two real parameters, which give the
-     coordinates, on the complex plane, of the point in the center of
-     the region shown.  The default value is 0 for both coordinates
-     (the origin).
-
-   * "radius" sets the radius of the biggest circle inside the square
-     region that will be displayed.  The default value is 2.
-
-   * "filename" gives the name of the file where the resulting graph
-     will be saved.  The extension .xpm will be added to that name.  If
-     the file already exists, it will be replaced by the file generated
-     by the function.  The default values are julia for the Julia set,
-     and mandelbrot for the Mandelbrot set.
-
-
 Examples
 
 Graphical representation and staircase diagram for the sequence: 2,
@@ -988,20 +883,6 @@ Barnsley's fern, obtained with an Iterated Function System:
      (%i18) w: [85,92,99,100]$
 
      (%i19) ifs(w, [a1,a2,a3,a4], [p1,p2,p3,p4], [5,0], 50000, [style,dots]);
-
-To create a file named _dynamics9.xpm_ with a graphical representation
-of the Mandelbrot set, with 12 colors, use:
-
-     mandelbrot([filename,"dynamics9"])$
-
-and the Julia set for the number (-0.55 + i 0.6) can be obtained with:
-     julia(-0.55, 0.6, [levels, 36], [center, 0, 0.6], [radius, 0.3],
-           [hue, 240], [huerange, -180], [filename, "dynamics10"])$
-
-the graph will be saved in the file _dynamics10.xpm_ and will show the
-region from -0.3 to 0.3 in the x direction, and from 0.3 to 0.9 in the
-y direction.  36 colors will be used, starting with blue and ending
-with yellow.
 
 To solve numerically the differential equation
 
@@ -2061,7 +1942,7 @@ File: maxima.info,  Node: Functions and Variables for f90,  Prev: f90,  Up: f90
           (%o3)                         false
 
      Multiple expressions.  Capture standard output into a file via the
-     `with_stdout'  function.
+     `with_stdout' function.
 
           (%i1) load (f90)$
           (%i2) foo : sin (3*x + 1) - cos (7*x - 2);
@@ -4659,7 +4540,7 @@ I }.
  -- Function: poly_gcd (<poly1>, <poly2>, <varlist>)
      Returns the greatest common divisor of <poly1> and <poly2>.
 
-     See also `ezgcd',  `gcd',  `gcdex',  and `gcdivide'.
+     See also `ezgcd', `gcd', `gcdex', and `gcdivide'.
 
      Example:
 
@@ -7352,8 +7233,8 @@ File: maxima.info,  Node: Einführung in mnewton,  Next: Funktionen und Variablen
 ==========================
 
 Das Paket mnewton implementiert das Newton-Verfahren mit der Funktion
-`mnewton'  für das numerische Lösen nichtlinear Gleichungen in einer
-oder mehrerer Variablen.  Die Funktion `newton'  ist eine weitere
+`mnewton' für das numerische Lösen nichtlinear Gleichungen in einer
+oder mehrerer Variablen.  Die Funktion `newton' ist eine weitere
 Implementierung, die im Paket newton1 enthalten ist.
 
 
@@ -7374,7 +7255,7 @@ File: maxima.info,  Node: Funktionen und Variablen für mnewton,  Prev: Einführun
      Standardwert: `50'
 
      Obere Grenze für die Anzahl an Iterationen, falls die Funktion
-     `mnewton'  nicht oder sehr langsam konvergiert.
+     `mnewton' nicht oder sehr langsam konvergiert.
 
  -- Funktion: mnewton (<FuncList>, <VarList>, <GuessList>)
      Implementation des Newton-Verfahrens für das numerische Lösen von
@@ -7387,11 +7268,11 @@ File: maxima.info,  Node: Funktionen und Variablen für mnewton,  Prev: Einführun
      Die Lösungen werden als eine Liste zurückgegeben.  Kann keine
      Lösung gefunden werden, ist die Rückgabe eine leere Liste `[]'.
 
-     `mnewton' wird von den Funktionen `newtonepsilon'  und
-     `newtonmaxiter'  kontrolliert.
+     `mnewton' wird von den Funktionen `newtonepsilon' und
+     `newtonmaxiter' kontrolliert.
 
      Die Funktion wird mit dem Kommando `load(mnewton)' geladen.  Siehe
-     die Funktion `newton'  für eine alternative Implementierung des
+     die Funktion `newton' für eine alternative Implementierung des
      Newton-Verfahrens.
 
      Beispiele:
@@ -7406,7 +7287,7 @@ File: maxima.info,  Node: Funktionen und Variablen für mnewton,  Prev: Einführun
           (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
           (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
 
-     Die Optionsvariable `newtonepsilon'  kontrolliert die Genauigkeit
+     Die Optionsvariable `newtonepsilon' kontrolliert die Genauigkeit
      der Approximation.  Weiterhin kontrolliert die Optionsvariable, ob
      die Berechnung mit Gleitkommazahlen in doppelter oder großer
      Genauigkeit durchgeführt wird.
@@ -7434,9 +7315,9 @@ File: maxima.info,  Node: Funktionen und Variablen für mnewton,  Prev: Einführun
 
      Das Kommando `load(newton1)' lädt die Funktion.
 
-     Siehe auch die Funktionen `realroots',  `allroots'  und
-     `find_root',  um numerische Lösungen von Gleichungen zu finden.
-     Das Paket mnewton enthält mit der Funktion `mnewton'  eine weitere
+     Siehe auch die Funktionen `realroots', `allroots' und `find_root',
+     um numerische Lösungen von Gleichungen zu finden.  Das Paket
+     mnewton enthält mit der Funktion `mnewton' eine weitere
      Implementation des Newton-Verfahrens.
 
      Achtung: Auch mit `load(newton)' wird eine Funktion mit dem Namen
@@ -7779,6 +7660,88 @@ File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: To
 * Menu:
 
 * Functions and Variables for opsubst::
+
+
+File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  Up: opsubst
+
+64.1 Functions and Variables for opsubst
+========================================
+
+ -- Function: opsubst (<f>, <g>, <e>)
+ -- Function: opsubst (<g> = <f>, <e>)
+ -- Function: opsubst ([<g1> = <f1>, <g2> = <f2>, ..., <gn> = <fn>],
+          <e>)
+     The function `opsubst' is similar to the function `subst', except
+     that `opsubst' only makes substitutions for the operators in an
+     expression.  In general, when <f> is an operator in the expression
+     <e>, substitute <g> for <f> in the expression <e>.
+
+     To determine the operator, `opsubst' sets `inflag' to true.  This
+     means `opsubst' substitutes for the internal, not the displayed,
+     operator in the expression.
+
+     To use this function write first `load("opsubst")'.
+
+     Examples:
+
+          (%i1) load("opsubst")$
+
+          (%i2) opsubst(f, g, g(g(x)));
+          (%o2)                     f(f(x))
+          (%i3) opsubst(f, g, g(g));
+          (%o3)                       f(g)
+          (%i4) opsubst(f, g[x], g[x](z));
+          (%o4)                       f(z)
+          (%i5) opsubst(g[x], f, f(z));
+          (%o5)                      g (z)
+                                      x
+          (%i6) opsubst(tan, sin, sin(sin));
+          (%o6)                     tan(sin)
+          (%i7) opsubst([f=g, g=h], f(x));
+          (%o7)                       h(x)
+
+     Internally, Maxima does not use the unary negation, division, or
+     the subtraction operators; thus:
+
+          (%i8) opsubst("+", "-", a-b);
+          (%o8)                     a - b
+          (%i9) opsubst("f", "-", -a);
+          (%o9)                      - a
+          (%i10) opsubst("^^", "/", a/b);
+                                       a
+          (%o10)                       -
+                                       b
+
+     The internal representation of `-a*b' is `*(-1,a,b)'; thus
+
+          (%i11) opsubst("[", "*", -a*b);
+          (%o11)                  [- 1, a, b]
+
+     When either operator isn't a Maxima symbol, generally some other
+     function will signal an error:
+
+          (%i12) opsubst(a+b, f, f(x));
+
+          Improper name or value in functional position:
+          b + a
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     However, subscripted operators are allowed:
+
+          (%i13) opsubst(g[5], f, f(x));
+          (%o13)                     g (x)
+                                      5
+
+
+File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
+
+65 orthopoly
+************
+
+* Menu:
+
+* Introduction to orthogonal polynomials::
+* Functions and Variables for orthogonal polynomials::
 
 
 

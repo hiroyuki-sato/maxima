@@ -34,9 +34,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = locale
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -161,6 +161,7 @@ lisps_enabled = @lisps_enabled@
 localedir = $(datadir)/locale
 localstatedir = @localstatedir@
 mandir = @mandir@
+manual_version = @manual_version@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 openmcl_found = @openmcl_found@
@@ -180,7 +181,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 win32 = @win32@
-TRANSLATIONS = es
+TRANSLATIONS = es pt
+EXTRA_DIST = es.po es.mo pt.po pt.mo
 
 # the programs we use (TODO: use configure to detect them)
 MSGFMT = msgfmt --verbose
@@ -189,7 +191,6 @@ XGETTEXT = xgettext
 XARGS = xargs
 XGETTEXT_ARGS = -s -c -j
 SUFFIXES = .mo .po
-EXTRA_DIST = es.po es.mo
 all: all-am
 
 .SUFFIXES:
@@ -388,7 +389,7 @@ install-maxima-catalogs:
 
 maxima.pot:
 	touch $@
-	find ../src -name "*.lisp" | $(XARGS) $(XGETTEXT) $(XGETTEXT_ARGS) -o maxima.pot
+	find ../src ../share -name "*.lisp" | $(XARGS) $(XGETTEXT) $(XGETTEXT_ARGS) -o maxima.pot
 
 allpo: force-update maxima.pot
 	@for t in $(TRANSLATIONS); do $(MAKE) $$t.po; done

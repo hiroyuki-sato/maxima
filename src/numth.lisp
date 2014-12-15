@@ -127,7 +127,7 @@
          ip
          (list '(mplus) rp ip))))))
 
-(defun gcfactor (a b &aux tem)
+(defun gcfactor (a b)
   (prog (gl cd dc econt p e1 e2 ans plis nl $intfaclim )
     (setq e1 0
           e2 0
@@ -151,8 +151,8 @@
             (setq gl (cddr gl)) 
             (go loop))
           ((equal p (car nl))
-            (cond ((zerop (rem (setq tem (+ (* a (car cd)) ;gcremainder
-                                            (* b (cadr cd))))
+            (cond ((zerop (rem (+ (* a (car cd)) ;gcremainder
+                                  (* b (cadr cd)))
                                p))     ;remainder(real((a+bi)cd~),p)
                                        ;z~ is complex conjugate
                     (setq e1 (cadr nl)) (setq dc cd))
@@ -404,32 +404,54 @@
 ;;
 ;; Chinese Remainder Theorem
 ;;
-(defmfun $chinese (rems mods) 
+(defmfun $chinese (rems mods &optional (return-lcm? nil)) 
   (cond 
     ((not (and ($listp rems) ($listp mods)))
       (list '($chinese) rems mods) )
-    ((or (= 0 ($length rems)) (= 0 ($length mods)))
+    ((let ((lr ($length rems)) (lm ($length mods)))
+       (or (= 0 lr) (= 0 lm) (/= lr lm)) )
       (gf-merror (intl:gettext
-        "At least one argument to `chinese' was an empty list." )))
+        "Unsuitable arguments to `chinese': ~m ~m" ) rems mods ))
     ((notevery #'integerp (setq rems (cdr rems)))
       (list '($chinese) (cons '(mlist simp) rems) mods) )
     ((notevery #'integerp (setq mods (cdr mods)))
       (list '($chinese) (cons '(mlist simp) rems) (cons '(mlist simp) mods)) )
+    ((eql return-lcm? t)
+      (cons '(mlist simp) (chinese rems mods)) )
     (t
       (car (chinese rems mods)) )))
 ;;
 (defun chinese (rems mods)
-  (if (onep (length mods)) 
+  (if (= 1 (length mods)) 
     (list (car rems) (car mods))
-    (let* ((rp (car rems))
-           (p  (car mods))
-           (rq-q (chinese (cdr rems) (cdr mods)))
-           (rq (car rq-q))
-           (q (cadr rq-q))
-           (q-inv (inv-mod q p))
-           (h (mod (* (- rp rq) q-inv) p))
-           (x (+ (* h q) rq)) )
-      (list x (* p q)) )))
+    (let ((rp (car rems))
+          (p  (car mods))
+          (rq-q (chinese (cdr rems) (cdr mods))) )
+      (when rq-q
+        (let* ((rq (car rq-q))
+               (q (cadr rq-q))
+               (gc (zn-gcdex2 q p))
+               (g (car gc))    ;; gcd
+               (c (cadr gc)) ) ;; CRT-coefficient
+          (cond
+            ((= 1 g) ;; coprime moduli
+              (let* ((h (mod (* (- rp rq) c) p))
+                     (x (+ (* h q) rq)) )
+                (list x (* p q)) ))
+            ((= 0 (mod (- rp rq) g)) ;; ensures unique solution
+              (let* ((h (* (- rp rq) c))
+                     (q/g (truncate q g))
+                     (lcm-pq (* p q/g)) )
+                (list (mod (+ rq (* h q/g)) lcm-pq) lcm-pq) ))))))))
+;;
+;; (zn-gcdex2 x y) returns `(,g ,c) where c*x + d*y = g = gcd(x,y)
+;;
+(defun zn-gcdex2 (x y) 
+  (let ((x1 1) (y1 0) q r) 
+    (do ()((= 0 y) (list x x1)) 
+      (multiple-value-setq (q r) (truncate x y))
+      (psetf x y y r) 
+      (psetf x1 y1 y1 (- x1 (* q y1))) )))
 
 ;;
 ;; discrete logarithm:
@@ -501,22 +523,26 @@
 (defun dlog-baby-giant (a g p n) ;; g is generator of order p mod n
   (let* ((m (1+ (isqrt p)))
          (s (floor (* 1.3 m)))
-         (gi (inv-mod g n)) d babies )
+         (gi (inv-mod g n)) 
+          g^m babies )
     (setf babies 
       (make-hash-table :size s :test #'eql :rehash-threshold 0.9) )
-    (do ((r 0 (1+ r)) b)
-        ((= r m))
-      (setq b (mod (* a (power-mod gi r n)) n))
+    (do ((r 0) (b a))
+        (())
       (when (= 1 b)
         (clrhash babies)
         (return-from dlog-baby-giant r) )
-      (setf (gethash b babies) r) )
-    (setq d (power-mod g m n))
-    (do ((rr 0 (1+ rr)) bb r) (())
-      (setq bb (power-mod d rr n))
+      (setf (gethash b babies) r)
+      (incf r)
+      (when (= r m) (return))
+      (setq b (mod (* gi b) n)) )
+    (setq g^m (power-mod g m n))
+    (do ((rr 0 (1+ rr)) 
+         (bb 1 (mod (* g^m bb) n)) 
+          r ) (())
       (when (setq r (gethash bb babies))
         (clrhash babies)
-        (return (mod (+ (* rr m) r) n)) )) ))
+        (return (+ (* rr m) r)) )) ))
 
 ;; brute-force:
 
@@ -1664,7 +1690,7 @@
 ;; equivalent of) the field element e^i, where e is a primitive element 
 ;;
     (setq $gf_powers (make-array (1+ ord) :element-type 'integer)
-          *gf-powers* (make-array (1+ ord) :element-type 'integer) )
+          *gf-powers* (make-array (1+ ord) :element-type 'list :initial-element nil) )
     (setf (svref $gf_powers 0) 1
           (svref *gf-powers* 0) (list 0 1) )
     (do ((i 1 (1+ i)))
@@ -4021,137 +4047,6 @@
 ;; -----------------------------------------------------------------------------
 
 
-;; interface to share/linearalgebra; some temporarily workarounds --------------
-;;
-
-;; copied from mring.lisp:
-
-(defstruct mring
-  name
-  coerce-to-lisp-float
-  abs
-  great
-  add
-  div
-  rdiv
-  reciprocal
-  mult
-  sub
-  negate
-  psqrt
-  add-id
-  mult-id
-  fzerop
-  adjoint
-  maxima-to-mring
-  mring-to-maxima)
-
-;; these ring definitions will move to mring.lisp:
-
-(defparameter *gf-coeff-ring*
-  (make-mring
-   :name 'gf-coeff-ring
-   :coerce-to-lisp-float nil
-   :abs #'cl:identity ;; #'gf-mod
-   :great #'(lambda (yy b) (declare (ignore yy)) (null b)) ;; #'> gives wrong results
-   :add #'gf-cplus-b
-   :div #'(lambda (a b) (gf-ctimes a (gf-cinv b)))
-   :rdiv #'(lambda (a b) (gf-ctimes a (gf-cinv b)))
-   :reciprocal #'gf-cinv
-   :mult #'gf-ctimes
-   :sub #'(lambda (a b) (gf-cplus-b a (gf-cminus-b b)))
-   :negate #'gf-cminus-b
-   :psqrt nil
-   :add-id #'(lambda () 0)
-   :mult-id #'(lambda () 1)
-   :fzerop #'(lambda (s) (= 0 s))
-   :adjoint nil
-   :mring-to-maxima #'cl:identity
-   :maxima-to-mring #'cl:identity ))
-
-(setf (get 'gf-coeff-ring 'ring) *gf-coeff-ring*)
-
-(defparameter *gf-ring*
-  (make-mring
-   :name 'gf-ring
-   :coerce-to-lisp-float nil
-   :abs #'cl:identity ;; #'gf-mod
-   ;; :great #'(lambda (a b) (> (gf-x2n a) (gf-x2n b)))
-   :great #'(lambda (yy b) (declare (ignore yy)) (null b)) ;; ??
-   :add #'gf-plus
-   :div #'(lambda (a b) (gf-times a (gf-inv b *gf-red*) *gf-red*))
-   :rdiv #'(lambda (a b) (gf-times a (gf-inv b *gf-red*) *gf-red*))
-   :reciprocal #'(lambda (a) (gf-inv a *gf-red*))
-   :mult #'(lambda (a b) (gf-times a b *gf-red*))
-   :sub #'(lambda (a b) (gf-plus a (gf-minus b)))
-   :negate #'gf-minus
-   :psqrt nil
-   :add-id #'(lambda () nil)
-   :mult-id #'(lambda () '(0 1))
-   :fzerop #'(lambda (s) (null s))
-   :adjoint nil
-   :mring-to-maxima #'gf-x2p
-   :maxima-to-mring #'gf-p2x ))
-
-(setf (get 'gf-ring 'ring) *gf-ring*)
-
-(defparameter *ef-ring*
-  (make-mring
-   :name 'ef-ring
-   :coerce-to-lisp-float nil
-   :abs #'cl:identity ;; #'ef-mod
-   ;; :great #'(lambda (a b) (> (gf-x2n a) (gf-x2n b)))
-   :great #'(lambda (yy b) (declare (ignore yy)) (null b)) ;; ??
-   :add #'gf-plus
-   :div #'(lambda (a b) (gf-times a (gf-inv b *ef-red*) *ef-red*))
-   :rdiv #'(lambda (a b) (gf-times a (gf-inv b *ef-red*) *ef-red*))
-   :reciprocal #'(lambda (a) (gf-inv a *ef-red*))
-   :mult #'(lambda (a b) (gf-times a b *ef-red*))
-   :sub #'(lambda (a b) (gf-plus a (gf-minus b)))
-   :negate #'gf-minus
-   :psqrt nil
-   :add-id #'(lambda () nil)
-   :mult-id #'(lambda () '(0 1))
-   :fzerop #'(lambda (s) (null s))
-   :adjoint nil
-   :mring-to-maxima #'gf-x2p
-   :maxima-to-mring #'gf-p2x ))
-
-(setf (get 'ef-ring 'ring) *ef-ring*)
-
-;; workarounds: calling Lisp functions in lu.lisp:
-
-(defun *f-invert-by-lu (m field)
-  (let ((id (mfuncall '$identfor m)) ;; autoloads linearalgebra
-        (fs (*f-lu-factor m field)) )
-    (when fs (mfuncall '$lu_backsub fs id)) ))
-
-(defun *f-determinant-by-lu (m field)
-  (mfuncall '$zeromatrixp nil) ;; autoloads linearalgebra
-  (let ((fs (*f-lu-factor m field)))
-    (when fs (mfuncall 'determinant-by-lu-factors fs field)) ))
-
-;; returns nil if lu-factor fails
-(defun *f-lu-factor (m field)
-  (let (c perm ma fs)
-    (setq c ($length m))
-    (setq perm (make-array c))
-    (decf c)
-    (loop for i from 0 to c do (setf (aref perm i) i)) 
-    (setq ma (mfuncall 'maxima-to-array m (mring-maxima-to-mring field)))
-    (unwind-protect                      ;; protect against lu-factor failure
-      (let* ((old-out *standard-output*) ;; discard error messages from lu-factor
-             (redirect (make-string-output-stream))
-             (*standard-output* redirect) )
-        (setq fs (mfuncall 'lu-factor ma perm c field 0.0))
-        (setf *standard-output* old-out)
-        (close redirect)
-        fs )
-      (unless fs (return-from *f-lu-factor nil)) )))
-;;
-;; -----------------------------------------------------------------------------
-
-
 ;; invert and determinant by lu ------------------------------------------------
 ;;
 
@@ -4161,9 +4056,23 @@
 
 ;; invert by lu
 
+;; returns nil when LU-decomposition fails
+(defun try-lu-and-call (fun m ring)
+  (let ((old-out *standard-output*)
+        (redirect (make-string-output-stream))
+        (res nil) )
+    (unwind-protect                    ;; protect against lu failure
+      (setq *standard-output* redirect ;; discard error messages from lu-factor
+            res (mfuncall fun m ring) )
+      (progn 
+        (setq *standard-output* old-out)
+        (close redirect) )
+      (return-from try-lu-and-call res) )))
+
 (defmfun $zn_invert_by_lu (m p) 
   (zn-p-errchk p "zn_invert_by_lu" "Second")
-  (let ((*ef-arith?*) (*gf-char* p)) (*f-invert-by-lu m *gf-coeff-ring*)) )
+  (let ((*ef-arith?*) (*gf-char* p)) 
+    (try-lu-and-call '$invert_by_lu m 'gf-coeff-ring) ))
 
 (defmfun $gf_matinv (m) 
   (format t "`gf_matinv' is deprecated. ~%~\
@@ -4172,11 +4081,11 @@
 
 (defmfun $gf_invert_by_lu (m) 
   (gf-field? "gf_invert_by_lu")
-  (let ((*ef-arith?*)) (*f-invert-by-lu m *gf-ring*)) )
+  (let ((*ef-arith?*)) (try-lu-and-call '$invert_by_lu m 'gf-ring)) )
 
 (defmfun $ef_invert_by_lu (m) 
   (ef-field? "ef_invert_by_lu")
-  (let ((*ef-arith?* t)) (*f-invert-by-lu m *ef-ring*)) )
+  (let ((*ef-arith?* t)) (try-lu-and-call '$invert_by_lu m 'ef-ring)) )
 
 ;; determinant
 
@@ -4184,14 +4093,14 @@
   (zn-p-errchk p "zn_determinant" "Second")
   (let* ((*ef-arith?*) 
          (*gf-char* p)
-         (det (*f-determinant-by-lu m *gf-coeff-ring*)) ) ;; try LU-decomposition first
+         (det (try-lu-and-call '$determinant_by_lu m 'gf-coeff-ring)) )
     (if det det
       (mod (mfuncall '$determinant m) p) )))
- 
+
 (defmfun $gf_determinant (m) 
   (gf-field? "gf_determinant")
   (let* ((*ef-arith?*)
-         (det (*f-determinant-by-lu m *gf-ring*)) )
+         (det (try-lu-and-call '$determinant_by_lu m 'gf-ring)) )
     (if det det
       (let (($matrix_element_mult '$gf_mult) ($matrix_element_add '$gf_add))
         (mfuncall '$determinant m) ))))
@@ -4199,7 +4108,7 @@
 (defmfun $ef_determinant (m) 
   (ef-field? "ef_determinant")
   (let* ((*ef-arith?* t)
-         (det (*f-determinant-by-lu m *ef-ring*)) )
+         (det (try-lu-and-call '$determinant_by_lu m 'ef-ring)) )
     (if det det
       (let (($matrix_element_mult '$ef_mult) ($matrix_element_add '$ef_add))
         (mfuncall '$determinant m) ))))
@@ -4351,23 +4260,26 @@
 (defun gf-dlog-baby-giant (a g p red) ;; g is generator of order prime p
   (let* ((m (1+ (isqrt p)))
          (s (floor (* 1.3 m)))
-         (gi (gf-inv g red)) d babies )
+         (gi (gf-inv g red)) 
+          g^m babies )
     (setf babies 
       (make-hash-table :size s :test #'equal :rehash-threshold 0.9) )
-    (do ((r 0 (1+ r)) b)
-        ((= r m))
-      (setq b (gf-times a (gf-pow gi r red) red))
+    (do ((r 0) (b a))
+        (())
       (when (equal '(0 1) b)
         (clrhash babies)
         (return-from gf-dlog-baby-giant r) )
-      (setf (gethash b babies) r) )
-    (setq d (gf-pow g m red))
-    (do ((rr 0 (1+ rr)) bb r) 
-        ((= rr m))
-      (setq bb (gf-pow d rr red))
+      (setf (gethash b babies) r)
+      (incf r)
+      (when (= r m) (return))
+      (setq b (gf-times gi b red)) ) 
+    (setq g^m (gf-pow g m red))
+    (do ((rr 0 (1+ rr)) 
+         (bb (list 0 1) (gf-times g^m bb red)) 
+          r ) (())
       (when (setq r (gethash bb babies))
         (clrhash babies)
-        (return-from gf-dlog-baby-giant (+ (* rr m) r)) )) ))
+        (return (+ r (* rr m))) )) ))
 
 ;; Pollard rho for dlog computation (Brents variant of collision detection)
 

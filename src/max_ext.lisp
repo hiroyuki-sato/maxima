@@ -146,6 +146,7 @@
        $sequalignore
        $sexplode
        $sha1sum
+       $sha256sum
        $simplode
        $sinsert
        $sinvertcase
@@ -225,6 +226,7 @@
        $zeromatrixp
        
        $get_lu_factors         ; lu.lisp
+       $determinant_by_lu 
        $invert_by_lu 
        $linsolve_by_lu
        $lu_backsub

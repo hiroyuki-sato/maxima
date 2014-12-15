@@ -1199,8 +1199,6 @@
          x-samples y-samples yy result pltcmd result-array)
     (when (< xmax xmin)
        (merror "draw2d (explicit): illegal range"))
-    (when (not (subsetp (rest ($listofvars fcn)) (list var)))
-       (merror "draw2d (explicit): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (setf fcn ($float fcn))
     (cond 
@@ -1215,7 +1213,6 @@
                 (push (fun x) y-samples)))
           (setf x-samples (nreverse x-samples))
           (setf y-samples (nreverse y-samples))
-
           ;; For each region, adaptively plot it.
           (do ((x-start x-samples (cddr x-start))
                (x-mid (cdr x-samples) (cddr x-mid))
@@ -1224,11 +1221,12 @@
                (y-mid (cdr y-samples) (cddr y-mid))
                (y-end (cddr y-samples) (cddr y-end)))
               ((null x-end))
-
             ;; The region is x-start to x-end, with mid-point x-mid.
             (let ((sublst (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
                                                (car y-start) (car y-mid) (car y-end)
                                                depth 1e-5)))
+              (when (notevery #'numberp sublst)
+                (merror "draw2d (explicit): non defined variable"))
               (when (not (null result))
                 (setf sublst (cddr sublst)))
               (do ((lst sublst (cddr lst)))
@@ -2756,30 +2754,15 @@
             (if (get-option '$logx)
                (format nil "set logscale x~%")
                (format nil "unset logscale x~%"))
-
             (if (get-option '$logx_secondary)
                (format nil "set logscale x2~%")
                (format nil "unset logscale x2~%"))
-
-
-
-
-
-
             (if (get-option '$logy)
                (format nil "set logscale y~%")
                (format nil "unset logscale y~%"))
-
-
-
             (if (get-option '$logy_secondary)
                (format nil "set logscale y2~%")
                (format nil "unset logscale y2~%"))
-
-
-
-
-
             (if (get-option '$logcb)
                (format nil "set logscale cb~%")
                (format nil "unset logscale cb~%") )
@@ -2788,7 +2771,9 @@
                 (format nil "unset grid~%"))
             (format nil "set title '~a'~%"  (get-option '$title))
             (format nil "set xlabel '~a'~%" (get-option '$xlabel))
+            (format nil "set x2label '~a'~%" (get-option '$xlabel_secondary))
             (format nil "set ylabel '~a'~%" (get-option '$ylabel))
+            (format nil "set y2label '~a'~%" (get-option '$ylabel_secondary))
             (let ((suma 0))
               (if (get-option '$axis_bottom)  (setf suma (+ suma 1)))
               (if (get-option '$axis_left) (setf suma (+ suma 2)))
@@ -2811,8 +2796,8 @@
                            (hex-to-rgb (get-option '$yaxis_color)) )
                (format nil "unset yzeroaxis~%"))
             (if (null (get-option '$xtics_secondary))
-               (format nil "unset x2tics~%")
-               (format nil "set xtics nomirror~%set x2tics ~a ~a ~a~%"
+               (format nil "unset x2tics~%set xtics nomirror~%")
+               (format nil "set x2tics ~a ~a ~a~%"
                        (if (get-option '$xtics_secondary_rotate) "rotate" "norotate")
                        (if (get-option '$xtics_secondary_axis) "axis" "border")
                        (get-option '$xtics_secondary)))
@@ -2823,7 +2808,7 @@
                        (if (get-option '$xtics_axis) "axis" "border")
                        (get-option '$xtics)))
             (if (null (get-option '$ytics_secondary))
-               (format nil "unset y2tics~%")
+               (format nil "unset y2tics~%set ytics nomirror~%")
                (format nil "set ytics nomirror~%set y2tics ~a ~a ~a~%"
                        (if (get-option '$ytics_secondary_rotate) "rotate" "norotate")
                        (if (get-option '$ytics_secondary_axis) "axis" "border")
@@ -3001,7 +2986,8 @@
                (format nil "unset cbtics~%")
                (format nil "set cbtics ~a~%"
                        (get-option '$cbtics)) )
-            (if (eql (get-option '$contour) '$map)  ; if contour = map
+            (if (or (eql (get-option '$contour) '$map)
+                    (eql (get-option '$view) '$map) )
                (format nil "set view map~%~a~%"
                             (if (equal (get-option '$proportional_axes) '$none)
                                "set size noratio"
@@ -3017,7 +3003,7 @@
                 (format nil "set border 0~%"))
             (when (not (null (get-option '$enhanced3d)))
               (if (null (get-option '$wired_surface))
-                (format nil "set pm3d at s depthorder explicit~%")
+                (format nil "set pm3d at s ~a explicit~%" (get-option '$interpolate_color))
                 (format nil "set style line 1 lt 1 lw 1 lc rgb '#000000'~%set pm3d at s depthorder explicit hidden3d 1~%") ))
             (if (get-option '$surface_hide)
                (format nil "set hidden3d nooffset~%"))
