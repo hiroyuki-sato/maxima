@@ -1,8 +1,9 @@
-This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from
+/home/robert/maxima/maxima-code/doc/info/es//include-maxima.texi.
 
-Ver. 5.34 Este es el Manual de Maxima en versión Texinfo
+Este es el Manual de Maxima en versión Texinfo
 
-   Copyright 1994, 2001 William F. Schelter
+Copyright 1994, 2001 William F. Schelter
 
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).  Un sistema de cálculo simbólico
@@ -1183,6 +1184,74 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Véanse también `head_both', `head_angle' y `head_length'.
 
+ -- Opción gráfica: interpolate_color
+     Valor por defecto: `false'
+
+     Esta opción solo es relevante si `enhanced3d' tiene un valor
+     diferente de `false'.
+
+     Si `interpolate_color' vale `false', las superficies se colorean
+     con cuadriláteros homogéneos. Si vale `true', las transiciones de
+     colores se suavizan por interpolación.
+
+     La opción `interpolate_color' también acepta una lista de dos
+     números, `[m,n]'.  Para <m> y <n> positivos, cada cuadrilátero o
+     triángulo se interpola <m> y <n> veces en la dirección respectiva.
+     Para <m> y <n> negativos, la frecuencia de interpolación se elige
+     de forma que se dibujen al menos <abs(m)> y <abs(n)> puntos,
+     pudiéndose considerar esto como una función especial de enrejado.
+     Con valores nulos, esto es `interpolate_color=[0,0]', se
+     seleccionará un número óptimo de puntos interpolados en la
+     superficie.
+
+     Además, `interpolate_color=true' es equivalente a
+     `interpolate_color=[0,0]'.
+
+     La interpolación de colores en superficies paramétricas puede dar
+     resultados imprevisibles.
+
+     Ejemplos:
+
+     Interpolación de color con funciones explícitas.
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  enhanced3d   = sin(x*y),
+                  explicit(20*exp(-x^2-y^2)-10, x ,-3, 3, y, -3, 3)) $
+          (%i3) draw3d(
+                  interpolate_color = true,
+                  enhanced3d   = sin(x*y),
+                  explicit(20*exp(-x^2-y^2)-10, x ,-3, 3, y, -3, 3)) $
+          (%i4) draw3d(
+                  interpolate_color = [-10,0],
+                  enhanced3d   = sin(x*y),
+                  explicit(20*exp(-x^2-y^2)-10, x ,-3, 3, y, -3, 3)) $
+
+     Interpolación de color con el objeto `mesh'.
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  enhanced3d = true,
+                  mesh([[1,1,3],   [7,3,1],[12,-2,4],[15,0,5]],
+                       [[2,7,8],   [4,3,1],[10,5,8], [12,7,1]],
+                       [[-2,11,10],[6,9,5],[6,15,1], [20,15,2]])) $
+          (%i3) draw3d(
+                  enhanced3d        = true,
+                  interpolate_color = true,
+                  mesh([[1,1,3],   [7,3,1],[12,-2,4],[15,0,5]],
+                       [[2,7,8],   [4,3,1],[10,5,8], [12,7,1]],
+                       [[-2,11,10],[6,9,5],[6,15,1], [20,15,2]])) $
+          (%i4) draw3d(
+                  enhanced3d        = true,
+                  interpolate_color = true,
+                  view=map,
+                  mesh([[1,1,3],   [7,3,1],[12,-2,4],[15,0,5]],
+                       [[2,7,8],   [4,3,1],[10,5,8], [12,7,1]],
+                       [[-2,11,10],[6,9,5],[6,15,1], [20,15,2]])) $
+
+     Véase también `enhanced3d'.
+
+
  -- Opción gráfica: ip_grid
      Valor por defecto: `[50, 50]'
 
@@ -1965,13 +2034,20 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      segundo es la rotación horizontal alrededor del eje <z>, dentro
      del intervalo [0, 360].
 
+     Dándole a la opción `view' el valor `map', la dirección del
+     observador se sitúa perpendicularmente al plano-xy.
+
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
 
      Ejemplo:
 
           (%i1) load(draw)$
-          (%i2) draw3d(view = [170, 360],
+          (%i2) draw3d(view = [170, 50],
+                       enhanced3d = true,
+                       explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
+          (%i3) draw3d(view = map,
+                       enhanced3d = true,
                        explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
 
  -- Opción gráfica: wired_surface
@@ -2114,7 +2190,30 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        explicit(exp(u),u,-2,2),
                        ylabel = "Population")$
 
-     Véanse también `ylabel' y `zlabel'.
+     Véanse también `xlabel_secondary', `ylabel', `ylabel_secondary' y
+     `zlabel'.
+
+ -- Opción gráfica: xlabel_secondary
+     Valor por defecto: `""' (cadena vacía)
+
+     La opción `xlabel_secondary' almacena una cadena con la etiqueta
+     del eje <x> secundario. Por defecto, el eje no tiene etiqueta.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                   xaxis_secondary=true,yaxis_secondary=true,
+                   xtics_secondary=true,ytics_secondary=true,
+                   xlabel_secondary="t[s]",
+                   ylabel_secondary="U[V]",
+                   explicit(sin(t),t,0,10) )$
+
+     Véanse también `xlabel', `ylabel', `ylabel_secondary' y `zlabel'.
+
 
  -- Opción gráfica: xrange
      Valor por defecto: `auto'
@@ -2421,7 +2520,34 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        ylabel = "Population",
                        explicit(exp(u),u,-2,2) )$
 
-     Véanse también `xlabel' y `zlabel'.
+     Véanse también `xlabel', `xlabel_secondary', `ylabel_secondary' y
+     `zlabel'.
+
+ -- Opción gráfica: ylabel_secondary
+     Valor por defecto: `""' (cadena vacía)
+
+     La opción `ylabel_secondary' almacena una cadena con la etiqueta
+     del eje <y> secundario. Por defecto, el eje no tiene etiqueta.
+
+     Puesto que ésta es una opción global, su posición dentro de la
+     descripción de la escena no reviste importancia.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  key="current",
+                  xlabel="t[s]",
+                  ylabel="I[A]",ylabel_secondary="P[W]",
+                  explicit(sin(t),t,0,10),
+                  yaxis_secondary=true,
+                  ytics_secondary=true,
+                  color=red,key="Power",
+                  explicit((sin(t))^2,t,0,10)
+              )$
+
+     Véanse también `xlabel', `xlabel_secondary', `ylabel' and `zlabel'.
+
 
  -- Opción gráfica: yrange
      Valor por defecto: `auto'
@@ -4020,29 +4146,29 @@ La función `drawdf' dibuja el campo de direcciones de una ecuación
 diferencial ordinaria de primer orden (EDO) o de un sistema de dos
 ecuaciones autónomas de primer orden.
 
-   Puesto que `drawdf' es un paquete adicional, es necesario cargarlo en
+Puesto que `drawdf' es un paquete adicional, es necesario cargarlo en
 memoria ejecutando previamente la instrucción `load(drawdf)'.  `drawdf'
 utiliza el paquete `draw', que necesita como mínimo la versión 4.2 de
 Gnuplot.
 
-   Para dibujar el campo de direcciones de una EDO, ésta debe
-escribirse de la forma
+Para dibujar el campo de direcciones de una EDO, ésta debe escribirse
+de la forma
             dy
             -- = F(x,y)
             dx
 
-   y ser la función <F> la que se pase a `drawdf' como argumento.  Si
-las variables independiente y dependiente no son <x> e <y>, como en la
+y ser la función <F> la que se pase a `drawdf' como argumento.  Si las
+variables independiente y dependiente no son <x> e <y>, como en la
 ecuación anterior, entonces deben nombrarse de forma explícita en una
 lista que se pasará a `drawdf' (ver ejemplos más abajo).
 
-   Para dibujar el campo de direcciones de un conjunto de dos EDOs
+Para dibujar el campo de direcciones de un conjunto de dos EDOs
 autónomas, deben escribirse de la forma
             dx             dy
             -- = G(x,y)    -- = F(x,y)
             dt             dt
 
-   y será una lista con las dos funciones <G> y <F> la que se pase a
+y será una lista con las dos funciones <G> y <F> la que se pase a
 `drawdf' como argumento. El orden de las funciones es importante; la
 primera será la derivada de la abscisa respecto del tiempo y la segunda
 la derivada de la ordenada respecto del tiempo.  Si las variables no
@@ -4051,9 +4177,9 @@ función `drawdf' será una lista con los nombres de ambas variables,
 primero la correspondiente a las abscisas, seguida de la asociada a las
 ordenadas.
 
-   Si sólo se trata de una EDO, `drawdf' admitirá por defecto que `x=t'
-y `G(x,y)=1', transformanado la ecuación no autónoma en un sistema de
-dos ecuaciones autónomas.
+Si sólo se trata de una EDO, `drawdf' admitirá por defecto que `x=t' y
+`G(x,y)=1', transformanado la ecuación no autónoma en un sistema de dos
+ecuaciones autónomas.
 
 
 File: maxima.info,  Node: Funciones y variables para drawdf,  Prev: Introducción a drawdf,  Up: drawdf
@@ -4245,42 +4371,51 @@ File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
 
 * Menu:
 
-* Introducción a dynamics::
-* Funciones y variables para dynamics::
+* El paquete dynamics::
+* Análisis gráfico de sistemas dinámicos discretos::
+* Visualización usando VTK::
 
 
-File: maxima.info,  Node: Introducción a dynamics,  Next: Funciones y variables para dynamics,  Prev: dynamics,  Up: dynamics
+File: maxima.info,  Node: El paquete dynamics,  Next: Análisis gráfico de sistemas dinámicos discretos,  Prev: dynamics,  Up: dynamics
 
-49.1 Introducción a dynamics
-============================
+49.1 El paquete dynamics
+========================
 
-El paquete adicional `dynamics' incluye varias funciones para crear
-diversas representaciones gráficas de sistemas dinámicos y fractales, y
-además una implementación del método numérico de Runge-Kutta de cuarto
-orden, para resolver sistemas de ecuaciones diferenciales.
+El paquete adicional `dynamics' incluye funciones para visualización
+3D, animaciones, análisis gráfico de ecuaciones diferenciales y
+ecuaciones de diferencias y para resolución numérica de ecuaciones
+diferenciales. Las funciones para ecuaciones diferenciales se describen
+en la sección sobre `' y las funciones para representar las gráficas de
+los conjuntos de Mandelbrot y de Julia se describen en la sección sobre
+`Gráficos'.
 
-   Para usar las funciones en este paquete será necesario primero que
-todo cargarlo con `load("dynamics")', y las funciones que crean
-gráficas necesitan que Xmaxima esté instalado.
+Todas las funciones en este paquete se cargan automáticamente la primera
+vez que se usan.
 
 
-File: maxima.info,  Node: Funciones y variables para dynamics,  Prev: Introducción a dynamics,  Up: dynamics
+File: maxima.info,  Node: Análisis gráfico de sistemas dinámicos discretos,  Next: Visualización usando VTK,  Prev: El paquete dynamics,  Up: dynamics
 
-49.2 Funciones y variables para dynamics
-========================================
+49.2 Análisis gráfico de sistemas dinámicos discretos
+=====================================================
 
- -- Función: chaosgame (`[['<x1>, <y1>`]'...`['<xm>, <ym>`]]', `['<x0>,
-          <y0>`]', <b>, <n>, ...opciones...);
+ -- Función: chaosgame ([[<x1>, <y1>]...[<xm>, <ym>]], [<x0>, <y0>],
+          <b>, <n>, <opciones>, ...);
      Usa el método llamado juego del caos, para producir fractales: se
      dibuja un punto inicial (<x0>, <y0>) y luego se elije
      aleatoriamente uno de los <m> puntos `['<x1>, <y1>`]'...`['<xm>,
      <ym>`]'. Después se dibuja un nuevo punto que estará en el
      segmento entre el último punto dibujado y el punto que se acabó de
      elegir aleatoriamente, a una distancia del punto elegido que será
-     <b> veces la longitud del segmento. El proceso se repite <n> veces.
+     <b> veces la longitud del segmento. El proceso se repite <n>
+     veces.  Este programa acepta las mismas opciones de `plot2d'.
+
+     *Ejemplo*. Gráfico del triángulo de Sierpinsky:
+
+          (%i1) chaosgame([[0, 0], [1, 0], [0.5, sqrt(3)/2]], [0.1, 0.1], 1/2,
+                           30000, [style, dots]);
 
 
- -- Función: evolution (<F>, <y0>, <n>,...opciones...);
+ -- Función: evolution evolution (<F>, <y0>, <n>, ..., <opciones>, ...);
      Dibuja <n+1> puntos en una gráfica bidimensional (serie de
      tiempo), en que las coordenadas horizontales de los puntos son los
      números enteros 0, 1, 2, ..., <n>, y las coordenadas verticales
@@ -4291,25 +4426,42 @@ File: maxima.info,  Node: Funciones y variables para dynamics,  Prev: Introducci
      Con valor inicial <y(0)> igual a <y0>. <F> deberá ser una
      expresión que dependa únicamente de la variable <y> (y no de <n>),
      <y0> deberá ser un número real y <n> un número entero positivo.
+     Esta función acepta las mismas opciones que `plot2d'.
+
+     *Ejemplo*.
+
+          (%i1) evolution(cos(y), 2, 11);
 
 
- -- Función: evolution2d (`['<F>, <G>`]', `['<x0>, <y0>`]', <n>,
-          ...opciones...);
+ -- Función: evolution2d ([<F>, <G>], [<u>, <v>], [<u0>, <y0>], <n>,
+          <opciones>, ...);
      Muestra, en una gráfica bidimensional, los primeros <n+1> puntos de
      la sucesión definida a partir del sistema dinámico discreto con
      relaciones de recurrencia:
                   x(n+1) = F(x(n), y(n))    y(n+1) = G(x(n), y(n))
 
      Con valores iniciales <x0> y <y0>. <F> y <G> deben ser dos
-     expresiones que dependan únicamente de <x> y <y>.
+     expresiones que dependan únicamente de <x> y <y>. Esta función
+     acepta las mismas opciones que `plot2d'.
+
+     *Ejemplo*. Evolución de un sistema dinámico discreto en dos
+     dimensiones:
+
+          (%i1) f: 0.6*x*(1+2*x)+0.8*y*(x-1)-y^2-0.9$
+          (%i2) g: 0.1*x*(1-6*x+4*y)+0.1*y*(1+9*y)-0.4$
+          (%i3) evolution2d([f,g], [x,y], [-0.5,0], 50000, [style,dots]);
+
+     Y un acercamiento de una pequeña región en ese fractal:
+
+          (%i9) evolution2d([f,g], [x,y], [-0.5,0], 300000, [x,-0.8,-0.6],
+                            [y,-0.4,-0.2], [style, dots]);
 
 
- -- Función: ifs (`['<r1>,...,<rm>`]',`['<A1>,...,<Am>`]',
-          `[['<x1>,<y1>`]'...`['<xm>, <ym>`]]', `['<x0>,<y0>`]', <n>,
-          ...opciones...);
+ -- Función: ifs ([<r1>, ..., <rm>], [<A1>,..., <Am>], [[<x1>, <y1>],
+          ..., [<xm>, <ym>]], [<x0>, <y0>], <n>, <opciones>, ...);
      Usa el método del Sistema de Funciones Iteradas (IFS, en inglés
      Iterated Function System). Ese método es semejante al método
-     descrito en la función `chaosgame', pero en vez de aproximar el
+     descrito en la función `chaosgame'. pero en vez de aproximar el
      último punto al punto elegido aleatoriamente, las dos coordenadas
      del último punto se multiplican por una matriz 2 por 2 <Ai>
      correspondiente al punto que fue elegido aleatoriamente.
@@ -4320,63 +4472,25 @@ File: maxima.info,  Node: Funciones y variables para dynamics,  Prev: Introducci
      acumulada; por ejemplo, si se quieren 3 puntos con probabilidades
      0.2, 0.5 y 0.3, los pesos <r1>, <r2> y <r3> podrían ser 2, 7 y 10,
      o cualquier otro grupo de números que tengan la misma proporción.
+     Esta función acepta las mismas opciones que `plot2d'.
 
+     *Ejemplo*. El helecho de Barnsley, creado con 4 matrices y 4
+     puntos:
 
- -- Función: julia (<x>, <y>, ...<opciones>...)
-     Crea un fichero gráfico con la representación del conjunto de Julia
-     del número complejo (<x> + i <y>). Los parámetros <x> y <y> deben
-     ser reales. El fichero se crea en el directório actual o en el
-     directório del usuario, usando el formato gráfico XPM. El programa
-     puede demorar varios segundos a ser ejecutado y cuando termina
-     imprime un mensaje con el nombre del fichero creado.
-
-     Se asignan diferentes colores a los puntos que no pertenecen al
-     conjunto de Julia, de acuerdo con el número de iteraciones que
-     demore la secuencia, comenzando en ese punto, a salir fuera del
-     círculo de convergencia con radio 2. El número máximo de
-     iteraciones se define con la opción <levels>; después de
-     ejecutadas ese número de iteraciones, si la secuencia aun está
-     dentro del círculo de convergencia, el punto será coloreado con el
-     color definido por la opción <color>.
-
-     Todos los colores usados para los puntos que no pertenecen al
-     conjunto de Julia tendrán los mismos valores de saturación
-     (<saturation>) y valor (<value>), pero con diferentes ángulos de
-     tonalidad, distribuidos uniformemente en el intervalo entre <hue>
-     y (<hue> + <huerange>).
-
-     Se puede dar a la función una secuencia de opciones. La lista de
-     posibles opciones aparece en una sección más al frente.
-
-
- -- Función: mandelbrot (<options>)
-     Crea un fichero gráfico con la representación del conjunto de
-     Mandelbrot. El fichero se crea en el directório actual o en el
-     directório del usuario, usando el formato gráfico XPM. El programa
-     puede demorar varios segundos a ser ejecutado y cuando termina
-     imprime un mensaje con el nombre del fichero creado.
-
-     Se asignan diferentes colores a los puntos que no pertenecen al
-     conjunto de Mandelbrot, de acuerdo con el número de iteraciones
-     que demore la secuencia generada por ese punto a salir fuera del
-     círculo de convergencia con radio 2. El número máximo de
-     iteraciones se define con la opción <levels>; después de
-     ejecutadas ese número de iteraciones, si la secuencia aun está
-     dentro del círculo de convergencia, el punto será coloreado con el
-     color definido por la opción <color>.
-
-     Todos los colores usados para los puntos que no pertenecen al
-     conjunto de Mandelbrot tendrán los mismos valores de saturación
-     (<saturation>) y valor (<value>), pero con diferentes ángulos de
-     tonalidad, distribuidos uniformemente en el intervalo entre <hue>
-     y (<hue> + <huerange>).
-
-     Se puede dar a la función una secuencia de opciones. La lista de
-     posibles opciones aparece en una sección más al frente.
+          (%i1) a1: matrix([0.85,0.04],[-0.04,0.85])$
+          (%i2) a2: matrix([0.2,-0.26],[0.23,0.22])$
+          (%i3) a3: matrix([-0.15,0.28],[0.26,0.24])$
+          (%i4) a4: matrix([0,0],[0,0.16])$
+          (%i5) p1: [0,1.6]$
+          (%i6) p2: [0,1.6]$
+          (%i7) p3: [0,0.44]$
+          (%i8) p4: [0,0]$
+          (%i9) w: [85,92,99,100]$
+          (%i10) ifs(w, [a1,a2,a3,a4], [p1,p2,p3,p4], [5,0], 50000, [style,dots]);
 
 
  -- Función: orbits (<F>, <y0>, <n1>, <n2>, [<x>, <x0>, <xf>, <xstep>],
-          ...opciones...);
+          <opciones>, ...);
      Dibuja el diagrama de órbitas de una familia de sistemas dinámicos
      discretos unidimensionales, con un parámetro <x>; ese tipo de
      diagrama se usa para mostrar las bifurcaciones de un sistema
@@ -4391,8 +4505,17 @@ File: maxima.info,  Node: Funciones y variables para dynamics,  Prev: Introducci
      valores de la sucesión <y(n1+1)>,..., <y(n1+n2+1)>, obtenidos
      después de dejarla evolucionar durante <n1> iteraciones iniciales.
 
+     *Ejemplo*. Diagrama de órbitas para el mapa cuadrático
 
- -- Función: staircase (<F>, <y0>, <n>, ...opciones...);
+          (%i1) orbits(x^2+a, 0, 50, 200, [a, -2, 0.25], [style, dots]);
+
+     Para ampliar la región alrededor de la bifurcación en la parte de
+     abajo, cerca de x `=' -1.25, se usa el comando:
+          (%i2) orbits(x^2+a, 0, 100, 400, [a,-1,-1.53], [x,-1.6,-0.8],
+                       [nticks, 400], [style,dots]);
+
+
+ -- Función: staircase (<F>, <y0>, <n>,<opciones>,...);
      Dibuja un diagrama de escalera (o diagrama de red) para la sucesión
      definida por la ecuación de recurrencia
                   y(n+1) = F(y(n))
@@ -4405,193 +4528,456 @@ File: maxima.info,  Node: Funciones y variables para dynamics,  Prev: Introducci
      de intersección con la función <F>. En seguida, desde ese punto se
      dibuja un segmento horizontal hasta el punto de intersección con
      la recta, (<y1>, <y1>); el procedimiento se repite <n> veces hasta
-     alcanzar el punto (<yn>, <yn>).
+     alcanzar el punto (<yn>, <yn>). Esta función acepta las mismas
+     opciones que `plot2d'.
+
+     *Ejemplo*.
+
+          (%i1) staircase(cos(y), 1, 11, [y, 0, 1.2]);
 
 
-   Opciones
+
+File: maxima.info,  Node: Visualización usando VTK,  Prev: Análisis gráfico de sistemas dinámicos discretos,  Up: dynamics
 
-   Cada opción es una lista con dos o más elementos. El primer elemento
-en la lista es el nombre de la opción y el resto consiste en los
-argumentos para esa opción.
+49.3 Visualización usando VTK
+=============================
 
-   Las opciones aceptadas por las funciones evolution, evolution2,
-staircase, orbits, ifs y chaosgame son las siguientes:
+La función scene crea imágenes tridimensionales y animaciones usando el
+software _Visualization ToolKit_ (VTK). Para poder usar esa función es
+necesario tener Xmaxima y VTK instalados en el sistema (incluyendo la
+biblioteca para usar VTK desde TCL que en algunos sistemas viene en un
+paquete separado).
 
-   * "domain" especifica los valores mínimo y máximo de la variable
-     independiente para la gráfica de la función <F> representada por
-     `staircase'.
+ -- Función: scene (<objetos>, ..., <opciones>, ...);
+     Acepta una lista vacía o una lista de varios `objetos' y
+     `opciones'. El programa ejecuta Xmaxima, que abre una ventana
+     donde se representan los objetos dados, en un espacio
+     tridimensional y aplicando las opciones dadas. Cada objeto debe
+     pertenecer una de las 4 clases: sphere, cube, cylinder o cone (ver
+     `Objetos de scene'). Los objetos se identifican dando el nombre de
+     su clase, o una lista en que el primer elemento es el nombre de la
+     clase y los restantes elementos son opciones para ese objeto.
 
-   * "pointsize" define el radio de cada punto dibujado, en unidades de
-     puntos.  El valor por omisión es 1.
+     *Ejemplo*. Una pirámide hexagonal con fondo azul:
+          (%i1) scene(cone, [background,"#9980e5"])$
 
-   * "xaxislabel" es la etiqueta que se escribirá en el eje horizontal.
+     Presionando el botón izquierdo del ratón mientras se mueve dentro
+     de la ventana gráfica, se puede rotar la cámara, mostrando
+     diferentes vistas de la pirámide. Las dos opciones `elevation' y
+     `azimuth' se pueden usar también para cambiar la orientación de la
+     cámara. La cámara se puede mover presionando el botón del medio y
+     moviendo el ratón y el botón del lado derecho se usa para aumentar
+     o disminuir el zoom, moviendo el ratón para arriba y para bajo.
 
-   * "xcenter" es la coordenada x del punto que deberá aparecer en el
-     centro de la gráfica. Esta opción no es usada por la función
-     `orbits'.
+     Cada opción de un objeto deberá ser una lista comenzando con el
+     nombre de la opción, seguido por su valor. La lista de posibles
+     opciones se encuentra en la sección `Opciones de objetos de scene'.
 
-   * "xradius" es mitad de la longitud del intervalo de valores de x que
-     será representado. Esta opción no es usada por la función `orbits'.
+     *Ejemplo*. Este ejemplo mostrará una esfera cayendo para el piso y
+     rebotando sin perder energía. Para comenzar o poner en pausa la
+     animación se debe oprimir el botón de play/pausa.
 
-   * "yaxislabel" es la etiqueta que se escribirá en el eje vertical.
+          (%i1) p: makelist ([0,0,2.1- 9.8*t^2/2], t, 0, 0.64, 0.01)$
 
-   * "ycenter" es la coordenada y del punto que deberá aparecer en el
-     centro de la gráfica.
+          (%i2) p: append (p, reverse(p))$
 
-   * "yradius" es mitad de la longitud del intervalo de valores de y que
-     será representado.
+          (%i3) bola: [sphere, [radius,0.1], [thetaresolution,20],
+            [phiresolution,20], [position,0,0,2.1], [color,red],
+            [animate,position,p]]$
 
+          (%i4) piso: [cube, [xlength,2], [ylength,2], [zlength,0.2],
+            [position,0,0,-0.1],[color,violet]]$
 
-   Las opciones aceptadas por los programas julia y mandelbrot son las
-siguientes:
+          (%i5) scene (bola, piso, restart)$
 
-   * "size" acepta uno o dos argumentos. Si se da solo un argumento, el
-     ancho y la altura del fichero gráfico creado serán iguales a ese
-     valor en pixels. Si se dan dos argumentos, esos dos valores serán
-     usados para el ancho y la altura. El valor por omisión es 400
-     pixels tanto para el ancho como para la altura. Si los dos valores
-     no son iguales, el conjunto aparecerá distorcionado.
-
-   * "levels" define el número máximo de iteraciones, que es también el
-     número de colores usado para los puntos que no pertenecem al
-     conjunto. El valor por omisión es 12; valores mayores implican
-     tiempos de procesamiento más elevados.
-
-   * "huerange" define el intervalo de ángulos usados para la tonalidad
-     de los puntos que no pertenecen al conjunto. El valor por omisión
-     es 360, que hace que los colores usados abarcarán todo el rango de
-     tonalidades. Valores mayores que 360 implican repetición de algunos
-     valores de la tonalidad, y pueden usarse valores negativos para
-     que el ángulo de tonalidad sea menor a medida que el número de
-     iteraciones aumente.
-
-   * "hue" define la tonalidad, en grados, del primer color usado para
-     representar los puntos que no pertenecen al conjunto.  Su valor por
-     omisión es 300 grados, que corresponde al color magenta; el color
-     correspondiente para otros valores estandar es rojo 0, naranja 45,
-     amarillo 60, verde 120, cian 180 y azul 240. Consulte también la
-     opción <huerange>.
-
-   * "saturation" define el nivel de saturación que será usado para los
-     colores de los puntos que no pertenecen al conjunto. Debe ser un
-     valor entre 0 y 1. El valor por omisión es 0.46.
-
-   * "value" define el valor de los colores usados para puntos que no
-     pertenezcan al conjunto. Debe estar comprendido entre 0 y 1; cuanto
-     mayor sea, mas brilhantes serán los colores. Su valor por omisión
-     es 0.96.
-
-   * "color" debe ir seguido de tres parámetros que definen la
-     tonalidad, saturación y valor del color que será usado para los
-     puntos del conjunto. El valor por omisión es 0 para los tres
-     parámetros, que corresponde al negro. Consulte las explicación
-     sobre el rango de valores aceptados en la explicación de las
-     opciones <hue>, <saturation> y <value>.
-
-   * "center" deberá tener dos parámetros reales que dan las
-     coordenadas, en el plano complejo, del punto en el centro de la
-     región representada. El valor por omisión es 0 para las dos
-     coordenadas (el origen).
-
-   * "radius" es el radio de el mayor círculo que cabe dentro de la
-     región quadrada que será representada. El valor por omisión es 2.
-
-   * "filename" da el nombre del fichero donde se guardará la gráfica
-     producida. A ese nombre se le acrecentará la terminación .xpm. Si
-     el fichero ya existe, será substituido por el fichero producido
-     por la función. El valor por omisión es julia para el conjunto de
-     Julia y mandelbrot para el conjunto de Mandelbrot.
+     La opción <restart> fue usada para hacer que la animación
+     recomienze cada vez que se llega al último punto en la lista. Los
+     valores permitidos para los colores son los mismo que para la
+     opción `color' de plot2d.
 
 
-   Ejemplos
+49.3.1 Opciones de scene
+------------------------
 
-   Representación gráfica y diagrama de escalera de la secuencia: 2,
-cos(2), cos(cos(2)),...
+ -- Opción de scene: azimuth [azimuth, <ángulo>]
+     Valor predefinido: `135'
 
-     (%i1) load("dynamics")$
-     (%i2) evolution(cos(y), 2, 11, [yaxislabel, "y"], [xaxislabel,"n"]);
-     (%i3) staircase(cos(y), 1, 11, [domain, 0, 1.2]);
+     La rotación de la cámara en el plano horizontal (x, y). <ángulo>
+     debe ser un número real; un ángulo de 0 significa que la cámara
+     apunta en la dirección del eje y, haciendo que el eje x aparezca a
+     la derecha.
 
-   Si su procesador es lento, tendrá que reducir el número de
-iteraciones usado en los ejemplos siguientes. Y el valor de <pointsize>
-que da mejores resultados depende del monitor y de la resolución que
-use. Tendrá que experimentar con diferentes valores.
 
-   Diagrama de órbitas para el mapa cuadrático
-             y(n+1) = x + y(n)^2
+ -- Opción de scene: background [background, <color>]
+     Valor predefinido: `black'
 
-     (%i4) orbits(y^2+x, 0, 50, 200, [x, -2, 0.25, 0.01], [pointsize, 0.9]);
+     El color del fondo de la ventana gráfica. Acepta nombres de
+     colores o secuencias de caracteres hexadecimales para
+     rojo-verde-azul (ver la opción `color' de plot2d).
 
-   Para ampliar la región alrededor de la bifurcación en la parte de
-abajo, cerca de x `=' -1.25, use el comando:
-     (%i5) orbits(x+y^2, 0, 100, 400, [x,-1,-1.53,-0.001], [pointsize,0.9],
-                  [ycenter,-1.2], [yradius,0.4]);
 
-   Evolución de un sistema en dos dimensiones, que conduce a un fractal:
+ -- Opción de scene: elevation [elevation, <ángulo>]
+     Valor predefinido: `30'
 
-     (%i6) f: 0.6*x*(1+2*x)+0.8*y*(x-1)-y^2-0.9$
-     (%i7) g: 0.1*x*(1-6*x+4*y)+0.1*y*(1+9*y)-0.4$
-     (%i8) evolution2d([f,g],[-0.5,0],50000,[pointsize,0.7]);
+     La rotación vertical de la cámara. El <ángulo> debe ser un número
+     real; un ángulo de 0 significa que la cámara apunta en la
+     horizontal y el valor predefinido de 30 significa que la cámara
+     apunta 30 grados para abajo de la horizontal.
 
-   Y una ampliación de una pequeña región en el fractal:
 
-     (%i9) evolution2d([f,g],[-0.5,0],300000,[pointsize,0.7], [xcenter,-0.7],
-                       [ycenter,-0.3],[xradius,0.1],[yradius,0.1]);
+ -- Opción de scene: height [height, <pixels>]
+     Valor predefinido: `500'
 
-   Una gráfica del triangulo de Sierpinsky, obtenida con el juego del
-caos:
+     La altura, en pixels, de la ventana gráfica. <pixels> debe ser un
+     número entero positivo.
 
-     (%i9) chaosgame([[0, 0], [1, 0], [0.5, sqrt(3)/2]], [0.1, 0.1], 1/2,
-                      30000, [pointsize,0.7]);
 
-   El helecho de Barnsley, obtenido con el Sistema de Funciones
-Iteradas:
+ -- Opción de scene: restart [restart, <valor>]
+     Valor predefinido: `false'
 
-     (%i10) a1: matrix([0.85,0.04],[-0.04,0.85])$
-     (%i11) a2: matrix([0.2,-0.26],[0.23,0.22])$
-     (%i12) a3: matrix([-0.15,0.28],[0.26,0.24])$
-     (%i13) a4: matrix([0,0],[0,0.16])$
-     (%i14) p1: [0,1.6]$
-     (%i15) p2: [0,1.6]$
-     (%i16) p3: [0,0.44]$
-     (%i17) p4: [0,0]$
-     (%i18) w: [85,92,99,100]$
-     (%i19) ifs(w,[a1,a2,a3,a4],[p1,p2,p3,p4],[5,0],50000,[pointsize,0.9]);
+     Un valor 'true' significa que la animación recomenzará
+     automáticamente cuando llegue al final. Escribir simplemente
+     "restart" es equivalente a escribir [restart, <true>].
 
-   Para crear un fichero llamado _dinamica9.xpm_ con la representación
-gráfica del conjunto de Mandelbrot, con 12 colores, use el comando:
 
-     mandelbrot([filename,"dinamica9"])$
+ -- Opción de scene: tstep [tstep, <tiempo>]
+     Valor predefinido: `10'
 
-   y el conjunto de Julia del número (-0.55 + i 0.6) puede ser obtenido
-con:
-     julia(-0.55, 0.6, [levels, 36], [center, 0, 0.6], [radius, 0.3],
-           [hue, 240], [huerange, -180], [filename, "dinamica10"])$
+     El intervalo de tiempo, en milisegundos, entre iteraciones
+     consecutivas de las partes de una animación. <tiempo> debe ser un
+     número real.
 
-   la gráfica se guardará en el fichero _dinamica10.xpm_ y mostrará la
-región desde -0.3 hasta 0.3 en la dirección x, y desde 0.3 hasta 0.9 en
-la dirección y. Serán usados 36 colores, comenzando con azul e
-terminando con amarillo.
 
-   Para resolver numéricamente la ecuación diferencial
+ -- Opción de scene: width [width, <pixels>]
+     Valor predefinido: `500'
 
-               dx/dt = t - x^2
+     El ancho, en pixels, de la ventana gráfica. <pixels> deberá ser un
+     número entero positivo.
 
-   Con valor inicial x(t=0) = 1, en el intervalo de t desde 0 hasta 8, y
-con incrementos de 0.1, se usa:
 
-     (%i20) resultados: rk(t-x^2,x,1,[t,0,8,0.1])$
+ -- Opción de scene: windowname [windowtitle, <nombre>]
+     Valor predefinido: `.scene'
 
-   los resultados quedarán guardados en la lista resultados.
+     <nombre> deberá ser una secuencia de caracteres que pueda ser usada
+     para el nombre de una ventana de Tk, creada por Xmaxima para los
+     gráficos de `scene'. El valor predefinido `.scene' implica que
+     será creada una nueva ventana.
 
-   Para resolver numéricamente el sistema:
 
-             dx/dt = 4-x^2-4*y^2     dy/dt = y^2-x^2+1
+ -- Opción de scene: windowtitle [windowtitle, <nombre>]
+     Valor predefinido: `Xmaxima: scene'
 
-   para t entre 0 y 4, con valores iniciales -1.25 y 0.75 para (x, y)
-en t=0:
+     <nombre> debe ser una secuencia de caracteres que serán escritos en
+     el encabezado de la ventana creada por  `scene'.
 
-     (%i21) sol: rk([4-x^2-4*y^2,y^2-x^2+1],[x,y],[-1.25,0.75],[t,0,4,0.02])$
+
+49.3.2 Objetos de scene
+-----------------------
+
+ -- Objeto de scene: cone [cone, <opciones>]
+     Crea una pirámide regular con altura 1 unidad y base hexagonal con
+     vértices a 0.5 unidades del eje. Las opciones `height' y `radius'
+     se pueden usar para alterar esos valores predefinidos y la opción
+     `resolution' se usa para alterar el número de aristas de la base;
+     valores mayores harán que la pirámide parezca un cono. Por
+     omisión, el eje estará a lo largo del eje x, el punto medio de la
+     altura estará en el origen y el vértice en el lado positivo del eje
+     x; las opciones `orientation' y `center' permiten alterar eso.
+
+     *Ejemplo*. El siguiente comando muestra una pirámide que comienza
+     a dar vueltas cuando se oprime el botón de animación.
+
+          (%i1) scene([cone, [orientation,0,30,0], [tstep,100],
+             [animate,orientation,makelist([0,30,i],i,5,360,5)]], restart)$
+
+
+ -- Objeto de scene: cube [cube, <opciones>]
+     Un cubo con aristas de 1 unidad y caras paralelas al los planos
+     xy, xz y yz. Las longitudes de las 3 aristas se pueden modificar
+     con las opciones `xlength', `ylength' y `zlength', convirtiéndolo
+     en un paralelepípedo y las caras se pueden hacer rotar con la
+     opción `orientation'.
+
+
+ -- Objeto de scene: cylinder [cylinder, <opciones>]
+     Crea un prisma regular con altura de 1 unidad y base hexagonal con
+     los vértices a 0.5 unidades del eje. Las opciones `height' y
+     `radius' permiten modificar esos valores predefinidos y la opción
+     `resolution' se puede usar para modificar el número de aristas de
+     la base; valores mayores tornan el prisma más parecido a un
+     cilindro. La altura predefinida se puede alterar con la opción
+     `height'. Por omisión el eje estará orientado a lo largo del eje
+     x, y el punto medio de la altura estará en el origen; se pueden
+     cambiar esas propiedades con las opciones `orientation' y `center'.
+
+
+ -- Objeto de scene: sphere [sphere, <opciones>]
+     Una esfera de radio igual a 0.5 unidades y centro en el origen.
+
+
+49.3.3 Opciones de objetos de scene
+-----------------------------------
+
+ -- Opción de objeto: animation [animation, <propiedad>, <posiciones>]
+     <propiedad> deberá ser una de las 4 siguientes propiedades del
+     objeto: `origin', `scale', `position' o `orientation' y
+     <posiciones> deberá ser una lista de puntos. Cuando se oprime el
+     botón "play", esa propiedad tomará sucesivamente los valores en la
+     lista, en intervalos regulares de tiempo definidos por la opción
+     `tstep'. El botón de volver al comienzo puede usarse para
+     recomenzar desde el principio de la lista, haciendo que la
+     animación comience nuevamente cuando se presione otra vez el botón
+     de play.
+
+     Consulte también `track'.
+
+
+ -- Opción de objeto: capping [capping, <número>]
+     Valor predefinido: `1'
+
+     En un objeto "cone" o "cylinder", determina si la base (o bases) se
+     muestran o no. Un valor de 1 para <número> torna la base visible y
+     un valor de 0 la hace invisible.
+
+
+ -- Opción de objeto: center [center, <punto>]
+     Valor predefinido: `[0, 0, 0]'
+
+     Coordenadas del centro geométrico del objeto, en relación a su
+     posición (`position'); <punto> puede ser una lista de 3 números
+     reales o 3 números separados por comas. En objetos de clase
+     "cylinder","cone" o "cube" estará localizado en el punto medio de
+     la altura y en objetos de clase "sphere" estará en su centro.
+
+
+ -- Opción de objeto: color [color, <nombre>]
+     Valor predefinido: `white'
+
+     El color del objeto. Acepta nombres de colores conocidos o
+     secuencias de 6 dígitos (rojo-verde-azul) precedidos por # (ver la
+     opción `color' de plot2d).
+
+
+ -- Opción de objeto: endphi [endphi, <ángulo>]
+     Valor predefinido: `180'
+
+     En una esfera, phi es el ángulo en el plano vertical que pasa por
+     el eje z, medido a partir de la parte positiva del eje z. <ángulo>
+     debe ser un múmero entre 0 y 180 que determina el valor final de
+     phi hasta donde se mostrará la superficie. Valores menores que 180
+     eliminan una parte de la superficie.
+
+     Consulte también `startphi' y `phiresolution'.
+
+
+ -- Opción de objeto: endtheta [endtheta, <ángulo>]
+     Valor predefinido: `360'
+
+     En una esfera, theta es el ángulo en el plano horizontal
+     (longitud), medido desde la parte positiva del eje x. <ángulo>
+     debe ser un número entre 0 y 360 que determina el valor final
+     donde la superficie terminará. Valores menores que 360 hacen que
+     se elimine una parte de la superficie de la esfera.
+
+     Consulte también `starttheta' y `thetaresolution'.
+
+
+ -- Opción de objeto: height [height, <valor>]
+     Valor predefinido: `1'
+
+     <valor> debe ser un número positivo que define la altura de un cono
+     o cilindro.
+
+
+ -- Opción de objeto: linewidth [linewidth, <valor>]
+     Valor predefinido: `1'
+
+     El ancho de las líneas cuando se usa la opción `wireframe'.
+     <valor> debe ser un número positivo.
+
+
+ -- Opción de objeto: opacity [opacity, <valor>]
+     Valor predefinido: `1'
+
+     <valor> debe se un número entre 0 y 1. Cuanto menor sea el número,
+     mas transparente será el objeto. El valor predefinido de 1 implica
+     un objeto completamente opaco.
+
+
+ -- Opción de objeto: orientation [orientation, <ángulos>]
+     Valor predefinido: `[0, 0, 0]'
+
+     Tres ángulos que de rotaciones que serán realizadas en el objeto,
+     alrededor de los tres ejes.<ángulos> puede ser una lista con tres
+     números reales o tres números separados por comas. *Ejemplo*: `[0,
+     0, 90]' rota el eje x del objeto hasta el eje y del sistema de
+     referencia.
+
+
+ -- Opción de objeto: origin [origin, <punto>]
+     Valor predefinido: `[0, 0, 0]'
+
+     Coordenadas del origen del objeto, en relación al cual las otras
+     dimensiones serán definidas. <punto> pueden ser tres números
+     separados por comas, o una lista de tres números.
+
+
+ -- Opción de objeto: phiresolution [phiresolution, <num>]
+     Valor predefinido: `'
+
+     Número de sub-intervalos en que se divide el intervalo de valores
+     del ángulo phi, que comienza en `startphi' y termina en `endphi'.
+     <num> debe ser un número entero positivo.
+
+     Consulte también `startphi' y `endphi'.
+
+
+ -- Opción de objeto: points [points]
+     Esta opción hace que en vez de que se muestre la superficie, se
+     muestren únicamente los vértices en la triangulación usada para
+     construir la superficie. *Ejemplo*: `[sphere, [points]]'
+
+     Consulte también `surface' y `wireframe'.
+
+
+ -- Opción de objeto: pointsize [pointsize, <valor>]
+     Valor predefinido: `1'
+
+     Tamaño de los puntos, cuando se usa la opción `points'. <valor>
+     debe ser un número positivo.
+
+
+ -- Opción de objeto: position [position, <punto>]
+     Valor predefinido: `[0, 0, 0]'
+
+     Coordenadas de la posición del objeto. <punto> puede ser tres
+     números separados por comas o una lista de tres números.
+
+
+ -- Opción de objeto: radius [radius, <valor>]
+     Valor predefinido: `0.5'
+
+     El radio de una esfera o la distancia desde el eje hasta los
+     vértices de la base en cilindros o conos. <valor> debe ser un
+     número positivo.
+
+
+ -- Opción de objeto: resolution [resolution, <número>]
+     Valor predefinido: `6'
+
+     <número> debe ser un número entero mayor que 2, que define el
+     número de aristas de la base en objetos de clase "cone" o
+     "cylinder".
+
+
+ -- Opción de objeto: scale [scale, <factores>]
+     Valor predefinido: `[1, 1, 1]'
+
+     Tres factores de escala en que serán deformadas las dimensiones del
+     objeto en relación a los tres ejes. <factors> pueden ser tres
+     número separados por comas o una lista con tres números. *Ejemplo*:
+     `[2, 0.5, 1]' estira el objeto suplicando sus dimensiones paralelas
+     la eje x, reduce a mitad las dimensiones paralelas al eje y,
+     dejando iguales las dimensiones paralelas al eje z.
+
+
+ -- Opción de objeto: startphi [startphi, <ángulo>]
+     Valor predefinido: `0'
+
+     En una esfera, phi es el ángulo en el plano vertical que pasa por
+     el eje z, medido a partir de la parte positiva del eje z. <ángulo>
+     debe ser un múmero entre 0 y 180 que determina el valor inicial de
+     phi desde donde se mostrará la superficie. Valores superiores a 0
+     eliminan una parte de la superficie.
+
+     Consulte también `endphi' y `phiresolution'.
+
+
+ -- Opción de objeto: starttheta [starttheta, <ángulo>]
+     Valor predefinido: `0'
+
+     En una esfera, theta es el ángulo en el plano horizontal
+     (longitud), medido desde la parte positiva del eje x. <ángulo>
+     debe ser un número entre 0 y 360 que determina el valor inicial
+     donde la superficie comienza. Valores mayores que 0 hacen que se
+     elimine una parte de la superficie de la esfera.
+
+     Consulte también `endtheta' y `thetaresolution'.
+
+
+ -- Opción de objeto: surface [surface]
+     Hace que se muestre la superficie del objeto y no los las líneas
+     ni los vértices de la triangulación usada para construirlo. Ese es
+     el comportamiento habitual que se puede alterar con las opciones
+     `points' o `wireframe'.
+
+
+ -- Opción de objeto: thetaresolution [thetaresolution, <num>]
+     Valor predefinido: `'
+
+     Número de sub-intervalos en que se divide el intervalo de valores
+     del ángulo theta, que comienza en `starttheta' y termina en
+     `endtheta'. <num> debe ser un número entero positivo.  Consulte
+     también `starttheta' y `endtheta'.
+
+
+ -- Opción de objeto: track [track, <posiciones>]
+     <posiciones> deberá ser una lista de puntos. Cuando se oprime el
+     botón de "play", la posición del objeto tomara secuencialmente los
+     valores en la lista, a intervalos regulares de tiempo definidos
+     por la opción `tstep', dejando un rastro de la trayectoria del
+     objeto. El botón de volver al comienzo puede usarse para
+     recomenzar desde el principio de la lista, haciendo que la
+     animación comience nuevamente cuando se presione otra vez el botón
+     de play.
+
+     *Ejemplo*. Estos comandos muestran la trayectoria de una bola
+     lanzada con velocidad inicial de 5 m/s, a un ángulo de 45 grados,
+     cuando se puede ignorar la resistencia del aire:
+
+          (%i1) p: makelist ([0,4*t,4*t- 9.8*t^2/2], t, 0, 0.82, 0.01)$
+
+          (%i2) bola: [sphere, [radius,0.1], [color,red], [track,p]]$
+
+          (%i3) piso: [cube, [xlength,2], [ylength,4], [zlength,0.2],
+                [position,0,1.5,-0.2],[color,green]]$
+
+          (%i4) scene (bola, piso)$
+
+     Consulte también `animation'.
+
+
+ -- Opción de objeto: xlength [xlength, <altura>]
+     Valor predefinido: `1'
+
+     Altura de un objeto de clase "cube", en la dirección x. <altura>
+     debe ser un número positivo. Consulte también `ylength' y
+     `zlength'.
+
+
+ -- Opción de objeto: ylength [ylength, <altura>]
+     Valor predefinido: `1'
+
+     Altura de un objeto de clase "cube", en la dirección y. <altura>
+     debe ser un número positivo. Consulte también `xlength' y
+     `zlength'.
+
+
+ -- Opción de objeto: zlength [zlength, <altura>]
+     Valor predefinido: `1'
+
+     Altura de un objeto de clase "cube", en la dirección z. <altura>
+     debe ser un número positivo. Consulte también `xlength' y
+     `ylength'.
+
+
+ -- Opción de objeto: wireframe [wireframe]
+     Esta opción hace que en vez de que se muestre la superficie, se
+     muestren únicamente las aristas de la triangulación usada para
+     construir la superficie. *Ejemplo*: `[cube, [wireframe]]'
+
+     Consulte también `surface' y `points'.
+
 
 
 File: maxima.info,  Node: ezunits,  Next: f90,  Prev: dynamics,  Up: Top
@@ -4618,25 +5004,24 @@ dimensionales y efectuar conversiones entre unidades.  Las unidades que
 se definen son las del Sistema Internacional (SI) y otras comunes en
 los Estados Unidos, siendo posible declarar otras nuevas.
 
-   Véase también `physical_constants', una colección de constantes
-físicas.
+Véase también `physical_constants', una colección de constantes físicas.
 
-   Es necesario ejecutar primero `load(ezunits)' para utilizar este
+Es necesario ejecutar primero `load(ezunits)' para utilizar este
 paquete.  Con `demo(ezunits)' se podrán ver algunos ejemplos de
 utilización.  La función `known_units' devuelve una lista con todas las
 unidades que están definidas y `display_known_unit_conversions' muestra
 las conversiones conocidas por el sistema en un formato de lectura
 sencilla.
 
-   Una expresión tal como a ` b representa una magnitud dimensional,
-siendo `a' una magnitud adimensional y `b' las unidades.  Se puede
-utilizar un símbolo como unidad, sin necesidad de declararlo como tal
-ni de que deba cumplir propiedades especiales.  Tanto la magnitud como
-la unidad de una expresión de la forma a ` b pueden extraerse invocando
-las funciones `qty' y `units', respectivamente.
+Una expresión tal como a ` b representa una magnitud dimensional, siendo
+`a' una magnitud adimensional y `b' las unidades.  Se puede utilizar un
+símbolo como unidad, sin necesidad de declararlo como tal ni de que
+deba cumplir propiedades especiales.  Tanto la magnitud como la unidad
+de una expresión de la forma a ` b pueden extraerse invocando las
+funciones `qty' y `units', respectivamente.
 
-   Una expresión tal como `a ` b `` c' convierte las unidades `b' en
-`c'. El paquete `ezunits' contiene funciones conversoras para unidades
+Una expresión tal como `a ` b `` c' convierte las unidades `b' en `c'.
+El paquete `ezunits' contiene funciones conversoras para unidades
 fundamentales del SI, unidades derivadas, así como algunas otras
 unidades ajenas al SI.  Las conversiones entre unidades que no estén
 programadas en `ezunits' podrán declararse a posteriori.  Las
@@ -4646,21 +5031,21 @@ defecto como aquéllas introducidas por el usuario.  Las conversiones
 para los productos, cocientes y potencias de unidades se derivan del
 conjunto de conversiones ya conocidas.
 
-   En general, Maxima prefiere números exactos (enteros o racionales) a
+En general, Maxima prefiere números exactos (enteros o racionales) a
 inexactos (decimales en coma flotante), por lo que `ezunits' respetará
 los exactos cuando aparezcan en expresiones de magnitudes
 dimensionales. Todas las conversiones del paquete se han definido en
 términos de números exactos.
 
-   No hay un sistema de representación de unidades que se considere
+No hay un sistema de representación de unidades que se considere
 preferible, razón por la cual las unidades no se convierten a otras a
 menos que se indique de forma explícita. `ezunits' reconoce los prefijos
 m-, k-, M y G- para mili-, kilo-, mega- y giga-, respectivamente, tal
 como se utilizan en el SI; estos prefijos sólo se utilizan cuando así
 se indica de forma explícita.
 
-   Las operaciones aritméticas con magnitudes dimensionales se realizan
-de la forma convencional.
+Las operaciones aritméticas con magnitudes dimensionales se realizan de
+la forma convencional.
 
    * `(x ` a) * (y ` b)' es igual a (x * y) ` (a * b).
 
@@ -4668,22 +5053,22 @@ de la forma convencional.
 
    * `(x ` a)^y' es igual a x^y ` a^y si `y' es adimensional.
 
-   `ezunits' no necesita que las unidades en una suma tengan las mismas
+`ezunits' no necesita que las unidades en una suma tengan las mismas
 dimensiones; estos términos serán sumados sin emitirse mensaje de error.
 
-   `ezunits' incluye funciones para el análisis dimensional elemental,
+`ezunits' incluye funciones para el análisis dimensional elemental,
 como las dimensiones fundamentales, las unidades fundamentales de una
 magnitud dimensional o el cálculo de magnitudes adimensionales y
 unidades naturales. Las funciones de análisis dimensional son
 adaptaciones de funciones semejantes escritas por Barton Willis en otro
 paquete.
 
-   Con el fin de poder llevar a cabo análisis dimensionales, se
-mantiene una lista de dimensiones fundamentales y otra lista asociada
-de unidades fundamentales; por defecto, las dimensiones fundamentales
-son longitud, masa, tiempo, carga, temperatura y cantidad de materia,
-siendo las unidades fundamentales las propias del Sistema Internacional.
-En cualquier caso, es posible declarar otras dimensiones y unidades
+Con el fin de poder llevar a cabo análisis dimensionales, se mantiene
+una lista de dimensiones fundamentales y otra lista asociada de
+unidades fundamentales; por defecto, las dimensiones fundamentales son
+longitud, masa, tiempo, carga, temperatura y cantidad de materia, siendo
+las unidades fundamentales las propias del Sistema Internacional.  En
+cualquier caso, es posible declarar otras dimensiones y unidades
 fundamentales.
 
 
@@ -4697,22 +5082,22 @@ CODATA 2006 (`http://physics.nist.gov/constants').  La instrucción
 `load(physical_constants)' carga este paquete en memoria junto con el
 propio `ezunits', si éste no estaba previamente cargado.
 
-   Una constante física se representa por un símbolo con la propiedad
-de ser un valor constante. El valor constante es una magnitud
-dimensional en la sintaxis de `ezunits'. La función `constvalue' extrae
-el valor constante, el cual no es el valor ordinario del símbolo, por
-lo que las constantes físicas se mantienen inalteradas en las
-expresiones evaluadas hasta que sus valores sea extraído con la función
+Una constante física se representa por un símbolo con la propiedad de
+ser un valor constante. El valor constante es una magnitud dimensional
+en la sintaxis de `ezunits'. La función `constvalue' extrae el valor
+constante, el cual no es el valor ordinario del símbolo, por lo que las
+constantes físicas se mantienen inalteradas en las expresiones
+evaluadas hasta que sus valores sea extraído con la función
 `constvalue'.
 
-   `physical_constants' incluye cierta información adicional, como la
+`physical_constants' incluye cierta información adicional, como la
 descripción de cada constante, una estimación del error de su valor
 numérico y una propiedad para ser representada en TeX.  Para
 identificar constantes físicas, cada símbolo tiene la propiedad
 `physical_constant', de forma que `propvars(physical_constant)' muestra
 la lista de todas las constantes físicas.
 
-   `physical_constants' contiene las siguientes constantes:
+`physical_constants' contiene las siguientes constantes:
 
 `%c'
      velocidad de la luz en el vacío
@@ -4828,10 +5213,9 @@ la lista de todas las constantes físicas.
 `%b_prime'
      Constante de la ley del desplazamiento de Wien
 
-   Ejemplos:
+Ejemplos:
 
-   Lista de todos los símbolos que tienen la propiedad
-`physical_constant'.
+Lista de todos los símbolos que tienen la propiedad `physical_constant'.
 
      (%i1) load (physical_constants)$
      (%i2) propvars (physical_constant);
@@ -4840,7 +5224,7 @@ la lista de todas las constantes físicas.
      %R_inf, %a_0, %E_h, %ratio_h_me, %m_e, %N_A, %m_u, %F, %R, %%k,
      %V_m, %n_0, %ratio_S0_R, %sigma, %c_1, %c_1L, %c_2, %b, %b_prime]
 
-   Propiedades de la constante física `%c'.
+Propiedades de la constante física `%c'.
 
      (%i1) load (physical_constants)$
      (%i2) constantp (%c);
@@ -4857,7 +5241,7 @@ la lista de todas las constantes físicas.
      $$c$$
      (%o6)                         false
 
-   Energía equivalente de una libra-masa. El símbolo `%c' se mantiene
+Energía equivalente de una libra-masa. El símbolo `%c' se mantiene
 hasta que su valor es extraído con la llamada a la función `constvalue'.
 
      (%i1) load (physical_constants)$
@@ -5681,15 +6065,15 @@ File: maxima.info,  Node: Introducción a finance,  Next: Funciones y Variables p
 
 Este es el Paquete "Finance" (Ver 0.1).
 
-   En todas las funciones, <rate> es la tasa de interés compuesto,
-<num> es el número de periodos y debe ser positivo, y <flow> se refiere
-al flujo de caja; entonces, si se tiene un egreso el flujo es negativo
-y para un ingreso un valor positivo.
+En todas las funciones, <rate> es la tasa de interés compuesto, <num>
+es el número de periodos y debe ser positivo, y <flow> se refiere al
+flujo de caja; entonces, si se tiene un egreso el flujo es negativo y
+para un ingreso un valor positivo.
 
-   Note que antes de usar las funciones definidas en este paquete, debe
+Note que antes de usar las funciones definidas en este paquete, debe
 cargarla escribiendo `load(finance)$'.
 
-   Autor: Nicolás Guarin Zapata.
+Autor: Nicolás Guarin Zapata.
 
 
 File: maxima.info,  Node: Funciones y Variables para finance,  Prev: Introducción a finance,  Up: finance
@@ -5959,20 +6343,20 @@ File: maxima.info,  Node: Introducción a fractals,  Next: Definiciones para IFS 
 
 Este paquete define algunos fractales:
 
-   - con IFS (Iterated Function System) aleatorias: triángulo de
+- con IFS (Iterated Function System) aleatorias: triángulo de
 Sierpinsky, un árbol y un helecho.
 
-   - Fractales complejos: conjuntos de Mandelbrot y de Julia.
+- Fractales complejos: conjuntos de Mandelbrot y de Julia.
 
-   - Copos de Koch.
+- Copos de Koch.
 
-   - Funciones de Peano: funciones de Sierpinski y Hilbert.
+- Funciones de Peano: funciones de Sierpinski y Hilbert.
 
-   Autor: José Rammírez Labrador.
+Autor: José Rammírez Labrador.
 
-   Para preguntas, sugerencias y fallos,
+Para preguntas, sugerencias y fallos,
 
-   pepe DOT ramirez AAATTT uca DOT es
+pepe DOT ramirez AAATTT uca DOT es
 
 
 File: maxima.info,  Node: Definiciones para IFS fractals,  Next: Definiciones para fractales complejos,  Prev: Introducción a fractals,  Up: fractals
@@ -5983,15 +6367,15 @@ File: maxima.info,  Node: Definiciones para IFS fractals,  Next: Definiciones pa
 Algunos fractales se pueden generar por medio de la aplicación iterativa
 de transformaciones afines contractivas de forma aleatoria; véase
 
-   Hoggar S. G., "Mathematics for computer graphics", Cambridge
-University Press 1994.
+Hoggar S. G., "Mathematics for computer graphics", Cambridge University
+Press 1994.
 
-   Definimos una lista con varias transformaciones afines contractivas,
+Definimos una lista con varias transformaciones afines contractivas,
 luego las vamos seleccionando de forma aleatoria y recursiva. La
 probabilidad de selección de una transformación debe estar relacionada
 con la razón de contracción.
 
-   Se pueden cambiar las transformaciones y encontrar nuevos fractales.
+Se pueden cambiar las transformaciones y encontrar nuevos fractales.
 
  -- Función: sierpinskiale (<n>)
      Triángulo de Sierpinski: 3 aplicaciones contractivas; constante de
@@ -6227,18 +6611,18 @@ estructura simples (no tienen ni aristas mÃºltiples ni bucles), pero los
 digrafos pueden tener una arista dirigida desde <u> hasta <v> y otra
 desde <v> hasta <u>.
 
-   Los grafos se representan internamente como listas de adyacencia y se
+Los grafos se representan internamente como listas de adyacencia y se
 implementan como estructuras de lisp. Los vértices se identifican por
 sus números de identificacin' (siempre enteros). Las aristas/arcos se
 representan por listas de longitud 2. Se pueden asignar etiquetas a los
 vértices de los grafos/digrafos y pesos a sus aristas/arcos.
 
-   La función `draw_graph' dibuja grafos siguiendo un criterio rígido
-de posicionamiento de los vértices. También puede hacer uso del
-programa graphviz disponible en `http://www.graphviz.org'. La función
+La función `draw_graph' dibuja grafos siguiendo un criterio rígido de
+posicionamiento de los vértices. También puede hacer uso del programa
+graphviz disponible en `http://www.graphviz.org'. La función
 `draw_graph' utiliza el paquete `draw' de Maxima.
 
-   Para hacer uso de este paquete, ejecútese primero `load(graphs)'.
+Para hacer uso de este paquete, ejecútese primero `load(graphs)'.
 
 
 File: maxima.info,  Node: Funciones y variables para graphs,  Prev: Introducción a graphs,  Up: graphs
@@ -7910,7 +8294,7 @@ por Günter Nowak. Las sugerencias para mejorar la documentación se
 pueden hacer en la lista de correos de _maxima_,
 <maxima@math.utexas.edu>.
 
-   El código está algo anticuado. Las implementaciones modernas utilizan
+El código está algo anticuado. Las implementaciones modernas utilizan
 el algoritmo _F4_, más rápido, descrito en
 A new efficient algorithm for computing Gröbner bases (F4)
 Jean-Charles Faugère
@@ -7938,402 +8322,6 @@ January 20, 1999
 
      orden lexicográfico inverso.
 
-
-
-File: maxima.info,  Node: Funciones y variables para grobner,  Prev: Introducción a grobner,  Up: Top
-
-56.2 Funciones y variables para grobner
-=======================================
-
-56.2.1 Variables opcionales
----------------------------
-
- -- Variable opcional: poly_monomial_order
-     Valor por defecto: `lex'
-
-     Controla qué orden de monomios utiliza en los cálculos con
-     polinomios y bases de Groebner. Si no se le asigna valor alguno,
-     se utilizará `lex'.
-
- -- Variable opcional: poly_coefficient_ring
-     Valor por defecto: `expression_ring'
-
-     Indica el anillo de coeficientes de los polinomios que se va a
-     utilizar en los cálculos. Si no se le asigna ningún valor, se
-     utilizará el anillo de expresiones propio de _maxima_.  A esta
-     variable se le puede asignar el valor `ring_of_integers'.
-
- -- Variable opcional: poly_primary_elimination_order
-     Valor por defecto: `false'
-
-     Nombre del orden por defecto para las variables eliminadas en las
-     funciones basadas en eliminaciones. Si no se le asigna ningún
-     valor, se utilizará `lex'.
-
- -- Variable opcional: poly_secondary_elimination_order
-     Valor por defecto: `false'
-
-     Nombre del orden por defecto para las variables almacenadas en
-     funciones basadas en eliminaciones. Si no se le asigna ningún
-     valor, se utilizará `lex'.
-
- -- Variable opcional: poly_elimination_order
-     Valor por defecto: `false'
-
-     Nombre del orden de eliminación por defecto utilizado en los
-     cálculos de eliminación. Si se le asigna un valor, ignorará los
-     guardados en `poly_primary_elimination_order' y
-     `poly_secondary_elimination_order'.  El usuario se asegurará que
-     este es un orden válido de eliminación.
-
- -- Variable opcional: poly_return_term_list
-     Valor por defecto: `false'
-
-     Si vale `true', todas las funciones de este paquete devolverán los
-     polinomios como una lista de términos en el orden activo de
-     monomios, en lugar de una expresión ordinaria de _maxima_.
-
- -- Variable opcional: poly_grobner_debug
-     Valor por defecto: `false'
-
-     Si vale `true', genera una salida de seguimiento y depuración.
-
- -- Variable opcional: poly_grobner_algorithm
-     Valor por defecto: `buchberger'
-
-     Valores posibles:
-        * `buchberger'
-
-        * `parallel_buchberger'
-
-        * `gebauer_moeller'
-
-     Es el nombre del algoritmo utilizado para encontrar las bases de
-     Groebner.
-
- -- Variable opcional: poly_top_reduction_only
-     Valor por defecto: `false'
-
-     Si no vale `false', siempre que sea posible el algoritmo de
-     división se detendrá tras la primera reducción.
-
-56.2.2 Operadores simples
--------------------------
-
-`poly_add', `poly_subtract', `poly_multiply' y `poly_expt' son los
-operadores aritméticos para polinomios. Se ejecutan utilizando la
-representación interna, pero los resultados se devuelven en forma de
-expresión ordinaria de _maxima_.
-
- -- Función: poly_add (<poly1>, <poly2>, <varlist>)
-     Suma los polinomios <poly1> y <poly2>.
-
-          (%i1) poly_add(z+x^2*y,x-z,[x,y,z]);
-                                              2
-          (%o1)                              x  y + x
-
-
- -- Función: poly_subtract (<poly1>, <poly2>, <varlist>)
-     Resta el polinomio <poly2> de <poly1>.
-
-          (%i1) poly_subtract(z+x^2*y,x-z,[x,y,z]);
-                                                2
-          (%o1)                          2 z + x  y - x
-
- -- Función: poly_multiply (<poly1>, <poly2>, <varlist>)
-     Multiplica <poly1> por <poly2>.
-
-          (%i2) poly_multiply(z+x^2*y,x-z,[x,y,z])-(z+x^2*y)*(x-z),expand;
-          (%o1)                                  0
-
- -- Función: poly_s_polynomial (<poly1>, <poly2>, <varlist>)
-     Devuelve el _polinomio syzygy_ (_S-polinomio_) de dos polinomios
-     <poly1> y <poly2>.
-
- -- Función: poly_primitive_part (<poly1>, <varlist>)
-     Devuelve el polinomio <poly> dividido por el MCD de sus
-     coeficientes.
-
-          (%i1) poly_primitive_part(35*y+21*x,[x,y]);
-          (%o1)                              5 y + 3 x
-
- -- Función: poly_normalize (<poly>, <varlist>)
-     Devuelve el polinomio <poly> dividido por el coeficiente
-     principal. Da por supuesto que la división es posible, lo cual
-     puede no ser siempre cierto en anillos que no son campos.
-
-56.2.3 Otras funciones
-----------------------
-
- -- Función: poly_expand (<poly>, <varlist>)
-     Esta función expande los polinomios. Equivale a `expand(<poly>)'
-     si <poly> es un polinomio. Si la representación no es compatible
-     con un polinomio de variables <varlist>, devuelve un error.
-
-          (%i1) poly_expand((x-y)*(y+x),[x,y]);
-                                               2    2
-          (%o1)                               x  - y
-          (%i2) poly_expand((y+x)^2,[x,y]);
-                                          2            2
-          (%o2)                          y  + 2 x y + x
-          (%i3) poly_expand((y+x)^5,[x,y]);
-                            5      4         2  3       3  2      4      5
-          (%o3)            y  + 5 x y  + 10 x  y  + 10 x  y  + 5 x  y + x
-          (%i4) poly_expand(-1-x*exp(y)+x^2/sqrt(y),[x]);
-                                                    2
-                                            y      x
-          (%o4)                       - x %e  + ------- - 1
-                                                 sqrt(y)
-
-          (%i5) poly_expand(-1-sin(x)^2+sin(x),[sin(x)]);
-                                          2
-          (%o5)                      - sin (x) + sin(x) - 1
-
- -- Función: poly_expt (<poly>, <number>, <varlist>)
-     Eleva el polinomio <poly> a la potencia <number>, siendo este un
-     entero positivo. Si <number> no es un número entero positivo,
-     devolverá un error.
-
-          (%i1) poly_expt(x-y,3,[x,y])-(x-y)^3,expand;
-          (%o1)                                  0
-
- -- Función: poly_content (<poly>. <varlist>)
-     `poly_content' calcula el MCD de los coeficientes.
-
-          (%i1) poly_content(35*y+21*x,[x,y]);
-          (%o1)                                  7
-
- -- Función: poly_pseudo_divide (<poly>, <polylist>, <varlist>)
-     Realiza la seudo-división del polinomio <poly> por la lista de n
-     polinomios de <polylist>.  Devuelve varios resultados. El primer
-     resultado es una lista de cocientes a. El segundo resultado es el
-     resto r. El tercer resultado es un coeficiente escalar c, tal que
-     c*poly puede dividirse por <polylist> dentro del anillo de
-     coeficientes, el cual no es necesariamente un campo. Por último,
-     el cuarto resultado es un entero que guarda el recuento de
-     reducciones realizadas. El objeto resultante satisface la ecuación:
-
-     c*poly=sum(a[i]*polylist[i],i=1...n)+r.
-
- -- Función: poly_exact_divide (<poly1>, <poly2>, <varlist>)
-     Divide el polinomio <poly1> por otro polinomio <poly2>. Da por
-     supuesto que es posible la división de resto nulo. Devuelve el
-     cociente.
-
- -- Función: poly_normal_form (<poly>, <polylist>, <varlist>)
-     `poly_normal_form' encuentra la forma normal de un polinomio
-     <poly> respecto de un conjunto de polinomios <polylist>.
-
- -- Función: poly_buchberger_criterion (<polylist>, <varlist>)
-     Devuelve `true' si <polylist> es una base de Groebner respecto del
-     orden de términos activo, utilizando el criterio de Buchberger:
-     para cualesquiera polinomios h1 y h2 de <polylist> el S-polinomio
-     S(h1,h2) se reduce a 0 modulo <polylist>.
-
-
- -- Función: poly_buchberger (<polylist_fl> <varlist>)
-     `poly_buchberger' ejecuta el algoritmo de Buchberger sobre una
-     lista de polinomios y devuelve la base de Groebner resultante.
-
-
-56.2.4 Postprocesamiento estándar de bases de Groebner
-------------------------------------------------------
-
-El _k-ésimo ideal de eliminación_ I_k de un ideal I sobre K[
-x[1],...,x[n] ] es el ideal intersect(I, K[ x[k+1],...,x[n] ]).
-El _ideal_ I:J es el ideal {h|para todo w en J: w*h pertence a I}.
-El ideal I:p^inf es el ideal {h| existe un n en N: p^n*h pertence a I}.
-El ideal I:J^inf es el ideal {h| existe un n en N y un p en J: p^n*h
-pertence a I}.
-El _ideal radical_ sqrt(I) es el ideal {h| existe un n en N : h^n
-pertence a I }.
-
-
-
- -- Función: poly_reduction (<polylist>, <varlist>)
-     `poly_reduction' reduce una lista de polinomios <polylist> de
-     manera que cada polinomio se reduce completamente respecto de los
-     otros polinomios.
-
- -- Función: poly_minimization (<polylist>, <varlist>)
-     Devuelve una sublista de la lista de polinomios <polylist> con el
-     mismo ideal de monomios que <polylist>, pero mínimo, esto es,
-     ningún monomio principal de los polinomios de la sublista divide a
-     los monomios principales de los demás polinomios.
-
-
- -- Función: poly_normalize_list (<polylist>, <varlist>)
-     `poly_normalize_list' aplica `poly_normalize' a cada polinomio de
-     la lista. Esto significa que divide cada polinomio de <polylist>
-     por su coeficiente principal.
-
-
- -- Función: poly_grobner (<polylist>, <varlist>)
-     Devuelve la base de Groebner del ideal asociado a los polinomios
-     de <polylist>. El resultado depende de las variables globales.
-
- -- Función: poly_reduced_grobner (<polylist>, <varlist>)
-     Devuelve la base de Groebner reducida del ideal asociado a los
-     polinomios de <polylist>. El resultado depende de las variables
-     globales.
-
- -- Función: poly_depends_p (<poly>, <var>, <varlist>)
-     `poly_depends' comprueba si el polinomio depende de la variable
-     <var>.
-
- -- Función: poly_elimination_ideal (<polylist>, <n>, <varlist>)
-     `poly_elimination_ideal' devuelve la base de Groebner del n-ésimo
-     ideal de eliminación de un ideal especificado como una lista de
-     polinomios generadores (no necesariamente una base de Groebner).
-
- -- Función: poly_colon_ideal (<polylist1>, <polylist2>, <varlist>)
-     Devuelve la base de Groebner reducida del ideal
-
-     I(polylist1):I(polylist2)
-
-     siendo polylist1 y polylist2 dos listas de polinomios.
-
- -- Función: poly_ideal_intersection (<polylist1>, <polylist2>,
-          <varlist>)
-     `poly_ideal_intersection' devuelve la intersección de dos ideales.
-
- -- Función: poly_lcm (<poly1>, <poly2>, <varlist>)
-     Devuelve el MCM de <poly1> y <poly2>.
-
- -- Función: poly_gcd (<poly1>, <poly2>, <varlist>)
-     Devuelve el MCD de <poly1> y <poly2>.
-
-     Véanse también `ezgcd', `gcd', `gcdex' y `gcdivide'.
-
-     Ejemplo:
-
-          (%i1) p1:6*x^3+19*x^2+19*x+6;
-                                  3       2
-          (%o1)                6 x  + 19 x  + 19 x + 6
-          (%i2) p2:6*x^5+13*x^4+12*x^3+13*x^2+6*x;
-                            5       4       3       2
-          (%o2)          6 x  + 13 x  + 12 x  + 13 x  + 6 x
-          (%i3) poly_gcd(p1, p2, [x]);
-                                      2
-          (%o3)                    6 x  + 13 x + 6
-
- -- Función: poly_grobner_equal (<polylist1>, <polylist2>, <varlist>)
-     `poly_grobner_equal' comprueba si dos bases de Groebner generan el
-     mismo ideal. Devuelve `true' si dos listas de polinomios
-     <polylist1> y <polylist2>, supuestas bases de Groebner, generan el
-     mismo ideal, o `false' en caso contrario.  Eso equivale a
-     comprobar si cada polinomio de la primera base se reduce a 0
-     módulo la segunda base y viceversa. Nótese que en el ejemplo que
-     sigue la primera lista no es una base de Groebner, por lo que el
-     resultado es `false'.
-
-          (%i1) poly_grobner_equal([y+x,x-y],[x,y],[x,y]);
-          (%o1)                         false
-
-
- -- Función: poly_grobner_subsetp (<polylist1>, <polylist2>, <varlist>)
-     `poly_grobner_subsetp' comprueba si el ideal generado por
-     <polylist1> está contenido en el ideal generado por <polylist2>.
-     Para que esta comprobación tenga éxito, <polylist2> debe ser una
-     base de Groebner.
-
- -- Función: poly_grobner_member (<poly>, <polylist>, <varlist>)
-     Devuelve `true' si el polinomio <poly> pertenece al ideal generado
-     por la lista de polinomios <polylist>, la cual se supone una base
-     de Groebner.  Devolverá `false' en caso contrario.
-
- -- Función: poly_ideal_saturation1 (<polylist>, <poly>, <varlist>)
-     Devuelve la base de Groebner reducida de la saturación del ideal
-
-     I(polylist):poly^inf
-
-     Desde un punto de vista geométrico, sobre un campo algebraicamente
-     cerrado, este es el conjunto de polinomios del ideal generado por
-     <polylist> que no se anulan sobre la variedad de  <poly>.
-
- -- Función: poly_ideal_saturation (<polylist1>, <polylist2>, <varlist>)
-     Devuelve la base de Groebner reducida de la saturación del ideal
-
-     I(polylist1):I(polylist2)^inf
-
-     Desde un punto de vista geométrico, sobre un campo algebraicamente
-     cerrado, este es el conjunto de polinomios del ideal generado por
-     <polylist1> que no se anulan sobre la variedad de  <polylist2>.
-
- -- Función: poly_ideal_polysaturation1 (<polylist1>, <polylist2>,
-          <varlist>)
-     <polylist2> es una lista de n poliomios `[poly1,...,polyn]'.
-     Devuelve la base de Groebner reducida del ideal
-
-     I(polylist):poly1^inf:...:polyn^inf
-
-     obtenida a partir de una secuencia de saturaciones sucesivas de
-     los polinomios de la lista <polylist2> del ideal generado por la
-     lista de polinomios <polylist1>.
-
- -- Función: poly_ideal_polysaturation (<polylist>, <polylistlist>,
-          <varlist>)
-     <polylistlist> es una lista de n listas de polinomios
-     `[polylist1,...,polylistn]'.  Devuelve la base de Groebner
-     reducida de la saturación del ideal
-
-     I(polylist):I(polylist_1)^inf:...:I(polylist_n)^inf
-
- -- Función: poly_saturation_extension (<poly>, <polylist>, <varlist1>,
-          <varlist2>)
-     `poly_saturation_extension' ejecuta el truco de Rabinowitz.
-
- -- Función: poly_polysaturation_extension (<poly>, <polylist>,
-          <varlist1>, <varlist2>)
-
-
-File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: grobner,  Up: Top
-
-57 impdiff
-**********
-
-* Menu:
-
-* Funciones y variables para impdiff::
-
-
-File: maxima.info,  Node: Funciones y variables para impdiff,  Prev: impdiff,  Up: impdiff
-
-57.1 Funciones y variables para impdiff
-=======================================
-
- -- Función: implicit_derivative (<f>,<indvarlist>,<orderlist>,<depvar>)
-     Calcula las derivadas implícitas de funciones multivariantes. <f>
-     es una función array, los índices son los grados de las derivadas
-     en el orden establecido en <indvarlist>, <indvarlist> es la lista
-     de variables independientes, <orderlist> es el orden deseado y
-     <depvar> es la variable dependiente.
-
-     Antes de hacer uso de esta función ejecútese  `load("impdiff")'.
-
-
-
-File: maxima.info,  Node: interpol,  Next: lapack,  Prev: impdiff,  Up: Top
-
-58 interpol
-***********
-
-* Menu:
-
-* Introducción a interpol::
-* Funciones y variables para interpol::
-
-
-File: maxima.info,  Node: Introducción a interpol,  Next: Funciones y variables para interpol,  Prev: interpol,  Up: interpol
-
-58.1 Introducción a interpol
-============================
-
-El paquete `interpol' desarrolla los métodos de interpolación
-polinómica de Lagrange, lineal y de splines cúbicos.
-
-   Para comentarios, fallos o sugerencias, contactar con <'mario ARROBA
-edu PUNTO xunta PUNTO es'>.
 
 
 

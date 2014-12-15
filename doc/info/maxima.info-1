@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info//include-maxima.texi.
+/home/robert/maxima/maxima-code/doc/info//include-maxima.texi.
 
 This is a Texinfo Maxima Manual
 
@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.34.1 Manual
+Maxima 5.35.1 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -94,7 +94,7 @@ Additional packages
 * distrib::                     Probability distributions.
 * draw::                        A Maxima-Gnuplot interface.
 * drawdf::                      Direction fields with Gnuplot.
-* dynamics::                    Graphics for dynamical systems and fractals.
+* dynamics::                    3D visualization, animations and dynamical systems.
 * ezunits::                     Dimensional quantities.
 * f90::                         Maxima to fortran translator.
 * finance::                     Financial package.
@@ -380,8 +380,9 @@ drawdf
 * Functions and Variables for drawdf::
 
 dynamics
-* Introduction to dynamics::
-* Functions and Variables for dynamics::
+* The dynamics package::
+* Graphical analysis of discrete dynamical systems::
+* Visualization with VTK::
 
 ezunits
 * Introduction to ezunits::
@@ -905,9 +906,10 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
           _
 
 
- -- Function: describe (<string>)
- -- Function: describe (<string>, exact)
- -- Function: describe (<string>, inexact)
+ -- Function: describe
+          describe (<string>)
+          describe (<string>, exact)
+          describe (<string>, inexact)
      `describe(<string>)' is equivalent to `describe(<string>, exact)'.
 
      `describe(<string>, exact)' finds an item with title equal
@@ -969,8 +971,9 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
      abbreviated `a' or `n', respectively.
 
 
- -- Function: example (<topic>)
- -- Function: example ()
+ -- Function: example
+          example (<topic>)
+          example ()
      `example (<topic>)' displays some examples of <topic>, which is a
      symbol or a string.  To get examples for operators like `if', `do',
      or `lambda' the argument must be a string, e.g. `example ("do")'.
@@ -1340,14 +1343,15 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
           set by the user.)
 
 
- -- Function: kill (<a_1>, ..., <a_n>)
- -- Function: kill (labels)
- -- Function: kill (inlabels, outlabels, linelabels)
- -- Function: kill (<n>)
- -- Function: kill ([<m>, <n>])
- -- Function: kill (values, functions, arrays, ...)
- -- Function: kill (all)
- -- Function: kill (allbut (<a_1>, ..., <a_n>))
+ -- Function: kill
+          kill (<a_1>, ..., <a_n>)
+          kill (labels)
+          kill (inlabels, outlabels, linelabels)
+          kill (<n>)
+          kill ([<m>, <n>])
+          kill (values, functions, arrays, ...)
+          kill (all)
+          kill (allbut (<a_1>, ..., <a_n>))
      Removes all bindings (value, function, array, or rule) from the
      arguments <a_1>, ..., <a_n>.  An argument <a_k> may be a symbol or
      a single array element.  When <a_k> is a single array element,
@@ -1403,15 +1407,10 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
 
 
  -- Function: labels (<symbol>)
- -- System variable: labels
      Returns the list of input, output, or intermediate expression
      labels which begin with <symbol>.  Typically <symbol> is the value
      of `inchar', `outchar', or `linechar'.  If no labels begin with
      <symbol>, `labels' returns an empty list.
-
-     The variable `labels' is the list of input, output, and
-     intermediate expression labels, including all previous labels if
-     `inchar', `outchar', or `linechar' were redefined.
 
      By default, Maxima displays the result of each user input
      expression, giving the result an output label.  The output display
@@ -1428,6 +1427,12 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
      such as `ldisplay', always generate intermediate expression labels.
 
      See also `inchar', `outchar', `linechar', and `infolists'.
+
+
+ -- System variable: labels
+     The variable `labels' is the list of input, output, and
+     intermediate expression labels, including all previous labels if
+     `inchar', `outchar', or `linechar' were redefined.
 
 
  -- Option variable: linechar
@@ -1524,14 +1529,15 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
           (%i3)
 
 
- -- Function: playback ()
- -- Function: playback (<n>)
- -- Function: playback ([<m>, <n>])
- -- Function: playback ([<m>])
- -- Function: playback (input)
- -- Function: playback (slow)
- -- Function: playback (time)
- -- Function: playback (grind)
+ -- Function: playback
+          playback ()
+          playback (<n>)
+          playback ([<m>, <n>])
+          playback ([<m>])
+          playback (input)
+          playback (slow)
+          playback (time)
+          playback (grind)
      Displays input, output, and intermediate expressions, without
      recomputing them.  `playback' only displays the expressions bound
      to labels; any other output (such as text printed by `print' or
@@ -1902,7 +1908,6 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
 
 
  -- Function: grind (<expr>)
- -- Option variable: grind
      The function `grind' prints <expr> to the console in a form
      suitable for input to Maxima.  `grind' always returns `done'.
 
@@ -1912,16 +1917,6 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      See also `string', which returns a string instead of printing its
      output.  `grind' attempts to print the expression in a manner
      which makes it slightly easier to read than the output of `string'.
-
-     When the variable `grind' is `true', the output of `string' and
-     `stringout' has the same format as that of `grind'; otherwise no
-     attempt is made to specially format the output of those functions.
-     The default value of the variable `grind' is `false'.
-
-     `grind' can also be specified as an argument of `playback'.  When
-     `grind' is present, `playback' prints input expressions in the same
-     format as the `grind' function.  Otherwise, no attempt is made to
-     specially format input expressions.
 
      `grind' evaluates its argument.
 
@@ -1999,6 +1994,18 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
           [i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),if i = j then p[i]:1/sqrt(x\
           ) else L[j,i]:x*p[i])),for i thru n do L[i,i]:1/p[i],for i thru \
           n do (for j from i+1 thru n do L[i,j]:0),L)
+
+
+ -- Option variable: grind
+     When the variable `grind' is `true', the output of `string' and
+     `stringout' has the same format as that of `grind'; otherwise no
+     attempt is made to specially format the output of those functions.
+     The default value of the variable `grind' is `false'.
+
+     `grind' can also be specified as an argument of `playback'.  When
+     `grind' is present, `playback' prints input expressions in the same
+     format as the `grind' function.  Otherwise, no attempt is made to
+     specially format input expressions.
 
 
  -- Option variable: ibase
@@ -3118,8 +3125,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
      Do `example(append);' for an example.
 
 
- -- Function: assoc (<key>, <list>, <default>)
- -- Function: assoc (<key>, <list>)
+ -- Function: assoc
+          assoc (<key>, <list>, <default>)
+          assoc (<key>, <list>)
      This function searches for <key> in the left hand side of the
      input <list>. The <list> argument should be a list, each of whose
      elements is an expression with exactly two parts. Most usually,
@@ -3148,8 +3156,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
           (%o3)                                false
 
 
- -- Function: cons (<expr>, <list>)
- -- Function: cons (<expr_1>, <expr_2>)
+ -- Function: cons
+          cons (<expr>, <list>)
+          cons (<expr_1>, <expr_2>)
      `cons (<expr>, <list>)' returns a new list constructed of the
      element <expr> as its first element, followed by the elements of
      <list>. This is analogous to the Lisp language construction
@@ -3214,8 +3223,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
      the current value of `i'.
 
 
- -- Function: delete (<expr_1>, <expr_2>)
- -- Function: delete (<expr_1>, <expr_2>, <n>)
+ -- Function: delete
+          delete (<expr_1>, <expr_2>)
+          delete (<expr_1>, <expr_2>, <n>)
      `delete(<expr_1>, <expr_2>)' removes from <expr_2> any arguments
      of its top-level operator which are the same (as determined by
      "=") as <expr_1>.  Note that "=" tests for formal equality, not
@@ -3283,8 +3293,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
      for more details.
 
 
- -- Function: endcons (<expr>, <list>)
- -- Function: endcons (<expr_1>, <expr_2>)
+ -- Function: endcons
+          endcons (<expr>, <list>)
+          endcons (<expr_1>, <expr_2>)
      `endcons (<expr>, <list>)' returns a new list constructed of the
      elements of <list> followed by <expr>. The Maxima function
      `endcons' can also be used where the second argument is other than
@@ -3386,12 +3397,13 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
      Returns `true' if <expr> is a list else `false'.
 
 
- -- Function: makelist ()
- -- Function: makelist (<expr>, <n>)
- -- Function: makelist (<expr>, <i>, <i_max>)
- -- Function: makelist (<expr>, <i>, <i_0>, <i_max>)
- -- Function: makelist (<expr>, <i>, <i_0>, <i_max>, <step>)
- -- Function: makelist (<expr>, <x>, <list>)
+ -- Function: makelist
+          makelist ()
+          makelist (<expr>, <n>)
+          makelist (<expr>, <i>, <i_max>)
+          makelist (<expr>, <i>, <i_0>, <i_max>)
+          makelist (<expr>, <i>, <i_0>, <i_max>, <step>)
+          makelist (<expr>, <x>, <list>)
      The first form, `makelist ()', creates an empty list. The second
      form, `makelist (<expr>)', creates a list with <expr> as its single
      element. `makelist (<expr>, <n>)' creates a list of <n> elements
@@ -3509,8 +3521,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
           (%i9)
 
 
- -- Function: rest (<expr>, <n>)
- -- Function: rest (<expr>)
+ -- Function: rest
+          rest (<expr>, <n>)
+          rest (<expr>)
      Returns <expr> with its first <n> elements removed if <n> is
      positive and its last `- <n>' elements removed if <n> is negative.
      If <n> is 1 it may be omitted. The first argument <expr> may be a
@@ -3554,8 +3567,9 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction
      for more details.
 
 
- -- Function: sort (<L>, <P>)
- -- Function: sort (<L>)
+ -- Function: sort
+          sort (<L>, <P>)
+          sort (<L>)
      `sort(<L>, <P>)' sorts a list <L> according to a predicate `P' of
      two arguments which defines a strict weak order on the elements of
      <L>.  If `<P>(a, b)' is `true', then `a' appears before `b' in the
@@ -3762,9 +3776,10 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
 5.5.1 Functions and Variables for Arrays
 ----------------------------------------
 
- -- Function: array (<name>, <dim_1>, ..., <dim_n>)
- -- Function: array (<name>, <type>, <dim_1>, ..., <dim_n>)
- -- Function: array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)
+ -- Function: array
+          array (<name>, <dim_1>, ..., <dim_n>)
+          array (<name>, <type>, <dim_1>, ..., <dim_n>)
+          array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)
      Creates an n-dimensional array.  n may be less than or equal to 5.
      The subscripts for the i'th dimension are the integers running
      from 0 to <dim_i>.
@@ -4172,8 +4187,9 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      type of the array cannot be changed.
 
 
- -- Function: remarray (<A_1>, ..., <A_n>)
- -- Function: remarray (all)
+ -- Function: remarray
+          remarray (<A_1>, ..., <A_n>)
+          remarray (all)
      Removes arrays and array associated functions and frees the
      storage occupied.  The arguments may be declared arrays,
      undeclared (hashed) arrays, array functions, and subscripted
@@ -4301,8 +4317,9 @@ File: maxima.info,  Node: Functions and Variables for Structures,  Prev: Introdu
      `defstruct'.
 
 
- -- Function: defstruct (<S>(<a_1>, ..., <a_n>))
- -- Function: defstruct (<S>(<a_1> = <v_1>, ..., <a_n> = <v_n>))
+ -- Function: defstruct
+          defstruct (<S>(<a_1>, ..., <a_n>))
+          defstruct (<S>(<a_1> = <v_1>, ..., <a_n> = <v_n>))
      Define a structure, which is a list of named fields <a_1>, ...,
      <a_n> associated with a symbol <S>.  An instance of a structure is
      just an expression which has operator <S> and exactly `n'
@@ -4339,8 +4356,9 @@ File: maxima.info,  Node: Functions and Variables for Structures,  Prev: Introdu
           (%o8)             [bar(v, w, x = 123, y = %pi)]
 
 
- -- Function: new (<S>)
- -- Function: new (<S> (<v_1>, ..., <v_n>))
+ -- Function: new
+          new (<S>)
+          new (<S> (<v_1>, ..., <v_n>))
      `new' creates new instances of structures.
 
      `new(<S>)' creates a new instance of structure <S> in which each
@@ -4658,8 +4676,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      `atom(sin(x))' are `false' (assuming `a[1]' and `x' are unbound).
 
 
- -- Function: box (<expr>)
- -- Function: box (<expr>, <a>)
+ -- Function: box
+          box (<expr>)
+          box (<expr>, <a>)
      Returns <expr> enclosed in a box.  The return value is an
      expression with `box' as the operator and <expr> as the argument.
      A box is drawn on the display when `display2d' is `true'.
@@ -4740,8 +4759,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      `demo("disol")$'.
 
 
- -- Function: dispform (<expr>)
- -- Function: dispform (<expr>, all)
+ -- Function: dispform
+          dispform (<expr>)
+          dispform (<expr>, all)
      Returns the external representation of <expr>.
 
      `dispform(<expr>)' returns the external representation with
@@ -5189,8 +5209,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
           (%o13)                          G
 
 
- -- Function: operatorp (<expr>, <op>)
- -- Function: operatorp (<expr>, [<op_1>, ..., <op_n>])
+ -- Function: operatorp
+          operatorp (<expr>, <op>)
+          operatorp (<expr>, [<op_1>, ..., <op_n>])
      `operatorp (<expr>, <op>)' returns `true' if <op> is equal to the
      operator of <expr>.
 
@@ -5491,8 +5512,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      referred to in the function itself.
 
 
- -- Function: psubst (<list>, <expr>)
- -- Function: psubst (<a>, <b>, <expr>)
+ -- Function: psubst
+          psubst (<list>, <expr>)
+          psubst (<a>, <b>, <expr>)
      `psubst(<a>, <b>, <expr>)' is simliar to `subst'.  See `subst'.
 
      In distinction from `subst' the function `psubst' makes parallel
@@ -5512,9 +5534,10 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
           (%o5)                              2 sin(a)
 
 
- -- Function: rembox (<expr>, unlabelled)
- -- Function: rembox (<expr>, <label>)
- -- Function: rembox (<expr>)
+ -- Function: rembox
+          rembox (<expr>, unlabelled)
+          rembox (<expr>, <label>)
+          rembox (<expr>)
      Removes boxes from <expr>.
 
      `rembox (<expr>, unlabelled)' removes all unlabelled boxes from
@@ -6848,9 +6871,10 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
 7.7 User defined operators
 ==========================
 
- -- Function: infix (<op>)
- -- Function: infix (<op>, <lbp>, <rbp>)
- -- Function: infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)
+ -- Function: infix
+          infix (<op>)
+          infix (<op>, <lbp>, <rbp>)
+          infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)
      Declares <op> to be an infix operator.  An infix operator is a
      function of two arguments, with the name of the function written
      between the arguments.  For example, the subtraction operator `-'
@@ -6945,8 +6969,9 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
           (%o3)                if x ## y then 1 else 0
 
 
- -- Function: matchfix (<ldelimiter>, <rdelimiter>)
- -- Function: matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)
+ -- Function: matchfix
+          matchfix (<ldelimiter>, <rdelimiter>)
+          matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)
      Declares a matchfix operator with left and right delimiters
      <ldelimiter> and <rdelimiter>.  The delimiters are specified as
      strings.
@@ -7049,8 +7074,9 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
                                           15
 
 
- -- Function: nary (<op>)
- -- Function: nary (<op>, <bp>, <arg_pos>, <pos>)
+ -- Function: nary
+          nary (<op>)
+          nary (<op>, <bp>, <arg_pos>, <pos>)
      An `nary' operator is used to denote a function of any number of
      arguments, each of which is separated by an occurrence of the
      operator, e.g.  A+B or A+B+C.  The `nary("x")' function is a
@@ -7062,8 +7088,9 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
      See also *note Introduction to operators::.
 
 
- -- Function: nofix (<op>)
- -- Function: nofix (<op>, <pos>)
+ -- Function: nofix
+          nofix (<op>)
+          nofix (<op>, <pos>)
      `nofix' operators are used to denote functions of no arguments.
      The mere presence of such an operator in a command will cause the
      corresponding function to be evaluated.  For example, when one
@@ -7075,8 +7102,9 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
      See also *note Introduction to operators::.
 
 
- -- Function: postfix (<op>)
- -- Function: postfix (<op>, <lbp>, <lpos>, <pos>)
+ -- Function: postfix
+          postfix (<op>)
+          postfix (<op>, <lbp>, <lpos>, <pos>)
      `postfix' operators like the `prefix' variety denote functions of a
      single argument, but in this case the argument immediately
      precedes an occurrence of the operator in the input string, e.g.
@@ -7086,8 +7114,9 @@ File: maxima.info,  Node: User defined operators,  Prev: Assignment operators,  
      See also *note Introduction to operators::.
 
 
- -- Function: prefix (<op>)
- -- Function: prefix (<op>, <rbp>, <rpos>, <pos>)
+ -- Function: prefix
+          prefix (<op>)
+          prefix (<op>, <rbp>, <rpos>, <pos>)
      A `prefix' operator is one which signifies a function of one
      argument, which argument immediately follows an occurrence of the
      operator.  `prefix("x")' is a syntax extension function to declare
@@ -7978,8 +8007,9 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
           (%i6) e (- x) - e (x);
           (%o6)                           0
 
- -- Function: expand (<expr>)
- -- Function: expand (<expr>, <p>, <n>)
+ -- Function: expand
+          expand (<expr>)
+          expand (<expr>, <p>, <n>)
      Expand expression <expr>.  Products of sums and exponentiated sums
      are multiplied out, numerators of rational expressions which are
      sums are split into their respective terms, and multiplication
@@ -8248,8 +8278,9 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
                                          i = 1     i = 1
 
 
- -- Function: multthru (<expr>)
- -- Function: multthru (<expr_1>, <expr_2>)
+ -- Function: multthru
+          multthru (<expr>)
+          multthru (<expr_1>, <expr_2>)
      Multiplies a factor (which should be a sum) of <expr> by the other
      factors of <expr>.  That is, <expr> is `<f_1> <f_2> ... <f_n>'
      where at least one factor, say <f_i>, is a sum of terms.  Each
@@ -9908,8 +9939,9 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
      `<fun>(<arcfun>(<x>))' simplifications are turned off.
 
 
- -- Function: trigreduce (<expr>, <x>)
- -- Function: trigreduce (<expr>)
+ -- Function: trigreduce
+          trigreduce (<expr>, <x>)
+          trigreduce (<expr>)
      Combines products and powers of trigonometric and hyperbolic sin's
      and cos's of <x> into those of multiples of <x>.  It also tries to
      eliminate these functions when they occur in denominators.  If <x>
@@ -10009,10 +10041,11 @@ File: maxima.info,  Node: Random Numbers,  Prev: Trigonometric Functions,  Up: M
 10.6 Random Numbers
 ===================
 
- -- Function: make_random_state (<n>)
- -- Function: make_random_state (<s>)
- -- Function: make_random_state (true)
- -- Function: make_random_state (false)
+ -- Function: make_random_state
+          make_random_state (<n>)
+          make_random_state (<s>)
+          make_random_state (true)
+          make_random_state (false)
      A random state object represents the state of the random number
      generator.  The state comprises 627 32-bit words.
 
@@ -10542,9 +10575,10 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
      See also `declare'.
 
 
- -- Function: printprops (<a>, <i>)
- -- Function: printprops ([<a_1>, ..., <a_n>], <i>)
- -- Function: printprops (all, <i>)
+ -- Function: printprops
+          printprops (<a>, <i>)
+          printprops ([<a_1>, ..., <a_n>], <i>)
+          printprops (all, <i>)
      Displays the property with the indicator <i> associated with the
      atom <a>.  <a> may also be a list of atoms or the atom `all' in
      which case all of the atoms with the given property will be used.
@@ -10652,11 +10686,12 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
      `rem' was called, or `false' if it had no such property.
 
 
- -- Function: remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
- -- Function: remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)
- -- Function: remove ("<a>", operator)
- -- Function: remove (<a>, transfun)
- -- Function: remove (all, <p>)
+ -- Function: remove
+          remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
+          remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)
+          remove ("<a>", operator)
+          remove (<a>, transfun)
+          remove (all, <p>)
      Removes properties associated with atoms.
 
      `remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)' removes property `p_k'
@@ -10730,10 +10765,11 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
      they are subcontexts of the current context.
 
 
- -- Function: askinteger (<expr>, integer)
- -- Function: askinteger (<expr>)
- -- Function: askinteger (<expr>, even)
- -- Function: askinteger (<expr>, odd)
+ -- Function: askinteger
+          askinteger (<expr>, integer)
+          askinteger (<expr>)
+          askinteger (<expr>, even)
+          askinteger (<expr>, odd)
      `askinteger (<expr>, integer)' attempts to determine from the
      `assume' database whether <expr> is an integer.  `askinteger'
      prompts the user if it cannot tell otherwise, and attempt to
@@ -10980,8 +11016,9 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
      Deactivates the specified contexts <context_1>, ..., <context_n>.
 
 
- -- Function: facts (<item>)
- -- Function: facts ()
+ -- Function: facts
+          facts (<item>)
+          facts ()
      If <item> is the name of a context, `facts (<item>)' returns a
      list of the facts in the specified context.
 
@@ -10992,8 +11029,9 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
      `facts ()' (i.e., without an argument) lists the current context.
 
 
- -- Function: forget (<pred_1>, ..., <pred_n>)
- -- Function: forget (<L>)
+ -- Function: forget
+          forget (<pred_1>, ..., <pred_n>)
+          forget (<L>)
      Removes predicates established by `assume'.  The predicates may be
      expressions equivalent to (but not necessarily identical to) those
      previously assumed.
@@ -11097,12 +11135,18 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
           (%o3)                         true
 
 
- -- Function: newcontext (<name>)
+ -- Function: newcontext
+          newcontext (<name>)
+          newcontext ()
      Creates a new, empty context, called <name>, which has `global' as
      its only subcontext.  The newly-created context becomes the
      currently active context.
 
-     `newcontext' evaluates its argument.  `newcontext' returns <name>.
+     If <name> is not specified, a new name is created (via `gensym')
+     and returned.
+
+     `newcontext' evaluates its argument.  `newcontext' returns <name>
+     (if specified) or the new context name.
 
 
  -- Function: sign (<expr>)
@@ -11114,12 +11158,20 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
      known).
 
 
- -- Function: supcontext (<name>, <context>)
- -- Function: supcontext (<name>)
+ -- Function: supcontext
+          supcontext (<name>, <context>)
+          supcontext (<name>)
+          supcontext ()
      Creates a new context, called <name>, which has <context> as a
      subcontext.  <context> must exist.
 
      If <context> is not specified, the current context is assumed.
+
+     If <name> is not specified, a new name is created (via `gensym')
+     and returned.
+
+     `supcontext' evaluates its argument.  `supcontext' returns <name>
+     (if specified) or the new context name.
 
 
 
@@ -11359,40 +11411,43 @@ File: maxima.info,  Node: Introduction to Plotting,  Next: Plotting Formats,  Pr
 =============================
 
 Maxima uses an external plotting package to make the plots (see the
-section on Plotting formats).  The plotting functions calculate a set of
-points and pass them to the plotting package together with a set of
-commands.  That information can be passed to the external program either
-through a pipe or by calling the program with the name of a file where
-the data has been saved.  The data file is given the name
-`maxout.interface', where `interface' is the name of the plotting
-interface being used (gnuplot, xmaxima, mgnuplot or gnuplot_pipes).
+section on `Plotting Formats').  The plotting functions calculate a set
+of points and pass them to the plotting package together with a set of
+commands.  That information can be passed to the external program
+either through a pipe or by calling the program with the name of a file
+where the data has been saved.  The data file is given the name
+`maxout.format', where `format' is the name of the plotting format
+being used (`gnuplot', `xmaxima', `mgnuplot' or `gnuplot_pipes').
 
-   There are options that can be used to save the plot in a graphic
-format file. In those cases, the file `maxout.interface' will be created
-and then executed by the external plotting program to save the result in
-another file; if the name of that graphic file is not given by the
-options used, the default name `maxplot.format' will be used, where
-`format' is the format being used.
+   There are to save the plot in a graphic format file. In those cases,
+the file `maxout.format' created by Maxima includes commands that will
+make the external plotting program save the result in a graphic file.
+The default name for that graphic file is `maxplot.extension', where
+`extension' is the extension normally used for the kind of graphic file
+selected.
 
-   The `maxout.interface' and `maxplot.format' files (or the plot name
-given by the options), in the cases when they are used, are created in
-the directory specified by the system variable `maxima_tempdir'. That
-location can be changed; by assigning to that variable (or to the
+   The `maxout.format' and `maxplot.extension' files are created in the
+directory specified by the system variable `maxima_tempdir'. That
+location can be changed by assigning to that variable (or to the
 environment variable MAXIMA_TEMPDIR) a string that represents a valid
-directory where Maxima can create new files. The name of the file, or
-files, created will be shown as the output of the plotting command.
+directory where Maxima can create new files. The output of the Maxima
+plotting command will be a list with the names of the file(s) created,
+including their complete path.
 
-   After a plot has been created, the file `maxout.interface' can be
-executed again with the appropriate external program.  If a Maxima
-plotting command fails to show anything, that file can be inspected to
-look for possible sources of problems.
+   If the format used is either `gnuplot' or `xmaxima', the external
+programs `gnuplot' or `xmaxima' can be run, giving it the file
+`maxout.format' as argument, in order to view again a plot previously
+created in Maxima. Thus, when a Maxima plotting command fails, the
+format can be set to `gnuplot' or `xmaxima' and the plain-text file
+`maxout.gnuplot' (or `maxout.xmaxima') can be inspected to look for the
+source of the problem.
 
-   Together with the plotting functions described in this chapter,
-package *note draw:: adds other functionalities.  Note that some
-plotting options are named equal in both plotting contexts, but with
-different syntax; if you want to access the draw information related to
-these options, you have to type `?? opt', where `opt' is the name of
-the option.
+   The additional package *note draw:: provides functions similar to
+the ones described in this section with some extra features. Note that
+some plotting options have the same name in both plotting packages, but
+their syntax and behavior is different. To view the documentation for a
+graphic option `opt', type `?? opt' in order to choose the information
+for either of those two packages.
 
 
 File: maxima.info,  Node: Plotting Formats,  Next: Functions and Variables for Plotting,  Prev: Introduction to Plotting,  Up: Plotting
@@ -11400,10 +11455,11 @@ File: maxima.info,  Node: Plotting Formats,  Next: Functions and Variables for P
 12.2 Plotting Formats
 =====================
 
-There are currently two external plotting programs that Maxima use:
-Gnuplot and Xmaxima.  There are various different formats for those
-programs, which can be selected with the option `plot_format' (see the
-Plotting Options section).
+Maxima can use either Gnuplot or Xmaxima as graphics program. Gnuplot is
+an external program that has to be installed separately, while Xmaxima
+is distributed with Maxima. There are various different formats for
+those programs, which can be selected with the option `plot_format'
+(see also the `Plotting Options' section).
 
    The plotting formats are the following:
 
@@ -11426,9 +11482,9 @@ Plotting Options section).
      already displayed on the screen.
 
      This format is only used to plot to the screen; whenever graphic
-     files are created, the format will be switched automatically to
-     `gnuplot' and the gnuplot commands needed to created the graphic
-     file will be saved in `maxout.gnuplot'.
+     files are created, the format is silently switched to `gnuplot' and
+     the commands needed to create the graphic file are saved with the
+     data in file `maxout.gnuplot'.
 
    * *mgnuplot*
 
@@ -11444,16 +11500,16 @@ Plotting Options section).
      be used to display plots created when Maxima is run from the
      console or from other graphical interfaces.  To use this format,
      the xmaxima program, which is distributed together with Maxima,
-     should be installed.  If Maxima is being run from xmaxima itself,
-     this format will make the plot functions send the data and
-     commands through the same socket used for the communication
-     between Maxima and Xmaxima.  When used from the console or from
-     other interface, the commands and data will be saved in the file
-     `maxout.xmaxima', and the xmaxima program will be launched with the
-     name of the location of that file as argument.
+     should be installed.  If Maxima is being run from the Xmaxima
+     console, the data and commands are passed to xmaxima through the
+     same socket used for the communication between Maxima and the
+     Xmaxima console. When used from a terminal or from graphical
+     interfaces different from Xmaxima, the commands and data are saved
+     in the file `maxout.xmaxima' and xmaxima is run with the name of
+     that file as argument.
 
      In previous versions this format used to be called `openmath'; that
-     old name will still be accepted as a synonym for `xmaxima'.
+     old name still works as a synonym for `xmaxima'.
 
 
 File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting Options,  Prev: Plotting Formats,  Up: Plotting
@@ -11468,19 +11524,19 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      treated the same as in `plot3d'.
 
      This function only works when the plot format is either `gnuplot'
-     or `gnuplot_pipes'.  The additional package `implicit_plot' can
-     also be used to plot contours and it works for any format.  See
-     `implicit_plot'.
+     or `gnuplot_pipes'.  The additional package `implicit_plot', which
+     works in any graphic format, can also be used to plot contours but
+     a separate expression must be given for each contour.
 
      Examples:
 
           (%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4])$
 
      You can add any options accepted by `plot3d'; for instance, the
-     option `legend' with a value of false, to remove the legend.
-     Gnuplot chooses, by default, 3 contours to show.  To increase the
-     number of levels, it is necessary to specify a custom gnuplot
-     preamble:
+     option `legend' with a value of false, to remove the legend. By
+     default, Gnuplot chooses and displays 3 contours. To increase the
+     number of contours, it is necessary to use a custom
+     `gnuplot_preamble', as in the next example:
 
           (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
                         [legend,false],
@@ -11488,9 +11544,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
 
  -- Function: get_plot_option (<keyword>, <index>)
-     Returns the current default value of the option named <keyword>.  A
-     value of 1 for the index will return the keyword itself, a value
-     of 2 returns the first parameter following the keyword, and so on.
+     Returns the current default value of the option named <keyword>,
+     which is a list. The optional argument <index> must be a positive
+     integer which can be used to extract only one element from the list
+     (element 1 is the name of the option).
 
      See also `set_plot_option', `remove_plot_option' and the section
      on Plotting Options.
@@ -11507,12 +11564,12 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
 
  -- System variable: gnuplot_file_args
-     When the a graphic file is going to be created using `gnuplot',
-     this variable is used to specify the way the file name should be
-     passed to gnuplot. Its default value is "~s", which means that the
-     name of the file will be passed directly. The contents of this
-     variable can be changed in order to add options for the gnuplot
-     program, adding those options before the string "~s".
+     When a graphic file is going to be created using `gnuplot', this
+     variable is used to specify the way the file name should be passed
+     to gnuplot. Its default value is "~s", which means that the name
+     of the file will be passed directly. The contents of this variable
+     can be changed in order to add options for the gnuplot program,
+     adding those options before the format directive "~s".
 
 
  -- System variable: gnuplot_view_args
@@ -11534,7 +11591,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      the gnuplot interactive shell where other commands can be issued
      in order to modify the plot.
 
-     In Windows versions of gnuplot older than 4.6.3 the behavior of
+     In Windows versions of Gnuplot older than 4.6.3 the behavior of
      "~s -" and "-persist ~s" were the opposite; namely, "-persist ~s"
      made the plot window and the gnuplot interactive shell remain,
      while "~s -" closed the gnuplot shell keeping the plot window.
@@ -11542,18 +11599,21 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      might be necessary to adjust the value of `gnuplot_view_args'.
 
 
- -- Function: implicit_plot (<expr>, <x_range>, <y_range>)
- -- Function: implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
+ -- Function: implicit_plot
+          implicit_plot (<expr>, <x_range>, <y_range>)
+          implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
           <y_range>)
-     Displays a plot of one or more expressions in implicit form.
-     <expr> is the expression to be plotted, <x_range> the range of the
-     horizontal axis and <y_range> the range of vertical axis.
-     `implicit_plot' respects global setting for the Gnuplot driver set
-     by the <set_plot_option> function.  Options can also be passed to
-     `implicit_plot' function as optional arguments.
+     Displays a plot of a function on the real plane, defined
+     implicitly by the expression <expr>. The domain in the plane is
+     defined by <x_range> and <y_range>. Several functions can be
+     represented on the same plot, giving a list [<expr_1>, ...,
+     <expr_n>] of expressions that define them. This function uses the
+     global format options set up with the `set_plot_option'.
+     Additional options can also be given as extra arguments for the
+     `implicit_plot' command.
 
-     `implicit_plot' works by tracking sign changes on the area given
-     by <x_range> and <y_range> and can fail for complicated
+     The method used by `implicit_plot' consists of tracking sign
+     changes on the domain given and it can fail for complicated
      expressions.
 
      `load(implicit_plot)' loads this function.
@@ -11591,8 +11651,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      Gnuplot from adjusting the color box up to 40, in which case the
      points corresponding the maximum 36 iterations would not be black.
 
-          (%i1) julia (-0.55, 0.6, [iterations, 36], [x, -0.3, 0.2], [y, 0.3, 0.9],
-                [grid, 400, 400], [color_bar_tics, 0, 6, 36])$
+          (%i1) julia (-0.55, 0.6, [iterations, 36], [x, -0.3, 0.2],
+                [y, 0.3, 0.9], [grid, 400, 400], [color_bar_tics, 0, 6, 36])$
 
 
  -- Function: make_transform ([<var1>, <var2>, <var3>], <fx>, <fy>,
@@ -11635,7 +11695,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      Example:
 
-          (%i1) mandelbrot ([iterations, 30], [x, -2, 1], [y, -1.2, 1.2], [grid,400,400])$
+     [grid,400,400])$
+          (%i1) mandelbrot ([iterations, 30], [x, -2, 1], [y, -1.2, 1.2],
+                      [grid,400,400])$
 
 
  -- System function: polar_to_xy
@@ -11645,10 +11707,11 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      (polar coordinates), and transform them into x and y coordinates.
 
 
- -- Function: plot2d (<plot>, <x_range>, ..., <options>, ...)
- -- Function: plot2d ([<plot_1>, ..., <plot_n>], ..., <options>, ...)
- -- Function: plot2d ([<plot_1>, ..., <plot_n>], <x_range>, ...,
-          <options>, ...)
+ -- Function: plot2d
+          plot2d (<plot>, <x_range>, ..., <options>, ...)
+          plot2d ([<plot_1>, ..., <plot_n>], ..., <options>, ...)
+          plot2d ([<plot_1>, ..., <plot_n>], <x_range>, ..., <options>,
+          ...)
      Where <plot>, <plot_1>, ..., <plot_n> can be either expressions,
      function names or a list with the any of the forms: `[discrete,
      [<x1>, ..., <xn>], [<y1>, ..., <yn>]]', `[discrete, [[<x1>, <y1>],
@@ -11721,9 +11784,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      default rectangular shape of the plot; in this example the plot
      will fill a square.
 
-          (%i1) plot2d ( x^2 - 1, [x, -3, 3], [box, false], grid2d, [yx_ratio, 1],
-                [axes, solid], [xtics, -2, 4, 2], [ytics, 2, 2, 6],
-                [label, ["x", 2.9, -0.3], ["x^2-1", 0.1, 8]], [title, "A parabola"])$
+          (%i1) plot2d ( x^2 - 1, [x, -3, 3], [box, false], grid2d,
+                [yx_ratio, 1], [axes, solid], [xtics, -2, 4, 2],
+                [ytics, 2, 2, 6], [label, ["x", 2.9, -0.3],
+                ["x^2-1", 0.1, 8]], [title, "A parabola"])$
 
      A plot with a logarithmic scale in the vertical axis:
 
@@ -11757,7 +11821,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      A plot of a discrete set of points, defining x and y coordinates
      separately:
 
-          (%i1) plot2d ([discrete, makelist(i*%pi, i, 1, 5), [.6, .9, 0.2, 1.3, 1]])$
+          (%i1) plot2d ([discrete, makelist(i*%pi, i, 1, 5),
+                                      [0.6, 0.9, 0.2, 1.3, 1]])$
 
      In the next example a table with three columns is saved in a file
      "data.txt" which is then read and the second and third column are
@@ -11782,9 +11847,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      See also the section about Plotting Options.
 
 
- -- Function: plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
- -- Function: plot3d ([<expr_1>, ..., <expr_n>], <x_range>, <y_range>,
-          ..., <options>, ...)
+ -- Function: plot3d
+          plot3d (<expr>, <x_range>, <y_range>, ..., <options>, ...)
+          plot3d ([<expr_1>, ..., <expr_n>], <x_range>, <y_range>, ...,
+          <options>, ...)
      Displays a plot of one or more surfaces defined as functions of two
      variables or in parametric form.
 
@@ -11807,18 +11873,20 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
                    [palette, false], [color, magenta])$
 
      The infinite values of z can also be avoided by choosing a grid
-     that does not fall on any asymptotes; next example also shows how
-     to change the palette and how to show the color bar that relates
-     the colors used with the values of the z variable:
+     that does not fall on any points where the function is undefined,
+     as in the next example, which also shows how to change the palette
+     and how to include a color bar that relates colors to values of
+     the z variable:
 
           (%i1) plot3d (log (x^2*y^2), [x, -2, 2], [y, -2, 2],[grid, 29, 29],
-                 [palette, [gradient, red, orange, yellow, green]], color_bar,
-                 [xtics, 1], [ytics, 1], [ztics, 4],[color_bar_tics, 4])$
+                 [palette, [gradient, red, orange, yellow, green]],
+                 color_bar, [xtics, 1], [ytics, 1], [ztics, 4],
+                 [color_bar_tics, 4])$
 
      Two surfaces in the same plot. Ranges specific to one of the
-     surfaces can be given by placing the expression and the ranges
-     inside a common list; in this example each surface is defined in a
-     domain different from the domain of the complete plot.
+     surfaces can be given by placing each expression and its ranges in
+     a separate list; global ranges for the complete plot are also
+     given after the functions definitions.
 
           (%i1) plot3d ([[-3*x - y, [x, -2, 2], [y, -2, 2]],
              4*sin(3*(x^2 + y^2))/(x^2 + y^2), [x, -3, 3], [y, -3, 3]],
@@ -11826,9 +11894,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      Plot of a Klein bottle, defined parametrically:
 
-          (%i1) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0) - 10.0$
-          (%i2) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
-          (%i3) expr_3: 5*(-sin(x/2)*cos(y) + cos(x/2)*sin(2*y))$
+          (%i1) expr_1: 5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3)-10$
+          (%i2) expr_2: -5*sin(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3)$
+          (%i3) expr_3: 5*(-sin(x/2)*cos(y)+cos(x/2)*sin(2*y))$
           (%i4) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
                   [y, -%pi, %pi], [grid, 50, 50])$
 
@@ -11846,7 +11914,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      cylindrical to rectangular coordinates.  See the documentation for
      `polar_to_xy'.
 
-          (%i1) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi], [box, false],
+          (%i1) plot3d (r^.33*cos(th/3), [r,0,1], [th,0,6*%pi], [box, false],
              [grid, 12, 80], [transform_xy, polar_to_xy], [legend, false])$
 
      Plot of a sphere using the transformation from spherical to
@@ -11861,19 +11929,19 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      Definition of a function of two-variables using a matrix.  Notice
      the single quote in the definition of the function, to prevent
-     plot3d from failing when it realizes that the matrix will require
-     integer indices.
+     `plot3d' from failing when it realizes that the matrix will
+     require integer indices.
 
-          (%i1) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4], [1, 2, 3, 3])$
+          (%i1) M: matrix([1,2,3,4], [1,2,3,2], [1,2,3,4], [1,2,3,3])$
           (%i2) f(x, y) := float('M [round(x), round(y)])$
-          (%i3) plot3d (f(x,y), [x, 1, 4], [y, 1, 4], [grid, 3, 3], [legend, false])$
+          (%i3) plot3d (f(x,y), [x,1,4],[y,1,4],[grid,3,3],[legend,false])$
 
      By setting the elevation equal to zero, a surface can be seen as a
      map in which each color represents a different level.
 
-          (%i1) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4], [zlabel, ""],
-                  [mesh_lines_color, false], [elevation, 0], [azimuth, 0],
-                  color_bar, [grid, 80, 80], [ztics, false], [color_bar_tics, 1])$
+          (%i1) plot3d (cos (-x^2 + y^3/4), [x,-4,4], [y,-4,4], [zlabel,""],
+                 [mesh_lines_color,false], [elevation,0], [azimuth,0],
+                 color_bar, [grid,80,80], [ztics,false], [color_bar_tics,1])$
 
      See also the section about Plotting Options.
 
@@ -11999,7 +12067,7 @@ names. For instance, typing logx as an option is equivalent to writing
 
 
  -- Plot option: color_bar [color_bar, <symbol>]
-     Default value: `false' in plot3d, `true' in mandelbrot and julia-
+     Default value: `false' in plot3d, `true' in mandelbrot and julia
 
      Where <symbol> can be either `true' or `false'.  If `true',
      whenever `plot3d', `mandelbrot' or `julia' use a palette to
@@ -12057,8 +12125,9 @@ names. For instance, typing logx as an option is equivalent to writing
      coordinates indicated after each label.
 
 
- -- Plot option: legend [legend, <string_1>, ..., <string_n>]
- -- Plot option: legend [legend, <false>]
+ -- Plot option: legend
+          legend [legend, <string_1>, ..., <string_n>]
+          legend [legend, <false>]
      It specifies the labels for the plots when various plots are
      shown.  If there are more plots than the number of labels given,
      they will be repeated.  If given the value `false', no legends
@@ -12096,8 +12165,9 @@ names. For instance, typing logx as an option is equivalent to writing
      sets the number of points that will be shown for the plot.
 
 
- -- Plot option: palette [palette, [<palette_1>], ..., [<palette_n>]]
- -- Plot option: palette [palette, <false>]
+ -- Plot option: palette
+          palette [palette, [<palette_1>], ..., [<palette_n>]]
+          palette [palette, <false>]
      It can consist of one palette or a list of several palettes.  Each
      palette is a list with a keyword followed by values. If the
      keyword is gradient, it should be followed by a list of valid
@@ -12156,7 +12226,7 @@ names. For instance, typing logx as an option is equivalent to writing
      points than objects in this list, they will be repeated
      sequentially.  The possible objects that can be used are:
      `bullet', `circle', `plus', `times', `asterisk', `box', `square',
-     `triangle', `delta', `wedge', `nabla', `diamond', `lozenge'
+     `triangle', `delta', `wedge', `nabla', `diamond', `lozenge'.
 
 
  -- Plot option: pdf_file [pdf_file, <file_name>]
@@ -12233,8 +12303,9 @@ names. For instance, typing logx as an option is equivalent to writing
      axes of a 3d plot will be the same.
 
 
- -- Plot option: style [style, <type_1>, ..., <type1_n>]
- -- Plot option: style [style, [<style_1>], ..., [<style_n>]]
+ -- Plot option: style
+          style [style, <type_1>, ..., <type_n>]
+          style [style, [<style_1>], ..., [<style_n>]]
      The styles that will be used for the various functions or sets of
      data in a 2d plot.  The word <style> must be followed by one or
      more styles.  If there are more functions and data sets than the
@@ -12262,7 +12333,7 @@ names. For instance, typing logx as an option is equivalent to writing
      triangles, 9: open triangles, 10: filled inverted triangles, 11:
      open inverted triangles, 12: filled lozenges and 13: open lozenges.
 
-     <linesdots> accepts up to four parameters: line width, points
+     <linespoints> accepts up to four parameters: line width, points
      radius, color and type of object to replace the points.
 
      See also `color' and `point_type'.
@@ -12322,7 +12393,7 @@ names. For instance, typing logx as an option is equivalent to writing
      increments and the third is the last value where a mark is placed.
      The second and third numbers can be omitted. When only one number
      is given, it will be used as the increment from an initial value
-     that will be chosen automatically
+     that will be chosen automatically.
 
 
  -- Plot option: xy_scale [xy_scale, <sx>, <sy>]
@@ -12420,7 +12491,7 @@ specific option.
           language.  If the option `gnuplot_out_file' is set to
           <filename>, gnuplot writes the PostScript commands to
           <filename>.  Otherwise, it is saved as `maxplot.ps' file. The
-          settings for this terminal of are given by the value of
+          settings for this terminal are given by the value of the
           option `gnuplot_dumb_term_command'.
 
         * A string representing any valid gnuplot term specification
@@ -12428,14 +12499,15 @@ specific option.
           Gnuplot can generate output in many other graphical formats
           such as png, jpeg, svg etc. To use those formats, option
           `gnuplot_term' can be set to any supported gnuplot term name
-          (for example symbol) or even a full gnuplot term
-          specification with any valid options (string).  For example
-          `[gnuplot_term, png]' creates output in PNG (Portable Network
-          Graphics) format while `[gnuplot_term, "png size 1000,1000"]'
-          creates PNG of 1000 x 1000 pixels size.  If the option
-          `gnuplot_out_file' is set to <filename>, gnuplot writes the
-          output to <filename>.  Otherwise, it is saved as
-          `maxplot.<term>' file, where <term> is gnuplot terminal name.
+          (which must be a symbol) or even a full gnuplot term
+          specification with any valid options (which must be a
+          string).  For example `[gnuplot_term, png]' creates output in
+          PNG (Portable Network Graphics) format while `[gnuplot_term,
+          "png size 1000,1000"]' creates PNG of 1000 x 1000 pixels
+          size.  If the option `gnuplot_out_file' is set to <filename>,
+          gnuplot writes the output to <filename>.  Otherwise, it is
+          saved as `maxplot.<term>' file, where <term> is gnuplot
+          terminal name.
 
 
  -- Plot option: gnuplot_out_file [gnuplot_out_file, <file_name>]
@@ -12496,7 +12568,7 @@ specific option.
  -- Plot option: gnuplot_pdf_term_command [gnuplot_pdf_term_command,
           <command>]
      The gnuplot command to set the terminal type for the PDF terminal.
-     It this option is not set, the command used will be: `"set term
+     If this option is not set, the command used will be: `"set term
      pdfcairo color solid lw 3 size 17.2 cm, 12.9 cm font \",18\""'.
      See the gnuplot documentation for more information.
 
@@ -12504,7 +12576,7 @@ specific option.
  -- Plot option: gnuplot_png_term_command [gnuplot_png_term_command,
           <command>]
      The gnuplot command to set the terminal type for the PNG terminal.
-     It this option is not set, the command used will be: `"set term
+     If this option is not set, the command used will be: `"set term
      pngcairo font \",12\""'. See the gnuplot documentation for more
      information.
 
@@ -12512,7 +12584,7 @@ specific option.
  -- Plot option: gnuplot_ps_term_command [gnuplot_ps_term_command,
           <command>]
      The gnuplot command to set the terminal type for the PostScript
-     terminal.  It this option is not set, the command used will be:
+     terminal.  If this option is not set, the command used will be:
      `"set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm
      font \",24\""'. See the gnuplot documentation for `set term
      postscript' for more information.
@@ -12521,7 +12593,7 @@ specific option.
  -- Plot option: gnuplot_svg_term_command [gnuplot_svg_term_command,
           <command>]
      The gnuplot command to set the terminal type for the SVG terminal.
-     It this option is not set, the command used will be: `"set term
+     If this option is not set, the command used will be: `"set term
      svg font \",14\""'. See the gnuplot documentation for more
      information.
 
@@ -12557,15 +12629,16 @@ File: maxima.info,  Node: Gnuplot_pipes Format Functions,  Prev: Gnuplot Options
      format and opens a new pipe.
 
 
- -- Function: gnuplot_replot ()
- -- Function: gnuplot_replot (<s>)
+ -- Function: gnuplot_replot
+          gnuplot_replot ()
+          gnuplot_replot (<s>)
      Updates the gnuplot window.  If `gnuplot_replot' is called with a
      gnuplot command in a string <s>, then `s' is sent to gnuplot
      before reploting the window.
 
 
  -- Function: gnuplot_reset ()
-     Resets the state of gnuplot used with the `gnuplot_pipes' format
+     Resets the state of gnuplot used with the `gnuplot_pipes' format.
      To update the gnuplot window call `gnuplot_replot' after
      `gnuplot_reset'.
 
@@ -12658,8 +12731,9 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      `writefile'.
 
 
- -- Function: batch (<filename>)
- -- Function: batch (<filename>, `option')
+ -- Function: batch
+          batch (<filename>)
+          batch (<filename>, `option')
      `batch(<filename>)' reads Maxima expressions from <filename> and
      evaluates them.  `batch' searches for <filename> in the list
      `file_search_maxima'.  See also `file_search'.
@@ -12754,8 +12828,9 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      The result is a Lisp pathname object.
 
 
- -- Function: file_search (<filename>)
- -- Function: file_search (<filename>, <pathlist>)
+ -- Function: file_search
+          file_search (<filename>)
+          file_search (<filename>, <pathlist>)
      `file_search' searches for the file <filename> and returns the
      path to the file (as a string) if it can be found; otherwise
      `file_search' returns `false'.  `file_search (<filename>)'
@@ -12979,13 +13054,13 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      otherwise the result of a successful filename merge.
 
 
- -- Function: save (<filename>, <name_1>, <name_2>, <name_3>, ...)
- -- Function: save (<filename>, values, functions, labels, ...)
- -- Function: save (<filename>, [<m>, <n>])
- -- Function: save (<filename>, <name_1>=<expr_1>, ...)
- -- Function: save (<filename>, all)
- -- Function: save (<filename>, <name_1>=<expr_1>, <name_2>=<expr_2>,
-          ...)
+ -- Function: save
+          save (<filename>, <name_1>, <name_2>, <name_3>, ...)
+          save (<filename>, values, functions, labels, ...)
+          save (<filename>, [<m>, <n>])
+          save (<filename>, <name_1>=<expr_1>, ...)
+          save (<filename>, all)
+          save (<filename>, <name_1>=<expr_1>, <name_2>=<expr_2>, ...)
      Stores the current values of <name_1>, <name_2>, <name_3>, ..., in
      <filename>.  The arguments are the names of variables, functions,
      or other objects.  If a name has no value or function associated
@@ -13036,11 +13111,12 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      `save' evaluates <filename> and quotes all other arguments.
 
 
- -- Function: stringout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
- -- Function: stringout (<filename>, [<m>, <n>])
- -- Function: stringout (<filename>, input)
- -- Function: stringout (<filename>, functions)
- -- Function: stringout (<filename>, values)
+ -- Function: stringout
+          stringout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
+          stringout (<filename>, [<m>, <n>])
+          stringout (<filename>, input)
+          stringout (<filename>, functions)
+          stringout (<filename>, values)
      `stringout' writes expressions to a file in the same form the
      expressions would be typed for input.  The file can then be used
      as input for the `batch' or `demo' commands, and it may be edited
@@ -13082,8 +13158,9 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      assignment statements.
 
 
- -- Function: with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
- -- Function: with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Function: with_stdout
+          with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
+          with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
      Evaluates <expr_1>, <expr_2>, <expr_3>, ... and writes any output
      thus generated to a file <f> or output stream <s>.  The evaluated
      expressions are not written to the output.  Output may be
@@ -13143,12 +13220,13 @@ File: maxima.info,  Node: Functions and Variables for TeX Output,  Next: Functio
 13.4 Functions and Variables for TeX Output
 ===========================================
 
- -- Function: tex (<expr>)
- -- Function: tex (<expr>, <destination>)
- -- Function: tex (<expr>, false)
- -- Function: tex (<label>)
- -- Function: tex (<label>, <destination>)
- -- Function: tex (<label>, false)
+ -- Function: tex
+          tex (<expr>)
+          tex (<expr>, <destination>)
+          tex (<expr>, false)
+          tex (<label>)
+          tex (<label>, <destination>)
+          tex (<label>, false)
      Prints a representation of an expression suitable for the TeX
      document preparation system.  The result is a fragment of a
      document, which can be copied into a larger document but not
@@ -13212,11 +13290,12 @@ File: maxima.info,  Node: Functions and Variables for TeX Output,  Next: Functio
           (%i1) tex1 (sin(x) + cos(x));
           (%o1)                     \sin x+\cos x
 
- -- Function: texput (<a>, <s>)
- -- Function: texput (<a>, <f>)
- -- Function: texput (<a>, <s>, <operator_type>)
- -- Function: texput (<a>, [<s_1>, <s_2>], matchfix)
- -- Function: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
+ -- Function: texput
+          texput (<a>, <s>)
+          texput (<a>, <f>)
+          texput (<a>, <s>, <operator_type>)
+          texput (<a>, [<s_1>, <s_2>], matchfix)
+          texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
      Assign the TeX output for the atom <a>, which can be a symbol or
      the name of an operator.
 
@@ -13610,8 +13689,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%o2)                         true
 
 
- -- Function: coeff (<expr>, <x>, <n>)
- -- Function: coeff (<expr>, <x>)
+ -- Function: coeff
+          coeff (<expr>, <x>, <n>)
+          coeff (<expr>, <x>)
      Returns the coefficient of `<x>^<n>' in <expr>, where <expr> is a
      polynomial or a monomial term in <x>.
 
@@ -13802,8 +13882,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      form.
 
 
- -- Function: factor (<expr>)
- -- Function: factor (<expr>, <p>)
+ -- Function: factor
+          factor (<expr>)
+          factor (<expr>, <p>)
      Factors the expression <expr>, containing any number of variables
      or functions, into factors irreducible over the integers.  `factor
      (<expr>, <p>)' factors <expr> over the field of rationals with an
@@ -14132,8 +14213,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%o6)           [6 x  + 13 x + 6, x + 1, x  + x]
 
 
- -- Function: gcdex (<f>, <g>)
- -- Function: gcdex (<f>, <g>, <x>)
+ -- Function: gcdex
+          gcdex (<f>, <g>)
+          gcdex (<f>, <g>, <x>)
      Returns a list `[<a>, <b>, <u>]' where <u> is the greatest common
      divisor (gcd) of <f> and <g>, and <u> is equal to `<a> <f> + <b>
      <g>'.  The arguments <f> and <g> should be univariate polynomials,
@@ -14409,8 +14491,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
                                  4       2
 
 
- -- Function: polymod (<p>)
- -- Function: polymod (<p>, <m>)
+ -- Function: polymod
+          polymod (<p>)
+          polymod (<p>, <m>)
      Converts the polynomial <p> to a modular representation with
      respect to the current modulus which is the value of the variable
      `modulus'.
@@ -14421,8 +14504,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      See `modulus'.
 
 
- -- Function: quotient (<p_1>, <p_2>)
- -- Function: quotient (<p_1>, <p_2>, <x_1>, ..., <x_n>)
+ -- Function: quotient
+          quotient (<p_1>, <p_2>)
+          quotient (<p_1>, <p_2>, <x_1>, ..., <x_n>)
      Returns the polynomial <p_1> divided by the polynomial <p_2>.  The
      arguments <x_1>, ..., <x_n> are interpreted as in `ratvars'.
 
@@ -14430,8 +14514,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      returned by `divide'.
 
 
- -- Function: rat (<expr>)
- -- Function: rat (<expr>, <x_1>, ..., <x_n>)
+ -- Function: rat
+          rat (<expr>)
+          rat (<expr>, <x_1>, ..., <x_n>)
      Converts <expr> to canonical rational expression (CRE) form by
      expanding and combining all terms over a common denominator and
      cancelling out the greatest common divisor of the numerator and
@@ -14492,8 +14577,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      expressions (CRE) are used in algebraic mode.
 
 
- -- Function: ratcoef (<expr>, <x>, <n>)
- -- Function: ratcoef (<expr>, <x>)
+ -- Function: ratcoef
+          ratcoef (<expr>, <x>, <n>)
+          ratcoef (<expr>, <x>)
      Returns the coefficient of the expression `<x>^<n>' in the
      expression <expr>.  If omitted, <n> is assumed to be 1.
 
@@ -14911,8 +14997,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           ($A $B $X $Y)
 
 
- -- Function: ratweight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
- -- Function: ratweight ()
+ -- Function: ratweight
+          ratweight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
+          ratweight ()
      Assigns a weight <w_i> to the variable <x_i>.  This causes a term
      to be replaced by 0 if its weight exceeds the value of the
      variable `ratwtlvl' (default yields no truncation).  The weight of
@@ -14958,8 +15045,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      For the default value of `false', no truncation occurs.
 
 
- -- Function: remainder (<p_1>, <p_2>)
- -- Function: remainder (<p_1>, <p_2>, <x_1>, ..., <x_n>)
+ -- Function: remainder
+          remainder (<p_1>, <p_2>)
+          remainder (<p_1>, <p_2>, <x_1>, ..., <x_n>)
      Returns the remainder of the polynomial <p_1> divided by the
      polynomial <p_2>.  The arguments <x_1>, ..., <x_n> are interpreted
      as in `ratvars'.
@@ -15061,8 +15149,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%o1)                  (2 x + 1)  (x  - 1)
 
 
- -- Function: tellrat (<p_1>, ..., <p_n>)
- -- Function: tellrat ()
+ -- Function: tellrat
+          tellrat (<p_1>, ..., <p_n>)
+          tellrat ()
      Adds to the ring of algebraic integers known to Maxima the
      elements which are the solutions of the polynomials <p_1>, ...,
      <p_n>.  Each argument <p_i> is a polynomial with integer
@@ -16746,7 +16835,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Functions,  Next:
 
 
  -- Function: jacobi_nd (<u>, <m>)
-     The Jacobian elliptic function nc(u,m) = 1/cn(u,m).
+     The Jacobian elliptic function nd(u,m) = 1/dn(u,m).
 
 
  -- Function: jacobi_ds (<u>, <m>)
@@ -16794,7 +16883,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Functions,  Next:
 
 
  -- Function: inverse_jacobi_nd (<u>, <m>)
-     The inverse of the Jacobian elliptic function nc(u,m).
+     The inverse of the Jacobian elliptic function nd(u,m).
 
 
  -- Function: inverse_jacobi_ds (<u>, <m>)
@@ -16824,7 +16913,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
 
      elliptic_e(phi, m) = integrate(sqrt(1 - m*sin(x)^2), x, 0, phi)
 
-     See also *note elliptic_e:: and *note elliptic_ec::.
+     See also *note elliptic_f:: and *note elliptic_ec::.
 
 
  -- Function: elliptic_eu (<u>, <m>)
@@ -16892,9 +16981,10 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
      `limit (cot(x)/csc(x), x, 0)'.
 
 
- -- Function: limit (<expr>, <x>, <val>, <dir>)
- -- Function: limit (<expr>, <x>, <val>)
- -- Function: limit (<expr>)
+ -- Function: limit
+          limit (<expr>, <x>, <val>, <dir>)
+          limit (<expr>, <x>, <val>)
+          limit (<expr>)
      Computes the limit of <expr> as the real variable <x> approaches
      the value <val> from the direction <dir>.  <dir> may have the value
      `plus' for a limit from above, `minus' for a limit from below, or
@@ -16944,9 +17034,10 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
      Setting `limsubst' to `true' will allow such substitutions.
 
 
- -- Function: tlimit (<expr>, <x>, <val>, <dir>)
- -- Function: tlimit (<expr>, <x>, <val>)
- -- Function: tlimit (<expr>)
+ -- Function: tlimit
+          tlimit (<expr>, <x>, <val>, <dir>)
+          tlimit (<expr>, <x>, <val>)
+          tlimit (<expr>)
      Take the limit of the Taylor series expansion of `expr' in `x' at
      `val' from direction `dir'.
 
@@ -17082,8 +17173,9 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
                             /
 
 
- -- Function: at (<expr>, [<eqn_1>, ..., <eqn_n>])
- -- Function: at (<expr>, <eqn>)
+ -- Function: at
+          at (<expr>, [<eqn_1>, ..., <eqn_n>])
+          at (<expr>, <eqn>)
      Evaluates the expression <expr> with the variables assuming the
      values as specified for them in the list of equations `[<eqn_1>,
      ..., <eqn_n>]' or the single equation <eqn>.
@@ -17133,8 +17225,9 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      property is assigned by `gradef'.
 
 
- -- Function: atvalue (<expr>, [<x_1> = <a_1>, ..., <x_m> = <a_m>], <c>)
- -- Function: atvalue (<expr>, <x_1> = <a_1>, <c>)
+ -- Function: atvalue
+          atvalue (<expr>, [<x_1> = <a_1>, ..., <x_m> = <a_m>], <c>)
+          atvalue (<expr>, <x_1> = <a_1>, <c>)
      Assigns the value <c> to <expr> at the point `<x> = <a>'.
      Typically boundary values are established by this mechanism.
 
@@ -17371,10 +17464,11 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      `subst (x, 'diff (y, t), 'diff (y, t, 2))' yields `'diff (x, t)'.
 
 
- -- Function: diff (<expr>, <x_1>, <n_1>, ..., <x_m>, <n_m>)
- -- Function: diff (<expr>, <x>, <n>)
- -- Function: diff (<expr>, <x>)
- -- Function: diff (<expr>)
+ -- Function: diff
+          diff (<expr>, <x_1>, <n_1>, ..., <x_m>, <n_m>)
+          diff (<expr>, <x>, <n>)
+          diff (<expr>, <x>)
+          diff (<expr>)
      Returns the derivative or differential of <expr> with respect to
      some or all variables in <expr>.
 
@@ -17521,8 +17615,9 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
           (%o15)          [b z - c y, c x - a z, a y - b x]
 
 
- -- Function: gradef (<f>(<x_1>, ..., <x_n>), <g_1>, ..., <g_m>)
- -- Function: gradef (<a>, <x>, <expr>)
+ -- Function: gradef
+          gradef (<f>(<x_1>, ..., <x_n>), <g_1>, ..., <g_m>)
+          gradef (<a>, <x>, <expr>)
      Defines the partial derivatives (i.e., the components of the
      gradient) of the function <f> or variable <a>.
 
@@ -17907,8 +18002,9 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
                                                  2
 
 
- -- Function: integrate (<expr>, <x>)
- -- Function: integrate (<expr>, <x>, <a>, <b>)
+ -- Function: integrate
+          integrate (<expr>, <x>)
+          integrate (<expr>, <x>, <a>, <b>)
      Attempts to symbolically compute the integral of <expr> with
      respect to <x>.  `integrate (<expr>, <x>)' is an indefinite
      integral, while `integrate (<expr>, <x>, <a>, <b>)' is a definite
@@ -18374,9 +18470,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 19.4 Functions and Variables for QUADPACK
 =========================================
 
- -- Function: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, [<epsrel>,
-          <epsabs>, <limit>])
- -- Function: quad_qag (<f>, <x>, <a>, <b>, <key>, [<epsrel>, <epsabs>,
+ -- Function: quad_qag
+          quad_qag (<f(x)>, <x>, <a>, <b>, <key>, [<epsrel>, <epsabs>,
+          <limit>])
+          quad_qag (<f>, <x>, <a>, <b>, <key>, [<epsrel>, <epsabs>,
           <limit>])
      Integration of a general function over a finite interval.
      `quad_qag' implements a simple globally adaptive integrator using
@@ -18457,10 +18554,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
                                           9
 
 
- -- Function: quad_qags (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+ -- Function: quad_qags
+          quad_qags (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
           <limit>])
- -- Function: quad_qags (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
-          <limit>])
+          quad_qags (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>, <limit>])
      Integration of a general function over a finite interval.
      `quad_qags' implements globally adaptive interval subdivision with
      extrapolation (de Doncker, 1978) by the Epsilon algorithm (Wynn,
@@ -18535,10 +18632,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      `quad_qag' for this integrand.
 
 
- -- Function: quad_qagi (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+ -- Function: quad_qagi
+          quad_qagi (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
           <limit>])
- -- Function: quad_qagi (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
-          <limit>])
+          quad_qagi (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>, <limit>])
      Integration of a general function over an infinite or
      semi-infinite interval.  The interval is mapped onto a finite
      interval and then the same strategy as in `quad_qags' is applied.
@@ -18621,9 +18718,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
                                          32
 
 
- -- Function: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, [<epsrel>,
-          <epsabs>, <limit>])
- -- Function: quad_qawc (<f>, <x>, <c>, <a>, <b>, [<epsrel>, <epsabs>,
+ -- Function: quad_qawc
+          quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
+          quad_qawc (<f>, <x>, <c>, <a>, <b>, [<epsrel>, <epsabs>,
           <limit>])
      Computes the Cauchy principal value of f(x)/(x - c) over a finite
      interval.  The strategy is globally adaptive, and modified
@@ -18713,9 +18811,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
           (%o3)                    - 3.130120337415917
 
 
- -- Function: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+ -- Function: quad_qawf
+          quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, [<epsabs>,
           <limit>, <maxp1>, <limlst>])
- -- Function: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+          quad_qawf (<f>, <x>, <a>, <omega>, <trig>, [<epsabs>,
           <limit>, <maxp1>, <limlst>])
      Calculates a Fourier cosine or Fourier sine transform on a
      semi-infinite interval using the Quadpack QAWF function.  The same
@@ -18801,10 +18900,11 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
           (%o3)                   .6901942235215714
 
 
- -- Function: quad_qawo (<f(x)>, <x>, <a>, <b>, <omega>, <trig>,
-          [<epsrel>, <epsabs>, <limit>, <maxp1>, <limlst>])
- -- Function: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>,
-          [<epsrel>, <epsabs>, <limit>, <maxp1>, <limlst>])
+ -- Function: quad_qawo
+          quad_qawo (<f(x)>, <x>, <a>, <b>, <omega>, <trig>, [<epsrel>,
+          <epsabs>, <limit>, <maxp1>, <limlst>])
+          quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>, [<epsrel>,
+          <epsabs>, <limit>, <maxp1>, <limlst>])
      Integration of cos (omega x) f(x) or sin (omega x) f(x) over a
      finite interval, where omega is a constant.  The rule evaluation
      component is based on the modified Clenshaw-Curtis technique.
@@ -18893,9 +18993,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
           (%o3)                     1.376043390090716
 
 
- -- Function: quad_qaws (<f(x)>, <x>, <a>, <b>, <alpha>, <beta>,
-          <wfun>, [<epsrel>, <epsabs>, <limit>])
- -- Function: quad_qaws (<f>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+ -- Function: quad_qaws
+          quad_qaws (<f(x)>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+          [<epsrel>, <epsabs>, <limit>])
+          quad_qaws (<f>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
           [<epsrel>, <epsabs>, <limit>])
      Integration of w(x) f(x) over a finite interval, where w(x) is a
      certain algebraic or logarithmic function.  A globally adaptive
@@ -18987,10 +19088,11 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
           (%o3)                     8.750097361672829
 
 
- -- Function: quad_qagp (<f(x)>, <x>, <a>, <b>, <points>, [<epsrel>,
+ -- Function: quad_qagp
+          quad_qagp (<f(x)>, <x>, <a>, <b>, <points>, [<epsrel>,
           <epsabs>, <limit>])
- -- Function: quad_qagp (<f>, <x>, <a>, <b>, <points>, [<epsrel>,
-          <epsabs>, <limit>])
+          quad_qagp (<f>, <x>, <a>, <b>, <points>, [<epsrel>, <epsabs>,
+          <limit>])
      Integration of a general function over a finite interval.
      `quad_qagp' implements globally adaptive interval subdivision with
      extrapolation (de Doncker, 1978) by the Epsilon algorithm (Wynn,
@@ -19152,8 +19254,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      solutions, and only yield approximations when all else fails.
 
 
- -- Function: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
- -- Function: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
+ -- Function: algsys
+          algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
+          algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
      Solves the simultaneous polynomials <expr_1>, ..., <expr_m> or
      polynomial equations <eqn_1>, ..., <eqn_m> for the variables
      <x_1>, ..., <x_n>.  An expression <expr> is equivalent to an
@@ -19254,8 +19357,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
                sqrt(3)        sqrt(3)          3        3
 
 
- -- Function: allroots (<expr>)
- -- Function: allroots (<eqn>)
+ -- Function: allroots
+          allroots (<expr>)
+          allroots (<eqn>)
      Computes numerical approximations of the real and complex roots of
      the polynomial <expr> or polynomial equation <eqn> of one variable.
 
@@ -19313,8 +19417,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
            + 1.098699797110288)
 
 
- -- Function: bfallroots (<expr>)
- -- Function: bfallroots (<eqn>)
+ -- Function: bfallroots
+          bfallroots (<expr>)
+          bfallroots (<eqn>)
      Computes numerical approximations of the real and complex roots of
      the polynomial <expr> or polynomial equation <eqn> of one variable.
 
@@ -19413,8 +19518,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
           (%o9)                    [%t7, %t8, %t9]
 
 
- -- Function: dimension (<eqn>)
- -- Function: dimension (<eqn_1>, ..., <eqn_n>)
+ -- Function: dimension
+          dimension (<eqn>)
+          dimension (<eqn_1>, ..., <eqn_n>)
      `dimen' is a package for dimensional analysis.  `load ("dimen")'
      loads this package.  `demo ("dimen")' displays a short
      demonstration.
@@ -19743,10 +19849,11 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      which are free of `%i'.
 
 
- -- Function: realroots (<expr>, <bound>)
- -- Function: realroots (<eqn>, <bound>)
- -- Function: realroots (<expr>)
- -- Function: realroots (<eqn>)
+ -- Function: realroots
+          realroots (<expr>, <bound>)
+          realroots (<eqn>, <bound>)
+          realroots (<expr>)
+          realroots (<eqn>)
      Computes rational approximations of the real roots of the
      polynomial <expr> or polynomial equation <eqn> of one variable, to
      within a tolerance of <bound>.  Coefficients of <expr> or <eqn>
@@ -19909,9 +20016,10 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      interval for the roots found by the `realroots' function.
 
 
- -- Function: solve (<expr>, <x>)
- -- Function: solve (<expr>)
- -- Function: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+ -- Function: solve
+          solve (<expr>, <x>)
+          solve (<expr>)
+          solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
      Solves the algebraic equation <expr> for the variable <x> and
      returns a list of solution equations in <x>.  If <expr> is not an
      equation, the equation `<expr> = 0' is assumed in its place.  <x>
@@ -20157,8 +20265,9 @@ File: maxima.info,  Node: Functions and Variables for Differential Equations,  P
      See `ode2' for an example of its usage.
 
 
- -- Function: desolve (<eqn>, <x>)
- -- Function: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+ -- Function: desolve
+          desolve (<eqn>, <x>)
+          desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
      The function `desolve' solves systems of linear ordinary
      differential equations using Laplace transform.  Here the <eqn>'s
      are differential equations in the dependent variables <x_1>, ...,
@@ -20395,6 +20504,10 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
 
           x[j] = sum(y[k] exp(-2 %i %pi j k / n), k, 0, n - 1)
 
+     As there are various sign and normalization conventions possible,
+     this definition of the transform may differ from that used by
+     other mathematical software.
+
      `load(fft)' loads this function.
 
      See also `fft' (forward transform), `recttopolar', and
@@ -20450,6 +20563,10 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      the output of the transform.  Then for `k' from 0 through `n - 1',
 
           y[k] = (1/n) sum(x[j] exp(+2 %i %pi j k / n), j, 0, n - 1)
+
+     As there are various sign and normalization conventions possible,
+     this definition of the transform may differ from that used by
+     other mathematical software.
 
      When the data <x> are real, real coefficients `a' and `b' can be
      computed such that
@@ -20544,8 +20661,9 @@ File: maxima.info,  Node: Functions for numerical solution of equations,  Next: 
 22.3 Functions for numerical solution of equations
 ==================================================
 
- -- Function: horner (<expr>, <x>)
- -- Function: horner (<expr>)
+ -- Function: horner
+          horner (<expr>, <x>)
+          horner (<expr>)
      Returns a rearranged representation of <expr> as in Horner's rule,
      using <x> as the main variable if it is specified.  `x' may be
      omitted in which case the main variable of the canonical rational
@@ -20725,10 +20843,11 @@ File: maxima.info,  Node: Functions for numerical solution of differential equat
 22.5 Functions for numerical solution of differential equations
 ===============================================================
 
- -- Function: plotdf (<dydx>, ...options...)
- -- Function: plotdf (<dvdu>, `['<u>,<v>`]', ...options...)
- -- Function: plotdf (`['<dxdt>,<dydt>`]', ...options...)
- -- Function: plotdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options...)
+ -- Function: plotdf
+          plotdf (<dydx>, options...)
+          plotdf (<dvdu>, [<u>,<v>], options...)
+          plotdf ([<dxdt>,c<dydt>], options...)
+          plotdf ([<dudt>,c<dvdt>], [<u>,c<v>], options...)
      The function `plotdf' creates a two-dimensional plot of the
      direction field (also called slope field) for a first-order
      Ordinary Differential Equation (ODE) or a system of two autonomous
@@ -20930,9 +21049,10 @@ File: maxima.info,  Node: Functions for numerical solution of differential equat
      by that point (in red) and the orthogonal trajectory (in blue).
 
 
- -- Function: rk (<ODE>, <var>, <initial>, <domain>)
- -- Function: rk ([<ODE1>,...,<ODEm>], [<v1>,...,<vm>],
-          [<init1>,...,<initm>], <domain>)
+ -- Function: rk
+          rk (<ODE>, <var>, <initial>, <domain>)
+          rk ([<ODE1>, ..., <ODEm>], [<v1>, ..., <vm>], [<init1>, ...,
+          <initm>], <domain>)
      The first form solves numerically one first-order ordinary
      differential equation, and the second form solves a system of m of
      those equations, using the 4th order Runge-Kutta method. <var>
@@ -21136,9 +21256,10 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
                                  [ a    b      c   ]
 
 
- -- Function: cauchy_matrix ([<x_1>, <x_2>, ..., <x_m>], [<y_1>, <y_2>,
+ -- Function: cauchy_matrix
+          cauchy_matrix ([<x_1>, <x_2>, ..., <x_m>], [<y_1>, <y_2>,
           ..., <y_n>])
- -- Function: cauchy_matrix ([<x_1>, <x_2>, ..., <x_n>])
+          cauchy_matrix ([<x_1>, <x_2>, ..., <x_n>])
      Returns a `n' by <m> Cauchy matrix with the elements <a[i,j]> =
      1/(<x_i>+<y_i>).  The second argument of `cauchy_matrix' is
      optional.  For this case the elements of the Cauchy matrix are
@@ -21668,9 +21789,10 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
                           [    0         0      (b + a)  ]
 
 
- -- Function: genmatrix (<a>, <i_2>, <j_2>, <i_1>, <j_1>)
- -- Function: genmatrix (<a>, <i_2>, <j_2>, <i_1>)
- -- Function: genmatrix (<a>, <i_2>, <j_2>)
+ -- Function: genmatrix
+          genmatrix (<a>, <i_2>, <j_2>, <i_1>, <j_1>)
+          genmatrix (<a>, <i_2>, <j_2>, <i_1>)
+          genmatrix (<a>, <i_2>, <j_2>)
      Returns a matrix generated from <a>, taking element `<a>[<i_1>,
      <j_1>]' as the upper-left element and `<a>[<i_2>, <j_2>]' as the
      lower-right element of the matrix.  Here <a> is a declared array
@@ -21728,8 +21850,9 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
                                   [  2, 1   2, 2 ]
 
 
- -- Function: gramschmidt (<x>)
- -- Function: gramschmidt (<x>, <F>)
+ -- Function: gramschmidt
+          gramschmidt (<x>)
+          gramschmidt (<x>, <F>)
      Carries out the Gram-Schmidt orthogonalization algorithm on <x>,
      which is either a matrix or a list of lists.  <x> is not modified
      by `gramschmidt'.  The inner product employed by `gramschmidt' is
@@ -22299,9 +22422,10 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      determinants.
 
 
- -- Function: submatrix (<i_1>, ..., <i_m>, <M>, <j_1>, ..., <j_n>)
- -- Function: submatrix (<i_1>, ..., <i_m>, <M>)
- -- Function: submatrix (<M>, <j_1>, ..., <j_n>)
+ -- Function: submatrix
+          submatrix (<i_1>, ..., <i_m>, <M>, <j_1>, ..., <j_n>)
+          submatrix (<i_1>, ..., <i_m>, <M>)
+          submatrix (<M>, <j_1>, ..., <j_n>)
      Returns a new matrix composed of the matrix <M> with rows <i_1>,
      ..., <i_m> deleted, and columns <j_1>, ..., <j_n> deleted.
 
@@ -22498,9 +22622,9 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      `load(affine)' loads this function.
 
 
- -- Function: set_up_dot_simplifications (<eqns>,
-          <check_through_degree>)
- -- Function: set_up_dot_simplifications (<eqns>)
+ -- Function: set_up_dot_simplifications
+          set_up_dot_simplifications (<eqns>, <check_through_degree>)
+          set_up_dot_simplifications (<eqns>)
      The <eqns> are polynomial equations in non commutative variables.
      The value of `current_variables' is the list of variables used for
      computing degrees.  The equations must be homogeneous, in order
@@ -22591,8 +22715,9 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      `load(affine)' loads this function.
 
 
- -- Function: list_nc_monomials ([<p_1>, ..., <p_n>])
- -- Function: list_nc_monomials (<p>)
+ -- Function: list_nc_monomials
+          list_nc_monomials ([<p_1>, ..., <p_n>])
+          list_nc_monomials (<p>)
      Returns a list of the non commutative monomials occurring in a
      polynomial <p> or a list of polynomials <p_1>, ..., <p_n>.
 
@@ -22879,8 +23004,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 25.2.1 Managing indexed objects
 -------------------------------
 
- -- Function: dispcon (<tensor_1>, <tensor_2>, ...)
- -- Function: dispcon (all)
+ -- Function: dispcon
+          dispcon (<tensor_1>, <tensor_2>, ...)
+          dispcon (all)
      Displays the contraction properties of its arguments as were given
      to `defcon'.  `dispcon (all)' displays all the contraction
      properties which were defined.
@@ -22947,8 +23073,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      considered undefined.
 
 
- -- Function: rename (<expr>)
- -- Function: rename (<expr>, <count>)
+ -- Function: rename
+          rename (<expr>)
+          rename (<expr>, <count>)
      Returns an expression equivalent to <expr> but with the dummy
      indices in each term chosen from the set `[%1, %2,...]', if the
      optional second argument is omitted. Otherwise, the dummy indices
@@ -23028,8 +23155,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      `rename').
 
 
- -- Function: defcon (<tensor_1>)
- -- Function: defcon (<tensor_1>, <tensor_2>, <tensor_3>)
+ -- Function: defcon
+          defcon (<tensor_1>)
+          defcon (<tensor_1>, <tensor_2>, <tensor_3>)
      gives <tensor_1> the property that the contraction of a product of
      <tensor_1> and <tensor_2> results in <tensor_3> with the
      appropriate indices.  If only one argument, <tensor_1>, is given,
@@ -23046,9 +23174,10 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      `defcon'.
 
 
- -- Function: remcon (<tensor_1>, ..., <tensor_n>)
- -- Function: remcon (all)
-     removes all the contraction properties from the (<tensor_1>, ...,
+ -- Function: remcon
+          remcon (<tensor_1>, ..., <tensor_n>)
+          remcon (all)
+     Removes all the contraction properties from the (<tensor_1>, ...,
      <tensor_n>). `remcon(all)' removes all contraction properties from
      all indexed objects.
 
@@ -23461,8 +23590,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      covariant indices and <n> contravariant indices.
 
 
- -- Function: canform (<expr>)
- -- Function: canform (<expr>, <rename>)
+ -- Function: canform
+          canform (<expr>)
+          canform (<expr>, <rename>)
      Simplifies <expr> by renaming dummy indices and reordering all
      indices as dictated by symmetry conditions imposed on them. If
      `allsym' is `true' then all indices are assumed symmetric,
@@ -23647,8 +23777,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      `coord' is a list of all indexed objects having this property.
 
 
- -- Function: remcoord (<tensor_1>, <tensor_2>, ...)
- -- Function: remcoord (all)
+ -- Function: remcoord
+          remcoord (<tensor_1>, <tensor_2>, ...)
+          remcoord (all)
      Removes the coordinate differentiation property from the `tensor_i'
      that was established by the function `coord'.  `remcoord(all)'
      removes this property from all indexed objects.
@@ -23681,8 +23812,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
                                              %1 c              %1 c
 
 
- -- Function: simpmetderiv (<expr>)
- -- Function: simpmetderiv (<expr>[, <stop>])
+ -- Function: simpmetderiv
+          simpmetderiv (<expr>)
+          simpmetderiv (<expr>[, <stop>])
      Simplifies expressions containing products of the derivatives of
      the metric tensor. Specifically, `simpmetderiv' recognizes two
      identities:
