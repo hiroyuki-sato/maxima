@@ -56,10 +56,9 @@ build-stamp:
 	aclocal
 	automake
 
-	GCL_ANSI=t gcl -batch -eval '(bye #+ia64 1)' || \
-	echo '(setq compiler::*opt-three* "-O0" compiler::*opt-two* "-O0")(si::save-system "gcl")' | GCL_ANSI=t gcl
+	echo '(progn (dolist (l (quote si::(clines defentry system object bye quit get-setf-method))) (import l :cl)(export l :cl))(export (quote *load-pathname*) :si)(setf (symbol-function (quote si::get-setf-method)) (symbol-function (quote get-setf-expansion)))(setq si::*optimize-maximum-pages* nil)(si::save-system "gcl"))' | GCL_ANSI=t gcl
 
-	PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '#-native-reloc(princ "--enable-gcl-alt-link")(bye)') \
+	PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '(progn #-native-reloc(princ "--enable-gcl-alt-link"))') \
 		--enable-sys-proclaim \
 		--prefix=/usr \
 		--libexec=/usr/lib \
@@ -71,6 +70,9 @@ build-stamp:
 	rm -f src/sys-proclaim.lisp
 
 	PATH=$$(pwd):$$PATH GCL_ANSI=t $(MAKE)
+
+	echo ':lisp (setq maxima::*maxima-started* nil si::*optimize-maximum-pages* t)(si::sgc-on nil)(si::gbc t)(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
+
 
 # This sets up some reasonable readline command completion by default
 
@@ -105,7 +107,7 @@ build-stamp:
 #		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
 #		dvips -o maxima.ps maxima
 
-	echo ':lisp (setq si::*readline-prefix* "maxima::$$")(when (fboundp (quote si::sgc-on)) (si::sgc-on t))(setq maxima::*maxima-started* nil maxima::*maxima-index-dir* "/usr/share/doc/maxima/info")(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
+	echo ':lisp (setq si::*readline-prefix* "maxima::$$")(setq maxima::*maxima-started* nil maxima::*maxima-index-dir* "/usr/share/doc/maxima/info")(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
 
 	touch build-stamp
 
@@ -138,7 +140,7 @@ clean: #restore
 	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
 	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
 	rm -rf doc/info/maxima.html
-	rm -rf src/binary-gcl
+	rm -rf src/binary-gcl gcl
 	rm -f doc/man/ru/maxima.1
 	rm -f tests/rtest14.ERR
 	rm -f doc/info/include-maxima.texi
