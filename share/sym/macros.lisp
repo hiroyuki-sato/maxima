@@ -16,6 +16,7 @@
 ;       *              e-mail : avb@sysal.ibp.fr                      *
 ;       ***************************************************************
 
+
 ;---------------------------------------------------------------------------
 ;                     DECLARATION DES MACROS
 ; pour le type 2 des polynomes partitionnes avec en tete de chaque
@@ -35,26 +36,6 @@
 (defmacro tcoe (term) (list 'cadr term)); coefficient d'un terme partitionne
 (defmacro tlg (term) 
          (list 'car term)); longueur de la partition d'un terme partitionne
-
-(defvar COEI)
-(defvar TERMREST)
-(defvar CHCOETERM)
-(defvar MONI)
-(defvar A)
-(defvar TCOE)
-(defvar B)
-(defvar TMON)
-(defvar C)
-(defvar LGI)
-(defvar D)
-(defvar TLG)
-(defvar SYM)
-(defvar TERM)
-(defvar 3CONS)
-(defvar TERMI)
-(defvar P)
-(defvar COE)
-(defvar 4CONS)
 
 
 

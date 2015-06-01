@@ -1461,6 +1461,78 @@ integrate(sqrt(cos(x)+1), x, -%pi, %pi);
 integrate ((1+exp(t))/sqrt(t+exp(t)), t, 0, 1);
 2*sqrt(%e+1)-2;
 
+/* #2862 Incorrect result for integrate(u/(u+1)^2,u,0,inf); */
+errcatch(integrate(u/(u+1)^2,u,0,inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+
+/* #2903 Wrong integration over 1/(x+1) with bounds 0 to inf, since version 5.34.0 */
+errcatch(integrate(1/(x+1), x,0,inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+
+/* #2919 Definite integration broken: integrate(1/(x^2), x, -inf, inf) gives zero  */
+errcatch(integrate(1/(x^2), x, -inf, inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+/* other tests mentioned in #2919 */
+
+errcatch (integrate(1/x, x, 0, 1));
+[];
+
+error;
+["defint: integral is divergent."];
+
+integrate(1/x, x, -1, 1);
+0;
+/* expected output: Principal Value -- dunno how to capture that */
+
+errcatch (integrate(1/x, x, 0, inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+errcatch (integrate(1/x, x, 1, inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+integrate(1/x, x, -inf, inf);
+0;
+/* expected output: Principal Value -- dunno how to capture that */
+
+errcatch (integrate(1/x^2, x, 0, 1));
+[];
+
+error;
+["defint: integral is divergent."];
+
+errcatch (integrate(1/x^2, x, -1, 1));
+[];
+
+error;
+["defint: integral is divergent."];
+
+errcatch (integrate(1/x^2, x, 0, inf));
+[];
+
+error;
+["defint: integral is divergent."];
+
+integrate(1/x^2, x, 1, inf);
+1;
+
 /* SF # 2633: ev(integrate,numer) gives strange result */
 (foo : ev(integrate(sin(2*%pi*x),x,0,1),numer), 0);
 0;

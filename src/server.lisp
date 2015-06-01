@@ -52,7 +52,9 @@
 
   (let ((host (etypecase host
                 (string host)
-                (integer (hostent-name (resolve-host-ipaddr host))))))
+                (integer (hostent-name (resolve-host-ipaddr host)))))
+	#+(and ccl openmcl-unicode-strings)
+	(ccl:*default-socket-character-encoding* :utf-8))
     #+allegro (socket:make-socket :remote-host host :remote-port port
                                   :format (if bin :binary :text))
     #+clisp (socket:socket-connect port host :element-type
@@ -104,10 +106,12 @@
 #+lispworks (system::getpid)
 #+ecl (si:getpid)
 #+ccl (ccl::getpid)
-#-(or clisp cmu scl sbcl gcl openmcl lispworks ecl ccl) (getpid-from-environment)
+#+allegro (excl::getpid)
+#-(or clisp cmu scl sbcl gcl openmcl lispworks ecl ccl allegro)
+  (getpid-from-environment)
 )
 
-#+(or gcl clisp cmu scl sbcl lispworks ecl ccl)
+#+(or gcl clisp cmu scl sbcl lispworks ecl ccl allegro)
 (defun xchdir (w)
   #+clisp (ext:cd w)
   #+gcl (si::chdir w)
@@ -116,4 +120,5 @@
   #+lispworks (hcl:change-directory w)
   #+ecl (si:chdir w)
   #+ccl (ccl:cwd w)
+  #+allegro (excl:chdir w)
   )

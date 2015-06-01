@@ -42,12 +42,13 @@
 (defun bye ()
   #+(or cmu scl clisp) (ext:quit)
   #+sbcl               (sb-ext:quit)
-  #+allegro            (excl:exit)
+  #+allegro            (excl:exit 0 :quiet t)
   #+(or mcl openmcl)   (ccl:quit)
   #+gcl                (lisp:quit)
   #+ecl                (si:quit)
   #+lispworks          (lispworks:quit)
   #+abcl               (cl-user::quit)
+  #+kcl                (lisp::bye)
   )
 
 
@@ -91,6 +92,17 @@
   (cond ((null l) nil)
 	((atom l) (member l x :test #'eq))
 	(t (or (amongl x (car l)) (amongl x (cdr l)))))) 
+
+;;; Tests to see whether one tree is a subtree of another.
+;;;
+;;; Both arguments should be well-formed cons trees (so no cycles). If supplied,
+;;; TEST is used as an equality predicate.
+
+(defun subtree-p (branch tree &key (test #'eql))
+  (or (funcall test branch tree)
+      (and (not (atom tree))
+           (member branch tree
+                   :test (lambda (x y) (subtree-p x y :test test))))))
 
 ;;; Takes a list in "alist" form and converts it to one in
 ;;; "property list" form, i.e. ((A . B) (C . D)) --> (A B C D).

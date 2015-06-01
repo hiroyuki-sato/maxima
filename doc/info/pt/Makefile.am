@@ -4,7 +4,7 @@ lang = pt
 langsdir = /pt
 
 info_TEXINFOS = maxima.texi
-maxima_TEXINFOS = include-maxima.texi maxima-macros.texi \
+maxima_TEXINFOS = maxima-macros.texi \
  Introduction.texi Bugs.texi Help.texi Command.texi Operators.texi \
  Expressions.texi Simplification.texi Plotting.texi Input.texi Floating.texi \
  Contexts.texi Polynomials.texi Constants.texi Logarithms.texi \
@@ -22,4 +22,4 @@ maxima_TEXINFOS = include-maxima.texi maxima-macros.texi \
  stats.texi stirling.texi stringproc.texi unit.texi zeilberger.texi
 
 include ../common-lang.mk
-EXTRA_DIST += texi2html.init
+EXTRA_DIST += texi2html.init txi-pt_PT.tex

@@ -33,7 +33,7 @@ endif
 SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8) $(DE_DIR) $(DE_DIR_UTF8)
 
 info_TEXINFOS = maxima.texi
-maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
+maxima_TEXINFOS = category-macros.texi Introduction.texi \
  Bugs.texi Help.texi Command.texi DataTypes.texi Constants.texi Lists.texi \
  Arrays.texi defstruct.texi Expressions.texi Operators.texi Evaluation.texi \
  Simplification.texi MathFunctions.texi Database.texi Plotting.texi \
@@ -211,7 +211,7 @@ endif
 all-local: maxima.info maxima-index.lisp $(MAXIMA_CHM)
 
 maxima.info : maxima.texi
-	makeinfo --split-size=1000000 maxima.texi
+	$(MAKEINFO) --split-size=1000000 maxima.texi
 
 html: maxima.html contents.hhc
 
@@ -286,13 +286,13 @@ EXTRA_DIST = texi2html manual.css texi2html.init \
     extract_categories1.awk  extract_categories1.sed  extract_categories.sh
 
 check_texinfo:
-	pattern=`printf "\t"` ; \
+	@pattern=`printf "\t"` ; \
 	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run make distclean and then /doc/info/fix_tab to fix the problem." ; exit 1 )
 
 warn_texinfo:
-	pattern=`printf "\t"` ; \
+	@pattern=`printf "\t"` ; \
 	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run /doc/info/fix_tab to fix the problem." )
