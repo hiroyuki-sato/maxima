@@ -36,6 +36,7 @@
 
 (defconstant +behavior-count+ 4)
 (defvar *behavior-count-now*)
+(defvar *getsignl-asksign-ok* nil)
 
 (load-macsyma-macros rzmac)
 
@@ -94,6 +95,13 @@
 	  ans))))
 
 (defmfun $limit (&rest args)
+  (let ((first-try (apply #'toplevel-$limit args)))
+    (if (and (consp first-try) (eq (caar first-try) '%limit))
+      (let ((*getsignl-asksign-ok* t))
+        (apply #'toplevel-$limit args))
+      first-try)))
+
+(defmfun toplevel-$limit (&rest args)
   (let ((limit-assumptions ())
 	(old-integer-info ())
 	($keepfloat t)
@@ -233,7 +241,7 @@
 
 (defmfun limit-list (exp1 &rest rest)
   (if (mbagp exp1)
-      `(,(car exp1) ,@(mapcar #'(lambda (x) (apply #'$limit `(,x ,@rest))) (cdr exp1)))
+      `(,(car exp1) ,@(mapcar #'(lambda (x) (apply #'toplevel-$limit `(,x ,@rest))) (cdr exp1)))
       ()))
 
 (defun limit-context (var val direction) ;Only works on entry!
@@ -285,15 +293,27 @@
 ;; preserve-direction.  Default is T, like it used to be.
 (defun both-side (exp var val &optional (preserve t))
   (let* ((preserve-direction preserve)
-         (la ($limit exp var val '$plus)) lb)
+         (la (toplevel-$limit exp var val '$plus)) lb)
     (when (eq la '$und) (return-from both-side '$und))
-    (setf lb ($limit exp var val '$minus))
-    (cond ((alike1 (ridofab la) (ridofab lb))  (ridofab la))
-          ((or (not (free la '%limit))
-               (not (free lb '%limit)))  ())
-          ;; inf + minf => infinity
-          ((and (infinityp la) (infinityp lb)) '$infinity)
-          (t '$und))))
+    (setf lb (toplevel-$limit exp var val '$minus))
+    (let ((ra (ridofab la))
+          (rb (ridofab lb)))
+      (cond ((eq t (meqp ra rb))
+             ra)
+            ((and (eq ra '$ind)
+                  (eq rb '$ind))
+             ; Maxima does not consider equal(ind,ind) to be true, but
+             ; if both one-sided limits are ind then we want to call
+             ; the two-sided limit ind (e.g., limit(sin(1/x),x,0)).
+             '$ind)
+            ((or (not (free la '%limit))
+                 (not (free lb '%limit)))
+             ())
+            ((and (infinityp la) (infinityp lb))
+             ; inf + minf => infinity
+             '$infinity)
+            (t
+             '$und)))))
 
 ;; Warning:  (CATCH NIL ...) will catch all throws.
 ;; NIL should not be used as a tag name.
@@ -321,11 +341,12 @@
 ;; or nil if sign unknown or complex
 (defun getsignl (z)
   (let ((z (ridofab z)))
-    (if (not (free z var)) (setq z ($limit z var val)))
-    (let ((sign ($csign z)))
-      (cond ((eq sign '$pos) 1)
-	    ((eq sign '$neg) -1)
-	    ((eq sign '$zero) 0)))))
+    (if (not (free z var)) (setq z (toplevel-$limit z var val)))
+    (let ((*complexsign* t))
+      (let ((sign (if *getsignl-asksign-ok* ($asksign z) ($sign z))))
+        (cond ((eq sign '$pos) 1)
+              ((eq sign '$neg) -1)
+              ((eq sign '$zero) 0))))))
 
 (defun restorelim (exp)
   (cond ((null exp) nil)
@@ -416,9 +437,20 @@ ignoring dummy variables and array indices."
     ;; If there's only one infinity, we replace it by a variable and take the
     ;; limit as that variable goes to infinity. Use $gensym in case we can't
     ;; compute the answer and the limit leaks out.
-    (1 (let ((limit (or (inf-typep exp) (epsilon-typep exp)))
-             (var ($gensym)))
-         ($limit (subst var limit exp) var limit)))
+    (1 (let* ((val (or (inf-typep exp) (epsilon-typep exp)))
+              (var ($gensym))
+              (expr (subst var val exp))
+              (limit (toplevel-$limit expr var val)))
+         (cond
+           ;; Now we look to see whether the computed limit is any simpler than
+           ;; what we shoved in (which we'll define as "doesn't contain EXPR as a
+           ;; subtree"). If so, return it.
+           ((not (subtree-p expr limit :test #'equal))
+            limit)
+
+           ;; Otherwise, return the original form: apparently, we can't compute
+           ;; the limit we needed, and it's uglier than what we started with.
+           (t exp))))
 
     ;; If more than one infinity, we have to be a bit more careful.
     (otherwise
@@ -1012,7 +1044,7 @@ ignoring dummy variables and array indices."
   (let ((ans ()))
     (setq n (stirling0 n)
 	  d (stirling0 d))
-    (setq ans ($limit (m// n d) var '$inf))
+    (setq ans (toplevel-$limit (m// n d) var '$inf))
     (cond ((and (atom ans)
 		(not (member ans '(und ind ) :test #'eq)))  ans)
 	  ((eq (caar ans) '%limit)  ())
@@ -1427,12 +1459,38 @@ ignoring dummy variables and array indices."
     (desetq (const . (n . d)) (remove-singularities n d))
     (setq const (m* const (m// nconst dconst)))
     (simpinf
-     (cond (ind (let ((ans (limit2 n d var val)))
-		  (if ans (m* const ans))))
-	   (t (let ((ans (limit
-			  ($multthru (sratsimp (m// n d)))
-			  var val 'think)))
-		(if ans (m* const ans))))))))
+     (let ((ans (if ind
+                    (limit2 n d var val)
+                    (limit-numden n d val))))
+
+       ;; When the limit function returns, it's possible that it will return NIL
+       ;; (gave up without finding a limit). It's also possible that it will
+       ;; return something containing UND. We treat that as a failure too.
+       (when (and ans (freeof '$und ans))
+         (m* const ans))))))
+
+;; Try to compute the limit of a quotient NUM/DEN, trying to massage the input
+;; into a convenient form for LIMIT on the way.
+(defun limit-numden (n d val)
+  (let ((expr (cond
+                ;; For general arguments, the best approach seems to be to use
+                ;; sratsimp to simplify the quotient as much as we can, then
+                ;; $multthru, which splits it up into a sum (presumably useful
+                ;; because limit(a+b) = limit(a) + limit(b) if the limits exist, and
+                ;; the right hand side might be easier to calculate)
+                ((not (mplusp n))
+                 ($multthru (sratsimp (m// n d))))
+
+                ;; If we've already got a sum in the numerator, it seems to be
+                ;; better not to recombine it. Call LIMIT on the whole lot, though,
+                ;; because terms with infinite limits might cancel to give a finite
+                ;; result.
+                (t
+                 (m+l (mapcar #'(lambda (x)
+                                  (sratsimp (m// x d)))
+                              (cdr n)))))))
+
+    (limit expr var val 'think)))
 
 ;; Heuristics for picking the right way to express a LHOSPITAL problem.
 (defun lhop-numden (num denom)
@@ -1822,7 +1880,7 @@ ignoring dummy variables and array indices."
   (let ((new-val (cond ((eq val '$zeroa)  '$inf)
 		       ((eq val '$zerob)  '$minf))))
     (if new-val (let ((preserve-direction t))
-		  ($limit e var new-val)) (throw 'limit t))))
+		  (toplevel-$limit e var new-val)) (throw 'limit t))))
 
 (defun simplimtimes (exp)
   ;; The following test
@@ -1896,6 +1954,7 @@ ignoring dummy variables and array indices."
              (if (or (not sign) (eq sign 'complex))
                  0
                  (ecase (* zf sign)
+                   (0 0)
                    (1  '$zeroa)
                    (-1 '$zerob))))))
       ;; If num=1 (and so denom != 1), we have some form of infinity
@@ -2990,8 +3049,8 @@ ignoring dummy variables and array indices."
 
 (defmfun $ldefint (exp var ll ul &aux $logabs ans a1 a2)
   (setq $logabs t ans (sinint exp var)
-	a1 ($limit ans var ul '$minus)
-	a2 ($limit ans var ll '$plus))
+	a1 (toplevel-$limit ans var ul '$minus)
+	a2 (toplevel-$limit ans var ll '$plus))
   (and (member a1 '($inf $minf $infinity $und $ind) :test #'eq)
        (setq a1 (nounlimit ans var ul)))
   (and (member a2 '($inf $minf $infinity $und $ind) :test #'eq)

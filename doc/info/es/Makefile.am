@@ -4,7 +4,7 @@ lang = es
 langsdir = /es
 
 info_TEXINFOS = maxima.texi
-maxima_TEXINFOS = include-maxima.texi maxima-macros.texi \
+maxima_TEXINFOS = maxima-macros.texi \
 Affine.es.texi           Equations.es.texi     Lists.es.texi          Rules.es.texi \
 Arrays.es.texi           Expressions.es.texi   Runtime.es.texi \
 Atensor.es.texi          Matrices.es.texi       Series.es.texi \
@@ -30,5 +30,5 @@ DataTypes.es.texi   Evaluation.es.texi   MathFunctions.es.texi   Database.es.tex
 bernstein.texi      to_poly_solve.texi
 
 include ../common-lang.mk
-EXTRA_DIST += texi2html.init
+EXTRA_DIST += texi2html.init txi-es_ES.tex
 

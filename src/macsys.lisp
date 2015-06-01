@@ -251,9 +251,9 @@ DESTINATION is an actual stream (rather than nil for a string)."
 	(when $showtime	;; we don't distinguish showtime:all?? /RJF
 	  (format t (intl:gettext "Evaluation took ~,4F seconds (~,4F elapsed)")
 		  time-used etime-used )
-	  #+(or gcl ecl openmcl)
+	  #+(or gcl ecl)
 	  (format t "~%")
-	  #+(or cmu scl sbcl clisp)
+	  #+(or cmu scl sbcl clisp openmcl)
 	  (let ((total-bytes (- area-after area-before)))
 	    (cond ((> total-bytes (* 1024 1024))
 		   (format t (intl:gettext " using ~,3F MB.~%")
@@ -273,7 +273,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
           (putprop '$% (cons time-used 0) 'time)
 	  (putprop d-tag (cons time-used  0) 'time))
 	(if (eq (caar r) 'displayinput)
-	    (displa `((mlabel) ,d-tag ,$%))) ;; consistently misspelling label.
+	    (displa `((mlabel) ,d-tag ,$%)))
 	(when (eq batch-or-demo-flag ':demo)
           (princ (break-prompt))
           (force-output)
@@ -427,8 +427,13 @@ DESTINATION is an actual stream (rather than nil for a string)."
             ,*autoconf-version*
             ,(format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" year month day hour minute seconds)
             ,*autoconf-host*
-            ,(lisp-implementation-type)
-            ,(lisp-implementation-version)))))))
+            ,#+sbcl (ensure-readably-printable-string (lisp-implementation-type)) #-sbcl (lisp-implementation-type)
+            ,#+sbcl (ensure-readably-printable-string (lisp-implementation-version)) #-sbcl (lisp-implementation-version)))))))
+
+;; SBCL base strings aren't readably printable.
+;; Attempt a work-around. Yes, this is terribly ugly.
+#+sbcl (defun ensure-readably-printable-string (x)
+  (coerce x `(simple-array character (,(length x)))))
 
 (defun dimension-build-info (form result)
   (declare (special bkptht bkptdp lines break))
@@ -499,7 +504,6 @@ DESTINATION is an actual stream (rather than nil for a string)."
       #-clisp (lisp-implementation-version)
       #+clisp (subseq (lisp-implementation-version)
 	      0 (1+ (search ")" (lisp-implementation-version)))))
-  #+gcl (format t " (a.k.a. GCL)")
   (format t (intl:gettext "~%Distributed under the GNU Public License. See the file COPYING.~%"))
   (format t (intl:gettext "Dedicated to the memory of William Schelter.~%"))
   (format t (intl:gettext "The function bug_report() provides bug reporting information.~%")))
@@ -611,11 +615,21 @@ DESTINATION is an actual stream (rather than nil for a string)."
 
     #+gcl (lisp:system (apply '$sconcat args))
     #+ecl (si:system (apply '$concat args))
-    #+clisp (ext:run-shell-command (apply '$sconcat args))
+    #+clisp (let ((output (ext:run-shell-command (apply '$sconcat args)
+                                                 :wait t :output :stream)))
+              (loop for line = (read-line output nil)
+                 while line do
+                   (format (or s t) "~a~%" line)))
     #+(or cmu scl) (ext:run-program shell (list shell-opt (apply '$sconcat args)) :output (or s t))
     #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t :output (or s nil))
-    #+sbcl (sb-ext:run-program shell (list shell-opt (apply '$sconcat args)) :search t :output (or s t))
-    #+openmcl (ccl::run-program shell (list shell-opt (apply '$sconcat args)) :output (or s t))
+    #+sbcl (sb-ext:run-program shell
+			       #+win32 (cons shell-opt (mapcar '$sconcat args))
+			       #-win32 (list shell-opt (apply '$sconcat args))
+			       :search t :output (or s t))
+    #+openmcl (ccl::run-program shell
+				#+windows (cons shell-opt (mapcar '$sconcat args))
+				#-windows (list shell-opt (apply '$sconcat args))
+				:output (or s t))
     #+abcl (extensions::run-shell-command (apply '$sconcat args) :output (or s *standard-output*))
     #+lispworks (system:run-shell-command (apply '$sconcat args) :wait t)))
 

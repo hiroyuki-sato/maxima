@@ -46,6 +46,7 @@ algebra/nusum.mac \
 algebra/recur.dem \
 algebra/recur.mac \
 algebra/recur.transcript \
+algebra/rtest_recur.mac \
 algebra/solver/linsolve.mac \
 algebra/solver/misc.mac \
 algebra/solver/readme \
@@ -374,6 +375,7 @@ contrib/levin/levin.dem \
 contrib/levin/levin.mac \
 contrib/levin/rtest_levin.mac \
 contrib/lindstedt.mac \
+contrib/lll.lisp \
 contrib/log10.mac \
 contrib/lurkmathml/mathml.lisp \
 contrib/lurkmathml/mathml_ref_list_for_IE \
@@ -387,7 +389,10 @@ contrib/maximaMathML/mathml-maxima.lisp \
 contrib/maximaMathML/mathml.readme \
 contrib/maximaMathML/maximaMathML.lisp \
 contrib/maximaMathML/PrMathML.lisp \
+contrib/maxima-odesolve/kovacicODE.info \
 contrib/maxima-odesolve/kovacicODE.mac \
+contrib/maxima-odesolve/kovacicODE.texi \
+contrib/maxima-odesolve/maxima-odesolve-index.lisp \
 contrib/maxima-odesolve/README \
 contrib/maxima-server.lisp \
 contrib/mcclim/formula.lisp \
@@ -401,6 +406,7 @@ contrib/namespaces/foo.mac \
 contrib/namespaces/namespaces.lisp \
 contrib/namespaces/rtest_namespaces.mac \
 contrib/noninteractive/asksign1.lisp \
+contrib/noninteractive/expand_branches.mac \
 contrib/noninteractive/noninteractive.lisp \
 contrib/noninteractive/noninteractive.mac \
 contrib/noninteractive/rtest_noninteractive.mac \
@@ -1255,6 +1261,7 @@ trigonometry/trgsmp.mac \
 trigonometry/trigrat.lisp \
 utils/mactex-utilities.lisp \
 vector/rtest_vect.mac \
+vector/rtest_vector_rebuild.mac \
 vector/vect.dem \
 vector/vect.mac \
 vector/vector.dem \
