@@ -136,7 +136,7 @@ When one changes, the other does too."
 	  (setq libdir     (combine-path maxima-prefix-env "lib"))
 	  (setq libexecdir (combine-path maxima-prefix-env "libexec"))
 	  (setq datadir    (combine-path maxima-prefix-env "share"))
-	  (setq infodir    (combine-path maxima-prefix-env #+(or windows win32) "share" "info")))
+	  (setq infodir    (combine-path maxima-prefix-env #+(or cygwin windows win32) "share" "info")))
 	(progn
 	  (setq libdir     (maxima-parse-dirstring *autoconf-libdir*))
 	  (setq libexecdir (maxima-parse-dirstring *autoconf-libexecdir*))
@@ -685,7 +685,6 @@ When one changes, the other does too."
 ;; usable *LOAD-PATHNAME*, but it does have SYS:*LOAD-PATHNAME*.
 (defun maxima-load-pathname-directory ()
   "Return the directory part of *load-pathname*."
-  (let ((path #-gcl *load-pathname*
-              #+gcl sys:*load-pathname*))
+  (let ((path *load-pathname*))
     (make-pathname :directory (pathname-directory path)
                    :device (pathname-device path))))

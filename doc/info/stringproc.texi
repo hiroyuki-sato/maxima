@@ -1,12 +1,15 @@
 @menu
-* Introduction to string processing::
-* Functions and Variables for input and output::
-* Functions and Variables for characters::
-* Functions and Variables for strings::
+* Introduction to String Processing::
+* Input and Output::
+* Characters::
+* String Processing::
+* Octets and Utilities for Cryptography::
 @end menu
 
-@node Introduction to string processing, Functions and Variables for input and output, stringproc, stringproc
-@section Introduction to string processing
+@c -----------------------------------------------------------------------------
+@c -----------------------------------------------------------------------------
+@node Introduction to String Processing, Input and Output, stringproc, stringproc
+@section Introduction to String Processing
 
 @code{stringproc.lisp} enlarges Maximas capabilities of working with strings 
 and adds some useful functions for file in/output.
@@ -112,8 +115,10 @@ now offers a lot of functions for manipulating strings. Tokenizing can be done b
 @closecatbox
 
 
-@node Functions and Variables for input and output, Functions and Variables for characters, Introduction to string processing, stringproc
-@section Functions and Variables for input and output
+@c -----------------------------------------------------------------------------
+@c -----------------------------------------------------------------------------
+@node Input and Output, Characters, Introduction to String Processing, stringproc
+@section Input and Output
 
 Example: 
 
@@ -146,6 +151,7 @@ and an integer: ~20t~d~%"$
 (%i7) close(s)$
 @end example
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} close (@var{stream}) 
 Closes @var{stream} and returns @code{true} if @var{stream} had been open. 
 
@@ -155,9 +161,12 @@ Closes @var{stream} and returns @code{true} if @var{stream} had been open.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} flength (@var{stream})
-Returns the number of elements in @var{stream}
-where @var{stream} has to be a stream from or to a file. 
+@var{stream} has to be an open stream from or to a file. 
+@code{flength} then returns the number of bytes which are currently present in this file.
+
+Example: See @ref{writebyte} .
 
 @opencatbox
 @category{File input} @category{File output} @category{Package stringproc}
@@ -165,6 +174,19 @@ where @var{stream} has to be a stream from or to a file.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
+@deffn {Function} flush_output (@var{stream})
+Flushes @var{stream} where @var{stream} has to be an output stream to a file. 
+
+Example: See @ref{writebyte} .
+
+@opencatbox
+@category{File output} @category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
 @deffn {Function} fposition @
 @fname{fposition} (@var{stream}) @
 @fname{fposition} (@var{stream}, @var{pos})
@@ -181,6 +203,7 @@ is in position 1.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} freshline @
 @fname{freshline} ()  @
 @fname{freshline} (@var{stream}) 
@@ -282,9 +305,12 @@ Note that there are some cases, where @code{newline()} does not work as expected
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} opena (@var{file}) 
-Returns an output stream to @var{file}.
-If an existing file is opened, @code{opena} appends elements at the end of file.
+Returns a character output stream to @var{file}.
+If an existing file is opened, @code{opena} appends elements at the end of @var{file}.
+
+For binary output see @ref{Functions and Variables for binary input and output, , opena_binary} .
 
 @opencatbox
 @category{File output} @category{Package stringproc}
@@ -292,9 +318,12 @@ If an existing file is opened, @code{opena} appends elements at the end of file.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} openr (@var{file}) 
-Returns an input stream to @var{file}.
-If @var{file} does not exist, it will be created.
+Returns a character input stream to @var{file}.
+@code{openr} assumes that @var{file} already exists.
+
+For binary input see @ref{Functions and Variables for binary input and output, , openr_binary} .
 
 @opencatbox
 @category{File input} @category{Package stringproc}
@@ -302,10 +331,13 @@ If @var{file} does not exist, it will be created.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} openw (@var{file}) 
-Returns an output stream to @var{file}.
+Returns a character output stream to @var{file}.
 If @var{file} does not exist, it will be created.
 If an existing file is opened, @code{openw} destructively modifies @var{file}.
+
+For binary output see @ref{Functions and Variables for binary input and output, , openw_binary} .
 
 @opencatbox
 @category{File output} @category{Package stringproc}
@@ -313,6 +345,7 @@ If an existing file is opened, @code{openw} destructively modifies @var{file}.
 
 @end deffn
 
+@c -----------------------------------------------------------------------------
 @deffn {Function} printf @
 @fname{printf} (@var{dest}, @var{string}) @
 @fname{printf} (@var{dest}, @var{string}, @var{expr_1}, ..., @var{expr_n})
@@ -449,6 +482,36 @@ The directive ~h has been introduced to handle bigfloats.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{readbyte}
+@deffn {Function} readbyte (@var{stream})
+
+Removes and returns the first byte in @var{stream} which must be a binary input stream. 
+If the end of file is encountered @code{readbyte} returns @code{false}.
+
+Example: Read the first 16 bytes from a file encrypted with AES in OpenSSL. 
+
+@example
+(%i1) ibase: obase: 16.$
+
+(%i2) in: openr_binary("msg.bin");
+(%o2)                       #<input stream msg.bin>
+(%i3) (L:[],  thru 16. do push(readbyte(in), L),  L:reverse(L));
+(%o3) [53, 61, 6C, 74, 65, 64, 5F, 5F, 88, 56, 0DE, 8A, 74, 0FD, 0AD, 0F0]
+(%i4) close(in);
+(%o4)                                true
+(%i5) map(ascii, rest(L,-8));
+(%o5)                      [S, a, l, t, e, d, _, _]
+(%i6) salt: octets_to_number(rest(L,8));
+(%o6)                          8856de8a74fdadf0
+@end example
+
+@opencatbox
+@category{File input} @category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
 @anchor{readchar}
 @deffn {Function} readchar (@var{stream})
 
@@ -480,10 +543,9 @@ if the end of the file is encountered.
 @deffn {Function} sprint (@var{expr_1}, @dots{}, @var{expr_n})
 
 Evaluates and displays its arguments one after the other `on a line' starting at
-the leftmost position.  The numbers are printed with the '-' right next to the
-number, and it disregards line length.  @code{newline()}, which will be
-autoloaded from @code{stringproc.lisp} might be useful, if you whish to place
-intermediate line breaking.
+the leftmost position.  The expressions are printed with a space character right next 
+to the number, and it disregards line length.  
+@code{newline()} might be useful, if you whish to place intermediate line breaking.
 
 Example:
 
@@ -507,8 +569,55 @@ Example:
 @closecatbox
 @end deffn
 
-@node Functions and Variables for characters, Functions and Variables for strings, Functions and Variables for input and output, stringproc
-@section Functions and Variables for characters
+@c -----------------------------------------------------------------------------
+@anchor{writebyte}
+@deffn {Function} writebyte (@var{byte}, @var{stream})
+
+Writes @var{byte} to @var{stream} which must be a binary output stream. 
+@code{writebyte} returns @code{byte}.
+
+Example: Write some bytes to a binary file output stream. 
+In this example all bytes correspond to printable characters and are printed 
+by @code{printfile}. 
+The bytes remain in the stream until @code{flush_output} or @code{close} have been called.
+
+@example
+(%i1) ibase: obase: 16.$
+
+(%i2) bytes: map(cint, charlist("GNU/Linux"));
+(%o2)                [47, 4E, 55, 2F, 4C, 69, 6E, 75, 78]
+(%i3) out: openw_binary("test.bin");
+(%o3)                      #<output stream test.bin>
+(%i4) for i thru 3 do writebyte(bytes[i], out);
+(%o4)                                done
+(%i5) printfile("test.bin")$
+
+(%i6) flength(out);
+(%o6)                                  0
+(%i7) flush_output(out);
+(%o7)                                true
+(%i8) flength(out);
+(%o8)                                  3
+(%i9) printfile("test.bin")$
+GNU
+(%i0A) for b in rest(bytes,3) do writebyte(b, out);
+(%o0A)                               done
+(%i0B) close(out);
+(%o0B)                               true
+(%i0C) printfile("test.bin")$
+GNU/Linux
+@end example
+
+@opencatbox
+@category{File output} @category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@c -----------------------------------------------------------------------------
+@node Characters, String Processing, Input and Output, stringproc
+@section Characters
 
 @deffn {Function} alphacharp (@var{char})    
 Returns @code{true} if @var{char} is an alphabetic character. 
@@ -722,43 +831,10 @@ Returns @code{true} if @var{char} is an uppercase character.
 @end deffn
 
 @c -----------------------------------------------------------------------------
-@node Functions and Variables for strings,  , Functions and Variables for characters, stringproc
-@section Functions and Variables for strings
-
 @c -----------------------------------------------------------------------------
-@anchor{base64}
-@deffn {Function} base64 (@var{string})
+@node String Processing, Octets and Utilities for Cryptography, Characters, stringproc
+@section String Processing
 
-Returns the base64-representation of @var{string} as a string.
-
-Example:
-
-@example
-(%i1) base64 : base64("foo bar baz");
-(%o1)                       Zm9vIGJhciBiYXo=
-(%i2) string : base64_decode(base64);
-(%o2)                          foo bar baz
-@end example
-
-@opencatbox
-@category{Package stringproc}
-@closecatbox
-
-@end deffn
-
-@c -----------------------------------------------------------------------------
-@anchor{base64_decode}
-@deffn {Function} base64_decode (@var{base64-string})
-
-Decodes the string @var{base64-string} coded in base64 back to the original string.
-
-Example: See @ref{base64}.
-
-@opencatbox
-@category{Package stringproc}
-@closecatbox
-
-@end deffn
 
 @c -----------------------------------------------------------------------------
 @deffn {Function} charat (@var{string}, @var{n}) 
@@ -821,31 +897,6 @@ Examples:
 @end example
 
 See also @code{parse_string}.
-
-@opencatbox
-@category{Package stringproc}
-@closecatbox
-
-@end deffn
-
-@c -----------------------------------------------------------------------------
-@anchor{md5sum}
-@deffn {Function} md5sum (@var{string})
-
-Returns the md5 checksum of a @var{string}. 
-The return value is a string to guarantee 32 hex characters. To parse the returned 
-value into an integer please set the input base to 16 and prefix the string by zero.
-
-Example:
-
-@example
-(%i1) string : md5sum("foo bar baz");
-(%o1)                  ab07acbb1e496801937adfa772424bf7
-(%i2) ibase : obase : 16.$
-
-(%i3) integer : parse_string(sconcat(0, string));
-(%o3)                 0ab07acbb1e496801937adfa772424bf7
-@end example
 
 @opencatbox
 @category{Package stringproc}
@@ -925,31 +976,6 @@ Like @code{sequal} but ignores case.
 
 @deffn {Function} sexplode (@var{string})
 @code{sexplode} is an alias for function @code{charlist}.
-
-@opencatbox
-@category{Package stringproc}
-@closecatbox
-
-@end deffn
-
-@c -----------------------------------------------------------------------------
-@anchor{sha1sum}
-@deffn {Function} sha1sum (@var{string})
-
-Returns the sha1 fingerprint of a @var{string}. 
-The return value is a string to guarantee 48 hex characters. To parse the returned 
-value into an integer please set the input base to 16 and prefix the string by zero.
-
-Example:
-
-@example
-(%i1) string : sha1sum("foo bar baz");
-(%o1)              c7567e8b39e2428e38bf9c9226ac68de4c67dc39
-(%i2) ibase : obase : 16.$
-
-(%i3) integer : parse_string(sconcat(0, string));
-(%o3)              0c7567e8b39e2428e38bf9c9226ac68de4c67dc39
-@end example
 
 @opencatbox
 @category{Package stringproc}
@@ -1300,7 +1326,7 @@ Like @code{strim} except that only the left end of @var{string} is trimmed.
 @end deffn
 
 @deffn {Function} strimr (@var{seq}, @var{string}) 
-Like @code{strim} except that only the right end of string is trimmed. 
+Like @code{strim} except that only the right end of @var{string} is trimmed.
 
 @opencatbox
 @category{Package stringproc}
@@ -1392,6 +1418,286 @@ If test is not given, @var{constituent} is used as the default test.
 (%i3) map(parse_string,%);
 (%o3)                      [5, 10, 24]
 @end example
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@node Octets and Utilities for Cryptography,  , String Processing, stringproc
+@section Octets and Utilities for Cryptography
+
+@c -----------------------------------------------------------------------------
+@anchor{base64}
+@deffn {Function} base64 (@var{arg})
+
+Returns the base64-representation of @var{arg} as a string. 
+The argument @var{arg} may be a string, a non-negative integer or a list of octets.
+
+Example:
+
+@example
+(%i1) base64: base64("foo bar baz");
+(%o1)                          Zm9vIGJhciBiYXo=
+(%i2) string: base64_decode(base64);
+(%o2)                            foo bar baz
+(%i3) obase: 16.$
+(%i4) integer: base64_decode(base64, 'number);
+(%o4)                       666f6f206261722062617a
+(%i5) octets: base64_decode(base64, 'list);
+(%o5)            [66, 6F, 6F, 20, 62, 61, 72, 20, 62, 61, 7A]
+(%i6) ibase: 16.$
+(%i7) base64(octets);
+(%o7)                          Zm9vIGJhciBiYXo=
+@end example
+
+Note that if @var{arg} contains umlauts (resp. octets larger than 127) 
+the resulting base64-string is platform dependend. 
+However the decoded string will be equal to the original.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{base64_decode}
+@deffn {Function} base64_decode @
+@fname{base64_decode} (@var{base64-string}) @
+@fname{base64_decode} (@var{base64-string}, @var{return-type})
+
+By default @code{base64_decode} decodes the @var{base64-string} back to the original string. 
+
+The optional argument @var{return-type} allows @code{base64_decode} to 
+alternatively return the corresponding number or list of octets.
+
+Example: See @ref{base64}.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{crc24sum}
+@deffn {Function} crc24sum @
+@fname{crc24sum} (@var{octets}) @
+@fname{crc24sum} (@var{octets}, @var{return-type})
+
+By default @code{crc24sum} returns the @code{CRC24} checksum of an octet-list 
+as a string.
+
+The optional argument @var{return-type} allows @code{crc24sum} to 
+alternatively return the corresponding number or list of octets.
+
+Example:
+@example
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQEcBAEBAgAGBQJVdCTzAAoJEG/1Mgf2DWAqCSYH/AhVFwhu1D89C3/QFcgVvZTM
+wnOYzBUURJAL/cT+IngkLEpp3hEbREcugWp+Tm6aw3R4CdJ7G3FLxExBH/5KnDHi
+rBQu+I7+3ySK2hpryQ6Wx5J9uZSa4YmfsNteR8up0zGkaulJeWkS4pjiRM+auWVe
+vajlKZCIK52P080DG7Q2dpshh4fgTeNwqCuCiBhQ73t8g1IaLdhDN6EzJVjGIzam
+/spqT/sTo6sw8yDOJjvU+Qvn6/mSMjC/YxjhRMaQt9EMrR1AZ4ukBF5uG1S7mXOH
+WdiwkSPZ3gnIBhM9SuC076gLWZUNs6NqTeE3UzMjDAFhH3jYk1T7mysCvdtIkms=
+=WmeC
+-----END PGP SIGNATURE-----
+@end example
+
+@example
+(%i1) ibase : obase : 16.$
+(%i2) sig64 : sconcat(
+ "iQEcBAEBAgAGBQJVdCTzAAoJEG/1Mgf2DWAqCSYH/AhVFwhu1D89C3/QFcgVvZTM",
+ "wnOYzBUURJAL/cT+IngkLEpp3hEbREcugWp+Tm6aw3R4CdJ7G3FLxExBH/5KnDHi",
+ "rBQu+I7+3ySK2hpryQ6Wx5J9uZSa4YmfsNteR8up0zGkaulJeWkS4pjiRM+auWVe",
+ "vajlKZCIK52P080DG7Q2dpshh4fgTeNwqCuCiBhQ73t8g1IaLdhDN6EzJVjGIzam",
+ "/spqT/sTo6sw8yDOJjvU+Qvn6/mSMjC/YxjhRMaQt9EMrR1AZ4ukBF5uG1S7mXOH",
+ "WdiwkSPZ3gnIBhM9SuC076gLWZUNs6NqTeE3UzMjDAFhH3jYk1T7mysCvdtIkms=" )$
+(%i3) octets: base64_decode(sig64, 'list)$
+(%i4) crc24: crc24sum(octets, 'list);
+(%o4)                          [5A, 67, 82]
+(%i5) base64(crc24);
+(%o5)                              WmeC
+@end example
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{md5sum}
+@deffn {Function} md5sum @
+@fname{md5sum} (@var{arg}) @
+@fname{md5sum} (@var{arg}, @var{return-type})
+
+Returns the @code{MD5} checksum of a string, a non-negative integer or 
+a list of octets. The default return value is a string containing 32 hex characters.
+
+The optional argument @var{return-type} allows @code{md5sum} to alternatively 
+return the corresponding number or list of octets.
+
+Example:
+
+@example
+(%i1) ibase: obase: 16.$
+(%i2) msg: "foo bar baz"$
+(%i3) string: md5sum(msg);
+(%o3)                  ab07acbb1e496801937adfa772424bf7
+(%i4) integer: md5sum(msg, 'number);
+(%o4)                 0ab07acbb1e496801937adfa772424bf7
+(%i5) octets: md5sum(msg, 'list);
+(%o5)        [0AB,7,0AC,0BB,1E,49,68,1,93,7A,0DF,0A7,72,42,4B,0F7]
+(%i6) sdowncase( printf(false, "~@{~2,'0x~^:~@}", octets) );
+(%o6)           ab:07:ac:bb:1e:49:68:01:93:7a:df:a7:72:42:4b:f7
+@end example
+
+Note that in case @var{arg} contains German umlauts or other non-ASCII 
+characters (resp. octets larger than 127) the @code{MD5} checksum is platform dependend.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{number_to_octets}
+@deffn {Function} number_to_octets (@var{number})
+
+Returns an octet-representation of @var{number} as a list of octets.
+The @var{number} must be a non-negative integer.
+
+Example:
+
+@example
+(%i1) ibase : obase : 16.$
+(%i2) octets: [0ca,0fe,0ba,0be]$
+(%i3) number: octets_to_number(octets);
+(%o3)                            0cafebabe
+(%i4) number_to_octets(number);
+(%o4)                      [0CA, 0FE, 0BA, 0BE]
+@end example
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{octets_to_number}
+@deffn {Function} octets_to_number (@var{octets})
+
+Returns a number by concatenating the octets in the list of @var{octets}.
+
+Example: See @ref{number_to_octets}.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{octets_to_oid}
+@deffn {Function} octets_to_oid (@var{octets})
+
+Computes an object identifier (OID) from the list of @var{octets}.
+
+Example: RSA encryption OID
+
+@example
+(%i1) ibase : obase : 16.$
+(%i2) oid: octets_to_oid([2A,86,48,86,0F7,0D,1,1,1]);
+(%o2)                      1.2.840.113549.1.1.1
+(%i3) oid_to_octets(oid);
+(%o3)               [2A, 86, 48, 86, 0F7, 0D, 1, 1, 1]
+@end example
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{oid_to_octets}
+@deffn {Function} oid_to_octets (@var{oid-string})
+
+Convertes an object identifier (OID) to a list of @var{octets}.
+
+Example: See @ref{octets_to_oid}.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{sha1sum}
+@deffn {Function} sha1sum @
+@fname{sha1sum} (@var{arg}) @
+@fname{sha1sum} (@var{arg}, @var{return-type})
+
+Returns the @code{SHA1} fingerprint of a string, a non-negative integer or 
+a list of octets. The default return value is a string containing 40 hex characters.
+
+The optional argument @var{return-type} allows @code{sha1sum} to alternatively 
+return the corresponding number or list of octets.
+
+Example:
+
+@example
+(%i1) ibase: obase: 16.$
+(%i2) msg: "foo bar baz"$
+(%i3) string: sha1sum(msg);
+(%o3)              c7567e8b39e2428e38bf9c9226ac68de4c67dc39
+(%i4) integer: sha1sum(msg, 'number);
+(%o4)             0c7567e8b39e2428e38bf9c9226ac68de4c67dc39
+(%i5) octets: sha1sum(msg, 'list);
+(%o5)  [0C7,56,7E,8B,39,0E2,42,8E,38,0BF,9C,92,26,0AC,68,0DE,4C,67,0DC,39]
+(%i6) sdowncase( printf(false, "~@{~2,'0x~^:~@}", octets) );
+(%o6)     c7:56:7e:8b:39:e2:42:8e:38:bf:9c:92:26:ac:68:de:4c:67:dc:39
+@end example
+
+Note that in case @var{arg} contains German umlauts or other non-ASCII 
+characters (resp. octets larger than 127) the @code{SHA1} fingerprint is platform dependend.
+
+@opencatbox
+@category{Package stringproc}
+@closecatbox
+
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{sha256sum}
+@deffn {Function} sha256sum @
+@fname{sha256sum} (@var{arg}) @
+@fname{sha256sum} (@var{arg}, @var{return-type})
+
+Returns the @code{SHA256} fingerprint of a string, a non-negative integer or 
+a list of octets. The default return value is a string containing 64 hex characters.
+
+The optional argument @var{return-type} allows @code{sha256sum} to alternatively 
+return the corresponding number or list of octets (see @ref{sha1sum}).
+
+Example:
+
+@example
+(%i1) string: sha256sum("foo bar baz");
+(%o1)  dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7
+@end example
+
+Note that in case @var{arg} contains German umlauts or other non-ASCII 
+characters (resp. octets larger than 127) the @code{SHA256} fingerprint is platform dependend.
 
 @opencatbox
 @category{Package stringproc}

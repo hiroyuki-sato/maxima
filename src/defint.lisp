@@ -825,23 +825,38 @@ in the interval of integration.")
 		  (setq ll '$inf)))
 	   (cond ((alike1 ul (m*t -1 '$minf))
 		  (setq ul '$inf)))
-	   (cond ((eq ul '$inf) nil)
+	   (cond ((eq ll ul)
+		  ; We have minf <= ll = ul <= inf
+		  )
+		 ((eq ul '$inf)
+		  ; We have minf <= ll < ul = inf
+		  )
 		 ((eq ll '$minf)
+		  ; We have minf = ll < ul < inf
+		  ;
+		  ; Now substitute
+		  ;
+		  ;   var -> -var
+		  ;   ll  -> -ul
+		  ;   ul  -> inf
+		  ;
+		  ; so that minf < ll < ul = inf
 		  (setq exp (subin (m- var) exp))
 		  (setq ll (m- ul))
 		  (setq ul '$inf))
-		 ((eq ll '$inf)
-		  (setq ll ul)
-		  (setq ul '$inf)
-		  (setq exp (m- exp))))
-	   ;;Fix limits so that ll < ul.
-	   (let ((d (complm ask-or-not)))
-	     (cond ((equal d -1)
-		    (setq exp (m- exp))
-		    (setq d ll)
-		    (setq ll ul)
-		    (setq ul d))
-		   (t t))))))
+		 ((or (eq ll '$inf)
+		      (equal (complm ask-or-not) -1))
+		  ; We have minf <= ul < ll
+		  ;
+		  ; Now substitute
+		  ;
+		  ;   exp  -> -exp
+		  ;   ll  <-> ul
+		  ;
+		  ; so that minf <= ll < ul
+		  (setq exp (m- exp))
+		  (rotatef ll ul)))
+	   t)))
 
 (defun complm (ask-or-not)
   (let ((askflag (cond ((eq ask-or-not 'ask)  t)
@@ -977,15 +992,19 @@ in the interval of integration.")
 	(t (setq e ($multthru e))
 	   (let ((a1 ($limit e var ll '$plus))
 		 (a2 ($limit e var ul '$minus)))
-	     (cond ((member a1 '($inf $minf $infinity ) :test #'eq)
-		    (cond ((member a2 '($inf $minf $infinity) :test #'eq)
-			   (cond ((eq a2 a1)  ())
-				 (t (diverg))))
-			  (t (diverg))))
-		   ((member a2 '($inf $minf $infinity) :test #'eq)  (diverg))
-		   ((or (member a1 '($und $ind) :test #'eq)
-			(member a2 '($und $ind) :test #'eq))  ())
-		   (t (m- a2 a1)))))))
+	     (combine-ll-ans-ul-ans a1 a2)))))
+
+;; check for divergent integral
+(defun combine-ll-ans-ul-ans (a1 a2)
+  (cond ((member a1 '($inf $minf $infinity ) :test #'eq)
+	 (cond ((member a2 '($inf $minf $infinity) :test #'eq)
+		(cond ((eq a2 a1)  ())
+		      (t (diverg))))
+	       (t (diverg))))
+	((member a2 '($inf $minf $infinity) :test #'eq)  (diverg))
+	((or (member a1 '($und $ind) :test #'eq)
+	     (member a2 '($und $ind) :test #'eq))  ())
+	(t (m- a2 a1))))
 
 ;;;This function works only on things with ATAN's in them now.
 (defun same-sheet-subs (exp ll ul &aux ll-ans ul-ans)
@@ -1008,10 +1027,8 @@ in the interval of integration.")
     (setq exp (sratsimp ($substitute poles exp)))
     (setq ul-ans (limcp exp var ul '$minus))
     (if (and ll-ans 
-	     ul-ans
-	     (not (member ll-ans infinities))
-	     (not (member ul-ans infinities)))
-	(m- ul-ans ll-ans)
+	     ul-ans)
+	(combine-ll-ans-ul-ans ll-ans ul-ans)
       nil)))
 
 (defun atan-poles (exp ll ul)

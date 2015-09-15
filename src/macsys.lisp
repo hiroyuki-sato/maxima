@@ -150,6 +150,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 
     (multiple-value-bind (.olduser .oldsystem .oldgcu .oldgcs)
 	(excl::get-internal-run-times)
+      (declare (ignore .olduser .oldsystem .oldgcs))
       (sys::gsgc-totalloc .oldspace t)
       (list (aref .oldspace 0) (aref .oldspace 2) .oldgcu)))) ;; report just two kinds of space,
 							      ;; cons-cells and other bytes,
@@ -381,10 +382,6 @@ DESTINATION is an actual stream (rather than nil for a string)."
   (continue (make-echo-stream fileobj *standard-output*)
 	    (if demo-p ':demo ':batch)))
 
-(defmspec $grindef (form)
-  (eval `(grindef ,@(cdr form)))
-  '$done)
-
 (defun $demo (&rest arg-list)
   (let ((tem ($file_search (car arg-list) $file_search_demo)))
     (or tem (merror (intl:gettext "demo: could not find ~M in ~M.")
@@ -613,7 +610,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 	   (setf shell "cmd") (setf shell-opt "/c"))
 	  (t (setf shell "/bin/sh") (setf shell-opt "-c")))
 
-    #+gcl (lisp:system (apply '$sconcat args))
+    #+gcl (system::system (apply '$sconcat args))
     #+ecl (si:system (apply '$concat args))
     #+clisp (let ((output (ext:run-shell-command (apply '$sconcat args)
                                                  :wait t :output :stream)))

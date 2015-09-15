@@ -217,16 +217,21 @@
 ;; Maxima functions in (Z/nZ)*
 ;; 
 ;; zn_order, zn_primroot_p, zn_primroot, zn_log, 
-;; chinese,
+;; chinese, zn_characteristic_factors, zn_factor_generators, zn_nth_root,
 ;; zn_add_table, zn_mult_table, zn_power_table 
 ;;
-;; 2012 - 2014, Volker van Nek  
+;; 2012 - 2015, Volker van Nek  
 ;;
 
 ;; Maxima option variables:
 (defmvar $zn_primroot_limit 1000 "Upper bound for `zn_primroot'." fixnum)
 (defmvar $zn_primroot_verbose nil "Print message when `zn_primroot_limit' is reached." boolean)
 (defmvar $zn_primroot_pretest nil "`zn_primroot' pretests whether (Z/nZ)* is cyclic." boolean)
+
+
+(defun zn-quo (n d p)
+  (declare (inline))
+  (mod (* n (inv-mod d p)) p) )
 
 
 ;; compute the order of x in (Z/nZ)*
@@ -255,12 +260,16 @@
            (gf-merror (intl:gettext 
              "Third argument to `zn_order' must be of the form [[p1, e1], ..., [pk, ek]]." )))
          (setq fs-phi (totient-with-factors n)) )
-      (zn_order x 
+      (zn-order x 
                 n
                 (car fs-phi) ;; phi
                 (cdr fs-phi)) ))) ;; factors of phi with multiplicity
 ;;
 (defun zn_order (x n phi fs-phi)
+  (format t "`zn_order' is deprecated. ~%Please use `zn-order' instead.~%" )
+  (zn-order x n phi fs-phi) )
+;;
+(defun zn-order (x n phi fs-phi)
   (let ((s phi) p e)
     (dolist (f fs-phi s)
       (setq p (car f) e (cadr f))
@@ -416,7 +425,7 @@
       (list '($chinese) (cons '(mlist simp) rems) mods) )
     ((notevery #'integerp (setq mods (cdr mods)))
       (list '($chinese) (cons '(mlist simp) rems) (cons '(mlist simp) mods)) )
-    ((eql return-lcm? t)
+    ((eql return-lcm? '$lcm)
       (cons '(mlist simp) (chinese rems mods)) )
     (t
       (car (chinese rems mods)) )))
@@ -574,7 +583,7 @@
             (setq bb b yy y zz z) ))
         (setq dy (mod (- y yy) p) dz (mod (- zz z) p)) ;; g^dy = a^dz = g^(x*dz)
         (when (= 1 (gcd dz p))
-          (return (mod (* dy (inv-mod dz p)) p)) )     ;; x = dy/dz mod p (since g is generator of order p)
+          (return (zn-quo dy dz p)) ) ;; x = dy/dz mod p (since g is generator of order p)
         (setq y 0
               z 0
               b 1
@@ -648,6 +657,100 @@
         (t (> (cadr a) (cadr b))) ))
 
 
+;; factor generators:
+
+(defmfun $zn_factor_generators (m) 
+  (unless (and (integerp m) (> m 1))
+    (gf-merror (intl:gettext 
+      "`zn_factor_generators': Argument must be an integer greater or equal 2." )))
+  (cons '(mlist simp) (zn-factor-generators m)) )
+;;
+;; D. Shanks - Solved and unsolved problems in number theory, 2. ed
+;; Theorem 44, page 94
+;;
+;; zn_factor_generators(104);                     --> [79,27,89]
+;; zn_characteristic_factors(104);                --> [2,2,12]
+;; map(lambda([g], zn_order(g,104)), [79,27,89]); --> [2,2,12]
+;;
+;; Every element in Z104* can be expressed as 
+;;   79^i * 27^j * 89^k (mod m) where 0 <= i,j < 2 and 0 <= k < 12
+;;
+;; The proof of theorem 44 contains the construction of the factor generators.
+;;
+(defun zn-factor-generators (m) ;; m > 1
+  (let* (($intfaclim) 
+         (fs (sort (get-factor-list m) #'< :key #'car))
+         (pe (car fs))
+         (p (car pe)) (e (cadr pe))
+         (a (expt p e)) 
+         phi fs-phi ga gs ords fs-ords pegs )
+    ;; lemma 1, page 98 :
+                                                       ;; (Z/mZ)* is cyclic when m = 
+    (when (= m 2)                                      ;; 2
+      (return-from zn-factor-generators (list 1)) )     
+    (when (or (< m 8)                                  ;; 3,4,5,6,7
+              (and (> p 2) (null (cdr fs)))            ;;   p^k, p#2
+              (and (= 2 p) (= 1 e) (null (cddr fs))) ) ;; 2*p^k, p#2
+      (setq phi (totient-by-fs-n fs)
+            fs-phi (sort (mapcar #'car (get-factor-list phi)) #'<)
+            ga (zn-primroot m phi fs-phi) )
+      (return-from zn-factor-generators (list ga)) )
+    (setq fs (cdr fs))
+    (cond 
+      ((= 2 p)
+        (unless (and (= e 1) (cdr fs)) ;; phi(2*m) = phi(m) if m#1 is odd
+          (push (1- a) gs) ) ;; a = 2^e
+        (when (> e 1) (setq ords (list 2) fs-ords (list '((2 1)))))
+        (when (> e 2) 
+          (push 3 gs) (push (expt 2 (- e 2)) ords) (push `((2 ,(- e 2))) fs-ords) ))
+    ;; lemma 2, page 100 :
+      (t 
+        (setq phi (* (1- p) (expt p (1- e)))
+              fs-phi (sort (get-factor-list (1- p)) #'< :key #'car) )
+        (when (> e 1) (setq fs-phi (nconc fs-phi (list `(,p ,(1- e))))))
+        (setq ga (zn-primroot a phi (mapcar #'car fs-phi)) ;; factors only
+              gs (list ga)
+              ords (list phi)
+              fs-ords (list fs-phi) )))
+    ;; 
+    (do (b gb c h ia) 
+        ((null fs))
+      (setq pe (car fs) fs (cdr fs)
+            p (car pe) e (cadr pe)
+            phi (* (1- p) (expt p (1- e)))
+            fs-phi (sort (get-factor-list (1- p)) #'< :key #'car) )
+      (when (> e 1) (setq fs-phi (nconc fs-phi (list `(,p ,(1- e))))))
+      (setq b (expt p e)
+            gb (zn-primroot b phi (mapcar #'car fs-phi))
+            c (mod (* (inv-mod b a) (- 1 gb)) a) ;; CRT: h = gb mod b
+            h (+ (* b c) gb)                     ;; CRT: h =  1 mod a
+            ia (inv-mod a b)
+            gs (mapcar #'(lambda (g) (+ (* a (mod (* ia (- 1 g)) b)) g)) gs)
+            gs (cons h gs)
+            ords (cons phi ords)
+            fs-ords (cons fs-phi fs-ords)
+            a (* a b) ))
+    ;; lemma 3, page 101 :
+    (setq pegs 
+      (mapcar #'(lambda (g ord f)
+                (mapcar #'(lambda (pe) 
+                          (append pe 
+                            (list (power-mod g (truncate ord (apply #'expt pe)) m)) ))
+                        f ))
+              gs ords fs-ords ))
+    (setq pegs (sort (apply #'append pegs) #'zn-pe>))
+    (do ((todo pegs (nreverse left)) 
+         (q 0 0) (fg 1 1) (left nil nil)
+          g fgs )
+        ((null todo) fgs)
+      (dolist (peg todo)
+        (setq p (car peg) g (caddr peg)) 
+        (if (= p q) 
+          (push peg left)
+          (setq q p fg (mod (* fg g) m)) ))
+      (push fg fgs) )))
+
+
 ;; nth roots in (Z/nZ)*
 
 (defmfun $zn_nth_root (a r n &optional fs-n)
@@ -664,20 +767,24 @@
     (when rts (cons '(mlist simp) rts)) ))
 
 (defun zn-nrt (a r n &optional fs-n)
-  (when (= 1 (gcd a n))
-    (let (p q qs rt rts rems)
-      (unless fs-n (setq fs-n (let (($intfaclim)) (get-factor-list n))))
-      (dolist (pe fs-n)
-        (setq p (car pe)
-              q (apply #'expt pe)
-              rt (zq-nrt a r p q) )
-        (unless rt (return-from zn-nrt nil))
-        (push q qs)
-        (push rt rts) )
-      (when (= 1 (length fs-n)) (return-from zn-nrt rt)) ;; n is a prime power
-      (setq qs (nreverse qs)
-            rems (zn-distrib-lists (nreverse rts)) )
-      (sort (mapcar #'(lambda (rs) (car (chinese rs qs))) rems) #'<) )))
+  (cond
+    ((= a 0) (list 0))
+    ((= 1 (gcd a n))
+      (let (p q qs rt rts rems res)
+        (unless fs-n (setq fs-n (let (($intfaclim)) (get-factor-list n))))
+        (dolist (pe fs-n)
+          (setq p (car pe)
+                q (apply #'expt pe)
+                rt (zq-nrt a r p q) )
+          (unless rt (return-from zn-nrt nil))
+          (push q qs)
+          (push rt rts) )
+        (if (= 1 (length fs-n)) 
+          (setq res rt) ;; n is a prime power
+          (setq qs (nreverse qs)
+                rems (zn-distrib-lists (nreverse rts))
+                res (mapcar #'(lambda (rs) (car (chinese rs qs))) rems) ))
+        (sort res #'<) ))))
 
 ;; return all possible combinations containing one entry per list:
 ;; (zn-distrib-lists '((1 2 3) (4) (5 6)))
@@ -937,6 +1044,8 @@
 (defvar *gf-fsx-base-p* nil "*gf-fsx* in  base p") 
 (defvar *gf-x^p-powers* nil "x^p^i, i=0,..,n-1") 
 
+(defvar *f2-red* 0 "reduction polynomial") ;; used by ef coeff arith over binary fields
+
 (declaim (fixnum *gf-exp* *ef-exp*))
 
 ;; extension:
@@ -961,7 +1070,17 @@
 
 (defmvar $gf_rat nil "Return values are rational expressions?" boolean)
 
-(defmvar $gf_symmetric nil "A symmetric modulus should be used?" boolean)
+(defmvar $gf_symmetric nil "A symmetric modulus should be used?" boolean) ;; deprecated
+(defmvar $gf_balanced nil "A balanced modulus should be used?" boolean)   ;; there is ec_balanced in elliptic_curves.lisp
+
+(putprop '$gf_symmetric 'gf-balanced-info 'assign)
+
+(defun gf-balanced-info (assign-var arg) 
+  (declare (ignore assign-var))
+  (setq $gf_balanced arg)
+  (format t "`gf_symmetric' is deprecated and replaced by `gf_balanced'.~%The value is bound to `gf_balanced'.") )
+  ;; temporarily print this message
+
 
 (defmvar $gf_coeff_limit 256 
   "`gf_coeff_limit' limits the coeffs when searching for irreducible and primitive polynomials." fixnum)
@@ -1109,6 +1228,7 @@
     ((= 0 c) (gf-merror (intl:gettext "ef coefficient inversion: Quotient by zero")))
     ($ef_coeff_inv (mfuncall '$ef_coeff_inv c))
     (*gf-logs?* (ef-cinv-by-table c))
+    ((= 2 *gf-char*) (f2-inv c))
     (t (let ((*ef-arith?*))
          (gf-x2n (gf-inv (gf-n2x c) *gf-red*)) ))))
 
@@ -1116,6 +1236,7 @@
   (cond 
     ($ef_coeff_exp (mfuncall '$ef_coeff_exp c n))
     (*gf-logs?* (ef-cpow-by-table c n))
+    ((= 2 *gf-char*) (f2-pow c n))
     (t (let ((*ef-arith?*)) 
          (gf-x2n (gf-pow (gf-n2x c) n *gf-red*)) ))))
 
@@ -1125,6 +1246,7 @@
     ((plusp c)
       (cond 
         ((< c *gf-ord*) c) 
+        ((= 2 *gf-char*) (f2-red c))
         (t (let ((*ef-arith?*))
              (gf-x2n (gf-nred (gf-n2x c) *gf-red*)) ))))
     (t 
@@ -1135,6 +1257,7 @@
   (cond 
     ($ef_coeff_mult (mfuncall '$ef_coeff_mult a b))
     (*gf-logs?* (ef-ctimes-by-table a b))
+    ((= 2 *gf-char*) (f2-times a b))
     (t (let ((*ef-arith?*)) 
          (gf-x2n (gf-times (gf-n2x a) (gf-n2x b) *gf-red*)) ))))
 
@@ -1208,6 +1331,78 @@
     ((null x) nil)
     (t (svref *gf-powers* 
          (mod (* n (the fixnum (svref $gf_logs (gf-x2n x)))) *gf-ord*) )) ))
+
+
+;; ef coefficient arith for binary base fields:
+
+(defun f2-red (a)
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((red *f2-red*)
+         (ilen (integer-length red))
+         (e 0) )
+       (declare (fixnum e ilen))
+    (do () ((= a 0) 0)
+      (setq e (- (integer-length a) ilen))
+      (when (< e 0) (return a))
+      (setq a (logxor a (ash red e))) )))
+
+(defun f2-times (a b)
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((ilen (integer-length b))
+         (a1 (ash a (1- ilen)))
+         (ab a1) )
+    (do ((i (- ilen 2) (1- i)) (k 0)) 
+        ((< i 0) (f2-red ab))
+        (declare (fixnum i k))
+      (decf k)
+      (when (logbitp i b) 
+        (setq a1 (ash a1 k)
+              ab (logxor ab a1)
+              k 0 )))))
+
+(defun f2-pow (a n) ;; assume n >= 0
+  (declare (optimize (speed 3) (safety 0)) 
+           (integer n) )
+  (cond 
+    ((= n 0) 1)
+    ((= a 0) 0) 
+    (t (do (res) (())
+         (when (oddp n)
+           (setq res (if res (f2-times a res) a)) 
+           (when (= 1 n)
+             (return-from f2-pow res) ))
+         (setq n (ash n -1) 
+               a (f2-times a a)) ))))
+
+(defun f2-inv (b) 
+  (declare (optimize (speed 3) (safety 0)))
+  (when (= b 0) 
+    (gf-merror (intl:gettext "f2 arithmetic: Quotient by zero")) )
+  (let ((b1 1) (a *f2-red*) (a1 0) q r)
+    (do ()
+        ((= b 0) a1)
+      (multiple-value-setq (q r) (f2-divide a b)) 
+      (psetf a b b r) 
+      (psetf a1 b1 b1 (logxor (f2-times q b1) a1)) )))
+
+(defun f2-divide (a b)
+  (declare (optimize (speed 3) (safety 0)))
+  (cond 
+    ((= b 0)
+      (gf-merror (intl:gettext "f2 arithmetic: Quotient by zero")) )
+    ((= a 0) (values 0 0))
+    (t 
+      (let ((ilen (integer-length b))
+            (e 0) 
+            (q 0) )
+           (declare (fixnum e ilen))
+        (do () ((= a 0) (values q 0))
+          (setq e (- (integer-length a) ilen))
+          (when (< e 0) (return (values q a)))
+          (setq q (logxor q (ash 1 e)))
+          (setq a (logxor a (ash b e))) )))))
+
+;; -------------------------------------------------------------------------- ;;
 
 
 #-gcl (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -1359,6 +1554,8 @@
     (unless *gf-red* ;; find irreducible reduction poly:
       (setq *gf-red* (if (= 1 *gf-exp*) (list 1 1) (gf-irr p *gf-exp*))
             *gf-irred?* t ))
+    
+    (when (= *gf-char* 2) (setq *f2-red* (gf-x2n *gf-red*)))
     
     (setq *gf-card* (expt p *gf-exp*)) ;; cardinality #(F)
 
@@ -1550,7 +1747,7 @@
         $ef_coeff_mult nil $ef_coeff_add nil $ef_coeff_inv nil $ef_coeff_exp nil
         *gf-rat-header* nil *gf-char* 0 
         *gf-exp* 1 *gf-ord* 0 *gf-card* 0 ;; *gf-exp* = 1 when gf_set_data has no optional arg
-        *gf-red* nil *gf-prim* nil 
+        *gf-red* nil *f2-red* 0 *gf-prim* nil
         *gf-fs-ord* nil *gf-fsx* nil *gf-fsx-base-p* nil *gf-x^p-powers* nil 
         *gf-char?* nil *gf-red?* nil *gf-irred?* nil *gf-data?* nil ) 
   t )
@@ -1842,7 +2039,10 @@
 
 (defmfun $ef_eval (a) 
   (ef-gf-field? "ef_eval")
-  (let ((*ef-arith?*)) (gf-eval a *ef-red* "ef_eval")) )
+  (let ((*ef-arith?* t)) 
+    (unless (equal a ($expand a))
+      (gf-merror (intl:gettext "`ef_eval': The argument must be an expanded polynomial.")) )
+    (gf-eval a *ef-red* "ef_eval") ))
 
 (defun gf-eval (a red fun)
   (setq a (let ((modulus)) (car (prep1 a)))) 
@@ -1873,7 +2073,7 @@
 (defun gf-np2smod (x) ;; modifies x
   (cond 
     ((null x) nil)
-    ((not $gf_symmetric) x)
+    ((not $gf_balanced) x)
     (*ef-arith?*
       (*f-np2smod x *gf-card* #'(lambda (c) (neg (gf-ctimes (1- *gf-char*) c)))) )
     (t 
@@ -1890,7 +2090,7 @@
 ;; adjust a coefficient to a symmetric modulus:
 (defun gf-cp2smod (c)
   (cond 
-    ((not $gf_symmetric) c)
+    ((not $gf_balanced) c)
     (*ef-arith?*
       (if (> c (ash *gf-card* -1)) (neg (gf-ctimes c (1- *gf-char*))) c) )
     (t 
@@ -2106,6 +2306,14 @@
            ((null rx) res)
         (rplacd r (list (+ e (the fixnum (car rx))) (gf-ctimes c (cadr rx)))) ))))
 
+;; v^e * x
+
+(defun gf-nxetimes (x e) ;; modifies x
+  (if (null x) x
+    (do ((r x (cddr r)))
+        ((null r) x)
+      (rplaca r (+ e (car r))) )))
+
 ;; - x
 
 (defun gf-minus (x) 
@@ -2123,23 +2331,6 @@
     (do ((r (cdr x) (cddr r))) (())
       (rplaca r (gf-cminus-b (car r)))
       (when (null (cdr r)) (return x)) )))
-
-;; x + c, 0 < c < *gf-char*
-
-(defun gf-nxcplus (x c) ;; modifies x
-  #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
-  (maybe-char-is-fixnum-let ((c c))
-    (cond 
-      ((null x) (list 0 c))
-      (t (setq x (nreverse x))
-         (cond
-           ((= 0 (the fixnum (cadr x)))
-             (setq c (gf-cplus-b c (car x)))
-             (if (= 0 c)
-               (setq x (cddr x))
-               (rplaca x c) ))
-           (t (setq x (cons c (cons 0 x)))) )
-         (nreverse x) ))))
 
 ;; x + y
 
@@ -2964,7 +3155,7 @@
         (if (= 0 n) nil (list 0 n)) ))
     (t
       (do (res) (())
-        (setq res (gf-nxcplus res (cadr y))) 
+        (setq res (gf-nplus res (list 0 (cadr y))))
         (when (null (cddr y)) 
           (return (gf-times res (gf-pow x (car y) red) red)) ) 
         (setq res (gf-times res (gf-pow x (- (car y) (caddr y)) red) red)
@@ -3325,9 +3516,9 @@
            (setq a (simplifya (cons '(mtimes) (cdr a)) nil)) )
          a ))))
 
-;; adjust results from rat3d/pfactor to a positive modulus if $gf_symmetric = false 
+;; adjust results from rat3d/pfactor to a positive modulus if $gf_balanced = false 
 (defun gf-ns2pmod-factors (fs) ;; modifies fs 
-  (if $gf_symmetric fs
+  (if $gf_balanced fs
     (maybe-char-is-fixnum-let ((m *gf-char*))
       (do ((r fs (cddr r)))
           ((null r) fs)
@@ -3800,7 +3991,7 @@
 
 (defun ef-normal-p (x) 
   (unless (null x) 
-    (let ((mat (gf-maybe-normal-basis x)) )
+    (let ((mat (ef-maybe-normal-basis x)) )
       (/= 0 ($ef_determinant mat)) )))
 
 
@@ -4192,7 +4383,7 @@
   (let* ((a-ind (funcall dlog-fn a)) (b-ind (funcall dlog-fn b))
          (d (gcd (gcd a-ind b-ind) ord))
          (m (truncate ord d)) )
-    (mod (* (inv-mod (truncate b-ind d) m) (truncate a-ind d)) m) ))
+    (zn-quo (truncate a-ind d) (truncate b-ind d) m) ))
 
 ;; Pohlig and Hellman reduction
 
@@ -4307,7 +4498,7 @@
             (setq bb b yy y zz z) ))
         (setq dy (mod (- yy y) p) dz (mod (- z zz) p)) ;; g^dy = a^dz = g^(x*dz)
         (when (= 1 (gcd dz p))
-          (return (mod (* dy (inv-mod dz p)) p)) )     ;; x = dy/dz mod p (since g is generator of order p)
+          (return (zn-quo dy dz p)) ) ;; x = dy/dz mod p (since g is generator of order p)
         (setq y 0
               z 0
               b (list 0 1)

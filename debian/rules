@@ -10,6 +10,9 @@
 # This is the debhelper compatability version to use.
 #export DH_COMPAT=3
 
+#FIXME remove when converting to dh
+export SOURCE_DATE_EPOCH = $(shell date -d "$$(dpkg-parsechangelog -SDate)" +%s)
+
 NO_STRIP:=
 #ALT_LINK:=
 #ifeq ($(DEB_BUILD_ARCH),mips)
@@ -34,7 +37,7 @@ NO_STRIP:=
 
 SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/stamp-vti\
 	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
-	 src/sys-proclaim.lisp src/lisp)
+	 src/lisp)#src/sys-proclaim.lisp 
 
 debian/save/%: %
 	mkdir -p $(@D)
@@ -58,7 +61,7 @@ build-stamp:
 
 	echo '(progn (dolist (l (quote si::(clines defentry system object bye quit get-setf-method))) (import l :cl)(export l :cl))(export (quote *load-pathname*) :si)(setf (symbol-function (quote si::get-setf-method)) (symbol-function (quote get-setf-expansion)))(setq si::*optimize-maximum-pages* nil)(si::save-system "gcl"))' | GCL_ANSI=t gcl
 
-	PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '(progn #-native-reloc(princ "--enable-gcl-alt-link"))') \
+	git_found=false PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '(progn #-native-reloc(princ "--enable-gcl-alt-link"))') \
 		--enable-sys-proclaim \
 		--prefix=/usr \
 		--libexec=/usr/lib \
@@ -69,7 +72,7 @@ build-stamp:
 
 	rm -f src/sys-proclaim.lisp
 
-	PATH=$$(pwd):$$PATH GCL_ANSI=t $(MAKE)
+	PATH=$$(pwd):$$PATH GCL_ANSI=t GCL_MEM_MULTIPLE=0.2 $(MAKE)
 
 	echo ':lisp (setq maxima::*maxima-started* nil si::*optimize-maximum-pages* t si::*code-block-reserve* (make-array 10000000 :element-type (quote character) :static t))(si::sgc-on nil)(si::gbc t)(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
 
@@ -81,7 +84,7 @@ build-stamp:
 
 	chmod +x ./maxima-local
 #	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
-	./maxima-local -g --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
+	GCL_MEM_MULTIPLE=0.2 ./maxima-local -g --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
 		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
 
@@ -146,6 +149,8 @@ clean: #restore
 	rm -f doc/info/include-maxima.texi
 	rm -f configure.lineno doc/info/extract_categories.sh.debdiff
 	rm -f raw_ff_map src/share-subdirs.lisp doc/info/figures/favicon.ico
+	rm -f doc/info/pt/include-maxima.texi doc/info/es/include-maxima.texi
+
 	dh_clean
 
 
@@ -234,8 +239,6 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	for i in $$(find debian/tmp/usr/share/info -name "maxima-index.lisp") ; do \
 		mkdir -p debian/tmp/usr/share/doc/maxima/$$(basename $$(dirname $$i)) && \
 		cat $$i | sed 's,^(load-info-hashtables,(clrhash cl-info::*info-tables*)\n(load-info-hashtables,1' >tmp &&\
-	        ! cmp $$i tmp && mv tmp $$i &&\
-		cat $$i | sed 's,#-gcl \*load-pathname\* #+gcl sys:\*load-pathname\*,"/usr/share/info/",1' >tmp &&\
 	        ! cmp $$i tmp && mv tmp $$i &&\
                 mv $$i debian/tmp/usr/share/doc/maxima/$$(basename $$(dirname $$i)) ; done
 

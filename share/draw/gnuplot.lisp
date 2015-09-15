@@ -1,6 +1,6 @@
 ;;;                 COPYRIGHT NOTICE
 ;;;  
-;;;  Copyright (C) 2007-2014 Mario Rodriguez Riotorto
+;;;  Copyright (C) 2007-2015 Mario Rodriguez Riotorto
 ;;;  
 ;;;  This program is free software; you can redistribute
 ;;;  it and/or modify it under the terms of the
@@ -57,6 +57,11 @@
         (send-gnuplot-command
           (format nil "set terminal wxt dashed ~a~%set multiplot~%" (write-font-type)))
         (setf *multiplot-is-active* t))
+      ($qt
+        ($multiplot_mode '$none)
+       (send-gnuplot-command
+         (format nil "set terminal qt dashed ~a~%set multiplot~%" (write-font-type)))
+       (setf *multiplot-is-active* t))
       ($none
         (send-gnuplot-command
           (format nil "unset multiplot~%"))
@@ -1524,6 +1529,8 @@
 	   (j 0 (1+ j)))
 	  ((> j ($second grid)))
 	(let ((fun-val (funcall expr x-val y-val)))
+          (when (not (floatp fun-val))
+                (merror "draw2d (implicit): non defined variable"))
 	  (if (or (eq fun-val t) (>= fun-val epsilon))
 	      (setf (aref sample i j) 1)
 	      (setf (aref sample i j) -1)))))))
@@ -1593,8 +1600,6 @@
 	 (ssample (make-array `(,(1+ ($first ip-grid-in))
 				,(1+ ($second ip-grid-in))))) )
 
-    (when (not (subsetp (rest ($listofvars expr)) (list x y)))
-       (merror "draw2d (implicit): non defined variable"))
     (setq e (coerce-float-fun (imp-pl-prepare-expr expr)
 			      `((mlist simp)
 				,x ,y)))
@@ -3224,6 +3229,11 @@
                            (write-font-type)
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))))
+        ($qt (format cmdstorage "set terminal qt dashed enhanced ~a ~a size ~a, ~a~%"
+                           *draw-terminal-number*
+                           (write-font-type)
+                           (round (first (get-option '$dimensions)))
+                           (round (second (get-option '$dimensions)))))
         ($x11 (format cmdstorage "set terminal x11 dashed enhanced ~a ~a size ~a, ~a~%"
                            *draw-terminal-number*
                            (write-font-type)
@@ -3249,6 +3259,10 @@
       (setf nrows (ceiling (/ (length scenes) ncols)))
       (if (> (length scenes) 1)
         (format cmdstorage "~%set size 1.0, 1.0~%set origin 0.0, 0.0~%set multiplot~%")) )
+
+    ; Make gnuplot versions newer than 5.0 understand that linetype means
+    ; we try to set the dash type
+    (format cmdstorage "~%if(GPVAL_VERSION >= 5.0){set for [i=1:8] linetype i dashtype i}")
 
     ; write descriptions of 2d and 3d scenes
     (let ((i -1)
@@ -3398,7 +3412,7 @@
              (cond
                 ; connect to gnuplot via pipes
                 ((and (not *windows-OS*)
-                      (member (get-option '$terminal) '($screen $aquaterm $wxt $x11))
+                      (member (get-option '$terminal) '($screen $aquaterm $wxt $x11 $qt))
                       (equal $draw_renderer '$gnuplot_pipes))
                    (check-gnuplot-process)
                    (when (not *multiplot-is-active*) ; not in a one window multiplot
@@ -3410,11 +3424,11 @@
                 (t
 
 		 #+(or (and sbcl win32) (and ccl windows))
-		 (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11))
+		 (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11 $qt))
 		     ($system $gnuplot_command "-persist" gfn)
 		     ($system $gnuplot_command gfn))
 		 #-(or (and sbcl win32) (and ccl windows))
-		 ($system (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11))
+		 ($system (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11 $qt))
 			      (format nil "~a ~a"
 				      $gnuplot_command
 				      (format nil $gnuplot_view_args gfn))
@@ -3520,6 +3534,7 @@
       (case term
          ($wxt      (setf str "wxt"))
          ($aquaterm (setf str "aquaterm"))
+         ($qt       (setf str "qt"))
          (otherwise (setf str "x11")))
       (send-gnuplot-command (format nil "set terminal ~a ~a~%" str num))   ))
 

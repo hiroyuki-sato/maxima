@@ -245,7 +245,8 @@
      ;;	   funct (mul -1 (div (meval (mul denom funct))
      ;;			      (add (mul f x) e))))
 
-     jump
+     ;; jump
+
      ;; Apply the linear substitution y = f*x+e.  That is x = (y-e)/f.
      ;; Then use INTIRA to integrate this.  The integrand becomes
      ;; something like p(y)*y^m and other terms.
@@ -274,66 +275,89 @@
 	  expr)))
 
 (defun intirfactoroot (expr x)
-  (declare (special *globalcareflag*))
-  (prog (assoclist (exp expr))
-     (when (setq assoclist (jmaug (setq expr (distrfactor (timestest expr) x)) x))
-       (return (inti expr x assoclist)))
-     (setq *globalcareflag* 't)
-     (when (setq assoclist (jmaug (setq exp (distrfactor (timestest exp) x)) x))
-       (setq *globalcareflag* nil)
-       (return (inti exp x assoclist)))
-     (setq *globalcareflag* nil)
-     (return nil)))
+  (let ((factors (timestest expr)))
+    (flet ((try-inti ()
+             (let* ((e (distrfactor factors x))
+                    (alist (jmaug e x)))
+               (when alist (inti e x alist)))))
+      (or (try-inti)
+          (let ((*globalcareflag* t))
+            (declare (special *globalcareflag*))
+            (try-inti))))))
 
-(defun distrfactor (expr x)
-  (if (null expr)
+;; DISTRFACTOR
+;;
+;; Apply FACTOROOT to each element in the list, FACTORS. Accumulate the results
+;; by multiplication, associating to the right.
+(defun distrfactor (factors x)
+  (if (null factors)
       1
-      (mul (factoroot (car expr) x)
-	   (distrfactor (cdr expr) x))))
+      (mul (factoroot (first factors) x)
+	   (distrfactor (rest factors) x))))
 
+;; FACTOROOT
+;;
+;; If EXPR is of the form A^B and is not free of VAR, use CAREFULFACTOR to try
+;; to factor it. Otherwise just return EXPR.
 (defun factoroot (expr var)
-  (if (atom expr)
-      expr
-      (if (and (eq (caar expr) 'mexpt)
-	       (hasvar expr)
-	       (integerpfr (caddr expr)))
-	  (carefulfactor expr var)
-	  expr)))
+  (if (and (mexptp expr)
+           (hasvar expr)
+           (integerpfr (caddr expr)))
+      (carefulfactor expr var)
+      expr))
 
+;; CAREFULFACTOR
+;;
+;; Try to factor an expression of the form A^B. If *GLOBALCAREFLAG* is NIL, this
+;; is exactly the same as $FACTOR. Otherwise, use $FACTOR on (A/x)^B and then
+;; restore the missing x^B afterwards using RESTOREX.
 (defun carefulfactor (expr x)
   (declare (special *globalcareflag*))
   (if (null *globalcareflag*)
       ($factor expr)
-      (restorex ($factor (power (div (cadr expr) x) (caddr expr))) x)))
+      (restorex ($factor (power (div (cadr expr) x) (caddr expr)))
+                x (caddr expr))))
 
-(defun restorex (expr var)
-  (if (atom expr)
-      expr
-      (if (eq (caar expr) 'mtimes)
-	  (distrestorex (cdr expr) var)
-	  expr)))
+;; RESTOREX
+;;
+;; Multiply EXPR by VAR^EXPT, trying to insert the factor of VAR inside terms in
+;; a product if possible.
+(defun restorex (expr var expt)
+  (cond
+    ((and (mexptp expr)
+          (equal expt (caddr expr)))
+     (power (restorex (cadr expr) var 1) (caddr expr)))
 
-(defun distrestorex (expr var)
-  (if (null expr)
-      1
-      (mul (restoroot (car expr) var)
-	   (distrestorex (cdr expr) var))))
+    ((mtimesp expr)
+     (distrestorex (cdr expr) var expt))
 
-(defun restoroot (expr var)
-  (if (atom expr)
-      expr
-      (if (and (eq (caar expr) 'mexpt)
-	       (integerpfr (caddr expr))
-	       (mplusp (cadr expr)))
-	  (power ($expand (mul var (cadr expr))) (caddr expr))
-	  expr)))
+    (t
+     (mul (power var expt) expr))))
+
+;; DISTRESTOREX
+;;
+;; Takes a list of factors. Returns an expression that equals the product of
+;; these factors, but after multiplying one of them by VAR to try to multiply
+;; the entire product by VAR^EXPT. If it's not possible to multiply factors to
+;; do so, add a factor of VAR^EXPT to the end.
+(defun distrestorex (factors var expt)
+  (if (null factors)
+      (power var expt)
+      (let ((start (first factors)))
+        (if (and (mexptp start)
+                 (equal expt (caddr start)))
+
+            (lmul
+             (cons (power ($expand (mul var (cadr start)))
+                          (caddr start))
+                   (rest factors)))
+
+            (mul start (distrestorex (rest factors) var expt))))))
 
 (defun timestest (expr)
-  (if (atom expr)
-      (list expr)
-      (if (eq (caar expr) 'mtimes)
-	  (cdr expr)
-	  (list expr))))
+  (if (mtimesp expr)
+      (cdr expr)
+      (list expr)))
 
 ;; Integrate a function of the form d*p(y)*y^m*(a*y^2+b*x+c)^n.
 ;; n is half of an integer.
