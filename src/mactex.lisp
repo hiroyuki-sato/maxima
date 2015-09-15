@@ -106,6 +106,8 @@
 (defmspec $tex(l) ;; mexplabel, and optional filename or stream
   ;;if filename or stream supplied but 'nil' then return a string
   (let ((args (cdr l)))
+    (unless (member (length args) '(1 2))
+      (wna-err '$tex))
     (cond ((and (cdr args) (null (cadr args)))
 	   (let ((*standard-output* (make-string-output-stream)))
 	     (apply 'tex1  args)
@@ -128,9 +130,6 @@
 (defun tex1 (mexplabel &optional filename-or-stream) ;; mexplabel, and optional filename or stream
   (prog (mexp  texport x y itsalabel need-to-close-texport)
      (reset-ccol)
-     (cond ((null mexplabel)
-	    (displa " No eqn given to TeX")
-	    (return nil)))
      ;; collect the file-name, if any, and open a port if needed
      (setq filename-or-stream (meval filename-or-stream))
      (setq texport
@@ -379,8 +378,7 @@
   (tex (cadr x) (append l (texsym (caar x))) r (caar x) rop))
 
 (defun tex-infix (x l r)
-  ;; check for 2 args
-  (if (or (null (cddr x)) (cdddr x)) (wna-err (caar x)))
+  (twoargcheck x)
   (setq l (tex (cadr x) l nil lop (caar x)))
   (tex (caddr x) (append l (texsym (caar x))) r (caar x) rop))
 
@@ -644,7 +642,7 @@
 (defprop mquotient ("\\over") texsym)
 
 (defun tex-mquotient (x l r)
-  (if (or (null (cddr x)) (cdddr x)) (wna-err (caar x)))
+  (twoargcheck x)
   (setq l (tex (cadr x) (append l '("{{")) nil 'mparen 'mparen)
 					;the divide bar groups things
 	r (tex (caddr x) (list "}\\over{") (append '("}}")r) 'mparen 'mparen))

@@ -8,7 +8,7 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.36.1])
+AC_INIT([maxima], [5.37.1])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability])
 
@@ -16,26 +16,37 @@ AM_PATH_LISPDIR
 
 AC_CANONICAL_HOST
 
-dnl Don't use AC_EXEEXT as that requires a C compiler
+dnl If we were using a C compiler, EXEEXT would get defined
+dnl automatically. But we aren't, so we have to define it ourselves.
 case "$host" in
         *mingw*)
                 win32=true
                 mingw=true
                 EXEEXT=.exe
+		CLISPEXT=${EXEEXT}
                 ;;
         *cygwin*)
-                win32=true
+                win32=false
                 mingw=false
                 EXEEXT=.exe
+		CLISPEXT=${EXEEXT}
                 ;;
         *)
                 win32=false
                 mingw=false
                 EXEEXT=
+		CLISPEXT=.run
 esac
 AC_SUBST(EXEEXT)
 AC_SUBST(win32)
 AM_CONDITIONAL(WIN32, test x$win32 = xtrue)
+
+dnl To make life more confusing, the automake test machinery (which we
+dnl use in ./tests) needs the am__EXEEXT conditional. This would have
+dnl normally been expanded (via something we've copied from Automake's
+dnl init.m4 into our aclocal.m4) as Automake computed EXEEXT, but it
+dnl didn't so we have to drop this in ourselves.
+AM_CONDITIONAL([am__EXEEXT], [test -n "$EXEEXT"])
 
 explicit_lisp=false
 lisps_enabled=""
@@ -64,11 +75,7 @@ AC_ARG_WITH(clisp,
 		CLISP_NAME="$withval"
 	fi],
 	[CLISP_NAME=${clisp_default_name}])
-if test x"${win32}" = x"true" ; then
-   	CLISP_RUNTIME="lisp.exe"
-else
-	CLISP_RUNTIME="lisp.run"
-fi
+	CLISP_RUNTIME="lisp${CLISPEXT}"
 AC_ARG_WITH(clisp-runtime,
 	[  --with-clisp-runtime=<path>  Use clisp runtime <path> (default
 	                          *lib-directory*/base/lisp.run on unix,
@@ -848,7 +855,7 @@ script the SCL executable is the program exec'd by that shell script.])
 fi
 
 if test x"${gcl}" = xtrue; then
-   result=`"${GCL_NAME}" -batch -eval '#+ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_SUCCESS~%") #-ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_FAILURE~%")' -eval '(bye)'`
+   result=`"${GCL_NAME}" -batch -eval '#+ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_SUCCESS~%") #-ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_FAILURE~%")' -eval '(si::bye)'`
    retval=$?
    if test ! x"${retval}" = x"0" ; then
       AC_MSG_ERROR(unable to run gcl executable \"${GCL_NAME}\".)
@@ -1025,12 +1032,12 @@ if test x"${exec_prefix}" = xNONE ; then
 else
 	tmp_exec_prefix="${exec_prefix}"
 fi
-expanded_top_srcdir="`(cd \"$top_srcdir\" 1>/dev/null 2>/dev/null; pwd)`"
+expanded_top_srcdir="$(cd "$top_srcdir" 1>/dev/null 2>/dev/null; pwd)"
 expanded_exec_prefix="${tmp_exec_prefix}"
-expanded_libdir="`eval \"exec_prefix=\\\"${tmp_exec_prefix}\\\";echo ${libdir}\"`"
-expanded_libexecdir="`eval \"exec_prefix=\\\"${tmp_exec_prefix}\\\";echo ${libexecdir}\"`"
-expanded_datadir="`eval \"prefix=\\\"${tmp_prefix}\\\";datarootdir=\\\"${datarootdir}\\\";echo ${datadir}\"`"
-expanded_infodir="`eval \"prefix=\\\"${tmp_prefix}\\\";datarootdir=\\\"${datarootdir}\\\";echo ${infodir}\"`"
+expanded_libdir="$(eval "exec_prefix=\"${tmp_exec_prefix}\";echo ${libdir}")"
+expanded_libexecdir="$(eval "exec_prefix=\"${tmp_exec_prefix}\";echo ${libexecdir}")"
+expanded_datadir="$(eval "prefix=\"${tmp_prefix}\";datarootdir=\"${datarootdir}\";echo ${datadir}")"
+expanded_infodir="$(eval "prefix=\"${tmp_prefix}\";datarootdir=\"${datarootdir}\";echo ${infodir}")"
 
 
 dnl Find all the directories in share, but remove the share directory
@@ -1055,7 +1062,10 @@ AC_SUBST(default_sharedirs)
 dnl Look for grep that can handle long lines and -e.
 AC_PROG_EGREP
 AC_SUBST(EGREP)
-
+AC_PATH_PROG([CAT],[cat])
+AC_PROG_SED
+AC_PROG_AWK
+AM_PATH_PYTHON
 
 # Configure these files and make them executable
 AC_CONFIG_FILES([maxima-local], chmod +x maxima-local)
@@ -1071,6 +1081,7 @@ AC_OUTPUT(Makefile maxima.spec maxima.iss \
 admin/Makefile src/Makefile src/maxima src/rmaxima src/autoconf-variables.lisp \
 src/share-subdirs.lisp \
 lisp-utils/Makefile tests/Makefile doc/Makefile \
+crosscompile-windows/Makefile crosscompile-windows/wxwidgets/Makefile \
 doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi \
 doc/info/de/Makefile \
 doc/info/de.utf8/Makefile doc/info/es/Makefile doc/info/es.utf8/Makefile \
