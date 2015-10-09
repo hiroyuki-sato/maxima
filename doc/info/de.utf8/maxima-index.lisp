@@ -2673,4 +2673,4 @@
 ("Zufallszahlen" . ("maxima.info-2" 176979 2673))
 ("Zuweisungsoperatoren" . ("maxima.info-1" 291827 9886))
 )))
-(load-info-hashtables (list (pathname-device #-gcl *load-pathname* #+gcl sys:*load-pathname*) (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (list (pathname-device *load-pathname*) (pathname-directory *load-pathname*)) deffn-defvr-pairs section-pairs))
