@@ -59,7 +59,7 @@ build-stamp:
 	aclocal
 	automake
 
-	echo '(progn (dolist (l (quote si::(clines defentry system object bye quit get-setf-method))) (import l :cl)(export l :cl))(export (quote *load-pathname*) :si)(setf (symbol-function (quote si::get-setf-method)) (symbol-function (quote get-setf-expansion)))(setq si::*optimize-maximum-pages* nil)(si::save-system "gcl"))' | GCL_ANSI=t gcl
+	echo '(progn (setq si::*optimize-maximum-pages* nil)(si::save-system "gcl"))' | GCL_ANSI=t gcl
 
 	git_found=false PATH=$$(pwd):$$PATH GCL_ANSI=t ./configure --enable-gcl $$(gcl -batch -eval '(progn #-native-reloc(princ "--enable-gcl-alt-link"))') \
 		--enable-sys-proclaim \
