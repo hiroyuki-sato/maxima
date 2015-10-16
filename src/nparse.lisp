@@ -18,7 +18,7 @@
 
 (defmfun alphabetp (n)
   (and (characterp n)
-       (or (alpha-char-p n)
+       (or (alpha-char-p n) #+gcl(>= (char-code n) 128)
 	   (member n *alphabet*))))
 
 (defmfun ascii-numberp (num)
