@@ -3,8 +3,6 @@
 #+ecl
 ($load "lisp-utils/defsystem.lisp")
 
-(load (merge-pathnames (make-pathname :name "cobyla" :type "system")
-		       #-gcl *load-pathname*
-		       #+gcl sys:*load-pathname*))
+(load (merge-pathnames (make-pathname :name "cobyla" :type "system") *load-pathname*))
 
 (mk:oos "cobyla-interface" :compile)
