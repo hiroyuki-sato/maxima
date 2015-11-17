@@ -1888,4 +1888,4 @@
 ("Substantivos e Verbos" . ("maxima.info-1" 144085 2474))
 ("Visualização usando VTK" . ("maxima.info-5" 201854 353))
 )))
-(load-info-hashtables (list (pathname-device #-gcl *load-pathname* #+gcl sys:*load-pathname*) (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))

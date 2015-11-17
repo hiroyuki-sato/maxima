@@ -2683,4 +2683,4 @@
 ("Share" . ("maxima.info-5" 92734 592))
 ("Visualización usando VTK" . ("maxima.info-7" 168587 16606))
 )))
-(load-info-hashtables (list (pathname-device #-gcl *load-pathname* #+gcl sys:*load-pathname*) (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))

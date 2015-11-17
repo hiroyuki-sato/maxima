@@ -37,7 +37,23 @@ NO_STRIP:=
 
 SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/stamp-vti\
 	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
-	 src/lisp)#src/sys-proclaim.lisp 
+	 src/lisp\
+	 \
+	 admin/Makefile.in crosscompile-windows/Makefile.in crosscompile-windows/wxwidgets/Makefile.in\
+	 demo/Makefile.in doc/emaxima/Makefile.in doc/info/de/Makefile.in doc/info/de.utf8/Makefile.in\
+	 doc/info/es/Makefile.in doc/info/es.utf8/Makefile.in doc/info/Makefile.in doc/info/pt_BR/Makefile.in\
+	 doc/info/pt_BR.utf8/Makefile.in doc/info/pt/Makefile.in doc/info/pt.utf8/Makefile.in doc/intromax/Makefile.in\
+	 doc/Makefile.in doc/man/Makefile.in doc/share/Makefile.in interfaces/emacs/emaxima/Makefile.in\
+	 interfaces/emacs/imaxima/Makefile.in interfaces/emacs/Makefile.in interfaces/emacs/misc/Makefile.in\
+	 interfaces/Makefile.in interfaces/xmaxima/doc/figures/Makefile.in interfaces/xmaxima/doc/Makefile.in\
+	 interfaces/xmaxima/Makefile.in interfaces/xmaxima/msgs/Makefile.in interfaces/xmaxima/win32/Makefile.in\
+	 lisp-utils/Makefile.in locale/Makefile.in Makefile.in plotting/Makefile.in share/contrib/integration/Makefile.in\
+	 share/contrib/Makefile.in share/contrib/maxima-odesolve/Makefile.in share/draw/Makefile.in\
+	 share/logic/Makefile.in share/Makefile.in src/autoconf-variables.lisp src/Makefile.in\
+	 src/share-subdirs.lisp tests/Makefile.in\
+	 \
+	 \
+	)#src/sys-proclaim.lisp 
 
 debian/save/%: %
 	mkdir -p $(@D)
@@ -85,6 +101,7 @@ build-stamp:
 #	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
 
 	chmod +x ./maxima-local
+	touch tests/tests-gcl.log
 #	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
 	./maxima-local -g --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
@@ -121,37 +138,53 @@ BOOK:=debian/maximabook-19-Sept-2004.pdf
 clean: #restore
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp install-stamp
+#	rm -f build-stamp install-stamp
 
-	-cd doc && $(MAKE) clean
-	-cd interfaces && $(MAKE) clean
-	-GCL_ANSI=t $(MAKE) clean
+#	-cd doc && $(MAKE) clean
+#	-cd interfaces && $(MAKE) clean
+#	-GCL_ANSI=t $(MAKE) clean
 	debian/rules restore
-	-rm -f debian/test_results.out tests/tests-gcl.log
-	-for i in $$(find -name Makefile) ; do\
-		! [ -e $$i.am ] || rm -f $$i;\
-		! [ -e $$i.am ] || rm -f $$i.in;\
-	 done
-	-rm -f src/maxima doc/man/maxima.1 interfaces/xmaxima/Tkmaxima/Header.tcl \
-		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
-		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
-	rm -f src/factor.fn src/nparse.fn tests/gazonk0.fn
+	rm -rf $(BOOK) src/binary-gcl binary gcl src/sys-proclaim.lisp tests/tests-gcl.log
+	rm -rf admin/Makefile config.log config.status crosscompile-windows/Makefile\
+		crosscompile-windows/wxwidgets/Makefile demo/Makefile doc/emaxima/Makefile\
+		doc/info/de/Makefile doc/info/de.utf8/Makefile doc/info/es/include-maxima.texi\
+		doc/info/es/Makefile doc/info/es.utf8/Makefile doc/info/include-maxima.texi\
+		doc/info/Makefile doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile\
+		doc/info/pt/include-maxima.texi doc/info/pt/Makefile doc/info/pt.utf8/Makefile\
+		doc/intromax/Makefile doc/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1\
+		doc/share/Makefile interfaces/emacs/emaxima/Makefile interfaces/emacs/imaxima/Makefile\
+		interfaces/emacs/Makefile interfaces/emacs/misc/Makefile interfaces/Makefile\
+		interfaces/xmaxima/autoconf-variables.tcl interfaces/xmaxima/doc/figures/Makefile\
+		interfaces/xmaxima/doc/Makefile interfaces/xmaxima/Makefile interfaces/xmaxima/msgs/Makefile\
+		interfaces/xmaxima/Tkmaxima/Header.tcl interfaces/xmaxima/win32/Makefile interfaces/xmaxima/xmaxima\
+		lisp-utils/Makefile locale/Makefile Makefile maxima.iss maxima-local maxima.spec plotting/Makefile\
+		plotting/mgnuplot share/contrib/integration/Makefile share/contrib/Makefile\
+		share/contrib/maxima-odesolve/Makefile share/draw/Makefile share/logic/Makefile share/Makefile\
+		src/gcl-depends.mk src/Makefile src/maxima src/maxima.bat src/rmaxima tests/Makefile xmaxima-local\
+		interfaces/xmaxima/Tkmaxima/tclIndex
+#	-rm -f debian/test_results.out tests/tests-gcl.log
+#	-for i in $$(find -name Makefile) ; do\
+#		! [ -e $$i.am ] || rm -f $$i;\
+#		! [ -e $$i.am ] || rm -f $$i.in;\
+#	 done
+#	-rm -f src/maxima interfaces/xmaxima/Tkmaxima/Header.tcl \
+#		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
+#		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
+#	rm -f src/factor.fn src/nparse.fn tests/gazonk0.fn
 #	cd doc/maximabook && \
 #		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
 #			maxima.log maxima.out maxima.toc maxima.ps
-	rm -f debian/*.install
-	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
-			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
-	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
-	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
-#	rm -rf doc/info/maxima.html
-	rm -rf src/binary-gcl gcl
-	rm -f doc/man/ru/maxima.1
-	rm -f tests/rtest14.ERR
-	rm -f doc/info/include-maxima.texi
-	rm -f configure.lineno doc/info/extract_categories.sh.debdiff
-	rm -f raw_ff_map src/share-subdirs.lisp doc/info/figures/favicon.ico
-	rm -f doc/info/pt/include-maxima.texi doc/info/es/include-maxima.texi
+#	rm -f debian/*.install
+#	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
+#			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
+#	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
+#	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
+##	rm -rf doc/info/maxima.html doc/man/maxima.1 doc/man/ru/maxima.1 doc/info/include-maxima.texi doc/info/extract_categories.sh.debdiff \
+#		doc/info/pt/include-maxima.texi doc/info/es/include-maxima.texi
+#	rm -rf src/binary-gcl gcl
+#	rm -f tests/rtest14.ERR
+#	rm -f configure.lineno
+#	rm -f raw_ff_map src/share-subdirs.lisp
 
 	dh_clean
 

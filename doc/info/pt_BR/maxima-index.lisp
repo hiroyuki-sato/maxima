@@ -2379,4 +2379,4 @@
 ("Sintaxe" . ("maxima.info-1" 154214 4238))
 ("Substantivos e Verbos" . ("maxima.info-1" 146036 2483))
 )))
-(load-info-hashtables (list (pathname-device #-gcl *load-pathname* #+gcl sys:*load-pathname*) (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))
