@@ -9,4 +9,4 @@
 ("Definitions for kovacicODE" . ("kovacicODE.info" 654 1493))
 ("Introduction to kovacicODE" . ("kovacicODE.info" 450 63))
 )))
-(load-info-hashtables (list (pathname-device *load-pathname*) (pathname-directory *load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))

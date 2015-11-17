@@ -19,7 +19,7 @@
 
 (defvar local-obj-dir)
 
-(load (merge-pathnames "convmac.lisp" *load-pathname*))
+(load (merge-pathnames "convmac.lisp" (maxima-load-pathname-directory)))
 
 (putprop 'procforttem "templt" 'autoload)
 (putprop 'procrattem "templt" 'autoload)
@@ -34,4 +34,4 @@
 
 (dolist (fname '("init" "lspfor" "lspc" "lsprat" "templt" "global" "intrfc"
 		 "pre" "output" "vaxlsp" "segmnt"))
-  (load (merge-pathnames fname *load-pathname*)))
+  (load (merge-pathnames fname (maxima-load-pathname-directory))))

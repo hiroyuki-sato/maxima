@@ -2793,4 +2793,4 @@
 ("User defined operators" . ("maxima.info-1" 254578 10965))
 ("Visualization with VTK" . ("maxima.info-2" 754952 15370))
 )))
-(load-info-hashtables (list (pathname-device #-gcl *load-pathname* #+gcl sys:*load-pathname*) (pathname-directory #-gcl *load-pathname* #+gcl sys:*load-pathname*)) deffn-defvr-pairs section-pairs))
+(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))

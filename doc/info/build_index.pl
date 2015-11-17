@@ -251,7 +251,7 @@ print ")))\n";
 
 #        Construct hashtables from the lists given above.
 
-print "(load-info-hashtables (list (pathname-device *load-pathname*) (pathname-directory *load-pathname*)) deffn-defvr-pairs section-pairs))\n";
+print "(load-info-hashtables (maxima::maxima-load-pathname-directory) deffn-defvr-pairs section-pairs))\n";
 
 # (2.3)  Do we have any items or sections?
 #
