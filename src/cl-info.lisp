@@ -49,9 +49,14 @@
 
 ; ------------------ search help topics ------------------
 
+(defun maxima::combine-path (&rest list)
+  "splice a '/' between the path components given as arguments"
+  (format nil "~{~A~^/~}" list))
+
 (defvar maxima::*maxima-index-dir* nil)
 
 (defun load-primary-index ()
+  (declare (special maxima::*maxima-lang-subdir* maxima::*maxima-infodir*))
   ;; Load the index, but make sure we use a sensible *read-base*.
   ;; See bug 1951964.  GCL doesn't seem to have
   ;; with-standard-io-syntax.  Is just binding *read-base* enough?  Is
@@ -146,7 +151,12 @@
     (when (consp wanted)
       (format t "~%")
       (loop for item in wanted
-        do (format t "~A~%~%" (read-info-text (first item) (second item)))))))
+	    do (let ((doc (read-info-text (first item) (second item))))
+		 (if doc
+		     (format t "~A~%~%" doc)
+		     (format t "Unable to find documentation for `~A'.~%~
+                                Possible bug maxima-index.lisp or build_index.pl?~%"
+			     (first (second item)))))))))
 
 (defun inexact-topic-match (topic)
   (setq topic (regex-sanitize topic))
@@ -199,9 +209,14 @@
      (text (make-string byte-count))
      (path+filename (merge-pathnames (make-pathname :name filename) dir-name)))
     (with-open-file (in path+filename :direction :input)
+      (unless (plusp byte-offset)
+	;; If byte-offset isn't positive there must be some error in
+	;; the index.  Return nil and let the caller deal with it.
+	(return-from read-info-text nil))
       (file-position in byte-offset)
-      #+gcl (gcl-read-sequence text in :start 0 :end byte-count)
-      #-gcl (read-sequence text in :start 0 :end byte-count))
+      (#-gcl read-sequence
+       #+gcl gcl-read-sequence
+       text in :start 0 :end byte-count))
     text))
 
 #+gcl

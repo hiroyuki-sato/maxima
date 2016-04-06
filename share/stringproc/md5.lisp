@@ -73,10 +73,12 @@
 
 |#
 
+(in-package :maxima)
+
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (defvar old-ibase *read-base*)
+    (defvar old-ibase-md5 *read-base*)
     (setq *read-base* 10.) )
 
 
@@ -180,7 +182,7 @@
   (let (bytes len)
     (cond
       ((stringp s)
-        (setq bytes (mapcar #'char-code (coerce s 'list))) )
+        (setq bytes (string-to-octets s)) )
       ((and (integerp s) (>= s 0))
         (setq bytes (number-to-octets s)) )
       (($listp s)
@@ -212,4 +214,4 @@
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (setq *read-base* old-ibase) )
+    (setq *read-base* old-ibase-md5) )

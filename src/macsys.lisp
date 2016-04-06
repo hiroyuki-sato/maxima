@@ -228,7 +228,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 	(format t "~a" *general-display-prefix*)
 	(if (eq r eof) (return '$done))
 	(setq $__ (caddr r))
-	(unless $nolabels (set  c-tag $__))
+	(unless $nolabels (setf (symbol-value c-tag) $__))
 	(cond (batch-or-demo-flag
 	  (let (($display2d nil))
 	    (displa `((mlabel) ,c-tag , $__)))))
@@ -247,7 +247,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 			  internal-time-units-per-second))
 	(incf accumulated-time time-used)
 	(setq d-tag (makelabel $outchar))
-	(unless $nolabels (set d-tag $%))
+	(unless $nolabels (setf (symbol-value d-tag) $%))
 	(setq $_ $__)
 	(when $showtime	;; we don't distinguish showtime:all?? /RJF
 	  (format t (intl:gettext "Evaluation took ~,4F seconds (~,4F elapsed)")
@@ -394,7 +394,9 @@ DESTINATION is an actual stream (rather than nil for a string)."
   (format t (intl:gettext "To report a bug, you must have a Sourceforge account.~%"))
   (format t (intl:gettext "Please include the following information with your bug report:~%"))
   (format t "-------------------------------------------------------------~%")
-  (displa ($build_info))
+  ; Display the 2D-formatted build information
+  (let (($display2d t))
+    (displa ($build_info)))
   (format t "-------------------------------------------------------------~%")
   (format t (intl:gettext "The above information is also reported by the function 'build_info()'.~%~%"))
   "")
@@ -603,10 +605,10 @@ DESTINATION is an actual stream (rather than nil for a string)."
   ;; From what I can tell, GCL, ECL, and Clisp cannot redirect the output into an existing stream. Oh well.
   (let ((s (and (boundp '*socket-connection*) *socket-connection*))
 	shell shell-opt)
-    #+(or gcl ecl clisp lispworks)
+    #+(or gcl ecl lispworks)
     (declare (ignore s))
 
-    (cond ((string= *autoconf-win32* "true")
+    (cond ((string= *autoconf-windows* "true")
 	   (setf shell "cmd") (setf shell-opt "/c"))
 	  (t (setf shell "/bin/sh") (setf shell-opt "-c")))
 
@@ -620,8 +622,8 @@ DESTINATION is an actual stream (rather than nil for a string)."
     #+(or cmu scl) (ext:run-program shell (list shell-opt (apply '$sconcat args)) :output (or s t))
     #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t :output (or s nil))
     #+sbcl (sb-ext:run-program shell
-			       #+win32 (cons shell-opt (mapcar '$sconcat args))
-			       #-win32 (list shell-opt (apply '$sconcat args))
+			       #+(or win32 win64) (cons shell-opt (mapcar '$sconcat args))
+			       #-(or win32 win64) (list shell-opt (apply '$sconcat args))
 			       :search t :output (or s t))
     #+openmcl (ccl::run-program shell
 				#+windows (cons shell-opt (mapcar '$sconcat args))
@@ -631,7 +633,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
     #+lispworks (system:run-shell-command (apply '$sconcat args) :wait t)))
 
 (defun $room (&optional (arg nil arg-p))
-  (if arg-p
+  (if (and arg-p (member arg '(t nil) :test #'eq))
       (room arg)
       (room)))
 

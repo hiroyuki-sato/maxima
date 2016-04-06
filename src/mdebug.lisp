@@ -12,6 +12,10 @@
     (defmacro fb (op &rest args)
       `(,op ,@ (mapcar #'(lambda (x) `(the fixnum ,x)) args))))
 
+(defstruct (line-info (:type list)) line file)
+
+(defstruct (bkpt (:type list)) form file file-line function)
+
 ;; This function is not documented and not used in Maxima core or share.
 (defun $bt()
   (loop for v in *baktrcl*
@@ -78,7 +82,7 @@
 			  (if (cdr v) "," "")))
 	   (princ ")" st)
 	   (and lineinfo
-		(format st (intl:gettext "(~a line ~a)")
+		(format st (intl:gettext " (~a line ~a)")
 			(short-name (cadr lineinfo)) (car lineinfo)))
 	   (terpri st)
 	   (values fname vals params backtr lineinfo bdlist))
@@ -121,14 +125,18 @@
        
 		(cond (return-list (return-from complete-prop all))
 		      ((> (length all) 1)
-               ;; NOTE TO TRANSLATORS: MEANING OF FOLLOWING IS UNKNOWN
-		       (format t
-		         (intl:gettext 
-                           "~&Not unique with property ~(~a: ~{~s~^, ~}~).")
-			       prop all))
+		       (format *debug-io*
+			 (intl:gettext "~&Break command '~(~s~)' is ambiguous.~%")
+			 sym)
+		       (format *debug-io*
+			 (intl:gettext "Perhaps you meant one of the following: ~(~{~s~^, ~}~).")
+			 all)
+		       (finish-output *debug-io*))
 		      ((null all)
-		       (format t 
-		         (intl:gettext "~& No such break command: ~a") sym))
+		       (format *debug-io*
+			 (intl:gettext "~&Break command '~(~s~)' does not exist.")
+			 sym)
+		       (finish-output *debug-io*))
 		      (t (return-from complete-prop
 			   (car all)))))))
 
@@ -265,12 +273,11 @@
 
 (declaim (special *mread-prompt*))
 
-;; RLT: What is the repeat-if-newline option for?  A grep of the code
-;; indicates that dbm-read is never called with more than 3 args.  Can
-;; we just flush it?  Can probably get rid of the &aux stuff too.
-
 (defvar *need-prompt* t)
 
+;; STREAM, EOF-ERROR-P and EOF-VALUE are analogous to the corresponding
+;; arguments to Lisp's READ.  REPEAT-IF-NEWLINE, when T, says to repeat
+;; the last break command (if available) when only a newline is read.
 (defun dbm-read (&optional (stream *standard-input*) (eof-error-p t)
 		 (eof-value nil) repeat-if-newline  &aux tem  ch
 		 (mprompt *mread-prompt*) (*mread-prompt* ""))
@@ -377,10 +384,10 @@
 
 (defun set-env (bkpt)
   (format *debug-io* 
-          (intl:gettext "(~a ~a~@[ in ~a~])") 
+          (intl:gettext "(~a line ~a~@[, in function ~a~])")
           (short-name (bkpt-file bkpt))
 	  (bkpt-file-line bkpt)
-	  nil)				; (bkpt-function bkpt)
+	  (bkpt-function bkpt))
   (format *debug-io* "~&~a:~a::~%" (bkpt-file bkpt)
 	  (bkpt-file-line bkpt)))
 
@@ -457,9 +464,10 @@
 	     (dolist (v (complete-prop key 'keyword 'break-doc t))
 	       (format t "~&~%~(~s~)   ~a" v (get v 'break-doc)))))
 	(t
+	 ; Skip any undocumented break commands
 	 (loop for vv being the symbols of 'keyword
-		when (get vv 'break-command)
-		collect (cons vv (or (get vv 'break-doc) "Undocumented"))
+		when (and (get vv 'break-command) (get vv 'break-doc))
+		collect (cons vv (get vv 'break-doc))
 		into all
 		finally (setq all (sort all 'alphalessp))
 	      (format t (intl:gettext "~
@@ -476,7 +484,9 @@ Command      Description~%~
   "Print help on a break command or with no arguments on
              all break commands")
 
-;; What is this debug command for?
+;; This is an undocumented break command which gets placed in
+;; *LAST-DBM-COMMAND* when an invalid (nonexistent or ambiguous)
+;; break command is read in.
 (def-break :_none #'(lambda()) nil)
 
 (def-break :next  'step-next
@@ -493,13 +503,9 @@ Command      Description~%~
 (def-break :top  #'(lambda( &rest l)l (throw 'macsyma-quit 'top)) 
   "Throw to top level")
 
-(defstruct (line-info (:type list)) line file)
-
-(defstruct (bkpt (:type list)) form file file-line function)
-
 (defun *break-points* (form)
   (let ((pos(position form *break-points* :key 'car)))
-    (format t "Bkpt ~a:" pos)
+    (format *debug-io* "Bkpt ~a: " pos)
     (break-dbm-loop  (aref *break-points* pos))))
 
 ;; fun = function name eg '$|odeSeriesSolve| and 
@@ -591,11 +597,11 @@ Command      Description~%~
       (when (eq (car bpt) nil)
 	(setq disabled t)
 	(setq bpt (cdr bpt)))
-      (format t "Bkpt ~a:(~a line ~a)~@[(disabled)~]"
+      (format t "Bkpt ~a: (~a line ~a)~@[ (disabled)~]"
 	      n (short-name (second bpt))
 	      (third bpt) disabled)
       (let ((fun (fourth bpt)))
-	(format t "(line ~a of ~a)"  (relative-line fun (nth 2 bpt))
+	(format t " (line ~a of ~a)" (relative-line fun (nth 2 bpt))
 		fun)))))
 
 (defun relative-line (fun l)

@@ -1015,7 +1015,7 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 
 ;; Other than sums, products, and lambda forms, meqp knows nothing
 ;; about dummy variables. Because of the way niceindices chooses names
-;; for the sum indicies, it's necessary to locally assign a new value to
+;; for the sum indices, it's necessary to locally assign a new value to
 ;; niceindicespref.
 
 (defun meqp-by-csign (z a b)
@@ -1261,20 +1261,13 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 		(setq exp dum)))
 	   ((eq dum 'float)
 	    (if (and (setq dum (numer x)) (numberp dum)) (setq exp dum)))
-           ;; If numer or symbol, try to evaluate numerically. NUMER returns NIL
-           ;; catches any errors and returns nil. If there would have been a
-           ;; floating point overflow, we might end up with a bigfloat. In that
-           ;; case, or if the result is small enough that we don't really trust
-           ;; it (eek, hack!), try evaluating as a bigfloat.
 	   ((and (member dum '(numer symbol) :test #'eq)
 		 (prog2 (setq dum (numer x))
 		     (or (null dum)
-                         (bigfloatp dum)
 			 (and (numberp dum)
 			      (prog2 (setq exp dum)
 				  (< (abs dum) 1.0e-6))))))
-	    (cond ((bigfloatp dum) (setq exp dum))
-                  ($signbfloat
+	    (cond ($signbfloat
 		   (and (setq dum ($bfloat x)) ($bfloatp dum) (setq exp dum)))
 		  (t (setq sign '$pnz evens nil odds (ncons x) minus nil)
 		     (return sign)))))
@@ -1349,7 +1342,7 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 	 (funcall (get (mop (mop x)) 'sign-function) x))
 	((specrepp x) (sign (specdisrep x)))
 	((kindp (caar x) '$posfun) (sign-posfun x))
-	((and (kindp (caar x) '$oddfun) (kindp (caar x) '$increasing)) (sign-oddinc x))
+	((kindp (caar x) '$oddfun) (sign-oddfun x))
 	(t (sign-any x))))
 
 (defun sign-any (x)
@@ -1387,7 +1380,7 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
     (sign1 (car x))
     (cond ((eq sign '$zero) (return t))
 	  ((and *complexsign* (eq sign '$complex))
-	   ;; Found a complex factor. Return immediatly. The sign is $complex.
+	   ;; Found a complex factor. Return immediately. The sign is $complex.
 	   (return t))
 	  ((and *complexsign* (eq sign '$imaginary))
 	   ;; Found an imaginary factor. Look if we have already one.
@@ -1438,6 +1431,11 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
                   (eq (caar lhs) (caar rhs))
                   (kindp (caar lhs) '$increasing))
              (sign (sub (cadr lhs) (cadr rhs)))
+             t)
+            ((and (not (atom lhs)) (not (atom rhs))
+                  (eq (caar lhs) (caar rhs))
+                  (kindp (caar lhs) '$decreasing))
+             (sign (sub (cadr rhs) (cadr lhs)))
              t)
             ((and (not (atom lhs)) (eq (caar lhs) 'mabs)
                   (alike1 (cadr lhs) rhs))
@@ -1626,10 +1624,10 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 	     (format t "~&in SIGN-MEXPT for ~A, base is $imaginary.~%" x))
 	   (cond
 	     ((and (integerp expt) (eq evod '$even))
-	      (setq sign (if (eq (mod expt 4) 0) '$pz '$nz)))
+	      (setq sign (if (eql (mod expt 4) 0) '$pz '$nz)))
 	     ((and (integerp expt) (eq evod '$odd))
 	      (setq sign '$imaginary
-		    minus (if (eq (mod (- expt 1) 4) 0) t nil)))
+		    minus (if (eql (mod (- expt 1) 4) 0) t nil)))
 	     (t (setq sign '$complex))))
 
 	  ((and (eq sign-base '$zero)
@@ -1826,8 +1824,19 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 	odds nil
 	evens nil))
 
-(defun sign-oddinc (x)
-  (sign (cadr x)))
+(defun sign-oddfun (x)
+  (cond ((kindp (caar x) '$increasing)
+         ; Take the sign of the argument
+         (sign (cadr x)))
+        ((kindp (caar x) '$decreasing)
+         ; Take the sign of negative of the argument
+         (sign (neg (cadr x))))
+        (t
+         ; If the sign of the argument is zero, then we're done (the sign of
+         ; the function value is the same).  Otherwise, punt to SIGN-ANY.
+         (sign (cadr x))
+         (unless (eq sign '$zero)
+           (sign-any x)))))
 
 (defun imag-err (x)
   (if sign-imag-errp

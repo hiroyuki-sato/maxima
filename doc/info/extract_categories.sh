@@ -4,7 +4,8 @@ if [ "x$TARGET" = "x" ]; then
   exit 1
 fi
 
-set -x
+# Uncomment to see everything as it happens.
+# set -x
 
 TARGET_TEXI=$TARGET.texi
 
@@ -12,6 +13,9 @@ WORKING_DIRECTORY=`mktemp -d ${TMPDIR:-/tmp}/maxima-texinfo-categories-XXXXXX`
 cp -R *.texi figures $WORKING_DIRECTORY
 d=`pwd`
 cd $WORKING_DIRECTORY
+
+# Remove the working directory when we're done.
+trap "rm -r $WORKING_DIRECTORY" 0
 
 for f in *.texi; do
   if [ $f = "maxima.texi" ]
@@ -42,8 +46,13 @@ for f in Category-*.texi; do echo '@include' $f; done >> tmp-target.texi
 echo '@bye' >> tmp-target.texi
 mv tmp-target.texi $TARGET_TEXI
 
-perl "/usr/bin/texi2html" -split_chapter --lang=en --output=. \
+# Show these two commands because this is where many warnings come from.
+set -x
+perl "$d/texi2html" --lang=en --output=maxima_singlepage.html \
  --css-include="$d/manual.css" --init-file "$d/texi2html.init" $TARGET_TEXI
+perl "$d/texi2html" -split_chapter --lang=en --output=. \
+ --css-include="$d/manual.css" --init-file "$d/texi2html.init" $TARGET_TEXI
+set +x
 
 # Now clean up the texi2html output. I'm going to burn in Hell for this (and much else).
 

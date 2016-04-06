@@ -15,6 +15,9 @@
 (load-macsyma-macros defcal mopers)
 
 (defmvar *alphabet* (list #\_ #\%))
+(defmvar *whitespace-chars*
+         '(#\tab #\space #\linefeed #\return #\page #\newline
+           #+(or unicode sb-unicode openmcl-unicode-strings) #\no-break_space))
 
 (defmfun alphabetp (n)
   (and (characterp n)
@@ -123,7 +126,7 @@
 
 (defun gobble-whitespace ()
   (do ((ch (parse-tyipeek) (parse-tyipeek)))
-      ((not (member ch '(#\tab #\space #\linefeed #\return #\page #\newline))))
+      ((not (member ch *whitespace-chars*)))
     (parse-tyi)))
 
 (defun read-command-token (obj)
@@ -155,7 +158,7 @@
 ;; characters, since if you do
 ;; PREFIX("ABCDEFGH");
 ;; then ABCDEFGA should read as a symbol.
-;; 99% of the time we dont have to unparse-tyi, and so there will
+;; 99% of the time we don't have to unparse-tyi, and so there will
 ;; be no consing...
 
 (defun parse-tyi ()
@@ -222,8 +225,7 @@
 		             ;; when grad is defined as a prefix operator.
 		             ;; See bug report ID: 2970792.
 		             (or (not (alphabetp (cadr (exploden (cadr (cadr lis))))))
-		                 (member (parse-tyipeek)
-		                         '(#\tab #\space #\linefeed #\return #\page #\newline)))
+		                 (member (parse-tyipeek) *whitespace-chars*))
 		             (cadr (cadr lis)))))
 	         (t
 		  (let ((res   (and (eql (car (cadr lis)) 'ans)
@@ -558,7 +560,8 @@
 	(setq c (parse-tyipeek))
 	(parse-tyi)
 	(cond ((= depth 0) (return t)))
-	(cond ((and (numberp c) (< c 0))(error (intl:gettext "parser: end of file in comment.")))
+	(cond ((eql c *parse-stream-eof*)
+	       (error (intl:gettext "parser: end of file in comment.")))
 	      ((char= c #\*)
 	       (cond ((char= (parse-tyipeek) #\/)
 		      (decf depth)
@@ -674,13 +677,13 @@
   (cond ((not (consp op))
 	 (let ((existing-lbp (get op 'lbp))
 	       (existing-rbp (get op 'rbp)))
-	   (cond ((not lbp) ;; ignore ommitted arg
+	   (cond ((not lbp) ;; ignore omitted arg
 		  )
 		 ((not existing-lbp)
 		  (putprop op lbp 'lbp))
 		 ((not (equal existing-lbp lbp))
 		  (maxima-error "Incompatible LBP's defined for this operator ~a" op)))
-	   (cond ((not rbp) ;; ignore ommitted arg
+	   (cond ((not rbp) ;; ignore omitted arg
 		  )
 		 ((not existing-rbp)
 		  (putprop op rbp 'rbp))
@@ -829,7 +832,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 ;;;
 ;;; If you want rubout processing, be sure to call some stream which knows
 ;;; about such things. Also, I'm figuring that the PROMPT will be
-;;; an atribute of the stream which somebody can hack before calling
+;;; an attribute of the stream which somebody can hack before calling
 ;;; MREAD if he wants to.
 
 
@@ -1162,7 +1165,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
     (cond ((eq '|$(| (first-c))
 	   (list '$any (mheader '|$'|) (parse '$any 190.)))
 	  ((or (atom (setq right (parse '$any 190.)))
-	       (member (caar right) '(mquote mlist mprog mprogn lambda) :test #'eq))
+	       (member (caar right) '(mquote mlist $set mprog mprogn lambda) :test #'eq))
 	   (list '$any (mheader '|$'|) right))
 	  ((eq 'mqapply (caar right))
 	   (cond ((eq (caaadr right) 'lambda)

@@ -8,7 +8,7 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.37.3])
+AC_INIT([maxima], [5.38.0])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability])
 
@@ -18,28 +18,34 @@ AC_CANONICAL_HOST
 
 dnl If we were using a C compiler, EXEEXT would get defined
 dnl automatically. But we aren't, so we have to define it ourselves.
+dnl Still to do: Add Win64 support here, if this is needed.
 case "$host" in
         *mingw*)
                 win32=true
+                win64=false
                 mingw=true
                 EXEEXT=.exe
 		CLISPEXT=${EXEEXT}
                 ;;
         *cygwin*)
                 win32=false
+                win64=false
                 mingw=false
                 EXEEXT=.exe
 		CLISPEXT=${EXEEXT}
                 ;;
         *)
                 win32=false
+                win64=false
                 mingw=false
                 EXEEXT=
 		CLISPEXT=.run
 esac
 AC_SUBST(EXEEXT)
 AC_SUBST(win32)
+AC_SUBST(win64)
 AM_CONDITIONAL(WIN32, test x$win32 = xtrue)
+AM_CONDITIONAL(WIN64, test x$win64 = xtrue)
 
 dnl To make life more confusing, the automake test machinery (which we
 dnl use in ./tests) needs the am__EXEEXT conditional. This would have
@@ -697,7 +703,7 @@ AM_CONDITIONAL(XMAXIMA_EXE, test x$xmaxima_exe = xtrue)
 dnl Optionally build xmaxima.exe under windows
 dnl default to false as additional software
 AC_ARG_ENABLE(winkill_exe,
-  [  --enable-winkill         Build Windows winkill.exe and winkill_lib.dll for installer],
+  [  --enable-winkill             Build Windows winkill.exe and winkill_lib.dll for installer],
   [case "${enableval}" in
        		yes) winkill_exe=true ;;
        		no)  winkill_exe=false ;;
@@ -705,6 +711,38 @@ AC_ARG_ENABLE(winkill_exe,
    esac],
    [winkill_exe=false])
 AM_CONDITIONAL(WINKILL_EXE, test x$winkill_exe = xtrue)
+
+dnl Should we build a win64 installer?
+AC_ARG_ENABLE(win64-installer,
+  [  --enable-win64-installer     Build a 64bit installer on Windows],
+  [case "${enableval}" in
+                yes) win64_installer=true ;;
+                no) win64_installer=false ;;
+                *) AC_MSG_ERROR(bad valu ${enableval} for --enable-win64-installer) ;;
+  esac],
+  [win64_installer=false])
+AM_CONDITIONAL(WIN64_INSTALLER, test x$win64_installer = xtrue)
+AC_SUBST(win64_installer)
+
+dnl Enable use of MathJax in the html documentation.  This just loads
+dnl MathJax in each html file.  The texi files need to put the
+dnl appropriate @html/@end html text to generate the equations for MathJax.
+AC_ARG_ENABLE(mathjax,
+  [  --enable-mathjax             Enable MathJax support for html manual],
+  [case "${enableval}" in
+      yes) mathjax=true
+           mathjax_enable='@set mathjax true'
+           mathjax_script="<script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>"
+;;
+      no)  mathjax=false
+           mathjax_enable='@clear mathjax'
+           mathjax_script="";;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-mathjax) ;;
+   esac],
+  [mathjax=false])
+AM_CONDITIONAL(MATHJAX, test x$mathjax = xtrue)
+AC_SUBST(mathjax_script)
+AC_SUBST(mathjax_enable)
 
 dnl Tools for building xmaxima.exe on windows
 dnl Hard code the filenames for now.  Can over-ride on make command line
@@ -1083,6 +1121,8 @@ src/share-subdirs.lisp \
 lisp-utils/Makefile tests/Makefile doc/Makefile \
 crosscompile-windows/Makefile crosscompile-windows/wxwidgets/Makefile \
 doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi \
+doc/info/texi2html.init \
+doc/info/figures/Makefile \
 doc/info/de/Makefile \
 doc/info/de.utf8/Makefile doc/info/es/Makefile doc/info/es.utf8/Makefile \
 doc/info/pt/Makefile doc/info/pt.utf8/Makefile \

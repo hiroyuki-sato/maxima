@@ -8,9 +8,11 @@
 (setf $testsuite_files
       '((mlist simp)
         "rtest_rules"
-        "rtestnset" "rtest1" "rtest1a"
+        "rtestnset" 
+        ((mlist) "rtest1" 180)
+        "rtest1a"
         ((mlist) "rtest2" 86 95)
-         "rtest4"
+	"rtest4"
         "rtest5"
         "rtest6" "rtest6a" "rtest6b" "rtest7"
         "rtest9" 
@@ -40,7 +42,7 @@
         "rtestifactor"
         ((mlist simp) "rtest_equal" 157 160)
         "rtest_abs"
-        ((mlist simp) "rtest_taylor" 88 91 94 99 123 124)
+        ((mlist simp) "rtest_taylor" 23 88 91 94 99 123 124 129)
         ((mlist simp) "rtest_dot")
         "rtest_mset"
         "rtest_boolean"
@@ -63,4 +65,6 @@
         "rtest_limit"
         "rtest_powerseries"
         ((mlist) "rtest_laplace" 29 49 50 51 54 59 60 61 62 78 80)
+        "rtest_plotoptions"
 	))
+

@@ -59,7 +59,7 @@ When one changes, the other does too."
 (defun shadow-string-assignment (var value)
   (cond
     ((stringp value)
-     (set (get var 'lisp-shadow) value)
+     (setf (symbol-value (get var 'lisp-shadow)) value)
      value)
     (t
       (merror (intl:gettext "assignment: must assign a string to ~:M; found: ~M") var value))))
@@ -109,10 +109,6 @@ When one changes, the other does too."
 (defvar $file_search_tests nil
   "Directories to search for maxima test suite")
 
-(defun combine-path (&rest list)
-  "splice a '/' between the path components given as arguments"
-  (format nil "~{~A~^/~}" list))
-
 (defun maxima-parse-dirstring (str)
   (let ((sep "/"))
     (if (position (character "\\") str)
@@ -138,7 +134,7 @@ When one changes, the other does too."
 	  (setq libdir     (combine-path maxima-prefix-env "lib"))
 	  (setq libexecdir (combine-path maxima-prefix-env "libexec"))
 	  (setq datadir    (combine-path maxima-prefix-env "share"))
-	  (setq infodir    (combine-path maxima-prefix-env #+(or cygwin windows win32) "share" "info")))
+	  (setq infodir    (combine-path maxima-prefix-env #+(or cygwin windows win32 win64) "share" "info")))
 	(progn
 	  (setq libdir     (maxima-parse-dirstring *autoconf-libdir*))
 	  (setq libexecdir (maxima-parse-dirstring *autoconf-libexecdir*))
@@ -175,7 +171,7 @@ When one changes, the other does too."
 (defun default-userdir ()
   (let ((home-env (maxima-getenv "HOME"))
 	(base-dir "")
-	(maxima-dir (if (string= *autoconf-win32* "true")
+	(maxima-dir (if (string= *autoconf-windows* "true")
 			"maxima"
 			".maxima")))
     (setf base-dir
@@ -187,7 +183,7 @@ When one changes, the other does too."
 		  "c:\\user\\"
 		  home-env)
 	      ;; we have to make a guess
-	      (if (string= *autoconf-win32* "true")
+	      (if (string= *autoconf-windows* "true")
 		  "c:\\user\\"
 		  "/tmp")))
     (combine-path (maxima-parse-dirstring base-dir) maxima-dir)))
@@ -200,7 +196,7 @@ When one changes, the other does too."
 	      (if (string= home-env "c:\\")
 		  "c:\\user\\"
 		  home-env)
-	      (if (string= *autoconf-win32* "true")
+	      (if (string= *autoconf-windows* "true")
 		  "c:\\user\\"
 		  "/tmp")))
     (maxima-parse-dirstring base-dir)))
@@ -288,7 +284,7 @@ When one changes, the other does too."
 
     ; On Windows Vista gcc requires explicit include
     #+gcl
-    (when (string= *autoconf-win32* "true")
+    (when (string= *autoconf-windows* "true")
       (let ((mingw-gccver (maxima-getenv "mingw_gccver")))
 	(when mingw-gccver
 	  (setq compiler::*cc*
@@ -588,6 +584,8 @@ When one changes, the other does too."
     (set-readtable-for-macsyma)
     (setf *read-default-float-format* 'lisp::double-float))
 
+  #+sbcl (setf *read-default-float-format* 'double-float)
+
   (initialize-real-and-run-time)
   (intl::setlocale)
   (set-locale-subdir)
@@ -603,11 +601,23 @@ When one changes, the other does too."
           intl::*locale-directories*)))
 
 (defun adjust-character-encoding ()
+  #+cmu
+  (handler-bind ((error #'(lambda (c)
+			    ;; If there's a continue restart, restart
+			    ;; to set the filename encoding anyway.
+			    (if (find-restart 'cl:continue c)
+				(invoke-restart 'cl:continue)))))
+    ;; Set both the terminal external format and filename encoding to
+    ;; utf-8.  The handler-bind is needed in case the filename
+    ;; encoding was already set to something else; we forcibly change
+    ;; it to utf-8. (Is that right?)
+    (stream:set-system-external-format :utf-8 :utf-8))
+  #+clisp
   (ignore-errors
-    #+clisp (progn (setf custom:*default-file-encoding*
-                         (ext:make-encoding :input-error-action #\?))
-                   (setf custom:*terminal-encoding*
-                         custom:*default-file-encoding*))))
+    (progn (setf custom:*default-file-encoding*
+		 (ext:make-encoding :input-error-action #\?))
+	   (setf custom:*terminal-encoding*
+		 custom:*default-file-encoding*))))
 
 (import 'cl-user::run)
 
@@ -624,12 +634,20 @@ When one changes, the other does too."
   (throw 'to-maxima t))
 
 (defun maxima-read-eval-print-loop ()
-  (setf *debugger-hook* #'maxima-lisp-debugger-repl)
-  (loop
-     (catch 'to-maxima-repl
-       (format-prompt t "~%~A> " (package-name *package*))
-       (finish-output)
-       (format t "~{~&~S~}" (multiple-value-list (eval (read)))))))
+  (when *debugger-hook*
+    ; Only set a new debugger hook if *DEBUGGER-HOOK* has not been set to NIL
+    (setf *debugger-hook* #'maxima-lisp-debugger-repl))
+  (let ((eof (gensym)))
+    (loop
+      (catch 'to-maxima-repl
+        (format-prompt t "~%~A> " (package-name *package*))
+        (finish-output)
+        (let ((input (read *standard-input* nil eof)))
+          ; Return to Maxima on EOF
+          (when (eq input eof)
+            (fresh-line)
+            (to-maxima))
+          (format t "~{~&~S~}" (multiple-value-list (eval input))))))))
 
 (defun maxima-lisp-debugger-repl (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))

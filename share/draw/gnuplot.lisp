@@ -1,6 +1,6 @@
 ;;;                 COPYRIGHT NOTICE
 ;;;  
-;;;  Copyright (C) 2007-2015 Mario Rodriguez Riotorto
+;;;  Copyright (C) 2007-2016 Mario Rodriguez Riotorto
 ;;;  
 ;;;  This program is free software; you can redistribute
 ;;;  it and/or modify it under the terms of the
@@ -33,7 +33,7 @@
 
 
 
-(defvar *windows-OS* (string= *autoconf-win32* "true"))
+(defvar *windows-OS* (string= *autoconf-windows* "true") )
 
 (defmacro write-font-type ()
    '(if (string= (get-option '$font) "")
@@ -1205,123 +1205,159 @@
     (when (< xmax xmin)
        (merror "draw2d (explicit): illegal range"))
     (setq *plot-realpart* (get-option '$draw_realpart))
-    (setf fcn ($float fcn))
-    (cond 
-      ((floatp fcn) ; if function is a constant, we only need the end points
-        (setf result (list xmin fcn xmax fcn)))
-      (t ; if not a constant, call adaptive-plot
-        (setq fcn (coerce-float-fun fcn `((mlist) ,var)))
-        (flet ((fun (x) (funcall fcn x)))
-            (dotimes (k (1+ (* 2 nticks)))
-              (let ((x (+ xmin (* k x-step))))
-                (push x x-samples)
-                (push (fun x) y-samples)))
-          (setf x-samples (nreverse x-samples))
-          (setf y-samples (nreverse y-samples))
-          ;; For each region, adaptively plot it.
-          (do ((x-start x-samples (cddr x-start))
-               (x-mid (cdr x-samples) (cddr x-mid))
-               (x-end (cddr x-samples) (cddr x-end))
-               (y-start y-samples (cddr y-start))
-               (y-mid (cdr y-samples) (cddr y-mid))
-               (y-end (cddr y-samples) (cddr y-end)))
-              ((null x-end))
-            ;; The region is x-start to x-end, with mid-point x-mid.
-            (let ((sublst (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
-                                               (car y-start) (car y-mid) (car y-end)
-                                               depth 1e-5)))
-              (when (notevery #'(lambda (x) (or (numberp x) (eq x t) )) sublst)
-                (merror "draw2d (explicit): non defined variable"))
-              (when (not (null result))
-                (setf sublst (cddr sublst)))
-              (do ((lst sublst (cddr lst)))
-                  ((null lst) 'done)
-                (setf result (append result (list (first lst) (second lst))))))))) )
-      (cond ((null (get-option '$filled_func))
-               (cond
-                 ((> *draw-transform-dimensions* 0)
-                    ; With geometric transformation.
-                    ; When option filled_func in not nil,
-                    ; geometric transformation is ignored
-                    (setf result-array (make-array (length result)))
-                    (setf xmin most-positive-double-float
-                          xmax most-negative-double-float)
-                    (let (xold yold x y (count -1))
-                      (do ((lis result (cddr lis)))
-                          ((null lis))
-                        (setf xold (first lis)
-                              yold (second lis))
-                        (setf x (funcall *draw-transform-f1* xold yold)
-                              y (funcall *draw-transform-f2* xold yold))
-                        (if (> x xmax) (setf xmax x))
-                        (if (< x xmin) (setf xmin x))
-                        (if (> y ymax) (setf ymax y))
-                        (if (< y ymin) (setf ymin y))
-                        (setf (aref result-array (incf count)) x)
-                        (setf (aref result-array (incf count)) y)  )  ) )
-                 (t
-                    ; No geometric transformation invoked.
-                    (do ((y (cdr result) (cddr y)))
-                        ((null y))
-                      (setf yy (car y))
-                      (check-extremes-y))
-                    (setf result-array (make-array (length result)
-                                                   :initial-contents result))))
-               (update-ranges-2d xmin xmax ymin ymax)
-               (setf pltcmd (format nil " ~a w l lw ~a lt ~a lc ~a axis ~a"
-                                        (make-obj-title (get-option '$key))
-                                        (get-option '$line_width)
-                                        (get-option '$line_type)
-                                        (hex-to-rgb (get-option '$color))
-                                        (axes-to-plot)))
-               (make-gr-object
-                  :name   'explicit
-                  :command pltcmd
-                  :groups '((2 0))  ; numbers are sent to gnuplot in groups of 2
-                  :points  (list result-array )) )
-            ((equal (get-option '$filled_func) t)
-               (do ((y (cdr result) (cddr y)))
-                   ((null y))
-                  (setf yy (car y))
-                  (check-extremes-y))
-               (update-ranges-2d xmin xmax ymin ymax)
-               (setf result-array (make-array (length result)
-                                              :element-type 'flonum 
-                                              :initial-contents result))
-               (setf pltcmd (format nil " ~a w filledcurves x1 lc ~a axis ~a"
-                                        (make-obj-title (get-option '$key))
-                                        (hex-to-rgb (get-option '$fill_color))
-                                        (axes-to-plot)))
-               (make-gr-object
-                  :name   'explicit
-                  :command pltcmd
-                  :groups '((2 0))  ; numbers are sent to gnuplot in groups of 2
-                  :points  (list result-array )))
-            (t
-               (let (fcn2 yy2 (count -1))
-                  (setf result-array (make-array (* (/ (length result) 2) 3)
-                                                 :element-type 'flonum))
-                  (setq fcn2 (coerce-float-fun (get-option '$filled_func) `((mlist), var)))
-                  (flet ((fun (x) (funcall fcn2 x)))
-                    (do ((xx result (cddr xx)))
-                      ((null xx))
-                      (setf yy  (second xx)
-                            yy2 (fun (first xx)))
-                      (setf ymax (max ymax yy yy2)
-                            ymin (min ymin yy yy2))
-                      (setf (aref result-array (incf count)) (first xx)
-                            (aref result-array (incf count)) yy
-                            (aref result-array (incf count)) yy2) )  ))
-               (update-ranges-2d xmin xmax ymin ymax)
-               (setf pltcmd (format nil " ~a w filledcurves lc ~a axis ~a"
-                                        (make-obj-title (get-option '$key))
-                                        (hex-to-rgb (get-option '$fill_color))
-                                        (axes-to-plot)  ))
-               (make-gr-object
-                  :name   'explicit
-                  :command pltcmd
-                  :groups '((3 0))  ; numbers are sent to gnuplot in groups of 3
-                  :points  (list result-array))))  ))
+    (setq fcn (coerce-float-fun fcn `((mlist) ,var)))
+    (when (get-option '$logx)
+      (setf xmin (log xmin))
+      (setf xmax (log xmax))
+      (setf x-step (/ (- xmax xmin) ($float nticks) 2)))
+    (flet ((fun (x)
+               (let ((y (if (get-option '$logx)
+                            (funcall fcn (exp x))
+                            (funcall fcn x))))
+                 (if (and (get-option '$logy)
+                          (numberp y))
+                     (if (> y 0)
+                       (log y)
+                       (merror "draw2d (explicit): logarithm of negative number"))
+                     y))))
+      (dotimes (k (1+ (* 2 nticks)))
+        (let ((x (+ xmin (* k x-step))))
+          (push x x-samples)
+          (push (fun x) y-samples)))
+      (setf x-samples (nreverse x-samples))
+      (setf y-samples (nreverse y-samples))
+      ;; For each region, adaptively plot it.
+      (do ((x-start x-samples (cddr x-start))
+           (x-mid (cdr x-samples) (cddr x-mid))
+           (x-end (cddr x-samples) (cddr x-end))
+           (y-start y-samples (cddr y-start))
+           (y-mid (cdr y-samples) (cddr y-mid))
+           (y-end (cddr y-samples) (cddr y-end)))
+          ((null x-end))
+        ;; The region is x-start to x-end, with mid-point x-mid.
+        (let ((sublst (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
+                                           (car y-start) (car y-mid) (car y-end)
+                                           depth 1e-5)))
+          (when (notevery #'(lambda (x) (or (numberp x) (eq x t) (eq x nil))) sublst)
+            (let ((items sublst) (item 'nil))
+	      ;; Search for the item in sublist that is the undefined variable
+	      (while items
+		(if
+		    (not
+		     (or (numberp (car items)) (eq (car items) t) (eq (car items) nil)))
+		    (setq item (car items))
+		  )
+		(setq items (cdr items))
+		)
+	      (merror "draw2d (explicit): non defined variable in term: ~M" item)
+	      )
+	    )
+
+
+          (when (not (null result))
+            (setf sublst (cddr sublst)))
+          (do ((lst sublst (cddr lst)))
+              ((null lst) 'done)
+            (setf result (append result
+                                 (list
+                                   (if (and (get-option '$logx)
+                                            (numberp (first lst)))
+                                     (exp (first lst))
+                                     (first lst))
+                                   (if (and (get-option '$logy)
+                                            (numberp (second lst)))
+                                     (exp (second lst))
+                                     (second lst)))))))))
+    ; reset x extremes to original values
+    (when (get-option '$logx)
+      (setf xmin (exp xmin))
+      (setf xmax (exp xmax)))
+
+    (cond ((null (get-option '$filled_func))
+             (cond
+               ((> *draw-transform-dimensions* 0)
+                  ; With geometric transformation.
+                  ; When option filled_func in not nil,
+                  ; geometric transformation is ignored
+                  (setf result-array (make-array (length result)))
+                  (setf xmin most-positive-double-float
+                        xmax most-negative-double-float)
+                  (let (xold yold x y (count -1))
+                    (do ((lis result (cddr lis)))
+                        ((null lis))
+                      (setf xold (first lis)
+                            yold (second lis))
+                      (setf x (funcall *draw-transform-f1* xold yold)
+                            y (funcall *draw-transform-f2* xold yold))
+                      (if (> x xmax) (setf xmax x))
+                      (if (< x xmin) (setf xmin x))
+                      (if (> y ymax) (setf ymax y))
+                      (if (< y ymin) (setf ymin y))
+                      (setf (aref result-array (incf count)) x)
+                      (setf (aref result-array (incf count)) y)  )  ) )
+               (t
+                  ; No geometric transformation invoked.
+                  (do ((y (cdr result) (cddr y)))
+                      ((null y))
+                    (setf yy (car y))
+                    (check-extremes-y))
+                  (setf result-array (make-array (length result)
+                                                 :initial-contents result))))
+             (update-ranges-2d xmin xmax ymin ymax)
+             (setf pltcmd (format nil " ~a w l lw ~a lt ~a lc ~a axis ~a"
+                                      (make-obj-title (get-option '$key))
+                                      (get-option '$line_width)
+                                      (get-option '$line_type)
+                                      (hex-to-rgb (get-option '$color))
+                                      (axes-to-plot)))
+             (make-gr-object
+                :name   'explicit
+                :command pltcmd
+                :groups '((2 0))  ; numbers are sent to gnuplot in groups of 2
+                :points  (list result-array )) )
+          ((equal (get-option '$filled_func) t)
+             (do ((y (cdr result) (cddr y)))
+                 ((null y))
+                (setf yy (car y))
+                (check-extremes-y))
+             (update-ranges-2d xmin xmax ymin ymax)
+             (setf result-array (make-array (length result)
+                                            :element-type 'flonum 
+                                            :initial-contents result))
+             (setf pltcmd (format nil " ~a w filledcurves x1 lc ~a axis ~a"
+                                      (make-obj-title (get-option '$key))
+                                      (hex-to-rgb (get-option '$fill_color))
+                                      (axes-to-plot)))
+             (make-gr-object
+                :name   'explicit
+                :command pltcmd
+                :groups '((2 0))  ; numbers are sent to gnuplot in groups of 2
+                :points  (list result-array )))
+          (t
+             (let (fcn2 yy2 (count -1))
+                (setf result-array (make-array (* (/ (length result) 2) 3)
+                                               :element-type 'flonum))
+                (setq fcn2 (coerce-float-fun (get-option '$filled_func) `((mlist), var)))
+                (flet ((fun (x) (funcall fcn2 x)))
+                  (do ((xx result (cddr xx)))
+                    ((null xx))
+                    (setf yy  (second xx)
+                          yy2 (fun (first xx)))
+                    (setf ymax (max ymax yy yy2)
+                          ymin (min ymin yy yy2))
+                    (setf (aref result-array (incf count)) (first xx)
+                          (aref result-array (incf count)) yy
+                          (aref result-array (incf count)) yy2) )  ))
+             (update-ranges-2d xmin xmax ymin ymax)
+             (setf pltcmd (format nil " ~a w filledcurves lc ~a axis ~a"
+                                      (make-obj-title (get-option '$key))
+                                      (hex-to-rgb (get-option '$fill_color))
+                                      (axes-to-plot)  ))
+             (make-gr-object
+                :name   'explicit
+                :command pltcmd
+                :groups '((3 0))  ; numbers are sent to gnuplot in groups of 3
+                :points  (list result-array))))  ))
 
 
 
@@ -1529,13 +1565,13 @@
 	   (j 0 (1+ j)))
 	  ((> j ($second grid)))
 	(let ((fun-val (funcall expr x-val y-val)))
-          (when (not (floatp fun-val))
-                (merror "draw2d (implicit): non defined variable"))
+          (when (and (not (floatp fun-val)) (not (eq fun-val t)))
+                (merror "draw2d (implicit): non defined variable in condition ~M=0" fun-val))
 	  (if (or (eq fun-val t) (>= fun-val epsilon))
 	      (setf (aref sample i j) 1)
 	      (setf (aref sample i j) -1)))))))
 
-(defun print-segment (points xmin xdelta ymin ydelta)
+(defun draw-print-segment (points xmin xdelta ymin ydelta)
   (let* ((point1 (car points)) (point2 (cadr points))
 	 (x1 (coerce (+ xmin (/ (* xdelta (+ (car point1) (caddr point1))) 2)) 'flonum) )
 	 (y1 (coerce (+ ymin (/ (* ydelta (+ (cadr point1) (cadddr point1))) 2)) 'flonum) )
@@ -1543,7 +1579,7 @@
 	 (y2 (coerce (+ ymin (/ (* ydelta (+ (cadr point2) (cadddr point2))) 2)) 'flonum) ))
      (setq pts (nconc (list x1 y1 x2 y2) pts))))	
 
-(defun print-square (xmin xmax ymin ymax sample grid)
+(defun draw-print-square (xmin xmax ymin ymax sample grid)
   (let* ((xdelta (/ (- xmax xmin) ($first grid)))
 	 (ydelta (/ (- ymax ymin) ($second grid))))
     (do ((i 0 (1+ i)))
@@ -1560,7 +1596,7 @@
 		  (setq points (cons `(,i ,(1+ j) ,(1+ i) ,(1+ j)) points)))
 	      (if (< (* (aref sample i j) (aref sample i (1+ j))) 0)
 		  (setq points (cons `(,i ,j ,i ,(1+ j)) points)))
-	      (print-segment points xmin xdelta ymin ydelta)) )))))
+	      (draw-print-segment points xmin xdelta ymin ydelta)) )))))
 
 (defun imp-pl-prepare-factor (expr)
   (cond 
@@ -1616,7 +1652,7 @@
 		   (yymax (+ yymin ydelta)))
 	      (sample-data e xxmin xxmax yymin yymax
 			   ssample ip-grid-in)
-	      (print-square xxmin xxmax yymin yymax
+	      (draw-print-square xxmin xxmax yymin yymax
 			    ssample ip-grid-in) )) ))
 
     ; geometric transformation
@@ -1774,7 +1810,21 @@
          (count -1)
          ncols result)
     (when (not (subsetp (rest ($listofvars fcn)) (list par1 par2)))
-       (merror "draw3d (explicit): non defined variable"))
+            (let ((items (rest ($listofvars fcn))) (item 'nil))
+	      ;; Search for the item in sublist that is the undefined variable
+	      (while items
+		(if
+		    (
+		     not
+		     (subsetp (list (car items)) (list par1 par2))
+		     )
+		    (setq item (car items))
+		  )
+		(setq items (cdr items))
+		)
+	      (merror "draw3d (explicit): non defined variable in term ~M" item)
+	      )
+	    )
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "explicit" '(0 2 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -2416,7 +2466,7 @@
 ;;     surface_hide
 ;;     transform
 (defmacro check-tube-extreme (ex cx cy cz circ)
-    `(when (equal (nth ,ex (get-option '$tube_extremes)) '$closed)
+    `(when (equal (nth ,ex (get-option '$capping)) t)
        (let ((cxx ,cx)
              (cyy ,cy)
              (czz ,cz))
@@ -2718,7 +2768,23 @@
       (gethash '$label         *2d-graphic-objects*) 'label
       (gethash '$bars          *2d-graphic-objects*) 'bars
       (gethash '$polar         *2d-graphic-objects*) 'polar
-      (gethash '$image         *2d-graphic-objects*) 'image )
+      (gethash '$image         *2d-graphic-objects*) 'image
+      (gethash '%points        *2d-graphic-objects*) 'points
+      (gethash '%errors        *2d-graphic-objects*) 'errors
+      (gethash '%polygon       *2d-graphic-objects*) 'polygon
+      (gethash '%ellipse       *2d-graphic-objects*) 'ellipse
+      (gethash '%triangle      *2d-graphic-objects*) 'triangle
+      (gethash '%rectangle     *2d-graphic-objects*) 'rectangle
+      (gethash '%quadrilateral *2d-graphic-objects*) 'quadrilateral
+      (gethash '%region        *2d-graphic-objects*) 'region
+      (gethash '%explicit      *2d-graphic-objects*) 'explicit
+      (gethash '%implicit      *2d-graphic-objects*) 'implicit
+      (gethash '%parametric    *2d-graphic-objects*) 'parametric
+      (gethash '%vector        *2d-graphic-objects*) 'vect
+      (gethash '%label         *2d-graphic-objects*) 'label
+      (gethash '%bars          *2d-graphic-objects*) 'bars
+      (gethash '%polar         *2d-graphic-objects*) 'polar
+      (gethash '%image         *2d-graphic-objects*) 'image )
 
 (defun make-scene-2d (args)
    (let ((objects nil)
@@ -2740,8 +2806,10 @@
       ; save in plotcmd the gnuplot preamble
       (setf plotcmd
          (concatenate 'string
-            (format nil "set style rectangle fillcolor rgb '~a' fs solid 1.0 noborder~%"
-                        (get-option '$background_color)) ; background rectangle
+            (if *multiplot-is-active*
+               ""
+               (format nil "set obj 1 fc rgb '~a' fs solid 1.0 noborder ~%"
+                       (get-option '$background_color)) )
             (if (equal (get-option '$proportional_axes) '$none)
                (format nil "set size noratio~%")
                (format nil "set size ratio -1~%") )
@@ -2799,10 +2867,16 @@
                (format nil "unset logscale y2~%"))
             (if (get-option '$logcb)
                (format nil "set logscale cb~%")
-               (format nil "unset logscale cb~%") )
-            (if (get-option '$grid)
-                (format nil "set grid~%")
-                (format nil "unset grid~%"))
+	      (format nil "unset logscale cb~%") )
+	    
+	    ( if (equal (car (get-option '$grid)) 0)
+		(format nil "unset grid~%")
+	        (format nil "set grid xtics ytics mxtics mytics~%set mxtics ~a~%set mytics ~d~%"
+		      (car  (get-option '$grid))
+		      (cadr (get-option '$grid))
+		      )
+	      )
+		   
             (format nil "set title '~a'~%"  (get-option '$title))
             (format nil "set xlabel '~a'~%" (get-option '$xlabel))
             (format nil "set x2label '~a'~%" (get-option '$xlabel_secondary))
@@ -2896,7 +2970,21 @@
       (gethash '$parametric_surface *3d-graphic-objects*) 'parametric_surface
       (gethash '$tube               *3d-graphic-objects*) 'tube
       (gethash '$spherical          *3d-graphic-objects*) 'spherical
-      (gethash '$cylindrical        *3d-graphic-objects*) 'cylindrical )
+      (gethash '$cylindrical        *3d-graphic-objects*) 'cylindrical
+      (gethash '%points             *3d-graphic-objects*) 'points3d
+      (gethash '%elevation_grid     *3d-graphic-objects*) 'elevation_grid
+      (gethash '%mesh               *3d-graphic-objects*) 'mesh
+      (gethash '%triangle           *3d-graphic-objects*) 'triangle3d
+      (gethash '%quadrilateral      *3d-graphic-objects*) 'quadrilateral3d
+      (gethash '%explicit           *3d-graphic-objects*) 'explicit3d
+      (gethash '%implicit           *3d-graphic-objects*) 'implicit3d
+      (gethash '%parametric         *3d-graphic-objects*) 'parametric3d
+      (gethash '%vector             *3d-graphic-objects*) 'vect3d
+      (gethash '%label              *3d-graphic-objects*) 'label
+      (gethash '%parametric_surface *3d-graphic-objects*) 'parametric_surface
+      (gethash '%tube               *3d-graphic-objects*) 'tube
+      (gethash '%spherical          *3d-graphic-objects*) 'spherical
+      (gethash '%cylindrical        *3d-graphic-objects*) 'cylindrical  )
 
 ;; This function builds a 3d scene by calling the 
 ;; graphic objects constructors.
@@ -2939,7 +3027,7 @@
                (when (near-equal zi zf)
                   (setf zi (- zi 0.01)
                         zf (+ zf 0.01)))
-               (format nil "set xrange [~a:~a]~%set yrange [~a:~a]~%set zrange [~a:~a]~%"
+               (format nil "set format '%h'~%set xrange [~a:~a]~%set yrange [~a:~a]~%set zrange [~a:~a]~%"
                            xi xf yi yf zi zf))
             (if (get-option '$cbrange)
                (format nil "set cbrange [~a:~a]~%" 
@@ -2977,9 +3065,13 @@
             (if (get-option '$logcb)
                (format nil "set logscale cb~%")
                (format nil "unset logscale cb~%") )
-            (if (get-option '$grid)
-                (format nil "set grid~%")
-                (format nil "unset grid~%"))
+	    (if (equal (car (get-option '$grid)) 0)
+		(format nil "unset grid~%")
+	        (format nil "set grid xtics ytics ztics mxtics mytics mztics~%set mxtics ~a~%set mytics ~d~%"
+		      (car  (get-option '$grid))
+		      (cadr (get-option '$grid))
+		      )
+	      )
             (if (get-option '$xaxis)
                (format nil "set xzeroaxis lw ~a lt ~a lc ~a~%"
                            (get-option '$xaxis_width)
@@ -3034,7 +3126,7 @@
                                ($xyz      "set view equal xyz")
                                (otherwise ""))))
             (if (not (get-option '$axis_3d))
-                (format nil "set border 0~%"))
+                (format nil "set border 0~%unset xtics~%unset ytics~%unset ztics~%"))
             (when (not (null (get-option '$enhanced3d)))
               (if (null (get-option '$wired_surface))
                 (format nil "set pm3d at s ~a explicit~%" (get-option '$interpolate_color))
@@ -3279,7 +3371,8 @@
       (dolist (scn scenes)
         ; write size and origin if necessary
         (cond ((or isanimatedgif ismultipage)
-                (format cmdstorage "~%set size 1.0, 1.0~%") )
+                (format cmdstorage "~%set size 1.0, 1.0~%")
+                (format cmdstorage "set obj 1 rectangle behind from screen 0.0,0.0 to screen 1.0,1.0~%") )
               (t ; it's not an animated gif
                 (setf thisalloc (car alloc))
                 (setf alloc (cdr alloc))
@@ -3384,9 +3477,9 @@
                (format cmdstorage "~%quit~%~%")
                (format cmdstorage "~%set term dumb~%~%") )
              (close cmdstorage)
-	     #+(or (and sbcl win32) (and ccl windows))
+	     #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
              ($system $gnuplot_command gfn)
-	     #-(or (and sbcl win32) (and ccl windows))
+	     #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 	     ($system (format nil "~a \"~a\"" 
 			      $gnuplot_command
 			      gfn) ))
@@ -3423,11 +3516,11 @@
                 ; call gnuplot via system command
                 (t
 
-		 #+(or (and sbcl win32) (and ccl windows))
+		 #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 		 (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11 $qt))
 		     ($system $gnuplot_command "-persist" gfn)
 		     ($system $gnuplot_command gfn))
-		 #-(or (and sbcl win32) (and ccl windows))
+		 #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 		 ($system (if (member (get-option '$terminal) '($screen $aquaterm $wxt $x11 $qt))
 			      (format nil "~a ~a"
 				      $gnuplot_command

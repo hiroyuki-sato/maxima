@@ -16,7 +16,7 @@
    MA 02110-1301, USA.
    
    
-**** sha1, sha256 **************************************************************
+**** sha1, sha256, mgf1_sha1 ***************************************************
    
    Copyright Volker van Nek, 2014 - 2015
    
@@ -82,12 +82,26 @@
    SHA1 Fingerprint=85:A4:08:C0:9C:19:3E:5D:51:58:7D:CD:D6:13:30:FD:8C:DE:37:BF
    (%o8)                                  0
 
+
+   mgf1_sha1(seed, length) resp. mgf1_sha1(seed, length, return_type) returns 
+   a pseudo random number of octet-length length.
+   The returned value is a number (default) or a list of octets.
+   See RFC 3447,appendix B.2.1.
+
+   (%i1) ibase: obase: 16.$
+   (%i2) number: mgf1_sha1(0cafe, 8);
+   (%o2)                          0b097d3c8328001ee
+   (%i3) octets: mgf1_sha1(0cafe, 8, 'list);
+   (%o3)                    [0B0,97,0D3,0C8,32,80,1,0EE]
+
 |#
+
+(in-package :maxima)
 
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (defvar old-ibase *read-base*)
+    (defvar old-ibase-sha1 *read-base*)
     (setq *read-base* 10.) )
 
 
@@ -191,7 +205,7 @@
   (let (bytes len)
     (cond
       ((stringp s)
-        (setq bytes (mapcar #'char-code (coerce s 'list))) )
+        (setq bytes (string-to-octets s)) )
       ((and (integerp s) (>= s 0))
         (setq bytes (number-to-octets s)) )
       (($listp s)
@@ -217,6 +231,31 @@
       (t  
         (gf-merror (intl:gettext 
           "`sha1sum': Optional argument must be 'list, 'number or 'string." ))))))
+
+
+;; *** MGF1_SHA1 ************************************************************ ;;
+;;
+;; Generation of a pseudorandom number according to RFC 3447, appendix B.2.1 .
+;;
+(defmfun $mgf1_sha1 (seed len &optional (rtype '$number))
+  (let ((err-msg (intl:gettext "Unsuitable arguments to `mgf1_sha1': ~m, ~m"))
+         s s+i res )
+    (cond
+      ((and (integerp seed) (>= seed 0)) (setq s (number-to-octets seed)))
+      (($listp seed) (setq s (cdr seed)))
+      (t (gf-merror err-msg seed len)) )
+    (unless (and (integerp len) (> len 0)) (gf-merror err-msg seed len))
+    (do ((i 0 (1+ i))
+         (ii (ceiling (/ len 20.0))))
+        ((= i ii))
+      (setq s+i (cons '(mlist simp) (append s (word-to-octets i)))
+            res (nconc res (cdr ($sha1sum s+i '$list))) ))
+    (setq res (subseq res 0 len))
+    (cond
+      ((equal rtype '$number) (octets-to-number res))
+      ((equal rtype '$list) (cons '(mlist simp) res))
+      (t (gf-merror (intl:gettext 
+           "`mgf1_sha1': Optional argument must be 'number or 'list." ))))))
 
 
 ;; *** SHA256 *************************************************************** ;;
@@ -283,7 +322,7 @@
   (let (bytes len)
     (cond
       ((stringp s)
-        (setq bytes (mapcar #'char-code (coerce s 'list))) )
+        (setq bytes (string-to-octets s)) )
       ((and (integerp s) (>= s 0))
         (setq bytes (number-to-octets s)) )
       (($listp s)
@@ -315,4 +354,4 @@
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (setq *read-base* old-ibase) )
+    (setq *read-base* old-ibase-sha1) )

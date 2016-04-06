@@ -348,11 +348,20 @@ values")
     ;; we just need to make sure the exponent marker is
     ;; printed.
     (if *fortran-print*
-        (setq string (format nil "~e" symb))
+        (setq string (cond
+                       ;; Strings for non-finite numbers as specified for input in Fortran 2003 spec;
+                       ;; they apparently did not exist in earlier versions.
+                       ((float-nan-p symb) "NAN")
+                       ((float-inf-p symb) (if (< symb 0) "-INF" "INF"))
+                       (t (format nil "~e" symb))))
         (multiple-value-bind (form digits)
           (cond
             ((zerop a)
              (values "~,vf" 1))
+            ;; Work around for GCL bug #47404.
+            ;; Avoid numeric comparisons with NaN, which erroneously return T.
+            #+gcl ((or (float-inf-p symb) (float-nan-p symb))
+             (return-from exploden-format-float (format nil "~a" symb)))
             ((<= 0.001 a 1e7)
              (let*
                ((integer-log10 (floor (/ (log a) #.(log 10.0))))
@@ -360,6 +369,8 @@ values")
                (if (< scale effective-printprec)
                  (values "~,vf" (- effective-printprec scale))
                  (values "~,ve" (1- effective-printprec)))))
+            #-gcl ((or (float-inf-p symb) (float-nan-p symb))
+             (return-from exploden-format-float (format nil "~a" symb)))
             (t
               (values "~,ve" (1- effective-printprec))))
 
@@ -684,8 +695,21 @@ values")
 (defun extract-date-bits (s groups)
   (loop for p in groups while p collect (apply #'subseq (cons s p))))
 
-(defun construct-universal-time (year month day &optional (hour 0) (minute 0) (second 0) (ms 0))
-  (add (div ms 1000) (encode-universal-time second minute hour day month year)))
+; Clisp (2.49) / Windows does have a problem with dates before 1970-01-01,
+; therefore add 400 years in that case and subtract 12622780800
+; (= parse_timedate("2300-01-01") (Lisp starts with 1900-01-01) in timezone
+; GMT) afterwards.
+; see discussion on mailing list circa 2015-04-21: "parse_timedate error"
+
+(if (and (string= (lisp-implementation-type) "CLISP") (string= *autoconf-windows* "true"))
+  ; Clisp/Windows case:
+  (defun construct-universal-time (year month day &optional (hour 0) (minute 0) (second 0) (ms 0))
+    (add (div ms 1000) (sub (encode-universal-time second minute hour day month (add year 400)) 12622780800)))
+  ; other Lisp / OS versions:
+  (defun construct-universal-time (year month day &optional (hour 0) (minute 0) (second 0) (ms 0))
+    (add (div ms 1000) (encode-universal-time second minute hour day month year)))
+)
+
 
 ;;Some systems make everything functionp including macros:
 (defun functionp (x)

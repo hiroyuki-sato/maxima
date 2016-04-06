@@ -360,7 +360,7 @@ nicedummies(to_poly_solve(cosh(x) - sinh(2*x)/2 = 0,x));
 nicedummies(to_poly_solve(sinh(x) + cosh(x) = 1,x));
 %union([x=2*%i*%pi*%z0])$
 
-/* miscelaneous */
+/* miscellaneous */
 
 nicedummies(to_poly_solve(sin(x) = cos(x), x,simpfuncs = ['expand]));
 %union([x = %pi*%z0+%pi/4])$
@@ -1209,6 +1209,20 @@ nicedummies(%solve(tan(x)=tan(%pi/5),x));
 
 %solve(conjugate(atanh(x/8+7)),x);
 %union([x=-56])$
+
+/* SF bug #3088: "string(a %or b) => ?%or(a,b)" */
+
+(kill (a, b, c, d), string (a %or b));
+"a %or b";
+
+string (a %or b %or c %or d);
+"a %or b %or c %or d";
+
+string (a %and b);
+"a %and b";
+
+string (a %and b %and c %and d);
+"a %and b %and c %and d";
 
 /* clean up */
 (print("time = ", absolute_real_time() - %start), is(absolute_real_time() - %start < 200));

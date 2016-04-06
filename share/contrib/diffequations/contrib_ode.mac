@@ -191,7 +191,7 @@ ode_check(e_,a_) := block(
 
 /* Attempt to simplify the result from ode_check() */
 ode_check_tidy(e) := block(
-  for f in ['bessimp, 'expintegral_e_simp,'ode_trig_simp]
+  for f in ['bessel_simplify, 'expintegral_e_simplify,'ode_trig_simp]
   do 
     (if (f(e)=0) then return(e:0)),
   return(expand(e))
@@ -200,7 +200,7 @@ ode_check_tidy(e) := block(
 /*  This Bessel function simplification code can be improved,
     but is does work well on the contrib_ode testsuite.
 */
-bessimp(e) := block(
+bessel_simplify(e) := block(
  for f in ['besksimp, 'besisimp, 'besysimp, 'besjsimp, 
            'hankel1simp, 'hankel2simp, 'struvehsimp, 'struvelsimp]
  do
@@ -278,8 +278,8 @@ besksimp(ex):=block(
 
 /* This is a helper function for besksimp.
   - the function bk has been substituted for bessel_k in ex
-  - collect all the arguments of each occurence of bk in e
-  - partition arguements into sets with same argument and where 
+  - collect all the arguments of each occurrence of bk in e
+  - partition arguments into sets with same argument and where 
     either the orders m and n differ by integer or m and (-n) 
     differ by integer (so m+n is an integer).
   - for the elements where  m+n is an integer, substitute

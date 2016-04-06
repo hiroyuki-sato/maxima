@@ -33,7 +33,7 @@ endif
 SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8) $(DE_DIR) $(DE_DIR_UTF8)
 
 info_TEXINFOS = maxima.texi
-maxima_TEXINFOS = category-macros.texi Introduction.texi \
+maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  Bugs.texi Help.texi Command.texi DataTypes.texi Constants.texi Lists.texi \
  Arrays.texi defstruct.texi Expressions.texi Operators.texi Evaluation.texi \
  Simplification.texi MathFunctions.texi Database.texi Plotting.texi \
@@ -43,15 +43,18 @@ maxima_TEXINFOS = category-macros.texi Introduction.texi \
  Atensor.texi Series.texi Number.texi Symmetries.texi Groups.texi \
  Runtime.texi Miscellaneous.texi Rules.texi nset.texi Function.texi \
  Program.texi Debugging.texi alt-display.texi asympa.texi \
- augmented_lagrangian.texi bernstein.texi bode.texi clebsch_gordan.texi \
+ augmented_lagrangian.texi bitwise.texi bernstein.texi bode.texi celine.texi \
+ clebsch_gordan.texi \
  cobyla.texi contrib_ode.texi descriptive.texi diag.texi distrib.texi \
- draw.texi drawdf.texi dynamics.texi ezunits.texi f90.texi finance.texi \
+ draw.texi drawdf.texi dynamics.texi engineering-format.texi \
+ ezunits.texi f90.texi finance.texi \
  fractals.texi ggf.texi graphs.texi grobner.texi impdiff.texi interpol.texi \
  lapack.texi lbfgs.texi lindstedt.texi linearalgebra.texi lsquares.texi \
  minpack.texi makeOrders.texi mnewton.texi numericalio.texi opsubst.texi \
- orthopoly.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
+ operatingsystem.texi \
+ orthopoly.texi ratpow.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
  stats.texi stirling.texi stringproc.texi to_poly_solve.texi unit.texi \
- zeilberger.texi
+ zeilberger.texi errormessages.texi
 
 figurefiles = \
 figures/introduction1.gif\
@@ -133,7 +136,135 @@ figures/bodephase8.gif\
 figures/bodephase9.gif\
 figures/scene1.png\
 figures/scene2.png\
-figures/color_terminal.png
+figures/color_terminal.png\
+figures/draw_axis3d.gif\
+figures/draw_axis_bottom.gif\
+figures/draw_bars.gif\
+figures/draw_border.gif\
+figures/draw_cbrange.gif\
+figures/draw_cbtics.gif\
+figures/draw_colorbox2.gif\
+figures/draw_colorbox.gif\
+figures/draw_color.gif\
+figures/draw_columns.gif\
+figures/draw_contour2.gif\
+figures/draw_contour.gif\
+figures/draw_cylindrical.gif\
+figures/draw_elevation_grid.gif\
+figures/draw_ellipse.gif\
+figures/draw_enhanced3d10.gif\
+figures/draw_enhanced3d11.gif\
+figures/draw_enhanced3d2.gif\
+figures/draw_enhanced3d3.gif\
+figures/draw_enhanced3d4.gif\
+figures/draw_enhanced3d5.gif\
+figures/draw_enhanced3d6.gif\
+figures/draw_enhanced3d7.gif\
+figures/draw_enhanced3d8.gif\
+figures/draw_enhanced3d9.gif\
+figures/draw_enhanced3d.gif\
+figures/draw_equiv.gif\
+figures/draw_errors2.gif\
+figures/draw_errors.gif\
+figures/draw_explicit2.gif\
+figures/draw_explicit3.gif\
+figures/draw_explicit.gif\
+figures/draw_filledfunc2.gif\
+figures/draw_filledfunc.gif\
+figures/draw_grid2.gif\
+figures/draw_grid.gif\
+figures/draw_head_angle.gif\
+figures/draw_head_both.gif\
+figures/draw_head_length.gif\
+figures/draw_head_type.gif\
+figures/draw_image2.gif\
+figures/draw_image3.gif\
+figures/draw_image4.gif\
+figures/draw_image5.gif\
+figures/draw_image6.gif\
+figures/draw_image.gif\
+figures/draw_implicit2.gif\
+figures/draw_implicit.gif\
+figures/draw_interpolate_color2.gif\
+figures/draw_interpolate_color3.gif\
+figures/draw_interpolate_color4.gif\
+figures/draw_interpolate_color5.gif\
+figures/draw_interpolate_color6.gif\
+figures/draw_interpolate_color.gif\
+figures/draw_key.gif\
+figures/draw_key_pos2.gif\
+figures/draw_key_pos.gif\
+figures/draw_label2.gif\
+figures/draw_label_alignment.gif\
+figures/draw_label.gif\
+figures/draw_label_orientation.gif\
+figures/draw_line_type.gif\
+figures/draw_line_width.gif\
+figures/draw_logcb.gif\
+figures/draw_logx_secondary.gif\
+figures/draw_mesh2.gif\
+figures/draw_mesh3.gif\
+figures/draw_mesh.gif\
+figures/draw_nticks.gif\
+figures/draw_palette2.gif\
+figures/draw_palette3.gif\
+figures/draw_palette4.gif\
+figures/draw_palette5.gif\
+figures/draw_palette.gif\
+figures/draw_parametric3.gif\
+figures/draw_parametric2.gif\
+figures/draw_parametric.gif\
+figures/draw_points2.gif\
+figures/draw_points3.gif\
+figures/draw_points4.gif\
+figures/draw_points5.gif\
+figures/draw_points6.gif\
+figures/draw_points7.gif\
+figures/draw_points8.gif\
+figures/draw_point_size.gif\
+figures/draw_points_joined.gif\
+figures/draw_points.gif\
+figures/draw_point_type.gif\
+figures/draw_polygon.gif\
+figures/draw_polar.gif\
+figures/draw_proportional_axis2.gif\
+figures/draw_proportional_axis.gif\
+figures/draw_quadrilateral.gif\
+figures/draw_rectangle.gif\
+figures/draw_region.gif\
+figures/draw_scene.gif\
+figures/draw_spherical.gif\
+figures/draw_surface_hide.gif\
+figures/draw_title.gif\
+figures/draw_transform2.gif\
+figures/draw_transparent.gif\
+figures/draw_triangle.gif\
+figures/draw_tube_extremes.gif\
+figures/draw_tube.gif\
+figures/draw_unit_vectors.gif\
+figures/draw_user_preamble.gif\
+figures/draw_user_preamble2.gif\
+figures/draw_vector2.gif\
+figures/draw_vector.gif\
+figures/draw_view2.gif\
+figures/draw_view.gif\
+figures/draw_wired_surface.gif\
+figures/draw_xaxis.gif\
+figures/draw_xaxis_secondary.gif\
+figures/draw_ylabel_secondary.gif\
+figures/draw_transform.gif\
+figures/worldmap_make_poly_continent.gif\
+figures/worldmap_make_poly_continent2.gif\
+figures/worldmap_make_poly_country.gif\
+figures/worldmap_make_polygon.gif\
+figures/worldmap_region_boundaries.gif\
+figures/worldmap_region_boundaries_plus.gif\
+figures/worldmap_geomap.gif\
+figures/worldmap_geomap2.gif\
+figures/worldmap_geomap3.gif\
+figures/worldmap_geomap4.gif\
+figures/worldmap_geomap5.gif\
+figures/worldmap_geomap6.gif
 
 pdffigures = \
 figures/introduction1.pdf\
@@ -199,7 +330,138 @@ figures/bodephase8.pdf\
 figures/bodephase9.pdf\
 figures/scene1.pdf\
 figures/scene2.pdf\
-figures/color_terminal.pdf
+figures/color_terminal.pdf\
+figures/draw_axis3d.pdf\
+figures/draw_axis_bottom.pdf\
+figures/draw_bars.pdf\
+figures/draw_border.pdf\
+figures/draw_cbrange.pdf\
+figures/draw_cbtics.pdf\
+figures/draw_colorbox2.pdf\
+figures/draw_colorbox.pdf\
+figures/draw_color.pdf\
+figures/draw_columns.pdf\
+figures/draw_contour2.pdf\
+figures/draw_contour.pdf\
+figures/draw_cylindrical.pdf\
+figures/draw_elevation_grid.pdf\
+figures/draw_ellipse.pdf\
+figures/draw_enhanced3d10.pdf\
+figures/draw_enhanced3d11.pdf\
+figures/draw_enhanced3d2.pdf\
+figures/draw_enhanced3d3.pdf\
+figures/draw_enhanced3d4.pdf\
+figures/draw_enhanced3d5.pdf\
+figures/draw_enhanced3d6.pdf\
+figures/draw_enhanced3d7.pdf\
+figures/draw_enhanced3d8.pdf\
+figures/draw_enhanced3d9.pdf\
+figures/draw_enhanced3d.pdf\
+figures/draw_equiv.pdf\
+figures/draw_errors2.pdf\
+figures/draw_errors.pdf\
+figures/draw_explicit2.pdf\
+figures/draw_explicit3.pdf\
+figures/draw_explicit.pdf\
+figures/draw_filledfunc2.pdf\
+figures/draw_filledfunc.pdf\
+figures/draw_grid2.pdf\
+figures/draw_grid.pdf\
+figures/draw_head_angle.pdf\
+figures/draw_head_both.pdf\
+figures/draw_head_length.pdf\
+figures/draw_head_type.pdf\
+figures/draw_image2.pdf\
+figures/draw_image3.pdf\
+figures/draw_image4.pdf\
+figures/draw_image5.pdf\
+figures/draw_image6.pdf\
+figures/draw_image.pdf\
+figures/draw_implicit2.pdf\
+figures/draw_implicit.pdf\
+figures/draw_interpolate_color2.pdf\
+figures/draw_interpolate_color3.pdf\
+figures/draw_interpolate_color4.pdf\
+figures/draw_interpolate_color5.pdf\
+figures/draw_interpolate_color6.pdf\
+figures/draw_interpolate_color.pdf\
+figures/draw_key.pdf\
+figures/draw_key_pos2.pdf\
+figures/draw_key_pos.pdf\
+figures/draw_label2.pdf\
+figures/draw_label_alignment.pdf\
+figures/draw_label.pdf\
+figures/draw_label_orientation.pdf\
+figures/draw_line_type.pdf\
+figures/draw_line_width.pdf\
+figures/draw_logcb.pdf\
+figures/draw_logx_secondary.pdf\
+figures/draw_mesh2.pdf\
+figures/draw_mesh3.pdf\
+figures/draw_mesh.pdf\
+figures/draw_nticks.pdf\
+figures/draw_palette2.pdf\
+figures/draw_palette3.pdf\
+figures/draw_palette4.pdf\
+figures/draw_palette5.pdf\
+figures/draw_palette.pdf\
+figures/draw_parametric3.pdf\
+figures/draw_parametric2.pdf\
+figures/draw_parametric.pdf\
+figures/draw_points2.pdf\
+figures/draw_points3.pdf\
+figures/draw_points4.pdf\
+figures/draw_points5.pdf\
+figures/draw_points6.pdf\
+figures/draw_points7.pdf\
+figures/draw_points8.pdf\
+figures/draw_point_size.pdf\
+figures/draw_points_joined.pdf\
+figures/draw_points.pdf\
+figures/draw_point_type.pdf\
+figures/draw_polygon.pdf\
+figures/draw_polar.pdf\
+figures/draw_proportional_axis2.pdf\
+figures/draw_proportional_axis.pdf\
+figures/draw_quadrilateral.pdf\
+figures/draw_rectangle.pdf\
+figures/draw_region.pdf\
+figures/draw_scene.pdf\
+figures/draw_spherical.pdf\
+figures/draw_surface_hide.pdf\
+figures/draw_title.pdf\
+figures/draw_transform2.pdf\
+figures/draw_transparent.pdf\
+figures/draw_triangle.pdf\
+figures/draw_tube_extremes.pdf\
+figures/draw_tube.pdf\
+figures/draw_unit_vectors.pdf\
+figures/draw_user_preamble.pdf\
+figures/draw_user_preamble2.pdf\
+figures/draw_vector2.pdf\
+figures/draw_vector.pdf\
+figures/draw_view2.pdf\
+figures/draw_view.pdf\
+figures/draw_wired_surface.pdf\
+figures/draw_xaxis.pdf\
+figures/draw_xaxis_secondary.pdf\
+figures/draw_ylabel_secondary.pdf\
+figures/draw_transform.pdf\
+figures/worldmap_make_poly_continent.pdf\
+figures/worldmap_make_poly_continent.pdf\
+figures/worldmap_make_poly_continent.pdf\
+figures/worldmap_make_poly_continent2.pdf\
+figures/worldmap_make_poly_country.pdf\
+figures/worldmap_make_polygon.pdf\
+figures/worldmap_region_boundaries.pdf\
+figures/worldmap_region_boundaries_plus.pdf\
+figures/worldmap_geomap.pdf\
+figures/worldmap_geomap2.pdf\
+figures/worldmap_geomap3.pdf\
+figures/worldmap_geomap4.pdf\
+figures/worldmap_geomap5.pdf\
+figures/worldmap_geomap6.pdf
+
 
 if CHM
 MAXIMA_CHM = maxima.chm
@@ -208,22 +470,26 @@ UNINSTALL_CHM = uninstall-chm
 CLEAN_CHM = clean-chm
 endif
 
-all-local: maxima.info maxima-index.lisp $(MAXIMA_CHM)
+# We need the html docu to be generated on "make all" because if we fail
+# to do so a "sudo make install" will generate the html docu as read-only
+# fails conflicting with a subsequent "make html".
+all-local: html maxima.info maxima-index.lisp $(MAXIMA_CHM)
 
-maxima.info : maxima.texi
-	$(MAKEINFO) --split-size=1000000 maxima.texi
+maxima.info: $(top_srcdir)/doc/info/maxima.texi
+	$(MAKEINFO) --split-size=1000000 $<
 
 html: maxima.html contents.hhc
 
 maxima-index.lisp: maxima.info build_index.pl
 	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
 
-maxima.html: maxima.texi $(maxima_TEXINFOS)
-	sh extract_categories.sh maxima
+maxima.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
+	touch $@
+#	sh extract_categories.sh maxima
 
-maxima.pdf: maxima.texi $(maxima_TEXINFOS)
-	$(TEXI2PDF) $(AM_V_texinfo) -o maxima.pdf maxima.texi
-	rm maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
+maxima.pdf: $(top_srcdir)/doc/info/maxima.texi $(maxima_TEXINFOS) $(pdffigures)
+	$(TEXI2PDF) $(AM_V_texinfo) -o $@ $<
+	rm maxima.fns maxima.vr \
 	maxima.toc maxima.fn maxima.aux maxima.log
 
 contents.hhc index.hhk: maxima.html
@@ -284,7 +550,8 @@ endif
 EXTRA_DIST = texi2html manual.css texi2html.init \
     $(genericdirDATA) $(pdffigures) \
     create_index build_index.pl maxima-index.lisp  \
-    extract_categories1.awk  extract_categories1.sed  extract_categories.sh
+    extract_categories1.awk  extract_categories1.sed  extract_categories.sh\
+    figures/Makefile.am figures/Makefile.in
 
 check_texinfo:
 	@pattern=`printf "\t"` ; \
@@ -298,5 +565,6 @@ warn_texinfo:
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run /doc/info/fix_tab to fix the problem." )
 
-.PHONY: check_texinfo warn_texinfo
 
+
+.PHONY: check_texinfo warn_texinfo

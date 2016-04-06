@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/maxima/maxima-code/doc/info/de.utf8//include-maxima.de.texi.
+/home/vttoth/dev/maxima/doc/info/de.utf8//include-maxima.de.texi.
 
 Das ist ein Texinfo Maxima Manual
 
@@ -8,6 +8,482 @@ Das ist ein Texinfo Maxima Manual
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Debugger-Kommandos,  Next: Funktionen und Variablen der Fehlersuche,  Prev: Quellcode-Debugger,  Up: Fehlersuche
+
+29.2 Debugger-Kommandos
+=======================
+
+Es gibt spezielle Kommandos, die von Maxima nicht als ein Ausdruck
+interpretiert werden.  Diese Kommandos beginnen mit einem Doppelpunkt
+`:' und können in der Kommandozeile oder nach einer Unterbrechung
+ausgeführt werden.  Mit dem Kommando `:lisp' werden zum Beispiel
+Lisp-Zeilen ausgewertet:
+
+     (%i1) :lisp (+ 2 3)
+     5
+
+Die Anzahl der Argumente hängt vom jeweiligen Kommando ab.  Die
+Kommandos können mit den ersten zwei Buchstaben abgekürzt werden.  Zum
+Beispiel genügt es `:br' für das Kommando `:break' einzugeben.
+
+Die speziellen Kommandos sind folgende:
+
+`:break F n'
+     Setzte einen Unterbrechnungspunkt in der Funktion `F' in der Zeile
+     `n' vom Anfang der Funktion.  Wird `F' als eine Zeichenkette
+     angegeben, dann wird `F' als der Name einer Datei angenommen.  `n'
+     ist in diesem Fall die `n'-te Zeile in der Datei.  Wird `n' nicht
+     angegeben, wird der Wert zu Null angenommen.
+
+`:bt'
+     Gebe einen Backtrace des Stack Frames aus.
+
+`:continue'
+     Setze die Ausführung der Funktion fort.
+
+`:delete'
+     Lösche den spezifizierten Unterbrechnungspunkt oder alle, wenn
+     keiner spezifiziert wird.
+
+`:disable'
+     Schalte den spezifierten oder alle Unterbrechnungspunkte ab.
+
+`:enable'
+     Schalte den spezifizierten oder alle Unterbrechnungspunkte ein.
+
+`:frame n'
+     Gebe den Stack Frame `n' oder den aktuellen aus, wenn keiner
+     spezifiert wird.
+
+`:help'
+     Gebe einen Hilfetext zu einem spezifierten Kommando oder zu allen
+     Kommandos aus, wenn kein Kommando spezifierten wird.
+
+`:info'
+     Gebe Information über einen Eintrag aus.
+
+`:lisp some-form'
+     Werte `some-form' als eine Lisp-Form aus.
+
+`:lisp-quiet some-form'
+     Werte `some-form' als eine Lisp-Form aus, ohne eine Ausgabe zu
+     erzeugen.
+
+`:next'
+     Wie `:step', führt aber Funktionsaufrufe als einen Schritt aus.
+
+`:quit'
+     Beende den Debugger.
+
+`:resume'
+     Setzte die Ausführung des Programms fort.
+
+`:step'
+     Setzte die Auswertung des Programms bis zur nächsten Zeile fort.
+
+`:top'
+     Beende die Auswertung und kehre zur Maxima-Eingabe zurück.
+
+
+
+File: maxima.info,  Node: Funktionen und Variablen der Fehlersuche,  Prev: Debugger-Kommandos,  Up: Fehlersuche
+
+29.3 Funktionen und Variablen der Fehlersuche
+=============================================
+
+ -- Optionsvariable: debugmode
+     Standardwert: `false'
+
+     Hat die Optionsvariable `debugmode' den Wert `true', wird der
+     Maxima-Debugger gestartet, wenn ein Programmfehler auftritt.  Nach
+     der Unterbrechung des Programms kann der Debugger genutzt werden.
+     Siehe das Kapitel Debugger-Kommandos für eine Liste der Kommandos
+     des Debuggers.
+
+     Der Maxima-Debugger behandelt keine Lisp-Programmfehler.
+
+
+ -- Optionsvariable: refcheck
+     Standardwert: `false'
+
+     Hat `refcheck' den Wert `true', gibt Maxima eine Meldung aus, wenn
+     einer Variablen zum ersten Mal ein Wert zugewiesen wird.
+
+
+ -- Optionsvariable: setcheck
+     Standardwert: `false'
+
+     Der Optionsvariablen `setcheck' kann eine Liste mit den Namen von
+     Variablen zugewiesen werden.  Dies können auch indizierte
+     Variablen sein.  Immer wenn einer der Variablen mit den Operatoren
+     `:' oder `::' ein Wert zugewiesen wird, gibt Maxima eine Meldung
+     aus, die den Namen der Variablen und den zugewiesenen Wert enthält.
+
+     `setcheck' kann den Wert `all' oder `true' erhalten.  In diesem
+     Fall wird für alle Variablen eine Meldung ausgegeben.
+
+     Jede Zuweisung an `setcheck' initialisert eine neue Liste mit
+     Variablen.  Vorherige Zuweisungen werden überschrieben.
+
+     Die Auswertung der Namen der Variablen muss mit dem Quote-Operator
+     `'' unterdrückt werden, wenn den Variablen bereits Werte
+     zugewiesen wurden.  Haben zum Beispiel die Variablen `x', `y' und
+     `z' Werte, dann werden die Variablen mit dem folgenden Befehl
+     angegeben:
+
+          setcheck: ['x, 'y, 'z]$
+
+     Es wird keine Meldung ausgegeben, wenn eine Variable sich selbst
+     zugewiesen wird, zum Beispiel `X: 'X'.
+
+
+ -- Optionsvariable: setcheckbreak
+     Standardwert: `false'
+
+     Hat `setcheckbreak' den Wert `true', startet Maxima den Debugger,
+     wenn einer Variablen, die in der Liste `setcheck' enthalten ist,
+     ein Wert zugewiesen wird.  Die Unterbrechung wird noch vor der
+     Zuweisung des Wertes ausgeführt.  Die Variable `setval' enhält den
+     Wert, der zugewiesen werden soll.  Dieser Variablen kann ein
+     anderer Wert zugewiesen werden.
+
+     Siehe auch `setcheck' und `setval'.
+
+
+ -- Systemvariable: setval
+     Enthält den Wert, der einer Variable zugewiesen werden soll, wenn
+     die Zuweisung mit der Optionsvariablen `setcheckbreak'
+     unterbrochen wurde.  `setval' kann ein anderer Wert zugewiesen
+     werden.
+
+     Siehe auch `setcheck' und `setcheckbreak'.
+
+
+ -- Funktion: timer (<f_1>, ..., <f_n>)
+ -- Funktion: timer (all)
+ -- Funktion: timer ()
+     Sammelt Statistiken über die Ausführungszeiten von Funktionen.  Die
+     Argumente <f_1>, ..., <f_n> sind die Namen von Funktionen zu denen
+     Statistiken gesammelt werden.  `time(g)' fügt die Funktion `g' der
+     Liste an Funktionen hinzu, zu denen Informationen gesammelt werden.
+
+     `timer(all)' fügt alle nutzerdefinierten Funktionen, die in der
+     Informationsliste `functions' enthalten sind, der Liste der
+     Funktionen hinzu, über die Informationen gesammelt werden.
+
+     Wird `timer()' ohne Argumente aufgerufen, wird eine Liste der
+     Funktionen zurückgeben, über die Informationen gesammelt werden.
+
+     Maxima misst die Zeit, die eine Funktion für die Ausführung
+     benötigt.  `timer_info' gibt eine Statistik für alle Funktionen
+     zurück, für die die Ausführungszeiten gemessen werden.  Die
+     Statistik enthält die durchschnittliche Ausführungszeit der
+     Funktionen und die Anzahl der Aufrufe der Funktionen.  Mit der
+     Funktion `untimer' wird die Aufzeichnung der Ausführungszeiten
+     beendet.
+
+     `timer' wertet die Argumente nicht aus.  Daher werden im Folgenden
+     `f(x) := x^2$ g:f$ timer(g)$' für die Funktion `f' keine
+     Ausführungszeiten aufgezeichnet.
+
+     Wird für die Funktion `f' mit dem Kommando `trace(f)' der Ablauf
+     verfolgt, hat das Kommando `timer(f)' keinen Effekt.  Für eine
+     Funktion können nicht gleichzeitig Ausführungszeiten aufgezeichnet
+     und der Ablauf verfolgt werden.
+
+     Siehe auch `timer_devalue'.
+
+
+ -- Funktion: untimer (<f_1>, ..., <f_n>)
+ -- Funktion: untimer ()
+     `untimer' beendet die Aufzeichnung von Informationen zur
+     Ausführungszeit für die Funktionen <f_1>, ..., <f_n>.
+
+     Wird `untimer' ohne Argument aufgerufen, wird die Aufzeichnung für
+     alle Funktionen beendet.
+
+     Die aufgezeichneten Informationen zu einer Funktion `f' können mit
+     dem Kommando `timer_info(f)' auch dann abgerufen werden, wenn
+     zuvor mit dem Kommando `untimer(f)' die Aufzeichnung für die
+     Funktion `f' beendet wurde.  Jedoch werden die aufgezeichneten
+     Informationen für die Funktion `f' nicht mit dem Kommando
+     `timer_info()' angezeigt.  Das Kommando `timer(f)' setzt alle
+     aufgezeichneten zurück und startet die Aufzeichnung für die
+     Funktion erneut.
+
+
+ -- Optionsvariable: timer_devalue
+     Standardwert: `false'
+
+     Hat `timer_devalue' den Wert `true', subtrahiert Maxima bei der
+     Aufzeichnung der Ausführungszeiten die Zeiten, welche eine
+     Funktion in anderen Funktionen verbringt.  Ansonsten enthalten die
+     aufgezeichneten Zeiten auch die Ausführungszeiten der Funktionen,
+     die aufgerufen werden.
+
+     Siehe auch `timer' und `timer_info'.
+
+
+ -- Funktion: timer_info (<f_1>, ..., <f_n>)
+ -- Funktion: timer_info ()
+     Gibt eine Tabelle mit den aufgezeichneten Informationen über die
+     Ausführungszeiten der Funktionen <f_1>, ..., <f_n> zurück.  Wird
+     kein Argument angegeben, werden Informationen für alle Funktionen
+     angezeigt, zu denen Informationen aufgezeichnet sind.
+
+     Die Tabelle enthält die Namen der Funktionen, die Ausführungszeit
+     pro Aufruf, die Anzahl der Aufrufe, die gesamte Zeit und die
+     `gctime'-Zeit.  Die `gctime'-Zeit bedeutet "Garbage Collection
+     Time".
+
+     Die Daten, die von der Funktion `timer_info' angezeigt werden,
+     können auch mit der Funktion `get' erhalten werden:
+
+          get(f, 'calls);  get(f, 'runtime);  get(f, 'gctime);
+
+     Siehe auch `timer'.
+
+
+ -- Funktion: trace (<f_1>, ..., <f_n>)
+ -- Funktion: trace (all)
+ -- Funktion: trace ()
+     Startet die Ablaufverfolgung für die Funktionen <f_1>, ..., <f_n>.
+     Mit dem Kommando `trace(g)' kann eine weitere Funktion hinzugefügt
+     werden.
+
+     `trace(all)' startet die Ablaufverfolgung für alle
+     nutzerdefinierten Funktionen, die in der Informationsliste
+     `functions' enthalten sind.
+
+     Das Kommando `trace()' zeigt eine Liste aller Funktionen für die
+     eine Ablaufverfolgung gestartet wurde.
+
+     Mit der Funktion `untrace' wird die Ablaufverfolgung beendet.
+     Siehe auch `trace_options'.
+
+     `trace' wertet die Argumente nicht aus.
+
+     Die Ablaufverfolgung kann für eine Funktion `f' nicht gestartet
+     werden, wenn für die Funktion bereits mit der Funktion `timer'
+     Informationen über die Ausführungszeiten gesammelt werden.
+
+
+ -- Funktion: trace_options (<f>, <option_1>, ..., <option_n>)
+ -- Funktion: trace_options (<f>)
+     Setzt Optionen für die Ablaufverfolgung einer Funktion <f>.
+     Bereits vorliegende Optionen werden ersetzt.
+
+     `trace_options(<f>)' setzt alle Optionen auf die Standardwerte
+     zurück.
+
+     Die Optionen sind:
+
+    `noprint'
+          Gebe keine Meldung beim Eintritt in eine oder dem Austritt
+          aus einer Funktion aus.
+
+    `break'
+          Setze eine Unterbrechnung vor dem Eintritt in eine Funktion
+          und nach dem Austritt aus einer Funktion.  Siehe `break'.
+
+    ``lisp_print''
+          Zeige die Argumente und Rückgabewerte in der Lisp-Syntax an.
+
+    `info'
+          Gebe `-> true' beim Eintritt in und Austritt aus einer
+          Funktion aus.
+
+    ``errorcatch''
+          Catch errors, giving the option to signal an error,  retry
+          the function call, or specify a return value.
+
+
+     Es können bedingte Optionen für die Ablaufverfolgung definiert
+     werden.  Dazu wird eine Option zusammen mit einer Aussagefunktion
+     angegeben.  Die Argumente der Aussagefunktion für eine bedingte
+     Option sind immer `[level, direction, function, item]'.  `level'
+     ist die Rekursionstiefe der Funktion, `direction' enthält die
+     Werte `enter' oder `exit', `function' ist der Name der Funktion
+     und `item' ist eine Liste der Argumente oder der Rückgabewert beim
+     Verlassen der Funktion.
+
+     Dies ist ein Beispiel für eine Ablaufverfolgung ohne Bedingungen:
+
+          (%i1) ff(n) := if equal(n, 0) then 1 else n * ff(n - 1)$
+
+          (%i2) trace (ff)$
+
+          (%i3) trace_options (ff, lisp_print, break)$
+
+          (%i4) ff(3);
+
+     In diesem Fall wird eine Aussagefunktion für eine bedingte
+     Ablaufverfolgung angegeben:
+
+          (%i5) trace_options (ff, break(pp))$
+
+          (%i6) pp (level, direction, function, item) := block (print (item),
+              return (function = 'ff and level = 3 and direction = exit))$
+
+          (%i7) ff(6);
+
+
+ -- Funktion: untrace (<f_1>, ..., <f_n>)
+ -- Funktion: untrace ()
+     Beendet die Ablaufverfolgung für die Funktionen <f_1>, ..., <f_n>.
+     Das Kommando `untrace()' beendet die Ablaufverfolgung für alle
+     Funktionen.
+
+     `untrace' gibt eine Liste der Funktionen zurück, für die die
+     Ablaufverfolgung beendet wurde.
+
+
+
+File: maxima.info,  Node: Verschiedenes,  Next: abs_integrate,  Prev: Fehlersuche,  Up: Top
+
+30 Verschiedenes
+****************
+
+* Menu:
+
+* Einführung in Verschiedenes::
+* Share-Pakete::
+* Funktionen und Variablen für Verschiedenes::
+
+
+File: maxima.info,  Node: Einführung in Verschiedenes,  Next: Share-Pakete,  Prev: Verschiedenes,  Up: Verschiedenes
+
+30.1 Einführung in Verschiedenes
+================================
+
+Dieses Kapitel enthält verschiedene Funktionen und Optionsvariablen.
+
+
+File: maxima.info,  Node: Share-Pakete,  Next: Funktionen und Variablen für Verschiedenes,  Prev: Einführung in Verschiedenes,  Up: Verschiedenes
+
+30.2 Share-Pakete
+=================
+
+Das Maxima Share-Verzeichnis enthält viele weitere zusätzliche
+Funktionen und Erweiterungen, die nicht Teil des Kernels von Maxima und
+in Paketen organisiert sind.  Diese Pakete werden mit der Funktion
+`load' geladen.  Einige Pakete werden automatisch geladen, wenn der
+Nutzer eine Funktion des Paketes aufruft.  Mit der Funktion
+`setup_autoload' können Funktionen für das automatische Laden
+konfiguriert werden.
+
+Die Lisp-Variable `*maxima-sharedir*' enthält das Verzeichnis der
+Pakete.  Das Kommanod `printfile("share.usg")' gibt eine Übersicht über
+Pakete aus.  Diese ist jedoch derzeit stark veraltert.
+
+
+File: maxima.info,  Node: Funktionen und Variablen für Verschiedenes,  Prev: Share-Pakete,  Up: Verschiedenes
+
+30.3 Funktionen und Variablen für Verschiedenes
+===============================================
+
+ -- Systemvariable: askexp
+     Wenn `asksign' aufgerufen wird, enthält `askexp' den Ausdruck, der
+     von `asksign' getestet wird.
+
+     Es war einmal möglich, die Variable `askexp' nach einer
+     Unterbrechnung mit Control-A zu inspezieren.
+
+ -- Function: gensym ()
+ -- Function: gensym (<x>)
+     `gensym()' creates and returns a fresh symbol.
+
+     The name of the new-symbol is the concatenation of a prefix, which
+     defaults to "g", and a suffix, which is the decimal representation
+     of a number that defaults to the value of a Lisp internal counter.
+
+     If <x> is supplied, and is a string, then that string is used as a
+     prefix instead of "g" for this call to gensym only.
+
+     If <x> is supplied, and is an integer, then that integer, instead
+     of the value of the internal Lisp integer, is used as the suffix
+     for this call to gensym only.
+
+     If and only if no explicit suffix is supplied, the Lisp internal
+     integer is incremented after it is used.
+
+     Examples:
+
+          (%i1) gensym();
+          (%o1)                         g887
+          (%i2) gensym("new");
+          (%o2)                        new888
+          (%i3) gensym(123);
+          (%o3)                         g123
+
+ -- Option variable: packagefile
+     Default value: `false'
+
+     Package designers who use `save' or `translate' to create packages
+     (files) for others to use may want to set `packagefile: true' to
+     prevent information from being added to Maxima's information-lists
+     (e.g.  `values', `functions') except where necessary when the file
+     is loaded in.  In this way, the contents of the package will not
+     get in the user's way when he adds his own data.  Note that this
+     will not solve the problem of possible name conflicts.  Also note
+     that the flag simply affects what is output to the package file.
+     Setting the flag to `true' is also useful for creating Maxima init
+     files.
+
+ -- Funktion: remvalue (<name_1>, ..., <name_n>)
+ -- Funktion: remvalue (all)
+     Entfernt die Werte von nutzerdefinierten Variablen <name_1>, ...,
+     <name_n>.  Die Variablen können indiziert sein.  `remvalue(all)'
+     entfernt die Werte aller Variablen, die in der Informationsliste
+     `values' enthalten sind.
+
+     Siehe auch `values'.
+
+ -- Funktion: rncombine (<expr>)
+     Transformiert den Ausdruck <expr> so, dass alle Terme mit
+     identischem Nenner oder Nennern, die sich nur um einen numerischen
+     Faktor voneinander unterscheiden, über einen Nenner
+     zusammengefasst werden. Die Funktion `combine' fasst ebenfalls
+     Ausdrücke über einen Nenner zusammen, betrachtet aber Nenner als
+     verschieden, die sich um einen Zahlenfaktor voneinander
+     unterscheiden.
+
+     Die Funktion wird mit dem Kommando `rncomb' geladen.
+
+ -- Funktion: setup_autoload (<filename>, <function_1>, ...,
+          <function_n>)
+     Die Funktionen <function_1>, ..., <function_n> erhalten die
+     Eigenschaft, dass die Datei <filename> automatisch geladen wird,
+     wenn die Funktion zum ersten Mal genutzt werden soll.  <filename>
+     wird mit der Funktion `load' geladen und enthält üblicherweise den
+     Code für die Definition der zu ladenden Funktion.
+
+     `setup_autoload' funktioniert nicht für Array-Funktionen.
+     `setup_autoload' wertet die Argumente nicht aus.
+
+     Beispiele:
+
+          (%i1) legendre_p (1, %pi);
+          (%o1)                  legendre_p(1, %pi)
+          (%i2) setup_autoload ("specfun.mac", legendre_p, ultraspherical);
+          (%o2)                         done
+          (%i3) ultraspherical (2, 1/2, %pi);
+          Warning - you are redefining the Macsyma function ultraspherical
+          Warning - you are redefining the Macsyma function legendre_p
+                                      2
+                           3 (%pi - 1)
+          (%o3)            ------------ + 3 (%pi - 1) + 1
+                                2
+          (%i4) legendre_p (1, %pi);
+          (%o4)                          %pi
+          (%i5) legendre_q (1, %pi);
+                                        %pi + 1
+                                %pi log(-------)
+                                        1 - %pi
+          (%o5)                 ---------------- - 1
+                                       2
 
 
 File: maxima.info,  Node: abs_integrate,  Next: affine,  Prev: Verschiedenes,  Up: Top
@@ -33,7 +509,7 @@ polynomial and q is a polynomial that `factor' is able to factor into a
 product of linear or constant terms, the `abs_integrate' package
 determines an antiderivative that is continuous on the entire real
 line.  Additionally, for an integrand that involves one or more
-parameters, the function `conditional_integrate'  tries to determine an
+parameters, the function `conditional_integrate' tries to determine an
 antiderivative that is valid for all parameter values.
 
 Examples:
@@ -47,7 +523,7 @@ To use the `abs_integrate' package, you'll first need to load it:
                                     2
 
 To convert (%o2) into an expression involving the absolute value
-function, apply `signum_to_abs' ; thus
+function, apply `signum_to_abs'; thus
 
      (%i3) signum_to_abs(%);
                                  x abs(x)
@@ -67,8 +543,7 @@ example
                                      6
 
 Additionally, `abs_integrate' is able to find antiderivatives of some
-integrands involving `max',  `min',  `signum',  and `unit_step',
-examples:
+integrands involving `max', `min', `signum', and `unit_step', examples:
 
      (%i5) integrate(max(x,x^2),x);
                 3      2                                        3    2
@@ -123,7 +598,7 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
      Default value: `['signum_int, 'abs_integrate_use_if]'
 
      The list `extra_integration_methods' is a list of functions for
-     integration.  When `integrate'  is unable to find an
+     integration.  When `integrate' is unable to find an
      antiderivative, Maxima uses the methods in
      `extra_integration_methods' to attempt to determine an
      antiderivative.
@@ -196,8 +671,8 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
      Default value: `['abs_defint]'
 
      The list `extra_definite_integration_methods' is a list of extra
-     functions for definite integration.  When `integrate'  is unable
-     to find a definite integral, Maxima uses the methods in
+     functions for definite integration.  When `integrate' is unable to
+     find a definite integral, Maxima uses the methods in
      `extra_definite_integration_methods' to attempt to determine an
      antiderivative.
 
@@ -249,7 +724,7 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
           (%o7)                        g(w(x))
 
      An alternative to calling `intfudu' directly is to use the
-     `extra_integration_methods'  mechanism; an example:
+     `extra_integration_methods' mechanism; an example:
 
           (%i1) load(abs_integrate)$
           (%i2) load(basic)$
@@ -274,7 +749,6 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
      `http://www.cs.berkeley.edu/~fateman/papers/partition.pdf'.
 
      Related functions `intfugudu'.
-
 
  -- Function: intfugudu (<e>, <x>)
      This function uses the derivative divides rule for integrands of
@@ -306,7 +780,6 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
      `http://www.cs.berkeley.edu/~fateman/papers/partition.pdf'
 
      Related functions `intfudu'.
-
 
  -- Function: signum_to_abs (<e>)
      This function replaces subexpressions of the form q signum(q) by
@@ -401,13 +874,12 @@ File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Intr
             -----------------------------, -------------------------------]
                           2                               2
 
-     To convert `unit_step'  to signum form, the function
+     To convert `unit_step' to signum form, the function
      `convert_to_signum' uses unit_step(x) = (1 + signum(x))/2.
 
      To use `load(abs_integrate)'.
 
      Related functions `signum_to_abs'.
-
 
 
 File: maxima.info,  Node: affine,  Next: asympa,  Prev: abs_integrate,  Up: Top
@@ -446,7 +918,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      <a_1>, ..., <x_n> = <a_n>]' where <a_1>, ..., <a_n> are all free
      of <x_1>, ..., <x_n>.
 
-     `fast_linsolve' is faster than `linsolve'  for system of equations
+     `fast_linsolve' is faster than `linsolve' for system of equations
      which are sparse.
 
      `load(affine)' loads this function.
@@ -488,7 +960,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      generated by the equations, i.e., if and only if <f> is a
      polynomial combination of the elements of the equations.
 
-     The degree is that returned by `nc_degree'.   This in turn is
+     The degree is that returned by `nc_degree'. This in turn is
      influenced by the weights of individual variables.
 
      `load(affine)' loads this function.
@@ -513,9 +985,9 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      `load(affine)' loads this function.
 
  -- Function: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
-     If `set_up_dot_simplifications'  has been previously done, finds
-     the central polynomials in the variables <x_1>, ..., <x_n> in the
-     given degree, <n>.
+     If `set_up_dot_simplifications' has been previously done, finds the
+     central polynomials in the variables <x_1>, ..., <x_n> in the given
+     degree, <n>.
 
      For example:
 
@@ -527,7 +999,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
 
  -- Function: check_overlaps (<n>, <add_to_simps>)
      Checks the overlaps thru degree <n>, making sure that you have
-     sufficient simplification rules in each degree, for `dotsimp'  to
+     sufficient simplification rules in each degree, for `dotsimp' to
      work correctly.  This process can be speeded up if you know before
      hand what the dimension of the space of monomials is.  If it is of
      finite global dimension, then `hilbert' should be used.  If you
@@ -570,8 +1042,8 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      Default value: `false'
 
      When `all_dotsimp_denoms' is a list, the denominators encountered
-     by `dotsimp'  are appended to the list.  `all_dotsimp_denoms' may
-     be initialized to an empty list `[]' before calling `dotsimp'.
+     by `dotsimp' are appended to the list.  `all_dotsimp_denoms' may be
+     initialized to an empty list `[]' before calling `dotsimp'.
 
      By default, denominators are not collected by `dotsimp'.
 
@@ -2590,7 +3062,6 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
           `fill_color', `fill_density' and `line_width'.  See also
           `bars'.
 
-
      Function `barsplot_description' creates a graphic object suitable
      for creating complex scenes, together with other graphic objects.
      There is also a function `wxbarsplot' for creating embedded
@@ -2672,9 +3143,8 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                    frequency = relative)$
           (%i6) draw(gr2d(bp1), gr2d(bp2))$
 
-     For bars diagrams related options, see `bars'  of package `draw'.
-     See also functions `histogram'  and `piechart'.
-
+     For bars diagrams related options, see `bars' of package `draw'.
+     See also functions `histogram' and `piechart'.
 
  -- Function: boxplot (<data>)
  -- Function: boxplot (<data>, <option_1>, <option_2>, ...)
@@ -2826,13 +3296,13 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
  -- Function: piechart (<one_row_matrix>)
  -- Function: piechart (<one_row_matrix>, <option_1>, <option_2>, ...)
  -- Function: piechart_description (...)
-     Similar to `barsplot',  but plots sectors instead of rectangles.
+     Similar to `barsplot', but plots sectors instead of rectangles.
 
      Available options are:
 
         * <sector_colors> (default, `[]'): a list of colors for sectors.
           When there are more sectors than specified colors, the extra
-          necesary colors are chosen at random.  See `color'  to learn
+          necesary colors are chosen at random.  See `color' to learn
           more about them.
 
         * <pie_center> (default, `[0,0]'): diagram's center.
@@ -2846,7 +3316,6 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
         * The following local `draw' options: `key', `color',
           `fill_density' and `line_width'.  See also `ellipse'.
-
 
      Function `piechart_description' creates a graphic object suitable
      for creating complex scenes, together with other graphic objects.
@@ -2864,7 +3333,6 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                   title   = "Digit frequencies in pi")$
 
      See also function `barsplot'.
-
 
  -- Function: scatterplot (<list>)
  -- Function: scatterplot (<list>, <option_1>, <option_2>, ...)
@@ -2923,8 +3391,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                   xtics        = 5)$
 
      For plotting isolated or line-joined points in two and three
-     dimensions, see `points'.    See also `histogram'.
-
+     dimensions, see `points'.  See also `histogram'.
 
  -- Function: starplot (<data1>, <data2>, ..., <option_1>, <option_2>,
           ...)
@@ -5035,7 +5502,7 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
      Returns the value at <x> of the distribution function of a general
      finite discrete random variable, with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
      Examples:
 
@@ -5057,37 +5524,37 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
      Returns the <q>-quantile of a general finite discrete random
      variable, with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: mean_general_finite_discrete (<v>)
      Returns the mean of a general finite discrete random variable,
      with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: var_general_finite_discrete (<v>)
      Returns the variance of a general finite discrete random variable,
      with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: std_general_finite_discrete (<v>)
      Returns the standard deviation of a general finite discrete random
      variable, with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: skewness_general_finite_discrete (<v>)
      Returns the skewness coefficient of a general finite discrete
      random variable, with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: kurtosis_general_finite_discrete (<v>)
      Returns the kurtosis coefficient of a general finite discrete
      random variable, with vector probabilities v.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
  -- Function: random_general_finite_discrete (<v>)
  -- Function: random_general_finite_discrete (<v>, <m>)
@@ -5095,7 +5562,7 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
      probabilities v.  Calling `random_general_finite_discrete' with a
      second argument <m>, a random sample of size <m> will be simulated.
 
-     See `pdf_general_finite_discrete'  for more details.
+     See `pdf_general_finite_discrete' for more details.
 
      Examples:
 
@@ -5454,7 +5921,7 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
  -- Function: cdf_hypergeometric (<x>, <n1>, <n2>, <n>)
      Returns the value at <x> of the distribution function of a
      Hypergeometric(n1,n2,n) random variable, with <n1>, <n2> and <n>
-     non negative integers and n<=n1+n2.  See `pdf_hypergeometric'  for
+     non negative integers and n<=n1+n2.  See `pdf_hypergeometric' for
      a more complete description.
 
      To make use of this function, write first `load(distrib)'.
@@ -6251,8 +6718,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      nothing will be plotted when the function does not give a real
      value.
 
-     This option affects objects `explicit'  and `parametric'  in 2D
-     and 3D, and `parametric_surface'.
+     This option affects objects `explicit' and `parametric' in 2D and
+     3D, and `parametric_surface'.
 
      Example:
 
@@ -6590,7 +7057,6 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      description does not matter.
 
      See also `font'.
-
 
  -- Graphic option: gnuplot_file_name
      Default value: `"maxout.gnuplot"'
@@ -6963,7 +7429,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Default value: `color'
 
      `palette' indicates how to map gray levels onto color components.
-     It works together with option `enhanced3d'  in 3D graphics, who
+     It works together with option `enhanced3d' in 3D graphics, who
      associates every point of a surfaces to a real number or gray
      level.  It also works with gray images.  With `palette', levels
      are transformed into colors.
@@ -6995,7 +7461,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Second, `palette' can be a user defined lookup table.  In this
      case, the format for building a lookup table of length `n' is
      `palette = [color_1, color_2, ..., color_n]', where `color_i' is a
-     well formed color (see option `color' ), such that `color_1' is
+     well formed color (see option `color'), such that `color_1' is
      assigned to the lowest gray level and `color_n' to the highest.
      The rest of colors are interpolated.
 
@@ -7034,8 +7500,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                    enhanced3d = x,
                    explicit(x^2+y^2,x,-1,1,y,-1,1)) $
 
-     See also `colorbox'  and `enhanced3d'.
-
+     See also `colorbox' and `enhanced3d'.
 
  -- Graphic option: point_size
      Default value: 1
@@ -7411,7 +7876,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
  -- Graphic option: wired_surface
      Default value: `false'
 
-     Indicates whether 3D surfaces in `enhanced3d'  mode show the grid
+     Indicates whether 3D surfaces in `enhanced3d' mode show the grid
      joinning the points or not.
 
      Since this is a global graphics option, its position in the scene
@@ -7431,7 +7896,6 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      `x_voxel' is the number of voxels in the x direction to be used by
      the marching cubes algorithm implemented by the 3d `implicit'
      object.  It is also used by graphic object `region'.
-
 
  -- Graphic option: xaxis
      Default value: `false'

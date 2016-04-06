@@ -27,12 +27,14 @@
 ;; Parse {a, b, c} into set(a, b, c).
 
 (putopr "{" '$set)
+(setf (get '$set 'op) "{")
 
-(def-nud-equiv |$}| delim-err)
-(def-led-equiv |$}| erb-err)
+(setf (get '|$}| 'nud) 'delim-err)
+(setf (get '|$}| 'led) 'erb-err)
+
 (def-lbp     |$}| 5.)
 
-(def-nud-equiv	|${| parse-matchfix)
+(setf (get '|${| 'nud) 'parse-matchfix)
 (def-match	|${| |$}|)
 (def-lbp	|${| 200.)
 ;No RBP

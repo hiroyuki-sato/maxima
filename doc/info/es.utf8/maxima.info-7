@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/maxima/maxima-code/doc/info/es.utf8//include-maxima.texi.
+/home/vttoth/dev/maxima/doc/info/es.utf8//include-maxima.texi.
 
 Este es el Manual de Maxima en versión Texinfo
 
@@ -130,8 +130,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
  -- Función: draw_file (<Opción gráfica>, ..., <Opción gráfica>, ...)
      Almacena el gráfico actual en un fichero. Las opciones gráficas que
-     acepta son: `terminal', `dimensions', `file_name' y
-     `background_color'.
+     acepta son: `terminal', `dimensions' y`file_name'.
 
      Ejemplo:
 
@@ -368,6 +367,25 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        border      = false,
                        fill_color  = blue,
                        polygon([[5,2],[9,2],[7,5]]) )$
+
+ -- Opción gráfica: capping
+     Valor por defecto: `[false, false]'
+
+     Una lista de dos elementos, `true' y `false', indicando si los
+     extremos de un objeto gráfico `tube' permanece abiertos o si deben
+     ser cerrados. Por defecto, ambos extremos se dejan abiertos.
+
+     La asignación `capping = false' equivale a `capping = [false,
+     false]' y `capping = true' equivale a `capping = [true, true]'.
+
+     Ejemplo:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  capping = [false, true],
+                  tube(0, 0, a, 1,
+                       a, 0, 8) )$
+
 
  -- Opción gráfica: cbrange
      Valor por defecto: `auto'
@@ -830,7 +848,7 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
           (%i1) load(draw)$
           (%i2) draw3d(
-                   tube_extremes = [open, closed],
+                   capping = [true, false],
                    palette = [26,15,-2],
                    enhanced3d = [-foo, foo],
                    tube(a, a, a^2, 1, a, -2, 2) )$
@@ -920,6 +938,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      función, entonces la región limitada por esta función y la
      definida en el objeto `explicit' será la que se rellene. Por
      defecto, las funciones explícitas no se rellenan.
+
+     Un caso de especial utilidad es `filled_func=0', con lo que se
+     sombrea la región limitada por el eje horizontal y la función
+     explícita.
 
      Esta opción sólo afecta al objeto gráfico bidimensional `explicit'.
 
@@ -1070,8 +1092,14 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
  -- Opción gráfica: grid
      Valor por defecto: `false'
 
-     Cuando `grid' vale `true', se dibujará una rejilla sobre el plano
-     <xy>.
+     Cuando
+
+     Cuando `grid' toma un valor distinto de `false', se dibujará una
+     rejilla sobre el plano <xy>. Si a `grid' se le asigna el valor
+     `true', se dibujará una línea de la rejilla por cada marca que
+     haya sobre los ejes. Si a `grid' se le asigna la lista `[nx,ny]',
+     con <[nx,ny] > [0,0]>, se dibujarán `nx' líneas por cada marca del
+     eje-<x> y <ny> líneas por cada marca del eje-<y>.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
@@ -1309,17 +1337,17 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
           (%i1) load(draw)$
           (%i2) draw2d(
                   key_pos = top_left,
-                  key   = "x",
+                  key     = "x",
                   explicit(x,  x,0,10),
-                  color= red,
-                  key   = "x squared",
+                  color   = red,
+                  key     = "x squared",
                   explicit(x^2,x,0,10))$
           (%i3) draw3d(
                   key_pos = center,
-                  key   = "x",
+                  key     = "x",
                   explicit(x+y,x,0,10,y,0,10),
                   color= red,
-                  key   = "x squared",
+                  key     = "x squared",
                   explicit(x^2+y^2,x,0,10,y,0,10))$
 
 
@@ -1964,22 +1992,6 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
                        color       = blue,
                        polygon([[5,2],[9,2],[7,5]]) )$
 
- -- Opción gráfica: tube_extremes
-     Valor por defecto: `[open, open]'
-
-     Una lista de dos elementos, `open' y `closed', indicando si los
-     extremos de un objeto gráfico `tube' permanece abiertos o si deben
-     ser cerrados. Por defecto, ambos extremos se dejan abiertos.
-
-     Ejemplo:
-
-          (%i1) load(draw)$
-          (%i2) draw3d(
-                  tube_extremes = [open, closed],
-                  tube(0, 0, a, 1,
-                       a, 0, 8) )$
-
-
  -- Opción gráfica: unit_vectors
      Valor por defecto: `false'
 
@@ -2175,10 +2187,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `xaxis', `xaxis_type' y `xaxis_color'.
 
  -- Opción gráfica: xlabel
-     Valor por defecto: `""' (cadena vacía)
+     Valor por defecto: `"x"'
 
      La opción `xlabel' almacena una cadena con la etiqueta del eje
-     <x>. Por defecto, el eje no tiene etiqueta.
+     <x>. Por defecto, el eje tiene etiqueta `"x"'.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
@@ -2505,10 +2517,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `yaxis', `yaxis_type' y `yaxis_color'.
 
  -- Opción gráfica: ylabel
-     Valor por defecto: `""' (cadena vacía)
+     Valor por defecto: `"y"'
 
      La opción `ylabel' almacena una cadena con la etiqueta del eje
-     <y>. Por defecto, el eje no tiene etiqueta.
+     <y>. Por defecto, el eje tiene etiqueta `"y"'.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
@@ -2755,10 +2767,10 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
      Véanse también `zaxis', `zaxis_type' y `zaxis_color'.
 
  -- Opción gráfica: zlabel
-     Valor por defecto: `""' (cadena vacía)
+     Valor por defecto: `"z"'
 
      La opción `zlabel' almacena una cadena con la etiqueta del eje
-     <z>. Por defecto, el eje no tiene etiqueta.
+     <z>. Por defecto, el eje tiene etiqueta `"z"'.
 
      Puesto que ésta es una opción global, su posición dentro de la
      descripción de la escena no reviste importancia.
@@ -3679,14 +3691,14 @@ File: maxima.info,  Node: Funciones y variables para draw,  Next: Funciones y va
 
      Este objeto se ve afectado por las siguientes opciones gráficas:
      `xu_grid', `yv_grid', `line_type', `line_width', `key',
-     `wired_surface', `enhanced3d', `color' y `tube_extremes'.
+     `wired_surface', `enhanced3d', `color' y `capping'.
 
      Ejemplo:
 
           (%i1) load(draw)$
           (%i2) draw3d(
                   enhanced3d = true,
-                  xu_grid = 50,
+                  xu_grid    = 50,
                   tube(cos(a), a, 0, cos(a/10)^2,
                        a, 0, 4*%pi) )$
 
@@ -4063,12 +4075,12 @@ Este paquete carga automáticamente el paquete `draw'.
      para más información). El paquete `worldmap' carga automáticamente
      el paquete `draw'.
           (%i1) load(worldmap)$
-          (%i2) c1: gr2d(geomap(Canada,United_States,
-                                Mexico,Cuba))$
+          (%i2) c1: gr2d(geomap([Canada,United_States,
+                                 Mexico,Cuba]))$
           (%i3) c2: gr2d(geomap(Africa))$
-          (%i4) c3: gr2d(geomap(Oceania,China,Japan))$
-          (%i5) c4: gr2d(geomap(France,Portugal,Spain,
-                                Morocco,Western_Sahara))$
+          (%i4) c3: gr2d(geomap([Oceania,China,Japan]))$
+          (%i5) c4: gr2d(geomap([France,Portugal,Spain,
+                                 Morocco,Western_Sahara]))$
           (%i6) draw(columns  = 2,
                      c1,c2,c3,c4)$
 
@@ -4122,8 +4134,8 @@ Este paquete carga automáticamente el paquete `draw'.
                (%i2) draw3d(geomap(World_coastlines,
                                    [conic_projection,0,0,0,1,90]))$
 
-     En `http://www.telefonica.net/web2/biomates/maxima/gpdraw/geomap'
-     hay ejemplos más elaborados.
+     En `http://riotorto.users.sf.net/gnuplot/geomap' hay ejemplos más
+     elaborados.
 
 
 File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
@@ -6607,9 +6619,9 @@ File: maxima.info,  Node: Introducción a graphs,  Next: Funciones y variables p
 
 El paquete `graphs' permite trabajar con estructuras de grafos y
 digrafos en Maxima. Tanto los grafos como los digrafos son de
-estructura simples (no tienen ni aristas mÃºltiples ni bucles), pero los
-digrafos pueden tener una arista dirigida desde <u> hasta <v> y otra
-desde <v> hasta <u>.
+estructura simples (no tienen ni aristas mÃºltiples ni bucles), pero
+los digrafos pueden tener una arista dirigida desde <u> hasta <v> y
+otra desde <v> hasta <u>.
 
 Los grafos se representan internamente como listas de adyacencia y se
 implementan como estructuras de lisp. Los vértices se identifican por

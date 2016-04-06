@@ -100,7 +100,8 @@
 
 
 (dolist (f       
-     '($close
+     '($adjust_external_format
+       $close
        $flush_output
        $flength
        $fposition
@@ -112,6 +113,9 @@
        $make_string_input_stream
        $make_string_output_stream
        $get_output_stream_string
+       $stderr
+       $stdin
+       $stdout
        $printf
        $sprint
        $writebyte
@@ -167,17 +171,34 @@
        $supcase
        $tab
        $tokens
+       $unicode
+       $unicode_to_utf8
+       $utf8_to_unicode
        $base64
        $base64_decode
        $crc24sum
        $md5sum
+       $mgf1_sha1
        $number_to_octets
        $octets_to_number
        $octets_to_oid
        $oid_to_octets
+       $octets_to_string
+       $string_to_octets
        $sha1sum
        $sha256sum ))
   (setf (get f 'autoload) "stringproc"))
+
+
+(dolist (f       
+  '($regex_compile
+    $regex_match_pos
+    $regex_match
+    $regex_split
+    $regex_subst_first
+    $regex_subst
+    $string_to_regex ))
+  (setf (get f 'autoload) "sregex"))
 
 
 (setf (get '$romberg 'autoload) "romberg")
@@ -322,6 +343,18 @@
 
 (defprop $pochhammer simp-pochhammer operators)
 (autof 'simp-pochhammer "orthopoly")
+
+(dolist (f
+  '($draw
+    $draw2d
+    $draw3d
+    $set_draw_defaults
+    $multiplot_mode
+    $make_level_picture
+    $make_rgb_picture
+    $get_pixel
+    $take_channel))
+  (setf (get f 'autoload) "draw"))
 
 (dolist (f
   '($julia

@@ -252,6 +252,14 @@
   (mPr_engine (cadr mexpress) 'mparen 'mparen)
   (tprinc "<mo>|</mo>"))
 
+(defun mPr-conjugate (mexpress)
+  (tprinc "<mover>")
+  (tprinc "<mrow>")
+  (mPr_engine (cadr mexpress) 'mparen 'mparen)
+  (tprinc "</mrow>")
+  (tprinc "<mo>&#xaf;</mo>") ;; macron
+  (tprinc "</mover>"))
+
 ;; a[1]^2 or a[x,y]^z
 (defun mPr-arr-power(b e)
   (tprinc "<msubsup>")
@@ -289,7 +297,7 @@
   (tprinc "</msub>") (row-end "</mrow>")
 )
 ;;      in mPr_engine ,whennever mexpress is an atom this function taking care 
-;;of it by getting a TeX symbol if it exsits. Also it handles some word wich
+;;of it by getting a TeX symbol if it exists. Also it handles some word which
 ;;has a reserved character for TeX
 
 ;; prints instead of returning value now
@@ -812,6 +820,8 @@
 (setup '(mabs (mPrprocess mPr-abs)))
 
 (setup '(%abs (mPrprocess mPr-abs)))
+
+(setup '($conjugate (mPrprocess mPr-conjugate)))
 
 (setup '(mnctimes (mPrprocess mPr-infix) (mPr-lbp 110) (mPr-rbp 109)
             (chchr "&CenterDot;")))

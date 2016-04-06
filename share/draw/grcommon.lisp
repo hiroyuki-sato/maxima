@@ -1,6 +1,6 @@
 ;;;                 COPYRIGHT NOTICE
 ;;;  
-;;;  Copyright (C) 2007-2014 Mario Rodriguez Riotorto
+;;;  Copyright (C) 2007-2016 Mario Rodriguez Riotorto
 ;;;  
 ;;;  This program is free software; you can redistribute
 ;;;  it and/or modify it under the terms of the
@@ -100,7 +100,7 @@
       (gethash '$z_voxel *gr-options*)       10
 
       ; tics
-      (gethash '$grid *gr-options*)            nil
+      (gethash '$grid *gr-options*)            (list 0 0)
       (gethash '$xtics *gr-options*)           "autofreq"
       (gethash '$xtics_secondary *gr-options*) nil   ; no tics in top x-axis
       (gethash '$ytics *gr-options*)           "autofreq"
@@ -136,11 +136,12 @@
       (gethash '$zaxis_width *gr-options*) 1
       (gethash '$zaxis_type *gr-options*)  0    ; two options: 1 (solid) and 0 (dots)
       (gethash '$zaxis_color *gr-options*) "#000000"
-      (gethash '$xlabel *gr-options*) ""
+      (gethash '$xlabel *gr-options*)      "X"
       (gethash '$xlabel_secondary *gr-options*) ""
-      (gethash '$ylabel *gr-options*) ""
+      (gethash '$ylabel *gr-options*)      "Y"
       (gethash '$ylabel_secondary *gr-options*) ""
-      (gethash '$zlabel *gr-options*) ""
+      (gethash '$zlabel *gr-options*)      "Z"
+      (gethash '$zlabel_rotate *gr-options*) '$auto
 
       ; point options
       (gethash '$point_size *gr-options*)    1
@@ -188,6 +189,7 @@
       (gethash '$surface_hide *gr-options*)   nil
       (gethash '$interpolate_color *gr-options*)   "depthorder"
       (gethash '$enhanced3d *gr-options*)     '$none
+      (gethash '$isolines *gr-options*)       '$none
       (gethash '$wired_surface *gr-options*)  nil
       (gethash '$contour *gr-options*)        '$none  ; other options are: $base, $surface, $both and $map
       (gethash '$contour_levels *gr-options*) 5       ; 1-50, [lowest_level,step,highest_level] or {z1,z2,...}
@@ -195,7 +197,7 @@
       (gethash '$palette  *gr-options*)       '$color ; '$color is a short cut for [7,5,15]
                                                       ; and '$gray is a short cut for [3,3,3].
                                                       ; See command 'show palette rgbformulae' in gnuplot.
-      (gethash '$tube_extremes *gr-options*) '((mlist simp) '$open '$open) ; or '$closed
+      (gethash '$capping *gr-options*)        '((mlist simp) nil nil)
   ) )
 
 ;; Returns option value
@@ -356,8 +358,6 @@
     (otherwise (merror "draw: illegal key position specification"))))
 
 
-
-
 ;; update option terminal
 ;; ----------------------
 ;; *draw-terminal-number* is used when working with
@@ -370,7 +370,7 @@
                  $epslatex $epslatex_standalone $svg $x11 $qt
                  $dumb $dumb_file $pdf $pdfcairo $wxt $animated_gif
                  $multipage_pdfcairo $multipage_pdf $multipage_eps 
-                 $multipage_eps_color $aquaterm $tiff $vrml $obj $pnm)))
+                 $multipage_eps_color $aquaterm $tiff $vrml $obj $stl $pnm)))
      (cond
        ((member val terms)
           (when (and (eq val '$png) $draw_use_pngcairo)
@@ -530,6 +530,68 @@
              *draw-enhanced3d-fun* nil))
     (t
         (merror "draw: illegal enhanced3d definition")) ) )
+
+
+
+;; update option isolines
+;; ----------------------
+(defvar *draw-isolines-type* 0)
+(defvar *draw-isolines-fun* nil)
+
+(defun check-isolines-model (grobj lis)
+  (when (null (position *draw-isolines-type* lis))
+    (merror (format nil "draw (~a): unacceptable isolines model" grobj))))
+
+(defun update-isolines-expression (vars)
+  (let ((texture (gethash '$isolines *gr-options*)))
+    (when (not ($subsetp ($setify ($listofvars texture))
+                         ($setify vars)))
+      (merror "draw: incompatible variables in isolines expression"))
+    (setf *draw-isolines-fun* (coerce-float-fun texture vars))))
+
+(defun update-isolines (val)
+  (cond
+    ((or (null val)
+         (equal val '$none))
+      (setf (gethash '$isolines *gr-options*) '$none
+            *draw-isolines-type* 0
+            *draw-isolines-fun* nil))
+    ((equal val t)
+      (let ((model '((mlist) $z $x $y $z)))
+        (setf (gethash '$isolines *gr-options*) model
+              *draw-isolines-type* 3
+              *draw-isolines-fun* (coerce-float-fun
+                              ($first model)
+                              (list '(mlist) ($second model) ($third model) ($fourth model))))))
+    ((and ($listp val)
+          ($subsetp ($setify ($listofvars ($first val)))
+                    ($setify ($rest val))))
+       (case ($length val)
+         (2 (setf (gethash '$isolines *gr-options*) val
+                  *draw-isolines-type* 1
+                  *draw-isolines-fun* (coerce-float-fun
+                              ($first val)
+                              (list '(mlist) ($second val)))))
+         (3 (setf (gethash '$isolines *gr-options*) val
+                  *draw-isolines-type* 2
+                  *draw-isolines-fun* (coerce-float-fun
+                                  ($first val)
+                                  (list '(mlist) ($second val) ($third val)))))
+         (4 (setf (gethash '$isolines *gr-options*) val
+                  *draw-isolines-type* 3
+                  *draw-isolines-fun* (coerce-float-fun
+                                  ($first val)
+                                  (list '(mlist) ($second val) ($third val) ($fourth val)))))
+         (otherwise (merror "draw: illegal length of isolines"))))
+    ((not ($listp val))
+       ; isolines is given an expression without 
+       ; explicit declaration of its variables.
+       ; Each graphic object must check for them.
+       (setf (gethash '$isolines *gr-options*) val
+             *draw-isolines-type* 99
+             *draw-isolines-fun* nil))
+    (t
+        (merror "draw: illegal isolines definition")) ) )
 
 
 
@@ -787,6 +849,23 @@
 
 
 
+;; update capping option
+;; a list of two elements, false and/or true
+;; -----------------------------------------
+(defun update-capping (val)
+  (cond
+    ((and ($listp val)
+          (= ($length val) 2)
+          (member ($first val) '(nil t))
+          (member ($second val) '(nil t)))
+       (setf (gethash '$capping *gr-options*) val))
+    ((member val '(nil t))
+       (setf (gethash '$capping *gr-options*) (list '(mlist simp) val val)))
+    (t
+      (merror "draw: illegal capping: ~M " val))) )
+
+
+
 (defun ini-local-option-variables ()
   (setf ; global variables
        *draw-transform-dimensions* 0
@@ -794,7 +873,9 @@
        *draw-transform-f2* nil
        *draw-transform-f3* nil
        *draw-enhanced3d-type* 0
-       *draw-enhanced3d-fun* nil)  )
+       *draw-enhanced3d-fun* nil
+       *draw-isolines-type* 0
+       *draw-isolines-fun* nil)  )
 
 
 
@@ -805,13 +886,13 @@
       (gethash '$terminal *gr-options*)     '$screen  ; defined as screen, png, jpg, gif, svg,
                                                       ; eps, eps_color, pdf, pdfcairo, wxt or
                                                       ; aquaterm. A list of type [term, number]
-                                                      ; is also admited if term is screen, wxt
+                                                      ; is also admitted if term is screen, wxt
                                                       ; or aquaterm
       (gethash '$key_pos *gr-options*)            nil
       (gethash '$dimensions *gr-options*)        '(600 500)
       (gethash '$file_name *gr-options*)         "maxima_out"
-      (gethash '$gnuplot_file_name *gr-options*) "maxout.gnuplot"
-      (gethash '$data_file_name *gr-options*)    "data.gnuplot"
+      (gethash '$gnuplot_file_name *gr-options*) (format nil "maxout~d.gnuplot" (getpid))
+      (gethash '$data_file_name *gr-options*)    (format nil "data~d.gnuplot" (getpid))
       (gethash '$delay *gr-options*)             5 ; delay for animated gif's, default 5*(1/100) sec
    ))
 
@@ -849,13 +930,8 @@
               (merror "draw: illegal colorbox option: ~M " val)) )
       (($line_type $xaxis_type $yaxis_type $zaxis_type) ; defined as $solid or $dots
          (update-linestyle opt val) )
-      (($tube_extremes) ; defined as a list of two elements, $open and/or $closed
-            (if (and ($listp val)
-                     (= ($length val) 2)
-                     (member ($first val) '($open $closed))
-                     (member ($second val) '($open $closed)))
-               (setf (gethash opt *gr-options*) val)
-               (merror "draw: illegal tube extreme types: ~M" val)))
+      ($capping
+         (update-capping val))
       ($point_type
          (update-pointtype val))
       (($columns $nticks $adapt_depth $xu_grid $yv_grid $delay $x_voxel $y_voxel $z_voxel)
@@ -883,7 +959,7 @@
       ($opacity
          (update-opacity val))
       (($transparent $border $logx $logx_secondary $logy $logy_secondary
-        $logz $logcb $head_both $grid
+        $logz $logcb $head_both
         $xaxis_secondary $yaxis_secondary $axis_bottom $axis_left $axis_top
         $axis_right $axis_3d $surface_hide $xaxis $yaxis $zaxis $unit_vectors
         $xtics_rotate $ytics_rotate $xtics_secondary_rotate $ytics_secondary_rotate
@@ -896,6 +972,8 @@
          (update-transform val))
       ($enhanced3d
          (update-enhanced3d val))
+      ($isolines
+         (update-isolines val))
       (($xtics $ytics $xtics_secondary $ytics_secondary $ztics $cbtics)
         ; $auto or t, $none or nil, number, increment, set, set of pairs
             (cond ((member val '($none nil))   ; nil is maintained for back-portability
@@ -947,6 +1025,10 @@
         (update-terminal val))
       ($key_pos
         (update-key_pos val))
+      ($zlabel_rotate
+            (if (member val '(t nil $auto))
+		(setf (gethash opt *gr-options*) val)
+	        (merror "draw: illegal zlabel_rotate option: ~M" val)))
       ($head_type ; defined as $filled, $empty and $nofilled
             (if (member val '($filled $empty $nofilled))
                 (setf (gethash opt *gr-options*) val)
@@ -1007,6 +1089,30 @@
                             (setf (gethash opt *gr-options*) (list fval1 fval2)))
                          (t  ; should be length 3 or nil option => automatic computation of ranks
                             (setf (gethash opt *gr-options*) (list fval1 fval2 0)) ))  ))) )
+      (($grid) ; defined as a Maxima list with two numbers.
+	       ; 0   0 means "off",
+               ; >0 >0 means "on with n grid lines per tick",
+            (cond ((member val '(nil))
+		   (setf (gethash opt *gr-options*) (list 0 0))
+		   )
+		  ((member val '(t))
+		   (setf (gethash opt *gr-options*) (list 1 1))
+		   )
+                  ((or (not ($listp val))
+                       (/=  ($length val) 2))
+                     (merror "draw: illegal grid lines specification: ~M " val))
+                  (t
+                     (let ((fval1 ($float (cadr val)))
+                           (fval2 ($float (caddr val))))
+                       (cond
+                         ((or (not (floatp fval1))
+                              (not (floatp fval2))
+                              (< fval1 1)
+			      (< fval2 1))
+                            (merror "grid: illegal grid lines specification"))
+                         (t
+			   (setf (gethash opt *gr-options*) (list fval1 fval2)) )
+			 )  ))) )
       (($ip_grid $ip_grid_in)
        (if (not ($listp val))
            (merror "draw: illegal value for grid")
@@ -1026,6 +1132,9 @@
 
 
       ; DEPRECATED OPTIONS
+      ($tube_extremes
+        ($print "WARNING: 'tube_extremes' is deprecated, using 'capping' instead...")
+        (update-capping (substitute nil '$open (substitute t '$closed val))))
       ($file_bgcolor
         ($print "WARNING: 'file_bgcolor' is deprecated, using 'background_color' instead...")
         (update-color '$background_color val))
