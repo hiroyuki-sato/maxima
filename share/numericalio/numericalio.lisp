@@ -12,6 +12,7 @@
 ;;
 ;;   M: read_matrix (source, sep_ch_flag)
 ;;   read_matrix (source, M, sep_ch_flag)
+;;   A : read_array (source, sep_ch_flag)
 ;;   read_array (source, A, sep_ch_flag)
 ;;   read_hashed_array (source, A, sep_ch_flag)
 ;;   L: read_nested_list (source, sep_ch_flag)
@@ -19,6 +20,7 @@
 ;;   read_list (source, L, sep_ch_flag)
 ;;
 ;;   read_binary_matrix (source, M)
+;;   A : read_binary_array (source)
 ;;   read_binary_array (source, A)
 ;;   L: read_binary_list (source)
 ;;   read_binary_list (source, L)
@@ -73,6 +75,8 @@
 
 ;; -------------------- read functions --------------------
 
+;; ---- functions to read a matrix
+
 (defun $read_matrix (stream-or-filename &rest args)
   (if ($matrixp (car args))
     (let*
@@ -81,6 +85,7 @@
        (nrow (length (cdr M)))
        (ncol (if (> nrow 0) (length (cdadr M)) 0))
        (L ($read_list stream-or-filename sep-ch-flag (* nrow ncol))))
+      ;; COPYING DATA HERE !!
       (fill-matrix-from-list L M nrow ncol))
     (let ((sep-ch-flag (car args)))
       `(($matrix) ,@(cdr ($read_nested_list stream-or-filename sep-ch-flag))))))
@@ -91,6 +96,7 @@
       ((nrow (length (cdr M)))
        (ncol (if (> nrow 0) (length (cdadr M)) 0))
        (L ($read_binary_list stream-or-filename (* nrow ncol))))
+      ;; COPYING DATA HERE !!
       (fill-matrix-from-list L M nrow ncol))
     (merror "read_binary_matrix: expected a matrix, found ~a instead" (type-of M))))
 
@@ -103,28 +109,78 @@
           (setq k (1+ k))))))
   M)
 
-(defun $read_array (file-name A &optional sep-ch-flag)
-  (read-array file-name A sep-ch-flag 'text))
+;; ---- functions to read a Lisp array or Maxima declared array
 
-(defun $read_binary_array (file-name A)
-  (read-array file-name A nil 'binary))
+(defun $read_array (stream-or-filename &rest args)
+  (if (and args (lisp-or-declared-maxima-array-p (car args)))
+    (let
+      ((A (car args))
+       (sep-ch-flag (and (cdr args) (cadr args)))
+       (mode (or (and (cddr args) (caddr args)) 'text)))
+      (read-into-existing-array stream-or-filename A sep-ch-flag mode))
+    (let
+      ((sep-ch-flag (and args (car args)))
+       (mode (or (and (cdr args) (cadr args)) 'text)))
+      (read-and-return-new-array stream-or-filename sep-ch-flag mode))))
 
-(defun read-array (file-name A sep-ch-flag mode)
-  (if (lisp-or-declared-maxima-array-p A)
-    (let*
-      ((dimensions
-         (if (arrayp A)
-           (array-dimensions A)
-           (cdr (third (cdr (mfuncall '$arrayinfo A))))))
-       (n
-         (apply #'* (mapcar #'(lambda (m) (1+ m)) dimensions)))
-       (L
-         (if (eq mode 'text)
-           ($read_list file-name sep-ch-flag n)
-           ($read_binary_list file-name n))))
-      ($fillarray A L)
-      '$done)
-    (merror "read-array: expected a declared array, found ~a instead" (type-of A))))
+(defun $read_binary_array (file-name &rest args)
+  (if (car args)
+    (read-into-existing-array file-name (car args) nil 'binary)
+    (read-and-return-new-array file-name nil 'binary)))
+
+(defun read-into-existing-array (file-name A sep-ch-flag mode)
+  (if (not (arrayp A))
+    (setq A (get (mget A 'array) 'array)))
+  (let*
+    ((dimensions (array-dimensions A))
+     (n (apply #'* dimensions)))
+    (read-into-existing-array-size-known file-name A sep-ch-flag mode n)
+    '$done))
+
+(defun read-into-existing-array-size-known (stream-or-filename A sep-ch-flag mode n)
+  (if (streamp stream-or-filename)
+    (read-into-existing-array-size-known-from-stream stream-or-filename A sep-ch-flag mode n)
+    (let ((file-name (require-string stream-or-filename)))
+      (with-open-file
+        (in file-name
+            :if-does-not-exist nil
+            :element-type (if (eq mode 'text) 'character '(unsigned-byte 8)))
+        (if (not (null in))
+          (read-into-existing-array-size-known-from-stream in A sep-ch-flag mode n)
+          (merror "read_array: no such file `~a'" file-name))))))
+
+(defun read-into-existing-array-size-known-from-stream (in A sep-ch-flag mode n)
+  (let (x (sep-ch (get-input-sep-ch sep-ch-flag in)))
+    (dotimes (i n)
+      (if (eq (setq x (if (eq mode 'text) (parse-next-element in sep-ch) (read-float-64 in))) 'eof)
+        (return A))
+      (setf (row-major-aref A i) x))))
+
+(defun read-into-existing-array-size-unknown-from-stream (in A sep-ch mode)
+  (let (x)
+    (loop
+      (if (eq (setq x (if (eq mode 'text) (parse-next-element in sep-ch) (read-float-64 in))) 'eof)
+        (return A))
+      (vector-push-extend x A))))
+
+(defun read-and-return-new-array (stream-or-filename sep-ch-flag mode)
+  (if (streamp stream-or-filename)
+    (read-and-return-new-array-from-stream stream-or-filename sep-ch-flag mode)
+    (let ((file-name (require-string stream-or-filename)))
+      (with-open-file
+        (in file-name
+            :if-does-not-exist nil
+            :element-type (if (eq mode 'text) 'character '(unsigned-byte 8)))
+        (if (not (null in))
+          (read-and-return-new-array-from-stream in sep-ch-flag mode)
+          (merror "read_array: no such file `~a'" file-name))))))
+
+(defun read-and-return-new-array-from-stream (in sep-ch-flag mode)
+  (let ((A (make-array 0 :adjustable t :fill-pointer t))
+        (sep-ch (if (eq mode 'text) (get-input-sep-ch sep-ch-flag in))))
+    (read-into-existing-array-size-unknown-from-stream in A sep-ch mode)))
+
+;; ---- functions to read a Maxima undeclared array
 
 (defun $read_hashed_array (stream-or-filename A &optional sep-ch-flag)
   (if (streamp stream-or-filename)
@@ -149,6 +205,8 @@
            (arrstore (list (list A 'array) key) ($rest L)))))))
   A)
 
+;; ---- functions to read a list or nested list
+
 (defun $read_nested_list (stream-or-filename &optional sep-ch-flag)
   (if (streamp stream-or-filename)
     (read-nested-list-from-stream stream-or-filename sep-ch-flag)
@@ -171,18 +229,33 @@
     (let*
       ((L (car args))
        (sep-ch-flag (cadr args))
-       (n (or (caddr args) ($length L)))
-       ;; Probably we could try to avoid creating a second list
-       ;; by reading directly into the first one ...
-       (L2 (read-list stream-or-filename sep-ch-flag 'text n)))
-      (dotimes (i (length L2))
-        (setf (nth i L) (nth i L2)))
-      L)
+       (n (or (caddr args) ($length L))))
+      (read-into-existing-list stream-or-filename L sep-ch-flag 'text n))
     (if (integerp (car args))
       (let ((n (car args)))
         (read-list stream-or-filename nil 'text n))
       (let ((sep-ch-flag (car args)) (n (cadr args)))
         (read-list stream-or-filename sep-ch-flag 'text n)))))
+
+(defun read-into-existing-list (stream-or-filename L sep-ch-flag mode n)
+  (if (streamp stream-or-filename)
+    (read-into-existing-list-from-stream stream-or-filename L sep-ch-flag mode n)
+    (let ((file-name (require-string stream-or-filename)))
+      (with-open-file
+        (in file-name
+            :if-does-not-exist nil
+            :element-type (if (eq mode 'text) 'character '(unsigned-byte 8)))
+        (if (not (null in))
+          (read-into-existing-list-from-stream in L sep-ch-flag mode n)
+          (merror "read_list: no such file `~a'" file-name))))))
+
+(defun read-into-existing-list-from-stream (in L sep-ch-flag mode n)
+  (let (x (sep-ch (if (eq mode 'text) (get-input-sep-ch sep-ch-flag in))))
+    (dotimes (i n)
+      (if (eq (setq x (if (eq mode 'text) (parse-next-element in sep-ch) (read-float-64 in))) 'eof)
+        (return))
+      (setf (nth (1+ i) L) x))
+    L))
 
 (defun read-list (stream-or-filename sep-ch-flag mode n)
   (if (streamp stream-or-filename)
@@ -212,43 +285,10 @@
   (if ($listp (car args))
     (let*
       ((L (car args))
-       (n (or (cadr args) ($length L)))
-       ;; Probably we could try to avoid creating a second list
-       ;; by reading directly into the first one ...
-       (L2 (read-list stream-or-filename nil 'binary n)))
-      (dotimes (i (length L2))
-        (setf (nth i L) (nth i L2)))
-      L)
+       (n (or (cadr args) ($length L))))
+      (read-into-existing-list stream-or-filename nil 'binary n))
     (let ((n (car args)))
       (read-list stream-or-filename nil 'binary n))))
-
-(let (pushback-sep-ch)
-  (defun parse-next-element (in sep-ch)
-    (let
-      ((*parse-stream* in)
-       (sign 1)
-       (initial-pos (file-position in))
-       token
-       found-sep-ch)
-      (loop
-        (if pushback-sep-ch
-          (setq token pushback-sep-ch pushback-sep-ch nil)
-          (setq token (scan-one-token-g t 'eof)))
-        (cond
-          ((eq token 'eof)
-           (if found-sep-ch
-             (return nil)
-             (return 'eof)))
-          ((and (eq token sep-ch) (not (eq sep-ch #\space)))
-           (if (or found-sep-ch (eq initial-pos 0))
-             (progn
-               (setq pushback-sep-ch token)
-               (return nil))
-             (setq found-sep-ch token)))
-          ((member token '($- $+))
-           (setq sign (* sign (if (eq token '$-) -1 1))))
-          (t
-            (return (m* sign token))))))))
 
 (defun make-mlist-from-string (s sep-ch)
   ; scan-one-token-g isn't happy with symbol at end of string.
@@ -300,6 +340,36 @@
 (defun $read_maxima_array (file-name A &optional sep-ch-flag)
   ($read_array file-name A sep-ch-flag))
 ;; -----  end backwards compatibility stuff ... sigh  -----
+
+;; ---- read one element
+
+(let (pushback-sep-ch)
+  (defun parse-next-element (in sep-ch)
+    (let
+      ((*parse-stream* in)
+       (sign 1)
+       (initial-pos (file-position in))
+       token
+       found-sep-ch)
+      (loop
+        (if pushback-sep-ch
+          (setq token pushback-sep-ch pushback-sep-ch nil)
+          (setq token (scan-one-token-g t 'eof)))
+        (cond
+          ((eq token 'eof)
+           (if found-sep-ch
+             (return nil)
+             (return 'eof)))
+          ((and (eq token sep-ch) (not (eq sep-ch #\space)))
+           (if (or found-sep-ch (eq initial-pos 0))
+             (progn
+               (setq pushback-sep-ch token)
+               (return nil))
+             (setq found-sep-ch token)))
+          ((member token '($- $+))
+           (setq sign (* sign (if (eq token '$-) -1 1))))
+          (t
+            (return (m* sign token))))))))
 
 
 ;; -------------------- write functions -------------------

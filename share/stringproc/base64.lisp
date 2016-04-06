@@ -42,10 +42,12 @@
 
 |#
 
+(in-package :maxima)
+
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (defvar old-ibase *read-base*)
+    (defvar old-ibase-base64 *read-base*)
     (setq *read-base* 10.) )
 
 
@@ -76,7 +78,7 @@
   (let (bytes len base64 k b ind)
     (cond
       ((stringp s)
-        (setq bytes (mapcar #'char-code (coerce s 'list))) )
+        (setq bytes (string-to-octets s)) )
       ((and (integerp s) (>= s 0))
         (setq bytes (number-to-octets s)) )
       (($listp s)
@@ -139,13 +141,11 @@
                 (logior (logand (ash (svref w 2.) 6.) #xff)     (svref w 3.)     ) )
         (when (= (incf j) size) (return))
         (go a) )
+      (setq res (coerce res 'list))
       (cond
-        ((equal rtype '$list)
-          (cons '(mlist simp) (coerce res 'list)) )
-        ((equal rtype '$number)
-          (reduce #'(lambda (x y) (logior (ash x 8.) y)) (coerce res 'list)) )
-        ((equal rtype '$string)
-          (coerce (map 'vector #'code-char res) 'string) )
+        ((equal rtype '$list) (cons '(mlist simp) res))
+        ((equal rtype '$number) (reduce #'(lambda (x y) (logior (ash x 8.) y)) res))
+        ((equal rtype '$string) (octets-to-string res))
         (t  
           (gf-merror (intl:gettext 
             "`base64_decode': Optional argument must be 'list, 'number or 'string." )))))))
@@ -154,4 +154,4 @@
 (eval-when
   #+gcl (compile eval)
   #-gcl (:compile-toplevel :execute)
-    (setq *read-base* old-ibase) )
+    (setq *read-base* old-ibase-base64) )

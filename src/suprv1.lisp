@@ -209,6 +209,7 @@
   ;; Should really get the truename of FILE.
   (if printp (format t (intl:gettext "loadfile: loading ~A.~%") file))
   (let* ((path (pathname file))
+	 (*package* (find-package :maxima))
 	 ($load_pathname path)
 	 (*read-base* 10.)
 	 (tem (errset #-sbcl (load (pathname file)) #+sbcl (with-compilation-unit nil (load (pathname file))))))
@@ -347,6 +348,14 @@
 			    (not (> (cadr x) (caddr x))))))
 	      (let (($linenum (caddr x))) (remlabels (- (caddr x) (cadr x)))))
 	     ((setq z (mgetl (caar x) '(hashar array))) (remarrelem z x))
+	     ((and ($subvarp x)
+		   (boundp (caar x))
+		   (hash-table-p (setq z (symbol-value (caar x)))))
+	      ; Evaluate the subscripts (as is done in ARRSTORE)
+	      (let ((indices (mevalargs (cdr x))))
+		(if (gethash 'dim1 z)
+		  (remhash (car indices) z)
+		  (remhash indices z))))
          ((eq (caar x) '$@) (mrecord-kill x))
 	     ((and (eq (caar x) '$allbut)
 		   (not (dolist (u (cdr x))
@@ -762,14 +771,14 @@
 (defmspec $errcatch (form)
   (let ((errcatch (cons bindlist loclist)) ret)
     (if (null (setq ret (let (*mdebug*)
-			  (errset (mevaln (cdr form)) lisperrprint))))
+			  (errset (rat-error-to-merror (mevaln (cdr form))) lisperrprint))))
 	(errlfun1 errcatch))
     (cons '(mlist) ret)))
 
 (defmspec $catch (form)
   (let ((mcatch (cons bindlist loclist)))
     (prog1
-	(catch 'mcatch (mevaln (cdr form)))
+	(catch 'mcatch (rat-error-to-merror (mevaln (cdr form))))
       (errlfun1 mcatch))))
 
 (defmfun $throw (exp)
@@ -848,7 +857,6 @@
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'assign))
       '(($debugmode debugmode1)
-	($ttyintfun ttyintfunsetup)
 	($fpprec fpprec1) ($poislim poislim1)
 	($default_let_rule_package let-rule-setter)
 	($current_let_rule_package let-rule-setter)

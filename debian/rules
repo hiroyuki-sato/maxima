@@ -52,7 +52,8 @@ SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/st
 	 share/logic/Makefile.in share/Makefile.in src/autoconf-variables.lisp src/Makefile.in\
 	 src/share-subdirs.lisp tests/Makefile.in\
 	 \
-	 \
+	doc/info/figures/Makefile.in doc/info/maxima-index.lisp doc/info/maxima.info doc/info/maxima.info-1 \
+	doc/info/maxima.info-2 doc/info/maxima.info-3 \
 	)#src/sys-proclaim.lisp 
 
 debian/save/%: %
@@ -148,7 +149,7 @@ clean: #restore
 	rm -rf admin/Makefile config.log config.status crosscompile-windows/Makefile\
 		crosscompile-windows/wxwidgets/Makefile demo/Makefile doc/emaxima/Makefile\
 		doc/info/de/Makefile doc/info/de.utf8/Makefile doc/info/es/include-maxima.texi\
-		doc/info/es/Makefile doc/info/es.utf8/Makefile doc/info/include-maxima.texi\
+		doc/info/es/Makefile doc/info/es.utf8/Makefile\
 		doc/info/Makefile doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile\
 		doc/info/pt/include-maxima.texi doc/info/pt/Makefile doc/info/pt.utf8/Makefile\
 		doc/intromax/Makefile doc/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1\
@@ -162,6 +163,12 @@ clean: #restore
 		share/contrib/maxima-odesolve/Makefile share/draw/Makefile share/logic/Makefile share/Makefile\
 		src/gcl-depends.mk src/Makefile src/maxima src/maxima.bat src/rmaxima tests/Makefile xmaxima-local\
 		interfaces/xmaxima/Tkmaxima/tclIndex
+	rm -rf bin/interfaces bin/doc bin/src bin/xmaxima
+	rm -f doc/info/figures/Makefile
+	rm -f tmp
+	rm -f share/contrib/maxima-odesolve/maxima-odesolve-index.lisp
+
+	rm -f $(INSTALLS)
 #	-rm -f debian/test_results.out tests/tests-gcl.log
 #	-for i in $$(find -name Makefile) ; do\
 #		! [ -e $$i.am ] || rm -f $$i;\
@@ -283,6 +290,8 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 
 	! [ -e debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/gentran/man/MANUAL.ps.gz ] ||\
 		gunzip debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/gentran/man/MANUAL.ps.gz
+
+	rm -f debian/tmp/usr/share/maxima/$(MVERS)/share/.gitattributes
 
 	dh_install
 

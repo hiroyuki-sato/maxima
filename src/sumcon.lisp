@@ -120,6 +120,15 @@
 
 (defmvar $niceindicespref '((mlist simp) $i $j $k $l $m $n))
 
+(putprop '$niceindicespref
+         (lambda (n v)
+           (declare (ignore n))
+           (unless (and ($listp v) (not ($emptyp v)))
+             (merror
+               (intl:gettext "niceindicespref: value must be a nonempty list; found: ~:M")
+               v)))
+         'assign)
+
 (defun get-free-index (llist &optional i)
   (or (do ((try-list (cdr $niceindicespref) (cdr try-list)))
 	  ((null try-list))
@@ -132,11 +141,14 @@
 	(if (free llist try) (return try)))))
 
 (defmfun $bashindices (e)	       ; e is assumed to be simplified
-  (let (($genindex '$j))
-    (cond ((atom e) e)
-	  ((member (caar e) '(%sum %product) :test #'eq)
-	   (sumconsimp (subst (gensumindex) (caddr e) e)))
-	  (t (recur-apply #'$bashindices e)))))
+  (if (atom e)
+    e
+    (let (($genindex '$j)
+	  (e (recur-apply #'$bashindices e)))
+      (cond ((atom e) e)
+	    ((member (caar e) '(%sum %product) :test #'eq)
+	     (sumconsimp (subst (gensumindex) (caddr e) e)))
+	    (t e)))))
 
 (defmfun $niceindices (e)
   (if (atom e)
