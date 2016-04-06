@@ -226,16 +226,10 @@
 
 ; --------------- build help topic indices ---------------
 
-(defun coerce-to-dirlist (pn)
-  (list (pathname-device pn) (append (pathname-directory pn) (list (concatenate 'string (pathname-name pn) (pathname-type pn))))))
-
-(defun valid-dirlist-p (dn)
-  (probe-file (make-pathname :device (car dn) :directory (cadr dn) :name "maxima" :type "info")))
-  
 (defun load-info-hashtables (dir-name deffn-defvr-pairs section-pairs
 				      ;; In Debian, lsp index file must be in different directory from info files
-				      &aux (dir-name (or (car (member-if 'valid-dirlist-p
-									 (list dir-name (coerce-to-dirlist maxima::*maxima-infodir*))))
+				      &aux (dir-name (or (car (member-if 'probe-file (list dir-name maxima::*maxima-infodir*)
+							      :key (lambda (x) (merge-pathnames (make-pathname :name "maxima" :type "info") x nil))))
 							 dir-name)))
   (if (and (zerop (length section-pairs)) 
            (zerop (length deffn-defvr-pairs)))
