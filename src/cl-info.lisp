@@ -53,6 +53,8 @@
   "splice a '/' between the path components given as arguments"
   (format nil "~{~A~^/~}" list))
 
+(defvar maxima::*maxima-index-dir* nil)
+
 (defun load-primary-index ()
   (declare (special maxima::*maxima-lang-subdir* maxima::*maxima-infodir*))
   ;; Load the index, but make sure we use a sensible *read-base*.
@@ -61,7 +63,7 @@
   ;; with-standard-io-syntax too much for what we want?
   (let*
       ((subdir-bit (or maxima::*maxima-lang-subdir* "."))
-       (path-to-index (maxima::combine-path maxima::*maxima-infodir* subdir-bit "maxima-index.lisp")))
+       (path-to-index (maxima::combine-path (or maxima::*maxima-index-dir* maxima::*maxima-infodir*) subdir-bit "maxima-index.lisp")))
     (handler-case
 	#-gcl
       (with-standard-io-syntax (load path-to-index))
