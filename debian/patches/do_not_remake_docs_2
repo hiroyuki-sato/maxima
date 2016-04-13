@@ -5,10 +5,10 @@ Description: <short summary of the patch>
  information below has been extracted from the changelog. Adjust it or drop
  it.
  .
- maxima (5.36.1-1) unstable; urgency=medium
+ maxima (5.38.0-2) unstable; urgency=medium
  .
-   * New upstream release
-Author: Camm Maguire <camm@barriere.debian.org>
+   * fix i386 test failure
+Author: Camm Maguire <camm@debian.org>
 
 ---
 The information above should follow the Patch Tagging Guidelines, please
@@ -23,16 +23,15 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
---- maxima-5.36.1.orig/interfaces/xmaxima/doc/Makefile.am
-+++ maxima-5.36.1/interfaces/xmaxima/doc/Makefile.am
-@@ -8,8 +8,8 @@ info_TEXINFOS = xmaxima.texi
+--- maxima-5.38.0.orig/doc/info/Makefile.am
++++ maxima-5.38.0/doc/info/Makefile.am
+@@ -484,7 +484,8 @@ maxima-index.lisp: maxima.info build_ind
+ 	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
  
- all-local: xmaxima.html
+ maxima.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
+-	sh extract_categories.sh maxima
++	touch $@
++#	sh extract_categories.sh maxima
  
--xmaxima.html: xmaxima.texi $(top_srcdir)/doc/info/texi2html
--	perl $(top_srcdir)/doc/info/texi2html -split_chapter --lang=en --output=. --css-include=$(top_srcdir)/doc/info/manual.css --init-file  $(top_srcdir)/doc/info/texi2html.init  xmaxima.texi 
-+xmaxima.html: xmaxima.texi #$(top_srcdir)/doc/info/texi2html
-+	perl /usr/bin/texi2html -split_chapter --lang=en --output=. --css-include=$(top_srcdir)/doc/info/manual.css --init-file  $(top_srcdir)/doc/info/texi2html.init  xmaxima.texi 
- 
- htmlname = xmaxima
- htmlinstdir = $(xmaximadir)/html
+ maxima.pdf: $(top_srcdir)/doc/info/maxima.texi $(maxima_TEXINFOS) $(pdffigures)
+ 	$(TEXI2PDF) $(AM_V_texinfo) -o $@ $<
