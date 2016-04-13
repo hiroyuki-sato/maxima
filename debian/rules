@@ -7,33 +7,10 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# This is the debhelper compatability version to use.
-#export DH_COMPAT=3
-
 #FIXME remove when converting to dh
 export SOURCE_DATE_EPOCH = $(shell date -d "$$(dpkg-parsechangelog -SDate)" +%s)
 
 NO_STRIP:=
-#ALT_LINK:=
-#ifeq ($(DEB_BUILD_ARCH),mips)
-#ALT_LINK:=--enable-gcl-alt-link
-#endif
-#ifeq ($(DEB_BUILD_ARCH),mipsel)
-#ALT_LINK:=--enable-gcl-alt-link
-#endif
-#ifeq ($(DEB_BUILD_ARCH),ia64)
-#ALT_LINK:=--enable-gcl-alt-link
-#NO_STRIP:=-Xmaxima
-#endif
-#ifeq ($(DEB_BUILD_ARCH),hppa)
-#ALT_LINK:=--enable-gcl-alt-link
-#endif
-#ifeq ($(DEB_BUILD_ARCH),alpha)
-#ALT_LINK:=--enable-gcl-alt-link
-#endif
-#ifeq ($(DEB_BUILD_ARCH),powerpc)
-#NO_STRIP:=-Xmaxima
-#endif
 
 SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/stamp-vti\
 	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
@@ -54,7 +31,7 @@ SAVES:=$(addprefix debian/save/,aclocal.m4 configure interfaces/emacs/imaxima/st
 	 \
 	doc/info/figures/Makefile.in doc/info/maxima-index.lisp doc/info/maxima.info doc/info/maxima.info-1 \
 	doc/info/maxima.info-2 doc/info/maxima.info-3 \
-	)#src/sys-proclaim.lisp 
+	)
 
 debian/save/%: %
 	mkdir -p $(@D)
@@ -91,44 +68,21 @@ build-stamp:
 
 	PATH=$$(pwd):$$PATH GCL_ANSI=t $(MAKE)
 
-#	echo ':lisp (setq maxima::*maxima-started* nil si::*optimize-maximum-pages* t si::*code-block-reserve* (make-array 10000000 :element-type (quote character) :static t))(si::sgc-on nil)(si::gbc t)(si::save-system "foo")' | strace -f setarch $$(arch) -R ./maxima-local
-
 	echo ':lisp (setq maxima::*maxima-started* nil si::*optimize-maximum-pages* t si::*code-block-reserve* (make-array 10000000 :element-type (quote character) :static t))(si::sgc-on nil)(si::gbc t)(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
 
 
-# This sets up some reasonable readline command completion by default
-
-# Reenable if/when gcl uses __mulsi et. al. on m68k, now configured for (020) unoptimally
-#	[ "$$(dpkg --print-architecture)" != "m68k" ] || cp debian/rtest8.mac.m68k tests/rtest8.mac
-
 	chmod +x ./maxima-local
 	touch tests/tests-gcl.log
-#	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
 	./maxima-local -g --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
 		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
 
-#	cat tmp tests/tests-gcl.log >debian/test_results.out
-
-#	grep "Error(s) found in.*:" tests/tests-gcl.log | sed 's,Error(s) found in ,,1'	>tmp
-
-#	! [ -e tests/known-bugs ] || diff -u tests/known-bugs tmp
-
-#	[ -e tests/known-bugs ] || grep -q "No Errors Found" tests/tests-gcl.log
-
 	touch tmp
 	cat tmp >debian/test_results.out
 
-#	echo '(bye #-(or sparc sparc64) 1)' | gcl || 
 	grep -q "No unexpected errors found." debian/test_results.out
 
 	rm -f tmp
-
-#	cd doc/maximabook &&\
-#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-#		TEXINPUTS=../../interfaces/emacs/emaxima:.:$$TEXINPUTS latex maxima && \
-#		dvips -o maxima.ps maxima
 
 	echo ':lisp (setq si::*readline-prefix* "maxima::$$")(setq maxima::*maxima-started* nil maxima::*maxima-index-dir* "/usr/share/doc/maxima/info")(si::save-system "foo")' | ./maxima-local && mv foo src/binary-gcl/maxima
 
@@ -139,11 +93,7 @@ BOOK:=debian/maximabook-19-Sept-2004.pdf
 clean: #restore
 	dh_testdir
 	dh_testroot
-#	rm -f build-stamp install-stamp
 
-#	-cd doc && $(MAKE) clean
-#	-cd interfaces && $(MAKE) clean
-#	-GCL_ANSI=t $(MAKE) clean
 	debian/rules restore
 	rm -rf $(BOOK) src/binary-gcl binary gcl src/sys-proclaim.lisp tests/tests-gcl.log
 	rm -rf admin/Makefile config.log config.status crosscompile-windows/Makefile\
@@ -169,29 +119,7 @@ clean: #restore
 	rm -f share/contrib/maxima-odesolve/maxima-odesolve-index.lisp
 
 	rm -f $(INSTALLS)
-#	-rm -f debian/test_results.out tests/tests-gcl.log
-#	-for i in $$(find -name Makefile) ; do\
-#		! [ -e $$i.am ] || rm -f $$i;\
-#		! [ -e $$i.am ] || rm -f $$i.in;\
-#	 done
-#	-rm -f src/maxima interfaces/xmaxima/Tkmaxima/Header.tcl \
-#		interfaces/xmaxima/Tkmaxima/tclIndex interfaces/xmaxima/autoconf-variables.tcl \
-#		interfaces/xmaxima/xmaxima src/autoconf-variables.lisp
-#	rm -f src/factor.fn src/nparse.fn tests/gazonk0.fn
-#	cd doc/maximabook && \
-#		rm -f maxima.aux maxima.dvi maxima.idx maxima.lof \
-#			maxima.log maxima.out maxima.toc maxima.ps
-#	rm -f debian/*.install
-#	rm -f $(BOOK) config.log config.status plotting/mgnuplot \
-#			src/maxima.bat src/rmaxima maxima-local xmaxima-local maxima.spec maxima.iss
-#	rm -rf src/numerical/slatec/fortran/CVS src/*gazonk* interfaces/xmaxima/win32/Makefile
-#	for i in aclocal.m4 src/sys-proclaim.lisp configure ; do ! [ -e $$i.ori ] || mv $$i.ori $$i; done
-##	rm -rf doc/info/maxima.html doc/man/maxima.1 doc/man/ru/maxima.1 doc/info/include-maxima.texi doc/info/extract_categories.sh.debdiff \
-#		doc/info/pt/include-maxima.texi doc/info/es/include-maxima.texi
-#	rm -rf src/binary-gcl gcl
-#	rm -f tests/rtest14.ERR
-#	rm -f configure.lineno
-#	rm -f raw_ff_map src/share-subdirs.lisp
+	rm -f debian/ChangeLog
 
 	dh_clean
 
@@ -206,8 +134,12 @@ INSTALLS:=$(shell ls -1 debian/*.install.in | sed 's,\.in$$,,1')
 debian/%.pdf: debian/%.pdf.uu
 	cat $< | uudecode >$@
 
+CHANGELOGS:=$(shell ls -1 ChangeLog*)
+debian/ChangeLog: $(CHANGELOGS)
+	for i in $^; do echo "==========">>$@;echo "File: $$i" >>$@;echo "==========">>$@;cat $$i >>$@; done
+
 install: install-stamp
-install-stamp: build-stamp $(BOOK) $(INSTALLS)
+install-stamp: build-stamp $(BOOK) $(INSTALLS) debian/ChangeLog
 	dh_testdir
 	dh_testroot
 	dh_prep
@@ -249,15 +181,6 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	mkdir -p debian/tmp/usr/share/pixmaps
 	ln -s /usr/share/doc/xmaxima/maxima-icon.png debian/tmp/usr/share/pixmaps/maxima-icon.png
 
-# GCL must be able to write to directory in which tests are run
-#	cd debian/tmp/usr/share/maxima/$(MVERS)/tests && patch -p1 <../../../../../../tests.lisp.patch
-#	cat debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp | sed "s,@MVERS@,$(MVERS),g" >tmp && \
-#		mv tmp debian/tmp/usr/share/maxima/$(MVERS)/tests/tests.lisp
-
-#	cd debian/tmp/usr/bin && patch -p1 <../../../xmaxima.patch
-#	cat debian/tmp/usr/bin/xmaxima | sed "s,@MVERS@,$(MVERS),g" >tmp && \
-#		chmod 755 tmp && mv tmp debian/tmp/usr/bin/xmaxima
-
 	cp $(BOOK) debian/tmp/usr/share/doc/maxima-doc
 
 	cd debian/tmp/usr/share/info && \
@@ -270,13 +193,6 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS)
 	cat debian/tmp/usr/share/man/man1/maxima.1 | \
 		sed 's,^.TH MAXIMA 1L,.TH MAXIMA 1,1' >debian/foo && \
 		mv debian/foo debian/tmp/usr/share/man/man1/maxima.1
-
-#	cp -a debian/plotting debian/tips debian/tmp/usr/share/doc/maxima-doc/
-#	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.uu") ; do \
-#		cat $$i | uudecode > $${i%.uu} && rm $$i ; done
-#
-#	for i in $$(find debian/tmp/usr/share/doc/maxima-doc/plotting debian/tmp/usr/share/doc/maxima-doc/tips -name "*.shtml") ; do \
-#		mv $$i $${i%.shtml}.html ; done
 
 	for i in $$(find debian/tmp/usr/share/info -name "maxima-index.lisp") ; do \
 		mkdir -p debian/tmp/usr/share/doc/maxima/$$(basename $$(dirname $$i)) && \
@@ -310,7 +226,7 @@ binary-indep: build install
 	dh_installman -i
 #	dh_desktop -i
 	dh_installinfo -p maxima-doc debian/tmp/usr/share/info/*info*
-	dh_installchangelogs  -i
+	dh_installchangelogs  -i debian/ChangeLog
 	dh_link -i
 	dh_strip -i
 	dh_compress -i -X.shtml -X.hh -Xmaxima-index.lisp
@@ -333,7 +249,7 @@ binary-arch: build install
 	dh_installman -a
 #	dh_desktop -a
 	dh_installinfo -a
-	dh_installchangelogs  -a
+	dh_installchangelogs  -a debian/ChangeLog
 	dh_link -a
 	dh_strip -a $(NO_STRIP)
 	dh_compress -a

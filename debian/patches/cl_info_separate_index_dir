@@ -5,13 +5,10 @@ Description: <short summary of the patch>
  information below has been extracted from the changelog. Adjust it or drop
  it.
  .
- maxima (5.37.1-1) unstable; urgency=medium
+ maxima (5.38.0-2) unstable; urgency=medium
  .
-   * New upstream release
-   * Bug fix: "looking for info documentation in the wrong location",
-     thanks to Antonio Terceiro (Closes: #788430).
+   * fix i386 test failure
 Author: Camm Maguire <camm@debian.org>
-Bug-Debian: https://bugs.debian.org/788430
 
 ---
 The information above should follow the Patch Tagging Guidelines, please
@@ -26,25 +23,36 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
-Index: maxima-5.38.0/src/cl-info.lisp
-===================================================================
 --- maxima-5.38.0.orig/src/cl-info.lisp
 +++ maxima-5.38.0/src/cl-info.lisp
-@@ -226,7 +226,17 @@
+@@ -53,6 +53,8 @@
+   "splice a '/' between the path components given as arguments"
+   (format nil "~{~A~^/~}" list))
+ 
++(defvar maxima::*maxima-index-dir* nil)
++
+ (defun load-primary-index ()
+   (declare (special maxima::*maxima-lang-subdir* maxima::*maxima-infodir*))
+   ;; Load the index, but make sure we use a sensible *read-base*.
+@@ -61,7 +63,7 @@
+   ;; with-standard-io-syntax too much for what we want?
+   (let*
+       ((subdir-bit (or maxima::*maxima-lang-subdir* "."))
+-       (path-to-index (maxima::combine-path maxima::*maxima-infodir* subdir-bit "maxima-index.lisp")))
++       (path-to-index (maxima::combine-path (or maxima::*maxima-index-dir* maxima::*maxima-infodir*) subdir-bit "maxima-index.lisp")))
+     (handler-case
+ 	#-gcl
+       (with-standard-io-syntax (load path-to-index))
+@@ -224,7 +226,12 @@
  
  ; --------------- build help topic indices ---------------
  
 -(defun load-info-hashtables (dir-name deffn-defvr-pairs section-pairs)
-+(defun coerce-to-dirlist (pn)
-+  (list (pathname-device pn) (append (pathname-directory pn) (list (concatenate 'string (pathname-name pn) (pathname-type pn))))))
-+
-+(defun valid-dirlist-p (dn)
-+  (probe-file (make-pathname :device (car dn) :directory (cadr dn) :name "maxima" :type "info")))
-+  
 +(defun load-info-hashtables (dir-name deffn-defvr-pairs section-pairs
 +				      ;; In Debian, lsp index file must be in different directory from info files
-+				      &aux (dir-name (or (car (member-if 'valid-dirlist-p
-+									 (list dir-name (coerce-to-dirlist maxima::*maxima-infodir*))))
++				      &aux (dir-name (or (car (member-if 'probe-file
++									 (list dir-name (maxima::combine-path maxima::*maxima-infodir* ""))
++							      :key (lambda (x) (merge-pathnames (make-pathname :name "maxima" :type "info") x nil))))
 +							 dir-name)))
    (if (and (zerop (length section-pairs)) 
             (zerop (length deffn-defvr-pairs)))
