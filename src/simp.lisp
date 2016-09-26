@@ -505,11 +505,11 @@
 	      (freel (cdr exp) var)))))
 
 (defmfun freel (l var)
-  (cond ((and (listp l) (listp (cdr l)))
-	 (do ((l l (cdr l))) ((null l) t)
-	   (cond ((not (free (car l) var)) (return nil)))))
-	(t
-	 t)))
+  (do ((l l (cdr l))) ((null l) t)
+    (cond
+     ((atom l) (return (free l var)))	;; second element of a pair
+     ((not (free (car l) var)) (return nil)))))
+
 
 (defmfun freeargs (exp var)
   (cond ((alike1 exp var) nil)
@@ -2872,7 +2872,7 @@
 	      ((= i 1) '$%i)
 	      ((= i 2) -1)
 	      (t (list '(mtimes simp) -1 '$%i))))
-      (power -1 (mul2 pot '((rat simp) 1 2)))))
+    (power -1 (mul2 pot '((rat simp) 1 2)))))
 
 (defun mnlogp (pot)
   (cond ((eq (caar pot) '%log) (simplifya (cadr pot) nil))

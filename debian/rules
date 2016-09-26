@@ -73,9 +73,11 @@ build-stamp:
 
 	chmod +x ./maxima-local
 	touch tests/tests-gcl.log
+	echo foo $$(grep Committed_ /proc/meminfo)
 	./maxima-local -g --lisp=gcl --batch-string="run_testsuite();"  >tmp 2>&1 & \
 		j=$$! ; echo Waiting on pid $$j ; \
 		tail -f --pid=$$j --retry tests/tests-gcl.log tmp & wait $$j
+	echo foo $$(grep Committed_ /proc/meminfo)
 
 	touch tmp
 	cat tmp >debian/test_results.out
