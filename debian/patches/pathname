@@ -1,0 +1,84 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ maxima (5.38.1-2) unstable; urgency=medium
+ .
+   * Build-dep against latest gcl
+   * Bug fix: "FTBFS: tests failures", thanks to Lucas Nussbaum (Closes:
+     #831248).
+Author: Camm Maguire <camm@debian.org>
+Bug-Debian: https://bugs.debian.org/831248
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2016-10-11
+
+--- maxima-5.38.1.orig/lisp-utils/defsystem.lisp
++++ maxima-5.38.1/lisp-utils/defsystem.lisp
+@@ -1843,11 +1843,11 @@ s/^[^M]*IRIX Execution Environment 1, *[
+ 	 (rel-directory (directory-to-list (pathname-directory rel-dir)))
+ 	 (rel-keyword (when (keywordp (car rel-directory))
+ 			(pop rel-directory)))
+-         #-(or :MCL :sbcl :clisp :cmu) (rel-file (file-namestring rel-dir))
++         #-(or :MCL :gcl :sbcl :clisp :cmu) (rel-file (file-namestring rel-dir))
+ 	 ;; Stig (July 2001);
+ 	 ;; These values seems to help clisp as well
+-	 #+(or :MCL :sbcl :clisp :cmu) (rel-name (pathname-name rel-dir))
+-	 #+(or :MCL :sbcl :clisp :cmu) (rel-type (pathname-type rel-dir))
++	 #+(or :MCL :gcl :sbcl :clisp :cmu) (rel-name (pathname-name rel-dir))
++	 #+(or :MCL :gcl :sbcl :clisp :cmu) (rel-type (pathname-type rel-dir))
+ 	 (directory nil))
+ 
+     ;; TI Common Lisp pathnames can return garbage for file names because
+@@ -1873,7 +1873,7 @@ s/^[^M]*IRIX Execution Environment 1, *[
+ 
+     (when (and abs-name (not (null-string abs-name))) ; was abs-name
+       (cond ((and (null abs-directory) (null abs-keyword))
+-	     #-(or :lucid :kcl :akcl TI) (setf abs-keyword :relative)
++	     #-(or :lucid TI) (setf abs-keyword :relative)
+ 	     (setf abs-directory (list abs-name)))
+ 	    (t
+ 	     (setf abs-directory (append abs-directory (list abs-name))))))
+@@ -1886,11 +1886,11 @@ s/^[^M]*IRIX Execution Environment 1, *[
+ 	       rel-keyword)
+       ;; The following feature switches seem necessary in CMUCL
+       ;; Marco Antoniotti 19990707
+-      #+(or :sbcl :CMU)
++      #+(or :gcl :sbcl :CMU)
+       (if (typep abs-dir 'logical-pathname)
+ 	  (setf abs-keyword :absolute)
+ 	  (setf abs-keyword rel-keyword))
+-      #-(or :sbcl :CMU)
++      #-(or :gcl :sbcl :CMU)
+       (setf abs-keyword rel-keyword))
+     (setf directory (append abs-directory rel-directory))
+     (when abs-keyword (setf directory (cons abs-keyword directory)))
+@@ -1900,11 +1900,11 @@ s/^[^M]*IRIX Execution Environment 1, *[
+                     :directory
+                     directory
+ 		    :name
+-		    #-(or :sbcl :MCL :clisp :cmu) rel-file
+-		    #+(or :sbcl :MCL :clisp :cmu) rel-name
++		    #-(or :gcl :sbcl :MCL :clisp :cmu) rel-file
++		    #+(or :gcl :sbcl :MCL :clisp :cmu) rel-name
+ 
+-		    #+(or :sbcl :MCL :clisp :cmu) :type
+-		    #+(or :sbcl :MCL :clisp :cmu) rel-type
++		    #+(or :gcl :sbcl :MCL :clisp :cmu) :type
++		    #+(or :gcl :sbcl :MCL :clisp :cmu) rel-type
+ 		    ))))
+ 
+ #-scl
