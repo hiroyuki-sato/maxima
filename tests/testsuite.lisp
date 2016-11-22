@@ -42,7 +42,7 @@
         "rtestifactor"
         ((mlist simp) "rtest_equal" 157 160)
         "rtest_abs"
-        ((mlist simp) "rtest_taylor" 88 91 94 99 123 124)
+        ((mlist simp) "rtest_taylor" 23 88 91 94 99 123 124 129)
         ((mlist simp) "rtest_dot")
         "rtest_mset"
         "rtest_boolean"
