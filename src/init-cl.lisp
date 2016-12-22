@@ -681,8 +681,7 @@ When one changes, the other does too."
   "Return a pathname string such that subdirs is a subdirectory of maxima_objdir"
   (apply #'combine-path *maxima-objdir* subdirs))
 
-;; The directory part of *load-pathname*.  GCL doesn't seem to have a
-;; usable *LOAD-PATHNAME*, but it does have SYS:*LOAD-PATHNAME*.
+;; The directory part of *load-pathname*.
 (defun maxima-load-pathname-directory ()
   "Return the directory part of *load-pathname*."
   (let ((path *load-pathname*))
