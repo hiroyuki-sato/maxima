@@ -18,12 +18,12 @@
 ;;; This is a maxima-gnuplot interface.
 
 ;;; Visit
-;;; http://riotorto.users.sf.net/gnuplot
+;;; http://tecnostats.net/Maxima/gnuplot
 ;;; for examples
 
 ;;; For questions, suggestions, bugs and the like, feel free
 ;;; to contact me at
-;;; mario @@@ edu DOT xunta DOT es
+;;; riotorto @@@ yahoo DOT com
 
 
 ;; use $draw_version to save package version
@@ -2806,8 +2806,8 @@
       ; save in plotcmd the gnuplot preamble
       (setf plotcmd
          (concatenate 'string
-            (if *multiplot-is-active*
-               ""
+            (unless (or *multiplot-is-active*
+                        (member (get-option '$terminal) '($eps $epslatex $epslatex_standalone)))
                (format nil "set obj 1 fc rgb '~a' fs solid 1.0 noborder ~%"
                        (get-option '$background_color)) )
             (if (equal (get-option '$proportional_axes) '$none)
@@ -3027,7 +3027,7 @@
                (when (near-equal zi zf)
                   (setf zi (- zi 0.01)
                         zf (+ zf 0.01)))
-               (format nil "set format '%h'~%set xrange [~a:~a]~%set yrange [~a:~a]~%set zrange [~a:~a]~%"
+               (format nil "set xrange [~a:~a]~%set yrange [~a:~a]~%set zrange [~a:~a]~%"
                            xi xf yi yf zi zf))
             (if (get-option '$cbrange)
                (format nil "set cbrange [~a:~a]~%" 
@@ -3227,13 +3227,18 @@
        gfn (plot-temp-file (get-option '$gnuplot_file_name))
        dfn (plot-temp-file (get-option '$data_file_name)))
 
-    ; we now create two files: maxout.gnuplot and data.gnuplot
+    ;; we now create two files: maxout.gnuplot and data.gnuplot
     (setf cmdstorage
           (open gfn
                 :direction :output :if-exists :supersede))
+    (if (eql cmdstorage nil)
+      (merror "draw: Cannot create file '~a'. Probably maxima_tempdir doesn't point to a writable directory." gfn))
     (setf datastorage
           (open dfn
                 :direction :output :if-exists :supersede))
+    (if (eql datastorage nil)
+      (merror "draw: Cannot create file '~a'. Probably maxima_tempdir doesn't point to a writable directory." dfn))
+    
     (setf datapath (format nil "'~a'" dfn))
     ; when one multiplot window is active, change of terminal is not allowed
     (if (not *multiplot-is-active*)
@@ -3354,7 +3359,14 @@
 
     ; Make gnuplot versions newer than 5.0 understand that linetype means
     ; we try to set the dash type
-    (format cmdstorage "~%if(GPVAL_VERSION >= 5.0){set for [i=1:8] linetype i dashtype i}")
+    (format cmdstorage "~%if(GPVAL_VERSION >= 5.0){set for [i=1:8] linetype i dashtype i; set format '%h'}")
+
+    ;; By default gnuplot assumes everything below 1e-8 to be a rounding error
+    ;; and rounds it down to 0. This is handy for standalone gnuplot as it allows
+    ;; to suppress pixels with imaginary part while allowing for small calculation
+    ;; errors. As plot and draw handle the imaginary part without gnuplot's help
+    ;; this isn't needed here and is turned off as it often surprises users.
+    (format cmdstorage "~%set zero 0.0")
 
     ; write descriptions of 2d and 3d scenes
     (let ((i -1)
@@ -3390,8 +3402,8 @@
                      (incf nilcounter)))
                 (format cmdstorage "~%set size ~a, ~a~%" size1 size2)
                 (format cmdstorage "set origin ~a, ~a~%" origin1 origin2)
-                (when (and (not *multiplot-is-active*)
-                           (not (member (get-option '$terminal) '($epslatex $epslatex_standalone))))
+                (unless (or *multiplot-is-active*
+                            (member (get-option '$terminal) '($epslatex $epslatex_standalone)))
                   (format cmdstorage "set obj 1 rectangle behind from screen ~a,~a to screen ~a,~a~%" 
                                      origin1 origin2 (+ origin1 size1 ) (+ origin2 size2)))  ))
         (setf is1stobj t

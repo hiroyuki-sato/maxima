@@ -61,16 +61,16 @@
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'op))
       '((mqapply $subvar) (bigfloat $bfloat)))
 
-(setq $exptsubst nil
-      $partswitch nil
-      $inflag nil
-      $gradefs '((mlist simp))
-      $dependencies '((mlist simp))
-      atvars '($@1 $@2 $@3 $@4)
-      $derivsubst nil
-      $opsubst t
-      in-p nil
-      substp nil)
+(defmvar $exptsubst nil)
+(defmvar $partswitch nil)
+(defmvar $inflag nil)
+(defmvar $derivsubst nil)
+(defmvar $opsubst t)
+(defvar $gradefs '((mlist simp)))
+(defvar $dependencies '((mlist simp)))
+(defvar atvars '($@1 $@2 $@3 $@4))
+(defvar in-p nil)
+(defvar substp nil)
 
 (defmvar $vect_cross nil
   "If TRUE allows DIFF(X~Y,T) to work where ~ is defined in
@@ -1118,6 +1118,24 @@
   (when (null (cdr e))
     (merror (intl:gettext "last: empty argument.")))
   (car (last e)))
+
+(defmfun $firstn (e n)
+  (atomchk (setq e (format1 e)) '$firstn nil)
+  (if (or (not (fixnump n)) (minusp n))
+    (merror (intl:gettext "firstn: second argument must be a nonnegative integer; found: ~M") n))
+  (let ((m ($length e)))
+    (if (> n m)
+      ($rest e 0)
+      ($rest e (- n m)))))
+
+(defmfun $lastn (e n)
+  (atomchk (setq e (format1 e)) '$lastn nil)
+  (if (or (not (fixnump n)) (minusp n))
+    (merror (intl:gettext "lastn: second argument must be a nonnegative integer; found: ~M") n))
+  (let ((m ($length e)))
+    (if (> n m)
+      ($rest e 0)
+      ($rest e (- m n)))))
 
 (defmfun $args (e)
   (atomchk (setq e (format1 e)) '$args nil)

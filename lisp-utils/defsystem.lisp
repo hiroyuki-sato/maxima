@@ -3601,8 +3601,7 @@ the system definition, if provided."
 	(multiple-value-bind (*version-dir* *version-replace*)
 	    (translate-version version)
 	  ;; CL implementations may uniformly default this to nil
-	  (let ((*load-verbose* #-common-lisp-controller t
-				#+common-lisp-controller nil) ; nil
+	  (let (
 		#-(or MCL CMU CLISP ECL :sbcl lispworks scl)
 		(*compile-file-verbose* t) ; nil
 		#+common-lisp-controller
@@ -3614,8 +3613,6 @@ the system definition, if provided."
 		#+(and common-lisp-controller cmu)
 		(ext:*gc-verbose* nil)
 
-		(*compile-verbose* #-common-lisp-controller t
-				   #+common-lisp-controller nil) ; nil
 		(*version* version)
 		(*oos-verbose* verbose)
 		(*oos-test* test)

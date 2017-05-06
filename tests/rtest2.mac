@@ -586,3 +586,315 @@ m(1);
 kill (functions, arrays);
 done;
 
+/* try to verify that save(...) handles arrays correctly */
+
+(kill (all),
+ myundeclared[1234, foo] : sin(bar),
+ myundeclared[bar, baz + 1] : cos(quux),
+ myundeclared[1729, u^2] : tan(bar),
+ myundeclared[mumble, 7] : 9876,
+ array (mydeclared, 1, 1, 1),
+ mydeclared[0, 0, 0] : bar + 0,
+ mydeclared[0, 0, 1] : bar + 1,
+ mydeclared[0, 1, 0] : bar + 2,
+ mydeclared[0, 1, 1] : bar + 3,
+ mydeclared[1, 0, 0] : bar + 4,
+ mydeclared[1, 0, 1] : bar + 5,
+ mydeclared[1, 1, 0] : bar + 6,
+ mydeclared[1, 1, 1] : bar + 7,
+ myvalue : make_array (fixnum, 2, 2, 2, 2),
+ myvalue[0, 0, 0, 0] : %pi + 1,
+ myvalue[1, 1, 1, 1] : %e - 1,
+ use_fast_arrays : true,
+ myfast[foo, bar, baz] : blurf,
+ myfast["mumble", "abc", "xy", "Z"] : 2*blurf,
+ myfast[sin(foo), 1 - baz] : 3*blurf,
+ reset (use_fast_arrays),
+ save (sconcat (maxima_tempdir, "/tmpsavearrays.lisp"), arrays, values),
+ 0);
+0;
+
+[arrays, values];
+[[myundeclared, mydeclared], [myvalue, myfast]];
+
+arrayinfo (myundeclared);
+[hashed, 2, [1234,foo],[1729,u^2],[bar,baz+1],[mumble,7]];
+
+listarray (myundeclared);
+[sin(bar), tan(bar), cos(quux), 9876];
+
+arrayinfo (mydeclared);
+[declared, 3, [1, 1, 1]];
+
+listarray (mydeclared);
+[bar, bar + 1, bar + 2, bar + 3, bar + 4, bar + 5, bar + 6, bar + 7];
+
+arrayinfo (myvalue);
+[declared, 4, [1, 1, 1, 1]]; /* "declared" seems wrong here ... oh well */
+
+listarray (myvalue);
+[%pi + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, %e - 1];
+
+(arrayinfo (myfast), [%%[1], %%[2], sort (rest (%%, 2))]);
+[hash_table, true, [["mumble", "abc", "xy", "Z"], [foo, bar, baz], [sin(foo), 1 - baz]]];
+
+sort (listarray (myfast));
+[blurf, 2*blurf, 3*blurf];
+
+kill (myundeclared, mydeclared, myvalue, myfast);
+done;
+
+[arrays, values];
+[[], []];
+
+[errcatch (arrayinfo (myundeclared)),
+ errcatch (arrayinfo (mydeclared)),
+ errcatch (arrayinfo (myvalue)),
+ errcatch (arrayinfo (myfast))];
+[[], [], [], []];
+
+[errcatch (listarray (myundeclared)),
+ errcatch (listarray (mydeclared)),
+ errcatch (listarray (myvalue)),
+ errcatch (listarray (myfast))];
+[[], [], [], []];
+
+(load (sconcat (maxima_tempdir, "/tmpsavearrays.lisp")), 0);
+0;
+
+[arrays, values];
+[[myundeclared, mydeclared], [myvalue, myfast]];
+
+arrayinfo (myundeclared);
+[hashed, 2, [1234,foo],[1729,u^2],[bar,baz+1],[mumble,7]];
+
+listarray (myundeclared);
+[sin(bar), tan(bar), cos(quux), 9876];
+
+arrayinfo (mydeclared);
+[declared, 3, [1, 1, 1]];
+
+listarray (mydeclared);
+[bar, bar + 1, bar + 2, bar + 3, bar + 4, bar + 5, bar + 6, bar + 7];
+
+arrayinfo (myvalue);
+[declared, 4, [1, 1, 1, 1]]; /* "declared" seems wrong here ... oh well */
+
+listarray (myvalue);
+[%pi + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, %e - 1];
+
+(arrayinfo (myfast), [%%[1], %%[2], sort (rest (%%, 2))]);
+[hash_table, true, [["mumble", "abc", "xy", "Z"], [foo, bar, baz], [sin(foo), 1 - baz]]];
+
+sort (listarray (myfast));
+[blurf, 2*blurf, 3*blurf];
+
+/* firstn, lastn */
+
+(kill (a, b, z), mylist : [a, 3, %pi, b, -2, %e, z, 0, %phi], 0);
+0;
+
+firstn (mylist, 0);
+[];
+
+firstn (mylist, 1);
+[a];
+
+firstn (mylist, 4);
+[a, 3, %pi, b];
+
+firstn (mylist, 8);
+[a, 3, %pi, b, -2, %e, z, 0];
+
+firstn (mylist, 9);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+firstn (mylist, 10);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+firstn (mylist, 100);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+errcatch (firstn (mylist, -4));
+[];
+
+lastn (mylist, 0);
+[];
+
+lastn (mylist, 1);
+[%phi];
+
+lastn (mylist, 4);
+[%e, z, 0, %phi];
+
+lastn (mylist, 8);
+[3, %pi, b, -2, %e, z, 0, %phi];
+
+lastn (mylist, 9);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+lastn (mylist, 10);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+lastn (mylist, 100);
+[a, 3, %pi, b, -2, %e, z, 0, %phi];
+
+errcatch (lastn (mylist, -4));
+[];
+
+(kill (foo), fooexpr : funmake (foo, mylist), 0);
+0;
+
+firstn (fooexpr, 0);
+foo();
+
+firstn (fooexpr, 1);
+foo(a);
+
+firstn (fooexpr, 4);
+foo(a, 3, %pi, b);
+
+firstn (fooexpr, 8);
+foo(a, 3, %pi, b, -2, %e, z, 0);
+
+firstn (fooexpr, 9);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+firstn (fooexpr, 10);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+firstn (fooexpr, 100);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+errcatch (firstn (fooexpr, -4));
+[];
+
+lastn (fooexpr, 0);
+foo();
+
+lastn (fooexpr, 1);
+foo(%phi);
+
+lastn (fooexpr, 4);
+foo(%e, z, 0, %phi);
+
+lastn (fooexpr, 8);
+foo(3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (fooexpr, 9);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (fooexpr, 10);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (fooexpr, 100);
+foo(a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+errcatch (lastn (fooexpr, -4));
+[];
+
+(kill (bar), nary ("bar"));
+"bar";
+
+barexpr : apply ("bar", mylist);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+firstn (barexpr, 0);
+"bar"();
+
+firstn (barexpr, 1);
+"bar"(a);
+
+firstn (barexpr, 4);
+a bar 3 bar %pi bar b;
+
+firstn (barexpr, 8);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0;
+
+firstn (barexpr, 9);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+firstn (barexpr, 10);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+firstn (barexpr, 100);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+errcatch (firstn (barexpr, -4));
+[];
+
+lastn (barexpr, 0);
+"bar"();
+
+lastn (barexpr, 1);
+"bar"(%phi);
+
+lastn (barexpr, 4);
+%e bar z bar 0 bar %phi;
+
+lastn (barexpr, 8);
+3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+lastn (barexpr, 9);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+lastn (barexpr, 10);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+lastn (barexpr, 100);
+a bar 3 bar %pi bar b bar (-2) bar %e bar z bar 0 bar %phi;
+
+errcatch (lastn (barexpr, -4));
+[];
+
+(kill (baz, k), bazexpr : funmake (baz[k], mylist), 0);
+0;
+
+firstn (bazexpr, 0);
+baz[k]();
+
+firstn (bazexpr, 1);
+baz[k](a);
+
+firstn (bazexpr, 4);
+baz[k](a, 3, %pi, b);
+
+firstn (bazexpr, 8);
+baz[k](a, 3, %pi, b, -2, %e, z, 0);
+
+firstn (bazexpr, 9);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+firstn (bazexpr, 10);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+firstn (bazexpr, 100);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+errcatch (firstn (bazexpr, -4));
+[];
+
+lastn (bazexpr, 0);
+baz[k]();
+
+lastn (bazexpr, 1);
+baz[k](%phi);
+
+lastn (bazexpr, 4);
+baz[k](%e, z, 0, %phi);
+
+lastn (bazexpr, 8);
+baz[k](3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (bazexpr, 9);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (bazexpr, 10);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+lastn (bazexpr, 100);
+baz[k](a, 3, %pi, b, -2, %e, z, 0, %phi);
+
+errcatch (lastn (bazexpr, -4));
+[];
+

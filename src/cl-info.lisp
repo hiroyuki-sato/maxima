@@ -136,17 +136,18 @@
 
     (setq wanted
           (if (> nitems 1)
-          (loop
-           for prompt-count from 0
-           thereis (progn
-                 (finish-output *debug-io*)
-                 (print-prompt prompt-count)
-                 (force-output)
-                 (clear-input)
-                 (select-info-items
-                  (parse-user-choice nitems) items-list)))
-          items-list))
-    (clear-input)
+            (prog1
+              (loop
+                for prompt-count from 0
+                thereis (progn
+                          (finish-output *debug-io*)
+                          (print-prompt prompt-count)
+                          (force-output)
+                          (clear-input)
+                          (select-info-items
+                            (parse-user-choice nitems) items-list)))
+              (clear-input))
+            items-list))
     (finish-output *debug-io*)
     (when (consp wanted)
       (format t "~%")
@@ -205,8 +206,8 @@
     ((value (cdr parameters))
      (filename (car value))
      (byte-offset (cadr value))
-     (byte-count (caddr value))
-     (text (make-string byte-count))
+     (char-count (caddr value))
+     (text (make-string char-count))
      (path+filename (merge-pathnames (make-pathname :name filename) dir-name)))
     (with-open-file (in path+filename :direction :input)
       (unless (plusp byte-offset)
@@ -216,7 +217,7 @@
       (file-position in byte-offset)
       (#-gcl read-sequence
        #+gcl gcl-read-sequence
-       text in :start 0 :end byte-count))
+       text in :start 0 :end char-count))
     text))
 
 #+gcl
@@ -229,11 +230,9 @@
 (defun load-info-hashtables (dir-name deffn-defvr-pairs section-pairs
 				      ;; In Debian, lsp index file must be in different directory from info files
 				      &aux (dir-name
-					    (or (car (member-if (lambda (x)
-								  (let* ((p (merge-pathnames (make-pathname :name "maxima" :type "info") x nil))
-									 (s (open p :if-does-not-exist nil)))
-								    (when s (close s) t)))
-								(list dir-name (maxima::combine-path maxima::*maxima-infodir* ""))))
+					    (or (when (equal (pathname (concatenate 'string maxima::*maxima-index-dir* "/"))
+							     dir-name)
+						  (maxima::combine-path maxima::*maxima-infodir* ""))
 						dir-name)))
   (if (and (zerop (length section-pairs)) 
            (zerop (length deffn-defvr-pairs)))

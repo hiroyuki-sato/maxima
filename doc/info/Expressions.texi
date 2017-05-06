@@ -385,6 +385,7 @@ The order of the items in the list may depend on the global flag
 See also @mrefcomma{substpart} @mrefcomma{apply} @mrefcomma{funmake} and @mrefdot{op}
 
 How to convert a matrix to a nested list:
+
 @c ===beg===
 @c M:matrix([1,2],[3,4]);
 @c args(M);
@@ -404,6 +405,7 @@ How to convert a matrix to a nested list:
 
 Since maxima internally treats a sum of @code{n} terms as a summation command
 with @code{n} arguments args() can extract the list of terms in a sum:
+
 @c ===beg===
 @c a+b+c;
 @c args(%);
@@ -565,13 +567,64 @@ collapse the elements of the array @code{A} by doing
 @closecatbox
 @end deffn
 
+@c -----------------------------------------------------------------------------
+@anchor{copy}
+@deffn {Function} copy (@var{e})
+
+Return a copy of the Maxima expression @var{e}.  Although @var{e} can be any
+Maxima expression, the copy function is the most useful when @var{e} is either 
+a list or a matrix; consider:
+
+@c ===beg===
+@c m : [1,[2,3]]$
+@c mm : m$
+@c mm[2][1] : x$
+@c m;
+@c mm;
+@c ===end===
+@example 
+(%i1) m : [1,[2,3]]$
+(%i2) mm : m$
+(%i3) mm[2][1] : x$
+(%i4) m;
+(%o4)                      [1,[x,3]]
+(%i5) mm;
+(%o5)                      [1,[x,3]]
+@end example
+
+Let's try the same experiment, but this time let @var{mm} be a copy of @var{m}
+
+@c ===beg===
+@c m : [1,[2,3]]$
+@c mm : copy(m)$
+@c mm[2][1] : x$
+@c m;
+@c mm;
+@c ===end===
+@example
+(%i6) m : [1,[2,3]]$
+(%i7) mm : copy(m)$
+(%i8) mm[2][1] : x$
+(%i9) m;
+(%o9)                     [1,[2,3]]
+(%i10) mm;
+(%o10)                    [1,[x,3]]
+@end example
+
+This time, the assignment to @var{mm} does not change the value of @var{m}.
+
+@opencatbox
+@category{Expressions}
+@closecatbox
+@end deffn
+
 @c NEEDS WORK
 
 @c -----------------------------------------------------------------------------
 @anchor{disolate}
 @deffn {Function} disolate (@var{expr}, @var{x_1}, @dots{}, @var{x_n})
 
-is similar to @code{isolate (@var{expr}, @var{x})} except that it enables the
+is similar to @mref{isolate}@code{ (@var{expr}, @var{x})} except that it enables the
 user to isolate more than one variable simultaneously.  This might be useful,
 for example, if one were attempting to change variables in a multiple
 integration, and that variable change involved two or more of the integration
@@ -966,7 +1019,8 @@ can all be substituted back by evaluating the expression in which they occur.
 @var{var}.
 
 @code{isolate_wrt_times} if @code{true}, then @code{isolate} will also isolate
-with respect to products.  See @mrefdot{isolate_wrt_times}
+with respect to products.  See @mrefdot{isolate_wrt_times} See also @mrefdot{disolate}
+
 
 Do @code{example (isolate)} for examples.
 

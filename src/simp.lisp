@@ -537,14 +537,10 @@
 	       (t (cons (car x)
 			(mapcar #'(lambda (x) (simplifya x y)) (cdr x))))))
 	((eq (caar x) 'rat) (*red1 x))
-	((and (not dosimp) (member 'simp (cdar x) :test #'eq)) x)
+	;; Enforced resimplification: Reset dosimp and strip 'simp tags from x.
+	(dosimp (let ((dosimp nil)) (simplifya (unsimplify x) y)))
+	((member 'simp (cdar x) :test #'eq) x)
 	((eq (caar x) 'mrat) x)
-	((and (member (caar x) '(mplus mtimes mexpt) :test #'eq)
-	      (member (get (caar x) 'operators) '(simplus simpexpt simptimes) :test #'eq)
-	      (not (member 'array (cdar x) :test #'eq)))
-	 (cond ((eq (caar x) 'mplus) (simplus x 1 y))
-	       ((eq (caar x) 'mtimes) (simptimes x 1 y))
-	       (t (simpexpt x 1 y))))
 	((not (atom (caar x)))
 	 (cond ((or (eq (caaar x) 'lambda)
 		    (and (not (atom (caaar x))) (eq (caaaar x) 'lambda)))
@@ -654,6 +650,11 @@
 (defun rulechk (x) (or (mget x 'oldrules) (get x 'rules)))
 
 (defmfun resimplify (x) (let ((dosimp t)) (simplifya x nil)))
+
+(defun unsimplify (x)
+  (if (or (atom x) (specrepp x))
+      x
+      (cons (remove 'simp (car x) :count 1) (mapcar #'unsimplify (cdr x)))))
 
 (defun simpargs (x y)
   (if (or (eq (get (caar x) 'dimension) 'dimension-infix)
@@ -942,19 +943,19 @@
 ;;;-----------------------------------------------------------------------------
 
 (defun exptb (a b)
-  (cond ((equal a %e-val)
-	 ;; Make B a float so we'll get double-precision result.
-         (exp (float b)))
-        ((or (floatp a) (not (minusp b)))
-         #+gcl
-         (if (float-inf-p (setq b (expt a b)))
-             (merror (intl:gettext "EXPT: floating point overflow."))
-             b)
-         #-gcl
-         (expt a b))
-	(t
-	 (setq b (expt a (- b)))
-	 (*red 1 b))))
+  (let ((result
+	 (cond ((equal a %e-val)
+		;; Make B a float so we'll get double-precision result.
+		(exp (float b)))
+	       ((or (floatp a) (not (minusp b)))
+		(expt a b))
+	       (t
+		(setq b (expt a (- b)))
+		(*red 1 b)))))
+    (if (float-inf-p result)	;; needed for gcl - no trap of overflow
+	(signal 'floating-point-overflow)
+      result)))
+    
 
 ;;;-----------------------------------------------------------------------------
 ;;; SIMPLUS (X W Z)                                                27.09.2010/DK
@@ -1451,7 +1452,7 @@
         ((and (member $logexpand '($all $super))
               (consp y)
               (member (caar y) '(%product $product)))
-         (let ((new-op (if (eq (getcharn (caar y) 1) #\%) '%sum '$sum)))
+         (let ((new-op (if (eql (getcharn (caar y) 1) #\%) '%sum '$sum)))
            (simplifya `((,new-op) ((%log) ,(cadr y)) ,@(cddr y)) t)))
         ((and $lognegint
               (maxima-integerp y)
@@ -2377,6 +2378,9 @@
             ;; Numerically evaluate if the power is a flonum.
             (when $%emode
               (let ((val (flonum-eval '%exp pot)))
+		(if (float-inf-p val)
+		    ;; needed for gcl - no trap of overflow
+		    (signal 'floating-point-overflow))
                 (when val
                   (return val)))
               ;; Numerically evaluate if the power is a (complex)
