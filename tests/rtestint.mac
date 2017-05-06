@@ -1120,8 +1120,10 @@ integrate(log(1+exp(cos(phi))),phi,0,%pi);
 integrate(atan2(y,x),x);
 y*log(y^2+x^2)/2+x*atan(y/x);
 
-integrate(atan2(y,x),y);
-y*atan(y/x)-(x*log(y^2/x^2+1)/2);
+/* Note: Fixing bug #3246 changed the answer to an equivalent one.
+   Therefore, compare the ratsimp-ed difference of the expressions to zero. */
+ratsimp(integrate(atan2(y,x),y) - (y*atan(y/x)-(x*log(y^2/x^2+1)/2)));
+0;
 
 /* Bug ID: 3023997 - integrate(x*atan2(x,y),x) -> noun form
  * We have generalized the special case for the atan2 function.
@@ -1661,4 +1663,37 @@ integrate(sec(x)/sqrt(tan(x)),x);
 /* bug #3115 */
 integrate((x*sqrt(x^3-4*x))/(x^2-4),x);
 'integrate((x*sqrt(x^3-4*x))/(x^2-4),x);
-  
+
+/* SF bug #3144: "stackoverflow in integral" */
+
+integrate(sin(k*x)/x*erf(x^2),x,0,inf);
+'integrate(sin(k*x)/x*erf(x^2),x,0,inf);
+
+/* Borwein integrals; see: https://en.wikipedia.org/wiki/Borwein_integral */
+
+integrate(sin(x)/x,x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)) * (sin(x/7)/(x/7)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)) * (sin(x/7)/(x/7)) * (sin(x/9)/(x/9)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)) * (sin(x/7)/(x/7)) * (sin(x/9)/(x/9))
+                     * (sin(x/11)/(x/11)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)) * (sin(x/7)/(x/7)) * (sin(x/9)/(x/9))
+                     * (sin(x/11)/(x/11)) * (sin(x/13)/(x/13)),x,0,inf)$
+%pi/2 $
+
+integrate((sin(x)/x) * (sin(x/3)/(x/3)) * (sin(x/5)/(x/5)) * (sin(x/7)/(x/7)) * (sin(x/9)/(x/9))
+                     * (sin(x/11)/(x/11)) * (sin(x/13)/(x/13)) * (sin(x/15)/(x/15)),x,0,inf)$
+467807924713440738696537864469*%pi/935615849440640907310521750000 $

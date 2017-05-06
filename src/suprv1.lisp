@@ -26,7 +26,7 @@
 		       $rules $props $ratvars
 		       varlist genvar
 		       $gensumnum checkfactors $features featurel
-		       $weightlevels tellratlist $dontfactor
+		       tellratlist $dontfactor
 		       dispflag savefile $%% $error
 		       opers *ratweights $ratweights
 		       $stringdisp $lispdisp
@@ -332,7 +332,7 @@
 	      (mapc #'kill1 (cdr $infolists))
 	      (setq $ratvars '((mlist simp)) varlist nil genvar nil
 		    checkfactors nil greatorder nil lessorder nil $gensumnum 0
-		    $weightlevels '((mlist)) *ratweights nil $ratweights
+		    *ratweights nil $ratweights
 		    '((mlist simp))
 		    tellratlist nil $dontfactor '((mlist)) $setcheck nil)
 	      (killallcontexts))
@@ -545,7 +545,7 @@
 	((nonsymchk y '$alias))
         ((eq x y) y) ; x is already the alias of y
 ; Not needed. We return the alias immediately if we already have one.
-;	((not (eq (getcharn x 1) #\$))
+;	((not (eql (getcharn x 1) #\$))
 ;	 (merror "-ed symbols may not be aliased. ~M" x))
 	((get x 'reversealias)
 	 (if (not (eq x y))

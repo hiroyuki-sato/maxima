@@ -408,7 +408,7 @@
 	      (mapc #'kill1 (cdr $infolists))
 	      (setq $ratvars '((mlist simp)) varlist nil genvar nil
 		    checkfactors nil greatorder nil lessorder nil $gensumnum 0
-		    $weightlevels '((mlist)) *ratweights nil $ratweights
+		    *ratweights nil $ratweights
 		    '((mlist simp))
 		    tellratlist nil $dontfactor '((mlist)) $setcheck nil)
 	      (killallcontexts))
@@ -478,7 +478,7 @@
           (get-dissym-1 b c))))))                              ; NEW
 
 (defun get-dissym-1 (b c)                                      ; NEW
-  (if (eq (car b) #\space)                                     ; NEW
+  (if (eql (car b) #\space)                                    ; NEW
     (cons #\space (append c (cons #\| (rest b))))              ; NEW
     (append c (cons #\| b))))                                  ; NEW
 

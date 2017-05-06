@@ -60,8 +60,8 @@
 
 ;; factorial stuff
 
-(setq $factlim 100000 ; set to a big integer which will work (not -1)
-      makef nil)
+(defmvar $factlim 100000) ; set to a big integer which will work (not -1)
+(defvar makef nil)
 
 (defmfun $genfact (&rest l)
   (cons '(%genfact) l))
@@ -395,10 +395,13 @@ summation when necessary."
 
 ;; These variables should be initialized where they belong.
 
-(setq $wtlevel nil $cflength 1
-      $weightlevels '((mlist)) *trunclist nil $taylordepth 3
-      $maxtaydiff 4 $verbose nil $psexpand nil ps-bmt-disrep t
-      silent-taylor-flag nil)
+(defmvar $cflength 1)
+(defmvar $taylordepth 3)
+(defmvar $maxtaydiff 4)
+(defmvar $verbose nil)
+(defvar *trunclist nil)
+(defvar ps-bmt-disrep t)
+(defvar silent-taylor-flag nil)
 
 (defmacro sum-arg (sum)
   `(cadr ,sum))
@@ -982,7 +985,7 @@ summation when necessary."
   (when (and $dotscrules (mnctimesp e))
     (let ($dotexptsimp)
       (setq e (simpnct e 1 nil))))
-  (if ($mapatom e) e (antisym1 e z)))
+  (if ($atom e) e (antisym1 e z)))
 
 (defun antisym1 (e z)
   (let ((antisym-sign nil)
