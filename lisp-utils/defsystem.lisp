@@ -1818,7 +1818,6 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 ;;;       "[root.subdir]BAZ"
 ;;;       "[root.][subdir]BAZ"
 ;;; Use #+:vaxlisp for VAXLisp 3.0, #+(and vms dec common vax) for v2.2
-
 #-scl
 (defun new-append-directories (absolute-dir relative-dir)
   ;; Version of append-directories for CLtL2-compliant lisps. In particular,
@@ -1873,7 +1872,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 
     (when (and abs-name (not (null-string abs-name))) ; was abs-name
       (cond ((and (null abs-directory) (null abs-keyword))
-	     #-(or :lucid TI) (setf abs-keyword :relative)
+	     #-(or :lucid TI) (setf abs-keyword (car (pathname-directory "./")))
 	     (setf abs-directory (list abs-name)))
 	    (t
 	     (setf abs-directory (append abs-directory (list abs-name))))))
@@ -1906,6 +1905,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 		    #+(or :gcl :sbcl :MCL :clisp :cmu) :type
 		    #+(or :gcl :sbcl :MCL :clisp :cmu) rel-type
 		    ))))
+;(trace new-append-directories)
 
 #-scl
 (defun directory-to-list (directory)
@@ -1928,6 +1928,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 		(split-string directory :item #\/))))
 	(t
 	 (coerce directory 'list))))
+;(trace directory-to-list)
 
 
 (defparameter *append-dirs-tests*
