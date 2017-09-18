@@ -1,0 +1,48 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ maxima (5.40.0-2) unstable; urgency=medium
+ .
+   * build-dep latest gcl
+Author: Camm Maguire <camm@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2017-09-18
+
+--- maxima-5.40.0.orig/src/init-cl.lisp
++++ maxima-5.40.0/src/init-cl.lisp
+@@ -361,12 +361,14 @@ When one changes, the other does too."
+ 	       (not (probe-file (combine-path *maxima-infodir* *maxima-lang-subdir* "maxima-index.lisp"))))
+        (setq *maxima-lang-subdir* nil))))
+ 
+-(defun get-dirs (path)
+-  #+(or :clisp :sbcl :ecl :openmcl)
+-  (directory (concatenate 'string (namestring path) "/*/")
+-	     #+openmcl :directories #+openmcl t)
+-  #-(or :clisp :sbcl :ecl :openmcl)
+-  (directory (concatenate 'string (namestring path) "/*")))
++
++(defun get-dirs (path &aux (ns (namestring path)))
++  (directory (concatenate 'string
++			  ns
++			  (if (eql #\/ (char ns (1- (length ns)))) "" "/")
++			  "*"
++			  #+(or :clisp :sbcl :ecl :openmcl :gcl) "/")
++	     #+openmcl :directories #+openmcl t))
+ 
+ (defun unix-like-basename (path)
+   (let* ((pathstring (namestring path))
