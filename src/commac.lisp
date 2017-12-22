@@ -125,13 +125,6 @@
 (defmacro maxima-error (datum &rest args)
   `(cerror "without any special action" ,datum ,@args))
 
-(defmacro safe-value (sym)
-  (cond ((symbolp sym)
-	 `(cond ((symbolp ',sym)
-		 (and (boundp ',sym) ,sym))
-	   (t ,sym)))
-	(t nil)))
-
 (defmacro show (&rest l)
   (loop for v in l
 	 collecting `(format t "~%The value of ~A is ~A" ',v ,v) into tem
@@ -413,9 +406,6 @@ values")
   (loop for v in (coerce (print-invert-case symb) 'list)
      collect (intern (string v))))
 
-(defvar *string-for-implode*
-  (make-array 20 :fill-pointer 0 :adjustable t :element-type '#.(array-element-type "a")))
-
 ;;; If the 'string is all the same case, invert the case.  Otherwise,
 ;;; do nothing.
 #-(or scl allegro)
@@ -510,30 +500,24 @@ values")
 	       converted-str)))
 	(t (princ-to-string sym))))
 
-(defun implode (lis)
-  (let ((ar *string-for-implode*)
-	(leng (length lis)))
-    (unless (> (array-total-size ar) leng)
-      (setq ar (adjust-array ar (+ leng 20))))
-    (setf (fill-pointer ar) leng)
-    (loop for v in lis
-       for i below leng
-       do
-	 (setf (aref ar i) (cond ((characterp v) v)
-				 ((symbolp v) (char (symbol-name v) 0))
-				 ((numberp v) (code-char v)))))
-    (intern-invert-case ar)))
+(defun implode (list)
+  (declare (optimize (speed 3)))
+  (intern-invert-case (map 'string #'(lambda (v)
+                                       (etypecase v
+                                         (character v)
+                                         (symbol (char (symbol-name v) 0))
+                                         (integer (code-char v))))
+                           list)))
 
 ;; Note:  symb can also be a number, not just a symbol.
 (defun explode (symb)
-  (loop for v in (coerce (format nil "~S" symb) 'list)
-     collect (intern (string v))))
+  (declare (optimize (speed 3)))
+  (map 'list #'(lambda (v) (intern (string v))) (format nil "~a" symb)))
 
-(defun getcharn (symb i)
-  (let ((strin (string symb)))
-    (if (<= 1 i (length strin))
-	(char strin (1- i))
-    nil)))
+;;; return the first character of the name of a symbol or a string or char
+(defun get-first-char (symb)
+  (declare (optimize (speed 3)))
+  (char (string symb) 0))
 
 (defun getchar (symb i)
   (let ((str (string symb)))
@@ -564,10 +548,10 @@ values")
   (length (exploden sym)))
 
 (defmacro safe-zerop (x)
-  (cond((symbolp x)
-	`(and (numberp ,x) (zerop ,x)))
-       (t `(let ((.x. ,x))
-	    (and (numberp .x.) (zerop .x.))))))
+  (if (symbolp x)
+      `(and (numberp ,x) (zerop ,x))
+      `(let ((.x. ,x))
+         (and (numberp .x.) (zerop .x.)))))
 
 (defmacro signp (sym x)
   (cond ((atom x)
@@ -663,7 +647,7 @@ values")
       ;; so work around null TZ here.
       (if tz (decode-universal-time time-integer (- tz))
         (decode-universal-time time-integer))
-      (declare (ignore day-of-week))
+      (declare (ignore day-of-week #+gcl dst-p))
       ;; DECODE-UNIVERSAL-TIME might return a timezone offset
       ;; which is a multiple of 1/3600 but not 1/60.
       ;; We need a multiple of 1/60 because our formatted
@@ -762,27 +746,36 @@ values")
 ; (= parse_timedate("2300-01-01Z") (Lisp starts with 1900-01-01) in timezone
 ; GMT) afterwards.
 ; see discussion on mailing list circa 2015-04-21: "parse_timedate error"
+;
+; Nota bene that this approach is correct only if the daylight saving time flag
+; is the same for the given date and date + 400 years. That is true for
+; dates before 1970-01-01 and after 2038-01-18, for Clisp at least,
+; which ignores daylight saving time for all dates in those ranges,
+; effectively making them all standard time.
 
-(if (and (string= (lisp-implementation-type) "CLISP") (string= *autoconf-windows* "true"))
-  ; Clisp/Windows case:
-  (defun encode-time-with-all-parts (year month day hours minutes seconds-integer seconds-fraction tz)
-    (add seconds-fraction
-         ;; Some Lisps allow TZ to be null but CLHS doesn't explicitly allow it,
-         ;; so work around null TZ here.
-         (let
-           ((foo
-              (if tz
-                (encode-universal-time seconds-integer minutes hours day month (add year 400) tz)
-                (encode-universal-time seconds-integer minutes hours day month (add year 400)))))
-           (sub foo 12622780800))))
-  ; other Lisp / OS versions:
-  (defun encode-time-with-all-parts (year month day hours minutes seconds-integer seconds-fraction tz)
+#+(and clisp win32)
+(defun encode-time-with-all-parts (year month day hours minutes seconds-integer seconds-fraction tz)
+  ;; Experimenting with Clisp 2.49 for Windows seems to show that the bug
+  ;; is triggered when local time zone is east of UTC, for times before
+  ;; 1970-01-01 00:00:00 UTC + the number of hours of the time zone.
+  ;; So apply the bug workaround to all times < 1970-01-02.
+  (if (or (< year 1970) (and (= year 1970) (= day 1)))
+    (sub (encode-time-with-all-parts (add year 400) month day hours minutes seconds-integer seconds-fraction tz) 12622780800)
     (add seconds-fraction
          ;; Some Lisps allow TZ to be null but CLHS doesn't explicitly allow it,
          ;; so work around null TZ here.
          (if tz
            (encode-universal-time seconds-integer minutes hours day month year tz)
            (encode-universal-time seconds-integer minutes hours day month year)))))
+
+#-(and clisp win32)
+(defun encode-time-with-all-parts (year month day hours minutes seconds-integer seconds-fraction tz)
+  (add seconds-fraction
+       ;; Some Lisps allow TZ to be null but CLHS doesn't explicitly allow it,
+       ;; so work around null TZ here.
+       (if tz
+         (encode-universal-time seconds-integer minutes hours day month year tz)
+         (encode-universal-time seconds-integer minutes hours day month year))))
 
 (defun $encode_time (year month day hours minutes seconds &optional tz-offset)
     (when tz-offset
@@ -813,12 +806,13 @@ values")
       ;; Some Lisps allow TZ to be null but CLHS doesn't explicitly allow it,
       ;; so work around null TZ here.
       (if tz (decode-universal-time seconds-integer (- tz))
-        (decode-universal-time seconds-integer))
+          (decode-universal-time seconds-integer))
+      (declare (ignore day-of-week #+gcl dst-p))
       ;; HMM, CAN DECODE-UNIVERSAL-TIME RETURN TZ = NIL ??
-      (let
-        ((tz-offset
+      (let ((tz-offset
            #-gcl (if dst-p (- 1 tz) (- tz))
-           #+gcl (- tz)))  ; bug in gcl https://savannah.gnu.org/bugs/?50570
+           #+gcl (- tz)  ; bug in gcl https://savannah.gnu.org/bugs/?50570
+           ))
         (list '(mlist) year month day hours minutes (add seconds seconds-fraction) ($ratsimp tz-offset))))))
 
 ;;Some systems make everything functionp including macros:

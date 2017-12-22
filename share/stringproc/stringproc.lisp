@@ -366,9 +366,10 @@ SBCL(terminal) reads UCS-2LE and the input is UCS-2LE. Do nothing.
 
 SBCL(wxMaxima) reads cp1252 but the input is UTF-8. Adjustment needed. 
   Switch to UTF-8 via Lisp command in init file.
+  Update (Maxima 5.40.0): SBCL(wxMaxima) reads UTF-8 and the input is UTF-8. Do nothing.
 
-Observations based on Maxima 5.36.1(ccl), 5.37.2(clisp), 5.37.3(gcl), 5.37.2(sbcl)
-in Windows 7.
+Observations based on Maxima 5.36.1(ccl), 5.37.2/5.40.0(clisp), 5.37.3(gcl), 
+5.37.2/5.40.0(sbcl) in Windows 7.
 
 TODO: Comments on Xmaxima in Windows.
 |#
@@ -898,7 +899,7 @@ constituent, alphanumericp, alphacharp, digitcharp, lowercasep, uppercasep, char
       (do (acc) (())
         (push ($sconcat (pop li)) acc)
         (when (null li)
-          (return (eval `(concatenate 'string ,@(nreverse acc)))) )
+          (return (reduce #'(lambda (s0 s1) (concatenate 'string s0 s1)) (nreverse acc) :initial-value "")))
         (push ds acc) ))))
 
 
@@ -938,7 +939,7 @@ constituent, alphanumericp, alphacharp, digitcharp, lowercasep, uppercasep, char
   (do ((ol (mapcar #'char-code (coerce str 'list)))
         ch m-chars )
       ((null ol) 
-        (eval `(concatenate 'string ,@m-chars)) )
+       (reduce #'(lambda (s0 s1) (concatenate 'string s0 s1)) m-chars :initial-value ""))
     (multiple-value-setq (ol ch) (rm-first-utf-8-char ol))
     (push (utf-8-m-char (length ch) ch) m-chars) ))
 
@@ -1153,7 +1154,7 @@ the optional second argument must be `clessp' or `cgreaterp'." ) alt )))
         "`ssort': optional second argument must be one of ~%clessp[ignore], cgreaterp[ignore]" ))))
   (setq test (stripdollar test))
   (let ((copy (copy-seq str)))
-    (if *parse-utf-8-input* (utf-8-ssort copy test) (sort copy test)) ))
+    (if *parse-utf-8-input* (utf-8-ssort copy test) (stable-sort copy test)) ))
 ;;
 (defun utf-8-ssort (str &optional (test 'clessp)) 
   (setq test 
@@ -1161,10 +1162,8 @@ the optional second argument must be `clessp' or `cgreaterp'." ) alt )))
   (do ((ol (coerce (string-to-raw-bytes str) 'list))
         utf8 code-pts ) 
       ((null ol) 
-        (eval 
-          `(concatenate 'string
-            ,@(mapcar #'(lambda (n) ($unicode n))
-                      (sort code-pts test) ))))
+       (let ((l (mapcar #'(lambda (n) ($unicode n)) (stable-sort code-pts test))))
+         (reduce #'(lambda (s0 s1) (concatenate 'string s0 s1)) l :initial-value "")))
     (multiple-value-setq (ol utf8) (rm-first-utf-8-char ol))
     (push (utf8-to-uc utf8) code-pts) ))
 

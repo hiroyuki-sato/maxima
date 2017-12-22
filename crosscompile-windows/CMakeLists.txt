@@ -26,6 +26,14 @@ cmake_minimum_required(VERSION 3.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/ ${CMAKE_BINARY_DIR}/)
 
 
+# What is the build system?
+execute_process(COMMAND gcc -dumpmachine OUTPUT_VARIABLE BUILDHOST OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Build system: ${BUILDHOST}")
+
+# Output the host system, for which we are compiling
+message(STATUS "Host system: ${HOST}")
+
+
 file(READ ${CMAKE_ROOT}/Modules/NSIS.template.in MYNSISTEMPLATE)
 string(REPLACE "RequestExecutionLevel admin" "RequestExecutionLevel user" 
         MYNSISTEMPLATE "${MYNSISTEMPLATE}")
@@ -38,8 +46,6 @@ option(USE_VTK "Use VTK." YES)
 # it builds the current Maxima/wxMaxima Git versions and also
 # sets the installation directory to C:\maxima-current
 option(BUILD_CURRENT "Build a installer for current Maxima/wxMaxima." NO)
-
-option(BUILD_64BIT "Build a 64 bit installer." NO)
 
 
 
@@ -123,8 +129,6 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/clisp-prefix/src/clisp/ DESTINATION clisp-
 add_subdirectory("sbcl/")
 
 add_subdirectory("gnuplot/")
-
-add_subdirectory("imagemagick/")
 
 add_subdirectory("tcltk/")
 

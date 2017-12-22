@@ -1,6 +1,6 @@
 ;;;                 COPYRIGHT NOTICE
 ;;;  
-;;;  Copyright (C) 2007-2016 Mario Rodriguez Riotorto
+;;;  Copyright (C) 2007-2017 Mario Rodriguez Riotorto
 ;;;  
 ;;;  This program is free software; you can redistribute
 ;;;  it and/or modify it under the terms of the
@@ -93,7 +93,6 @@
       (gethash '$fill_color *gr-options*)       "#ff0000" ; for filled regions
       (gethash '$fill_density *gr-options*)     0         ; in [0,1], only for object 'bars
 
-
       ; implicit plot options
       (gethash '$ip_grid *gr-options*)    '((mlist simp) 50 50)
       (gethash '$ip_grid_in *gr-options*) '((mlist simp) 5 5)
@@ -120,7 +119,7 @@
       (gethash '$ytics_secondary_axis *gr-options*)   nil
       (gethash '$ztics_axis *gr-options*)      nil
 
-      ; axis
+      ; axes
       (gethash '$axis_bottom *gr-options*) t
       (gethash '$axis_left *gr-options*)   t
       (gethash '$axis_top *gr-options*)    t
@@ -186,20 +185,22 @@
       (gethash '$transform *gr-options*) '$none
 
       ; 3d options
-      (gethash '$xu_grid *gr-options*)        30
-      (gethash '$yv_grid *gr-options*)        30
-      (gethash '$surface_hide *gr-options*)   nil
-      (gethash '$interpolate_color *gr-options*)   "depthorder"
-      (gethash '$enhanced3d *gr-options*)     '$none
-      (gethash '$isolines *gr-options*)       '$none
-      (gethash '$wired_surface *gr-options*)  nil
-      (gethash '$contour *gr-options*)        '$none  ; other options are: $base, $surface, $both and $map
-      (gethash '$contour_levels *gr-options*) 5       ; 1-50, [lowest_level,step,highest_level] or {z1,z2,...}
-      (gethash '$colorbox *gr-options*)       t       ; in pm3d mode, always show colorbox
-      (gethash '$palette  *gr-options*)       '$color ; '$color is a short cut for [7,5,15]
-                                                      ; and '$gray is a short cut for [3,3,3].
-                                                      ; See command 'show palette rgbformulae' in gnuplot.
-      (gethash '$capping *gr-options*)        '((mlist simp) nil nil)
+      (gethash '$xu_grid *gr-options*)           30
+      (gethash '$yv_grid *gr-options*)           30
+      (gethash '$surface_hide *gr-options*)      nil
+      (gethash '$interpolate_color *gr-options*) "depthorder"
+      (gethash '$enhanced3d *gr-options*)        '$none
+      (gethash '$isolines *gr-options*)          '$none
+      (gethash '$wired_surface *gr-options*)     nil
+      (gethash '$contour *gr-options*)           '$none ; other options are: $base, $surface, $both and $map
+      (gethash '$contour_levels *gr-options*)     5     ; 1-50, [lowest_level,step,highest_level] or {e1,e2,...}
+      (gethash '$isolines_levels *gr-options*)    5     ; 1-50, [lowest_level_fraction,step,highest_level_fraction],
+                                                        ; or {e1_fraction,e2_fraction,...}. Only for VTK.
+      (gethash '$colorbox *gr-options*)           t       ; in pm3d mode, always show colorbox
+      (gethash '$palette  *gr-options*)           '$color ; '$color is a short cut for [7,5,15]
+                                                          ; and '$gray is a short cut for [3,3,3].
+                                                          ; See command 'show palette rgbformulae' in gnuplot.
+      (gethash '$capping *gr-options*)            '((mlist simp) nil nil)
   ) )
 
 ;; Returns option value
@@ -1183,6 +1184,31 @@
 
 
 
+;; update contour (Gnuplot) and isolines (VTK) levels
+;; ---------------------------------------------------
+(defun update-contour-isolines (opt val)
+  (cond ((and (integerp val) (> val 0 ))
+          (setf (gethash opt *gr-options*) val))
+        ((and ($listp val) (= ($length val) 3) )
+           (let ((ini  ($float (nth 1 val)))
+                 (step ($float (nth 2 val)))
+                 (end  ($float (nth 3 val))))
+              (cond ((and (< ini end)
+                          (< step (- end ini)))
+                      (setf (gethash opt *gr-options*) (format nil "incremental ~a,~a,~a" ini step end)))
+                    (t
+                      (merror "draw: illegal contour level incremental description: ~M " val))) ))
+        ((and ($setp val) (not ($emptyp val)))
+           (let ((pts (map 'list #'$float (rest val)))
+                 (str "discrete ") )
+             (dolist (num pts 'done)
+               (setf str (concatenate 'string str " " (format nil "~a," num))))
+             (setf (gethash opt *gr-options*) (string-trim '(#\,) str) ) ))
+        (t
+          (merror "draw: unknown contour level description: ~M " val))))
+
+
+
 ;; update boolean type options
 ;; ---------------------------
 (defun update-boolean-option (opt val)
@@ -1524,26 +1550,8 @@
          (update-pointtype val))
       (($columns $nticks $adapt_depth $xu_grid $yv_grid $delay $x_voxel $y_voxel $z_voxel)
             (update-positive-integer opt val))
-      ($contour_levels    ; positive integer, increment or set of points
-            (cond ((and (integerp val) (> val 0 ))
-                    (setf (gethash opt *gr-options*) val))
-                  ((and ($listp val) (= ($length val) 3) )
-                     (let ((ini  ($float (nth 1 val)))
-                           (step ($float (nth 2 val)))
-                           (end  ($float (nth 3 val))))
-                        (cond ((and (< ini end)
-                                    (< step (- end ini)))
-                                (setf (gethash opt *gr-options*) (format nil "incremental ~a,~a,~a" ini step end)))
-                              (t
-                                (merror "draw: illegal contour level incremental description: ~M " val))) ))
-                  ((and ($setp val) (not ($emptyp val)))
-                     (let ((pts (map 'list #'$float (rest val)))
-                           (str "discrete ") )
-                       (dolist (num pts 'done)
-                         (setf str (concatenate 'string str " " (format nil "~a," num))))
-                       (setf (gethash opt *gr-options*) (string-trim '(#\,) str) ) ))
-                  (t
-                    (merror "draw: unknown contour level description: ~M " val))))
+      (($contour_levels $isolines_levels)   ; positive integer, increment or set
+         (update-contour-isolines opt val))
       ($opacity
          (update-opacity val))
       (($transparent $border $logx $logx_secondary $logy $logy_secondary
@@ -1719,28 +1727,28 @@
 
       ; DEPRECATED OPTIONS
       ($tube_extremes
-        ($print "WARNING: 'tube_extremes' is deprecated, using 'capping' instead...")
+        ($print "Warning: 'tube_extremes' is deprecated, using 'capping' instead...")
         (update-capping (substitute nil '$open (substitute t '$closed val))))
       ($file_bgcolor
-        ($print "WARNING: 'file_bgcolor' is deprecated, using 'background_color' instead...")
+        ($print "Warning: 'file_bgcolor' is deprecated, using 'background_color' instead...")
         (update-color '$background_color val))
       ($rot_vertical
-        ($print "WARNING: 'rot_vertical' is deprecated, using 'view' instead...")
+        ($print "Warning: 'rot_vertical' is deprecated, using 'view' instead...")
         (update-view (list '(mlist) val (second (gethash '$view *gr-options*)))))
       ($rot_horizontal
-        ($print "WARNING: 'rot_horizontal' is deprecated, using 'view' instead...")
+        ($print "Warning: 'rot_horizontal' is deprecated, using 'view' instead...")
         (update-view (list '(mlist) (first (gethash '$view *gr-options*)) val)))
       ($pic_width
-        ($print "WARNING: 'pic_width' is deprecated, using 'dimensions' instead...")
+        ($print "Warning: 'pic_width' is deprecated, using 'dimensions' instead...")
         (update-dimensions (list '(mlist) val (second (gethash '$dimensions *gr-options*)))))
       ($pic_height
-        ($print "WARNING: 'pic_height' is deprecated, using 'dimensions' instead...")
+        ($print "Warning: 'pic_height' is deprecated, using 'dimensions' instead...")
         (update-dimensions (list '(mlist) (first (gethash '$dimensions *gr-options*)) val)))
       (($eps_width $pdf_width)
-        ($print "WARNING: 'eps_width' is deprecated, using 'dimensions' instead...")
+        ($print "Warning: 'eps_width' is deprecated, using 'dimensions' instead...")
         (update-dimensions (list '(mlist) (* 100 val) (second (gethash '$dimensions *gr-options*)))))
       (($eps_height $pdf_height)
-        ($print "WARNING: 'eps_height' is deprecated, using 'dimensions' instead...")
+        ($print "Warning: 'eps_height' is deprecated, using 'dimensions' instead...")
         (update-dimensions (list '(mlist) (first (gethash '$dimensions *gr-options*)) (* 100 val))))
 
       (otherwise (merror "draw: unknown option ~M " opt))  ) )

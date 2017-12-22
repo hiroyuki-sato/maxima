@@ -1452,7 +1452,7 @@
         ((and (member $logexpand '($all $super))
               (consp y)
               (member (caar y) '(%product $product)))
-         (let ((new-op (if (eql (getcharn (caar y) 1) #\%) '%sum '$sum)))
+         (let ((new-op (if (char= (get-first-char (caar y)) #\%) '%sum '$sum)))
            (simplifya `((,new-op) ((%log) ,(cadr y)) ,@(cddr y)) t)))
         ((and $lognegint
               (maxima-integerp y)
@@ -1909,6 +1909,27 @@
 
 (defmfun simplambda (x vestigial simp-flag)
   (declare (ignore vestigial simp-flag))
+  ; Check for malformed lambda expressions.
+  ; We verify that we have a valid list of parameters and a non-empty body.
+  (let ((params (cadr x)))
+    (unless ($listp params)
+      (merror (intl:gettext "lambda: first argument must be a list; found: ~M") params))
+    (do ((params (cdr params) (cdr params))
+         (seen-params nil))
+        ((null params))
+      (when (mdeflistp params)
+        (setq params (cdar params)))
+      (let ((p (car params)))
+        (unless (or (mdefparam p)
+                    (and (op-equalp p 'mquote)
+                         (mdefparam (cadr p))))
+          (merror (intl:gettext "lambda: parameter must be a non-constant symbol; found: ~M") p))
+        (setq p (mparam p))
+        (when (member p seen-params :test #'eq)
+          (merror (intl:gettext "lambda: ~M occurs more than once in the parameter list") p))
+        (push p seen-params))))
+  (when (null (cddr x))
+    (merror (intl:gettext "lambda: no body present")))
   (cons '(lambda simp) (cdr x)))
 
 (defmfun simpmdef (x vestigial simp-flag)
@@ -2245,15 +2266,15 @@
            ((and (eq (caar gr) 'mabs)
                  (or (evnump pot)
                      (mevenp pot))
-                 (or (and (eq $domain '$real) (not (decl-complexp (cadr gr))))
-                     (and (eq $domain '$complex) (decl-realp (cadr gr)))))
+                 (or (and (eq $domain '$real) (not (apparently-complex-to-judge-by-$csign-p (cadr gr))))
+                     (and (eq $domain '$complex) (apparently-real-to-judge-by-$csign-p (cadr gr)))))
             (return (power (cadr gr) pot)))
            ((and (eq (caar gr) 'mabs)
                  (integerp pot)
                  (oddp pot)
                  (not (equal pot -1))
-                 (or (and (eq $domain '$real) (not (decl-complexp (cadr gr))))
-                     (and (eq $domain '$complex) (decl-realp (cadr gr)))))
+                 (or (and (eq $domain '$real) (not (apparently-complex-to-judge-by-$csign-p (cadr gr))))
+                     (and (eq $domain '$complex) (apparently-real-to-judge-by-$csign-p (cadr gr)))))
             ;; abs(x)^(2*n+1) -> abs(x)*x^(2*n), n an integer number
             (if (plusp pot)
                 (return (mul (power (cadr gr) (add pot -1))
@@ -2479,7 +2500,7 @@
            ((and (eq $domain '$real)
                  (free gr '$%i)
                  $radexpand
-                 (not (decl-complexp (cadr gr)))
+                 (not (apparently-complex-to-judge-by-$csign-p (cadr gr)))
                  (evnump (caddr gr)))
             ;; Simplify (x^a)^b -> abs(x)^(a*b)
             (setq pot (mul pot (caddr gr))
@@ -2492,6 +2513,14 @@
                   gr (power (cadr gr) (neg (caddr gr)))))
            (t (go up)))
      (go cont)))
+
+(defun apparently-complex-to-judge-by-$csign-p (e)
+  (let ((s ($csign e)))
+    (member s '($complex $imaginary))))
+
+(defun apparently-real-to-judge-by-$csign-p (e)
+  (let ((s ($csign e)))
+    (member s '($pos $neg $zero $pn $pnz $pz $nz))))
 
 ;; Basically computes log of m base b.  Except if m is not a power
 ;; of b, we return nil.  m is a positive integer and base an integer
@@ -3000,7 +3029,7 @@
 		      ((mget x '$mainvar)
 		       (cond ((mget y '$mainvar) (alphalessp y x)) (t t)))
 		      (t (or (maxima-constantp y) (mget y '$scalar)
-			     (and (not (mget y '$mainvar)) (alphalessp y x))))))
+			     (and (not (mget y '$mainvar)) (not (null (alphalessp y x))))))))
 	       (t (not (ordfna y x)))))
 	((atom y) (ordfna x y))
 	((eq (caar x) 'rat)
