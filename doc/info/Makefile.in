@@ -1353,7 +1353,8 @@ clean-am: clean-aminfo clean-generic clean-local mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-generic distclean-local \
+	distclean-tags
 
 dvi: dvi-recursive
 
@@ -1509,14 +1510,14 @@ uninstall-am: uninstall-dvi-am uninstall-html-am uninstall-info-am \
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am all-local \
 	check check-am clean clean-aminfo clean-generic clean-local \
 	cscopelist-am ctags ctags-am dist-hook dist-info distclean \
-	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-local install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-aminfo \
+	distclean-generic distclean-local distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-data-local install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-aminfo \
 	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
 	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
 	uninstall-am uninstall-dvi-am uninstall-html-am \
@@ -1674,6 +1675,9 @@ warn_texinfo:
 	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run /doc/info/fix_tab to fix the problem." )
+
+distclean-local:
+	rm -f figures/Makefile
 
 .PHONY: check_texinfo warn_texinfo
 

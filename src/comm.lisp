@@ -45,7 +45,7 @@
     (and (symbolp x) (remprop x 'opr))
     (and (stringp x) (remhash x *opr-table*))))
 
-;; Store build-in operators, which get additional properties.
+;; Store built-in operators, which get additional properties.
 ;; These operators aren't killed by the function kill-operator.
 (defvar *mopl* nil)
 
@@ -416,7 +416,7 @@
 		(t (go noun)))
      doit (cond ((nonvarcheck (cadr z) '$diff))
 		((null (cddr z)) (wna-err '$diff))
-		((not (eq (ml-typep (caddr z)) 'fixnum)) (go noun))
+		((not (fixnump (caddr z))) (go noun))
 		((minusp (setq count (caddr z)))
 		 (merror (intl:gettext "diff: order of derivative must be a nonnegative integer; found ~M") count)))
      loop1(cond ((zerop count) (rplacd z (cdddr z)) (go loop2))
@@ -536,7 +536,7 @@
 
 (defun sdiffgrad (e x)
   (let ((fun (caar e)) grad args result)
-    (cond ((and (eq fun 'mqapply) (oldget (caaadr e) 'grad))
+    (cond ((and (eq fun 'mqapply) (zl-get (caaadr e) 'grad))
            ;; Change the array function f[n](x) to f(n,x), call sdiffgrad again.
            (setq result
 	         (sdiffgrad (cons (cons (caaadr e) nil) 
@@ -556,7 +556,7 @@
 	  ((and (equal fun '$hypergeometric) (get '$hypergeometric 'operators))
 	   (funcall 'diff-hypergeometric (second e) (third e) (fourth e) x))
 
-	  ((or (eq fun 'mqapply) (null (setq grad (oldget fun 'grad))))
+	  ((or (eq fun 'mqapply) (null (setq grad (zl-get fun 'grad))))
 	   (if (not (depends e x)) 0 (diff%deriv (list e x 1))))
 	  ((not (= (length (cdr e)) (length (car grad))))
 	   (merror (intl:gettext "~:M: expected exactly ~M arguments.") 
@@ -739,6 +739,7 @@
 (defmfun nonvarcheck (e fn)
   (if (or (mnump e)
 	  (maxima-integerp e)
+	  ($constantp e)
 	  (and (not (atom e)) (not (eq (caar e) 'mqapply)) (mopp1 (caar e))))
       (merror (intl:gettext "~:M: second argument must be a variable; found ~M") fn e)))
 

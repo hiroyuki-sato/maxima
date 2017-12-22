@@ -13,7 +13,7 @@
 (macsyma-module combin)
 
 (declare-top (special *mfactl *factlist donel nn* dn* *ans* *var*
-		      $zerobern *n $cflength *a* $prevfib $next_lucas
+		      $zerobern *n $cflength *a* *a $prevfib $next_lucas
 		      *infsumsimp *times *plus sum usum makef
 		      varlist genvar $sumsplitfact $ratfac $simpsum
 		      $prederror $listarith
@@ -1198,11 +1198,11 @@
 (defun ipoly2 (a n lo sign)
   (cond ((member (asksign lo) '($zero $negative) :test #'eq)
 	 (throw 'isumout 'divergent)))
-  (and (null (equal lo 1))
-       (let ((sign sign) ($simpsum t))
-	 (adsum `((%sum)
-		  ((mtimes) ,a -1 ((mexpt) ,*var* ,n))
-		  ,*var* 1 ((mplus) -1 ,lo)))))
+  (unless (equal lo 1)
+    (let (($simpsum t))
+      (adsum `((%sum)
+               ((mtimes) ,a -1 ((mexpt) ,*var* ,n))
+               ,*var* 1 ((mplus) -1 ,lo)))))
   (cond ((eq sign '$negative)
 	 (list '(mtimes) a ($zeta (meval (list '(mtimes) -1 n)))))
 	((throw 'isumout 'divergent))))
@@ -1440,11 +1440,11 @@
 		 (progn
 		   (setq op (caar fun))
 		   (when (cdr fun) (setq param (cadr fun)))
-		   (or (and (oldget op 'op) (not (eq op 'mfactorial)))
+		   (or (and (zl-get op 'op) (not (eq op 'mfactorial)))
 		       (not (atom (cadr fun)))
 		       (not (= (length fun) 2))))))
      (merror (intl:gettext "deftaylor: don't know how to handle this function: ~M") fun))
-   (when (oldget op 'sp2)
+   (when (zl-get op 'sp2)
      (mtell (intl:gettext "deftaylor: redefining ~:M.~%") op))
    (when param (setq series (subst 'sp2var param series)))
    (setq series (subsum '*index series))
