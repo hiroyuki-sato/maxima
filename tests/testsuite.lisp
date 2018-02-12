@@ -31,7 +31,8 @@
 	;; known failure.  Presumably 1.12 will have this fixed.
         ((mlist simp) "rtest16" #+ccl 50)
         "rtestode" "rtestode_zp"
-        "rtest3" "rtest8"
+        "rtest3"
+	((mlist simp) "rtest8" #+(and m68k linux gnu) 101 #+(and m68k linux gnu) 104)
         ((mlist simp) "rtest12" 76 78)
         "rexamples"
         ((mlist simp) "rtesthyp" 105 112 113 123 124 128)

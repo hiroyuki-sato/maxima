@@ -94,7 +94,7 @@ clean: #restore
 	dh_testdir
 	dh_testroot
 
-	-$(MAKE) clean
+	! [ -e Makefile ] || $(MAKE) clean
 	debian/rules restore
 	rm -rf $(BOOK) src/binary-gcl binary gcl src/sys-proclaim.lisp tests/tests-gcl.log
 	rm -rf admin/Makefile config.log config.status crosscompile-windows/Makefile\
@@ -224,6 +224,7 @@ binary-indep: build install
 	dh_installtex -i -p maxima-emacs
 	dh_installcron -i
 	dh_installman -i
+	dh_lintian -i
 #	dh_desktop -i
 	dh_installinfo -p maxima-doc debian/tmp/usr/share/info/*info*
 	dh_installchangelogs  -i debian/ChangeLog
@@ -247,6 +248,7 @@ binary-arch: build install
 	dh_installemacsen -a
 	dh_installcron -a
 	dh_installman -a
+	dh_lintian -a
 #	dh_desktop -a
 	dh_installinfo -a
 	dh_installchangelogs  -a debian/ChangeLog
