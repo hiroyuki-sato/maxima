@@ -340,7 +340,7 @@ is EQ to FNNAME if the latter is non-NIL."
                                        (not (safe-mget (caar form) 'local-fun))
                                        (setq transp t)
                                        (caar form))))
-                        (getl-lm-fcn-prop u '(subr)))
+                        (getl-lm-fcn-prop u '(subr mfexpr)))
                    (cond (aryp (safe-mgetl (caar form) '(hashar array)))
                          ((safe-mgetl (caar form) '(mexpr mmacro)))
                          (t
@@ -373,6 +373,8 @@ is EQ to FNNAME if the latter is non-NIL."
                  ((eq (car u) 'mfexpr*)
                   (setq noevalargs nil)
                   (apply (cadr u) (ncons form)))
+                 ((eq (car u) 'mfexpr)
+                  (mlambda (cadr u) (cdr form) (caar form) noevalargs form))
                  ((eq (car u) 'macro)
                   (setq noevalargs nil)
                   (setq form (cons(caar form) (cdr form)))
@@ -422,7 +424,9 @@ is EQ to FNNAME if the latter is non-NIL."
 	((setq fn (symbol-array sym))
 	 (setq typ 'array))
 	((setq fn (get sym 'mfexpr*))
-	 (setq typ 'mfexpr*)))
+	 (setq typ 'mfexpr*))
+	((setq fn (get sym 'mfexpr))
+	 (setq typ 'mfexpr)))
   (and typ (member typ props :test #'eq) (list typ fn)))
 
 
@@ -458,10 +462,12 @@ is EQ to FNNAME if the latter is non-NIL."
       (cdr form)))
 
 (defun badfunchk (name val flag)
+  (declare (special aryp))
   (if (or flag (numberp val) (member val '(t nil $%e $%pi $%i) :test #'eq))
-      (if (and (atom name) (not (equal val name)))
-        (merror (intl:gettext "apply: found ~M evaluates to ~M where a function was expected.") name val)
-        (merror (intl:gettext "apply: found ~M where a function was expected.") val))))
+      (let ((type (if aryp (intl:gettext "an array") (intl:gettext "a function"))))
+        (if (and (atom name) (not (equal val name)))
+            (merror (intl:gettext "apply: found ~M evaluates to ~M where ~M was expected.") name val type)
+            (merror (intl:gettext "apply: found ~M where ~M was expected.") val type)))))
 
 ;; To store the value of $errormsg in mbind. This value is looked up in the
 ;; routine mbind-doit. This is a hack to get the expected behavior, when the
@@ -1262,7 +1268,8 @@ wrapper for this."
        (nreverse ans))))
 
 (defun mapatom (x)
-  (or (symbolp x) (mnump x) ($subvarp x) (stringp x)))
+  (or (symbolp x) (mnump x) ($subvarp x) (stringp x)
+      (and (consp x) (eq (caar x) 'mminus) (mnump (cadr x)))))
 
 (defmfun $mapatom (x)
   (if (mapatom (specrepcheck x)) t))
@@ -1448,9 +1455,7 @@ wrapper for this."
           (cond
             ((eq mpropp 'kind) (declarekind var prop))
             ((eq mpropp 'opers)
-             (putprop (setq var (linchk var)) t prop) (putprop var t 'opers)
-             (if (and (symbolp var) (not (get var 'operators)))
-               (putprop var 'simpargs1 'operators)))
+             (putprop (setq var (linchk var)) t prop) (putprop var t 'opers))
             (mpropp
               (if (and (member prop '($scalar $nonscalar) :test #'eq)
                        (mget var (if (eq prop '$scalar) '$nonscalar '$scalar)))
@@ -1489,7 +1494,7 @@ wrapper for this."
 	  ((eq (cadr l) '$array) (meval `(($remarray) ,@vars)))
 	  ((member (cadr l) '($alias $noun) :test #'eq) (remalias1 vars (eq (cadr l) '$alias)))
 	  ((eq (cadr l) '$matchdeclare) (remove1 vars 'matchdeclare t t nil))
-	  ((eq (cadr l) '$rule) (remrule vars))
+	  ((eq (cadr l) '$rule) (remrule (mapcar #'(lambda (v) (if (stringp v) ($verbify v) v)) vars)))
 	  ((member (cadr l) '($evfun $evflag $nonarray $bindtest
 			    $autoload $assign) :test #'eq)
 	   (remove1 vars (stripdollar (cadr l)) nil t nil))
@@ -1558,7 +1563,7 @@ wrapper for this."
                (if (not (getl var (delete prop (copy-list opers) :count 1 :test #'eq)))
                  (zl-remprop var 'opers)))
               (t (zl-remprop var prop)))
-            (cond ((eq info t) (rempropchk var))
+            (cond ((eq info t) (rempropchk (car vars)))
                   ((eq info 'foo))
                   (funp
                     (mfunction-delete var info))
@@ -1740,7 +1745,9 @@ wrapper for this."
 
 (defmspec $array (x)
   (setq x (cdr x))
-  (cond ($use_fast_arrays
+  (cond
+	((symbolp (car x))
+     (if $use_fast_arrays
          (let ((type (if (symbolp (cadr x)) (cadr x) '$any))
                (name (car x))
                (diml (if (symbolp (cadr x)) (cddr x) (cdr x))))
@@ -1750,8 +1757,7 @@ wrapper for this."
                         (mapcar #'(lambda (dim)
                                   ;; let make_array catch bad vals
                                     (add 1 (meval dim)))
-                                diml)))))
-	((symbolp (car x))
+                                diml))))
 	 (let ((compp (assoc (cadr x) '(($complete . t) ($integer . fixnum) ($fixnum . fixnum)
 					($float . flonum) ($flonum . flonum)))))
 	   (let ((fun (car x))
@@ -1808,11 +1814,9 @@ wrapper for this."
 	       (putprop fun '$fixnum 'array-mode))
 	     (when (eq compp 'flonum)
 	       (putprop fun '$float 'array-mode))
-	     fun)))
+	     fun))))
 	(($listp (car x))
-	 (dolist (u (cdar x))
-	   (meval `(($array) ,u ,@(cdr x))))
-	 (car x))
+	 (cons '(mlist) (mapcar #'(lambda (u) (meval `(($array) ,u ,@(cdr x)))) (cdar x))))
 	(t
 	 (merror (intl:gettext "array: first argument must be a symbol or a list; found: ~M") (car x)))))
 
@@ -1870,10 +1874,10 @@ wrapper for this."
 		  (if (member fun '(mqapply $%) :test #'eq) (merror (intl:gettext "assignment: cannot assign to ~M") l))
 		  (if $use_fast_arrays
 		    (progn
-		      (format t "ARRSTORE: use_fast_arrays=true; allocate a new value hash table for ~S~%" fun)
+		      ;; (format t "ARRSTORE: use_fast_arrays=true; allocate a new value hash table for ~S~%" fun)
 		      (meval* `((mset) ,fun ,(make-equal-hash-table (cdr (mevalargs (cdr l)))))))
 		    (progn
-		      (format t "ARRSTORE: use_fast_arrays=false; allocate a new property hash table for ~S~%" fun)
+		      ;; (format t "ARRSTORE: use_fast_arrays=false; allocate a new property hash table for ~S~%" fun)
 		  (add2lnc fun $arrays)
 		  (setq ary (gensym))
 		  (mputprop fun ary 'hashar)
@@ -2094,10 +2098,10 @@ wrapper for this."
 					(mdefparam (cadr (cadar l)))
 					(setq mfex t)))
 			       (setq mlex t))))))
-	(merror (intl:gettext "define: in definition of ~:M, found bad argument ~M") fun (car l)))))
+	(merror (intl:gettext "define: in definition of ~:M, parameter must be a symbol and must not be a system constant; found: ~M") fun (car l)))))
 
 (defun mdefparam (x)
-  (and (symbolp x) (not (kindp x '$constant))))
+  (and (symbolp x) (not (get x 'sysconst))))
 
 (defun mdeflistp (l)
   (and (null (cdr l)) ($listp (car l)) (cdar l) (null (cddar l))))

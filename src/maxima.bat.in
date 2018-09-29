@@ -17,13 +17,22 @@ set LANGUAGE=
 set "lisp=@DEFAULTLISP@"
 set lisp_options=
 set "version=@VERSION@"
+
+rem For what directory was Maxima configured? Set %prefix% to exactly that directory, if
+rem Maxima was installed in the default path (= %configureprefix%/bin/maxima.bat exists).
+rem %~dp0/.. should be the same, but is something like the 8.3 short path - and that
+rem causes problems with Xmaxima and Clisp.
+rem (the combination will not work if Maxima is installed somewhere else, but that is not recommended)
 set "prefix=%~dp0/.."
+set "configureprefix=@prefix@"
+if exist "%configureprefix%/bin/maxima.bat" set "prefix=%configureprefix%"
+
 rem change "\" to "/" in that path. Works too and causes less troubles (e.g. with xmaxima).
 set "prefix=%prefix:\=/%"
 set "maxima_prefix=%prefix%"
 set "package=@PACKAGE@"
 set verbose=false
-set "path=%maxima_prefix%/gnuplot;%maxima_prefix%/gnuplot/bin;%maxima_prefix%/bin;%path%"
+set "path=%maxima_prefix%/gnuplot;%maxima_prefix%/gnuplot/bin;%maxima_prefix%/bin;%maxima_prefix%/vtk;%path%"
 
 rem set userdir and tempdir - replace "\" with "/"
 if not defined MAXIMA_USERDIR set "MAXIMA_USERDIR=%USERPROFILE:\=/%/maxima"
@@ -32,16 +41,33 @@ rem there were reports, that the tempdir could not be found (maybe because of sp
 rem so set a fallback (as it was before)
 if not exist "%MAXIMA_TEMPDIR%"/ set "MAXIMA_TEMPDIR=%USERPROFILE:\=/%"
 
+rem change 'short names' (e.g. "C:/Users/TESTTE~1/AppData/Local/Temp" to
+rem long names (e.g. "C:/Users/test test/AppData/Local/Temp" - 
+rem CLISP has a problem with these short names.
+for /F "tokens=* USEBACKQ" %%F in (`maxima_longnames.exe "%MAXIMA_TEMPDIR%"`) do set "MAXIMA_TEMPDIR=%%F"
+
+
 rem read maximarc and set the Lisp type, if the user did specify MAXIMA_LISP
 rem currently no comments or other (Unix shell) commands are understood, only (e.g):
 rem LISP=sbcl
-if EXIST %MAXIMA_USERDIR%/maximarc (
+if EXIST "%MAXIMA_USERDIR%/maximarc" (
     setlocal enabledelayedexpansion
     for /F usebackq %%L in ("%MAXIMA_USERDIR%/maximarc") do (
         set %%L
         set lisp=!MAXIMA_LISP!
     )
 )
+
+rem In order to allow maxima to find out where its files are on MS Windows maxima needs
+rem to be started in the directory it can be found in. Which in the case of
+rem maxima-portable might be a different folder every time.
+rem The user, though, might want it to start in the folder the worksheet lies in, as
+rem read_matrix, write_data etc. should be relative to that folder.
+rem common lisp doesn't provide such a function and clisp has problems with shortnames
+rem while sbcl has problems with non-ascii-non-unicode folder names.
+rem The variable MAXIMA_INITIAL_FOLDER tells which folder to start maxima in
+rem after searching for the files it is composed of.
+if defined MAXIMA_INITIAL_FOLDER cd "%MAXIMA_INITIAL_FOLDER%"
 
 :startparseargs
 if x%1 == x-l goto foundlisp

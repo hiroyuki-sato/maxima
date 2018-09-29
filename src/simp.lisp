@@ -1923,7 +1923,7 @@
         (unless (or (mdefparam p)
                     (and (op-equalp p 'mquote)
                          (mdefparam (cadr p))))
-          (merror (intl:gettext "lambda: parameter must be a non-constant symbol; found: ~M") p))
+          (merror (intl:gettext "lambda: parameter must be a symbol and must not be a system constant; found: ~M") p))
         (setq p (mparam p))
         (when (member p seen-params :test #'eq)
           (merror (intl:gettext "lambda: ~M occurs more than once in the parameter list") p))
@@ -2984,7 +2984,7 @@
   (simplifya (list '(mabs) e) t))
 
 (defmfun simpmqapply (exp y z)
-  (let ((simpfun (and (not (atom (cadr exp))) (get (caaadr exp) 'specsimp))) u)
+  (let ((simpfun (and (not (atom (cadr exp))) (safe-get (caaadr exp) 'specsimp))) u)
     (if simpfun
 	(funcall simpfun exp y z)
 	(progn (setq u (simpargs exp z))
@@ -3036,8 +3036,6 @@
 	 (cond ((eq (caar y) 'rat)
 		(> (* (caddr y) (cadr x)) (* (caddr x) (cadr y))))))
 	((eq (caar y) 'rat))
-	((member (caar x) '(mbox mlabox) :test #'eq) (great (cadr x) y))
-	((member (caar y) '(mbox mlabox) :test #'eq) (great x (cadr y)))
 	((or (member (caar x) '(mtimes mplus mexpt %del) :test #'eq)
 	     (member (caar y) '(mtimes mplus mexpt %del) :test #'eq))
 	 (ordfn x y))
@@ -3506,8 +3504,23 @@
 
 (declare-top (special var))
 
+;; (BPROG U V) appears to return A and B (as ((A1 . A2) B1 . B2) with A = A1/A2, B = B1/B2)
+;; such that B/U + A/V = 1/(U*V), where U, V are polynomials represented as a list of
+;; exponents and coefficients, (<gensym> E1 C1 E2 C2 ...) = C1*<gensym>^E1 + C2*<gensym>^E2 + ....
+;; Example:
+;; (%i73) partfrac ((2*x^2-3)/(x^4-3*x^2+2), x);
+;; 1. Trace: (PARTFRAC '((#:X16910 2 2 0 -3) #:X16910 4 1 2 -3 0 2) '#:X16910)
+;; 2. Trace: (BPROG '(#:X16910 2 1 0 -2) '(#:X16910 2 1 0 -1))
+;; 2. Trace: BPROG ==> ((-1 . 1) 1 . 1)
+;; 2. Trace: (BPROG '(#:X16910 1 1 0 1) '(#:X16910 1 1 0 -1))
+;; 2. Trace: BPROG ==> ((1 . 2) -1 . 2)
+;; 2. Trace: (BPROG '(#:X16910 1 1 0 -1) '1)
+;; 2. Trace: BPROG ==> ((0 . 1) 1 . 1)
+;; 1. Trace: PARTFRAC ==> ((0 . 1) ((1 . 2) (#:X16910 1 1 0 -1) 1) ((-1 . 2) (#:X16910 1 1 0 1) 1) ((1 . 1) (#:X16910 2 1 0 -2) 1))
+;; (%o73) 1/(x^2-2)-1/(2*(x+1))+1/(2*(x-1))
+
 (defun bprog (r s)
-  (prog (p1b p2b coef1r coef2r coef1s coef2s f1 f2 a egcd)
+  (prog (p1b p2b coef1r coef2r coef1s coef2s f1 f2 a egcd state seen-state)
      (setq r (ratfix r))
      (setq s (ratfix s))
      (setq coef2r (setq coef1s 0))
@@ -3516,6 +3529,7 @@
      (setq p1b (car r))
      (unless (zerop (pdegree p1b var)) (setq egcd (pgcdexpon p1b)))
      (setq p2b (car s))
+	 (setq seen-state nil)
      (unless (or (zerop (pdegree p2b var)) (= egcd 1))
        (setq egcd (gcd egcd (pgcdexpon p2b)))
        (setq p1b (pexpon*// p1b egcd nil)
@@ -3542,6 +3556,11 @@
 					     (ptimes f2 coef2s))
 				a))
      (setq a f1)
+	 ;; Catch an endless loop by keeping track of (p1b, p2b) combinations seen.
+	 ;; Without this, rat(1/(x^(2/3)+1)) with algebraic = true loops forever.
+	 (when (member (setq state (cons p1b p2b)) seen-state :test #'equal)
+	   (rat-error (intl:gettext "BPROG: Failed to apply Bezout's identity")))
+	 (push state seen-state)
      (go b1)))
 
 (defmfun ratdifference (a b) (ratplus a (ratminus b)))

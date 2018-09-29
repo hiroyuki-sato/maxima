@@ -155,7 +155,10 @@
         factor-list)))
 
 (defun $ifactors (n)
-  (unless (and (integerp n) (plusp n))
+  (unless (and (or (integerp n) 
+                   (and ($integerp n)
+                        (setq n ($fix n)) ))
+               (plusp n) )
     (merror (intl:gettext "ifactors: argument must be a positive integer; found: ~M") n))
   (let* (($intfaclim)
 	 (factor-list (get-factor-list n))
@@ -916,12 +919,16 @@
   (unless (and (integerp start) (integerp end))
     (merror (intl:gettext "primes: arguments must be integers; found: ~M, ~M") start end))
   (let ((primes nil))
-    ;; take primes from *small-primes* if possible
-    (dolist (n *small-primes* (incf start))
-      (when (<= start n end)
-	(push n primes)
-	(setq start n)))
+    (cond 
+      ;; take primes from *small-primes* if possible
+      ((<= start *largest-small-prime*)
+        (dolist (n *small-primes*)
+          (when (<= start n end) 
+            (push n primes) ))
+        (setq start *largest-small-prime*) ) 
+      (t 
+        (decf start) )) ; $next_prime returns a value >= argument + 1
     ;; search for the rest of primes
     (do ((n ($next_prime start) ($next_prime (1+ n))))
-	((> n end) (cons '(mlist) (reverse primes)))
-      (push n primes))))
+        ((> n end) (cons '(mlist) (reverse primes)))
+      (push n primes) )))

@@ -457,9 +457,7 @@ created by @mref{:} or @mref{::} or functional binding.
 @item functions
 All user-defined functions, created by @mref{:=} or @mrefdot{define}
 @item arrays
-All declared and undeclared arrays, created by @code{:}, @code{::}, or
-@code{:=}.
-@c AREN'T THERE OTHER MEANS OF CREATING ARRAYS ??
+All arrays, @mref{hashed arrays} and @mref{memoizing functions}.
 @item macros
 All user-defined macro functions, created by @mrefdot{::=}
 @item myoptions
@@ -560,6 +558,9 @@ defeats quotation.
 @code{kill (@var{symbol})} unbinds all properties of @var{symbol}.  In contrast,
 the functions @mrefcomma{remvalue} @mrefcomma{remfunction}@w{}
 @mrefcomma{remarray} and @mref{remrule} unbind a specific property.
+Note that facts declared by @mref{assume} don't require a symbol they apply to,
+therefore aren't stored as properties of symbols and therefore aren't affected
+by @code{kill}.
 
 @code{kill} always returns @code{done}, even if an argument has no binding.
 
@@ -1185,8 +1186,19 @@ Example:
 @defvr {Option variable} display2d
 Default value: @code{true}
 
-When @code{display2d} is @code{false}, the console display is a string 
-(1-dimensional) form rather than a display (2-dimensional) form.
+When @code{display2d} is @code{true},
+the console display is an attempt to present mathematical expressions
+as they might appear in books and articles,
+using only letters, numbers, and some punctuation characters.
+This display is sometimes called the "pretty printer" display.
+
+When @code{display2d} is @code{false},
+the console display is a 1-dimensional or linear form
+which is the same as the output produced by @code{grind}.
+
+When @code{display2d} is @code{false},
+the value of @code{stringdisp} is ignored,
+and strings are always displayed with quote marks.
 
 See also @mref{leftjust} to switch between a left justified and a centered
 display of equations.

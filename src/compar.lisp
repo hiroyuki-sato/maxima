@@ -943,7 +943,7 @@ sign of the square, so any negative results are converted to positive."
             (found-sign (if squared (fifth hit) (fourth hit))))
         (funcall registrar expression)
         (setq sign
-              (if (and minus (not squared)) (flip found-sign) found-sign))))))
+              (if minus (flip found-sign) found-sign))))))
 
 (defun ensure-sign (expr &optional domain squared)
   "Try to determine the sign of EXPR. If DOMAIN is not one of the special values
@@ -1386,7 +1386,7 @@ TDNEG TDZERO TDPN) to store it, and also sets SIGN."
 	  ((eq sign '$neg) (setq s (flip s) m (not m)))
 	  ((prog2 (setq m (not (eq m minus)) o (nconc odds o) e (nconc evens e))
 	       nil))
-	  ((eq s sign))
+	  ((eq s sign) (when (eq s '$nz) (setq s '$pz)))
 	  ((eq s '$pos) (setq s sign))
 	  ((eq s '$neg) (setq s (flip sign)))
 	  ((or (and (eq s '$pz) (eq sign '$nz))

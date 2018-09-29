@@ -12,7 +12,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.41.0 Manual
+Maxima 5.42.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -89,6 +89,7 @@ Additional packages
 * celine-pkg::                      Sister Celine's method
 * clebsch_gordan-pkg::              Clebsch-Gordan and Wigner coefficients
 * cobyla-pkg::                      Nonlinear optimization with inequality constraints.
+* combinatorics-pkg::               Functions to work with permutations.
 * contrib_ode-pkg::                 Additional routines for ODEs
 * descriptive-pkg::                 Descriptive statistics.
 * diag-pkg::                        Jordan matrices.
@@ -128,6 +129,7 @@ Additional packages
 * stringproc-pkg::                  String processing.
 * to_poly_solve-pkg::               to_poly_solve package.
 * unit-pkg::                        Units and dimensions package.
+* wrstcse-pkg::                     Worstcase calculations for engineering.
 * zeilberger-pkg::                  Functions for hypergeometric summation.
 
 Understanding maxima's output
@@ -358,6 +360,10 @@ cobyla
 * Functions and Variables for cobyla::
 * Examples for cobyla::
 
+combinatorics
+* Package combinatorics::       
+* Functions and Variables for Combinatorics::       
+
 contrib_ode
 * Introduction to contrib_ode::
 * Functions and Variables for contrib_ode::
@@ -400,7 +406,7 @@ ezunits
 * Functions and Variables for ezunits::
 
 f90
-* Functions and Variables for f90::
+* Package f90::
 
 finance
 * Introduction to finance::
@@ -937,7 +943,7 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
 
           batching /home/wfs/maxima/share/simplification/disol.dem
            At the _ prompt, type ';' followed by enter to get next demo
-          (%i2)                      load(disol)
+          (%i2)                      load("disol")
 
           _
           (%i3)           exp1 : a (e (g + f) + b (d + c))
@@ -1343,8 +1349,7 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
      'functions'
           All user-defined functions, created by ':=' or 'define'.
      'arrays'
-          All declared and undeclared arrays, created by ':', '::', or
-          ':='.
+          All arrays, 'hashed arrays' and 'memoizing functions'.
      'macros'
           All user-defined macro functions, created by '::='.
      'myoptions'
@@ -1433,7 +1438,9 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
 
      'kill (<symbol>)' unbinds all properties of <symbol>.  In contrast,
      the functions 'remvalue', 'remfunction', 'remarray', and 'remrule'
-     unbind a specific property.
+     unbind a specific property.  Note that facts declared by 'assume'
+     don't require a symbol they apply to, therefore aren't stored as
+     properties of symbols and therefore aren't affected by 'kill'.
 
      'kill' always returns 'done', even if an argument has no binding.
 
@@ -1826,8 +1833,17 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
  -- Option variable: display2d
      Default value: 'true'
 
-     When 'display2d' is 'false', the console display is a string
-     (1-dimensional) form rather than a display (2-dimensional) form.
+     When 'display2d' is 'true', the console display is an attempt to
+     present mathematical expressions as they might appear in books and
+     articles, using only letters, numbers, and some punctuation
+     characters.  This display is sometimes called the "pretty printer"
+     display.
+
+     When 'display2d' is 'false', the console display is a 1-dimensional
+     or linear form which is the same as the output produced by 'grind'.
+
+     When 'display2d' is 'false', the value of 'stringdisp' is ignored,
+     and strings are always displayed with quote marks.
 
      See also 'leftjust' to switch between a left justified and a
      centered display of equations.
@@ -2799,10 +2815,18 @@ File: maxima.info,  Node: Functions and Variables for Strings,  Prev: Introducti
      Concatenates its arguments into a string.  Unlike 'concat', the
      arguments do not need to be atoms.
 
-     See also 'concat' and 'eval_string'.
+     See also 'concat', and 'eval_string'.  For complex string
+     conversions see also 'printf'.
 
           (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
-          (%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+          (%o1)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+
+     Another purpose for 'sconcat' is to convert arbitrary objects to
+     strings.
+          (%i1) sconcat (x);
+          (%o1)                           x
+          (%i2) stringp(%);
+          (%o2)                         true
 
  -- Function: string (<expr>)
 
@@ -3013,7 +3037,7 @@ File: maxima.info,  Node: Introduction to Lists,  Next: Functions and Variables 
 ---------------------------
 
 Lists are the basic building block for Maxima and Lisp.  All data types
-other than arrays, hash tables and numbers are represented as Lisp
+other than arrays, 'hashed arrays' and numbers are represented as Lisp
 lists, These Lisp lists have the form
 
      ((MPLUS) $A 2)
@@ -3045,11 +3069,15 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Next: Performance 
 
      '[' and ']' mark the beginning and end, respectively, of a list.
 
-     '[' and ']' also enclose the subscripts of a list, array, hash
-     array, or array function.  Note that other than for arrays
+     '[' and ']' also enclose the subscripts of a list, array, 'hashed
+     array', or 'memoizing function'.  Note that other than for arrays
      accessing the 'n'th element of a list may need an amount of time
      that is roughly proportional to 'n', *Note Performance
      considerations for Lists::.
+
+     Note that if an element of a subscripted variable is written to
+     before a list or an array of this name is declared a 'hashed array'
+     *Note Arrays::.)  is created, not a list.
 
      Examples:
 
@@ -4159,6 +4187,32 @@ File: maxima.info,  Node: Arrays,  Next: Structures,  Prev: Lists,  Up: Data Typ
 5.5 Arrays
 ==========
 
+Maxima supports 3 array-like constructs:
+   * If one tries to write to an indexed variable without creating a
+     list first an undeclared array (also named hashed array) is created
+     that grows dynamically and allows numbers, symbols and strings as
+     indices:
+          (%i1) a["feww"]:1;
+          (%o1)                           1
+          (%i2) a[qqwdqwd]:3;
+          (%o2)                           3
+          (%i3) a[5]:99;
+          (%o3)                          99
+          (%i4) a[qqwdqwd];
+          (%o4)                           3
+          (%i5) a[5];
+          (%o5)                          99
+          (%i6) a["feww"];
+          (%o6)                           1
+     Since lisp handles hashed arrays and 'memoizing functions' similar
+     to arrays many of the functions that can be applied to arrays can
+     be applied to them, as well.
+   * Lists (see 'makelist' allow for fast addition and removal of
+     elements, can be created without knowing their final size.
+   * Declared arrays that allow fast access to random elements at the
+     cost that their size needs to be known at construction time.
+     (*Note Performance considerations for Lists::.)
+
 * Menu:
 
 * Functions and Variables for Arrays::  
@@ -4187,17 +4241,7 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      'array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)' creates
      m arrays, all of the same dimensions.
 
-     If the user assigns to a subscripted variable before declaring the
-     corresponding array, an undeclared array is created.  Undeclared
-     arrays, otherwise known as hashed arrays (because hash coding is
-     done on the subscripts), are more general than declared arrays.
-     The user does not declare their maximum size, and they grow
-     dynamically by hashing as more elements are assigned values.  The
-     subscripts of undeclared arrays need not even be numbers.  However,
-     unless an array is rather sparse, it is probably more efficient to
-     declare it when possible than to leave it undeclared.  The 'array'
-     function can be used to transform an undeclared array into a
-     declared array.
+     See also 'arraymake', 'arrayinfo' and 'make_array'.
 
  -- Function: arrayapply (<A>, [<i_1>, ..., <i_n>])
 
@@ -4210,8 +4254,8 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
  -- Function: arrayinfo (<A>)
 
      Returns information about the array <A>.  The argument <A> may be a
-     declared array, an undeclared (hashed) array, an array function, or
-     a subscripted function.
+     declared array, a 'hashed array', a 'memoizing function', or a
+     subscripted function.
 
      For declared arrays, 'arrayinfo' returns a list comprising the atom
      'declared', the number of dimensions, and the size of each
@@ -4223,10 +4267,10 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      subscripts of every element which has a value.  The values are
      returned by 'listarray'.
 
-     For array functions, 'arrayinfo' returns a list comprising the atom
-     'hashed', the number of subscripts, and any subscript values for
-     which there are stored function values.  The stored function values
-     are returned by 'listarray'.
+     For 'memoizing functions', 'arrayinfo' returns a list comprising
+     the atom 'hashed', the number of subscripts, and any subscript
+     values for which there are stored function values.  The stored
+     function values are returned by 'listarray'.
 
      For subscripted functions, 'arrayinfo' returns a list comprising
      the atom 'hashed', the number of subscripts, and any subscript
@@ -4251,8 +4295,8 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           (%o5) [#####, #####, #####, #####, #####, #####, %e, #####,
                                                   #####, #####, #####, %pi]
 
-     'arrayinfo' and 'listarray' applied to an undeclared (hashed)
-     array.
+     'arrayinfo' and 'listarray' applied to a undeclared array ('hashed
+     array'.).
 
           (%i1) bb [FOO] : (a + b)^2;
                                              2
@@ -4266,7 +4310,7 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
                                         3         2
           (%o4)                 [(c - d) , (b + a) ]
 
-     'arrayinfo' and 'listarray' applied to an array function.
+     'arrayinfo' and 'listarray' applied to a 'memoizing function'.
 
           (%i1) cc [x, y] := y / x;
                                                y
@@ -4286,6 +4330,17 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
                                         z  v
           (%o5)                        [-, -]
                                         4  u
+
+     Using 'arrayinfo' in order to convert an undeclared array to a
+     declared array:
+
+          (%i1) for i:0 thru 10 do a[i]:i^2$
+          (%i2) indices:map(first,rest(rest(arrayinfo(a))));
+          (%o2)          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          (%i3) array(A,fixnum,length(indices)-1)$
+          (%i4) fillarray(A,map(lambda([x],a[x]),indices))$
+          (%i5) listarray(A);
+          (%o5)       [0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
 
      'arrayinfo' and 'listarray' applied to a subscripted function.
 
@@ -4341,9 +4396,9 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           (%i10) ''%, n = 3;
           (%o10)                          c
           (%i11) A2 : make_array (fixnum, 10);
-          (%o11)          {Array:  #(0 0 0 0 0 0 0 0 0 0)}
+          (%o11)        {Lisp Array: #(0 0 0 0 0 0 0 0 0 0)}
           (%i12) fillarray (A2, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o12)          {Array:  #(1 2 3 4 5 6 7 8 9 10)}
+          (%o12)        {Lisp Array: #(1 2 3 4 5 6 7 8 9 10)}
           (%i13) arraymake ('A2, [8]);
           (%o13)                         A2
                                            8
@@ -4354,10 +4409,11 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      Default value: '[]'
 
      'arrays' is a list of arrays that have been allocated.  These
-     comprise arrays declared by 'array', hashed arrays constructed by
-     implicit definition (assigning something to an array element), and
-     array functions defined by ':=' and 'define'.  Arrays defined by
-     'make_array' are not included.
+     comprise arrays declared by 'array', 'hashed arrays' that can be
+     constructed by implicit definition (assigning something to an
+     element that isn't yet declared as a list or an array), and
+     'memoizing functions' defined by ':=' and 'define'.  Arrays defined
+     by 'make_array' are not included.
 
      See also 'array', 'arrayapply', 'arrayinfo', 'arraymake',
      'fillarray', 'listarray', and 'rearray'.
@@ -4374,7 +4430,7 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           (%o3)                      cc  := ---
                                        x    100
           (%i4) dd : make_array ('any, 7);
-          (%o4)       {Array:  #(NIL NIL NIL NIL NIL NIL NIL)}
+          (%o4)     {Lisp Array: #(NIL NIL NIL NIL NIL NIL NIL)}
           (%i5) arrays;
           (%o5)                     [aa, bb, cc]
 
@@ -4418,45 +4474,45 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      are ignored.
 
           (%i1) a2 : make_array (fixnum, 8);
-          (%o1)             {Array:  #(0 0 0 0 0 0 0 0)}
+          (%o1)           {Lisp Array: #(0 0 0 0 0 0 0 0)}
           (%i2) fillarray (a2, [1, 2, 3, 4, 5]);
-          (%o2)             {Array:  #(1 2 3 4 5 5 5 5)}
+          (%o2)           {Lisp Array: #(1 2 3 4 5 5 5 5)}
           (%i3) fillarray (a2, [4]);
-          (%o3)             {Array:  #(4 4 4 4 4 4 4 4)}
+          (%o3)           {Lisp Array: #(4 4 4 4 4 4 4 4)}
           (%i4) fillarray (a2, makelist (i, i, 1, 100));
-          (%o4)             {Array:  #(1 2 3 4 5 6 7 8)}
+          (%o4)           {Lisp Array: #(1 2 3 4 5 6 7 8)}
 
-     Multple-dimension arrays are filled in row-major order.
+     Multiple-dimension arrays are filled in row-major order.
 
           (%i1) a3 : make_array (fixnum, 2, 5);
-          (%o1)        {Array:  #2A((0 0 0 0 0) (0 0 0 0 0))}
+          (%o1)      {Lisp Array: #2A((0 0 0 0 0) (0 0 0 0 0))}
           (%i2) fillarray (a3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o2)        {Array:  #2A((1 2 3 4 5) (6 7 8 9 10))}
+          (%o2)      {Lisp Array: #2A((1 2 3 4 5) (6 7 8 9 10))}
           (%i3) a4 : make_array (fixnum, 5, 2);
-          (%o3)     {Array:  #2A((0 0) (0 0) (0 0) (0 0) (0 0))}
+          (%o3)   {Lisp Array: #2A((0 0) (0 0) (0 0) (0 0) (0 0))}
           (%i4) fillarray (a4, a3);
-          (%o4)     {Array:  #2A((1 2) (3 4) (5 6) (7 8) (9 10))}
+          (%o4)   {Lisp Array: #2A((1 2) (3 4) (5 6) (7 8) (9 10))}
 
  -- Function: listarray (<A>)
 
      Returns a list of the elements of the array <A>.  The argument <A>
-     may be a declared array, an undeclared (hashed) array, an array
-     function, or a subscripted function.
+     may be an array, an undeclared array ('hashed array'), a 'memoizing
+     function', or a subscripted function.
 
      Elements are listed in row-major order.  That is, elements are
      sorted according to the first index, then according to the second
      index, and so on.  The sorting order of index values is the same as
      the order established by 'orderless'.
 
-     For undeclared arrays, array functions, and subscripted functions,
-     the elements correspond to the index values returned by
-     'arrayinfo'.
+     For undeclared arrays ('hashed arrays'), 'memoizing functions', and
+     subscripted functions, the elements correspond to the index values
+     returned by 'arrayinfo'.
 
-     Unbound elements of declared general arrays (that is, not 'fixnum'
-     and not 'flonum') are returned as '#####'.  Unbound elements of
-     declared 'fixnum' or 'flonum' arrays are returned as 0 or 0.0,
-     respectively.  Unbound elements of undeclared arrays, array
-     functions, and subscripted functions are not returned.
+     Unbound elements of general arrays (that is, not 'fixnum' and not
+     'flonum') are returned as '#####'.  Unbound elements of 'fixnum' or
+     'flonum' arrays are returned as 0 or 0.0, respectively.  Unbound
+     elements of hashed arrays, 'memoizing functions', and subscripted
+     functions are not returned.
 
      Examples:
 
@@ -4474,8 +4530,8 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           (%i5) arrayinfo (aa);
           (%o5)                 [declared, 2, [2, 3]]
 
-     'listarray' and 'arrayinfo' applied to an undeclared (hashed)
-     array.
+     'listarray' and 'arrayinfo' applied to a undeclared array ('hashed
+     array').
 
           (%i1) bb [FOO] : (a + b)^2;
                                              2
@@ -4489,7 +4545,7 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           (%i4) arrayinfo (bb);
           (%o4)               [hashed, 1, [BAR], [FOO]]
 
-     'listarray' and 'arrayinfo' applied to an array function.
+     'listarray' and 'arrayinfo' applied to an 'memoizing function'.
 
           (%i1) cc [x, y] := y / x;
                                                y
@@ -4544,32 +4600,35 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
      Examples:
 
           (%i1) A1 : make_array (fixnum, 10);
-          (%o1)           {Array:  #(0 0 0 0 0 0 0 0 0 0)}
+          (%o1)         {Lisp Array: #(0 0 0 0 0 0 0 0 0 0)}
           (%i2) A1 [8] : 1729;
           (%o2)                         1729
           (%i3) A1;
-          (%o3)          {Array:  #(0 0 0 0 0 0 0 0 1729 0)}
+          (%o3)        {Lisp Array: #(0 0 0 0 0 0 0 0 1729 0)}
           (%i4) A2 : make_array (flonum, 10);
-          (%o4) {Array:  #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
+          (%o4) {Lisp Array: #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
           (%i5) A2 [2] : 2.718281828;
           (%o5)                      2.718281828
           (%i6) A2;
           (%o6)
-               {Array:  #(0.0 0.0 2.718281828 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
+           {Lisp Array: #(0.0 0.0 2.718281828 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
           (%i7) A3 : make_array (any, 10);
-          (%o7) {Array:  #(NIL NIL NIL NIL NIL NIL NIL NIL NIL NIL)}
+          (%o7) {Lisp Array: #(NIL NIL NIL NIL NIL NIL NIL NIL NIL NIL)}
           (%i8) A3 [4] : x - y - z;
-          (%o8)                      - z - y + x
+          (%o8)                     (- z) - y + x
           (%i9) A3;
-          (%o9) {Array:  #(NIL NIL NIL NIL ((MPLUS SIMP) $X ((MTIMES SIMP)\
-           -1 $Y) ((MTIMES SIMP) -1 $Z))
-            NIL NIL NIL NIL NIL)}
+          (%o9) {Lisp Array: #(NIL NIL NIL NIL
+                         ((MPLUS SIMP) $X ((MTIMES SIMP) -1 $Y) ((MTIMES S\
+          IMP) -1 $Z))
+                         NIL NIL NIL NIL NIL)}
           (%i10) A4 : make_array (fixnum, 2, 3, 5);
-          (%o10) {Array:  #3A(((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0)) ((0 0 \
-          0 0 0) (0 0 0 0 0) (0 0 0 0 0)))}
+          (%o10) {Lisp Array: #3A(((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0))
+                           ((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0)))}
           (%i11) fillarray (A4, makelist (i, i, 1, 2*3*5));
-          (%o11) {Array:  #3A(((1 2 3 4 5) (6 7 8 9 10) (11 12 13 14 15))
-              ((16 17 18 19 20) (21 22 23 24 25) (26 27 28 29 30)))}
+          (%o11) {Lisp Array: #3A(((1 2 3 4 5) (6 7 8 9 10) (11 12 13 14 1\
+          5))
+                           ((16 17 18 19 20) (21 22 23 24 25) (26 27 28 29\
+           30)))}
           (%i12) A4 [0, 2, 1];
           (%o12)                         12
 
@@ -4586,13 +4645,13 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
           remarray (all)
 
      Removes arrays and array associated functions and frees the storage
-     occupied.  The arguments may be declared arrays, undeclared
-     (hashed) arrays, array functions, and subscripted functions.
+     occupied.  The arguments may be declared arrays, 'hashed arrays',
+     array functions, and subscripted functions.
 
      'remarray (all)' removes all items in the global list 'arrays'.
 
-     It may be necessary to use this function if it is desired to
-     redefine the values in a hashed array.
+     It may be necessary to use this function if it is desired to clear
+     the cache of a 'memoizing function'.
 
      'remarray' returns the list of arrays removed.
 
@@ -4631,16 +4690,17 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
  -- Option variable: use_fast_arrays
      Default value: 'false'
 
-     When 'use_fast_arrays' is 'true', undeclared arrays and arrays
-     declared by 'array' are values instead of properties, and
-     undeclared arrays are implemented as Lisp hash tables.
+     When 'use_fast_arrays' is 'true', arrays declared by 'array' are
+     values instead of properties, and undeclared arrays ('hashed
+     arrays') are implemented as Lisp hashed arrays.
 
-     When 'use_fast_arrays' is 'false', undeclared arrays and arrays
-     declared by 'array' are properties, and undeclared arrays are
-     implemented with Maxima's own hash table implementation.
+     When 'use_fast_arrays' is 'false', arrays declared by 'array' are
+     properties, and undeclared arrays are implemented with Maxima's own
+     hashed array implementation.
 
-     Arrays created by 'make_array' are not affected by
-     'use_fast_arrays'.
+     Note that the code 'use_fast_arrays' switches to is not necessarily
+     faster than the default one; Arrays created by 'make_array' are not
+     affected by 'use_fast_arrays'.
 
      See also 'translate_fast_arrays'.
 
@@ -5598,8 +5658,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      user-defined prefix, binary or n-ary infix, postfix, matchfix, or
      nofix operator.  Otherwise, if <expr> is a subscripted function
      expression, 'op' returns the subscripted function; in this case the
-     return value is not an atom.  Otherwise, <expr> is an array
-     function or ordinary function expression, and 'op' returns a
+     return value is not an atom.  Otherwise, <expr> is a 'memoizing
+     function' or ordinary function expression, and 'op' returns a
      symbol.
 
      'op' observes the value of the global flag 'inflag'.
@@ -5946,7 +6006,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      In distinction from 'subst' the function 'psubst' makes parallel
      substitutions, if the first argument <list> is a list of equations.
 
-     See also 'sublis' for making parallel substitutions.
+     See also 'sublis' for making parallel substitutions and 'let' and
+     'letsimp' for others ways to do substitutions.
 
      Example:
 
@@ -6149,7 +6210,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
      into the operator of an expression.  E.g.  '(opsubst: false, subst
      (x^2, r, r+r[0]))' will work.
 
-     See also 'at', 'ev' and 'psubst'.
+     See also 'at', 'ev' and 'psubst', as well as 'let' and 'letsimp'.
 
      Examples:
 
@@ -6980,9 +7041,9 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
      element; such objects cannot be extended by naming nonexistent
      elements.
 
-     When the left-hand side is a subscripted element of an undeclared
-     Maxima array, the right-hand side is assigned to that element, if
-     it already exists, or a new element is allocated, if it does not
+     When the left-hand side is a subscripted element of a 'hashed
+     array', the right-hand side is assigned to that element, if it
+     already exists, or a new element is allocated, if it does not
      already exist.
 
      When the left-hand side is a list of simple and/or subscripted
@@ -7013,7 +7074,8 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
           (%i3) b;
           (%o3)                      [1, 2, 456]
 
-     Assignment creates an undeclared array.
+     Assignment to a variable that neither is the name of a list nor of
+     an array creates a 'hashed array'.
 
           (%i1) c[99] : 789;
           (%o1)                          789
@@ -7158,19 +7220,19 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
      quote-quote '''').  The function body is evaluated every time the
      function is called.
 
-     '<f>[<x_1>, ..., <x_n>] := <expr>' defines a so-called array
-     function.  Its function body is evaluated just once for each
+     '<f>[<x_1>, ..., <x_n>] := <expr>' defines a so-called 'memoizing
+     function'.  Its function body is evaluated just once for each
      distinct value of its arguments, and that value is returned,
      without evaluating the function body, whenever the arguments have
-     those values again.  (A function of this kind is commonly known as
-     a "memoizing function".)
+     those values again.  (A function of this kind is also known as a
+     "array function".)
 
      '<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>) := <expr>' is a special
-     case of an array function.  '<f>[<x_1>, ..., <x_n>]' is an array
-     function which returns a lambda expression with arguments '<y_1>,
-     ..., <y_m>'.  The function body is evaluated once for each distinct
-     value of '<x_1>, ..., <x_n>', and the body of the lambda expression
-     is that value.
+     case of a 'memoizing function'.  '<f>[<x_1>, ..., <x_n>]' is a
+     'memoizing function' which returns a lambda expression with
+     arguments '<y_1>, ..., <y_m>'.  The function body is evaluated once
+     for each distinct value of '<x_1>, ..., <x_n>', and the body of the
+     lambda expression is that value.
 
      When the last or only function argument <x_n> is a list of one
      element, the function defined by ':=' accepts a variable number of
@@ -7218,7 +7280,7 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
           Evaluating G1 for x= [1, a] and y= [2, b]
           (%o3)                           0
 
-     'f[<x_1>, ..., <x_n>] := ...' defines an array function.
+     'f[<x_1>, ..., <x_n>] := ...' defines a 'memoizing function'.
 
           (%i1) G2[a] := (print ("Evaluating G2 for a=", a), a^2);
                                                                2
@@ -7238,7 +7300,7 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
           (%o6)                  [1522756, 5499025]
 
      '<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>) := <expr>' is a special
-     case of an array function.
+     case of a 'memoizing function'.
 
           (%i1) G3[n](x) := (print ("Evaluating G3 for n=", n), diff (sin(x)^2, x, n));
           (%o1) G3 (x) := (print("Evaluating G3 for n=", n),
@@ -7918,12 +7980,12 @@ File: maxima.info,  Node: Functions and Variables for Evaluation,  Prev: Evaluat
           variables appearing on the left side of equations in the
           arguments or in the value of some arguments if the value is an
           equation.  The variables (subscripted variables which do not
-          have associated array functions as well as non-subscripted
-          variables) in the expression <expr> are replaced by their
-          global values, except for those appearing in this list.
-          Usually, <expr> is just a label or '%' (as in '%i2' in the
-          example below), so this step simply retrieves the expression
-          named by the label, so that 'ev' may work on it.
+          have associated 'memoizing functions' as well as
+          non-subscripted variables) in the expression <expr> are
+          replaced by their global values, except for those appearing in
+          this list.  Usually, <expr> is just a label or '%' (as in
+          '%i2' in the example below), so this step simply retrieves the
+          expression named by the label, so that 'ev' may work on it.
 
        3. If any substitutions are indicated by the arguments, they are
           carried out now.
@@ -8350,7 +8412,7 @@ users have contributed numerous application packages and tools to extend
 or alter its functional behavior.  Various non-standard and "share"
 packages exist to modify or extend simplification as well.  You are
 invited to look into this more experimental material where work is still
-in progress.  *Note simplification-pkg::.
+in progress *Note simplification-pkg::.
 
    The following appended material is optional on a first reading, and
 reading it is not necessary for productive use of Maxima.  It is for the
@@ -8936,7 +8998,10 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Int
  -- System variable: opproperties
 
      'opproperties' is the list of the special operator properties
-     recognized by the Maxima simplifier:
+     recognized by the Maxima simplifier.
+
+     Items are added to the 'opproperties' list by the function
+     'define_opproperty'.
 
      Example:
 
@@ -8944,6 +9009,45 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Int
           (%o1) [linear, additive, multiplicative, outative, evenfun,
           oddfun, commutative, symmetric, antisymmetric, nary,
           lassociative, rassociative]
+
+ -- Function: define_opproperty (<property_name>, <simplifier_fn>)
+
+     Declares the symbol <property_name> to be an operator property,
+     which is simplified by <simplifier_fn>, which may be the name of a
+     Maxima or Lisp function or a lambda expression.  After
+     'define_opproperty' is called, functions and operators may be
+     declared to have the <property_name> property, and <simplifier_fn>
+     is called to simplify them.
+
+     <simplifier_fn> must be a function of one argument, which is an
+     expression in which the main operator is declared to have the
+     <property_name> property.
+
+     <simplifier_fn> is called with the global flag 'simp' disabled.
+     Therefore <simplifier_fn> must be able to carry out its
+     simplification without making use of the general simplifier.
+
+     'define_opproperty' appends <property_name> to the global list
+     'opproperties'.
+
+     'define_opproperty' returns 'done'.
+
+     Example:
+
+     Declare a new property, 'identity', which is simplified by
+     'simplify_identity'.  Declare that 'f' and 'g' have the new
+     property.
+
+          (%i1) define_opproperty (identity, simplify_identity);
+          (%o1)                         done
+          (%i2) simplify_identity(e) := first(e);
+          (%o2)           simplify_identity(e) := first(e)
+          (%i3) declare ([f, g], identity);
+          (%o3)                         done
+          (%i4) f(10 + t);
+          (%o4)                        t + 10
+          (%i5) g(3*u) - f(2*u);
+          (%o5)                           u
 
  -- Property: outative
 
@@ -9209,7 +9313,7 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
                                      ]
                                      /
 
-          (%i12) load(abs_integrate)$
+          (%i12) load("abs_integrate")$
           (%i13) integrate(x*abs(x),x);
                                 2           3
                                x  abs(x)   x  signum(x)
@@ -10426,7 +10530,7 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
      already known to Maxima, the following angles are fully
      implemented: '0', '%pi/6', '%pi/4', '%pi/3', and '%pi/2'.
      Corresponding angles in the other three quadrants are also
-     available.  Do 'load(atrig1);' to use them.
+     available.  Do 'load("atrig1");' to use them.
 
  -- Function: cos (<x>)
 
@@ -12762,6 +12866,8 @@ names.  For instance, typing logx as an option is equivalent to writing
      for three-dimensional plotting or for the 'julia' and 'mandelbrot'
      programs.
 
+     For a way to actually draw a grid See 'grid2d'.
+
  -- Plot option: grid2d [grid, <value>]
      Default value: 'false'
 
@@ -12769,6 +12875,8 @@ names.  For instance, typing logx as an option is equivalent to writing
      lines are placed are the same points where tics are marked in the x
      and y axes, which can be controlled with the 'xtics' and 'ytics'
      options.
+
+     See also 'grid'.
 
  -- Plot option: iterations [grid, <value>]
      Default value: '9'
@@ -13052,6 +13160,11 @@ names.  For instance, typing logx as an option is equivalent to writing
      In a 2d plot, it defines the ratio of the total size of the Window
      to the size that will be used for the plot.  The two numbers given
      as arguments are the scale factors for the x and y axes.
+
+     This option does not change the size of the graphic window or the
+     placement of the graph in the window.  If you want to change the
+     aspect ratio of the plot, it is better to use option 'yx_ratio'.
+     For instance, '[yx_ratio, 10]' instead of '[xy_scale, 0.1, 1]'.
 
  -- Plot option: y [y, <min>, <max>]
 
@@ -14596,6 +14709,10 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      Maxima from taking an inordinately long time factoring large
      integers.
 
+     'factor_max_degree' if set to a positive integer 'n' will prevent
+     certain polynomials from being factored if their degree in any
+     variable exceeds 'n'.
+
      See also 'collectterms'.
 
      Examples:
@@ -14692,6 +14809,49 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
 
               30    27    21    18    12    9    3
            - x   - x   + x   + x   - x   - x  + x  + 1)
+
+ -- Option variable: factor_max_degree
+     Default value: '1000'
+
+     When factor_max_degree is set to a positive integer 'n', it will
+     prevent Maxima from attempting to factor certain polynomials whose
+     degree in any variable exceeds 'n'.  If
+     'factor_max_degree_print_warning' is true, a warning message will
+     be printed.  'factor_max_degree' can be used to prevent excessive
+     memory usage and/or computation time and stack overflows.  Note
+     that "obvious" factoring of polynomials such as 'x^2000+x^2001' to
+     'x^2000*(x+1)' will still take place.  To disable this behavior,
+     set 'factor_max_degree' to '0'.
+
+     Example:
+          (%i1) factor_max_degree : 100$
+          (%i2) factor(x^100-1);
+                                  2        4    3    2
+          (%o2) (x - 1) (x + 1) (x  + 1) (x  - x  + x  - x + 1)
+             4    3    2            8    6    4    2
+           (x  + x  + x  + x + 1) (x  - x  + x  - x  + 1)
+             20    15    10    5        20    15    10    5
+           (x   - x   + x   - x  + 1) (x   + x   + x   + x  + 1)
+             40    30    20    10
+           (x   - x   + x   - x   + 1)
+          (%i3) factor(x^101-1);
+                                         101
+          Refusing to factor polynomial x    - 1
+                         because its degree exceeds factor_max_degree (100)
+                                       101
+          (%o3)                       x    - 1
+
+     See also: 'factor_max_degree_print_warning'
+
+ -- Option variable: factor_max_degree_print_warning
+     Default value: 'true'
+
+     When factor_max_degree_print_warning is true, then Maxima will
+     print a warning message when the factoring of a polynomial is
+     prevented because its degree exceeds the value of
+     factor_max_degree.
+
+     See also: 'factor_max_degree'
 
  -- Option variable: factorflag
      Default value: 'false'
@@ -14999,6 +15159,7 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      Examples:
 
           (%i1) rat(x/2.0);
+
           rat: replaced 0.5 by 1/2 = 0.5
                                           x
           (%o1)/R/                        -
@@ -15009,6 +15170,7 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      'solve' ignores 'keepfloat':
 
           (%i1) solve(1.0-x,x), keepfloat;
+
           rat: replaced 1.0 by 1/1 = 1.0
           (%o1)                        [x = 1]
 
@@ -15049,13 +15211,13 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
  -- Option variable: modulus
      Default value: 'false'
 
-     When 'modulus' is a positive number <p>, operations on rational
-     numbers (as returned by 'rat' and related functions) are carried
-     out modulo <p>, using the so-called "balanced" modulus system in
-     which '<n> modulo <p>' is defined as an integer <k> in
-     '[-(<p>-1)/2, ..., 0, ..., (<p>-1)/2]' when <p> is odd, or
-     '[-(<p>/2 - 1), ..., 0, ...., <p>/2]' when <p> is even, such that
-     '<a> <p> + <k>' equals <n> for some integer <a>.
+     When 'modulus' is a positive number <p>, operations on canonical
+     rational expressions (CREs, as returned by 'rat' and related
+     functions) are carried out modulo <p>, using the so-called
+     "balanced" modulus system in which '<n> modulo <p>' is defined as
+     an integer <k> in '[-(<p>-1)/2, ..., 0, ..., (<p>-1)/2]' when <p>
+     is odd, or '[-(<p>/2 - 1), ..., 0, ...., <p>/2]' when <p> is even,
+     such that '<a> <p> + <k>' equals <n> for some integer <a>.
 
      If <expr> is already in canonical rational expression (CRE) form
      when 'modulus' is reset, then you may need to re-rat <expr>, e.g.,
@@ -17186,7 +17348,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      called.  Because 'laplace' knows more general rules for Laplace
      transforms, it is preferable to use 'laplace' and not 'specint'.
 
-     'demo(hypgeo)' displays several examples of Laplace transforms
+     'demo("hypgeo")' displays several examples of Laplace transforms
      computed by 'specint'.
 
      Examples:
@@ -17954,8 +18116,8 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      applications in the theory of partial differential equations.  The
      'cartan' package implements the functions 'ext_diff' and
      'lie_diff', along with the operators '~' (wedge product) and '|'
-     (contraction of a form with a vector.)  Type 'demo (tensor)' to see
-     a brief description of these commands along with examples.
+     (contraction of a form with a vector.)  Type 'demo ("tensor")' to
+     see a brief description of these commands along with examples.
 
      'cartan' was implemented by F.B. Estabrook and H.D. Wahlquist.
 
@@ -18555,8 +18717,8 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
      or compiled prior to calling 'dblint'.  This will result in orders
      of magnitude speed improvement over interpreted code in many cases!
 
-     'demo (dblint)' executes a demonstration of 'dblint' applied to an
-     example problem.
+     'demo ("dblint")' executes a demonstration of 'dblint' applied to
+     an example problem.
 
  -- Function: defint (<expr>, <x>, <a>, <b>)
 
@@ -20273,7 +20435,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
 
      Solves the list of simultaneous linear equations for the list of
      variables.  The expressions must each be polynomials in the
-     variables and may be equations.
+     variables and may be equations.  If the length of the list of
+     variables doesn't match the number of linearly-independent
+     equations to solve the result will be an empty list.
 
      When 'globalsolve' is 'true', each solved-for variable is bound to
      its value in the solution of the equations.
@@ -20293,6 +20457,9 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      with intermediate expression ('%t') labels, and returns the list of
      labels.
 
+     See also 'algsys', 'eliminate'.  and 'solve'.
+
+     Examples:
           (%i1) e1: x + z = y;
           (%o1)                       z + x = y
           (%i2) e2: 2*a*x - y = 2*a^2;
@@ -21742,11 +21909,12 @@ File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Fu
 * Menu:
 
 * Dot::                         
+* Matrices::                         
 * Vectors::                     
 * eigen::
 
 
-File: maxima.info,  Node: Dot,  Next: Vectors,  Prev: Introduction to Matrices and Linear Algebra,  Up: Introduction to Matrices and Linear Algebra
+File: maxima.info,  Node: Dot,  Next: Matrices,  Prev: Introduction to Matrices and Linear Algebra,  Up: Introduction to Matrices and Linear Algebra
 
 23.1.1 Dot
 ----------
@@ -21777,9 +21945,50 @@ expressions involving '.', namely 'dot0nscsimp', 'dot0simp', 'dot1simp',
 and 'dotscrules'.
 
 
-File: maxima.info,  Node: Vectors,  Next: eigen,  Prev: Dot,  Up: Introduction to Matrices and Linear Algebra
+File: maxima.info,  Node: Matrices,  Next: Vectors,  Prev: Dot,  Up: Introduction to Matrices and Linear Algebra
 
-23.1.2 Vectors
+23.1.2 Matrices
+---------------
+
+Matrices are handled with speed and memory-efficiency in mind.  This
+means that assigning a matrix to a variable will create a reference to,
+not a copy of the matrix.  If the matrix is modified all references to
+the matrix point to the modified object (See 'copymatrix' for a way of
+avoiding this):
+     (%i1) M1:matrix([0,0],[0,0]);
+                                 [ 0  0 ]
+     (%o1)                       [      ]
+                                 [ 0  0 ]
+     (%i2) M2:M1;
+                                 [ 0  0 ]
+     (%o2)                       [      ]
+                                 [ 0  0 ]
+     (%i3) M1[1][1]:2;
+     (%o3)                           2
+     (%i4) M2;
+                                 [ 2  0 ]
+     (%o4)                       [      ]
+                                 [ 0  0 ]
+
+   Converting a matrix to nested lists and vice versa works the
+following way:
+     (%i1) l:[[1,2],[3,4]];
+     (%o1)                   [[1, 2], [3, 4]]
+     (%i2) M1:apply('matrix,l);
+                                 [ 1  2 ]
+     (%o2)                       [      ]
+                                 [ 3  4 ]
+     (%i3) M2:transpose(M1);
+                                 [ 1  3 ]
+     (%o3)                       [      ]
+                                 [ 2  4 ]
+     (%i4) args(M2);
+     (%o4)                   [[1, 3], [2, 4]]
+
+
+File: maxima.info,  Node: Vectors,  Next: eigen,  Prev: Matrices,  Up: Introduction to Matrices and Linear Algebra
+
+23.1.3 Vectors
 --------------
 
 'vect' is a package of functions for vector analysis.  'load ("vect")'
@@ -21803,7 +22012,7 @@ command 'declare(".", commutative)' must be executed.
 
 File: maxima.info,  Node: eigen,  Prev: Vectors,  Up: Introduction to Matrices and Linear Algebra
 
-23.1.3 eigen
+23.1.4 eigen
 ------------
 
 The package 'eigen' contains several functions devoted to the symbolic
@@ -22309,8 +22518,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      A matrix which has two eigenvectors for one eigenvalue (namely 2).
 
-          (%i1) M1 : matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0],
-                             [0, 0, 0, 2]);
+          (%i1) M1 : matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]);
                                    [ 0  1  0  0 ]
                                    [            ]
                                    [ 0  0  0  0 ]
@@ -22395,11 +22603,11 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      Returns a matrix generated from <a>, taking element '<a>[<i_1>,
      <j_1>]' as the upper-left element and '<a>[<i_2>, <j_2>]' as the
      lower-right element of the matrix.  Here <a> is a declared array
-     (created by 'array' but not by 'make_array') or an undeclared
-     array, or an array function, or a lambda expression of two
-     arguments.  (An array function is created like other functions with
-     ':=' or 'define', but arguments are enclosed in square brackets
-     instead of parentheses.)
+     (created by 'array' but not by 'make_array') or a 'hashed array',
+     or a 'memoizing function', or a lambda expression of two arguments.
+     (A 'memoizing function' is created like other functions with ':='
+     or 'define', but arguments are enclosed in square brackets instead
+     of parentheses.)
 
      If <j_1> is omitted, it is assumed equal to <i_1>.  If both <j_1>
      and <i_1> are omitted, both are assumed equal to 1.
@@ -22470,7 +22678,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      intermediate results.  As a consequence, the return value may
      contain factored integers.
 
-     'load(eigen)' loads this function.
+     'load("eigen")' loads this function.
 
      Example:
 
@@ -22496,12 +22704,11 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
           (%i1) load ("eigen")$
           (%i2) ip (f, g) := integrate (f * g, u, a, b);
           (%o2)          ip(f, g) := integrate(f g, u, a, b)
-          (%i3) y : gramschmidt([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
+          (%i3) y : gramschmidt ([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
                                          %pi cos(u) - 2
           (%o3)              [1, sin(u), --------------]
                                               %pi
-          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]),
-                                                          a= -%pi/2, b=%pi/2;
+          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]), a= -%pi/2, b=%pi/2;
           (%o4)                       [0, 0, 0]
 
  -- Function: ident (<n>)
@@ -23173,7 +23380,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      'fast_linsolve' is faster than 'linsolve' for system of equations
      which are sparse.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: grobner_basis ([<expr_1>, ..., <expr_m>])
      Returns a Groebner basis for the equations <expr_1>, ..., <expr_m>.
@@ -23188,7 +23395,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      by <expr_1>, ..., <expr_m>, that is, if and only if <f> is a
      polynomial combination of the elements of <expr_1>, ..., <expr_m>.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: set_up_dot_simplifications
           set_up_dot_simplifications (<eqns>, <check_through_degree>)
@@ -23208,26 +23415,26 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      The degree is that returned by 'nc_degree'.  This in turn is
      influenced by the weights of individual variables.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: declare_weights (<x_1>, <w_1>, ..., <x_n>, <w_n>)
      Assigns weights <w_1>, ..., <w_n> to <x_1>, ..., <x_n>,
      respectively.  These are the weights used in computing 'nc_degree'.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: nc_degree (<p>)
      Returns the degree of a noncommutative polynomial <p>.  See
      'declare_weights'.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: dotsimp (<f>)
      Returns 0 if and only if <f> is in the ideal generated by the
      equations, i.e., if and only if <f> is a polynomial combination of
      the elements of the equations.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
      If 'set_up_dot_simplifications' has been previously done, finds the
@@ -23239,7 +23446,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
           fast_central_elements ([x, y], 2);
           [y.y, x.x];
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: check_overlaps (<n>, <add_to_simps>)
      Checks the overlaps thru degree <n>, making sure that you have
@@ -23251,20 +23458,20 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      'rank_function'.  An optional third argument 'reset', 'false' says
      don't bother to query about resetting things.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: mono ([<x_1>, ..., <x_n>], <n>)
      Returns the list of independent monomials relative to the current
      dot simplifications of degree <n> in the variables <x_1>, ...,
      <x_n>.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: monomial_dimensions (<n>)
      Compute the Hilbert series through degree <n> for the current
      algebra.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: extract_linear_equations ([<p_1>, ..., <p_n>], [<m_1>,
           ..., <m_n>])
@@ -23274,7 +23481,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      <m_n>.  The coefficients should be scalars.  Use
      'list_nc_monomials' to build the list of monomials.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Function: list_nc_monomials
           list_nc_monomials ([<p_1>, ..., <p_n>])
@@ -23283,7 +23490,7 @@ File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introductio
      Returns a list of the non commutative monomials occurring in a
      polynomial <p> or a list of polynomials <p_1>, ..., <p_n>.
 
-     'load(affine)' loads this function.
+     'load("affine")' loads this function.
 
  -- Option variable: all_dotsimp_denoms
      Default value: 'false'
@@ -23432,7 +23639,7 @@ emptor!
 -----------------------------------
 
 The indicial tensor manipulation package may be loaded by
-'load(itensor)'.  Demos are also available: try 'demo(tensor)'.
+'load("itensor")'.  Demos are also available: try 'demo("tensor")'.
 
    In 'itensor' a tensor is represented as an "indexed object" .  This
 is a function of 3 groups of indices which represent the covariant,
@@ -23483,7 +23690,7 @@ depending on the setting of the 'iframe_flag' variable.
 package, specify the name of the metric, and perform some simple
 calculations.
 
-     (%i1) load(itensor);
+     (%i1) load("itensor");
      (%o1)      /share/tensor/itensor.lisp
      (%i2) imetric(g);
      (%o2)                                done
@@ -23618,7 +23825,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      twice) as the following example demonstrates.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(a([i,j],[k,l],m,n)*b([k,o],[j,m,p],q,r))$
                                           k l      j m p
@@ -23654,7 +23861,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      than either one by itself.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) allsym:true;
           (%o2)                                true
@@ -23829,7 +24036,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      'defrule' and 'applyb1' commands:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) matchdeclare(l1,listp);
           (%o2)                                done
@@ -23863,7 +24070,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
           (%i1) load(ctensor);
           (%o1)       /share/tensor/ctensor.mac
-          (%i2) load(itensor);
+          (%i2) load("itensor");
           (%o2)      /share/tensor/itensor.lisp
           (%i3) lg:matrix([sqrt(r/(r-2*m)),0,0,0],[0,r,0,0],
                           [0,0,sin(theta)*r,0],[0,0,0,sqrt((r-2*m)/r)]);
@@ -23937,7 +24144,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      instance:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) kdelta([1,2],[2,1]);
           (%o2)                                 - 1
@@ -23969,7 +24176,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      easily simplified with 'rename' or 'contract'.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) expr:ishow('levi_civita([],[i,j])
                            *'levi_civita([k,l],[])*a([j],[k]))$
@@ -24036,7 +24243,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      evaluation of 'levi_civita'.  For example:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) el1:ishow('levi_civita([i,j,k],[])*a([],[i])*a([],[j]))$
                                        i  j
@@ -24107,7 +24314,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      as the example below illustrates.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) expr:contract( expand( a([i1, j1, k1], [])
                      *kdels([i, j, k], [i1, j1, k1])))$
@@ -24207,7 +24414,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      vector field.  For example:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(liediff(v,a([i,j],[])*b([],[k],l)))$
                  k    %2            %2          %2
@@ -24242,7 +24449,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      cannot be directly evaluated in derivative form.  For instance, the
      following causes an error:
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) icurvature([i,j,k],[l],m);
           Maxima encountered a Lisp error:
@@ -24302,7 +24509,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      object <tensor> that have <n> or more derivative indices as the
      following example demonstrates.
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(a([i],[J,r],k,r)+a([i],[j,r,s],k,r,s))$
                                           J r      j r s
@@ -24344,7 +24551,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      seen from the following:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(g([],[a,b],c))$
                                                 a b
@@ -24398,7 +24605,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      'simpmetderiv' to obtain a contractible expression:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) imetric(g);
           (%o2)                                done
@@ -24489,7 +24696,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      'ev(<expr>,ichr2)'.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) entertensor()$
           Enter tensor name: a;
@@ -24543,7 +24750,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      the Riemann curvature tensor using the 'igeodesic_coords' function.
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(icurvature([r,s,t],[u]))$
                        u            u         %1         u
@@ -24605,7 +24812,7 @@ invoke the 'imetric' function.
 ('icc1' and 'icc2'), as the following example demonstrates:
 
 
-     (%i1) load(itensor);
+     (%i1) load("itensor");
      (%o1)      /share/tensor/itensor.lisp
      (%i2) iframe_flag:true;
      (%o2)                                true
@@ -24842,7 +25049,7 @@ added to the connection coefficients.  Similarly, when the flag
      demonstrated by the following example:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) imetric:g;
           (%o2)                                  g
@@ -24949,7 +25156,7 @@ applied.
      The behavior of the wedge product operator is controlled by the
      'igeowedge_flag' flag, as in the following example:
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(a([i])~b([j]))$
                                            a  b  - b  a
@@ -24986,7 +25193,7 @@ applied.
      order.  This ensures better simplification of expressions involving
      the '|' operator.  For instance:
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) decsym(a,2,0,[anti(all)],[]);
           (%o2)                                done
@@ -25011,7 +25218,7 @@ applied.
      form.  As such, this operation is also controlled by the setting of
      'igeowedge_flag'.  For instance:
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(extdiff(v([i]),j))$
                                             v    - v
@@ -25039,7 +25246,7 @@ applied.
      Compute the Hodge-dual of <expr>.  For instance:
 
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) imetric(g);
           (%o2)                            done
@@ -25095,7 +25302,7 @@ translate tensor expressions into appropriately indexed TeX objects.
      To use the 'tentex' function, you must first load 'tentex', as in
      the following example:
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) load(tentex);
           (%o2)       /share/tensor/tentex.lisp
@@ -25143,7 +25350,7 @@ that performs this task is 'ic_convert'.
      statement can be evaluated by just doing 'ev'.  The following
      examples demonstrate the features of this function.
 
-          (%i1) load(itensor);
+          (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
           (%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)
                 *b([i],[l,k]))$

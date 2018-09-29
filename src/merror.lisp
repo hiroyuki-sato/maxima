@@ -27,6 +27,10 @@
   "Signals a Maxima user error."
   (apply #'merror (fstringc l)))
 
+(defmfun $warning (&rest l)
+  "Signals a Maxima warning."
+  (apply #'mwarning l))
+
 (defmvar $error_size 60.
   "Expressions greater in SOME size measure over this value
   are replaced by symbols {ERREXP1, ERREXP2,...} in the MAXIMA-ERROR
@@ -73,7 +77,7 @@
 
 (defun merror (sstring &rest l)
   (declare (special errcatch *mdebug*))
-  (setq $error `((mlist) ,sstring ,@ l))
+  (setq $error `((mlist simp) ,sstring ,@ l))
   (and $errormsg ($errormsg))
   (cond (*mdebug*
 	 (let ((dispflag t) ret)
@@ -91,6 +95,9 @@
 	 (format t (intl:gettext "~& -- an error. To debug this try: debugmode(true);~%"))
 	 (force-output)
 	 (throw 'macsyma-quit 'maxima-error))))
+
+(defun mwarning (&rest l)
+  (format t "Warning: ~{~a~^ ~}~%" (mapcar #'$sconcat l)))
 
 (defmacro with-$error (&body body)
   "Let MERROR signal a MAXIMA-$ERROR condition."
