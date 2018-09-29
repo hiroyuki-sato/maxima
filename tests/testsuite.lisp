@@ -37,7 +37,7 @@
         ((mlist simp) "rtest16" #+ccl 50 #+ecl 50 #+acl 50 #+acl 241 #+ecl 561)
         "rtestode" "rtestode_zp"
         "rtest3"
-#-ecl	"rtest8"
+#-ecl	((mlist simp) "rtest8" #+(and m68k linux gnu) 101 #+(and m68k linux gnu) 104)
 #+ecl   ((mlist simp) "rtest8" 104)
         ((mlist simp) "rtest12" 76 78)
         "rexamples"
