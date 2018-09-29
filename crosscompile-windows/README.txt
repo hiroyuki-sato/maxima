@@ -3,23 +3,26 @@ Crosscompiling Maxima for Windows
 
 On a Ubuntu/Debian System just install some tools for crosscompiling:
 
-apt-get install g++-mingw-w64-i686 cmake nsis wine automake texinfo rsync p7zip-full tcl-dev tk-dev texlive g++ libgl1-mesa-dev gettext
+apt-get install g++-mingw-w64-i686 cmake nsis wine automake texinfo rsync p7zip-full texlive g++ gettext
 
 (If you are using a 64 bit operating system, it might be necessary to add
 the i386 architecture (https://wiki.debian.org/Multiarch/HOWTO) before).
+
+You will need CMake >= 3.6, if that is not included in your distribution,
+download a recent CMake from https://cmake.org/files/
 
 Then you can extract the Maxima sourcecode or clone the git repository
 and start the crosscompiling-process:
 
 
 cd crosscompile-windows/build # change to the build directory
-cmake ..
+cmake ..  # use the right CMake executable (CMake >= 3.6)
 make
 make package
 
-This will download the required Software (CLISP, Gnuplot, wxMaxima,
-wxWidgets, Tcl, Tk, jsMath TeX Fonts, SBCL, VTK) from the Internet
-into the directory "crosscompile-windows/download".
+This will download the required Software (CLISP, SBCL, Gnuplot, wxMaxima,
+wxWidgets, Tcl, Tk, VTK) from the Internet into the directory
+"crosscompile-windows/download".
 
 The packages will be compiled (if necessary) and a Windows 
 installer for Maxima is generated.
@@ -37,6 +40,10 @@ If you want to exclude VTK, use
 cmake -DUSE_VTK=NO ..
 (Attention: The size of the installer will approximately be 50% larger
 than without VTK).
+
+If you want to change the default Lisp, which will be used, you can
+use the option "-DWITH_DEFAULT_LISP=sbcl" in the cmake call (otherwise
+Clisp would be the default).
 
 
 In case a new release of a software is released (and no new patches are needed),
@@ -77,6 +84,17 @@ this installer (and uninstaller) understands the command line switch
 To select a installation directory for a unattended installation, use
 "/D=directory", e.g. to install to C:\maxima the command would be:
 maxima-clisp-sbcl-VERSION-win32.exe /S /D=C:\maxima
+This parameter must be the last one.
+
+The installer supports components, you can deselect (by default a full
+installation is done) some parts either during the installation process
+or using the command line switches:
+- VTK using the command line option /no_vtk
+- Gnuplot using /no_gnuplot (installation is strongly recommended!)
+- wxMaxima using /no_wxmaxima (installation is strongly recommended!)
+
+These switches are mainly useful for an unattended installation.
+
 
 Testing the installed package:
 ==============================
@@ -85,16 +103,15 @@ After building it, you can (and should) test the new Maxima installation
 package. Install it on Windows and check that the installation (and later
 the deinstallation) works properly. To test Maxima, try the following:
 
- o Run the maxima testsuite: run_testsuite()
+ o Run the maxima testsuite: run_testsuite();
  o Try compiling a function.  This has been a problem in the past
-    - f(x):=x+2;
-    - compile(f);
-    - f(2);
+    f(x):=x+2;
+    compile(f);
+    f(2);
  o Test the graphics systems in both xmaxima and wxmaxima
     plot2d(sin(x),[x,0,10]);
     plot2d(sin(x),[x,0,10],[plot_format,xmaxima]);
     plot3d(x*y,[x,-1,1],[y,-1,1]);
-    scene(cone);
     plotdf([-y,x],[trajectory_at,5,0]);
     load(draw)$
     draw3d(xu_grid = 30, yv_grid = 60, surface_hide = true,
@@ -104,7 +121,7 @@ the deinstallation) works properly. To test Maxima, try the following:
                        theta, 0, %pi, phi, 0, 2 * %pi))$
  o Check that plotting to Postscript works
     plot2d(sin(x),[x,0,10],[ps_file,"ps_test.ps"]);
- o Try out the on-line help: describe(sin)
+ o Try out the on-line help: describe(sin);
  o Try out, if external packages (e.g. lapack) work:
    load(lapack);
    fpprintprec : 6;
@@ -114,8 +131,6 @@ the deinstallation) works properly. To test Maxima, try the following:
    should return the eigenvalues of M (and false, false since we did
    not compute eigenvectors: [[7.54331, 12.4067], false, false]
 
- o Check that the windows help files work from the Start menu 
-   and from within xmaxima and wxmaxima
  o Try if double-clicking on a .wxmx file opens it
  o The wxMaxima source comes with a file (test/testbench_simple.wxmx)
    that tries to trigger everything that has gone wrong in previous

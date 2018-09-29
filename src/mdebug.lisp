@@ -140,11 +140,17 @@
 		      (t (return-from complete-prop
 			   (car all)))))))
 
-(defun $backtrace (&optional (n 30))
+(defun $backtrace (&optional (n 0 n-p))
+  (unless (typep n '(integer 0))
+    (merror
+      (intl:gettext "backtrace: number of frames must be a nonnegative integer; got ~M~%")
+      n))
   (let ($display2d)
-    (loop for i below n
-	   for j from *current-frame*
-	   while (print-one-frame j t))))
+    (loop for i from 0
+          for j from *current-frame*
+          when (and n-p (= i n))
+            return nil
+          while (print-one-frame j t))))
 
 ;; if this is NIL then nothing more is checked in eval
 
@@ -158,15 +164,13 @@
 (defvar *break-step* nil)
 (defvar *step-next* nil)
 
-(defun step-into (&optional (n 1))
-  ;;FORM is the next form about to be evaluated.
-  n
+(defun step-into (&optional ignored)
+  (declare (ignore ignored))
   (or *break-points* (init-break-points))
   (setq *break-step* 'break-step-into)
   :resume)
 
 (defun step-next (&optional (n 1))
-  n
   (let ((fun (current-step-fun)))
     (setq *step-next* (cons n fun))
     (or *break-points* (init-break-points))

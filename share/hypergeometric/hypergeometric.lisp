@@ -305,9 +305,6 @@
 (defun 1f0-numeric (a x)
   (/ 1 (expt (- 1 x) a)))
    	  
-(defun gamma (x)
-  (bigfloat (maxima::$bfloat (maxima::take '(maxima::%gamma) (maxima::to x)))))
-
 ;; This is DLMF: http://dlmf.nist.gov/15.15#E1 with zo = 1/2. Also here is Maxima code that
 ;; sums the first n+1 terms of the sum. The CL function 2f1-numeric-alt uses a running
 ;; error and it sums until three consecutive partial sums have a modified relative difference
@@ -588,9 +585,6 @@ ff(a,b,c,x,n) := block([f, f0 : 1, f1 : 1- 2 * b / c,s : 1,k : 1, cf : a / (1-2/
 
 (defun float-or-bigfloat-p (x)
   (or (floatp x) ($bfloatp x)))
-
-(defun float-or-rational-p (x)
-  (or (floatp x) ($ratnump x)))
 
 ;; Return true iff it is possible to evaluate hypergeometric(a,b,x) using (exact)
 ;; rational arithmetic. Thus (1) x and every member of a and b (Common Lisp lists) must be

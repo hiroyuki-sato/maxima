@@ -77,6 +77,7 @@ algebraic integers to take effect.
 @closecatbox
 @end defvr
 
+@anchor{berlefact}
 @c -----------------------------------------------------------------------------
 @defvr {Option variable} berlefact
 Default value: @code{true}
@@ -398,6 +399,7 @@ See also @mref{num}
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{divide}
 @deffn {Function} divide (@var{p_1}, @var{p_2}, @var{x_1}, @dots{}, @var{x_n})
 
 computes the quotient and remainder
@@ -428,6 +430,7 @@ Note that @code{y} is the main variable in the second example.
 @closecatbox
 @end deffn
 
+@anchor{eliminate}
 @c -----------------------------------------------------------------------------
 @deffn {Function} eliminate ([@var{eqn_1}, @dots{}, @var{eqn_n}], [@var{x_1}, @dots{}, @var{x_k}])
 
@@ -534,33 +537,37 @@ functions, into factors irreducible over the integers.
 @code{factor (@var{expr}, @var{p})} factors @var{expr} over the field of 
 rationals with an element adjoined whose minimum polynomial is @var{p}.
 
-@code{factor} uses @code{ifactors} function for factoring integers.
+@code{factor} uses @mref{ifactors} function for factoring integers.
 
-@code{factorflag} if @code{false} suppresses the factoring of integer factors
+@mref{factorflag} if @code{false} suppresses the factoring of integer factors
 of rational expressions.
 
-@code{dontfactor} may be set to a list of variables with respect to which
+@mref{dontfactor} may be set to a list of variables with respect to which
 factoring is not to occur.  (It is initially empty).  Factoring also
 will not take place with respect to any variables which are less
 important (using the variable ordering assumed for CRE form) than
 those on the @code{dontfactor} list.
 
-@code{savefactors} if @code{true} causes the factors of an expression which
+@mref{savefactors} if @code{true} causes the factors of an expression which
 is a product of factors to be saved by certain functions in order to
 speed up later factorizations of expressions containing some of the
 same factors.
 
-@code{berlefact} if @code{false} then the Kronecker factoring algorithm will
+@mref{berlefact} if @code{false} then the Kronecker factoring algorithm will
 be used otherwise the Berlekamp algorithm, which is the default, will
 be used.
 
-@code{intfaclim} if @code{true} maxima will give up factorization of
+@mref{intfaclim} if @code{true} maxima will give up factorization of
 integers if no factor is found after trial divisions and Pollard's rho
 method.  If set to @code{false} (this is the case when the user calls
 @code{factor} explicitly), complete factorization of the integer will be
 attempted.  The user's setting of @code{intfaclim} is used for internal
 calls to @code{factor}.  Thus, @code{intfaclim} may be reset to prevent
 Maxima from taking an inordinately long time factoring large integers.
+
+@mref{factor_max_degree} if set to a positive integer @code{n} will
+prevent certain polynomials from being factored if their degree in any
+variable exceeds @code{n}.
 
 See also @mrefdot{collectterms}
 
@@ -689,6 +696,75 @@ Examples:
 @closecatbox
 @end deffn
 
+@anchor{factor_max_degree}
+
+
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} factor_max_degree
+Default value: @code{1000}
+
+When factor_max_degree is set to a positive integer @code{n}, it will prevent
+Maxima from attempting to factor certain polynomials whose degree in any
+variable exceeds @code{n}. If @mref{factor_max_degree_print_warning} is true,
+a warning message will be printed. @code{factor_max_degree} can be used to
+prevent excessive memory usage and/or computation time and stack overflows.
+Note that "obvious" factoring of polynomials such as @code{x^2000+x^2001} to
+@code{x^2000*(x+1)} will still take place. To disable this behavior, set
+@code{factor_max_degree} to @code{0}.
+
+Example:
+@c ===beg===
+@c factor_max_degree : 100$
+@c factor(x^100-1);
+@c factor(x^101-1);
+@c ===end===
+@example
+(%i1) factor_max_degree : 100$
+@group
+(%i2) factor(x^100-1);
+                        2        4    3    2
+(%o2) (x - 1) (x + 1) (x  + 1) (x  - x  + x  - x + 1)
+   4    3    2            8    6    4    2
+ (x  + x  + x  + x + 1) (x  - x  + x  - x  + 1)
+   20    15    10    5        20    15    10    5
+ (x   - x   + x   - x  + 1) (x   + x   + x   + x  + 1)
+   40    30    20    10
+ (x   - x   + x   - x   + 1)
+@end group
+@group
+(%i3) factor(x^101-1);
+                               101
+Refusing to factor polynomial x    - 1
+               because its degree exceeds factor_max_degree (100)
+                             101
+(%o3)                       x    - 1
+@end group
+@end example
+
+See also: @mref{factor_max_degree_print_warning}
+
+@opencatbox
+@category{Polynomials}
+@closecatbox
+@end defvr
+
+@anchor{factor_max_degree_print_warning}
+@c -----------------------------------------------------------------------------
+@defvr {Option variable} factor_max_degree_print_warning
+Default value: @code{true}
+
+When factor_max_degree_print_warning is true, then Maxima will print a
+warning message when the factoring of a polynomial is prevented because
+its degree exceeds the value of factor_max_degree.
+
+See also: @mref{factor_max_degree}
+
+@opencatbox
+@category{Polynomials}
+@closecatbox
+@end defvr 
+
+@anchor{factorflag}
 @c -----------------------------------------------------------------------------
 @defvr {Option variable} factorflag
 Default value: @code{false}
@@ -866,7 +942,6 @@ Examples:
 @c fullratsubst (b*a, a^2, a^3);
 @c fullratsubst ([a^2 = b, b^2 = c, c^2 = a], a^3*b*c);
 @c fullratsubst (a^2 = b*a, a^3);
-@c errcatch (fullratsubst (b*a^2, a^2, a^3));
 @example
 (%i1) load ("lrats")$
 @end example
@@ -1152,6 +1227,7 @@ Examples:
 
 @c I SUSPECT THE FOLLOWING TEXT IS OUTDATED DUE TO CHANGES IN INTEGER FACTORING CODE
 
+@anchor{intfaclim}
 @c -----------------------------------------------------------------------------
 @defvr {Option variable} intfaclim
 Default value: true
@@ -1198,6 +1274,7 @@ Examples:
 @example
 @group
 (%i1) rat(x/2.0);
+
 rat: replaced 0.5 by 1/2 = 0.5
                                 x
 (%o1)/R/                        -
@@ -1217,6 +1294,7 @@ rat: replaced 0.5 by 1/2 = 0.5
 @example
 @group
 (%i1) solve(1.0-x,x), keepfloat;
+
 rat: replaced 1.0 by 1/1 = 1.0
 (%o1)                        [x = 1]
 @end group
@@ -1303,9 +1381,9 @@ equation may be given as first argument.
 @defvr {Option variable} modulus
 Default value: @code{false}
 
-When @code{modulus} is a positive number @var{p}, operations on rational numbers
-(as returned by @code{rat} and related functions) are carried out modulo
-@var{p}, using the so-called "balanced" modulus system in which @code{@var{n}
+When @code{modulus} is a positive number @var{p}, operations on canonical rational
+expressions (CREs, as returned by @code{rat} and related functions) are carried out
+modulo @var{p}, using the so-called "balanced" modulus system in which @code{@var{n}
 modulo @var{p}} is defined as an integer @var{k} in
 @code{[-(@var{p}-1)/2, ..., 0, ..., (@var{p}-1)/2]} when @var{p} is odd, or
 @code{[-(@var{p}/2 - 1), ..., 0, ...., @var{p}/2]} when @var{p} is even, such
@@ -1540,7 +1618,7 @@ Returns the polynomial @var{p_1} divided by the polynomial @var{p_2}.  The
 arguments @var{x_1}, @dots{}, @var{x_n} are interpreted as in @code{ratvars}.
 
 @code{quotient} returns the first element of the two-element list returned by
-@code{divide}.
+@mref{divide}.
 
 @c NEED SOME EXAMPLES HERE
 @opencatbox
@@ -1600,6 +1678,7 @@ Examples:
 @c rat (%, y, a, x);
 @c ===end===
 @example
+@group
 (%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x) /
       (4*y^2 + x^2);
                                            4
@@ -1610,6 +1689,7 @@ Examples:
 (%o1)         ------------------------------------
                               2    2
                            4 y  + x
+@end group
 @group
 (%i2) rat (%, y, a, x);
                             2 a + 2 y
@@ -2443,6 +2523,7 @@ On most problems the default value @code{subres} should be best.
 @closecatbox
 @end defvr
 
+@anchor{savefactors}
 @c -----------------------------------------------------------------------------
 @defvr {Option variable} savefactors
 Default value: @code{false}

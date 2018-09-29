@@ -1201,6 +1201,21 @@ map('pop, '[l1,l2,l3]);
 (remove("[", symmetric),0);
 0$
 
+/* ensure that remove("[", symmetric) doesn't interfere with other stuff --
+ * bug previously caused rtest_levin to fail if executed after this one.
+ */
+
+?mopp (?mlist);
+true;
+
+constantp ([1.0, 2.0]);
+true;
+
+member ("[", props);
+false;
+
+/* resume other tests */
+
 (aa[1] : [1], push(aa[1],aa[1]), [aa[1],pop(aa[1]), aa[1]]);
 [[[1],1],[1],[1]]$
 
@@ -1507,3 +1522,51 @@ cos(x)^2;
 trigsimp (sin(x)^2 - 1);
 -cos(x)^2;
 
+/* Bug 3375: missing eigenvectors
+   Results are ugly.  Just check that no eigenvectors are []
+ */
+([[vals,mult],vects]:eigenvectors(matrix([0,20,50],[1/20,0,0],[0,1/10,0])),
+ some(emptyp,vects));
+false;
+
+([[vals,mult],vects]:eigenvectors(matrix([0,1,0],[1,0,1],[2,0,1])),
+ some(emptyp,vects));
+false;
+
+/* Bug 1820: missing eigenvectors */
+([[vals,mult],vects]:eigenvectors(matrix([-1.8890437,-0.3],[1,0])),
+ some(emptyp,vects));
+false;
+
+kill(vals,mult,vects);
+done;
+
+(reset(use_fast_arrays),1);
+1;
+
+/* SF bug #3399: "trigreduce gives malformed property list error" */
+
+trigreduce (atan (tan (x + y + z)));
+x + y + z;
+
+/* this is the original example from the bug report;
+ * verify that it doesn't trigger an error, but do not inspect the result itself
+ */
+block ([expr, A, B, a, b, x, y],
+  expr:-(2*(B*atan(((A*b+A*a-B)*(cos(B*x)*sin(A*y)+sin(B*x)*cos(A*y)))/(sqrt(A^2*b^2-2*A*B*b-A^2*a^2+B^2)*(sin(B*x)*sin(A*y)-cos(B*x)*cos(A*y)-1)))
+    +sqrt(A^2*b^2-2*A*B*b-A^2*a^2+B^2)*atan((cos(B*x)*sin(A*y)+sin(B*x)*cos(A*y))/(sin(B*x)*sin(A*y)-cos(B*x)*cos(A*y)-1))))
+     /(A*B*sqrt(A^2*b^2-2*A*B*b-A^2*a^2+B^2)),
+  errcatch (trigreduce(expr)),
+  if %% = [] then 'failed('trigreduce(expr)) else true);
+true;
+
+/* SF bug #3413: "false in definite integral of rational"
+ * SF bug #2644: "integrate(1/(1+s^7),s,0,%pi) includes a 'false' term"
+ * obviously we can update these next two results if someday Maxima can compute these integrals
+ */
+
+integrate(1/(x^8+x+1),x,0,1);
+'integrate(1/(x^8+x+1),x,0,1);
+
+integrate(1/(1+s^7),s,0,%pi);
+'integrate(1/(1+s^7),s,0,%pi);

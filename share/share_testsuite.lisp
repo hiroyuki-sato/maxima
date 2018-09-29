@@ -48,11 +48,15 @@
     "rtest_numericalio"
     ((mlist simp) "rtest_simplify_sum" 57)
     "rtest_solve_rec"
-    ((mlist simp) "rteststringproc" 12 14)
+#-(or gcl ecl)    "rtest_stringproc"
+#+gcl    ((mlist simp) "rtest_stringproc" 14)
+#+ecl    ((mlist simp) "rtest_stringproc" 12 69)
     "rtest_opproperties"
     "rtest_stats"
     "rtest_distrib"
-    "rtest_descriptive"
+#-(or gcl ecl)   "rtest_descriptive"
+#+gcl    ((mlist simp) "rtest_descriptive" 86 97)
+#+ecl    ((mlist simp) "rtest_descriptive" 86 97)
     "rtest_interpol"
     "rtest_levin"
     "rtest_fractals"
@@ -62,36 +66,58 @@
     "rtest_itensor"
     ((mlist simp) "rtest_fourier_elim" 146 147 148 149)
     ((mlist simp) "rtest_sequence" 55)
-    "test-cholesky"
-    "test-eigens-by-jacobi"
-    "test-lu"
-    "test-linalg"
-    "test-polynomialp"
-    "test-matrixexp"
+    "rtest_cholesky"
+    "rtest_eigens_by_jacobi"
+    "rtest_lu"
+    "rtest_linalg"
+    "rtest_polynomialp"
+    "rtest_matrixexp"
     ((mlist simp) "rtest_romberg" 18 20)
     "rtest_wilcoxon"
     "rtest_bitwise"
-    "gf_test"
-    "rtest_namespaces"
-    "arag_test"
-    "rtest_pdiff"
-    "rtest_to_poly"
-    ((mlist simp) "rtestprintf" 27 29 38 39 40 47 48 54)
+    "rtest_gf"
+#+(or clisp sbcl ccl cmucl)    ((mlist simp) "rtest_namespaces" 7)
+#-(or clisp sbcl ccl cmucl)    "rtest_namespaces"
+    "rtest_arag"
+#-(or ccl ecl) ((mlist simp) "rtest_pdiff" 62)
+#+ccl "rtest_pdiff"
+#+ecl ((mlist simp) "rtest_pdiff" 38 61 62 63 65 69)
+    ((mlist simp) "rtest_to_poly" 13 14 15 16 17 18 19 20 25)
+#+ecl               ((mlist simp) "rtestprintf" 38 54 61 63 65 66 69 70)
+#+clisp             ((mlist simp) "rtestprintf" 27 38 61 63 65 69)
+#+gcl               ((mlist simp) "rtestprintf" 7 29 38 39 40 47 48 61 63 65 69 70)
+#+abcl              ((mlist simp) "rtestprintf" 40)
+#+ccl              ((mlist simp) "rtestprintf" 27 61)
+#-(or clisp gcl ecl abcl ccl)    ((mlist simp) "rtestprintf" 38 61 63 65 69)
     "rtest_simplex"
     "rtest_graphs"
-    "rtest_abs_integrate"
+    ((mlist simp) "rtest_abs_integrate" 66 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 123 125 126 127 164 178)
     "rtest_pochhammer"
-    ((mlist simp) "rtest_to_poly_solve" 64 74 80)
-    "rtest_hg"
-    "rtest_nfloat"
+#-gcl    ((mlist simp) "rtest_to_poly_solve" 64 74 80 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 55 70 72 73 76 77 78 83 86 87 88 89 90 96 97 102 116 120 124 125 126 127 128 129 130 131 133 134 135 136 137 138 139 140 141 142 143 144 146 147 148 149 157 158 159 162 163 164 165 166 167 168 169 173 179 180 181 183 184 196 197 198 199 200 201 202 203 204 207 208 210 214 215 216 217 222 233 234 240 241 242 243 244 245 253 262 263 265 268 273 274 277 278 282 283 284 285 286 287 288 289 290 291 292 293 295 296 299 300 311 312 318 319 320 322)
+#+gcl    ((mlist simp) "rtest_to_poly_solve" 64 74 80 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 55 70 72 73 76 77 78 83 86 87 88 89 90 96 97 102 116 120 124 125 126 127 128 129 130 131 133 134 135 136 137 138 139 140 141 142 143 144 146 147 148 149 157 158 159 162 163 164 165 166 167 168 169 173 179 180 181 183 184 196 197 198 199 200 201 202 203 204 207 208 210 212 214 215 216 217 222 233 234 240 241 242 243 244 245 253 262 263 265 268 273 274 277 278 282 283 284 285 286 287 288 289 290 291 292 293 295 296 299 300 311 312 318 319 320 322)
+#-(or gcl abcl)    ((mlist simp) "rtest_hg" 87)
+#+gcl              ((mlist simp) "rtest_hg" 87 120)
+#+abcl             ((mlist simp) "rtest_hg" 120)
+    ((mlist simp) "rtest_nfloat" 25)
     "rtest_mnewton"
     "rtest_solve_rat_ineq"
     ((mlist simp) "rtest_vect" 4 9 10 13 16 19 20 21 24 25)
     "rtest_antid"
     "rtest_bffac"
     "rtest_grobner"
-    "rtest_finance"
+#-(or gcl ecl)    "rtest_finance"
+#+gcl    ((mlist simp) "rtest_finance" 9 10 11)
+#+ecl    ((mlist simp) "rtest_finance" 9 10 11)
     "rtest_fft"
     "rtest_rfft"
-    "rtest_decfp")
+#-gcl    "rtest_decfp"
+#+gcl    ((mlist simp) "rtest_decfp" 1 2 3 4)
+    "rtest_wrstcse"
+#-ecl    "rtest_draw"
+#-(or sbcl ccl ecl abcl)    "rtest_engineering_format"
+#+sbcl    ((mlist simp) "rtest_engineering_format" 6)
+#+abcl    ((mlist simp) "rtest_engineering_format" 6)
+#+ccl    ((mlist simp) "rtest_engineering_format" 6 8 10 12)
+#+ecl    ((mlist simp) "rtest_engineering_format" 6 8 10 12 14)
+    )
   )

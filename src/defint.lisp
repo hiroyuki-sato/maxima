@@ -1420,7 +1420,7 @@ in the interval of integration.")
 	   (setq exp (mapcar 'pdis (cdr (oddelm (cdr exp)))))))))
 
 (defun mtoinf (grand var)
-  (prog (ans sd* sn* p* pe* n d s nc dc $savefactors checkfactors temp)
+  (prog (ans ans1 sd* sn* p* pe* n d s nc dc $savefactors checkfactors temp)
      (setq $savefactors t)
      (setq sn* (setq sd* (list 1.)))
      (cond ((eq ($sign (m+ loopstop* -1)) '$pos)
@@ -1473,11 +1473,10 @@ in the interval of integration.")
 					      (cadddr pe*))))
 			  (setq ans (m+ ans (m*t (m^ -1 p*) nn*)))
 			  (return (m* (m// nc dc) ans))))))))
-     (cond ((ratp grand var)
-	    (setq ans (m*t '$%pi (zmtorat n (cond ((mtimesp d) d)
-						  (t ($sqfr d)))
-					  s
-					  #'mtorat)))
+	  (cond
+	    ((and (ratp grand var)
+	          (setq ans1 (zmtorat n (cond ((mtimesp d) d) (t ($sqfr d))) s #'mtorat)))
+	    (setq ans (m*t '$%pi ans1))
 	    (return (m* (m// nc dc) ans)))
 	   ((and (or (%einvolve grand)
 		     (involve grand '(%sinh %cosh %tanh)))
@@ -1573,8 +1572,9 @@ in the interval of integration.")
 	(let ((rsn* t))
 	  (setq n ($xthru (m+l
 			   (mapcar #'(lambda (a b)
-				       (m// (funcall fn1 (car a) b (deg b))
-					    (cadr a)))
+				       (let ((foo (funcall fn1 (car a) b (deg b))))
+					 (if foo (m// foo (cadr a))
+						 (return-from zmtorat nil))))
 				   n
 				   d)))))
 	(return (cond (c (m// n c))
@@ -1582,8 +1582,8 @@ in the interval of integration.")
      on
 
      (setq n (funcall fn1 n d s))
-     (return  (sratsimp (cond (c  (m// n c))
-			      (t n))))))
+     (return (when n (sratsimp (cond (c  (m// n c))
+				     (t n)))))))
 
 (defun pfrnum (f g n n2 var)
   (let ((varlist (list var))  genvar)
@@ -1887,6 +1887,15 @@ in the interval of integration.")
 	 (r (add a (mul -1 (mul q 2 '$%pi)))))
     (cons q r)))
 
+; returns cons of (integer_part . fractional_part) of a
+(defun lower-infr (a)
+  ;; I think we really want to compute how many full periods are in a
+  ;; and the remainder.
+  (let* (;(q (igprt (div a (mul 2 '$%pi))))
+	 (q (mfuncall '$ceiling (div a (mul 2 '$%pi))))
+	 (r (add a (mul -1 (mul q 2 '$%pi)))))
+    (cons q r)))
+
 
 ;; Return the integer part of r.
 (defun igprt (r)
@@ -1981,6 +1990,11 @@ in the interval of integration.")
 	      (go out)))
        ;; Compute p and d for the lower limit a.
        (setq l (infr l))
+       ;; avoid an extra trip around the circle - helps skip principal values
+       (if (ratgreaterp (car b) (car l))		; if q > p
+	   (setq l (cons (add 1 (car l))		;   p += 1
+			 (add (mul -1 %pi2) (cdr l))))) ;   d -= 2*%pi
+       
        ;; Compute -integrate(f,x,0,d)
        (setq int-zero-to-d
 	     (cond ((setq ans (try-intsc e (cdr l) var))

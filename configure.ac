@@ -8,13 +8,18 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.41.0])
+AC_INIT([maxima], [5.42.0])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability tar-ustar])
 
 # On debian-based systems this makes us use the right gcl version out-of-the box.
 # On other systems it doesn't hurt.
 export GCL_ANSI=t
+
+# This enables running the testbench for "make check" on gcl versions with the old
+# memory management (Which in January 2018 includes all Versions shipped with debian
+# and Ubuntu)
+export GCL_MEM_MULTIPLE=0.1
 
 AM_PATH_LISPDIR
 
@@ -789,7 +794,7 @@ AC_ARG_ENABLE(mathjax,
   [case "${enableval}" in
       yes) mathjax=true
            mathjax_enable='@set mathjax true'
-           mathjax_script="<script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>"
+           mathjax_script="<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>"
 ;;
       no)  mathjax=false
            mathjax_enable='@clear mathjax'
@@ -1051,14 +1056,14 @@ AC_ARG_WITH(default-lisp,
 			AC_MSG_ERROR(Unknown argument ${DEFAULTLISP} to --with-default-lisp) 
 			;;
      	esac],
-	[if test x"${clisp}" = xtrue ; then
-		DEFAULTLISP=clisp
+	[if test x"${sbcl}" = xtrue ; then
+		DEFAULTLISP=sbcl
 	elif test x"${cmucl}" = xtrue ; then
 		DEFAULTLISP=cmucl
 	elif test x"${scl}" = xtrue ; then
 		DEFAULTLISP=scl
-	elif test x"${sbcl}" = xtrue ; then
-	   	DEFAULTLISP=sbcl
+	elif test x"${clisp}" = xtrue ; then
+	   	DEFAULTLISP=clisp
 	elif test x"${gcl}" = xtrue ; then
 	   	DEFAULTLISP=gcl
 	elif test x"${acl}" = xtrue ; then
