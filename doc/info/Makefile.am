@@ -32,7 +32,7 @@ endif
 
 SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8) $(DE_DIR) $(DE_DIR_UTF8)
 
-info_TEXINFOS = maxima.texi
+info_TEXINFOS = #maxima.texi
 maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  Bugs.texi Help.texi Command.texi DataTypes.texi Constants.texi Lists.texi \
  Arrays.texi defstruct.texi Expressions.texi Operators.texi Evaluation.texi \
@@ -44,7 +44,7 @@ maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  Runtime.texi Miscellaneous.texi Rules.texi nset.texi Function.texi \
  Program.texi Debugging.texi alt-display.texi asympa.texi \
  augmented_lagrangian.texi bitwise.texi bernstein.texi bode.texi celine.texi \
- clebsch_gordan.texi combinatorics.texi \
+ clebsch_gordan.texi combinatorics.texi odepack.texi \
  cobyla.texi contrib_ode.texi descriptive.texi diag.texi distrib.texi \
  draw.texi drawdf.texi dynamics.texi engineering-format.texi \
  wrstcse.texi ezunits.texi f90.texi finance.texi \
@@ -150,6 +150,7 @@ figures/draw_colorbox.gif\
 figures/draw_color.gif\
 figures/draw_color2.gif\
 figures/draw_color3.gif\
+figures/draw_color4.gif\
 figures/draw_columns.gif\
 figures/draw_contour2.gif\
 figures/draw_contour.gif\
@@ -370,6 +371,7 @@ figures/draw_colorbox.pdf\
 figures/draw_color.pdf\
 figures/draw_color2.pdf\
 figures/draw_color3.pdf\
+figures/draw_color4.pdf\
 figures/draw_columns.pdf\
 figures/draw_contour2.pdf\
 figures/draw_contour.pdf\
@@ -510,31 +512,41 @@ UNINSTALL_CHM = uninstall-chm
 CLEAN_CHM = clean-chm
 endif
 
+INFOLANG ?= en
+
 # We need the html docu to be generated on "make all" because if we fail
 # to do so a "sudo make install" will generate the html docu as read-only
 # fails conflicting with a subsequent "make html".
 all-local: html maxima.info maxima-index.lisp $(MAXIMA_CHM)
 
-maxima.info: $(top_srcdir)/doc/info/maxima.texi
-	$(MAKEINFO) --split-size=1000000 $<
+infoname = maxima
+include $(top_srcdir)/common-info.mk
+maxima.info : maxima.texi $(maxima_TEXINFOS)
+	-$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) \
+	  --split-size=1000000 $(srcdir)/maxima.texi
 
-html: maxima.html contents.hhc
+html: maxima_0.html contents.hhc
 
-maxima-index.lisp: maxima.info build_index.pl
-	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
+maxima-index.lisp: build_index.pl maxima.info
+	/usr/bin/env perl $^ ':crlf' > $@
 
-maxima.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
-	sh extract_categories.sh maxima
+DOLLAR_SIGN = $$
 
-maxima.epub: maxima.html
+maxima_0.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
+#	@: sh $(srcdir)/extract_categories.sh maxima
+#	./build_html.sh
+	touch $@
+
+maxima.epub: maxima_0.html
 	ebook-convert maxima_singlepage.html maxima.epub --breadth-first "--title=Maxima @manual_version@ Manual" "--authors=Maxima Team" --language=en
 
-maxima.pdf: $(top_srcdir)/doc/info/maxima_pdf.texi $(top_srcdir)/doc/info/maxima.texi $(maxima_TEXINFOS) $(pdffigures)
-	$(TEXI2PDF) $(AM_V_texinfo) -o $@ $<
-	rm -f maxima_pdf.fns maxima_pdf.vr maxima_pdf.toc maxima_pdf.fn maxima_pdf.aux maxima_pdf.log maxima_pdf.vrs
+maxima.pdf: maxima_pdf.texi $(maxima_TEXINFOS) $(pdffigures)
+	$(TEXI2PDF) $(AM_V_texinfo) -o maxima.pdf $<
+	rm -f maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
+	maxima.toc maxima.fn maxima.aux maxima.log
 
-contents.hhc index.hhk: maxima.html
-	perl ./create_index
+contents.hhc index.hhk: maxima_0.html
+	/usr/bin/env perl $(srcdir)/create_index `grep -l '<h2.*Table of Contents' maxima_[0-9]*.html`
 
 # Squash error on exit from hhc
 maxima.chm: maxima.hhp contents.hhc index.hhk
@@ -544,19 +556,19 @@ include $(top_srcdir)/common.mk
 genericdir = $(dochtmldir)
 genericdirDATA = $(figurefiles) \
 contents.hhc index.hhk header.hhp maxima.hhp
-
 htmlname = maxima
 htmlinstdir = $(dochtmldir)
 include $(top_srcdir)/common-html.mk
 
 all-local: warn_texinfo
 dist-hook: check_texinfo html
+pdf-local: maxima.pdf
 
 install-data-local: install-maxima-index $(INSTALL_CHM)
 uninstall-local: uninstall-maxima-index $(UNINSTALL_CHM)
 
 install-maxima-index: maxima-index.lisp
-	test -z "$(infodir)" || mkdir -p -- "$(DESTDIR)$(infodir)"
+	$(MKDIR_P) "$(DESTDIR)$(infodir)"
 	$(INSTALL_DATA) maxima-index.lisp "$(DESTDIR)$(infodir)/maxima-index.lisp"
 
 uninstall-maxima-index: maxima-index.lisp
@@ -565,19 +577,17 @@ uninstall-maxima-index: maxima-index.lisp
 clean-local: clean-info clean-html $(CLEAN_CHM)
 
 clean-info:
-	rm -f maxima.info*
-	rm -f maxima-index.lisp
+	rm -f $(wildcard maxima.info* maxima-index.lisp) \
+	      $(wildcard $(addprefix $(srcdir),maxima.info* maxima-index.lisp))
 	rm -f maxima.fns
 
 clean-html:
-	rm -f maxima*.html
-	rm -f contents.hhc
-	rm -f index.hhk
-	rm -f maxima.chm
+	rm -f $(wildcard maxima*.html contents.hhc index.hhk maxima.chm) \
+	      $(wildcard $(addprefix $(srcdir),maxima*.html contents.hhc index.hhk maxima.chm))
 
 if CHM
 install-chm: maxima.chm
-	test -z "$(DESTDIR)$(docchmdir)" || mkdir -p -- "$(DESTDIR)$(docchmdir)"
+	$(MKDIR_P) "$(DESTDIR)$(docchmdir)"
 	$(INSTALL_DATA) maxima.chm "$(DESTDIR)$(docchmdir)/maxima.chm"
 
 uninstall-chm:
@@ -588,8 +598,8 @@ clean-chm:
 	rm -rf chm
 endif
 
-EXTRA_DIST = texi2html manual.css texi2html.init \
-    $(genericdirDATA) $(pdffigures) $(macfiles) \
+EXTRA_DIST = texi2html manual.css texi2html.init maxima.texi \
+    $(genericdirDATA) $(pdffigures) $(macfiles) $(maxima_TEXINFOS) $(figurefiles) \
     create_index build_index.pl maxima-index.lisp docdraw.mac \
     extract_categories1.awk extract_categories1.sed extract_categories.sh check_tab fix_tab \
     figures/Makefile.am figures/Makefile.in figures/README \
@@ -598,13 +608,13 @@ EXTRA_DIST = texi2html manual.css texi2html.init \
 
 check_texinfo:
 	@pattern=`printf "\t"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print0 | xargs -0 $(EGREP) -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run make distclean and then doc/info/fix_tab to fix the problem." ; exit 1 )
 
 warn_texinfo:
 	@pattern=`printf "\t"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print0 | xargs -0 $(EGREP) -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run doc/info/fix_tab to fix the problem." )
 

@@ -16,10 +16,10 @@ endif
 
 genericdir = $(xmaximadir)
 
-genericdirDATA = demos.html examples.html intro.html plotmaxima.html maxima-new.png maxima-new.svg maxima-new.gif maxima-icon.ico maxima-icon.png maxima-icon.gif 
+genericdirDATA = demos.html examples.html intro.html plotmaxima.html net.sourceforge.maxima.png net.sourceforge.maxima.svg net.sourceforge.maxima.gif maxima-icon.ico maxima-icon.png maxima-icon.gif 
 
 appicondir = $(datarootdir)/pixmaps
-dist_appicon_DATA = maxima-new.png maxima-new.svg
+dist_appicon_DATA = net.sourceforge.maxima.png net.sourceforge.maxima.svg
 
 bin_SCRIPTS = xmaxima
 
@@ -84,8 +84,7 @@ TKSOURCES = \
 XMAXIMA_FILES = $(TKSOURCES)
 XMAXIMASOURCES = Tkmaxima/Header.tcl $(TKSOURCES) autoconf-variables.tcl xmaxima-trailer.tcl
 
-
-xmaxima: $(XMAXIMASOURCES) Tkmaxima/tclIndex
+xmaxima: $(XMAXIMASOURCES)
 	rm -f xmaxima && \
 	cat Tkmaxima/Header.tcl > xmaxima && \
 	(cd "$(abs_top_srcdir)/interfaces/xmaxima/" ; cat $(XMAXIMA_FILES)) >> xmaxima && \

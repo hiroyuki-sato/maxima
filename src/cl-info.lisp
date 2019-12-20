@@ -142,7 +142,7 @@
                 thereis (progn
                           (finish-output *debug-io*)
                           (print-prompt prompt-count)
-                          (force-output)
+                          (finish-output)
                           #-(or sbcl cmu) (clear-input)
                           (select-info-items
                             (parse-user-choice nitems) items-list)))

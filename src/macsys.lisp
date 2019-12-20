@@ -22,6 +22,7 @@
 (defmvar $prompt '_
   "Prompt symbol of the demo function, playback, and the Maxima break loop.")
 
+
 ;; A prefix and suffix that are wrapped around every prompt that Maxima
 ;; emits. This is designed for use with text-based interfaces that drive Maxima
 ;; through standard input and output and need to decorate prompts to make the
@@ -166,8 +167,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
   (declare (ignore unused))
   0)
 
-(defun continue (&optional (input-stream *standard-input*)
-		 batch-or-demo-flag)
+(defun continue (&key ((:stream input-stream) *standard-input*) batch-or-demo-flag one-shot)
   (declare (special *socket-connection* *maxima-run-string*))
   (if *maxima-run-string* (setq batch-or-demo-flag :batch))
   (if (eql batch-or-demo-flag :demo)
@@ -187,8 +187,9 @@ DESTINATION is an actual stream (rather than nil for a string)."
 	 (area-after)
 	 (etime-used)
 	 (c-tag)
-	 (d-tag))
-	(nil)
+	 (d-tag)
+         (finish nil one-shot))
+        (finish nil)
       (declare (ignorable area-before area-after))
       (catch 'return-from-debugger
 	(when (or (not (checklabel $inchar))
@@ -280,7 +281,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 		(gctime (- (caddr area-after) (caddr area-before))))
 	    (if (= 0 gctime) nil (format t (intl:gettext " including GC time ~s s,") (* 0.001 gctime)))
 	    (format t (intl:gettext " using ~s cons-cells and ~s other bytes.~%") conses other))
-	  (force-output))
+	  (finish-output))
 	(unless $nolabels
           (putprop '$% (cons time-used 0) 'time)
 	  (putprop d-tag (cons time-used  0) 'time))
@@ -288,7 +289,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 	    (displa `((mlabel) ,d-tag ,$%)))
 	(when (eq batch-or-demo-flag ':demo)
           (princ (break-prompt))
-          (force-output)
+          (finish-output)
 	  (let (quitting)
 	    (loop
 	      ;;those are common lisp characters you're reading here
@@ -297,7 +298,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
                 ((#\page)
                  (fresh-line)
                  (princ (break-prompt))
-                 (force-output))
+                 (finish-output))
                 ((#\?)
                  (format t
                    (intl:gettext
@@ -322,7 +323,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 		 (unread-char char input-stream)
 		 (return nil))))))))
 
-(defun $break (&rest arg-list)
+(defmfun $break (&rest arg-list)
   (prog1 (apply #'$print arg-list)
     (mbreak-loop)))
 
@@ -337,7 +338,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 			 (mread *standard-input*))))
 	(case r
 	  (($exit) (throw 'break-exit t))
-	  (t (errset (displa (meval r)) t)))))))
+	  (t (errset (displa (meval r)))))))))
 
 (defun merrbreak (&optional arg)
   (format *debug-io* "~%Merrbreak:~A" arg)
@@ -398,10 +399,10 @@ DESTINATION is an actual stream (rather than nil for a string)."
 
 
 (defun batch-internal (fileobj demo-p)
-  (continue (make-echo-stream fileobj *standard-output*)
-	    (if demo-p ':demo ':batch)))
+  (continue :stream (make-echo-stream fileobj *standard-output*)
+	    :batch-or-demo-flag (if demo-p ':demo ':batch)))
 
-(defun $demo (&rest arg-list)
+(defmfun $demo (&rest arg-list)
   (let ((tem ($file_search (car arg-list) $file_search_demo)))
     (or tem (merror (intl:gettext "demo: could not find ~M in ~M.")
 		    (car arg-list) '$file_search_demo))
@@ -421,7 +422,8 @@ DESTINATION is an actual stream (rather than nil for a string)."
   "")
 
 ;; Declare a build_info structure, then remove it from the list of user-defined structures.
-(defstruct1 '((%build_info) $version $timestamp $host $lisp_name $lisp_version))
+(defstruct1 '((%build_info) $version $timestamp $host $lisp_name $lisp_version
+	      $maxima_userdir $maxima_tempdir $maxima_objdir $maxima_frontend $maxima_frontend_version))
 (let nil (declare (special $structures))
   (setq $structures (cons '(mlist) (remove-if #'(lambda (x) (eq (caar x) '%build_info)) (cdr $structures)))))
 
@@ -446,7 +448,12 @@ DESTINATION is an actual stream (rather than nil for a string)."
             ,(format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" year month day hour minute seconds)
             ,*autoconf-host*
             ,#+sbcl (ensure-readably-printable-string (lisp-implementation-type)) #-sbcl (lisp-implementation-type)
-            ,#+sbcl (ensure-readably-printable-string (lisp-implementation-version)) #-sbcl (lisp-implementation-version)))))))
+            ,#+sbcl (ensure-readably-printable-string (lisp-implementation-version)) #-sbcl (lisp-implementation-version)
+	    ,$maxima_userdir
+	    ,$maxima_tempdir
+	    ,$maxima_objdir
+	    ,$maxima_frontend
+	    ,$maxima_frontend_version))))))
 
 ;; SBCL base strings aren't readably printable.
 ;; Attempt a work-around. Yes, this is terribly ugly.
@@ -468,6 +475,16 @@ DESTINATION is an actual stream (rather than nil for a string)."
        (coerce (mstring (mfuncall '$@ form '$lisp_name)) 'string)))
      (lisp-version-string (format nil (intl:gettext "Lisp implementation version: ~a")
        (coerce (mstring (mfuncall '$@ form '$lisp_version)) 'string)))
+     (maxima-userdir-string (format nil (intl:gettext "User dir: ~a")
+       (coerce (mstring (mfuncall '$@ form '$maxima_userdir)) 'string)))
+     (maxima-tempdir-string (format nil (intl:gettext "Temp dir: ~a")
+       (coerce (mstring (mfuncall '$@ form '$maxima_tempdir)) 'string)))
+     (maxima-objdir-string (format nil (intl:gettext "Object dir: ~a")
+       (coerce (mstring (mfuncall '$@ form '$maxima_objdir)) 'string)))
+     (maxima-frontend-string (format nil (intl:gettext "Frontend: ~a")
+       (coerce (mstring (mfuncall '$@ form '$maxima_frontend)) 'string)))
+     (maxima-frontend-version-string (format nil (intl:gettext "Frontend version: ~a")
+       (coerce (mstring (mfuncall '$@ form '$maxima_frontend_version)) 'string)))
      (bkptht 1)
      (bkptdp 1)
      (lines 0)
@@ -477,7 +494,12 @@ DESTINATION is an actual stream (rather than nil for a string)."
     (forcebreak (reverse (coerce timestamp-string 'list)) 0)
     (forcebreak (reverse (coerce host-string 'list)) 0)
     (forcebreak (reverse (coerce lisp-name-string 'list)) 0)
-    (forcebreak (reverse (coerce lisp-version-string 'list)) 0))
+    (forcebreak (reverse (coerce lisp-version-string 'list)) 0)
+    (forcebreak (reverse (coerce maxima-userdir-string 'list)) 0)
+    (forcebreak (reverse (coerce maxima-tempdir-string 'list)) 0)
+    (forcebreak (reverse (coerce maxima-objdir-string 'list)) 0)
+    (forcebreak (reverse (coerce maxima-frontend-string 'list)) 0)
+    (if $maxima_frontend (forcebreak (reverse (coerce maxima-frontend-version-string 'list)) 0)))
   nil)
 
 (setf (get '%build_info 'dimension) 'dimension-build-info)
@@ -512,7 +534,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 		#+(or cmu scl sbcl openmcl lispworks) 'continue
 		#-(or kcl cmu scl sbcl openmcl lispworks) nil
 		(catch 'macsyma-quit
-		  (continue input-stream batch-flag)
+		  (continue :stream input-stream :batch-or-demo-flag batch-flag)
 		  (format t *maxima-epilog*)
 		  (bye)))))))
 
@@ -649,7 +671,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
                  (setq result (meval* v)))
                result)))))))
 
-(defun $sconcat (&rest x)
+(defmfun $sconcat (&rest x)
   (let ((ans "") )
     (dolist (v x)
       (setq ans (concatenate 'string ans
@@ -659,7 +681,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 				    (coerce (mstring v) 'string))))))
     ans))
 
-(defun $system (&rest args)
+(defmfun $system (&rest args)
   ;; If XMaxima is running, direct output from command into *SOCKET-CONNECTION*.
   ;; From what I can tell, GCL, ECL, and Clisp cannot redirect the output into an existing stream. Oh well.
   (let ((s (and (boundp '*socket-connection*) *socket-connection*))
@@ -692,7 +714,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
     #+abcl (extensions::run-shell-command (apply '$sconcat args) :output (or s *standard-output*))
     #+lispworks (system:run-shell-command (apply '$sconcat args) :wait t)))
 
-(defun $room (&optional (arg nil arg-p))
+(defmfun $room (&optional (arg nil arg-p))
   (if (and arg-p (member arg '(t nil) :test #'eq))
       (room arg)
       (room)))
@@ -715,7 +737,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
     (progn
       (format t (intl:gettext "~&Maxima encountered a Lisp error:~%~% ~A") condition)
       (format t (intl:gettext "~&~%Automatically continuing.~%To enable the Lisp debugger set *debugger-hook* to nil.~%"))
-      (force-output)
+      (finish-output)
     )
     (error () (ignore-errors (bye))))
   (throw 'return-from-debugger t))
@@ -727,12 +749,28 @@ DESTINATION is an actual stream (rather than nil for a string)."
     (setq t0-real (get-internal-real-time))
     (setq t0-run (get-internal-run-time)))
 
-  (defun $absolute_real_time () (get-universal-time))
+  (defmfun $absolute_real_time () (get-universal-time))
 
-  (defun $elapsed_real_time ()
+  (defmfun $elapsed_real_time ()
     (let ((elapsed-real-time (- (get-internal-real-time) t0-real)))
       (/ elapsed-real-time float-units)))
 
-  (defun $elapsed_run_time ()
+  (defmfun $elapsed_run_time ()
     (let ((elapsed-run-time (- (get-internal-run-time) t0-run)))
       (/ elapsed-run-time float-units))))
+
+;; Tries to manually trigger the lisp's garbage collector
+;; and returns true if it knew how to do that.
+(defmfun $garbage_collect ()
+  #+allegro
+  (progn (excl::gc) t)
+  #+(or clisp ecl)
+  (progn (ext::gc) t)
+  #+gcl
+  (progn (si::gbc t) t)
+  #+sbcl
+  (progn (sb-ext::gc :full t) t)
+  #+cmucl
+  (progn (ext:gc :full t) t)
+  #-(or allegro clisp ecl gcl sbcl cmucl)
+  nil)

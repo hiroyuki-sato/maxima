@@ -12,8 +12,8 @@ if you are interested in working on a port.
 When Maxima is recompiled, the Lisp implementation is selected by
 an argument of the form `--enable-foolisp' for the configure script.
 `./configure --help' shows a list of the Lisp types recognized by
-configure (among other options). Always specify the Lisp type(s)
-you want maxima to be built with:
+configure (among other options). It is possible to specify several
+Lisp type(s) you want maxima to be built with at the same time.
 configure tries to autodetect the Lisp type if it is not specified,
 but it has been reported that autodetection can fail.
 
@@ -54,8 +54,22 @@ computer running a different Clisp version. Also Clisp uses an
 extremely efficient memory handling which means it might not run
 out of memory where ECL, SBCL and GCL do.
 
+CLISP version 2.49 has a bug that causes it to output garbled data
+if the front-end is fast enough to acknowledge a data packet while
+the next data packet is still being prepared.
+
 There are Clisp implementations for many platforms including 
 MS Windows and Unix-like systems. 
+
+Maxima compiled with a typical linux install of clisp 2.49.92
+typically depends on the following libraries:
+
+ * libc
+ * libffcall
+ * libreadline
+ * libsigsegv
+ * libtinfo
+ * libunistring
 
 --------------------------------------------------------------------
 CMUCL <http://www.cons.org/cmucl/>
@@ -103,6 +117,15 @@ Also, the special variable *FEATURES* should include the keyword :ANSI-CL.
 There are GCL implementations for many platforms
 including MS Windows and Unix-like systems.
 
+Maxima compiled using a typical linux install using gcl 2.6.12
+typically depends on:
+
+ * libc
+ * libgmp
+ * libreadline
+ * libx11
+ * gcc
+ 
 --------------------------------------------------------------------
 SBCL <http://www.sbcl.org>
 
@@ -111,7 +134,15 @@ but most notably, it is simpler to rebuild SBCL than CMUCL.
 For many tasks a maxima compiled with SBCL is considerably faster than
 GCL. For other tasks GCL is faster than SBCL.
 
-rmaxima is recommended for use with SBCL. See CMUCL above.
+As sbcl doesn't use readline it is recommended to use rmaxima for using
+a command-line maxima with SBCL. For common details of SBCL and CMUCL
+See CMUCL above.
+
+Maxima compiled using a typical linux install using sbcl 1.4.10
+typically depends on:
+
+ * libc
+ * zlib
 
 --------------------------------------------------------------------
 Allegro Common Lisp <http://franz.com/products/allegro-common-lisp/>
@@ -132,17 +163,27 @@ the 64-bit version passes all tests.
 ECL <https://common-lisp.net/project/ecl/>
     
 	ECL is known to work with maxima and passes the testsuite.  ECL
-runs on many platforms and OSes. It is faster than CLISP, but seems to
-tend more towards fragmenting the available memory. ECL tends to be slower 
+runs on many platforms and OSes and is the lisp compiler used for
+maxima on android. It is faster than CLISP, but seems to tend more
+towards fragmenting the available memory. ECL tends to be slower 
 than GCL or SBCL but faster than CLISP.
 
 ECL must be configured to use the C compiler, building Maxima with the
 ECL bytecode compiler is (currently) not possible.  So do *not* use the
 option "--with-cmp=no" when building ECL.
 
+Maxima compiled using a typical linux install using ecl 16.1.2
+typically only depends on:
+
+ * libc
+
 --------------------------------------------------------------------
 Armed Bear Common Lisp (ABCL) <https://common-lisp.net/project/armedbear/>
-    Maxima can also compiled with ABCL - but currently not with
-a 'configure'-option but only with the purely Lisp-based procedure.
-(see INSTALL.lisp)
+
+ABCL's main feature is that is tightly integrated into java.
+That also means that it is an interpreter running in a virtual machine
+which makes it even slower than clisp. Also java doesn't automatically
+convert tail-recursive function calls to loops which means that in a
+few functions might run out of stack space faster than other lisps.
+
 

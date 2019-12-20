@@ -17,7 +17,7 @@
 (defstruct (bkpt (:type list)) form file file-line function)
 
 ;; This function is not documented and not used in Maxima core or share.
-(defun $bt()
+(defmfun $bt()
   (loop for v in *baktrcl*
 	 do 
 	 (and (consp v)
@@ -90,8 +90,7 @@
 
 ;; these are in the system package in gcl...
 #-gcl
-(progn 'compile
-       (defun break-call (key args prop &aux fun)
+(progn (defun break-call (key args prop &aux fun)
 	 (setq fun (complete-prop key 'keyword prop))
 	 (setq key fun)
 	 (or fun (return-from break-call nil))
@@ -140,7 +139,7 @@
 		      (t (return-from complete-prop
 			   (car all)))))))
 
-(defun $backtrace (&optional (n 0 n-p))
+(defmfun $backtrace (&optional (n 0 n-p))
   (unless (typep n '(integer 0))
     (merror
       (intl:gettext "backtrace: number of frames must be a nonnegative integer; got ~M~%")
@@ -286,7 +285,7 @@
     (progn
       (fresh-line *standard-output*)
       (princ mprompt *standard-output*)
-      (force-output *standard-output*)
+      (finish-output *standard-output*)
       (setf *prompt-on-read-hang* nil))
     (progn
       (setf *prompt-on-read-hang* t)
@@ -632,7 +631,7 @@ Command      Description~%~
 		  (:show
 		   (when tem (show-break-point i)
 			 (terpri)
-			 (force-output))
+			 (finish-output))
 		   tem)))))))
 
 ;; get the most recent function on the stack with step info.
