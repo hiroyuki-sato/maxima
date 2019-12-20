@@ -15,6 +15,15 @@
 @SET_MAKE@
 
 # versioned installation directories
+
+# Installation/uninstallation and distribution for .html files.
+# infoname -- info base name (e.g. maxima or xmaxima)
+# infodir  -- info installation directory
+# langsdir -- info installation subdirectory
+
+# Installation/uninstallation and distribution for .html files.
+# htmlname    -- html base name (e.g. maxima or xmaxima)
+# htmlinstdir -- html installation directory  
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -79,8 +88,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(top_srcdir)/common.mk \
-	$(srcdir)/../common-lang-recode.mk $(srcdir)/Makefile.in \
+DIST_COMMON = $(srcdir)/../common-lang-recode.mk \
+	$(top_srcdir)/common.mk $(top_srcdir)/common-info.mk \
+	$(top_srcdir)/common-html.mk $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am
 subdir = doc/info/pt_BR.utf8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -104,13 +114,81 @@ am__v_at_0 = @
 am__v_at_1 = 
 SOURCES =
 DIST_SOURCES =
+AM_V_DVIPS = $(am__v_DVIPS_@AM_V@)
+am__v_DVIPS_ = $(am__v_DVIPS_@AM_DEFAULT_V@)
+am__v_DVIPS_0 = @echo "  DVIPS   " $@;
+am__v_DVIPS_1 = 
+AM_V_MAKEINFO = $(am__v_MAKEINFO_@AM_V@)
+am__v_MAKEINFO_ = $(am__v_MAKEINFO_@AM_DEFAULT_V@)
+am__v_MAKEINFO_0 = @echo "  MAKEINFO" $@;
+am__v_MAKEINFO_1 = 
+AM_V_INFOHTML = $(am__v_INFOHTML_@AM_V@)
+am__v_INFOHTML_ = $(am__v_INFOHTML_@AM_DEFAULT_V@)
+am__v_INFOHTML_0 = @echo "  INFOHTML" $@;
+am__v_INFOHTML_1 = 
+AM_V_TEXI2DVI = $(am__v_TEXI2DVI_@AM_V@)
+am__v_TEXI2DVI_ = $(am__v_TEXI2DVI_@AM_DEFAULT_V@)
+am__v_TEXI2DVI_0 = @echo "  TEXI2DVI" $@;
+am__v_TEXI2DVI_1 = 
+AM_V_TEXI2PDF = $(am__v_TEXI2PDF_@AM_V@)
+am__v_TEXI2PDF_ = $(am__v_TEXI2PDF_@AM_DEFAULT_V@)
+am__v_TEXI2PDF_0 = @echo "  TEXI2PDF" $@;
+am__v_TEXI2PDF_1 = 
+AM_V_texinfo = $(am__v_texinfo_@AM_V@)
+am__v_texinfo_ = $(am__v_texinfo_@AM_DEFAULT_V@)
+am__v_texinfo_0 = -q
+am__v_texinfo_1 = 
+AM_V_texidevnull = $(am__v_texidevnull_@AM_V@)
+am__v_texidevnull_ = $(am__v_texidevnull_@AM_DEFAULT_V@)
+am__v_texidevnull_0 = > /dev/null
+am__v_texidevnull_1 = 
+am__TEXINFO_TEX_DIR = $(srcdir)/$(srcdir)/..
+DVIS =
+PDFS =
+PSS =
+HTMLS =
+TEXINFOS =
+TEXI2DVI = texi2dvi
+TEXI2PDF = $(TEXI2DVI) --pdf --batch
+MAKEINFOHTML = $(MAKEINFO) --html
+AM_MAKEINFOHTMLFLAGS = $(AM_MAKEINFOFLAGS)
+DVIPS = dvips
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__installdirs = "$(DESTDIR)$(infodir)"
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ABCL_JAR = @ABCL_JAR@
 ACLOCAL = @ACLOCAL@
 ACL_NAME = @ACL_NAME@
 AMTAR = @AMTAR@
@@ -131,12 +209,14 @@ CMUCL_RUNTIME_PATH = @CMUCL_RUNTIME_PATH@
 CYGPATH_W = @CYGPATH_W@
 DEFAULTLISP = @DEFAULTLISP@
 DEFS = @DEFS@
+DISTCLEAN_EXTRA_SRC_FILES = @DISTCLEAN_EXTRA_SRC_FILES@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 ECL_NAME = @ECL_NAME@
 EGREP = @EGREP@
 EMACS = @EMACS@
+EMACSDIR = @EMACSDIR@
 EMACSLOADPATH = @EMACSLOADPATH@
 EXEEXT = @EXEEXT@
 GCCVER = @GCCVER@
@@ -149,6 +229,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+JRE = @JRE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -170,6 +251,7 @@ PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
 PYTHON_PLATFORM = @PYTHON_PLATFORM@
 PYTHON_PREFIX = @PYTHON_PREFIX@
 PYTHON_VERSION = @PYTHON_VERSION@
+SBCL_EXTRA_ARGS = @SBCL_EXTRA_ARGS@
 SBCL_NAME = @SBCL_NAME@
 SCL_NAME = @SCL_NAME@
 SCL_RUNTIME = @SCL_RUNTIME@
@@ -233,6 +315,7 @@ lang_pt = @lang_pt@
 lang_pt_br = @lang_pt_br@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lisp_only_build = @lisp_only_build@
 lispdir = @lispdir@
 lisps_enabled = @lisps_enabled@
 localedir = @localedir@
@@ -266,10 +349,18 @@ top_srcdir = @top_srcdir@
 win32 = @win32@
 win64 = @win64@
 win64_installer = @win64_installer@
+INFOLANG = pt_BR
+TEXINFO_TEX = $(srcdir)/../texinfo.tex
+info_TEXINFOS = 
+@CHM_TRUE@genericdirDATA = \
+@CHM_TRUE@contents.hhc index.hhk header.hhp
+
+LANGSRCDIR = $(srcdir)/../$(INFOLANG)
+LANGBUILDDIR = $(builddir)/../$(INFOLANG)
+langsdir = /$(INFOLANG).utf8
+# pt_BR is not known to texinfo
+INFOLANGOPT = $(INFOLANG:_BR=)
 MAKEINFOFLAGS = --enable-encoding
-TEXINFO_TEX = ../pt_BR/texinfo.tex
-langsdir = /pt_BR.utf8
-origlangsdir = ../pt_BR
 @USE_RECODE_TRUE@urecode = true
 fcharset = ISO-8859-1
 tcharset = UTF-8
@@ -282,20 +373,20 @@ docchmdir = $(docdir)/chm
 dochtmldir = $(docdir)/html
 docsharedir = $(docdir)/share
 demodir = $(verpkgdatadir)/demo
-emacsdir = $(verpkgdatadir)/emacs
+emacsdir = $(EMACSDIR)
 sharedir = $(verpkgdatadir)/share
 instsrcdir = $(verpkgdatadir)/src
 xmaximadir = $(verpkgdatadir)/xmaxima
 insttestsdir = $(verpkgdatadir)/tests
-genericdir = $(dochtmldir)/pt_BR.utf8
-genericdirDATA = \
-contents.hhc index.hhk header.hhp
-
 EXTRA_DIST = maxima-index.lisp $(genericdirDATA)
+infoname = maxima
+htmlinstdir = $(dochtmldir)/$(INFOLANG).utf8
+htmlname = maxima
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(srcdir)/../common-lang-recode.mk $(am__configure_deps)
+.SUFFIXES: .dvi .ps
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/../common-lang-recode.mk $(top_srcdir)/common.mk $(top_srcdir)/common-info.mk $(top_srcdir)/common-html.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -316,7 +407,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
-$(top_srcdir)/common.mk $(srcdir)/../common-lang-recode.mk:
+$(srcdir)/../common-lang-recode.mk $(top_srcdir)/common.mk $(top_srcdir)/common-info.mk $(top_srcdir)/common-html.mk:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -326,6 +417,97 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+.dvi.ps:
+	$(AM_V_DVIPS)TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
+	$(DVIPS) $(AM_V_texinfo) -o $@ $<
+
+uninstall-dvi-am:
+	@$(NORMAL_UNINSTALL)
+	@list='$(DVIS)'; test -n "$(dvidir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(dvidir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(dvidir)/$$f"; \
+	done
+
+uninstall-html-am:
+	@$(NORMAL_UNINSTALL)
+	@list='$(HTMLS)'; test -n "$(htmldir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " rm -rf '$(DESTDIR)$(htmldir)/$$f'"; \
+	  rm -rf "$(DESTDIR)$(htmldir)/$$f"; \
+	done
+
+uninstall-info-am:
+	@$(PRE_UNINSTALL)
+	@if test -d '$(DESTDIR)$(infodir)' && $(am__can_run_installinfo); then \
+	  list='$(INFO_DEPS)'; \
+	  for file in $$list; do \
+	    relfile=`echo "$$file" | sed 's|^.*/||'`; \
+	    echo " install-info --info-dir='$(DESTDIR)$(infodir)' --remove '$(DESTDIR)$(infodir)/$$relfile'"; \
+	    if install-info --info-dir="$(DESTDIR)$(infodir)" --remove "$(DESTDIR)$(infodir)/$$relfile"; \
+	    then :; else test ! -f "$(DESTDIR)$(infodir)/$$relfile" || exit 1; fi; \
+	  done; \
+	else :; fi
+	@$(NORMAL_UNINSTALL)
+	@list='$(INFO_DEPS)'; \
+	for file in $$list; do \
+	  relfile=`echo "$$file" | sed 's|^.*/||'`; \
+	  relfile_i=`echo "$$relfile" | sed 's|\.info$$||;s|$$|.i|'`; \
+	  (if test -d "$(DESTDIR)$(infodir)" && cd "$(DESTDIR)$(infodir)"; then \
+	     echo " cd '$(DESTDIR)$(infodir)' && rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]"; \
+	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
+	   else :; fi); \
+	done
+
+uninstall-pdf-am:
+	@$(NORMAL_UNINSTALL)
+	@list='$(PDFS)'; test -n "$(pdfdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pdfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pdfdir)/$$f"; \
+	done
+
+uninstall-ps-am:
+	@$(NORMAL_UNINSTALL)
+	@list='$(PSS)'; test -n "$(psdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(psdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(psdir)/$$f"; \
+	done
+
+dist-info: $(INFO_DEPS)
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list='$(INFO_DEPS)'; \
+	for base in $$list; do \
+	  case $$base in \
+	    $(srcdir)/*) base=`echo "$$base" | sed "s|^$$srcdirstrip/||"`;; \
+	  esac; \
+	  if test -f $$base; then d=.; else d=$(srcdir); fi; \
+	  base_i=`echo "$$base" | sed 's|\.info$$||;s|$$|.i|'`; \
+	  for file in $$d/$$base $$d/$$base-[0-9] $$d/$$base-[0-9][0-9] $$d/$$base_i[0-9] $$d/$$base_i[0-9][0-9]; do \
+	    if test -f $$file; then \
+	      relfile=`expr "$$file" : "$$d/\(.*\)"`; \
+	      test -f "$(distdir)/$$relfile" || \
+		cp -p $$file "$(distdir)/$$relfile"; \
+	    else :; fi; \
+	  done; \
+	done
+
+mostlyclean-aminfo:
+	-rm -rf 
+
+clean-aminfo:
+
+maintainer-clean-aminfo:
+	@list='$(INFO_DEPS)'; for i in $$list; do \
+	  i_i=`echo "$$i" | sed 's|\.info$$||;s|$$|.i|'`; \
+	  echo " rm -f $$i $$i-[0-9] $$i-[0-9][0-9] $$i_i[0-9] $$i_i[0-9][0-9]"; \
+	  rm -f $$i $$i-[0-9] $$i-[0-9][0-9] $$i_i[0-9] $$i_i[0-9][0-9]; \
+	done
 tags TAGS:
 
 ctags CTAGS:
@@ -365,11 +547,14 @@ distdir: $(DISTFILES)
 	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
+	  dist-info dist-hook
 check-am: all-am
 check: check-am
-all-am: Makefile all-local
+all-am: Makefile $(INFO_DEPS) all-local
 installdirs:
+	for dir in "$(DESTDIR)$(infodir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -402,7 +587,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-local mostlyclean-am
+clean-am: clean-aminfo clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -410,101 +595,177 @@ distclean-am: clean-am distclean-generic
 
 dvi: dvi-am
 
-dvi-am:
+dvi-am: $(DVIS)
 
 html: html-am
 
-html-am:
+html-am: $(HTMLS)
 
 info: info-am
 
-info-am:
+info-am: $(INFO_DEPS)
 
-install-data-am: install-data-local
+install-data-am: install-data-local install-info-am
 
 install-dvi: install-dvi-am
 
-install-dvi-am:
-
+install-dvi-am: $(DVIS)
+	@$(NORMAL_INSTALL)
+	@list='$(DVIS)'; test -n "$(dvidir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(dvidir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(dvidir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dvidir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dvidir)" || exit $$?; \
+	done
 install-exec-am:
 
 install-html: install-html-am
 
-install-html-am:
-
+install-html-am: $(HTMLS)
+	@$(NORMAL_INSTALL)
+	@list='$(HTMLS)'; list2=; test -n "$(htmldir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(htmldir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(htmldir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p" || test -d "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  $(am__strip_dir) \
+	  d2=$$d$$p; \
+	  if test -d "$$d2"; then \
+	    echo " $(MKDIR_P) '$(DESTDIR)$(htmldir)/$$f'"; \
+	    $(MKDIR_P) "$(DESTDIR)$(htmldir)/$$f" || exit 1; \
+	    echo " $(INSTALL_DATA) '$$d2'/* '$(DESTDIR)$(htmldir)/$$f'"; \
+	    $(INSTALL_DATA) "$$d2"/* "$(DESTDIR)$(htmldir)/$$f" || exit $$?; \
+	  else \
+	    list2="$$list2 $$d2"; \
+	  fi; \
+	done; \
+	test -z "$$list2" || { echo "$$list2" | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(htmldir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(htmldir)" || exit $$?; \
+	done; }
 install-info: install-info-am
 
-install-info-am:
-
+install-info-am: $(INFO_DEPS)
+	@$(NORMAL_INSTALL)
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list='$(INFO_DEPS)'; test -n "$(infodir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(infodir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(infodir)" || exit 1; \
+	fi; \
+	for file in $$list; do \
+	  case $$file in \
+	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
+	  esac; \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  file_i=`echo "$$file" | sed 's|\.info$$||;s|$$|.i|'`; \
+	  for ifile in $$d/$$file $$d/$$file-[0-9] $$d/$$file-[0-9][0-9] \
+	               $$d/$$file_i[0-9] $$d/$$file_i[0-9][0-9] ; do \
+	    if test -f $$ifile; then \
+	      echo "$$ifile"; \
+	    else : ; fi; \
+	  done; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(infodir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(infodir)" || exit $$?; done
+	@$(POST_INSTALL)
+	@if $(am__can_run_installinfo); then \
+	  list='$(INFO_DEPS)'; test -n "$(infodir)" || list=; \
+	  for file in $$list; do \
+	    relfile=`echo "$$file" | sed 's|^.*/||'`; \
+	    echo " install-info --info-dir='$(DESTDIR)$(infodir)' '$(DESTDIR)$(infodir)/$$relfile'";\
+	    install-info --info-dir="$(DESTDIR)$(infodir)" "$(DESTDIR)$(infodir)/$$relfile" || :;\
+	  done; \
+	else : ; fi
 install-man:
 
 install-pdf: install-pdf-am
 
-install-pdf-am:
-
+install-pdf-am: $(PDFS)
+	@$(NORMAL_INSTALL)
+	@list='$(PDFS)'; test -n "$(pdfdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pdfdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pdfdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pdfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pdfdir)" || exit $$?; done
 install-ps: install-ps-am
 
-install-ps-am:
-
+install-ps-am: $(PSS)
+	@$(NORMAL_INSTALL)
+	@list='$(PSS)'; test -n "$(psdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(psdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(psdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(psdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(psdir)" || exit $$?; done
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 	-rm -f Makefile
-maintainer-clean-am: distclean-am maintainer-clean-generic
+maintainer-clean-am: distclean-am maintainer-clean-aminfo \
+	maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-aminfo mostlyclean-generic
 
 pdf: pdf-am
 
-pdf-am:
+pdf-am: $(PDFS)
 
 ps: ps-am
 
-ps-am:
+ps-am: $(PSS)
 
-uninstall-am: uninstall-local
+uninstall-am: uninstall-dvi-am uninstall-html-am uninstall-info-am \
+	uninstall-local uninstall-pdf-am uninstall-ps-am
 
 .MAKE: install-am install-strip
 
-.PHONY: all all-am all-local check check-am clean clean-generic \
-	clean-local cscopelist-am ctags-am dist-hook distclean \
-	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
-	install-data-local install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am tags-am uninstall uninstall-am uninstall-local
+.PHONY: all all-am all-local check check-am clean clean-aminfo \
+	clean-generic clean-local cscopelist-am ctags-am dist-hook \
+	dist-info distclean distclean-generic distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-data-local install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-aminfo maintainer-clean-generic mostlyclean \
+	mostlyclean-aminfo mostlyclean-generic pdf pdf-am ps ps-am \
+	tags-am uninstall uninstall-am uninstall-dvi-am \
+	uninstall-html-am uninstall-info-am uninstall-local \
+	uninstall-pdf-am uninstall-ps-am
 
 
-maxima.texi: $(origlangsdir)/maxima.texi
-	rm -f *.texi
-	cp -p $(origlangsdir)/*.texi .
+all-local: maxima.info maxima-index.lisp maxima.html contents.hhc
 
-maxima-index.lisp: maxima.info ../build_index.pl
-	perl ../build_index.pl maxima.info ':utf8' > maxima-index.lisp
-
-maxima.html: maxima.texi
-	rm -f maxima*.html 2>/dev/null
-	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file $(origlangsdir)/texi2html.init maxima.texi 
-	for f in maxima*.html; do \
-	    if test x$(urecode) = xtrue ; then \
-	        recode $(fcharset)..$(tcharset) $$f ; \
-	    else \
-	        rm -f foo.$$f 2>/dev/null ; \
-	        iconv -f $(fcharset) -t $(tcharset) $$f > foo.$$f ; \
-	        mv -f foo.$$f $$f ; \
-	    fi; \
-	done
-	for f in maxima*.html; do \
-	    rm -f foo.$$f 2>/dev/null ; \
-	    sed -e "s|charset=$(fhtmlcharset)|charset=$(thtmlcharset)|" < $$f > foo.$$f ; \
-	    mv -f foo.$$f $$f ; \
-	done
+maxima-index.lisp: $(top_srcdir)/doc/info/build_index.pl maxima.info
+	/usr/bin/env perl $^ ':utf8' > $@
 
 # Support for installation of DATA files in a generic directory
 # with subdirectories.
@@ -540,11 +801,10 @@ uninstall-datafiles:
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
 
-all-local: maxima.info maxima-index.lisp maxima.html contents.hhc
-
-maxima.info: maxima.texi
+maxima.info: $(LANGSRCDIR)/maxima.texi
 	@rm -f maxima.info* 2>/dev/null
-	$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) -I $(srcdir) maxima.texi
+	$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) \
+	  -I $(LANGSRCDIR) -I $(LANGBUILDDIR) $<
 	for f in $@ $@-[0-9] $@-[0-9][0-9]; do \
 	    if test -f $$f; then \
 		if test x$(urecode) = xtrue ; then \
@@ -558,103 +818,123 @@ maxima.info: maxima.texi
 	done
 
 contents.hhc: maxima.html
-	perl ../create_index
+	/usr/bin/env perl $(srcdir)/../create_index `grep -l name..SEC_Contents maxima*.html`
 
-install-data-local: install-maxima-info install-maxima-html
-
-install-maxima-info: maxima.info maxima-index.lisp
-	test -z "$(infodir)$(langsdir)" || mkdir -p -- "$(DESTDIR)$(infodir)$(langsdir)"
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list='./maxima.info'; \
-	for file in $$list; do \
-	  case $$file in \
-	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
-	  esac; \
-	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
-	  file_i=`echo "$$file" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  for ifile in $$d/$$file $$d/$$file-[0-9] $$d/$$file-[0-9][0-9] \
-	               $$d/$$file_i[0-9] $$d/$$file_i[0-9][0-9] ; do \
-	    if test -f $$ifile; then \
-	      relfile=`echo "$$ifile" | sed 's|^.*/||'`; \
-	      echo " $(INSTALL_DATA) '$$ifile' '$(DESTDIR)$(infodir)$(langsdir)/$$relfile'"; \
-	      $(INSTALL_DATA) "$$ifile" "$(DESTDIR)$(infodir)$(langsdir)/$$relfile"; \
-	    else : ; fi; \
-	  done; \
+install-data-local: install-maxima-info
+install-maxima-info: $(wildcard $(infoname).info* $(infoname)-index.lisp)
+	@d=$(DESTDIR)$(infodir)$(langsdir); \
+	test -d $$d && $(mkinstalldirs) $$d; \
+	list="$^"; for p in $$list; do \
+	  b=$${p#$(builddir)/}; \
+	  s=$${p#$(srcdir)/}; \
+	  if test -f $(builddir)/$$b; then \
+	    t=`dirname $$d/$$b`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) BUILDDIR/$$b $$d/$$b"; \
+	    $(INSTALL_DATA) $(builddir)/$$b $$d/$$b; \
+	  elif test -f $(srcdir)/$$s; then \
+	    t=`dirname $$d/$$s`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) SRCDIR/$$s $$d/$$s"; \
+	    $(INSTALL_DATA) $(srcdir)/$$s $$d/$$s; \
+	  elif test -f $$p; then \
+	    t=`dirname $$d/$$p`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) $$p $$d/$$p"; \
+	    $(INSTALL_DATA) $$p $$d/$$p; \
+	  fi; \
 	done
-	$(INSTALL_DATA) maxima-index.lisp "$(DESTDIR)$(infodir)$(langsdir)/maxima-index.lisp"
 
-install-maxima-html: maxima.html
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(dochtmldir)$(langsdir)
+uninstall-local: uninstall-maxima-info
+uninstall-maxima-info:
+	rm -f $(DESTDIR)$(infodir)$(langsdir)/$(infoname).info*
+	rm -f $(DESTDIR)$(infodir)$(langsdir)/$(infoname)-index.lisp
+
+dist-hook: dist-maxima-info
+dist-maxima-info:
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list="$(srcdir)/maxima.html $(srcdir)/maxima_*.html" ; \
+	list="$(srcdir)/$(infoname).info*" ; \
 	for p in $$list; do \
 	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
-	  if test -f $(srcdir)/$$f; then \
-            if test ! -d `dirname $(DESTDIR)$(dochtmldir)$(langsdir)/$$f`; then \
-              $(mkinstalldirs) `dirname $(DESTDIR)$(dochtmldir)$(langsdir)/$$f`; \
-            fi; \
-	    echo " $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(dochtmldir)$(langsdir)/$$f"; \
-	    $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(dochtmldir)$(langsdir)/$$f; \
-	  else if test -f $$f; then \
-            if test ! -d `dirname $(DESTDIR)$(dochtmldir)$(langsdir)/$$f`; then \
-              $(mkinstalldirs) `dirname $(DESTDIR)$(dochtmldir)$(langsdir)/$$f`; \
-            fi; \
-	    echo " $(INSTALL_DATA) $$f $(DESTDIR)$(dochtmldir)$(langsdir)/$$f"; \
-	    $(INSTALL_DATA) $$f $(DESTDIR)$(dochtmldir)$(langsdir)/$$f; \
-	  fi; fi; \
+	  test -f $(distdir)/$$f || cp -p $(srcdir)/$$f $(distdir)/$$f; \
 	done
 
-uninstall-local: uninstall-maxima-info uninstall-maxima-html
-
-uninstall-maxima-info:
-	@list='./maxima.info'; \
-	for file in $$list; do \
-	  relfile=`echo "$$file" | sed 's|^.*/||'`; \
-	  relfile_i=`echo "$$relfile" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  (if cd "$(DESTDIR)$(infodir)$(langsdir)"; then \
-	     echo " cd '$(DESTDIR)$(infodir)$(langsdir)' && rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]"; \
-	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
-	   else :; fi); \
+install-data-local: install-maxima-html
+install-maxima-html: $(wildcard $(htmlname).html $(htmlname)_*.html)
+	@d=$(DESTDIR)$(htmlinstdir); \
+	test -d $$d && $(mkinstalldirs) $$d; \
+	list="$^"; for p in $$list; do \
+	  b=$${p#$(builddir)/}; \
+	  s=$${p#$(srcdir)/}; \
+	  if test -f $(builddir)/$$b; then \
+	    t=`dirname $$d/$$b`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) BUILDDIR/$$b $$d/$$b"; \
+	    $(INSTALL_DATA) $(builddir)/$$b $$d/$$b; \
+	  elif test -f $(srcdir)/$$s; then \
+	    t=`dirname $$d/$$s`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) SRCDIR/$$s $$d/$$s"; \
+	    $(INSTALL_DATA) $(srcdir)/$$s $$d/$$s; \
+	  elif test -f $$p; then \
+	    t=`dirname $$d/$$p`; \
+            test -d $$t || $(mkinstalldirs) $$t; \
+	    echo " $(INSTALL_DATA) $$p $$d/$$p"; \
+	    $(INSTALL_DATA) $$p $$d/$$p; \
+	  fi; \
 	done
-	rm -f "$(DESTDIR)$(infodir)$(langsdir)/maxima-index.lisp"
 
+uninstall-local: uninstall-maxima-html
 uninstall-maxima-html:
-	@$(NORMAL_UNINSTALL)
-	rm -f $(DESTDIR)$(dochtmldir)$(langsdir)/maxima.html 
-	rm -f $(DESTDIR)$(dochtmldir)$(langsdir)/maxima_*.html
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname).html 
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname)_*.html
+
+dist-hook: dist-maxima-html
+dist-maxima-html: $(wildcard $(htmlname).html $(htmlname)_*.html)
+	@builddirstrip=`echo "$(builddir)" | sed 's|.|.|g'`; \
+	list="$^" ; \
+	for p in $$list; do \
+	  f=`echo "$$p" | sed "s|^$$builddirstrip/||"`; \
+	  test -f $(distdir)/$$f || cp -p $(builddir)/$$f $(distdir)/$$f; \
+	done
+
+maxima.html: $(LANGSRCDIR)/maxima.texi
+	rm -f maxima*.html 2>/dev/null
+	@: $(MAKEINFOHTML) $(AM_MAKEINFOHTMLFLAGS) $(MAKEINFOHTMLFLAGS) \
+	  -I $(LANGSRCDIR) -I $(LANGBUILDDIR) --init-file=$(srcdir)/../texi2html.init \
+	   --split=chapter --output=. --css-include=$(srcdir)/../manual.css $<
+	/usr/bin/env perl $(srcdir)/../texi2html --split_chapter --lang=$(INFOLANGOPT) --output=. \
+	  --css-include=$(srcdir)/../manual.css \
+	  -I $(LANGSRCDIR) -I $(LANGBUILDDIR) \
+	  --init-file $(srcdir)/texi2html.init \
+	  $<
+	for f in maxima*.html; do \
+	    if test x$(urecode) = xtrue ; then \
+	        recode $(fcharset)..$(tcharset) $$f ; \
+	    else \
+	        rm -f foo.$$f 2>/dev/null ; \
+	        iconv -f $(fcharset) -t $(tcharset) $$f > foo.$$f ; \
+	        mv -f foo.$$f $$f ; \
+	    fi; \
+	done
+	for f in maxima*.html; do \
+	    rm -f foo.$$f 2>/dev/null ; \
+	    sed -e "s|charset=$(fhtmlcharset)|charset=$(thtmlcharset)|" < $$f > foo.$$f ; \
+	    mv -f foo.$$f $$f ; \
+	done
 
 clean-local: clean-info clean-html clean-texi
 
 clean-info:
-	rm -f maxima.info*
-	rm -f maxima-index.lisp
+	rm -f $(wildcard maxima*.info maxima-index.lisp) \
+	      $(wildcard $(srcdir)/maxima*.info $(srcdir)/maxima-index.lisp)
 
 clean-html:
-	rm -f maxima.html maxima_*.html
-	rm -f contents.hhc
-	rm -f index.hhk
+	rm -f $(wildcard maxima*.html contents.hhc index.hhk maxima.chm) \
+	      $(wildcard $(srcdir)/maxima*.html $(srcdir)/contents.hhc $(srcdir)/index.hhk $(srcdir)/maxima.chm)
 
 clean-texi:
-	rm -f *.texi
-
-dist-hook: dist-maxima-info dist-maxima-html 
-
-dist-maxima-html: maxima.html
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list="$(srcdir)/maxima.html $(srcdir)/maxima_*.html" ; \
-	for p in $$list; do \
-	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
-	  test -f $(distdir)/$$f || cp -p $(srcdir)/$$f $(distdir)/$$f; \
-	done
-
-dist-maxima-info: 
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list="$(srcdir)/maxima.info*" ; \
-	for p in $$list; do \
-	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
-	  test -f $(distdir)/$$f || cp -p $(srcdir)/$$f $(distdir)/$$f; \
-	done
+	rm -f $(wildcard *.texi $(srcdir)/*.texi)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

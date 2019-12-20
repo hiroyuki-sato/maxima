@@ -313,10 +313,6 @@
 (defprop mfexpr*s mfexpr* shadow)
 (defprop mfexpr* mfexpr* shadow)
 
-(defprop subr t uuolinks)
-(defprop lsubr t uuolinks)
-(defprop fsubr t uuolinks)		; believe it or not.
-
 (defprop mexpr t mget)
 (defprop mexpr expr shadow)
 
@@ -415,11 +411,11 @@
 ;; (Think about PROGV and SETF and BINDF. If the trace object where
 ;; a closure, then we want to fluid bind instance variables.)
 
-(declare-top (special errcatch lisperrprint bindlist loclist))
+(declare-top (special errcatch bindlist loclist))
 
 (defmacro macsyma-errset (form &aux (ret (gensym)))
   `(let ((errcatch (cons bindlist loclist)) ,ret)
-    (setq ,ret (errset ,form lisperrprint))
+    (setq ,ret (errset ,form))
     (or ,ret (errlfun1 errcatch))
     ,ret))
 
@@ -697,7 +693,7 @@
       (funcall *prin1* form)
       (prin1 form))
   (terpri)
-  (force-output))
+  (finish-output))
 
 ;; 9:02pm  Monday, 18 May 1981 -GJC
 ;; A function benchmark facility using trace utilities.

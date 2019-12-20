@@ -34,7 +34,7 @@
 
 (declare-top (special $algdelta $ratepsilon $algepsilon $keepfloat
 		     varlist genvar *roots *failures $ratprint $numer $ratfac
-		     $rnum $solvefactors $dispflag $breakup
+		     $solvefactors $dispflag $breakup
 		     *tvarxlist* errorsw $programmode *ivar* errset $polyfactor
 		     bindlist loclist $float $infeval))
 
@@ -63,8 +63,8 @@
   in-core)
 
 (defmacro merrset (l)
-  `(let ((errset 'errbreak1) (unbind (cons bindlist loclist)) val)
-     (setq val (errset ,l nil))
+  `(let ((errset t) (unbind (cons bindlist loclist)) val)
+     (setq val (errset ,l))
      (when (null val) (errlfun1 unbind))
      val))
 
@@ -772,7 +772,7 @@
 						  (pderivative p x)))))
 		(listovars p))))
 
-(defmfun mycabs (x)
+(defun mycabs (x)
   (and (complexnump x) (cabs x)))
 
 ;;; (DISTREP LOL)

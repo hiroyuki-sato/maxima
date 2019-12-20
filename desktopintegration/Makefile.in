@@ -80,7 +80,7 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = desktopintegration
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(dist_appicon_DATA) $(dist_desktop_DATA) \
+	$(dist_appicon_DATA) $(dist_appinfo_DATA) $(dist_desktop_DATA) \
 	$(dist_mimedata_DATA)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -136,12 +136,14 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(bashcompletiondir)" \
-	"$(DESTDIR)$(appicondir)" "$(DESTDIR)$(desktopdir)" \
-	"$(DESTDIR)$(mimedatadir)"
+	"$(DESTDIR)$(appicondir)" "$(DESTDIR)$(appinfodir)" \
+	"$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(mimedatadir)"
 DATA = $(bashcompletion_DATA) $(dist_appicon_DATA) \
-	$(dist_desktop_DATA) $(dist_mimedata_DATA)
+	$(dist_appinfo_DATA) $(dist_desktop_DATA) \
+	$(dist_mimedata_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ABCL_JAR = @ABCL_JAR@
 ACLOCAL = @ACLOCAL@
 ACL_NAME = @ACL_NAME@
 AMTAR = @AMTAR@
@@ -162,12 +164,14 @@ CMUCL_RUNTIME_PATH = @CMUCL_RUNTIME_PATH@
 CYGPATH_W = @CYGPATH_W@
 DEFAULTLISP = @DEFAULTLISP@
 DEFS = @DEFS@
+DISTCLEAN_EXTRA_SRC_FILES = @DISTCLEAN_EXTRA_SRC_FILES@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 ECL_NAME = @ECL_NAME@
 EGREP = @EGREP@
 EMACS = @EMACS@
+EMACSDIR = @EMACSDIR@
 EMACSLOADPATH = @EMACSLOADPATH@
 EXEEXT = @EXEEXT@
 GCCVER = @GCCVER@
@@ -180,6 +184,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+JRE = @JRE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -201,6 +206,7 @@ PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
 PYTHON_PLATFORM = @PYTHON_PLATFORM@
 PYTHON_PREFIX = @PYTHON_PREFIX@
 PYTHON_VERSION = @PYTHON_VERSION@
+SBCL_EXTRA_ARGS = @SBCL_EXTRA_ARGS@
 SBCL_NAME = @SBCL_NAME@
 SCL_NAME = @SCL_NAME@
 SCL_RUNTIME = @SCL_RUNTIME@
@@ -264,6 +270,7 @@ lang_pt = @lang_pt@
 lang_pt_br = @lang_pt_br@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lisp_only_build = @lisp_only_build@
 lispdir = @lispdir@
 lisps_enabled = @lisps_enabled@
 localedir = @localedir@
@@ -299,8 +306,10 @@ win64 = @win64@
 win64_installer = @win64_installer@
 EXTRA_DIST = x-mac.xml x-maxima-out.xml \
   text-x-maximasession.svg text-x-maxima-out.svg maxima rmaxima xmaxima \
-  xmaxima.desktop
+  net.sourceforge.maxima.xmaxima.desktop
 
+appinfodir = $(datarootdir)/metainfo
+dist_appinfo_DATA = net.sourceforge.maxima.xmaxima.appdata.xml
 mimedatadir = $(datarootdir)/mime/packages
 dist_mimedata_DATA = x-mac.xml x-maxima-out.xml
 appicondir = $(datarootdir)/pixmaps
@@ -308,7 +317,7 @@ dist_appicon_DATA = text-x-maximasession.svg text-x-maxima-out.svg
 bashcompletiondir = ${datarootdir}/bash-completion/completions
 bashcompletion_DATA = maxima rmaxima xmaxima
 desktopdir = $(datarootdir)/applications
-dist_desktop_DATA = xmaxima.desktop
+dist_desktop_DATA = net.sourceforge.maxima.xmaxima.desktop
 all: all-am
 
 .SUFFIXES:
@@ -384,6 +393,27 @@ uninstall-dist_appiconDATA:
 	@list='$(dist_appicon_DATA)'; test -n "$(appicondir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(appicondir)'; $(am__uninstall_files_from_dir)
+install-dist_appinfoDATA: $(dist_appinfo_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_appinfo_DATA)'; test -n "$(appinfodir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(appinfodir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(appinfodir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(appinfodir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(appinfodir)" || exit $$?; \
+	done
+
+uninstall-dist_appinfoDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appinfo_DATA)'; test -n "$(appinfodir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(appinfodir)'; $(am__uninstall_files_from_dir)
 install-dist_desktopDATA: $(dist_desktop_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_desktop_DATA)'; test -n "$(desktopdir)" || list=; \
@@ -467,7 +497,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bashcompletiondir)" "$(DESTDIR)$(appicondir)" "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(mimedatadir)"; do \
+	for dir in "$(DESTDIR)$(bashcompletiondir)" "$(DESTDIR)$(appicondir)" "$(DESTDIR)$(appinfodir)" "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(mimedatadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -521,7 +551,8 @@ info: info-am
 info-am:
 
 install-data-am: install-bashcompletionDATA install-dist_appiconDATA \
-	install-dist_desktopDATA install-dist_mimedataDATA
+	install-dist_appinfoDATA install-dist_desktopDATA \
+	install-dist_mimedataDATA
 
 install-dvi: install-dvi-am
 
@@ -566,7 +597,8 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-bashcompletionDATA uninstall-dist_appiconDATA \
-	uninstall-dist_desktopDATA uninstall-dist_mimedataDATA
+	uninstall-dist_appinfoDATA uninstall-dist_desktopDATA \
+	uninstall-dist_mimedataDATA
 
 .MAKE: install-am install-strip
 
@@ -574,15 +606,16 @@ uninstall-am: uninstall-bashcompletionDATA uninstall-dist_appiconDATA \
 	ctags-am distclean distclean-generic distdir dvi dvi-am html \
 	html-am info info-am install install-am \
 	install-bashcompletionDATA install-data install-data-am \
-	install-dist_appiconDATA install-dist_desktopDATA \
-	install-dist_mimedataDATA install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am tags-am uninstall uninstall-am \
-	uninstall-bashcompletionDATA uninstall-dist_appiconDATA \
+	install-dist_appiconDATA install-dist_appinfoDATA \
+	install-dist_desktopDATA install-dist_mimedataDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am tags-am uninstall \
+	uninstall-am uninstall-bashcompletionDATA \
+	uninstall-dist_appiconDATA uninstall-dist_appinfoDATA \
 	uninstall-dist_desktopDATA uninstall-dist_mimedataDATA
 
 

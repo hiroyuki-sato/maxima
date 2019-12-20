@@ -1303,11 +1303,11 @@ connection coefficients.
 
  -- Variable: ric
 
-     The mixed Ricci-tensor.  Computed by 'ricci'.
+     The covariant Ricci-tensor.  Computed by 'ricci'.
 
  -- Variable: uric
 
-     The contravariant Ricci-tensor.  Computed by 'uricci'.
+     The mixed-index Ricci-tensor.  Computed by 'uricci'.
 
  -- Variable: lg
 
@@ -5254,9 +5254,8 @@ File: maxima.info,  Node: Functions and Variables for Runtime Environment,  Prev
 
  -- Function: timedate
           timedate (<T>, <tz_offset>)
-
-     timedate (<T>)
-     timedate ()  
+          timedate (<T>)
+          timedate ()
 
      'timedate(<T>, <tz_offset>)' returns a string representing the time
      <T> in the time zone <tz_offset>.  The string format is 'YYYY-MM-DD
@@ -6949,6 +6948,8 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
 
      'cartesian_product' complains if any argument is not a literal set.
 
+     See also 'cartesian_product_list'.
+
      Examples:
 
           (%i1) cartesian_product ({0, 1});
@@ -6959,6 +6960,82 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
           (%o3)                      {[x, y, z]}
           (%i4) cartesian_product ({x}, {-1, 0, 1});
           (%o4)              {[x, - 1], [x, 0], [x, 1]}
+
+ -- Function: cartesian_product_list (<b_1>, ... , <b_n>)
+     Returns a list of lists of the form '[<x_1>, ..., <x_n>]', where
+     <x_1>, ..., <x_n> are elements of the lists <b_1>, ...  , <b_n>,
+     respectively, comprising all possible combinations of the elements
+     of <b_1>, ...  , <b_n>.
+
+     The list returned by 'cartesian_product_list' is equivalent to the
+     following recursive definition.  Let <L> be the list returned by
+     'cartesian_product_list(<b_2>, ..., <b_n>)'.  Then
+     'cartesian_product_list(<b_1>, <b_2>, ..., <b_n>)' (i.e., <b_1> in
+     addition to <b_2>, ..., <b_n>) returns a list comprising each
+     element of <L> appended to the first element of <b_1>, each element
+     of <L> appended to the second element of <b_1>, each element of <L>
+     appended to the third element of <b_1>, etc.  The order of the list
+     returned by 'cartesian_product_list(<b_1>, <b_2>, ..., <b_n>)' may
+     therefore be summarized by saying the lesser indices (1, 2, 3, ...)
+     vary more slowly than the greater indices.
+
+     The list returned by 'cartesian_product_list' contains duplicate
+     elements if any argument <b_1>, ..., <b_n> contains duplicates.  In
+     this respect, 'cartesian_product_list' differs from
+     'cartesian_product', which returns no duplicates.  Also, the
+     ordering of the list returned 'cartesian_product_list' is
+     determined by the order of the elements of <b_1>, ..., <b_n>.
+     Again, this differs from 'cartesian_product', which returns a set
+     (with order determined by 'orderlessp').
+
+     The length of the list returned by 'cartesian_product_list' is
+     equal to the product of the lengths of the arguments <b_1>, ...,
+     <b_n>.
+
+     See also 'cartesian_product'.
+
+     'cartesian_product_list' complains if any argument is not a list.
+
+     Examples:
+
+     'cartesian_product_list' returns a list of lists comprising all
+     possible combinations.
+
+          (%i1) cartesian_product_list ([0, 1]);
+          (%o1)                      [[0], [1]]
+          (%i2) cartesian_product_list ([0, 1], [0, 1]);
+          (%o2)           [[0, 0], [0, 1], [1, 0], [1, 1]]
+          (%i3) cartesian_product_list ([x], [y], [z]);
+          (%o3)                      [[x, y, z]]
+          (%i4) cartesian_product_list ([x], [-1, 0, 1]);
+          (%o4)              [[x, - 1], [x, 0], [x, 1]]
+          (%i5) cartesian_product_list ([a, h, e], [c, b, 4]);
+          (%o5) [[a, c], [a, b], [a, 4], [h, c], [h, b], [h, 4], [e, c],
+                                                            [e, b], [e, 4]]
+
+     The order of the list returned by 'cartesian_product_list' may be
+     summarized by saying the lesser indices vary more slowly than the
+     greater indices.
+
+          (%i1) cartesian_product_list ([1, 2, 3], [a, b], [i, ii]);
+          (%o1) [[1, a, i], [1, a, ii], [1, b, i], [1, b, ii], [2, a, i],
+          [2, a, ii], [2, b, i], [2, b, ii], [3, a, i], [3, a, ii],
+          [3, b, i], [3, b, ii]]
+
+     The list returned by 'cartesian_product_list' contains duplicate
+     elements if any argument contains duplicates.
+
+          (%i1) cartesian_product_list ([e, h], [3, 7, 3]);
+          (%o1)   [[e, 3], [e, 7], [e, 3], [h, 3], [h, 7], [h, 3]]
+
+     The length of the list returned by 'cartesian_product_list' is
+     equal to the product of the lengths of the arguments.
+
+          (%i1) foo: cartesian_product_list ([1, 1, 2, 2, 3], [h, z, h]);
+          (%o1) [[1, h], [1, z], [1, h], [1, h], [1, z], [1, h], [2, h],
+            [2, z], [2, h], [2, h], [2, z], [2, h], [3, h], [3, z], [3, h]]
+          (%i2) is (length (foo) = 5*3);
+          (%o2)                         true
 
  -- Function: disjoin (<x>, <a>)
      Returns the set <a> without the member <x>.  If <x> is not a member
@@ -9874,10 +9951,12 @@ File: maxima.info,  Node: Lisp and Maxima,  Next: Garbage Collection,  Prev: Pro
 37.1 Lisp and Maxima
 ====================
 
-Maxima is written in Lisp, and it is easy to access Lisp functions and
-variables from Maxima and vice versa.  Lisp and Maxima symbols are
-distinguished by a naming convention.  A Lisp symbol which begins with a
-dollar sign '$' corresponds to a Maxima symbol without the dollar sign.
+Maxima is a fairly complete programming language.  But since it is
+written in Lisp, it additionally can provide easy access to Lisp
+functions and variables from Maxima and vice versa.  Lisp and Maxima
+symbols are distinguished by a naming convention.  A Lisp symbol which
+begins with a dollar sign '$' corresponds to a Maxima symbol without the
+dollar sign.
 
    A Maxima symbol which begins with a question mark '?' corresponds to
 a Lisp symbol without the question mark.  For example, the Maxima symbol
@@ -9970,20 +10049,23 @@ File: maxima.info,  Node: Garbage Collection,  Next: Introduction to Program Flo
 37.2 Garbage Collection
 =======================
 
-Symbolic computation tends to create a good deal of garbage (temporary
-or intermediate results that are eventually not used), and effective
-handling of this can be crucial to successful completion of some
-programs.
+One of the advantages of using lisp is that it uses "Garbage
+Collection".  In other words it automatically takes care of freeing
+memory occupied for example of intermediate results that were used
+during symbolic computation.
 
-   Under GCL, on UNIX systems where the mprotect system call is
-available (including SUN OS 4.0 and some variants of BSD) a stratified
-garbage collection is available.  This limits the collection to pages
-which have been recently written to.  See the GCL documentation under
-ALLOCATE and GBC. At the Lisp level doing (setq si::*notify-gbc* t) will
-help you determine which areas might need more space.
+   Garbage Collection avoids many errors frequently found in C programs
+(memory being freed too early, multiple times or not at all).
 
-   For other Lisps that run Maxima, we refer the reader to the
-documentation for that Lisp on how to control GC.
+ -- Function: garbage_collect ()
+
+     Tries to manually trigger the lisp's garbage collection.  This
+     rarely is necessary as the lisp will employ an excellent algorithm
+     for determining when to start garbage collection.
+
+     If maxima knows how to do manually trigger the garbage collection
+     for the current lisp 'garbage_collect' returns 'true', else
+     'false'.
 
 
 File: maxima.info,  Node: Introduction to Program Flow,  Next: Functions and Variables for Program Flow,  Prev: Garbage Collection,  Up: Program Flow
@@ -12558,7 +12640,7 @@ File: maxima.info,  Node: Functions and Variables for Combinatorics,  Prev: Pack
 
      Finds the position of permutation <p>, an integer from 1 to the
      degree <n> of the permutation, in the sequence of permutations in
-     lexicographic order.
+     Trotter-Johnson order.
 
      See also 'perm_unrank' and 'perms'.
 
@@ -12617,11 +12699,11 @@ File: maxima.info,  Node: Functions and Variables for Combinatorics,  Prev: Pack
      so-called Trotter-Johnson order.
 
      'perms(<n>, <i>)' returns the _n_-degree permutation which is at
-     the _i_th position (from 1 to _n_!)  in the lexicographic ordering
-     of the permutations.
+     the _i_th position (from 1 to _n_!)  in the Trotter-Johnson
+     ordering of the permutations.
 
      'perms(<n>, <i>, <j>)' returns a list of the _n_-degree
-     permutations between positions <i> and <j> in the lexicographic
+     permutations between positions <i> and <j> in the Trotter-Johnson
      ordering of the permutations.
 
      The sequence of permutations in Trotter-Johnson order starts with
@@ -17972,6 +18054,19 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                     )
                 )$
      (Figure draw_color3)
+
+          (%i1) draw2d(
+                  "figures/draw_color4",
+                  makelist(
+                      [
+                          color=i,
+                          key=sconcat("color =",i),
+                          explicit(sin(i*x),x,0,1)
+                      ],
+                      i,0,17
+                  )
+              )$
+     (Figure draw_color4)
 
      See also 'fill_color'.
 

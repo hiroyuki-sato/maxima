@@ -1,11 +1,10 @@
 ; -*- Lisp -*-
 (in-package :maxima)
 
-(defparameter *autoconf-variables-set* "@variables_set@")
 (defparameter *autoconf-prefix* "/usr/local")
 (defparameter *autoconf-exec_prefix* "/usr/local")
 (defparameter *autoconf-package* "maxima")
-(defparameter *autoconf-version* "5.42.1")
+(defparameter *autoconf-version* "5.43.0")
 (defparameter *autoconf-libdir* "/usr/local/lib")
 (defparameter *autoconf-libexecdir* "/usr/local/libexec")
 (defparameter *autoconf-datadir* "/usr/local/share")
@@ -19,7 +18,7 @@
 (defparameter *autoconf-ld-flags* "")
 
 ;; This will be T if this was a lisp-only build
-(defparameter *autoconf-lisp-only-build* (eq t '@lisp_only_build@))
+(defparameter *autoconf-lisp-only-build* (eq t 'nil))
  
 (defparameter *maxima-source-root* "/home/vttoth/dev/maxima")
 (defparameter *maxima-default-layout-autotools* "true")
