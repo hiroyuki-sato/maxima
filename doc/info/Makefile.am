@@ -533,8 +533,9 @@ maxima-index.lisp: build_index.pl maxima.info
 DOLLAR_SIGN = $$
 
 maxima_0.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
-	@: sh $(srcdir)/extract_categories.sh maxima
-	./build_html.sh
+#	@: sh $(srcdir)/extract_categories.sh maxima
+#	./build_html.sh
+	touch $@
 
 maxima.epub: maxima_0.html
 	ebook-convert maxima_singlepage.html maxima.epub --breadth-first "--title=Maxima @manual_version@ Manual" "--authors=Maxima Team" --language=en
@@ -555,7 +556,6 @@ include $(top_srcdir)/common.mk
 genericdir = $(dochtmldir)
 genericdirDATA = $(figurefiles) \
 contents.hhc index.hhk header.hhp maxima.hhp
-
 htmlname = maxima
 htmlinstdir = $(dochtmldir)
 include $(top_srcdir)/common-html.mk
