@@ -1,12 +1,679 @@
-This is maxima.info, produced by makeinfo version 5.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 6.6 from maxima.texi.
+
+Este é o Manual do Maxima no formato Texinfo
+
+Copyright 1994, 2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     Um sistema de álgebra computacional.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definições para manipulação da dados,  Next: Definições para estatística descritiva,  Prev: Introdução ao pacote descriptive,  Up: descriptive
+
+44.2, Definições para manipulação da dados
+==========================================
+
+ -- Função da class: continuous_freq (<list>)
+ -- Função da class: continuous_freq (<list>, <m>)
+     O argumento de 'continuous_freq' deve ser uma lista de números, que
+     serão então agrupadas em intervalos e contado quantos desses dados
+     pertencem a cada grupo.  Opcionalmente, a função 'continuous_freq'
+     admite um segundo argumento indicando o número de classes, 10 é o
+     valor padrão,
+
+          (%i1) load (numericalio)$
+          (%i2) load (descriptive)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) continuous_freq (s1, 5);
+          (%o4) [[0, 1.8, 3.6, 5.4, 7.2, 9.0], [16, 24, 18, 17, 25]]
+
+     A primeira lista contém os limites de intervalos e o segundo a
+     correspondente contagem: existem 16 algarismos da parte decimal de
+     '%pi' dentro do intervalo '[0, 1.8]', isto é 0's e 1's, 24
+     algarismos em '(1.8, 3.6]', isto é 2's e 3's, e assim por diante.
+
+ -- Função da class: discrete_freq (<list>)
+     Conta as frequências absolutas em amostras discretas, em amostras
+     numéricas e em amostras divididas em categorias.  Seu único
+     argumento é uma lista,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"));
+          (%o3) [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8,
+          4, 6, 2, 6, 4, 3, 3, 8, 3, 2, 7, 9, 5, 0, 2, 8, 8, 4, 1, 9, 7,
+          1, 6, 9, 3, 9, 9, 3, 7, 5, 1, 0, 5, 8, 2, 0, 9, 7, 4, 9, 4, 4,
+          5, 9, 2, 3, 0, 7, 8, 1, 6, 4, 0, 6, 2, 8, 6, 2, 0, 8, 9, 9, 8,
+          6, 2, 8, 0, 3, 4, 8, 2, 5, 3, 4, 2, 1, 1, 7, 0, 6, 7]
+          (%i4) discrete_freq (s1);
+          (%o4) [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                       [8, 8, 12, 12, 10, 8, 9, 8, 12, 13]]
+
+     A primeira lista fornece os valores da amostra e a segunda as suas
+     frequências absolutas.  Os comandos '? col' e '? transpose' podem
+     ajudá-lo a entender o último comando de entrada.
+
+ -- Função da class: subsample (<matriz_de_dados>, <expressão_lógica>)
+ -- Função da class: subsample (<matriz_de_dados>, <expressão_lógica>,
+          <col_num>, <col_num>, ...)
+     Essas funções são um tipo de variação da função 'submatrix' do
+     Maxima.  O primeiro argumento é o nome da matriz de dados, o
+     segundo argumento é uma expressão lógica que recebeu apóstrofo e os
+     argumentos opcionais adicionais são o número de colunas a serem
+     tomadas.  Esse comportamento é melhor entendido com exemplos,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s2 : read_matrix (file_search ("wind.data"))$
+          (%i4) subsample (s2, '(%c[1] > 18));
+                        [ 19.38  15.37  15.12  23.09  25.25 ]
+                        [                                   ]
+                        [ 18.29  18.66  19.08  26.08  27.63 ]
+          (%o4)         [                                   ]
+                        [ 20.25  21.46  19.95  27.71  23.38 ]
+                        [                                   ]
+                        [ 18.79  18.96  14.46  26.38  21.84 ]
+
+     Existem registros de várias variáveis nos quais a velocidade do
+     vento na primeira estação meteorológica foram maiores que 18.  Veja
+     que na expressão lógica que recebeu apóstrofo o <i>-ésimo
+     componente é referenciado como '%c[i]'.  O símbolo '%c[i]' é usado
+     dentro da função 'subsample', portanto quando usado como uma
+     variável de uma categoria, Maxima fica confuso.  No seguinte
+     exemplo, requisitamos somente o primeiro, o segundo e o quinto
+     componentes desses registro com velocidades de vento maiores que ou
+     igual a 16 nós na estação meteorológica número 1 e menor que 25 nós
+     na estação meteorológica número 4,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s2 : read_matrix (file_search ("wind.data"))$
+          (%i4) subsample (s2, '(%c[1] >= 16 and %c[4] < 25), 1, 2, 5);
+                               [ 19.38  15.37  25.25 ]
+                               [                     ]
+                               [ 17.33  14.67  19.58 ]
+          (%o4)                [                     ]
+                               [ 16.92  13.21  21.21 ]
+                               [                     ]
+                               [ 17.25  18.46  23.87 ]
+
+     Aqui está um exemplo com as variáveis divididas em categorias do
+     ficheiro 'biomed.data'.  Queremos os registros correspondentes a
+     aqueles pacientes no grupo 'B' que possuem idade maior que 38 anos,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i4) subsample (s3, '(%c[1] = B and %c[2] > 38));
+                          [ B  39  28.0  102.3  17.1  146 ]
+                          [                               ]
+                          [ B  39  21.0  92.4   10.3  197 ]
+                          [                               ]
+                          [ B  39  23.0  111.5  10.0  133 ]
+                          [                               ]
+                          [ B  39  26.0  92.6   12.3  196 ]
+          (%o4)           [                               ]
+                          [ B  39  25.0  98.7   10.0  174 ]
+                          [                               ]
+                          [ B  39  21.0  93.2   5.9   181 ]
+                          [                               ]
+                          [ B  39  18.0  95.0   11.3  66  ]
+                          [                               ]
+                          [ B  39  39.0  88.5   7.6   168 ]
+
+     Probavelmente, a análise estatística irá envolver somente as
+     medidas sanguíneas,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i4) subsample (s3, '(%c[1] = B and %c[2] > 38), 3, 4, 5, 6);
+                             [ 28.0  102.3  17.1  146 ]
+                             [                        ]
+                             [ 21.0  92.4   10.3  197 ]
+                             [                        ]
+                             [ 23.0  111.5  10.0  133 ]
+                             [                        ]
+                             [ 26.0  92.6   12.3  196 ]
+          (%o4)              [                        ]
+                             [ 25.0  98.7   10.0  174 ]
+                             [                        ]
+                             [ 21.0  93.2   5.9   181 ]
+                             [                        ]
+                             [ 18.0  95.0   11.3  66  ]
+                             [                        ]
+                             [ 39.0  88.5   7.6   168 ]
+
+     Essa é a média de várias variáveis de 's3',
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i4) mean (s3);
+                 65 B + 35 A  317          6 NA + 8145.0
+          (%o4) [-----------, ---, 87.178, -------------, 18.123,
+                     100      10                100
+                                                              3 NA + 19587
+                                                              ------------]
+                                                                  100
+     Aqui, a primeira componente é sem sentido, uma vez que 'A' e 'B'
+     são categorias, o segundo componente é a idade média dos indivíduos
+     na forma racional, e o quarto eo último valores exibem um
+     comportamento estranho.  Isso ocorre porque o símbolo 'NA' é usado
+     aqui para indicar dado não disponível (<non available> em inglês),
+     e as duas médias são certamente sem sentido.  Uma solução possível
+     pode ser jogar fora a matriz cujas linhas possuam símbolos 'NA',
+     embora isso cause alguma perda de informação,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i4) mean (subsample (s3, '(%c[4] # NA and %c[6] # NA), 3, 4, 5, 6));
+          (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813,
+                                                                      2514
+                                                                      ----]
+                                                                       13
+
+
+File: maxima.info,  Node: Definições para estatística descritiva,  Next: Definições específicas para estatística descritiva de várias variáveis,  Prev: Definições para manipulação da dados,  Up: descriptive
+
+44.3, Definições para estatística descritiva
+============================================
+
+ -- Função da class: mean (<lista>)
+ -- Função da class: mean (<matriz>)
+     Essa função calcula a média de uma amostra, definida como
+                                 n
+                               ====
+                       _   1   \
+                       x = -    >    x
+                           n   /      i
+                               ====
+                               i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) mean (s1);
+                                         471
+          (%o4)                          ---
+                                         100
+          (%i5) %, numer;
+          (%o5)                         4.71
+          (%i6) s2 : read_matrix (file_search ("wind.data"))$
+          (%i7) mean (s2);
+          (%o7)     [9.9485, 10.1607, 10.8685, 15.7166, 14.8441]
+
+ -- Função da class: var (<list>)
+ -- Função da class: var (<matrix>)
+     This is the sample variance, defined as
+                               n
+                             ====
+                     2   1   \          _ 2
+                    s  = -    >    (x - x)
+                         n   /       i
+                             ====
+                             i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) var (s1), numer;
+          (%o4)                   8.425899999999999
+
+     See also function 'var1'.
+
+ -- Função da class: var1 (<lista>)
+ -- Função da class: var1 (<matriz>)
+     Essa função calcula a variância da amostra, definida como
+                               n
+                             ====
+                         1   \          _ 2
+                        ---   >    (x - x)
+                        n-1  /       i
+                             ====
+                             i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) var1 (s1), numer;
+          (%o4)                    8.5110101010101
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) var1 (s2);
+          (%o6) [17.39586540404041, 15.13912778787879, 15.63204924242424,
+                                      32.50152569696971, 24.66977392929294]
+
+     See also function 'var'.
+
+ -- Função da class: std (<lista>)
+ -- Função da class: std (<matriz>)
+     A raíz quadrada da função 'var', a variância com denominador n.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) std (s1), numer;
+          (%o4)                   2.902740084816414
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) std (s2);
+          (%o6) [4.149928523480858, 3.871399812729241, 3.933920277534866,
+                                      5.672434260526957, 4.941970881136392]
+
+     Veja também as funções 'var' e 'std1'.
+
+ -- Função da class: std1 (<lista>)
+ -- Função da class: std1 (<matriz>)
+     É a raíz quadrada da função 'var1', a variância com denominador
+     n-1.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) std1 (s1), numer;
+          (%o4)                   2.917363553109228
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) std1 (s2);
+          (%o6) [4.17083509672109, 3.89090320978032, 3.953738641137555,
+                                      5.701010936401517, 4.966867617451963]
+
+     Veja também as funções 'var1' e 'std'.
+
+ -- Função da class: noncentral_moment (<lista>, <k>)
+ -- Função da class: noncentral_moment (<matriz>, <k>)
+     O momento não central de ordem k, definido como
+                                 n
+                               ====
+                           1   \      k
+                           -    >    x
+                           n   /      i
+                               ====
+                               i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) noncentral_moment (s1, 1), numer; /* the mean */
+          (%o4)                         4.71
+          (%i6) s2 : read_matrix (file_search ("wind.data"))$
+          (%i7) noncentral_moment (s2, 5);
+          (%o7) [319793.8724761506, 320532.1923892463, 391249.5621381556,
+                                      2502278.205988911, 1691881.797742255]
+
+     Veja também a função 'central_moment'.
+
+ -- Função da class: central_moment (<lista>, <k>)
+ -- Função da class: central_moment (<matriz>, <k>)
+     O momento central de ordem k, definido como
+                              n
+                            ====
+                        1   \          _ k
+                        -    >    (x - x)
+                        n   /       i
+                            ====
+                            i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) central_moment (s1, 2), numer; /* a variância */
+          (%o4)                   8.425899999999999
+          (%i6) s2 : read_matrix (file_search ("wind.data"))$
+          (%i7) central_moment (s2, 3);
+          (%o7) [11.29584771375004, 16.97988248298583, 5.626661952750102,
+                                       37.5986572057918, 25.85981904394192]
+
+     Veja também as funções 'central_moment' e 'mean'.
+
+ -- Função da class: cv (<lista>)
+ -- Função da class: cv (<matriz>)
+     O coeficiente de variação é o quociente entre o desvio padrão da
+     amostra ('std') e a média 'mean',
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) cv (s1), numer;
+          (%o4)                   .6193977819764815
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) cv (s2);
+          (%o6) [.4192426091090204, .3829365309260502, 0.363779605385983,
+                                      .3627381836021478, .3346021393989506]
+
+     Veja também as funções 'std' e 'mean'.
+
+ -- Função da class: mini (<lista>)
+ -- Função da class: mini (<matriz>)
+     É o valor mínimo da amostra <lista>,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) mini (s1);
+          (%o4)                           0
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) mini (s2);
+          (%o6)             [0.58, 0.5, 2.67, 5.25, 5.17]
+
+     Veja também função 'maxi'.
+
+ -- Função da class: maxi (<lista>)
+ -- Função da class: maxi (<matriz>)
+     É o valor máximo da amostra <lista>,
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) maxi (s1);
+          (%o4)                           9
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) maxi (s2);
+          (%o6)          [20.25, 21.46, 20.04, 29.63, 27.63]
+
+     Veja também a função 'mini'.
+
+ -- Função da class: range (<lista>)
+ -- Função da class: range (<matriz>)
+     A amplitude é a diferença entre os valores de maximo e de mínimo.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) range (s1);
+          (%o4)                           9
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) range (s2);
+          (%o6)          [19.67, 20.96, 17.37, 24.38, 22.46]
+
+ -- Função da class: quantile (<lista>, <p>)
+ -- Função da class: quantile (<matriz>, <p>)
+     É o <p>-'quantile' (quantil de ordem <p>), com <p> sendo um número
+     em [0, 1] (intervalo fechado), da amostra <lista>.  Embora exista
+     muitas Definições para quantil de uma amostra (Hyndman, R. J., Fan,
+     Y. (1996) <Sample quantiles in statistical packages>.  American
+     Statistician, 50, 361-365), aquela que se baseia em interpolação
+     linear é a que foi implementada no pacote 'descriptive'.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) /* 1st and 3rd quartiles */ [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
+          (%o4)                      [2.0, 7.25]
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) quantile (s2, 1/4);
+          (%o6)    [7.2575, 7.477500000000001, 7.82, 11.28, 11.48]
+
+ -- Função da class: median (<lista>)
+ -- Função da class: median (<matriz>)
+     Uma vez que a amostra está ordenada, se o tamanho da amostra for
+     ímpar a mediana é o valor central, de outra forma a mediana será a
+     média dos dois valores centrais.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) median (s1);
+                                          9
+          (%o4)                           -
+                                          2
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) median (s2);
+          (%o6)         [10.06, 9.855, 10.73, 15.48, 14.105]
+
+     A mediana é o 1/2-'quantil'.
+
+     Veja também function 'quantile'.
+
+ -- Função da class: qrange (<lista>)
+ -- Função da class: qrange (<matriz>)
+     A amplitude do interquartil é a diferença entre o terceiro e o
+     primeiro quartil, 'quantile(<lista>,3/4) - quantile(<lista>,1/4)',
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) qrange (s1);
+                                         21
+          (%o4)                          --
+                                         4
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) qrange (s2);
+          (%o6) [5.385, 5.572499999999998, 6.0225, 8.729999999999999,
+                                                         6.650000000000002]
+
+     Veja também a função 'quantile'.
+
+ -- Função da class: mean_deviation (<lista>)
+ -- Função da class: mean_deviation (<matriz>)
+     O desvio médio, definido como
+                               n
+                             ====
+                         1   \          _
+                         -    >    |x - x|
+                         n   /       i
+                             ====
+                             i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) mean_deviation (s1);
+                                         51
+          (%o4)                          --
+                                         20
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) mean_deviation (s2);
+          (%o6) [3.287959999999999, 3.075342, 3.23907, 4.715664000000001,
+                                                         4.028546000000002]
+
+     Veja também a função 'mean'.
+
+ -- Função da class: median_deviation (<lista>)
+ -- Função da class: median_deviation (<matriz>)
+     O desvio da mediana, definido como
+                           n
+                         ====
+                     1   \
+                     -    >    |x - med|
+                     n   /       i
+                         ====
+                         i = 1
+     onde 'med' é a mediana da <lista>.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) median_deviation (s1);
+                                          5
+          (%o4)                           -
+                                          2
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) median_deviation (s2);
+          (%o6)           [2.75, 2.755, 3.08, 4.315, 3.31]
+
+     Veja também a função 'mean'.
+
+ -- Função da class: harmonic_mean (<lista>)
+ -- Função da class: harmonic_mean (<matriz>)
+     A média harmônica, definida como
+                            n
+                         --------
+                          n
+                         ====
+                         \     1
+                          >    --
+                         /     x
+                         ====   i
+                         i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) y : [5, 7, 2, 5, 9, 5, 6, 4, 9, 2, 4, 2, 5]$
+          (%i4) harmonic_mean (y), numer;
+          (%o4)                   3.901858027632205
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) harmonic_mean (s2);
+          (%o6) [6.948015590052786, 7.391967752360356, 9.055658197151745,
+                                      13.44199028193692, 13.01439145898509]
+
+     Veja também as funções 'mean' e 'geometric_mean'.
+
+ -- Função da class: geometric_mean (<lista>)
+ -- Função da class: geometric_mean (<matriz>)
+     A média geométrica, definida como
+                           /  n      \ 1/n
+                           | /===\   |
+                           |  ! !    |
+                           |  ! !  x |
+                           |  ! !   i|
+                           | i = 1   |
+                           \         /
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) y : [5, 7, 2, 5, 9, 5, 6, 4, 9, 2, 4, 2, 5]$
+          (%i4) geometric_mean (y), numer;
+          (%o4)                   4.454845412337012
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) geometric_mean (s2);
+          (%o6) [8.82476274347979, 9.22652604739361, 10.0442675714889,
+                                      14.61274126349021, 13.96184163444275]
+
+     Veja também as funções 'mean' e 'harmonic_mean'.
+
+ -- Função da class: kurtosis (<lista>)
+ -- Função da class: kurtosis (<matriz>)
+     O coeficiente de curtose, definido como
+                              n
+                            ====
+                      1     \          _ 4
+                     ----    >    (x - x)  - 3
+                        4   /       i
+                     n s    ====
+                            i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) kurtosis (s1), numer;
+          (%o4)                  - 1.273247946514421
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) kurtosis (s2);
+          (%o6) [- .2715445622195385, 0.119998784429451,
+             - .4275233490482866, - .6405361979019522, - .4952382132352935]
+
+     Veja também as funções 'mean', 'var' e 'skewness'.
+
+ -- Função da class: skewness (<lista>)
+ -- Função da class: skewness (<matriz>)
+     O coeficiente de assimetria, definido como
+                              n
+                            ====
+                      1     \          _ 3
+                     ----    >    (x - x)
+                        3   /       i
+                     n s    ====
+                            i = 1
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) skewness (s1), numer;
+          (%o4)                  .009196180476450306
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) skewness (s2);
+          (%o6) [.1580509020000979, .2926379232061854, .09242174416107717,
+                                      .2059984348148687, .2142520248890832]
+
+     Veja também as funções 'mean', 'var' e 'kurtosis'.
+
+ -- Função da class: pearson_skewness (<lista>)
+ -- Função da class: pearson_skewness (<matriz>)
+     O coeficiente de assimetria de pearson, definido como
+                          _
+                       3 (x - med)
+                       -----------
+                            s
+     onde <med> é a mediana de <lista>.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) pearson_skewness (s1), numer;
+          (%o4)                   .2159484029093895
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) pearson_skewness (s2);
+          (%o6) [- .08019976629211892, .2357036272952649,
+                   .1050904062491204, .1245042340592368, .4464181795804519]
+
+     Veja também as funções 'mean', 'var' e 'median'.
+
+ -- Função da class: quartile_skewness (<lista>)
+ -- Função da class: quartile_skewness (<matriz>)
+     O coeficiented de assimetria do quartil, definido como
+                         c    - 2 c    + c
+                          3/4      1/2    1/4
+                         --------------------
+                             c    - c
+                              3/4    1/4
+     onde c_p é o quartil de ordem <p> da amostra <lista>.
+
+     Exemplo:
+
+          (%i1) load (descriptive)$
+          (%i2) load (numericalio)$
+          (%i3) s1 : read_list (file_search ("pidigits.data"))$
+          (%i4) quartile_skewness (s1), numer;
+          (%o4)                  .04761904761904762
+          (%i5) s2 : read_matrix (file_search ("wind.data"))$
+          (%i6) quartile_skewness (s2);
+          (%o6) [- 0.0408542246982353, .1467025572005382,
+                 0.0336239103362392, .03780068728522298, 0.210526315789474]
+
+     Veja também a função 'quantile'.
 
 
 File: maxima.info,  Node: Definições específicas para estatística descritiva de várias variáveis,  Next: Definições para gráficos estatísticos,  Prev: Definições para estatística descritiva,  Up: descriptive
 
-44.4 Definições específicas para estatística descritiva de várias variáveis
-===========================================================================
+44.4, Definições específicas para estatística descritiva de várias variáveis
+============================================================================
 
- -- Função: cov (<matriz>)
+ -- Função da class: cov (<matriz>)
      A matriz de covariância da amostra de várias variáveis, definida
      como
                         n
@@ -37,7 +704,7 @@ File: maxima.info,  Node: Definições específicas para estatística descritiva
 
      Veja também a função 'cov1'.
 
- -- Função: cov1 (<matriz>)
+ -- Função da class: cov1 (<matriz>)
      A matriz de covariância da amostra de várias variáveis, definida
      como
                         n
@@ -68,8 +735,8 @@ File: maxima.info,  Node: Definições específicas para estatística descritiva
 
      Veja também a função 'cov'.
 
- -- Função: global_variances (<matriz>)
- -- Função: global_variances (<matriz>, <valor_lógico>)
+ -- Função da class: global_variances (<matriz>)
+ -- Função da class: global_variances (<matriz>, <valor_lógico>)
      A função 'global_variances' retorna uma lista de medidas de
      variância global:
 
@@ -110,8 +777,8 @@ File: maxima.info,  Node: Definições específicas para estatística descritiva
 
      Veja também 'cov' e 'cov1'.
 
- -- Função: cor (<matriz>)
- -- Função: cor (<matriz>, <valor_lógico>)
+ -- Função da class: cor (<matriz>)
+ -- Função da class: cor (<matriz>, <valor_lógico>)
      A matriz de correlação da maostra de várias variáveis.
 
      Exemplo:
@@ -155,8 +822,8 @@ File: maxima.info,  Node: Definições específicas para estatística descritiva
 
      Veja também 'cov' e 'cov1'.
 
- -- Função: list_correlations (<matriz>)
- -- Função: list_correlations (<matriz>, <valor_lógico>)
+ -- Função da class: list_correlations (<matriz>)
+ -- Função da class: list_correlations (<matriz>, <valor_lógico>)
      A função 'list_correlations' retorna uma lista de medidas de
      correlação:
 
@@ -226,13 +893,13 @@ File: maxima.info,  Node: Definições específicas para estatística descritiva
 
 File: maxima.info,  Node: Definições para gráficos estatísticos,  Prev: Definições específicas para estatística descritiva de várias variáveis,  Up: descriptive
 
-44.5 Definições para gráficos estatísticos
-==========================================
+44.5, Definições para gráficos estatísticos
+===========================================
 
- -- Função: dataplot (<lista>)
- -- Função: dataplot (<lista>, <opção_1>, <opção_2>, ...)
- -- Função: dataplot (<matriz>)
- -- Função: dataplot (<matriz>, <opção_1>, <opção_2>, ...)
+ -- Função da class: dataplot (<lista>)
+ -- Função da class: dataplot (<lista>, <opção_1>, <opção_2>, ...)
+ -- Função da class: dataplot (<matriz>)
+ -- Função da class: dataplot (<matriz>, <opção_1>, <opção_2>, ...)
      A função 'dataplot' permite visualização directa de dados de
      amostra, ambas d uma única variável (<lista>) e de várias variáveis
      (<matriz>).  Fornecendo valores para as seguintes <opções> que são
@@ -342,10 +1009,11 @@ File: maxima.info,  Node: Definições para gráficos estatísticos,  Prev: Defi
           (%i3) s2 : read_matrix (file_search ("wind.data"))$
           (%i4) dataplot (s2)$
 
- -- Função: histogram (<lista>)
- -- Função: histogram (<lista>, <opção_1>, <opção_2>, ...)
- -- Função: histogram (<one_column_matrix>)
- -- Função: histogram (<one_column_matrix>, <opção_1>, <opção_2>, ...)
+ -- Função da class: histogram (<lista>)
+ -- Função da class: histogram (<lista>, <opção_1>, <opção_2>, ...)
+ -- Função da class: histogram (<one_column_matrix>)
+ -- Função da class: histogram (<one_column_matrix>, <opção_1>,
+          <opção_2>, ...)
      Essa função monta um gráfico de um histograma.  Dados de amostras
      devem ser armazenados em uma lista de números ou em uma matriz de
      uma coluna.  Fornecendo valores para as seguintes <opções> alguns
@@ -393,10 +1061,11 @@ File: maxima.info,  Node: Definições para gráficos estatísticos,  Prev: Defi
 
      Veja também a função 'barsplot'.
 
- -- Função: barsplot (<lista>)
- -- Função: barsplot (<lista>, <opção_1>, <opção_2>, ...)
- -- Função: barsplot (<one_column_matrix>)
- -- Função: barsplot (<one_column_matrix>, <opção_1>, <opção_2>, ...)
+ -- Função da class: barsplot (<lista>)
+ -- Função da class: barsplot (<lista>, <opção_1>, <opção_2>, ...)
+ -- Função da class: barsplot (<one_column_matrix>)
+ -- Função da class: barsplot (<one_column_matrix>, <opção_1>,
+          <opção_2>, ...)
      Similar a 'histogram' mas para variáveis estatísticas, numéricas ou
      divididas em categorias.  As opções estão abaixo,
 
@@ -447,8 +1116,8 @@ File: maxima.info,  Node: Definições para gráficos estatísticos,  Prev: Defi
 
      Veja também a função 'histogram'.
 
- -- Função: boxplot (<data>)
- -- Função: boxplot (<data>, <opção_1>, <opção_2>, ...)
+ -- Função da class: boxplot (<data>)
+ -- Função da class: boxplot (<data>, <opção_1>, <opção_2>, ...)
      Essa função monta diagramas em caixas.  O argumento <data> pode ser
      uma lista, que não é de grande interesse, uma vez que esses
      diagramas são principalmente usados para comparação entre
@@ -489,8 +1158,8 @@ File: maxima.info,  Node: Definições para gráficos estatísticos,  Prev: Defi
 
 File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
-45 diag
-*******
+45, diag
+********
 
 * Menu:
 
@@ -499,10 +1168,10 @@ File: maxima.info,  Node: diag,  Next: distrib,  Prev: descriptive,  Up: Top
 
 File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
 
-45.1 Definições para diag
-=========================
+45.1, Definições para diag
+==========================
 
- -- Função: diag (<lm>)
+ -- Função da class: diag (<lm>)
      Constrói a matriz quadrada com as matrizes de <lm> na diagonal.
      <lm> é uma lista de matrizes ou escalares.
 
@@ -528,7 +1197,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
 
      Para usar essa função escreva primeiramente 'load("diag")'.
 
- -- Função: JF (<lambda>,<n>)
+ -- Função da class: JF (<lambda>,<n>)
      Retorna a célula de Jordan de ordem <n> com autovalor <lambda>.
 
      Exemplo:
@@ -551,7 +1220,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
 
      Para usar essa função escreva primeiramente 'load("diag")'.
 
- -- Função: jordan (<mat>)
+ -- Função da class: jordan (<mat>)
      Retorna a forma de Jordan da matriz <mat>, mas codificada em uma
      lista do Maxima.  Para pegar a matriz correspondente à codificação,
      chame a função 'dispJordan' sando como argumento a saída de 'JF'.
@@ -590,7 +1259,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
      Para usar essa função escreva primeiramente 'load("diag")'.  Veja
      também 'dispJordan' e 'minimalPoly'.
 
- -- Função: dispJordan (<l>)
+ -- Função da class: dispJordan (<l>)
      Retorna a matriz de Jordan associada à codificação fornecida pela
      lista do Maxima <l>, que é a saída fornecida pela função 'jordan'.
 
@@ -619,7 +1288,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
      Para usar essa função escreva primeiramente 'load("diag")'.  Veja
      também 'jordan' e 'minimalPoly'.
 
- -- Função: minimalPoly (<l>)
+ -- Função da class: minimalPoly (<l>)
      Retorna o menor polinómio associado à codificação fornecida pela
      lista do Maxima <l>, que é a saída fornecida pela função 'jordan'.
 
@@ -640,7 +1309,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
      Para usar essa função escreva prmeiramente 'load("diag")'.  Veja
      também 'jordan' e 'dispJordan'.
 
- -- Função: ModeMatrix (<A>,<l>)
+ -- Função da class: ModeMatrix (<A>,<l>)
      Retorna a matriz <M> tal que (M^^-1).A.M=J, onde <J> é a forma de
      Jordan de <A>.  A lista do Maxima <l> é a codificação da forma de
      Jordan como retornado pela função 'jordan'.
@@ -676,7 +1345,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
      Para usa essa função escreva primeiramente 'load("diag")'.  Veja
      também 'jordan' e 'dispJordan'.
 
- -- Função: mat_function (<f>,<mat>)
+ -- Função da class: mat_function (<f>,<mat>)
      Retorna f(mat), onde <f> é uma função analítica e <mat> uma matriz.
      Essa computação é baseada na fórmula da integral de Cauchy, que
      estabelece que se 'f(x)' for analítica e
@@ -765,6 +1434,7 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
                    [ (t  - 4 t + 2) %e    ]
                    [ -------------------- ]
                    [          2           ]
+
 
      Exemplo 2:
           (%i5) b1:matrix([0,0,1,1,1],
@@ -891,8 +1561,8 @@ File: maxima.info,  Node: Definições para diag,  Prev: diag,  Up: diag
 
 File: maxima.info,  Node: distrib,  Next: dynamics,  Prev: diag,  Up: Top
 
-46 distrib
-**********
+46, distrib
+***********
 
 * Menu:
 
@@ -903,8 +1573,8 @@ File: maxima.info,  Node: distrib,  Next: dynamics,  Prev: diag,  Up: Top
 
 File: maxima.info,  Node: Introdução a distrib,  Next: Definições para distribuições contínuas,  Prev: distrib,  Up: distrib
 
-46.1 Introdução a distrib
-=========================
+46.1, Introdução a distrib
+==========================
 
 Pacote 'distrib' contém um conjunto de funções para fazer cálculos
 envolvendo probabilidades de modelos de uma única variável estatística e
@@ -914,7 +1584,7 @@ O que segue é um curto resumo de definiçoes básicas relacionadas à
 teoria das probabilidades.
 
 Seja f(x) a <função densidade de probabilidade> absoluta de uma variável
-aleatória contínua X.  A <função distribuição de probabilidade> é
+aleatória contínua X. A <função distribuição de probabilidade> é
 definida como
                             x
                            /
@@ -1110,15 +1780,15 @@ Para comentários, melhorias ou sugestões, por favor contacte o autor em
 
 File: maxima.info,  Node: Definições para distribuições contínuas,  Next: Definições para distribuições discretas,  Prev: Introdução a distrib,  Up: distrib
 
-46.2 Definições para distribuições contínuas
-============================================
+46.2, Definições para distribuições contínuas
+=============================================
 
- -- Função: pdf_normal (<x>,<m>,<s>)
+ -- Função da class: pdf_normal (<x>,<m>,<s>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Normal(m,s), com s>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_normal (<x>,<m>,<s>)
+ -- Função da class: cdf_normal (<x>,<m>,<s>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Normal(m,s), com s>0.  Essa função é
      definida em termos de funções de erro internas do Maxima, 'erf'.
@@ -1133,38 +1803,38 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'erf'.
 
- -- Função: quantile_normal (<q>,<m>,<s>)
+ -- Função da class: quantile_normal (<q>,<m>,<s>)
      Retorna o <q>-quantil de uma variável aleatória Normal(m,s), com
      s>0; em outras palavras, isso é o inverso de 'cdf_normal'.  O
      argumento <q> deve ser um elemento de [0,1].  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_normal (<m>,<s>)
+ -- Função da class: mean_normal (<m>,<s>)
      Retorna a média de uma variável aleatória Normal(m,s), com s>0, a
      saber <m>.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: var_normal (<m>,<s>)
+ -- Função da class: var_normal (<m>,<s>)
      Retorna a variância de uma variável aleatória Normal(m,s), com s>0,
      a saber <s^2>.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_normal (<m>,<s>)
+ -- Função da class: std_normal (<m>,<s>)
      Retorna o desvio padrão de uma variável aleatória Normal(m,s), com
      s>0, a saber <s>.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: skewness_normal (<m>,<s>)
+ -- Função da class: skewness_normal (<m>,<s>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Normal(m,s), com s>0, que é sempre igual a 0.  Para fazer uso dessa
      função,escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_normal (<m>,<s>)
+ -- Função da class: kurtosis_normal (<m>,<s>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Normal(m,s), com s>0, que é sempre igual a 0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_normal_algorithm
+ -- Variável de opção da class: random_normal_algorithm
      Valor por omissão: 'box_mueller'
 
      Esse é o algoritmo seleccionado para simular variáveis aleatórias
@@ -1177,8 +1847,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_normal'.
 
- -- Função: random_normal (<m>,<s>)
- -- Função: random_normal (<m>,<s>,<n>)
+ -- Função da class: random_normal (<m>,<s>)
+ -- Função da class: random_normal (<m>,<s>,<n>)
      Retorna uma variável estatística pseudo-aleatória Normal(m,s), com
      s>0.  Chamando 'random_normal' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -1191,12 +1861,12 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_normal_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_student_t (<x>,<n>)
+ -- Função da class: pdf_student_t (<x>,<n>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória de Student t(n), com n>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_student_t (<x>,<n>)
+ -- Função da class: cdf_student_t (<x>,<n>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória de Student t(n), com n>0.  Essa função não
      tem uma forma definitiva e é calculada numericamente se a variável
@@ -1211,18 +1881,18 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) %,numer;
           (%o3)                   .6698450596140417
 
- -- Função: quantile_student_t (<q>,<n>)
+ -- Função da class: quantile_student_t (<q>,<n>)
      Retorna o <q>-quantil de uma variável aleatória de Student t(n),
      com n>0; em outras palavras, 'quantile_student_t' é o inverso de
      'cdf_student_t'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_student_t (<n>)
+ -- Função da class: mean_student_t (<n>)
      Retorna a média de uma variável aleatória de Student t(n), com n>0,
      que é sempre igual a 0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: var_student_t (<n>)
+ -- Função da class: var_student_t (<n>)
      Retorna a variância de uma variável aleatória de Student t(n), com
      n>2.
 
@@ -1232,22 +1902,22 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o3)                         -----
                                         n - 2
 
- -- Função: std_student_t (<n>)
+ -- Função da class: std_student_t (<n>)
      Retorna o desvio padrão de uma variável aleatória de Student t(n),
      com n>2.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_student_t (<n>)
+ -- Função da class: skewness_student_t (<n>)
      Retorna o coeficiente de assimetria de uma variável aleatória de
      Student t(n), com n>3, que é sempre igual a 0.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_student_t (<n>)
+ -- Função da class: kurtosis_student_t (<n>)
      Retorna o coeficiente de curtose de uma variável aleatória de
      Student t(n), com n>4.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_student_t_algorithm
+ -- Variável de opção da class: random_student_t_algorithm
      Valor por omissão: 'ratio'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -1269,8 +1939,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_student_t'.
 
- -- Função: random_student_t (<n>)
- -- Função: random_student_t (<n>,<m>)
+ -- Função da class: random_student_t (<n>)
+ -- Função da class: random_student_t (<n>,<m>)
      Retorna uma variável estatística pseudo-aleatória de Student t(n),
      com n>0.  Chamando 'random_student_t' com um segundo argumento <m>,
      uma amostra aleatória de tamanho <m> será simulada.
@@ -1283,7 +1953,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_student_t_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_chi2 (<x>,<n>)
+ -- Função da class: pdf_chi2 (<x>,<n>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Chi-quadrada Chi^2(n), com n>0.
 
@@ -1305,7 +1975,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                    2    gamma(-)
                                               2
 
- -- Função: cdf_chi2 (<x>,<n>)
+ -- Função da class: cdf_chi2 (<x>,<n>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Chi-quadrada Chi^2(n), com n>0.
 
@@ -1321,7 +1991,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) cdf_chi2(3,4),numer;
           (%o3)                   .4421745996289249
 
- -- Função: quantile_chi2 (<q>,<n>)
+ -- Função da class: quantile_chi2 (<q>,<n>)
      Retorna o <q>-quantilede uma variável aleatória Chi-quadrada
      Chi^2(n), com n>0; em outras palavras, essa função é a inversa da
      função 'cdf_chi2'.  O argumento <q> deve ser um elemento de [0,1].
@@ -1340,7 +2010,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o3)              quantile_gamma(0.99, -, 2)
                                                   2
 
- -- Função: mean_chi2 (<n>)
+ -- Função da class: mean_chi2 (<n>)
      Retorna a média de uma variável aleatória Chi-quadrada Chi^2(n),
      com n>0.
 
@@ -1357,7 +2027,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) assume(n>0)$ mean_chi2(n);
           (%o4)                           n
 
- -- Função: var_chi2 (<n>)
+ -- Função da class: var_chi2 (<n>)
      Retorna a variância de uma variável aleatória Chi-quadrada
      Chi^2(n), com n>0.
 
@@ -1374,7 +2044,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) assume(n>0)$ var_chi2(n);
           (%o4)                          2 n
 
- -- Função: std_chi2 (<n>)
+ -- Função da class: std_chi2 (<n>)
      Retorna o desvio padrão de uma variável aleatória Chi-quadrada
      Chi^2(n), com n>0.
 
@@ -1391,7 +2061,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) assume(n>0)$ std_chi2(n);
           (%o4)                    sqrt(2) sqrt(n)
 
- -- Função: skewness_chi2 (<n>)
+ -- Função da class: skewness_chi2 (<n>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Chi-quadrada Chi^2(n), com n>0.
 
@@ -1410,7 +2080,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                       ---------
                                        sqrt(n)
 
- -- Função: kurtosis_chi2 (<n>)
+ -- Função da class: kurtosis_chi2 (<n>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Chi-quadrada Chi^2(n), com n>0.
 
@@ -1429,7 +2099,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                          --
                                          n
 
- -- Variável de opção: random_chi2_algorithm
+ -- Variável de opção da class: random_chi2_algorithm
      Valor por omissão: 'ahrens_cheng'
 
      Esse é o algoritmo seleccionado para simular variáveis estatística
@@ -1443,8 +2113,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_chi2'.
 
- -- Função: random_chi2 (<n>)
- -- Função: random_chi2 (<n>,<m>)
+ -- Função da class: random_chi2 (<n>)
+ -- Função da class: random_chi2 (<n>,<m>)
      Retorna uma variável estatística pseudo-aleatória Chi-square
      Chi^2(n), com n>0.  Chamando 'random_chi2' com um segundo argumento
      <m>, uma amostra aleatória de tamanho <m> será simulada.
@@ -1457,12 +2127,12 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_chi2_algorithm'.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_f (<x>,<m>,<n>)
+ -- Função da class: pdf_f (<x>,<m>,<n>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória F, F(m,n), com m,n>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_f (<x>,<m>,<n>)
+ -- Função da class: cdf_f (<x>,<m>,<n>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória F, F(m,n), com m,n>0.  Essa função não
      possui uma forma definitiva e é calculada numericamente se a
@@ -1477,7 +2147,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) %,numer;
           (%o3)                   0.66756728179008
 
- -- Função: quantile_f (<q>,<m>,<n>)
+ -- Função da class: quantile_f (<q>,<m>,<n>)
      Retorna o <q>-quantil de uma variável aleatória F, F(m,n), com
      m,n>0; em outras palavras, essa função é o inverso de 'cdf_f'.  O
      argumento <q> deve ser um elemento de [0,1].
@@ -1494,31 +2164,31 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) %,numer;
           (%o3)                   0.518947838573693
 
- -- Função: mean_f (<m>,<n>)
+ -- Função da class: mean_f (<m>,<n>)
      Retorna a média de uma variável aleatória F, F(m,n), com m>0, n>2.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_f (<m>,<n>)
+ -- Função da class: var_f (<m>,<n>)
      Retorna a variância de uma variável aleatória F, F(m,n), com m>0,
      n>4.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_f (<m>,<n>)
+ -- Função da class: std_f (<m>,<n>)
      Retorna o desvio padrão de uma variável aleatória F, F(m,n), com
      m>0, n>4.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_f (<m>,<n>)
+ -- Função da class: skewness_f (<m>,<n>)
      Retorna o coeficiente de assimetria de uma variável aleatória F,
      F(m,n), com m>0, n>6.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_f (<m>,<n>)
+ -- Função da class: kurtosis_f (<m>,<n>)
      Retorna o coeficiente de curtose de uma variável aleatória F,
      F(m,n), com m>0, n>8.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_f_algorithm
+ -- Variável de opção da class: random_f_algorithm
      Valor por omissão: 'inverse'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -1538,8 +2208,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_f'.
 
- -- Função: random_f (<m>,<n>)
- -- Função: random_f (<m>,<n>,<k>)
+ -- Função da class: random_f (<m>,<n>)
+ -- Função da class: random_f (<m>,<n>,<k>)
      Retorna uma variável estatística pseudo-aleatória F, F(m,n), com
      m,n>0.  Chamando 'random_f' com um terceiro argumento <k>, uma
      amostra aleatória de tamanho <k> será simulada.
@@ -1552,7 +2222,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_f_algorithm'.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_exp (<x>,<m>)
+ -- Função da class: pdf_exp (<x>,<m>)
      Retorna o valor em <x> da função densidade de probabilidade
      variável aleatória Exponential(m), com m>0.
 
@@ -1570,7 +2240,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                           - m x
           (%o4)                       m %e
 
- -- Função: cdf_exp (<x>,<m>)
+ -- Função da class: cdf_exp (<x>,<m>)
      Retorna o valor em <x> da função distribuição de probabilidade
      variável aleatória Exponential(m), com m>0.
 
@@ -1588,7 +2258,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                            - m x
           (%o4)                      1 - %e
 
- -- Função: quantile_exp (<q>,<m>)
+ -- Função da class: quantile_exp (<q>,<m>)
      Retorna o <q>-quantil variável aleatória Exponential(m), com m>0;
      em outras palavras, essa função é inversa da função 'cdf_exp'.  O
      argumento <q> deve ser um elemento de [0,1].
@@ -1606,7 +2276,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o3)             quantile_weibull(0.56, 1, -)
                                                       m
 
- -- Função: mean_exp (<m>)
+ -- Função da class: mean_exp (<m>)
      Retorna a média de uma variável aleatória Exponential(m), com m>0.
 
      A variável aleatória Exponential(m) é equivalente a Weibull(1,1/m),
@@ -1624,7 +2294,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                           -
                                           m
 
- -- Função: var_exp (<m>)
+ -- Função da class: var_exp (<m>)
      Retorna a variância de uma variável aleatória Exponential(m), com
      m>0.
 
@@ -1644,7 +2314,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                           2
                                          m
 
- -- Função: std_exp (<m>)
+ -- Função da class: std_exp (<m>)
      Retorna o desvio padrão de uma variável aleatória Exponential(m),
      com m>0.
 
@@ -1663,7 +2333,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                           -
                                           m
 
- -- Função: skewness_exp (<m>)
+ -- Função da class: skewness_exp (<m>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Exponential(m), com m>0.
 
@@ -1680,7 +2350,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) assume(m>0)$  skewness_exp(m);
           (%o4)                           2
 
- -- Função: kurtosis_exp (<m>)
+ -- Função da class: kurtosis_exp (<m>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Exponential(m), com m>0.
 
@@ -1697,7 +2367,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) assume(m>0)$  kurtosis_exp(m);
           (%o4)                           6
 
- -- Variável de opção: random_exp_algorithm
+ -- Variável de opção da class: random_exp_algorithm
      Valor por omissão: 'inverse'
 
      Esse é o algoritmo seleccionado para simular variáveis exponenciais
@@ -1717,8 +2387,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_exp'.
 
- -- Função: random_exp (<m>)
- -- Função: random_exp (<m>,<k>)
+ -- Função da class: random_exp (<m>)
+ -- Função da class: random_exp (<m>,<k>)
      Retorna uma variável estatística pseudo-aleatória Exponential(m),
      com m>0.  Chamando 'random_exp' com um segundo argumento <k>, uma
      amostra aleatória de tamanho <k> será simulada.
@@ -1731,12 +2401,12 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_exp_algorithm'.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_lognormal (<x>,<m>,<s>)
+ -- Função da class: pdf_lognormal (<x>,<m>,<s>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Lognormal(m,s), com s>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_lognormal (<x>,<m>,<s>)
+ -- Função da class: cdf_lognormal (<x>,<m>,<s>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Lognormal(m,s), com s>0.  Essa função é
      definida em termos de funções 'erf'de erro internas do Maxima.
@@ -1751,38 +2421,38 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'erf'.
 
- -- Função: quantile_lognormal (<q>,<m>,<s>)
+ -- Função da class: quantile_lognormal (<q>,<m>,<s>)
      Retorna o <q>-quantil de uma variável aleatória Lognormal(m,s), com
      s>0; em outras palavras, essa função é a inversa da função
      'cdf_lognormal'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_lognormal (<m>,<s>)
+ -- Função da class: mean_lognormal (<m>,<s>)
      Retorna a média de uma variável aleatória Lognormal(m,s), com s>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_lognormal (<m>,<s>)
+ -- Função da class: var_lognormal (<m>,<s>)
      Retorna a variância de uma variável aleatória Lognormal(m,s), com
      s>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_lognormal (<m>,<s>)
+ -- Função da class: std_lognormal (<m>,<s>)
      Retorna o desvio padrão de uma variável aleatória Lognormal(m,s),
      com s>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_lognormal (<m>,<s>)
+ -- Função da class: skewness_lognormal (<m>,<s>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Lognormal(m,s), com s>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_lognormal (<m>,<s>)
+ -- Função da class: kurtosis_lognormal (<m>,<s>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Lognormal(m,s), com s>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_lognormal (<m>,<s>)
- -- Função: random_lognormal (<m>,<s>,<n>)
+ -- Função da class: random_lognormal (<m>,<s>)
+ -- Função da class: random_lognormal (<m>,<s>,<n>)
      Retorna uma variável estatística pseudo-aleatória Lognormal(m,s),
      com s>0.  Chamando 'random_lognormal' com um terceiro argumento
      <n>, uma amostra aleatória de tamanho <n> será simulada.
@@ -1796,12 +2466,12 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_normal_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_gamma (<x>,<a>,<b>)
+ -- Função da class: pdf_gamma (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Gamma(a,b), com a,b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_gamma (<x>,<a>,<b>)
+ -- Função da class: cdf_gamma (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Gamma(a,b), com a,b>0.
 
@@ -1815,37 +2485,37 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) %,numer;
           (%o3)                 4.402663157135039E-7
 
- -- Função: quantile_gamma (<q>,<a>,<b>)
+ -- Função da class: quantile_gamma (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Gamma(a,b), com
      a,b>0; em outras palavras, essa função é a inversa da função
      'cdf_gamma'.  O argumento <q> deve ser um elemento de [0,1].  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_gamma (<a>,<b>)
+ -- Função da class: mean_gamma (<a>,<b>)
      Retorna a média de uma variável aleatória Gamma(a,b), com a,b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_gamma (<a>,<b>)
+ -- Função da class: var_gamma (<a>,<b>)
      Retorna a variância de uma variável aleatória Gamma(a,b), com
      a,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_gamma (<a>,<b>)
+ -- Função da class: std_gamma (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Gamma(a,b), com
      a,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_gamma (<a>,<b>)
+ -- Função da class: skewness_gamma (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Gamma(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_gamma (<a>,<b>)
+ -- Função da class: kurtosis_gamma (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Gamma(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_gamma_algorithm
+ -- Variável de opção da class: random_gamma_algorithm
      Valor por omissão: 'ahrens_cheng'
 
      Esse é o algoritmo seleccionado para simular variáveis estatística
@@ -1866,8 +2536,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_gamma'.
 
- -- Função: random_gamma (<a>,<b>)
- -- Função: random_gamma (<a>,<b>,<n>)
+ -- Função da class: random_gamma (<a>,<b>)
+ -- Função da class: random_gamma (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Gamma(a,b), com
      a,b>0.  Chamando 'random_gamma' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -1880,12 +2550,12 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_gamma_algorithm'.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_beta (<x>,<a>,<b>)
+ -- Função da class: pdf_beta (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Beta(a,b), com a,b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_beta (<x>,<a>,<b>)
+ -- Função da class: cdf_beta (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Beta(a,b), com a,b>0.
 
@@ -1901,36 +2571,36 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%i3) %,numer;
           (%o3)                 7.666089131388224E-7
 
- -- Função: quantile_beta (<q>,<a>,<b>)
+ -- Função da class: quantile_beta (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Beta(a,b), com
      a,b>0; em outras palavras, essa função é a inversa da função
      'cdf_beta'.  O argumento <q> deve ser um elemento de [0,1].  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_beta (<a>,<b>)
+ -- Função da class: mean_beta (<a>,<b>)
      Retorna a média de uma variável aleatória Beta(a,b), com a,b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_beta (<a>,<b>)
+ -- Função da class: var_beta (<a>,<b>)
      Retorna a variância de uma variável aleatória Beta(a,b), com a,b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: std_beta (<a>,<b>)
+ -- Função da class: std_beta (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Beta(a,b), com
      a,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_beta (<a>,<b>)
+ -- Função da class: skewness_beta (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Beta(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_beta (<a>,<b>)
+ -- Função da class: kurtosis_beta (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Beta(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_beta_algorithm
+ -- Variável de opção da class: random_beta_algorithm
      Valor por omissão: 'cheng'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -1949,8 +2619,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
      Veja também 'random_beta'.
 
- -- Função: random_beta (<a>,<b>)
- -- Função: random_beta (<a>,<b>,<n>)
+ -- Função da class: random_beta (<a>,<b>)
+ -- Função da class: random_beta (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Beta(a,b), com
      a,b>0.  Chamando 'random_beta' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -1963,50 +2633,50 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random_beta_algorithm'.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_continuous_uniform (<x>,<a>,<b>)
+ -- Função da class: pdf_continuous_uniform (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Continuous Uniform(a,b), com a<b.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_continuous_uniform (<x>,<a>,<b>)
+ -- Função da class: cdf_continuous_uniform (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Continuous Uniform(a,b), com a<b.  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_continuous_uniform (<q>,<a>,<b>)
+ -- Função da class: quantile_continuous_uniform (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Continuous
      Uniform(a,b), com a<b; em outras palavras, essa função é a inversa
      da função 'cdf_continuous_uniform'.  O argumento <q> deve ser um
      elemento de [0,1].  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: mean_continuous_uniform (<a>,<b>)
+ -- Função da class: mean_continuous_uniform (<a>,<b>)
      Retorna a média de uma variável aleatória Continuous Uniform(a,b),
      com a<b.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: var_continuous_uniform (<a>,<b>)
+ -- Função da class: var_continuous_uniform (<a>,<b>)
      Retorna a variância de uma variável aleatória Continuous
      Uniform(a,b), com a<b.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: std_continuous_uniform (<a>,<b>)
+ -- Função da class: std_continuous_uniform (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Continuous
      Uniform(a,b), com a<b.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: skewness_continuous_uniform (<a>,<b>)
+ -- Função da class: skewness_continuous_uniform (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Continuous Uniform(a,b), com a<b.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_continuous_uniform (<a>,<b>)
+ -- Função da class: kurtosis_continuous_uniform (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Continuous Uniform(a,b), com a<b.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: random_continuous_uniform (<a>,<b>)
- -- Função: random_continuous_uniform (<a>,<b>,<n>)
+ -- Função da class: random_continuous_uniform (<a>,<b>)
+ -- Função da class: random_continuous_uniform (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Continuous
      Uniform(a,b), com a<b.  Chamando 'random_continuous_uniform' com um
      terceiro argumento <n>, uma amostra aleatória de tamanho <n> será
@@ -2017,48 +2687,48 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Veja também 'random'.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: pdf_logistic (<x>,<a>,<b>)
+ -- Função da class: pdf_logistic (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Logistic(a,b) , com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_logistic (<x>,<a>,<b>)
+ -- Função da class: cdf_logistic (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Logistic(a,b), com b>0.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_logistic (<q>,<a>,<b>)
+ -- Função da class: quantile_logistic (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Logistic(a,b) , com
      b>0; em outras palavras, essa função é a inversa da função
      'cdf_logistic'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: meanlog (<a>,<b>)
+ -- Função da class: meanlog (<a>,<b>)
      Retorna a média de uma Logistic(a,b) variável aleatória , com b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_logistic (<a>,<b>)
+ -- Função da class: var_logistic (<a>,<b>)
      Retorna a variância de uma variável aleatória Logistic(a,b) , com
      b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_logistic (<a>,<b>)
+ -- Função da class: std_logistic (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Logistic(a,b) ,
      com b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_logistic (<a>,<b>)
+ -- Função da class: skewness_logistic (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Logistic(a,b) , com b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_logistic (<a>,<b>)
+ -- Função da class: kurtosis_logistic (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Logistic(a,b) , com b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_logistic (<a>,<b>)
- -- Função: random_logistic (<a>,<b>,<n>)
+ -- Função da class: random_logistic (<a>,<b>)
+ -- Função da class: random_logistic (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Logistic(a,b),
      com b>0.  Chamando 'random_logistic' com um terceiro argumento <n>,
      uma amostra aleatória de tamanho <n> será simulada.
@@ -2066,48 +2736,48 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_pareto (<x>,<a>,<b>)
+ -- Função da class: pdf_pareto (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Pareto(a,b), com a,b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_pareto (<x>,<a>,<b>)
+ -- Função da class: cdf_pareto (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Pareto(a,b), com a,b>0.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_pareto (<q>,<a>,<b>)
+ -- Função da class: quantile_pareto (<q>,<a>,<b>)
      Retorna o <q>-quantile de uma variável aleatória Pareto(a,b), com
      a,b>0; em outras palavras, essa função é a inversa da função
      'cdf_pareto'.  O argumento <q> deve ser um elemento de [0,1].  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_pareto (<a>,<b>)
+ -- Função da class: mean_pareto (<a>,<b>)
      Retorna a média de uma variável aleatória Pareto(a,b), com a>1,b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_pareto (<a>,<b>)
+ -- Função da class: var_pareto (<a>,<b>)
      Retorna a variância de uma variável aleatória Pareto(a,b), com
      a>2,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_pareto (<a>,<b>)
+ -- Função da class: std_pareto (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Pareto(a,b), com
      a>2,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_pareto (<a>,<b>)
+ -- Função da class: skewness_pareto (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Pareto(a,b), com a>3,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_pareto (<a>,<b>)
+ -- Função da class: kurtosis_pareto (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Pareto(a,b), com a>4,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_pareto (<a>,<b>)
- -- Função: random_pareto (<a>,<b>,<n>)
+ -- Função da class: random_pareto (<a>,<b>)
+ -- Função da class: random_pareto (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Pareto(a,b), com
      a>0,b>0.  Chamando 'random_pareto' com um terceiro argumento <n>,
      uma amostra aleatória de tamanho <n> será simulada.
@@ -2115,48 +2785,48 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_weibull (<x>,<a>,<b>)
+ -- Função da class: pdf_weibull (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Weibull(a,b), com a,b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_weibull (<x>,<a>,<b>)
+ -- Função da class: cdf_weibull (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Weibull(a,b), com a,b>0.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_weibull (<q>,<a>,<b>)
+ -- Função da class: quantile_weibull (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Weibull(a,b), com
      a,b>0; em outras palavras, essa função é a inversa da função
      'cdf_weibull'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_weibull (<a>,<b>)
+ -- Função da class: mean_weibull (<a>,<b>)
      Retorna a média de uma variável aleatória Weibull(a,b), com a,b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_weibull (<a>,<b>)
+ -- Função da class: var_weibull (<a>,<b>)
      Retorna a variância de uma variável aleatória Weibull(a,b), com
      a,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_weibull (<a>,<b>)
+ -- Função da class: std_weibull (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Weibull(a,b), com
      a,b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_weibull (<a>,<b>)
+ -- Função da class: skewness_weibull (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Weibull(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_weibull (<a>,<b>)
+ -- Função da class: kurtosis_weibull (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Weibull(a,b), com a,b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_weibull (<a>,<b>)
- -- Função: random_weibull (<a>,<b>,<n>)
+ -- Função da class: random_weibull (<a>,<b>)
+ -- Função da class: random_weibull (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Weibull(a,b), com
      a,b>0.  Chamando 'random_weibull' com um terceiro argumento <n>,
      uma amostra aleatória de tamanho <n> será simulada.
@@ -2164,7 +2834,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_rayleigh (<x>,<b>)
+ -- Função da class: pdf_rayleigh (<x>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Rayleigh(b), com b>0.
 
@@ -2183,7 +2853,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                      2     - b  x
           (%o4)                   2 b  x %e
 
- -- Função: cdf_rayleigh (<x>,<b>)
+ -- Função da class: cdf_rayleigh (<x>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Rayleigh(b), com b>0.
 
@@ -2202,7 +2872,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                           - b  x
           (%o4)                     1 - %e
 
- -- Função: quantile_rayleigh (<q>,<b>)
+ -- Função da class: quantile_rayleigh (<q>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Rayleigh(b), com
      b>0; em outras palavras, essa função é a inversa da função
      'cdf_rayleigh'.  O argumento <q> deve ser um elemento de [0,1].
@@ -2222,7 +2892,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                   -----------------
                                           b
 
- -- Função: mean_rayleigh (<b>)
+ -- Função da class: mean_rayleigh (<b>)
      Retorna a média de uma variável aleatória Rayleigh(b), com b>0.
 
      A variável aleatória Rayleigh(b) é equivalente a Weibull(2,1/b),
@@ -2240,7 +2910,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                       ---------
                                          2 b
 
- -- Função: var_rayleigh (<b>)
+ -- Função da class: var_rayleigh (<b>)
      Retorna a variância de uma variável aleatória Rayleigh(b), com b>0.
 
      A variável aleatória Rayleigh(b) é equivalente a Weibull(2,1/b),
@@ -2261,7 +2931,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                           2
                                          b
 
- -- Função: std_rayleigh (<b>)
+ -- Função da class: std_rayleigh (<b>)
      Retorna o desvio padrão de uma variável aleatória Rayleigh(b), com
      b>0.
 
@@ -2282,7 +2952,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o4)                     -------------
                                           b
 
- -- Função: skewness_rayleigh (<b>)
+ -- Função da class: skewness_rayleigh (<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Rayleigh(b), com b>0.
 
@@ -2306,7 +2976,7 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                     (1 - ---)
                                           4
 
- -- Função: kurtosis_rayleigh (<b>)
+ -- Função da class: kurtosis_rayleigh (<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Rayleigh(b), com b>0.
 
@@ -2330,8 +3000,8 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
                                    (1 - ---)
                                          4
 
- -- Função: random_rayleigh (<b>)
- -- Função: random_rayleigh (<b>,<n>)
+ -- Função da class: random_rayleigh (<b>)
+ -- Função da class: random_rayleigh (<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Rayleigh(b), com
      b>0.  Chamando 'random_rayleigh' com um segundo argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -2339,48 +3009,48 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_laplace (<x>,<a>,<b>)
+ -- Função da class: pdf_laplace (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Laplace(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_laplace (<x>,<a>,<b>)
+ -- Função da class: cdf_laplace (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Laplace(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_laplace (<q>,<a>,<b>)
+ -- Função da class: quantile_laplace (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Laplace(a,b), com
      b>0; em outras palavras, essa função é a inversa da função
      'cdf_laplace'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_laplace (<a>,<b>)
+ -- Função da class: mean_laplace (<a>,<b>)
      Retorna a média de uma variável aleatória Laplace(a,b), com b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_laplace (<a>,<b>)
+ -- Função da class: var_laplace (<a>,<b>)
      Retorna a variância de uma variável aleatória Laplace(a,b), com
      b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_laplace (<a>,<b>)
+ -- Função da class: std_laplace (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Laplace(a,b), com
      b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_laplace (<a>,<b>)
+ -- Função da class: skewness_laplace (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Laplace(a,b), com b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_laplace (<a>,<b>)
+ -- Função da class: kurtosis_laplace (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Laplace(a,b), com b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_laplace (<a>,<b>)
- -- Função: random_laplace (<a>,<b>,<n>)
+ -- Função da class: random_laplace (<a>,<b>)
+ -- Função da class: random_laplace (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Laplace(a,b), com
      b>0.  Chamando 'random_laplace' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -2388,24 +3058,24 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_cauchy (<x>,<a>,<b>)
+ -- Função da class: pdf_cauchy (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Cauchy(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_cauchy (<x>,<a>,<b>)
+ -- Função da class: cdf_cauchy (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Cauchy(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_cauchy (<q>,<a>,<b>)
+ -- Função da class: quantile_cauchy (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Cauchy(a,b), com
      b>0; em outras palavras, essa função é a inversa da função
      'cdf_cauchy'.  O argumento <q> deve ser um elemento de [0,1].  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: random_cauchy (<a>,<b>)
- -- Função: random_cauchy (<a>,<b>,<n>)
+ -- Função da class: random_cauchy (<a>,<b>)
+ -- Função da class: random_cauchy (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo aleatória Cauchy(a,b), com
      b>0.  Chamando 'random_cauchy' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -2413,23 +3083,23 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      Somente o método inverso genérico está implementado.  Para fazer
      uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_gumbel (<x>,<a>,<b>)
+ -- Função da class: pdf_gumbel (<x>,<a>,<b>)
      Retorna o valor em <x> da função densidade de probabilidade de uma
      variável aleatória Gumbel(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_gumbel (<x>,<a>,<b>)
+ -- Função da class: cdf_gumbel (<x>,<a>,<b>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Gumbel(a,b), com b>0.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_gumbel (<q>,<a>,<b>)
+ -- Função da class: quantile_gumbel (<q>,<a>,<b>)
      Retorna o <q>-quantil de uma variável aleatória Gumbel(a,b), com
      b>0; em outras palavras, essa função é a inversa da função
      'cdf_gumbel'.  O argumento <q> deve ser um elemento de [0,1].  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_gumbel (<a>,<b>)
+ -- Função da class: mean_gumbel (<a>,<b>)
      Retorna a média de uma variável aleatória Gumbel(a,b), com b>0.
 
           (%i1) load (distrib)$
@@ -2438,16 +3108,16 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
      onde o símbolol '%gamma' representa a constante de
      Euler-Mascheroni.  Veja também '%gamma'.
 
- -- Função: var_gumbel (<a>,<b>)
+ -- Função da class: var_gumbel (<a>,<b>)
      Retorna a variância de uma variável aleatória Gumbel(a,b), com b>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: std_gumbel (<a>,<b>)
+ -- Função da class: std_gumbel (<a>,<b>)
      Retorna o desvio padrão de uma variável aleatória Gumbel(a,b), com
      b>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_gumbel (<a>,<b>)
+ -- Função da class: skewness_gumbel (<a>,<b>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Gumbel(a,b), com b>0.
 
@@ -2461,13 +3131,13 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
           (%o5)                   1.139547099404649
      onde 'zeta' representa a função zeta de Riemann.
 
- -- Função: kurtosis_gumbel (<a>,<b>)
+ -- Função da class: kurtosis_gumbel (<a>,<b>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Gumbel(a,b), com b>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: random_gumbel (<a>,<b>)
- -- Função: random_gumbel (<a>,<b>,<n>)
+ -- Função da class: random_gumbel (<a>,<b>)
+ -- Função da class: random_gumbel (<a>,<b>,<n>)
      Retorna uma variável estatística pseudo-aleatória Gumbel(a,b), com
      b>0.  Chamando 'random_gumbel' com um terceiro argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -2478,16 +3148,16 @@ File: maxima.info,  Node: Definições para distribuições contínuas,  Next: D
 
 File: maxima.info,  Node: Definições para distribuições discretas,  Prev: Definições para distribuições contínuas,  Up: distrib
 
-46.3 Definições para distribuições discretas
-============================================
+46.3, Definições para distribuições discretas
+=============================================
 
- -- Função: pdf_binomial (<x>,<n>,<p>)
+ -- Função da class: pdf_binomial (<x>,<n>,<p>)
      Retorna o valor em <x> da função de probabilidade de uma
      Binomial(n,p) variável aleatória, com 0<p<1 e n um inteiro
      positivo.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: cdf_binomial (<x>,<n>,<p>)
+ -- Função da class: cdf_binomial (<x>,<n>,<p>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma Binomial(n,p) variável aleatória, com 0<p<1 e n um inteiro
      positivo.
@@ -2504,39 +3174,39 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) cdf_binomial(5,7,1/6), numer;
           (%o3)                   .9998713991769548
 
- -- Função: quantile_binomial (<q>,<n>,<p>)
+ -- Função da class: quantile_binomial (<q>,<n>,<p>)
      Retorna o <q>-quantil de uma variável aleatória Binomial(n,p), com
      0<p<1 e n um inteiro positivo; em outras palavras, essa função é a
      inversa da função 'cdf_binomial'.  O argumento <q> deve ser um
      elemento de [0,1].  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: mean_binomial (<n>,<p>)
+ -- Função da class: mean_binomial (<n>,<p>)
      Retorna a média de uma variável aleatória Binomial(n,p), com 0<p<1
      e n um inteiro positivo.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: var_binomial (<n>,<p>)
+ -- Função da class: var_binomial (<n>,<p>)
      Retorna a variância de uma variável aleatória Binomial(n,p), com
      0<p<1 e n um inteiro positivo.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: std_binomial (<n>,<p>)
+ -- Função da class: std_binomial (<n>,<p>)
      Retorna o desvio padrão de uma variável aleatória Binomial(n,p),
      com 0<p<1 e n um inteiro positivo.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: skewness_binomial (<n>,<p>)
+ -- Função da class: skewness_binomial (<n>,<p>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_binomial (<n>,<p>)
+ -- Função da class: kurtosis_binomial (<n>,<p>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_binomial_algorithm
+ -- Variável de opção da class: random_binomial_algorithm
      Valor por omissão: 'kachit'
 
      Esse é o algoritmo seleccionado para simular rvariáveis
@@ -2553,8 +3223,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
      Veja também 'random_binomial'.
 
- -- Função: random_binomial (<n>,<p>)
- -- Função: random_binomial (<n>,<p>,<m>)
+ -- Função da class: random_binomial (<n>,<p>)
+ -- Função da class: random_binomial (<n>,<p>,<m>)
      Retorna uma variável estatística pseudo-aleatória Binomial(n,p),
      com 0<p<1 e n um inteiro positivo.  Chamando 'random_binomial' com
      um terceiro argumento <m>, uma amostra aleatória de tamanho <m>
@@ -2568,12 +3238,12 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random_binomial_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_poisson (<x>,<m>)
+ -- Função da class: pdf_poisson (<x>,<m>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Poisson(m), com m>0.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_poisson (<x>,<m>)
+ -- Função da class: cdf_poisson (<x>,<m>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Poisson(m), com m>0.
 
@@ -2587,36 +3257,36 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) cdf_poisson(3,5), numer;
           (%o3)                   .2650259152973617
 
- -- Função: quantile_poisson (<q>,<m>)
+ -- Função da class: quantile_poisson (<q>,<m>)
      Retorna o <q>-quantil de uma variável aleatória Poisson(m), com
      m>0; em outras palavras, essa função é a inversa da função
      'cdf_poisson'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_poisson (<m>)
+ -- Função da class: mean_poisson (<m>)
      Retorna a média de uma variável aleatória Poisson(m), com m>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_poisson (<m>)
+ -- Função da class: var_poisson (<m>)
      Retorna a variância de uma variável aleatória Poisson(m), com m>0.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: std_poisson (<m>)
+ -- Função da class: std_poisson (<m>)
      Retorna o desvio padrão de uma variável aleatória Poisson(m), com
      m>0.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_poisson (<m>)
+ -- Função da class: skewness_poisson (<m>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Poisson(m), com m>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_poisson (<m>)
+ -- Função da class: kurtosis_poisson (<m>)
      Retorna o coeficiente de curtose de uma Poisson variável aleatória
      Poi(m), com m>0.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_poisson_algorithm
+ -- Variável de opção da class: random_poisson_algorithm
      Valor por omissão: 'ahrens_dieter'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -2632,8 +3302,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
      Veja também 'random_poisson'.
 
- -- Função: random_poisson (<m>)
- -- Função: random_poisson (<m>,<n>)
+ -- Função da class: random_poisson (<m>)
+ -- Função da class: random_poisson (<m>,<n>)
      Retorna uma variável estatística pseudo-aleatória Poisson(m), com
      m>0.  Chamando 'random_poisson' com um segundo argumento <n>, uma
      amostra aleatória de tamanho <n> será simulada.
@@ -2646,7 +3316,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random_poisson_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_bernoulli (<x>,<p>)
+ -- Função da class: pdf_bernoulli (<x>,<p>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Bernoulli(p), com 0<p<1.
 
@@ -2661,18 +3331,18 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) assume(0<p,p<1)$ pdf_bernoulli(1,p);
           (%o4)                           p
 
- -- Função: cdf_bernoulli (<x>,<p>)
+ -- Função da class: cdf_bernoulli (<x>,<p>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Bernoulli(p), com 0<p<1.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_bernoulli (<q>,<p>)
+ -- Função da class: quantile_bernoulli (<q>,<p>)
      Retorna o <q>-quantil de uma variável aleatória Bernoulli(p), com
      0<p<1; em outras palavras, essa função é a inversa da função
      'cdf_bernoulli'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_bernoulli (<p>)
+ -- Função da class: mean_bernoulli (<p>)
      Retorna a média de uma variável aleatória Bernoulli(p), com 0<p<1.
 
      A variável aleatória Bernoulli(p) é equivalente a Binomial(1,p),
@@ -2685,7 +3355,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) assume(0<p,p<1)$ mean_bernoulli(p);
           (%o4)                           p
 
- -- Função: var_bernoulli (<p>)
+ -- Função da class: var_bernoulli (<p>)
      Retorna a variância de uma variável aleatória Bernoulli(p), com
      0<p<1.
 
@@ -2700,7 +3370,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) assume(0<p,p<1)$ var_bernoulli(p);
           (%o4)                       (1 - p) p
 
- -- Função: std_bernoulli (<p>)
+ -- Função da class: std_bernoulli (<p>)
      Retorna o desvio padrão de uma variável aleatória Bernoulli(p), com
      0<p<1.
 
@@ -2715,7 +3385,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) assume(0<p,p<1)$ std_bernoulli(p);
           (%o4)                  sqrt(1 - p) sqrt(p)
 
- -- Função: skewness_bernoulli (<p>)
+ -- Função da class: skewness_bernoulli (<p>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Bernoulli(p), com 0<p<1.
 
@@ -2732,7 +3402,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%o4)                  -------------------
                                  sqrt(1 - p) sqrt(p)
 
- -- Função: kurtosis_bernoulli (<p>)
+ -- Função da class: kurtosis_bernoulli (<p>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Bernoulli(p), com 0<p<1.
 
@@ -2749,8 +3419,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%o4)                    ---------------
                                       (1 - p) p
 
- -- Função: random_bernoulli (<p>)
- -- Função: random_bernoulli (<p>,<n>)
+ -- Função da class: random_bernoulli (<p>)
+ -- Função da class: random_bernoulli (<p>,<n>)
      Retorna uma variável estatística pseudo-aleatória Bernoulli(p), com
      0<p<1.  Chamando 'random_bernoulli' com um segundo argumento <n>,
      uma amostra aleatória de tamanho <n> será simulada.
@@ -2761,47 +3431,47 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random'.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: pdf_geometric (<x>,<p>)
+ -- Função da class: pdf_geometric (<x>,<p>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Geometric(p), com 0<p<1.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_geometric (<x>,<p>)
+ -- Função da class: cdf_geometric (<x>,<p>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Geometric(p), com 0<p<1.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_geometric (<q>,<p>)
+ -- Função da class: quantile_geometric (<q>,<p>)
      Retorna o <q>-quantil de uma variável aleatória Geometric(p), com
      0<p<1; em outras palavras, essa função é a inversa da função
      'cdf_geometric'.  O argumento <q> deve ser um elemento de [0,1].
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_geometric (<p>)
+ -- Função da class: mean_geometric (<p>)
      Retorna a média de uma variável aleatória Geometric(p), com 0<p<1.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: var_geometric (<p>)
+ -- Função da class: var_geometric (<p>)
      Retorna a variância de uma variável aleatória Geometric(p), com
      0<p<1.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_geometric (<p>)
+ -- Função da class: std_geometric (<p>)
      Retorna o desvio padrão de uma variável aleatória Geometric(p), com
      0<p<1.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: skewness_geometric (<p>)
+ -- Função da class: skewness_geometric (<p>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Geometric(p), com 0<p<1.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_geometric (<p>)
+ -- Função da class: kurtosis_geometric (<p>)
      Retorna o coeficiente de curtose de uma geometric variável
      aleatória Geo(p), com 0<p<1.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_geometric_algorithm
+ -- Variável de opção da class: random_geometric_algorithm
      Valor por omissão: 'bernoulli'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -2818,8 +3488,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
      Veja também 'random_geometric'.
 
- -- Função: random_geometric (<p>)
- -- Função: random_geometric (<p>,<n>)
+ -- Função da class: random_geometric (<p>)
+ -- Função da class: random_geometric (<p>,<n>)
      Retorna um Geometric(p) variável estatística pseudo-aleatória, com
      0<p<1.  Chamando 'random_geometric' com um segundo argumento <n>,
      uma amostra aleatória de tamanho <n> será simulada.
@@ -2832,51 +3502,51 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random_geometric_algorithm'.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_discrete_uniform (<x>,<n>)
+ -- Função da class: pdf_discrete_uniform (<x>,<n>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Discrete Uniform(n), com n a strictly positive integer.
      Para fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: cdf_discrete_uniform (<x>,<n>)
+ -- Função da class: cdf_discrete_uniform (<x>,<n>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Discrete Uniform(n), com n inteiro
      estritamente positivo.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: quantile_discrete_uniform (<q>,<n>)
+ -- Função da class: quantile_discrete_uniform (<q>,<n>)
      Retorna o <q>-quantil de uma variável aleatória Discrete
      Uniform(n), com n um inteiro estritamente positivo; em outras
      palavras, essa função é a inversa da função 'cdf_discrete_uniform'.
      O argumento <q> deve ser um elemento de [0,1].  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: mean_discrete_uniform (<n>)
+ -- Função da class: mean_discrete_uniform (<n>)
      Retorna a média de uma variável aleatória Discrete Uniform(n), com
      n um inteiro estritamente positivo.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: var_discrete_uniform (<n>)
+ -- Função da class: var_discrete_uniform (<n>)
      Retorna a variância de uma variável aleatória Discrete Uniform(n),
      com n um inteiro estritamente positivo.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: std_discrete_uniform (<n>)
+ -- Função da class: std_discrete_uniform (<n>)
      Retorna o desvio padrão de uma variável aleatória Discrete
      Uniform(n), com n um inteiro estritamente positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: skewness_discrete_uniform (<n>)
+ -- Função da class: skewness_discrete_uniform (<n>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Discrete Uniform(n), com n um inteiro estritamente positivo.  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_discrete_uniform (<n>)
+ -- Função da class: kurtosis_discrete_uniform (<n>)
      Retorna o coeficiente de curtose de uma variável aleatória Discrete
      Uniform(n), com n um inteiro estritamente positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: random_discrete_uniform (<n>)
- -- Função: random_discrete_uniform (<n>,<m>)
+ -- Função da class: random_discrete_uniform (<n>)
+ -- Função da class: random_discrete_uniform (<n>,<m>)
      Retorna uma variável estatística pseudo-aleatória Discrete
      Uniform(n), com n um inteiro estritamente positivo.  Chamando
      'random_discrete_uniform' com um segundo argumento <m>, uma amostra
@@ -2888,19 +3558,19 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random'.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: pdf_hypergeometric (<x>,<n1>,<n2>,<n>)
+ -- Função da class: pdf_hypergeometric (<x>,<n1>,<n2>,<n>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros
      não negativos e n<=n1+n2.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: cdf_hypergeometric (<x>,<n1>,<n2>,<n>)
+ -- Função da class: cdf_hypergeometric (<x>,<n1>,<n2>,<n>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma variável aleatória Hypergeometric(n1,n2,n), com <n1>, <n2> e
      <n> inteiros não negativos e n<=n1+n2.  Para fazer uso dessa
      função, escreva primeiramente 'load(distrib)'.
 
- -- Função: quantile_hypergeometric (<q>,<n1>,<n2>,<n>)
+ -- Função da class: quantile_hypergeometric (<q>,<n1>,<n2>,<n>)
      Retorna o <q>-quantil de uma variável aleatória
      Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros não
      negativos e n<=n1+n2; em outras palavras, essa função é a inversa
@@ -2908,37 +3578,37 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      elemento de [0,1].  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: mean_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: mean_hypergeometric (<n1>,<n2>,<n>)
      Retorna a média de uma variável aleatória discreta univorme
      Hyp(n1,n2,n), com <n1>, <n2> e <n> inteiros não negativos e
      n<=n1+n2.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: var_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: var_hypergeometric (<n1>,<n2>,<n>)
      Retorna a variância de uma variável aleatória hipergeométrica
      Hyp(n1,n2,n), com <n1>, <n2> e <n> inteiros não negativos e
      n<=n1+n2.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: std_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: std_hypergeometric (<n1>,<n2>,<n>)
      Retorna o desvio padrão de uma variável aleatória
      Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros não
      negativos e n<=n1+n2.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: skewness_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: skewness_hypergeometric (<n1>,<n2>,<n>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros não
      negativos e n<=n1+n2.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: kurtosis_hypergeometric (<n1>,<n2>,<n>)
      Retorna o coeficiente de curtose de uma variável aleatória
      Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros não
      negativos e n<=n1+n2.  Para fazer uso dessa função, escreva
      primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_hypergeometric_algorithm
+ -- Variável de opção da class: random_hypergeometric_algorithm
      Valor por omissão: 'kachit'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -2954,8 +3624,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
      Veja também 'random_hypergeometric'.
 
- -- Função: random_hypergeometric (<n1>,<n2>,<n>)
- -- Função: random_hypergeometric (<n1>,<n2>,<n>,<m>)
+ -- Função da class: random_hypergeometric (<n1>,<n2>,<n>)
+ -- Função da class: random_hypergeometric (<n1>,<n2>,<n>,<m>)
      Retorna uma variável estatística pseudo-aleatória
      Hypergeometric(n1,n2,n), com <n1>, <n2> e <n> inteiros não
      negativos e n<=n1+n2.  Chamando 'random_hypergeometric' com um
@@ -2970,13 +3640,13 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      Veja também 'random_hypergeometric_algorithm'.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: pdf_negative_binomial (<x>,<n>,<p>)
+ -- Função da class: pdf_negative_binomial (<x>,<n>,<p>)
      Retorna o valor em <x> da função de probabilidade de uma variável
      aleatória Negative Binomial(n,p), com 0<p<1 e n um inteiro
      positivo.  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: cdf_negative_binomial (<x>,<n>,<p>)
+ -- Função da class: cdf_negative_binomial (<x>,<n>,<p>)
      Retorna o valor em <x> da função distribuição de probabilidade de
      uma Negative Binomial(n,p) variável aleatória, com 0<p<1 e n um
      inteiro positivo.
@@ -2993,7 +3663,7 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
           (%i3) cdf_negative_binomial(3,4,1/8), numer;
           (%o3)                  .006238937377929698
 
- -- Função: quantile_negative_binomial (<q>,<n>,<p>)
+ -- Função da class: quantile_negative_binomial (<q>,<n>,<p>)
      Retorna o <q>-quantil de uma variável aleatória Negative
      Binomial(n,p), com 0<p<1 e n um inteiro positivo; em outras
      palavras, essa função é a inversa da função
@@ -3001,32 +3671,32 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
      [0,1].  Para fazer uso dessa função, escreva primeiramente
      'load(distrib)'.
 
- -- Função: mean_negative_binomial (<n>,<p>)
+ -- Função da class: mean_negative_binomial (<n>,<p>)
      Retorna a média de uma variável aleatória Negative Binomial(n,p),
      com 0<p<1 e n um inteiro positivo.  Para fazer uso dessa função,
      escreva primeiramente 'load(distrib)'.
 
- -- Função: var_negative_binomial (<n>,<p>)
+ -- Função da class: var_negative_binomial (<n>,<p>)
      Retorna a variância de uma variável aleatória Negative
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: std_negative_binomial (<n>,<p>)
+ -- Função da class: std_negative_binomial (<n>,<p>)
      Retorna o desvio padrão de uma variável aleatória Negative
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: skewness_negative_binomial (<n>,<p>)
+ -- Função da class: skewness_negative_binomial (<n>,<p>)
      Retorna o coeficiente de assimetria de uma variável aleatória
      Negative Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para
      fazer uso dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Função: kurtosis_negative_binomial (<n>,<p>)
+ -- Função da class: kurtosis_negative_binomial (<n>,<p>)
      Retorna o coeficiente de curtose de uma variável aleatória Negative
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Para fazer uso
      dessa função, escreva primeiramente 'load(distrib)'.
 
- -- Variável de opção: random_negative_binomial_algorithm
+ -- Variável de opção da class: random_negative_binomial_algorithm
      Valor por omissão: 'bernoulli'
 
      Esse é o algoritmo seleccionado para simular variáveis estatísticas
@@ -3043,8 +3713,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
      Veja também 'random_negative_binomial'.
 
- -- Função: random_negative_binomial (<n>,<p>)
- -- Função: random_negative_binomial (<n>,<p>,<m>)
+ -- Função da class: random_negative_binomial (<n>,<p>)
+ -- Função da class: random_negative_binomial (<n>,<p>,<m>)
      Retorna uma variável estatística pseudo-aleatória Negative
      Binomial(n,p), com 0<p<1 e n um inteiro positivo.  Chamando
      'random_negative_binomial' com um terceiro argumento <m>, uma
@@ -3061,8 +3731,8 @@ File: maxima.info,  Node: Definições para distribuições discretas,  Prev: De
 
 File: maxima.info,  Node: dynamics,  Next: eval_string,  Prev: distrib,  Up: Top
 
-47 dynamics
-***********
+47, dynamics
+************
 
 * Menu:
 
@@ -3073,8 +3743,8 @@ File: maxima.info,  Node: dynamics,  Next: eval_string,  Prev: distrib,  Up: Top
 
 File: maxima.info,  Node: O pacote dynamics,  Next: Análise gráfica de sistemas dinâmicos discretos,  Prev: dynamics,  Up: dynamics
 
-47.1 O pacote dynamics
-======================
+47.1, O pacote dynamics
+=======================
 
 O pacote adicional 'dynamics' inclui várias funções para criar diversas
 representações gráficas de sistemas dinâmicos e fractais, para além duma
@@ -3088,11 +3758,11 @@ precisam que o Xmaxima esteja instalado.
 
 File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  Next: Visualização usando VTK,  Prev: O pacote dynamics,  Up: dynamics
 
-47.2 Análise gráfica de sistemas dinâmicos discretos
-====================================================
+47.2, Análise gráfica de sistemas dinâmicos discretos
+=====================================================
 
- -- Função: chaosgame ('[['<x1>, <y1>']'...'['<xm>, <ym>']]', '['<x0>,
-          <y0>']', <b>, <n>, ...opções...);
+ -- Função da class: chaosgame ('[['<x1>, <y1>']'...'['<xm>, <ym>']]',
+          '['<x0>, <y0>']', <b>, <n>, ...opções...);
 
      Usa o método designado de _jogo do caos_, para produzir fractais:
      desenha-se um ponto inicial (<x0>, <y0>) e logo escolhe-se
@@ -3103,7 +3773,7 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      que será <b> vezes o comprimento do segmento.  O processo repete-se
      <n> vezes.
 
- -- Função: evolution (<F>, <y0>, <n>,...opções...);
+ -- Função da class: evolution (<F>, <y0>, <n>,...opções...);
 
      Desenha <n+1> pontos num gráfico bidimensional (série de tempo),
      onde as coordenadas horizontais dos pontos são os números inteiros
@@ -3115,7 +3785,7 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      expressão que dependa unicamente da variável <y> (e não de <n>),
      <y0> deverá ser um número real e <n> um número inteiro positivo.
 
- -- Função: evolution2d ('['<F>, <G>']', '['<x0>, <y0>']', <n>,
+ -- Função da class: evolution2d ('['<F>, <G>']', '['<x0>, <y0>']', <n>,
           ...opções...);
 
      Mostra, num gráfico bidimensional, os primeiros <n+1> pontos da
@@ -3126,7 +3796,7 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      Com valores iniciais <x0> e <y0>.  <F> e <G> deverão ser duas
      expressões que dependam unicamente de <x> e <y>.
 
- -- Função: ifs ('['<r1>,...,<rm>']','['<A1>,...,<Am>']',
+ -- Função da class: ifs ('['<r1>,...,<rm>']','['<A1>,...,<Am>']',
           '[['<x1>,<y1>']'...'['<xm>, <ym>']]', '['<x0>,<y0>']',
      <n>, ...opções...);
 
@@ -3145,8 +3815,8 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      ser 2, 7 e 10, ou qualquer outro grupo de números que estejam na
      mesma proporção.
 
- -- Função: orbits (<F>, <y0>, <n1>, <n2>, [<x>, <x0>, <xf>, <xstep>],
-          ...opções...);
+ -- Função da class: orbits (<F>, <y0>, <n1>, <n2>, [<x>, <x0>, <xf>,
+          <xstep>], ...opções...);
 
      Desenha o diagrama de órbitas duma família de sistemas dinâmicos
      discretos unidimensionais, com um parâmetro <x>; esse tipo de
@@ -3162,9 +3832,9 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      sucessão <y(n1+1)>,..., <y(n1+n2+1)>, obtidos após deixá-la evoluir
      durante <n1> iterações iniciais.
 
- -- Função: rk (EDO, var, inicial, dominio)
- -- Função: rk ([EDO1,...,EDOm], [v1,...,vm], [inic1,...,inicm],
-          domínio)
+ -- Função da class: rk (EDO, var, inicial, dominio)
+ -- Função da class: rk ([EDO1,...,EDOm], [v1,...,vm],
+          [inic1,...,inicm], domínio)
 
      A primeira forma usa-se para resolver numericamente uma equação
      diferencial ordinária de primeira ordem (EDO), e a segunda forma
@@ -3206,7 +3876,7 @@ File: maxima.info,  Node: Análise gráfica de sistemas dinâmicos discretos,  N
      variável independente, seguido dos valores das variáveis
      dependentes nesse ponto.
 
- -- Função: staircase (<F>, <y0>, <n>, ...opções...);
+ -- Função da class: staircase (<F>, <y0>, <n>, ...opções...);
 
      Desenha um diagrama de degraus (ou diagrama de teia de aranha) para
      a sucessão definida pela equação de recorrência
@@ -3329,8 +3999,8 @@ t=0:
 
 File: maxima.info,  Node: Visualização usando VTK,  Prev: Análise gráfica de sistemas dinâmicos discretos,  Up: dynamics
 
-47.3 Visualização usando VTK
-============================
+47.3, Visualização usando VTK
+=============================
 
 A função scene cria imagens a três dimensões e animações, usando o
 software _Visualization ToolKit_ (VTK). Para poder usar essa função é
@@ -3341,8 +4011,8 @@ sistemas).
 
 File: maxima.info,  Node: eval_string,  Next: f90,  Prev: dynamics,  Up: Top
 
-48 eval_string
-**************
+48, eval_string
+***************
 
 * Menu:
 
@@ -3351,10 +4021,10 @@ File: maxima.info,  Node: eval_string,  Next: f90,  Prev: dynamics,  Up: Top
 
 File: maxima.info,  Node: Definições para eval_string,  Prev: eval_string,  Up: eval_string
 
-48.1 Definições para eval_string
-================================
+48.1, Definições para eval_string
+=================================
 
- -- Função: eval_string (<str>)
+ -- Função da class: eval_string (<str>)
      Entrega a sequência de caracteres do Maxima <str> como uma
      expressão do Maxima e a avalia.  <str> é uma sequência de
      caracteres do Maxima.  Essa sequência pode ou não ter um marcador
@@ -3374,7 +4044,7 @@ File: maxima.info,  Node: Definições para eval_string,  Prev: eval_string,  Up
      Para usar essa função escreva primeiro 'load("eval_string")'.  Veja
      também 'parse_string'.
 
- -- Função: parse_string (<str>)
+ -- Função da class: parse_string (<str>)
      Entrega a sequência de caracteres do Maxima <str> como uma
      expressão do Maxima (sem fazer nenhuma avaliação dessa expressão).
      <str> é uma sequência de caracteres do Maxima.  Essa sequência pode
@@ -3399,8 +4069,8 @@ File: maxima.info,  Node: Definições para eval_string,  Prev: eval_string,  Up
 
 File: maxima.info,  Node: f90,  Next: ggf,  Prev: eval_string,  Up: Top
 
-49 f90
-******
+49, f90
+*******
 
 * Menu:
 
@@ -3409,10 +4079,10 @@ File: maxima.info,  Node: f90,  Next: ggf,  Prev: eval_string,  Up: Top
 
 File: maxima.info,  Node: Definições para f90,  Prev: f90,  Up: f90
 
-49.1 Definições para f90
-========================
+49.1, Definições para f90
+=========================
 
- -- Função: f90 (<expr>)
+ -- Função da class: f90 (<expr>)
      O comando f90 é uma actualização do comando 'fortran' original do
      maxima.  A principal diferença é na forma como são divididas as
      linhas muito compridas.
@@ -3451,8 +4121,8 @@ File: maxima.info,  Node: Definições para f90,  Prev: f90,  Up: f90
 
 File: maxima.info,  Node: ggf,  Next: impdiff,  Prev: f90,  Up: Top
 
-50 ggf
-******
+50, ggf
+*******
 
 * Menu:
 
@@ -3461,10 +4131,10 @@ File: maxima.info,  Node: ggf,  Next: impdiff,  Prev: f90,  Up: Top
 
 File: maxima.info,  Node: Definições para ggf,  Prev: ggf,  Up: ggf
 
-50.1 Definições para ggf
-========================
+50.1, Definições para ggf
+=========================
 
- -- Variável de Opção: GGFINFINITY
+ -- Variável de Opção da class: GGFINFINITY
      Valor por omissão: 3
 
      Essa é uma variável de opção para a função 'ggf'.
@@ -3479,7 +4149,7 @@ File: maxima.info,  Node: Definições para ggf,  Prev: ggf,  Up: ggf
 
      Veja também 'ggf'.
 
- -- Variável de opção: GGFCFMAX
+ -- Variável de opção da class: GGFCFMAX
      Valor por omissão: 3
 
      Essa é uma variável de opção para a função 'ggf'.
@@ -3494,7 +4164,7 @@ File: maxima.info,  Node: Definições para ggf,  Prev: ggf,  Up: ggf
 
      Veja também 'ggf'.
 
- -- Função: ggf (<l>)
+ -- Função da class: ggf (<l>)
      Calcula a função geradora (se for uma fração de dois polinómios) de
      uma sequência, sendo dados seus primeiros termos.  <l> é uma lista
      de números.
@@ -3511,8 +4181,8 @@ File: maxima.info,  Node: Definições para ggf,  Prev: ggf,  Up: ggf
 
 File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: ggf,  Up: Top
 
-51 impdiff
-**********
+51, impdiff
+***********
 
 * Menu:
 
@@ -3521,10 +4191,11 @@ File: maxima.info,  Node: impdiff,  Next: interpol,  Prev: ggf,  Up: Top
 
 File: maxima.info,  Node: Definições para impdiff,  Prev: impdiff,  Up: impdiff
 
-51.1 Definições para impdiff
-============================
+51.1, Definições para impdiff
+=============================
 
- -- Função: implicit_derivative (<f>,<indvarlist>,<orderlist>,<depvar>)
+ -- Função da class: implicit_derivative
+          (<f>,<indvarlist>,<orderlist>,<depvar>)
      Essa subrotina calcula derivadas implícitas de funções de várias
      variáveis.  <f> é uma função do tipo array, os índices são o grau
      da derivada na ordem <indvarlist>; <indvarlist> é a lista de
@@ -3536,8 +4207,8 @@ File: maxima.info,  Node: Definições para impdiff,  Prev: impdiff,  Up: impdif
 
 File: maxima.info,  Node: interpol,  Next: lbfgs,  Prev: impdiff,  Up: Top
 
-52 interpol
-***********
+52, interpol
+************
 
 * Menu:
 
@@ -3547,8 +4218,8 @@ File: maxima.info,  Node: interpol,  Next: lbfgs,  Prev: impdiff,  Up: Top
 
 File: maxima.info,  Node: Introdução a interpol,  Next: Definições para interpol,  Prev: interpol,  Up: interpol
 
-52.1 Introdução a interpol
-==========================
+52.1, Introdução a interpol
+===========================
 
 Pacote 'interpol' define os métodos Lagrangiano, linear e o de splines
 cúbicos para interpolação polinomial.
@@ -3559,11 +4230,11 @@ edu DOT xunta DOT es'>.
 
 File: maxima.info,  Node: Definições para interpol,  Prev: Introdução a interpol,  Up: interpol
 
-52.2 Definições para interpol
-=============================
+52.2, Definições para interpol
+==============================
 
- -- Função: lagrange (<pontos>)
- -- Função: lagrange (<pontos>, <opção>)
+ -- Função da class: lagrange (<pontos>)
+ -- Função da class: lagrange (<pontos>, <opção>)
      Calcula a interpolação polinomial através do método Lagrangiano.  O
      argumento <pontos> deve ser um dos seguintes:
 
@@ -3615,12 +4286,12 @@ File: maxima.info,  Node: Definições para interpol,  Prev: Introdução a inte
           (%o8)        ----- - ------ + ------- - ------ + ---
                         420     210       420      105      5
 
- -- Função: charfun2 (<x>, <a>, <b>)
+ -- Função da class: charfun2 (<x>, <a>, <b>)
      Retorna 'true', i.  e., verdadeiro se o número <x> pertence ao
      intervalo [a, b), e 'false', i.  e., falsono caso contrário.
 
- -- Função: linearinterpol (<pontos>)
- -- Função: linearinterpol (<pontos>, <opção>)
+ -- Função da class: linearinterpol (<pontos>)
+ -- Função da class: linearinterpol (<pontos>, <opção>)
      Calcula a interpolação polinomial através do método linear.  O
      argumento <pontos> deve ser um dos seguintes:
 
@@ -3677,8 +4348,8 @@ File: maxima.info,  Node: Definições para interpol,  Prev: Introdução a inte
            + (--- - 3) charfun2(s, 3, 6)
                3
 
- -- Função: cspline (<pontos>)
- -- Função: cspline (<pontos>, <opção1>, <opção2>, ...)
+ -- Função da class: cspline (<pontos>)
+ -- Função da class: cspline (<pontos>, <opção1>, <opção2>, ...)
      Calcula a interpolação polnomial pelo método de splines (
      polinómios de ordem k que interpolam os dados e têm k-1 derivadas
      contínuas em todo o intervalo ) cúbicos.  O argumento <pontos> deve
@@ -3767,8 +4438,8 @@ File: maxima.info,  Node: Definições para interpol,  Prev: Introdução a inte
 
 File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: interpol,  Up: Top
 
-53 lbfgs
-********
+53, lbfgs
+*********
 
 * Menu:
 
@@ -3778,8 +4449,8 @@ File: maxima.info,  Node: lbfgs,  Next: lindstedt,  Prev: interpol,  Up: Top
 
 File: maxima.info,  Node: Introdução a lbfgs,  Next: Definições para lbfgs,  Prev: Top,  Up: Top
 
-53.1 Introdução a lbfgs
-=======================
+53.1, Introdução a lbfgs
+========================
 
 'lbfgs' é uma implementação do algoritmo[1] L-BFGS
 (Broyden-Fletcher-Goldfarb-Shanno) para resolver problemas de
@@ -3804,10 +4475,10 @@ scale optimization".  Mathematical Programming B 45:503-528 (1989)
 
 File: maxima.info,  Node: Definições para lbfgs,  Prev: Introdução a lbfgs,  Up: Top
 
-53.2 Definições para lbfgs
-==========================
+53.2, Definições para lbfgs
+===========================
 
- -- Função: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
+ -- Função da class: lbfgs (<FOM>, <X>, <X0>, <epsilon>, <iprint>)
 
      Encontra uma solução aproximada da minimização não limitada de
      número de mérito <FOM> sobre a lista de variáveis <X>, começando a
@@ -3915,17 +4586,17 @@ File: maxima.info,  Node: Definições para lbfgs,  Prev: Introdução a lbfgs, 
           (%i8) plot2d ([F(x), [discrete, X, Y]], [x, -1, 6]), ''estimates;
           (%o8)
 
- -- Variãvel: lbfgs_nfeval_max
+ -- Variãvel da class: lbfgs_nfeval_max
      Valor por omissão: 100
 
- -- Variãvel: lbfgs_ncorrections
+ -- Variãvel da class: lbfgs_ncorrections
      Valor por omissão: 25
 
 
 File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: Top
 
-54 lindstedt
-************
+54, lindstedt
+*************
 
 * Menu:
 
@@ -3934,10 +4605,10 @@ File: maxima.info,  Node: lindstedt,  Next: linearalgebra,  Prev: lbfgs,  Up: To
 
 File: maxima.info,  Node: Definições para lindstedt,  Prev: lindstedt,  Up: lindstedt
 
-54.1 Definições para lindstedt
-==============================
+54.1, Definições para lindstedt
+===============================
 
- -- Função: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
+ -- Função da class: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
      Esse é um primeiro passo para um código de Lindstedt.  Esse código
      pode resolver problemas com condições iniciais fornecidas, às quais
      podem ser constantes arbitrárias, (não apenas <%k1> e <%k2>) onde
@@ -3974,8 +4645,8 @@ File: maxima.info,  Node: Definições para lindstedt,  Prev: lindstedt,  Up: li
 
 File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up: Top
 
-55 linearalgebra
-****************
+55, linearalgebra
+*****************
 
 * Menu:
 
@@ -3985,8 +4656,8 @@ File: maxima.info,  Node: linearalgebra,  Next: lsquares,  Prev: lindstedt,  Up:
 
 File: maxima.info,  Node: Introdução a linearalgebra,  Next: Definições para linearalgebra,  Prev: linearalgebra,  Up: linearalgebra
 
-55.1 Introdução a linearalgebra
-===============================
+55.1, Introdução a linearalgebra
+================================
 
 'linearalgebra' é uma colecção de funções para álgebra linear.
 
@@ -4088,10 +4759,10 @@ Exemplo:
 
 File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a linearalgebra,  Up: linearalgebra
 
-55.2 Definições para linearalgebra
-==================================
+55.2, Definições para linearalgebra
+===================================
 
- -- Função: addmatrices (<f>, <M_1>, ..., <M_n>)
+ -- Função da class: addmatrices (<f>, <M_1>, ..., <M_n>)
 
      Usando a função <f> como a função de adição, retorne a adição das
      matrizes <M_1>, ..., <M_n>.  A função <f> deve aceitar qualquer
@@ -4106,23 +4777,23 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%i4) addmatrices('max,m1,m2,5*m1);
           (%o4) matrix([7,10],[15,20])
 
- -- Função: blockmatrixp (<M>)
+ -- Função da class: blockmatrixp (<M>)
 
      Retorna 'true' se e somente se <M> for uma matriz e toda entrada de
      <M> também for uma matriz.
 
- -- Função: columnop (<M>, <i>, <j>, <theta>)
+ -- Função da class: columnop (<M>, <i>, <j>, <theta>)
 
      Se <M> for uma matriz, retorna a matriz que resulta de fazer a
      operação de coluna 'C_i <- C_i - <theta> * C_j'.  Se <M> não tiver
      uma linha <i> ou <j>, emite uma mensagem de erro.
 
- -- Função: columnswap (<M>, <i>, <j>)
+ -- Função da class: columnswap (<M>, <i>, <j>)
 
      Se <M> for uma matriz, troca as colunas <i> e <j>.  Se <M> não
      tiver uma coluna <i> ou <j>, emite uma mensagem de erro.
 
- -- Função: columnspace (<M>)
+ -- Função da class: columnspace (<M>)
 
      Se <M> for uma matriz, retorna 'span (v_1, ..., v_n)', onde o
      conjunto '{v_1, ..., v_n}' é uma base para o espaço coluna de <M>.
@@ -4130,7 +4801,7 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      vazio é '{0}'.  Dessa forma, quando o espaço coluna tiver somente
      um membro, retorna 'span ()'.
 
- -- Função: copy (<e>)
+ -- Função da class: copy (<e>)
 
      Retorna uma cópia da expressão <e> do Maxima.  Embora <e> possa ser
      qualquer expressão do Maxima, Afunção 'copy' é mais útil quando <e>
@@ -4156,21 +4827,21 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%o11) [1,[x,3]]
      Dessa vez, a atribuição a <mm> não muda o valor de <m>.
 
- -- Função: cholesky (<M>)
- -- Função: cholesky (<M>, <corpo>)
+ -- Função da class: cholesky (<M>)
+ -- Função da class: cholesky (<M>, <corpo>)
 
      Retorna factorização de Cholesky da matriz hermitiana (or
      autoadjunta) <M>.  O valor padrão para o segundo argumento é
      'generalring'.  Para uma descrição dos possíveis valores para
      <corpo>, veja 'lu_factor'.
 
- -- Função: ctranspose (<M>)
+ -- Função da class: ctranspose (<M>)
 
      Retorna a matriz transposta conjugada complexa da matriz <M>.  A
      função 'ctranspose' usa 'matrix_element_transpose' para transpor
      cada elemento da matriz.
 
- -- Função: diag_matrix (<d_1>, <d_2>,...,<d_n>)
+ -- Função da class: diag_matrix (<d_1>, <d_2>,...,<d_n>)
 
      Retorna uma matriz diagonal matriz com entradas de diagonal <d_1>,
      <d_2>,...,<d_n>.  Quando as entradas de diagonal forem matrizes, as
@@ -4193,14 +4864,14 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%o3)                              [      ]
                                              [ 0  q ]
 
- -- Função: dotproduct (<u>, <v>)
+ -- Função da class: dotproduct (<u>, <v>)
 
      Retorna o produto do ponto (produto escalar) dos vectores <u> e
      <v>.  Isso é o mesmo que 'conjugate (transpose (<u>)) . <v>'.  Os
      argumentos <u> e <v> devem ser vectores coluna.
 
- -- Função: eigens_by_jacobi (<A>)
- -- Função: eigens_by_jacobi (<A>, <tipo_corpo>)
+ -- Função da class: eigens_by_jacobi (<A>)
+ -- Função da class: eigens_by_jacobi (<A>, <tipo_corpo>)
 
      Calculam os autovalores e autovectores de <A> pelo método de
      rotações de Jacobi.  <A> deve ser uma matriz simétrica (mas essa
@@ -4262,34 +4933,34 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
                           [                                              ]]
                           [ - 7.071067811865475b-1  7.071067811865475b-1 ]
 
- -- Função: get_lu_factors (<x>)
+ -- Função da class: get_lu_factors (<x>)
 
      Quando '<x> = lu_factor (<A>)', então 'get_lu_factors' retorna uma
      lista da forma '[P, L, U]', onde <P> é uma matriz de permutação,
      <L> é triangular baixa com a diagonal preenchida com a unidade, e
      <U> é triangular alta, e '<A> = <P> <L> <U>'.
 
- -- Função: hankel (<col>)
- -- Função: hankel (<col>, <lin>)
+ -- Função da class: hankel (<col>)
+ -- Função da class: hankel (<col>, <lin>)
 
      Retorna uma matriz de Hankel <H>.  A primeira coluna de <H> é
      <col>; excepto para a primeira entrada, a última linha de <H> é
      <lin>.  O valor padrão para <lin> é o vector nulo com o mesmo
      comprimento que <col>.
 
- -- Função: hessian (<f>,<vars>)
+ -- Função da class: hessian (<f>,<vars>)
 
      Retorna a matriz hessiana de <f> com relação às variáveis na lista
      <vars>.  As entradas <i>,<j> da matriz hessiana são <diff(f
      vars[i],1,vars[j],1)>.
 
- -- Função: hilbert_matrix (<n>)
+ -- Função da class: hilbert_matrix (<n>)
 
      Retorna the <n> by <n> matriz de Hilbert.  Quando <n> não for um
      inteiro positivo, emite uma mensagem de erro.
 
- -- Função: identfor (<M>)
- -- Função: identfor (<M>, <corpo>)
+ -- Função da class: identfor (<M>)
+ -- Função da class: identfor (<M>, <corpo>)
 
      Retorna uma matriz identidade que tem o mesmo tamanho que a matriz
      <M>.  As entradas de diagonal da matriz identidade são a identidade
@@ -4304,17 +4975,17 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
 
      Veja também 'zerofor'
 
- -- Função: invert_by_lu (<M>, <(rng generalring)>)
+ -- Função da class: invert_by_lu (<M>, <(rng generalring)>)
 
      Inverte a matriz <M> através de factorização linear alta (LU). A
      factorização LU é concluída usando o anel <rng>.
 
- -- Função: kronecker_product (<A>, <B>)
+ -- Função da class: kronecker_product (<A>, <B>)
 
      Retorna o produto de Kronecker das matrizes <A> e <B>.
 
- -- Função: listp (<e>, <p>)
- -- Função: listp (<e>)
+ -- Função da class: listp (<e>, <p>)
+ -- Função da class: listp (<e>)
 
      Recebendo um argumento opcional <p>, retorna 'true' se <e> for uma
      lista do Maxima e <p> avalia para 'true' para elemento da lista.
@@ -4322,8 +4993,8 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      <e> for uma lista do Maxima.  em todos os outros casos, retorna
      'false'.
 
- -- Função: locate_matrix_entry (<M>, <r_1>, <c_1>, <r_2>, <c_2>, <f>,
-          <rel>)
+ -- Função da class: locate_matrix_entry (<M>, <r_1>, <c_1>, <r_2>,
+          <c_2>, <f>, <rel>)
 
      O primeiro argumento deve ser uma matriz; os argumentos que vão de
      <r_1> até <c_2> determinam um sub-matriz de <M> que consiste de
@@ -4350,12 +5021,12 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      Examina a sub-matriz procurando por uma entrada que minimize <f>.
      Retorna o índice de uma entrada minimizada.
 
- -- Função: lu_backsub (<M>, <b>)
+ -- Função da class: lu_backsub (<M>, <b>)
 
      Quando '<M> = lu_factor (<A>, <corpo>)', então 'lu_backsub (<M>,
      <b>)' resolve o sistema linear '<A> <x> = <b>'.
 
- -- Função: lu_factor (<M>, <corpo>)
+ -- Função da class: lu_factor (<M>, <corpo>)
 
      Retorna uma lista da forma '[<LU>, <perm>, <corpo>]', ou da forma
      '[<LU>, <perm>, <cmp>, <baixo-cnd> <alto-cnd>]', onde
@@ -4469,8 +5140,8 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%o11)                  [              ]
                                   [   3    8 - z ]
 
- -- Função: mat_cond (<M>, 1)
- -- Função: mat_cond (<M>, inf)
+ -- Função da class: mat_cond (<M>, 1)
+ -- Função da class: mat_cond (<M>, inf)
 
      Retorna o número condiciona da norma de ordem <p> da matriz <m>.
      Os valores permitidos para <p> são 1 e <inf>.  Essa função utiliza
@@ -4480,16 +5151,16 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      alta para o número de condição de norma infinita em tempo
      proporcional ao quadrado do tamanho da matriz.
 
- -- Função: mat_norm (<M>, 1)
- -- Função: mat_norm (<M>, inf)
- -- Função: mat_norm (<M>, frobenius)
+ -- Função da class: mat_norm (<M>, 1)
+ -- Função da class: mat_norm (<M>, inf)
+ -- Função da class: mat_norm (<M>, frobenius)
 
      Retorna a matriz de norma <p> da matriz <M>.  Os valores permitidos
      para <p> são 1, 'inf', e 'frobenius' (a norma da matriz de
      Frobenius).  A matriz <M> pode ser uma matriz não de bloco.
 
- -- Função: matrixp (<e>, <p>)
- -- Função: matrixp (<e>)
+ -- Função da class: matrixp (<e>, <p>)
+ -- Função da class: matrixp (<e>)
 
      Fornecendo um argumento opcional <p>, 'matrixp' retorna 'true' se
      <e> for uma matriz e <p> avaliar para 'true' para todo elemento da
@@ -4499,25 +5170,25 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
 
      Veja também 'blockmatrixp'
 
- -- Função: matrix_size (<M>)
+ -- Função da class: matrix_size (<M>)
 
      Retorna uma lista com dois elementos que fornecem o número de
      linhas e colunas, respectivamente da matriz <M>.
 
- -- Função: mat_fullunblocker (<M>)
+ -- Função da class: mat_fullunblocker (<M>)
 
      Se <M> for uma matriz de bloco, expande todos os blocos da matriz
      em todos os níveis.  Se <M> for uma matriz, retorna <M>; de outra
      forma, emite uma mensagem de erro.
 
- -- Função: mat_trace (<M>)
+ -- Função da class: mat_trace (<M>)
 
      Retorna o traço da matriz <M>.  Se <M> não for uma matriz, retorna
      uma forma substantiva.  Quando <M> for uma matriz de bloco,
      'mat_trace(M)' retorna o mesmo valor retornado por
      'mat_trace(mat_unblocker(m))'.
 
- -- Função: mat_unblocker (<M>)
+ -- Função da class: mat_unblocker (<M>)
 
      Se <M> for uma matriz de bloco, 'mat_unbloker' desfaz o bloco de
      <M> um nível.  Se <M> for uma matriz, 'mat_unblocker (M)' retorna
@@ -4556,11 +5227,11 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%o5)                    [             ]
                                    [ 3  4  9  10 ]
 
- -- Função: nonnegintegerp (<n>)
+ -- Função da class: nonnegintegerp (<n>)
 
      Retorna 'true' se e somente se '<n> >= 0' e <n> for um inteiro.
 
- -- Função: nullspace (<M>)
+ -- Função da class: nullspace (<M>)
 
      Se <M> for uma matriz, retorna 'span (v_1, ..., v_n)', onde o
      conjunto '{v_1, ..., v_n}' é uma base para o espaço nulo de <M>.  A
@@ -4568,11 +5239,11 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      vazio é '{0}'.  Dessa forma, quando o espaço nulo tiver somente um
      membro, retorna 'span ()'.
 
- -- Função: nullity (<M>)
+ -- Função da class: nullity (<M>)
 
      Se <M> for uma matriz, retorna a dimensão do espaço nulo de <M>.
 
- -- Função: orthogonal_complement (<v_1>, ..., <v_n>)
+ -- Função da class: orthogonal_complement (<v_1>, ..., <v_n>)
 
      Retorna 'span (u_1, ..., u_m)', onde o conjunto '{u_1, ..., u_m}' é
      uma base para o complemento ortogonal do conjunto '(v_1, ...,
@@ -4581,9 +5252,9 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      Cada vector no intervalo de <v_1> até <v_n> deve ser um vector
      coluna.
 
- -- Função: polynomialp (<p>, <L>, <coeffp>, <exponp>)
- -- Função: polynomialp (<p>, <L>, <coeffp>)
- -- Função: polynomialp (<p>, <L>)
+ -- Função da class: polynomialp (<p>, <L>, <coeffp>, <exponp>)
+ -- Função da class: polynomialp (<p>, <L>, <coeffp>)
+ -- Função da class: polynomialp (<p>, <L>)
 
      Retorna 'true' se <p> for um polinómio nas variáveis da lista <L>,
      O predicado <coeffp> deve avaliar para 'true' para cada
@@ -4635,7 +5306,7 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%i3) polynomialp (x^2 + 5*x*y + y^2, [x, y]);
           (%o3)                         true
 
- -- Função: polytocompanion (<p>, <x>)
+ -- Função da class: polytocompanion (<p>, <x>)
 
      Se <p> for um polinómio em <x>, retorna a atriz companheira de <p>.
      Para um polinómio mônico <p> de grau <n>, temos '<p> = (-1)^<n>
@@ -4643,7 +5314,7 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
 
      Quando <p> não for um polinómio em <x>, emite uma mensagem de erro.
 
- -- Função: ptriangularize (<M>, <v>)
+ -- Função da class: ptriangularize (<M>, <v>)
 
      Se <M> for uma matriz onde cada entrada dessa matriz for um
      polinómio em <v>, retorna a matriz <M2> tal que
@@ -4658,13 +5329,13 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
      Nota: Essa função não verifica se toda entrada é um polinómio em
      <v>.
 
- -- Função: rowop (<M>, <i>, <j>, <theta>)
+ -- Função da class: rowop (<M>, <i>, <j>, <theta>)
 
      Se <M> for uma matriz, retorna a matriz que resulta de se fazer a
      operação de linha 'R_i <- R_i - theta * R_j'.  Se <M> não tiver uma
      linha <i> ou <j>, emite uma mensagem de erro.
 
- -- Função: rank (<M>)
+ -- Função da class: rank (<M>)
 
      Retorna o ranque daquela matriz <M>.  O rank é a dimensão do espaço
      coluna.  Exemplo:
@@ -4679,13 +5350,13 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           Proviso:  {d - b c # 0}
           (%o3)                                  2
 
- -- Função: rowswap (<M>, <i>, <j>)
+ -- Função da class: rowswap (<M>, <i>, <j>)
 
      Se <M> for uma matriz, permuta as linha <i> e <j>.  Se <M> não
      tiver uma linha <i> ou <j>, emite uma mensagem de erro.
 
- -- Função: toeplitz (<col>)
- -- Função: toeplitz (<col>, <lin>)
+ -- Função da class: toeplitz (<col>)
+ -- Função da class: toeplitz (<col>, <lin>)
 
      Retorna uma matriz de Toeplitz <T>.  a primeira coluna de <T> é
      <col>; excepto para a primeira entrada, a primeira linha de <T> é
@@ -4706,13 +5377,13 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
           (%o3)                         [                ]
                                         [ %I + 1    1    ]
 
- -- Função: vandermonde_matrix ([<x_1>, ..., <x_n>])
+ -- Função da class: vandermonde_matrix ([<x_1>, ..., <x_n>])
 
      Retorna uma matriz <n> por <n> cuja <i>-ésima linha é '[1, <x_i>,
      <x_i>^2, ... <x_i>^(<n>-1)]'.
 
- -- Função: zerofor (<M>)
- -- Função: zerofor (<M>, <fld>)
+ -- Função da class: zerofor (<M>)
+ -- Função da class: zerofor (<M>, <fld>)
 
      Retorna uma matriz zero que tem o mesmo tamanho da matriz <M>.
      Toda entrada da matriz zero é a identidade aditiva do anel <fld>; o
@@ -4726,7 +5397,7 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
 
      Veja também 'identfor'
 
- -- Função: zeromatrixp (<M>)
+ -- Função da class: zeromatrixp (<M>)
 
      Se <M> não for uma matriz de bloco, retorna 'true' se 'is (equal
      (<e>, 0))' for verdadeiro para cada elemento <e> da matriz <M>.  Se
@@ -4736,8 +5407,8 @@ File: maxima.info,  Node: Definições para linearalgebra,  Prev: Introdução a
 
 File: maxima.info,  Node: lsquares,  Next: makeOrders,  Prev: linearalgebra,  Up: Top
 
-56 lsquares
-***********
+56, lsquares
+************
 
 /lsquares.texi/1.1/Mon Feb 27 22:09:17 2006//
 * Menu:
@@ -4747,10 +5418,10 @@ File: maxima.info,  Node: lsquares,  Next: makeOrders,  Prev: linearalgebra,  Up
 
 File: maxima.info,  Node: Definições para lsquares,  Prev: lsquares,  Up: lsquares
 
-56.1 Definições para lsquares
-=============================
+56.1, Definições para lsquares
+==============================
 
- -- Variável global: DETCOEF
+ -- Variável global da class: DETCOEF
 
      Essa variável é usada pelas funções 'lsquares' e 'plsquares' para
      armazenar o Coeficiente de Determinação que mede o melhor ajuste.
@@ -4763,8 +5434,8 @@ File: maxima.info,  Node: Definições para lsquares,  Prev: lsquares,  Up: lsqu
 
      Veja também 'lsquares'.
 
- -- Função: lsquares (<Mat>,<VarList>,<equação>,<ParamList>)
- -- Função: lsquares
+ -- Função da class: lsquares (<Mat>,<VarList>,<equação>,<ParamList>)
+ -- Função da class: lsquares
           (<Mat>,<VarList>,<equação>,<ParamList>,<EsperadosList>)
      Ajuste múltiplo de equações não lineares de uma tabela de dados
      pelo método dos "mínimos quadrados".  <Mat> é uma matriz contendo
@@ -4844,9 +5515,10 @@ File: maxima.info,  Node: Definições para lsquares,  Prev: lsquares,  Up: lsqu
      Para usar essa função escreva primeiro 'load("lsquares")'.  Veja
      também 'DETCOEF' e 'mnewton'.
 
- -- Função: plsquares (<Mat>,<VarList>,<depvars>)
- -- Função: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
- -- Função: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
+ -- Função da class: plsquares (<Mat>,<VarList>,<depvars>)
+ -- Função da class: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
+ -- Função da class: plsquares
+          (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
      Ajuste de polinómios de várias variáveis de uma tabela de dados
      pelo método dos "mínimos quadrados".  <Mat> é uma matriz contendo
      os dados, <VarList> é uma lista de nomes de variáveis (um nome para
@@ -4929,8 +5601,8 @@ File: maxima.info,  Node: Definições para lsquares,  Prev: lsquares,  Up: lsqu
 
 File: maxima.info,  Node: makeOrders,  Next: mnewton,  Prev: lsquares,  Up: Top
 
-57 makeOrders
-*************
+57, makeOrders
+**************
 
 * Menu:
 
@@ -4939,10 +5611,10 @@ File: maxima.info,  Node: makeOrders,  Next: mnewton,  Prev: lsquares,  Up: Top
 
 File: maxima.info,  Node: Definições para makeOrders,  Prev: makeOrders,  Up: makeOrders
 
-57.1 Definições para makeOrders
-===============================
+57.1, Definições para makeOrders
+================================
 
- -- Função: makeOrders (<indvarlist>,<orderlist>)
+ -- Função da class: makeOrders (<indvarlist>,<orderlist>)
      Retorna uma lista de todos os expoentes para um polinómio acima de
      e incluindo os argumentos.
 
@@ -4964,8 +5636,8 @@ File: maxima.info,  Node: Definições para makeOrders,  Prev: makeOrders,  Up: 
 
 File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: makeOrders,  Up: Top
 
-58 mnewton
-**********
+58, mnewton
+***********
 
 * Menu:
 
@@ -4974,10 +5646,10 @@ File: maxima.info,  Node: mnewton,  Next: numericalio,  Prev: makeOrders,  Up: T
 
 File: maxima.info,  Node: Definições para mnewton,  Prev: mnewton,  Up: mnewton
 
-58.1 Definições para mnewton
-============================
+58.1, Definições para mnewton
+=============================
 
- -- Variável de opção: newtonepsilon
+ -- Variável de opção da class: newtonepsilon
      Valor por omissão: '10.0^(-fpprec/2)'
 
      Precisão para determinar quando a função 'mnewton' convergiu em
@@ -4985,7 +5657,7 @@ File: maxima.info,  Node: Definições para mnewton,  Prev: mnewton,  Up: mnewto
 
      Veja também 'mnewton'.
 
- -- Variável de opção: newtonmaxiter
+ -- Variável de opção da class: newtonmaxiter
      Valor por omissão: '50'
 
      Número máximo de iterações que para a função 'mnewton' caso essa
@@ -4993,7 +5665,7 @@ File: maxima.info,  Node: Definições para mnewton,  Prev: mnewton,  Up: mnewto
 
      Veja também 'mnewton'.
 
- -- Função: mnewton (<FuncList>,<VarList>,<GuessList>)
+ -- Função da class: mnewton (<FuncList>,<VarList>,<GuessList>)
      Solução de multiplas funções não lineares usando o método de
      Newton.  <FuncList> é a lista de funções a serem resolvidas,
      <VarList> é a lista dos nomes de variáveis, e <GuessList> é a lista
@@ -5021,8 +5693,8 @@ File: maxima.info,  Node: Definições para mnewton,  Prev: mnewton,  Up: mnewto
 
 File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
 
-59 numericalio
-**************
+59, numericalio
+***************
 
 * Menu:
 
@@ -5032,8 +5704,8 @@ File: maxima.info,  Node: numericalio,  Next: opsubst,  Prev: mnewton,  Up: Top
 
 File: maxima.info,  Node: Introdução a numericalio,  Next: Definições para numericalio,  Prev: numericalio,  Up: numericalio
 
-59.1 Introdução a numericalio
-=============================
+59.1, Introdução a numericalio
+==============================
 
 'numericalio' é uma colecção de funções para ler e escrever ficheiros de
 dados.  O ficheiro é lido completamente para construir um objecto;
@@ -5085,11 +5757,11 @@ tentado colapsar a saída para '1234,,Foo'.
 
 File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a numericalio,  Up: numericalio
 
-59.2 Definições para numericalio
-================================
+59.2, Definições para numericalio
+=================================
 
- -- Função: read_matrix (<nomeficheiro>)
- -- Função: read_matrix (<nomeficheiro>, <separator_flag>)
+ -- Função da class: read_matrix (<nomeficheiro>)
+ -- Função da class: read_matrix (<nomeficheiro>, <separator_flag>)
      Lê o ficheiro <nomeficheiro> e retorna seu conteúdo completo como
      uma matriz.  Se <separator_flag> não for especificado, o ficheiro é
      assumido como delimitado por espaços em branco.
@@ -5098,8 +5770,9 @@ File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a n
      Cada linha do ficheiro inicia uma linha da matriz.  Se algumas
      linhas possuirem diferentes comprimentos, 'read_matrix' reclama.
 
- -- Função: read_lisp_array (<nomeficheiro>, <A>)
- -- Função: read_lisp_array (<nomeficheiro>, <A>, <separator_flag>)
+ -- Função da class: read_lisp_array (<nomeficheiro>, <A>)
+ -- Função da class: read_lisp_array (<nomeficheiro>, <A>,
+          <separator_flag>)
 
      'read_lisp_array' exige que o array seja declarado através de
      'make_array' antes de chamar a função de leitura.  (Isso obviamente
@@ -5110,8 +5783,9 @@ File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a n
      está de acordo com as dimensãoes do array; a entrada é lida como
      uma lista monótona, então o array é preenchido usando 'fillarray'.
 
- -- Função: read_maxima_array (<nomeficheiro>, <A>)
- -- Função: read_maxima_array (<nomeficheiro>, <A>, <separator_flag>)
+ -- Função da class: read_maxima_array (<nomeficheiro>, <A>)
+ -- Função da class: read_maxima_array (<nomeficheiro>, <A>,
+          <separator_flag>)
 
      'read_maxima_array' requer que o array seja declarado através de
      'array' antes de chamar a função de leitura.  (Isso obviamente é
@@ -5122,8 +5796,9 @@ File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a n
      está de acordo com as dimensãoes do array; a entrada é lida como
      uma lista monótona, então o array é preenchido usando 'fillarray'.
 
- -- Função: read_hashed_array (<nomeficheiro>, <A>)
- -- Função: read_hashed_array (<nomeficheiro>, <A>, <separator_flag>)
+ -- Função da class: read_hashed_array (<nomeficheiro>, <A>)
+ -- Função da class: read_hashed_array (<nomeficheiro>, <A>,
+          <separator_flag>)
 
      'read_hashed_array' trata o primeiro item sobre uma linha como uma
      chave hash, e associa o restante da linha (como uma lista) com a
@@ -5131,22 +5806,23 @@ File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a n
      'A[567]: [12, 17, 32, 55]$'.  Linhas não precisam ter o mesmo
      número de elementos.
 
- -- Função: read_nested_list (<nomeficheiro>)
- -- Função: read_nested_list (<nomeficheiro>, <separator_flag>)
+ -- Função da class: read_nested_list (<nomeficheiro>)
+ -- Função da class: read_nested_list (<nomeficheiro>, <separator_flag>)
 
      'read_nested_list' retorna uma lista que tem uma sublista para cada
      linha de entrada.  Linhas não precisam ter o mesmo número de
      elementos.  Linhas vazias não são ignoradas: uma linha vazia
      retorna uma sublista vazia.
 
- -- Função: read_list (<nomeficheiro>)
- -- Função: read_list (<nomeficheiro>, <separator_flag>)
+ -- Função da class: read_list (<nomeficheiro>)
+ -- Função da class: read_list (<nomeficheiro>, <separator_flag>)
 
      'read_list' lê todas as entradas em uma lista monótona.
      'read_list' ignora o caractere de fim de linha.
 
- -- Função: write_data (<X>, <nomeficheiro>)
- -- Função: write_data (<object>, <nomeficheiro>, <separator_flag>)
+ -- Função da class: write_data (<X>, <nomeficheiro>)
+ -- Função da class: write_data (<object>, <nomeficheiro>,
+          <separator_flag>)
 
      'write_data' escreve o objecto <X> no ficheiro <nomeficheiro>.
 
@@ -5173,8 +5849,8 @@ File: maxima.info,  Node: Definições para numericalio,  Prev: Introdução a n
 
 File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: Top
 
-60 opsubst
-**********
+60, opsubst
+***********
 
 * Menu:
 
@@ -5183,12 +5859,12 @@ File: maxima.info,  Node: opsubst,  Next: orthopoly,  Prev: numericalio,  Up: To
 
 File: maxima.info,  Node: Definições para opsubst,  Prev: opsubst,  Up: opsubst
 
-60.1 Definições para opsubst
-============================
+60.1, Definições para opsubst
+=============================
 
- -- Função: opsubst (<f>,<g>,<e>)
- -- Função: opsubst (<g>=<f>,<e>)
- -- Função: opsubst ([<g1>=<f1>,<g2>=<f2>,..., <gn>=<fn>],<e>)
+ -- Função da class: opsubst (<f>,<g>,<e>)
+ -- Função da class: opsubst (<g>=<f>,<e>)
+ -- Função da class: opsubst ([<g1>=<f1>,<g2>=<f2>,..., <gn>=<fn>],<e>)
      A função 'opsubst' similar à função 'subst', excepto que 'opsubst'
      somente faz substituições para as operações em uma expressões.  Em
      geral, quando <f> for um operador em uma expressão <e>, substitui
@@ -5248,8 +5924,8 @@ File: maxima.info,  Node: Definições para opsubst,  Prev: opsubst,  Up: opsubs
 
 File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
 
-61 orthopoly
-************
+61, orthopoly
+*************
 
 * Menu:
 
@@ -5259,8 +5935,8 @@ File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
 
 File: maxima.info,  Node: Introdução a polinómios ortogonais,  Next: Definições para polinómios ortogonais,  Prev: orthopoly,  Up: orthopoly
 
-61.1 Introdução a polinómios ortogonais
-=======================================
+61.1, Introdução a polinómios ortogonais
+========================================
 
 'orthopoly' é um pacote para avaliação simbólica e numérica de muitos
 tipos de polinómios ortogonais, incluindo polinómios de Chebyshev,
@@ -5279,8 +5955,8 @@ Barton Willis da University de Nebraska e Kearney (UNK) escreveu o
 pacote 'orthopoly' e sua documetação.  O pacote é liberado segundo a
 licença pública geral GNU (GPL).
 
-61.1.1 Iniciando com orthopoly
-------------------------------
+61.1.1, Iniciando com orthopoly
+-------------------------------
 
 'load (orthopoly)' torna o pacote 'orthopoly' disponível para uso.
 
@@ -5417,8 +6093,8 @@ bidimensionais em um terminal.
      $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
      (%o4)                         false
 
-61.1.2 Limitations
-------------------
+61.1.2, Limitations
+-------------------
 
 Quando uma expressão envolve muitos polinómios ortogonais com ordens
 simbólicas, é possível que a expressão actualmente tenda para zero, e
@@ -5530,8 +6206,8 @@ que é ortogonal a (0, 1), defina
      (%o3)/R/                    --------
                                     2
 
-61.1.3 Avaliação em Ponto Flutuante
------------------------------------
+61.1.3, Avaliação em Ponto Flutuante
+------------------------------------
 
 Muitas funções em 'orthopoly' utilizam análise de erro durante a
 execução para estimar o erro em avaliações em ponto flutuante; as
@@ -5605,8 +6281,8 @@ número em ponto flutuante de precisão dupla.
      (%i1) ultraspherical (150, 0.5b0, 0.9b0);
      (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
 
-61.1.4 Gráficos e 'orthopoly'
------------------------------
+61.1.4, Gráficos e 'orthopoly'
+------------------------------
 
 Para desenhar gráficos de expressões que envolvem polinómios ortogonais,
 deverá fazer duas coisas:
@@ -5627,8 +6303,8 @@ A expressão completa 'legendre_p (5, x)' recebe apóstrofo; isso é
 diferente de apenas colocar apóstrofo no nome da função usando
 ''legendre_p (5, <x>)'.
 
-61.1.5 Funções Diversas
------------------------
+61.1.5, Funções Diversas
+------------------------
 
 O pacote 'orthopoly' define o síbolo de Pochhammer e uma função de passo
 de unidade.  'orthopoly' utiliza a função delta de Kronecker e a função
@@ -5700,8 +6376,8 @@ usando 'signum'; por exemplo,
 Não redefina a própria 'unit_step'; alguns código em 'orthopoly'
 requerem que a função de passo de unidade seja contínua à esquerda.
 
-61.1.6 Algorítmos
------------------
+61.1.6, Algorítmos
+------------------
 
 Geralmente, 'orthopoly' faz avaliações simbólicas pelo uso de uma
 representação hipergeométrica de polinómios ortogonais.  As funções
@@ -5722,45 +6398,45 @@ meio inteiras são avaliadas usando o código SLATEC.
 
 File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Introdução a polinómios ortogonais,  Up: orthopoly
 
-61.2 Definições para polinómios ortogonais
-==========================================
+61.2, Definições para polinómios ortogonais
+===========================================
 
- -- Função: assoc_legendre_p (<n>, <m>, <x>)
+ -- Função da class: assoc_legendre_p (<n>, <m>, <x>)
      As funções de Legendre associadas de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equações 22.5.37, página 779,
      8.6.6 (segunda equação), página 334, e 8.2.5, página 333.
 
- -- Função: assoc_legendre_q (<n>, <m>, <x>)
+ -- Função da class: assoc_legendre_q (<n>, <m>, <x>)
      A função de Legendre associada de segundo tipo.
 
      Referência: Abramowitz e Stegun, equação 8.5.3 e 8.1.8.
 
- -- Função: chebyshev_t (<n>, <x>)
+ -- Função da class: chebyshev_t (<n>, <x>)
      A função de Chebyshev de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equação 22.5.47,página 779.
 
- -- Função: chebyshev_u (<n>, <x>)
+ -- Função da class: chebyshev_u (<n>, <x>)
      A função de Chebyshev do segundo tipo.
 
      Referência: Abramowitz e Stegun, equação 22.5.48,página 779.
 
- -- Função: gen_laguerre (<n>, <a>, <x>)
+ -- Função da class: gen_laguerre (<n>, <a>, <x>)
      O poliômio generalizado de Laguerre.
 
      Referência: Abramowitz e Stegun, equação 22.5.54,página 780.
 
- -- Função: hermite (<n>, <x>)
+ -- Função da class: hermite (<n>, <x>)
      O polinómio de Hermite.
 
      Referência: Abramowitz e Stegun, equação 22.5.55,página 780.
 
- -- Função: intervalp (<e>)
+ -- Função da class: intervalp (<e>)
      Retorna 'true' se a entrada for um intervalo e retorna 'false' se
      não for.
 
- -- Função: jacobi_p (<n>, <a>, <b>, <x>)
+ -- Função da class: jacobi_p (<n>, <a>, <b>, <x>)
      o polinómio de Jacobi.
 
      Os polinómios de Jacobi são actualmente definidos para todo <a> e
@@ -5769,24 +6445,24 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
 
      Referência: Abramowitz e Stegun, equação 22.5.42,página 779.
 
- -- Função: laguerre (<n>, <x>)
+ -- Função da class: laguerre (<n>, <x>)
      O polinómio de Laguerre.
 
      Referência: Abramowitz e Stegun, equatções 22.5.16 e 22.5.54,página
      780.
 
- -- Função: legendre_p (<n>, <x>)
+ -- Função da class: legendre_p (<n>, <x>)
      O polinómio de Legendre de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equações 22.5.50 e 22.5.51,página
      779.
 
- -- Função: legendre_q (<n>, <x>)
+ -- Função da class: legendre_q (<n>, <x>)
      O polinómio de Legendre de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equações 8.5.3 e 8.1.8.
 
- -- Função: orthopoly_recur (<f>, <args>)
+ -- Função da class: orthopoly_recur (<f>, <args>)
      Retorna uma relação recursiva para a família de funções ortogonais
      <f> com argumentos <args>.  A recursividade é com relação ao grau
      do polinómio.
@@ -5814,7 +6490,7 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
           A recursion relation for foo isn't known to Maxima
            -- an error.  Quitting.  To debug this try debugmode(true);
 
- -- Variable: orthopoly_returns_intervals
+ -- Variable da class: orthopoly_returns_intervals
      Valor por omissão: 'true'
 
      Quando 'orthopoly_returns_intervals' for 'true', resultados em
@@ -5823,7 +6499,7 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
      um número complexo; nesse caso, o intervalo é um disco no plano
      complexo.
 
- -- Função: orthopoly_weight (<f>, <args>)
+ -- Função da class: orthopoly_weight (<f>, <args>)
 
      Retorna uma lista de três elementos; o primeiro elemento é a
      fórmula do peso para a família de polinómios ortogonais <f> com
@@ -5841,7 +6517,7 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
      A variável principal de <f> deve ser um símbolo; Se não for, Maxima
      sinaliza com um erro.
 
- -- Função: pochhammer (<n>, <x>)
+ -- Função da class: pochhammer (<n>, <x>)
      O símbolo de Pochhammer.  Para inteiros não negativos <n> com '<n>
      <= pochhammer_max_index', a expressão 'pochhammer (<x>, <n>)'
      avalia para o produto '<x> (<x> + 1) (<x> + 2) ... (<x> + n - 1)'
@@ -5872,7 +6548,7 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
           (%o1)                         (x)
                                            n
 
- -- Variável: pochhammer_max_index
+ -- Variável da class: pochhammer_max_index
      Valor por omissão: 100
 
      'pochhammer (<n>, <x>)' expande para um produto se e somente se
@@ -5888,34 +6564,34 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
 
      Referência: Abramowitz e Stegun, equação 6.1.16,página 256.
 
- -- Função: spherical_bessel_j (<n>, <x>)
+ -- Função da class: spherical_bessel_j (<n>, <x>)
      A Função de Bessel esférica de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equações 10.1.8,página 437 e
      10.1.15,página 439.
 
- -- Função: spherical_bessel_y (<n>, <x>)
+ -- Função da class: spherical_bessel_y (<n>, <x>)
      A Função de Bessel esférica de segundo tipo.
 
      Referência: Abramowitz e Stegun, equações 10.1.9,página 437 e
      10.1.15,página 439.
 
- -- Função: spherical_hankel1 (<n>, <x>)
+ -- Função da class: spherical_hankel1 (<n>, <x>)
      A Função de Hankel esférica de primeiro tipo.
 
      Referência: Abramowitz e Stegun, equação 10.1.36,página 439.
 
- -- Função: spherical_hankel2 (<n>, <x>)
+ -- Função da class: spherical_hankel2 (<n>, <x>)
      A Função de Hankel esférica de segundo tipo.
 
      Referência: Abramowitz e Stegun, equação 10.1.17,página 439.
 
- -- Função: spherical_harmonic (<n>, <m>, <x>, <y>)
+ -- Função da class: spherical_harmonic (<n>, <m>, <x>, <y>)
      A função armônica esférica.
 
      Referência: Merzbacher 9.64.
 
- -- Função: unit_step (<x>)
+ -- Função da class: unit_step (<x>)
      A função de passo de unidade contínua à esquerda; dessa forma
      'unit_step (<x>)' tende para '<x> <= 0' e é igual a 1 para '<x> >
      0'.
@@ -5923,7 +6599,7 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
      Se quiser uma função de degrau unitário que tome o valor 1/2 em
      zero, use '(1 + signum (<x>))/2'.
 
- -- Função: ultraspherical (<n>, <a>, <x>)
+ -- Função da class: ultraspherical (<n>, <a>, <x>)
      A função polinômial ultraesférica (também conhecida como função
      polinomial de Gegenbauer).
 
@@ -5932,8 +6608,8 @@ File: maxima.info,  Node: Definições para polinómios ortogonais,  Prev: Intro
 
 File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
 
-62 plotdf
-*********
+62, plotdf
+**********
 
 * Menu:
 
@@ -5943,8 +6619,8 @@ File: maxima.info,  Node: plotdf,  Next: romberg,  Prev: orthopoly,  Up: Top
 
 File: maxima.info,  Node: Introdução a plotdf,  Next: Definições para plotdf,  Prev: plotdf,  Up: plotdf
 
-62.1 Introdução a plotdf
-========================
+62.1, Introdução a plotdf
+=========================
 
 A função 'plotdf' cria um gráfico do campo de direcções para uma Equação
 Diferencial Ordinária (EDO) de primeira ordem, ou para um sistema de
@@ -5982,11 +6658,11 @@ duas equações.
 
 File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf,  Up: plotdf
 
-62.2 Definições para plotdf
-===========================
+62.2, Definições para plotdf
+============================
 
- -- Function: plotdf (<dydx>,...opções...)
- -- Function: plotdf ('['<dxdt>,<dydt>']',...opções...)
+ -- Function da class: plotdf (<dydx>,...opções...)
+ -- Function da class: plotdf ('['<dxdt>,<dydt>']',...opções...)
 
      Desenha um campo de direcções em duas dimensões <x> e <y>.
 
@@ -6176,8 +6852,8 @@ File: maxima.info,  Node: Definições para plotdf,  Prev: Introdução a plotdf
 
 File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
-63 romberg
-**********
+63, romberg
+***********
 
 * Menu:
 
@@ -6186,11 +6862,11 @@ File: maxima.info,  Node: romberg,  Next: simplex,  Prev: plotdf,  Up: Top
 
 File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
 
-63.1 Definições para romberg
-============================
+63.1, Definições para romberg
+=============================
 
- -- Função: romberg (<expr>, <x>, <a>, <b>)
- -- Função: romberg (<F>, <a>, <b>)
+ -- Função da class: romberg (<expr>, <x>, <a>, <b>)
+ -- Função da class: romberg (<F>, <a>, <b>)
 
      Calcula uma integração numérica pelo método de Romberg.
 
@@ -6290,7 +6966,7 @@ File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
           (%i8) abs (estimate - exact) / exact, numer;
           (%o8)                1.3711979871851024E-10
 
- -- Variável de opção: rombergabs
+ -- Variável de opção da class: rombergabs
      Valor por omissão: 0.0
 
      A precisão de 'romberg' é governada pelas variávies globais
@@ -6303,7 +6979,7 @@ File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
 
      Veja também 'rombergit' e 'rombergmin'.
 
- -- Variável de opção: rombergit
+ -- Variável de opção da class: rombergit
      Valor por omissão: 11
 
      'romberg' divide ao meio o tamanho do passo no máximo 'rombergit'
@@ -6316,7 +6992,7 @@ File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
 
      Veja também 'rombergabs' e 'rombergtol'.
 
- -- Variável de opção: rombergmin
+ -- Variável de opção da class: rombergmin
      Valor por omissão: 0
 
      'romberg' sempre faz ao menos 'rombergmin' iterações; isso é uma
@@ -6325,7 +7001,7 @@ File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
 
      Veja também 'rombergit', 'rombergabs', e 'rombergtol'.
 
- -- Variável de opção: rombergtol
+ -- Variável de opção da class: rombergtol
      Valor por omissão: 1e-4
 
      A precisão de 'romberg' é governada pelas variáveis globais
@@ -6341,623 +7017,11 @@ File: maxima.info,  Node: Definições para romberg,  Prev: Top,  Up: Top
 
 File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
 
-64 simplex
-**********
+64, simplex
+***********
 
 * Menu:
 
 * Introdução a simplex::
 * Definições para simplex::
-
-
-File: maxima.info,  Node: Introdução a simplex,  Next: Definições para simplex,  Prev: simplex,  Up: simplex
-
-64.1 Introdução a simplex
-=========================
-
-'simplex' é um pacote para optimização linear usando o algoritmo
-simplex.
-
-Exemplo:
-
-     (%i1) load("simplex")$
-     (%i2) minimize_sx(x+y, [3*x+2*y>2, x+4*y>3]);
-                       9        7       1
-     (%o2)            [--, [y = --, x = -]]
-                       10       10      5
-
-
-File: maxima.info,  Node: Definições para simplex,  Prev: Introdução a simplex,  Up: simplex
-
-64.2 Definições para simplex
-============================
-
- -- Variável de opção: epsilon_sx
-     Valor por omissão: '10^-8'
-
-     Epsilon usando para cálculos numéricos em 'linear_program'.
-
-     Veja também: 'linear_program'.
-
- -- Função: linear_program (<A>, <b>, <c>)
-
-     'linear_program' é uma implementação do algoritmo simplex.
-     'linear_program(A, b, c)' calcula um vetor <x> para o qual 'c.x' é
-     o mínimo possível entre vetores para os quais 'A.x = b' e 'x >= 0'.
-     O argumento <A> é uma matriz e os argumentos <b> e <c> são listas.
-
-     'linear_program' retorna uma lista contendo o vetor minimizado <x>
-     e o valor mínimo 'c.x'.  Se o problema for não associado, é
-     retornado "Problem not bounded!"  e se o problema for não viável, é
-     retornado "Problem not feasible!".
-
-     Para usar essa função primeiramente chame o pacote 'simplex' com
-     'load(simplex);'.
-
-     Exemplo:
-
-          (%i2) A: matrix([1,1,-1,0], [2,-3,0,-1], [4,-5,0,0])$
-          (%i3) b: [1,1,6]$
-          (%i4) c: [1,-2,0,0]$
-          (%i5) linear_program(A, b, c);
-                             13     19        3
-          (%o5)            [[--, 4, --, 0], - -]
-                             2      2         2
-
-     Veja também: 'minimize_sx', 'scale_sx', e 'epsilon_sx'.
-
- -- Função: maximize_sx (<obj>, <cond>, [<pos>])
-
-     Maximiza a função linear objetiva <obj> submetida a alguma
-     restrição linear <cond>.  Veja 'minimize_sx' para uma descrição
-     detalhada de argumentos e valores de retorno.
-
-     Veja também: 'minimize_sx'.
-
- -- Função: minimize_sx (<obj>, <cond>, [<pos>])
-
-     Minimiza uma função linear objetiva <obj> submetida a alguma
-     restrição linear <cond>.  <cond> é uma lista de equações lineares
-     ou desigualdades.  Em desigualdades estritas '>' é substituido por
-     '>=' e '<' por '<='.  O argumento opcional <pos> é uma lista de
-     variáveis de decisão que são assumidas como sendo positivas.
-
-     Se o mínimo existir, 'minimize_sx' retorna uma lista que contém o
-     menor valor da função objetiva e uma lista de valores de variáveis
-     de decisão para os quais o mínimo é alcançado.  Se o problema for
-     não associado, 'minimize_sx' retorna "Problem not bounded!"  e se o
-     problema for não viável, é retornado "Ploblem not feasible!".
-
-     As variáveis de decisão não são assumidas para serem não negativas
-     por padrão.  Se todas as variáveis de dicisão forem não negativas,
-     escolha 'nonegative_sx' para 'true'.  Se somente algumas das
-     variáveis de decisão forem positivas, coloque-as então no argumento
-     opcional <pos> (note que isso é mais eficiente que adicionar
-     restrições).
-
-     'minimize_sx' utiliza o algoritmo simplex que é implementado na
-     função 'linear_program' do Maxima.
-
-     Para usar essa função primeiramente chame o pacote 'simplex' com
-     'load(simplex);'.
-
-     Exemplos:
-
-          (%i1) minimize_sx(x+y, [3*x+y=0, x+2*y>2]);
-                                4       6        2
-          (%o1)                [-, [y = -, x = - -]]
-                                5       5        5
-          (%i2) minimize_sx(x+y, [3*x+y>0, x+2*y>2]), nonegative_sx=true;
-          (%o2)                [1, [y = 1, x = 0]]
-          (%i3) minimize_sx(x+y, [3*x+y=0, x+2*y>2]), nonegative_sx=true;
-          (%o3)                Problem not feasible!
-          (%i4) minimize_sx(x+y, [3*x+y>0]);
-          (%o4)                Problem not bounded!
-
-     Veja também: 'maximize_sx', 'nonegative_sx', 'epsilon_sx'.
-
- -- Variável de opção: nonegative_sx
-     Valor por omissão: 'false'
-
-     Se 'nonegative_sx' for verdadeiro (true) todas as variáveis de
-     decisão para 'minimize_sx' e 'maximize_sx' são assumidas para serem
-     positivas.
-
-     Veja também: 'minimize_sx'.
-
-
-File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up: Top
-
-65 simplification
-*****************
-
-* Menu:
-
-* Introdução a simplification::
-* Definições para simplification::
-
-
-File: maxima.info,  Node: Introdução a simplification,  Next: Definições para simplification,  Prev: simplification,  Up: simplification
-
-65.1 Introdução a simplification
-================================
-
-O directório 'maxima/share/simplification' contém muitos scripts que
-implementam regras de simplificação e funções, e também algumas funções
-não relacionadas a simplificação.
-
-
-File: maxima.info,  Node: Definições para simplification,  Prev: Introdução a simplification,  Up: simplification
-
-65.2 Definições para simplification
-===================================
-
-65.2.1 Package absimp
----------------------
-
-O pacote 'absimp' contém regras de comparação de sequências decaractere
-que extendem as regras internas de simplificação para as funções 'abs' e
-'signum'.  'absimp' respeita as relações estabelecidas com a função
-interna 'assume' e por meio de declarações tais como 'modedeclare (m,
-even, n, odd)' para inteiros paes ou ímpares.
-
-'absimp' define as funções 'unitramp' e 'unitstep' em termos de 'abs' e
-'signum'.
-
-'load (absimp)' torna esse pacote disponível para uso.  'demo (absimp)'
-faz uma demonstração desse pacote.
-
-Exemplos:
-
-     (%i1) load (absimp)$
-     (%i2) (abs (x))^2;
-                                            2
-     (%o2)                                 x
-     (%i3) diff (abs (x), x);
-                                           x
-     (%o3)                               ------
-                                         abs(x)
-     (%i4) cosh (abs (x));
-     (%o4)                               cosh(x)
-
-65.2.2 Package facexp
----------------------
-
-O pacote 'facexp' contém muitas funções relacionadas a simplificações
-que fornecem ao utilizador a habilidade de estruturar expressões por
-meio de expansão controlada.  Essa capacidade é especialmente útil
-quando a expressão contém variáveis que possuem significado físico,
-porque é muitas vezes verdadeiro que a forma mais econômica de uma tal
-expressão pode ser obtida por meio de uma expansão completa da expressão
-com relação a essas variáveis, e então factorizar seus coeficientes.
-Apesar de ser verdadeiro que esse procedimento é fácil de realizar
-usando as funções padrão do Maxima, ajustes adicionais podem se
-desejáveis, e esses toques finais podem ser mais difíceis de aplicar.
-
-A função 'facsum' e suas formas relacionadas fornecem um meio
-conveniente de controlar a estrutura de expressões por esse caminho.
-Outra função, 'collectterms', pode ser usada para adicionar duas ou mais
-expressões que já tenham sido simplificadas para essa forma, sem
-resimplificar a expressão completa novamente.  Essa função pode ser útil
-quando expressões forem muito grandes.
-
-'load (facexp)' torna dispon;ivel para uso esse pacote.  'demo (facexp)'
-faz uma demonstração desse pacote.
-
- -- Função: facsum (<expr>, <arg_1>, ..., <arg_n>)
-     Retorna uma forma de <expr> que depende dos argumentos <arg_1>,
-     ..., <arg_n>.  Os argumentos podem ser quaisquer formas adequadas
-     para 'ratvars', ou eles podem ser listas de tais formas.  Se os
-     argumentos não forem listas, então a forma retornada é
-     completamente expandida com relação aos argumentos, e os
-     coeficientes dos argumentos foram factorizados.  Esses coeficientes
-     são livres dos argumentos, excepto talvez no sentido não racional.
-
-     Se quaisquer dos argumentos forem listas, então todas as tais
-     listas são combinadas em uma lista simples, e em lugar de chamar
-     'factor' sobre os coeficientes dos argumentos, 'facsum' chama a si
-     mesma sobre esses coeficientes, usando essa nova lista simples que
-     foi construída como o novo argumento listo para essa chamada
-     recursiva.  Esse processo pode ser repetido para um quantidade
-     arbitrária de repetições por através do aninhamento dos elementos
-     desejados nas listas.
-
-     É possível que alguém possa querer usar 'facsum' com relação a
-     subexpressões mais complicadas, tal como 'log (x + y)'.  Tais
-     argumentos são também permitidos.  Sem especificação de variável,
-     por exemplo 'facsum (<expr>)', o resultado retornado é o mesmo que
-     o que é retornado por meio de 'ratsimp (<expr>)'.
-
-     Ocasionalmente o utilizador pode querer obter quaisquer das formas
-     abaixo para expressões que são especificadas somente por meio de
-     seus operadores líderes.  Por exemplo, alguém pode querer usar
-     'facsum' com relação a todos os 'log''s.  Nessa situação, alguém
-     pode incluir no meio dos argumentos ou o código dos 'log''s
-     eespecíficos que devem ser tratados po esse caminho ou
-     alternativamente a expressão 'operator (log)' ou a expressão
-     ''operator (log)'.  Se alguém quiser usar 'facsum' na expressão
-     <expr> com relação aos operadores <op_1>, ..., <op_n>, pode-se
-     avaliar 'facsum (<expr>, operator (<op_1>, ..., <op_n>))'.  A forma
-     'operator' pode também aparecer dentro de uma lista de argumentos.
-
-     Adicionalmente, a escolha de comutadores 'facsum_combine' e
-     'nextlayerfactor' pode afectar o ressultado de 'facsum'.
-
- -- Variável global: nextlayerfactor
-     Valor por omissão: 'false'
-
-     Quando 'nextlayerfactor' for 'true', chamadas recursivas a 'facsum'
-     são aplicdas aos factores da forma factorizada dos coeficientes dos
-     argumentos.
-
-     Quando 'nextlayerfactor' for 'false', 'facsum' é aplicada a cada
-     coeficiente como um todo mesmo se chamadas recursivas a 'facsum'
-     acontecerem.
-
-     A inclusão do átomo 'nextlayerfactor' na lista argumento de
-     'facsum' tem o efieto de 'nextlayerfactor: true', mas para o
-     próximo nível da expressão somente.  Uma vez que 'nextlayerfactor'
-     é sempre associado ou a 'true' ou a 'false', 'nextlayerfactor' deve
-     ser apresentada com apóstrofo simples mesmo que 'nextlayerfactor'
-     apareça na lista de argumento de 'facsum'.
-
- -- Variável global: facsum_combine
-     Valor por omissão: 'true'
-
-     'facsum_combine' controla a forma do resultado final retornada por
-     meio de 'facsum' quando seu argumento é um quociente de polinómios.
-     Se 'facsum_combine' for 'false' então a forma será retornada como
-     um somatório completametne expandido como descrito acima, mas se
-     'true', então a expressão retornada é uma razão de polinómios, com
-     cada polinómio na forma descrita acima.
-
-     A escolha de 'true' desse comutador é útil quando se deseja para
-     'facsum' ambos o dumerador e o denominador de uma expressão
-     racional, mas não se deseja que o denominador seja multiplicado de
-     forma completa pelos termos do numerador.
-
- -- Função: factorfacsum (<expr>, <arg_1>, ... <arg_n>)
-     Retorna uma forma de <expr> que é obtida por meio de chamada a
-     'facsum' sobre os factores de <expr> com <arg_1>, ...  <arg_n> como
-     argumentos.  Se qualqeur dos factores de <expr> estiver elevado a
-     um expoente, ambos o factor e o expoente irão ser processados por
-     esse meio.
-
- -- Função: collectterms (<expr>, <arg_1>, ..., <arg_n>)
-     Se muitas expressões tiverem sido simplificadas com 'facsum',
-     'factorfacsum', 'factenexpand', 'facexpten' ou com
-     'factorfacexpten', e elas estão para serem adicionadas umas às
-     outras, pode ser desejável combiná-las usando a função
-     'collecterms'.  'collecterms' pode pegar como argumentos todos os
-     argumentos que podem ser fornecidos para essas outras funções
-     associadas com excessão de 'nextlayerfactor', que não tem efeito
-     sobre 'collectterms'.  A vantagem de 'collectterms' está em que
-     'collectterms' retorna uma forma similar a 'facsum', mas uma vez
-     que 'collectterms' está adicionando forma que já tenham sido
-     processadas por 'facsum', 'collectterms' não precisa repetir aquele
-     esforço.  Essa capacidade é especialmente útil quando a expressão a
-     ser somada for muito grande.
-
-65.2.3 Pacote functs
---------------------
-
- -- Função: rempart (<expr>, <n>)
-     Remove a parte <n> da expressão <expr>.
-
-     Se <n> é uma lsita da forma '[<l>, <m>]' então as partes de <l> até
-     <m> são removidas.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: wronskian ([<f_1>, ..., <f_n>], <x>)
-     Retorna a matriz Wronskiana das funções <f_1>, ..., <f_n> na
-     variável <x>.
-
-     <f_1>, ..., <f_n> pode ser o nome de funções definidas pelo
-     utilizador, ou expressões na variável <x>.
-
-     O determinante da matriz Wronskiana é o determinante Wronskiano do
-     conjunto de funções.  As funções são linearmente independentes
-     entre si se seu determinante for igual a zero.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: tracematrix (<M>)
-     Retorna o traço (somatório dos elementos da diagonal principal) da
-     matriz <M>.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: rational ('z')
-     Multiplica o numerador e o denominador de <z> pelo complexo
-     conjugado do denominador, racionando dessa forma o denominador
-     complexo.  Retorna a forma de expressão racional canónica (CRE) se
-     fornecida uma CRE, caso contrário retorna a forma geral.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: nonzeroandfreeof (<x>, <expr>)
-     Retorna 'true' se <expr> for diferente de zero e 'freeof (<x>,
-     <expr>)' retorna 'true'.  Retorna 'false' de outra forma.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: linear (<expr>, <x>)
-     Quando <expr> for uma expressão linear na variável <x>, 'linear'
-     retorna '<a>*<x> + <b>' onde <a> é diferente de zero, e <a> e <b>
-     são livres de <x>.  De outra forma, 'linear' retorna <expr>.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: gcdivide (<p>, <q>)
-     Quando 'takegcd' for 'true', 'gcdivide' divide os polinómios <p> e
-     <q> por seu maior divisor comum (MDC) e retorna a razão dos
-     resultados.
-
-     Quando 'takegcd' for 'false', 'gcdivide' retorna a razão '<p>/<q>'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: arithmetic (<a>, <d>, <n>)
-     Retorna o <n>-ésiomo termo da série aritmética '<a>, <a> + <d>, <a>
-     + 2*<d>, ..., <a> + (<n> - 1)*<d>'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: geometric (<a>, <r>, <n>)
-     Retorna o <n>-ésimo termo da série geométrica '<a>, <a>*<r>,
-     <a>*<r>^2, ..., <a>*<r>^(<n> - 1)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: harmonic (<a>, <b>, <c>, <n>)
-     Retorna o <n>-ésimo termo da série harmônica '<a>/<b>, <a>/(<b> +
-     <c>), <a>/(<b> + 2*<c>), ..., <a>/(<b> + (<n> - 1)*<c>)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: arithsum (<a>, <d>, <n>)
-     Retorna a soma dos elementos da série aritmética de 1 a <n>.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: geosum (<a>, <r>, <n>)
-     Retorna a soma dos elementos da série geométrica de 1 a <n>.  Se
-     <n> for infinito ('inf') então a soma será finita se e somente se o
-     valor absoluto de <r> for menor que 1.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: gaussprob (<x>)
-     Retorna a função de probalilidade de Gauss '%e^(-<x>^2/2) /
-     sqrt(2*%pi)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: gd (<x>)
-     Retorna a função de Gudermann '2 * atan(%e^<x> - %pi/2)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: agd (<x>)
-     Retorna o inverso da função de Gudermann 'log (tan (%pi/4 +
-     x/2)))'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: vers (<x>)
-     Retorna o sinus versus '1 - cos (x)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: covers (<x>)
-     Retorna o sinus versus do complemento '1 - sin (<x>)'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: exsec (<x>)
-     Retorna a parte externa da secante 'sec (<x>) - 1'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: hav (<x>)
-     Retorna o semi-sinus versus '(1 - cos(x))/2'.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: combination (<n>, <r>)
-     Retorna o número de combinações de <n> objectos tomados em grupos
-     de <r> elementos.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
- -- Função: permutation (<n>, <r>)
-     Retorna o número de permutações de <r> objectos seleccionados de um
-     conjunto de <n> objectos.
-
-     Para usar essa função escreva primeiramente 'load(functs)'.
-
-65.2.4 Package ineq
--------------------
-
-O pacote 'ineq' contém regras de simplificação para desigualdades.
-
-Sessão exemplo:
-
-     (%i1) load(ineq)$
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     Warning: Putting rules on '+' or '*' is inefficient, and may not work.
-     (%i2) a>=4;  /* uma desigualdade exemplo */
-     (%o2)                               a >= 4
-     (%i3) (b>c)+%; /* adiciona uma segunda e estrita desigualdade */
-     (%o3)                            b + a > c + 4
-     (%i4) 7*(x<y); /* multiplica por um número positivo */
-     (%o4)                              7 x < 7 y
-     (%i5) -2*(x>=3*z); /* multiplica por um número negativo */
-     (%o5)                           - 2 x <= - 6 z
-     (%i6) (1+a^2)*(1/(1+a^2)<=1); /* Maxima sabe que 1+a^2 > 0 */
-                                             2
-     (%o6)                             1 <= a  + 1
-     (%i7) assume(x>0)$ x*(2<3); /* assumindo x>0 */
-     (%o7)                              2 x < 3 x
-     (%i8) a>=b; /* outa desigualdade */
-     (%o8)                               a >= b
-     (%i9) 3+%; /* adiciona alguma coisa à desigualdade imediatamente acima */
-     (%o9)                           a + 3 >= b + 3
-     (%i10) %-3; /* retirando essa alguma coisa */
-     (%o10)                              a >= b
-     (%i11) a>=c-b; /* ainda outra desigualdade */
-     (%o11)                            a >= c - b
-     (%i12) b+%; /* adiciona b a ambos os lados da desigualdade */
-     (%o12)                            b + a >= c
-     (%i13) %-c; /* subtrai c de ambos os lados */
-     (%o13)                         - c + b + a >= 0
-     (%i14) -%;  /* multiplica por -1 */
-     (%o14)                          c - b - a <= 0
-     (%i15) (z-1)^2>-2*z; /* determinando a verdade de uma assertiva */
-                                           2
-     (%o15)                         (z - 1)  > - 2 z
-     (%i16) expand(%)+2*z; /* expandindo essa assertiva e adicionado 2*z a ambos os lados */
-                                        2
-     (%o16)                            z  + 1 > 0
-     (%i17) %,pred;
-     (%o17)                               true
-
-Seja cuidadoso com o uso dos parêntesis em torno de desigualdades:
-quando o utilizador digita '(A > B) + (C = 5)' o resltado é 'A + C > B +
-5', mas 'A > B + C = 5' é um erro de sintaxe, e '(A > B + C) = 5' é
-alguma coisa completametne diferente.
-
-Faça 'disprule (all)' para ver uma lista completa das definições de
-regras.
-
-O utilizador será questionado se o Maxima for incapaz de decidir o sinal
-de uma quantidade multiplicando uma desigualdade.
-
-O mais comum recurso estranho é ilustrado por:
-
-     (%i1) eq: a > b;
-     (%o1)                                a > b
-     (%i2) 2*eq;
-     (%o2)                              2 (a > b)
-     (%i3) % - eq;
-     (%o3)                                a > b
-
-Outro problema é 0 vezes uma desigualdade; o padrão para isso acontecer
-é 0 ter sido colocado à esquerda sozinho.  Contudo, se digitar
-'X*<some_inequality>' e Maxima perguntar sobre o sinal de 'X' e
-responder 'zero' (ou 'z'), o programa retorna 'X*<some_inequality>' e
-não utiliza a informação que 'X' é 0.  Pode usar 'ev (%, x: 0)' em casos
-semelhantes a esse; a base de dados irá somente ser usada para
-propósitos de comparação em decisões, e não para o propósito de
-avaliação de 'X'.
-
-O utilizador pode notar uma resposta lenta quando esse pacote é
-disponibilizado para uso, como o simplificador é forçado a examinar mais
-regras do precisaria sem esse pacote, então pode desejar remover essas
-regras após fazer uso delas.  Faça 'kill (rules)' para eliminar todas as
-regras (incluindo qualquer regra que possa ter definido); ou pode ser
-mais selectivo eliminando somente algumas delas; ou use 'remrule' sobre
-uma regra específica.
-
-Note que se disponibilizar esse pacote para ser usado, após definir suas
-próprias regras, irá sobrescrever as suas regras que possuirem nomes
-identicos a nomes contidos nas regras do pacote.  As regras no pacote
-são: '*rule1', ..., '*rule8', '+rule1', ..., '+rule18', e deve colocar o
-nome de regra entre aspas duplas ao referir-se a eles, como em 'remrule
-("+", "+rule1")' para especificamente remover a primeira regra sobre
-'"+"' ou 'disprule ("*rule2")' para mostrar a definição da segunda regra
-multiplicativa.
-
-65.2.5 Package rducon
----------------------
-
- -- Função: reduce_consts (<expr>)
-     Substitui subexpressões constantes de <expr> com construída com
-     átomos constantes, gravando a definição de todas essas constantes
-     construídas na lista de equações 'const_eqns', e retornando a
-     expressão modificada <expr>.  Essas partes de <expr> são constantes
-     que retornam 'true' quando operadas por meio da função 'constantp'.
-     Consequêntemente, antes de usar 'reduce_consts', se pode fazer
-
-          declare ([<objecto que vai receber a propriedade constante>], constant)$
-
-     para escolher a base de dados das quantidades constantes ocorrendo
-     em suas expressões.
-
-     Se está a planear gerar saídas em Fortran após esses cálculos
-     simbólicos, uma das primeiras secções de código pode ser o cálculo
-     de todas as constantes.  Para gerar esse segmento de código, faça
-
-          map ('fortran, const_eqns)$
-
-     Variables como 'const_eqns' que afectam 'reduce_consts' são:
-
-     'const_prefix' (valor padrão: 'xx') é a sequência de caracteres
-     usada para prefixar todos os símbolos gerados por 'reduce_consts'
-     para representar subexpressões constantes.
-
-     'const_counter' (valor padrão: 1) é o índice inteiro usado para
-     gerar símbolos únicos para representar cada subexpressão constante
-     emcontrada por 'reduce_consts'.
-
-     'load (rducon)' torna essa função disponível para uso.  'demo
-     (rducon)' faz uma demonstração dessa função.
-
-65.2.6 Pacote scifac
---------------------
-
- -- Função: gcfac (<expr>)
-     'gcfac' função de factorização que tenta aplicar a mesma heurística
-     que cientístas aplicam em tentativas de fazer expressões
-     extremamente simples.  'gcfac' está limitada a factorizações
-     monomiais.  Para um somatório, 'gcfac' faz o seguinte:
-
-       1. Factores sobre os inteiros.
-       2. Coloca em evidência o maior expoente de termos ocorrendo como
-          coeficientes, independentemente da complexidade dos termos.
-       3. Usa (1) e (2) em factorizações de pares de termos adjascentes.
-       4. Repetidamente e recursivamente aplica essas técnicas até que a
-          expressão não mais mude.
-
-     O item (3) não necessáriamente faz uma tarefa óptima factorização
-     par a par devido à dificuldade combinatória natural de encontrar
-     qual de todas dos possíveis rearranjos de pares retorna o mais
-     compacto resultado de factorização de um par.
-
-     'load (scifac)' torna essa função disponível para uso.  'demo
-     (scifac)' faz uma demonstração dessa função.
-
-65.2.7 Pacote sqdnst
---------------------
-
- -- Função: sqrtdenest (<expr>)
-     Desaninha 'sqrt' de simples, numérico, binômios de raízes
-     irracionais de números racionais , onde for possível.  E.g.
-
-          (%i1) load (sqdnst)$
-          (%i2) sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
-                                              sqrt(3)
-                                         sqrt(------- + 1)
-                                                 2
-          (%o2)                        ---------------------
-                                       sqrt(11 sqrt(2) - 12)
-          (%i3) sqrtdenest(%);
-                                            sqrt(3)   1
-                                            ------- + -
-                                               2      2
-          (%o3)                            -------------
-                                              1/4    3/4
-                                           3 2    - 2
-
-     Algumas vezes isso ajuda na hora de aplicar 'sqrtdenest' mais que
-     uma vez, sobre coisas como '(19601-13860 sqrt(2))^(7/4)'.
-
-     'load (sqdnst)' Torna essa função disponível para uso.
 

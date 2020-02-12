@@ -1,0 +1,328 @@
+60a61,63
+> load ("charsets_length.lisp");
+> 
+> /* load(grobner); */
+70c73
+< /*
+---
+> 
+79c82
+< */
+---
+> 
+91a95,97
+> /* This is no more necessary, charsets_set.lisp has been fixed */
+> /* charsets_union([x]):=listify(apply(union, maplist(lambda([y],setify(expand(y))),x)))$ */
+> 
+290c296
+< /* the extend:ed char series of poly set ps */
+---
+> /* the extended char series of poly set ps */
+321c327
+< /* the extend:ed char series of poly set ps -- allowing to remove factors */
+---
+> /* the extended char series of poly set ps -- allowing to remove factors */
+372c378
+< /* the extend:ed irreducible char series of poly set ps: user function */
+---
+> /* the extended irreducible char series of poly set ps: user function */
+458a465,469
+> /* In fact the argument handling is incorrect. Either it is triser(ps,ord) */
+> /* where ord is a list, or triser(ps,lst,ord) where lst is the unordered set */
+> /* of variables and ord the order computed by charsets_reorder (lst, charsets_degord, qs) */
+> /* and automatically filled */
+> 
+478a490
+> 
+494,495c506,507
+<    /* sort to try to get things in maple order
+<    qs : sort (qs, charsets_lenord1), */
+---
+>    /* sort to try to get things in maple order */
+>    qs : sort (qs, charsets_lenord), 
+597c609
+<             num(xthru(multthru( last / lcoeff ( last,/* reverse */(ord))))))
+---
+>             num(xthru(multthru( last / lcoeff ( last,ord)))))
+625,626c637,638
+<             cf : length ( expand ( charsets_initial ( f, ord) ) ),
+<             cg : length ( expand ( charsets_initial ( g, ord) ) ),
+---
+>             cf : charsets_polylength ( expand ( charsets_initial ( f, ord) ) ),
+>             cg : charsets_polylength ( expand ( charsets_initial ( g, ord) ) ),
+630c642
+<                   if length ( expand ( f) )  < length ( expand ( g) ) 
+---
+>                   if charsets_polylength ( expand ( f) )  < charsets_polylength ( expand ( g) ) 
+775c787
+<    ?mlocal(v),array(v,n),
+---
+>    local(v),array(v,n),
+794d805
+<    ?munlocal(v),
+868c879
+<      apply(min, maplist(lambda([u],length( expand (u))),qs))]
+---
+>      apply(min, maplist(lambda([u],charsets_polylength( expand (u))),qs))]
+899,900c910,912
+<    if mapatom(x) then degree(c,x)
+<    else max(map(lambda([u],degree(c,u)),x))
+---
+>    if mapatom(x) then charsets_degree(c,[x]),
+>    if listp(f) then lmax(maplist(lambda([u],degree(u,x)),c))
+>    else charsets_degree([f],x)
+981,984c993
+<          else (
+<             if medset = charsets_autored then
+<                charsets_charseta(charsets_union(rs,cs,ps),ord,charsets_charsetn)
+<             else charsets_charseta( charsets_union( rs, cs, ps), ord, medset)))
+---
+>        else charsets_charseta( charsets_union( rs, cs, ps), ord, medset))
+1021c1030
+<       [charsetn, wcharsetn, qcharsetn, triset, trisetc, autored]),any_check,
+---
+>       [charsetn, wcharsetn, qcharsetn, triset, trisetc]),any_check,
+1056,1057c1065,1066
+<          cs : medset ( ps, ord),
+<          fset2 : [ fset1[1], charsets_union( fset1[2], charsets_initialset1( cs, ord))],
+---
+>          if medset = [] then cs: ps else  cs : medset ( ps, ord),
+>          fset2 : [ fset1[1], charsets_union( fset1[2], charsets_initialset1(cs, ord))], 
+1069,1072d1077
+<          else (
+<             if medset = charsets_autored then
+<                charsets_fcharsetsub ( charsets_union ( rs, cs, ps), ord,
+<                    charsets_charsetn, fset3)
+1075c1080
+<                    medset, fset3))))
+---
+>                    medset, fset3))) 
+1248c1253
+<             for j in ss do 
+---
+>             for j in ss do (
+1253c1258
+<                          charsets_qs[charsets_class( p, ord)])),
+---
+>                    charsets_qs[charsets_class( p, ord)]))),
+1260,1261c1265,1267
+<    if not charsets_operatorp(f,charsets_ListOrSet) and not ratnump(g) and not freeof (last(ord), g)
+<           and (fg:first(last_result:divide ( f, g)),second(last_result)) = 0 then (
+---
+>    if not charsets_operatorp(f,charsets_ListOrSet) and not ratnump(g)
+>    and ((fg:first(last_result:divide(f,g,
+>            charsets_lvar(g,ord))),second(last_result)) = 0) then (
+1269c1275
+< /*      fset1 is assigned to fset at th end: of the procedure */
+---
+> /*      fset1 is assigned to fset at the end of the procedure */
+1559c1565
+<       qhi : sort (qhi, charsets_lenord1),
+---
+>       qhi : sort (qhi, charsets_lenord),
+1582c1588
+<    else ( sort ( charsets_contract ( qsi, ord, 0), charsets_lenord2))
+---
+>    else ( sort ( charsets_contract ( qsi, ord, 0), charsets_lenord))
+1595c1601
+<       qhi : sort (qhi, charsets_lenord2),
+---
+>       qhi : sort (qhi, charsets_lenord),
+1627c1633
+< /* the extend:ed char series of poly set ps */
+---
+> /* the extended char series of poly set ps */
+1719c1725
+< /* the extend:ed char series of poly set ps -- allowing to remove factors */
+---
+> /* the extended char series of poly set ps -- allowing to remove factors */
+1758c1764
+<    else (sort ( qsi, charsets_lenord2))
+---
+>    else (sort ( qsi, charsets_lenord))
+2039c2045
+< /* the extend:ed irreducible char series of poly set ps */
+---
+> /* the extended irreducible char series of poly set ps */
+2145c2151,2156
+< charsets_select ( ppi,n):=block([ i,pp,qq],
+---
+> /* In maple the condition is n <= nops(i) and nops gives the same thing as maxima's */
+> /* length for sums and products, excepts that for a single variable nops(x) = 1 while */
+> /* length (x) produces an error. */
+> 
+> charsets_select ( ppi,n):=block([ i,pp,qq,lli],
+>    lli : if (i=listofvars(i)[1]) then 1 else length(i),
+2149c2160
+<       if n <= length ( i) then ( qq :  charsets_adjoin2( i, qq))
+---
+>       if n <= lli then ( qq :  charsets_adjoin2( i, qq))
+2177c2188
+<          itt :  charsets_adjoin2(i, qs),
+---
+>          itt :  charsets_adjoin2(i, setify1(qs)),
+2181,2182c2192,2193
+<                if charsets_subset ( j, itt) then ( _ind : 1))),
+<          if _ind = 0 then ( iss :  charsets_adjoin2(cons( i, qs),iss)))),
+---
+>               if charsets_subset (setify1([j]), itt) then ( _ind : 1))), 
+>          if _ind = 0 then (iss: charsets_adjoin2(cons(i,qs),iss)))),
+2184a2196,2197
+> 
+> /* if _ind = 0 then ( iss: charsets_adjoin2(charsets_adjoin2(i,qs),iss)))), */
+2187c2200,2202
+< charsets_nopsord(a,b):=if length( b) < length( a) then ( true) else ( false)$
+---
+> charsets_nopsord(a,b):= if symbolp (a) then (false)
+> else if symbolp (b) then (true) else
+> if length( b) < length( a) then ( true) else ( false)$
+2435c2450
+< /* test for a trivial case --- can it be extend:ed?       */
+---
+> /* test for a trivial case --- can it be extended?       */
+2684,2686d2698
+< /* compute the GCD of f and g over the algebraic field having  */
+< /* adjoining asc set as -- using Maple's built-in function  */
+< /* Malgcd is sometimes faster than algcd and is not used  */
+2688,2698d2699
+< charsets_Malgcd ( f,g,as,mord):=block(
+<    [ nas,i,last],
+<       nas : length ( as),
+<        last:[ f, g ],
+<       for i : nas thru 1 step  -  1 do 
+<          subst(last, ( mord[i] = RootOf ( as[i], mord[i]) )),
+<       last:evala ( Gcd ( (last)) ),
+<       for i : 1 thru nas do 
+<         last: subst(last, ( RootOf ( as[i], mord[i])  = mord[i])),
+<       last
+< )$
+3299c3300
+<    [ qs,cs,iss,n,i,qhi,qsi,factorset,csno,ppi,qqi,_ind,mem],
+---
+>    [ qs,cs,iss,n,i,qhi,qsi,factorset,csno,ppi,qqi,_ind,mem,fset4],  
+3318c3319
+<       qqi :  charsets_union(qqi,setify1(ppi[2])),
+---
+>       qqi :  charsets_union(qqi,ppi[2]),   
+3321c3322
+<          ppi : charsets_union( qs, setify1(ppi[1])),
+---
+>          ppi : charsets_union( setify1(qs), setify1(ppi[1])),  
+3328,3329c3329,3332
+<          else (
+<             if (qs # mem) and (4 < charsets_degree ( qs[1], ord))  then (
+---
+>          else ( fset4: qs,
+>            fset4: if (listp(qs) and (qs # []) and (listp(first(qs))))
+>            then first(qs) else qs,
+>            if (qs # mem) and (4 < charsets_degree (fset4[1], ord))  then (  
+3333,3334c3336
+<                   ml2(cs,factorset,
+<                      charsets_fcharseta(qs,ord,charsets_wcharsetn)))
+---
+>                ml2(cs,factorset, charsets_fcharseta(qs,ord,charsets_wcharsetn)))  
+3344,3345c3346,3347
+<       if 0 < charsets_class ( cs[1], ord)  then (
+<          iss : charsets_initialset ( cs, ord),
+---
+>        if 0 < charsets_class ( cs, ord)  then (
+>          iss : charsets_initialset ( cs[1], ord),  
+3347c3349
+<              qsi : charsets_union([setify1(cs)],qsi)),
+---
+>            qsi : charsets_union([cs],qsi)),   
+3349,3350c3351
+<          else (
+<             iss : charsets_factorps ( factorset)),
+---
+>        else ( iss : charsets_factorps ( factorset)),  
+3352c3353
+<       if 1 < length ( qhi) then ( qhi : charsets_union(iss, rest(qhi)))
+---
+>       if 1 < length ( qhi) then ( qhi : charsets_union(setify1([iss]), rest(qhi)))
+3357a3359,3361
+> 
+> 
+> 
+3528c3532
+<       gb : grobner::gbasis ( qs,  [ (zz), reverse(ord) ], plex),
+---
+>       gb : poly_reduced_grobner ( qs,  [ (zz), reverse(ord) ]),
+3544c3548
+<    ps : grobner::gbasis ( ps, charsets_reverse ( ord), plex),
+---
+>    ps : poly_reduced_grobner ( ps, charsets_reverse ( ord), lex),
+3558c3562
+<          fs : grobner::gbasis ( fs, charsets_reverse ( ord), plex),
+---
+>          fs :  poly_reduced_grobner  ( fs, charsets_reverse ( ord), lex),
+3579c3583
+<                   gb : grobner::gbasis ( fs, charsets_reverse ( ord), plex)),
+---
+>                   gb : poly_reduced_grobner ( fs, charsets_reverse ( ord), lex)),
+3584c3588
+<                      gb1 : grobner::gbasis ( gb,  [ vrd, (urd) ], plex),
+---
+>                      gb1 : poly_reduced_grobner ( gb,  [ vrd, (urd) ], lex),
+3757c3761
+<             grobner::gbasis (  setify1([ map(simplify ( qs[j] / f) /* $ ( ( j = 1 .. length ( qs) ))*/) ]), charsets_reverse ( ord), plex))
+---
+>             poly_reduced_grobner (  setify1([ map(simplify ( qs[j] / f) /* $ ( ( j = 1 .. length ( qs) ))*/) ]), charsets_reverse ( ord), lex))
+3773c3777
+<       gb : grobner::gbasis ( qs,  [ zz, map(ord[length ( ord)  - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], plex),
+---
+>       gb : poly_reduced_grobner ( qs,  [ zz, map(ord[length ( ord)  - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], lex),
+3798c3802
+<       gb : grobner::gbasis ( qs,  [ zz, map(ord[length ( ord)  - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], plex),
+---
+>       gb : poly_reduced_grobner ( qs,  [ zz, map(ord[length ( ord)  - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], lex),
+3816,3817c3820,3821
+<       gb : grobner::gbasis ( qs,  [ (zz), map(ord[length ( ord) 
+<                 - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], plex),
+---
+>       gb : poly_reduced_grobner ( qs,  [ (zz), map(ord[length ( ord) 
+>                 - j + 1]/* $ ( ( j = 1 .. length ( ord) ))*/) ], lex),
+3828c3832
+< /* the extend:ed irreducible char series of polyset ps */
+---
+> /* the extended irreducible char series of polyset ps */
+3937,3938c3941,3942
+<   [len_a : if mapatom(a) then 1 else length(a),
+<    len_b : if mapatom(b) then 1 else length(b)],
+---
+>   [len_a : charsets_length(a),
+>    len_b : charsets_length(b)],
+3941,3957d3944
+< charsets_lenord1( a,b):=block([ii,flag,
+<    len_a : if mapatom(a) then 1 else length(a),
+<    len_b : if mapatom(b) then 1 else length(b)],
+<    if len_b  < len_a then true
+<    else (
+<       if len_b > len_a then false
+<       else (
+<           flag:true,
+<           for i:1 thru length(a) do block(
+<               [len_ai : if mapatom(a[i]) then 1 else length(a[i]),
+<                len_bi : if mapatom(b[i]) then 1 else length(b[i])],
+<               if len_bi < len_ai then return(flag:false)
+<           ),
+<           flag
+<       )
+<    )
+< )$
+3959,3970d3945
+< charsets_lenord2( a,b):=block(
+<   [len_a : if mapatom(a) then 1 else length(a),
+<    len_b : if mapatom(b) then 1 else length(b)],
+<    if len_b > len_a then true
+<    else (
+<       if len_b < len_a then false
+<       else (
+<          if sum( if mapatom(b[i]) then 1 else length(b[i]),i,1,length(b)) < sum(if mapatom(a[i]) then 1 else length(a[i]),i,1,length(a))
+<             then true else false
+<       )
+<    )
+< )$
+4238,4239d4212
+< charsets_lenord1,
+< charsets_lenord2,

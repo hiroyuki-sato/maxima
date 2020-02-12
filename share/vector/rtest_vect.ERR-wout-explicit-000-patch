@@ -1,0 +1,131 @@
+
+/* Maxima error log from tests in /home/robert/maxima/maxima-code/share/vector/rtest_vect.mac */
+
+/* Problem 4 (line 20) */
+a . b-b . a;
+/* Erroneous Result?:
+a . b-b . a */ 
+/* Expected result: */
+0;
+
+/* Problem 9 (line 36) */
+ev(vectorsimp(a ~ b . c ~ d-(a . c*b . d-b . c*a . d)),expandall:true),expandall = false;
+/* Erroneous Result?:
+(-a . c*b . d)+a . d*b . c-a . (b . c*d)+a . (b . d*c) */ 
+/* Expected result: */
+0;
+
+/* Problem 10 (line 40) */
+ev(vectorsimp((3*a-2*b) ~ (2*a+b)),expandall:true),expandall = false;
+/* Erroneous Result?:
+2*(2*a) ~ b+3*a ~ b */ 
+/* Expected result: */
+7*a ~ b;
+
+/* Problem 13 (line 50) */
+grad c;
+/* Erroneous Result?:
+c*grad 1 */ 
+/* Expected result: */
+0;
+
+/* Problem 16 (line 61) */
+div c;
+/* Erroneous Result?:
+c*div 1 */ 
+/* Expected result: */
+0;
+
+/* Problem 19 (line 71) */
+ev(vectorsimp(div (u*a))-(u*div a+grad u . a),expandall:true),expandall = false;
+/* Erroneous Result?:
+a . grad u-grad u*a */ 
+/* Expected result: */
+0;
+
+/* Problem 20 (line 75) */
+ev(vectorsimp(div (a ~ b)),expandall:true),expandall = false;
+/* Erroneous Result?:
+div (a ~ b) */ 
+/* Expected result: */
+b . curl a-a . curl b;
+
+/* Problem 21 (line 80) */
+curl c;
+/* Erroneous Result?:
+c*curl 1 */ 
+/* Expected result: */
+0;
+
+/* Problem 24 (line 89) */
+ev(vectorsimp(curl (a*u)),expandall:true),expandall = false;
+/* Erroneous Result?:
+curl (u*a) */ 
+/* Expected result: */
+u*curl a+grad u ~ a;
+
+/* Problem 25 (line 92) */
+ev(vectorsimp(curl (a ~ b)),expandall:true),expandall = false;
+/* Erroneous Result?:
+curl (a ~ b) */ 
+/* Expected result: */
+b . grad a-a . grad b+a*div b+(-b)*div a;
+
+/* Problem 58 (line 230) */
+0 ~ f(a,b),a = matrix([1,2],[6,7]),b = matrix([1,2],[1,6]);
+/* Erroneous Result?:
+0 */ 
+/* Expected result: */
+[0,0,0];
+
+/* Problem 59 (line 233) */
+g(c,d) ~ 0;
+/* Erroneous Result?:
+0 */ 
+/* Expected result: */
+[0,0,0];
+
+/* Problem 60 (line 236) */
+f(a,g(b,c)) ~ f(a,g(b,c)),a = matrix([1,2],[6,7]),b = matrix([1,2],[1,6]);
+/* Erroneous Result?:
+0 */ 
+/* Expected result: */
+[0,0,0];
+
+/* Problem 61 (line 239) */
+curl grad f(a,b,c),a = matrix([1,2],[6,7]),b = matrix([1,2],[1,6]);
+/* Erroneous Result?:
+0 */ 
+/* Expected result: */
+[0,0,0];
+
+/* Problem 63 (line 247) */
+express([0,1,1] ~ [0,1,1]);
+/* Erroneous Result?:
+0 */ 
+/* Expected result: */
+[0,0,0];
+
+/* Problem 67 (line 264) */
+ε(1,2,2);
+/* Erroneous Result?:
+[0,0,0] */ 
+/* Expected result: */
+0;
+
+/* Problem 70 (line 273) */
+express(ε(1,2,2)*a_[2]*b_[2]);
+/* Erroneous Result?:
+[0,0,0] */ 
+/* Expected result: */
+0;
+
+/* Problem 71 (line 276) */
+makelist(sum(sum(ε(i,j,k)*a_[j]*b_[k],j,1,3),k,1,3),i,3);
+/* Erroneous Result?:
+[[a_2*b_3-a_3*b_2,a_2*b_3-a_3*b_2,a_2*b_3-a_3*b_2],
+ [a_3*b_1-a_1*b_3,a_3*b_1-a_1*b_3,a_3*b_1-a_1*b_3],
+ [a_1*b_2-a_2*b_1,a_1*b_2-a_2*b_1,a_1*b_2-a_2*b_1]] */ 
+/* Expected result: */
+[a_2*b_3-a_3*b_2,a_3*b_1-a_1*b_3,a_1*b_2-a_2*b_1];
+

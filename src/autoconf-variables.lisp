@@ -4,12 +4,12 @@
 (defparameter *autoconf-prefix* "/usr/local")
 (defparameter *autoconf-exec_prefix* "/usr/local")
 (defparameter *autoconf-package* "maxima")
-(defparameter *autoconf-version* "5.43.0")
+(defparameter *autoconf-version* "5.43.2")
 (defparameter *autoconf-libdir* "/usr/local/lib")
 (defparameter *autoconf-libexecdir* "/usr/local/libexec")
 (defparameter *autoconf-datadir* "/usr/local/share")
 (defparameter *autoconf-infodir* "/usr/local/share/info")
-(defparameter *autoconf-host* "x86_64-unknown-linux-gnu")
+(defparameter *autoconf-host* "i686-pc-linux-gnu")
 ;; This variable is kept for backwards compatibiliy reasons:
 ;; We seem to be in the fortunate position that we sometimes need to check for windows.
 ;; But at least until dec 2015 we didn't need to check for a specific windows flavour.
@@ -20,5 +20,5 @@
 ;; This will be T if this was a lisp-only build
 (defparameter *autoconf-lisp-only-build* (eq t 'nil))
  
-(defparameter *maxima-source-root* "/home/vttoth/dev/maxima")
+(defparameter *maxima-source-root* "/home/robert/maxima/maxima-code")
 (defparameter *maxima-default-layout-autotools* "true")

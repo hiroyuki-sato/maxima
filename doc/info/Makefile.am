@@ -525,18 +525,17 @@ maxima.info : maxima.texi $(maxima_TEXINFOS)
 	-$(MAKEINFO) $(AM_MAKEINFOFLAGS) $(MAKEINFOFLAGS) \
 	  --split-size=1000000 $(srcdir)/maxima.texi
 
-html: maxima_0.html contents.hhc
+html: maxima_toc.html contents.hhc
 
 maxima-index.lisp: build_index.pl maxima.info
 	/usr/bin/env perl $^ ':crlf' > $@
 
 DOLLAR_SIGN = $$
 
-maxima_0.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css
-	@: sh $(srcdir)/extract_categories.sh maxima
+maxima_toc.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css texi2html.init
 	./build_html.sh
 
-maxima.epub: maxima_0.html
+maxima.epub: maxima_toc.html
 	ebook-convert maxima_singlepage.html maxima.epub --breadth-first "--title=Maxima @manual_version@ Manual" "--authors=Maxima Team" --language=en
 
 maxima.pdf: maxima_pdf.texi $(maxima_TEXINFOS) $(pdffigures)
@@ -544,8 +543,8 @@ maxima.pdf: maxima_pdf.texi $(maxima_TEXINFOS) $(pdffigures)
 	rm -f maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
 	maxima.toc maxima.fn maxima.aux maxima.log
 
-contents.hhc index.hhk: maxima_0.html
-	/usr/bin/env perl $(srcdir)/create_index `grep -l '<h2.*Table of Contents' maxima_[0-9]*.html`
+contents.hhc index.hhk: maxima_toc.html
+	/usr/bin/env perl $(srcdir)/create_index maxima_toc.html
 
 # Squash error on exit from hhc
 maxima.chm: maxima.hhp contents.hhc index.hhk
@@ -598,10 +597,10 @@ clean-chm:
 	rm -rf chm
 endif
 
-EXTRA_DIST = texi2html manual.css texi2html.init maxima.texi \
+EXTRA_DIST = texi2html manual.css texi2html.init maxima.texi maxima.html \
     $(genericdirDATA) $(pdffigures) $(macfiles) $(maxima_TEXINFOS) $(figurefiles) \
     create_index build_index.pl maxima-index.lisp docdraw.mac \
-    extract_categories1.awk extract_categories1.sed extract_categories.sh check_tab fix_tab \
+    extract_categories1.awk extract_categories1.sed check_tab fix_tab \
     figures/Makefile.am figures/Makefile.in figures/README \
     maxima-init.lisp mmref.tex README.update_examples maxima_pdf.texi \
     figures/orthopoly1.ps.gz figures/plotdf1.ps.gz figures/plotdf2.ps.gz figures/plotdf3.ps.gz figures/plotdf4.ps.gz figures/plotdf5.ps.gz figures/plotdf6.ps.gz
