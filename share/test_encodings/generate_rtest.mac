@@ -1,0 +1,21 @@
+encodings: cons ("CP1252", makelist (sconcat ("ISO-8859-", k), k, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15]));
+
+for e in encodings
+    do (printf (true, "/* test encoding ~a with batchload and batch */~%", e),
+        printf (true, "(mystream: openr (file_search (\"foo-~a.mac\"), \"~a\"), 0);~%", e, e),
+        printf (true, "0;~%"),
+        printf (true, "(batchload (mystream), close (mystream), print (foo_string), 0);~%"),
+        printf (true, "0;~%"),
+        printf (true, "(mystream: openr (file_search (\"foo-~a.mac\"), \"~a\"), 0);~%", e, e),
+        printf (true, "0;~%"),
+        printf (true, "(batch (mystream), close (mystream), 0);~%"),
+        printf (true, "0;~%"),
+        printf (true, "(mystream: openr (file_search (\"foo-~a.UTF-8.mac\"), \"UTF-8\"), 0);~%", e),
+        printf (true, "0;~%"),
+        printf (true, "(batchload (mystream), close (mystream), print (foo_string), 0);~%"),
+        printf (true, "0;~%"),
+        printf (true, "(mystream: openr (file_search (\"foo-~a.UTF-8.mac\"), \"UTF-8\"), 0);~%", e),
+        printf (true, "0;~%"),
+        printf (true, "(batch (mystream), close (mystream), 0);~%"),
+        printf (true, "0;~%~%"));
+
