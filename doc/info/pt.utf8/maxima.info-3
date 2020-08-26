@@ -1,535 +1,33 @@
-This is maxima.info, produced by makeinfo version 6.6 from maxima.texi.
-
-Este é o Manual do Maxima no formato Texinfo
-
-Copyright 1994, 2001 William F. Schelter
-
-START-INFO-DIR-ENTRY
-* Maxima: (maxima).     Um sistema de álgebra computacional.
-END-INFO-DIR-ENTRY
-
-
-File: maxima.info,  Node: Arrays,  Next: Matrizes e Álgebra Linear,  Prev: Numérico,  Up: Top
-
-24, Arrays
-**********
-
-* Menu:
-
-* Definições para Arrays::
-
-
-File: maxima.info,  Node: Definições para Arrays,  Prev: Arrays,  Up: Arrays
-
-24.1, Definições para Arrays
-============================
-
- -- Função da class: array (<name>, <dim_1>, ..., <dim_n>)
- -- Função da class: array (<name>, <type>, <dim_1>, ..., <dim_n>)
- -- Função da class: array ([<nome_1>, ..., <nome_m>], <dim_1>, ...,
-          <dim_n>)
-
-     Cria um array n-dimensional.  n pode ser menor ou igual a 5.  Os
-     subscritos para a i'ésima dimensão são inteiros no intervalo de 0 a
-     <dim_i>.
-
-     'array (<name>, <dim_1>, ..., <dim_n>)' cria um array genérico.
-
-     'array (<name>, <type>, <dim_1>, ..., <dim_n>)' cria um array, com
-     elementos de um tipo especificado.  <type> pode ser 'fixnum' para
-     inteiros de tamanho limitado ou 'flonum' para números em ponto
-     flutuante.
-
-     'array ([<nome_1>, ..., <nome_m>], <dim_1>, ..., <dim_n>)' cria m
-     arrays, todos da mesma dimensão.
-
-     Se o utilizador atribui a uma variável subscrita antes de declarar
-     o array correspondente, um array não declarado é criado.  Arrays
-     não declarados, também conhecidos como array desordenado (porque o
-     codigo desordenado termina nos subscritos), são mais gerais que
-     arrays declarados.  O utilizador não declara seu tamanho máximo, e
-     ele cresce dinamicamente e desordenadamente à medida que são
-     atribuídos valores a mais elementos.  Os subscritos de um array não
-     declarado não precisam sempre ser números.  Todavia, excepto para
-     um array um tanto quanto esparso, é provavelmente mais eficiente
-     declarar isso quando possível que deixar não declarado.  A função
-     'array' pode ser usada para transformar um array não declarado em
-     um array declarado.
-
- -- Função da class: arrayapply (<A>, [<i_1>, ..., <i_n>])
-     Avalia '<A> [<i_1>, ..., <i_n>]', quando <A> for um array e <i_1>,
-     ..., <i_n> são inteiros.
-
-     Ela é remanescente de 'apply', excepto o primeiro argumento que é
-     um array ao invés de uma função.
-
- -- Função da class: arrayinfo (<A>)
-     Retorna informações sobre o array <A>.  O argumento <A> pode ser um
-     array declarado, uma array não declarado ( que sofreu um hash), uma
-     função de array, ou uma função que possui subscrito.
-
-     Para arrays declarados, 'arrayinfo' retorna uma lista compreendendo
-     o átomo 'declared', o n;umero de dimensões, e o tamanho de cada
-     dimensão.  Os elementos do array, ambos associados e não
-     associados, são retornados por 'listarray'.
-
-     Para arrays não declarados (arrays que sofreram um hash),
-     'arrayinfo' retorna uma lista compreendendo o átomo 'hashed', o
-     número de subscritos, e os subscritos de de todo elemento que tiver
-     um valor.  Os valores são retornados por meio de 'listarray'.
-
-     Para funções de array, 'arrayinfo' retretorna uma lista
-     compreendendo o átomo 'hashed', o número de subscritos, e quaisquer
-     valores de subscritos para os quais exista valores funcionais
-     armazenados.  Os valores funcionais armazenados são retornados
-     através de 'listarray'.
-
-     Para funções que possuem subscritos, 'arrayinfo' retorna uma lista
-     compreendendo o átomo 'hashed', o número de subscritos, e qualquer
-     valores subscritos para os quais existe uma expressões lambda.  As
-     expressões lambda são retornadas por 'listarray'.
-
-     Examples:
-
-     'arrayinfo' e 'listarray' aplicado a um array declarado.
-
-          (%i1) array (aa, 2, 3);
-          (%o1)                          aa
-          (%i2) aa [2, 3] : %pi;
-          (%o2)                          %pi
-          (%i3) aa [1, 2] : %e;
-          (%o3)                          %e
-          (%i4) arrayinfo (aa);
-          (%o4)                 [declared, 2, [2, 3]]
-          (%i5) listarray (aa);
-          (%o5) [#####, #####, #####, #####, #####, #####, %e, #####,
-                                                  #####, #####, #####, %pi]
-
-     'arrayinfo' e 'listarray' aplicado a um array não declarado (no
-     qual foi aplicado um hash).
-
-          (%i1) bb [FOO] : (a + b)^2;
-                                             2
-          (%o1)                       (b + a)
-          (%i2) bb [BAR] : (c - d)^3;
-                                             3
-          (%o2)                       (c - d)
-          (%i3) arrayinfo (bb);
-          (%o3)               [hashed, 1, [BAR], [FOO]]
-          (%i4) listarray (bb);
-                                        3         2
-          (%o4)                 [(c - d) , (b + a) ]
-
-     'arrayinfo' e 'listarray' aplicado a uma função de array.
-
-          (%i1) cc [x, y] := y / x;
-                                               y
-          (%o1)                      cc     := -
-                                       x, y    x
-          (%i2) cc [u, v];
-                                          v
-          (%o2)                           -
-                                          u
-          (%i3) cc [4, z];
-                                          z
-          (%o3)                           -
-                                          4
-          (%i4) arrayinfo (cc);
-          (%o4)              [hashed, 2, [4, z], [u, v]]
-          (%i5) listarray (cc);
-                                        z  v
-          (%o5)                        [-, -]
-                                        4  u
-
-     'arrayinfo' e 'listarray' aplicadas a funções com subscritos.
-
-          (%i1) dd [x] (y) := y ^ x;
-                                               x
-          (%o1)                     dd (y) := y
-                                      x
-          (%i2) dd [a + b];
-                                              b + a
-          (%o2)                  lambda([y], y     )
-          (%i3) dd [v - u];
-                                              v - u
-          (%o3)                  lambda([y], y     )
-          (%i4) arrayinfo (dd);
-          (%o4)             [hashed, 1, [b + a], [v - u]]
-          (%i5) listarray (dd);
-                                   b + a                v - u
-          (%o5)      [lambda([y], y     ), lambda([y], y     )]
-
- -- Função da class: arraymake (<A>, [<i_1>, ..., <i_n>])
-     Retorna a expressão '<A>[<i_1>, ..., <i_n>]'.  O resultado é uma
-     referência a um array não avaliado.
-
-     'arraymake' é remanicência de 'funmake', excepto o valor retornado
-     é um array de referência não avaliado ao invés de uma chamada de
-     função não avaliada.
-
-     Exemplos:
-
-          (%i1) arraymake (A, [1]);
-          (%o1)                          A
-                                          1
-          (%i2) arraymake (A, [k]);
-          (%o2)                          A
-                                          k
-          (%i3) arraymake (A, [i, j, 3]);
-          (%o3)                       A
-                                       i, j, 3
-          (%i4) array (A, fixnum, 10);
-          (%o4)                           A
-          (%i5) fillarray (A, makelist (i^2, i, 1, 11));
-          (%o5)                           A
-          (%i6) arraymake (A, [5]);
-          (%o6)                          A
-                                          5
-          (%i7) ''%;
-          (%o7)                          36
-          (%i8) L : [a, b, c, d, e];
-          (%o8)                    [a, b, c, d, e]
-          (%i9) arraymake ('L, [n]);
-          (%o9)                          L
-                                          n
-          (%i10) ''%, n = 3;
-          (%o10)                          c
-          (%i11) A2 : make_array (fixnum, 10);
-          (%o11)          {Array:  #(0 0 0 0 0 0 0 0 0 0)}
-          (%i12) fillarray (A2, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o12)          {Array:  #(1 2 3 4 5 6 7 8 9 10)}
-          (%i13) arraymake ('A2, [8]);
-          (%o13)                         A2
-                                           8
-          (%i14) ''%;
-          (%o14)                          9
-
- -- Variável de sistema da class: arrays
-     Valor por omissão: '[]'
-
-     'arrays' é uma lista dos arrays que tiverem sido alocados.  Essa
-     lista compreende arrays declarados através de 'array', arrays
-     desordenados (hashed) construídos através de definição implícita
-     (atribuindo alguma coisa a um elemento de array), e funções de
-     array definidas por meio de ':=' e 'define'.  Arrays definidos por
-     meio de 'make_array' não estão incluídos.
-
-     Veja também 'array', 'arrayapply', 'arrayinfo', 'arraymake',
-     'fillarray', 'listarray', e 'rearray'.
-
-     Exemplos:
-
-          (%i1) array (aa, 5, 7);
-          (%o1)                          aa
-          (%i2) bb [FOO] : (a + b)^2;
-                                             2
-          (%o2)                       (b + a)
-          (%i3) cc [x] := x/100;
-                                             x
-          (%o3)                      cc  := ---
-                                       x    100
-          (%i4) dd : make_array ('any, 7);
-          (%o4)       {Array:  #(NIL NIL NIL NIL NIL NIL NIL)}
-          (%i5) arrays;
-          (%o5)                     [aa, bb, cc]
-
- -- Função da class: bashindices (<expr>)
-     Transforma a expressão <expr> dando a cada somatório e a cada
-     produto um único índice.  Isso dá a 'changevar' grande precisão
-     quando se está trabalhando com somatórios e produtos.  A forma do
-     único índice é 'j<number>'.  A quantidade <number> é determindad
-     por referência a 'gensumnum', que pode ser alterada pelo
-     utilizador.  Por exemplo, 'gensumnum:0$' reseta isso.
-
- -- Função da class: fillarray (<A>, <B>)
-     Preenche o array <A> com <B>, que é uma lista ou um array.
-
-     Se um tipo específico for declarado para <A> no momento de sua
-     criação, <A> somente porde ser preenchido com elementos do tipo
-     especificado; Constitui um erro alguma tentativa feita para copiar
-     um um elemento de um tipo diferente.
-
-     Se as dimensões dos arrays <A> e <B> forem diferents, <A> é
-     preenchido no ordem de maior fileira.  Se não existirem elementos
-     livres em <B> o último elemento é usado para preencher todo o resto
-     de <A>.  Se existirem muitos , esses restantes seram ignorados.
-
-     'fillarray' retorna esse primeiro argumento.
-
-     Exemplos:
-
-     Create an array of 9 elements and fill it from a list.
-
-          (%i1) array (a1, fixnum, 8);
-          (%o1)                          a1
-          (%i2) listarray (a1);
-          (%o2)              [0, 0, 0, 0, 0, 0, 0, 0, 0]
-          (%i3) fillarray (a1, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-          (%o3)                          a1
-          (%i4) listarray (a1);
-          (%o4)              [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-     Quando existirem poucos elementos para preencher o array, o último
-     elemento é repetido.  Quando houverem muitos elementos, os
-     elementos extras são ignorados.
-
-          (%i1) a2 : make_array (fixnum, 8);
-          (%o1)             {Array:  #(0 0 0 0 0 0 0 0)}
-          (%i2) fillarray (a2, [1, 2, 3, 4, 5]);
-          (%o2)             {Array:  #(1 2 3 4 5 5 5 5)}
-          (%i3) fillarray (a2, [4]);
-          (%o3)             {Array:  #(4 4 4 4 4 4 4 4)}
-          (%i4) fillarray (a2, makelist (i, i, 1, 100));
-          (%o4)             {Array:  #(1 2 3 4 5 6 7 8)}
-
-     Arrays multi-dimensionais são preenchidos em ordem de maior
-     fileira.
-
-          (%i1) a3 : make_array (fixnum, 2, 5);
-          (%o1)        {Array:  #2A((0 0 0 0 0) (0 0 0 0 0))}
-          (%i2) fillarray (a3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-          (%o2)        {Array:  #2A((1 2 3 4 5) (6 7 8 9 10))}
-          (%i3) a4 : make_array (fixnum, 5, 2);
-          (%o3)     {Array:  #2A((0 0) (0 0) (0 0) (0 0) (0 0))}
-          (%i4) fillarray (a4, a3);
-          (%o4)     {Array:  #2A((1 2) (3 4) (5 6) (7 8) (9 10))}
-
- -- Função da class: listarray (<A>)
-     Retorna uma lista dos elementos do array <A>.  O argumento <A> pode
-     ser um array declarado, um array não declarado (desordenado -
-     hashed), uma função de array, ou uma função com subscritos.
-
-     Elementos são listados em ordem de linha maior.  Isto é, elementos
-     são ordenados conforme o primeiro índice, en seguida conforme o
-     segundo índice, e assim sucessivamente.  A sequuência de ordenação
-     por meio dos valores dos índices é a mesma ordem estabelecida por
-     meio de 'orderless'.
-
-     Para arrays não declarados , funções de arrays, e funções com
-     subscritos, os elementos correspondem aos valores de índice
-     retornados através de 'arrayinfo'.
-
-     Elemetos não associados de arrays genéricos declarados (isto é, não
-     'fixnum' e não 'flonum') são retornados como '#####'.  Elementos
-     não associados de arrays declarados 'fixnum' ou 'flonum' são
-     retornados como 0 ou 0.0, respectivamente.  Elementos não
-     associados de arrays não declarados, funções de array, e funções
-     subscritas não são retornados.
-
-     Exemplos:
-
-     'listarray' e 'arrayinfo' aplicados a um array declarado.
-
-          (%i1) array (aa, 2, 3);
-          (%o1)                          aa
-          (%i2) aa [2, 3] : %pi;
-          (%o2)                          %pi
-          (%i3) aa [1, 2] : %e;
-          (%o3)                          %e
-          (%i4) listarray (aa);
-          (%o4) [#####, #####, #####, #####, #####, #####, %e, #####,
-                                                  #####, #####, #####, %pi]
-          (%i5) arrayinfo (aa);
-          (%o5)                 [declared, 2, [2, 3]]
-
-     'listarray' e 'arrayinfo' aplicadas a arrays não declarados (hashed
-     - desordenados).
-
-          (%i1) bb [FOO] : (a + b)^2;
-                                             2
-          (%o1)                       (b + a)
-          (%i2) bb [BAR] : (c - d)^3;
-                                             3
-          (%o2)                       (c - d)
-          (%i3) listarray (bb);
-                                        3         2
-          (%o3)                 [(c - d) , (b + a) ]
-          (%i4) arrayinfo (bb);
-          (%o4)               [hashed, 1, [BAR], [FOO]]
-
-     'listarray' e 'arrayinfo' aplicada a uma função de array.
-
-          (%i1) cc [x, y] := y / x;
-                                               y
-          (%o1)                      cc     := -
-                                       x, y    x
-          (%i2) cc [u, v];
-                                          v
-          (%o2)                           -
-                                          u
-          (%i3) cc [4, z];
-                                          z
-          (%o3)                           -
-                                          4
-          (%i4) listarray (cc);
-                                        z  v
-          (%o4)                        [-, -]
-                                        4  u
-          (%i5) arrayinfo (cc);
-          (%o5)              [hashed, 2, [4, z], [u, v]]
-
-     'listarray' e 'arrayinfo' aplicadas a funções com subscritos.
-
-          (%i1) dd [x] (y) := y ^ x;
-                                               x
-          (%o1)                     dd (y) := y
-                                      x
-          (%i2) dd [a + b];
-                                              b + a
-          (%o2)                  lambda([y], y     )
-          (%i3) dd [v - u];
-                                              v - u
-          (%o3)                  lambda([y], y     )
-          (%i4) listarray (dd);
-                                   b + a                v - u
-          (%o4)      [lambda([y], y     ), lambda([y], y     )]
-          (%i5) arrayinfo (dd);
-          (%o5)             [hashed, 1, [b + a], [v - u]]
-
- -- Função da class: make_array (<type>, <dim_1>, ..., <dim_n>)
-     Cria e retorna um array de Lisp.  <type> pode ser 'any', 'flonum',
-     'fixnum', 'hashed' ou 'functional'.  Existem n indices, e o
-     i'enésimo indice está no intervalo de 0 a <dim_i> - 1.
-
-     A vantagem de 'make_array' sobre 'array' é que o valor de retorno
-     não tem um nome, e uma vez que um ponteiro a ele vai, ele irá
-     também.  Por exemplo, se 'y: make_array (...)' então 'y' aponta
-     para um objecto que ocupa espaço, mas depois de 'y: false', 'y' não
-     mais aponta para aquele objecto, então o objecto pode ser
-     descartado.
-
-     Exemplos:
-
-          (%i1) A1 : make_array (fixnum, 10);
-          (%o1)           {Array:  #(0 0 0 0 0 0 0 0 0 0)}
-          (%i2) A1 [8] : 1729;
-          (%o2)                         1729
-          (%i3) A1;
-          (%o3)          {Array:  #(0 0 0 0 0 0 0 0 1729 0)}
-          (%i4) A2 : make_array (flonum, 10);
-          (%o4) {Array:  #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
-          (%i5) A2 [2] : 2.718281828;
-          (%o5)                      2.718281828
-          (%i6) A2;
-          (%o6)
-               {Array:  #(0.0 0.0 2.718281828 0.0 0.0 0.0 0.0 0.0 0.0 0.0)}
-          (%i7) A3 : make_array (any, 10);
-          (%o7) {Array:  #(NIL NIL NIL NIL NIL NIL NIL NIL NIL NIL)}
-          (%i8) A3 [4] : x - y - z;
-          (%o8)                      - z - y + x
-          (%i9) A3;
-          (%o9) {Array:  #(NIL NIL NIL NIL ((MPLUS SIMP) $X ((MTIMES SIMP)\
-           -1 $Y) ((MTIMES SIMP) -1 $Z))
-            NIL NIL NIL NIL NIL)}
-          (%i10) A4 : make_array (fixnum, 2, 3, 5);
-          (%o10) {Array:  #3A(((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0)) ((0 0 \
-          0 0 0) (0 0 0 0 0) (0 0 0 0 0)))}
-          (%i11) fillarray (A4, makelist (i, i, 1, 2*3*5));
-          (%o11) {Array:  #3A(((1 2 3 4 5) (6 7 8 9 10) (11 12 13 14 15))
-              ((16 17 18 19 20) (21 22 23 24 25) (26 27 28 29 30)))}
-          (%i12) A4 [0, 2, 1];
-          (%o12)                         12
-
- -- Função da class: rearray (<A>, <dim_1>, ..., <dim_n>)
-     Altera as dimenções de um array.  O novo array será preenchido com
-     os elementos do antigo em ordem da maior linha.  Se o array antigo
-     era muito pequeno, os elementos restantes serão preenchidos com
-     'false', '0.0' ou '0', dependendo do tipo do array.  O tipo do
-     array não pode ser alterado.
-
- -- Função da class: remarray (<A_1>, ..., <A_n>)
- -- Função da class: remarray (all)
-     Remove arrays e funções associadas a arrays e libera o espaço
-     ocupado.  Os argumentos podem ser arrays declarados, arrays não
-     declarados (dsordenados - hashed), funções de array functions, e
-     funções com subscritos.
-
-     'remarray (all)' remove todos os ítens na lista global 'arrays'.
-
-     Isso pode ser necessário para usar essa função se isso é desejado
-     para redefinir os valores em um array desordenado.
-
-     'remarray' retorna a lista dos arrays removidos.
-
- -- Função da class: subvar (<x>, <i>)
-     Avalia a expressão subscrita '<x>[<i>]'.
-
-     'subvar' avalia seus argumentos.
-
-     'arraymake (<x>, [<i>]' constrói a expressão '<x>[<i>]', mas não a
-     avalia.
-
-     Exemplos:
-
-          (%i1) x : foo $
-          (%i2) i : 3 $
-          (%i3) subvar (x, i);
-          (%o3)                         foo
-                                           3
-          (%i4) foo : [aa, bb, cc, dd, ee]$
-          (%i5) subvar (x, i);
-          (%o5)                          cc
-          (%i6) arraymake (x, [i]);
-          (%o6)                         foo
-                                           3
-          (%i7) ''%;
-          (%o7)                          cc
-
- -- Variável de pção da class: use_fast_arrays
-     - Se 'true' somente dois tipos de arrays são reconhecidos.
-
-     1) O array art-q (t no Lisp Comum) que pode ter muitas dimensões
-     indexadas por inteiros, e pode aceitar qualquer objecto do Lisp ou
-     do Maxima como uma entrada.  Para construir assim um array, insira
-     'a:make_array(any,3,4);' então 'a' terá como valor, um array com
-     doze posições, e o índice é baseado em zero.
-
-     2) O array Hash_table que é o tipo padrão de array criado se um faz
-     'b[x+1]:y^2' (e 'b' não é ainda um array, uma lista, ou uma matriz
-     - se isso ou um desses ocorrer um erro pode ser causado desde 'x+1'
-     não poderá ser um subscrito válido para um array art-q, uma lista
-     ou uma matriz).  Esses índices (também conhecidos como chaves)
-     podem ser quaisquer objectos.  Isso somente pega uma chave por vez
-     a cada vez ('b[x+1,u]:y' ignorará o 'u').  A referência termina em
-     'b[x+1] ==> y^2'.  Certamente a chave poe ser uma lista , e.g.
-     'b[[x+1,u]]:y' poderá ser válido.  Isso é incompatível com os
-     arrays antigos do Maxima, mas poupa recursos.
-
-     Uma vantagem de armazenar os arrays como valores de símbolos é que
-     as convenções usuais sobre variáveis locais de uma função
-     aplicam-se a arrays também.  O tipo Hash_table também usa menos
-     recursos e é mais eficiente que o velho tipo hashar do Maxima.
-     Para obter comportamento consistente em códigos traduzidos e
-     compilados posicione 'translate_fast_arrays' para ser 'true'.
+This is maxima.info, produced by makeinfo version 5.1 from maxima.texi.
 
 
 File: maxima.info,  Node: Matrizes e Álgebra Linear,  Next: Funções Afins,  Prev: Arrays,  Up: Top
 
-25, Matrizes e Álgebra Linear
-*****************************
+25 Matrizes e Álgebra Linear
+****************************
 
 * Menu:
 
-* Introdução a Matrizes e Álgebra Linear::
-* Definições para Matrizes e Álgebra Linear::
+* Introdução a Matrizes e Álgebra Linear::  
+* Definições para Matrizes e Álgebra Linear::  
 
 
 File: maxima.info,  Node: Introdução a Matrizes e Álgebra Linear,  Next: Definições para Matrizes e Álgebra Linear,  Prev: Matrizes e Álgebra Linear,  Up: Matrizes e Álgebra Linear
 
-25.1, Introdução a Matrizes e Álgebra Linear
-============================================
+25.1 Introdução a Matrizes e Álgebra Linear
+===========================================
 
 * Menu:
 
-* Ponto::
-* Vetores::
+* Ponto::                         
+* Vetores::                     
 * auto::
 
 
 File: maxima.info,  Node: Ponto,  Next: Vetores,  Prev: Introdução a Matrizes e Álgebra Linear,  Up: Introdução a Matrizes e Álgebra Linear
 
-25.1.1, Ponto
--------------
+25.1.1 Ponto
+------------
 
 O operador '.' representa multiplicação não comutativa e produto
 escalar.  Quando os operandos são matrizes 1-coluna ou 1-linha 'a' e
@@ -557,8 +55,8 @@ envolvendo '.', a saber 'dot', 'dot0nscsimp', 'dot0simp', 'dot1simp',
 
 File: maxima.info,  Node: Vetores,  Next: auto,  Prev: Ponto,  Up: Introdução a Matrizes e Álgebra Linear
 
-25.1.2, Vetores
----------------
+25.1.2 Vetores
+--------------
 
 'vect' é um pacote de funções para análise vectorial.  'load ("vect")'
 chama esse pacote, e 'demo ("vect")' permite visualizar uma
@@ -582,8 +80,8 @@ operador comutativo.
 
 File: maxima.info,  Node: auto,  Prev: Vetores,  Up: Introdução a Matrizes e Álgebra Linear
 
-25.1.3, auto
-------------
+25.1.3 auto
+-----------
 
 O pacote 'eigen' contém muitas funções devotadas para a computação
 simbólica de autovalores e autovectores.  Maxima chama o pacote
@@ -602,23 +100,22 @@ As funções no pacote 'eigen' são 'innerproduct', 'unitvector',
 
 File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: Introdução a Matrizes e Álgebra Linear,  Up: Matrizes e Álgebra Linear
 
-25.2, Definições para Matrizes e Álgebra Linear
-===============================================
+25.2 Definições para Matrizes e Álgebra Linear
+==============================================
 
- -- Função da class: addcol (<M>, <list_1>, ..., <list_n>)
+ -- Função: addcol (<M>, <list_1>, ..., <list_n>)
      Anexa a(s) coluna(s) dadas por uma ou mais listas (ou matrizes)
      sobre a matriz <M>.
 
- -- Função da class: addrow (<M>, <list_1>, ..., <list_n>)
+ -- Função: addrow (<M>, <list_1>, ..., <list_n>)
      Anexa a(s) linha(s) dadas por uma ou mais listas (ou matrizes)
      sobre a matriz <M>.
 
- -- Função da class: adjoint (<M>)
+ -- Função: adjoint (<M>)
      Retorna a matriz adjunta da matriz <M>.  A matriz adjunta é a
      transposta da matriz dos cofactores de <M>.
 
- -- Função da class: augcoefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>,
-          ..., <x_n>])
+ -- Função: augcoefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
      Retorna a matriz dos coeficientes aumentada para as variáveis
      <x_1>, ..., <x_n> do sistema de equações lineares <eqn_1>, ...,
      <eqn_m>.  Essa é a matriz dos coeficientes com uma coluna anexada
@@ -631,7 +128,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%o2)                  [                 ]
                                  [ a    b      c   ]
 
- -- Função da class: charpoly (<M>, <x>)
+ -- Função: charpoly (<M>, <x>)
      Retorna um polinómio característico para a matriz <M> em relação à
      variável <x>.  Que é, 'determinant (<M> - diagmatrix (length (<M>),
      <x>))'.
@@ -667,8 +164,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                               [x1 = -------, x2 = -------]]
                                                     sqrt(5)       sqrt(5)
 
- -- Função da class: coefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>, ...,
-          <x_n>])
+ -- Função: coefmatrix ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
      Retorna a matriz dos coeficientes para as variáveis <x_1>, ...,
      <x_n> do sistema de equações lineares <eqn_1>, ..., <eqn_m>.
 
@@ -677,12 +173,12 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%o1)                            [          ]
                                            [ a    b   ]
 
- -- Função da class: col (<M>, <i>)
+ -- Função: col (<M>, <i>)
      Reorna a <i>'ésima coluna da matriz <M>.  O valor de retorno é uma
      matriz.
 
- -- Função da class: columnvector (<L>)
- -- Função da class: covect (<L>)
+ -- Função: columnvector (<L>)
+ -- Função: covect (<L>)
      Retorna uma matriz de uma coluna e 'length (<L>)' linhas, contendo
      os elementos da lista <L>.
 
@@ -707,7 +203,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                        [    ]
                                        [ dd ]
 
- -- Função da class: conjugate (<x>)
+ -- Função: conjugate (<x>)
      Retorna o conjugado complexo de <x>.
 
           (%i1) declare ([aa, bb], real, cc, complex, ii, imaginary);
@@ -726,7 +222,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
           (%o5)             conjugate(yy) + conjugate(xx)
 
- -- Função da class: copymatrix (<M>)
+ -- Função: copymatrix (<M>)
      Retorna uma cópia da matriz <M>.  Esse é o único para fazer uma
      copia separada copiando <M> elemento a elemento.
 
@@ -735,7 +231,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      m2' também modifica 'm1 [i,j]'.  criando uma cópia com 'copymatrix'
      e então usando atribução cria uma separada e modificada cópia.
 
- -- Função da class: determinant (<M>)
+ -- Função: determinant (<M>)
      Calcula o determinante de <M> por um método similar à eliminação de
      Gauss.
 
@@ -745,7 +241,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      é chamada quando os comutadores 'ratmx' e 'sparse' são ambos
      'true'.
 
- -- Variável da class: detout
+ -- Variável: detout
      Valor por omissão: 'false'
 
      Quando 'detout' é 'true', o determinante de uma matriz cuja inversa
@@ -772,7 +268,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%o5)                     ------------
                                      a d - b c
 
- -- Função da class: diagmatrix (<n>, <x>)
+ -- Função: diagmatrix (<n>, <x>)
      Retorna uma matriz diagonal de tamanho <n> por <n> com os elementos
      da diagonal todos iguais a <x>.  'diagmatrix (<n>, 1)' retorna uma
      matriz identidade (o mesmo que 'ident (<n>)').
@@ -784,7 +280,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      <x> é uma matriz, isso não é copiado; todos os elementos da
      diagonal referem-se à mesma instância, <x>.
 
- -- Variável da class: doallmxops
+ -- Variável: doallmxops
      Valor por omissão: 'true'
 
      Quando 'doallmxops' é 'true', todas as operações relacionadas a
@@ -792,7 +288,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      comutadores individuais 'dot' governam quais operações são
      executadas.
 
- -- Variável da class: domxexpt
+ -- Variável: domxexpt
      Valor por omissão: 'true'
 
      Quando 'domxexpt' é 'true', uma matriz exponencial, 'exp (<M>)'
@@ -824,20 +320,20 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                             [        b + a         %pi ]
                             [ (1 - c)       (1 - c)    ]
 
- -- Variável de opção da class: domxmxops
+ -- Variável de opção: domxmxops
      Valor por omissão: 'true'
 
      Quando 'domxmxops' é 'true', todas as operações matriz-matriz ou
      matriz-lista são realizadas (mas não operações escalar-matriz); se
      esse comutador é 'false' tais operações não são.
 
- -- Variável de opção da class: domxnctimes
+ -- Variável de opção: domxnctimes
      Valor por omissão: 'false'
 
      Quando 'domxnctimes' é 'true', produtos não comutativos de matrizes
      são realizados.
 
- -- Variável de opção da class: dontfactor
+ -- Variável de opção: dontfactor
      Valor por omissão: '[]'
 
      'dontfactor' pode ser escolhido para uma lista de variáveis em
@@ -847,43 +343,43 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      hierarquía de variável assumida para a forma expresão racional
      canónica (CRE), que essas na lista 'dontfactor'.
 
- -- Variável de opção da class: doscmxops
+ -- Variável de opção: doscmxops
      Valor por omissão: 'false'
 
      Quando 'doscmxops' é 'true', operações escalar-matriz são
      realizadas.
 
- -- Variável de opção da class: doscmxplus
+ -- Variável de opção: doscmxplus
      Valor por omissão: 'false'
 
      Quando 'doscmxplus' é 'true', operações escalar-matriz retornam uma
      matriz resultado.  Esse comutador não é subsomado sob 'doallmxops'.
 
- -- Variável de opção da class: dot0nscsimp
+ -- Variável de opção: dot0nscsimp
      Valor por omissão: 'true'
 
      Quando 'dot0nscsimp' é 'true', um produto não comutativo de zero e
      um termo não escalar é simplificado para um produto comutativo.
 
- -- Variável de opção da class: dot0simp
+ -- Variável de opção: dot0simp
      Valor por omissão: 'true'
 
      Quando 'dot0simp' é 'true', um produto não comutativo de zero e um
      termo escalar é simplificado para um produto não comutativo.
 
- -- Variável de opção da class: dot1simp
+ -- Variável de opção: dot1simp
      Valor por omissão: 'true'
 
      Quando 'dot1simp' é 'true', um produto não comutativo de um e outro
      termo é simplificado para um produto comutativo.
 
- -- Variável de opção da class: dotassoc
+ -- Variável de opção: dotassoc
      Valor por omissão: 'true'
 
      Quando 'dotassoc' é 'true', uma expresão '(A.B).C' simplifica para
      'A.(B.C)'.
 
- -- Variável de opção da class: dotconstrules
+ -- Variável de opção: dotconstrules
      Valor por omissão: 'true'
 
      Quando 'dotconstrules' é 'true', um produto não comutativo de uma
@@ -891,30 +387,30 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      Ativando esse sinalizador efectivamente activamos 'dot0simp',
      'dot0nscsimp', e 'dot1simp' também.
 
- -- Variável de opção da class: dotdistrib
+ -- Variável de opção: dotdistrib
      Valor por omissão: 'false'
 
      Quando 'dotdistrib' é 'true', uma expresão 'A.(B + C)' simplifica
      para 'A.B + A.C'.
 
- -- Variável de opção da class: dotexptsimp
+ -- Variável de opção: dotexptsimp
      Valor por omissão: 'true'
 
      Quando 'dotexptsimp' é 'true', uma expresão 'A.A' simplifica para
      'A^^2'.
 
- -- Variável de opção da class: dotident
+ -- Variável de opção: dotident
      Valor por omissão: 1
 
      'dotident' é o valor retornado por 'X^^0'.
 
- -- Variável de opção da class: dotscrules
+ -- Variável de opção: dotscrules
      Valor por omissão: 'false'
 
      Quando 'dotscrules' é 'true', uma expresão 'A.SC' ou 'SC.A'
      simplifica para 'SC*A' e 'A.(SC*B)' simplifica para 'SC*(A.B)'.
 
- -- Função da class: echelon (<M>)
+ -- Função: echelon (<M>)
      Retorna a forma escalonada da matriz <M>, como produzido através da
      eliminação de Gauss.  A forma escalonada é calculada de <M> por
      operações elementares de linha tais que o primeiro elemento não
@@ -945,8 +441,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                             [ 0   0    1   ----------- ]
                             [              37 aa - 313 ]
 
- -- Função da class: eigenvalues (<M>)
- -- Função da class: eivals (<M>)
+ -- Função: eigenvalues (<M>)
+ -- Função: eivals (<M>)
      Retorna uma lista de duas listas contendo os autovalores da matriz
      <M>.  A primeira sublista do valor de retorno é a lista de
      autovalores da matriz, e a segunda sublista é a lista de
@@ -971,8 +467,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      ainda chamado, 'load ("eigen")' chama-o.  Após ser chamado, todas
      as funções e variáveis no pacote estarão disponíveis.
 
- -- Função da class: eigenvectors (<M>)
- -- Função da class: eivects (<M>)
+ -- Função: eigenvectors (<M>)
+ -- Função: eivects (<M>)
      pegam uma matriz <M> como seu argumento e retorna uma lista de
      listas cuja primeira sublista é a saída de 'eigenvalues' e as
      outras sublistas são os autovectores da matriz correspondente para
@@ -1010,11 +506,11 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      chamada novamente com o sinalizador 'knowneigvals' escolhido para
      'true'.
 
- -- Função da class: ematrix (<m>, <n>, <x>, <i>, <j>)
+ -- Função: ematrix (<m>, <n>, <x>, <i>, <j>)
      Retorna uma matriz <m> por <n>, todos os elementos da qual são zero
      excepto para o elemento '[<i>, <j>]' que é <x>.
 
- -- Função da class: entermatrix (<m>, <n>)
+ -- Função: entermatrix (<m>, <n>)
      Retorna uma matriz <m> por <n>, lendo os elementos interativamente.
 
      Se <n> é igual a <m>, Maxima pergunta pelo tipo de matriz
@@ -1051,9 +547,9 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                           [                            5 ]
                           [    0         0      (b + a)  ]
 
- -- Função da class: genmatrix (<a>, <i_2>, <j_2>, <i_1>, <j_1>)
- -- Função da class: genmatrix (<a>, <i_2>, <j_2>, <i_1>)
- -- Função da class: genmatrix (<a>, <i_2>, <j_2>)
+ -- Função: genmatrix (<a>, <i_2>, <j_2>, <i_1>, <j_1>)
+ -- Função: genmatrix (<a>, <i_2>, <j_2>, <i_1>)
+ -- Função: genmatrix (<a>, <i_2>, <j_2>)
      Retorna uma matriz gerada de <a>, pegando o elemento
      '<a>[<i_1>,<j_1>]' como o elemento do canto superior esquerdo e
      '<a>[<i_2>,<j_2>]' como o elemento do canto inferior directo da
@@ -1111,8 +607,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                   [ B      B     ]
                                   [  2, 1   2, 2 ]
 
- -- Função da class: gramschmidt (<x>)
- -- Função da class: gschmit (<x>)
+ -- Função: gramschmidt (<x>)
+ -- Função: gschmit (<x>)
      Realiza o algoritmo de ortonalização de Gram-Schmidt sobre <x>,
      seja ela uma matriz ou uma lista de listas.  <x> não é modificado
      por 'gramschmidt'.
@@ -1153,11 +649,11 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%i5) [i (y[1], y[2]), i (y[2], y[3]), i (y[3], y[1])];
           (%o5)                       [0, 0, 0]
 
- -- Função da class: ident (<n>)
+ -- Função: ident (<n>)
      Retorna uma matriz identidade <n> por <n>.
 
- -- Função da class: innerproduct (<x>, <y>)
- -- Função da class: inprod (<x>, <y>)
+ -- Função: innerproduct (<x>, <y>)
+ -- Função: inprod (<x>, <y>)
      Retorna o produto interno (também chamado produto escalar ou
      produto do ponto) de <x> e <y>, que são listas de igual
      comprimento, ou ambas matrizes 1-coluna ou 1-linha de igual
@@ -1168,7 +664,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'inprod' é um sinônimo para 'innerproduct'.
 
- -- Função da class: invert (<M>)
+ -- Função: invert (<M>)
      Retorna a inversa da matriz <M>.  A inversa é calculada pelo método
      adjunto.
 
@@ -1197,7 +693,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      Veja '^^' (expoente não comutativo) para outro método de inverter
      uma matriz.
 
- -- Variável de opção da class: lmxchar
+ -- Variável de opção: lmxchar
      Valor por omissão: '['
 
      'lmxchar' é o caractere mostrado como o delimitador esquerdo de uma
@@ -1213,7 +709,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                      |         ]
                                      | g  h  i ]
 
- -- Função da class: matrix (<row_1>, ..., <row_n>)
+ -- Função: matrix (<row_1>, ..., <row_n>)
      Retorna uma matriz retangular que tem as linhas <row_1>, ...,
      <row_n>.  Cada linha é uma lista de expressões.  Todas as linhas
      devem ter o mesmo comprimento.
@@ -1339,16 +835,16 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%o15)                      [      ]
                                       [ 0  1 ]
 
- -- Função da class: matrixmap (<f>, <M>)
+ -- Função: matrixmap (<f>, <M>)
      Retorna uma matriz com elemento 'i,j' igual a '<f>(<M>[i,j])'.
 
      Veja também 'map', 'fullmap', 'fullmapl', e 'apply'.
 
- -- Função da class: matrixp (<expr>)
+ -- Função: matrixp (<expr>)
      Retorna 'true' se <expr> é uma matriz, de outra forma retorna
      'false'.
 
- -- Variável de opção da class: matrix_element_add
+ -- Variável de opção: matrix_element_add
      Valor por omissão: '+'
 
      'matrix_element_add' é a operação invocada em lugar da adição em
@@ -1379,7 +875,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                [  u  v  w   x  y  z ]
                                [ d  e  f   d  e  f  ]
 
- -- Variável de opção da class: matrix_element_mult
+ -- Variável de opção: matrix_element_mult
      Valor por omissão: '*'
 
      'matrix_element_mult' é a operação invocada em lugar da
@@ -1420,7 +916,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                                    [             2          2          2  ]
                                    [ sqrt((f - z)  + (e - y)  + (d - x) ) ]
 
- -- Variável de opção da class: matrix_element_transpose
+ -- Variável de opção: matrix_element_transpose
      Valor por omissão: 'false'
 
      'matrix_element_transpose' é a operação aplicada a cada elemento de
@@ -1468,7 +964,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
           (%o9)                 [                  ]
                                 [ 2 %i + 3    11   ]
 
- -- Função da class: mattrace (<M>)
+ -- Função: mattrace (<M>)
      Retorna o traço (que é, a soma dos elementos sobre a diagonal
      principal) da matriz quadrada <M>.
 
@@ -1477,19 +973,19 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'load ("nchrpl")' chama essa função.
 
- -- Função da class: minor (<M>, <i>, <j>)
+ -- Função: minor (<M>, <i>, <j>)
      Retorna o <i>, <j> menor do elemento localizado na linha <i> coluna
      <j> da matriz <M>.  Que é <M> com linha <i> e coluna <j> ambas
      removidas.
 
- -- Função da class: ncexpt (<a>, <b>)
+ -- Função: ncexpt (<a>, <b>)
      Se uma expressão exponencial não comutativa é muito alta para ser
      mostrada como '<a>^^<b>' aparecerá como 'ncexpt (<a>,<b>)'.
 
      'ncexpt' não é o nome de uma função ou operador; o nome somente
      aparece em saídas, e não é reconhecido em entradas.
 
- -- Função da class: ncharpoly (<M>, <x>)
+ -- Função: ncharpoly (<M>, <x>)
      Retorna o polinómio característico da matriz <M> com relação a <x>.
      Essa é uma alternativa para 'charpoly' do Maxima.
 
@@ -1505,31 +1001,31 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'load ("nchrpl")' loads this file.
 
- -- Função da class: newdet (<M>, <n>)
+ -- Função: newdet (<M>, <n>)
      Calcula o determinante de uma matriz ou array <M> pelo algoritmo da
      árvore menor de Johnson-Gentleman.  O argumento <n> é a ordem; isso
      é opcional se <M> for uma matriz.
 
- -- Declaração da class: nonscalar
+ -- Declaração: nonscalar
      Faz átomos ser comportarem da mesma forma que uma lista ou matriz
      em relação ao operador do ponto.
 
- -- Função da class: nonscalarp (<expr>)
+ -- Função: nonscalarp (<expr>)
      Retorna 'true' se <expr> é um não escalar, i.e., isso contém átomos
      declarados como não escalares, listas, ou matrizes.
 
- -- Função da class: permanent (<M>, <n>)
+ -- Função: permanent (<M>, <n>)
      Calcula o permanente da matriz <M>.  Um permanente é como um
      determinante mas sem mudança de sinal.
 
- -- Função da class: rank (<M>)
+ -- Função: rank (<M>)
      Calcula o posto da matriz <M>.  Que é, a ordem do mais largo
      determinante não singular de <M>.
 
      <rank> pode retornar uma resposta ruim se não puder determinar que
      um elemento da matriz que é equivalente a zero é realmente isso.
 
- -- Variável de opção da class: ratmx
+ -- Variável de opção: ratmx
      Valor por omissão: 'false'
 
      Quando 'ratmx' é 'false', adição, subtração, e multiplicação para
@@ -1543,11 +1039,11 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      expandidos (dependendo da escolha de 'ratfac') o que pode não ser
      desejado sempre.
 
- -- Função da class: row (<M>, <i>)
+ -- Função: row (<M>, <i>)
      retorna a <i>'ésima linha da matriz <M>.  O valor de retorno é uma
      matriz.
 
- -- Variável de opção da class: scalarmatrixp
+ -- Variável de opção: scalarmatrixp
      Valor por omissão: 'true'
 
      Quando 'scalarmatrixp' é 'true', então sempre que uma matriz 1 x 1
@@ -1561,7 +1057,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      Quando 'scalarmatrixp' é 'false', matrizes 1 x 1 não são
      simplificadas para escalares.
 
- -- Função da class: scalefactors (<coordinatetransform>)
+ -- Função: scalefactors (<coordinatetransform>)
      Aqui coordinatetransform avalia para a forma [[expresão1,
      expresão2, ...], indeterminação1, indeterminação2, ...], onde
      indeterminação1, indeterminação2, etc.  são as variáveis de
@@ -1578,15 +1074,15 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      dentro de componentes físicos no sistema de coordenadas corrente ,
      existe uma função com uso da forma
 
- -- Função da class: setelmx (<x>, <i>, <j>, <M>)
+ -- Função: setelmx (<x>, <i>, <j>, <M>)
      Atribue <x> para o (<i>, <j>)'ésimo elemento da matriz <M>, e
      retorna a matriz alterada.
 
      '<M> [<i>, <j>]: <x>' tem o mesmo efeito, mas retorna <x> em lugar
      de <M>.
 
- -- Função da class: similaritytransform (<M>)
- -- Função da class: simtran (<M>)
+ -- Função: similaritytransform (<M>)
+ -- Função: simtran (<M>)
      'similaritytransform' calcula uma transformação homotética da
      matriz 'M'.  Isso retorna uma lista que é a saída do comando
      'uniteigenvectors'.  Em adição se o sinalizador 'nondiagonalizable'
@@ -1610,21 +1106,20 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'simtran' é um sinônimo para 'similaritytransform'.
 
- -- Variável de opção da class: sparse
+ -- Variável de opção: sparse
      Valor por omissão: 'false'
 
      Quando 'sparse' é 'true', e se 'ratmx' é 'true', então
      'determinant' usará rotinas especiais para calcular determinantes
      esparsos.
 
- -- Função da class: submatrix (<i_1>, ..., <i_m>, <M>, <j_1>, ...,
-          <j_n>)
- -- Função da class: submatrix (<i_1>, ..., <i_m>, <M>)
- -- Função da class: submatrix (<M>, <j_1>, ..., <j_n>)
+ -- Função: submatrix (<i_1>, ..., <i_m>, <M>, <j_1>, ..., <j_n>)
+ -- Função: submatrix (<i_1>, ..., <i_m>, <M>)
+ -- Função: submatrix (<M>, <j_1>, ..., <j_n>)
      Retorna uma nova matriz formada pela matrix <M> com linhas <i_1>,
      ..., <i_m> excluídas, e colunas <j_1>, ..., <j_n> excluídas.
 
- -- Função da class: transpose (<M>)
+ -- Função: transpose (<M>)
      Retorna a transposta de <M>.
 
      Se <M> é uma matriz, o valor de retorno é outra matriz <N> tal que
@@ -1636,7 +1131,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
      De outra forma <M> é um símbolo, e o valor de retorno é uma
      expressão substantiva ''transpose (<M>)'.
 
- -- Função da class: triangularize (<M>)
+ -- Função: triangularize (<M>)
      Retorna a maior forma triangular da matriz 'M', como produzido
      através da eliminação de Gauss.  O valor de retorno é o mesmo que
      'echelon', excepto que o o coeficiente lider não nulo em cada linha
@@ -1658,8 +1153,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
                        [                                     ]
                        [  0    0    626 - 74 aa  238 - 74 bb ]
 
- -- Função da class: uniteigenvectors (<M>)
- -- Função da class: ueivects (<M>)
+ -- Função: uniteigenvectors (<M>)
+ -- Função: ueivects (<M>)
      Calcula autovectores unitários da matriz <M>.  O valor de retorno é
      uma lista de listas, a primeiro sublista é a saída do comando
      'eigenvalues', e as outras sublistas são os autovectores unitários
@@ -1686,8 +1181,8 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'ueivects' é um sinônimo para 'uniteigenvectors'.
 
- -- Função da class: unitvector (<x>)
- -- Função da class: uvect (<x>)
+ -- Função: unitvector (<x>)
+ -- Função: uvect (<x>)
      Retorna <x>/norm(<x>); isso é um vector unitário na mesma direção
      que <x>.
 
@@ -1695,7 +1190,7 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      'uvect' é um sinônimo para 'unitvector'.
 
- -- Função da class: vectorsimp (<expr>)
+ -- Função: vectorsimp (<expr>)
      Aplica simplificações e expansões conforme os seguintes
      sinalizadores globais:
 
@@ -1727,18 +1222,18 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
      Esses sinalizadores foram todos declarados 'evflag'.
 
- -- Variável de opção da class: vect_cross
+ -- Variável de opção: vect_cross
      Valor por omissão: 'false'
 
      Quando 'vect_cross' é 'true', isso permite DIFF(X~Y,T) trabalhar
      onde ~ é definido em SHARE;VECT (onde VECT_CROSS é escolhido para
      'true', de qualqeur modo.)
 
- -- Função da class: zeromatrix (<m>, <n>)
+ -- Função: zeromatrix (<m>, <n>)
      Retorna um matriz <m> por <n>, com todos os elementos sendo zero.
 
- -- Símbolo especial da class: [
- -- Símbolo especial da class: ]
+ -- Símbolo especial: [
+ -- Símbolo especial: ]
      '[' e ']' marcam o omeço e o fim, respectivamente, de uma lista.
 
      '[' e ']' também envolvem os subscritos de uma lista, array, array
@@ -1773,21 +1268,21 @@ File: maxima.info,  Node: Definições para Matrizes e Álgebra Linear,  Prev: I
 
 File: maxima.info,  Node: Funções Afins,  Next: itensor,  Prev: Matrizes e Álgebra Linear,  Up: Top
 
-26, Funções Afins
-*****************
+26 Funções Afins
+****************
 
 * Menu:
 
-* Definições para Funções Afins::
+* Definições para Funções Afins::      
 
 
 File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Afins,  Up: Funções Afins
 
-26.1, Definições para Funções Afins
-===================================
+26.1 Definições para Funções Afins
+==================================
 
- -- Função da class: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>,
-          ..., <x_n>])
+ -- Função: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
+          <x_n>])
      Resolve equações lineares simultâneas <expr_1>, ..., <expr_m> para
      as variáveis <x_1>, ..., <x_n>.  Cada <expr_i> pode ser uma equação
      ou uma expressão geral; se for dada como uma expressão geral, será
@@ -1802,7 +1297,7 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: grobner_basis ([<expr_1>, ..., <expr_m>])
+ -- Função: grobner_basis ([<expr_1>, ..., <expr_m>])
      Retorna uma base de Groebner para as equações <expr_1>, ...,
      <expr_m>.  A funçã 'polysimp' pode então ser usada para simplificar
      outras funções relativas às equações.
@@ -1817,9 +1312,8 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: set_up_dot_simplifications (<eqns>,
-          <check_through_degree>)
- -- Função da class: set_up_dot_simplifications (<eqns>)
+ -- Função: set_up_dot_simplifications (<eqns>, <check_through_degree>)
+ -- Função: set_up_dot_simplifications (<eqns>)
      As <eqns> são equações polinomiais em variáveis não comutativas.  O
      valor de 'current_variables' é uma lista de variáveis usadas para
      calcular graus.  As equações podem ser homogéneas, de forma a que o
@@ -1836,26 +1330,26 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: declare_weights (<x_1>, <w_1>, ..., <x_n>, <w_n>)
+ -- Função: declare_weights (<x_1>, <w_1>, ..., <x_n>, <w_n>)
      Atribui pesos <w_1>, ..., <w_n> to <x_1>, ..., <x_n>,
      respectivamente.  Esses são pesos usados em cálculos 'nc_degree'.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: nc_degree (<p>)
+ -- Função: nc_degree (<p>)
      Retorna o grau de um polinómio não comutativo <p>.  Veja
      'declare_weights'.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: dotsimp (<f>)
+ -- Função: dotsimp (<f>)
      Retorna 0 se e somente se <f> for um ideal gerado pelas equações,
      i.e., se e somente se <f> for uma combinação polinomial dos
      elementos das equações.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
+ -- Função: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
      Se 'set_up_dot_simplifications' tiver sido feito previamente, ache
      o polinómio central nas variáveis <x_1>, ..., <x_n> no grau dado,
      <n>.
@@ -1867,7 +1361,7 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: check_overlaps (<n>, <add_to_simps>)
+ -- Função: check_overlaps (<n>, <add_to_simps>)
      Verifica as sobreposições através do grau <n>, garantindo que tem
      regras de simplificaçõ suficientes em cada grau, para 'dotsimp'
      trabalhar correctamente.  Esse processo pode ser mais rápido se
@@ -1879,20 +1373,20 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: mono ([<x_1>, ..., <x_n>], <n>)
+ -- Função: mono ([<x_1>, ..., <x_n>], <n>)
      Retorna a lista de monómios independentes relativamente à
      simplificação actual do grau <n> nas variáveis <x_1>, ..., <x_n>.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: monomial_dimensions (<n>)
+ -- Função: monomial_dimensions (<n>)
      Calcula a série de Hilbert através do grau <n> para a algebra
      corrente.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: extract_linear_equations ([<p_1>, ..., <p_n>],
-          [<m_1>, ..., <m_n>])
+ -- Função: extract_linear_equations ([<p_1>, ..., <p_n>], [<m_1>, ...,
+          <m_n>])
 
      Faz uma lista dos coeficientes dos polinómios não comutativos
      <p_1>, ..., <p_n> dos monomios não comutatvos <m_1>, ..., <m_n>.
@@ -1901,15 +1395,15 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Função da class: list_nc_monomials ([<p_1>, ..., <p_n>])
- -- Função da class: list_nc_monomials (<p>)
+ -- Função: list_nc_monomials ([<p_1>, ..., <p_n>])
+ -- Função: list_nc_monomials (<p>)
 
      Retorna uma lista de monómios não comutativos que ocorrem em um
      polinómio <p> ou em uma lista de polinómios <p_1>, ..., <p_n>.
 
      Para usar essa função escreva primeiramente 'load(affine)'.
 
- -- Variável de opção da class: all_dotsimp_denoms
+ -- Variável de opção: all_dotsimp_denoms
      Valor por omissão: 'false'
 
      Quando 'all_dotsimp_denoms' é uma lista, os denominadores
@@ -1922,8 +1416,8 @@ File: maxima.info,  Node: Definições para Funções Afins,  Prev: Funções Af
 
 File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Funções Afins,  Up: Top
 
-27, itensor
-***********
+27 itensor
+**********
 
 * Menu:
 
@@ -1933,8 +1427,8 @@ File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Funções Afins,  Up: 
 
 File: maxima.info,  Node: Introdução a itensor,  Next: Definições para itensor,  Prev: itensor,  Up: itensor
 
-27.1, Introdução a itensor
-==========================
+27.1 Introdução a itensor
+=========================
 
 Maxima implementa a manipulação de tensores simbólicos d dois tipos
 distintos: manipulação de componentes de tensores (pacote 'ctensor') e
@@ -1986,8 +1480,8 @@ casos o utilizador possa encontrar dificuldade com a especificação da
 métrica, definição de função, e a avaliação de objectos "indexados"
 diferenciados.
 
-27.1.1, Nova notação d tensores
--------------------------------
+27.1.1 Nova notação d tensores
+------------------------------
 
 Até agora, o pacote 'itensor' no Maxima tinha usado uma notação que
 algumas vezes conduzia a ordenação incorrecta de índices.  Considere o
@@ -2039,8 +1533,8 @@ considerável chance que "novos" tensores irão falhar em interoperar com
 certas funções ou recursos.  Essas falhas serão corrigidas à medida que
 forem encontradas...  até então, seja cuidadoso!
 
-27.1.2, Manipulação de tensores indiciais
------------------------------------------
+27.1.2 Manipulação de tensores indiciais
+----------------------------------------
 
 o pacote de manipulação de tensores indiciais pode ser chamado através
 de 'load(itensor)'.  Demonstações estão também disponíveis: tente
@@ -2172,13 +1666,13 @@ especificando o nome da métrica, e executando alguns cálculos simples.
 
 File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itensor,  Up: itensor
 
-27.2, Definições para itensor
-=============================
+27.2 Definições para itensor
+============================
 
-27.2.1, Gerenciando objectos indexados
---------------------------------------
+27.2.1 Gerenciando objectos indexados
+-------------------------------------
 
- -- Função da class: entertensor (<nome>)
+ -- Função: entertensor (<nome>)
 
      É uma função que, através da linha de comando, permite criar um
      objecto indexado chamado <nome> com qualquer número de índices de
@@ -2186,7 +1680,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      índices (às quais podem ser nulas) são entradas aceitáveis (veja o
      exemplo sob 'covdiff').
 
- -- Função da class: changename (<antigo>, <novo>, <expr>)
+ -- Função: changename (<antigo>, <novo>, <expr>)
 
      Irá mudar o nome de todos os objectos indexados chamados <antigo>
      para <novo> em <expr>.  <antigo> pode ser ou um símbolo ou uma
@@ -2194,7 +1688,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      objectos indexados chamados <nome> com índice covariante <m> e
      índice contravariante <n> serão renomeados para <novo>.
 
- -- Função da class: listoftens
+ -- Função: listoftens
 
      Lista todos os tensores em uma expressão tensorial, incluindo seus
      índices.  E.g.,
@@ -2209,8 +1703,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t7)                        [a   , b   , c   , d]
                                          i j   u,v   x y
 
-
- -- Função da class: ishow (<expr>)
+ -- Função: ishow (<expr>)
 
      Mostra <expr> com os objectos indexados tendo seus índices
      covariantes como subscritos e índices contravariantes como
@@ -2218,7 +1711,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      subscritos, separados dos índices covariantes por uma vírgula (veja
      os exemplos através desse documento).
 
- -- Função da class: indices (<expr>)
+ -- Função: indices (<expr>)
 
      Retorna uma lista de dois elementos.  O primeiro é uma lista de
      índices livres em <expr> (aqueles que ocorrem somente uma vez).  O
@@ -2235,15 +1728,14 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%i3) indices(%);
           (%o3)                 [[l, p, i, n, o, q, r], [k, j, m]]
 
-
      Um produto de tensores contendo o mesmo índice mais que duas vezes
      é sintaticamente ilegal.  'indices' tenta lidar com essas
      expressões de uma forma razoável; todavia, quando 'indices' é
      chamada para operar sobre tal uma expressão ilegal, seu
      comportamento pode ser considerado indefinido.
 
- -- Função da class: rename (<expr>)
- -- Função da class: rename (<expr>, <contador>)
+ -- Função: rename (<expr>)
+ -- Função: rename (<expr>, <contador>)
 
      Retorna uma expressão equivalente para <expr> mas com índices que
      ocorrem exactamente duas vezes em cada termo alterado do conjunto
@@ -2304,7 +1796,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                      - g      g      ichr2      ichr2      ichr2     ichr2
                                           %1 %3      %2 %6      %4 r      %5 %7
 
- -- Variável de Opção da class: flipflag
+ -- Variável de Opção: flipflag
 
      Valor por omissão: 'false'.  Se 'false' então os índices irão ser
      renomeados conforme a ordem dos índices contravariantes, de outra
@@ -2317,8 +1809,8 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      '%1', o seguinte para '%2', etc.  Então a ordenação ocorre após a
      ocorrência do 'rename' (veja o exemplo sob 'rename').
 
- -- Função da class: defcon (<tensor_1>)
- -- Função da class: defcon (<tensor_1>, <tensor_2>, <tensor_3>)
+ -- Função: defcon (<tensor_1>)
+ -- Função: defcon (<tensor_1>, <tensor_2>, <tensor_3>)
      Dado <tensor_1> a propriedade que a contração de um produto do
      <tensor_1> e do <tensor_2> resulta em <tensor_3> com os índices
      apropriados.  Se somente um argumento, <tensor_1>, for dado, então
@@ -2334,13 +1826,13 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      é uma lista de objectos indexados que tenham fornecido propriedades
      de contrações com 'defcon'.
 
- -- Função da class: remcon (<tensor_1>, ..., <tensor_n>)
- -- Função da class: remcon (all)
+ -- Função: remcon (<tensor_1>, ..., <tensor_n>)
+ -- Função: remcon (all)
      Remove todas as propriedades de contração de <tensor_1>, ...,
      <tensor_n>).  'remcon(all)' remove todas as propriedades de
      contração de todos os objectos indexados.
 
- -- Função da class: contract (<expr>)
+ -- Função: contract (<expr>)
 
      Realiza contrações tensoriais em <expr> a qual pode ser qualquer
      combinação de adições e produtos.  Essa função usa a informação
@@ -2350,13 +1842,13 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      nos denominadores dos termos.  O comutador 'gcd' pode ser 'false'
      se cancelamentos de máximo divisor comum forem desnecessários.
 
- -- Função da class: indexed_tensor (<tensor>)
+ -- Função: indexed_tensor (<tensor>)
 
      Deve ser executada antes de atribuir componentes para um <tensor>
      para o qual um valor interno já existe como com 'ichr1', 'ichr2',
      'icurvature'.  Veja o exemplo sob 'icurvature'.
 
- -- Função da class: components (<tensor>, <expr>)
+ -- Função: components (<tensor>, <expr>)
 
      Permite que se atribua um valor indicial a uma expressão <expr>
      dando os valores das componentes do <tensor>.  Esses são
@@ -2391,7 +1883,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                                 i  j
           (%t3)                                e  p
 
-
      2) Como uma matriz:
 
 
@@ -2404,7 +1895,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%o8)                                  1
           (%i9) g([4,4],[]);
           (%o9)                                 - 1
-
 
      3) Como uma função.  Pode usar uma função Maxima para especificar
      as componentes de um tensor baseado nesses índices.  Por exemplo,
@@ -2424,7 +1914,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                                k
           (%t6)                               g
                                                i j,l
-
 
      4) Usando a compatibilidade dos modelos de coincidência do Maxima,
      especificamente os comandos 'defrule' e 'applyb1':
@@ -2450,13 +1939,12 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                                    %1  %2  %3 n
 
 
-
- -- Função da class: remcomps (<tensor>)
+ -- Função: remcomps (<tensor>)
 
      Desassocia todos os valores de <tensor> que foram atribuídos com a
      função 'components'.
 
- -- Função da class: showcomps (<tensor>)
+ -- Função: showcomps (<tensor>)
 
      Mostra atribuições de componentes de um tensor, feitas usando o
      comando 'components'.  Essa função pode ser particularmente útil
@@ -2497,11 +1985,10 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                             [                                         r     ]
           (%o5)                                false
 
-
      O comando 'showcomps' pode também mostrar componentes de um tensor
      de categoria maior que 2.
 
- -- Função da class: idummy ()
+ -- Função: idummy ()
 
      Incrementos 'icounter' e retorno como seu valor um índice da forma
      '%n' onde n é um inteiro positivo.  Isso garante que índices que
@@ -2509,20 +1996,20 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      expressões não irão conflitar com índices que já estiverem sendo
      usados (veja o exemplo sob 'indices').
 
- -- Variável de opção da class: idummyx
+ -- Variável de opção: idummyx
      Valor por omissão: '%'
 
      É o prefixo para índices que ocorrem exactamente duas vezes (veja o
      exemplo sob índices 'indices').
 
- -- Variável de Opção da class: icounter
+ -- Variável de Opção: icounter
      Valor por omissão: '1'
 
      Determina o sufixo numérico a ser usado na geração do próximo
      índice que ocorre exactamente duas vezes no pacote tensor.  O
      prefixo é determinado através da opção 'idummy' (padrão: '%').
 
- -- Função da class: kdelta (<L1>, <L2>)
+ -- Função: kdelta (<L1>, <L2>)
      é a função delta generalizada de Kronecker definida no pacote
      'itensor' com <L1> a lista de índices covariantes e <L2> a lista de
      índices contravariantes.  'kdelta([i],[j])' retorna o delta de
@@ -2538,7 +2025,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      programação e não significa implicar que 'kdelta([i,j],[])' seja um
      objecto tensorial válido.
 
- -- Função da class: kdels (<L1>, <L2>)
+ -- Função: kdels (<L1>, <L2>)
 
      Delta de Kronecker simetrizado, usado em alguns cálculos.  Por
      exemplo:
@@ -2559,14 +2046,13 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t4)                  kdelta  kdelta  + kdelta  kdelta
                                        a       b         a       b
 
-
- -- Função da class: levi_civita (<L>)
+ -- Função: levi_civita (<L>)
      é o tensor de permutação (ou de Levi-Civita) que retorna 1 se a
      lista <L> consistir de uma permutação par de inteiros, -1 se isso
      consistir de uma permutação ímpar, e 0 se alguns índices em <L>
      forem repetidos.
 
- -- Função da class: lc2kdt (<expr>)
+ -- Função: lc2kdt (<expr>)
      Simplifica expressões contendo os símbolos de Levi-Civita,
      convertendo esses para expressões delta de Kronecker quando
      possível.  A principal diferença entre essa função e simplesmente
@@ -2605,7 +2091,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t6)                           a  - a kdelta
                                            l           l
 
-
      A função 'lc2kdt' algumas vezes faz uso de tensores métricos.  Se o
      tensor métrico não tiver sido definido previamente com 'imetric',
      isso resulta em um erro.
@@ -2633,8 +2118,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                             l i      l i
           (%t11)                           a    - a g
 
-
- -- Função da class: lc_l
+ -- Função: lc_l
 
      Regra de simplificação usada para expressões contendo símbolos não
      avaliados de Levi-Civita ('levi_civita').  Juntamente com 'lc_u',
@@ -2657,8 +2141,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%i5) ishow(canform(contract(expand(applyb1(el2,lc_l,lc_u)))))$
           (%t5)                                  0
 
-
- -- Função da class: lc_u
+ -- Função: lc_u
 
      Regra de simplificação usada para expressões contendo símbolos não
      avaliados de Levi-Civita ('levi_civita').  Juntamente com 'lc_u',
@@ -2666,7 +2149,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      eficientemente que a avaliação de 'levi_civita'.  Para detalhes,
      veja 'lc_l'.
 
- -- Função da class: canten (<expr>)
+ -- Função: canten (<expr>)
      Simplifica <expr> por renomeação (veja 'rename') e permutando
      índices que ocorrem exactamente duas vezes.  'rename' é restrito a
      adições de produto de tensores nos quais nenhum índice derivativo
@@ -2679,13 +2162,13 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      simétrica em seus índices.  Por essa razão, 'canten' retorna um
      erro se 'allsym' não for posicionada em 'true'.
 
- -- Função da class: concan (<expr>)
+ -- Função: concan (<expr>)
      Similar a 'canten' mas também executa contração de índices.
 
-27.2.2, Simetrias de tensores
------------------------------
+27.2.2 Simetrias de tensores
+----------------------------
 
- -- Variável de Opção da class: allsym
+ -- Variável de Opção: allsym
 
      Valor por omissão: 'false'.  Se 'true' então todos os objectos
      indexados são assumidos simétricos em todos os seus índices
@@ -2694,8 +2177,8 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      são sempre tomados para serem simétricos a menos que 'iframe_flag'
      seja escolhida para 'true'.
 
- -- Função da class: decsym (<tensor>, <m>, <n>, [<cov_1>, <cov_2>,
-          ...], [<contr_1>, <contr_2>, ...])
+ -- Função: decsym (<tensor>, <m>, <n>, [<cov_1>, <cov_2>, ...],
+          [<contr_1>, <contr_2>, ...])
 
      Declara propriedades de simetria para <tensor> de covariante <m> e
      <n> índices contravariantes.  As <cov_i> e <contr_i> são
@@ -2743,12 +2226,11 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%i12) dispsym(a,3,0);
           (%o12)                     [[cyc, [[1, 2, 3]], []]]
 
-
- -- Função da class: remsym (<tensor>, <m>, <n>)
+ -- Função: remsym (<tensor>, <m>, <n>)
      Remove todas as propriedades de simetria de <tensor> que tem <m>
      índices covariantes e <n> índices contravariantes.
 
- -- Função da class: canform (<expr>)
+ -- Função: canform (<expr>)
      Simplifica <expr> através de mudança de nome de índices que ocorrem
      exactamente duas vezes e reordenação de todos os índices como
      ditados pelas condições de simetria impostas sobre eles.  Se
@@ -2764,10 +2246,10 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      para sua forma mais simples embora retorne sempre um resultado
      matemáticamente correcto.
 
-27.2.3, Cálculo de tensores indiciais
--------------------------------------
+27.2.3 Cálculo de tensores indiciais
+------------------------------------
 
- -- Função da class: diff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
+ -- Função: diff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
 
      É a função usual de diferenciação do Maxima que tem sido expandida
      nessas habilidades para 'itensor'.  'diff' toma a derivada de
@@ -2781,7 +2263,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      diferenciação.  Isso permite que um array de nomes de coordenadas
      ou nomes subscritos como 'x[1]', 'x[2]', ...  sejam usados.
 
- -- Função da class: idiff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
+ -- Função: idiff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
      Diferenciação indicial.  A menos que 'diff', que diferencia com
      relação a uma variável independente, 'idiff' possa ser usada para
      diferenciar com relação a uma coordenada.  Para um objecto
@@ -2795,7 +2277,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      '2*determinant(g)*ichr2([%i,k],[%i])' onde o índice que ocorre
      exactamente duas vezes '%i' é escolhido apropriadamente.
 
- -- Função da class: liediff (<v>, <ten>)
+ -- Função: liediff (<v>, <ten>)
 
      Calcula a derivada de Lie da expressão tensorial <ten> com relação
      ao campo vectorial <v>.  <ten> pode ser qualquer expressão
@@ -2814,13 +2296,12 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                       + (v   b      - b   v    + v   b   ) a
                                               ,%1 l    ,l  ,%1    ,l  ,%1   i j
 
-
- -- Função da class: rediff (<ten>)
+ -- Função: rediff (<ten>)
 
      Avalia todas as ocorrências do comando 'idiff' na expressão
      tensorial <ten>.
 
- -- Função da class: undiff (<expr>)
+ -- Função: undiff (<expr>)
 
      Retorna uma expressão equivalente a <expr> mas com todas as
      derivadas de objectos indexados substituídas pela forma substantiva
@@ -2830,7 +2311,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      com alguma definição de função resultando em <expr> e então
      concluir a diferenciação através de digamos 'ev(<expr>, idiff)'.
 
- -- Função da class: evundiff (<expr>)
+ -- Função: evundiff (<expr>)
 
      Equivalente à execução de 'undiff', seguida por 'ev' e 'rediff'.
 
@@ -2885,15 +2366,15 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                 + -----------------------------------
                                                    2
 
- -- Função da class: flush (<expr>, <tensor_1>, <tensor_2>, ...)
+ -- Função: flush (<expr>, <tensor_1>, <tensor_2>, ...)
      Escolhe para zero, em <expr>, todas as ocorrências de <tensor_i>
      que não tiverem índices derivativos.
 
- -- Função da class: flushd (<expr>, <tensor_1>, <tensor_2>, ...)
+ -- Função: flushd (<expr>, <tensor_1>, <tensor_2>, ...)
      Escolhe para zero, em <expr>, todas as ocorrências de <tensor_i>
      que tiverem índices derivativos.
 
- -- Função da class: flushnd (<expr>, <tensor>, <n>)
+ -- Função: flushnd (<expr>, <tensor>, <n>)
      Escolhe para zero, em <expr>, todas as ocorrências do objecto
      diferenciado <tensor> que tem <n> ou mais índices derivativos como
      demonstra o seguinte exemplo.
@@ -2909,7 +2390,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t3)                               a
                                                i,k r
 
- -- Função da class: coord (<tensor_1>, <tensor_2>, ...)
+ -- Função: coord (<tensor_1>, <tensor_2>, ...)
 
      Dados os <tensor_i> a propriedade de diferenciação da coordenada
      que a derivada do vector contravariante cujo nome é um dos
@@ -2918,20 +2399,20 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      'kdelta([i],[j])'.  'coord' que é uma lista de todos os objectos
      indexados tendo essa propriedade.
 
- -- Função da class: remcoord (<tensor_1>, <tensor_2>, ...)
- -- Função da class: remcoord (all)
+ -- Função: remcoord (<tensor_1>, <tensor_2>, ...)
+ -- Função: remcoord (all)
 
      Remove a propriedade de coordenada de diferenciação dos 'tensor_i'
      que foram estabelecidos através da função 'coord'.  'remcoord(all)'
      remove essa propriedade de todos os objectos indexados.
 
- -- Função da class: makebox (<expr>)
+ -- Função: makebox (<expr>)
      Mostra <expr> da mesma maneira que 'show'; todavia, qualquer tensor
      d'Alembertiano ocorrendo em <expr> será indicado usando o símbolo
      '[]'.  Por exemplo, '[]p([m],[n])' representa
      'g([],[i,j])*p([m],[n],i,j)'.
 
- -- Função da class: conmetderiv (<expr>, <tensor>)
+ -- Função: conmetderiv (<expr>, <tensor>)
 
      Simplifica expressões contendo derivadas comuns de ambas as formas
      covariantes e contravariantes do tensor métrico (a restrição
@@ -2951,8 +2432,8 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t3)                 - g     ichr2     - g     ichr2
                                              %1 c              %1 c
 
- -- Função da class: simpmetderiv (<expr>)
- -- Função da class: simpmetderiv (<expr>[, <stop>])
+ -- Função: simpmetderiv (<expr>)
+ -- Função: simpmetderiv (<expr>[, <stop>])
 
      Simplifica expressões contendo produtos de derivadas de tensores
      métricos.  Especificamente, 'simpmetderiv' reconhece duas
@@ -2962,7 +2443,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
              ab        ab           ab                 a
             g   g   + g   g     = (g   g  )   = (kdelta )   = 0
              ,d  bc        bc,d         bc ,d          c ,d
-
 
      consequêntemente
 
@@ -2977,7 +2457,6 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
             ab          ab
            g   g     = g   g
             ,j  ab,i    ,i  ab,j
-
 
      que seguem de simetrias de símbolos de Christoffel.
 
@@ -3029,20 +2508,19 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%t10)                           - g    g
                                               ,e   c b,d
 
-
      Veja também 'weyl.dem' para um exemplo que usa 'simpmetderiv' e
      'conmetderiv' juntos para simplificar contrações do tensor de Weyl.
 
- -- Função da class: flush1deriv (<expr>, <tensor>)
+ -- Função: flush1deriv (<expr>, <tensor>)
 
      Escolhe para zero, em 'expr', todas as ocorrências de 'tensor' que
      possuem exactamente um índice derivativo.
 
-27.2.4, Tensores em espaços curvos
-----------------------------------
+27.2.4 Tensores em espaços curvos
+---------------------------------
 
- -- Função da class: imetric (<g>)
- -- Variável de sistema da class: imetric
+ -- Função: imetric (<g>)
+ -- Variável de sistema: imetric
 
      Especifica a métrica através de atribuição à variável 'imetric:<g>'
      adicionalmente, as propriedades de contração da métrica <g> são
@@ -3051,12 +2529,12 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      (desassociada por padrão), é associada à métrica, atribuida pelo
      comando 'imetric(<g>)'.
 
- -- Função da class: idim (<n>)
+ -- Função: idim (<n>)
      Escolhe as dimensões da métrica.  Também inicializa as propriedades
      de antisimetria dos símbolos de Levi-Civita para as dimensões
      dadas.
 
- -- Função da class: ichr1 ([<i>, <j>, <k>])
+ -- Função: ichr1 ([<i>, <j>, <k>])
      Retorna o símbolo de Christoffel de primeiro tipo via definição
                  (g      + g      - g     )/2 .
                    ik,j     jk,i     ij,k
@@ -3064,14 +2542,14 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
      particular, à variável 'imetric' deve ser atribuída um nome como no
      exemplo sob 'chr2'.
 
- -- Função da class: ichr2 ([<i>, <j>], [<k>])
+ -- Função: ichr2 ([<i>, <j>], [<k>])
      Retorna o símbolo de Christoffel de segundo tipo definido pela
      relação
                                  ks
              ichr2([i,j],[k]) = g    (g      + g      - g     )/2
                                        is,j     js,i     ij,s
 
- -- Função da class: icurvature ([<i>, <j>, <k>], [<h>])
+ -- Função: icurvature ([<i>, <j>, <k>], [<h>])
      Retorna o tensor da curvatura de Riemann em termos de símbolos de
      Christoffel de segundo tipo ('ichr2').  A seguinte notação é usada:
                          h             h            h         %1         h
@@ -3081,7 +2559,7 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
                                   + ichr2      ichr2
                                          %1 k       i j
 
- -- Função da class: covdiff (<expr>, <v_1>, <v_2>, ...)
+ -- Função: covdiff (<expr>, <v_1>, <v_2>, ...)
      Retorna a derivada da covariante de <expr> com relação às variáveis
      <v_i> em termos de símbolos de Christoffel de segundo tipo
      ('ichr2').  Com o objectivo de avaliar esses, se pode usar
@@ -3122,12 +2600,12 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
              2     i j,s
           (%i6)
 
- -- Função da class: lorentz_gauge (<expr>)
+ -- Função: lorentz_gauge (<expr>)
      Impõe a condição de Lorentz através da substituição de 0 para todos
      os objectos indexados em <expr> que possui um índice de derivada
      idêntico ao índice contravariante.
 
- -- Função da class: igeodesic_coords (<expr>, <nome>)
+ -- Função: igeodesic_coords (<expr>, <nome>)
 
      Faz com que símbolos de Christoffel não diferenciados e a primeira
      derivada do tensor métrico tendam para zero em <expr>.  O <nome> na
@@ -3161,9 +2639,8 @@ File: maxima.info,  Node: Definições para itensor,  Prev: Introdução a itens
           (%i5) canform(%);
           (%o5)                                  0
 
-
-27.2.5, Referenciais móveis
----------------------------
+27.2.5 Referenciais móveis
+--------------------------
 
 Maxima actualmente tem a habilidade de executar cálculos usando
 referenciais móveis.  Essas podem ser referenciais ortonormais (tetrads,
@@ -3222,7 +2699,6 @@ conecção ('icc1' e 'icc2'), como demonstra o seguinte exemplo:
      (%t6)               ifr   ifr   (ifri        - ifri       )
                             a     b       c %4,%5       c %5,%4
 
-
 Um método alternativo é usado para calcular o suporte do referencial
 ('ifb') se o sinalizador 'iframe_bracket_form' é escolhido para 'false':
 
@@ -3232,14 +2708,13 @@ Um método alternativo é usado para calcular o suporte do referencial
      (%t8)              (ifr   ifr     - ifr     ifr  ) ifri
                             a     b,%7      a,%7    b       c %6
 
-
- -- Função da class: iframes ()
+ -- Função: iframes ()
 
      Uma vez que nessa versão do Maxima, identidades de contração para
      'ifr' e 'ifri' são sempre definidas, como é o suporte do
      referencial ('ifb'), essa função não faz nada.
 
- -- Variável da class: ifb
+ -- Variável: ifb
 
      O suporte do referencial.  A contribuição da métrica do referencial
      para os coeficientes de conecção é expressa usando o suporte do
@@ -3250,7 +2725,6 @@ Um método alternativo é usado para calcular o suporte do referencial
                          c a b      b c a      a b c
           ifc1    = --------------------------------
               abc                  2
-
 
      O suporte do referencial por si mesmo é definido em termos de campo
      de referencial e métrica do referencial.  Dois métodos alternativos
@@ -3264,7 +2738,6 @@ Um método alternativo é usado para calcular o suporte do referencial
              abc    b      c       a d,e       a e,d       a f    d e
 
 
-
      Otherwise:
 
 
@@ -3272,8 +2745,7 @@ Um método alternativo é usado para calcular o suporte do referencial
           ifb    = (ifr    ifr    - ifr    ifr   ) ifri
              abc       b      c,e      b,e    c        a d
 
-
- -- Variável da class: icc1
+ -- Variável: icc1
 
      Coeficientes de conecção de primeiro tipo.  Em 'itensor', definido
      como
@@ -3281,7 +2753,6 @@ Um método alternativo é usado para calcular o suporte do referencial
 
           icc1    = ichr1    - ikt1    - inmc1
               abc        abc       abc        abc
-
 
      Nessa expressão, se 'iframe_flag' for 'true', o símbolo de
      Christoffel 'ichr1' é substituído com o coeficiente de conecção do
@@ -3291,7 +2762,7 @@ Um método alternativo é usado para calcular o suporte do referencial
      referencial.  Ultimamente, como 'inonmet_flag' é 'false', 'inmc1'
      não estará presente.
 
- -- Variável da class: icc2
+ -- Variável: icc2
 
      Coeficientes de conecção de segundo tipo.  Em 'itensor', definido
      como
@@ -3301,7 +2772,6 @@ Um método alternativo é usado para calcular o suporte do referencial
           icc2   = ichr2   - ikt2   - inmc2
               ab        ab       ab        ab
 
-
      Nessa expressão, se 'iframe_flag' for 'true', o símbolo de
      Christoffel 'ichr2' é substituído com o coeficiente de conecção
      'ifc2'.  Se 'itorsion_flag' for 'false', 'ikt2' será omitido.
@@ -3310,7 +2780,7 @@ Um método alternativo é usado para calcular o suporte do referencial
      referencial.  Ultimamente, como 'inonmet_flag' é 'false', 'inmc2'
      não estará presente.
 
- -- Variável da class: ifc1
+ -- Variável: ifc1
 
      Coeficiente de referencial de primeiro tipo (também conhecido como
      coeficientes de rotação de Ricci).  Esse tensor representa a
@@ -3324,8 +2794,7 @@ Um método alternativo é usado para calcular o suporte do referencial
               abc                   2
 
 
-
- -- Variável da class: ifc2
+ -- Variável: ifc2
 
      Coeficiente de referencial de primeiro tipo.  Esse tensor
      representa a contribuição da métrica do referencial para o
@@ -3338,36 +2807,35 @@ Um método alternativo é usado para calcular o suporte do referencial
           ifc2   = ifg   ifc1
               ab             abd
 
-
- -- Variável da class: ifr
+ -- Variável: ifr
 
      O campo do referencial.  Contrai ('ifri') para e com a forma do
      campo inverso do referencial para formar a métrica do referencial
      ('ifg').
 
- -- Variável da class: ifri
+ -- Variável: ifri
 
      O campo inverso do referencial.  Especifica a base do referencial
      (vectores base duais).  Juntamente com a métrica do referencial,
      forma a base de todos os cálculos baseados em referenciais.
 
- -- Variável da class: ifg
+ -- Variável: ifg
 
      A métrica do referencial.  O valor padrão é 'kdelta', mas pode ser
      mudada usando 'components'.
 
- -- Variável da class: ifgi
+ -- Variável: ifgi
 
      O inverso da métrica do referencial.  Contrai com a métrica do
      referencial ('ifg') para 'kdelta'.
 
- -- Variável de Opção da class: iframe_bracket_form
+ -- Variável de Opção: iframe_bracket_form
      Valor por omissão: 'true'
 
      Especifica como o suporte do referencial ('ifb') é calculado.
 
-27.2.6, Torsão e não metricidade
---------------------------------
+27.2.6 Torsão e não metricidade
+-------------------------------
 
 Maxima pode trabalhar com torsão e não metricidade.  Quando o
 sinalizador 'itorsion_flag' for escolhido para 'true', a contribuição de
@@ -3375,7 +2843,7 @@ torsão é adicionada aos coeficientes de conecção.  Similarmente, quando
 o sinalizador 'inonmet_flag' for 'true', componentes de não metricidades
 são incluídos.
 
- -- Variável da class: inm
+ -- Variável: inm
 
      O vector de não metricidade.  Conforme a não metricidade está
      definida através da derivada covariante do tensor métrico.
@@ -3387,8 +2855,7 @@ são incluídos.
           g     =- g  inm
            ij;k     ij  k
 
-
- -- Variável da class: inmc1
+ -- Variável: inmc1
 
      Permutação covariante de componentes do vector de não metricidade.
      Definida como
@@ -3399,11 +2866,10 @@ são incluídos.
           inmc1    = ------------------------------
                abc                 2
 
-
      (Substitue 'ifg' em lugar de 'g' se um referencial métrico for
      usada.)
 
- -- Variável da class: inmc2
+ -- Variável: inmc2
 
      Permutação covariante de componentes do vector de não metricidade.
      Usada nos coeficicientes de conecção se 'inonmet_flag' for 'true'.
@@ -3416,11 +2882,10 @@ são incluídos.
           inmc2   = -------------------------------------------
                ab                        2
 
-
      (Substitue 'ifg' em lugar de 'g' se um referencial métrico for
      usada.)
 
- -- Variável da class: ikt1
+ -- Variável: ikt1
 
      Permutação covariante do tensor de torsão (também conhecido como
      contorsão).  Definido como:
@@ -3432,11 +2897,10 @@ são incluídos.
           ikt1    = ----------------------------------
               abc                   2
 
-
      (Substitue 'ifg' em lugar de 'g' se um referencial métrico for
      usada.)
 
- -- Variável da class: ikt2
+ -- Variável: ikt2
 
      Permutação contravariante do tensor de torsão (também conhecida
      como contorsão).  Definida como:
@@ -3446,11 +2910,10 @@ são incluídos.
           ikt2   = g   ikt1
               ab           abd
 
-
      (Substitue 'ifg' em lugar de 'g' se um referencial métrico for
      usada.)
 
- -- Variável da class: itr
+ -- Variável: itr
 
      O tensor de torsão.  Para uma métrica com torsão, diferenciação
      covariante repetida sobre uma funçào escalar não irá comutar,como
@@ -3503,9 +2966,8 @@ são incluídos.
           (%t16)                           - f    itr
                                               ,%1    i j
 
-
-27.2.7, Álgebra externa (como em produto externo)
--------------------------------------------------
+27.2.7 Álgebra externa (como em produto externo)
+------------------------------------------------
 
 O pacote 'itensor' pode executar operações sobre campos tensores
 covariantes totalmente antisimétricos.  Um campo tensor totalmente
@@ -3552,7 +3014,7 @@ comportamento do produto cunha: se 'igeowedge_flag' for 'false' (o
 padrão), a primeira, definição "tensorial" é usada, de outra forma a
 segunda, definição "geométrica" irá ser aplicada.
 
- -- Operador da class: ~
+ -- Operador: ~
      O operador do produto cunha é definido como sendo o acento til '~'.
      O til é um operador binário.  Seus argumentos podem ser expressões
      envolvendo escalares, tensores covariantes de categoria 1, ou
@@ -3585,7 +3047,7 @@ segunda, definição "geométrica" irá ser aplicada.
           (%t7)                     a    b  + b  a    - a    b
                                      i j  k    i  j k    i k  j
 
- -- Operador da class: |
+ -- Operador: |
      A barra vertical '|' denota a operação binária "contração com um
      vector".  Quando um tensor covariante totalmente antisimétrico é
      contraído com um vector contravariante, o resultado é o mesmo
@@ -3615,7 +3077,7 @@ segunda, definição "geométrica" irá ser aplicada.
      seja declarado totalmente antisimétrico em seus índices
      covariantes.  De outra forma, os resultados serão incorrectos.
 
- -- Função da class: extdiff (<expr>, <i>)
+ -- Função: extdiff (<expr>, <i>)
 
      Calcula a derivada externa de <expr> com relação ao índice <i>.  A
      derivada externa é formalmente definida como o produto cunha do
@@ -3646,7 +3108,7 @@ segunda, definição "geométrica" irá ser aplicada.
           (%t7)                      a      - a      + a
                                       j k,i    i k,j    i j,k
 
- -- Função da class: hodge (<expr>)
+ -- Função: hodge (<expr>)
 
      Calcula o Hodge dual de <expr>.  Por exemplo:
 
@@ -3684,8 +3146,7 @@ segunda, definição "geométrica" irá ser aplicada.
           (%t11)                     - A
                                         %106 %107 %108
 
-
- -- Variável de Opção da class: igeowedge_flag
+ -- Variável de Opção: igeowedge_flag
      Valor por omissão: 'false'
 
      Controla o comportamento de produto cunha e derivada externa.
@@ -3694,8 +3155,8 @@ segunda, definição "geométrica" irá ser aplicada.
      totalmente antisimétrico.  Quando escolhida para 'true', formas
      diferenciais irão concordar com a noção do elemento volume.
 
-27.2.8, Exportando expressões TeX
----------------------------------
+27.2.8 Exportando expressões TeX
+--------------------------------
 
 O pacote 'itensor' fornece suporte limitado à exportação de expressões
 de tensores para o TeX. Uma vez que expressões 'itensor' aparecem como
@@ -3704,7 +3165,7 @@ saída esperada.  Pode tentar no seu lugar o comando 'tentex', o qual
 tenta traduzir expressões de tensores dentro de objectos TeX indexados
 apropriadamente.
 
- -- Função da class: tentex (<expr>)
+ -- Função: tentex (<expr>)
 
      Para usar a função 'tentex', deve primeiro chamar 'tentex', como no
      seguinte exemplo:
@@ -3724,7 +3185,6 @@ apropriadamente.
           $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
            \Gamma_{k\,m_1}^{i}-\Gamma_{j\,l,k}^{i}+\Gamma_{j\,k,l}^{i}$$
 
-
      Note o uso da declaração 'idummyx', para evitar o aparecimento do
      sinal de porcentagem na expressão TeX, o qual pode induzir a erros
      de compilação.
@@ -3732,14 +3192,14 @@ apropriadamente.
      Note Bem: Essa vesão da função 'tentex' é um tanto quanto
      experimental.
 
-27.2.9, Interagindo com o pacote 'ctensor'
-------------------------------------------
+27.2.9 Interagindo com o pacote 'ctensor'
+-----------------------------------------
 
 O pacote 'itensor' possui a habilidade de gerar código Maxima que pode
 então ser executado no contexto do pacote 'ctensor'.  A função que
 executa essa tarefa é 'ic_convert'.
 
- -- Função da class: ic_convert (<eqn>)
+ -- Função: ic_convert (<eqn>)
 
      Converte a equação <eqn> na sintaxe 'itensor' para uma declaração
      de atribuição 'ctensor'.  Adições implícitas sobre índices que
@@ -3785,8 +3245,8 @@ executa essa tarefa é 'ic_convert'.
            lg    , l, 1, dim), m, 1, dim)))
              l, m
 
-27.2.10, Palavras reservadas
-----------------------------
+27.2.10 Palavras reservadas
+---------------------------
 
 As palavras seguintes do Maxima são usadas internamente pelo pacote
 'itensor' e não podem ser redefinidas:
@@ -3808,19 +3268,19 @@ As palavras seguintes do Maxima são usadas internamente pelo pacote
 
 File: maxima.info,  Node: ctensor,  Next: Pacote atensor,  Prev: itensor,  Up: Top
 
-28, ctensor
-***********
+28 ctensor
+**********
 
 * Menu:
 
-* Introdução a ctensor::
-* Definições para ctensor::
+* Introdução a ctensor::     
+* Definições para ctensor::     
 
 
 File: maxima.info,  Node: Introdução a ctensor,  Next: Definições para ctensor,  Prev: ctensor,  Up: ctensor
 
-28.1, Introdução a ctensor
-==========================
+28.1 Introdução a ctensor
+=========================
 
 'ctensor' é um pacote de manipulação de componentes.  Para usar o pacote
 'ctensor', digite 'load(ctensor)'.  Para começar uma sessão iterativa
@@ -3929,23 +3389,22 @@ mostradas como exemplos para a métrica padrão.
                                        4, 4, 1   2 a
      (%o11)                               done
 
-
 
 File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctensor,  Up: ctensor
 
-28.2, Definições para ctensor
-=============================
+28.2 Definições para ctensor
+============================
 
-28.2.1, Inicialização e configuração
-------------------------------------
+28.2.1 Inicialização e configuração
+-----------------------------------
 
- -- Função da class: csetup ()
+ -- Função: csetup ()
      É uma função no pacote 'ctensor' (component tensor) que inicializa
      o pacote e permite ao utilizador inserir uma métrica
      interativamente.  Veja 'ctensor' para mais detalhes.
 
- -- Função da class: cmetric (<dis>)
- -- Função da class: cmetric ()
+ -- Função: cmetric (<dis>)
+ -- Função: cmetric ()
      É uma função no pacote 'ctensor' que calcula o inverso da métrica e
      prepara o pacote para cálculos adiante.
 
@@ -3963,8 +3422,8 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
      sejam definidas.  A partir dessas, a matriz do referencial 'fr' e a
      métrica do referencial inverso 'ufg' são calculadas.
 
- -- Função da class: ct_coordsys (<sistema_de_coordenadas>, <extra_arg>)
- -- Função da class: ct_coordsys (<sistema_de_coordenadas>)
+ -- Função: ct_coordsys (<sistema_de_coordenadas>, <extra_arg>)
+ -- Função: ct_coordsys (<sistema_de_coordenadas>)
      Escolhe um sistema de coordenadas predefinido e uma métrica.  O
      argumento <sistema_de_coordenadas> pode ser um dos seguintes
      símbolos:
@@ -3999,7 +3458,6 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
             interiorschwarzschild 4  [t,z,u,v]        Métrica de Schwarzschild Interior
             kerr_newman           4  [t,r,theta,phi]   Métrica simétrica axialmente alterada
 
-
      'sistema_de_coordenadas' pode também ser uma lista de funções de
      transformação, seguida por uma lista contendo as varáveis
      coordenadas.  Por exemplo, pode especificar uma métrica esférica
@@ -4023,7 +3481,6 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
           (%o4)                           [r, theta, phi]
           (%i5) dim;
           (%o5)                                  3
-
 
      Funções de transformação podem também serem usadas quando
      'cframe_flag' for 'true':
@@ -4053,7 +3510,6 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
                                      [         2    2        ]
                                      [ 0  0   r  cos (theta) ]
 
-
      O argumento opcional <extra_arg> pode ser qualquer um dos
      seguintes:
 
@@ -4070,7 +3526,7 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
      'ct_coordsys' mostra os valores de 'dim', 'ct_coords', e ou 'lg' ou
      'lfg' e 'fri', dependendo do valor de 'cframe_flag'.
 
- -- Função da class: init_ctensor ()
+ -- Função: init_ctensor ()
      Inicializa o pacote 'ctensor'.
 
      A função 'init_ctensor' reinicializa o pacote 'ctensor'.  Essa
@@ -4079,8 +3535,8 @@ File: maxima.info,  Node: Definições para ctensor,  Prev: Introdução a ctens
      retorna 'dim' para 4, e retorna a métrica do referencial para a
      métrica do referencial de Lorentz.
 
-28.2.2, Os tensores do espaço curvo
------------------------------------
+28.2.2 Os tensores do espaço curvo
+----------------------------------
 
 O principal propósito do pacote 'ctensor' é calcular os tensores do
 espaç(tempo) curvo, mais notavelmente os tensores usados na relatividade
@@ -4101,7 +3557,6 @@ tensores:
                            uriem
 
 
-
 'ctensor' pode também usar referenciais móveis.  Quando 'cframe_flag'
 for escolhida para 'true', os seguintes tensores podem ser calculados:
 
@@ -4116,8 +3571,7 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
                                    |
                                    \uriem
 
-
- -- Função da class: christof (<dis>)
+ -- Função: christof (<dis>)
      Uma função no pacote 'ctensor'.  Essa função calcula os símbolos de
      Christoffel de ambos os tipos.  O argumento <dis> determina quais
      resultados são para serem imediatamente mostrados.  Os símbolos de
@@ -4132,13 +3586,13 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      elementos não acontecerá.  Os elementos do array 'mcs[i,j,k]' são
      definidos de uma tal maneira que o índice final é contravariante.
 
- -- Função da class: ricci (<dis>)
+ -- Função: ricci (<dis>)
      Uma função no pacote 'ctensor'.  'ricci' calcula as componentes
      contravariantes (simétricas) 'ric[i,j]' do tensor de Ricci.  Se o
      argumento <dis> for 'true', então as componentes não nulas são
      mostradas.
 
- -- Função da class: uricci (<dis>)
+ -- Função: uricci (<dis>)
      Essa função primeiro calcula as componentes contravariantes
      'ric[i,j]' do tensor de Ricci.  Então o tensor misto de Ricci é
      calculado usando o tensor métrico contravariante.  Se o valor do
@@ -4148,12 +3602,12 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      'ricci(false)' irá simplesmente calcular as entradas do array
      'uric[i,j]' sem mostrar os resultados.
 
- -- Função da class: scurvature ()
+ -- Função: scurvature ()
 
      Retorna a curvatura escalar (obtida através da contração do tensor
      de Ricci) do Riemaniano multiplicado com a métrica dada.
 
- -- Função da class: einstein (<dis>)
+ -- Função: einstein (<dis>)
      Uma função no pacote 'ctensor'.  'einstein' calcula o tensor misto
      de Einstein após os símbolos de Christoffel e o tensor de Ricci
      terem sido obtidos (com as funções 'christof' e 'ricci').  Se o
@@ -4163,7 +3617,7 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      simplificação racional ocorra sobre esses componentes.  Se 'ratfac'
      for 'true' então as componentes irão também ser factoradas.
 
- -- Função da class: leinstein (<dis>)
+ -- Função: leinstein (<dis>)
      Tensor covariante de Einstein.  'leinstein' armazena o valor do
      tensor covariante de Einstein no array 'lein'.  O tensor covariante
      de Einstein é calculado a partir tensor misto de Einstein 'ein'
@@ -4171,7 +3625,7 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      <dis> for 'true', então os valores não nulos do tensor covariante
      de Einstein são mostrados.
 
- -- Função da class: riemann (<dis>)
+ -- Função: riemann (<dis>)
      Uma função no pacote 'ctensor'.  'riemann' calcula o tensor de
      curvatura de Riemann a partir da métrica dada e correspondendo aos
      símbolos de Christoffel.  As seguintes convenções de índice são
@@ -4195,7 +3649,7 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      'cframe_flag' for 'true', o tensor covariante de Riemann é
      calculado primeiro dos coeficientes de campo do referencial.
 
- -- Função da class: lriemann (<dis>)
+ -- Função: lriemann (<dis>)
      Tensor covariante de Riemann ('lriem[]').
 
      Calcula o tensor covariante de Riemann como o array 'lriem'.  Se o
@@ -4208,12 +3662,12 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
 
      Para informação sobre a ordenação de índice, veja 'riemann'.
 
- -- Função da class: uriemann (<dis>)
+ -- Função: uriemann (<dis>)
      Calcula as componentes contravariantes do tensor de curvatura de
      Riemann como elementos do array 'uriem[i,j,k,l]'.  Esses são
      mostrados se <dis> for 'true'.
 
- -- Função da class: rinvariant ()
+ -- Função: rinvariant ()
      Compõe o invariante de Kretchmann ('kinvariant') obtido através da
      contração dos tensores
 
@@ -4222,7 +3676,7 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      Esse objecto não é automaticamente simplificado devido ao facto de
      poder ser muito largo.
 
- -- Função da class: weyl (<dis>)
+ -- Função: weyl (<dis>)
      Calcula o tensor conformal de Weyl.  Se o argumento <dis> for
      'true', as componentes não nulas 'weyl[i,j,k,l]' irão ser mostradas
      para o utilizador.  De outra forma, essas componentes irão
@@ -4231,8 +3685,8 @@ for escolhida para 'true', os seguintes tensores podem ser calculados:
      racionalmente simplificadas; se 'ratfac' for 'true' então os
      resultados irão ser factorados também.
 
-28.2.3, Expansão das séries de Taylor
--------------------------------------
+28.2.3 Expansão das séries de Taylor
+------------------------------------
 
 O pacote 'ctensor' possui a habilidade para truncar resultados assumindo
 que eles são aproximações das séries de Taylor.  Esse comportamenteo é
@@ -4253,7 +3707,7 @@ A função 'ctaylor' é invocada pelas seguintes funções de 'ctensor':
          weyl()
          checkdiv()
 
- -- Função da class: ctaylor ()
+ -- Função: ctaylor ()
 
      A função 'ctaylor' trunca seus argumentos através da conversão
      destes para uma série de Taylor usando 'taylor', e então chamando
@@ -4330,7 +3784,6 @@ A função 'ctaylor' é invocada pelas seguintes funções de 'ctensor':
           [[4, 4], 46]
           (%o12)                               done
 
-
      Todavia, se nós recalcularmos esse exemplo como uma aproximação que
      é linear na variável 'l', pegamos expressões muito simples:
 
@@ -4378,17 +3831,16 @@ A função 'ctaylor' é invocada pelas seguintes funções de 'ctensor':
 
 
 
-
      Essa compatibilidade pode ser útil, por exemplo, quando trabalhamos
      no limite do campo fraco longe de uma fonte gravitacional.
 
-28.2.4, Campos de referencial
------------------------------
+28.2.4 Campos de referencial
+----------------------------
 
 Quando a variável 'cframe_flag' for escolhida para 'true', o pacote
 'ctensor' executa seus cálculos usando um referencial móvel.
 
- -- Função da class: frame_bracket (<fr>, <fri>, <diagframe>)
+ -- Função: frame_bracket (<fr>, <fri>, <diagframe>)
      O delimitador do referencial ('fb[]').
 
      Calcula o delimitador do referencial conforme a seguinte definição:
@@ -4397,15 +3849,15 @@ Quando a variável 'cframe_flag' for escolhida para 'true', o pacote
           ifb   = ( ifri    - ifri    ) ifr   ifr
              ab         d,e       e,d      a     b
 
-28.2.5, Classificação Algébrica
--------------------------------
+28.2.5 Classificação Algébrica
+------------------------------
 
 Um novo recurso (a partir de November de 2004) de 'ctensor' é sua
 habilidade para calcular a classificação de Petrov de uma métrica espaço
 tempo tetradimensional.  Para uma demonstração dessa compatibilidade,
 veja o ficheiro 'share/tensor/petrov.dem'.
 
- -- Função da class: nptetrad ()
+ -- Função: nptetrad ()
      Calcula um tetrad nulo de Newman-Penrose ('np') e seus índices
      ascendentes em contrapartida ('npi').  Veja 'petrov' para um
      exemplo.
@@ -4428,8 +3880,7 @@ veja o ficheiro 'share/tensor/petrov.dem'.
           np  = (fri  - %i fri ) / sqrt(2)
             4       3         4
 
-
- -- Função da class: psi (<dis>)
+ -- Função: psi (<dis>)
      Calcula os cinco coeficientes de Newman-Penrose
      'psi[0]'...'psi[4]'.  Se 'psi' for escolhida para 'true', os
      coeficientes são mostrados.  Veja 'petrov' para um exemplo.
@@ -4453,7 +3904,7 @@ veja o ficheiro 'share/tensor/petrov.dem'.
      referencial, e outros numa base de coordenada, sem nenhum modo para
      distinguir entre os dois tipos.
 
- -- Função da class: petrov ()
+ -- Função: petrov ()
      Calcula a classificação de petrov da métrica caracterizada através
      de 'psi[0]'...'psi[4]'.
 
@@ -4526,7 +3977,6 @@ veja o ficheiro 'share/tensor/petrov.dem'.
           (%i12) petrov();
           (%o12)                                 D
 
-
      A função de classificação Petrov é baseada no algoritmo publicado
      em "Classifying geometries in general relativity: III
      Classification in practice" por Pollney, Skea, e d'Inverno, Class.
@@ -4534,8 +3984,8 @@ veja o ficheiro 'share/tensor/petrov.dem'.
      teste simples, a implementação não está testada até 19 de Dezembro
      de 2004, e é provável que contenha erros.
 
-28.2.6, Torsão e não metricidade
---------------------------------
+28.2.6 Torsão e não metricidade
+-------------------------------
 
 'ctensor' possui a habilidade de calcular e incluir coeficientes de
 torsão e não metricidade nos coeficientes de conecção.
@@ -4557,7 +4007,6 @@ com a seguinte fórmula:
      kt   = g   kt
        ij         ijm
 
-
 Note que somente o tensor de índice misto é calculao e armazenado no
 array 'kt'.
 
@@ -4572,7 +4021,6 @@ coeficientes de não metricidade 'nmc' são calculados como segue:
      nmc  = ------------------------------
         ij                2
 
-
 onde D simboliza o delta de Kronecker.
 
 Quando 'ctorsion_flag' for escolhida para 'true', os valores de 'kt' são
@@ -4584,26 +4032,26 @@ subtraídos dos coeficientes de conecção indexados mistos.
 Se necessário, 'christof' chama as funções 'contortion' e 'nonmetricity'
 com o objectivo de calcular 'kt' e 'nm'.
 
- -- Função da class: contortion (<tr>)
+ -- Função: contortion (<tr>)
 
      Calcula os coeficientes de contorsão de categoria (2,1) a partir do
      tensor de torsão <tr>.
 
- -- Função da class: nonmetricity (<nm>)
+ -- Função: nonmetricity (<nm>)
 
      Calcula o coeficiente de não metricidade de categoria (2,1) a
      partir do vector de não metricidade <nm>.
 
-28.2.7, Recursos diversos
--------------------------
+28.2.7 Recursos diversos
+------------------------
 
- -- Função da class: ctransform (<M>)
+ -- Função: ctransform (<M>)
      Uma função no pacote 'ctensor' que irá executar uma transformação
      de coordenadas sobre uma matriz simétrica quadrada arbitrária <M>.
      O utilizador deve informar as funçãoes que definem a transformação.
      (Formalmente chamada 'transform'.)
 
- -- Função da class: findde (<A>, <n>)
+ -- Função: findde (<A>, <n>)
 
      Retorna uma lista de equações diferenciais únicas (expressões)
      correspondendo aos elementos do array quadrado <n> dimensional <A>.
@@ -4648,12 +4096,11 @@ com o objectivo de calcular 'kt' e 'nm'.
           (%i10) deindex;
           (%o10)                     [[1, 1], [2, 2], [4, 4]]
 
-
- -- Função da class: cograd ()
+ -- Função: cograd ()
      Calcula o gradiente covariante de uma função escalar permitindo ao
      utilizador escolher o nome do vector correspondente como o exemplo
      sob 'contragrad' ilustra.
- -- Função da class: contragrad ()
+ -- Função: contragrad ()
 
      Calcula o gradiente contravariante de uma função escalar permitindo
      ao utilizador escolher o nome do vector correspondente como o
@@ -4681,8 +4128,7 @@ com o objectivo de calcular 'kt' e 'nm'.
           (%o8)                      [0, -------------, 0, 0]
                                                r
 
-
- -- Função da class: dscalar ()
+ -- Função: dscalar ()
      Calcula o tensor d'Alembertiano da função escalar assim que as
      dependências tiverem sido declaradas sobre a função.  Po exemplo:
 
@@ -4702,7 +4148,7 @@ com o objectivo de calcular 'kt' e 'nm'.
                                                  2
                                                 r
 
- -- Função da class: checkdiv ()
+ -- Função: checkdiv ()
 
      Calcula a divergência covariante do tensor de segunda categoria
      misto (cujo primeiro índice deve ser covariante) imprimindo as
@@ -4712,13 +4158,13 @@ com o objectivo de calcular 'kt' e 'nm'.
      Adicionalmente, a divergência (vector) é dada no array chamado
      'div'.
 
- -- Função da class: cgeodesic (<dis>)
+ -- Função: cgeodesic (<dis>)
      Uma função no pacote 'ctensor'.  'cgeodesic' calcula as equações
      geodésicas de movimento para uma dada métrica.  Elas são
      armazenadas no array 'geod[i]'.  Se o argumento <dis> for 'true'
      então essas equações são mostradas.
 
- -- Função da class: bdvac (<f>)
+ -- Função: bdvac (<f>)
 
      Gera as componentes covariantes das equações de campo de vácuo da
      teoria de gravitação de Brans-Dicke.  O campo escalar é
@@ -4728,13 +4174,13 @@ com o objectivo de calcular 'kt' e 'nm'.
      As componentes de segunda categoria do tensor campo covariante são
      as componentes de segunda categoria representadas pelo array 'bd'.
 
- -- Função da class: invariant1 ()
+ -- Função: invariant1 ()
 
      Gera o tensor misto de Euler-Lagrange (equações de campo) para a
      densidade invariante de R^2.  As equações de campo são componentes
      de um array chamado 'inv1'.
 
- -- Função da class: invariant2 ()
+ -- Função: invariant2 ()
 
      *** NOT YET IMPLEMENTED ***
 
@@ -4742,25 +4188,25 @@ com o objectivo de calcular 'kt' e 'nm'.
      densidade invariante de 'ric[i,j]*uriem[i,j]'.  As equações de
      campo são as componentes de um array chamado 'inv2'.
 
- -- Função da class: bimetric ()
+ -- Função: bimetric ()
 
      *** NOT YET IMPLEMENTED ***
 
      Gera as euauações de campo da teoria bimétrica de Rosen.  As
      equações de campo são as componentes de um array chamado 'rosen'.
 
-28.2.8, Funções utilitárias
----------------------------
+28.2.8 Funções utilitárias
+--------------------------
 
- -- Função da class: diagmatrixp (<M>)
+ -- Função: diagmatrixp (<M>)
 
      Retorna 'true' se <M> for uma matriz diagonal ou um array (2D).
 
- -- Função da class: symmetricp (<M>)
+ -- Função: symmetricp (<M>)
 
      Retorna 'true' se <M> for uma matriz simétrica ou um array (2D).
 
- -- Função da class: ntermst (<f>)
+ -- Função: ntermst (<f>)
      Fornece ao utilizador um rápido quadro do "tamanho" do tensor
      duplamente subscrito (array) <f>.  Imprime uma lista de dois
      elementos onde o segundo elemento corresponde a N-TERMOS de
@@ -4768,7 +4214,7 @@ com o objectivo de calcular 'kt' e 'nm'.
      caminho, é possível rapidamente encontrar as expressões não nulas e
      tentar simplificação.
 
- -- Função da class: cdisplay (<ten>)
+ -- Função: cdisplay (<ten>)
      Mostra todos os elementos do tensor <ten>, como representados por
      um array multidimensional.  Tensores de categoria 0 e 1, assim como
      outros tipos de variáveis, são mostrados com 'ldisplay'.  Tensores
@@ -4983,22 +4429,21 @@ com o objectivo de calcular 'kt' e 'nm'.
 
           (%o5)                                done
 
-
- -- Função da class: deleten (<L>, <n>)
+ -- Função: deleten (<L>, <n>)
      Retorna uma nova lista consistindo de <L> com o <n>'ésimo elemento
      apagado.
 
-28.2.9, Variáveis usadas por 'ctensor'
---------------------------------------
+28.2.9 Variáveis usadas por 'ctensor'
+-------------------------------------
 
- -- Variável de opção da class: dim
+ -- Variável de opção: dim
      Valor por omissão: 4
 
      Uma opção no pacote 'ctensor'.  'dim' é a dimensão de multiplicação
      com o padrão 4.  O comando 'dim: n' irá escolher a dimensão para
      qualquer outro valor 'n'.
 
- -- Variável de opção da class: diagmetric
+ -- Variável de opção: diagmetric
      Valor por omissão: 'false'
 
      Uma opção no pacote 'ctensor'.  Se 'diagmetric' for 'true' rotinas
@@ -5009,13 +4454,13 @@ com o objectivo de calcular 'kt' e 'nm'.
      automaticamente por 'csetup' se uma métrica diagonal for
      especificada.
 
- -- Variável de opção da class: ctrgsimp
+ -- Variável de opção: ctrgsimp
 
      Faz com que simplificações trigonométricas sejam usadas quando
      tensores forem calculados.  Actualmente, 'ctrgsimp' afecta somente
      cálculos envolvendo um referencial móvel.
 
- -- Variável de opção da class: cframe_flag
+ -- Variável de opção: cframe_flag
 
      Faz com que cálculos sejam executados relativamente a um
      referencial móvel em oposição a uma métrica holonómica.  O
@@ -5025,60 +4470,60 @@ com o objectivo de calcular 'kt' e 'nm'.
      dimensão apropriada; para cálculos num referencial de Lorentz,
      'lfg' pode ter a assinatura apropriada.
 
- -- Variável de opção da class: ctorsion_flag
+ -- Variável de opção: ctorsion_flag
 
      Faz com que o tensor de contorsão seja incluído no cálculo dos
      coeficientes de conecção.  O tensor de contorsão por si mesmo é
      calculado através de 'contortion' a partir do tensor 'tr' fornecido
      pelo utilizador.
 
- -- Variável de opção da class: cnonmet_flag
+ -- Variável de opção: cnonmet_flag
 
      Faz com que os coeficientes de não metricidade sejam incluídos no
      cálculo dos coeficientes de conecção.  Os coeficientes de não
      metricidade são calculados a partir do vector de não metricidade
      'nm' fornecido pelo utilizador através da função 'nonmetricity'.
 
- -- Variável de opção da class: ctayswitch
+ -- Variável de opção: ctayswitch
 
      Se escolhida para 'true', faz com que alguns cálculos de 'ctensor'
      sejam realizados usando expansões das séries de Taylor.
      actualmente, 'christof', 'ricci', 'uricci', 'einstein', e 'weyl'
      levam em conta essa escolha.
 
- -- Variável de opção da class: ctayvar
+ -- Variável de opção: ctayvar
 
      Variável usada pela expansão de séries de Taylor se 'ctayswitch' é
      escolhida para 'true'.
 
- -- Variável de opção da class: ctaypov
+ -- Variável de opção: ctaypov
 
      Maximo expoente usado em expansões de séries de Taylor quando
      'ctayswitch' for escolhida para 'true'.
 
- -- Variável de opção da class: ctaypt
+ -- Variável de opção: ctaypt
 
      Ponto em torno do qual expansões de séries de Taylor sao realizadas
      quando 'ctayswitch' for escolhida para 'true'.
 
- -- Variável de sistema da class: gdet
+ -- Variável de sistema: gdet
 
      O determinante do tensor métrico 'lg'.  Calculado através de
      'cmetric' quando 'cframe_flag' for escolhido para 'false'.
 
- -- Variável de opção da class: ratchristof
+ -- Variável de opção: ratchristof
 
      Faz com que simplificações racionais sejam aplicadas através de
      'christof'.
 
- -- Variável de opção da class: rateinstein
+ -- Variável de opção: rateinstein
      Valor por omissão: 'true'
 
      Se 'true' simplificação racional será executada sobre as
      componentes não nulas de tensores de Einstein; se 'ratfac' for
      'true' então as componentes irão também ser factoradas.
 
- -- Variável de opção da class: ratriemann
+ -- Variável de opção: ratriemann
      Valor por omissão: 'true'
 
      Um dos comutadores que controlam simplificações dos tensores de
@@ -5086,7 +4531,7 @@ com o objectivo de calcular 'kt' e 'nm'.
      concluídas; se 'ratfac' for 'true' então cada uma das componentes
      irá também ser factorada.
 
- -- Variável de opção da class: ratweyl
+ -- Variável de opção: ratweyl
      Valor por omissão: 'true'
 
      Se 'true', esse comutador faz com que a função de 'weyl' aplique
@@ -5094,17 +4539,17 @@ com o objectivo de calcular 'kt' e 'nm'.
      'ratfac' for 'true', então as componentes irão também ser
      factoradas.
 
- -- Variável da class: lfg
+ -- Variável: lfg
      O referencial métrico covariante.  Por padrão, é inicializado para
      o referencial tetradimensional de Lorentz com assinatura (+,+,+,-).
      Usada quando 'cframe_flag' for 'true'.
 
- -- Variável da class: ufg
+ -- Variável: ufg
      A métrica do referencial inverso.  Calculada de 'lfg' quando
      'cmetric' for chamada enquanto 'cframe_flag' for escolhida para
      'true'.
 
- -- Variável da class: riem
+ -- Variável: riem
      O tensor de categoria (3,1) de Riemann.  Calculado quando a função
      'riemann' é invocada.  Para informação sobre ordenação de índices,
      veja a descrição de 'riemann'.
@@ -5112,51 +4557,51 @@ com o objectivo de calcular 'kt' e 'nm'.
      Se 'cframe_flag' for 'true', 'riem' é calculado a partir do tensor
      covariante de Riemann 'lriem'.
 
- -- Variável da class: lriem
+ -- Variável: lriem
 
      O tensor covariante de Riemann.  Calculado através de 'lriemann'.
 
- -- Variável da class: uriem
+ -- Variável: uriem
 
      O tensor contravariante de Riemann.  Calculado através de
      'uriemann'.
 
- -- Variável da class: ric
+ -- Variável: ric
 
      O tensor misto de Ricci.  Calculado através de 'ricci'.
 
- -- Variável da class: uric
+ -- Variável: uric
 
      O tensor contravariante de Ricci.  Calculado através de 'uricci'.
 
- -- Variável da class: lg
+ -- Variável: lg
 
      O tensor métrico.  Esse tensor deve ser especificado (como uma
      'dim' através da matriz 'dim') antes que outro cálculo possa ser
      executado.
 
- -- Variável da class: ug
+ -- Variável: ug
 
      O inverso do tensor métrico.  Calculado através de 'cmetric'.
 
- -- Variável da class: weyl
+ -- Variável: weyl
 
      O tensor de Weyl.  Calculado através de 'weyl'.
 
- -- Variável da class: fb
+ -- Variável: fb
 
      Coeficientes delimitadores do referencial, como calculado através
      de 'frame_bracket'.
 
- -- Variável da class: kinvariant
+ -- Variável: kinvariant
 
      O invariante de Kretchmann.  Calculado através de 'rinvariant'.
 
- -- Variável da class: np
+ -- Variável: np
 
      Um tetrad nulo de Newman-Penrose.  Calculado através de 'nptetrad'.
 
- -- Variável da class: npi
+ -- Variável: npi
 
      O índice ascendente do tetrad nulo de Newman-Penrose.  Calculado
      através de 'nptetrad'.  Definido como 'ug.np'.  O produto
@@ -5171,33 +4616,33 @@ com o objectivo de calcular 'kt' e 'nm'.
                                         [                ]
                                         [  0    0   1  0 ]
 
- -- Variável da class: tr
+ -- Variável: tr
 
      Tensor de categoria 3 fornecido pelo utilizador representando
      torsão.  Usado por 'contortion'.
 
- -- Variável da class: kt
+ -- Variável: kt
 
      O tensor de contorsão, calculado a partir de 'tr' através de
      'contortion'.
 
- -- Variável da class: nm
+ -- Variável: nm
 
      Vetor de não metrcidade fornecido pelo utilizador.  Usado por
      'nonmetricity'.
 
- -- Variável da class: nmc
+ -- Variável: nmc
 
      Os coeficientes de não metricidade, calculados a partir de 'nm' por
      'nonmetricity'.
 
- -- Variável de sistema da class: tensorkill
+ -- Variável de sistema: tensorkill
 
      Variável indicando se o pacote tensor foi inicializado.  Escolhida
      e usada por 'csetup', retornada ao seu valor original através de
      'init_ctensor'.
 
- -- Variável de opção da class: ct_coords
+ -- Variável de opção: ct_coords
      Valor por omissão: '[]'
 
      Uma opção no pacote 'ctensor'.  'ct_coords' contém uma lista de
@@ -5206,8 +4651,8 @@ com o objectivo de calcular 'kt' e 'nm'.
      atribuição 'ct_coords: [j1, j2, ..., jn]' onde os j's são os novos
      nomes de coordenadas.  Veja também 'csetup'.
 
-28.2.10, Nomes reservados
--------------------------
+28.2.10 Nomes reservados
+------------------------
 
 Os seguintes nomes são usados internamente pelo pacote 'ctensor' e não
 devem ser redefinidos:
@@ -5243,8 +4688,8 @@ devem ser redefinidos:
                          christof()
        yesp()
 
-28.2.11, Modificações
----------------------
+28.2.11 Modificações
+--------------------
 
 Em Novembro de 2004, o pacote 'ctensor' foi extensivamente reescrito.
 Muitas funções e variáveis foram renomeadas com o objectivo de tornar o
@@ -5279,12 +4724,11 @@ pacote com a versão comercial do Macsyma.
        uriem[]      UR[]            Tensor contravariante de Riemann
        weyl[]       W[]             Tensor (3,1) de Weyl
 
-
 
 File: maxima.info,  Node: Pacote atensor,  Next: Séries,  Prev: ctensor,  Up: Top
 
-29, Pacote atensor
-******************
+29 Pacote atensor
+*****************
 
 * Menu:
 
@@ -5294,8 +4738,8 @@ File: maxima.info,  Node: Pacote atensor,  Next: Séries,  Prev: ctensor,  Up: T
 
 File: maxima.info,  Node: Introdução ao Pacote atensor,  Next: Definições para o Pacote atensor,  Prev: Pacote atensor,  Up: Pacote atensor
 
-29.1, Introdução ao Pacote atensor
-==================================
+29.1 Introdução ao Pacote atensor
+=================================
 
 'atensor' é um pacote de manipulção de tensores algébricos.  Para usar
 'atensor', digite 'load(atensor)', seguido por uma chamada à função
@@ -5384,11 +4828,11 @@ simplificações desejadas.
 
 File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introdução ao Pacote atensor,  Up: Pacote atensor
 
-29.2, Definições para o Pacote atensor
-======================================
+29.2 Definições para o Pacote atensor
+=====================================
 
- -- Função da class: init_atensor (<alg_type>, <opt_dims>)
- -- Função da class: init_atensor (<alg_type>)
+ -- Função: init_atensor (<alg_type>, <opt_dims>)
+ -- Função: init_atensor (<alg_type>)
 
      Inicializa o pacote 'atensor' com o tipo especificado de álgebra.
      <alg_type> pode ser um dos seguintes:
@@ -5444,7 +4888,7 @@ File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introduçã
      Clifford Cl(3,1).  Uma chamada a 'init_atensor(dirac)' é
      equivalente a 'init_atensor(clifford,3,0,1)'.
 
- -- Função da class: atensimp (<expr>)
+ -- Função: atensimp (<expr>)
 
      Simplifica a expressão algébrica de tensores <expr> conforme as
      regras configuradas por uma chamada a 'init_atensor'.
@@ -5453,41 +4897,41 @@ File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introduçã
      Uma salvaguarda é usada para garantir que a função sempre termine,
      mesmo para expressões complexas.
 
- -- Função da class: alg_type
+ -- Função: alg_type
 
      O tipo de álgebra.  Valores válidos sáo 'universal', 'grassmann',
      'clifford', 'symmetric', 'symplectic' e 'lie_envelop'.
 
- -- Variável da class: adim
+ -- Variável: adim
 
      A dimensionalidade da álgebra.  'atensor' usa o valor de 'adim'
      para determinar se um objecto indexado é uma base vectorial válida.
      Veja 'abasep'.
 
- -- Variável da class: aform
+ -- Variável: aform
 
      Valor por omissão para as formas bilineares 'sf', 'af', e 'av'.  O
      padrão é a matriz identidade 'ident(3)'.
 
- -- Variável da class: asymbol
+ -- Variável: asymbol
 
      O símbolo para bases vectoriais.
 
- -- Função da class: sf (<u>, <v>)
+ -- Função: sf (<u>, <v>)
 
      É uma função escalar simétrica que é usada em relações comutativas.
      A implementação padrão verifica se ambos os argumentos são bases
      vectoriais usando 'abasep' e se esse for o caso, substitui o valor
      correspondente da matriz 'aform'.
 
- -- Função da class: af (<u>, <v>)
+ -- Função: af (<u>, <v>)
 
      É uma função escalar antisimétrica que é usada em relações
      comutativas.  A implementação padrão verifica se ambos os
      argumentos são bases vectoriais usando 'abasep' e se esse for o
      caso, substitui o valor correspondente da matriz 'aform'.
 
- -- Função da class: av (<u>, <v>)
+ -- Função: av (<u>, <v>)
 
      É uma função antisimétrica que é usada em relações comutativas.  A
      implementação padrão verifica se ambos os argumentos são bases
@@ -5512,7 +4956,7 @@ File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introduçã
           (%o5)                                 x
                                                  3
 
- -- Função da class: abasep (<v>)
+ -- Função: abasep (<v>)
 
      Verifica se esse argumento é uma base vectorial 'atensor' .
 
@@ -5523,19 +4967,19 @@ File: maxima.info,  Node: Definições para o Pacote atensor,  Prev: Introduçã
 
 File: maxima.info,  Node: Séries,  Next: Teoria dos Números,  Prev: Pacote atensor,  Up: Top
 
-30, Séries
-**********
+30 Séries
+*********
 
 * Menu:
 
-* Introdução a Séries::
-* Definições para Séries::
+* Introdução a Séries::      
+* Definições para Séries::      
 
 
 File: maxima.info,  Node: Introdução a Séries,  Next: Definições para Séries,  Prev: Séries,  Up: Séries
 
-30.1, Introdução a Séries
-=========================
+30.1 Introdução a Séries
+========================
 
 Maxima contém funções 'taylor' e 'powerseries' (séries de potência) para
 encontrar as séries de funções diferenciáveis.  Maxima também tem
@@ -5547,10 +4991,10 @@ que controlam a expansão.
 
 File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séries,  Up: Séries
 
-30.2, Definições para Séries
-============================
+30.2 Definições para Séries
+===========================
 
- -- Variável de opção da class: cauchysum
+ -- Variável de opção: cauchysum
      Valor por omissão: 'false'
 
      Quando multiplicando adições jutas com 'inf' como seus limites
@@ -5582,8 +5026,8 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
                            ====   ====
                            i1 = 0 i2 = 0
 
- -- Função da class: deftaylor (<f_1>(<x_1>), <expr_1>, ...,
-          <f_n>(<x_n>), <expr_n>)
+ -- Função: deftaylor (<f_1>(<x_1>), <expr_1>, ..., <f_n>(<x_n>),
+          <expr_n>)
      Para cada função <f_i> de uma variável <x_i>, 'deftaylor' define
      <expr_i> como a séries de Taylor sobre zero.  <expr_i> é
      tipicamente um polinómio em <x_i> ou um somatório; expressões mais
@@ -5613,14 +5057,14 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%o3)/T/     1 + x + -- + ------- + -------- + . . .
                                2     18432     307200
 
- -- Variável de opção da class: maxtayorder
+ -- Variável de opção: maxtayorder
      Valor por omissão: 'true'
 
      Quando 'maxtayorder' for 'true', durante a manipulação algébrica de
      séries (truncadas) de Taylor, 'taylor' tenta reter tantos termos
      quantos forem conhecidos serem correctos.
 
- -- Função da class: niceindices (<expr>)
+ -- Função: niceindices (<expr>)
      Renomeia os índices de adições e produtos em <expr>.  'niceindices'
      tenta renomear cada índice para o valor de 'niceindicespref[1]', a
      menos que o nome apareça nas parcelas do somatório ou produtório,
@@ -5654,7 +5098,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
                               l = 1 ====
                                     k = 1
 
- -- Variável de opção da class: niceindicespref
+ -- Variável de opção: niceindicespref
      Valor por omissão: '[i, j, k, l, m, n]'
 
      'niceindicespref' é a lista da qual 'niceindices' obtém os nomes
@@ -5683,7 +5127,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
                               q = 1 ====
                                     p = 1
 
- -- Função da class: nusum (<expr>, <x>, <i_0>, <i_1>)
+ -- Função: nusum (<expr>, <x>, <i_0>, <i_1>)
      Realiza o somatório hipergeométrico indefinido de <expr> com
      relação a <x> usando um procedimento de decisão devido a R.W.
      Gosper.  <expr> e o resultado deve ser expressável como produtos de
@@ -5733,8 +5177,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
                                      ! !
                                     i = 1
 
- -- Função da class: pade (<taylor_series>, <numer_deg_bound>,
-          <denom_deg_bound>)
+ -- Função: pade (<taylor_series>, <numer_deg_bound>, <denom_deg_bound>)
      Retorna uma lista de todas as funções racionais que possuem a dada
      expansão da séries de Taylor onde a adição dos graus do numerador e
      do denominador é menor que ou igual ao nível de truncação das
@@ -5796,7 +5239,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
                             2
            + 2856700692480 x  + 3370143559680 x + 2386516803584)]
 
- -- Variável de opção da class: powerdisp
+ -- Variável de opção: powerdisp
      Valor por omissão: 'false'
 
      Quando 'powerdisp' for 'true', uma adição é mostrada com seus
@@ -5807,7 +5250,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
      Por padão, termos de uma adição são mostrados em ordem do expoente
      decrescente.
 
- -- Função da class: powerseries (<expr>, <x>, <a>)
+ -- Função: powerseries (<expr>, <x>, <a>)
      Retorna a forma geral expansão de séries de potência para <expr> na
      variável <x> sobre o ponto <a> (o qual pode ser 'inf' para
      infinito).
@@ -5845,7 +5288,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%o2)                -------------------------------------
                                                 2
 
- -- Variável de opção da class: psexpand
+ -- Variável de opção: psexpand
      Valor por omissão: 'false'
 
      Quando 'psexpand' for 'true', uma expressão função racional
@@ -5858,8 +5301,8 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
      Quando 'psexpand' for 'multi', então termos com o mesmo grau total
      nas variáveis são agrupados juntos.
 
- -- Função da class: revert (<expr>, <x>)
- -- Função da class: revert2 (<expr>, <x>, <n>)
+ -- Função: revert (<expr>, <x>)
+ -- Função: revert2 (<expr>, <x>, <n>)
      Essas funções retornam a reversão de <expr>, uma série de Taylor
      sobre zero na variável <x>.  'revert' retorna um polinómio de grau
      igual ao maior expoente em <expr>.  'revert2' retorna um polinómio
@@ -5899,13 +5342,13 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%o7)                  - -- + -- - -- + x
                                    4    3    2
 
- -- Função da class: taylor (<expr>, <x>, <a>, <n>)
- -- Função da class: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
- -- Função da class: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
- -- Função da class: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>,
-          ...], [<n_1>, <n_2>, ...])
- -- Função da class: taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>,
-          <a_2>, <n_2>], ...)
+ -- Função: taylor (<expr>, <x>, <a>, <n>)
+ -- Função: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
+ -- Função: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
+ -- Função: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...],
+          [<n_1>, <n_2>, ...])
+ -- Função: taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>,
+          <n_2>], ...)
      'taylor (<expr>, <x>, <a>, <n>)' expande a expressão <expr> em uma
      série truncada de Taylor ou de Laurent na variável <x> em torno do
      ponto <a>, contendo termos até '(<x> - <a>)^<n>'.
@@ -6057,14 +5500,14 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%o16)/T/ ----- + ----- + ------------------------------- + . . .
                     x + y     6                   360
 
- -- Variável de opção da class: taylordepth
+ -- Variável de opção: taylordepth
      Valor por omissão: 3
 
      Se existem ainda termos não zero, 'taylor' dobra o grau da expansão
      de '<g>(<x>)' contanto que o grau da expansão seja menor que ou
      igual a '<n> 2^taylordepth'.
 
- -- Função da class: taylorinfo (<expr>)
+ -- Função: taylorinfo (<expr>)
      Retorna information about the séries de Taylor <expr>.  O valor de
      retorno é uma lista de listas.  Cada lista compreende o nome de uma
      variável, o ponto de expansão, e o grau da expansão.
@@ -6089,11 +5532,11 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%i2) taylorinfo(%);
           (%o2)               [[y, a, inf], [x, 0, 3]]
 
- -- Função da class: taylorp (<expr>)
+ -- Função: taylorp (<expr>)
      Retorna 'true' se <expr> for uma séries de Taylor, e 'false' de
      outra forma.
 
- -- Variável de opção da class: taylor_logexpand
+ -- Variável de opção: taylor_logexpand
      Valor por omissão: 'true'
 
      'taylor_logexpand' controla expansão de logaritmos em séries de
@@ -6110,7 +5553,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
      expansão logarítmica que ocorre é somente aquela que for necessária
      para obter uma séries de potência formal.
 
- -- Variável de opção da class: taylor_order_coefficients
+ -- Variável de opção: taylor_order_coefficients
      Valor por omissão: 'true'
 
      'taylor_order_coefficients' controla a ordenação dos coeficientes
@@ -6119,11 +5562,11 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
      Quando 'taylor_order_coefficients' for 'true', coeficientes da
      séries de Taylor são ordenados canonicamente.
 
- -- Função da class: taylor_simplifier (<expr>)
+ -- Função: taylor_simplifier (<expr>)
      Simplifica coeficientes da séries de potência <expr>.  'taylor'
      chama essa função.
 
- -- Variável de opção da class: taylor_truncate_polynomials
+ -- Variável de opção: taylor_truncate_polynomials
      Valor por omissão: 'true'
 
      Quando 'taylor_truncate_polynomials' for 'true', polinómios são
@@ -6132,12 +5575,12 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
      De outra forma, entrada de polinómios para 'taylor' são
      consideradas terem precisão infinita.
 
- -- Função da class: taytorat (<expr>)
+ -- Função: taytorat (<expr>)
      Converte <expr> da forma 'taylor' para a forma de expressão
      racional canónica (CRE). O efeito é o mesmo que 'rat (ratdisrep
      (<expr>))', mas mais rápido.
 
- -- Função da class: trunc (<expr>)
+ -- Função: trunc (<expr>)
      Coloca notas na representação interna da expressão geral <expr> de
      modo que isso é mostrado como se suas adições forem séries de
      Taylor truncadas.  <expr> is not otherwise modified.
@@ -6153,7 +5596,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%i3) is (expr = trunc (expr));
           (%o3)                         true
 
- -- Função da class: unsum (<f>, <n>)
+ -- Função: unsum (<f>, <n>)
      Retorna a primeira diferençã de trás para frente '<f>(<n>) -
      <f>(<n> - 1)'.  Dessa forma 'unsum' logicamente é a inversa de
      'sum'.
@@ -6183,7 +5626,7 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
           (%o4)                   ----------------
                                   binomial(2 n, n)
 
- -- Variável de opção da class: verbose
+ -- Variável de opção: verbose
      Valor por omissão: 'false'
 
      Quando 'verbose' for 'true', 'powerseries' mostra mensagens de
@@ -6192,20 +5635,20 @@ File: maxima.info,  Node: Definições para Séries,  Prev: Introdução a Séri
 
 File: maxima.info,  Node: Teoria dos Números,  Next: Simetrias,  Prev: Séries,  Up: Top
 
-31, Teoria dos Números
-**********************
+31 Teoria dos Números
+*********************
 
 * Menu:
 
-* Definições para Teoria dos Números::
+* Definições para Teoria dos Números::  
 
 
 File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria dos Números,  Up: Teoria dos Números
 
-31.1, Definições para Teoria dos Números
-========================================
+31.1 Definições para Teoria dos Números
+=======================================
 
- -- Função da class: bern (<n>)
+ -- Função: bern (<n>)
      Retorna o <n>'ésimo número de Bernoulli para o inteiro <n>.
      Números de Bernoulli iguais a zero são suprimidos se 'zerobern' for
      'false'.
@@ -6223,17 +5666,17 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
                       2  6    30  66    2730  6    510    798
 
- -- Função da class: bernpoly (<x>, <n>)
+ -- Função: bernpoly (<x>, <n>)
      Retorna o <n>'ésimo polinómio de Bernoulli na variável <x>.
 
- -- Função da class: bfzeta (<s>, <n>)
+ -- Função: bfzeta (<s>, <n>)
      Retorna a função zeta de Riemann para o argumento <s>.  O valor de
      retorno é um grande inteiro em ponto flutuante (bfloat); <n> é o
      número de dígitos no valor de retorno.
 
      'load ("bffac")' chama essa função.
 
- -- Função da class: bfhzeta (<s>, <h>, <n>)
+ -- Função: bfhzeta (<s>, <h>, <n>)
      Retorna a função zeta de Hurwitz para os argumentos <s> e <h>.  O
      valor de retorno é um grande inteiro em ponto flutuante (bfloat);
      <n> é o números de dígitos no valor de retorno.
@@ -6244,7 +5687,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
 
      'load ("bffac")' chama essa função.
 
- -- Função da class: binomial (<x>, <y>)
+ -- Função: binomial (<x>, <y>)
      O coeficiente binomial '<x>!/(<y>! (<x> - <y>)!)'.  Se <x> e <y>
      forem inteiros, então o valor numérico do coeficiente binomial é
      calculado.  Se <y>, ou <x - y>, for um inteiro, o the coeficiente
@@ -6267,7 +5710,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i5) binomial (11, y);
           (%o5)                    binomial(11, y)
 
- -- Função da class: burn (<n>)
+ -- Função: burn (<n>)
      Retorna o <n>'ésimo número de Bernoulli para o inteiro <n>.  'burn'
      pode ser mais eficitente que 'bern' para valores grandes e isolados
      de <n> (talvez <n> maior que 105 ou algo parecido), como 'bern'
@@ -6280,7 +5723,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
 
      'load ("bffac")' chama essa função.
 
- -- Função da class: cf (<expr>)
+ -- Função: cf (<expr>)
      Converte <expr> em uma fração contínua.  <expr> é uma expressão
      compreendendo frações contínuas e raízes quadradas de inteiros.
      Operandos na expressão podem ser combinados com operadores
@@ -6344,7 +5787,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
                (%i2) cf ([1,1,1,1,1,2]) * 3;
                (%o2)                  [3, 3, 3, 3, 3, 6]
 
- -- Função da class: cfdisrep (<list>)
+ -- Função: cfdisrep (<list>)
      Constrói e retorna uma expressão aritmética comum da forma 'a +
      1/(b + 1/(c + ...))' a partir da representação lista de uma fração
      contínua '[a, b, c, ...]'.
@@ -6360,7 +5803,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
                                             1 + -
                                                 2
 
- -- Função da class: cfexpand (<x>)
+ -- Função: cfexpand (<x>)
      Retorna uma matriz de numeradores e denominadores dos último
      (columa 1) e penúltimo (columa 2) convergentes da fração contínua
      <x>.
@@ -6376,7 +5819,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i3) %[1,1]/%[2,1], numer;
           (%o3)                   3.141592653011902
 
- -- Variável de opção da class: cflength
+ -- Variável de opção: cflength
      Valor por omissão: 1
 
      'cflength' controla o número de termos da fração contínua que a
@@ -6393,8 +5836,8 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i6) cf ((1 + sqrt(5))/2);
           (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
 
- -- Função da class: divsum (<n>, <k>)
- -- Função da class: divsum (<n>)
+ -- Função: divsum (<n>, <k>)
+ -- Função: divsum (<n>)
 
      'divsum (<n>, <k>)' retorna a adição dos divisores de <n> elevados
      à <k>'ésima potência.
@@ -6410,7 +5853,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i4) 1^2 + 2^2 + 3^2 + 4^2 + 6^2 + 12^2;
           (%o4)                          210
 
- -- Função da class: euler (<n>)
+ -- Função: euler (<n>)
      Retorna o <n>'ésimo número de Euler para o inteiro <n> não
      negativo.
 
@@ -6419,14 +5862,14 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
           (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
 
- -- Constante da class: %gamma
+ -- Constante: %gamma
      A constante de Euler-Mascheroni, 0.5772156649015329 ....
 
- -- Função da class: factorial (<x>)
+ -- Função: factorial (<x>)
      Representa a função factorial.  Maxima trata 'factorial (<x>)' da
      mesma forma que '<x>!'.  Veja '!'.
 
- -- Função da class: fib (<n>)
+ -- Função: fib (<n>)
      Retorna o <n>'ésimo número de Fibonacci.  'fib(0)' igual a 0 e
      'fib(1)' igual a 1, e 'fib (-<n>)' igual a '(-1)^(<n> + 1) *
      fib(<n>)'.
@@ -6437,7 +5880,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
           (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
 
- -- Função da class: fibtophi (<expr>)
+ -- Função: fibtophi (<expr>)
      Expressa números de Fibonacci que aparecem em <expr> em termos da
      constante '%phi', que é '(1 + sqrt(5))/2', aproximadamente
      1.61803399.
@@ -6463,7 +5906,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i4) ratsimp (%);
           (%o4)                           0
 
- -- Função da class: ifactors (<n>)
+ -- Função: ifactors (<n>)
      Para um inteiro positivo <n> retorna a factoração de <n>.  Se
      'n=p1^e1..pk^nk' for a decomposição de <n> em factores primos,
      'ifactors' retorna '[[p1, e1], ... , [pk, ek]]'.
@@ -6476,14 +5919,14 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
           (%o2)                        51575319651600
 
- -- Função da class: inrt (<x>, <n>)
+ -- Função: inrt (<x>, <n>)
      Retorna a parte inteira da <n>'ésima raíz do valor absoluto de <x>.
 
           (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
           (%i2) map (lambda ([a], inrt (10^a, 3)), l);
           (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
 
- -- Função da class: inv_mod (<n>, <m>)
+ -- Função: inv_mod (<n>, <m>)
      Calcula o inverso de <n> módulo <m>.  'inv_mod (n,m)' retorna
      'false', se <n> modulo <m> for zero.
 
@@ -6494,20 +5937,20 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i3) inv_mod(3, 42);
           (%o3)                          false
 
- -- Função da class: jacobi (<p>, <q>)
+ -- Função: jacobi (<p>, <q>)
      Retorna símbolo de Jacobi de <p> e <q>.
 
           (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
           (%i2) map (lambda ([a], jacobi (a, 9)), l);
           (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
 
- -- Função da class: lcm (<expr_1>, ..., <expr_n>)
+ -- Função: lcm (<expr_1>, ..., <expr_n>)
      Retorna o menor múltiplo comum entre seus argumentos.  Os
      argumentos podem ser expressões gerais também inteiras.
 
      'load ("functs")' chama essa função.
 
- -- Função da class: minfactorial (<expr>)
+ -- Função: minfactorial (<expr>)
      Examina <expr> procurando por ocorrências de dois factoriais que
      diferem por um inteiro.  'minfactorial' então converte um em um
      polinómio vezes o outro.
@@ -6521,13 +5964,13 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%o2)                    ---------------
                                    (n + 1) (n + 2)
 
- -- Função da class: next_prime (<n>)
+ -- Função: next_prime (<n>)
      Retorna o menor primo maior que <n>.
 
           (%i1) next_prime(27);
           (%o1)                       29
 
- -- Função da class: partfrac (<expr>, <var>)
+ -- Função: partfrac (<expr>, <var>)
      Expande a expressão <expr> em frações parciais com relação à
      variável principal <var>.  'partfrac' faz uma decomposição completa
      de fração parcial.  O algoritmo utilizado é baseado no facto que os
@@ -6552,7 +5995,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
                               x + 2   x + 1          2
                                               (x + 1)
 
- -- Função da class: power_mod (<a>, <n>, <m>)
+ -- Função: power_mod (<a>, <n>, <m>)
      Usa um algoritmo modular para calcular 'a^n mod m' onde <a> e <n>
      são inteiros e <m> é um inteiro positivo.  Se <n> for negativo,
      'inv_mod' é usada para encontrar o inverso modular.
@@ -6566,7 +6009,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i4) inv_mod(2,5);
           (%o4)                          3
 
- -- Função da class: primep (<n>)
+ -- Função: primep (<n>)
      Teste de primalidade.  Se 'primep (n)' retornar 'false', <n> é um
      número compostro e se esse teste retornar 'true', <n> é um número
      primo com grande probabilidade.
@@ -6583,18 +6026,18 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
      'primep_number_of_tests', a probabilidade de <n> passar no teste
      sendo composto é muito menor que 10^-15.
 
- -- Variável de opção da class: primep_number_of_tests
+ -- Variável de opção: primep_number_of_tests
      Valor por omissão: 25
 
      Número de testes de Miller-Rabin usados em 'primep'.
 
- -- Função da class: prev_prime (<n>)
+ -- Função: prev_prime (<n>)
      Retorna o maior primo menor que <n>.
 
           (%i1) prev_prime(27);
           (%o1)                       23
 
- -- Função da class: qunit (<n>)
+ -- Função: qunit (<n>)
      Retorna a principal unidade do campo dos números quadráticos reais
      'sqrt (<n>)' onde <n> é um inteiro, i.e., o elemento cuja norma é
      unidade.  Isso é importante para resolver a equação de Pell 'a^2 -
@@ -6605,17 +6048,17 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%i2) expand (% * (sqrt(17) - 4));
           (%o2)                           1
 
- -- Função da class: totient (<n>)
+ -- Função: totient (<n>)
      Retorna o número de inteiros menores que ou iguais a <n> que são
      relativamente primos com <n>.
 
- -- Variável de opção da class: zerobern
+ -- Variável de opção: zerobern
      Valor por omissão: 'true'
 
      Quando 'zerobern' for 'false', 'bern' exclui os números de
      Bernoulli que forem iguais a zero.  Veja 'bern'.
 
- -- Função da class: zeta (<n>)
+ -- Função: zeta (<n>)
      Retorna a função zeta de Riemann se <x> for um inteiro negativo, 0,
      1, ou número par positivo, e retorna uma forma substantiva 'zeta
      (<n>)' para todos os outros argumentos, incluindo não inteiros
@@ -6629,7 +6072,7 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
           (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
                     120       12    2        6              90
 
- -- Variável de opção da class: zeta%pi
+ -- Variável de opção: zeta%pi
      Valor por omissão: 'true'
 
      Quando 'zeta%pi' for 'true', 'zeta' retorna uma expressão
@@ -6650,23 +6093,23 @@ File: maxima.info,  Node: Definições para Teoria dos Números,  Prev: Teoria d
 
 File: maxima.info,  Node: Simetrias,  Next: Grupos,  Prev: Teoria dos Números,  Up: Top
 
-32, Simetrias
-*************
+32 Simetrias
+************
 
 * Menu:
 
-* Definições para Simetrias::
+* Definições para Simetrias::  
 
 
 File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Simetrias
 
-32.1, Definições para Simetrias
-===============================
+32.1 Definições para Simetrias
+==============================
 
-32.1.1, Mudando a base do sistema de numeração
-----------------------------------------------
+32.1.1 Mudando a base do sistema de numeração
+---------------------------------------------
 
- -- Função da class: comp2pui (<n>, <L>)
+ -- Função: comp2pui (<n>, <L>)
      implementa a passagem das funções simétricas completamente
      simétricas fornecidas na lista <L> para as funções simétricas
      elementares de 0 a <n>.  Se a lista <L> contiver menos que <n+1>
@@ -6679,19 +6122,19 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                   2                    2
           (%o1)    [4, g, 2 h2 - g , 3 h3 - g h2 + g (g  - 2 h2)]
 
- -- Função da class: ele2pui (<m>, <L>)
+ -- Função: ele2pui (<m>, <L>)
      vai de funções simétricas elementares para as funções completas.
      Similar a 'comp2ele' e 'comp2pui'.
 
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: ele2comp (<m>, <L>)
+ -- Função: ele2comp (<m>, <L>)
      Vai de funções simétricas elementares para funções completas.
      Similar a 'comp2ele' e a 'comp2pui'.
 
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: elem (<ele>, <sym>, <lvar>)
+ -- Função: elem (<ele>, <sym>, <lvar>)
      ddecompões o polinómio simétrico <sym>, nas variáveis contidas na
      lista <lvar>, em termos de funções elementares simétricas
      fornecidas na lista <ele>.  Se o primeiro elemento de <ele> for
@@ -6720,7 +6163,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Function da class: mon2schur (<L>)
+ -- Function: mon2schur (<L>)
      a lsita <L> representa a função de Schur S_L: temos L = [i_1, i_2,
      ..., i_q], com i_1 <= i_2 <= ... <= i_q.  A função de Schur S_[i_1,
      i_2, ..., i_q] é a menor da matriz infinita h_[i-j], i <= 1, j <=
@@ -6746,7 +6189,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
               + x2^2 x3 + x3^2 x2
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: multi_elem (<l_elem>, <multi_pc>, <l_var>)
+ -- Função: multi_elem (<l_elem>, <multi_pc>, <l_var>)
      decompões um polinómio multi-simétrico na forma multi-contraída
      <multi_pc> nos grupos de variáveis contidas na lista de listas
      <l_var> en termos de funções elementares simétricas contidas em
@@ -6761,7 +6204,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: multi_pui
+ -- Função: multi_pui
      é para a função 'pui' o que a função 'multi_elem' é para a função
      'elem'.
 
@@ -6771,7 +6214,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o1)              t2 + p1 t1 + ------- - ---
                                              2       2
 
- -- Função da class: pui (<L>, <sym>, <lvar>)
+ -- Função: pui (<L>, <sym>, <lvar>)
      decompõe o polinómio simétrico <sym>, nas variáveis na lista
      <lvar>, em termos de funções exponenciais na lista <L>.  Se o
      primeiro elemento de <L> for fornecido, esse primeiro elemento será
@@ -6797,7 +6240,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                           6
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: pui2comp (<n>, <lpui>)
+ -- Função: pui2comp (<n>, <lpui>)
      converte a dista das primeiras <n> funções completas (com o
      comprimento em primeiro lugar) em termos de funções exponenciais
      fornecidas na lista <lpui>.  se a lista <lpui> for vazia, o
@@ -6823,7 +6266,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                   2               6
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: pui2ele (<n>, <lpui>)
+ -- Função: pui2ele (<n>, <lpui>)
      efectiva a passagem de funções exponenciais para as funções
      elementares simétricas.  Se o sinalizador 'pui2ele' for 'girard',
      'pui2ele' irá retornar a lista de funções elementares simétricas de
@@ -6832,7 +6275,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Outras funções para mudanças de base: 'comp2ele'.
 
- -- Função da class: puireduc (<n>, <lpui>)
+ -- Função: puireduc (<n>, <lpui>)
      <lpui> é uma lista cujo primeiro elemento é um inteiro <m>.
      'puireduc' fornece as primeiras <n> funções exponenciais em termos
      das primeiras <m> funções.
@@ -6848,7 +6291,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o2)              [2, p1, p2, -------------]
                                                2
 
- -- Função da class: schur2comp (<P>, <l_var>)
+ -- Função: schur2comp (<P>, <l_var>)
      <P> é um polinómio nas variáveis da lista <l_var>.  Cada uma dessas
      variáveis represetna uma função simétrica completa.  Na lista
      <l_var> o <i>-ésima função simétrica completa é representada
@@ -6862,10 +6305,10 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o2)                         s  a
                                          3
 
-32.1.2, Modificando represetnações
-----------------------------------
+32.1.2 Modificando represetnações
+---------------------------------
 
- -- Função da class: cont2part (<pc>, <lvar>)
+ -- Função: cont2part (<pc>, <lvar>)
      Retorna o polinómio particionado associado à forma contraída <pc>
      cujas variáveis estão em <lvar>.
 
@@ -6876,7 +6319,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                              3
           (%o2)              [[1, 5, 0], [2 a  b, 4, 1]]
 
- -- Função da class: contract (<psym>, <lvar>)
+ -- Função: contract (<psym>, <lvar>)
      retorna uma forma contraída (i.e.  um monômio de grupo ssimétrico)
      do polinómio <psym> nas variáveis contidas na lista <lvar>.  A
      função 'explose' executa a operação inversa.  A função 'tcontract'
@@ -6892,14 +6335,14 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                         3    4
           (%o2)                      2 a  b x  y
 
- -- Função da class: explose (<pc>, <lvar>)
+ -- Função: explose (<pc>, <lvar>)
      retorna o polinómio simétrico associado com a forma contraída <pc>.
      A lista <lvar> conté as variáveis.
 
           (%i1) explose (a*x + 1, [x, y, z]);
           (%o1)                  a z + a y + a x + 1
 
- -- Função da class: part2cont (<ppart>, <lvar>)
+ -- Função: part2cont (<ppart>, <lvar>)
      vai da forma particionada para a forma contraída de um polinómio
      simétrico.  A forma contraída é convertida com as variáveis em
      <lvar>.
@@ -6908,25 +6351,25 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                                         3    4
           (%o1)                      2 a  b x  y
 
- -- Função da class: partpol (<psym>, <lvar>)
+ -- Função: partpol (<psym>, <lvar>)
      <psym> é um polinómio simétrico nas variáveis da lista <lvar>.
      Essa função retorna sua represetnação particionada.
 
           (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
           (%o1)               [[3, 1, 1], [- a, 1, 0]]
 
- -- Função da class: tcontract (<pol>, <lvar>)
+ -- Função: tcontract (<pol>, <lvar>)
      testa se o polinómio <pol> é simétrico nas variáveis da lista
      <lvar>.  Se for, 'tcontract' retorna uma representação contraída
      como o faz a função 'contract'.
 
- -- Função da class: tpartpol (<pol>, <lvar>)
+ -- Função: tpartpol (<pol>, <lvar>)
      testa se o polinómio <pol> é simétrico nas variáveis da lista
      <lvar>.  Se for, 'tpartpol' retorna sua represetnação particionada
      como o faz a função 'partpol'.
 
- -- Função da class: direct ([<p_1>, ..., <p_n>], <y>, <f>, [<lvar_1>,
-          ..., <lvar_n>])
+ -- Função: direct ([<p_1>, ..., <p_n>], <y>, <f>, [<lvar_1>, ...,
+          <lvar_n>])
      calcula a imagem directa (see M. Giusti, D. Lazard et A. Valibouze,
      ISSAC 1988, Rome) associada à função <f>, na lista de variáveis
      <lvar_1>, ..., <lvar_n>, e nos polinómios <p_1>, ..., <p_n> na
@@ -7007,8 +6450,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'ele2pui' (se o sinalizador 'direct' for escolhido para
      'puissances').
 
- -- Função da class: multi_orbit (<P>, [<lvar_1>, <lvar_2>,...,
-          <lvar_p>])
+ -- Função: multi_orbit (<P>, [<lvar_1>, <lvar_2>,..., <lvar_p>])
 
      <P> é um polinómio no conjunto de variáveis contidas nas lista
      <lvar_1>, <lvar_2>, ..., <lvar_p>.  Essa função retorna a órbita do
@@ -7021,7 +6463,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o2)        [y + x + 2 c, y + x + 2 b, y + x + 2 a]
      Veja também: 'orbit' para a ação de um grupo simétrico simples.
 
- -- Função da class: multsym (<ppart_1>, <ppart_2>, <n>)
+ -- Função: multsym (<ppart_1>, <ppart_2>, <n>)
      retorna oproduto de dois polinómios simétricos em <n> varieis
      trabalhando somente módulo a ação do grupo simétrico de ordem <n>.
      O polinómios estão em sua forma particionada.
@@ -7039,7 +6481,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'contract', 'cont2part', 'explose', 'part2cont', 'partpol',
      'tcontract', 'tpartpol'.
 
- -- Função da class: orbit (<P>, <lvar>)
+ -- Função: orbit (<P>, <lvar>)
      calcula a órbita do polinómio <P> nas variáveis na lista <lvar> sob
      a ação do grupo simétrico do conjunto das variáveis na lista
      <lvar>.
@@ -7052,8 +6494,8 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      Veja também 'multi_orbit' para a ação de um produto de grupos
      simétricos sobre um polinómio.
 
- -- Função da class: pui_direct (<orbite>, [<lvar_1>, ..., <lvar_n>],
-          [<d_1>, <d_2>, ..., <d_n>])
+ -- Função: pui_direct (<orbite>, [<lvar_1>, ..., <lvar_n>], [<d_1>,
+          <d_2>, ..., <d_n>])
 
      Tomemos <f> para ser um polinómio em <n> blocos de variáveis
      <lvar_1>, ..., <lvar_n>.  Façamos <c_i> ser o n;umero de variáveis
@@ -7097,24 +6539,24 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
                            2                   3        2       2        3
                         9 x  y + 12 a x y + 3 x  + 6 a x  + 12 a  x + 8 a ]
 
-32.1.3, Partições
------------------
+32.1.3 Partições
+----------------
 
- -- Função da class: kostka (<part_1>, <part_2>)
+ -- Função: kostka (<part_1>, <part_2>)
      escrita por P. Esperet, calcula o número de Kostka da partição
      <part_1> e <part_2>.
 
           (%i1) kostka ([3, 3, 3], [2, 2, 2, 1, 1, 1]);
           (%o1)                           6
 
- -- Função da class: lgtreillis (<n>, <m>)
+ -- Função: lgtreillis (<n>, <m>)
      retorna a lista de partições de peso <n> e comprimento <m>.
 
           (%i1) lgtreillis (4, 2);
           (%o1)                   [[3, 1], [2, 2]]
      Veja também: 'ltreillis', 'treillis' e 'treinat'.
 
- -- Função da class: ltreillis (<n>, <m>)
+ -- Função: ltreillis (<n>, <m>)
      retorna a lista de partições de peso <n> e comprimento menor que ou
      igual a <m>.
 
@@ -7123,7 +6565,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Veja também: 'lgtreillis', 'treillis' e 'treinat'.
 
- -- Função da class: treillis (<n>)
+ -- Função: treillis (<n>)
      retorna todas as partições de peso <n>.
 
           (%i1) treillis (4);
@@ -7131,7 +6573,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Veja também: 'lgtreillis', 'ltreillis' e 'treinat'.
 
- -- Função da class: treinat (<part>)
+ -- Função: treinat (<part>)
      retorna a lista de partições inferiores à partiçào <part> com
      relação à ordem natural.
 
@@ -7148,10 +6590,10 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Veja também: 'lgtreillis', 'ltreillis' e 'treillis'.
 
-32.1.4, Polinómios e suas raízes
---------------------------------
+32.1.4 Polinómios e suas raízes
+-------------------------------
 
- -- Função da class: ele2polynome (<L>, <z>)
+ -- Função: ele2polynome (<L>, <z>)
      retorna o polinómio em <z> de forma que as funções elementares
      simétricas de suas raízes estejam na lista '<L> = [<n>, <e_1>, ...,
      <e_n>]', onde <n> é o grau dos polinómios e <e_i> é a <i>-ésima
@@ -7169,7 +6611,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Veja também: 'polynome2ele', 'pui2polynome'.
 
- -- Função da class: polynome2ele (<P>, <x>)
+ -- Função: polynome2ele (<P>, <x>)
      fornece a lista '<l> = [<n>, <e_1>, ..., <e_n>]' onde <n> é o grau
      do polinómio <P> na variável <x> e <e_i> é a <i>-ésima função
      simétrica elementar das raízes de <P>.
@@ -7181,14 +6623,14 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o2)            x  - 14 x  + 56 x  - 56 x + 22
      A inversa: 'ele2polynome (<l>, <x>)'
 
- -- Função da class: prodrac (<L>, <k>)
+ -- Função: prodrac (<L>, <k>)
      <L> é uma lista contendo as funções simétricas elementares sobre um
      conjunto <A>.  'prodrac' retorna o polinómio cujas raízes são os
      produtos <k> por <k> dos elementos de <A>.
 
      Veja também 'somrac'.
 
- -- Função da class: pui2polynome (<x>, <lpui>)
+ -- Função: pui2polynome (<x>, <lpui>)
      calcula o polinómio em <x> cujas funções exponenciais das raízes
      são dadas na lista <lpui>.
 
@@ -7205,17 +6647,17 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
           (%o3)                  x  - 4 x  + 5 x - 1
      Veja também: 'polynome2ele', 'ele2polynome'.
 
- -- Função da class: somrac (<L>, <k>)
+ -- Função: somrac (<L>, <k>)
      A lista <L> contains função simétrica elementars de um polynomial
      <P> .  The function computes the polinómio whose roots are the <k>
      by <k> distinct sums of the roots of <P>.
 
      Also see 'prodrac'.
 
-32.1.5, Resolvents
-------------------
+32.1.5 Resolvents
+-----------------
 
- -- Função da class: resolvante (<P>, <x>, <f>, [<x_1>,..., <x_d>])
+ -- Função: resolvante (<P>, <x>, <f>, [<x_1>,..., <x_d>])
      calculates the resolvent of the polinómio <P> in <x> of degree <n>
      >= <d> by the function <f> expressed nas variáveis <x_1>, ...,
      <x_d>.  For efficiency of computation it is important to not
@@ -7389,7 +6831,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_unitaire', 'resolvante_alternee1', 'resolvante_klein',
      'resolvante_klein3', 'resolvante_vierer', 'resolvante_diedrale'.
 
- -- Função da class: resolvante_alternee1 (<P>, <x>)
+ -- Função: resolvante_alternee1 (<P>, <x>)
      calcula a transformação de '<P>(<x>)' de grau <n> pela função
      $\prod_{1\leq i<j\leq n-1} (x_i-x_j)$.  product(x_i - x_j, 1 <= i <
      j <= n - 1).
@@ -7400,7 +6842,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_klein', 'resolvante_klein3', 'resolvante_vierer',
      'resolvante_diedrale', 'resolvante_bipartite'.
 
- -- Função da class: resolvante_bipartite (<P>, <x>)
+ -- Função: resolvante_bipartite (<P>, <x>)
      calcula a trasformação de '<P>(<x>)' de mesmo grau <n> através da
      função x_1 x_2 ... x_[n/2] + x_[n/2 + 1] ... x_n.
 
@@ -7420,7 +6862,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_klein', 'resolvante_klein3', 'resolvante_vierer',
      'resolvante_diedrale', 'resolvante_alternee1'.
 
- -- Função da class: resolvante_diedrale (<P>, <x>)
+ -- Função: resolvante_diedrale (<P>, <x>)
      +calculates the transformation of '<P>(<x>)' by the function
      +'<x_1> <x_2> + <x_3> <x_4>'.
 
@@ -7439,7 +6881,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_alternee1', 'resolvante_klein', 'resolvante_klein3',
      'resolvante_vierer', 'resolvante'.
 
- -- Função da class: resolvante_klein (<P>, <x>)
+ -- Função: resolvante_klein (<P>, <x>)
      +calculates the transformation of '<P>(<x>)' by the function
      +'<x_1> <x_2> <x_4> + <x_4>'.
 
@@ -7449,7 +6891,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_alternee1', 'resolvante', 'resolvante_klein3',
      'resolvante_vierer', 'resolvante_diedrale'.
 
- -- Função da class: resolvante_klein3 (<P>, <x>)
+ -- Função: resolvante_klein3 (<P>, <x>)
      calcula a transformação de '<P>(<x>)' através da função '<x_1>
      <x_2> <x_4> + <x_4>'.
 
@@ -7459,7 +6901,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_alternee1', 'resolvante_klein', 'resolvante',
      'resolvante_vierer', 'resolvante_diedrale'.
 
- -- Função da class: resolvante_produit_sym (<P>, <x>)
+ -- Função: resolvante_produit_sym (<P>, <x>)
      calcula a lista de todas as resolventes de produto do polinómio
      '<P>(<x>)'.
 
@@ -7485,7 +6927,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_klein', 'resolvante_klein3', 'resolvante_vierer',
      'resolvante_diedrale'.
 
- -- Função da class: resolvante_unitaire (<P>, <Q>, <x>)
+ -- Função: resolvante_unitaire (<P>, <Q>, <x>)
      +computes the resolvent of the polinómio '<P>(<x>)' by the
      +polynomial '<Q>(<x>)'.
 
@@ -7495,7 +6937,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_klein', 'resolvante_klein3', 'resolvante_vierer',
      'resolvante_diedrale'.
 
- -- Função da class: resolvante_vierer (<P>, <x>)
+ -- Função: resolvante_vierer (<P>, <x>)
      calcula a transformação de '<P>(<x>)' pela função '<x_1> <x_2> -
      <x_3> <x_4>'.
 
@@ -7505,16 +6947,16 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'resolvante_alternee1', 'resolvante_klein', 'resolvante_klein3',
      'resolvante', 'resolvante_diedrale'.
 
- -- Função da class: multinomial (<r>, <part>)
+ -- Função: multinomial (<r>, <part>)
      onde <r> é o peso da partição <part>.  Essa função retorna o
      coefinciente multinomial associado: se as partes de <part> forem
      <i_1>, <i_2>, ..., <i_k>, o resultado é '<r>!/(<i_1>! <i_2>! ...
      <i_k>!)'.
 
- -- Função da class: permut (<L>)
+ -- Função: permut (<L>)
      retorna a lista de permutações da lista <L>.
 
- -- Função da class: tcontract (<pol>, <lvar>)
+ -- Função: tcontract (<pol>, <lvar>)
      testa se o polinómio <pol> é simétrico nas variáveis contidas na
      lista <lvar>.  se for é rtornado uma forma contraída da forma
      retornada pela função 'contract'.
@@ -7524,7 +6966,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'contract', 'cont2part', 'explose', 'part2cont', 'partpol',
      'tpartpol'.
 
- -- Função da class: tpartpol (<pol>, <lvar>)
+ -- Função: tpartpol (<pol>, <lvar>)
      testa se o polinómio <pol> é simétrico nas variáveis contidas na
      lista <lvar>.  Se for simétrico 'tpartpol' produz a forma
      particionada como a função 'partpol'.
@@ -7534,7 +6976,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
      'contract', 'cont2part', 'explose', 'part2cont', 'partpol',
      'tcontract'.
 
- -- Função da class: treillis (<n>)
+ -- Função: treillis (<n>)
      retorna todas as partições de peso <n>.
 
           (%i1) treillis (4);
@@ -7542,7 +6984,7 @@ File: maxima.info,  Node: Definições para Simetrias,  Prev: Simetrias,  Up: Si
 
      Veja também : 'lgtreillis', 'ltreillis' e 'treinat'.
 
- -- Função da class: treinat (<part>)
+ -- Função: treinat (<part>)
      retorna a lista das partições inferiores à partição <part> pela
      ordem natural.
 

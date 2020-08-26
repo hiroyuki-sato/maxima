@@ -18,11 +18,10 @@
 
 (macsyma-module trans2)
 
-
-(def%tr $random (form) `($fixnum . ($random ,@(tr-args (cdr form)))))
-
-(def%tr mequal (form)
-  `($any . (simplify (list '(mequal) ,@(tr-args (cdr form))))))
+(def%tr $random (form)
+  (destructuring-bind (mode . arg) (translate (cadr form))
+    (cons (or (find mode '($fixnum $float) :test #'eq) '$number)
+          `($random ,arg))))
 
 (def%tr mcall (form)
   (setq form (cdr form))
@@ -180,8 +179,7 @@
     (let ((op (car form)))
       `(,mode . (,(if (and (= (length form) 2)
 			   (eq mode '$float))
-		      (progn (push-autoload-def 'marrayref '(marrayref1$))
-			     'marrayref1$)
+		      'marrayref1$
 		      'marrayref)
 		 ,op . ,(cdr form))))))
 
@@ -194,9 +192,7 @@
     (destructuring-let (((val aarray . inds) form))
       `(,mode . (,(if (and (= (length inds) 1)
 			   (eq mode '$float))
-		      (progn
-			(push-autoload-def 'marrayset '(marrayset1$))
-			'marrayset1$)
+		      'marrayset1$
 		      'marrayset)
 		  ,val ,aarray . ,inds)))))
 

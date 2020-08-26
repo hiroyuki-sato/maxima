@@ -13,7 +13,7 @@
 (macsyma-module trutil)
 
 (defun tr-gensym ()
-  (gentemp (symbol-name 'tr-gensym)))
+  (intern (symbol-name (gensym "TR-GENSYM")) :maxima))
 
 (defun push-defvar (var val)
   ;; makes sure there is a form in the beginning of the
@@ -49,21 +49,6 @@
 		  (unless winp
 		    (barfo "Bad *pre-transl-forms*"))))))))
 
-(defun push-autoload-def (old-entry new-entries)
-  (and (get old-entry 'autoload)
-       ;; don't need this if it is IN-CORE.
-       ;; this automaticaly punts this shit for systems
-       ;; that don't need it.
-       (do ((entry))
-	   ((null new-entries))
-	 (setq entry (pop new-entries))
-	 (push-pre-transl-form
-	      `(putprop ',entry
-			;; this ensures that the autoload definition
-			;; will not get out of date.
-		(or (get ',old-entry 'autoload) t)
-		'autoload)))))
-
 (defun tr-nargs-check (form &optional (args-p nil) (nargs (length (cdr form))))
   ;; the maclisp args info format is NIL meaning no info,
   ;; probably a lexpr. or cons (min . max)
@@ -72,11 +57,12 @@
 	     (min (or (car args-p) (cdr args-p)))
 	     (max (cdr args-p)))
 	 (cond ((and min (< nargs min))
-		(mformat *translation-msgs-files* (intl:gettext "error: too few arguments supplied to ~:@M~%")
-			 (caar form))
-		(mgrind form *translation-msgs-files*))
+		(tr-format (intl:gettext "error: too few arguments supplied to ~:@M~%~:M~%")
+			   (caar form)
+			   form))
 	       ((and max (> nargs max))
-		(tr-format  (intl:gettext "error: too many arguments supplied to ~:@M~%") (caar form))
-		(mgrind form *translation-msgs-files*)))))
+		(tr-format (intl:gettext "error: too many arguments supplied to ~:@M~%~:M~%")
+			   (caar form)
+			   form)))))
   nargs) ;; return the number of arguments.
 

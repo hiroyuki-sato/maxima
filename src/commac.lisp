@@ -12,8 +12,6 @@
   #+gcl (eval-when (eval) (compiler::compiler-def-hook (first f) body))
   `(setf (get ',(first f) ',(second f)) #'(lambda ,arg ,@body)))
 
-(defvar *prin1* nil)		  ;a function called instead of prin1.
-
 ;; Should we give this a different name?
 (defvar *fortran-print* nil
   "Tells EXPLODEN we are printing numbers for Fortran so include the exponent marker.")
@@ -527,7 +525,7 @@ values")
 ;; Note:  symb can also be a number, not just a symbol.
 (defun explode (symb)
   (declare (optimize (speed 3)))
-  (map 'list #'(lambda (v) (intern (string v))) (format nil "~a" symb)))
+  (map 'list #'(lambda (v) (intern (string v))) (format nil "~s" symb)))
 
 ;;; return the first character of the name of a symbol or a string or char
 (defun get-first-char (symb)
@@ -639,8 +637,6 @@ values")
 	  (setq ch (tyi-raw stream eof-option))
 	  (return-from eat-continuations ch))))
     ch))
-
-(defvar ^w nil)
 
 (defmfun $timedate (&optional (time (get-universal-time)) tz)
   (cond

@@ -15,7 +15,6 @@
 (declare-top
  ;; evaluate for declarations
  (special
-  ^w			;If T, then no output goes to the console.
   linel			;Width of screen.
   ttyheight		;Height of screen.
 
@@ -29,9 +28,10 @@
 ;; (PUSH-STRING "foo" RESULT) --> (SETQ RESULT (APPEND '(#/o #/o #/f) RESULT))
 
 (defmacro push-string (string symbol)
-  (check-arg string stringp "a string")
   (check-arg symbol symbolp "a symbol")
-  `(setq ,symbol (list* ,@(nreverse (exploden string)) ,symbol)))
+  (if (stringp string)
+    `(setq ,symbol (list* ,@(nreverse (exploden string)) ,symbol))
+    `(setq ,symbol (append (nreverse (exploden ,string)) ,symbol))))
 
 ;; Macros for setting up dispatch table.
 ;; Don't call this DEF-DISPLA, since it shouldn't be annotated by
