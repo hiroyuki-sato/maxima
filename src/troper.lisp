@@ -147,11 +147,6 @@
 (def%tr bigfloat (form)
   `($any . ',form))
 
-(def%tr %sqrt (form)
-  (setq form (translate (cadr form)))
-  (if (eq '$float (car form)) `($float sqrt ,(cdr form))
-      `($any simplify (list '(%sqrt) ,(cdr form)))))
-
 (def%tr mabs (form) 
   (setq form (translate (cadr form)))
   (if (covers '$number (car form)) (list (car form) 'abs (cdr form))
@@ -160,16 +155,7 @@
 (def%tr %signum (form)
   (destructuring-let (( (mode . arg) (translate (cadr form))))
     (cond ((member mode '($fixnum $float) :test #'eq)
-	   (let ((temp (tr-gensym)))
-	     `($fixnum . ((lambda (,temp)
-			    (declare (,(if (eq mode '$float)	
-					   'flonum
-					   'fixnum)
-				       ,temp))
-			    (cond ((minusp ,temp) -1)
-				  ((plusp ,temp) 1)
-				  (t 0)))
-			  ,arg))))
+	   `(,mode . (cl:signum ,arg)))
 	  (t
 	   ;; even in this unknown case we can do a hell
 	   ;; of a lot better than consing up a form to
@@ -224,22 +210,9 @@
       (cons '$float (dconv-$float form))
       `($any $float ,(cdr form))))
 
-(def%tr %exp (form)
-  (setq form (translate (cadr form)))
-  (if (eq '$float (car form))
-      `($float exp ,(cdr form))
-      `($any simplify (list '(%exp) ,(cdr form)))))
-
 (def%tr $atan2 (form)
   (setq form (cdr form))
   (let ((x (translate (car form))) (y (translate (cadr form))))
     (if (eq '$float (*union-mode (car x) (car y)))
-	`($float atan ,(cdr x) ,(cdr y))
+	`($float atan ,(dconv-$float x) ,(dconv-$float y))
 	`($any simplify (list '($atan2) ,(cdr x) ,(cdr y))))))
-
-(def%tr %atan (form)
-  (setq form (cdr form))
-  (let ((x (translate (car form))))
-    (if (eq '$float (car x))
-	`($float atan ,(cdr x))
-	`($any simplify (list '(%atan) ,(cdr x))))))

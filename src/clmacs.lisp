@@ -337,17 +337,6 @@
     (or not-dim1 (setf (gethash 'dim1 table) t))
     table))
 
-;;; Range of atan should be [0,2*pi]
-(defun atan (y x)
-  (let ((tem (cl:atan y x)))
-    (if (>= tem 0)
-	tem
-	(+ tem (* 2 pi)))))
-
-;;; Range of atan2 should be (-pi,pi]
-;;; CL manual says that's what lisp::atan is supposed to have.
-(deff atan2 #'cl:atan)
-
 ;;; exp is shadowed to save trouble for other packages--its declared special
 (deff exp #'cl:exp)
 
@@ -435,6 +424,7 @@
 (defconstant least-negative-flonum least-negative-double-float)
 (defconstant flonum-epsilon double-float-epsilon)
 (defconstant least-positive-normalized-flonum least-positive-normalized-double-float)
+(defconstant least-negative-normalized-flonum least-negative-normalized-double-float)
 
 (defconstant flonum-exponent-marker #\D)
 )
@@ -587,50 +577,3 @@
 ; one2 k
 ; one1 l
 ; nil
-
-;; Defines a function named NAME that checks that the number of
-;; arguments is correct.  If the number of actual arguments is
-;; incorrect, a maxima error is signaled.
-;;
-;; The required arguments is given by REQUIRED-ARG-LIST.  Allowed
-;; (maxima) keyword arguments is given by KEYWORD-ARG-LIST.
-;;
-;; The body of the function can refer to KEYLIST which is the list of
-;; maxima keyword arguments converted to lisp keyword arguments.
-
-(defmacro defun-checked (name ((&rest required-arg-list)
-			       &rest keyword-arg-list)
-			 &body body)
-  (let ((number-of-required-args (length required-arg-list))
-	(number-of-keyword-args (length keyword-arg-list))
-	(arg-list (gensym "ARG-LIST-"))
-	(helper-fun (gensym "REAL-FUN-"))
-	(options (gensym "OPTIONS-ARG-")))
-    `(defun ,name (&rest ,arg-list)
-       ;; Check that the required number of arguments is given and
-       ;; that we don't supply too many arguments.
-       ;;
-       ;; NOTE: The check when keyword args are given is a little too
-       ;; tight.  It's valid to have duplicate keyword args, but we
-       ;; disallow that if the number of arguments exceed the limit.
-       (when (or (> (length ,arg-list) ,(+ number-of-required-args number-of-keyword-args))
-		 (< (length ,arg-list) ,number-of-required-args))
-	 (merror (intl:gettext "~M arguments supplied to ~M: found ~M")
-		 (if (< (length ,arg-list) ,number-of-required-args)
-		     (intl:gettext "Too few")
-		     (if (> (length ,arg-list) ,(+ number-of-required-args
-						   number-of-keyword-args))
-			 (intl:gettext "Too many")
-			 (intl:gettext "Incorrect number of")))
-		 ',(if keyword-arg-list
-		       `((,name) ,@required-arg-list ((mlist simp) ,@keyword-arg-list))
-		       `((,name) ,@required-arg-list))
-		 (cons '(mlist) ,arg-list)))
-       (flet ((,helper-fun (,@required-arg-list
-			    ,@(when keyword-arg-list
-				`(&rest ,options)))
-		(let ,(when keyword-arg-list
-			`((keylist (lispify-maxima-keyword-options ,options
-								   ',keyword-arg-list))))
-	      ,@body)))
-	 (apply #',helper-fun ,arg-list)))))

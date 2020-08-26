@@ -1,4 +1,4 @@
-This is imaxima.info, produced by makeinfo version 6.6 from
+This is imaxima.info, produced by makeinfo version 5.1 from
 imaxima.texi.
 
 INFO-DIR-SECTION Emacs
@@ -24,13 +24,15 @@ Imaxima
 Imaxima is a package for displaying the output from the computer algebra
 system Maxima as images typeset by TeX.
 
-This manual documents imaxima version 5.43.2.  You can download the
-latest version of imaxima from
-<http://members3.jcom.home.ne.jp/imaxima/>.
+This manual documents imaxima version branch_5_44_base_3_gdf5d933.  You
+can download the latest version of imaxima from the Maxima website
+(http://maxima.sourceforge.net/).
 
 Since version 1.0b, imaxima and imath supports inline graph.
 
-Send suggestions and bug reports to Yasuaki Honda <imaxima@mac.com>.
+Send suggestions and bug reports to the Maxima email list
+<maxima-discuss@lists.sourceforge.net> or the Maxima bug tracker
+(https://sourceforge.net/p/maxima/bugs/).
 
 * Menu:
 
@@ -66,15 +68,12 @@ If you use Interactive Math minor mode, put
 in your '.emacs' file.
 
 To do line breaking imaxima requires the LaTeX package 'breqn'.  This
-package is officially distributed by Morten Høgholm from
-<http://www.ctan.org/tex-archive/macros/latex/contrib/mh> as mh.zip.
-
-Alternatively, for the easy installation, you may download
-<http://members3.jcom.home.ne.jp/imaxima/breqn097a.zip>.  Compared to
-mh.zip, breqn097a.zip contains all the '*.sty' and '*.sym' files in it.
+package is currently distributed from its CTAN webpage
+(https://ctan.org/pkg/breqn) as breqn.tds.zip
+(http://mirrors.ctan.org/install/macros/latex/contrib/breqn.tds.zip).
 
 The files in 'breqn' must be installed in a place where TeX can find
-them.  In a typical teTeX installation you should put the '*.sty' and
+them.  In a typical LaTeX installation you should put the '*.sty' and
 '*.sym' files in
 
      /usr/share/texmf/tex/latex/breqn/
@@ -112,7 +111,8 @@ File: imaxima.info,  Node: Usage,  Next: Inline Graph,  Prev: Installation,  Up:
 2 Usage
 *******
 
-To start using imaxima just type 'M-x imaxima'.
+To start using imaxima just type 'M-x imaxima'.  The imaxima directory
+needs to be on Emacs' 'load-path'.
 
  -- Function: imaxima
      Starts a Maxima session in an Emacs buffer.
@@ -169,6 +169,10 @@ If there is an error in a LaTeX expression you can press 'Mouse-2' (or
      Maxima expression such as 1+2; to ensure that the imaxima does
      respond to you now.
 
+ -- Function: imaxima-print-buffer
+     Run LaTeX on the current buffer and show output.  See *Note
+     imaxima-print-tex-command::.  for how LaTeX is run.
+
 
 File: imaxima.info,  Node: Inline Graph,  Next: Options,  Prev: Usage,  Up: Top
 
@@ -188,23 +192,23 @@ If this works fine, then quite likely 'wxplot2d' works, too.
 
 Following commands can be used in a maxima session to draw graphs to be
 displayed inline: 'wxplot2d', 'wxplot3d', 'wxdraw2d', 'wxdraw3d',
-'wximplicit_plot', and 'wxcontour_plot'.
+'wximplicit_plot', and 'wxcontour_plot'.  New in version 1.0d, the
+graphics commands 'wxdraw', 'wxjulia' and 'wxmandelbroit' also provide
+inline images.
 
-They correspond to their original commands 'plot2d', 'plot3d', 'draw2d',
-'draw3d', 'implicit_plot', and 'contour_plot'.
-
-The syntax of the wx-prefixed versions of the commands and their
-arguments are the same as the ones of the corresponding original
-commands.  Hence, 'wxplot2' draws a graph inline in maxima session,
-while 'plot2d' displays the same graph in the different window.
+The syntax and capabilities of the wx-prefixed versions of the commands
+and their arguments are the same as the ones of the corresponding
+original commands.  Hence, 'wxplot2' draws a graph inline in maxima
+session, while 'plot2d' displays the same graph in the different window.
 
 The wx-prefixed versions of the commands set up arguments so that
 Gnuplot is used to draw the graph and writes the graph in extended
 postscript format into a temporary file.  So, it is suggested not to use
 plot options such as 'plot_format'.
 
-'wxdraw2d' and 'wxdraw3d' autamatically load the draw package since they
-call 'draw2d' and 'draw3d' internally.
+The 'wxdraw' family of commands automatically load the draw package
+since they call 'draw' internally.  Similarly, 'wxjulia' and
+'wxmandelbroit' automatically load the dynamics package.
 
 
 File: imaxima.info,  Node: Options,  Next: Imath minor mode,  Prev: Inline Graph,  Up: Top
@@ -335,6 +339,9 @@ change these options.
      case you might have to remove the options '-dTextAlphaBits=4' and
      '-dGraphicsAlphaBits=4'.
 
+ -- User Option: imaxima-cp-program
+     The default 'copy' program.
+
  -- User Option: imaxima-dvips-program
      Dvips executable.
 
@@ -375,6 +382,16 @@ change these options.
      When imaxima-to-html function is called, the function determines
      the directory into which the session.html file and the
      session-images directory are created.  The default value is "~".
+
+ -- User Option: imaxima-print-tex-file
+     Name of the LaTeX file name to be created by
+     'imaxima-print-buffer'.  Do not include ".tex" suffix.  This file
+     will be stored in the directory 'imaxima-tmp-dir'.
+
+ -- User Option: imaxima-print-tex-command
+     Command to run LaTeX on the file created by 'imaxima-print-buffer'.
+     In the string '%s' is replaced by the name of the tex file.  e.g.
+     "pdflatex %s; xpdf %s"
 
 
 File: imaxima.info,  Node: Imath minor mode,  Next: Index,  Prev: Options,  Up: Top
@@ -439,57 +456,70 @@ File: imaxima.info,  Node: Index,  Prev: Imath minor mode,  Up: Top
 * Menu:
 
 * breqn:                                 Installation.         (line  6)
-* CMUCL:                                 Miscellaneous.        (line 50)
+* CMUCL:                                 Miscellaneous.        (line 53)
 * concrete:                              Appearance.           (line 43)
 * euler:                                 Appearance.           (line 43)
 * ghostscript:                           Miscellaneous.        (line 17)
-* imaxima:                               Usage.                (line  8)
+* imaxima:                               Usage.                (line  9)
 * imaxima-bg-color:                      Appearance.           (line 27)
-* imaxima-clean-up:                      Usage.                (line 43)
-* imaxima-dvips-options:                 Miscellaneous.        (line 29)
-* imaxima-dvips-program:                 Miscellaneous.        (line 26)
+* imaxima-clean-up:                      Usage.                (line 44)
+* imaxima-cp-program:                    Miscellaneous.        (line 26)
+* imaxima-dvips-options:                 Miscellaneous.        (line 32)
+* imaxima-dvips-program:                 Miscellaneous.        (line 29)
 * imaxima-equation-color:                Appearance.           (line 21)
-* imaxima-exit-hook:                     Miscellaneous.        (line 59)
+* imaxima-exit-hook:                     Miscellaneous.        (line 62)
 * imaxima-fg-color:                      Appearance.           (line 31)
 * imaxima-fnt-size:                      Appearance.           (line 10)
 * imaxima-gs-options:                    Miscellaneous.        (line 20)
 * imaxima-gs-program:                    Miscellaneous.        (line 17)
-* imaxima-html-dir:                      Miscellaneous.        (line 62)
+* imaxima-html-dir:                      Miscellaneous.        (line 65)
 * imaxima-image-type:                    Miscellaneous.        (line  9)
-* imaxima-initex-option:                 Miscellaneous.        (line 43)
+* imaxima-initex-option:                 Miscellaneous.        (line 46)
 * imaxima-label-color:                   Appearance.           (line 24)
-* imaxima-latex:                         Usage.                (line 32)
+* imaxima-latex:                         Usage.                (line 33)
 * imaxima-latex-error-face:              Appearance.           (line 48)
 * imaxima-latex-preamble:                Appearance.           (line 35)
 * imaxima-linearize-flag:                Line Breaking.        (line 23)
-* imaxima-lisp-file:                     Miscellaneous.        (line 37)
+* imaxima-lisp-file:                     Miscellaneous.        (line 40)
 * imaxima-max-scale:                     Line Breaking.        (line 17)
-* imaxima-maxima-options:                Miscellaneous.        (line 50)
-* imaxima-maxima-program:                Miscellaneous.        (line 47)
+* imaxima-maxima-options:                Miscellaneous.        (line 53)
+* imaxima-maxima-program:                Miscellaneous.        (line 50)
+* imaxima-print-buffer:                  Usage.                (line 64)
+* imaxima-print-tex-command:             Miscellaneous.        (line 75)
+* imaxima-print-tex-file:                Miscellaneous.        (line 70)
 * imaxima-pt-size:                       Appearance.           (line  6)
 * imaxima-scale-factor:                  Appearance.           (line 15)
-* imaxima-startup-hook:                  Miscellaneous.        (line 56)
-* imaxima-tex-program:                   Miscellaneous.        (line 40)
-* imaxima-tmp-dir:                       Miscellaneous.        (line 33)
-* imaxima-to-html:                       Usage.                (line 36)
-* imaxima-use-maxima-mode-flag:          Usage.                (line 24)
-* imaxima-version:                       Usage.                (line 49)
+* imaxima-startup-hook:                  Miscellaneous.        (line 59)
+* imaxima-tex-program:                   Miscellaneous.        (line 43)
+* imaxima-tmp-dir:                       Miscellaneous.        (line 36)
+* imaxima-to-html:                       Usage.                (line 37)
+* imaxima-use-maxima-mode-flag:          Usage.                (line 25)
+* imaxima-version:                       Usage.                (line 50)
 * jpeg:                                  Miscellaneous.        (line  9)
 * png:                                   Miscellaneous.        (line  9)
-* reinit-imaxima:                        Usage.                (line 54)
+* reinit-imaxima:                        Usage.                (line 55)
 
 
 
 Tag Table:
 Node: Top530
-Node: Installation1288
-Node: Usage3312
-Node: Inline Graph5754
-Node: Options7289
-Node: Appearance7694
-Node: Line Breaking9381
-Node: Miscellaneous10734
-Node: Imath minor mode13008
-Node: Index15259
+Node: Installation1414
+Node: Usage3281
+Ref: imaxima-print-buffer5781
+Node: Inline Graph5939
+Node: Options7556
+Node: Appearance7961
+Node: Line Breaking9648
+Node: Miscellaneous11001
+Ref: imaxima-tmp-dir12225
+Ref: imaxima-print-tex-file13345
+Ref: imaxima-print-tex-command13563
+Node: Imath minor mode13779
+Node: Index16030
 
 End Tag Table
+
+
+Local Variables:
+coding: iso-8859-1
+End:

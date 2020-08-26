@@ -2326,6 +2326,7 @@ x + 99 is equal to x
 @anchor{mode_declare}
 @anchor{modedeclare}
 @deffn {Function} mode_declare (@var{y_1}, @var{mode_1}, @dots{}, @var{y_n}, @var{mode_n})
+@deffnx {Function} modedeclare (@var{y_1}, @var{mode_1}, @dots{}, @var{y_n}, @var{mode_n})
 
 A @code{mode_declare} informs the compiler which type (lisp programmers name the type:
 ``mode'') a function parameter or its return value will be of. This can greatly
@@ -2337,16 +2338,12 @@ The arguments of @code{mode_declare} are pairs consisting of a variable (or a li
 of variables all having the same mode) and a mode. Available modes (``types'') are:
 @example
 array            an declared array (see the detailed description below)
-string           a string
 boolean          true or false
 integer          integers (including arbitrary-size integers)
 fixnum           integers (excluding arbitrary-size integers)
 float            machine-size floating-point numbers
 real             machine-size floating-point or integer
-@c DOES NUMBER, EVEN AND ODD INCLUDE BFLOATS AND ARBITRARY-SIZE INTS?
 number           Numbers
-even             Even integers
-odd              Odd integers
 any              any kind of object (useful for arrays of any)
 @end example
 
@@ -2600,32 +2597,12 @@ which there is no function definition.
 @defvr {Option variable} savedef
 Default value: @code{true}
 
-When @code{savedef} is @code{true}, the Maxima version of a user function is
+When @code{savedef} is @code{true}, the Maxima version of an user function is
 preserved when the function is translated.  This permits the definition to be
 displayed by @code{dispfun} and allows the function to be edited.
 
 When @code{savedef} is @code{false}, the names of translated functions are
 removed from the @code{functions} list.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-@end defvr
-
-@c IS THERE ANY REASON TO SET transcompile: false ??
-@c MAYBE THIS VARIABLE COULD BE PERMANENTLY SET TO true AND STRUCK FROM THE DOCUMENTATION.
-
-@c -----------------------------------------------------------------------------
-@anchor{transcompile}
-@defvr {Option variable} transcompile
-Default value: @code{true}
-
-When @code{transcompile} is @code{true}, @code{translate} and
-@code{translate_file} generate declarations to make the translated code more
-suitable for compilation.
-@c BUT THE DECLARATIONS DON'T SEEM TO BE NECESSARY, SO WHAT'S THE POINT AGAIN ??
-
-@code{compfile} sets @code{transcompile: true} for the duration.
 
 @opencatbox
 @category{Translation flags and variables}
@@ -2669,7 +2646,7 @@ code gets generated.  Thus, the user should not set the @code{simp} switch to
 @code{false} which inhibits simplification of the expressions to be translated.
 
 The switch @code{translate}, if @code{true}, causes automatic
-translation of a user's function to Lisp.
+translation of an user's function to Lisp.
 
 Note that translated
 functions may not run identically to the way they did before
@@ -2681,7 +2658,7 @@ Also the @code{prederror: false} setting
 will not translate.
 @c WHAT ABOUT % AND %% ???
 
-@code{savedef} - if @code{true} will cause the Maxima version of a user
+@code{savedef} - if @code{true} will cause the Maxima version of an user
 function to remain when the function is @code{translate}'d.  This permits the
 definition to be displayed by @code{dispfun} and allows the function to be
 edited.
@@ -2758,7 +2735,6 @@ See also
 @mrefcomma{tr_function_call_default}
 @mrefcomma{tr_numer}
 @mrefcomma{tr_optimize_max_loop}
-@mrefcomma{tr_semicompile}
 @mrefcomma{tr_state_vars}
 @mrefcomma{tr_warnings_get}
 @c Not documented
@@ -2819,14 +2795,45 @@ otherwise array names appear as literal symbols in translated code.
 @defvr {Option variable} tr_bound_function_applyp
 Default value: @code{true}
 
-When @code{tr_bound_function_applyp} is @code{true}, Maxima gives a warning if a
-bound variable (such as a function argument) is found being used as a function.
-@c WHAT DOES THIS MEAN ??
-@code{tr_bound_function_applyp} does not affect the code generated in such
-cases.
+When @code{tr_bound_function_applyp} is @code{true} and @code{tr_function_call_default}
+is @code{general}, if a bound variable (such as a function argument) is found being
+used as a function then Maxima will rewrite that function call using @code{apply} and
+print a warning message.
 
-For example, an expression such as @code{g (f, x) := f (x+1)} will trigger
-the warning message.
+For example, if @code{g} is defined by @code{g(f,x) := f(x+1)} then translating
+@code{g} will cause Maxima to print a warning and rewrite @code{f(x+1)} as
+@code{apply(f,[x+1])}.
+
+@c ===beg===
+@c f (x) := x^2$
+@c g (f) := f (3)$
+@c tr_bound_function_applyp : true$
+@c translate (g)$
+@c g (lambda ([x], x));
+@c tr_bound_function_applyp : false$
+@c translate (g)$
+@c g (lambda ([x], x));
+@c ===end===
+@example
+(%i1) f (x) := x^2$
+(%i2) g (f) := f (3)$
+(%i3) tr_bound_function_applyp : true$
+@group
+(%i4) translate (g)$
+warning: f is a bound variable in f(3), but it is used as a function.
+note: instead I'll translate it as: apply(f,[3])
+@end group
+@group
+(%i5) g (lambda ([x], x));
+(%o5)                           3
+@end group
+(%i6) tr_bound_function_applyp : false$
+(%i7) translate (g)$
+@group
+(%i8) g (lambda ([x], x));
+(%o8)                           9
+@end group
+@end example
 
 @opencatbox
 @category{Translation flags and variables}
@@ -2848,20 +2855,14 @@ translation of the file are only inserted into the UNLISP file.
 @closecatbox
 @end defvr
 
-@c THIS FLAG APPEARS TO HAVE NO EFFECT. SHOULD CUT OUT THIS ITEM AND RELATED CODE.
-@c NOTE THAT THERE IS CODE IN src/transf.lisp WHICH USES THIS FLAG BUT THE MODE
-@c FLAG IS LOST SOMEWHERE ALONG THE WAY TO THE LISP OUTPUT FILE.
-
 @c -----------------------------------------------------------------------------
 @anchor{tr_float_can_branch_complex}
 @defvr {Option variable} tr_float_can_branch_complex
 Default value: @code{true}
 
 Tells the Maxima-to-Lisp translator to assume that the functions 
-@code{acos}, @code{asin}, @code{asec}, and @code{acsc} can return complex results.
-
-The ostensible effect of @code{tr_float_can_branch_complex} is the following.
-However, it appears that this flag has no effect on the translator output.
+@code{acos}, @code{asin}, @code{asec}, @code{acsc}, @code{log}
+and @code{sqrt} can return complex results.
 
 When it is @code{true} then @code{acos(x)} is of mode @code{any}
 even if @code{x} is of mode @code{float} (as set by @code{mode_declare}).
@@ -2921,20 +2922,6 @@ non-terminating optimization properties.
 @closecatbox
 @end defvr
 
-@c -----------------------------------------------------------------------------
-@anchor{tr_semicompile}
-@defvr {Option variable} tr_semicompile
-Default value: @code{false}
-
-When @code{tr_semicompile} is @code{true}, @code{translate_file} and
-@code{compfile} output forms which will be macroexpanded but not compiled into
-machine code by the Lisp compiler.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-@end defvr
-
 @c ARE ANY OF THESE OBSOLETE ??
 
 @c -----------------------------------------------------------------------------
@@ -2942,9 +2929,11 @@ machine code by the Lisp compiler.
 @defvr {System variable} tr_state_vars
 Default value:
 @example
-[transcompile, tr_semicompile, tr_warn_undeclared, tr_warn_meval,
+[translate_fast_arrays, tr_warn_undeclared, tr_warn_meval,
 tr_warn_fexpr, tr_warn_mode, tr_warn_undefined_variable,
-tr_function_call_default, tr_array_as_ref,tr_numer]
+tr_function_call_default, tr_bound_function_applyp,
+tr_array_as_ref, tr_numer, tr_float_can_branch_complex,
+define_variable]
 @end example
 
 The list of the switches that affect the form of the

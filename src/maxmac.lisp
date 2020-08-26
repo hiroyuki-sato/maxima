@@ -17,10 +17,6 @@
 ;; General purpose macros which are used in Lisp code, but not widely enough
 ;; accepted to be a part of Lisp systems.
 
-;; 'ttyoff' is a system independent way of expressing the Maclisp ^W.
-
-(defvar ttyoff    '^w)
-
 ;; Like PUSH, but works at the other end.
 
 (defmacro tuchus (list object)
@@ -44,11 +40,12 @@
   (values))
 
 (defmacro with-new-context (sub-context &rest forms)
-  `(let ((my-context (gensym "$CTXT")))
-     (mfuncall '$supcontext my-context ,@sub-context)
-     (unwind-protect
-       (prog1 ,@forms)
-       ($killcontext my-context))))
+  (let ((my-context (gensym)))
+    `(let ((,my-context (gensym "$CTXT")))
+       (mfuncall '$supcontext ,my-context ,@sub-context)
+       (unwind-protect
+         (progn ,@forms)
+         ($killcontext ,my-context)))))
 
 ;; For creating a macsyma evaluator variable binding context.
 ;; (MBINDING (VARIABLES &OPTIONAL VALUES FUNCTION-NAME)

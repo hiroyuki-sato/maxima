@@ -139,6 +139,14 @@ clean: #restore
 		ratpow_002dpkg.html  romberg_002dpkg.html  simplex_002dpkg.html  simplification_002dpkg.html  solve_005frec_002dpkg.html  stats_002dpkg.html\
 		stirling_002dpkg.html  stringproc_002dpkg.html  to_005fpoly_005fsolve_002dpkg.html  unit_002dpkg.html  wrstcse_002dpkg.html  zeilberger_002dpkg.html 
 
+	rm -f 	doc/man/de/Makefile doc/man/de/maxima.1 doc/man/ru/Makefile \
+		interfaces/xmaxima/doc/Command_002dline-options.html interfaces/xmaxima/doc/Concept-Index.html \
+		interfaces/xmaxima/doc/Entering-commands.html interfaces/xmaxima/doc/Getting-Help.html \
+		interfaces/xmaxima/doc/Main-Window.html interfaces/xmaxima/doc/Openmath-plots.html \
+		interfaces/xmaxima/doc/Session-control.html interfaces/xmaxima/doc/The-browser.html \
+		interfaces/xmaxima/doc/index.html
+
+
 	rm -f $(INSTALLS)
 	rm -f debian/ChangeLog
 
@@ -220,6 +228,9 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS) debian/ChangeLog
 		cat $$i | sed 's,^(load-info-hashtables,(clrhash cl-info::*info-tables*)\n(load-info-hashtables,1' >tmp &&\
 	        ! cmp $$i tmp && mv tmp $$i &&\
                 mv $$i debian/tmp/usr/share/doc/maxima/$$(basename $$(dirname $$i)) ; done
+
+	cd debian/tmp/usr/share/info && mkdir -p maxima && \
+		for i in *.info; do if grep -q ": *(maxima/" $$i; then mv $$i maxima/; fi; done
 
 	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/lurkmathml/mathmltest
 

@@ -223,7 +223,36 @@
 	       (return (values tail (nreverse decls) doc))))))))
 )
 
-
+(defun defmfun-keywords (fname options valid-keywords)
+  ;; options looks like (((mequal) $opt1 val1) ((mequal) $opt2 val2) ...)
+  ;;
+  ;; Convert to a new list that looks like (:opt1 val1 :opt2 val2 ...)
+  ;;
+  (unless (listp options)
+    (merror "Invalid Maxima keyword options: ~M" options))
+  (when (every #'(lambda (o)
+		   ;; Make sure every option has the right form.
+		   (let ((ok (and (listp o)
+				  (= (length o) 3)
+				  (eq (caar o) 'mequal))))
+		     (unless ok
+		       (merror (intl:gettext "~M: Badly formed keyword option: ~M")
+			       fname o))
+		     ok))
+	       options)
+    (mapcan #'(lambda (o)
+		(destructuring-bind (mequal opt val)
+		    o
+		  (declare (ignore mequal))
+		  (if (or (null valid-keywords)
+			  (member opt valid-keywords))
+		      (flet ((keywordify (x)
+			       (intern (subseq (symbol-name x) 1) :keyword)))
+			(list (keywordify opt) val))
+		      (merror (intl:gettext "~M: Unrecognized keyword: ~M")
+			      fname opt))))
+	    options)))
+  
 ;; Define user-exposed functions that are written in Lisp.
 ;;
 ;; If the function name NAME starts with #\$ we check the number of
@@ -237,117 +266,180 @@
 ;;
 ;; The lambda-list supports &optional and &rest args.  Keyword args
 ;; are an error.
+;;
+;; The variable %%PRETTY-FNAME is defined such that the body can refer
+;; to this variable to get the pretty name of the defined function for
+;; use in printing error messages or what not.  This allows the
+;; implementation to print out the function name that would also be
+;; used when printint out error messages for incorrect number of
+;; arguments.
 (defmacro defmfun (name lambda-list &body body)
-  (let ((maclisp-narg-p (and (symbolp lambda-list) (not (null lambda-list)))))
-    (cond
-      ((or (char/= #\$ (aref (string name) 0))
-	   maclisp-narg-p)
-       ;; If NAME doesn't start with $, it's an internal function not
-       ;; directly exposed to the user.  Basically define the function
-       ;; as is, taking care to support the Maclisp narg syntax.
-       (cond (maclisp-narg-p
-	      ;; Support MacLisp narg syntax:  (defun foo a ...)
-	      `(progn
-		 (defprop ,name t translated)
-		 (defun ,name (&rest narg-rest-argument
-			       &aux (,lambda-list (length narg-rest-argument)))
-		   ,@body)))
-	     (t
-	      `(progn
-		 (defprop ,name t translated)
-		 (defun ,name ,lambda-list ,@body)))))
-      (t
-       ;; Function name begins with $, so it's exposed to the user;
-       ;; carefully check the number of arguments and print a nice
-       ;; message if the number doesn't match the expected number.
-       #+nil
-       (unless (char= #\$ (aref (string name) 0))
-	 (warn "First character of function name must start with $: ~S~%" name))
-       (multiple-value-bind (required-args
-			     optional-args
-			     restp
-			     rest-arg
-			     keywords-present-p)
-	   (parse-lambda-list lambda-list)
+  (flet ((add-props ()
+           ;; We make sure that the ARG-LIST property is added
+           ;; first, so that it will end up last in the list.
+           `(progn
+              (putprop ',name ',lambda-list 'arg-list)
+              (defprop ,name t translated))))
+    (let ((maclisp-narg-p (and (symbolp lambda-list) (not (null lambda-list)))))
+      (cond
+        ((or (char/= #\$ (aref (string name) 0))
+	     maclisp-narg-p)
+         ;; If NAME doesn't start with $, it's an internal function not
+         ;; directly exposed to the user.  Basically define the function
+         ;; as is, taking care to support the Maclisp narg syntax.
+         (cond (maclisp-narg-p
+	        ;; Support MacLisp narg syntax:  (defun foo a ...)
+	        `(progn
+                   ,(add-props)
+		   (defun ,name (&rest narg-rest-argument
+			         &aux (,lambda-list (length narg-rest-argument)))
+		     ,@body)))
+	       (t
+	        `(progn
+                   ,(add-props)
+		   (defun ,name ,lambda-list ,@body)))))
+        (t
+         ;; Function name begins with $, so it's exposed to the user;
+         ;; carefully check the number of arguments and print a nice
+         ;; message if the number doesn't match the expected number.
+         #+nil
+         (unless (char= #\$ (aref (string name) 0))
+	   (warn "First character of function name must start with $: ~S~%" name))
+         (multiple-value-bind (required-args
+			       optional-args
+			       restp
+			       rest-arg
+			       keywords-present-p
+			       keyword-args
+			       allow-other-keys-p)
+	     (parse-lambda-list lambda-list)
 
-	 (when keywords-present-p
-	   (error "Keyword arguments are not supported"))
+	   (when (and keywords-present-p
+		      (or optional-args restp))
+	     (error "Keyword args cannot be used with optional args or rest args"))
 
-	 (let* ((required-len (length required-args))
-		(optional-len (length optional-args))
-		(impl-name (intern (concatenate 'string
-						(string name)
-						"-IMPL")))
-		(impl-doc (format nil "Implementation for ~S" name))
-		(nargs (gensym "NARGS-"))
-		(args (gensym "REST-ARG-"))
-		(rest-name (gensym "REST-ARGS"))
-		(pretty-fname
-		 (cond (optional-args
-			;; Can't do much with optional args, so just use the function name.
-			name)
-		       (restp
-			;; Use maxima syntax for rest args: foo(a,b,[c]);
-			`((,name) ,@required-args ((mlist) ,rest-arg)))
-		       (t
-			;; Just have required args: foo(a,b)
-			`((,name) ,@required-args)))))
+	   (let* ((required-len (length required-args))
+		  (optional-len (length optional-args))
+		  (impl-name (intern (concatenate 'string
+						  (string name)
+						  "-IMPL")))
+		  (impl-doc (format nil "Implementation for ~S" name))
+		  (nargs (gensym "NARGS-"))
+		  (args (gensym "REST-ARG-"))
+		  (rest-name (gensym "REST-ARGS"))
+		  (pretty-fname
+		    (cond (optional-args
+			   ;; Can't do much with optional args, so just use the function name.
+			   name)
+		          (restp
+			   ;; Use maxima syntax for rest args: foo(a,b,[c]);
+			   `((,name) ,@required-args ((mlist) ,rest-arg)))
+			  (keywords-present-p
+			   ;; Not exactly sure how to do this
+			   (let* ((index 1)
+				  (keys (mapcar
+					 #'(lambda (k)
+					     (multiple-value-bind (name val)
+						 (if (consp k)
+						     (values
+						      (intern (format nil "$~A" (car k)))
+						      (second k))
+						     (values
+						      (intern (format nil "$~A" k))
+						      nil))
+					       (incf index)
+					       `((mequal) ,name ,val)))
+					 keyword-args)))
+			     `((,name) ,@required-args ,@keys)))
+		          (t
+			   ;; Just have required args: foo(a,b)
+			   `((,name) ,@required-args))))
+		  (maxima-keywords
+		    (unless allow-other-keys-p
+		      (mapcar #'(lambda (x)
+				  (intern (concatenate
+					   'string "$"
+					   (symbol-name
+					    (if (consp x)
+						(car x)
+						x)))))
+			      keyword-args))))
 
-	   (multiple-value-bind (forms decls doc-string)
-	       (parse-body body nil t)
-	     (setf doc-string (if doc-string (list doc-string)))
-	     `(progn
-		(defun ,impl-name ,lambda-list
-		  ,impl-doc
-		  ,@decls
-		  (block ,name
-		    ,@forms))
-		(defprop ,name t translated)
-		(defun ,name (&rest ,args)
-		  ,@doc-string
-		  (let ((,nargs (length ,args)))
-		    (declare (ignorable ,nargs))
-		    ,@(cond
-			(restp
-			 ;; When a rest arg is given, there's no upper
-			 ;; limit to the number of args.  Just check that
-			 ;; we have enough args to satisfy the required
-			 ;; args.
-			 (unless (null required-args)
-			   `((when (< ,nargs ,required-len)
+	     (multiple-value-bind (forms decls doc-string)
+	         (parse-body body nil t)
+	       (setf doc-string (if doc-string (list doc-string)))
+	       `(progn
+		  (defun ,impl-name ,lambda-list
+		    ,impl-doc
+		    ,@decls
+		    (block ,name
+		      (let ((%%pretty-fname ',pretty-fname))
+			(declare (ignorable %%pretty-fname))
+			,@forms)))
+                  ,(add-props)
+		  (defun ,name (&rest ,args)
+		    ,@doc-string
+		    (let ((,nargs (length ,args)))
+		      (declare (ignorable ,nargs))
+		      ,@(cond
+			  ((or restp keywords-present-p)
+			   ;; When a rest arg is given, there's no upper
+			   ;; limit to the number of args.  Just check that
+			   ;; we have enough args to satisfy the required
+			   ;; args.
+			   (unless (null required-args)
+			     `((when (< ,nargs ,required-len)
+				 (merror (intl:gettext "~M: expected at least ~M arguments but got ~M: ~M")
+					 ',pretty-fname
+					 ,required-len
+					 ,nargs
+					 (list* '(mlist) ,args))))))
+			  (optional-args
+			   ;; There are optional args (but no rest
+			   ;; arg). Verify that we don't have too many args,
+			   ;; and that we still have all the required args.
+			   `(
+			     (when (> ,nargs ,(+ required-len optional-len))
+			       (merror (intl:gettext "~M: expected at most ~M arguments but got ~M: ~M")
+				       ',pretty-fname
+				       ,(+ required-len optional-len)
+				       ,nargs
+				       (list* '(mlist) ,args)))
+			     (when (< ,nargs ,required-len)
 			       (merror (intl:gettext "~M: expected at least ~M arguments but got ~M: ~M")
 				       ',pretty-fname
 				       ,required-len
 				       ,nargs
+				       (list* '(mlist) ,args)))))
+			  (t
+			   ;; We only have required args.
+			   `((unless (= ,nargs ,required-len)
+			       (merror (intl:gettext "~M: expected exactly ~M arguments but got ~M: ~M")
+				       ',pretty-fname
+				       ,required-len
+				       ,nargs
 				       (list* '(mlist) ,args))))))
-			(optional-args
-			 ;; There are optional args (but no rest
-			 ;; arg). Verify that we don't have too many args,
-			 ;; and that we still have all the required args.
-			 `(
-			   (when (> ,nargs ,(+ required-len optional-len))
-			     (merror (intl:gettext "~M: expected at most ~M arguments but got ~M: ~M")
-				     ',pretty-fname
-				     ,(+ required-len optional-len)
-				     ,nargs
-				     (list* '(mlist) ,args)))
-			   (when (< ,nargs ,required-len)
-			     (merror (intl:gettext "~M: expected at least ~M arguments but got ~M: ~M")
-				     ',pretty-fname
-				     ,required-len
-				     ,nargs
-				     (list* '(mlist) ,args)))))
-			(t
-			 ;; We only have required args.
-			 `((unless (= ,nargs ,required-len)
-			     (merror (intl:gettext "~M: expected exactly ~M arguments but got ~M: ~M")
-				     ',pretty-fname
-				     ,required-len
-				     ,nargs
-				     (list* '(mlist) ,args))))))
-		    (apply #',impl-name ,args)))
-		(define-compiler-macro ,name (&rest ,rest-name)
-		  `(,',impl-name ,@,rest-name))))))))))
+		      ,(cond
+			 (keywords-present-p
+			  `(apply #',impl-name
+				  (append 
+				   (subseq ,args 0 ,required-len)
+				   (defmfun-keywords ',pretty-fname
+				    (nthcdr ,required-len ,args)
+				    ',maxima-keywords))))
+			 (t
+			  `(apply #',impl-name ,args)))))
+		  ,(cond
+		      (keywords-present-p
+		       `(define-compiler-macro ,name (&rest ,rest-name)
+			  (let ((args (append (subseq ,rest-name 0 ,required-len)
+					      (defmfun-keywords ',pretty-fname
+						 (nthcdr ,required-len ,rest-name)
+						 ',maxima-keywords))))
+			  `(,',impl-name ,@args))))
+		      (t
+		       `(define-compiler-macro ,name (&rest ,rest-name)
+			  `(,',impl-name ,@,rest-name)))))))))))))
 
 ;; Examples:
 ;; (defmfun $foobar (a b) (list '(mlist) a b))
@@ -356,8 +448,17 @@
 ;; (defmfun $foobar2 (a b &rest c) (list '(mlist) a b (list* '(mlist) c)))
 ;; (defmfun $foobar3 (a b &optional c &rest d) "foobar3 function" (list '(mlist) a b c (list* '(mlist) d)))
 ;;
+;; (defmfun $foobar4 (a b &key c) (list '(mlist) a b c))
+;; (defmfun $foobar5 (a b &key (c 42)) (list '(mlist) a b c))
+;; (defmfun $foobar6 (a b &key (c 42) &allow-other-keys) (list '(mlist) a b c))
+;;
+;; foobar5(1,2) => [1, 2, 42]
+;; foobar5(1,2,c=99) => [1, 2, 99]
+;; foobar5(1,2,c=99,d=4) => error: unrecognized keyword d
+;; foobar6(1,2,c=42,d=99) => [1, 2, 42]
+;;
 ;; This works by accident, kind of:
 ;; (defmfun $baz (a &aux (b (1+ a))) (list '(mlist) a b))
 
 ;; This should produce compile errors
-;; (defmfun $zot (a &key b) (list '(mlist) a b))
+;; (defmfun $zot (a &optional c &key b) (list '(mlist) a b))
