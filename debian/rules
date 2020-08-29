@@ -12,7 +12,7 @@ export SOURCE_DATE_EPOCH = $(shell date -d "$$(dpkg-parsechangelog -SDate)" +%s)
 
 NO_STRIP:=
 
-SAVES:=$(addprefix debian/save/,aclocal.m4 interfaces/emacs/imaxima/stamp-vti\
+SAVES:=$(addprefix debian/save/, interfaces/emacs/imaxima/stamp-vti\
 	 interfaces/emacs/imaxima/imaxima.info interfaces/emacs/imaxima/version.texi\
 	 src/lisp\
 	 $(shell ls -1 doc/info/maxima*.html)\
@@ -231,6 +231,12 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS) debian/ChangeLog
 
 	cd debian/tmp/usr/share/info && mkdir -p maxima && \
 		for i in *.info; do if grep -q ": *(maxima/" $$i; then mv $$i maxima/; fi; done
+
+	cd debian/tmp/usr/share/maxima/$(MVERS)/share && \
+		for i in diff_form/example.txt diff_form/surface_example.txt stringproc/rectangular.csv-utf-16be \
+			 stringproc/rectangular.csv-utf-16le stringproc/rectangular.csv-utf-32be \
+			 stringproc/rectangular.csv-utf-32le ; do \
+			 iconv -c -t UTF-8 $$i -o tmp && mv tmp $$i ; done
 
 	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/lurkmathml/mathmltest
 
