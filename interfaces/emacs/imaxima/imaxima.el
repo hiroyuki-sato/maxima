@@ -80,7 +80,7 @@
 (require 'advice)
 
 (require 'comint)
-(require 'cl-lib)
+(require 'cl);FIXME cl-lib, xemacs21 compatibility
 
 ;; XEmacs stuff
 
@@ -174,7 +174,7 @@ Unless optional argument INPLACE is non-nil, return a new string."
   :group 'imaxima
   :type (cons 'choice
 	      (mapcar (lambda (type) (list 'const type))
-		      (cl-remove-if-not 'imaxima-image-type-available-p
+		      (remove-if-not 'imaxima-image-type-available-p; FIXME cl-remove-if-not, xemacs21 compatibility
 				     imaxima-image-types))))
 
 (defcustom imaxima-pt-size 11
