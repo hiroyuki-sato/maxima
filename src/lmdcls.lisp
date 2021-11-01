@@ -12,7 +12,7 @@
 
 #+gcl
 (progn 
-  (system::clines "#define MAKE_UNSPECIAL(x) (check_type_symbol(&(x)),(x)->s.s_stype = stp_ordinary, Cnil)")
+  (system::clines "object MAKE_UNSPECIAL(object x) {if (type_of(x)==t_symbol) x->s.s_stype=0;return Cnil;}")
   (system::defentry make-unspecial (system::object) (system::object "MAKE_UNSPECIAL")))
 
 #+(or scl cmu)
@@ -127,10 +127,10 @@
 	  preserve-direction prods radcanp
 	  real-infinities realonlyratnum *refchkl* return-mode returns rulefcnl
 	  rulesw scanmapp sign-imag-errp simplimplus-problems
-	  *small-primes* specials sqrt3//2 $stringdisp substp
+	  *small-primes* sqrt3//2 $stringdisp substp
 	  sums tellratlist timesinp tr-abort tr-progret tr-unique
 	  transl-file translate-time-evalables transp
-	  tstack typel varlist wflag
+	  tstack varlist wflag
 	  $cflength *trunclist $taylordepth
 	  $maxtaydiff $verbose $psexpand ps-bmt-disrep
 	  silent-taylor-flag $define_variable $infolists

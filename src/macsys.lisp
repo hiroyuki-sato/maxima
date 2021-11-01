@@ -402,10 +402,10 @@ DESTINATION is an actual stream (rather than nil for a string)."
   (continue :stream (make-echo-stream fileobj *standard-output*)
 	    :batch-or-demo-flag (if demo-p ':demo ':batch)))
 
-(defmfun $demo (&rest arg-list)
-  (let ((tem ($file_search (car arg-list) $file_search_demo)))
+(defmfun $demo (filename)
+  (let ((tem ($file_search filename $file_search_demo)))
     (or tem (merror (intl:gettext "demo: could not find ~M in ~M.")
-		    (car arg-list) '$file_search_demo))
+		    filename '$file_search_demo))
     ($batch tem	'$demo)))
 
 (defmfun $bug_report ()
@@ -540,7 +540,7 @@ DESTINATION is an actual stream (rather than nil for a string)."
 
 (defun maxima-banner ()
   (format t *maxima-prolog*)
-  (format t "~&Maxima ~a http://maxima.sourceforge.net~%"
+  (format t "~&Maxima ~a https://maxima.sourceforge.io~%"
       *autoconf-version*)
   (format t (intl:gettext "using Lisp ~a ~a") (lisp-implementation-type)
       #-clisp (lisp-implementation-version)

@@ -2447,18 +2447,33 @@ block([factor_max_degree : 2], [factor(x^2+2*x+1), factor(x^2-1), factor(x^2+3*x
 /*        Bug #2928: Loops forever: ev(ratexpand(1/(x^(2/3)+1)), algebraic:true); */
 /* a.k.a. Bug #2994: Infinite loop: ratsimp(x/(sqrt(x^(2/3)+1)),x),algebraic; */
 /* a.k.a. Bug #3419: Endless loop in BPROG (rat(1/(x^(2/3)+1)), algebraic) */
-(test(expr) := is(radcan(ev(rat(expr), algebraic) - expr) = 0), done);
-done$
-test(1/(x^(1/3)+1));
-true$
-test(1/(x^(2/3)+1));
-true$
-test(1/((x-1)^(2/3)+1));
-true$
-test(x/(sqrt(x^(2/3)+1)));
-true$
-kill(expr);
-done$
+
+/* examples present in previous version of rtest16 */
+
+string (ev (rat (1/(x^(1/3)+1)), algebraic));
+"((x^(1/3))^2-x^(1/3)+1)/(x+1)";
+
+string (ev (rat (1/(x^(2/3)+1)), algebraic));
+"(x^(1/3)*x-(x^(1/3))^2+1)/(x^2+1)";
+
+string (ev (rat(1/((x-1)^(2/3)+1)), algebraic));
+"((x-1)^(1/3)*x-((x-1)^(1/3))^2-(x-1)^(1/3)+1)/(x^2-2*x+2)";
+
+string (ev (rat(x/(sqrt(x^(2/3)+1))), algebraic));
+"(sqrt(x^(2/3)+1)*x^(1/3)*x^2+((-sqrt(x^(2/3)+1)*(x^(1/3))^2)+sqrt(x^(2/3)+1))*x)/(x^2+1)";
+
+/* additional examples courtesy of M. Talon */
+
+string (ev (rat(1/(x^(2/5)+1)), algebraic));
+"(((x^(1/5))^3-x^(1/5))*x+(x^(1/5))^4-(x^(1/5))^2+1)/(x^2+1)";
+
+/* Maxima cannot yet handle this next one (incomplete factorization, gets one factor but misses the other)
+ *
+rat(1/(x^(3/5)+x^(1/3))),algebraic;
+ */
+
+string (ev (rat(1/(x^(4/5)+1)), algebraic));
+"(x^(1/5)*x^3-(x^(1/5))^2*x^2+(x^(1/5))^3*x-(x^(1/5))^4+1)/(x^4+1)";
 
 /* Bug #3431: error system variable holds unsimplified list, causing errors to be repeated when trying to access it */
 errcatch(0^0);
@@ -2611,3 +2626,23 @@ errcatch (addcol (matrix ([1], [2], [3]), matrix ([11, 22, 33])));
 /* Bug #3532: Integrator doesn't use a new variable internally, causing facts on the original variable to be used for the substitution variable */
 is(integrate(cos(x) * abs(cos(x)), x, 0, %pi) = %pi / 2);
 false$
+
+/* Bug found on mailing list thread "Wrong integral, but antiderivative and limits are correct" */
+integrate(x^8/(5+x^9)^2, x, 0, inf);
+1/45$
+
+/* Test case for bug mentioned at https://sourceforge.net/p/maxima/mailman/message/8488105/ */
+is(abs(integrate(1/(x^4+1), x, 0, 1/2) - 0.49396) < 0.00001);
+true$
+
+/* Another bug found on mailing list thread "Wrong integral, but antiderivative and limits are correct" */
+freeof(?xz, residue(plog(x)/(x-ratsimp(rectform(%e^(%i*%pi/9)))), x, %e^(%i*%pi/9)));
+true$
+
+/* Bug #3562: "integrate(1/(1+tan(x)), x, 0, %pi/2) gives complex result, should be %pi/4" */
+integrate(1/(1+tan(x)), x, 0, %pi/2);
+%pi/4$
+
+/* Also from bug #3562 */
+limit(log((x^2+1)/x^2)-2*log((x-1)/x), x, 0, minus);
+0$

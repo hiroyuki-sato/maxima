@@ -10,9 +10,9 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
+File: maxima.info,  Node: Top,  Next: Top,  Prev: (dir),  Up: (dir)
 
-Maxima 5.44.0 Manual
+Maxima 5.45.1 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -105,6 +105,7 @@ Additional packages
 * ggf-pkg::                         Generating function of sequences.
 * graphs-pkg::                      Graph theory package.
 * grobner-pkg::                     Functions for working with Groebner bases.
+* hompack-pkg::                     HOMPACK solver for systems of polynomial equations.
 * impdiff-pkg::                     Implicit derivatives.
 * interpol-pkg::                    Interpolation package.
 * lapack-pkg::                      LAPACK functions for linear algebra.
@@ -136,6 +137,9 @@ Additional packages
 
 Understanding maxima's output
 * Error and warning messages::  Error and warning messages
+
+Maxima's command-line options
+* Command-line options::  Which command-line options does Maxima support?
 
 Index
 * Function and Variable Index:: Index.
@@ -432,6 +436,10 @@ grobner
 * Introduction to grobner::
 * Functions and Variables for grobner::
 
+hompack
+* Introduction to hompack::
+* Functions and Variables for hompack::
+
 impdiff
 * Functions and Variables for impdiff::
 
@@ -557,7 +565,7 @@ File: maxima.info,  Node: Introduction to Maxima,  Next: Bug Detection and Repor
 
 Start Maxima with the command "maxima".  Maxima will display version
 information and a prompt.  End each Maxima command with a semicolon.
-End the session with the command "quit();".  Here's a sample session:
+End the session with the command "'quit();'".  Here's a sample session:
 
      [wfs@chromium]$ maxima
      Maxima 5.9.1 http://maxima.sourceforge.net
@@ -910,16 +918,17 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
 3.2 Functions and Variables for Help
 ====================================
 
- -- Function: apropos (<string>)
+ -- Function: apropos (<name>)
 
-     Searches for Maxima names which have <string> appearing anywhere
-     within them.  Thus, 'apropos (exp)' returns a list of all the flags
-     and functions which have 'exp' as part of their names, such as
-     'expand', 'exp', and 'exponentialize'.  Thus if you can only
-     remember part of the name of something you can use this command to
-     find the rest of the name.  Similarly, you could say 'apropos
-     (tr_)' to find a list of many of the switches relating to the
-     translator, most of which begin with 'tr_'.
+     Searches for Maxima names which have <name> appearing anywhere
+     within them; <name> must be a string or symbol.  Thus, 'apropos
+     (exp)' returns a list of all the flags and functions which have
+     'exp' as part of their names, such as 'expand', 'exp', and
+     'exponentialize'.  So, if you can only remember part of the name of
+     a Maxima command or variable, you can use this command to find the
+     rest of the name.  Similarly, you can type 'apropos (tr_)' to find
+     a list of many of the switches relating to the translator, most of
+     which begin with 'tr_'.
 
      'apropos("")' returns a list with all Maxima names.
 
@@ -927,14 +936,24 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
 
      Example:
 
-     Show all Maxima symbols which have '"gamma"' in the name:
+     Show all Maxima symbols which have 'gamma' in the name:
 
           (%i1) apropos("gamma");
-          (%o1) [%gamma, gamma, gammalim, gamma_expand, gamma_incomplete_lower,
-          gamma_incomplete, gamma_incomplete_generalized,
-          gamma_incomplete_regularized, Gamma, log_gamma, makegamma,
-          prefer_gamma_incomplete, gamma-incomplete,
-          gamma_incomplete_generalized_regularized]
+          (%o1) [%gamma, Gamma, gamma_expand, gammalim, makegamma,
+          prefer_gamma_incomplete, gamma, gamma-incomplete, gamma_incomplete,
+          gamma_incomplete_generalized, gamma_incomplete_generalized_regularized,
+          gamma_incomplete_lower, gamma_incomplete_regularized, log_gamma]
+
+          The same example, using the symbol gamma, rather than the string:
+          (%i2) apropos(gamma);
+          (%o2) [%gamma, Gamma, gamma_expand, gammalim, makegamma,
+          prefer_gamma_incomplete, gamma, gamma-incomplete, gamma_incomplete,
+          gamma_incomplete_generalized, gamma_incomplete_generalized_regularized,
+          gamma_incomplete_lower, gamma_incomplete_regularized, log_gamma]
+
+          The number of symbols in the current Maxima session. This will vary.
+          (%i3) length(apropos(""));
+          (%o3)                                2338
 
  -- Function: demo (<filename>)
 
@@ -1843,9 +1862,11 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
 
           (%i1) declare_index_properties (A, [presubscript, postsubscript]);
           (%o1)                         done
-          (%i2) declare_index_properties (B, [postsuperscript, postsuperscript, presuperscript]);
+          (%i2) declare_index_properties (B, [postsuperscript, postsuperscript,
+           presuperscript]);
           (%o2)                         done
-          (%i3) declare_index_properties (C, [postsuperscript, presubscript, presubscript, presuperscript]);
+          (%i3) declare_index_properties (C, [postsuperscript, presubscript,
+           presubscript, presuperscript]);
           (%o3)                         done
           (%i4) A[w, x];
           (%o4)                           A
@@ -1927,7 +1948,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      expression which is displayed between indices.  The value is
      assigned by 'put(<A>, <S>, display_index_separator)',
 
-          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript,
+           presubscript, presubscript]);
           (%o1)                         done
           (%i2) put (A, ";", display_index_separator);
           (%o2)                           ;
@@ -1939,7 +1961,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      The assigned value is retrieved by 'get(<A>,
      display_index_separator)'.
 
-          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript,
+           presubscript, presubscript]);
           (%o1)                         done
           (%i2) put (A, ";", display_index_separator);
           (%o2)                           ;
@@ -1950,7 +1973,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      string, or 'false', indicating the default separator, or any
      expression.
 
-          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript,
+           presubscript, presubscript]);
           (%o1)                         done
           (%i2) A[w, x, y, z];
                                            w, x
@@ -1990,7 +2014,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      If no display index separator is assigned, the default separator is
      used.  The default separator is a comma.
 
-          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript,
+           presubscript, presubscript]);
           (%o1)                         done
           (%i2) A[w, x, y, z];
                                            w, x
@@ -1999,7 +2024,8 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
 
      Each symbol has its own value of 'display_index_separator'.
 
-          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+          (%i1) declare_index_properties (A, [postsuperscript, postsuperscript,
+           presubscript, presubscript]);
           (%o1)                         done
           (%i2) put (A, " ", display_index_separator);
           (%o2)
@@ -2642,13 +2668,53 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
 
  -- Function: bfloat (<expr>)
 
-     Converts all numbers and functions of numbers in <expr> to bigfloat
-     numbers.  The number of significant digits in the resulting
-     bigfloats is specified by the global variable 'fpprec'.
+     'bfloat' replaces integers, rationals, floating point numbers, and
+     some symbolic constants in <expr> with bigfloat (variable-precision
+     floating point) numbers.
 
-     When 'float2bf' is 'false' a warning message is printed when a
-     floating point number is converted into a bigfloat number (since
-     this may lead to loss of precision).
+     The constants '%e', '%gamma', '%phi', and '%pi' are replaced by a
+     numerical approximation.  However, '%e' in '%e^x' is not replaced
+     by a numeric value unless 'bfloat(x)' is a number.
+
+     'bfloat' also causes numerical evaluation of some built-in
+     functions, namely trigonometric functions, exponential functions,
+     'abs', and 'log'.
+
+     The number of significant digits in the resulting bigfloats is
+     specified by the global variable 'fpprec'.  Bigfloats already
+     present in <expr> are replaced with values which have precision
+     specified by the current value of 'fpprec'.
+
+     When 'float2bf' is 'false', a warning message is printed when a
+     floating point number is replaced by a bigfloat number with less
+     precision.
+
+     Examples:
+
+     'bfloat' replaces integers, rationals, floating point numbers, and
+     some symbolic constants in <expr> with bigfloat numbers.
+
+          (%i1) bfloat([123, 17/29, 1.75]);
+          (%o1)        [1.23b2, 5.862068965517241b-1, 1.75b0]
+          (%i2) bfloat([%e, %gamma, %phi, %pi]);
+          (%o2) [2.718281828459045b0, 5.772156649015329b-1,
+                                  1.618033988749895b0, 3.141592653589793b0]
+          (%i3) bfloat((f(123) + g(h(17/29)))/(x + %gamma));
+                   1.0b0 (g(h(5.862068965517241b-1)) + f(1.23b2))
+          (%o3)    ----------------------------------------------
+                              x + 5.772156649015329b-1
+
+     'bfloat' also causes numerical evaluation of some built-in
+     functions.
+
+          (%i1) bfloat(sin(17/29));
+          (%o1)                 5.532051841609784b-1
+          (%i2) bfloat(exp(%pi));
+          (%o2)                  2.314069263277927b1
+          (%i3) bfloat(abs(-%gamma));
+          (%o3)                 5.772156649015329b-1
+          (%i4) bfloat(log(%phi));
+          (%o4)                 4.812118250596035b-1
 
  -- Function: bfloatp (<expr>)
 
@@ -2708,8 +2774,8 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
      Default value: 'true'
 
      When 'float2bf' is 'false', a warning message is printed when a
-     floating point number is converted into a bigfloat number (since
-     this may lead to loss of precision).
+     floating point number is replaced by a bigfloat number with less
+     precision.
 
  -- Function: floatnump (<expr>)
 
@@ -4212,7 +4278,7 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Next: Performance 
      expressions the same as '<', and all other elements the same as
      'orderlessp'.
 
-          (%i1) L : [%i, 1+%i, 2*x, minf, inf, %e, sin(1), 0, 1, 2, 3, 1.0, 1.0b0];
+          (%i1) L: [%i, 1+%i, 2*x, minf, inf, %e, sin(1), 0,1,2,3, 1.0, 1.0b0];
           (%o1) [%i, %i + 1, 2 x, minf, inf, %e, sin(1), 0, 1, 2, 3, 1.0,
                                                                      1.0b0]
           (%i2) sort (L, ordermagnitudep);
@@ -5843,8 +5909,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
  -- Property: mainvar
 
      You may declare variables to be 'mainvar'.  The ordering scale for
-     atoms is essentially: numbers < constants (e.g., '%e', '%pi') <
-     scalars < other variables < mainvars.  E.g., compare 'expand
+     atoms is essentially: numbers '<' constants (e.g., '%e', '%pi') '<'
+     scalars '<' other variables '<' mainvars.  E.g., compare 'expand
      ((X+Y)^4)' with '(declare (x, mainvar), expand ((x+y)^4))'.  (Note:
      Care should be taken if you elect to use the above feature.  E.g.,
      if you subtract an expression in which 'x' is a 'mainvar' from one
@@ -6248,7 +6314,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
           psubst (<list>, <expr>)
           psubst (<a>, <b>, <expr>)
 
-     'psubst(<a>, <b>, <expr>)' is simliar to 'subst'.  See 'subst'.
+     'psubst(<a>, <b>, <expr>)' is similar to 'subst'.  See 'subst'.
 
      In distinction from 'subst' the function 'psubst' makes parallel
      substitutions, if the first argument <list> is a list of equations.
@@ -7538,7 +7604,8 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
 
      'f(<x_1>, ..., <x_n>) := ...' defines an ordinary function.
 
-          (%i1) G1(x, y) := (print ("Evaluating G1 for x=", x, "and y=", y), x.y - y.x);
+          (%i1) G1(x, y) := (print ("Evaluating G1 for x=", x, "and y=", y),
+           x.y - y.x);
           (%o1) G1(x, y) := (print("Evaluating G1 for x=", x, "and y=",
                                                          y), x . y - y . x)
           (%i2) G1([1, a], [2, b]);
@@ -7570,7 +7637,8 @@ File: maxima.info,  Node: Assignment operators,  Next: User defined operators,  
      '<f>[<x_1>, ..., <x_n>](<y_1>, ..., <y_m>) := <expr>' is a special
      case of a 'memoizing function'.
 
-          (%i1) G3[n](x) := (print ("Evaluating G3 for n=", n), diff (sin(x)^2, x, n));
+          (%i1) G3[n](x) := (print ("Evaluating G3 for n=", n), diff (sin(x)^2,
+           x, n));
           (%o1) G3 (x) := (print("Evaluating G3 for n=", n),
                   n
                                                                2
@@ -8772,7 +8840,7 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Int
      that 'h' is a commutative function.  E.g.  'h(x, z, y)' will
      simplify to 'h(x, y, z)'.  This is the same as 'symmetric'.
 
-     Exemplo:
+     Example:
 
           (%i1) S (b, a);
           (%o1)                        S(b, a)
@@ -9659,12 +9727,13 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
                   r : r - q),
               reverse(uf));
           (%o1) unitfrac(r) := block([uf : [], q],
-          if not ratnump(r) then error("unitfrac: argument must be a rational number"
-                                               1
-          ), while r # 0 do (uf : cons(q : ----------, uf), r : r - q),
-                                                   1
-                                           ceiling(-)
-                                                   r
+          if not ratnump(r) then
+          error("unitfrac: argument must be a rational number"),
+                                            1
+          while r # 0 do (uf : cons(q : ----------, uf), r : r - q),
+                                                1
+                                        ceiling(-)
+                                                r
           reverse(uf))
           (%i2) unitfrac (9/10);
                                       1  1  1
@@ -9747,6 +9816,14 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
  -- Function: fix (<x>)
 
      A synonym for 'entier (<x>)'.
+
+ -- Function: hstep (<x>)
+     The Heaviside unit step function, equal to 0 if <x> is negative,
+     equal to 1 if <x> is positive and equal to 1/2 if <x> is equal to
+     zero.
+
+     If you want a unit step function that takes on the value of 0 at
+     <x> equal to zero, use 'unit_step'.
 
  -- Function: lmax (<L>)
 
@@ -9951,7 +10028,7 @@ File: maxima.info,  Node: Functions for Complex Numbers,  Next: Combinatorial Fu
           (%o6)                  atan(------) + %pi
                                       cos(2)
 
-     If 'carg' returns a noun form this most communly is caused by some
+     If 'carg' returns a noun form this most commonly is caused by some
      properties of the variables involved not being known:
 
           (%i1) carg (a+%i*b);
@@ -10174,7 +10251,8 @@ File: maxima.info,  Node: Combinatorial Functions,  Next: Root Exponential and L
           (%i3) [4,77!, (1.0+%i)!];
           (%o3) [4, 77!, 0.3430658398165453 %i + 0.6529654964201667]
           (%i4) [2.86b0!, (1.0b0+%i)!];
-          (%o4)  [5.046635586910012b0, 3.430658398165454b-1 %i + 6.529654964201667b-1]
+          (%o4) [5.046635586910012b0, 3.430658398165454b-1 %i
+                                                    + 6.529654964201667b-1]
 
      The factorial of a known constant, or general expression is not
      simplified.  Even so it may be possible to simplify the factorial
@@ -10464,7 +10542,7 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
           containing 'log''s is done.
 
      'lognegint'
-          if 'true' implements the rule 'log(-n)' -> 'log(n)+%i*%pi' for
+          if 'true' implements the rule 'log(-n) -> log(n)+%i*%pi' for
           'n' a positive integer.
 
      '%e_to_numlog'
@@ -10612,8 +10690,8 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
  -- Option variable: lognegint
      Default value: 'false'
 
-     If 'true' implements the rule 'log(-n)' -> 'log(n)+%i*%pi' for 'n'
-     a positive integer.
+     If 'true' implements the rule 'log(-n) -> log(n)+%i*%pi' for 'n' a
+     positive integer.
 
  -- Option variable: logsimp
      Default value: 'true'
@@ -10624,7 +10702,7 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
  -- Function: plog (<x>)
 
      Represents the principal branch of the complex-valued natural
-     logarithm with '-%pi' < 'carg(<x>)' <= '+%pi' .
+     logarithm with '-%pi < carg(<x>) <= +%pi' .
 
  -- Function: sqrt (<x>)
 
@@ -11856,7 +11934,7 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
 
      'assume' does not handle predicates with complex numbers.  If a
      predicate contains a complex number 'assume' returns 'inconsistent'
-     or 'redunant'.
+     or 'redundant'.
 
      'assume' evaluates its arguments.
 
@@ -12439,23 +12517,24 @@ File: maxima.info,  Node: Introduction to Plotting,  Next: Plotting Formats,  Pr
 12.1 Introduction to Plotting
 =============================
 
-Maxima uses an external plotting package to make the plots (see the
-section on 'Plotting Formats').  The plotting functions calculate a set
-of points and pass them to the plotting package together with a set of
-commands.  That information can be passed to the external program either
-through a pipe or by calling the program with the name of a file where
-the data has been saved.  The data file is given the name
-'maxout_xxx.format', where 'xxx' is a number that is unique to every
-concurrently-running instance of Maxima and 'format' is the name of the
-plotting format being used ('gnuplot', 'xmaxima', 'mgnuplot',
-'gnuplot_pipes' or 'geomview').
+To make the plots, Maxima can use an external plotting package or its
+own graphical interface Xmaxima (see the section on 'Plotting Formats').
+The plotting functions calculate a set of points and pass them to the
+plotting package together with a set of commands specific to that
+graphic program.  In some cases those commands and data are saved in a
+file and the graphic program is executed giving it the name of that file
+to be parsed.
 
-   There are commands to save the plot in a graphic format file.  In
-those cases, the file 'maxout_xxx.format' created by Maxima includes
-commands that will make the external plotting program save the result in
-a graphic file.  The default name for that graphic file is
-'maxplot.extension', where 'extension' is the extension normally used
-for the kind of graphic file selected.
+   When a file is created, it will begiven the name 'maxout_xxx.format',
+where 'xxx' is a number that is unique to every concurrently-running
+instance of Maxima and 'format' is the name of the plotting format being
+used ('gnuplot', 'xmaxima', 'mgnuplot' or 'geomview').
+
+   There are commands to save the plot in a graphic format file, rather
+than showing it in the screen.  The default name for that graphic file
+is 'maxplot.extension', where 'extension' is the extension normally used
+for the kind of graphic file selected, but that name can also be
+specified by the user.
 
    The 'maxout_xxx.format' and 'maxplot.extension' files are created in
 the directory specified by the system variable 'maxima_tempdir'.  That
@@ -12463,22 +12542,25 @@ location can be changed by assigning to that variable (or to the
 environment variable 'MAXIMA_TEMPDIR') a string that represents a valid
 directory where Maxima can create new files.  The output of the Maxima
 plotting command will be a list with the names of the file(s) created,
-including their complete path.
+including their complete path, or empty if no files are created.  Those
+files should be deleted after the maxima session ends.
 
-   If the format used is either 'gnuplot' or 'xmaxima', the external
-programs 'gnuplot' or 'xmaxima' can be run, giving it the file
-'maxout_xxx.format' as argument, in order to view again a plot
-previously created in Maxima.  Thus, when a Maxima plotting command
-fails, the format can be set to 'gnuplot' or 'xmaxima' and the
-plain-text file 'maxout_xxx.gnuplot' (or 'maxout_xxx.xmaxima') can be
-inspected to look for the source of the problem.
+   If the format used is either 'gnuplot' or 'xmaxima', and the
+'maxout_xxx.gnuplot' or 'maxout_xxx.xmaxima' was saved, 'gnuplot' or
+'xmaxima' can be run, giving it the name of that file as argument, in
+order to view again a plot previously created in Maxima.  Thus, when a
+Maxima plotting command fails, the format can be set to 'gnuplot' or
+'xmaxima' and the plain-text file 'maxout_xxx.gnuplot' (or
+'maxout_xxx.xmaxima') can be inspected to look for the source of the
+problem.
 
    The additional package *note draw:: provides functions similar to the
-ones described in this section with some extra features.  Note that some
-plotting options have the same name in both plotting packages, but their
-syntax and behavior is different.  To view the documentation for a
-graphic option 'opt', type '?? opt' in order to choose the information
-for either of those two packages.
+ones described in this section with some extra features, but it only
+works with 'gnuplot'.  Note that some plotting options have the same
+name in both plotting packages, but their syntax and behavior is
+different.  To view the documentation for a graphic option 'opt', type
+'?? opt' in order to choose the information for either of those two
+packages.
 
 
 File: maxima.info,  Node: Plotting Formats,  Next: Functions and Variables for Plotting,  Prev: Introduction to Plotting,  Up: Plotting
@@ -12488,9 +12570,14 @@ File: maxima.info,  Node: Plotting Formats,  Next: Functions and Variables for P
 
 Maxima can use either Gnuplot, Xmaxima or Geomview as graphics program.
 Gnuplot and Geomview are external programs which must be installed
-separately, while Xmaxima is distributed with Maxima.  There are various
-different formats for those programs, which can be selected with the
-option 'plot_format' (see also the 'Plotting Options' section).
+separately, while Xmaxima is distributed with Maxima.  To see which
+plotting format you are currently using, use the command
+'get_plot_option(plot_format);' and to change to another format, you can
+use 'set_plot_option([plot_format, <format>])', where '<format>' is the
+name of one of the formats described below.  Those two commands show and
+change the global plot format, while each individual plotting command
+can use its own format, if it includes an option '[plot_format,
+<format>]' (see 'get_plot_option' and 'set_plot_option').
 
    The plotting formats are the following:
 
@@ -12502,28 +12589,31 @@ option 'plot_format' (see also the 'Plotting Options' section).
 
    * *gnuplot_pipes* (default on non-Windows platforms)
 
-     This format is not available in Windows platforms.  It is similar
-     to the 'gnuplot' format except that the commands are sent to
-     gnuplot through a pipe, while the data are saved into the file
-     'maxout_xxx.gnuplot_pipes'.  A single gnuplot process is kept open
-     and subsequent plot commands will be sent to the same process,
-     replacing previous plots, unless the gnuplot pipe is closed with
-     the function 'gnuplot_close'.  When this format is used, the
-     function 'gnuplot_replot' can be used to modify a plot that has
-     already displayed on the screen.
+     It is similar to the 'gnuplot' format except that the commands and
+     plot data are sent directly to 'gnuplot' without creating any
+     files.  A single gnuplot process is kept open, with a single
+     graphic window, and subsequent plot commands will be sent to the
+     same process, replacing previous plots in that same window.  Even
+     if the graphic window is closed, the 'gnuplot' process is still
+     running until the end of the session or until it is killed with
+     'gnuplot_close'..  The function 'gnuplot_replot' can be used to
+     modify a plot that has already been displayed on the screen or to
+     open again the graphic window after it was closed.
 
-     This format is only used to plot to the screen; whenever graphic
-     files are created, the format is silently switched to 'gnuplot' and
+     This format does not work with some versions of Lisp under Windows
+     and it is only used to plot to the screen; whenever graphic files
+     are to be created, the format is silently switched to 'gnuplot' and
      the commands needed to create the graphic file are saved with the
      data in file 'maxout_xxx.gnuplot'.
 
    * *mgnuplot*
 
-     Mgnuplot is a Tk-based wrapper around gnuplot.  It is included in
-     the Maxima distribution.  Mgnuplot offers a rudimentary GUI for
-     gnuplot, but has fewer overall features than the plain gnuplot
-     interface.  Mgnuplot requires an external gnuplot installation and,
-     in Unix systems, the Tcl/Tk system.
+     Mgnuplot is a Tk-based wrapper around gnuplot.  It is an old
+     interface still included in the Maxima distribution, but it is
+     currently disabled because it does not have most of the features
+     introduced by the newer versions of the plotting commands.
+     Mgnuplot requires an external gnuplot installation and, in Unix
+     systems, the Tcl/Tk system.
 
    * *xmaxima*
 
@@ -12531,54 +12621,26 @@ option 'plot_format' (see also the 'Plotting Options' section).
      used to display plots created when Maxima is run from the console
      or from other graphical interfaces.  To use this format, the
      xmaxima program, which is distributed together with Maxima, must be
-     installed.  If Maxima is being run from the Xmaxima console, the
-     data and commands are passed to xmaxima through the same socket
-     used for the communication between Maxima and the Xmaxima console.
-     When used from a terminal or from graphical interfaces different
-     from Xmaxima, the commands and data are saved in the file
-     'maxout_xxx.xmaxima' and xmaxima is run with the name of that file
-     as argument.
-
-     In previous versions this format used to be called 'openmath'; that
-     old name still works as a synonym for 'xmaxima'.
+     installed; in some Linux distributions Xmaxima is distributed in a
+     package separate from other parts of Maxima.  If Maxima is being
+     run from the Xmaxima console, the data and commands are passed to
+     xmaxima through the same socket used for the communication between
+     Maxima and the Xmaxima console.  When used from a terminal or from
+     graphical interfaces different from Xmaxima, the commands and data
+     are saved in the file 'maxout_xxx.xmaxima' and xmaxima is run with
+     the name of that file as argument.
 
    * *geomview*
 
-     Geomview, a Motif based interactive 3D viewing program for Unix,
-     can also be used to display plots created by Maxima.  To use this
-     format, the geomview program must be installed.
+     Geomview, a Motif based interactive 3D viewing program for Unix.
+     It can only be used to display plots created with 'plot3d'.  To use
+     this format, the geomview program must be installed.
 
 
 File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting Options,  Prev: Plotting Formats,  Up: Plotting
 
 12.3 Functions and Variables for Plotting
 =========================================
-
- -- Function: contour_plot (<expr>, <x_range>, <y_range>, <options>,
-          ...)
-
-     It plots the contours (curves of equal value) of <expr> over the
-     region <x_range> by <y_range>.  Any additional arguments are
-     treated the same as in 'plot3d'.
-
-     This function only works when the plot format is either 'gnuplot'
-     or 'gnuplot_pipes'.  The additional package 'implicit_plot', which
-     works in any graphic format, can also be used to plot contours but
-     a separate expression must be given for each contour.
-
-     Examples:
-
-          (%i1) contour_plot (x^2 + y^2, [x, -4, 4], [y, -4, 4])$
-
-     You can add any options accepted by 'plot3d'; for instance, the
-     option 'legend' with a value of false, to remove the legend.  By
-     default, Gnuplot chooses and displays 3 contours.  To increase the
-     number of contours, it is necessary to use a custom
-     'gnuplot_preamble', as in the next example:
-
-          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
-                        [legend,false],
-                        [gnuplot_preamble, "set cntrparam levels 12"])$
 
  -- System variable: geomview_command
 
@@ -12599,36 +12661,42 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      (element 1 is the name of the option).
 
      See also 'set_plot_option', 'remove_plot_option' and the section on
-     Plotting Options.
+     'Plotting Options'.
 
  -- System variable: gnuplot_command
 
      This variable stores the name of the command used to run the
-     gnuplot program when the plot format is 'gnuplot'.  Its default
-     value is "gnuplot".  If the gnuplot program is not found unless you
-     give its complete path or if you want to try a different version of
-     it, you may change the value of this variable.  For instance,
+     gnuplot program when the plot format is 'gnuplot' or
+     'gnuplot_pipes'.  Its default value is "gnuplot".  If the gnuplot
+     program is not found unless you give its complete path or if you
+     want to try a different version of it, you may change the value of
+     this variable.  For instance,
 
           (%i1) gnuplot_command: "/usr/local/bin/my_gnuplot"$
 
  -- System variable: gnuplot_file_args
 
      When a graphic file is going to be created using 'gnuplot', this
-     variable is used to specify the way the file name should be passed
-     to gnuplot.  Its default value is "~s", which means that the name
-     of the file will be passed directly.  The contents of this variable
-     can be changed in order to add options for the gnuplot program,
-     adding those options before the format directive "~s".
+     variable is used to specify the format used to print the file name
+     given to gnuplot.  Its default value is "~a" in SBCL and Openmcl,
+     and "~s" in other lisp versions, which means that the name of the
+     file will be passed without quotes if SBCL or Openmcl are used and
+     within quotes if other Lisp versions are used.  The contents of
+     this variable can be changed in order to add options for the
+     gnuplot program, adding those options before the format directive
+     "~s".
 
  -- System variable: gnuplot_view_args
 
-     This variable is used to parse the argument that will be passed to
-     the gnuplot program when the plot format is 'gnuplot'.  Its default
-     value is "-persist ~s", where "~s" will be replaced with the name
-     of the file where the gnuplot commands have been written (usually
-     "maxout_xxx.gnuplot").  The option '-persist' tells gnuplot to exit
-     after the commands in the file have been executed, without closing
-     the window that displays the plot.
+     This variable is the format used to parse the argument that will be
+     passed to the gnuplot program when the plot format is 'gnuplot'.
+     Its default value is "-persist ~a" when SBCL or Openmcl are used,
+     and "-persist ~s" with other Lisp variants, where "~a" or "~s" will
+     be replaced with the name of the file where the gnuplot commands
+     have been written (usually "maxout_xxx.gnuplot").  The option
+     '-persist' tells gnuplot to exit after the commands in the file
+     have been executed, without closing the window that displays the
+     plot.
 
      Those familiar with gnuplot, might want to change the value of this
      variable.  For example, by changing it to:
@@ -12647,29 +12715,6 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      when older gnuplot versions are used in Windows, it might be
      necessary to adjust the value of 'gnuplot_view_args'.
 
- -- Function: implicit_plot
-          implicit_plot (<expr>, <x_range>, <y_range>)
-          implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
-          <y_range>)
-
-     Displays a plot of a function on the real plane, defined implicitly
-     by the expression <expr>.  The domain in the plane is defined by
-     <x_range> and <y_range>.  Several functions can be represented on
-     the same plot, giving a list [<expr_1>, ..., <expr_n>] of
-     expressions that define them.  This function uses the global format
-     options set up with the 'set_plot_option'.  Additional options can
-     also be given as extra arguments for the 'implicit_plot' command.
-
-     The method used by 'implicit_plot' consists of tracking sign
-     changes on the domain given and it can fail for complicated
-     expressions.
-
-     'load(implicit_plot)' loads this function.
-
-     Example:
-          (%i1) load(implicit_plot)$
-          (%i2) implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4])$
-
  -- Function: julia (<x>, <y>, ...<options>...)
 
      Creates a graphic representation of the Julia set for the complex
@@ -12683,10 +12728,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      move out of the convergence circle of radius 2 centered at the
      origin.  The number of pixels in the grid is controlled by the
      'grid' plot option (default 30 by 30).  The maximum number of
-     iterations is set with the option 'iterations'.  The program uses
-     its own default palette: magenta,violet, blue, cyan, green, yellow,
-     orange, red, brown and black, but it can be changed by adding an
-     explicit 'palette' option in the command.
+     iterations is set with the option 'iterations'.  The program sets
+     its own default palette: magenta, violet, blue, cyan, green,
+     yellow, orange, red, brown and black, but it can be changed by
+     adding an explicit 'palette' option in the command.
 
      The default domain used goes from -2 to 2 in both axes and can be
      changed with the 'x' and 'y' options.  By default, the two axes are
@@ -12755,58 +12800,86 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      (polar coordinates), and transform them into x and y coordinates.
 
  -- Function: plot2d
-          plot2d (<plot>, <x_range>, ..., <options>, ...)
-          plot2d ([<plot_1>, ..., <plot_n>], ..., <options>, ...)
-          plot2d ([<plot_1>, ..., <plot_n>], <x_range>, ..., <options>,
-          ...)
+          plot2d (<expr>, <range_x>, <options>)
+          plot2d (<expr_1>=<expr_2>, <range_x>, <range_y>, <options>)
+          plot2d ([parametric, <expr_x>, <expr>_y, <range>], <options>)
+          plot2d ([discrete, <points>], <options>)
+          plot2d ([contour, <expr>], <range_x>, <range_y>, <options>)
+          plot2d ([<type_1>, ..., <type_n>], <options>)
 
-     Where <plot>, <plot_1>, ..., <plot_n> can be either expressions,
-     function names or a list with the any of the forms: '[discrete,
-     [<x1>, ..., <xn>], [<y1>, ..., <yn>]]', '[discrete, [[<x1>, <y1>],
-     ..., [<xn>, ..., <yn>]]]' or '[parametric, <x_expr>, <y_expr>,
-     <t_range>]'.
+     There are 5 types of plots that can be plotted by 'plot2d':
 
-     Displays a plot of one or more expressions as a function of one
-     variable or parameter.
+       1. Explicit functions.  'plot2d' (<expr>, <range_x>, <options>),
+          where <expr> is an expression that depends on only one
+          variable, or the name of a function with one input parameter
+          and numerical results.  <range_x> is a list with three
+          elements, the first one being the name of the variable that
+          will be shown on the horizontal axis of the plot, and the
+          other two elements should be two numbers, the first one
+          smaller than the second, that define the minimum and maximum
+          values to be shown on the horizontal axis.  The name of the
+          variable used in <range_x> must be the same variable on which
+          <expr> depends.  The result will show in the vertical axis the
+          corresponding values of the expression or function for each
+          value of the variable in the horizontal axis.
 
-     'plot2d' displays one or several plots in two dimensions.  When
-     expressions or function names are used to define the plots, they
-     should all depend on only one variable <var> and the use of
-     <x_range> will be mandatory, to provide the name of the variable
-     and its minimum and maximum values; the syntax for <x_range> is:
-     '[<variable>, <min>, <max>]'.
+       2. Implicit functions.  'plot2d' (<expr_1>=<expr_2>, <range_x>,
+          <range_y>, <options>), where <expr_1> and <expr_2> are two
+          expressions that can depend on one or two variables.
+          <range_x> and <range_y> must be two lists of three elements
+          that define the ranges for the variables in the two axes of
+          the plot; the first element of each list is the name of the
+          corresponding variable, and the other two elements are the
+          minimum and maximum values for that variable.  The two
+          variables on which <expr_1> and <expr_2> can depend are those
+          specified by <range_x> and <range_y>.  The result will be a
+          curve or a set of curves where the equation <expr_1>=<expr_2>
+          is true.
 
-     A plot can also be defined in the discrete or parametric forms.
-     The discrete form is used to plot a set of points with given
-     coordinates.  A discrete plot is defined by a list starting with
-     the keyword <discrete>, followed by one or two lists of values.  If
-     two lists are given, they must have the same length; the first list
-     will be interpreted as the x coordinates of the points to be
-     plotted and the second list as the y coordinates.  If only one list
-     is given after the <discrete> keyword, each element on the list
-     could also be a list with two values that correspond to the x and y
-     coordinates of a point, or it could be a sequence of numerical
-     values which will be plotted at consecutive integer values
-     (1,2,3,...)  on the x axis.
+       3. Parametric functions.  'plot2d' ([parametric, <expr_x>,
+          <expr>_y, <range>], <options>), where <expr_x> and <expr>_y
+          are two expressions that depend on a single parameter.
+          <range> must be a three-element list; the first element must
+          be the name of the parameter on which <expr_x> and <expr>_y
+          depend, and the other two elements must be the minimum and
+          maximum values for that parameter.  The result will be a curve
+          in which the horizontal and vertical coordinates of each point
+          are the values of <expr_x> and <expr>_y for a value of the
+          parameter within the range given.
 
-     A parametric plot is defined by a list starting with the keyword
-     <parametric>, followed by two expressions or function names and a
-     range for the parameter.  The range for the parameter must be a
-     list with the name of the parameter followed by its minimum and
-     maximum values: '[<param>, <min>, <max>]'.  The plot will show the
-     path traced out by the point with coordinates given by the two
-     expressions or functions, as <param> increases from <min> to <max>.
+       4. Set of points.  'plot2d' ([discrete, <points>], <options>),
+          displays a list of points, joined by segments by default.  The
+          horizontal and vertical coordinates of each of those points
+          can be specified in three different ways: With two lists of
+          the same length, in which the elements of the first list are
+          the horizontal coordinates of the points and the second list
+          are the vertical coordinates, or with a list of two-element
+          lists, each one corresponding to the two coordinates of one of
+          the points, or with a single list that defines the vertical
+          coordinates of the points; in this last case, the horizontal
+          coordinates of the n points will be assumed to be the first n
+          natural numbers.
 
-     A range for the vertical axis is an optional argument with the
-     form: '[y, <min>, <max>]' (the keyword <y> is always used for the
-     vertical axis).  If that option is used, the plot will show that
-     exact vertical range, independently of the values reached by the
-     plot.  If the vertical range is not specified, it will be set up
-     according to the minimum and maximum values of the second
-     coordinate of the plot points.
+       5. Contour lines.  'plot2d' ([contour, <expr>], <range_x>,
+          <range_y>, <options>), where <expr> is an expression that
+          depends on two variables.  <range_x> and <range_y> will be
+          lists whose first elements are the names of those two
+          variables, followed by two numbers that set the minimum and
+          maximum values for them.  The first variable will be
+          represented along the horizontal axis and the second along the
+          vertical axis.  The result will be a set of curves along which
+          the given expression has certain values.  If those values are
+          not specified with the option 'levels', plotd2d will try to
+          choose, at the most, 8 values of the form d*10^n, where d is
+          either 1, 2 or 5, all of them within the minimum and maximum
+          values of <expr> within the given ranges.
 
-     All other options should also be lists, starting with a keyword and
-     followed by one or more values.  See 'plot_options'.
+     At the end of a plot2d command several of the options described in
+     'Plotting Options' can be used.  Many instances of the 5 types
+     described above can be combined into a single plot, by putting them
+     inside a list: 'plot2d' ([<type_1>, ..., <type_n>], <options>).  If
+     one of the types included in the list require <range_x> or
+     <range_y>, those ranges should come immediately after the list.
 
      If there are several plots to be plotted, a legend will be written
      to identity each of the expressions.  The labels that should be
@@ -12816,12 +12889,32 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      *Examples:*
 
-     Plot of a common function:
+       1. Explicit function.
 
-          (%i1) plot2d (sin(x), [x, -%pi, %pi])$
+               (%i1) plot2d (sin(x), [x, -%pi, %pi])$
 
-     If the function grows too fast, it might be necessary to limit the
-     values in the vertical axis using the 'y' option:
+       2. Implicit function.
+
+               (%i1) plot2d (x^2-y^3+3*y=2, [x,-2.5,2.5], [y,-2.5,2.5])$
+
+       3. Parametric function.
+
+               (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
+               (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t,-8*%pi,8*%pi]])$
+
+       4. Set of points.
+
+               (%i1) plot2d ([discrete, makelist(i*%pi, i, 1, 5),
+                                           [0.6, 0.9, 0.2, 1.3, 1]])$
+
+       5. Contour lines.
+
+               (%i1) plot2d ([contour, u^3 + v^2], [u, -4, 4], [v, -4, 4])$
+
+     *Examples using options*.
+
+     If an explicit function grows too fast, the 'y' option can be used
+     to limit the values in the vertical axis:
 
           (%i1) plot2d (sec(x), [x, -2, 2], [y, -20, 20])$
 
@@ -12832,7 +12925,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      rectangular shape of the plot; in this example the plot will fill a
      square.
 
-          (%i1) plot2d ( x^2 - 1, [x, -3, 3], [box, false], grid2d,
+          (%i1) plot2d ( x^2 - 1, [x, -3, 3], nobox, grid2d,
                 [yx_ratio, 1], [axes, solid], [xtics, -2, 4, 2],
                 [ytics, 2, 2, 6], [label, ["x", 2.9, -0.3],
                 ["x^2-1", 0.1, 8]], [title, "A parabola"])$
@@ -12849,15 +12942,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
           (%i2) H(x) := if x < 0 then x^4 - 1 else 1 - x^5 $
           (%i3) plot2d ([F, G, H], [u, -1, 1], [y, -1.5, 1.5])$
 
-     A plot of the butterfly curve, defined parametrically:
-
-          (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
-          (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t, -8*%pi, 8*%pi]])$
-
      Plot of a circle, using its parametric representation, together
-     with the function -|x|.  The circle will only look like a circle if
-     the scale in the two axes is the same, which is done with the
-     option 'same_xy'.
+     with the function -'|<x>|'.  The circle will only look like a
+     circle if the scale in the two axes is the same, which is done with
+     the option 'same_xy'.
 
           (%i1) plot2d([[parametric, cos(t), sin(t), [t,0,2*%pi]], -abs(x)],
                    [x, -sqrt(2), sqrt(2)], same_xy)$
@@ -12865,12 +12953,6 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      A plot of 200 random numbers between 0 and 9:
 
           (%i1) plot2d ([discrete, makelist ( random(10), 200)])$
-
-     A plot of a discrete set of points, defining x and y coordinates
-     separately:
-
-          (%i1) plot2d ([discrete, makelist(i*%pi, i, 1, 5),
-                                      [0.6, 0.9, 0.2, 1.3, 1]])$
 
      In the next example a table with three columns is saved in a file
      "data.txt" which is then read and the second and third column are
@@ -12907,19 +12989,19 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      function names.  The mouse can be used to rotate the plot looking
      at the surface from different sides.
 
-     *Examples:*
+     *Examples*.
 
      Plot of a function of two variables:
 
           (%i1) plot3d (u^2 - v^2, [u, -2, 2], [v, -3, 3], [grid, 100, 100],
-                  [mesh_lines_color,false])$
+                  nomesh_lines)$
 
      Use of the 'z' option to limit a function that goes to infinity (in
      this case the function is minus infinity on the x and y axes); this
      also shows how to plot with only lines and no shading:
 
           (%i1) plot3d ( log ( x^2*y^2 ), [x, -2, 2], [y, -2, 2], [z, -8, 4],
-                   [palette, false], [color, magenta])$
+                   nopalette, [color, magenta])$
 
      The infinite values of z can also be avoided by choosing a grid
      that does not fall on any points where the function is undefined,
@@ -12954,17 +13036,15 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      coordinates to rectangular coordinates.  See the documentation for
      'spherical_to_xyz'.
 
-          (%i1) plot3d (sin(2*theta)*cos(phi), [theta, 0, %pi],
-                  [phi, 0, 2*%pi],
-                  [transform_xy, spherical_to_xyz], [grid,30,60],
-             [legend,false])$
+          (%i1) plot3d (sin(2*theta)*cos(phi), [theta,0,%pi], [phi,0,2*%pi],
+                [transform_xy, spherical_to_xyz], [grid, 30, 60], nolegend)$
 
      Use of the pre-defined function 'polar_to_xy' to transform from
      cylindrical to rectangular coordinates.  See the documentation for
      'polar_to_xy'.
 
-          (%i1) plot3d (r^.33*cos(th/3), [r,0,1], [th,0,6*%pi], [box, false],
-             [grid, 12, 80], [transform_xy, polar_to_xy], [legend, false])$
+          (%i1) plot3d (r^.33*cos(th/3), [r,0,1], [th,0,6*%pi], nobox,
+              nolegend, [grid, 12, 80], [transform_xy, polar_to_xy])$
 
      Plot of a sphere using the transformation from spherical to
      rectangular coordinates.  Option 'same_xyz' is used to get the
@@ -12972,9 +13052,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      used, it is not convenient to eliminate the mesh lines, because
      Gnuplot will not show the surface correctly.
 
-          (%i1) plot3d ( 5, [theta, 0, %pi], [phi, 0, 2*%pi], same_xyz,
+          (%i1) plot3d ( 5, [theta,0,%pi], [phi,0,2*%pi], same_xyz, nolegend,
             [transform_xy, spherical_to_xyz], [mesh_lines_color,blue],
-            [palette,[gradient,"#1b1b4e", "#8c8cf8"]], [legend, false])$
+            [palette,[gradient,"#1b1b4e", "#8c8cf8"]])$
 
      Definition of a function of two-variables using a matrix.  Notice
      the single quote in the definition of the function, to prevent
@@ -12983,16 +13063,16 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
           (%i1) M: matrix([1,2,3,4], [1,2,3,2], [1,2,3,4], [1,2,3,3])$
           (%i2) f(x, y) := float('M [round(x), round(y)])$
-          (%i3) plot3d (f(x,y), [x,1,4],[y,1,4],[grid,3,3],[legend,false])$
+          (%i3) plot3d (f(x,y), [x,1,4], [y,1,4], [grid,3,3], nolegend)$
 
      By setting the elevation equal to zero, a surface can be seen as a
      map in which each color represents a different level.
 
           (%i1) plot3d (cos (-x^2 + y^3/4), [x,-4,4], [y,-4,4], [zlabel,""],
                  [mesh_lines_color,false], [elevation,0], [azimuth,0],
-                 color_bar, [grid,80,80], [ztics,false], [color_bar_tics,1])$
+                 color_bar, [grid,80,80], noztics, [color_bar_tics,1])$
 
-     See also the section about Plotting Options.
+     See also 'Plotting Options'.
 
  -- System variable: plot_options
 
@@ -13006,8 +13086,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      Removes the default value of an option.  The name of the option
      must be given.
 
-     See also 'set_plot_option', 'get_plot_option' and the section on
-     Plotting Options.
+     See also 'set_plot_option', 'get_plot_option' and 'Plotting
+     Options'.
 
  -- Function: set_plot_option (<option>)
 
@@ -13054,20 +13134,36 @@ File: maxima.info,  Node: Plotting Options,  Next: Gnuplot Options,  Prev: Funct
 =====================
 
 All options consist of a list starting with one of the keywords in this
-section, followed by one or more values.  Some of the options may have
-different effects in different plotting commands as it will be pointed
-out in the following list.  The options that accept among their possible
-values true or false, can also be set to true by simply writing their
-names.  For instance, typing logx as an option is equivalent to writing
-[logx, true].
+section, followed by one or more values.  If the option appears inside
+one of the plotting commands, its value will be local for that command.
+It the option is given as argument to 'set_plot_option', its value will
+be global and used in all plots, unless it is overridden by a local
+value.
+
+   Some of the options may have different effects in different plotting
+commands as it will be pointed out in the following list.  The options
+that accept among their possible values true or false, can also be set
+to true by simply writing their names, and false by writing their names
+with the prefix no.  For instance, typing 'logx' as an option is
+equivalent to writing '[logx, true]' and 'nobox' is equivalent to '[box,
+false]'.  When just the name of the option is used for an option which
+cannot have a value 'true', it means that any value previously assigned
+to that option will be removed, leaving it to the graphic program to
+decide what to do.
 
  -- Plot option: adapt_depth [adapt_depth, <integer>]
      Default value: '5'
 
      The maximum number of splittings used by the adaptive plotting
-     routine.
+     routine of 'plot2d'; <integer> must be a non-negative integer.  A
+     value of zero means that adaptive plotting will not be used and the
+     resulting plot will have 1+4*<nticks> points (see option 'nticks').
+     To have more control on the number of points and their positions, a
+     list of points can be created and then plotted using the 'discrete'
+     method of 'plot2d'.
 
- -- Plot option: axes [axes, <symbol>]
+ -- Plot option: axes [axes, <symbol>], axes, noaxes
+
      Default value: 'true'
 
      Where <symbol> can be either 'true', 'false', 'x', 'y' or 'solid'.
@@ -13075,9 +13171,12 @@ names.  For instance, typing logx as an option is equivalent to writing
      y axis will be shown; if it is equal to 'true', both axes will be
      shown and 'solid' will show the two axes with a solid line, rather
      than the default broken line.  This option does not have any effect
-     in the 3 dimensional plots.
+     in the 3 dimensional plots.  The single keywords 'axes' and
+     'noaxes' can be used as synonyms for '[axes, true]' and '[axes,
+     false]'.
 
  -- Plot option: azimuth [azimuth, <number>]
+
      Default value: '30'
 
      A plot3d plot can be thought of as starting with the x and y axis
@@ -13089,11 +13188,14 @@ names.  For instance, typing logx as an option is equivalent to writing
 
      See also 'elevation'.
 
- -- Plot option: box [box, <symbol>]
+ -- Plot option: box [box, <symbol>], box, nobox
+
      Default value: 'true'
 
      If set to 'true', a bounding box will be drawn for the plot; if set
-     to 'false', no box will be drawn.
+     to 'false', no box will be drawn.  The single keywords 'box' and
+     'nobox' can be used as synonyms for '[box, true]' and '[box,
+     false]'.
 
  -- Plot option: color [color, <color_1>, ..., <color_n>]
 
@@ -13109,24 +13211,32 @@ names.  For instance, typing logx as an option is equivalent to writing
      two for green component and two for the blue component.  If the
      name of a given color is unknown color, black will be used instead.
 
- -- Plot option: color_bar [color_bar, <symbol>]
+ -- Plot option: color_bar [color_bar, <symbol>], color_bar, nocolor_bar
+
      Default value: 'false' in plot3d, 'true' in mandelbrot and julia
 
      Where <symbol> can be either 'true' or 'false'.  If 'true',
      whenever 'plot3d', 'mandelbrot' or 'julia' use a palette to
      represent different values, a box will be shown on the right,
-     showing the corresponding between colors and values.
+     showing the corresponding between colors and values.  The single
+     keywords 'color_bar' and 'nocolor_bar' can be used as synonyms for
+     '[color_bar, true]' and '[color_bar, false]'.
 
- -- Plot option: color_bar_tics [color_bar_tics, <x1>, <x2>, <x3>]
+ -- Plot option: color_bar_tics [color_bar_tics, <x1>, <x2>, <x3>],
+          color_bar_tics, nocolor_bar_tics
 
      Defines the values at which a mark and a number will be placed in
      the color bar.  The first number is the initial value, the second
      the increments and the third is the last value where a mark is
      placed.  The second and third numbers can be omitted.  When only
      one number is given, it will be used as the increment from an
-     initial value that will be chosen automatically.
+     initial value that will be chosen automatically.  The single
+     keyword 'color_bar_tics' removes a value given previously, making
+     the graphic program use its default for the values of the tics and
+     'nocolor_bar_tics' will not show any tics on the color bar.
 
  -- Plot option: elevation [elevation, <number>]
+
      Default value: '60'
 
      A plot3d plot can be thought of as starting with the x and y axis
@@ -13147,17 +13257,20 @@ names.  For instance, typing logx as an option is equivalent to writing
 
      For a way to actually draw a grid See 'grid2d'.
 
- -- Plot option: grid2d [grid, <value>]
+ -- Plot option: grid2d [grid2d, <value>], grid2d, nogrid2d
+
      Default value: 'false'
 
      Shows a grid of lines on the xy plane.  The points where the grid
      lines are placed are the same points where tics are marked in the x
      and y axes, which can be controlled with the 'xtics' and 'ytics'
-     options.
+     options.  The single keywords 'grid2d' and 'nogrid2d' can be used
+     as synonyms for '[grid2d, true]' and '[grid2d, false]'.
 
      See also 'grid'.
 
- -- Plot option: iterations [grid, <value>]
+ -- Plot option: iterations [iterations, <value>]
+
      Default value: '9'
 
      Number of iterations made by the programs mandelbrot and julia.
@@ -13167,37 +13280,66 @@ names.  For instance, typing logx as an option is equivalent to writing
      Writes one or several labels in the points with <x>, <y>
      coordinates indicated after each label.
 
- -- Plot option: legend
-          legend [legend, <string_1>, ..., <string_n>]
-          legend [legend, <false>]
+ -- Plot option: legend [legend, <string_1>, ..., <string_n>], legend,
+          nolegend
 
      It specifies the labels for the plots when various plots are shown.
      If there are more plots than the number of labels given, they will
      be repeated.  If given the value 'false', no legends will be shown.
      By default, the names of the expressions or functions will be used,
      or the words discrete1, discrete2, ..., for discrete sets of
-     points.
+     points.  The single keyword 'legend' removes any previously defined
+     legends, leaving it to the plotting program to set up a legend.
+     The keyword 'nolegend' is a synonym for '[legend, false]'.
 
- -- Plot option: logx [logx, <value>]
+ -- Plot option: levels [levels, <number>, ...]
+
+     This option is used by 'plot2d' to do contour plots.  If only one
+     number is given after the keyword 'levels', it must be a natural
+     number; 'plot2d' will try to plot that number of contours with
+     values between the minimum and maximum value of the expression
+     given, with the form d*10^n, where d is either 1, 2 or 5.  Since
+     not always it will be possible to find that number of levels in
+     that interval, the number of contour lines show will be smaller
+     than the number specified by this option.
+
+     If more than one number are given after the keyword 'levels',
+     'plot2d'.  will show the contour lines corresponding to those
+     values of the expression plotted, if they exist within the domain
+     used.
+
+ -- Plot option: logx [logx, <value>], logx, nologx
+
+     Default value: 'false'
 
      Makes the horizontal axes to be scaled logarithmically.  It can be
-     either true or false.
+     either true or false.  The single keywords 'logx' and 'nologx' can
+     be used as synonyms for '[logx, true]' and '[logx, false]'.
 
- -- Plot option: logy [logy, <value>]
+ -- Plot option: logy [logy, <value>], logy, nology
+
+     Default value: 'false'
 
      Makes the vertical axes to be scaled logarithmically.  It can be
-     either true or false.
+     either true or false.  The single keywords 'logy' and 'nology' can
+     be used as synonyms for '[logy, true]' and '[logy, false]'.
 
- -- Plot option: mesh_lines_color [mesh_lines_color, <color>]
+ -- Plot option: mesh_lines_color [mesh_lines_color, <color>],
+          mesh_lines_color, no_mesh_lines
+
      Default value: 'black'
 
      It sets the color used by plot3d to draw the mesh lines, when a
      palette is being used.  It accepts the same colors as for the
      option 'color' (see the list of allowed colors in 'color').  It can
      also be given a value 'false' to eliminate completely the mesh
-     lines.
+     lines.  The single keyword 'mesh_lines_color' removes any
+     previously defined colors, leaving it to the graphic program to
+     decide what color to use.  The keyword 'no_mesh_lines' is a synonym
+     for '[mesh_lines_color, false]'
 
  -- Plot option: nticks [nticks, <integer>]
+
      Default value: '29'
 
      When plotting functions with 'plot2d', it is gives the initial
@@ -13205,9 +13347,8 @@ names.  For instance, typing logx as an option is equivalent to writing
      functions.  When plotting parametric functions with 'plot3d', it
      sets the number of points that will be shown for the plot.
 
- -- Plot option: palette
-          palette [palette, [<palette_1>], ..., [<palette_n>]]
-          palette [palette, <false>]
+ -- Plot option: palette [palette, [<palette_1>], ..., [<palette_n>]],
+          palette, nopalette
 
      It can consist of one palette or a list of several palettes.  Each
      palette is a list with a keyword followed by values.  If the
@@ -13235,16 +13376,40 @@ names.  For instance, typing logx as an option is equivalent to writing
      only.  In that case, the colors of the lines will be determined by
      the option 'color'.
 
+     The single keyword 'palette' removes any palette previously
+     defined, leaving it to the graphic program to decide the palette to
+     use and 'nopalette' is a synonym for '[palette, false]'.
+
+ -- Plot option: plotepsilon [plotepsilon, <value>]
+
+     Default value: 1e-6
+
+     This value is used by 'plot2d' when plotting implicit functions or
+     contour lines.  When plotting an explicit function 'expr_1=expr_2',
+     it is converted into 'expr_1-expr_2' and the points where that
+     equals zero are searched.  When a contour line for 'expr' equal to
+     some value is going to be plotted, the points where 'expr' minus
+     that value are equal to zero are searched.  The search is done by
+     computing those expressions at a grid of points (see 'sample').  If
+     at one of the points in that grid the absolute value of the
+     expression is less than the value of 'plotepsilon', it will be
+     assumed to be zero, and therefore, as being part of the curve to be
+     plotted.
+
  -- Plot option: plot_format [plot_format, <format>]
+
      Default value: 'gnuplot', in Windows systems, or 'gnuplot_pipes' in
      other systems.
 
      Where <format> is one of the following: gnuplot, xmaxima, mgnuplot,
      gnuplot_pipes or geomview.
 
-     It sets the format to be used for plotting.
+     It sets the format to be used for plotting as explained in
+     'Plotting Formats'.
 
- -- Plot option: plot_realpart [plot_realpart, <symbol>]
+ -- Plot option: plot_realpart [plot_realpart, <symbol>], plot_realpart,
+          noplot_realpart
+
      Default value: 'false'
 
      If set to 'true', the functions to be plotted will be considered as
@@ -13255,7 +13420,9 @@ names.  For instance, typing logx as an option is equivalent to writing
      complex value, with real value equal to 'log(abs(x))'; if
      'plot_realpart' were 'true', 'log(-5)' would be plotted as
      'log(5)', while nothing would be plotted if 'plot_realpart' were
-     'false'.
+     'false'.  The single keyword 'plot_realpart' can be used as a
+     synonym for '[plot_realpart, true]' and 'noplot_realpart' is a
+     synonym for '[plot_realpart, false]'.
 
  -- Plot option: point_type [point_type, <type_1>, ..., <type_n>]
 
@@ -13308,7 +13475,10 @@ names.  For instance, typing logx as an option is equivalent to writing
      terminal will be used with the EPS option, solid colored lines of
      width 2, plot size of 16.4 cm by 12.3 cm and font of 24 points.
 
- -- Plot option: run_viewer [run_viewer, <symbol>]
+ -- Plot option: run_viewer [run_viewer, <symbol>], run_viewer,
+          norun_viewer
+
+     Default value: 'true'
 
      This option is only used when the plot format is 'gnuplot' and the
      terminal is 'default' or when the Gnuplot terminal is set to 'dumb'
@@ -13327,23 +13497,42 @@ names.  For instance, typing logx as an option is equivalent to writing
      ASCII representation of the plot, will be shown in the Maxima or
      Xmaxima console.
 
-     The default value for this option is true, making the plots to be
-     shown in either the console or a separate graphics window.
+     Its default value, true, makes the plots appear in either the
+     console or a separate graphics window.  'run_viewer' and
+     'norun_viewer' are synonyms for '[run_viewer, true]' and
+     '[run_viewer, false]'.
 
- -- Plot option: same_xy [same_xy , <value>]
+ -- Plot option: same_xy [same_xy , <value>], same_xy, nosame_xy
 
      It can be either true or false.  If true, the scales used in the x
      and y axes will be the same, in either 2d or 3d plots.  See also
-     'yx_ratio'.
+     'yx_ratio'.  'same_xy' and 'nosame_xy' are synonyms for '[same_xy,
+     true]' and '[same_xy, false]'.
 
- -- Plot option: same_xyz [same_xyz , <value>]
+ -- Plot option: same_xyz [same_xyz , <value>], same_xyz, nosame_xyz
 
      It can be either true or false.  If true, the scales used in the 3
-     axes of a 3d plot will be the same.
+     axes of a 3d plot will be the same.  'same_xyz' and 'nosame_xyz'
+     are synonyms for '[same_xyz, true]' and '[same_xyz, false]'.
 
- -- Plot option: style
-          style [style, <type_1>, ..., <type_n>]
-          style [style, [<style_1>], ..., [<style_n>]]
+ -- Plot option: sample [sample, <nx>, <ny>]
+
+     Default value: '[sample, 50, 50]'
+
+     <nx> and <ny> must be two natural numbers that will be used by
+     'plot2d' to look for the points that make part of the plot of an
+     implicit function or a contour line.  The domain is divided into
+     <nx> intervals in the horizontal axis and <ny> intervals in the
+     vertical axis and the numerical value of the expression is computed
+     at the borders of those intervals.  Higher values of <nx> and <ny>
+     will give smoother curves, but will increase the time needed to
+     trace the plot.  When there are critical points in the plot where
+     the curve changes direction, to get better results it is more
+     important to try to make those points to be at the border of the
+     intervals, rather than increasing <nx> and <ny>.
+
+ -- Plot option: style [style, <type_1>, ..., <type_n>], [style,
+          [<style_1>], ..., [<style_n>]]
 
      The styles that will be used for the various functions or sets of
      data in a 2d plot.  The word <style> must be followed by one or
@@ -13398,11 +13587,12 @@ names.  For instance, typing logx as an option is equivalent to writing
 
      Defines a title that will be written at the top of the plot.
 
- -- Plot option: transform_xy [transform_xy, <symbol>]
+ -- Plot option: transform_xy [transform_xy, <symbol>], notransform_xy
 
      Where <symbol> is either 'false' or the result obtained by using
      the function 'transform_xy'.  If different from 'false', it will be
-     used to transform the 3 coordinates in plot3d.
+     used to transform the 3 coordinates in plot3d.  'notransform_xy'
+     removes any transformation function previously defined.
 
      See 'make_transform', 'polar_to_xy' and 'spherical_to_xyz'.
 
@@ -13419,20 +13609,24 @@ names.  For instance, typing logx as an option is equivalent to writing
 
      Specifies the <string> that will label the first axis; if this
      option is not used, that label will be the name of the independent
-     variable, when plotting functions with 'plot2d' or 'implicit_plot',
-     or the name of the first variable, when plotting surfaces with
-     'plot3d' or contours with 'contour_plot', or the first expression
-     in the case of a parametric plot.  It can not be used with
-     'set_plot_option'.
+     variable, when plotting functions with 'plot2d' the name of the
+     first variable, when plotting surfaces with 'plot3d', or the first
+     expression in the case of a parametric plot.
 
- -- Plot option: xtics [xtics, <x1>, <x2>, <x3>]
+ -- Plot option: xtics [xtics, <x1>, <x2>, <x3>], [xtics, 'false'],
+          xtics, noxtics
 
      Defines the values at which a mark and a number will be placed in
      the x axis.  The first number is the initial value, the second the
      increments and the third is the last value where a mark is placed.
-     The second and third numbers can be omitted.  When only one number
-     is given, it will be used as the increment from an initial value
-     that will be chosen automatically.
+     The second and third numbers can be omitted, in which case the
+     first number is the increment from an initial value that will be
+     chosen by the graphic program.  If '[xtics, false]' is used, no
+     marks or numbers will be shown along the x axis.
+
+     The single keyword 'xtics' removes any values previously defined,
+     leaving it to the graphic program to decide the values to use and
+     'noxtics' is a synonym for '[xtics, false]'
 
  -- Plot option: xy_scale [xy_scale, <sx>, <sy>]
 
@@ -13455,20 +13649,25 @@ names.  For instance, typing logx as an option is equivalent to writing
  -- Plot option: ylabel [ylabel, <string>]
 
      Specifies the <string> that will label the second axis; if this
-     option is not used, that label will be "y", when plotting functions
-     with 'plot2d' or 'implicit_plot', or the name of the second
-     variable, when plotting surfaces with 'plot3d' or contours with
-     'contour_plot', or the second expression in the case of a
-     parametric plot.  It can not be used with 'set_plot_option'.
+     option is not used, that label will be "y", when plotting explicit
+     functions with 'plot2d', or the name of the second variable, when
+     plotting surfaces with 'plot3d', or the second expression in the
+     case of a parametric plot.
 
- -- Plot option: ytics [ytics, <y1>, <y2>, <y3>]
+ -- Plot option: ytics [ytics, <y1>, <y2>, <y3>], [ytics, 'false'],
+          ytics, noytics
 
      Defines the values at which a mark and a number will be placed in
      the y axis.  The first number is the initial value, the second the
      increments and the third is the last value where a mark is placed.
-     The second and third numbers can be omitted.  When only one number
-     is given, it will be used as the increment from an initial value
-     that will be chosen automatically
+     The second and third numbers can be omitted, in which case the
+     first number is the increment from an initial value that will be
+     chosen by the graphic program.  If '[ytics, false]' is used, no
+     marks or numbers will be shown along the y axis.
+
+     The single keyword 'ytics' removes any values previously defined,
+     leaving it to the graphic program to decide the values to use and
+     'noytics' is a synonym for '[ytics, false]'
 
  -- Plot option: yx_ratio [yx_ratio, <r>]
 
@@ -13486,12 +13685,30 @@ names.  For instance, typing logx as an option is equivalent to writing
      'plot3d'.  If this option is not used, that label will be "z", when
      plotting surfaces, or the third expression in the case of a
      parametric plot.  It can not be used with 'set_plot_option' and it
-     will be ignored by 'plot2d' and 'implicit_plot'.
+     will be ignored by 'plot2d'.
 
- -- Plot option: zmin [zmin, <z>]
+ -- Plot option: zmin [zmin, <z>], zmin
 
      In 3d plots, the value of z that will be at the bottom of the plot
      box.
+
+     The single keyword 'zmin' removes any value previously defined,
+     leaving it to the graphic program to decide the value to use.
+
+ -- Plot option: ztics [ztics, <z1>, <z2>, <z3>], [ztics, 'false'],
+          ztics, noztics
+
+     Defines the values at which a mark and a number will be placed in
+     the z axis.  The first number is the initial value, the second the
+     increments and the third is the last value where a mark is placed.
+     The second and third numbers can be omitted, in which case the
+     first number is the increment from an initial value that will be
+     chosen by the graphic program.  If '[ztics, false]' is used, no
+     marks or numbers will be shown along the z axis.
+
+     The single keyword 'ztics' removes any values previously defined,
+     leaving it to the graphic program to decide the values to use and
+     'noztics' is a synonym for '[ztics, false]'
 
 
 File: maxima.info,  Node: Gnuplot Options,  Next: Gnuplot_pipes Format Functions,  Prev: Plotting Options,  Up: Plotting
@@ -13570,6 +13787,37 @@ specific option.
      supported by Gnuplot.  To create PNG, PDF, Postscript or SVG, it is
      easier to use options 'png_file', 'pdf_file', 'ps_file', or
      'svg_file'.
+
+ -- Plot option: gnuplot_script_file [gnuplot_script_file,
+          <file_name_or_function>]
+
+     Set the name of the script file created by 'plot2d' or 'plot3d'
+     when the 'plot_format' is 'gnuplot'.  The value
+     <file_name_or_function> can be a string or a Maxima function of one
+     variable that returns a string.
+
+     In this example, the script file name is set to "sin.gnuplot".
+
+          (%i1) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, "sin.gnuplot"]);
+
+          (%o1) ["/tmp/sin.gnuplot"]
+
+     In this example, 'gnuplot_maxout_prt(<file>)' is a function that
+     takes the default file name, <file>.  It constructs a full file
+     name for the data file by interpolating a random 8-digit integer
+     with a pad of zeros into the default file name.  The directory is
+     determined by 'maxima_tempdir' (it is "/tmp" in this example).
+
+          (%i1) gnuplot_maxout_prt(file) := block([beg,end],
+                  [beg,end] : split(file,"."),
+                  printf(false,"~a_~8,'0d.~a",beg,random(10^8-1),end)) $
+
+          (%i2) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, gnuplot_maxout_prt]);
+
+          (%o2) ["/tmp/maxout68715_09606909.gnuplot"]
+
+     By default, the script would have been saved in a file named
+     'maxoutXXXXX.gnuplot' (XXXXX=68715 in this example).
 
  -- Plot option: gnuplot_pm3d [gnuplot_pm3d, <value>]
 
@@ -14018,13 +14266,15 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      they have been defined by 'defstruct' before the 'load' command is
      called.
 
-     See also 'loadfile', 'batch', 'batchload', and 'demo'.  'loadfile'
-     processes Lisp files; 'batch', 'batchload', and 'demo' process
-     Maxima files.
+     See also 'loadfile', for Lisp files; and 'batch', 'batchload', and
+     'demo'.  for Maxima files.
 
      See 'file_search' for more detail about the file search mechanism.
-     Additionally the chapter on 'numericalio' describes many functions
-     that allow to load files that contain csv or similar data.
+     The 'numericalio' chapter describes many functions for loading csv
+     and other data files.
+
+     During Maxima file loading, the variable 'load_pathname' is bound
+     to the pathname of the file being loaded.
 
      'load' evaluates its argument.
 
@@ -14655,7 +14905,7 @@ File: maxima.info,  Node: Polynomials,  Next: Special Functions,  Prev: File Inp
 * Functions and Variables for Polynomials::  
 
 
-File: maxima.info,  Node: Introduction to Polynomials,  Next: Functions and Variables for Polynomials,  Prev: Polynomials,  Up: Polynomials
+File: maxima.info,  Node: Introduction to Polynomials,  Next: Functions and Variables for Polynomials
 
 14.1 Introduction to Polynomials
 ================================
@@ -14711,7 +14961,7 @@ information such as the degree of truncation.  As with CRE form, the
 symbol '/T/' follows the line label of such expressions.
 
 
-File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introduction to Polynomials,  Up: Polynomials
+File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introduction to Polynomials
 
 14.2 Functions and Variables for Polynomials
 ============================================
@@ -15249,23 +15499,22 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
                                         a
                                        x  - 1
 
- -- Function: fullratsubst (<a>, <b>, <c>)
+ -- Function: fullratsubst (<new>, <old>, <expr>)
 
-     is the same as 'ratsubst' except that it calls itself recursively
-     on its result until that result stops changing.  This function is
-     useful when the replacement expression and the replaced expression
-     have one or more variables in common.
+     fullratsubst ('<old> = <new>', <expr>)  
+     fullratsubst ('[ <old_1> = <new_1>, ..., <old_n> = <new_n> ]',
+     <expr>)
 
-     'fullratsubst' will also accept its arguments in the format of
-     'lratsubst'.  That is, the first argument may be a single
-     substitution equation or a list of such equations, while the second
-     argument is the expression being processed.
+     'fullratsubst' applies 'lratsubst' repeatedly until <expr> stops
+     changing (or 'lrats_max_iter' is reached).  This function is useful
+     when the replacement expression and the replaced expression have
+     one or more variables in common.
 
-     'load ("lrats")' loads 'fullratsubst' and 'lratsubst'.
+     'fullratsubst' accepts its arguments in the format of 'ratsubst' or
+     'lratsubst'.
 
      Examples:
 
-          (%i1) load ("lrats")$
         * 'subst' can carry out multiple substitutions.  'lratsubst' is
           analogous to 'subst'.
           (%i2) subst ([a = b, c = d], a + c);
@@ -15291,10 +15540,19 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%i8) fullratsubst (a^2 = b*a, a^3);
                                            2
           (%o8)                         a b
-        * 'fullratsubst' may cause an indefinite recursion.
-          (%i9) errcatch (fullratsubst (b*a^2, a^2, a^3));
+        * 'fullratsubst' catches potential infinite recursions.  *note
+          lrats_max_iter::.
+          (%i9) fullratsubst (b*a^2, a^2, a^3), lrats_max_iter=15;
+          Warning: fullratsubst1(substexpr,forexpr,expr): reached maximum iterations of 15 . Increase `lrats_max_iter' to increase this limit.
+                                               3  15
+          (%o7)                               a  b
 
-          *** - Lisp stack overflow. RESET
+     See also 'lrats_max_iter' and 'fullratsubstflag'.
+
+ -- Option variable: fullratsubstflag
+     Default value: 'false'
+
+     An option variable that is set to 'true' in 'fullratsubst'.
 
  -- Function: gcd (<p_1>, <p_2>, <x_1>, ...)
 
@@ -15485,24 +15743,25 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%i1) lopow ((x+y)^2 + (x+y)^a, x+y);
           (%o1)                       min(a, 2)
 
- -- Function: lratsubst (<L>, <expr>)
+ -- Function: lratsubst (<new>, <old>, <expr>)
+          lratsubst ('<old> = <new>', <expr>)
+          lratsubst ('[ <old_1> = <new_1>, ..., <old_n> = <new_n> ]',
+          <expr>)
 
-     is analogous to 'subst (<L>, <expr>)' except that it uses
-     'ratsubst' instead of 'subst'.
+     'lratsubst' is analogous to 'subst' except that it uses 'ratsubst'
+     to perform substitutions.
 
-     The first argument of 'lratsubst' is an equation or a list of
-     equations identical in format to that accepted by 'subst'.  The
-     substitutions are made in the order given by the list of equations,
-     that is, from left to right.
-
-     'load ("lrats")' loads 'fullratsubst' and 'lratsubst'.
+     The first argument of 'lratsubst' is an equation, a list of
+     equations or a list of unit length whose first element is a list of
+     equations (that is, the first argument is identical in format to
+     that accepted by 'subst').  The substitutions are made in the order
+     given by the list of equations, that is, from left to right.
 
      Examples:
 
-          (%i1) load ("lrats")$
         * 'subst' can carry out multiple substitutions.  'lratsubst' is
           analogous to 'subst'.
-          (%i2) subst ([a = b, c = d], a + c);
+          (%i2) lratsubst ([a = b, c = d], a + c);
           (%o2)                         d + b
           (%i3) lratsubst ([a^2 = b, c^2 = d], (a + e)*c*(a + c));
           (%o3)                (d + a c) e + a d + b c
@@ -15510,6 +15769,28 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           may be given as first argument.
           (%i4) lratsubst (a^2 = b, a^3);
           (%o4)                          a b
+        * A nested list of substitutions can be used-but it must contain
+          only one list.
+          (%i5) lratsubst ([[a^2=b*a, b=c]], a^3);
+
+                                                2
+          (%o5)                               a  c
+          (%i6) lratsubst ([[a^2=b*a, b=c],[a=b]], a^3);
+
+
+                                           2
+          lratsubst: improper argument: [[a  = a b, b = c], [a = b]]
+          #0: lratsubst(listofeqns=[[a^2 = a*b,b = c],[a = b]],expr=a^3)
+           -- an error. To debug this try: debugmode(true);
+
+     See also 'fullratsubst'.
+
+ -- Option variable: lrats_max_iter
+     Default value: '100000'
+
+     The upper limit on the number of iterations that 'fullratsubst' and
+     'lratsubst' may perform.  It must be set to a positive integer.
+     See the example for 'fullratsubst'.
 
  -- Option variable: modulus
      Default value: 'false'
@@ -15639,6 +15920,45 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      the current value of 'modulus'.
 
      See 'modulus'.
+
+ -- Function: polynomialp
+          polynomialp (<p>, <L>, <coeffp>, <exponp>)
+          polynomialp (<p>, <L>, <coeffp>)
+          polynomialp (<p>, <L>)
+
+     Return 'true' if <p> is a polynomial in the variables in the list
+     <L>.  The predicate <coeffp> must evaluate to 'true' for each
+     coefficient, and the predicate <exponp> must evaluate to 'true' for
+     all exponents of the variables in <L>.  If you want to use a
+     non-default value for <exponp>, you must supply <coeffp> with a
+     value even if you want to use the default for <coeffp>.
+
+     The command 'polynomialp (<p>, <L>, <coeffp>)' is equivalent to
+     'polynomialp (<p>, <L>, <coeffp>, 'nonnegintegerp)' and the command
+     'polynomialp (<p>, <L>)' is equivalent to 'polynomialp (<p>, L<,>
+     'constantp, 'nonnegintegerp)'.
+
+     The polynomial needn't be expanded:
+
+          (%i1) polynomialp ((x + 1)*(x + 2), [x]);
+          (%o1)                         true
+          (%i2) polynomialp ((x + 1)*(x + 2)^a, [x]);
+          (%o2)                         false
+
+     An example using non-default values for coeffp and exponp:
+
+          (%i1) polynomialp ((x + 1)*(x + 2)^(3/2), [x], numberp, numberp);
+          (%o1)                         true
+          (%i2) polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x], numberp,
+                                                                  numberp);
+          (%o2)                         true
+
+     Polynomials with two variables:
+
+          (%i1) polynomialp (x^2 + 5*x*y + y^2, [x]);
+          (%o1)                         false
+          (%i2) polynomialp (x^2 + 5*x*y + y^2, [x, y]);
+          (%o2)                         true
 
  -- Function: quotient
           quotient (<p_1>, <p_2>)
@@ -16029,8 +16349,8 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      When 'radsubstflag' is 'true', 'ratsubst' makes substitutions for
      radicals in expressions which don't explicitly contain them.
 
-     'ratsubst' ignores the value 'true' of the option variable
-     'keepfloat'.
+     'ratsubst' ignores the value 'true' of the option variables
+     'keepfloat', 'float', and 'numer'.
 
      Examples:
 
@@ -16666,7 +16986,7 @@ Functions, Chapter 6.
 
      For negative integers 'gamma' is not defined.
 
-     Maxima can evalute 'gamma' numerically for real and complex values
+     Maxima can evaluate 'gamma' numerically for real and complex values
      in float and bigfloat precision.
 
      'gamma' has mirror symmetry.
@@ -16853,7 +17173,7 @@ Functions, Chapter 6.
 
      In general the beta function is not defined for negative integers
      as an argument.  The exception is for <a=-n>, <n> a positive
-     integer and <b> a positive integer with <b<=n>, it is possible to
+     integer and <b> a positive integer with 'b<=n', it is possible to
      define an analytic continuation.  Maxima gives for this case a
      result.
 
@@ -16927,7 +17247,7 @@ Functions, Chapter 6.
           beta: expected nonzero arguments; found 0, b
            -- an error.  To debug this try debugmode(true);
 
-     Numercial evaluation for real and complex arguments in float or
+     Numerical evaluation for real and complex arguments in float or
      bigfloat precision:
 
           (%i8) beta(2.5,2.3);
@@ -16974,8 +17294,8 @@ Functions, Chapter 6.
 
              gamma(a) hypergeometric_generalized([a, 1 - b], [a + 1], z) z
 
-     (See functions.wolfram.com for a complete definition of the
-     incomplete beta function.)
+     (See <https://functions.wolfram.com> for a complete definition of
+     the incomplete beta function.)
 
      For negative integers a = -n and positive integers b=m with m<=n
      the incomplete beta function is defined through
@@ -17084,10 +17404,10 @@ Functions, Chapter 6.
                                        b + a                 b + a
 
           (%i24) beta_incomplete(a-1,b,z),beta_expand:true;
-                                                                     b  a - 1
-                     beta_incomplete(a, b, z) (- b - a + 1)   (1 - z)  z
-          (%o24)     -------------------------------------- - ---------------
-                                     1 - a                         1 - a
+                                                                 b  a - 1
+                 beta_incomplete(a, b, z) (- b - a + 1)   (1 - z)  z
+          (%o24) -------------------------------------- - ---------------
+                                 1 - a                         1 - a
 
      Derivative and integral for 'beta_incomplete':
 
@@ -17115,7 +17435,7 @@ Functions, Chapter 6.
                                                        beta(a, b)
 
      As for 'beta_incomplete' this definition is not complete.  See
-     functions.wolfram.com for a complete definition of
+     <https://functions.wolfram.com> for a complete definition of
      'beta_incomplete_regularized'.
 
      'beta_incomplete_regularized' simplifies <a> or <b> a positive
@@ -17413,7 +17733,7 @@ File: maxima.info,  Node: Exponential Integrals,  Next: Error Function,  Prev: G
 15.5 Exponential Integrals
 ==========================
 
-The Exponential Integral and related funtions are defined in Abramowitz
+The Exponential Integral and related functions are defined in Abramowitz
 and Stegun, Handbook of Mathematical Functions, Chapter 5
 
  -- Function: expintegral_e1 (<z>)
@@ -17486,7 +17806,7 @@ File: maxima.info,  Node: Error Function,  Next: Struve Functions,  Prev: Expone
 15.6 Error Function
 ===================
 
-The Error function and related funtions are defined in Abramowitz and
+The Error function and related functions are defined in Abramowitz and
 Stegun, Handbook of Mathematical Functions, Chapter 7
 
  -- Function: erf (<z>)
@@ -18441,6 +18761,24 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
 
      'cartan' was implemented by F.B. Estabrook and H.D. Wahlquist.
 
+ -- Function: init_cartan ([<x_1>, ..., <x_n>])
+
+     'init_cartan([<x_1>, ..., <x_n>])' initializes global variables for
+     the 'cartan' package.  The sole argument is a list of symbols, from
+     which the Cartan basis is constructed.
+
+     'init_cartan' returns the basis which is constructed.
+
+     'init_cartan' assigns values to the following global variables:
+     'cartan_coords', 'cartan_dim', 'extdim', and 'cartan_basis'.  In
+     addition, the following arrays are assigned: 'extsub' and
+     'extsubb'.
+
+     Note: Because of the internal implementation of the 'cartan'
+     package, it is necessary for 'init_cartan' to be called before any
+     expression containing the Cartan coordinates '<x_1>, ..., <x_n>' is
+     parsed.
+
  -- Function: del (<x>)
 
      'del (<x>)' represents the differential of the variable x.
@@ -18448,6 +18786,8 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      'diff' returns an expression containing 'del' if an independent
      variable is not specified.  In this case, the return value is the
      so-called "total differential".
+
+     See also 'diff', 'del' and 'derivdegree'.
 
      Examples:
 
@@ -18548,6 +18888,8 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      'depends(<f>, [<x_1>, ..., <x_n>])' is equivalent to
      'dependencies(<f>(<x_1>, ..., <x_n>))'.
 
+     See also 'diff', 'del', 'derivdegree' and 'derivabbrev'.
+
           (%i1) depends ([f, g], x);
           (%o1)                     [f(x), g(x)]
           (%i2) depends ([r, s], [u, v, w]);
@@ -18641,6 +18983,8 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      When 'derivabbrev' is 'true', derivatives are displayed as
      subscripts.  Otherwise, derivatives are displayed in the Leibniz
      notation, 'dy/dx'.
+
+     See also 'depends', 'del', 'derivdegree' and 'derivabbrev'.
 
      Examples:
 
@@ -18810,7 +19154,11 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
  -- Function: laplace (<expr>, <t>, <s>)
 
      Attempts to compute the Laplace transform of <expr> with respect to
-     the variable <t> and transform parameter <s>.
+     the variable <t> and transform parameter <s>.  The Laplace
+     transform of the function 'f(t)' is the one-sided transform defined
+     by
+          F(s) = integrate(f(t) * exp(-s*t), t, 0, inf)
+     where 'F(s)' is the transform of 'f(t)'.
 
      'laplace' recognizes in <expr> the functions 'delta', 'exp', 'log',
      'sin', 'cos', 'sinh', 'cosh', and 'erf', as well as 'derivative',
@@ -19058,10 +19406,13 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
 
      Computes the inverse Laplace transform of <expr> with respect to
      <s> and parameter <t>.  <expr> must be a ratio of polynomials whose
-     denominator has only linear and quadratic factors.  By using the
-     functions 'laplace' and 'ilt' together with the 'solve' or
-     'linsolve' functions the user can solve a single differential or
-     convolution integral equation or a set of them.
+     denominator has only linear and quadratic factors; there is an
+     extension of 'ilt', called 'pwilt' (Piece-Wise Inverse Laplace
+     Transform) that handles several other cases where 'ilt' fails.
+
+     By using the functions 'laplace' and 'ilt' together with the
+     'solve' or 'linsolve' functions the user can solve a single
+     differential or convolution integral equation or a set of them.
 
           (%i1) 'integrate (sinh(a*x)*f(t-x), x, 0, t) + b*f(t) = t**2;
                         t
@@ -19435,6 +19786,26 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
      same method to evaluate the definite integral, while 'integrate'
      may employ various heuristics and may recognize some special cases.
 
+ -- Function: pwilt (<expr>, <s>, <t>)
+
+     Computes the inverse Laplace transform of <expr> with respect to
+     <s> and parameter <t>.  Unlike 'ilt', 'pwilt' is able to return
+     piece-wise and periodic functions and can also handle some cases
+     with polynomials of degree greater than 3 in the denominator.
+
+     Two examples where 'ilt' fails:
+          (%i1) pwilt (exp(-s)*s/(s^3-2*s-s+2), s, t);
+                                                 t - 1       - 2 (t - 1)
+                                       (t - 1) %e        2 %e
+          (%o1)         hstep(t - 1) (--------------- - ---------------)
+                                              3                 9
+
+          (%i2) pwilt ((s^2+2)/(s^2-1), s, t);
+                                                   t       - t
+                                               3 %e    3 %e
+          (%o2)                    delta(t) + ----- - -------
+                                                 2        2
+
  -- Function: potential (<givengradient>)
 
      The calculation makes use of the global variable
@@ -19587,9 +19958,9 @@ functions, but they are not exposed at the Maxima level.
 
    (4) National Bureau of Standards, Washington, D.C., U.S.A
 
-   (5) <http://www.netlib.org/slatec>
+   (5) <https://www.netlib.org/slatec>
 
-   (6) <http://www.netlib.org/quadpack>
+   (6) <https://www.netlib.org/quadpack>
 
    (7) R. Piessens, E. de Doncker-Kapenga, C.W. Uberhuber, and D.K.
 Kahaner.  QUADPACK: A Subroutine Package for Automatic Integration.
@@ -19874,7 +20245,6 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-     'epsrel=1d-7); x, 0, 5);
           (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5,
                            'epsrel=1d-7);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
@@ -20045,7 +20415,6 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-     x, 0, inf));
           (%i1) quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
           (%o1)     [1.376043389877692, 4.72710759424899E-11, 765, 0]
           (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
@@ -20124,7 +20493,6 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-     'epsabs=1d-9);
           (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1,
                            'epsabs=1d-9);
           (%o1)     [8.750097361672832, 1.24321522715422E-10, 170, 0]
@@ -20165,7 +20533,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      Maxima expression.
 
      To help the integrator, the user must supply a list of points where
-     the integrand is singular or discontinous.
+     the integrand is singular or discontinuous.
 
      The keyword arguments are optional and may be specified in any
      order.  They all take the form 'key=val'.  The keyword arguments
@@ -20664,15 +21032,59 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      ("inteqn")' loads this package.
 
      <ie> is the integral equation; <unk> is the unknown function;
-     <tech> is the technique to be tried from those given above (<tech>
-     = 'first' means: try the first technique which finds a solution;
-     <tech> = 'all' means: try all applicable techniques); <n> is the
-     maximum number of terms to take for 'taylor', 'neumann',
+     <tech> is the technique to be tried from those given in the lists
+     below; (<tech> = 'first' means: try the first technique which finds
+     a solution; <tech> = 'all' means: try all applicable techniques);
+     <n> is the maximum number of terms to take for 'taylor', 'neumann',
      'firstkindseries', or 'fredseries' (it is also the maximum depth of
      recursion for the differentiation method); <guess> is the initial
      guess for 'neumann' or 'firstkindseries'.
 
-     Default values for the 2nd thru 5th parameters are:
+     Two types of equations are considered.  A second-kind equation of
+     the following form,
+                                     b(x)
+                                    /
+                                    [
+                  p(x) = q(x, p(x), I     w(x, u, p(x), p(u)) du)
+                                    ]
+                                    /
+                                     a(x)
+
+     and a first-kind equation with the form
+                                   b(x)
+                                  /
+                                  [
+                           f(x) = I     w(x, u, p(u)) du
+                                  ]
+                                  /
+                                   a(x)
+
+     The different solution techniques used require particular forms of
+     the expressions <q> and <w>.  The techniques available are the
+     following:
+
+     Second-kind equations
+        * 'flfrnk2nd': For fixed-limit, finite-rank integrands.
+        * 'vlfrnk': For variable-limit, finite-rank integrands.
+        * 'transform': Laplace transform for convolution types.
+        * 'fredseries': Fredholm-Carleman series for linear equations.
+        * 'tailor': Taylor series for quasi-linear variable-limit
+          equations.
+        * 'neumann': Neumann series for quasi-second kind equations.
+        * 'collocate': Collocation using a power series form for p(x)
+          evaluated at equally spaced points.
+
+     First-kind equations
+        * 'flfrnk1st': For fixed-limit, finite-rank integrands.
+        * 'vlfrnk': For variable-limit, finite-rank integrands.
+        * 'abel': For singular integrands
+        * 'transform': See above
+        * 'collocate': See above
+        * 'firstkindseries': Iteration technique similar to neumann
+          series.
+
+     The default values for the 2nd thru 5th parameters in the calling
+     form are:
 
      <unk>: '<p>(<x>)', where <p> is the first function encountered in
      an integrand which is unknown to Maxima and <x> is the variable
@@ -20680,14 +21092,29 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      outside of an integral in the case of 'secondkind' equations, or is
      the only other variable besides the variable of integration in
      'firstkind' equations.  If the attempt to search for <x> fails, the
-     user will be asked to supply the independent variable.
+     user will be asked to supply the independent variable.  <tech>:
+     'first'.  <n>: 1.  <guess>: 'none' which will cause 'neumann' and
+     'firstkindseries' to use '<f>(<x>)' as an initial guess.
 
-     tech: 'first'
+     Examples:
+          (%i1) load("inteqn")$
 
-     n: 1
+          (%i2) e: p(x) - 1 -x + cos(x) + 'integrate(cos(x-u)*p(u),u,0,x)$
 
-     guess: 'none' which will cause 'neumann' and 'firstkindseries' to
-     use '<f>(<x>)' as an initial guess.
+          (%i3) ieqn(e, p(x), 'transform);
+          default 4th arg, number of iterations or coll. parms.:  1
+          default 5th arg, initial guess:  none
+
+          (%t3)                           [x, transform]
+          (%o3)                               [%t3]
+          (%i4) e: 2*'integrate(p(x*sin(u)), u, 0, %pi/2) - a*x - b$
+
+          (%i5) ieqn(e, p(x), 'firstkindseries);
+          default 4th arg, number of iterations or coll. parms.:  1
+          default 5th arg, initial guess:  none
+
+          (%t5)          [2 a x + %pi b, firstkindseries, 1, approximate]
+          (%o5)                               [%t5]
 
  -- Option variable: ieqnprint
      Default value: 'true'
@@ -21462,24 +21889,28 @@ File: maxima.info,  Node: Numerical,  Next: Matrices and Linear Algebra,  Prev: 
 
 * Introduction to fast Fourier transform::                     
 * Functions and Variables for fast Fourier transform::
+* Functions and Variables for FFTPACK5::
 * Functions for numerical solution of equations::
 * Introduction to numerical solution of differential equations::
 * Functions for numerical solution of differential equations::
 
 
-File: maxima.info,  Node: Introduction to fast Fourier transform,  Next: Functions and Variables for fast Fourier transform,  Prev: Numerical,  Up: Numerical
+File: maxima.info,  Node: Introduction to fast Fourier transform,  Next: Functions and Variables for fast Fourier transform
 
 22.1 Introduction to fast Fourier transform
 ===========================================
 
 The 'fft' package comprises functions for the numerical (not symbolic)
-computation of the fast Fourier transform.
+computation of the fast Fourier transform.  This is limited to sequences
+whit length that is a power of two.  For more general lengths, consider
+the 'fftpack5' package that supports sequences of any length, but is
+most efficient if the length is a product of small primes.
 
 
-File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  Next: Functions for numerical solution of equations,  Prev: Introduction to fast Fourier transform,  Up: Numerical
+File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  Next: Functions and Variables for FFTPACK5,  Prev: Introduction to fast Fourier transform
 
-22.2 Functions and Variables for fast Fourier transform
-=======================================================
+22.2 Functions and Variables for fft
+====================================
 
  -- Function: polartorect (<r>, <t>)
 
@@ -21635,6 +22066,8 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      See also 'inverse_fft' (inverse transform), 'recttopolar', and
      'polartorect'..  See 'real_fft' for FFTs of a real-valued input,
      and 'bf_fft' and 'bf_real_fft' for operations on bigfloat values.
+     Finally, for transforms of any size (but limited to float values),
+     see 'fftpack5_fft' and 'fftpack5_real_fft'.
 
      Examples:
 
@@ -21644,8 +22077,8 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%i2) fpprintprec : 4 $
           (%i3) L : [1, 2, 3, 4, -1, -2, -3, -4] $
           (%i4) L1 : fft (L);
-          (%o4) [0.0, - 1.811 %i - .1036, 0.0, .6036 - .3107 %i, 0.0,
-                                   .3107 %i + .6036, 0.0, 1.811 %i - .1036]
+          (%o4) [0.0, 1.811 %i - .1036, 0.0, 0.3107 %i + .6036, 0.0,
+                                   0.6036 - 0.3107 %i, 0.0, (- 1.811 %i) - 0.1036]
           (%i5) L2 : inverse_fft (L1);
           (%o5) [1.0, 2.168L-19 %i + 2.0, 7.525L-20 %i + 3.0,
           4.256L-19 %i + 4.0, - 1.0, - 2.168L-19 %i - 2.0,
@@ -21659,15 +22092,13 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%i2) fpprintprec : 4 $
           (%i3) L : [1, 1 + %i, 1 - %i, -1, -1, 1 - %i, 1 + %i, 1] $
           (%i4) L1 : fft (L);
-          (%o4) [0.5, .3536 %i + .3536, - 0.25 %i - 0.25,
-          0.5 - 6.776L-21 %i, 0.0, - .3536 %i - .3536, 0.25 %i - 0.25,
-          0.5 - 3.388L-20 %i]
+          (%o4) [0.5, 0.5, 0.25 %i - 0.25, (- 0.3536 %i) - 0.3536, 0.0, 0.5,
+                                                  (- 0.25 %i) - 0.25, 0.3536 %i + 0.3536]
           (%i5) L2 : inverse_fft (L1);
-          (%o5) [1.0 - 4.066E-20 %i, 1.0 %i + 1.0, 1.0 - 1.0 %i,
-          - 1.008L-19 %i - 1.0, 4.066E-20 %i - 1.0, 1.0 - 1.0 %i,
-          1.0 %i + 1.0, 1.947L-20 %i + 1.0]
+          (%o5) [1.0, 1.0 %i + 1.0, 1.0 - 1.0 %i, - 1.0, - 1.0, 1.0 - 1.0 %i,
+                                                                       1.0 %i + 1.0, 1.0]
           (%i6) lmax (abs (L2 - L));
-          (%o6)                       6.83L-17
+          (%o6)                       0.0
 
      Computation of sine and cosine coefficients.
 
@@ -21706,16 +22137,16 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
 
      No check is made that <x> contains only real values.
 
-     The symmetry properites of the Fourier transform of real sequences
+     The symmetry properties of the Fourier transform of real sequences
      to reduce he complexity.  In particular the first and last output
-     values of 'real_fft' are purely real.  For larger sequencyes,
+     values of 'real_fft' are purely real.  For larger sequences,
      'real_fft' may be computed more quickly than 'fft'.
 
      Since the output length is short, the normal 'inverse_fft' cannot
      be directly used.  Use 'inverse_real_fft' to compute the inverse.
 
  -- Function: inverse_real_fft (<y>)
-     Computes the inverse Fourier transfrom of <y>, which must have a
+     Computes the inverse Fourier transform of <y>, which must have a
      length of 'N/2+1' where 'N' is a power of two.  That is, the input
      <x> is expected to be the output of 'real_fft'.
 
@@ -21741,14 +22172,116 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      'real_fft'.
 
  -- Function: bf_inverse_real_fft (<y>)
-     Computes the inverse fast Fourier transfrom with a real-valued
+     Computes the inverse fast Fourier transform with a real-valued
      bigfloat output.  This is the bigfloat version of
      'inverse_real_fft'.
 
 
-File: maxima.info,  Node: Functions for numerical solution of equations,  Next: Introduction to numerical solution of differential equations,  Prev: Functions and Variables for fast Fourier transform,  Up: Numerical
+File: maxima.info,  Node: Functions and Variables for FFTPACK5,  Next: Functions for numerical solution of equations,  Prev: Functions and Variables for fast Fourier transform
 
-22.3 Functions for numerical solution of equations
+22.3 Functions and Variables for FFTPACK5
+=========================================
+
+'FFTPACK5' provides several routines to compute Fourier transforms for
+both real and complex sequences and their inverses.  The forward
+transform is defined the same as for 'fft'.  The major difference is the
+length of the sequence is not constrained to be a power of two.  In
+fact, any length is supported, but it is most efficient when the length
+has the form 2^r*3^s*5^t.
+
+   'load(fftpack5)' loads this function.
+
+ -- Function: fftpack5_fft (<x>)
+
+     Like 'fft' ('fft'), this computes the fast Fourier transform of a
+     complex sequence.  However, the length of <x> is not limited to a
+     power of 2.
+
+     'load(fftpack5)' loads this function.
+
+     Examples:
+
+     Real data.
+
+          (%i1) load("fftpack5") $
+          (%i2) fpprintprec : 4 $
+          (%i3) L : [1, 2, 3, 4, -1, -2 ,-3, -4] $
+          (%i4) L1 : fftpack5_fft(L);
+          (%o4) [0.0, 1.811 %i - 0.1036, 0.0, 0.3107 %i + 0.6036, 0.0,
+                                          0.6036 - 0.3107 %i, 0.0, (- 1.811 %i) - 0.1036]
+          (%i5) L2 : fftpack5_inverse_fft(L1);
+          (%o5) [1.0, 4.441e-16 %i + 2.0, 1.837e-16 %i + 3.0, 4.0 - 4.441e-16 %i,
+               - 1.0, (- 4.441e-16 %i) - 2.0, (- 1.837e-16 %i) - 3.0, 4.441e-16
+                 %i - 4.0]
+          (%i6) lmax (abs (L2-L));
+          (%o6)                       4.441e-16
+          (%i7) L : [1, 2, 3, 4, 5, 6]$
+          (%i8) L1 : fftpack5_fft(L);
+          (%o8) [3.5, (- 0.866 %i) - 0.5, (- 0.2887 %i) - 0.5, (- 1.48e-16 %i) - 0.5,
+                                                         0.2887 %i - 0.5, 0.866
+                                                                %%i - 0.5]
+          (%i9) L2 : fftpack5_inverse_fft (L1);
+          (%o9) [1.0 - 1.48e-16 %i, 3.701e-17 %i + 2.0, 3.0 - 1.48e-16 %i,
+                               4.0 - 1.811e-16 %i, 5.0 - 1.48e-16 %i, 5.881e-16
+                                     %i + 6.0]
+          (%i10) lmax (abs (L2-L));
+          (%o10)                             9.064e-16
+
+     Complex data.
+
+          (%i1) load("fftpack5") $
+          (%i2) fpprintprec : 4 $
+          (%i3) L : [1, 1 + %i, 1 - %i, -1, -1, 1 - %i, 1 + %i, 1] $
+          (%i4) L1 : fftpack5_inverse_fft (L);
+          (%o4) [4.0, 2.828 %i + 2.828, (- 2.0 %i) - 2.0, 4.0, 0.0,
+                                                 (- 2.828 %i) - 2.828, 2.0 %i - 2.0, 4.0]
+          (%i5) L2 : fftpack5_fft(L1);
+          (%o5) [1.0, 1.0 %i + 1.0, 1.0 - 1.0 %i, (- 2.776e-17 %i) - 1.0, - 1.0,
+                                          1.0 - 1.0 %i, 1.0 %i + 1.0, 1.0 -
+                                                    %2.776e-17 %i]
+          (%i6) lmax(abs(L2-L));
+          (%o6)                              1.11e-16
+
+ -- Function: fftpack5_inverse_fft (<y>)
+
+     Computes the inverse complex Fourier transform, like 'inverse_fft',
+     but is not constrained to be a power of two.
+
+ -- Function: fftpack5_real_fft (<x>)
+
+     Computes the fast Fourier transform of a real-valued sequence <x>,
+     just like 'real_fft', except the length is not constrained to be a
+     power of two.
+
+     Examples:
+
+          (%i1) fpprintprec : 4 $
+          (%i2) L : [1, 2, 3, 4, 5, 6] $
+          (%i3) L1 : fftpack5_real_fft(L);
+          (%o3)       [3.5, (- 0.866 %i) - 0.5, (- 0.2887 %i) - 0.5, - 0.5]
+          (%i4) L2 : fftpack5_inverse_real_fft(L1, 6);
+          (%o4)                  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          (%i5) lmax(abs(L2-L));
+          (%o5)                            1.332e-15
+          (%i6) fftpack5_inverse_real_fft(L1, 7);
+          (%o6)            [0.5, 2.083, 2.562, 3.7, 4.3, 5.438, 5.917]
+
+     The last example shows how important it to set the length correctly
+     for 'fftpack5_inverse_real_fft'.
+
+ -- Function: fftpack5_inverse_real_fft (<y>, <n>)
+
+     Computes the inverse Fourier transform of <y>, which must have a
+     length of 'floor(n/2) + 1'.  The length of sequence produced by the
+     inverse transform must be specified by <n>.  This is required
+     because the length of <y> does not uniquely determine <n>.  The
+     last element of <y> is always real if <n> is even, but it can be
+     complex when <n> is odd.
+
+
+File: maxima.info,  Node: Functions for numerical solution of equations,  Next: Introduction to numerical solution of differential equations,  Prev: Functions and Variables for FFTPACK5
+
+22.4 Functions for numerical solution of equations
 ==================================================
 
  -- Function: horner
@@ -21899,9 +22432,9 @@ File: maxima.info,  Node: Functions for numerical solution of equations,  Next: 
           (%o6)                6.098490481853958e-4 a
 
 
-File: maxima.info,  Node: Introduction to numerical solution of differential equations,  Next: Functions for numerical solution of differential equations,  Prev: Functions for numerical solution of equations,  Up: Numerical
+File: maxima.info,  Node: Introduction to numerical solution of differential equations,  Next: Functions for numerical solution of differential equations,  Prev: Functions for numerical solution of equations
 
-22.4 Introduction to numerical solution of differential equations
+22.5 Introduction to numerical solution of differential equations
 =================================================================
 
 The Ordinary Differential Equations (ODE) solved by the functions in
@@ -21926,9 +22459,9 @@ separated option.  If the expressions given do not depend on that
 independent variable, the system is called autonomous.
 
 
-File: maxima.info,  Node: Functions for numerical solution of differential equations,  Prev: Introduction to numerical solution of differential equations,  Up: Numerical
+File: maxima.info,  Node: Functions for numerical solution of differential equations,  Prev: Introduction to numerical solution of differential equations
 
-22.5 Functions for numerical solution of differential equations
+22.6 Functions for numerical solution of differential equations
 ===============================================================
 
  -- Function: plotdf
@@ -22207,8 +22740,10 @@ File: maxima.info,  Node: Functions for numerical solution of differential equat
      for t between 0 and 4, and with values of -1.25 and 0.75 for x and
      y at t=0:
 
-          (%i1) sol: rk([4-x^2-4*y^2,y^2-x^2+1],[x,y],[-1.25,0.75],[t,0,4,0.02])$
-          (%i2) plot2d ([discrete,makelist([p[1],p[3]],p,sol)], [xlabel,"t"],[ylabel,"y"])$
+          (%i1) sol: rk([4-x^2-4*y^2, y^2-x^2+1], [x, y], [-1.25, 0.75],
+                        [t, 0, 4, 0.02])$
+          (%i2) plot2d([discrete, makelist([p[1], p[3]], p, sol)], [xlabel, "t"],
+                       [ylabel, "y"])$
 
      The plot will show the solution for variable <y> as a function of
      <t>.
@@ -22279,15 +22814,15 @@ means that assigning a matrix to a variable will create a reference to,
 not a copy of the matrix.  If the matrix is modified all references to
 the matrix point to the modified object (See 'copymatrix' for a way of
 avoiding this):
-     (%i1) M1:matrix([0,0],[0,0]);
+     (%i1) M1: matrix([0,0],[0,0]);
                                  [ 0  0 ]
      (%o1)                       [      ]
                                  [ 0  0 ]
-     (%i2) M2:M1;
+     (%i2) M2: M1;
                                  [ 0  0 ]
      (%o2)                       [      ]
                                  [ 0  0 ]
-     (%i3) M1[1][1]:2;
+     (%i3) M1[1][1]: 2;
      (%o3)                           2
      (%i4) M2;
                                  [ 2  0 ]
@@ -22296,13 +22831,13 @@ avoiding this):
 
    Converting a matrix to nested lists and vice versa works the
 following way:
-     (%i1) l:[[1,2],[3,4]];
+     (%i1) l: [[1,2],[3,4]];
      (%o1)                   [[1, 2], [3, 4]]
-     (%i2) M1:apply('matrix,l);
+     (%i2) M1: apply('matrix,l);
                                  [ 1  2 ]
      (%o2)                       [      ]
                                  [ 3  4 ]
-     (%i3) M2:transpose(M1);
+     (%i3) M2: transpose(M1);
                                  [ 1  3 ]
      (%o3)                       [      ]
                                  [ 2  4 ]
@@ -22408,7 +22943,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      Examples:
 
-          (%i1) cauchy_matrix([x1,x2],[y1,y2]);
+          (%i1) cauchy_matrix([x1, x2], [y1, y2]);
                                 [    1        1    ]
                                 [ -------  ------- ]
                                 [ y1 + x1  y2 + x1 ]
@@ -22417,7 +22952,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
                                 [ -------  ------- ]
                                 [ y1 + x2  y2 + x2 ]
 
-          (%i2) cauchy_matrix([x1,x2]);
+          (%i2) cauchy_matrix([x1, x2]);
                                 [   1         1    ]
                                 [  ----    ------- ]
                                 [  2 x1    x2 + x1 ]
@@ -22811,7 +23346,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      A matrix which has just one eigenvector per eigenvalue.
 
-          (%i1) M1 : matrix ([11, -1], [1, 7]);
+          (%i1) M1: matrix ([11, -1], [1, 7]);
                                      [ 11  - 1 ]
           (%o1)                      [         ]
                                      [ 1    7  ]
@@ -22842,15 +23377,16 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      A matrix which has two eigenvectors for one eigenvalue (namely 2).
 
-          (%i1) M1 : matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]);
-                                   [ 0  1  0  0 ]
-                                   [            ]
-                                   [ 0  0  0  0 ]
-          (%o1)                    [            ]
-                                   [ 0  0  2  0 ]
-                                   [            ]
-                                   [ 0  0  0  2 ]
-          (%i2) [vals, vecs] : eigenvectors (M1);
+          (%i1) M1: matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0],
+                            [0, 0, 0, 2]);
+                                  [ 0  1  0  0 ]
+                                  [            ]
+                                  [ 0  0  0  0 ]
+          (%o1)                   [            ]
+                                  [ 0  0  2  0 ]
+                                  [            ]
+                                  [ 0  0  0  2 ]
+          (%i2) [vals, vecs]: eigenvectors (M1);
           (%o2) [[[0, 2], [2, 2]], [[[1, 0, 0, 0]],
                                              [[0, 0, 1, 0], [0, 0, 0, 1]]]]
           (%i3) for i thru length (vals[1]) do disp (val[i] = vals[1][i],
@@ -23028,11 +23564,12 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
           (%i1) load ("eigen")$
           (%i2) ip (f, g) := integrate (f * g, u, a, b);
           (%o2)          ip(f, g) := integrate(f g, u, a, b)
-          (%i3) y : gramschmidt ([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
+          (%i3) y: gramschmidt ([1, sin(u), cos(u)], ip), a=-%pi/2, b=%pi/2;
                                          %pi cos(u) - 2
           (%o3)              [1, sin(u), --------------]
                                               %pi
-          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]), a= -%pi/2, b=%pi/2;
+          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]), a=-%pi/2,
+                   b=%pi/2;
           (%o4)                       [0, 0, 0]
 
  -- Function: ident (<n>)
@@ -24398,31 +24935,31 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
           (%o2)      /share/tensor/itensor.lisp
           (%i3) lg:matrix([sqrt(r/(r-2*m)),0,0,0],[0,r,0,0],
                           [0,0,sin(theta)*r,0],[0,0,0,sqrt((r-2*m)/r)]);
-                         [         r                                     ]
-                         [ sqrt(-------)  0       0              0       ]
-                         [      r - 2 m                                  ]
-                         [                                               ]
-                         [       0        r       0              0       ]
-          (%o3)          [                                               ]
-                         [       0        0  r sin(theta)        0       ]
-                         [                                               ]
-                         [                                      r - 2 m  ]
-                         [       0        0       0        sqrt(-------) ]
-                         [                                         r     ]
+                  [         r                                     ]
+                  [ sqrt(-------)  0       0              0       ]
+                  [      r - 2 m                                  ]
+                  [                                               ]
+                  [       0        r       0              0       ]
+          (%o3)   [                                               ]
+                  [       0        0  r sin(theta)        0       ]
+                  [                                               ]
+                  [                                      r - 2 m  ]
+                  [       0        0       0        sqrt(-------) ]
+                  [                                         r     ]
           (%i4) components(g([i,j],[]),lg);
           (%o4)                                done
           (%i5) showcomps(g([i,j],[]));
-                            [         r                                     ]
-                            [ sqrt(-------)  0       0              0       ]
-                            [      r - 2 m                                  ]
-                            [                                               ]
-                            [       0        r       0              0       ]
-          (%t5)      g    = [                                               ]
-                      i j   [       0        0  r sin(theta)        0       ]
-                            [                                               ]
-                            [                                      r - 2 m  ]
-                            [       0        0       0        sqrt(-------) ]
-                            [                                         r     ]
+                       [         r                                     ]
+                       [ sqrt(-------)  0       0              0       ]
+                       [      r - 2 m                                  ]
+                       [                                               ]
+                       [       0        r       0              0       ]
+          (%t5) g    = [                                               ]
+                 i j   [       0        0  r sin(theta)        0       ]
+                       [                                               ]
+                       [                                      r - 2 m  ]
+                       [       0        0       0        sqrt(-------) ]
+                       [                                         r     ]
           (%o5)                                false
 
      The 'showcomps' command can also display components of a tensor of
@@ -24545,7 +25082,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
            $IMETRIC [or a callee] requires less than two arguments.
 
           Automatically continuing.
-          To reenable the Lisp debugger set *debugger-hook* to nil.
+          To re-enable the Lisp debugger set *debugger-hook* to nil.
           (%i9) imetric(g);
           (%o9)                                done
           (%i10) ishow(lc2kdt(expr))$
@@ -24769,7 +25306,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      Equivalent to the execution of 'undiff', followed by 'ev' and
      'rediff'.
 
-     The point of this operation is to easily evalute expressions that
+     The point of this operation is to easily evaluate expressions that
      cannot be directly evaluated in derivative form.  For instance, the
      following causes an error:
 
@@ -24782,7 +25319,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
            $ICURVATURE [or a callee] requires less than three arguments.
 
           Automatically continuing.
-          To reenable the Lisp debugger set *debugger-hook* to nil.
+          To re-enable the Lisp debugger set *debugger-hook* to nil.
 
      However, if 'icurvature' is entered in noun form, it can be
      evaluated using 'evundiff':

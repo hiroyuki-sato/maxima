@@ -30,7 +30,7 @@
         ((mlist simp) "rtest5"
                  ,@(and (boundp '*autoconf-lisp-only-build*)
                         (symbol-value '*autoconf-lisp-only-build*)
-                        (list* '(mlist simp) (list 78 80))))
+                        (list (list '(mlist simp) 80))))
 	;; 46 = ECL bug #437: mishandling float format
 	;; 45 sporadically fails in all tested ECL versions (15.3.7-16.1.3)
 	;; 43 fails in ECL up to version 15.3.7
@@ -140,10 +140,11 @@
 	 #+allegro ((mlist simp) 184 185))
         "rtest_powerseries"
         ((mlist simp) "rtest_laplace"
-	 ((mlist simp) 29 49 50 51 54 59 60 61 62 78 80))
+	 ((mlist simp) 29 49 50 51 59 60 61 62 78 80))
         "rtest_plotoptions"
 	"rtest_algsys"
         "rtest_trace"
+	"rtest_polynomialp"
 	))
 
 ;; The list of share testsuite files. As they are given withut a path
@@ -226,12 +227,12 @@
     "rtest_stats"
     "rtest_distrib"
     ((mlist simp) "rtest_descriptive"
-     ;; 86 and 97 fail in ECL 15.3.7
-     #+(or gcl ecl)
-     ((mlist simp) 86 97)
+     ;; Tests that failed for gcl 2.6.12
+     #+gcl 
+     ((mlist simp) 98 109)
      ;; Tests that failed for ACL 10.1
      #+allegro
-     ((mlist simp) 86 87 97 98))
+     ((mlist simp) 98 99 109 110))
     "rtest_interpol"
     ((mlist simp) "rtest_levin"
      ;; Tested with allegro 10.1
@@ -274,7 +275,6 @@
     "rtest_eigens_by_jacobi"
     "rtest_lu"
     "rtest_linalg"
-    "rtest_polynomialp"
     "rtest_matrixexp"
     ((mlist simp) "rtest_romberg"
      ((mlist simp) 18 20))
@@ -321,17 +321,7 @@
      #+allegro ((mlist simp) 3 4 5))
     ((mlist simp) "rtest_abs_integrate"
      #-(or cmucl ccl ecl sbcl gcl)
-     ((mlist) 66 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 123 125 126 127 164 178)
-     #+gcl
-     ((mlist simp) 66 164)
-     #+cmucl
-     ((mlist simp) 66 164)
-     #+sbcl
-     ((mlist simp) 66 164)
-     #+ecl
-     ((mlist simp) 66 164)
-     #+ccl
-     ((mlist simp) 66 164))
+     ((mlist) 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 123 125 126 127 178))
     "rtest_pochhammer"
     ((mlist simp) "rtest_to_poly_solve"
      #-(or cmucl ccl ecl gcl sbcl sbcl)

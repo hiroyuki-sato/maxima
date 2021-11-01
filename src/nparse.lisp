@@ -17,7 +17,8 @@
 (defmvar *alphabet* (list #\_ #\%))
 (defmvar *whitespace-chars*
          '(#\tab #\space #\linefeed #\return #\page #\newline
-           #+(or unicode sb-unicode openmcl-unicode-strings) #\no-break_space))
+           #+(or (and unicode (not lispworks))
+                 sb-unicode openmcl-unicode-strings) #\no-break_space))
 
 (defun alphabetp (n)
   (and (characterp n)
@@ -1293,6 +1294,9 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 (def-rpos	|$.| $expr)
 (def-mheader	|$.| (mnctimes))
 
+;; Copy properties to noun operator.
+(setf (get '%mnctimes 'op) (get 'mnctimes 'op))
+
 (def-led-equiv	|$*| parse-nary)
 (def-lbp	|$*| 120.)
 ;RBP not needed
@@ -1450,8 +1454,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 	 (case (first-c)
 	   (($else)   (list t (parse '$any (rbp (pop-c)))))
 	   (($elseif) (parse-condition (pop-c)))
-	   (t ; Note: $false instead of () makes DISPLA suppress display!
-	    (list t '$false)))))
+	   (t         (list t '$false)))))
 
 (def-mheader $do (mdo))
 

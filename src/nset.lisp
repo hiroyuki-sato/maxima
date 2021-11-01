@@ -121,7 +121,7 @@
 (defun simp-set (a yy z)
   (declare (ignore yy))
   (setq a (mapcar #'(lambda (x) (simplifya x z)) (cdr a)))
-  (setq a (sorted-remove-duplicates (sort a '$orderlessp)))
+  (setq a (sorted-remove-duplicates (stable-sort a '$orderlessp)));FIXME consider a total order function with #'sort
   `(($set simp) ,@a))
 
 ;; Return true iff a is an empty set or list
@@ -318,7 +318,7 @@
 (defun powerset-subset (a k n)
   (let ((s) (b) (acc))
     (cond ((= k 0)
-	   (setq acc (cons `(($set)) acc)))
+	   (setq acc (cons `(($set simp)) acc)))
      	  ((<= k n)
 	   (dotimes (i k)
 	     (setq s (cons i s)))
@@ -382,7 +382,7 @@
 	     (setq acc (cons (cons '(mlist simp) (nreverse q)) acc))
 	     (setq p (permutation-lex-successor n p r))))
 	  (t
-	   (setq acc `(((mlist))))))
+	   (setq acc `(((mlist simp))))))
     (setq acc (nreverse acc))
     (if need-to-simp `(($set) ,@acc)
       `(($set simp) ,@acc))))
@@ -731,7 +731,7 @@
 (defun set-partitions (a n)
   (cond ((= n 0)
 	 (cond ((null a)
-		(list `(($set))))
+		(list `(($set simp))))
 	       (t
 		nil)))
 	((null a)
@@ -748,7 +748,7 @@
 	       (setq acc (cons (simplifya `(($set) ,@w ,($adjoin x z) ,@s) t) acc))
 	       (setq w (cons z w))))
 	     	   
-	   (setq x `(($set) ,x))
+	   (setq x `(($set simp) ,x))
 	   (setq p (set-partitions (cdr a) (- n 1)))
 	   (dolist (pj p acc)
 	     (setq acc (cons ($adjoin x pj) acc)))))))
@@ -810,26 +810,25 @@
 (defmfun $num_partitions (n &optional lst)
   (cond ((equal n 0) 1)
 	((and (integerp n) (> n -1))
-	 (let ((p (make-array (+ n 1)))
-	       (s (make-array (+ n 1)))
-	       (sum) (i) (j))
-	   (setf (aref p 0) 1)
-	   (setf (aref p 1) 1)
-	   
-	   (setq i 0)
-	   (while (<= i n)
-	     (setf (aref s i) (mfuncall '$divsum i 1))
-	     (incf i))
-	   
-	  (setq i 2)
-	  (while (<= i n)
-	    (setq sum 0)
-	    (setq j 1)
-	    (while (<= j i)
-	       (setq sum (+ sum (* (aref s j) (aref p (- i j)))))
-	       (incf j))
-	    (setf (aref p i) (/ sum i))
-	    (incf i))
+	 (let ((p (make-array (+ n 1) :initial-element 0)))
+           (setf (aref p 0) 1)
+           (loop for i from 1 to n
+              do (loop with j = 0
+                    for k from 1
+                    if (oddp k) do
+                      (setf j (floor (* k (1- (* 3 k))) 2))
+                      (when (> j i) (return))
+                      (incf (aref p i) (aref p (- i j)))
+                      (setf j (floor (* k (1+ (* 3 k))) 2))
+                      (when (> j i) (return))
+                      (incf (aref p i) (aref p (- i j)))
+                    else do
+                      (setf j (floor (* k (1- (* 3 k))) 2))
+                      (when (> j i) (return))
+                      (decf (aref p i) (aref p (- i j)))
+                      (setf j (floor (* k (1+ (* 3 k))) 2))
+                      (when (> j i) (return))
+                      (decf (aref p i) (aref p (- i j)))))
 	  (cond ((eq lst '$list)
 		 (let ((acc))
 		   (incf n)
@@ -894,8 +893,8 @@
 ;; is an identity.
 
 (defprop %kron_delta simp-kron-delta operators)
-(setf (get '$kron_delta 'noun) '%kron_delta)
-(setf (get '%kron_delta 'verb) '$kron_delta)
+(setf (get '$kron_delta 'verb) '%kron_delta)
+(setf (get '%kron_delta 'noun) '$kron_delta)
 (setf (get '$kron_delta 'alias) '%kron_delta)
 (setf (get '%kron_delta 'reversealias) '$kron_delta)
 (defmfun $kron_delta (&rest x) (simplifya `((%kron_delta) ,@x) t))

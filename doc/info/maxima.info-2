@@ -785,7 +785,9 @@ connection coefficients.
      A function in the 'ctensor' (component tensor) package which will
      perform a coordinate transformation upon an arbitrary square
      symmetric matrix <M>.  The user must input the functions which
-     define the transformation.  (Formerly called 'transform'.)
+     define the transformation.  (Formerly called 'transform'.)  These
+     may also be supplied in the form of a list as an optional second
+     argument.
 
  -- Function: findde (<A>, <n>)
 
@@ -1391,7 +1393,7 @@ should not be redefined:
        ---------------------------------------------------------------------
        _lg()        Evaluates to lfg if frame metric used, lg otherwise
        _ug()        Evaluates to ufg if frame metric used, ug otherwise
-       cleanup()    Removes items drom the deindex list
+       cleanup()    Removes items from the deindex list
        contract4()  Used by psi()
        filemet()    Used by csetup() when reading the metric from a file
        findde1()    Used by findde()
@@ -2558,7 +2560,7 @@ File: maxima.info,  Node: Functions and Variables for Series,  Next: Introductio
      truncated based upon the input truncation levels.
 
      Otherwise, polynomials input to 'taylor' are considered to have
-     infinite precison.
+     infinite precision.
 
  -- Function: taytorat (<expr>)
 
@@ -2911,8 +2913,8 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
      'burn' may be more efficient than 'bern' for large, isolated <n> as
      'bern' computes all the Bernoulli numbers up to index <n> before
-     returning.  'burn' invokes the approximation for even integers <n>
-     > 255.  For odd integers and <n> <= 255 the function 'bern' is
+     returning.  'burn' invokes the approximation for even integers 'n >
+     255'.  For odd integers and 'n <= 255' the function 'bern' is
      called.
 
      'load ("bffac")' loads this function.  See also 'bern'.
@@ -3231,7 +3233,7 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      lucas(<n>)'.
 
           (%i1) map (lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
-          (%o1)             [7, - 4, 3, - 1, 2, 1, 3, 4, 7, 11, 18, 29, 47]
+          (%o1)    [7, - 4, 3, - 1, 2, 1, 3, 4, 7, 11, 18, 29, 47]
 
      After calling 'lucas', the global variable 'next_lucas' is equal to
      'lucas (<n> + 1)', the Lucas number following the last returned.
@@ -3241,8 +3243,9 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
           (%i1) fib_via_lucas(n) :=
                    block([lucas : lucas(n)],
                    signum(n) * (2*next_lucas - lucas)/5 )$
-          (%i2) map (fib_via_lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
-          (%o2)             [- 3, 2, - 1, 1, 0, 1, 1, 2, 3, 5, 8, 13, 21]
+          (%i2) map (fib_via_lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7,
+                                    8]);
+          (%o2)     [- 3, 2, - 1, 1, 0, 1, 1, 2, 3, 5, 8, 13, 21]
 
  -- Function: mod (<x>, <y>)
 
@@ -3891,34 +3894,34 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
      'zn_order' computes the order of the unit <x> in (Z/<n>Z)*.
 
-          (%i1) n : 22$
-          (%i2) g : zn_primroot(n);
-          (%o2)                               7
-          (%i3) units_22 : sublist(makelist(i,i,1,21), lambda([x], gcd(x, n) = 1));
-          (%o3)              [1, 3, 5, 7, 9, 13, 15, 17, 19, 21]
-          (%i4) (ord_7 : zn_order(7, n)) = totient(n);
-          (%o4)                            10 = 10
-          (%i5) powers_7 : makelist(power_mod(g,i,n), i,0,ord_7 - 1);
-          (%o5)              [1, 7, 5, 13, 3, 21, 15, 17, 9, 19]
+          (%i1) n: 22$
+          (%i2) g: zn_primroot(n);
+          (%o2)                            7
+          (%i3) units_22: sublist(makelist(i,i,1,21), lambda([x], gcd(x,n)=1));
+          (%o3)          [1, 3, 5, 7, 9, 13, 15, 17, 19, 21]
+          (%i4) (ord_7: zn_order(7, n)) = totient(n);
+          (%o4)                        10 = 10
+          (%i5) powers_7: makelist(power_mod(g,i,n), i,0,ord_7 - 1);
+          (%o5)          [1, 7, 5, 13, 3, 21, 15, 17, 9, 19]
           (%i6) map(lambda([x], zn_order(x, n)), powers_7);
-          (%o6)              [1, 10, 5, 10, 5, 2, 5, 10, 5, 10]
-          (%i7) map(lambda([x], ord_7/gcd(x, ord_7)), makelist(i, i,0,ord_7 - 1));
-          (%o7)              [1, 10, 5, 10, 5, 2, 5, 10, 5, 10]
+          (%o6)          [1, 10, 5, 10, 5, 2, 5, 10, 5, 10]
+          (%i7) map(lambda([x], ord_7/gcd(x,ord_7)), makelist(i,i,0,ord_7-1));
+          (%o7)         [1, 10, 5, 10, 5, 2, 5, 10, 5, 10]
           (%i8) totient(totient(n));
-          (%o8)                               4
+          (%o8)                          4
 
      The optional third argument must be of the same form as the list
      returned by 'ifactors(totient(n))'.
 
           (%i1) (p : 2^142 + 217, primep(p));
-          (%o1)                             true
-          (%i2) ifs : ifactors( totient(p) )$
-          (%i3) g : zn_primroot(p, ifs);
-          (%o3)                               3
+          (%o1)                         true
+          (%i2) ifs: ifactors( totient(p) )$
+          (%i3) g: zn_primroot(p, ifs);
+          (%o3)                           3
           (%i4) is( (ord_3 : zn_order(g, p, ifs)) = totient(p) );
-          (%o4)                             true
-          (%i5) map(lambda([x], ord_3/zn_order(x, p, ifs)), makelist(i,i,2,15));
-          (%o5)        [22, 1, 44, 10, 5, 2, 22, 2, 8, 2, 1, 1, 20, 1]
+          (%o4)                         true
+          (%i5) map(lambda([x], ord_3/zn_order(x,p,ifs)), makelist(i,i,2,15));
+          (%o5)    [22, 1, 44, 10, 5, 2, 22, 2, 8, 2, 1, 1, 20, 1]
 
  -- Function: zn_power_table
           zn_power_table (<n>)
@@ -3991,25 +3994,25 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
           (%i1) N:2*5$ phi:totient(N)$ e:7$ d:inv_mod(e,phi)$
 
           (%i5) zn_power_table(N, all, e*d);
-                 [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 ]
-                 [                                                               ]
-                 [ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 ]
-                 [                                                               ]
-                 [ 2  4  8  6  2  4  8  6  2  4  8  6  2  4  8  6  2  4  8  6  2 ]
-                 [                                                               ]
-                 [ 3  9  7  1  3  9  7  1  3  9  7  1  3  9  7  1  3  9  7  1  3 ]
-                 [                                                               ]
-                 [ 4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4 ]
-          (%o5)  [                                                               ]
-                 [ 5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5 ]
-                 [                                                               ]
-                 [ 6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6 ]
-                 [                                                               ]
-                 [ 7  9  3  1  7  9  3  1  7  9  3  1  7  9  3  1  7  9  3  1  7 ]
-                 [                                                               ]
-                 [ 8  4  2  6  8  4  2  6  8  4  2  6  8  4  2  6  8  4  2  6  8 ]
-                 [                                                               ]
-                 [ 9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9 ]
+                [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 ]
+                [                                                               ]
+                [ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 ]
+                [                                                               ]
+                [ 2  4  8  6  2  4  8  6  2  4  8  6  2  4  8  6  2  4  8  6  2 ]
+                [                                                               ]
+                [ 3  9  7  1  3  9  7  1  3  9  7  1  3  9  7  1  3  9  7  1  3 ]
+                [                                                               ]
+                [ 4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4  6  4 ]
+          (%o5) [                                                               ]
+                [ 5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5 ]
+                [                                                               ]
+                [ 6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6 ]
+                [                                                               ]
+                [ 7  9  3  1  7  9  3  1  7  9  3  1  7  9  3  1  7  9  3  1  7 ]
+                [                                                               ]
+                [ 8  4  2  6  8  4  2  6  8  4  2  6  8  4  2  6  8  4  2  6  8 ]
+                [                                                               ]
+                [ 9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9  1  9 ]
 
  -- Function: zn_primroot
           zn_primroot (<n>)
@@ -4072,7 +4075,7 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
  -- Option variable: zn_primroot_limit
      Default value: '1000'
 
-     If 'zn_primroot' cannot find a primitve root, it stops at this
+     If 'zn_primroot' cannot find a primitive root, it stops at this
      upper bound.  If the option variable 'zn_primroot_verbose'
      (default: 'false') is set to 'true', a message will be printed when
      'zn_primroot_limit' is reached.
@@ -4111,13 +4114,13 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
      The optional third argument must be of the same form as the list
      returned by 'ifactors(totient(n))'.
 
-          (%i1) (p : 2^142 + 217, primep(p));
-          (%o1)                             true
-          (%i2) ifs : ifactors( totient(p) )$
-          (%i3) sublist(makelist(i,i,1,50), lambda([x], zn_primroot_p(x, p, ifs)));
-          (%o3)      [3, 12, 13, 15, 21, 24, 26, 27, 29, 33, 38, 42, 48]
+          (%i1) (p: 2^142 + 217, primep(p));
+          (%o1)                         true
+          (%i2) ifs: ifactors( totient(p) )$
+          (%i3) sublist(makelist(i,i,1,50), lambda([x], zn_primroot_p(x,p,ifs)));
+          (%o3)  [3, 12, 13, 15, 21, 24, 26, 27, 29, 33, 38, 42, 48]
           (%i4) [time(%o2), time(%o3)];
-          (%o4)                   [[7.748484], [0.036002]]
+          (%o4)                  [[7.748484], [0.036002]]
 
  -- Option variable: zn_primroot_pretest
      Default value: 'false'
@@ -4435,7 +4438,7 @@ File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Introdu
 
  -- Function: partpol (<psym>, <lvar>)
      <psym> is a symmetric polynomial in the variables of the list
-     <lvar>.  This function retturns its partitioned representation.
+     <lvar>.  This function returns its partitioned representation.
 
           (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
           (%o1)               [[3, 1, 1], [- a, 1, 0]]
@@ -4459,7 +4462,7 @@ File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Introdu
      Valibouze, ISSAC 1988, Rome) associated to the function <f>, in the
      lists of variables <lvar_1>, ..., <lvar_n>, and in the polynomials
      <p_1>, ..., <p_n> in a variable <y>.  The arity of the function <f>
-     is important for the calulation.  Thus, if the expression for <f>
+     is important for the calculation.  Thus, if the expression for <f>
      does not depend on some variable, it is useless to include this
      variable, and not including it will also considerably reduce the
      amount of computation.
@@ -4658,7 +4661,7 @@ File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Introdu
      See also: 'lgtreillis', 'ltreillis' and 'treinat'.
 
  -- Function: treinat (<part>)
-     retruns the list of partitions inferior to the partition <part>
+     returns the list of partitions inferior to the partition <part>
      w.r.t.  the natural order.
 
           (%i1) treinat ([5]);
@@ -4740,8 +4743,8 @@ File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Introdu
 -----------------
 
  -- Function: resolvante (<P>, <x>, <f>, [<x_1>,..., <x_d>])
-     calculates the resolvent of the polynomial <P> in <x> of degree <n>
-     >= <d> by the function <f> expressed in the variables <x_1>, ...,
+     calculates the resolvent of the polynomial <P> in <x> of degree 'n
+     >= d' by the function <f> expressed in the variables <x_1>, ...,
      <x_d>.  For efficiency of computation it is important to not
      include in the list '[<x_1>, ..., <x_d>]' variables which do not
      appear in the transformation function <f>.
@@ -6162,7 +6165,8 @@ File: maxima.info,  Node: Functions and Variables for Rules and Patterns,  Prev:
      See also 'let'.  For other ways to do substitutions see also
      'subst', 'psubst', 'at' and 'ratsubst'.
 
-          (%i1) e0:e(k)=-(9*y(k))/(5*z)-u(k-1)/(5*z)+(4*y(k))/(5*z^2)+(3*u(k-1))/(5*z^2)+y(k)-(2*u(k-1))/5;
+          (%i1) e0: e(k) = -(9*y(k))/(5*z)-u(k-1)/(5*z)+(4*y(k))/(5*z^2)
+                           +(3*u(k-1))/(5*z^2)+y(k)-(2*u(k-1))/5;
                           9 y(k)    u(k - 1)   4 y(k)   3 u(k - 1)
           (%o1) e(k) = (- ------) - -------- + ------ + ---------- + y(k)
                            5 z        5 z          2          2
@@ -6364,7 +6368,7 @@ File: maxima.info,  Node: Functions and Variables for Rules and Patterns,  Prev:
           remlet (all)
           remlet (all, <name>)
 
-     Deletes the substitution rule, <prod> -> repl, most recently
+     Deletes the substitution rule, 'prod --> repl', most recently
      defined by the 'let' function.  If name is supplied the rule is
      deleted from the rule package name.
 
@@ -7945,16 +7949,16 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
      identities:
 
        1. stirling1(1,k) = kron_delta(1,k), k >= 0,(see
-          <http://dlmf.nist.gov/26.8.E2>)
+          <https://dlmf.nist.gov/26.8.E2>)
        2. stirling1(n,n) = 1, n >= 0 (see
-          <http://dlmf.nist.gov/26.8.E1>)
+          <https://dlmf.nist.gov/26.8.E1>)
        3. stirling1(n,n-1) = -binomial(n,2), n >= 1, (see
-          <http://dlmf.nist.gov/26.8.E16>)
+          <https://dlmf.nist.gov/26.8.E16>)
        4. stirling1(n,0) = kron_delta(n,0), n >=0 (see
-          <http://dlmf.nist.gov/26.8.E14> and
-          <http://dlmf.nist.gov/26.8.E1>)
+          <https://dlmf.nist.gov/26.8.E14> and
+          <https://dlmf.nist.gov/26.8.E1>)
        5. stirling1(n,1) =(-1)^(n-1) (n-1)!, n >= 1 (see
-          <http://dlmf.nist.gov/26.8.E14>)
+          <https://dlmf.nist.gov/26.8.E14>)
        6. stirling1(n,k) = 0, n >= 0 and k > n.
 
      These identities are applied when the arguments are literal
@@ -7981,15 +7985,15 @@ File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction 
      identities.
 
        1. stirling2(n,0) = 1, n >= 1 (see
-          <http://dlmf.nist.gov/26.8.E17> and stirling2(0,0) = 1)
+          <https://dlmf.nist.gov/26.8.E17> and stirling2(0,0) = 1)
        2. stirling2(n,n) = 1, n >= 0, (see
-          <http://dlmf.nist.gov/26.8.E4>)
+          <https://dlmf.nist.gov/26.8.E4>)
        3. stirling2(n,1) = 1, n >= 1, (see
-          <http://dlmf.nist.gov/26.8.E17> and stirling2(0,1) = 0)
+          <https://dlmf.nist.gov/26.8.E17> and stirling2(0,1) = 0)
        4. stirling2(n,2) = 2^(n-1) -1, n >= 1, (see
-          <http://dlmf.nist.gov/26.8.E17>)
+          <https://dlmf.nist.gov/26.8.E17>)
        5. stirling2(n,n-1) = binomial(n,2), n>= 1 (see
-          <http://dlmf.nist.gov/26.8.E16>)
+          <https://dlmf.nist.gov/26.8.E16>)
        6. stirling2(n,k) = 0, n >= 0 and k > n.
 
      These identities are applied when the arguments are literal
@@ -8885,7 +8889,8 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
           (%o4)                       baz_quux
           (%i5) baz_quux: sqrt(2);
           Cannot assign to `baz_quux'.
-          #0: lambda([y],if y # 'baz_quux then error("Cannot assign to `baz_quux'."))(y=sqrt(2))
+          #0: lambda([y],if y # 'baz_quux then
+                      error("Cannot assign to `baz_quux'."))(y=sqrt(2))
            -- an error. To debug this try: debugmode(true);
           (%i6) baz_quux;
           (%o6)                       baz_quux
@@ -9808,8 +9813,8 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
      Default value: 'true'
 
      Tells the Maxima-to-Lisp translator to assume that the functions
-     'acos', 'asin', 'asec', 'acsc', 'log' and 'sqrt' can return complex
-     results.
+     'acos', 'asin', 'asec', 'acsc', 'acosh', 'asech', 'atanh', 'acoth',
+     'log' and 'sqrt' can return complex results.
 
      When it is 'true' then 'acos(x)' is of mode 'any' even if 'x' is of
      mode 'float' (as set by 'mode_declare').  When 'false' then
@@ -9844,11 +9849,8 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
 
  -- System variable: tr_state_vars
      Default value:
-          [translate_fast_arrays, tr_warn_undeclared, tr_warn_meval,
-          tr_warn_fexpr, tr_warn_mode, tr_warn_undefined_variable,
-          tr_function_call_default, tr_bound_function_applyp,
-          tr_array_as_ref, tr_numer, tr_float_can_branch_complex,
-          define_variable]
+          [translate_fast_arrays, tr_function_call_default, tr_bound_function_applyp,
+          tr_array_as_ref, tr_numer, tr_float_can_branch_complex, define_variable]
 
      The list of the switches that affect the form of the translated
      output.  This information is useful to system people when trying to
@@ -9904,9 +9906,8 @@ File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev
           compile_file (<filename>, <compiled_filename>,
           <lisp_filename>)
 
-     Translates the Maxima file <filename> into Lisp, executes the Lisp
-     compiler, and, if the translation and compilation succeed, loads
-     the compiled code into Maxima.
+     Translates the Maxima file <filename> into Lisp, and executes the
+     Lisp compiler.  The compiled code is not loaded into Maxima.
 
      'compile_file' returns a list of the names of four files: the
      original Maxima file, the Lisp translation, notes on translation,
@@ -10451,7 +10452,7 @@ File: maxima.info,  Node: Functions and Variables for Program Flow,  Prev: Intro
           (%i2) sin(a,b);
           sin: wrong number of arguments.
            -- an error. To debug this try: debugmode(true);
-          (%i3) errormsg:false;
+          (%i3) errormsg: false;
           (%o3)                         false
           (%i4) sin(a,b);
            -- an error. To debug this try: debugmode(true);
@@ -10459,7 +10460,8 @@ File: maxima.info,  Node: Functions and Variables for Program Flow,  Prev: Intro
      The option variable 'errormsg' can not be set in a block to a local
      value.
 
-          (%i1) f(bool):=block([errormsg:bool], print ("value of errormsg is",errormsg))$
+          (%i1) f(bool):=block([errormsg:bool],
+                               print ("value of errormsg is",errormsg))$
           (%i2) errormsg:true;
           (%o2)                         true
           (%i3) f(false);
@@ -11026,12 +11028,16 @@ File: maxima.info,  Node: Functions and Variables for Debugging,  Prev: Keyword 
  -- Option variable: debugmode
      Default value: 'false'
 
-     When a Maxima error occurs, Maxima will start the debugger if
-     'debugmode' is 'true'.  The user may enter commands to examine the
-     call stack, set breakpoints, step through Maxima code, and so on.
-     See 'debugging' for a list of debugger commands.
+     When 'debugmode' is 'true', Maxima will start the Maxima debugger
+     when a Maxima error occurs.  At this point the user may enter
+     commands to examine the call stack, set breakpoints, step through
+     Maxima code, and so on.  See 'debugging' for a list of Maxima
+     debugger commands.
 
-     Enabling 'debugmode' will not catch Lisp errors.
+     When 'debugmode' is 'lisp', Maxima will start the Lisp debugger
+     when a Maxima error occurs.
+
+     In either case, enabling 'debugmode' will not catch Lisp errors.
 
  -- Option variable: refcheck
      Default value: 'false'
@@ -11336,8 +11342,8 @@ output.  This throws an error, which is handled by resetting the
      (%i9) x;
 
      Error in *alt-display2d*.
-     Messge: Condition designator ((MLABEL) $%O9 $X) is not of type (OR SYMBOL STRING
-                                                                  FUNCTION).
+     Messge: Condition designator ((MLABEL) $%O9 $X) is not of type
+             (OR SYMBOL STRING FUNCTION).
      *alt-display2d* reset to nil.
       -- an error. To debug this try: debugmode(true);
 
@@ -11350,6 +11356,54 @@ File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introd
 39.2 Functions and Variables for alt-display
 ============================================
 
+ -- Function: alt_display_output_type (<form>)
+
+     Determine the type of output to be printed.  <Form> must be a lisp
+     form suitable for printing via Maxima's built-in 'displa' function.
+     At present, this function returns one of three values: <text>,
+     <label> or <unknown>.
+
+     An example where 'alt_display_output_type' is used.  In
+     'my_display', a text form is printed between a pair of tags TEXT;>>
+     and <<TEXT; while a label form is printed between a pair tags
+     OUT;>> and <<OUT; in addition to the usual output label.
+
+     The function 'set_prompt' also ensures that input labels are
+     printed between matching PROMPT;>> and <<PROMPT; tags.
+
+     Thanks to Eric Stemmler
+     (https://sourceforge.net/p/maxima/mailman/maxima-discuss/thread/7792c096-7e07-842d-0c3a-b2f039ef1f15%40gmail.com/#msg37235035).
+
+     (%i1) (load("mactex-utilities"), load("alt-display.mac")) $
+
+     (%i2) define_alt_display(my_display(form),
+     block([type,txttmplt,labtmplt],
+     txttmplt:"~%TEXT;>>~%~a~%<<TEXT;~%",
+     labtmplt:"~%OUT;>>~%(~a) ~a~a~a~%<<OUT;~%",
+     type:alt_display_output_type(form),
+     if type='text then
+        printf(true,txttmplt,first(form))
+     else if type='label then
+          printf(true,labtmplt,first(form),"$$",tex1(second(form)),"$$")
+     else
+          block([alt_display1d:false, alt_display2d:false], displa(form)))) $
+
+     (%i3) (set_prompt('prefix, "PROMPT;>>",'suffix, "<<PROMPT;"),
+           set_alt_display(1,my_display)) $
+
+     PROMPT;>>(%i4) <<PROMPT;integrate(x^n,x);
+     PROMPT;>>
+     TEXT;>>
+     Is n equal to -1?
+     <<TEXT;
+     <<PROMPT;
+     n;
+
+     OUT;>>
+     (%o4) $$\frac{x^{n+1}}{n+1}$$
+     <<OUT;
+     PROMPT;>>(%i5) <<PROMPT;
+
  -- Function: define_alt_display (<function>(<input>), <expr>)
      This function is similar to 'define': it evaluates its arguments
      and expands into a function definition.  The <function> is a
@@ -11360,16 +11414,18 @@ File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introd
      Set a time-stamp on each prompt:
           (%i1) load("alt-display.mac")$
 
-          (%i2) display2d:false$
+          (%i2) display2d: false$
 
           (%i3) define_alt_display(time_stamp(x),
-                             block([alt_display1d:false,alt_display2d:false],
-                                   prompt_prefix:printf(false,"~a~%",timedate()),
-                                   displa(x)));
+                          block([alt_display1d:false,alt_display2d:false],
+                                prompt_prefix:printf(false,"~a~%",timedate()),
+                                displa(x)));
 
-          (%o3) time_stamp(x):=block([\*alt\-display1d\*:false,
-                                      \*alt\-display2d\*:false],
-                           \*prompt\-prefix\*:printf(false,"~a~%",timedate()),displa(x))
+          (%o3) time_stamp(x):=block(
+                           [\*alt\-display1d\*:false,
+                            \*alt\-display2d\*:false],
+                           \*prompt\-prefix\*
+                            :printf(false,"~a~%",timedate()),displa(x))
           (%i4) set_alt_display(1,time_stamp);
 
           (%o4) done
@@ -11489,8 +11545,9 @@ File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introd
 
           (%i1) load("alt-display.mac")$
 
-          (%i2) set_prompt(prefix,"<<prefix>> ",suffix,"<<suffix>> ",general,
-                     printf(false,"<<general>>~%"),epilog,printf(false,"<<epilog>>~%"));
+          (%i2) set_prompt(prefix, "<<prefix>> ", suffix, "<<suffix>> ",
+                           general, printf(false,"<<general>>~%"),
+                           epilog, printf(false,"<<epilog>>~%"));
 
           (%o2)                                done
           <<prefix>> (%i3) <<suffix>> x/y;
@@ -11508,7 +11565,7 @@ File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introd
 
           (%i1) load("alt-display.mac")$
 
-          (%i2) cs(s) := printf(false,"~c[~am",ascii(27),s)$
+          (%i2) cs(s) := printf(false,"~a[~am",ascii(27),s)$
 
           (%i3) set_prompt(prefix,cs("1;31"),suffix,cs("0;32"),general,cs("1;34"),epilog,cs("00;"));
           (%o3)                                done
@@ -11521,8 +11578,8 @@ File: maxima.info,  Node: Functions and Variables for alt-display,  Prev: Introd
      Each prompt string starts with the ASCII escape character (27)
      followed by an open square bracket (91); each string ends with a
      lower-case m (109).  The webpages
-     <http://misc.flogisoft.com/bash/tip_colors_and_formatting> and
-     <http://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html> provide
+     <https://misc.flogisoft.com/bash/tip_colors_and_formatting> and
+     <https://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html> provide
      information on how to use control strings to set the terminal
      colors.
 
@@ -12294,11 +12351,11 @@ File: maxima.info,  Node: Introduction to cobyla,  Next: Functions and Variables
 constrained optimization routine COBYLA by Powell[1][2][3].
 
    COBYLA minimizes an objective function F(X) subject to M inequality
-constraints of the form g(X) >= 0 on X, where X is a vector of variables
-that has N components.
+constraints of the form 'g(X) >= 0' on X, where X is a vector of
+variables that has N components.
 
    Equality constraints g(X)=0 can often be implemented by a pair of
-inequality constraints g(X)>=0 and -g(X)>= 0.  Maxima's interface to
+inequality constraints 'g(X)>=0' and '-g(X)>= 0'.  Maxima's interface to
 COBYLA allows equality constraints and internally converts the equality
 constraints to a pair of inequality constraints.
 
@@ -12386,10 +12443,19 @@ File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples fo
        2. The minimized function value
        3. The number of function evaluations.
        4. Return code with the following meanings
-            1. 0 - No errors.
-            2. 1 - Limit on maximum number of function evaluations
+               0 - No errors.
+               1 - Limit on maximum number of function evaluations
                reached.
-            3. 2 - Rounding errors inhibiting progress.
+               2 - Rounding errors inhibiting progress.
+               -1 - <MAXCV> value exceeds <RHOEND>.  This indicates that
+               the constraints were probably not satisfied.  User should
+               investigate the value of the constraints.
+
+     <MAXCV> stands for "MAXimum Constraint Violation" and is the value
+     of max(0.0, -c1(x), -c2(x),...-cm(x)) where ck(x) denotes the k'th
+     constraint function.  (Note that maxima allows constraints of the
+     form f(x) = g(x), which are internally converted to f(x)-g(x) >= 0
+     and g(x)-f(x) >= 0 which is required by COBYLA).
 
      'load("fmin_cobyla")' loads this function.
 
@@ -12411,8 +12477,8 @@ File: maxima.info,  Node: Examples for cobyla,  Prev: Functions and Variables fo
 47.3 Examples for cobyla
 ========================
 
-Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
-1/sqrt(2), x2 = -1/sqrt(2).
+Minimize x1*x2 with '1-x1^2-x2^2 >= 0'.  The theoretical solution is x1
+= 1/sqrt(2), x2 = -1/sqrt(2).
 
      (%i1) load("fmin_cobyla")$
      (%i2) fmin_cobyla(x1*x2, [x1, x2], [1,1],
@@ -12424,7 +12490,27 @@ Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
      (%o2) [[x1 = 0.70710584934848, x2 = - 0.7071077130248],
             - 0.49999999999926, [[-1.999955756559757e-12],[]], 66]
 
-   There are additional examples in the share/cobyla/ex directory.
+   Here is the same example but the constraint is x1^2+x2^2 <= -1 which
+is impossible over the reals.
+
+     (%i1) fmin_cobyla(x1*x2, [x1, x2], [1,1],
+              constraints = [x1^2+x2^2 <= -1], iprint=1);
+        Normal return from subroutine COBYLA
+
+        NFVALS =   65   F = 3.016417E-13    MAXCV = 1.000000E+00
+        X =-3.375179E-07  -8.937057E-07
+     (%o1) [[x1 = - 3.375178983064622e-7, x2 = - 8.937056510780022e-7],
+                                                     3.016416530564557e-13, 65, - 1]
+     (%i2) subst(%o1[2], [x1^2+x2^2 <= -1]);
+     (%o2)                 [- 6.847914590915444e-13 <= - 1]
+
+   We see the return code ('%o1[4]') is -1 indicating that the
+constraints may not be satisfied.  Substituting the solution into the
+constraint equation as shown in '%o2' shows that the constraint is, of
+course, violated.
+
+   There are additional examples in the share/cobyla/ex directory and in
+share/cobyla/rtest_cobyla.mac.
 
 
 File: maxima.info,  Node: combinatorics-pkg,  Next: contrib_ode-pkg,  Prev: cobyla-pkg,  Up: Top
@@ -12860,7 +12946,7 @@ solutions.  Each solution can have a number of forms:
 
    * a parametric solution in terms of variable '%t', or
 
-   * a tranformation into another ODE in variable '%u'.
+   * a transformation into another ODE in variable '%u'.
 
    '%c' is used to represent the constant of integration for first order
 equations.  '%k1' and '%k2' are the constants for second order
@@ -13104,10 +13190,11 @@ File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possib
             -(bessel_j(n,x^2)-bessel_j(n+2,x^2))*x)
             -2*bessel_j(n+1,x^2)+2*bessel_j(n-1,x^2));
           (%o2)                           0
-          (%i3) bessel_simplify(-2*bessel_j(1,z)*z^3-10*bessel_j(2,z)*z^2
-           +15*%pi*bessel_j(1,z)*struve_h(3,z)*z-15*%pi*struve_h(1,z)*bessel_j(3,z)*z
-           -15*%pi*bessel_j(0,z)*struve_h(2,z)*z+15*%pi*struve_h(0,z)*bessel_j(2,z)*z
-           -30*%pi*bessel_j(1,z)*struve_h(2,z)+30*%pi*struve_h(1,z)*bessel_j(2,z));
+          (%i3) bessel_simplify( -2*bessel_j(1,z)*z^3 - 10*bessel_j(2,z)*z^2
+           + 15*%pi*bessel_j(1,z)*struve_h(3,z)*z - 15*%pi*struve_h(1,z)
+             *bessel_j(3,z)*z - 15*%pi*bessel_j(0,z)*struve_h(2,z)*z
+           + 15*%pi*struve_h(0,z)*bessel_j(2,z)*z - 30*%pi*bessel_j(1,z)
+             *struve_h(2,z) + 30*%pi*struve_h(1,z)*bessel_j(2,z));
           (%o3)                           0
 
  -- Function: expintegral_e_simplify (<expr>)
@@ -13128,7 +13215,8 @@ These routines are work in progress.  I still need to:
    * Extend the FACTOR method 'ode1_factor' to work for multiple roots.
 
    * Extend the FACTOR method 'ode1_factor' to attempt to solve higher
-     order factors.  At present it only attemps to solve linear factors.
+     order factors.  At present it only attempts to solve linear
+     factors.
 
    * Fix the LAGRANGE routine 'ode1_lagrange' to prefer real roots over
      complex roots.
@@ -13136,7 +13224,7 @@ These routines are work in progress.  I still need to:
    * Add additional methods for Riccati equations.
 
    * Improve the detection of Abel equations of second kind.  The
-     exisiting pattern matching is weak.
+     existing pattern matching is weak.
 
    * Work on the Lie symmetry group routine 'ode1_lie'.  There are quite
      a few problems with it: some parts are unimplemented; some test
@@ -13174,8 +13262,8 @@ File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for cont
 49.5 References for contrib_ode
 ===============================
 
-  1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen, Vol
-     1, Geest & Portig, Leipzig, 1961
+  1. E. Kamke, Differentialgleichungen Lo"sungsmethoden und Lo"sungen,
+     Vol 1, Geest & Portig, Leipzig, 1961
 
   2. G. M. Murphy, Ordinary Differential Equations and Their Solutions,
      Van Nostrand, New York, 1960
@@ -13319,7 +13407,7 @@ plain text files.  For example, file 'pidigits.data' contains the first
 speeds at 5 meteorological stations in the Republic of Ireland (This is
 part of a data set taken at 12 meteorological stations.  The original
 file is freely downloadable from the StatLib Data Repository and its
-analysis is discused in Haslett, J., Raftery, A. E. (1989) <Space-time
+analysis is discussed in Haslett, J., Raftery, A. E. (1989) <Space-time
 Modelling with Long-memory Dependence: Assessing Ireland's Wind Power
 Resource, with Discussion>.  Applied Statistics 38, 1-50).  This loads
 the data:
@@ -14329,10 +14417,10 @@ File: maxima.info,  Node: Functions and Variables for descriptive statistics,  N
         * <mean variance>: 'trace(S_1)/p',
         * <generalized variance>: 'determinant(S_1)',
         * <generalized standard deviation>: 'sqrt(determinant(S_1))',
-        * <efective variance> 'determinant(S_1)^(1/p)', (defined in:
+        * <effective variance> 'determinant(S_1)^(1/p)', (defined in:
           Pen~a, D. (2002) <Ana'lisis de datos multivariantes>;
           McGraw-Hill, Madrid.)
-        * <efective standard deviation>: 'determinant(S_1)^(1/(2*p))'.
+        * <effective standard deviation>: 'determinant(S_1)^(1/(2*p))'.
      where <p> is the dimension of the multivariate random variable and
      S_1 the covariance matrix returned by 'cov1'.
 
@@ -14483,7 +14571,7 @@ File: maxima.info,  Node: Functions and Variables for descriptive statistics,  N
           principal_components (<matrix>)
           principal_components (<matrix>, <options> ...)
 
-     Calculates the principal componentes of a multivariate sample.
+     Calculates the principal components of a multivariate sample.
      Principal components are used in multivariate statistical analysis
      to reduce the dimensionality of the sample.
 
@@ -14555,7 +14643,7 @@ File: maxima.info,  Node: Functions and Variables for descriptive statistics,  N
                                           [             ]
                                           [  0    0   2 ]
           (%i3) fpprintprec:4 $
-          (%i4) /* the argumment is a covariance matrix */
+          (%i4) /* the argument is a covariance matrix */
                 res: principal_components(S, data=false);
           0 errors, 0 warnings
                                                             [ - .3827  0.0  .9239 ]
@@ -14830,7 +14918,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
           name of one of the three optimal algorithms available for the
           number of classes: ''fd' (Freedman, D. and Diaconis, P. (1981)
           On the histogram as a density estimator: L_2 theory.
-          Zeitschrift fuer Wahrscheinlichkeitstheorie und verwandte
+          Zeitschrift fu"r Wahrscheinlichkeitstheorie und verwandte
           Gebiete 57, 453-476.), ''scott' (Scott, D. W. (1979) On
           optimal and data-based histograms.  Biometrika 66, 605-610.),
           and ''sturges' (Sturges, H. A. (1926) The choice of a class
@@ -15481,7 +15569,7 @@ variable X.  The <distribution function> is defined as
                            ]
                            /
                             minf
-   which equals the probability <Pr(X <= x)>.
+   which equals the probability 'Pr(X <= x)'.
 
    The <mean> value is a localization parameter and is defined as
                           inf
@@ -16338,7 +16426,7 @@ File: maxima.info,  Node: Functions and Variables for continuous distributions, 
      'random_gamma' with a third argument <n>, a random sample of size
      <n> will be simulated.
 
-     The implemented algorithm is a combinantion of two procedures,
+     The implemented algorithm is a combination of two procedures,
      depending on the value of parameter <a>:
 
      For a>=1, Cheng, R.C.H. and Feast, G.M. (1979).  <Some simple gamma
@@ -17495,7 +17583,7 @@ File: maxima.info,  Node: Introduction to draw,  Next: Functions and Variables f
 53.1 Introduction to draw
 =========================
 
-'draw' is a Maxima-Gnuplot and a Maxima-vtk interface.
+'draw' is a Maxima-Gnuplot and a Maxima-VTK interface.
 
    There are three main functions to be used at Maxima level:
    * 'draw2d', draws a single 2D scene.
@@ -17518,12 +17606,12 @@ with options for the scene or the following objects.
 example plots (in the html and pdf version of this manual) can be found
 in the section *Note Functions and Variables for draw::.  An online
 version of the html manual can be found at
-<maxima.sourceforge.net/docs/manual/maxima_singlepage.html#draw>.  More
-elaborated examples of this package can be found at the following
+<https://maxima.sourceforge.io/docs/manual/maxima_singlepage.html#draw>.
+More elaborated examples of this package can be found at the following
 locations:
 
-   <http://tecnostats.net/Maxima/gnuplot>
-<http://tecnostats.net/Maxima/vtk>
+   <http://riotorto.users.sourceforge.net/Maxima/gnuplot/>
+<http://riotorto.users.sourceforge.net/Maxima/vtk/>
 
    Example:
 
@@ -17542,6 +17630,12 @@ locations:
 as a front end 'wxdraw', 'wxdraw2d' and 'wxdraw3d' are drop-in
 replacements for draw that do the same as 'draw', 'draw2d' and 'draw3d'
 but embed the resulting plot in the worksheet.
+
+   If you want to use VTK with draw, you need VTK with the Python
+interface installed (the *note dynamics-pkg:: uses VTK with the TCL
+interface!)  and set the variable:
+
+   'draw_renderer: 'vtk $'
 
 
 File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and Variables for pictures,  Prev: Introduction to draw,  Up: draw-pkg
@@ -17610,7 +17704,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 53.2.2 Functions
 ----------------
 
- -- Function: draw (<arg_1>, ...)
+ -- Function: draw ('<arg_1>, ...')
 
      Plots a series of scenes; its arguments are 'gr2d' and/or 'gr3d'
      objects, together with some options, or lists of scenes and
@@ -17749,8 +17843,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
           (%i4) /* plot with standard defaults */
                 draw2d(explicit(((1+x)**2/(1+x*x))-1,x,-10,10))$
 
-53.2.3 Graphics options
------------------------
+53.2.3 Plot options for draw programs
+-------------------------------------
 
  -- Graphic option: adapt_depth
      Default value: 10
@@ -17890,7 +17984,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Since this is a global graphics option, its position in the scene
      description does not matter.
 
-     This option das not work with terminals 'epslatex' and
+     This option does not work with terminals 'epslatex' and
      'epslatex_standalone'.
 
      See also 'color'
@@ -17991,7 +18085,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      polygons and labels.
 
      Colors can be given as names or in hexadecimal rgb code.  If a
-     gnuplot version >= 5.0 is used and the terminal that is in use
+     gnuplot version '>= 5.0' is used and the terminal that is in use
      supports this rgba colors with transparency information are also
      supported.
 
@@ -18018,7 +18112,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      brown            orange           dark_orange      violet
      dark_violet      plum             purple
 
-     Cromatic componentes in hexadecimal code are introduced in the form
+     Cromatic components in hexadecimal code are introduced in the form
      '"#rrggbb"'.
 
      Example:
@@ -18042,24 +18136,25 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                 );
      (Figure draw_color2)
 
-          (%i1) H(p,p_0):=%i/(2*%pi*(p-p_0));
-                draw2d(
-                    proportional_axes=xy,
-                    ip_grid=[150,150],
-                    grid=true,
-                    makelist(
-                        [
-                            color=printf(false,"#~2,'0x~2,'0x~2,'0x",i*10,0,0),
-                            key_pos=top_left,
-                            key = if mod(i,5)=0 then sconcat("H=",i,"A/M") else "",
-                            implicit(
-                                cabs(H(x+%i*y,-1-%i)+H(x+%i*y,1+%i)-H(x+%i*y,1-%i)-H(x+%i*y,-1+%i))=i/10,
-                                x,-3,3,
-                                y,-3,3
-                            )
-                        ],
-                        i,1,25
-                    )
+          (%i1) H(p,p_0) := %i/(2*%pi*(p-p_0))$
+          (%i2) draw2d(
+                 proportional_axes=xy,
+                 ip_grid=[150,150],
+                 grid=true,
+                 makelist(
+                   [
+                     color=printf(false,"#~2,'0x~2,'0x~2,'0x",i*10,0,0),
+                     key_pos=top_left,
+                     key = if mod(i,5)=0 then sconcat("H=",i,"A/M") else "",
+                     implicit(
+                       cabs(H(x+%i*y,-1-%i)+H(x+%i*y,1+%i)-H(x+%i*y,1-%i)
+                            -H(x+%i*y,-1+%i))=i/10,
+                       x,-3,3,
+                       y,-3,3
+                     )
+                   ],
+                   i,1,25
+                 )
                 )$
      (Figure draw_color3)
 
@@ -19612,7 +19707,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      Default value: 'false'
 
      Indicates whether 3D surfaces in 'enhanced3d' mode show the grid
-     joinning the points or not.
+     joining the points or not.
 
      Since this is a global graphics option, its position in the scene
      description does not matter.
@@ -19852,7 +19947,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
           (%i1) draw2d(xtics = {["High",0.75],["Medium",0],["Low",-0.75]},
                        explicit(x^3,x,-1,1)  )$
 
-     See also 'ytics', and 'ztics'.
+     See also 'ytics_draw', and 'ztics_draw'.
 
  -- Graphic option: xtics_axis
      Default value: 'false'
@@ -19888,7 +19983,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      This graphic option controls the way tic marks are drawn on the
      second <x> axis.
 
-     See 'xtics' for a complete description.
+     See 'xtics_draw' for a complete description.
 
  -- Graphic option: xtics_secondary_axis
      Default value: 'false'
@@ -20347,7 +20442,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      This graphic option controls the way tic marks are drawn on the <z>
      axis.
 
-     See 'xtics' for a complete description.
+     See 'xtics_draw' for a complete description.
 
  -- Graphic option: ztics_axis
      Default value: 'false'
@@ -21279,6 +21374,12 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                        vector([0,0,0],[1,1,-2]/sqrt(6)) )$
      (Figure draw_vector2)
 
+ -- Variable: draw_renderer
+     Default value: 'gnuplot_pipes'
+
+     When 'draw_renderer' is set to ''vtk', the VTK interface is used
+     for draw.
+
 
 File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw-pkg
 
@@ -21458,7 +21559,7 @@ File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions
      first components of 'boundaries_array[171]' are equal to the last
      two coordinates of 'boundaries_array[173]', and the two first of
      'boundaries_array[173]' are equal to the two first of
-     'boundaries_array[1143]'; in conclussion, boundary numbers 171, 173
+     'boundaries_array[1143]'; in conclusion, boundary numbers 171, 173
      and 1143 (in this order) are compatible and the colored polygon can
      be drawn.
           (%i1) load(worldmap)$
@@ -22486,10 +22587,9 @@ three.
 * Menu:
 
 * Functions and Variables for engineering-format::
-* Known bugs in engineering-format::
 
 
-File: maxima.info,  Node: Functions and Variables for engineering-format,  Next: Known bugs in engineering-format,  Prev: engineering-format-pkg,  Up: engineering-format-pkg
+File: maxima.info,  Node: Functions and Variables for engineering-format,  Prev: engineering-format-pkg,  Up: engineering-format-pkg
 
 56.1 Functions and Variables for engineering-format
 ===================================================
@@ -22534,16 +22634,6 @@ File: maxima.info,  Node: Functions and Variables for engineering-format,  Next:
      The maximum absolute value that isn't automatically converted to
      the engineering format.  See also 'engineering_format_min' and
      'engineering_format_floats'.
-
-
-File: maxima.info,  Node: Known bugs in engineering-format,  Prev: Functions and Variables for engineering-format,  Up: engineering-format-pkg
-
-56.2 Known Bugs
-===============
-
-The output routine of SBCL 1.3.0 has a bug that sometimes causes the
-exponent not to be dividable by three.  The value of the displayed
-number is still valid in this case.
 
 
 File: maxima.info,  Node: ezunits-pkg,  Next: f90-pkg,  Prev: engineering-format-pkg,  Up: Top
@@ -22636,9 +22726,10 @@ File: maxima.info,  Node: Introduction to physical_constants,  Next: Functions a
 =======================================
 
 'physical_constants' is a collection of physical constants, copied from
-CODATA 2006 recommended values (<http://physics.nist.gov/constants>).
-'load ("physical_constants")' loads this package, and loads 'ezunits'
-also, if it is not already loaded.
+CODATA 2006 recommended values
+(<https://physics.nist.gov/cuu/Constants/>).  'load
+("physical_constants")' loads this package, and loads 'ezunits' also, if
+it is not already loaded.
 
    A physical constant is represented as a symbol which has a property
 which is the constant value.  The constant value is a dimensional
@@ -22733,7 +22824,7 @@ symbols.
 '%b_prime'
      Wien displacement law constant
 
-   Reference: <http://physics.nist.gov/constants>
+   Reference: <https://physics.nist.gov/cuu/Constants/>
 
    Examples:
 
@@ -23766,7 +23857,7 @@ File: maxima.info,  Node: Functions and Variables for finance,  Prev: Introducti
  -- Function: arit_amortization (<rate>,<increment>,<amount>,<num>)
 
      The amortization table determined by a specific rate and with
-     growing payment can be claculated by 'arit_amortization'.  Notice
+     growing payment can be calculated by 'arit_amortization'.  Notice
      that the payment is not constant, it presents an arithmetic
      growing, increment is then the difference between two consecutive
      rows in the "Payment" column.  <rate> is the interest rate,
@@ -23948,7 +24039,7 @@ contraction ratio.
 
      Sierpinski Triangle: 3 contractive maps; .5 contraction constant
      and translations; all maps have the same contraction ratio.
-     Argument <n> must be great enougth, 10000 or greater.
+     Argument <n> must be great enough, 10000 or greater.
 
      Example:
 
@@ -23959,7 +24050,7 @@ contraction ratio.
  -- Function: treefale (<n>)
 
      3 contractive maps all with the same contraction ratio.  Argument
-     <n> must be great enougth, 10000 or greater.
+     <n> must be great enough, 10000 or greater.
 
      Example:
 
@@ -23971,7 +24062,7 @@ contraction ratio.
 
      4 contractive maps, the probability to choice a transformation must
      be related with the contraction ratio.  Argument <n> must be great
-     enougth, 10000 or greater.
+     enough, 10000 or greater.
 
      Example:
 
@@ -24048,1693 +24139,4 @@ File: maxima.info,  Node: Definitions for complex fractals,  Next: Definitions f
                           [grid, 150, 150])$
 
      See also 'julia_parameter'.
-
-
-File: maxima.info,  Node: Definitions for Koch snowflakes,  Next: Definitions for Peano maps,  Prev: Definitions for complex fractals,  Up: Top
-
-60.4 Definitions for Koch snowflakes
-====================================
-
- -- Function: snowmap (<ent>, <nn>)
-
-     Koch snowflake sets.  Function 'snowmap' plots the snow Koch map
-     over the vertex of an initial closed polygonal, in the complex
-     plane.  Here the orientation of the polygon is important.  Argument
-     <nn> is the number of recursive applications of Koch
-     transformation; <nn> must be small (5 or 6).
-
-     Examples:
-
-          (%i1) load("fractals")$
-          (%i2) plot2d([discrete,
-                        snowmap([1,exp(%i*%pi*2/3),exp(-%i*%pi*2/3),1],4)])$
-          (%i3) plot2d([discrete,
-                        snowmap([1,exp(-%i*%pi*2/3),exp(%i*%pi*2/3),1],4)])$
-          (%i4) plot2d([discrete, snowmap([0,1,1+%i,%i,0],4)])$
-          (%i5) plot2d([discrete, snowmap([0,%i,1+%i,1,0],4)])$
-
-
-File: maxima.info,  Node: Definitions for Peano maps,  Prev: Definitions for Koch snowflakes,  Up: fractals-pkg
-
-60.5 Definitions for Peano maps
-===============================
-
-Continuous curves that cover an area.  Warning: the number of points
-exponentially grows with <n>.
-
- -- Function: hilbertmap (<nn>)
-
-     Hilbert map.  Argument <nn> must be small (5, for example).  Maxima
-     can crash if <nn> is 7 or greater.
-
-     Example:
-
-          (%i1) load("fractals")$
-          (%i2) plot2d([discrete,hilbertmap(6)])$
-
- -- Function: sierpinskimap (<nn>)
-
-     Sierpinski map.  Argument <nn> must be small (5, for example).
-     Maxima can crash if <nn> is 7 or greater.
-
-     Example:
-
-          (%i1) load("fractals")$
-          (%i2) plot2d([discrete,sierpinskimap(6)])$
-
-
-File: maxima.info,  Node: ggf-pkg,  Next: graphs-pkg,  Prev: fractals-pkg,  Up: Top
-
-61 ggf
-******
-
-* Menu:
-
-* Functions and Variables for ggf::
-
-
-File: maxima.info,  Node: Functions and Variables for ggf,  Prev: ggf-pkg,  Up: ggf-pkg
-
-61.1 Functions and Variables for ggf
-====================================
-
- -- Option variable: GGFINFINITY
-     Default value: 3
-
-     This is an option variable for function 'ggf'.
-
-     When computing the continued fraction of the generating function, a
-     partial quotient having a degree (strictly) greater than
-     <GGFINFINITY> will be discarded and the current convergent will be
-     considered as the exact value of the generating function; most
-     often the degree of all partial quotients will be 0 or 1; if you
-     use a greater value, then you should give enough terms in order to
-     make the computation accurate enough.
-
-     See also 'ggf'.
-
- -- Option variable: GGFCFMAX
-     Default value: 3
-
-     This is an option variable for function 'ggf'.
-
-     When computing the continued fraction of the generating function,
-     if no good result has been found (see the <GGFINFINITY> flag) after
-     having computed <GGFCFMAX> partial quotients, the generating
-     function will be considered as not being a fraction of two
-     polynomials and the function will exit.  Put freely a greater value
-     for more complicated generating functions.
-
-     See also 'ggf'.
-
- -- Function: ggf (<l>)
-     Compute the generating function (if it is a fraction of two
-     polynomials) of a sequence, its first terms being given.  <l> is a
-     list of numbers.
-
-     The solution is returned as a fraction of two polynomials.  If no
-     solution has been found, it returns with 'done'.
-
-     This function is controlled by global variables <GGFINFINITY> and
-     <GGFCFMAX>.  See also <GGFINFINITY> and <GGFCFMAX>.
-
-     To use this function write first 'load("ggf")'.
-
-
-File: maxima.info,  Node: graphs-pkg,  Next: grobner-pkg,  Prev: ggf-pkg,  Up: Top
-
-62 graphs
-*********
-
-* Menu:
-
-* Introduction to graphs::
-* Functions and Variables for graphs::
-
-
-File: maxima.info,  Node: Introduction to graphs,  Next: Functions and Variables for graphs,  Prev: graphs-pkg,  Up: graphs-pkg
-
-62.1 Introduction to graphs
-===========================
-
-The 'graphs' package provides graph and digraph data structure for
-Maxima.  Graphs and digraphs are simple (have no multiple edges nor
-loops), although digraphs can have a directed edge from <u> to <v> and a
-directed edge from <v> to <u>.
-
-   Internally graphs are represented by adjacency lists and implemented
-as a lisp structures.  Vertices are identified by their ids (an id is an
-integer).  Edges/arcs are represented by lists of length 2.  Labels can
-be assigned to vertices of graphs/digraphs and weights can be assigned
-to edges/arcs of graphs/digraphs.
-
-   There is a 'draw_graph' function for drawing graphs.  Graphs are
-drawn using a force based vertex positioning algorithm.  'draw_graph'
-can also use graphviz programs available from <http://www.graphviz.org>.
-'draw_graph' is based on the maxima 'draw' package.
-
-   To use the 'graphs' package, first load it with 'load("graphs")'.
-
-
-File: maxima.info,  Node: Functions and Variables for graphs,  Prev: Introduction to graphs,  Up: graphs-pkg
-
-62.2 Functions and Variables for graphs
-=======================================
-
-62.2.1 Building graphs
-----------------------
-
- -- Function: create_graph
-          create_graph (<v_list>, <e_list>)
-          create_graph (<n>, <e_list>)
-          create_graph (<v_list>, <e_list>, <directed>)
-
-     Creates a new graph on the set of vertices <v_list> and with edges
-     <e_list>.
-
-     <v_list> is a list of vertices ('[v1, v2,..., vn]') or a list of
-     vertices together with vertex labels ('[[v1,l1], [v2,l2],...,
-     [vn,ln]]').
-
-     <n> is the number of vertices.  Vertices will be identified by
-     integers from 0 to n-1.
-
-     <e_list> is a list of edges ('[e1, e2,..., em]') or a list of edges
-     together with edge-weights ('[[e1, w1], ..., [em, wm]]').
-
-     If <directed> is not 'false', a directed graph will be returned.
-
-     Example 1: create a cycle on 3 vertices:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([1,2,3], [[1,2], [2,3], [1,3]])$
-          (%i3) print_graph(g)$
-          Graph on 3 vertices with 3 edges.
-          Adjacencies:
-            3 :  1  2
-            2 :  3  1
-            1 :  3  2
-
-     Example 2: create a cycle on 3 vertices with edge weights:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([1,2,3], [[[1,2], 1.0], [[2,3], 2.0],
-                                    [[1,3], 3.0]])$
-          (%i3) print_graph(g)$
-          Graph on 3 vertices with 3 edges.
-          Adjacencies:
-            3 :  1  2
-            2 :  3  1
-            1 :  3  2
-
-     Example 3: create a directed graph:
-          (%i1) load ("graphs")$
-          (%i2) d : create_graph(
-                  [1,2,3,4],
-                  [
-                   [1,3], [1,4],
-                   [2,3], [2,4]
-                  ],
-                  'directed = true)$
-          (%i3) print_graph(d)$
-          Digraph on 4 vertices with 4 arcs.
-          Adjacencies:
-            4 :
-            3 :
-            2 :  4  3
-            1 :  4  3
-
- -- Function: copy_graph (<g>)
-     Returns a copy of the graph <g>.
-
- -- Function: circulant_graph (<n>, <d>)
-     Returns the circulant graph with parameters <n> and <d>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : circulant_graph(10, [1,3])$
-          (%i3) print_graph(g)$
-          Graph on 10 vertices with 20 edges.
-          Adjacencies:
-            9 :  2  6  0  8
-            8 :  1  5  9  7
-            7 :  0  4  8  6
-            6 :  9  3  7  5
-            5 :  8  2  6  4
-            4 :  7  1  5  3
-            3 :  6  0  4  2
-            2 :  9  5  3  1
-            1 :  8  4  2  0
-            0 :  7  3  9  1
-
- -- Function: clebsch_graph ()
-     Returns the Clebsch graph.
-
- -- Function: complement_graph (<g>)
-     Returns the complement of the graph <g>.
-
- -- Function: complete_bipartite_graph (<n>, <m>)
-     Returns the complete bipartite graph on <n+m> vertices.
-
- -- Function: complete_graph (<n>)
-     Returns the complete graph on <n> vertices.
-
- -- Function: cycle_digraph (<n>)
-     Returns the directed cycle on <n> vertices.
-
- -- Function: cycle_graph (<n>)
-     Returns the cycle on <n> vertices.
-
- -- Function: cuboctahedron_graph (<n>)
-     Returns the cuboctahedron graph.
-
- -- Function: cube_graph (<n>)
-     Returns the <n>-dimensional cube.
-
- -- Function: dodecahedron_graph ()
-     Returns the dodecahedron graph.
-
- -- Function: empty_graph (<n>)
-     Returns the empty graph on <n> vertices.
-
- -- Function: flower_snark (<n>)
-     Returns the flower graph on <4n> vertices.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) f5 : flower_snark(5)$
-          (%i3) chromatic_index(f5);
-          (%o3)                           4
-
- -- Function: from_adjacency_matrix (<A>)
-     Returns the graph represented by its adjacency matrix <A>.
-
- -- Function: frucht_graph ()
-     Returns the Frucht graph.
-
- -- Function: graph_product (<g1>, <g1>)
-     Returns the direct product of graphs <g1> and <g2>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) grid : graph_product(path_graph(3), path_graph(4))$
-          (%i3) draw_graph(grid)$
-
- -- Function: graph_union (<g1>, <g1>)
-     Returns the union (sum) of graphs <g1> and <g2>.
-
- -- Function: grid_graph (<n>, <m>)
-     Returns the <n x m> grid.
-
- -- Function: great_rhombicosidodecahedron_graph ()
-     Returns the great rhombicosidodecahedron graph.
-
- -- Function: great_rhombicuboctahedron_graph ()
-     Returns the great rhombicuboctahedron graph.
-
- -- Function: grotzch_graph ()
-     Returns the Grotzch graph.
-
- -- Function: heawood_graph ()
-     Returns the Heawood graph.
-
- -- Function: icosahedron_graph ()
-     Returns the icosahedron graph.
-
- -- Function: icosidodecahedron_graph ()
-     Returns the icosidodecahedron graph.
-
- -- Function: induced_subgraph (<V>, <g>)
-     Returns the graph induced on the subset <V> of vertices of the
-     graph <g>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) V : [0,1,2,3,4]$
-          (%i4) g : induced_subgraph(V, p)$
-          (%i5) print_graph(g)$
-          Graph on 5 vertices with 5 edges.
-          Adjacencies:
-            4 :  3  0
-            3 :  2  4
-            2 :  1  3
-            1 :  0  2
-            0 :  1  4
-
- -- Function: line_graph (<g>)
-     Returns the line graph of the graph <g>.
-
- -- Function: make_graph
-          make_graph (<vrt>, <f>)
-          make_graph (<vrt>, <f>, <oriented>)
-
-     Creates a graph using a predicate function <f>.
-
-     <vrt> is a list/set of vertices or an integer.  If <vrt> is an
-     integer, then vertices of the graph will be integers from 1 to
-     <vrt>.
-
-     <f> is a predicate function.  Two vertices <a> and <b> will be
-     connected if 'f(a,b)=true'.
-
-     If <directed> is not <false>, then the graph will be directed.
-
-     Example 1:
-          (%i1) load("graphs")$
-          (%i2) g : make_graph(powerset({1,2,3,4,5}, 2), disjointp)$
-          (%i3) is_isomorphic(g, petersen_graph());
-          (%o3)                         true
-          (%i4) get_vertex_label(1, g);
-          (%o4)                        {1, 2}
-
-     Example 2:
-          (%i1) load("graphs")$
-          (%i2) f(i, j) := is (mod(j, i)=0)$
-          (%i3) g : make_graph(20, f, directed=true)$
-          (%i4) out_neighbors(4, g);
-          (%o4)                    [8, 12, 16, 20]
-          (%i5) in_neighbors(18, g);
-          (%o5)                    [1, 2, 3, 6, 9]
-
- -- Function: mycielski_graph (<g>)
-     Returns the mycielskian graph of the graph <g>.
-
- -- Function: new_graph ()
-     Returns the graph with no vertices and no edges.
-
- -- Function: path_digraph (<n>)
-     Returns the directed path on <n> vertices.
-
- -- Function: path_graph (<n>)
-     Returns the path on <n> vertices.
-
- -- Function: petersen_graph
-          petersen_graph ()
-          petersen_graph (<n>, <d>)
-
-     Returns the petersen graph <P_{n,d}>.  The default values for <n>
-     and <d> are 'n=5' and 'd=2'.
-
- -- Function: random_bipartite_graph (<a>, <b>, <p>)
-     Returns a random bipartite graph on 'a+b' vertices.  Each edge is
-     present with probability <p>.
-
- -- Function: random_digraph (<n>, <p>)
-     Returns a random directed graph on <n> vertices.  Each arc is
-     present with probability <p>.
-
- -- Function: random_regular_graph
-          random_regular_graph (<n>)
-          random_regular_graph (<n>, <d>)
-
-     Returns a random <d>-regular graph on <n> vertices.  The default
-     value for <d> is 'd=3'.
-
- -- Function: random_graph (<n>, <p>)
-     Returns a random graph on <n> vertices.  Each edge is present with
-     probability <p>.
-
- -- Function: random_graph1 (<n>, <m>)
-     Returns a random graph on <n> vertices and random <m> edges.
-
- -- Function: random_network (<n>, <p>, <w>)
-     Returns a random network on <n> vertices.  Each arc is present with
-     probability <p> and has a weight in the range '[0,w]'.  The
-     function returns a list '[network, source, sink]'.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) [net, s, t] : random_network(50, 0.2, 10.0);
-          (%o2)                   [DIGRAPH, 50, 51]
-          (%i3) max_flow(net, s, t)$
-          (%i4) first(%);
-          (%o4)                   27.65981397932507
-
- -- Function: random_tournament (<n>)
-     Returns a random tournament on <n> vertices.
-
- -- Function: random_tree (<n>)
-     Returns a random tree on <n> vertices.
-
- -- Function: small_rhombicosidodecahedron_graph ()
-     Returns the small rhombicosidodecahedron graph.
-
- -- Function: small_rhombicuboctahedron_graph ()
-     Returns the small rhombicuboctahedron graph.
-
- -- Function: snub_cube_graph ()
-     Returns the snub cube graph.
-
- -- Function: snub_dodecahedron_graph ()
-     Returns the snub dodecahedron graph.
-
- -- Function: truncated_cube_graph ()
-     Returns the truncated cube graph.
-
- -- Function: truncated_dodecahedron_graph ()
-     Returns the truncated dodecahedron graph.
-
- -- Function: truncated_icosahedron_graph ()
-     Returns the truncated icosahedron graph.
-
- -- Function: truncated_tetrahedron_graph ()
-     Returns the truncated tetrahedron graph.
-
- -- Function: tutte_graph ()
-     Returns the Tutte graph.
-
- -- Function: underlying_graph (<g>)
-     Returns the underlying graph of the directed graph <g>.
-
- -- Function: wheel_graph (<n>)
-     Returns the wheel graph on <n+1> vertices.
-
-62.2.2 Graph properties
------------------------
-
- -- Function: adjacency_matrix (<gr>)
-     Returns the adjacency matrix of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c5 : cycle_graph(4)$
-          (%i3) adjacency_matrix(c5);
-                                   [ 0  1  0  1 ]
-                                   [            ]
-                                   [ 1  0  1  0 ]
-          (%o3)                    [            ]
-                                   [ 0  1  0  1 ]
-                                   [            ]
-                                   [ 1  0  1  0 ]
-
- -- Function: average_degree (<gr>)
-     Returns the average degree of vertices in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) average_degree(grotzch_graph());
-                                         40
-          (%o2)                          --
-                                         11
-
- -- Function: biconnected_components (<gr>)
-     Returns the (vertex sets of) 2-connected components of the graph
-     <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph(
-                      [1,2,3,4,5,6,7],
-                      [
-                       [1,2],[2,3],[2,4],[3,4],
-                       [4,5],[5,6],[4,6],[6,7]
-                      ])$
-          (%i3) biconnected_components(g);
-          (%o3)        [[6, 7], [4, 5, 6], [1, 2], [2, 3, 4]]
-
- -- Function: bipartition (<gr>)
-     Returns a bipartition of the vertices of the graph <gr> or an empty
-     list if <gr> is not bipartite.
-
-     Example:
-
-          (%i1) load ("graphs")$
-          (%i2) h : heawood_graph()$
-          (%i3) [A,B]:bipartition(h);
-          (%o3)  [[8, 12, 6, 10, 0, 2, 4], [13, 5, 11, 7, 9, 1, 3]]
-          (%i4) draw_graph(h, show_vertices=A, program=circular)$
-
- -- Function: chromatic_index (<gr>)
-     Returns the chromatic index of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) chromatic_index(p);
-          (%o3)                           4
-
- -- Function: chromatic_number (<gr>)
-     Returns the chromatic number of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) chromatic_number(cycle_graph(5));
-          (%o2)                           3
-          (%i3) chromatic_number(cycle_graph(6));
-          (%o3)                           2
-
- -- Function: clear_edge_weight (<e>, <gr>)
-     Removes the weight of the edge <e> in the graph <gr>.
-
-     Example:
-
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph(3, [[[0,1], 1.5], [[1,2], 1.3]])$
-          (%i3) get_edge_weight([0,1], g);
-          (%o3)                          1.5
-          (%i4) clear_edge_weight([0,1], g)$
-          (%i5) get_edge_weight([0,1], g);
-          (%o5)                           1
-
- -- Function: clear_vertex_label (<v>, <gr>)
-     Removes the label of the vertex <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([[0,"Zero"], [1, "One"]], [[0,1]])$
-          (%i3) get_vertex_label(0, g);
-          (%o3)                         Zero
-          (%i4) clear_vertex_label(0, g);
-          (%o4)                         done
-          (%i5) get_vertex_label(0, g);
-          (%o5)                         false
-
- -- Function: connected_components (<gr>)
-     Returns the (vertex sets of) connected components of the graph
-     <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g: graph_union(cycle_graph(5), path_graph(4))$
-          (%i3) connected_components(g);
-          (%o3)            [[1, 2, 3, 4, 0], [8, 7, 6, 5]]
-
- -- Function: diameter (<gr>)
-     Returns the diameter of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) diameter(dodecahedron_graph());
-          (%o2)                           5
-
- -- Function: edge_coloring (<gr>)
-     Returns an optimal coloring of the edges of the graph <gr>.
-
-     The function returns the chromatic index and a list representing
-     the coloring of the edges of <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) [ch_index, col] : edge_coloring(p);
-          (%o3) [4, [[[0, 5], 3], [[5, 7], 1], [[0, 1], 1], [[1, 6], 2],
-          [[6, 8], 1], [[1, 2], 3], [[2, 7], 4], [[7, 9], 2], [[2, 3], 2],
-          [[3, 8], 3], [[5, 8], 2], [[3, 4], 1], [[4, 9], 4], [[6, 9], 3],
-          [[0, 4], 2]]]
-          (%i4) assoc([0,1], col);
-          (%o4)                           1
-          (%i5) assoc([0,5], col);
-          (%o5)                           3
-
- -- Function: degree_sequence (<gr>)
-     Returns the list of vertex degrees of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) degree_sequence(random_graph(10, 0.4));
-          (%o2)            [2, 2, 2, 2, 2, 2, 3, 3, 3, 3]
-
- -- Function: edge_connectivity (<gr>)
-     Returns the edge-connectivity of the graph <gr>.
-
-     See also 'min_edge_cut'.
-
- -- Function: edges (<gr>)
-     Returns the list of edges (arcs) in a (directed) graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) edges(complete_graph(4));
-          (%o2)   [[2, 3], [1, 3], [1, 2], [0, 3], [0, 2], [0, 1]]
-
- -- Function: get_edge_weight
-          get_edge_weight (<e>, <gr>)
-          get_edge_weight (<e>, <gr>, <ifnot>)
-
-     Returns the weight of the edge <e> in the graph <gr>.
-
-     If there is no weight assigned to the edge, the function returns 1.
-     If the edge is not present in the graph, the function signals an
-     error or returns the optional argument <ifnot>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c5 : cycle_graph(5)$
-          (%i3) get_edge_weight([1,2], c5);
-          (%o3)                           1
-          (%i4) set_edge_weight([1,2], 2.0, c5);
-          (%o4)                         done
-          (%i5) get_edge_weight([1,2], c5);
-          (%o5)                          2.0
-
- -- Function: get_vertex_label (<v>, <gr>)
-     Returns the label of the vertex <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([[0,"Zero"], [1, "One"]], [[0,1]])$
-          (%i3) get_vertex_label(0, g);
-          (%o3)                         Zero
-
- -- Function: graph_charpoly (<gr>, <x>)
-     Returns the characteristic polynomial (in variable <x>) of the
-     graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) graph_charpoly(p, x), factor;
-                                             5        4
-          (%o3)               (x - 3) (x - 1)  (x + 2)
-
- -- Function: graph_center (<gr>)
-     Returns the center of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : grid_graph(5,5)$
-          (%i3) graph_center(g);
-          (%o3)                         [12]
-
- -- Function: graph_eigenvalues (<gr>)
-     Returns the eigenvalues of the graph <gr>.  The function returns
-     eigenvalues in the same format as maxima 'eigenvalues' function.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) graph_eigenvalues(p);
-          (%o3)               [[3, - 2, 1], [1, 4, 5]]
-
- -- Function: graph_periphery (<gr>)
-     Returns the periphery of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : grid_graph(5,5)$
-          (%i3) graph_periphery(g);
-          (%o3)                    [24, 20, 4, 0]
-
- -- Function: graph_size (<gr>)
-     Returns the number of edges in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) graph_size(p);
-          (%o3)                          15
-
- -- Function: graph_order (<gr>)
-     Returns the number of vertices in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) graph_order(p);
-          (%o3)                          10
-
- -- Function: girth (<gr>)
-     Returns the length of the shortest cycle in <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : heawood_graph()$
-          (%i3) girth(g);
-          (%o3)                           6
-
- -- Function: hamilton_cycle (<gr>)
-     Returns the Hamilton cycle of the graph <gr> or an empty list if
-     <gr> is not hamiltonian.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c : cube_graph(3)$
-          (%i3) hc : hamilton_cycle(c);
-          (%o3)              [7, 3, 2, 6, 4, 0, 1, 5, 7]
-          (%i4) draw_graph(c, show_edges=vertices_to_cycle(hc))$
-
- -- Function: hamilton_path (<gr>)
-     Returns the Hamilton path of the graph <gr> or an empty list if
-     <gr> does not have a Hamilton path.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) hp : hamilton_path(p);
-          (%o3)            [0, 5, 7, 2, 1, 6, 8, 3, 4, 9]
-          (%i4) draw_graph(p, show_edges=vertices_to_path(hp))$
-
- -- Function: isomorphism (<gr1>, <gr2>)
-
-     Returns a an isomorphism between graphs/digraphs <gr1> and <gr2>.
-     If <gr1> and <gr2> are not isomorphic, it returns an empty list.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) clk5:complement_graph(line_graph(complete_graph(5)))$
-          (%i3) isomorphism(clk5, petersen_graph());
-          (%o3) [9 -> 0, 2 -> 1, 6 -> 2, 5 -> 3, 0 -> 4, 1 -> 5, 3 -> 6,
-                                                    4 -> 7, 7 -> 8, 8 -> 9]
-
- -- Function: in_neighbors (<v>, <gr>)
-     Returns the list of in-neighbors of the vertex <v> in the directed
-     graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : path_digraph(3)$
-          (%i3) in_neighbors(2, p);
-          (%o3)                          [1]
-          (%i4) out_neighbors(2, p);
-          (%o4)                          []
-
- -- Function: is_biconnected (<gr>)
-     Returns 'true' if <gr> is 2-connected and 'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_biconnected(cycle_graph(5));
-          (%o2)                         true
-          (%i3) is_biconnected(path_graph(5));
-          (%o3)                         false
-
- -- Function: is_bipartite (<gr>)
-     Returns 'true' if <gr> is bipartite (2-colorable) and 'false'
-     otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_bipartite(petersen_graph());
-          (%o2)                         false
-          (%i3) is_bipartite(heawood_graph());
-          (%o3)                         true
-
- -- Function: is_connected (<gr>)
-     Returns 'true' if the graph <gr> is connected and 'false'
-     otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_connected(graph_union(cycle_graph(4), path_graph(3)));
-          (%o2)                         false
-
- -- Function: is_digraph (<gr>)
-     Returns 'true' if <gr> is a directed graph and 'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_digraph(path_graph(5));
-          (%o2)                         false
-          (%i3) is_digraph(path_digraph(5));
-          (%o3)                         true
-
- -- Function: is_edge_in_graph (<e>, <gr>)
-     Returns 'true' if <e> is an edge (arc) in the (directed) graph <g>
-     and 'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c4 : cycle_graph(4)$
-          (%i3) is_edge_in_graph([2,3], c4);
-          (%o3)                         true
-          (%i4) is_edge_in_graph([3,2], c4);
-          (%o4)                         true
-          (%i5) is_edge_in_graph([2,4], c4);
-          (%o5)                         false
-          (%i6) is_edge_in_graph([3,2], cycle_digraph(4));
-          (%o6)                         false
-
- -- Function: is_graph (<gr>)
-     Returns 'true' if <gr> is a graph and 'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_graph(path_graph(5));
-          (%o2)                         true
-          (%i3) is_graph(path_digraph(5));
-          (%o3)                         false
-
- -- Function: is_graph_or_digraph (<gr>)
-     Returns 'true' if <gr> is a graph or a directed graph and 'false'
-     otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_graph_or_digraph(path_graph(5));
-          (%o2)                         true
-          (%i3) is_graph_or_digraph(path_digraph(5));
-          (%o3)                         true
-
- -- Function: is_isomorphic (<gr1>, <gr2>)
-
-     Returns 'true' if graphs/digraphs <gr1> and <gr2> are isomorphic
-     and 'false' otherwise.
-
-     See also 'isomorphism'.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) clk5:complement_graph(line_graph(complete_graph(5)))$
-          (%i3) is_isomorphic(clk5, petersen_graph());
-          (%o3)                         true
-
- -- Function: is_planar (<gr>)
-
-     Returns 'true' if <gr> is a planar graph and 'false' otherwise.
-
-     The algorithm used is the Demoucron's algorithm, which is a
-     quadratic time algorithm.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_planar(dodecahedron_graph());
-          (%o2)                         true
-          (%i3) is_planar(petersen_graph());
-          (%o3)                         false
-          (%i4) is_planar(petersen_graph(10,2));
-          (%o4)                         true
-
- -- Function: is_sconnected (<gr>)
-     Returns 'true' if the directed graph <gr> is strongly connected and
-     'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_sconnected(cycle_digraph(5));
-          (%o2)                         true
-          (%i3) is_sconnected(path_digraph(5));
-          (%o3)                         false
-
- -- Function: is_vertex_in_graph (<v>, <gr>)
-     Returns 'true' if <v> is a vertex in the graph <g> and 'false'
-     otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c4 : cycle_graph(4)$
-          (%i3) is_vertex_in_graph(0, c4);
-          (%o3)                         true
-          (%i4) is_vertex_in_graph(6, c4);
-          (%o4)                         false
-
- -- Function: is_tree (<gr>)
-     Returns 'true' if <gr> is a tree and 'false' otherwise.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) is_tree(random_tree(4));
-          (%o2)                         true
-          (%i3) is_tree(graph_union(random_tree(4), random_tree(5)));
-          (%o3)                         false
-
- -- Function: laplacian_matrix (<gr>)
-     Returns the laplacian matrix of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) laplacian_matrix(cycle_graph(5));
-                             [  2   - 1   0    0   - 1 ]
-                             [                         ]
-                             [ - 1   2   - 1   0    0  ]
-                             [                         ]
-          (%o2)              [  0   - 1   2   - 1   0  ]
-                             [                         ]
-                             [  0    0   - 1   2   - 1 ]
-                             [                         ]
-                             [ - 1   0    0   - 1   2  ]
-
- -- Function: max_clique (<gr>)
-     Returns a maximum clique of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : random_graph(100, 0.5)$
-          (%i3) max_clique(g);
-          (%o3)          [6, 12, 31, 36, 52, 59, 62, 63, 80]
-
- -- Function: max_degree (<gr>)
-     Returns the maximal degree of vertices of the graph <gr> and a
-     vertex of maximal degree.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : random_graph(100, 0.02)$
-          (%i3) max_degree(g);
-          (%o3)                        [6, 79]
-          (%i4) vertex_degree(95, g);
-          (%o4)                           2
-
- -- Function: max_flow (<net>, <s>, <t>)
-     Returns a maximum flow through the network <net> with the source
-     <s> and the sink <t>.
-
-     The function returns the value of the maximal flow and a list
-     representing the weights of the arcs in the optimal flow.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) net : create_graph(
-            [1,2,3,4,5,6],
-            [[[1,2], 1.0],
-             [[1,3], 0.3],
-             [[2,4], 0.2],
-             [[2,5], 0.3],
-             [[3,4], 0.1],
-             [[3,5], 0.1],
-             [[4,6], 1.0],
-             [[5,6], 1.0]],
-            directed=true)$
-          (%i3) [flow_value, flow] : max_flow(net, 1, 6);
-          (%o3) [0.7, [[[1, 2], 0.5], [[1, 3], 0.2], [[2, 4], 0.2],
-          [[2, 5], 0.3], [[3, 4], 0.1], [[3, 5], 0.1], [[4, 6], 0.3],
-          [[5, 6], 0.4]]]
-          (%i4) fl : 0$
-          (%i5) for u in out_neighbors(1, net)
-               do fl : fl + assoc([1, u], flow)$
-          (%i6) fl;
-          (%o6)                          0.7
-
- -- Function: max_independent_set (<gr>)
-     Returns a maximum independent set of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) d : dodecahedron_graph()$
-          (%i3) mi : max_independent_set(d);
-          (%o3)             [0, 3, 5, 9, 10, 11, 18, 19]
-          (%i4) draw_graph(d, show_vertices=mi)$
-
- -- Function: max_matching (<gr>)
-     Returns a maximum matching of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) d : dodecahedron_graph()$
-          (%i3) m : max_matching(d);
-          (%o3) [[5, 7], [8, 9], [6, 10], [14, 19], [13, 18], [12, 17],
-                                         [11, 16], [0, 15], [3, 4], [1, 2]]
-          (%i4) draw_graph(d, show_edges=m)$
-
- -- Function: min_degree (<gr>)
-     Returns the minimum degree of vertices of the graph <gr> and a
-     vertex of minimum degree.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : random_graph(100, 0.1)$
-          (%i3) min_degree(g);
-          (%o3)                        [3, 49]
-          (%i4) vertex_degree(21, g);
-          (%o4)                           9
-
- -- Function: min_edge_cut (<gr>)
-     Returns the minimum edge cut in the graph <gr>.
-
-     See also 'edge_connectivity'.
-
- -- Function: min_vertex_cover (<gr>)
-     Returns the minimum vertex cover of the graph <gr>.
-
- -- Function: min_vertex_cut (<gr>)
-     Returns the minimum vertex cut in the graph <gr>.
-
-     See also 'vertex_connectivity'.
-
- -- Function: minimum_spanning_tree (<gr>)
-     Returns the minimum spanning tree of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : graph_product(path_graph(10), path_graph(10))$
-          (%i3) t : minimum_spanning_tree(g)$
-          (%i4) draw_graph(g, show_edges=edges(t))$
-
- -- Function: neighbors (<v>, <gr>)
-     Returns the list of neighbors of the vertex <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : petersen_graph()$
-          (%i3) neighbors(3, p);
-          (%o3)                       [4, 8, 2]
-
- -- Function: odd_girth (<gr>)
-     Returns the length of the shortest odd cycle in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : graph_product(cycle_graph(4), cycle_graph(7))$
-          (%i3) girth(g);
-          (%o3)                           4
-          (%i4) odd_girth(g);
-          (%o4)                           7
-
- -- Function: out_neighbors (<v>, <gr>)
-     Returns the list of out-neighbors of the vertex <v> in the directed
-     graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : path_digraph(3)$
-          (%i3) in_neighbors(2, p);
-          (%o3)                          [1]
-          (%i4) out_neighbors(2, p);
-          (%o4)                          []
-
- -- Function: planar_embedding (<gr>)
-
-     Returns the list of facial walks in a planar embedding of <gr> and
-     'false' if <gr> is not a planar graph.
-
-     The graph <gr> must be biconnected.
-
-     The algorithm used is the Demoucron's algorithm, which is a
-     quadratic time algorithm.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) planar_embedding(grid_graph(3,3));
-          (%o2) [[3, 6, 7, 8, 5, 2, 1, 0], [4, 3, 0, 1], [3, 4, 7, 6],
-                                                [8, 7, 4, 5], [1, 2, 5, 4]]
-
- -- Function: print_graph (<gr>)
-     Prints some information about the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c5 : cycle_graph(5)$
-          (%i3) print_graph(c5)$
-          Graph on 5 vertices with 5 edges.
-          Adjacencies:
-            4 :  0  3
-            3 :  4  2
-            2 :  3  1
-            1 :  2  0
-            0 :  4  1
-          (%i4) dc5 : cycle_digraph(5)$
-          (%i5) print_graph(dc5)$
-          Digraph on 5 vertices with 5 arcs.
-          Adjacencies:
-            4 :  0
-            3 :  4
-            2 :  3
-            1 :  2
-            0 :  1
-          (%i6) out_neighbors(0, dc5);
-          (%o6)                          [1]
-
- -- Function: radius (<gr>)
-     Returns the radius of the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) radius(dodecahedron_graph());
-          (%o2)                           5
-
- -- Function: set_edge_weight (<e>, <w>, <gr>)
-     Assigns the weight <w> to the edge <e> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([1, 2], [[[1,2], 1.2]])$
-          (%i3) get_edge_weight([1,2], g);
-          (%o3)                          1.2
-          (%i4) set_edge_weight([1,2], 2.1, g);
-          (%o4)                         done
-          (%i5) get_edge_weight([1,2], g);
-          (%o5)                          2.1
-
- -- Function: set_vertex_label (<v>, <l>, <gr>)
-     Assigns the label <l> to the vertex <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : create_graph([[1, "One"], [2, "Two"]], [[1,2]])$
-          (%i3) get_vertex_label(1, g);
-          (%o3)                          One
-          (%i4) set_vertex_label(1, "oNE", g);
-          (%o4)                         done
-          (%i5) get_vertex_label(1, g);
-          (%o5)                          oNE
-
- -- Function: shortest_path (<u>, <v>, <gr>)
-     Returns the shortest path from <u> to <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) d : dodecahedron_graph()$
-          (%i3) path : shortest_path(0, 7, d);
-          (%o3)                   [0, 1, 19, 13, 7]
-          (%i4) draw_graph(d, show_edges=vertices_to_path(path))$
-
- -- Function: shortest_weighted_path (<u>, <v>, <gr>)
-     Returns the length of the shortest weighted path and the shortest
-     weighted path from <u> to <v> in the graph <gr>.
-
-     The length of a weighted path is the sum of edge weights of edges
-     in the path.  If an edge has no weight, then it has a default
-     weight 1.
-
-     Example:
-
-          (%i1) load ("graphs")$
-          (%i2) g: petersen_graph(20, 2)$
-          (%i3) for e in edges(g) do set_edge_weight(e, random(1.0), g)$
-          (%i4) shortest_weighted_path(0, 10, g);
-          (%o4) [2.575143920268482, [0, 20, 38, 36, 34, 32, 30, 10]]
-
- -- Function: strong_components (<gr>)
-     Returns the strong components of a directed graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) t : random_tournament(4)$
-          (%i3) strong_components(t);
-          (%o3)                 [[1], [0], [2], [3]]
-          (%i4) vertex_out_degree(3, t);
-          (%o4)                           3
-
- -- Function: topological_sort (<dag>)
-
-     Returns a topological sorting of the vertices of a directed graph
-     <dag> or an empty list if <dag> is not a directed acyclic graph.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g:create_graph(
-                   [1,2,3,4,5],
-                   [
-                    [1,2], [2,5], [5,3],
-                    [5,4], [3,4], [1,3]
-                   ],
-                   directed=true)$
-          (%i3) topological_sort(g);
-          (%o3)                    [1, 2, 5, 3, 4]
-
- -- Function: vertex_connectivity (<g>)
-     Returns the vertex connectivity of the graph <g>.
-
-     See also 'min_vertex_cut'.
-
- -- Function: vertex_degree (<v>, <gr>)
-     Returns the degree of the vertex <v> in the graph <gr>.
-
- -- Function: vertex_distance (<u>, <v>, <gr>)
-     Returns the length of the shortest path between <u> and <v> in the
-     (directed) graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) d : dodecahedron_graph()$
-          (%i3) vertex_distance(0, 7, d);
-          (%o3)                           4
-          (%i4) shortest_path(0, 7, d);
-          (%o4)                   [0, 1, 19, 13, 7]
-
- -- Function: vertex_eccentricity (<v>, <gr>)
-
-     Returns the eccentricity of the vertex <v> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g:cycle_graph(7)$
-          (%i3) vertex_eccentricity(0, g);
-          (%o3)                           3
-
- -- Function: vertex_in_degree (<v>, <gr>)
-     Returns the in-degree of the vertex <v> in the directed graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p5 : path_digraph(5)$
-          (%i3) print_graph(p5)$
-          Digraph on 5 vertices with 4 arcs.
-          Adjacencies:
-            4 :
-            3 :  4
-            2 :  3
-            1 :  2
-            0 :  1
-          (%i4) vertex_in_degree(4, p5);
-          (%o4)                           1
-          (%i5) in_neighbors(4, p5);
-          (%o5)                          [3]
-
- -- Function: vertex_out_degree (<v>, <gr>)
-     Returns the out-degree of the vertex <v> in the directed graph
-     <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) t : random_tournament(10)$
-          (%i3) vertex_out_degree(0, t);
-          (%o3)                           2
-          (%i4) out_neighbors(0, t);
-          (%o4)                        [7, 1]
-
- -- Function: vertices (<gr>)
-     Returns the list of vertices in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) vertices(complete_graph(4));
-          (%o2)                     [3, 2, 1, 0]
-
- -- Function: vertex_coloring (<gr>)
-     Returns an optimal coloring of the vertices of the graph <gr>.
-
-     The function returns the chromatic number and a list representing
-     the coloring of the vertices of <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p:petersen_graph()$
-          (%i3) vertex_coloring(p);
-          (%o3) [3, [[0, 2], [1, 3], [2, 2], [3, 3], [4, 1], [5, 3],
-                                           [6, 1], [7, 1], [8, 2], [9, 2]]]
-
- -- Function: wiener_index (<gr>)
-     Returns the Wiener index of the graph <gr>.
-
-     Example:
-          (%i2) wiener_index(dodecahedron_graph());
-          (%o2)                          500
-
-62.2.3 Modifying graphs
------------------------
-
- -- Function: add_edge (<e>, <gr>)
-     Adds the edge <e> to the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) p : path_graph(4)$
-          (%i3) neighbors(0, p);
-          (%o3)                          [1]
-          (%i4) add_edge([0,3], p);
-          (%o4)                         done
-          (%i5) neighbors(0, p);
-          (%o5)                        [3, 1]
-
- -- Function: add_edges (<e_list>, <gr>)
-     Adds all edges in the list <e_list> to the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : empty_graph(3)$
-          (%i3) add_edges([[0,1],[1,2]], g)$
-          (%i4) print_graph(g)$
-          Graph on 3 vertices with 2 edges.
-          Adjacencies:
-            2 :  1
-            1 :  2  0
-            0 :  1
-
- -- Function: add_vertex (<v>, <gr>)
-     Adds the vertex <v> to the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : path_graph(2)$
-          (%i3) add_vertex(2, g)$
-          (%i4) print_graph(g)$
-          Graph on 3 vertices with 1 edges.
-          Adjacencies:
-            2 :
-            1 :  0
-            0 :  1
-
- -- Function: add_vertices (<v_list>, <gr>)
-     Adds all vertices in the list <v_list> to the graph <gr>.
-
- -- Function: connect_vertices (<v_list>, <u_list>, <gr>)
-     Connects all vertices from the list <v_list> with the vertices in
-     the list <u_list> in the graph <gr>.
-
-     <v_list> and <u_list> can be single vertices or lists of vertices.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g : empty_graph(4)$
-          (%i3) connect_vertices(0, [1,2,3], g)$
-          (%i4) print_graph(g)$
-          Graph on 4 vertices with 3 edges.
-          Adjacencies:
-            3 :  0
-            2 :  0
-            1 :  0
-            0 :  3  2  1
-
- -- Function: contract_edge (<e>, <gr>)
-     Contracts the edge <e> in the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) g: create_graph(
-                8, [[0,3],[1,3],[2,3],[3,4],[4,5],[4,6],[4,7]])$
-          (%i3) print_graph(g)$
-          Graph on 8 vertices with 7 edges.
-          Adjacencies:
-            7 :  4
-            6 :  4
-            5 :  4
-            4 :  7  6  5  3
-            3 :  4  2  1  0
-            2 :  3
-            1 :  3
-            0 :  3
-          (%i4) contract_edge([3,4], g)$
-          (%i5) print_graph(g)$
-          Graph on 7 vertices with 6 edges.
-          Adjacencies:
-            7 :  3
-            6 :  3
-            5 :  3
-            3 :  5  6  7  2  1  0
-            2 :  3
-            1 :  3
-            0 :  3
-
- -- Function: remove_edge (<e>, <gr>)
-     Removes the edge <e> from the graph <gr>.
-
-     Example:
-          (%i1) load ("graphs")$
-          (%i2) c3 : cycle_graph(3)$
-          (%i3) remove_edge([0,1], c3)$
-          (%i4) print_graph(c3)$
-          Graph on 3 vertices with 2 edges.
-          Adjacencies:
-            2 :  0  1
-            1 :  2
-            0 :  2
-
- -- Function: remove_vertex (<v>, <gr>)
-     Removes the vertex <v> from the graph <gr>.
-
-62.2.4 Reading and writing to files
------------------------------------
-
- -- Function: dimacs_export
-          dimacs_export (<gr>, <fl>)
-          dimacs_export (<gr>, <fl>, <comment1>, ..., <commentn>)
-
-     Exports the graph into the file <fl> in the DIMACS format.
-     Optional comments will be added to the top of the file.
-
- -- Function: dimacs_import (<fl>)
-
-     Returns the graph from file <fl> in the DIMACS format.
-
- -- Function: graph6_decode (<str>)
-
-     Returns the graph encoded in the graph6 format in the string <str>.
-
- -- Function: graph6_encode (<gr>)
-
-     Returns a string which encodes the graph <gr> in the graph6 format.
-
- -- Function: graph6_export (<gr_list>, <fl>)
-
-     Exports graphs in the list <gr_list> to the file <fl> in the graph6
-     format.
-
- -- Function: graph6_import (<fl>)
-
-     Returns a list of graphs from the file <fl> in the graph6 format.
-
- -- Function: sparse6_decode (<str>)
-
-     Returns the graph encoded in the sparse6 format in the string
-     <str>.
-
- -- Function: sparse6_encode (<gr>)
-
-     Returns a string which encodes the graph <gr> in the sparse6
-     format.
-
- -- Function: sparse6_export (<gr_list>, <fl>)
-
-     Exports graphs in the list <gr_list> to the file <fl> in the
-     sparse6 format.
-
- -- Function: sparse6_import (<fl>)
-
-     Returns a list of graphs from the file <fl> in the sparse6 format.
-
-62.2.5 Visualization
---------------------
-
- -- Function: draw_graph
-          draw_graph (<graph>)
-          draw_graph (<graph>, <option1>, ..., <optionk>)
-
-     Draws the graph using the *note draw-pkg:: package.
-
-     The algorithm used to position vertices is specified by the
-     optional argument <program>.  The default value is
-     'program=spring_embedding'.  <draw_graph> can also use the graphviz
-     programs for positioning vertices, but graphviz must be installed
-     separately.
-
-     Example 1:
-
-          (%i1) load ("graphs")$
-          (%i2) g:grid_graph(10,10)$
-          (%i3) m:max_matching(g)$
-          (%i4) draw_graph(g,
-             spring_embedding_depth=100,
-             show_edges=m, edge_type=dots,
-             vertex_size=0)$
-
-     Example 2:
-
-          (%i1) load ("graphs")$
-          (%i2) g:create_graph(16,
-              [
-               [0,1],[1,3],[2,3],[0,2],[3,4],[2,4],
-               [5,6],[6,4],[4,7],[6,7],[7,8],[7,10],[7,11],
-               [8,10],[11,10],[8,9],[11,12],[9,15],[12,13],
-               [10,14],[15,14],[13,14]
-              ])$
-          (%i3) t:minimum_spanning_tree(g)$
-          (%i4) draw_graph(
-              g,
-              show_edges=edges(t),
-              show_edge_width=4,
-              show_edge_color=green,
-              vertex_type=filled_square,
-              vertex_size=2
-              )$
-
-     Example 3:
-
-          (%i1) load ("graphs")$
-          (%i2) g:create_graph(16,
-              [
-               [0,1],[1,3],[2,3],[0,2],[3,4],[2,4],
-               [5,6],[6,4],[4,7],[6,7],[7,8],[7,10],[7,11],
-               [8,10],[11,10],[8,9],[11,12],[9,15],[12,13],
-               [10,14],[15,14],[13,14]
-              ])$
-          (%i3) mi : max_independent_set(g)$
-          (%i4) draw_graph(
-              g,
-              show_vertices=mi,
-              show_vertex_type=filled_up_triangle,
-              show_vertex_size=2,
-              edge_color=cyan,
-              edge_width=3,
-              show_id=true,
-              text_color=brown
-              )$
-
-     Example 4:
-
-          (%i1) load ("graphs")$
-          (%i2) net : create_graph(
-              [0,1,2,3,4,5],
-              [
-               [[0,1], 3], [[0,2], 2],
-               [[1,3], 1], [[1,4], 3],
-               [[2,3], 2], [[2,4], 2],
-               [[4,5], 2], [[3,5], 2]
-              ],
-              directed=true
-              )$
-          (%i3) draw_graph(
-              net,
-              show_weight=true,
-              vertex_size=0,
-              show_vertices=[0,5],
-              show_vertex_type=filled_square,
-              head_length=0.2,
-              head_angle=10,
-              edge_color="dark-green",
-              text_color=blue
-              )$
-
-     Example 5:
-
-          (%i1) load("graphs")$
-          (%i2) g: petersen_graph(20, 2);
-          (%o2)                         GRAPH
-          (%i3) draw_graph(g, redraw=true, program=planar_embedding);
-          (%o3)                         done
-
-     Example 6:
-
-          (%i1) load("graphs")$
-          (%i2) t: tutte_graph();
-          (%o2)                         GRAPH
-          (%i3) draw_graph(t, redraw=true,
-                              fixed_vertices=[1,2,3,4,5,6,7,8,9]);
-          (%o3)                         done
-
- -- Option variable: draw_graph_program
-     Default value: <spring_embedding>
-
-     The default value for the program used to position vertices in
-     'draw_graph' program.
-
- -- draw_graph option: show_id
-     Default value: <false>
-
-     If <true> then ids of the vertices are displayed.
-
- -- draw_graph option: show_label
-     Default value: <false>
-
-     If <true> then labels of the vertices are displayed.
-
- -- draw_graph option: label_alignment
-     Default value: <center>
-
-     Determines how to align the labels/ids of the vertices.  Can be
-     'left', 'center' or 'right'.
-
- -- draw_graph option: show_weight
-     Default value: <false>
-
-     If <true> then weights of the edges are displayed.
-
- -- draw_graph option: vertex_type
-     Default value: <circle>
-
-     Defines how vertices are displayed.  See the <point_type> option
-     for the 'draw' package for possible values.
-
- -- draw_graph option: vertex_size
-     The size of vertices.
-
- -- draw_graph option: vertex_color
-     The color used for displaying vertices.
-
- -- draw_graph option: show_vertices
-     Default value: []
-
-     Display selected vertices in the using a different color.
-
- -- draw_graph option: show_vertex_type
-     Defines how vertices specified in <show_vertices> are displayed.
-     See the <point_type> option for the 'draw' package for possible
-     values.
-
- -- draw_graph option: show_vertex_size
-     The size of vertices in <show_vertices>.
-
- -- draw_graph option: show_vertex_color
-     The color used for displaying vertices in the <show_vertices> list.
-
- -- draw_graph option: vertex_partition
-     Default value: []
-
-     A partition '[[v1,v2,...],...,[vk,...,vn]]' of the vertices of the
-     graph.  The vertices of each list in the partition will be drawn in
-     a different color.
-
- -- draw_graph option: vertex_coloring
-     Specifies coloring of the vertices.  The coloring <col> must be
-     specified in the format as returned by <vertex_coloring>.
-
- -- draw_graph option: edge_color
-     The color used for displaying edges.
-
- -- draw_graph option: edge_width
-     The width of edges.
-
- -- draw_graph option: edge_type
-     Defines how edges are displayed.  See the <line_type> option for
-     the 'draw' package.
-
- -- draw_graph option: show_edges
-     Display edges specified in the list <e_list> using a different
-     color.
-
- -- draw_graph option: show_edge_color
-     The color used for displaying edges in the <show_edges> list.
-
- -- draw_graph option: show_edge_width
-     The width of edges in <show_edges>.
-
- -- draw_graph option: show_edge_type
-     Defines how edges in <show_edges> are displayed.  See the
-     <line_type> option for the 'draw' package.
-
- -- draw_graph option: edge_partition
-     A partition '[[e1,e2,...],...,[ek,...,em]]' of edges of the graph.
-     The edges of each list in the partition will be drawn using a
-     different color.
-
- -- draw_graph option: edge_coloring
-     The coloring of edges.  The coloring must be specified in the
-     format as returned by the function <edge_coloring>.
-
- -- draw_graph option: redraw
-     Default value: <false>
-
-     If 'true', vertex positions are recomputed even if the positions
-     have been saved from a previous drawing of the graph.
-
- -- draw_graph option: head_angle
-     Default value: 15
-
-     The angle for the arrows displayed on arcs (in directed graphs).
-
- -- draw_graph option: head_length
-     Default value: 0.1
-
-     The length for the arrows displayed on arcs (in directed graphs).
-
- -- draw_graph option: spring_embedding_depth
-     Default value: 50
-
-     The number of iterations in the spring embedding graph drawing
-     algorithm.
-
- -- draw_graph option: terminal
-     The terminal used for drawing (see the <terminal> option in the
-     'draw' package).
-
- -- draw_graph option: file_name
-     The filename of the drawing if terminal is not screen.
-
- -- draw_graph option: program
-     Defines the program used for positioning vertices of the graph.
-     Can be one of the graphviz programs (dot, neato, twopi, circ, fdp),
-     <circular>, <spring_embedding> or <planar_embedding>.
-     <planar_embedding> is only available for 2-connected planar graphs.
-     When 'program=spring_embedding', a set of vertices with fixed
-     position can be specified with the <fixed_vertices> option.
-
- -- draw_graph option: fixed_vertices
-     Specifies a list of vertices which will have positions fixed along
-     a regular polygon.  Can be used when 'program=spring_embedding'.
-
- -- Function: vertices_to_path (<v_list>)
-     Converts a list <v_list> of vertices to a list of edges of the path
-     defined by <v_list>.
-
- -- Function: vertices_to_cycle (<v_list>)
-     Converts a list <v_list> of vertices to a list of edges of the
-     cycle defined by <v_list>.
 

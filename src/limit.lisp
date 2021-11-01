@@ -174,9 +174,6 @@
 		      origval '$inf
 		      exp (subin (m* -1 var) exp)))
               
-              ;; Hide noun form of %derivative, %integrate.
-	      (setq exp (hide exp))
-              
 	      ;; Transform the limit value.
 	      (unless (infinityp val)
 		(unless (zerop2 val)
@@ -185,6 +182,7 @@
 		    ;; bound by %sum, %product, %integrate, %limit
 		    (setq var (gensym))
 		    (putprop var t 'internal)
+		    (setq exp (derivative-subst exp val var realvar))
 		    (setq exp (maxima-substitute (m+ val var) realvar exp))))
 		(setq val (cond ((eq dr '$plus) '$zeroa)
 				((eq dr '$minus) '$zerob)
@@ -785,8 +783,9 @@ ignoring dummy variables and array indices."
 		   (return n1))
 		  ((and (infinityp n1) (eq ($sign dn) '$neg))
 		   (return (simpinf (m* -1 n1))))
-		  ((and (not (eq n1 '$ind))
-			(eq ($csign n1) '$zero))
+		  ((and (zerop1 n1)
+			(or (eq ($sign dn) '$pos)
+			    (eq ($sign dn) '$neg)))
 		   (return 0))
 		  (t (return '$und))))
 	   ((eq n1 '$ind) (return (cond ((infinityp d1) 0)
@@ -1201,67 +1200,6 @@ ignoring dummy variables and array indices."
     (setq baslim (limit bas var val 'think))
     (setq expolim (limit expo var val 'think))
     (simplimexpt bas expo baslim expolim)))
-
-;;; This function will transform an expression such that either all logarithms
-;;; contain arguments not becoming infinite or are of the form
-;;; LOG(LOG( ... LOG(VAR))) This reduction takes place only over the operators
-;;; MPLUS, MTIMES, MEXPT, and %LOG.
-
-(defun log-red-contract (facs)
-  (do ((l facs (cdr l))
-       (consts ())
-       (log ()))
-      ((null l)
-       (if log (cons (cadr log) (m*l consts))
-	   ()))
-    (cond ((freeof var (car l)) (push (car l) consts))
-	  ((mlogp (car l))
-	   (if (null log) (setq log (car l))
-	       (return ())))
-	  (t (return ())))))
-
-(defun log-reduce (x)
-  (cond ((atom x) x)
-	((freeof var x) x)
-	((mplusp x)
-	 (do ((l (cdr x) (cdr l))
-	      (sum ())
-	      (weak-logs ())
-	      (strong-logs ())
-	      (temp))
-	     ((null l) (m+l `(((%log) ,(m*l strong-logs))
-			      ((%log) ,(m*l weak-logs))
-			      ,@sum)))
-	   (setq x (log-reduce (car l)))
-	   (cond ((mlogp x)
-		  (if (infinityp (limit (cadr x) var val 'think))
-		      (push (cadr x) strong-logs)
-		      (push (cadr x) weak-logs)))
-		 ((and (mtimesp x) (setq temp (log-red-contract (cdr x))))
-		  (if (infinityp (limit (car temp) var val 'think))
-		      (push (m^ (car temp) (cdr temp)) strong-logs)
-		      (push (m^ (car temp) (cdr temp)) weak-logs)))
-		 (t (push x sum)))))
-	((mtimesp x)
-	 (do ((l (cdr x) (cdr l))
-	      (ans 1))
-	     ((null l) ans)
-	   (setq ans ($expand (m* (log-reduce (car l)) ans)))))
-	((mexptp x) (m^t (log-reduce (cadr x)) (caddr x)))
-	((mlogp x)
-	 (cond ((not (infinityp (limit (cadr x) var val 'think))) x)
-	       (t
-		(cond ((eq (cadr x) var) x)
-		      ((mplusp (cadr x))
-		       (let ((strongl (maxi (cdadr x))))
-			 (m+ (log-reduce `((%log) ,(car strongl))) `((%log) ,(m// (cadr x) (car strongl))))))
-		      ((mtimesp (cadr x))
-		       (do ((l (cdadr x) (cdr l)) (ans 0)) ((null l) ans)
-			 (setq ans (m+ (log-reduce (simplify `((%log) ,(log-reduce (car l))))) ans))))
-		      (t
-		       (let ((red-log (simplify `((%log) ,(log-reduce (cadr x))))))
-			 (if (alike1 red-log x) x (log-reduce red-log))))))))
-	(t x)))
 
 ;; this function is responsible for the following bug:
 ;; limit(x^2 + %i*x, x, inf)  -> inf	(should be infinity)
@@ -2030,7 +1968,7 @@ ignoring dummy variables and array indices."
 		    (t (setq infl (append infl infinityl))))))
 
      oon  (setq y (m+l (append minfl infl)))
-     (cond ((alike1 exp (setq y (sratsimp (log-reduce (hyperex y)))))
+     (cond ((alike1 exp (setq y (sratsimp (hyperex y))))
 	    (cond ((not (infinityp val))
 		   (setq infl (cnv infl val)) ;THIS IS HORRIBLE!!!!
 		   (setq minfl (cnv minfl val))))
@@ -2215,27 +2153,30 @@ ignoring dummy variables and array indices."
 	   ;; together.
 	   (cond ((mtimesp t1)  (setq t1 (cdr t1)))
 		 (t (setq t1 (list t1))))
-	     (cond ((mtimesp t2)  (setq t2 (cdr t2)))
-		   (t (setq t2 (list t2))))
-	     ;; Find the strengths of each term of T1 and T2
-	     (setq t1 (mapcar (function istrength) t1))
-	     (setq t2 (mapcar (function istrength) t2))
-	     ;; Compute the max of the strengths of the terms.
-	     (let ((ans (ismax t1))
-		   (d (ismax t2)))
-	       (cond ((or (null ans) (null d)
-			  (eq (car ans) 'gen) (eq (car d) 'gen))  0.))
-	       (if (eq (car ans) 'var)  (setq ans (add-up-deg t1)))
-	       (if (eq (car d) 'var)  (setq d (add-up-deg t2)))
-	       ;; Can't just just compare dominating terms if there are
-	       ;; indeterm-inates present; e.g. X-X^2*LOG(1+1/X). So
-	       ;; check for this.
-	       (cond ((or (zero-lim t1)
-			  (zero-lim t2))
-		      (cpa-indeterm ans d t1 t2 flag))
-		     ((isgreaterp ans d)  1.)
-		     ((isgreaterp d ans)  -1.)
-		     (t  0)))))))
+	   (cond ((mtimesp t2)  (setq t2 (cdr t2)))
+		 (t (setq t2 (list t2))))
+	   ;; Find the strengths of each term of T1 and T2
+	   (setq t1 (mapcar (function istrength) t1))
+	   (setq t2 (mapcar (function istrength) t2))
+	   ;; Compute the max of the strengths of the terms.
+	   (let ((ans (ismax t1))
+		 (d (ismax t2)))
+	     (cond ((or (null ans) (null d))
+		    ;;(eq (car ans) 'gen) (eq (car d) 'gen))
+		    ;; ismax couldn't find highest term; give up
+		    0.)
+		   (t
+		    (if (eq (car ans) 'var)  (setq ans (add-up-deg t1)))
+		    (if (eq (car d) 'var)  (setq d (add-up-deg t2)))
+		    ;; Can't just just compare dominating terms if there are
+		    ;; indeterm-inates present; e.g. X-X^2*LOG(1+1/X). So
+		    ;; check for this.
+		    (cond ((or (zero-lim t1)
+			       (zero-lim t2))
+			   (cpa-indeterm ans d t1 t2 flag))
+			  ((isgreaterp ans d)  1.)
+			  ((isgreaterp d ans)  -1.)
+			  (t  0)))))))))
 
 (defun cpa-indeterm (ans d t1 t2 flag)
   (cond ((not (eq (car ans) 'var))
@@ -2460,7 +2401,7 @@ ignoring dummy variables and array indices."
 			     (t (list 'num term))))
 	((not (among var term))  (list 'num term))
 	((mplusp term)
-	 (let ((temp (ismax (mapcar #'istrength (cdr term)))))
+	 (let ((temp (ismax-core (mapcar #'istrength (cdr term)))))
 	   (cond ((not (null temp))  temp)
 		 (t `(gen ,term)))))
 	((mtimesp term)
@@ -3050,30 +2991,27 @@ ignoring dummy variables and array indices."
 	 (cond ((eq val '$zeroa) '($plus))
 	       ((eq val '$zerob) '($minus)))))
 
-;; replace noun form of %derivative and indefinite %integrate with gensym.
-;; prevents substitution x -> x+1 for limit('diff(x+2,x), x, 1)
+;; substitute inside noun form of %derivative
+;; for cases such as     limit('diff(x+2,x), x, 1)
+;;                 ->    limit('diff(xx+3), xx, 0)
 ;;
-;; however, this doesn't work for limit('diff(x+2,x)/x, x, inf)
-;; because the rest of the limit code thinks the gensym is const wrt x.
-(defun hide (exp)
+;; maxima-substitute with *atp* skips over %derivative
+;;
+;; substitutes   diff(f(realvar), realvar, n)
+;;           ->  diff(f(var+val), var, n)
+(defun derivative-subst (exp val var realvar)
   (cond ((atom exp) exp)
-	((or (eq '%derivative (caar exp))
-	     (and (eq '%integrate (caar exp))	; indefinite integral
-		  (null (cdddr exp))))
-	 (hidelim exp (caar exp)))
-	(t (cons (car exp) (mapcar 'hide (cdr exp))))))
-
-(defun hidelim (exp func)
-  (setq func (gensym))
-  (putprop func
-	   (hidelima exp)
-	   'limitsub)
-  func)
-
-(defun hidelima (e)
-  (if (among var e)
-      (nounlimit e var val)
-      e))
+	((eq '%derivative (caar exp))
+	 (cons
+	  (car exp)
+	  (cons		;; the function being differentiated
+	   (maxima-substitute (m+ val var) realvar (cadr exp))
+	   (cons	;; the var of differentiation
+	    (maxima-substitute var realvar (caddr exp))
+	    (cdddr exp))))) ;; the order of the derivative
+	(t (cons (car exp)
+		 (mapcar (lambda (x) (derivative-subst x val var realvar))
+			 (cdr exp))))))
 
 ;;;Used by Defint also.
 (defun oscip (e)
@@ -3184,8 +3122,8 @@ ignoring dummy variables and array indices."
 ;; expressions in terms of new variable wsym.  return cons pair of new
 ;; version of exp and the log of the new variable wsym.
 (defun mrv-rewrite (exp omega var wsym)
-  (setq omega (sort omega (lambda (x y) (> (length (mrv x var))
-					   (length (mrv y var))))))
+  (setq omega (stable-sort omega (lambda (x y) (> (length (mrv x var))
+					   (length (mrv y var))))));FIXME consider a total order function with #'sort
   (let* ((g (car (last omega)))
 	 (logg (logred g))
 	 (sig (equal (mrv-sign logg var) 1))
@@ -3331,6 +3269,9 @@ ignoring dummy variables and array indices."
 					 ((equal (mrv-sign c0 var) -1)
 					  (return '$minf))))
 				  ((equal sig 0)
+				   (if (equal exp c0)
+				       ;; example: gruntz(n^n/(n^n+(n-1)^n), n, inf);
+				       (tay-error " infinite recursion in limitinf" exp))
 				   (return (limitinf c0 var)))))))
 
 ;; user-level function equivalent to $limit.

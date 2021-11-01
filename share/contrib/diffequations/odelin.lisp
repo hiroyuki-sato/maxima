@@ -32,7 +32,6 @@
 (eval-when
     #+gcl (load compile eval)
     #-gcl (:load-toplevel :compile-toplevel :execute)
-    ($load "polynomialp")
     ($load "sqfr")
     ($load "spherodialwave")
     ($load "kummer")
@@ -82,7 +81,7 @@
 	  (t (merror "'odelin' doesn't handle DEs with order ~:M" (- n 1))))))
 
 (defun odelin-order-one (cfs x)
-  (fss-cleanup (take '($set) ($exp ($integrate (div (car cfs) (cadr cfs)) x))) x))
+  (fss-cleanup (take '($set) ($exp ($integrate (mul -1 (div (car cfs) (cadr cfs))) x))) x))
 
 (defun expunge-const-factors (e x)
   (let ((acc 1))

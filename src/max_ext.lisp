@@ -1,6 +1,9 @@
 ;;Autoloads for maxima
 (in-package :maxima)
 
+($auto_mexpr '$lratsubst "lrats")
+($auto_mexpr '$fullratsubst "lrats")
+
 ($auto_mexpr '$nusum "nusum")
 ($auto_mexpr '$unsum "nusum")
 ($auto_mexpr '$funcsolve "nusum")
@@ -43,6 +46,10 @@
 ($auto_mexpr '$bc2 "ode2.mac")
 ($auto_mexpr '$desimp "ode2.mac")
 ($auto_mexpr '$linear2 "ode2")
+
+;villate
+($auto_mexpr '$similaritytransform "eigen.mac")
+($auto_mexpr '$simtran "eigen.mac")
 
 (dolist (v       
 	  '($arite
@@ -281,9 +288,7 @@
        
        $addmatrices            ; mring.lisp
        $require_ring
-       
-       $nonnegintegerp         ; polynomialp.lisp
-       $polynomialp ))
+       ))
   (setf (get f 'autoload) "linearalgebra"))
 
 (dolist (mexpr       
@@ -388,3 +393,8 @@
     $common_lisp    
     $to_cl))
   (setf (get f 'autoload) "tocl"))
+
+(dolist (f
+  '($hstep
+    $pwilt))
+  (setf (get f 'autoload) "pwilt"))

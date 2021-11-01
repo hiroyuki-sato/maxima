@@ -1412,7 +1412,7 @@
          (pts '())
          pltcmd grouping x y)
 
-    (when (not (subsetp (rest ($listofvars ineq)) (list x-var y-var)))
+    (when (not (subsetp (rest ($listofvars ineq)) (list x-var y-var) :test #'like))
        (merror "draw2d (region): non defined variable"))
 
     ; build 2d arrays: x, y and boolean
@@ -1735,7 +1735,7 @@
         (pts '())
         (grouping '())
         pltcmd ncols vertices)
-    (when (not (subsetp (rest ($listofvars expr)) (list par1 par2 par3)))
+    (when (not (subsetp (rest ($listofvars expr)) (list par1 par2 par3) :test #'like))
        (merror "draw3d (implicit): non defined variable"))
     (check-enhanced3d-model "implicit" '(0 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -1828,14 +1828,14 @@
          ($numer t)
          (count -1)
          ncols result)
-    (when (not (subsetp (rest ($listofvars fcn)) (list par1 par2)))
+    (when (not (subsetp (rest ($listofvars fcn)) (list par1 par2) :test #'like))
             (let ((items (rest ($listofvars fcn))) (item 'nil))
 	      ;; Search for the item in sublist that is the undefined variable
 	      (while items
 		(if
 		    (
 		     not
-		     (subsetp (list (car items)) (list par1 par2))
+		     (subsetp (list (car items)) (list par1 par2) :test #'like)
 		     )
 		    (setq item (car items))
 		  )
@@ -2178,7 +2178,7 @@
          result f1 f2 xx yy)
     (when (< tmax tmin)
        (merror "draw2d (parametric): illegal range"))
-    (when (not (subsetp (append (rest ($listofvars xfun)) (rest ($listofvars yfun))) (list par)))
+    (when (not (subsetp (append (rest ($listofvars xfun)) (rest ($listofvars yfun))) (list par) :test #'like))
        (merror "draw2d (parametric): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (setq f1 (coerce-float-fun xfun `((mlist), par)))
@@ -2329,7 +2329,7 @@
          (eps (/ (- tmax tmin) (- nticks 1)))
          (count -1)
          ncols result f1 f2 f3 xx yy zz)
-     (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1)))
+    (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1) :test #'like))
         (merror "draw3d (parametric): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "parametric" '(0 1 3 99))
@@ -2414,7 +2414,7 @@
          (nv (+ vgrid 1))
          (count -1)
          ncols result f1 f2 f3 xx yy zz uu vv)
-     (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1 par2)))
+    (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun) ($listofvars zfun))) (list par1 par2) :test #'like))
         (merror "draw3d (parametric_surface): non defined variable"))
     (setq *plot-realpart* (get-option '$draw_realpart))
     (check-enhanced3d-model "parametric_surface" '(0 2 3 99))
@@ -2527,7 +2527,7 @@
        (merror "draw3d (tube): illegal range"))
     (when (not (subsetp (rest ($append ($listofvars xfun) ($listofvars yfun)
                                        ($listofvars zfun) ($listofvars rad)))
-                        (list par1)))
+                        (list par1) :test #'like))
        (merror "draw3d (tube): non defined variable"))
     (check-enhanced3d-model "tube" '(0 1 3 99))
     (when (= *draw-enhanced3d-type* 99)
@@ -3243,17 +3243,21 @@
                   '($multipage_pdf $multipage_pdfcairo $multipage_eps $multipage_eps_color)))
 
     (setf
-       gfn (plot-temp-file (get-option '$gnuplot_file_name))
-       dfn (plot-temp-file (get-option '$data_file_name)))
+       gfn (plot-temp-file (get-option '$gnuplot_file_name) t)
+       dfn (plot-temp-file (get-option '$data_file_name) t))
 
     ;; we now create two files: maxout.gnuplot and data.gnuplot
     (setf cmdstorage
-          (open gfn
+          (open
+	   #+sbcl (sb-ext:native-namestring gfn)
+	   #-sbcl gfn
                 :direction :output :if-exists :supersede))
     (if (eql cmdstorage nil)
       (merror "draw: Cannot create file '~a'. Probably maxima_tempdir doesn't point to a writable directory." gfn))
     (setf datastorage
-          (open dfn
+          (open
+	   #+sbcl (sb-ext:native-namestring dfn)
+	   #-sbcl dfn
                 :direction :output :if-exists :supersede))
     (if (eql datastorage nil)
       (merror "draw: Cannot create file '~a'. Probably maxima_tempdir doesn't point to a writable directory." dfn))
@@ -3365,7 +3369,10 @@
                            (round (first (get-option '$dimensions)))
                            (round (second (get-option '$dimensions)))))
 
-        (otherwise ; default screen output
+        (otherwise
+          ;; If we arrive here, (get-option '$terminal) returned something unrecognized;
+          ;; at present (commit ccd8074, 2020-12-07) the following are accepted by
+          ;; UPDATE-TERMINAL, but not handled here: $obj $ply $pnm $screen $stl $tiff $vrml
           (cond
             ((string= *autoconf-windows* "true")  ; running on windows operating system
               (format cmdstorage "set terminal windows enhanced ~a ~a size ~a, ~a~%"
@@ -3373,16 +3380,18 @@
                           (write-font-type)
                           (round (first (get-option '$dimensions)))
                           (round (second (get-option '$dimensions)))))
-            (t  ; other platforms
-              (format cmdstorage "if(GPVAL_VERSION >= 5.0){set terminal x11 dashed enhanced ~a ~a size ~a, ~a replotonresize} else {set terminal x11 dashed enhanced ~a ~a size ~a, ~a}~%"
-                           *draw-terminal-number*
-                           (write-font-type)
-                           (round (first (get-option '$dimensions)))
-                           (round (second (get-option '$dimensions)))
-			   *draw-terminal-number*
-                           (write-font-type)
-                           (round (first (get-option '$dimensions)))
-                           (round (second (get-option '$dimensions))))))) ))
+            (t
+              ;; Non-Windows platform. There isn't any terminal specification which
+              ;; works across the board; in the absence of a terminal specification
+              ;; which is known to work, we must refrain altogether.
+              ;;
+              ;; Treat $SCREEN as a default option. Otherwise, complain.
+
+              (unless (eq (get-option '$terminal) '$screen)
+                (mtell "draw: warning: I don't know about terminal '~m'; I'll try to restore the default.~%" (get-option '$terminal))
+                (mtell "draw: try this: set_draw_defaults(terminal = <something>);~%"))
+
+              (format cmdstorage "set terminal pop~%"))))))
 
     ; compute some parameters for multiplot
     (when (and (not isanimatedgif) (not ismultipage))
@@ -3401,6 +3410,11 @@
     ;; errors. As plot and draw handle the imaginary part without gnuplot's help
     ;; this isn't needed here and is turned off as it often surprises users.
     (format cmdstorage "~%set zero 0.0")
+
+    ; We use whitespace as a separator, so override any datafile separator
+    ; the user has set.  The user could have set the separator to a comma
+    ; for reading CSV files, for example.
+    (format cmdstorage "~%set datafile separator whitespace")
 
     ; write descriptions of 2d and 3d scenes
     (let ((i -1)

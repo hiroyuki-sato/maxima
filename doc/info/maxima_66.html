@@ -2,16 +2,16 @@
 <html>
 <!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>Maxima 5.44.0 Manual: Gnuplot Options</title>
+<title>Maxima 5.45.1 Manual: Gnuplot Options</title>
 
-<meta name="description" content="Maxima 5.44.0 Manual: Gnuplot Options">
-<meta name="keywords" content="Maxima 5.44.0 Manual: Gnuplot Options">
+<meta name="description" content="Maxima 5.45.1 Manual: Gnuplot Options">
+<meta name="keywords" content="Maxima 5.45.1 Manual: Gnuplot Options">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link href="maxima_0.html#Top" rel="start" title="Top">
-<link href="maxima_363.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_368.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
 <link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="maxima_61.html#Plotting" rel="up" title="Plotting">
 <link href="maxima_67.html#Gnuplot_005fpipes-Format-Functions" rel="next" title="Gnuplot_pipes Format Functions">
@@ -77,7 +77,7 @@ img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-r
 <a name="Gnuplot-Options"></a>
 <div class="header">
 <p>
-Next: <a href="maxima_67.html#Gnuplot_005fpipes-Format-Functions" accesskey="n" rel="next">Gnuplot_pipes Format Functions</a>, Previous: <a href="maxima_65.html#Plotting-Options" accesskey="p" rel="previous">Plotting Options</a>, Up: <a href="maxima_61.html#Plotting" accesskey="u" rel="up">Plotting</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="maxima_67.html#Gnuplot_005fpipes-Format-Functions" accesskey="n" rel="next">Gnuplot_pipes Format Functions</a>, Previous: <a href="maxima_65.html#Plotting-Options" accesskey="p" rel="previous">Plotting Options</a>, Up: <a href="maxima_61.html#Plotting" accesskey="u" rel="up">Plotting</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 <a name="Gnuplot-Options-1"></a>
 <h3 class="section">12.5 Gnuplot Options</h3>
@@ -134,7 +134,7 @@ output to <var>filename</var>.  Otherwise, it is saved as
 name.
 </p></li></ul>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fout_005ffile"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fout_005ffile"></a><dl>
@@ -156,7 +156,45 @@ by Gnuplot. To create PNG, PDF, Postscript or SVG, it is easier to use
 options <code><a href="maxima_65.html#png_005ffile">png_file</a></code>, <code><a href="maxima_65.html#pdf_005ffile">pdf_file</a></code>, <code><a href="maxima_65.html#ps_005ffile">ps_file</a></code>,
 or <code><a href="maxima_65.html#svg_005ffile">svg_file</a></code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
+</div></p></dd></dl>
+
+<a name="gnuplot_005fscript_005ffile"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fscript_005ffile"></a><dl>
+<dt><a name="index-gnuplot_005fscript_005ffile"></a>Plot option: <strong>gnuplot_script_file</strong> <em>[gnuplot_script_file, <var>file_name_or_function</var>]</em></dt>
+<dd>
+<p>Set the name of the script file created by <code>plot2d</code> or <code>plot3d</code>
+when the <code><a href="maxima_65.html#plot_005fformat">plot_format</a></code> is <code>gnuplot</code>. The value
+<var>file_name_or_function</var> can be a string or a Maxima function of one
+variable that returns a string.
+</p>
+<p>In this example, the script file name is set to &ldquo;sin.gnuplot&rdquo;.
+</p>
+<div class="example">
+<pre class="example">(%i1) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, &quot;sin.gnuplot&quot;]);
+
+(%o1) [&quot;/tmp/sin.gnuplot&quot;]
+</pre></div>
+
+<p>In this example, <code>gnuplot_maxout_prt(<var>file</var>)</code> is a function
+that takes the default file name, <var>file</var>. It constructs a full file
+name for the data file by interpolating a random 8-digit integer with a
+pad of zeros into the default file name. The directory is determined by
+<code><a href="maxima_149.html#maxima_005ftempdir">maxima_tempdir</a></code> (it is &ldquo;/tmp&rdquo; in this example).
+</p>
+<div class="example">
+<pre class="example">(%i1) gnuplot_maxout_prt(file) := block([beg,end],
+        [beg,end] : split(file,&quot;.&quot;),
+        printf(false,&quot;~a_~8,'0d.~a&quot;,beg,random(10^8-1),end)) $
+
+(%i2) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, gnuplot_maxout_prt]);
+
+(%o2) [&quot;/tmp/maxout68715_09606909.gnuplot&quot;]
+</pre></div>
+
+<p>By default, the script would have been saved in a file named
+<code>maxoutXXXXX.gnuplot</code> (XXXXX=68715 in this example).
+</p>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fpm3d"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fpm3d"></a><dl>
@@ -165,7 +203,7 @@ or <code><a href="maxima_65.html#svg_005ffile">svg_file</a></code>.
 <p>With a value of <code>false</code>, it can be used to disable the use of PM3D
 mode, which is enabled by default.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fpreamble"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fpreamble"></a><dl>
@@ -175,7 +213,7 @@ mode, which is enabled by default.
 Gnuplot. Any valid gnuplot commands may be used. Multiple commands should
 be separated with a semi-colon. See also <code><a href="#gnuplot_005fpostamble">gnuplot_postamble</a></code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fpostamble"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fpostamble"></a><dl>
@@ -186,7 +224,7 @@ Gnuplot and right before the plot command is sent. Any valid gnuplot
 commands may be used. Multiple commands should be separated with a
 semi-colon. See also <code><a href="#gnuplot_005fpreamble">gnuplot_preamble</a></code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fdefault_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fdefault_005fterm_005fcommand"></a><dl>
@@ -196,7 +234,7 @@ semi-colon. See also <code><a href="#gnuplot_005fpreamble">gnuplot_preamble</a><
 <p>The gnuplot command to set the terminal type for the default
 terminal. It this option is not set, the command used will be: <code>&quot;set term wxt size 640,480 font \&quot;,12\&quot;; set term pop&quot;</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fdumb_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fdumb_005fterm_005fcommand"></a><dl>
@@ -207,7 +245,7 @@ terminal. It this option is not set, the command used will be: <code>&quot;set t
 this option is not set, the command used will be: <code>&quot;set term dumb
 79 22&quot;</code>, which makes the text output 79 characters by 22 characters.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fpdf_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fpdf_005fterm_005fcommand"></a><dl>
@@ -216,7 +254,7 @@ this option is not set, the command used will be: <code>&quot;set term dumb
 <p>The gnuplot command to set the terminal type for the PDF
 terminal.  If this option is not set, the command used will be: <code>&quot;set term pdfcairo color solid lw 3 size 17.2 cm, 12.9 cm font \&quot;,18\&quot;&quot;</code>. See the gnuplot documentation for more information.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fpng_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fpng_005fterm_005fcommand"></a><dl>
@@ -227,7 +265,7 @@ this option is not set, the command used will be:
 <code>&quot;set term pngcairo font \&quot;,12\&quot;&quot;</code>. See the gnuplot documentation
 for more information.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fps_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fps_005fterm_005fcommand"></a><dl>
@@ -237,7 +275,7 @@ for more information.
 terminal.  If this option is not set, the command used will be: <code>&quot;set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \&quot;,24\&quot;&quot;</code>. See the gnuplot documentation for <code>set term postscript</code> for
 more information.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fstrings"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fstrings"></a><dl>
@@ -251,7 +289,7 @@ formatting characters and their meaning, see the documentation for enhanced
 in Gnuplot. The default value for this option is <code>false</code>, which will
 not treat any characters as formatting characters.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fsvg_005fterm_005fcommand"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fsvg_005fterm_005fcommand"></a><dl>
@@ -262,7 +300,7 @@ terminal.  If this option is not set, the command used will be:
 <code>&quot;set term svg font \&quot;,14\&quot;&quot;</code>. See the gnuplot documentation for
 more information.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fcurve_005ftitles"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fcurve_005ftitles"></a><dl>
@@ -271,7 +309,7 @@ more information.
 <p>This is an obsolete option that has been replaced by <code><a href="maxima_65.html#legend">legend</a></code> described
 above.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="gnuplot_005fcurve_005fstyles"></a><a name="Item_003a-Plotting_002fdefvr_002fgnuplot_005fcurve_005fstyles"></a><dl>
@@ -279,13 +317,13 @@ above.
 <dd>
 <p>This is an obsolete option that has been replaced by <code><a href="maxima_65.html#style">style</a></code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Plotting">Plotting</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Plotting">Plotting</a>
 </div></p></dd></dl>
 
 <a name="Item_003a-Plotting_002fnode_002fGnuplot_005fpipes-Format-Functions"></a><hr>
 <div class="header">
 <p>
-Next: <a href="maxima_67.html#Gnuplot_005fpipes-Format-Functions" accesskey="n" rel="next">Gnuplot_pipes Format Functions</a>, Previous: <a href="maxima_65.html#Plotting-Options" accesskey="p" rel="previous">Plotting Options</a>, Up: <a href="maxima_61.html#Plotting" accesskey="u" rel="up">Plotting</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="maxima_67.html#Gnuplot_005fpipes-Format-Functions" accesskey="n" rel="next">Gnuplot_pipes Format Functions</a>, Previous: <a href="maxima_65.html#Plotting-Options" accesskey="p" rel="previous">Plotting Options</a>, Up: <a href="maxima_61.html#Plotting" accesskey="u" rel="up">Plotting</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 
 
