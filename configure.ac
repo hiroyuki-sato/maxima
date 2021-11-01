@@ -8,7 +8,7 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.44.0])
+AC_INIT([maxima], [5.45.1])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability tar-ustar])
 
@@ -963,7 +963,7 @@ flag.)
    fi
    count=`echo "${result}" | grep -c "MAXIMA_CMUCL_TEST_SUCCESS"`
    if test ! "${count}" = "1" ; then
-      AC_MSG_ERROR(an error occured while checking cmucl runtime)
+      AC_MSG_ERROR(an error occurred while checking cmucl runtime)
    fi
 fi
 
@@ -1255,13 +1255,8 @@ AC_CONFIG_FILES([src/startmaxima_abcl.sh], chmod +x src/startmaxima_abcl.sh)
 AC_CONFIG_FILES([xmaxima-local], chmod +x xmaxima-local)
 AC_CONFIG_FILES([tests/test.sh], chmod +x tests/test.sh)
 AC_CONFIG_FILES([doc/info/build_html.sh], chmod +x doc/info/build_html.sh)
-
-# Convert maxima.bat to DOS line ending
-# sed-3.02 in old mingw distribution doesn't support -i or \r
-# dos2unix may not be present, but perl is required elsewhere
-# perl -i interferes with binmode so need to use a temporary file
-AC_CONFIG_FILES([src/maxima.bat], (perl -ne 'BEGIN{binmode(STDOUT,":crlf")};' -e 'print' < src/maxima.bat > src/maxima.bat.tmp; mv src/maxima.bat.tmp src/maxima.bat))
 AC_CONFIG_FILES([src/maxima], chmod +x src/maxima)
+AC_CONFIG_FILES([src/maxima.bat])
 
 AC_OUTPUT(Makefile maxima.spec maxima.iss \
 admin/Makefile src/Makefile src/rmaxima src/autoconf-variables.lisp \
@@ -1311,7 +1306,7 @@ fi
 echo
 echo "Summary:"
 if test x"${clisp}" = xtrue ; then
-	echo "Compiling an maxima image that uses \"${CLISP_NAME}\"",
+	echo "Compiling a maxima image using \"${CLISP_NAME}\"",
 	echo "clisp runtime is \"${CLISP_RUNTIME_PATH}\""
 	if test x"${clisp_exec}" = xtrue ; then
 		echo "clisp executable image enabled for maxima."
@@ -1320,7 +1315,7 @@ if test x"${clisp}" = xtrue ; then
 	fi
 fi
 if test x"${cmucl}" = xtrue ; then
-	echo "Compiling an maxima image that uses \"${CMUCL_NAME}\""
+	echo "Compiling a maxima image using \"${CMUCL_NAME}\""
 	echo "cmucl runtime is \"${CMUCL_RUNTIME_PATH}\""
 	if test x"${cmucl_exec}" = xtrue; then
 		echo "CMUCL executable image enabled for maxima."
@@ -1329,11 +1324,11 @@ if test x"${cmucl}" = xtrue ; then
 	fi
 fi
 if test x"${scl}" = xtrue ; then
-	echo "SCL enabled, that uses \"${SCL_NAME}\""
+	echo "SCL enabled, using \"${SCL_NAME}\""
 	echo "SCL runtime is \"${SCL_RUNTIME_PATH}\""
 fi
 if test x"${sbcl}" = xtrue ; then
-   	echo "Compiling an maxima image that uses \"${SBCL_NAME}\""
+   	echo "Compiling a maxima image using \"${SBCL_NAME}\""
 	if test x"${sbcl_exec}" = xtrue ; then
 	   	echo "sbcl executable image enabled for maxima."
 	else
@@ -1341,7 +1336,7 @@ if test x"${sbcl}" = xtrue ; then
 	fi
 fi
 if test x"${gcl}" = xtrue ; then
-	echo "Compiling an maxima image that uses \"${GCL_NAME}\""
+	echo "Compiling a maxima image using \"${GCL_NAME}\""
 	if test x"${gcl_alt_link}" = xtrue ; then
 		echo "    GCL alternative linking method enabled."
 	fi
@@ -1350,7 +1345,7 @@ if test x"${acl}" = xtrue ; then
 	echo "ACL enabled. Executable name: \"${ACL_NAME}\""
 fi
 if test x"${openmcl}" = xtrue ; then
-	echo "Compiling an maxima image that uses \"${OPENMCL_NAME}\""
+	echo "Compiling a maxima image using \"${OPENMCL_NAME}\""
 	if test x"${openmcl_exec}" = xtrue ; then
 		echo "OpenMCL executable image enabled for maxima."
 	else
@@ -1358,7 +1353,7 @@ if test x"${openmcl}" = xtrue ; then
 	fi
 fi
 if test x"${ccl64}" = xtrue ; then
-	echo "Compiling an maxima image that uses \"${CCL64_NAME}\""
+	echo "Compiling a maxima image using \"${CCL64_NAME}\""
 	if test x"${ccl64_exec}" = xtrue ; then
 	   	echo "CCL64 executable image enabled for maxima."
 	else

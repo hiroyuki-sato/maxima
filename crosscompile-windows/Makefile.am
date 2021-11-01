@@ -1,7 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 EXTRA_DIST =\
  CMakeLists.txt\
- FileAssociation.nsh\
- README.txt TODO.txt\
+ README.txt TODO.txt LICENSE_APPENDIX.txt\
  maxima-icon.bmp maxima-installerimage.bmp\
  wine-clisp.sh.tmpl wine-lisp.sh.tmpl wine-sbcl.sh.tmpl\
  sbcl.sh licenses.html\
@@ -9,4 +9,4 @@ EXTRA_DIST =\
  xmaxima.bat downloads/.keep\
  gnuplot/CMakeLists.txt sbcl/CMakeLists.txt tcltk/CMakeLists.txt abcl/CMakeLists.txt\
  vtk/CMakeLists.txt wine/CMakeLists.txt wxmaxima/CMakeLists.txt wxwidgets/CMakeLists.txt\
- wxwidgets/wxwidgets-install-translations-for-wxmaxima.sh.tmpl maxima_longnames.c
+ maxima_longnames.c

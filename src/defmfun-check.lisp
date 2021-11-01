@@ -321,7 +321,7 @@
 	   (let* ((required-len (length required-args))
 		  (optional-len (length optional-args))
 		  (impl-name (intern (concatenate 'string
-						  (string name)
+						  (subseq (string name) 1)
 						  "-IMPL")))
 		  (impl-doc (format nil "Implementation for ~S" name))
 		  (nargs (gensym "NARGS-"))
@@ -377,6 +377,11 @@
 			(declare (ignorable %%pretty-fname))
 			,@forms)))
                   ,(add-props)
+		  ; We don't put this putprop in add-props because
+		  ; add-props is for both user and internal functions
+		  ; while the impl-name property is only for user
+		  ; functions.
+		  (putprop ',name ',impl-name 'impl-name)
 		  (defun ,name (&rest ,args)
 		    ,@doc-string
 		    (let ((,nargs (length ,args)))

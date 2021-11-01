@@ -689,7 +689,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 
 (defun extreme-float-values (x)
   ;; BLECHH, I HATE ENUMERATING CASES. IS THERE A BETTER WAY ??
-  (case (type-of x)
+  (typecase x ;gcl returns an atomic list type with type-of
     (short-float (values most-negative-short-float most-positive-short-float))
     (single-float (values most-negative-single-float most-positive-single-float))
     (double-float (values most-negative-double-float most-positive-double-float))
@@ -707,7 +707,9 @@ One extra decimal digit in actual representation for rounding purposes.")
   (if (float-inf-p x)
     (merror (intl:gettext "bfloat: attempted conversion of floating-point infinity.~%")))
   (unless $float2bf
-    (mtell (intl:gettext "bfloat: converting float ~S to bigfloat.~%") x))
+    (let ((p (float-precision x)))
+      (if (< fpprec p)
+        (mtell (intl:gettext "bfloat: converting float ~S to bigfloat.~%") x))))
 
   ;; Need to check for zero because different lisps return different
   ;; values for integer-decode-float of a 0.  In particular CMUCL

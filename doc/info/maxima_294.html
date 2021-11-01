@@ -2,20 +2,20 @@
 <html>
 <!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>Maxima 5.44.0 Manual: Functions and Variables for opsubst</title>
+<title>Maxima 5.45.1 Manual: File operations</title>
 
-<meta name="description" content="Maxima 5.44.0 Manual: Functions and Variables for opsubst">
-<meta name="keywords" content="Maxima 5.44.0 Manual: Functions and Variables for opsubst">
+<meta name="description" content="Maxima 5.45.1 Manual: File operations">
+<meta name="keywords" content="Maxima 5.45.1 Manual: File operations">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link href="maxima_0.html#Top" rel="start" title="Top">
-<link href="maxima_363.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_368.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
 <link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="maxima_293.html#opsubst_002dpkg" rel="up" title="opsubst-pkg">
-<link href="maxima_295.html#orthopoly_002dpkg" rel="next" title="orthopoly-pkg">
-<link href="maxima_293.html#opsubst_002dpkg" rel="previous" title="opsubst-pkg">
+<link href="maxima_291.html#operatingsystem_002dpkg" rel="up" title="operatingsystem-pkg">
+<link href="maxima_295.html#Environment-operations" rel="next" title="Environment operations">
+<link href="maxima_293.html#Directory-operations" rel="previous" title="Directory operations">
 <style type="text/css">
 <!--
 a.summary-letter {text-decoration: none}
@@ -74,93 +74,35 @@ img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-r
 </head>
 
 <body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
-<a name="Functions-and-Variables-for-opsubst"></a>
+<a name="File-operations"></a>
 <div class="header">
 <p>
-Previous: <a href="maxima_293.html#opsubst_002dpkg" accesskey="p" rel="previous">opsubst-pkg</a>, Up: <a href="maxima_293.html#opsubst_002dpkg" accesskey="u" rel="up">opsubst-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="maxima_295.html#Environment-operations" accesskey="n" rel="next">Environment operations</a>, Previous: <a href="maxima_293.html#Directory-operations" accesskey="p" rel="previous">Directory operations</a>, Up: <a href="maxima_291.html#operatingsystem_002dpkg" accesskey="u" rel="up">operatingsystem-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<a name="Functions-and-Variables-for-opsubst-1"></a>
-<h3 class="section">77.1 Functions and Variables for opsubst</h3>
-
-<a name="opsubst_005ffunc"></a><a name="Item_003a-opsubst_002fdeffn_002fopsubst"></a><dl>
-<dt><a name="index-opsubst"></a>Function: <strong>opsubst</strong> <em><br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>opsubst</tt> (<var>f</var>,<var>g</var>,<var>e</var>) <br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>opsubst</tt> (<var>g</var>=<var>f</var>,<var>e</var>) <br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>opsubst</tt> ([<var>g1</var>=<var>f1</var>,<var>g2</var>=<var>f2</var>,..., <var>gn</var>=<var>fn</var>],<var>e</var>)</em></dt>
-<dd><p>The function <code>opsubst</code> is similar to the function <code>subst</code>, except that
-<code>opsubst</code> only makes substitutions for the operators in an expression. In general, 
-When <var>f</var> is an operator in the expression <var>e</var>, substitute <var>g</var> 
-for <var>f</var> in the expression <var>e</var>.
-</p>
-<p>To determine the operator, <code>opsubst</code> sets <code>inflag</code> to true. This means 
-<code>opsubst</code> substitutes for the internal, not the displayed, operator
-in the expression.
-</p>
-<p>Examples:
-</p><div class="example">
-<pre class="example">(%i1) load (&quot;opsubst&quot;)$
-
-(%i2) opsubst(f,g,g(g(x)));
-(%o2)                     f(f(x))
-(%i3) opsubst(f,g,g(g));
-(%o3)                       f(g)
-(%i4) opsubst(f,g[x],g[x](z));
-(%o4)                       f(z)
-(%i5) opsubst(g[x],f, f(z));
-(%o5)                      g (z)
-                            x
-(%i6) opsubst(tan, sin, sin(sin));
-(%o6)                     tan(sin)
-(%i7) opsubst([f=g,g=h],f(x));
-(%o7)                       h(x)
-</pre></div>
-
-<p>Internally, Maxima does not use the unary negation,
-division, or the subtraction operators; thus:
-</p><div class="example">
-<pre class="example">(%i8) opsubst(&quot;+&quot;,&quot;-&quot;,a-b);
-(%o8)                     a - b
-(%i9) opsubst(&quot;f&quot;,&quot;-&quot;,-a);
-(%o9)                      - a
-(%i10) opsubst(&quot;^^&quot;,&quot;/&quot;,a/b);
-                             a
-(%o10)                       -
-                             b
-</pre></div>
-
-<p>The internal representation of -a*b is *(-1,a,b); thus
-</p><div class="example">
-<pre class="example">(%i11) opsubst(&quot;[&quot;,&quot;*&quot;, -a*b);
-(%o11)                  [- 1, a, b]
-</pre></div>
-
-<p>When either operator isn&rsquo;t a Maxima symbol, generally some other function
-will signal an error:
-</p><div class="example">
-<pre class="example">(%i12) opsubst(a+b,f, f(x));
-
-Improper name or value in functional position:
-b + a
- -- an error.  Quitting.  To debug this try debugmode(true);
-</pre></div>
-
-<p>However, subscripted operators are allowed:
-</p><div class="example">
-<pre class="example">(%i13) opsubst(g[5],f, f(x));
-(%o13)                     g (x)
-                            5
-</pre></div>
-
-<p>To use this function write first <code>load(&quot;opsubst&quot;)</code>.
-</p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Expressions">Expressions</a>
-&middot;<a href="maxima_364.html#Category_003a-Share-packages">Share packages</a>
-&middot;<a href="maxima_364.html#Category_003a-Package-opsubst">Package opsubst</a>
-</div></p>
-</dd></dl>
+<a name="File-operations-1"></a>
+<h3 class="section">77.3 File operations</h3>
 
 
-<a name="Item_003a-include_002dmaxima_002fnode_002forthopoly_002dpkg"></a><hr>
+<a name="copy_005ffile"></a><a name="Item_003a-operatingsystem_002fdeffn_002fcopy_005ffile"></a><dl>
+<dt><a name="index-copy_005ffile"></a>Function: <strong>copy_file</strong> <em>(<var>file1</var>, <var>file2</var>)</em></dt>
+<dd><p>copies file <var>file1</var> to <var>file2</var>
+</p></dd></dl>
+
+<a name="rename_005ffile"></a><a name="Item_003a-operatingsystem_002fdeffn_002frename_005ffile"></a><dl>
+<dt><a name="index-rename_005ffile"></a>Function: <strong>rename_file</strong> <em>(<var>file1</var>, <var>file2</var>)</em></dt>
+<dd><p>renames file <var>file1</var> to <var>file2</var>
+</p></dd></dl>
+
+<a name="delete_005ffile"></a><a name="Item_003a-operatingsystem_002fdeffn_002fdelete_005ffile"></a><dl>
+<dt><a name="index-delete_005ffile"></a>Function: <strong>delete_file</strong> <em>(<var>file1</var>)</em></dt>
+<dd><p>deletes file <var>file1</var>
+</p></dd></dl>
+
+
+<a name="Item_003a-operatingsystem_002fnode_002fEnvironment-operations"></a><hr>
 <div class="header">
 <p>
-Previous: <a href="maxima_293.html#opsubst_002dpkg" accesskey="p" rel="previous">opsubst-pkg</a>, Up: <a href="maxima_293.html#opsubst_002dpkg" accesskey="u" rel="up">opsubst-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="maxima_295.html#Environment-operations" accesskey="n" rel="next">Environment operations</a>, Previous: <a href="maxima_293.html#Directory-operations" accesskey="p" rel="previous">Directory operations</a>, Up: <a href="maxima_291.html#operatingsystem_002dpkg" accesskey="u" rel="up">operatingsystem-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

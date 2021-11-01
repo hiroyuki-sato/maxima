@@ -1307,7 +1307,8 @@ The mode @code{any_check} is like @code{any}, but @code{any_check} enables the
 @group
 (%i5) baz_quux: sqrt(2);
 Cannot assign to `baz_quux'.
-#0: lambda([y],if y # 'baz_quux then error("Cannot assign to `baz_quux'."))(y=sqrt(2))
+#0: lambda([y],if y # 'baz_quux then
+            error("Cannot assign to `baz_quux'."))(y=sqrt(2))
  -- an error. To debug this try: debugmode(true);
 @end group
 @group
@@ -2861,8 +2862,9 @@ translation of the file are only inserted into the UNLISP file.
 Default value: @code{true}
 
 Tells the Maxima-to-Lisp translator to assume that the functions 
-@code{acos}, @code{asin}, @code{asec}, @code{acsc}, @code{log}
-and @code{sqrt} can return complex results.
+@code{acos}, @code{asin}, @code{asec}, @code{acsc}, @code{acosh},
+@code{asech}, @code{atanh}, @code{acoth}, @code{log} and @code{sqrt}
+can return complex results.
 
 When it is @code{true} then @code{acos(x)} is of mode @code{any}
 even if @code{x} is of mode @code{float} (as set by @code{mode_declare}).
@@ -2929,16 +2931,14 @@ non-terminating optimization properties.
 @defvr {System variable} tr_state_vars
 Default value:
 @example
-[translate_fast_arrays, tr_warn_undeclared, tr_warn_meval,
-tr_warn_fexpr, tr_warn_mode, tr_warn_undefined_variable,
-tr_function_call_default, tr_bound_function_applyp,
-tr_array_as_ref, tr_numer, tr_float_can_branch_complex,
-define_variable]
+[translate_fast_arrays, tr_function_call_default, tr_bound_function_applyp,
+tr_array_as_ref, tr_numer, tr_float_can_branch_complex, define_variable]
 @end example
 
 The list of the switches that affect the form of the
 translated output.
 @c DOES THE GENERAL USER REALLY CARE ABOUT DEBUGGING THE TRANSLATOR ???
+@c I doubt it.
 This information is useful to system people when
 trying to debug the translator.  By comparing the translated product
 to what should have been produced for a given state, it is possible to
@@ -3051,9 +3051,8 @@ undefined global variables are seen.
 @fname{compile_file} (@var{filename}, @var{compiled_filename}) @
 @fname{compile_file} (@var{filename}, @var{compiled_filename}, @var{lisp_filename})
 
-Translates the Maxima file @var{filename} into Lisp, executes the Lisp compiler,
-and, if the translation and compilation succeed, loads the compiled code into
-Maxima.
+Translates the Maxima file @var{filename} into Lisp, and executes the Lisp compiler.
+The compiled code is not loaded into Maxima.
 
 @code{compile_file} returns a list of the names of four files: the original
 Maxima file, the Lisp translation, notes on translation, and the compiled code.

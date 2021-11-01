@@ -5,7 +5,7 @@
 @end menu
 
 @c -----------------------------------------------------------------------------
-@node Introduction to Polynomials, Functions and Variables for Polynomials, Polynomials, Polynomials
+@node Introduction to Polynomials, Functions and Variables for Polynomials
 @section Introduction to Polynomials
 @c -----------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ symbol @code{/T/} follows the line label of such expressions.
 @c end concepts Polynomials
 
 @c -----------------------------------------------------------------------------
-@node Functions and Variables for Polynomials,  , Introduction to Polynomials, Polynomials
+@node Functions and Variables for Polynomials,  , Introduction to Polynomials
 @section Functions and Variables for Polynomials
 @c -----------------------------------------------------------------------------
 
@@ -141,6 +141,7 @@ Examples:
 @c REWORD THIS ITEM -- COULD BE MORE CONCISE
 
 @c -----------------------------------------------------------------------------
+@anchor{bothcoef}
 @deffn {Function} bothcoef (@var{expr}, @var{x})
 
 Returns a list whose first member is the coefficient of @var{x} in @var{expr}
@@ -348,6 +349,7 @@ function.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{content}
 @deffn {Function} content (@var{p_1}, @var{x_1}, @dots{}, @var{x_n})
 
 Returns a list whose first element is
@@ -811,6 +813,7 @@ integer factors of rational expressions.
 @end defvr
 
 @c -----------------------------------------------------------------------------
+@anchor{factorout}
 @deffn {Function} factorout (@var{expr}, @var{x_1}, @var{x_2}, @dots{})
 
 Rearranges the sum @var{expr} into a sum of terms of the form 
@@ -845,6 +848,7 @@ Example:
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{factorsum}
 @deffn {Function} factorsum (@var{expr})
 
 Tries to group terms in factors of @var{expr} which are sums into groups of
@@ -877,6 +881,7 @@ Example:
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{fasttimes}
 @deffn {Function} fasttimes (@var{p_1}, @var{p_2})
 
 Returns the product of the polynomials @var{p_1} and @var{p_2} by using a
@@ -893,6 +898,7 @@ and @code{n_2} is the degree of @code{p_2}.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{fullratsimp}
 @deffn {Function} fullratsimp (@var{expr})
 
 @code{fullratsimp} repeatedly
@@ -947,29 +953,24 @@ Example:
 @closecatbox
 @end deffn
 
-@c SPELL OUT WHAT fullratsubst DOES INSTEAD OF ALLUDING TO ratsubst AND lratsubst
-@c THIS ITEM NEEDS MORE WORK
-
 @c -----------------------------------------------------------------------------
-@deffn {Function} fullratsubst (@var{a}, @var{b}, @var{c})
+@anchor{fullratsubst}
+@deffn {Function} fullratsubst (@var{new}, @var{old}, @var{expr})
+@fname{fullratsubst} (@code{@var{old} = @var{new}}, @var{expr}) @
+@fname{fullratsubst} (@code{[ @var{old_1} = @var{new_1}, @dots{}, @var{old_n} = @var{new_n} ]}, @var{expr})
 
-is the same as @code{ratsubst} except that it calls
-itself recursively on its result until that result stops changing.
-This function is useful when the replacement expression and the
-replaced expression have one or more variables in common.
+@code{fullratsubst} applies @mref{lratsubst} repeatedly until @var{expr}
+stops changing (or @mref{lrats_max_iter} is reached). This function is
+useful when the replacement expression and the replaced expression have
+one or more variables in common.
 
-@code{fullratsubst} will also accept its arguments in the format of
-@code{lratsubst}.  That is, the first argument may be a single substitution
-equation or a list of such equations, while the second argument is the
-expression being processed.
-
-@code{load ("lrats")} loads @code{fullratsubst} and @code{lratsubst}.
+@code{fullratsubst} accepts its arguments in the format of
+@mref{ratsubst} or @mref{lratsubst}.
 
 Examples:
 
 @c EXPRESSIONS ADAPTED FROM demo ("lrats")
-@c CAN PROBABLY CUT OUT THE lratsubst STUFF (lratsubst HAS ITS OWN DESCRIPTION)
-@c load ("lrats")$
+@c ===beg===
 @c subst ([a = b, c = d], a + c);
 @c lratsubst ([a^2 = b, c^2 = d], (a + e)*c*(a + c));
 @c lratsubst (a^2 = b, a^3);
@@ -977,9 +978,7 @@ Examples:
 @c fullratsubst (b*a, a^2, a^3);
 @c fullratsubst ([a^2 = b, b^2 = c, c^2 = a], a^3*b*c);
 @c fullratsubst (a^2 = b*a, a^3);
-@example
-(%i1) load ("lrats")$
-@end example
+@c ===end===
 @itemize @bullet
 @item
 @code{subst} can carry out multiple substitutions.
@@ -1027,19 +1026,38 @@ equation as first argument.
 @end example
 @itemize @bullet
 @item
-@c REWORD THIS SENTENCE
-@code{fullratsubst} may cause an indefinite recursion.
+@code{fullratsubst} catches potential infinite recursions. @ref{lrats_max_iter}.
 @end itemize
 @example
-(%i9) errcatch (fullratsubst (b*a^2, a^2, a^3));
-
-*** - Lisp stack overflow. RESET
+(%i9) fullratsubst (b*a^2, a^2, a^3), lrats_max_iter=15;
+Warning: fullratsubst1(substexpr,forexpr,expr): reached maximum iterations of 15 . Increase `lrats_max_iter' to increase this limit.
+                                     3  15
+(%o7)                               a  b
 @end example
+
+See also @mref{lrats_max_iter} and @mref{fullratsubstflag}.
 
 @opencatbox
 @category{Rational expressions}
 @closecatbox
 @end deffn
+
+@c FULLRATSUBSTFLAG was undocumented until 2020-01
+
+@c -----------------------------------------------------------------------------
+@anchor{fullratsubstflag}
+@defvr {Option variable} fullratsubstflag
+Default value: @code{false}
+
+An option variable that is set to @code{true} in @mref{fullratsubst}.
+
+@opencatbox
+@category{Polynomials}
+@category{Rational expressions}
+@closecatbox
+@end defvr
+
+
 
 @c GCD IS A VARIABLE AND A FUNCTION
 @c THIS ITEM NEEDS A LOT OF WORK
@@ -1188,6 +1206,7 @@ not the  @code{y+1} we would expect in @code{k[y, x]}.
 @c CHOOSE ONE CHARACTERIZATION OF "GAUSSIAN INTEGERS" AND USE IT WHERE GAUSSIAN INTEGERS ARE REFERENCED
 
 @c -----------------------------------------------------------------------------
+@anchor{gcfactor}
 @deffn {Function} gcfactor (@var{n})
 
 Factors the Gaussian integer @var{n} over the Gaussian integers, i.e., numbers
@@ -1204,6 +1223,7 @@ rational integers (i.e.,  ordinary integers).  Factors are normalized by making
 @c CHOOSE ONE CHARACTERIZATION OF "GAUSSIAN INTEGERS" AND USE IT WHERE GAUSSIAN INTEGERS ARE REFERENCED
 
 @c -----------------------------------------------------------------------------
+@anchor{gfactor}
 @deffn {Function} gfactor (@var{expr})
 
 Factors the polynomial @var{expr} over the Gaussian integers
@@ -1230,6 +1250,7 @@ Example:
 @c THIS ITEM NEEDS MORE WORK
 
 @c -----------------------------------------------------------------------------
+@anchor{gfactorsum}
 @deffn {Function} gfactorsum (@var{expr})
 
 is similar to @code{factorsum} but applies @code{gfactor} instead
@@ -1241,6 +1262,7 @@ of @code{factor}.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{hipow}
 @deffn {Function} hipow (@var{expr}, @var{x})
 
 Returns the highest explicit exponent of @var{x} in @var{expr}.
@@ -1384,37 +1406,40 @@ Returns the lowest exponent of @var{x} which explicitly appears in
 @c THIS ITEM NEEDS MORE WORK
 
 @c -----------------------------------------------------------------------------
-@deffn {Function} lratsubst (@var{L}, @var{expr})
+@anchor{lratsubst}
+@deffn {Function} lratsubst (@var{new}, @var{old}, @var{expr}) @
+@fname{lratsubst} (@code{@var{old} = @var{new}}, @var{expr}) @
+@fname{lratsubst} (@code{[ @var{old_1} = @var{new_1}, @dots{}, @var{old_n} = @var{new_n} ]}, @var{expr})
 
-is analogous to @code{subst (@var{L}, @var{expr})}
-except that it uses @code{ratsubst} instead of @code{subst}.
+@code{lratsubst} is analogous to @mref{subst} except that it uses
+@code{ratsubst} to perform substitutions.
 
-The first argument of
-@code{lratsubst} is an equation or a list of equations identical in
-format to that accepted by @code{subst}.  The
-substitutions are made in the order given by the list of equations,
-that is, from left to right.
-
-@code{load ("lrats")} loads @code{fullratsubst} and @code{lratsubst}.
+The first argument of @code{lratsubst} is an equation, a list of
+equations or a list of unit length whose first element is a list of
+equations (that is, the first argument is identical in format to that
+accepted by @code{subst}). The substitutions are made in the order given
+by the list of equations, that is, from left to right.
 
 Examples:
 
 @c EXPRESSIONS ADAPTED FROM demo ("lrats")
 @c THIS STUFF CAN PROBABLY STAND REVISION -- EXAMPLES DON'T SEEM VERY ENLIGHTENING
-@c load ("lrats")$
-@c subst ([a = b, c = d], a + c);
+
+@c ===beg===
+@c lratsubst ([a = b, c = d], a + c);
 @c lratsubst ([a^2 = b, c^2 = d], (a + e)*c*(a + c));
 @c lratsubst (a^2 = b, a^3);
-@example
-(%i1) load ("lrats")$
-@end example
+@c lratsubst ([[a^2=b*a, b=c]], a^3);
+@c errcatch(lratsubst ([[a^2=b*a, b=c],[a=b]], a^3));
+@c ===end===
+
 @itemize @bullet
 @item
 @code{subst} can carry out multiple substitutions.
 @code{lratsubst} is analogous to @code{subst}.
 @end itemize
 @example
-(%i2) subst ([a = b, c = d], a + c);
+(%i2) lratsubst ([a = b, c = d], a + c);
 (%o2)                         d + b
 (%i3) lratsubst ([a^2 = b, c^2 = d], (a + e)*c*(a + c));
 (%o3)                (d + a c) e + a d + b c
@@ -1428,12 +1453,49 @@ equation may be given as first argument.
 (%i4) lratsubst (a^2 = b, a^3);
 (%o4)                          a b
 @end example
+@itemize @bullet
+@item
+A nested list of substitutions can be used--but it must contain only one list.
+@end itemize
+@example
+(%i5) lratsubst ([[a^2=b*a, b=c]], a^3);
+
+                                      2
+(%o5)                               a  c
+(%i6) lratsubst ([[a^2=b*a, b=c],[a=b]], a^3);
+
+
+                                 2
+lratsubst: improper argument: [[a  = a b, b = c], [a = b]]
+#0: lratsubst(listofeqns=[[a^2 = a*b,b = c],[a = b]],expr=a^3)
+ -- an error. To debug this try: debugmode(true);
+
+@end example
+
+See also @mref{fullratsubst}.
 
 @opencatbox
 @category{Polynomials}
 @category{Rational expressions}
 @closecatbox
 @end deffn
+
+
+@c -----------------------------------------------------------------------------
+@anchor{lrats_max_iter}
+@defvr {Option variable} lrats_max_iter
+Default value: @code{100000}
+
+The upper limit on the number of iterations that @mref{fullratsubst} and
+@mref{lratsubst} may perform. It must be set to a positive integer. See
+the example for @mref{fullratsubst}.
+
+@opencatbox
+@category{Polynomials}
+@category{Rational expressions}
+@closecatbox
+@end defvr
+
 
 @c -----------------------------------------------------------------------------
 @anchor{modulus}
@@ -1676,6 +1738,73 @@ See @mrefdot{modulus}
 
 @c ISN'T THERE AN EQUIVALENT FUNCTION SOMEWHERE ??
 @c NEEDS WORK (IF KEPT)
+
+@c -----------------------------------------------------------------------------
+@anchor{polynomialp}
+@deffn  {Function} polynomialp @
+@fname{polynomialp} (@var{p}, @var{L}, @var{coeffp}, @var{exponp}) @
+@fname{polynomialp} (@var{p}, @var{L}, @var{coeffp}) @
+@fname{polynomialp} (@var{p}, @var{L})
+
+Return @code{true} if @var{p} is a polynomial in the variables in the list
+@var{L}.  The predicate @var{coeffp} must evaluate to @code{true} for each
+coefficient, and the predicate @var{exponp} must evaluate to @code{true} for all
+exponents of the variables in @var{L}.  If you want to use a non-default value
+for @var{exponp}, you must supply @var{coeffp} with a value even if you want
+to use the default for @var{coeffp}.
+
+@c WORK THE FOLLOWING INTO THE PRECEDING
+The command @code{polynomialp (@var{p}, @var{L}, @var{coeffp})} is equivalent to
+@code{polynomialp (@var{p}, @var{L}, @var{coeffp}, 'nonnegintegerp)} and the
+command @code{polynomialp (@var{p}, @var{L})} is equivalent to
+@code{polynomialp (@var{p}, L@var{,} 'constantp, 'nonnegintegerp)}.
+
+The polynomial needn't be expanded:
+
+@c ===beg===
+@c polynomialp ((x + 1)*(x + 2), [x]);
+@c polynomialp ((x + 1)*(x + 2)^a, [x]);
+@c ===end===
+@example
+(%i1) polynomialp ((x + 1)*(x + 2), [x]);
+(%o1)                         true
+(%i2) polynomialp ((x + 1)*(x + 2)^a, [x]);
+(%o2)                         false
+@end example
+
+An example using non-default values for coeffp and exponp:
+
+@c ===beg===
+@c polynomialp ((x + 1)*(x + 2)^(3/2), [x], numberp, numberp);
+@c polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x], numberp, 
+@c                                                        numberp);
+@c ===end===
+@example
+(%i1) polynomialp ((x + 1)*(x + 2)^(3/2), [x], numberp, numberp);
+(%o1)                         true
+(%i2) polynomialp ((x^(1/2) + 1)*(x + 2)^(3/2), [x], numberp,
+                                                        numberp);
+(%o2)                         true
+@end example
+
+Polynomials with two variables:
+
+@c ===beg===
+@c polynomialp (x^2 + 5*x*y + y^2, [x]);
+@c polynomialp (x^2 + 5*x*y + y^2, [x, y]);
+@c ===end===
+@example
+(%i1) polynomialp (x^2 + 5*x*y + y^2, [x]);
+(%o1)                         false
+(%i2) polynomialp (x^2 + 5*x*y + y^2, [x, y]);
+(%o2)                         true
+@end example
+
+@opencatbox
+@category{Predicate functions}
+@category{Polynomials}
+@closecatbox
+@end deffn
 
 @c -----------------------------------------------------------------------------
 @anchor{quotient}
@@ -1929,6 +2058,7 @@ Examples:
 @end defvr
 
 @c -----------------------------------------------------------------------------
+@anchor{ratdiff}
 @deffn {Function} ratdiff (@var{expr}, @var{x})
 
 Differentiates the rational expression @var{expr} with respect to @var{x}.
@@ -2117,6 +2247,7 @@ both be used at the same time.
 @end defvr
 
 @c -----------------------------------------------------------------------------
+@anchor{ratnumer}
 @deffn {Function} ratnumer (@var{expr})
 
 Returns the numerator of @var{expr},
@@ -2141,6 +2272,7 @@ are not considered ratios by @code{num}.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{ratp}
 @deffn {Function} ratp (@var{expr})
 
 Returns @code{true} if @var{expr} is a canonical rational expression (CRE) or
@@ -2286,8 +2418,8 @@ When @code{radsubstflag} is @code{true},
 @code{ratsubst} makes substitutions for radicals in expressions
 which don't explicitly contain them.
 
-@code{ratsubst} ignores the value @code{true} of the option variable 
-@code{keepfloat}.
+@code{ratsubst} ignores the value @code{true} of the option variables
+@code{keepfloat}, @code{float}, and @code{numer}.
 
 Examples:
 

@@ -49,7 +49,16 @@
 ;; These operators aren't killed by the function kill-operator.
 (defvar *mopl* nil)
 
-(mapc #'(lambda (x) (putprop (car x) (cadr x) 'op) (putopr (cadr x) (car x)) (push (cadr x) *mopl*))
+;; This business about operator properties is terrible --
+;; this stuff should be in src/nparse.lisp, and it should be split up
+;; for each operator. Extra points for making it declarative.
+
+(mapc #'(lambda (x)
+          (putprop (car x) (cadr x) 'op)
+          (putprop (intern (concatenate 'string "%" (symbol-name (car x)))) (cadr x) 'op) ;; nounify not yet available
+          (putopr (cadr x) (car x))
+          (push (cadr x) *mopl*))
+
       '((mplus "+") (mminus "-") (mtimes "*") (mexpt "**") (mexpt "^")
 	(mnctimes ".") (rat "/") (mquotient "/") (mncexpt "^^")
 	(mequal "=") (mgreaterp ">") (mlessp "<") (mleqp "<=") (mgeqp ">=")
@@ -859,16 +868,16 @@
   (let ((substp t))
     (mpart (cdr l) t nil t '$substinpart)))
 
-(defun part1 (arglist substflag dispflag inflag) ; called only by TRANSLATE
+(defun part1 (arglist substflag dispflag inflag fn) ; called only by TRANSLATE
   (let ((substp t))
-    (mpart arglist substflag dispflag inflag '$substpart)))
+    (mpart arglist substflag dispflag inflag fn)))
 
 (defun mpart (arglist substflag dispflag inflag fn)
   (prog (substitem arg arg1 exp exp1 exp* sevlist count prevcount n specp
 	 lastelem lastcount)
      (setq specp (or substflag dispflag))
      (if substflag (setq substitem (car arglist) arglist (cdr arglist)))
-     (if (null arglist) (wna-err '$part))
+     (if (null arglist) (wna-err fn))
      (setq exp (if substflag (meval (car arglist)) (car arglist)))
      (when (null (setq arglist (cdr arglist)))
        (setq $piece exp)
