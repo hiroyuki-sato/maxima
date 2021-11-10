@@ -230,11 +230,9 @@
 (defun load-info-hashtables (dir-name deffn-defvr-pairs section-pairs
 				      ;; In Debian, lsp index file must be in different directory from info files
 				      &aux (dir-name
-					    (or (car (member-if (lambda (x)
-								  (let* ((p (merge-pathnames (make-pathname :name "maxima" :type "info") x nil))
-									 (s (open p :if-does-not-exist nil)))
-								    (when s (close s) t)))
-								(list dir-name (maxima::combine-path maxima::*maxima-infodir* ""))))
+					    (or (when (equal (pathname (concatenate 'string maxima::*maxima-index-dir* "/"))
+							     dir-name)
+						  (maxima::combine-path maxima::*maxima-infodir* ""))
 						dir-name)))
   (if (and (zerop (length section-pairs)) 
            (zerop (length deffn-defvr-pairs)))
