@@ -58,7 +58,7 @@
 ;;     A folder is created to store all the formula images. They
 ;;     are referenced from the HTML document by using <IMG> tag.
 
-(require 'cl);FIXME cl-lib, xemacs21 compatibility
+(require 'cl-lib)
 (require 'imaxima)
 
 (if (featurep 'xemacs)
