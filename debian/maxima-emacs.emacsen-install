@@ -8,11 +8,12 @@
 FLAVOR=$1
 PACKAGE=maxima
 
-if [ ${FLAVOR} = emacs ]; then exit 0; fi
+# if [ ${FLAVOR} = emacs ]; then exit 0; fi
 
 echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
 
-SITEFLAG="-no-site-file"
+SITEFLAG=""
+if [ ${FLAVOR} = emacs ]; then SITEFLAG="-no-site-file"; fi
 FLAGS="${SITEFLAG} -q -batch -l path.el -f batch-byte-compile"
 
 ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
@@ -30,10 +31,12 @@ cd ${ELDIR}
 FILES=`echo *.el`
 #cp ${FILES} ${ELCDIR}
 cd ${ELCDIR}
-ln -sf ${ELDIR}/*.el ${ELDIR}/*.lisp .
+if [ ${FLAVOR} != emacs ]; then 
+    ln -sf ${ELDIR}/*.el ${ELDIR}/*.lisp .
+fi
 
 cat << EOF > path.el
-(setq load-path (cons "." load-path) byte-compile-warnings nil)
+(setq load-path (cons "." load-path) byte-compile-warnings nil image-map (when (boundp 'image-map) image-map))
 EOF
 rm -f *.elc
 ${FLAVOR} ${FLAGS} ${FILES}
