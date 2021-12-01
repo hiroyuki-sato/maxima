@@ -69,7 +69,7 @@
 	"rtestode_zp"
         "rtest3"
 	;; ECL 16.1.2 still fails in #104
-	((mlist simp) "rtest8"
+	((mlist simp) "rtest8"  #+(and m68k linux gnu) 101 #+(and m68k linux gnu) 104
 	 #+ecl ((mlist simp) 104))
         ((mlist simp) "rtest12"
 	 ((mlist simp) 76 78))
