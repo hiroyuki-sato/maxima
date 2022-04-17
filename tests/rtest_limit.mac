@@ -173,6 +173,10 @@ limit(abs(sin(x))/x, x, inf);
 limit(sinh(exp(%i*x)),x,inf);
 ind;
 
+/* #3866 limit(log(sinh(x)),x,0,'plus) --> infinity */
+limit(log(sinh(x)),x,0,'plus);
+minf;
+
 /* [ 1528607 ] limit(a^x,x,inf) can't solve for a : abs(a) < 1 */
 limit((-2/3)^x,x,inf);
 0;
@@ -306,6 +310,10 @@ limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), minus);
 limit(atan2(-(x^2-2), x^3-2*x), x, sqrt(2), plus);
 -atan(1/sqrt(2));
 
+/* #3864 limit of atan2 expression */
+limit(atan2(0,1-3^x),x,0);
+und;
+
 limit(floor(x), x, 5, minus);
 4;
 
@@ -382,6 +390,9 @@ minf;
 limit((sqrt(x)-2)*log(1-sqrt(x)/2),x,4,minus);
 0;
 
+/* Bug 3831 */
+limit(log((sqrt(x^2+1))/2),x,1);
+-log(2)/2;
 
 /* limit of incomplete gamma */
 /* function simplim%gamma_incomplete in gamma.lisp */
@@ -437,6 +448,16 @@ limit( ((1/%pi)*(atan(n/%pi) + %pi/2))^n, n, inf);
 /* limit(x*expintegral_ei(x),x,0) --> Error - ID: 2801821 */
 limit(x*expintegral_ei(x), x, 0);
 0;
+
+/* #3865 crash from taking limit of factorial(x) + 1 */
+limit(factorial(x) + 1, x, 0);
+2;
+
+limit(1/(1-factorial(x)), x, 0, minus);
+minf;
+
+limit(1/(1-factorial(x)), x, 0, plus);
+inf;
 
 /* Limit of the factorial function - 4 problems - ID: 2841504 */
 limit(factorial(x),x,-2,plus);
@@ -533,7 +554,7 @@ limit(diff(exp(n * x), x,n)/n,n,inf);
 'limit(diff(exp(n * x), x,n)/n,n,inf);
 
 limit(integrate(f(t),t,0,x),x,0,plus);
-'limit(integrate(f(t),t,0,x),x,0,plus);
+0$
 
 limit(integrate(t,t,0,x)/x,x,inf);
 inf;
@@ -717,10 +738,10 @@ limit((a*exp(a*x)*sin(b*x))/(b^2+a^2)-(b*exp(a*x)*cos(b*x))/(b^2+a^2), x, 0, plu
 /* Bug #2898: limit of continuous --> und */
 
 limit(log(x)^2+2*log(x)+q/2+1,x,1);
-(q+2)/2$
+q/2+1$
 
 limit(log(x)^2+2*%gamma*log(x)-%pi^2/6+%gamma^2,x,1);
--((%pi^2-6*%gamma^2)/6)$
+%gamma^2-%pi^2/6$
 
 /* #2972 Wrong limits involving logs */
 limit( 27^(log(n)/log(3))/n^3, n, inf);
@@ -871,3 +892,28 @@ block ([actual, expected, ctxt:newcontext()],
   killcontext (ctxt),
   if ev (equal (actual, expected), logexpand='super) then true else [actual, expected]);
 true;
+
+/* SF bug #3826: "limit returns temp variable expression" */
+
+(kill (q, a, x),
+ ctxt: newcontext (),
+ assume (q > 0),
+ limit(x^q/(a*x^q- 1),x,inf));
+'limit(x^q/(a*x^q- 1),x,inf);
+
+tlimit(x^q/(a*x^q- 1),x,inf);
+'limit(x^q/(a*x^q- 1),x,inf);
+
+(assume (a > 0),
+ declare (q, integer),
+ limit(x^q/(a*x^q- 1),x,inf));
+1/a;
+
+(remove (q, integer),
+ declare (q, noninteger),
+ limit(x^q/(a*x^q- 1),x,inf));
+1/a;
+
+(remove (q, noninteger),
+ killcontext (ctxt));
+done;

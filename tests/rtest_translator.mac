@@ -1833,6 +1833,193 @@ block ([translate : false],
 (kill (foo, bar, l1, l2), 0);
 0;
 
+/* A bug in MARRAYREF caused things like translated array references
+ * to yield MQAPPLY expressions with an incorrect header.
+ */
+
+block ([translate : false],
+  foo () := 'baz () [1],
+  bar () := 'baz () [1, 2, 3],
+  l1 : [foo (), bar ()],
+  translate_or_lose (foo, bar),
+  l2 : [foo (), bar ()],
+  [is (l1 = l2), l2]);
+[true, ['baz () [1], 'baz () [1, 2, 3]]];
+
+(kill (foo, bar, l1, l2), 0);
+0;
+
+/* A bug in MARRAYREF caused bogus indexing into hash tables and fast
+ * arrays.  This affected things like translated array references.
+ */
+
+block ([translate : false,
+        use_fast_arrays : true],
+
+  foo () := block ([a],
+              a[false] : 'wtf,
+              a[1] : 2,
+              a[1]),
+
+  /* This would correctly yield 2 */
+  l1 : foo (),
+
+  translate_or_lose (foo),
+
+  /* This used to incorrectly yield wtf */
+  l2 : foo (),
+
+  [is (l1 = l2), l2]);
+[true, 2];
+
+(kill (foo, l1, l2), 0);
+0;
+
+/* A bug in MARRAYREF caused things like translated array references
+ * to yield expressions with an incorrect header.
+ */
+
+block ([translate : false],
+  foo () := block ([a],
+              local (a),
+              array (a, complete, 5),
+              a[3]),
+
+  /* This would correctly yield a[3] */
+  l1 : foo(),
+
+  translate_or_lose (foo),
+
+  /* This would incorrectly yield a(3) */
+  l2 : foo(),
+
+  [is (l1 = l2), l2]);
+[true, 'a[3]];
+
+(kill (foo, l1, l2), 0);
+0;
+
+/* When translate_fast_arrays:true, a lisp error would occur at runtime
+ * during an attempted MQAPPLY array assignment
+ */
+
+block ([translate : false],
+  foo () := block ([a],
+              local (a, b),
+              a : make_array ('fixnum, 5),
+              b () := a,
+              b () [3] : 17,
+              b () [3]),
+
+  /* This would correctly yield 17 */
+  l1 : foo(),
+
+  block ([translate_fast_arrays : false],
+    translate_or_lose (foo)),
+
+  /* This would correctly yield 17 */
+  l2 : foo(),
+
+  block ([translate_fast_arrays : true],
+    translate_or_lose (foo)),
+
+  /* This would cause a lisp error */
+  l3 : foo(),
+
+  [is (l1 = l2), is (l2 = l3), l3]);
+[true, true, 17];
+
+(kill (foo, l1, l2, l3), 0);
+0;
+
+/* The string "**" no longer translates to the string "^".
+ * This test compares the interpreted and translated results.
+ */
+
+block ([translate : false],
+  foo () := ["^", "^" (2, 3), apply ("^", [2, 3]),
+             "**", "**" (2, 3), apply ("**", [2, 3])],
+  l1 : foo (),
+  translate_or_lose (foo),
+  l2 : foo (),
+  [l2, is (l1 = l2)]);
+[["^", 8, 8, "**", 8, 8], true];
+
+(kill (foo, l1, l2), 0);
+0;
+
+/* Attempting to translate some atoms like lisp arrays would
+ * cause lisp errors during translation.
+ */
+
+(a : make_array (fixnum, 1),
+ a[0] : 13,
+ define (foo (), a),
+ translate_or_lose (foo),
+ listarray (foo ()));
+[13];
+
+(kill (foo, a), 0);
+0;
+
+/* Simple tests for catch and throw */
+
+block ([translate : false, l1, l2],
+  local (foo, bar, baz),
+
+  foo (p) := if p then throw (13) else 2,
+  bar () := catch (1, foo (false), 3),
+  baz () := catch (1, foo (true), 3),
+
+  l1 : [bar (), baz ()],
+
+  translate_or_lose (foo, bar, baz),
+
+  l2 : [bar (), baz ()],
+
+  [l2, is (l1 = l2)]);
+[[3, 13], true];
+
+/* Translating a define_variable form with translate (but not
+ * translate_file or compfile) used to invoke undefined behavior.
+ * This would cause a lisp error during translation under some
+ * (but not all) lisp implementations.
+ */
+
+block ([translate : false],
+  local (foo),
+  foo () := (define_variable (x, 1, fixnum), x),
+  translate_or_lose (foo),
+  foo ());
+1;
+
+(kill (foo, x), 0);
+0;
+
+/* If local was used on a matchdeclared pattern variable, and this
+ * was all translated with something besides translate_file (e.g.,
+ * translate, compfile, etc.), then the MATCHDECLARE property would
+ * not be on the pattern variable.
+ */
+
+block ([translate : false, l1, l2],
+  local (foo),
+
+  foo () := (local (x), matchdeclare (x, true), let (a * x, x), letsimp (a * q)),
+
+  /* This would yield q */
+  l1 : foo (),
+
+  translate_or_lose (foo),
+
+  /* This used to yield a*q */
+  l2 : foo (),
+
+  [l2, is (l1 = l2)]);
+[q, true];
+
+(kill (foo), 0);
+0;
 
 
 

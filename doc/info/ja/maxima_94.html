@@ -1,0 +1,747 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Functions and Variables for Integration</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for Integration">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for Integration">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_92.html#Integration" rel="up" title="Integration">
+<link href="maxima_95.html#Introduction-to-QUADPACK" rel="next" title="Introduction to QUADPACK">
+<link href="maxima_93.html#Introduction-to-Integration" rel="previous" title="Introduction to Integration">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Functions-and-Variables-for-Integration"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_95.html#Introduction-to-QUADPACK" accesskey="n" rel="next">Introduction to QUADPACK</a>, Previous: <a href="maxima_93.html#Introduction-to-Integration" accesskey="p" rel="previous">Introduction to Integration</a>, Up: <a href="maxima_92.html#Integration" accesskey="u" rel="up">Integration</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Functions-and-Variables-for-Integration-1"></a>
+<h3 class="section">19.2 Functions and Variables for Integration</h3>
+
+
+<a name="changevar"></a><a name="Item_003a-Integration_002fdeffn_002fchangevar"></a><dl>
+<dt><a name="index-changevar"></a>関数: <strong>changevar</strong> <em>(<var>expr</var>, <var>f(x,y)</var>, <var>y</var>, <var>x</var>)</em></dt>
+<dd>
+<p><var>x</var>に関する積分を含む<var>expr</var>の中に現れるすべての積分に関して、
+<code><var>f(x,y)</var> = 0</code>で与えられる変数変換を生成します。
+新しい変数は<var>y</var>です。
+</p>
+<div class="example">
+<pre class="example">(%i1) assume(a &gt; 0)$
+</pre><pre class="example">(%i2) 'integrate (%e**sqrt(a*y), y, 0, 4);
+                      4
+                     /
+                     [    sqrt(a) sqrt(y)
+(%o2)                I  %e                dy
+                     ]
+                     /
+                      0
+</pre><pre class="example">(%i3) changevar (%, y-z^2/a, z, y);
+                      0
+                     /
+                     [                abs(z)
+                   2 I            z %e       dz
+                     ]
+                     /
+                      - 2 sqrt(a)
+(%o3)            - ----------------------------
+                                a
+</pre></div>
+
+<p>上の<code>'integrate</code>のインスタンスのように、名詞形を含む式は
+<code>nouns</code>フラグありの<code>ev</code>によって評価されるかもしれません。
+例えば、上の<code>changevar</code>が返す式は<code>ev (%o3, nouns)</code>で評価することができます。
+</p>
+<p><code>changevar</code>は、
+和や積のインデックスに関する変更にも使えます。
+しかしながら、
+変更が和や積の中でなされる時、
+この変更はシフトすなわち<code>i = j+ ...</code>
+でなければならず、高階関数ではなことをはっきり理解しなければいけません。
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i4) sum (a[i]*x^(i-2), i, 0, inf);
+                         inf
+                         ====
+                         \         i - 2
+(%o4)                     &gt;    a  x
+                         /      i
+                         ====
+                         i = 0
+</pre><pre class="example">(%i5) changevar (%, i-2-n, n, i);
+                        inf
+                        ====
+                        \               n
+(%o5)                    &gt;      a      x
+                        /        n + 2
+                        ====
+                        n = - 2
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+
+<a name="Item_003a-Integration_002fdeffn_002fdblint"></a><dl>
+<dt><a name="index-dblint"></a>関数: <strong>dblint</strong> <em>(<var>f</var>, <var>r</var>, <var>s</var>, <var>a</var>, <var>b</var>)</em></dt>
+<dd>
+<p>トップレベルMaximaで書かれ、翻訳され機械語にコンパイルされた二重積分ルーチン。
+このパッケージをアクセスするには<code>load (&quot;dblint&quot;)</code>を使ってください。
+以下を計算するため、xとy方向に関して
+シンプソンの規則方法を使います。
+</p>
+<div class="example">
+<pre class="example">/b /s(x)
+|  |
+|  |    f(x,y) dy dx
+|  |
+/a /r(x)
+</pre></div>
+
+<p>関数<var>f</var>は、２つの変数の翻訳されコンパイルされた関数でなければいけなく、
+<var>r</var>と<var>s</var>はそれぞれ、翻訳されコンパイルされた変数でなければいけません。
+一方で、<var>a</var>と<var>b</var>は浮動小数点数でなければいけません。
+ルーチンは、
+xとyの区間の分割の数を決める２つのグローバル変数を持ちます:
+<code>dblint_x</code>と<code>dblint_y</code>,
+両方とも初期は10で、他の整数値（x方向に計算される<code>2*dblint_x+1</code>点があり、
+y方向に計算される<code>2*dblint_y+1</code>点があります）に独立に変えることができます。
+ルーチンは、X軸を更に分割します。
+Xのそれぞれの値に関して、最初、
+<code><var>r</var>(x)</code>と<code><var>s</var>(x)</code>を計算します;
+そして<code><var>r</var>(x)</code>と<code><var>s</var>(x)</code>の間でY軸が更に分割され、
+シンプソン規則を使ってY軸に沿っての積分が実行されます;
+そして、
+シンプソン規則を使って
+Y積分である関数値を用いてX軸に沿っての積分が実行されます;
+この手続きは、様々な理由のため数値的に不安定かもしれませんが、
+かなり速いです:
+非常に振動的な関数や特異点（領域内の極や分岐点）を持つ関数にこれを使うことは避けてください。
+Y積分は、<code><var>r</var>(x)</code>と<code><var>s</var>(x)</code>がどこくらい離れているかに依存します。
+だから、もし距離<code><var>s</var>(x) - <var>r</var>(x)</code>がXに関して急速に変化するなら、
+様々なY積分での異なるステップサイズでの切り詰めから起こる本質的なエラーがあるかもしれません。
+領域の範囲を改善するために、計算時間という犠牲を払って、<code>dblint_x</code>と<code>dblint_y</code>を増やすことができます。
+関数値は保存されないので、もし関数が非常に時間がかかるものなら、
+もし何か変えたら再計算を待たなければいけません（すいません）。
+関数<var>f</var>, <var>r</var>, <var>s</var>は、 <code>dblint</code>コールの前に、翻訳されるかコンパイルされるかどちらかが要求されます。
+これは、多くの場合、インタープリタコードに対して桁違いの速度改善がなされるでしょう！
+</p>
+<p><code>demo (dblint)</code>は、
+例の問題に適用された<code>dblint</code>のデモンストレーションを実行します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+<a name="defint"></a><a name="Item_003a-Integration_002fdeffn_002fdefint"></a><dl>
+<dt><a name="index-defint"></a>関数: <strong>defint</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</em></dt>
+<dd>
+<p>定積分を計算しようとします。
+<code>integrate</code>は、
+積分の範囲が指定されている時、
+すなわち、<code>integrate</code>が
+<code>integrate (<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</code>としてコールされた時、
+<code>defint</code>をコールします。
+</p>
+<p>このように、ユーザーの観点からは、<code>integrate</code>をコールすることは十分です。
+</p>
+<p><code>defint</code>は、シンボリック式、計算された積分または積分の名詞形、
+を返します。
+定積分の数値近似に関しては、<code>quad_qag</code>と関連関数を参照してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+<a name="erfflag"></a><a name="Item_003a-Integration_002fdefvr_002ferfflag"></a><dl>
+<dt><a name="index-erfflag"></a>オプション変数: <strong>erfflag</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>erfflag</code>が<code>false</code>の時、
+<code>risch</code>が
+もしまず第一に被積分になにもないなら、
+答えの中に<code>erf</code>関数を導入することを妨げます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+
+<a name="ilt"></a><a name="Item_003a-Integration_002fdeffn_002filt"></a><dl>
+<dt><a name="index-ilt"></a>関数: <strong>ilt</strong> <em>(<var>expr</var>, <var>s</var>, <var>t</var>)</em></dt>
+<dd>
+<p><var>expr</var>の<var>s</var>とパラメータ<var>t</var>に関する逆ラプラス変換を計算します。
+<var>expr</var>は、
+分子は線形２次因子だけを持つ多項式の比でなければいけません。
+<code>solve</code>または<code>linsolve</code>と合わせて
+関数<code>laplace</code>や<code>ilt</code>を使うことによって
+ユーザーは１つの微分または畳み込み積分方程式やそれらの組を解くことができます。
+</p>
+<div class="example">
+<pre class="example">(%i1) 'integrate (sinh(a*x)*f(t-x), x, 0, t) + b*f(t) = t**2;
+              t
+             /
+             [                                    2
+(%o1)        I  f(t - x) sinh(a x) dx + b f(t) = t
+             ]
+             /
+              0
+</pre><pre class="example">(%i2) laplace (%, t, s);
+                               a laplace(f(t), t, s)   2
+(%o2)  b laplace(f(t), t, s) + --------------------- = --
+                                       2    2           3
+                                      s  - a           s
+</pre><pre class="example">(%i3) linsolve ([%], ['laplace(f(t), t, s)]);
+                                        2      2
+                                     2 s  - 2 a
+(%o3)     [laplace(f(t), t, s) = --------------------]
+                                    5         2     3
+                                 b s  + (a - a  b) s
+</pre><pre class="example">(%i4) ilt (rhs (first (%)), s, t);
+Is  a b (a b - 1)  positive, negative, or zero?
+
+pos;
+               sqrt(a b (a b - 1)) t
+        2 cosh(---------------------)       2
+                         b               a t
+(%o4) - ----------------------------- + -------
+              3  2      2               a b - 1
+             a  b  - 2 a  b + a
+
+                                                       2
+                                             + ------------------
+                                                3  2      2
+                                               a  b  - 2 a  b + a
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Laplace-transform">Laplace transform</a>
+&middot;</div></dd></dl>
+
+<a name="intanalysis"></a><a name="Item_003a-Integration_002fdefvr_002fintanalysis"></a><dl>
+<dt><a name="index-intanalysis"></a>オプション変数: <strong>intanalysis</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>true</code>の時、定積分は、積分区間内の被積分関数の極を見つけようとします。
+もしあれば、積分は主値積分として適切に評価されます。
+もしintanalysisが<code>false</code>なら、
+このチェックは実行されず、積分は極がないことを仮定して実行されます。
+</p>
+<p><code>ldefint</code>も参照してください。
+</p>
+<p>例:
+</p>
+<p><code>intanalysis</code>が<code>false</code>に設定されている時
+Maximaは以下の積分を解くことができます:
+</p>
+<div class="example">
+<pre class="example">(%i1) integrate(1/(sqrt(x)+1),x,0,1);
+                                1
+                               /
+                               [       1
+(%o1)                          I  ----------- dx
+                               ]  sqrt(x) + 1
+                               /
+                                0
+
+(%i2) integrate(1/(sqrt(x)+1),x,0,1),intanalysis:false;
+(%o2)                            2 - 2 log(2)
+
+(%i3) integrate(cos(a)/sqrt((tan(a))^2 +1),a,-%pi/2,%pi/2);
+The number 1 isn't in the domain of atanh
+ -- an error. To debug this try: debugmode(true);
+
+(%i4) intanalysis:false$
+(%i5) integrate(cos(a)/sqrt((tan(a))^2+1),a,-%pi/2,%pi/2);
+                                      %pi
+(%o5)                                 ---
+                                       2
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+<a name="integrate"></a><a name="Item_003a-Integration_002fdeffn_002fintegrate"></a><dl>
+<dt><a name="index-integrate"></a>関数: <strong>integrate</strong> <em>(<var>expr</var>, <var>x</var>)</em></dt>
+<dt><a name="index-integrate-1"></a>関数: <strong>integrate</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</em></dt>
+<dd><p><var>x</var>に関する<var>expr</var>の積分をシンボリックに計算しようとします。
+<code>integrate (<var>expr</var>, <var>x</var>)</code>は不定積分で、
+<code>integrate (<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</code>は<var>a</var>,<var>b</var>の上限下限を持つ定積分です。
+<code>integrate</code>はこの制限を強制しませんが、上限下限は<var>x</var>を含んではいけません。
+<var>a</var>は<var>b</var>より小さい必要はありません。
+<var>b</var>が<var>a</var>と等しいなら、<code>integrate</code>は0を返します。
+</p>
+<p>定積分の数値近似に関しては<code>quad_qag</code>と関連関数を参照してください。
+（複素積分）留数の計算に関しては<code>residue</code>を参照してください。
+不定積分の代替計算方法に関しては<code>antid</code>を参照してください。
+</p>
+<p><code>integrate</code>が成功すれば、積分（<code>integrate</code>を含まない式）を返します。
+そうでなければ、積分の名詞形式（クォートされた演算子<code>'integrate</code>)もしくは１つ以上の名詞形式を含む式を返します。
+<code>integrate</code>の名詞形式は積分記号で表示されます。
+</p>
+<p>いくつかの環境では、（例えば、<code>'integrate (<var>expr</var>, <var>x</var>)</code>のように、
+シングルクオートされた<code>integrate</code>で手動で名詞形式を構成することが役に立ちます。
+例えば、積分が、また計算されていないいくつかのパラメータに依存しているかもしれません。
+名詞は、<var>i</var>が注目の名詞形式であるところの<code>ev (<var>i</var>, nouns)</code>によって、引数に適用されるかもしれません。
+</p>
+<p><code>integrate</code>は不定積分とは別に、定積分を扱います。
+それぞれの場合を扱うため、ある範囲の発見法を用意しています。
+定積分の特別な場合は、0や無限大に等しい積分の下限上限を含んだり、
+0や<code>%pi</code>や<code>2 %pi</code>に等しい下限上限を持つ三角関数を含んだり、
+有理関数やベータやプサイ関数の定義に関連した積分やいくつかの対数的な積分、三角関数積分を含んだりします。
+有理関数の処理は、留数の計算を含むかもしれません。
+もし適用可能な特殊な場合が見つからなければ、不定積分を計算し、下限上限でそれを評価しようとするでしょう。
+これは、下限上限に無限大の極限を取ることを含みます。<code>ldefint</code>も参照してください。
+</p>
+<p>不定積分の特殊な場合は、三角関数、指数対数関数、有理関数を含みます。
+<code>integrate</code>は初等積分の短いテーブルもまた利用しています。
+</p>
+<p>もし非積分関数が形式<code>f(g(x)) * diff(g(x), x)</code>を持つなら、<code>integrate</code>は、変数の交換を実行します。
+<code>integrate</code>は、<code>g(x)</code>の導関数が非積分関数を割るような部分式<code>g(x)</code>を見つけようとします。
+この探索は、<code>gradef</code>関数によって定義された導関数を利用します。
+<code>changevar</code>や<code>antid</code>も参照ください。
+</p>
+<p>もしこれまでの発見法のどれも不定積分を見つけられなければ、リッシュのアルゴリズムが実行されます。
+フラグ<code>risch</code>が、<code>ev</code>のコールやコマンドライン上で<code>evflag</code>として設定されるかもしれません。
+例えば、<code>ev (integrate (<var>expr</var>, <var>x</var>), risch)</code>や
+<code>integrate (<var>expr</var>, <var>x</var>), risch</code>というように。
+もし<code>risch</code>が<code>true</code>なら、<code>integrate</code>は、発見法を最初に試さずに、<code>risch</code>関数をコールします。
+<code>risch</code>も参照ください。
+</p>
+<p><code>integrate</code>は<code>f(x)</code>記法で陽に表現された関数関係のみに動作します。
+<code>integrate</code>は<code>depends</code>関数で規定された陰の依存性を考慮しません。
+</p>
+<p><code>integrate</code>は非積分関数のパラメータのある性質を知っている必要がある場合があります。
+<code>integrate</code>は<code>assume</code>データベースを最初に参照し、
+注目の変数がそこになければ、<code>integrate</code>はユーザーに問い合わせます。
+質問に依存して、適切な応答は、<code>yes;</code>や<code>no;</code>や<code>pos;</code>, <code>zero;</code>, <code>neg;</code>など。
+</p>
+<p><code>integrate</code>は線形には宣言されていません。<code>declare</code>と<code>linear</code>を参照ください。
+</p>
+<p><code>integrate</code>は２、３の特集な場合だけ、部分積分を企てます。
+</p>
+<p>例:
+</p>
+<ul>
+<li> 初等不定積分、定積分
+
+<div class="example">
+<pre class="example">(%i1) integrate (sin(x)^3, x);
+                           3
+                        cos (x)
+(%o1)                   ------- - cos(x)
+                           3
+</pre><pre class="example">(%i2) integrate (x/ sqrt (b^2 - x^2), x);
+                                 2    2
+(%o2)                    - sqrt(b  - x )
+</pre><pre class="example">(%i3) integrate (cos(x)^2 * exp(x), x, 0, %pi);
+                               %pi
+                           3 %e      3
+(%o3)                      ------- - -
+                              5      5
+</pre><pre class="example">(%i4) integrate (x^2 * exp(-x^2), x, minf, inf);
+                            sqrt(%pi)
+(%o4)                       ---------
+                                2
+</pre></div>
+
+</li><li> <code>assume</code>と対話的問い合わせの利用
+
+<div class="example">
+<pre class="example">(%i1) assume (a &gt; 1)$
+</pre><pre class="example">(%i2) integrate (x**a/(x+1)**(5/2), x, 0, inf);
+    2 a + 2
+Is  -------  an integer?
+       5
+
+no;
+Is  2 a - 3  positive, negative, or zero?
+
+neg;
+                                   3
+(%o2)                  beta(a + 1, - - a)
+                                   2
+</pre></div>
+
+</li><li> 変数変換。この例では２回変数変換があります。
+<code>gradef</code>で規定された導関数を使ったものと未知関数<code>r(x)</code>の微分<code>diff(r(x))</code>を使ったもの。
+
+<div class="example">
+<pre class="example">(%i3) gradef (q(x), sin(x**2));
+(%o3)                         q(x)
+</pre><pre class="example">(%i4) diff (log (q (r (x))), x);
+                      d               2
+                     (-- (r(x))) sin(r (x))
+                      dx
+(%o4)                ----------------------
+                            q(r(x))
+</pre><pre class="example">(%i5) integrate (%, x);
+(%o5)                     log(q(r(x)))
+</pre></div>
+
+</li><li> <code>'integrate</code>名詞形を含む戻り値。
+この例では、Maximaは有理関数の分母の因子を抽出できますが、剰余を因数分解できないか積分をみつけられません。
+<code>grind</code>は、結果として名詞形<code>'integrate</code>を示します。
+積分や有理関数について更に知るには<code>integrate_use_rootsof</code>も参照ください。
+
+<div class="example">
+<pre class="example">(%i1) expand ((x-4) * (x^3+2*x+1));
+                    4      3      2
+(%o1)              x  - 4 x  + 2 x  - 7 x - 4
+</pre><pre class="example">(%i2) integrate (1/%, x);
+                              /  2
+                              [ x  + 4 x + 18
+                              I ------------- dx
+                              ]  3
+                 log(x - 4)   / x  + 2 x + 1
+(%o2)            ---------- - ------------------
+                     73               73
+</pre><pre class="example">(%i3) grind (%);
+log(x-4)/73-('integrate((x^2+4*x+18)/(x^3+2*x+1),x))/73$
+</pre></div>
+
+</li><li> 積分を使った関数の定義。
+関数の本体は、関数が定義された時には評価されません。
+この例では、<code>f_1</code>の本体は、<code>integrate</code>の名詞形を含みます。
+クォートクォート演算子<code>'<!-- /@w -->'</code>があると、積分が評価され、結果が<code>f_2</code>の本体になります。
+
+<div class="example">
+<pre class="example">(%i1) f_1 (a) := integrate (x^3, x, 1, a);
+                                     3
+(%o1)           f_1(a) := integrate(x , x, 1, a)
+</pre><pre class="example">(%i2) ev (f_1 (7), nouns);
+(%o2)                          600
+</pre><pre class="example">(%i3) /* Note parentheses around integrate(...) here */
+      f_2 (a) := ''(integrate (x^3, x, 1, a));
+                                   4
+                                  a    1
+(%o3)                   f_2(a) := -- - -
+                                  4    4
+</pre><pre class="example">(%i4) f_2 (7);
+(%o4)                          600
+</pre></div>
+</li></ul>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+<a name="integration_005fconstant"></a><a name="Item_003a-Integration_002fdefvr_002fintegration_005fconstant"></a><dl>
+<dt><a name="index-integration_005fconstant"></a>システム変数: <strong>integration_constant</strong></dt>
+<dd><p>デフォルト値: <code>%c</code>
+</p>
+<p>積分定数は、等式の不定積分によって導入され、
+定数名は、
+<code>integration_constant</code>と<code>integration_constant_counter</code>を連結することで構成されます。
+</p>
+<p><code>integration_constant</code>は、任意のシンボルに割り当てられます。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) integrate (x^2 = 1, x);
+                           3
+                          x
+(%o1)                     -- = x + %c1
+                          3
+</pre><pre class="example">(%i2) integration_constant : 'k;
+(%o2)                           k
+</pre><pre class="example">(%i3) integrate (x^2 = 1, x);
+                            3
+                           x
+(%o3)                      -- = x + k2
+                           3
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+<a name="integration_005fconstant_005fcounter"></a><a name="Item_003a-Integration_002fdefvr_002fintegration_005fconstant_005fcounter"></a><dl>
+<dt><a name="index-integration_005fconstant_005fcounter"></a>システム変数: <strong>integration_constant_counter</strong></dt>
+<dd><p>デフォルト値: 0
+</p>
+<p>積分定数が等式の不定積分によって導入された時、
+定数名は、
+<code>integration_constant</code>と<code>integration_constant_counter</code>を連結することで構成されます。
+</p>
+<p><code>integration_constant_counter</code>は、
+次の積分定数を構成する前に増分されます。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) integrate (x^2 = 1, x);
+                           3
+                          x
+(%o1)                     -- = x + %c1
+                          3
+</pre><pre class="example">(%i2) integrate (x^2 = 1, x);
+                           3
+                          x
+(%o2)                     -- = x + %c2
+                          3
+</pre><pre class="example">(%i3) integrate (x^2 = 1, x);
+                           3
+                          x
+(%o3)                     -- = x + %c3
+                          3
+</pre><pre class="example">(%i4) reset (integration_constant_counter);
+(%o4)            [integration_constant_counter]
+</pre><pre class="example">(%i5) integrate (x^2 = 1, x);
+                           3
+                          x
+(%o5)                     -- = x + %c1
+                          3
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div>
+</dd></dl>
+
+<a name="integrate_005fuse_005frootsof"></a><a name="Item_003a-Integration_002fdefvr_002fintegrate_005fuse_005frootsof"></a><dl>
+<dt><a name="index-integrate_005fuse_005frootsof"></a>オプション変数: <strong>integrate_use_rootsof</strong></dt>
+<dd><p>デフォルト値: <code>false</code>
+</p>
+<p><code>integrate_use_rootsof</code>が<code>true</code>かつ有理関数の分子が因数分解できない時、
+<code>integrate</code>は、
+分子の（まだ知られていない）根上の和という形式で積分を返します。
+</p>
+<p>例えば、
+<code>integrate_use_rootsof</code>を<code>false</code>に設定すると、
+<code>integrate</code>は、有理関数の未解決積分を名詞形で返します:
+</p>
+<div class="example">
+<pre class="example">(%i1) integrate_use_rootsof: false$
+</pre><pre class="example">(%i2) integrate (1/(1+x+x^5), x);
+        /  2
+        [ x  - 4 x + 5
+        I ------------ dx                            2 x + 1
+        ]  3    2                2            5 atan(-------)
+        / x  - x  + 1       log(x  + x + 1)          sqrt(3)
+(%o2)   ----------------- - --------------- + ---------------
+                7                 14             7 sqrt(3)
+</pre></div>
+
+<p>さて、フラグを<code>true</code>に設定し、
+積分の未解決部分を
+有理関数の分子の根上の和として表現しましょう:
+</p>
+<div class="example">
+<pre class="example">(%i3) integrate_use_rootsof: true$
+</pre><pre class="example">(%i4) integrate (1/(1+x+x^5), x);
+      ====        2
+      \       (%r4  - 4 %r4 + 5) log(x - %r4)
+       &gt;      -------------------------------
+      /                    2
+      ====            3 %r4  - 2 %r4
+                        3      2
+      %r4 in rootsof(%r4  - %r4  + 1, %r4)
+(%o4) ----------------------------------------------------------
+               7
+
+                                                      2 x + 1
+                                  2            5 atan(-------)
+                             log(x  + x + 1)          sqrt(3)
+                           - --------------- + ---------------
+                                   14             7 sqrt(3)
+</pre></div>
+
+<p>代わりにユーザーは別々に分子の根を計算できます。
+例えば、もし分子が3次多項式なら
+<code>1/((x - a)*(x - b)*(x - c))</code>または<code>1/((x^2 - (a+b)*x + a*b)*(x - c))</code>
+というように
+これらの根を使って被積分関数を表現できます。
+時々、これはMaximaがもっと役立つ結果を得るのを助けます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div>
+</dd></dl>
+
+
+<a name="ldefint"></a><a name="Item_003a-Integration_002fdeffn_002fldefint"></a><dl>
+<dt><a name="index-ldefint"></a>関数: <strong>ldefint</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</em></dt>
+<dd>
+<p><var>expr</var>の<var>x</var>に関する不定積分を上限<var>b</var>と下限<var>a</var>で評価するために
+<code>limit</code>を使うことによって<var>expr</var>の定積分を計算しようとします。
+もし定積分を計算するのに失敗したなら、
+<code>ldefint</code>は、名詞形として極限を含む式を返します。
+</p>
+<p><code>ldefint</code>は、<code>integrate</code>からコールされないので、
+o executing 
+<code>ldefint (<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</code>
+を実行することは、
+<code>integrate (<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</code>
+とは違った結果をもたらすかもしれません。
+<code>ldefint</code>は、定積分を評価するためにいつも同じ方法を使いますが、
+<code>integrate</code>は、様々な発見的方法を利用し、いくつかの特殊な場合を認識することもあります。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+
+<a name="potential"></a><a name="Item_003a-Integration_002fdeffn_002fpotential"></a><dl>
+<dt><a name="index-potential"></a>関数: <strong>potential</strong> <em>(<var>givengradient</var>)</em></dt>
+<dd>
+<p>計算は、
+<code>nonlist</code>または形式
+</p><div class="example">
+<pre class="example">[indeterminatej=expressionj, indeterminatek=expressionk, ...]
+</pre></div>
+<p>でなければならないグローバル変数<code>potentialzeroloc[0]</code>を利用します。
+ここで、前者は後者の中のすべての右辺のnonlist式と同値です（訳者無理解）。
+示された右辺は、積分の下限として使われます。
+積分の成功は、
+それらの値と順序に依存するかもしれません。
+<code>potentialzeroloc</code>は、0に初期化されます。
+</p>
+</dd></dl>
+
+<a name="residue"></a><a name="Item_003a-Integration_002fdeffn_002fresidue"></a><dl>
+<dt><a name="index-residue"></a>関数: <strong>residue</strong> <em>(<var>expr</var>, <var>z</var>, <var>z_0</var>)</em></dt>
+<dd>
+<p>変数<var>z</var>が値<var>z_0</var>を仮定する時、
+式<var>expr</var>の複素平面での留数を計算します。
+留数は、
+<var>expr</var>のローラン級数における
+<code>(<var>z</var> - <var>z_0</var>)^(-1)</code>の係数です。
+</p>
+<div class="example">
+<pre class="example">(%i1) residue (s/(s**2+a**2), s, a*%i);
+                                1
+(%o1)                           -
+                                2
+</pre><pre class="example">(%i2) residue (sin(a*x)/x**4, x, 0);
+                                 3
+                                a
+(%o2)                         - --
+                                6
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;<a href="maxima_311.html#Category_003a-Complex-variables">Complex variables</a>
+&middot;</div></dd></dl>
+
+<a name="risch"></a><a name="Item_003a-Integration_002fdeffn_002frisch"></a><dl>
+<dt><a name="index-risch"></a>関数: <strong>risch</strong> <em>(<var>expr</var>, <var>x</var>)</em></dt>
+<dd>
+<p>リッシュアルゴリズムの超越な場合を使って、
+<var>expr</var>を
+<var>x</var>に関して積分します。
+（リッシュアルゴリズムの代数的な場合は実装されていません。）
+これは、現在、<code>integrate</code>の主要部ができない入れ子の指数関数や対数関数の場合を扱います。
+<code>integrate</code>は、これらの場合が与えられたなら、自動的に<code>risch</code>を適用します。
+</p>
+<p><code>erfflag</code>がもし<code>false</code>なら、
+もしまず第一に被積分関数になにもないなら、
+<code>risch</code>が
+答えの中に<code>erf</code>関数を導入することを妨げます。
+</p>
+<div class="example">
+<pre class="example">(%i1) risch (x^2*erf(x), x);
+                                                        2
+             3                      2                - x
+        %pi x  erf(x) + (sqrt(%pi) x  + sqrt(%pi)) %e
+(%o1)   -------------------------------------------------
+                              3 %pi
+</pre><pre class="example">(%i2) diff(%, x), ratsimp;
+                             2
+(%o2)                       x  erf(x)
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+
+<a name="tldefint"></a><a name="Item_003a-Integration_002fdeffn_002ftldefint"></a><dl>
+<dt><a name="index-tldefint"></a>関数: <strong>tldefint</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>)</em></dt>
+<dd>
+<p><code>tlimswitch</code>が<code>true</code>に設定されている<code>ldefint</code>と同値です。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Integral-calculus">Integral calculus</a>
+&middot;</div></dd></dl>
+
+
+<a name="Item_003a-Integration_002fnode_002fIntroduction-to-QUADPACK"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_95.html#Introduction-to-QUADPACK" accesskey="n" rel="next">Introduction to QUADPACK</a>, Previous: <a href="maxima_93.html#Introduction-to-Integration" accesskey="p" rel="previous">Introduction to Integration</a>, Up: <a href="maxima_92.html#Integration" accesskey="u" rel="up">Integration</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

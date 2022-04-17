@@ -16,7 +16,7 @@ Default value: 4
 rule is used in @mref{limit}.  This prevents infinite looping in cases like
 @code{limit (cot(x)/csc(x), x, 0)}.
 
-@opencatbox
+@opencatbox{Categories:}
 @category{Limits}
 @closecatbox
 @end defvr
@@ -69,7 +69,7 @@ expressions, for example, @code{limit (inf-1)}.
 For the method see Wang, P., "Evaluation of Definite Integrals by Symbolic
 Manipulation", Ph.D. thesis, MAC TR-92, October 1971.
 
-@opencatbox
+@opencatbox{Categories:}
 @category{Limits}
 @closecatbox
 @end deffn
@@ -83,7 +83,7 @@ prevents @mref{limit} from attempting substitutions on unknown forms.  This is
 to avoid bugs like @code{limit (f(n)/f(n+1), n, inf)} giving 1.  Setting
 @code{limsubst} to @code{true} will allow such substitutions.
 
-@opencatbox
+@opencatbox{Categories:}
 @category{Limits}
 @closecatbox
 @end defvr
@@ -98,7 +98,7 @@ to avoid bugs like @code{limit (f(n)/f(n+1), n, inf)} giving 1.  Setting
 Take the limit of the Taylor series expansion of @code{expr} in @code{x}
 at @code{val} from direction @code{dir}.
 
-@opencatbox
+@opencatbox{Categories:}
 @category{Limits}
 @closecatbox
 @end deffn
@@ -115,8 +115,48 @@ directly.  This allows evaluation of limits such as
 and the limit of input expression cannot be computed directly, @code{limit} will
 return an unevaluated limit expression.
 
-@opencatbox
+@opencatbox{Categories:}
 @category{Limits}
 @closecatbox
 @end defvr
 
+@c -----------------------------------------------------------------------------
+@anchor{gruntz}
+@deffn {Function} gruntz @
+@fname{gruntz} (@var{expr}, @var{var}, @var{value}) @
+@fname{gruntz} (@var{expr}, @var{var}, @var{value}, @var{direction})
+
+Compute limit of expression @var{expr} with respect to variable @var{var} at @var{value}.
+When @var{value} is not infinite (i.e., not @code{inf} or @code{minf}),
+@var{direction} must be supplied,
+either @code{plus} for a limit from above,
+or @code{minus} for a limit from below.
+
+If @code{gruntz} cannot find the limit,
+an unevaluated expression @code{gruntz(...)} is returned.
+
+@code{gruntz} implements the method described in the dissertation of
+Dominik Gruntz, "On Computing Limits in a Symbolic Manipulation System"
+(ETH Zurich, 1996).
+
+The algorithm identifies the most rapidly varying subexpression,
+replaces it with a new variable, rewrites the expression in terms
+of the new variable, and then repeats.
+
+The algorithm doesn't handle oscillating functions, so it can't do things like
+@code{limit(sin(x)/x, x, inf)}.
+
+To handle limits involving functions such as @code{gamma(x)} and @code{erf(x)},
+the Gruntz algorithm requires them to be written in terms of asymptotic expansions,
+which Maxima cannot currently do.
+
+The Gruntz algorithm assumes that variables and expressions are real,
+so, for example, it can't handle @code{limit((-2)^x, x, inf)}.
+
+@code{gruntz} is one of the methods called from @code{limit}.
+
+@opencatbox{Categories:}
+@category{Limits}
+@closecatbox
+
+@end deffn

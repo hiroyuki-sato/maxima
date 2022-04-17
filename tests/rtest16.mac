@@ -3,7 +3,7 @@
 
 /* make sure things work after a reset().  ID: 1986726 and ID: 2787047
  *
- * display2d is a resetable option variable. We save the value of display2d
+ * display2d is a resettable option variable. We save the value of display2d
  * and restore it after the reset. This allows to run the testsuite in both
  * display modes.
  */
@@ -2046,7 +2046,7 @@ true$
 
 /* #2675 (1/3): Integration yields noun form with subscripted variable */
 integrate(exp(-(1+%i)*x[1]),x[1],0,inf);
--((-1 + %i)/2)$
+1/2-%i/2$
 
 /* #2688: %e^^A returns element by element exponent */
 is(%e^^matrix([1,2],[3,4]) = %e^matrix([1,2],[3,4]));
@@ -2168,6 +2168,23 @@ true;
 
 closeto(float(li[3](exp(%pi*%i/3))) - float(zeta(3)/3 + %i*5*%pi^3/162), 5.6611e-16);
 true;
+
+/*
+ * li[3] should not return a small imaginary part for this value.
+ * (There are others, but the solution fixes those as well.
+ */
+imagpart(li[3](-.862));
+0;
+
+/*
+ * Likewise li[s](-1.5) was returning small imaginary parts.  In fact,
+ * this was true for -2 < z < -1 because the log series was used to
+ * compute the value.  Check that we return exactly zero now for
+ * select values of s
+ */
+
+makelist(imagpart(li[s](-1.5)), s, 4, 10);
+[0, 0, 0, 0, 0, 0, 0];  
 
 /* Bug 3582: numerical evaluation of li[2] */
 /* this gave an infinite loop */
@@ -2646,3 +2663,124 @@ integrate(1/(1+tan(x)), x, 0, %pi/2);
 /* Also from bug #3562 */
 limit(log((x^2+1)/x^2)-2*log((x-1)/x), x, 0, minus);
 0$
+
+/* #3787 fixnump checks in simpexpt */
+(declare(n,integer),0);
+0$
+
+(-1)^((2^62-1)*n);
+(-1)^n$
+
+(-1)^((2^62+1)*n);
+(-1)^n$
+
+(-1)^((2^62+2)*n);
+1$
+
+(remove(n,integer),0);
+0$
+
+/*
+ * Check sech/csch don't overflow for large numbers.  Use relative
+ *  error to test for accuracy.
+ */
+
+closetorel(actual, expected, tol) := block([numer:true, relerr: abs(actual-expected)/expected], if (relerr < tol) then true else relerr);
+closetorel(actual, expected, tol) := block([numer:true, relerr: abs(actual-expected)/expected], if (relerr < tol) then true else relerr);
+
+closeto(sech(715.0), 6.033b-311);
+true;
+closeto(csch(715.0), 6.033b-311);
+true;
+
+/*
+ *
+ * Check acsch doesn't overflow for small numbers.  But some lisps
+ * like clisp don't support denormals, so we have to be careful.
+ *
+ */
+
+if (1e-309 = 0.0) then
+    closetorel(acsch(1e-300), acsch(bfloat(1e-300)), 1.1375b-16)
+  else
+    closetorel(acsch(1e-309), acsch(bfloat(1b-309)), 7.1559b-17);
+true;
+
+/* SF bug #3825: "apply('forget, facts()) gives Lisp error" */
+
+(kill (all), declare (F, increasing));
+done;
+
+facts ();
+[kind (F, increasing)];
+
+featurep (F, increasing);
+true;
+
+apply ('forget, facts ());
+[kind (F, increasing)];
+
+facts ();
+[];
+
+featurep (F, increasing);
+false;
+
+declare ([F, G], rational, [H, I], irrational);
+done;
+
+facts ();
+[kind (F, rational), kind (G, rational), kind (H, irrational), kind (I, irrational)];
+
+[featurep (F, rational),
+ featurep (G, rational),
+ featurep (H, irrational),
+ featurep (I, irrational)];
+[true, true, true, true];
+
+forget (kind (G, rational), kind (I, irrational));
+[kind (G, rational), kind (I, irrational)];
+
+facts ();
+[kind (F, rational), kind (H, irrational)];
+
+forget (kind (F, rational), kind (H, irrational));
+[kind (F, rational), kind (H, irrational)];
+
+facts ();
+[];
+
+[featurep (F, rational),
+ featurep (G, rational),
+ featurep (H, irrational),
+ featurep (I, irrational)];
+[false, false, false, false];
+
+/* Bug #3934: expand(1/(1+%i)^4) => (-4)^(-1) (unsimplified) */
+
+expand((1+%i)^-2);
+-%i/2;
+
+expand(1/(1+%i)^4);
+-1/4;
+
+expand(4/(%i+1)^4)+1;
+0;
+
+expand(1/(1+%i)^8-1/16);
+0;
+
+expand((sqrt(-1/2)+sqrt(1/2))^-8);
+1;
+
+/* Bug #3956: expand(1/((sqrt(2)-1)*(sqrt(2)+1))) => 1/1 (unsimplified) */
+
+expand(1/((sqrt(2)-1)*(sqrt(2)+1)));
+1;
+
+expand(1/(-(sqrt(3)-1)*(sqrt(3)+1)));
+-1/2;
+
+expand(1/(-(sqrt(n+1)-1)*(sqrt(n+1)+1)));
+-1/n;
+

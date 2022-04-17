@@ -2,20 +2,20 @@
 <html>
 <!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>Maxima 5.45.1 Manual: Introduction to String Processing</title>
+<title>Maxima 5.46.0 Manual: Functions and Variables for solve_rec</title>
 
-<meta name="description" content="Maxima 5.45.1 Manual: Introduction to String Processing">
-<meta name="keywords" content="Maxima 5.45.1 Manual: Introduction to String Processing">
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for solve_rec">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for solve_rec">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link href="maxima_0.html#Top" rel="start" title="Top">
-<link href="maxima_368.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_377.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
 <link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="maxima_330.html#stringproc_002dpkg" rel="up" title="stringproc-pkg">
-<link href="maxima_332.html#Input-and-Output" rel="next" title="Input and Output">
-<link href="maxima_330.html#stringproc_002dpkg" rel="previous" title="stringproc-pkg">
+<link href="maxima_329.html#solve_005frec_002dpkg" rel="up" title="solve_rec-pkg">
+<link href="maxima_332.html#stats_002dpkg" rel="next" title="stats-pkg">
+<link href="maxima_330.html#Introduction-to-solve_005frec" rel="previous" title="Introduction to solve_rec">
 <style type="text/css">
 <!--
 a.summary-letter {text-decoration: none}
@@ -62,7 +62,7 @@ pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
     background-color: rgb(238,238,255)}
 div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
 div.image {margin: 0; padding: 1em; text-align: center}
-div.categorybox {border: 1px solid gray; padding-top: 0px; padding-bottom: 0px;
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
     padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
 img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
 
@@ -74,121 +74,285 @@ img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-r
 </head>
 
 <body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
-<a name="Introduction-to-String-Processing"></a>
+<a name="Functions-and-Variables-for-solve_005frec"></a>
 <div class="header">
 <p>
-Next: <a href="maxima_332.html#Input-and-Output" accesskey="n" rel="next">Input and Output</a>, Previous: <a href="maxima_330.html#stringproc_002dpkg" accesskey="p" rel="previous">stringproc-pkg</a>, Up: <a href="maxima_330.html#stringproc_002dpkg" accesskey="u" rel="up">stringproc-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="maxima_330.html#Introduction-to-solve_005frec" accesskey="p" rel="previous">Introduction to solve_rec</a>, Up: <a href="maxima_329.html#solve_005frec_002dpkg" accesskey="u" rel="up">solve_rec-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_377.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<a name="Introduction-to-String-Processing-1"></a>
-<h3 class="section">88.1 Introduction to String Processing</h3>
+<a name="Functions-and-Variables-for-solve_005frec-1"></a>
+<h3 class="section">87.2 Functions and Variables for solve_rec</h3>
 
-<p>The package <code>stringproc</code> contains functions for processing strings 
-and characters including formatting, encoding and data streams. 
-This package is completed by some tools for cryptography, e.g. base64 and hash 
-functions.
+<a name="reduce_005forder"></a><a name="Item_003a-solve_005frec_002fdeffn_002freduce_005forder"></a><dl>
+<dt><a name="index-reduce_005forder"></a>Function: <strong>reduce_order</strong> <em>(<var>rec</var>, <var>sol</var>, <var>var</var>)</em></dt>
+<dd>
+<p>Reduces the order of linear recurrence <var>rec</var> when a particular solution
+<var>sol</var> is known. The reduced reccurence can be used to get other solutions.
 </p>
-<p>It can be directly loaded via <code>load(stringproc)</code> or automatically by 
-using one of its functions.
-</p>
-<p>For questions and bug reports please contact the author. The following 
-command prints his e-mail-address.
-</p>
-<p><code>printf(true, &quot;~{~a~}@gmail.com&quot;, split(sdowncase(&quot;Volker van Nek&quot;)))$</code>
-</p>
-
-<p>A string is constructed by typing e.g. <code>&quot;Text&quot;</code>. 
-When the option variable <code><a href="maxima_16.html#stringdisp">stringdisp</a></code> is set to <code>false</code>, which is 
-the default, the double quotes won&rsquo;t be printed. 
-<a href="maxima_334.html#stringp">stringp</a> is a test, if an object is a string.
+<p>Example:
 </p>
 <div class="example">
-<pre class="example">(%i1) str: &quot;Text&quot;;
-(%o1)                         Text
-(%i2) stringp(str);
-(%o2)                         true
+<pre class="example">(%i3) rec: x[n+2] = x[n+1] + x[n]/n;
+                                      x
+                                       n
+(%o3)               x      = x      + --
+                     n + 2    n + 1   n
+</pre><pre class="example">(%i4) solve_rec(rec, x[n]);
+WARNING: found some hypergeometrical solutions! 
+(%o4)                    x  = %k  n
+                          n     1
+</pre><pre class="example">(%i5) reduce_order(rec, n, x[n]);
+(%t5)                    x  = n %z
+                          n       n
+
+                           n - 1
+                           ====
+                           \
+(%t6)                %z  =  &gt;     %u
+                       n   /        %j
+                           ====
+                           %j = 0
+
+(%o6)             (- n - 2) %u     - %u
+                              n + 1     n
+</pre><pre class="example">(%i6) solve_rec((n+2)*%u[n+1] + %u[n], %u[n]);
+                                     n
+                            %k  (- 1)
+                              1
+(%o6)                 %u  = ----------
+                        n    (n + 1)!
+
+So the general solution is
+
+             n - 1
+             ====        j
+             \      (- 1)
+       %k  n  &gt;    -------- + %k  n
+         2   /     (j + 1)!     1
+             ====
+             j = 0
 </pre></div>
 
-<p>Characters are represented by a string of length 1. 
-<a href="maxima_333.html#charp">charp</a> is the corresponding test.
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="simplify_005fproducts"></a><a name="Item_003a-solve_005frec_002fdefvr_002fsimplify_005fproducts"></a><dl>
+<dt><a name="index-simplify_005fproducts"></a>Option variable: <strong>simplify_products</strong></dt>
+<dd><p>Default value: <code>true</code>
+</p>
+<p>If <code>simplify_products</code> is <code>true</code>, <code>solve_rec</code> will try to
+simplify products in result.
+</p>
+<p>See also: <code><a href="#solve_005frec">solve_rec</a></code>.
+</p>
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="simplify_005fsum"></a><a name="Item_003a-solve_005frec_002fdeffn_002fsimplify_005fsum"></a><dl>
+<dt><a name="index-simplify_005fsum"></a>Function: <strong>simplify_sum</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>Tries to simplify all sums appearing in <var>expr</var> to a closed form.
+</p>
+<p>To use this function first load the <code>simplify_sum</code> package with
+<code>load(&quot;simplify_sum&quot;)</code>.
+</p>
+<p>Example:
 </p>
 <div class="example">
-<pre class="example">(%i1) char: &quot;e&quot;;
-(%o1)                           e
-(%i2) charp(char);
-(%o2)                         true
+<pre class="example">(%i1) load(&quot;simplify_sum&quot;)$
+</pre><pre class="example">(%i2) sum(binomial(n+k,k)/2^k,k,1,n)+sum(binomial(2*n,2*k),k,1,n);
+        n                          n
+       ====                       ====
+       \     binomial(n + k, k)   \
+(%o2)   &gt;    ------------------ +  &gt;    binomial(2 n, 2 k)
+       /              k           /
+       ====          2            ====
+       k = 1                      k = 1
+</pre><pre class="example">(%i3) simplify_sum(%);
+
+                         2 n - 1    n
+(%o3)                   2        + 2  - 2
 </pre></div>
 
-<p>In Maxima position indices in strings are like in list 1-indexed 
-which results to the following consistency.
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;<a href="maxima_378.html#Category_003a-Sums-and-products">Sums and products</a>
+&middot;<a href="maxima_378.html#Category_003a-Simplification-functions">Simplification functions</a>
+&middot;</div>
+</dd></dl>
+
+<a name="solve_005frec"></a><a name="Item_003a-solve_005frec_002fdeffn_002fsolve_005frec"></a><dl>
+<dt><a name="index-solve_005frec"></a>Function: <strong>solve_rec</strong> <em>(<var>eqn</var>, <var>var</var>, [<var>init</var>])</em></dt>
+<dd><p>Solves for hypergeometrical solutions to linear recurrence <var>eqn</var> with
+polynomials coefficient in variable <var>var</var>. Optional arguments <var>init</var>
+are initial conditions.
+</p>
+<p><code>solve_rec</code> can solve linear recurrences with constant coefficients,
+finds hypergeometrical solutions to homogeneous linear recurrences with
+polynomial coefficients, rational solutions to linear recurrences with
+polynomial coefficients and can solve Ricatti type recurrences.
+</p>
+<p>Note that the running time of the algorithm used to find hypergeometrical
+solutions is exponential in the degree of the leading and trailing
+coefficient.
+</p>
+<p>To use this function first load the <code>solve_rec</code> package with
+<code>load(&quot;solve_rec&quot;);</code>.
+</p>
+<p>Example of linear recurrence with constant coefficients:
 </p>
 <div class="example">
-<pre class="example">(%i1) is(charat(&quot;Lisp&quot;,1) = charlist(&quot;Lisp&quot;)[1]);
-(%o1)                         true
+<pre class="example">(%i2) solve_rec(a[n]=a[n-1]+a[n-2]+n/2^n, a[n]);
+                        n          n
+           (sqrt(5) - 1)  %k  (- 1)
+                            1           n
+(%o2) a  = ------------------------- - ----
+       n               n                  n
+                      2                5 2
+                                                n
+                                   (sqrt(5) + 1)  %k
+                                                    2    2
+                                 + ------------------ - ----
+                                            n              n
+                                           2            5 2
 </pre></div>
 
-<p>A string may contain Maxima expressions. 
-These can be parsed with <a href="maxima_334.html#parse_005fstring">parse_string</a>.
+<p>Example of linear recurrence with polynomial coefficients:
 </p>
 <div class="example">
-<pre class="example">(%i1) map(parse_string, [&quot;42&quot; ,&quot;sqrt(2)&quot;, &quot;%pi&quot;]);
-(%o1)                   [42, sqrt(2), %pi]
-(%i2) map('float, %);
-(%o2)        [42.0, 1.414213562373095, 3.141592653589793]
+<pre class="example">(%i7) 2*x*(x+1)*y[x] - (x^2+3*x-2)*y[x+1] + (x-1)*y[x+2];
+                         2
+(%o7) (x - 1) y      - (x  + 3 x - 2) y      + 2 x (x + 1) y
+               x + 2                   x + 1                x
+</pre><pre class="example">(%i8) solve_rec(%, y[x], y[1]=1, y[3]=3);
+                              x
+                           3 2    x!
+(%o9)                 y  = ---- - --
+                       x    4     2
 </pre></div>
 
-<p>Strings can be processed as characters or in binary form as octets. 
-Functions for conversions are <a href="maxima_335.html#string_005fto_005foctets">string_to_octets</a> and <a href="maxima_335.html#octets_005fto_005fstring">octets_to_string</a>.
-Usable encodings depend on the platform, the application and the 
-underlying Lisp.
-(The following shows Maxima in GNU/Linux, compiled with SBCL.)
+<p>Example of Ricatti type recurrence:
 </p>
 <div class="example">
-<pre class="example">(%i1) obase: 16.$
-(%i2) string_to_octets(&quot;$&pound;&euro;&quot;, &quot;cp1252&quot;);
-(%o2)                     [24, 0A3, 80]
-(%i3) string_to_octets(&quot;$&pound;&euro;&quot;, &quot;utf-8&quot;);
-(%o3)               [24, 0C2, 0A3, 0E2, 82, 0AC]
+<pre class="example">(%i2) x*y[x+1]*y[x] - y[x+1]/(x+2) + y[x]/(x-1) = 0;
+                            y         y
+                             x + 1     x
+(%o2)         x y  y      - ------ + ----- = 0
+                 x  x + 1   x + 2    x - 1
+</pre><pre class="example">(%i3) solve_rec(%, y[x], y[3]=5)$
+</pre><pre class="example">(%i4) ratsimp(minfactorial(factcomb(%)));
+                                   3
+                               30 x  - 30 x
+(%o4) y  = - -------------------------------------------------
+       x        6      5       4       3       2
+             5 x  - 3 x  - 25 x  + 15 x  + 20 x  - 12 x - 1584
 </pre></div>
 
-<p>Strings may be written to character streams or as octets to binary streams. 
-The following example demonstrates file in and output of characters.
+
+<p>See also: <code><a href="#solve_005frec_005frat">solve_rec_rat</a></code>, <code><a href="#simplify_005fproducts">simplify_products</a></code> and <code><a href="#product_005fuse_005fgamma">product_use_gamma</a></code>.
 </p>
-<p><a href="maxima_332.html#openw">openw</a> returns an output stream to a file, 
-<a href="maxima_332.html#printf">printf</a> writes formatted to that file and by e.g. 
-<a href="maxima_332.html#close">close</a> all characters contained in the stream are written to the file.
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="solve_005frec_005frat"></a><a name="Item_003a-solve_005frec_002fdeffn_002fsolve_005frec_005frat"></a><dl>
+<dt><a name="index-solve_005frec_005frat"></a>Function: <strong>solve_rec_rat</strong> <em>(<var>eqn</var>, <var>var</var>, [<var>init</var>])</em></dt>
+<dd>
+<p>Solves for rational solutions to linear recurrences. See solve_rec for
+description of arguments.
+</p>
+<p>To use this function first load the <code>solve_rec</code> package with
+<code>load(&quot;solve_rec&quot;);</code>.
+</p>
+<p>Example:
 </p>
 <div class="example">
-<pre class="example">(%i1) s: openw(&quot;file.txt&quot;);
-(%o1)                #&lt;output stream file.txt&gt;
-(%i2) printf(s, &quot;~%~d ~f ~a ~a ~f ~e ~a~%&quot;, 
-42, 1.234, sqrt(2), %pi, 1.0e-2, 1.0e-2, 1.0b-2)$
-(%i3) close(s)$
+<pre class="example">(%i1) (x+4)*a[x+3] + (x+3)*a[x+2] - x*a[x+1] + (x^2-1)*a[x];
+(%o1)  (x + 4) a      + (x + 3) a      - x a
+                x + 3            x + 2      x + 1
+                                                   2
+                                               + (x  - 1) a
+                                                            x
+</pre><pre class="example">(%i2) solve_rec_rat(% = (x+2)/(x+1), a[x]);
+                       1
+(%o2)      a  = ---------------
+            x   (x - 1) (x + 1)
 </pre></div>
 
-<p><a href="maxima_332.html#openr">openr</a> then returns an input stream from the previously used file and 
-<a href="maxima_332.html#readline">readline</a> returns the line read as a string.
-The string may be tokenized by e.g. <a href="maxima_334.html#split">split</a> or <a href="maxima_334.html#tokens">tokens</a> and 
-finally parsed by <a href="maxima_334.html#parse_005fstring">parse_string</a>.
+
+<p>See also: <code><a href="#solve_005frec">solve_rec</a></code>.
+</p>
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="product_005fuse_005fgamma"></a><a name="Item_003a-solve_005frec_002fdefvr_002fproduct_005fuse_005fgamma"></a><dl>
+<dt><a name="index-product_005fuse_005fgamma"></a>Option variable: <strong>product_use_gamma</strong></dt>
+<dd><p>Default value: <code>true</code>
+</p>
+<p>When simplifying products, <code>solve_rec</code> introduces gamma function
+into the expression if <code>product_use_gamma</code> is <code>true</code>.
+</p>
+<p>See also: <code><a href="#simplify_005fproducts">simplify_products</a></code>, <code><a href="#solve_005frec">solve_rec</a></code>.
+</p>
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="summand_005fto_005frec"></a><a name="Item_003a-solve_005frec_002fdeffn_002fsummand_005fto_005frec"></a><dl>
+<dt><a name="index-summand_005fto_005frec"></a>Function: <strong>summand_to_rec</strong> <em><br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>summand_to_rec</tt> (<var>summand</var>, <var>k</var>, <var>n</var>) <br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>summand_to_rec</tt> (<var>summand</var>, [<var>k</var>, <var>lo</var>, <var>hi</var>], <var>n</var>)</em></dt>
+<dd>
+<p>Returns the recurrence satisfied by the sum
 </p>
 <div class="example">
-<pre class="example">(%i4) s: openr(&quot;file.txt&quot;);
-(%o4)                 #&lt;input stream file.txt&gt;
-(%i5) readline(s);
-(%o5)          42 1.234 sqrt(2) %pi 0.01 1.0E-2 1.0b-2
-(%i6) map(parse_string, split(%));
-(%o6)       [42, 1.234, sqrt(2), %pi, 0.01, 0.01, 1.0b-2]
-(%i7) close(s)$
+<pre class="example">     hi
+    ====
+    \
+     &gt;     summand
+    /
+    ====
+  k = lo
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Strings">Strings</a>
-&middot;<a href="maxima_369.html#Category_003a-Share-packages">Share packages</a>
-&middot;<a href="maxima_369.html#Category_003a-Package-stringproc">Package stringproc</a>
-</div></p>
+<p>where summand is hypergeometrical in <var>k</var> and <var>n</var>. If <var>lo</var> and <var>hi</var>
+are omitted, they are assumed to be <code>lo = -inf</code> and <code>hi = inf</code>.
+</p>
+<p>To use this function first load the <code>simplify_sum</code> package with
+<code>load(&quot;simplify_sum&quot;)</code>.
+</p>
+<p>Example:
+</p>
+<div class="example">
+<pre class="example">(%i1) load(&quot;simplify_sum&quot;)$
+</pre><pre class="example">(%i2) summand: binom(n,k);
+(%o2)                           binomial(n, k)
+</pre><pre class="example">(%i3) summand_to_rec(summand,k,n);
+(%o3)                      2 sm  - sm      = 0
+                               n     n + 1
+</pre><pre class="example">(%i7) summand: binom(n, k)/(k+1);
+                                binomial(n, k)
+(%o7)                           --------------
+                                    k + 1
+</pre><pre class="example">(%i8) summand_to_rec(summand, [k, 0, n], n);
+(%o8)               2 (n + 1) sm  - (n + 2) sm      = - 1
+                                n             n + 1
+</pre></div>
 
-<a name="Item_003a-stringproc_002fnode_002fInput-and-Output"></a><hr>
+<div class=categorybox>
+Categories:<a href="maxima_378.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<hr>
 <div class="header">
 <p>
-Next: <a href="maxima_332.html#Input-and-Output" accesskey="n" rel="next">Input and Output</a>, Previous: <a href="maxima_330.html#stringproc_002dpkg" accesskey="p" rel="previous">stringproc-pkg</a>, Up: <a href="maxima_330.html#stringproc_002dpkg" accesskey="u" rel="up">stringproc-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="maxima_330.html#Introduction-to-solve_005frec" accesskey="p" rel="previous">Introduction to solve_rec</a>, Up: <a href="maxima_329.html#solve_005frec_002dpkg" accesskey="u" rel="up">solve_rec-pkg</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_377.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

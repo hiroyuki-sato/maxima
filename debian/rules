@@ -22,7 +22,9 @@ SAVES:=$(addprefix debian/save/, interfaces/emacs/imaxima/stamp-vti\
 	  \
 	 src/autoconf-variables.lisp \
 	 src/share-subdirs.lisp \
-	 \
+	 doc/info/category-macros.texi \
+	 doc/info/ja/build_html.sh \
+	\
 	doc/info/maxima-index.lisp doc/info/maxima.info doc/info/maxima.info-1 \
 	doc/info/maxima.info-2 doc/info/maxima.info-3 \
 	)
@@ -144,7 +146,8 @@ clean: #restore
 		interfaces/xmaxima/doc/Entering-commands.html interfaces/xmaxima/doc/Getting-Help.html \
 		interfaces/xmaxima/doc/Main-Window.html interfaces/xmaxima/doc/Openmath-plots.html \
 		interfaces/xmaxima/doc/Session-control.html interfaces/xmaxima/doc/The-browser.html \
-		interfaces/xmaxima/doc/index.html
+		interfaces/xmaxima/doc/index.html doc/info/de/build_html.sh doc/info/ja/Makefile doc/info/ru/Makefile \
+		interfaces/xmaxima/doc/Xmaxima-plots.html share/contrib/symplectic_ode/Makefile
 
 
 	rm -f $(INSTALLS)
@@ -233,12 +236,16 @@ install-stamp: build-stamp $(BOOK) $(INSTALLS) debian/ChangeLog
 		for i in *.info; do if grep -q ": *(maxima/" $$i; then mv $$i maxima/; fi; done
 
 	cd debian/tmp/usr/share/maxima/$(MVERS)/share && \
-		for i in diff_form/example.txt diff_form/surface_example.txt stringproc/rectangular.csv-utf-16be \
+		for i in translators/m2mj/M2M.java translators/m2mj/Macsyma.stg translators/m2mj/Templates.java \
+                         translators/m2mj/mapleLexer.g4 translators/m2mj/mapleParser.g4 \
+                         translators/m2mj/mapleParserVisitorImpl.java translators/m2mj/readme \
+			 diff_form/example.txt diff_form/surface_example.txt stringproc/rectangular.csv-utf-16be \
 			 stringproc/rectangular.csv-utf-16le stringproc/rectangular.csv-utf-32be \
 			 stringproc/rectangular.csv-utf-32le ; do \
 			 iconv -c -t UTF-8 $$i -o tmp && mv tmp $$i ; done
 
 	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/contrib/lurkmathml/mathmltest
+	chmod 755 ./debian/tmp/usr/share/maxima/$(MVERS)/share/translators/m2mj/antlr4
 
 	rm -f debian/tmp/usr/share/info/dir debian/tmp/usr/share/maxima/$(MVERS)/share/logic/COPYING
 

@@ -72,7 +72,8 @@
 	       (loop for i from (1- n) downto (- n 20)
 	     	  while (setq ch (nth i *parse-window*))
 		  do
-		    (cond ((char= ch #\newline)
+		    (cond ((or (eql ch *parse-stream-eof*)
+			       (char= ch #\newline))
 			   (return-from column some))
 			  (t (push ch some))))
 	       some))
@@ -96,7 +97,7 @@
       (apply 'format t format-string (mapcar #'printer l))
       (cond ((or $report_synerr_info (eql *parse-stream* *standard-input*))
 	     (let ((some (column)))
-	       (format t "~%~{~c~}~%~vt^" some (- (length some) 2))
+	       (format t "~%~{~c~}~%~vt^" some (max 0 (- (length some) 2)))
 	       (read-line *parse-stream* nil nil))))
       (terpri)
       (finish-output)
@@ -1790,8 +1791,9 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 ;; STRIP-LINEINFO does not modify EXPR.
 
 (defun strip-lineinfo (expr)
-  (if (atom expr) expr
-    (cons (strip-lineinfo-op (car expr)) (mapcar #'strip-lineinfo (cdr expr)))))
+  (if (or (atom expr) (specrepp expr))
+      expr
+      (cons (strip-lineinfo-op (car expr)) (mapcar #'strip-lineinfo (cdr expr)))))
 
 ;; If something in the operator looks like debugging stuff, remove it.
 ;; It is assumed here that debugging stuff is a list comprising an integer and a string

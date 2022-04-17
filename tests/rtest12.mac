@@ -165,7 +165,7 @@ poissimp(sin(x)^5+cos(x)^5);
 pfeformat:false;
 false$
 
-/* test for bug [ 1648352 ] rules and pattern bug */
+/* test for bug #1097: rules and pattern bug */
 
 (kill (foo, bar),
  matchdeclare (aa, true, gg, lambda([yy], evenp(yy) and (yy > 1))),
@@ -182,6 +182,27 @@ foo(x)^3;
 letsimp (foo(x)^4);
 bar(x)^4 - 2*bar(x)^2 + 1;
 
+/* More tests for bug #1097: pattern variable appears in letsimp result */
+
+(kill (f, g, x, y),
+ matchdeclare ([arg1, arg2, exp], true),
+ let (f(arg1, arg2)^exp, g(arg2, arg1)^exp), 0);
+0;
+
+letsimp (f(x, y)); /* This used to yield g(arg2,arg1) */
+g(y, x);
+
+letsimp (f(x, y)^2); /* This used to yield g(arg2,arg1)^2 */
+g(y, x)^2;
+
+letsimp (f(x, y)^q); /* This used to yield g(arg2,arg1)^q */
+g(y, x)^q;
+
+(remlet (f(arg1, arg2)^exp),
+ remove ([arg1, arg2, exp], matchdeclare),
+ 0);
+0;
+
 /* letsimp confused by debug stuff in expression car
  * mailing list 2012-12-23: "let(simp) behaves different when loaded from batch file"
  */
@@ -194,4 +215,118 @@ bar(x)^4 - 2*bar(x)^2 + 1;
    letsimp(F(0))),
  test ());
 5;
+
+/* Bug #2709: `letsimp' is wrong if `ratexpand' is called */
+
+(let (U, T), 0);
+0;
+
+letsimp (U / n);
+T / n;
+
+ratexpand (a * b * c);
+a * b * c;
+
+letsimp (U / n); /* This used to yield 1 */
+T / n;
+
+(remlet (U), 0);
+0;
+
+/* Some basic letsimp tests, based on bug #3950 */
+
+(let (f, g), 0);
+0;
+
+letsimp (f);
+g;
+
+letsimp (f ());
+f ();
+
+letsimp (f (1));
+f (1);
+
+letsimp (f (1, 2, 3));
+f (1, 2, 3);
+
+(remlet (f), 0);
+0;
+
+(let (f (1), g (1)), 0);
+0;
+
+letsimp (f);
+f;
+
+letsimp (f ());
+f ();
+
+letsimp (f (1));
+g (1);
+
+letsimp (f (1, 2, 3));
+f (1, 2, 3);
+
+(remlet (f (1)), 0);
+0;
+
+(let (f (1, 2, 3), g (1, 2, 3)), 0);
+0;
+
+letsimp (f);
+f;
+
+letsimp (f ());
+f ();
+
+letsimp (f (1));
+f (1);
+
+letsimp (f (1, 2, 3));
+g (1, 2, 3);
+
+(remlet (f (1, 2, 3)), 0);
+0;
+
+/* Bug #3950: letsimp confuses symbols and nullary applications */
+
+(let (f (), g ()), 0);
+0;
+
+/* This used to yield g() */
+letsimp (f);
+f;
+
+/* This used to yield f() */
+letsimp (f ());
+g ();
+
+letsimp (f (1));
+f (1);
+
+letsimp (f (1, 2, 3));
+f (1, 2, 3);
+
+(remlet (f ()), 0);
+0;
+
+(matchdeclare (foo, true), 0);
+0;
+
+(let (foo (), bar ()), 0);
+0;
+
+/* This used to cause a stack overflow */
+letsimp (x);
+x;
+
+/* This also used to cause a stack overflow */
+letsimp (foo ());
+bar ();
+
+(remove (foo, matchdeclare),
+ remlet (foo ()),
+ 0);
+0;
 

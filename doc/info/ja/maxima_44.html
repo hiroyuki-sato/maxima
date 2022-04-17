@@ -1,0 +1,903 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Functions and Variables for Simplification</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for Simplification">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for Simplification">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_43.html#Simplification" rel="up" title="Simplification">
+<link href="maxima_45.html#Mathematical-Functions" rel="next" title="Mathematical Functions">
+<link href="maxima_43.html#Simplification" rel="previous" title="Simplification">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Functions-and-Variables-for-Simplification"></a>
+<div class="header">
+<p>
+Previous: <a href="maxima_43.html#Simplification" accesskey="p" rel="previous">Simplification</a>, Up: <a href="maxima_43.html#Simplification" accesskey="u" rel="up">Simplification</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Functions-and-Variables-for-Simplification-1"></a>
+<h3 class="section">9.1 Functions and Variables for Simplification</h3>
+
+<a name="additive"></a><a name="Item_003a-Simplification_002fdefvr_002fadditive"></a><dl>
+<dt><a name="index-additive"></a>キーワード: <strong>additive</strong></dt>
+<dd>
+<p>もし<code>declare(f, additive)</code>が実行されると:
+</p>
+<p>(1) もし<code>f</code>が1変数関数なら、<code>f</code>が和に適用された時はいつでも、
+<code>f</code>は和の上に分配整理されます。
+例えば、<code>f(y+x)</code>は、<code>f(y)+f(x)</code>に整理されます。
+</p>
+<p>(2) もし<code>f</code>が2変数以上の関数なら、
+<code>sum</code>や<code>integrate</code>の場合と同様に
+加法性が第一番目の引数に対して定義されます。
+例えば、<code>f(h(x)+g(x),x)</code>は<code>f(h(x),x)+f(g(x),x)</code>に整理されます。
+<code>f</code>が<code>sum(x[i],i,lower-limit,upper-limit)</code>の形の式に適用されたときには
+この整理はされません。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;</div></dd></dl>
+
+<a name="antisymmetric"></a><a name="Item_003a-Simplification_002fdefvr_002fantisymmetric"></a><dl>
+<dt><a name="index-antisymmetric"></a>宣言: <strong>antisymmetric</strong></dt>
+<dd><p>もし<code>declare(h,antisymmetric)</code>が実行されると、
+<code>h</code>は反対称として整理されます。
+例えば、<code>h(x,z,y)</code>は<code>-h(x,y,z)</code>と整理されます。
+即ち、<code>symmetric</code>か<code>commutative</code>で得られた結果に(-1)^nを掛けたものとなります。
+ここで、nはその形に変換するのに必要な置換の回数です。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;</div></dd></dl>
+
+<a name="Item_003a-Simplification_002fdeffn_002fcombine"></a><dl>
+<dt><a name="index-combine"></a>関数: <strong>combine</strong> <em>(<var>expr</var>)</em></dt>
+<dd><p>同じ分母を持つ項を単一の項に結合することによって和<var>expr</var>を整理します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="commutative"></a><a name="Item_003a-Simplification_002fdefvr_002fcommutative"></a><dl>
+<dt><a name="index-commutative"></a>宣言: <strong>commutative</strong></dt>
+<dd>
+<p>もし<code>declare(h,commutative)</code>が実行されたなら、
+<code>h</code>は可換関数として整理されます。
+例えば、<code>h(x,z,y)</code>は<code>h(x,y,z)</code>に整理されます。
+これは<code>symmetric</code>と同じです。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;</div></dd></dl>
+
+
+<a name="demoivre"></a><a name="Item_003a-Simplification_002fdeffn_002fdemoivre"></a><dl>
+<dt><a name="index-demoivre"></a>関数: <strong>demoivre</strong> <em>(<var>expr</var>)</em></dt>
+<dt><a name="index-demoivre-1"></a>オプション変数: <strong>demoivre</strong></dt>
+<dd>
+<p>関数<code>demoivre (expr)</code>は、
+グローバル変数<code>demoivre</code>を設定することなしに式を変換します。
+</p>
+<p>変数<code>demoivre</code>が<code>true</code>の時、
+複素数の指数関数は、円関数の項で表した同値な式に変換されます:
+もし<code>b</code>が<code>%i</code>を含まなければ、
+<code>exp (a + b*%i)</code>は、<code>%e^a * (cos(b) + %i*sin(b))</code>に整理されます。
+<code>a</code>と<code>b</code>は展開されません。
+</p>
+<p><code>demoivre</code>のデフォルト値は<code>false</code>です。
+</p>
+<p><code>exponentialize</code>は、円関数や双曲関数を指数関数形に変換します。
+<code>demoivre</code>と<code>exponentialize</code>は、同時に両方trueにはできません。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Complex-variables">Complex variables</a>
+&middot;<a href="maxima_311.html#Category_003a-Trigonometric-functions">Trigonometric functions</a>
+&middot;<a href="maxima_311.html#Category_003a-Hyperbolic-functions">Hyperbolic functions</a>
+&middot;</div></dd></dl>
+
+
+<a name="function_005fdistrib"></a><a name="Item_003a-Simplification_002fdeffn_002fdistrib"></a><dl>
+<dt><a name="index-distrib"></a>関数: <strong>distrib</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>和を積上に分配します。
+式のトップレベルのみで働き、すなわち、再帰的でなく、
+<code>expand</code>より速い点で、<code>expand</code>とは違います。
+トップレベルの和すべてを展開する点で、<code>multthru</code>とは違います。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) distrib ((a+b) * (c+d));
+(%o1)                 b d + a d + b c + a c
+(%i2) multthru ((a+b) * (c+d));
+(%o2)                 (b + a) d + (b + a) c
+(%i3) distrib (1/((a+b) * (c+d)));
+                                1
+(%o3)                    ---------------
+                         (b + a) (d + c)
+(%i4) expand (1/((a+b) * (c+d)), 1, 0);
+                                1
+(%o4)                 ---------------------
+                      b d + a d + b c + a c
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="distribute_005fover"></a><a name="Item_003a-Simplification_002fdefvr_002fdistribute_005fover"></a><dl>
+<dt><a name="index-distribute_005fover"></a>オプション変数: <strong>distribute_over</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>distribute_over</code>は、
+リストや行列や等式のようなバッグ(重複を許す集合)上の関数のマッピングを制御します。
+今回、すべてのMaxima関数がこのプロパティを持つ訳ではありません。
+このプロパティはコマンド<code>properties</code>で調べることが可能です。
+</p>
+<p><code>distribute_over</code>を値<code>false</code>に設定した時、
+関数のマッピングはオフにスイッチされます。
+</p>
+<p>例:
+</p>
+<p><code>sin</code>関数はリスト上にマップします:
+</p>
+<div class="example">
+<pre class="example">(%i1) sin([x,1,1.0]);
+(%o1)                 [sin(x), sin(1), .8414709848078965]
+</pre></div>
+
+<p><code>mod</code>は
+リスト上にマップされる２変数関数です。
+入れ子のリスト上のマッピングも可能です:
+</p>
+<div class="example">
+<pre class="example">(%i2) mod([x,11,2*a],10);
+(%o2)                    [mod(x, 10), 1, 2 mod(a, 5)]
+(%i3) mod([[x,y,z],11,2*a],10);
+(%o3)       [[mod(x, 10), mod(y, 10), mod(z, 10)], 1, 2 mod(a, 5)]
+</pre></div>
+
+<p><code>floor</code>関数の行列や等式上のマッピング:
+</p>
+<div class="example">
+<pre class="example">(%i4) floor(matrix([a,b],[c,d]));
+                            [ floor(a)  floor(b) ]
+(%o4)                       [                    ]
+                            [ floor(c)  floor(d) ]
+(%i5) floor(a=b);
+(%o5)                         floor(a) = floor(b)
+</pre></div>
+
+<p>１変数以上の関数は、任意の引数上、または、すべての引数上にマップします:
+</p>
+<div class="example">
+<pre class="example">(%i6) expintegral_e([1,2],[x,y]);
+(%o6) [[expintegral_e(1, x), expintegral_e(1, y)], 
+       [expintegral_e(2, x), expintegral_e(2, y)]]
+</pre></div>
+
+<p>関数がプロパティdistribute_overを持つかチェックします:
+</p>
+<div class="example">
+<pre class="example">(%i7) properties(abs);
+(%o7) [integral, distributes over bags, noun, rule, gradef]
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
+&middot;</div></dd></dl>
+
+<a name="domain"></a><a name="Item_003a-Simplification_002fdefvr_002fdomain"></a><dl>
+<dt><a name="index-domain"></a>オプション変数: <strong>domain</strong></dt>
+<dd><p>デフォルト値: <code>real</code>
+</p>
+<p><code>domain</code>が<code>complex</code>に設定されている時、
+<code>sqrt (x^2)</code>は、<code>abs(x)</code>を返さず、<code>sqrt (x^2)</code>
+のままを保ちます。
+</p>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
+&middot;</div></dd></dl>
+
+<a name="evenfun"></a><a name="oddfun"></a><a name="Item_003a-Simplification_002fdefvr_002fevenfun"></a><dl>
+<dt><a name="index-evenfun"></a>宣言: <strong>evenfun</strong></dt>
+<dd><a name="Item_003a-Simplification_002fdefvr_002foddfun"></a></dd><dt><a name="index-oddfun"></a>宣言: <strong>oddfun</strong></dt>
+<dd>
+<p><code>declare(f, evenfun</code>や <code>declare(f, oddfun</code>は
+関数 <code>f</code>を奇関数か偶関数として認識するように指示します。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) o (- x) + o (x);
+(%o1)                     o(x) + o(- x)
+(%i2) declare (o, oddfun);
+(%o2)                         done
+(%i3) o (- x) + o (x);
+(%o3)                           0
+(%i4) e (- x) - e (x);
+(%o4)                     e(- x) - e(x)
+(%i5) declare (e, evenfun);
+(%o5)                         done
+(%i6) e (- x) - e (x);
+(%o6)                           0
+</pre></div>
+</dd></dl>
+
+<a name="expand"></a><a name="Item_003a-Simplification_002fdeffn_002fexpand"></a><dl>
+<dt><a name="index-expand"></a>関数: <strong>expand</strong> <em>(<var>expr</var>)</em></dt>
+<dt><a name="index-expand-1"></a>関数: <strong>expand</strong> <em>(<var>expr</var>, <var>p</var>, <var>n</var>)</em></dt>
+<dd>
+<p>式<var>expr</var>を展開します。
+指数和や和の積の積を実行し、有理式の分子をそれぞれの項に分割し、
+（可換、非可換な）積が<var>expr</var>のすべてのレベルの和で分配されます。
+</p>
+<p>多項式の場合、もっと効率的なアルゴリズムの<code>ratexpand</code>を普通使うべきです。
+</p>
+<p><code>maxnegex</code>と<code>maxposex</code>はそれぞれ、展開される最大の負と正の指数を制御します。
+</p>
+<p><code>expand (expr, p, n)</code>は、
+<var>expr</var>を、<code>maxposex</code>に<var>p</var>を<code>maxnegex</code>に<var>n</var>を使って展開します。
+これは、式のすべてではなく、一部を展開するために役立ちます。
+</p>
+<p><code>expon</code> - 自動的に展開される最大の負のべきの指数（<code>expand</code>のコールに独立して）。
+例えば、もしも<code>expon</code>が4なら<code>(x+1)^(-5)</code>は自動では展開されません。
+</p>
+<p><code>expop</code> - 自動的に展開される最大の正の指数。
+もし<code>expop</code>が3以上なら、<code>(x+1)^3</code>は自動的に展開されます。
+もし<code>n</code>が<code>expop</code>よりも大きい時<code>(x+1)^n</code>が展開されるのが望まれるなら、
+<code>maxposex</code>が<code>n</code>より小さくない場合のみ、<code>expand ((x+1)^n)</code>の実行が行われます。
+</p>
+<p><code>ev</code>で使われる<code>expand</code>フラグによって展開が実行されます。
+</p>
+<p>ファイル<samp>share/simplification/facexp.mac</samp>は、
+ユーザーに制御された展開によって式を構成する機能を提供するいくつかの関連関数
+（特に自動ロードされる<code>facsum</code>, <code>factorfacsum</code>と<code>collectterms</code>）と
+変数(<code>nextlayerfactor</code>と<code>facsum_combine</code>)を含みます。
+簡単な関数の記述が<samp>simplification/facexp.usg</samp>にあります。
+<code>demo(&quot;facexp&quot;)</code>でデモが実行できます。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) expr:(x+1)^2*(y+1)^3;
+                               2        3
+(%o1)                   (x + 1)  (y + 1)
+(%i2) expand(expr);
+       2  3        3    3      2  2        2      2      2
+(%o2) x  y  + 2 x y  + y  + 3 x  y  + 6 x y  + 3 y  + 3 x  y
+                                                      2
+                                     + 6 x y + 3 y + x  + 2 x + 1
+(%i3) expand(expr,2);
+               2        3              3          3
+(%o3)         x  (y + 1)  + 2 x (y + 1)  + (y + 1)
+(%i4) expr:(x+1)^-2*(y+1)^3;
+                                   3
+                            (y + 1)
+(%o4)                       --------
+                                   2
+                            (x + 1)
+(%i5) expand(expr);
+            3               2
+           y             3 y            3 y             1
+(%o5) ------------ + ------------ + ------------ + ------------
+       2              2              2              2
+      x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1
+(%i6) expand(expr,2,2);
+</pre><pre class="example">                                   3
+                            (y + 1)
+(%o6)                     ------------
+                           2
+                          x  + 2 x + 1
+</pre></div>
+
+<p>展開なしに式を再整理します:
+</p>
+<div class="example">
+<pre class="example">(%i7) expr:(1+x)^2*sin(x);
+                                       2
+(%o7)                           (x + 1)  sin(x)
+(%i8) exponentialize:true;
+(%o8)                                true
+(%i9) expand(expr,0,0);
+                                   2    %i x     - %i x
+                         %i (x + 1)  (%e     - %e      )
+(%o9)                  - -------------------------------
+                                        2
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+
+<a name="expandwrt"></a><a name="Item_003a-Simplification_002fdeffn_002fexpandwrt"></a><dl>
+<dt><a name="index-expandwrt"></a>関数: <strong>expandwrt</strong> <em>(<var>expr</var>, <var>x_1</var>, ..., <var>x_n</var>)</em></dt>
+<dd>
+<p>式<code>expr</code>を、変数<var>x_1</var>, ..., <var>x_n</var>に関して展開します。
+変数を含む積すべては陽に現れます。
+返される形式は、変数を含む式の和の積を含みません。
+<var>x_1</var>, ..., <var>x_n</var>は、変数、演算子、式であり得ます。
+</p>
+<p>デフォルトでは、分母は展開されませんが、これは、スイッチ<code>expandwrt_denom</code>によって
+制御することができます。
+</p>
+<p>この関数は<samp>simplification/stopex.mac</samp>から自動ロードされます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="expandwert_005fdenom"></a><a name="Item_003a-Simplification_002fdefvr_002fexpandwrt_005fdenom"></a><dl>
+<dt><a name="index-expandwrt_005fdenom"></a>オプション変数: <strong>expandwrt_denom</strong></dt>
+<dd><p>デフォルト値: <code>false</code>
+</p>
+<p><code>expandwrt_denom</code>は、<code>expandwrt</code>によって有理式の扱いを制御します。
+もし<code>true</code>なら、式の分子も分母も<code>expandwrt</code>の引数に従って展開されますが、
+もし<code>expandwrt_denom</code>が<code>false</code>なら、分子だけがその方法で展開されます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="expandwrt_005ffactored"></a><a name="Item_003a-Simplification_002fdeffn_002fexpandwrt_005ffactored"></a><dl>
+<dt><a name="index-expandwrt_005ffactored"></a>関数: <strong>expandwrt_factored</strong> <em>(<var>expr</var>, <var>x_1</var>, ..., <var>x_n</var>)</em></dt>
+<dd>
+<p><code>expandwrt</code>に似ていますが、積の式を幾分違って扱います。
+<code>expandwrt_factored</code>は、<code>expr</code>の、
+変数<var>x_1</var>, ..., <var>x_n</var>を含む因子上でだけ展開します。
+</p>
+<p>この関数は、<samp>simplification/stopex.mac</samp>から自動ロードされます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="expon"></a><a name="Item_003a-Simplification_002fdefvr_002fexpon"></a><dl>
+<dt><a name="index-expon"></a>オプション変数: <strong>expon</strong></dt>
+<dd><p>デフォルト値: 0
+</p>
+<p><code>expon</code>は、(<code>expand</code>のコールに依らず)自動的に展開される負のべき乗の最大指数です。
+例えば、
+もし<code>expon</code>が4なら、
+<code>(x+1)^(-5)</code>は自動的には展開されません。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+
+<a name="exponentialize"></a><a name="Item_003a-Simplification_002fdeffn_002fexponentialize"></a><dl>
+<dt><a name="index-exponentialize"></a>関数: <strong>exponentialize</strong> <em>(<var>expr</var>)</em></dt>
+<dt><a name="index-exponentialize-1"></a>オプション変数: <strong>exponentialize</strong></dt>
+<dd>
+<p>関数<code>exponentialize (expr)</code>は、
+<var>expr</var>の中の円関数や双曲関数を指数関数に変換します。
+グローバル変数<code>exponentialize</code>を設定する必要はありません。
+</p>
+<p>変数<code>exponentialize</code>が<code>true</code>の時、
+円関数や双曲関数すべては指数関数形に変換されます。
+デフォルト値は<code>false</code>です。
+</p>
+<p><code>demoivre</code>は複素数の指数関数を円関数に変換します。
+<code>exponentialize</code>や<code>demoivre</code>は同時にtrueにすることはできません。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Complex-variables">Complex variables</a>
+&middot;<a href="maxima_311.html#Category_003a-Trigonometric-functions">Trigonometric functions</a>
+&middot;<a href="maxima_311.html#Category_003a-Hyperbolic-functions">Hyperbolic functions</a>
+&middot;</div></dd></dl>
+
+
+<a name="expop"></a><a name="Item_003a-Simplification_002fdefvr_002fexpop"></a><dl>
+<dt><a name="index-expop"></a>オプション変数: <strong>expop</strong></dt>
+<dd><p>デフォルト値: 0
+</p>
+<p><code>expop</code>は、自動的に展開される最高の正の指数です。
+例えば、<code>(x + 1)^3</code>が入力された時、
+<code>expop</code>が3以下の時だけ自動的に展開されます。
+もし、<code>n</code>が<code>expop</code>より大きい<code>(x + 1)^n</code>が展開されることを望むなら、
+<code>expand ((x + 1)^n)</code>の実行は、
+<code>maxposex</code>がn以上の時だけ機能します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="lassociative"></a><a name="Item_003a-Simplification_002fdefvr_002flassociative"></a><dl>
+<dt><a name="index-lassociative"></a>宣言: <strong>lassociative</strong></dt>
+<dd>
+<p><code>declare (g, lassociative)</code>は、
+Maximaの整理器に
+<code>g</code>が左結合であることを告げます。
+例えば、<code>g (g (a, b), g (c, d))</code>は<code>g (g (g (a, b), c), d)</code>に整理されます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;<a href="maxima_311.html#Category_003a-Simplification">Simplification</a>
+&middot;</div></dd></dl>
+
+
+<a name="linear"></a><a name="Item_003a-Simplification_002fdefvr_002flinear"></a><dl>
+<dt><a name="index-linear-1"></a>宣言: <strong>linear</strong></dt>
+<dd>
+<p>Maximaの演算子のプロパティの１つ。
+そう宣言された1変数関数<code>f</code>に関して、
+&quot;expansion&quot; <code>f(x + y)</code>は<code>f(x) + f(y)</code>を出力し、
+<code>a</code>が定数の<code>f(a*x)</code>は、<code>a*f(x)</code>を出力します。
+２つ以上の引数の関数に関しては、
+「線形性」は、<code>sum</code>や<code>integrate</code>の場合のように定義されます。
+すなわち、<code>a</code>と<code>b</code>が<code>x</code>に独立の場合，
+<code>f (a*x + b, x)</code>は<code>a*f(x,x) + b*f(1,x)</code>を出力します。
+</p>
+<p><code>linear</code>は、<code>additive</code>かつ<code>outative</code>と同値です。
+<code>opproperties</code>も参照してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;<a href="maxima_311.html#Category_003a-Simplification">Simplification</a>
+&middot;</div></dd></dl>
+
+
+<a name="maxnegex"></a><a name="Item_003a-Simplification_002fdefvr_002fmaxnegex"></a><dl>
+<dt><a name="index-maxnegex"></a>オプション変数: <strong>maxnegex</strong></dt>
+<dd><p>デフォルト値: 1000
+</p>
+<p><code>maxnegex</code>は、
+<code>expand</code>コマンドによって展開される最大の負の指数です。
+（<code>maxposex</code>)も参照してください。）
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+
+<a name="maxposex"></a><a name="Item_003a-Simplification_002fdefvr_002fmaxposex"></a><dl>
+<dt><a name="index-maxposex"></a>オプション変数: <strong>maxposex</strong></dt>
+<dd><p>デフォルト値: 1000
+</p>
+<p><code>maxposex</code>は、
+<code>expand</code>コマンドで展開される最大指数です。
+（<code>maxnegex</code>)も参照してください。）
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+
+<a name="multiplicative"></a><a name="Item_003a-Simplification_002fdefvr_002fmultiplicative"></a><dl>
+<dt><a name="index-multiplicative"></a>宣言: <strong>multiplicative</strong></dt>
+<dd>
+<p><code>declare (f, multiplicative)</code>は、Maxima整理器に
+<code>f</code>が乗法的であることを告げます。
+</p>
+<ol>
+<li> もし<code>f</code>が１変数関数なら、
+整理器が積に適用された<code>f</code>に出会うといつでも、
+<code>f</code>はその積上に分配されます。
+例えば、<code>f(x*y)</code>は<code>f(x)*f(y)</code>に整理されます。
+
+</li><li> もし<code>f</code>が多変数関数なら、
+乗法性は、<code>f</code>の最初の引数の乗法性として定義されます。
+例えば、
+<code>f (g(x) * h(x), x)</code>は、<code>f (g(x) ,x) * f (h(x), x)</code>に整理されます。
+</li></ol>
+
+<p>この式整理は、<code>f</code>が<code>product (x[i], i, m, n)</code>の形の式に適用された時にはなされません。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;<a href="maxima_311.html#Category_003a-Simplification">Simplification</a>
+&middot;</div></dd></dl>
+
+
+<a name="multthru"></a><a name="Item_003a-Simplification_002fdeffn_002fmultthru"></a><dl>
+<dt><a name="index-multthru"></a>関数: <strong>multthru</strong> <em>(<var>expr</var>)</em></dt>
+<dt><a name="index-multthru-1"></a>関数: <strong>multthru</strong> <em>(<var>expr_1</var>, <var>expr_2</var>)</em></dt>
+<dd>
+<p><var>expr</var>の（和の）因子に<var>expr</var>の他の因子を掛ける。
+すなわち、<var>expr</var>は<code><var>f_1</var> <var>f_2</var> ... <var>f_n</var></code>です。
+ここで、少なくとも１つの因子、<var>f_i</var>としましょう、は項の和です。
+この和の各項に、積の中の他の因子を掛けます。
+（すなわち、<var>f_i</var>を除いた因子すべてです。）
+<code>multthru</code>は、指数化された和を展開しません。
+この関数は、（可換であれ非可換であれ）積を和上に分配する最も速い方法です。
+割り算は積として表現されるので、
+<code>multthru</code>は積によって和を割ることにも使うことができます。
+</p>
+<p><code>multthru (<var>expr_1</var>, <var>expr_2</var>)</code>は、
+（和もしくは等式の）<var>expr_2</var>の中の各項に<var>expr_1</var>を掛けます。
+もし<var>expr_1</var>がそれ自身和でなければ、
+この形式は<code>multthru (<var>expr_1</var>*<var>expr_2</var>)</code>と同値です。
+</p>
+<div class="example">
+<pre class="example">(%i1) x/(x-y)^2 - 1/(x-y) - f(x)/(x-y)^3;
+                      1        x         f(x)
+(%o1)             - ----- + -------- - --------
+                    x - y          2          3
+                            (x - y)    (x - y)
+(%i2) multthru ((x-y)^3, %);
+                           2
+(%o2)             - (x - y)  + x (x - y) - f(x)
+(%i3) ratexpand (%);
+                           2
+(%o3)                   - y  + x y - f(x)
+(%i4) ((a+b)^10*s^2 + 2*a*b*s + (a*b)^2)/(a*b*s^2);
+                        10  2              2  2
+                 (b + a)   s  + 2 a b s + a  b
+(%o4)            ------------------------------
+                                  2
+                             a b s
+(%i5) multthru (%);  /* note that this does not expand (b+a)^10 */
+                                        10
+                       2   a b   (b + a)
+(%o5)                  - + --- + ---------
+                       s    2       a b
+                           s
+(%i6) multthru (a.(b+c.(d+e)+f));
+(%o6)            a . f + a . c . (e + d) + a . b
+(%i7) expand (a.(b+c.(d+e)+f));
+(%o7)         a . f + a . c . e + a . c . d + a . b
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+<a name="declaration_005fnary"></a><a name="Item_003a-Simplification_002fdefvr_002fnary"></a><dl>
+<dt><a name="index-nary-2"></a>宣言: <strong>nary</strong></dt>
+<dd>
+<p><code>declare(f, nary)</code>はMaximaに
+関数 <code>f</code>をn項関数として認識するよう指示します。
+</p>
+<p><code>nary</code>宣言は
+<code><a href="maxima_40.html#operator_005fnary">nary</a></code>関数をコールするのと同じではありません。
+<code>declare(f, nary)</code>は唯一の効果は
+例えば、 <code>foo(x, foo(y, z))</code>を
+<code>foo(x, y, z)</code>に整理するように
+入れ子の式をフラットにするようMaxima整理器に指示することです。
+<code><a href="maxima_56.html#declare">declare</a></code>.も参照してください。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) H (H (a, b), H (c, H (d, e)));
+(%o1)               H(H(a, b), H(c, H(d, e)))
+(%i2) declare (H, nary);
+(%o2)                         done
+(%i3) H (H (a, b), H (c, H (d, e)));
+(%o3)                   H(a, b, c, d, e)
+</pre></div>
+</dd></dl>
+
+
+<a name="negdistrib"></a><a name="Item_003a-Simplification_002fdefvr_002fnegdistrib"></a><dl>
+<dt><a name="index-negdistrib"></a>オプション変数: <strong>negdistrib</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>negdistrib</code>が<code>true</code>の時,
+ -1が式上に分配されます。
+例えば、<code>-(x + y)</code>は<code>- y - x</code>になります。
+<code>false</code>に設定すると、<code>- (x + y)</code>はそのまま表示されることになるでしょう。
+これは時々役に立ちますが、非常に注意してください;
+<code>simp</code>フラグ同様に、
+当然のことながら、Maximaの中でローカルな使用以外には、
+これは、<code>false</code>に設定したくないフラグの１つです。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
+&middot;</div>
+</dd></dl>
+
+<a name="opproperties"></a><a name="Item_003a-Simplification_002fdefvr_002fopproperties"></a><dl>
+<dt><a name="index-opproperties"></a>システム変数: <strong>opproperties</strong></dt>
+<dd>
+<p><code>opproperties</code>は、Maximaの整理器が認識する特殊演算子プロパティのリストです:
+<code>linear</code>, <code>additive</code>, <code>multiplicative</code>, <code>outative</code>, <code>evenfun</code>,
+<code>oddfun</code>, <code>commutative</code>, <code>symmetric</code>, <code>antisymmetric</code>, <code>nary</code>, 
+<code>lassociative</code>, <code>rassociative</code>.
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Global-variables">Global variables</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;</div></dd></dl>
+
+
+
+<a name="outative"></a><a name="Item_003a-Simplification_002fdefvr_002foutative"></a><dl>
+<dt><a name="index-outative"></a>宣言: <strong>outative</strong></dt>
+<dd>
+<p><code>declare (f, outative)</code>は、Maximaの整理器に
+<code>f</code>の引数の中の定数因子が外に出すことができることを告げます。
+</p>
+<ol>
+<li> もし<code>f</code>が1変数関数なら、
+整理器が積に適用された<code>f</code>に出会うといつでも、その積は定数因子と、ていすうでない因子に分割され、定数因子が外に出されます。
+例えば、<code>f(a*x)</code>は、<code>a</code>を定数とすると、<code>a*f(x)</code>に整理されます。
+非アトムな定数因子は外に出されません。
+</li><li> もし<code>f</code>が多変数関数なら、
+outativityは、<code>sum</code>や<code>integrate</code>の場合のように定義されます。
+すなわち、<code>f (a*g(x), x)</code>は、<code>a</code>が<code>x</code>に依らないとすると、
+<code>a * f(g(x), x)</code>に整理されます。
+</li></ol>
+
+<p><code>sum</code>, <code>integrate</code>, <code>limit</code>はすべて<code>outative</code>です。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;</div></dd></dl>
+
+<a name="radcan"></a><a name="Item_003a-Simplification_002fdeffn_002fradcan"></a><dl>
+<dt><a name="index-radcan"></a>関数: <strong>radcan</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>対数関数、指数関数、累乗根を含む<var>expr</var>を、与えられ場変数の順序で式の大きなクラス上の標準形式に整理します;
+関数的に同値な形式は特殊な形式にマップされます。
+式の幾分大きなクラスのため、<code>radcan</code>は正規の形式を生成します。
+このクラスの２つの式は、必ずしも、同じ結果ではありませんが、それらの差は<code>radcan</code>によって0に整理されます。
+</p>
+<p>いくつかの式のため、<code>radcan</code>は特殊な時間消費をします。
+これは、因数分解や指数関数の部分分解展開に基づいた整理のための式のコンポーネントの間のある関係を探求するコストです。
+</p>
+
+
+
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) radcan((log(x+x^2)-log(x))^a/log(1+x)^(a/2));
+                                           a/2
+(%o1)                            log(x + 1)
+
+(%i2) radcan((log(1+2*a^x+a^(2*x))/log(1+a^x)));
+(%o2)                                  2
+
+(%i3) radcan((%e^x-1)/(1+%e^(x/2)));
+                                     x/2
+(%o3)                              %e    - 1
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-functions">Simplification functions</a>
+&middot;</div></dd></dl>
+
+
+<a name="radexpand"></a><a name="Item_003a-Simplification_002fdefvr_002fradexpand"></a><dl>
+<dt><a name="index-radexpand"></a>オプション変数: <strong>radexpand</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>radexpand</code>は、根号のいくつかの整理を制御します。
+</p>
+<p><code>radexpand</code>が<code>all</code>の時
+n乗の積の因子のn番目の根を根号の外に出すようにします。
+例えば、もし<code>radexpand</code>が<code>all</code>なら、
+<code>sqrt (16*x^2)</code>は<code>4*x</code>に整理されます。
+</p>
+<p>特に、<code>sqrt (x^2)</code>を考えます。
+</p><ul>
+<li> もし<code>radexpand</code>が<code>all</code>もしくは<code>assume (x &gt; 0)</code>が実行されたなら、
+<code>sqrt(x^2)</code>は<code>x</code>に整理されます。
+</li><li> もし<code>radexpand</code>が<code>true</code>、かつ<code>domain</code>が<code>real</code>(これはデフォルトです)なら、
+<code>sqrt(x^2)</code>は<code>abs(x)</code>に整理されます。
+</li><li> もし<code>radexpand</code>が<code>false</code>、もしくは、<code>radexpand</code>が<code>true</code>かつ<code>domain</code>が<code>complex</code>なら、
+<code>sqrt(x^2)</code>は整理されません。
+</li></ul>
+
+<p><code>domain</code>は、<code>radexpand</code>が<code>true</code>の時だけ意味を持つことに注意してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-flags-and-variables">Simplification flags and variables</a>
+&middot;</div>
+</dd></dl>
+
+
+
+<a name="rassociative"></a><a name="Item_003a-Simplification_002fdefvr_002frassociative"></a><dl>
+<dt><a name="index-rassociative"></a>宣言: <strong>rassociative</strong></dt>
+<dd>
+<p><code>declare (g, rassociative)</code>は、
+Maximaの整理器に
+<code>g</code>が右結合であることを告げます。
+例えば、
+<code>g(g(a, b), g(c, d))</code>は、<code>g(a, g(b, g(c, d)))</code>に整理されます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;</div></dd></dl>
+
+
+<a name="scsimp"></a><a name="Item_003a-Simplification_002fdeffn_002fscsimp"></a><dl>
+<dt><a name="index-scsimp"></a>関数: <strong>scsimp</strong> <em>(<var>expr</var>, <var>rule_1</var>, ..., <var>rule_n</var>)</em></dt>
+<dd>
+<p>順次的な相対整理(Sequential Comparative Simplification) (Stouteによる方法)。
+<code>scsimp</code>は、
+規則<var>rule_1</var>, ..., <var>rule_n</var>に従って、
+<var>expr</var>を整理しようとします。
+もしより小さな式が得られたら、
+プロセスは繰り返されます。
+そうでなければ、すべての整理が試された後、
+元の答えを返します。
+</p>
+<p><code>example (scsimp)</code>はいくつかの例を表示します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Simplification-functions">Simplification functions</a>
+&middot;</div></dd></dl>
+
+<a name="simp"></a><a name="Item_003a-Simplification_002fdefvr_002fsimp"></a><dl>
+<dt><a name="index-simp"></a>オプション変数: <strong>simp</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p><code>simp</code>は整理を有効にします。
+これは標準です。
+<code>simp</code>は<code>evflag</code>でもあります。
+それは関数<code>ev</code>に認識されます。<code>ev</code>を参照してください。
+</p>
+<p><code>simp</code>が
+値<code>false</code>で<code>evflag</code>として使われる時、
+式の評価フェイズの間だけ
+整理は抑制されます。
+フラグは評価フェイズに続く整理を抑制できません。
+</p>
+<p>例:
+</p>
+<p>整理がグローバルにオフにスイッチされます。
+式<code>sin(1.0)</code>は数値に整理されません。
+<code>simp</code>-フラグは整理をオンにスイッチします。
+</p>
+<div class="example">
+<pre class="example">(%i1) simp:false;
+(%o1)                                false
+(%i2) sin(1.0);
+(%o2)                              sin(1.0)
+(%i3) sin(1.0),simp;
+(%o3)                          .8414709848078965
+</pre></div>
+
+<p>整理が再びオンにスイッチされます。
+<code>simp</code>-フラグは完全に整理を抑制できません。
+割り当ては式の評価フェイズの間に起こるので、
+出力は整理された式を示しますが、
+変数<code>x</code>は、値として未整理の式を持ちます。
+</p>
+<div class="example">
+<pre class="example">(%i4) simp:true;
+(%o4)                                true
+(%i5) x:sin(1.0),simp:false;
+(%o5)                          .8414709848078965
+(%i6) :lisp $X
+((%SIN) 1.0)
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+&middot;</div></dd></dl>
+
+
+<a name="symmetric"></a><a name="Item_003a-Simplification_002fdefvr_002fsymmetric"></a><dl>
+<dt><a name="index-symmetric"></a>宣言: <strong>symmetric</strong></dt>
+<dd>
+<p><code>declare (h, symmetric)</code>は、Maximaの整理器に
+<code>h</code>が対称関数であることを告げます。
+例えば、<code>h (x, z, y)</code>は<code>h (x, y, z)</code>に整理されます。
+</p>
+<p><code>commutative</code>は<code>symmetric</code>と同義です。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_311.html#Category_003a-Operators">Operators</a>
+&middot;</div></dd></dl>
+
+<a name="xthru"></a><a name="Item_003a-Simplification_002fdeffn_002fxthru"></a><dl>
+<dt><a name="index-xthru"></a>関数: <strong>xthru</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>（和でなければいけない）<var>expr</var>のすべての項を、
+共通分母上で、<code>ratsimp</code>がするように積や指数和を展開することなしに結合させます。
+<code>xthru</code>は、因子が陽であるときだけ、有理式の分子と分母の共通因子を消去します。
+</p>
+<p>分子と分母の最大公約数の陽因子を消去するために、式を<code>ratsimp</code>する前に<code>xthru</code>を使うのがよい場合があります。
+</p>
+<div class="example">
+<pre class="example">(%i1) ((x+2)^20 - 2*y)/(x+y)^20 + (x+y)^(-19) - x/(x+y)^20;
+</pre><pre class="example">                                20
+                 1       (x + 2)   - 2 y       x
+(%o1)        --------- + --------------- - ---------
+                    19             20             20
+             (y + x)        (y + x)        (y + x)
+</pre><pre class="example">(%i2) xthru (%);
+                                 20
+                          (x + 2)   - y
+(%o2)                     -------------
+                                   20
+                            (y + x)
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Expressions">Expressions</a>
+&middot;</div></dd></dl>
+
+
+
+
+<hr>
+<div class="header">
+<p>
+Previous: <a href="maxima_43.html#Simplification" accesskey="p" rel="previous">Simplification</a>, Up: <a href="maxima_43.html#Simplification" accesskey="u" rel="up">Simplification</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -9,7 +9,7 @@ genericdirDATA = \
 contents.hhc index.hhk header.hhp maxima.hhp
 endif
 
-all-local: maxima-index.lisp maxima.html contents.hhc $(MAXIMA_CHM)
+all-local: maxima-index.lisp maxima_toc.html contents.hhc $(MAXIMA_CHM)
 
 install-data-local: $(INSTALL_CHM)
 
@@ -18,16 +18,16 @@ uninstall-local: $(UNINSTALL_CHM)
 maxima-index.lisp: maxima.info $(srcdir)/../build_index.pl
 	/usr/bin/env perl $(srcdir)/../build_index.pl maxima.info ':crlf' > maxima-index.lisp
 
-maxima.html: maxima.texi $(maxima_TEXINFOS)
-	/usr/bin/env perl $(srcdir)/../texi2html -split_chapter --lang=$(lang) --output=. --css-include=$(srcdir)/../manual.css --init-file $(srcdir)/texi2html.init $(srcdir)/maxima.texi 
+maxima_singlepage.html maxima_toc.html: maxima.texi $(maxima_TEXINFOS)
+	$(srcdir)/../build_html.sh -l $(lang) -D
 
-maxima.pdf: maxima_pdf.texi maxima.texi $(maxima_TEXINFOS)
-	$(TEXI2PDF) $(AM_V_texinfo) -o maxima.pdf $(srcdir)/maxima_pdf.texi
-	rm -f maxima_pdf.fns maxima_pdf.vr maxima_pdf.tp maxima_pdf.pg maxima_pdf.ky maxima_pdf.cp \
-	maxima_pdf.toc maxima_pdf.fn maxima_pdf.aux maxima_pdf.log maxima_pdf.vrs
+maxima.pdf: maxima.texi $(maxima_TEXINFOS)
+	$(TEXI2PDF) $(AM_V_texinfo) -I $(srcdir)/.. -o maxima.pdf $(srcdir)/maxima.texi
+	rm -f maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
+	maxima.toc maxima.fn maxima.aux maxima.log maxima.vrs
 
-contents.hhc: maxima.html
-	/usr/bin/env perl $(srcdir)/../create_index `grep -l name..SEC_Contents maxima*.html`
+contents.hhc: maxima_singlepage.html
+	/usr/bin/env perl $(srcdir)/../create_index maxima_singlepage.html
 
 include $(top_srcdir)/common.mk
 
@@ -43,15 +43,15 @@ clean-info:
 	rm -f maxima-index.lisp
 
 clean-html:
-	rm -f maxima.html maxima_*.html
+	rm -f maxima*.html
 	rm -f maxima_singlepage.html
 	rm -f contents.hhc
 	rm -f index.hhk
 
-EXTRA_DIST = maxima-index.lisp $(genericdirDATA)
+EXTRA_DIST = maxima-index.lisp $(genericdirDATA) maxima_toc.html
 
 # This builds the Windows help file maxima.chm
-maxima.chm: maxima.html maxima.hhp contents.hhc index.hhk
+maxima.chm: maxima_toc.html maxima.hhp contents.hhc index.hhk
 	$(MKDIR_P) chm
 	$(MKDIR_P) chm/figures
 	for hfile in *.html ; do \
