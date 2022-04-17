@@ -1,0 +1,672 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Introduction to orthogonal polynomials</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Introduction to orthogonal polynomials">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Introduction to orthogonal polynomials">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_264.html#orthopoly" rel="up" title="orthopoly">
+<link href="maxima_266.html#Functions-and-Variables-for-orthogonal-polynomials" rel="next" title="Functions and Variables for orthogonal polynomials">
+<link href="maxima_264.html#orthopoly" rel="previous" title="orthopoly">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Introduction-to-orthogonal-polynomials"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_266.html#Functions-and-Variables-for-orthogonal-polynomials" accesskey="n" rel="next">Functions and Variables for orthogonal polynomials</a>, Previous: <a href="maxima_264.html#orthopoly" accesskey="p" rel="previous">orthopoly</a>, Up: <a href="maxima_264.html#orthopoly" accesskey="u" rel="up">orthopoly</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Introduction-to-orthogonal-polynomials-1"></a>
+<h3 class="section">71.1 Introduction to orthogonal polynomials</h3>
+
+<p><code>orthopoly</code>は、
+Chebyshev, Laguerre, Hermite, Jacobi, Legendre, 超球(Gegenbauer)
+多項式を含むいくつかの種類の直交多項式のシンボリックな評価と数値評価のためのパッケージです。
+さらに、<code>orthopoly</code>には球Bessel, 球Hankel, 球調和関数のサポートが含まれます。
+</p>
+<p>ほとんどの部分に関して、
+<code>orthopoly</code>は
+Abramowitz and Stegunの<i>Handbook of Mathematical Functions</i>, Chapter 22 (10th printing, December 1972)の慣例に従います;
+加えて、
+Gradshteyn and Ryzhikの<i>Table of Integrals, Series, and Products</i> (1980 corrected and enlarged edition)と
+Eugen Merzbacherの<i>Quantum Mechanics</i> (2nd edition, 1970)を使います。
+</p>
+
+
+<p>University of Nebraska at Kearney (UNK)のBarton Willisが
+<code>orthopoly</code>パッケージとドキュメンテーションを書きました。
+パッケージはGNU General Public License (GPL)の下で公開されています。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Orthogonal-polynomials">Orthogonal polynomials</a>
+&middot;<a href="maxima_311.html#Category_003a-Share-packages">Share packages</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-orthopoly">Package orthopoly</a>
+&middot;</div>
+<a name="Getting-Started-with-orthopoly"></a>
+<h4 class="subsection">71.1.1 Getting Started with orthopoly</h4>
+
+<p><code>load (&quot;orthopoly&quot;)</code>は<code>orthopoly</code>パッケージをロードします。
+</p>
+<p>3次のLegendre多項式を見つけるには、
+</p>
+<div class="example">
+<pre class="example">(%i1) legendre_p (3, x);
+                      3             2
+             5 (1 - x)    15 (1 - x)
+(%o1)      - ---------- + ----------- - 6 (1 - x) + 1
+                 2             2
+</pre></div>
+
+<p>これを<var>x</var>の冪の和として表すには、
+<var>ratsimp</var>か<var>rat</var>を結果に適用してください。
+</p>
+<div class="example">
+<pre class="example">(%i2) [ratsimp (%), rat (%)];
+                        3           3
+                     5 x  - 3 x  5 x  - 3 x
+(%o2)/R/            [----------, ----------]
+                         2           2
+</pre></div>
+
+<p>あるいはまた、
+<code>legendre_p</code>の第二引数 (「主」変数)を正準有理形(CRE)にしてください。
+</p>
+<div class="example">
+<pre class="example">(%i1) legendre_p (3, rat (x));
+                              3
+                           5 x  - 3 x
+(%o1)/R/                   ----------
+                               2
+</pre></div>
+
+<p>浮動小数点評価に関して、
+<code>orthopoly</code>はランニング誤差解析を使って
+誤差の上限を推定します。
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) jacobi_p (150, 2, 3, 0.2);
+(%o1) interval(- 0.062017037936715, 1.533267919277521E-11)
+</pre></div>
+
+<p>区間(interval)は形式form <code>interval (<var>c</var>, <var>r</var>)</code>を取ります。
+ここで、<var>c</var>は中央値、<var>r</var>は区間の半径です。
+Maximaは区間上の算術をサポートしていないので、
+グラフィックスなどいくつかの状況では
+誤差を抑制し、区間の中央値だけ出力したいでしょう。
+これをするには、オプション変数<code>orthopoly_returns_intervals</code>を
+<code>false</code>に設定してください。
+</p>
+<div class="example">
+<pre class="example">(%i1) orthopoly_returns_intervals : false;
+(%o1)                         false
+(%i2) jacobi_p (150, 2, 3, 0.2);
+(%o2)                  - 0.062017037936715
+</pre></div>
+
+<p>更に知るにはセクションsee <a href="#Floating-point-Evaluation">Floating point Evaluation</a>を参照してください。
+</p>
+<p><code>orthopoly</code>のほとんどの関数は<code>gradef</code>プロパティを持ちます;
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) diff (hermite (n, x), x);
+(%o1)                     2 n H     (x)
+                               n - 1
+(%i2) diff (gen_laguerre (n, a, x), x);
+              (a)               (a)
+           n L   (x) - (n + a) L     (x) unit_step(n)
+              n                 n - 1
+(%o2)      ------------------------------------------
+                               x
+</pre></div>
+
+
+<p>二番目の例の単位階段関数は、
+<var>n</var>が0で評価することによって、そうでなければ生じる誤差を抑制します。
+</p>
+<div class="example">
+<pre class="example">(%i3) ev (%, n = 0);
+(%o3)                           0
+</pre></div>
+
+<p><code>gradef</code>プロパティは「主」変数にのみ適用されます;
+他の引数に関する導関数は、普通、エラーメッセージに帰着します;
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) diff (hermite (n, x), x);
+(%o1)                     2 n H     (x)
+                               n - 1
+(%i2) diff (hermite (n, x), n);
+
+Maxima doesn't know the derivative of hermite with respect the first
+argument
+ -- an error.  Quitting.  To debug this try debugmode(true);
+</pre></div>
+
+<p>一般に、<code>orthopoly</code>の関数はリストや行列上に写像します。
+写像を完全に評価するには、
+オプション変数<code>doallmxops</code>と<code>listarith</code>はともに
+<code>true</code>(デフォルト値)でなければいけません。
+行列上への写像を見るには、以下を考えてください。
+</p>
+<div class="example">
+<pre class="example">(%i1) hermite (2, x);
+                                     2
+(%o1)                    - 2 (1 - 2 x )
+(%i2) m : matrix ([0, x], [y, 0]);
+                            [ 0  x ]
+(%o2)                       [      ]
+                            [ y  0 ]
+(%i3) hermite (2, m);
+               [                             2  ]
+               [      - 2        - 2 (1 - 2 x ) ]
+(%o3)          [                                ]
+               [             2                  ]
+               [ - 2 (1 - 2 y )       - 2       ]
+</pre></div>
+
+<p>二番目の例では、値の<code>i, j</code>要素は<code>hermite (2, m[i,j])</code>です;
+次の例で見るように、これは、
+計算<code>-2 + 4 m . m</code>と同じではありません。
+</p>
+<div class="example">
+<pre class="example">(%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
+                    [ 4 x y - 2      0     ]
+(%o4)               [                      ]
+                    [     0      4 x y - 2 ]
+</pre></div>
+
+<p>定義域外の点で関数を評価すると、
+一般に、<code>orthopoly</code>は未評価関数を返します。
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) legendre_p (2/3, x);
+(%o1)                        P   (x)
+                              2/3
+</pre></div>
+
+<p><code>orthopoly</code>はTexへの翻訳をサポートします;
+端末上での2次元出力も行います。
+</p>
+<div class="example">
+<pre class="example">(%i1) spherical_harmonic (l, m, theta, phi);
+                          m
+(%o1)                    Y (theta, phi)
+                          l
+(%i2) tex (%);
+$$Y_{l}^{m}\left(\vartheta,\varphi\right)$$
+(%o2)                         false
+(%i3) jacobi_p (n, a, a - b, x/2);
+                          (a, a - b) x
+(%o3)                    P          (-)
+                          n          2
+(%i4) tex (%);
+$$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
+(%o4)                         false
+</pre></div>
+
+<a name="Limitations"></a>
+<h4 class="subsection">71.1.2 Limitations</h4>
+
+<p>式がいくつかの直交多項式を記号順で含む時、
+式が実際に0になる可能性がありますが、
+まだMaximaはそれを零に整理することができません。
+もしそんな量で割るなら、困ったことになるでしょう。
+例えば、
+以下の式は
+1より大きな整数 <var>n</var>で零になりますが、
+まだMaximaはそれを零に整理することができません。
+</p>
+<div class="example">
+<pre class="example">(%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x)
+      + (1 - n) * legendre_p (n - 2, x);
+(%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
+                  n - 1           n               n - 2
+</pre></div>
+
+<p>特定の <var>n</var>では式を零に換算できます。
+</p>
+<div class="example">
+<pre class="example">(%i2) ev (% ,n = 10, ratsimp);
+(%o2)                           0
+</pre></div>
+
+<p>一般に、直交多項式の多項式形は
+浮動小数点評価に関しては不適当です。
+以下は例です。
+</p>
+<div class="example">
+<pre class="example">(%i1) p : jacobi_p (100, 2, 3, x)$
+
+(%i2) subst (0.2, x, p);
+(%o2)                3.4442767023833592E+35
+(%i3) jacobi_p (100, 2, 3, 0.2);
+(%o3)  interval(0.18413609135169, 6.8990300925815987E-12)
+(%i4) float(jacobi_p (100, 2, 3, 2/10));
+(%o4)                   0.18413609135169
+</pre></div>
+
+<p>真値は約0.184です;
+この計算は
+極端な減算消去誤差に苦しみます。
+多項式を展開し評価すると、よりよい結果を与えます。
+</p><div class="example">
+<pre class="example">(%i5) p : expand(p)$
+(%i6) subst (0.2, x, p);
+(%o6) 0.18413609766122982
+</pre></div>
+
+<p>これは一般的な規則ではありません;
+多項式を展開することはいつも、
+数値評価により適した式を生じるわけではありません。
+数値評価する最もよい方法は
+断然、1つ以上の関数引数を浮動小数点数にすることです。
+それをすることで、
+特別な浮動小数点アルゴリズムが評価に使われます。
+</p>
+<p>Maximaの <code>float</code>関数は幾分でたらめです;
+もし
+<code>float</code>を記号次数や順序パラメータを持つ直交多項式を含む式に適用するなら、
+これらのパラメータは
+浮動小数点に変換されるかもしれません;
+その後、式は完全には評価されません。
+以下を考えてください。
+</p>
+<div class="example">
+<pre class="example">(%i1) assoc_legendre_p (n, 1, x);
+                               1
+(%o1)                         P (x)
+                               n
+(%i2) float (%);
+                              1.0
+(%o2)                        P   (x)
+                              n
+(%i3) ev (%, n=2, x=0.9);
+                             1.0
+(%o3)                       P   (0.9)
+                             2
+</pre></div>
+
+<p>(%o3)の式は浮動小数点に評価されません;
+<code>orthopoly</code>は
+整数を要求するところで浮動小数点値を認識しません。
+同様に、
+数値評価
+recognize floating point values where it requires an integer. Similarly, 
+numerical evaluation of the 
+<code>pochhammer_max_index</code>を越える位数の
+<code>pochhammer</code>関数は迷惑かもしれません;
+以下を考えてください。
+</p>
+<div class="example">
+<pre class="example">(%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
+(%o1)                         (1)
+                                 10
+</pre></div>
+
+<p><code>float</code>を適用することは
+<var>x</var>を浮動小数点に評価しません。
+</p>
+<div class="example">
+<pre class="example">(%i2) float (x);
+(%o2)                       (1.0)
+                                 10.0
+</pre></div>
+
+<p><var>x</var>を浮動小数点に評価するには、
+<code>pochhammer_max_index</code>を11以上にバインドして、
+<code>float</code>を <var>x</var>に適用する必要があります。
+</p>
+<div class="example">
+<pre class="example">(%i3) float (x), pochhammer_max_index : 11;
+(%o3)                       3628800.0
+</pre></div>
+
+<p><code>pochhammer_max_index</code>のデフォルト値は100です;
+<code>orthopoly</code>をロードした後、値を変えてください。
+</p>
+<p>最後に、参考書は直交多項式の定義を変えることを承知してください;
+一般的にAbramowitz and Stegunの慣例を使っています。
+</p>
+<p>orhtopolyのバグを疑う前に、
+いくつかの特殊なケースをチェックして、
+あなたの定義が<code>orthopoly</code>が使っているものと一致しているかを明らかにしてください。
+</p>
+<p>定義はしばしば規格化について異なります;
+時々、著者は
+<em>(-1, 1)</em>以外の区間上で直交な族を作る関数の「シフト」版を使います。
+例えば、
+<em>(0, 1)</em>上で直交するLegendre多項式を定義するのに、
+以下を定義します。
+</p>
+<div class="example">
+<pre class="example">(%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
+
+(%i2) shifted_legendre_p (2, rat (x));
+                            2
+(%o2)/R/                 6 x  - 6 x + 1
+(%i3) legendre_p (2, rat (x));
+                               2
+                            3 x  - 1
+(%o3)/R/                    --------
+                               2
+</pre></div>
+
+<a name="Floating-point-Evaluation"></a><a name="Floating-point-Evaluation-1"></a>
+<h4 class="subsection">71.1.3 Floating point Evaluation</h4>
+
+<p><code>orthopoly</code>の関数のほとんどは
+浮動小数点評価中の誤差を見積もるのに、
+ランニング誤差解析を使います;
+例外は球Bessel関数と第二種Legendreの陪多項式です。
+数値評価のため、
+球Bessel関数はSLATEC関数をコールします。
+第二種Legendreの陪多項式の数値評価のために特別な方法は使われません。
+</p>
+<p>ランニング誤差解析は
+(丸め単位としても知られている)計算機イプシロンの二次か高次の
+誤差を無視します。
+2,3の他の誤差も無視します。
+(ありそうにありませんが、)実際の誤差は推定を越える可能性があります。
+</p>
+<p>区間は形式 <code>interval (<var>c</var>, <var>r</var>)</code>を持ちます。
+ここで、
+<var>c</var>は区間の中心で、
+<var>r</var>は半径です。
+区間の中心は複素数であり得ますし、
+半径はいつも正の実数です。
+</p>
+<p>以下は例です。
+</p>
+
+<div class="example">
+<pre class="example">(%i1) fpprec : 50$
+
+(%i2) y0 : jacobi_p (100, 2, 3, 0.2);
+(%o2) interval(0.1841360913516871, 6.8990300925815987E-12)
+(%i3) y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
+(%o3) 1.8413609135168563091370224958913493690868904463668b-1
+</pre></div>
+
+<p>実際の誤差が誤差推定よりも小さいことをテストしましょう。
+</p>
+<div class="example">
+<pre class="example">(%i4) is (abs (part (y0, 1) - y1) &lt; part (y0, 2));
+(%o4)                         true
+</pre></div>
+
+<p>なるほど、この例では、
+誤差推定は真の誤差の上限です。
+</p>
+<p>Maximaは区間の算術をサポートしていません。
+</p>
+<div class="example">
+<pre class="example">(%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
+(%o1) interval(0.18032072148437508, 3.1477135311021797E-15)
+        + interval(- 0.19949294375000004, 3.3769353084291579E-15)
+</pre></div>
+
+<p>ユーザーは区間算数を行う計算をする演算子を定義できます。
+区間の足し算を定義するには、
+以下を定義できます。
+</p>
+<div class="example">
+<pre class="example">(%i1) infix (&quot;@+&quot;)$
+
+(%i2) &quot;@+&quot;(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2)
+      + part (y, 2))$
+
+(%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
+(%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
+</pre></div>
+
+<p>引数が複素数の時、特殊な浮動小数点ルーチンがコールされます。
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) legendre_p (10, 2 + 3.0*%i);
+(%o1) interval(- 3.876378825E+7 %i - 6.0787748E+7, 
+                                           1.2089173052721777E-6)
+</pre></div>
+
+<p>これを真値と比較しましょう。
+</p>
+<div class="example">
+<pre class="example">(%i1) float (expand (legendre_p (10, 2 + 3*%i)));
+(%o1)          - 3.876378825E+7 %i - 6.0787748E+7
+</pre></div>
+
+<p>更に、
+引数が多倍長浮動小数点の時、
+特殊な浮動小数点ルーチンがコールされます;
+しかしながら、多倍長浮動小数点は
+倍精度浮動小数点に変換され、最終結果は倍精度です。
+</p>
+<div class="example">
+<pre class="example">(%i1) ultraspherical (150, 0.5b0, 0.9b0);
+(%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
+</pre></div>
+
+<a name="Graphics-and-orthopoly"></a>
+<h4 class="subsection">71.1.4 Graphics and <code>orthopoly</code></h4>
+
+<p>直交多項式を含む式をプロットするには、
+2つのことをしなければいけません:
+</p><ol>
+<li> オプション変数 <code>orthopoly_returns_intervals</code>を <code>false</code>に設定する。
+</li><li> <code>orthopoly</code>関数のすべてのコールをクォートする。
+</li></ol>
+<p>もし関数コールがクォートされていないなら、
+Maximaはプロットする前にそれらを多項式に評価します;
+結果として、
+特殊な浮動小数点コードはコールされません。
+以下は、Legendre多項式を含む式をどうやってプロットするかの例です。
+</p>
+<div class="example">
+<pre class="example">(%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]),
+                        orthopoly_returns_intervals : false;
+(%o1)
+</pre></div>
+
+<img src="./figures/orthopoly1.png" alt="./figures/orthopoly1">
+
+<p>式 <code>legendre_p (5, x)</code><i>全体</i>をクォートします;
+これは
+<code>'legendre_p (5, <var>x</var>)</code>を使って関数名をクォートするだけとは違います。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Plotting">Plotting</a>
+&middot;</div>
+
+<a name="Miscellaneous-Functions"></a>
+<h4 class="subsection">71.1.5 Miscellaneous Functions</h4>
+
+<p><code>orthopoly</code>パッケージは
+Pochhammerシンボルと単位階段函数を定義します。
+<code>orthopoly</code>は<code>gradef</code>文の中で
+Kroneckerのデルタ函数と単位階段函数を使います。
+</p>
+<p>Pochhammerシンボルをガンマ函数の商に変換するには、
+<code>makegamma</code>を使ってください。
+</p>
+<div class="example">
+<pre class="example">(%i1) makegamma (pochhammer (x, n));
+                          gamma(x + n)
+(%o1)                     ------------
+                            gamma(x)
+(%i2) makegamma (pochhammer (1/2, 1/2));
+                                1
+(%o2)                       ---------
+                            sqrt(%pi)
+</pre></div>
+
+<p>Pochhammerシンボルの導函数は
+<code>psi</code>函数を使って与えられます。
+</p>
+<div class="example">
+<pre class="example">(%i1) diff (pochhammer (x, n), x);
+(%o1)             (x)  (psi (x + n) - psi (x))
+                     n     0             0
+(%i2) diff (pochhammer (x, n), n);
+(%o2)                   (x)  psi (x + n)
+                           n    0
+</pre></div>
+
+<p>(%o1)の式に注意する必要があります;
+<code>psi</code>函数の差分は
+<code><var>x</var> = -1, -2, .., -<var>n</var></code>の時
+多項式です。
+これらの多項式は
+<var>n</var>が正の整数の時、
+導函数を<code><var>n</var> - 1</code>次多項式にするように、
+<code>pochhammer (<var>x</var>, <var>n</var>)</code>の因子を相殺します。
+</p>
+<p>Pochhammerシンボルは
+ガンマ函数の商としての表現を通して
+負の位数で定義されます。
+以下を考えてください。
+</p>
+<div class="example">
+<pre class="example">(%i1) q : makegamma (pochhammer (x, n));
+                          gamma(x + n)
+(%o1)                     ------------
+                            gamma(x)
+(%i2) sublis ([x=11/3, n= -6], q);
+                               729
+(%o2)                        - ----
+                               2240
+</pre></div>
+
+<p>代わりに、この結果を直接得ることができます。
+</p>
+<div class="example">
+<pre class="example">(%i1) pochhammer (11/3, -6);
+                               729
+(%o1)                        - ----
+                               2240
+</pre></div>
+
+<p>単位階段函数は左連続です;
+従って、
+</p>
+<div class="example">
+<pre class="example">(%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
+(%o1)                       [0, 0, 1]
+</pre></div>
+
+<p>もし零で左連続でも右連続でもない単位階段函数が必要なら、
+<code>signum</code>を使って自分のものを定義してください;
+例えば、
+</p>
+<div class="example">
+<pre class="example">(%i1) xunit_step (x) := (1 + signum (x))/2$
+
+(%i2) [xunit_step (-1/10), xunit_step (0), xunit_step (1/10)];
+                                1
+(%o2)                       [0, -, 1]
+                                2
+</pre></div>
+
+<p><code>unit_step</code>自身を再定義しないでください;
+<code>orthopoly</code>の中のあるコードは
+単位階段函数が左連続であることを要求します。
+</p>
+
+<a name="Algorithms"></a>
+<h4 class="subsection">71.1.6 Algorithms</h4>
+
+<p>一般的に、
+<code>orthopoly</code>は
+直交多項式の超幾何表現を使うことで記号評価をします
+超幾何函数は
+(ドキュメント化されていない)関数 <code>hypergeo11</code>と <code>hypergeo21</code>を使って
+評価されます。
+例外は半整数Bessel函数と第二種Legendreの陪函数です。
+半整数Bessel函数は明示的な表現を使って評価されます。
+第二種Legendreの陪函数は再帰を使って評価されます。
+</p>
+<p>浮動小数点評価のために、
+函数のほとんどを超幾何形式に再び変換します;
+順方向再帰を使って超幾何函数を評価します。
+ここでも、
+例外は半整数Bessel函数と第二種Legendreの陪函数です。
+数値的に、
+半整数Bessel函数はSLATECコードを使って評価されます。
+</p>
+
+<a name="Item_003a-orthopoly_002fnode_002fFunctions-and-Variables-for-orthogonal-polynomials"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_266.html#Functions-and-Variables-for-orthogonal-polynomials" accesskey="n" rel="next">Functions and Variables for orthogonal polynomials</a>, Previous: <a href="maxima_264.html#orthopoly" accesskey="p" rel="previous">orthopoly</a>, Up: <a href="maxima_264.html#orthopoly" accesskey="u" rel="up">orthopoly</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

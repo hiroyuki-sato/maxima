@@ -8,7 +8,7 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.45.1])
+AC_INIT([maxima], [5.46.0])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability tar-ustar])
 
@@ -616,6 +616,26 @@ AC_ARG_ENABLE(gettext,
 
 AM_CONDITIONAL(ENABLE_GETTEXT, test x$enable_gettext = xtrue)
 
+AC_ARG_ENABLE(build-docs,
+	[  --enable-build-docs        Execute make in doc directories],
+	[case "${enableval}" in
+	       yes) enable_build_docs=true  ;;
+ 	       no)  enable_build_docs=false ;;
+	       *) AC_MSG_ERROR(bad value ${enableval} for --enable-build-docs) ;;
+	 esac],
+	 [enable_build_docs=true])
+
+
+AM_CONDITIONAL(ENABLE_BUILD_DOCS, test x$enable_build_docs = xtrue)
+
+AC_CHECK_PROG(makeinfo_found,makeinfo,true,false)
+
+if test x"${enable_build_docs}" = xtrue ; then
+    if test x"${makeinfo_found}" = xfalse ; then
+        AC_MSG_ERROR(No makeinfo found; consider --disable-build-docs)
+    fi
+fi
+
 dnl languages
 AC_ARG_ENABLE(lang-de,
 	[  --enable-lang-de             German language support],
@@ -628,16 +648,16 @@ AC_ARG_ENABLE(lang-de,
 
 AM_CONDITIONAL(LANG_DE, test x$lang_de = xtrue)
 
-AC_ARG_ENABLE(lang-de-utf8,
-	[  --enable-lang-de-utf8        German language support (UTF-8)],
+AC_ARG_ENABLE(lang-ja,
+	[  --enable-lang-ja             Japanese language support],
      	[case "${enableval}" in
-       		yes) lang_de_utf8=true  ;;
-       		no)  lang_de_utf8=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-de-utf8) ;;
+       		yes) lang_ja=true  ;;
+       		no)  lang_ja=false ;;
+		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-ja) ;;
      	esac],
-	[lang_de_utf8=false])
+	[lang_ja=false])
 
-AM_CONDITIONAL(LANG_DE_UTF8, test x$lang_de_utf8 = xtrue)
+AM_CONDITIONAL(LANG_JA, test x$lang_ja = xtrue)
 
 AC_ARG_ENABLE(lang-es,
 	[  --enable-lang-es             Spanish language support],
@@ -651,17 +671,6 @@ AC_ARG_ENABLE(lang-es,
 AC_SUBST(lang_es)
 AM_CONDITIONAL(LANG_ES, test x$lang_es = xtrue)
 
-AC_ARG_ENABLE(lang-es-utf8,
-	[  --enable-lang-es-utf8        Spanish language support (UTF-8)],
-     	[case "${enableval}" in
-       		yes) lang_es_utf8=true  ;;
-       		no)  lang_es_utf8=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-es-utf8) ;;
-     	esac],
-	[lang_es_utf8=false])
-
-AM_CONDITIONAL(LANG_ES_UTF8, test x$lang_es_utf8 = xtrue)
-
 AC_ARG_ENABLE(lang-pt,
 	[  --enable-lang-pt             Portuguese language support],
      	[case "${enableval}" in
@@ -673,17 +682,6 @@ AC_ARG_ENABLE(lang-pt,
 
 AC_SUBST(lang_pt)
 AM_CONDITIONAL(LANG_PT, test x$lang_pt = xtrue)
-
-AC_ARG_ENABLE(lang-pt-utf8,
-	[  --enable-lang-pt-utf8        Portuguese language support (UTF-8)],
-     	[case "${enableval}" in
-       		yes) lang_pt_utf8=true  ;;
-       		no)  lang_pt_utf8=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-pt-utf8) ;;
-     	esac],
-	[lang_pt_utf8=false])
-
-AM_CONDITIONAL(LANG_PT_UTF8, test x$lang_pt_utf8 = xtrue)
 
 AC_ARG_ENABLE(lang-pt_BR,
 	[  --enable-lang-pt_BR          Brazilian Portuguese language support],
@@ -697,41 +695,16 @@ AC_ARG_ENABLE(lang-pt_BR,
 AC_SUBST(lang_pt_br)
 AM_CONDITIONAL(LANG_PT_BR, test x$lang_pt_br = xtrue)
 
-AC_ARG_ENABLE(lang-pt_BR-utf8,
-	[  --enable-lang-pt_BR-utf8     Brazilian Portuguese language support (UTF-8)],
+AC_ARG_ENABLE(lang-ru,
+	[  --enable-lang-ru             Russian language support],
      	[case "${enableval}" in
-       		yes) lang_pt_br_utf8=true  ;;
-       		no)  lang_pt_br_utf8=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-pt_BR-utf8) ;;
+       		yes) lang_ru=true  ;;
+       		no)  lang_ru=false ;;
+		*) AC_MSG_ERROR(bad value ${enableval} for --enable-lang-ru) ;;
      	esac],
-	[lang_pt_br_utf8=false])
+	[lang_ru=false])
 
-AM_CONDITIONAL(LANG_PT_BR_UTF8, test x$lang_pt_br_utf8 = xtrue)
-
-AC_ARG_ENABLE(recode,
-	[  --enable-recode              Use recode for charset conversion],
-     	[case "${enableval}" in
-       		yes) use_recode=true  ;;
-       		no)  use_recode=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-recode) ;;
-     	esac],
-	[use_recode=false])
-
-dnl iconv and/or recode
-AC_CHECK_PROG(iconv_found,iconv,true,false)
-AC_CHECK_PROG(recode_found,recode,true,false)
-
-if test x"${use_recode}" = xtrue ; then
-    if test x"${recode_found}" = xfalse ; then
-	AC_MSG_ERROR(No recode found)
-    fi
-elif test x"${iconv_found}" = xfalse ; then
-    use_recode=true 
-else
-    use_recode=false
-fi
-
-AM_CONDITIONAL(USE_RECODE, test x$use_recode = xtrue)
+AM_CONDITIONAL(LANG_RU, test x$lang_ru = xtrue)
 
 dnl Optionally build the windows CHM help files
 dnl default to false as requires win32 and Microsoft HTML Help Workshop
@@ -827,7 +800,7 @@ AC_ARG_ENABLE(mathjax,
   [case "${enableval}" in
       yes) mathjax=true
            mathjax_enable='@set mathjax true'
-           mathjax_script='<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>'
+           mathjax_script='<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>'
 ;;
       no)  mathjax=false
            mathjax_enable='@clear mathjax'
@@ -924,7 +897,7 @@ if test x"${clisp}" = xtrue; then
     if test -x ${CLISP_RUNTIME_PATH} ; then
         echo "clisp runtime is \"${CLISP_RUNTIME_PATH}\""
     else
-        AC_MSG_ERROR(clisp runtime \"${CLISP_RUNTIME_PATH}\" is not an executable)
+        AC_MSG_ERROR(clisp runtime "${CLISP_RUNTIME_PATH}" is not an executable)
     fi
     CLISP_RUNTIME=`basename ${CLISP_RUNTIME_PATH}`
 fi
@@ -943,7 +916,7 @@ dnl be a shell script.
 	   	CMUCL_RUNTIME_PATH="${cmucl_path}"
 	else
 		AC_MSG_ERROR([Unable to determine CMUCL runtime path.
-The best guess for CMUCL runtime, \"${CMUCL_RUNTIME_PATH}\", is not
+The best guess for CMUCL runtime, "${CMUCL_RUNTIME_PATH}", is not
 an executable. Use the argument
    --with-cmucl-runtime=<path>
 to set the actual CMUCL executable. If the CMUCL lisp command is a shell
@@ -981,7 +954,7 @@ dnl be a shell script.
 	   	SCL_RUNTIME_PATH="${scl_path}"
 	else
 		AC_MSG_ERROR([Unable to determine SCL runtime path.
-The best guess for SCL runtime, \"${SCL_RUNTIME_PATH}\", is not
+The best guess for SCL runtime, "${SCL_RUNTIME_PATH}", is not
 an executable. Use the argument
    --with-scl-runtime=<path>
 to set the actual SCL executable. If the SCL lisp command is a shell
@@ -995,14 +968,14 @@ if test x"${gcl}" = xtrue; then
    result=`"${GCL_NAME}" -batch -eval '#+ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_SUCCESS~%") #-ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_FAILURE~%")' -eval '(si::bye)'`
    retval=$?
    if test ! x"${retval}" = x"0" ; then
-      AC_MSG_ERROR(unable to run gcl executable \"${GCL_NAME}\".)
+      AC_MSG_ERROR(unable to run gcl executable "${GCL_NAME}".)
    fi
    count=`echo "${result}" | grep -c "MAXIMA_GCL_ANSI_TEST_SUCCESS"`
    if test ! "${count}" = "1" ; then
-      AC_MSG_ERROR([The gcl executable \"${GCL_NAME}\" was not compiled with
+      AC_MSG_ERROR([The gcl executable "${GCL_NAME}" was not compiled with
 the --enable-ansi flag, which is required for Maxima.
 The gcl ANSI-CL check returned
-\"${result}\".])
+"${result}".])
    fi
 fi
 
@@ -1246,7 +1219,6 @@ AC_SUBST(EGREP)
 AC_PATH_PROG([CAT],[cat])
 AC_PROG_SED
 AC_PROG_AWK
-AM_PATH_PYTHON
 AC_SUBST(SED)
 
 # Configure these files and make them executable
@@ -1255,23 +1227,29 @@ AC_CONFIG_FILES([src/startmaxima_abcl.sh], chmod +x src/startmaxima_abcl.sh)
 AC_CONFIG_FILES([xmaxima-local], chmod +x xmaxima-local)
 AC_CONFIG_FILES([tests/test.sh], chmod +x tests/test.sh)
 AC_CONFIG_FILES([doc/info/build_html.sh], chmod +x doc/info/build_html.sh)
+AC_CONFIG_FILES([doc/info/de/build_html.sh], chmod +x doc/info/de/build_html.sh)
+AC_CONFIG_FILES([doc/info/ja/build_html.sh], chmod +x doc/info/ja/build_html.sh)
 AC_CONFIG_FILES([src/maxima], chmod +x src/maxima)
 AC_CONFIG_FILES([src/maxima.bat])
 
-AC_OUTPUT(Makefile maxima.spec maxima.iss \
+AC_CONFIG_FILES([Makefile maxima.spec maxima.iss \
 admin/Makefile src/Makefile src/rmaxima src/autoconf-variables.lisp \
 src/share-subdirs_autogenerated.lisp \
 lisp-utils/Makefile tests/Makefile doc/Makefile \
 crosscompile-windows/Makefile \
 doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi \
 desktopintegration/Makefile \
+doc/info/category-macros.texi \
 doc/info/texi2html.init \
 doc/info/figures/Makefile \
 doc/info/de/Makefile \
-doc/info/de.utf8/Makefile doc/info/es/Makefile doc/info/es.utf8/Makefile \
-doc/info/pt/Makefile doc/info/pt.utf8/Makefile \
+doc/info/es/Makefile \
+doc/info/ja/Makefile \
+doc/info/ja/include-maxima.texi \
+doc/info/pt/Makefile \
 doc/info/pt/include-maxima.texi \
-doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile \
+doc/info/pt_BR/Makefile \
+doc/info/ru/Makefile \
 doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/Makefile doc/man/ru/maxima.1 doc/man/de/Makefile doc/man/de/maxima.1 \
 doc/share/Makefile interfaces/Makefile interfaces/emacs/Makefile \
 interfaces/emacs/emaxima/Makefile interfaces/emacs/imaxima/Makefile \
@@ -1282,8 +1260,10 @@ interfaces/xmaxima/msgs/Makefile interfaces/xmaxima/win32/Makefile \
 plotting/mgnuplot share/Makefile demo/Makefile plotting/Makefile locale/Makefile \
 share/contrib/Makefile share/contrib/integration/Makefile \
 share/contrib/maxima-odesolve/Makefile \
+share/contrib/symplectic_ode/Makefile \
 share/draw/Makefile share/logic/Makefile  doc/info/es/include-maxima.texi \
-src/lisp)
+src/lisp])
+AC_OUTPUT
 
 # The default of 4096 is sometimes too little for the test suite.
 if test x"${sbcl}" = xtrue ; then

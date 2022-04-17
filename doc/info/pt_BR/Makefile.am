@@ -1,6 +1,8 @@
-MAKEINFOFLAGS = --enable-encoding
+MAKEINFOFLAGS = --enable-encoding -I . -I .. -I ../..
 
-lang = pt
+TEXINFO_TEX = ../texinfo.tex
+
+lang = pt_BR
 langsdir = /pt_BR
 
 include ../common-lang.mk

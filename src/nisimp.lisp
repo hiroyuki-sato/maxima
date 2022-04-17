@@ -245,7 +245,20 @@
   (let ((num (cadr e)) (denom (cddr e)) $ratexpand)
     (if $letvarsimp (setq varlist (mapcar #'nisletsimp varlist)))
     (let (($ratexpand t))
-      (setq num (nisletsimp (pdis num)) denom (nisletsimp (pdis denom))))
+      ; Construct new CREs based on the numerator and denominator
+      ; of E and disrep them in the VARLIST and GENVAR context from
+      ; E.
+      ;
+      ; NISLETSIMP can change VARLIST and GENVAR, so the order of
+      ; the PDIS and NISLETSIMP forms matter here.  PDISing and
+      ; NISLETSIMPing the numerator before moving on to the
+      ; denominator is not correct.
+      (let ((varlist (mrat-varlist e))
+            (genvar (mrat-genvar e)))
+        (setq num (pdis num)
+              denom (pdis denom)))
+      (setq num (nisletsimp num)
+            denom (nisletsimp denom)))
     (setq e (list '(mquotient) num denom))
     (if $letrat (nisletsimp ($ratexpand e)) e)))
 
@@ -304,14 +317,16 @@
      (setq x (nisextract a))
      (setq y (nisextract b))
      (cond
-       ((cadr y)
-	(cond ((and (equal (car x) (car y))
-		    (setq newexpt (nisexpocheck (cddr x)
-						(cddr y)
-						c))
+       ((listp (cadr y))
+	(cond ((and (listp (cadr x))
+		    (equal (car x) (car y))
+		    (setq c (cons (cons (car x) (car y)) c))
 		    (setq c (nisargschecker (cadr x)
 					    (cadr y)
-					    c)))
+					    c))
+		    (setq newexpt (nisexpocheck (cddr x)
+						(cddr y)
+						c)))
 	       (cond ((equal '(rat) (car newexpt))
 		      (return (cons (cons a (nisbuild x newexpt))
 				    c)))
@@ -334,10 +349,10 @@
 
 (defun nisextract (x)
   (cond ((or (atom x) (eq (caar x) 'rat))
-	 (cons x (cons nil 1)))
+	 (cons x (cons t 1)))
 	((eq 'mexpt (caar x))
 	 (cond ((atom (cadr x))
-		(cons (cadr x) (cons nil (caddr x))))
+		(cons (cadr x) (cons t (caddr x))))
 	       (t (cons (if (member 'array (cdaadr x) :test #'eq)
 			    (list (caaadr x) 'array)
 			    (caaadr x))
@@ -415,7 +430,7 @@
 
 (defun nisbuild (x newexpt) 
   (list '(mexpt)
-	(if (cadr x)
+	(if (listp (cadr x))
 	    (cons (if (symbolp (car x)) (ncons (car x)) (car x))
 		  (cadr x))
 	    (car x))

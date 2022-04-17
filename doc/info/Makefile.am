@@ -2,35 +2,27 @@ if LANG_ES
   ES_DIR = es
 endif
 
-if LANG_ES_UTF8
-  ES_DIR_UTF8 = es.utf8
-endif
-
 if LANG_PT
   PT_DIR = pt
-endif
-
-if LANG_PT_UTF8
-  PT_DIR_UTF8 = pt.utf8
 endif
 
 if LANG_PT_BR
   PT_BR_DIR = pt_BR
 endif
 
-if LANG_PT_BR_UTF8
-  PT_BR_DIR_UTF8 = pt_BR.utf8
-endif
-
 if LANG_DE
   DE_DIR = de
 endif
 
-if LANG_DE_UTF8
-  DE_DIR_UTF8 = de.utf8
+if LANG_JA
+  JA_DIR = ja
 endif
 
-SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8) $(DE_DIR) $(DE_DIR_UTF8)
+if LANG_RU
+  RU_DIR = ru
+endif
+
+SUBDIRS = $(ES_DIR) $(PT_DIR) $(PT_BR_DIR) $(DE_DIR) $(JA_DIR) $(RU_DIR)
 
 info_TEXINFOS = #maxima.texi
 maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
@@ -47,12 +39,12 @@ maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  clebsch_gordan.texi combinatorics.texi odepack.texi \
  cobyla.texi contrib_ode.texi descriptive.texi diag.texi distrib.texi \
  draw.texi drawdf.texi dynamics.texi engineering-format.texi \
- wrstcse.texi ezunits.texi f90.texi finance.texi \
- fractals.texi ggf.texi graphs.texi grobner.texi hompack.texi impdiff.texi interpol.texi \
+ wrstcse.texi ezunits.texi f90.texi finance.texi fractals.texi gentran.texi \
+ ggf.texi graphs.texi grobner.texi hompack.texi impdiff.texi interpol.texi \
  lapack.texi lbfgs.texi lindstedt.texi linearalgebra.texi lsquares.texi \
  minpack.texi makeOrders.texi mnewton.texi numericalio.texi opsubst.texi \
- operatingsystem.texi \
- orthopoly.texi pytranslate.texi ratpow.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
+ operatingsystem.texi orthopoly.texi pytranslate.texi quantum_computing.texi \
+ ratpow.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
  stats.texi stirling.texi stringproc.texi to_poly_solve.texi unit.texi \
  zeilberger.texi errormessages.texi commandline-options.texi
 
@@ -690,7 +682,7 @@ maxima-index.lisp: build_index.pl maxima.info
 
 DOLLAR_SIGN = $$
 
-maxima_toc.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css texi2html.init
+maxima_singlepage.html maxima_toc.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css texi2html.init
 	./build_html.sh
 
 maxima.epub: maxima_toc.html
@@ -701,8 +693,8 @@ maxima.pdf: maxima.texi $(maxima_TEXINFOS) $(pdffigures)
 	rm -f maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
 	maxima.toc maxima.fn maxima.aux maxima.log
 
-contents.hhc index.hhk: maxima_toc.html
-	/usr/bin/env perl $(srcdir)/create_index maxima_toc.html
+contents.hhc index.hhk: maxima_singlepage.html
+	/usr/bin/env perl $(srcdir)/create_index maxima_singlepage.html
 
 # Squash error on exit from hhc
 maxima.chm: maxima.hhp contents.hhc index.hhk
@@ -755,7 +747,7 @@ clean-chm:
 	rm -rf chm
 endif
 
-EXTRA_DIST = texi2html manual.css texi2html.init maxima.texi maxima.html \
+EXTRA_DIST = manual.css texi2html.init maxima.texi \
     $(genericdirDATA) $(pdffigures) $(macfiles) $(maxima_TEXINFOS) $(figurefiles) \
     create_index build_index.pl maxima-index.lisp docdraw.mac \
     extract_categories1.awk extract_categories1.sed check_tab fix_tab \

@@ -13,7 +13,7 @@
 ;;; "testfile.mac", or a Maxima list containing a file name followed by
 ;;; another Maxima list of the numbers of the test problems that are
 ;;; expected to fail, e.g.  ((mlist simp) "testfile.mac" ((mlist) 7 9 13)).
-(defvar $testsuite_files
+(defparameter $testsuite_files
       `((mlist simp)
 	((mlist simp) "rtest_rules"
 	 #+allegro ((mlist simp) 11 13))
@@ -67,12 +67,11 @@
 	 #+allegro ((mlist simp) 50 241 524 525))
         "rtestode"
 	"rtestode_zp"
-        "rtest3"
+        ((mlist simp) "rtest3" ((mlist simp) 146))
 	;; ECL 16.1.2 still fails in #104
 	((mlist simp) "rtest8"  #+(and m68k linux gnu) 101 #+(and m68k linux gnu) 104
 	 #+ecl ((mlist simp) 104))
-        ((mlist simp) "rtest12"
-	 ((mlist simp) 76 78))
+        "rtest12"
         "rexamples"
         ((mlist simp) "rtesthyp"
 	 ((mlist simp) 105 112 113 123 124 128))
@@ -80,9 +79,11 @@
 	 ((mlist simp) 143))
         "rtestmt19937"
         "rtest_allnummod"
+        ((mlist simp) "rtest_maxmin" 
+                ((mlist simp) 16 17 40 52 53 57 97 109))
         "rtestconjugate"
         ((mlist simp) "rtestsum"
-	 ((mlist simp) 3 4 18 75))
+	 ((mlist simp) 23 24 38 95))
 	;; Tested with acl 10.1
 	((mlist simp) "rtest_trig"
 	 #+allegro ((mlist simp) 58))
@@ -123,8 +124,8 @@
         "rtest_signum"
         "rtest_lambert_w"
         ((mlist simp) "rtest_elliptic"
-	 #-allegro ((mlist simp) 129 143)
-	 #+allegro ((mlist simp) 92 129 143))
+	 #-allegro ((mlist simp) 135 149)
+	 #+allegro ((mlist simp) 92 135 149))
         "rtest_integrate"
         "rtest_integrate_special"
         ((mlist simp) "rtest_sqrt"
@@ -133,7 +134,7 @@
 	 ((mlist simp) 40 41))
         ((mlist simp) "rtest_log")
         ((mlist simp) "rtest_power"
-	 ((mlist simp) 19 20 26 58))
+	 ((mlist simp) 19 20 26))
         "rtestdefstruct"
 	;; Tested with acl 10.1
 	((mlist simp) "rtest_limit"
@@ -145,12 +146,17 @@
 	"rtest_algsys"
         "rtest_trace"
 	"rtest_polynomialp"
-	))
+        ((mlist simp) "rtest_limit_extra" 
+          ((mlist simp)  42 52 53 61 64 67 70 80 81 82 83 84 87 89 90 91 
+                         94 96 98 100 102 103 104 106 108 111 116 118 
+                         119 124 125 126 127 132 133 135 136 137 139 170 187
+                         208))
+          ))
 
-;; The list of share testsuite files. As they are given withut a path
+;; The list of share testsuite files. As they are given without a path
 ;; this assumes that file_search_tests is set appropriately so that maxima
 ;; can actually find these files. (file_search_maxima is a good choice.)
-(defvar $share_testsuite_files
+(defparameter $share_testsuite_files
   '((mlist simp)
     "rtestflatten"
     "rtest_z_transform"
@@ -223,6 +229,7 @@
      ;; 12 fails in ECL 15.3.7, 69 in ECL 13.5.1
      #+ecl ((mlist simp) 12 69)
      #+gcl ((mlist simp) 14))
+    #-allegro "rtest_md5sum"
     "rtest_opproperties"
     "rtest_stats"
     "rtest_distrib"
@@ -319,9 +326,7 @@
     ((mlist simp) "rtest_graphs"
      ;; Tested with acl 10.1
      #+allegro ((mlist simp) 3 4 5))
-    ((mlist simp) "rtest_abs_integrate"
-     #-(or cmucl ccl ecl sbcl gcl)
-     ((mlist) 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 123 125 126 127 178))
+    ((mlist simp) "rtest_abs_integrate" ((mlist) 177 253))
     "rtest_pochhammer"
     ((mlist simp) "rtest_to_poly_solve"
      #-(or cmucl ccl ecl gcl sbcl sbcl)
@@ -382,13 +387,8 @@
      #-(or ecl abcl)
      "rtest_draw"
      ((mlist simp) "rtest_engineering_format"
-      #+sbcl
-      ((mlist simp) 6)
       #+abcl
       ((mlist simp) 6)
-      ;; ECL > 15.3.7 doesn't fail here any more
-      #+ecl
-      ((mlist simp) 6 8 10 12 14)
       #+ccl
       ((mlist simp) 6 8 10 12)
       ;; Tested with acl 10.1

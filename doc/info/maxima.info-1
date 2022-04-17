@@ -12,7 +12,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Top,  Prev: (dir),  Up: (dir)
 
-Maxima 5.45.1 Manual
+Maxima 5.46.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -102,6 +102,7 @@ Additional packages
 * f90-pkg::                         Maxima to fortran translator.
 * finance-pkg::                     Financial package.
 * fractals-pkg::                    Fractals.
+* gentran-pkg::                     Gentran
 * ggf-pkg::                         Generating function of sequences.
 * graphs-pkg::                      Graph theory package.
 * grobner-pkg::                     Functions for working with Groebner bases.
@@ -122,6 +123,7 @@ Additional packages
 * opsubst-pkg::                     Substitutions utility.
 * orthopoly-pkg::                   Orthogonal polynomials.
 * pytranslate::                     Maxima to Python Translation
+* quantum_computing-pkg::           Quantum computing circuits simulator.
 * ratpow-pkg::                      Determine the coefficients of polynoms.
 * romberg-pkg::                     Romberg method for numerical integration.
 * simplex-pkg::                     Linear programming.
@@ -425,6 +427,13 @@ fractals
 * Definitions for Koch snowflakes::
 * Definitions for Peano maps::
 
+gentran
+* Introduction to Gentran::
+* Functions for Gentran::
+* Gentran Mode Switches::
+* Gentran Option Variables::
+* Gentran Evaluation Forms::
+
 ggf
 * Functions and Variables for ggf::
 
@@ -503,6 +512,10 @@ pytranslate
 * Functions in pytranslate::
 * Extending pytranslate::
 
+quantum_computing
+* Package quantum_computing::
+* Functions and Variables for Quantum_Computing::       
+
 ratpow
 * Functions and Variables for ratpow::
 
@@ -537,7 +550,7 @@ stirling
 
 stringproc
 * Introduction to String Processing::
-* Input and Output::
+* String Input and Output::
 * Characters::
 * String Processing::
 * Octets and Utilities for Cryptography::
@@ -567,24 +580,23 @@ Start Maxima with the command "maxima".  Maxima will display version
 information and a prompt.  End each Maxima command with a semicolon.
 End the session with the command "'quit();'".  Here's a sample session:
 
-     [wfs@chromium]$ maxima
-     Maxima 5.9.1 http://maxima.sourceforge.net
-     Using Lisp CMU Common Lisp 19a
+     $ maxima
+     Maxima 5.45.1 https://maxima.sourceforge.io
+     using Lisp SBCL 2.0.1.debian
      Distributed under the GNU Public License. See the file COPYING.
      Dedicated to the memory of William Schelter.
-     This is a development version of Maxima. The function bug_report()
-     provides bug reporting information.
+     The function bug_report() provides bug reporting information.
      (%i1) factor(10!);
-                                 8  4  2
-     (%o1)                      2  3  5  7
+                                        8  4  2
+     (%o1)                             2  3  5  7
      (%i2) expand ((x + y)^6);
-            6        5       2  4       3  3       4  2      5      6
-     (%o2) y  + 6 x y  + 15 x  y  + 20 x  y  + 15 x  y  + 6 x  y + x
+                6        5       2  4       3  3       4  2      5      6
+     (%o2)     y  + 6 x y  + 15 x  y  + 20 x  y  + 15 x  y  + 6 x  y + x
      (%i3) factor (x^6 - 1);
-                                   2            2
-     (%o3)       (x - 1) (x + 1) (x  - x + 1) (x  + x + 1)
+                                          2            2
+     (%o3)              (x - 1) (x + 1) (x  - x + 1) (x  + x + 1)
      (%i4) quit();
-     [wfs@chromium]$
+     $
 
    Maxima can search the info pages.  Use the 'describe' command to show
 information about the command or all the commands and variables
@@ -1393,7 +1405,7 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
           created by 'tellsimp', 'tellsimpafter', 'defmatch', or
           'defrule'.
      'aliases'
-          All atoms which have an user-defined alias, created by the
+          All atoms which have a user-defined alias, created by the
           'alias', 'ordergreat', 'orderless' functions or by declaring
           the atom as a 'noun' with 'declare'.
      'dependencies'
@@ -1753,6 +1765,31 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
           (%i3) result;
           (%o3)                       x (x + 1)
 
+ -- Function: eval_string_lisp (<str>)
+
+     Sequentially read lisp forms from the string <str> and evaluate
+     them.  Any values produced from the last form are returned as a
+     Maxima list.
+
+     Examples:
+
+          (%i1) eval_string_lisp ("");
+          (%o1) []
+          (%i2) eval_string_lisp ("(values)");
+          (%o2) []
+          (%i3) eval_string_lisp ("69");
+          (%o3) [69]
+          (%i4) eval_string_lisp ("1 2 3");
+          (%o4) [3]
+          (%i5) eval_string_lisp ("(values 1 2 3)");
+          (%o5) [1,2,3]
+          (%i6) eval_string_lisp ("(defun $foo (x) (* 2 x))");
+          (%o6) [foo]
+          (%i7) foo (5);
+          (%o7) 10
+
+     See also *note eval_string::.
+
  -- System variable: values
      Initial value: '[]'
 
@@ -2096,11 +2133,23 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
      characters.  This display is sometimes called the "pretty printer"
      display.
 
+     When 'display2d' is 'true', Maxima attempts to honor the global
+     variable for line length, 'linel'.  When an atom (symbol, number,
+     or string) would otherwise cause a line to exceed 'linel', the atom
+     may be printed in pieces on successive lines, with a continuation
+     character (backslash, '\') at the end of the leading piece;
+     however, in some cases, such atoms are printed without a line
+     break, and the length of the line is greater than 'linel'.
+
      When 'display2d' is 'false', the console display is a 1-dimensional
      or linear form which is the same as the output produced by 'grind'.
 
      When 'display2d' is 'false', the value of 'stringdisp' is ignored,
      and strings are always displayed with quote marks.
+
+     When 'display2d' is 'false', Maxima attempts to honor 'linel', but
+     atoms are not broken across lines, and the actual length of an
+     output line may exceed 'linel'.
 
      See also 'leftjust' to switch between a left justified and a
      centered display of equations.
@@ -2138,6 +2187,16 @@ File: maxima.info,  Node: Functions and Variables for Display,  Prev: Functions 
                     4 X        4
           X*4/3;    ---        - X
                      3         3
+
+ -- Function: with_default_2d_display (expr)
+
+     While maxima by default realizes 2d Output using ASCII-Art some
+     frontend change that to TeX, MathML or a specific XML dialect that
+     better suits the needs for this specific frontend.
+     'with_default_2d_display' temporarily switches maxima to the
+     default 2D ASCII Art formatter for outputting the result of 'expr'.
+
+     See also 'set_alt_display' and 'display2d'.
 
  -- Function: dispterms (<expr>)
 
@@ -2735,7 +2794,7 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
      Example:
 
           (%i1) ratepsilon:1e-4;
-          (%o1)                         1.e-4
+          (%o1)                         1.0e-4
           (%i2) rat(bfloat(11111/111111)), bftorat:false;
           `rat' replaced 9.99990999991B-2 by 1/10 = 1.0B-1
                                          1
@@ -3046,19 +3105,22 @@ with strings.
      (%i2) s_2 : "Embedded \"double quotes\" and backslash \\ characters.";
      (%o2) Embedded "double quotes" and backslash \ characters.
      (%i3) s_3 : "Embedded line termination
+     in this string.";
      (%o3) Embedded line termination
      in this string.
-     (%i4) in this string.";
+     (%i4) s_4 : "Ignore the \
+     line termination \
+     characters in \
+     this string.";
      (%o4) Ignore the line termination characters in this string.
-     (%i5) s_4 : "Ignore the \
+     (%i5) stringdisp : false;
      (%o5)                         false
-     (%i6) line termination \
+     (%i6) s_1;
      (%o6)                   This is a string.
-     (%i7) characters in \
+     (%i7) stringdisp : true;
      (%o7)                         true
-     (%i8) this string.";
+     (%i8) s_1;
      (%o8)                  "This is a string."
-     (%i9) stringdisp : false;
 
 
 File: maxima.info,  Node: Functions and Variables for Strings,  Prev: Introduction to Strings,  Up: Strings
@@ -5314,17 +5376,17 @@ File: maxima.info,  Node: Identifiers,  Next: Inequality,  Prev: Nouns and Verbs
 ===============
 
 Maxima identifiers may comprise alphabetic characters, plus the numerals
-0 through 9, plus any special character preceded by the backslash '\'
+0 through 9, plus any other character preceded by the backslash '\'
 character.
 
    A numeral may be the first character of an identifier if it is
 preceded by a backslash.  Numerals which are the second or later
 characters need not be preceded by a backslash.
 
-   Characters may be declared alphabetic by the 'declare' function.  If
-so declared, they need not be preceded by a backslash in an identifier.
-The alphabetic characters are initially 'A' through 'Z', 'a' through
-'z', '%', and '_'.
+   The alphabetic characters are initially '%', '_', and all characters
+for which the Lisp function ALPHA-CHAR-P returns 'true'.  Characters may
+be declared alphabetic by the 'declare' function.  If so declared, they
+need not be preceded by a backslash in an identifier.
 
    Maxima is case-sensitive.  The identifiers 'foo', 'FOO', and 'Foo'
 are distinct.  See *note Lisp and Maxima:: for more on this point.
@@ -5386,8 +5448,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Inequa
  -- System variable: aliases
      Default value: '[]'
 
-     'aliases' is the list of atoms which have an user defined alias
-     (set up by the 'alias', 'ordergreat', 'orderless' functions or by
+     'aliases' is the list of atoms which have a user defined alias (set
+     up by the 'alias', 'ordergreat', 'orderless' functions or by
      declaring the atom a 'noun' with 'declare'.)
 
  -- Keyword: allbut
@@ -8588,50 +8650,50 @@ File: maxima.info,  Node: Introduction to Simplification,  Next: Functions and V
 9.1 Introduction to Simplification
 ==================================
 
-Maxima performs a cycle of actions in response to each new user-typed
-command.  This consists of four steps: reading or "parsing" the input,
-evaluation, simplification and output.  Parsing converts a syntactically
-valid sequence of typed characters into a data structure to be used for
-the rest of the operations.  Evaluation includes replacing names with
-their assigned values.  Simplification means rewriting an expression to
-be easier for the user or other programs to understand.  Output includes
-displaying computational results in a variety of different formats and
-notations.
+Maxima interacts with the user through a cycle of actions called the
+read-eval-print loop (REPL). This consists of three steps: reading and
+parsing, evaluating and simplifying, and outputting.  Parsing converts a
+syntactically valid sequence of typed characters into a internal data
+structure.  Evaluation replaces variable and function names with their
+values and simplification rewrites expressions to be easier for the user
+or other programs to understand.  Output displays results in a variety
+of different formats and notations.
 
    Evaluation and simplification sometimes appear to have similar
-functionality as they both have the goal of removing "complexity" and
-system designers have sometimes divided a task so that it is performed
-partly in each.  For example, 'integrate(x,x)' evaluates the answer as
-'x*x/2', which is then simplified to 'x^2/2'.
+functionality, and Maxima uses simplification in many cases where other
+systems use evaluation.  For example, arithmetic both on numbers and on
+symbolic expressions is simplification, not evaluation: '2+2' simplifies
+to '4', '2+x+x' simplifies to '2+2*x', and 'sqrt(7)^4' simplifies to
+'49'.  Evaluation and simplification are interleaved.  For example,
+'factor(integrate(x+1,x))' first calls the built-in function
+'integrate', giving 'x+x*x*2^-1'; that simplifies to 'x+(1/2)*x^2'; this
+in turn is passed to the 'factor' function, which returns '(x*(x+2))/2'.
 
-   Evaluation is always present: it is the consequence of having a
-programming system with functions, subroutines, variables, values,
-loops, assignments and so on.  In the evaluation step, built-in or
-user-defined function names are replaced by their definitions, variables
-are replaced by their values.  This is largely the same as activities of
-a conventional programming language, but extended to work with symbolic
-mathematical data.  Because of the generality of the mathematics at
-hand, there are different possible models of evaluation and so the
-systems has optional "flags" that can steer the process of evaluation.
+   Evaluation is what makes Maxima a programming language: it implements
+functions, subroutines, variables, values, loops, assignments and so on.
+Evaluation replaces built-in or user-defined function names by their
+definitions and variables by their values.  This is largely the same as
+activities of a conventional programming language, but extended to work
+with symbolic mathematical data.  The system has various optional
+"flags" which the user can set to control the details of evaluation.
 *Note Functions and Variables for Evaluation::.
 
-   By contrast, the intent of simplification is to maintain the value of
-an expression while re-formulating its representation to be smaller,
-simpler to understand, or to conform to particular specifications (like
-factored, expanded).  For example, 'sin(0)' to '0' or 'x+x to 2*x'.
-There are several powerful tools to alter the results of simplification,
-since it is largely in this part of the system that an user can
-incorporate knowledge of newly introduced functions or symbolic notation
-into Maxima.
+   Simplification maintains the value of an expression while
+re-formulating its form to be smaller, simpler to understand, or to
+conform to a particular specification (like expanded).  For example,
+'sin(%pi/2)' to '1', and 'x+x' to '2*x'.  There are many flags which
+control simplification.  For example, with 'triginverses:true',
+'atan(tan(x))' does not simplify to 'x', but with 'triginverses:all', it
+does.
 
-   Simplification is generally done at four different levels:
+   Simplification can be provided in three ways:
    * The internal, built-in automated simplifier,
-   * Built-in simplification routines that can be explicitly called by
-     the user at selected places in a program or command sequence,
-   * User-written simplification routines, linked to the simplifier by
-     using "tellsimp" or "tellsimpafter" and called automatically,
-   * User-written routines that can be explicitly called by the user at
-     selected places in a program or command sequence.
+   * User-written pattern-matching transformations, linked to the
+     simplifier by using "tellsimp" or "tellsimpafter" and called
+     automatically,
+   * User-written simplification routines adding using the 'simplifying'
+     subsystem.
+
    The internal simplifier belongs to the heart of Maxima.  It is a
 large and complicated collection of programs, and it has been refined
 over many years and by thousands of users.  Nevertheless, especially if
@@ -8651,22 +8713,29 @@ whenever the simplifier encounters the respective arithmetic operators
 in an expression tree to be analyzed.
 
    The structure of the simplifier dates back to 1965, and many hands
-have worked on it through the years.  The structure turns out to be, in
-modern jargon, data- directed, or object-oriented.  The program
-dispatches to the appropriate routine depending on the root of some
-sub-tree of the expression, recursively.  This general notion means you
-can make modifications to the simplification process by very local
-changes to the program.  In many cases it is conceptually
-straightforward to add an operator and add its simplification routine
+have worked on it through the years.  It is data-directed, or
+object-oriented in the sense that it dispatches to the appropriate
+routine depending on the root of some sub-tree of the expression,
+recursively.  This general approach means that modifications to
+simplification are generally localized.  In many cases it is
+straightforward to add an operator and its simplification routine
 without disturbing existing code.
 
-   We note that in addition to this general simplifier operating on
-algebraic expression trees, there are several other representations of
-expressions in Maxima which have separate methods and simplifiers.  For
-example, the 'rat' function converts polynomials to vectors of
-coefficients to assist in rapid manipulation of such forms.  Other
-representations include Taylor series and the (rarely used) Poisson
-series.
+   Maxima also provides a variety of transformation routines that can
+change the form of an expression, including 'factor' (polynomial
+factorization), 'horner' (reorganize a polynomial using Horner's rule),
+'partfrac' (rewrite a rational function as partial fractions),
+'trigexpand' (apply the sum formulas for trigonometric functions), and
+so on.
+
+   Users can also write routines that change the form of an expression.
+
+   Besides this general simplifier operating on algebraic expression
+trees, there are several other representations of expressions in Maxima
+which have separate methods.  For example, the 'rat' function converts
+polynomials to vectors of coefficients to assist in rapid manipulation
+of such forms.  Other representations include Taylor series and the
+(rarely used) Poisson series.
 
    All operators introduced by the user initially have no simplification
 programs associated with them.  Maxima does not know anything about
@@ -8689,15 +8758,14 @@ of the expression, such as the ordering of terms in a sum or product,
 are made uniform.  This is important for the other programs to work
 properly.
 
-   You can set a number of option variables which direct Maxima's
-processing to favor particular kinds of patterns as being goals.  You
-can even use the most extreme option which is to turn the simplifier off
-by simp:false.  We do not recommend this since many internal routines
-expect their arguments to be simplified.  (About the only time it seems
-plausible to turn off the simplifier is in the rare case that you want
-to over-ride a built-in simplification.  In that case you might
-temporarily disable the simplifier, put in the new transformation via
-'tellsimp', and then re-enable the simplifier by 'simp:true'.)
+   A number of option variables control simplification.  Indeed,
+simplification can be turned off entirely using 'simp:false'.  However,
+many internal routines will not operate correctly with 'simp:false'.
+(About the only time it seems plausible to turn off the simplifier is in
+the rare case that you want to over-ride a built-in simplification.  In
+that case you might temporarily disable the simplifier, put in the new
+transformation via 'tellsimp', and then re-enable the simplifier by
+'simp:true'.)
 
    It is more plausible for you to associate user-defined symbolic
 function names or operators with properties ('additive', 'lassociative',
@@ -9423,7 +9491,7 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Int
      Simplifies <expr>, which can contain logs, exponentials, and
      radicals, by converting it into a form which is canonical over a
      large class of expressions and a given ordering of variables; that
-     is, all functionally equivalent forms are mapped into an unique
+     is, all functionally equivalent forms are mapped into a unique
      form.  For a somewhat larger class of expressions, 'radcan'
      produces a regular form.  Two equivalent expressions in this class
      do not necessarily have the same appearance, but their difference
@@ -9839,27 +9907,93 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
 
  -- Function: max (<x_1>, ..., <x_n>)
 
-     Return a simplified value for the maximum of the expressions <x_1>
-     through <x_n>.  When 'get (trylevel, maxmin)', is 2 or greater,
-     'max' uses the simplification 'max (e, -e) --> |e|'.  When 'get
-     (trylevel, maxmin)' is 3 or greater, <max> tries to eliminate
-     expressions that are between two other arguments; for example, 'max
-     (x, 2*x, 3*x) --> max (x, 3*x)'.  To set the value of 'trylevel' to
-     2, use 'put (trylevel, 2, maxmin)'.
+     Return a simplified value for the numerical maximum of the
+     expressions <x_1> through <x_n>.  For an empty argument list, 'max'
+     yields 'minf'.
 
-     See also 'min' and 'lmax'.
+     The option variable 'maxmin_effort' controls which simplification
+     methods are applied.  Using the default value of _twelve_ for
+     'maxmin_effort', 'max' uses _all_ available simplification methods.
+     To to inhibit all simplifications, set 'maxmin_effort' to zero.
+
+     When 'maxmin_effort' is one or more, for an explicit list of real
+     numbers, 'max' returns a number.
+
+     Unless 'max' needs to simplify a lengthy list of expressions, we
+     suggest using the default value of 'maxmin_effort'.  Setting
+     'maxmin_effort' to zero (no simplifications), will cause problems
+     for some Maxima functions; accordingly, generally 'maxmin_effort'
+     should be nonzero.
+
+     See also 'min', 'lmax'., and 'lmin'..
+
+     Examples:
+
+     In the first example, setting 'maxmin_effort' to zero suppresses
+     simplifications.
+          (%i1) block([maxmin_effort : 0], max(1,2,x,x, max(a,b)));
+          (%o1) max(1,2,max(a,b),x,x)
+
+          (%i2) block([maxmin_effort : 1], max(1,2,x,x, max(a,b)));
+          (%o2) max(2,a,b,x)
+
+     When 'maxmin_effort' is two or more, 'max' compares pairs of
+     members:
+          (%i1) block([maxmin_effort : 1], max(x,x+1,x+3));
+          (%o1) max(x,x+1,x+3)
+
+          (%i2) block([maxmin_effort : 2], max(x,x+1,x+3));
+          (%o2) x+3
+
+     Finally, when 'maxmin_effort' is three or more, 'max' compares
+     triples members and excludes those that are in between; for example
+          (%i1) block([maxmin_effort : 4], max(x, 2*x, 3*x, 4*x));
+          (%o1) max(x,4*x)
 
  -- Function: min (<x_1>, ..., <x_n>)
 
-     Return a simplified value for the minimum of the expressions 'x_1'
-     through 'x_n'.  When 'get (trylevel, maxmin)', is 2 or greater,
-     'min' uses the simplification 'min (e, -e) --> -|e|'.  When 'get
-     (trylevel, maxmin)' is 3 or greater, 'min' tries to eliminate
-     expressions that are between two other arguments; for example, 'min
-     (x, 2*x, 3*x) --> min (x, 3*x)'.  To set the value of 'trylevel' to
-     2, use 'put (trylevel, 2, maxmin)'.
+     Return a simplified value for the numerical minimum of the
+     expressions <x_1> through <x_n>.  For an empty argument list,
+     'minf' yields 'inf'.
 
-     See also 'max' and 'lmin'.
+     The option variable 'maxmin_effort' controls which simplification
+     methods are applied.  Using the default value of _twelve_ for
+     'maxmin_effort', 'max' uses _all_ available simplification methods.
+     To to inhibit all simplifications, set 'maxmin_effort' to zero.
+
+     When 'maxmin_effort' is one or more, for an explicit list of real
+     numbers, 'min' returns a number.
+
+     Unless 'min' needs to simplify a lengthy list of expressions, we
+     suggest using the default value of 'maxmin_effort'.  Setting
+     'maxmin_effort' to zero (no simplifications), will cause problems
+     for some Maxima functions; accordingly, generally 'maxmin_effort'
+     should be nonzero.
+
+     See also 'max', 'lmax'., and 'lmin'..
+
+     Examples:
+
+     In the first example, setting 'maxmin_effort' to zero suppresses
+     simplifications.
+          (%i1) block([maxmin_effort : 0], min(1,2,x,x, min(a,b)));
+          (%o1) min(1,2,a,b,x,x)
+
+          (%i2) block([maxmin_effort : 1], min(1,2,x,x, min(a,b)));
+          (%o2) min(1,a,b,x)
+
+     When 'maxmin_effort' is two or more, 'min' compares pairs of
+     members:
+          (%i1) block([maxmin_effort : 1], min(x,x+1,x+3));
+          (%o1) min(x,x+1,x+3)
+
+          (%i2) block([maxmin_effort : 2], min(x,x+1,x+3));
+          (%o2) x
+
+     Finally, when 'maxmin_effort' is three or more, 'min' compares
+     triples members and excludes those that are in between; for example
+          (%i1) block([maxmin_effort : 4], min(x, 2*x, 3*x, 4*x));
+          (%o1) max(x,4*x)
 
  -- Function: round (<x>)
 
@@ -10522,7 +10656,7 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
      Represents the natural (base e) logarithm of <x>.
 
      Maxima does not have a built-in function for the base 10 logarithm
-     or other bases.  'log10(x) := log(x) / log(10)' is an useful
+     or other bases.  'log10(x) := log(x) / log(10)' is a useful
      definition.
 
      Simplification and evaluation of logarithms is governed by several
@@ -12097,11 +12231,10 @@ File: maxima.info,  Node: Functions and Variables for Facts,  Next: Functions an
      'contexts' is a list of the contexts which currently exist,
      including the currently active context.
 
-     The context mechanism makes it possible for an user to bind
-     together and name a collection of facts, called a context.  Once
-     this is done, the user can have Maxima assume or forget large
-     numbers of facts merely by activating or deactivating their
-     context.
+     The context mechanism makes it possible for a user to bind together
+     and name a collection of facts, called a context.  Once this is
+     done, the user can have Maxima assume or forget large numbers of
+     facts merely by activating or deactivating their context.
 
      Any symbolic atom can be a context, and the facts contained in that
      context will be retained in storage until destroyed one by one by
@@ -12581,13 +12714,13 @@ can use its own format, if it includes an option '[plot_format,
 
    The plotting formats are the following:
 
-   * *gnuplot* (default on Windows)
+   * *gnuplot*
 
      Used to launch the external program gnuplot, which must be
      installed in your system.  All plotting commands and data are saved
      into the file 'maxout_xxx.gnuplot'.
 
-   * *gnuplot_pipes* (default on non-Windows platforms)
+   * *gnuplot_pipes* (default value)
 
      It is similar to the 'gnuplot' format except that the commands and
      plot data are sent directly to 'gnuplot' without creating any
@@ -13596,6 +13729,12 @@ decide what to do.
 
      See 'make_transform', 'polar_to_xy' and 'spherical_to_xyz'.
 
+ -- Plot option: window [window, <n>]
+
+     Opens the plot in window number <n>, instead of the default window
+     0.  If window number <n> is already opened, the plot in that window
+     will be replaced by the current plot.
+
  -- Plot option: x [x, <min>, <max>]
 
      When used as the first option in a 'plot2d' command (or any of the
@@ -13791,22 +13930,31 @@ specific option.
  -- Plot option: gnuplot_script_file [gnuplot_script_file,
           <file_name_or_function>]
 
-     Set the name of the script file created by 'plot2d' or 'plot3d'
-     when the 'plot_format' is 'gnuplot'.  The value
-     <file_name_or_function> can be a string or a Maxima function of one
-     variable that returns a string.
+     Creates a plot with 'plot2d', 'plot3d', 'mandelbrot' or 'julia'
+     using the 'gnuplot' 'plot_format' and saving the script sent to
+     Gnuplot in the file specified by <file_name_or_function>.  The
+     value <file_name_or_function> can be a string or a Maxima function
+     of one variable that returns a string.  If that string corresponds
+     to a complete file path (directory and file name), the script will
+     be created in that file and will not be deleted after Maxima is
+     closed; otherwise, the string will give the name of a file to be
+     created in the temporary directory and deleted when Maxima is
+     closed.
 
-     In this example, the script file name is set to "sin.gnuplot".
+     In this example, the script file name is set to "sin.gnuplot", in
+     the current directory.
 
-          (%i1) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, "sin.gnuplot"]);
+          (%i1) plot2d( sin(x), [x,0,2*%pi], [gnuplot_script_file, "./sin.gnuplot"]);
 
-          (%o1) ["/tmp/sin.gnuplot"]
+          (%o1) ["./sin.gnuplot"]
 
      In this example, 'gnuplot_maxout_prt(<file>)' is a function that
      takes the default file name, <file>.  It constructs a full file
      name for the data file by interpolating a random 8-digit integer
-     with a pad of zeros into the default file name.  The directory is
-     determined by 'maxima_tempdir' (it is "/tmp" in this example).
+     with a pad of zeros into the default file name ("maxout" followed
+     by the id number of the Maxima process, followed by ".gnuplot").
+     The temporary directory is determined by 'maxima_tempdir' (it is
+     "/tmp" in this example).
 
           (%i1) gnuplot_maxout_prt(file) := block([beg,end],
                   [beg,end] : split(file,"."),
@@ -13817,7 +13965,11 @@ specific option.
           (%o2) ["/tmp/maxout68715_09606909.gnuplot"]
 
      By default, the script would have been saved in a file named
-     'maxoutXXXXX.gnuplot' (XXXXX=68715 in this example).
+     'maxoutXXXXX.gnuplot' (XXXXX=68715 in this example) in the
+     temporary directory.  If the print statement in function
+     'gnuplot_maxout_prt' above included a directory path, the file
+     would have been saved in that directory rather than in the
+     temporary directory.
 
  -- Plot option: gnuplot_pm3d [gnuplot_pm3d, <value>]
 
@@ -13922,6 +14074,12 @@ File: maxima.info,  Node: Gnuplot_pipes Format Functions,  Prev: Gnuplot Options
 
      Closes the pipe to gnuplot which is used with the 'gnuplot_pipes'
      format.
+
+ -- Function: gnuplot_send (<s>)
+
+     Sends the command <s> to the gnuplot pipe.  If that pipe is not
+     currently opened, it will be opened before sending the command.
+     <s> must be a string.
 
  -- Function: gnuplot_restart ()
 
@@ -14031,11 +14189,20 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
 
  -- Function: batch
           batch (<filename>)
-          batch (<filename>, 'option')
+          batch (<filename>, <option>)
+          batch (<S>)
+          batch (<S>, <option>)
 
      'batch(<filename>)' reads Maxima expressions from <filename> and
      evaluates them.  'batch' searches for <filename> in the list
      'file_search_maxima'.  See also 'file_search'.
+
+     'batch(<S>)' reads Maxima expressions from the input stream <S> as
+     created by 'openr'.  The behavior of 'batch' in this case is the
+     same as if the input were a file name, and in the remainder of this
+     description, what is said about input files applies to input
+     streams as well, except that the comments about searching for files
+     do not apply to streams.
 
      'batch(<filename>, demo)' is like 'demo(<filename>)'.  In this case
      'batch' searches for <filename> in the list 'file_search_demo'.
@@ -14074,27 +14241,41 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      working command lines, to give error-free demonstrations, or to
      help organize one's thinking in solving complex problems.
 
-     'batch' evaluates its argument.  'batch' returns the path of
-     <filename> as a string, when called with no second argument or with
-     the option 'demo'.  When called with the option 'test', the return
-     value is a an empty list '[]' or a list with <filename> and the
-     numbers of the tests which have failed.
+     'batch' evaluates its arguments.
+
+     When called with no second argument or with the option 'demo',
+     'batch' returns the path of <filename>, if the argument is a file
+     name, or the path of the file for which the input stream was
+     opened, if the argument is a file input stream.  If the argument is
+     a string input stream, a representation of the input stream is
+     returned.
+
+     When called with the option 'test', the return value is a an empty
+     list '[]' or a list with <filename> and the numbers of the tests
+     which have failed.
 
      See also 'load', 'batchload', and 'demo'.
 
- -- Function: batchload (<filename>)
-
-     Reads Maxima expressions from <filename> and evaluates them,
-     without displaying the input or output expressions and without
-     assigning labels to output expressions.  Printed output (such as
-     produced by 'print' or 'describe')) is displayed, however.
+ -- Function: batchload
+          batchload (<filename>)
+          batchload (<S>)
+     Reads Maxima expressions from input file <filename> or input stream
+     <S> and evaluates them, without displaying the input or output
+     expressions and without assigning labels to output expressions.
+     Printed output (such as produced by 'print' or 'describe')) is
+     displayed, however.
 
      The special variable '%' and the function '%th' refer to previous
      results from the interactive interpreter, not results within the
      file.  The file cannot include ':lisp' constructs.
 
-     'batchload' returns the path of <filename>, as a string.
      'batchload' evaluates its argument.
+
+     'batchload' returns the path of <filename>, if the argument is a
+     file name, or the path of the file for which the input stream was
+     opened, if the argument is a file input stream.  If the argument is
+     a string input stream, a representation of the input stream is
+     returned.
 
      See also 'batch', and 'load'.
 
@@ -14247,8 +14428,11 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      Evaluates expressions in <filename>, thus bringing variables,
      functions, and other objects into Maxima.  The binding of any
      existing object is clobbered by the binding recovered from
-     <filename>.  To find the file, 'load' calls 'file_search' with
-     'file_search_maxima' and 'file_search_lisp' as the search
+     <filename>.
+
+     <filename> must be a string, symbol, or Lisp pathname (as created
+     by 'filename_merge').  To find the file, 'load' calls 'file_search'
+     with 'file_search_maxima' and 'file_search_lisp' as the search
      directories.  If 'load' succeeds, it returns the name of the file.
      Otherwise 'load' prints an error message.
 
@@ -14445,7 +14629,7 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      The general form of 'stringout' writes the values of one or more
      expressions to the output file.  Note that if an expression is a
      variable, only the value of the variable is written and not the
-     name of the variable.  As an useful special case, the expressions
+     name of the variable.  As a useful special case, the expressions
      may be input labels ('%i1', '%i2', '%i3', ...) or output labels
      ('%o1', '%o2', '%o3', ...).
 
@@ -15500,10 +15684,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
                                        x  - 1
 
  -- Function: fullratsubst (<new>, <old>, <expr>)
-
-     fullratsubst ('<old> = <new>', <expr>)  
-     fullratsubst ('[ <old_1> = <new_1>, ..., <old_n> = <new_n> ]',
-     <expr>)
+          fullratsubst ('<old> = <new>', <expr>)
+          fullratsubst ('[ <old_1> = <new_1>, ..., <old_n> = <new_n> ]',
+          <expr>)
 
      'fullratsubst' applies 'lratsubst' repeatedly until <expr> stops
      changing (or 'lrats_max_iter' is reached).  This function is useful
@@ -16994,7 +17177,7 @@ Functions, Chapter 6.
      When 'gamma_expand' is 'true', Maxima expands 'gamma' for arguments
      'z+n' and 'z-n' where 'n' is an integer.
 
-     Maxima knows the derivate of 'gamma'.
+     Maxima knows the derivative of 'gamma'.
 
      Examples:
 
@@ -17037,7 +17220,7 @@ Functions, Chapter 6.
           (%o9)             [z gamma(z), --------, z + 1]
                                           z - 1
 
-     The deriviative of 'gamma':
+     The derivative of 'gamma':
 
           (%i10) diff(gamma(z),z);
           (%o10)                  psi (z) gamma(z)
@@ -18068,7 +18251,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      hypergeometric functions are returned unchanged (instead of
      changing to '%f' as 'hgfred' would).
 
-     'load(hypergeometric);' loads this function.
+     'load("hypergeometric");' loads this function.
 
      See also 'hgfred'.
 
@@ -18124,7 +18307,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      It can be beneficial to load orthopoly too as the following example
      shows.  Note that <L> is the generalized Laguerre polynomial.
 
-          (%i5) load(orthopoly)$
+          (%i5) load("orthopoly")$
           (%i6) hgfred([-2],[a],z);
 
                                               (a - 1)
@@ -18192,7 +18375,10 @@ and relationships given there.
 m instead of the modulus k or the modular angle \alpha.  This is one
 area where we differ from Abramowitz and Stegun who use the modular
 angle for the elliptic functions.  The following relationships are true:
-m = k^2 and k = \sin(\alpha)
+
+   m = k^2
+
+   k = sin(alpha)
 
    The elliptic functions and integrals are primarily intended to
 support symbolic computation.  Therefore, most of derivatives of the
@@ -18371,7 +18557,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
 
      where tau = sn(u,m).
 
-     This is related to elliptic_e by
+     This is related to 'elliptic_e' by
 
      elliptic_eu(u, m) = elliptic_e(asin(sn(u,m)),m)
 
@@ -18385,7 +18571,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
  -- Function: elliptic_kc (<m>)
      The complete elliptic integral of the first kind, defined as
 
-     integrate(1/sqrt(1 - m*sin(x)^2), x, 0, %pi/2)
+     integrate(1/sqrt(1 - m*sin(x)^2), x, 0, pi/2)
 
      For certain values of m, the value of the integral is known in
      terms of Gamma functions.  Use 'makegamma' to evaluate them.
@@ -18393,10 +18579,88 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
  -- Function: elliptic_ec (<m>)
      The complete elliptic integral of the second kind, defined as
 
-     integrate(sqrt(1 - m*sin(x)^2), x, 0, %pi/2)
+     integrate(sqrt(1 - m*sin(x)^2), x, 0, pi/2)
 
      For certain values of m, the value of the integral is known in
      terms of Gamma functions.  Use 'makegamma' to evaluate them.
+
+ -- Function: carlson_rc (<x>, <y>)
+     Carlson's RC integral is defined by
+
+     integrate(1/2*(t+x)^(-1/2)/(t+y), t, 0, inf)
+
+     This integral is related to many elementary functions in the
+     following way:
+
+     log(x) = (x-1)*rc(((1+x)/2)^2, x), x > 0
+
+     asin(x) = x * rc(1-x^2, 1), |x|<= 1
+
+     acos(x) = sqrt(1-x^2)*rc(x^2,1), 0 <= x <=1
+
+     atan(x) = x * rc(1,1+x^2)
+
+     asinh(x) = x * rc(1+x^2,1)
+
+     acosh(x) = sqrt(x^2-1) * rc(x^2,1), x >= 1
+
+     atanh(x) = x * rc(1,1-x^2), |x|<=1
+
+     Also, we have the relationship
+
+     R_C(x,y) = R_F(x,y,y)
+
+     Some special values:
+
+     R_C(0,1) = pi/2
+
+     R_C(0,1/4) = pi
+
+     R_C(2,1) = log(sqrt(2)+1)
+
+     R_C(i, i+1) = pi/4 + i/2*log(sqrt(2)+1)
+
+     R_C(0, i) = (1-i)*pi/(2*sqrt(2))
+
+ -- Function: carlson_rd (<x>, <y>, <z>)
+     Carlson's RD integral is defined by
+
+     R_D(x,y,z) = 3/2*integrate(1/(sqrt(t+x)*sqrt(t+y)*sqrt(t+z)*(t+z)),
+     t, 0, inf)
+
+     We also have the special values
+
+     R_D(x,x,x) = x^(-3/2)
+
+     R_D(0,y,y) = 3/4*pi*y^(-3/2)
+
+     R_D(0,2,1) = 3 sqrt(pi) gamma(3/4)/gamma(1/4)
+
+     It is also related to the complete elliptic E function as follows
+
+     E(m) = R_F(0, 1 - m, 1) - (m/3)* R_D(0, 1 - m, 1)
+
+ -- Function: carlson_rf (<x>, <y>, <z>)
+     Carlson's RF integral is defined by
+
+     R_F(x,y,z) = 1/2*integrate(1/(sqrt(t+x)*sqrt(t+y)*sqrt(t+z)), t, 0,
+     inf)
+
+     We also have the special values
+
+     R_F(0,1,2) = gamma(1/4)^2/(4*sqrt(2*pi))
+
+     R_F(i,-i,0) = gamma(1/4)^2/(4*sqrt(pi))
+
+     It is also related to the complete elliptic E function as follows
+
+     E(m) = R_F(0, 1 - m, 1) - (m/3)* R_D(0, 1 - m, 1)
+
+ -- Function: carlson_rj (<x>, <y>, <z>, <p>)
+     Carlson's RJ integral is defined by
+
+     R_J(x,y,z) = 1/2*integrate(1/(sqrt(t+x)*sqrt(t+y)*sqrt(t+z)*(t+p)),
+     t, 0, inf)
 
 
 File: maxima.info,  Node: Limits,  Next: Differentiation,  Prev: Elliptic Functions,  Up: Top
@@ -18490,6 +18754,38 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
      'limit(x/(x-1)-1/log(x),x,1,plus)'.  When 'tlimswitch' is 'false'
      and the limit of input expression cannot be computed directly,
      'limit' will return an unevaluated limit expression.
+
+ -- Function: gruntz
+          gruntz (<expr>, <var>, <value>)
+          gruntz (<expr>, <var>, <value>, <direction>)
+
+     Compute limit of expression <expr> with respect to variable <var>
+     at <value>.  When <value> is not infinite (i.e., not 'inf' or
+     'minf'), <direction> must be supplied, either 'plus' for a limit
+     from above, or 'minus' for a limit from below.
+
+     If 'gruntz' cannot find the limit, an unevaluated expression
+     'gruntz(...)' is returned.
+
+     'gruntz' implements the method described in the dissertation of
+     Dominik Gruntz, "On Computing Limits in a Symbolic Manipulation
+     System" (ETH Zurich, 1996).
+
+     The algorithm identifies the most rapidly varying subexpression,
+     replaces it with a new variable, rewrites the expression in terms
+     of the new variable, and then repeats.
+
+     The algorithm doesn't handle oscillating functions, so it can't do
+     things like 'limit(sin(x)/x, x, inf)'.
+
+     To handle limits involving functions such as 'gamma(x)' and
+     'erf(x)', the Gruntz algorithm requires them to be written in terms
+     of asymptotic expansions, which Maxima cannot currently do.
+
+     The Gruntz algorithm assumes that variables and expressions are
+     real, so, for example, it can't handle 'limit((-2)^x, x, inf)'.
+
+     'gruntz' is one of the methods called from 'limit'.
 
 
 File: maxima.info,  Node: Differentiation,  Next: Integration,  Prev: Limits,  Up: Top
@@ -21138,7 +21434,7 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      Returns the left-hand side (that is, the first argument) of the
      expression <expr>, when the operator of <expr> is one of the
      relational operators '< <= = # equal notequal >= >', one of the
-     assignment operators ':= ::= : ::', or an user-defined binary infix
+     assignment operators ':= ::= : ::', or a user-defined binary infix
      operator, as declared by 'infix'.
 
      When <expr> is an atom or its operator is something other than the
@@ -21373,7 +21669,7 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      Returns the right-hand side (that is, the second argument) of the
      expression <expr>, when the operator of <expr> is one of the
      relational operators '< <= = # equal notequal >= >', one of the
-     assignment operators ':= ::= : ::', or an user-defined binary infix
+     assignment operators ':= ::= : ::', or a user-defined binary infix
      operator, as declared by 'infix'.
 
      When <expr> is an atom or its operator is something other than the
@@ -21726,26 +22022,21 @@ File: maxima.info,  Node: Functions and Variables for Differential Equations,  P
      See 'ode2' for an example of its usage.
 
  -- Function: desolve
-          desolve (<eqn>, <x>)
-          desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+          desolve (<eqn>, <y>)
+          desolve ([<eqn_1>, ..., <eqn_n>], [<y_1>, ..., <y_n>])
 
      The function 'desolve' solves systems of linear ordinary
      differential equations using Laplace transform.  Here the <eqn>'s
-     are differential equations in the dependent variables <x_1>, ...,
-     <x_n>.  The functional dependence of <x_1>, ..., <x_n> on an
+     are differential equations in the dependent variables <y_1>, ...,
+     <y_n>.  The functional dependence of <y_1>, ..., <y_n> on an
      independent variable, for instance <x>, must be explicitly
-     indicated in the variables and its derivatives.  For example, this
-     would not be the correct way to define two equations:
-
-          eqn_1: 'diff(f,x,2) = sin(x) + 'diff(g,x);
-          eqn_2: 'diff(f,x) + x^2 - f = 2*'diff(g,x,2);
-
-     The correct way would be:
+     indicated in the variables and its derivatives.  For example, the
+     _correct_ way to define the differential equations would be:
 
           eqn_1: 'diff(f(x),x,2) = sin(x) + 'diff(g(x),x);
           eqn_2: 'diff(f(x),x) + x^2 - f(x) = 2*'diff(g(x),x,2);
 
-     The call to the function 'desolve' would then be
+     The call to the function 'desolve' would then be:
           desolve([eqn_1, eqn_2], [f(x),g(x)]);
 
      If initial conditions at 'x=0' are known, they can be supplied
@@ -21928,7 +22219,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
 
      'polartorect' is the inverse function of 'recttopolar'.
 
-     'load(fft)' loads this function.  See also 'fft'.
+     'load("fft")' loads this function.  See also 'fft'.
 
  -- Function: recttopolar (<a>, <b>)
 
@@ -21948,7 +22239,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
 
      'recttopolar' is the inverse function of 'polartorect'.
 
-     'load(fft)' loads this function.  See also 'fft'.
+     'load("fft")' loads this function.  See also 'fft'.
 
  -- Function: inverse_fft (<y>)
 
@@ -21976,7 +22267,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      this definition of the transform may differ from that used by other
      mathematical software.
 
-     'load(fft)' loads this function.
+     'load("fft")' loads this function.
 
      See also 'fft' (forward transform), 'recttopolar', and
      'polartorect'.
@@ -22061,7 +22352,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           a[n/2] = realpart (y[n/2])
           b[n/2] = 0
 
-     'load(fft)' loads this function.
+     'load("fft")' loads this function.
 
      See also 'inverse_fft' (inverse transform), 'recttopolar', and
      'polartorect'..  See 'real_fft' for FFTs of a real-valued input,
@@ -22189,7 +22480,7 @@ length of the sequence is not constrained to be a power of two.  In
 fact, any length is supported, but it is most efficient when the length
 has the form 2^r*3^s*5^t.
 
-   'load(fftpack5)' loads this function.
+   'load("fftpack5")' loads this function.
 
  -- Function: fftpack5_fft (<x>)
 
@@ -22197,7 +22488,7 @@ has the form 2^r*3^s*5^t.
      complex sequence.  However, the length of <x> is not limited to a
      power of 2.
 
-     'load(fftpack5)' loads this function.
+     'load("fftpack5")' loads this function.
 
      Examples:
 
@@ -22411,7 +22702,7 @@ File: maxima.info,  Node: Functions for numerical solution of equations,  Next: 
      'false'.  Thus it is not necessary that <expr> evaluate to a
      number.
 
-     'load(newton1)' loads this function.
+     'load("newton1")' loads this function.
 
      See also 'realroots', 'allroots', 'find_root' and 'mnewton'.
 
@@ -23836,7 +24127,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      name of an operator enclosed in quote marks, the name of a
      function, or a lambda expression.
 
-     The dot operator '.' is an useful choice in some contexts.
+     The dot operator '.' is a useful choice in some contexts.
 
      See also 'matrix_element_add' and 'matrix_element_transpose'.
 
@@ -24144,7 +24435,7 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
  -- Function: unitvector (<x>)
  -- Function: uvect (<x>)
 
-     Returns <x>/norm(<x>); this is an unit vector in the same direction
+     Returns <x>/norm(<x>); this is a unit vector in the same direction
      as <x>.
 
      'load ("eigen")' loads this function.
@@ -24413,7 +24704,7 @@ capacity is at hand, a complex metric with intricate functional and
 coordinate dependencies can easily lead to expressions whose size is
 excessive and whose structure is hidden.  In addition, many calculations
 involve intermediate expressions which swell causing programs to
-terminate before completion.  Through experience, an user can avoid many
+terminate before completion.  Through experience, a user can avoid many
 of these difficulties.
 
    Because of the special way in which tensors and tensor operations are
@@ -24761,13 +25052,6 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
                - g      g      ichr2      ichr2      ichr2     ichr2
                                     %1 %3      %2 %6      %4 r      %5 %7
 
- -- Function: show (<expr>)
-
-     Displays 'expr' with the indexed objects in it shown having
-     covariant indices as subscripts, contravariant indices as
-     superscripts.  The derivative indices are displayed as subscripts,
-     separated from the covariant indices by a comma.
-
  -- Option variable: flipflag
      Default value: 'false'
 
@@ -24929,7 +25213,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      as demonstrated by the following example:
 
 
-          (%i1) load(ctensor);
+          (%i1) load("ctensor");
           (%o1)       /share/tensor/ctensor.mac
           (%i2) load("itensor");
           (%o2)      /share/tensor/itensor.lisp
@@ -25397,8 +25681,8 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      that was established by the function 'coord'.  'remcoord(all)'
      removes this property from all indexed objects.
 
- -- Function: makebox (<expr>)
-     Display <expr> in the same manner as 'show'; however, any tensor
+ -- Function: makebox (<expr>,<g>)
+     Display <expr> using the metric <g> such that any tensor
      d'Alembertian occurring in <expr> will be indicated using the
      symbol '[]'.  For example, '[]p([m],[n])' represents
      'g([],[i,j])*p([m],[n],i,j)'.
@@ -26165,7 +26449,7 @@ translate tensor expressions into appropriately indexed TeX objects.
 
           (%i1) load("itensor");
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) load(tentex);
+          (%i2) load("tentex");
           (%o2)       /share/tensor/tentex.lisp
           (%i3) idummyx:m;
           (%o3)                                  m

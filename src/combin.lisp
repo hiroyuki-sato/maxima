@@ -1376,9 +1376,9 @@
 ;; product routines
 
 (defmspec $product (l)
+  (arg-count-check 4 l)
   (setq l (cdr l))
-  (cond ((not (= (length l) 4)) (merror (intl:gettext "product: expected exactly four arguments.")))
-	((dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) nil :evaluate-summand t))))
+  (dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) nil :evaluate-summand t))
 
 (declare-top (special $ratsimpexpons))
 
@@ -1400,8 +1400,9 @@
 	(t (ratf ($ratdisrep e)))))
 
 (defun srrat (e)
-  (cons (list 'mrat 'simp (caddar e) (cadddr (car e)))
-	(srrat2 (cdr e))))
+  (unless (some (lambda (v) (switch 'multivar v)) (mrat-tlist e))
+    (cons (list 'mrat 'simp (mrat-varlist e) (mrat-genvar e))
+          (srrat2 (mrat-ps e)))))
 
 (defun srrat2 (e)
   (if (pscoefp e) e (srrat3 (terms e) (gvar e))))

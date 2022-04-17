@@ -85,16 +85,15 @@
 ;; This is much faster (3-4 times) than the original factorial
 ;; function.
 
-(defun k (n m) 
-  (if (<= n m)
-      n
-      (* (k n (* 2 m))
-	 (k (- n m) (* 2 m)))))
-
 (defun factorial (n)
-  (if (zerop n)
-      1
-      (k n 1)))
+  (labels ((k (n m) 
+	     (if (<= n m)
+		 n
+		 (* (k n (* 2 m))
+		    (k (- n m) (* 2 m))))))
+    (if (zerop n)
+	1
+	(k n 1))))
 
 ;;; Factorial has mirror symmetry
 
@@ -515,12 +514,10 @@ summation when necessary."
 
 (defun subst-if-not-freeof (x y expr)
   (if ($freeof y expr)
+      ;; suppressing substitution here avoids substituting for
+      ;; local variables recognize by freeof, e.g., formal argument of lambda.
       expr
-      (if (atom expr)
-	  x
-	  (let* ((args (cdr expr))
-		 (L (eval `(mapcar (lambda (a) (subst-if-not-freeof ',x ',y a)) ',args))))
-	    (cons (car expr) L)))))
+      (let ($simp) (maxima-substitute x y expr))))
 
 (defun mevalsumarg (expr ind low hi)
   (if (let (($prederror nil))

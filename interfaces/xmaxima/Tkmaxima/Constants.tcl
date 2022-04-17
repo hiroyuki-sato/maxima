@@ -3,7 +3,7 @@
 # Copyright (C) 1998 William F. Schelter                   #
 # For distribution under GNU public License.  See COPYING. #
 #                                                          #
-#     Time-stamp: "2021-06-14 20:16:00 villate"            #
+#     Time-stamp: "2021-06-14 15:38:17 villate"            #
 ############################################################
 
 proc cMAXINITBeforeIni {} {

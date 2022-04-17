@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Introduction to itensor</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Introduction to itensor">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Introduction to itensor">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_116.html#itensor" rel="up" title="itensor">
+<link href="maxima_118.html#Functions-and-Variables-for-itensor" rel="next" title="Functions and Variables for itensor">
+<link href="maxima_116.html#itensor" rel="previous" title="itensor">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Introduction-to-itensor"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_118.html#Functions-and-Variables-for-itensor" accesskey="n" rel="next">Functions and Variables for itensor</a>, Previous: <a href="maxima_116.html#itensor" accesskey="p" rel="previous">itensor</a>, Up: <a href="maxima_116.html#itensor" accesskey="u" rel="up">itensor</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Introduction-to-itensor-1"></a>
+<h3 class="section">25.1 Introduction to itensor</h3>
+
+<p>Maximaは、記号的なテンソル操作を２つの異なったタイプで実装しています:
+成分テンソル操作(<code>ctensor</code>パッケージ)と添字テンソル操作(<code>itensor</code>パッケージ)。
+</p>
+<p>注意せよ: 以下の&rsquo;新しいテンソル表記&rsquo;に関するノートを参照してください。
+</p>
+<p>成分テンソル操作は、
+幾何学的テンソルオブジェクトが配列または行列で表現されることを意味します。
+縮約や共変微分のようなテンソル演算は実際に、
+<code>do</code>文を伴う繰り返し用(ダミー)添字上の和によって実行されます。
+すなわち、配列や行列に記憶された適切なテンソル成分上で陽に演算を実行します。
+</p>
+<p>添字テンソル操作は、
+共変、反変、そして微分添字の関数としてテンソルを表現することで実装されています。
+縮約や共変微分のようなテンソル演算は、
+対応する成分よりむしろ添字それ自身を操作することで実行されます。
+</p>
+<p>Riemann幾何の文脈での微分的、代数的、解析的処理へのこれらの２つのアプローチは、
+ユーザーの問題の個々の性質と難しさを通してだけ明らかにされる様々な利点と欠点を持ちます。
+しかしながら、２つの実装の以下の特性を心にとどめて置くべきです:
+</p>
+<p>成分を陽に使ったテンソルとテンソル演算の表現は、
+<code>ctensor</code>を使いやすくします。
+軽量の指定と、帰納されたテンソルと不変量の計算は容易です。
+Maximaの強力な整理能力すべてはいつでも使えますが、
+入り組んだ関数的、座標依存性を持つ複雑な計量は、簡単に、サイズが極端で、構造が隠された式に
+至ります。
+さらに、たくさんの計算は、増大する中間式を含み、プログラムが完了前に終了する原因となります。
+経験を通して、ユーザーはこれらの難しさの多くを避けることができます。
+</p>
+<p>テンソルとテンソル演算が添字上の記号演算を使って表される特別な方法のために、
+成分表現では処理できなかった式が、時々、
+<code>itensor</code>の中の対称オブジェクトに関する特別なルーチンを使うことで、
+たいそう整理することができます。
+この方法で、大きな式の構造がもっと明白になるかもしれません。
+他方で、
+<code>itensor</code>の中の特別な添字表現のために、
+いくつかの場合、
+ユーザーは、計量の指定や関数の定義、微分された「添字付き」オブジェクトの評価に
+難しさを見いだすかもしれません。
+</p>
+<p><code>itensor</code>パッケージは、添字付き変数に関する微分を実行できます。
+それは、ラグランジアンとハミルトニアン形式を扱う時にパッケージを使うことができます。
+(添字付き)場の変数に関する場のラグランジアンを微分することが可能なので、
+Maximaを、対応するEuler-Lagrange方程式を添字形式で得るのに使うことができます。
+これらの方程式は、
+<code>ic_convert</code>関数を使って、成分テンソル(<code>ctensor</code>)プログラムに翻訳することができ、
+それは場の方程式を個別の座標表現で解くことや、
+ハミルトニアン形式の運動方程式を計算し直すことを可能にします。
+２つの包括的な例として、<code>einhil.dem</code>と<code>bradic.dem</code>を参照してください。
+最初の<code>einhil.dem</code>は、
+斉次で等方的な場合(Friedmann方程式)と
+球対称で静的な場合(Schwarzschild解)に
+のEinsteinの場テンソルを得るために
+Einstein-Hilbert作用を使います。
+二番目の<code>bradic.dem</code>は、
+Brans-Dicke重力理論の作用からFriedmann方程式を計算する方法を示し、
+理論のスカラー場に関連したハミルトニアンも演繹します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Tensors">Tensors</a>
+&middot;<a href="maxima_311.html#Category_003a-Share-packages">Share packages</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-itensor">Package itensor</a>
+&middot;</div>
+<a name="New-tensor-notation"></a>
+<h4 class="subsection">25.1.1 New tensor notation</h4>
+
+<p>Maximaの<code>itensor</code>パッケージの初期のバージョンは、
+時々、間違った添字順序に至る表記を使いました。
+例えば、以下を考えてください:
+</p>
+<div class="example">
+<pre class="example">(%i2) imetric(g);
+(%o2)                                done
+(%i3) ishow(g([],[j,k])*g([],[i,l])*a([i,j],[]))$
+                                 i l  j k
+(%t3)                           g    g    a
+                                           i j
+(%i4) ishow(contract(%))$
+                                      k l
+(%t4)                                a
+</pre></div>
+
+<p><code>a</code>が偶然対称テンソルでなければ、
+この結果は間違っています
+これが起こる理由は、
+<code>itensor</code>は正しく共変添字と反変添字の集合の中の順序を保つけれども、
+一旦、添字が上がったり、下がったりすると、
+添字の他の集合に関する位置が失われるからです。
+</p>
+<p>この問題を避けるため、
+存在する表記と完全に互換性を残し、相互に使うことが可能な新しい表記が開発されました。
+この表記では、反変添字は、共変添字リストの中の適切な位置に挿入されますが、
+マイナス記号が前に付けられます。
+現在、<code>contract</code>や<code>ishow</code>のような関数は、
+この新しい添字表記に通じており、
+テンソルを適切に処理することができます。
+</p>
+<p>この新しい表記では、以前の例は正しい結果をもたらします:
+</p>
+<div class="example">
+<pre class="example">(%i5) ishow(g([-j,-k],[])*g([-i,-l],[])*a([i,j],[]))$
+                                 i l       j k
+(%t5)                           g    a    g
+                                      i j
+(%i6) ishow(contract(%))$
+                                      l k
+(%t6)                                a
+</pre></div>
+
+<p>現在、
+この表記を使う唯一のコードは、<code>lc2kdt</code>関数です。
+数値添字に頼らずLevi-Civita記号を決定するために計量テンソルを用いる時、
+この表記を通じて、一貫した結果を達成します。
+</p>
+<p>このコードはできたばかりなので、おそらくバグを含みます。
+「古い」テンソル表記を使った何かを壊さないことを確認するためにテストされている一方、
+「新しい」テンソルが
+特定の関数や特徴と相互運営するのに失敗する相当な可能性があります。
+これらのバグは、出会った時修正されるでしょう。それまでは、利用者責任！
+</p>
+
+<a name="Indicial-tensor-manipulation"></a>
+<h4 class="subsection">25.1.2 Indicial tensor manipulation</h4>
+
+<p>添字テンソル操作パッケージは<code>load(&quot;itensor&quot;)</code>でロードできます。
+デモも利用可能です: <code>demo(tensor)</code>を試してください。
+</p>
+<p><code>itensor</code>では、
+テンソルは「添字付きオブジェクト」として表されます。
+これは
+共変、反変、微分添字を表す添字の3つのグループの関数です。
+共変添字は添字付きオブジェクトの最初の引数としてリストで指定され、
+半変添字は二番目の引数としてリストで指定されます。
+もし添字付きオブジェクトが添字のグループのいずれかを欠いているなら、
+空のリスト<code>[]</code>が対応する引数として与えられます。
+例えば、<code>g([a,b],[c])</code>は、
+２つの共変添字<code>(a,b)</code>と１つの反変添字(<code>c</code>)を持ち、微分添字を持たない
+<code>g</code>と呼ばれる添字付きオブジェクトを表します。
+</p>
+<p>もし存在するなら、微分添字は、テンソルを表すシンボル関数の追加の引数として添えられます。
+それらは、ユーザーによって陽に指定されたり、ある座標変数に関する微分の処理の中で生成されたりします。
+常微分は可換なので、
+フレーム計量が使われることを示す<code>iframe_flag</code>が<code>true</code>に設定されない限り、
+微分添字はアルファベット順に並び替えられます。
+この標準オーダーは、Maximaが、例えば、<code>t([a],[b],i,j)</code>が<code>t([a],[b],j,i)</code>と同じだと認識することを可能にします。
+添字付きオブジェクトの引数として現れない添字の座標に関する
+添字付きオブジェクトの微分は、通常ゼロをもたらします。
+これは、Maximaが添字付きオブジェクトで表されたテンソルが対応する座標に陰に依存するかもしれないことを知らないためです。
+<code>itensor</code>現在のMaxima関数<code>diff</code>を修正したことで、
+そうでなければ記述されない限り、Maximaは、添字付きオブジェクトすべてが微分の任意の変数に依存することを現在仮定します。
+これは、和の慣例が微分添字に拡張されることを可能にします。
+<code>itensor</code>は微分添字を上げる能力を所有しないこと、そしてそれらは常に共変として扱われることに注意すべきです。
+</p>
+<p>以下の関数が添字付きオブジェクトを操作するためにテンソルパッケージの中で利用可能です。
+現在、整理ルーチンに関して、添字付きオブジェクトがデフォルトで対称性を持たないことを仮定します。
+これは、変数<code>allsym[false]</code>を<code>true</code>に設定することで上書きすることができます。
+これによって、すべての添字付きオブジェクトを共変添字のリストと反変添字のリストに関して完全に対称に扱うようになります。
+</p>
+<p><code>itensor</code>パッケージは、一般にテンソルを不透明なオブジェクトとして扱います。
+テンソル等式は、代数ルール、特に対称性と縮約ルールに基づいて操作されます。
+加えて、<code>itensor</code>パッケージは、共変微分、曲率、ねじれ率を理解します。
+計算は、<code>iframe_flag</code>変数の設定に依存して動枠の計量に関して実行されます。
+</p>
+<p>以下のサンプルセッションは、
+<code>itensor</code>パッケージをロードし、計量名を指定し、いくつかの簡単な計算を実行する仕方を
+例示します。
+</p>
+<div class="example">
+<pre class="example">(%i1) load(&quot;itensor&quot;);
+(%o1)      /share/tensor/itensor.lisp
+(%i2) imetric(g);
+(%o2)                                done
+(%i3) components(g([i,j],[]),p([i,j],[])*e([],[]))$
+(%i4) ishow(g([k,l],[]))$
+(%t4)                               e p
+                                       k l
+(%i5) ishow(diff(v([i],[]),t))$
+(%t5)                                  0
+(%i6) depends(v,t);
+(%o6)                               [v(t)]
+(%i7) ishow(diff(v([i],[]),t))$
+                                    d
+(%t7)                               -- (v )
+                                    dt   i
+(%i8) ishow(idiff(v([i],[]),j))$
+(%t8)                                v
+                                      i,j
+(%i9) ishow(extdiff(v([i],[]),j))$
+(%t9)                             v    - v
+                                   j,i    i,j
+                                  -----------
+                                       2
+(%i10) ishow(liediff(v,w([i],[])))$
+                               %3          %3
+(%t10)                        v   w     + v   w
+                                   i,%3    ,i  %3
+(%i11) ishow(covdiff(v([i],[]),j))$
+                                              %4
+(%t11)                        v    - v   ichr2
+                               i,j    %4      i j
+(%i12) ishow(ev(%,ichr2))$
+                %4 %5
+(%t12) v    - (g      v   (e p       + e   p     - e p       - e    p
+        i,j            %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
+
+                                         + e p       + e   p    ))/2
+                                              i %5,j    ,j  i %5
+(%i13) iframe_flag:true;
+(%o13)                               true
+(%i14) ishow(covdiff(v([i],[]),j))$
+                                             %6
+(%t14)                        v    - v   icc2
+                               i,j    %6     i j
+(%i15) ishow(ev(%,icc2))$
+                                             %6
+(%t15)                        v    - v   ifc2
+                               i,j    %6     i j
+(%i16) ishow(radcan(ev(%,ifc2,ifc1)))$
+             %6 %7                    %6 %7
+(%t16) - (ifg      v   ifb       + ifg      v   ifb       - 2 v
+                    %6    j %7 i             %6    i j %7      i,j
+
+                                             %6 %7
+                                        - ifg      v   ifb      )/2
+                                                    %6    %7 i j
+(%i17) ishow(canform(s([i,j],[])-s([j,i])))$
+(%t17)                            s    - s
+                                   i j    j i
+(%i18) decsym(s,2,0,[sym(all)],[]);
+(%o18)                               done
+(%i19) ishow(canform(s([i,j],[])-s([j,i])))$
+(%t19)                                 0
+(%i20) ishow(canform(a([i,j],[])+a([j,i])))$
+(%t20)                            a    + a
+                                   j i    i j
+(%i21) decsym(a,2,0,[anti(all)],[]);
+(%o21)                               done
+(%i22) ishow(canform(a([i,j],[])+a([j,i])))$
+(%t22)                                 0
+</pre></div>
+
+
+<a name="Item_003a-Itensor_002fnode_002fFunctions-and-Variables-for-itensor"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_118.html#Functions-and-Variables-for-itensor" accesskey="n" rel="next">Functions and Variables for itensor</a>, Previous: <a href="maxima_116.html#itensor" accesskey="p" rel="previous">itensor</a>, Up: <a href="maxima_116.html#itensor" accesskey="u" rel="up">itensor</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

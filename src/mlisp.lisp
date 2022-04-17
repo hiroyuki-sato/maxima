@@ -187,7 +187,6 @@ is EQ to FNNAME if the latter is non-NIL."
   ; are applied to arguments.
   (setq noevalargs nil)
   (let ((params  (cdadr fn))( mlocp  t))
-    (setq loclist (cons nil loclist))
     (do ((a) (p))
 	((or (null params) (and (null args) (not (mdeflistp params))))
 	 (setq args (nreconc a args) params (nreconc p params)))
@@ -213,6 +212,7 @@ is EQ to FNNAME if the latter is non-NIL."
 	     (vector-push args ar)
 	     (vector-push fnname ar)
 	     (mbind finish2032 args fnname)
+	     (push nil loclist)
 	     (setq finish2033 t)
 	     (let ((aexprp (and aexprp (not (atom (caddr fn)))
 				(eq (caar (caddr fn)) 'lambda))))
@@ -805,9 +805,6 @@ wrapper for this."
 (defmspec $defstruct (L)
   `((mlist) ,@(mapcar 'defstruct1 (cdr L))))
 
-;; trivial translation to quiet complaint about lack of translation for this defmspec
-(def%tr $defstruct (x) `($any . (meval ',x)))
-
 (defvar $structures '((mlist)))
 
 (defun defstruct-translate (form)
@@ -863,9 +860,6 @@ wrapper for this."
                     (length (cdr (get recordop 'defstruct-default))) (length recordargs)))
 
           `(,(car recordname) ,@(mapcar #'meval (cdr recordname))))))))
-
-;; trivial translation to quiet complaint about lack of translation for this defmspec
-(def%tr $new (x) `($any . (meval ',x)))
 
 ;; Following property assignments comprise the Lisp code equivalent to infix("@", 200, 201)
 
@@ -1067,6 +1061,7 @@ wrapper for this."
 	       exp1)))
 	((eq (caar exp) 'mquote) (cadr exp))
 	((member (caar exp) '(msetq $define) :test #'eq)
+	 (twoargcheck exp)
 	 (list (car exp) (cadr exp) (mevalatoms (caddr exp))))
 	((or (and (eq (caar exp) '$ev)
 		  (cdr exp)
@@ -1074,6 +1069,7 @@ wrapper for this."
 	     (eq (caar exp) 'mprogn))
 	 (cons (car exp) (cons (mevalatoms (cadr exp)) (cddr exp))))
 	((member (caar exp) '($sum $product %sum %product) :test #'eq)
+	 (arg-count-check 4 exp)
 	 (if msump
 	     (meval exp)
 	     (list (car exp) (cadr exp) (caddr exp)
@@ -1960,7 +1956,8 @@ wrapper for this."
       0					; break SAVE files.
       (logand #o77777
 	      (let ((x (car l)))
-		(cond (($ratp x) (merror (intl:gettext "hash function: cannot hash a special expression (CRE or Taylor).")))
+		(cond ((specrepp x)
+		       (merror (intl:gettext "hash function: cannot hash a special expression (CRE, Taylor or Poisson).")))
 		      ((or (fixnump x) (floatp x))
 		       (+ (if (fixnump x) x (floor (+ x 5e-4)))
 			   (* 7 (hasher (cdr l)))))
