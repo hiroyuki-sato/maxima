@@ -39,10 +39,10 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   solve_rec.texi stringproc.texi numericalio.texi descriptive.texi \
   distrib.texi draw.texi simplex.texi simplifications.texi unit.texi makeOrders.texi \
   mnewton.texi lsquares.texi plotdf.texi lindstedt.texi impdiff.texi \
-  ggf.texi f90.texi eval_string.texi diag.texi dynamics.texi\
+  ggf.texi ezunits.texi f90.texi diag.texi dynamics.texi\
   bode.texi augmented_lagrangian.texi opsubst.texi stats.texi stirling.texi\
   implicit_plot.texi interpol.texi lbfgs.texi romberg.texi grobner.texi\
-  contrib_ode.texi
+  contrib_ode.texi graphs.texi category-macros.texi lapack.texi
 
 figurefiles = \
 figures/dynamics1.gif\
@@ -87,7 +87,22 @@ figures/plotting22.gif\
 figures/plotting23.gif\
 figures/plotting24.gif\
 figures/plotting25.gif\
-figures/orthopoly1.gif
+figures/orthopoly1.gif\
+figures/graphs01.gif\
+figures/graphs02.gif\
+figures/graphs03.gif\
+figures/graphs04.gif\
+figures/graphs05.gif\
+figures/graphs06.gif\
+figures/graphs07.gif\
+figures/graphs08.gif\
+figures/graphs09.gif\
+figures/graphs10.gif\
+figures/graphs11.gif\
+figures/graphs12.gif\
+figures/graphs13.gif\
+figures/graphs14.gif\
+figures/graphs15.gif
 
 pdffigures = \
 figures/dynamics1.pdf\
@@ -134,13 +149,15 @@ figures/plotting24.pdf\
 figures/plotting25.pdf\
 figures/orthopoly1.pdf
 
-all-local: maxima-index.lisp maxima.html contents.hhc
+all-local: maxima-index.lisp
+
+html: maxima.html contents.hhc
 
 maxima-index.lisp: maxima.info build_index.pl
 	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
 
 maxima.html: maxima.texi $(maxima_TEXINFOS)
-	perl ./texi2html -split_chapter --lang=en --output=. --css-include=./manual.css --init-file ./texi2html.init maxima.texi 
+	sh extract_categories.sh maxima
 
 contents.hhc: maxima.html
 	perl ./create_index
@@ -155,7 +172,7 @@ htmlinstdir = $(dochtmldir)
 include $(top_srcdir)/common-html.mk
 
 all-local: warn_texinfo
-dist-hook: check_texinfo
+dist-hook: check_texinfo html
 
 install-data-local: install-maxima-index
 uninstall-local: uninstall-maxima-index

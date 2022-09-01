@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plot2d.tcl,v 1.12 2006/07/30 19:27:22 villate Exp $
+#       $Id: Plot2d.tcl,v 1.17 2008/04/04 23:09:32 villate Exp $
 #
 ###### Plot2d.tcl ######
 ############################################################
@@ -41,6 +41,10 @@ set plot2dOptions {
     {zoomfactor "1.6 1.6" "Factor to zoom the x and y axis when zooming.  Zoom out will be reciprocal" }
     {errorbar 0 "If not 0 width in pixels of errorbar.  Two y values supplied for each x: {y1low y1high y2low y2high  .. }"}
     {data "" "List of data sets to be plotted.  Has form { {xversusy {x1 x2 ... xn} {y1 .. yn ... ym}} .. {againstIndex {y1 y2 .. yn}}  .. }"}
+    {psfile "" "A filename where the graph will be saved in PostScript."}
+    {nobox 0 "if not zero, do not draw the box around the plot."}
+    {axes "xy" "if zero, no axes are drawn. x, y or xy to draw the axes."}
+    {nolegend 0 "if not zero, do not write down the legend."}
 }
 
 proc argSuppliedp { x } {
@@ -333,7 +337,7 @@ proc plot2d {args } {
 
 proc replot2d {win } {
     global printOption axisGray plot2dOptions
-    linkLocal $win xfundata data
+    linkLocal $win xfundata data psfile nobox axes
     foreach v $data {
 	if { "[assq [lindex $v 0] $plot2dOptions notthere]" != "notthere" } {
 	    oset $win [lindex $v 0] [lindex $v 1]
@@ -377,10 +381,10 @@ proc replot2d {win } {
 
     # Draw the two axes
     $c del axes
-    if { $xmin*$xmax < 0 } {
+    if { $xmin*$xmax < 0 && ($axes == {y} || $axes == {xy}) } {
 	$c create line [$rtosx 0] $y1 [$rtosx 0] $y2 -fill $axisGray -tags axes
     }
-    if { $ymin*$ymax < 0 } {
+    if { $ymin*$ymax < 0 && ($axes == {x} || $axes == {xy}) } {
 	$c create line $x1 [$rtosy 0] $x2 [$rtosy 0] -fill $axisGray -tags axes
     }
 
@@ -393,17 +397,25 @@ proc replot2d {win } {
     redraw2dData $win -tags path
 
     # Draw the plot box
-    if { "[$c find withtag printrectangle]" == "" } {
+    if { "[$c find withtag printrectangle]" == "" && $nobox == 0 } {
 	$c create rectangle $x1 $y1 $x2 $y2 -tags printrectangle -width 2
 	marginTicks $c [storx$win $x1] [story$win $y2] [storx$win $x2] \
 	    [story$win $y1] "printrectangle marginticks"
 
     }
     # Write down the axes labels
-    $c create text [expr {$x1 - 50}] [expr {$y1 + 20}] -anchor ne \
+    $c create text [expr {$x1 - 50}] [expr {$y1 - 5}] -anchor sw \
 	           -text [oget $win yaxislabel] -font {helvetica 20 normal}
     $c create text [expr {$x2 - 20}] [expr {$y2 + 30}] -anchor ne \
                    -text [oget $win xaxislabel] -font {helvetica 20 normal}
+
+    # Create a PostScript file, if requested
+    if { $psfile != "" } {
+	set printOption(psfilename) $psfile
+	writePostscript $win
+	$c delete printoptions
+	eval [$win.menubar.close cget -command]
+    }
 }
 
 
@@ -662,7 +674,7 @@ proc RealtoScreen { win listPts } {
 }
 
 proc drawPlot {win listpts args } {
-    makeLocal $win  c nolines plotpoints  pointsize bargraph linewidth
+    makeLocal $win  c nolines nolegend plotpoints  pointsize bargraph linewidth
     #    set linewidth 2.4
     # puts ll:[llength $listpts]
     set tags [assoc -tags $args ""]
@@ -718,14 +730,16 @@ proc drawPlot {win listpts args } {
 		    set res "$win create line "
 		    #puts npts:[llength $pts]
 		    if { $n >= 6 } {
-			eval $c create line $pts  	-tags [list $tags] -width $linewidth -fill $fill
+			eval $c create line $pts -tags [list $tags] -width $linewidth -fill $fill
 		    }
 		}
 	    }
 	
 	}
     }
-    plot2dDrawLabel $win $label $fill
+    if { $nolegend == 0 } {
+	plot2dDrawLabel $win $label $fill
+    }
 }
 
 

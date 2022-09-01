@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plotconf.tcl,v 1.17 2006/12/16 02:47:08 villate Exp $
+#       $Id: Plotconf.tcl,v 1.20 2007/12/07 14:02:22 villate Exp $
 #
 ###### plotconf.tcl ######
 ############################################################
@@ -101,7 +101,10 @@ proc makeFrame { w type } {
     #    $c config -width $wid
     #	    oset $win width $wid
     #    }
-    place $w.position -in $w.c -x 2 -y 2 -anchor nw
+
+    # place the coordinates in the lower right-hand corner.
+    place $w.position -in $w.c -relx 0.99 -rely 0.99 -anchor se
+
     raise $w.position
     focus $w
     bind $w <Configure> "resizePlotWindow $w %w %h"
@@ -314,10 +317,14 @@ proc writePostscript { win } {
     set y1 [expr {$y1+.01 * $diag}]
     set y2 [expr {$y2-.01 * $diag}]
 
+    # Set up font replacement list
+    set fontMap([font create -family {Bitstream Vera Sans Mono} -size 10]) [list Courier 10]
+
     set com "$c postscript  \
       	    -x  $x1  -y $y1 \
 	    -width [expr {($x2 - $x1)}] \
             -height [expr {($y2 - $y1)}] \
+            -fontmap fontMap \
 	    [getPageOffsets [expr {($x2 - $x1)/(1.0*($y2 - $y1))}] ] "
 
     #puts com=$com

@@ -1805,7 +1805,7 @@ which is in a comment which begins on a previous line."
 (defun maxima-uncomment-region (beg end)
   "`uncomment-region' to use with the menu."
   (interactive "r")
-  (comment-region beg end (universal-argument)))
+  (uncomment-region beg end (universal-argument)))
 
 ;;;; Help functions
 
@@ -2940,7 +2940,11 @@ Return the last string sent."
            (pmark (progn (goto-char (process-mark inferior-maxima-process))
                          (forward-line 0)
                          (point-marker)))
-           (output (buffer-substring-no-properties inferior-maxima-input-end pmark)))
+           (beg (progn
+                  (goto-char inferior-maxima-input-end)
+                  (forward-line 1)
+                  (point)))
+           (output (buffer-substring-no-properties beg pmark)))
       (goto-char pt)
       output)))
 

@@ -296,7 +296,7 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
  -- Function: concat (<arg_1>, <arg_2>, ...)
      Concatenates its arguments.  The arguments must evaluate to atoms.
      The return value is a symbol if the first argument is a symbol and
-     a Maxima string otherwise.
+     a string otherwise.
 
      `concat' evaluates its arguments.  The single quote `'' prevents
      evaluation.
@@ -326,7 +326,7 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
           (%o9)                         b
 
      Note that although `concat (1, 2)' looks like a number, it is a
-     Maxima string.
+     string.
 
           (%i10) concat (1, 2) + 3;
           (%o10)                       12 + 3
@@ -335,8 +335,6 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
  -- Function: sconcat (<arg_1>, <arg_2>, ...)
      Concatenates its arguments into a string.  Unlike `concat', the
      arguments do not need to be atoms.
-
-     The result is a Lisp string.
 
           (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
           (%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
@@ -389,13 +387,13 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      Examples:
 
           User     part       inpart
-          a-b;      A - B     A + (- 1) B
+          a-b;      a - b     a + (- 1) b
 
-                     A            - 1
-          a/b;       -         A B
-                     B
+                     a            - 1
+          a/b;       -         a b
+                     b
                                  1/2
-          sqrt(x);   sqrt(X)    X
+          sqrt(x);   sqrt(x)    x
 
                     4 X        4
           X*4/3;    ---        - X
@@ -497,6 +495,8 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      final component of <path> is of the form `###.<something>', the
      component is replaced with `<filename>.<something>'.  Otherwise,
      the final component is simply replaced by <filename>.
+
+     The result is a Lisp pathname object.
 
 
  -- Function: file_search (<filename>)
@@ -980,6 +980,19 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
                                  10 log(a) - log(b)
 
 
+ -- Function: printfile (<path>)
+     Prints the file named by <path> to the console.  <path> may be a
+     string or a symbol; if it is a symbol, it is converted to a string.
+
+     If <path> names a file which is accessible from the current
+     working directory, that file is printed to the console.  Otherwise,
+     `printfile' attempts to locate the file by appending <path> to
+     each of the elements of `file_search_usage' via `filename_merge'.
+
+     `printfile' returns <path> if it names an existing file, or
+     otherwise the result of a successful filename merge.
+
+
  -- Function: tcl_output (<list>, <i0>, <skip>)
  -- Function: tcl_output (<list>, <i0>)
  -- Function: tcl_output ([<list_1>, ..., <list_n>], <i>)
@@ -1060,17 +1073,17 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      Replaces parts of <expr> at the specified integer <depth> with
      descriptive summaries.
 
-        * Sums and differences are replaced by `sum(<n>)' where <n> is
+        * Sums and differences are replaced by `Sum(<n>)' where <n> is
           the number of operands of the sum.
 
-        * Products are replaced by `product(<n>)' where <n> is the
+        * Products are replaced by `Product(<n>)' where <n> is the
           number of operands of the product.
 
-        * Exponentials are replaced by `expt'.
+        * Exponentials are replaced by `Expt'.
 
-        * Quotients are replaced by `quotient'.
+        * Quotients are replaced by `Quotient'.
 
-        * Unary negation is replaced by `negterm'.
+        * Unary negation is replaced by `Negterm'.
 
      When <depth> is greater than or equal to the maximum depth of
      <expr>, `reveal (<expr>, <depth>)' returns <expr> unmodified.
@@ -1087,26 +1100,26 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
                                   b + a     2 b     2 a
                               2 %e      + %e    + %e
           (%i2) reveal (e, 1);
-          (%o2)                       quotient
+          (%o2)                       Quotient
           (%i3) reveal (e, 2);
-                                       sum(3)
+                                       Sum(3)
           (%o3)                        ------
-                                       sum(3)
+                                       Sum(3)
           (%i4) reveal (e, 3);
-                               expt + negterm + expt
+                               Expt + Negterm + Expt
           (%o4)               ------------------------
-                              product(2) + expt + expt
+                              Product(2) + Expt + Expt
           (%i5) reveal (e, 4);
                                  2                 2
-                                b  - product(3) + a
+                                b  - Product(3) + a
           (%o5)         ------------------------------------
-                                   product(2)     product(2)
-                        2 expt + %e           + %e
+                                   Product(2)     Product(2)
+                        2 Expt + %e           + %e
           (%i6) reveal (e, 5);
                                    2            2
                                   b  - 2 a b + a
           (%o6)              --------------------------
-                                 sum(2)     2 b     2 a
+                                 Sum(2)     2 b     2 a
                              2 %e       + %e    + %e
           (%i7) reveal (e, 6);
                                     2            2
@@ -1292,9 +1305,11 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
 
 
  -- Function: tex (<expr>)
+ -- Function: tex (<expr>, <destination>)
+ -- Function: tex (<expr>, false)
  -- Function: tex (<label>)
- -- Function: tex (<expr>, <filename>)
- -- Function: tex (<label>, <filename>)
+ -- Function: tex (<label>, <destination>)
+ -- Function: tex (<label>, false)
      Prints a representation of an expression suitable for the TeX
      document preparation system.  The result is a fragment of a
      document, which can be copied into a larger document but not
@@ -1308,12 +1323,12 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      to the left of the expression).  The TeX equation label is the
      same as the Maxima label.
 
-     `tex (<expr>, <filename>)' appends a TeX representation of <expr>
-     to the file <filename>.
+     <destination> may be an output stream or file name.  When
+     <destination> is a file name, `tex' appends its output to the file.
+     The functions `openw' and `opena' create output streams.
 
-     `tex (<label>, <filename>)' appends a TeX representation of the
-     expression named by <label>, with an equation label, to the file
-     <filename>.
+     `tex (<expr>, false)' and `tex (<label>, false)' return their TeX
+     output as a string.
 
      `tex' evaluates its first argument after testing it to see if it
      is a label.  Quote-quote `''' forces evaluation of the argument,
@@ -1339,6 +1354,13 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
           (%o3)                           false
           (%i4) tex (%o1, "foo.tex");
           (%o4)                          (\%o1)
+
+     `tex (<expr>, false)' returns its TeX output as a string.
+
+          (%i1) S : tex (x * y * z, false);
+          (%o1) $$x\,y\,z$$
+          (%i2) S;
+          (%o2) $$x\,y\,z$$
 
 
  -- Function: texput (<a>, <s>)
@@ -1457,6 +1479,79 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
           (%o7)                         false
 
 
+ -- Function: get_tex_environment (<op>)
+ -- Function: set_tex_environment (<op>, <before>, <after>)
+     Customize the TeX environment output by `tex'.  As maintained by
+     these functions, the TeX environment comprises two strings: one is
+     printed before any other TeX output, and the other is printed
+     after.
+
+     Only the TeX environment of the top-level operator in an expression
+     is output; TeX environments associated with other operators are
+     ignored.
+
+     `get_tex_environment' returns the TeX enviroment which is applied
+     to the operator <op>; returns the default if no other environment
+     has been assigned.
+
+     `set_tex_environment' assigns the TeX environment for the operator
+     <op>.
+
+     Examples:
+
+          (%i1) get_tex_environment (":=");
+          (%o1) [
+          \begin{verbatim}
+          , ;
+          \end{verbatim}
+          ]
+          (%i2) tex (f (x) := 1 - x);
+
+          \begin{verbatim}
+          f(x):=1-x;
+          \end{verbatim}
+
+          (%o2)                         false
+          (%i3) set_tex_environment (":=", "$$", "$$");
+          (%o3)                       [$$, $$]
+          (%i4) tex (f (x) := 1 - x);
+          $$f(x):=1-x$$
+          (%o4)                         false
+
+
+ -- Function: get_tex_environment_default ()
+ -- Function: set_tex_environment_default (<before>, <after>)
+     Customize the TeX environment output by `tex'.  As maintained by
+     these functions, the TeX environment comprises two strings: one is
+     printed before any other TeX output, and the other is printed
+     after.
+
+     `get_tex_environment_default' returns the TeX environment which is
+     applied to expressions for which the top-level operator has no
+     specific TeX environment (as assigned by `set_tex_environment').
+
+     `set_tex_environment_default' assigns the default TeX environment.
+
+     Examples:
+
+          (%i1) get_tex_environment_default ();
+          (%o1)                       [$$, $$]
+          (%i2) tex (f(x) + g(x));
+          $$g\left(x\right)+f\left(x\right)$$
+          (%o2)                         false
+          (%i3) set_tex_environment_default ("\\begin{equation}
+          ", "
+          \\end{equation}");
+          (%o3) [\begin{equation}
+          ,
+          \end{equation}]
+          (%i4) tex (f(x) + g(x));
+          \begin{equation}
+          g\left(x\right)+f\left(x\right)
+          \end{equation}
+          (%o4)                         false
+
+
  -- Function: system (<command>)
      Executes <command> as a separate process.  The command is passed
      to the default shell for execution.  `system' is not supported by
@@ -1565,8 +1660,6 @@ File: maxima.info,  Node: Functions and Variables for Floating Point,  Prev: Flo
      second argument is how many digits to retain and return, it's a
      good idea to request a couple of extra.
 
-     `load ("bffac")' loads this function.
-
 
  -- Option variable: algepsilon
      Default value: 10^8
@@ -1596,8 +1689,6 @@ File: maxima.info,  Node: Functions and Variables for Floating Point,  Prev: Flo
 
      These functions return bigfloat values.  <fpprec> is the bigfloat
      precision of the return value.
-
-     `load ("bffac")' loads these functions.
 
 
  -- Option variable: bftorat
@@ -2221,10 +2312,11 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
 
 
  -- Function: factor (<expr>)
+ -- Function: factor (<expr>, <p>)
      Factors the expression <expr>, containing any number of variables
      or functions, into factors irreducible over the integers.  `factor
-     (<expr>, p)' factors <expr> over the field of integers with an
-     element adjoined whose minimum polynomial is p.
+     (<expr>, <p>)' factors <expr> over the field of integers with an
+     element adjoined whose minimum polynomial is <p>.
 
      `factor' uses `ifactors' function for factoring integers.
 
@@ -2500,12 +2592,10 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      it is recommended that `gcd' equal to `subres' be used.  To take
      the gcd when an algebraic is present, e.g., `gcd (<x>^2 -
      2*sqrt(2)*<x> + 2, <x> - sqrt(2))', `algebraic' must be `true' and
-     `gcd' must not be `ez'.  `subres' is a new algorithm, and people
-     who have been using the `red' setting should probably change it to
-     `subres'.
+     `gcd' must not be `ez'.
 
-     The `gcd' flag, default: `subres', if `false' will also prevent
-     the greatest common divisor from being taken when expressions are
+     The `gcd' flag, default: `spmod', if `false' will also prevent the
+     greatest common divisor from being taken when expressions are
      converted to canonical rational expression (CRE) form.  This will
      sometimes speed the calculation if gcds are not required.
 
@@ -3371,6 +3461,17 @@ File: maxima.info,  Node: Functions and Variables for Constants,  Prev: Constant
      implements `false' by the value `NIL' in Lisp.
 
 
+ -- Constant: ind
+     `ind' represents a bounded, indefinite result.
+
+     See also `limit'.
+
+     Example:
+
+          (%i1) limit (sin(1/x), x, 0);
+          (%o1)                          ind
+
+
  -- Constant: inf
      `inf' represents real positive infinity.
 
@@ -3447,6 +3548,17 @@ File: maxima.info,  Node: Functions and Variables for Constants,  Prev: Constant
  -- Constant: true
      `true' represents the Boolean constant of the same name.  Maxima
      implements `true' by the value `T' in Lisp.
+
+
+ -- Constant: und
+     `und' represents an undefined result.
+
+     See also `limit'.
+
+     Example:
+
+          (%i1) limit (1/x, x, 0);
+          (%o1)                          und
 
 
 
@@ -3702,7 +3814,7 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
 
      When `%piargs' is `true', trigonometric functions are simplified
      to algebraic constants when the argument is an integer multiple of
-     %pi, %pi/2, %pi/3, %pi/4, or %pi/6
+     %pi, %pi/2, %pi/3, %pi/4, or %pi/6.
 
      Maxima knows some identities which can be applied when %pi, etc.,
      are multiplied by an integer variable (that is, a symbol declared
@@ -3867,7 +3979,23 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
  -- Option variable: halfangles
      Default value: `false'
 
-     When `halfangles' is `true', half-angles are simplified away.
+     When `halfangles' is `true', trigonometric functions of arguments
+     `<expr>/2' are simplified to functions of <expr>.
+
+     Examples:
+
+          (%i1) halfangles : false;
+          (%o1)                         false
+          (%i2) sin (x / 2);
+                                           x
+          (%o2)                        sin(-)
+                                           2
+          (%i3) halfangles : true;
+          (%o3)                         true
+          (%i4) sin (x / 2);
+                                  sqrt(1 - cos(x))
+          (%o4)                   ----------------
+                                      sqrt(2)
 
 
  -- Package: ntrig
@@ -4104,8 +4232,8 @@ Special function notation follows:
      bessel_k (index, expr)         Modified Bessel function, 2nd kind
      %he[n] (z)                     Hermite polynomial (Nota bene: `he',
                                     not `h'. See A&S 22.5.18)
-     %p[u,v] (z)                    Legendre function
-     %q[u,v] (z)                    Legendre function, 2nd kind
+     assoc_legendre_p[v,u] (z)      Legendre function of degree v and order u
+     assoc_legendre_q[v,u] (z)      Legendre function, 2nd kind
      hstruve[n] (z)                 Struve H function
      lstruve[n] (z)                 Struve L function
      %f[p,q] ([], [], expr)         Generalized Hypergeometric function
@@ -4140,10 +4268,12 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
 
      See also `airy_bi', `airy_dai', `airy_dbi'.
 
+
  -- Function: airy_dai (<x>)
      The derivative of the Airy function Ai `airy_ai(x)'.
 
      See `airy_ai'.
+
 
  -- Function: airy_bi (<x>)
      The Airy function Bi, as defined in Abramowitz and Stegun,
@@ -4158,10 +4288,12 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
 
      See `airy_ai', `airy_dbi'.
 
+
  -- Function: airy_dbi (<x>)
      The derivative of the Airy Bi function `airy_bi(x)'.
 
      See `airy_ai' and `airy_bi'.
+
 
  -- Function: asympa
      `asympa' is a package for asymptotic analysis. The package contains
@@ -4172,17 +4304,15 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      `load ("asympa")' loads this package.
 
 
- -- Function: bessel (<z>, <a>)
+ -- Function: bessel (<z>, <order>)
      The Bessel function of the first kind.
 
-     This function is deprecated.  Write `bessel_j (<z>, <a>)' instead.
+     This function has been removed.  Use `bessel_j (<order>, <z>)'
+     instead.
 
 
  -- Function: bessel_j (<v>, <z>)
      The Bessel function of the first kind of order v and argument z.
-
-     `bessel_j' computes the array `besselarray' such that `besselarray
-     [i] = bessel_j [i + v - int(v)] (z)' for `i' from zero to `int(v)'.
 
      `bessel_j' is defined as
                           inf
@@ -4199,9 +4329,6 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
  -- Function: bessel_y (<v>, <z>)
      The Bessel function of the second kind of order v and argument z.
 
-     `bessel_y' computes the array `besselarray' such that `besselarray
-     [i] = bessel_y [i + v - int(v)] (z)' for `i' from zero to `int(v)'.
-
      `bessel_y' is defined as
                         cos(%pi v) bessel_j(v, z) - bessel_j(-v, z)
                         -------------------------------------------
@@ -4214,9 +4341,6 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
  -- Function: bessel_i (<v>, <z>)
      The modified Bessel function of the first kind of order v and
      argument z.
-
-     `bessel_i' computes the array `besselarray' such that `besselarray
-     [i] = bessel_i [i + v - int(v)] (z)' for `i' from zero to `int(v)'.
 
      `bessel_i' is defined as
                               inf
@@ -4233,9 +4357,6 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
  -- Function: bessel_k (<v>, <z>)
      The modified Bessel function of the second kind of order v and
      argument z.
-
-     `bessel_k' computes the array `besselarray' such that `besselarray
-     [i] = bessel_k [i + v - int(v)] (z)' for `i' from zero to `int(v)'.
 
      `bessel_k' is defined as
                      %pi csc(%pi v) (bessel_i(-v, z) - bessel_i(v, z))
@@ -4265,6 +4386,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
           (%o4)                sqrt(---) (------ - ------)
                                     %pi      2       z
                                             z
+
 
  -- Function: scaled_bessel_i (<v>, <z>)
      The scaled modified Bessel function of the first kind of order v
@@ -4447,7 +4569,7 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      of `psi', but it can compute some exact values for rational args.
      Several variables control what range of rational args `psi' will
      return an exact value, if possible.  See `maxpsiposint',
-     `maxpsinegint', `maxpsifracnum', and `maxpsifracnum'.  That is,
+     `maxpsinegint', `maxpsifracnum', and `maxpsifracdenom'.  That is,
      <x> must lie between `maxpsinegint' and `maxpsiposint'.  If the
      absolute value of the fractional part of <x> is rational and has a
      numerator less than `maxpsifracnum' and has a denominator less
@@ -4520,6 +4642,56 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
                                          p
 
 
+ -- Function: hgfred (<a>, <b>, <t>)
+     Simplify the generalized hypergeometric function in terms of other,
+     simpler, forms.  <a> is a list of numerator parameters and <b> is
+     a list of the denominator parameters.
+
+     If `hgfred' cannot simplify the hypergeometric function, it returns
+     an expression of the form `%f[p,q]([a], [b], x)' where <p> is the
+     number of elements in <a>, and <q> is the number of elements in
+     <b>.  This is the usual `pFq' generalized hypergeometric function.
+
+          (%i1) assume(not(equal(z,0)));
+          (%o1)                          [notequal(z, 0)]
+          (%i2) hgfred([v+1/2],[2*v+1],2*%i*z);
+
+                               v/2                               %i z
+                              4    bessel_j(v, z) gamma(v + 1) %e
+          (%o2)               ---------------------------------------
+                                                 v
+                                                z
+          (%i3) hgfred([1,1],[2],z);
+
+                                             log(1 - z)
+          (%o3)                            - ----------
+                                                 z
+          (%i4) hgfred([a,a+1/2],[3/2],z^2);
+
+                                         1 - 2 a          1 - 2 a
+                                  (z + 1)        - (1 - z)
+          (%o4)                   -------------------------------
+                                           2 (1 - 2 a) z
+
+     It can be beneficial to load orthopoly too as the following example
+     shows.  Note that <L> is the generalized Laguerre polynomial.
+
+          (%i5) load(orthopoly)$
+          (%i6) hgfred([-2],[a],z);
+
+                                              (a - 1)
+                                           2 L       (z)
+                                              2
+          (%o6)                            -------------
+                                             a (a + 1)
+          (%i7) ev(%);
+
+                                            2
+                                           z        2 z
+          (%o7)                         --------- - --- + 1
+                                        a (a + 1)    a
+
+
 
 File: maxima.info,  Node: Elliptic Functions,  Next: Limits,  Prev: Special Functions,  Up: Top
 
@@ -4560,7 +4732,6 @@ are given, a floating-point result is returned.
 integrals other than derivatives has not yet been written.
 
    Some examples of elliptic functions:
-
      (%i1) jacobi_sn (u, m);
      (%o1)                    jacobi_sn(u, m)
      (%i2) jacobi_sn (u, 1);
@@ -4582,7 +4753,6 @@ integrals other than derivatives has not yet been written.
                    2 (1 - m)
 
    Some examples of elliptic integrals:
-
      (%i1) elliptic_f (phi, m);
      (%o1)                  elliptic_f(phi, m)
      (%i2) elliptic_f (phi, 0);
@@ -4633,74 +4803,98 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Functions,  Next:
  -- Function: jacobi_sn (<u>, <m>)
      The Jacobian elliptic function sn(u,m).
 
+
  -- Function: jacobi_cn (<u>, <m>)
      The Jacobian elliptic function cn(u,m).
+
 
  -- Function: jacobi_dn (<u>, <m>)
      The Jacobian elliptic function dn(u,m).
 
+
  -- Function: jacobi_ns (<u>, <m>)
      The Jacobian elliptic function ns(u,m) = 1/sn(u,m).
+
 
  -- Function: jacobi_sc (<u>, <m>)
      The Jacobian elliptic function sc(u,m) = sn(u,m)/cn(u,m).
 
+
  -- Function: jacobi_sd (<u>, <m>)
      The Jacobian elliptic function sd(u,m) = sn(u,m)/dn(u,m).
+
 
  -- Function: jacobi_nc (<u>, <m>)
      The Jacobian elliptic function nc(u,m) = 1/cn(u,m).
 
+
  -- Function: jacobi_cs (<u>, <m>)
      The Jacobian elliptic function cs(u,m) = cn(u,m)/sn(u,m).
+
 
  -- Function: jacobi_cd (<u>, <m>)
      The Jacobian elliptic function cd(u,m) = cn(u,m)/dn(u,m).
 
+
  -- Function: jacobi_nd (<u>, <m>)
      The Jacobian elliptic function nc(u,m) = 1/cn(u,m).
+
 
  -- Function: jacobi_ds (<u>, <m>)
      The Jacobian elliptic function ds(u,m) = dn(u,m)/sn(u,m).
 
+
  -- Function: jacobi_dc (<u>, <m>)
      The Jacobian elliptic function dc(u,m) = dn(u,m)/cn(u,m).
+
 
  -- Function: inverse_jacobi_sn (<u>, <m>)
      The inverse of the Jacobian elliptic function sn(u,m).
 
+
  -- Function: inverse_jacobi_cn (<u>, <m>)
      The inverse of the Jacobian elliptic function cn(u,m).
+
 
  -- Function: inverse_jacobi_dn (<u>, <m>)
      The inverse of the Jacobian elliptic function dn(u,m).
 
+
  -- Function: inverse_jacobi_ns (<u>, <m>)
      The inverse of the Jacobian elliptic function ns(u,m).
+
 
  -- Function: inverse_jacobi_sc (<u>, <m>)
      The inverse of the Jacobian elliptic function sc(u,m).
 
+
  -- Function: inverse_jacobi_sd (<u>, <m>)
      The inverse of the Jacobian elliptic function sd(u,m).
+
 
  -- Function: inverse_jacobi_nc (<u>, <m>)
      The inverse of the Jacobian elliptic function nc(u,m).
 
+
  -- Function: inverse_jacobi_cs (<u>, <m>)
      The inverse of the Jacobian elliptic function cs(u,m).
+
 
  -- Function: inverse_jacobi_cd (<u>, <m>)
      The inverse of the Jacobian elliptic function cd(u,m).
 
+
  -- Function: inverse_jacobi_nd (<u>, <m>)
      The inverse of the Jacobian elliptic function nc(u,m).
+
 
  -- Function: inverse_jacobi_ds (<u>, <m>)
      The inverse of the Jacobian elliptic function ds(u,m).
 
+
  -- Function: inverse_jacobi_dc (<u>, <m>)
      The inverse of the Jacobian elliptic function dc(u,m).
+
 
 
 File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev: Functions and Variables for Elliptic Functions,  Up: Top
@@ -4719,7 +4913,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
  -- Function: elliptic_e (<phi>, <m>)
      The incomplete elliptic integral of the second kind, defined as
 
-     elliptic_e(u, m) = integrate(sqrt(1 - m*sin(x)^2), x, 0, phi)
+     elliptic_e(phi, m) = integrate(sqrt(1 - m*sin(x)^2), x, 0, phi)
 
      See also *Note elliptic_e:: and *Note elliptic_ec::.
 
@@ -4730,10 +4924,14 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
      integrate(dn(v,m)^2,v,0,u) = integrate(sqrt(1-m*t^2)/sqrt(1-t^2),
      t, 0, tau)
 
-     where tau = sn(u,m)
+     where tau = sn(u,m).
 
-     This is related to elliptic_e by elliptic_eu(u, m) =
-     elliptic_e(asin(sn(u,m)),m) See also *Note elliptic_e::.
+     This is related to elliptic_e by
+
+     elliptic_eu(u, m) = elliptic_e(asin(sn(u,m)),m)
+
+     See also *Note elliptic_e::.
+
 
  -- Function: elliptic_pi (<n>, <phi>, <m>)
      The incomplete elliptic integral of the third kind, defined as
@@ -4741,6 +4939,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
      integrate(1/(1-n*sin(x)^2)/sqrt(1 - m*sin(x)^2), x, 0, phi)
 
      Only the derivative with respect to phi is known by Maxima.
+
 
  -- Function: elliptic_kc (<m>)
      The complete elliptic integral of the first kind, defined as
@@ -4750,6 +4949,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
      For certain values of m, the value of the integral is known in
      terms of Gamma functions.  Use `makegamma' to evaluate them.
 
+
  -- Function: elliptic_ec (<m>)
      The complete elliptic integral of the second kind, defined as
 
@@ -4757,6 +4957,7 @@ File: maxima.info,  Node: Functions and Variables for Elliptic Integrals,  Prev:
 
      For certain values of m, the value of the integral is known in
      terms of Gamma functions.  Use `makegamma' to evaluate them.
+
 
 
 File: maxima.info,  Node: Limits,  Next: Differentiation,  Prev: Elliptic Functions,  Up: Top
@@ -4800,8 +5001,8 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
      used in `limit'.  This prevents infinite looping in cases like
      `limit (cot(x)/csc(x), x, 0)'.
 
-     `tlimswitch' when true will cause the limit package to use Taylor
-     series when possible.
+     `tlimswitch' when true will allow the `limit' command to use
+     Taylor series expansion when necessary.
 
      `limsubst' prevents `limit' from attempting substitutions on
      unknown forms.  This is to avoid bugs like `limit (f(n)/f(n+1), n,
@@ -4827,14 +5028,19 @@ File: maxima.info,  Node: Functions and Variables for Limits,  Prev: Limits,  Up
  -- Function: tlimit (<expr>, <x>, <val>, <dir>)
  -- Function: tlimit (<expr>, <x>, <val>)
  -- Function: tlimit (<expr>)
-     Returns `limit' with `tlimswitch' set to `true'.
+     Take the limit of the Taylor series expansion of `expr' in `x' at
+     `val' from direction `dir'.
 
 
  -- Option variable: tlimswitch
-     Default value: `false'
+     Default value: `true'
 
-     When `tlimswitch' is `true', it causes the limit package to use
-     Taylor series when possible.
+     When `tlimswitch' is `true', the `limit' command will use a Taylor
+     series expansion if the limit of the input expression cannot be
+     computed directly.  This allows evaluation of limits such as
+     `limit(x/(x-1)-1/log(x),x,1,plus)'.  When `tlimswitch' is `false'
+     and the limit of input expression cannot be computed directly,
+     `limit' will return an unevaluated limit expression.
 
 
 
@@ -5592,9 +5798,9 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
      begin with.
 
 
- -- Function: ilt (<expr>, <t>, <s>)
+ -- Function: ilt (<expr>, <s>, <t>)
      Computes the inverse Laplace transform of <expr> with respect to
-     <t> and parameter <s>.  <expr> must be a ratio of polynomials
+     <s> and parameter <t>.  <expr> must be a ratio of polynomials
      whose denominator has only linear and quadratic factors.  By using
      the functions `laplace' and `ilt' together with the `solve' or
      `linsolve' functions the user can solve a single differential or
@@ -5810,13 +6016,67 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
                (%o4)                          600
 
 
+ -- System variable: integration_constant
+     Default value: `%c'
+
+     When a constant of integration is introduced by indefinite
+     integration of an equation, the name of the constant is
+     constructed by concatenating `integration_constant' and
+     `integration_constant_counter'.
+
+     `integration_constant' may be assigned any symbol.
+
+     Examples:
+
+          (%i1) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o1)                     -- = x + %c1
+                                    3
+          (%i2) integration_constant : 'k;
+          (%o2)                           k
+          (%i3) integrate (x^2 = 1, x);
+                                      3
+                                     x
+          (%o3)                      -- = x + k2
+                                     3
+
+
  -- System variable: integration_constant_counter
      Default value: 0
 
-     `integration_constant_counter' is a counter which is updated each
-     time a constant of integration (named by Maxima, e.g.,
-     `integrationconstant1') is introduced into an expression by
-     indefinite integration of an equation.
+     When a constant of integration is introduced by indefinite
+     integration of an equation, the name of the constant is
+     constructed by concatenating `integration_constant' and
+     `integration_constant_counter'.
+
+     `integration_constant_counter' is incremented before constructing
+     the next integration constant.
+
+     Examples:
+
+          (%i1) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o1)                     -- = x + %c1
+                                    3
+          (%i2) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o2)                     -- = x + %c2
+                                    3
+          (%i3) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o3)                     -- = x + %c3
+                                    3
+          (%i4) reset (integration_constant_counter);
+          (%o4)            [integration_constant_counter]
+          (%i5) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o5)                     -- = x + %c1
+                                    3
 
 
  -- Option variable: integrate_use_rootsof
@@ -6043,8 +6303,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 20.4 Functions and Variables for QUADPACK
 =========================================
 
- -- Function: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
- -- Function: quad_qag (<f>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
+ -- Function: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Function: quad_qag (<f>, <x>, <a>, <b>, <key>, [<epsrel>, <epsabs>,
+          <limit>])
      Integration of a general function over a finite interval.
      `quad_qag' implements a simple globally adaptive integrator using
      the strategy of Aind (Piessens, 1973).  The caller may choose
@@ -6071,9 +6333,19 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      integration region into sub-intervals until the desired accuracy is
      achieved.
 
-     The optional arguments <epsrel> and <limit> are the desired
-     relative error and the maximum number of subintervals,
-     respectively.  <epsrel> defaults to 1e-8 and <limit> is 200.
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
+
+    <epsabs>
+          Desired absolute error of approximation.  Default is 0.
+
+    <limit>
+          Size of internal work array.  (<limit> - <limlst>)/2 is the
+          maximum number of subintervals to use.  Default is 200.
 
      `quad_qag' returns a list of four elements:
 
@@ -6106,15 +6378,18 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qag (x^(1/2)*log(1/x), x, 0, 1, 3);
+          (%i1) quad_qag (x^(1/2)*log(1/x), x, 0, 1, 3, 'epsrel=5d-8);
           (%o1)    [.4444444444492108, 3.1700968502883E-9, 961, 0]
           (%i2) integrate (x^(1/2)*log(1/x), x, 0, 1);
                                           4
           (%o2)                           -
                                           9
 
- -- Function: quad_qags (<f(x)>, <x>, <a>, <b>, <epsrel>, <limit>)
- -- Function: quad_qags (<f>, <x>, <a>, <b>, <epsrel>, <limit>)
+
+ -- Function: quad_qags (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
+ -- Function: quad_qags (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
      Integration of a general function over a finite interval.
      `quad_qags' implements globally adaptive interval subdivision with
      extrapolation (de Doncker, 1978) by the Epsilon algorithm (Wynn,
@@ -6132,9 +6407,19 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      function or operator, a Maxima lambda expression, or a general
      Maxima expression.
 
-     The optional arguments <epsrel> and <limit> are the desired
-     relative error and the maximum number of subintervals,
-     respectively.  <epsrel> defaults to 1e-8 and <limit> is 200.
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
+
+    <epsabs>
+          Desired absolute error of approximation.  Default is 0.
+
+    <limit>
+          Size of internal work array.  (<limit> - <limlst>)/2 is the
+          maximum number of subintervals to use.  Default is 200.
 
      `quad_qags' returns a list of four elements:
 
@@ -6172,15 +6457,17 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qags (x^(1/2)*log(1/x), x, 0 ,1);
+          (%i1) quad_qags (x^(1/2)*log(1/x), x, 0, 1, 'epsrel=1d-10);
           (%o1)   [.4444444444444448, 1.11022302462516E-15, 315, 0]
 
      Note that `quad_qags' is more accurate and efficient than
      `quad_qag' for this integrand.
 
 
- -- Function: quad_qagi (<f(x)>, <x>, <a>, <inftype>, <epsrel>, <limit>)
- -- Function: quad_qagi (<f>, <x>, <a>, <inftype>, <epsrel>, <limit>)
+ -- Function: quad_qagi (<f(x)>, <x>, <a>, <inftype>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Function: quad_qagi (<f>, <x>, <a>, <inftype>, [<epsrel>, <epsabs>,
+          <limit>])
      Integration of a general function over an infinite or
      semi-infinite interval.  The interval is mapped onto a finite
      interval and then the same strategy as in `quad_qags' is applied.
@@ -6213,9 +6500,19 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
     `both'
           The interval is the entire real line.
 
-     The optional arguments <epsrel> and <limit> are the desired
-     relative error and the maximum number of subintervals,
-     respectively.  <epsrel> defaults to 1e-8 and <limit> is 200.
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
+
+    <epsabs>
+          Desired absolute error of approximation.  Default is 0.
+
+    <limit>
+          Size of internal work array.  (<limit> - <limlst>)/2 is the
+          maximum number of subintervals to use.  Default is 200.
 
      `quad_qagi' returns a list of four elements:
 
@@ -6254,7 +6551,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qagi (x^2*exp(-4*x), x, 0, inf);
+          (%i1) quad_qagi (x^2*exp(-4*x), x, 0, inf, 'epsrel=1d-8);
           (%o1)        [0.03125, 2.95916102995002E-11, 105, 0]
           (%i2) integrate (x^2*exp(-4*x), x, 0, inf);
                                          1
@@ -6262,8 +6559,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
                                          32
 
 
- -- Function: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, <epsrel>, <limit>)
- -- Function: quad_qawc (<f>, <x>, <c>, <a>, <b>, <epsrel>, <limit>)
+ -- Function: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Function: quad_qawc (<f>, <x>, <c>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
      Computes the Cauchy principal value of f(x)/(x - c) over a finite
      interval.  The strategy is globally adaptive, and modified
      Clenshaw-Curtis integration is used on the subranges which contain
@@ -6281,9 +6580,19 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      function or operator, a Maxima lambda expression, or a general
      Maxima expression.
 
-     The optional arguments <epsrel> and <limit> are the desired
-     relative error and the maximum number of subintervals,
-     respectively.  <epsrel> defaults to 1e-8 and <limit> is 200.
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
+
+    <epsabs>
+          Desired absolute error of approximation.  Default is 0.
+
+    <limit>
+          Size of internal work array.  (<limit> - <limlst>)/2 is the
+          maximum number of subintervals to use.  Default is 200.
 
      `quad_qawc' returns a list of four elements:
 
@@ -6316,7 +6625,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5);
+          (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5, 'epsrel=1d-7);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
           (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
                 x, 0, 5);
@@ -6341,10 +6650,10 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
           (%o3)                    - 3.130120337415917
 
 
- -- Function: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
- -- Function: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
+ -- Function: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+          <limit>, <maxp1>, <limlst>])
+ -- Function: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+          <limit>, <maxp1>, <limlst>])
      Calculates a Fourier cosine or Fourier sine transform on a
      semi-infinite interval using the Quadpack QAWF function.  The same
      approach as in `quad_qawo' is applied on successive finite
@@ -6368,7 +6677,9 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      function or operator, a Maxima lambda expression, or a general
      Maxima expression.
 
-     The optional arguments are:
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
 
     <epsabs>
           Desired absolute error of approximation.  Default is 1d-10.
@@ -6384,10 +6695,6 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
     <limlst>
           Upper bound on the number of cycles.  Must be greater than or
           equal to 3.  Default is 10.
-
-     <epsabs> and <limit> are the desired relative error and the
-     maximum number of subintervals, respectively.  <epsrel> defaults
-     to 1e-8 and <limit> is 200.
 
      `quad_qawf' returns a list of four elements:
 
@@ -6420,7 +6727,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qawf (exp(-x^2), x, 0, 1, 'cos);
+          (%i1) quad_qawf (exp(-x^2), x, 0, 1, 'cos, 'epsabs=1d-9);
           (%o1)   [.6901942235215714, 2.84846300257552E-11, 215, 0]
           (%i2) integrate (exp(-x^2)*cos(x), x, 0, inf);
                                     - 1/4
@@ -6432,9 +6739,9 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
 
  -- Function: quad_qawo (<f(x)>, <x>, <a>, <b>, <omega>, <trig>,
-          <epsabs>, <limit>, <maxp1>, <limlst>)
- -- Function: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
+          [<epsrel>, <epsabs>, <limit>, <maxp1>, <limlst>])
+ -- Function: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>,
+          [<epsrel>, <epsabs>, <limit>, <maxp1>, <limlst>])
      Integration of cos(omega x) f(x) or sin(omega x) f(x) over a
      finite interval, where omega is a constant.  The rule evaluation
      component is based on the modified Clenshaw-Curtis technique.
@@ -6457,10 +6764,15 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      function or operator, a Maxima lambda expression, or a general
      Maxima expression.
 
-     The optional arguments are:
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
 
     <epsabs>
-          Desired absolute error of approximation.  Default is 1d-10.
+          Desired absolute error of approximation.  Default is 0.
 
     <limit>
           Size of internal work array.  (<limit> - <limlst>)/2 is the
@@ -6473,10 +6785,6 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
     <limlst>
           Upper bound on the number of cycles.  Must be greater than or
           equal to 3.  Default is 10.
-
-     <epsabs> and <limit> are the desired relative error and the
-     maximum number of subintervals, respectively.  <epsrel> defaults
-     to 1e-8 and <limit> is 200.
 
      `quad_qawo' returns a list of four elements:
 
@@ -6523,9 +6831,9 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
 
  -- Function: quad_qaws (<f(x)>, <x>, <a>, <b>, <alpha>, <beta>,
-          <wfun>, <epsabs>, <limit>)
+          <wfun>, [<epsrel>, <epsabs>, <limit>])
  -- Function: quad_qaws (<f>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
-          <epsabs>, <limit>)
+          [<epsrel>, <epsabs>, <limit>])
      Integration of w(x) f(x) over a finite interval, where w(x) is a
      certain algebraic or logarithmic function.  A globally adaptive
      subdivision strategy is applied, with modified Clenshaw-Curtis
@@ -6554,18 +6862,19 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      function or operator, a Maxima lambda expression, or a general
      Maxima expression.
 
-     The optional arguments are:
+     The keyword arguments are optional and may be specified in any
+     order.  They all take the form `key=val'.  The keyword arguments
+     are:
+
+    <epsrel>
+          Desired relative error of approximation.  Default is 1d-10.
 
     <epsabs>
-          Desired absolute error of approximation.  Default is 1d-10.
+          Desired absolute error of approximation.  Default is 0.
 
     <limit>
-          Size of internal work array.  (<limit> - <limlst>)/2 is the
-          maximum number of subintervals to use.  Default is 200.
-
-     <epsabs> and <limit> are the desired relative error and the
-     maximum number of subintervals, respectively.  <epsrel> defaults
-     to 1e-8 and <limit> is 200.
+          Size of internal work array.  <limit>is the maximum number of
+          subintervals to use.  Default is 200.
 
      `quad_qaws' returns a list of four elements:
 
@@ -6598,7 +6907,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
-          (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1);
+          (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1, 'epsabs=1d-9);
           (%o1)     [8.750097361672832, 1.24321522715422E-10, 170, 0]
           (%i2) integrate ((1-x*x)^(-1/2)/(x+1+2^(-alpha)), x, -1, 1);
                  alpha
@@ -6623,1007 +6932,4 @@ File: maxima.info,  Node: Equations,  Next: Differential Equations,  Prev: Integ
 * Menu:
 
 * Functions and Variables for Equations::
-
-
-File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equations,  Up: Equations
-
-21.1 Functions and Variables for Equations
-==========================================
-
- -- System variable: %rnum_list
-     Default value: `[]'
-
-     `%rnum_list' is the list of variables introduced in solutions by
-     `algsys'.  `%r' variables are added to `%rnum_list' in the order
-     they are created.  This is convenient for doing substitutions into
-     the solution later on.  It's recommended to use this list rather
-     than doing `concat ('%r, j)'.
-
-
- -- Option variable: algexact
-     Default value: `false'
-
-     `algexact' affects the behavior of `algsys' as follows:
-
-     If `algexact' is `true', `algsys' always calls `solve' and then
-     uses `realroots' on `solve''s failures.
-
-     If `algexact' is `false', `solve' is called only if the eliminant
-     was not univariate, or if it was a quadratic or biquadratic.
-
-     Thus `algexact: true' doesn't guarantee only exact solutions, just
-     that `algsys' will first try as hard as it can to give exact
-     solutions, and only yield approximations when all else fails.
-
-
- -- Function: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
- -- Function: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
-     Solves the simultaneous polynomials <expr_1>, ..., <expr_m> or
-     polynomial equations <eqn_1>, ..., <eqn_m> for the variables
-     <x_1>, ..., <x_n>.  An expression <expr> is equivalent to an
-     equation `<expr> = 0'.  There may be more equations than variables
-     or vice versa.
-
-     `algsys' returns a list of solutions, with each solution given as
-     a list of equations stating values of the variables <x_1>, ...,
-     <x_n> which satisfy the system of equations.  If `algsys' cannot
-     find a solution, an empty list `[]' is returned.
-
-     The symbols `%r1', `%r2', ..., are introduced as needed to
-     represent arbitrary parameters in the solution; these variables
-     are also appended to the list `%rnum_list'.
-
-     The method is as follows:
-
-     (1) First the equations are factored and split into subsystems.
-
-     (2) For each subsystem <S_i>, an equation <E> and a variable <x>
-     are selected.  The variable is chosen to have lowest nonzero
-     degree.  Then the resultant of <E> and <E_j> with respect to <x>
-     is computed for each of the remaining equations <E_j> in the
-     subsystem <S_i>.  This yields a new subsystem <S_i'> in one fewer
-     variables, as <x> has been eliminated.  The process now returns to
-     (1).
-
-     (3) Eventually, a subsystem consisting of a single equation is
-     obtained.  If the equation is multivariate and no approximations in
-     the form of floating point numbers have been introduced, then
-     `solve' is called to find an exact solution.
-
-     In some cases, `solve' is not be able to find a solution, or if it
-     does the solution may be a very large expression.
-
-     If the equation is univariate and is either linear, quadratic, or
-     biquadratic, then again `solve' is called if no approximations have
-     been introduced.  If approximations have been introduced or the
-     equation is not univariate and neither linear, quadratic, or
-     biquadratic, then if the switch `realonly' is `true', the function
-     `realroots' is called to find the real-valued solutions.  If
-     `realonly' is `false', then `allroots' is called which looks for
-     real and complex-valued solutions.
-
-     If `algsys' produces a solution which has fewer significant digits
-     than required, the user can change the value of `algepsilon' to a
-     higher value.
-
-     If `algexact' is set to `true', `solve' will always be called.
-
-     (4) Finally, the solutions obtained in step (3) are substituted
-     into previous levels and the solution process returns to (1).
-
-     When `algsys' encounters a multivariate equation which contains
-     floating point approximations (usually due to its failing to find
-     exact solutions at an earlier stage), then it does not attempt to
-     apply exact methods to such equations and instead prints the
-     message: "`algsys' cannot solve - system too complicated."
-
-     Interactions with `radcan' can produce large or complicated
-     expressions.  In that case, it may be possible to isolate parts of
-     the result with `pickapart' or `reveal'.
-
-     Occasionally, `radcan' may introduce an imaginary unit `%i' into a
-     solution which is actually real-valued.
-
-     Examples:
-
-          (%i1) e1: 2*x*(1 - a1) - 2*(x - 1)*a2;
-          (%o1)              2 (1 - a1) x - 2 a2 (x - 1)
-          (%i2) e2: a2 - a1;
-          (%o2)                        a2 - a1
-          (%i3) e3: a1*(-y - x^2 + 1);
-                                             2
-          (%o3)                   a1 (- y - x  + 1)
-          (%i4) e4: a2*(y - (x - 1)^2);
-                                                 2
-          (%o4)                   a2 (y - (x - 1) )
-          (%i5) algsys ([e1, e2, e3, e4], [x, y, a1, a2]);
-          (%o5) [[x = 0, y = %r1, a1 = 0, a2 = 0],
-
-                                            [x = 1, y = 0, a1 = 1, a2 = 1]]
-          (%i6) e1: x^2 - y^2;
-                                        2    2
-          (%o6)                        x  - y
-          (%i7) e2: -1 - y + 2*y^2 - x + x^2;
-                                   2        2
-          (%o7)                 2 y  - y + x  - x - 1
-          (%i8) algsys ([e1, e2], [x, y]);
-                           1            1
-          (%o8) [[x = - -------, y = -------],
-                        sqrt(3)      sqrt(3)
-
-                  1              1             1        1
-          [x = -------, y = - -------], [x = - -, y = - -], [x = 1, y = 1]]
-               sqrt(3)        sqrt(3)          3        3
-
-
- -- Function: allroots (<expr>)
- -- Function: allroots (<eqn>)
-     Computes numerical approximations of the real and complex roots of
-     the polynomial <expr> or polynomial equation <eqn> of one variable.
-
-     The flag `polyfactor' when `true' causes `allroots' to factor the
-     polynomial over the real numbers if the polynomial is real, or
-     over the complex numbers, if the polynomial is complex.
-
-     `allroots' may give inaccurate results in case of multiple roots.
-     If the polynomial is real, `allroots (%i*<p>)') may yield more
-     accurate approximations than `allroots (<p>)', as `allroots'
-     invokes a different algorithm in that case.
-
-     `allroots' rejects non-polynomials.  It requires that the numerator
-     after `rat''ing should be a polynomial, and it requires that the
-     denominator be at most a complex number.  As a result of this
-     `allroots' will always return an equivalent (but factored)
-     expression, if `polyfactor' is `true'.
-
-     For complex polynomials an algorithm by Jenkins and Traub is used
-     (Algorithm 419, Comm. ACM, vol. 15, (1972), p. 97).  For real
-     polynomials the algorithm used is due to Jenkins (Algorithm 493,
-     ACM TOMS, vol. 1, (1975), p.178).
-
-     Examples:
-
-          (%i1) eqn: (1 + 2*x)^3 = 13.5*(1 + x^5);
-                                      3          5
-          (%o1)              (2 x + 1)  = 13.5 (x  + 1)
-          (%i2) soln: allroots (eqn);
-          (%o2) [x = .8296749902129361, x = - 1.015755543828121,
-
-          x = .9659625152196369 %i - .4069597231924075,
-
-          x = - .9659625152196369 %i - .4069597231924075, x = 1.0]
-          (%i3) for e in soln
-                  do (e2: subst (e, eqn), disp (expand (lhs(e2) - rhs(e2))));
-                                - 3.5527136788005E-15
-
-                               - 5.32907051820075E-15
-
-                   4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                  - 4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                                 3.5527136788005E-15
-
-          (%o3)                         done
-          (%i4) polyfactor: true$
-          (%i5) allroots (eqn);
-          (%o5) - 13.5 (x - 1.0) (x - .8296749902129361)
-
-                                     2
-           (x + 1.015755543828121) (x  + .8139194463848151 x
-
-           + 1.098699797110288)
-
-
- -- Option variable: backsubst
-     Default value: `true'
-
-     When `backsubst' is `false', prevents back substitution after the
-     equations have been triangularized.  This may be helpful in very
-     big problems where back substitution would cause the generation of
-     extremely large expressions.
-
-
- -- Option variable: breakup
-     Default value: `true'
-
-     When `breakup' is `true', `solve' expresses solutions of cubic and
-     quartic equations in terms of common subexpressions, which are
-     assigned to intermediate expression labels (`%t1', `%t2', etc.).
-     Otherwise, common subexpressions are not identified.
-
-     `breakup: true' has an effect only when `programmode' is `false'.
-
-     Examples:
-
-          (%i1) programmode: false$
-          (%i2) breakup: true$
-          (%i3) solve (x^3 + x^2 - 1);
-
-                                  sqrt(23)    25 1/3
-          (%t3)                  (--------- + --)
-                                  6 sqrt(3)   54
-          Solution:
-
-                                                sqrt(3) %i   1
-                                                ---------- - -
-                          sqrt(3) %i   1            2        2   1
-          (%t4)    x = (- ---------- - -) %t3 + -------------- - -
-                              2        2            9 %t3        3
-
-                                                sqrt(3) %i   1
-                                              - ---------- - -
-                        sqrt(3) %i   1              2        2   1
-          (%t5)    x = (---------- - -) %t3 + ---------------- - -
-                            2        2             9 %t3         3
-
-                                             1     1
-          (%t6)                  x = %t3 + ----- - -
-                                           9 %t3   3
-          (%o6)                    [%t4, %t5, %t6]
-          (%i6) breakup: false$
-          (%i7) solve (x^3 + x^2 - 1);
-          Solution:
-
-                       sqrt(3) %i   1
-                       ---------- - -
-                           2        2        sqrt(23)    25 1/3
-          (%t7) x = --------------------- + (--------- + --)
-                       sqrt(23)    25 1/3    6 sqrt(3)   54
-                    9 (--------- + --)
-                       6 sqrt(3)   54
-
-                                                        sqrt(3) %i   1    1
-                                                     (- ---------- - -) - -
-                                                            2        2    3
-
-                     sqrt(23)    25 1/3  sqrt(3) %i   1
-          (%t8) x = (--------- + --)    (---------- - -)
-                     6 sqrt(3)   54          2        2
-
-                                                      sqrt(3) %i   1
-                                                    - ---------- - -
-                                                          2        2      1
-                                                + --------------------- - -
-                                                     sqrt(23)    25 1/3   3
-                                                  9 (--------- + --)
-                                                     6 sqrt(3)   54
-
-                      sqrt(23)    25 1/3             1             1
-          (%t9)  x = (--------- + --)    + --------------------- - -
-                      6 sqrt(3)   54          sqrt(23)    25 1/3   3
-                                           9 (--------- + --)
-                                              6 sqrt(3)   54
-          (%o9)                    [%t7, %t8, %t9]
-
-
- -- Function: dimension (<eqn>)
- -- Function: dimension (<eqn_1>, ..., <eqn_n>)
-     `dimen' is a package for dimensional analysis.  `load ("dimen")'
-     loads this package.  `demo ("dimen")' displays a short
-     demonstration.
-
-
- -- Option variable: dispflag
-     Default value: `true'
-
-     If set to `false' within a `block' will inhibit the display of
-     output generated by the solve functions called from within  the
-     `block'.  Termination of the `block' with a dollar sign, $, sets
-     `dispflag' to `false'.
-
-
- -- Function: funcsolve (<eqn>, <g>(<t>))
-     Returns `[<g>(<t>) = ...]'  or `[]', depending on whether or not
-     there exists a rational function `<g>(<t>)' satisfying <eqn>,
-     which must be a first order, linear polynomial in (for this case)
-     `<g>(<t>)' and `<g>(<t>+1)'
-
-          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) =
-                (n - 1)/(n + 2);
-                                      (n + 3) f(n + 1)   n - 1
-          (%o1)        (n + 1) f(n) - ---------------- = -----
-                                           n + 1         n + 2
-          (%i2) funcsolve (eqn, f(n));
-
-          Dependent equations eliminated:  (4 3)
-                                             n
-          (%o2)                f(n) = ---------------
-                                      (n + 1) (n + 2)
-
-     Warning: this is a very rudimentary implementation - many safety
-     checks and obvious generalizations are missing.
-
-
- -- Option variable: globalsolve
-     Default value: `false'
-
-     When `globalsolve' is `true', solved-for variables are assigned
-     the solution values found by `linsolve', and by `solve' when
-     solving two or more linear equations.
-
-     When `globalsolve' is `false', solutions found by `linsolve' and
-     by `solve' when solving two or more linear equations are expressed
-     as equations, and the solved-for variables are not assigned.
-
-     When solving anything other than two or more linear equations,
-     `solve' ignores `globalsolve'.  Other functions which solve
-     equations (e.g., `algsys') always ignore `globalsolve'.
-
-     Examples:
-
-          (%i1) globalsolve: true$
-          (%i2) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t2)                        x : --
-                                           7
-
-                                             1
-          (%t3)                        y : - -
-                                             7
-          (%o3)                     [[%t2, %t3]]
-          (%i3) x;
-                                         17
-          (%o3)                          --
-                                         7
-          (%i4) y;
-                                           1
-          (%o4)                          - -
-                                           7
-          (%i5) globalsolve: false$
-          (%i6) kill (x, y)$
-          (%i7) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t7)                        x = --
-                                           7
-
-                                             1
-          (%t8)                        y = - -
-                                             7
-          (%o8)                     [[%t7, %t8]]
-          (%i8) x;
-          (%o8)                           x
-          (%i9) y;
-          (%o9)                           y
-
-
- -- Function: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
-     `inteqn' is a package for solving integral equations.  `load
-     ("inteqn")' loads this package.
-
-     <ie> is the integral equation; <unk> is the unknown function;
-     <tech> is the technique to be tried from those given above (<tech>
-     = `first' means: try the first technique which finds a solution;
-     <tech> = `all' means: try all applicable techniques); <n> is the
-     maximum number of terms to take for `taylor', `neumann',
-     `firstkindseries', or `fredseries' (it is also the maximum depth
-     of recursion for the differentiation method); <guess> is the
-     initial guess for `neumann' or `firstkindseries'.
-
-     Default values for the 2nd thru 5th parameters are:
-
-     <unk>: `<p>(<x>)', where <p> is the first function encountered in
-     an integrand which is unknown to Maxima and <x> is the variable
-     which occurs as an argument to the first occurrence of <p> found
-     outside of an integral in the case of `secondkind' equations, or
-     is the only other variable besides the variable of integration in
-     `firstkind' equations.  If the attempt to search for <x> fails,
-     the user will be asked to supply the independent variable.
-
-     tech: `first'
-
-     n: 1
-
-     guess: `none' which will cause `neumann' and `firstkindseries' to
-     use `<f>(<x>)' as an initial guess.
-
-
- -- Option variable: ieqnprint
-     Default value: `true'
-
-     `ieqnprint' governs the behavior of the result returned by the
-     `ieqn' command. When `ieqnprint' is `false', the lists returned by
-     the `ieqn' function are of the form
-
-     [<solution>, <technique used>, <nterms>, <flag>]
-
-     where <flag> is absent if the solution is exact.
-
-     Otherwise, it is the word `approximate' or `incomplete'
-     corresponding to an inexact or non-closed form solution,
-     respectively. If a series method was used, <nterms> gives the
-     number of terms taken (which could be less than the n given to
-     `ieqn' if an error prevented generation of further terms).
-
-
- -- Function: lhs (<expr>)
-     Returns the left-hand side (that is, the first argument) of the
-     expression <expr>, when the operator of <expr> is one of the
-     relational operators `< <= = # equal notequal >= >', one of the
-     assignment operators `:= ::= : ::', or a user-defined binary infix
-     operator, as declared by `infix'.
-
-     When <expr> is an atom or its operator is something other than the
-     ones listed above, `lhs' returns <expr>.
-
-     See also `rhs'.
-
-     Examples:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb),
-                 lhs (aa > bb)];
-          (%o4)                   [aa, aa, aa, aa]
-          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)),
-                 lhs (notequal (aa, bb))];
-          (%o5)                   [aa, aa, aa, aa]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
-          (%o10)               [foo(x), bar(y), x, x]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) lhs (aa ][ bb);
-          (%o12)                         aa
-
-
- -- Function: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
-     Solves the list of simultaneous linear equations for the list of
-     variables.  The expressions must each be polynomials in the
-     variables and may be equations.
-
-     When `globalsolve' is `true', each solved-for variable is bound to
-     its value in the solution of the equations.
-
-     When `backsubst' is `false', `linsolve' does not carry out back
-     substitution after the equations have been triangularized.  This
-     may be necessary in very big problems where back substitution
-     would cause the generation of extremely large expressions.
-
-     When `linsolve_params' is `true', `linsolve' also generates the
-     `%r' symbols used to represent arbitrary parameters described in
-     the manual under `algsys'.  Otherwise, `linsolve' solves an
-     under-determined system of equations with some variables expressed
-     in terms of others.
-
-     When `programmode' is `false', `linsolve' displays the solution
-     with intermediate expression (`%t') labels, and returns the list
-     of labels.
-
-          (%i1) e1: x + z = y;
-          (%o1)                       z + x = y
-          (%i2) e2: 2*a*x - y = 2*a^2;
-                                                 2
-          (%o2)                   2 a x - y = 2 a
-          (%i3) e3: y - 2*z = 2;
-          (%o3)                      y - 2 z = 2
-          (%i4) [globalsolve: false, programmode: true];
-          (%o4)                     [false, true]
-          (%i5) linsolve ([e1, e2, e3], [x, y, z]);
-          (%o5)            [x = a + 1, y = 2 a, z = a - 1]
-          (%i6) [globalsolve: false, programmode: false];
-          (%o6)                    [false, false]
-          (%i7) linsolve ([e1, e2, e3], [x, y, z]);
-          Solution
-
-          (%t7)                       z = a - 1
-
-          (%t8)                        y = 2 a
-
-          (%t9)                       x = a + 1
-          (%o9)                    [%t7, %t8, %t9]
-          (%i9) ''%;
-          (%o9)            [z = a - 1, y = 2 a, x = a + 1]
-          (%i10) [globalsolve: true, programmode: false];
-          (%o10)                    [true, false]
-          (%i11) linsolve ([e1, e2, e3], [x, y, z]);
-          Solution
-
-          (%t11)                      z : a - 1
-
-          (%t12)                       y : 2 a
-
-          (%t13)                      x : a + 1
-          (%o13)                 [%t11, %t12, %t13]
-          (%i13) ''%;
-          (%o13)           [z : a - 1, y : 2 a, x : a + 1]
-          (%i14) [x, y, z];
-          (%o14)                 [a + 1, 2 a, a - 1]
-          (%i15) [globalsolve: true, programmode: true];
-          (%o15)                    [true, true]
-          (%i16) linsolve ([e1, e2, e3], '[x, y, z]);
-          (%o16)           [x : a + 1, y : 2 a, z : a - 1]
-          (%i17) [x, y, z];
-          (%o17)                 [a + 1, 2 a, a - 1]
-
-
- -- Option variable: linsolvewarn
-     Default value: `true'
-
-     When `linsolvewarn' is `true', `linsolve' prints a message
-     "Dependent equations eliminated".
-
-
- -- Option variable: linsolve_params
-     Default value: `true'
-
-     When `linsolve_params' is `true', `linsolve' also generates the
-     `%r' symbols used to represent arbitrary parameters described in
-     the manual under `algsys'.  Otherwise, `linsolve' solves an
-     under-determined system of equations with some variables expressed
-     in terms of others.
-
-
- -- System variable: multiplicities
-     Default value: `not_set_yet'
-
-     `multiplicities' is set to a list of the multiplicities of the
-     individual solutions returned by `solve' or `realroots'.
-
-
- -- Function: nroots (<p>, <low>, <high>)
-     Returns the number of real roots of the real univariate polynomial
-     <p> in the half-open interval `(<low>, <high>]'.  The endpoints of
-     the interval may be `minf' or `inf'.  infinity and plus infinity.
-
-     `nroots' uses the method of Sturm sequences.
-
-          (%i1) p: x^10 - 2*x^4 + 1/2$
-          (%i2) nroots (p, -6, 9.1);
-          (%o2)                           4
-
-
- -- Function: nthroot (<p>, <n>)
-     where p is a polynomial with integer coefficients and n is a
-     positive integer returns q, a polynomial over the integers, such
-     that q^n=p or prints an error message indicating that p is not a
-     perfect nth power. This routine is much faster than `factor' or
-     even `sqfr'.
-
-
- -- Option variable: programmode
-     Default value: `true'
-
-     When `programmode' is `true', `solve', `realroots', `allroots',
-     and `linsolve' return solutions as elements in a list.  (Except
-     when `backsubst' is set to `false', in which case `programmode:
-     false' is assumed.)
-
-     When `programmode' is `false', `solve', etc.  create intermediate
-     expression labels `%t1', `t2', etc., and assign the solutions to
-     them.
-
-
- -- Option variable: realonly
-     Default value: `false'
-
-     When `realonly' is `true', `algsys' returns only those solutions
-     which are free of `%i'.
-
-
- -- Function: realroots (<expr>, <bound>)
- -- Function: realroots (<eqn>, <bound>)
- -- Function: realroots (<expr>)
- -- Function: realroots (<eqn>)
-     Computes rational approximations of the real roots of the
-     polynomial <expr> or polynomial equation <eqn> of one variable, to
-     within a tolerance of <bound>.  Coefficients of <expr> or <eqn>
-     must be literal numbers; symbol constants such as `%pi' are
-     rejected.
-
-     `realroots' assigns the multiplicities of the roots it finds to
-     the global variable `multiplicities'.
-
-     `realroots' constructs a Sturm sequence to bracket each root, and
-     then applies bisection to refine the approximations.  All
-     coefficients are converted to rational equivalents before
-     searching for roots, and computations are carried out by exact
-     rational arithmetic.  Even if some coefficients are floating-point
-     numbers, the results are rational (unless coerced to floats by the
-     `float' or `numer' flags).
-
-     When <bound> is less than 1, all integer roots are found exactly.
-     When <bound> is unspecified, it is assumed equal to the global
-     variable `rootsepsilon'.
-
-     When the global variable `programmode' is `true', `realroots'
-     returns a list of the form `[x = <x_1>, x = <x_2>, ...]'.  When
-     `programmode' is `false', `realroots' creates intermediate
-     expression labels `%t1', `%t2', ..., assigns the results to them,
-     and returns the list of labels.
-
-     Examples:
-
-          (%i1) realroots (-1 - x + x^5, 5e-6);
-                                         612003
-          (%o1)                     [x = ------]
-                                         524288
-          (%i2) ev (%[1], float);
-          (%o2)                 x = 1.167303085327148
-          (%i3) ev (-1 - x + x^5, %);
-          (%o3)                - 7.396496210176905E-6
-
-          (%i1) realroots (expand ((1 - x)^5 * (2 - x)^3 * (3 - x)), 1e-20);
-          (%o1)                 [x = 1, x = 2, x = 3]
-          (%i2) multiplicities;
-          (%o2)                       [5, 3, 1]
-
-
- -- Function: rhs (<expr>)
-     Returns the right-hand side (that is, the second argument) of the
-     expression <expr>, when the operator of <expr> is one of the
-     relational operators `< <= = # equal notequal >= >', one of the
-     assignment operators `:= ::= : ::', or a user-defined binary infix
-     operator, as declared by `infix'.
-
-     When <expr> is an atom or its operator is something other than the
-     ones listed above, `rhs' returns 0.
-
-     See also `lhs'.
-
-     Examples:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb),
-                 rhs (aa > bb)];
-          (%o4)                   [bb, bb, bb, bb]
-          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)),
-                 rhs (notequal (aa, bb))];
-          (%o5)                   [bb, bb, bb, bb]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
-          (%o10)                  [2 x, 3 y, y, y]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) rhs (aa ][ bb);
-          (%o12)                         bb
-
-
- -- Option variable: rootsconmode
-     Default value: `true'
-
-     `rootsconmode' governs the behavior of the `rootscontract'
-     command.  See `rootscontract' for details.
-
-
- -- Function: rootscontract (<expr>)
-     Converts products of roots into roots of products.  For example,
-     `rootscontract (sqrt(x)*y^(3/2))' yields `sqrt(x*y^3)'.
-
-     When `radexpand' is `true' and `domain' is `real', `rootscontract'
-     converts `abs' into `sqrt', e.g., `rootscontract (abs(x)*sqrt(y))'
-     yields `sqrt(x^2*y)'.
-
-     There is an option `rootsconmode' affecting `rootscontract' as
-     follows:
-
-          Problem            Value of        Result of applying
-                            rootsconmode        rootscontract
-
-          x^(1/2)*y^(3/2)      false          (x*y^3)^(1/2)
-          x^(1/2)*y^(1/4)      false          x^(1/2)*y^(1/4)
-          x^(1/2)*y^(1/4)      true           (x*y^(1/2))^(1/2)
-          x^(1/2)*y^(1/3)      true           x^(1/2)*y^(1/3)
-          x^(1/2)*y^(1/4)      all            (x^2*y)^(1/4)
-          x^(1/2)*y^(1/3)      all            (x^3*y^2)^(1/6)
-
-     When `rootsconmode' is `false', `rootscontract' contracts only
-     with respect to rational number exponents whose denominators are
-     the same.  The key to the `rootsconmode: true' examples is simply
-     that 2 divides into 4 but not into 3.  `rootsconmode: all'
-     involves taking the least common multiple of the denominators of
-     the exponents.
-
-     `rootscontract' uses `ratsimp' in a manner similar to
-     `logcontract'.
-
-     Examples:
-
-          (%i1) rootsconmode: false$
-          (%i2) rootscontract (x^(1/2)*y^(3/2));
-                                             3
-          (%o2)                      sqrt(x y )
-          (%i3) rootscontract (x^(1/2)*y^(1/4));
-                                             1/4
-          (%o3)                     sqrt(x) y
-          (%i4) rootsconmode: true$
-          (%i5) rootscontract (x^(1/2)*y^(1/4));
-          (%o5)                    sqrt(x sqrt(y))
-          (%i6) rootscontract (x^(1/2)*y^(1/3));
-                                             1/3
-          (%o6)                     sqrt(x) y
-          (%i7) rootsconmode: all$
-          (%i8) rootscontract (x^(1/2)*y^(1/4));
-                                        2   1/4
-          (%o8)                       (x  y)
-          (%i9) rootscontract (x^(1/2)*y^(1/3));
-                                       3  2 1/6
-          (%o9)                      (x  y )
-          (%i10) rootsconmode: false$
-          (%i11) rootscontract (sqrt(sqrt(x) + sqrt(1 + x))
-                              *sqrt(sqrt(1 + x) - sqrt(x)));
-          (%o11)                          1
-          (%i12) rootsconmode: true$
-          (%i13) rootscontract (sqrt(5+sqrt(5)) - 5^(1/4)*sqrt(1+sqrt(5)));
-          (%o13)                          0
-
-
- -- Option variable: rootsepsilon
-     Default value: 1.0e-7
-
-     `rootsepsilon' is the tolerance which establishes the confidence
-     interval for the roots found by the `realroots' function.
-
-
- -- Function: solve (<expr>, <x>)
- -- Function: solve (<expr>)
- -- Function: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     Solves the algebraic equation <expr> for the variable <x> and
-     returns a list of solution equations in <x>.  If <expr> is not an
-     equation, the equation `<expr> = 0' is assumed in its place.  <x>
-     may be a function (e.g. `f(x)'), or other non-atomic expression
-     except a sum or product. <x> may be omitted if <expr> contains
-     only one variable.  <expr> may be a rational expression, and may
-     contain trigonometric functions, exponentials, etc.
-
-     The following method is used:
-
-     Let <E> be the expression and <X> be the variable.  If <E> is
-     linear in <X> then it is trivially solved for <X>.  Otherwise if
-     <E> is of the form `A*X^N + B' then the result is `(-B/A)^1/N)'
-     times the `N''th roots of unity.
-
-     If <E> is not linear in <X> then the gcd of the exponents of <X>
-     in <E> (say <N>) is divided into the exponents and the
-     multiplicity of the roots is multiplied by <N>.  Then `solve' is
-     called again on the result.  If <E> factors then `solve' is called
-     on each of the factors.  Finally `solve' will use the quadratic,
-     cubic, or quartic formulas where necessary.
-
-     In the case where <E> is a polynomial in some function of the
-     variable to be solved for, say `F(X)', then it is first solved for
-     `F(X)' (call the result <C>), then the equation `F(X)=C' can be
-     solved for <X> provided the inverse of the function <F> is known.
-
-     `breakup' if `false' will cause `solve' to express the solutions of
-     cubic or quartic equations as single expressions rather than as
-     made up of several common subexpressions which is the default.
-
-     `multiplicities' - will be set to a list of the multiplicities of
-     the individual solutions returned by `solve', `realroots', or
-     `allroots'.  Try `apropos (solve)' for the switches which affect
-     `solve'.  `describe' may then by used on the individual switch
-     names if their purpose is not clear.
-
-     `solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])' solves a
-     system of simultaneous (linear or non-linear) polynomial equations
-     by calling `linsolve' or `algsys' and returns a list of the
-     solution lists in the variables.  In the case of `linsolve' this
-     list would contain a single list of solutions.  It takes two lists
-     as arguments.  The first list represents the equations to be
-     solved; the second list is a list of the unknowns to be
-     determined.  If the total number of variables in the equations is
-     equal to the number of equations, the second argument-list may be
-     omitted.  For linear systems if the given equations are not
-     compatible, the message `inconsistent' will be displayed (see the
-     `solve_inconsistent_error' switch); if no unique solution exists,
-     then `singular' will be displayed.
-
-     When `programmode' is `false', `solve' displays solutions with
-     intermediate expression (`%t') labels, and returns the list of
-     labels.
-
-     When `globalsolve' is `true' and the problem is to solve two or
-     more linear equations, each solved-for variable is bound to its
-     value in the solution of the equations.
-
-     Examples:
-
-          (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
-
-          SOLVE is using arc-trig functions to get a solution.
-          Some solutions will be lost.
-                                      %pi
-          (%o1)                  [x = ---, f(x) = 1]
-                                       6
-          (%i2) ev (solve (5^f(x) = 125, f(x)), solveradcan);
-                                          log(125)
-          (%o2)                   [f(x) = --------]
-                                           log(5)
-          (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
-                                2    2
-          (%o3)             [4 x  - y  = 12, x y - x = 2]
-          (%i4) solve (%, [x, y]);
-          (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
-
-           - .1331240357358706, y = .0767837852378778
-
-           - 3.608003221870287 %i], [x = - .5202594388652008 %i
-
-           - .1331240357358706, y = 3.608003221870287 %i
-
-           + .0767837852378778], [x = - 1.733751846381093,
-
-          y = - .1535675710019696]]
-          (%i5) solve (1 + a*x + x^3, x);
-                                                 3
-                        sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (%o5) [x = (- ---------- - -) (--------------- - -)
-                            2        2      6 sqrt(3)      2
-
-                  sqrt(3) %i   1
-                 (---------- - -) a
-                      2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                                    3
-           sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (---------- - -) (--------------- - -)
-               2        2      6 sqrt(3)      2
-
-                   sqrt(3) %i   1
-                (- ---------- - -) a
-                       2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                   3
-           sqrt(4 a  + 27)   1 1/3               a
-          (--------------- - -)    - --------------------------]
-              6 sqrt(3)      2                  3
-                                        sqrt(4 a  + 27)   1 1/3
-                                     3 (--------------- - -)
-                                           6 sqrt(3)      2
-          (%i6) solve (x^3 - 1);
-                       sqrt(3) %i - 1        sqrt(3) %i + 1
-          (%o6)   [x = --------------, x = - --------------, x = 1]
-                             2                     2
-          (%i7) solve (x^6 - 1);
-                     sqrt(3) %i + 1      sqrt(3) %i - 1
-          (%o7) [x = --------------, x = --------------, x = - 1,
-                           2                   2
-
-                               sqrt(3) %i + 1        sqrt(3) %i - 1
-                         x = - --------------, x = - --------------, x = 1]
-                                     2                     2
-          (%i8) ev (x^6 - 1, %[1]);
-                                                6
-                                (sqrt(3) %i + 1)
-          (%o8)                 ----------------- - 1
-                                       64
-          (%i9) expand (%);
-          (%o9)                           0
-          (%i10) x^2 - 1;
-                                        2
-          (%o10)                       x  - 1
-          (%i11) solve (%, x);
-          (%o11)                  [x = - 1, x = 1]
-          (%i12) ev (%th(2), %[1]);
-          (%o12)                          0
-
-
- -- Option variable: solvedecomposes
-     Default value: `true'
-
-     When `solvedecomposes' is `true', `solve' calls `polydecomp' if
-     asked to solve polynomials.
-
-
- -- Option variable: solveexplicit
-     Default value: `false'
-
-     When `solveexplicit' is `true', inhibits `solve' from returning
-     implicit solutions, that is, solutions of the form `F(x) = 0'
-     where `F' is some function.
-
-
- -- Option variable: solvefactors
-     Default value: `true'
-
-     When `solvefactors' is `false', `solve' does not try to factor the
-     expression.  The `false' setting may be desired in some cases
-     where factoring is not necessary.
-
-
- -- Option variable: solvenullwarn
-     Default value: `true'
-
-     When `solvenullwarn' is `true', `solve' prints a warning message
-     if called with either a null equation list or a null variable list.
-     For example, `solve ([], [])' would print two warning messages and
-     return `[]'.
-
-
- -- Option variable: solveradcan
-     Default value: `false'
-
-     When `solveradcan' is `true', `solve' calls `radcan' which makes
-     `solve' slower but will allow certain problems containing
-     exponentials and logarithms to be solved.
-
-
- -- Option variable: solvetrigwarn
-     Default value: `true'
-
-     When `solvetrigwarn' is `true', `solve' may print a message saying
-     that it is using inverse trigonometric functions to solve the
-     equation, and thereby losing solutions.
-
-
- -- Option variable: solve_inconsistent_error
-     Default value: `true'
-
-     When `solve_inconsistent_error' is `true', `solve' and `linsolve'
-     give an error if the equations to be solved are inconsistent.
-
-     If `false', `solve' and `linsolve' return an empty list `[]' if
-     the equations are inconsistent.
-
-     Example:
-
-          (%i1) solve_inconsistent_error: true$
-          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
-          Inconsistent equations:  (2)
-           -- an error.  Quitting.  To debug this try debugmode(true);
-          (%i3) solve_inconsistent_error: false$
-          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
-          (%o4)                          []
-
-
-
-File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equations,  Up: Top
-
-22 Differential Equations
-*************************
-
-* Menu:
-
-* Introduction to Differential Equations::
-* Functions and Variables for Differential Equations::
-
-
-File: maxima.info,  Node: Introduction to Differential Equations,  Next: Functions and Variables for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
-
-22.1 Introduction to Differential Equations
-===========================================
-
-This section describes the functions available in Maxima to obtain
-analytic solutions for some specific types of first and second-order
-equations. To obtain a numerical solution for a system of differential
-equations, see the additional package `dynamics'. For graphical
-representations in phase space, see the additional package `plotdf'.
 

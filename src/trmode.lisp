@@ -128,11 +128,11 @@
       ((null l))
     (declmode (car l) (ir-or-extend (cadr l)) t)))
 
-(defmfun ass-eq-ref n
-  (let ((val (assoc (arg 2) (arg 1) :test #'eq)))
+(defmfun ass-eq-ref (table key &optional dflt)
+  (let ((val (assoc key table :test #'eq)))
     (if val
 	(cdr val)
-	(if (= n 3) (arg 3) nil))))
+	dflt)))
 
 (defmfun ass-eq-set (val table key)
   (let ((cell (assoc key table :test #'eq)))
@@ -174,10 +174,18 @@
 	((member 'array (cdar form) :test #'eq)
 	 (declarray (caar form) mode))
 	((eq '$function (caar form))
-	 (mapc #'(lambda (l) (declfun l mode)) (cdr form)))
+	 (mapc
+       #'(lambda (l)
+           (if (stringp l) (setq l ($verbify l)))
+           (declfun l mode))
+       (cdr form)))
 	((member (caar form) '($fixed_num_args_function $variable_num_args_function) :test #'eq)
-	 (mapc #'(lambda (f) (declfun f mode) (mputprop f t (caar form)))
-	       (cdr form)))
+	 (mapc
+       #'(lambda (f)
+           (if (stringp f) (setq f ($verbify f)))
+           (declfun f mode)
+           (mputprop f t (caar form)))
+       (cdr form)))
 	((eq '$completearray (caar form))
 	 (mapc #'(lambda (l)
 		   (putprop (if (atom l) l (caar l)) mode 'array-mode))
@@ -196,8 +204,8 @@
   (add2lnc v $props)
   (putprop v mode 'mode))
 
-(defmfun chekvalue (v mode &optional (val (meval1 v) val-givenp))
-  (cond ((or val-givenp (not (eq v val)))
+(defun chekvalue (my-v mode &optional (val (meval1 my-v) val-givenp))
+  (cond ((or val-givenp (not (eq my-v val)))
 	 ;; hack because macsyma PROG binds variable to itself. 
 	 (let ((checker (assoc mode `(($float . floatp)
 				      ($fixnum . integerp)
@@ -217,7 +225,7 @@
 				 (setq not-done nil))
 			       t)))
 		     ((if not-done (and nchecker (not (mfuncall '$featurep val (cdr nchecker)))))))
-	       (signal-mode-error v mode val))))))
+	       (signal-mode-error my-v mode val))))))
 
 (defun signal-mode-error (object mode value)
   (cond ((and $mode_check_warnp (not $mode_check_errorp))
@@ -255,8 +263,8 @@ maybe you want ~:M mode.~%"
 	 mode
 	 (case mode
 	   (($integer $integerp) '$fixnum)
-	   (($complex) "&to ask about this")
-	   (t "&to see the documentation on"))))
+	   (($complex) "to ask about this")
+	   (t "to see the documentation on"))))
 
 (defmfun fluidize (variable)
   (mapc #'(lambda (v) (or (boundp v) (setf (symbol-value v) nil)))

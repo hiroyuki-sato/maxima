@@ -1,7 +1,6 @@
-@c english version 1.54
+@c english version 1.63
 @menu
 * Introducci@'on a las expresiones::  
-* Asignaci@'on::
 * Expresiones complejas::
 * Nombres y verbos::
 * Identificadores::
@@ -11,7 +10,7 @@
 * Funciones y variables para expresiones::
 @end menu
 
-@node Introducci@'on a las expresiones, Asignaci@'on, Expresiones, Expresiones
+@node Introducci@'on a las expresiones, Expresiones complejas, Expresiones, Expresiones
 @section Introducci@'on a las expresiones
 
 Existe un cierto n@'umero de palabras reservadas que no pueden
@@ -59,13 +58,7 @@ pero quiz@'as se quiera incluir un tercer t@'ermino en la @i{expresi@'on con com
 (%o4)                        3628800
 @end example
 
-@node Asignaci@'on, Expresiones complejas, Introducci@'on a las expresiones, Expresiones
-@section Asignaci@'on
-
-Existen dos operadores de asignaci@'on en Maxima, @code{:} y @code{::}. 
-Por ejemplo, @code{a: 3} asigna a la variable @code{a} el valor de 3. Por otro lado, @code{::} asigna el valor de la expresi@'on de su derecha al valor de la cantidad de su izquierda, el cual debe evaluarse a una variable de tipo @'atomo o una variable subindicada. 
-
-@node Expresiones complejas, Nombres y verbos, Asignaci@'on, Expresiones
+@node Expresiones complejas, Nombres y verbos, Introducci@'on a las expresiones, Expresiones
 @section Expresiones complejas
 
 Una expresi@'on compleja se especifica en Maxima a@~nadiendo a la parte
@@ -237,18 +230,13 @@ forma que no sea incluy@'endolos literalmente en la cadena.
 No existe en Maxima el tipo de variable car@'acter, debi@'endose
 representar un car@'acter simple como una cadena de un solo car@'acter.
 
-En Maxima, las cadenas de caracteres se implementan como s@'{@dotless{i}}mbolos
-de Lisp, no como cadenas de Lisp, lo cual puede cambiar en versiones futuras de Maxima.
-Maxima puede representar cadenas y caracteres de Lisp, aunque algunas operaciones,
-como las pruebas de igualdad, pueden no funcionar correctamente.
-
 El paquete adicional @code{stringproc} contiene muchas funciones que
 permiten trabajar con cadenas.
 
 Ejemplos:
 
 @c ===beg===
-@c s_1 : "This is a Maxima string.";
+@c s_1 : "This is a string.";
 @c s_2 : "Embedded \"double quotes\" and backslash \\ characters.";
 @c s_3 : "Embedded line termination
 @c in this string.";
@@ -262,8 +250,8 @@ Ejemplos:
 @c s_1;
 @c ===end===
 @example
-(%i1) s_1 : "This is a Maxima string.";
-(%o1)               This is a Maxima string.
+(%i1) s_1 : "This is a string.";
+(%o1)               This is a string.
 (%i2) s_2 : "Embedded \"double quotes\" and backslash \\ characters.";
 (%o2) Embedded "double quotes" and backslash \ characters.
 (%i3) s_3 : "Embedded line termination
@@ -278,11 +266,11 @@ this string.";
 (%i5) stringdisp : false;
 (%o5)                         false
 (%i6) s_1;
-(%o6)               This is a Maxima string.
+(%o6)               This is a string.
 (%i7) stringdisp : true;
 (%o7)                         true
 (%i8) s_1;
-(%o8)              "This is a Maxima string."
+(%o8)              "This is a string."
 @end example
 
 @node Desigualdades, Sintaxis, Cadenas de caracteres, Expresiones
@@ -725,10 +713,10 @@ Se aplica com@'unmente para declarar una variable como un vector simb@'olico
 o una matriz simb@'olica.
 
 @item @code{mainvar}
-Hace que Maxima considere a @var{a_i} como una "variable principal" (@code{mainvar});
-@code{ordergreatp} determina la ordenaci@'on de los @'atomos como sigue:
-
-(variables principales) > (otras variables) > (variables escalares) > (constantes) > (n@'umeros)
+Hace que Maxima considere a @var{a_i} como una "variable principal",
+d@'andole prioridad frente a cualesquiera otras constantes o
+variables en la ordenaci@'on can@'onica de expresiones de Maxima,
+tal como determina @code{ordergreatp}.
 
 @item @code{alphabetic}
 Indica a Maxima que reconozca todos los caracteres de la cadena alfanum@'erica
@@ -1156,7 +1144,8 @@ Valor por defecto: @code{true}
 Si @code{%emode} vale @code{true},
 @code{%e^(%pi %i x)} se simplifica como sigue.
 
-@code{%e^(%pi %i x)} se simplifica a @code{cos (%pi x) + %i sin (%pi x)} si @code{x} es un entero o m@'ultiplo de 1/2, 1/3, 1/4 o 1/6, y luego se sigue simplificando.
+@code{%e^(%pi %i x)} se simplifica a @code{cos (%pi x) + %i sin (%pi x)} si @code{x} es
+un n@'umero decimal de coma flotante, un entero o un m@'ultiplo de 1/2, 1/3, 1/4 o 1/6, y luego se sigue simplificando.
 
 Para otros valores num@'ericos de @code{x},
 @code{%e^(%pi %i x)} se simplifica a @code{%e^(%pi %i y)} donde @code{y} es @code{x - 2 k}
@@ -1194,9 +1183,9 @@ Si @code{exptsubst} vale @code{true} permite la sustituci@'on @code{y} por @code
 
 @deffn {Funci@'on} freeof (@var{x_1}, ..., @var{x_n}, @var{expr})
 @code{freeof (@var{x_1}, @var{expr})}
-Devuelve @code{true}
-si ninguna subexpresi@'on de  @var{expr} es igual a @var{x_1}
-o si  @var{x_1} aparece como variable muda en @var{expr},
+Devuelve @code{true} si ninguna subexpresi@'on de @var{expr} coincide con @var{x_1},
+o si @var{x_1} aparece como variable muda en @var{expr}, o si @var{x_1} no es ni
+una forma nominal ni verbal de cualesquiera operadores presentes en @var{expr},
 devolviendo @code{false} en otro caso.
 
 La llamada @code{freeof (@var{x_1}, ..., @var{x_n}, @var{expr})}
@@ -1329,8 +1318,14 @@ y partes izquierda y derecha iguales a @code{any}.
 con fuerzas de ligadura por la izquierda y por la derecha declaradas en los argumentos, siendo las partes izquierda y derecha iguales a @code{any}.
 
 @code{infix (@var{op}, @var{lbp}, @var{rbp}, @var{lpos}, @var{rpos}, @var{pos})}
-declara @var{op} como operador infijo
-con fuerzas de ligadura por la izquierda y por la derecha y partes declaradas en los argumentos.
+declara @var{op} como operador infijo con fuerzas de ligadura por la 
+izquierda y por la derecha, junto con los tipos de expresiones correspondientes
+a @var{lpos}, @var{rpos} y @var{pos}, que son el operando de la izquierda,
+el de la derecha y el operador del resultado; los tipos reconocidos son:
+@code{expr}, @code{clause} y @code{any}, que indican expresi@'on algebraica,
+expresi@'on booleana o cualquier otra, respectivamente. Maxima puede detectar
+algunos errores sint@'acticos comparando los tipos declarados con los de la expresi@'on
+actual.
 
 La precedencia de @var{op} con respecto a otros operadores deriva de las fuerzas de ligadura de los operadores en cuesti@'on.
 Si las fuerzas de ligadura a izquierda y derecha de @var{op} son ambas mayores que las fuerzas de ligadura a izquierda y derecha de otro operador, entonces @var{op} tiene preferencia sobre el otro operador. Si las fuerzas de ligadura no son ambas mayores o menores, se aplican otras relaciones m@'as complejas.
@@ -1393,6 +1388,27 @@ mientras que mayor  @var{rbp} hace a @var{op} asociativo por la izquierda.
 (%o5)                    ((foo,bar),baz)
 @end example
 
+Maxima puede detectar algunos errores sint@'acticos comparando
+los tipos declarados con los de la expresi@'on actual.
+
+@c ===beg===
+@c infix ("##", 100, 99, expr, expr, expr);
+@c if x ## y then 1 else 0;
+@c infix ("##", 100, 99, expr, expr, clause);
+@c if x ## y then 1 else 0;
+@c ===end===
+@example
+(%i1) infix ("##", 100, 99, expr, expr, expr);
+(%o1)                          ##
+(%i2) if x ## y then 1 else 0;
+Incorrect syntax: Found algebraic expression where logical expression expected
+if x ## y then 
+             ^
+(%i2) infix ("##", 100, 99, expr, expr, clause);
+(%o2)                          ##
+(%i3) if x ## y then 1 else 0;
+(%o3)                if x ## y then 1 else 0
+@end example
 @end deffn
 
 @defvr {Variable opcional} inflag
@@ -1690,48 +1706,145 @@ La variable @code{optimprefix} es el prefijo utilizado para los s@'{@dotless{i}}
 
 @end defvr
 
-@c NEEDS WORK
-@c WHAT DOES ">" MEAN IN THIS CONTEXT ??
 @deffn {Funci@'on} ordergreat (@var{v_1}, ..., @var{v_n})
-Establece una ordenaci@'on para las variables @var{v_1}, ..., @var{v_n}
-de manera que @var{v_1} > @var{v_2} > ...  > @var{v_n} y
-@var{v_n} > cualquier otra variable no mencionada como argumento.
+@deffnx {Funci@'on} orderless (@var{v_1}, ..., @var{v_n})
 
-V@'ease tambi@'en @code{orderless}.
+@code{ordergreat} cambia el orden can@'onico de las expresiones de
+Maxima, de manera que @var{v_1} prevalece sobre @var{v_2}, que
+prevalece sobre ..., que prevalece sobre @var{v_n}, que prevalece
+sobre cualquier otro s@'{@dotless{i}}mbolo no presente en la
+lista de argumentos.
+
+@code{orderless} cambia el orden can@'onico de las expresiones de
+Maxima, de manera que @var{v_1} precede a @var{v_2}, que precede a ...,
+que precede a @var{v_n}, que precede a cualquier otra variable no 
+presente en la lista de argumentos.
+
+El orden impuesto por @code{ordergreat} y @code{orderless} se 
+destruye con @code{unorder}. @code{ordergreat} y @code{orderless}
+s@'olo se pueden llamar una vez, a menos que se invoque a @code{unorder}.
+La @'ultima llamada a @code{ordergreat} y @code{orderless} es la que
+se mantiene activa.
+
+V@'ease tambi@'en @code{ordergreatp}.
 
 @end deffn
 
-@c NEEDS WORK
-@c WHAT DOES "PRECEDES" MEAN IN THIS CONTEXT ??
+
 @deffn {Funci@'on} ordergreatp (@var{expr_1}, @var{expr_2})
-Devuelve @code{true} si @var{expr_2} precede a @var{expr_1} seg@'un el orden establecido con la funci@'on @code{ordergreat}.
+@deffnx {Funci@'on} orderlessp (@var{expr_1}, @var{expr_2})
 
+@code{ordergreatp} devuelve @code{true} si @var{expr_1} prevalece sobre
+@var{expr_2} en el orden can@'onico de las expresiones de Maxima, o
+@code{false} en caso contrario.
+
+@code{orderlessp} devuelve @code{true} si @var{expr_1} precede a
+@var{expr_2} en el orden can@'onico de las expresiones de Maxima, o
+@code{false} en caso contrario.
+
+Todos los @'atomos y expresiones de Maxima son comparables bajo 
+@code{ordergreatp} y @code{orderlessp}, aunque existen ejemplos aislados
+de expresiones para los que estos predicados no son transitivos.
+
+La ordenaci@'on can@'onica de @'atomos (s@'{@dotless{i}}mbolos, n@'umeros
+literales y cadenas) es la siguiente: (enteros y decimales en coma flotante)
+preceden a (n@'umeros decimales grandes o @i{bigfloats}), que preceden a (constantes
+declaradas), que preceden a (cadenas), que preceden a (escalares declarados), que preceden a 
+(primer argumento de @code{orderless}), que precede a ..., que precede a (@'ultimo
+argumento de @code{orderless}), que precede a (otros s@'{@dotless{i}}mbolos), que
+preceden a (@'ultimo argumento de @code{ordergreat}), que precede a ..., que
+precede a (primer argumento de @code{ordergreat}), que precede a (variables
+principales declaradas).
+
+Para las expresiones no at@'omicas, la ordenaci@'on can@'onica se deriva de la
+ordenaci@'on de @'atomos. Para los operadores nativos @code{+}, @code{*} y @code{^},
+los criterios de ordenaci@'on no son sencillos de resumir.
+Para otros operadores nativos, y todas las dem@'as funciones y operadores,
+las expresiones se ordenan por sus argumentos (empezando por el primero),
+despu@'es por el nombre del operador o funci@'on. En caso de expresiones
+con sub@'{@dotless{i}}ndices, el s@'{@dotless{i}}mbolo subindicado se
+considera operador y el sub@'{@dotless{i}}ndice un argumento del mismo.
+
+El orden can@'onico de expresiones se modifica mediante las funciones
+@code{ordergreat} y @code{orderless}, as@'{@dotless{i}} como por las 
+declaraciones @code{mainvar}, @code{constant} y @code{scalar}.
+
+V@'ease tambi@'en @code{sort}.
+
+Ejemplos:
+
+Ordenaci@'on de s@'{@dotless{i}}mbolos comunes y constantes.
+N@'otese que @code{%pi} no se ordena en funci@'on de su valor
+num@'erico.
+
+@c ===beg===
+@c stringdisp : true;
+@c sort ([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
+@c ===end===
+@example
+(%i1) stringdisp : true;
+(%o1)                         true
+(%i2) sort ([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
+(%o2) [3, 3.0, 4, 4.0, 3.0b0, 4.0b0, %pi, "bar", "foo", a, x, X]
+@end example
+
+Efecto producido por las funciones @code{ordergreat} y @code{orderless}.
+
+@c ===beg===
+@c sort ([M, H, K, T, E, W, G, A, P, J, S]);
+@c ordergreat (S, J);
+@c orderless (M, H);
+@c sort ([M, H, K, T, E, W, G, A, P, J, S]);
+@c ===end===
+@example
+(%i1) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+(%o1)           [A, E, G, H, J, K, M, P, S, T, W]
+(%i2) ordergreat (S, J);
+(%o2)                         done
+(%i3) orderless (M, H);
+(%o3)                         done
+(%i4) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+(%o4)           [M, H, A, E, G, K, P, T, W, J, S]
+@end example
+
+Efecto producido por las declaraciones @code{mainvar}, @code{constant} y @code{scalar}.
+
+@c ===beg===
+@c sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+@c declare (aa, mainvar);
+@c declare ([baz, quux], constant);
+@c declare ([A1, B1], scalar);
+@c sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+@c ===end===
+@example
+(%i1) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+(%o1)   [aa, bar, baz, bb, cc, dd, foo, quux, A1, B1, C1]
+(%i2) declare (aa, mainvar);
+(%o2)                         done
+(%i3) declare ([baz, quux], constant);
+(%o3)                         done
+(%i4) declare ([A1, B1], scalar);
+(%o4)                         done
+(%i5) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+(%o5)   [baz, quux, A1, B1, bar, bb, cc, dd, foo, C1, aa]
+@end example
+
+Ordenaci@'on de expresiones no at@'omicas.
+
+@c ===beg===
+@c sort ([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n), f(n, 1)]);
+@c sort ([foo(1), X[1], X[k], foo(k), 1, k]);
+@c ===end===
+@example
+(%i1) sort ([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n), f(n, 1)]);
+(%o1) [1, 2, f(1), g(1), g(1, 2), f(2), f(2, 1), n, g(n), 
+                                                         f(n, 1)]
+(%i2) sort ([foo(1), X[1], X[k], foo(k), 1, k]);
+(%o2)            [1, foo(1), X , k, foo(k), X ]
+                              1              k
+@end example
 @end deffn
 
-@c NEEDS WORK
-@c WHAT DOES "<" MEAN IN THIS CONTEXT ??
-@deffn {Funci@'on} orderless (@var{v_1}, ..., @var{v_n})
-Establece una ordenaci@'on para las variables @var{v_1}, ..., @var{v_n}
-de manera que @var{v_1} < @var{v_2} < ...  < @var{v_n} y
-@var{v_n} < cualquier otra variable no mencionada como argumento.
-
-@c EXPRESS THIS ORDER IN A MORE COMPREHENSIBLE FASHION
-As@'{@dotless{i}}, la ordenaci@'on completa de objetos es: constantes num@'ericas <
-constantes declaradas < escalares declarados < primer argumento de @code{orderless} <
-...  < @'ultimo argumento de @code{orderless} < variables que empiezan por A < ...
-< variables que empiezan por Z < @'ultimo argumento de  @code{ordergreat} <
- ... < primer argumento de @code{ordergreat} < objetos declarados como @code{mainvar}.
-
-V@'eanse tambi@'en @code{ordergreat} y @code{mainvar}.
-
-@end deffn
-
-@c NEEDS WORK
-@c WHAT DOES "PRECEDES" MEAN IN THIS CONTEXT ??
-@deffn {Funci@'on} orderlessp (@var{expr_1}, @var{expr_2})
-Devuelve @code{true} si @var{expr_1} precede a @var{expr_2} seg@'un el orden establecido con la funci@'on @code{orderless}.
-
-@end deffn
 
 @c NEEDS WORK
 @deffn {Funci@'on} part (@var{expr}, @var{n_1}, ..., @var{n_k})
@@ -2167,22 +2280,8 @@ Ejemplos:
                            ====
                            k = 1
 (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10));
-Incorrect syntax: Too many )'s
-else b^k, k, 1, 10))
-                  ^
-(%i12) linenum:11;
-(%o11)                         11
-(%i12) sum (integrate (x^k, x, 0, 1), k, 1, n);
-                            n
-                           ====
-                           \       1
-(%o12)                      >    -----
-                           /     k + 1
-                           ====
-                           k = 1
-(%i13) sum (if k <= 5 then a^k else b^k, k, 1, 10);
           10    9    8    7    6    5    4    3    2
-(%o13)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
+(%o12)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
 @end example
 
 @end deffn

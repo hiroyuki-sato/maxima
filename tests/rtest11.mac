@@ -38,10 +38,10 @@ radcan(exp2);
 
 /* It's not easy to test reveal. Let's not worry about it too much. */
 expand(reveal(exp1,2),0,0);
-"negterm" + 2 * "quotient"$
+Negterm + 2 * Quotient$
 
-/* reveal(exp1,3); answers ok but the check program doesn't like "product"(2)
--"quotient"+atan/"product"(2)+log/"product"(2))$ */
+expand(reveal(exp1,3),0,0);
+log/Product(2)+atan/Product(2)-Quotient$
 
 g(l):=catch(map(lambda([x],if x < 0 then throw(x) else f(x)),l));
 g(l):=catch(map(lambda([x],if x < 0 then throw(x) else f(x)),l))$
@@ -220,6 +220,44 @@ freeof(y,sin(x+2*y));
 false$
 freeof(cos(y),"*",sin(y)+cos(x));
 true$
+
+/* freeof should try both noun and verb forms */
+
+(kill (f, g, h, x, n), 0);
+0;
+
+freeof (sin, sin (x));
+false;
+
+freeof (integrate, 'integrate (f(x), x));
+false;
+
+freeof (diff, 'diff (f(x), x));
+false;
+
+freeof (sum, 'sum (f(x), x, 1, n));
+false;
+
+freeof (limit, 'limit (f(x), x, inf));
+false;
+
+freeof (sin, f (g (1 + sin (h (x)))));
+false;
+
+freeof (integrate, f (g (x - 'integrate (h (x), x))));
+false;
+
+freeof (diff, f (g (x * 'diff (h (x), x, 3))));
+false;
+
+freeof (sum, f (g (x / 'sum (h (x), x, 2, n))));
+false;
+
+freeof (limit, f (g (x ^ 'limit (h (x), x, inf))));
+false;
+
+/* Additional freeof tests */
+
 lfreeof([x],y);
 true$
 lfreeof([x],y+z);
@@ -256,3 +294,27 @@ done;
  */
 [integerp (absolute_real_time ()), floatnump (elapsed_real_time ()), floatnump (elapsed_run_time ())];
 [true, true, true];
+
+/* Do the right thing when listarray and arrayinfo are called within
+ * a function and the name of the formal argument coincides with the
+ * name of the actual argument. (Was a bug in ARRAYINFO-AUX.)
+ */
+
+(foo(x) := apply (arrayinfo, [x]),
+ bar(x) := listarray (x),
+ kill (x),
+ x[1] : 1234,
+ foo(x));
+[hashed, 1, [1]];
+
+bar(x);
+[1234];
+
+(kill(y),
+ y[2] : 2345,
+ foo(y));
+[hashed, 1, [2]];
+
+bar(y);
+[2345];
+

@@ -308,7 +308,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
  -- Función: concat (<arg_1>, <arg_2>, ...)
      Concatena sus argumentos, que deben ser todos átomos.  El valor
      devuelto es un símbolo si el primer argumento es a su vez un
-     símbolo, o una cadena de Maxima en caso contrario.
+     símbolo, o una cadena en caso contrario.
 
      La función `concat' evalúa sus argumentos.  El apátrofo  `'' evita
      la evaluación.
@@ -338,7 +338,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           (%o9)                         b
 
      Nótese que aunque `concat (1, 2)' parezca un número, se trata de
-     una cadena de Maxima.
+     una cadena.
 
           (%i10) concat (1, 2) + 3;
           (%o10)                       12 + 3
@@ -348,7 +348,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      Concatena sus argumentos para producir una cadena.  Al contrario
      que `concat', sus argumentos no necesitan ser átomos.
 
-     El resultado es una cadena de Lisp.
+     El resultado es una cadena.
 
           (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
           (%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
@@ -401,13 +401,13 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      Ejemplos:
 
           User     part       inpart
-          a-b;      A - B     A + (- 1) B
+          a-b;      a - b     a + (- 1) b
 
-                     A            - 1
-          a/b;       -         A B
-                     B
+                     a            - 1
+          a/b;       -         a b
+                     b
                                  1/2
-          sqrt(x);   sqrt(X)    X
+          sqrt(x);   sqrt(x)    x
 
                     4 X        4
           X*4/3;    ---        - X
@@ -514,6 +514,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      componente se reemplaza con `<filename>.<something>'.  En otro
      caso, la componente final se reemplaza simplemente por <filename>.
 
+     El resultado es un objeto Lisp de tipo pathname.
 
  -- Función: file_search (<filename>)
  -- Función: file_search (<filename>, <pathlist>)
@@ -1010,6 +1011,20 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
                                  10 log(a) - log(b)
 
 
+ -- Función: printfile (<path>)
+     Envía el fichero al que hace referncia la ruta <path> a la
+     consola. <path> puede ser una cadena o un símbolo, en cuyo caso se
+     convertirá en una cadena.
+
+     Si <path> hace referencia a un fichero accesible desde el
+     directorio actual de trabajo, entonces se enviará a la consola; en
+     caso contrario, `printfile' intentará localizar el fichero
+     añadiéndole <path> a cada uno de los elementos de
+     `file_search_usage' a través de `filename_merge'.
+
+     `printfile' devuelve la ruta del fichero encontado.
+
+
  -- Función: read (<expr_1>, ..., <expr_n>)
      Imprime <expr_1>, ..., <expr_n> y a continuación lee una expresión
      desde la consola y devuelve la expresión evaluada. La expresión
@@ -1049,17 +1064,17 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      Reemplaza partes de <expr> al <nivel> especificado y las sutituye
      por descripciones cortas.
 
-        * Las sumas y restas se reemplazan por `sum(<n>)', siendo <n>
+        * Las sumas y restas se reemplazan por `Sum(<n>)', siendo <n>
           el número de términos de la suma.
 
-        * Los productos se reemplazan por `product(<n>)', siendo <n> el
+        * Los productos se reemplazan por `Product(<n>)', siendo <n> el
           número de factores del producto.
 
-        * Las potencias se reemplazan por `expt'.
+        * Las potencias se reemplazan por `Expt'.
 
-        * Los cocientes se reemplazan por `quotient'.
+        * Los cocientes se reemplazan por `Quotient'.
 
-        * El símbolo negativo se reemplaza por `negterm'.
+        * El símbolo negativo se reemplaza por `Negterm'.
 
      Si el entero  <depth> es mayor o igual que la profundidad máxima
      de <expr>, `reveal (<expr>, <depth>)' devuelve <expr> sin
@@ -1077,26 +1092,26 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
                                   b + a     2 b     2 a
                               2 %e      + %e    + %e
           (%i2) reveal (e, 1);
-          (%o2)                       quotient
+          (%o2)                       Quotient
           (%i3) reveal (e, 2);
-                                       sum(3)
+                                       Sum(3)
           (%o3)                        ------
-                                       sum(3)
+                                       Sum(3)
           (%i4) reveal (e, 3);
-                               expt + negterm + expt
+                               Expt + Negterm + Expt
           (%o4)               ------------------------
-                              product(2) + expt + expt
+                              Product(2) + Expt + Expt
           (%i5) reveal (e, 4);
                                  2                 2
-                                b  - product(3) + a
+                                b  - Product(3) + a
           (%o5)         ------------------------------------
-                                   product(2)     product(2)
-                        2 expt + %e           + %e
+                                   Product(2)     Product(2)
+                        2 Expt + %e           + %e
           (%i6) reveal (e, 5);
                                    2            2
                                   b  - 2 a b + a
           (%o6)              --------------------------
-                                 sum(2)     2 b     2 a
+                                 Sum(2)     2 b     2 a
                              2 %e       + %e    + %e
           (%i7) reveal (e, 6);
                                     2            2
@@ -1281,9 +1296,11 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
 
  -- Función: tex (<expr>)
+ -- Función: tex (<expr>, <destination>)
+ -- Función: tex (<expr>, false)
  -- Función: tex (<label>)
- -- Función: tex (<expr>, <filename>)
- -- Función: tex (<label>, <filename>)
+ -- Función: tex (<label>, <destination>)
+ -- Función: tex (<label>, false)
      Devuelve la expresión en un formato apropiado para para ser
      incorporado a un documento basado en TeX.  El resultado que se
      obtiene es un fragmento de código que puede incluirse en un
@@ -1298,12 +1315,15 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      que será mostrada al lado izquierdo de la misma. La etiqueta de la
      expresión en TeX es la misma que la de Maxima.
 
-     La instrucción `tex (<expr>, <filename>)' añade la representación
-     TeX de <expr> al fichero <filename>.
+     <destination> puede ser tanto un flujo de salida como el nombre de
+     un fichero.
 
-     La instrucción `tex (<label>, <filename>)' añade la representación
-     TeX de la expresión a la que hace referencia la etiqueta  <label>,
-     junto con una etiqueta, al fichero <filename>.
+     Si <destination> es el nombre de un fichero, `tex' añade la salida
+     al fichero.  Las funciones `openw' y `opena' crean flujos de
+     salida.
+
+     Las instrucciones `tex (<expr>, false)' y `tex (<label>, false)'
+     devuelven el código TeX en formato de cadena.
 
      La función `tex' evalúa su primer argumento tras comprobar si se
      trata de una etiqueta. La doble comilla simple `''' fuerza la
@@ -1331,6 +1351,12 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           (%i4) tex (%o1, "foo.tex");
           (%o4)                          (\%o1)
 
+     `tex (<expr>, false)' devuelve el código TeX en formato de cadena.
+
+          (%i1) S : tex (x * y * z, false);
+          (%o1) $$x\,y\,z$$
+          (%i2) S;
+          (%o2) $$x\,y\,z$$
 
  -- Función: texput (<a>, <s>)
  -- Función: texput (<a>, <s>, <operator_type>)
@@ -1448,6 +1474,72 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           (%o7)                         false
 
 
+ -- Función: get_tex_environment (<op>)
+ -- Función: set_tex_environment (<op>, <before>, <after>)
+     Gestiona el entorno de las salidas TeX que se obtienen de la
+     función `tex'.  El entorno TeX está formado por dos cadenas: una
+     que se escribe antes que cualquier salida en TeX, y otra que se
+     escribe después.
+
+     `get_tex_environment' devuelve el entorno TeX que se aplica al
+     operador <op>.  Si no se ha asignado ningún entorno, devolverá el
+     que tenga por defecto.
+
+     `set_tex_environment' asigna el entorno TeX al operador <op>.
+
+     Ejemplos:
+
+          (%i1) get_tex_environment (":=");
+          (%o1) [
+          \begin{verbatim}
+          , ;
+          \end{verbatim}
+          ]
+          (%i2) tex (f (x) := 1 - x);
+
+          \begin{verbatim}
+          f(x):=1-x;
+          \end{verbatim}
+
+          (%o2)                         false
+          (%i3) set_tex_environment (":=", "$$", "$$");
+          (%o3)                       [$$, $$]
+          (%i4) tex (f (x) := 1 - x);
+          $$f(x):=1-x$$
+          (%o4)                         false
+
+ -- Función: get_tex_environment_default ()
+ -- Función: set_tex_environment_default (<before>, <after>)
+     Gestiona el entorno de las salidas TeX que se obtienen de la
+     función `tex'.  El entorno TeX está formado por dos cadenas: una
+     que se escribe antes que cualquier salida en TeX, y otra que se
+     escribe después.
+
+     `get_tex_environment_default' devuelve el entorno TeX que se aplica
+     a expresiones para las cuales el operador de mayor rango no tiene
+     entorno TeX asignado (mediante `set_tex_environment').
+
+     `set_tex_environment_default' asigna el entorno TeX por defecto.
+
+     Ejemplos:
+
+          (%i1) get_tex_environment_default ();
+          (%o1)                       [$$, $$]
+          (%i2) tex (f(x) + g(x));
+          $$g\left(x\right)+f\left(x\right)$$
+          (%o2)                         false
+          (%i3) set_tex_environment_default ("\\begin{equation}
+          ", "
+          \\end{equation}");
+          (%o3) [\begin{equation}
+          ,
+          \end{equation}]
+          (%i4) tex (f(x) + g(x));
+          \begin{equation}
+          g\left(x\right)+f\left(x\right)
+          \end{equation}
+          (%o4)                         false
+
  -- Función: system (<command>)
      Ejecuta la instrucción <command> como un proceso independiente de
      Maxima.  La instrucción se le pasa a la consola del sistema para
@@ -1482,14 +1574,21 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      afectadas por `ttyoff'.
 
 
- -- Macro: with_stdout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
-     Abre el archivo <filename> y a continuación evalúa <expr_1>,
-     <expr_2>, <expr_3>, ....  Los valores de los argumentos no se
-     almacenan <filename>, pero cualquier resultado a imprimir por
-     `print', `display', `disp' o `grind', va a parar al archivo
-     <filename> en lugar de a la consola.
+ -- Función: with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Función: with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
+     Evalúa  <expr_1>, <expr_2>, <expr_3>, ...  y escribe los
+     resultados en el fichero <f> o flujo de salida <s>.  Las
+     expresiones que se evalúan no se escriben. La salida puede
+     generarse por medio de `print', `display', `grind' entre otras
+     funciones.
 
-     La macro `with_stdout' devuelve el valor de su último argumento.
+     La variable global `file_output_append' controla si `with_stdout'
+     añade o reinicia el contenido del fichero de salida <f>.  Si
+     `file_output_append' vale `true', `with_stdout' añade contenido al
+     fichero de salida. En cualquier caso, `with_stdout' crea el
+     fichero si éste no existe.
+
+     La función `with_stdout' devuelve el valor de su último argumento.
 
      Véase también `writefile'.
 
@@ -1555,8 +1654,6 @@ File: maxima.info,  Node: Funciones y variables para la aritmética de punto flot
      conservan y devuelven, pudiendo utilizarse para obtener algunas
      cifras extra.
 
-     La instrucción `load ("bffac")' carga esta función.
-
 
  -- Variable optativa: algepsilon
      Valor por defecto: 10^8
@@ -1590,8 +1687,6 @@ File: maxima.info,  Node: Funciones y variables para la aritmética de punto flot
 
      Estas funciones devuelven valores "bigfloat". La variable <fpprec>
      es la precisión "bigfloat" del valor de retorno.
-
-     La instrucción `load ("bffac")' carga estas funciones.
 
 
  -- Variable optativa: bftorat
@@ -2235,11 +2330,12 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
 
 
  -- Función: factor (<expr>)
+ -- Función: factor (<expr>, <p>)
      Factoriza la expresión <expr>, que puede contener cualquier número
      de variables o funciones, en factores irreducibles respecto de los
-     enteros. La llamada `factor (<expr>, p)' factoriza <expr> en el
+     enteros. La llamada `factor (<expr>, <p>)' factoriza <expr> en el
      campo de los enteros con un elemento añadido cuyo polinomio mínimo
-     es p.
+     es <p>.
 
      La función `factor' utiliza a `ifactors' para factorizar enteros.
 
@@ -2510,16 +2606,17 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
      los algoritmos `ezgcd', subresultante `prs', reducido o modular,
      respectivamente.  Si `gcd' vale `false' entonces `gcd(<p_1>,
      <p_2>, <x>)' devolverá siempre 1 para cualquier <x>.  Muchas
-     funciones (por ejemplo,  `ratsimp', `factor', etc.) hacen uso de
+     funciones (por ejemplo,  `ratsimp', `factor', etc.)  hacen uso de
      `gcd' implícitamente.  En caso de polinomios homogéneos se
      recomienda darle a `gcd' el valor `subres'.  Para calcular un
-     máximo común divisor en presencia de raíces, como en `gcd (<x>^2 -
-     2*sqrt(2)*<x> + 2, <x> - sqrt(2))', la variable `algebraic' debe
-     igualarse previamente a `true' y `gcd' no puede ser `ez'. Se
-     recomienda utilizar el algoritmo `subres' en lugar de `red', por
-     ser aquél más nuevo.
+     máximo común divisor en presencia de raíces, como en  `gcd (<x>^2
+     - 2*sqrt(2)*<x> + 2, <x> - sqrt(2))', la variable `algebraic' debe
+     igualarse a `true' y `gcd' no puede ser `ez'.
 
-     Cuando la variable `gcd', cuyo valor por defecto es `subres', vale
+     Se recomienda utilizar el algoritmo `subres' en lugar de `red',
+     por ser aquél más moderno.
+
+     Si la variable `gcd', cuyo valor por defecto es `spmod', vale
      `false', no se calculará el máximo común divisor cuando las
      expresiones se conviertan a su forma canónica (CRE), lo que
      redundará en ocasiones en mayor rapidez de cálculo.
@@ -3367,6 +3464,16 @@ File: maxima.info,  Node: Funciones y variables para Constantes,  Prev: Constant
      El símbolo `false' representa al valor lógico "falso". Maxima
      implementa `false' con el valor `NIL' de Lisp.
 
+ -- Constante: ind
+     `ind' representa un resultado acotado indeterminado.
+
+     Véase también `limit'.
+
+     Ejemplo:
+
+          (%i1) limit (sin(1/x), x, 0);
+          (%o1)                          ind
+
  -- Constante: inf
      El símbolo `inf' representa al infinito real positivo.
 
@@ -3441,6 +3548,16 @@ File: maxima.info,  Node: Funciones y variables para Constantes,  Prev: Constant
  -- Constante: true
      El símbolo `true' representa al valor lógico "verdadero". Maxima
      implementa `true' con el valor `T' de Lisp.
+
+ -- Constante: und
+     `und' representa un resultado indefinido.
+
+     Véase también `limit'.
+
+     Ejemplo:
+
+          (%i1) limit (1/x, x, 0);
+          (%o1)                          und
 
 
 File: maxima.info,  Node: Logaritmos,  Next: Trigonometría,  Prev: Constantes,  Up: Top
@@ -3703,11 +3820,11 @@ File: maxima.info,  Node: Funciones y variables para trigonometría,  Prev: Intro
 
      Cuando `%piargs' vale `true', las funciones trigonométricas se
      simplifican a constantes algebraicas cuando el argumento es
-     múltiplo entero de `%pi', `%pi/2', `%pi/3', `%pi/4' o `%pi/6'.
+     múltiplo entero de %pi, %pi/2, %pi/3, %pi/4 o %pi/6.
 
-     Maxima conoce algunas identidades aplicables cuando `%pi', etc.,
-     se multiplican por una variable entera (esto es, un símbolo
-     declarado como entero).
+     Maxima conoce algunas identidades aplicables cuando %pi, etc., se
+     multiplican por una variable entera (esto es, un símbolo declarado
+     como entero).
 
      Ejemplo:
 
@@ -3736,8 +3853,8 @@ File: maxima.info,  Node: Funciones y variables para trigonometría,  Prev: Intro
           (%o7)          [-, - -, sqrt(3), cos(-----------)]
                           2    2                    3
 
-     Se aplican ciertas identidades cuando `%pi' o `%pi/2' se
-     multiplican por una variable entera.
+     Se aplican ciertas identidades cuando %pi o %pi/2 se multiplican
+     por una variable entera.
 
           (%i1) declare (n, integer, m, even);
           (%o1)                         done
@@ -3751,10 +3868,11 @@ File: maxima.info,  Node: Funciones y variables para trigonometría,  Prev: Intro
 
      Cuando `%iargs' vale `true', las funciones trigonométricas se
      simplifican a funciones hiperbólicas si el argumento es
-     aparentemente un múltiplo de la unidad imaginaria `%i'.
+     aparentemente un múltiplo de la unidad imaginaria %i.
 
-     Maxima aplica esta simplificación cuando el argumento es un
-     múltiplo literal de `%i', aunque el resultado sea reducible a real.
+     La simplificación se lleva a cabo incluso cuando el argumento es
+     manifiestamente real; Maxima sólo se fija en si el argumento es un
+     múltiplo literal de %i.
 
      Ejemplos:
 
@@ -3863,6 +3981,29 @@ File: maxima.info,  Node: Funciones y variables para trigonometría,  Prev: Intro
 
  -- Función: csch (<x>)
      Cosecante hiperbólica.
+
+
+ -- Variable opcional: halfangles
+     Valor por defecto: `false'
+
+     Si `halfangles' vale `true', las funciones trigonométricas con
+     argumentos del tipo `<expr>/2' se simplifican a funciones con
+     argumentos <expr>.
+
+     Ejemplos:
+
+          (%i1) halfangles : false;
+          (%o1)                         false
+          (%i2) sin (x / 2);
+                                           x
+          (%o2)                        sin(-)
+                                           2
+          (%i3) halfangles : true;
+          (%o3)                         true
+          (%i4) sin (x / 2);
+                                  sqrt(1 - cos(x))
+          (%o4)                   ----------------
+                                      sqrt(2)
 
 
  -- Paquete: ntrig
@@ -4172,19 +4313,15 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
      La instrucción `load ("asympa")' carga este paquete.
 
 
- -- Función: bessel (<z>, <a>)
+ -- Función: bessel (<z>, <order>)
      Función de Bessel de primera especie.
 
-     Ya no se recomienda su uso.  Utilícese `bessel_j (<z>, <a>)' en su
-     lugar.
+     Esta función ha sido eliminada. Utilícese `bessel_j (<order>,
+     <z>)' en su lugar.
 
 
  -- Función: bessel_j (<v>, <z>)
      Función de Bessel de primera especie de orden v y argumento z.
-
-     La función `bessel_j' calcula el arreglo `besselarray' tal que
-     `besselarray [i] = bessel_j [i + v - int(v)] (z)' para `i' desde
-     cero hasta `int(v)'.
 
      La función `bessel_j' se define como
 
@@ -4202,10 +4339,6 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
  -- Función: bessel_y (<v>, <z>)
      Función de Bessel de segunda especie de orden v y argumento z.
 
-     La función `bessel_y' calcula el arreglo `besselarray' tal que
-     `besselarray [i] = bessel_y [i + v - int(v)] (z)' para `i' desde
-     cero hasta `int(v)'.
-
      La función `bessel_y' se define como
 
                         cos(%pi v) bessel_j(v, z) - bessel_j(-v, z)
@@ -4219,10 +4352,6 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
  -- Función: bessel_i (<v>, <z>)
      Función modificada de Bessel de primera especie de orden v y
      argumento z.
-
-     La función `bessel_i' calcula el arreglo `besselarray' tal que
-     `besselarray [i] = bessel_i [i + v - int(v)] (z)' para `i' desde
-     cero hasta `int(v)'.
 
      La función `bessel_i' se define como
 
@@ -4240,10 +4369,6 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
  -- Función: bessel_k (<v>, <z>)
      Función modificada de Bessel de segunda especie de orden v y
      argumento z.
-
-     La función `bessel_k' calcula el arreglo `besselarray' tal que
-     `besselarray [i] = bessel_k [i + v - int(v)] (z)' para `i' desde
-     cero hasta `int(v)'.
 
      La función `bessel_k' se define como
 
@@ -4423,7 +4548,7 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
      racionales.  Existen algunas variables globales para controlar en
      qué rangos racionales debe devolver `psi' resultados exactos, si
      ello es posible.  Véanse las descripciones de `maxpsiposint',
-     `maxpsinegint', `maxpsifracnum' y `maxpsifracnum'.  En resumen,
+     `maxpsinegint', `maxpsifracnum' y `maxpsifracdenom'.  En resumen,
      <x> debe alcanzar un valor entre `maxpsinegint' y `maxpsiposint'.
      Si el valor absoluto de la parte fraccional de <x> es racional y
      tiene un numerador menor que `maxpsifracnum' y un denominador
@@ -4499,6 +4624,57 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
                                          p
 
 
+ -- Función: hgfred (<a>, <b>, <t>)
+     Simplifica la función hipergeométrica generalizada en términos de
+     otras funciones más sencillas. <a> es una lista de parámetros del
+     numerador y <b> lo es de parámetros del denominador.
+
+     En caso de que `hgfred' no pueda simplificar la función
+     hipergeométrica devolverá una expresión de la forma `%f[p,q]([a],
+     [b], x)', siendo <p> el número de elementos de <a> y <q> el de
+     <b>. Esta es la función hipergeométrica generalizada `pFq'.
+
+          (%i1) assume(not(equal(z,0)));
+          (%o1)                          [notequal(z, 0)]
+          (%i2) hgfred([v+1/2],[2*v+1],2*%i*z);
+
+                               v/2                               %i z
+                              4    bessel_j(v, z) gamma(v + 1) %e
+          (%o2)               ---------------------------------------
+                                                 v
+                                                z
+          (%i3) hgfred([1,1],[2],z);
+
+                                             log(1 - z)
+          (%o3)                            - ----------
+                                                 z
+          (%i4) hgfred([a,a+1/2],[3/2],z^2);
+
+                                         1 - 2 a          1 - 2 a
+                                  (z + 1)        - (1 - z)
+          (%o4)                   -------------------------------
+                                           2 (1 - 2 a) z
+
+     Tal como muestra el siguiente ejemplo, puede ser de utilidad cargar
+     también el paquete `orthopoly'. Nótese que <L> es el polinomio
+     generalizado de Laguerre.
+
+          (%i5) load(orthopoly)$
+          (%i6) hgfred([-2],[a],z);
+
+                                              (a - 1)
+                                           2 L       (z)
+                                              2
+          (%o6)                            -------------
+                                             a (a + 1)
+          (%i7) ev(%);
+
+                                            2
+                                           z        2 z
+          (%o7)                         --------- - --- + 1
+                                        a (a + 1)    a
+
+
 
 File: maxima.info,  Node: Funciones elípticas,  Next: Límites,  Prev: Funciones Especiales,  Up: Top
 
@@ -4544,7 +4720,6 @@ derivadas de las funciones e integrales elípticas  todavía no han sido
 programadas en Maxima.
 
    Algunos ejemplos de funciones elípticas:
-
      (%i1) jacobi_sn (u, m);
      (%o1)                    jacobi_sn(u, m)
      (%i2) jacobi_sn (u, 1);
@@ -4566,7 +4741,6 @@ programadas en Maxima.
                    2 (1 - m)
 
    Algunos ejemplos de integrales elípticas:
-
      (%i1) elliptic_f (phi, m);
      (%o1)                  elliptic_f(phi, m)
      (%i2) elliptic_f (phi, 0);
@@ -4714,7 +4888,7 @@ File: maxima.info,  Node: Funciones y variables para integrales elípticas,  Prev
      integrate(dn(v,m)^2,v,0,u) = integrate(sqrt(1-m*t^2)/sqrt(1-t^2),
      t, 0, tau)
 
-     donde tau = sn(u,m)
+     donde tau = sn(u,m).
 
      Esto se relaciona con `elliptic_e' mediante
 
@@ -4774,11 +4948,11 @@ File: maxima.info,  Node: Funciones y variables para límites,  Prev: Límites,  U
  -- Función: limit (<expr>, <x>, <val>, <dir>)
  -- Función: limit (<expr>, <x>, <val>)
  -- Función: limit (<expr>)
-     Calcula el ímite de <expr> cuando la variable real <x> se aproxima
-     al valor <val> desde la dirección <dir>. El argumento <dir> puede
-     ser el valor `plus' para un límite por la derecha, `minus' para un
-     límite por la izquierda o simplemente se omite para indicar un
-     límite en ambos sentidos.
+     Calcula el límite de <expr> cuando la variable real <x> se
+     aproxima al valor <val> desde la dirección <dir>. El argumento
+     <dir> puede ser el valor `plus' para un límite por la derecha,
+     `minus' para un límite por la izquierda o simplemente se omite
+     para indicar un límite en ambos sentidos.
 
      La función `limit' utiliza los símbolos especiales siguientes:
      `inf' (más infinito) y `minf' (menos infinito). En el resultado
@@ -4790,8 +4964,8 @@ File: maxima.info,  Node: Funciones y variables para límites,  Prev: Límites,  U
      bucles infinitos al iterar la regla en casos como `limit
      (cot(x)/csc(x), x, 0)'.
 
-     Si la variable `tlimswitch' vale `true' hará que el paquete sobre
-     límites utilice desarrollos de Taylor siempre que sea posible.
+     Si la variable `tlimswitch' vale `true', hará que la función
+     `limit' utilice desarrollos de Taylor siempre que le sea posible.
 
      La variable `limsubst' evita que la función `limit' realice
      sustituciones sobre formas desconocidas, a fin de evitar fallos
@@ -4821,16 +4995,18 @@ File: maxima.info,  Node: Funciones y variables para límites,  Prev: Límites,  U
  -- Función: tlimit (<expr>, <x>, <val>, <dir>)
  -- Función: tlimit (<expr>, <x>, <val>)
  -- Función: tlimit (<expr>)
-     Devuelve el límite solicitado dándole a `tlimswitch' el valor
-     `true'.
-
+     Calcula el límite del desarrollo de Taylor de la expresión `expr'
+     de variable `x' en el punto `val' en la dirección `dir'.
 
  -- Variable optativa: tlimswitch
-     Valor por defecto: `false'
+     Valor por defecto: `true'
 
-     Si la variable `tlimswitch' vale `true' hará que el paquete sobre
-     límites utilice desarrollos de Taylor siempre que sea posible.
-
+     Si `tlimswitch' vale `true', la función `limit' utilizará un
+     desarrollo de Taylor si el límite de la expresión dada no se puede
+     calcular directamente. Esto permite el cálculo de límites como
+     `limit(x/(x-1)-1/log(x),x,1,plus)'.  Si `tlimswitch' vale `false'
+     y el límite de la expresión no se puede calcular directamente, la
+     función `limit' devolverá una expresión sin evaluar.
 
 
 File: maxima.info,  Node: Diferenciación,  Next: Integración,  Prev: Límites,  Up: Top
@@ -5588,9 +5764,9 @@ File: maxima.info,  Node: Funciones y variables para integración,  Next: Introdu
      función `erf' en el resultado si no había ninguna en el integrando.
 
 
- -- Función: ilt (<expr>, <t>, <s>)
+ -- Función: ilt (<expr>, <s>, <t>)
      Calcula la transformada inversa de Laplace de <expr> con respecto
-     de <t> y parámetro <s>. El argumento  <expr> debe ser una fracción
+     de <s> y parámetro <t>. El argumento  <expr> debe ser una fracción
      de polinomios cuyo denominador tenga sólo factores lineales y
      cuadráticos. Utilizando las funciones `laplace' y `ilt', junto con
      las funciones `solve' o `linsolve', el usuario podrá resolver
@@ -5812,13 +5988,67 @@ File: maxima.info,  Node: Funciones y variables para integración,  Next: Introdu
                (%o4)                          600
 
 
+ -- Variable del sistema: integration_constant
+     Valor por defecto: `%c'
+
+     Cuando una constante de integración se crea durante la integración
+     definida de una ecuación, el nombre de la constante se construye
+     concatenando `integration_constant' y
+     `integration_constant_counter'.
+
+     A `integration_constant' se le puede asignar un símbolo cualquiera.
+
+     Ejemplos:
+
+          (%i1) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o1)                     -- = x + %c1
+                                    3
+          (%i2) integration_constant : 'k;
+          (%o2)                           k
+          (%i3) integrate (x^2 = 1, x);
+                                      3
+                                     x
+          (%o3)                      -- = x + k2
+                                     3
+
+
  -- Variable del sistema: integration_constant_counter
      Valor por defecto: 0
 
-     La variable `integration_constant_counter' es un contador que se
-     actualiza cada vez que se introduce una constante de integración
-     en una expresión como resultado de una integración indefinida.
+     Cuando una constante de integración se crea durante la integración
+     definida de una ecuación, el nombre de la constante se construye
+     concatenando `integration_constant' y
+     `integration_constant_counter'.
 
+     La variable `integration_constant_counter' se incrementa antes de
+     construir la constante de integración siguiente.
+
+     Ejemplos:
+
+          (%i1) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o1)                     -- = x + %c1
+                                    3
+          (%i2) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o2)                     -- = x + %c2
+                                    3
+          (%i3) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o3)                     -- = x + %c3
+                                    3
+          (%i4) reset (integration_constant_counter);
+          (%o4)            [integration_constant_counter]
+          (%i5) integrate (x^2 = 1, x);
+                                     3
+                                    x
+          (%o5)                     -- = x + %c1
+                                    3
 
  -- Variable optativa: integrate_use_rootsof
      Valor por defecto: `false'
@@ -6033,8 +6263,10 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 20.4 Funciones y variables para QUADPACK
 ========================================
 
- -- Función: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
- -- Función: quad_qag (<f>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
+ -- Función: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Función: quad_qag (<f>, <x>, <a>, <b>, <key>, [<epsrel>, <epsabs>,
+          <limit>])
      Integración de una función general en un intervalo finito.  La
      función `quad_qag' implementa un integrador global adaptativo
      simple utilizando una estrategia de Aind (Piessens, 1973).  Se
@@ -6065,9 +6297,21 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      la región de integración en subintervalos hasta conseguir la
      precisión requerida.
 
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
+
+    <epsrel>
+          Error relativo deseado de la aproximación. El valor por
+          defecto es 1d-10.
+
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
+
+    <limit>
+          Tamaño del array interno utilizado para realizar la
+          cuadratura.  (<limit> - <limlst>)/2 es el número máximo de
+          subintervalos a utilizar. El valor por defecto es 200.
 
      La función `quad_qag' devuelve una lista de cuatro elementos:
 
@@ -6100,15 +6344,17 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qag (x^(1/2)*log(1/x), x, 0, 1, 3);
+          (%i1) quad_qag (x^(1/2)*log(1/x), x, 0, 1, 3, 'epsrel=5d-8);
           (%o1)    [.4444444444492108, 3.1700968502883E-9, 961, 0]
           (%i2) integrate (x^(1/2)*log(1/x), x, 0, 1);
                                           4
           (%o2)                           -
                                           9
 
- -- Función: quad_qags (<f(x)>, <x>, <a>, <b>, <epsrel>, <limit>)
- -- Función: quad_qags (<f>, <x>, <a>, <b>, <epsrel>, <limit>)
+ -- Función: quad_qags (<f(x)>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
+ -- Función: quad_qags (<f>, <x>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
      Integración de una función general en un intervalo finito.  La
      función `quad_qags' implementa la subdivisión de intervalos global
      adaptativa con extrapolación (de Doncker, 1978) mediante el
@@ -6125,9 +6371,21 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      operador de Maxima o de Lisp, como una expresión lambda o como una
      expresión general de Maxima.
 
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
+
+    <epsrel>
+          Error relativo deseado de la aproximación. El valor por
+          defecto es 1d-10.
+
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
+
+    <limit>
+          Tamaño del array interno utilizado para realizar la
+          cuadratura.  (<limit> - <limlst>)/2 es el número máximo de
+          subintervalos a utilizar. El valor por defecto es 200.
 
      La función `quad_qags' devuelve una lista de cuatro elementos:
 
@@ -6167,15 +6425,17 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qags (x^(1/2)*log(1/x), x, 0 ,1);
+          (%i1) quad_qags (x^(1/2)*log(1/x), x, 0, 1, 'epsrel=1d-10);
           (%o1)   [.4444444444444448, 1.11022302462516E-15, 315, 0]
 
      Nótese que `quad_qags' es más precisa y eficiente que `quad_qag'
      para este integrando.
 
 
- -- Función: quad_qagi (<f(x)>, <x>, <a>, <inftype>, <epsrel>, <limit>)
- -- Función: quad_qagi (<f>, <x>, <a>, <inftype>, <epsrel>, <limit>)
+ -- Función: quad_qagi (<f(x)>, <x>, <a>, <inftype>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Función: quad_qagi (<f>, <x>, <a>, <inftype>, [<epsrel>, <epsabs>,
+          <limit>])
      Integración de una función general en un intervalo infinito o
      semi-infinito.  El intervalo se proyecta sobre un intervalo finito
      y luego se aplica la misma estrategia que en `quad_qags'.
@@ -6209,9 +6469,21 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
     `both'
           El intervalo es toda la recta real.
 
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
+
+    <epsrel>
+          Error relativo deseado de la aproximación. El valor por
+          defecto es 1d-10.
+
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
+
+    <limit>
+          Tamaño del array interno utilizado para realizar la
+          cuadratura.  (<limit> - <limlst>)/2 es el número máximo de
+          subintervalos a utilizar. El valor por defecto es 200.
 
      La función `quad_qagi' devuelve una lista de cuatro elementos:
 
@@ -6251,7 +6523,7 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qagi (x^2*exp(-4*x), x, 0, inf);
+          (%i1) quad_qagi (x^2*exp(-4*x), x, 0, inf, 'epsrel=1d-8);
           (%o1)        [0.03125, 2.95916102995002E-11, 105, 0]
           (%i2) integrate (x^2*exp(-4*x), x, 0, inf);
                                          1
@@ -6259,8 +6531,10 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
                                          32
 
 
- -- Función: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, <epsrel>, <limit>)
- -- Función: quad_qawc (<f>, <x>, <c>, <a>, <b>, <epsrel>, <limit>)
+ -- Función: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Función: quad_qawc (<f>, <x>, <c>, <a>, <b>, [<epsrel>, <epsabs>,
+          <limit>])
      Calcula el valor principal de Cauchy de f(x)/(x - c) en un
      intervalo finito (a, b) para una c dada.  La estrategia es global
      adaptativa, utilizando la integración de Clenshaw-Curtis
@@ -6278,9 +6552,21 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      operador de Maxima o de Lisp, como una expresión lambda o como una
      expresión general de Maxima.
 
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
+
+    <epsrel>
+          Error relativo deseado de la aproximación. El valor por
+          defecto es 1d-10.
+
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
+
+    <limit>
+          Tamaño del array interno utilizado para realizar la
+          cuadratura.  (<limit> - <limlst>)/2 es el número máximo de
+          subintervalos a utilizar. El valor por defecto es 200.
 
      `quad_qawc' returns a list of four elements:
 
@@ -6313,35 +6599,36 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5);
+          (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5,
+                           'epsrel=1d-7);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
           (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
                            x, 0, 5);
           Principal Value
-                                 alpha
-                  alpha       9 4                 9
-                 4      log(------------- + -------------)
-                                alpha           alpha
-                            64 4      + 4   64 4      + 4
-          (%o2) (-----------------------------------------
-                                  alpha
-                               2 4      + 2
-
-                   3 alpha                       3 alpha
-                   -------                       -------
-                      2            alpha/2          2          alpha/2
-                2 4        atan(4 4       )   2 4        atan(4       )   alpha
-              - --------------------------- - -------------------------)/2
-                          alpha                        alpha
-                       2 4      + 2                 2 4      + 2
+                  alpha        9 4                 9
+                 4      log(-------------- + --------------)
+                             alpha + 3        alpha + 3
+                            4          + 4   4          + 4
+          (%o2) (-------------------------------------------
+                                   alpha
+                                2 4      + 2
+              3 alpha                   3 alpha
+              -------                   -------
+                 2          alpha/2        2              alpha/2
+             4        atan(4       )   4        atan(- 4 4       )
+           - ----------------------- + ---------------------------)
+                    alpha                       alpha
+                   4      + 1                  4      + 1
+            alpha
+          /2
           (%i3) ev (%, alpha=5, numer);
           (%o3)                    - 3.130120337415917
 
 
- -- Función: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
- -- Función: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
+ -- Función: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+          <limit>, <maxp1>, <limlst>])
+ -- Función: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, [<epsabs>,
+          <limit>, <maxp1>, <limlst>])
      Calcula la transformada seno o coseno de Fourier en un intervalo
      semi-infinito.  Se aplica el mismo método que en `quad_qawo' a
      sucesivos intervalos finitos, acelerando la convergencia mediante
@@ -6363,7 +6650,8 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      operador de Maxima o de Lisp, como una expresión lambda o como una
      expresión general de Maxima
 
-     Los argumentos opcionales son:
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
 
     <epsabs>
           El error absoluto deseado para la aproximación. El valor por
@@ -6381,10 +6669,6 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
     <limlst>
           Cota superior del número de ciclos. Debe ser mayor o igual
           que 3.  El valor por defecto es 10.
-
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
 
      `quad_qawf' returns a list of four elements:
 
@@ -6417,7 +6701,7 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qawf (exp(-x^2), x, 0, 1, 'cos);
+          (%i1) quad_qawf (exp(-x^2), x, 0, 1, 'cos, 'epsabs=1d-9);
           (%o1)   [.6901942235215714, 2.84846300257552E-11, 215, 0]
           (%i2) integrate (exp(-x^2)*cos(x), x, 0, inf);
                                     - 1/4
@@ -6429,9 +6713,9 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
 
  -- Función: quad_qawo (<f(x)>, <x>, <a>, <b>, <omega>, <trig>,
-          <epsabs>, <limit>, <maxp1>, <limlst>)
- -- Función: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>, <epsabs>,
-          <limit>, <maxp1>, <limlst>)
+          [<epsrel>, <epsabs>, <limit>, <maxp1>, <limlst>])
+ -- Función: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>, [<epsrel>,
+          <epsabs>, <limit>, <maxp1>, <limlst>])
      Integración de cos(omega x) f(x) o sin(omega x) f(x) en un
      intervalo finito, siendo omega una constante. La regla de
      evaluación se basa en la técnica modificada de Clenshaw-Curtis.
@@ -6455,11 +6739,16 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      operador de Maxima o de Lisp, como una expresión lambda o como una
      expresión general de Maxima
 
-     Los argumentos opcionales son:
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
 
-    <epsabs>
+    <epsrel>
           El error absoluto deseado para la aproximación. El valor por
           defecto es 1d-10.
+
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
 
     <limit>
           Tamaño del arreglo interno de trabajo.  (<limit> -
@@ -6473,10 +6762,6 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
     <limlst>
           Cota superior del número de ciclos. Debe ser mayor o igual
           que 3.  El valor por defecto es 10.
-
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
 
      `quad_qawo' returns a list of four elements:
 
@@ -6522,10 +6807,10 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
           (%o3)                     1.376043390090716
 
 
- -- Función: quad_qaws (<f(x)>, <x>, <a>, <b>, <alfa>, <beta>, <wfun>,
-          <epsabs>, <limit>)
- -- Función: quad_qaws (<f>, <x>, <a>, <b>, <alfa>, <beta>, <wfun>,
-          <epsabs>, <limit>)
+ -- Función: quad_qaws (<f(x)>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+          [<epsrel>, <epsabs>, <limit>])
+ -- Función: quad_qaws (<f>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+          [<epsrel>, <epsabs>, <limit>])
      Integración de w(x) f(x) en un intervalo finito [a, b], siendo w
      una función de la forma (x - a)^alpha (b - x)^beta v(x), con  v(x)
      igual a 1, a log(x - a), a log(b - x) o a log(x - a) log(b - x) y
@@ -6556,20 +6841,21 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
      operador de Maxima o de Lisp, como una expresión lambda o como una
      expresión general de Maxima
 
-     Los argumentos opcionales son:
+     Los argumentos opcionales pueden especificarse en cualquier orden.
+     Todos ellos toman la forma `key=val'. Tales argumentos son:
 
-    <epsabs>
+    <epsrel>
           El error absoluto deseado para la aproximación. El valor por
           defecto es 1d-10.
 
-    <limit>
-          Tamaño del arreglo interno de trabajo.  (<limit> -
-          <limlst>)/2 es el número máximo de subintervalos para la
-          partición. El valor por defecto es 200.
+    <epsabs>
+          Error absoluto deseado de la aproximación. El valor por
+          defecto es 0.
 
-     Los argumentos opcionales <epsrel> y <limit> son el error relativo
-     y el número máximo  de subintervalos, respectivamente. La variable
-     <epsrel> tiene por defecto el valor 1e-8 y <limit> el de 200.
+    <limit>
+          Tamaño del array interno utilizado para realizar la
+          cuadratura.  (<limit> - <limlst>)/2 es el número máximo de
+          subintervalos a utilizar. El valor por defecto es 200.
 
      `quad_qaws' returns a list of four elements:
 
@@ -6602,7 +6888,8 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
 
      Ejemplos:
 
-          (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1);
+          (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1,
+                           'epsabs=1d-9);
           (%o1)     [8.750097361672832, 1.24321522715422E-10, 170, 0]
           (%i2) integrate ((1-x*x)^(-1/2)/(x+1+2^(-alpha)), x, -1, 1);
                  alpha

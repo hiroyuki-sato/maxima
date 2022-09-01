@@ -102,6 +102,7 @@
   (setq y (simpcheck (cadr x) z))
   (cond ((or (floatp y) (and (not makef) (ratnump y) (equal (caddr y) 2)))
 	 (simplifya (makegamma1 (list '(mfactorial) y)) nil))
+	(($bfloatp y) (mfuncall '$bffac y $fpprec))
 	((or (not (fixnump y)) (not (> y -1)))
 	 (eqtest (list '(mfactorial) y) x))
 	((or (minusp $factlim) (not (> y $factlim)))
@@ -355,7 +356,7 @@ summation when necessary."
 (defmspec $sum (l)
   (setq l (cdr l))
   (if (= (length l) 4)
-      (dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) t)
+      (dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) t :evaluate-summand t)
       (wna-err '$sum)))
 
 (defmspec $lsum (l)
@@ -393,6 +394,25 @@ summation when necessary."
 	      (getl '%sum '($outative $linear)))
 	 (freesum exp lo hi 1))
 	((null $simpsum) (list (get '%sum 'msimpind) exp i lo hi))
+	((and (or (eq lo '$minf)
+		  (alike1 lo '((mtimes simp) -1 $inf)))
+	      (equal hi '$inf))
+	 (let ((pos-part (simpsum2 exp i 0 '$inf))
+	       (neg-part (simpsum2 (maxima-substitute (m- i) i exp) i 1 '$inf)))
+	   (cond
+	     ((or (eq neg-part '$und)
+		  (eq pos-part '$und))
+	      '$und)
+	     ((eq pos-part '$inf)
+	      (if (eq neg-part '$minf) '$und '$inf))
+	     ((eq pos-part '$minf)
+	      (if (eq neg-part '$inf) '$und '$minf))
+	     ((or (eq neg-part '$inf) (eq neg-part '$minf))
+	      neg-part)
+	     (t (m+ neg-part pos-part)))))
+	((or (eq lo '$minf)
+	     (alike1 lo '((mtimes simp) -1 '$inf)))
+	 (simpsum2 (maxima-substitute (m- i) i exp) i (m- hi) '$inf))
 	(t (simpsum2 exp i lo hi))))
 
 ;; DOSUM, MEVALSUMARG, DO%SUM -- general principles
@@ -402,7 +422,7 @@ summation when necessary."
 ;;  - return 0/1 for empty sum/product. sumhack/prodhack are ignored
 ;;  - distribute sum/product over mbags when listarith = true
 
-(defun dosum (expr ind low hi sump)
+(defun dosum (expr ind low hi sump &key (evaluate-summand t))
   (setq low (ratdisrep low) hi (ratdisrep hi)) ;; UGH, GAG WITH ME A SPOON
   (if (not (symbolp ind))
       (merror "~:M: bad index ~M (must be a symbol)~%" (if sump '$sum '$product) ind))
@@ -411,7 +431,7 @@ summation when necessary."
 	  (setq lind (cons ind nil))
 	  (cond
 	    ((not (fixnump (setq *hl (m- hi low))))
-	     (setq expr (mevalsumarg expr ind low hi))
+	     (if evaluate-summand (setq expr (mevalsumarg expr ind low hi)))
 	     (return (cons (if sump '(%sum) '(%product))
 			   (list expr ind low hi))))
 	    ((signp l *hl)
@@ -581,7 +601,7 @@ summation when necessary."
             
             (($freeof i ex) (power ex n))
             
-            ((and (integerp n) (eq sgn '$pos))
+            ((and (integerp n) (eq sgn '$pos) $simpproduct)
              (unwind-protect
 		  (dotimes (j n acc)
 		    (setq acc (mult acc (resimplify (subst (add j lo) i ex)))))

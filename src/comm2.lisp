@@ -40,7 +40,7 @@
 	  (if (pzerop v) 0 (mul3 v (maxima-substitute (caddr e) y (car e)) -1)))))
 
 (defmfun diffsumprod (e x)
-  (cond ((or (not (atom x)) (not (free (cadddr e) x)) (not (free (car (cddddr e)) x)))
+  (cond ((or (not ($mapatom x)) (not (free (cadddr e) x)) (not (free (car (cddddr e)) x)))
 	 (diff%deriv (list e x 1)))
 	((eq (caddr e) x) 0)
 	(t (let ((u (sdiff (cadr e) x)))
@@ -163,7 +163,7 @@
   (atscan (let ((atp t)) ($substitute ateqs exp))))
 
 (defun atscan (exp)
-  (cond ((or (atom exp) (member (caar exp) '(%at mrat) :test #'eq)) exp)
+  (cond ((or (atom exp) (member (caar exp) '(%at mrat) :test #'eq) (like ateqs '((mlist)))) exp)
 	((eq (caar exp) '%derivative)
 	 (or (and (not (atom (cadr exp)))
 		  (let ((vl (cdadr exp)) dl)
@@ -513,7 +513,7 @@
 (defun box-label (x)
   (if (atom x)
       x
-      (implode (cons #\& (mstring x)))))
+      (coerce (mstring x) 'string)))
 
 (declare-top (special label))
 
@@ -595,18 +595,14 @@
 ;;;; GENMAT
 
 (defmfun $genmatrix (a i2 &optional (j2 i2) (i1 1) (j1 i1))
-  (unless (or (symbolp a)
-	      (hash-table-p a)
-	      (and (not (atom a))
-		   (eq (caar a) 'lambda)))
-    (improper-arg-err a '$genmatrix))
-  (when (notevery #'fixnump (list i2 j2 i1 j1))
-    (merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1)))
-  (let ((header (list a 'array))
-	 (l (ncons '($matrix))))
-    (cond ((and (or (zerop i2) (zerop j2)) (= i1 1) (= j1 1)))
-	  ((or (> i1 i2) (> j1 j2))
-	   (merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1))))
+  (let ((f) (l (ncons '($matrix))))
+    (setq f (if (or (symbolp a) (hash-table-p a) (arrayp a))
+		#'(lambda (i j) (meval (list (list a 'array) i j)))
+	      #'(lambda (i j) (mfuncall a i j))))
+    
+    (if (or (notevery #'fixnump (list i2 j2 i1 j1)) (> i1 i2) (> j1 j2))
+	(merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1)))
+ 	 
     (dotimes (i (1+ (- i2 i1)))
       (nconc l (ncons (ncons '(mlist)))))
     (do ((i i1 (1+ i))
@@ -614,7 +610,7 @@
 	((> i i2))
       (do ((j j1 (1+ j)))
 	  ((> j j2))
-	(nconc (car l) (ncons (meval (list header i j))))))
+	(nconc (car l) (ncons (funcall f i j)))))
     l))
 
 ; Execute deep copy for copymatrix and copylist.
@@ -679,7 +675,7 @@
   (prog (arra ary)
      (setq arra val)
      (setq ary sym)
-     (if arra
+     (if (and arra (or (hash-table-p arra) (arrayp arra)))
 	 (cond ((hash-table-p arra)
 		(let ((dim1 (gethash 'dim1 arra)))
 		  (return (list* '(mlist) '$hash_table (if dim1 1 t)
@@ -775,15 +771,11 @@
 
 ;;;; CONCAT
 
-(defmfun $concat (&rest l)
+(defun $concat (&rest l)
   (when (null l)
-    (merror "`concat' needs at least one argument."))
-  (getalias (implode
-	     (cons (cond ((not (atom (car l))))
-			 ((or (numberp (car l)) (char= (char (symbol-name (car l)) 0) #\&)) #\&)
-			 (t #\$))
-		   (mapcan #'(lambda (x)
-			       (unless (atom x)
-				 (merror "Argument to `concat' not an atom: ~M" x))
-			       (string* x))
-			   l)))))
+    (merror "concat: I need at least one argument."))
+  (let ((result-is-a-string (or (numberp (car l)) (stringp (car l)))))
+    (setq l (mapcan #'(lambda (x) (unless (atom x) (merror "concat: argument is not an atom: ~M" x)) (string* x)) l))
+    (if result-is-a-string
+      (coerce l 'string)
+      (getalias (implode (cons '#\$ l))))))

@@ -30,7 +30,7 @@
 
 ;; Let's have version numbers 1,2,3,...
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
+(eval-when (:load-toplevel :execute)
   (mfuncall '$declare '$integervalued '$feature)
   ($put '$nummod 3 '$version))
 
@@ -82,9 +82,14 @@
 ;; For an example, see pretty-good-floor-or-ceiling. Code courtesy of Stavros Macrakis.
 
 (defmacro bind-fpprec (val &rest exprs)
-  `(let ($fpprec fpprec bigfloatzero bigfloatone bfhalf bfmhalf)
-     (fpprec1 nil ,val)
-     ,@exprs))
+  `(let (fpprec bigfloatzero bigfloatone bfhalf bfmhalf)
+     (let (($fpprec (fpprec1 nil ,val)))
+       ,@exprs)))
+
+;; Return true if the expression can be formed using rational numbers, logs, mplus, mexpt, or mtimes.
+
+(defun use-radcan-p (e)
+  (or ($ratnump e) (and (op-equalp e '%log 'mexpt 'mplus 'mtimes) (every 'use-radcan-p (cdr e)))))
 
 ;; When constantp(x) is true, we use bfloat evaluation to try to determine
 ;; the ceiling or floor. If numerical evaluation of e is ill-conditioned, this function
@@ -96,7 +101,7 @@
 
 (defun pretty-good-floor-or-ceiling (x fn &optional digits)
   (let (($float2bf t) ($algebraic t) (f1) (f2) (f3) (eps) (lb) (ub) (n))
-
+    
     (setq digits (if (and (integerp digits) (> 0 digits)) digits 25))
     (catch 'done
 
@@ -110,33 +115,42 @@
       ;; This happens when, for example, x = asin(2). For now, bfloatp
       ;; evaluates to nil for a complex big float. If this ever changes,
       ;; this code might need to be repaired.
-
-      (setq f1 (bind-fpprec digits ($bfloat x)))
-      (if (or (not ($bfloatp f1)) (not ($freeof '$%i f1))) (throw 'done nil))
-
+      
+      (bind-fpprec digits 
+		   (setq f1 ($bfloat x))
+		   (if (not ($bfloatp f1)) (throw 'done nil)))
+		   
       (incf digits 20)
       (setq f2 (bind-fpprec digits ($bfloat x)))
-      (if (or (not ($bfloatp f2)) (not ($freeof '$%i f2))) (throw 'done nil))
+      (if (not ($bfloatp f2)) (throw 'done nil))
 
       (incf digits 20)
-      (setq f3 (bind-fpprec digits ($bfloat x)))
-      (if (or (not ($bfloatp f3)) (not ($freeof '$%i f3))) (throw 'done nil))
+      (bind-fpprec digits 
+		   (setq f3 ($bfloat x))
+		   (if (not ($bfloatp f3)) (throw 'done nil))
 
-      ;; Let's say that the true value of x is in the interval
-      ;; [f3 - |f3| * eps, f3 + |f3| * eps], where eps = 10^(20 - digits).
-      ;; Define n to be the number of integers in this interval; we have
+		   ;; Let's say that the true value of x is in the interval
+		   ;; [f3 - |f3| * eps, f3 + |f3| * eps], where eps = 10^(20 - digits).
+		   ;; Define n to be the number of integers in this interval; we have
+		   
+		   (setq eps (power ($bfloat 10) (- 20 digits)))
+		   (setq lb (sub f3 (mult (take '(mabs) f3) eps)))
+		   (setq ub (add f3 (mult (take '(mabs) f3) eps)))
+		   (setq n (sub (take '($ceiling) ub) (take '($ceiling) lb))))
+      
+      (setq f1 (take (list fn) f1))
+      (setq f2 (take (list fn) f2))
+      (setq f3 (take (list fn) f3))
+      
+      ;; Provided f1 = f2 = f3 and n = 0, return f1; if n = 1 and (use-radcan-p e) and ($radcan e)
+      ;; is a $ratnump, return floor / ceiling of radcan(x),
+      
+      (cond ((and (= f1 f2 f3) (= n 0)) f1)
+	    ((and (=  f1 f2 f3) (= n 1) (use-radcan-p x))
+	     (setq x ($radcan x))
+	     (if ($ratnump x) (take (list fn) x) nil))
+	    (t nil)))))
 
-      (setq eps (power ($bfloat 10) (- 20 digits)))
-      (setq lb (sub f3 (mult (take '(mabs) f3) eps)))
-      (setq ub (add f3 (mult (take '(mabs) f3) eps)))
-      (setq n (sub (mfuncall '$ceiling ub) (mfuncall '$ceiling lb)))
-      (setq f1 (mfuncall fn f1))
-      (setq f2 (mfuncall fn f2))
-      (setq f3 (mfuncall fn f3))
-
-      ;; Provided f1 = f2 = f3 and n = 0, return f1.
-
-      (if (and (= f1 f2 f3) (= n 0)) f1 nil))))
 
 ;; (a) The function fpentier rounds a bigfloat towards zero--we need to
 ;;     check for that.
@@ -172,7 +186,7 @@
 	((and (setq e1 (mget e '$numer)) (floor e1)))
 
 	((or (member e infinities) (eq e '$und) (eq e '$ind)) '$und)
-	;;((memq e '($inf $minf $ind $und)) e) ; Proposed code
+	;;((member e '($inf $minf $ind $und)) e) ; Proposed code
 	;; leave floor(infinity) as is
 	((or (eq e '$zerob)) -1)
 	((or (eq e '$zeroa)) 0)
@@ -189,8 +203,8 @@
 	;; handle 0 < e < 1 implies floor(e) = 0 and
 	;; -1 < e < 0 implies floor(e) = -1.
 
-	((and (eq ($compare 0 e) '&<) (eq ($compare e 1) '&<)) 0)
-	((and (eq ($compare -1 e) '&<) (eq ($compare e 0) '&<)) -1)
+	((and (equal ($compare 0 e) "<") (equal ($compare e 1) "<")) 0)
+	((and (equal ($compare -1 e) "<") (equal ($compare e 0) "<")) -1)
 	(t `(($floor simp) ,e))))
 
 
@@ -202,7 +216,6 @@
 (defun simp-ceiling (e e1 z)
   (oneargcheck e)
   (setq e (simplifya (specrepcheck (nth 1 e)) z))
-
   (cond ((numberp e) (ceiling e))
 
 	((ratnump e) (ceiling (cadr e) (caddr e)))
@@ -233,8 +246,8 @@
 	;; handle 0 < e < 1 implies ceiling(e) = 1 and
 	;; -1 < e < 0 implies ceiling(e) = 0.
 
-	((and (eq ($compare 0 e) '&<) (eq ($compare e 1) '&<)) 1)
-	((and (eq ($compare -1 e) '&<) (eq ($compare e 0) '&<)) 0)
+	((and (equal ($compare 0 e) "<") (equal ($compare e 1) "<")) 1)
+	((and (equal ($compare -1 e) "<") (equal ($compare e 0) "<")) 0)
 	(t `(($ceiling simp) ,e))))
 
 (defprop $mod simp-nummod operators)
@@ -260,46 +273,50 @@
 ;; The function 'round' rounds a number to the nearest integer. For a tie, round to the 
 ;; nearest even integer. 
 
-(defprop $round simp-round operators)
 (defprop %round simp-round operators)
-(setf (get '$round 'integer-valued) t)
-(setf (get '$round 'reflection-rule) #'odd-function-reflect)
+(setf (get '%round 'integer-valued) t)
+(setf (get '%round 'reflection-rule) #'odd-function-reflect)
+(setf (get '$round 'alias) '%round)
+(setf (get '$round 'verb) '%round)
+(setf (get '%round 'noun) '$round)
 
 (defun simp-round (e yy z)
-  (declare (ignore yy))
   (oneargcheck e)
+  (setq yy (caar e)) ;; find a use for the otherwise unused YY.
   (setq e (simplifya (specrepcheck (second e)) z))
   (cond (($featurep e '$integer) e) ;; takes care of round(round(x)) --> round(x).
-	((memq e '($inf $minf $und $ind)) e)
+	((member e '($inf $minf $und $ind) :test #'eq) e)
 	(t 
 	 (let* ((lb (take '($floor) e))
 		(ub (take '($ceiling) e))
 		(sgn (csign (sub (sub ub e) (sub e lb)))))
-	   (cond ((eq sgn t) `(($round simp) ,e))
+	   (cond ((eq sgn t) `((,yy simp) ,e))
 		 ((eq sgn '$neg) ub)
 		 ((eq sgn '$pos) lb)
+		 ((alike lb ub) lb) ;; For floats that are integers, this can happen. Maybe featurep should catch this.
 		 ((and (eq sgn '$zero) ($featurep lb '$even)) lb)
 		 ((and (eq sgn '$zero) ($featurep ub '$even)) ub)
-		 ((apply-reflection-simp '$round e t))
-		 (t `(($round simp) ,e)))))))
+		 ((apply-reflection-simp yy e t))
+		 (t `((,yy simp) ,e)))))))
  
 ;; Round a number towards zero.
 
-(defprop $truncate simp-truncate operators)
 (defprop %truncate simp-truncate operators)
-(setf (get '$truncate 'integer-valued) t)
-(setf (get '$truncate 'reflection-rule) #'odd-function-reflect)
+(setf (get '%truncate 'integer-valued) t)
+(setf (get '%truncate 'reflection-rule) #'odd-function-reflect)
+(setf (get '$truncate 'alias) '%truncate)
+(setf (get '$truncate 'verb) '%truncate)
+(setf (get '%truncate 'noun) '$truncate)
 
 (defun simp-truncate (e yy z)
-  (declare (ignore yy))
   (oneargcheck e)
+  (setq yy (caar e)) ;; find a use for the otherwise unused YY.
   (setq e (simplifya (specrepcheck (second e)) z))
   (cond (($featurep e '$integer) e) ;; takes care of truncate(truncate(x)) --> truncate(x).
-	((memq e '($inf $minf $und $ind)) e)
+	((member e '($inf $minf $und $ind) :test #'eq) e)
 	(t
 	 (let ((sgn (csign e)))
-	   (cond ((memq sgn '($neg $nz)) (take '($ceiling) e))
-		 ((memq sgn '($zero $pz $pos)) (take '($floor) e))
-		 ((apply-reflection-simp '$truncate e t))
-		 (t `(($truncate simp) ,e)))))))
-	
+	   (cond ((member sgn '($neg $nz) :test #'eq) (take '($ceiling) e))
+		 ((member sgn '($zero $pz $pos) :test #'eq) (take '($floor) e))
+		 ((apply-reflection-simp yy e t))
+		 (t `((,yy simp) ,e)))))))

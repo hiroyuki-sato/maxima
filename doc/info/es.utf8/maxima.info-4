@@ -9,6 +9,30 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Series,  Next: Teoría de Números,  Prev: atensor,  Up: Top
+
+30 Series
+*********
+
+* Menu:
+
+* Introducción a las series::
+* Funciones y variables para las series::
+
+
+File: maxima.info,  Node: Introducción a las series,  Next: Funciones y variables para las series,  Prev: Series,  Up: Series
+
+30.1 Introducción a las series
+==============================
+
+Maxima dispone de las funciones `taylor' y `powerseries' para calcular
+las series de las funciones diferenciables. También tiene herramientas
+como `nusum' capaces de encontrar la expresión compacta de algunas
+series. Operaciones como la suma y la multiplicación operan de la forma
+habitual en el contexto de las series. Esta sección presenta las
+variables globales que controlan la expansión.
+
+
 File: maxima.info,  Node: Funciones y variables para las series,  Prev: Introducción a las series,  Up: Series
 
 30.2 Funciones y variables para las series
@@ -731,9 +755,6 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
 
           sum ((k+h)^-s, k, 0, inf)
 
-     Es necesario cargar en memoria esta función haciendo `load
-     ("bffac")'.
-
 
  -- Función: binomial (<x>, <y>)
      Es el coeficiente binomial `<x>!/(<y>! (<x> - <y>)!)'.  Si <x> y
@@ -1072,20 +1093,19 @@ File: maxima.info,  Node: Funciones y variables para teoría de números,  Prev:
      Comprueba si el número entero <n> es o no primo, devolviendo `true'
      o `false' según el caso.
 
-     Cuando el resultado de `primep (n)' es `false', <n> es un número
+     Cuando el resultado de `primep (<n>)' es `false', <n> es un número
      compuesto, y si es `true', <n> es primo con alta probabilidad.
 
-     Si <n> es menor que 341550071728321, se utiliza una versión
-     determinística de la prueba de Miller-Rabin. En tal caso, si
-     `primep (n)' devuelve `true', entonces <n> es un número primo.
+     Si <n> es menor que 10^16, se utiliza una versión determinística
+     de la prueba de Miller-Rabin. En tal caso, si `primep (<n>)'
+     devuelve `true', entonces <n> es un número primo.
 
-     Para <n> mayor que 34155071728321 `primep' realiza un número de
-     pruebas de seudo-primalidad de Miller-Rabin igual a
-     `primep_number_of_tests' y una prueba de seudo-primalidad de
-     Lucas. La probabilidad de que <n> pase una prueba de Miller-Rabin
-     es menor que 1/4. Con el valor por defecto de
-     `primep_number_of_tests', que es 25, la probabilidad de que <n>
-     sea compuesto es menor que 10^-15.
+     Para <n> mayor que 10^16 `primep' realiza un número de pruebas de
+     seudo-primalidad de Miller-Rabin igual a `primep_number_of_tests'
+     y una prueba de seudo-primalidad de Lucas. La probabilidad de que
+     <n> pase una prueba de Miller-Rabin es menor que 1/4. Con el valor
+     por defecto de `primep_number_of_tests', que es 25, la
+     probabilidad de que <n> sea compuesto es menor que 10^-15.
 
 
  -- Variable opcional: primep_number_of_tests
@@ -2111,12 +2131,7 @@ File: maxima.info,  Node: Funciones y variables para grupos,  Prev: Grupos,  Up:
      En este proceso se obtiene una tabla de multiplicación para la
      acción correcta de G sobre G/H, donde los co-cojuntos son
      enumerados [H,Hg2,Hg3,...]. Esto puede ser observado internamente
-     en el `$todd_coxeter_state'.
-
-     Las tablas de multiplicación para las variables están en la
-     `table:todd_coxeter_state[2]'. Entonces la `table[i]' retorna la
-     tabla para la i-ésima variable. `mulcoset(coset,i) :=
-     tabla[varnum][coset];'
+     en el `todd_coxeter_state'.
 
      Ejemplo:
 
@@ -2151,16 +2166,6 @@ File: maxima.info,  Node: Funciones y variables para grupos,  Prev: Grupos,  Up:
 
           Rows tried 71
           (%o6)                          20
-          (%i7) table:todd_coxeter_state[2]$
-          (%i8) table[1];
-          (%o8) {Array: (SIGNED-BYTE 30) #(0 2 1 3 7 6 5 4 8 11 17 9 12 14 #
-
-          13 20 16 10 18 19 15 0 0 0 0 0 0 0 0 0 0 0 0
-
-            0 0 0)}
-
-     Nótese que sólo los elementos 1 hasta el 20 de este arreglo `%o8'
-     son significativos. `table[1][4] = 7' indica coset4.var1 = coset7
 
 
 
@@ -2356,8 +2361,6 @@ File: maxima.info,  Node: Funciones y variables para el entorno de ejecución,  
      los campos son: las horas, minutos, segundos, día de de la semana,
      mes, día del mes, año y número de horas de diferencia con respecto
      a la hora GMT.
-
-     El valor que devuelve es una cadena Lisp.
 
      Ejemplo
 
@@ -2804,6 +2807,7 @@ File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones,
      multiplicar denominadores numéricos. Esto da como resultado
      expresiones en las que se pueden reconocer algunas cancelaciones.
 
+     Antes de utilizar esta función ejecútese `load(rncomb)'.
 
  -- Función: scalarp (<expr>)
      Devuelve `true' si <expr> is un número, constante  o variable
@@ -3225,7 +3229,7 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
      Muestra las reglas de un paquete de reglas. La llamada `letrules
      ()' muestra las reglas del paquete de reglas actual. La llamada
      `letrules (<nombre_paquete>)' muestra las reglas de
-     `nombre_paquete'.
+     <nombre_paquete>.
 
      El paquete de reglas actual tiene su nombre almacenado en by
      `current_let_rule_package'. A menos que se indique de otra manera,
@@ -3415,8 +3419,15 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
      ser declarados como "matchfix".
 
      La llamada `matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>,
-     <pos>)'  declara el argumento <arg_pos> y el resultado <pos>, así
+     <pos>)' declara el argumento <arg_pos> y el resultado <pos>, así
      como los delimitadores  <ldelimiter> y <rdelimiter>.
+
+     Los argumentos <arg_pos> y <pos> son tipos de funciones,
+     reconociéndose como tales: `expr', `clause' y `any', los cuales
+     hacen referencia a una expresión algebraica, booleana o de
+     cualquier otro tipo, respectivamente.  Maxima puede detectar
+     ciertos errores sintácticos comparando el tipo de expresión
+     declarado con el de la expresión actual.
 
      La función que ejecutará una operación "matchfix" será una típica
      función definida por el usuario. La función de operador se define
@@ -3489,9 +3500,9 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
  -- Función: remlet ()
  -- Función: remlet (all)
  -- Función: remlet (all, <nombre>)
-     Elimina la última regla de sustitución prod -> repl que haya sido
-     definida por la función `let'. Si se suministar el nombre la regla
-     será borrada del paquete con ese mismo nombre.
+     Elimina la última regla de sustitución <prod> -> repl que haya
+     sido definida por la función `let'. Si se suministar el nombre la
+     regla será borrada del paquete con ese mismo nombre.
 
      Las llamadas `remlet()' y `remlet(all)' eliminan todas las reglas
      de sustitución del paquete de reglas actual. Si se suministra el
@@ -3515,7 +3526,7 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
      `tellsimpafter'.
 
      La llamada `remrule (<op>, <nombre_regla>)' elimina la regla de
-     nombre  `nombre_regla' del operador <op>.
+     nombre  <nombre_regla> del operador <op>.
 
      Independientemente de que  <op> sea un operador propio de Maxima o
      haya sido definido por el usario (como los establecidos por
@@ -3672,7 +3683,7 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
      globales.
 
      La regla construida por  `tellsimpafter' es nombrada detrás del
-     operador principal de `patrón'. Reglas para operadores de Maxima y
+     operador principal de <patrón>. Reglas para operadores de Maxima y
      operadores definidos por el usuario con `infix', `prefix',
      `postfix', `matchfix' y `nofix', tienen nombres que son cadenas
      alfanuméricas de Maxima. Reglas para otras funciones tienen
@@ -4144,6 +4155,20 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducció
      Devuelve el noveno elemento de la lista o expresión <expr>. Véase
      `first' para más detalles.
 
+
+ -- Función: unique (<L>)
+     Devuelve la lista <L> sin redundancias, es decir, sin elementos
+     repetidos
+
+     Cuando ninguno de los elementos de <L> está repetido, `unique'
+     devuelve una réplica de <L>, no la propia <L>.
+
+     Si <L> no es una lista, `unique' devuelve <L>.
+
+     Ejemplo:
+
+          (%i1) unique ([1, %pi, a + b, 2, 1, %e, %pi, a + b, [1]]);
+          (%o1)              [1, 2, %e, %pi, [1], b + a]
 
  -- Función: rest (<expr>, <n>)
  -- Función: rest (<expr>)
@@ -5146,12 +5171,12 @@ File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Intro
           (%o1)                  f(f(f(4, 1), 2), 3)
 
      La función `lreduce' aplicada a operadores binarios de Maxima.  El
-     símbolo `//' es el operador división.
+     símbolo `/' es el operador división.
 
           (%i1) lreduce ("^", args ({a, b, c, d}));
                                          b c d
           (%o1)                       ((a ) )
-          (%i2) lreduce ("//", args ({a, b, c, d}));
+          (%i2) lreduce ("/", args ({a, b, c, d}));
                                           a
           (%o2)                         -----
                                         b c d
@@ -5424,14 +5449,14 @@ File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Intro
           (%o1)                  f(1, f(2, f(3, 4)))
 
      La función `rreduce' aplicada a operadores binarios de Maxima.  El
-     símbolo `//' es el operador división.
+     símbolo `/' es el operador división.
 
           (%i1) rreduce ("^", args ({a, b, c, d}));
                                            d
                                           c
                                          b
           (%o1)                         a
-          (%i2) rreduce ("//", args ({a, b, c, d}));
+          (%i2) rreduce ("/", args ({a, b, c, d}));
                                          a c
           (%o2)                          ---
                                          b d
@@ -5547,23 +5572,23 @@ File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Intro
 
           (%i1) s: {0, 1, 2, 3, 4, 5}$
           (%i2) p: set_partitions (s, 3)$
+          (%i3) cardinality(p) = stirling2 (6, 3);
           (%o3)                        90 = 90
-          (%i4) cardinality(p) = stirling2 (6, 3);
 
      Cada elemento de `p' debería tener <n> = 3 miembros,
 
           (%i1) s: {0, 1, 2, 3, 4, 5}$
           (%i2) p: set_partitions (s, 3)$
+          (%i3) map (cardinality, p);
           (%o3)                          {3}
-          (%i4) map (cardinality, p);
 
      Por último, para cada miembro de `p', la unión de sus elementos
      debe ser igual a `s',
 
           (%i1) s: {0, 1, 2, 3, 4, 5}$
           (%i2) p: set_partitions (s, 3)$
+          (%i3) map (lambda ([x], apply (union, listify (x))), p);
           (%o3)                 {{0, 1, 2, 3, 4, 5}}
-          (%i4) map (lambda ([x], apply (union, listify (x))), p);
 
  -- Función: some (<f>, <a>)
  -- Función: some (<f>, <L_1>, ..., <L_n>)
@@ -6181,6 +6206,15 @@ File: maxima.info,  Node: Macros,  Next: Funciones y variables para la definici�
           (%i4) macroexpand (show_values (a, b, c - a - b));
           (%o4)    map(=, '([a, b, c - b - a]), [a, b, c - b - a])
 
+     Dada una función con varios argumentos, se crea otra función en la
+     cual algunos argumentos son fijos.
+
+          (%i1) curry (f, [a]) :=
+                  buildq ([f, a], lambda ([[x]], apply (f, append (a, x))))$
+          (%i2) by3 : curry ("*", 3);
+          (%o2)        lambda([[x]], apply(*, append([3], x)))
+          (%i3) by3 (a + b);
+          (%o3)                       3 (b + a)
 
  -- Función: macroexpand (<expr>)
      Devuelve la macroexpansión de <expr>, sin evaluarla, cuando `expr'

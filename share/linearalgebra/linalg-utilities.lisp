@@ -13,17 +13,14 @@
   (if (member level (member ($get '$infolevel pck) `($debug $verbose $silent)))
       (apply 'mtell `(,msg ,@arg))))
 
-(defun $mytest (fn)
-  (let ((*collect-errors* nil))
-    (setq fn ($file_search fn))
-    (test-batch fn nil :show-all nil :show-expected nil)))
-
 (defun $require_nonempty_matrix (m pos fun)
   (if (not (and ($matrixp m) (> ($length m) 0) (> ($length ($first m)) 0)))
       (merror "The ~:M argument of the function ~:M must be a nonempty matrix" pos fun)))
 
+;; Why both some and every? Because we want blockmatrixp(matrix()) --> false.
+
 (defun $blockmatrixp (m) 
-  (and ($matrixp m) ($every '$matrixp m)))
+  (and ($matrixp m) ($some '$matrixp m) ($every '$matrixp m)))
 
 (defun $require_matrix (m pos fun)
   (if (not ($matrixp m))
@@ -159,7 +156,7 @@
   (cons '($matrix) (mapcar #'(lambda (s) (cons '(mlist) s)) (array-to-row-list mat fn))))
 
 (defun array-to-maxima-list (ar &optional (fn 'identity))
-  (cons '(mlist) (mapcar fn (coerce ar 'list))))
+  (cons '(mlist) (mapcar fn (cl:coerce ar 'list))))
   
 (defun maxima-to-array (mat &optional (fn 'identity) typ)
   (let ((r ($matrix_size mat)) (c))

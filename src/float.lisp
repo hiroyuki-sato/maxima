@@ -34,7 +34,7 @@
 
 ;; External variables
 
-(defmvar $float2bf nil
+(defmvar $float2bf t
   "If TRUE, no MAXIMA-ERROR message is printed when a floating point number is
 converted to a bigfloat number.")
 
@@ -45,13 +45,18 @@ relatively small rational numbers).  If TRUE, the rational number generated
 will accurately represent the bigfloat.")
 
 (defmvar $bftrunc t
-  "Needs to be documented")
+  "If TRUE, printing of bigfloat numbers will truncate trailing zeroes.
+  Otherwise, all trailing zeroes are printed.")
 
 (defmvar $fpprintprec 0
-  "Needs to be documented"
+  "Controls the number of significant digits printed for floats.  If
+  0, then full precision is used."
   fixnum)
 
-(defmvar $fpprec 16.
+(defmvar $maxfpprintprec (ceiling (log (expt 2 (float-digits 1.0)) 10.0))
+  "The maximum number of significant digits printed for floats.")
+
+(defmvar $fpprec $maxfpprintprec
   "Number of decimal digits of precision to use when creating new bigfloats.
 One extra decimal digit in actual representation for rounding purposes.")
 
@@ -136,7 +141,7 @@ One extra decimal digit in actual representation for rounding purposes.")
   (setq exp (readlist exp))
   (bigfloatp
    (let ((fpprec (+ 4 fpprec (integer-length exp)
-		    (floor (1+ (* #.(/ (log 10d0) (log 2d0)) (length lft))))))
+		    (floor (1+ (* #.(/ (log 10.0) (log 2.0)) (length lft))))))
 	 $float temp)
      (setq temp (add (readlist lft)
 		     (div (readlist rt) (expt 10. (length rt)))))
@@ -156,7 +161,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 	     (mtell "Warning - an incorrect form for 0.0b0 has been generated."))
 	 (list '|0| '|.| '|0| '|b| '|0|))
 	(t ;; L IS ALWAYS POSITIVE FP NUMBER
-	 (let ((extradigs (floor (1+ (quotient (integer-length (caddr l)) #.(/ (log 10d0) (log 2d0))))))
+	 (let ((extradigs (floor (1+ (quotient (integer-length (caddr l)) #.(/ (log 10.0) (log 2.0))))))
 	       (*m 1) (*cancelled 0))
 	   (setq l
 		 ((lambda (*decfp fpprec of l expon)
@@ -253,29 +258,65 @@ One extra decimal digit in actual representation for rounding purposes.")
 		     (list '(rat simp) 1 (exptrl 2 (1- fpprec)))
 		     $ratepsilon)))))
 
+(defun float-nan-p (x)
+  (and (floatp x) (not (= x x))))
+
+(defun float-inf-p (x)
+  (and (floatp x) (not (float-nan-p x)) (beyond-extreme-values x)))
+
+(defun beyond-extreme-values (x)
+  (multiple-value-bind (most-negative most-positive) (extreme-float-values x)
+    (cond
+      ((< x 0) (< x most-negative))
+      ((> x 0) (> x most-positive))
+      (t nil))))
+
+(defun extreme-float-values (x)
+  ;; BLECHH, I HATE ENUMERATING CASES. IS THERE A BETTER WAY ??
+  (case (type-of x)
+    (short-float (values most-negative-short-float most-positive-short-float))
+    (single-float (values most-negative-single-float most-positive-single-float))
+    (double-float (values most-negative-double-float most-positive-double-float))
+    (long-float (values most-negative-long-float most-positive-long-float))
+    ;; NOT SURE THE FOLLOWING REALLY WORKS
+    ;; #+(and cmu double-double)
+    ;; (kernel:double-double-float
+    ;;   (values most-negative-double-double-float most-positive-double-double-float))
+    ))
+
 ;; Convert a floating point number into a bigfloat.
 (defun floattofp (x)
+  (if (float-nan-p x)
+    (merror "Attempted float-to-bigfloat conversion of floating point NaN (not-a-number).~%"))
+  (if (float-inf-p x)
+    (merror "Attempted float-to-bigfloat conversion of floating-point infinity.~%"))
   (unless $float2bf
     (mtell "Warning:  Float to bigfloat conversion of ~S~%" x))
-  (setq x (fixfloat x))
-  (fpquotient (intofp (car x)) (intofp (cdr x))))
+
+  (multiple-value-bind (frac exp sign)
+      (integer-decode-float x)
+    ;; Scale frac to the desired number of bits, and adjust the
+    ;; exponent accordingly.
+    (let ((scale (- fpprec (integer-length frac))))
+      (list (ash (* sign frac) scale)
+	    (+ fpprec (- exp scale))))))
 
 ;; Convert a bigfloat into a floating point number.
 (defmfun fp2flo (l)
   (let ((precision (caddar l))
 	(mantissa (cadr l))
 	(exponent (caddr l))
-	(fpprec #.machine-mantissa-precision)
+	(fpprec machine-mantissa-precision)
 	(*m 0))
     ;;Round the mantissa to the number of bits of precision of the machine,
     ;;and then convert it to a floating point fraction.
-    (setq mantissa (quotient (fpround mantissa) #.(expt 2d0 machine-mantissa-precision)))
+    (setq mantissa (quotient (fpround mantissa) (expt 2.0 machine-mantissa-precision)))
     ;; Multiply the mantissa by the exponent portion.  I'm not sure
     ;; why the exponent computation is so complicated. Using
     ;; scale-float will prevent possible overflow unless the result
     ;; really would.
     (setq precision
-	  (errset (scale-float mantissa (+ exponent (- precision) *m #.machine-mantissa-precision))
+	  (errset (scale-float mantissa (+ exponent (- precision) *m machine-mantissa-precision))
 		  nil))
     (if precision
 	(car precision)
@@ -287,7 +328,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 ;; 7.45E-9) - JPG
 
 (defun fixfloat (x)
-  (let (($ratepsilon #.(expt 2.0 (- machine-mantissa-precision))))
+  (let (($ratepsilon (expt 2.0 (- machine-mantissa-precision))))
     (maxima-rationalize x)))
 
 ;; Takes a flonum arg and returns a rational number corresponding to the flonum
@@ -603,14 +644,15 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defun fpposp (x)
   (> (car x) 0))
 
-(defmfun fpmin na
-  (prog (min)
-     (setq min (arg 1))
-     (do ((i 2 (1+ i)))
-	 ((> i na))
-       (if (fplessp (arg i) min)
-	   (setq min (arg i))))
-     (return min)))
+(defmfun fpmin (arg1 &rest args)
+  (let ((min arg1))
+    (mapc #'(lambda (u) (if (fplessp u min) (setq min u))) args)
+    min))
+
+(defmfun fpmax (arg1 &rest args)
+  (let ((max arg1))
+    (mapc #'(lambda (u) (if (fpgreaterp u max) (setq max u))) args)
+    max))
 
 ;; (FPE) RETURN BIG FLOATING POINT %E.  IT RETURNS (CDR BIGFLOAT%E) IF RIGHT
 ;; PRECISION.  IT RETURNS TRUNCATED BIGFLOAT%E IF POSSIBLE, ELSE RECOMPUTES.
@@ -622,7 +664,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 	 (cdr (setq bigfloat%e (bigfloatp bigfloat%e))))
 	((< fpprec (caddar max-bfloat-%e))
 	 (cdr (setq bigfloat%e (bigfloatp max-bfloat-%e))))
-	(t (cdr (setq max-bfloat-%e (setq bigfloat%e (*fpexp 1)))))))
+   (t (cdr (setq max-bfloat-%e (setq bigfloat%e (fpe1)))))))
 
 (defun fppi ()
   (cond ((= fpprec (caddar bigfloat%pi)) (cdr bigfloat%pi))
@@ -647,22 +689,89 @@ One extra decimal digit in actual representation for rounding purposes.")
 	((= fpprec (caddar bigfloatone)) (cdr bigfloatone))
 	(t (intofp 1))))
 
-;; COMPPI computes PI to N bits.
-;; That is, (COMPPI N)/(2.0^N) is an approximation to PI.
+;;....................................................................................................... ;;
+;;
+;; (fpe1) returns a bigfloat approximation to E.
+;; fpe1 is the bigfloat part of the bfloat(%e) computation
+;;
+(defun fpe1 nil
+  (bcons (list (fpround (compe (+ fpprec 12))) (+ -12 *m))))
+;;
+;; compe is the bignum part of the bfloat(%e) computation  
+;; (compe N)/(2.0^N) is an approximation to E
+;; The algorithm is based on the series
+;;
+;; %e = sum( 1/i! ,i,0,inf )
+;; 
+;; but sums up 1001 terms to one.
+;; 
+(defun compe (prec)
+  (let (s h (n 1) d (k 1001))
+     (setq h (ash 1 prec))
+     (setq s h)
+     (do ((i k (+ i k)))
+              ((zerop h))
+       (setq d (do ((j 1 (1+ j)) (p i))
+                   ((> j (1- k)) (* p n))
+                 (setq p (* p (- i j)))) )
+       (setq n (do ((j (- k 2) (1- j)) (p 1))
+                   ((< j 0) p)  
+                 (setq p (1+ (* p (- i j))))) )
+       (setq h (*quo (* h n) d))
+       (setq s (+ s h)))
+     s))
+;;................................................................................ Volker van Nek 2007 .. ;;
 
-(defun comppi (n)
-  (prog (a b c)
-     (setq a (expt 2 n))
-     (setq c (+ (* 3 a) (setq b (*quo a 8.))))
-     (do ((i 4 (+ i 2)))
-	 ((zerop b))
-       (setq b (*quo (* b (1- i) (1- i))
-		     (* 4 i (1+ i))))
-       (setq c (+ c b)))
-     (return c)))
-
+;;....................................................................................................... ;;
+;;
+;; (fppi1) returns a bigfloat approximation to PI.
+;; fppi1 is the bigfloat part of the bfloat(%pi) computation
+;;
 (defun fppi1 nil
-  (bcons (list (fpround (comppi (+ fpprec 3))) (+ -3 *m))))
+  (bcons 
+    (fpquotient 
+      (fprt18231_)
+      (list (fpround (comppi (+ fpprec 12))) (+ -12 *m)) )))
+;;
+;; comppi is the bignum part of the bfloat(%pi) computation  
+;; (comppi N)/(2.0^N) is an approximation to 640320^(3/2)/12 * 1/PI
+;;
+;; Chudnovsky & Chudnovsky (1987):
+;;
+;; 640320^(3/2) / (12 * %pi) = 
+;;
+;; sum( (-1)^i*(6*i)!*(545140134*i+13591409) / (i!^3*(3*i)!*640320^(3*i)) ,i,0,inf )
+;; 
+(defun comppi (prec)
+  (let (s h n d)     
+     (setq s (ash 13591409 prec))
+     (setq h (neg (*quo (ash 67047785160 prec) 262537412640768000)))
+     (setq s (+ s h))
+     (do ((i 2 (1+ i)))
+         ((zerop h))
+       (setq n (* 12 (- (* 6 i) 5) (- (* 6 i) 4) (- (* 2 i) 1) (- (* 6 i) 1) (+ (* i 545140134) 13591409) ))
+       (setq d (* (- (* 3 i) 2) (expt i 3) (- (* i 545140134) 531548725) 262537412640768000))
+       (setq h (neg (*quo (* h n) d)))
+       (setq s (+ s h)))
+     s ))
+;;     
+;; fprt18231_ computes sqrt(640320^3/12^2).
+;;                                   n[0]   n[i+1] = n[i]^2+a*d[i]^2            n[inf]
+;; quadratic Heron algorithm: x[0] = ----,                          , sqrt(a) = ------
+;;                                   d[0]   d[i+1] = 2*n[i]*d[i]                d[inf]
+(defun fprt18231_ nil  
+  (let (a n d h)     
+     (setq a 1823176476672000)
+     (setq n 42698670666) 
+     (setq d 1000)     
+     (do ((prec 10 (* 2 prec)))
+         ((> prec $fpprec))
+       (setq h n)
+       (setq n (+ (* n n) (* a d d)))
+       (setq d (* 2 h d)) )
+     (fpquotient (intofp n) (intofp d)) ))
+;;................................................................................ Volker van Nek 2007 .. ;;
+
 
 ;; Compute the main part of the Euler-Mascheroni constant using the
 ;; Bessel function approach.  See
@@ -739,9 +848,9 @@ One extra decimal digit in actual representation for rounding purposes.")
   ;; We also assume don't need a really precise value of beta because
   ;; our N's are not so big that we need more.
   (let* ((fpprec prec)
-	 (big-n (floor (* 1/4 prec (log 2d0))))
+	 (big-n (floor (* 1/4 prec (log 2.0))))
 	 (big-n-sq (intofp (* big-n big-n)))
-	 (beta 3.591121476668622136649223d0)
+	 (beta 3.591121476668622136649223)
 	 (limit (floor (* beta big-n)))
 	 (one (fpone))
 	 (term (intofp 1))
@@ -762,15 +871,6 @@ One extra decimal digit in actual representation for rounding purposes.")
 (defun fpgamma1 ()
   ;; Use a few extra bits of precision
   (bcons (list (fpround (first (comp-bf%gamma (+ fpprec 8)))) 0)))
-
-(defmfun fpmax na
-  (prog (max)
-     (setq max (arg 1))
-     (do ((i 2 (1+ i)))
-	 ((> i na))
-       (if (fpgreaterp (arg i) max)
-	   (setq max (arg i))))
-     (return max)))
 
 (defun fpdifference (a b)
   (fpplus a (fpminus b)))
@@ -1564,7 +1664,7 @@ One extra decimal digit in actual representation for rounding purposes.")
 	 (y (cdr (bigfloatp y)))
 	 (t1 (let (($float2bf t))
 	       ;; No warning message, please.
-	       (floattofp 1.2d0)))
+	       (floattofp 1.2)))
 	 (t2 (intofp 3))
 	 (rho (fpplus (fptimes* x x)
 		      (fptimes* y y)))
@@ -1603,6 +1703,6 @@ One extra decimal digit in actual representation for rounding purposes.")
 	    (bcons (fproot x 2))))))
 
 (eval-when
-    #+gcl (load)
-    #-gcl (:load-toplevel)
+    #+gcl (load eval)
+    #-gcl (:load-toplevel :execute)
     (fpprec1 nil $fpprec))		; Set up user's precision

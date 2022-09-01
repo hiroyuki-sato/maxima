@@ -16,6 +16,8 @@
 ;;  along with this program; if not, write to the Free Software 		 
 ;;  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+($load '$polynomialp)
+
 (defmacro opapply (op args)
   `(simplify (cons (list ,op) ,args)))
 
@@ -58,16 +60,16 @@
 
     (setq p (meqhk p))
     (setq q ($ratdenom p))
-    (if (not ($constantp q)) (mtell "Assuming that ~:M " `((mnotequal) ,q 0)))
+    (if (not ($constantp q)) (mtell "Assuming that ~:M~%" `((mnotequal) ,q 0)))
    
     ;; It's OK to send every expression through convert-from-max-min-to-abs.
     ;; I put in the conditional to skip the ratsimp for expressions that don't
     ;; involve max or min.
 
-    (setq p (if ($freeof '$max '$min p) p ($ratsimp (convert-from-max-min-to-abs p))))
+    (setq p (if ($freeof '$max '$min p) p (sratsimp (convert-from-max-min-to-abs p))))
     
     (setq p (to-polynomial p vars convert-cnst))
-    `((mlist) ((mlist) ,(first p) ,@(second p)) ((mlist) ,@(third p)))))))
+    `((mlist) ((mlist) ,(first p) ,@(second p)) ((mlist) ,@(third p)))))
    
 (defun to-polynomial (p vars convert-cnst)
   (let ((n) (b) (nv) (acc nil) (subs nil) (pk) (q) (inequal) (np-subs))
@@ -302,7 +304,7 @@ to eliminate.
       (merror "Each member of the first argument to 'elim' must be a polynomial"))
 
   (setq x (margs x))
-  (opapply 'mlist (mapcar #'(lambda (s) (opapply 'mlist s)) (unk-eliminate eqs x)))))
+  (opapply 'mlist (mapcar #'(lambda (s) (opapply 'mlist s)) (unk-eliminate eqs x))))
 
 (defun $elim_allbut (eqs x)
   (let (($listconstvars nil) (v))
