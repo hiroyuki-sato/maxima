@@ -157,7 +157,6 @@ colnew/prob2.mac \
 colnew/prob3.mac \
 colnew/prob4.mac \
 combinatorics/README \
-contrib/aes.mac \
 contrib/altsimp/altsimp.lisp \
 contrib/augmented_lagrangian.mac \
 contrib/bitwise/bitwise.lisp \
@@ -314,7 +313,8 @@ contrib/gentran/test/type.mac \
 contrib/gentran/test/type.output \
 contrib/gentran/vaxinit.lisp \
 contrib/gentran/vaxlsp.lisp \
-contrib/gf/gf_hard_test.mac \
+contrib/gf/aes2.mac \
+contrib/gf/aes.mac \
 contrib/gf/gf.mac \
 contrib/gf/gf_manual.pdf \
 contrib/gf/gf_manual.tex \
@@ -909,8 +909,6 @@ misc/declin.dem \
 misc/declin.mac \
 misc/declin.usg \
 misc/diffop.lisp \
-misc/disran.lisp \
-misc/disran.usg \
 misc/dump.lisp \
 misc/dump.usg \
 misc/foptim.lisp \

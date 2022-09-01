@@ -10,9 +10,9 @@ binary-acl/maxima.dxl : clmacs.lisp
 binary-acl/maxima.dxl : commac.lisp
 binary-acl/maxima.dxl : mormac.lisp
 binary-acl/maxima.dxl : compat.lisp
+binary-acl/maxima.dxl : transm.lisp
 binary-acl/maxima.dxl : getopt.lisp
 binary-acl/maxima.dxl : command-line.lisp
-binary-acl/maxima.dxl : defopt.lisp
 binary-acl/maxima.dxl : defcal.lisp
 binary-acl/maxima.dxl : maxmac.lisp
 binary-acl/maxima.dxl : mopers.lisp
@@ -188,7 +188,6 @@ binary-acl/maxima.dxl : rat3c.lisp
 binary-acl/maxima.dxl : rat3e.lisp
 binary-acl/maxima.dxl : nrat4.lisp
 binary-acl/maxima.dxl : ratout.lisp
-binary-acl/maxima.dxl : transm.lisp
 binary-acl/maxima.dxl : transl.lisp
 binary-acl/maxima.dxl : transs.lisp
 binary-acl/maxima.dxl : trans1.lisp
@@ -219,7 +218,6 @@ binary-acl/maxima.dxl : intpol.lisp
 binary-acl/maxima.dxl : nparse.lisp
 binary-acl/maxima.dxl : displa.lisp
 binary-acl/maxima.dxl : nforma.lisp
-binary-acl/maxima.dxl : ldisp.lisp
 binary-acl/maxima.dxl : grind.lisp
 binary-acl/maxima.dxl : spgcd.lisp
 binary-acl/maxima.dxl : ezgcd.lisp

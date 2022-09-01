@@ -412,7 +412,6 @@ csimp2.lisp \
 db.lisp \
 defcal.lisp \
 defint.lisp \
-defopt.lisp \
 desoln.lisp \
 displa.lisp \
 displm.lisp \
@@ -445,7 +444,6 @@ intpol.lisp \
 invert.lisp \
 irinte.lisp \
 laplac.lisp \
-ldisp.lisp \
 lesfac.lisp \
 letmac.lisp \
 limit.lisp \

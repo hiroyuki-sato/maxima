@@ -170,8 +170,9 @@
 
 (defmspec $load_namespace (form)
   (push *package* *namespace-stack*)
-  (meval `(($load) ,(cadr form)))
-  (setq *package* (pop *namespace-stack*))
+  (unwind-protect
+       (meval `(($load) ,(cadr form)))
+    (setq *package* (pop *namespace-stack*)))
   t)
 
 (defun require-1 (s)
@@ -477,7 +478,6 @@
 	   ((and (setq y (safe-get x 'reversealias))
 		 (not (and (member x $aliases :test #'eq) (get x 'noun))))
 	    (setq y (exploden (stripdollar y))))
-	   ((setq y (rassoc x aliaslist :test #'eq)) (return (msize (car y) l r lop rop)))
        ((null (setq y (exploden x))))
        ((safe-get x 'noun) (return (msize-atom (get x 'noun) l r)))
 	   ((char= #\$ (car y)) (setq y (slash (cdr y))))

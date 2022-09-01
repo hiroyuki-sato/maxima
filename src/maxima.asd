@@ -68,14 +68,15 @@
                (:module prerequisites :pathname ""
                         :components ((:file "mormac") 
                                      (:file "compat")))
+	       (:module maxima-language-compiler-macros :pathname ""
+			:components ((:file "transm")))
 	       (:module getopt :pathname ""
 			:components ((:file "getopt")))
 	       (:module command-line :pathname ""
 			:depends-on (getopt)
 			:components ((:file "command-line")))
                (:module fundamental-macros :pathname ""
-                        :components ((:file "defopt") 
-                                     (:file "defcal") 
+                        :components ((:file "defcal") 
                                      (:file "maxmac")))
                (:module utility-macros :pathname ""
                         :components ((:file "mopers") 
@@ -422,8 +423,6 @@
 				     (:file "nrat4") 
 				     (:file "ratout")))
 
-	       (:module maxima-language-compiler-macros :pathname ""
-			:components ((:file "transm")))
 	       (:module maxima-language-compiler :pathname ""
 			:components ((:file "transl") 
 				     (:file "transs") 
@@ -467,7 +466,6 @@
 	       (:module display :pathname ""
 			:components ((:file "displa") 
 				     (:file "nforma") 
-				     (:file "ldisp") 
 				     (:file "grind")))
 
 	       (:module gcd :pathname ""

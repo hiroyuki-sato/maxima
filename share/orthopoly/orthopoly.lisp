@@ -542,12 +542,14 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
    (dimension-sub-and-super-scripted-function "U" `(1) nil nil 2 form)
    result))
 
-;; See A & S 22.5.35, page 779.  We evaluate the legendre polynomials
-;; as jacobi_p(n,0,0,x).  Eat less exercise more.
+;; See A&S 8.2.1 page 333 and 22.5.35 page 779.  We evaluate the legendre
+;; polynomials as jacobi_p(n,0,0,x).  Eat less exercise more.
 
 (defun $legendre_p (n x)
   (cond ((use-hypergeo n x) 
-	 ($jacobi_p n 0 0 x))
+	 (if (and (integerp n) (< n 0))
+	   ($legendre_p (- (abs n) 1) x)
+	   ($jacobi_p n 0 0 x)))
 	(t `(($legendre_p simp) ,n ,x))))
 
 (putprop '$legendre_p 
@@ -581,7 +583,7 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 	 '((n x) 
 	   ((unk) "$first" "$legendre_p")
 	   ((mplus)
-	    ((mtimes) -1 (($kron_delta) 0 n)
+	    ((mtimes) -1 ((%kron_delta) 0 n)
 	     ((mexpt) ((mplus) -1 ((mexpt) x 2)) -1)) 
 	    ((mtimes)
 	     ((mplus)
@@ -726,7 +728,11 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 (defun $assoc_legendre_p (n m x)
   (let ((f) (d) (dx 0))
     (cond ((and (integerp n) (integerp m))
-	   (cond ((> (abs m) n)
+	   (cond ((< n 0)
+		  (setq f ($assoc_legendre_p (- (abs n) 1) m x))
+		  (setq d 1)
+		  (setq dx 1))
+		 ((> (abs m) n)
 		  (setq f 0)
 		  (setq d 1))
 		 ((< m 0)
@@ -997,7 +1003,7 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 (defun $spherical_bessel_j (n x)
   (cond ((and (eq '$zero (csign ($ratdisrep x)))
 	      (or (integerp n) ($featurep n '$integer)))
-	 `(($kron_delta) 0 ,n))
+	 `((%kron_delta) 0 ,n))
 
 	((and (use-float x) (integerp n))
 	 (let ((d 1) (xr) (xi) (z))
@@ -1260,12 +1266,14 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
     
 ;; For recursion relations, see A & S 22.7 page 782. 
 
+;; legendre_p(n+1,x) = ((2*n+1)*legendre_p(n,x)*x-n*legendre_p(n-1,x))/(n+1)
+
 ;;  jacobi_p(n+1,a,b,x) = (((2*n+a+b+1)*(a^2-b^2) + 
 ;;    x*pochhammer(2*n+a+b,3)) * jacobi_p(n,a,b,x) - 
 ;;    2*(n+a)*(n+b)*(2*n+a+b+2)*jacobi_p(n-1,a,b,x))/(2*(n+1)*(n+a+b+1)*(2*n+a+b))
 
 ;; ultraspherical(n+1,a,x) = (2*(n+a)*x * ultraspherical(n,a,x) - 
-;;    (n+2*a+1)*ultraspherical(n-1,a,x))/(n+1)
+;;    (n+2*a-1)*ultraspherical(n-1,a,x))/(n+1)
 
 ;; chebyshev_t(n+1,x) = 2*x*chebyshev_t(n,x) -chebyshev_t(n-1,x)
 
@@ -1276,7 +1284,7 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 ;; gen_laguerre(n+1,a,x) = (((2*n+a+1) - x)*gen_laguerre(n,a,x)  
 ;;  -(n+a)*gen_laguerre(n-1,a,x))/(n+1)
 
-;; hermite(n+1,x) = 2*x*hermite(n,x) +2*n*hermite(n-1,x)
+;; hermite(n+1,x) = 2*x*hermite(n,x) -2*n*hermite(n-1,x)
 
 ;; See G & R 8.733.2; A & S 22.7.11 might be wrong -- or maybe I need
 ;; reading glasses.
@@ -1350,16 +1358,16 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 	 (let* ((n (nth 1 arg))
 	       (x (nth 2 arg))
 	       (z (if (eq fn '$legendre_q) 
-		      `((mtimes) -1 (($kron_delta) ,n 1)) 0))) 
+		      `((mtimes) -1 ((%kron_delta) ,n 0)) 0))) 
 	   (simplify
-	     `((mequal) ((,fn) ,n ,x)
+	     `((mequal) ((,fn) ((mplus) 1 ,n) ,x)
 	       ((mplus)
-		((mtimes) ((mexpt) ,n -1)
+		((mtimes) ((mexpt) ((mplus) 1 ,n) -1)
 		 ((mplus)
-		  ((mtimes) ((mplus) 1 ((mtimes) -1 ,n))
-		   ((,fn) ((mplus) -2 ,n) ,x))
-		  ((mtimes) ((mplus) -1 ((mtimes) 2 ,n))
-		   ((,fn) ((mplus) -1 ,n) ,x) ,x)))
+		  ((mtimes) ((mtimes) -1 ,n)
+		   ((,fn) ((mplus) -1 ,n) ,x))
+		  ((mtimes) ((mplus) 1 ((mtimes) 2 ,n))
+		   ((,fn) ,n ,x) ,x)))
 		,z)))))
 
 	((member fn '($assoc_legendre_p $assoc_legendre_q) :test 'eq)
@@ -1429,7 +1437,7 @@ Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramo
 	 
 	(t (merror "A recursion relation for ~:M isn't known to Maxima" fn))))
     
-;; See A & S Table 2.2, page 774.
+;; See A & S Table 22.2, page 774.
 
 (defun $orthopoly_weight (fn arg)
   (if (not ($listp arg)) 
@@ -1484,6 +1492,13 @@ variable ~:M" arg (car (last arg))))
 	 (check-arg-length fn 2 (- (length arg) 1))
 	 `((mlist) 1 -1 1))
 
+	; This is for a fixed order.  There is also an orthogonality
+	; condition for fixed degree with weight function 1/(1-x^2).
+	; See A & S 8.14.11 and 8.14.12.
+	((eq fn '$assoc_legendre_p)
+	 (check-arg-length fn 3 (- (length arg) 1))
+	 `((mlist) 1 -1 1))
+
 	((eq fn '$laguerre)
 	 (check-arg-length fn 2 (- (length arg) 1))
 	 (let ((x (nth 2 arg)))
@@ -1506,7 +1521,7 @@ variable ~:M" arg (car (last arg))))
 	    `((mlist) ((mexpt) $%e ((mtimes) -1 ((mexpt) ,x 2)))
 	      ((mtimes ) -1 $inf) $inf))))
 
-	(t (merror "a weight for ~:m isn't known to maxima" fn))))
+	(t (merror "A weight for ~:M isn't known to Maxima" fn))))
     
 
     

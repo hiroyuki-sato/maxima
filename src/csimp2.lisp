@@ -733,8 +733,8 @@
 	     (mul2 d b1)))))
 
 (declare-top (special $globalsolve $backsubst $dispflag
-		      $linsolve_params $%rnum_list ax linelable $linechar 
-		      $linenum sol *mosesflag))
+		      $linsolve_params $%rnum_list ax *linelabel* $linechar 
+		      $linenum *mosesflag))
 
 (defun xrutout (ax n m varl ind)
   (let (($linsolve_params (and $backsubst $linsolve_params)))
@@ -773,20 +773,20 @@
        (do ((ll zz (cdr ll)))
 	   ((null ll))
 	 (setq zzz (car ll))
-	 (setq zzz (list '(mlable)
+	 (setq zzz (list '(mlabel)
 			 (progn
 			   (if chk
 			       (setq chk nil)
 			       (incf $linenum))
 			   (let (($nolabels nil))
 			     (makelabel $linechar))
-			   linelable)
-			 (set linelable zzz)))
-	 (nconc sol (ncons linelable))
+			   *linelabel*)
+			 (set *linelabel* zzz)))
+	 (nconc sol (ncons *linelabel*))
 	 (cond ($dispflag
 		(setq tim (get-internal-run-time))
 		(mtell-open "~%~M" zzz)
 		(timeorg tim))
 	       (t
-		(putprop linelable t 'nodisp))))
+		(putprop *linelabel* t 'nodisp))))
        (return sol))))

@@ -544,18 +544,21 @@
   (unless (and (fixnump n) (< 1 n))
     (merror (intl:gettext 
       "Argument to `zn_mult_table' must be a small fixnum greater 1." )) )
-  (do ((i 1 (1+ i)) res)
+  (do ((i 0 (1+ i)) res)
       ((= i n) (cons '($matrix) (nreverse res)))
       (declare (fixnum i))
     (when (or all? (= 1 (gcd i n))) 
-      (push (mfuncall '$makelist `(mod (* ,i $j) ,n) '$j 1 (1- n)) res) )))
+      (push 
+        (mfuncall '$cons 0
+          (mfuncall '$makelist `(mod (* ,i $j) ,n) '$j 1 (1- n)) )
+        res ) )))
 
 (defmfun $zn_power_table (n &optional (all? t))
   (declare (fixnum n))
   (unless (and (fixnump n) (< 1 n))
     (merror (intl:gettext 
       "Argument to `zn_power_table' must be a small fixnum greater 1." )) )
-  (do ((i 1 (1+ i)) (tn1 (1+ (mfuncall '$totient n))) res)
+  (do ((i 0 (1+ i)) (tn1 (1+ (mfuncall '$totient n))) res)
       ((= i n) (cons '($matrix) (nreverse res)))
       (declare (fixnum i))
     (when (or all? (= 1 (gcd i n))) 
@@ -581,27 +584,29 @@
 
 ;; Maxima functions: 
 
-;; gf_set, gf_unset, gf_char, gf_prim, gf_red, gf_info, 
-;; gf_make_tables, gf_mult_table, gf_power_table, 
-;; gf_add, gf_sub, gf_mul, gf_inv, gf_div, gf_exp, gf_ind, gf_log, 
+;; gf_set, gf_unset, gf_minimal_set, gf_info, 
+;; gf_characteristic, gf_primitive, gf_reduction, gf_order, 
+;; gf_make_arrays, gf_mult_table, gf_powers, 
+;; gf_add, gf_sub, gf_mult, gf_inv, gf_div, gf_exp, gf_index, gf_log, 
 ;; gf_p2n, gf_n2p, gf_p2l, gf_l2p, gf_l2n, gf_n2l, 
-;; gf_irr_p, gf_prim_p, gf_next_prim,  
-;; gf_eval, gf_rand, gf_factor, gf_gcd, gf_gcdex, gf_ord, gf_deg, gf_minpoly, 
-;; gf_normal_p, gf_normal, gf_random_normal, gf_normal_basis, gf_nbrep, 
-;; gf_matadd, gf_matmul, gf_matinv
+;; gf_irreducible_p, gf_primitive_p, gf_next_primitive,  
+;; gf_eval, gf_random, gf_factor, gf_gcd, gf_gcdex, gf_degree, gf_minimal_poly, 
+;; gf_normal_p, gf_normal, gf_random_normal, gf_normal_basis, gf_normal_basis_rep, 
+;; gf_matadd, gf_matmult, gf_matinv
 
-(declaim (special $gf_power_table $gf_log_table $gf_rat)) 
+(declare-top (special $gf_powers $gf_logs $gf_rat)) 
 
-(declaim (special 
+(declare-top (special 
   *gf-var* *gf-rat-sym* *gf-rat-header*
   *gf-char* *fixnump-2gf-char* *gf-exp* *gf-ord* *gf-card* *gf-prim* *gf-red* 
   *gf-fs-ord* *gf-fs* *gf-fs-base-p* *gf-x^p-powers* 
-  *gf-set?* *gf-tables?* ))
+  *gf-set?* *gf-minset?* *gf-tables?* ))
 
 (declaim (fixnum *gf-exp*)) ;; this doesn't seem to be a real practical limitation 
 
 (defmvar $gf_rat nil "functions in gf return rational expressions?" boolean)
-(defmvar *gf-set?* nil "field is set?" boolean)
+(defmvar *gf-set?* nil "gf data are set?" boolean)
+(defmvar *gf-minset?* nil "characteristic and reduction polynomial are set?" boolean)
 (defmvar *gf-tables?* nil "log and power tables are computed?" boolean)
 
 
@@ -803,7 +808,8 @@
 
     (when (equal *gf-prim* '$false) (setq *gf-prim* nil))
     
-    (setq *gf-set?* t)
+    (setq *gf-minset?* t
+          *gf-set?* t )
 
     `((mlist simp) 
       ,(when *gf-prim* (gf-x2p *gf-prim*)) 
@@ -828,8 +834,8 @@
 
 
 (defmfun $gf_unset ()
-  (setq $gf_power_table '$gf_power_table
-        $gf_log_table '$gf_log_table
+  (setq $gf_powers '$gf_powers
+        $gf_logs '$gf_logs
         $gf_rat nil
         *gf-var* nil *gf-rat-sym* nil *gf-rat-header* nil
         *gf-char* 0 *gf-exp* 0 *gf-ord* 0 
@@ -839,27 +845,30 @@
   t )
 
 
+(defun gf-minset? ()
+  (unless *gf-minset?*
+    (merror (intl:gettext "gf data not set." )) ))
+
 (defun gf-set? ()
   (unless *gf-set?*
-    (merror (intl:gettext "Field not yet set." )) ))  
+    (merror (intl:gettext "gf data not or not fully set." )) ))  
 
 (defun field? ()
   (unless *gf-prim*
     (merror (intl:gettext "Not a field." )) ))
 
-(defmfun $gf_char () 
-  (gf-set?) *gf-char* )
+(defmfun $gf_characteristic () 
+  (gf-minset?) *gf-char* )
 
-(defmfun $gf_prim () 
+(defmfun $gf_primitive () 
   (gf-set?) (gf-x2p *gf-prim*) )
 
-(defmfun $gf_red () 
-  (gf-set?) (gf-x2p *gf-red*) )
+(defmfun $gf_reduction () 
+  (gf-minset?) (gf-x2p *gf-red*) )
 
 
 (defmfun $gf_info (&optional (print? t))
-  (unless *gf-set?*
-    (merror (intl:gettext "Field not set." )) )
+  (gf-set?)
   (cond
     (print?
       (mfuncall '$print "char:" *gf-char*)
@@ -878,17 +887,31 @@
         ,*gf-char* ,*gf-exp* ,*gf-ord* ,@(unless *gf-prim* `(,*gf-card*))
         ,(when *gf-prim* (gf-x2p *gf-prim*)) 
         ,(gf-x2p *gf-red*) )) ))
+
+;; Minimal set
+;; Just set characteristic and reduction poly to allow basic arithmetics on the fly.
+(defmfun $gf_minimal_set (p red)
+  (unless (and (integerp p) (primep p))
+    (merror (intl:gettext "First argument to `gf_minimal_set' must be a prime number." )) )
+  ($gf_unset)
+  (setq *gf-char* p)
+  #-gcl (setq *fixnump-2gf-char* (< (* 2 p) most-positive-fixnum))
+  (setq red (gf-set-red red))
+  (unless (fixnump (setq *gf-exp* (car red)))
+    (merror (intl:gettext "The exponent must be a fixnum." )) )
+  (when (= 0 *gf-exp*) (setq *gf-exp* 1))
+  (setq *gf-minset?* t) )
 ;;
 ;; -----------------------------------------------------------------------------
 
 
 ;; lookup tables ---------------------------------------------------------------
 ;;
-(defmfun $gf_make_tables () 
+(defmfun $gf_make_arrays () 
   (gf-set?)
   (field?)
   (unless (fixnump *gf-ord*)
-    (merror (intl:gettext "`gf_make_tables': Field order must be a fixnum." )) )
+    (merror (intl:gettext "`gf_make_arrays': Field order must be a fixnum." )) )
   (when *gf-prim* (gf-make-tables)) )
 
 (defun gf-make-tables () 
@@ -898,27 +921,27 @@
 ;; power table of the field, where the i-th element is the numerical
 ;; equivalent of the field element e^i, where e is a primitive element 
 ;;
-    (setq $gf_power_table (make-array (1+ ord) :element-type 'integer))
-    (setf (svref $gf_power_table 0) 1)
+    (setq $gf_powers (make-array (1+ ord) :element-type 'integer))
+    (setf (svref $gf_powers 0) 1)
     (do ((i 1 (1+ i)))
         ((> i ord))
         (declare (fixnum i))
       (setq x (gf-xtimes x primx))
-      (setf (svref $gf_power_table i) (gf-x2n x)) )
+      (setf (svref $gf_powers i) (gf-x2n x)) )
 ;;
 ;; log table: the inverse lookup of the power table 
 ;;
-    (setq $gf_log_table (make-array (1+ ord) :initial-element nil))
+    (setq $gf_logs (make-array (1+ ord) :initial-element nil))
     (do ((i 0 (1+ i)))
         ((= i ord))
         (declare (fixnum i))
-      (setf (svref $gf_log_table (svref $gf_power_table i)) i) )
+      (setf (svref $gf_logs (svref $gf_powers i)) i) )
     (setq *gf-tables?* t)
-    `((mlist simp) ,$gf_power_table ,$gf_log_table) ))
+    `((mlist simp) ,$gf_powers ,$gf_logs) ))
 
 (defun gf-clear-tables () 
-  (setq $gf_power_table '$gf_power_table
-        $gf_log_table '$gf_log_table
+  (setq $gf_powers '$gf_powers
+        $gf_logs '$gf_logs
         *gf-tables?* nil ))
 ;;
 ;; -----------------------------------------------------------------------------
@@ -1001,16 +1024,16 @@
 (defmfun $gf_mult_table ()
   (gf-set?)
   (mfuncall '$genmatrix  
-              #'(lambda (i j) (gf-x2n (gf-xtimes (gf-n2x i) (gf-n2x j)))) 
-              (1- *gf-card*) 
-              (1- *gf-card*) ))
+              #'(lambda (i j) (gf-x2n (gf-xtimes (gf-n2x (1- i)) (gf-n2x (1- j))))) 
+              *gf-card* 
+              *gf-card* ))
 
-(defmfun $gf_power_table ()
+(defmfun $gf_powers ()
   (gf-set?)
   (mfuncall '$genmatrix  
-              #'(lambda (i j) (gf-x2n (gf-pow (gf-n2x i) j)))
-              (1- *gf-card*) 
-              (1- *gf-card*) ))
+              #'(lambda (i j) (gf-x2n (gf-pow (gf-n2x (1- i)) j)))
+              *gf-card* 
+              (1+ *gf-ord*) ))
 ;;
 ;; -----------------------------------------------------------------------------
 
@@ -1021,9 +1044,9 @@
 ;; an arbitrary polynomial is evaluated in a given field
 
 (defmfun $gf_eval (a) 
-  (gf-set?) 
+  (gf-minset?) 
   (let ((modulus *gf-char*))
-    (setq a (mfuncall '$remainder ($rat a) ($gf_red)))
+    (setq a (mfuncall '$remainder ($rat a) ($gf_reduction)))
     (if (integerp (cadr a))
       (rplaca (cdr a) (mod (cadr a) *gf-char*))
       (let ((b (gf-mod (cdadr a))))
@@ -1064,27 +1087,27 @@
 ;; arithmetic in Galois Fields - Maxima level functions ------------------------
 ;;
 (defmfun $gf_add (&rest args) 
-  (gf-set?)
+  (gf-minset?)
   (setq args (mapcar #'gf-p2x args))
   (gf-x2p (reduce #'gf-xplus args)) )
 
 (defmfun $gf_sub (&rest args) 
-  (gf-set?)
+  (gf-minset?)
   (setq args (mapcar #'gf-p2x args))
   (gf-x2p (gf-xplus (car args) (gf-xminus (reduce #'gf-xplus (cdr args))))) )
 
-(defmfun $gf_mul (&rest args) 
-  (gf-set?)
+(defmfun $gf_mult (&rest args) 
+  (gf-minset?)
   (setq args (mapcar #'gf-p2x args))
   (gf-x2p (reduce #'gf-xtimes args)) ) 
 
 (defmfun $gf_inv (a) 
-  (gf-set?) 
+  (gf-minset?) 
   (setq a (gf-inv (gf-p2x a)))
   (when a (gf-x2p a)) ) ;; a is nil in case the inverse does not exist
 
 (defmfun $gf_div (&rest args) 
-  (gf-set?)
+  (gf-minset?)
   (setq args (mapcar #'gf-p2x args)
         args (cons (car args) (mapcar #'gf-inv (cdr args))) )
   (cond
@@ -1093,10 +1116,18 @@
     (t (gf-x2p (reduce #'gf-xtimes args))) )) 
 
 (defmfun $gf_exp (&optional a n)
-  (gf-set?) 
-  (if a
-    (gf-x2p (gf-pow (gf-p2x a) n))
-    *gf-exp* ))
+  (gf-minset?) 
+  (cond 
+    ((not a) *gf-exp*)
+    ((not n) 
+      (merror (intl:gettext "`gf_exp' needs zero or two arguments." )) )
+    ((not (integerp n))
+      (merror (intl:gettext "Second argument to `gf_exp' must be an integer." )) )
+    ((< n 0)
+      (setq a (gf-inv (gf-p2x a)))
+      (when a ($gf_exp (gf-x2p a) (neg n))) ) ;; a is nil in case the inverse does not exist
+    (t 
+      (gf-x2p (gf-pow (gf-p2x a) (mod n *gf-ord*))) )))
 ;;
 ;; -----------------------------------------------------------------------------
 
@@ -1396,7 +1427,7 @@
 
 ;; x^n mod y
 
-(defun gf-pow (x n) 
+(defun gf-pow (x n) ;; assume 0 <= n <= order
   #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
   (cond 
     ((= 0 n) (list 0 1))
@@ -1410,8 +1441,8 @@
               x (gf-sq x)) ))))
 
 (defun gf-pow-by-table (x n) 
-  (let ((index (svref $gf_log_table (gf-x2n x))))
-    (gf-n2x (svref $gf_power_table (mod (* index n) *gf-ord*))) ))
+  (let ((index (svref $gf_logs (gf-x2n x))))
+    (gf-n2x (svref $gf_powers (mod (* index n) *gf-ord*))) ))
   
 ;; remainder:
 ;; x - quotient(x, y) * y 
@@ -1527,7 +1558,7 @@
 ;; polynomial/number/list - conversions ----------------------------------------
 ;;
 (defmfun $gf_p2n (p) 
-  (gf-set?) (gf-x2n (gf-p2x p)) )
+  (gf-minset?) (gf-x2n (gf-p2x p)) )
 
 (defun gf-x2n (x)
   #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
@@ -1541,7 +1572,7 @@
         (setq x (cddr x)) ))))
 
 (defmfun $gf_n2p (n) 
-  (gf-set?)
+  (gf-minset?)
   (unless (integerp n)
     (merror (intl:gettext "`gf_n2p': Argument must be an integer.")) )
   (gf-x2p (gf-n2x n)) )
@@ -1558,7 +1589,7 @@
 
 (defmfun $gf_p2l (p &optional (len 0)) ;; in case of len = 0 the list isn't padded or truncated
   (declare (fixnum len))
-  (gf-set?) 
+  (gf-minset?) 
   (let ((x (gf-p2x p)))
     (cons '(mlist simp) (gf-x2l x len)) ))
 
@@ -1577,7 +1608,7 @@
         (unless (null x) (setq e (the fixnum (car x)))) ))))
 
 (defmfun $gf_l2p (l)
-  (gf-set?)
+  (gf-minset?)
   (unless ($listp l)
     (merror (intl:gettext "`gf_l2p': Argument must be a list of integers.")) )
   (gf-x2p (gf-l2x (cdr l))) )
@@ -1596,7 +1627,7 @@
 
 
 (defmfun $gf_l2n (l) 
-  (gf-set?)
+  (gf-minset?)
   (unless ($listp l)
     (merror (intl:gettext "Argument to `gf_l2n' must be a list of integers.")) )
   (gf-l2n (cdr l)) )
@@ -1612,7 +1643,7 @@
 
 (defmfun $gf_n2l (n &optional (len 0)) ;; in case of len = 0 the list isn't padded or truncated
   (declare (fixnum len))
-  (gf-set?)
+  (gf-minset?)
   (unless (integerp n)
     (merror (intl:gettext "First argument to `gf_n2l' must be an integer.")) )
   (cons '(mlist simp) (if (= 0 len) (gf-n2l n) (gf-n2l-twoargs n len))) )
@@ -1647,12 +1678,12 @@
 
 ;; irreducibility (Ben-Or algorithm) -------------------------------------------
 ;;
-(defmfun $gf_irr_p (a &optional p) 
+(defmfun $gf_irreducible_p (a &optional p) 
   (cond
     (p (unless (and (integerp p) (primep p))
-        (merror (intl:gettext "`gf_irr_p': Second argument must be a prime number." )) ))
-    (t (gf-set?) (setq p *gf-char*)) )
-  (let* ((*gf-char* p)                ;; gf_irr_p is independent of the given environment
+        (merror (intl:gettext "`gf_irreducible_p': Second argument must be a prime number." )) ))
+    (t (gf-minset?) (setq p *gf-char*)) )
+  (let* ((*gf-char* p)                ;; gf_irreducible_p is independent of the given environment
          (x (gf-p2x a)) n) 
     (cond
       ((null x) nil)
@@ -1664,7 +1695,7 @@
 
 (defun gf-irr-p (y p n) ;; p,n > 1 !
   #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
-  (let ((*gf-char* p)                  ;; gf_irr_p is independent of the field set
+  (let ((*gf-char* p)                  ;; gf_irreducible_p is independent of the field set
         #-gcl (*fixnump-2gf-char* (< (* 2 p) most-positive-fixnum)) ;; see above
         (*gf-red* y)
         (x (list 1 1)) (mx (list 1 (1- p)))) 
@@ -1695,7 +1726,7 @@
 
 ;; Tests if an element is primitive in the field 
 
-(defmfun $gf_prim_p (a) 
+(defmfun $gf_primitive_p (a) 
   (gf-set?)
   (let ((n (gf-x2n (gf-p2x a))))
     (when (< n *gf-card*) (gf-prim-p (gf-n2x n))) ))
@@ -1716,7 +1747,7 @@
 
 ;; Find the next primitive element
 
-(defmfun $gf_next_prim (a) 
+(defmfun $gf_next_primitive (a) 
   (gf-set?)
   (field?)
   (let* ((n (gf-x2n (gf-p2x a)))
@@ -1868,7 +1899,7 @@
 
 ;; Produces a random element within the given environment 
 
-(defmfun $gf_rand () 
+(defmfun $gf_random () 
   (gf-set?) (gf-x2p (gf-rand)) )
 
 (defun gf-rand ()
@@ -1885,7 +1916,7 @@
   (cond
     (p (unless (and (integerp p) (primep p))
         (merror (intl:gettext "`gf_factor': Second argument must be a prime number." )) ))
-    (t (gf-set?) 
+    (t (gf-minset?) 
        (setq p *gf-char*) ))
   (let* ((*gf-char* p) (modulus p) 
          (a (mfuncall '$rat a))
@@ -1925,12 +1956,12 @@
 ;; gcd and gcdex
 
 (defmfun $gf_gcd (a b) 
-  (gf-set?)
+  (gf-minset?)
   (setq a (gf-p2x a) b (gf-p2x b))
   (gf-x2p (gf-gcd a b)) )
 
 (defmfun $gf_gcdex (a b) 
-  (gf-set?)
+  (gf-minset?)
   (setq a (gf-p2x a) b (gf-p2x b))
   (cons '(mlist simp) (mapcar #'gf-x2p (gf-gcdex a b))) )
 ;;
@@ -1942,7 +1973,7 @@
 
 ;; Finds the lowest value k for which x^k = 1  (Otto Forsters Version)
 
-(defmfun $gf_ord (&optional a) 
+(defmfun $gf_order (&optional a) 
   (gf-set?) 
   (cond 
     (a (setq a (gf-p2x a))
@@ -1964,7 +1995,7 @@
                 k (* k p) ) )) )))
 
 (defun gf-ord-by-table (x) 
-  (let ((index (svref $gf_log_table (gf-x2n x))))
+  (let ((index (svref $gf_logs (gf-x2n x))))
     (truncate *gf-ord* (gcd *gf-ord* index)) ))
 
 
@@ -1995,7 +2026,7 @@
 
 ;; Finds the lowest value d for which x^(p^d) = x
 
-(defmfun $gf_deg (a) 
+(defmfun $gf_degree (a) 
   (gf-set?) 
   (field?)
   (gf-deg (gf-p2x a)) )
@@ -2008,7 +2039,7 @@
 
 ;; produce the minimal polynomial 
 
-(defmfun $gf_minpoly (a)
+(defmfun $gf_minimal_poly (a)
   (gf-set?)
   (field?)
   (let ((z-cre (mfuncall '$rat (if (equal *gf-var* '$z) '$x '$z)))) 
@@ -2112,7 +2143,7 @@
         gf-exp )))
 
 ;; coeffs returns all coefficients of a polynomial, as a list of designated length.
-;; The elements of the list are values in the range 0, 1, 2, ..., gf_char - 1. 
+;; The elements of the list are values in the range 0, 1, 2, ..., gf_characteristic - 1. 
 
 (defun gf-coeffs-array (x n) 
   #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
@@ -2148,15 +2179,15 @@
         (push (cadr x) cs)
         (setq x (cddr x))
         (unless (null x) (setq e (the fixnum (car x)))) ))))
-
     
 ;; Produces the normal representation of an element as a list of coefficients 
 
-(defmfun $gf_nbrep (a m)
+(defmfun $gf_normal_basis_rep (a m)
   (gf-set?)
   (field?)
   (let* ((inv ($gf_matinv m))
          (cs (cons '(mlist simp) (gf-coeffs-list (gf-p2x a) (1- *gf-exp*)))) 
+         ($matrix_element_mult '*) ($matrix_element_add '+)
          (nbrep (meval `((mnctimes) ,cs ,inv))) res)
     (dolist (c (cdadr nbrep)) (push (gf-cmod c) res)) ;; 0 <= c
     (cons '(mlist simp) res) ))
@@ -2205,32 +2236,32 @@
 
 ;; matrix multiplication (convenience: mat, list or poly possible as argument)
 
-(defmfun $gf_matmul (&rest args) 
-  (mfuncall '$rreduce #'gf-matmul (cons '(mlist simp) args)) )
+(defmfun $gf_matmult (&rest args) 
+  (mfuncall '$rreduce #'gf-matmult (cons '(mlist simp) args)) )
 
-(defun gf-matmul (m1 m2) 
+(defun gf-matmult (m1 m2) 
   (when ($listp m1) (setq m1 (list '($matrix simp) m1)))
   (when ($listp m2) (setq m2 (mfuncall '$transpose m2)))
   (cond 
     ((and ($matrixp m1) ($matrixp m2))
-      (gf-matmul2 m1 m2) )
+      (gf-matmult2 m1 m2) )
     (($matrixp m1)
-      (gf-matmul1 m1 m2) ) ;; assumed without checking: m2 is poly 
+      (gf-matmult1 m1 m2) ) ;; assumed without checking: m2 is poly 
     (($matrixp m2)
-      (gf-matmul1 m2 m1) )
+      (gf-matmult1 m2 m1) )
     (t 
-      ($gf_mul m1 m2) ) ))
+      ($gf_mult m1 m2) ) ))
 
-(defmfun gf-matmul1 (m poly) 
+(defmfun gf-matmult1 (m poly) 
   (do ((r (cdr m) (cdr r)) new)
       ((null r) (cons '($matrix simp) (nreverse new)))
     (push (cons '(mlist simp) 
-                (mapcar #'(lambda (p) ($gf_mul p poly)) (cdar r)) ) new) ))
+                (mapcar #'(lambda (p) ($gf_mult p poly)) (cdar r)) ) new) ))
 
-(defmfun gf-matmul2 (m1 m2) 
+(defmfun gf-matmult2 (m1 m2) 
   (setq m1 (cdr m1) m2 (cdr ($transpose m2)))
   (unless (= (length (car m1)) (length (car m2)))
-    (merror (intl:gettext "`gf_matmul': attempt to multiply nonconformable matrices.")) )
+    (merror (intl:gettext "`gf_matmult': attempt to multiply nonconformable matrices.")) )
   (do ((r1 m1 (cdr r1)) new-mat)
       ((null r1) 
         (if (and (not (eq nil $scalarmatrixp))
@@ -2251,7 +2282,7 @@
 (defmfun $gf_matinv (m) 
   (gf-set?)
   (field?)
-  (let* (($matrix_element_mult '$gf_mul) ($matrix_element_add '$gf_add)
+  (let* (($matrix_element_mult '$gf_mult) ($matrix_element_add '$gf_add)
          (dm (mfuncall '$determinant m))
          (am (mfuncall '$adjoint m)) )
     (mfuncall '$matrixmap #'(lambda (p) ($gf_div p dm)) am) ))
@@ -2264,7 +2295,7 @@
 
 ;; solve g^x = a in Fp^n, where g is a generator 
 
-(defmfun $gf_ind (a) 
+(defmfun $gf_index (a) 
   (gf-set?) 
   (field?)
   (if (= 1 *gf-exp*)
@@ -2295,7 +2326,7 @@
 (defun gf-dlog (a)
   #+ (or ccl ecl gcl) (declare (optimize (speed 3) (safety 0)))
   (if *gf-tables?*
-    (svref $gf_log_table (gf-x2n a))
+    (svref $gf_logs (gf-x2n a))
     (let (p (e 0) odivp (g *gf-prim*) gg x dlog dlogs tmp) 
          (declare (fixnum e))
       (dolist (f *gf-fs-ord*)

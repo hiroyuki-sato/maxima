@@ -10,9 +10,9 @@ binary-cmucl/maxima.core : clmacs.lisp
 binary-cmucl/maxima.core : commac.lisp
 binary-cmucl/maxima.core : mormac.lisp
 binary-cmucl/maxima.core : compat.lisp
+binary-cmucl/maxima.core : transm.lisp
 binary-cmucl/maxima.core : getopt.lisp
 binary-cmucl/maxima.core : command-line.lisp
-binary-cmucl/maxima.core : defopt.lisp
 binary-cmucl/maxima.core : defcal.lisp
 binary-cmucl/maxima.core : maxmac.lisp
 binary-cmucl/maxima.core : mopers.lisp
@@ -189,7 +189,6 @@ binary-cmucl/maxima.core : rat3c.lisp
 binary-cmucl/maxima.core : rat3e.lisp
 binary-cmucl/maxima.core : nrat4.lisp
 binary-cmucl/maxima.core : ratout.lisp
-binary-cmucl/maxima.core : transm.lisp
 binary-cmucl/maxima.core : transl.lisp
 binary-cmucl/maxima.core : transs.lisp
 binary-cmucl/maxima.core : trans1.lisp
@@ -220,7 +219,6 @@ binary-cmucl/maxima.core : intpol.lisp
 binary-cmucl/maxima.core : nparse.lisp
 binary-cmucl/maxima.core : displa.lisp
 binary-cmucl/maxima.core : nforma.lisp
-binary-cmucl/maxima.core : ldisp.lisp
 binary-cmucl/maxima.core : grind.lisp
 binary-cmucl/maxima.core : spgcd.lisp
 binary-cmucl/maxima.core : ezgcd.lisp
