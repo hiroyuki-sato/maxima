@@ -807,6 +807,7 @@ Optional Features:
   --enable-acl                     Use ACL
   --enable-gcl                     Use GCL
   --enable-openmcl                 Use OpenMCL
+  --enable-ccl                 Use CCL (Clozure Common Lisp)
   --enable-ecl                 Use ECL
   --enable-gettext                 Locale support
   --enable-lang-es                 Spanish language support
@@ -836,6 +837,7 @@ Optional Packages:
   --with-acl=<prog>                Use ACL executable <prog> (default lisp)
   --with-gcl=<prog>                Use GCL executable <prog> (default gcl)
   --with-openmcl=<prog>            Use OpenMCL executable <prog> (default openmcl)
+  --with-ccl=<prog>              Use OpenMCL executable <prog> (default ccl)
   --with-ecl=<prog>            Use ECL executable <prog> (default ecl)
   --with-default-lisp=<lisp>       Set default lisp implementation to <lisp>
   --with-posix-shell=</path/to/shell>    Use <shell> for maxima script (default /bin/sh)
@@ -1592,7 +1594,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=maxima
- VERSION=5.21.1
+ VERSION=5.22.0
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2587,6 +2589,35 @@ if test "${with_openmcl+set}" = set; then
 else
   OPENMCL_NAME=${openmcl_default_name}
 fi;
+# Check whether --enable-ccl or --disable-ccl was given.
+if test "${enable_ccl+set}" = set; then
+  enableval="$enable_ccl"
+  case "${enableval}" in
+       		yes) openmcl=true
+		     explicit_lisp=true;;
+       		no)  openmcl=false ;;
+		*) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-ccl" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-ccl" >&2;}
+   { (exit 1); exit 1; }; } ;;
+     	esac
+else
+  openmcl=false
+fi;
+
+# Check whether --with-ccl or --without-ccl was given.
+if test "${with_ccl+set}" = set; then
+  withval="$with_ccl"
+  openmcl=true
+	explicit_lisp=true
+	if test "$withval" = "yes"; then
+		OPENMCL_NAME="${openmcl_default_name}"
+	else
+		OPENMCL_NAME="$withval"
+	fi
+else
+  OPENMCL_NAME=${openmcl_default_name}
+fi;
+
 if test x"${openmcl}" = xtrue ; then
 	if test `echo "$OPENMCL_NAME" | sed 's/\(.\).*/\1/'` = "/" ; then
 		if test -x "$OPENMCL_NAME" ; then

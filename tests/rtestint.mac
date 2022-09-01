@@ -806,7 +806,7 @@ integrate(log(x)^k1,x,0,1);
 (-1)^k1*gamma(k1+1);
 */
 integrate((-log(x))^k1,x,0,1);
-gamma(k1+1);
+k1*gamma(k1);
 
 /* p. 120 */
 integrate(sqrt(log(x))/x^2,x,1,inf);
@@ -1075,6 +1075,12 @@ y*log(y^2+x^2)/2+x*atan(y/x);
 integrate(atan2(y,x),y);
 y*atan(y/x)-(x*log(y^2/x^2+1)/2);
 
+/* Bug ID: 3023997 - integrate(x*atan2(x,y),x) -> noun form
+ * We have generalized the special case for the atan2 function.
+ */
+integrate(y*atan2(y,x),y);
+y^2*atan(y/x)/2-(x^2*y-x^3*atan(y/x))/(2*x);
+
 /* [ 2501765 ] integrate((-14*x^2-32)/(x^4+3*x^2+1)^2,x,0,inf); */
 integrate(1/(x^4+3*x^2+1)^2,x,0,inf);
 (sqrt(3-sqrt(5))*(3*sqrt(2)*sqrt(5)+15*sqrt(2))*%pi
@@ -1284,3 +1290,11 @@ integrate(sin(3*asin(x)),x);
 integrate(sin(4*asin(x)),x);
 (15*((1-x^2)^(3/2)/5-x^2*(1-x^2)^(3/2)/5)
        +sqrt(1-x)*sqrt(x+1)*(93*x^4-106*x^2+13))/-60;
+       
+/* Bug ID: 3029610 - integrate and %e_to_numlog
+*/
+integrate((exp(3/2*log(x))+1)/sqrt(x),x);
+2*(x^2/4+sqrt(x));
+
+integrate(3*sqrt(x)*exp(3/2*log(x)),x);
+x^3;

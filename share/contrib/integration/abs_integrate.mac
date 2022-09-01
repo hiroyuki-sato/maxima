@@ -29,6 +29,7 @@ extra_integration_methods : ['intfudu, 'intfugudu, 'signum_int, 'abs_integrate_u
 
 extra_integrate(q,x) := block([l, i, ii : funmake(nounify('integrate),[q,x])],
   l : extra_integration_methods,
+  q : subst('mod = lambda([x,y], x - y * floor(x / y)),q),
   while l # [ ] do (
     i : first(l)(q,x),
     l : rest(l),
@@ -46,13 +47,6 @@ extra_definite_integrate(q,x,lo,hi) := block([l,i, ii : funmake(nounify('integra
     l : rest(l),
     if (i # false) and freeof('integrate, i) then return(ii : i)),
   ii);
-
-/* The conditional gradefs work OK, but they complicate testing and they can generate messy expressions. */
-/* gradef(signum(x),%if(x # 0, 0, 'und)); */
-gradef(signum(x),0); 
-
-/* gradef(abs(x), %if(x # 0, abs(x) / x, 'und)); */
-gradef(abs(x), abs(x) / x);
 
 safe_op(e) := block([inflag : true], if mapatom(e) then false else op(e));
 
@@ -94,7 +88,7 @@ unit_step_mult_simp(e) := block([p : [], q : 1, inflag : true],
    for ek in e do (
      if safe_op(ek) = 'unit_step then p : cons(first(ek),p) else q : q * ek),
    p : xreduce('min, p),
-   if freeof('max, 'min, p) then q * unit_step(p) else e)
+   if freeof('max, 'min, 'inf, p) then q * unit_step(p) else e)
  else map('unit_step_mult_simp, e));
          
 /* Do signum(a) * signum(b) --> signum(a * b) and e * signum(e) --> abs(e) */
@@ -193,6 +187,7 @@ abs_defint(e,x,lo,hi) := block([f,l],
     e : convert_to_signum(e),
     l : xreduce('append, (gatherargs(e, 'signum))),
     l : flatten(map(lambda([s], real_linear_factors(s,x)), l)), /* flatten([[1], false]) --> [1,false] */
+    l : delete(false,l),
     l : partitions_interval_p(l,lo,hi),
     if l # false then (
       f : dint(e,x,l),
@@ -259,8 +254,9 @@ interval_integrate(q,x,l) :=  block([xo,q1,q2,i1],
     else i1 : [ ],
     if i1 = [ ] then false else %if(x < xo, q1 + first(i1), q2)));
 
-gradef(floor(x),%if(%integerp(x), 'und, 0));
-gradef(ceiling(x),%if(%integerp(x), 'und, 0));
+''(buildq([z : ?gensym()], gradef(floor(z), %if(%integerp(z), 'und, 0))));    
+''(buildq([z : ?gensym()], gradef(ceiling(z),%if(%integerp(z), 'und, 0)))); 
+''(buildq([z : ?gensym()], gradef(signum(z), 0)));
 
 /* integrate(G(x,floor(x), ceiling(x)),x)
 

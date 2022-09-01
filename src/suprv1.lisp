@@ -21,10 +21,11 @@
   (setq old-ibase *read-base* old-base *print-base*)
   (setq *read-base* 10. *print-base* 10.))
 
-(defmvar mopl nil)
+;; Store build-in operators, which get additional properties.
+;; These operators aren't killed by the function kill-operator.
+(defvar *mopl* nil)
 
-(declare-top  (special
-		       bindlist loclist errset *rset ^q lf tab ff cr
+(declare-top  (special bindlist loclist errset *rset ^q lf tab ff cr
 		       $values $functions $arrays $gradefs $dependencies
 		       $rules $props $ratvars $ratvarswitch
 		       varlist genvar $filename
@@ -83,7 +84,6 @@
 (defmvar $disptime nil)
 (defmvar $strdisp t)
 (defmvar $grind nil)
-(defmvar $prompt '_)
 (defmvar $backtrace '$backtrace)
 (defmvar $debugmode nil)
 (defmvar $pagepause nil)
@@ -130,16 +130,12 @@
 (defvar moreflush nil)
 (defmvar $morewait nil "needs to be documented" no-reset)
 
-(defmvar $showtime nil)
-
 (defmvar aliaslist nil
   "is used by the `makeatomic' scheme which has never been completed"
   no-reset)
 
 (defun sys-gctime ()
   (status gctime))
-
-(defmvar $showtime nil)
 
 ;(defmfun meval* (test)
 ;  (let (refchkl baktrcl checkfactors)
@@ -195,7 +191,7 @@
      (unwind-protect
 	  (progn
 	    (fresh-line)
-	    (princ (stripdollar $prompt))
+	    (princ (break-prompt))
 	    (finish-output)
 	    (return (char= (tyi*) #\newline)))
        (clear-input)))))
@@ -363,7 +359,9 @@
 	(killframe x)
 	(i-$remove (list x $features)))
       (let ((y (get x 'op)))
-	(when (and y (not (member y mopl :test #'equal)) (member y (cdr $props) :test #'equal))
+        (when (and y 
+                   (not (member y *mopl* :test #'equal))
+                   (member y (cdr $props) :test #'equal))
 	  (kill-operator x)))
       (remalias x nil)
       (setf $arrays (delete x $arrays :count 1 :test #'eq))
@@ -483,8 +481,14 @@
 		    t)
 		 (transp (setf (symbol-value x) x) t)
 		 ((eq x '$default_let_rule_package) t)
+		 ;; Next case: X is bound to itself but X is not on values list.
+		 ;; Translation code does that; I don't know why.
+		 ;; Silently let it stand and hope it doesn't cause trouble.
+		 ((eq (symbol-value x) x) t)
 		 (t
-		  (mtell "remvalue: warning: cannot remove value of:~%~M" x) nil))))))
+		  (mtell "remvalue: ~M doesn't appear to be a known variable; just unbind it anyway.~%" x)
+		  (makunbound x)
+		  t))))))
 
 (defmfun ruleof (rule)
   (or (mget rule 'ruleof)
@@ -662,6 +666,7 @@
 	(cadr (reverse l)))))
 
 (defmspec $playback (x)
+  (declare (special $showtime))
   (setq x (cdr x))
   (let ((state-pdl (cons 'playback state-pdl)))
     (prog (l l1 l2 numbp slowp nostringp inputp timep grindp inchar largp)
@@ -846,19 +851,18 @@
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'alias)
 		(putprop (cadr x) (car x) 'reversealias))
       '(($block mprog block) ($lambda lambda lambda)
-	($abs mabs abs) ($subst $substitute subst)
+	($subst $substitute subst)
 	($go mgo go) ($signum %signum signum)
 	($return mreturn return) ($factorial mfactorial factorial)
 	($nouuo nouuo nouuo) ($rset *rset rset)
-	($ibase *read-base* *read-base*) ($obase *print-base* obase) ($nopoint *nopoint nopoint)
+        ($ibase *read-base* *read-base*) ($obase *print-base* obase)
+        ($nopoint *nopoint nopoint)
 	($modulus modulus modulus) ($zunderflow zunderflow zunderflow)
 	($ttyoff #.ttyoff ttyoff) ($writefile_on #.writefilep writefile_on)
 	($mode_declare $modedeclare mode_declare)))
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'alias))
       '(($ratcoeff $ratcoef) ($ratnum $ratnumer) ($true t)
-; Cut out the alias binom for binomial
-;	($binom %binomial)
         ($derivative $diff) ($prod $product)
 	($bothcoeff $bothcoef)))
 
@@ -1072,6 +1076,7 @@
     (putprop x l 'reversealias)))
 
 ($nounify '$sum)
+($nounify '$lsum)
 ($nounify '$product)
 ($nounify '$integrate)
 ($nounify '$limit)

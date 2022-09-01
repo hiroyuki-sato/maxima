@@ -43,7 +43,7 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   bode.texi augmented_lagrangian.texi opsubst.texi stats.texi stirling.texi\
   implicit_plot.texi interpol.texi lbfgs.texi romberg.texi grobner.texi\
   contrib_ode.texi graphs.texi category-macros.texi lapack.texi \
-  asympa.texi Deleted.texi
+  asympa.texi Deleted.texi minpack.texi
 
 figurefiles = \
 figures/contour1.gif\
@@ -109,6 +109,9 @@ figures/graphs14.gif\
 figures/graphs15.gif
 
 pdffigures = \
+figures/contour1.pdf\
+figures/contour2.pdf\
+figures/contour3.pdf\
 figures/dynamics1.pdf\
 figures/dynamics2.pdf\
 figures/dynamics3.pdf\

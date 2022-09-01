@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1316,11 +1316,58 @@ File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción
           (%i8) member ("ab", ["aa", "ab", sin(1), a + b]);
           (%o8)                         true
 
-
  -- Función: ninth (<expr>)
      Devuelve el noveno elemento de la lista o expresión <expr>. Véase
      `first' para más detalles.
 
+ -- Función: pop (<list>)
+     Borra el primer elemento de la lista <list> y devuelve este mismo
+     elemento.
+
+     Si el argumento <list> es una lista vacía, o simplemente no es una
+     lista, Maxima devuelve un mensaje de error.
+
+     Véase `push' para los ejemplos.
+
+     Ejecútese `load(basic)' antes de utilizar esta función.
+
+ -- Función: push (<item>, <list>)
+     Añade al comienzo de la lista <list> el elemento <item>,
+     devolviendo este mismo elemento. El argumento <list> debe ser
+     necesariamente una lista, mientras que <item> puede ser cualquier
+     símbolo o expresión.
+
+     Si el argumento <list> no es una lista, Maxima devuelve un mensaje
+     de error.
+
+     Véase `pop' para eliminar el primer elemento de una lista.
+
+     Ejecútese `load(basic)' antes de utilizar esta función.
+
+     Ejemplos:
+
+          (%i1) ll:[];
+          (%o1)                          []
+          (%i2) push(x,ll);
+          (%o2)                          [x]
+          (%i3) push(x^2+y,ll);
+                                           2
+          (%o3)                      [y + x , x]
+          (%i4) a:push("string",ll);
+                                               2
+          (%o4)                  [string, y + x , x]
+          (%i5) pop(ll);
+          (%o5)                        string
+          (%i6) pop(ll);
+                                            2
+          (%o6)                        y + x
+          (%i7) pop(ll);
+          (%o7)                           x
+          (%i8) ll;
+          (%o8)                          []
+          (%i9) a;
+                                               2
+          (%o9)                  [string, y + x , x]
 
  -- Función: unique (<L>)
      Devuelve la lista <L> sin redundancias, es decir, sin elementos
@@ -5080,6 +5127,44 @@ File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Int
      guarda el mensaje y `errormsg' lo formatea e imprime.
 
 
+ -- Variable opcional: errormsg
+     Valor por defecto: `true'
+
+     Cuando `errormsg' vale `false' se suprimen los contenidos de los
+     mensajes de error.
+
+     La variable `errormsg' no se puede asignar a un valor local dentro
+     de un bloque. El valor global de `errormsg' está siempre presente.
+
+     Ejemplos:
+
+          (%i1) errormsg;
+          (%o1)                                true
+          (%i2) sin(a,b);
+          Wrong number of arguments to sin
+           -- an error. To debug this try: debugmode(true);
+          (%i3) errormsg:false;
+          (%o3)                                false
+          (%i4) sin(a,b);
+
+           -- an error. To debug this try: debugmode(true);
+
+     La variable `errormsg' no se puede asignar a un valor local dentro
+     de un bloque.
+
+          (%i1) f(bool):=block([errormsg:bool],
+                               print ("value of errormsg is",errormsg))$
+          (%i2) errormsg:true;
+          (%o2)                                true
+          (%i3) f(false);
+          value of errormsg is true
+          (%o3)                                true
+          (%i4) errormsg:false;
+          (%o4)                                false
+          (%i5) f(true);
+          value of errormsg is false
+          (%o5)                                false
+
  -- Operador especial: for
      Utilizado en las iteraciones. Véase `do' para una descripción de
      las técnicas de iteración en Maxima.
@@ -6535,8 +6620,7 @@ File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
 * Introducción a descriptive::
 * Funciones y variables para el tratamiento de datos::
-* Funciones y variables de valores descriptivos::
-* Funciones y variables de valores descriptivos multivariantes::
+* Funciones y variables de parámetros descriptivos::
 * Funciones y variables para gráficos estadísticos::
 
 
@@ -6679,7 +6763,7 @@ momento previo y luego se toma una muestra con el valor categórico `a',
                                  [ b  5 ]
 
 
-File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  Next: Funciones y variables de valores descriptivos,  Prev: Introducción a descriptive,  Up: descriptive
+File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  Next: Funciones y variables de parámetros descriptivos,  Prev: Introducción a descriptive,  Up: descriptive
 
 45.2 Funciones y variables para el tratamiento de datos
 =======================================================
@@ -6830,482 +6914,6 @@ File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  N
                                                                       2514
                                                                       ----]
                                                                        13
-
-
-File: maxima.info,  Node: Funciones y variables de valores descriptivos,  Next: Funciones y variables de valores descriptivos multivariantes,  Prev: Funciones y variables para el tratamiento de datos,  Up: descriptive
-
-45.3 Funciones y variables de valores descriptivos
-==================================================
-
- -- Función: mean (<list>)
- -- Función: mean (<matrix>)
-     Es la media muestral, definida como
-                                 n
-                               ====
-                       _   1   \
-                       x = -    >    x
-                           n   /      i
-                               ====
-                               i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) mean (s1);
-                                         471
-          (%o3)                          ---
-                                         100
-          (%i4) %, numer;
-          (%o4)                         4.71
-          (%i5) s2 : read_matrix (file_search ("wind.data"))$
-          (%i6) mean (s2);
-          (%o6)     [9.9485, 10.1607, 10.8685, 15.7166, 14.8441]
-
-
- -- Función: var (<list>)
- -- Función: var (<matrix>)
-     Es la varianza muestral, definida como
-                               n
-                             ====
-                     2   1   \          _ 2
-                    s  = -    >    (x - x)
-                         n   /       i
-                             ====
-                             i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) var (s1), numer;
-          (%o3)                   8.425899999999999
-
-     Véase también `var1'.
-
- -- Función: var1 (<list>)
- -- Función: var1 (<matrix>)
-     Es la cuasivarianza muestral, definida como
-                               n
-                             ====
-                         1   \          _ 2
-                        ---   >    (x - x)
-                        n-1  /       i
-                             ====
-                             i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) var1 (s1), numer;
-          (%o3)                    8.5110101010101
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) var1 (s2);
-          (%o5) [17.39586540404041, 15.13912778787879, 15.63204924242424,
-                                      32.50152569696971, 24.66977392929294]
-
-     Véase también `var'.
-
- -- Función: std (<list>)
- -- Función: std (<matrix>)
-     Es la desviación típica muestral, raíz cuadrada de `var'.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) std (s1), numer;
-          (%o3)                   2.902740084816414
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) std (s2);
-          (%o5) [4.149928523480858, 3.871399812729241, 3.933920277534866,
-                                      5.672434260526957, 4.941970881136392]
-
-     Véanse también `var' y `std1'.
-
- -- Función: std1 (<list>)
- -- Función: std1 (<matrix>)
-     Es la cuasidesviación típica muestral, raíz cuadrada de `var1'.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) std1 (s1), numer;
-          (%o3)                   2.917363553109228
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) std1 (s2);
-          (%o5) [4.17083509672109, 3.89090320978032, 3.953738641137555,
-                                      5.701010936401517, 4.966867617451963]
-
-     Véanse también `var1' y `std'.
-
- -- Función: noncentral_moment (<list>, <k>)
- -- Función: noncentral_moment (<matrix>, <k>)
-     Es el momento no central de orden k, definido como
-                                 n
-                               ====
-                           1   \      k
-                           -    >    x
-                           n   /      i
-                               ====
-                               i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) noncentral_moment (s1, 1), numer; /* the mean */
-          (%o3)                         4.71
-          (%i5) s2 : read_matrix (file_search ("wind.data"))$
-          (%o5) [319793.8724761506, 320532.1923892463, 391249.5621381556,
-                                      2502278.205988911, 1691881.797742255]
-          (%i6) noncentral_moment (s2, 5);
-
-     Véase también `central_moment'.
-
- -- Función: central_moment (<list>, <k>)
- -- Función: central_moment (<matrix>, <k>)
-     Es el momento central de orden k, definido como
-                              n
-                            ====
-                        1   \          _ k
-                        -    >    (x - x)
-                        n   /       i
-                            ====
-                            i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) central_moment (s1, 2), numer; /* the variance */
-          (%o3)                   8.425899999999999
-          (%i5) s2 : read_matrix (file_search ("wind.data"))$
-          (%o5) [11.29584771375004, 16.97988248298583, 5.626661952750102,
-                                       37.5986572057918, 25.85981904394192]
-          (%i6) central_moment (s2, 3);
-
-     Véanse también `central_moment' y `mean'.
-
- -- Función: cv (<list>)
- -- Función: cv (<matrix>)
-     Es el coeficiente de variación, o cociente entre la desviación
-     típica muestral (`std') y la media (`mean'),
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) cv (s1), numer;
-          (%o3)                   .6193977819764815
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) cv (s2);
-          (%o5) [.4192426091090204, .3829365309260502, 0.363779605385983,
-                                      .3627381836021478, .3346021393989506]
-
-     Véanse también `std' y `mean'.
-
- -- Función: mini (<list>)
- -- Función: mini (<matrix>)
-     Es el valor mínimo de la muestra <list>,
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) mini (s1);
-          (%o3)                           0
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) mini (s2);
-          (%o5)             [0.58, 0.5, 2.67, 5.25, 5.17]
-
-     Véase también `maxi'.
-
- -- Función: maxi (<list>)
- -- Función: maxi (<matrix>)
-     Es el valor máximo de la muestra <list>,
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) maxi (s1);
-          (%o3)                           9
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) maxi (s2);
-          (%o5)          [20.25, 21.46, 20.04, 29.63, 27.63]
-
-     Véase también `mini'.
-
- -- Función: range (<list>)
- -- Función: range (<matrix>)
-     Es la diferencia entre los valores extremos.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) range (s1);
-          (%o3)                           9
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) range (s2);
-          (%o5)          [19.67, 20.96, 17.37, 24.38, 22.46]
-
-
- -- Función: quantile (<list>, <p>)
- -- Función: quantile (<matrix>, <p>)
-     Es el <p>-cuantil, siendo <p> un número del intervalo [0, 1], de
-     la muestra <list>.  Aunque existen varias definiciones para el
-     cuantil muestral (Hyndman, R. J., Fan, Y. (1996) <Sample quantiles
-     in statistical packages>. American Statistician, 50, 361-365), la
-     programada en el paquete  `descriptive' es la basada en la
-     interpolación lineal.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) /* 1st and 3rd quartiles */
-                   [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
-          (%o3)                      [2.0, 7.25]
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) quantile (s2, 1/4);
-          (%o5)    [7.2575, 7.477500000000001, 7.82, 11.28, 11.48]
-
-
- -- Función: median (<list>)
- -- Función: median (<matrix>)
-     Una vez ordenada una muestra, si el tamaño muestral es impar la
-     mediana es el valor central, en caso contrario será la media de
-     los dos valores centrales.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) median (s1);
-                                          9
-          (%o3)                           -
-                                          2
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) median (s2);
-          (%o5)         [10.06, 9.855, 10.73, 15.48, 14.105]
-
-     La mediana es el cuantil 1/2.
-
-     Véase también `quantile'.
-
- -- Función: qrange (<list>)
- -- Función: qrange (<matrix>)
-     El rango intercuartílico es la diferencia entre el tercer y primer
-     cuartil, `quantile(<list>,3/4) - quantile(<list>,1/4)',
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) qrange (s1);
-                                         21
-          (%o3)                          --
-                                         4
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) qrange (s2);
-          (%o5) [5.385, 5.572499999999998, 6.0225, 8.729999999999999,
-                                                         6.650000000000002]
-
-     Véase también `quantile'.
-
- -- Función: mean_deviation (<list>)
- -- Función: mean_deviation (<matrix>)
-     Es la desviación media, definida como
-                               n
-                             ====
-                         1   \          _
-                         -    >    |x - x|
-                         n   /       i
-                             ====
-                             i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) mean_deviation (s1);
-                                         51
-          (%o3)                          --
-                                         20
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) mean_deviation (s2);
-          (%o5) [3.287959999999999, 3.075342, 3.23907, 4.715664000000001,
-                                                         4.028546000000002]
-
-     Véase también `mean'.
-
- -- Función: median_deviation (<list>)
- -- Función: median_deviation (<matrix>)
-     Es la desviación mediana, definida como
-                           n
-                         ====
-                     1   \
-                     -    >    |x - med|
-                     n   /       i
-                         ====
-                         i = 1
-
-     siendo `med' la mediana de <list>.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) median_deviation (s1);
-                                          5
-          (%o3)                           -
-                                          2
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) median_deviation (s2);
-          (%o5)           [2.75, 2.755, 3.08, 4.315, 3.31]
-
-     Véase también `mean'.
-
- -- Función: harmonic_mean (<list>)
- -- Función: harmonic_mean (<matrix>)
-     Es la media armónica, definida como
-                            n
-                         --------
-                          n
-                         ====
-                         \     1
-                          >    --
-                         /     x
-                         ====   i
-                         i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) y : [5, 7, 2, 5, 9, 5, 6, 4, 9, 2, 4, 2, 5]$
-          (%i3) harmonic_mean (y), numer;
-          (%o3)                   3.901858027632205
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) harmonic_mean (s2);
-          (%o5) [6.948015590052786, 7.391967752360356, 9.055658197151745,
-                                      13.44199028193692, 13.01439145898509]
-
-     Véanse también `mean' y `geometric_mean'.
-
- -- Función: geometric_mean (<list>)
- -- Función: geometric_mean (<matrix>)
-     Es la media geométrica, definida como
-                           /  n      \ 1/n
-                           | /===\   |
-                           |  ! !    |
-                           |  ! !  x |
-                           |  ! !   i|
-                           | i = 1   |
-                           \         /
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) y : [5, 7, 2, 5, 9, 5, 6, 4, 9, 2, 4, 2, 5]$
-          (%i3) geometric_mean (y), numer;
-          (%o3)                   4.454845412337012
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) geometric_mean (s2);
-          (%o5) [8.82476274347979, 9.22652604739361, 10.0442675714889,
-                                      14.61274126349021, 13.96184163444275]
-
-     Véanse también `mean' y `harmonic_mean'.
-
- -- Función: kurtosis (<list>)
- -- Función: kurtosis (<matrix>)
-     Es el coeficiente de curtosis, definido como
-                              n
-                            ====
-                      1     \          _ 4
-                     ----    >    (x - x)  - 3
-                        4   /       i
-                     n s    ====
-                            i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) kurtosis (s1), numer;
-          (%o3)                  - 1.273247946514421
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) kurtosis (s2);
-          (%o5) [- .2715445622195385, 0.119998784429451,
-             - .4275233490482866, - .6405361979019522, - .4952382132352935]
-
-     Véanse también `mean', `var' y `skewness'.
-
- -- Función: skewness (<list>)
- -- Función: skewness (<matrix>)
-     Es el coeficiente de asimetría, definido como
-                              n
-                            ====
-                      1     \          _ 3
-                     ----    >    (x - x)
-                        3   /       i
-                     n s    ====
-                            i = 1
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) skewness (s1), numer;
-          (%o3)                  .009196180476450306
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) skewness (s2);
-          (%o5) [.1580509020000979, .2926379232061854, .09242174416107717,
-                                      .2059984348148687, .2142520248890832]
-
-     Véanse también `mean', `var' y `kurtosis'.
-
- -- Función: pearson_skewness (<list>)
- -- Función: pearson_skewness (<matrix>)
-     Es el coeficiente de asimetría de Pearson, definido como
-                          _
-                       3 (x - med)
-                       -----------
-                            s
-
-     siendo <med> la mediana de <list>.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) pearson_skewness (s1), numer;
-          (%o3)                   .2159484029093895
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) pearson_skewness (s2);
-          (%o5) [- .08019976629211892, .2357036272952649,
-                   .1050904062491204, .1245042340592368, .4464181795804519]
-
-     Véanse también `mean', `var' y `median'.
-
- -- Función: quartile_skewness (<list>)
- -- Función: quartile_skewness (<matrix>)
-     Es el coeficiente de asimetría cuartílico, definido como
-                         c    - 2 c    + c
-                          3/4      1/2    1/4
-                         --------------------
-                             c    - c
-                              3/4    1/4
-
-     siendo c_p el <p>-cuantil de la muestra <list>.
-
-     Ejemplo:
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) quartile_skewness (s1), numer;
-          (%o3)                  .04761904761904762
-          (%i4) s2 : read_matrix (file_search ("wind.data"))$
-          (%i5) quartile_skewness (s2);
-          (%o5) [- 0.0408542246982353, .1467025572005382,
-                 0.0336239103362392, .03780068728522298, 0.210526315789474]
-
-     Véase también `quantile'.
 
 
 

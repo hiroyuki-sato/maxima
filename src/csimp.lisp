@@ -14,26 +14,26 @@
 
 (declare-top (special rsn* $factlim $exponentialize
 		      var varlist genvar $%emode $ratprint
-		      nn* dn* $errexp sqrt3//2 sqrt2//2 -sqrt2//2 -sqrt3//2
-		      $demoivre errorsw islinp $keepfloat $ratfac))
+		      nn* dn* $errexp sqrt3//2 -sqrt3//2
+		      $demoivre errorsw $keepfloat $ratfac))
 
 (load-macsyma-macros rzmac)
 
 (declare-top (special $nointegrate $lhospitallim $tlimswitch $limsubst
 		      $abconvtest complex-limit plogabs))
 
-
 (setq $demoivre nil rsn* nil $nointegrate nil $lhospitallim 4
       $tlimswitch t $limsubst nil $abconvtest nil
       complex-limit nil plogabs nil)
 
-(defmvar %p%i '((mtimes) $%i $%pi))
-(defmvar fourth%pi '((mtimes) ((rat simp) 1 4) $%pi))
-(defmvar half%pi '((mtimes) ((rat simp) 1 2) $%pi))
-(defmvar %pi2 '((mtimes) 2 $%pi))
-(defmvar half%pi3 '((mtimes) ((rat simp) 3 2) $%pi))
+;; Simplified shortcuts of constant expressions involving %pi.
+(defvar %p%i '((mtimes) $%i $%pi))
+(defvar fourth%pi '((mtimes) ((rat simp) 1 4) $%pi))
+(defvar half%pi '((mtimes) ((rat simp) 1 2) $%pi))
+(defvar %pi2 '((mtimes) 2 $%pi))
+(defvar half%pi3 '((mtimes) ((rat simp) 3 2) $%pi))
+
 (defmvar $sumsplitfact t) ;= nil minfactorial is applied after a factocomb.
-;(defmvar $gammalim 1000000.) Moved to csimp2.lisp
 
 (loop for (a b) on
        '(%sin %asin %cos %acos %tan %atan
@@ -60,13 +60,14 @@
 		    (m+ (list '(%cos) (car l))
 			(m* '$%i (list '(%sin) (car l)))))))))
 
-;;;If exp is of the form a*var1+b where a is freeof var1
-;;; then (a . b) is returned else nil
-(defun islinear (exp var1)
-  (let ((a (let ((islinp t))
-	     (sdiff exp var1))))
+;; If expr is of the form a*var1+b where a is freeof var1
+;; then (a . b) is returned else nil.
+(defun islinear (expr var1)
+  (declare (special *islinp*))
+  (let ((a (let ((*islinp* t))
+             (sdiff expr var1))))
     (if (freeof var1 a)
-	(cons a (maxima-substitute 0 var1 exp)))))
+        (cons a (maxima-substitute 0 var1 expr)))))
 
 (defmfun $partition (e var1)
   (prog (k)

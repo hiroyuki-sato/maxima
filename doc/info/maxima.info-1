@@ -4,6 +4,7 @@ This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
    Copyright 1994,2001 William F. Schelter
 
+INFO-DIR-SECTION Math
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     A computer algebra system.
 END-INFO-DIR-ENTRY
@@ -11,7 +12,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.21.1 Manual
+Maxima 5.22.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -108,6 +109,7 @@ Additional packages
 * linearalgebra::               Functions for linear algebra.
 * lsquares::                    Least squares.
 * makeOrders::                  Polynomial utility.
+* minpack::                     MINPACK functions for minimization and roots
 * mnewton::                     Newton's method.
 * numericalio::                 Reading and writing files.
 * opsubst::                     Substitutions utility.
@@ -376,7 +378,6 @@ descriptive
 * Introduction to descriptive::
 * Functions and Variables for data manipulation::
 * Functions and Variables for descriptive statistics::
-* Functions and Variables for specific multivariate descriptive statistics::
 * Functions and Variables for statistical graphs::
 
 diag
@@ -465,6 +466,11 @@ lsquares
 makeOrders
 
 * Functions and Variables for makeOrders::
+
+minpack
+
+* Introduction to minpack::
+* Functions and Variables for minpack::
 
 mnewton
 
@@ -3032,6 +3038,9 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      Returns the absolute value <expr>.  If <expr> is complex, returns
      the complex modulus of <expr>.
 
+     `abs' distributes over a list, a matrix, or an equation.  See
+     `distribute_over'.
+
 
  -- Keyword: additive
      If `declare(f,additive)' has been executed, then:
@@ -3562,6 +3571,27 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      other cases.
 
 
+ -- Function: psubst (<list>, <expr>)
+ -- Function: psubst (<a>, <b>, <expr>)
+     `psubst(<a>, <b>, <expr>)' is simliar to `subst'. See `subst'.
+
+     In distinction from `subst' the function `psubst' makes parallel
+     substitutions, if the first argument <list> is a list of equations.
+
+     See also `sublis' for making parallel substitutions.
+
+     Example:
+
+     The first example shows parallel substitution with `psubst'. The
+     second example shows the result for the function `subst', which
+     does a serial substitution.
+
+          (%i4) psubst ([a^2=b, b=a], sin(a^2) + sin(b));
+          (%o4)                           sin(b) + sin(a)
+          (%i5) subst ([a^2=b, b=a], sin(a^2) + sin(b));
+          (%o5)                              2 sin(a)
+
+
  -- Function: make_random_state (<n>)
  -- Function: make_random_state (<s>)
  -- Function: make_random_state (true)
@@ -3808,10 +3838,14 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
 
  -- Function: sublis (<list>, <expr>)
-     Makes multiple parallel substitutions into an expression.
+     Makes multiple parallel substitutions into an expression. <list>
+     is a list of equations. The left hand side of the equations must
+     be an atom.
 
      The variable `sublis_apply_lambda' controls simplification after
      `sublis'.
+
+     See also `psubst' for making parallel substitutions.
 
      Example:
 
@@ -3856,10 +3890,13 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
      `subst' is an alias for `substitute'.
 
-     `subst (<eq_1>, <expr>)' or `subst ([<eq_1>, ..., <eq_k>], <expr>)'
-     are other permissible forms.  The <eq_i> are equations indicating
-     substitutions to be made.  For each equation, the right side will
-     be substituted for the left in the expression <expr>.
+     `subst (<eq_1>, <expr>)' or `subst ([<eq_1>, ..., <eq_k>],
+     <expr>)' are other permissible forms.  The <eq_i> are equations
+     indicating substitutions to be made.  For each equation, the right
+     side will be substituted for the left in the expression <expr>.
+     The equations are substituted in serial from left to right in
+     <expr>. See the functions `sublis' and `psubst' for making
+     parallel substitutions.
 
      `exptsubst' if `true' permits substitutions like `y' for `%e^x' in
      `%e^(a*x)' to take place.
@@ -3875,6 +3912,14 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           (%o1)                      y + x + a
           (%i2) subst (-%i, %i, a + b*%i);
           (%o2)                       a - %i b
+
+     The substitution is done in serial for a list of equations.
+     Compare this with a parallel substitution:
+
+          (%i3) subst([a=b, b=c], a+b);
+          (%o3)                                 2 c
+          (%i4) sublis([a=b, b=c], a+b);
+          (%o4)                                c + b
 
      For further examples, do `example (subst)'.
 
@@ -3972,30 +4017,6 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      numberp(x)'.
 
      See also *Note Identifiers::.
-
-
- -- Function: unorder ()
-     Disables the aliasing created by the last use of the ordering
-     commands `ordergreat' and `orderless'. `ordergreat' and
-     `orderless' may not be used more than one time each without
-     calling `unorder'.  See also `ordergreat' and `orderless'.
-
-     Examples:
-
-          (%i1) unorder();
-          (%o1)                          []
-          (%i2) b*x + a^2;
-                                             2
-          (%o2)                       b x + a
-          (%i3) ordergreat (a);
-          (%o3)                         done
-          (%i4) b*x + a^2;
-           %th(1) - %th(3);
-                                       2
-          (%o4)                       a  + b x
-          (%i5) unorder();
-                                        2    2
-          (%o5)                        a  - a
 
 
  -- Function: vectorpotential (<givencurl>)
@@ -4573,10 +4594,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
      `carg' is a computational function, not a simplifying function.
 
-     `carg' ignores the declaration `declare (<x>, complex)', and
-     treats <x> as a real variable.  This is a bug.  See also `abs'
-     (complex magnitude), `polarform', `rectform', `realpart', and
-     `imagpart'.
+     See also `abs' (complex magnitude), `polarform', `rectform',
+     `realpart', and `imagpart'.
 
      Examples:
 
@@ -5083,7 +5102,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
 
  -- Function: freeof (<x_1>, ..., <x_n>, <expr>)
-     `freeof (<x_1>, <expr>)' Returns `true' if no subexpression of
+     `freeof (<x_1>, <expr>)' returns `true' if no subexpression of
      <expr> is equal to <x_1> or if <x_1> occurs only as a dummy
      variable in <expr>, or if <x_1> is neither the noun nor verb form
      of any operator in <expr>, and returns `false' otherwise.
@@ -5097,81 +5116,79 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
      `freeof' operates only on <expr> as it stands (after
      simplification and evaluation) and does not attempt to determine
-     if some equivalent expression would give a different result.  In
+     if some equivalent expression would give a different result. In
      particular, simplification may yield an equivalent but different
      expression which comprises some different elements than the
      original form of <expr>.
 
      A variable is a dummy variable in an expression if it has no
-     binding outside of the expression.  Dummy variables recognized by
+     binding outside of the expression. Dummy variables recognized by
      `freeof' are the index of a sum or product, the limit variable in
      `limit', the integration variable in the definite integral form of
      `integrate', the original variable in `laplace', formal variables
-     in `at' expressions, and arguments in `lambda' expressions.  Local
-     variables in `block' are not recognized by `freeof' as dummy
-     variables; this is a bug.
+     in `at' expressions, and arguments in `lambda' expressions.
 
      The indefinite form of `integrate' is not free of its variable of
      integration.
 
-        * Arguments are names of functions, variables, subscripted
-          names, operators, and expressions.  `freeof (a, b, expr)' is
-          equivalent to `freeof (a, expr) and freeof (b, expr)'.
+     Examples:
 
-               (%i1) expr: z^3 * cos (a[1]) * b^(c+d);
-                                                d + c  3
-               (%o1)                   cos(a ) b      z
-                                            1
-               (%i2) freeof (z, expr);
-               (%o2)                         false
-               (%i3) freeof (cos, expr);
-               (%o3)                         false
-               (%i4) freeof (a[1], expr);
-               (%o4)                         false
-               (%i5) freeof (cos (a[1]), expr);
-               (%o5)                         false
-               (%i6) freeof (b^(c+d), expr);
-               (%o6)                         false
-               (%i7) freeof ("^", expr);
-               (%o7)                         false
-               (%i8) freeof (w, sin, a[2], sin (a[2]), b*(c+d), expr);
-               (%o8)                         true
+     Arguments are names of functions, variables, subscripted names,
+     operators, and expressions. `freeof (a, b, expr)' is equivalent to
+     `freeof (a, expr) and freeof (b, expr)'.
 
-        * `freeof' evaluates its arguments.
+          (%i1) expr: z^3 * cos (a[1]) * b^(c+d);
+                                           d + c  3
+          (%o1)                   cos(a ) b      z
+                                       1
+          (%i2) freeof (z, expr);
+          (%o2)                         false
+          (%i3) freeof (cos, expr);
+          (%o3)                         false
+          (%i4) freeof (a[1], expr);
+          (%o4)                         false
+          (%i5) freeof (cos (a[1]), expr);
+          (%o5)                         false
+          (%i6) freeof (b^(c+d), expr);
+          (%o6)                         false
+          (%i7) freeof ("^", expr);
+          (%o7)                         false
+          (%i8) freeof (w, sin, a[2], sin (a[2]), b*(c+d), expr);
+          (%o8)                         true
 
-               (%i1) expr: (a+b)^5$
-               (%i2) c: a$
-               (%i3) freeof (c, expr);
-               (%o3)                         false
+     `freeof' evaluates its arguments.
 
-        * `freeof' does not consider equivalent expressions.
-          Simplification may yield an equivalent but different
-          expression.
+          (%i1) expr: (a+b)^5$
+          (%i2) c: a$
+          (%i3) freeof (c, expr);
+          (%o3)                         false
 
-               (%i1) expr: (a+b)^5$
-               (%i2) expand (expr);
-                         5        4       2  3       3  2      4      5
-               (%o2)    b  + 5 a b  + 10 a  b  + 10 a  b  + 5 a  b + a
-               (%i3) freeof (a+b, %);
-               (%o3)                         true
-               (%i4) freeof (a+b, expr);
-               (%o4)                         false
-               (%i5) exp (x);
-                                                x
-               (%o5)                          %e
-               (%i6) freeof (exp, exp (x));
-               (%o6)                         true
+     `freeof' does not consider equivalent expressions.  Simplification
+     may yield an equivalent but different expression.
 
-        * A summation or definite integral is free of its dummy
-          variable.  An indefinite integral is not free of its variable
-          of integration.
+          (%i1) expr: (a+b)^5$
+          (%i2) expand (expr);
+                    5        4       2  3       3  2      4      5
+          (%o2)    b  + 5 a b  + 10 a  b  + 10 a  b  + 5 a  b + a
+          (%i3) freeof (a+b, %);
+          (%o3)                         true
+          (%i4) freeof (a+b, expr);
+          (%o4)                         false
+          (%i5) exp (x);
+                                           x
+          (%o5)                          %e
+          (%i6) freeof (exp, exp (x));
+          (%o6)                         true
 
-               (%i1) freeof (i, 'sum (f(i), i, 0, n));
-               (%o1)                         true
-               (%i2) freeof (x, 'integrate (x^2, x, 0, 1));
-               (%o2)                         true
-               (%i3) freeof (x, 'integrate (x^2, x));
-               (%o3)                         false
+     A summation or definite integral is free of its dummy variable.
+     An indefinite integral is not free of its variable of integration.
+
+          (%i1) freeof (i, 'sum (f(i), i, 0, n));
+          (%o1)                         true
+          (%i2) freeof (x, 'integrate (x^2, x, 0, 1));
+          (%o2)                         true
+          (%i3) freeof (x, 'integrate (x^2, x));
+          (%o3)                         false
 
 
  -- Function: genfact (<x>, <y>, <z>)
@@ -6096,6 +6113,45 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
                                i in rootsof(x  - 1)
 
 
+ -- Function: unorder ()
+     Disables the aliasing created by the last use of the ordering
+     commands `ordergreat' and `orderless'. `ordergreat' and `orderless'
+     may not be used more than one time each without calling `unorder'.
+
+     `unorder' does not substitute back in expressions the original
+     symbols for the aliases introduced by `ordergreat' and
+     `orderless'. Therefore, after execution of `unorder' the aliases
+     appear in previous expressions.
+
+     See also `ordergreat' and `orderless'.
+
+     Examples:
+
+     `ordergreat(a)' introduces an alias for the symbol `a'. Therefore,
+     the difference of `%o2' and `%o4' does not vanish. `unorder' does
+     not substitute back the symbol `a' and the alias appears in the
+     output `%o7'.
+
+          (%i1) unorder();
+          (%o1)                          []
+          (%i2) b*x+a^2;
+                                             2
+          (%o2)                       b x + a
+          (%i3) ordergreat(a);
+          (%o3)                         done
+          (%i4) b*x+a^2;
+                                       2
+          (%o4)                       a  + b x
+          (%i5) %th(1)-%th(3);
+                                        2    2
+          (%o5)                        a  - a
+          (%i6) unorder();
+          (%o6)                          [a]
+          (%i7) %th(2);
+                                          2    2
+          (%o7)                      _101a  - a
+
+
  -- Function: verbify (<f>)
      Returns the verb form of the function name <f>.
 
@@ -6182,10 +6238,9 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      Default value: `true'
 
      `distribute_over' controls the mapping of functions over bags like
-     lists, matrices, and equations. At this time this feature is
-     implemented for the trigonometric functions, the exponential
-     integrals, and the integer functions like `mod', `floor',
-     `ceiling', `round'.
+     lists, matrices, and equations. At this time not all Maxima
+     functions have this property. It is possible to look up this
+     property with the command `properties'.
 
      The mapping of functions is switched off, when setting
      `distribute_over' to the value `false'.
@@ -6220,6 +6275,11 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
           (%i6) expintegral_e([1,2],[x,y]);
           (%o6) [[expintegral_e(1, x), expintegral_e(1, y)],
                  [expintegral_e(2, x), expintegral_e(2, y)]]
+
+     Check if a function has the property distribute_over:
+
+          (%i7) properties(abs);
+          (%o7) [integral, distributes over bags, noun, rule, gradef]
 
 
  -- Option variable: domain
@@ -6931,8 +6991,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      number of levels, it is necessary to specify a custom gnuplot
      preamble:
 
-          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
-          (%i2) [legend,false], [gnuplot_preamble,"set cntrparam levels 12"])$
+          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4], [legend,false],
+            [gnuplot_preamble, "set cntrparam levels 12"])$
 
 
  -- Function: get_plot_option (<keyword>, <index>)
@@ -7035,8 +7095,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      The aspect of the plot might be different depending on the plotting
      program used. For instance, when the plot box is disable, Xmaxima
      will plot the axes using arrows:
-          (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10], [box, false],
-                     [plot_format, xmaxima])$
+          (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10], [box, false], [plot_format, xmaxima])$
 
      A plot with a logarithmic scale:
           (%i1) plot2d (exp(3*s), [s, -2, 2], [logy])$
@@ -7050,13 +7109,11 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      A plot of the butterfly curve, defined parametrically:
           (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
-          (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t, -8*%pi, 8*%pi],
-                   [nticks, 2000]])$
+          (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t, -8*%pi, 8*%pi], [nticks, 2000]])$
 
      A "circle" with two turns, when plotted with only 7 points:
 
-          (%i1) plot2d ([parametric, cos(t), sin(t), [t, -2*%pi, 2*%pi],
-                     [nticks, 8]])$
+          (%i1) plot2d ([parametric, cos(t), sin(t), [t, -2*%pi, 2*%pi], [nticks, 8]])$
 
      Plot of a common function together with the parametric
      representation of a circle. The size of the plot has been adjusted
@@ -7065,36 +7122,34 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      terminal used to produce this plot; you might have to adjust the
      values for your screen.
 
-          (%i1) plot2d([[parametric, cos(t), sin(t) ,[t,0,2*%pi],
-                 [nticks, 80]], abs(x)], [x,-2,2], [y, -1.5, 1.5])$
+          (%i1) plot2d([[parametric, cos(t), sin(t) ,[t,0,2*%pi], [nticks, 80]],
+                  abs(x)], [x,-2,2], [y, -1.5, 1.5])$
           plot2d: some values were clipped.
 
      A plot of a discrete set of points, defining x and y coordinates
      separately:
-          (%i1) plot2d ( [ discrete, [10, 20, 30, 40, 50],
-                         [.6, .9, 1.1, 1.3, 1.4]] )$
+          (%i1) plot2d ([discrete, [10, 20, 30, 40, 50], [.6, .9, 1.1, 1.3, 1.4]])$
 
      The same points shown in the previous example, defining each point
      separately and without any lines joining the points:
-          (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1], [40, 1.3],
-                             [50, 1.4]]], [style, points])$
+          (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1], [40, 1.3], [50, 1.4]]],
+                 [style, points])$
 
      In this example, a table with three columns is saved in a file
      "data.txt" which is then read and the second and third column are
      plotted on the two axes:
-          (%i1) with_stdout ("data.txt",
-                   for x:0 thru 10 do print (x, x^2, x^3))$
-          (%i2) data: transpose ( read_matrix ("data.txt"))$
-          (%i3) plot2d ([discrete, data[2], data[3]],
-                  [style,points], [point_type,diamond], [color,red])$
+          (%i1) with_stdout ("data.txt", for x:0 thru 10 do print (x, x^2, x^3))$
+          (%i2) data: read_matrix ("data.txt")$
+          (%i3) plot2d ([discrete, transpose(data)[2], transpose(data)[3]],
+            [style,points], [point_type,diamond], [color,red])$
 
      A plot of experimental data points together with the theoretical
      function that predicts the data:
           (%i1) xy: [[10, .6], [20, .9], [30, 1.1], [40, 1.3], [50, 1.4]]$
           (%i2) plot2d([[discrete, xy], 2*%pi*sqrt(l/980)], [l,0,50],
-             [style, points, lines], [color, red, blue],
-             [point_type, asterisk], [legend, "experiment", "theory"],
-             [xlabel, "pendulum's length (cm)"], [ylabel, "period (s)"])$
+                  [style, points, lines], [color, red, blue], [point_type, asterisk],
+                  [legend, "experiment", "theory"],
+                  [xlabel, "pendulum's length (cm)"], [ylabel, "period (s)"])$
 
      See also the section about Plotting Options.
 
@@ -7118,61 +7173,58 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      this case the function is minus infinity on the x and y axes);
      this also shows how to plot with only lines and no shading:
           (%i1) plot3d ( log ( x^2*y^2 ), [x, -2, 2], [y, -2, 2], [z, -8, 4],
-                   [palette, false], [color, magenta, blue])$
+                         [palette, false], [color, magenta, blue])$
 
      The infinite values of z can also be avoided by choosing a grid
      that does not fall on any asymptotes; this example also shows how
      to select one of the predefined palettes, in this case the fourth
      one:
-          (%i1) plot3d(log(x^2*y^2), [x, -2, 2], [y, -2, 2], [grid, 29, 29],
+          (%i1) plot3d (log (x^2*y^2), [x, -2, 2], [y, -2, 2], [grid, 29, 29],
                 [palette, get_plot_option(palette,5)])$
 
      Two surfaces in the same plot, sharing the same domain; in gnuplot
      the two surfaces will use the same palette:
-          (%i1) plot3d ( [2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2),
-                   [x, -3, 3], [y, -2, 2]])$
+          (%i1) plot3d ([2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2), [x, -3, 3], [y, -2, 2]])$
 
      The same two surfaces, but now with different domains; in xmaxima
      each surface will use a different palette, chosen from the list
      defined by the option palette:
-          (%i1) plot3d ( [[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]],
-                   4*sin(3*(x^2+y^2))/(x^2+y^2), [x, -3, 3], [y, -2, 2]],
-                   [plot_format,xmaxima])$
+          (%i1) plot3d ([[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]], 4*sin(3*(x^2+y^2))/(x^2+y^2),
+                [x, -3, 3], [y, -2, 2]], [plot_format,xmaxima])$
 
      Plot of a Klein bottle, defined parametrically:
-          (%i1) e_1: 5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)-10.0$
-          (%i2) e_2: -5*sin(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)$
-          (%i3) e_3: 5*(-sin(x/2)*cos(y)+cos(x/2)*sin(2*y))$
-          (%i4) plot3d ([e_1, e_2, e_3], [x, -%pi, %pi],
+          (%i1) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0) - 10.0$
+          (%i2) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
+          (%i3) expr_3: 5*(-sin(x/2)*cos(y) + cos(x/2)*sin(2*y))$
+          (%i4) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
                   [y, -%pi, %pi], [grid, 40, 40])$
 
      Plot of a spherical harmonic, using of the predefined
      transformations, `spherical_to_xyz', to transform from spherical
      to rectangular coordinates. See the documentation for
      `spherical_to_xyz'.
-          (%i1) plot3d (sin(2*theta)*cos(phi), [theta,0,%pi], [phi,0,2*%pi],
+          (%i1) plot3d (sin(2*theta)*cos(phi), [theta, 0, %pi], [phi, 0, 2*%pi],
                   [transform_xy, spherical_to_xyz], [grid,30,60])$
 
      Use of the predefined function `polar_to_xy' to transform from
      cylindrical to rectangular coordinates. See the documentation for
      `polar_to_xy'. This example also shows how to eliminate the
      bounding box and the legend.
-          (%i1) plot3d(r^.33*cos(th/3), [r,0,1], [th,0,6*%pi], [grid,12,80],
-                 [transform_xy, polar_to_xy], [box, false], [legend,false])$
+          (%i1) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi], [grid, 12, 80],
+                  [transform_xy, polar_to_xy], [box, false], [legend,false])$
 
      Plot of a sphere using the transformation from spherical to
      rectangular coordinates. In xmaxima the three axes are scaled in
      the same proportion, maintaining the symmetric shape of the
      sphere. A palette with different shades of a single color is used:
-          (%i1) plot3d (5, [theta, 0, %pi], [phi, 0, 2*%pi],
-           [transform_xy, spherical_to_xyz], [plot_format,xmaxima],
-           [palette,[value,0.65,0.7,0.1,0.9]])$
+          (%i1) plot3d ( 5, [theta, 0, %pi], [phi, 0, 2*%pi], [plot_format,xmaxima],
+            [transform_xy, spherical_to_xyz], [palette,[value,0.65,0.7,0.1,0.9]])$
 
      Definition of a function of two-variables using a matrix. Notice
      the single quote in the definition of the function, to prevent
      plot3d from failing when it realizes that the matrix will require
      integer indices.
-          (%i1) M: matrix([1,2,3,4], [1,2,3,2], [1,2,3,4], [1,2,3,3])$
+          (%i1) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],[1, 2, 3, 3])$
           (%i2) f(x, y) := float('M [round(x), round(y)])$
           (%i3) plot3d (f(x,y), [x, 1, 4], [y, 1, 4], [grid, 4, 4])$
           apply: subscript must be an integer; found: round(x)
@@ -7899,8 +7951,20 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      Default value: `false'
 
      When `%edispflag' is `true', Maxima displays `%e' to a negative
-     exponent as a quotient.  For example, `%e^-x' is displayed as
+     exponent as a quotient. For example, `%e^-x' is displayed as
      `1/%e^x'.
+
+     Example:
+
+          (%i1) %e^-10;
+                                         - 10
+          (%o1)                        %e
+          (%i2) %edispflag:true$
+          (%i3) %e^-10;
+                                         1
+          (%o3)                         ----
+                                          10
+                                        %e
 
 
  -- Function: %th (<i>)
@@ -8093,6 +8157,20 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      arguments which don't have names or where only the value of the
      argument is of interest and not the name.
 
+     Examples:
+
+          (%i1) b[1,2]:x-x^2$
+          (%i2) x:123$
+          (%i3) disp(x, b[1,2], sin(1.0));
+                                         123
+
+                                            2
+                                       x - x
+
+                                  .8414709848078965
+
+          (%o3)                         done
+
 
  -- Function: dispcon (<tensor_1>, <tensor_2>, ...)
  -- Function: dispcon (all)
@@ -8109,11 +8187,20 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      `display' are usually atoms, subscripted variables, or function
      calls.  See also `disp'.
 
-          (%i1) display(B[1,2]);
+     Examples:
+
+          (%i1) b[1,2]:x-x^2$
+          (%i2) x:123$
+          (%i3) display(x, b[1,2], sin(1.0));
+                                       x = 123
+
                                                 2
-                                   B     = X - X
+                                   b     = x - x
                                     1, 2
-          (%o1)                            done
+
+                            sin(1.0) = .8414709848078965
+
+          (%o3)                         done
 
 
  -- Option variable: display2d
@@ -8121,6 +8208,17 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
 
      When `display2d' is `false', the console display is a string
      (1-dimensional) form rather than a display (2-dimensional) form.
+
+     Example:
+
+          (%i1) x/(x^2+1);
+                                         x
+          (%o1)                        ------
+                                        2
+                                       x  + 1
+          (%i2) display2d:false$
+          (%i3) x/(x^2+1);
+          (%o3) x/(x^2+1)
 
 
  -- Option variable: display_format_internal
@@ -8289,6 +8387,8 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
  -- Option variable: file_search_maxima
  -- Option variable: file_search_lisp
  -- Option variable: file_search_demo
+ -- Option variable: file_search_usage
+ -- Option variable: file_search_tests
      These variables specify lists of directories to be searched by
      `load', `demo', and some other Maxima functions.  The default
      values of these variables name various directories in the Maxima
@@ -10416,6 +10516,19 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      (<x_1>, <x_2>, ...)*g' where `g' is a product of expressions not
      containing any <x_i> and `f' is factored.
 
+     Note that the option variable `keepfloat' is ignored by
+     `factorout'.
+
+     Example:
+
+          (%i1) expand (a*(x+1)*(x-1)*(u+1)^2);
+                       2  2          2      2      2
+          (%o1)     a u  x  + 2 a u x  + a x  - a u  - 2 a u - a
+          (%i2) factorout(%,x);
+                   2
+          (%o2) a u  (x - 1) (x + 1) + 2 a u (x - 1) (x + 1)
+                                                        + a (x - 1) (x + 1)
+
 
  -- Function: factorsum (<expr>)
      Tries to group terms in factors of <expr> which are sums into
@@ -11197,6 +11310,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      When `radsubstflag' is `true', `ratsubst' makes substitutions for
      radicals in expressions which don't explicitly contain them.
 
+     `ratsubst' ignores the value `true' of the option variable
+     `keepfloat'.
+
      Examples:
 
           (%i1) ratsubst (a, x*y^2, x^4*y^3 + x^4*y^8);
@@ -11659,36 +11775,43 @@ File: maxima.info,  Node: Functions and Variables for Logarithms,  Prev: Logarit
      Represents the natural (base e) logarithm of <x>.
 
      Maxima does not have a built-in function for the base 10 logarithm
-     or other bases.  `log10(x) := log(x) / log(10)' is a useful
+     or other bases. `log10(x) := log(x) / log(10)' is a useful
      definition.
 
      Simplification and evaluation of logarithms is governed by several
      global flags:
 
-     `logexpand' - causes `log(a^b)' to become `b*log(a)'.  If it is
-     set to `all', `log(a*b)' will also simplify to `log(a)+log(b)'.
-     If it is set to `super', then `log(a/b)' will also simplify to
-     `log(a)-log(b)' for rational numbers `a/b', `a#1'.  (`log(1/b)',
-     for `b' integer, always simplifies.)  If it is set to `false', all
-     of these simplifications will be turned off.
+    ``logexpand''
+          causes `log(a^b)' to become `b*log(a)'. If it is set to
+          `all', `log(a*b)' will also simplify to `log(a)+log(b)'.  If
+          it is set to `super', then `log(a/b)' will also simplify to
+          `log(a)-log(b)' for rational numbers `a/b', `a#1'.
+          (`log(1/b)', for `b' integer, always simplifies.) If it is
+          set to `false', all of these simplifications will be turned
+          off.
 
-     `logsimp' - if `false' then no simplification of `%e' to a power
-     containing `log''s is done.
+    ``logsimp''
+          if `false' then no simplification of `%e' to a power
+          containing `log''s is done.
 
-     `lognumer' - if `true' then negative floating point arguments to
-     `log' will always be converted to their absolute value before the
-     `log' is taken.  If `numer' is also `true', then negative integer
-     arguments to `log' will also be converted to their absolute value.
+    ``lognumer''
+          if `true' then negative floating point arguments to `log'
+          will always be converted to their absolute value before the
+          `log' is taken. If `numer' is also `true', then negative
+          integer arguments to `log' will also be converted to their
+          absolute value.
 
-     `lognegint' - if `true' implements the rule `log(-n)' ->
-     `log(n)+%i*%pi' for `n' a positive integer.
+    ``lognegint''
+          if `true' implements the rule `log(-n)' -> `log(n)+%i*%pi' for
+          `n' a positive integer.
 
-     `%e_to_numlog' - when `true', `r' some rational number, and `x'
-     some expression, `%e^(r*log(x))' will be simplified into `x^r' .
-     It should be noted that the `radcan' command also does this
-     transformation, and more complicated transformations of this ilk
-     as well.  The `logcontract' command "contracts" expressions
-     containing `log'.
+    ``%e_to_numlog''
+          when `true', `r' some rational number, and `x' some
+          expression, `%e^(r*log(x))' will be simplified into `x^r' .
+          It should be noted that the `radcan' command also does this
+          transformation, and more complicated transformations of this
+          as well. The `logcontract' command "contracts" expressions
+          containing `log'.
 
 
  -- Option variable: logabs
@@ -11745,14 +11868,15 @@ File: maxima.info,  Node: Functions and Variables for Logarithms,  Prev: Logarit
 
 
  -- Option variable: logexpand
-     Default value: `true'
+     Default value: `false'
 
-     Causes `log(a^b)' to become `b*log(a)'.  If it is set to `all',
-     `log(a*b)' will also simplify to `log(a)+log(b)'.  If it is set to
-     `super', then `log(a/b)' will also simplify to `log(a)-log(b)' for
-     rational numbers `a/b', `a#1'.  (`log(1/b)', for integer `b',
-     always simplifies.)  If it is set to `false', all of these
-     simplifications will be turned off.
+     If `true' causes `log(a^b)' to become `b*log(a)'.  If it is set to
+     `all', `log(a*b)' will also simplify to `log(a)+log(b)'.  If it is
+     set to `super', then `log(a/b)' will also simplify to
+     `log(a)-log(b)' for rational numbers `a/b', `a#1'.  (`log(1/b)',
+     for integer `b', always simplifies.) If it is set to `false', that
+     is the default value, all of these simplifications will be turned
+     off.
 
 
  -- Option variable: lognegint
@@ -13233,7 +13357,7 @@ and Stegun, Handbook of Mathematical Functions, Chapter 5
      The Exponential Integral Ei(z) (A&S 5.1.2)
 
 
- -- Function: expintegral_li (<n>,<z>)
+ -- Function: expintegral_li (<z>)
      The Exponential Integral Li(z)  (A&S 5.1.3)
 
 
@@ -16521,6 +16645,17 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
      even `sqfr'.
 
 
+ -- Option variable: polyfactor
+     Default value: `false'
+
+     The option variable `polyfactor' when `true' causes `allroots' and
+     `bfallroots' to factor the polynomial over the real numbers if the
+     polynomial is real, or over the complex numbers, if the polynomial
+     is complex.
+
+     See `allroots' for an example.
+
+
  -- Option variable: programmode
      Default value: `true'
 
@@ -19278,10 +19413,10 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      `load ("nchrpl")' loads this file.
 
 
- -- Function: newdet (<M>, <n>)
-     Computes the determinant of the matrix or array <M> by the
-     Johnson-Gentleman tree minor algorithm.  The argument <n> is the
-     order; it is optional if <M> is a matrix.
+ -- Function: newdet (<M>)
+     Computes the determinant of the matrix <M> by the
+     Johnson-Gentleman tree minor algorithm. `newdet' returns the
+     result in CRE form.
 
 
  -- Declaration: nonscalar
@@ -19294,9 +19429,12 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      declared as non-scalars, lists, or matrices.
 
 
- -- Function: permanent (<M>, <n>)
-     Computes the permanent of the matrix <M>.  A permanent is like a
-     determinant but with no sign changes.
+ -- Function: permanent (<M>)
+     Computes the permanent of the matrix <M> by the Johnson-Gentleman
+     tree minor algorithm. A permanent is like a determinant but with
+     no sign changes.  `permanent' returns the result in CRE form.
+
+     See also `newdet'.
 
 
  -- Function: rank (<M>)
@@ -22028,10 +22166,10 @@ set to `true', the following tensors can be calculated:
 
      This notation is consistent with the notation used by the `itensor'
      package and its `icurvature' function.  If the optional argument
-     <dis> is `true', the non-zero components `riem[i,j,k,l]' will be
-     displayed.  As with the Einstein tensor, various switches set by
-     the user control the simplification of the components of the
-     Riemann tensor.  If `ratriemann' is `true', then rational
+     <dis> is `true', the unique non-zero components `riem[i,j,k,l]'
+     will be displayed.  As with the Einstein tensor, various switches
+     set by the user control the simplification of the components of
+     the Riemann tensor.  If `ratriemann' is `true', then rational
      simplification will be done. If `ratfac' is `true' then each of
      the components will also be factored.
 
@@ -22045,7 +22183,7 @@ set to `true', the following tensors can be calculated:
      Covariant Riemann-tensor (`lriem[]').
 
      Computes the covariant Riemann-tensor as the array `lriem'. If the
-     argument <dis> is `true', unique nonzero values are displayed.
+     argument <dis> is `true', unique non-zero values are displayed.
 
      If the variable `cframe_flag' is `true', the covariant Riemann
      tensor is computed directly from the frame field coefficients.

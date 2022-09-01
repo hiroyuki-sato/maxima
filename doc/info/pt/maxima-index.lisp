@@ -1,6 +1,6 @@
 (in-package :cl-info)
 (defun cause-maxima-index-to-load () nil)
-(defvar *info-deffn-defvr-pairs* '(
+(defparameter *info-deffn-defvr-pairs* '(
 ; CONTENT: (<INDEX TOPIC> . (<FILENAME> <BYTE OFFSET> <LENGTH IN CHARACTERS> <NODE NAME>))
 ("!" . ("maxima.info-1" 80942 2485 "Operadores Geral"))
 ("!!" . ("maxima.info-1" 83429 765 "Operadores Geral"))
@@ -1748,7 +1748,7 @@
 ("|" . ("maxima.info-3" 181048 1388 "Definições para itensor"))
 ("~" . ("maxima.info-3" 179433 1613 "Definições para itensor"))
 ))
-(defvar *info-section-pairs* '(
+(defparameter *info-section-pairs* '(
 ; CONTENT: (<NODE NAME> . (<FILENAME> <BYTE OFFSET> <LENGTH IN CHARACTERS>))
 ("Comandos Palavra Chave" . ("maxima.info-5" 4515 2512))
 ("Comentários" . ("maxima.info-1" 269943 1310))

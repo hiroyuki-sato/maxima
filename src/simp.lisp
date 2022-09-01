@@ -133,7 +133,7 @@
 (defmvar $%emode t)
 (defmvar $lognegint nil)
 (defmvar $ratsimpexpons nil)
-(defmvar $logexpand t)
+(defmvar $logexpand nil) ; Possible values are T, $ALL and $SUPER
 (defmvar $radexpand t)
 (defmvar $subnumsimp nil)
 (defmvar $logsimp t)
@@ -180,7 +180,7 @@
 	(mnctimes simpnct) (mquotient simpquot) (mexpt simpexpt)
 	(%log simpln) 
         (%derivative simpderiv)
-	(mabs simpabs) (%signum simpsignum)
+        (%signum simpsignum)
 	(%integrate simpinteg) (%limit simp-limit) 
 	(bigfloat simpbigfloat) (lambda simplambda) (mdefine simpmdef)
 	(mqapply simpmqapply) (%gamma simpgamma) (%erf simperf)
@@ -385,30 +385,47 @@
 (defmfun $nonscalarp (x) (eq (scalarclass x) '$nonscalar))
 
 (defun scalarclass (exp) ;  Returns $SCALAR, $NONSCALAR, or NIL (unknown).
-  (cond ((atom exp)
-	 (cond ((or (mget exp '$nonscalar) (arrayp exp) ($member exp $arrays)) '$nonscalar)
-	       ((mget exp '$scalar) '$scalar)))
+  (cond ((mnump exp)
+         ;; Maxima numbers are scalar.
+         '$scalar)
+        ((atom exp)
+	 (cond ((or (mget exp '$nonscalar)
+	            (and (not (mget exp '$scalar))
+	                 ;; Arrays are nonscalar, but not if declared scalar.
+	                 (or (arrayp exp)
+	                     ($member exp $arrays))))
+	        '$nonscalar)
+	       ((or (mget exp '$scalar)
+	            ;; Include constant atoms which are not declared nonscalar.
+	            ($constantp exp))
+	        '$scalar)))
+        ((and (member 'array (car exp))
+              (not (mget (caar exp) '$scalar)))
+         '$nonscalar)
 	((specrepp exp) (scalarclass (specdisrep exp)))
-	;;  If the function is declared scalar or nonscalar, then return.  If it isn't
-	;;  explicitly declared, then try to be intelligent by looking at the arguments
-	;;  to the function.
+	;; If the function is declared scalar or nonscalar, then return. If it
+        ;; isn't explicitly declared, then try to be intelligent by looking at 
+        ;; the arguments to the function.
 	((scalarclass (caar exp)))
-	;;  <number> + <scalar> is SCALARP because that seems to be useful.  This should
-	;;  probably only be true if <number> is a member of the field of scalars.
-	;;  <number> * <scalar> is SCALARP since <scalar> + <scalar> is SCALARP.
-	;;  Also, this has to be done to make <scalar> - <scalar> SCALARP.
+	;; <number> + <scalar> is SCALARP because that seems to be useful. 
+        ;; This should probably only be true if <number> is a member of the 
+        ;; field of scalars. <number> * <scalar> is SCALARP since 
+        ;; <scalar> + <scalar> is SCALARP. Also, this has to be done to make 
+        ;; <scalar> - <scalar> SCALARP.
 	((member (caar exp) '(mplus mtimes) :test #'eq)
 	 (do ((l (cdr exp) (cdr l))) ((null l) '$scalar)
 	   (if (not (consttermp (car l)))
 	       (return (scalarclass-list l)))))
 	((and (eq (caar exp) 'mqapply) (scalarclass (cadr exp))))
 	((mxorlistp exp) '$nonscalar)
-	;;  If we can't find out anything about the operator, then look at the arguments
-	;;  to the operator.  I think NIL should be returned at this point.  -cwh
-	(t (do ((exp (cdr exp) (cdr exp)) (l))
-	       ((null exp) (scalarclass-list l))
-	     (if (not (consttermp (car exp)))
-		 (setq l (cons (car exp) l)))))))
+	;; If we can't find out anything about the operator, then look at the
+        ;; arguments to the operator.  I think NIL should be returned at this 
+        ;; point.  -cwh
+	(t
+	 (do ((exp (cdr exp) (cdr exp)) (l '(1)))
+	      ((null exp) (scalarclass-list l))
+	    (if (not (consttermp (car exp)))
+	        (setq l (cons (car exp) l)))))))
 
 ;;  Could also do <scalar> +|-|*|/ |^ <declared constant>, but this is not
 ;;  always correct and could screw somebody.
@@ -737,14 +754,18 @@
 	 (*red (exptb (cadr x) (num1 y))
 	       (exptb (caddr x) (num1 y))))))
 
-;; I (rtoy) think EXPTB is meant to compute a^b, where b is an
-;; integer.
+;; I (rtoy) think EXPTB is meant to compute a^b, where b is an integer.
 (defun exptb (a b)
   (cond ((equal a %e-val)
 	 ;; Make B a float so we'll get double-precision result.
-	 (exp (float b)))
-	((or (floatp a) (not (minusp b)))
-	 (expt a b))
+         (exp (float b)))
+        ((or (floatp a) (not (minusp b)))
+         #+gcl
+         (if (float-inf-p (setq b (expt a b)))
+             (merror (intl:gettext "expt: floating point overflow."))
+             b)
+         #-gcl
+         (expt a b))
 	(t
 	 (setq b (expt a (- b)))
 	 (*red 1 b))))
@@ -790,7 +811,8 @@
      (go start)
      end  (setq res (testp res))
      (if matrixflag
-	 (setq res (cond ((zerop1 res) matrixflag)
+         (setq res (cond ; Don't simplify a zero away. We might lose the type.
+                         ; ((zerop1 res) matrixflag)
 			 ((and (or ($listp matrixflag)
 				   $doallmxops $doscmxplus $doscmxops)
 			       (or (not ($listp matrixflag)) $listarith))
@@ -905,22 +927,53 @@
      (if (mplusp (cadr fm)) (setq plusflag t))
      (return (cdr fm))))
 
-(defmfun simpln (x y z)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Simplification of the Log function
+
+;; The log function distributes over lists, matrices, and equations
+(defprop %log (mlist $matrix mequal) distribute_over)
+
+(defun simpln (x y z)
   (oneargcheck x)
   (cond ((onep1 (setq y (simpcheck (cadr x) z))) (addk -1 y))
 	((zerop1 y)
 	 (cond (radcanp (list '(%log simp) 0))
-	       ((not errorsw) (merror "log(0) has been generated."))
+               ((not errorsw)
+                (merror (intl:gettext "log: log(0) has been generated.")))
 	       (t (throw 'errorsw t))))
-	((eq y '$%e) 1)
-	((and (mexptp y) (eq (cadr y) '$%e))	;; log(%e^x) -> x
-	 (simplifya (caddr y) t))
-	((ratnump y)
+        ;; Check evaluation in floating point precision.
+        ((flonum-eval (mop x) y))
+        ;; Check evaluation in bigfloag precision.
+        ((and (not (member 'simp (car x) :test #'eq))
+              (big-float-eval (mop x) y)))
+        ((eq y '$%e) 1)
+        ((and (mexptp y)
+              (eq (cadr y) '$%e)
+              (or (not (member ($csign (caddr y)) '($complex $imaginary)))
+                  (not (member ($csign (mul '$%i (caddr y))) 
+                               '($complex $imaginary)))))
+         ;; Simplify log(exp(x)) and log(exp(%i*x)), where x is a real
+         (caddr y))
+        ((and (mexptp y)
+              (ratnump (caddr y))
+              (or (equal 1 (cadr (caddr y)))
+                  (equal -1 (cadr (caddr y)))))
+         ;; Simplify log(z^(1/n)) -> log(z)/n, where n is an integer
+         (mul (caddr y)
+              (take '(%log) (cadr y))))
+        ((ratnump y)
+         ;; Simplify log(n/d)
 	 (cond ((equal (cadr y) 1) (simpln1 (list nil (caddr y) -1)))
 	       ((eq $logexpand '$super)
 		(simplifya (list '(mplus) (simplifya (list '(%log) (cadr y)) t)
 				 (simpln1 (list nil (caddr y) -1))) t))
 	       (t (eqtest (list '(%log) y) x))))
+        ((and (mexptp y)
+              (eq ($sign (cadr y)) '$pos)
+              (not (member ($csign (caddr y)) '($complex $imaginary))))
+         ;; Simplify log(x^a) -> a*log(x), where x > 0 and a is real
+         (mul (caddr y) (take '(%log) (cadr y))))
 	((and $logexpand (mexptp y)) (simpln1 y))
 	((and (member $logexpand '($all $super) :test #'eq) (mtimesp y))
 	 (prog (b)
@@ -931,17 +984,11 @@
 	    (cond ((null (setq y (cdr y)))
 		   (return (simplifya (cons '(mplus) b) t))))
 	    (go loop)))
-    ((and (member $logexpand '($all $super)) (consp y) (member (caar y) '(%product $product)))
-     (let ((new-op (if (eq (getcharn (caar y) 1) #\%) '%sum '$sum)))
-       (simplifya `((,new-op) ((%log) ,(cadr y)) ,@(cddr y)) t)))
-	((flonum-eval (mop x) y))
-	((and (not (member 'simp (car x) :test #'eq))
-	      (big-float-eval (mop x) y)))
-	;; (($bfloatp y) ($bfloat (list '(%log) y)))
-	;; ((or (floatp y) (and $numer (integerp y)))
-	;;  (cond ((plusp y) (log y))
-	;;        ($lognumer (cond ((equal y -1) 0) (t (log (- y)))))
-	;;        (t (add2 (log (- y)) (mul2 '$%i %pi-val)))))
+        ((and (member $logexpand '($all $super))
+              (consp y)
+              (member (caar y) '(%product $product)))
+         (let ((new-op (if (eq (getcharn (caar y) 1) #\%) '%sum '$sum)))
+           (simplifya `((,new-op) ((%log) ,(cadr y)) ,@(cddr y)) t)))
 	((and $lognegint (maxima-integerp y) (eq ($sign y) '$neg))
 	 (add (mul '$%i '$%pi) (take '(%log) (neg y))))
         ((taylorize (mop x) (second x)))
@@ -973,6 +1020,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; Simplification of the "/" operator.
+
 (defmfun simpquot (x y z)
   (twoargcheck x)
   (cond ((and (integerp (cadr x)) (integerp (caddr x)) (not (zerop (caddr x))))
@@ -983,12 +1032,25 @@
 	   (setq x (simplifya (list '(mexpt) (caddr x) -1) z))
 	   (if (equal y 1) x (simplifya (list '(mtimes) y x) t)))))
 
-;; Obsolete.  Use DIV*.  All references to this should now be flushed.
-;; This definition will go away soon.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;(DEFUN QSNT (X Y) (SIMPLIFY (LIST '(MTIMES) X (LIST '(MEXPT) Y -1))))
+;;; Implementation of the abs function.
 
-(setf (get '%mabs 'operators) 'simpabs)
+;; Put the properties alias, reversealiases, noun and verb on the property list.
+(defprop $abs mabs alias)
+(defprop $abs mabs verb)
+(defprop mabs $abs reversealias)
+(defprop mabs $abs noun)
+
+;; The abs function distributes over bags.
+(defprop mabs (mlist $matrix mequal) distribute_over)
+
+;; Define a verb function $abs
+(defun $abs (x)
+  (simplify (list '(mabs) x)))
+
+;; The abs function is a simplifying function.
+(defprop mabs simpabs operators)
 
 (defmfun simpabs (x y z)
   (oneargcheck x)
@@ -1028,12 +1090,17 @@
 	 (muln 
            (mapcar #'(lambda (u) (simplifya (list '(mabs) u) nil)) (cdr y)) t))
 	((mminusp y) (list '(mabs simp) (neg y)))
-	((mbagp y)
-	 (cons (car y)
-	       (mapcar #'(lambda (u)
-			   (simplifya (list '(mabs) u) nil)) (cdr y))))
+; We have put the property distribute_over on the property list of mabs.
+;	((mbagp y)
+;	 (cons (car y)
+;	       (mapcar #'(lambda (u)
+;			   (simplifya (list '(mabs) u) nil)) (cdr y))))
 	(t (eqtest (list '(mabs) y) x))))
 
+(defun abs-integral (x)
+  (mul (div 1 2) x (take '(mabs) x)))
+
+(putprop 'mabs `((x) ,#'abs-integral) 'integral)
 
 (defun pls (x out)
   (prog (fm plusflag)
