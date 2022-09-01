@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -476,7 +476,7 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Desigua
      etiquetada es similar a la que produce `dpart', pero con un nombre
      en la línea superior.
 
- -- Declaración: mainvar
+ -- Propiedad: mainvar
      Se pueden declarar variables de tipo `mainvar'.  El orden de los
      átomos es: números < constantes (como `%e' o `%pi') < escalares <
      otras variables < "mainvars".  Por ejemplo, compárese `expand
@@ -489,7 +489,7 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Desigua
      la que `x' es `mainvar', quizás sea necesario guardar también `x'.)
 
 
- -- Declaración: noun
+ -- Propiedad: noun
      El símbolo `noun' es una de las opciones de la instrucción
      `declare'. Hace que una función se declare como "nombre", lo que
      significa que no se evaluará automáticamente.
@@ -1350,7 +1350,6 @@ cabo la reducción oportuna.
    Las siguientes propiedades están en la lista `opproperties' y
 controlan la simplificación de funciones y operadores:
 
-
    additive        lassociative     oddfun
    antisymmetric   linear           outative
    commutative     multiplicative   rassociative
@@ -1383,7 +1382,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
 9.2 Funciones y variables para simplificación
 =============================================
 
- -- Declaración: additive
+ -- Propiedad: additive
      Si `declare(f,additive)' ha sido ejecutado, entonces:
 
      (1) Si `f' es univariado, cada vez que el simplificador encuentre
@@ -1397,8 +1396,16 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      ocurre cuando `f' se aplica a expresiones de la forma
      `sum(x[i],i,lower-limit,upper-limit)'.
 
+     Ejemplo:
 
- -- Declaración: antisymmetric
+          (%i1) F3 (a + b + c);
+          (%o1)                     F3(c + b + a)
+          (%i2) declare (F3, additive);
+          (%o2)                         done
+          (%i3) F3 (a + b + c);
+          (%o3)                 F3(c) + F3(b) + F3(a)
+
+ -- Propiedad: antisymmetric
      Si `declare(h,antisymmetric)' es ejecutado, esto dice al
      simplificador que `h' es antisimétrico. E.g. `h(x,z,y)' será
      simplificado a `-h(x,y,z)'. Que es, el producto de (-1)^n por el
@@ -1406,13 +1413,31 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      número de intercambios necesarios de dos argumentos para
      convertirle a esta forma.
 
+     Ejemplos:
+
+          (%i1) S (b, a);
+          (%o1)                        S(b, a)
+          (%i2) declare (S, symmetric);
+          (%o2)                         done
+          (%i3) S (b, a);
+          (%o3)                        S(a, b)
+          (%i4) S (a, c, e, d, b);
+          (%o4)                   S(a, b, c, d, e)
+          (%i5) T (b, a);
+          (%o5)                        T(b, a)
+          (%i6) declare (T, antisymmetric);
+          (%o6)                         done
+          (%i7) T (b, a);
+          (%o7)                       - T(a, b)
+          (%i8) T (a, c, e, d, b);
+          (%o8)                   T(a, b, c, d, e)
 
  -- Función: combine (<expr>)
      Simplifica la suma <expr> combinando términos de con igual
      denominador reduciéndolos a un único término.
 
 
- -- Declaración: commutative
+ -- Propiedad: commutative
      Si `declare(h,commutative)' es ejecutado, le dice al simplificador
      que `h' es una función conmutaiva. Por ejemplo, `h(x,z,y)' se
      simplificará a `h(x,y,z)'. Esto es lo mismo que `symmetric'.
@@ -1513,8 +1538,8 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      (x^2)' en lugar de devolver `abs(x)'.
 
 
- -- Declaración: evenfun
- -- Declaración: oddfun
+ -- Propiedad: evenfun
+ -- Propiedad: oddfun
      `declare(f, evenfun' o `declare(f, oddfun' indican a Maxima que
      reconozca la función `f' como par o impar, respectivamente.
 
@@ -1697,25 +1722,45 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      que `n'.
 
 
- -- Declaración: lassociative
+ -- Propiedad: lassociative
      La instrucción `declare (g, lassociative)' le indica al
      simplificador de Maxima que `g' es asociativo por la izquierda.
      Por ejemplo, `g (g (a, b), g (c, d))'se reduce a `g (g (g (a, b),
      c), d)'.
 
 
- -- Declaración: linear
+ -- Propiedad: linear
      Es una de las propiedades de operadores de Maxima. Si la función
      univariante `f' se declara lineal, la expansión de  `f(x + y)'
      produce `f(x) + f(y)', `f(a*x)' produce `a*f(x)' si `a' es una
-     constante.  Si la función tiene dos o más argumentos, la
-     linealidad se interpreta como la de `sum' o `integrate', esto es,
-     `f (a*x + b, x)' produce `a*f(x,x) + b*f(1,x)' si `a' y `b' no
-     contienen a `x'.
+     constante.  Si la función tiene dos o más argumentos, la linealidad
+     se interpreta como la de `sum' o `integrate', esto es, `f (a*x +
+     b, x)' produce `a*f(x,x) + b*f(1,x)' si `a' y `b' no contienen a
+     `x'.
 
      `linear' equivale a `additive' y `outative'.  Véase también
      `opproperties'.
 
+     Ejemplo:
+
+          (%i1) 'sum (F(k) + G(k), k, 1, inf);
+                                 inf
+                                 ====
+                                 \
+          (%o1)                   >    (G(k) + F(k))
+                                 /
+                                 ====
+                                 k = 1
+          (%i2) declare (nounify (sum), linear);
+          (%o2)                         done
+          (%i3) 'sum (F(k) + G(k), k, 1, inf);
+                               inf          inf
+                               ====         ====
+                               \            \
+          (%o3)                 >    G(k) +  >    F(k)
+                               /            /
+                               ====         ====
+                               k = 1        k = 1
 
  -- Variable opcional: maxnegex
      Valor por defecto: 1000
@@ -1731,7 +1776,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      función `expand'. Véase también `maxnegex'.
 
 
- -- Declaración: multiplicative
+ -- Propiedad: multiplicative
      La instrucción `declare (f, multiplicative)' indica al
      simplificador de Maxima que `f' is multiplicativa.
 
@@ -1748,6 +1793,14 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      Esta transformación no se realiza cuando `f' se aplica a
      expresiones de la forma `product (x[i], i, m, n)'.
 
+     Ejemplo:
+
+          (%i1) F2 (a * b * c);
+          (%o1)                       F2(a b c)
+          (%i2) declare (F2, multiplicative);
+          (%o2)                         done
+          (%i3) F2 (a * b * c);
+          (%o3)                   F2(a) F2(b) F2(c)
 
  -- Función: multthru (<expr>)
  -- Función: multthru (<expr_1>, <expr_2>)
@@ -1796,12 +1849,12 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
           (%o7)         a . f + a . c . e + a . c . d + a . b
 
 
- -- Declaración: nary
+ -- Propiedad: nary
      `declare(f, nary)' le indica a Maxima que reconozca la función `f'
      como n-aria.
 
      La declaración `nary' no equivale a invocar la función
-     `operator_nary, nary'. El único efecto de `declare(f, nary)' es
+     `function_nary, nary'. El único efecto de `declare(f, nary)' es
      indicar al simplificador de Maxima que aplane expresiones anidadas,
      como simplificar `foo(x, foo(y, z))' a `foo(x, y, z)'.  Véase
      también `declare'.
@@ -1833,7 +1886,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      `nary', `lassociative', `rassociative'.
 
 
- -- Declaración: outative
+ -- Propiedad: outative
      La instrucción `declare (f, outative)' le indica al simplificador
      de Maxima que los factores constantes del argumento de la función
      `f' pueden ser extraídos.
@@ -1853,6 +1906,18 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      Las funciones `sum', `integrate' y `limit' han sido todas
      declaradas con la propiedad `outative'.
 
+     Ejemplo:
+
+          (%i1) F1 (100 * x);
+          (%o1)                       F1(100 x)
+          (%i2) declare (F1, outative);
+          (%o2)                         done
+          (%i3) F1 (100 * x);
+          (%o3)                       100 F1(x)
+          (%i4) declare (zz, constant);
+          (%o4)                         done
+          (%i5) F1 (zz * y);
+          (%o5)                       zz F1(y)
 
  -- Función: radcan (<expr>)
      Simplifica la expresión <expr>, que puede contener logaritmos,
@@ -1907,7 +1972,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
      `true'.
 
 
- -- Declaración: rassociative
+ -- Propiedad: rassociative
      La instrucción `declare (g, rassociative)' le indica al
      simplificador de Maxima que `g' es asociativa por la derecha.  Por
      ejemplo, `g(g(a, b), g(c, d))' se reduce a `g(a, g(b, g(c, d)))'.
@@ -1964,7 +2029,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Int
           (%i6) :lisp $X
           ((%SIN) 1.0)
 
- -- Declaración: symmetric
+ -- Propiedad: symmetric
      La instrucción `declare (h, symmetric)' le indica al simplificador
      de  Maxima que `h' es una función simétrica.  Por ejemplo, `h (x,
      z, y)'  se reduce a `h (x, y, z)'.
@@ -3431,7 +3496,6 @@ propiedades y borrarlas con `rem'.
    Las variables pueden tener las siguientes propiedades a almacenar en
 el banco de datos:
 
-
    constant
    integer        noninteger
    even           odd
@@ -3441,14 +3505,12 @@ el banco de datos:
    Las funciones pueden tener las siguientes propiedades a almacenar en
 el banco de datos:
 
-
    increasing     decreasing
    posfun         integervalued
 
    Las siguientes propiedades se pueden aplicar a funciones y se
 utilizan para su correcta simplificación. Estas propiedades se
 describen en el capítulo dedicado a la simplificación:
-
 
    linear         additive       multiplicative
    outative       commutative    symmetric
@@ -3457,7 +3519,6 @@ describen en el capítulo dedicado a la simplificación:
 
    Otras propiedades aplicables a variables y funciones, y que se
 almacenan en la lista de propiedades de Lisp, son:
-
 
    bindtest       feature        alphabetic
    scalar         nonscalar      nonarray
@@ -3495,173 +3556,32 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
 11.2 Funciones y variables para las propiedades
 ===============================================
 
- -- Función: declare (<a_1>, <f_1>, <a_2>, <f_2>, ...)
-     Asigna al átomo o lista de átomos <a_i> la propiedad o lista de
-     propiedades<p_i>. Si <a_i> y/o <p_i> son listas, cada uno de los
-     átomos adquiere todas las propiedades.
+ -- Propiedad: alphabetic
+     `alphabetic' es un tipo de propiedad reconocida por `declare'.  La
+     expresión `declare(<s>, alphabetic)' le indica a Maxima que
+     reconozca como alfabéticos todos los caracteres que haya en <s>,
+     que debe ser una cadena de texto.
 
-     La función `declare' no evalúa sus argumentos y siempre devuelve la
-     expresión `done'.
+     Véase también `Identifiers'.
 
-     La llamada `featurep (<object>, <feature>)' devuelve `true' si
-     <object> ha sido previamente declarado como poseedor de la
-     propiedad <feature>. No obstante, `featurep' no reconoce algunas
-     propiedades, lo cual es un fallo conocido de Maxima.
+     Ejemplo:
 
-     Véase también `features'.
+          (%i1) xx\~yy\`\@ : 1729;
+          (%o1)                         1729
+          (%i2) declare ("~`@", alphabetic);
+          (%o2)                         done
+          (%i3) xx~yy`@ + @yy`xx + `xx@@yy~;
+          (%o3)               `xx@@yy~ + @yy`xx + 1729
+          (%i4) listofvars (%);
+          (%o4)                  [@yy`xx, `xx@@yy~]
 
-     La función `declare' reconoce las siguientes propiedades:
+ -- Propiedad: bindtest
+     La sentencia `declare(<x>, bindtest' le indica a Maxima que
+     devuelva un mensaje de error cuando el símbolo <x> no tenga
+     asociado valor alguno.
 
-    `evfun'
-          Hace que <a_i> sea reconocida por `ev', de manera que la
-          función nombrada por <a_i> se aplique cuando <a_i> aparezca
-          como argumento de control de `ev'.  Véase `evfun'.
+     Ejemplo:
 
-    `evflag'
-          Hace que <a_i> sea reconocida por `ev', de manera que a <a_i>
-          se le asigne el valor `true' durante la ejecución de `ev'
-          cuando <a_i> aparezca como argumento de control de `ev'.
-
-    `bindtest'
-          Hace que Maxima envíe un error si <a_i> es evaluado sin
-          habérsele asignado un valor.
-
-    `noun'
-          Hace que Maxima considere a <a_i> como un nombre. El efecto
-          que se obtiene es que se reemplazan todas las expresiones
-          <a_i> por `'<a_i>' o `nounify (<a_i>)', dependiendo del
-          contexto.
-
-    `constant'
-          Hace que Maxima considere a <a_i> como una constante
-          simbólica.
-
-    `scalar'
-          Hace que Maxima considere a <a_i> como una variable escalar.
-
-    `nonscalar'
-          Hace que Maxima considere a <a_i> como una variable no
-          escalar.  Se aplica comúnmente para declarar una variable
-          como un vector simbólico o una matriz simbólica.
-
-    `nonarray'
-          Indica que Maxima no debe considerar <a_i> como un array.
-          Esta declaración evita la evaluación múltiple de variables
-          subindicadas.
-
-    `mainvar'
-          Hace que Maxima considere a <a_i> como una "variable
-          principal", dándole prioridad frente a cualesquiera otras
-          constantes o variables en la ordenación canónica de
-          expresiones de Maxima, tal como determina `ordergreatp'.
-
-    `alphabetic'
-          Indica a Maxima que reconozca todos los caracteres de la
-          cadena alfanumérica <a_i> como caracteres alfabéticos.
-
-    `feature'
-          Hace que Maxima considere a <a_i> como el nombre de una
-          propiedad.  Otros átomos podrán ser declarados entonces como
-          poseedores de la propiedad <a_i>.
-
-    `rassociative', `lassociative'
-          Hace que Maxima reconozca a <a_i> como una función asociativa
-          por la derecha o por la izquierda.
-
-    `nary'
-          Hace que Maxima reconozca a <a_i> como una función n-aria.
-
-          La declaración `nary' no es equivalente a la función `nary'.
-          El único efecto de `declare(foo, nary)' consiste en hacer que
-          el simplificador de Maxima reduzca expresiones anidadas; por
-          ejemplo, para transformar `foo(x, foo(y, z))' a `foo(x, y,
-          z)'.
-
-    `symmetric', `antisymmetric', `commutative'
-          Hace que Maxima reconozca a <a_i> como una función simétrica o
-          antisimétrica. La propiedad `commutative' equivale a
-          `symmetric'.
-
-    `evenfun', `oddfun'
-          Hace que Maxima reconozca a <a_i> como una función par o
-          impar.
-
-    `outative'
-          Hace que Maxima simplifique las expresiones <a_i> extrayendo
-          los factores constantes del primer argumento.
-
-          Cuando <a_i> tenga un único argumento, un factor se
-          considerará constante si es una constante literal o declarada.
-
-          Cuando <a_i> tenga dos o más argumentos, un factor se
-          considerará constante si el segundo argumento es un símbolo y
-          el factor no contiene al segundo argumento.
-
-    `multiplicative'
-          Hace que Maxima simplifique las expresiones <a_i> haciendo
-          uso de la sustitución `<a_i>(x * y * z * ...)' `-->'
-          `<a_i>(x) * <a_i>(y) * <a_i>(z) * ...'.  Tal sustitución se
-          aplica únicamente al primer argumento.
-
-    `additive'
-          Hace que Maxima simplifique las expresiones <a_i> haciendo
-          uso de la sustitución `<a_i>(x + y + z + ...)' `-->'
-          `<a_i>(x) + <a_i>(y) + <a_i>(z) + ...'.  Tal sustitución se
-          aplica únicamente al primer argumento.
-
-    `linear'
-          Equivale a declarar <a_i> conjuntamente como `outative' y
-          `additive'.
-
-    `integer', `noninteger'
-          Hace que Maxima reconozca a <a_i> como una variable entera o
-          no entera.
-
-    `even', `odd'
-          Hace que Maxima reconozca a <a_i> como una variable entera
-          par o impar.
-
-    `rational', `irrational'
-          Hace que Maxima reconozca a <a_i> como una variable real
-          racional o irracional.
-
-    `real', `imaginary', `complex'
-          Hace que Maxima reconozca a <a_i> como una variable real,
-          imaginaria o compleja.
-
-
-          `increasing', `decreasing' Hace que Maxima reconozca a <a_i>
-          como una función creciente o decreciente.
-
-    `posfun'
-          Hace que Maxima reconozca a <a_i> como una función positiva.
-
-    `integervalued'
-          Hace que Maxima reconozca a <a_i> como una función de valor
-          entero.
-
-
-     Ejemplos:
-
-     Declaraciones en base a `evfun' y `evflag'.
-          (%i1) declare (expand, evfun);
-          (%o1)                         done
-          (%i2) (a + b)^3;
-                                             3
-          (%o2)                       (b + a)
-          (%i3) (a + b)^3, expand;
-                               3        2      2      3
-          (%o3)               b  + 3 a b  + 3 a  b + a
-          (%i4) declare (demoivre, evflag);
-          (%o4)                         done
-          (%i5) exp (a + b*%i);
-                                       %i b + a
-          (%o5)                      %e
-          (%i6) exp (a + b*%i), demoivre;
-                                a
-          (%o6)               %e  (%i sin(b) + cos(b))
-
-     Declaración en base a  `bindtest'.
           (%i1) aa + bb;
           (%o1)                        bb + aa
           (%i2) declare (aa, bindtest);
@@ -3674,129 +3594,272 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
           (%i5) aa + bb;
           (%o5)                       bb + 1234
 
-     Declaración en base a  `noun'.
-          (%i1) factor (12345678);
-                                       2
-          (%o1)                     2 3  47 14593
-          (%i2) declare (factor, noun);
-          (%o2)                         done
-          (%i3) factor (12345678);
-          (%o3)                   factor(12345678)
-          (%i4) ''%, nouns;
-                                       2
-          (%o4)                     2 3  47 14593
+ -- Propiedad: constant
+     `declare(<a>, constant)' declara <a> como constante.  La
+     declaración de un símbolo como constante no impide que se le
+     asigne un valor no constante al símbolo.
 
-     Declaraciones en base a `constant', `scalar', `nonscalar' y
-     `mainvar'.
+     Véanse `constantp' y `declare'
 
-     Declaración en base a `alphabetic'.
-          (%i1) xx\~yy\`\@ : 1729;
-          (%o1)                         1729
-          (%i2) declare ("~`@", alphabetic);
-          (%o2)                         done
-          (%i3) xx~yy`@ + @yy`xx + `xx@@yy~;
-          (%o3)               `xx@@yy~ + @yy`xx + 1729
-          (%i4) listofvars (%);
-          (%o4)                  [@yy`xx, `xx@@yy~]
+     Ejemplo:
 
-     Declaración en base a `feature'.
-          (%i1) declare (FOO, feature);
+          (%i1) declare(c, constant);
           (%o1)                         done
-          (%i2) declare (x, FOO);
-          (%o2)                         done
-          (%i3) featurep (x, FOO);
-          (%o3)                         true
+          (%i2) constantp(c);
+          (%o2)                         true
+          (%i3) c : x;
+          (%o3)                           x
+          (%i4) constantp(c);
+          (%o4)                         false
 
-     Declaraciones en base a `rassociative' y `lassociative'.
+ -- Función: constantp (<expr>)
+     Devuelve `true' si <expr> es una expresión constante y `false' en
+     caso contrario.
 
-     Declaración en base a `nary'.
-          (%i1) H (H (a, b), H (c, H (d, e)));
-          (%o1)               H(H(a, b), H(c, H(d, e)))
-          (%i2) declare (H, nary);
-          (%o2)                         done
-          (%i3) H (H (a, b), H (c, H (d, e)));
-          (%o3)                   H(a, b, c, d, e)
+     Una expresión se considera constante si sus argumentos son números
+     (incluidos los números racionales que se muestran con `/R/'),
+     constantes simbólicas como `%pi', `%e' o `%i', variables con valor
+     constante o declarada como constante por `declare', o funciones
+     cuyos argumentos son constantes.
 
-     Declaraciones en base a `symmetric' y `antisymmetric'.
-          (%i1) S (b, a);
-          (%o1)                        S(b, a)
-          (%i2) declare (S, symmetric);
-          (%o2)                         done
-          (%i3) S (b, a);
-          (%o3)                        S(a, b)
-          (%i4) S (a, c, e, d, b);
-          (%o4)                   S(a, b, c, d, e)
-          (%i5) T (b, a);
-          (%o5)                        T(b, a)
-          (%i6) declare (T, antisymmetric);
-          (%o6)                         done
-          (%i7) T (b, a);
-          (%o7)                       - T(a, b)
-          (%i8) T (a, c, e, d, b);
-          (%o8)                   T(a, b, c, d, e)
+     La función `constantp' evalúa sus argumentos.
 
-     Declaraciones en base a `oddfun' y `evenfun'.
-          (%i1) o (- u) + o (u);
-          (%o1)                     o(u) + o(- u)
-          (%i2) declare (o, oddfun);
-          (%o2)                         done
-          (%i3) o (- u) + o (u);
-          (%o3)                           0
-          (%i4) e (- u) - e (u);
-          (%o4)                     e(- u) - e(u)
-          (%i5) declare (e, evenfun);
-          (%o5)                         done
-          (%i6) e (- u) - e (u);
-          (%o6)                           0
+     Ejemplos:
 
-     Declaración en base a `outative'.
-          (%i1) F1 (100 * x);
-          (%o1)                       F1(100 x)
-          (%i2) declare (F1, outative);
-          (%o2)                         done
-          (%i3) F1 (100 * x);
-          (%o3)                       100 F1(x)
-          (%i4) declare (zz, constant);
-          (%o4)                         done
-          (%i5) F1 (zz * y);
-          (%o5)                       zz F1(y)
+          (%i1) constantp (7 * sin(2));
+          (%o1)                                true
+          (%i2) constantp (rat (17/29));
+          (%o2)                                true
+          (%i3) constantp (%pi * sin(%e));
+          (%o3)                                true
+          (%i4) constantp (exp (x));
+          (%o4)                                false
+          (%i5) declare (x, constant);
+          (%o5)                                done
+          (%i6) constantp (exp (x));
+          (%o6)                                true
+          (%i7) constantp (foo (x) + bar (%e) + baz (2));
+          (%o7)                                false
+          (%i8)
 
-     Declaración en base a `multiplicative'.
-          (%i1) F2 (a * b * c);
-          (%o1)                       F2(a b c)
-          (%i2) declare (F2, multiplicative);
-          (%o2)                         done
-          (%i3) F2 (a * b * c);
-          (%o3)                   F2(a) F2(b) F2(c)
+ -- Función: declare (<a_1>, <f_1>, <a_2>, <f_2>, ...)
+     Asigna al átomo o lista de átomos <a_i> la propiedad o lista de
+     propiedades<p_i>. Si <a_i> y/o <p_i> son listas, cada uno de los
+     átomos adquiere todas las propiedades.
 
-     Declaración en base a `additive'.
-          (%i1) F3 (a + b + c);
-          (%o1)                     F3(c + b + a)
-          (%i2) declare (F3, additive);
-          (%o2)                         done
-          (%i3) F3 (a + b + c);
-          (%o3)                 F3(c) + F3(b) + F3(a)
+     La función `declare' no evalúa sus argumentos y siempre devuelve la
+     expresión `done'.
 
-     Declaración en base a `linear'.
-          (%i1) 'sum (F(k) + G(k), k, 1, inf);
-                                 inf
-                                 ====
-                                 \
-          (%o1)                   >    (G(k) + F(k))
-                                 /
-                                 ====
-                                 k = 1
-          (%i2) declare (nounify (sum), linear);
-          (%o2)                         done
-          (%i3) 'sum (F(k) + G(k), k, 1, inf);
-                               inf          inf
-                               ====         ====
-                               \            \
-          (%o3)                 >    G(k) +  >    F(k)
-                               /            /
-                               ====         ====
-                               k = 1        k = 1
+     La llamada `featurep (<object>, <feature>)' devuelve `true' si
+     <object> ha sido previamente declarado como poseedor de la
+     propiedad <feature>.
 
+     Véase también `features'.
+
+     La función `declare' reconoce las siguientes propiedades:
+
+    `additive'
+          Hace que Maxima simplifique las expresiones <a_i>
+          haciendo uso de la sustitución       `<a_i>(x + y + z + ...)'
+          `-->'       `<a_i>(x) + <a_i>(y) + <a_i>(z) + ...'.
+          Tal sustitución se aplica únicamente al primer argumento.
+
+    `alphabetic'
+          Indica a Maxima que reconozca todos los caracteres de la
+          cadena alfanumérica       <a_i> como caracteres alfabéticos.
+
+    `antisymmetric, commutative, symmetric'
+          Hace que Maxima reconozca a <a_i> como una función simétrica o
+               antisimétrica. La propiedad `commutative' equivale a
+          `symmetric'.
+
+    `bindtest'
+          Hace que Maxima envíe un error si <a_i> es evaluado sin
+          habérsele       asignado un valor.
+
+    `constant'
+          Hace que Maxima considere a <a_i> como una constante
+          simbólica.
+
+    `even, odd'
+          Hace que Maxima reconozca a <a_i> como una variable entera
+          par o impar.
+
+    `evenfun, oddfun'
+          Hace que Maxima reconozca a <a_i> como una función par o
+          impar.
+
+    `evflag'
+          Hace que <a_i> sea reconocida por `ev', de manera que a <a_i>
+          se le       asigne el valor `true' durante la ejecución de
+          `ev' cuando <a_i>       aparezca como argumento de control de
+          `ev'. Véase también `evflag'.
+
+    `evfun'
+          Hace que <a_i> sea reconocida por `ev', de manera que la
+          función       nombrada por <a_i> se aplique cuando <a_i>
+          aparezca como argumento       de control de `ev'. Véase
+          también `evfun'.
+
+    `feature'
+          Hace que Maxima considere a <a_i> como el nombre de una
+          propiedad.        Otros átomos podrán ser declarados entonces
+          como poseedores de       la propiedad <a_i>.
+
+    `increasing, decreasing'
+          Hace que Maxima reconozca a <a_i> como una función creciente
+          o decreciente.
+
+    `integer, noninteger'
+          Hace que Maxima reconozca a <a_i> como una variable entera o
+          no entera.
+
+    `integervalued'
+          Hace que Maxima reconozca a <a_i> como una función de valor
+          entero.
+
+    `lassociative, rassociative'
+          Hace que Maxima reconozca a <a_i> como una función asociativa
+          por la derecha o       por la izquierda.
+
+    `linear'
+          Equivale a declarar <a_i> conjuntamente como `outative' y
+          `additive'.
+
+    `mainvar'
+          Hace que Maxima considere a <a_i> como una "variable
+          principal",       dándole prioridad frente a cualesquiera
+          otras constantes o       variables en la ordenación canónica
+          de expresiones de Maxima,       tal como determina
+          `ordergreatp'.
+
+    `multiplicative'
+          Hace que Maxima simplifique las expresiones <a_i>
+          haciendo uso de la sustitución       `<a_i>(x * y * z * ...)'
+          `-->' `<a_i>(x) * <a_i>(y) * <a_i>(z) * ...'.        Tal
+          sustitución se aplica únicamente al primer argumento.
+
+    `nary'
+          Hace que Maxima reconozca a <a_i> como una función n-aria.
+
+          La declaración `nary' no es equivalente a la función `nary'.
+               El único efecto de `declare(foo, nary)' consiste en
+          hacer que       el simplificador de Maxima reduzca
+          expresiones anidadas; por ejemplo,       para transformar
+          `foo(x, foo(y, z))' a `foo(x, y, z)'.
+
+    `nonarray'
+          Indica que Maxima no debe considerar <a_i> como un array.
+          Esta declaración       evita la evaluación múltiple de
+          variables subindicadas.
+
+    `nonscalar'
+          Hace que Maxima considere a <a_i> como una variable no
+          escalar.        Se aplica comúnmente para declarar una
+          variable como un vector simbólico       o una matriz
+          simbólica.
+
+    `noun'
+          Hace que Maxima considere a <a_i> como un nombre. El efecto
+             que se obtiene es que se reemplazan todas las expresiones
+          <a_i>       por `'<a_i>' o `nounify (<a_i>)',
+          dependiendo del contexto.
+
+    `outative'
+          Hace que Maxima simplifique las expresiones <a_i>
+          extrayendo los factores constantes del primer argumento.
+
+          Cuando <a_i> tenga un único argumento, un factor se
+          considerará constante       si es una constante literal o
+          declarada.
+
+          Cuando <a_i> tenga dos o más argumentos, un factor se
+          considerará constante       si el segundo argumento es un
+          símbolo y el factor no contiene al       segundo argumento.
+
+    `posfun'
+          Hace que Maxima reconozca a <a_i> como una función positiva.
+
+    `rational, irrational'
+          Hace que Maxima reconozca a <a_i> como una variable real
+          racional o irracional.
+
+    `real, imaginary, complex'
+          Hace que Maxima reconozca a <a_i> como una variable real,
+          imaginaria o compleja.
+
+    `scalar'
+          Hace que Maxima considere a <a_i> como una variable escalar.
+
+
+     Ejemplos sobre el uso de estas propiedades están disponibles en la
+     documentación correspondiente a cada propiedad por separado.
+
+ -- Propiedad: decreasing
+ -- Propiedad: increasing
+     Las instrucciones `declare(<f>, decreasing)' y `declare(<f>,
+     increasing' le indican a Maxima que reconozca la función <f> como
+     una función decreciente o creciente.
+
+     Véase también `declare' para más propiedades.
+
+     Ejemplo:
+
+          (%i1) assume(a > b);
+          (%o1)                        [a > b]
+          (%i2) is(f(a) > f(b));
+          (%o2)                        unknown
+          (%i3) declare(f, increasing);
+          (%o3)                         done
+          (%i4) is(f(a) > f(b));
+          (%o4)                         true
+
+ -- Propiedad: even
+ -- Propiedad: odd
+     `declare(<a>, even)' y `declare(<a>, odd)' le indican a Maxima que
+     reconozca el símbolo <a> como entero par o impar.  Las propiedades
+     `even' y `odd' no son reconocidas por las funciones `evenp',
+     `oddp' y `integerp'.
+
+     Véanse también `declare' y `askinteger'.
+
+     Ejemplo:
+
+          (%i1) declare(n, even);
+          (%o1)                         done
+          (%i2) askinteger(n, even);
+          (%o2)                          yes
+          (%i3) askinteger(n);
+          (%o3)                          yes
+          (%i4) evenp(n);
+          (%o4)                         false
+
+ -- Propiedad: feature
+     Maxima interpreta dos tipos diferentes de propiedades, del sistema
+     y las que se aplican a expresiones matemáticas. Véase `status'
+     para obtener información sobre propiedades del sistema, así como
+     `features' y `featurep' para propiedades de las expresiones
+     matemáticas.
+
+     `feature' no es el nombre de ninguna función o variable.
+
+ -- Función: featurep (<a>, <f>)
+     Intenta determinar si el objeto <a> tiene la propiedad <f> en base
+     a los hechos almacenados en la base de datos. En caso afirmativo,
+     devuelve `true', o `false' en caso contrario.
+
+     Nótese que `featurep' devuelve `false' cuando no se puedan
+     verificar ni <f> ni su negación.
+
+     `featurep' evalúa su argumento.
+
+     Véanse también `declare' y `features'.
+
+     Ejemplos:
+
+          (%i1) declare (j, even)$
+          (%i2) featurep (j, integer);
+          (%o2)                           true
 
  -- Declaración: features
      Maxima reconoce ciertas propiedades matemáticas sobre funciones y
@@ -3806,28 +3869,44 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
      función o variable <x>.
 
      La llamada `declare (<foo>, feature)' declara una nueva propiedad
-     <foo>. Por ejemplo, `declare ([rojo, verde, azul], feature)'
+     <foo>.  Por ejemplo, `declare ([rojo, verde, azul], feature)'
      declara tres nuevas propiedades, `rojo', `verde' y `azul'.
 
      El predicado `featurep (<x>, <foo>)' devuelve `true' si <x> goza
      de la propiedad <foo>, y `false' en caso contrario.
 
      La lista `features' contiene las propiedades que reconoce Maxima;
-     a saber, `integer', `noninteger', `even', `odd', `rational',
-     `irrational', `real', `imaginary', `complex', `analytic',
-     `increasing', `decreasing', `oddfun', `evenfun', `posfun',
-     `commutative', `lassociative', `rassociative', `symmetric', and
-     `antisymmetric', junto con las definidas por el usuario.
+     a saber,
 
-     La lista `features' sólo contiene propiedades matemáticas. Hay
+        integer        noninteger      even
+        odd            rational        irrational
+        real           imaginary       complex
+        analytic       increasing      decreasing
+        oddfun         evenfun         posfun
+        commutative    lassociative    rassociative
+        symmetric      antisymmetric
+
+     junto con las definidas por el usuario.
+
+     La lista `features' sólo contiene propiedades matemáticas.  Hay
      otra lista con propiedades no matemáticas; Véase `status'.
 
+     Ejemplo:
+
+          (%i1) declare (FOO, feature);
+          (%o1)                         done
+          (%i2) declare (x, FOO);
+          (%o2)                         done
+          (%i3) featurep (x, FOO);
+          (%o3)                         true
 
  -- Función: get (<a>, <i>)
      Recupera la propiedad de usuario indicada por <i> asociada al
      átomo <a> o devuelve `false' si <a> no tiene la propiedad <i>.
 
      La función `get' evalúa sus argumentos.
+
+     Véanse también `put' y `qput'.
 
           (%i1) put (%e, 'transcendental, 'type);
           (%o1)                    transcendental
@@ -3847,11 +3926,45 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
           (%i6) typeof (2*%e + %pi);
           (%o6)     [transcendental, [algebraic, transcendental]]
 
+ -- Propiedad: integer
+ -- Propiedad: noninteger
+     `declare(<a>, integer)' o `declare(<a>, noninteger)' indica a
+     Maxima que reconozca <a> como una variable entera o no entera.
+
+     Véase también `declare'.
+
+     Ejemplo:
+
+          (%i1) declare(n, integer, x, noninteger);
+          (%o1)                         done
+          (%i2) askinteger(n);
+          (%o2)                          yes
+          (%i3) askinteger(x);
+          (%o3)                          no
+
+ -- Propiedad: integervalued
+     `declare(<f>, integervalued)' indica a MAxima que reconozca <f>
+     como una función que toma valores enteros.
+
+     Véase también `declare'.
+
+     Ejemplo:
+
+          (%i1) exp(%i)^f(x);
+                                        %i f(x)
+          (%o1)                      (%e  )
+          (%i2) declare(f, integervalued);
+          (%o2)                         done
+          (%i3) exp(%i)^f(x);
+                                        %i f(x)
+          (%o3)                       %e
 
  -- Propiedad: nonarray
      La instrucción `declare(a, nonarray)' le indica a Maxima que no
      considere <a> como un array. Esta declaración evita la evaluación
      múltiple de <a>, si ésta es una variable subindicada.
+
+     Véase también `declare'.
 
      Ejemplo:
 
@@ -3866,10 +3979,21 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
           (%o6)                          a
                                           x
 
+ -- Propiedad: nonscalar
+     Hace que los átomos se comporten como hace una lista o matriz con
+     respecto del operador `.' del la multiplicación no conmutativa.
+
+     Véase también `declare'.
+
+ -- Función: nonscalarp (<expr>)
+     Devuelve `true' si <expr> no es escalar, es decir, si contiene
+     átomos declarados como no escalares, listas o matrices.
+
  -- Declaración: posfun
      La instrucción `declare (f, posfun)' declara a `f' como función
      positiva, de forma que `is (f(x) > 0)' devolverá `true'.
 
+     Véase también `declare'.
 
  -- Función: printprops (<a>, <i>)
  -- Función: printprops ([<a_1>, ..., <a_n>], <i>)
@@ -3882,6 +4006,143 @@ File: maxima.info,  Node: Funciones y variables para las propiedades,  Next: Fun
      mostradas de otra manera, i.e. para `atvalue', `atomgrad',
      `gradef', y `matchdeclare'.
 
+
+ -- Función: properties (<a>)
+     Devuelve una lista con los nombres de todas las propiedades
+     asociadas al t'omo <a>.
+
+ -- Variable del sistema: props
+     Valor por defecto: `[]'
+
+     `props' son t'omos que tienen asociadas otras propiedades además
+     de las explícitamente mencionadas en `infolists', tales como las
+     especificadas por `atvalue', `matchdeclare' y la función `declare'.
+
+ -- Función: propvars (<prop>)
+     Devuelve la lista con los átomos de la lista `props' que tienen la
+     propiedad indicada por <prop>. Así, `propvars (atvalue)' devuelve
+     la lista con los átomos a los que se les ha asociado valores con
+     `atvalue'.
+
+ -- Función: put (<átomo>, <valor>, <indicador>)
+     Asigna el <valor> a la propiedad  (especificada por <indicador>)
+     de <átomo>; <indicador> puede ser el nombre de cualquier propiedad
+     y no solamente de aquellas definidas por el sistema.
+
+     `rem' deshace la asignación realizada por `put'.
+
+     La función `put' evalúa sus argumentos y devuelve <valor>.
+
+     Ejemplos:
+
+          (%i1) put (foo, (a+b)^5, expr);
+                                             5
+          (%o1)                       (b + a)
+          (%i2) put (foo, "Hello", str);
+          (%o2)                         Hello
+          (%i3) properties (foo);
+          (%o3)            [[user properties, str, expr]]
+          (%i4) get (foo, expr);
+                                             5
+          (%o4)                       (b + a)
+          (%i5) get (foo, str);
+          (%o5)                         Hello
+
+
+ -- Función: qput (<átomo>, <valor>, <indicador>)
+     Asigna <valor> a la propiedad de <átomo> que especifique
+     <indicador>.  Actúa del mismo modeo que `put', excepto que sus
+     argumentos no son evaluados.
+
+     Véase también `get'.
+
+     Ejemplo:
+
+          (%i1) foo: aa$
+          (%i2) bar: bb$
+          (%i3) baz: cc$
+          (%i4) put (foo, bar, baz);
+          (%o4)                          bb
+          (%i5) properties (aa);
+          (%o5)                [[user properties, cc]]
+          (%i6) get (aa, cc);
+          (%o6)                          bb
+          (%i7) qput (foo, bar, baz);
+          (%o7)                          bar
+          (%i8) properties (foo);
+          (%o8)            [value, [user properties, baz]]
+          (%i9) get ('foo, 'baz);
+          (%o9)                          bar
+
+ -- Propiedad: rational
+ -- Propiedad: irrational
+     `declare(<a>, rational)' o `declare(<a>, irrational)' indica a
+     Maxima que reconozca <a> como una variable real racional o
+     irracional.
+
+     Véase también `declare'.
+
+ -- Propiedad: real
+ -- Propiedad: imaginary
+ -- Propiedad: complex
+     `declare(<a>, real)', `declare(<a>, imaginary)' o `declare(<a>,
+     complex)' indican a Maxima que reconozca <a> como variable real,
+     imaginaria puro o compleja, respectivamente.
+
+     Véase también `declare'.
+
+ -- Función: rem (<átomo>, <indicador>)
+     Elimina del <átomo> la propiedad indicada por <indicador>.  `rem'
+     deshace la asignación realizada por `put'.
+
+     `rem' devuelve `done' si <átomo> tenía la propiedad <indicador>
+     cuando `rem' fue invocado, devolviendo `false' si carecía tal
+     propiedad.
+
+
+ -- Función: remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
+ -- Función: remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)
+ -- Función: remove ("<a>", operator)
+ -- Función: remove (<a>, transfun)
+ -- Función: remove (all, <p>)
+     Elimina propiedades asociadas con átomos.
+
+     La llamada `remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)' elimina la
+     propiedad `p_k' del átomo `a_k'.
+
+     La llamada `remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)'
+     elimina las propiedades `<p_1>, ..., <p_n>' de los átomos <a_1>,
+     ..., <a_m>. Puede tener más de un par de listas.
+
+     La llamada `remove (all, <p>)' elimina la propiedad <p> de todos
+     los átomos que la tengan.
+
+     Las propiedades eliminadas pueden ser de las que define el
+     sistema, como `function', `macro' o `mode_declare'; `remove' no
+     elimina las propiedades definidas por `put'.
+
+     La llamada `remove ("<a>", operator)' o su equivalente `remove
+     ("<a>", op)' elimina de  <a> las propiedades de operador
+     declaradas por `prefix', `infix', `nary', `postfix', `matchfix' o
+     `nofix'. Nótese que el nombre del operador debe escribirse como
+     cadena precedida de apóstrofo.
+
+     La función `remove' devuelve siempre `done' independientemente que
+     haya algún átomo con la propiedad especificada.
+
+     La función `remove' no evalúa sus argumentos.
+
+ -- Propiedad: scalar
+     `declare(<a>, scalar)' indica a Maxima que considere a <a> como
+     una variable escalar.
+
+     Véase también `declare'.
+
+ -- Función: scalarp (<expr>)
+     Devuelve `true' si <expr> es un número, constante  o variable
+     declarada como `scalar' con `declare', o compuesta completamente
+     de tales números, constantes o variables, pero que no contengan
+     matrices ni listas.
 
 
 File: maxima.info,  Node: Funciones y variables para los hechos,  Next: Funciones y variables para los predicados,  Prev: Funciones y variables para las propiedades,  Up: Base de datos de Maxima
@@ -3905,11 +4166,6 @@ File: maxima.info,  Node: Funciones y variables para los hechos,  Next: Funcione
      La variable `activecontexts' es la lista de contextos que se han
      activado por medio de la función `activate', pero que no se han
      activado por ser subcontextos del contexto actual.
-
-
- -- Variable del sistema: askexp
-     Cuando se invoca a `asksign', la expresión que se va a analizar es
-     precisamente `askexp'.
 
 
  -- Función: askinteger (<expr>, integer)
@@ -4367,41 +4623,6 @@ File: maxima.info,  Node: Funciones y variables para los predicados,  Prev: Func
 
      Aquí, el dominio real de `acos (x^2 + 1)' es el conjunto vacío.
 
-
- -- Operator especial: constant
-     La llamada `declare (<a>, constant)' declara <a> como constante.
-     Véase `declare'.
-
-
- -- Función: constantp (<expr>)
-     Devuelve `true' si <expr> es una expresión constante y `false' en
-     caso contrario.
-
-     Una expresión se considera constante si sus argumentos son números
-     (incluidos los números racionales que se muestran con `/R/'),
-     constantes simbólicas como `%pi', `%e' o `%i', variables con valor
-     constante o declarada como constante por `declare', o funciones
-     cuyos argumentos son constantes.
-
-     La función `constantp' evalúa sus argumentos.
-
-     Ejemplos:
-
-          (%i1) constantp (7 * sin(2));
-          (%o1)                                true
-          (%i2) constantp (rat (17/29));
-          (%o2)                                true
-          (%i3) constantp (%pi * sin(%e));
-          (%o3)                                true
-          (%i4) constantp (exp (x));
-          (%o4)                                false
-          (%i5) declare (x, constant);
-          (%o5)                                done
-          (%i6) constantp (exp (x));
-          (%o6)                                true
-          (%i7) constantp (foo (x) + bar (%e) + baz (2));
-          (%o7)                                false
-          (%i8)
 
  -- Función: equal (<a>, <b>)
      Representa la equivalencia, esto es, la igualdad de los valores.
@@ -5497,6 +5718,8 @@ File: maxima.info,  Node: Lectura y escritura,  Next: Polinomios,  Prev: Gráfic
 * Comentarios::
 * Archivos::
 * Funciones y variables para lectura y escritura::
+* Funciones y variables para salida TeX::
+* Funciones y variables para salida Fortran::
 
 
 File: maxima.info,  Node: Comentarios,  Next: Archivos,  Prev: Lectura y escritura,  Up: Lectura y escritura
@@ -5542,15 +5765,15 @@ almacenamiento que contiene datos o texto.  Los archivos se agrupan en
 los discos en "directorios", que son listas de archivos.  Instrucciones
 que operan con archivos son:
 
-     appendfile           batch                 batchload
-     closefile            file_output_append    filename_merge
-     file_search          file_search_maxima    file_search_lisp
-     file_search_demo     file_search_usage     file_search_tests
-     file_type            load                  load_pathname
-     loadfile             loadprint             printfile
-     pathname_directory   pathname_name         pathname_type
-     save                 stringout             with_stdout
-     writefile
+        appendfile           batch                 batchload
+        closefile            file_output_append    filename_merge
+        file_search          file_search_maxima    file_search_lisp
+        file_search_demo     file_search_usage     file_search_tests
+        file_type            file_type_lisp        file_type_maxima
+        load                 load_pathname         loadfile
+        loadprint            pathname_directory    pathname_name
+        pathname_type        printfile             save
+        stringout            with_stdout           writefile
 
    Cuando el nombre de un fichero se pasa a funciones como `plot2d',
 `save' o `writefile' y en él no se incluye la ruta de acceso, Maxima
@@ -5558,7 +5781,7 @@ almacena el fichero en la carpeta de trabajo actual. La ubicación de la
 carpeta de trabajo depende del sistema operativo y de la instalación.
 
 
-File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev: Archivos,  Up: Lectura y escritura
+File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Next: Funciones y variables para salida TeX,  Prev: Archivos,  Up: Lectura y escritura
 
 13.3 Funciones y variables para lectura y escritura
 ===================================================
@@ -5789,7 +6012,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
  -- Función: load (<filename>)
      Evalúa las expresiones del archivo <filename>, trayendo variables,
-     funciones y otros objetos a Maxima.  Una asignación hecha
+     funciones y otros objetos a Maxima. Una asignación hecha
      previamente a una variable en Maxima será destruida por otra
      asignación que se le haga en <filename>. Para encontrar el
      fichero, `load' llama a `file_search' con `file_search_maxima' y
@@ -5798,11 +6021,11 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      caso contrario, `load' muestra un mensaje de error.
 
      La función `load' trabaja indistintamente con código Lisp y Maxima.
-     Los ficheros creados con `save', `translate_file' y
-     `compile_file', que crea código Lisp, y `stringout', que crea
-     código Maxima, todos ellos pueden ser procesados por `load'. La
-     función `load' llama a `loadfile' para cargar archivos en Lisp y a
-     `batchload' para cargar archivos en Maxima.
+     Los ficheros creados con `save', `translate_file' y `compile_file',
+     que crea código Lisp, y `stringout', que crea código Maxima, todos
+     ellos pueden ser procesados por `load'. La función `load' llama a
+     `loadfile' para cargar archivos en Lisp y a  `batchload' para
+     cargar archivos en Maxima.
 
      La función `load' no reconoce las construcciones de tipo `:lisp' en
      ficheros de Maxima. Además, mientras se está procesando <filename>,
@@ -5918,8 +6141,8 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
  -- Función: save (<filename>, <name_1>=<expr_1>, <name_2>=<expr_2>,
           ...)
      Alamacena los valores actuales de <name_1>, <name_2>, <name_3>,
-     ..., en el archivo <filename>.  Los argumentos son nombres de
-     variables, funciones u otros objetos.  Si un nombre no tiene un
+     ..., en el archivo <filename>. Los argumentos son nombres de
+     variables, funciones u otros objetos. Si un nombre no tiene un
      valor o una función asociado a él, entonces se ignora.
 
      La función `save' devuelve <filename>.
@@ -5932,16 +6155,16 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
      La llamada `save (<filename>, values, functions, labels, ...)'
      almacena los elementos cuyos nombres son `values', `functions',
-     `labels', etc.  Los nombres pueden ser cualesquiera de los
+     `labels', etc. Los nombres pueden ser cualesquiera de los
      especificados por la variable `infolists'; `values' incluye todas
      las variables definidas por el usuario.
 
      La llamada `save (<filename>, [<m>, <n>])' almacena los valores de
-     las etiquetas de entrada y salida desde <m> hasta <n>.  Nótese que
-     <m> y <n> deben ser números.  Las etiquetas de entrada y salida
+     las etiquetas de entrada y salida desde <m> hasta <n>. Nótese que
+     <m> y <n> deben ser números. Las etiquetas de entrada y salida
      también se pueden almacenar una a una, por ejemplo, `save
      ("foo.1", %i42, %o42)'.  La llamada `save (<filename>, labels)'
-     almacena todas las etiquetas de entrada y salida.  Cuando las
+     almacena todas las etiquetas de entrada y salida. Cuando las
      etiquetas almacenadas en el archivo sean posteriormente
      recuperadas, se sobreescribirán las activas en ese momento.
 
@@ -5987,7 +6210,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      `%i2', `%i3', ...) o de salida (`%o1', `%o2', `%o3', ...).
 
      Si `grind' vale `true', `stringout' formatea la salida utilizando
-     `grind'. En caso contrario, se utilizará el formato `string'.
+     `grind'.  En caso contrario, se utilizará el formato `string'.
      Véanse `grind' y `string'.
 
      La forma especial `stringout (<filename>, [<m>, <n>])' escribe los
@@ -6003,11 +6226,74 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
      La forma especial `stringout (<filename>, values)' escribe todas
      las variables asignadas por el usuario, contenidas en la lista
-     global `values', en el archivo. Cada variable se escribe como una
+     global `values', en el archivo.  Cada variable se escribe como una
      sentencia de asignación, con el nombre de la variable seguida de
      dos puntos y a continuación su valor. Nótese que la forma general
      de `stringout' no escribe las variables como sentencias de
      asignación.
+
+ -- Función: with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Función: with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
+     Evalúa  <expr_1>, <expr_2>, <expr_3>, ...  y escribe los
+     resultados en el fichero <f> o flujo de salida <s>.  Las
+     expresiones que se evalúan no se escriben. La salida puede
+     generarse por medio de `print', `display', `grind' entre otras
+     funciones.
+
+     La variable global `file_output_append' controla si `with_stdout'
+     añade o reinicia el contenido del fichero de salida <f>.  Si
+     `file_output_append' vale `true', `with_stdout' añade contenido al
+     fichero de salida. En cualquier caso, `with_stdout' crea el
+     fichero si éste no existe.
+
+     La función `with_stdout' devuelve el valor de su último argumento.
+
+     Véase también `writefile'.
+
+          (%i1) with_stdout ("tmp.out",
+                             for i:5 thru 10 do print (i, "! yields", i!))$
+          (%i2) printfile ("tmp.out")$
+          5 ! yields 120
+          6 ! yields 720
+          7 ! yields 5040
+          8 ! yields 40320
+          9 ! yields 362880
+          10 ! yields 3628800
+
+ -- Función: writefile (<filename>)
+     Comienza escribiendo una transcripción de la sesión de Maxima en
+     el archivo <filename>.  Cualquier interacción entre Maxima y el
+     usuario se almacena también en este archivo, tal como aparece en
+     la consola.
+
+     Puesto que la transcripción se escribe en el formato de salida a
+     la consola, su contenido no es interpretable por Maxima.  Para
+     hacer un archivo que contenga expresiones que puedan ser
+     nuevamente cargadas en Maxima, véanse `save' y `stringout'; la
+     función `save' almacena expresiones en formato Lisp, mientras que
+     `stringout' lo hace en formato Maxima.
+
+     El resultado de ejecutar `writefile' cuando el archivo <filename>
+     ya existe depende del entorno Lisp operativo; el contenido
+     anterior puede ser sobreescrito o ampliado con la sesión actual.
+     La función `appendfile' siempre añade la sesión al contenido
+     actual.
+
+     Puede ser útil ejecutar `playback' después de `writefile' para
+     guardar las interacciones previas de la sesión. Puesto que
+     `playback' muestra solamente las variables de entrada y salida
+     (`%i1', `%o1', etc.), cualquier salida generada por una sentencia
+     de impresión desde dentro de una función no es mostrada por
+     `playback'.
+
+     La función `closefile' cierra los archivos abiertos por
+     `writefile' o `appendfile'.
+
+
+File: maxima.info,  Node: Funciones y variables para salida TeX,  Next: Funciones y variables para salida Fortran,  Prev: Funciones y variables para lectura y escritura,  Up: Lectura y escritura
+
+13.4 Funciones y variables para salida TeX
+==========================================
 
  -- Función: tex (<expr>)
  -- Función: tex (<expr>, <destination>)
@@ -6016,7 +6302,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
  -- Función: tex (<label>, <destination>)
  -- Función: tex (<label>, false)
      Devuelve la expresión en un formato apropiado para para ser
-     incorporado a un documento basado en TeX.  El resultado que se
+     incorporado a un documento basado en TeX. El resultado que se
      obtiene es un fragmento de código que puede incluirse en un
      documento mayor, pero que no puede ser procesado aisladamente.
 
@@ -6282,62 +6568,80 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           \end{equation}
           (%o4)                         false
 
- -- Función: with_stdout (<f>, <expr_1>, <expr_2>, <expr_3>, ...)
- -- Función: with_stdout (<s>, <expr_1>, <expr_2>, <expr_3>, ...)
-     Evalúa  <expr_1>, <expr_2>, <expr_3>, ...  y escribe los
-     resultados en el fichero <f> o flujo de salida <s>.  Las
-     expresiones que se evalúan no se escriben. La salida puede
-     generarse por medio de `print', `display', `grind' entre otras
-     funciones.
+
+File: maxima.info,  Node: Funciones y variables para salida Fortran,  Prev: Funciones y variables para salida TeX,  Up: Lectura y escritura
 
-     La variable global `file_output_append' controla si `with_stdout'
-     añade o reinicia el contenido del fichero de salida <f>.  Si
-     `file_output_append' vale `true', `with_stdout' añade contenido al
-     fichero de salida. En cualquier caso, `with_stdout' crea el
-     fichero si éste no existe.
+13.5 Funciones y variables para salida Fortran
+==============================================
 
-     La función `with_stdout' devuelve el valor de su último argumento.
+ -- Variable opcional: fortindent
+     Valor por defecto: 0
 
-     Véase también `writefile'.
+     La variable `fortindent' controla el margen izquierdo de las
+     expresiones que escribe la instrucción `fortran'.  El valor 0
+     escribe con un margen normal de 6 espacios; valores positivos
+     harán que las expresiones se escriban más a la derecha.
 
-          (%i1) with_stdout ("tmp.out",
-                             for i:5 thru 10 do print (i, "! yields", i!))$
-          (%i2) printfile ("tmp.out")$
-          5 ! yields 120
-          6 ! yields 720
-          7 ! yields 5040
-          8 ! yields 40320
-          9 ! yields 362880
-          10 ! yields 3628800
+ -- Función: fortran (<expr>)
+     Escribe <expr> en código Fortran. La salida se escribe con
+     márgenes, y si ésta es demasiado larga `fortran' sigue escribiendo
+     en líneas sucesivas. La función `fortran' escribe el operador de
+     exponenciación `^' como `**', e imprime un número complejo `a + b
+     %i' como `(a,b)'.
 
- -- Función: writefile (<filename>)
-     Comienza escribiendo una transcripción de la sesión de Maxima en
-     el archivo <filename>.  Cualquier interacción entre Maxima y el
-     usuario se almacena también en este archivo, tal como aparece en
-     la consola.
+     El argumento <expr> puede ser una ecuación. En tal caso, `fortran'
+     escribe una sentencia de asignación, dándole el valor del miembro
+     derecho de la expresión al miembro izquierdo. En particular, si el
+     miembro derecho de <expr> es el nombre de una matriz, entonces
+     `fortran' escribe una sentencia de asignación para cada elemento
+     de la matriz.
 
-     Puesto que la transcripción se escribe en el formato de salida a
-     la consola, su contenido no es interpretable por Maxima.  Para
-     hacer un archivo que contenga expresiones que puedan ser
-     nuevamente cargadas en Maxima, véanse `save' y `stringout'; la
-     función `save' almacena expresiones en formato Lisp, mientras que
-     `stringout' lo hace en formato Maxima.
+     Si <expr> no es reconozida por `fortran', la expresión se escribe
+     en formato `grind' sin avisos. La función `fortran' no reconoce
+     listas, arreglos ni funciones.
 
-     El resultado de ejecutar `writefile' cuando el archivo <filename>
-     ya existe depende del entorno Lisp operativo; el contenido
-     anterior puede ser sobreescrito o ampliado con la sesión actual.
-     La función `appendfile' siempre añade la sesión al contenido
-     actual.
+     La variable `fortindent' controla el margen izquierdo de las
+     expresiones que escribe la instrucción `fortran'.  El valor 0
+     escribe con un margen normal de 6 espacios; valores positivos
+     harán que las expresiones se escriban más a la derecha.
 
-     Puede ser útil ejecutar `playback' después de `writefile' para
-     guardar las interacciones previas de la sesión. Puesto que
-     `playback' muestra solamente las variables de entrada y salida
-     (`%i1', `%o1', etc.), cualquier salida generada por una sentencia
-     de impresión desde dentro de una función no es mostrada por
-     `playback'.
+     Si `fortspaces' vale `true', `fortran' rellena las líneas con
+     espacios de 80 columnas.
 
-     La función `closefile' cierra los archivos abiertos por
-     `writefile' o `appendfile'.
+     La función `fortran' evalúa sus argumentos; un argumento precedido
+     de apóstrofo previene de la evaluación.  La función `fortran'
+     siempre devuelve `done'.
+
+     Ejemplos:
+
+     (%i1) expr: (a + b)^12$
+     (%i2) fortran (expr);
+           (b+a)**12
+     (%o2)                         done
+     (%i3) fortran ('x=expr);
+           x = (b+a)**12
+     (%o3)                         done
+     (%i4) fortran ('x=expand (expr));
+           x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+          1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+          2   **3+66*a**10*b**2+12*a**11*b+a**12
+     (%o4)                         done
+     (%i5) fortran ('x=7+5*%i);
+           x = (7,5)
+     (%o5)                         done
+     (%i6) fortran ('x=[1,2,3,4]);
+           x = [1,2,3,4]
+     (%o6)                         done
+     (%i7) f(x) := x^2$
+     (%i8) fortran (f);
+           f
+     (%o8)                         done
+
+ -- Variable opcional: fortspaces
+     Valor por defecto: `false'
+
+     Si `fortspaces' vale `true', `fortran' rellena las líneas con
+     espacios de 80 columnas.
 
 
 File: maxima.info,  Node: Polinomios,  Next: Funciones Especiales,  Prev: Lectura y escritura,  Up: Top

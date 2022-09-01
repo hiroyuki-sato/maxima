@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1049,7 +1049,8 @@ File: maxima.info,  Node: Funciones y variables para lbfgs,  Prev: Introducción 
           (%i3) F_grad : map (lambda ([x], diff (F(a, b, c), x)), [a, b, c]);
                                               3           5
           (%o3)          [2 (a - 5), 4 (b - 3) , 6 (c - 2) ]
-          (%i4) estimates : lbfgs ([F(a, b, c), F_grad], [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
+          (%i4) estimates : lbfgs ([F(a, b, c), F_grad],
+                                   [a, b, c], [0, 0, 0], 1e-4, [1, 0]);
           *************************************************
             N=    3   NUMBER OF CORRECTIONS=25
                  INITIAL VALUES
@@ -1304,6 +1305,7 @@ File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Intro
      ser cualquier expresión de Maxima, la función `copy' es
      especialmente útil cuando <e> es una lista o una matriz.
      Considérese el siguiente ejemplo:
+
           (%i1) m : [1,[2,3]]$
           (%i2) mm : m$
           (%i3) mm[2][1] : x$
@@ -1326,7 +1328,7 @@ File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Intro
  -- Función: cholesky (<M>, <field>)
      Devuelve la factorización de Cholesky de la matriz autoadjunta (o
      hermítica) <M>. El valor por defecto del segundo argumento es
-     <generalring>. Para una descripción de los posibles valores para
+     `generalring'. Para una descripción de los posibles valores para
      <field>, véase `lu_factor'.
 
 
@@ -1336,11 +1338,12 @@ File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Intro
      transponer cada elemento de la matriz.
 
 
- -- Función: diag_matrix (<d_1>, <d_2>,...,<d_n>)
+ -- Función: diag_matrix (<d_1>, <d_2>, ..., <d_n>)
      Devuelve una matriz diagonal con los elementos de la diagonal
-     iguales a <d_1>, <d_2>,...,<d_n>; cuando éstos son matrices, los
+     iguales a <d_1>, <d_2>, ..., <d_n>; cuando éstos son matrices, los
      elementos nulos de la matriz devuelta son matrices nulas de tamaño
      apropiado. Por ejemplo:
+
           (%i1) diag_matrix(diag_matrix(1,2),diag_matrix(3,4));
 
                                       [ [ 1  0 ]  [ 0  0 ] ]
@@ -1790,9 +1793,8 @@ File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Intro
      predicado <coeffp>, aunque aquí se desee su comportamiento por
      defecto.
 
-     `polynomialp (<p>, <L>, <coeffp>)' equivale a `polynomialp (<p>,
-     <L>, <coeffp>, 'nonnegintegerp)'.
-
+     La instrucción `polynomialp (<p>, <L>, <coeffp>)' equivale a
+     `polynomialp (<p>, <L>, <coeffp>, 'nonnegintegerp)', al tiempo que
      `polynomialp (<p>, <L>)' equivale a `polynomialp (<p>, L<,>
      'constantp, 'nonnegintegerp)'.
 
@@ -1871,7 +1873,6 @@ File: maxima.info,  Node: Funciones y variables para linearalgebra,  Prev: Intro
      <row>. El valor por defecto para <row> es el complejo conjugado de
      <col>. Ejemplo:
           (%i1)  toeplitz([1,2,3],[x,y,z]);
-
                                             [ 1  y  z ]
                                             [         ]
           (%o1)                             [ 2  1  y ]
@@ -2585,8 +2586,8 @@ File: maxima.info,  Node: Funciones y variables para mnewton,  Prev: mnewton,  U
 
      Precisión que determina cuando la función `mnewton' ha conseguido
      una convergencia aceptable. Si `newtonepsilon' es un número
-     decimal grande (bigfloat), entonces `mnewton' realiza los cálculos
-     en ese formato.
+     decimal de precisión arbitraria (bigfloat), entonces `mnewton'
+     realiza los cálculos en ese formato.
 
      Véase también `mnewton'.
 
@@ -2620,6 +2621,18 @@ File: maxima.info,  Node: Funciones y variables para mnewton,  Prev: mnewton,  U
           (%o3)             [[a = 1.70927556786144]]
           (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
           (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
+
+     La variable `newtonepsilon' controla la precisión de las
+     aproximaciones. También controla si los cálculos se realizan con
+     precisión doble o arbitraria (bigfloats).
+
+          (%i1) load(mnewton)$
+
+          (%i2) (fpprec : 25, newtonepsilon : bfloat(10^(-fpprec+5)))$
+
+          (%i3) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
+          (%o3) [[u = 1.066618389595406772591173b0,
+                                         v = 1.552564766841786450100418b0]]
 
      Antes de hacer uso de esta función ejecútese  `load("mnewton")'.
      Véanse también `newtonepsilon' y `newtonmaxiter'.
@@ -4278,10 +4291,16 @@ File: maxima.info,  Node: simplification,  Next: solve_rec,  Prev: simplex,  Up:
 * Menu:
 
 * Introducción a simplification::
-* Funciones y variables para simplification::
+* Paquete absimp::
+* Paquete facexp::
+* Paquete functs::
+* Paquete ineq::
+* Paquete rducon::
+* Paquete scifac::
+* Paquete sqdnst::
 
 
-File: maxima.info,  Node: Introducción a simplification,  Next: Funciones y variables para simplification,  Prev: simplification,  Up: simplification
+File: maxima.info,  Node: Introducción a simplification,  Next: Paquete absimp,  Prev: simplification,  Up: simplification
 
 73.1 Introducción a simplification
 ==================================
@@ -4291,13 +4310,10 @@ implementan algunas reglas y funciones para simplificar expresiones,
 así como ciertas funciones no relacionadas con la simplificación.
 
 
-File: maxima.info,  Node: Funciones y variables para simplification,  Prev: Introducción a simplification,  Up: simplification
+File: maxima.info,  Node: Paquete absimp,  Next: Paquete facexp,  Prev: Introducción a simplification,  Up: simplification
 
-73.2 Funciones y variables para simplification
-==============================================
-
-73.2.1 Paquete absimp
----------------------
+73.2 Paquete absimp
+===================
 
 El paquete `absimp' contiene reglas para aplicar patrones que extienden
 el sistema de reglas nativo de Maxima para las funciones `abs' y
@@ -4324,8 +4340,11 @@ desarrolla una demostración sobre el uso del mismo.
      (%i4) cosh (abs (x));
      (%o4)                               cosh(x)
 
-73.2.2 Paquete facexp
----------------------
+
+File: maxima.info,  Node: Paquete facexp,  Next: Paquete functs,  Prev: Paquete absimp,  Up: simplification
+
+73.3 Paquete facexp
+===================
 
 El paquete `facexp' contiene varias funciones que le aportan al usuario
 la posibilidad de estructurar expresiones controlando su expansión.
@@ -4430,8 +4449,11 @@ hace una demostración sobre su uso.
      ser especialmente útil cuando las expresiones a sumar son muy
      grandes.
 
-73.2.3 Paquete functs
----------------------
+
+File: maxima.info,  Node: Paquete functs,  Next: Paquete ineq,  Prev: Paquete facexp,  Up: simplification
+
+73.4 Paquete functs
+===================
 
  -- Función: rempart (<expr>, <n>)
      Elimina la parte <n> de la expresión <expr>.
@@ -4500,14 +4522,47 @@ hace una demostración sobre su uso.
      Para hacer uso de esta función ejecutar `load(functs)'.
 
  -- Función: gcdivide (<p>, <q>)
-     Si `takegcd' vale `true', `gcdivide' divide los polinomios <p> y
-     <q> por su máximo común divisor y devuelve el cociente de los
-     resultados.
+     Si `takegcd' vale `true', que es su valor por defecto, `gcdivide'
+     divide los polinomios <p> y <q> por su máximo común divisor y
+     devuelve el cociente de los resultados.  `gcdivide' hace una
+     llamada a la función `ezgcd' para dividir los polinomios por su
+     máximo común divisor.
 
      Si `takegcd' vale `false', `gcdivide' devuelve el cociente
      `<p>/<q>'.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
+
+     Véanse también  `ezgcd', `gcd', `gcdex' y `poly_gcd'.
+
+     Ejemplos:
+
+          (%i1) load(functs)$
+
+          (%i2) p1:6*x^3+19*x^2+19*x+6;
+                                  3       2
+          (%o2)                6 x  + 19 x  + 19 x + 6
+          (%i3) p2:6*x^5+13*x^4+12*x^3+13*x^2+6*x;
+                            5       4       3       2
+          (%o3)          6 x  + 13 x  + 12 x  + 13 x  + 6 x
+          (%i4) gcdivide(p1, p2);
+                                       x + 1
+          (%o4)                        ------
+                                        3
+                                       x  + x
+          (%i5) takegcd:false;
+          (%o5)                         false
+          (%i6) gcdivide(p1, p2);
+                                 3       2
+                              6 x  + 19 x  + 19 x + 6
+          (%o6)          ----------------------------------
+                            5       4       3       2
+                         6 x  + 13 x  + 12 x  + 13 x  + 6 x
+          (%i7) ratsimp(%);
+                                       x + 1
+          (%o7)                        ------
+                                        3
+                                       x  + x
 
  -- Función: arithmetic (<a>, <d>, <n>)
      Devuelve el <n>-ésimo término de la progresión aritmética `<a>,
@@ -4590,8 +4645,11 @@ hace una demostración sobre su uso.
 
      Para hacer uso de esta función ejecutar `load(functs)'.
 
-73.2.4 Paquete ineq
--------------------
+
+File: maxima.info,  Node: Paquete ineq,  Next: Paquete rducon,  Prev: Paquete functs,  Up: simplification
+
+73.5 Paquete ineq
+=================
 
 El paquete `ineq' contiene reglas de simplificación para desigualdades
 
@@ -4682,8 +4740,11 @@ referenciarse a ellas, como en `remrule ("+", "+rule1")' para eliminar
 la primera regla sobre `"+"', o `disprule ("*rule2")' para mostrar la
 definición de la segunda regla multiplicativa.
 
-73.2.5 Paquete rducon
----------------------
+
+File: maxima.info,  Node: Paquete rducon,  Next: Paquete scifac,  Prev: Paquete ineq,  Up: simplification
+
+73.6 Paquete rducon
+===================
 
  -- Función: reduce_consts (<expr>)
      Sustituye subexpresiones constantes de <expr> por átomos,
@@ -4720,8 +4781,11 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (rducon)' carga esta función y `demo (rducon)'
      hace una demostración sobre su uso.
 
-73.2.6 Paquete scifac
----------------------
+
+File: maxima.info,  Node: Paquete scifac,  Next: Paquete sqdnst,  Prev: Paquete rducon,  Up: simplification
+
+73.7 Paquete scifac
+===================
 
  -- Función: gcfac (<expr>)
      Es una función de factorización que intenta aplicar la misma
@@ -4748,8 +4812,11 @@ definición de la segunda regla multiplicativa.
      La instrucción `load (scifac)' carga esta función y `demo (scifac)'
      hace una demostración sobre su uso.
 
-73.2.7 Paquete sqdnst
----------------------
+
+File: maxima.info,  Node: Paquete sqdnst,  Prev: Paquete scifac,  Up: simplification
+
+73.8 Paquete sqdnst
+===================
 
  -- Función: sqrtdenest (<expr>)
      Reduce expresiones en las que se encuentren raíces cuadradas
@@ -6043,116 +6110,107 @@ File: maxima.info,  Node: Funciones y variables para stats,  Next: Funciones y v
                                  |  p_value = .4361763918860381
 
 
- -- Función: simple_linear_regression (<x>)
- -- Función: simple_linear_regression (<x> <option>)
-     Regresión lineal simple, y_i=a+b x_i+e_i, donde las e_i son
-     variables aleatorias independientes de distribución N(0,sigma).
-     El argumento <x> debe ser una matriz de dos columnas o una lista
-     de pares de números.
+ -- Función: linear_regression (<x>)
+ -- Función: linear_regression (<x> <option>)
+     Regresión lineal múltiple, y_i = b0 + b1*x_1i + b2*x_2i + ... +
+     bk*x_ki + u_i, donde u_i son variables aleatorias independientes
+     N(0,sigma). El argumento <x> debe ser una matriz con más de una
+     columna. La última columna se considera que son las respuestas
+     (y_i).
 
-     Opciones:
+     Opción:
 
         * `'conflevel', valor por defecto `95/100', nivel de confianza
-          para el intervalo de confianza; debe ser una expresión que
+          para los intervalos de confianza; debe ser una expresión que
           tome un valor en el intervalo (0,1).
 
-        * `'regressor', valor por defecto `'x', nombre de la variable
-          independiente.
+     El resultado devuelto por la función `linear_regression' es un
+     objeto `inference_result' de Maxima con los siguientes campos:
+
+       1. `'b_estimation': estimadores de los coeficientes de regresión.
+
+       2. `'b_covariances': matriz de covarianzas de los estimadores de
+          los coeficientes de regresión.
+
+       3. `b_conf_int': intervalos de confianza para los coeficientes
+          de regresión.
+
+       4. `b_statistics': estadísticos para los contrastes de los
+          coeficientes.
+
+       5. `b_p_values': p-valores para los contrastes de los
+          coeficientes.
+
+       6. `b_distribution': distribución de probabilidad para los
+          contrastes de los coeficientes.
+
+       7. `v_estimation': estimador insesgado de la varianza.
+
+       8. `v_conf_int': intervalo de confianza de la varianza.
+
+       9. `v_distribution': distribución de probabilidad para el
+          contraste de la varianza.
+
+      10. `residuals': residuos.
+
+      11. `adc': coeficiente de determinación ajustado.
+
+      12. `aic': Criterio de información de Akaike.
+
+      13. `bic': Criterio de información de Bayes.
 
 
-     El resultado devuelto por la función  `simple_linear_regression'
-     es un objeto `inference_result' con los siguientes apartados:
-
-       1. `'model': la ecuación ajustada. Útil para hacer predicciones.
-          Véanse los ejemplos más abajo.
-
-       2. `'means': media bivariante.
-
-       3. `'variances': varianzas de ambas variables.
-
-       4. `'correlation': coeficiente de correlación.
-
-       5. `'adc': coeficiente de determinación ajustado.
-
-       6. `'a_estimation': estimador del parámetro <a>.
-
-       7. `'a_conf_int': intervalo de confianza del parámetro <a>.
-
-       8. `'b_estimation': estimador del parámetro <b>.
-
-       9. `'b_conf_int': intervalo de confianza del parámetro <b>.
-
-      10. `'hypotheses': hipótesis nula y altenativa sobre el parámetro
-          <b>.
-
-      11. `'statistic': valor del estadístico de contraste utilizado
-          para probar la hipótesis.
-
-      12. `'distribution': distribución del estadístico de contraste,
-          junto con su parámetro.
-
-      13. `'p_value': p-valor del test sobre <b>.
-
-      14. `'v_estimation': estimador insesgado de la varianza, o
-          varianza residual.
-
-      15. `'v_conf_int': intervalo de confianza de la varianza.
-
-      16. `'cond_mean_conf_int': intervalo de confianza para la media
-          condicionada.  Véanse los ejemplos más abajo.
-
-      17. `'new_pred_conf_int': intervalo de confianza para una nueva
-          predicción.  Véanse los ejemplos más abajo.
-
-      18. `'residuals': lista de pares (predicción, residuo), ordenado
-          respecto de las predicciones.  Útil para el análisis de la
-          bondad de ajuste. Véanse los ejemplos más abajo.
-
-
-     Sólo los elementos 1, 4, 14, 9, 10, 11, 12 y 13 de arriba, y en
-     este orden, son mostrados por defecto. El resto permanecen ocultos
-     hasta que el usuario haga uso de las funciones `items_inference' y
+     Solamente los apartados 1, 4, 5, 6, 7, 8, 9 y 11, en este orden,
+     se muestran por defecto. El resto permanecen ocultos hasta que el
+     usuario haga uso de las funciones `items_inference' y
      `take_inference'.
 
      Ejemplo:
 
-     Ajuste de un modelo lineal a una muestra bivariante. La entrada
-     `%i4' representa gráficamente la muestra junto con la recta de
-     regresión; la entrada `%i5' calcula `y' dado `x=113'; también se
-     calculan las medias y el intervalo de confianza para una nueva
-     predicción cuando `x=113'.
+     Ajustando un modelo lineal a una muestra tridimensional. La última
+     columna se considera que son las respuestas (y_i).
 
-          (%i1) load("stats")$
-          (%i2) s:[[125,140.7],[130,155.1],[135,160.3],
-                     [140,167.2],[145,169.8]]$
-          (%i3) z:simple_linear_regression(s,conflevel=0.99);
-                     |               SIMPLE LINEAR REGRESSION
-                     |
-                     |   model = 1.405999999999985 x - 31.18999999999804
-                     |
-                     |           correlation = .9611685255255155
-                     |
-                     |           v_estimation = 13.57966666666665
-                     |
-          (%o3)      | b_conf_int = [.04469633662525263, 2.767303663374718]
-                     |
-                     |          hypotheses = H0: b = 0 ,H1: b # 0
-                     |
-                     |            statistic = 6.032686683658114
-                     |
-                     |            distribution = [student_t, 3]
-                     |
-                     |             p_value = 0.0038059549413203
-          (%i4) plot2d([[discrete, s], take_inference(model,z)],
-                        [x,120,150],
-                        [gnuplot_curve_styles, ["with points","with lines"]] )$
-          (%i5) take_inference(model,z), x=133;
-          (%o5)                         155.808
-          (%i6) take_inference(means,z);
-          (%o6)                     [135.0, 158.62]
-          (%i7) take_inference(new_pred_conf_int,z), x=133;
-          (%o7)              [132.0728595995113, 179.5431404004887]
-
+          (%i2) load("stats")$
+          (%i3) X:matrix(
+              [58,111,64],[84,131,78],[78,158,83],
+              [81,147,88],[82,121,89],[102,165,99],
+              [85,174,101],[102,169,102])$
+          (%i4) fpprintprec: 4$
+          (%i5) res: linear_regression(X);
+                       |       LINEAR REGRESSION MODEL
+                       |
+                       | b_estimation = [9.054, .5203, .2397]
+                       |
+                       | b_statistics = [.6051, 2.246, 1.74]
+                       |
+                       | b_p_values = [.5715, .07466, .1423]
+                       |
+          (%o5)        |   b_distribution = [student_t, 5]
+                       |
+                       |         v_estimation = 35.27
+                       |
+                       |     v_conf_int = [13.74, 212.2]
+                       |
+                       |      v_distribution = [chi2, 5]
+                       |
+                       |             adc = .7922
+          (%i6) items_inference(res);
+          (%o6) [b_estimation, b_covariances, b_conf_int, b_statistics,
+          b_p_values, b_distribution, v_estimation, v_conf_int,
+          v_distribution, residuals, adc, aic, bic]
+          (%i7) take_inference('b_covariances, res);
+                            [  223.9    - 1.12   - .8532  ]
+                            [                             ]
+          (%o7)             [ - 1.12    .05367   - .02305 ]
+                            [                             ]
+                            [ - .8532  - .02305   .01898  ]
+          (%i8) take_inference('bic, res);
+          (%o8)                          30.98
+          (%i9) load("draw")$
+          (%i10) draw2d(
+              points_joined = true,
+              grid = true,
+              points(take_inference('residuals, res)) )$
 
 
 File: maxima.info,  Node: Funciones y variables para distribuciones especiales,  Prev: Funciones y variables para stats,  Up: Top
@@ -6520,8 +6578,8 @@ Ejemplo:
      `stringproc.lisp', puede ser de utilidad si se quiere intercalar
      un salto de línea.
 
-          (%i1) for n:0 thru 22 do sprint( fib(n) )$
-          0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765
+          (%i1) for n:0 thru 19 do sprint( fib(n) )$
+          0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181
           (%i2) for n:0 thru 22 do (
                    sprint(fib(n)), if mod(n,10)=9 then newline() )$
           0 1 1 2 3 5 8 13 21 34

@@ -1,6 +1,6 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -1960,6 +1960,12 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
                                        /
                                         z
 
+     Véanse también `gamma_expand' para controlar cómo se expresa
+     `gamma_incomplete' en términos de funciones elementales y de
+     `erfc'.
+
+     Véanse también las funciones relacionadas
+     `gamma_incomplete_regularized' y `gamma_incomplete_generalized'.
 
  -- Función: gamma_incomplete_regularized (<a>,<z>)
      Función gamma incompleta superior regularizada, A&S 6.5.1.
@@ -1969,6 +1975,11 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
                                                   ----------------------
                                                          gamma(a)
 
+     Véanse también `gamma_expand' para controlar cómo se expresa
+     `gamma_incomplete' en términos de funciones elementales y de
+     `erfc'.
+
+     Véase también `gamma_incomplete'.
 
  -- Función: gamma_incomplete_generalized (<a>,<z1>,<z1>)
      Función gamma incompleta generalizada.
@@ -1982,6 +1993,26 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
                                                         /
                                                          z1
 
+     Véanse también `gamma_incomplete' y `gamma_incomplete_regularized'.
+
+ -- Variable opcional: gamma_expand
+     Valor por defecto: `false'
+
+     `gamma_expand' controla la expansión de `gamma_incomplete'.  Si
+     `gamma_expand' vale `true', `gamma_incomplete(v,z)' se expande en
+     términos de `z', `exp(z)' y `erfc(z)', siempre que sea posible.
+
+          (%i1) gamma_incomplete(2,z);
+          (%o1)                       gamma_incomplete(2, z)
+          (%i2) gamma_expand:true;
+          (%o2)                                true
+          (%i3) gamma_incomplete(2,z);
+                                                     - z
+          (%o3)                            (z + 1) %e
+          (%i4) gamma_incomplete(3/2,z);
+                                        - z   sqrt(%pi) erfc(sqrt(z))
+          (%o4)               sqrt(z) %e    + -----------------------
+                                                         2
 
  -- Variable optativa: gammalim
      Valor por defecto: 1000000
@@ -2930,8 +2961,18 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
 
 
  -- Función: lambert_w (<z>)
-     Rama principal de la función W de Lambert, la solución de la
-     ecuación `z = W(z) * exp(W(z))'.
+     Rama principal de la función W de Lambert, solución de la ecuación
+     `z = W(z) * exp(W(z))'.  (DLMF 4.13)
+
+ -- Función: generalized_lambert_w (<k>, <z>)
+     <k>-ésima rama de la función W de Lambert's, W(z), solución de `z
+     = W(z) * exp(W(z))'. (DLMF 4.13)
+
+     La rama principal, representada por Wp(z) en DLMF, es
+     `lambert_w(z) = generalized_lambert_w(0,z)'.
+
+     La otra rama con valores reales, representada por Wm(z) en DLMF,
+     es `generalized_lambert_w(-1,z)'.
 
  -- Función: nzeta (<z>)
      Función de dispersión del plasma.  `nzeta(z) =
@@ -4633,6 +4674,12 @@ que no son accesibles desde el nivel de Maxima.
      adaptativa, utilizando la integración de Clenshaw-Curtis
      modificada en los subintervalos que contienen a x = c.
 
+`quad_qagp'
+     Básicamente hace lo mismo que `quad_qags', pero los puntos de
+     singularidad o discontinuidad deben ser aportados por el usuario.
+     Esto hace que el cálculo de una buena solución sea más fácil para
+     el integrador.
+
    ---------- Footnotes ----------
 
    (1) Applied Mathematics and Programming Division, K.U. Leuven
@@ -5290,6 +5337,110 @@ File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducci
           (%o3)                     8.750097361672829
 
 
+ -- Fución: quad_qagp (<f(x)>, <x>, <a>, <b>, <points>, [<epsrel>,
+          <epsabs>, <limit>])
+ -- Fución: quad_qagp (<f>, <x>, <a>, <b>, <points>, [<epsrel>,
+          <epsabs>, <limit>])
+     Integra una función general sobre un intervalo acotado. La función
+     `quad_qagp' implementa un método adaptativo global de subdivisión
+     del intervalo con extrapolación (de Doncker, 1978) basado en el
+     algoritmo Epsilon (Wynn, 1956).
+
+     `quad_qagp' calcula la integral
+
+     integrate (f(x), x, a, b)
+
+     La función a integrar es <f(x)>, con variable independiente <x>,
+     en el intervalo limitado por <a> y <b>.
+
+     El integrando puede especificarse mediante el nombre de una
+     función de Maxima o de Lisp o un operador, como una expresión
+     lambda de Maxima, o como una expresión general de Maxima.
+
+     Para ayudar al integrador, el usuario debe aportar una lista de
+     puntos donde el integrando es singular o discontinuo.
+
+     Las opciones se suministran como argumentos y se pueden escribir en
+     cualquier orden. Deben tomar la forma `opción=valor'. Las opciones
+     son:
+
+    <epsrel>
+          Error relativo de aproximación deseado. Valor por defecto es
+          1d-8.
+
+    <epsabs>
+          Error absoluto de aproximación deseado. Valor por defecto es
+          0.
+
+    <limit>
+          Tamaño del array interno de trabajo. <limit> es el máximo
+          número de subintervalos a utilizar. Valor por defecto es 200.
+
+     `quad_qagp' devuelve una lista con cuatro elementos:
+
+        * una aproximación a la integral,
+
+        * el error absoluto estimado de la aproximación,
+
+        * el número de evaluaciones del integrando,
+
+        * un código de error.
+
+     El código de error (cuarto elemento de la lista devuelta) puede
+     tener los siguientes valores:
+
+    `0'
+          no se encontraron errores;
+
+    `1'
+          se han hecho demasiados subintervalos;
+
+    `2'
+          se detectó un error de redondeo muy grande;
+
+    `3'
+          se ha observado un comportamiento del integrando
+          extremadamente malo;
+
+    `4'
+          fallo de convergencia;
+
+    `5'
+          la integral es probablemente divergengente o converge muy
+          lentamente;
+
+    `6'
+          entrada inválida.
+
+     Ejemplos:
+
+          (%i1) quad_qagp(x^3*log(abs((x^2-1)*(x^2-2))),x,0,3,[1,sqrt(2)]);
+          (%o1)   [52.74074838347143, 2.6247632689546663e-7, 1029, 0]
+          (%i2) quad_qags(x^3*log(abs((x^2-1)*(x^2-2))), x, 0, 3);
+          (%o2)   [52.74074847951494, 4.088443219529836e-7, 1869, 0]
+
+     El integrando tiene singularidades en `1' y `sqrt(2)', de manera
+     que suministramos estos puntos a `quad_qagp'. También se observa
+     que `quad_qagp' es más exacto y eficiente que `quad_qags'.
+
+ -- Fución: quad_control (<parameter>, [<value>])
+     Controla la gestión de los errores de `QUADPACK'. El parámetro debe
+     ser uno de los siguientes símbolos:
+
+    `current_error'
+          El número de error actual.
+
+    `control'
+          Controla si los mensajes se imprimen o no. Si el valor es
+          cero o menor, los mensajes se suprimen.
+
+    `max_message'
+          El máximo número de veces que se imprime cualquier mensaje.
+
+     Si no se da <value>, entonces se devuelve el valor actual asociado
+     a <parameter>. En cambio, si se da <value>, se hace la asignación
+     correspondiente a <parameter>, adquiriendo este nuevo valor.
+
 
 File: maxima.info,  Node: Ecuaciones,  Next: Ecuaciones Diferenciales,  Prev: Integración,  Up: Top
 
@@ -5310,9 +5461,9 @@ File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuac
      Valor por defecto: `[]'
 
      La variable `%rnum_list' es la lista de variables introducidas en
-     las soluciones por la función `algsys'.  Las variables `%r' se
-     añaden a `%rnum_list' en su orden de creación. Esto es útil para
-     hacer sustituciones en la solución.
+     las soluciones por la funciones `solve' y `algsys'.  Las variables
+     `%r' se añaden a `%rnum_list' en su orden de creación.  Esto es
+     útil para hacer sustituciones en la solución a posteriori.
 
           (%i1) solve ([x + y = 3], [x,y]);
           (%o1)              [[x = 3 - %r1, y = %r1]]
@@ -5328,8 +5479,14 @@ File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuac
           (%o6)     [[x = - 2 t  - 3 t  + 4, y = t , z = t ]]
                                2      1           2       1
 
+ -- Variable opcional: algepsilon
+     Valor por defecto: 10^8
+
+     La variable `algepsilon' es utilizada por `algsys'.
+
+
  -- Variable opcional: algexact
-     Default value: `false'
+     Valor por defecto: `false'
 
      El contenido de la variable `algexact' afecta al comportamiento de
      `algsys' de la siguiente forma:
@@ -6695,7 +6852,7 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Nex
      Si los datos <x> son reales, los coeficientes reales `a' y `b' se
      pueden calcular de manera que
 
-          x[j] = sum (a[k] * cos (2*%pi*j*k / n) + b[k] * sin (2*%pi*j*k / n), k, 0, n/2)
+          x[j] = sum(a[k]*cos(2*%pi*j*k/n)+b[k]*sin(2*%pi*j*k/n), k, 0, n/2)
 
      con
 
@@ -6776,79 +6933,6 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Nex
           (%i17) f(j) := sum (a[k] * cos (2*%pi*j*k / n) + b[k] * sin (2*%pi*j*k / n), k, 0, n/2) $
           (%i18) makelist (float (f (j)), j, 0, n - 1);
           (%o18)      [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-
-
- -- Variable opcional: fortindent
-     Valor por defecto: 0
-
-     La variable `fortindent' controla el margen izquierdo de las
-     expresiones que escribe la instrucción `fortran'.  El valor 0
-     escribe con un margen normal de 6 espacios; valores positivos
-     harán que las expresiones se escriban más a la derecha.
-
-
- -- Función: fortran (<expr>)
-     Escribe <expr> en código Fortran. La salida se escribe con
-     márgenes, y si ésta es demasiado larga `fortran' sigue escribiendo
-     en líneas sucesivas. La función `fortran' escribe el operador de
-     exponenciación `^' como `**', e imprime un número complejo `a + b
-     %i' como `(a,b)'.
-
-     El argumento <expr> puede ser una ecuación. En tal caso, `fortran'
-     escribe una sentencia de asignación, dándole el valor del miembro
-     derecho de la expresión al miembro izquierdo. En particular, si el
-     miembro derecho de <expr> es el nombre de una matriz, entonces
-     `fortran' escribe una sentencia de asignación para cada elemento
-     de la matriz.
-
-     Si <expr> no es reconozida por `fortran', la expresión se escribe
-     en formato `grind' sin avisos. La función `fortran' no reconoce
-     listas, arreglos ni funciones.
-
-     La variable `fortindent' controla el margen izquierdo de las
-     expresiones que escribe la instrucción `fortran'.  El valor 0
-     escribe con un margen normal de 6 espacios; valores positivos
-     harán que las expresiones se escriban más a la derecha.
-
-     Si `fortspaces' vale `true', `fortran' rellena las líneas con
-     espacios de 80 columnas.
-
-     La función `fortran' evalúa sus argumentos; un argumento precedido
-     de apóstrofo previene de la evaluación.  La función `fortran'
-     siempre devuelve `done'.
-
-     Ejemplos:
-
-
-     (%i1) expr: (a + b)^12$
-     (%i2) fortran (expr);
-           (b+a)**12
-     (%o2)                         done
-     (%i3) fortran ('x=expr);
-           x = (b+a)**12
-     (%o3)                         done
-     (%i4) fortran ('x=expand (expr));
-           x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
-          1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
-          2   **3+66*a**10*b**2+12*a**11*b+a**12
-     (%o4)                         done
-     (%i5) fortran ('x=7+5*%i);
-           x = (7,5)
-     (%o5)                         done
-     (%i6) fortran ('x=[1,2,3,4]);
-           x = [1,2,3,4]
-     (%o6)                         done
-     (%i7) f(x) := x^2$
-     (%i8) fortran (f);
-           f
-     (%o8)                         done
-
-
- -- Variable opcional: fortspaces
-     Valor por defecto: `false'
-
-     Si `fortspaces' vale `true', `fortran' rellena las líneas con
-     espacios de 80 columnas.
 
 
  -- Función: horner (<expr>, <x>)

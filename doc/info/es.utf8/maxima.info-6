@@ -1,145 +1,12 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
 
-   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
+Ver. 5.28 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).  Un sistema de cálculo simbólico
 END-INFO-DIR-ENTRY
-
-
-File: maxima.info,  Node: Funciones y variables para Bernstein,  Prev: Bernstein,  Up: Bernstein
-
-40.1 Funciones y variables para Bernstein
-=========================================
-
- -- Función: bernstein_poly (<k>,<n>,<x>)
-     Si `k' no es un entero negativo, los polinomios de Bernstein se
-     definen como `bernstein_poly(k,n,x) = binomial(n,k) x^k
-     (1-x)^(n-k)'; en cambio, si `k' es un entero negativo, el
-     polinomio de Bernstein `bernstein_poly(k,n,x)' se anula. Cuando o
-     bien `k' o `n' no son enteros, la variable opcional
-     `bernstein_explicit' controla la expansión de los polinomios de
-     Bernstein a su forma explícita.
-
-     Ejemplo:
-
-          (%i1) bernstein_poly(k,n,x);
-          (%o1)                       bernstein_poly(k, n, x)
-          (%i2) bernstein_poly(k,n,x), bernstein_explicit : true;
-                                                        n - k  k
-          (%o2)                   binomial(n, k) (1 - x)      x
-
-     Los polinomios de Bernstein tienen definidas su derivada e
-     integral:
-
-          (%i3) diff(bernstein_poly(k,n,x),x);
-          (%o3)  (bernstein_poly(k - 1, n - 1, x) - bernstein_poly(k, n - 1, x)) n
-
-          (%i4) integrate(bernstein_poly(k,n,x),x);
-                                                                            k + 1
-                 hypergeometric([k + 1, k - n], [k + 2], x) binomial(n, k) x
-          (%o4)  ----------------------------------------------------------------
-                                              k + 1
-
-     Cuando los argumentos contienen números decimales en coma
-     flotante, los polinomios de Bernstein también devuelven resultados
-     decimales.
-
-          (%i5) bernstein_poly(5,9, 1/2 + %i);
-                                         39375 %i   39375
-          (%o5)                          -------- + -----
-                                           128       256
-          (%i6) bernstein_poly(5,9, 0.5b0 + %i);
-          (%o6)                  3.076171875b2 %i + 1.5380859375b2
-
-     Para hacer uso de `bernstein_poly', ejecútese primero
-     `load("bernstein")'.
-
-
- -- Variable opcional: bernstein_explicit
-     Valor por defecto: `false'
-
-     Cuando o bien `k' o `n' no son enteros, la variable opcional
-     `bernstein_explicit' controla la expansión de los polinomios de
-     Bernstein a su forma explícita.
-
-     Ejemplo:
-
-          (%i1) bernstein_poly(k,n,x);
-          (%o1)                       bernstein_poly(k, n, x)
-          (%i2) bernstein_poly(k,n,x), bernstein_explicit : true;
-                                                        n - k  k
-          (%o2)                   binomial(n, k) (1 - x)      x
-
-     Cuando tanto `k' como `n' son enteros, `bernstein(k,n,x)' se
-     expande siempre a su forma explícita.
-
-
- -- Función: multibernstein_poly (<[k1,k2,...,kp]>,<[n1,n2,...,
-          np]>,<[x1,x2,..., xp]>)
-     La sentencia `multibernstein_poly (<[k1,k2,...,kp]>,<[n1,n2,...,
-     np]>,<[x1,x2,..., xp]>)' es el producto de polinomios de Bernstein
-     `bernstein_poly(k1,n1,x1) bernstein_poly(k2,n2,x2) ...
-     bernstein_poly(kp,np,xp)'.
-
-     Para hacer uso de `multibernstein_poly', ejecútese primero
-     `load("bernstein")'.
-
-
- -- Función: bernstein_approx (<f>,<[x1,x1,...,xn]>,n)
-     Devuelve el polinomio de Bernstein uniforme de `n'-ésimo orden que
-     aproxima la función `(x1,x2,..xn) |--> f'.
-
-     Ejemplos:
-
-          (%i1) bernstein_approx(f(x),[x], 2);
-                                  2       1                          2
-          (%o1)             f(1) x  + 2 f(-) (1 - x) x + f(0) (1 - x)
-                                          2
-          (%i2) bernstein_approx(f(x,y),[x,y], 2);
-                         2  2       1                2                  2  2
-          (%o2) f(1, 1) x  y  + 2 f(-, 1) (1 - x) x y  + f(0, 1) (1 - x)  y
-                                    2
-                    1   2                 1  1
-           + 2 f(1, -) x  (1 - y) y + 4 f(-, -) (1 - x) x (1 - y) y
-                    2                     2  2
-                    1         2                      2        2
-           + 2 f(0, -) (1 - x)  (1 - y) y + f(1, 0) x  (1 - y)
-                    2
-                 1                      2                  2        2
-           + 2 f(-, 0) (1 - x) x (1 - y)  + f(0, 0) (1 - x)  (1 - y)
-                 2
-
-     Para hacer uso de `bernstein_approx', ejecútese primero
-     `load("bernstein")'.
-
-
- -- Función: bernstein_expand (<e>, <[x1,x1,...,xn]>)
-     Expresa el polinomio `e' como una combinación lineal de polinomios
-     de Bernstein multivariantes.
-
-          (%i1) bernstein_expand(x*y+1,[x,y]);
-          (%o1)           2 x y + (1 - x) y + x (1 - y) + (1 - x) (1 - y)
-          (%i2) expand(%);
-          (%o2)                               x y + 1
-
-     Maxima devuelve un error si el primer argumento no es un polinomio.
-
-     Para hacer uso de `bernstein_expand', ejecútese primero
-     `load("bernstein")'.
-
-
-
-File: maxima.info,  Node: bode,  Next: cobyla,  Prev: Bernstein,  Up: Top
-
-41 bode
-*******
-
-* Menu:
-
-* Funciones y variables para bode::
 
 
 File: maxima.info,  Node: Funciones y variables para bode,  Prev: bode,  Up: bode
@@ -804,8 +671,8 @@ File: maxima.info,  Node: Referencias para contrib_ode,  Prev: Pruebas realizada
   7. E. S. Cheb-Terrab, T. Kolokolnikov,  First Order ODEs,
      Symmetries and Linear Transformations, European Journal of
      Applied Mathematics, Vol. 14, No. 2, pp. 231-246 (2003).
-     (`http://arxiv.org/abs/math-ph/0007023')
-     (`http://lie.uwaterloo.ca/papers/ode_iv.pdf')
+     (`http://arxiv.org/abs/math-ph/0007023',
+     `http://lie.uwaterloo.ca/papers/ode_iv.pdf')
 
   8. G. W. Bluman, S. C. Anco, Symmetry and Integration Methods for
      Differential Equations, Springer, (2002)
@@ -1031,6 +898,15 @@ File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  N
      frecuencias absolutas. Las instrucciones `? col' y `? transpose'
      pueden ayudar a comprender la última entrada.
 
+ -- Función: standardize (<list>)
+ -- Función: standardize (<matrix>)
+     Resta a cada elemento de la lista la media muestral y luego divide
+     el resultado por la desviación típica. Si la entrada es una
+     matriz, `standardize' resta a cada fila la media multivariante y
+     luego divide cada componente por la desviación típica
+     correspondiente.
+
+
  -- Función: subsample (<data_matrix>, <predicate_function>)
  -- Función: subsample (<data_matrix>, <predicate_function>, <col_num>,
           <col_num>, ...)
@@ -1145,6 +1021,40 @@ File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  N
                                                                       2514
                                                                       ----]
                                                                        13
+
+ -- Función: tranform_sample (<matriz>, <varlist>, <exprlist>)
+     Transforma la <matriz> de datos, en la que a cada columna se le
+     asigna un nombre de acuerdo con la lista <varlist>, según las
+     expresiones de <exprlist>.
+
+     Ejemplos:
+
+     El segundo argumento asigna nombres a las tres columnas, con ellos
+     la lista de expresiones define la transformación de la muestra.
+
+          (%i1) load (descriptive)$
+          (%i2) data: matrix([3,2,7],[3,7,2],[8,2,4],[5,2,4]) $
+          (%i3) tranform_sample(data, [a,b,c], [c, a*b, log(a)]);
+                                         [ 7  6   log(3) ]
+                                         [               ]
+                                         [ 2  21  log(3) ]
+          (%o3)                          [               ]
+                                         [ 4  16  log(8) ]
+                                         [               ]
+                                         [ 4  10  log(5) ]
+
+     Add a constant column and remove the third variable.
+
+          (%i1) load (descriptive)$
+          (%i2) data: matrix([3,2,7],[3,7,2],[8,2,4],[5,2,4]) $
+          (%i3) tranform_sample(data, [a,b,c], [makelist(1,k,length(data)),a,b]);
+                                            [ 1  3  2 ]
+                                            [         ]
+                                            [ 1  3  7 ]
+          (%o3)                             [         ]
+                                            [ 1  8  2 ]
+                                            [         ]
+                                            [ 1  5  2 ]
 
 
 File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Next: Funciones y variables para gráficos estadísticos,  Prev: Funciones y variables para el tratamiento de datos,  Up: descriptive
@@ -1689,7 +1599,7 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
      Véase también `cov'.
 
  -- Función: global_variances (<matrix>)
- -- Función: global_variances (<matrix>, <logical_value>)
+ -- Función: global_variances (<matrix>, <options> ...)
      La función `global_variances' devuelve una lista de medidas
      globales de variabilidad:
 
@@ -1709,6 +1619,14 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
      donde <p> es la dimensión de la variable aleatoria multivariante y
      S_1 la matriz de covarianzas devuelta por la función `cov1'.
 
+     Opción:
+
+        * `'data', por defecto `'true', indica si la matriz de entrada
+          contiene los datos muestrales, en cuyo caso la matriz de
+          covarianzas `cov1' debe ser calculada; en caso contrario, se
+          le debe pasar ésta a la función como matriz simétrica en
+          lugar de los datos.
+
      Ejemplo:
 
           (%i1) load (descriptive)$
@@ -1717,24 +1635,28 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
           (%o3) [105.338342060606, 21.06766841212119, 12874.34690469686,
                    113.4651792608502, 6.636590811800794, 2.576158149609762]
 
-     La función `global_variances' tiene un argumento lógico opcional:
-     `global_variances(x,true)' indica a Maxima que `x' es la matriz de
-     datos, calculando entonces lo mismo que `global_variances(x)'. Por
-     otro lado, `global_variances(x,false)' significa que  `x' no es la
-     matriz de datos, sino la de covarianzas, evitando así recalcularla,
+     Cálculo de `global_variances' a partir de la matriz de covarianzas.
 
           (%i1) load (descriptive)$
           (%i2) s2 : read_matrix (file_search ("wind.data"))$
           (%i3) s : cov1 (s2)$
-          (%i4) global_variances (s, false);
+          (%i4) global_variances (s, data=false);
           (%o4) [105.338342060606, 21.06766841212119, 12874.34690469686,
                    113.4651792608502, 6.636590811800794, 2.576158149609762]
 
      Véanse también `cov' y `cov1'.
 
  -- Función: cor (<matrix>)
- -- Función: cor (<matrix>, <logical_value>)
+ -- Función: cor (<matrix>, <options> ...)
      Es la matriz de correlaciones de la muestra multivariante.
+
+     Opción:
+
+        * `'data', por defecto `'true', indica si la matriz de entrada
+          contiene los datos muestrales, en cuyo caso la matriz de
+          covarianzas `cov1' debe ser calculada; en caso contrario, se
+          le debe pasar ésta a la función como matriz simétrica en
+          lugar de los datos.
 
      Ejemplo:
 
@@ -1752,17 +1674,14 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
                 [                                                  ]
                 [ .7519506  0.782502  .8323358  .7293848    1.0    ]
 
-     La función `cor' tiene un argumento lógico opcional: `cor(x,true)'
-     indica a Maxima que `x' es la matriz de datos, calculando entonces
-     lo mismo que `cor(x)'. Por otro lado, `cor(x,false)' significa que
-     `x' no es la matriz de datos, sino la de covarianzas, evitando
-     así recalcularla,
+     Cálculo de la matriz de correlaciones a partir de la matriz de
+     covarianzas.
 
           (%i1) load (descriptive)$
-          (%i2) fpprintprec:7$
+          (%i2) fpprintprec : 7 $
           (%i3) s2 : read_matrix (file_search ("wind.data"))$
           (%i4) s : cov1 (s2)$
-          (%i5) cor (s, false); /* this is faster */
+          (%i5) cor (s, data=false); /* this is faster */
                 [   1.0     .8476339  .8803515  .8239624  .7519506 ]
                 [                                                  ]
                 [ .8476339    1.0     .8735834  .6902622  0.782502 ]
@@ -1776,7 +1695,7 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
      Véanse también `cov' y `cov1'.
 
  -- Función: list_correlations (<matrix>)
- -- Función: list_correlations (<matrix>, <logical_value>)
+ -- Función: list_correlations (<matrix>, <options> ...)
      La función `list_correlations' devuelve una lista con medidas de
      correlación:
 
@@ -1806,6 +1725,13 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
                                   |s   s  |
                                   \       /
 
+     Opción:
+
+        * `'data', por defecto `'true', indica si la matriz de entrada
+          contiene los datos muestrales, en cuyo caso la matriz de
+          covarianzas `cov1' debe ser calculada; en caso contrario, se
+          le debe pasar ésta a la función como matriz simétrica en
+          lugar de los datos.
 
      Ejemplo:
 
@@ -1833,14 +1759,100 @@ File: maxima.info,  Node: Funciones y variables de parámetros descriptivos,  Ne
                  [                                                ]
                  [ - .13049   .23492   .37956   .26719    - 1.0   ]
 
-     La función `list_correlations' tiene un argumento lógico opcional:
-     `list_correlations(x,true)' indica a Maxima que `x' es la matriz
-     de datos, calculando entonces lo mismo que `list_correlations(x)'.
-     Por otro lado, `list_correlations(x,false)' significa que  `x' no
-     es la matriz de datos, sino la de covarianzas, evitando así
-     recalcularla.
-
      Véanse también `cov' y `cov1'.
+
+ -- Función: principal_components (<matrix>)
+ -- Función: principal_components (<matrix>, <options> ...)
+     Calcula las componentes principales de una muestra multivariante.
+     Las componentes principales se utilizan en el análisis estadístico
+     multivariante para reducir la dimensionalidad de la muestra.
+
+     Opción:
+
+        * `'data', por defecto `'true', indica si la matriz de entrada
+          contiene los datos muestrales, en cuyo caso la matriz de
+          covarianzas `cov1' debe ser calculada; en caso contrario, se
+          le debe pasar ésta a la función como matriz simétrica en
+          lugar de los datos.
+
+     La salida de la función `principal_components' es una lista con
+     los siguientes resultados:
+
+        * varianzas de las componentes principales,
+
+        * porcentajes de variación total explicada por cada componente
+          principal,
+
+        * matriz de rotación.
+
+     Ejemplos:
+
+     En este ejemplo, la primera componente explica el 83.13 por ciento
+     de la varianza total.
+
+          (%i1) load (descriptive)$
+          (%i2) s2 : read_matrix (file_search ("wind.data"))$
+          (%i3) fpprintprec:4 $
+          (%i4) res: principal_components(s2);
+          0 errors, 0 warnings
+          (%o4) [[87.57, 8.753, 5.515, 1.889, 1.613],
+          [83.13, 8.31, 5.235, 1.793, 1.531],
+          [ .4149  .03379   - .4757  - 0.581   - .5126 ]
+          [                                            ]
+          [ 0.369  - .3657  - .4298   .7237    - .1469 ]
+          [                                            ]
+          [ .3959  - .2178  - .2181  - .2749    .8201  ]]
+          [                                            ]
+          [ .5548   .7744    .1857    .2319    .06498  ]
+          [                                            ]
+          [ .4765  - .4669   0.712   - .09605  - .1969 ]
+          (%i5) /* porcentajes acumulados  */
+              block([ap: copy(res[2])],
+                for k:2 thru length(ap) do ap[k]: ap[k]+ap[k-1],
+                ap);
+          (%o5)                 [83.13, 91.44, 96.68, 98.47, 100.0]
+          (%i6) /* dimension de la muestra */
+                p: length(first(res));
+          (%o6)                                  5
+          (%i7) /* dibuja porcentajes para seleccionar el numero de
+                   componentes principales para el analisis ulterior */
+               draw2d(
+                  fill_density = 0.2,
+                  apply(bars, makelist([k, res[2][k], 1/2], k, p)),
+                  points_joined = true,
+                  point_type    = filled_circle,
+                  point_size    = 3,
+                  points(makelist([k, res[2][k]], k, p)),
+                  xlabel = "Variances",
+                  ylabel = "Percentages",
+                  xtics  = setify(makelist([concat("PC",k),k], k, p))) $
+
+     En caso de que la matriz de covarianzas sea conocida, se le puede
+     pasar a la función, pero debe utilizarse la opción `data=false'.
+
+          (%i1) load (descriptive)$
+          (%i2) S: matrix([1,-2,0],[-2,5,0],[0,0,2]);
+                                          [  1   - 2  0 ]
+                                          [             ]
+          (%o2)                           [ - 2   5   0 ]
+                                          [             ]
+                                          [  0    0   2 ]
+          (%i3) fpprintprec:4 $
+          (%i4) /* el argumento es una matriz de covarianzas */
+                res: principal_components(S, data=false);
+          0 errors, 0 warnings
+                                                            [ - .3827  0.0  .9239 ]
+                                                            [                     ]
+          (%o4) [[5.828, 2.0, .1716], [72.86, 25.0, 2.145], [  .9239   0.0  .3827 ]]
+                                                            [                     ]
+                                                            [   0.0    1.0   0.0  ]
+          (%i5) /* transformacion para obtener las componentes principales a
+                   partir de los registros originales */
+                matrix([a1,b2,c3],[a2,b2,c2]).last(res);
+                       [ .9239 b2 - .3827 a1  1.0 c3  .3827 b2 + .9239 a1 ]
+          (%o5)        [                                                  ]
+                       [ .9239 b2 - .3827 a2  1.0 c2  .3827 b2 + .9239 a2 ]
+
 
 
 File: maxima.info,  Node: Funciones y variables para gráficos estadísticos,  Prev: Funciones y variables de parámetros descriptivos,  Up: descriptive
@@ -2071,7 +2083,8 @@ File: maxima.info,  Node: Funciones y variables para gráficos estadísticos,  P
 
         * <frequency> (valor por defecto, `absolute'): indica la escala
           de las ordenadas.  Valores admitidos son:  `absolute',
-          `relative' y and `percent'.
+          `relative', `percent' y `density'.  Con `density', el
+          histograma adquiere un área total igual a uno.
 
         * <htics> (valor por defecto, `auto'): formato para las marcas
           sobre el eje de las abscisas. Valores admitidos son: `auto',
@@ -2135,7 +2148,7 @@ File: maxima.info,  Node: Funciones y variables para gráficos estadísticos,  P
                   histogram_description(
                     s2,
                     nclasses     = 9,
-                    frequency    = relative,
+                    frequency    = density,
                     fill_density = 0.5),
                   explicit(pdf_normal(x,m,s), x, m - 3*s, m + 3* s))$
 

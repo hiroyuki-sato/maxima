@@ -69,7 +69,9 @@
 (defprop atom  atom ml-typep)
 
 #+(or cmu scl)
-(shadow '(cl:compiled-function-p) (find-package :maxima))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (shadow '(cl:compiled-function-p) (find-package :maxima))
+)
 #+(or cmu scl)
 (defun compiled-function-p (x)
   (and (functionp x) (not (symbolp x))
@@ -240,21 +242,7 @@ values")
     (unless (gethash ',var *variable-initial-values*)
       (setf (gethash ',var *variable-initial-values*)
 	    ,(first val-and-doc)))
-    (defvar ,var ,@val-and-doc)
-    #+debug
-    (maybe-reset ',var ',(if val-and-doc (list (car val-and-doc))))))
-
-#+debug
-(defun maybe-reset (var val-and-doc &aux val)
-  (cond (*reset-var*
-	 (cond ((not(eq 'nil val-and-doc))
-		(cond ((not (equal (setq val (eval (car val-and-doc)))
-				   (symbol-value var)))
-		       (format t "~%Replacing value of ~A" var)
-		       (set var val))))
-	       (t (cond ((boundp var)
-			 (format t "~%Removing value of ~A" var)
-			 (makunbound var))))))))
+    (defvar ,var ,@val-and-doc)))
 
 (defun $mkey (variable)
   "($mkey '$demo)==>:demo"

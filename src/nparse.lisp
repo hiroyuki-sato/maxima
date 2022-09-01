@@ -29,8 +29,6 @@
 (defvar *parse-stream-eof* -1 "EOF value for Maxima parser")
 (defvar *parse-tyi* nil)
 
-(defvar macsyma-operators ()  "Maxima operators structure")
-
 (defvar *mread-prompt* nil    "prompt used by `mread'")
 (defvar *mread-eof-obj* ()    "Bound by `mread' for use by `mread-raw'")
 
@@ -320,7 +318,9 @@
         (setf (nth 3 data) (list flonum-exponent-marker)))))
   (if (not (equal (nth 3 data) '(#\B)))
       (readlist (apply #'append data))
-      (let ((int-part (readlist (or (first data) '(#\0))))
+      (let*
+	   ((*read-base* 10.)
+	    (int-part (readlist (or (first data) '(#\0))))
 	    (frac-part (readlist (or (third data) '(#\0))))
 	    (frac-len (length (third data)))
 	    (exp-sign (first (fifth data)))
@@ -484,6 +484,7 @@
   (scan-one-token-g nil nil))
 
 (defun scan-one-token-g (eof-ok? eof-obj)
+  (declare (special macsyma-operators))
   (cond ((car scan-buffered-token)
 	 (rplaca scan-buffered-token ())
 	 (cdr scan-buffered-token))
