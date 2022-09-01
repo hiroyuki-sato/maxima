@@ -1,4 +1,4 @@
-;;; -*- Lisp -*-
+; -*- Lisp -*-
 
 (in-package :cl-user)
 
@@ -14,92 +14,28 @@
 #+cmu
 (setf ext:*gc-verbose* nil)
 
-;; If you want maxima to use long-floats for arithmetic, use this:
-#+(and nil (or clisp scl))
-(pushnew :flonum-long *features*)
-
-;; If you want maxima to use double-double-floats, use this:
-#+(and nil cmu double-double)
-(pushnew :flonum-double-double *features*)
-
 (setf *load-verbose* nil)
 
 (defvar *maxima-build-time* (multiple-value-list (get-decoded-time)))
 
 (export '*maxima-build-time*)
 
-#+ecl
-(defun do-compile-ecl (&rest args)
-  ;; Not sure about this.  Compile twice.  The first produces a .o
-  ;; file.  The second produces the .fas file to keep defsystem happy
-  ;; because defsystem needs to load the files while compiling so
-  ;; macros and such are defined.
-  (apply #'compile-file args)
-  (let ((output (getf (cdr args) :output-file)))
-    (c:build-fasl (compile-file-pathname output :type :fasl)
-		  :lisp-files (list (compile-file-pathname output
-							   :type :object)))))
-
-#+ecl
-(defun build-maxima-lib ()
-  (labels ((list-all-objects (module)
-             (if (eql (mk::component-type module) :file)
-		 (list (mk::component-full-pathname module :binary))
-		 (apply #'append (mapcar #'list-all-objects (mk::component-components module))))))
-    (let* ((files (list-all-objects (mk:find-system 'maxima))))
-      #+msvc
-      (progn
-	(c::build-static-library "binary-ecl/maxima-lib" :lisp-files (print files))
-	(let ((c::*ld-format* (concatenate 'string c::*ld-format* " /LIBPATH:binary-ecl")))
-	  (c::build-fasl "binary-ecl/maxima" :lisp-files '(maxima-lib))))
-      #+cygwin
-      (c::build-fasl "binary-ecl/maxima" :lisp-files files)
-      #-(or cygwin msvc)
-      (let ((obj (mapcar #'(lambda (p)
-			     ;; Convert dir/foo.fas to dir/foo.o
-			     (make-pathname :type "o" :defaults p))
-			 files)))
-	(c::build-program "binary-ecl/maxima" :lisp-files obj
-        :ld-flags
-        (let
-          ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*" (find-package "MAXIMA")))))
-          (if (and x (not (string= x ""))) (list x)))
-			  :epilogue-code '(progn (require :defsystem)
-					         (cl-user::run)))))))
-
-(defun maxima-binary-pathname ()
-  #+clisp
-  "binary-clisp"
-  #+cmu
-  (make-pathname :name "binary-cmucl"
-		 :directory (pathname-directory *load-truename*))
-  #+scl
-  (make-pathname :name "binary-scl"
-		 :directory (pathname-directory *load-truename*))
-  #+sbcl
-  (make-pathname :name "binary-sbcl"
-		 :directory (pathname-directory *load-truename*))
-  #+gcl
-  "binary-gcl"
-  #+allegro
-  "binary-acl"
-  #+openmcl
-  "binary-openmcl"
-  #+abcl
-  "binary-abcl"
-  #+lispworks
-  (make-pathname :name "binary-lispworks"
-		 :directory (pathname-directory *load-truename*))
-  #+ecl
-  "binary-ecl"
-  #-(or clisp cmu scl sbcl gcl allegro openmcl abcl lispworks ecl)
-  "binary-unknownlisp")
-
 (mk:defsystem "maxima"
   :source-extension "lisp"  
-  :binary-pathname (maxima-binary-pathname)
-  #+ecl :compiler-options #+ecl (:system-p t)
-  #+ecl :compiler #+ecl do-compile-ecl
+  :binary-pathname #+clisp "binary-clisp"
+                   #+cmu (make-pathname
+			  :name "binary-cmucl"
+			  :directory (pathname-directory *load-truename*))
+                   #+scl (make-pathname
+			  :name "binary-scl"
+			  :directory (pathname-directory *load-truename*))
+		   #+sbcl (make-pathname
+			   :name "binary-sbcl"
+			   :directory (pathname-directory *load-truename*))
+		   #+gcl "binary-gcl"
+		   #+allegro "binary-acl"
+		   #+openmcl "binary-openmcl"
+		   #-(or clisp cmu scl sbcl gcl allegro openmcl) "binary-unknownlisp"
   :components (#+gcl
 	       (:module proclaim :source-pathname ""
 			:load-only t
@@ -111,11 +47,9 @@
 				     #+gcl-working-proclaims
 				     (:file "sys-proclaim")))
 	       (:module package :source-pathname ""
-			#-ecl :load-only #-ecl t
-			:components (#-gcl
-				     (:file "maxima-package")
-				     #+ecl (:file "ecl-port")
-				     (:file "autoconf-variables")))
+			:load-only t
+			:components (#-gcl(:file "maxima-package")
+					  (:file "autoconf-variables")))
 	       (:module info :source-pathname ""
 			:components ((:file "nregex")
 				     (:file "cl-info")))
@@ -151,6 +85,8 @@
                (:module rat-macros :source-pathname ""
                         :components ((:file "ratmac") 
                                      (:file "mhayat")))
+               (:module numerical-macros :source-pathname ""
+                        :components ((:file "numerm")))
                #+gcl (:file "optimize") ; jfa check this
                (:module utilities :source-pathname ""
 			:depends-on (utility-macros)
@@ -507,6 +443,7 @@
 				     (:file "ellipt")
 				     (:file "airy"
 					    :depends-on ("ellipt"))
+				     (:file "numer") 
 				     (:file "intpol")))
 	       (:module reader :source-pathname ""
 			:depends-on (compatibility-macros)
@@ -585,8 +522,6 @@
 				     (:file "maxmin")
 				     (:file "nummod")
 				     (:file "conjugate")
-                                     (:file "expintegral")
-                                     (:file "gamma")
 				     (:file "mstuff")))
 	       (:module poisson-series :source-pathname ""
 			:components ((:file "ratpoi")
@@ -608,7 +543,7 @@
 				     (:file "openmath")))
 	       (:module final :source-pathname ""
 			;; These are not compiled, for whatever reason
-			#-ecl :load-only #-ecl t
+			:load-only t
 			:components ((:file "autol")
 				     (:file "max_ext")
 				     (:file "init-cl")))))

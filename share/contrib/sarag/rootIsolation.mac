@@ -12,6 +12,8 @@ bernstein(p,i,c,d,var) :=
 /* Bounds on real roots                   */
 
 /* Cauchy Root Upper Bound */
+/* Lemma 10.2 */
+/* (Defined for non-zero polynomials) */
 cauchyRootUpperBound(pol,var) :=
   block([p,q,i,den],
     p : expandIf(p),
@@ -40,6 +42,7 @@ cauchyRootLowerBound(pol,var) :=
 
 
 /* Prime Cauchy Root Upper Bound */
+/* Lemma 10.5 */
 primeCauchyRootUpperBound(pol,var) :=
   block([p,q,i,den],
     p : expandIf(p),
@@ -93,9 +96,9 @@ signToTheLeft(bern) :=
 
 
 /* ------------------------------------- */
-/* Splitting of Bernstein coefficients */
+/* Splitting of Bezier curves */
 
-/* De Casteljau */
+/* Alg. 10.31 */
 bernsteinSplit(coeffList, c, d, e) :=
   block([p : length(coeffList)-1,
          b : make_array('any),
@@ -125,7 +128,7 @@ bernsteinSplit(coeffList, c, d, e) :=
   );
 
 
-/* special De Casteljau */
+/* Algorithm 10.34 */
 specialBernsteinSplit(coeffList,c,d) :=
  block([p : length(coeffList)-1,
         bern_first,
@@ -153,6 +156,11 @@ specialBernsteinSplit(coeffList,c,d) :=
 
   return([bern_first,bern_second])
   );
+
+
+
+/* Square free part of a polynomial */
+squareFree(pol,var) := pol/gcd(pol,diff(pol,var),var);  
 
 
 /* ---------------------------------------------- */
@@ -189,6 +197,7 @@ bernsteinCoeffList(pol,var,c,d) :=
   convert2Bernstein(pol,degree(pol,var),var,c,d);
 
 /* Bernstein coefficients */
+/* computed by using Proposition 10.24 */
 convert2Bernstein(pol,polDeg,var,c,d) :=
   block([auxPol,transMinusC, conDMinusC, recP, transMinusOne,res,i],
     pol : expandIf(pol),
@@ -355,7 +364,7 @@ deCasteljauFindRootsGenIntGenStructVerbose(pol,var,threshold,search_interval,int
      searchRightEnd : search_interval[2]
      ),
 
-  sqPol : expand(factor(SQUARE_FREE_ALGORITHM(pol,var))), 
+  sqPol : expand(factor(squareFree(pol,var))), 
   
   resList : [],   
   bCoeffList : [[bernsteinCoeffList(sqPol,var,searchLeftEnd,searchRightEnd),searchLeftEnd,searchRightEnd]],
@@ -363,7 +372,7 @@ deCasteljauFindRootsGenIntGenStructVerbose(pol,var,threshold,search_interval,int
 
   if integer_flag then
      (
-     normFact : apply(sarag_lcm,map(denom,bCoeffList[1][1])),
+     normFact : apply(lcm,map(denom,bCoeffList[1][1])),
      if verbosity >= EXTRA then
         print("non-normalized bCoeffList[1][1] : ", bCoeffList[1][1]),
      if verbosity >= VERY then
@@ -448,7 +457,7 @@ refineRoot(rootInterval,pol,var) :=
   else
     (
     resList : [],
-    sqPol : expand(factor(SQUARE_FREE_ALGORITHM(pol,var))),
+    sqPol : expand(factor(squareFree(pol,var))),
 
 
     bCoeffList : bernsteinCoeffList(sqPol,var,leftEnd,rightEnd),
@@ -517,7 +526,7 @@ deCasteljauRootsSignVerbose(isolListForP,p,q,var,verbosity) :=
   if not(gcd(p,diff(p,var))=1) then
     (
     modulus : false,
-    sfP : SQUARE_FREE_ALGORITHM(p,var)
+    sfP : squareFree(p,var)
     )
   else
     (
@@ -526,7 +535,7 @@ deCasteljauRootsSignVerbose(isolListForP,p,q,var,verbosity) :=
     ),
 */
 
-  sfP : expand(factor(SQUARE_FREE_ALGORITHM(p,var))),
+  sfP : expand(factor(squareFree(p,var))),
   if verbosity>=EXTRA then
     print("deCasteljauRootsSign) sfP : ", sfP),
   g : gcd(sfP,q),

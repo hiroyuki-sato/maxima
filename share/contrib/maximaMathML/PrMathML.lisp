@@ -13,6 +13,11 @@
 (in-package :maxima)
 (macsyma-module mathml)
 
+;; mcmPr-lib must be set as a directory name where your PrMathML 
+;; files are located
+;;
+(setq mcmPr-lib "/usr/local/MP/maxima/")
+
 ;; special variables used in TeXetting
 (declaim (special *row* *indent* ccol mPrport $mPrautolabel $mPrworksheet $lamPrworksheet
              $mPrlabelleft $lamPrautolabel $mPrdisplaytype $mPrevaluate
@@ -26,7 +31,8 @@
 ;;              prmathml(expr, [,filename[,t (d)]])  on the C-line
 
 (defmfun $prmathml (&rest margs)
-         (prog (ccol *row* *indent* filename mexplabel mexpress mPrport x y)
+         (prog (ccol *row* *indent* displaytype filename mexplabel mexpress mPrport x
+                     y eqnline)
            (setq mexpress (car margs))
            (setq ccol 1 *indent* 0 *row* t)
            (cond
@@ -293,13 +299,15 @@
     ((numberp chr) (mPr-num chr))
     ;; pwang 1/2005
     ;; ((atom chr) (tprinc "<mi>") (tprinc (fullstrip1 chr)) (tprinc "</mi>"))
-    ((safe-get chr 'chchr) (tprinc "<mi>") 
-     (tprinc (safe-get chr 'chchr)) (tprinc "</mi>"))
-    (t
-      (let ((my-atom (if (symbolp chr) (print-invert-case (stripdollar chr)) chr)))
-        (tprinc "<mi>")
-        (tprinc (coerce (mapcar #'handle_rsw (exploden my-atom)) 'string))
-        (tprinc "</mi>")))))
+    ((get chr 'chchr) (tprinc "<mi>") 
+     (tprinc (get chr 'chchr)) (tprinc "</mi>"))
+    (t (tprinc "<mi>")
+       (tprinc (apply 'concat
+           (mapcar #'handle_rsw
+              ;;; pwang 5/2005 (rm '// (explode (fullstrip1 chr))))))
+                   (exploden (fullstrip1 chr)))))
+       (tprinc "</mi>")))
+)
 
 (defun rm (a list)
   (do ((l list (cdr l)) (l2 nil)) ((null l) (reverse l2))
@@ -308,11 +316,11 @@
 
 ;;      this fn is called by mPr-atom ,it checks for a reserved char.
 (defun handle_rsw (c)
-  (cond
-    ((equal c #\<) "&lt;")
-    ((equal c #\>) "&gt;")
-    ((equal c #\&) "&amp;")
-    (t c)))
+  (if (member c '(< > &) :test #'equal) (get c 'char) c)) 
+
+(setf (get '< 'char) '"&lt;")
+(setf (get '> 'char) '"&gt")
+(setf (get '& 'char) '"&amp;")
 
 ;;      mPr-binomial :-
 ;;       top level:  binomail(x,y);
@@ -532,7 +540,7 @@
 ;;long form
 (defun mPr-integrate (mexpress)
   (setq mexpress (meval 
-    (list '($substitute) '((mminus) $inf) '$minf mexpress)))
+    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF mexpress)))
   (cond
     ((equal (length mexpress) 3)
      (row-begin "<mrow>")(tprinc "<mo>&Integral;</mo>"))
@@ -552,7 +560,7 @@
 ;;      mPr-limit takes care the "limit(exp,var,val,dir)"
 (defun mPr-limit (mexpress)
   (setq mexpress (meval 
-    (list '($substitute) '((mminus) $inf) '$minf mexpress)))
+    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF mexpress)))
   (row-begin "<mrow>")(tprinc "<munder><mo>lim</mo>")(row-begin "<mrow>")
   (mPr_engine (caddr mexpress) 'mparen 'mparen)
   (tprinc "<mo>&RightArrow;</mo>")
@@ -714,11 +722,11 @@
   (mPr_engine (caddr mexpress) 'mparen 'mequal)
   (tprinc "<mo>=</mo>")
   (mPr_engine (meval 
-    (list '($substitute) '((mminus) $inf) '$minf (cadddr mexpress)))
+    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF (cadddr mexpress)))
     'mequal 'mparen)
   (row-end "</mrow>")
   (mPr_engine  (meval
-    (list '($substitute) '((mminus) $inf) '$minf (car (cddddr mexpress))))
+    (list '($SUBSTITUTE) '((MMINUS) $INF) '$MINF (car (cddddr mexpress))))
     'mparen 'mparen)
   (tprinc "</munderover>")
   (mPr_engine (cadr mexpress) 'mparen rop)
@@ -745,7 +753,7 @@
 (setup '(mor (mPrprocess mPr-infix) (mPr-lbp 50) (mPr-rbp 50)
              (chchr "or")))
 
-(setup '(mnot (mPrprocess mPr-prefix) (mPr-rbp 70) (chchr "&not;")))
+(setup '(mnot (mPrprocess mPr-prefix) (mPr-rbp 70) (chchr ".NOT."))) ;; ??
 
 (setup '(mgreaterp (mPrprocess mPr-infix) (mPr-lbp 80) (mPr-rbp 80)
             (chchr "&gt;")))

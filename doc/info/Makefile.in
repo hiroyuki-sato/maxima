@@ -42,16 +42,15 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(maxima_TEXINFOS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/include-maxima.texi.in \
-	$(top_srcdir)/common-html.mk $(top_srcdir)/common.mk \
-	texinfo.tex
+	$(srcdir)/Makefile.in $(top_srcdir)/common-html.mk \
+	$(top_srcdir)/common.mk texinfo.tex
 subdir = doc/info
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = include-maxima.texi
+CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
 INFO_DEPS = $(srcdir)/maxima.info
@@ -102,12 +101,6 @@ DEFS = @DEFS@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-ECL_FALSE = @ECL_FALSE@
-ECL_NAME = @ECL_NAME@
-ECL_TRUE = @ECL_TRUE@
-EGREP = @EGREP@
-EMACS = @EMACS@
-EMACSLOADPATH = @EMACSLOADPATH@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -129,7 +122,6 @@ LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
 LANG_PT_UTF8_TRUE = @LANG_PT_UTF8_TRUE@
-LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
@@ -177,7 +169,6 @@ clisp_found = @clisp_found@
 cmucl_found = @cmucl_found@
 datadir = @datadir@
 default_layout_autotools = @default_layout_autotools@
-ecl_found = @ecl_found@
 exec_prefix = @exec_prefix@
 expanded_datadir = @expanded_datadir@
 expanded_exec_prefix = @expanded_exec_prefix@
@@ -197,7 +188,6 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-lispdir = @lispdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -235,10 +225,10 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   solve_rec.texi stringproc.texi numericalio.texi descriptive.texi \
   distrib.texi draw.texi simplex.texi simplifications.texi unit.texi makeOrders.texi \
   mnewton.texi lsquares.texi plotdf.texi lindstedt.texi impdiff.texi \
-  ggf.texi ezunits.texi f90.texi diag.texi dynamics.texi\
+  ggf.texi f90.texi eval_string.texi diag.texi dynamics.texi\
   bode.texi augmented_lagrangian.texi opsubst.texi stats.texi stirling.texi\
   implicit_plot.texi interpol.texi lbfgs.texi romberg.texi grobner.texi\
-  contrib_ode.texi graphs.texi category-macros.texi lapack.texi
+  contrib_ode.texi
 
 figurefiles = \
 figures/dynamics1.gif\
@@ -283,22 +273,7 @@ figures/plotting22.gif\
 figures/plotting23.gif\
 figures/plotting24.gif\
 figures/plotting25.gif\
-figures/orthopoly1.gif\
-figures/graphs01.gif\
-figures/graphs02.gif\
-figures/graphs03.gif\
-figures/graphs04.gif\
-figures/graphs05.gif\
-figures/graphs06.gif\
-figures/graphs07.gif\
-figures/graphs08.gif\
-figures/graphs09.gif\
-figures/graphs10.gif\
-figures/graphs11.gif\
-figures/graphs12.gif\
-figures/graphs13.gif\
-figures/graphs14.gif\
-figures/graphs15.gif
+figures/orthopoly1.gif
 
 pdffigures = \
 figures/dynamics1.pdf\
@@ -401,8 +376,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-include-maxima.texi: $(top_builddir)/config.status $(srcdir)/include-maxima.texi.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 .texi.info:
 	restore=: && backupdir="$(am__leading_dot)am$$$$" && \
@@ -493,8 +466,8 @@ dist-info: $(INFO_DEPS)
 mostlyclean-aminfo:
 	-rm -rf maxima.aux maxima.cp maxima.cps maxima.fn maxima.fns maxima.ky \
 	  maxima.kys maxima.log maxima.pg maxima.pgs maxima.tmp \
-	  maxima.toc maxima.tp maxima.tps maxima.vr maxima.vrs \
-	  maxima.dvi maxima.pdf maxima.ps maxima.html
+	  maxima.toc maxima.tp maxima.tps maxima.vr maxima.dvi \
+	  maxima.pdf maxima.ps maxima.html
 
 maintainer-clean-aminfo:
 	@list='$(INFO_DEPS)'; for i in $$list; do \
@@ -713,6 +686,8 @@ dvi: dvi-recursive
 
 dvi-am: $(DVIS)
 
+html: html-recursive
+
 html-am: $(HTMLS)
 
 info: info-recursive
@@ -795,15 +770,13 @@ uninstall-info: uninstall-info-recursive
 	uninstall uninstall-am uninstall-info-am uninstall-local
 
 
-all-local: maxima-index.lisp
-
-html: maxima.html contents.hhc
+all-local: maxima-index.lisp maxima.html contents.hhc
 
 maxima-index.lisp: maxima.info build_index.pl
 	perl ./build_index.pl maxima.info ':crlf' > maxima-index.lisp
 
 maxima.html: maxima.texi $(maxima_TEXINFOS)
-	sh extract_categories.sh maxima
+	perl ./texi2html -split_chapter --lang=en --output=. --css-include=./manual.css --init-file ./texi2html.init maxima.texi 
 
 contents.hhc: maxima.html
 	perl ./create_index
@@ -881,7 +854,7 @@ dist-maxima-html: $(htmlname).html
 	done
 
 all-local: warn_texinfo
-dist-hook: check_texinfo html
+dist-hook: check_texinfo
 
 install-data-local: install-maxima-index
 uninstall-local: uninstall-maxima-index
@@ -907,21 +880,21 @@ clean-html:
 
 check_texinfo:
 	pattern=`printf "\r$$"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have DOS-style EOLs: $$bad_files" ; \
 	echo "Run make distclean and then /doc/info/fix_crlf to fix the problem." ; exit 1 )
 	pattern=`printf "\t"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "ERROR: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run make distclean and then /doc/info/fix_tab to fix the problem." ; exit 1 )
 
 warn_texinfo:
 	pattern=`printf "\r$$"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have DOS-style EOLs: $$bad_files" ; \
 	echo "Run /doc/info/fix_crlf to fix the problem." )
 	pattern=`printf "\t"` ; \
-	bad_files=`find . -name '*.texi' -print | xargs $(EGREP) -l -e "$$pattern"` ; \
+	bad_files=`find . -name '*.texi' -print | xargs grep -l -e "$$pattern"` ; \
 	[ -z  "$$bad_files" ] || ( echo "WARNING: The following files have unexpanded Tabs: $$bad_files" ; \
 	echo "Run /doc/info/fix_tab to fix the problem." )
 

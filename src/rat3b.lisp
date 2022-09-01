@@ -61,11 +61,8 @@
 			  (alike1 z *x*))
 		      (setq v*  b))
 		     (t (setq flag t)))) varlist genvar)
-
-     ;;; causing lisp error - [ 2010843 ] diff of Taylor poly
-     ;;(cond ((and (signp n (cdr (old-get trunclist v*)))
-     ;;		 (car (old-get trunclist v*))) (return 0)))	     
-
+     (cond ((and (signp n (cdr (old-get trunclist v*)))
+		 (car (old-get trunclist v*))) (return 0)))	     
      (and trunclist
 	  (return (cons (list 'mrat 'simp varlist genvar trunclist 'trunc)
 			(cond (flag (psdp (cdr e)))

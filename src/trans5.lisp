@@ -77,8 +77,13 @@
 		       sym))))
 	  expr-args))
 
-(defstruct (disp-hack-ob (:conc-name nil) (:type list))
-  left-ob right-ob)
+
+(eval-when
+    #+gcl (compile load eval)
+    #-gcl (:compile-toplevel :load-toplevel :execute)
+
+    (defstruct (disp-hack-ob (:conc-name nil) (:type list)) ;;it wanted tree but that's illegal
+      left-ob right-ob))
 
 (defun object-for-display-hack (exp)
   (if (atom exp)

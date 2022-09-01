@@ -82,10 +82,8 @@
 (defvar *macsyma-extend-types-saved* nil)
 
 (defun dsksetup (x storefl fasdumpfl fn)
-  (let (prinlength prinlevel file (fname (meval (car x)))
+  (let (prinlength prinlevel file (fname (namestring (maxima-string (meval (car x)))))
 		   *print-gensym* list fasdeqlist fasdnoneqlist maxima-error)
-    (unless (stringp fname)
-      (merror "~a: first argument must be a string." fn))
     (setq savefile
 	  (if (or (eq $file_output_append '$true) (eq $file_output_append t))
 	      (open fname :direction :output :if-exists :append :if-does-not-exist :create)
@@ -95,9 +93,7 @@
       (princ ";;; -*- Mode: LISP; package:maxima; syntax:common-lisp; -*- " savefile)
       (terpri savefile)
       (princ "(in-package :maxima)" savefile))
-    ;; Check arguments. First argument was checked above.
-    ;; May want to relax requirement that all atoms be symbols.
-    (dolist (u (cdr x))
+    (dolist (u x)
       (cond ((atom u) (if (not (symbolp u)) (improper-arg-err u fn)))
 	    ((listargp u))
 	    ((or (not (eq (caar u) 'mequal)) (not (symbolp (cadr u))))
@@ -108,12 +104,10 @@
 	  *macsyma-extend-types-saved* nil)
     (if (null (errset (dskstore x storefl file list)))
 	(setq maxima-error t))
-    ;; FOLLOWING CODE IS NEVER EXECUTED DUE TO PRECEDING (SETQ *MACSYMA-EXTEND-TYPES-SAVED* NIL)
-    ;; CUT (DEFVAR *MACSYMA-EXTEND-TYPES-SAVED*) AND FOLLOWING CODE AT SOME FUTURE DATE
     (if (not (null *macsyma-extend-types-saved*))
 	(block nil
 	  (if (null (errset
-		     (dskstore (cons "{" *macsyma-extend-types-saved*) storefl file list)))
+		     (dskstore (cons '&{ *macsyma-extend-types-saved*) storefl file list)))
 	      (setq maxima-error t))
 	  (setq *macsyma-extend-types-saved* nil)))
     (close savefile)
@@ -172,12 +166,12 @@
 	 (when (setq val (and (member item (cdr $aliases) :test #'eq) (get item 'reversealias)))
 	   (dskdefprop rename val 'reversealias)
 	   (pradd2lnc rename '$aliases)
-	   (dskdefprop val rename 'alias)
+	   (dskdefprop (makealias val) rename 'alias)
 	   (and greatorder (not (assoc 'greatorder alrdystrd :test #'eq))
 		(setq x (list* nil 'greatorder (cdr x))))
 	   (and lessorder (not (assoc 'lessorder alrdystrd :test #'eq))
 		(setq x (list* nil 'lessorder (cdr x))))
-	   (setq x (list* nil val (cdr x))))
+	   (setq x (list* nil (makealias val) (cdr x))))
 	 (cond ((setq val (get item 'noun))
 		(setq x (list* nil val (cdr x)))
 		(dskdefprop rename val 'noun))
@@ -358,21 +352,14 @@
 
 (defun pradd2lnc (item prop)
   (if (or (null $packagefile) (not (member prop (cdr $infolists) :test #'eq))
-	  (and (eq prop '$props) (getopr0 item)))
+	  (and (eq prop '$props) (get item 'opr)))
       (fasprin `(add2lnc (quote ,item) ,prop))))
 
 (defun dskdefprop (name val ind)
-  (declare (special *opr-table*))
-  (fasprin
-    (cond
-      ((and (member ind '(expr fexpr macro) :test #'eq) (eq (car val) 'lambda))
-       (list* 'defun name (if (eq ind 'expr) (cdr val) (cons ind (cdr val)))))
-      ((eq ind 'opr)
-       (if (symbolp name)
-         (list 'defprop name val ind)
-         `(setf (gethash ,name *opr-table*) ',val)))
-      (t
-        (list 'defprop name val ind)))))
+  (fasprin (if (and (member ind '(expr fexpr macro) :test #'eq) (eq (car val) 'lambda))
+	       (list* 'defun name
+		      (if (eq ind 'expr) (cdr val) (cons ind (cdr val))))
+	       (list 'defprop name val ind))))
 
 (defun dskget (file name flag unstorep)
   (let ((defaultf defaultf) (eof (list nil)) item)

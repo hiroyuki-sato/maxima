@@ -242,7 +242,7 @@
 		 (expon (caddr x)) ;; this is the exponent
 		 (doit (and
 			f		; there is such a function
-			(member (getcharn f 1) '(#\% #\$)) ;; insist it is a % or $ function
+			(member (getchar f 1) '(% $) :test #'eq) ;; insist it is a % or $ function
 			(not (eq (car (last (car fx))) 'array))	; fix for x[i]^2
 					; Jesper Harder <harder@ifa.au.dk>
 			(not (member f '(%sum %product %derivative %integrate %at
@@ -281,8 +281,8 @@
 			 )))))
     (append l r)))
 
-(defprop mnctimes (" cdot ") texsym)
-(defprop mtimes (" cdot ") texsym)    ;; HMM, SEEMS INADVISABLE
+(defprop mnctimes " cdot " texsym)
+(defprop mtimes " cdot " texsym)    ;; HMM, SEEMS INADVISABLE
 
 (defun tex-sqrt(x l r)
   ;; format as \\sqrt { } assuming implicit parens for sqr grouping
@@ -502,6 +502,12 @@
  
 (defprop | --> | " rightarrow " texsym)
 (defprop | WHERE | "` bold where`" texsym)
+(defprop &>= (" ge ") texsym)
+(defprop &> (" > ") texsym)
+(defprop &<= (" le ") texsym)
+(defprop &< (" < ") texsym)
+(defprop &= (" = ") texsym)
+(defprop |&#| (" neq ") texsym)
  
 (defun tex-mlable (x l r)
   (tex (caddr x)

@@ -91,7 +91,7 @@
 
 	      ((and
 		itsalabel ;; but is it a user-command-label?
-		(eq (getcharn $inchar 2) (getcharn mexplabel 2)))
+		(eq (getchar $inchar 2) (getchar mexplabel 2)))
 	       ;; aha, this is a C-line: do the grinding:
 	       (format texport "<pre>~%~a " mexplabel) 
                ;; need to get rid of "<" signs
@@ -150,7 +150,7 @@
 (defun mathml-atom (x l r) 
   (append l
 	  (list (cond ((numberp x) (mathmlnumformat x))
-                      ((stringp x) (format nil "<mtext>~a</mtext>" x))
+                      ((mstringp x) (maybe-invert-string-case (string-left-trim '(#\&) x)))
 		      ((and (symbolp x) (get x 'mathmlword)))
 		      (t (mathml-stripdollar x))))
 	  r))
@@ -163,7 +163,8 @@
 	   (setq r (explode atom))
 	   (setq exponent (member 'e r :test #'string-equal));; is it ddd.ddde+EE
 	   (cond ((null exponent)
-                  (strcat "<mn>" (format nil "~a" (implode (exploden atom))) "</mn> "))
+		   ;; it is not. go with it as given
+                  (strcat "<mn>" (format nil "~s" atom) "</mn> "))
 		 (t
 		  (setq firstpart
 			(nreverse (cdr (member 'e (reverse r) :test #'string-equal))))
@@ -269,24 +270,7 @@
 
 (defprop bigfloat mathml-bigfloat mathml)
 
-(defun mathml-bigfloat (x l r) 
-  (let ((formatted (fpformat x)))
-    (if (or (find '|b| formatted) (find '|B| formatted))
-      (let*
-        ((spell-out-expt
-           (append
-             '("<mrow><msub><mn>")
-             (apply #'append
-                    (mapcar
-                     #'(lambda (e) (if (or (eq e '|b|) (eq e '|B|))
-                                       '("</mn><mi>B</mi></msub>"
-                                         "<mo>&times;</mo>"
-                                         "<msup><mn>10</mn><mn>")
-                                       (list e)))
-                      formatted))
-             '("</mn></msup></mrow>"))))
-        (append l spell-out-expt r))
-      (append l formatted r))))
+(defun mathml-bigfloat (x l r) (declare (ignore l r)) (fpformat x))
 
 (defprop mprog "<mi>block</mi><mspace width=\"mediummathspace\"/> " mathmlword) 
 (defprop %erf "<mi>erf</mi> " mathmlword)
@@ -402,7 +386,7 @@
 		   (expon (caddr x)) ;; this is the exponent
 		   (doit (and
 			  f ; there is such a function
-			  (member (getcharn f 1) '(#\% #\$)) ;; insist it is a % or $ function
+			  (member (getchar f 1) '(% $) :test #'eq) ;; insist it is a % or $ function
                           (not (member f '(%sum %product %derivative %integrate %at
 					      %lsum %limit) :test #'eq)) ;; what else? what a hack...
 			  (or (and (atom expon) (not (numberp expon))) ; f(x)^y is ok
@@ -589,7 +573,7 @@
 		    x (cdr x))))))
 
 (defprop mminus mathml-prefix mathml)
-(defprop mminus ("<mo>-</mo>") mathmlsym)
+(defprop mminus ("-") mathmlsym)
 (defprop mminus 100. mathml-rbp)
 (defprop mminus 100. mathml-lbp)
 

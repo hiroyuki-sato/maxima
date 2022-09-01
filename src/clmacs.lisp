@@ -13,15 +13,14 @@
 
 (eval-when
     #+gcl (compile load)
-    #+ecl (compile load eval)
-    #-(or gcl ecl) (:compile-toplevel :load-toplevel)
+    #-gcl (:compile-toplevel :load-toplevel)
 
     ;;this will make operators which
     ;;declare the type and result of numerical operations
 
-    (defmacro def-op (name arg-type op &optional return-type)
+    (defmacro def-op (name type op &optional return-type)
       `(setf (macro-function ',name)
-	     (make-operation ',arg-type ',op ',return-type)))
+	     (make-operation ',type ',op ',return-type)))
 
     ;;make very sure .type .op and .return are not special!!
     (defun make-operation (.type .op .return)
@@ -51,9 +50,9 @@
 	  (when *dbreak*
 	    (break "hi"))))
 
-      (defmacro def-op (name arg-type old)
+      (defmacro def-op (name type old)
 	`(defmacro ,name (&rest l)
-	   `(progn (chk-type (list ,@l) ',',name ',',arg-type ',l)
+	   `(progn (chk-type (list ,@l) ',',name ',',type ',l)
 		   (,',old ,@l)))))
 
     (def-op f+ fixnum +)
@@ -226,8 +225,8 @@
 		     (aref curs 4) (aref curs 5)) val)))
     ;; set the index (`cursor') for the next call to ASET-BY-CURSOR
     (loop for j downfrom (aref curs 0)
-	   do (cond ((< (aref curs j) (aref curs (+ 5 j)))
-		     (setf (aref curs j) (+  (aref curs j) 1))
+	   do (cond ((< (aref curs j) (aref curs (f+ 5 j)))
+		     (setf (aref curs j) (f+  (aref curs j) 1))
 		     (return-from aset-by-cursor t))
 		    (t (setf (aref curs j) 0)))
 	   (cond ((eql j 0) (return-from aset-by-cursor nil))))))
@@ -240,7 +239,7 @@
   (setq x (cond ((null x)
 		 (ecase (array-element-type ar)
 		   (fixnum '(0))
-		   (float '(0.0))
+		   (float '(0d0))
 		   ((t) '(nil))))
 		((arrayp x)(listarray x))
 		((atom x) (list x))
@@ -278,19 +277,21 @@
     (or not-dim1 (setf (gethash 'dim1 table) t))
     table))
 
-;;; Range of atan should be [0,2*pi]
+;;range of atan should be [0,2*pi]
 (defun atan (y x)
   (let ((tem (cl:atan y x)))
     (if (>= tem 0)
 	tem
 	(+ tem (* 2 pi)))))
 
-;;; Range of atan2 should be (-pi,pi]
-;;; CL manual says that's what lisp::atan is supposed to have.
+;;range of atan2 should be (-pi,pi]
+;;CL manual says that's what lisp::atan is supposed to have.
 (deff atan2 #'cl:atan)
 
-;;; exp is shadowed to save trouble for other packages--its declared special
+;;exp is shadowed to save trouble for other packages--its declared special
 (deff exp #'cl:exp)
+
+(setq *read-default-float-format* 'double-float)
 
 #+clisp
 (progn
@@ -313,209 +314,7 @@
   ;; in those few cases when the mathematical result is exact although
   ;; one of the arguments is a floating-point number, such as (* 0
   ;; 1.618), (/ 0 1.618), (atan 0 1.0), (expt 2.0 0)
-  (setq custom:*floating-point-rational-contagion-ansi* t)
+  (setq custom:*floating-point-rational-contagion-ansi* t))
 
-  ;; When building maxima using with 'flonum being a 'long-float it may be
-  ;; useful to adjust the number of bits of precision that CLISP uses for
-  ;; long-floats.
-  #+nil
-  (setf (ext:long-float-digits) 128)
-  )
-
-;; Make the maximum exponent larger for CMUCL.  Without this, cmucl
-;; will generate a continuable error when raising an integer to a
-;; power greater than this.
-#+cmu
-(setf ext::*intexp-maximum-exponent* 100000)
-;;;; Setup the mapping from the Maxima 'flonum float type to a CL float type.
-;;;;
-;;;; Add :flonum-log to *features* if you want flonum to be a
-;;;; long-float.  Or add :flonum-double-double if you want flonum to
-;;;; be a double-double (currently only for CMUCL).  Otherwise, you
-;;;; get double-float as the flonum type.
-;;;;
-;;;; Default double-float flonum.
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'double-float)
-) ; eval-when
-
-#-(or flonum-long flonum-double-double)
-(progn
-;; Tell Lisp the float type for a 'flonum.
-#-clisp
-(deftype flonum (&optional low high)
-  (cond (high
-	 `(double-float ,low ,high))
-	(low
-	 `(double-float ,low))
-	(t
-	 'double-float)))
-
-;; Some versions of clisp appear to be buggy: (coerce 1 'flonum)
-;; signals an error.  So does (coerce 1 '(double-float 0d0)).  But
-;; (coerce 1 'double-float) returns 1d0 as expected.  So for now, make
-;; flonum be exactly the same as double-float, without bounds.
-#+clisp
-(deftype flonum (&optional low high)
-  'double-float)
-
-(defconstant most-positive-flonum most-positive-double-float)
-(defconstant most-negative-flonum most-negative-double-float)
-(defconstant least-positive-flonum least-positive-double-float)
-(defconstant least-negative-flonum least-negative-double-float)
-(defconstant flonum-epsilon double-float-epsilon)
-(defconstant least-positive-normalized-flonum least-positive-normalized-double-float)
-
-(defconstant flonum-exponent-marker #\D)
-)
-
-#+flonum-long
-(progn
-;;;; The Maxima 'flonum can be a CL 'long-float on the Scieneer CL or CLISP,
-;;;; but should be the same a 'double-float on other CL implementations.
-
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'long-float)
-) ; eval-when
-
-;; Tell Lisp the float type for a 'flonum.
-(deftype flonum (&optional low high)
-  (cond (high
-	 `(long-float ,low ,high))
-	(low
-	 `(long-float ,low))
-	(t
-	 'long-float)))
-
-(defconstant most-positive-flonum most-positive-long-float)
-(defconstant most-negative-flonum most-negative-long-float)
-(defconstant least-positive-flonum least-positive-long-float)
-(defconstant least-negative-flonum least-negative-long-float)
-(defconstant flonum-epsilon long-float-epsilon)
-(defconstant least-positive-normalized-flonum least-positive-normalized-long-float)
-
-(defconstant flonum-exponent-marker #\L)
-
-)
-
-#+flonum-double-double
-(progn
-
-;;;; The Maxima 'flonum can be a 'kernel:double-double-float on the CMU CL.
-
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'kernel:double-double-float)
-) ; eval-when
-
-;; Tell Lisp the float type for a 'flonum.
-(deftype flonum (&optional low high)
-  (cond (high
-	 `(kernel:double-double-float ,low ,high))
-	(low
-	 `(kernel:double-double-float ,low))
-	(t
-	 'kernel:double-double-float)))
-
-;; While double-double can represent number as up to
-;; most-positive-double-float, it can't really do operations on them
-;; due to the way multiplication and division are implemented.  (I
-;; don't think there's any workaround for that.)
-;;
-;; So, the largest number that can be used is the float just less than
-;; 2^1024/(1+2^27).  This is the number given here.
-(defconstant most-positive-double-double-hi
-  (scale-float (cl:float (1- 9007199187632128) 1d0) 944))
-
-(defconstant most-positive-flonum (cl:float most-positive-double-double-hi 1w0))
-(defconstant most-negative-flonum (cl:float (- most-positive-double-double-hi 1w0)))
-(defconstant least-positive-flonum (cl:float least-positive-double-float 1w0))
-(defconstant least-negative-flonum (cl:float least-negative-double-float 1w0))
-;; This is an approximation to a double-double epsilon.  Due to the
-;; way double-doubles are represented, epsilon is actually zero
-;; because 1+x = 1 only when x is zero.  But double-doubles only have
-;; 106 bits of precision, so we use that as epsilon.
-(defconstant flonum-epsilon (scale-float 1w0 -106))
-(defconstant least-positive-normalized-flonum (cl:float least-positive-normalized-double-float 1w0))
-
-(defconstant flonum-exponent-marker #\W)
-
-)
-
-;;;;
-(defmacro float (x &optional (y 1e0))
+(defmacro float (x &optional (y 1d0))
   `(cl:float ,x ,y))
-
-;; DO-MERGE-ASYM moved here from nset.lisp so that it is defined before 
-;; it is referenced in compar.lisp.
-
-(defmacro do-merge-symm (list1 list2 eqfun lessfun bothfun onefun)
-  ;; Like do-merge-asym, but calls onefun if an element appears in one but
-  ;; not the other list, regardless of which list it appears in.
-  `(do-merge-asym ,list1 ,list2 ,eqfun ,lessfun ,bothfun ,onefun ,onefun))
-
-(defmacro do-merge-asym
-  (list1 list2 eqfun lessfun bothfun only1fun only2fun)
-  ;; Takes two lists.
-  ;; The element equality function is eqfun, and they must be sorted by lessfun.
-  ;; Calls bothfun on each element that is shared by the two lists;
-  ;; calls only1fun on each element that appears only in the first list;
-  ;; calls only2fun on each element that appears only in the second list.
-  ;; If both/only1/only2 fun are nil, treat as no-op.
-  ;; Initializes the variable "res" to nil; returns its value as the result.
-  (let ((l1var (gensym))
-	(l2var (gensym)))
-    `(do ((,l1var ,list1)
-	  (,l2var ,list2)
-	  res)
-	 ;; The variable RES is for the use of both/only1/only2-fun
-	 ;; do-merge-asym returns (nreverse res)
-	 ((cond ((null ,l1var)
-		 (if ,only2fun
-		     (while ,l2var
-		       (funcall ,only2fun (car ,l2var))
-		       (setq ,l2var (cdr ,l2var))))
-		 t)
-		((null ,l2var)
-		 (if ,only1fun
-		     (while ,l1var
-		       (funcall ,only1fun (car ,l1var))
-		       (setq ,l1var (cdr ,l1var))))
-		 t)
-		((funcall ,eqfun (car ,l1var) (car ,l2var))
-		 (if ,bothfun (funcall ,bothfun (car ,l1var)))
-		 (setq ,l1var (cdr ,l1var) ,l2var (cdr ,l2var))
-		 nil)
-		((funcall ,lessfun (car ,l1var) (car ,l2var))
-		 (if ,only1fun (funcall ,only1fun (car ,l1var)))
-		 (setq ,l1var (cdr ,l1var))
-		 nil)
-		(t
-		 (if ,only2fun (funcall ,only2fun (car ,l2var)))
-		 (setq ,l2var (cdr ,l2var))
-		 nil))
-	  (nreverse res)))))
-
-;;; Test
-; (do-merge-asym '(a a a b c g h k l)
-; 	       '(a b b c c h i j k k)
-; 	       'eq
-; 	       'string<
-; 	       '(lambda (x) (prin0 'both x))
-; 	       '(lambda (x) (prin0 'one1 x))
-; 	       '(lambda (x) (prin0 'one2 x)))
-; both a
-; one1 a
-; one1 a
-; both b
-; one2 b
-; both c
-; one2 c
-; one1 g
-; both h
-; one2 i
-; one2 j
-; both k
-; one2 k
-; one1 l
-; nil
-

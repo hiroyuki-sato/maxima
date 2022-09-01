@@ -4,12 +4,6 @@
 
 ;; see bottom of file for examples
 
-(defun ensure-string (x)
-  (cond
-    ((stringp x) x)
-    ((symbolp x) (print-invert-case (stripdollar x)))
-    (t (maybe-invert-string-case (string (implode (strgrind x)))))))
-
 (defmfun $join (x y)
   (if (and ($listp x) ($listp y))
       (cons '(mlist) (loop for w in (cdr x) for u in (cdr y) collect w collect u))
@@ -19,7 +13,7 @@
     #+gcl (compile eval load)
     #-gcl (:compile-toplevel :execute :load-toplevel)
     (defmacro coerce-float (x)
-      `(cl:float (meval* ,x) 1.0)))
+      `(cl:float (meval* ,x) 1d0)))
 
 (defvar *maxima-plotdir* "")
 (defvar *maxima-tempdir*)
@@ -28,7 +22,7 @@
 (defvar *z-range* nil)
 (defvar *original-points* nil)
 (defvar $axes_length 4.0)
-(defvar *rot* (make-array 9 :element-type 'flonum))
+(defvar *rot* (make-array 9 :element-type 'double-float))
 (defvar $rot nil)
 
 (defvar $plot_options `((mlist)
@@ -36,26 +30,17 @@
                         ;; doesn't impact 2-D plotting, but is useful
                         ;; for parametric plots so that the plots
                         ;; don't get prematurely clipped.
-			#-clisp
-                        ((mlist) $x #.(- (/ most-positive-flonum 1024))
-                         #.(/ most-positive-flonum 1024))
-			#+clisp
-                        ((mlist) $x #.(- (/ most-positive-double-float 1024.0))
-                         #.(/ most-positive-double-float 1024.0))
+                        ((mlist) $x #.(- (/ most-positive-double-float 1024))
+                         #.(/ most-positive-double-float 1024))
                         ;; Make the default range on Y large.  Don't
-                        ;; use most-positive-flonum because this
+                        ;; use most-positive-double-float because this
                         ;; causes overflow in the draw2d routine.
-			#-clisp
-                        ((mlist) $y #.(- (/ most-positive-flonum 1024))
-                         #.(/ most-positive-flonum 1024))
-			#+clisp
-                        ((mlist) $y #.(- (/ most-positive-double-float 1024.0))
-                         #.(/ most-positive-double-float 1024.0))
+                        ((mlist) $y #.(- (/ most-positive-double-float 1024))
+                         #.(/ most-positive-double-float 1024))
                         ((mlist) $t -3 3)
                         ((mlist) $grid 30 30)
                         ((mlist) $transform_xy nil)
                         ((mlist) $run_viewer t)
-			((mlist) $axes t)
                         ((mlist) $plot_format
                          ,(if (string= *autoconf-win32* "true")
                               '$gnuplot
@@ -63,11 +48,12 @@
                         ((mlist) $gnuplot_term $default)
                         ((mlist) $gnuplot_out_file nil)
                         ;; With adaptive plotting, 100 is probably too
-                        ;; many ticks.
-                        ((mlist) $nticks 29)
+                        ;; many ticks.  I (rtoy) think 10 is a more
+                        ;; reasonable default.
+                        ((mlist) $nticks 10)
                         ;; Controls the number of splittings
                         ;; adaptive-plotting will do.
-                        ((mlist) $adapt_depth 5)
+                        ((mlist) $adapt_depth 10)
                         ((mlist) $gnuplot_pm3d
                          ,(if (string= *autoconf-win32* "true") t nil))
                         ((mlist) $gnuplot_preamble "")
@@ -90,6 +76,7 @@
                          "set term dumb 79 22")
                         ((mlist) $gnuplot_ps_term_command
                          "set size 1.5, 1.5;set term postscript eps enhanced color solid 24")
+                        ((mlist) $gnuplot_pipes_term "x11")
                         ((mlist) $plot_realpart nil)
                         ))
 
@@ -104,18 +91,15 @@
           x
           nil)))
 
-(defvar *missing-data-indicator* "NaN")
 
 (defvar *gnuplot-stream* nil)
 (defvar *gnuplot-command* "")
-
 (defvar $gnuplot_command (if (string= *autoconf-win32* "true")
 			     "wgnuplot"
 			     "gnuplot"))
 
 (defun start-gnuplot-process (path)
   #+clisp (setq *gnuplot-stream* (ext:make-pipe-output-stream path))
-  #+lispworks (setq *gnuplot-stream* (system:open-pipe path))
   #+cmu (setq *gnuplot-stream*
               (ext:process-input (ext:run-program path nil :input :stream
                                                   :output nil :wait nil)))
@@ -131,9 +115,7 @@
 ;;            (si::fp-output-stream (si:run-process path nil)))
   #+gcl (setq *gnuplot-stream*
               (open (concatenate 'string "| " path) :direction :output))
-  #+ecl (progn
-          (setq *gnuplot-stream* (ext:run-program path nil :input :stream :output t :error :output :wait nil)))
-  #-(or clisp cmu sbcl gcl scl lispworks ecl)
+  #-(or clisp cmu sbcl gcl scl)
   (merror "Gnuplot not supported with your lisp!")
   
   ;; set mouse must be the first command send to gnuplot
@@ -169,27 +151,17 @@
 
 (defun $gnuplot_reset ()
   (send-gnuplot-command "unset output")
-  (send-gnuplot-command (translate-gnuplot-term-option))
+  (send-gnuplot-command (format nil "set term ~a" 
+                                (get-plot-option-string '$gnuplot_pipes_term)))
   (send-gnuplot-command "reset"))
-
-;; If embedded in output, the gnuplot_term option makes Gnuplot unhappy,
-;; so translate gnuplot_term into something Gnuplot actually wants to see.
-;; Logic copied from GNUPLOT-PRINT-HEADER.
-
-(defun translate-gnuplot-term-option ()
-  (case ($get_plot_option '$gnuplot_term 2)
-    ($default (get-plot-option-string '$gnuplot_default_term_command))
-    ($ps (get-plot-option-string '$gnuplot_ps_term_command))
-    ($dumb (get-plot-option-string '$gnuplot_dumb_term_command))
-    (t (format nil "set term ~a" (get-plot-option-string '$gnuplot_term)))))
 
 (defun $gnuplot_replot (&optional s)
   (if (null *gnuplot-stream*)
       (merror "Gnuplot is not running."))
   (cond ((null s)
          (send-gnuplot-command "replot"))
-        ((stringp s)
-         (send-gnuplot-command s)
+        ((mstringp s)
+         (send-gnuplot-command ($sconcat s))
          (send-gnuplot-command "replot"))
         (t
          (merror "Input to 'gnuplot_replot' is not a string!")))
@@ -207,7 +179,8 @@
          (val-list (if ($listp val)
                        (cdr val)
                        `(,val))))
-    (ensure-string (nth (mod (- index 1) (length val-list)) val-list))))
+    (print-invert-case 
+     (stripdollar (nth (mod (- index 1) (length val-list)) val-list)))))
 
 (defun check-list-items (name lis type length)
   (or (eql (length lis) length)
@@ -234,9 +207,6 @@
           ($nticks  (check-list-items name (cddr value) 'fixnum 1))
           (($run_viewer $transform_xy $gnuplot_pm3d)
            (check-list-items name (cddr value) 't 1))
-	  ($axes
-	   (or (member (third value) '($x $y t nil))
-	       (merror "option axes should be: true, false, x or y")) value)
           ($plot_format (or (member (third value)
                                     (if (string= *autoconf-win32* "true")
                                         '($zic $geomview
@@ -249,10 +219,9 @@
                                               $gnuplot_pipes
                                               $mgnuplot
                                               $openmath
-                                              $xgraph
                                               )
                                         ))
-                            (merror "plot_format: only gnuplot, mgnuplot, openmath, geomview, and xgraph are recognized"))
+                            (merror "plot_format: only [gnuplot,mgnuplot,openmath,geomview] are available"))
                         value)
           ($gnuplot_term (or (symbolp (third value)) (stringp (third value))
                              (merror "gnuplot_term: must be symbol or string"))
@@ -270,6 +239,7 @@
           ($gnuplot_ps_term_command value)
           ($adapt_depth (check-list-items name (cddr value) 'fixnum 1))
           ($plot_realpart value)
+          ($gnuplot_pipes_term value)
           (t
            (merror "Unknown plot option specified:  ~M" name))))
   (loop for v on (cdr $plot_options)
@@ -279,7 +249,7 @@
   )
 
 (defun get-gnuplot-term (term)
-  (let* ((sterm (string-downcase (ensure-string term)))
+  (let* ((sterm (string-downcase (format nil "~a" (stripdollar term))))
          (pos   (search " " sterm)))
     (if pos  
       (subseq sterm 0 pos)
@@ -288,9 +258,7 @@
 (defvar $pstream nil)
 
 (defun print-pt1 (f str)
-  (if (floatp f)
-    (format str "~g " f)
-    (format str "~a " *missing-data-indicator*)))
+  (format str "~g " f))
 
 (defstruct (polygon (:type list)
                     (:constructor %make-polygon (pts edges)))
@@ -314,17 +282,17 @@
 
 (defun draw3d (f minx maxx miny maxy  nxint nyint)
   (let* ((epsx (/ (- maxx minx) nxint))
-	 (x 0.0)  ( y 0.0)
+	 (x 0d0)  ( y 0d0)
          (epsy (/ (- maxy miny) nyint))
          (nx (+ nxint 1))
          (l 0)
          (ny (+ nyint 1))
 	 (ar (make-array  (+ 12         ; 12  for axes
 			     (* 3 nx ny))  :fill-pointer (* 3 nx ny)
-			     :element-type t :adjustable t)))
-    (declare (type flonum x y epsy epsx)
+			     :element-type 'double-float :adjustable t)))
+    (declare (double-float x y epsy epsx)
              (fixnum nx  ny l)
-             (type (cl:array t) ar))
+             (type (cl:array double-float) ar))
     (loop for j below ny
            initially (setq y miny)
            do (setq x minx)
@@ -403,14 +371,14 @@
    
 ;; pts is a vector of bts [x0,y0,z0,x1,y1,z1,...] and each tuple xi,yi,zi is rotated
 ;; also the *z-range* is computed.
-#-abcl (defun $rotate_pts(pts rotation-matrix)
+(defun $rotate_pts(pts rotation-matrix)
   (or ($matrixp rotation-matrix) (error "second arg not matrix"))
   (let* ((rot *rot*)
          (l (length pts))
          (x 0.0) (y 0.0) (z 0.0)
          )
-    (declare (type flonum  x y z))
-    (declare (type (cl:array flonum) rot))
+    (declare (double-float  x y z))
+    (declare (type (cl:array double-float) rot))
     ($copy_pts rotation-matrix *rot* 0)
         
     ;;    (setf (rot rot  0 0) (* cosphi costh))
@@ -431,7 +399,7 @@
            (setq x (aref pts j))
            (setq y (aref pts (+ j 1)))
            (setq z (aref pts (+ j 2)))
-           (loop for i below 3 with a of-type flonum = 0.0
+           (loop for i below 3 with a of-type double-float = 0.0
                   do
                   (setq a (* x (aref rot (+ (* 3 i) 0))))
                   (setq a (+ a (* y (aref rot (+ (* 3 i) 1)))))
@@ -444,9 +412,9 @@
          ($list_matrix_entries (ncmul2  $rot x)))
         ((mbagp x) (cons (car x) (mapcar '$rotate_list (cdr x))))))
 
-(defun $get_range (pts k &aux (z 0.0) (max most-negative-flonum) (min most-positive-flonum))
-  (declare (type flonum z max min))
-  (declare (type (vector flonum) pts))
+(defun $get_range (pts k &aux (z 0.0) (max most-negative-double-float) (min most-positive-double-float))
+  (declare (double-float z max min))
+  (declare (type (vector double-float) pts))
   (loop for i from k below (length pts) by 3
          do (setq z (aref pts i))
          (cond ((< z min) (setq min z)))
@@ -490,14 +458,14 @@
   (cond ((eql z1 0.0)
          (if (> z2 0.0)
              0.0
-             (coerce pi 'flonum)))
+             (coerce pi 'double-float)))
         (t
          (cl:atan  z2 z1 ))))
 
 (defun $polar_to_xy (pts &aux (r 0.0) (th 0.0))
-  (declare (type flonum r th))
-  (declare (type (cl:array flonum) pts))
-  (assert (typep pts '(vector flonum)))
+  (declare (double-float r th))
+  (declare (type (cl:array double-float) pts))
+  (assert (typep pts '(vector double-float)))
   (loop for i below (length pts) by 3
          do (setq r (aref pts i))
          (setq th (aref pts (+ i 1)))
@@ -513,8 +481,8 @@
   (let ((sym (gensym "transform")))
     (setf (symbol-function sym)
           #'(lambda (pts &aux  (x1 0.0)(x2 0.0)(x3 0.0))
-              (declare (type flonum  x1 x2 x3))
-              (declare (type (cl:array t) pts))
+              (declare (double-float  x1 x2 x3))
+              (declare (type (cl:array double-float) pts))
               (loop for i below (length pts) by 3
                      do 
 		     (setq x1 (aref pts i))
@@ -542,11 +510,6 @@
 (defun coerce-float-fun (expr &optional lvars)
   (cond ((and (consp expr) (functionp expr))
          expr)
-        ; expr is a string which names an operator
-        ; (e.g. "!" "+" or a user-defined operator)
-        ((and (stringp expr) (getopr0 expr))
-         (let ((a (if lvars lvars `((mlist) ,(gensym)))))
-           (coerce-float-fun `(($apply) ,(getopr0 expr) ,a) a)))
         ((and (symbolp expr) (not (member expr lvars)) (not ($constantp expr)))
          (cond
        ((fboundp expr)
@@ -564,6 +527,9 @@
           (get expr 'mfexpr*)
           ; expr is the name of a Maxima macro defined by ::=
           (mget expr 'mmacro)
+          ; expr is a string which names an operator
+          ; (e.g. "!" "+" or a user-defined operator)
+          (get expr 'opr)
           ; expr is the name of a simplifying function,
           ; and the simplification property is associated with the noun form
           (get ($nounify expr) 'operators)
@@ -681,7 +647,7 @@
 ;; which is closer to us (ie highest z component after rotating towards the user)
 ;; and this is then they are sorted in groups of 5.   
 (defun sort-ngons (points edges n &aux lis )
-  (declare (type (cl:array (flonum))  points)
+  (declare (type (cl:array (double-float))  points)
            (type (cl:array (mod 65000)) edges)
            (fixnum n))
   (let ((new (make-array (length edges) :element-type  (array-element-type edges)))
@@ -695,7 +661,7 @@
     (declare (type (cl:array (mod 65000)) new)
              (fixnum i leng n1 at )
              )
-    (declare (type flonum z z1))
+    (declare (double-float z z1))
     
     (setq lis
           (loop  for i0 below leng by (+ n 1)
@@ -761,9 +727,9 @@
 (defun $copy_pts(lis vec start)
   (declare (fixnum start))
   (let ((tem vec))
-    (declare (type (cl:array flonum) tem))
+    (declare (type (cl:array double-float) tem))
     (cond ((numberp lis)
-	   (or (typep lis 'flonum) (setq lis (float lis)))
+	   (or (typep lis 'double-float) (setq lis (float lis 0d0)))
 	   (setf (aref tem start) lis)
 	   (1+ start))
           ((typep lis 'cons)
@@ -802,7 +768,7 @@
          (eps (/ (- tmax tmin) (- nticks 1)))
          f1 f2 in-range-y in-range-x in-range last-ok 
          )
-    (declare (type flonum x y tt ymin ymax xmin xmax tmin tmax eps))
+    (declare (double-float x y tt ymin ymax xmin xmax tmin tmax eps))
     (setq f1 (coerce-float-fun (third param) `((mlist), (second trange))))
     (setq f2 (coerce-float-fun (fourth param) `((mlist), (second trange))))
     (cons '(mlist simp)    
@@ -887,7 +853,7 @@
 ;;         (eps2 (* eps eps))
 ;;         in-range last-ok
 ;;         )
-;;      (declare (type flonum x1 y1 x y dy eps2 eps ymin ymax ))
+;;      (declare (double-float x1 y1 x y dy eps2 eps ymin ymax ))
 ;;                                      ;(print (list 'ymin ymin 'ymax ymax epsy))
 ;;      (setq x ($- x eps))  
 ;;      (cons '(mlist)
@@ -981,10 +947,10 @@
            ;;
            ;; XXX: What is the right value for delta?  Does this break
            ;; other things?  Simple tests thus far show that
-           ;; 100*flonum-epsilon is ok.
+           ;; 100*double-float-epsilon is ok.
            (let ((diff (- (abs quad)
                           (* eps (- quad-b (min f-a f-a1 f-b f-b1 f-c)))))
-                 (delta (* 100 flonum-epsilon)))
+                 (delta (* 100 double-float-epsilon)))
              (<= diff delta))))
         (t
          ;; Something is not a number, so assume it's not smooth enough.
@@ -1042,10 +1008,10 @@
            (ymin (coerce-float (third yrange)))
            (ymax (coerce-float (fourth yrange)))
            ;; What is a good EPS value for adaptive plotting?
-                                        ;(eps 1e-5)
+                                        ;(eps 1d-5)
            x-samples y-samples result
            )
-      (declare (type flonum ymin ymax))
+      (declare (double-float ymin ymax))
       ;; Divide the region into NTICKS regions.  Each region has a
       ;; start, mid and endpoint. Then adaptively plot over each of
       ;; these regions.  So it's probably a good idea not to make
@@ -1094,10 +1060,10 @@
                             (cddr
                              (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
                                             (car y-start) (car y-mid) (car y-end)
-                                            depth 1e-5)))
+                                            depth 1d-5)))
                     (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
                                    (car y-start) (car y-mid) (car y-end)
-                                   depth 1e-5))))
+                                   depth 1d-5))))
           
 
         ;; jfa: I don't think this is necessary any longer
@@ -1118,12 +1084,12 @@
         (cons '(mlist) result)))))
 
 (defun get-range (lis)
-  (let ((ymin most-positive-flonum)
-        (ymax most-negative-flonum))
-    (declare (type flonum ymin ymax))
+  (let ((ymin most-positive-double-float)
+        (ymax most-negative-double-float))
+    (declare (double-float ymin ymax))
     (do ((l lis (cddr l)))
         ((null l))
-      (or (floatp (car l)) (setf (car l) (float (car l))))
+      (or (floatp (car l)) (setf (car l) (float (car l) #. (coerce 2 'double-float))))
       (cond ((< (car l) ymin)
 	     (setq ymin (car l))))
       (cond ((< ymax (car l))
@@ -1226,97 +1192,88 @@
              ($printfile view-file)
              (merror "Plot option `gnuplot_out_file' not defined."))))) 
     (if gnuplot-out-file
-	gnuplot-out-file-string
-	"")))
+        (format t "Output file \"~a\".~%" gnuplot-out-file-string))))
 
 (defun $plot2d (fun &optional range &rest options)
   (let (($numer t) ($display2d nil) ($float t) ($%enumer t)
         (*plot-realpart* *plot-realpart*)
-        ($plot_options $plot_options) (i 0)
-	(output-file "")
+        ($plot_options $plot_options) (i 0) 
         plot-format gnuplot-term gnuplot-out-file file plot-name
         log-x log-y xmin xmax ymin ymax styles style legend
-        xlabel ylabel box psfile axes)
+        xlabel ylabel box)
  
     (when (and (consp fun) (eq (cadr fun) '$parametric))
       (or range (setq range (nth 4 fun)))
-      (setq fun `((mlist) ,fun)))
+      (setf fun `((mlist) ,fun)))
     (when (and (consp fun) (eq (cadr fun) '$discrete))
-      (setq fun `((mlist) ,fun)))
+      (setf fun `((mlist) ,fun)))
 
-    (unless ($listp fun ) (setq fun `((mlist) ,fun)))     
+    (unless ($listp fun ) (setf fun `((mlist) ,fun)))     
     (let ((no-range-required t))
       (if (not ($listp fun))    ;; to plot a single function a range is needed
-        (setq no-range-required nil)
+        (setf no-range-required nil)
         (dolist (subfun (rest fun))
           (if (not ($listp subfun))         ;; if any of the sets to be plotted
-            (setq no-range-required nil)))) ;; is a function, a range is needed
+            (setf no-range-required nil)))) ;; is a function, a range is needed
       (unless no-range-required
         (setq range (check-range range))
-        (setq xlabel (ensure-string (second range)))
-        (setq xmin (third range))
-        (setq xmax (fourth range)))
+        (setf xlabel (print-invert-case (stripdollar (second range))))
+        (setf xmin (coerce-float (third range)))
+        (setf xmax (coerce-float (fourth range))))
       (if (and no-range-required range)
         ;;; second argument was really a plot option, not a range
-        (setq options (cons range options))))
+        (setf options (cons range options))))
     ;; if only one function is being plotted, use its name for ylabel
     ;; of for xlabel and ylabel, if the plot is a parametric
     (when (= (length fun) 2)
       (let ((v (second fun)))
         (cond ((atom v) 
-               (setq ylabel (coerce (mstring v) 'string)))
+               (setf ylabel (coerce (mstring v) 'string)))
               ((eq (second v) '$parametric)
-               (setq xlabel (coerce (mstring (third v)) 'string))
-               (setq ylabel (coerce (mstring (fourth v)) 'string)))
+               (setf xlabel (coerce (mstring (third v)) 'string))
+               (setf ylabel (coerce (mstring (fourth v)) 'string)))
               ((eq (second v) '$discrete)
-               (setq ylabel (format nil "discrete data")))
-              (t (setq ylabel (coerce (mstring v) 'string)))))
-      (if (> (length xlabel) 80) (setq xlabel nil))
-      (if (> (length ylabel) 80) (setq ylabel nil)))
+               (setf ylabel (format nil "discrete data")))
+              (t (setf ylabel (coerce (mstring v) 'string)))))
+      (if (> (length xlabel) 80) (setf xlabel nil))
+      (if (> (length ylabel) 80) (setf ylabel nil)))
 
     ;; options parser
     (dolist (v options)
       (if ($listp v)
         (case (second v)
-          ($logx (setq log-x t))
-          ($logy (setq log-y t))
-	  ($box (setq box (cddr v)))
-          ($xlabel (setq xlabel (ensure-string (third v))))
-          ($ylabel (setq ylabel (ensure-string (third v))))
-          ($x
-	   (setq v (check-range v))
-	   (setq xmin (third v))
-	   (setq xmax (fourth v))
-	   ($set_plot_option `((mlist) $x ,xmin ,xmax))
-	   (unless xlabel (setq xlabel "x")))
-          ($y
-	   (setq v (check-range v))
-	   (setq ymin (third v))
-	   (setq ymax (fourth v))
-	   ($set_plot_option `((mlist) $y ,ymin ,ymax))
-	   (unless ylabel (setq ylabel "y")))
-          ($style (setq styles (cddr v)))
-          ($legend (setq legend (cddr v)))
-	  ($psfile
-	   ($set_plot_option '((MLIST SIMP) $GNUPLOT_TERM $PS))
-	   ($set_plot_option `((MLIST SIMP) $GNUPLOT_OUT_FILE ,(third v)))
-	   (setq psfile t))
+          ($logx (setf log-x t))
+          ($logy (setf log-y t))
+	  ($box (setf box (cddr v)))
+          ($xlabel (setf xlabel (print-invert-case (stripdollar (third v)))))
+          ($ylabel (setf ylabel (print-invert-case (stripdollar (third v)))))
+          ($x (when (fourth v)
+                (setf xmin (meval (third v)))
+                (setf xmax (meval (fourth v)))
+                ($set_plot_option `((mlist) $x ,xmin ,xmax)))
+              (unless xlabel (setf xlabel "x")))
+          ($y (when (fourth v)
+                (setf ymin (meval (third v)))
+                (setf ymax (meval (fourth v)))
+                ($set_plot_option `((mlist) $y ,ymin ,ymax))))
+          ($style (setf styles (cddr v)))
+          ($legend (setf legend (cddr v)))
           (t ($set_plot_option v)))
         (merror "Option ~M should be a list" v)))
-    (when (and xlabel log-x) (setq xlabel (format nil "log(~a)" xlabel)))
-    (when (and ylabel log-y) (setq ylabel (format nil "log(~a)" ylabel)))
+    (when (and xlabel log-x) (setf xlabel (format nil "log(~a)" xlabel)))
+    (when (and ylabel log-y) (setf ylabel (format nil "log(~a)" ylabel)))
     ($set_plot_option '((mlist simp) $gnuplot_pm3d nil))
 
     (setq *plot-realpart* ($get_plot_option '$plot_realpart 2))
-    (setq plot-format  ($get_plot_option '$plot_format 2))
-    (setq gnuplot-term ($get_plot_option '$gnuplot_term 2))
-    (setq axes ($get_plot_option '$axes 2))
+    (setf plot-format  ($get_plot_option '$plot_format 2))
+    (setf gnuplot-term ($get_plot_option '$gnuplot_term 2))
     (if ($get_plot_option '$gnuplot_out_file 2)
-      (setq gnuplot-out-file (get-plot-option-string '$gnuplot_out_file)))
+      (setf gnuplot-out-file (get-plot-option-string '$gnuplot_out_file)))
     (if (and (eq plot-format '$gnuplot) (eq gnuplot-term '$default) 
              gnuplot-out-file)
-      (setq file gnuplot-out-file)
-      (setq file (plot-temp-file (format nil "maxout.~(~a~)" (ensure-string plot-format)))))
+      (setf file gnuplot-out-file)
+      (setf file (plot-temp-file
+                  (format nil "maxout.~(~a~)" (stripdollar plot-format)))))
     ;; old function $plot2dopen incorporated here
     (case plot-format
       ($openmath
@@ -1325,49 +1282,40 @@
           (st)
           (cond ($show_openplot (format st "plot2d -data {~%"))
                 (t (format st "{plot2d ")))
-	  (when psfile (format st " {psfile \"~a\"}"
-			       (get-plot-option-string '$gnuplot_out_file)))
-	  (when (and legend (not (first legend))) (format st " {nolegend 1}"))
-	  (when (and box (not (first box))) (format st " {nobox 1}"))
-	  (if axes
-	      (case axes
-		    ($x (format st " {axes {x} }"))
-		    ($y (format st " {axes {y} }"))
-		    (t (format st " {axes {xy} }")))
-	    (format st " {axes 0}"))
           (when (and xmin xmax) (format st " {xrange ~g ~g}" xmin xmax))
           (when (and ymin ymax) (format st " {yrange ~g ~g}" ymin ymax))
           (when xlabel (format st " {xaxislabel \"~a\"}" xlabel))
           (when ylabel (format st " {yaxislabel \"~a\"}" ylabel))
+	  (when (and legend (not (first legend)))
+	    (format st " {labelposition {-100000000 1000000000}}"))
           (format st "~%")
           (dolist (f (cdr fun))
             (if styles
               (progn
-                (setq style (nth (mod i (length styles)) styles))
-                (setq style (if ($listp style) (cdr style) `(,style))))
-              (setq style nil))
+                (setf style (nth (mod i (length styles)) styles))
+                (setf style (if ($listp style) (cdr style) `(,style))))
+              (setf style nil))
             (incf i)
             (if legend         ;; legend in the command line has priority
-             (setq plot-name
+             (setf plot-name
 		   (if (first legend)
-		     (ensure-string (nth (mod (- i 1) (length legend)) legend))
+		     (print-invert-case (stripdollar
+                                 (nth (mod (- i 1) (length legend)) legend)))
 		     nil))     ;; no legend if option [legend,false]
              (if (= 2 (length fun))
-               (progn
-		 (setq plot-name nil)     ;; no legend if just one function
-		 (format st " {nolegend 1}"))
+               (setf plot-name nil)     ;; no legend if just one function
                (setq plot-name
                  (let ((string ""))
                    (cond ((atom f) 
-                          (setq string (coerce (mstring f) 'string)))
+                          (setf string (coerce (mstring f) 'string)))
                          ((eq (second f) '$parametric)
-                          (setq string 
+                          (setf string 
                                 (concatenate 
                                  'string (coerce (mstring (third f)) 'string)
                                  ", " (coerce (mstring (fourth f)) 'string))))
                          ((eq (second f) '$discrete)
-                          (setq string (format nil "discrete~a" i)))
-                         (t (setq string (coerce (mstring f) 'string))))
+                          (setf string (format nil "discrete~a" i)))
+                         (t (setf string (coerce (mstring f) 'string))))
                    (cond ((< (length string) 80) string)
                          (t (format nil "fun~a" i)))))))
             (when plot-name 
@@ -1401,11 +1349,6 @@
 	      (format st "unset key~%"))
 	    (when (and box (not (first box)))
 	      (format st "unset border; unset xtics; unset ytics~%"))
-	    (if axes
-		(case axes
-		      ($x (format st "set xzeroaxis~%"))
-		      ($y (format st "set yzeroaxis~%"))
-		      (t (format st "set zeroaxis~%"))))
             (format st "plot")
             (when (and xmin xmax) (format st " [~g:~g]" xmin xmax))
             (when (and ymin ymax)
@@ -1423,11 +1366,6 @@
 	      (format *gnuplot-stream* "unset key~%"))
 	    (when (and box (not (first box)))
 	      (format *gnuplot-stream* "unset border; unset xtics; unset ytics~%"))
-	    (if axes
-		(case axes
-		      ($x (format *gnuplot-stream* "set xzeroaxis~%"))
-		      ($y (format *gnuplot-stream* "set yzeroaxis~%"))
-		      (t (format *gnuplot-stream* "set zeroaxis~%"))))
             (setq *gnuplot-command* (format nil "plot"))
             (when (and xmin xmax)
               (setq *gnuplot-command*
@@ -1450,29 +1388,30 @@
                               (format nil "'~a' index ~a " file i)))))
            (if styles
              (progn
-               (setq style (nth (mod i (length styles)) styles))
-               (setq style (if ($listp style) (cdr style) `(,style))))
-             (setq style nil))
+               (setf style (nth (mod i (length styles)) styles))
+               (setf style (if ($listp style) (cdr style) `(,style))))
+             (setf style nil))
            (incf i)
            (if legend
-             (setq plot-name      ;; legend in the command line has priority
+             (setf plot-name      ;; legend in the command line has priority
 		   (if (first legend)
-		     (ensure-string (nth (mod (- i 1) (length legend)) legend))
+		     (print-invert-case (stripdollar
+                                 (nth (mod (- i 1) (length legend)) legend)))
 		     nil))        ;; no legend if option [legend,false]
              (if (= 2 (length fun))
-               (setq plot-name nil)     ;; no legend if just one function
+               (setf plot-name nil)     ;; no legend if just one function
                (setq plot-name
                  (let ((string ""))
                    (cond ((atom v) 
-                          (setq string (coerce (mstring v) 'string)))
+                          (setf string (coerce (mstring v) 'string)))
                          ((eq (second v) '$parametric)
-                          (setq string 
+                          (setf string 
                                 (concatenate 
                                  'string (coerce (mstring (third v)) 'string)
                                  ", " (coerce (mstring (fourth v)) 'string))))
                          ((eq (second v) '$discrete)
-                          (setq string (format nil "discrete~a" i)))
-                         (t (setq string (coerce (mstring v) 'string))))
+                          (setf string (format nil "discrete~a" i)))
+                         (t (setf string (coerce (mstring v) 'string))))
                    (cond ((< (length string) 80) string)
                          (t (format nil "fun~a" i)))))))
            (case plot-format
@@ -1497,7 +1436,7 @@
             (format st "~%"))
            ($gnuplot_pipes
             (format st "~%")))
-         (setq i 0)
+         (setf i 0)
          (dolist (v (cdr fun))
            (incf i)
            ;; Assign PLOT-NAME only if not already assigned.
@@ -1521,7 +1460,7 @@
              ($mgnuplot
               (format st "~%~%# \"~a\"~%" plot-name))
              )
-           (let (in-discontinuity points)
+           (let (in-discontinuity)
              (loop for (v w) on (cdr (draw2d v range log-x log-y)) by #'cddr
                do
                (cond ((eq v 'moveto)
@@ -1538,14 +1477,11 @@
                        (t
                         (format st "move "))))
                      (t  (format st "~g ~g ~%" v w)
-			 (setq points t)
-                         (setq in-discontinuity nil))))
-	     (if (and (null points) xmin ymin)
-		 (format st "~g ~g ~%" xmin ymin)))))))
-
+                         (setq in-discontinuity nil)))))))))
+    
     (case plot-format
       ($gnuplot 
-       (setq output-file (gnuplot-process file)))
+       (gnuplot-process file))
       ($gnuplot_pipes
        (send-gnuplot-command *gnuplot-command*))
       ($mgnuplot 
@@ -1554,7 +1490,7 @@
       ($xgraph
        ($system (format nil "xgraph -t 'Maxima Plot' < \"~a\" &" file)))
       )
-    output-file))
+    ""))
 
 ;;(defun maxima-bin-search (command)
 ;;  (or ($file_search command
@@ -1566,6 +1502,40 @@
 (defun msymbolp (x)
   (and (symbolp x) (char= (char (symbol-value x) 0) #\$)))
 
+;; OK, here are some test cases for $SPRINT.
+;; The only strange one is sprint ([s1, s2, s3]) which is printing an expression containing
+;; Lisp strings via STRGRIND, which introduces the ? and \ , dunno if there's anything we
+;; want to do about that.
+
+;; sprint ("foo bar", "Foo Bar", "FOO BAR");
+;; sprint (["foo bar", "Foo Bar", "FOO BAR"]);
+;; :lisp (setq $s1 "foo bar")
+;; :lisp (setq $s2 "Foo Bar")
+;; :lisp (setq $s3 "FOO BAR")
+;; sprint (s1, s2, s3);
+;; sprint ([s1, s2, s3]);  =>  [?foo\ bar,?Foo\ Bar,?FOO\ BAR]  -- strange ??
+;; sprint (aa, Bb, CC);
+;; sprint ([aa, Bb, CC]);
+;; sprint (aa + Bb + CC);
+;; sprint (1234, 12.34, 12.34e300, 12.34b300);
+;; sprint ([1234, 12.34, 12.34e300, 12.34b300]);
+;; sprint (%i, %pi, %phi, %gamma);
+;; sprint ([%i, %pi, %phi, %gamma]);
+;; sprint (%i + %pi + %phi + %gamma);
+;; sprint (foo(xx,yy) + Bar(Xx,Yy) + BAZ(XX,YY));
+
+(defun $sprint (&rest args)
+  (sloop for v in args do
+         (cond
+           ((stringp v)
+            v)
+           ((or (mstringp v) (msymbolp v))
+            (setq v (maybe-invert-string-case (symbol-name (stripdollar v)))))
+           (t
+             (setq v (maybe-invert-string-case (string (implode (strgrind v)))))))
+         (princ v)
+         (princ " "))
+  (car args))
 
 ;; $SHOW_FILE APPEARS TO BE ESSENTIALLY THE SAME AS $PRINTFILE
 
@@ -1776,7 +1746,7 @@
 	     (not (member plot-format-in-plot-options gnuplot-formats :test #'eq))))
 
       (merror "contour_plot: plot_format = ~a not understood; must be a gnuplot format."
-              (ensure-string (or plot-format-in-arguments plot-format-in-plot-options)))
+              (print-invert-case (stripdollar (or plot-format-in-arguments plot-format-in-plot-options))))
 
       ; Prepend contour preamble to preamble in arguments (if given)
       ; and pass concatenated preamble as an argument to plot3d.
@@ -1818,30 +1788,16 @@
                 &aux lvars trans *original-points*
                 ($plot_options $plot_options)
                 ($in_netmath $in_netmath)
-                grid plot-format gnuplot-term gnuplot-out-file file
-                orig-fun const-expr psfile box legend xlabel ylabel zlabel
-		(output-file "")
+                grid
+                plot-format gnuplot-term gnuplot-out-file file
+                orig-fun
+                const-expr
                 )
   (declare (special *original-points*))
   (setf orig-fun fun)
-    ;; options parser
-    (dolist (v options)
-      (if ($listp v)
-        (case (second v)
-	  ($box (setq box (cddr v)))
-          ($xlabel (setq xlabel (ensure-string (third v))))
-          ($ylabel (setq ylabel (ensure-string (third v))))
-          ($zlabel (setq zlabel (ensure-string (third v))))
-          ($legend (setq legend (cddr v)))
- 	  ($psfile
-	   ($set_plot_option '((MLIST SIMP) $GNUPLOT_TERM $PS))
-	   ($set_plot_option `((MLIST SIMP) $GNUPLOT_OUT_FILE ,(third v)))
-	   (setq psfile t))
-          (t ($set_plot_option v)))
-        (merror "Option ~M should be a list" v)))
-;  (cond (options
-;         (dolist (v options)
-;           ($set_plot_option v))))
+  (cond (options
+         (dolist (v options)
+           ($set_plot_option v))))
   (setf plot-format  ($get_plot_option '$plot_format 2))
   (setf gnuplot-term ($get_plot_option '$gnuplot_term 2))
   (if ($get_plot_option '$gnuplot_out_file 2)
@@ -1850,7 +1806,7 @@
            (eq gnuplot-term '$default) 
            gnuplot-out-file)
       (setf file gnuplot-out-file)
-      (setf file (plot-temp-file (format nil "maxout.~(~a~)" (ensure-string plot-format)))))
+      (setf file (plot-temp-file (format nil "maxout.~(~a~)" (stripdollar plot-format)))))
   (and $in_netmath (setq $in_netmath (eq plot-format '$openmath)))
   (setq xrange (check-range xrange))
   (setq yrange (check-range yrange))
@@ -1893,7 +1849,7 @@
                      (fourth grid)))
          (ar (polygon-pts pl)) tem
          )
-    (declare (type (cl:array t) ar))
+    (declare (type (cl:array double-float) ar))
 
     (if trans  (mfuncall trans ar))
     (if (setq tem  ($get_plot_option '$transform_xy 2)) (mfuncall tem ar))
@@ -1922,14 +1878,6 @@
                 (output-points pl nil)))
              ($gnuplot
               (gnuplot-print-header $pstream :const-expr const-expr)
-	      (when xlabel (format $pstream "set xlabel \"~a\"~%" xlabel))
-	      (when ylabel (format $pstream "set ylabel \"~a\"~%" ylabel))
-	      (when zlabel (format $pstream "set zlabel \"~a\"~%" zlabel))
-	      (when (and legend (not (first legend)))
-		(format $pstream "unset key~%"))
-	      (when (and box (not (first box)))
-		(format $pstream "unset border; unset xtics; unset ytics; unset ztics~%"))
-        (format $pstream "set datafile missing \"~a\"~%" *missing-data-indicator*)
               (let ((title (get-plot-option-string '$gnuplot_curve_titles 1))
                     (plot-name
                      (let ((string (coerce (mstring orig-fun) 'string)))
@@ -1941,17 +1889,9 @@
                         (get-plot-option-string '$gnuplot_curve_styles 1)))
               (output-points pl (third grid)))
              ($gnuplot_pipes
-              (setq output-file (check-gnuplot-process))
+              (check-gnuplot-process)
               ($gnuplot_reset)
               (gnuplot-print-header *gnuplot-stream* :const-expr const-expr)
-	      (when xlabel (format *gnuplot-stream* "set xlabel \"~a\"~%" xlabel))
-	      (when ylabel (format *gnuplot-stream* "set ylabel \"~a\"~%" ylabel))
-	      (when zlabel (format *gnuplot-stream* "set zlabel \"~a\"~%" zlabel))
-	      (when (and legend (not (first legend)))
-		(format *gnuplot-stream* "unset key~%"))
-	      (when (and box (not (first box)))
-		(format *gnuplot-stream* "unset border; unset xtics; unset ytics; unset ztics~%"))
-          (format *gnuplot-stream* "set datafile missing \"~a\"~%" *missing-data-indicator*)
               (let ((title (get-plot-option-string '$gnuplot_curve_titles 1))
                     (plot-name
                      (let ((string (coerce (mstring orig-fun) 'string)))
@@ -1969,20 +1909,8 @@
               (progn
                 (cond 
                  ($show_openplot
-                  (format $pstream "plot3d -data {~%"))
-                 (t (format $pstream "{plot3d ")))
-		(when psfile
-		  (format $pstream " {psfile \"~a\"}"
-			  (get-plot-option-string '$gnuplot_out_file)))
-		(when (and legend (not (first legend)))
-		  (format $pstream " {nolegend 1}"))
-		(when (and box (not (first box)))
-		  (format $pstream " {nobox 1}"))
-		(when xlabel (format $pstream " {xaxislabel \"~a\"}" xlabel))
-		(when ylabel (format $pstream " {yaxislabel \"~a\"}" ylabel))
-		(when zlabel (format $pstream " {zaxislabel \"~a\"}" zlabel))
-		(format $pstream " {matrix_mesh ~%")
-
+                  (format $pstream "plot3d -data {{matrix_mesh ~%"))
+                 (t (format $pstream "{plot3d {matrix_mesh ~%")))
                 ;; we do the x y z  separately:
                 (loop for off from 0 to 2
                        with ar = (polygon-pts pl)
@@ -2060,7 +1988,7 @@
                               (format nil " -parametric3d \"~a\"" file)))
                    ))))
       ))
-  output-file)
+  "")
   
 
 #|

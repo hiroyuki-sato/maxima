@@ -89,8 +89,6 @@
 
 (defmspec $compfile (forms)
     (setq forms (cdr forms))
-    (if (eq 1 (length forms))
-      (merror "compfile: bravely refusing to write file of length 0"))
     (bind-transl-state
      (setq $transcompile t
 	   *in-compfile* t)
@@ -101,7 +99,7 @@
        (pop forms)
        (unwind-protect
 	    (progn
-	      (setq transl-file (open out-file-name :direction :output :if-exists :overwrite :if-does-not-exist :create :element-type 'character))
+	      (setq transl-file (open-out-dsk out-file-name))
 	      (cond ((or (member '$all forms :test #'eq)
 			 (member '$functions forms :test #'eq))
 		     (setq forms (mapcar #'caar (cdr $functions)))))
@@ -152,7 +150,7 @@
 	 (setq result (list '(mlist) input-file)))
 	(t (setq result (translate-file input-file translation-output-file))
 	   (setq input-file (third result))))
-  #+(or cmu scl sbcl clisp allegro openmcl lispworks ecl)
+  #+(or cmu scl sbcl clisp allegro openmcl)
   (multiple-value-bind (output-truename warnings-p failure-p)
       (if bin-file
 	  (compile-file input-file :output-file bin-file)
@@ -162,12 +160,14 @@
     ;; indicate that we found errors. Is this what we want?
     (unless failure-p
       (setq bin-file output-truename)))
-  #-(or cmu scl sbcl clisp allegro openmcl lispworks ecl)
+  #-(or cmu scl sbcl clisp allegro openmcl)
   (setq bin-file (compile-file input-file :output-file bin-file))
   (append result (list bin-file)))
 
+;; Converts a Maxima "string" (which is really a symbol that starts
+;; with the character '&') to a Lisp string.
 (defun maxima-string (symb)
-  (print-invert-case symb))
+  (string-left-trim "&" (print-invert-case symb)))
 
 (defmfun $translate_file (input-file &optional output-file)
   (setq input-file (maxima-string input-file))

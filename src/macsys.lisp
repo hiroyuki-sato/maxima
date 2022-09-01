@@ -96,12 +96,7 @@
 							      ;; cons-cells and other bytes,
 							      ;; also report gc-user time
 
-#+lispworks
-(defun used-area (&optional unused)
-  (declare (ignore unused))
-  (getf (system:room-values) :total-allocated))
-
-#-(or cmu scl sbcl clisp allegro openmcl lispworks)
+#-(or cmu scl sbcl clisp allegro)
 (defun used-area (&optional unused)
   (declare (ignore unused))
   0)
@@ -190,9 +185,9 @@
 	(unless $nolabels (set d-tag $%))
 	(setq $_ $__)
 	(when $showtime	;; we don't distinguish showtime:all?? /RJF
-	  (format t "Evaluation took ~,4F seconds (~,4F elapsed)"
+	  (format t "Evaluation took ~$ seconds (~$ elapsed)"
 		  time-used etime-used )
-	  #+(or gcl ecl)
+	  #+gcl
 	  (format t "~%")
 	  #+(or cmu scl sbcl clisp)
 	  (let ((total-bytes (- area-after area-before)))
@@ -300,7 +295,7 @@
 
 (defun batch (filename &optional demo-p
 	      &aux (orig filename) list
-	      file-obj (accumulated-time 0.0) (abortp t))
+	      file-obj (accumulated-time 0d0) (abortp t))
   (setq list (if demo-p '$file_search_demo '$file_search_maxima))
   (setq filename ($file_search filename (symbol-value list)))
   (or filename (merror "Could not find ~M in ~M: ~M"
@@ -310,7 +305,7 @@
        (progn (batch-internal (setq file-obj (open filename)) demo-p)
 	      (setq abortp nil)
 	      (when $showtime
-		(format t "~&Batch spent ~,4F seconds in evaluation.~%"
+		(format t "~&Batch spent ~$ seconds in evaluation.~%"
 			accumulated-time)))
     (if file-obj (close file-obj))
     (when abortp (format t "~&(Batch of ~A aborted.)~%" filename))))
@@ -381,8 +376,8 @@
       (loop
 	 do
 	 (catch #+kcl si::*quit-tag*
-		#+(or cmu scl sbcl openmcl lispworks) 'continue
-		#-(or kcl cmu scl sbcl openmcl lispworks) nil
+		#+(or cmu scl sbcl) 'continue
+		#-(or kcl cmu scl sbcl) nil
 		(catch 'macsyma-quit
 		  (continue input-stream batch-flag)
 		  (format t *maxima-epilog*)
@@ -399,7 +394,8 @@
   #+gcl (format t " (aka GCL)")
   (format t "~%Distributed under the GNU Public License. See the file COPYING.~%")
   (format t "Dedicated to the memory of William Schelter.~%")
-  (format t "The function bug_report() provides bug reporting information.~%"))
+  (format t "This is a development version of Maxima. The function bug_report()~%")
+  (format t "provides bug reporting information.~%"))
 
 #+kcl
 (si::putprop :t 'throw-macsyma-top 'si::break-command)
@@ -415,7 +411,7 @@
 
 (defmfun $appendfile (name)
   (if (and (symbolp name)
-	   (member (char (symbol-name name) 0) '(#\$) :test #'char=))
+	   (member (char (symbol-name name) 0) '(#\& #\$) :test #'char=))
       (setq name (maxima-string name)))
   (if $appendfile (merror "already in appendfile, use closefile first"))
   (let ((stream  (open name :direction :output
@@ -484,25 +480,24 @@
   (let ((ans "") )
     (dolist (v x)
       (setq ans (concatenate 'string ans
-			     (cond
+			     (cond ((and (symbolp v) (char= (char (symbol-name v) 0) #\&))
+				    (subseq (print-invert-case v) 1))
 				   ((stringp v) v)
 				   (t
 				    (coerce (mstring v) 'string))))))
     ans))
 
 (defun $system (&rest args)
-  ;; If XMaxima is running, direct output from command into *SOCKET-CONNECTION*.
-  ;; From what I can tell, GCL, ECL, and Clisp cannot redirect the output into an existing stream. Oh well.
-  (let ((s (and (boundp '*socket-connection*) *socket-connection*)))
-    #+gcl (lisp:system (apply '$sconcat args))
-    #+ecl (si:system (apply '$concat args))
-    #+clisp (ext:run-shell-command (apply '$sconcat args))
-    #+(or cmu scl) (ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
-    #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t :output (or s nil))
-    #+sbcl (sb-ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
-    #+openmcl (ccl::run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
-    #+abcl (extensions::run-shell-command (apply '$sconcat args) :output (or s *standard-output*))
-    #+lispworks (system:run-shell-command (apply '$sconcat args) :wait t)))
+  #+gcl   (lisp:system (apply '$sconcat args))
+  #+clisp (ext:run-shell-command (apply '$sconcat args))
+  #+(or cmu scl) (ext:run-program "/bin/sh"
+				  (list "-c" (apply '$sconcat args)) :output t)
+  #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t)
+  #+sbcl  (sb-ext:run-program "/bin/sh"
+			      (list "-c" (apply '$sconcat args)) :output t)
+  #+openmcl (ccl::run-program "/bin/sh"
+			      (list "-c" (apply '$sconcat args)) :output t)
+  )
 
 (defun $room (&optional (arg nil arg-p))
   (if arg-p
@@ -516,7 +511,7 @@
   (throw 'return-from-debugger t))
 
 (let ((t0-real 0) (t0-run 0)
-      (float-units (float internal-time-units-per-second)))
+      (float-units (float internal-time-units-per-second 1d0)))
 
   (defun initialize-real-and-run-time ()
     (setq t0-real (get-internal-real-time))

@@ -40,7 +40,7 @@
 	  (if (pzerop v) 0 (mul3 v (maxima-substitute (caddr e) y (car e)) -1)))))
 
 (defmfun diffsumprod (e x)
-  (cond ((or (not ($mapatom x)) (not (free (cadddr e) x)) (not (free (car (cddddr e)) x)))
+  (cond ((or (not (atom x)) (not (free (cadddr e) x)) (not (free (car (cddddr e)) x)))
 	 (diff%deriv (list e x 1)))
 	((eq (caddr e) x) 0)
 	(t (let ((u (sdiff (cadr e) x)))
@@ -163,7 +163,7 @@
   (atscan (let ((atp t)) ($substitute ateqs exp))))
 
 (defun atscan (exp)
-  (cond ((or (atom exp) (member (caar exp) '(%at mrat) :test #'eq) (like ateqs '((mlist)))) exp)
+  (cond ((or (atom exp) (member (caar exp) '(%at mrat) :test #'eq)) exp)
 	((eq (caar exp) '%derivative)
 	 (or (and (not (atom (cadr exp)))
 		  (let ((vl (cdadr exp)) dl)
@@ -240,9 +240,8 @@
 		   ((logconcoeffp (car x)) (setq decints (cons (car x) decints)))
 		   (t (setq notlogs (cons (car x) notlogs))))))))
 
-(defun lgcsimp (e)		;; this is to simplify
-  (let (($logexpand nil))	;; log(%e) -> 1 and log(%e^2) -> 2
-    (simpln `((%log) ,e) 1 t)))
+(defun lgcsimp (e)
+  (cond ((atom e) (simpln (list '(%log) e) 1 t)) (t (list '(%log simp) e))))
 
 (defun lgcsimplep (e)
   (and (eq (caar e) 'mplus)
@@ -420,18 +419,15 @@
 		 y ($bfloat y))
 	   (*fpatan y (list x)))
 	  ((and $%piargs (free x '$%i) (free y '$%i)
-		(cond ((zerop1 y)
-		       (cond ((atan2negp x) (simplify '$%pi))
-			     ((atan2posp x) 0)))
+		;; Only use asksign if %piargs is on.
+		(cond ((zerop1 y) (if (atan2negp x) (simplify '$%pi) 0))
 		      ((zerop1 x)
-		       (cond ((atan2negp y) (mul2* -1 half%pi))
-			     ((atan2posp y) (simplify half%pi))))
+		       (if (atan2negp y) (mul2* -1 half%pi) (simplify half%pi)))
 		      ((alike1 y x)
-		       (cond ((atan2negp x) (mul2* -3 fourth%pi))
-			     ((atan2posp x) (simplify fourth%pi))))
+		       ;; Should we check if ($sign x) is $zero here?
+		       (if (atan2negp x) (mul2* -3 fourth%pi) (simplify fourth%pi)))
 		      ((alike1 y (mul2 -1 x))
-		       (cond ((atan2negp x) (mul2* 3 fourth%pi))
-			     ((atan2posp x) (mul2* -1 fourth%pi))))
+		       (if (atan2negp x) (mul2* 3 fourth%pi) (mul2* -1 fourth%pi)))
 		      ;; Why is atan2(1,sqrt(3)) super-special-cased here?!?!
 		      ;; It doesn't even handle atan2(1,-sqrt(3));
 		      ;; *Atan* should handle sqrt(3) etc., so all cases will work
@@ -453,8 +449,7 @@
 	   (merror "atan2(0,0) has been generated."))
 	  (t (eqtest (list '($atan2) y x) e)))))
 
-(defun atan2negp (e) (eq ($sign e) '$neg))
-(defun atan2posp (e) (eq ($sign e) '$pos))
+(defun atan2negp (e) (eq (asksign-p-or-n e) '$neg))
 
 ;;;; ARITHF
 
@@ -518,7 +513,7 @@
 (defun box-label (x)
   (if (atom x)
       x
-      (coerce (mstring x) 'string)))
+      (implode (cons #\& (mstring x)))))
 
 (declare-top (special label))
 
@@ -600,14 +595,18 @@
 ;;;; GENMAT
 
 (defmfun $genmatrix (a i2 &optional (j2 i2) (i1 1) (j1 i1))
-  (let ((f) (l (ncons '($matrix))))
-    (setq f (if (or (symbolp a) (hash-table-p a) (arrayp a))
-		#'(lambda (i j) (meval (list (list a 'array) i j)))
-	      #'(lambda (i j) (mfuncall a i j))))
-    
-    (if (or (notevery #'fixnump (list i2 j2 i1 j1)) (> i1 i2) (> j1 j2))
-	(merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1)))
- 	 
+  (unless (or (symbolp a)
+	      (hash-table-p a)
+	      (and (not (atom a))
+		   (eq (caar a) 'lambda)))
+    (improper-arg-err a '$genmatrix))
+  (when (notevery #'fixnump (list i2 j2 i1 j1))
+    (merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1)))
+  (let ((header (list a 'array))
+	 (l (ncons '($matrix))))
+    (cond ((and (or (zerop i2) (zerop j2)) (= i1 1) (= j1 1)))
+	  ((or (> i1 i2) (> j1 j2))
+	   (merror "Invalid arguments to `genmatrix':~%~M" (list '(mlist) a i2 j2 i1 j1))))
     (dotimes (i (1+ (- i2 i1)))
       (nconc l (ncons (ncons '(mlist)))))
     (do ((i i1 (1+ i))
@@ -615,7 +614,7 @@
 	((> i i2))
       (do ((j j1 (1+ j)))
 	  ((> j j2))
-	(nconc (car l) (ncons (funcall f i j)))))
+	(nconc (car l) (ncons (meval (list header i j))))))
     l))
 
 ; Execute deep copy for copymatrix and copylist.
@@ -680,7 +679,7 @@
   (prog (arra ary)
      (setq arra val)
      (setq ary sym)
-     (if (and arra (or (hash-table-p arra) (arrayp arra)))
+     (if arra
 	 (cond ((hash-table-p arra)
 		(let ((dim1 (gethash 'dim1 arra)))
 		  (return (list* '(mlist) '$hash_table (if dim1 1 t)
@@ -776,11 +775,15 @@
 
 ;;;; CONCAT
 
-(defun $concat (&rest l)
+(defmfun $concat (&rest l)
   (when (null l)
-    (merror "concat: I need at least one argument."))
-  (let ((result-is-a-string (or (numberp (car l)) (stringp (car l)))))
-    (setq l (mapcan #'(lambda (x) (unless (atom x) (merror "concat: argument is not an atom: ~M" x)) (string* x)) l))
-    (if result-is-a-string
-      (coerce l 'string)
-      (getalias (implode (cons '#\$ l))))))
+    (merror "`concat' needs at least one argument."))
+  (getalias (implode
+	     (cons (cond ((not (atom (car l))))
+			 ((or (numberp (car l)) (char= (char (symbol-name (car l)) 0) #\&)) #\&)
+			 (t #\$))
+		   (mapcan #'(lambda (x)
+			       (unless (atom x)
+				 (merror "Argument to `concat' not an atom: ~M" x))
+			       (string* x))
+			   l)))))

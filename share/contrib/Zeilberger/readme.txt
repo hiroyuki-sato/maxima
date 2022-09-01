@@ -115,7 +115,7 @@ If the input is not hypergeometric it outputs:
 NON_HYPERGEOMETRIC
 ---------------------------------------------------------------------------
 
-- parGosper(F_n,k,n,d)
+- parGosper(F_n,k , k , n , d)
 
 parGosper tries to find a d-th order recurrence.
 If it finds one it outputs it in the form (*).
@@ -125,9 +125,7 @@ If the input is not proper hypergeometric in k and n it outputs:
 [NON_PROPER_HYPERGEOMETRIC]
 ---------------------------------------------------------------------------
 
-- Zeilberger(F_n,k,n)
-
-- Zeilberger(F_n,k,n,d) [same as "parGosper(F_n,k,n,d)"]
+- Zeilberger(F_n,k , k , n)
 
 Zeilberger starts by invoking "Gosper" and if it fails
 tries "parGosper" with order 1 and tries up to 
@@ -178,7 +176,7 @@ with level of details depending on the value of "gs_prove_detail".
 
 ---------------------------------------------------------------------------
 
-- zb_meaning(F_n,k,n,zb_cert,zb_rec)
+- zb_meaning(F_n,k,k,n,zb_cert,zb_rec)
 
 It spells out the meaning of one of the elements 
 in the output of "parGosper" or "Zeilberger", i.e. 
@@ -186,9 +184,7 @@ something of the form "[zb_cert,zb_rec]"
 
 ---------------------------------------------------------------------------
 
-- zb_prove(F_n,k,n,zb_out)
-
-- zb_prove(F_n,k,n) [zb_out is computed by "Zeilberger"]
+- zb_prove(F_n,k,k,n,zb_out)
 
 It writes a proof and DOES A TEST for all the solutions
 contained in "zb_out", with level of details depending on the

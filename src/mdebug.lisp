@@ -526,12 +526,17 @@ Command      Description~%~
 (def-break :top  #'(lambda( &rest l)l (throw 'macsyma-quit 'top)) "Throw to top level")
 
 
-(defstruct (line-info (:type list)) line file)
 
-(defstruct (bkpt (:type list)) form file file-line function)
+(eval-when
+    #+gcl (compile load eval)
+    #-gcl (:compile-toplevel :load-toplevel :execute)
+
+    (defstruct (line-info (:type list)) line file)
+
+    (defstruct (bkpt (:type list)) form file file-line function))
 
 
-(defun *break-points* (form)
+(defun *break-points* (form  ) 
   (let ((pos(position form *break-points* :key 'car )))
     (format t "Bkpt ~a:" pos)
     (break-dbm-loop  (aref *break-points* pos) )))
@@ -539,12 +544,16 @@ Command      Description~%~
 
 ;;fun = function name eg '$|odeSeriesSolve| and li = offset from beginning of function.
 ;;   or= string (filename) and li = absolute position.
+;; 
 
-(defun break-function (fun &optional (li 0) absolute &aux i tem info form fun-line)
+(defun break-function (fun &optional (li 0)  absolute  &aux i tem info form
+		       fun-line
+		       )
   (unless *mdebug*
     (format t "~&Turning on debugging debugmode(true)")
     (setq *mdebug* t))
-  (cond ((stringp fun)
+  (cond ((or (stringp fun)
+	     (and (mstringp fun) (setq fun ($sconcat fun))))
 	 (let ((file fun)  start)
 	   (loop named joe for vv being the symbols of 'maxima with tem with linfo
 		  when (and (typep (setq tem (set-full-lineinfo vv))
@@ -552,7 +561,7 @@ Command      Description~%~
 			    (setq linfo (get-lineinfo (aref tem 1)))
 			    (equal file (cadr linfo))
 			    (fb >= li (setq start (aref tem 0)))
-			    (fb <= li (+ start (length (the vector tem)))))
+			    (fb <= li (f + start (length (the vector tem)))))
 		  do (setq fun vv li (f - li start -1 ))
 					; (print (list 'found fun fun li  (aref tem 0)))
 		  (return-from joe nil)
@@ -589,12 +598,13 @@ Command      Description~%~
 
 
 ;; note  need to make the redefine function, fixup the break point
-;; list..
+;; list.. 
 
 (defun make-break-point (fun ar i)
   (declare (fixnum i) (type (vector t) ar))
   (let* ((tem (aref ar i))
 	 (linfo (get-lineinfo tem)))
+					;(defstruct (bkpt (:type list)) form file file-line function)    
     (and linfo (list tem (cadr linfo) (car linfo) fun))))
 
 (defun dbm-up (n &aux (cur *current-frame*) (m (length *mlambda-call-stack*)))

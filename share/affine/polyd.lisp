@@ -126,7 +126,7 @@ far degree"
 		(cond (ones-to-add
 		       (cond((setq dims
 				   (monomials-and-rank-function-agree
-				     (floor (1+ (* 2.2 ($nc_degree (car (last ones-to-add))))))))
+				     (floor (1+ (* 2.2d0 ($nc_degree (car (last ones-to-add))))))))
 			     (return nil))))
 		      (t (return (setq answer
 				       (list '(mlist) relations
@@ -204,7 +204,7 @@ far degree"
    ($sort_dot_simplifications)
      (format t "~%starting to resimplify dot simplifications..")
      (cond ((< (setq leng ($length $dot_simplifications)) 10) (displa $dot_simplifications))
-	   (t (format t "~%There are ~A of them." (truncate leng 2))))
+	   (t (format t "~%There are ~A of them." (// leng 2))))
 
    (setq dot-simps $dot_simplifications)
    (sloop named sue for v on (cdr $dot_simplifications) by 'cddr

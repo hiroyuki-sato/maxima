@@ -81,7 +81,7 @@
                        (t $cost_float_power)))
               (declare (fixnum exin rem in-cut pw2))
               (setq rem (cond (slow (rem (quotient exin pw2) 2))
-                              (t (/ (truncate exin pw2) 2)))))))))
+                              (t (\ (// exin pw2) 2)))))))))
 
 ;;; the following macro is courtesy of gjc.
 
@@ -104,7 +104,7 @@
                    ((eq opr 'mexpt)
                     (let ((expon (caddr x)))
                       (+ ($expense (cadr x))
-                         (cond ((integerp expon)
+                         (cond ((fixp expon)
                                 (cond ((< expon 0)
                                        (+ $cost_reciprocal
                                           (multiplies-in-nth-power (- expon))))

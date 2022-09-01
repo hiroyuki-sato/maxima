@@ -11,14 +11,14 @@
 (in-package :maxima)
 
 ;;; Run-time support for translated code.
-
-;;; GJC: Experimental macsyma array lisp level support for translated code.
+;;; GJC: Experimental macsyma array lisp level support for translated
+;;; code.
 ;;; To quickly handle the array reference and setting syntax in macsyma,
 
-;;; In macsyma arrays go by an atomic name. Lists and matrices
+;;; In macsyma arrays go by an atomic name. Lists and matricies
 ;;; may be hacked with the array syntax, which is convient.
 
-;;; additions for handling arrays in value cell on cl --wfs
+;;;additions for handling arrays in value cell on cl --wfs
 
 (macsyma-module acall)
 
@@ -116,16 +116,18 @@
 		    aarray) val))
     ((symbol)
      (cond ((setq ap (get aarray 'array))
-	    (if (null inds)
-		(setf (aref ap ind1) val)
-		(setf (apply #'aref ap all-inds) val)))
+	    (cond ((null inds)
+		   (store (funcall ap ind1) val))
+		  (t
+		   (setf (apply #'aref ap all-inds) val))))
 	   ((setq ap (mget aarray 'array))
 	    ;; the macsyma ARRAY frob is NOT an array pointer, it
 	    ;; is a GENSYM with a lisp array property, don't
 	    ;; ask me why.
-	    (if (null inds)
-		(setf (aref (symbol-array ap) ind1) val)
-		(setf (apply #'aref (symbol-array ap) all-inds) val)))
+	    (cond ((null inds)
+		   (store (funcall ap ind1) val))
+		  (t
+		   (setf (apply #'aref ap all-inds) val))))
 	   ((setq ap (mget aarray 'hashar))
 	    (arrstore `((,aarray ,'array)
 			,@(mapcar #'(lambda (u) `((mquote simp) ,u)) all-inds))
@@ -227,13 +229,11 @@
 			(length (cdr (arraydims (cadr ary)))))
 		    number-of-args)
 	   (merror "~:@M Array already defined with different dimensions" fnname)))
-	(t
-	 (setq ary (gensym))
-	 (mputprop fnname ary 'hashar)
-	 (setf (symbol-array ary) (make-array 7 :initial-element nil))
-	 (setf (aref (symbol-array ary) 0) 4)
-	 (setf (aref (symbol-array ary) 1) 0)
-	 (setf (aref (symbol-array ary) 2) number-of-args))))
+	(t (mputprop fnname (setq ary (gensym)) 'hashar)
+	   (*array ary t 7)
+	   (store (funcall ary 0) 4)
+	   (store (funcall ary 1) 0)
+	   (store (funcall ary 2) number-of-args))))
 
 ;;; An entry point to $APPLY for translated code.
 
@@ -245,6 +245,7 @@
 (defmfun assign-check (var val)
   (let ((a (get var 'assign)))
     (if a (funcall a var val))))
+
 
 (declare-top (special maplp))
 
@@ -358,7 +359,7 @@
       (- x)
       (simplify (list '(mminus) x))))
 
-(defmfun retlist_tr (&rest args)
-  (do ((j (- (length args) 2) (- j 2))
-       (l () (cons (list '(mequal simp) (nth j args) (nth (1+ j) args)) l)))
+(defmfun retlist_tr n
+  (do ((j (1- n) (- j 2))
+       (l () (cons (list '(mequal simp) (arg j) (arg (1+ j))) l)))
       ((< j 0) (cons '(mlist simp) l))))

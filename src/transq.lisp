@@ -52,7 +52,7 @@
 	 ;; X^0 can only happen in hand-written code, in macros
 	 ;; the general-representation simplifier will get rid
 	 ;; of it.
-	 1.0)
+	 1d0)
 	((= pos-exp 1)
 	 exp-base)
 	((not (atom exp-base))

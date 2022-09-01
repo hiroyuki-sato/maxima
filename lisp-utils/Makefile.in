@@ -13,8 +13,6 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-
-# versioned installation directories
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -37,9 +35,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/common.mk
 subdir = lisp-utils
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -74,12 +71,6 @@ DEFS = @DEFS@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-ECL_FALSE = @ECL_FALSE@
-ECL_NAME = @ECL_NAME@
-ECL_TRUE = @ECL_TRUE@
-EGREP = @EGREP@
-EMACS = @EMACS@
-EMACSLOADPATH = @EMACSLOADPATH@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -101,7 +92,6 @@ LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
 LANG_PT_UTF8_TRUE = @LANG_PT_UTF8_TRUE@
-LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
@@ -149,7 +139,6 @@ clisp_found = @clisp_found@
 cmucl_found = @cmucl_found@
 datadir = @datadir@
 default_layout_autotools = @default_layout_autotools@
-ecl_found = @ecl_found@
 exec_prefix = @exec_prefix@
 expanded_datadir = @expanded_datadir@
 expanded_exec_prefix = @expanded_exec_prefix@
@@ -169,7 +158,6 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-lispdir = @lispdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -185,25 +173,12 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 win32 = @win32@
-verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
-verpkgdatadir = $(pkgdatadir)/@VERSION@
-docdir = $(verpkgdatadir)/doc
-dochtmldir = $(docdir)/html
-docsharedir = $(docdir)/share
-demodir = $(verpkgdatadir)/demo
-emacsdir = $(verpkgdatadir)/emacs
-sharedir = $(verpkgdatadir)/share
-instsrcdir = $(verpkgdatadir)/src
-xmaximadir = $(verpkgdatadir)/xmaxima
-insttestsdir = $(verpkgdatadir)/tests
-genericdir = $(sharedir)/lisp-utils
-genericdirDATA = defsystem.lisp
 EXTRA_DIST = defsystem.lisp make-depends.lisp makealbertdoc.lisp
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -241,7 +216,6 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -314,7 +288,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-data-local
+install-data-am:
 
 install-exec-am:
 
@@ -340,52 +314,17 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-local
+uninstall-am: uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic distclean \
 	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
-	install-data-local install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-info-am \
-	uninstall-local
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-info-am
 
-
-# Support for installation of DATA files in a generic directory
-# with subdirectories.
-# To use, set genericdir to point to the installation directory.
-# Set genericdirDATA to hold the list of files to install.
-# genericdirDATA may contain subdirectories. Subdirectories will
-# be created if necessary.
-
-install-data-local: install-datafiles
-install-datafiles: $(genericdirDATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(genericdir)
-	@list='$(genericdirDATA)'; for p in $$list; do \
-	  if test -f $(srcdir)/$$p; then \
-            if test ! -d `dirname $(DESTDIR)$(genericdir)/$$p`; then \
-              $(mkinstalldirs) `dirname $(DESTDIR)$(genericdir)/$$p`; \
-            fi; \
-	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(genericdir)/$$p"; \
-	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(genericdir)/$$p; \
-	  else if test -f $$p; then \
-            if test ! -d `dirname $(DESTDIR)$(genericdir)/$$p`; then \
-              $(mkinstalldirs) `dirname $(DESTDIR)$(genericdir)/$$p`; \
-            fi; \
-	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(genericdir)/$$p"; \
-	    $(INSTALL_DATA) $$p $(DESTDIR)$(genericdir)/$$p; \
-	  fi; fi; \
-	done
-
-uninstall-local: uninstall-datafiles
-uninstall-datafiles:
-	@$(NORMAL_UNINSTALL)
-	list='$(genericdirDATA)'; for p in $$list; do \
-	  rm -f $(DESTDIR)$(genericdir)/$$p; \
-	done
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

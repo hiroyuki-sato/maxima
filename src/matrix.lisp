@@ -15,16 +15,14 @@
 (declare-top (special errrjfflag oneoff* ei* ej* *ech* *tri* *inv*
 		      mdl dosimp $detout vlist mul* top* *det* genvar $ratfac
 		      *mosesflag varlist header linind* $scalarmatrixp $sparse
-		      $algebraic *rank* *mat*))
+		      $algebraic *rank*))
 
 (defmvar $detout nil)
 (defmvar top* nil)
 (defmvar $ratmx nil)
-(defmvar $matrix_element_mult "*")  ;;; Else, most useful when "."
-(defmvar $matrix_element_add "+")
+(defmvar $matrix_element_mult '|&*|)  ;;; Else, most useful when '|&.|
+(defmvar $matrix_element_add '|&+|)
 (defmvar $matrix_element_transpose nil)
-
-(defvar *mat*)
 
 ;;I believe that all the code now stores arrays in the value cell 
 (defun get-array-pointer (symbol)
@@ -195,8 +193,8 @@
 	   ((equal (setq minor (assoo (delete d (copy-tree id) :test #'equal) mdl)) 0)
 	    (go loop)))
      (setq ans
-	   (if (and (equal $matrix_element_mult "*")
-		    (equal $matrix_element_add "+"))
+	   (if (and (eq $matrix_element_mult '|&*|)
+		    (eq $matrix_element_add '|&+|))
 	       (add ans (mul sign e minor)) ;fast common case
 	     (mapply $matrix_element_add
 		     (list ans
@@ -381,8 +379,7 @@
 (defmfun $echelon (x)
   (let (($ratmx t))
     (newvarmat1 (setq x (check x))))
-  (let ((*ech* t) ($algebraic $algebraic))
-    (and (not $algebraic) (some #'algp varlist) (setq $algebraic t))
+  (let ((*ech* t))
     (setq x (cons '($matrix) (mxc (disreplist1 (echelon1 (replist1 (mcx (cdr x)))))))))
   (if $ratmx x ($totaldisrep x)))
 
@@ -493,18 +490,18 @@
      (go loop2)))
 
 ;;; This actually takes the inner product of the two vectors.
-;;; I check for the most common cases for speed. "*" is a slight
+;;; I check for the most common cases for speed. '|&*| is a slight
 ;;; violation of data abstraction here. The parser should turn "*" into
 ;;; MTIMES, well, it may someday, which will break this code. Don't
 ;;; hold your breath.
 
 (defun multl (a b)
-  (cond ((equal $matrix_element_add "+")
+  (cond ((eq $matrix_element_add '|&+|)
 	 (do ((ans (if (not $ratmx) 0 '(0 . 1))
 		   (cond ((not $ratmx)
-			  (cond ((equal $matrix_element_mult "*")
+			  (cond ((eq $matrix_element_mult '|&*|)
 				 (add ans (mul (car a) (car b))))
-				((equal $matrix_element_mult ".")
+				((eq $matrix_element_mult '|&.|)
 				 (add ans (ncmul (car a) (car b))))
 				(t
 				 (add ans
@@ -618,11 +615,10 @@
 ;;; If you think this is a hack, well, realize that the hack is
 ;;; actually the fact that TRANSPOSE can return a noun form.
 
-
-
 (defmfun $transpose (mat)
   (cond ((not (mxorlistp mat))
-	 (cond ((and (not (atom mat)) (member (mop mat) '($transpose %transpose) :test #'eq))
+	 (cond ((and (not (atom mat))
+		     (eq (caar mat) '%transpose))
 		(cadr mat))
 	       (($scalarp mat) mat)
 	       ((mplusp mat)
@@ -634,6 +630,7 @@
 	       ((mncexptp mat)
 		(destructuring-let (((mat pow) (cdr mat)))
 		  `((mncexpt) ,($transpose mat) ,pow)))
+	       
 	       (t ($nounify '$transpose) (list '(%transpose) mat))))
 	(t
 	 (let ((ans (transpose (mcx (cdr (check mat))))))

@@ -2,7 +2,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                                                           ;;
 ;;  Author:  Andrej Vodopivec <andrejv@users.sourceforge.net>                ;;
-;;  Licence: GPL                                                             ;;
+;;  Licence: GPL2                                                            ;;
 ;;                                                                           ;;
 ;;  Usage:                                                                   ;;
 ;;   implicit_plot(expr, xrange, yrange, [options]);                         ;;
@@ -68,8 +68,8 @@
 	  (format file "~f ~f~%" x1 y1)
 	  (format file "~f ~f~%~%" x2 y2))
 	(progn
-	  (format file "  { ~f ~f ~f }~%" (float x1) (float (/ (+ x1 x2) 2)) (float x2))
-	  (format file "  { ~f ~f ~f }~%" (float y1) (float (/ (+ y1 y2) 2)) (float y2)))) ))
+	  (format file "  { ~f ~f ~f }~%" x1 (/ (+ x1 x2) 2) x2)
+	  (format file "  { ~f ~f ~f }~%" y1 (/ (+ y1 y2) 2) y2)))))
 	
 
 (defun print-square (file xmin xmax ymin ymax sample grid)
@@ -194,7 +194,7 @@
 	  (progn
 	    (format file (pop openmath-titles))
 	    (format file " {xversusy~%")))
-	(setq e (coerce-float-fun (if (atom e) e ($float (imp-pl-prepare-expr e)))
+	(setq e (coerce-float-fun ($float (imp-pl-prepare-expr e))
 				  `((mlist simp)
 				    ,($first xrange)
 				    ,($first yrange))))

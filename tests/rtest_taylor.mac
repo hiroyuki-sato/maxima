@@ -370,6 +370,12 @@ x$
 taylor(acosh(x),x,1,1) - taylor(logarc(acosh(x)),x,1,1);
 0$
 
+/* SF bug 807275 */
+
+/*
+taylor(log(cos(th)),th,%pi/2,2);
+ - log(2) + log( - 2 * th + %pi) - (((th - ((%pi)/2))^2)/6)$ */
+
 /*  SF bug 774065 */
 
 taylor(x/log(x),x,inf,1);
@@ -384,6 +390,12 @@ taylor(x^y,x,0,1,y,0,1);
 taylor(taylor(x^y,y,0,1),x,0,1);
 1 + log(x) * y$ */
 
+/* SF bug  752332 */
+
+/*
+taylor(atan(1/sqrt(1-b))/sqrt(1-b),b,1,2);
+ - ((%i * %pi)/(2 * sqrt(b - 1))) - 1 - ((b - 1)/3) - (((b - 1)^2)/5)$ 
+*/
 
 /* SF bug  701628*/
 
@@ -441,54 +453,25 @@ errcatch(taylor(x^3,x,0,2)/taylor(x^3,x,0,2));
 (remvalue(tp),0);
 0$
 
-/* [ 696818 ] Taylor internal error (rat problem?) */
-taylor(log(sqrt(e*%e^x+1)+e),x,0,2),gcd:subres;
-log(sqrt(e+1)+e)+sqrt(e+1)*e*x/(2*e^2+(2*sqrt(e+1)+2)*e+2*sqrt(e+1))
-                      +((sqrt(e+1)+1)*e^5+(3*sqrt(e+1)+6)*e^4
-                                         +(4*sqrt(e+1)+9)*e^3
-                                         +(4*sqrt(e+1)+4)*e^2+2*sqrt(e+1)*e)
-                       *x^2
-                       /(8*e^6+(24*sqrt(e+1)+48)*e^5+(80*sqrt(e+1)+120)*e^4
-                              +(104*sqrt(e+1)+152)*e^3+(72*sqrt(e+1)+96)*e^2
-                              +(32*sqrt(e+1)+24)*e+8*sqrt(e+1))$
 
-taylor(exp(x), x, minf, 1);
-exp(x)$
 
-/* [ 1682435 ] taylor of rat(factor(1+x)) gives internal error */
-taylor(rat(factor(1+x)),x,0,1);
-1+x$
 
-/* [ 807275 ] Taylor Illegal log kernel: log(cos(th)) @ %pi/2 */
-taylor(log(cos(th)),th,%pi/2,2);
-log((2*th-%pi)/2)+log(-1)-(th-%pi/2)^2/6$
 
-/* SF bug  752332 */
-(assume(a < 1),0);
-0;
-taylor(atan(1/sqrt(1-a))/sqrt(1-a),a,1,2);
-((%i * %pi)/(2 * sqrt(a - 1))) - 1 - ((a - 1)/3) - (((a - 1)^2)/5)$ 
 
-/* [ 1358239 ] taylor(exp(sqrt(log(x)*log(log(x))))@inf > stack overflow */
-taylor(exp(sqrt(log(x)*log(log(x)))), x, inf, 2);
-exp(sqrt(log(x))*sqrt(log(log(x))));
 
-/* [ 2010843 ] diff of Taylor poly */
-diff(taylor(sqrt((f - z^2/4/f)^2 + (d-z)^2) + sqrt((f - z^2/4/f)^2 + (zp-z)^2),
-	    [z, zp, d], 0, 4),
-     z);
-(z-zp-d)/f+((3*zp+3*d)*z^2+(-5*zp^2-5*d^2)*z+2*zp^3+2*d^3)/(4*f^3);
 
-/* [ 734851 ] pade interfered with by taylor */
-ts:taylor(sin(x),x,0,3);
-x-x^3/6;
 
-taylor(x,x,0,3);
-+x;
 
-pade(ts,2,2);
-[6*x/(x^2+6)];
 
-/* [ 1729430 ] numberp of taylor poly */
-numberp(taylor(x^2, x, 0, 1));
-false;
+
+
+
+
+
+
+
+
+
+
+
+

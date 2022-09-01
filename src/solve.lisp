@@ -39,6 +39,10 @@
 (defmvar $linsolvewarn t
   "Needs to be documented.")
 
+(defmvar $solve_inconsistent_error t
+  "If T gives an MAXIMA-ERROR if SOLVE meets up with inconsistent linear
+	 equations.  If NIL, returns ((MLIST SIMP)) in this case.")
+
 (defmvar $programmode t
   "Causes SOLVE to return its answers explicitly as elements
 	 in a list rather than printing E-labels.")
@@ -73,12 +77,12 @@
 ;; This macro returns the number of trivial equations.  It counts up the
 ;; number of zeros in a list.
 
-;(defmacro nzlist (llist)
-;  `(do ((l ,llist (cdr l))
-;	(zcount 0))
-;       ((null l) zcount)
-;     (if (and (integerp (car l)) (zerop (car l)))
-;	 (incf zcount))))
+(defmacro nzlist (llist)
+  `(do ((l ,llist (cdr l))
+	(zcount 0))
+    ((null l) zcount)
+    (if (and (integerp (car l)) (zerop (car l)))
+	(incf zcount))))
 
 ;; This is only called on a variable.
 
@@ -91,103 +95,63 @@
 
 (defmfun $solve (*eql &optional (varl nil varl-p))
   (setq $multiplicities (make-mlist))
-  (prog (eql                            ; Equations to solve
-         $keepfloat $ratfac             ; In case user has set these
-         *roots                         ; *roots gets solutions,
-         *failures                      ; *failures "roots of"
-         broken-not-freeof) ;Has something to do with splitting up roots
-     
-     ;; Create the equation list (this is a lisp list, not 'MLIST)
+  (prog (eql		       ;Expressions and variables being solved
+	 $keepfloat $ratfac	       ;In case the user has set these
+	 *roots *failures ;*roots gets solutions, *failures "roots of"
+	 broken-not-freeof) ;Has something to do with spliting up roots
      (setq eql
-           (cond
-             ;; If an atom, cons it.
-             ((atom *eql) (ncons *eql))
-             ;; If we have a list of equations, move everything over
-             ;; to one side, so x=5 -> x-5=0.
-             ((eq (g-rep-operator *eql) 'mlist)
-              (mapcar 'meqhk (mapcar 'meval (cdr *eql))))
-             ;; We can't solve inequalities
-             ((member (g-rep-operator *eql)
-                      '(mnotequal mgreaterp mlessp mgeqp mleqp) :test #'eq)
-              (merror "Cannot solve inequalities. -`solve'"))
-             ;; Finally, assume we have just one equation, and put it
-             ;; on one side again.
-             (t (ncons (meqhk *eql)))))
+	   (cond ((atom *eql) (ncons *eql))
+		 ((eq (g-rep-operator *eql) 'mlist)
+		  (mapcar 'meqhk (mapcar 'meval (cdr *eql))))
+		 ((member (g-rep-operator *eql)
+			'(mnotequal mgreaterp mlessp mgeqp mleqp) :test #'eq)
+		  (merror "Cannot solve inequalities. -`solve'"))
+		 (t (ncons (meqhk *eql)))))
 
-     (cond
-       ;; If the variable list wasn't supplied we have to supply it
-       ;; ourselves. Also remove constants like $%pi from the list.
-       ((null varl-p)
-        (setq varl
-              (let (($listconstvars nil))
-                (cdr ($listofvars *eql))))
-        (if varl (setq varl (remc varl)))) ; Remove all constants
+     (cond ((null varl-p)	 ;If the variable list wasn't supplied
+	    (setq varl		      ;we have to supply it ourselves.
+		  (let (($listconstvars nil))
+		    (cdr ($listofvars
+					;If some trivial then use original equations
+					;(primarily for case of X=X etc.)
+			  (cond ((zerop (nzlist eql)) *eql)
+				(t eql)))))) ;Usually throw trivia out!
+	    (if varl (setq varl (remc varl)))) ;Remove all constants
+	   (t (setq varl
+		    (cond (($listp varl) (mapcar #'meval (cdr varl)))
+			  (t (list varl))))))
 
-       ;; If we have got a variable list then if it's a list apply
-       ;; meval to each entry and then weed out duplicates. Else, just
-       ;; cons it.
-       (t
-        (setq varl
-              (cond (($listp varl) (remove-duplicates
-                                    (mapcar #'meval (cdr varl))))
-                    (t (list varl))))))
+     (if (and (null varl) $solvenullwarn)
+	 (mtell "~&Got a null variable list, continuing - `solve'~%"))
+     (if (and (null eql) $solvenullwarn)
+	 (mtell "~&Got a null equation list, continuing - `solve'~%"))
+     (if (some #'mnump varl)
+	 (merror "A number was found where a variable was expected -`solve'"))
 
-     ;; Some sanity checks and warning messages.
-     (when (and (null varl) $solvenullwarn)
-       (mtell "~&Got a null variable list, continuing - `solve'~%"))
-
-     (when (and (null eql) $solvenullwarn)
-       (mtell "~&Got a null equation list, continuing - `solve'~%"))
-
-     (when (some #'mnump varl)
-       (merror
-        "A number was found where a variable was expected -`solve'"))
-     
-     ;; Deal with special cases.
-     (cond
-       ;; Trivially true equations for any set of variables.
-       ((equal eql '(0))
-        (return '$all))
-
-       ;; Trivially false equations: return []
-       ((or (null varl) (null eql))
-        (return (make-mlist-simp)))
-
-       ;; One equation in one variable: SSOLVE
-       ((and (null (cdr varl)) (null (cdr eql)))
-        (return (ssolve (car eql) (car varl))))
-
-       ;; We were given a variable list, or there are same # of eqns
-       ;; as unknowns: SOLVEX.
-       ((or varl-p
-            (= (length varl) (length eql)))
-        (setq eql (solvex eql varl (not $programmode) t))
-        (return
-          (cond ((and (cdr eql)
-                      (not ($listp (cadr eql))))
-                 (make-mlist eql))
-                (t eql)))))
-
-     ;; We don't know what to do, so complain. The let sets u to varl
-     ;; but as an MLIST list and e to the original eqns coerced to a
-     ;; list.
+     (cond ((equal eql '(0)) (return '$all))
+	   ((or (null varl) (null eql)) (return (make-mlist-simp)))
+	   ((and (null (cdr varl)) (null (cdr eql)))
+	    (return (ssolve (car eql) (car varl))))
+	   ((or varl-p (= (length varl) (length eql)))
+	    (setq eql (solvex eql varl (not $programmode) t))
+	    (return (cond ((and (cdr eql) (not ($listp (cadr eql))))
+			   (make-mlist eql))
+			  (t eql)))))
      (let ((u (make-mlist-l varl))
-           (e (cond (($listp *eql) *eql)
-                    (t (make-mlist *eql)))))
+	   (e (cond (($listp *eql) *eql)
+		    (t (make-mlist *eql)))))
        ;; MFORMAT doesn't have ~:[~] yet, so I just change this to
        ;; make one of two possible calls to MERROR. Smaller codesize
        ;; then what was here before anyway.
        (if (> (length varl) (length eql))
-	   (merror
-      "More unknowns than equations - `solve'~
+	   (merror "More unknowns than equations - `solve'~
 		  ~%Unknowns given :  ~%~M~
 		  ~%Equations given:  ~%~M"
-      u e)
-	   (merror
-      "More equations than unknowns - `solve'~
+		   u e)
+	   (merror "More equations than unknowns - `solve'~
 		  ~%Unknowns given :  ~%~M~
 		  ~%Equations given:  ~%~M"
-      u e)))))
+		   u e)))))
 
 
 ;; Removes anything from its list arg which solve considers not to be a
@@ -302,7 +266,7 @@
 			   (setq varlist vartemp))
 		       
 			 (cond ((atom exp) (go a))
-			       ((of-form-A*F<X>^N+B exp) (solve1a exp mult))
+			       ((specasep exp) (solve1a exp mult))
 			       ((and (not (pcoefp exp))
 				     (cddr exp)
 				     (not (equal 1 (setq *g (solventhp (cdddr exp) (cadr exp))))))
@@ -562,7 +526,7 @@
 			  *has*var))
 	   nil)
 	  ((equal (cadr exp) 1) (solvelin exp))
-	  ((of-form-A*F<X>^N+B exp) (solve-A*F<X>^N+B exp t))
+	  ((specasep exp) (solvespec exp t))
 	  ((equal (cadr exp) 2) (solvequad exp))
 	  ((not (equal 1 (setq *g (solventhp (cdddr exp) (cadr exp)))))
 	   (solventh exp *g))
@@ -695,30 +659,30 @@
   (solve x var mult)
   (make-solution *roots *failures))
 
-;; Sees if expression is of the form A*F<X>^N+B.
+;; Sees if expression is of the form A*F(X)^N+B.
 
-(defun of-form-A*F<X>^N+B (e)
+(defun specasep (e)
   (and (memalike (pdis (list (car e) 1 1)) *has*var)
        (or (atom (caddr e))
 	   (not (memalike (pdis (list (caaddr e) 1 1))
 			  *has*var)))
        (or (null (cdddr e)) (equal (cadddr e) 0))))
 
-;; Solves the special case A*F<X>^N+B.
+;; Solves the special case A*F(X)^N+B.
 
-(defun solve-A*F<X>^N+B (exp $%emode) 
+(defun solvespec (exp $%emode) 
   (prog (a b c) 
      (setq a (pdis (caddr exp)))
      (setq c (pdis (list (car exp) 1 1)))
      (cond ((null (cdddr exp))
 	    (return (solve c *var (* (cadr exp) mult)))))
      (setq b (pdis (pminus (cadddr (cdr exp)))))
-     (return (solve-A*F<X>^N+B1 c
+     (return (solvespec1 c
 			 (simpnrt (div* b a) (cadr exp))
 			 (make-rat 1 (cadr exp))
 			 (cadr exp)))))
 
-(defun solve-A*F<X>^N+B1 (var root n thisn) 
+(defun solvespec1 (var root n thisn) 
   (do ((thisn thisn (1- thisn))) ((zerop thisn))
     (solve (add* var (mul* -1 root (power* '$%e (mul* 2 '$%pi '$%i thisn n))))
 	   *var mult)))
@@ -743,7 +707,7 @@
 (setq broken-not-freeof nil)
 
 ;; For consistency, use backwards args.
-;; == (freeof var exp) but works even if solution is broken up ($breakup=t)
+
 (defun broken-freeof (var exp)
   (cond ($breakup
 	 (do ((b-n-fo var (car b-n-fo-l))
@@ -826,7 +790,6 @@
 ;; You mean you didn't do it because you were buggy.  Hope you're fixed soon!
 ;; --RWK
 
-;; Solve <exp> = <*myvar> for <*var>, where <*myvar>=<op>(...)
 (defun usolve (exp op) 
   (prog (inverse) 
      (setq inverse
@@ -934,7 +897,9 @@
      (if (and $linsolvewarn (car ans))
 	 (mtell "~&Dependent equations eliminated:  ~A~%" (car ans)))
      (if (cadr ans)
-	 (return '((mlist simp))))
+	 (if $solve_inconsistent_error
+	     (merror "Inconsistent equations:  ~A" (cadr ans))
+	     (return '((mlist simp)))))
      (do ((j 0 (1+ j)))
 	 ((> j xm*))
        ;;I put this in the value cell--wfs 

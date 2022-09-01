@@ -1,4 +1,4 @@
-@c english version 1.68
+@c english version 1.59
 @menu
 * Comentarios::
 * Archivos::
@@ -396,7 +396,7 @@ La funci@'on @code{closefile} cierra los archivos abiertos por @code{appendfile}
 
 @deffn {Funci@'on} concat (@var{arg_1}, @var{arg_2}, ...)
 Concatena sus argumentos, que deben ser todos @'atomos.
-El valor devuelto es un s@'{@dotless{i}}mbolo si el primer argumento es a su vez un s@'{@dotless{i}}mbolo, o una cadena en caso contrario.
+El valor devuelto es un s@'{@dotless{i}}mbolo si el primer argumento es a su vez un s@'{@dotless{i}}mbolo, o una cadena de Maxima en caso contrario.
 
 La funci@'on @code{concat} eval@'ua sus argumentos.
 El ap@'atrofo  @code{'} evita la evaluaci@'on.
@@ -428,7 +428,7 @@ La asignaci@'on con el operador @code{::} eval@'ua su expresi@'on izquierda.
 (%o9)                         b
 @end example
 
-N@'otese que aunque @code{concat (1, 2)} parezca un n@'umero, se trata de una cadena.
+N@'otese que aunque @code{concat (1, 2)} parezca un n@'umero, se trata de una cadena de Maxima.
 
 @example
 (%i10) concat (1, 2) + 3;
@@ -442,7 +442,8 @@ N@'otese que aunque @code{concat (1, 2)} parezca un n@'umero, se trata de una ca
 Concatena sus argumentos para producir una cadena.
 Al contrario que @code{concat}, sus argumentos @i{no} necesitan ser @'atomos.
 
-El resultado es una cadena.
+El resultado es una cadena de Lisp.
+@c THAT'S ODD; WHY NOT A MAXIMA STRING ??
 
 @example
 (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
@@ -493,13 +494,13 @@ Ejemplos:
 
 @example
 User     part       inpart
-a-b;      a - b     a + (- 1) b
+a-b;      A - B     A + (- 1) B
 
-           a            - 1
-a/b;       -         a b
-           b
+           A            - 1
+a/b;       -         A B
+           B
                        1/2
-sqrt(x);   sqrt(x)    x
+sqrt(x);   sqrt(X)    X
 
           4 X        4
 X*4/3;    ---        - X
@@ -597,7 +598,8 @@ Si la componente final de @var{path} es de la forma @code{###.@var{something}},
 la componente se reemplaza con @code{@var{filename}.@var{something}}.
 En otro caso, la componente final se reemplaza simplemente por @var{filename}.
 
-El resultado es un objeto Lisp de tipo @i{pathname}.
+@c SAY SOMETHING ABOUT ARG TYPE -- LISP STRINGS WORK BETTER THAN MAXIMA STRINGS
+@c SAY SOMETHING ABOUT RETURN TYPE
 @end deffn
 
 @deffn {Funci@'on} file_search (@var{filename})
@@ -1099,25 +1101,6 @@ Para mostrar el contenido de un archivo v@'ease @code{printfile}.
 
 @end deffn
 
-
-
-@deffn {Funci@'on} printfile (@var{path})
-
-Env@'{@dotless{i}}a el fichero al que hace referncia la ruta @var{path}
-a la consola. @var{path} puede ser una cadena o un s@'{@dotless{i}}mbolo,
-en cuyo caso se convertir@'a en una cadena.
-
-Si @var{path} hace referencia a un fichero accesible desde el directorio
-actual de trabajo, entonces se enviar@'a a la consola; en caso contrario,
-@code{printfile} intentar@'a localizar el fichero a@~nadi@'endole @var{path}
-a cada uno de los elementos de @code{file_search_usage} a trav@'es de 
-@code{filename_merge}.
-
-@code{printfile} devuelve la ruta del fichero encontado.
-
-@end deffn
-
-
 @deffn {Funci@'on} read (@var{expr_1}, ..., @var{expr_n})
 Imprime @var{expr_1}, ..., @var{expr_n} y a continuaci@'on lee una expresi@'on desde la consola y devuelve la expresi@'on evaluada. La expresi@'on termina con un punto y coma @code{;} o con el s@'{@dotless{i}}mbolo de d@'olar @code{$}.
 
@@ -1160,17 +1143,17 @@ Reemplaza partes de @var{expr} al @var{nivel} especificado y las sutituye por de
 
 @itemize @bullet
 @item
-Las sumas y restas se reemplazan por @code{Sum(@var{n})},
+Las sumas y restas se reemplazan por @code{sum(@var{n})},
 siendo @var{n} el n@'umero de t@'erminos de la suma.
 @item
-Los productos se reemplazan por @code{Product(@var{n})},
+Los productos se reemplazan por @code{product(@var{n})},
 siendo @var{n} el n@'umero de factores del producto.
 @item
-Las potencias se reemplazan por @code{Expt}. 
+Las potencias se reemplazan por @code{expt}. 
 @item
-Los cocientes se reemplazan por @code{Quotient}.
+Los cocientes se reemplazan por @code{quotient}.
 @item
-El s@'{@dotless{i}}mbolo negativo se reemplaza por @code{Negterm}.
+El s@'{@dotless{i}}mbolo negativo se reemplaza por @code{negterm}.
 @end itemize
 
 Si el entero  @var{depth} es mayor o igual que la profundidad m@'axima de @var{expr},
@@ -1188,26 +1171,26 @@ Ejemplo:
                         b + a     2 b     2 a
                     2 %e      + %e    + %e
 (%i2) reveal (e, 1);
-(%o2)                       Quotient
+(%o2)                       quotient
 (%i3) reveal (e, 2);
-                             Sum(3)
+                             sum(3)
 (%o3)                        ------
-                             Sum(3)
+                             sum(3)
 (%i4) reveal (e, 3);
-                     Expt + Negterm + Expt
+                     expt + negterm + expt
 (%o4)               ------------------------
-                    Product(2) + Expt + Expt
+                    product(2) + expt + expt
 (%i5) reveal (e, 4);
                        2                 2
-                      b  - Product(3) + a
+                      b  - product(3) + a
 (%o5)         ------------------------------------
-                         Product(2)     Product(2)
-              2 Expt + %e           + %e
+                         product(2)     product(2)
+              2 expt + %e           + %e
 (%i6) reveal (e, 5);
                          2            2
                         b  - 2 a b + a
 (%o6)              --------------------------
-                       Sum(2)     2 b     2 a
+                       sum(2)     2 b     2 a
                    2 %e       + %e    + %e
 (%i7) reveal (e, 6);
                           2            2
@@ -1366,11 +1349,9 @@ La forma especial @code{stringout (@var{filename}, values)} escribe todas las va
 @end deffn
 
 @deffn {Funci@'on} tex (@var{expr})
-@deffnx {Funci@'on} tex (@var{expr}, @var{destination})
-@deffnx {Funci@'on} tex (@var{expr}, false)
 @deffnx {Funci@'on} tex (@var{label})
-@deffnx {Funci@'on} tex (@var{label}, @var{destination})
-@deffnx {Funci@'on} tex (@var{label}, false)
+@deffnx {Funci@'on} tex (@var{expr}, @var{filename})
+@deffnx {Funci@'on} tex (@var{label}, @var{filename})
 
 Devuelve la expresi@'on en un formato apropiado para para ser incorporado a un documento basado en TeX.
 El resultado que se obtiene es un fragmento de c@'odigo que puede incluirse en un documento mayor, pero que
@@ -1380,13 +1361,9 @@ La instrucci@'on @code{tex (@var{expr})} imprime en la consola la representaci@'
 
 La instrucci@'on @code{tex (@var{label})} imprime en la consola la representaci@'on en TeX de la expresi@'on a la que hace referencia la etiqueta @var{label}, asign@'andole a su vez una etiqueta de ecuaci@'on que ser@'a mostrada al lado izquierdo de la misma. La etiqueta de la expresi@'on en TeX es la misma que la de Maxima.
 
-@var{destination} puede ser tanto un flujo de salida como el nombre de un fichero.
+La instrucci@'on @code{tex (@var{expr}, @var{filename})} a@~nade la representaci@'on TeX de @var{expr} al fichero @var{filename}. 
 
-Si @var{destination} es el nombre de un fichero, @code{tex} a@~nade la salida al fichero.
-Las funciones @code{openw} y @code{opena} crean flujos de salida.
-
-Las instrucciones @code{tex (@var{expr}, false)} y @code{tex (@var{label}, false)}
-devuelven el c@'odigo TeX en formato de cadena.
+La instrucci@'on @code{tex (@var{label}, @var{filename})} a@~nade la representaci@'on TeX de la expresi@'on a la que hace referencia la etiqueta  @var{label}, junto con una etiqueta, al fichero @var{filename}. 
 
 La funci@'on @code{tex} eval@'ua su primer argumento tras
 comprobar si se trata de una etiqueta. La doble comilla simple @code{''} 
@@ -1415,18 +1392,6 @@ $$-\cos x$$
 (%o4)                          (\%o1)
 @end example
 
-@code{tex (@var{expr}, false)} devuelve el c@'odigo TeX en formato de cadena.
-
-@c ===beg===
-@c S : tex (x * y * z, false);
-@c S;
-@c ===end===
-@example
-(%i1) S : tex (x * y * z, false);
-(%o1) $$x\,y\,z$$
-(%i2) S;
-(%o2) $$x\,y\,z$$
-@end example
 @end deffn
 
 
@@ -1609,92 +1574,6 @@ $$ \langle a \, | \,b \rangle $$
 @end deffn
 
 
-@deffn {Funci@'on} get_tex_environment (@var{op})
-@deffnx {Funci@'on} set_tex_environment (@var{op}, @var{before}, @var{after})
-
-Gestiona el entorno de las salidas TeX que se obtienen de la funci@'on @code{tex}.
-El entorno TeX est@'a formado por dos cadenas: una que se escribe antes que
-cualquier salida en TeX, y otra que se escribe despu@'es.
-
-@code{get_tex_environment} devuelve el entorno TeX que se aplica al operador @var{op}.
-Si no se ha asignado ning@'un entorno, devolver@'a el que tenga por defecto.
-
-@code{set_tex_environment} asigna el entorno TeX al operador @var{op}.
-
-Ejemplos:
-
-@c ===beg===
-@c get_tex_environment (":=");
-@c tex (f (x) := 1 - x);
-@c set_tex_environment (":=", "$$", "$$");
-@c tex (f (x) := 1 - x);
-@c ===end===
-@example
-(%i1) get_tex_environment (":=");
-(%o1) [
-\begin@{verbatim@}
-, ;
-\end@{verbatim@}
-]
-(%i2) tex (f (x) := 1 - x);
-
-\begin@{verbatim@}
-f(x):=1-x;
-\end@{verbatim@}
-
-(%o2)                         false
-(%i3) set_tex_environment (":=", "$$", "$$");
-(%o3)                       [$$, $$]
-(%i4) tex (f (x) := 1 - x);
-$$f(x):=1-x$$
-(%o4)                         false
-@end example
-@end deffn
-
-@deffn {Funci@'on} get_tex_environment_default ()
-@deffnx {Funci@'on} set_tex_environment_default (@var{before}, @var{after})
-
-Gestiona el entorno de las salidas TeX que se obtienen de la funci@'on @code{tex}.
-El entorno TeX est@'a formado por dos cadenas: una que se escribe antes que
-cualquier salida en TeX, y otra que se escribe despu@'es.
-
-@code{get_tex_environment_default} devuelve el entorno TeX que se aplica
-a expresiones para las cuales el operador de mayor rango no tiene entorno
-TeX asignado (mediante @code{set_tex_environment}).
-
-@code{set_tex_environment_default} asigna el entorno TeX por defecto.
-
-Ejemplos:
-
-@c ===beg===
-@c get_tex_environment_default ();
-@c tex (f(x) + g(x));
-@c set_tex_environment_default ("\\begin{equation}
-@c ", "
-@c \\end{equation}");
-@c tex (f(x) + g(x));
-@c ===end===
-@example
-(%i1) get_tex_environment_default ();
-(%o1)                       [$$, $$]
-(%i2) tex (f(x) + g(x));
-$$g\left(x\right)+f\left(x\right)$$
-(%o2)                         false
-(%i3) set_tex_environment_default ("\\begin@{equation@}
-", "
-\\end@{equation@}");
-(%o3) [\begin@{equation@}
-, 
-\end@{equation@}]
-(%i4) tex (f(x) + g(x));
-\begin@{equation@}
-g\left(x\right)+f\left(x\right)
-\end@{equation@}
-(%o4)                         false
-@end example
-@end deffn
-
-
 @deffn {Funci@'on} system (@var{command})
 Ejecuta la instrucci@'on @var{command} como un proceso independiente de Maxima.
 La instrucci@'on se le pasa a la consola del sistema para su ejecuci@'on.
@@ -1727,21 +1606,11 @@ no se ven afectadas por @code{ttyoff}.
 
 @end defvr
 
+@deffn {Macro} with_stdout (@var{filename}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
+Abre el archivo @var{filename} y a continuaci@'on eval@'ua @var{expr_1}, @var{expr_2}, @var{expr_3}, ....
+Los valores de los argumentos no se almacenan @var{filename}, pero cualquier resultado a imprimir por @code{print}, @code{display}, @code{disp} o @code{grind}, va a parar al archivo @var{filename} en lugar de a la consola.
 
-@deffn {Funci@'on} with_stdout (@var{f}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
-@deffnx {Funci@'on} with_stdout (@var{s}, @var{expr_1}, @var{expr_2}, @var{expr_3}, ...)
-Eval@'ua  @var{expr_1}, @var{expr_2}, @var{expr_3}, ...
-y escribe los resultados en el fichero @var{f} o flujo de salida @var{s}.
-Las expresiones que se eval@'uan no se escriben. La salida puede generarse por medio
-de @code{print}, @code{display}, @code{grind} entre otras funciones.
-
-La variable global @code{file_output_append} controla si @code{with_stdout}
-a@~nade o reinicia el contenido del fichero de salida @var{f}.
-Si @code{file_output_append} vale @code{true}, @code{with_stdout} a@~nade
-contenido al fichero de salida. En cualquier caso, @code{with_stdout}
-crea el fichero si @'este no existe.
-
-La funci@'on @code{with_stdout} devuelve el valor de su @'ultimo argumento.
+La macro @code{with_stdout} devuelve el valor de su @'ultimo argumento.
 
 V@'ease tambi@'en @code{writefile}.
 

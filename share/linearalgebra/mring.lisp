@@ -84,12 +84,12 @@
    :psqrt #'(lambda (s) (if (>= s 0) (cl:sqrt s) nil))
    :add-id #'(lambda () 0.0)
    :mult-id #'(lambda () 1.0)
-   :fzerop #'(lambda (s)  (< (abs s) (* 4 flonum-epsilon))) 
+   :fzerop #'(lambda (s)  (< (abs s) (* 4 double-float-epsilon))) 
    :adjoint #'cl:identity
    :mring-to-maxima #'cl:identity
    :maxima-to-mring #'(lambda (s) 
 			(setq s ($float s))
-			(if (floatp s) s (merror "Unable to convert ~:M to a long float" s)))))
+			(if (floatp s) s (merror "Unable to convert ~:M to a double float" s)))))
 
 (setf (get '$floatfield 'ring) *floatfield*)
 
@@ -109,7 +109,7 @@
    :psqrt #'(lambda (s) (if (and (= 0 (imagpart s)) (>= (realpart s) 0)) (cl:sqrt s) nil))
    :add-id #'(lambda () 0.0)
    :mult-id #'(lambda () 1.0)
-   :fzerop #'(lambda (s) (< (abs s) (* 4 flonum-epsilon)))
+   :fzerop #'(lambda (s) (< (abs s) (* 4 double-float-epsilon)))
    :adjoint #'cl:conjugate
    :mring-to-maxima #'(lambda (s) (add (realpart s) (mult '$%i (imagpart s)))) ;; was complexify
    :maxima-to-mring #'(lambda (s) 
@@ -117,7 +117,7 @@
 			  (setq s ($rectform (meval s)))
 			  (if (complex-number-p s 'float-or-rational-p)
 			      (complex ($float ($realpart s)) ($float ($imagpart s)))
-			    (merror "Unable to convert ~:M to a complex long float" s))))))
+			    (merror "Unable to convert ~:M to a complex double float" s))))))
 
 (setf (get '$complexfield 'ring) *complexfield*)
 
@@ -293,14 +293,14 @@
    :great #'(lambda (a b) (declare (ignore a)) (eq t (meqp b 0)))
    :add #'(lambda (a b) (add a b))
    :div #'(lambda (a b) (progn
-			  (let (($matrix_element_mult ".")
+			  (let (($matrix_element_mult '&.)
 				($matrix_element_transpose '$transpose))
 			    (setq b (if ($matrixp b) ($invert_by_lu b '$noncommutingring)
 				      (take '(mncexpt) b -1)))
 			    (take '(mnctimes) a b))))
    
    :rdiv #'(lambda (a b) (progn
-			   (let (($matrix_element_mult ".")
+			   (let (($matrix_element_mult '&.)
 				 ($matrix_element_transpose '$transpose))
 			     (setq b (if ($matrixp b) ($invert_by_lu b '$noncommutingring)
 				       (take '(mncexpt) b -1)))
@@ -308,13 +308,13 @@
 				
 
    :reciprocal #'(lambda (s) (progn
-			       (let (($matrix_element_mult ".")
+			       (let (($matrix_element_mult '&.)
 				     ($matrix_element_transpose '$transpose))
 				 (if ($matrixp s) ($invert_by_lu s '$noncommutingring) 
 				   (take '(mncexpt) s -1)))))
 
    :mult #'(lambda (a b) (progn 
-			   (let (($matrix_element_mult ".")
+			   (let (($matrix_element_mult '&.)
 				 ($matrix_element_transpose '$transpose))
 			     (take  '(mnctimes) a b))))
 
@@ -331,6 +331,10 @@
 
 (setf (get '$noncommutingring 'ring) *noncommutingring*)
 
+(defmspec $ringeval (e)
+  (let ((fld (get (or (car (member (nth 2 e) $%mrings)) '$generalring) 'ring)))
+    (funcall (mring-mring-to-maxima fld) (ring-eval (nth 1 e) fld))))
+ 
 (defun ring-eval (e fld)
   (let ((fadd (mring-add fld))
 	(fnegate (mring-negate fld))
@@ -362,11 +366,8 @@
 	  ((op-equalp e 'mabs) (funcall fabs (ring-eval (first (margs e)) fld)))
 	
 	  ((and (or (eq (mring-name fld) '$floatfield) (eq (mring-name fld) '$complexfield))
-		(consp e) (consp (car e)) (gethash (mop e) *flonum-op*))
-	   (apply (gethash (mop e) *flonum-op*) (mapcar #'(lambda (s) (ring-eval s fld)) (margs e))))
+		(consp e) (consp (car e)) (gethash (mop e) *double-float-op*))
+	   (apply (gethash (mop e) *double-float-op*) (mapcar #'(lambda (s) (ring-eval s fld)) (margs e))))
 	  
 	  (t (merror "Unable to evaluate ~:M in the ring '~:M'" e (mring-name fld))))))
   
-(defmspec $ringeval (e)
-  (let ((fld (get (or (car (member (nth 2 e) $%mrings)) '$generalring) 'ring)))
-    (funcall (mring-mring-to-maxima fld) (ring-eval (nth 1 e) fld))))

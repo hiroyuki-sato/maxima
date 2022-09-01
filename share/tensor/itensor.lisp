@@ -48,6 +48,13 @@
 (autof '$igeodesic_coords '|gener|)
 (autof '$conmetderiv '|gener|)
 (autof '$name '|canten|)
+  
+
+
+(eval-when
+    #+gcl (eval compile)
+    #-gcl (:execute :compile-toplevel)
+    (defmacro fixp (x) `(typep ,x 'fixnum)))
 
 (declare-top (special smlist $idummyx $vect_coords $imetric $icounter $dim
 		      $contractions $coord $allsym $metricconvert $iframe_flag
@@ -183,14 +190,13 @@
 (defmspec $remcon (a) (setq a (cdr a))
   ;;Removes contraction definitions
        (and (eq (car a) '$all) (setq a (cdr $contractions)))
-       (cons smlist (mapc #'(lambda (e)
-			      (zl-remprop e 'contractions)
-			      (setq $contractions (delete e $contractions :test #'eq)))
+       (cons smlist (mapc (function (lambda (e) (zl-remprop e 'contractions)
+					    (delete e $contractions :test #'eq)))
 			  a)))
 
 (defun getcon (e)
   ;; Helper to obtain contractions on both the noun and verb form of E
-	(cond ((and (symbolp e) (eq (getcharn e 1) #\%))  (zl-get ($verbify e) 'contractions))
+	(cond ((and (symbolp e) (eq (getchar e 1) '%))  (zl-get ($verbify e) 'contractions))
 		(t (zl-get e 'contractions))
 	)
 )
@@ -506,7 +512,6 @@
       (eq (caar e) 'mequal)
       (list (car e) (covdiff (cadr e)) (covdiff (caddr e)))
     )
-    ((eq (caar e) '%determinant) 0)
     (t (merror "Not acceptable to COVDIFF: ~M" (ishow e)))
   )
 )
@@ -1072,11 +1077,27 @@
   )
 )
 
+;; Test for membership using EQUAL, to catch member lists
+(defun memlist (e l)
+  (cond ((null l) nil)
+        ((equal e (car l)) l)
+        (t (memlist e (cdr l)))
+  )
+)
+
 ;; Substitute using EQUAL, to catch member lists
 (defun substlist (b a l)
   (cond ((null l) l)
         ((equal a (car l)) (cons b (cdr l)))
         (t (cons (car l) (substlist b a (cdr l))))
+  )
+)
+
+;; And delete an element from a list, again using EQUAL
+(defun dellist (e l)
+  (cond ((null l) l)
+        ((equal e (car l)) (dellist e (cdr l)))
+        (t (cons (car l) (dellist e (cdr l))))
   )
 )
 
@@ -1103,9 +1124,8 @@
   (do
     ((i (minusi c) (cdr i)))
     ((null i))
-    (and (member (car i) c :test #'equal)
-	 (member (list '(mtimes simp) -1 (car i)) c :test #'equal)
-         (setq c (delete (car i) (delete (list '(mtimes simp) -1 (car i)) c :test #'equal)))
+    (and (memlist (car i) c) (memlist (list '(mtimes simp) -1 (car i)) c)
+         (setq c (delete (car i) (dellist (list '(mtimes simp) -1 (car i)) c)))
     )
   )
   c
@@ -1117,8 +1137,8 @@
 (defun contract1 (f g)
   (prog (a b c d e cf sgn)
     (when (cdddr f) (return nil))
-    (setq a (copy-tree (derat (cdadr f))) b (copy-tree (cdaddr f))
-          c (copy-tree (derat (cadr g))) d (copy-tree (caddr g)) e (copy-tree (cdddr g))
+    (setq a (derat (cdadr f)) b (cdaddr f)
+          c (derat (cadr g)) d (caddr g) e (cdddr g)
     )
     (cond                        ; This section is all Kronecker-delta code
       (
@@ -1167,7 +1187,7 @@
               )
               (
                 (and (cdr c) (not (numberp a))
-                     (member (list '(mtimes simp) -1 a) (cdr c) :test #'equal)
+                     (memlist (list '(mtimes simp) -1 a) (cdr c))
                 )
                 (setq c (substlist (list '(mtimes simp) -1 b)
                                    (list '(mtimes simp) -1 a)
@@ -1488,7 +1508,7 @@
 	(t (nconc (splice2 (car l))(cons '| | (splice1 (cdr l)))))))
 
 (defun splice2 (x)
-  (cond ((fixnump x)(explode x))
+  (cond ((fixp x)(explode x))
 	(t (cdr (explodec x)))))
 ;	(t (cdr (explodec (print-invert-case x))))))
 
@@ -1506,12 +1526,12 @@
 		   (t (go noun)))
 	doit (cond ((null (cddr z))
 		    (merror "Wrong number of args to DERIVATIVE"))
-		   ((not (fixnump (setq count (caddr z)))) (go noun))
+		   ((not (fixp (setq count (caddr z)))) (go noun))
 		   ((< count 0.)
 		    (merror "Improper count to DIFF: ~M"
 			    count)))
 	loop1(setq v (cadr z))
-	     (and (fixnump v)
+	     (and (fixp v)
 		  $vect_coords
 		  (> v 0.)
 		  (not (> v $dim))
@@ -1553,9 +1573,8 @@
 ;coordinate index in sorted order unless the indexed object was declared
 ;constant in which case 0 is returned.
 (defun sdiff (e x) 
-  (simplifya
        (cond ((mnump e) 0.)
-	     ((and (alike1 e x) (not (and (rpobj e) (rpobj x)))) 1.)
+	     ((alike1 e x) 1.)
 	     ((or (atom e) (member 'array (cdar e) :test #'eq))
 	      (chainrule1 e x))
 	     ((mget (caar e) '$constant) 0.)                    ;New line added
@@ -1575,7 +1594,7 @@
 		     (cdr e))))
 	     ((eq (caar e) 'mtimes)
  	      (addn (sdifftimes (cdr e) x) t))
-	     ((eq (caar e) 'mexpt) (diffexpt e x))
+	     ((eq (caar e) 'mexpt) (diffexpt1 e x))
 ;;	     ((rpobj e) (diffrpobj e x))                        ;New line added
 ;;	     ((and (boundp '$imetric) (eq (caar e) '%determinant);New line added
 ;;		   (eq (cadr e) $imetric))
@@ -1586,526 +1605,8 @@
 ;;			     (list '($ichr2 simp) (cons smlist (list dummy x))
 ;;				   (cons smlist (ncons dummy)))))
 ;;	       nil))
-
-         ((and
-              (boundp '$imetric)
-              (rpobj x)
-              (eq (caar e) '%determinant)
-              (eq (cadr e) $imetric)
-          )
-          (cond
-           ((and
-             (eq (caar x) $imetric)
-             (eq (length (cdadr x)) 0)
-             (eq (length (cdaddr x)) 2)
-             (eq (length (cdddr x)) 0)
-            )
-            (list '(mtimes simp)
-                   -1
-                  (list '(%determinant simp) $imetric)
-                  (list (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 0 (cdaddr x)) (nth 1 (cdaddr x)))
-                        '((mlist simp))
-                  )
-            )
-           )
-           ((and
-             (eq (caar x) $imetric)
-             (eq (length (cdadr x)) 2)
-             (eq (length (cdaddr x)) 0)
-             (eq (length (cdddr x)) 0)
-            )
-            (list '(mtimes simp)
-                  (list '(%determinant simp) $imetric)
-                  (list (cons $imetric '(simp))
-                        '((mlist simp))
-                        (list '(mlist simp) (nth 0 (cdadr x)) (nth 1 (cdadr x)))
-                  )
-            )
-           )
-           (t 0.)
-          )
-         )
-
-
-         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-         ;; Differentiation of tensors with respect to tensors ;;
-         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-         ;;
-         ((and (rpobj e) (rpobj x)) ; (merror "Not yet..."))
-          (cond
-
-            ( ;; dg([a,b],[])/dg([],[m,n])
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 0)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 0)
-             )
-             (list '(mtimes simp)
-                   -1
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 0 (cdadr e)) (nth 0 (cdaddr x)))
-                    '((mlist simp))
-                   )
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 1 (cdadr e)) (nth 1 (cdaddr x)))
-                    '((mlist simp))
-                   )
-             )
-            )
-
-            ( ;; dg([],[a,b])/dg([m,n],[])
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 0)
-              (eq (length (cdaddr e)) 2)
-              (eq (length (cdddr e)) 0)
-              (eq (length (cdadr x)) 2)
-              (eq (length (cdaddr x)) 0)
-              (eq (length (cdddr x)) 0)
-             )
-             (list '(mtimes simp)
-                   -1
-                   (list
-                    (cons $imetric '(simp))
-                    '((mlist simp))
-                    (list '(mlist simp) (nth 0 (cdaddr e)) (nth 0 (cdadr x)))
-                   )
-                   (list
-                    (cons $imetric '(simp))
-                    '((mlist simp))
-                    (list '(mlist simp) (nth 1 (cdaddr e)) (nth 1 (cdadr x)))
-                   )
-             )
-            )
-
-            ( ;; dg([a,b],[],y)/dg([],[m,n])
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 1)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 0)
-             )
-             (prog (d1 d2)
-              (setq d1 ($idummy) d2 ($idummy))
-              (return
-               (list '(mtimes simp)
-                   (list
-                    (cons $imetric '(simp))
-                    '((mlist simp))
-                    (list '(mlist simp) d1 d2)
-                    (cadddr e)
-                   )
-                   (list
-                     '(mplus simp)
-                     (list
-                       '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list
-                          '(mlist simp)
-                          (nth 0 (cdadr e))
-                          (nth 0 (cdaddr x))
-                        )
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d1 (nth 1 (cdaddr x)))
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 1 (cdadr e)) d2)
-                        '((mlist simp))
-                       )
-                     )
-                     (list
-                       '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 0 (cdadr e)) d1)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list
-                          '(mlist simp)
-                          (nth 1 (cdadr e))
-                          (nth 0 (cdaddr x))
-                        )
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d2 (nth 1 (cdaddr x)))
-                        '((mlist simp))
-                       )
-                     )
-                   )
-               )
-              )
-             )
-            )
-
-            ( ;; dg([a,b],[],y)/dg([],[m,n],k)
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 1)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 1)
-             )
-             (list '(mtimes simp)
-                   -1
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 0 (cdadr e)) (nth 0 (cdaddr x)))
-                    '((mlist simp))
-                   )
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 1 (cdadr e)) (nth 1 (cdaddr x)))
-                    '((mlist simp))
-                   )
-                   (list
-                    '(%kdelta simp)
-                     (list '(mlist simp) (cadddr e))
-                     (list '(mlist simp) (cadddr x))
-                   )
-             )
-            )
-
-            ( ;; dg([a,b],[],y,d)/dg([],[m,n])
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 2)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 0)
-             )
-             (prog (d1 d2)
-              (setq d1 ($idummy) d2 ($idummy))
-              (return
-               (list '(mtimes simp)
-                   (list
-                    (cons $imetric '(simp))
-                    '((mlist simp))
-                    (list '(mlist simp) d1 d2)
-                    (nth 0 (cdddr e))
-                    (nth 1 (cdddr e))
-                   )
-                   (list
-                     '(mplus simp)
-                     (list
-                       '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list
-                          '(mlist simp)
-                          (nth 0 (cdadr e))
-                          (nth 0 (cdaddr x))
-                        )
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d1 (nth 1 (cdaddr x)))
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 1 (cdadr e)) d2)
-                        '((mlist simp))
-                       )
-                     )
-                     (list
-                       '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 0 (cdadr e)) d1)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list
-                          '(mlist simp)
-                          (nth 1 (cdadr e))
-                          (nth 0 (cdaddr x))
-                        )
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d2 (nth 1 (cdaddr x)))
-                        '((mlist simp))
-                       )
-                     )
-                   )
-               )
-              )
-             )
-            )
-
-            ( ;; dg([a,b],[],y,d)/dg([],[m,n],k)
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 2)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 1)
-             )
-             (prog (d1 d2 d3 d4)
-              (setq d1 ($idummy) d2 ($idummy) d3 ($idummy) d4 ($idummy))
-              (return
-               (list
-                '(mtimes simp)
-                (list
-                 '(mplus simp)
-                 (list
-                  '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 0 (cdadr e)) d3)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d2 d4)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 1 (cdadr e)) d1)
-                        '((mlist simp))
-                       )
-                 )
-                 (list
-                  '(mtimes simp)
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 0 (cdadr e)) d2)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) (nth 1 (cdadr e)) d3)
-                        '((mlist simp))
-                       )
-                       (list
-                        (cons $imetric '(simp))
-                        (list '(mlist simp) d1 d4)
-                        '((mlist simp))
-                       )
-                 )
-                )
-                (list
-                 '(mplus simp)
-                 (list
-                  '(mtimes simp)
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 0 (cdaddr x)))
-                         (list '(mlist simp) d3)
-                       )
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 1 (cdaddr x)))
-                         (list '(mlist simp) d4)
-                       )
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 1 (cdddr e)))
-                         (list '(mlist simp) (nth 0 (cdddr x)))
-                       )
-
-                       (list
-                        (cons $imetric '(simp))
-                        '((mlist simp))
-                        (list '(mlist simp) d2 d1)
-                        (nth 0 (cdddr e))
-                       )
-                 )
-                 (list
-                  '(mtimes simp)
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 0 (cdaddr x)))
-                         (list '(mlist simp) d2)
-                       )
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 1 (cdaddr x)))
-                         (list '(mlist simp) d1)
-                       )
-                       (list
-                        '(%kdelta simp)
-                         (list '(mlist simp) (nth 0 (cdddr e)))
-                         (list '(mlist simp) (nth 0 (cdddr x)))
-                       )
-
-                       (list
-                        (cons $imetric '(simp))
-                        '((mlist simp))
-                        (list '(mlist simp) d3 d4)
-                        (nth 1 (cdddr e))
-                       )
-                 )
-                )
-               )
-              )
-             )
-            )
-
-            ( ;; dg([a,b],[],y,d)/dg([],[m,n],k,l)
-             (and
-              (boundp '$imetric)
-              (eq (caar e) $imetric)
-              (eq (caar x) $imetric)
-              (eq (length (cdadr e)) 2)
-              (eq (length (cdaddr e)) 0)
-              (eq (length (cdddr e)) 2)
-              (eq (length (cdadr x)) 0)
-              (eq (length (cdaddr x)) 2)
-              (eq (length (cdddr x)) 2)
-             )
-             (list '(mtimes simp)
-                   -1
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 0 (cdadr e)) (nth 0 (cdaddr x)))
-                    '((mlist simp))
-                   )
-                   (list
-                    (cons $imetric '(simp))
-                    (list '(mlist simp) (nth 1 (cdadr e)) (nth 1 (cdaddr x)))
-                    '((mlist simp))
-                   )
-                   (list
-                    '(%kdelta simp)
-                     (list '(mlist simp) (cadddr e))
-                     (list '(mlist simp) (cadddr x))
-                   )
-                   (list
-                    '(%kdelta simp)
-                     (list '(mlist simp) (nth 1 (cdddr e)))
-                     (list '(mlist simp) (nth 1 (cdddr x)))
-                   )
-             )
-            )
-
-
-            ((and
-               (eq (caar e) (caar x))
-               (eq (length (cdadr e)) (length (cdadr x)))
-               (eq (length (cdaddr e)) (length (cdaddr x)))
-               (eq (length (cdddr e)) (length (cdddr x)))
-             )
-             (cons '(mtimes)
-              (cons 1
-               (append
-                 (mapcar
-                   #'(lambda (x y)
-                       (list
-                         '(%kdelta simp)
-                         (list '(mlist simp) x)
-                         (list '(mlist simp) y)
-                       )
-                     ) (cdadr e) (cdadr x)
-                 )
-                 (mapcar
-                   #'(lambda (x y)
-                       (list
-                         '(%kdelta simp)
-                         (list '(mlist simp) x)
-                         (list '(mlist simp) y)
-                       )
-                     ) (cdaddr x) (cdaddr e)
-                 )
-                 (mapcar
-                   #'(lambda (x y)
-                       (list
-                         '(%kdelta simp)
-                         (list '(mlist simp) x)
-                         (list '(mlist simp) y)
-                       )
-                     )
-                     (cdddr e) (cdddr x)
-                 )
-               )
-              )
-             )
-            )
-            ((or
-              (and ;; catchall symbols constructed from the metric tensor
-               (boundp '$imetric)
-               (eq (caar x) $imetric)
-               (member
-                 (caar e)
-                 (cons '$icurvature (cons '%icurvature christoffels))
-               )
-              )
-              (and ;; d(some covi)/d(cov metric)
-               (boundp '$imetric)
-               (not (eq (caar e) $imetric))
-               (eq (caar x) $imetric)
-               (eq (length (cdadr x)) 2)
-               (eq (length (cdaddr x)) 0)
-               (eq (length (cdddr x)) 0)
-               (> (+ (length (cdadr e)) (length (cdddr e))) 0)
-              )
-              (and ;; d(some conti)/d(cont metric)
-               (boundp '$imetric)
-               (not (eq (caar e) $imetric))
-               (eq (caar x) $imetric)
-               (eq (length (cdadr x)) 0)
-               (eq (length (cdaddr x)) 2)
-               (eq (length (cdddr x)) 0)
-               (> (length (cdaddr e)) 0)
-              )
-              (and ;; da([a,b],y)/da([m,n],k) with a+b=m+n, y=k
-               (depends (caar e) (caar x))
-               (eq (+ (length (cdadr e)) (length (cdaddr e)))
-                   (+ (length (cdadr x)) (length (cdaddr x))))
-               (eq (length (cdddr e)) (length (cdddr x)))
-              )
-             )
-             (list '(%derivative) e x)
-            )
-            (t 0.)
-          )
-         )
-         ;; End of tensor vs. tensor differentiation
-
 	     ((not (depends e x))
-	      (cond ((fixnump x) (list '(%derivative) e x))
+	      (cond ((fixp x) (list '(%derivative) e x))
 		    ((atom x) 0.)
 		    (t (list '(%derivative) e x))))
 							  ;This line moved down
@@ -2128,9 +1629,7 @@
 		    ((freel (cdr e) x) 0.)
 		    (t (diff%deriv (list e x 1.)))))
 	     ((member (caar e) '(%sum %product) :test #'eq) (diffsumprod e x))
-	     (t (sdiffgrad e x)))
-  t )
-) 
+	     (t (sdiffgrad e x)))) 
 
 ; VTT: several of these functions have been copied verbatim from comm.lisp and
 ; comm2.lisp, in order to implement indicial differentiation as distinct from
@@ -2276,9 +1775,7 @@
             args)
            t)))))
 
-(defmfun $idiff (&rest args)
-  (let (derivlist)
-    (ideriv args)))
+(defmfun $idiff n (let (derivlist) (ideriv (listify n))))
 
 (defmfun idiff (e x)
   (cond
@@ -2377,7 +1874,7 @@
 	     (setq a (cdr l1))
 	     (ifnot (and a (cdr a)) (return (list '(%levi_civita) l1)))
 	     (setq b a)
-	loop1(ifnot (fixnump (car a)) (return (list '(%levi_civita) l1)))
+	loop1(ifnot (fixp (car a)) (return (list '(%levi_civita) l1)))
 	     (and (setq a (cdr a)) (go loop1))
 	loop3(setq a (car b) b (cdr b) c b)
 	loop2(cond ((= (car c) a) (return 0.))
@@ -2414,7 +1911,7 @@
 	  (cond ((cdddr e) (matcherr)))
 	  (setq nn ($length l1))
 	  (setq l nil)
-	  (do ((i nn (1- i))) ((< i 1)) (setq l (cons ($idummy) l)))
+	  (do ((i nn (1- i))) ((< i 1)) (setq l (cons ($idummy) l) n $icounter))
 	  (return (values (list '(mtimes simp) ($kdelta l1 (cons smlist l))
 	        (list (cons (caar e) '(simp)) (cons smlist l) (ncons smlist))
 	        (list '(mexpt simp) (meval (list 'mfactorial nn)) -1)) t)
@@ -2434,7 +1931,7 @@
 	  (cond ((cdddr e) (matcherr)))
 	  (setq nn ($length l2))
 	  (setq l nil)
-	  (do ((i nn (1- i))) ((< i 1)) (setq l (cons ($idummy) l)))
+	  (do ((i nn (1- i))) ((< i 1)) (setq l (cons ($idummy) l) n $icounter))
 	  (return (values (list '(mtimes simp) ($kdelta (cons smlist l) l2)
 	        (list (cons (caar e) '(simp)) (ncons smlist) (cons smlist l))
 	        (list '(mexpt simp) (meval (list 'mfactorial nn)) -1)) t)
@@ -2690,7 +2187,7 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 
 
 (defun allfixed (l) 
-       (and l (fixnump (car l)) (or (null (cdr l)) (allfixed (cdr l))))) 
+       (and l (fixp (car l)) (or (null (cdr l)) (allfixed (cdr l))))) 
 
 (defun tensoreval (tensor indxs)
   ((lambda (der con)
@@ -2922,29 +2419,40 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 	   (merror "~M is not a valid name." a))
 	  (t (add2lnc a $coord)))))
 
-(defmfun $remcoord (&rest args)
-  (cond ((and (= (length args) 1)
-	      (eq (car args) '$all))
-	 (setq $coord '((mlist)))
-	 '$done)
-	(t (dolist (c args '$done)
-	     (setq $coord (delete c $coord :test #'eq))))))
+(defmfun $remcoord n
+  (cond ((and (equal n 1) (eq (arg 1) '$all))
+	 (setq $coord '((mlist))) '$done)
+	(t (do ((l (listify n) (cdr l)))
+	       ((null l) '$done)
+	     (delete (car l) $coord :test #'eq)))))
 
 
 ;; Additions on 5/19/2004 -- VTT
+
+(defun memberlist (e l)
+	(cond ((null l) nil)
+	      ((equal e (car l)) t)
+	      (t (memberlist e (cdr l)))))
+
+(defun unionlist (l1 l2)
+	(cond ((null l1) l2)
+	      ((memberlist (car l1) l2) (unionlist (cdr l1) l2))
+	      (t (cons (car l1) (unionlist (cdr l1) l2)))))
 
 (defmfun $listoftens (e)
   (itensor-sort (cons smlist (listoftens e))))
 
 (defun listoftens (e)
-  (cond ((atom e) nil)
-	((rpobj e) (list e))
-	(t (let (l)
-	     (mapcar #'(lambda (x) (setq l (union l (listoftens x) :test #'equal))) (cdr e))
-	     l))))
+  (cond
+    ((atom e) nil)
+    ((rpobj e) (list e))
+    (t (prog (l) (setq l nil)
+	     (mapcar (lambda (x) (setq l (unionlist l (listoftens x)))) (cdr e))
+	     (return l)))))
 
-(defun numlist (&optional (n 1))
-  (loop for i from n upto $dim collect i))
+(defun numlist (&optional (n '1))
+  (cond ((>= n $dim) (list n))
+	(t (cons n (numlist (1+ n))))))
 
 ;;showcomps(tensor):=block([i1,i2,ind:indices(tensor)[1]],
 ;;	if length(ind)=0 then ishow(ev(tensor))
@@ -3014,15 +2522,14 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 ; non-existent symmetries. Used by $idim below.
 
 (defun remsym (name ncov ncontr)
-  (declare (special $symmetries))
-  (let ((tensor (implode (nconc (exploden name) (ncons 45)
+  (prog (tensor)
+    (setq tensor (implode (nconc (exploden name) (ncons 45)
                                  (exploden ncov) (ncons 45)
-                                 (exploden ncontr)))))
-    (when (member tensor (cdr $symmetries) :test #'equal)
-      (setq $symmetries (delete tensor $symmetries :test #'equal))
-      (zl-remprop tensor '$sym)
-      (zl-remprop tensor '$anti)
-      (zl-remprop tensor '$cyc))))
+                                 (exploden ncontr))))
+    (cond ((member tensor (cdr $symmetries) :test #'equal)
+	   (delete tensor $symmetries :test #'equal)
+	   (zl-remprop tensor '$sym) (zl-remprop tensor '$anti)
+	   (zl-remprop tensor '$cyc)))))
 
 ; This function sets the metric dimensions and Levi-Civita symmetries.
 
@@ -3043,5 +2550,5 @@ indexed objects")) (t (return (flush (arg 1) l nil))))))
 )
 
 ($load '$ex_calc)
-($load '$lckdt)
-($load '$iframe)
+($load 'lckdt)
+($load 'iframe)

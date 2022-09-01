@@ -12,6 +12,14 @@
 (in-package :maxima)
 ($put '$orthopoly 1.0 '$version)
 
+;; A while loop taken from nset.lisp. Someday it should be placed
+;; in a file with other Maxima macros and deleted from here and from nset.
+
+(defmacro while (cond &rest body)
+  `(do ()
+       ((not ,cond))
+     ,@body))
+
 ;; If the input can be evaluated to a floating point number (either
 ;; real or complex), convert the input to a Common Lisp complex number.
 ;; When the input doesn't evaluate to a float, return the input.
@@ -22,9 +30,9 @@
 	 (br ($float ($realpart b)))
 	 (bi ($float ($imagpart b))))
     (cond ((and (numberp br) (numberp bi))
-	   (if (= bi 0) (float br)
-	     (complex (float br) 
-		      (float bi))))
+	   (if (= bi 0) (float br 1.0d0)
+	     (complex (float br 1.0d0) 
+		      (float bi 1.0d0))))
 	  (t a))))
 
 ;; Return true iff a is a float or a complex number with either a
@@ -64,6 +72,7 @@
 ;; ((unk) input from user). We "simplify" this form by printing an error.
 
 (defprop unk simp-unk operators)
+
 (defun simp-unk (x y z)
   (declare (ignore y z))
   (merror "Maxima doesn't know the derivative of ~:M with respect the ~:M argument" (nth 2 x) (nth 1 x)))
@@ -75,6 +84,7 @@
 ;; This function differs from (1 + signum(x))/2 which isn't left or right
 ;; continuous at 0.
 
+(defprop $unit_step simp-unit-step operators)
 (defprop $unit_step "\\Theta" texword)
 
 (defun simp-unit-step (a y z)
@@ -234,39 +244,29 @@
 ;; When n is an integer with n > -1, return the product 
 ;; x (x + 1) (x + 2) ... (x + n - 1).  This is the same as
 ;; gamma(x + n) / gamma(x).  See A&S 6.1.22, page 256.  When
-;; n isn't an integer or n < 0, return the form (($pochhammer) x n))
+;; n isn't an integer or n < 0, return the form (($pochhammer) x n).
 ;; Also notice that pochhammer(1,n) = n!.
 
-(meval `(($declare) $pochhammer $complex))
+;; We trap the case x is a complex float; otherwise, Maxima has to..
+
 (defmvar $pochhammer_max_index 100)
 
 (defun $pochhammer (x n)
-  (simplify `(($pochhammer) ,x ,n)))
+  (cond ((mminusp n)
+	 (div (power -1 n) ($pochhammer (sub 1 x) (neg n))))
 
-(defun simp-pochhammer (e y z)
-  (declare (ignore y))
-  (let ((x) (n))
-    (twoargcheck e)
-    (setq x (simplifya (specrepcheck (second e)) z))
-    (setq n (simplifya (specrepcheck (third e)) z))
- 
-    (cond ((eq t (meqp n 0)) 1)
-	  
-	  ;; Use reflection rule when (great (neg n) n) is true or when n is a negative integer.
-	  
-	  ((and (integerp n) (< n 0))
-	   (div (power -1 n) (simplify `(($pochhammer) ,(sub 1 x) ,(neg n)))))
-	  
-	  ((eq t (eq x 1)) (take '(mfactorial) n))
+	((and (integerp n) (use-float x))
+	 (let ((acc 1.0d0))
+	   (setq x (maxima-to-lisp-complex-float x))
+	   (dotimes (i n (lisp-float-to-maxima-float acc))
+	     (setq acc (* acc (+ i x))))))
 
-	  ((and (integerp n) (> n -1) (<=  n $pochhammer_max_index)) 
-	   (let ((acc 1))
-	     (dotimes (i n)
-	       (setq acc (mul acc (add i x))))
-	     (if (complex-number-p x #'(lambda (s) (or (floatp s) ($bfloatp s)))) ($expand acc) acc)))
+	((and (integerp n) (<= n $pochhammer_max_index))
+	 (let ((acc 1))
+	   (dotimes (i n acc)
+	     (setq acc (mul acc (add i x))))))
 
-	  (t `(($pochhammer simp) ,x ,n)))))
-
+	(t `(($pochhammer simp) ,x ,n))))
 
 (putprop '$pochhammer
 	 '((x n)
@@ -306,7 +306,7 @@
   (cond ((mminusp n)
 	 (pochhammer-quotient b a x (neg n)))
 	((and (integerp n) (use-float a b x))
-	 (let ((acc 1.0))
+	 (let ((acc 1.0d0))
 	   (setq a (maxima-to-lisp-complex-float a))
 	   (setq b (maxima-to-lisp-complex-float b))
 	   (dotimes (i n (lisp-float-to-maxima-float acc))
@@ -339,7 +339,7 @@
 	   (multiple-value-setq (f e)
 	     ($hypergeo21 (mul -1 n) (add n a b 1) (add a 1)
 			  (div (add 1 (mul -1 x)) 2) n))
-	   (setq e (if e (+ e (* 4 n (abs f) flonum-epsilon)) nil))
+	   (setq e (if e (+ e (* 4 n (abs f) double-float-epsilon)) nil))
 	   (orthopoly-return-handler d f e)))
 	(t `(($jacobi_p simp) ,n ,a ,b ,x))))
 
@@ -386,7 +386,7 @@
 	   (multiple-value-setq (f e)
 	     ($hypergeo21 (mul -1 n) (add n (mul 2 a)) (add a (div 1 2))
 			  (div (add 1 (mul -1 x)) 2) n))
-	   (setq e (if e (+ e (* 4 n (abs f) flonum-epsilon)) nil))
+	   (setq e (if e (+ e (* 4 n (abs f) double-float-epsilon)) nil))
 	   (orthopoly-return-handler d f e)))
 	(t `(($ultraspherical simp) ,n ,a ,x))))
 
@@ -687,7 +687,7 @@
 	  (t
 	   (setq d 1)
 	   (setq f `(($assoc_legendre_p simp) ,n ,m ,x))))
-    (interval-mult d f (* flonum-epsilon dx))))
+    (interval-mult d f (* double-float-epsilon dx))))
 
 
 ;; For the derivative of the associated legendre p function, see
@@ -765,7 +765,7 @@
 	   (setq d (pochhammer-quotient (add a 1) 1 x n))
 	   (multiple-value-setq (f e)
 	     ($hypergeo11 (mul -1 n) (add 1 a) x n))
-	   (setq e (if e (+ e (* 4 (abs f) flonum-epsilon n)) nil))
+	   (setq e (if e (+ e (* 4 (abs f) double-float-epsilon n)) nil))
 	   (orthopoly-return-handler d f e)))
 	(t
 	 `(($gen_laguerre) ,n ,a ,x))))
@@ -946,10 +946,10 @@
 		  (setq d (if (oddp n) -1 1))
 		  (setq x (mul -1 x))
 		  (setq z (* -1 z))))
-	   (setq n (+ 0.5 ($float n)))
+	   (setq n (+ 0.5d0 ($float n)))
 	   (setq d (* d (sqrt (/ pi (* 2 z)))))
 	   (setq d (lisp-float-to-maxima-float d))
-	   ($expand (mul ($rectform d) ($bessel_j n x)))))
+	   ($expand (mul ($rectform d) ($bessel x n)))))
 
 	((and (integerp n) (> n -1))
 	 (let ((xt (sub x (div (mul n '$%pi) 2))))
@@ -997,7 +997,7 @@
 		  (setq d (if (oddp n) 1 -1))
 		  (setq x (mul -1 x))
 		  (setq z (* -1 z))))
-	   (setq n (+ 0.5 ($float n)))
+	   (setq n (+ 0.5d0 ($float n)))
 	   (setq d (* d (sqrt (/ pi (* 2 z)))))
 	   (setq d (lisp-float-to-maxima-float d))
 	   ($expand (mul ($rectform d) ($bessel_y n x)))))
@@ -1108,8 +1108,8 @@
 	 (xr ($realpart x))
 	 (xi ($imagpart x)))
     (cond ((or (floatp xr) (floatp xi))
-	   (setq xr (float xr)
-		 xi (float xi))
+	   (setq xr (float xr 1.0d0)
+		 xi (float xi 1.0d0))
 	   (if (= 0.0 xi) xr (complex xr xi)))
 	  (t
 	   y))))
@@ -1122,15 +1122,15 @@
 (defun hypergeo11-float (n b x)
   (let ((f0) (fm1) (f) (i 0) (k) (dk) (ak) (bk) (err)
 	(as (make-array (- 1 n) 
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(bs (make-array (- 1 n) 
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(fs (make-array (- 1 n)
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(u) (u0) (um1))
 
-    (setq f0 1.0)
-    (setq fm1 0.0)
+    (setq f0 1.0d0)
+    (setq fm1 0.0d0)
     (setq x (- b x))
     (setq n (- n))
     (while (< i n)
@@ -1146,9 +1146,9 @@
       (incf i))
     (setf (aref fs i) f0)
     (setq i 1)
-    (setq err 1.0)
-    (setq u0 1.0)
-    (setq um1 0.0)
+    (setq err 1.0d0)
+    (setq u0 1.0d0)
+    (setq um1 0.0d0)
     (while (< i n)
       (setq k (- n i))
       (setq u (+ (* (aref as k) u0)
@@ -1157,20 +1157,20 @@
       (setq u0 u)
       (setq err (+ err (abs (* u0 (aref fs k)))))
       (incf i))
-    (values f0 (* 12 flonum-epsilon err))))
+    (values f0 (* 12 double-float-epsilon err))))
     
 (defun hypergeo21-float (n b c x)
   (let ((f0) (fm1) (f) (i 0) (k) (dk) (ak) (bk) (err)
 	(as (make-array (- 1 n) 
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(bs (make-array (- 1 n) 
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(fs (make-array (- 1 n)
-			:initial-element 0.0))
+			:initial-element 0.0d0))
 	(u) (u0) (um1))
 
-    (setq f0 1.0)
-    (setq fm1 0.0)
+    (setq f0 1.0d0)
+    (setq fm1 0.0d0)
     (setq n (- n))
     (while (< i n)
       (setf (aref fs i) f0)
@@ -1185,9 +1185,9 @@
       (incf i))
     (setf (aref fs i) f0)
     (setq i 1)
-    (setq err 1.0)
-    (setq u0 1.0)
-    (setq um1 0.0)
+    (setq err 1.0d0)
+    (setq u0 1.0d0)
+    (setq um1 0.0d0)
     (while (< i n)
       (setq k (- n i))
       (setq u (+ (* (aref as k) u0)
@@ -1196,7 +1196,7 @@
       (setq u0 u)
       (incf i)
       (setq err (+ err (abs (* (aref fs k) u0)))))
-    (values f0 (* 12 flonum-epsilon err))))
+    (values f0 (* 12 double-float-epsilon err))))
     
 ;; For recursion relations, see A & S 22.7 page 782. 
 

@@ -116,7 +116,7 @@ makeSpec(p) :=
    block(
    Spec : p,
    for i : 0 thru length(ZAnsatzCoeff)-1 do
-     Spec : subst(factor(expand(ZAnsatzCoeff[i+1])),'_z[i],Spec),
+     Spec : subst(factor(expand(ZAnsatzCoeff[i+1])),"_z"[i],Spec),
    return(Spec)
    );
 
@@ -185,7 +185,7 @@ if ZAnsatzDegree = 0 then
       return([[GosperSol,[1]]])
   ),
 
-nFTrivial : niceForm(f,n,'_z,ZAnsatzDegree,k),
+nFTrivial : niceForm(f,n,"_z",ZAnsatzDegree,k),
 
 if nFTrivial = [] then
   (
@@ -256,7 +256,7 @@ GAnsatzDegree: AnsatzDegreeVerboseOpt(p,q,r,k,mode-1),
   Gpoly : 0,
 
   if GAnsatzDegree >= 0 then
-    Gpoly: GosperPoly(p,q,r,k,'_g,GAnsatzDegree),
+    Gpoly: GosperPoly(p,q,r,k,"_g",GAnsatzDegree),
 
 
 if mode >= very_verbose then
@@ -272,7 +272,7 @@ if Gpoly = 0 then
 /* Numerical test                                                        */
 if mod_test and (ZAnsatzDegree<=mod_threshold) then
   (
-  modulus : mod_big_prime,
+  MODULUS : mod_big_prime,
   test_Gpoly : polymod(subst(ev_point,n,Gpoly),mod_big_prime),
 
 
@@ -283,10 +283,10 @@ if mod_test and (ZAnsatzDegree<=mod_threshold) then
   if mode>= very_verbose then 
     print("modulus : ", modulus),
   sysSol : SolveZSysVerboseOpt(test_Gpoly,
-                              '_g,GAnsatzDegree+1,'_z,ZAnsatzDegree+1,k,
+                              "_g",GAnsatzDegree+1,"_z",ZAnsatzDegree+1,k,
                               modular_linear_solver,mode-1),
   
-  modulus : false,
+  MODULUS : false,
   if mode>= very_verbose then
      print("numerical sysSol : ", sysSol),
   if sysSol = [] then
@@ -306,7 +306,7 @@ if mod_test and (ZAnsatzDegree<=mod_threshold) then
 /* --------------------------------------------------------------------- */
 
 
-sysSol : SolveZSysVerboseOpt(Gpoly,'_g,GAnsatzDegree+1,'_z,ZAnsatzDegree+1,k,
+sysSol : SolveZSysVerboseOpt(Gpoly,"_g",GAnsatzDegree+1,"_z",ZAnsatzDegree+1,k,
                              linear_solver,mode-1),
 
 if mode>= very_verbose then
@@ -511,7 +511,6 @@ printZeilbergerSummary(f,parGRes) :=
       print("a[",i,"] = ", parGRes[1][2][i+1])
      );
 
-
 /* Front-end of the Zeilberger's algorithm with verbosity option */
 ZeilbergerVerboseOpt(f,k,n,mode) :=
    block(
@@ -568,69 +567,34 @@ ZeilbergerVerboseOpt(f,k,n,mode) :=
    ) ; 
 
 
-/* Non verbose version of Zeilberger's algorithm */
-ZeilbergerSummary([args]):=
- block([f,k,n],
- f:first(args),
- k:second(args),
- n:third(args),
- if length(args)=3 then
-   ZeilbergerVerboseOpt(f,k,n,summary)
- else
-   parGosperVerboseOpt(f,k,n,fourth(args),summary)
- );
+ZeilbergerSummary(f,k,n) ::=
+  buildq([f,k,n],
+      ZeilbergerVerboseOpt(f,k,n,summary)
+      );
+
+/* Verbose front-end macro of the Zeilberger's algorithm */
+ZeilbergerVerbose(f,k,n) ::=
+   buildq([f,k,n],
+       ZeilbergerVerboseOpt(f,k,n,verbose)
+         ) ;
 
 
-/* Non verbose version of Zeilberger's algorithm */
-ZeilbergerVerbose([args]):=
- block([f,k,n],
- f:first(args),
- k:second(args),
- n:third(args),
- if length(args)=3 then
-   ZeilbergerVerboseOpt(f,k,n,verbose)
- else
-   parGosperVerboseOpt(f,k,n,fourth(args),verbose)
- );
+/* Very verbose front-end macro of the Zeilberger's algorithm */
+ZeilbergerVeryVerbose(f,k,n) ::=
+   buildq([f,k,n],
+       ZeilbergerVerboseOpt(f,k,n,very_verbose)
+         ) ;
 
+ZeilbergerExtra(f,k,n) ::=
+   buildq([f,k,n],
+       ZeilbergerVerboseOpt(f,k,n,extra)
+         );
 
 /* Non verbose version of Zeilberger's algorithm */
-ZeilbergerVeryVerbose([args]):=
- block([f,k,n],
- f:first(args),
- k:second(args),
- n:third(args),
- if length(args)=3 then
-   ZeilbergerVerboseOpt(f,k,n,very_verbose)
- else
-   parGosperVerboseOpt(f,k,n,fourth(args),very_verbose)
- );
-
-
-/* Non verbose version of Zeilberger's algorithm */
-ZeilbergerExtra([args]):=
- block([f,k,n],
- f:first(args),
- k:second(args),
- n:third(args),
- if length(args)=3 then
-   ZeilbergerVerboseOpt(f,k,n,extra)
- else
-   parGosperVerboseOpt(f,k,n,fourth(args),extra)
- );
-
-
-/* Non verbose version of Zeilberger's algorithm */
-Zeilberger([args]):=
- block([f,k,n],
- f:first(args),
- k:second(args),
- n:third(args),
- if length(args)=3 then
-   ZeilbergerVerboseOpt(f,k,n,nonverbose)
- else
-   parGosperVerboseOpt(f,k,n,fourth(args),nonverbose)
- );
+Zeilberger(f,k,n) ::=
+  buildq([f,k,n],
+       ZeilbergerVerboseOpt(f,k,n,nonverbose)
+        );
 
 
 /* Short name macro for verbose parGosper */

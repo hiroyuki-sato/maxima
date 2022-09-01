@@ -2,10 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(src/macsys.lisp)
 
-AM_INIT_AUTOMAKE(maxima,5.17.1)
-
-AM_PATH_LISPDIR
-
+AM_INIT_AUTOMAKE(maxima,5.13.0)
 AC_CANONICAL_HOST
 case "$host" in
         *mingw*)
@@ -308,41 +305,6 @@ if test x"${openmcl}" = xtrue ; then
 	fi
 fi
 
-dnl n.b. ecl_default_name is hardcoded in "with" message
-ecl_default_name=ecl
-AC_ARG_ENABLE(ecl,[  --enable-ecl                 Use ECL],
-     	[case "${enableval}" in
-       		yes) ecl=true 
-		     explicit_lisp=true;;
-       		no)  ecl=false ;;
-		*) AC_MSG_ERROR(bad value ${enableval} for --enable-ecl) ;;
-     	esac],
-	[ecl=false])
-AC_ARG_WITH(ecl,
-	[  --with-ecl=<prog>            Use ECL executable <prog> (default ecl)],
-	[ecl=true
-	explicit_lisp=true
-	if test "$withval" = "yes"; then
-		ECL_NAME="${ecl}"
-	else
-		ECL_NAME="$withval"
-	fi],
-	[ECL_NAME=${ecl_default_name}])
-if test x"${ecl}" = xtrue ; then
-	if test `echo "$ECL_NAME" | sed 's/\(.\).*/\1/'` = "/" ; then
-		if test -x "$ECL_NAME" ; then
-			ecl_found=true
-		else
-			ecl_found=false
-		fi
-	else
-		AC_CHECK_PROG(ecl_found,$ECL_NAME,true,false)
-	fi
-	if test x"${ecl_found}" = xfalse ; then
-		AC_MSG_WARN(ecl executable ${ECL_NAME} not found in PATH)
-	fi
-fi
-
 dnl languages
 AC_ARG_ENABLE(lang-es,[  --enable-lang-es                 Spanish language support],
      	[case "${enableval}" in
@@ -474,7 +436,6 @@ dnl  	fi
 	AC_CHECK_PROG(sbcl_found,$SBCL_NAME,true,false)
 	AC_CHECK_PROG(acl_found,$ACL_NAME,true,false)
 	AC_CHECK_PROG(openmcl_found,$OPENMCL_NAME,true,false)
-	AC_CHECK_PROG(ecl_found,$ECL_NAME,true,false)
 
   	if test x"${clisp_found}" = xtrue ; then
   		clisp=true
@@ -488,10 +449,10 @@ dnl  	fi
 	   	sbcl=true
 	elif test x"${acl_found}" = xtrue ; then
 		acl=true
-	elif test x"${ecl_found}" = xtrue ; then
-		ecl=true
+	elif test x"${openmcl_found}" = xtrue ; then
+		openmcl=true
 	else
-		AC_MSG_ERROR(No lisp implementation specified and none of the default executables [${clisp_default_name}(clisp),${gcl_default_name}(GCL),${cmucl_default_name}(CMUCL),${scl_default_name}(SCL),${sbcl_default_name}(SBCL),${acl_default_name}(ACL),${openmcl_default_name}(OpenMCL),${ecl_default_name}(ECL)] were found in PATH)
+		AC_MSG_ERROR(No lisp implementation specified and none of the default executables [${clisp_default_name}(clisp),${gcl_default_name}(GCL),${cmucl_default_name}(CMUCL),${scl_default_name}(SCL),${sbcl_default_name}(SBCL),${acl_default_name}(ACL),${openmcl_default_name}(OpenMCL)] were found in PATH)
 	fi
 fi
 
@@ -502,7 +463,6 @@ AM_CONDITIONAL(SCL, test x$scl = xtrue)
 AM_CONDITIONAL(SBCL, test x$sbcl = xtrue)
 AM_CONDITIONAL(ACL, test x$acl = xtrue)
 AM_CONDITIONAL(OPENMCL, test x$openmcl = xtrue)
-AM_CONDITIONAL(ECL, test x$ecl = xtrue)
 
 if test x"${clisp}" = xtrue; then
     if test x"${CLISP_RUNTIME_PATH}" = x"" ; then
@@ -583,7 +543,7 @@ script the SCL executable is the program exec'd by that shell script.])
 fi
 
 if test x"${gcl}" = xtrue; then
-   result=`"${GCL_NAME}" -batch -eval '#+ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_SUCCESS~%") #-ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_FAILURE~%")' -eval '(bye)'`
+   result=`"${GCL_NAME}" -batch -eval '#+ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_SUCCESS~%") #-ansi-cl (format t "MAXIMA_GCL_ANSI_TEST_FAILURE~%")' -eval '(quit)'`
    retval=$?
    if test ! x"${retval}" = x"0" ; then
       AC_MSG_ERROR(unable to run gcl executable \"${GCL_NAME}\".)
@@ -660,13 +620,6 @@ AC_ARG_WITH(default-lisp,
 				AC_MSG_ERROR(openmcl not enabled)
 			fi
 			;;		
-		ecl)
-			if test x"${ecl}" = xtrue ; then
-				DEFAULTLISP=ecl
-			else
-				AC_MSG_ERROR(ecl not enabled)
-			fi
-			;;		
 		*) 
 			AC_MSG_ERROR(Unknown argument ${DEFAULTLISP} to --with-default-lisp) 
 			;;
@@ -685,8 +638,6 @@ AC_ARG_WITH(default-lisp,
 		DEFAULTLISP=acl
 	elif test x"${openmcl}" = xtrue ; then
 		DEFAULTLISP=openmcl
-	elif test x"${ecl}" = xtrue ; then
-		DEFAULTLISP=ecl
 	else
 		AC_MSG_ERROR(Internal error. No lisp enabled. Please contact maintainer.)
 	fi])
@@ -704,7 +655,6 @@ AC_SUBST(SBCL_NAME)
 AC_SUBST(GCL_NAME)
 AC_SUBST(ACL_NAME)
 AC_SUBST(OPENMCL_NAME)
-AC_SUBST(ECL_NAME)
 AC_SUBST(DEFAULTLISP)
 
 AC_ARG_WITH(posix-shell,
@@ -772,23 +722,17 @@ AC_SUBST(expanded_datadir)
 AC_SUBST(expanded_infodir)
 default_layout_autotools="true"
 AC_SUBST(default_layout_autotools)
-AC_SUBST(LDFLAGS)
-
-dnl Look for grep that can handle long lines and -e.
-AC_PROG_EGREP
-AC_SUBST(EGREP)
 
 AC_OUTPUT(Makefile maxima-local xmaxima-local maxima.spec maxima.iss \
 src/Makefile src/maxima src/maxima.bat src/rmaxima src/autoconf-variables.lisp \
 lisp-utils/Makefile tests/Makefile doc/Makefile \
-doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi \
+doc/emaxima/Makefile doc/info/Makefile \
 doc/info/es/Makefile doc/info/es.utf8/Makefile \
 doc/info/pt/Makefile doc/info/pt.utf8/Makefile \
 doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile \
-doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1 \
+doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 \
 doc/share/Makefile \
 interfaces/Makefile interfaces/emacs/Makefile interfaces/emacs/emaxima/Makefile \
-interfaces/emacs/imaxima/Makefile \
 interfaces/emacs/misc/Makefile interfaces/xmaxima/Makefile \
 interfaces/xmaxima/autoconf-variables.tcl interfaces/xmaxima/Tkmaxima/Header.tcl \
 interfaces/xmaxima/doc/Makefile interfaces/xmaxima/doc/figures/Makefile \
@@ -826,9 +770,6 @@ if test x"${acl}" = xtrue ; then
 fi
 if test x"${openmcl}" = xtrue ; then
 	echo "OpenMCL enabled. Executable name: \"${OPENMCL_NAME}\""
-fi
-if test x"${ecl}" = xtrue ; then
-	echo "ECL enabled. Executable name: \"${ECL_NAME}\""
 fi
 echo "default lisp: $DEFAULTLISP"
 echo "wish executable name: \"${WISH}\""

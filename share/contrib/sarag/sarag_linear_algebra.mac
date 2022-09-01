@@ -2,9 +2,7 @@
 /* SARAG - Linear Algebra                                             */
 /* by Fabrizio Caruso                                                 */
 
-/* It counts the sign change of a determinant after */
-/* i consecutive row changes */
-revRowsCount(i) := (-1)^(i*(i-1)/2);
+
 
 exchange(m,i,j) :=
   block([aux,size],
@@ -604,23 +602,20 @@ solveSys(mat,vec,solver) :=
 
 
 
-newtonFromPoly(pol,var,len) :=
-  array2singleList(newtonArrFromPoly(pol,var,len));
+newtonFromPoly(pol,var) :=
+  array2singleList(newtonArrFromPoly(pol,var));
 
-newtonArrFromPoly(pol,var,len) :=
+newtonArrFromPoly(pol,var) :=
   block([newtonRes,degPol,i,j],
     degPol : degree(pol,var),
-    newtonRes : make_array('any,len+1),
+    newtonRes : make_array('any,degPol+1),
 
     newtonRes[0] : degPol,
 
-    for i : 1 thru len do
+    for i : 1 thru degPol do
       (
-
       newtonRes[i] : (degPol-i)*ratcoeff(pol,var,degPol-i)-
-                     sum(ratcoeff(pol,var,degPol-j)*
-                     newtonRes[i-j],j,1,
-                     min(i,degPol))
+                     sum(ratcoeff(pol,var,degPol-j)*newtonRes[i-j],j,1,i)
       ),
     return(newtonRes)
     );

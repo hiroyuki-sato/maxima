@@ -1,4 +1,4 @@
-@c version 1.36
+@c version 1.31
 @menu
 * Introducci@'on a las funciones especiales::
 * Funciones y variables para las funciones especiales::
@@ -83,15 +83,17 @@ La instrucci@'on @code{load ("asympa")} carga este paquete.
 
 @end deffn
 
-@deffn {Funci@'on} bessel (@var{z}, @var{order}) 
+@deffn {Funci@'on} bessel (@var{z}, @var{a}) 
 Funci@'on de Bessel de primera especie.
 
-Esta funci@'on ha sido eliminada. Util@'{@dotless{i}}cese @code{bessel_j (@var{order}, @var{z})} en su lugar.
+Ya no se recomienda su uso.  Util@'{@dotless{i}}cese @code{bessel_j (@var{z}, @var{a})} en su lugar.
 
 @end deffn
 
 @deffn {Funci@'on} bessel_j (@var{v}, @var{z})
 Funci@'on de Bessel de primera especie de orden @math{v} y argumento @math{z}.
+
+La funci@'on @code{bessel_j} calcula el arreglo @code{besselarray} tal que @code{besselarray [i] = bessel_j [i + v - int(v)] (z)} para @code{i} desde cero hasta @code{int(v)}.
 
 La funci@'on @code{bessel_j} se define como
 
@@ -130,6 +132,9 @@ aunque la serie infinita no se utiliza en los c@'alculos.
 @deffn {Funci@'on} bessel_y (@var{v}, @var{z})
 Funci@'on de Bessel de segunda especie de orden @math{v} y argumento @math{z}.
 
+La funci@'on @code{bessel_y} calcula el arreglo @code{besselarray} tal que
+@code{besselarray [i] = bessel_y [i + v - int(v)] (z)} para @code{i} desde cero hasta @code{int(v)}.
+
 La funci@'on @code{bessel_y} se define como
 
 @ifhtml
@@ -158,6 +163,9 @@ si @math{v} no es un entero.  En caso de que  @math{v} sea un entero @math{n}, s
 
 @deffn {Funci@'on} bessel_i (@var{v}, @var{z})
 Funci@'on modificada de Bessel de primera especie de orden @math{v} y argumento @math{z}.
+
+La funci@'on @code{bessel_i} calcula el arreglo @code{besselarray} tal que
+@code{besselarray [i] = bessel_i [i + v - int(v)] (z)} para @code{i} desde cero hasta @code{int(v)}.
 
 La funci@'on @code{bessel_i} se define como
 
@@ -195,6 +203,9 @@ aunque la serie infinita no se utiliza en los c@'alculos.
 
 @deffn {Funci@'on} bessel_k (@var{v}, @var{z})
 Funci@'on modificada de Bessel de segunda especie de orden @math{v} y argumento @math{z}.
+
+La funci@'on @code{bessel_k} calcula el arreglo @code{besselarray} tal que
+@code{besselarray [i] = bessel_k [i + v - int(v)] (z)} para @code{i} desde cero hasta @code{int(v)}.
 
 La funci@'on @code{bessel_k} se define como
 
@@ -404,7 +415,7 @@ algunos argumentos racionales.
 Existen algunas variables globales para controlar en qu@'e rangos
 racionales debe devolver @code{psi} resultados exactos, si ello es posible.
 V@'eanse las descripciones de @code{maxpsiposint}, @code{maxpsinegint},
-@code{maxpsifracnum} y @code{maxpsifracdenom}.
+@code{maxpsifracnum} y @code{maxpsifracnum}.
 En resumen, @var{x} debe alcanzar un valor entre @code{maxpsinegint} y
 @code{maxpsiposint}. Si el valor absoluto de la parte fraccional de
 @var{x} es racional y tiene un numerador menor que @code{maxpsifracnum}
@@ -498,62 +509,20 @@ Examples:
 @end deffn
 
 
-@deffn {Funci@'on} hgfred (@var{a}, @var{b}, @var{t})
 
-Simplifica la funci@'on hipergeom@'etrica generalizada en t@'erminos
-de otras funciones m@'as sencillas. @var{a} es una lista de par@'ametros
-del numerador y @var{b} lo es de par@'ametros del denominador.
 
-En caso de que @code{hgfred} no pueda simplificar la funci@'on hipergeom@'etrica
-devolver@'a una expresi@'on de la forma @code{%f[p,q]([a], [b], x)}, siendo @var{p}
-el n@'umero de elementos de @var{a} y @var{q} el de @var{b}. Esta es la 
-funci@'on hipergeom@'etrica generalizada @code{pFq}.
 
-@example
-(%i1) assume(not(equal(z,0)));
-(%o1)                          [notequal(z, 0)]
-(%i2) hgfred([v+1/2],[2*v+1],2*%i*z);
 
-                     v/2                               %i z
-                    4    bessel_j(v, z) gamma(v + 1) %e
-(%o2)               ---------------------------------------
-                                       v
-                                      z
-(%i3) hgfred([1,1],[2],z);
 
-                                   log(1 - z)
-(%o3)                            - ----------
-                                       z
-(%i4) hgfred([a,a+1/2],[3/2],z^2);
 
-                               1 - 2 a          1 - 2 a
-                        (z + 1)        - (1 - z)
-(%o4)                   -------------------------------
-                                 2 (1 - 2 a) z
 
-@end example
 
-Tal como muestra el siguiente ejemplo, puede ser de utilidad cargar
-tambi@'en el paquete @code{orthopoly}. N@'otese que @var{L} es el
-polinomio generalizado de Laguerre.
 
-@example
-(%i5) load(orthopoly)$
-(%i6) hgfred([-2],[a],z);
 
-                                    (a - 1)
-                                 2 L       (z)
-                                    2
-(%o6)                            -------------
-                                   a (a + 1)
-(%i7) ev(%);
 
-                                  2
-                                 z        2 z
-(%o7)                         --------- - --- + 1
-                              a (a + 1)    a
 
-@end example
 
-@end deffn
+
+
+
 

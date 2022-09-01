@@ -197,7 +197,7 @@
   precison; otherwise (the default) they are truncated based upon the input
   truncation levels.")
 
-(defmvar $taylor_logexpand t
+(defmvar $taylor_logexpand ()
  "Unless FALSE log's of products will be expanded fully in TAYLOR (the default)
   to avoid identically-zero constant terms which involve log's. When FALSE,
   only expansions necessary to produce a formal series will be executed.")
@@ -268,7 +268,7 @@
 		     (when (and (evenp n) (eq ($sign (pdis (car l))) '$neg))
 		       (rplaca l (pminus (car l))))
 		     (setq ans (rctimes ans (ratexpt (cons (car l) 1)
-						   (truncate (cadr l) n))))))))))
+						   (// (cadr l) n))))))))))
 
 (defun rccoefp (e)		;a sure check, but expensive
        (and (null (atom e))
@@ -1054,7 +1054,7 @@
 (defun sum-c*logs (c*logs)
    (if (null c*logs) (rczero)
       (let ((ps (cddr (car c*logs))))
-	 (psplus (make-ps ps (ncons (term (ps-le ps) (caar c*logs))))
+	 (psplus (make-ps ps (ncons (term (rcmone) (caar c*logs))))
 		 (sum-c*logs (cdr c*logs))))))
 
 ;; Calculatest the limit of a series at the expansion point. Returns one of
@@ -1092,7 +1092,7 @@
   (member lim '($im $infinity) :test #'eq))
 
 (defun lim-minus (lim)
-  (cdr (assoc lim '(($zeroa . $zerob) ($zerob . $zeroa) ($pos . $neg) ($zero . $zero)
+  (cdr (assoc lim '(($zeroa . $zerob) ($zerob . $zeroa) ($pos . $neg)
 		    ($neg . $pos) ($inf . $minf) ($minf . $inf)
 		    ($im . $im) ($infinity . $infinity) ($finite . $finite)) :test #'eq)))
 (defun lim-abs (lim)
@@ -1101,8 +1101,7 @@
 
 (defun lim-times (lim1 lim2)
   (let (lim)
-   (cond ((or (eq lim1 '$zero) (eq lim2 '$zero)) (setq lim '$zero))
-	 ((and (lim-infp lim1) (lim-infp lim2)) (setq lim '$inf))
+   (cond ((and (lim-infp lim1) (lim-infp lim2)) (setq lim '$inf))
 	 ((and (lim-zerop lim1) (lim-zerop lim2)) (setq lim '$pos))
 	 ((or (when (lim-finitep lim2) (exch lim1 lim2) 't)
 	      (lim-finitep lim1))
@@ -1129,7 +1128,7 @@
 
 (defun lim-exp (lim)
    (case lim
-      (($zeroa $zerob $zero $pos $neg $minf) '$zeroa)
+      (($zeroa $zerob $pos $neg $minf) '$zeroa)
       (($inf $finite) lim)
       ($infinity '$infinity) ; actually only if Re lim = inf
       (t (break "Unhandled limit in lim-exp"))))
@@ -1138,8 +1137,6 @@
    (case lim
       ($zeroa '$minf)
       ($inf '$inf)
-      ($minf '$infinity)
-      ($zerob '$infinity)
       (t (break "Unhandled limit in lim-log"))))
 
 (defun expand-and-disrep (term p)
@@ -1209,12 +1206,16 @@
     (if (and (eq (caar kernel) 'mexpt) (eq (cadr kernel) '$%e)
 	     (not (atom (setq expt (caddr kernel))))
 	     (eq (caar expt) 'mtimes) (not (mfree expt (ncons '$%i))))
-	(destructuring-let (((rpart . ipart) (trisplit expt)))
-	   (cons (pstimes (prep1 (m^ '$%e rpart))
-			  (psplus (adjoin-tvar `((%cos) ,ipart))
-				  (pstimes (prep1 '$%i)
-					   (adjoin-tvar `((%sin) ,ipart)))))
-			  pow))
+	(if (not (and (eq (cadr expt) '$%i)
+		      (mfree (cddr expt) (ncons '$%i))))
+	    (break "bad exponential in adjoin-pvar")
+	    (progn
+	      (break "now")
+	      (setq expt (m// expt '$%i))
+	      (cons (psplus (adjoin-tvar `((%cos) ,expt))
+			    (pstimes (prep1 '$%i)
+				     (adjoin-tvar `((%sin) ,expt))))
+		    pow)))
 	(progn
 	  (when (eq (caar kernel) 'mexpt)
 	    (when (and (not (atom (setq expt (caddr kernel))))
@@ -1318,7 +1319,7 @@
 				    (exch v1 v2) (exch e1 e2) (setq reverse? (not reverse?)))
 				  (if (eq (caar v1) '%log)
 				      (cond ((eq (caar v2) '%log)
-					     (stronger-var? (cadr v1) (cadr v2)))
+					     (stronger-var? (log-abs-tvar v1) (log-abs-tvar v2)))
 					    ((and (eq (caar v2) 'mexpt) (eq (cadr v2) '$%e))
 					     (stronger-var? `((%log) ,v1) (caddr v2)))
 					    (t (break "Unhandled var in stronger-var?")))
@@ -1331,6 +1332,11 @@
 (defun neg-monom? (exp)
    (and (mtimesp exp) (equal (cadr exp) -1) (null (cdddr exp))
 	(caddr exp)))
+
+(defun log-abs-tvar (var)
+   (cond ((or (tvar? (cadr var)) (eq (caar (cadr var)) '%log)) (cadr var))
+	 ((neg-monom? (cadr var)) )
+	 (t (break "Illegal logarithmic tvar"))))
 
 (defun order-vars-by-strength (vars)
    (do ((vars* vars (cdr vars*)) (ordvars () ))
@@ -1351,8 +1357,7 @@
        (())
       (cond ((null vars1*)
 	     (if (null vars2*)
-		 ;; two equal vars generated
-		 (return 't)
+		 (break "two equal vars generated")
 		(let ((lim (tvar-lim (car vars2*))))
 		   (return
 		    (cond ((lim-infp lim) ())
@@ -1408,18 +1413,28 @@
 			     (facs (cddr kernel) (cdr facs)))
 			    ((null facs) ans)))
 		       ((eq (caar kernel) '%log)
-			(lim-log (datum-lim (get-datum (cadr kernel) t))))
+			;; Assume all log's are of the form log(x+a),
+			;; log(-log(x+a)),... First type go to minf; all
+			;; others to inf.
+			;(lim-log (tvar-lim (cadr kernel)))
+			(if (tvar? (cadr kernel))
+			    (let ((pt (exp-pt (get-datum (cadr kernel)))))
+			       (if (member pt '($inf $minf) :test #'eq) (lim-log pt)
+				  '$minf))
+			   (cond ((eq (caar (cadr kernel)) 'mplus) '$minf)
+				 ((eq (caar (cadr kernel)) '%log) '$inf)
+				 ((neg-monom? (cadr kernel)) '$inf)
+				 (t (break "Illegal log kernel")))))
 		       ((member (caar kernel) '(%sin %cos) :test #'eq)
 			(unless (lim-infp (tvar-lim (cadr kernel)))
 			   (break "Invalid trig kernel in tvar-lim"))
 			'$finite)
 		       (t (break "Unhandled kernel in tvar-lim"))))
-	  lim)))))
+	   (when datum (push (cons (data-gvar datum) lim) tvar-limits))
+	   lim)))))
 
 (defun coef-sign (coef)
-   (if (not ($freeof '$%i ($rectform coef)))
-       '$im
-     ($asksign coef)))
+   (if (not ($freeof '$%i coef)) '$im ($asksign coef)))
 
 (defun gvar-lim (gvar)
    (or (cdr (assoc gvar tvar-limits :test #'eq))
@@ -1886,12 +1901,12 @@
 
 (defun parse-tay-args (l)
    (cond ((null l) )
-	 ((numberp (car l))
-	  (merror "Variable of expansion cannot be a number: ~M"
-	 	  (car l)))
 	 ((or (symbolp (car l)) (not (eq (caaar l) 'mlist)))
 	  (parse-tay-args1 (list (car l) ($ratdisrep (cadr l)) (caddr l)))
 	  (parse-tay-args (cdddr l)))
+	 ;((or (numberp (car l)) (null (eq (caaar l) 'MLIST)))
+	 ; (merror "Variable of expansion not atomic: ~M"
+	 ;	  (CAR L)))
 	 ((do ((l (cddar l) (cdr l)))
 	      ((null l) () )
 	     (and (or (mnump (car l)) (eq (car l) '$inf))
@@ -2181,8 +2196,7 @@
  (let ((last-exp e))	    ;; lexp-non0 should be bound here when needed
   (cond ((assolike e tlist) (var-expand e 1 () ))
 	((or (mnump e) (atom e) (mfree e tvars))
-	 (if (or (e> (rczero) (current-trunc mainvar-datum))
-		 (lim-zerop e))
+	 (if (e> (rczero) (current-trunc mainvar-datum))
 	     (pszero (data-gvar-o mainvar-datum)
 		     (current-trunc mainvar-datum))
 	    (if (and taylor_simplifier (not (atom e)))
@@ -2192,8 +2206,9 @@
 		   e-simp)
 	       (prep1 e))))
 	((null (atom (caar e))) (merror "Bad arg `taylor2' - internal error"))
-	(($taylorp e)
-	 (if (and (compatvarlist varlist (mrat-varlist e)
+	((eq (caar e) 'mrat)
+	 (if (and (member 'trunc (car e) :test #'eq)
+		  (compatvarlist varlist (mrat-varlist e)
 				 genvar (mrat-genvar e))
 		  (compattlist (mrat-tlist e)))
 	     (pstrunc (cdr e))
@@ -2211,9 +2226,7 @@
 		     (funcall (get (subfunname e) 'spec-trans) e))
 		    ((known-ps (subfunname e))
 		     (try-expansion (caddr e) (cadr e))))) )
-	((and (member (caar e) '(%sum %product) :test #'eq)
-	      (mfreel (cddr e) tvars)) 
-	 (tsprsum (cadr e) (cddr e) (caar e)))
+	((member (caar e) '(%sum %product) :test #'eq) (tsprsum (cadr e) (cddr e) (caar e)))
 	((eq (caar e) '%derivative) (tsdiff (cadr e) (cddr e) e))
 	((or (eq (caar e) '%at)
 	     (do ((l (mapcar 'car tlist) (cdr l)))
@@ -2275,23 +2288,9 @@
 (defun var-expand (var exp dont-truncate?)
   (let (($keepfloat) ($float) (modulus))
      (setq exp (prep1 exp)))		;; exp must be a rational integer
-  (let ((temp (get-datum var 't)))
+  (let ((temp (get-datum var)))
      (cond ((null temp) (merror "Invalid call to var-expand"))
-	   ((member (exp-pt temp) '($inf $minf $infinity) :test #'eq)
-	    (cond ((switch '$asymp temp)
-		     (merror
-		      "Cannot create an asymptotic expansion at infinity"))
-		    ((e> (setq exp (rcminus exp)) (current-trunc temp))
-		     (rczero))
-		    (t (make-ps (int-var temp)
-				(ncons (if exact-poly (inf) (current-trunc temp)))
-				(ncons (term exp
-					     (if (eq (exp-pt temp) '$minf)
-						 (rcmone)
-					       (rcone))))))))
-	   ;; multivar expansion does not work at infinity, so
-	   ;; expansion at infinity is handled by above clause even if doing multivar.
-	   ((switch 'multi temp)	;; multivar expansion
+	   ((switch 'multi temp)
 	    (psexpt (psplus
 		     ;; The reason we call var-expand below instead of taylor2
 		     ;; is that we must be sure the call is not truncated to
@@ -2322,7 +2321,19 @@
 			   (ncons (term (if (switch '$asymp temp) (rcminus exp)
 					   exp)
 					(rcone)))))))
-	   (t (psexpt (psplus
+	     ((member (exp-pt temp) '($inf $minf $infinity) :test #'eq)
+	      (cond ((switch '$asymp temp)
+		     (merror
+		      "Cannot create an asymptotic expansion at infinity"))
+		    ((e> (setq exp (rcminus exp)) (current-trunc temp))
+		     (rczero))
+		    (t (make-ps (int-var temp)
+				(ncons (if exact-poly (inf) (current-trunc temp)))
+				(ncons (term exp
+					     (if (eq (exp-pt temp) '$minf)
+						 (rcmone)
+						 (rcone))))))))
+	     (t (psexpt (psplus
 			 (make-ps (int-var temp)
 				  (ncons (if exact-poly (inf) (current-trunc temp)))
 				  (ncons (term (if (switch '$asymp temp)
@@ -2373,8 +2384,8 @@
 		  (go begin-expansion)))
 	     (t
 	      (if (and (eq funame '%atan)
-		       (eq (coef-sign arg) '$neg))
-		  (return (psplus (atrigh arg func) (taylor2 (m- '$%pi))))
+		       (eq (asksign-p-or-n (term-disrep (ps-lt psarg) psarg)) '$pos))
+		  (return (psplus (atrigh arg func) (taylor2 '$%pi)))
 		  (return (atrigh arg func))))))
      (setq temp (t-o-var (gvar psarg)))
      (when (e> (e* funord argord) temp) (return (rczero)))
@@ -2690,11 +2701,8 @@
 	    (return 't)))))
 
 (defun tsexpt (b e)
-   (cond ((and (atom b) (mnump e)
-	       (get-datum b)
-	       (not (eq (exp-pt (get-datum b)) '$minf)))
-	  ;; one could remove this clause and let this case be handled by tsexpt1
-	  (var-expand b e () ))
+   (cond ((and (atom b) (mnump e))
+	  (if (get-datum b) (var-expand b e () ) (prep1 (m^ b e))))
 	 ((mfree e tvars) (tsexpt1 b e))
 	 ((eq '$%e b) (tsexpt-red (list e)))
 	 (t (tsexpt-red (list (list '(%log) b) e)))))
@@ -2876,7 +2884,7 @@
 
 (defun [max-trunc] ()
    (do ((l tlist (cdr l)) (emax (rczero)))
-       ((null l) (1+ (truncate (car emax) (cdr emax))))
+       ((null l) (1+ (// (car emax) (cdr emax))))
       (when (e> (current-trunc (car l)) emax)
 	 (setq emax (orig-trunc (car l))))))
 

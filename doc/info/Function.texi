@@ -12,11 +12,6 @@
 @c NEEDS WORK, THIS TOPIC IS IMPORTANT
 @c MENTION DYNAMIC SCOPE (VS LEXICAL SCOPE)
 @section Function
-
-@opencatbox
-@category{Function definition} @category{Programming}
-@closecatbox
-
 @subsection Ordinary functions
 
 To define a function in Maxima you use the @code{:=} operator.
@@ -288,28 +283,6 @@ and their values on the right-hand side.
 (%o4)    map(=, '([a, b, c - b - a]), [a, b, c - b - a])
 @end example
 
-Given a function of several arguments,
-create another function for which some of the arguments are fixed.
-
-@c ===beg===
-@c curry (f, [a]) :=
-@c         buildq ([f, a], lambda ([[x]], apply (f, append (a, x))))$
-@c by3 : curry ("*", 3);
-@c by3 (a + b);
-@c ===end===
-
-@example
-(%i1) curry (f, [a]) :=
-        buildq ([f, a], lambda ([[x]], apply (f, append (a, x))))$
-(%i2) by3 : curry ("*", 3);
-(%o2)        lambda([[x]], apply(*, append([3], x)))
-(%i3) by3 (a + b);
-(%o3)                       3 (b + a)
-@end example
-
-@opencatbox
-@category{Function definition}
-@closecatbox
 @end deffn
 
 @deffn {Function} macroexpand (@var{expr})
@@ -354,9 +327,6 @@ Examples
                                99
 @end example
 
-@opencatbox
-@category{Function application}
-@closecatbox
 @end deffn
 
 @deffn {Function} macroexpand1 (@var{expr})
@@ -399,9 +369,6 @@ Examples
                                99
 @end example
 
-@opencatbox
-@category{Function application}
-@closecatbox
 @end deffn
 
 @defvr {Global variable} macros
@@ -412,10 +379,6 @@ The macro function definition operator @code{::=} puts a new macro function onto
 and @code{kill}, @code{remove}, and @code{remfunction} remove macro functions from the list.
 
 See also @code{infolists}.
-
-@opencatbox
-@category{Function definition} @category{Global variables}
-@closecatbox
 
 @end defvr
 
@@ -459,9 +422,6 @@ Examples
 (%o4)                   <>1, %pi, z - y<>
 @end example
 
-@opencatbox
-@category{Function definition}
-@closecatbox
 @end deffn
 
 
@@ -550,9 +510,6 @@ Improper name or value in functional position.
 (%o4)                  %i sin(x) + cos(x)
 @end example
 
-@opencatbox
-@category{Function application}
-@closecatbox
 @end deffn
 
 
@@ -576,16 +533,6 @@ The local variables may be bound to arbitrary values within the block but when t
 block is exited the saved values are restored,
 and the values assigned within the block are lost.
 
-The declaration @code{local(@var{v_1}, ..., @var{v_m})} within @code{block}
-saves the properties associated with the symbols @var{v_1}, ..., @var{v_m},
-removes any properties before evaluating other expressions,
-and restores any saved properties on exit from the block.
-Some declarations are implemented as properties of a symbol,
-including @code{:=}, @code{array}, @code{dependencies}, @code{atvalue}, @code{matchdeclare},
-@code{atomgrad}, @code{constant}, @code{nonscalar}, @code{assume}, and some others.
-The effect of @code{local} is to make such declarations effective only within the block;
-otherwise declarations within a block are actually global declarations.
-
 @code{block} may appear within another @code{block}.
 Local variables are established each time a new @code{block} is evaluated.
 Local variables appear to be global to any enclosed blocks.
@@ -593,6 +540,12 @@ If a variable is non-local in a block,
 its value is the value most recently assigned by an enclosing block, if any,
 otherwise, it is the value of the variable in the global environment.
 This policy may coincide with the usual understanding of "dynamic scope".
+
+If it is desired to save and restore other local properties
+besides @code{value}, for example @code{array} (except for complete arrays),
+@code{function}, @code{dependencies}, @code{atvalue}, @code{matchdeclare}, @code{atomgrad}, @code{constant}, and
+@code{nonscalar} then the function @code{local} should be used inside of the block
+with arguments being the names of the variables.
 
 The value of the block is the value of the last statement or the
 value of the argument to the function @code{return} which may be used to exit
@@ -607,9 +560,6 @@ transfer to a tag in a block other than the one containing the @code{go}.
 Blocks typically appear on the right side of a function definition
 but can be used in other places as well.
 
-@opencatbox
-@category{Expressions} @category{Programming}
-@closecatbox
 @end deffn
 
 @c REPHRASE, NEEDS EXAMPLE
@@ -618,9 +568,6 @@ Evaluates and prints @var{expr_1}, ..., @var{expr_n} and then
 causes a Maxima break at which point the user can examine and change
 his environment.  Upon typing @code{exit;} the computation resumes.
 
-@opencatbox
-@category{Debugging}
-@closecatbox
 @end deffn
 
 @c FOR SOME REASON throw IS IN SOME OTHER FILE. MOVE throw INTO THIS FILE.
@@ -651,9 +598,6 @@ The function @code{g} returns a list of @code{f} of each element of @code{l} if 
 consists only of non-negative numbers; otherwise, @code{g} "catches" the
 first negative element of @code{l} and "throws" it up.
 
-@opencatbox
-@category{Programming}
-@closecatbox
 @end deffn
 
 @deffn {Function} compfile (@var{filename}, @var{f_1}, ..., @var{f_n})
@@ -674,10 +618,6 @@ The Lisp translations are not evaluated, nor is the output file processed by the
 @code{compile_file} translates Maxima into Lisp, and then executes the Lisp compiler. 
 
 See also @code{translate}, @code{translate_file}, and @code{compile_file}.
-
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 
 @end deffn
 
@@ -704,9 +644,6 @@ and calls the Lisp function @code{COMPILE} on each translated function.
 @code{compile} quotes its arguments; 
 the quote-quote operator @code{'@w{}'} defeats quotation.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @deffn {Function} define (@var{f}(@var{x_1}, ..., @var{x_n}), @var{expr})
@@ -736,9 +673,7 @@ this allows for the function name to be computed, as well as the body.
 
 All function definitions appear in the same namespace;
 defining a function @code{f} within another function @code{g}
-does not automatically limit the scope of @code{f} to @code{g}.
-However, @code{local(f)} makes the definition of function @code{f}
-effective only within the block or other compound expression in which @code{local} appears.
+does not limit the scope of @code{f} to @code{g}.
 
 If some formal argument @var{x_k} is a quoted symbol (after evaluation),
 the function defined by @code{define} does not evaluate the corresponding actual argument.
@@ -825,9 +760,6 @@ the first argument is evaluated.
 (%o6)             bar(y, x) := sin(x) - cos(y)
 @end example
 
-@opencatbox
-@category{Function definition}
-@closecatbox
 @end deffn
 
 @c SEE NOTE BELOW ABOUT THE DOCUMENTATION STRING
@@ -970,9 +902,6 @@ Cannot assign to `baz_quux'.
 (%o6)                       baz_quux
 @end example
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @deffn {Function} dispfun (@var{f_1}, ..., @var{f_n})
@@ -1070,9 +999,6 @@ Examples:
                                 5             10
 @end example
 
-@opencatbox
-@category{Function definition} @category{Display functions}
-@closecatbox
 @end deffn
 
 @defvr {System variable} functions
@@ -1133,10 +1059,6 @@ Examples:
 (%o9)                 [G_1, G_2, G_3, H_1]
 @end example
 
-@opencatbox
-@category{Function definition} @category{Global variables}
-@closecatbox
-
 @end defvr
 
 @deffn {Function} fundef (@var{f})
@@ -1160,9 +1082,6 @@ In contrast, @code{dispfun (@var{f})} creates an intermediate expression label
 and assigns the definition to the label.
 
 @c PROBABLY NEED SOME EXAMPLES HERE
-@opencatbox
-@category{Function definition}
-@closecatbox
 @end deffn
 
 @deffn {Function} funmake (@var{F}, [@var{arg_1}, ..., @var{arg_n}])
@@ -1292,9 +1211,6 @@ Maxima simplifies @code{funmake}'s return value.
 (%o1)                           1
 @end example
 
-@opencatbox
-@category{Function application} @category{Expressions}
-@closecatbox
 @end deffn
 
 @deffn {Function} lambda ([@var{x_1}, ..., @var{x_m}], @var{expr_1}, ..., @var{expr_n})
@@ -1476,58 +1392,23 @@ The arguments appear within the function body as a list.
 (%i4) g (17, 29, x, y, z, %e);
 (%o4)                  z + y + x + %e + 46
 @end example
-
-@opencatbox
-@category{Function definition}
-@closecatbox
 @end deffn
 
 @c NEEDS CLARIFICATION AND EXAMPLES
 @deffn {Function} local (@var{v_1}, ..., @var{v_n})
-
-Saves the properties associated with the symbols @var{v_1}, ..., @var{v_n},
-removes any properties before evaluating other expressions,
-and restores any saved properties on exit
-from the block or other compound expression in which @code{local} appears.
-
-Some declarations are implemented as properties of a symbol,
-including @code{:=}, @code{array}, @code{dependencies}, @code{atvalue}, @code{matchdeclare},
-@code{atomgrad}, @code{constant}, @code{nonscalar}, @code{assume}, and some others.
-The effect of @code{local} is to make such declarations effective only within the block
-or other compound expression in which @code{local} appears;
-otherwise such declarations are global declarations.
-
-@code{local} can only appear in @code{block}
-or in the body of a function definition or @code{lambda} expression,
-and only one occurrence is permitted in each.
+Declares the variables @var{v_1}, ..., @var{v_n} to be local with
+respect to all the properties in the statement in which this function
+is used.
 
 @code{local} quotes its arguments.
 @code{local} returns @code{done}.
 
-Example:
+@code{local} may only be used in @code{block}, in the body of function
+definitions or @code{lambda} expressions, or in the @code{ev} function, and only one
+occurrence is permitted in each.
 
-A local function definition.
+@code{local} is independent of @code{context}.
 
-@c ===beg===
-@c foo (x) := 1 - x;
-@c foo (100);
-@c block (local (foo), foo (x) := 2 * x, foo (100));
-@c foo (100);
-@c ===end===
-@example
-(%i1) foo (x) := 1 - x;
-(%o1)                    foo(x) := 1 - x
-(%i2) foo (100);
-(%o2)                         - 99
-(%i3) block (local (foo), foo (x) := 2 * x, foo (100));
-(%o3)                          200
-(%i4) foo (100);
-(%o4)                         - 99
-@end example
-
-@opencatbox
-@category{Function definition} @category{Programming}
-@closecatbox
 @end deffn
 
 @defvr {Option variable} macroexpansion
@@ -1707,10 +1588,6 @@ x + 99 is equal to x
                             a b + 99
 @end example
 
-@opencatbox
-@category{Function application} @category{Global flags}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} mode_checkp
@@ -1720,10 +1597,6 @@ Default value: @code{true}
 When @code{mode_checkp} is @code{true}, @code{mode_declare} checks the modes
 of bound variables.
 @c NEED SOME EXAMPLES HERE.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -1735,10 +1608,6 @@ When @code{mode_check_errorp} is @code{true}, @code{mode_declare} calls
 error.
 @c NEED SOME EXAMPLES HERE.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} mode_check_warnp
@@ -1748,10 +1617,6 @@ Default value: @code{true}
 When @code{mode_check_warnp} is @code{true}, mode errors are
 described.
 @c NEED SOME EXAMPLES HERE.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -1811,9 +1676,6 @@ declares that the values returned by @code{f_1}, @code{f_2}, ... are single-word
 
 @code{modedeclare} is a synonym for @code{mode_declare}.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @c WHAT IS THIS ABOUT ??
@@ -1843,9 +1705,6 @@ firstnumb (x) ::= buildq ([x], mode_identity (number, x));
 and use @code{firstnumb}
 every time you take the first of a list of numbers.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @c IS THERE ANY REASON TO SET transcompile: false ??
@@ -1858,10 +1717,6 @@ declarations to make the translated code more suitable for compilation.
 @c BUT THE DECLARATIONS DON'T SEEM TO BE NECESSARY, SO WHAT'S THE POINT AGAIN ??
 
 @code{compfile} sets @code{transcompile: true} for the duration.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -1925,9 +1780,6 @@ translated version.
 The result returned by @code{translate} is a list of the names of the
 functions translated.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @deffn {Function} translate_file (@var{maxima_filename})
@@ -1995,10 +1847,6 @@ See also @code{tr_array_as_ref},
 @code{tr_warn_undefined_variable},
 and @code{tr_windy}.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
-
 @end deffn
 
 @defvr {Option variable} transrun
@@ -2007,10 +1855,6 @@ Default value: @code{true}
 When @code{transrun} is @code{false} will cause the interpreted
 version of all functions to be run (provided they are still around)
 rather than the translated version.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2027,10 +1871,6 @@ otherwise array names appear as literal symbols in translated code.
 
 @code{tr_array_as_ref} has no effect if @code{translate_fast_arrays} is @code{true}.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @c WHY IS THIS FLAG NEEDED ??? UNDER WHAT CIRCUMSTANCES CAN TRANSLATION
@@ -2046,10 +1886,6 @@ variable (such as a function argument) is found being used as a function.
 For example, an expression such as @code{g (f, x) := f (x+1)} will trigger
 the warning message.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_file_tty_messagesp
@@ -2060,10 +1896,6 @@ messages generated by @code{translate_file} during translation of a file are dis
 on the console and inserted into the UNLISP file. 
 When @code{false}, messages about translation of the
 file are only inserted into the UNLISP file.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2084,10 +1916,6 @@ even if @code{x} is of mode @code{float} (as set by @code{mode_declare}).
 When @code{false} then @code{acos(x)} is of mode
 @code{float} if and only if @code{x} is of mode @code{float}.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_function_call_default
@@ -2103,10 +1931,6 @@ apropriate warning. There is no need to turn this off.  With the
 default settings, no warning messages implies full compatibility of
 translated and compiled code with the Maxima interpreter.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_numer
@@ -2114,10 +1938,6 @@ Default value: @code{false}
 
 When @code{tr_numer} is @code{true}, @code{numer} properties are used for
 atoms which have them, e.g. @code{%pi}.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2129,10 +1949,6 @@ macro-expansion and optimization pass of the translator will loop in
 considering a form.  This is to catch macro expansion errors, and
 non-terminating optimization properties.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_semicompile
@@ -2141,10 +1957,6 @@ Default value: @code{false}
 When @code{tr_semicompile} is @code{true}, @code{translate_file} and @code{compfile}
 output forms which will be macroexpanded but not compiled into machine
 code by the Lisp compiler.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2165,10 +1977,6 @@ trying to debug the translator.  By comparing the translated product
 to what should have been produced for a given state, it is possible to
 track down bugs.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @c tr_warnings_get EXISTS AND FUNCTIONS AS ADVERTISED (SORT OF) -- RETURNS *tr-runtime-warned*
@@ -2178,9 +1986,6 @@ track down bugs.
 Prints a list of warnings which have been given by
 the translator during the current translation.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 
 @defvr {Option variable} tr_warn_bad_function_calls
@@ -2189,10 +1994,6 @@ Default value: @code{true}
 - Gives a warning when
 when function calls are being made which may not be correct due to
 improper declarations that were made at translate time.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2203,10 +2004,6 @@ Default value: @code{compfile}
 encountered.  FEXPRs should not normally be output in translated code,
 all legitimate special program forms are translated.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_warn_meval
@@ -2216,10 +2013,6 @@ Default value: @code{compfile}
 @code{meval} gets called.  If @code{meval} is called that indicates problems in the
 translation.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_warn_mode
@@ -2227,10 +2020,6 @@ Default value: @code{all}
 
 - Gives a warning when variables are
 assigned values inappropriate for their mode.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2240,10 +2029,6 @@ Default value: @code{compile}
 - Determines when to send
 warnings about undeclared variables to the TTY.
 
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
-
 @end defvr
 
 @defvr {Option variable} tr_warn_undefined_variable
@@ -2251,10 +2036,6 @@ Default value: @code{all}
 
 - Gives a warning when
 undefined global variables are seen.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2267,10 +2048,6 @@ Default value: @code{true}
 
 - Generate helpful comments and
 programming hints.
-
-@opencatbox
-@category{Translation flags and variables}
-@closecatbox
 
 @end defvr
 
@@ -2310,10 +2087,6 @@ assignments to the translation flags (@code{tr_numer}, etc.) have no effect on t
 
 @code{compile_file} evaluates its arguments.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
-
 @end deffn
 
 @c NEEDS CLARIFICATION
@@ -2327,8 +2100,5 @@ does which does not yet have a Lisp function value, will have one at
 call time. @code{(MFUNCTION-CALL fn arg1 arg2 ...)} is generated when
 the translator does not know @code{fn} is going to be a Lisp function.
 
-@opencatbox
-@category{Translation and compilation}
-@closecatbox
 @end deffn
 

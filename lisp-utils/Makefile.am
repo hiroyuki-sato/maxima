@@ -1,7 +1,4 @@
-include $(top_srcdir)/common.mk
-
-genericdir = $(sharedir)/lisp-utils
-
-genericdirDATA = defsystem.lisp
+verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
 
 EXTRA_DIST = defsystem.lisp make-depends.lisp makealbertdoc.lisp
+

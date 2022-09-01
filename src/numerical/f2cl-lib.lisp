@@ -991,22 +991,37 @@ is not included")
    
 ;; Map Fortran logical unit numbers to Lisp streams
 
+#-gcl
 (defparameter *lun-hash*
-  (make-hash-table))
+  (let ((table (make-hash-table)))
+    (setf (gethash 6 table) *standard-output*)
+    (setf (gethash 5 table) *standard-input*)
+    (setf (gethash t table) *standard-output*)
+    table))
+
+#+gcl
+(defvar *lun-hash*
+  (let ((table (make-hash-table)))
+    (setf (gethash 6 table) *standard-output*)
+    (setf (gethash 5 table) *standard-input*)
+    (setf (gethash t table) *standard-output*)
+    table))
+
+#+nil
+(defun lun->stream (lun)
+  (let ((stream (gethash lun *lun-hash*)))
+    (if stream
+	stream
+	(setf (gethash lun *lun-hash*)
+	      (open (format nil "fort~d.dat" lun)
+		    :direction :output
+		    :if-exists :rename)))))
 
 (defun lun->stream (lun &optional readp)
   (let ((stream (gethash lun *lun-hash*)))
     (if stream
 	stream
-	(cond ((eql lun 5)
-	       ;; Always standard input
-	       (setf (gethash lun *lun-hash*) *standard-input*))
-	      ((or (eql lun 6)
-		   (eql lun t))
-	       ;; Always standard output
-	       (setf (gethash lun *lun-hash*) *standard-output*))
-	      ((integerp lun)
-	       ;; All other cases open a file fort<n>.dat
+	(cond ((integerp lun)
 	       (setf (gethash lun *lun-hash*)
 		     (open (format nil "fort~d.dat" lun)
 			   :direction :io
@@ -1015,7 +1030,8 @@ is not included")
 	       (setf (gethash lun *lun-hash*)
 		     (if readp
 			 (make-string-input-stream lun)
-			 (make-string-output-stream))))))))
+			 (make-string-output-stream))))
+	      ))))
 
 (defun init-fortran-io ()
   "Initialize the F2CL Fortran I/O subsystem to sensible defaults"
@@ -1031,7 +1047,7 @@ causing all pending operations to be flushed"
 	       (when (and (streamp val) (not (member key '(5 6 t))))
 		 (format t "Closing unit ~A: ~A~%" key val)
 		 (close val)))
-	   *lun-hash*))
+	       *lun-hash*))
 
 (defun %open-file (&key file status access recl blank unit form)
   ;; We should also check for values of access, form that we don't support.
@@ -1264,8 +1280,8 @@ causing all pending operations to be flushed"
   (ecase i
     (1 least-positive-normalized-double-float)
     (2 most-positive-double-float)
-    (3 #-(or gcl ecl) double-float-epsilon #+(or gcl ecl) (scale-float (float #X10000000000001 1d0) -105))
-    (4 (scale-float #-(or gcl ecl) double-float-epsilon #+(or gcl ecl) (scale-float (float #X10000000000001 1d0) -105) 1))
+    (3 double-float-epsilon)
+    (4 (scale-float double-float-epsilon 1))
     (5 (log (float (float-radix 1d0) 1d0) 10d0))))
 
 (defun r1mach (i)
@@ -1392,42 +1408,8 @@ causing all pending operations to be flushed"
 ;;;-------------------------------------------------------------------------
 ;;; end of macros.l
 ;;;
-;;; $Id: f2cl-lib.lisp,v 1.19 2008/07/27 07:04:15 robert_dodier Exp $
+;;; $Id: f2cl-lib.lisp,v 1.14 2007/04/28 15:17:27 are_muc Exp $
 ;;; $Log: f2cl-lib.lisp,v $
-;;; Revision 1.19  2008/07/27 07:04:15  robert_dodier
-;;; Merge patches-for-ecl-branch into main trunk.
-;;; With these changes, Maxima builds without errors with Clisp, CMUCL, SBCL, and GCL,
-;;; and run_testsuite does not appear to report any errors that are not reported
-;;; otherwise. Not yet tested with ECL.
-;;;
-;;; Revision 1.18  2008/03/26 14:48:26  robert_dodier
-;;; For (D1MACH 3) and (D1MACH 4), make the values for GCL match the
-;;; values as shown in d1mach.f.
-;;;
-;;; Revision 1.17  2008/03/26 13:17:55  rtoy
-;;; Oops.  Fix bug in previous commit where the test for lun = t was
-;;; inside the test for integerp lun.  Just use separate tests for units
-;;; 5, 6, and t.
-;;;
-;;; Revision 1.16  2008/03/26 12:54:54  rtoy
-;;; Change how *lun-hash* is handled, based on Robert's changes.  Rather
-;;; than initializing *lun-hash* to NIL, we continue to initialize it to
-;;; a(n) (empty) hash-table.  Now we don't have to check *lun-hash* for
-;;; NIL everywhere.  Then we change lun->stream to initialize the table
-;;; for units 5, 6, and t to the correct streams.  The effect should be
-;;; the same and nicely localized to the one function.
-;;;
-;;; This change (or a very similar one) will go into f2cl.
-;;;
-;;; The following test works with both clisp, gcl, and cmucl:
-;;;
-;;; (%i1) :lisp (slatec::xerprn "FOOBAR" -1 "BAZQUUX" 72)
-;;;
-;;; Revision 1.15  2008/03/15 20:00:48  robert_dodier
-;;; Lazy initialization of *LUN-HASH*. Putting the initialization into
-;;; DEFPARAMETER caused some Clisp installations to barf up an error message
-;;; (something about attempted write on a closed stream) when SLATEC::XERPRN was called.
-;;;
 ;;; Revision 1.14  2007/04/28 15:17:27  are_muc
 ;;; reverted back the changes to %close and %open-file, as rtay whishes to
 ;;; keep f2cl versions idetical.

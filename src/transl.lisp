@@ -830,7 +830,9 @@ APPLY means like APPLY.")
 	 (tr-arraycall form))
 	;; TRANSLATE properties have priority.
 	((setq temp (get (caar form) 'translate))
-	 (funcall temp form))
+	 ;; TPROP-CALL is a macro, think of it as FUNCALL.
+	 ;; see the macro file if you are curious.
+	 (tprop-call temp form))
 	((setq temp (get-lisp-fun-type (caar form)))
 	 (tr-lisp-function-call form temp))
 	((setq temp (macsyma-special-macro-p (caar form)))
@@ -842,7 +844,7 @@ APPLY means like APPLY.")
 	 ;; puntastical case. the weird ones are presumably taken care
 	 ;; of by TRANSLATE properties by now.
 	 (tr-infamous-noun-form form))
-
+	
 	;; "What does a macsyma function call mean?".
 	;; By the way, (A:'B,B:'C,C:'D)$ A(3) => D(3)
 	;; is not supported.
@@ -895,7 +897,7 @@ APPLY means like APPLY.")
 
 (defun attempt-translate-random-special-op (form typel)
   (warn-fexpr form)
-  `(,(function-mode (caar form)) . (meval ',(translate-atoms form))))
+  `($any . (meval ',(translate-atoms form))))
 
 
 (defun tr-lisp-function-call (form type)
@@ -950,15 +952,14 @@ APPLY means like APPLY.")
 ;;; Some atoms, soley by usage, are self evaluating. 
 
 (defun implied-quotep (atom)
-  (cond
-	((stringp atom)
-	 (cond
-       ((equal atom "**") ;;; foolishness. The PARSER should do this.
+  (cond ((get atom 'implied-quotep)
+	 atom)
+	((char= (char (symbol-name atom) 0) #\&) ;;; mstring hack
+	 (cond ((eq atom '|&**|) ;;; foolishness. The PARSER should do this.
 		;; Losing Fortran hackers.
 		(tr-format "~% `**' is obsolete, use `^' !!!")
-		"^")
-       (t atom)))
-    ((get atom 'implied-quotep) atom)
+		'|&^|)
+	       (t atom)))
 	(t nil)))
 
 (defun translate-atoms (form)
@@ -1006,10 +1007,10 @@ APPLY means like APPLY.")
 (defmspec $declare_translated (fns)
   (setq fns (cdr fns))
   (loop for v in fns
-	when (or (symbolp v) (and (stringp v) (setq v ($verbify v))))
+	when (symbolp v)
 	do (setf (get v 'once-translated) t)
 	(pushnew v *declared-translated-functions*)
-	else do (merror "declare_translated: Arguments should be symbols or strings.")))
+	else do (merror "Declare_translated needs symbolic args")))
 
 (def%tr $declare (form)
   (do ((l (cdr form) (cddr l)) (nl))
@@ -1058,7 +1059,7 @@ APPLY means like APPLY.")
               ~%Try to use value cell and the Use_fast_arrays:true
               ~%if this is for arrays.  For functions, local definitions are~
                ~%not advised so use lambda expression")
-  (cons nil `(mapply 'mlocal ',(cdr form) '$local)))
+  (cons nil (cons 'mlocal (cdr form))))
 
 
 (def%tr mquote (form)
@@ -1162,7 +1163,7 @@ APPLY means like APPLY.")
 	(cond ((eq '$fixnum mode) (pushnew var fx :test #'eq))
 	      ((eq '$float mode)  (pushnew var fl :test #'eq)))))
     (if fx (pushnew `(fixnum  . ,fx) dl :test #'eq))
-    (if fl (pushnew `(type flonum  . ,fl) dl :test #'eq))
+    (if fl (pushnew `(flonum  . ,fl) dl :test #'eq))
     (if specs (pushnew `(special  . ,specs) dl :test #'eq))
     (if dl `(declare . ,dl))))
 
@@ -1422,7 +1423,7 @@ APPLY means like APPLY.")
        (setq init (dtranslate (caddr form)))
        (cond ((or (cadr (cddddr form)) (caddr (cddddr form)))
 	      (tunbind 'mdo) (tunbind (cadr form))
-	      (return `($any meval '((mdoin) . ,(cdr form))))))
+	      (return `($any simplify (mdoin . ,(cdr form))))))
        (setq action (translate (cadddr (cddddr form)))
 	     mode (cond ((null returns) '$any)
 			(t
@@ -1471,8 +1472,7 @@ APPLY means like APPLY.")
 	  ((member 'array (car var) :test #'eq)
 	   (tr-arraysetq var val))
 	  (t
-	   (unless (safe-get (caar var) 'mset_extension_operator)
-         (tr-format "~%Dubious first LHS argument to ~:@M~%~:M" (caar form) var))
+	   (tr-format "~%Dubious first LHS argument to ~:@M~%~:M" (caar form) var)
 	   (setq val (translate val))
 	   `(,(car val) mset ',(translate-atoms var) ,(cdr val))))))
 
@@ -1628,10 +1628,10 @@ APPLY means like APPLY.")
 
 (defun tboundp (var)
   ;; really LEXICAL-VARP.
-  (and (symbolp var) (get var 'tbind) (not (get var 'special))))
+  (and (get var 'tbind) (not (get var 'special))))
 
 (defun teval (var)
-  (or (and (symbolp var) (get var 'tbind)) var))
+  (or (get var 'tbind) var))
 
 ;; Local Modes:
 ;; Mode: LISP

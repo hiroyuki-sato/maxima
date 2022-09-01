@@ -51,7 +51,6 @@ define_variable(solve_rec_warn,        true,   bool)$
 
 define_variable(simplify_products,     true,   bool)$
 define_variable(normalize_products,    true,   bool)$
-define_variable(distribute_products,   true,   bool)$
 define_variable(simplify_products_deg,   10, fixnum)$
 define_variable(product_use_gamma,     true,   bool)$
 
@@ -91,7 +90,7 @@ change_to_shift_op(expr, %f, %n) :=
     if numberp(first(k%)) then expr
     else funmake('shift_op, [%f, %n, k%[1]-%n])
   )
-  else if member(part(expr, 0), ["+", "*", "/", "^", "-"]) then
+  else if member(part(expr, 0), ["+", "*", "//", "^", "-"]) then
     apply(part(expr, 0),
       map(lambda([%u], change_to_shift_op(%u, %f, %n)), args(expr)))
   else expr$
@@ -118,7 +117,7 @@ differ_degree(expr) :=
     else if db=0 then 0
     else db*part(expr, 2)
   )
-  else if part(expr, 0)="/" then block(
+  else if part(expr, 0)="//" then block(
     [dd : differ_degree(denom(expr)), nd : differ_degree(num(expr))],
     if dd#0 then inf
     else nd
@@ -143,7 +142,7 @@ to_standard_form1(expr, %n, %m) :=
                                                  part(expr, 3)-%m])
     else expr
   )
-  else if member(part(expr, 0), ["+", "-", "*", "/", "^"]) then
+  else if member(part(expr, 0), ["+", "-", "*", "//", "^"]) then
   apply(part(expr, 0), map(lambda([u], to_standard_form1(u, %n, %m)),
                                   args(expr)))
   else subst(%n=%n-%m, expr)$
@@ -304,7 +303,7 @@ solve_rec_ic1(gen_sol, %f, %n, cond, var) := block(
   ),
   eqns : ev(eqns, product),
   sol : linsolve(eqns, used_vars),
-  gen_sol : subst(sol, gen_sol),
+  gen_sol : subst_all(gen_sol, sol),
   gen_sol
 )$
 
@@ -386,28 +385,23 @@ solve_rec_lin_cc(coeffs, ihom, %f, %n, cond) := block(
 
   if ihom#0 then block(
     [exps : get_exps(expand(ihom), %n), curr_ihom, pol],
-/*
+
     exps : remove_duplicates(exps),
-*/
+
     for ex in exps do block(
       [base, pow, mul, %emode : false],
-      [pol, ex] : ex,
-      
-      if not(numberp(ex)) then (
-        if part(ex, 0)="^" then
-          pow : part(ex, 2)
-        else
-          pow : part(ex, 2, 2)),
+      pol : coeff(ihom, ex),
+      if part(ex, 0)="^" then
+        pow : part(ex, 2)
+      else
+        pow : part(ex, 2, 2),
       if hipow(pow, %n)>1 then curr_ihom : false
       else (
         mul : coeff(pow, %n),
-        if numberp(ex) then base:1
-        else (
-          if part(ex, 0)="^" then
-            base : part(ex, 1)
-          else
-            base : 1/part(ex, 2, 1)
-        ),
+        if part(ex, 0)="^" then
+          base : part(ex, 1)
+        else
+          base : 1/part(ex, 2, 1),
         base : base^mul,
         if not(freeof(%n, expand(pow-mul*%n))) then curr_ihom : false
         else (
@@ -416,7 +410,7 @@ solve_rec_lin_cc(coeffs, ihom, %f, %n, cond) := block(
       ),
       if curr_ihom#false then (
         gen_sol : gen_sol + curr_ihom,
-        ihom : ratexpand(ihom-pol*ex)
+        ihom : expand(ihom-pol*ex)
       )
     )
 
@@ -468,9 +462,9 @@ solve_rec_char_part(coeffs, po, ihom_pol, ihom, %n) := block(
     false
   else (
     if (listp(eqns[1])) then
-      subst(eqns[1], p%) /*at(p, eqns[1])*/
+      subst_all(p%, eqns[1]) /*at(p, eqns[1])*/
     else
-      subst(eqns, p%)
+      subst_all(p%, eqns)
   )
 )$
 
@@ -499,33 +493,20 @@ rec_polyp1(p%, %n, hi) := block(
     false
 )$
 
-get_exps(expr, var) :=
-  if atom(expr) then [[expr, 1]]
-  else if op(expr)="+" then apply(append, map(lambda([u], get_exps(u, var)), args(expr)))
-  else if op(expr)="-" then block(
-    [ex:get_exps(-expr, var)],
-    map(lambda([u], [-u[1], u[2]]), ex)
+get_exps(expr, %n) :=
+  if atom(expr) then []
+  else if part(expr, 0)="^" then block(
+    [base : part(expr, 1), pow : part(expr, 2)],
+    if freeof(%n, pow) then []
+    else if not(freeof(%n, pow)) and not(freeof(%n, base)) then []
+    else [expr]
   )
-  else if op(expr)="/" then block(
-    [dn_exps : get_exps(denom(expr), var), nm_exps : get_exps(num(expr), var)],
-    if length(dn_exps)=0 then nm_exps
-    else if length(dn_exps)>1 then []
-    else if length(nm_exps)=0 then 1/dn_exps[1]
-    else map(lambda([u], u/dn_exps[1]), nm_exps))
-  else if op(expr)="^" then block(
-    [bs : part(expr, 1), pw : part(expr, 2)],
-    if freeof(var, pw) then [[expr, 1]]
-    else if not(freeof(var, pw)) and not(freeof(var, bs)) then [[expr, 1]]
-    else block(
-      [a0,a1],
-      [a1,a0]:bothcoef(pw, var),
-      if not freeof(var, a0) then [[expr, 1]]
-      else [[bs^a0, bs^(a1*var)]]
-    )
+  else if part(expr, 0)="//" then block(
+    [nu : get_exps(part(expr, 1), %n),
+     de : 1/get_exps(part(expr, 2), %n)],
+    append(de, nu)
   )
-  else if op(expr)="*" then xreduce("*", map(lambda([u], get_exps(u, var)), args(expr)))
-  else [expr, 1]$
-
+  else apply('append, map(lambda([u], get_exps(u, %n)), args(expr)))$
 
 /**************************************************************************
  *
@@ -624,7 +605,7 @@ hyper_poly(coeffs, ihom, %n) := block(
     eqn : makelist(coeff(eqn, %n, i)=0, i, 0, hipow(eqn, %n)),
     if errcatch(sol : linsolve(eqn, makelist(%k[i+1], i, 0, deg)))=[] then
       return(false),
-    gen_p : expand(subst(sol, gen_p)),
+    gen_p : expand(subst_all(gen_p, sol)),
     gen_p
   )
 )$
@@ -729,7 +710,7 @@ monic_factors_fac(p, %n) := block(
   [zeros, factors, sol : [1], f, d, tmp, i, pol, fac, lcoeff, %%n, deg],
   factors : factor(p),
   if atom(factors) then return([1, factors]),
-  if part(factors, 0)="/" then factors : part(factors, 1),
+  if part(factors, 0)="//" then factors : part(factors, 1),
   if part(factors, 0)="-" then factors : factors*(-1),
 
   /* This is a dirty trick to get a product */
@@ -934,7 +915,7 @@ simplify_product(prod) := block(
    deg : simplify_products_deg],
   if simplify_products=false then return(prod),
   if atom(prod) then return(prod),
-  if member(part(prod, 0), ["+", "-", "*", "/", "^"]) then
+  if member(part(prod, 0), ["+", "-", "*", "//", "^"]) then
     return(apply(part(prod, 0), map('simplify_product, args(prod)))),
   if part(prod, 0)#nounify('product) then return(prod),
 
@@ -950,13 +931,13 @@ simplify_product(prod) := block(
   if atom(term) or freeof(%n, term) then return(term^(hi-lo+1)),
 
   /* Distribute over products.  */
-  if part(term, 0)="*" then (
-      p%*apply("*", map(lambda([u], simplify_product(apply(nounify('product),
-                [u, %n, lo, hi]))),
-          args(term)))
-  )
+  if part(term, 0)="*" then
+    p%*apply("*", map(lambda([u], simplify_product(apply(nounify('product),
+                                                         [u, %n, lo, hi]))),
+                     args(term)))
+
   /* Take care of fractions. */
-  else if part(term, 0)="/" then block(
+  else if part(term, 0)="//" then block(
     [nu : num(term), de : denom(term)],
     /* Check for cancelations. */
     for %kk:-deg thru deg do block(
@@ -1008,7 +989,7 @@ simplify_product(prod) := block(
       )
       else if product_use_gamma and integerp(aa) then
         gamma(subst(hi+1, %n, expand(term/aa)))/
-        gamma(subst(lo, %n, expand(term/aa)))*aa^(hi-lo+1)
+        gamma(subst(lo, %n, expand(term/aa)))*aa^(hi-lo)
       else
         prod
     )
@@ -1047,7 +1028,7 @@ normalize_product(%expr) :=
     else
       %expr
   )
-  else if member(part(%expr, 0), ["+", "-", "*", "/", "^", "="]) then
+  else if member(part(%expr, 0), ["+", "-", "*", "//", "^", "="]) then
     apply(part(%expr, 0), map(' normalize_product, args(%expr)))
   else
     %expr$
@@ -1056,6 +1037,12 @@ my_prod(term, n, lo, hi) := block(
   [pr : 1],
   for i:lo thru hi do pr : pr*subst(i, n, term),
   pr
+)$
+
+subst_all(expr, sub) := block(
+  [s],
+  for s in sub do expr : subst(part(s, 2), part(s, 1), expr),
+  expr
 )$
 
 /*************************************************************************

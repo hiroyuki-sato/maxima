@@ -450,15 +450,20 @@ false$
  *
  * Stuff checked here (various Lisp types omitted):
  *
- *  string
+ *  Maxima string
+ *  Lisp string
  *  Lisp array
  *  Maxima declared array
  *  Maxima undeclared array
  */
 
-(string1a : "FOO",
- string1b : "FOO",
- string2 : "BAR",
+(mstring1a : "FOO",
+ mstring1b : "FOO",
+ mstring2 : "BAR",
+
+ lstring1a : sconcat ("FOO"),
+ lstring1b : sconcat ("FOO"),
+ lstring2 : sconcat ("BAR"),
 
  larray1a : make_array (any, 5),
  fillarray (larray1a, makelist (i, i, 1, 5)),
@@ -517,10 +522,16 @@ false$
 
 /* Comparisons to same type */
 
-is (equal (string1a, string1b));
+is (equal (mstring1a, mstring1b));
 true;
 
-is (equal (string1a, string2));
+is (equal (mstring1a, mstring2));
+false;
+
+is (equal (lstring1a, lstring1b));
+true;
+
+is (equal (lstring1a, lstring2));
 false;
 
 is (equal (larray1a, larray1b));
@@ -579,21 +590,45 @@ unknown; /* comparison of non-identical lambda expressions yields unknown */
 /* Comparisons to different type */
 
 /* No automatic type conversion */
-is (equal (string1a, larray1a));
+is (equal (mstring1a, lstring1a));
 false;
 
-is (equal (string1a, 1234));
+is (equal (mstring1a, larray1a));
+false;
+
+is (equal (mstring1a, 1234));
 false;
 
 /* No automatic type conversion */
-is (equal (string1a, 'FOO));
+is (equal (mstring1a, 'FOO));
 false;
 
-is (equal (string1a, sin('x)));
+is (equal (mstring1a, sin('x)));
 false;
 
 
-is (equal (larray1a, string1a));
+/* No automatic type conversion */
+is (equal (lstring1a, mstring1a));
+false;
+
+is (equal (lstring1a, larray1a));
+false;
+
+is (equal (lstring1a, 1234));
+false;
+
+/* No automatic type conversion */
+is (equal (lstring1a, 'FOO));
+false;
+
+is (equal (lstring1a, sin('x)));
+false;
+
+
+is (equal (larray1a, mstring1a));
+false;
+
+is (equal (larray1a, lstring1a));
 false;
 
 is (equal (larray1a, 1234));
@@ -632,10 +667,16 @@ false;
 
 /* Comparisons to same type */
 
-is (string1a = string1b);
+is (mstring1a = mstring1b);
 true;
 
-is (string1a = string2);
+is (mstring1a = mstring2);
+false;
+
+is (lstring1a = lstring1b);
+true;
+
+is (lstring1a = lstring2);
 false;
 
 is (larray1a = larray1b);
@@ -651,22 +692,45 @@ false;
 /* Comparisons to different type */
 
 /* No automatic type conversion */
-is (string1a = larray1a);
+is (mstring1a = lstring1a);
 false;
 
-is (string1a = 1234);
+is (mstring1a = larray1a);
+false;
+
+is (mstring1a = 1234);
 false;
 
 /* No automatic type conversion */
-is (string1a = 'FOO);
+is (mstring1a = 'FOO);
 false;
 
-is (string1a = sin('x));
+is (mstring1a = sin('x));
 false;
 
 
 /* No automatic type conversion */
-is (larray1a = string1a);
+is (lstring1a = mstring1a);
+false;
+
+is (lstring1a = larray1a);
+false;
+
+is (lstring1a = 1234);
+false;
+
+/* No automatic type conversion */
+is (lstring1a = 'FOO);
+false;
+
+is (lstring1a = sin('x));
+false;
+
+
+is (larray1a = mstring1a);
+false;
+
+is (larray1a = lstring1a);
 false;
 
 is (larray1a = 1234);
@@ -696,18 +760,3 @@ unknown;
 
 (a2a [1, 4] : '(1/(1/x - 1)), a2b [1, 4] : '(x/(1 - x)), is (equal (a2a, a2b)));
 true;
-
-is(notequal(exp(x),0));
-true$
-
-is(notequal(exp(%i * x),0));
-true$
-
-is(notequal(exp(x - sqrt(3) * x^2 + 42*%i),0));
-true$
-
-is(notequal(%i * exp(x),0));
-true$
-
-is(notequal(exp(minf),0));
-false$

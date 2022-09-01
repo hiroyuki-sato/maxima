@@ -32,13 +32,6 @@
 (defmfun pquotientchk (a b)
   (if (eqn b 1) a (pquotient a b)))
 
-;; divides polynomial x by polynomial y
-;; avoids error "quotient by polynomial of higher degree"
-;;  (returns nil in this case)
-(defun pquotientchk-safe (x y)
-  (let ((errrjfflag t))
-    (catch 'raterr (pquotientchk x y))))
-
 (defun ptimeschk (a b)
   (cond ((eqn a 1) b)
 	((eqn b 1) a)
@@ -206,9 +199,6 @@
 	    ($red (redgcd u v))
 	    ($subres (subresgcd u v))
 	    (t (merror "Illegal `gcd' algorithm"))))
-  (let ((errrjfflag t))			;; check for gcd that simplifies to 0
-    (if (not (catch 'raterr (rainv s))) ;; sourceforge bugs 831445 and 1313987
-	(setq s 1)))
   (unless (equal s 1)
     (setq s (pexpon*// (primpart
 			(if $algebraic s
@@ -243,23 +233,19 @@
 (defun redgcd (p q &aux (d 0))
   (loop until (zerop (pdegree q (p-var p)))
 	 do (psetq p q
-		   q (pquotientchk-safe (prem p q) (pexpt (p-lc p) d))
+		   q (pquotientchk (prem p q) (pexpt (p-lc p) d))
 		   d (+ (p-le p) 1 (- (p-le q))))
-	 (if (< d 1) (return 1))
 	 finally (return (if (pzerop q) p 1))))
 
-;;computes gcd's using subresultant prs
-;;ACM Transactions On Mathematical Software Sept. 1978
+;;computes gcd's using subresultant prs TOMS Sept. 1978
 
 (defun subresgcd (p q)
   (loop for g = 1 then (p-lc p)
-	 for h = 1 then (pquotientchk-safe (pexpt g d) h^1-d)
+	 for h = 1 then (pquotient (pexpt g d) h^1-d)
 	 for d = (- (p-le p) (p-le q))
-	 for h^1-d = 1 then (if (< d 1)
-				(return 1)
-			      (pexpt h (1- d)))
+	 for h^1-d = (if (equal h 1) 1 (pexpt h (1- d)))
 	 do (psetq p q
-		   q (pquotientchk-safe (prem p q) (ptimes g (ptimes h h^1-d))))
+		   q (pquotientchk (prem p q) (ptimes g (ptimes h h^1-d))))
 	 if (zerop (pdegree q (p-var p))) return (if (pzerop q) p 1)))
 
 ;;*** THIS COMPUTES PSEUDO REMAINDERS
@@ -438,8 +424,8 @@
 (defvar bigprimes nil)
 
 (eval-when
-    #+gcl (load eval)
-    #-gcl (:load-toplevel :execute)
+    #+gcl (load)
+    #-gcl (:load-toplevel)
 
     ;; it is convenient to have the bigprimes be actually less than
     ;; half the size of the most positive fixnum, so that arithmetic is

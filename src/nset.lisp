@@ -25,23 +25,23 @@
 (setf (get '$set  'dimension) 'dimension-match)
 
 ;; Parse {a, b, c} into set(a, b, c).
+;; Don't bother with DEF-NUD etc -- matchfix + ::= works just fine.
+;; Well, MDEFMACRO is a little too zealous in this context, since we
+;; don't really want this macro defn to show up on the $MACROS infolist.
+;; (Maybe it would be cleanest to append built-in defns to FOO::$MACROS
+;; where FOO is something other than MAXIMA, but that awaits
+;; regularization of package use within Maxima.)
 
-(putopr "{" '$set)
-
-(def-nud-equiv |$}| delim-err)
-(def-led-equiv |$}| erb-err)
-(def-lbp     |$}| 5.)
-
-(def-nud-equiv	|${| parse-matchfix)
-(def-match	|${| |$}|)
-(def-lbp	|${| 200.)
-;No RBP
-(def-mheader	|${| ($set))
-(def-pos	|${| $any)
-;No LPOS
-;No RPOS
-
-(def-operator "{" '$any nil '$any nil nil nil nil '(nud . parse-matchfix) 'msize-matchfix 'dimension-match "}")
+(eval-when
+    #+gcl (compile load eval)
+    #-gcl (:compile-toplevel :load-toplevel :execute)
+    ;; matchfix ("{", "}")
+    (meval '(($matchfix) &{ &}))
+    ;; "{" ([L]) ::= buildq ([L], set (splice (L)));
+    (let ((new-defn
+	   (meval '((mdefmacro) ((${) ((mlist) $l)) (($buildq) ((mlist) $l) (($set) (($splice) $l)))))))
+      ;; Simpler to patch up $MACROS here, than to replicate the functionality of MDEFMACRO.
+      (setq $macros (delete (cadr new-defn) $macros :test #'equal))))
 
 ;; Support for TeXing sets. If your mactex doesn't TeX the empty set
 ;; correctly, get the latest mactex.lisp.
@@ -50,7 +50,10 @@
 (defprop $set (("\\left \\{" ) " \\right \\}") texsym)
 
 (defun require-set (x context-string)
-  (if ($setp x) (cdr x) (merror "Function ~:M expects a set, instead found ~:M" context-string x)))
+  (cond (($setp x) 
+	 (cdr (simp-set x 1 nil)))
+	(t 
+	 (merror "Function ~:M expects a set, instead found ~:M" context-string x))))
 
 ;; If x is a Maxima list, return a Lisp list of its members; otherwise,
 ;; signal an error. Unlike require-set, the function require-list does not
@@ -123,11 +126,14 @@
 (defun $setp (a)
   (and (consp a) (consp (car a)) (eq (caar a) '$set)))
 
-;; Return the cardinality of a set. This function works even when $simp is false.
+;; Return the cardinality of a set; if the argument is a list, convert it to a
+;; set. Works even when simp : false.  For example,
+
+;; (C1) cardinality(set(a,a,a)), simp : false;
+;; (D1) 				   1
  
 (defun $cardinality (a)
-  (if $simp (length (require-set a "$cardinality"))
-    (let (($simp t)) ($cardinality (simplify a)))))
+  (length (require-set a "$cardinality")))
 
 ;; Return true iff a is a subset of b. If either argument is a list, first 
 ;; convert it to a set. Signal an error if a or b aren't lists or sets.
@@ -522,6 +528,77 @@
 		  (rplacd l (cddr l))))
       (setq l (cdr l)))))
 
+(defmacro do-merge-symm (list1 list2 eqfun lessfun bothfun onefun)
+  ;; Like do-merge-asym, but calls onefun if an element appears in one but
+  ;; not the other list, regardless of which list it appears in.
+  `(do-merge-asym ,list1 ,list2 ,eqfun ,lessfun ,bothfun ,onefun ,onefun))
+
+(defmacro do-merge-asym
+  (list1 list2 eqfun lessfun bothfun only1fun only2fun)
+  ;; Takes two lists.
+  ;; The element equality function is eqfun, and they must be sorted by lessfun.
+  ;; Calls bothfun on each element that is shared by the two lists;
+  ;; calls only1fun on each element that appears only in the first list;
+  ;; calls only2fun on each element that appears only in the second list.
+  ;; If both/only1/only2 fun are nil, treat as no-op.
+  ;; Initializes the variable "res" to nil; returns its value as the result.
+  (let ((l1var (gensym))
+	(l2var (gensym)))
+    `(do ((,l1var ,list1)
+	  (,l2var ,list2)
+	  res)
+	 ;; The variable RES is for the use of both/only1/only2-fun
+	 ;; do-merge-asym returns (nreverse res)
+	 ((cond ((null ,l1var)
+		 (if ,only2fun
+		     (while ,l2var
+		       (funcall ,only2fun (car ,l2var))
+		       (setq ,l2var (cdr ,l2var))))
+		 t)
+		((null ,l2var)
+		 (if ,only1fun
+		     (while ,l1var
+		       (funcall ,only1fun (car ,l1var))
+		       (setq ,l1var (cdr ,l1var))))
+		 t)
+		((funcall ,eqfun (car ,l1var) (car ,l2var))
+		 (if ,bothfun (funcall ,bothfun (car ,l1var)))
+		 (setq ,l1var (cdr ,l1var) ,l2var (cdr ,l2var))
+		 nil)
+		((funcall ,lessfun (car ,l1var) (car ,l2var))
+		 (if ,only1fun (funcall ,only1fun (car ,l1var)))
+		 (setq ,l1var (cdr ,l1var))
+		 nil)
+		(t
+		 (if ,only2fun (funcall ,only2fun (car ,l2var)))
+		 (setq ,l2var (cdr ,l2var))
+		 nil))
+	  (reverse res)))))
+
+;;; Test
+; (do-merge-asym '(a a a b c g h k l)
+; 	       '(a b b c c h i j k k)
+; 	       'eq
+; 	       'string<
+; 	       '(lambda (x) (prin0 'both x))
+; 	       '(lambda (x) (prin0 'one1 x))
+; 	       '(lambda (x) (prin0 'one2 x)))
+; both a
+; one1 a
+; one1 a
+; both b
+; one2 b
+; both c
+; one2 c
+; one1 g
+; both h
+; one2 i
+; one2 j
+; both k
+; one2 k
+; one1 l
+; nil
+
 (defun set-intersect (l1 l2)
   ;;  Only works for lists of sorted by $orderlessp.
   (do-merge-symm
@@ -633,7 +710,7 @@
        (acc)
        (tail)
        (x))
-      ((null l) (simplify (cons '($set) (mapcar #'(lambda (x) (cons '($set) x)) acc))))
+      ((null l) (cons '($set) (mapcar #'(lambda (x) (cons '($set) x)) acc)))
     (setq x (car l))
     (setq tail (member-if #'(lambda (z) (bool-checked-mfuncall f x (car z))) acc))
     (cond ((null tail)
@@ -676,21 +753,21 @@
 ;;   (2) p1, p2 in P and p1 # p2 implies p1 and p2 are disjoint,
 ;;   (3) union(x | x in P) = S.
 ;; Thus set() is a partition of set().
-
-(defun $set_partitions (a &optional n-sub)
+      
+(defun $set_partitions (a &optional n)
   (setq a (require-set a "$set_partitions"))
-  (cond ((and (integerp n-sub) (> n-sub -1))
-	 `(($set) ,@(set-partitions a n-sub)))
-	((null n-sub)
-	 (setq n-sub (length a))
+  (cond ((and (integerp n) (> n -1))
+	 `(($set) ,@(set-partitions a n)))
+	((null n)
+	 (setq n (length a))
 	 (let ((acc (set-partitions a 0)) (k 1))
-	   (while (<= k n-sub)
+	   (while (<= k n)
 	     (setq acc (append acc (set-partitions a k)))
 	     (incf k))
 	   `(($set) ,@acc)))
 	(t
 	 (merror "The optional second argument to set_partitions must be
-a positive integer; instead found ~:M" n-sub))))
+a positive integer; instead found ~:M" n))))
 
 (defun set-partitions (a n)
   (cond ((= n 0)
@@ -727,10 +804,10 @@ a positive integer; instead found ~:M" n-sub))))
 	   (setq acc (cond ((= n 0) nil)
 			   ((integerp len) (fixed-length-partitions n n len))
 			   (t (integer-partitions n))))
-	   (setq acc (mapcar #'(lambda (x) (simplify (cons '(mlist) x))) acc))
+	   (setq acc (mapcar #'(lambda (x) (cons `(mlist simp) x)) acc))
 	   `(($set simp) ,@acc))
 	  (t
-	   (if len `(($integer_partitions simp) ,n ,len) `(($integer_partitions simp) ,n))))))
+	   (if len `(($integer_partitions simp) ,n ,len) `(($int_partitions simp) ,n))))))
 	 
 (defun integer-partitions (n)
   (let ((p `(,n)) (acc nil) (d) (k) (j) (r))
@@ -854,8 +931,8 @@ a positive integer; instead found ~:M" n-sub))))
 (defprop $kron_delta simp-kron-delta operators)
 
 (eval-when
-    #+gcl (load eval)
-    #-gcl (:load-toplevel :execute)
+    #+gcl (compile load eval)
+    #-gcl (:compile-toplevel :load-toplevel :execute)
     ;; (kind '$kron_delta '$symmetric)) <-- This doesn't work. Why?
     ;; Put new fact in global context; 
     ;; otherwise it goes in initial context, which is meant for the user.
@@ -1083,11 +1160,11 @@ a positive integer; instead found ~:M" n-sub))))
 
 (defun xappend (s)
   #+(or cmu scl)
-  (cons '(mlist) (apply 'append (mapcar #'(lambda (x)
-                        (require-list x "$append")) s)))
+  (cons '(mlist) (apply 'append (mapcar #'(lambda (x) 
+					    (require-list x "$append")) s)))
   #-(or cmu scl)
   (let ((acc))
-    (dolist (si (reverse s) (cons '(mlist) acc))
+    (dolist (si s (cons '(mlist) acc))
       (setq acc (append (require-list si "$append") acc)))))
 
 (def-nary 'mand (s) (mevalp (cons '(mand) s)) t)
@@ -1104,27 +1181,15 @@ a positive integer; instead found ~:M" n-sub))))
 ;; When there isn't a Maxima function we can call (actually when (get op '$nary) 
 ;; returns nil) we give up and use rl-reduce with left-associativity.
 
-
 (defun $xreduce (f s &optional (init 'no-init))
-  (let* ((op-props (get (if (atom f) ($verbify f) nil) '$nary))
-	 (opfn  (if (consp op-props) (car op-props) nil)))
-  
-    (cond (opfn
+  (let ((op (if (atom f) ($verbify f) nil)))
+    (cond ((get op '$nary)
 	   (setq s (require-list-or-set s "$xreduce"))
-	   (if (not (equal init 'no-init))
-	       (setq s (cons init s)))
-	  
-	   (if (null s)
-	       (cadr op-props)        ; is this clause really needed?
-	     
-	     (funcall opfn s)))
-
-	  (op-props
-	   ($apply f ($listify s)))
-	  
+	   (if (not (equal init 'no-init)) (setq s (cons init s)))
+					;(print "...using nary function")
+	   (mapply1 op s f nil))
 	  (t
 	   (rl-reduce f ($listify s) nil init "$xreduce")))))
-
 
 ;; Extend a function f : S x S -> S to n arguments using a minimum depth tree.
 ;; The function f should be nary (associative); otherwise, the result is somewhat 

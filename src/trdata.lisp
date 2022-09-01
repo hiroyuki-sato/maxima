@@ -21,12 +21,17 @@
 
 (transl-module trdata)
 
+(eval-when
+    #+gcl (compile)
+    #-gcl (:compile-toplevel)
+    (setq *def%tr-produces-autoload-file* nil))
+
 ;;; MODEDECLARE(FUNCTION(LENGTH),FIXNUM)
 
 ;;I think all this can be done at load time only:--wfs
 (eval-when
-    #+gcl (load eval)
-    #-gcl (:load-toplevel :execute)
+    #+gcl (load)
+    #-gcl (:load-toplevel)
 
     (mapc #'(lambda (x) (putprop x '$fixnum 'function-mode))
 	  '($length $nterms random $nroots $rank $polysign $time

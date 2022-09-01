@@ -524,7 +524,7 @@
 		(merror "atomic arg required" x))))
 	((numberp x)
 	 x)
-	((member (getcharn x 1) '(#\$ #\% #\&))
+	((member (getchar x 1) '($ % &) :test #'eq)
 	 (intern (substring x 1)))
 	(t
 	 x)))

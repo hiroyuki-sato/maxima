@@ -3,13 +3,14 @@
 /* by Fabrizio Caruso                                               */
 
 
-/* Part concerning the computation of signed remainder sequence*/
+padWithZeros(seq,size) :=
+  append(seq,makelist(0,i,1,size-length(seq)));
 
-/* Signed Remainder Sequence computation*/
+
 sRem(a,b,var) :=
   sRemVerbose(a,b,var,DEFAULT_VERBOSITY);
 
-
+/* Signed Remainder Sequence */
 sRemVerbose(a,b,var,verbosity) :=
   block([rOld,rNew,quo,res,seq],
   
@@ -35,11 +36,11 @@ sRemVerbose(a,b,var,verbosity) :=
   return(srsRes)
   );
 
-/* Extended Signed Remainder Sequence */
+
 sRemExt(a,b,var) :=
   sRemExtVerbose(a,b,var,DEFAULT_VERBOSITY);
 
-
+/* Extended Signed Remainder Sequence */
 sRemExtVerbose(a,b,var,verbosity) :=
   block([rOld,rNew,uOld,uNew,vOld,vNew,rRes, uRes, vRes,quo],
   
@@ -85,117 +86,34 @@ sRemExtVerbose(a,b,var,verbosity) :=
      rNew : -second(rRes)
 
      ),
-  return([rList,endcons(uNew,uList),endcons(vNew,vList)])
+  return([rList,uList,vList])
   );
       
 
-
+/* It counts the sign change of a determinant after */
+/* i consecutive row changes */
+revRowsCount(i) := (-1)^(i*(i-1)/2);
 
 /* ------------------------------------------------------- */
 /* Part concerning the computation of signed subresultants */
 
-/* Signed subresultants*/
-sSubRes(a,b,var) :=
-  sSubResVerbose(a,b,var,DEFAULT_VERBOSITY);
 
-sSubResVerbose(a,b,var,verbosity) :=
-  block([degA,degB,i,j,k,h,lcA,lcB,delta,h,
-         SR,s,sOld],
-    
-    a : expandIf(a),
-    b : expandIf(b),
-    
-    degA : degree(a,var),
-    degB : degree(b,var),
-    if degA<=degB then
-      (
-      print("sSubRes) Error: inconsistent degrees"),
-      return(false)
-      ),
-    
-    SR : make_array('any,degA+1),
-    s : make_array('any,degA+1),
-    sOld : make_array('any,degA+1),
-
-
-    lcA : leadCoeff(a,var),
-    lcB : leadCoeff(b,var),
-    SR[degA] : a,
-
-      s[degA] : 1,
-      
-    sOld[degA] : s[degA],
-
-    SR[degA-1] : b,
-    sOld[degA-1] : lcB,
-
-    i : degA + 1,
-    j : degA,
-
-    while j>=1 and not(SR[j-1]=0) do
-      (
-      
-      k : degree(SR[j-1],var),
-      if verbosity>=EXTRA then
-        (
-        print("sSubRes) j : ", j),
-        print("sSubRes) k : ", k)
-        ),      
-
-      if k = j-1 then
-        (
-        s[j-1] : sOld[j-1],
-        
-        if k>=1 then
-           SR[k-1] : NORM_ALGORITHM(-remainder(s[j-1]^2*SR[i-1],SR[j-1],var)/
-                         (s[j]*sOld[i-1]))
-        ),
-      if k < j-1 then
-        (
-        /* Computation of s[k] */
-        for delta : 1 thru min(j-k-1,j-1) do
-           sOld[j-delta-1] : (-1)^delta * (sOld[j-1]*sOld[j-delta])/s[j],
-        s[k] : sOld[k],
-        s[j-1] : 0,
-        SR[k] : NORM_ALGORITHM(s[k]*SR[j-1]/sOld[j-1]),
-        
-        for h : k+1 thru j-2 do
-          (
-          SR[h] : 0,
-          s[h] : 0
-          ),
-        
-        /* Computation of SR[k-1] */
-        /* ratexpand or expand */
-        if k>= 1 then 
-          SR[k-1] : NORM_ALGORITHM(-remainder(sOld[j-1]*s[k]*SR[i-1],
-                                             SR[j-1],var)/
-                         (s[j]*sOld[i-1]))
-        ),
-      
-      if k>= 1 then
-         sOld[k-1] : leadCoeff(SR[k-1],var),
-      i : j,
-      j : k,
-      if verbosity>= NORMAL and k>= 1 then
-        print("sSubRes) SR[", k-1,"] : ", SR[k-1])
-      ),
-  
-  
-       s[degA]:lcA,   
-     
-     return([padWithZeros(makelist(SR[degA-i],i,0,degA-j),degA+1),
-             padWithZeros(makelist( s[degA-i],i,0,degA-j),degA+1)])  
-  ); 
-
-
-
-/* It only outputs the signed subresultant coefficients and avoids */
-/* storing the polynomials                      */
+/* Signed Subresultant Sequence */
+/* Algorithm 8.73               */
 sSubResCoeff(a,b,var) :=
   sSubResCoeffVerbose(a,b,var,DEFAULT_VERBOSITY);
 
 sSubResCoeffVerbose(a,b,var,verbosity) :=
+  subResCoeffGenStructVerbose(a,b,var,true,verbosity);
+
+subResCoeff(a,b,var) :=
+  subResCoeffVerbose(a,b,var,DEFAULT_VERBOSITY);
+
+subResCoeffVerbose(a,b,var,verbosity) :=
+  subResCoeffGenStructVerbose(a,b,var,false,verbosity);
+
+
+subResCoeffGenStructVerbose(a,b,var,signed_flag,verbosity) :=
   block([degA,degB,i,j,k,h,lcA,lcB,delta,h,
          s,sOld,
          currentSR,previousSR,newSR],
@@ -220,6 +138,9 @@ sSubResCoeffVerbose(a,b,var,verbosity) :=
 
     previousSR : a,    
 
+    if signed_flag then
+      s[degA] : sgn(lcA)
+    else
       s[degA] : 1,
     
     sOld[degA] : s[degA],
@@ -280,22 +201,275 @@ sSubResCoeffVerbose(a,b,var,verbosity) :=
       if k>=1 and verbosity>= NORMAL then
         print("sSubResCoeff) SR[", k-1,"] : ",newSR)
       ),
-  
-    s[degA]:lcA,
 
   return(padWithZeros(makelist( s[degA-i],i,0,degA-j),degA+1))  
   ); 
 
 
+sSubResExtLast(a,b,var) :=
+  sSubResExtLastVerbose(a,b,var,DEFAULT_VERBOSITY);
 
-sSubResCoeffLast(p,q,var):=last(sSubResCoeff(p,q,var));
 
-/* Extended Signed Subresultant Sequence*/
+sSubResExtLastVerbose(a,b,var,verbosity) :=
+  subResExtLastGenStructVerbose(a,b,var,true,verbosity);
 
+subResExtLast(a,b,var) :=
+  subResExtLastVerbose(a,b,var,DEFAULT_VERBOSITY);
+
+subResExtLastVerbose(a,b,var,verbosity) :=
+  subResExtLastGenStructVerbose(a,b,var,false,verbosity);
+
+
+subResExtLastGenStructVerbose(a,b,var,signed_flag,verbosity) :=
+   block([q,degA,degB,i,j,k,lcA,lcB,delta,
+          SR,s,sOld,u,v,
+          previousSR,currentSR,newSR,
+          previousU, currentU, newU,
+          previousV, currentV, newV],
+   
+   a : expandIf(a),
+   b : expandIf(b),
+  
+   degA : degree(a,var),
+   degB : degree(b,var),
+   if degA<=degB then
+      (
+      print("sSubResExtLast) Error: inconsistent degrees"),
+      return(false)
+      ),
+
+   
+   SR : make_array('any,degA+1),
+   s : make_array('any,degA+1),
+   sOld : make_array('any,degA+1),
+
+   lcA : leadCoeff(a,var),
+   lcB : leadCoeff(b,var),
+
+   previousSR : a,
+
+   if signed_flag then
+     s[degA] : sgn(lcA)
+   else
+     s[degA] : 1,
+     
+   sOld[degA] : s[degA],
+
+   currentSR : b,
+    
+   sOld[degA-1] : lcB,
+
+   previousU : 1,
+   previousV : 0,
+   currentU : 0,
+   currentV : 1,
+   
+   i : degA + 1,
+   j : degA,
+
+   while j>=1 and not(currentSR=0) do
+     (
+     k : degree(currentSR,var),
+     if verbosity>= EXTRA then
+        (
+        print("sSubResCoeff) j : ",j),
+        print("sSubResCoeff) k : ",k)
+        ),
+     if k = j-1 then
+       (
+       s[j-1] : sOld[j-1],
+
+       q : quotient(s[j-1]^2 * previousSR, currentSR,var),
+
+       newSR : NORM_ALGORITHM((-s[j-1]^2 * 
+                                 previousSR + q * currentSR)/(s[j]*sOld[i-1])),
+       newU : NORM_ALGORITHM((-s[j-1]^2 * 
+                                previousU + q * currentU)/(s[j]*sOld[i-1])),
+       newV : NORM_ALGORITHM((-s[j-1]^2 * 
+                                previousV + q * currentV)/(s[j]*sOld[i-1]))
+       ),
+
+     if k<j-1 then
+       ( 
+       s[j-1] : 0,
+       /*  Computation of s[k] */ 
+       for delta : 1 thru j-k-1 do
+          sOld[j-delta-1] : (-1)^delta * (sOld[j-1]*sOld[j-delta])/s[j],
+       
+       if k>= 0 then
+          s[k] : sOld[k],
+             
+       newSR : NORM_ALGORITHM(s[k]*currentSR/sOld[j-1]),
+       newU : NORM_ALGORITHM(s[k]*currentU/sOld[j-1]),
+       newV : NORM_ALGORITHM(s[k]*currentV/sOld[j-1]),
+        
+       for h : k+1 thru j-2 do
+          (
+          u[h] : 0,
+          v[h] : 0,
+          s[h] : 0
+          ),
+     
+       /* Computation of SR[k-1], u[k-1], v[k-1] */ 
+       q : quotient(s[k]*sOld[j-1]*previousSR,currentSR,var),
+       newSR : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousSR + 
+                         q * currentSR)/(s[j]*sOld[i-1])),
+       newU : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousU + 
+                        q * currentU)/(s[j]*sOld[i-1])),
+       newV : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousV + 
+                        q * currentV)/(s[j]*sOld[i-1]))
+       ),
+     if k>=1 then
+        sOld[k-1] : leadCoeff(newSR,var),
+     i : j,
+     j : k,
+     previousSR : currentSR,
+     currentSR : newSR,
+
+     previousU : currentU,
+     currentU : newU,
+  
+     previousV : currentV,
+     currentV : newV,
+      
+     if verbosity>= NORMAL then
+        print("sSubResExt) SR[", k-1,"] : ", newSR)
+     ),
+for h : 0 thru j-2 do
+   (
+
+   s[h] : 0,
+   u[h] : 0,
+   v[h] : 0
+   ),
+
+return([previousSR,s[j],currentU,currentV])
+);
+
+
+sSubRes(a,b,var) :=
+  sSubResVerbose(a,b,var,DEFAULT_VERBOSITY);
+
+sSubResVerbose(a,b,var,verbosity) :=
+  subResGenStructVerbose(a,b,var,true,verbosity);
+
+subRes(a,b,var) :=
+  subResVerbose(a,b,var,DEFAULT_VERBOSITY);
+
+subResVerbose(a,b,var,verbosity) :=
+  subResGenStructVerbose(a,b,var,false,verbosity);
+
+
+subResGenStructVerbose(a,b,var,signed_flag,verbosity) :=
+  block([degA,degB,i,j,k,h,lcA,lcB,delta,h,
+         SR,s,sOld],
+    
+    a : expandIf(a),
+    b : expandIf(b),
+    
+    degA : degree(a,var),
+    degB : degree(b,var),
+    if degA<=degB then
+      (
+      print("sSubRes) Error: inconsistent degrees"),
+      return(false)
+      ),
+    
+    SR : make_array('any,degA+1),
+    s : make_array('any,degA+1),
+    sOld : make_array('any,degA+1),
+
+
+    lcA : leadCoeff(a,var),
+    lcB : leadCoeff(b,var),
+    SR[degA] : a,
+
+    if signed_flag then
+      s[degA] : sgn(lcA)
+    else
+      s[degA] : 1,
+      
+    sOld[degA] : s[degA],
+
+    SR[degA-1] : b,
+    sOld[degA-1] : lcB,
+
+    i : degA + 1,
+    j : degA,
+
+    while j>=1 and not(SR[j-1]=0) do
+      (
+      
+      k : degree(SR[j-1],var),
+      if verbosity>=EXTRA then
+        (
+        print("sSubRes) j : ", j),
+        print("sSubRes) k : ", k)
+        ),      
+
+      if k = j-1 then
+        (
+        s[j-1] : sOld[j-1],
+        
+        if k>=1 then
+           SR[k-1] : NORM_ALGORITHM(-remainder(s[j-1]^2*SR[i-1],SR[j-1],var)/
+                         (s[j]*sOld[i-1]))
+        ),
+      if k < j-1 then
+        (
+        /* Computation of s[k] */
+        for delta : 1 thru min(j-k-1,j-1) do
+           sOld[j-delta-1] : (-1)^delta * (sOld[j-1]*sOld[j-delta])/s[j],
+        s[k] : sOld[k],
+        s[j-1] : 0,
+        SR[k] : NORM_ALGORITHM(s[k]*SR[j-1]/sOld[j-1]),
+        
+        for h : k+1 thru j-2 do
+          (
+          SR[h] : 0,
+          s[h] : 0
+          ),
+        
+        /* Computation of SR[k-1] */
+        /* ratexpand or expand */
+        if k>= 1 then 
+          SR[k-1] : NORM_ALGORITHM(-remainder(sOld[j-1]*s[k]*SR[i-1],
+                                             SR[j-1],var)/
+                         (s[j]*sOld[i-1]))
+        ),
+      
+      if k>= 1 then
+         sOld[k-1] : leadCoeff(SR[k-1],var),
+      i : j,
+      j : k,
+      if k>= 1 and verbosity>= NORMAL then
+        print("sSubRes) SR[", k-1,"] : ", SR[k-1])
+      ),
+     
+     return([padWithZeros(makelist(SR[degA-i],i,0,degA-j),degA+1),
+             padWithZeros(makelist( s[degA-i],i,0,degA-j),degA+1)])  
+  ); 
+
+
+
+
+/* Extended Signed Subresultant Sequence      */
+/* Algorithm 8.75                             */
+/* (A variation of this algorithm is used in  */
+/* Algorithm 9.47 and Algorithm 10.17         */
 sSubResExt(a,b,var) :=
   sSubResExtVerbose(a,b,var,DEFAULT_VERBOSITY);
 
 sSubResExtVerbose(a,b,var,verbosity) :=
+  subResExtGenStructVerbose(a,b,var,true,verbosity);
+
+subResExt(a,b,var) :=
+  subResExtVerbose(a,b,var,DEFAULT_VERBOSITY);
+
+subResExtVerbose(a,b,var,verbosity) :=
+  subResExtGenStructVerbose(a,b,var,false,verbosity);
+
+subResExtGenStructVerbose(a,b,var,signed_flag,verbosity) :=
    block([q,degA,degB,i,j,k,lcA,lcB,delta,
           SR:make_array('any),s:make_array('any),sOld:make_array('any),
           u:make_array('any),v:make_array('any)],
@@ -323,8 +497,9 @@ sSubResExtVerbose(a,b,var,verbosity) :=
    lcB : leadCoeff(b,var),
 
    SR[degA] : a,
-
-
+   if signed_flag then
+      s[degA] : sgn(lcA)
+   else
       s[degA] : 1,
       
    sOld[degA] : s[degA],
@@ -422,151 +597,12 @@ for h : 0 thru j-2 do
    v[h+1] : 0
    ),
 
-
-  s[degA]:lcA,
-
-return(
-       [padWithZeros(makelist(SR[degA-i],i,0,degA-j),degA+1),
+return([padWithZeros(makelist(SR[degA-i],i,0,degA-j),degA+1),
         padWithZeros(makelist(s[degA-i],i,0,degA-j),degA+1),
         makelist(u[degA-i+1],i,0,degA-j+1),
         makelist(v[degA-i+1],i,0,degA-j+1)])
 );
 
-
-
-/* It only computes the last polynomial, coefficient and cofactors and */
-/* avoids storing all the values. */
-/* Therefore it is more efficient than sSubResExt with respect to memory. */ 
-sSubResExtLast(a,b,var) :=
-  sSubResExtLastVerbose(a,b,var,DEFAULT_VERBOSITY);
-
-
-sSubResExtLastVerbose(a,b,var,verbosity) :=
-   block([q,degA,degB,i,j,k,lcA,lcB,delta,
-          SR,s,sOld,u,v,
-          previousSR,currentSR,newSR,
-          previousU, currentU, newU,
-          previousV, currentV, newV],
-   
-   a : expandIf(a),
-   b : expandIf(b),
-  
-   degA : degree(a,var),
-   degB : degree(b,var),
-   if degA<=degB then
-      (
-      print("sSubResExtLast) Error: inconsistent degrees"),
-      return(false)
-      ),
-
-   
-   SR : make_array('any,degA+1),
-   s : make_array('any,degA+1),
-   sOld : make_array('any,degA+1),
-
-   lcA : leadCoeff(a,var),
-   lcB : leadCoeff(b,var),
-
-   previousSR : a,
-
-
-     s[degA] : 1,
-     
-   sOld[degA] : s[degA],
-
-   currentSR : b,
-    
-   sOld[degA-1] : lcB,
-
-   previousU : 1,
-   previousV : 0,
-   currentU : 0,
-   currentV : 1,
-   
-   i : degA + 1,
-   j : degA,
-
-   while j>=1 and not(currentSR=0) do
-     (
-
-     k : degree(currentSR,var),
-     if verbosity>= EXTRA then
-        (
-        print("sSubResCoeff) j : ",j),
-        print("sSubResCoeff) k : ",k)
-        ),
-     if k = j-1 then
-       (
-       s[j-1] : sOld[j-1],
-
-       q : quotient(s[j-1]^2 * previousSR, currentSR,var),
-
-       newSR : NORM_ALGORITHM((-s[j-1]^2 * 
-                                 previousSR + q * currentSR)/(s[j]*sOld[i-1])),
-       newU : NORM_ALGORITHM((-s[j-1]^2 * 
-                                previousU + q * currentU)/(s[j]*sOld[i-1])),
-       newV : NORM_ALGORITHM((-s[j-1]^2 * 
-                                previousV + q * currentV)/(s[j]*sOld[i-1]))
-       ),
-
-     if k<j-1 then
-       ( 
-       s[j-1] : 0,
-       /*  Computation of s[k] */ 
-       for delta : 1 thru j-k-1 do
-          sOld[j-delta-1] : (-1)^delta * (sOld[j-1]*sOld[j-delta])/s[j],
-       
-       if k>= 0 then
-          s[k] : sOld[k],
-             
-       newSR : NORM_ALGORITHM(s[k]*currentSR/sOld[j-1]),
-       newU : NORM_ALGORITHM(s[k]*currentU/sOld[j-1]),
-       newV : NORM_ALGORITHM(s[k]*currentV/sOld[j-1]),
-        
-       for h : k+1 thru j-2 do
-          (
-          u[h] : 0,
-          v[h] : 0,
-          s[h] : 0
-          ),
-     
-       /* Computation of SR[k-1], u[k-1], v[k-1] */ 
-       q : quotient(s[k]*sOld[j-1]*previousSR,currentSR,var),
-       newSR : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousSR + 
-                         q * currentSR)/(s[j]*sOld[i-1])),
-       newU : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousU + 
-                        q * currentU)/(s[j]*sOld[i-1])),
-       newV : NORM_ALGORITHM((-sOld[j-1] * s[k] * previousV + 
-                        q * currentV)/(s[j]*sOld[i-1]))
-       ),
-     if k>=1 then
-        sOld[k-1] : leadCoeff(newSR,var),
-     i : j,
-     j : k,
-     previousSR : currentSR,
-     currentSR : newSR,
-     previousU : currentU,
-     currentU : newU,
-     previousV : currentV,
-     currentV : newV,
-      
-     if verbosity>= NORMAL then
-        print("sSubResExt) SR[", k-1,"] : ", newSR)
-     ),
-for h : 0 thru j-2 do
-   (
-
-   s[h] : 0,
-   u[h] : 0,
-   v[h] : 0
-   ),
-
-
-  s[degA] : lcA,
-
-
-  return([previousSR,s[j],currentU,currentV])
-);
 
 
 
@@ -583,72 +619,30 @@ lastNonZeroAux(seq,res) :=
         lastNonZeroAux(rest(seq,-1),res-1)
      else
         [last(seq),res];  
-	
-	/* Gcd and Gcd-Free part computation */
+         
+/* Gcd and Gcd-Free part computation */
 /* It outputs : */
 /* gcd(p,q) and p/gcd(p,q) */
 gcdFreePart(p,q,var) :=
   gcdFreePartVerbose(p,q,var,DEFAULT_VERBOSITY);
 
 gcdFreePartVerbose(p,q,var,verbosity) :=
-  block([sExtSR,gcdRes,gcdFree,lnz,aux,a],
-    p : expandIf(p),
-     q : expandIf(q),
-    if degree(p,var)<degree(q,var) then
-      (
-      aux:p,
-      p: q,
-      q : aux,
-      degq_gr_degp : true
-      )
-    else  
-    degq_gr_degp:false,
-      if degree(p,var)= degree(q,var) then
-         q : ratexpand(leadCoeff(p,var)*q-leadCoeff(q,var)*p),
- 
-    if verbosity>= NORMAL then
-      (
-      print("gcdFreePart) Invoking sSubResExt with"),
-      print("gcdFreePart) p : ", p),
-      print("gcdFreePart) q : ", q)
-      ),
-
-    sExtSR : sSubResExtLastVerbose(p,q,var,verbosity-1),
-   
-    if degq_gr_degp then
-    (
-    gcdRes : first(sExtSR),
-    gcdFree : third(sExtSR)
-    )
-    else
-    (
-    gcdRes : first(sExtSR),
-    gcdFree : fourth(sExtSR)
-    ),
-    return([gcdRes,gcdFree])
-);
-
-
-/*gcdFree part when coefficients are integers*/
-gcdFreePartWithZ(p,q,var) :=
-  gcdFreePartWithZVerbose(p,q,var,DEFAULT_VERBOSITY);
-
-
-gcdFreePartWithZVerbose(p,q,var,verbosity) :=
-  block([sExtSR,gcdRes,gcdFree,lnz,aux,a],
+  block([sExtSR,gcdRes,gcdFree,lnz,aux],
     p : expandIf(p),
     q : expandIf(q),
     if degree(p,var)<degree(q,var) then
       (
       aux : p,
       p : q,
-      q : aux,
-      degq_gr_degp:true
+      q : aux
       )
     else  
-    degq_gr_degp:false,
       if degree(p,var)= degree(q,var) then
+         (
+         aux : q,
          q : ratexpand(leadCoeff(p,var)*q-leadCoeff(q,var)*p),
+         p : aux
+         ),
  
     if verbosity>= NORMAL then
       (
@@ -657,53 +651,72 @@ gcdFreePartWithZVerbose(p,q,var,verbosity) :=
       print("gcdFreePart) q : ", q)
       ),
 
-    sExtSR : sSubResExtLastVerbose(p,q,var,verbosity-1),
+    sExtSR : subResExtLastVerbose(p,q,var,verbosity-1),
    
-      if degq_gr_degp then
-    (
     gcdRes : first(sExtSR),
-    gcdFree : third(sExtSR)
-    )
-    else
-    (
-    gcdRes : first(sExtSR),
-    gcdFree : fourth(sExtSR)
-    ),
+    gcdFree : third(sExtSR),
     
-    if degq_gr_degp then
-    return([ratexpand(leadCoeff(expandIf(q),var)*gcdRes/leadCoeff(gcdRes,var)),
-            ratexpand(leadCoeff(expandIf(q),var)*
-                      gcdFree/leadCoeff(gcdFree,var))])
-		      else 
-return([ratexpand(leadCoeff(expandIf(p),var)*gcdRes/leadCoeff(gcdRes,var)),
-            ratexpand(leadCoeff(expandIf(p),var)*
-                      gcdFree/leadCoeff(gcdFree,var))])
-);
-    
-
-
-  
-  /* Square free part of a polynomial */
-squareFreeBuiltIn(pol,var):= 
-  pol/gcd(pol,diff(pol,var),var);  
-
-squareFreeWithQ(pol,var):=
-  block([gcdRes],
-  return(gcdFreePart(pol,diff(pol,var),var)[2])
+    return([gcdRes,gcdFree])
   );
 
-squareFreeWithZ(pol,var):=
-  gcdFreePartWithZ(pol,diff(pol,var),var)[2];
+
+gcdFreePartWithZ(p,q,var) :=
+  gcdFreePartWithZVerbose(p,q,var,DEFAULT_VERBOSITY);
+
+gcdFreePartWithZVerbose(p,q,var,verbosity) :=
+  block([sExtSR,gcdRes,gcdFree,lnz,aux],
+    p : expandIf(p),
+    q : expandIf(q),
+    if degree(p,var)<degree(q,var) then
+      (
+      aux : p,
+      p : q,
+      q : aux
+      )
+    else  
+      if degree(p,var)= degree(q,var) then
+         (
+         aux : q,
+         q : ratexpand(leadCoeff(p,var)*q-leadCoeff(q,var)*p),
+         p : aux
+         ),
+ 
+    if verbosity>= NORMAL then
+      (
+      print("gcdFreePart) Invoking sSubResExt with"),
+      print("gcdFreePart) p : ", p),
+      print("gcdFreePart) q : ", q)
+      ),
+
+    sExtSR : subResExtLastVerbose(p,q,var,verbosity-1),
+   
+    gcdRes : first(sExtSR),
+    gcdFree : third(sExtSR),
+    
+    return([ratexpand(leadCoeff(expandIf(p),var)*gcdRes/second(sExtSR)),
+            ratexpand(leadCoeff(expandIf(p),var)*
+                      gcdFree/leadCoeff(gcdFree,var))])
+  );
+
+/*
+gcdFreePartInZ(p,q,var) :=
+  map(lambda([x],ratexpand(leadCoeff(expandIf(p),var)*x/leadCoeff(x,var))),
+    gcdFreePart(p,q,var));
+*/
 
 
-  /* computation of resultant through subresultants*/
+subResCoeffLast(p,q,var) :=
+  last(subResCoeff(p,q,var));
+/*
+ second(subResExtLast(p,q,var));
+*/
 
 sylvesterResultant(p,q,var) :=
   block([aux],
     p : expandIf(p),
     q : expandIf(q),
     if degree(p,var)>degree(q,var) then
-      return(revRowsCount(degree(p,var))*sSubResCoeffLast(p,q,var))
+      return(epsilon(degree(p,var))*subResCoeffLast(p,q,var))
     else
       if degree(p,var)<degree(q,var) then
         return((-1)^(degree(q,var)*degree(p,var))*sylvesterResultant(q,p,var))
@@ -711,15 +724,24 @@ sylvesterResultant(p,q,var) :=
         (
         aux : expand(leadCoeff(p,var)*q-leadCoeff(q,var)*p),
        
-        return(expand(sSubResCoeffLast(p,aux,var)/leadCoeff(p,var)^degree(aux,var)))
+        return(expand(subResCoeffLast(p,aux,var)/leadCoeff(p,var)^degree(aux,var)))
         )
       );
-	
 
-/* Computation of subdiscriminants*/
+
+discriminant(p,var) :=
+  expand((-1)^epsilon(degree(p,var))*
+         sylvesterResultant(p,diff(p,var),var)*
+         leadCoeff(p,var)^(degree(p,var)-degree(diff(p,var),var)-2));
+
+/*
+subDiscr(p,var) :=
+  expand(first(subRes(p,diff(p,var),var))
+         /leadCoeff(p,var));
+*/
 subDiscr(p,var) :=
   block([pcRes,pRes,cRes],
-    pcRes : sSubRes(p,diff(p,var),var),
+    pcRes : subRes(p,diff(p,var),var),
     pRes : first(pcRes),
     pRes : cons(first(pRes),expand(rest(pRes)/leadCoeff(p,var))),
     cRes : second(pcRes),
@@ -729,19 +751,22 @@ subDiscr(p,var) :=
 
 subDiscrCoeff(p,var) :=
   block([cRes],
-  p:expand(p),
-  cRes : sSubResCoeff(p,diff(p,var),var),
+  cRes : subResCoeff(p,diff(p,var),var),
   cRes : cons(first(cRes),expand(rest(cRes)/leadCoeff(p,var))),
   return(cRes)
   );
-  
-  /*Discriminant */
-   discriminant(p,var) :=last(subDiscrCoeff(p,var));
 
 
+/* only for characteristic 0
+  expand((-1)^epsilon(degree(p,var))*sylvesterResultant(p,diff(p,var),var)/leadCoeff(p,var));
+*/
+
+/*
+subDiscriminant(p,var) := first(sSubRes(p,diff(p,var),var));
+*/  
 
 /* --------------------------------------------- */
-/* Part concerning the Cauchy index computation by signed remainders*/
+/* Part concerning the signed remainder sequence */
 
 /* In the following S(P,Q) is the signed remainder sequence of P and Q */
 
@@ -763,7 +788,7 @@ signChanges(seq) :=
 
 /* Number of sign changes of a polynomial at a certain value */
 /* Notation "V(P;a)" */
-
+/* We use proposition 2.4 for the signs at infinities */
 signChangesAt(seq,var,a) :=
   if a = inf then
      signChanges(makelist(leadCoeff(seq[i],var),i,1,length(seq)))
@@ -790,6 +815,7 @@ derSeq(f,var) :=
   makelist(diff(f,var,i),i,0,degree(f,var));
 
 /* Cauchy Index */
+/* Theorem 2.52 */
 /* V(S(P,Q);a,b) = Ind(Q/P;a,b) */
 sRemCauchyIndexBetween(num,den,var,a,b) :=
   sRemCauchyIndexBetweenVerbose(num,den,var,a,b,DEFAULT_VERBOSITY);
@@ -805,13 +831,14 @@ sRemCauchyIndexVerbose(num,den,var,verbosity) :=
   signChangesDiff(sRemVerbose(den,num,var,verbosity-1),
                       var,-inf,+inf);
 
-/* Tarski query computed by formula */
+/* Tarski query computed by Sylvester's theorem's formula */
+/* Theorem 2.55 */
 /* V(S(P,P'Q);a,b) = SQ(Q,P;a,b) */
 sRemTarskiQueryBetween(q,p,var,a,b) :=
   sRemTarskiQueryBetweenVerbose(q,p,var,a,b,DEFAULT_VERBOSITY);
 
 sRemTarskiQueryBetweenVerbose(q,p,var,a,b,verbosity) :=
-  signChangesDiff(sRemVerbose(p,diff(p,var)*q,var,verbose-1),var,a,b);
+  signChangesDiff(sRemVerbose(p,diff(p,var)*q,var),var,a,b,verbosity-1);
 
 sRemTarskiQuery(q,p,var) :=
   sRemTarskiQueryVerbose(q,p,var,DEFAULT_VERBOSITY);
@@ -821,7 +848,8 @@ sRemTarskiQueryVerbose(q,p,var,verbosity) :=
                        var,-inf,+inf);
 
 
-/* Number of roots counted by Sturm'q theorem's formula */
+/* Number of roots counted by Tarski's theorem's formula */
+/* Theorem 2.56 */
 /* V(S(P,P');a,b) */
 sRemNumberOfRootsBetween(p,var,a,b) :=
   sRemNumberOfRootsBetweenVerbose(p,var,a,b,DEFAULT_VERBOSITY);
@@ -835,7 +863,8 @@ sRemNumberOfRoots(p,var) :=
 sRemNumberOfRootsVerbose(p,var,verbosity) :=
   sRemTarskiQueryVerbose(1,p,var,verbosity-1);
 
-/* Sturm sequence */
+/* Tarski sequence */
+/* defined as: S(P,P') */
 sturmSequence(p,var) :=
   sturmSequenceVerbose(p,var,DEFAULT_VERBOSITY);
 
@@ -844,10 +873,13 @@ sturmSequenceVerbose(p,var,verbosity) :=
 
 
 /* ------------------------------------------------- */
-/* Part concerning Cauchy index by signed subresultants coefficients */
-/* and the Cauchy Index in all R  */
+/* Part concerning signed subresultants coefficients */
+/* and the Cauchy Index in all R(Subsection 9.1.2)   */
 
 
+/* Notation taken from Remark 4.36 and used by Notation 9.4 */
+epsilon(x) :=
+  (-1)^(x*(x-1)/2);
 
 /* It counts and removes the trailing zeros out of a sequence */
 trimZeroCount(seq,count) :=
@@ -863,13 +895,10 @@ trimZeroCount(seq,count) :=
 trimZero(seq) :=
   trimZeroCount(seq,0);
 
-
-
-
-/* Generalized permanences minus variations */
+/* Notation 9.4 ("D(s)") */
 /* When there are no zeros this gives the difference between */
 /* the sign permanencies and the number of sign changes */ 
-genPermMVar(seq) :=
+sSubResSignChanges(seq) :=
    block([trimRes,trimmed,count],
    
      if seq = [] then
@@ -885,18 +914,28 @@ genPermMVar(seq) :=
      if oddp(count+1) then
         
         
-        return(genPermMVar(trimmed)+
-               revRowsCount(count+1)*sgn(first(seq)*first(trimmed)))
+        return(sSubResSignChanges(trimmed)+
+               epsilon(count+1)*sgn(first(seq)*first(trimmed)))
         
      else
-        return(genPermMVar(trimmed))
+        return(sSubResSignChanges(trimmed))
      
    );
    
 
+/* "j-th signed subresultant coefficient", Notation 8.52 ("sr_j(P,Q)") */
+/*
+sSubResCoeff(sSubResSeq,var,j) :=
+  if not(j = degree(first(sSubResSeq),var)) then
+     coeff(sSubResSeq[length(sSubResSeq)-j],var,j)
+  else
+     sgn(leadCoeff(first(sSubResSeq),var)^
+                    (degree(first(sSubResSeq),var)-
+                     degree(second(sSubResSeq),var)));
+*/
 
 /* Cauchy Index by signed subresultant */
-
+/* Algorithm 9.27 */
 sSubResCauchyIndex(q,p,var) :=
   sSubResCauchyIndexVerbose(q,p,var,DEFAULT_VERBOSITY);
 
@@ -905,7 +944,7 @@ sSubResCauchyIndexVerbose(q,p,var,verbosity) :=
   degP : degree(p,var),
   degQ : degree(q,var),
   if degQ < degP then
-     return(genPermMVar(sSubResVerbose(p,q,var,verbosity-1)[2]))
+     return(sSubResSignChanges(sSubResVerbose(p,q,var,verbosity-1)[2]))
   else
      (
      if verbosity >= VERY then
@@ -914,7 +953,7 @@ sSubResCauchyIndexVerbose(q,p,var,verbosity) :=
      if(oddp(sgnExp)) then
        sgnExp : sgnExp+1,
      newQ : remainder(leadCoeff(p,x)^sgnExp * q,p,var),
-     return(genPermMVar(sSubResVerbose(p,newQ,var,verbosity-1)[2]))
+     return(sSubResSignChanges(sSubResVerbose(p,newQ,var,verbosity-1)[2]))
      )
   );
 
@@ -925,6 +964,7 @@ sSubResNumberOfRootsVerbose(p,var,verbosity) :=
   sSubResCauchyIndexVerbose(diff(p,var),p,var,verbosity-1);
 
 /* Tarski Query by signed subresultant */
+/* Algorithm 9.28 */
 sSubResTarskiQuery(q,p,var) :=
  sSubResTarskiQueryVerbose(q,p,var,DEFAULT_VERBOSITY);
 
@@ -949,7 +989,7 @@ sSubResTarskiQueryVerbose(q,p,var,verbosity) :=
 
     coeffSeq : sSubResCoeffVerbose(p,diff(p,var),var,verbosity-1),
 
-    return(sgn(leadCoeff(q,var))*genPermMVar(coeffSeq)) 
+    return(sgn(leadCoeff(q,var))*sSubResSignChanges(coeffSeq)) 
     )
   else
     if degQ = 1 then
@@ -965,7 +1005,7 @@ sSubResTarskiQueryVerbose(q,p,var,verbosity) :=
 
       coeffSeq : sSubResCoeffVerbose(p,Rbar,var,verbosity-1),
 
-      return(genPermMVar(coeffSeq))
+      return(sSubResSignChanges(coeffSeq))
       )
     else
       (
@@ -975,17 +1015,17 @@ sSubResTarskiQueryVerbose(q,p,var,verbosity) :=
       coeffSeq : sSubResCoeffVerbose(NORM_ALGORITHM(-diff(p,var)*q),p,var,verbosity-1),
 
       if oddp(degQ-1) then
-         return(genPermMVar(coeffSeq) + sgn(leadCoeff(q,var)))
+         return(sSubResSignChanges(coeffSeq) + sgn(leadCoeff(q,var)))
       else
-         return(genPermMVar(coeffSeq))
+         return(sSubResSignChanges(coeffSeq))
       )
   );
 
 
 /* ----------------------------------------------  */
-/* Part concering the Bezoutian  */
+/* Part concering the Bezoutian (subsection 9.1.3) */
 
-/* Bezoutian  */
+/* Bezoutian (Notation 9.14) */
 bez(p,q,var,x,y) :=
    (subst(y,var,q) * subst(x,var,p) - 
     subst(x,var,q) * subst(y,var,p))/(x-y);
@@ -993,10 +1033,11 @@ bez(p,q,var,x,y) :=
 
 
 /* ----------------------------------------------- */
-/* Part concerning the Cauchy Index on an interval through signed subresultants */
-
+/* Part concerning the Cauchy Index on an interval */
+/* (Subsection 9.1.5)                              */
 
 /* Modified number of sign changes */
+/* Notation 9.29, ("W(s)") */
 /* Modified Sign Changes: */
 /* counting as two sign changes the groups +,0,0,+ and -,0,0,- */
 modifiedSignChanges(seq) :=
@@ -1054,6 +1095,7 @@ modifiedSignChangesDiff(seq,var,a,b) :=
 
 
 /* Cauchy Index in an interval computed by subresultants */
+/* Theorem 9.30 */
 /* W(SR(P,Q);a,b) = Ind(Q/P;a,b) */
 sSubResCauchyIndexBetween(num,den,var,a,b) :=
   sSubResCauchyIndexBetweenVerbose(num,den,var,a,b,DEFAULT_VERBOSITY);
@@ -1062,14 +1104,14 @@ sSubResCauchyIndexBetweenVerbose(num,den,var,a,b,verbosity) :=
   modifiedSignChangesDiff(sSubResVerbose(den,num,var,verbosity-1)[1],var,a,b);
 
 /* Tarski Query by subresultants */
-
+/* Corallary 9.32 */
 /* W(SR(P,Remainder(P,Q));a,b) = SQ(Q,P;a,b) */
 sSubResTarskiQueryBetween(q,p,var,a,b) :=
   sSubResTarskiQueryBetweenVerbose(q,p,var,a,b,DEFAULT_VERBOSITY);
 
 sSubResTarskiQueryBetweenVerbose(q,p,var,a,b,verbosity) :=
   modifiedSignChangesDiff(sSubResVerbose(p,
-                              remainder(q*diff(p,var),p,var),var,verbosity-1)[1],var,a,b);
+                              remainder(p,q,var),var,verbosity-1)[1],var,a,b);
 
 
 /* Number of roots on an interval by signed subresultants */
@@ -1086,11 +1128,12 @@ sSubResNumberOfRootsBetweenVerbose(p,var,a,b,verbosity) :=
 
 
 /* It computes the signature of a Hankel quadratic form */
+/* Algorithm 9.47 */
 hankelSignature(seq) := 
   hankelSignatureVerbose(seq,DEFAULT_VERBOSITY);
 
 hankelSignatureVerbose(seq,verbosity) :=
-  block([m,n,sLen,trimRes,trimmed,count,c,p,q,t,i,SR,j],
+  block([n,sLen,trimRes,trimmed,count,c,p,q,t,i,SR,j],
    sLen : length(seq),
    if evenp(sLen) then
      (
@@ -1142,7 +1185,7 @@ hankelSignatureVerbose(seq,verbosity) :=
               else 
                  j : j-1,
 
-           return(genPermMVar(
+           return(sSubResSignChanges(
                    makelist(SR[2][i+1],
                      i,0,m-j))) 
 
@@ -1192,14 +1235,14 @@ lienardChipartConditions(pol,var) :=
   if evenp(degP) then
     (
     m = p/2,
-    SR : sSubResCoeff(F,G,var),
+    SR : subResCoeff(F,G,var),
 
     return(setify(append(poly2list(pol,var),SR)))
     )
   else
     (
     m = (p-1)/2,
-    SR : sSubResCoeff(var*G,F,var),
+    SR : subResCoeff(var*G,F,var),
 
     return(setify(append(poly2list(pol,var),SR)))
     )
@@ -1210,6 +1253,7 @@ lienardChipartConditions(pol,var) :=
 
 /* It computes the difference between the number of roots of P */
 /* with positive real parts and the number of roots with negative real parts */
+/* Theorem 9.48 (notation "n(P)") */
 posNegDiff(p,var) := 
   posNegDiffVerbose(p,var,DEFAULT_VERBOSITY);
 
@@ -1251,10 +1295,7 @@ posNegDiffVerbose(p,var,verbosity) :=
             var,-inf,+inf,verbosity-1))
      )
   );
-  
-  /* New name for Horner evaluation */
 
-hornerEval(pol,var,value) :=saragHorner(pol,var,value) ;
 
 saragHorner(pol,var,value) :=
   block([res,i,degP],

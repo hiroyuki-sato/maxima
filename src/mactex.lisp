@@ -56,53 +56,12 @@
 
 (declare-top (special lop rop ccol $gcprint texport $labels $inchar vaxima-main-dir))
 
-(defvar *tex-environment-default* '("$$" . "$$"))
-
-(defun $set_tex_environment_default (env-open env-close)
-  (setq env-open ($sconcat env-open))
-  (setq env-close ($sconcat env-close))
-  (setq *tex-environment-default* `(,env-open . ,env-close))
-  ($get_tex_environment_default))
-
-(defun $get_tex_environment_default ()
-  `((mlist) ,(car *tex-environment-default*) ,(cdr *tex-environment-default*)))
-
-(defun $set_tex_environment (x env-open env-close)
-  (setq env-open ($sconcat env-open))
-  (setq env-close ($sconcat env-close))
-  (if (getopr x) (setq x (getopr x)))
-  (setf (get x 'tex-environment) `(,env-open . ,env-close))
-  ($get_tex_environment x))
-
-(defun $get_tex_environment (x)
-  (if (getopr x) (setq x (getopr x)))
-  (let ((e (get-tex-environment x)))
-    `((mlist) ,(car e) ,(cdr e))))
-
-(defun get-tex-environment (x)
-  (cond
-    ((symbolp x)
-     (or (get x 'tex-environment) *tex-environment-default*))
-    ((atom x)
-     *tex-environment-default*)
-    (t
-      (get-tex-environment (caar x)))))
-
-(setf (get 'mdefine 'tex-environment)
-      `(,(format nil "~%\\begin{verbatim}~%") . ,(format nil ";~%\\end{verbatim}~%")))
-
-(setf (get 'mdefmacro 'tex-environment)
-      `(,(format nil "~%\\begin{verbatim}~%") . ,(format nil ";~%\\end{verbatim}~%")))
-
-(setf (get 'mlable 'tex-environment)
-      `(,(format nil "~%\\begin{verbatim}~%") . ,(format nil ";~%\\end{verbatim}~%")))
-
 ;; top level command the result of tex'ing the expression x.
 ;; Lots of messing around here to get C-labels verbatim printed
 ;; and function definitions verbatim "ground"
 
-(defmspec $tex(l) ;; mexplabel, and optional filename or stream
-  ;;if filename or stream supplied but 'nil' then return a string
+(defmspec $tex(l) ;; mexplabel, and optional filename
+  ;;if filename supplied but 'nil' then return a string
   (let ((args (cdr l)))
     (cond ((and (cdr args) (null (cadr args)))
 	   (let ((*standard-output* (make-string-output-stream)))
@@ -120,26 +79,20 @@
                            (quote-% (subseq strsym (1+ pos))))
       strsym)))
 
-(defun tex1 (mexplabel &optional filename-or-stream) ;; mexplabel, and optional filename or stream
-  (prog (mexp  texport $gcprint ccol x y itsalabel need-to-close-texport)
+(defun tex1 (mexplabel &optional filename ) ;; mexplabel, and optional filename
+  (prog (mexp  texport $gcprint ccol x y itsalabel)
      ;; $gcprint = nil turns gc messages off
      (setq ccol 1)
      (cond ((null mexplabel)
 	    (displa " No eqn given to TeX")
 	    (return nil)))
      ;; collect the file-name, if any, and open a port if needed
-     (setq filename-or-stream (meval filename-or-stream))
-     (setq texport
-       (cond
-         ((null filename-or-stream) *standard-output*)
-         ((eq filename-or-stream t) *standard-output*)
-         ((streamp filename-or-stream) filename-or-stream)
-         (t
-           (setq need-to-close-texport t)
-           (open (namestring (maxima-string filename-or-stream))
-                 :direction :output
-                 :if-exists :append
-                 :if-does-not-exist :create))))
+     (setq texport (cond((null filename) *standard-output* ) ; t= output to terminal
+			(t
+			 (open (namestring (maxima-string (meval filename)))
+			       :direction :output
+			       :if-exists :append
+			       :if-does-not-exist :create))))
      ;; go back and analyze the first arg more thoroughly now.
      ;; do a normal evaluation of the expression in macsyma
      (setq mexp (meval mexplabel))
@@ -160,10 +113,10 @@
 		  (setq mexp (list '(mdefine) (cons (list x 'array) (cdadr y)) (caddr y)))))))
      (cond ((and (null(atom mexp))
 		 (member (caar mexp) '(mdefine mdefmacro) :test #'eq))
-	    (format texport (car (get-tex-environment (caar mexp))))
+	    (format texport "~%\\begin{verbatim}~%")
 	    (cond (mexplabel (format texport "~a " mexplabel)))
 	    (mgrind mexp texport)	;write expression as string
-	    (format texport (cdr (get-tex-environment (caar mexp)))))
+	    (format texport ";~%\\end{verbatim}~%"))
 	   ((and
 	     itsalabel ;; but is it a user-command-label?
          ;; THE FOLLOWING TESTS SEEM PRETTY STRANGE --
@@ -179,14 +132,13 @@
 	       (string= (subseq (maybe-invert-string-case (string $outchar)) 1 (length (string $outchar)))
 			(subseq (string mexplabel) 1 (length (string $outchar)))))))
 	    ;; aha, this is a C-line: do the grinding:
-	    (format texport (car (get-tex-environment 'mlable)))
-        (format texport "~a" mexplabel)
+	    (format texport "~%\\begin{verbatim}~%~a " mexplabel)
 	    (mgrind mexp texport)	;write expression as string
-	    (format texport (cdr (get-tex-environment 'mlable))))
+	    (format texport ";~%\\end{verbatim}~%"))
 	   (t 
 	    (if mexplabel (setq mexplabel (quote-% mexplabel)))
 					; display the expression for TeX now:
-        (myprinc (car (get-tex-environment mexp)))
+	    (myprinc "$$")
 	    (mapc #'myprinc
 		  ;;initially the left and right contexts are
 		  ;; empty lists, and there are implicit parens
@@ -194,10 +146,10 @@
 		  (tex mexp nil nil 'mparen 'mparen))
 	    (cond (mexplabel
 		   (format texport "\\leqno{\\tt ~a}" mexplabel)))
-	    (format texport (cdr (get-tex-environment mexp)))))
+	    (format texport "$$")))
      (terpri texport)
-     (if need-to-close-texport
-	    (close texport))
+     (cond (filename   ; and close port if not terminal
+	    (close texport)))
      (return mexplabel)))
 
 ;;; myprinc is an intelligent low level printing routine.  it keeps track of
@@ -247,11 +199,13 @@
 (defun tex-atom (x l r)	;; atoms: note: can we lose by leaving out {}s ?
   (append l
 	  (list (cond ((numberp x) (texnumformat x))
-		      ((and (symbolp x) (or (get x 'texword) (get (get x 'reversealias) 'texword))))
-                      ((stringp x)
-                       (tex-string (quote-% (if $stringdisp (concatenate 'string "``" x "''") x))))
+		      ((and (symbolp x) (get x 'texword)))
+                      ((stringp x) (tex-string x))
+                      ((mstringp x)
+                       (let ((s (maybe-invert-string-case (symbol-name (stripdollar x)))))
+                         (tex-string (quote-% (if $stringdisp (concatenate 'string "``" s "''") s)))))
                       ((characterp x) (tex-char x))
-		      (t (tex-stripdollar (or (get x 'reversealias) x)))))
+		      (t (tex-stripdollar x))))
 	  r))
 
 (defun tex-string (x)
@@ -319,9 +273,9 @@
 	  (t
 	   (setq r (exploden atom))
 	   (setq exponent (member 'e r :test #'string-equal)) ;; is it ddd.ddde+EE
-	   (cond
-         ((null exponent)
-		  (coerce r 'string))
+	   (cond ((null exponent)
+		  ;; it is not. go with it as given
+		  atom)
 		 (t
 		  (setq firstpart
 			(nreverse (cdr (member 'e (reverse r) :test #'string-equal))))
@@ -340,7 +294,7 @@
 	      x (cdr x)
 	      l (tex f (append l (list "\\left(")) (list "\\right)") 'mparen 'mparen))
 	(setq f (caar x)
-	      l (tex f l nil lop 'mfunction)))
+	      l (tex (texword f) l nil lop 'mfunction)))
     (setq
      r (nconc (tex-list (cdr x) nil (list "}") ",") r))
     (nconc l (list "_{") r  )))
@@ -568,11 +522,11 @@
 		 (expon (caddr x)) ;; this is the exponent
 		 (doit (and
 			f		; there is such a function
-			(member (getcharn f 1) '(#\% #\$)) ;; insist it is a % or $ function
-            (not (member 'array (cdar fx) :test #'eq))	; fix for x[i]^2
+			(member (getchar f 1) '(% $) :test #'eq) ;; insist it is a % or $ function
+			(not (eq (car (last (car fx))) 'array))	; fix for x[i]^2
 					; Jesper Harder <harder@ifa.au.dk>
 			(not (member f '(%sum %product %derivative %integrate %at
-					      %lsum %limit $pderivop) :test #'eq)) ;; what else? what a hack...
+				       %lsum %limit) :test #'eq)) ;; what else? what a hack...
 			(or (and (atom expon) (not (numberp expon))) ; f(x)^y is ok
 			    (and (atom expon) (numberp expon) (> expon 0))))))
 					; f(x)^3 is ok, but not f(x)^-1, which could
@@ -689,19 +643,12 @@
 
 (defprop %limit tex-limit tex)
 
-(defun tex-limit (x l r)
-  (let*
-     ;; limit function
-    ((s1 (tex (cadr x) nil nil 'mparen rop))
-     (direction (fifth x))
-     ;; the thing underneath "limit"
-     (subfun
-       (subst (or (and (eq direction '$plus) "\\downarrow ")
-                  (and (eq direction '$minus) "\\uparrow ")
-                  "\\rightarrow ")
-              '=
-              (tex `((mequal simp) ,(caddr x),(cadddr x))
-                   nil nil 'mparen 'mparen))))
+(defun tex-limit(x l r)	;; ignoring direction, last optional arg to limit
+  (let ((s1 (tex (cadr x) nil nil 'mparen rop))	;; limitfunction
+	(subfun	;; the thing underneath "limit"
+	 (subst "\\rightarrow " '=
+		(tex `((mequal simp) ,(caddr x),(cadddr x))
+		     nil nil 'mparen 'mparen))))
     (append l `("\\lim_{" ,@subfun "}{" ,@s1 "}") r)))
 
 (defprop %at tex-at tex)
@@ -731,13 +678,13 @@
 (defprop %binomial tex-choose tex)
 
 (defun tex-choose (x l r)
-  (append l
-          '("{{")
-          (tex (cadr x) nil nil 'mparen 'mparen)
-          '("}\\choose{")
-          (tex (caddr x) nil nil 'mparen 'mparen)
-          '("}}")
-          r))
+  `(,@l
+    "\\pmatrix{"
+    ,@(tex (cadr x) nil nil 'mparen 'mparen)
+    "\\\\"
+    ,@(tex (caddr x) nil nil 'mparen 'mparen)
+    "}"
+    ,@r))
 
 (defprop rat tex-rat tex)
 (defun tex-rat(x l r) (tex-mquotient x l r))
@@ -991,6 +938,24 @@
 (defprop | --> | "\\longrightarrow " texsym)
 (defprop #.(intern (format nil " ~A " 'where)) "\\;\\mathbf{where}\\;" texsym)
 
+(defprop &>= ("\\ge ") texsym)
+(defprop &>= tex-infix tex)
+
+(defprop &> (">") texsym)
+(defprop &> tex-infix tex)
+
+(defprop &<= ("\\le ") texsym)
+(defprop &<= tex-infix tex)
+
+(defprop &< ("<") texsym)
+(defprop &< tex-infix tex)
+
+(defprop &= ("=") texsym)
+(defprop &= tex-infix tex)
+
+(defprop |&#| ("\\ne ") texsym)
+(defprop |&#| tex-infix tex)
+
 ;; end of additions by Marek Rychlik
 
 (defun tex-try-sym (x)
@@ -1039,15 +1004,13 @@
 ;;  The texput function was written by Barton Willis.
 
 (defun $texput (e s &optional tx)
-
-  (cond
-    ((stringp e)
-     (setq e ($verbify e)))
-    ((not (symbolp e))
-     (merror "texput: first argument must be a string or a symbol.")))
+  (when (mstringp e)
+    (setq e (define-symbol (string-left-trim '(#\&) e))))
 
   (setq s (if ($listp s) (margs s) (list s)))
   
+  (setq s (mapcar #'(lambda (x) (maybe-invert-string-case (symbol-name (stripdollar x)))) s))
+
   (cond ((null tx)
 	 (putprop e (nth 0 s) 'texword))
 	((eq tx '$matchfix)

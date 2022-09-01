@@ -90,11 +90,8 @@ but re-ordering $opproperties doesn't change the order the rules are applied.
 					(margs arg)))))
 	  (t (protected-oper-apply e z)))))
 
-;(setq opers (cons '$idempotent opers)
-;      *opers-list (cons '($idempotent . idempotent) *opers-list))
-
 (setq opers (cons '$idempotent opers)
-      *opers-list `(,@*opers-list ($idempotent . idempotent)))
+      *opers-list (cons '($idempotent . idempotent) *opers-list))
 
 (setq $opproperties ($cons '$idempotent $opproperties))
 

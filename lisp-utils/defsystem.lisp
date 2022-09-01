@@ -870,7 +870,6 @@
       :sbcl
       :cormanlisp
       :scl
-      :abcl
       (and allegro-version>= (version>= 4 1)))
 (eval-when #-(or :lucid)
            (:compile-toplevel :load-toplevel :execute)
@@ -991,12 +990,10 @@
 ;;; MAKE package. A nice side-effect is that the short nickname
 ;;; MK is my initials.
 
-#+abcl (defpackage make (:use "COMMON-LISP") (:nicknames "MK"))
-
 #+(or clisp cormanlisp ecl (and gcl defpackage) sbcl)
 (defpackage "MAKE" (:use "COMMON-LISP") (:nicknames "MK"))
 
-#-(or :sbcl :cltl2 :lispworks :ecl :scl :abcl)
+#-(or :sbcl :cltl2 :lispworks :ecl :scl)
 (in-package :make :nicknames '("MK"))
 
 ;;; For CLtL2 compatible lisps...
@@ -1027,7 +1024,7 @@
 ;;; The code below, is originally executed also for CMUCL. However I
 ;;; believe this is wrong, since CMUCL comes with its own defpackage.
 ;;; I added the extra :CMU in the 'or'.
-#+(and :cltl2 (not (or :cmu :scl :clisp :sbcl :abcl
+#+(and :cltl2 (not (or :cmu :scl :clisp :sbcl
 		       (and :excl (or :allegro-v4.0 :allegro-v4.1))
 		       :mcl)))
 (eval-when (compile load eval)
@@ -1052,7 +1049,7 @@
 (eval-when (compile load eval)
   (in-package :make))
 
-#+(or ecl abcl)
+#+ecl
 (in-package :make)
 
 ;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19970105
@@ -1371,7 +1368,7 @@
  	 #+ACLPC                              ("lsp"  . "fsl")
  	 #+CLISP                              ("lisp" . "fas")
          #+KCL                                ("lsp"  . "o")
-         #+ECL                                ("lsp"  . #+msvc "obj" #-msvc "fas")
+         #+ECL                                ("lsp"  . "so")
          #+IBCL                               ("lsp"  . "o")
          #+Xerox                              ("lisp" . "dfasl")
 	 ;; Lucid on Silicon Graphics
@@ -2620,7 +2617,7 @@ the system definition, if provided."
 	   ;; string. So if case matters in the filename, use strings, not
 	   ;; symbols, wherever the system is named.
            (when (foreign-system-p system)
-             (warn "Foreing system ~S cannot be reloaded by MK:DEFSYSTEM." system)
+             (warn "Foreing system ~S cannot be reloaded by MK:DEFSYSTEM.")
              (return-from find-system nil))
 	   (let ((path (compute-system-path system-name definition-pname)))
 	     (when (and path
@@ -2642,7 +2639,7 @@ the system definition, if provided."
     (:load
      (or (unless *reload-systems-from-disk* (get-system system-name))
          (when (foreign-system-p (get-system system-name))
-           (warn "Foreign system ~S cannot be reloaded by MK:DEFSYSTEM." system-name)
+           (warn "Foreign system ~S cannot be reloaded by MK:DEFSYSTEM.")
            (return-from find-system nil))
 	 (or (find-system system-name :load-or-nil definition-pname)
 	     (error "Can't find system named ~s." system-name))))))
@@ -4126,10 +4123,10 @@ the system definition, if provided."
 (unless *old-require*
   (setf *old-require*
 	(symbol-function
-	 #-(or (and :excl :allegro-v4.0) :mcl :sbcl :scl :lispworks :abcl) 'lisp:require
+	 #-(or (and :excl :allegro-v4.0) :mcl :sbcl :scl :lispworks) 'lisp:require
 	 #+(and :excl :allegro-v4.0) 'cltl1:require
 	 #+(or :sbcl :scl) 'cl:require
-	 #+(or :lispworks3.1 :abcl) 'common-lisp::require
+	 #+:lispworks3.1 'common-lisp::require
 	 #+(and :lispworks (not :lispworks3.1)) 'system::require
 	 #+:openmcl 'cl:require
 	 #+(and :mcl (not :openmcl)) 'ccl:require
@@ -4140,9 +4137,9 @@ the system definition, if provided."
 	  (ccl:*warn-if-redefine-kernel* nil))
       #-(or (and allegro-version>= (version>= 4 1)) :lispworks)
       (setf (symbol-function
-	     #-(or (and :excl :allegro-v4.0) :mcl :sbcl :scl :lispworks :abcl) 'lisp:require
+	     #-(or (and :excl :allegro-v4.0) :mcl :sbcl :scl :lispworks) 'lisp:require
 	     #+(and :excl :allegro-v4.0) 'cltl1:require
-	     #+(or :lispworks3.1 :abcl) 'common-lisp::require
+	     #+:lispworks3.1 'common-lisp::require
 	     #+(or :sbcl :scl) 'cl:require
 	     #+(and :lispworks (not :lispworks3.1)) 'system::require
 	     #+:openmcl 'cl:require
@@ -4606,19 +4603,7 @@ the system definition, if provided."
 	 ;; Ugly, but seems to fix the problem.
 	 (concatenate 'string "./" namestring))))
 
-#+gcl
-(defun ensure-directories-exist (pathspec &key verbose)
-  (declare (ignore verbose))
-  ;; A very gross implementation of ensure-directories-exist.  Just
-  ;; call /bin/mkdir with our desired path.
-  (let* ((dir (make-pathname :host (pathname-host pathspec)
-			     :directory (pathname-directory pathspec)))
-	 (cmd (format nil "/bin/mkdir -p ~S" (namestring dir))))
-    (lisp:system cmd)
-    ;; The second return value is supposed to be T if directories were
-    ;; created.  I don't know how to tell that, so we just return T.
-    ;; (Would NIL be better?)
-    (values pathspec t)))
+#+gcl(defun ensure-directories-exist (arg0 &key verbose) ())
 
 (defun compile-file-operation (component force)
   ;; Returns T if the file had to be compiled.

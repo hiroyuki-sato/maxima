@@ -14,13 +14,7 @@
 
 (load-macsyma-macros rzmac)
 
-(declare-top (special var %p%i varlist plogabs half%pi nn* dn* $factlim))
-
-(defmvar $gammalim 10000
-  "Controls simplification of gamma for rational number arguments.")
-
-(defvar $gamma_expand nil
-  "Expand gamma(z+n) for n an integer when T.") 
+(declare-top (special var %p%i varlist plogabs half%pi nn* dn*))
 
 (defmfun simpplog (x vestigial z)
   (declare (ignore vestigial))
@@ -182,78 +176,33 @@
 (defmfun simpgamma (x vestigial z)
   (declare (ignore vestigial))
   (oneargcheck x)
-  (let ((j (simpcheck (cadr x) z)))
-    (cond ((and (floatp j)
-                (or (zerop j)
-                    (and (< j 0)
-                         (zerop (nth-value 1 (truncate j))))))
-           (merror "gamma(~:M) is undefined." j))
-          ((floatp j) (gammafloat j))
-          ((and ($bfloatp j)
-                (or (zerop1 j)
-                    (and (eq ($sign j) '$neg)
-                         (zerop1 (sub j ($truncate j))))))
-           (merror "gamma(~:M) is undefined." j))
-          (($bfloatp j) 
-           ;; Adding 4 digits in the call to bffac. For $fpprec up to about 256
-           ;; and an argument up to about 500.0 the accuracy of the result is
-           ;; better than 10^(-$fpprec).
-           (mfuncall '$bffac (m+ j -1) (+ $fpprec 4)))
-	  ((and (complex-number-p j 'float-or-rational-p)
-		(or $numer (floatp ($realpart j)) (floatp ($imagpart j))))
-	   (complexify (gamma-lanczos (complex ($float ($realpart j))
-					       ($float ($imagpart j))))))
-          ((and (complex-number-p j 'bigfloat-or-number-p)
-                (or $numer ($bfloatp ($realpart j)) 
-                           ($bfloatp ($imagpart j))))
-           ;; Adding 4 digits in the call to cbffac. See comment above.
-           (mfuncall '$cbffac 
-                     (add -1 ($bfloat ($realpart j)) 
-                             (mul '$%i ($bfloat ($imagpart j))))
-                     (+ $fpprec 4)))
-          ((eq j '$inf) '$inf) ; Simplify to $inf to be more consistent.
-          ((and $gamma_expand
-                (mplusp j) 
-                (integerp (cadr j)))
-           ;; Expand gamma(z+n) for n an integer.
-           (let ((n (cadr j))
-                 (z (simplify (cons '(mplus) (cddr j)))))
-             (cond 
-               ((> n 0)
-                (mul (simplify (list '($pochhammer) z n))
-                     (simplify (list '(%gamma) z))))
-               ((< n 0)
-                (setq n (- n))
-                (div (mul (power -1 n) (simplify (list '(%gamma) z)))
-                     ;; We factor to get the order (z-1)*(z-2)*...
-                     ;; and not (1-z)*(2-z)*... 
-                     ($factor
-                       (simplify (list '($pochhammer) (sub 1 z) n))))))))
+  (let* ((j (simpcheck (cadr x) z))
+	 (jr ($realpart j))
+	 (ji ($imagpart j)))
+    (cond ((floatp j) (gammafloat j))
+	  ((and (numberp jr) 
+		(numberp ji)
+		(or $numer (floatp jr) (floatp ji)))
+	   (complexify (gamma-lanczos (complex (float jr)
+					       (float ji)))))
+	  ((or (not (mnump j))
+	       (ratgreaterp (simpabs (list '(%abs) j) 1 t) $gammalim))
+	   (eqtest (list '(%gamma) j) x))
 	  ((integerp j)
-	   (cond ((> j 0)
-                  (cond ((<= j $factlim)
-                         ;; Positive integer less than $factlim. Evaluate.
-                         (simplify (list '(mfactorial) (1- j))))
-                         ;; Positive integer greater $factlim. Noun form.
-                        (t (eqtest (list '(%gamma) j) x))))
-                 ;; Negative integer. Throw a Maxima error.
+	   (cond ((> j 0) (simpfact (list '(mfactorial) (1- j)) 1 nil))
 		 (errorsw (throw 'errorsw t))
 		 (t (merror "gamma(~:M) is undefined" j))))
 	  ($numer (gammafloat (fpcofrat j)))
 	  ((alike1 j '((rat) 1 2))
 	   (list '(mexpt simp) '$%pi j))
-          ((and (mnump j)
-                (ratgreaterp $gammalim (simplify (list '(mabs) j)))
-                (or (ratgreaterp j 1) (ratgreaterp 0 j)))
-           ;; Expand for rational numbers less than $gammalim.
-           (gammared j))
+	  ((or (ratgreaterp j 1) (ratgreaterp 0 j)) (gammared j))
 	  (t (eqtest (list '(%gamma) j) x)))))
 
 (defun gamma (y) ;;; numerical evaluation for 0 < y < 1
   (prog (sum coefs)
-     (setq coefs (list 0.035868343 -0.193527817 0.48219939
-		       -0.75670407 0.91820685 -0.89705693
-		       0.98820588 -0.57719165))
+     (setq coefs (list 0.035868343d0 -0.193527817d0 0.48219939d0
+		       -0.75670407d0 0.91820685d0 -0.89705693d0
+		       0.98820588d0 -0.57719165d0))
      (unless (atom y) (setq y (fpcofrat y)))
      (setq sum (car coefs) coefs (cdr coefs))
      loop (setq sum (+ (* sum y) (car coefs)))
@@ -297,8 +246,8 @@
 ;;
 ;; to handle the case of Re(z) <= 0.
 ;;
-;; See http://my.fit.edu/~gabdo/gamma.m for some matlab code to
-;; compute this and http://my.fit.edu/~gabdo/gamma.txt for a nice
+;; See http://winnie.fit.edu/~gabdo/gamma.m for some matlab code to
+;; compute this and http://winnie.fit.edu/~gabdo/gamma.txt for a nice
 ;; discussion of Lanczos method and an improvement of Lanczos method.
 ;;
 ;;
@@ -308,26 +257,26 @@
 ;; accuracy.
 
 (defun gamma-lanczos (z)
-  (declare (type (complex flonum) z)
+  (declare (type (complex double-float) z)
 	   (optimize (safety 3)))
-  (let ((c (make-array 15 :element-type 'flonum
+  (let ((c (make-array 15 :element-type 'double-float
 		       :initial-contents
-		       '(0.99999999999999709182
-			 57.156235665862923517
-			 -59.597960355475491248
-			 14.136097974741747174
-			 -0.49191381609762019978
-			 .33994649984811888699e-4
-			 .46523628927048575665e-4
-			 -.98374475304879564677e-4
-			 .15808870322491248884e-3
-			 -.21026444172410488319e-3
-			 .21743961811521264320e-3
-			 -.16431810653676389022e-3
-			 .84418223983852743293e-4
-			 -.26190838401581408670e-4
-			 .36899182659531622704e-5))))
-    (declare (type (simple-array flonum (15)) c))
+		       '(0.99999999999999709182d0
+			 57.156235665862923517d0
+			 -59.597960355475491248d0
+			 14.136097974741747174d0
+			 -0.49191381609762019978d0
+			 .33994649984811888699d-4
+			 .46523628927048575665d-4
+			 -.98374475304879564677d-4
+			 .15808870322491248884d-3
+			 -.21026444172410488319d-3
+			 .21743961811521264320d-3
+			 -.16431810653676389022d-3
+			 .84418223983852743293d-4
+			 -.26190838401581408670d-4
+			 .36899182659531622704d-5))))
+    (declare (type (simple-array double-float (15)) c))
     (if (minusp (realpart z))
 	;; Use the reflection formula
 	;; -z*Gamma(z)*Gamma(-z) = pi/sin(pi*z)
@@ -335,84 +284,46 @@
 	;; Gamma(z) = pi/z/sin(pi*z)/Gamma(-z)
 	;;
 	;; If z is a negative integer, Gamma(z) is infinity.  Should
-	;; we test for this?  Throw an error?
-        ;; The test must be done by the calling routine.
-	(/ (float pi)
-	   (* (- z) (sin (* (float pi) z))
+	;; we test for this?  Throw an error?  What
+	(/ (float pi 1d0)
+	   (* (- z) (sin (* (float pi 1d0) z))
 	      (gamma-lanczos (- z))))
 	(let* ((z (- z 1))
 	       (zh (+ z 1/2))
 	       (zgh (+ zh 607/128))
+	       (zp (expt zgh (/ zh 2)))
 	       (ss 
-		(do ((sum 0.0)
+		(do ((sum 0d0)
 		     (pp (1- (length c)) (1- pp)))
 		    ((< pp 1)
 		     sum)
 		  (incf sum (/ (aref c pp) (+ z pp))))))
-          (let ((result 
-                 ;; We check for an overflow. The last positive value in 
-                 ;; double-float precicsion for which Maxima can calculate 
-                 ;; gamma is ~171.6243 (CLISP 2.46 and GCL 2.6.8)
-                 (ignore-errors
-		   (let ((zp (expt zgh (/ zh 2))))
-		     (* (sqrt (float (* 2 pi)))
-			(+ ss (aref c 0))
-			(* (/ zp (exp zgh)) zp))))))
-            (cond ((null result)
-                   ;; No result. Overflow.
-                   (merror "Overflow in `gamma-lanczos'."))
-                  ((or (float-nan-p (realpart result))
-                       (float-inf-p (realpart result)))
-                   ;; Result, but beyond extreme values. Overflow.
-                   (merror "Overflow in `gamma-lanczos'."))
-                  (t result)))))))
+	  (* (sqrt (float (* 2 pi) 1d0))
+	     (+ ss (aref c 0))
+	     (* zp (exp (- zgh)) zp))))))
 
 (defun gammafloat (a)
-  (let ((a (float a)))
-    (cond ((minusp a)
-	   (/ (float (- pi))
-	      (* a (sin (* (float pi) a)))
-	      (gammafloat (- a))))
-	  ((< a 10)
-	   (slatec::dgamma a))
-	  (t
-	   (let ((result
-		  (let ((c (* (sqrt (* 2 (float pi)))
-			      (exp (slatec::d9lgmc a)))))
-		    (let ((v (expt a (- (* .5d0 a) 0.25d0))))
-		      (* v
-			 (/ v (exp a))
-			 c)))))
-	     (if (or (float-nan-p result)
-		     (float-inf-p result))
-		 (merror "Overflow in `gammafloat'")
-		 result))))))
-
+  (realpart (gamma-lanczos (complex a 0d0))))
 
 (declare-top (special $numer $trigsign))
 
-;;; The Error functions Erf, Erfc, Erfi and the function Generalized Erf have 
-;;; been implemented as simplifying functions. The code is moved to the file
-;;; gamma.lisp and commented out at this place. 10/2008 DK.
-
-;(defmfun simperf (x vestigial z &aux y)
-;  (declare (ignore vestigial))
-;  (oneargcheck x)
-;  (setq y (simpcheck (cadr x) z))
-;  (cond ((zerop1 y) y)
-;	((or (floatp y) (and $numer (integerp y))) (erf (float y)))
-;	((eq y '$inf) 1)
-;	((eq y '$minf) -1)
-;	;;((and $trigsign (mminusp* y)) (neg (list '(%erf simp) (neg y))))
-;	((and $trigsign (great (neg y) y)) (neg (take '(%erf) (neg y))))
-;	(t (eqtest (list '(%erf) y) x))))
+(defmfun simperf (x vestigial z &aux y)
+  (declare (ignore vestigial))
+  (oneargcheck x)
+  (setq y (simpcheck (cadr x) z))
+  (cond ((zerop1 y) y)
+	((or (floatp y) (and $numer (integerp y))) (erf (float y)))
+	((eq y '$inf) 1)
+	((eq y '$minf) -1)
+	((and $trigsign (mminusp* y)) (neg (list '(%erf simp) (neg y))))
+	(t (eqtest (list '(%erf) y) x))))
 
 
-;(defmfun erf (y)
-;  (slatec:derf (float y)))
+(defmfun erf (y)
+  (slatec:derf (float y 1d0)))
 
-;(defmfun erfc (y)
-;  (slatec:derfc (float y)))
+(defmfun erfc (y)
+  (slatec:derfc (float y 1d0)))
 
 (defmfun $zeromatrix (m n) ($ematrix m n 0 1 1))
 

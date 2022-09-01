@@ -23,6 +23,7 @@ binary-clisp/maxima.mem : strmac.lisp
 binary-clisp/maxima.mem : displm.lisp
 binary-clisp/maxima.mem : ratmac.lisp
 binary-clisp/maxima.mem : mhayat.lisp
+binary-clisp/maxima.mem : numerm.lisp
 binary-clisp/maxima.mem : opers.lisp
 binary-clisp/maxima.mem : utils.lisp
 binary-clisp/maxima.mem : sumcon.lisp
@@ -214,6 +215,7 @@ binary-clisp/maxima.mem : trgred.lisp
 binary-clisp/maxima.mem : bessel.lisp
 binary-clisp/maxima.mem : ellipt.lisp
 binary-clisp/maxima.mem : airy.lisp
+binary-clisp/maxima.mem : numer.lisp
 binary-clisp/maxima.mem : intpol.lisp
 binary-clisp/maxima.mem : nparse.lisp
 binary-clisp/maxima.mem : displa.lisp
@@ -271,8 +273,6 @@ binary-clisp/maxima.mem : rand-mt19937.lisp
 binary-clisp/maxima.mem : maxmin.lisp
 binary-clisp/maxima.mem : nummod.lisp
 binary-clisp/maxima.mem : conjugate.lisp
-binary-clisp/maxima.mem : expintegral.lisp
-binary-clisp/maxima.mem : gamma.lisp
 binary-clisp/maxima.mem : mstuff.lisp
 binary-clisp/maxima.mem : ratpoi.lisp
 binary-clisp/maxima.mem : pois2.lisp

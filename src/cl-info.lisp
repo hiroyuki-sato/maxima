@@ -54,20 +54,8 @@
 
 ; ------------------ search help topics ------------------
 
-(defun autoload-maxima-index ()
-  ;; Autoload the index, but make sure we use a sensible *read-base*.
-  ;; See bug 1951964.  GCL doesn't seem to have
-  ;; with-standard-io-syntax.  Is just binding *read-base* enough?  Is
-  ;; with-standard-io-syntax too much for what we want?
-  #-gcl
-  (with-standard-io-syntax
-    (maxima::mfuncall 'cause-maxima-index-to-load))
-  #+gcl
-  (let ((*read-base* 10.))
-    (maxima::mfuncall 'cause-maxima-index-to-load)))
-
 (defun info-exact (x)
-  (autoload-maxima-index)
+  (maxima::mfuncall 'cause-maxima-index-to-load)
   (let ((exact-matches (exact-topic-match x)))
     (if (null exact-matches)
       (progn
@@ -92,7 +80,7 @@
     (find-regex-matches topic *info-deffn-defvr-hashtable*)))
 
 (defun info (x)
-  (autoload-maxima-index)
+  (maxima::mfuncall 'cause-maxima-index-to-load)
   (let (wanted tem)
     (setf tem (inexact-topic-match x))
     (when tem

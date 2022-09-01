@@ -27,25 +27,21 @@
 
 (defun maxima-getenv (envvar)
   #+gcl     (si::getenv envvar)
-  #+ecl     (si::getenv envvar)
   #+allegro (system:getenv envvar)
   #+(or cmu scl) (cdr (assoc envvar ext:*environment-list* :test #'string=))
   #+sbcl    (sb-ext:posix-getenv envvar)
   #+clisp   (ext:getenv envvar)
-  #+(or openmcl mcl)     (ccl::getenv envvar)
-  #+lispworks (hcl:getenv envvar)
+  #+mcl     (ccl::getenv envvar)
   )
 
 ;; CMUCL needs because when maxima reaches EOF, it calls BYE, not $QUIT.
 
 (defun bye ()
   #+(or cmu scl clisp) (ext:quit)
-  #+sbcl               (sb-ext:quit)
-  #+allegro            (excl:exit)
-  #+(or mcl openmcl)   (ccl:quit)
-  #+gcl                (lisp:quit)
-  #+ecl                (si:quit)
-  #+lispworks          (lispworks:quit)
+  #+sbcl           (sb-ext:quit)
+  #+allegro        (excl:exit)
+  #+mcl            (ccl:quit)
+  #+gcl            (lisp:quit)
   )
 
 

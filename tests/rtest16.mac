@@ -9,7 +9,7 @@ limit(7^(n^2)/8^n,n,inf);
 inf$
 limit((10^n+9^n+8^n)^(1/n),n,inf);
 10$
-
+/* maxima currently (2004/10/05) gets this wrong */
 limit(4^n/2^(2*n),n,inf);
 1$
 /* Test from Bug 1052308 */
@@ -20,8 +20,6 @@ limit(erf(nn*zz), nn, inf);
 0$
 limit(tanh(nn*zz), nn, inf);
 0$
-limit(nn^zz, nn, 0);
-1$
 
 /* From A. Reiner.  Fixed in buildq.lisp rev. 1.4.
    Exposed a bug caused by the dynamical scope of VARLIST. */
@@ -161,7 +159,7 @@ limit(atan2(y,x),y,minf);
 
 /* Bug 1548643 */
 limit(abs(sqrt(1-1/x)-1),x,0);
-'limit(abs(sqrt(1-1/x)-1),x,0);
+und;
 
 /* Bug 671574 */
 limit(x*atan(x)/(x+1),x,inf);
@@ -211,7 +209,7 @@ limit(x*(atan(x)-%pi/2),x,inf);
 /*
  * Bug [ 1661490 ] An integral gives a wrong result.
  */
-(assume(a>0, b>0, sqrt(sqrt(b^2+a^2)-a)*(sqrt(b^2+a^2)+a)^(3/2)-b^2>0),0);
+(assume(a>0,b>0,sqrt(b^2+a^2)-a>0,sqrt(sqrt(b^2+a^2)-a)*(sqrt(b^2+a^2)+a)^(3/2)-b^2>0),0);
 0;
 radcan(integrate(exp(-(a+%i*b)*x^2),x,minf,inf)/rectform(sqrt(%pi)/sqrt(a+%i*b)));
 1;
@@ -245,318 +243,6 @@ inf;
 
 limit(atanh(a-1)-log(a)/2,a,0,'plus),logarc:true;
 -log(2)/2;
-
-/* [ 1606731 ] limit of algebraic when algebraic : true */
-limit(x*(sqrt(1+x^2)-x),x,inf), algebraic : true, gcd : subres;
-1/2;
-
-/* [ 1097982 ] limit(x/(x^(log(x)))); returns wrong answer */
-limit(x/(x^log(x)), x, inf);
-0;
-
-/* [ 1039965 ] limit(4^n/2^(2*n),n,inf) is wrong */
-limit(4^n/2^(2*n),n,inf);
-1;
-
-/* [ 1731127 ] limit((1 + 1/x)*(sqrt(x + 1) + 1), x, inf) => 0 (not inf) */
-limit((1 + 1/x)*(sqrt(x + 1) + 1), x, inf);
-inf;
-
-/* [ 1593083 ] tlimit(t^2*exp(-4*t/3-8*exp(-t)),t,inf) gives error */
-tlimit(t^2*exp(-4*t/3-8*exp(-t)),t,inf);
-0;
-
-/* [ 1786774 ] tlimit((5^x + 3^x)^(1/x), x, inf) => Error */
-tlimit((5^x + 3^x)^(1/x), x, inf);
-5;
-
-/* [ 1603900 ] taylor/tlimit (4^n+1)/2^(2*n) internal error */
-tlimit((4^n+1)/2^(2*n),n,inf);
-1;
-
-/* [ 1281736 ] limit((x/log(x))*(x^(1/x)-1),x,inf) - wrong result */
-limit((x/log(x))*(x^(1/x)-1),x,inf);
-1;
-
-/* [ 1036901 ] tlimit(7^(n^2)/8^n,n,inf); wrong result */
-tlimit(7^(n^2)/8^n, n, inf);
-inf;
-
-/* [ 1665657 ] limit fails to find easy limit */
-limit(x/(x-1)-1/log(x),x,1,plus);
-1/2;
-
-/* [ 611411 ] limit asks sign of IND */
-limit(abs(sin(x)),x,inf);
-ind;
-
-/* [ 1629723 ] bug in limit, asks sign of IND, encountered in integrator */
-limit(abs(sin(x))/x, x, inf);
-0;
-
-/* [ 782099 ] limit returns expression in IND */
-limit(sinh(exp(%i*x)),x,inf);
-ind;
-
-/* [ 1528607 ] limit(a^x,x,inf) can't solve for a : abs(a) < 1 */
-limit((-2/3)^x,x,inf);
-0;
-
-limit((-1/%pi)^x,x,inf);
-0;
-
-tlimit(exp(%i*t), t, inf);
-ind;
-
-tlimit(exp(-t+%i*t),t,inf);
-0;
-
-/* [ 1811503 ] computing a wrong result */
-limit((((1+1/x)^(x^2))+1)^(1/x),x,inf);
-%e;
-
-/* [ 1760232 ] limit(1/n * n!^(1/n), n, inf); */
-limit(1/n * n!^(1/n), n, inf);
-%e^-1;
-
-/* it would be nice to handle these someday
-  limit(t*(erf((t))-1),t,inf);
-  0;
-
-  limit(n - exp(psi[0](n)), n, inf);
-  1/2;
-*/
-
-limit(x*gamma(x), x, 0);
-1;
-
-/* [ 744679 ] limit overflows memory? */
-(assume(a>1), limit((a^(1/n)+1)^n/2^n, n, inf));
-'sqrt(a);
-
-/* [ 702512 ] limit(1/(1/a*2^(%i*a)+1),a,inf) =&gt; UND */
-limit(1/(1/a*2^(%i*a)+1),a,inf);
-1;
-
-/* [ 923407 ] limit(atan(sqrt(x))/sqrt(x),x,0) wrong */
-limit(atan(sqrt(x))/sqrt(x),x,0);
-1;
-
-/* [ 1102908 ] limit/atan/exp returns complex expr with wrong principal val */
-limit(atan(x)/(1/exp(1)-exp(-(1+x)^2)),x,inf,plus);
-%e*%pi/2;
-
-limit( (3^(1/x) + 5^(1/x))^x, x, 0, minus);
-3;
-
-limit( (3^(1/x) + 5^(1/x))^x, x, 0, plus);
-5;
-
-limit( (3^(1/x) + 5^(1/x))^x, x, 0);
-und;
-
-/* [ 1852415 ] limit(sqrt(1-%e^(-x^2)), x, inf) = 0 */
-limit(sqrt(1-%e^(-x^2)), x, inf);
-1;
-
-/* [ 1515712 ] tlimit (x*atan(x)/(x+1),x,inf) => 3 %pi/2, etc */
-tlimit(x*atan(x)/(x+1),x,inf);
-%pi/2;
-
-tlimit(x*(atan(x)-%pi/2),x,inf);
--1;
-
-tlimit(atan(x^-1), x, 0, minus);
--%pi/2;
-
-/* [ 1103515 ] limit(atan2(x,-1),x,0) wrong */
-limit(atan2(x,-1), x, 0, minus);
--%pi;
-
-limit(atan2(x,-1), x, 0, plus);
-%pi;
-
-limit(atan2(x,-1), x, 0);
-und;
-/* ideally should be ind */
-
-/* [ 1587235 ] limit(floor(x),x,1) wrong */
-limit(floor(x),x,0);
-'limit(floor(x),x,0);
-
-/* [ 1885377 ] wrong limit evaluation in 5.14.0 */
-limit((3/4)^(5*n+1), n, inf);
-0;
-
-limit(-%e^x/x, x, inf);
-minf;
-
-/* [ 2083561 ] Limit of the Wallis product */
-limit((%pi*4^N*N!^2)/(2*2^(2*N)*gamma(N+1/2)*gamma(N+3/2)), N, inf);
-%pi/2;
-
-/* [ 635606 ] limit(abs(log(x))) internal error, UND */
-limit(abs(log(x)), x, 0);
-inf;
-
-limit(exp(-x)*(x*sin(x)+cos(x)), x, inf);
-0;
-
-/* tex(t[1]) shouldn't change t to true */
-tex (t[1], false);
-"$$t_{1}$$
-"; /* tex output contains embedded newline */
-
-/* tex(x[1]^2) shouldn't get confused by debug info in expression CAR */
-(foo : x[1]^2, tex (foo, false));
-"$$x_{1}^2$$
-"; /* tex output contains embedded newline */
-
-/* [ 2084910 ] limit bugs */
-limit((%pi*N^(2*N+1)*2^(2*N))/((2*N-1)^(2*N)*(2*%e*N+%e)), N, inf);
-%pi/2;
-
-/* [ 1977992 ] no limit calculation */
-limit(abs(sin(x))/sqrt(1-cos(x)), x, 0);
-sqrt(2);
-
-/* [ 1973399 ] F(x) := 1/%pi*(atan(x) + %pi/2) */
-/* only works with taylor_logexpand:true */
-limit( ((1/%pi)*(atan(n/%pi) + %pi/2))^n, n, inf);
-%e^-1;
-
-/* tests for gruntz limit algorithm */
-gruntz(exp(x), x, inf);
-inf;
-
-gruntz(exp(-x), x, inf);
-0;
-
-gruntz( (x + 2^x) / 3^x, x, inf);
-0;
-
-gruntz( x^2/(x + 2*x^2), x, inf);
-1/2;
-
-gruntz( x/x^log(x), x, inf);
-0;
-
-gruntz( (2^x)/(x + exp(x)) , x, 0, plus);
-1;
-
-gruntz( (erf(x))/sqrt(1-cos(x)) , x, 0, minus);
--2*sqrt(2)/sqrt(%pi);
-
-gruntz( (erf(x))/sqrt(1-cos(x)) , x, 0, plus);
-2*sqrt(2)/sqrt(%pi);
-
-gruntz( x*(x^(1/x)-1)/log(x), x, inf);
-1;
-
-gruntz( (x*x^(1/x)-x)/log(x), x, inf);
-1;
-
-/*
- * Bug [ 1854888 ] hgfred([5],[5], 1) doesn't simplify
- */
-hgfred([5],[5],1);
-%e;
-
-/*
- * Bug [ 1858964 ] hgfred([7],[-1], x) --/--> error
- */
-hgfred([7],[-1],x);
-und;
-
-/*
- * Bug [ 1858939 ] hgfred([-1],[-2],x) --> error
- */
-hgfred([-1],[-2],x);
--gen_laguerre(1,-3,x)/2;
-
-/*
- * Tests for the :: operator
- */
-a:b;
-b$
-
-a::3;
-3$
-
-b;
-3$
-
-p:concat('p,1);
-p1$
-
-p::5;
-5$
-
-p1;
-5$
-
-kill(all);
-done$
-
-/* Bug [ 1860250 ] erf(-inf) --> -erf(inf) */
-
-erf(-inf);
--1$
-
-erf(inf);
-1$
-
-erf(-x) + erf(x);
-0$
-
-erf(a-b) + erf(b-a);
-0$
-
-/* Bug [ 1950653 ] bessel_j not simplified 
- * A few additional related tests added too.
- */
-
-bessel_j(1/2,%pi),besselexpand:true;
-0;
-bessel_y(1/2,%pi/2),besselexpand:true;
-0;
-
-/* Bug [ 2149714 ] fpprintprec does not work correctly
-*/
-
-fpprec:16;
-16;
-
-block([fpprintprec:5], string(1.23b0));
-"1.23b0";
-
-block([fpprintprec:5], string(1.2345b0));
-"1.2345b0";
-
-block([fpprintprec:5], string(1.23456789b0));
-"1.2345b0";
-
-block([fpprintprec:25], string(1.2345678901234567890123456789b0));
-"1.234567890123457b0";
-
-/*
- * Bug 2142758: integrate(sqrt(2-2*x^2)*(sqrt(2)*x^2+sqrt(2))/(4-4*x^2),x,0,1)
- */
-integrate(sqrt(2-2*x^2)*(sqrt(2)*x^2+sqrt(2))/(4-4*x^2),x,0,1);
-3*%pi/8;
-
-
-integrate(sqrt(1-x^2)*(x^2+1)/(2-2*x^2),x,0,1);
-3*%pi/8;
-
-integrate(sqrt(1-x^2)*(x^2+1)/(1-x^2),x,0,1);
-3*%pi/4;
-
-/*
- * Bug [ 2208303 ] Problem with jacobi_dn and elliptic_kc
- */
-jacobi_dn(elliptic_kc(m)*t,m);
-jacobi_dn(elliptic_kc(m)*t,m);
 
 end;
 end$

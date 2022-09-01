@@ -47,7 +47,7 @@
   (catch 'done
       (dolist (pk p)
 	(dolist (qk q)
-	  (if (member (csign ($expand (mul (sub x pk) (sub qk x)))) '($pos $pz) :test #'eq) (throw 'done t))))
+	  (if (memq (csign ($expand (mul (sub x pk) (sub qk x)))) '($pos $pz)) (throw 'done t))))
       nil))
 	  	       
 ;; Return true if y is the additive inverse of x. 
@@ -63,7 +63,7 @@
 (defprop $max simp-max operators)
 
 (defun simp-max (l tmp z)
-  (let ((acc nil) (sgn) (num-max nil) (issue-warning))
+  (let ((acc nil) (sgn) (num-max nil) (issue-warning) (new-max))
     (setq l (margs (specrepcheck l)))
     (dolist (li l)
       (if (op-equalp li '$max) (setq acc (append acc (mapcar #'(lambda (s) (simplifya s z)) (margs li))))
@@ -91,14 +91,14 @@
     
     (dolist (x l)
       (catch 'done
+	(setq new-max t)
 	(dolist (ai acc)
 	  (setq sgn ($compare x ai))
-	  (cond ((member sgn '(">" ">=") :test #'equal)
-		 (setq acc (delete ai acc :test #'eq)))
-		((eq sgn '$notcomparable) (setq issue-warning t))
-		((member sgn '("<" "=" "<=") :test #'equal)
-		 (throw 'done t))))
-	(push x acc)))
+	  (setq new-max (and new-max (memq sgn '(&> &>=))))
+	  (if (eq sgn '$notcomparable) (setq issue-warning t))
+	  (if (memq sgn '(&< &= &<=)) (throw 'done t)))
+	(if new-max (setq acc (list x)) (push x acc))))
+    
     ;; Fourth, when when trylevel is 2 or higher e and -e are members of acc, replace e by |e|.
     
     (cond ((eq t (mgrp ($get '$trylevel '$maxmin) 1))
@@ -120,21 +120,21 @@
 	   (setq acc l)))
 
     ;; Finally, do a few clean ups:
-
+	   
     (setq acc (delete '$minf acc))
     (cond ((null acc) '$minf)
-	  ((member '$inf acc :test #'eq) '$inf)
+	  ((memq '$inf acc) '$inf)
 	  ((null (cdr acc)) (car acc))
 	  (t  `(($max simp) ,@(sort acc '$orderlessp))))))
 
 (defun limitneg (x)
   (cond ((eq x '$minf) '$inf)
 	((eq x '$inf) '$minf)
-	((member x '($und $ind $infinity) :test #'eq) x)
+	((memq x '($und $ind $infinity)) x)
 	(t (neg x))))
 
 (defprop $min simp-min operators)
-
+	  
 (defun simp-min (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil))
@@ -166,24 +166,24 @@
 ;; real valued, return 'notcomparable.'
 
 ;; The subtraction can be a problem--for example, compare(0.1, 1/10)
-;; evaluates to "=". But for flonum floats, I believe 0.1 > 1/10. 
-;; If you want to convert flonum and big floats to exact rational
+;; evaluates to "=". But for double floats, I believe 0.1d0 > 1/10. 
+;; If you want to convert double and big floats to exact rational
 ;; numbers, use $rationalize.
 
 ;; I think compare(asin(x), asin(x) + 1) should evaluate to < without
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
 (defun $compare (a b)
-  (cond ((eq t (meqp a b)) "=")
-	((or (not (lenient-extended-realp a)) (not (lenient-extended-realp b))) '$notcomparable)
+  (cond ((or (not (lenient-extended-realp a)) (not (lenient-extended-realp b)))
+	 (if (eq t (meqp a b)) '&= '$notcomparable))
 	(t
 	 (let ((sgn (csign (specrepcheck (sub a b)))))
-	   (cond ((eq sgn '$neg) "<")
-		 ((eq sgn '$nz) "<=")
-		 ((eq sgn '$zero) "=")
-		 ((eq sgn '$pz) ">=")
-		 ((eq sgn '$pos) ">")
-		 ((eq sgn '$pn) "#")
+	   (cond ((eq sgn '$neg) '&<)
+		 ((eq sgn '$nz) '&<=)
+		 ((eq sgn '$zero) '&=)
+		 ((eq sgn '$pz) '&>=)
+		 ((eq sgn '$pos) '&>)
+		 ((eq sgn '$pn) '&#)
 		 ((eq sgn '$pnz) '$unknown)
 		 (t '$unknown))))))
 
@@ -206,12 +206,8 @@
 ;; Convert all floats and big floats in e to an exact rational representation. 
 
 (defun $rationalize (e)
-  (setq e (ratdisrep e))
-  (cond ((floatp e) 
-	 (let ((significand) (expon) (sign))
-	   (multiple-value-setq (significand expon sign) (integer-decode-float e))
-	   (cl-rat-to-maxima (* sign significand (expt 2 expon)))))
+  (cond ((floatp e) (cl-rat-to-maxima (rationalize e)))
 	(($bfloatp e) (cl-rat-to-maxima (* (cadr e)(expt 2 (- (caddr e) (third (car e)))))))
 	(($mapatom e) e)
-	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
+	(t (mfuncall '$fullmap '$rationalize e))))
 

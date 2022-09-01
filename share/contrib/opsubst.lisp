@@ -41,7 +41,7 @@ operators, substituting for these operators will not work; examples:
 (%o1) a-b
 (%i2) opsubst("f","-",-a);
 (%o2) -a
-(%i3) opsubst("^^","/",a/b);
+(%i3) opsubst("^^","//",a/b);
 (%o3) a/b
 
 The internal representation of -a*b is *(-1,a,b); thus
@@ -107,12 +107,12 @@ subscripted:
 	       (merror "Expected an expression of the form `a = b'; instead found ~:M" qi))))
 	  (t (wna-err '$opsubst)))))
 
-;; If op is a string, verbify it; otherwise, return op. Without this transformation,
+;; If op is a mstring, verbify it; otherwise, return op. Without this transformation,
 ;; things like opsubst("[",f, f(a,b,c)) would fail. Notice that subst(f[1] = "[", f[1](1,2,3))
 ;; doesn't work correctly.
 
-(defun verbify-string (op)
-  (if (stringp op) ($verbify op) op))
+(defun verbify-mstring (op)
+  (if (mstringp op) ($verbify op) op))
 
 ;; If op is a symbol, verbify it; otherwise, return op.
 
@@ -120,8 +120,8 @@ subscripted:
   (if (symbolp op) ($verbify op) op))
 
 (defun op-subst (f g e)
-  (setq f (verbify-string f))
-  (setq g (verbify-string g))
+  (setq f (verbify-mstring f))
+  (setq g (verbify-mstring g))
 
   (let (($inflag t))
     (if ($mapatom e) e
@@ -135,8 +135,8 @@ subscripted:
 (defun $opsubstif (id prd e)
   (setq id (if ($listp id) (margs id) (list id)))
   (dolist (qi id)
-    (if (op-equalp qi 'mequal) (setq e (op-subst-if (verbify-string ($rhs qi))
-						    (verbify-string ($lhs qi)) prd e))
+    (if (op-equalp qi 'mequal) (setq e (op-subst-if (verbify-mstring ($rhs qi))
+						    (verbify-mstring ($lhs qi)) prd e))
       (merror "Expected an expression of the form `a = b'; instead found ~:M" qi)))
   e)
         	  
