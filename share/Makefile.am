@@ -1,5 +1,3 @@
-SUBDIRS = contrib linearalgebra orthopoly simplification
-
 include $(top_srcdir)/common.mk
 genericdir =$(sharedir)
 
@@ -43,8 +41,6 @@ algebra/charsets/flatten.lisp\
 algebra/charsets/rtestflatten.mac\
 algebra/charsets/set.lisp\
 algebra/charsets/test1.mac\
-algebra/differ.dem\
-algebra/differ.mac\
 algebra/gcdex.mac\
 algebra/grob1.lisp\
 algebra/nusum.mac\
@@ -66,7 +62,6 @@ calculus/cartan.dem\
 calculus/cartan.lisp\
 calculus/fourie.dem\
 calculus/fourie.mac\
-calculus/gendif.mac\
 calculus/optmiz.dem\
 calculus/optmiz.mac\
 calculus/optmiz.transcript\
@@ -96,31 +91,30 @@ contrib/Grobner/grobner.lisp\
 contrib/README\
 contrib/Zeilberger/Gosper.mac\
 contrib/Zeilberger/GosperEq.mac\
-contrib/Zeilberger/zeilberger_algorithm.mac\
 contrib/Zeilberger/algUtil.mac\
 contrib/Zeilberger/compare_sums.mac\
 contrib/Zeilberger/compatible.mac\
 contrib/Zeilberger/constants.mac\
-contrib/Zeilberger/zeilberger_linear_algebra.mac\
 contrib/Zeilberger/makeGosperForm.mac\
 contrib/Zeilberger/norm.mac\
 contrib/Zeilberger/numerical.mac\
 contrib/Zeilberger/readme.txt\
 contrib/Zeilberger/settings.mac\
 contrib/Zeilberger/shiftQuotient.mac\
-contrib/Zeilberger/testGosper.mac\
 contrib/Zeilberger/testZeilberger.mac\
 contrib/Zeilberger/whatsnew.txt\
+contrib/Zeilberger/zb_prover.mac\
+contrib/Zeilberger/zeilberger_algorithm.mac\
+contrib/Zeilberger/zeilberger_linear_algebra.mac\
 contrib/Zeilberger/zeilberger.mac\
-contrib/Zeilberger/zeilberger.texi\
 contrib/augmented_lagrangian.mac\
 contrib/bode.mac\
-contrib/contrib.texi\
+contrib/boolsimp/boolsimp.lisp\
+contrib/boolsimp/rtest_boolsimp.mac\
 contrib/cholesky.mac\
 contrib/defstruct.lisp\
 contrib/descriptive/biomed.data\
 contrib/descriptive/descriptive.mac\
-contrib/descriptive/descriptive.texi\
 contrib/descriptive/pidigits.data\
 contrib/descriptive/wind.data\
 contrib/devine.mac\
@@ -147,6 +141,11 @@ contrib/diffequations/tests/rtestode_kamke_1_3.mac\
 contrib/diffequations/tests/rtestode_kamke_1_4.mac\
 contrib/diffequations/tests/rtestode_kamke_1_5.mac\
 contrib/diffequations/tests/rtestode_kamke_1_6.mac\
+contrib/diffequations/tests/rtestode_kamke_2_1.mac\
+contrib/diffequations/tests/rtestode_kamke_2_2.mac\
+contrib/diffequations/tests/rtestode_kamke_2_3.mac\
+contrib/diffequations/tests/rtestode_kamke_2_4.mac\
+contrib/diffequations/tests/rtestode_kamke_2_5.mac\
 contrib/diffequations/tests/rtestode_murphy_1_1.mac\
 contrib/diffequations/tests/rtestode_murphy_1_2.mac\
 contrib/diffequations/tests/rtestode_murphy_1_3.mac\
@@ -161,8 +160,11 @@ contrib/diffequations/tests/rtestode_murphy_2_5.mac\
 contrib/diffequations/tests/testsuite.lisp\
 contrib/distrib/distrib.mac\
 contrib/distrib/numdistrib.lisp\
-contrib/distrib/distrib.texi\
+contrib/dynamics.mac\
 contrib/eval_string.lisp\
+contrib/ezunits/ezunits.mac\
+contrib/ezunits/rtestezunits.mac\
+contrib/floatproperties.lisp\
 contrib/f90.lisp\
 contrib/format/README\
 contrib/format/autoload-m.macsyma\
@@ -238,8 +240,9 @@ contrib/gentran/test/type.output\
 contrib/gentran/vaxinit.lisp\
 contrib/gentran/vaxlsp.lisp\
 contrib/ggf.mac\
-contrib/ifactor.lisp\
+contrib/graph2d.lisp\
 contrib/impdiff.mac\
+contrib/implicit_plot.lisp\
 contrib/lindstedt.mac\
 contrib/log10.mac\
 contrib/lsquares.mac\
@@ -266,8 +269,6 @@ contrib/nset/announce-1.2.txt\
 contrib/nset/changes_1.0_to_1.2.txt\
 contrib/nset/maxima-init.lisp\
 contrib/nset/nset-init.lisp\
-contrib/nset/nset.html\
-contrib/nset/nset_toc.html\
 contrib/numericalio/README\
 contrib/numericalio/array.data\
 contrib/numericalio/array.mac\
@@ -275,7 +276,6 @@ contrib/numericalio/csv.mac\
 contrib/numericalio/is_equal_array.lisp\
 contrib/numericalio/my_flatten.mac\
 contrib/numericalio/numericalio.lisp\
-contrib/numericalio/numericalio.texi\
 contrib/numericalio/pipe.data\
 contrib/numericalio/ragged.data\
 contrib/numericalio/ragged.mac\
@@ -293,6 +293,11 @@ contrib/pdiff/pdiff-doc.tex\
 contrib/pdiff/pdiff.lisp\
 contrib/plotdf.lisp\
 contrib/plsquares.mac\
+contrib/powers.lisp\
+contrib/prim/prim-ex.mac\
+contrib/prim/prim-ex1.mac\
+contrib/prim/prim.mac\
+contrib/prim/prim.txt\
 contrib/rand/Avg3.mac\
 contrib/rand/Demo.bk1\
 contrib/rand/Ima\
@@ -347,20 +352,24 @@ contrib/rand/twovar.mac\
 contrib/rand/twovar.usg\
 contrib/rand/vandpol.mac\
 contrib/rand/vandpol.usg\
+contrib/rtest_opproperties.mac\
 contrib/rtestdefstruct.mac\
 contrib/sarag/aliases.mac\
 contrib/sarag/constants.mac\
 contrib/sarag/examples.mac\
-contrib/sarag/sarag_linear_algebra.mac\
-contrib/sarag/sarag.mac\
+contrib/sarag/intervalArithmetic.mac\
 contrib/sarag/lowLevel.mac\
 contrib/sarag/readme.txt\
 contrib/sarag/rootCounting.mac\
 contrib/sarag/rootIsolation.mac\
+contrib/sarag/sarag_linear_algebra.mac\
+contrib/sarag/sarag_initialization.mac\
+contrib/sarag/sarag.mac\
 contrib/sarag/settings.mac\
 contrib/sarag/signDetermination.mac\
+contrib/sarag/topology_examples.mac\
+contrib/sarag/topology.mac\
 contrib/simplex/simplex.mac\
-contrib/simplex/simplex.texi\
 contrib/simplex/simplex_algorithm.lisp\
 contrib/simplex/minimize_sx.mac\
 contrib/simplex/Tests/sc50a_c.csv\
@@ -381,9 +390,10 @@ contrib/simplex/Tests/share2b_c.csv\
 contrib/simplex/Tests/share2b_b.csv\
 contrib/simplex/Tests/share2b_A.csv\
 contrib/simplex/Readme.txt\
+contrib/solve_rec/closed_form.mac\
+contrib/solve_rec/closed_form_test.mac\
 contrib/solve_rec/solve_rec.mac\
 contrib/solve_rec/solve_rec.dem\
-contrib/solve_rec/solve_rec.texi\
 contrib/state/matrix2.mac\
 contrib/state/a.cir\
 contrib/state/b.cir\
@@ -395,12 +405,13 @@ contrib/state/state.mac\
 contrib/state/tree.mac\
 contrib/stringproc/rteststringproc.mac\
 contrib/stringproc/stringproc.lisp\
-contrib/stringproc/stringproc.texi\
 contrib/unit/unit-functions.lisp\
 contrib/unit/unit.mac\
-contrib/unit/unit.texi\
 contrib/opsubst.lisp\
 contrib/stirling.mac\
+contrib/tex2ooo.lisp\
+contrib/tocl.lisp\
+contrib/multiadditive.lisp\
 diffequations/abel.mac\
 diffequations/desoln.mac\
 diffequations/desoln.usg\
@@ -422,6 +433,9 @@ integration/bypart.mac\
 integration/delta.dem\
 integration/delta.mac\
 integration/delta.usg\
+lbfgs/lbfgs.lisp\
+lbfgs/maxima-lbfgs.lisp\
+lbfgs/lbfgs.mac\
 linearalgebra/announcement.txt\
 linearalgebra/linalgcholesky.lisp\
 linearalgebra/mring.lisp\
@@ -429,7 +443,6 @@ linearalgebra/linalg-utilities.lisp\
 linearalgebra/linearalgebra.demo\
 linearalgebra/linearalgebra.mac\
 linearalgebra/linalg.usage\
-linearalgebra/linearalgebra.texi\
 linearalgebra/lu.lisp\
 linearalgebra/matrixexp.lisp\
 linearalgebra/matrixexp.usage\
@@ -521,10 +534,8 @@ numeric/submac.dem\
 numeric/submac.mac\
 orthopoly/changes_0.9_to_0.94.txt\
 orthopoly/h_atom.dem\
-orthopoly/Makefile.am\
 orthopoly/orthopoly-init.lisp\
 orthopoly/orthopoly.lisp\
-orthopoly/orthopoly.texi\
 orthopoly/README\
 orthopoly/test_orthopoly.mac\
 orthopoly/variational_method.dem\
@@ -562,7 +573,6 @@ simplification/rncomb.dem\
 simplification/rncomb.mac\
 simplification/scifac.dem\
 simplification/scifac.lisp\
-simplification/simplification.texi\
 simplification/sqdnst.mac\
 simplification/stopex.dem\
 simplification/stopex.mac\
@@ -635,6 +645,7 @@ tensor/mail-archive.txt\
 tensor/maxwell.dem\
 tensor/petrov.dem\
 tensor/plasma.dem\
+tensor/rainich.dem\
 tensor/reissner.dem\
 tensor/schwarz.dem\
 tensor/spinor.dem\

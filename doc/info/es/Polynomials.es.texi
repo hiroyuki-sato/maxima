@@ -1,4 +1,4 @@
-@c version 1.18
+@c version 1.22
 @menu
 * Introducci@'on a los Polinomios::  
 * Definiciones para Polinomios::  
@@ -198,6 +198,8 @@ Si la variable @code{sumsplitfact} vale @code{false} har@'a que @code{minfactori
 @deffn {Funci@'on} factor (@var{expr})
 Factoriza la expresi@'on @var{expr}, que puede contener cualquier n@'umero de variables o funciones, en factores irreducibles respecto de los enteros. La llamada @code{factor (@var{expr}, p)} factoriza @var{expr} en el campo de los enteros con un elemento a@~nadido cuyo polinomio m@'{@dotless{i}}nimo es p.
 
+La funci@'on @code{factor} utiliza a @code{ifactors} para factorizar enteros.
+
 Si la variable @code{factorflag} vale @code{false} suprime la factorizaci@'on de los factores enteros en las expresiones racionales.
 
 La variable @code{dontfactor} puede contener una lista de variables con respecto a las cuales no se factorizar@'a (inicialmente est@'a vac@'{@dotless{i}}a). Tampoco se factorizar@'a respecto de cualesquiera otra variables que sean menos importantes (seg@'un la ordenaci@'on que se sigue en el formato CRE) que aquellas que se encuentran en la lista @code{dontfactor}.
@@ -206,7 +208,14 @@ Si la variable @code{savefactors} vale @code{true}, los factores de una expresi@
 
 Si @code{berlefact} vale @code{false} entonces se utiliza el algoritmo de factorizaci@'on de Kronecker, en caso contrario se utilizar@'a el algoritmo de Berlekamp, que es el que se aplica por defecto.
 
-La variable @code{intfaclim} guarda el mayor divisor que se ensayar@'a al factorizar un n@'umero @code{bignum}. Si vale @code{false} (este es el caso cuando el usuario llama a @code{factor} expl@'{@dotless{i}}citamente), o si el entero ocupa dos bytes, se intentar@'a una factorizaci@'on completa del entero. El valor dado por el usuario a @code{intfaclim} se utiliza en las llamadas internas a @code{factor}. As@'{@dotless{i}}, puede ser necesario cambiar @code{intfaclim} a fin de evitar que Maxima consuma un tiempo excesivo intentando factorizar n@'umeros enteros grandes.
+Si la variable @code{intfaclim} vale @code{true}, Maxima desistir@'a de
+factorizar enteros si no encuentra ning@'un factor despu@'es de las
+divisiones tentativas y de aplicar el m@'etodo rho de Pollard. Si vale
+@code{false} (este es el caso cuando el usuario invoca expl@'{@dotless{i}}citamente
+a @code{factor}), se intentar@'a la factorizaci@'on completa del entero. El valor
+asignado a @code{intfaclim} se utiliza en llamadas internas a @code{factor}. As@'{@dotless{i}},
+se puede cambiar el valor de @code{intfaclim} para evitar que Maxima dedique
+un tiempo prohibitivo a factorizar n@'umeros enteros grandes.
 
 Ejemplos:
 @c EXAMPLES BELOW ADAPTED FROM examples (factor)
@@ -485,7 +494,9 @@ excepto por el hecho de que se llama a @'{@dotless{i}} misma recursivamente hast
 @deffn {Funci@'on} gcd (@var{p_1}, @var{p_2}, @var{x_1}, ...)
 Devuelve el m@'aximo com@'un divisor de @var{p_1} y @var{p_2}.
 La variable @code{gcd} determiona qu@'e algoritmo se va a utilizar.
-Asign@'andole a @code{gcd} los valores @code{ez}, @code{eez}, @code{subres}, @code{red} o @code{spmod}, se seleccionan los algoritmos @code{ezgcd}, nuevo @code{eez} @code{gcd}, subresultante @code{prs}, reducido o modular, respectivamente.  Si @code{gcd} vale @code{false} entonces @code{gcd(p1,p2,var)} devolver@'a siempre 1 para cualquier @code{var}.  Muchas funciones (por ejemplo,  @code{ratsimp}, @code{factor}, etc.) hacen uso de @code{gcd} impl@'{@dotless{i}}citamente.  En caso de polinomios homog@'eneos se recomienda darle a @code{gcd} el valor @code{subres}.  Para calcular un m@'aximo com@'un divisor en presencia de ra@'{@dotless{i}}ces, como en @code{gcd(x^2-2*sqrt(2)*x+2,x-sqrt(2));} , la variable @code{algebraic} debe igualarse previamente a @code{true} y @code{gcd} no puede ser @code{ez}. Se recomienda utilizar el algoritmo @code{subres} en lugar de @code{red}, por ser aqu@'el m@'as nuevo.
+Asign@'andole a @code{gcd} los valores @code{ez}, @code{subres}, @code{red} o @code{spmod}, se seleccionan los algoritmos @code{ezgcd}, subresultante @code{prs}, reducido o modular, respectivamente.
+Si @code{gcd} vale @code{false} entonces @code{gcd(@var{p_1}, @var{p_2}, @var{x})} devolver@'a siempre 1 para cualquier @var{x}.  Muchas funciones (por ejemplo,  @code{ratsimp}, @code{factor}, etc.) hacen uso de @code{gcd} impl@'{@dotless{i}}citamente.  
+En caso de polinomios homog@'eneos se recomienda darle a @code{gcd} el valor @code{subres}.  Para calcular un m@'aximo com@'un divisor en presencia de ra@'{@dotless{i}}ces, como en @code{gcd (@var{x}^2 - 2*sqrt(2)*@var{x} + 2, @var{x} - sqrt(2))}, la variable @code{algebraic} debe igualarse previamente a @code{true} y @code{gcd} no puede ser @code{ez}. Se recomienda utilizar el algoritmo @code{subres} en lugar de @code{red}, por ser aqu@'el m@'as nuevo.
 
 Cuando la variable @code{gcd}, cuyo valor por defecto es @code{subres}, vale @code{false}, no se calcular@'a el m@'aximo com@'un divisor cuando las expresiones se conviertan a su forma can@'onica (CRE), lo que redundar@'a en ocasiones en mayor rapidez de c@'alculo.
 @c NEEDS EXAMPLES HERE
@@ -573,15 +584,25 @@ Ejemplos:
 @end deffn
 
 @defvr {Variable opcional} intfaclim
-Valor por defecto: 1000
+Valor por defecto: @code{true}
 
-@c NEED A LINK TO DESCRIPTION OF "BIGNUM"
-La variable @code{intfaclim} guarda el mayor divisor que se ensayar@'a al factorizar un n@'umero @code{bignum}. Si vale @code{false} (este es el caso cuando el usuario llama a @code{factor} expl@'{@dotless{i}}citamente), o si el entero ocupa dos bytes, se intentar@'a una factorizaci@'on completa del entero.
+Si vale @code{true}, Maxima  desistir@'a de
+factorizar enteros si no encuentra ning@'un factor despu@'es de las
+divisiones tentativas y de aplicar el m@'etodo rho de Pollard, por lo que 
+la factorizaci@'on puede quedar incompleta.
 
-A la variable @code{intfaclim} se le asigna el valor @code{false} cuando los factores se calculan desde las funciones @code{divsum}, @code{totient} y @code{primep}.
+Si vale @code{false} (este es el caso cuando el usuario invoca expl@'{@dotless{i}}citamente
+a @code{factor}), se intentar@'a la factorizaci@'on completa del entero. El valor
+asignado a @code{intfaclim} se utiliza en llamadas internas a @code{factor}. A la variable
+@code{intfaclim} se le asigna el valor @code{false} cuando se calculan factores desde las
+funciones @code{divisors}, @code{divsum} y @code{totient}.
+@c ANY OTHERS ??
 
 @c WHAT ARE THESE MYSTERIOUS INTERNAL CALLS ?? (LET'S JUST LIST THE FUNCTIONS INVOLVED)
-Las llamadas internas a @code{factor} respetan el valor dado por el usuario a @code{intfaclim}. Asignando a @code{intfaclim} valores peque@~nos se puede reducir el tiempo de factorizaci@'on de n@'umeros enteros grandes.
+Las llamadas internas a @code{factor} respetan el valor dado por el usuario a @code{intfaclim}.
+Asignando a @code{intfaclim} el valor @code{true} se puede reducir  el tiempo que Maxima dedica a
+factorizar enteros grandes.
+@c NEED EXAMPLES HERE
 
 @end defvr
 
@@ -800,6 +821,8 @@ Devuelve el coeficiente de la expresi@'on @code{@var{x}^@var{n}} dentro de la ex
 El valor devuelto est@'a libre de las variables en @var{x}, excepto quiz@'as en un sentido no racional. Si no existe un coeficiente de este tipo se devuelve 0.
 
 La funci@'on @code{ratcoef} expande y simplifica racionalmente su primer argumento, por lo que puede dar una respuesta diferente a la dada por la funci@'on @code{coeff}, la cual tiene un car@'acter puramente sint@'actico.
+As@'{@dotless{i}}, @code{ratcoef ((x + 1)/y + x, x)} devuelve @code{(y + 1)/y}, 
+mientras que @code{coeff} devuelve 1.
 
 La llamada @code{ratcoef (@var{expr}, @var{x}, 0)}, siendo @var{expr} una suma, devuelve una suma formada por los t@'erminos que no contienen @var{x}.
 

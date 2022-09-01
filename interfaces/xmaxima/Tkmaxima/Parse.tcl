@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Parse.tcl,v 1.4 2004/10/13 12:08:58 vvzhy Exp $
+#       $Id: Parse.tcl,v 1.6 2006/07/30 19:22:20 villate Exp $
 #
 ###### Parse.tcl ######
 ############################################################
@@ -78,9 +78,12 @@ set Parser(reserved) " acos cos hypo sinh asin cosh log sqrt atan exp log10 tan 
 
 set Parser(help) [join [list [mc \
 {
-    The syntax is like C except that it is permitted to write x^n
-    instead of pow(x,n).
-} ] [concat "\n" [mc "Functions:"] "$Parser(reserved)\n\n" [mc "Operators:"] "== % & || ( << <= ) : * >=  + && , | < >> - > ^ ? /" ]] ""]
+The syntax for the definition of functions is like C, except that it is \
+permitted to write x^n instead of pow(x,n).
+} ] [mc {
+Functions:}] $Parser(reserved) [mc {
+
+Operators:}] " == % & || ( << <= ) : * >=  + && , | < >> - > ^ ? /" ] ""]
 
 
 
@@ -224,7 +227,8 @@ proc getExpr120 { } {
 	    parseMatch $Parser(lookahead)
 	    break;
 	} else {
-	    error [mc "syntax error"]
+	    bgerror [mc "syntax error"]
+	    break;
 	}
     }
 }

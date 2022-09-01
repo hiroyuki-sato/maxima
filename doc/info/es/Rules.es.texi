@@ -1,4 +1,4 @@
-@c english version 1.22
+@c english version 1.24
 @menu
 * Introducci@'on a reglas y patrones::  
 * Definiciones sobre reglas y patrones::  
@@ -136,7 +136,8 @@ Si el tercer argumento de @code{defmatch} en la entrada (%i2) hubiese sido omiti
 
 Define y da nombre a una regla de reemplazamiento para el patr@'on dado. Si la regla @var{nombre_regla} es aplicada a una expresi@'on (por @code{apply1}, @code{applyb1} o @code{apply2}), cada subexpresi@'on que coincida con el patr@'on ser@'a reemplazada por el contenido de @var{reemplazamiento}.
 
-Las propias reglas pueden ser tratadas como funciones que transforman una expresi@'on mediante una operaci@'on consistente en la b@'usqueda de una coincidencia y posterior aplicaci@'on de un reemplazamiento. Si la comparaci@'on falla se devuelve la expresi@'on original.
+Las propias reglas pueden ser tratadas como funciones que transforman una expresi@'on mediante una operaci@'on consistente en la b@'usqueda de una coincidencia y posterior aplicaci@'on de un reemplazamiento. Si la comparaci@'on falla, la funci@'on que implementa la regla devuelve @code{false}.
+
 
 @end deffn
 
@@ -289,13 +290,26 @@ La variable @code{let_rule_packages} guarda una lista con todos los paquetes de 
 @end defvr
 
 @deffn {Funci@'on} matchdeclare (@var{a_1}, @var{pred_1}, ..., @var{a_n}, @var{pred_n})
-
 Asocia un predicado @var{pred_k} con una variable o lista de variables  @var{a_k}, de forma que  @var{a_k} se comparar@'a con expresiones para las cuales el predicado devuelva algo que no sea @code{false}.
 
-El predicado es el nombre de una funci@'on, una llamada de funci@'on sin su @'ultimo argumento, @code{true} o @code{all}.
-Cualquier expresi@'on se hace coincidir con @code{true} o @code{all}. Si el predicado se especifica como una llamada de funci@'on, la expresi@'on a ser analizada es a@~nadida a su lista de argumentos; siendo los argumentos evaluados en el momento de ser evaluada la comparaci@'on. En cambio, si el predicado se especifica como un nombre de funci@'on, la expresi@'on a ser analizada ser@'a su @'unico argumento. No es necesario definir una funci@'on de predicado cuando se hace una llamada a @code{matchdeclare}; el predicado no se eval@'ua hasta que se ensaya  una comparaci@'on.
+Un predicado puede ser el nombre de una funci@'on, una expresi@'on lambda, una
+llamada a funci@'on, una llamada a una expresi@'on lambda sin
+el @'ultimo argumento, @code{true} o @code{all}.
+Cualquier expresi@'on se hace coincidir con @code{true} o @code{all}. 
 
-Un predicado de @code{matchdeclare} debe ser necesariamente un nombre de funci@'on o una llamada a funci@'on. En particular, un predicado no puede ser funci@'on @code{lambda} o un @code{block}.
+Si el predicado se especifica como una llamada a funci@'on o a
+una expresi@'on lambda, la expresi@'on a ser analizada es a@~nadida 
+a la lista de argumentos, siendo los argumentos evaluados en el 
+momento de ser evaluada la comparaci@'on. 
+En cambio, si el predicado se especifica como un nombre de funci@'on
+o como una expresi@'on lambda, la expresi@'on a ser analizada ser@'a 
+su @'unico argumento. No es necesario definir una funci@'on de predicado cuando se hace una llamada a @code{matchdeclare}; el predicado no se eval@'ua hasta que se ensaya  una comparaci@'on.
+
+Un predicado puede devolver tanto una expresi@'on booleana,
+como @code{true} o @code{false}.
+Las expresiones booleanas se eval@'uan con @code{is} dentro
+de la regla, por lo que no es necesario llamar a @code{is}
+desde dentro del predicado.
 
 Si una expresi@'on satisface un predicado, se asigna a la variable de comparaci@'on la expresi@'on, excepto cuando las variables de comparaci@'on son operandos de sumas @code{+} o multiplicaciones @code{*}. Solamente las sumas y multiplicaciones son tratadas de forma especial; los dem@'as operadores n-arios (tanto los del sistema como los definidos por el usuario) son tratados como funciones ordinarias.
 
@@ -314,12 +328,72 @@ Las funciones @code{defmatch}, @code{defrule}, @code{tellsimp}, @code{tellsimpaf
 
 Ejemplos:
 
-@itemize @bullet
-@item
-@code{q} compara una expresi@'on que no contiene @code{x} ni @code{%e}.
-@end itemize
+Un predicado puede ser el nombre de una funci@'on, una expresi@'on lambda, una
+llamada a funci@'on, una llamada a una expresi@'on lambda sin
+el @'ultimo argumento, @code{true} o @code{all}.
+
+@c ===beg===
+@c matchdeclare (aa, integerp);
+@c matchdeclare (bb, lambda ([x], x > 0));
+@c matchdeclare (cc, freeof (%e, %pi, %i));
+@c matchdeclare (dd, lambda ([x, y], gcd (x, y) = 1) (1728));
+@c matchdeclare (ee, true);
+@c matchdeclare (ff, all);
+@c ===end===
 @example
-(%i1) matchdeclare (q, freeof (x, %e))$
+(%i1) matchdeclare (aa, integerp);
+(%o1)                         done
+(%i2) matchdeclare (bb, lambda ([x], x > 0));
+(%o2)                         done
+(%i3) matchdeclare (cc, freeof (%e, %pi, %i));
+(%o3)                         done
+(%i4) matchdeclare (dd, lambda ([x, y], gcd (x, y) = 1) (1728));
+(%o4)                         done
+(%i5) matchdeclare (ee, true);
+(%o5)                         done
+(%i6) matchdeclare (ff, all);
+(%o6)                         done
+@end example
+
+Si una expresi@'on satisface un predicado, se asigna a la variable de comparaci@'on la expresi@'on.
+
+@c ===beg===
+@c matchdeclare (aa, integerp, bb, atom);
+@c defrule (r1, bb^aa, ["integer" = aa, "atom" = bb]);
+@c r1 (%pi^8);
+@c ===end===
+@example
+(%i1) matchdeclare (aa, integerp, bb, atom);
+(%o1)                         done
+(%i2) defrule (r1, bb^aa, ["integer" = aa, "atom" = bb]);
+                    aa
+(%o2)        r1 : bb   -> [integer = aa, atom = bb]
+(%i3) r1 (%pi^8);
+(%o3)               [integer = 8, atom = %pi]
+@end example
+
+En el caso de sumas y multiplicaciones, a la variable de comparaci@'on se le puede asignar una expresi@'on simple que satisfaga el predicado de comparaci@'on, o una suma o producto, respectivamente, de tales expresiones. 
+
+@c ===beg===
+@c matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c r1 (8 + a*b + sin(x));
+@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c r2 (8 * (a + b) * sin(x));
+@c ===end===
+@example
+(%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
+(%o1)                         done
+(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+bb + aa partitions `sum'
+(%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
+(%i3) r1 (8 + a*b + sin(x));
+(%o3)     [all atoms = 8, all nonatoms = sin(x) + a b]
+(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+bb aa partitions `product'
+(%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
+(%i5) r2 (8 * (a + b) * sin(x));
+(%o5)    [all atoms = 8, all nonatoms = (b + a) sin(x)]
 @end example
 
 @end deffn
@@ -433,7 +507,7 @@ La llamada @code{remrule (@var{function}, all)} borra todas las reglas para el o
 V@'ease tambi@'en @code{remlet}, que elimina una regla definida mediante @code{let}.
 
 Ejemplos:
-  	 
+         
 @c ===beg===
 @c tellsimp (foo (aa, bb), bb - aa);
 @c tellsimpafter (aa + bb, special_add (aa, bb));
@@ -658,6 +732,37 @@ foorule2, foorule3, +rule1, *rule1, ^rule1]
 (%o12)                         foo
 (%i13) remrule ("^", "^rule1");
 (%o13)                          ^
+@end example
+
+Un ejemplo de producto anticonmutativo.
+
+@c ===beg===
+@c gt (i, j) := integerp(j) and i < j;
+@c matchdeclare (i, integerp, j, gt(i));
+@c tellsimpafter (s[i]^^2, 1);
+@c tellsimpafter (s[i] . s[j], -s[j] . s[i]);
+@c s[1] . (s[1] + s[2]);
+@c expand (%);
+@c factor (expand (sum (s[i], i, 0, 9)^^5));
+@c ===end===
+@example
+(%i1) gt (i, j) := integerp(j) and i < j;
+(%o1)           gt(i, j) := integerp(j) and i < j
+(%i2) matchdeclare (i, integerp, j, gt(i));
+(%o2)                         done
+(%i3) tellsimpafter (s[i]^^2, 1);
+(%o3)                 [^^rule1, simpncexpt]
+(%i4) tellsimpafter (s[i] . s[j], -s[j] . s[i]);
+(%o4)                   [.rule1, simpnct]
+(%i5) s[1] . (s[1] + s[2]);
+(%o5)                    s  . (s  + s )
+                          1     2    1
+(%i6) expand (%);
+(%o6)                      1 - s  . s
+                                2    1
+(%i7) factor (expand (sum (s[i], i, 0, 9)^^5));
+(%o7) 100 (s  + s  + s  + s  + s  + s  + s  + s  + s  + s )
+            9    8    7    6    5    4    3    2    1    0
 @end example
 
 @end deffn

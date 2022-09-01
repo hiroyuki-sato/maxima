@@ -1,11 +1,11 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Constants.tcl,v 1.17 2004/10/28 18:26:29 vvzhy Exp $
+#       $Id: Constants.tcl,v 1.21.2.1 2006/08/03 13:21:57 villate Exp $
 #
 
 proc cMAXINITBeforeIni {} {
     global maxima_default
-    set maxima_default(plotwindow) embedded
+    set maxima_default(plotwindow) multiple
 
     # from Send-some.tcl
     set maxima_default(sMathServerHost) genie1.ma.utexas.edu
@@ -44,10 +44,19 @@ proc cMAXINITBeforeIni {} {
     # maxima_default(lProxyHttp)
 }
 
-proc cMAXINITAfterIni {} {
-    global maxima_default maxima_priv
+proc cMAXINITReadIni {} {
+    if {[file isfile ~/.xmaximarc]} {
+	if {[catch {uplevel "#0" [list source ~/.xmaximarc] } err]} {
+	    tide_failure [M [mc "Error sourcing %s\n%s"] \
+			      [file native ~/.xmaximarc] \
+			      $err]
+	}
+    }
+}
 
-    global MathServer
+proc cMAXINITAfterIni {} {
+    global maxima_default maxima_priv MathServer
+    lMaxInitSetOpts
     set MathServer [list $maxima_default(sMathServerHost) \
 			$maxima_default(iMathServerPort) ]
 
@@ -72,7 +81,7 @@ proc cMAXINITAfterIni {} {
 
 # Constants
 global maxima_priv
-set maxima_priv(date) 04/28/2002
+set maxima_priv(date) 29/07/2006
 
 # from
 if { ![info exists maxima_priv(date)] } {
@@ -132,6 +141,8 @@ set maxima_priv(urlHandlers) {
     text/html  netmath
     text/plain netmath
     image/gif  netmath
+    image/png  netmath
+    image/jpeg netmath
     application/postscript "ghostview -safer %s"
     application/pdf "acroread %s"
     application/x-dvi "xdvi %s"

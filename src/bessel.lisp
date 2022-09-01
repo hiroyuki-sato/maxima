@@ -77,6 +77,12 @@
 ;;
 ;; We only support computing this for real z.
 ;;
+
+;; rtoy: Commenting these out for now because they're deprecated and
+;; we have equivalent functionality in bessel_j and bessel_i.
+;;
+;; XXX  Remove these someday.
+#||
 (defun j[0]-bessel (x)
   (slatec:dbesj0 (float x 1d0)))
 
@@ -185,6 +191,7 @@
 	     (aref jvals n))))
 	(t (list '($in simp) $x $n))))
 
+||#
 (defun bessel-i (order arg)
   (cond ((zerop (imagpart arg))
 	 ;; We have numeric args and the first arg is purely
@@ -299,35 +306,38 @@
 ;; gn(x,n) = exp(-x)*I[n](x), based on some simple numerical
 ;; evaluations.
 
-(defun $g0 ($x)
-  (cond ((numberp $x)
-	 (slatec:dbsi0e (float $x)))
+(defun $scaled_bessel_i0 ($x)
+  (cond ((mnump $x)
+	 ;; XXX Should we return noun forms if $x is rational?
+	 (slatec:dbsi0e ($float $x)))
 	(t
-	 (mul `((mexpt) $%e ,(neg $x))
-	      `((%bessel_i) 0 $x)))))
+	 (mul (power '$%e (neg (simplifya `((mabs) ,$x) nil)))
+	      `((%bessel_i) 0 ,$x)))))
 
-(defun $g1 ($x)
-  (cond ((numberp $x)
-	 (slatec:dbsi1e (float $x)))
+(defun $scaled_bessel_i1 ($x)
+  (cond ((mnump $x)
+	 ;; XXX Should we return noun forms if $x is rational?
+	 (slatec:dbsi1e ($float $x)))
 	(t
-	 (mul `((mexpt) $%e ,(neg $x))
-	      `((%bessel_i) 1 $x)))))
+	 (mul (power '$%e (neg (simplifya `((mabs) ,$x) nil)))
+	      `((%bessel_i) 1 ,$x)))))
 
 
 (declare-top (fixnum i n) (flonum x q1 q0 fn fi b1 b0 b an a1 a0 a)) 
 
-(defun $gn ($x $n)
-  (cond ((and (numberp $x) (integerp $n))
+(defun $scaled_bessel_i ($n $x)
+  (cond ((and (mnump $x) (mnump $n))
+	 ;; XXX Should we return noun forms if $n and $x are rational?
 	 (multiple-value-bind (n alpha)
-	     (floor (float $n))
+	     (floor ($float $n))
 	   (let ((jvals (make-array (1+ n) :element-type 'double-float)))
-	     (slatec:dbesi (float $x) alpha 2 (1+ n) jvals 0)
+	     (slatec:dbesi ($float $x) alpha 2 (1+ n) jvals 0)
 	     (narray $iarray $float n)
 	     (fillarray (nsymbol-array '$iarray) jvals)
 	     (aref jvals n))))
 	(t
-	 (mul `((mexpt) $%e ,(neg $x))
-	      `((%bessel_i) $n $x)))))
+	 (mul (power '$%e (neg (simplifya `((mabs) ,$x) nil)))
+	      ($bessel_i $n $x)))))
 
 
 
@@ -1084,7 +1094,7 @@
   (let ((order (simpcheck (cadr exp) z))
 	(rat-order nil))
     (let* ((arg (simpcheck (caddr exp) z)))
-      (cond ((and (= (signum1 order) 1) (bessel-numerical-eval-p order arg))
+      (cond ((and (>= (signum1 order) 0) (bessel-numerical-eval-p order arg))
 	     ;; We have numeric order and arg and $numer is true, or
 	     ;; we have either the order or arg being floating-point,
 	     ;; so let's evaluate it numerically.
@@ -1147,7 +1157,7 @@
   (let ((order (simpcheck (cadr exp) z))
 	(rat-order nil))
     (let* ((arg (simpcheck (caddr exp) z)))
-      (cond ((and (= (signum1 order) 1) (bessel-numerical-eval-p order arg))
+      (cond ((and (>= (signum1 order) 0) (bessel-numerical-eval-p order arg))
 	     (bessel-i (float order) (complex ($realpart arg) ($imagpart arg))))
 	    ((and (integerp order) (minusp order))
 	     ;; Some special cases when the order is an integer
@@ -1204,7 +1214,7 @@
   (let ((order (simpcheck (cadr exp) z))
 	(rat-order nil))
     (let* ((arg (simpcheck (caddr exp) z)))
-      (cond ((and (= (signum1 order) 1) (bessel-numerical-eval-p order arg))
+      (cond ((and (>= (signum1 order) 0) (bessel-numerical-eval-p order arg))
 	     ;; A&S 9.6.6
 	     ;; K[-v](x) = K[v](x)
 	     (bessel-k (abs (float order)) (complex ($realpart arg) ($imagpart arg))))

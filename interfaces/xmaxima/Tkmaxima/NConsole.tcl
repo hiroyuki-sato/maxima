@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: NConsole.tcl,v 1.5 2002/09/19 16:24:37 mikeclarkson Exp $
+#       $Id: NConsole.tcl,v 1.8 2006/07/04 14:07:22 villate Exp $
 #
 ###### NConsole.tcl ######
 ############################################################
@@ -65,7 +65,7 @@ proc CNinsertPrompt { w } {
 }
 
 proc CNeval { w } {
-    linkLocal $w inputs
+    linkLocal $w inputs inputIndex
     set prev ""
     if { [$w compare insert < lastStart] } {
 	set this [thisRange $w input insert]
@@ -80,6 +80,7 @@ proc CNeval { w } {
     set expr [string trimright [$w get lastStart end] \n]
     $w tag add input lastStart end
     lappend inputs $expr
+    set inputIndex [expr {[llength $inputs] - 1}]
     set tag ""
     #puts "sendind <$expr>"
     set res [sendOneWait [oget $w program] $expr]
@@ -117,13 +118,14 @@ proc CNpreviousInput { w direction } {
     if { [$w compare insert < lastStart ] } { return }
 
     set last [lindex [peekLastCommand $w] 1]
-
     if {  ("[lindex $last 2]" != "ALT_p" && "[lindex $last 2]" != "ALT_n") || \
 	      ![info exists inputIndex] } {
 	set inputIndex [expr {$direction < 0 ? [llength $inputs] : -1}]
 	set matching [string trim [$w get lastStart end] " \n"]
     }
-    lappend inputs $matching
+    if {[info exists $matching]} {
+	lappend inputs $matching
+    }
     set n [llength $inputs]
     set j 0
     set matchRegexp "^[quoteForRegexp $matching]"
@@ -132,8 +134,8 @@ proc CNpreviousInput { w direction } {
 	# [string match "$matching*" [lindex $inputs $inputIndex]]
     	if { [regexp -- $matchRegexp [lindex $inputs $inputIndex]] } {
 	    $w delete lastStart end
-	    $w insert insert [lindex $inputs $inputIndex] input
-	    $w see end
+	    $w insert insert [lindex $inputs $inputIndex]
+	    $w see insert
 	    break
 	}
     }

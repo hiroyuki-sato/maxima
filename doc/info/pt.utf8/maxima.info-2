@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
    Esse é um Manual do Maxima no formato Texinfo
 
@@ -7,6 +7,1716 @@ This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Um sistema de álgebra computacional.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definições para Entrada e Saída,  Prev: Arquivos,  Up: Entrada e Saída
+
+9.4 Definições para Entrada e Saída de Dados
+============================================
+
+ -- Variável de sistema: __
+     `__' é a expressão de entrada atualmente sendo avaliada.  Isto é,
+     enquanto um expressão de entrada <expr> está sendo avaliada, `__'
+     é <expr>.
+
+     `__' é atribuída à expressão de entrada antes de a entrada ser
+     simplificada ou avaliada.  Todavia, o valor de `__' é simplificado
+     (mas não avaliado) quando for mostrado.
+
+     `__' é reconhecido por `batch' e `load'.  Em um arquivo processado
+     por `batch', `__' tem o mesmo significado que na linha de comando
+     interativa.  Em um arquivo processado por `load', `__' está
+     associado à expressão de entrada mais recentemente informada no
+     prompt interativo ou em um arquivo de lote (batch); `__' não é
+     associado à expressões de entrada no arquivo que está sendo
+     processado.  Em particular, quando `load (<nomedearquivo>)' for
+     chamado a partir da linha de comando interativa, `__' é associado
+     a `load (<filename>)' enquanto o arquivo está sendo processado.
+
+     Veja também `_' e `%'.
+
+     Exemplos:
+
+          (%i1) print ("Eu fui chamada como", __);
+          Eu fui chamada como print(Eu fui chamada como, __)
+          (%o1)              print(Eu fui chamada como, __)
+          (%i2) foo (__);
+          (%o2)                     foo(foo(__))
+          (%i3) g (x) := (print ("Expressão atual de entrada =", __), 0);
+          (%o3) g(x) := (print("Expressão atual de entrada =", __), 0)
+          (%i4) [aa : 1, bb : 2, cc : 3];
+          (%o4)                       [1, 2, 3]
+          (%i5) (aa + bb + cc)/(dd + ee + g(x));
+                                         cc + bb + aa
+          Expressão atual de entrada = --------------
+                                        g(x) + ee + dd
+                                          6
+          (%o5)                        -------
+                                       ee + dd
+
+
+ -- Variável de sistema: _
+     `_' é a mais recente expressão de  entrada (e.g., `%i1', `%i2',
+     `%i3', ...).
+
+     A `_' é atribuída à expressão de entrada antes dela ser
+     simplificada ou avaliada.  Todavia, o valor de `_' é simplificado
+     (mas não avaliado) quando for mostrado.
+
+     `_' é reconhecido por `batch' e `load'.  Em um arquivo processado
+     por `batch', `_' tem o mesmo significado que na linha de comando
+     interativa.  Em um arquivo processado por load `load', `_' está
+     associado à expressão de entrada mais recentemente avaliada na
+     linha de comando interativa ou em um arquivo de lote; `_' não está
+     associada a expressões de entrada no arquivo que está sendo
+     processado.
+
+     Veja também `__' e `%'.
+
+     Exemplos:
+
+          (%i1) 13 + 29;
+          (%o1)                          42
+          (%i2) :lisp $_
+          ((MPLUS) 13 29)
+          (%i2) _;
+          (%o2)                          42
+          (%i3) sin (%pi/2);
+          (%o3)                           1
+          (%i4) :lisp $_
+          ((%SIN) ((MQUOTIENT) $%PI 2))
+          (%i4) _;
+          (%o4)                           1
+          (%i5) a: 13$
+          (%i6) b: 29$
+          (%i7) a + b;
+          (%o7)                          42
+          (%i8) :lisp $_
+          ((MPLUS) $A $B)
+          (%i8) _;
+          (%o8)                         b + a
+          (%i9) a + b;
+          (%o9)                          42
+          (%i10) ev (_);
+          (%o10)                         42
+
+
+ -- Variável de sistema: %
+     `%' é a expressão de saída (e.g., `%o1', `%o2', `%o3', ...)  mais
+     recentemente calculada pelo Maxima, pode ou não ser mostrada.
+
+     `%' é reconhecida por `batch' e `load'.  Em um arquivo processado
+     por `batch', `%' tem o mesmo significado que na linha de comando
+     interativa.  Em um arquivo processado por `load', `%' é associado
+     à expressão de entrada mais recentemente calculada na linha de
+     comando interativa ou em um arquivo de lote; `%' não está
+     associada a expressões de saída no arquivo que está sendo
+     processado.
+
+     Veja também `_', `%%', e `%th'
+
+
+ -- Variável de sistema: %%
+     Em declaração composta, a saber `block', `lambda', ou `(<s_1>,
+     ..., <s_n>)', `%%' é os valor da declaração anterior.  Por exemplo,
+
+          block (integrate (x^5, x), ev (%%, x=2) - ev (%%, x=1));
+          block ([prev], prev: integrate (x^5, x), ev (prev, x=2) - ev (prev, x=1));
+
+     retornam o mesmo resultado, a saber `21/2'.
+
+     Uma declaração composta pode compreender outras declarações
+     compostas.  Pode uma declaração ser simples ou composta, `%%' é o
+     valor da declaração anterior.  Por exemplo,
+
+          block (block (a^n, %%*42), %%/6)
+
+     retorna `7*a^n'.
+
+     Dentro da declaração composta, o valor de `%%' pode ser
+     inspecionado em uma parada de linha de comando, que é aberta pela
+     execução da função `break'.  Por exemplo, na parada de linha de
+     comando aberta por
+
+          block (a: 42, break ())$
+
+     digitando `%%;' retorna `42'.
+
+     Na primeira declaração em uma declaração composta, ou fora de uma
+     declaração composta, `%%' é indefinido.
+
+     `%%'  reconhecido por `batch' e `load', e possem o mesmo
+     significao que na linha de comando interativa.
+
+     Veja também `%'.
+
+
+ -- Variável de opção: %edispflag
+     Valor padrão: `false'
+
+     Quando `%edispflag' é `true', Maxima mostra `%e' para um expoente
+     negativo como um quociente.  Por exemplo, `%e^-x' é mostrado como
+     `1/%e^x'.
+
+
+ -- Função: %th (<i>)
+     O valor da <i>'ésima expressão prévia de saída.  Isto é, se a
+     próxima expressão a ser calculada for a <n>'ésima saída, `%th
+     (<m>)' será a (<n> - <m>)'ésima saída.
+
+     `%th' é útil em arquivos `batch' ou para referir-se a um grupo de
+     expressões de saída.  Por exemplo,
+
+          block (s: 0, for i:1 thru 10 do s: s + %th (i))$
+
+     escolhe `s' para a soma das últimas dez expressões de saída.
+
+     `%th' é reconhecido por `batch' e `load'.  Em um arquivo
+     processado por `batch', `%th' possue o mesmo significado que na
+     linha de comando interativa.  Em um arquivo processado por `load',
+     `%th' refere-se a expressões de saída mais recentemente calculadas
+     na linha de comando interativa ou em um arquivo de lote; `%th' não
+     se refere a expressões de saída no arquivo que está sendo
+     processado.
+
+     Veja também `%'.
+
+
+ -- Símbolo especial: ?
+     Como prefixo para uma função ou nome de variável, `?' significa que
+     o nome é um nome Lisp, não um nome Maxima.  Por exemplo, `?round'
+     significa a função Lisp `ROUND'.  Veja *Note Lisp e Maxima:: para
+     mais sobre esse ponto.
+
+     A notação `? word' (um ponto de interrogação seguido de uma
+     palavra e separado desta por um espaço em branco) é equivalente a
+     `describe ("word")'.
+
+
+ -- Variável de opção: absboxchar
+     Valor padrão: `!'
+
+     `absboxchar' é o caracter usado para para desenhar o sinal de valor
+     absoluto em torno de expressões que são maiores que uma linha de
+     altura.
+
+
+ -- Variável de opção: file_output_append
+     Valor padrão: `false'
+
+     `file_output_append' governa se funções de saída de arquivo anexam
+     ao final ou truncam seu arquivo de saída.  Quando
+     `file_output_append' for `true', tais funções anexam ao final de
+     seu arquivo de saída.  De outra forma, o arquivo de saída é
+     truncado.
+
+     `save', `stringout', e `with_stdout' respeitam
+     `file_output_append'.  Outras funções que escrevem arquivos de
+     saída não respeitam `file_output_append'.  Em partivular, montagem
+     de gráficos e traduções de funções sempre truncam seu arquivo de
+     saída, e `tex' e `appendfile' sempre anexam ao final.
+
+
+ -- Função: appendfile (<filename>)
+     Adiciona ao final de <filename> uma transcrição do console.
+     `appendfile' é o mesmo que `writefile', exceto que o arquivo
+     transcrito, se já existe, terá sempre alguma coisa adicionada ao
+     seu final.
+
+     `closefile' fecha o arquivo transcrito que foi aberto
+     anteriormente por `appendfile' ou por `writefile'.
+
+
+ -- Função: batch (<filename>)
+     Lê expressões Maxima do arquivo <filename> e as avalia.  `batch'
+     procura pelo arquivo <filename> na lista `file_search_maxima'.
+     Veja `file_search'.
+
+     <filename> compreende uma seqüência de expressões Maxima, cada uma
+     terminada com `;' ou `$'.  A varável especial `%' e a função `%th'
+     referem-se a resultados prévios dentro do arquivo.  O arquivo pode
+     incluir construções `:lisp'.  Espaços, tabulações, e o caracter de
+     nova linha no arquivo serão ignorados.  um arquivo de entrada
+     conveniente pode ser criado por um editor de texto ou pela função
+     `stringout'.
+
+     `batch' lê cada expressão de entrada de <filename>, mostra a
+     entrada para o console, calcula a correspondente expressão de
+     saída, e mostra a expressão de saída.  Rótulos de entrada são
+     atribuídos para expressões de entrada e rótulos de saída são
+     atribuídos para expressões de saída.  `batch' avalia toda
+     expressão de entrada no arquivo a menos que exista um erro.  Se
+     uma entrada de usuário for requisitada (by `asksign' ou
+     `askinteger', por exemplo) `batch' interrompe para coletar a
+     entrada requisitada e então continua.
+
+     Isso possibilita interromper `batch' pela digitação de `control-C'
+     no console.  O efeito de `control-C' depende da subjacente
+     implementação do Lisp.
+
+     `batch' tem muitos usos, tais como fornecer um reservatório para
+     trabalhar linhas de comando, para fornecer demonstrações livres de
+     erros, ou para ajudar a organizar alguma coisa na solução de
+     problemas complexos.
+
+     `batch' avalia seu argumento.  `batch' não possui valor de retorno.
+
+     Veja também `load', `batchload', e `demo'.
+
+
+ -- Função: batchload (<filename>)
+     Lê expressões Maxima de <filename> e as avalia, sem mostrar a
+     entrada ou expressões de saída e sem atribuir rótulos para
+     expressões de saída.  Saídas impressas (tais como produzidas por
+     `print' ou `describe') são mostradas, todavia.
+
+     A variável especial `%' e a função `%th' referem-se a resultados
+     anteriores do interpretador interativo, não a resultados dentro do
+     arquivo.  O arquivo não pode incluir construções `:lisp'.
+
+     `batchload' retorna o caminho de <filename>, como uma seqüência de
+     caracteres.  `batchload' avalia seu argumento.
+
+     Veja também `batch' e `load'.
+
+
+ -- Função: closefile ()
+     Fecha o arquivo transcrito aberto por `writefile' ou `appendfile'.
+
+
+ -- Função: collapse (<expr>)
+     Reduz <expr> fazendo com que todas as suas subexpressões comuns
+     (i.e., iguais)  serem compartilhadas (i.e., usam a mesma células),
+     dessa forma exonomizando espaço.  (`collapse' é uma subrotina
+     usada pelo comando `optimize'.)  Dessa forma, chamar `collapse'
+     pode ser útil após um `save' arquivo.  Você pode diminuir muitas
+     expressões juntas pelo uso de `collapse ([<expr_1>, ...,
+     <expr_n>])'.  Similarmente, você pode diminuir os elementos de um
+     array `A' fazendo `collapse (listarray ('A))'.
+
+
+ -- Função: concat (<arg_1>, <arg_2>, ...)
+     Concatena seus argumentos.  Os argumentos devem obrigatóriamente
+     serem avaliados para atomos.  O valor de retorno é um símbolo se o
+     primeiro argumento for um símbolo e uma seqüência de caracteres no
+     formato do Maxima em caso contrário.
+
+     `concat' avalia seus argumentos.  O apóstrofo `'' evita avaliação.
+
+          (%i1) y: 7$
+          (%i2) z: 88$
+          (%i3) concat (y, z/2);
+          (%o3)                          744
+          (%i4) concat ('y, z/2);
+          (%o4)                          y44
+
+     Um símbolo construído por `concat' pode ser atribuído a um valor e
+     aparecer em expressões.  O operador de atribuição `::' (duplo dois
+     pontos) avalia seu lado esquerdo.
+
+          (%i5) a: concat ('y, z/2);
+          (%o5)                          y44
+          (%i6) a:: 123;
+          (%o6)                          123
+          (%i7) y44;
+          (%o7)                          123
+          (%i8) b^a;
+                                         y44
+          (%o8)                         b
+          (%i9) %, numer;
+                                         123
+          (%o9)                         b
+
+     Note que embora `concat (1, 2)' seja visto como um números, isso é
+     uma seqüência de caracteres no formato do Maxima.
+
+          (%i10) concat (1, 2) + 3;
+          (%o10)                       12 + 3
+
+
+ -- Função: sconcat (<arg_1>, <arg_2>, ...)
+     Concatena seus argumentos em uma seqüência de caracteres.  Ao
+     contrário de `concat', os argumentos arrumados não precisam ser
+     atômicos.
+
+     O resultado é uma seqüência de caracteres no format do Lisp.
+
+          (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
+          (%o1)               xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+
+
+ -- Função: disp (<expr_1>, <expr_2>, ...)
+     é como `display' mas somente os valores dos argumentos são
+     mostrados em lugar de equações.  Isso é útil para argumentos
+     complicados que não possuem nomes ou onde somente o valor do
+     argumento é de interesse e não o nome.
+
+
+ -- Função: dispcon (<tensor_1>, <tensor_2>, ...)
+ -- Função: dispcon (all)
+     Mostram as propriedades de contração de seus argumentos como foram
+     dados para `defcon'.  `dispcon (all)' mostra todas as propriedades
+     de contração que foram definidas.
+
+
+ -- Função: display (<expr_1>, <expr_2>, ...)
+     Mostra equações cujo lado esquerdo é <expr_i> não avaliado, e cujo
+     lado direito é o valor da expressão centrada na linha.  Essa
+     função é útil em blocos e em `for' declarações com o objetivo de
+     ter resultados intermediários mostrados.  The Os argumentos para
+     `display' são usualmente átomos, variáveis subscritas, ou chamadas
+     de função.  Veja também `disp'.
+
+          (%i1) display(B[1,2]);
+                                                2
+                                   B     = X - X
+                                    1, 2
+          (%o1)                            done
+
+
+ -- Variável de opção: display2d
+     Valor padrão: `true'
+
+     Quando `display2d' é `false', O console visualizador é
+     unidimensional ao invés de bidimensional.
+
+
+ -- Variável de opção: display_format_internal
+     Valor padrão: `false'
+
+     Quando `display_format_internal' é `true', expressões são
+     mostradas sem ser por caminhos que escondam a representação
+     matemática interna.  O visualizador então corresponde ao que
+     `inpart' retorna em lugar de `part'.
+
+     Exemplos:
+
+          User     part       inpart
+          a-b;      A - B     A + (- 1) B
+
+                     A            - 1
+          a/b;       -         A B
+                     B
+                                 1/2
+          sqrt(x);   sqrt(X)    X
+
+                    4 X        4
+          X*4/3;    ---        - X
+                     3         3
+
+
+ -- Função: dispterms (<expr>)
+     Mostra <expr> em partes uma abaixo da outra.  Isto é, primeiro o
+     operador de <expr> é mostrado, então cada parcela em uma adição,
+     ou fatores em um produto, ou parte de uma expressão mais geral é
+     mostrado separadamente.  Isso é útil se <expr> é muito larga para
+     ser mostrada de outra forma.  Por exemplo se `P1', `P2', ...  são
+     expressões muito largas então o programa visualizador pode sair
+     fora do espaço de armazenamento na tentativa de mostrar `P1 + P2 +
+     ...'  tudo de uma vez.  Todavia, `dispterms (P1 + P2 + ...)'
+     mostra `P1', então abaixo disso `P2', etc.  Quando não usando
+     `dispterms', se uma expressão exponencial é muito alta para ser
+     mostrada como `A^B' isso aparece como `expt (A, B)' (ou como
+     `ncexpt (A, B)' no caso de `A^^B').
+
+
+ -- Variável de opção: error_size
+     Valor padrão: 10
+
+     `error_size' modifica mensagens de erro conforme o tamanho das
+     expressões que aparecem nelas.  Se o tamanho de uma expressão
+     (como determinado pela função Lisp `ERROR-SIZE') é maior que
+     `error_size', a expressão é substituída na mensagem por um símbolo,
+     e o o símbolo é atribuído à expressão.  Os símbolos são obtidos da
+     lista `error_syms'.
+
+     De outra forma, a expressão é menor que `error_size', e a
+     expressão é mostrada na mensagem.
+
+     Veja também `error' e `error_syms'.
+
+     Exemplo:
+
+     O tamanho de `U', como determinado por `ERROR-SIZE', é 24.
+
+          (%i1) U: (C^D^E + B + A)/(cos(X-1) + 1)$
+
+          (%i2) error_size: 20$
+
+          (%i3) error ("Expressão exemplo é", U);
+
+          Expressão exemplo é errexp1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i4) errexp1;
+                                      E
+                                     D
+                                    C   + B + A
+          (%o4)                    --------------
+                                   cos(X - 1) + 1
+          (%i5) error_size: 30$
+
+          (%i6) error ("Expressão exemplo é", U);
+
+                                     E
+                                    D
+                                   C   + B + A
+          Expressão exemplo é --------------
+                                  cos(X - 1) + 1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+
+ -- Variável de opção: error_syms
+     Valor padrão: `[errexp1, errexp2, errexp3]'
+
+     Em mensagens de erro, expressões mais largas que `error_size' são
+     substituídas por símbolos, e os símbolos são escolhidos para as
+     expressões.  Os símbolos são obtidos da lista `error_syms'.  A
+     primeira expressão muito larga é substituída por `error_syms[1]',
+     a segunda por `error_syms[2]', e assim por diante.
+
+     Se houverem mais expressões muito largas que há elementos em
+     `error_syms', símbolos são construídos automaticamente, com o
+     <n>-ésimo símbolo equivalente a `concat ('errexp, <n>)'.
+
+     Veja também `error' e `error_size'.
+
+
+ -- Função: expt (<a>, <b>)
+     Se uma expressão exponencial é muito alta para ser mostrada cmo
+     `<a>^<b>' isso aparece como `expt (<a>, <b>)' (ou como `ncexpt
+     (<a>, <b>)' no caso de `<a>^^<b>').
+
+     `expt' e `ncexpt' não são reconhecidas em entradas.
+
+
+ -- Variável de opção: exptdispflag
+     Valor padrão: `true'
+
+     Quando `exptdispflag' é `true', Maxima mostra expressões com
+     expoente negativo usando quocientes, e.g., `X^(-1)' como `1/X'.
+
+
+ -- Função: filename_merge (<path>, <filename>)
+     Constroem um caminho modificado de <path> e <filename>.  Se o
+     componente final de <path> é da forma `###.<algumacoisa>', o
+     componente é substituído com `<filename>.<algumacoisa>'.  De outra
+     forma, o componente final é simplesmente substituído por
+     <filename>.
+
+
+ -- Função: file_search (<filename>)
+ -- Função: file_search (<filename>, <pathlist>)
+     `file_search' procura pelo arquivo <filename> e retorna o caminho
+     para o arquivo (como uma seqüência de caracteres) se ele for
+     achado; de outra forma `file_search' retorna `false'.
+     `file_search (<filename>)' procura nos diretórios padrões de busca,
+     que são especificados pelas variáveis `file_search_maxima',
+     `file_search_lisp', e `file_search_demo'.
+
+     `file_search' primeiro verifica se o nome atual passado existe,
+     antes de tentar coincidir esse nome atual com o modelo "coringa"
+     de busca do arquivo.  Veja `file_search_maxima' concernente a
+     modelos de busca de arquivos.
+
+     O argumento <filename> pode ser um caminho e nome de arquivo, ou
+     apenas um nome de arquivo, ou, se um diretório de busca de arquivo
+     inclui um modelo de busca de arquivo, apenas a base do nome de
+     arquivo (sem uma extensão).  Por exemplo,
+
+          file_search ("/home/wfs/special/zeta.mac");
+          file_search ("zeta.mac");
+          file_search ("zeta");
+
+     todos acham o mesmo arquivo, assumindo que o arquivo exista e
+     `/home/wfs/special/###.mac' está em `file_search_maxima'.
+
+     `file_search (<filename>, <pathlist>)' procura somente nesses
+     diretórios especificados por <pathlist>, que é uma lista de
+     seqüências de caracteres.  O argumento <pathlist> substitui os
+     diretórios de busca padrão, então se a lista do caminho é dada,
+     `file_search' procura somente nesses especificados, e não qualquer
+     dos diretórios padrão de busca.  Mesmo se existe somente um
+     diretório em <pathlist>, esse deve ainda ser dado como uma lista
+     de um único elemento.
+
+     O usuário pode modificar o diretório de busca padrão.  Veja
+     `file_search_maxima'.
+
+     `file_search' é invocado por `load' com `file_search_maxima' e
+     `file_search_lisp' como diretórios de busca.
+
+
+ -- Variável de opção: file_search_maxima
+ -- Variável de opção: file_search_lisp
+ -- Variável de opção: file_search_demo
+     Essas variáveis especificam listas de diretórios a serem procurados
+     por `load', `demo', e algumas outras funções do Maxima.  O valor
+     padrão dessas variáveis nomeia vários diretórios na instalaçã
+     padrão do Maxima.
+
+     O usuáro pode modificar essas variáveis, quer substituindo os
+     valores padrão ou colocando no final diretórios adicionais.  Por
+     exemplo,
+
+          file_search_maxima: ["/usr/local/foo/###.mac",
+              "/usr/local/bar/###.mac"]$
+
+     substitui o valor padrão de `file_search_maxima', enquanto
+
+          file_search_maxima: append (file_search_maxima,
+              ["/usr/local/foo/###.mac", "/usr/local/bar/###.mac"])$
+
+     adiciona no final da lista dois diretórios adicionais.  Isso pode
+     ser conveniente para colocar assim uma expressão no arquivo
+     `maxima-init.mac' de forma que o caminho de busca de arquivo é
+     atribuído automaticamente quando o Maxima inicia.
+
+     Multiplas extensões de arquivo e e multiplos caminhos podem ser
+     especificados por construções "coringa" especiais.  A seqüência de
+     caracteres `###' expande a busca para além do nome básico,
+     enquanto uma lista separada por vírgulas e entre chaves
+     `{foo,bar,baz}' expande em multiplas seqüências de caracteres.
+     Por exemplo, supondo que o nome básico a ser procurado seja
+     `neumann',
+
+          "/home/{wfs,gcj}/###.{lisp,mac}"
+
+     expande em `/home/wfs/neumann.lisp', `/home/gcj/neumann.lisp',
+     `/home/wfs/neumann.mac', e `/home/gcj/neumann.mac'.
+
+
+ -- Função: file_type (<filename>)
+     Retorna uma suposta informação sobre o conteúdo de <filename>,
+     baseada na extensão do arquivo.  <filename> não precisa referir-se
+     a um arquivo atual; nenhuma tentativa é feita para abrir o arquivo
+     e inspecionar seu conteúdo.
+
+     O valor de retorno é um símbolo, qualquer um entre `object',
+     `lisp', ou `maxima'.  Se a extensão começa com `m' ou `d',
+     `file_type' retorna `maxima'.  Se a extensão começa om `l',
+     `file_type' retorna `lisp'.  Se nenhum dos acima, `file_type'
+     retorna `object'.
+
+
+ -- Função: grind (<expr>)
+ -- Variável de opção: grind
+     A função `grind' imprime <expr> para o console em uma forma
+     adequada de entrada para Maxima.  `grind' sempre retorna `done'.
+
+     Quando <expr> for um nome de uma função ou o nome de uma macro,
+     `grind' mostra na tela a definição da função ou da macro em lugar
+     de apenas o nome.
+
+     Veja também `string', que retorna uma seqüência de caracteres em
+     lugar de imprimir sua saída.  `grind' tenta imprimir a expressão
+     de uma maneira que a faz levemente mais fácil para ler que a saída
+     de `string'.
+
+     Quando a variável `grind' é `true', a saída de `string' e
+     `stringout' tem o mesmo formato que `grind'; de outra forma
+     nenhuma tentativa é feita para formatar especialmente a saída
+     dessas funções.  O valor padrão da variável `grind' é `false'.
+
+     `grind' pode também ser especificado como um argumento de
+     `playback'.  Quando `grind' está presente, `playback' imprime
+     expressões de entrada no mesmo formato que a função `grind'.  De
+     outra forma, nenhuma tentativa é feita para formatar especialmente
+     as expressões de entrada.  `grind' avalia seus argumentos.
+
+     Exemplos:
+
+          (%i1) aa + 1729;
+          (%o1)                       aa + 1729
+          (%i2) grind (%);
+          aa+1729$
+          (%o2)                         done
+          (%i3) [aa, 1729, aa + 1729];
+          (%o3)                 [aa, 1729, aa + 1729]
+          (%i4) grind (%);
+          [aa,1729,aa+1729]$
+          (%o4)                         done
+          (%i5) matrix ([aa, 17], [29, bb]);
+                                     [ aa  17 ]
+          (%o5)                      [        ]
+                                     [ 29  bb ]
+          (%i6) grind (%);
+          matrix([aa,17],[29,bb])$
+          (%o6)                         done
+          (%i7) set (aa, 17, 29, bb);
+          (%o7)                   {17, 29, aa, bb}
+          (%i8) grind (%);
+          {17,29,aa,bb}$
+          (%o8)                         done
+          (%i9) exp (aa / (bb + 17)^29);
+                                          aa
+                                      -----------
+                                               29
+                                      (bb + 17)
+          (%o9)                     %e
+          (%i10) grind (%);
+          %e^(aa/(bb+17)^29)$
+          (%o10)                        done
+          (%i11) expr: expand ((aa + bb)^10);
+                   10           9        2   8         3   7         4   6
+          (%o11) bb   + 10 aa bb  + 45 aa  bb  + 120 aa  bb  + 210 aa  bb
+                   5   5         6   4         7   3        8   2
+           + 252 aa  bb  + 210 aa  bb  + 120 aa  bb  + 45 aa  bb
+                  9        10
+           + 10 aa  bb + aa
+          (%i12) grind (expr);
+          bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6
+               +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2
+               +10*aa^9*bb+aa^10$
+          (%o12)                        done
+          (%i13) string (expr);
+          (%o13) bb^10+10*aa*bb^9+45*aa^2*bb^8+120*aa^3*bb^7+210*aa^4*bb^6\
+          +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2+10*aa^9*\
+          bb+aa^10
+          (%i14) cholesky (A):= block ([n : length (A), L : copymatrix (A),
+          p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
+          (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
+          p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
+          for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+          (%i15) grind (cholesky);
+          cholesky(A):=block(
+                   [n:length(A),L:copymatrix(A),
+                    p:makelist(0,i,1,length(A))],
+                   for i thru n do
+                       (for j from i thru n do
+                            (x:L[i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),
+                             if i = j then p[i]:1/sqrt(x)
+                                 else L[j,i]:x*p[i])),
+                   for i thru n do L[i,i]:1/p[i],
+                   for i thru n do (for j from i+1 thru n do L[i,j]:0),L)$
+          (%o15)                        done
+          (%i16) string (fundef (cholesky));
+          (%o16) cholesky(A):=block([n:length(A),L:copymatrix(A),p:makelis\
+          t(0,i,1,length(A))],for i thru n do (for j from i thru n do (x:L\
+          [i,j],x:x-sum(L[j,k]*L[i,k],k,1,i-1),if i = j then p[i]:1/sqrt(x\
+          ) else L[j,i]:x*p[i])),for i thru n do L[i,i]:1/p[i],for i thru \
+          n do (for j from i+1 thru n do L[i,j]:0),L)
+
+
+ -- Variável de opção: ibase
+     Valor padrão: 10
+
+     Inteiros fornecidos dentro do Maxima são interpretados com
+     respeito à base `ibase'.
+
+     A `ibase' pode ser atribuído qualquer inteiro entre 2 e 35
+     (decimal), inclusive.  Quando `ibase' é maior que 10, os numerais
+     compreendem aos numerais decimais de 0 até 9 mais as letras
+     maiúsculas do alfabeto A, B, C, ..., como necessário.  Os numerais
+     para a base 35, a maior base aceitável, compreendem de 0 até 9 e
+     de A até Y.
+
+     Veja também `obase'.
+
+
+ -- Variável de opção: inchar
+     Valor padrão: `%i'
+
+     `inchar' é o prefixo dos rótulos de expressões fornecidas pelo
+     usuário.  Maxima automaticamente constrói um rótulo para cada
+     expressão de entrada por concatenação de `inchar' e `linenum'.  A
+     `inchar' pode ser atribuído qualquer seqüência de caracteres ou
+     símbolo, não necessariamente um caracter simples.
+
+          (%i1) inchar: "input";
+          (%o1)                                input
+          (input1) expand ((a+b)^3);
+                                      3        2      2      3
+          (%o1)                      b  + 3 a b  + 3 a  b + a
+          (input2)
+
+     Veja também `labels'.
+
+
+ -- Função: ldisp (<expr_1>, ..., <expr_n>)
+     Mostra expressões <expr_1>, ..., <expr_n> para o console como
+     saída impressa na tela.  `ldisp' atribue um rótulo de expressão
+     intermediária a cada argumento e retorna a lista de rótulos.
+
+     Veja também `disp'.
+
+          (%i1) e: (a+b)^3;
+                                             3
+          (%o1)                       (b + a)
+          (%i2) f: expand (e);
+                               3        2      2      3
+          (%o2)               b  + 3 a b  + 3 a  b + a
+          (%i3) ldisp (e, f);
+                                             3
+          (%t3)                       (b + a)
+
+                               3        2      2      3
+          (%t4)               b  + 3 a b  + 3 a  b + a
+
+          (%o4)                      [%t3, %t4]
+          (%i4) %t3;
+                                             3
+          (%o4)                       (b + a)
+          (%i5) %t4;
+                               3        2      2      3
+          (%o5)               b  + 3 a b  + 3 a  b + a
+
+
+ -- Função: ldisplay (<expr_1>, ..., <expr_n>)
+     Mostra expressões <expr_1>, ..., <expr_n> para o console como
+     saída impressa na tela.  Cada expressão é impressa como uma
+     equação da forma `lhs = rhs' na qual `lhs' é um dos argumentos de
+     `ldisplay' e `rhs' é seu valor.  Tipicamente cada argumento é uma
+     variável.  `ldisp' atribui um rótulo de expressão intermediáia a
+     cada equação e retorna a lista de rótulos.
+
+     Veja também `display'.
+
+          (%i1) e: (a+b)^3;
+                                             3
+          (%o1)                       (b + a)
+          (%i2) f: expand (e);
+                               3        2      2      3
+          (%o2)               b  + 3 a b  + 3 a  b + a
+          (%i3) ldisplay (e, f);
+                                               3
+          (%t3)                     e = (b + a)
+
+                                 3        2      2      3
+          (%t4)             f = b  + 3 a b  + 3 a  b + a
+
+          (%o4)                      [%t3, %t4]
+          (%i4) %t3;
+                                               3
+          (%o4)                     e = (b + a)
+          (%i5) %t4;
+                                 3        2      2      3
+          (%o5)             f = b  + 3 a b  + 3 a  b + a
+
+
+ -- Variável de opção: linechar
+     Valor padrão: `%t'
+
+     `linechar' é o refixo de rótulos de expressões intermediárias
+     gerados pelo Maxima.  Maxima constrói um rótulo para cada
+     expressão intermediária (se for mostrada) pela concatenação de
+     `linechar' e `linenum'.  A `linechar' pode ser atribuído qualquer
+     seqüência de caracteres ou símbolo, não necessáriamente um
+     caractere simples.
+
+     Expressões intermediárias podem ou não serem mostradas.  See
+     `programmode' e `labels'.
+
+
+ -- Variável de opção: linel
+     Valor padrão: 79
+
+     `linel' é a largura assumida (em caracteres) do console para o
+     propósito de mostrar expressões.  A `linel' pode ser atribuído
+     qualquer valor pelo usuário, embora valores muio pequenos ou muito
+     grandes possam ser impraticáveis.  Textos impressos por funções
+     internas do Maxima, tais como mensagens de erro e a saída de
+     `describe', não são afetadas por `linel'.
+
+
+ -- Variável de opção: lispdisp
+     Valor padrão: `false'
+
+     Quando `lispdisp' for `true', símbolos Lisp são mostrados com um
+     ponto de interrogação `?' na frente.  De outra forma, símbolos
+     Lisp serão mostrados sem o ponto de interrogaçõ na frente.
+
+     Exemplos:
+
+          (%i1) lispdisp: false$
+          (%i2) ?foo + ?bar;
+          (%o2)                       foo + bar
+          (%i3) lispdisp: true$
+          (%i4) ?foo + ?bar;
+          (%o4)                      ?foo + ?bar
+
+
+ -- Função: load (<nomedearquivo>)
+     Avalia expressões em <nomedearquivo>, dessa forma conduzindo
+     variáveis, funções, e outros objetos dentro do Maxima.  A
+     associação de qualquer objeto existente é substituída pela
+     associação recuperada de <nomedearquivo>.  Para achar o arquivo,
+     `load' chama `file_search' com `file_search_maxima' e
+     `file_search_lisp' como diretórios de busca.  Se `load' obtém
+     sucesso, isso retorna o nome do arquivo.  De outra forma `load'
+     imprime uma mensagem e erro.
+
+     `load' trabalha igualmente bem para códigos Lisp e códigos Maxima.
+     Arquivos criados por `save', `translate_file', e `compile_file',
+     que criam códigos Lisp, e `stringout', que criam códigos Maxima,
+     podem ser processadas por `load'.  `load' chama `loadfile' para
+     carregar arquivos Lisp e `batchload' para carregar arquivos Maxima.
+
+     `load' não reconhece construções `:lisp' em arquivos do Maxima, e
+     quando processando <nomedearquivo>, as variáveis globais `_',
+     `__', `%', e `%th' possuem as mesmas associações que possuiam
+     quando `load' foi chamada.
+
+     Veja também `loadfile', `batch', `batchload', e `demo'.
+     `loadfile' processa arquivos Lisp; `batch', `batchload', e `demo'
+     processam arquivos Maxima.
+
+     Veja `file_search' para mais detalhes sobre o mecanismo de busca
+     de arquivos.
+
+     `load' avalia seu argumento.
+
+
+ -- Função: loadfile (<nomedearquivo>)
+     Avalia expressões Lisp em <nomedearquivo>.  `loadfile' não invoca
+     `file_search', então `nomedearquivo' deve obrigatóriamente incluir
+     a extensão do arquivo e tanto quanto o caminho como necessário
+     para achar o arquivo.
+
+     `loadfile' pode processar arquivos criados por `save',
+     `translate_file', e `compile_file'.  O usuário pode achar isso
+     mais conveniente para usar `load' em lugar de `loadfile'.
+
+     `loadfile' avalia seu argumento, então `nomedearquivo' deve
+     obrigatóriamente ser uma seqüência de caracteres literal, não uma
+     variável do tipo seqüência de caracteres.  O operador
+     apóstrofo-apóstrofo `''' não aceita avaliação.
+
+
+ -- Variável de opção: loadprint
+     Valor padrão: `true'
+
+     `loadprint' diz se deve imprimir uma mensagem quando um arquivo é
+     chamado.
+
+        * Quando `loadprint' é `true', sempre imprime uma mensagem.
+
+        * Quando `loadprint' é `'loadfile', imprime uma mensagem
+          somente se um arquivo é chamado pela função `loadfile'.
+
+        * Quando `loadprint' é `'autoload', imprime uma mensagem
+          somente se um arquivo é automaticamente carregado.  Veja
+          `setup_autoload'.
+
+        * Quando `loadprint' é `false', nunca imprime uma mensagem.
+
+
+ -- Variável de opção: obase
+     Valor padrão: 10
+
+     `obase' é a base para inteiros mostrados pelo Maxima.
+
+     A `obase' poode ser atribuído qualquer inteiro entre 2 e 35
+     (decimal), inclusive.  Quando `obase' é maior que 10, os numerais
+     compreendem os numerais decimais de 0 até 9 e letras maiúsulas do
+     alfabeto A, B, C, ..., quando necessário.  Os numerais para a base
+     35, a maior base aceitável, compreendem de 0 até 9, e de A até Y.
+
+     Veja também `ibase'.
+
+
+ -- Variável de opção: outchar
+     Valor padrão: `%o'
+
+     `outchar' é o prefixo dos rótulos de expressões calculadas pelo
+     Maxima.  Maxima automaticamente constrói um rótulo para cada
+     expressão calculada pela concatenação de `outchar' e `linenum'.  A
+     `outchar' pode ser atribuído qualquer seqüência de caracteres ou
+     símbolo, não necessáriamente um caractere simples.
+
+          (%i1) outchar: "output";
+          (output1)                           output
+          (%i2) expand ((a+b)^3);
+                                      3        2      2      3
+          (output2)                  b  + 3 a b  + 3 a  b + a
+          (%i3)
+
+     Veja também `labels'.
+
+
+ -- Variável de opção: packagefile
+     Valor padrão: `false'
+
+     Projetistas de pacotes que usam `save' ou `translate' para criar
+     pacotes (arquivos) para outros usarem podem querer escolher
+     `packagefile: true' para prevenir qu informações sejam
+     acrescentadas à lista de informações do Maxima (e.g. `values',
+     `funções') exceto onde necessário quando o arquivo é carregado.
+     Nesse caminho, o conteúdo do pacote não pegará no caminho do
+     usuário quando ele adicionar seus próprios dados.  Note que isso
+     não resolve o problema de possíveis conflitos de nome.  Também
+     note que o sinalizador simplesmente afeta o que é saída para o
+     arquivo pacote.  Escolhendo o sinalizador para `true' é também
+     útil para criar arquivos de init do Maxima.
+
+
+ -- Variável de opção: pfeformat
+     Valor padrão: `false'
+
+     Quando `pfeformat' é `true', uma razão de inteiros é mostrada com
+     o caractere sólido (barra normal), e um denominador inteiro `n' é
+     mostrado como um termo multiplicativo em primeiro lugar `1/n'.
+
+          (%i1) pfeformat: false$
+          (%i2) 2^16/7^3;
+                                        65536
+          (%o2)                         -----
+                                         343
+          (%i3) (a+b)/8;
+                                        b + a
+          (%o3)                         -----
+                                          8
+          (%i4) pfeformat: true$
+          (%i5) 2^16/7^3;
+          (%o5)                       65536/343
+          (%i6) (a+b)/8;
+          (%o6)                      1/8 (b + a)
+
+
+ -- Função: print (<expr_1>, ..., <expr_n>)
+     Avalia e mostra <expr_1>, ..., <expr_n> uma após a outra, da
+     esquerda para a direita, iniciando no lado esquerdo do console.
+
+     O valor retornado por `print' é o valor de seu último argumento.
+     `print' não gera rótulos de expressão intermediária.
+
+     Veja também `display', `disp', `ldisplay', e `ldisp'.  Essas
+     funções mostram uma expressão por linha, enquanto `print' tenta
+     mostrar duas ou mais expressões por linha.
+
+     Para mostrar o conteúdo de um arquivo, veja `printfile'.
+
+          (%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+                      3        2      2      3
+          (a+b)^3 is b  + 3 a b  + 3 a  b + a  log (a^10/b) is
+
+                                                        10 log(a) - log(b)
+          (%i2) r;
+          (%o2)                  10 log(a) - log(b)
+          (%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+                                     (a+b)^3 is
+
+                               3        2      2      3
+                              b  + 3 a b  + 3 a  b + a
+
+                                   log (a^10/b) is
+
+                                 10 log(a) - log(b)
+
+
+ -- Função: tcl_output (<list>, <i0>, <skip>)
+ -- Função: tcl_output (<list>, <i0>)
+ -- Função: tcl_output ([<list_1>, ..., <list_n>], <i>)
+     Imprime os elementos de uma lista entre chaves `{ }', conveniente
+     como parte de um programa na linguagem Tcl/Tk.
+
+     `tcl_output (<list>, <i0>, <skip>)' imprime <list>, começando com
+     o elemento <i0> e imprimindo elementos `<i0> + <skip>', `<i0> + 2
+     <skip>', etc.
+
+     `tcl_output (<list>, <i0>)' é equivalente a `tcl_output (<list>,
+     <i0>, 2)'.
+
+     `tcl_output ([<list_1>, ..., <list_n>], <i>)' imprime os
+     <i>'ésimos elementos de <list_1>, ..., <list_n>.
+
+     Exemplos:
+
+          (%i1) tcl_output ([1, 2, 3, 4, 5, 6], 1, 3)$
+
+           {1.000000000     4.000000000
+           }
+          (%i2) tcl_output ([1, 2, 3, 4, 5, 6], 2, 3)$
+
+           {2.000000000     5.000000000
+           }
+          (%i3) tcl_output ([3/7, 5/9, 11/13, 13/17], 1)$
+
+           {((RAT SIMP) 3 7) ((RAT SIMP) 11 13)
+           }
+          (%i4) tcl_output ([x1, y1, x2, y2, x3, y3], 2)$
+
+           {$Y1 $Y2 $Y3
+           }
+          (%i5) tcl_output ([[1, 2, 3], [11, 22, 33]], 1)$
+
+           {SIMP 1.000000000     11.00000000
+           }
+
+
+ -- Função: read (<expr_1>, ..., <expr_n>)
+     Imprime <expr_1>, ..., <expr_n>, então lê uma expressão do console
+     e retorna a expressão avaliada.  A expressão é terminada com um
+     ponto e vírgula `;' ou o sinal de dólar `$'.
+
+     Veja também `readonly'.
+
+          (%i1) foo: 42$
+          (%i2) foo: read ("foo is", foo, " -- enter new value.")$
+          foo is 42  -- enter new value.
+          (a+b)^3;
+          (%i3) foo;
+                                               3
+          (%o3)                         (b + a)
+
+
+ -- Função: readonly (<expr_1>, ..., <expr_n>)
+     Imprime <expr_1>, ..., <expr_n>, então lê uma expressão do console
+     e retorna a expressão (sem avaliação).  A expressão é terminada
+     com um `;' (ponto e vírgula) ou `$' (sinal de dólar).
+
+          (%i1) aa: 7$
+          (%i2) foo: readonly ("Forneça uma expressão:");
+          Enter an expressão:
+          2^aa;
+                                            aa
+          (%o2)                            2
+          (%i3) foo: read ("Forneça uma expressão:");
+          Enter an expressão:
+          2^aa;
+          (%o3)                            128
+
+     Veja também `read'.
+
+
+ -- Função: reveal (<expr>, <depth>)
+     Substitue partes de <expr> no inteiro especificado <depth> com
+     sumário descritivo.
+
+        * Somas e diferenças são substituídas por `sum(<n>)' onde <n> é
+          o número de operandos do produto.
+
+        * Produtos são substituídos por `product(<n>)' onde <n> é o
+          número de operandos da multiplicação.
+
+        * Exponenciais são substituídos por `expt'.
+
+        * Quocientes são substituídos por `quotient'.
+
+        * Negação unária é substituída por `negterm'.
+
+     Quando <depth> é maior que ou igual à máxima intensidade de <expr>,
+     `reveal (<expr>, <depth>)' retornam <expr> sem modificações.
+
+     `reveal' avalia seus argumentos.  `reveal' retorna expressão
+     sumarizada.
+
+     Exemplo:
+
+          (%i1) e: expand ((a - b)^2)/expand ((exp(a) + exp(b))^2);
+                                    2            2
+                                   b  - 2 a b + a
+          (%o1)               -------------------------
+                                  b + a     2 b     2 a
+                              2 %e      + %e    + %e
+          (%i2) reveal (e, 1);
+          (%o2)                       quotient
+          (%i3) reveal (e, 2);
+                                       sum(3)
+          (%o3)                        ------
+                                       sum(3)
+          (%i4) reveal (e, 3);
+                               expt + negterm + expt
+          (%o4)               ------------------------
+                              product(2) + expt + expt
+          (%i5) reveal (e, 4);
+                                 2                 2
+                                b  - product(3) + a
+          (%o5)         ------------------------------------
+                                   product(2)     product(2)
+                        2 expt + %e           + %e
+          (%i6) reveal (e, 5);
+                                   2            2
+                                  b  - 2 a b + a
+          (%o6)              --------------------------
+                                 sum(2)     2 b     2 a
+                             2 %e       + %e    + %e
+          (%i7) reveal (e, 6);
+                                    2            2
+                                   b  - 2 a b + a
+          (%o7)               -------------------------
+                                  b + a     2 b     2 a
+                              2 %e      + %e    + %e
+
+
+ -- Variável de opção: rmxchar
+     Valor padrão: `]'
+
+     `rmxchar' é the caractere desenhado lado direito de uma matriz.
+
+     Veja também `lmxchar'.
+
+
+ -- Função: save (<filename>, <name_1>, <name_2>, <name_3>, ...)
+ -- Função: save (<filename>, values, functions, labels, ...)
+ -- Função: save (<filename>, [<m>, <n>])
+ -- Função: save (<filename>, <name_1>=<expr_1>, ...)
+ -- Função: save (<filename>, all)
+     Armazena os valores correntes de <name_1>, <name_2>, <name_3>,
+     ..., em <filename>.  Os argumentos são os nomes das variáveis,
+     funções, ou outros objetos.  Se um nome não possui valore ou
+     função associada a ele, esse nome sem nenhum valor ou função
+     associado será ignorado.  `save' retorna <filename>.
+
+     `save' armazena dados na forma de expressões Lisp.  Os dados
+     armazenados por `save' podem ser recuperados por `load
+     (<filename>)'.
+
+     O sinalizador global `file_output_append' governa se `save' anexa
+     ao final ou trunca o arquivo de saída.  Quando
+     `file_output_append' for `true', `save' anexa ao final doarquivo
+     de saída.  De outra forma, `save' trunca o arquivo de saída.
+     Nesse caso, `save' cria o arquivo se ele não existir ainda.
+
+     A forma especial `save (<filename>, values, functions, labels,
+     ...)'  armazena os ítens nomeados por `values', `funções',
+     `labels', etc.  Os nomes podem ser quaisquer especificados pela
+     variável `infolists'.  `values' compreende todas as variáveis
+     definidas pelo usuário.
+
+     A forma especial `save (<filename>, [<m>, <n>])' armazena os
+     valores de rótulos de entrada e saída de <m> até <n>.  Note que
+     <m> e <n> devem obrigatóriamente ser inteiros literais.  Rótulos
+     de entrada e saída podem também ser armazenados um a um, e.g.,
+     `save ("foo.1", %i42, %o42)'.  `save (<filename>, labels)'
+     armazena todos os rótulos de entrada e saída.  Quando rótulos
+     armazenados são recuperados, eles substituem rótulos existentes.
+
+     A forma especial `save (<filename>, <name_1>=<expr_1>,
+     <name_2>=<expr_2>, ...)' armazena os valores de <expr_1>,
+     <expr_2>, ..., com nomes <name_1>, <name_2>, ....  Isso é útil
+     para aplicar essa forma para rótulos de entrada e saída, e.g.,
+     `save ("foo.1", aa=%o88)'.  O lado direito dessa igualdade nessa
+     forma pode ser qualquer expressão, que é avaliada.  Essa forma não
+     introduz os novos nomes no ambiente corrente do Maxima, mas
+     somente armazena-os em <filename>.
+
+     Essa forma especial e a forma geral de `save' podem ser misturados.
+     Por exemplo, `save (<filename>, aa, bb, cc=42, funções, [11, 17])'.
+
+     A forma especial `save (<filename>, all)' armazena o estado
+     corrente do Maxima.  Isso inclui todas as variáveis definidas pelo
+     usuário, funções, arrays, etc., bem como alguns ítens definidos
+     automaticamente.  Os ítes salvos incluem variáveis de sistema,
+     tais como `file_search_maxima' ou `showtime', se a elas tiverem
+     sido atribuídos novos valores pelo usuário; veja `myoptions'.
+
+     `save' avalia seus argumentos.  <filename> deve obrigatóriamente
+     ser uma seqüência de caracteres, não uma variável tipo seqüência
+     de caracteres.  O primeiro e o último rótulos a salvar, se
+     especificado, devem obrigatóriamente serem inteiros.  O operador
+     apóstrofo-apóstrofo `''' avalia uma variável tipo seqüência de
+     caracteres para seu valor seqüência de caracteres, e.g., `s:
+     "foo.1"$ save (''s, all)$', e variáveis inteiras para seus valores
+     inteiros, e.g., `m: 5$ n: 12$ save ("foo.1", [''m, ''n])$'.
+
+
+ -- Variável de opção: savedef
+     Valor padrão: `true'
+
+     Quando `savedef' é `true', a vesão Maxima de uma função de usuário
+     é preservada quando a função é traduzida.  Isso permite que a
+     definição seja mostrada por `dispfun' e autoriza a função a ser
+     editada.
+
+     Quando `savedef' é `false', os nomes de funções traduzidas são
+     removidos da lista de `funções'.
+
+
+ -- Função: show (<expr>)
+     Mostra `expr' com os objetos indexados tendo índices covariantes
+     como subscritos, índices contravariantes como sobrescritos.  Os
+     índices derivativos são mostrados como subscritos, separados dos
+     índices covariantes por uma vírgula.
+
+
+ -- Função: showratvars (<expr>)
+     Retorna uma lista de variáveis expressão racional canônica (CRE)
+     na expressão `expr'.
+
+     Veja também `ratvars'.
+
+
+ -- Variável de opção: stardisp
+     Valor padrão: `false'
+
+     Quando `stardisp' é `true', multiplicação é mostrada com um
+     asterisco `*' entre os operandos.
+
+
+ -- Função: string (<expr>)
+     Converte `expr' para a notação linear do Maxima apenas como se
+     tivesse sido digitada.
+
+     O valor de retorno de `string' é uma seqüência de caracteres, e
+     dessa forma não pode ser usada em um cálculo.
+
+
+ -- Variável Lisp: stringdisp
+     Valor padrão: `false'
+
+     Quando `?stringdisp' for `true', seqüências de caracteres serão
+     mostradas contidas em aspas duplas.  De outra forma, aspas não são
+     mostradas.
+
+     `?stringdisp' é sempre `true' quando mostrando uma definição de
+     função.
+
+     `?stringdisp' é uma variável Lisp, então deve ser escrita com um
+     ponto de interrogação `?' na frente.
+
+     Exemplos:
+
+          (%i1) ?stringdisp: false$
+          (%i2) "This is an example string.";
+          (%o2)              This is an example string.
+          (%i3) foo () := print ("This is a string in a function definition.");
+          (%o3) foo() :=
+                        print("This is a string in a function definition.")
+          (%i4) ?stringdisp: true$
+          (%i5) "This is an example string.";
+          (%o5)             "This is an example string."
+
+
+ -- Função: stringout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
+ -- Função: stringout (<filename>, [<m>, <n>])
+ -- Função: stringout (<filename>, input)
+ -- Função: stringout (<filename>, functions)
+ -- Função: stringout (<filename>, values)
+     `stringout' escreve expressões para um arquivo na mesma forma de
+     expressões que foram digitadas para entrada.  O arquivo pode então
+     ser usado como entrada para comandos `batch' ou `demo', e isso
+     pode ser editado para qualquer propósito.  `stringout' pode ser
+     executado enquanto `writefile' está em progresso.
+
+     O sinalizador global `file_output_append' governa se `stringout'
+     anexa ao final ou trunca o arquivo de saída.  Quando
+     `file_output_append' for `true', `stringout' anexa ao final do
+     arquivo de sad'a.  De outra forma, `stringout' trunca o arquivo de
+     saída.  Nesse caso, `stringout' cria o arquivo de saída se ele não
+     existir ainda.
+
+     A forma geral de `stringout' escreve os valores de um ou mais
+     expressões para o arquivo de saída.  Note que se uma expressão é
+     uma variável, somente o valor da variável é escrito e não o nome
+     da variável.  Como um útil caso especial, as expressões podem ser
+     rótulos de entrada (`%i1', `%i2', `%i3', ...) ou rótulos de saída
+     (`%o1', `%o2', `%o3', ...).
+
+     Se `grind' é `true', `stringout' formata a saída usando o formato
+     `grind'.  De outra forma o formato `string' é usado.  Veja `grind'
+     e `string'.
+
+     A forma especial `stringout (<filename>, [<m>, <n>])' escreve os
+     valores dos rótulos de entrada de m até n, inclusive.
+
+     A forma especial `stringout (<filename>, input)' escreve todos os
+     rótulos de entrada para o arquivo.
+
+     A forma especial `stringout (<filename>, functions)' escreve todas
+     as funções definidas pelo usuário (nomeadas pela lista global
+     `functions') para o arquivo.
+
+     A forma especial `stringout (<filename>, values)' escreve todas as
+     variáveis atribuídas pelo usuário (nomeadas pela lista global
+     `values') para o arquivo.  Cada variável é impressa como uma
+     declaração de atribuição, com o nome da variável seguida de dois
+     pontos, e seu valor.  Note que a forma geral de `stringout' não
+     imprime variáveis como declarações de atribuição.
+
+
+ -- Função: tex (<expr>)
+ -- Função: tex (<rótulo>)
+ -- Função: tex (<expr>, <momearquivo>)
+ -- Função: tex (<label>, <nomearquivo>)
+     Imprime uma representação de uma expressão adequada para o sistema
+     TeX  de preparação de documento.  O resultado é um fragmento de um
+     documento, que pode ser copiado dentro de um documento maior.
+     Esse fragmento não pode ser processado de forma direta e isolada.
+
+     `tex (<expr>)' imprime uma representação TeX da <expr> no console.
+
+     `tex (<rótulo>)' imprime uma representação TeX de uma expressão
+     chamada <rótulo> e atribui a essa um rótulo de equação (a ser
+     mostrado à esquerda da expressão).  O rótulo de equação TeX é o
+     mesmo que o rótulo da equação no Maxima.
+
+     `tex (<expr>, <nomearquivo>)' anexa ao final uma representação TeX
+     de <expr> no arquivo <nomearquivo>.  `tex' não avalia o argumento
+     <nomearquivo>; apóstrofo-apóstrofo `''' força a avaliação so
+     argumento.
+
+     `tex (<rótulo>, <nomearquivo>)' anexa ao final uma representação
+     TeX da expressão chamada de <rótulo>, com um rótulo de equação, ao
+     arquivo <nomearquivo>.
+
+     `tex' não avalia o argumento <nomearquivo>; apóstrofo-apóstrofo
+     `''' força a avaliação so argumento.  `tex' avalia seus argumentos
+     após testar esse argumento para ver se é um rótulo.  duplo
+     apóstrofo `''' força a avaliação do argumento, desse modo
+     frustrando o teste e prevenindo o rótulo.
+
+     Veja também `texput'.
+
+     Exemplos:
+
+          (%i1) integrate (1/(1+x^3), x);
+                                              2 x - 1
+                            2            atan(-------)
+                       log(x  - x + 1)        sqrt(3)    log(x + 1)
+          (%o1)      - --------------- + ------------- + ----------
+                              6             sqrt(3)          3
+          (%i2) tex (%o1);
+          $$-{{\log \left(x^2-x+1\right)}\over{6}}+{{\arctan \left({{2\,x-1
+           }\over{\sqrt{3}}}\right)}\over{\sqrt{3}}}+{{\log \left(x+1\right)
+           }\over{3}}\leqno{\tt (\%o1)}$$
+          (%o2)                          (\%o1)
+          (%i3) tex (integrate (sin(x), x));
+          $$-\cos x$$
+          (%o3)                           false
+          (%i4) tex (%o1, "foo.tex");
+          (%o4)                          (\%o1)
+
+
+ -- Função: texput (<a>, <s>)
+ -- Função: texput (<a>, <s>, <operator_type>)
+ -- Função: texput (<a>, [<s_1>, <s_2>], matchfix)
+ -- Função: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
+     Escolhe a saída TeX para o átomo <a>, que pode ser um símbolo ou o
+     nome de um operador.
+
+     `texput (<a>, <s>)' faz com que a função `tex' interpole a
+     seqüência de caracteres <s> dentro da saída TeX em lugar de <a>.
+
+     `texput (<a>, <s>, <operator_type>)', onde <operator_type> é
+     `prefix', `infix', ou `postfix' faz com que a função `tex'
+     interpole <s> dentro da saída TeX em lugar de <a>, e coloca o
+     texto interpolado na posição apropriada.
+
+     `texput (<a>, [<s_1>, <s_2>], matchfix)' faz com que a função
+     `tex' interpole <s_1> e <s_2> dentro da saída TeX sobre qualquer
+     lado dos argumentos de <a>.  Os argumentos (se mais de um) são
+     separados por vírgulas.
+
+     `texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)' faz com que a
+     função `tex' interpole <s_1> e <s_2> dentro da saída TeX sobre
+     qualquer lado dos argumentos de <a>, com <s_3> separando os
+     argumentos.
+
+     Exemplos:
+
+          (%i1) texput (me,"\\mu_e");
+          (%o1)                         \mu_e
+          (%i2) tex (me);
+          $$\mu_e$$
+          (%o2)                         false
+          (%i3) texput (lcm, "\\mathrm{lcm}");
+          (%o3)                     \mathrm{lcm}
+          (%i4) tex (lcm (a, b));
+          $$\mathrm{lcm}\left(a , b\right)$$
+          (%o4)                         false
+          (%i5) prefix ("grad");
+          (%o5)                         grad
+          (%i6) texput ("grad", " \\nabla ", prefix);
+          (%o6)                          180
+          (%i7) tex (grad f);
+          $$ \nabla f$$
+          (%o7)                         false
+          (%i8) infix ("~");
+          (%o8)                           ~
+          (%i9) texput ("~", " \\times ", infix);
+          (%o9)                          180
+          (%i10) tex (a ~ b);
+          $$a \times b$$
+          (%o10)                        false
+          (%i11) postfix ("@");
+          (%o11)                          @
+          (%i12) texput ("@", "!!", postfix);
+          (%o12)                         160
+          (%i13) tex (x @);
+          $$x!!$$
+          (%o13)                        false
+          (%i14) matchfix ("<<", ">>");
+          (%o14)                         <<
+          (%i15) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+          (%o15)              \langle ( \rangle , false)
+          (%i16) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o16)                        false
+          (%i17) tex (<<a, b>>);
+          $$ \langle a , b \rangle $$
+          (%o17)                        false
+          (%i18) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+          (%o18)            \langle ( \rangle ,  \, | \,)
+          (%i19) tex (<<a>>);
+          $$ \langle a \rangle $$
+          (%o19)                        false
+          (%i20) tex (<<a, b>>);
+          $$ \langle a \, | \,b \rangle $$
+          (%o20)                        false
+
+
+ -- Função: system (<comando>)
+     Executa <comando> como um processo separado.  O comando é passado
+     ao shell padraõ para execução.  `system' não é suportado por todos
+     os sistemas operacionais, mas geralmente existe em ambientes Unix
+     e Unix-like.
+
+     Supondo que `_hist.out' é uma lista de freqüência que você deseja
+     imprimir como um gráfico em barras usando `xgraph'.
+
+          (%i1) (with_stdout("_hist.out",
+                     for i:1 thru length(hist) do (
+                       print(i,hist[i]))),
+                 system("xgraph -bar -brw .7 -nl < _hist.out"));
+
+     Com o objetivo de fazer com que a impressão do gráfico seja
+     concluída em segundo plano (retornando o controle para o Maxima) e
+     remover o arquivo temporário após isso ter sido concluído faça:
+
+          system("(xgraph -bar -brw .7 -nl < _hist.out;  rm -f _hist.out)&")
+
+
+ -- Variável de opção: ttyoff
+     Valor padrão: `false'
+
+     Quando `ttyoff' é `true', expressões de saída não são mostradas.
+     Expressões de saída são ainda calculadas e atribuídas rótulos.
+     Veja `labels'.
+
+     Textos impresso por funções internas do Maxima, tais como
+     mensagens de erro e a saída de `describe', não são afetadas por
+     `ttyoff'.
+
+
+ -- Função: with_stdout (<filename>, <expr_1>, <expr_2>, <expr_3>, ...)
+     Abre <filename> e então avalia <expr_1>, <expr_2>, <expr_3>, ....
+     Os valores dos argumentos não são armazenados em <filename>, mas
+     qualquer saída impressa gerada pela avaliação dos argumentos (de
+     `print', `display', `disp', ou `grind', por exemplo) vai para
+     <filename> em lugar do console.
+
+     O sinalizador global `file_output_append' governa se `with_stdout'
+     anexa ao final ou trunca o arquivo de saída.  Quando
+     `file_output_append' for `true', `with_stdout' anexa ao final do
+     arquivo de saída.  De outra forma, `with_stdout' trunca o arquivo
+     de saída.  Nesse caso, `with_stdout' cria o arquivo se ele não
+     existir ainda.
+
+     `with_stdout' retorna o valor do seu argumento final.
+
+     Veja também `writefile'.
+
+          (%i1) with_stdout ("tmp.out", for i:5 thru 10 do print (i, "! yields", i!))$
+          (%i2) printfile ("tmp.out")$
+          5 ! yields 120
+          6 ! yields 720
+          7 ! yields 5040
+          8 ! yields 40320
+          9 ! yields 362880
+          10 ! yields 3628800
+
+
+ -- Função: writefile (<filename>)
+     Começa escrevendo uma transcrição da sessão Maxima para <filename>.
+     Toda interação entre o usuário e Maxima é então gravada nesse
+     arquivo, da mesma forma que aparece no console.
+
+     Como a transcrição é impressa no formato de saída do console, isso
+     não pode ser reaproveitado pelo Maxima.  Para fazer um arquivo
+     contendo expressões que podem ser reaproveitadas, veja `save' e
+     `stringout'.  `save' armazena expressões no formato Lisp, enquanto
+     `stringout' armazena expressões no formato Maxima.
+
+     O efeito de executar `writefile' quando <filename> ainda existe
+     depende da implementação Lisp subjacente; o arquivo transcrito
+     pode ser substituído, ou o arquivo pode receber um anexo.
+     `appendfile' sempre anexa para o arquivo transcrito.
+
+     Isso pode ser conveniente para executar `playback' após
+     `writefile' para salvar a visualização de interações prévias.
+     Como `playback' mostra somente as variáveis de entrada e saída
+     (`%i1', `%o1', etc.), qualquer saída gerada por uma declaração de
+     impressão em uma função (como oposição a um valor de retorno) não
+     é mostrada por `playback'.
+
+     `closefile' fecha o arquivo transcrito aberto por `writefile' ou
+     `appendfile'.
+
+
+
+File: maxima.info,  Node: Ponto Flutuante,  Next: Contextos,  Prev: Entrada e Saída,  Up: Top
+
+10 Ponto Flutuante
+******************
+
+* Menu:
+
+* Definições para ponto Flutuante::
+
+
+File: maxima.info,  Node: Definições para ponto Flutuante,  Prev: Ponto Flutuante,  Up: Ponto Flutuante
+
+10.1 Definições para ponto Flutuante
+====================================
+
+ -- Função: bffac (<expr>, <n>)
+     Versão para grandes números em ponto flutuante da função
+     `factorial' (usa o artifício gamma).  O segundo argumento informa
+     quantos dígitos reter e retornar, isso é uma boa idéia para
+     requisitar precisão adicional.
+
+     `load ("bffac")' chama essa função.
+
+
+ -- Variável de Opção: algepsilon
+     Valor padrão: 10^8
+
+     `algepsilon' é usada por `algsys'.
+
+
+ -- Função: bfloat (<expr>)
+     Converte todos os números e funções de números em <expr> para
+     grandes números em ponto flutuante (bigfloat).  O número de
+     algarismos significativos no grande número em ponto flutuante
+     resultante é especificado através da variável global `fpprec'.
+
+     Quando `float2bf' for `false' uma mensagem de alerta é mostrada
+     quando uma número em ponto flutuante (float) é convertido em um
+     grande número em ponto flutuante (bigfloat - uma vez que isso pode
+     resultar em perda de precisão).
+
+
+ -- Função: bfloatp (<expr>)
+     Retorna `true' se a avaliação da <expr> resultar em um grande
+     número em ponto flutuante, de outra forma retorna `false'.
+
+
+ -- Função: bfpsi (<n>, <z>, <fpprec>)
+ -- Função: bfpsi0 (<z>, <fpprec>)
+     `bfpsi' é a função `polygamma' de argumentos reais <z> e ordem de
+     inteiro <n>.  `bfpsi0' é a função `digamma'.  `bfpsi0 (<z>,
+     <fpprec>)' é equivalente a `bfpsi (0, <z>, <fpprec>)'.
+
+     Essas funções retornam valores em grandes números em ponto
+     flutuante.  <fpprec> é a precisão do valor de retorno dos grandes
+     números em ponto flutuante.
+
+     `load ("bffac")' chama essas funções.
+
+
+ -- Variável de Opção: bftorat
+     Valor padrão: `false'
+
+     `bftorat' controla a conversão de `bfloats' para números racionais.
+     Quando `bftorat' for `false', `ratepsilon' será usada para
+     controlar a conversão (isso resulta em números racionais
+     relativametne pequenos).  Quando `bftorat' for `true', o número
+     racional gerado irá representar precisamente o `bfloat'.
+
+
+ -- Variável de Opção: bftrunc
+     Valor padrão: `true'
+
+     `bftrunc' faz com que tilhas de zeros em grandes números em ponto
+     flutuante diferentes de zero sejam ocultadas.  Desse modo, se
+     `bftrunc' for `false', `bfloat (1)' será mostrado como
+     `1.000000000000000B0'. De outra forma, será mostrado como `1.0B0'.
+
+
+ -- Função: cbffac (<z>, <fpprec>)
+     Fatorial complexo de grandes números em ponto flutuante.
+
+     `load ("bffac")' chama essa função.
+
+
+ -- Função: float (<expr>)
+     Converte inteiros, números racionais e grandes números em ponto
+     flutuante em <expr> para números em ponto flutuante.  Da mesma
+     forma um `evflag', `float' faz com que números racionais
+     não-inteiros e grandes números em ponto flutuante sejam
+     convertidos para ponto flutuante.
+
+
+ -- Variável de Opção: float2bf
+     Valor padrão: `false'
+
+     Quando `float2bf' for `false', uma mensagem de alerta é mostrada
+     quando um número em ponto flutuante é convertido em um grande
+     número em ponto flutuante (uma vez que isso pode resultar em perda
+     de precisão).
+
+
+ -- Função: floatnump (<expr>)
+     Retorna `true' se <expr> for um número em ponto flutuante, de
+     outra forma retorna `false'.
+
+
+ -- Variável de Opção: fpprec
+     Valor padrão: 16
+
+     `fpprec' é o número de algarismos significativos para aritmética
+     sobre grandes números em ponto flutuante `fpprec' não afeta
+     cálculos sobre números em ponto flutuante comuns.
+
+     Veja também `bfloat' e `fpprintprec'.
+
+
+ -- Variável de Opção: fpprintprec
+     Valor padrão: 0
+
+     `fpprintprec' é o n;umero de dígitos a serem mostrados na tela
+     quando no caso de nuúmeros em ponto flutuante e no caso de grandes
+     números em ponto flutuante.
+
+     Para números em ponto flutuante comuns, quando `fpprintprec' tiver
+     um valor entre 2 e 16  (inclusive), o n;umero de dígitos mostrado
+     na tela é igual a `fpprintprec'.  De outra forma, `fpprintprec' é
+     0, ou maior que 16, e o número de dígitos mostrados é 16.
+
+     Para grandes números em ponto flutuante, quando `fpprintprec'
+     tiver um valor entre 2 e `fpprec' (inclusive), o n;umero de
+     dígitos mostrados é giaul a `fpprintprec'.  De outra forma,
+     `fpprintprec' é 0, ou maior que `fpprec', e o n;umero de dígitos
+     mostrados é igual a `fpprec'.
+
+     `fpprintprec' não pode ser 1.
+
+
+ -- Função Lisp: ?round (<x>)
+ -- Função Lisp: ?round (<x>, <divisor>)
+     Arredonda o ponto flutuante <x> para o inteiro mais próximo.   O
+     argumento obrigatoriamente deve ser um ponto flutuante comum, não
+     um grandes números em ponto flutuante.   A `?' começando o nome
+     indica que isso é uma função Lisp.
+
+          (%i1) ?round (-2.8);
+          (%o1)                            - 3
+
+
+ -- Função Lisp: ?truncate (<x>)
+ -- Função Lisp: ?truncate (<x>, <divisor>)
+     Trunca o ponto flutuante <x> na direção do 0, para transormar-se
+     em um inteiro.   O argumento deve ser um número em ponto flutuante
+     comum, não um grandes números em ponto flutuante.  A `?'
+     começando o nome indica que isso é uma função Lisp.
+
+          (%i1) ?truncate (-2.8);
+          (%o1)                            - 2
+          (%i2) ?truncate (2.4);
+          (%o2)                             2
+          (%i3) ?truncate (2.8);
+          (%o3)                             2
+
+
+
+File: maxima.info,  Node: Contextos,  Next: Polinômios,  Prev: Ponto Flutuante,  Up: Top
+
+11 Contextos
+************
+
+* Menu:
+
+* Definições para Contextos::
 
 
 File: maxima.info,  Node: Definições para Contextos,  Prev: Contextos,  Up: Contextos
@@ -24,7 +1734,7 @@ File: maxima.info,  Node: Definições para Contextos,  Prev: Contextos,  Up: Co
      ativos pelo caminho da função `activate'.
 
 
- -- variável de sistema: activecontexts
+ -- Variável de sistema: activecontexts
      Valor padrão: `[]'
 
      `activecontexts' é a lista de contextos que estão ativos pelo
@@ -560,6 +2270,8 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
      (<expr>, p)' fatora <expr> sobre o campo dos inteiros com um
      elemento adjunto cujo menor polinômio é p.
 
+     `factor' usa a função `ifactors' para fatorar inteiros.
+
      `factorflag' se `false' suprime a fatoração de fatores inteiros de
      expressões racionais.
 
@@ -578,14 +2290,14 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
      será usado de outra forma o algorítmo de Berlekamp, que é o
      padrão, será usado.
 
-     `intfaclim' é o maior divisor que será tentado quando fatorando um
-     grande número inteiro.  Se escolhida para `false' (esse é o caso
-     quando o usuário chama explicitamente `factor'), ou se o inteiro
-     for um `fixnum' (i.e.  ajustado à paravra da máquina), a fatoração
+     `intfaclim' se `true' maxima irá interromper a fatoração de
+     inteiros se nenhum fator for encontrado após tentar divisões e o
+     método rho de Pollard.  Se escolhida para `false' (esse é o caso
+     quando o usuário chama `factor' explicitamente), a fatoração
      completa do inteiro será tentada.  A escolha do usuário para
-     `intfaclim' é usada para chamadas internas para `factor'. Dessa
-     forma, `intfaclim' pode ser colocado em zero para prevenir Maxima
-     de gastar um tempo excessivamente fatorando grandes inteiros.
+     `intfaclim' é usada para chamadas internas a `factor'. Dessa
+     forma, `intfaclim' pode ser resetada para evitar que o Maxima
+     gaste um tempo muito longo fatorando inteiros grandes.
 
      Exemplos:
 
@@ -824,18 +2536,17 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
  -- Função: gcd (<p_1>, <p_2>, <x_1>, ...)
      Retorna o máximo divisor comum entre <p_1> e <p_2>.  O sinalizador
      `gcd' determina qual algorítmo é empregado.  Escolhendo `gcd' para
-     `ez', `eez', `subres', `red', ou `spmod' seleciona o algorítmo
-     `ezgcd', Novo `eez' `gcd', `prs' subresultante, reduzido, ou
-     modular, respectivamente.  Se `gcd' for `false' então
-     GCD(p1,p2,var) irá sempre retornar 1 para todas as `var'iáveis.
-     Muitas funções (e.g.  `ratsimp', `factor', etc.) fazem com que
-     mdc's sejam feitos implicitamente.  Para polinômios homogêneos é
-     recomendado que `gcd' igual a `subres' seja usado.  Para pegar o
-     mdc quando uma expressão algébrica está presente, e.g.
-     GCD(X^2-2*SQRT(2)*X+2,X-SQRT(2)); , `algebraic' deve ser `true' e
-     `gcd' deve não ser `ez'.  `subres' é um novo algorítmo, e pessoas
-     que tenham estado usando a opção `red' podem provavelmente alterar
-     isso para `subres'.
+     `ez', `subres', `red', ou `spmod' seleciona o algorítmo `ezgcd',
+     subresultante `prs', reduzido, ou modular, respectivamente.  Se
+     `gcd' for `false' então `gcd (<p_1>, <p_2>, <x>)' sempre retorna 1
+     para todo <x>.  Muitas funções (e.g.  `ratsimp', `factor', etc.)
+     fazem com que mdc's sejam feitos implicitamente.  Para polinômios
+     homogêneos é recomendado que `gcd' igual a `subres' seja usado.
+     Para pegar o mdc quando uma expressão algébrica está presente,
+     e.g. `gcd (<x>^2 - 2*sqrt(2)*<x> + 2, <x> - sqrt(2))', `algebraic'
+     deve ser `true' e `gcd' não deve ser `ez'.  `subres' é um novo
+     algorítmo, e pessoas que tenham estado usando a opção `red' podem
+     provavelmente alterar isso para `subres'.
 
      O sinalizador `gcd', padrão: `subres', se `false' irá também
      evitar o máximo divisor comum de ser usado quando expressões são
@@ -926,20 +2637,21 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
 
 
  -- Variável de opção: intfaclim
-     Valor Padrão: 1000
+     Valor padrão: true
 
-     `intfaclim' é o maior divisor que será tentado quando fatorando um
-     grande número inteiro.
+     Se `true', maxima irá interromper a fatoração de inteiros se
+     nenhum fator for encontrado após tentar divisões e o método rho de
+     Pollard e a fatoração não irá ser completada.
 
-     Quando `intfaclim' for `false' (esse é o caso quando o usuáro
-     chama `factor' explicitamente), ou se o inteiro é um `fixnum'
-     (i.e., ajustado em uma palavra de máquina), fatores de qualquer
-     tamanho são considerados.  `intfaclim' é escolhida para `false'
-     fatores são calculados em `divsum', `totient', e `primep'.
+     Quando `intfaclim' for `false' (esse é o caso quando o usuário
+     chama `factor' explicitamente), a fatoração completa irá ser
+     tentada.  `intfaclim' é escolhida para `false' quando fatores são
+     calculados em `divisors', `divsum' e `totient'.
 
      Chamadas internas a `factor' respeitam o valor especificado pelo
-     usuário para `intfaclim'.  Escolhendo `intfaclim' para um pequeno
-     valor podemos reduzir o tempo gasto fatorando grandes inteiros.
+     usuário para `intfaclim'.  Setting `intfaclim' to `true' may reduce
+     `intfaclim'.  Escolhendo `intfaclim' para `true' podemos reduzir o
+     tempo gasto fatorando grandes inteiros.
 
 
  -- Variável de opção: keepfloat
@@ -1147,9 +2859,8 @@ File: maxima.info,  Node: Definições para Polinômios,  Prev: Introdução a P
 
      `ratcoef' expande e simplifica racionalmente seu primeiro
      argumento e dessa forma pode produzir respostas diferentes das de
-     `coeff' que é puramente sintática.  Dessa forma
-     RATCOEF((X+1)/Y+X,X) retorna (Y+1)/Y ao passo que `coeff' retorna
-     1.
+     `coeff' que é puramente sintática.  Dessa forma `ratcoef ((x +
+     1)/y + x, x)' retorna `(y + 1)/y' ao passo que `coeff' retorna 1.
 
      `ratcoef (<expr>, <x>, 0)', visualiza <expr> como uma adição,
      retornando uma soma desses termos que não possuem <x>.  portanto
@@ -1871,13 +3582,19 @@ File: maxima.info,  Node: Definições para Logarítmos,  Prev: Logarítmos,  Up
 
 
  -- Variável de opção: logarc
-     Valor padrão: `false'
-
+ -- Função: logarc (<expr>)
      Se `true' irá fazer com que as funções circularee inversas e
      hiperbólicas sejam convertidas em formas logarítimicas.
      `logarc(<exp>)' irá fazer com que essa conversão para uma expressão
      particular <exp> sem escolher o comutador ou tendo que re-avaliar
      a expressão com `ev'.
+
+     Quando a variável global `logarc' for `true', funções circulares
+     inversas e funções hiperbólicas são substituídas por suas funções
+     logarítmicas equivalentes.  O valor padrão de `logarc' é `false'.
+
+     A função `logarc(<expr>)' realiza aquela substituíção para uma
+     expressão <expr> sem modificar o valor da variável global `logarc'.
 
 
  -- Variável de opção: logconcoeffp
@@ -2297,7 +4014,7 @@ File: maxima.info,  Node: Definições para Trigonometria,  Prev: Introdução a
 
 
 
-File: maxima.info,  Node: Funções Especiais,  Next: Polinômios Ortogonais,  Prev: Trigonometria,  Up: Top
+File: maxima.info,  Node: Funções Especiais,  Next: Funções Elípticas,  Prev: Trigonometria,  Up: Top
 
 16 Funções Especiais
 ********************
@@ -2748,390 +4465,61 @@ File: maxima.info,  Node: Definições para Funções Especiais,  Prev: specint,
      primeiro, se necessário.
 
 
- -- Função: psi (<x>)
  -- Função: psi [<n>](<x>)
-     A derivada de `log (gamma (x))'.
+     A derivada de `log (gamma (<x>))' de ordem `<n>+1'.  Dessa forma,
+     `psi[0](<x>)' é a primeira derivada, `psi[1](<x>)' é a segunda
+     derivada, etc.
 
-     Maxima não sabe como calcular um valor numérico de `psi'.
-     Todavia, a função `bfpsi' no pacote `bffac' pode calcular valores
-     numéricos.
+     Maxima não sabe como, em geral, calcular um valor numérico de
+     `psi', mas Maxima pode calcular alguns valores exatos para
+     argumentos racionais.  Muitas variáveis controlam qual intervalo
+     de argumentos racionais `psi' irá retornar um valor exato, se
+     possível.  Veja `maxpsiposint', `maxpsinegint', `maxpsifracnum', e
+     `maxpsifracnum'.  Isto é, <x> deve localizar-se entre
+     `maxpsinegint' e `maxpsiposint'.  Se o valor absoluto da parte
+     facionária de <x> for racional e tiver um numerador menor que
+     `maxpsifracnum' e tiver um denominador menor que
+     `maxpsifracdenom', `psi' irá retornar um valor exato.
+
+     A função `bfpsi' no pacote `bffac' pode calcular valores numéricos.
+
+
+ -- Variável de opção: maxpsiposint
+     Valor padrão: 20
+
+     `maxpsiposint' é o maior valor positivo para o qual `psi[n](x)'
+     irá tentar calcular um valor exato.
+
+
+ -- Variável de opção: maxpsinegint
+     Valor padrão: -10
+
+     `maxpsinegint' é o valor mais negativo para o qual `psi[n](x)' irá
+     tentar calcular um valor exato.  Isto é, se <x> for menor que
+     `maxnegint', `psi[n](<x>)' não irá retornar resposta simplificada,
+     mesmo se isso for possível.
+
+
+ -- Variável de opção: maxpsifracnum
+     Valor padrão: 4
+
+     Tomemos <x> como sendo um número racional menor que a unidade e da
+     forma `p/q'.  Se `p' for menor que `maxpsifracnum', então
+     `psi[<n>](<x>)' não irá tentar retornar um valor simplificado.
+
+
+ -- Variável de opção: maxpsifracdenom
+     Valor padrão: 4
+
+     Tomemos <x> como sendo um número racional menor que a unidade e da
+     forma `p/q'.  Se `q' for maior que `maxpsifracdeonm', então
+     `psi[<n>](<x>)' não irá tentar retornar um valor simplificado.
 
 
 
-File: maxima.info,  Node: Polinômios Ortogonais,  Next: Funções Elípticas,  Prev: Funções Especiais,  Up: Top
+File: maxima.info,  Node: Funções Elípticas,  Next: Limites,  Prev: Funções Especiais,  Up: Top
 
-17 Polinômios Ortogonais
-************************
-
-* Menu:
-
-* Introdução a Polinômios Ortogonais::
-* Definições para Polinômios Ortogonais::
-
-
-File: maxima.info,  Node: Introdução a Polinômios Ortogonais,  Next: Definições para Polinômios Ortogonais,  Up: Polinômios Ortogonais
-
-17.1 Introdução a Polinômios Ortogonais
-=======================================
-
-O pacote `specfun' contém Código Maxima para a avaliação de todos os
-polinômios ortogonais listados no Capítulo 22 de Abramowitz e Stegun.
-Esses incluem polinômios de Chebyshev, Laguerre, Hermite, Jacobi,
-Legendre, e ultraesférico (Gegenbauer).  Adicionalmente, `specfun'
-contém códigos para funções de Bessel esféricas, funções de Hankel
-esféricas, e funções harmônicas esféricas.  O pacote `specfun' não é
-parte do Maxima propriamente; ele é chamado por meio de requisição de
-usuário via `load' ou automaticamente via o sistema `autoload'.
-
-   A seguinte tabela lista cada função em `specfun'.  `specfun' é um
-nome Maxima, restrições sobre seus argumentos, e uma referência para o
-algorítmo que `specfun' usa para avaliar isso.  Com poucas excessões,
-`specfun' segue as convenções de Abramowitz e Stegun.  Em todos os
-casos, m e n devem ser inteiros.
-
-   A&S refere-se a Abramowitz e Stegun, _Handbook of Mathematical
-Functions_ (10th edição, Dezembro de 1972), G&R refere-se a Gradshteyn
-e Ryzhik, _Table of Integrals, Series, and Products_ (1980 edição
-corrigida e ampliada), e Merzbacher refere-se a _Quantum Mechanics_
-(segunda edição, 1970).
-
-_Função_           _Nome Maxima_      _Restrições_       _Referência(s)_
-Chebyshev T        chebyshev_t(n, x)  n > -1             A&S 22.5.31
-Chebyshev U        chebyshev_u(n, x)  n > -1             A&S 22.5.32
-generalized        gen_laguerre(n,a,x)n > -1             A&S página 789
-Laguerre                                                 
-Laguerre           laguerre(n,x)      n > -1             A&S 22.5.67
-Hermite            hermite(n,x)        n > -1            A&S 22.4.40,
-                                                         22.5.41
-Jacobi             jacobi_p(n,a,b,x)   n > -1, a, b >    A&S página 789
-                                      -1                 
-associated         assoc_legendre_p(n,m,x)n > -1             A&S 22.5.37,
-Legendre P                                               8.6.6, 8.2.5
-associated         assoc_legendre_q(n,m,x)n > -1, m > -1     G & R 8.706
-Legendre Q                                               
-Legendre P         legendre_p(n,m,x)  n > -1             A&S 22.5.35
-Legendre Q         legendre_q(n,m,x)  n > -1             A&S 8.6.19
-spherical Hankel   spherical_hankel1(n,n > -1             A&S 10.1.36
-1st                x)                                    
-spherical Hankel   spherical_hankel2(n,n > -1             A&S 10.1.17
-2nd                x)                                    
-spherical Bessel   spherical_bessel_j(n,x)n > -1             A&S 10.1.8,
-J                                                        10.1.15
-spherical Bessel   spherical_bessel_y(n,x)n > -1             A&S 10.1.9,
-Y                                                        10.1.15
-spherical          spherical_harmonic(n,m,x,y)n > -1, |m| <= n   Merzbacher 9.64
-harmonic                                                 
-ultraspherical     ultraspherical(n,a,x) n > -1            A&S 22.5.27
-(Gegenbauer)                                             
-
-   O pacote `specfun' é primáriamente planejado para computação
-simbólica. A computação simbólica espera que `specfun' forneça
-resultados acurados em ponto flutuante também; todavia, nenhuma
-reinvidicação foi feita para que os algorítmos sejam também adequados
-para avaliação numérica.  Algum esforço, todavia, tem sido feito para
-fornecer boa performace numérica.  Quando todos os argumentos, exceto
-pela ordem, forem números em ponto flutuante (mas não grandes números
-em ponto flutuante), muitas funções em `specfun' chamam uma versão
-mododeclarada da função de Jacobi.  Isso aumenta grandemente a
-velocidade de avaliação de números em ponto flutuante de polinômios
-ortogonais.
-
-   `specfun' manuseia muitos domínios de erro através do retorno de uma
-função não avaliada.  Nenhuma regra de simplificação (baseada em
-relações recursivas) é definida para funções não avaliadas.  Isso é
-possível para uma expressão envolvendo adições de funções especiais não
-avaliadas para tender para zero, ainda Maxima é incapaz de reduzir
-essas funções a zero.
-
-   `load ("specfun")' chama o pacote `specfun'.  Alternativamente,
-`setup_autoload' faz com que o pacote seja chamado quando uma das
-funções `specfun' aparecer em uma expressão.  `setup_autoload' pode
-aparecer na linha de comando ou no arquivo `maxima-init.mac'.  Veja
-`setup_autoload'.
-
-   Um exemplo de uso de `specfun' é
-
-     (%i1) load ("specfun")$
-     (%i2) [hermite (0, x), hermite (1, x), hermite (2, x)];
-                                              2
-     (%o2)               [1, 2 x, - 2 (1 - 2 x )]
-     (%i3) diff (hermite (n, x), x);
-     (%o3)                 2 n hermite(n - 1, x)
-
-   Geralmente, código compilado executa mais rápidamente que o código
-traduzido; todavia, código traduzido pode ser melhor para
-desenvolvimento de programas.
-
-   Algumas funções (a saber `jacobi_p', `ultraspherical', `chebyshev_t',
-`chebyshev_u' e `legendre_p'), retornam um representação de série
-quando a ordem for um inteiro simbólico.  A representação de série não é
-usada por `specfun' para qualquer computação, mas essa representação de
-série pode ser simplificada pelo Maxima automaticamente, ou a
-simplificação pode ser possível para usar as séries para avaliar a
-função através de manipulações adicionais.  Por exemplo:
-
-     (%i1) load ("specfun")$
-     (%i2) legendre_p (n, x);
-     (%o2)                   legendre_p(n, x)
-     (%i3) ultraspherical (n, 3/2, 2);
-                  genfact(3, n, - 1) jacobi_p(n, 1, 1, 2)
-     (%o3)        ---------------------------------------
-                            genfact(2, n, - 1)
-     (%i4) declare (n, integer)$
-     (%i5) legendre_p (n, x);
-            n - 1
-            ====
-            \                                                 n - i%
-     (%o5) ( >     binomial(n, i%) binomial(n, n - i%) (x - 1)
-            /
-            ====
-            i% = 1
-
-                                         i%          n          n   n
-                                  (x + 1)   + (x + 1)  + (x - 1) )/2
-     (%i6) ultraspherical (n, 3/2, 2);
-                               n - 1
-                               ====
-                               \       i%
-     (%o6) genfact(3, n, - 1) ( >     3   binomial(n + 1, i%)
-                               /
-                               ====
-                               i% = 1
-
-                                         n
-      binomial(n + 1, n - i%) + (n + 1) 3  + n + 1)
-
-                           n
-     /(genfact(2, n, - 1) 2 )
-
-   O primeiro e o último termos da adição são adicionados fora do
-somatório.  Removendo esses dois termos evita-se erros do Maxima
-associados com termos 0^0 em uma adição que pode avaliar para 1, mas
-avaliada para 0 em um somatório no Maxima. Porque a soma de índices vai
-de 1 a n - 1, o menor índice de soma excederá o maior índice de soma
-quando n = 0; escolhendo `sumhack' para `true' temos uma correção. Por
-exemplo:
-
-     (%i1) load ("specfun")$
-     (%i2) declare (n, integer)$
-     (%i3) e: legendre_p(n,x)$
-     (%i4) ev (e, sum, n=0);
-     Lower bound to sum: 1
-     is greater than the upper bound: - 1
-      -- an error.  Quitting.  To debug this try debugmode(true);
-     (%i5) ev (e, sum, n=0, sumhack=true);
-     (%o5)                           1
-
-   Muitas funções em `specfun' possuem uma propriedade `gradef';
-derivadas com relação a ordem ou outros parâmetros de funções são
-indefinidas, e uma tentativa de calcular tal uma derivada retorna como
-resiltado uma mensagem de erro.
-
-   O pacote `specfun' e sua documentação foram escritos por Barton
-Willis da Universidade de Nebraska em Kearney. Foi liberado sob os
-termos da Licença Pública Geral (GPL).  Envie relatórios de erro e
-comentários sobre esse pacote para willisb@unk.edu.  Em seu relatório,
-por favor inclua a versão do Maxima, como reportado por `build_info()',
-e a versão de `specfun', como reportado por `get ('specfun, 'version)'.
-
-
-File: maxima.info,  Node: Definições para Polinômios Ortogonais,  Prev: Introdução a Polinômios Ortogonais,  Up: Polinômios Ortogonais
-
-17.2 Definições para Polinômios Ortogonais
-==========================================
-
- -- Função: assoc_legendre_p (<n>, <m>, <x>)
-     Retorna a função associada de Legendre de primeiro tipo para
-     inteiros  n > -1  e  m > -1.  Quando  | m | > n  e  n >= 0,
-     teremos   assoc_legendre_p (n, m, x) = 0.  Referência: A&S 22.5.37
-     página 779,  A&S 8.6.6 (segunda equação) página 334, e A&S 8.2.5
-     página 333.
-
-     `load ("specfun")' chama essa função.
-
-     Veja *Note assoc_legendre_q::, *Note legendre_p::, e *Note
-     legendre_q::.
-
- -- Função: assoc_legendre_q (<n>, <m>, <x>)
-     Retorna a função associada de Legendre de segundo tipo para
-     inteiros  n > -1  e  m > -1.
-
-     Referência: Gradshteyn e Ryzhik  8.706 página 1000.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note assoc_legendre_p::, *Note legendre_p::, e *Note
-     legendre_q::.
-
- -- Função: chebyshev_t (<n>, <x>)
-     Retorna a função de Chebyshev de primeiro tipo para inteiros  n >
-     -1.
-
-     Referência: A&S 22.5.31 página 778 e A&S 6.1.22 página 256.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note chebyshev_u::.
-
-
- -- Função: chebyshev_u (<n>, <x>)
-     Retorna a função de Chebyshev de segundo tipo para inteiros  n >
-     -1.
-
-     Referência A&S, 22.8.3 página 783 e A&S 6.1.22 página 256.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note chebyshev_t::.
-
-
- -- Função: gen_laguerre (<n>, <a>, <x>)
-     Retorna o polinômio generalizado de Laguerre para inteiros  n > -1.
-
-     `load ("specfun")' chama essa função.
-
-     Referência tabela na página 789 em A&S.
-
- -- Função: hermite (<n>, <x>)
-     Retorna o polinômio de Hermite para inteiros  n > -1.
-
-     `load ("specfun")' chama essa função.
-
-     Referência  A&S 22.5.40 e 22.5.41, página 779.
-
-
- -- Função: jacobi_p (<n>, <a>, <b>, <x>)
-     Retorna o polinômio de Jacobi para inteiros  n > -1  e  a  e  b
-     simbólicos ou  a > -1  e b > -1.  (Os polinômios de  Jacobi são
-     atualmente definidos para todos  a  e  b ; todavia, o polinômio de
-     Jacobi peso  (1-x)^a(1+x)^b não é integrável para  a <= -1 ou para
-     b <= -1.)
-
-     Quando a, b, e  x  forem números em ponto flutuante (mas não
-     grandes números em ponto flutuante) `specfun' chama uma versão
-     especial modo declarada de jacobi_p.  Para valore numéricos, a
-     versão modo declarada é mais rápida que a outra versão. Muitas
-     funções em `specfun' são calculados como um caso especial dos
-     polinômios de Jacobi; Eles também desfrutam do impulso de
-     velocidade da versão modo declarada de  jacobi.
-
-     Se  n  tiver sido declarado para ser um inteiro, jacobi_p (n, a,
-     b, x) retorna uma representação de somatório para a função de
-     Jacobi. Porque Maxima simplifica 0^0  para  0  em uma adição, dois
-     termos da adição são adicionados fora do somatório.
-
-     `load ("specfun")' chama essa função.
-
-     Referência  tabela na página 789 em A&S.
-
-
- -- Função: laguerre (<n>, <x>)
-     Retorna o polinômio de Laguerre para inteiros  n > -1.
-
-     Referência A&S 22.5.16, página 778 e A&S página 789.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note gen_laguerre::.
-
-
- -- Função: legendre_p (<n>, <x>)
-     Retorna o polinômio de Legendre de primeiro tipo para inteiros  n
-     > -1.
-
-     Referência A&S 22.5.35 página 779.
-
-     `load ("specfun")' chama essa função.
-
-     Veja *Note legendre_q::.
-
-
- -- Função: legendre_q (<n>, <x>)
-     Retorna o polinômio de Legendre de primeiro tipo para inteiros  n
-     > -1.
-
-     Referência A&S 8.6.19 página 334.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note legendre_p::.
-
-
- -- Função: spherical_bessel_j (<n>, <x>)
-     Retorna a função de Bessel esférica do primeiro tipo para inteiros
-     n > -1.
-
-     Referência A&S 10.1.8 página 437 e A&S 10.1.15 página 439.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note spherical_hankel1::, *Note spherical_hankel2::,
-     e *Note spherical_bessel_y::.
-
-
- -- Função: spherical_bessel_y (<n>, <x>)
-     Retorna a função de Bessel esférica do segundo tipo para inteiros
-     n > -1.
-
-     Referência A&S 10.1.9 página 437 e 10.1.15 página 439.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note spherical_hankel1::, *Note spherical_hankel2::,
-     e *Note spherical_bessel_y::.
-
-
- -- Função: spherical_hankel1 (<n>, <x>)
-     Retorna a função de Hankel esférica do primeiro tipo para inteiros
-     n > -1.
-
-     Referência A&S 10.1.36 página 439.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note spherical_hankel2::, *Note spherical_bessel_j::,
-     e *Note spherical_bessel_y::.
-
-
- -- Função: spherical_hankel2 (<n>, <x>)
-     Retorna a função de Hankel esférica do segundo tipo para inteiros
-     n > -1.
-
-     Referência  A&S 10.1.17 página 439.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note spherical_hankel1::, *Note spherical_bessel_j::,
-     e *Note spherical_bessel_y::.
-
-
- -- Função: spherical_harmonic (<n>, <m>, <x>, <y>)
-     Retorna a função harmônica esférica para inteiros  n > -1 e  | m |
-     <= n .
-
-     Referência  Merzbacher 9.64.
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note assoc_legendre_p::.
-
-
- -- Função: ultraspherical (<n>, <a>, <x>)
-     Retorna os polinômios ultraesféricos para inteiros  n > -1.  Os
-     polinômios ultraesféricos são também conhecidos com polinômios de
-     Gegenbauer.
-
-     Referência A&S 22.5.27
-
-     `load ("specfun")' chama essa função.
-
-     Veja também *Note jacobi_p::.
-
-
-
-File: maxima.info,  Node: Funções Elípticas,  Next: Limites,  Prev: Polinômios Ortogonais,  Up: Top
-
-18 Funções Elípticas
+17 Funções Elípticas
 ********************
 
 * Menu:
@@ -3143,7 +4531,7 @@ File: maxima.info,  Node: Funções Elípticas,  Next: Limites,  Prev: Polinômi
 
 File: maxima.info,  Node: Introdução a Funções Elípticas e Integrais,  Next: Definições para Funções Elípticas,  Up: Top
 
-18.1 Introdução a Funções Elípticas e Integrais
+17.1 Introdução a Funções Elípticas e Integrais
 ===============================================
 
 Maxima inclui suporte a funções elípticas Jacobianas e a integrais
@@ -3236,7 +4624,7 @@ que governa a distribuição do Maxima.
 
 File: maxima.info,  Node: Definições para Funções Elípticas,  Next: Definições para Integrais Elípticas,  Prev: Introdução a Funções Elípticas e Integrais,  Up: Top
 
-18.2 Definições para Funções Elípticas
+17.2 Definições para Funções Elípticas
 ======================================
 
  -- Função: jacobi_sn (<u>, <m>)
@@ -3314,7 +4702,7 @@ File: maxima.info,  Node: Definições para Funções Elípticas,  Next: Defini�
 
 File: maxima.info,  Node: Definições para Integrais Elípticas,  Prev: Definições para Funções Elípticas,  Up: Top
 
-18.3 Definições para Integrais Elípticas
+17.3 Definições para Integrais Elípticas
 ========================================
 
  -- Função: elliptic_f (<phi>, <m>)
@@ -3368,7 +4756,7 @@ File: maxima.info,  Node: Definições para Integrais Elípticas,  Prev: Defini�
 
 File: maxima.info,  Node: Limites,  Next: Diferenciação,  Prev: Funções Elípticas,  Up: Top
 
-19 Limites
+18 Limites
 **********
 
 * Menu:
@@ -3378,7 +4766,7 @@ File: maxima.info,  Node: Limites,  Next: Diferenciação,  Prev: Funções Elí
 
 File: maxima.info,  Node: Definições para Limites,  Prev: Limites,  Up: Limites
 
-19.1 Definições para Limites
+18.1 Definições para Limites
 ============================
 
  -- Variável de Opção: lhospitallim
@@ -3448,7 +4836,7 @@ File: maxima.info,  Node: Definições para Limites,  Prev: Limites,  Up: Limite
 
 File: maxima.info,  Node: Diferenciação,  Next: Integração,  Prev: Limites,  Up: Top
 
-20 Diferenciação
+19 Diferenciação
 ****************
 
 * Menu:
@@ -3458,7 +4846,7 @@ File: maxima.info,  Node: Diferenciação,  Next: Integração,  Prev: Limites, 
 
 File: maxima.info,  Node: Definições para Diferenciação,  Prev: Diferenciação,  Up: Diferenciação
 
-20.1 Definições para Diferenciação
+19.1 Definições para Diferenciação
 ==================================
 
  -- Função: antid (<expr>, <x>, <u(x)>)
@@ -4044,18 +5432,20 @@ File: maxima.info,  Node: Definições para Diferenciação,  Prev: Diferenciaç
 
 File: maxima.info,  Node: Integração,  Next: Equações,  Prev: Diferenciação,  Up: Top
 
-21 Integração
+20 Integração
 *************
 
 * Menu:
 
 * Introdução a Integração::
 * Definições para Integração::
+* Introdução a QUADPACK::
+* Definições para QUADPACK::
 
 
 File: maxima.info,  Node: Introdução a Integração,  Next: Definições para Integração,  Prev: Integração,  Up: Integração
 
-21.1 Introdução a Integração
+20.1 Introdução a Integração
 ============================
 
 Maxima tem muitas rotinas para manusear integração.  A função
@@ -4064,18 +5454,19 @@ que manuseia uma função não especificada (e suas derivadas,
 certamente).  Para usos numéricos, existe a função `romberg'; um
 integrador adaptativo que usa a regra da quadratura dos currais de
 Newton, chamada `quanc8'; e uma escolha de integradores adaptativos de
-Quadpack, a saber `quad_qag', `quad_qags', etc.  Funções
-hipergeométricas estão sendo trabalhadas, veja `specint' for details.
-Geralmente falando, Maxima somente manuseia integrais que são
-integráveis em termos de "funções elementares" (funções racionais,
-trigonometricas, logarítmicas, exponenciais, radicais, etc.) e umas
-poucas extensões (função de erro, dilogarithm).  Isso não manuseia
-integrais em termos de funções desconhecidas tais como `g(x)' e `h(x)'.
+Quadpack, a saber `quad_qag', `quad_qags', etc., os quais são descritos
+sob o tópico `QUADPACK'.  Funções hipergeométricas estão sendo
+trabalhadas, veja `specint' for details.  Geralmente falando, Maxima
+somente manuseia integrais que são integráveis em termos de "funções
+elementares" (funções racionais, trigonometricas, logarítmicas,
+exponenciais, radicais, etc.) e umas poucas extensões (função de erro,
+dilogarithm).  Isso não manuseia integrais em termos de funções
+desconhecidas tais como `g(x)' e `h(x)'.
 
 
-File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a Integração,  Up: Integração
+File: maxima.info,  Node: Definições para Integração,  Next: Introdução a QUADPACK,  Prev: Introdução a Integração,  Up: Integração
 
-21.2 Definições para Integração
+20.2 Definições para Integração
 ===============================
 
  -- Função: changevar (<expr>, <f(x,y)>, <y>, <x>)
@@ -4407,8 +5798,8 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
         * Definindo uma função em termos de uma integral.  O corpo de
           uma função não é avaliado quando a função é definida.  Dessa
           forma o corpo de `f_1' nesse exemplo contém a forma
-          substantiva de `integrate'.  O operador aspas simples `'''
-          faz com que a integral seja avaliada, e o resultado
+          substantiva de `integrate'.  O operador apóstrofo-apóstrofo
+          `''' faz com que a integral seja avaliada, e o resultado
           transforme-se no corpo de `f_2'.
 
                (%i1) f_1 (a) := integrate (x^3, x, 1, a);
@@ -4765,25 +6156,141 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
      Equivalente a `ldefint' com `tlimswitch' escolhido para `true'.
 
 
- -- Função: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
-     Numericamente avalia a integral
+
+File: maxima.info,  Node: Introdução a QUADPACK,  Next: Definições para QUADPACK,  Prev: Definições para Integração,  Up: Integração
+
+20.3 Introdução a QUADPACK
+==========================
+
+QUADPACK é uma coleção de funções para aálculo numérico de integrais
+definidas unidimensionais.  O pacote QUADPACK resultou da junção de um
+projeto de R. Piessens (1), E. de Doncker (2), C. Ueberhuber (3), e D.
+Kahaner (4).
+
+   A biblioteca QUADPACK inclída no Maxima é uma tradução automática
+(feita através do programa `f2cl') do código fonte em de QUADPACK como
+aparece na SLATEC Common Mathematical Library, Versão 4.1 (5).  A
+biblioteca Fortran SLATEC é datada de Julho de 1993, mas as funções
+QUADPACK foram escritas alguns anos antes.  Existe outra versão de
+QUADPACK em Netlib (6); não está claro no que aquela versão difere da
+versão existente em SLATEC.
+
+   As funções QUADPACK incluídas no Maxima são toda automáticas, no
+sentido de que essas funções tentam calcular um resultado para uma
+precisão específica, requerendo um número não especificado de
+avaliações de função.  A tradução do Lisp do Maxima da iblioteca
+QUADPACK também inclui algumas funçòes não automáticas, mas elas não
+são expostas a nível de Maxima.
+
+   Informação adicionalsobre a bilioteca QUADPACK pode ser encontrada
+no livro do QUADPACK (7).
+
+20.3.1 Overview
+---------------
+
+`quad_qag'
+     Integração de uma função genérica sobre um intervalo finito.
+     `quad_qag' implementa um integrador adaptativo globalmente simples
+     usando a estratégia de Aind (Piessens, 1973).  O chamador pode
+     escolher entre 6 pares de formulas da quadratura de Gauss-Kronrod
+     para a componente de avaliação da regra.  As regras de alto grau
+     são adequadas para integrandos fortemente oscilantes.
+
+`quad_qags'
+     Integração de uma função genérica sob um intervalo finito.
+     `quad_qags' implementa subdivisão de intervalos globalmente
+     adaptativos com extrapolação (de Doncker, 1978) por meio do
+     algorítmo de Epsilon (Wynn, 1956).
+
+`quad_qagi'
+     Integração de uma função genérica  sobre um intervalo finito ou
+     semi-finito.  O intervalo é mapeado sobre um intervalo finito e
+     então a mesma estratégia de `quad_qags' é aplicada.
+
+`quad_qawo'
+     Integração de cos(omega x) f(x) ou sin(omega x) f(x) sobre um
+     intervalo finito, onde omega é uma constante.  A componente de
+     avaliação da regra é baseada na técnica modificada de
+     Clenshaw-Curtis.  `quad_qawo' aplica subdivisão adaptativa com
+     extrapolação, similar a `quad_qags'.
+
+`quad_qawf'
+     Calcula uma transformação de cosseno de Fourier ou de um seno de
+     Fourier sobre um intervalo semi-finito.  O mesmo aproxima como
+     `quad_qawo' aplicado sobre intervalos finitos sucessivos, e
+     aceleração de convergência por meio d algorítimo de Epsilon (Wynn,
+     1956) aplicado a séries de contribuições de integrais.
+
+`quad_qaws'
+     Integraçào de w(x) f(x) sobre um intervalo finito [a, b], onde w é
+     uma função da forma (x - a)^alpha (b - x)^beta v(x) e v(x) é 1 ou
+     log(x - a) ou log(b - x) ou log(x - a) log(b - x), e alpha > -1 e
+     beta > -1.  Auma estratégia de subdivisão adaptativa é aplicada,
+     com integração modificada de Clenshaw-Curtis sobre os
+     subintervalos que possuem a ou b.
+
+`quad_qawc'
+     Calcula o valor principal de Cauchy de f(x)/(x - c) sobre um
+     intervalo finito (a, b) e um c especificado.  A estratégia é
+     globalmente adaptativa, e a integração modificada de
+     Clenshaw-Curtis é usada sobre subamplitudes que possuírem o ponto
+     x = c.
+
+   ---------- Footnotes ----------
+
+   (1) Applied Mathematics and Programming Division, K.U. Leuven
+
+   (2) Applied Mathematics and Programming Division, K.U. Leuven
+
+   (3) Institut für Mathematik, T.U. Wien
+
+   (4) National Bureau of Standards, Washington, D.C., U.S.A
+
+   (5) http://www.netlib.org/slatec
+
+   (6) http://www.netlib.org/quadpack
+
+   (7) R. Piessens, E. de Doncker-Kapenga, C.W. Uberhuber, e D.K.
+Kahaner.  QUADPACK: A Subroutine Package for Automatic Integration.
+Berlin: Springer-Verlag, 1983, ISBN 0387125531.
+
+
+File: maxima.info,  Node: Definições para QUADPACK,  Prev: Introdução a QUADPACK,  Up: Integração
+
+20.4 Definições para QUADPACK
+=============================
+
+ -- Função: quad_qag (<f(x)>, <x>, <a>, <b>, <chave>, <epsrel>,
+          <limite>)
+ -- Função: quad_qag (<f>, <x>, <a>, <b>, <chave>, <epsrel>, <limite>)
+     Integração de uma função genérica sobre um intervalo finito.
+     `quad_qag' implementa um integrador adaptativo globalmente simples
+     usando a estratégia de Aind (Piessens, 1973).  O chamador pode
+     escolher entre 6 pares de fórmulas da quadratura de Gauss-Kronrod
+     para a componente de avaliação da regra.  As regras de alto nível
+     são adequadas para integrandos fortemente oscilatórios.
+
+     `quad_qag' calcula a integral
 
      integrate (f(x), x, a, b)
 
-     usando um integrador adaptativo simples.
-
      A função a ser integrada é <f(x)>, com variável dependente <x>, e
-     a função é para ser integrada entre os limites <a> e <b>.  <key> é
-     o integrador a ser usado e pode ser um inteiro entre 1 e 6,
-     inclusive.  O valor de <key> seleciona a ordem da regra de
-     integração de Gauss-Kronrod.
+     a função é para ser integrada entre os limites <a> e <b>.  <chave>
+     é o integrador a ser usado e pode ser um inteiro entre 1 e 6,
+     inclusive.  O valor de <chave> seleciona a ordem da regra de
+     integração de Gauss-Kronrod.  Regra de alta ordem são adequadas
+     para integrandos fortemente oscilatórios.
+
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
 
      A integração numérica é concluída adaptativamente pela subdivisão a
      região de integração até que a precisão desejada for completada.
 
-     Os argumentos opcionais <epsrel> e <limit> são o erro relativo
+     Os argumentos opcionais <epsrel> e <limite> são o erro relativo
      desejado e o número máximo de subintervalos respectivamente.
-     <epsrel> padrão em 1e-8 e <limit> é 200.
+     <epsrel> padrão em 1e-8 e <limite> é 200.
 
      `quad_qag' retorna uma lista de quatro elementos:
 
@@ -4823,15 +6330,27 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
           (%o2)                           -
                                           9
 
- -- Função: quad_qags (<f(x)>, <x>, <a>, <b>, <epsrel>, <limit>)
-     Integra numericamente a função dada usando quadratura adaptativa
-     com extrapolação.  A função a ser integrated é <f(x)>, com
-     variável dependente <x>, e a função é para ser integrada entre os
-     limites <a> e <b>.
+ -- Função: quad_qags (<f(x)>, <x>, <a>, <b>, <epsrel>, <limite>)
+ -- Função: quad_qags (<f>, <x>, <a>, <b>, <epsrel>, <limite>)
+     Integração de uma função geral sobre um intervalo finito.
+     `quad_qags' implementa subdivisão de intervalo globalmente
+     adaptativa com extrapolação (de Doncker, 1978) através do
+     algorítmo de (Wynn, 1956).
 
-     Os argumentos opcionais <epsrel> e <limit> são o erro relativo
+     `quad_qags' computes the integral
+
+     integrate (f(x), x, a, b)
+
+     A função a ser integrada é <f(x)>, com variável dependente <x>, e
+     a função é para ser integrada entre os limites <a> e <b>.
+
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
+
+     Os argumentos opcionais <epsrel> e <limite> são o erro relativo
      desejado e o número máximo de subintervalos, respectivamente.
-     <epsrel> padrão em 1e-8 e <limit> é 200.
+     <epsrel> padrão em 1e-8 e <limite> é 200.
 
      `quad_qags' retorna uma lista de quatro elementos:
 
@@ -4876,10 +6395,15 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
      para esse integrando.
 
 
- -- Função: quad_qagi (<f(x)>, <x>, <a>, <inftype>, <epsrel>, <limit>)
-     Avalia numericamente uma das seguintes integrais
+ -- Função: quad_qagi (<f(x)>, <x>, <a>, <inftype>, <epsrel>, <limite>)
+ -- Função: quad_qagi (<f>, <x>, <a>, <inftype>, <epsrel>, <limite>)
+     Integração de uma função genérica sobre um intervalo finito ou
+     semi-finito.  O intervalo é mapeado sobre um intervalo finito e
+     então a mesma estratégia que em `quad_qags' é aplicada.
 
-     integrate (f(x), x, a, inf)
+     `quad_qagi' avalia uma das seguintes integrais
+
+     integrate (f(x), x, minf, inf)
 
      integrate (f(x), x, minf, a)
 
@@ -4888,6 +6412,10 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
      usando a rotina Quadpack QAGI.  A função a ser integrada é <f(x)>,
      com variável dependente <x>, e a função é para ser integrada sobre
      um intervalo infinito.
+
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
 
      O parâmetro <inftype> determina o intervalo de integração como
      segue:
@@ -4901,9 +6429,9 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
     `both'
           O intervalo corresponde a toda reta real.
 
-     Os argumentos opcionais <epsrel> e <limit> são o erro relativo
+     Os argumentos opcionais <epsrel> e <limite> são o erro relativo
      desejado e o número maximo de subintervalos, respectivamente.
-     <epsrel> padrão para 1e-8 e <limit> é 200.
+     <epsrel> padrão para 1e-8 e <limite> é 200.
 
      `quad_qagi' retorna uma lista de quatro elementos:
 
@@ -4950,8 +6478,14 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
                                          32
 
 
- -- Função: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, <epsrel>, <limit>)
-     Calcula numericamente o valor principal de Cauchy de
+ -- Função: quad_qawc (<f(x)>, <x>, <c>, <a>, <b>, <epsrel>, <limite>)
+ -- Função: quad_qawc (<f>, <x>, <c>, <a>, <b>, <epsrel>, <limite>)
+     Calcula o valor principal de Cauchy de f(x)/(x - c) over a finite
+     interval.  A estratégia é globalmente adaptativa, e a integração de
+     Clenshaw-Curtis modificada é usada sobre as subamplitudes que
+     possuírem o ponto x = c.
+
+     `quad_qawc' calcula o valor principal de Cauchy de
 
      integrate (f(x)/(x - c), x, a, b)
 
@@ -4959,9 +6493,13 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
      `<f(x)>/(<x> - <c>)', com variável dependente <x>, e a função é
      para ser integrada sobre o intervalo que vai de <a> até <b>.
 
-     Os argumentos opcionais <epsrel> e <limit> são o erro relativo
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
+
+     Os argumentos opcionais <epsrel> e <limite> são o erro relativo
      desejado e o máximo número de subintervalos, respectivamente.
-     <epsrel> padrão para 1e-8 e <limit> é 200.
+     <epsrel> padrão para 1e-8 e <limite> é 200.
 
      `quad_qawc' retorna uma lista de quatro elementos:
 
@@ -5020,8 +6558,16 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
 
  -- Função: quad_qawf (<f(x)>, <x>, <a>, <omega>, <trig>, <epsabs>,
           <limit>, <maxp1>, <limlst>)
-     Calcula numericamente a integral tipo Fourier usando a rotina
-     Quadpack QAWF.  A integral é
+ -- Função: quad_qawf (<f>, <x>, <a>, <omega>, <trig>, <epsabs>,
+          <limit>, <maxp1>, <limlst>)
+     Calcula uma transformação de cosseno de Fourier ou de um seno de
+     Fourier sobre um intervalo semi-finito.  usando a função QAWF do
+     pacote Quadpack.  A mesma aproxima como em `quad_qawo' quando
+     aplicada sobre intervalos finitos sucessivos, e aceleração de
+     convergência por meio d algorítimo de Epsilon (Wynn, 1956)
+     aplicado a séries de contribuições de integrais.
+
+     `quad_qawf' calcula a integral
 
      integrate (f(x)*w(x), x, a, inf)
 
@@ -5032,6 +6578,10 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
 
     `sin'
           w(x) = sin (omega x)
+
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
 
      Os argumentos opcionais são:
 
@@ -5097,8 +6647,16 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
 
 
  -- Função: quad_qawo (<f(x)>, <x>, <a>, <b>, <omega>, <trig>,
-          <epsabs>, <limit>, <maxp1>, <limlst>)
-     Calcula numericamente a integral usando a rotina Quadpack QAWO:
+          <epsabs>, <limite>, <maxp1>, <limlst>)
+ -- Função: quad_qawo (<f>, <x>, <a>, <b>, <omega>, <trig>, <epsabs>,
+          <limite>, <maxp1>, <limlst>)
+     Integração de cos(omega x) f(x) ou sin(omega x) f(x) sobre um
+     intervalo finito, onde omega é uma constante.  A componente de
+     avaliação da regra é baseada na técnica modificada de
+     Clenshaw-Curtis.  `quad_qawo' aplica subdivisão adaptativa com
+     extrapolação, similar a `quad_qags'.
+
+     `quad_qawo' calcula a integral usando a rotina Quadpack QAWO:
 
      integrate (f(x)*w(x), x, a, b)
 
@@ -5110,15 +6668,19 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
     `sin'
           w(x) = sin (omega x)
 
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
+
      Os argumentos opcionais são:
 
     <epsabs>
           Erro absoluto desejado de aproximação.  O Padrão é 1d-10.
 
-    <limit>
-          Tamanho do array interno de trabalho.  (<limit> - <limlst>)/2
-          é o número máximo de subintervalos a serem usados.  Default é
-          200.
+    <limite>
+          Tamanho do array interno de trabalho.  (<limite> -
+          <limlst>)/2 é o número máximo de subintervalos a serem
+          usados.  Default é 200.
 
     <maxp1>
           Número máximo dos momentos de Chebyshev.  Deve ser maior que
@@ -5128,9 +6690,9 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
           Limite superior sobre o número de ciclos.  Deve ser maior que
           ou igual a 3.  O padrão é 10.
 
-     <epsabs> e <limit> são o erro relativo desejado e o número máximo
+     <epsabs> e <limite> são o erro relativo desejado e o número máximo
      de subintervalos, respectivamente.  <epsrel> o padrão é 1e-8 e
-     <limit> é 200.
+     <limite> é 200.
 
      `quad_qawo' retorna uma lista de quatro elementos:
 
@@ -5175,38 +6737,51 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
           (%o3)                     1.376043390090716
 
 
- -- Função: quad_qaws (<f(x)>, <x>, <a>, <b>, <alfa>, <beta>, <wfun>,
-          <epsabs>, <limit>)
-     Numéricamente calcula a integral usando a rotina Quadpack QAWS:
+ -- Função: quad_qaws (<f(x)>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+          <epsabs>, <limite>)
+ -- Função: quad_qaws (<f>, <x>, <a>, <b>, <alpha>, <beta>, <wfun>,
+          <epsabs>, <limite>)
+     Integração de w(x) f(x) sobre um intervalo finito, onde w(x) é uma
+     certa função algébrica ou logarítmica.  Uma estratégia de
+     subdivisão globalmente adaptativa é aplicada, com integração
+     modificada de Clenshaw-Curtis sobre os subintervalos que possuírem
+     os pontos finais dos intervalos de integração.
+
+     `quad_qaws' calcula a integral usando a rotina Quadpack QAWS:
 
      integrate (f(x)*w(x), x, a, b)
 
      A função peso w é selecionada por <wfun>:
 
     `1'
-          w(x) = (x - a)^alfa (b - x)^beta
+          w(x) = (x - a)^alpha (b - x)^beta
 
     `2'
-          w(x) = (x - a)^alfa (b - x)^beta log(x - a)
+          w(x) = (x - a)^alpha (b - x)^beta log(x - a)
 
     `3'
-          w(x) = (x - a)^alfa (b - x)^beta log(b - x)
+          w(x) = (x - a)^alpha (b - x)^beta log(b - x)
 
-    `2'
-          w(x) = (x - a)^alfa (b - x)^beta log(x - a) log(b - x)
+    `4'
+          w(x) = (x - a)^alpha (b - x)^beta log(x - a) log(b - x)
+
+     O integrando pode ser especidficado como o nome de uma função
+     Maxima ou uma função Lisp ou um operador, uma expressão lambda do
+     Maxima, ou uma expressão geral do Maxima.
 
      O argumentos opcionais são:
 
     <epsabs>
           Erro absoluto desejado de aproximação.  O padrão é 1d-10.
 
-    <limit>
-          Tamanho do array interno de trabalho.  (<limit> - <limlst>)/2
-          é o número máximo de subintervalos para usar.  O padrão é 200.
+    <limite>
+          Tamanho do array interno de trabalho.  (<limite> -
+          <limlst>)/2 é o número máximo de subintervalos para usar.  O
+          padrão é 200.
 
      <epsabs> e <limit> são o erro relativo desejado e o número máximo
      de subintervalos, respectivamente.  <epsrel> o padrão é 1e-8 e
-     <limit> é 200.
+     <limite> é 200.
 
      `quad_qaws' retorna uma lista de quatro elementos:
 
@@ -5258,1860 +6833,12 @@ File: maxima.info,  Node: Definições para Integração,  Prev: Introdução a 
 
 File: maxima.info,  Node: Equações,  Next: Equações Diferenciais,  Prev: Integração,  Up: Top
 
-22 Equações
+21 Equações
 ***********
 
 * Menu:
 
 * Definições para Equações::
-
-
-File: maxima.info,  Node: Definições para Equações,  Prev: Equações,  Up: Equações
-
-22.1 Definições para Equações
-=============================
-
- -- Variável: %rnum_list
-     Valor padrão: `[]'
-
-     `%rnum_list' é a lista de variáveis introduzidas em soluções por
-     `algsys'.  `%r' variáveis São adicionadas a `%rnum_list' na ordem
-     em que forem criadas.  Isso é conveniente para fazer substituições
-     dentro da solução mais tarde.  É recomendado usar essa lista em
-     lugar de fazer `concat ('%r, j)'.
-
-
- -- Variável: algexact
-     Valor padrão: `false'
-
-     `algexact' afeta o comportamento de `algsys' como segue:
-
-     Se `algexact' é `true', `algsys' sempre chama `solve' e então usa
-     `realroots' sobre falhas de `solve'.
-
-     Se `algexact' é `false', `solve' é chamada somente se o eliminante
-     não for de uma variável, ou se for uma quadrática ou uma
-     biquadrada.
-
-     Dessa forma `algexact: true' não garante soluções exatas, apenas
-     que `algsys' tentará primeiro pegar soluções exatas, e somente
-     retorna aproximações quando tudo mais falha.
-
-
- -- Função: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
- -- Função: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
-     Resolve polinômios simultâneos <expr_1>, ..., <expr_m> ou equações
-     polinômiais <eqn_1>, ..., <eqn_m> para as variáveis <x_1>, ...,
-     <x_n>.  Uma expressão <expr> é equivalente a uma equação `<expr> =
-     0'.  Pode existir mais equações que variáveis ou vice-versa.
-
-     `algsys' retorna uma lista de soluções, com cada solução dada com
-     uma lista de valores de estado das equações das variáveis <x_1>,
-     ..., <x_n> que satisfazem o sistema de equações.  Se `algsys' não
-     pode achar uma solução, uma lista vazia `[]' é retornada.
-
-     Os símbolos `%r1', `%r2', ..., são introduzidos tantos quantos
-     forem necessários para representar parâmetros arbitrários na
-     solução; essas variáveis são também anexadas à lista `%rnum_list'.
-
-     O método usado é o seguinte:
-
-     (1) Primeiro as equações são fatoradas e quebradas em subsistemas.
-
-     (2) Para cada subsistema <S_i>, uma equação <E> e uma variável <x>
-     são selecionados.  A variável é escolhida para ter o menor grau
-     não zero.  Então a resultante de <E> e <E_j> em relação a <x> é
-     calculada para cada um das equações restantes <E_j> nos
-     subsistemas <S_i>.  Isso retorna um novo subsistema <S_i'> em umas
-     poucas variáveis, como <x> tenha sido eliminada.  O processo agora
-     retorna ao passo (1).
-
-     (3) Eventualmente, um subsistema consistindo de uma equação
-     simples é obtido.  Se a equação é de várias variáveis e
-     aproximações na forma de números em ponto flutuante nã tenham sido
-     introduzidas, então `solve' é chamada para achar uma solução exata.
-
-     Em alguns casos, `solve' não está habilitada a achar uma solução,
-     ou se isso é feito a solução pode ser uma expressão expressão
-     muito larga.
-
-     Se a equação é de uma única variável e é ou linear, ou quadrática,
-     ou biquadrada, então novamente `solve' é chamada se aproximações
-     não tiverem sido introduzidas.  Se aproximações tiverem sido
-     introduzidas ou a equação não é de uma única variável e nem tão
-     pouco linear, quadratica, ou biquadrada, então o comutador
-     `realonly' é `true', A função `realroots' é chamada para achar o
-     valor real das soluções.  Se `realonly' é `false', então
-     `allroots' é chamada a qual procura por soluções reais e complexas.
-
-     Se `algsys' produz uma solução que tem poucos digitos
-     significativos que o requerido, o usuário pode escolher o valor de
-     `algepsilon' para um valor maior.
-
-     Se `algexact' é escolhido para `true', `solve' será sempre chamada.
-
-     (4) Finalmente, as soluções obtidas no passo (3) são substituídas
-     dentro dos níveis prévios e o processo de solução retorna para (1).
-
-     Quando `algsys' encontrar uma equação de várias variáveis que
-     contém aproximações em ponto flutuante (usualmente devido a suas
-     falhas em achar soluções exatas por um estágio mais fácil), então
-     não tentará aplicar métodos exatos para tais equações e em lugar
-     disso imprime a mensagem: "`algsys' cannot solve - system too
-     complicated."
-
-     Interações com `radcan' podem produzir expressões largas ou
-     complicadas.  Naquele caso, pode ser possível isolar partes do
-     resultado com `pickapart' ou `reveal'.
-
-     Ocasionalmente, `radcan' pode introduzir uma unidade imaginária
-     `%i' dentro de uma solução que é atualmente avaliada como real.
-
-     Exemplos:
-
-          (%i1) e1: 2*x*(1 - a1) - 2*(x - 1)*a2;
-          (%o1)              2 (1 - a1) x - 2 a2 (x - 1)
-          (%i2) e2: a2 - a1;
-          (%o2)                        a2 - a1
-          (%i3) e3: a1*(-y - x^2 + 1);
-                                             2
-          (%o3)                   a1 (- y - x  + 1)
-          (%i4) e4: a2*(y - (x - 1)^2);
-                                                 2
-          (%o4)                   a2 (y - (x - 1) )
-          (%i5) algsys ([e1, e2, e3, e4], [x, y, a1, a2]);
-          (%o5) [[x = 0, y = %r1, a1 = 0, a2 = 0],
-
-                                            [x = 1, y = 0, a1 = 1, a2 = 1]]
-          (%i6) e1: x^2 - y^2;
-                                        2    2
-          (%o6)                        x  - y
-          (%i7) e2: -1 - y + 2*y^2 - x + x^2;
-                                   2        2
-          (%o7)                 2 y  - y + x  - x - 1
-          (%i8) algsys ([e1, e2], [x, y]);
-                           1            1
-          (%o8) [[x = - -------, y = -------],
-                        sqrt(3)      sqrt(3)
-
-                  1              1             1        1
-          [x = -------, y = - -------], [x = - -, y = - -], [x = 1, y = 1]]
-               sqrt(3)        sqrt(3)          3        3
-
-
- -- Função: allroots (<expr>)
- -- Função: allroots (<eqn>)
-     Calcula aproximações numéricas de raízes reais e complexas do
-     polinômio <expr> ou equação polinômial <eqn> de uma variável.
-
-     O sinalizador `polyfactor' quando `true' faz com que `allroots'
-     fatore o polinômio sobre os números reais se o polinômio for real,
-     ou sobre os números complexos, se o polinômio for complexo.
-
-     `allroots' pode retornar resultados imprecisos no caso de
-     multiplas raízes.  Se o polinômio for real, `allroots (%i*<p>)')
-     pode retornar aproximações mais precisas que `allroots (<p>)',
-     como `allroots' invoca um algorítmo diferente naquele caso.
-
-     `allroots' rejeita não-polinômios.  Isso requer que o numerador
-     após a classificação (`rat''ing) poderá ser um polinômio, e isso
-     requer que o denominador seja quando muito um número complexo.
-     Com um resultado disso `allroots' irá sempre retornar uma
-     expressão equivalente (mas fatorada), se `polyfactor' for `true'.
-
-     Para polinômios complexos um algorítmo por Jenkins and Traub é
-     usado (Algorithm 419, Comm.  ACM, vol.  15, (1972), p.  97).  Para
-     polinômios reais o algorítmo usado é devido a Jenkins (Algorithm
-     493, ACM TOMS, vol.  1, (1975), p.178).
-
-     Exemplos:
-
-          (%i1) eqn: (1 + 2*x)^3 = 13.5*(1 + x^5);
-                                      3          5
-          (%o1)              (2 x + 1)  = 13.5 (x  + 1)
-          (%i2) soln: allroots (eqn);
-          (%o2) [x = .8296749902129361, x = - 1.015755543828121,
-
-          x = .9659625152196369 %i - .4069597231924075,
-
-          x = - .9659625152196369 %i - .4069597231924075, x = 1.0]
-          (%i3) for e in soln
-                  do (e2: subst (e, eqn), disp (expand (lhs(e2) - rhs(e2))));
-                                - 3.5527136788005E-15
-
-                               - 5.32907051820075E-15
-
-                   4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                  - 4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                                 3.5527136788005E-15
-
-          (%o3)                         done
-          (%i4) polyfactor: true$
-          (%i5) allroots (eqn);
-          (%o5) - 13.5 (x - 1.0) (x - .8296749902129361)
-
-                                     2
-           (x + 1.015755543828121) (x  + .8139194463848151 x
-
-           + 1.098699797110288)
-
-
- -- Variável: backsubst
-     Valor padrão: `true'
-
-     Quando `backsubst' é `false', evita substituições em expressões
-     anteriores após as equações terem sido triangularizadas.  Isso pode
-     ser de grande ajuda em problemas muito grandes onde substituição
-     em expressões anteriores pode vir a causar a geração de expressões
-     extremamente largas.
-
-
- -- Variável: breakup
-     Valor padrão: `true'
-
-     Quando `breakup' é `true', `solve' expressa soluções de equações
-     cúbicas e quárticas em termos de subexpressões comuns, que são
-     atribuídas a rótulos de expressões intermediárias (`%t1', `%t2',
-     etc.).  De outra forma, subexpressões comuns não são identificadas.
-
-     `breakup: true' tem efeito somente quando `programmode' é `false'.
-
-     Exemplos:
-
-          (%i1) programmode: false$
-          (%i2) breakup: true$
-          (%i3) solve (x^3 + x^2 - 1);
-
-                                  sqrt(23)    25 1/3
-          (%t3)                  (--------- + --)
-                                  6 sqrt(3)   54
-          Solution:
-
-                                                sqrt(3) %i   1
-                                                ---------- - -
-                          sqrt(3) %i   1            2        2   1
-          (%t4)    x = (- ---------- - -) %t3 + -------------- - -
-                              2        2            9 %t3        3
-
-                                                sqrt(3) %i   1
-                                              - ---------- - -
-                        sqrt(3) %i   1              2        2   1
-          (%t5)    x = (---------- - -) %t3 + ---------------- - -
-                            2        2             9 %t3         3
-
-                                             1     1
-          (%t6)                  x = %t3 + ----- - -
-                                           9 %t3   3
-          (%o6)                    [%t4, %t5, %t6]
-          (%i6) breakup: false$
-          (%i7) solve (x^3 + x^2 - 1);
-          Solution:
-
-                       sqrt(3) %i   1
-                       ---------- - -
-                           2        2        sqrt(23)    25 1/3
-          (%t7) x = --------------------- + (--------- + --)
-                       sqrt(23)    25 1/3    6 sqrt(3)   54
-                    9 (--------- + --)
-                       6 sqrt(3)   54
-
-                                                        sqrt(3) %i   1    1
-                                                     (- ---------- - -) - -
-                                                            2        2    3
-
-                     sqrt(23)    25 1/3  sqrt(3) %i   1
-          (%t8) x = (--------- + --)    (---------- - -)
-                     6 sqrt(3)   54          2        2
-
-                                                      sqrt(3) %i   1
-                                                    - ---------- - -
-                                                          2        2      1
-                                                + --------------------- - -
-                                                     sqrt(23)    25 1/3   3
-                                                  9 (--------- + --)
-                                                     6 sqrt(3)   54
-
-                      sqrt(23)    25 1/3             1             1
-          (%t9)  x = (--------- + --)    + --------------------- - -
-                      6 sqrt(3)   54          sqrt(23)    25 1/3   3
-                                           9 (--------- + --)
-                                              6 sqrt(3)   54
-          (%o9)                    [%t7, %t8, %t9]
-
-
- -- Função: dimension (<eqn>)
- -- Função: dimension (<eqn_1>, ..., <eqn_n>)
-     `dimen' é um pacote de análise dimensional.  `load ("dimen")'
-     chama esse pacote.  `demo ("dimen")' mostra uma cura demostração.
-
-
- -- Variável: dispflag
-     Valor padrão: `true'
-
-     Se escolhida para `false' dentro de um `block' inibirá a
-     visualização da saída gerada pelas funções solve chamadas de
-     dentro de `block'.  Terminando `block' com um sinal de dolar, $,
-     escolhe `dispflag' para `false'.
-
-
- -- Função: funcsolve (<eqn>, <g>(<t>))
-     Retorna `[<g>(<t>) = ...]'  ou `[]', dependendo de existir ou não
-     uma função racional `<g>(<t>)' satisfazendo <eqn>, que deve ser de
-     primeira ordem, polinômio linear em (para esse caso) `<g>(<t>)'
-     and `<g>(<t>+1)'
-
-          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) = (n - 1)/(n + 2);
-                                      (n + 3) f(n + 1)   n - 1
-          (%o1)        (n + 1) f(n) - ---------------- = -----
-                                           n + 1         n + 2
-          (%i2) funcsolve (eqn, f(n));
-
-          Equações dependentes eliminadas:  (4 3)
-                                             n
-          (%o2)                f(n) = ---------------
-                                      (n + 1) (n + 2)
-
-     Atenção: essa é uma implementação muito rudimentar - muitas
-     verificações de segurança e obviamente generalizações estão
-     ausêntes.
-
-
- -- Variável: globalsolve
-     Valor padrão: `false'
-
-     When `globalsolve' for `true', variáveis para as quais as equações
-     são resolvidas são atribuidas aos valores da solução encontrados
-     por `linsolve', e por `solve' quando resolvendo duas ou mais
-     equações lineares.  Quando `globalsolve' for `false', soluções
-     encontradas por `linsolve' e por `solve' quando resolvendo duas ou
-     mais equações lineares são espressas como equações, e as variáveis
-     para as quais a equação foi resolvida não são atribuidas.
-
-     Quando resolvendo qualquer coisa outra que não duas equações
-     lineares ou mais, `solve' ignora `globalsolve'.  Outras funções
-     que resolvem equações (e.g., `algsys') sempre ignoram
-     `globalsolve'.
-
-     Exemplos:
-
-          (%i1) globalsolve: true$
-          (%i2) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t2)                        x : --
-                                           7
-
-                                             1
-          (%t3)                        y : - -
-                                             7
-          (%o3)                     [[%t2, %t3]]
-          (%i3) x;
-                                         17
-          (%o3)                          --
-                                         7
-          (%i4) y;
-                                           1
-          (%o4)                          - -
-                                           7
-          (%i5) globalsolve: false$
-          (%i6) kill (x, y)$
-          (%i7) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t7)                        x = --
-                                           7
-
-                                             1
-          (%t8)                        y = - -
-                                             7
-          (%o8)                     [[%t7, %t8]]
-          (%i8) x;
-          (%o8)                           x
-          (%i9) y;
-          (%o9)                           y
-
-
- -- Função: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
-     `inteqn' é um pacote para resolver equações integrais.  `load
-     ("inteqn")' carrega esse pacote.
-
-     <ie> é a equação integral; <unk> é a função desconhecida; <tech> é
-     a técnica a ser tentada nesses dados acima (<tech> = `first'
-     significa: tente a primeira técnica que achar uma solução; <tech>
-     = `all' significa: tente todas a técnicas aplicáveis); <n> é o
-     número máximo de termos a serem usados de `taylor', `neumann',
-     `firstkindseries', ou `fredseries' (isso é também o número máximo
-     de ciclos de recurssão para o método de diferenciação); <guess> é
-     o inicial suposto para `neumann' ou `firstkindseries'.
-
-     Valores padrão do segundo até o quinto parâmetro são:
-
-     <unk>: `<p>(<x>)', onde <p> é a primeira função encontrada em um
-     integrando que é desconhecida para Maxima e <x> é a variável que
-     ocorre como um argumento para a primeira ocorrência de <p> achada
-     fora de uma integral no caso de equações `secondkind' , ou é
-     somente outra variável ao lado da variável de integração em
-     equações `firstkind'.  Se uma tentativa de procurar por <x> falha,
-     o usuário será perguntado para suprir a variável independente.
-
-     tech: `first'
-
-     n: 1
-
-     guess: `none' o que fará com que `neumann' e `firstkindseries' use
-     `<f>(<x>)' como uma suposição inicial.
-
-
- -- Variável de opção: ieqnprint
-     Valor padrão: `true'
-
-     `ieqnprint' governa o comportamento do resultado retornado pelo
-     comando `ieqn'.  Quando `ieqnprint' é `false', as listas
-     retornadas pela função `ieqn' são da forma
-
-     [<solução>, <tecnica usada>, <nterms>, <sinalizador>]
-
-     onde <sinalizador> é retirado se a solução for exata.
-
-     De outra forma, isso é a palavra `approximate' ou `incomplete'
-     correspondendo à forma inexata ou forma aberta de solução,
-     respectivamente.  Se um método de série foi usado, <nterms>
-     fornece o número de termos usados (que poderá ser menor que os n
-     dados para `ieqn' se ocorrer um erro evita a geração de termos
-     adicionais).
-
-
- -- Function: lhs (<expr>)
-     Retorna o lado esquerdo (isto é, o primeiro argumento) da
-     expressão <expr>, quando o operador de <expr> for um dos
-     operadores relacionais `< <= = # equal notequal >= >', um dos
-     operadores de atribuição `:= ::= : ::', ou um operadro infixo
-     definido pelo usuário, como declarado por meio de `infix'.
-
-     Quando <expr> for um átomo ou seu operador for alguma coisa que
-     não esses listados acima, `lhs' retorna <expr>.
-
-     Veja também `rhs'.
-
-     Exemplos:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb), lhs (aa > bb)];
-          (%o4)                   [aa, aa, aa, aa]
-          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)), lhs (notequal (aa, bb))];
-          (%o5)                   [aa, aa, aa, aa]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
-          (%o10)               [foo(x), bar(y), x, x]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) lhs (aa ][ bb);
-          (%o12)                         aa
-
-
- -- Função: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
-     Resolve a lista de equações lineares simultâneas para a lista de
-     variáveis.  As expressões devem ser cada uma polinômios nas
-     variáveis e podem ser equações.
-
-     Quando `globalsolve' é `true' então variáveis que foram resolvidas
-     serão escolhidas para a solução do conjunto de equações
-     simultâneas.
-
-     Quando `backsubst' é `false', `linsolve' não realiza substituição
-     em equações anteriores após as equações terem sido
-     triangularizadas.  Isso pode ser necessário em problemas muito
-     grandes onde substituição em equações anteriores poderá causar a
-     geração de expressões extremamente largas.
-
-     Quando `linsolve_params' é `true', `linsolve' também gera símbolos
-     `%r' usados para representar parâmetros arbitrários descritos no
-     manual sob `algsys'.  De outra forma, `linsolve' resolve um
-     menor-determinado sistema de equações com algumas variáveis
-     expressas em termos de outras.
-
-          (%i1) e1: x + z = y$
-          (%i2) e2: 2*a*x - y = 2*a^2$
-          (%i3) e3: y - 2*z = 2$
-          (%i4) linsolve ([e1, e2, e3], [x, y, z]);
-          (%o4)            [x = a + 1, y = 2 a, z = a - 1]
-
-
- -- Variável: linsolvewarn
-     Valor padrão: `true'
-
-     Quando `linsolvewarn' é `true', `linsolve' imprime uma mensagem
-     "Dependent equações eliminated".
-
-
- -- Variável: linsolve_params
-     Valor padrão: `true'
-
-     Quando `linsolve_params' é `true', `linsolve' também gera os
-     símbolos `%r' usados para representar parâmetros arbitrários
-     descritos no manual sob `algsys'.  De outra forma, `linsolve'
-     resolve um menor-determinado sistema de equações com algumas
-     variáveis expressas em termos e outras.
-
-
- -- Variável: multiplicities
-     Valor padrão: `not_set_yet'
-
-     `multiplicities' é escolhida para uma lista de multiplicidades das
-     soluções individuais retornadas por `solve' ou `realroots'.
-
-
- -- Função: nroots (<p>, <low>, <high>)
-     Retorna o número de raízes reais do polinômio real de uma única
-     variável <p> no intervalo semi-aberto `(<low>, <high>]'.  Uma
-     extremidade do intervalo podem ser `minf' ou `inf'.  infinito e
-     mais infinito.
-
-     `nroots' usa o método das sequüências de Sturm.
-
-          (%i1) p: x^10 - 2*x^4 + 1/2$
-          (%i2) nroots (p, -6, 9.1);
-          (%o2)                           4
-
-
- -- Função: nthroot (<p>, <n>)
-     Onde p é um polinômio com coeficientes inteiros e n é um inteiro
-     positivo retorna q, um polinômio sobre os inteiros, tal que q^n=p
-     ou imprime uma mensagem de erro indicando que p não é uma potência
-     n-ésima perfeita.  Essa rotina é mais rápida que `factor' ou mesmo
-     `sqfr'.
-
-
- -- Variável: programmode
-     Valor padrão: `true'
-
-     Quando `programmode' é `true', `solve', `realroots', `allroots', e
-     `linsolve' retornam soluções como elementos em uma lista.  (Exceto
-     quando `backsubst' é escolhido para `false', nesse caso
-     `programmode: false' é assumido.)
-
-     Quando `programmode' é `false', `solve', etc.  cria rótulos de
-     expressões intermediárias `%t1', `t2', etc., e atribui as soluções
-     para eles.
-
-
- -- Variável: realonly
-     Valor padrão: `false'
-
-     Quando `realonly' é `true', `algsys' retorna somente aquelas
-     soluções que estão livres de `%i'.
-
-
- -- Função: realroots (<poly>, <bound>)
-     Acha todas as raízes reais de um polinômio também real de uma
-     única variável poly dentro de uma tolerância de limite que, se
-     menor que 1, faz com que todas as raízes da integral sejam achadas
-     exatamente.  O parâmetro limite pode ser arbitrariamente pequeno
-     com o objetivo de encontrar qualquer precisão desejada.  O
-     primeiro argumento pode também ser uma equação.  `realroots'
-     escolhe `multiplicities', útil em caso de multiplas raízes.
-     `realroots (<p>)' é equivalente a `realroots (<p>, rootsepsilon)'.
-     `rootsepsilon' é um número real usado para estabelecer um
-     intervalo de confidência para as ra@'izes.  Faça `example
-     (realroots)' para um exemplo.
-
-
- -- Função: rhs (<expr>)
-     Retorna o lado direito (isto é, o segundo argumento) da expressão
-     <expr>, quando o operador de <expr> for um dos operadores
-     relacionais `< <= = # equal notequal >= >', um dos operadores de
-     atribuição `:= ::= : ::', ou um operador binário infixo definido
-     pelo usuário, como declarado por meio de `infix'.
-
-     Quando <expr> for um étomo ou seu operadro for alguma coisa que
-     não esses listados acima, `rhs' retorna 0.
-
-     Veja também `lhs'.
-
-     Exemplos:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb), rhs (aa > bb)];
-          (%o4)                   [bb, bb, bb, bb]
-          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)), rhs (notequal (aa, bb))];
-          (%o5)                   [bb, bb, bb, bb]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
-          (%o10)                  [2 x, 3 y, y, y]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) rhs (aa ][ bb);
-          (%o12)                         bb
-
-
- -- Variável de opção: rootsconmode
-     Valor padrão: `true'
-
-     `rootsconmode' governa o comportamento do comando `rootscontract'.
-     Veja `rootscontract' para detalhes.
-
-
- -- Função: rootscontract (<expr>)
-     Converte produtos de raízes em raízes de produtos.  Por exemplo,
-     `rootscontract (sqrt(x)*y^(3/2))' retorna `sqrt(x*y^3)'.
-
-     Quando `radexpand' é `true' e `domain' é `real', `rootscontract'
-     converte `abs' em `sqrt', e.g., `rootscontract (abs(x)*sqrt(y))'
-     retorna `sqrt(x^2*y)'.
-
-     Existe uma opção `rootsconmode' afetando `rootscontract' como
-     segue:
-
-          Problem            Value of        Result of applying
-                            rootsconmode        rootscontract
-
-          x^(1/2)*y^(3/2)      false          (x*y^3)^(1/2)
-          x^(1/2)*y^(1/4)      false          x^(1/2)*y^(1/4)
-          x^(1/2)*y^(1/4)      true           (x*y^(1/2))^(1/2)
-          x^(1/2)*y^(1/3)      true           x^(1/2)*y^(1/3)
-          x^(1/2)*y^(1/4)      all            (x^2*y)^(1/4)
-          x^(1/2)*y^(1/3)      all            (x^3*y^2)^(1/6)
-
-     Quando `rootsconmode' é `false', `rootscontract' contrai somente
-     como relação a expoentes de número racional cujos denominadores
-     são os mesmos.  A chave para os exemplos `rootsconmode: true' é
-     simplesmente que 2 divides 4 mas não divide 3.  `rootsconmode:
-     all' envolve pegar o menor multiplo comum dos denominadores dos
-     expoentes.
-
-     `rootscontract' usa `ratsimp' em uma maneira similar a
-     `logcontract'.
-
-     Exemplos:
-
-          (%i1) rootsconmode: false$
-          (%i2) rootscontract (x^(1/2)*y^(3/2));
-                                             3
-          (%o2)                      sqrt(x y )
-          (%i3) rootscontract (x^(1/2)*y^(1/4));
-                                             1/4
-          (%o3)                     sqrt(x) y
-          (%i4) rootsconmode: true$
-          (%i5) rootscontract (x^(1/2)*y^(1/4));
-          (%o5)                    sqrt(x sqrt(y))
-          (%i6) rootscontract (x^(1/2)*y^(1/3));
-                                             1/3
-          (%o6)                     sqrt(x) y
-          (%i7) rootsconmode: all$
-          (%i8) rootscontract (x^(1/2)*y^(1/4));
-                                        2   1/4
-          (%o8)                       (x  y)
-          (%i9) rootscontract (x^(1/2)*y^(1/3));
-                                       3  2 1/6
-          (%o9)                      (x  y )
-          (%i10) rootsconmode: false$
-          (%i11) rootscontract (sqrt(sqrt(x) + sqrt(1 + x))
-                              *sqrt(sqrt(1 + x) - sqrt(x)));
-          (%o11)                          1
-          (%i12) rootsconmode: true$
-          (%i13) rootscontract (sqrt(5 + sqrt(5)) - 5^(1/4)*sqrt(1 + sqrt(5)));
-          (%o13)                          0
-
-
- -- Variável de opção: rootsepsilon
-     Valor padrão: 1.0e-7
-
-     `rootsepsilon' é a tolerância que estabelece o intervalo de
-     conficência para as raízes achadas pela função `realroots'.
-
-
- -- Função: solve (<expr>, <x>)
- -- Função: solve (<expr>)
- -- Função: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     Resolve a equação algébrica <expr> para a variável <x> e retorna
-     uma lista de equações solução em <x>.  Se <expr> não é uma
-     equação, a equação `<expr> = 0' é assumida em seu lugar.  <x> pode
-     ser uma função (e.g. `f(x)'), ou outra expressão não atômica
-     exceto uma adição ou um produto.  <x> pode ser omitido se <expr>
-     contém somente uma variável.  <expr> pode ser uma expressão
-     racional, e pode conter funções trigonométricas, exponenciais, etc.
-
-     O seguinte método é usado:
-
-     Tome <E> sendo a expressão e <X> sendo a variável.  Se <E> é
-     linear em <X> então isso é trivialmente resolvido para <X>.  De
-     outra forma se <E> é da forma `A*X^N + B' então o resultado é
-     `(-B/A)^1/N)' vezes as `N''ésimas raízes da unidade.
-
-     Se <E> não é linear em <X> então o máximo divisor comum (mdc) dos
-     expoentes de <X> em <E> (digamos <N>) é dividido dentro dos
-     expoentes e a multiplicidade das raízes é multiplicada por <N>.
-     Então `solve' é chamada novamente sobre o resultado.  Se <E> for
-     dada em fatores então `solve' é chamada sobre cada um dos fatores.
-     Finalmente `solve' usará as fórmulas quadráticas, cúbicas, ou
-     quárticas onde necessário.
-
-     No caso onde <E> for um polinômio em alguma função de variável a
-     ser resolvida, digamos `F(X)', então isso é primeiro resolvida
-     para `F(X)' (chama o resultado <C>), então a equação `F(X)=C' pode
-     ser resolvida para <X> fornecendo o inverso da função <F> que é
-     conhecida.
-
-     `breakup' se `false' fará com que `solve' expresse as soluções de
-     equações cúbicas ou quárticas como expressões simples ao invés de
-     como feito em cima de várias subexpressões comuns que é o padrão.
-
-     `multiplicities' - será escolhido para uma lista de
-     multiplicidades de soluções individuais retornadas por `solve',
-     `realroots', ou `allroots'.  Tente `apropos (solve)' para os
-     comutadores que afetam `solve'.  `describe' pode então ser usada
-     sobre o nome do comutador individual se seu proprósito não é claro.
-
-     `solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])' resolve um
-     sistema de equações polinomiais (lineares ou não-lineares)
-     simultâneas por chamada a `linsolve' ou `algsys' e retorna uma
-     lista de listas solução nas variáveis.  No caso de `linsolve' essa
-     lista conterá uma lista simples de soluções.  Isso pega duas
-     listas como argumentos.  A primeira lista representa as equações a
-     serem resolvidas; a segunda lista é a lista de desconhecidos a ser
-     determinada.  Se o número total de variáveis nas equações é igual
-     ao número de equações, a segunda lista-argumento pode ser omitida.
-     Para sistemas lineares se as dadas equações não são compatíveis,
-     a mensagem `inconsistent' será mostrada (veja o comutador
-     `solve_inconsistent_error' ); se não existe solução única, então
-     `singular' será mostrado.
-
-     Exemplos:
-
-          (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
-
-          SOLVE is using arc-trig functions to get a solution.
-          Some soluções will be lost.
-                                      %pi
-          (%o1)                  [x = ---, f(x) = 1]
-                                       6
-          (%i2) ev (solve (5^f(x) = 125, f(x)), solveradcan);
-                                          log(125)
-          (%o2)                   [f(x) = --------]
-                                           log(5)
-          (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
-                                2    2
-          (%o3)             [4 x  - y  = 12, x y - x = 2]
-          (%i4) solve (%, [x, y]);
-          (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
-
-           - .1331240357358706, y = .0767837852378778
-
-           - 3.608003221870287 %i], [x = - .5202594388652008 %i
-
-           - .1331240357358706, y = 3.608003221870287 %i
-
-           + .0767837852378778], [x = - 1.733751846381093,
-
-          y = - .1535675710019696]]
-          (%i5) solve (1 + a*x + x^3, x);
-                                                 3
-                        sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (%o5) [x = (- ---------- - -) (--------------- - -)
-                            2        2      6 sqrt(3)      2
-
-                  sqrt(3) %i   1
-                 (---------- - -) a
-                      2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                                    3
-           sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (---------- - -) (--------------- - -)
-               2        2      6 sqrt(3)      2
-
-                   sqrt(3) %i   1
-                (- ---------- - -) a
-                       2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                   3
-           sqrt(4 a  + 27)   1 1/3               a
-          (--------------- - -)    - --------------------------]
-              6 sqrt(3)      2                  3
-                                        sqrt(4 a  + 27)   1 1/3
-                                     3 (--------------- - -)
-                                           6 sqrt(3)      2
-          (%i6) solve (x^3 - 1);
-                       sqrt(3) %i - 1        sqrt(3) %i + 1
-          (%o6)   [x = --------------, x = - --------------, x = 1]
-                             2                     2
-          (%i7) solve (x^6 - 1);
-                     sqrt(3) %i + 1      sqrt(3) %i - 1
-          (%o7) [x = --------------, x = --------------, x = - 1,
-                           2                   2
-
-                               sqrt(3) %i + 1        sqrt(3) %i - 1
-                         x = - --------------, x = - --------------, x = 1]
-                                     2                     2
-          (%i8) ev (x^6 - 1, %[1]);
-                                                6
-                                (sqrt(3) %i + 1)
-          (%o8)                 ----------------- - 1
-                                       64
-          (%i9) expand (%);
-          (%o9)                           0
-          (%i10) x^2 - 1;
-                                        2
-          (%o10)                       x  - 1
-          (%i11) solve (%, x);
-          (%o11)                  [x = - 1, x = 1]
-          (%i12) ev (%th(2), %[1]);
-          (%o12)                          0
-
-
- -- Variável de opção: solvedecomposes
-     Valor padrão: `true'
-
-     Quando `solvedecomposes' é `true', `solve' chama `polydecomp' se
-     perguntado para resolver polinômios.
-
-
- -- Variável de opção: solveexplicit
-     Valor padrão: `false'
-
-     Quando `solveexplicit' é `true', inibe `solve' de retornar
-     soluções implícitas, isto é, soluções da forma `F(x) = 0' onde `F'
-     é alguma função.
-
-
- -- Variável de opção: solvefactors
-     Valor padrão: `true'
-
-     Quando `solvefactors' é `false', `solve' não tenta fatorar a
-     expressão.  O `false' escolhido pode ser desejado em alguns casos
-     onde a fatoração não é necessária.
-
-
- -- Variável de opção: solvenullwarn
-     Valor padrão: `true'
-
-     Quando `solvenullwarn' é `true', `solve' imprime uma mensagem de
-     alerta se chamada com ou uma lista equação ou uma variável lista
-     nula.  Por exemplo, `solve ([], [])' imprimirá duas mensagens de
-     alerta e retorna `[]'.
-
-
- -- Variável de opção: solveradcan
-     Valor padrão: `false'
-
-     Quando `solveradcan' é `true', `solve' chama `radcan' que faz
-     `solve' lento mas permitirá certamente que problemas contendo
-     exponeniais e logarítmos sejam resolvidos.
-
-
- -- Variável de opção: solvetrigwarn
-     Valor padrão: `true'
-
-     Quando `solvetrigwarn' é `true', `solve' pode imprimir uma
-     mensagem dizendo que está usando funções trigonométricas inversas
-     para resolver a equação, e desse modo perdendo soluções.
-
-
- -- Variável de opção: solve_inconsistent_error
-     Valor padrão: `true'
-
-     Quando `solve_inconsistent_error' é `true', `solve' e `linsolve'
-     resultam em erro se as equações a serem resolvidas são
-     inconsistentes.
-
-     Se `false', `solve' e `linsolve' retornam uma lista vazia `[]' se
-     as equações forem inconsistentes.
-
-     Exemplo:
-
-          (%i1) solve_inconsistent_error: true$
-          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
-          Inconsistent equações:  (2)
-           -- an error.  Quitting.  To debug this try debugmode(true);
-          (%i3) solve_inconsistent_error: false$
-          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
-          (%o4)                          []
-
-
-
-File: maxima.info,  Node: Equações Diferenciais,  Next: Numérico,  Prev: Equações,  Up: Top
-
-23 Equações Diferenciais
-************************
-
-* Menu:
-
-* Definições para Equações Diferenciais::
-
-
-File: maxima.info,  Node: Definições para Equações Diferenciais,  Prev: Equações Diferenciais,  Up: Equações Diferenciais
-
-23.1 Definições para Equações Diferenciais
-==========================================
-
- -- Função: bc2 (<solução>, <xval1>, <yval1>, <xval2>, <yval2>)
-     Resolve problema do valor limite para equações diferenciais de
-     segunda ordem.  Aqui: <solução> é uma solução geral para a
-     equação, como encontrado por `ode2', <xval1> é uma equação para a
-     variável independente na forma `<x> = <x0>', e <yval1> é uma
-     equação para a variável dependente na forma `<y> = <y0>'.  A
-     <xval2> e a <yval2> são equações para essas variáveis em outro
-     ponto.  Veja `ode2' para exemplo de utilização.
-
-
- -- Função: desolve (<eqn>, <x>)
- -- Função: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     A função `dsolve' resolve sistemas de equações diferenciais
-     ordinárias lineares usando transformada de Laplace.  Aqui as
-     <eqn>'s são equações diferenciais nas variáveis dependentes <x_1>,
-     ..., <x_n>.  A relação funcional deve ser explicitamente indicada
-     em ambas as equações e as variáveis.  Por Exemplo
-
-          'diff(f,x,2)=sin(x)+'diff(g,x);
-          'diff(f,x)+x^2-f=2*'diff(g,x,2);
-
-     não é o formato apropriado.  O caminho correto é:
-
-          'diff(f(x),x,2)=sin(x)+'diff(g(x),x);
-          'diff(f(x),x)+x^2-f=2*'diff(g(x),x,2);
-
-     A chamada é então `desolve([%o3,%o4],[f(x),g(x)]);' .
-
-     Se as condições iniciais em 0 são conhecidas, elas podem ser
-     fornecidas antes chamando `desolve' através de `atvalue'.
-
-          (%i1) 'diff(f(x),x)='diff(g(x),x)+sin(x);
-                           d           d
-          (%o1)            -- (f(x)) = -- (g(x)) + sin(x)
-                           dx          dx
-          (%i2) 'diff(g(x),x,2)='diff(f(x),x)-cos(x);
-                            2
-                           d            d
-          (%o2)            --- (g(x)) = -- (f(x)) - cos(x)
-                             2          dx
-                           dx
-          (%i3) atvalue('diff(g(x),x),x=0,a);
-          (%o3)                           a
-          (%i4) atvalue(f(x),x=0,1);
-          (%o4)                           1
-          (%i5) desolve([%o1,%o2],[f(x),g(x)]);
-                            x
-          (%o5) [f(x) = a %e  - a + 1, g(x) =
-
-                                                          x
-                                             cos(x) + a %e  - a + g(0) - 1]
-          (%i6) [%o1,%o2],%o5,diff;
-                       x       x      x                x
-          (%o6)   [a %e  = a %e , a %e  - cos(x) = a %e  - cos(x)]
-
-     Se `desolve' não pode obter uma solução, retorna `false'.
-
-
- -- Função: ic1 (<solução>, <xval>, <yval>)
-     Resolve o problema do valor inicial para equação diferencial de
-     primeira ordem.  Aqui: <solução> é uma solução geral para a
-     equação, como encontrado por `ode2', <xval> é uma equação para a
-     variável independente na forma `<x> = <x0>', e <yval> é uma
-     equação para a variável dependente na forma `<y> = <y0>'. Veja
-     `ode2' para exemplo de utilização.
-
-
- -- Função: ic2 (<solução>, <xval>, <yval>, <dval>)
-     Resolve o problema do valor inicial para equação diferencial de
-     segunda ordem.  Aqui: <solução> é uma solução geral para a
-     equação, como encontrado por `ode2', <xval> é uma equação para a
-     variável independente na forma `<x> = <x0>', <yval> é uma
-     equação para a variável dependente na forma `<y> = <y0>', e <dval>
-     é uma equação para a derivada da variável dependente com
-     relação à variável independente avaliada no ponto <xval>.  Veja
-     `ode2' para exemplo de utilização.
-
-
- -- Função: ode2 (<eqn>, <dvar>, <ivar>)
-     A função `ode2' resolve equações diferenciais ordinária ou de
-     primeira ou de segunda ordem.  Recebe três argumentos: uma EDO
-     <eqn>, a variável dependente <dvar>, e a variável
-     independente<ivar>.  Quando obtém sucesso, retorna ou uma
-     solução (explícita ou implícita) para a variável dependente.  `%c'
-     é usado para representar a constante no caso de equações de
-     primeira ordem, e `%k1' e `%k2' as constantes para equações de
-     segunda ordem.  Se `ode2' não pode obter a solução por alguma
-     razão, retorna `false', após talvez mostra uma mensagem de erro.
-     O método implementado para equações diferenciais de primeira ordem
-     na seqüência na qual eles são testados são: linear, separável,
-     exato - talvez requerendo um fator de integração, homogêneos,
-     equação de Bernoulli, e um método homogêneo geral.  Para segunda
-     ordem: coeficiente constante, exato, linear homogêneo com
-     coeficientes não-constantes os quais podem ser transformados para
-     coeficientes constates, o Euler ou equação equidimensional, o
-     método de variação de parâmetros, e equações as quais são livres
-     ou da variável independente ou da dependente de modo que elas
-     possam ser reduzidas duas equações lineares de primeria ordem para
-     serem resolvidas seqüêncialmente.  No curso de resolver EDOs,
-     muitas variáveis são escolhidas puramente para propósitos
-     informativos: `método' denota o método de solução usado e.g.
-     `linear', `intfactor' denota qualquer fator de integração usado,
-     `odeindex' denota o índice para o método de Bernoulli ou para o
-     método homogêneo generalizado, e `yp' denota a solução particular
-     para a técnica de variação de parâmetros.
-
-     Com o objetivo de resolver os problemas dos valores iniciais
-     (PVIs) e problemas dos valores limite (PVLs), a rotina `ic1' está
-     disponível para equações de primeira ordem, e `ic2' e `bc2' para
-     segunda ordem PVIs e PVLs, respectively.
-
-     Example:
-
-          (%i1) x^2*'diff(y,x) + 3*y*x = sin(x)/x;
-                                2 dy           sin(x)
-          (%o1)                x  -- + 3 x y = ------
-                                  dx             x
-          (%i2) ode2(%,y,x);
-                                       %c - cos(x)
-          (%o2)                    y = -----------
-                                            3
-                                           x
-          (%i3) ic1(%o2,x=%pi,y=0);
-                                        cos(x) + 1
-          (%o3)                   y = - ----------
-                                             3
-                                            x
-          (%i4) 'diff(y,x,2) + y*'diff(y,x)^3 = 0;
-                                   2
-                                  d y      dy 3
-          (%o4)                   --- + y (--)  = 0
-                                    2      dx
-                                  dx
-          (%i5) ode2(%,y,x);
-                                3
-                               y  + 6 %k1 y
-          (%o5)                ------------ = x + %k2
-                                    6
-          (%i6) ratsimp(ic2(%o5,x=0,y=0,'diff(y,x)=2));
-                                       3
-                                    2 y  - 3 y
-          (%o6)                   - ---------- = x
-                                        6
-          (%i7) bc2(%o5,x=0,y=1,x=1,y=3);
-                                   3
-                                  y  - 10 y       3
-          (%o7)                   --------- = x - -
-                                      6           2
-
-
-
-File: maxima.info,  Node: Numérico,  Next: Estatística,  Prev: Equações Diferenciais,  Up: Top
-
-24 Numérico
-***********
-
-* Menu:
-
-* Introdução a Numérico::
-* Pacotes de Fourier::
-* Definições para Numérico::
-* Definições para Séries de Fourier::
-
-
-File: maxima.info,  Node: Introdução a Numérico,  Next: Pacotes de Fourier,  Prev: Numérico,  Up: Numérico
-
-24.1 Introdução a Numérico
-==========================
-
-
-File: maxima.info,  Node: Pacotes de Fourier,  Next: Definições para Numérico,  Prev: Introdução a Numérico,  Up: Numérico
-
-24.2 Pacotes de Fourier
-=======================
-
-O pacote `fft' compreende funções para computação numérica (não
-simbólica) das transformações rápidas de Fourier.  `load ("fft")' chama
-esse pacote.  Veja `fft'.
-
-   O pacote `fourie' compreende funções para computação simbólica de
-séries de Fourier.  `load ("fourie")' chama esse pacote.  Existem
-funções no pacote `fourie' para calcular coeficientes da integral de
-Fourier e algumas funções para manipulação de expressões.  Veja
-`Definições para Séries'.
-
-
-File: maxima.info,  Node: Definições para Numérico,  Next: Definições para Séries de Fourier,  Prev: Pacotes de Fourier,  Up: Numérico
-
-24.3 Definições para Numérico
-=============================
-
- -- Função: polartorect (<magnitude_array>, <phase_array>)
-     Traduz valores complexos da forma `r %e^(%i t)' para a forma `a +
-     b %i'.  `load ("fft")' chama essa função dentro do Maxima. Veja
-     também `fft'.
-
-     O módulo e a fase, `r' e `t', São tomados de <magnitude_array> e
-     <phase_array>, respectivamente. Os valores originais de arrays de
-     entrada são substituídos pelas partes real e emaginária, `a' e
-     `b', no retorno. As saídas são calculadas como
-
-          a: r cos (t)
-          b: r sin (t)
-
-     Os arrays de entrada devem ter o mesmo tamanho  e ser
-     unidimensionais.  O tamanho do array não deve ser uma potência de
-     2.
-
-     `polartorect' é a função inversa de `recttopolar'.
-
-
- -- Função: recttopolar (<real_array>, <imaginary_array>)
-     Traduz valores complexos da forma `a + b %i' para a forma `r
-     %e^(%i t)'.  `load ("fft")' chama essa função dentro do Maxima.
-     Veja também `fft'.
-
-     As partes real e imaginária, `a' e `b', são tomadas de
-     <real_array> e <imaginary_array>, respectivamente. Os valores
-     originais dos arrays de entrada são substituídos pelo módulo e
-     pelo ângulo, `r' e `t', no retorno. As saídas são calculadas como
-
-          r: sqrt (a^2 + b^2)
-          t: atan2 (b, a)
-
-     O ângulo calculado encontra-se no intervalo de `-%pi' a `%pi'.
-
-     Os arrays de entrada devem ter o mesmo tamanho e ser
-     unidimensionais.  O tamanho do array não deve ser uma potência de
-     2.
-
-     `recttopolar' é a função inversa de `polartorect'.
-
-
- -- Função: ift (<real_array>, <imaginary_array>)
-     Transformação rápida inversa discreta de Fourier . `load ("fft")'
-     chama essa função dentro do Maxima.
-
-     `ift' realiza a transformação rápida complexa de Fourier sobre
-     arrays em ponto flutuante unidimensionais. A transformação inversa
-     é definida como
-
-          x[j]: sum (y[j] exp (+2 %i %pi j k / n), k, 0, n-1)
-
-     Veja `fft' para maiores detalhes.
-
-
- -- Função: fft (<real_array>, <imaginary_array>)
- -- Função: ift (<real_array>, <imaginary_array>)
- -- Função: recttopolar (<real_array>, <imaginary_array>)
- -- Função: polartorect (<magnitude_array>, <phase_array>)
-     Transformação rápidada de Fourier e funções relacionadas. `load
-     ("fft")' chama essas funções dentro do Maxima.
-
-     `fft' e `ift' realiza transformação rápida complexa de Fourier e a
-     transformação inversa, respectivamente, sobre arrays em ponto
-     flutuante unidimensionais. O tamanho de <imaginary_array> deve ser
-     igual ao tamanho de <real_array>.
-
-     `fft' e `ift' operam in-loco. Isto é, sobre o retorno de `fft' ou
-     de `ift', O conteúdo original dos arrays de entrada é substituído
-     pela saída.  A função `fillarray' pode fazer uma cópia de um
-     array, isso pode ser necessário.
-
-     A transformação discreta de Fourier e sua transformação inversa
-     são definidas como segue. Tome `x' sendo os dados originais, com
-
-          x[i]: real_array[i] + %i imaginary_array[i]
-
-     Tome `y' sendo os dados transformados. A transformação normal e
-     sua transformação inversa são
-
-          y[k]: (1/n) sum (x[j] exp (-2 %i %pi j k / n), j, 0, n-1)
-
-          x[j]:       sum (y[j] exp (+2 %i %pi j k / n), k, 0, n-1)
-
-     Arrays adequadas podem ser alocadas pela função `array'. Por
-     exemplo:
-
-          array (my_array, float, n-1)$
-
-     declara um array unidimensional com n elementos, indexado de 0 a
-     n-1 inclusive. O número de elementos n deve ser igual a 2^m para
-     algum m.
-
-     `fft' pode ser aplicada a dados reais (todos os arrays imaginários
-     são iguais a zero) para obter coeficientes seno e cosseno.  Após
-     chamar `fft', os coeficientes seno e cosseno, digamos `a' e `b',
-     podem ser calculados como
-
-          a[0]: real_array[0]
-          b[0]: 0
-
-     e
-
-          a[j]: real_array[j] + real_array[n-j]
-          b[j]: imaginary_array[j] - imaginary_array[n-j]
-
-     para j variando de 1 a n/2-1, e
-
-          a[n/2]: real_array[n/2]
-          b[n/2]: 0
-
-     `recttopolar' traduz valores complexos da forma `a + b %i' para a
-     forma `r %e^(%i t)'. Veja `recttopolar'.
-
-     `polartorect' traduz valores complexos da forma `r %e^(%i t)' para
-     a forma `a + b %i'. Veja `polartorect'.
-
-     `demo ("fft")' exibe uma demonstração do pacote `fft'.
-
-
- -- Variável de opção: fortindent
-     Valor padrão: 0
-
-     `fortindent' controla a margem esquerda de indentação de
-     expressões mostradas pelo comando `fortran'.  0 fornece indentação
-     normal (i.e., 6 espaços), e valores positivos farão com que
-     expressões sejam mostrados mais além para a direita.
-
-
- -- Função: fortran (<expr>)
-     Mostra <expr> como uma declaração Fortran.  A linha de saída é
-     indentada com espaços.  Se a linha for muito longa, `fortran'
-     imprime linhas de continuação.  `fortran' mostra o operador de
-     exponenciação `^' como `**', e mostra um número complexo `a + b
-     %i' na forma `(a,b)'.
-
-     <expr> pode ser uma equação. Nesse caso, `fortran' mostra uma
-     declaração de atribuição, atribuindo o primeiro membro (esquerda)
-     da equação ao segundo membro (direita).  Em particular, se o
-     primeiro membro <expr> é um nome de uma matriz, então `fortran'
-     mostra uma declaração de atribuição para cada elemento da matriz.
-
-     Se <expr> não for alguma coisa reconhecida por `fortran', a
-     expressão é mostrada no formato `grind' sem reclamação.  `fortran'
-     não conhece listas, arrays ou funções.
-
-     `fortindent' controla o margem esquerda das linhas mostradas.  0 é
-     a margem normal (i.e., indentada 6 espaços). Incrementando
-     `fortindent' faz com que expressões sejam mostradas adiante para a
-     direita.
-
-     quando `fortspaces' for `true', `fortran' preenche cada linha
-     mostrada com espaços em branco até completar 80 columas.
-
-     `fortran' avalia seus argumentos; colocando um apóstrofo em um
-     argumento evita avaliação.  `fortran' sempre retorna `done'.
-
-     Exemplos:
-
-          (%i1) expr: (a + b)^12$
-          (%i2) fortran (expr);
-                (b+a)**12
-          (%o2)                         done
-          (%i3) fortran ('x=expr);
-                x = (b+a)**12
-          (%o3)                         done
-          (%i4) fortran ('x=expand (expr));
-                x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
-               1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
-               2   **3+66*a**10*b**2+12*a**11*b+a**12
-          (%o4)                         done
-          (%i5) fortran ('x=7+5*%i);
-                x = (7,5)
-          (%o5)                         done
-          (%i6) fortran ('x=[1,2,3,4]);
-                x = [1,2,3,4]
-          (%o6)                         done
-          (%i7) f(x) := x^2$
-          (%i8) fortran (f);
-                f
-          (%o8)                         done
-
-
- -- Variável de opção: fortspaces
-     Valor padrão: `false'
-
-     Quando `fortspaces' for `true', `fortran' preenche cada linha
-     mostrada com espaços em branco até completar 80 columas.
-
-
- -- Função: horner (<expr>, <x>)
- -- Função: horner (<expr>)
-     Retorna uma representação rearranjada de <expr> como na regra de
-     Horner, usando <x> como variável principal se isso for
-     especificado.  `x' pode ser omitido e nesse caso a variável
-     principal da forma de expressão racional canônica de <expr> é
-     usada.
-
-     `horner' algumas vezes melhora a estabilidade se `expr' for ser
-     numericamente avaliada.  Isso também é útil se Maxima é usado para
-     gerar programas para rodar em Fortran. Veja também `stringout'.
-
-          (%i1) expr: 1e-155*x^2 - 5.5*x + 5.2e155;
-                                     2
-          (%o1)            1.0E-155 x  - 5.5 x + 5.2E+155
-          (%i2) expr2: horner (%, x), keepfloat: true;
-          (%o2)            (1.0E-155 x - 5.5) x + 5.2E+155
-          (%i3) ev (expr, x=1e155);
-          Maxima encountered a Lisp error:
-
-           floating point overflow
-
-          Automatically continuing.
-          To reenable the Lisp debugger set *debugger-hook* to nil.
-          (%i4) ev (expr2, x=1e155);
-          (%o4)                       7.0E+154
-
-
- -- Function: find_root (<f>(<x>), <x>, <a>, <b>)
- -- Function: find_root (<f>, <a>, <b>)
-     Encontra a raíz da função <f> com a variável <x> percorrendo o
-     intervalo `[<a>, <b>]'.  A função deve ter um sinal diferente em
-     cada ponto final.  Se essa condição não for alcançada, a action of
-     the function is governed by `find_root_error'.  If
-     `find_root_error' is `true' then an error occurs, otherwise the
-     value of `find_root_error' is returned (thus for plotting
-     `find_root_error' might be set to 0.0).  De outra forma (dado que
-     Maxima pode avaliar o primeiro argumento no intervalo
-     especificado, e que o intervalo é contínuo) `find_root' é
-     garantido vir para cima com a raíz (ou um deles se existir mais
-     que uma raíz).  A precisão de `find_root' é governada por
-     `intpolabs' e `intpolrel' os quais devem ser números em ponto
-     flutuante não negativos.  `find_root' encerrará quando o primeiro
-     argumento avaliar para alguma coisa menor que ou igual a
-     `intpolabs' ou se sucessivas aproximações da raíz diferirem por
-     não mais que `intpolrel * <um dos aproximandos>'.  O valor padrão
-     de `intpolabs' e `intpolrel' são 0.0 de forma que `find_root' pega
-     como boa uma resposta como for possível com a precisão aritmética
-     simples que tivermos.  O primeiro argumento pode ser uma equação.
-     A ordem dos dois últimos argumentos é irrelevante.  Dessa forma
-
-          find_root (sin(x) = x/2, x, %pi, 0.1);
-
-     é equivalente a
-
-          find_root (sin(x) = x/2, x, 0.1, %pi);
-
-     O método usado é uma busca binária no intervalo especificado pelos
-     últimos dois argumentos.  Quando o resultado da busca for
-     encontrado a função é fechada o suficiente para ser linear, isso
-     inicia usando interpolação linear.
-
-     Examples:
-          (%i1) f(x) := sin(x) - x/2;
-                                                  x
-          (%o1)                  f(x) := sin(x) - -
-                                                  2
-          (%i2) find_root (sin(x) - x/2, x, 0.1, %pi);
-          (%o2)                   1.895494267033981
-          (%i3) find_root (sin(x) = x/2, x, 0.1, %pi);
-          (%o3)                   1.895494267033981
-          (%i4) find_root (f(x), x, 0.1, %pi);
-          (%o4)                   1.895494267033981
-          (%i5) find_root (f, 0.1, %pi);
-          (%o5)                   1.895494267033981
-
-
- -- Variável de opção: find_root_abs
-     Valor padrão: 0.0
-
-     `find_root_abs' é a precisão do comando `find_root'. A precisão é
-     governada por `find_root_abs' e `find_root_rel' que devem ser
-     números não negativos em ponto flutuante.  `find_root' terminará
-     quando o primeiro argumento avaliar para alguma coisa menor que ou
-     igual a `find_root_abs' ou se sucessivos aproximandos para a raíz
-     diferirem por não mais que `find_root_rel * <um dos aproximandos>'.
-     Os valores padrão de `find_root_abs' e `find_root_rel' são 0.0 de
-     forma que `find_root' tome como boa uma resposta que for possível
-     com a precisão aritmética simples que tivermos.
-
-
- -- Variável de opção: find_root_error
-     Valor padrão: `true'
-
-     `find_root_error' governa o comportamento de `find_root'.  Quando
-     `find_root' for chamada, ela determina se a função a ser resolvida
-     satisfaz ou não a condição que os valores da função nos pontos
-     finais do intervalo de interpolação são opostos em sinal.  Se eles
-     forem de sinais opostos, a interpolação prossegue.  Se eles forem
-     de mesmo sinal, e `find_root_error' for `true', então um erro é
-     sinalizado.  Se eles forem de mesmo sinal e `find_root_error' não
-     for `true', o valor de `find_root_error' é retornado.  Dessa forma
-     para montagem de gráfico, `find_root_error' pode ser escolhida
-     para 0.0.
-
-
- -- Variável de opção: find_root_rel
-     Valor padrão: 0.0
-
-     `find_root_rel' é a precisão do comando `find_root' e é governada
-     por `find_root_abs' e `find_root_rel' que devem ser números não
-     negativos em ponto flutuante.  `find_root' terminará quando o
-     primeiro argumento avaliar para alguma coisa menor que ou igual a
-     `find_root_abs' ou se sucessivos aproximandos para a raíz
-     diferirem de não mais que `find_root_rel * <um dos aproximandos>'.
-     Os valores padrão de `find_root_labs' e `find_root_rel' é 0.0 de
-     forma que `find_root' toma como boa uma resposta que for possível
-     com a precisão aritmética simples que tivermos.
-
-
-
-File: maxima.info,  Node: Definições para Séries de Fourier,  Prev: Definições para Numérico,  Up: Numérico
-
-24.4 Definições para Séries de Fourier
-======================================
-
- -- Função: equalp (<x>, <y>)
-     Retorna `true' se `equal (<x>, <y>)' de outra forma `false' (não
-     fornece uma mensagem de erro como `equal (x, y)' poderia fazer
-     nesse caso).
-
-
- -- Função: remfun (<f>, <expr>)
- -- Função: remfun (<f>, <expr>, <x>)
-     `remfun (<f>, <expr>)' substitue todas as ocorrências de `<f>
-     (<arg>)' por <arg> em <expr>.
-
-     `remfun (<f>, <expr>, <x>)' substitue todas as ocorrências de `<f>
-     (<arg>)' por <arg> em <expr> somente se <arg> contiver a variável
-     <x>.
-
-
- -- Função: funp (<f>, <expr>)
- -- Função: funp (<f>, <expr>, <x>)
-     `funp (<f>, <expr>)' retorna `true' se <expr> contém a função <f>.
-
-     `funp (<f>, <expr>, <x>)' retorna `true' se <expr> contém a
-     função <f> e a variável <x> em algum lugar no argumento de uma das
-     instâncias de <f>.
-
-
- -- Função: absint (<f>, <x>, <halfplane>)
- -- Função: absint (<f>, <x>)
- -- Função: absint (<f>, <x>, <a>, <b>)
-     `absint (<f>, <x>, <halfplane>)' retorna a integral indefinida de
-     <f> com relação a <x> no dado semi-plano (`pos', `neg', ou `both').
-     <f> pode conter expressões da forma `abs (x)', `abs (sin (x))',
-     `abs (a) * exp (-abs (b) * abs (x))'.
-
-     `absint (<f>, <x>)' é equivalente a `absint (<f>, <x>, pos)'.
-
-     `absint (<f>, <x>, <a>, <b>)' retorna a integral definida de <f>
-     com relação a <x> de <a> até <b>.  <f> pode incluir valores
-     absolutos.
-
-
- -- Função: fourier (<f>, <x>, <p>)
-     Retorna uma lista de coeficientes de Fourier de `<f>(<x>)'
-     definidos sobre o intervalo `[-%pi, %pi]'.
-
-
- -- Função: foursimp (<l>)
-     Simplifica `sin (n %pi)' para 0 se `sinnpiflag' for `true' e `cos
-     (n %pi)' para `(-1)^n' se `cosnpiflag' for `true'.
-
-
- -- Variável de opção: sinnpiflag
-     Valor padrão: `true'
-
-     Veja `foursimp'.
-
-
- -- Variável de opção: cosnpiflag
-     Valor padrão: `true'
-
-     Veja `foursimp'.
-
-
- -- Função: fourexpand (<l>, <x>, <p>, <limit>)
-     Constrói e retorna a série de Fourier partindo da lista de
-     coeficientes de Fourier <l> até (up through) <limit> termos
-     (<limit> pode ser `inf'). <x> e <p> possuem o mesmo significado
-     que em `fourier'.
-
-
- -- Função: fourcos (<f>, <x>, <p>)
-     Retorna os coeficientes do cosseno de Fourier para `<f>(<x>)'
-     definida sobre `[0, %pi]'.
-
-
- -- Função: foursin (<f>, <x>, <p>)
-     Retorna os coeficientes do seno de Fourier para `<f>(<x>)'
-     definida sobre `[0, %pi]'.
-
-
- -- Função: totalfourier (<f>, <x>, <p>)
-     Retorna `fourexpand (foursimp (fourier (<f>, <x>, <p>)), <x>, <p>,
-     'inf)'.
-
-
- -- Função: fourint (<f>, <x>)
-     Constrói e retorna uma lista de coeficientes de integral de
-     Fourier de `<f>(<x>)' definida sobre `[minf, inf]'.
-
-
- -- Função: fourintcos (<f>, <x>)
-     Retorna os coeficientes da integral do cosseno de Fourier para
-     `<f>(<x>)' on `[0, inf]'.
-
-
- -- Função: fourintsin (<f>, <x>)
-     Retorna os coeficientes da integral do seno de Fourier para
-     `<f>(<x>)' on `[0, inf]'.
-
-
-
-File: maxima.info,  Node: Estatística,  Next: Arrays e Tabelas,  Prev: Numérico,  Up: Top
-
-25 Estatística
-**************
-
-* Menu:
-
-* Definições para Estatística::
-
-
-File: maxima.info,  Node: Definições para Estatística,  Prev: Estatística,  Up: Estatística
-
-25.1 Definições para Estatística
-================================
-
- -- Função: gauss (<mean>, <sd>)
-     Retorna um número em ponto flutuante randômico de uma
-     distribuição normal com usando <mean> e desvio padrão <sd>.
-
-
-
-File: maxima.info,  Node: Arrays e Tabelas,  Next: Matrizes e Álgebra Linear,  Prev: Estatística,  Up: Top
-
-26 Arrays e Tabelas
-*******************
-
-* Menu:
-
-* Definições para Arrays e Tabelas::
-
-
-File: maxima.info,  Node: Definições para Arrays e Tabelas,  Prev: Arrays e Tabelas,  Up: Arrays e Tabelas
-
-26.1 Definições para Arrays e Tabelas
-=====================================
-
- -- Função: array (<name>, <dim_1>, ..., <dim_n>)
- -- Função: array (<name>, <type>, <dim_1>, ..., <dim_n>)
- -- Função: array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)
-     Cria um array n-dimensional.  n pode ser menor ou igual a 5.  Os
-     subscritos para a i'ésima dimensão são inteiros no intervalo de 0
-     a <dim_i>.
-
-     `array (<name>, <dim_1>, ..., <dim_n>)' cria um array genérico.
-
-     `array (<name>, <type>, <dim_1>, ..., <dim_n>)' cria um array, com
-     elementos de um tipo especificado.  <type> pode ser `fixnum' para
-     inteiros de tamanho limitado ou `flonum' para números em ponto
-     flutuante.
-
-     `array ([<name_1>, ..., <name_m>], <dim_1>, ..., <dim_n>)' cria m
-     arrays, todos da mesma dimensão.
-
-     Se o usuário atribui a uma variável subscrita antes de declarar o
-     array correspondente, um array não declarado é criado.  Arrays não
-     declarados, também conhecidos como array desordenado (porque o
-     codigo desordenado termina nos subscritos), são mais gerais que
-     arrays declarados.  O usuário não declara seu tamanho máximo, e
-     ele cresce dinamicamente e desordenadamente à medida que são
-     atribuídos valores a mais elementos.  Os subscritos de um array
-     não declarado não precisam sempre ser números.  Todavia, exceto
-     para um array um tanto quanto esparso, é provavelmente mais
-     eficiente declarar isso quando possível que deixar não declarado.
-     A função `array' pode ser usada para transformar um array não
-     declarado em um array declarado.
-
-
- -- Função: arrayapply (<A>, [<i_1>, ..., <i_n>])
-     Avalia `<A> [<i_1>, ..., <i_n>]', quando <A> for um array e <i_1>,
-     ..., <i_n> são inteiros.
-
-     Ela é remanescente de `apply', exceto o primeiro argumento que é
-     um array ao invés de uma função.
-
-
- -- Função: arrayinfo (<A>)
-     Retorna uma lista de informações sobre o array <A>.  Para arrays
-     desordenados ela retorna uma lista de `hashed', o números de
-     subscritos, e os subscritos de cada elemento que tem um valor.
-     Para arrays declarados ela retorna uma lista de `declared', o
-     número de subscritos, e os limites que foram dados à função
-     `array' quando ela foi chamada sobre <A>.  Fazer
-     `example(arrayinfo);' por exemplo.
-
-
- -- Função: arraymake (<name>, [<i_1>, ..., <i_n>])
-     Retorna a expressão `<name> [<i_1>, ..., <i_n>]'.
-
-     Isso é um código remanescente de `funmake', exceto o valor
-     retornado é um array de referência não avaliado ao invés de uma
-     chamada de função não avaliada.
-
-
- -- Variável de sistema: arrays
-     Valor padrão: `[]'
-
-     `arrays' é uma lista de todas os arrays que foram alocadas, tanto
-     declarados como não declarados.
-
-     Veja também `array', `arrayapply', `arrayinfo', `arraymake',
-     `fillarray', `listarray', and `rearray'.
-
-
- -- Função: bashindices (<expr>)
-     Transforma a expressão <expr> dando a cada somatório e a cada
-     produto um único índice.  Isso dá a `changevar' grande precisão
-     quando se está trabalhando com somatórios e produtos.  A forma do
-     único índice é `j<number>'.  A quantidade <number> é determindad
-     por referência a `gensumnum', que pode ser alterada pelo usuário.
-     Por exemplo, `gensumnum:0$' reseta isso.
-
-
- -- Função: fillarray (<A>, <B>)
-     Preenche o array <A> com <B>, que é uma lista ou um array.
-
-     Se <A> for um array de ponto flutuante (inteiro) então <B> poderá
-     ser ou uma lista de números (inteiros) em ponto flutuante ou outro
-     array em ponto flutuante (inteiro).
-
-     Se as dimensões do array forem diferentes <A> é preenchida na
-     ordem da maior linha.  Se não existem elementos livres em <B> o
-     último elemento é usado para preencher todo o resto de <A>.  Se
-     existirem muitos os restantes serão descartados.
-
-     `fillarray' retorna esse primeiro argumento.
-
-
- -- Função: listarray (<A>)
-     Retorna uma lista dos elementos  de um array declarado ou
-     desordenado <A>.  A ordem é da maior-linha.  Elementos que não
-     estão ainda definidos são representados por `#####'.
-
-
- -- Função: make_array (<type>, <dim_1>, ..., <dim_n>)
-     Cria e retorna um array de Lisp.  <type> pode ser `any', `flonum',
-     `fixnum', `hashed' ou `functional'.  Existem n indices, e o
-     i'enésimo indice está no intervalo de 0 a <dim_i> - 1.
-
-     A vantagem de `make_array' sobre `array' é que o valor de retorno
-     não tem um nome, e uma vez que um ponteiro a ele vai, ele irá
-     também.  Por exemplo, se `y: make_array (...)' então `y' aponta
-     para um objeto que ocupa espaço, mas depois de `y: false', `y' não
-     mais aponta para aquele objeto, então o objeto pode ser descartado.
-
-     `y: make_array ('functional, 'f, 'hashed, 1)' - o segundo
-     argumento para `make_array' nesse caso é a função que chama o
-     cálculo dos elementos do array, e os argumentos restantes são
-     passados recursivamente a `make_array' para gerar a "memoria" para
-     a função array objeto.
-
-
- -- Função: rearray (<A>, <dim_1>, ..., <dim_n>)
-     Altera as dimenções de um array.  O novo array será preenchido com
-     os elementos do antigo em ordem da maior linha.  Se o array antigo
-     era muito pequeno, os elementos restantes serão preenchidos com
-     `false', `0.0' ou `0', dependendo do tipo do array.  O tipo do
-     array não pode ser alterado.
-
-
- -- Função: remarray (<A_1>, ..., <A_n>)
- -- Função: remarray (all)
-     Remove arrays e funções associadas a arrays e libera o espaço
-     ocupado.
-
-     `remarray (all)' remove todos os ítens na lista global `arrays'.
-
-     Isso pode ser necessário para usar essa função se isso é desejado
-     para redefinir os valores em um array desordenado.
-
-     `remarray' retorna a lista dos arrays removidos.
-
-
- -- Função: subvar (<x>, <i>)
-     Avalia a expressão subscrita `<x>[<i>]'.
-
-     `subvar' avalia seus argumentos.
-
-     `arraymake (<x>, [<i>]' constrói a expressão `<x>[<i>]', mas não a
-     avalia.
-
-     Exemplos:
-
-          (%i1) x : foo $
-
-          (%i2) i : 3 $
-
-          (%i3) subvar (x, i);
-          (%o3) foo
-           3
-          (%i4) foo : [aa, bb, cc, dd, ee]$
-
-          (%i5) subvar (x, i);
-          (%o5) +(%i6) arraymake (x, [i]);
-          (%o6) foo
-           3
-          (%i7) ''%;
-          (%o7) +
-
-
- -- Variável de pção: use_fast_arrays
-     - Se `true' somente dois tipos de arrays são reconhecidos.
-
-     1) O array art-q (t no Lisp Comum) que pode ter muitas dimensões
-     indexadas por inteiros, e pode aceitar qualquer objeto do Lisp ou
-     do Maxima como uma entrada.  Para construir assim um array, insira
-     `a:make_array(any,3,4);' então `a' terá como valor, um array com
-     doze posições, e o índice é baseado em zero.
-
-     2) O array Hash_table que é o tipo padrão de array criado se um
-     faz `b[x+1]:y^2' (e `b' não é ainda um array, uma lista, ou uma
-     matriz - se isso ou um desses ocorrer um erro pode ser causado
-     desde `x+1' não poderá ser um subscrito válido para um array
-     art-q, uma lista ou uma matriz).  Esses índices (também conhecidos
-     como chaves) podem ser quaisquer objetos.  Isso somente pega uma
-     chave por vez a cada vez (`b[x+1,u]:y' ignorará o `u').  A
-     referência termina em `b[x+1] ==> y^2'.  Certamente a chave poe
-     ser uma lista , e.g.  `b[[x+1,u]]:y' poderá ser válido.  Isso é
-     incompatível com os arrays antigos do Maxima, mas poupa recursos.
-
-     Uma vantagem de armazenar os arrays como valores de símbolos é que
-     as convenções usuais sobre variáveis locais de uma função
-     aplicam-se a arrays também.  O tipo Hash_table também usa menos
-     recursos e é mais eficiente que o velho tipo hashar do Maxima.
-     Para obter comportamento consistente em códigos traduzidos e
-     compilados posicione `translate_fast_arrays' para ser `true'.
-
-
-
-File: maxima.info,  Node: Matrizes e Álgebra Linear,  Next: Funções Afins,  Prev: Arrays e Tabelas,  Up: Top
-
-27 Matrizes e Álgebra Linear
-****************************
-
-* Menu:
-
-* Introdução a Matrizes e Álgebra Linear::
-* Definições para Matrizes e Álgebra Linear::
-
-
-File: maxima.info,  Node: Introdução a Matrizes e Álgebra Linear,  Next: Definições para Matrizes e Álgebra Linear,  Prev: Matrizes e Álgebra Linear,  Up: Matrizes e Álgebra Linear
-
-27.1 Introdução a Matrizes e Álgebra Linear
-===========================================
-
-* Menu:
-
-* Ponto::
-* Vetores::
-* auto::
-
-
-File: maxima.info,  Node: Ponto,  Next: Vetores,  Prev: Introdução a Matrizes e Álgebra Linear,  Up: Introdução a Matrizes e Álgebra Linear
-
-27.1.1 Ponto
-------------
-
-O operador `.' representa multiplicação não comutativa e produto
-escalar.  Quando os operandos são matrizes 1-coluna ou 1-linha `a' e
-`b', a expresão `a.b' é equivalente a `sum (a[i]*b[i], i, 1,
-length(a))'.  Se `a' e `b' não são complexos, isso é o produto escalar,
-também chamado produto interno ou produto do ponto, de `a' e `b'.  O
-produto escalar é definido como `conjugate(a).b' quando `a' e `b' são
-complexos; `innerproduct' no pacote `eigen' fornece o produto escalar
-complexo.
-
-   Quando os operandos são matrizes mais gerais, o produto é a matriz
-produto `a' e `b'.  O número de linhas de `b' deve ser igual ao número
-de colunas de `a', e o resultado tem número de linhas igual ao número
-de linhas de `a' e número de colunas igual ao número de colunas de `b'.
-
-   Para distingüir `.' como um operador aritmético do ponto decimal em
-um número em ponto flutuante, pode ser necessário deixar espaços em
-cada lado.  Por exemplo, `5.e3' é `5000.0' mas `5 . e3' é `5' vezes
-`e3'.
-
-   Existem muitos sinalizadores que governam a simplificação de
-expresões envolvendo `.', a saber `dot', `dot0nscsimp', `dot0simp',
-`dot1simp', `dotassoc', `dotconstrules', `dotdistrib', `dotexptsimp',
-`dotident', e `dotscrules'.
-
-
-File: maxima.info,  Node: Vetores,  Next: auto,  Prev: Ponto,  Up: Introdução a Matrizes e Álgebra Linear
-
-27.1.2 Vetores
---------------
-
-`vect' é um pacote de funções para análise vetorial.  `load ("vect")'
-chama esse pacote, e `demo ("vect")' permite visualizar uma
-demonstração.
-
-   O pacote de análise vetorial pode combinar e simplificar expresões
-simbólicas incluindo produtos dos pontos e productos dos x, juntamente
-com o gradiente, divergencia, torção, e operadores Laplacianos.  A
-distribuição desses operadores sobre adições ou produtos é governada
-por muitos sinalizadores, como são várias outras expansões, incluindo
-expansão dentro de componentes em qualquer sistema de coordenadas
-ortogonais.  Existem também funções para derivar o escalar ou vetor
-potencial de um campo.
-
-   O pacote `vect' contém essas funções: `vectorsimp', `scalefactors',
-`express', `potential', e `vectorpotential'.
-
-   Atenção: o pacote `vect' declara o operador ponto `.' como sendo um
-operador comutativo.
-
-
-File: maxima.info,  Node: auto,  Prev: Vetores,  Up: Introdução a Matrizes e Álgebra Linear
-
-27.1.3 auto
------------
-
-O pacote `eigen' contém muitas funções devotadas para a computação
-simbólica de autovalores e autovetores.  Maxima chama o pacote
-automaticamente se uma das funções `eigenvalues' ou `eigenvectors' é
-invocada.  O pacote pode ser chamado explicitamente com `load
-("eigen")'.
-
-   `demo ("eigen")' mostra uma demonstração das compatibilidades desse
-pacote.  `batch ("eigen")' executa a mesma demonstração, mas sem
-lembretes de usuário entre sucessivas computações.
-
-   As funções no pacote `eigen' são `innerproduct', `unitvector',
-`columnvector', `gramschmidt', `eigenvalues', `eigenvectors',
-`uniteigenvectors', e `similaritytransform'.
 
 
 

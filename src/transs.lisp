@@ -330,7 +330,12 @@
 	(*print-pprint-dispatch* (copy-pprint-dispatch)))
     #-gcl
     (progn
+      #-(or scl allegro)
       (setf (readtable-case *readtable*) :invert)
+      #+(or scl allegro)
+      (unless #+scl (eq ext:*case-mode* :lower)
+	      #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
+	(setf (readtable-case *readtable*) :invert))
       (set-pprint-dispatch '(cons (member maxima::defmtrfun))
 			   #'pprint-defmtrfun))
     (loop while (and (setq expr (mread in-stream)) (consp expr))
@@ -373,7 +378,7 @@
 ;;       (OPEN-OUT-DSK X))
 
 (defun alter-pathname (pathname &rest options)
-  (apply 'make-pathname :defaults (pathname  pathname)  options))
+  (apply 'make-pathname :defaults (pathname  pathname) options))
 
 (defun delete-with-side-effects-if (test list)
   "Rudimentary DELETE-IF which, however, is guaranteed to call
