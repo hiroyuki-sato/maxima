@@ -111,6 +111,7 @@ LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
 LANG_PT_UTF8_TRUE = @LANG_PT_UTF8_TRUE@
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
@@ -2967,22 +2968,9 @@ uninstall-datafiles:
 
 @ECL_TRUE@ecl:binary-ecl/maxima
 
-# We have to do some gymnastics here because ECL puts the
-# compiled application in the file "maxima", which would
-# overwrite the maxima shell script.
 @ECL_TRUE@binary-ecl/maxima:
-@ECL_TRUE@	test -f maxima && mv maxima maxima-tmp
-@ECL_TRUE@	success=true && \
-@ECL_TRUE@	$(EXECUTEECL) -eval "(require 'asdf)" -eval "(asdf:make-build \"maxima\" :type :program)" -eval "(ext:quit)" && \
-@ECL_TRUE@	mv maxima binary-ecl/maxima || \
-@ECL_TRUE@	success=false; \
-@ECL_TRUE@	test -f maxima-tmp && mv maxima-tmp maxima ; \
-@ECL_TRUE@	test $$success = true
-
-# This uses defsystem to build maxima with ecl.
-#binary-ecl/maxima:
-#	test -d binary-ecl || mkdir binary-ecl
-#	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' -eval '(quit)'
+@ECL_TRUE@	test -d binary-ecl || mkdir binary-ecl
+@ECL_TRUE@	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (build-maxima-lib))' -eval '(ext:quit)'
 
 @ECL_TRUE@install-ecl:
 @ECL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-ecl"
