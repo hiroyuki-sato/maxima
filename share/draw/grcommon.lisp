@@ -137,7 +137,9 @@
       (gethash '$zaxis_type *gr-options*)  0    ; two options: 1 (solid) and 0 (dots)
       (gethash '$zaxis_color *gr-options*) "#000000"
       (gethash '$xlabel *gr-options*) ""
+      (gethash '$xlabel_secondary *gr-options*) ""
       (gethash '$ylabel *gr-options*) ""
+      (gethash '$ylabel_secondary *gr-options*) ""
       (gethash '$zlabel *gr-options*) ""
 
       ; point options
@@ -184,6 +186,7 @@
       (gethash '$xu_grid *gr-options*)        30
       (gethash '$yv_grid *gr-options*)        30
       (gethash '$surface_hide *gr-options*)   nil
+      (gethash '$interpolate_color *gr-options*)   "depthorder"
       (gethash '$enhanced3d *gr-options*)     '$none
       (gethash '$wired_surface *gr-options*)  nil
       (gethash '$contour *gr-options*)        '$none  ; other options are: $base, $surface, $both and $map
@@ -576,6 +579,8 @@
 ;; -------------------
 (defun update-view (val)
   (cond
+    ((eql val '$map)
+      (setf (gethash '$view *gr-options*) val))
     ((and ($listp val)
           (= ($length val) 2))
        (let ((rv ($float (cadr val)))
@@ -590,6 +595,28 @@
                (list rv rh))))
     (t
       (merror "draw: illegal view specification ~M" val)) ))
+
+
+
+;; update option: interpolate_color
+;; --------------------------------
+(defun update-interpolate_color (val)
+  (cond
+    ((null val)
+      (setf (gethash '$interpolate_color *gr-options*) "depthorder"))
+    ((equal val t)
+      (setf (gethash '$interpolate_color *gr-options*) "interpolate 0, 0"))
+    ((and ($listp val)
+          (= ($length val) 2))
+       (let ((x ($float (cadr val)))
+             (y ($float (caddr val))) )
+         (unless
+           (and (numberp x) (numberp y))
+           (merror "draw: interpolate_color parameters must be numbers"))
+         (setf (gethash '$interpolate_color *gr-options*)
+               (format nil "interpolate ~a,~a" x y))))
+    (t
+      (merror "draw: illegal interpolate_color specification ~M" val)) ))
 
 
 
@@ -944,8 +971,8 @@
             (if (member val '($horizontal $vertical))
                 (setf (gethash opt *gr-options*) val)
                 (merror "draw: illegal label orientation: ~M" val)))
-      (($key $file_name $xy_file $title $xlabel $ylabel $zlabel $font
-        $gnuplot_file_name $data_file_name)
+      (($key $file_name $xy_file $title $xlabel $ylabel $zlabel $xlabel_secondary $ylabel_secondary
+        $font $gnuplot_file_name $data_file_name)
             (update-string opt val))
       ($user_preamble ; defined as a string or a Maxima list of strings
             (let ((str ""))
@@ -994,6 +1021,8 @@
         (update-color opt val))
       ($view
         (update-view val))
+      ($interpolate_color
+        (update-interpolate_color val))
 
 
       ; DEPRECATED OPTIONS

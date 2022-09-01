@@ -47,6 +47,9 @@
 (defun open-socket (host port &optional bin)
   "Open a socket connection to `host' at `port'."
   (declare (type (or integer string) host) (fixnum port) (type boolean bin))
+  #+(or gcl ccl)
+  (declare (ignore bin))
+
   (let ((host (etypecase host
                 (string host)
                 (integer (hostent-name (resolve-host-ipaddr host))))))
@@ -104,7 +107,7 @@
 #-(or clisp cmu scl sbcl gcl openmcl lispworks ecl ccl) (getpid-from-environment)
 )
 
-#+(or gcl clisp cmu scl sbcl lispworks ecl)
+#+(or gcl clisp cmu scl sbcl lispworks ecl ccl)
 (defun xchdir (w)
   #+clisp (ext:cd w)
   #+gcl (si::chdir w)
@@ -112,4 +115,5 @@
   #+sbcl (sb-posix:chdir w)
   #+lispworks (hcl:change-directory w)
   #+ecl (si:chdir w)
+  #+ccl (ccl:cwd w)
   )

@@ -5,7 +5,7 @@
 (defparameter *autoconf-prefix* "/usr/local")
 (defparameter *autoconf-exec_prefix* "/usr/local")
 (defparameter *autoconf-package* "maxima")
-(defparameter *autoconf-version* "5.34.1")
+(defparameter *autoconf-version* "5.35.1")
 (defparameter *autoconf-libdir* "/usr/local/lib")
 (defparameter *autoconf-libexecdir* "/usr/local/libexec")
 (defparameter *autoconf-datadir* "/usr/local/share")
@@ -14,5 +14,5 @@
 (defparameter *autoconf-win32* "false")
 (defparameter *autoconf-ld-flags* "")
  
-(defparameter *maxima-source-root* "/home/robert/tmp/maxima-read-only-git/maxima-code")
+(defparameter *maxima-source-root* "/home/robert/maxima/maxima-code")
 (defparameter *maxima-default-layout-autotools* "true")

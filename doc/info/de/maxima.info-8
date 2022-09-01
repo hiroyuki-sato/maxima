@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info/de//include-maxima.de.texi.
+/home/robert/maxima/maxima-code/doc/info/de//include-maxima.de.texi.
 
 Das ist ein Texinfo Maxima Manual
 
@@ -8,88 +8,6 @@ Das ist ein Texinfo Maxima Manual
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
-
-
-File: maxima.info,  Node: Functions and Variables for opsubst,  Prev: opsubst,  Up: opsubst
-
-64.1 Functions and Variables for opsubst
-========================================
-
- -- Function: opsubst (<f>, <g>, <e>)
- -- Function: opsubst (<g> = <f>, <e>)
- -- Function: opsubst ([<g1> = <f1>, <g2> = <f2>, ..., <gn> = <fn>],
-          <e>)
-     The function `opsubst' is similar to the function `subst', except
-     that `opsubst' only makes substitutions for the operators in an
-     expression.  In general, when <f> is an operator in the expression
-     <e>, substitute <g> for <f> in the expression <e>.
-
-     To determine the operator, `opsubst' sets `inflag' to true.  This
-     means `opsubst' substitutes for the internal, not the displayed,
-     operator in the expression.
-
-     To use this function write first `load("opsubst")'.
-
-     Examples:
-
-          (%i1) load("opsubst")$
-
-          (%i2) opsubst(f, g, g(g(x)));
-          (%o2)                     f(f(x))
-          (%i3) opsubst(f, g, g(g));
-          (%o3)                       f(g)
-          (%i4) opsubst(f, g[x], g[x](z));
-          (%o4)                       f(z)
-          (%i5) opsubst(g[x], f, f(z));
-          (%o5)                      g (z)
-                                      x
-          (%i6) opsubst(tan, sin, sin(sin));
-          (%o6)                     tan(sin)
-          (%i7) opsubst([f=g, g=h], f(x));
-          (%o7)                       h(x)
-
-     Internally, Maxima does not use the unary negation, division, or
-     the subtraction operators; thus:
-
-          (%i8) opsubst("+", "-", a-b);
-          (%o8)                     a - b
-          (%i9) opsubst("f", "-", -a);
-          (%o9)                      - a
-          (%i10) opsubst("^^", "/", a/b);
-                                       a
-          (%o10)                       -
-                                       b
-
-     The internal representation of `-a*b' is `*(-1,a,b)'; thus
-
-          (%i11) opsubst("[", "*", -a*b);
-          (%o11)                  [- 1, a, b]
-
-     When either operator isn't a Maxima symbol, generally some other
-     function will signal an error:
-
-          (%i12) opsubst(a+b, f, f(x));
-
-          Improper name or value in functional position:
-          b + a
-           -- an error.  Quitting.  To debug this try debugmode(true);
-
-     However, subscripted operators are allowed:
-
-          (%i13) opsubst(g[5], f, f(x));
-          (%o13)                     g (x)
-                                      5
-
-
-File: maxima.info,  Node: orthopoly,  Next: plotdf,  Prev: opsubst,  Up: Top
-
-65 orthopoly
-************
-
-* Menu:
-
-* Introduction to orthogonal polynomials::
-* Functions and Variables for orthogonal polynomials::
 
 
 File: maxima.info,  Node: Introduction to orthogonal polynomials,  Next: Functions and Variables for orthogonal polynomials,  Prev: orthopoly,  Up: orthopoly
@@ -126,8 +44,8 @@ To find the third-order Legendre polynomial,
      (%o1)      - ---------- + ----------- - 6 (1 - x) + 1
                       2             2
 
-To express this as a sum of powers of <x>, apply `ratsimp'  or `rat'
-to the result.
+To express this as a sum of powers of <x>, apply `ratsimp' or `rat' to
+the result.
 
      (%i2) [ratsimp (%), rat (%)];
                              3           3
@@ -154,7 +72,7 @@ Intervals have the form `interval (<c>, <r>)', where <c> is the center
 and <r> is the radius of the interval.  Since Maxima does not support
 arithmetic on intervals, in some situations, such as graphics, you want
 to suppress the error and output only the center of the interval.  To
-do this, set the option variable `orthopoly_returns_intervals'  to
+do this, set the option variable `orthopoly_returns_intervals' to
 `false'.
 
      (%i1) orthopoly_returns_intervals : false;
@@ -165,7 +83,7 @@ do this, set the option variable `orthopoly_returns_intervals'  to
 Refer to the section *note Floating point Evaluation:: for more
 information.
 
-Most functions in `orthopoly' have a `gradef'  property; thus
+Most functions in `orthopoly' have a `gradef' property; thus
 
      (%i1) diff (hermite (n, x), x);
      (%o1)                     2 n H     (x)
@@ -197,8 +115,8 @@ example
       -- an error.  Quitting.  To debug this try debugmode(true);
 
 Generally, functions in `orthopoly' map over lists and matrices.  For
-the mapping to fully evaluate, the option variables `doallmxops'  and
-`listarith'  must both be `true' (the defaults).  To illustrate the
+the mapping to fully evaluate, the option variables `doallmxops' and
+`listarith' must both be `true' (the defaults).  To illustrate the
 mapping over matrices, consider
 
      (%i1) hermite (2, x);
@@ -295,7 +213,7 @@ By far, the best way to do numerical evaluation is to make one or more
 of the function arguments floating point numbers.  By doing that,
 specialized floating point algorithms are used for evaluation.
 
-Maxima's `float'  function is somewhat indiscriminate; if you apply
+Maxima's `float' function is somewhat indiscriminate; if you apply
 `float' to an expression involving an orthogonal polynomial with a
 symbolic degree or order parameter, these parameters may be converted
 into floats; after that, the expression will not evaluate fully.
@@ -316,8 +234,8 @@ Consider
 
 The expression in (%o3) will not evaluate to a float; `orthopoly'
 doesn't recognize floating point values where it requires an integer.
-Similarly, numerical evaluation of the `pochhammer'  function for
-orders that exceed `pochhammer_max_index'  can be troublesome; consider
+Similarly, numerical evaluation of the `pochhammer' function for orders
+that exceed `pochhammer_max_index' can be troublesome; consider
 
      (%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
      (%o1)                         (1)
@@ -438,7 +356,7 @@ double floats and the final result is a double.
 
 To plot expressions that involve the orthogonal polynomials, you must
 do two things:
-  1. Set the option variable `orthopoly_returns_intervals'  to `false',
+  1. Set the option variable `orthopoly_returns_intervals' to `false',
 
   2. Quote any calls to `orthopoly' functions.
 
@@ -459,7 +377,7 @@ than just quoting the function name using `'legendre_p (5, <x>)'.
 
 The `orthopoly' package defines the Pochhammer symbol and a unit step
 function.  `orthopoly' uses the Kronecker delta function and the unit
-step function in `gradef'  statements.
+step function in `gradef' statements.
 
 To convert Pochhammer symbols into quotients of gamma functions, use
 `makegamma'.
@@ -474,7 +392,6 @@ To convert Pochhammer symbols into quotients of gamma functions, use
                                  sqrt(%pi)
 
 Derivatives of the Pochhammer symbol are given in terms of the `psi'
-
 function.
 
      (%i1) diff (pochhammer (x, n), x);
@@ -515,7 +432,7 @@ The unit step function is left-continuous; thus
      (%o1)                       [0, 0, 1]
 
 If you need a unit step function that is neither left or right
-continuous at zero, define your own using `signum',  for example,
+continuous at zero, define your own using `signum', for example,
 
      (%i1) xunit_step (x) := (1 + signum (x))/2$
 
@@ -524,7 +441,7 @@ continuous at zero, define your own using `signum',  for example,
      (%o2)                       [0, -, 1]
                                      2
 
-Do not redefine `unit_step'  itself; some code in `orthopoly' requires
+Do not redefine `unit_step' itself; some code in `orthopoly' requires
 that the unit step function be left-continuous.
 
 65.1.6 Algorithms
@@ -685,7 +602,7 @@ File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  P
                                 (1 - x) (2 - x) (3 - x)
 
      To convert a Pochhammer symbol into a quotient of gamma functions,
-     (see Abramowitz and Stegun, equation 6.1.22) use `makegamma',  for
+     (see Abramowitz and Stegun, equation 6.1.22) use `makegamma', for
      example
 
           (%i1) makegamma (pochhammer (x, n));
@@ -693,7 +610,7 @@ File: maxima.info,  Node: Functions and Variables for orthogonal polynomials,  P
           (%o1)                     ------------
                                       gamma(x)
 
-     When <n> exceeds `pochhammer_max_index'  or when <n> is symbolic,
+     When <n> exceeds `pochhammer_max_index' or when <n> is symbolic,
      `pochhammer' returns a noun form.
 
           (%i1) pochhammer (x, n);
@@ -1026,20 +943,20 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
      translated or compiled Maxima function.
 
      The accuracy of `romberg' is governed by the global variables
-     `rombergabs'  and `rombergtol'.    `romberg' terminates
-     successfully when the absolute difference between successive
-     approximations is less than `rombergabs', or the relative
-     difference in successive approximations is less than `rombergtol'.
-     Thus when `rombergabs' is `0.0' (the default) only the relative
-     error test has any effect on `romberg'.
+     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
+     when the absolute difference between successive approximations is
+     less than `rombergabs', or the relative difference in successive
+     approximations is less than `rombergtol'.  Thus when `rombergabs'
+     is `0.0' (the default) only the relative error test has any effect
+     on `romberg'.
 
-     `romberg' halves the stepsize at most `rombergit'  times before it
+     `romberg' halves the stepsize at most `rombergit' times before it
      gives up; the maximum number of function evaluations is therefore
      `2^rombergit'.  If the error criterion established by `rombergabs'
      and `rombergtol' is not satisfied, `romberg' prints an error
-     message.  `romberg' always makes at least `rombergmin'
-     iterations; this is a heuristic intended to prevent spurious
-     termination when the integrand is oscillatory.
+     message.  `romberg' always makes at least `rombergmin' iterations;
+     this is a heuristic intended to prevent spurious termination when
+     the integrand is oscillatory.
 
      `romberg' repeatedly evaluates the integrand after binding the
      variable of integration to a specific value (and not before).
@@ -1112,53 +1029,48 @@ File: maxima.info,  Node: Functions and Variables for romberg,  Prev: Top,  Up: 
  -- Option variable: rombergabs
      Default value: `0.0'
 
-     The accuracy of `romberg'  is governed by the global variables
-     `rombergabs' and `rombergtol'.    `romberg' terminates
-     successfully when the absolute difference between successive
-     approximations is less than `rombergabs', or the relative
-     difference in successive approximations is less than `rombergtol'.
-     Thus when `rombergabs' is `0.0' (the default) only the relative
-     error test has any effect on `romberg'.
-
-     See also `rombergit'  and `rombergmin'.
-
-
- -- Option variable: rombergit
-     Default value: `11'
-
-     `romberg'  halves the stepsize at most `rombergit' times before it
-     gives up; the maximum number of function evaluations is therefore
-     `2^rombergit'.  `romberg' always makes at least `rombergmin'
-
-     iterations; this is a heuristic intended to prevent spurious
-     termination when the integrand is oscillatory.
-
-     See also `rombergabs'  and `rombergtol'.
-
-
- -- Option variable: rombergmin
-     Default value: `0'
-
-     `romberg'  always makes at least `rombergmin' iterations; this is a
-     heuristic intended to prevent spurious termination when the
-     integrand is oscillatory.
-
-     See also `rombergit',  `rombergabs',  and `rombergtol'.
-
-
- -- Option variable: rombergtol
-     Default value: `1e-4'
-
-     The accuracy of `romberg'  is governed by the global variables
-     `rombergabs'  and `rombergtol'.  `romberg' terminates successfully
+     The accuracy of `romberg' is governed by the global variables
+     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
      when the absolute difference between successive approximations is
      less than `rombergabs', or the relative difference in successive
      approximations is less than `rombergtol'.  Thus when `rombergabs'
      is `0.0' (the default) only the relative error test has any effect
      on `romberg'.
 
-     See also `rombergit'  and `rombergmin'.
+     See also `rombergit' and `rombergmin'.
 
+ -- Option variable: rombergit
+     Default value: `11'
+
+     `romberg' halves the stepsize at most `rombergit' times before it
+     gives up; the maximum number of function evaluations is therefore
+     `2^rombergit'.  `romberg' always makes at least `rombergmin'
+     iterations; this is a heuristic intended to prevent spurious
+     termination when the integrand is oscillatory.
+
+     See also `rombergabs' and `rombergtol'.
+
+ -- Option variable: rombergmin
+     Default value: `0'
+
+     `romberg' always makes at least `rombergmin' iterations; this is a
+     heuristic intended to prevent spurious termination when the
+     integrand is oscillatory.
+
+     See also `rombergit', `rombergabs', and `rombergtol'.
+
+ -- Option variable: rombergtol
+     Default value: `1e-4'
+
+     The accuracy of `romberg' is governed by the global variables
+     `rombergabs' and `rombergtol'.  `romberg' terminates successfully
+     when the absolute difference between successive approximations is
+     less than `rombergabs', or the relative difference in successive
+     approximations is less than `rombergtol'.  Thus when `rombergabs'
+     is `0.0' (the default) only the relative error test has any effect
+     on `romberg'.
+
+     See also `rombergit' and `rombergmin'.
 
 
 File: maxima.info,  Node: simplex,  Next: simplification,  Prev: romberg,  Up: Top
@@ -1513,14 +1425,14 @@ File: maxima.info,  Node: Package functs,  Next: Package ineq,  Prev: Package fa
      When the option variable `takegcd' is `true' which is the default,
      `gcdivide' divides the polynomials <p> and <q> by their greatest
      common divisor and returns the ratio of the results.  `gcdivde'
-     calls the function `ezgcd'  to divide the polynomials by the
+     calls the function `ezgcd' to divide the polynomials by the
      greatest common divisor.
 
      When `takegcd' is `false', `gcdivide' returns the ratio `<p>/<q>'.
 
      To use this function write first `load(functs)'.
 
-     See also `ezgcd',  `gcd',  `gcdex',  and `poly_gcd'.
+     See also `ezgcd', `gcd', `gcdex', and `poly_gcd'.
 
      Example:
 
@@ -3311,9 +3223,8 @@ tests for strings.
      (%o2)                         true
 
 Characters are represented as strings of length 1.  These are not Lisp
-characters.  Tests can be done with `charp'  (respectively `lcharp'
-
-and conversion from Lisp to Maxima characters with `cunlisp' ).
+characters.  Tests can be done with `charp' (respectively `lcharp' and
+conversion from Lisp to Maxima characters with `cunlisp').
 
      (%i1) c: "e";
      (%o1)                           e
@@ -3327,12 +3238,12 @@ and conversion from Lisp to Maxima characters with `cunlisp' ).
 All functions in `stringproc.lisp' that return characters, return
 Maxima characters.  Due to the fact, that the introduced characters are
 strings of length 1, you can use a lot of string functions also for
-characters.  As seen, `supcase'  is one example.
+characters.  As seen, `supcase' is one example.
 
 It is important to know, that the first character in a Maxima string is
 at position 1.  This is designed due to the fact that the first element
-in a Maxima list is at position 1 too.  See definitions of `charat'  and
-`charlist'  for examples.
+in a Maxima list is at position 1 too.  See definitions of `charat' and
+`charlist' for examples.
 
 In applications string functions are often used when working with files.
 You will find some useful stream and print functions in
@@ -3341,8 +3252,8 @@ introduced functions at work.
 
 Example:
 
-`openw'  returns an output stream to a file, `printf' then allows
-formatted writing to this file.  See `printf'  for details.
+`openw' returns an output stream to a file, `printf' then allows
+formatted writing to this file.  See `printf' for details.
 
      (%i1) s: openw("E:/file.txt");
      (%o1)                    #<output stream E:/file.txt>
@@ -3355,9 +3266,9 @@ formatted writing to this file.  See `printf'  for details.
      (%o4)                                true
 
 After closing the stream you can open it again, this time with input
-direction.  `readline'  returns the entire line as one string.  The
+direction.  `readline' returns the entire line as one string.  The
 `stringproc' package now offers a lot of functions for manipulating
-strings.  Tokenizing can be done by `split'  or `tokens'.
+strings.  Tokenizing can be done by `split' or `tokens'.
 
      (%i5) s: openr("E:/file.txt");
      (%o5)                     #<input stream E:/file.txt>
@@ -3423,7 +3334,6 @@ Example:
      Writes a new line (to <stream>), if the position is not at the
      beginning of a line.  See also `newline'.
 
-
  -- Funktion: get_output_stream_string (<stream>)
      Gibt Buchstaben, aktuell in dem geöffneten Datenstrom <stream>
      enthalten sind, in einer Zeichenkette zurück. Die zurück gegebenen
@@ -3470,7 +3380,7 @@ Example:
 
  -- Function: newline ()
  -- Function: newline (<stream>)
-     Writes a new line (to <stream>).  See `sprint'  for an example of
+     Writes a new line (to <stream>).  See `sprint' for an example of
      using `newline()'.  Note that there are some cases, where
      `newline()' does not work as expected.
 
@@ -3662,14 +3572,14 @@ File: maxima.info,  Node: Functions and Variables for characters,  Next: Functio
      Returns `true' if <char_1> and <char_2> are the same.
 
  -- Function: cequalignore (<char_1>, <char_2>)
-     Like `cequal'  but ignores case.
+     Like `cequal' but ignores case.
 
  -- Function: cgreaterp (<char_1>, <char_2>)
      Returns `true' if the ASCII number of <char_1> is greater than the
      number of <char_2>.
 
  -- Function: cgreaterpignore (<char_1>, <char_2>)
-     Like `cgreaterp'  but ignores case.
+     Like `cgreaterp' but ignores case.
 
  -- Function: charp (<obj>)
      Returns `true' if <obj> is a Maxima character.  See introduction
@@ -3683,7 +3593,7 @@ File: maxima.info,  Node: Functions and Variables for characters,  Next: Functio
      number of <char_2>.
 
  -- Function: clesspignore (<char_1>, <char_2>)
-     Like `clessp'  but ignores case.
+     Like `clessp' but ignores case.
 
  -- Function: constituent (<char>)
      Returns `true' if <char> is a graphic character and not the space
@@ -3829,7 +3739,7 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: sdowncase (<string>)
  -- Function: sdowncase (<string>, <start>)
  -- Function: sdowncase (<string>, <start>, <end>)
-     Like `supcase',  but uppercase characters are converted to
+     Like `supcase', but uppercase characters are converted to
      lowercase.
 
  -- Function: sequal (<string_1>, <string_2>)
@@ -3837,11 +3747,10 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      and contain the same characters.
 
  -- Function: sequalignore (<string_1>, <string_2>)
-     Like `sequal'  but ignores case.
+     Like `sequal' but ignores case.
 
  -- Function: sexplode (<string>)
      `sexplode' is an alias for function `charlist'.
-
 
  -- Funktion: sha1sum (<string>)
      Gibt den SHA1-Fingerprint von <string> als String mit 48
@@ -3914,8 +3823,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: smismatch (<string_1>, <string_2>, <test>)
      Returns the position of the first character of <string_1> at which
      <string_1> and <string_2> differ or `false'.  Default test function
-     for matching is `sequal'.    If `smismatch' should ignore case, use
-     `sequalignore'  as test.
+     for matching is `sequal'.  If `smismatch' should ignore case, use
+     `sequalignore' as test.
 
      Example:
 
@@ -3945,15 +3854,14 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      matches <char>.  The first character in <string> is in position 1.
      For matching characters ignoring case see `ssearch'.
 
-
  -- Function: sremove (<seq>, <string>)
  -- Function: sremove (<seq>, <string>, <test>)
  -- Function: sremove (<seq>, <string>, <test>, <start>)
  -- Function: sremove (<seq>, <string>, <test>, <start>, <end>)
      Returns a string like <string> but without all substrings matching
-     <seq>.  Default test function for matching is `sequal'.    If
+     <seq>.  Default test function for matching is `sequal'.  If
      `sremove' should ignore case while searching for <seq>, use
-     `sequalignore'  as test.  Use <start> and <end> to limit searching.
+     `sequalignore' as test.  Use <start> and <end> to limit searching.
      Note that the first character in <string> is in position 1.
 
      Examples:
@@ -3980,8 +3888,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: ssearch (<seq>, <string>, <test>, <start>, <end>)
      Returns the position of the first substring of <string> that
      matches the string <seq>.  Default test function for matching is
-     `sequal'.    If `ssearch' should ignore case, use `sequalignore'
-     as test.  Use <start> and <end> to limit searching.  Note that the
+     `sequal'.  If `ssearch' should ignore case, use `sequalignore' as
+     test.  Use <start> and <end> to limit searching.  Note that the
      first character in <string> is in position 1.
 
      Example:
@@ -3994,12 +3902,9 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      Returns a string that contains all characters from <string> in an
      order such there are no two successive characters <c> and <d> such
      that `test (<c>, <d>)' is `false' and `test (<d>, <c>)' is `true'.
-     Default test function for sorting is `clessp'.    The set of test
-     functions is `{`clessp',
-
-     `clesspignore',  `cgreaterp',  `cgreaterpignore',
-
-     `cequal',  `cequalignore' }'.
+     Default test function for sorting is `clessp'.  The set of test
+     functions is `{`clessp', `clesspignore', `cgreaterp',
+     `cgreaterpignore', `cequal', `cequalignore'}'.
 
      Example:
 
@@ -4015,8 +3920,8 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
      Returns a string like <string> except that all substrings matching
      <old> are replaced by <new>.  <old> and <new> need not to be of
      the same length.  Default test function for matching is `sequal'.
-      If `ssubst' should ignore case while searching for old, use
-     `sequalignore'  as test.  Use <start> and <end> to limit searching.
+     If `ssubst' should ignore case while searching for old, use
+     `sequalignore' as test.  Use <start> and <end> to limit searching.
      Note that the first character in <string> is in position 1.
 
      Examples:
@@ -4031,7 +3936,7 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>)
  -- Function: ssubstfirst (<new>, <old>, <string>, <test>, <start>,
           <end>)
-     Like `subst'  except that only the first substring that matches
+     Like `subst' except that only the first substring that matches
      <old> is replaced.
 
  -- Function: strim (<seq>,<string>)
@@ -4047,10 +3952,10 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
           (%o3)                           7
 
  -- Function: striml (<seq>, <string>)
-     Like `strim'  except that only the left end of <string> is trimmed.
+     Like `strim' except that only the left end of <string> is trimmed.
 
  -- Function: strimr (<seq>, <string>)
-     Like `strim'  except that only the right end of string is trimmed.
+     Like `strim' except that only the right end of string is trimmed.
 
  -- Function: stringp (<obj>)
      Returns `true' if <obj> is a string.  See introduction for example.
@@ -6864,9 +6769,9 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
      Attempts to compute the indefinite hypergeometric summation of
      F_(n,k).
 
-     `Zeilberger' first invokes `Gosper' , and if that fails to find a
-     solution, then invokes `parGosper'  with order 1, 2, 3, ..., up to
-     `MAX_ORD' .  If Zeilberger finds a solution before reaching
+     `Zeilberger' first invokes `Gosper', and if that fails to find a
+     solution, then invokes `parGosper' with order 1, 2, 3, ..., up to
+     `MAX_ORD'.  If Zeilberger finds a solution before reaching
      `MAX_ORD', it stops and returns the solution.
 
      The algorithms yields a sequence [s_1, s_2, ..., s_m] of solutions.
@@ -6876,7 +6781,7 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
 
      `Zeilberger' returns `[]' if it fails to find a solution.
 
-     `Zeilberger' invokes `Gosper'  only if `Gosper_in_Zeilberger'  is
+     `Zeilberger' invokes `Gosper' only if `Gosper_in_Zeilberger' is
      `true'.
 
 77.3 General global variables
@@ -6909,16 +6814,16 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
  -- Global variable: Gosper_in_Zeilberger
      Default value: `true'
 
-     When `Gosper_in_Zeilberger' is `true', the `Zeilberger'  function
-     calls `Gosper'  before calling `parGosper' .  Otherwise,
+     When `Gosper_in_Zeilberger' is `true', the `Zeilberger' function
+     calls `Gosper' before calling `parGosper'.  Otherwise,
      `Zeilberger' goes immediately to `parGosper'.
 
  -- Global variable: trivial_solutions
      Default value: `true'
 
-     When `trivial_solutions' is `true', `Zeilberger'  returns
-     solutions which have certificate equal to zero, or all
-     coefficients equal to zero.
+     When `trivial_solutions' is `true', `Zeilberger' returns solutions
+     which have certificate equal to zero, or all coefficients equal to
+     zero.
 
 77.4 Variables related to the modular test
 ==========================================
@@ -6926,8 +6831,8 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
  -- Global variable: mod_test
      Default value: `false'
 
-     When `mod_test' is `true', `parGosper'  executes a modular test
-     for discarding systems with no solutions.
+     When `mod_test' is `true', `parGosper' executes a modular test for
+     discarding systems with no solutions.
 
  -- Global variable: modular_linear_solver
      Default value: `linsolve'
@@ -6935,13 +6840,11 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
      `modular_linear_solver' names the linear solver used by the
      modular test in `parGosper'.
 
-
  -- Global variable: ev_point
      Default value: `big_primes[10]'
 
      `ev_point' is the value at which the variable <n> is evaluated
      when executing the modular test in `parGosper'.
-
 
  -- Global variable: mod_big_prime
      Default value: `big_primes[1]'
@@ -6949,12 +6852,11 @@ File: maxima.info,  Node: Functions and Variables for zeilberger,  Prev: Introdu
      `mod_big_prime' is the modulus used by the modular test in
      `parGosper'.
 
-
  -- Global variable: mod_threshold
      Default value: 4
 
      `mod_threshold' is the greatest order for which the modular test in
-     `parGosper'  is attempted.
+     `parGosper' is attempted.
 
 
 File: maxima.info,  Node: Glossar,  Next: Index der Variablen und Funktionen,  Prev: zeilberger,  Up: Top
@@ -7035,8 +6937,8 @@ _Musterargument - pattern argument_
 
 
 _Mustervariable - pattern variable_
-     Mustervariable werden mit der Funktion `matchdeclare'  definiert.
-           Mustervariable werden bei der Definition von Mustern
+     Mustervariable werden mit der Funktion `matchdeclare' definiert.
+          Mustervariable werden bei der Definition von Mustern
      verwendet.  Den        Mustervariablen werden bei Erkennung eines
      Musters die TeilausdrÃ¼cke        zugewiesen, fÃ¼r die eine
      Ãœbereinstimmung vorliegt.  Von den        Mustervariablen sind die

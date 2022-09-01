@@ -1,8 +1,9 @@
-This is maxima.info, produced by makeinfo version 4.13 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.13 from
+/home/robert/maxima/maxima-code/doc/info/es.utf8//include-maxima.texi.
 
-Ver. 5.34 Este es el Manual de Maxima en versión Texinfo
+Este es el Manual de Maxima en versión Texinfo
 
-   Copyright 1994, 2001 William F. Schelter
+Copyright 1994, 2001 William F. Schelter
 
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).  Un sistema de cálculo simbólico
@@ -11,12 +12,12 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introducción a Maxima,  Prev: (dir),  Up: (dir)
 
-Manual de Maxima
-****************
+Manual de Maxima 5.35.0
+***********************
 
-Maxima es un sistema de cálculo simbólico escrito en Lisp.
+_Maxima es un sistema de cálculo simbólico escrito en Lisp._
 
-   Maxima desciende del sistema Macsyma, desarrollado en el MIT
+Maxima desciende del sistema Macsyma, desarrollado en el MIT
 (Massachusetts Institute of Technology) entre los años 1968 y 1982 como
 parte del proyecto MAC. El MIT pasó una copia del código fuente al DOE
 (Department of Energy) en 1982, en una versión conocida como
@@ -29,14 +30,14 @@ Maxima en SourceForge con el fin de mantener y seguir desarrollando
 DOE-Macsyma, ahora con el nombre de Maxima.
 
 
-   Los usuarios de habla hispana disponen de una lista de correos en la
+Los usuarios de habla hispana disponen de una lista de correos en la
 que podrán participar para recabar información, proponer ideas y
 comentar sus experiencias con Maxima:
 
-   `https://lists.sourceforge.net/lists/listinfo/maxima-lang-es'
+`https://lists.sourceforge.net/lists/listinfo/maxima-lang-es'
 
 
-   Nota de la traducción: Este manual es una traducción de la versión
+Nota de la traducción: Este manual es una traducción de la versión
 original en inglés. En la versión 5.25 se han introducido cambios
 sustanciales que afectan, fundamentalmente, a una reordenación de los
 contenidos, a la desaparición de algunas secciones y a la aparición de
@@ -47,7 +48,7 @@ conceptos básicos de Maxima, aunque todavía no forman parte de la
 versión inglesa de referencia.
 
 
-   Mario Rodríguez Riotorto. (`mario ARROBA edu PUNTO xunta PUNTO es')
+Mario Rodríguez Riotorto. (`mario ARROBA edu PUNTO xunta PUNTO es')
 
 * Menu:
 
@@ -112,7 +113,7 @@ Paquetes adicionales
 * distrib::                     Distribuciones de probabilidad.
 * draw::                        Un interfaz Maxima-Gnuplot.
 * drawdf::                      Dibuja campos de direcciones con Gnuplot.
-* dynamics::                    Gráficas de sistemas dinámicos y fractales.
+* dynamics::                    Visualización 3D, animaciones y sistemas dinámicos.
 * ezunits::                     Magnitudes dimensionales.
 * f90::                         Traductor de Maxima fortran.
 * finance::                     Cálculo financiero.
@@ -438,8 +439,9 @@ drawdf
 
 dynamics
 
-* Introducción a dynamics::
-* Funciones y variables para dynamics::
+* El paquete dynamics::
+* Análisis gráfico de sistemas dinámicos discretos::
+* Visualización usando VTK::
 
 ezunits
 
@@ -627,7 +629,7 @@ ejemplo de sesión:
      (%i4) quit();
      [wfs@chromium]$
 
-   Maxima puede hacer consultas en la documentación. La instrucción
+Maxima puede hacer consultas en la documentación. La instrucción
 `describe' mostrará información sobre una función o la lista de todas
 las funciones y variables que contengan el texto pasado a `describe'.
 La interrogación `?' (búsqueda exacta) y la doble interrogación `??'
@@ -692,10 +694,10 @@ La interrogación `?' (búsqueda exacta) y la doble interrogación `??'
 
      (%o1)                                true
 
-   Para usar posteriormente un resultado, se puede asignar dicho
-resultado a una variable o referirse a él por medio de la etiqueta
-asociada (`%i*' o `%o*').  Además, se puede utilizar `%' para referirse
-al último resultado obtenido.
+Para usar posteriormente un resultado, se puede asignar dicho resultado
+a una variable o referirse a él por medio de la etiqueta asociada
+(`%i*' o `%o*').  Además, se puede utilizar `%' para referirse al
+último resultado obtenido.
 
      (%i1) u: expand ((x + y)^6);
             6        5       2  4       3  3       4  2      5      6
@@ -707,7 +709,7 @@ al último resultado obtenido.
                                          5
      (%o3)                      6 (y + x)
 
-   Maxima manipula sin ningún problema números complejos y constantes
+Maxima manipula sin ningún problema números complejos y constantes
 numéricas:
 
      (%i1) cos(%pi);
@@ -715,7 +717,7 @@ numéricas:
      (%i2) exp(%i*%pi);
      (%o2)                          - 1
 
-   Maxima puede hacer derivadas  e integrales:
+Maxima puede hacer derivadas  e integrales:
 
      (%i1) u: expand ((x + y)^6);
             6        5       2  4       3  3       4  2      5      6
@@ -730,7 +732,7 @@ numéricas:
      (%o3)    - --------------- + ------------- + ----------
                        6             sqrt(3)          3
 
-   Maxima puede resolver sistemas de ecuaciones lineales y cúbicas:
+Maxima puede resolver sistemas de ecuaciones lineales y cúbicas:
 
      (%i1) linsolve ([3*x + 4*y = 7, 2*x + a*y = 13], [x, y]);
                              7 a - 52        25
@@ -739,7 +741,7 @@ numéricas:
      (%i2) solve (x^3 - 3*x^2 + 5*x = 15, x);
      (%o2)       [x = - sqrt(5) %i, x = sqrt(5) %i, x = 3]
 
-   Maxima puede resolver sistemas de ecuaciones no lineales. Tenga en
+Maxima puede resolver sistemas de ecuaciones no lineales. Tenga en
 cuenta que si usted no desea que el resultado sea impreso, puede
 finalizar el comando con `$' en vez de `;'.
 
@@ -754,7 +756,7 @@ finalizar el comando con `$' en vez de `;'.
                                [y = -------------, x = - -----------]]
                                           2                   2
 
-   Maxima puede generar gráficos de una o más funciones:
+Maxima puede generar gráficos de una o más funciones:
 
      (%i1) plot2d (sin(x)/x, [x, -20, 20])$
 
@@ -916,12 +918,12 @@ visto como texto plano por medio del comando  `?' (i.e., la función
 hipertexto tipo `info' por medio del programa `info' y como una página
 web a través de cualquier navegador.
 
-   El comando `example' muestra ejemplos para muchas funciones Maxima.
+El comando `example' muestra ejemplos para muchas funciones Maxima.
 Por ejemplo:
 
      (%i1) example (integrate);
 
-   produce:
+produce:
 
      (%i2) test(f):=block([u],u:integrate(f,x),ratsimp(f-diff(u,x)))
      (%o2) test(f) := block([u], u : integrate(f, x),
@@ -934,7 +936,7 @@ Por ejemplo:
      (%i5) test(1/(x^2+1))
      (%o5)                           0
 
-   y salidas adicionales.
+y salidas adicionales.
 
 
 File: maxima.info,  Node: Funciones y variables para la ayuda,  Prev: Documentación,  Up: Ayuda
@@ -1203,11 +1205,11 @@ Consola
 Existen distintos interfaces para Maxima, tales como wxMaxima, Xmaxima,
 Imaxima y la consola o terminal de texto.
 
-   La consola trabaja en modo texto, al tiempo que para introducir
+La consola trabaja en modo texto, al tiempo que para introducir
 instrucciones con ayuda de un menú y obtener resultados en modo gráfico
 es necesario instalar otros interfaces.
 
-   A lo largo de este manual se utilizará la consola, la cual está
+A lo largo de este manual se utilizará la consola, la cual está
 disponible en cualquiera de los sistemas operativos en los que trabaja
 Maxima. El usuario puede introducir todas las funciones de Maxima desde
 la consola; en el modo texto, los resultados se devolverán normalmente
@@ -1240,7 +1242,7 @@ de cuatro fases:
      fase, se prepara el resultado para ser mostrado a través de la
      consola.
 
-   El usuario puede tomar el control en cualquiera de las cuatro fases
+El usuario puede tomar el control en cualquiera de las cuatro fases
 recién descritas. En diferentes capítulos de este manual se detallan
 estas posibilidades, pero en éste se describen aquellas instrucciones
 relacionadas con las fases primera y cuarta, relacionadas con la
@@ -1275,8 +1277,7 @@ y variables opcionales.
    infolists     labels        values
    myoptions     optionset
 
-   Otras listas informativas, que se describirán en otros capítulos,
-son:
+Otras listas informativas, que se describirán en otros capítulos, son:
 
    functions      arrays         macros
    rules          aliases        dependencies
@@ -1308,8 +1309,8 @@ instrucciones:
    playback     prompt     showtime
    quit         to_lisp
 
-   Las funciones `read' und `readonly' imprimen texto en la consola y
-leen la información introducida por el usuario.
+Las funciones `read' und `readonly' imprimen texto en la consola y leen
+la información introducida por el usuario.
 
 Salida por consola
 ------------------
@@ -1319,8 +1320,8 @@ a otra externa. Por ejemplo, la representación interna de `sqrt(x)' es
 `x^(1/2)', y ambos formatos pueden ser devueltos por Maxima en función
 del valor que guarde la variable opcional `sqrtdispflag'.
 
-   Los siguientes símbolos y variables opcionales controlan la salida
-de resultados por consola:
+Los siguientes símbolos y variables opcionales controlan la salida de
+resultados por consola:
 
    %edispflag         absboxchar       display2d
    display_format_internal             exptdispflag
@@ -1329,7 +1330,7 @@ de resultados por consola:
    obase              pfeformat        powerdisp
    sqrtdispflag       stardisp         ttyoff
 
-   Con las siguientes funciones es posible formatear los resultados:
+Con las siguientes funciones es posible formatear los resultados:
 
    disp               display          dispterms
    grind              ldisp            ldisplay
@@ -2676,7 +2677,7 @@ capacidades de memoria del sistema.
      (%o3)                          ---
                                     101
 
-   Funciones disponibles para los números enteros y racionales:
+Funciones disponibles para los números enteros y racionales:
 
    integerp       numberp       nonnegintegerp
    oddp           evenp
@@ -2690,7 +2691,7 @@ doble precisión. Además, Maxima puede hacer cl'culos con números
 decimales grandes en coma flotante (bigfloats, en inglés), que, en
 principio, admiten precisión arbitraria.
 
-   La coma de los números decimales en coma flotante se escribe con un
+La coma de los números decimales en coma flotante se escribe con un
 punto y el exponente se puede indicar con "f", "e" o "d". Por defecto,
 Maxima hace los cálculos en doble precisión y muestra el exponente como
 "e" en el resultado, mientras que representa el exponente con la letra
@@ -2702,17 +2703,17 @@ distingue si la letra del exponente se escribe en minúscula o mayúscula.
      (%i2) [2.0b0,1b10,1b300];
      (%o2)               [2.0b0, 1.0b10, 1.0b300]
 
-   Si en un cálculo aritmético aparece un número decimal en coma
-flotante, se producirá un efecto de contagio que hará que el resultado
-se devuelva también como decimal. Esto también es cierto para el caso
-de decimales grandes de precisión arbitraria.
+Si en un cálculo aritmético aparece un número decimal en coma flotante,
+se producirá un efecto de contagio que hará que el resultado se devuelva
+también como decimal. Esto también es cierto para el caso de decimales
+grandes de precisión arbitraria.
 
      (%i1) 2.0+1/2+3;
      (%o1)                                 5.5
      (%i2) 2.0b0+1/2+3;
      (%o2)                                5.5b0
 
-   Con las funciones `float' y `bfloat' se puede convertir un número en
+Con las funciones `float' y `bfloat' se puede convertir un número en
 decimal de doble precisión, o de precisión arbitraria, respectivamente:
 
      (%i1) float([2,1/2,1/3,2.0b0]);
@@ -2720,7 +2721,7 @@ decimal de doble precisión, o de precisión arbitraria, respectivamente:
      (%i2) bfloat([2,1/2,1/3,2.0b0]);
      (%o2)     [2.0b0, 5.0b-1, 3.333333333333333b-1, 2.0b0]
 
-   Funciones y variables disponibles para números decimales:
+Funciones y variables disponibles para números decimales:
 
    float        floatnump
    bfloat       bfloatp       fpprec
@@ -2738,12 +2739,12 @@ imaginaria multiplicada por el símbolo `%i', que hace las veces de
 unidad imaginaria. Por ejemplo, las raíces de la ecuación `x^2 - 4*x +
 13 = 0' se representan como `2 + 3*%i' y `2 - 3*%i'.
 
-   Maxima no simplifica automáticamente productos, cocientes, raíces y
+Maxima no simplifica automáticamente productos, cocientes, raíces y
 otras expresiones con números complejos.  Por ejemplo, para hacer la
 multiplicación de números complejos se puede utilizar la función
 `expand'.
 
-   Funciones disponibles para los números complejos:
+Funciones disponibles para los números complejos:
 
    realpart     imagpart      rectform     polarform
    cabs         carg          conjugate    csign
@@ -3056,7 +3057,7 @@ Las cadenas de caracteres deben ir acotadas por comillas dobles (`"')
 al ser introducidas en Maxima, siendo luego mostradas con o sin ellas,
 dependiendo del valor de la variable global `stringdisp'.
 
-   Las cadenas pueden contener todo tipo de caracteres, incluyendo
+Las cadenas pueden contener todo tipo de caracteres, incluyendo
 tabulaciones, caracteres de nueva línea y de retorno.  La secuencia
 `\"' se reconoce literalmente como una comilla doble, al tiempo que
 `\\' se interpreta como una barra invertida. Cuando la barra invertida
@@ -3071,13 +3072,13 @@ de representar los caracteres especiales (tabulación, nueva línea o
 retorno) de otra forma que no sea incluyéndolos literalmente en la
 cadena.
 
-   No existe en Maxima el tipo de variable carácter, debiéndose
+No existe en Maxima el tipo de variable carácter, debiéndose
 representar un carácter simple como una cadena de un solo carácter.
 
-   El paquete adicional `stringproc' contiene muchas funciones que
+El paquete adicional `stringproc' contiene muchas funciones que
 permiten trabajar con cadenas.
 
-   Ejemplos:
+Ejemplos:
 
      (%i1) s_1 : "This is a string.";
      (%o1)               This is a string.
@@ -4032,23 +4033,23 @@ un listado de los elementos de un array se utiliza la función
                                        y
      (%o3)                       [99, x ]
 
-   Otro tipo de arrays son los declarados, los cuales admiten hasta
-cinco dimensiones y pueden guardar valores de un tipo concreto, como
-`fixnum' para enteros o `flonum' para reales de coma flotante. Maxima
-distingue dos tipos de arrays declarados; los primeros se pueden
-definir declarando un símbolo como array, haciendo uso de la función
-`array'; los segundos son arrays de Lisp, en los que un símbolo se
-declara como tal con la función `make_array'.
+Otro tipo de arrays son los declarados, los cuales admiten hasta cinco
+dimensiones y pueden guardar valores de un tipo concreto, como `fixnum'
+para enteros o `flonum' para reales de coma flotante. Maxima distingue
+dos tipos de arrays declarados; los primeros se pueden definir
+declarando un símbolo como array, haciendo uso de la función `array';
+los segundos son arrays de Lisp, en los que un símbolo se declara como
+tal con la función `make_array'.
 
-   En el primer ejemplo se declara el símbolo `a' como array, mientras
-que en el segundo se declara `b' como array de Lisp.
+En el primer ejemplo se declara el símbolo `a' como array, mientras que
+en el segundo se declara `b' como array de Lisp.
 
      (%i1) array(a, fixnum, 2, 2);
      (%o1)                           a
      (%i2) b: make_array(fixnum, 2, 2);
      (%o2)              {Array:  #2A((0 0) (0 0))}
 
-   Cuando a la variable opcional `use_fast_arrays' se le asigna el valor
+Cuando a la variable opcional `use_fast_arrays' se le asigna el valor
 `true', la función `array' también generará un array de Lisp.  Tal es
 lo que sucede en el ejemplo siguiente, en el que el símbolo `c' queda
 declarado como array de Lisp. Téngase en cuenta que por este método no
@@ -4066,10 +4067,10 @@ se puede asignar el tipo de array, ya que al introducirle el tipo
      make_array: dimensions must be integers; found [fixnum + 1, 3, 3]
       -- an error. To debug this try: debugmode(true);
 
-   Maxima también dispone de funciones array, que pueden almacenar
-valores de funciones, y de funciones subindicadas.
+Maxima también dispone de funciones array, que pueden almacenar valores
+de funciones, y de funciones subindicadas.
 
-   Se puede encontrar más información en las descripciones de las
+Se puede encontrar más información en las descripciones de las
 funciones. Los siguientes símbolos y funciones de Maxima permiten
 trabajar con arrays:
 
@@ -4585,21 +4586,21 @@ nombre (nombre del campo) y la estructura en su conjunto se define por
 medio de su operador (nombre de la estructura). Los valores dados a los
 campos pueden ser expresiones cualesquiera.
 
-   Una estructura se define con la función `defstruct', guardando la
+Una estructura se define con la función `defstruct', guardando la
 variable `structures' la lista de todas las estructuras definidas por
 el usuario. El operador `@' permite hacer referencias a los campos de
 la estructura. Con `kill(<S>)' se borra la estructura <S> completa y
 `kill(<x>@ <a>)' elimina la asignación actual del campo <a> en la
 estructura <x>.
 
-   En la impresión por consola (con `display2d' igual a `true'), las
+En la impresión por consola (con `display2d' igual a `true'), las
 estructuras se representan con las asignaciones de los campos en forma
 de ecuación, con el nombre del campo a la izquierda y su valor asociado
 a la derecha. En la impresión unidimensional (mediante `grind' o
 dándole a `display2d' el valor `false'), las estructuras se escriben
 sin los nombres de los campos.
 
-   No es posible utilizar el nombre de un campo como nombre de función,
+No es posible utilizar el nombre de un campo como nombre de función,
 pero el valor de un campo sí puede ser una expresión lambda.  Tampoco
 es posible restringir los valores de los campos a tipos de datos
 concretos, siendo el caso que a cada campo se le puede asignar cualquier
@@ -4793,13 +4794,13 @@ Operador  lbp rbp  Tipo     Ejemplo  Formato interno
    :=     180  20  infix    a:=b     ((mdefine) $A $B)
    ::=    180  20  infix    a::=b    ((mdefmacro) $A $B)
 
-   Con los rangos de enlace de los operadores se definen las reglas de
+Con los rangos de enlace de los operadores se definen las reglas de
 prioridad de cálculo de los mismos. Así, por ejemplo, el analizador
 sintáctico interpreta la expresión ` a + b * c ' como ` a + (b * c) ',
 pues el rango de enlace por la izquierda de la multiplicación es mayor
 que rango de enlace por la izquierda de la suma.
 
-   Maxima clasifica los operadores de la siguiente manera:
+Maxima clasifica los operadores de la siguiente manera:
 
 _Prefijo (prefix)_
      Los operadores prefijos son unarios con un único operando que se
@@ -4832,18 +4833,18 @@ _No-fijo (nofix)_
      y utilizar simplemente `quit' en lugar de `quit()', para cerrar
      una sesión de Maxima.
 
-   En la sección dedicada a los operadores definidos por el usuario se
+En la sección dedicada a los operadores definidos por el usuario se
 describe cómo redefinir los operadores internos de Maxima y cómo crear
 otros nuevos.
 
-   El mecanismo para definir un nuevo operador es sencillo.  Tan solo
-es necesario declarar una función como operador; la función operador
-puede estar definida o no.
+El mecanismo para definir un nuevo operador es sencillo.  Tan solo es
+necesario declarar una función como operador; la función operador puede
+estar definida o no.
 
-   Un ejemplo de operador definido por el usuario es el siguiente.
-Nótese que la llamada a función `"dd" (a)' equivale a `dd a', de igual
-manera que  `"<-" (a, b)' también equivale a `a <- b'.  Nótese también
-que las funciones `"dd"' y `"<-"' no están definidas en este ejemplo.
+Un ejemplo de operador definido por el usuario es el siguiente.  Nótese
+que la llamada a función `"dd" (a)' equivale a `dd a', de igual manera
+que  `"<-" (a, b)' también equivale a `a <- b'.  Nótese también que las
+funciones `"dd"' y `"<-"' no están definidas en este ejemplo.
 
      (%i1) prefix ("dd");
      (%o1)                          dd
@@ -4858,16 +4859,15 @@ que las funciones `"dd"' y `"<-"' no están definidas en este ejemplo.
      (%i6) "<-" (a, "dd" (b));
      (%o6)                      a <- dd b
 
-   La tabla anterior no incluye todos los operadores definidos en
-Maxima, ya que también lo son `!' para el factorial, `for', `do' y
-`while' para programar bucles, o `if', `then' y `else' para definir
-condicionales.
+La tabla anterior no incluye todos los operadores definidos en Maxima,
+ya que también lo son `!' para el factorial, `for', `do' y `while' para
+programar bucles, o `if', `then' y `else' para definir condicionales.
 
-   Las funciones `remove' y `kill' eliminan propiedades de operadores
-de un átomo.  La llamada `remove ("<a>", op)' sólo elimina las
-propiedades de operador de <a>.  La llamada `kill ("<a>")' elimina
-todas las propiedades de <a>, incluidas las propiedades de operador.
-Nótese que el nombre del operador debe ir entre comillas.
+Las funciones `remove' y `kill' eliminan propiedades de operadores de
+un átomo.  La llamada `remove ("<a>", op)' sólo elimina las propiedades
+de operador de <a>.  La llamada `kill ("<a>")' elimina todas las
+propiedades de <a>, incluidas las propiedades de operador.  Nótese que
+el nombre del operador debe ir entre comillas.
 
      (%i1) infix ("##");
      (%o1)                          ##
@@ -5921,14 +5921,14 @@ Las fases que se suceden desde que el usuario solicita un cálculo hasta
 que obtiene el resultado son: la propia solicitud del cálculo, la
 evaluación, la simplificación y la respuesta.
 
-   Toda expresión <expr> que se introduzca en Maxima será evaluada, de
+Toda expresión <expr> que se introduzca en Maxima será evaluada, de
 manera que los símbolos que no tengan asociado ningún valor y los
 números evalúan a sí mismos; en cambio, aquellos símbolos que tengan un
 valor asociado serán sustituídos por tales valores.
 
-   Dos ejemplos. En el primero, los símbolos y los números se evalúan a
-sí mismos; en el segundo ejemplo, al asignarle a la variable `a' el
-valor `2', allá donde se escriba `a' será sustituido por dicho valor.
+Dos ejemplos. En el primero, los símbolos y los números se evalúan a sí
+mismos; en el segundo ejemplo, al asignarle a la variable `a' el valor
+`2', allá donde se escriba `a' será sustituido por dicho valor.
 
      (%i1) [a, b, 2, 1/2, 1.0];
                                        1
@@ -5939,7 +5939,7 @@ valor `2', allá donde se escriba `a' será sustituido por dicho valor.
      (%i3) [a, sin(a), a^2];
      (%o3)                    [2, sin(2), 4]
 
-   Maxima distingue entre funciones en forma verbal y funciones en forma
+Maxima distingue entre funciones en forma verbal y funciones en forma
 nominal. Las funciones en forma verbal son evaluadas tomando en cuenta
 los valores dados a sus argumentos; en cambio, las funciones nominales
 no son evaluadas, aunque sus argumentos tengan valores asignados. Las
@@ -5947,8 +5947,8 @@ funciones son susceptibles de ser tratadas de ambos modos; ejemplos
 típicos son la función de diferenciación `diff' y la de integración
 `integrate'.
 
-   En el siguiente ejemplo se le asigna a la variable `a' cierto valor,
-a continuación se invoca la función `diff' en su forma verbal con sus
+En el siguiente ejemplo se le asigna a la variable `a' cierto valor, a
+continuación se invoca la función `diff' en su forma verbal con sus
 argumentos tomando los valores `a*x^2' y `x'.  Seguidamente se invoca a
 la misma función `diff' en su forma nominal, lo cual se consigue
 mediante el operador de comilla simple (`''); en este caso la función
@@ -5968,12 +5968,12 @@ por el valor `1/2'.
      (%o3)                        -- (--)
                                   dx  2
 
-   Sin embargo, no todas las funciones de Maxima sustituyen sus
-argumentos por sus valores. La documentación para cada función
-informará si sus argumentos son evaluados o no.
+Sin embargo, no todas las funciones de Maxima sustituyen sus argumentos
+por sus valores. La documentación para cada función informará si sus
+argumentos son evaluados o no.
 
-   Por ejemplo, la función `properties' no evalúa sus argumentos, lo
-cual resulta práctico para el usuario, ya que en caso contrario debería
+Por ejemplo, la función `properties' no evalúa sus argumentos, lo cual
+resulta práctico para el usuario, ya que en caso contrario debería
 utilizar el operador de comilla simple `'' a fin de poder mostrar las
 propiedades del símbolo `a'. A continuación se muestra como en el
 primer caso se devuelve una lista vacía, ya que no se le ha encontrado
@@ -5989,12 +5989,12 @@ consecuencia, la función `properties' muestra las propiedades de `'a'.
      (%i3) properties(a);
      (%o3)                        [value]
 
-   La evaluación de símbolos, funciones y expresiones se puede
-controlar con los operadores de comilla simple (`'') y de doble comilla
-simple (`'''). La evaluación se suprime con la comilla simple y se
-fuerza con la doble comilla simple (que no comilla doble).
+La evaluación de símbolos, funciones y expresiones se puede controlar
+con los operadores de comilla simple (`'') y de doble comilla simple
+(`'''). La evaluación se suprime con la comilla simple y se fuerza con
+la doble comilla simple (que no comilla doble).
 
-   Con la función `ev' se evalúa una expresión dentro de un contexto
+Con la función `ev' se evalúa una expresión dentro de un contexto
 determinado controlado por el valor de ciertas variables `evflag' y
 funciones de evaluación `evfun'.
 
@@ -6666,8 +6666,8 @@ sintácticos.
      unless               product        while                thru
      step
 
-   La mayoría de los objetos en Maxima son expresiones. Una secuencia
-de expresiones puede constituir una expresión, separándolas por comas y
+La mayoría de los objetos en Maxima son expresiones. Una secuencia de
+expresiones puede constituir una expresión, separándolas por comas y
 colocando paréntesis alrededor de ellas. Esto es similar a las
 expresiones con coma en C.
 
@@ -6679,14 +6679,14 @@ expresiones con coma en C.
      (%i4) (if (x > 17) then x: 2 else y: 4, y+x);
      (%o4)                          20
 
-   Incluso los bucles en Maxima son expresiones, aunque el valor que
+Incluso los bucles en Maxima son expresiones, aunque el valor que
 retornan (`done') no es muy útil.
 
      (%i1) y: (x: 1, for i from 1 thru 10 do (x: x*i))$
      (%i2) y;
      (%o2)                         done
 
-   pero quizás se quiera incluir un tercer término en la expresión con
+pero quizás se quiera incluir un tercer término en la expresión con
 coma para que devuelva el valor de interés.
 
      (%i3) y: (x: 1, for i from 1 thru 10 do (x: x*i), x)$
@@ -6708,8 +6708,8 @@ aplicando la función `nounify'.  Un nombre puede transformarse en verbo
 aplicando la función `verbify'.  La variable `nouns' hace que `ev'
 evalúe los nombres presentes en una expresión.
 
-   La forma verbal se distingue mediante la precedencia del carácter
-dólar `$' al correspondiente símbolo de Lisp.  Por otro lado, la forma
+La forma verbal se distingue mediante la precedencia del carácter dólar
+`$' al correspondiente símbolo de Lisp.  Por otro lado, la forma
 nominal se distingue mediante la precedencia del carácter porcentaje
 `%' al correspondiente símbolo de Lisp.  Algunos nombres gozan de
 propiedades especiales para su representación, como `'integrate' o
@@ -6718,9 +6718,9 @@ las formas nominal y verbal de una función son idénticas cuando se
 muestran en un terminal.  La variable global `noundisp' hace que Maxima
 muestre los nombres precedidos del apóstrofo `''.
 
-   Véanse también `noun', `nouns', `nounify' y `verbify'.
+Véanse también `noun', `nouns', `nounify' y `verbify'.
 
-   Ejemplos:
+Ejemplos:
 
      (%i1) foo (x) := x^2;
                                           2
@@ -6766,27 +6766,27 @@ En Maxima, los identificadores pueden contener caracteres alfabéticos,
 números del 0 al 9 y cualquier otro carácter precedido de la barra
 invertida `\'.
 
-   Un identificador puede comenzar con un carácter numérico si éste va
+Un identificador puede comenzar con un carácter numérico si éste va
 precedido de la barra invertida `\'.  Los caracteres numéricos que
 ocupen la segunda posición o posterior no necesitan ir precedidos de la
 barra invertida.
 
-   Los caracteres pueden declararse como alfabéticos con la función
+Los caracteres pueden declararse como alfabéticos con la función
 `declare'.  Así declarados, no necesitan ir precedidos de la barra
 invertida en un identificador.  En principio, los caracteres
 alfabéticos son las letras de `A' a `Z' y `a' a `z', junto con  `%' y
 `_'.
 
-   Maxima distingue minúsculas y mayúsculas. Los identificadores `foo',
+Maxima distingue minúsculas y mayúsculas. Los identificadores `foo',
 `FOO' y `Foo' son distintos.  Véase *note Lisp y Maxima:: para más
 información.
 
-   Un identificador en Maxima es un símbolo Lisp que comienza con el
+Un identificador en Maxima es un símbolo Lisp que comienza con el
 símbolo dólar `$'.  Cualquier otro símbolo de Lisp va precedido de la
 interrogación `?' cuando aparece en Maxima.  Véase *note Lisp y
 Maxima:: para más información.
 
-   Ejemplos:
+Ejemplos:
 
      (%i1) %an_ordinary_identifier42;
      (%o1)               %an_ordinary_identifier42
