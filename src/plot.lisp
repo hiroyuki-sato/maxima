@@ -249,6 +249,7 @@ sin(y)*(10.0+6*cos(x)),
           ($gnuplot_dumb_term_command :gnuplot_dumb_term_command)
           ($gnuplot_out_file :gnuplot_out_file)
           ($gnuplot_pm3d :gnuplot_pm3d)
+          ($gnuplot_strings :gnuplot_strings)
           ($gnuplot_preamble :gnuplot_preamble)
           ($gnuplot_postamble :gnuplot_postamble)
           ($gnuplot_pdf_term_command :gnuplot_pdf_term_command)
@@ -633,8 +634,7 @@ sin(y)*(10.0+6*cos(x)),
 	   (declare (special errcatch))
 	   ;; Just always try to convert the result to a float,
 	   ;; which handles things like $%pi.  See also BUG
-	   ;; #2880115
-	   ;; https://sourceforge.net/tracker/?func=detail&atid=104933&aid=2880115&group_id=4933
+	   ;; https://sourceforge.net/p/maxima/bugs/1795/
 	   ;;
 	   ;; Should we use HANDLER-CASE like we do above in
 	   ;; %coerce-float-fun?  Seems not necessary for what we want
@@ -1487,6 +1487,9 @@ sin(y)*(10.0+6*cos(x)),
       ($gnuplot_pm3d
        (setf (getf options :gnuplot_pm3d)
              (check-option-boole (cdr opt))))
+      ($gnuplot_strings
+       (setf (getf options :gnuplot_strings)
+             (check-option-boole (cdr opt))))
       ($gnuplot_preamble
        (setf (getf options :gnuplot_preamble)
              (check-option (cdr opt) #'stringp "a string" 1)))
@@ -1746,7 +1749,8 @@ sin(y)*(10.0+6*cos(x)),
             (setq no-range-required nil))) 
       (unless no-range-required
         (setq range (check-range range))
-        (setf (getf options :xlabel) (ensure-string (second range)))
+        (unless (getf options :xlabel)
+          (setf (getf options :xlabel) (ensure-string (second range))))
         (setf (getf options :x) (cddr range)))
       (when no-range-required
         ;; Make the default ranges on X nd Y large so parametric plots
@@ -1913,6 +1917,7 @@ sin(y)*(10.0+6*cos(x)),
           (format st "} "))
         file)
        (cons '(mlist) (cons file output-file)))
+      ;; this section is for plot_format different from xmaxima
       (t
        (with-open-file (st file :direction :output :if-exists :supersede)
          (case (getf options :plot_format)
@@ -1998,27 +2003,30 @@ sin(y)*(10.0+6*cos(x)),
                                                (coerce (mstring v) 'string))))
                                   (cond ((< (length string) 80) string)
                                         (t (format nil "fun~a" i)))))))
-                  (case (getf options :plot_format)
-                    ($gnuplot
-                     (when (> i 1) (format st ","))
-                     (format st " '-'")
-                     (if plot-name
-                         (format st " title ~s" plot-name)
-                         (format st " notitle"))
-                     (format st " ~a"
-                             (gnuplot-curve-style style colors types i)))
-                    ($gnuplot_pipes
-                     (setq *gnuplot-command*
-                           ($sconcat
-                            *gnuplot-command*
-                            (if plot-name 
-                                (format
-                                 nil " title ~s ~a" plot-name 
-                                 (gnuplot-curve-style style colors types i))
-                                (format
-                                 nil " notitle ~a"
-                                 (gnuplot-curve-style style colors types i)
-                                 )))))))))
+                  ;; TO DO: move this section into gnuplot_def.lisp
+                  (let ((gstrings (if (getf options :gnuplot_strings)
+                                     "" "noenhanced")))
+                    (case (getf options :plot_format)
+                      ($gnuplot
+                       (when (> i 1) (format st ","))
+                       (format st " '-'")
+                       (if plot-name
+                           (format st " title ~s ~a" plot-name gstrings)
+                           (format st " notitle"))
+                       (format st " ~a"
+                               (gnuplot-curve-style style colors types i)))
+                      ($gnuplot_pipes
+                       (setq *gnuplot-command*
+                             ($sconcat
+                              *gnuplot-command*
+                              (if plot-name 
+                                  (format
+                                   nil " title ~s ~a ~a" plot-name gstrings
+                                   (gnuplot-curve-style style colors types i))
+                                  (format
+                                   nil " notitle ~a"
+                                   (gnuplot-curve-style style colors types i)
+                                 ))))))))))
          (case (getf options :plot_format)
            ($gnuplot
             (format st "~%"))
@@ -2461,6 +2469,7 @@ Several functions depending on the two variables v1 and v2:
          (cond ($in_netmath *standard-output*)
                (t (open file :direction :output :if-exists :supersede))))
         (palette (getf options :palette))
+        (gstrings (if (getf options :gnuplot_strings) "" "noenhanced"))
         (legend (getf options :legend)) (n (length functions)))
     ;; titles will be a list. The titles given in the legend option
     ;; will have priority over the titles generated by plot3d.
@@ -2481,7 +2490,7 @@ Several functions depending on the two variables v1 and v2:
              (gnuplot-plot3d-command "-" palette
                                      (getf options :gnuplot_curve_styles)
                                      (getf options :color)
-                                     titles n)))
+                                     gstrings titles n)))
            ($gnuplot_pipes
             (when (and (member :gnuplot_pm3d options)
                        (not (getf options :gnuplot_pm3d)))
@@ -2494,7 +2503,7 @@ Several functions depending on the two variables v1 and v2:
              (gnuplot-plot3d-command file palette
                                      (getf options :gnuplot_curve_styles)
                                      (getf options :color)
-                                     titles n)))
+                                     gstrings titles n)))
            ($xmaxima
             (when (getf options :ps_file)
               (setq output-file (list (getf options :ps_file))))

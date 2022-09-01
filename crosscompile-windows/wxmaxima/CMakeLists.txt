@@ -9,13 +9,13 @@
 # If no further patches are needed, you should get a
 # updated setup-file automatically.
 
-set(WXMAXIMAVERSION "19.05.7")
+set(WXMAXIMAVERSION "20.06.6")
 
-set(WXMAXIMA_MD5    "310733d18961453ac4801b6d6ed51c20")
+set(WXMAXIMA_MD5 "488ffee27214784e2b5cbe020148b06e")
 
-set(WXMAXIMA_URL    "https://github.com/wxmaxima-developers/wxmaxima/archive/Version-${WXMAXIMAVERSION}.tar.gz")
+set(WXMAXIMA_URL "https://github.com/wxmaxima-developers/wxmaxima/archive/Version-${WXMAXIMAVERSION}.tar.gz")
 
-set(WXMAXIMA_GIT    "https://github.com/wxmaxima-developers/wxmaxima.git")
+set(WXMAXIMA_GIT "https://github.com/wxmaxima-developers/wxmaxima.git")
 
 if(USE_WXMAXIMA_GIT)
     find_package(Git REQUIRED)
@@ -56,4 +56,18 @@ else()
 endif()
 
 # install wxWidgets locale files
-install(DIRECTORY ${CMAKE_BINARY_DIR}/wxMaxima-translations/wxMaxima DESTINATION . COMPONENT wxMaxima)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/wxMaxima-translations/wxMaxima/locale DESTINATION share/ COMPONENT wxMaxima)
+
+
+# wxMaxima uses OpenMP, include the required mingw libraries.
+execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-file-name=libgomp-1.dll OUTPUT_VARIABLE MINGW_LIBGOMP OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-file-name=libwinpthread-1.dll OUTPUT_VARIABLE MINGW_LIBWINPTHREAD OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+message(STATUS "Found libgomp at ${MINGW_LIBGOMP}")
+
+message(STATUS "Found libwinpthread at ${MINGW_LIBWINPTHREAD}")
+
+# Include DLLs from the current Mingw environment.
+install(FILES "${MINGW_LIBGOMP}" "${MINGW_LIBWINPTHREAD}" DESTINATION bin/ COMPONENT wxMaxima)
+

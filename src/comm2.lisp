@@ -515,7 +515,7 @@
            (and (or (numberp x) (ratnump x))       ; both numbers
                 (or (numberp y) (ratnump y))       ; ... but not bigfloats
                 (or $numer (floatp x) (floatp y))) ; at least one float
-           (atan2 ($float y) ($float x)))
+           (atan ($float y) ($float x)))
           ( ;; bfloat contagion
            (and (mnump x)
                 (mnump y)
@@ -899,6 +899,9 @@
 ;;;; CONCAT
 
 (defmfun $concat (&rest l)
+  "Concatenates its arguments.
+The arguments must evaluate to atoms. The return value is a symbol if
+the first argument is a symbol and a string otherwise."
   (when (null l)
     (merror (intl:gettext "concat: there must be at least one argument.")))
   (let ((result-is-a-string (or (numberp (car l)) (stringp (car l)))))

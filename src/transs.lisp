@@ -25,16 +25,16 @@
 (defvar *translation-msgs-files* nil
   "Where the warning and other comments goes.")
 
-(defmvar transl-file nil "output stream of $compfile and $translate_file")
+(defmvar transl-file nil "output stream of $compfile")
 
-(defmvar $compgrind nil "If `true' lisp output will be pretty-printed.")
+(defmvar $compgrind t "If `true' lisp output will be pretty-printed.")
 
 (defmvar $tr_true_name_of_file_being_translated nil
   "This is set by TRANSLATE_FILE for use by user macros
 	 which want to know the name of the source file.")
 
 (defmvar $tr_state_vars
-    '((mlist) $transcompile $tr_semicompile
+    '((mlist)
       $translate_fast_arrays
       $tr_warn_undeclared
       $tr_warn_meval
@@ -42,19 +42,18 @@
       $tr_warn_mode
       $tr_warn_undefined_variable
       $tr_function_call_default
+      $tr_bound_function_applyp
       $tr_array_as_ref
       $tr_numer
+      $tr_float_can_branch_complex
       $define_variable))
-
-(defvar declares nil)
 
 (defmspec $compfile (forms)
     (setq forms (cdr forms))
     (if (eql 1 (length forms))
       (merror (intl:gettext "compfile: no functions specified; I refuse to create an empty file.")))
     (bind-transl-state
-     (setq $transcompile t
-	   *in-compfile* t)
+     (setq *in-compfile* t)
      (let
        ((out-file-name (namestring (maxima-string (meval (car forms)))))
         (t-error nil)
@@ -67,11 +66,8 @@
 			 (member '$functions forms :test #'eq))
 		     (setq forms (mapcar #'caar (cdr $functions)))))
 	      (do ((l forms (cdr l))
-		   (declares nil nil)
 		   (tr-abort nil nil)
 		   (item)
-		   (lexprs nil nil)
-		   (fexprs nil nil)
 		   (t-item))		;
 		  ((null l))
 		(setq item (car l))
@@ -85,13 +81,13 @@
 			      (when $compgrind
 				(mformat transl-file (intl:gettext "~2%;; Function ~:@M~%") item))
 			      (print* t-item))))))
-          (pathname out-file-name))
+          out-file-name)
 	 ;; unwind-protected
 	 (if transl-file (close transl-file))
 	 (if t-error (delete-file transl-file))))))
 
 (defun compile-function (f)
-  (mformat  *translation-msgs-files* (intl:gettext "~%Translating ~:@M") f)
+  (tr-format (intl:gettext "~%Translating ~:@M") f)
   (let ((fun (tr-mfun f)))
     (cond (tr-abort  nil)
 	  (t fun))))
@@ -117,6 +113,8 @@
       (setq bin-file output-truename)))
   #-(or cmu scl sbcl clisp allegro openmcl lispworks ecl)
   (setq bin-file (compile-file input-file :output-file bin-file))
+  (when bin-file
+    (setq bin-file (namestring bin-file)))
   (append result (list bin-file)))
 
 (defun maxima-string (symb)
@@ -266,31 +264,15 @@ translated."
 		       (mapcar 'pathname (list in-stream out-stream warn-stream)))))))))
 
 (defun print* (p)
-    (sub-print* p))
-
-(defun sub-print* (p &aux (flag nil))
-  (cond ((atom p))
-	(t
-	 (setq flag (and $tr_semicompile
-			 (not (eq (car p) 'eval-when))))
-	 (when flag (princ* #\() (princ* 'progn) (terpri*))
-	 (if $compgrind
-	     (prin1 p)
-	     (prin1 p transl-file))
-	 (when flag (princ* #\)))
-	 (terpri transl-file))))
-
-(defun princ* (form)
-  (princ form transl-file))
-
-(defun terpri* ()
-  (terpri transl-file))
+  (unless (atom p)
+    (let ((*print-pretty* (or $compgrind *print-pretty*)))
+      (prin1 p transl-file))
+    (terpri transl-file)))
 
 (defun print-abort-msg (fun from)
-  (mformat *translation-msgs-files*
-	   (intl:gettext "compfile: failed to translate ~:@M.~
-	    ~A will continue, but file output will be aborted.~%") ;; WTF DOES THIS MEAN ???
-	   fun from))
+  (tr-format (intl:gettext "compfile: failed to translate ~:@M.~%~
+	     ~A will continue, but file output will be aborted.~%") ;; WTF DOES THIS MEAN ???
+	     fun from))
 
 (defmspec $translate (functs)
   (setq functs (cdr functs))

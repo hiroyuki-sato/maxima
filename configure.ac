@@ -8,7 +8,7 @@ dnl Note: during Lisp-based builds (see INSTALL.lisp) the version
 dnl number is read from the following AC_INIT line.  It's sensitive to
 dnl whitespace so when updating the version number only make changes
 dnl within the second pair of square brackets.
-AC_INIT([maxima], [5.43.2])
+AC_INIT([maxima], [5.44.0])
 AC_CONFIG_SRCDIR([src/macsys.lisp])
 AM_INIT_AUTOMAKE([-Wno-portability tar-ustar])
 
@@ -1277,7 +1277,7 @@ doc/info/de.utf8/Makefile doc/info/es/Makefile doc/info/es.utf8/Makefile \
 doc/info/pt/Makefile doc/info/pt.utf8/Makefile \
 doc/info/pt/include-maxima.texi \
 doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile \
-doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1 \
+doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/Makefile doc/man/ru/maxima.1 doc/man/de/Makefile doc/man/de/maxima.1 \
 doc/share/Makefile interfaces/Makefile interfaces/emacs/Makefile \
 interfaces/emacs/emaxima/Makefile interfaces/emacs/imaxima/Makefile \
 interfaces/emacs/misc/Makefile interfaces/xmaxima/Makefile \

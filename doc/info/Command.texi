@@ -358,7 +358,7 @@ The dollar sign @code{$} terminates an input expression,
 and the most recent output @code{%} and an output label, e.g. @code{%o1},
 are assigned the result, but the result is not displayed.
 
-See also @code{;}.
+See also @mrefdot{;}
 
 Example:
 @c ===beg===
@@ -389,7 +389,7 @@ Example:
 The semicolon @code{;} terminates an input expression,
 and the resulting output is displayed.
 
-See also @code{$}.
+See also @mrefdot{$}
 
 Example:
 @c ===beg===
@@ -418,7 +418,7 @@ the prefix, the prefixes @code{inchar}, @mrefcomma{outchar} and
 @mref{linechar} should have a different first char.  Otherwise some commands
 like @code{kill(inlabels)} do not work as expected.
 
-See also @code{labels}.
+See also @mrefdot{labels}
 
 Example:
 
@@ -472,7 +472,7 @@ All user-defined pattern matching and simplification rules, created
 by @mrefcomma{tellsimp} @mrefcomma{tellsimpafter} @mrefcomma{defmatch} or
 @mrefdot{defrule}
 @item aliases
-All atoms which have a user-defined alias, created by the @mrefcomma{alias}@w{}
+All atoms which have an user-defined alias, created by the @mrefcomma{alias}@w{}
 @mrefcomma{ordergreat} @mref{orderless} functions or by declaring the atom as a
 @mref{noun} with @mrefdot{declare}
 @item dependencies
@@ -486,6 +486,10 @@ All functions which have user-defined derivatives, created by the
 All atoms which have any property other than those mentioned above, such as
 properties established by @mref{atvalue} or @mref{matchdeclare}, etc.,
 as well as properties established in the @mref{declare} function.
+@item structures
+@c Is also documented in Structures.texi. But it definitively is an infolist
+@c so it has to be documented here, too.
+All structs defined using @mrefdot{defstruct}
 @item let_rule_packages
 All user-defined @mref{let} rule packages
 plus the special package @mrefdot{default_let_rule_package}
@@ -1125,6 +1129,383 @@ Example:
 @c @end defvar
 
 @c -----------------------------------------------------------------------------
+@anchor{declare_index_properties}
+@deffn {Function} declare_index_properties (@var{a}, [@var{p_1}, @var{p_2}, @var{p_3}, ...])
+@deffnx {Function} declare_index_properties ([@var{a}, @var{b}, @var{c}, ...], [@var{p_1}, @var{p_2}, @var{p_3}, ...])
+@deffnx {Symbol} postsubscript
+@deffnx {Symbol} postsuperscript
+@deffnx {Symbol} presuperscript
+@deffnx {Symbol} presubscript
+
+Declares the properties of indices applied to the symbol @var{a}
+or each of the of symbols @var{a}, @var{b}, @var{c}, ....
+If multiple symbols are given,
+the whole list of properties applies to each symbol.
+
+Given a symbol with indices, @code{@var{a}[@var{i_1}, @var{i_2}, @var{i_3}, ...]},
+the @code{k}-th property @var{p_k} applies to the @code{k}-th index @var{i_k}.
+There may be any number of index properties, in any order. 
+
+Each property @var{p_k} must one of these four recognized properties:
+@code{postsubscript}, @code{postsuperscript}, @code{presuperscript}, or @code{presubscript},
+to denote indices which are displayed, respectively,
+to the right and below, to the right and above, to the left and above, or to the left and below.
+
+Index properties apply only to the 2-dimensional display of indexed variables
+(i.e., when @mref{display2d} is @code{true})
+and TeX output via @code{tex}.
+Otherwise, index properties are ignored.
+Index properties do not change the input of indexed variables,
+do not change the algebraic properties of indexed variables,
+and do not change the 1-dimensional display of indexed variables.
+
+@code{declare_index_properties} quotes (does not evaluate) its arguments.
+
+@code{remove_index_properties} removes index properties.
+@code{kill} also removes index properties (and all other properties).
+
+@code{get_index_properties} retrieves index properties.
+
+Examples:
+
+Given a symbol with indices, @code{@var{a}[@var{i_1}, @var{i_2}, @var{i_3}, ...]},
+the @code{k}-th property @var{p_k} applies to the @code{k}-th index @var{i_k}.
+There may be any number of index properties, in any order. 
+
+@c ===beg===
+@c declare_index_properties (A, [presubscript, postsubscript]);
+@c declare_index_properties (B, [postsuperscript, postsuperscript, presuperscript]);
+@c declare_index_properties (C, [postsuperscript, presubscript, presubscript, presuperscript]);
+@c A[w, x];
+@c B[w, x, y];
+@c C[w, x, y, z];
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [presubscript, postsubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) declare_index_properties (B, [postsuperscript, postsuperscript, presuperscript]);
+(%o2)                         done
+@end group
+@group
+(%i3) declare_index_properties (C, [postsuperscript, presubscript, presubscript, presuperscript]);
+(%o3)                         done
+@end group
+@group
+(%i4) A[w, x];
+(%o4)                           A
+                               w x
+@end group
+@group
+(%i5) B[w, x, y];
+                             y w, x
+(%o5)                         B
+@end group
+@group
+(%i6) C[w, x, y, z];
+                                z w
+(%o6)                            C
+                             x, y
+@end group
+@end example
+
+Index properties apply only to the 2-dimensional display of indexed variables and TeX output.
+Otherwise, index properties are ignored.
+
+@c ===beg===
+@c declare_index_properties (A, [presubscript, postsubscript]);
+@c A[w, x];
+@c tex (A[w, x]);
+@c display2d: false $
+@c A[w, x];
+@c display2d: true $
+@c grind (A[w, x]);
+@c stringdisp: true $
+@c string (A[w, x]);
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [presubscript, postsubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) A[w, x];
+(%o2)                           A
+                               w x
+@end group
+@group
+(%i3) tex (A[w, x]);
+$$@{@}_@{w@}A_@{x@}$$
+(%o3)                         false
+@end group
+(%i4) display2d: false $
+@group
+(%i5) A[w, x];
+(%o5) A[w,x]
+@end group
+(%i6) display2d: true $
+@group
+(%i7) grind (A[w, x]);
+A[w,x]$
+(%o7)                         done
+@end group
+(%i8) stringdisp: true $
+@group
+(%i9) string (A[w, x]);
+(%o9)                       "A[w,x]"
+@end group
+@end example
+
+@opencatbox
+@category{Display flags and variables}
+@closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{get_index_properties}
+@deffn {Function} get_index_properties (@var{a})
+
+Returns the properties for @var{a} established by @code{declare_index_properties}.
+
+See also @mrefdot{remove_index_properties}
+
+@opencatbox
+@category{Display flags and variables}
+@closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{remove_index_properties}
+@deffn {Function} remove_index_properties (@var{a}, @var{b}, @var{c}, ...)
+
+Removes the properties established by @code{declare_index_properties}.
+All index properties are removed from each symbol @var{a}, @var{b}, @var{c}, ....
+
+@code{remove_index_properties} quotes (does not evaluate) its arguments.
+
+@opencatbox
+@category{Display flags and variables}
+@closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{display_index_separator}
+@defvr {Symbol property} display_index_separator
+
+When a symbol @var{A} has index display properties declared via @code{declare_index_properties},
+the value of the property @code{display_index_separator}
+is the string or other expression which is displayed between indices.
+
+The value of @code{display_index_separator}
+is assigned by @code{put(@var{A}, @var{S}, display_index_separator)},
+where @var{S} is a string or other expression.
+The assigned value is retrieved by @code{get(@var{A}, display_index_separator)}.
+
+The display index separator @var{S} can be a string, including an empty string,
+or @code{false}, indicating the default separator, or any expression.
+If not a string and not @code{false}, the property value is coerced to a string via @code{string}.
+
+If no display index separator is assigned, the default separator is used.
+The default separator is a comma.
+There is no way to change the default separator.
+
+Each symbol has its own value of @code{display_index_separator}.
+
+See also @mref{put}, @mref{get}, and @mrefdot{declare_index_properties}
+
+Examples:
+    
+When a symbol @var{A} has index display properties,
+the value of the property @code{display_index_separator}
+is the string or other expression which is displayed between indices.
+The value is assigned by @code{put(@var{A}, @var{S}, display_index_separator)},
+
+@c ===beg===
+@c declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+@c put (A, ";", display_index_separator);
+@c A[w, x, y, z];
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) put (A, ";", display_index_separator);
+(%o2)                           ;
+@end group
+@group
+(%i3) A[w, x, y, z];
+                                 w;x
+(%o3)                           A
+                             y;z
+@end group
+@end example
+
+The assigned value is retrieved by @code{get(@var{A}, display_index_separator)}.
+
+@c ===beg===
+@c declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+@c put (A, ";", display_index_separator);
+@c get (A, display_index_separator);
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) put (A, ";", display_index_separator);
+(%o2)                           ;
+@end group
+@group
+(%i3) get (A, display_index_separator);
+(%o3)                           ;
+@end group
+@end example
+
+The display index separator @var{S} can be a string, including an empty string,
+or @code{false}, indicating the default separator, or any expression.
+
+@c ===beg===
+@c declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+@c A[w, x, y, z];
+@c put (A, "-", display_index_separator);
+@c A[w, x, y, z];
+@c put (A, " ", display_index_separator);
+@c A[w, x, y, z];
+@c put (A, "", display_index_separator);
+@c A[w, x, y, z];
+@c put (A, false, display_index_separator);
+@c A[w, x, y, z];
+@c put (A, 'foo, display_index_separator);
+@c A[w, x, y, z];
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) A[w, x, y, z];
+                                 w, x
+(%o2)                           A
+                            y, z
+@end group
+@group
+(%i3) put (A, "-", display_index_separator);
+(%o3)                           -
+@end group
+@group
+(%i4) A[w, x, y, z];
+                                 w-x
+(%o4)                           A
+                             y-z
+@end group
+@group
+(%i5) put (A, " ", display_index_separator);
+(%o5)                            
+@end group
+@group
+(%i6) A[w, x, y, z];
+                                 w x
+(%o6)                           A
+                             y z
+@end group
+@group
+(%i7) put (A, "", display_index_separator);
+(%o7) 
+@end group
+@group
+(%i8) A[w, x, y, z];
+                                 wx
+(%o8)                           A
+                              yz
+@end group
+@group
+(%i9) put (A, false, display_index_separator);
+(%o9)                         false
+@end group
+@group
+(%i10) A[w, x, y, z];
+                                 w, x
+(%o10)                          A
+                            y, z
+@end group
+@group
+(%i11) put (A, 'foo, display_index_separator);
+(%o11)                         foo
+@end group
+@group
+(%i12) A[w, x, y, z];
+                                 wfoox
+(%o12)                          A
+                           yfooz
+@end group
+@end example
+
+If no display index separator is assigned, the default separator is used.
+The default separator is a comma.
+
+@c ===beg===
+@c declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+@c A[w, x, y, z];
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) A[w, x, y, z];
+                                 w, x
+(%o2)                           A
+                            y, z
+@end group
+@end example
+
+Each symbol has its own value of @code{display_index_separator}.
+
+@c ===beg===
+@c declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+@c put (A, " ", display_index_separator);
+@c declare_index_properties (B, [presuperscript, presuperscript, postsubscript, postsubscript]);
+@c put (B, ";", display_index_separator);
+@c A[w, x, y, z] + B[w, x, y, z];
+@c ===end===
+@example
+@group
+(%i1) declare_index_properties (A, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o1)                         done
+@end group
+@group
+(%i2) put (A, " ", display_index_separator);
+(%o2)                            
+@end group
+@group
+(%i3) declare_index_properties (B, [postsuperscript, postsuperscript, presubscript, presubscript]);
+(%o3)                         done
+@end group
+@group
+(%i4) put (B, ";", display_index_separator);
+(%o4)                           ;
+@end group
+@group
+(%i5) A[w, x, y, z] + B[w, x, y, z];
+                            w;x       w x
+(%o5)                      B    +    A
+                        y;z       y z
+@end group
+@end example
+
+@opencatbox
+@category{Display flags and variables}
+@closecatbox
+@end defvr
+
+@c -----------------------------------------------------------------------------
 @anchor{disp}
 @deffn {Function} disp (@var{expr_1}, @var{expr_2}, @dots{})
 
@@ -1184,6 +1565,7 @@ Example:
 @example
 (%i1) b[1,2]:x-x^2$
 (%i2) x:123$
+@group
 (%i3) display(x, b[1,2], sin(1.0));
                              x = 123
 
@@ -1194,6 +1576,7 @@ Example:
                   sin(1.0) = 0.8414709848078965
 
 (%o3)                         done
+@end group
 @end example
 
 @opencatbox
@@ -1217,7 +1600,7 @@ the console display is a 1-dimensional or linear form
 which is the same as the output produced by @code{grind}.
 
 When @code{display2d} is @code{false},
-the value of @code{stringdisp} is ignored,
+the value of @mref{stringdisp} is ignored,
 and strings are always displayed with quote marks.
 
 See also @mref{leftjust} to switch between a left justified and a centered
@@ -1493,6 +1876,7 @@ bb+aa^10
   for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
 define: warning: redefining the built-in function cholesky
 @end group
+@group
 (%i15) grind (cholesky);
 cholesky(A):=block(
          [n:length(A),L:copymatrix(A),
@@ -1505,6 +1889,7 @@ cholesky(A):=block(
          for i thru n do L[i,i]:1/p[i],
          for i thru n do (for j from i+1 thru n do L[i,j]:0),L)$
 (%o15)                        done
+@end group
 @group
 (%i16) string (fundef (cholesky));
 (%o16) cholesky(A):=block([n:length(A),L:copymatrix(A),p:makelis\

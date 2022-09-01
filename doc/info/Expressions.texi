@@ -304,7 +304,7 @@ etc.  Any even number of arguments may be used.
 @defvr {System variable} aliases
 Default value: @code{[]}
 
-@code{aliases} is the list of atoms which have a user defined alias (set up by
+@code{aliases} is the list of atoms which have an user defined alias (set up by
 the @mrefcomma{alias} @mrefcomma{ordergreat} @mref{orderless} functions or by
 declaring the atom a @mref{noun} with @mrefdot{declare})
 
@@ -470,7 +470,7 @@ unbound).
 
 Returns @var{expr} enclosed in a box.  The return value is an expression with
 @code{box} as the operator and @var{expr} as the argument.  A box is drawn on
-the display when @code{display2d} is @code{true}.
+the display when @mref{display2d} is @code{true}.
 
 @code{box (@var{expr}, @var{a})} encloses @var{expr} in a box labelled by the
 symbol @var{a}.  The label is truncated if it is longer than the width of the
@@ -2132,7 +2132,7 @@ Quotients are replaced by @code{Quotient}.
 @item
 Unary negation is replaced by @code{Negterm}.
 @item
-Lists are replaced by @code{List(@var{n})} where @var{n} ist the number of
+Lists are replaced by @code{List(@var{n})} where @var{n} is the number of
 elements of the list.
 @end itemize
 
@@ -2196,6 +2196,44 @@ Example:
 @category{Expressions}
 @category{Display functions}
 @closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
+@anchor{sqrtdenest}
+@deffn {Function} sqrtdenest (@var{expr})
+Denests @code{sqrt} of simple, numerical, binomial surds, where possible.  E.g.
+
+@c ===beg===
+@c sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
+@c sqrtdenest(%);
+@c ===end===
+@example
+@group
+(%i1) sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
+                             sqrt(3)
+                        sqrt(------- + 1)
+                                2
+(%o1)                 ---------------------
+                      sqrt(11 sqrt(2) - 12)
+@end group
+@group
+(%i2) sqrtdenest(%);
+                           sqrt(3)   1
+                           ------- + -
+                              2      2
+(%o2)                     -------------
+                             1/4    3/4
+                          3 2    - 2
+@end group
+@end example
+
+Sometimes it helps to apply @code{sqrtdenest} more than once, on such as
+@code{(19601-13860 sqrt(2))^(7/4)}.
+
+@opencatbox
+@category{Expressions}
+@closecatbox
+
 @end deffn
 
 @c NEEDS EXPANSION, CLARIFICATION, MORE EXAMPLES

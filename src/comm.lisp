@@ -76,10 +76,10 @@
   "If TRUE allows DIFF(X~Y,T) to work where ~ is defined in
 	  SHARE;VECT where VECT_CROSS is set to TRUE.")
 
-(defmfun $substitute (old new &optional (expr nil three-arg?))
-  (cond (three-arg? (maxima-substitute old new expr))
+(defmfun $substitute (new old &optional (expr nil three-arg?))
+  (cond (three-arg? (maxima-substitute new old expr))
 	(t
-	 (let ((l old) (z new))
+	 (let ((l new) (z old))
 	   (cond ((and ($listp l) ($listp (cadr l)) (null (cddr l)))
 		  ($substitute (cadr l) z))
 		 ((notloreq l) (improper-arg-err l '$substitute))
@@ -136,6 +136,9 @@
                         (setq z (maxima-substitute (cdar l) (caar l) z))))))))))
 
 (defun maxima-substitute (x y z) ; The args to SUBSTITUTE are assumed to be simplified.
+;; Prevent replacing dependent variable with constant in derivative
+(cond ((and (not (atom z)) (eq (caar z) '%derivative) (eq (cadr z) y) (typep x 'number)) z)
+(t
   (let ((in-p t) (substp t))
     (if (and (mnump y) (= (signum1 y) 1))
 	(let ($sqrtdispflag ($pfeformat t)) (setq z (nformat-all z))))
@@ -157,6 +160,7 @@
 	       (timesp (if (eq (caar y) 'mtimes) (setq y (nformat y)))))
 	   (subst2 x y z negxpty timesp)))
      nil)))
+))
 
 ;;Remainder of page is update from F302 --gsb
 
@@ -835,7 +839,7 @@
 (defmfun $operatorp (expr oplist)
   (if ($listp oplist)
       ($member ($op expr) oplist)
-      (equal ($op expr) oplist)))
+      (alike1 ($op expr) oplist)))
 
 (defmfun $part (&rest args)
   #-gcl
@@ -1206,7 +1210,8 @@
 ;; number.  Otherwise, return NIL to indicate that we the computation
 ;; failed.  This is a pretty brute-force approach.
 (defun try-float-computation (thunk)
-  (let ((errcatch (cons bindlist loclist))
+  (let ((errset nil)
+	(errcatch (cons bindlist loclist))
 	(*mdebug* nil))
     (declare (special errcatch))
     (let ((result (errset (funcall thunk))))

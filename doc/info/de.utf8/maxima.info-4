@@ -1,12 +1,4 @@
-This is maxima.info, produced by makeinfo version 6.6 from maxima.texi.
-
-Das ist ein Texinfo Maxima Manual
-
-   Copyright 1994,2001 William F. Schelter
-
-START-INFO-DIR-ENTRY
-* Maxima: (maxima).     Ein Computer Algebra System.
-END-INFO-DIR-ENTRY
+This is maxima.info, produced by makeinfo version 5.1 from maxima.texi.
 
 
 File: maxima.info,  Node: Gleichungen,  Next: Lineare Algebra,  Prev: Polynome,  Up: Top
@@ -2546,7 +2538,7 @@ File: maxima.info,  Node: Funktionen und Variablen der linearen Algebra,  Prev: 
      expandcross       expandcrossplus       expandcrosscross
      expandgrad        expandgradplus        expandgradprod
      expanddiv         expanddivplus         expanddivprod
-     expandcurl        expandcurlplus        expandcurlcurl 
+     expandcurl        expandcurlplus        expandcurlcurl
      expandlaplacian   expandlaplacianplus   expandlaplacianprod
 
      All these flags have default value 'false'.  The 'plus' suffix
@@ -3800,8 +3792,8 @@ File: maxima.info,  Node: Tensoranalysis,  Next: Tensoren in gekrümmten Räumen
  -- Funktion: makebox (<expr>, <name>)
 
      Zeigt das Argument <expr> auf die gleiche Weise an wie die Funktion
-     'ishow' mit dem Unterschied, dass der dâAlembert-Operator <name> im
-     Ausdruck durch '[]' ersetzt wird.
+     'ishow' mit dem Unterschied, dass der dâAlembert-Operator <name>
+     im Ausdruck durch '[]' ersetzt wird.
 
      Beispiel:
 
@@ -4121,7 +4113,6 @@ An alternate method is used to compute the frame bracket ('ifb') if the
                                      %6    %5        %5      %6
      (%t8)              ifri     (ifr   ifr     - ifr     ifr  )
                             a %5     b     c,%6      b,%6    c
-
 
  -- Optionsvariable: iframe_flag
      Standardwert: 'false'
@@ -4533,7 +4524,6 @@ applied.
           (%t7)                    - (a      - a      + a     )
                                        k j,i    k i,j    j i,k
 
-
  -- Function: hodge (<expr>)
 
      Compute the Hodge-dual of <expr>.  For instance:
@@ -4689,7 +4679,7 @@ und sollten vom Nutzer nicht umdefiniert werden.
        ------------------------------------------
        indices2() Internal version of indices()
        conti      Lists contravariant indices
-       covi       Lists covariant indices of a indexed object
+       covi       Lists covariant indices of an indexed object
        deri       Lists derivative indices of an indexed object
        name       Returns the name of an indexed object
        concan
@@ -7223,17 +7213,21 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
  -- Funktion: zn_log (<a>, <g>, <n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
 
      Berechnet den diskreten Logarithmus.  Sei (Z/<n>Z)* eine zyklische
-     Gruppe, <g> eine Primitivwurzel modulo <n> und <a> ein Element
-     dieser Gruppe.  Dann berechnet 'zn_log (a, g, n)' eine Lösung der
-     Kongruenz 'g^x = a mod n'.
+     Gruppe, <g> eine Primitivwurzel modulo <n> oder der Generator einer
+     Untergruppe von (Z/<n>Z)* und <a> ein Element dieser Gruppe.  Dann
+     berechnet 'zn_log (a, g, n)' eine Lösung der Kongruenz 'g^x = a mod
+     n'.  Man beachte, dass 'zn_log' nicht terminiert, falls <a> keine
+     Potenz von <g> modulo <n> ist.
 
-     Der verwendete Algorithmus benötigt die Primfaktorzerlegung des
-     Totienten von <n>.  Da diese Berechnung ebenfalls zeitaufwändig
-     ist, kann es eventuell sinnvoll sein, die Primfaktoren des
-     Totienten vorab zu berechnen und 'zn_log' als viertes Argument zu
-     übergeben.  Die Form muss dabei der Rückgabe von
-     'ifactors(totient(n))' mit der Standardeinstellung 'false' der
-     Optionsvariable 'factors_only' entsprechen.
+     Der verwendete Algorithmus benötigt die Primfaktorzerlegung von
+     'zn_order(g)' bzw.  des Totienten von <n>.  Da diese Berechnung
+     ebenfalls zeitaufwändig ist, kann es eventuell sinnvoll sein, die
+     Primfaktoren von 'zn_order(g)' vorab zu berechnen und 'zn_log' als
+     viertes Argument zu übergeben.  Die Form muss dabei der Rückgabe
+     von 'ifactors(totient(n))' mit der Standardeinstellung 'false' der
+     Optionsvariable 'factors_only' entsprechen.  Verglichen mit der
+     Laufzeit für die Berechnung des Logarithmus hat dies jedoch nur
+     einen recht kleinen Effekt.
 
      Als Algorithmus wird die Pohlig-Hellman-Reduktion und das
      Rho-Verfahren von Pollard für den diskreten Logarithmus verwendet.
@@ -7254,30 +7248,39 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
           (%o3)                              10
           (%i4) powers_7 : makelist(power_mod(g, x, n), x, 0, ord_7 - 1);
           (%o4)              [1, 7, 5, 13, 3, 21, 15, 17, 9, 19]
-          (%i5) zn_log(21, g, n);
-          (%o5)                               5
+          (%i5) zn_log(9, g, n);
+          (%o5)                               8
           (%i6) map(lambda([x], zn_log(x, g, n)), powers_7);
           (%o6)                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+          (%i7) ord_5 : zn_order(5, n);
+          (%o7)                               5
+          (%i8) powers_5 : makelist(power_mod(5,x,n), x, 0, ord_5 - 1);
+          (%o8)                       [1, 5, 3, 15, 9]
+          (%i9) zn_log(9, 5, n);
+          (%o9)                               4
 
      Das optionale vierte Argument muss der Rückgabe von
      'ifactors(totient(n))' entsprechen.  Die Laufzeit hängt im
-     Wesentlichen von der Bitlänge des größten Primfaktors des Totienten
-     ab.
+     Wesentlichen von der Bitlänge des größten Primfaktors von
+     'zn_order(g)' ab.
 
           (%i1) (p : 2^127-1, primep(p));
           (%o1)                             true
           (%i2) ifs : ifactors(p - 1)$
           (%i3) g : zn_primroot(p, ifs);
           (%o3)                              43
-          (%i4) a : power_mod(g, 1234567890, p)$
+          (%i4) a : power_mod(g, 4711, p)$
           (%i5) zn_log(a, g, p, ifs);
-          (%o5)                          1234567890
-          (%i6) time(%o5);
-          (%o6)                            [1.204]
-          (%i7) f_max : last(ifs);
-          (%o7)                       [77158673929, 1]
-          (%i8) slength( printf(false, "~b", f_max[1]) );
-          (%o8)                              37
+          (%o5)                             4711
+          (%i6) f_max : last(ifs);
+          (%o6)                       [77158673929, 1]
+          (%i7) ord_5 : zn_order(5,p,ifs)$
+          (%i8) (p - 1)/ord_5;
+          (%o8)                              73
+          (%i9) ifs_5 : ifactors(ord_5)$
+          (%i10) a : power_mod(5, 4711, p)$
+          (%i11) zn_log(a, 5, p, ifs_5);
+          (%o11)                            4711
 
  -- Funktion: zn_mult_table (<n>)
  -- Funktion: zn_mult_table (<n>, <gcd>)

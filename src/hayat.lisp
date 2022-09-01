@@ -2242,14 +2242,19 @@
 	((and (member (caar e) '(%sum %product) :test #'eq)
 	      (mfreel (cddr e) tvars)) 
 	 (tsprsum (cadr e) (cddr e) (caar e)))
-	((eq (caar e) '%derivative) (tsdiff (cadr e) (cddr e) e))
+	;; If TSDIFF returns NIL, it means that the derivative is wrt to some variable
+	;; other than one of the taylor variables.
+	;; If so, keep going and handle E as if it were a general expression.
+	((and (eq (caar e) '%derivative) (tsdiff (cadr e) (cddr e) e)))
 	((or (eq (caar e) '%at)
 	     (do ((l (mapcar 'car tlist) (cdr l)))
 		 ((null l) t)
 		 (or (free e (car l)) (return ()))))
 	 (newsym e))
 	(t (let ((exact-poly () ))	; Taylor series aren't exact
-	      (taylor2 (diff-expand e tlist)))))))
+          (let ((ee (diff-expand e tlist)))
+            (cond ((equal (sratsimp e) (sratsimp ee)) (return-from taylor2 (prep1 ee)))
+                  (t (taylor2 ee)))))))))
 
 (defun compatvarlist (a b c d)
    (cond ((null a) t)
@@ -2987,7 +2992,10 @@
 			   (assoc (car l) tlist :test #'eq))
 		      (setq n (cons (cadr l) n) v (cons (car l) v))
 		      (setq u (cons (car l) (cons (cadr l) u)))))
-	      (or n (return (prep1 check)))
+	      ;; If N is null, it means that the derivative is wrt to some variable
+	      ;; other than one of the taylor variables.
+	      ;; If so, give up; let the caller handle it.
+	      (or n (return nil))
 	      (if u (setq e (meval (cons '($diff) (cons e l)))))
 	      (setq l (mapcar #'(lambda (x) (get-datum x)) v))
 	      (mapcar #'(lambda (datum pw)

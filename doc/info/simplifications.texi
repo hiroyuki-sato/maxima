@@ -6,7 +6,6 @@
 * Package ineq::
 * Package rducon::
 * Package scifac::
-* Package sqdnst::
 @end menu
 
 @node Introduction to simplification, Package absimp, simplification-pkg, simplification-pkg
@@ -282,6 +281,7 @@ Example:
 @category{Package functs}
 @closecatbox
 
+@anchor{rempart}
 @deffn {Function} rempart (@var{expr}, @var{n})
 Removes part @var{n} from the expression @var{expr}.
 
@@ -297,6 +297,7 @@ To use this function write first @code{load(functs)}.
 
 @end deffn
 
+@anchor{wronskian}
 @deffn {Function} wronskian ([@var{f_1}, ..., @var{f_n}], @var{x})
 Returns the Wronskian matrix of the list of expressions [@var{f_1}, ..., @var{f_n}] in the variable @var{x}.
 The determinant of the Wronskian matrix is the Wronskian determinant of the list of expressions.
@@ -328,6 +329,7 @@ To use @code{wronskian}, first @code{load(functs)}. Example:
 
 @c adjoint already described in doc/info/Matrices.texi
 
+@anchor{tracematrix}
 @deffn {Function} tracematrix (@var{M})
 Returns the trace (sum of the diagonal elements) of matrix @var{M}.
 
@@ -358,6 +360,7 @@ To use this function write first @code{load(functs)}.
 
 @c kronecker superseded by kron_delta in src/nset.lisp
 
+@anchor{nonzeroandfreeof}
 @deffn {Function} nonzeroandfreeof (@var{x}, @var{expr})
 Returns @code{true} if @var{expr} is nonzero and @code{freeof (@var{x}, @var{expr})} returns @code{true}.
 Returns @code{false} otherwise.
@@ -855,7 +858,7 @@ symbols to represent each constant subexpression found by @code{reduce_consts}.
 @c rncomb.usg: "rncombine" already in doc/info/Miscellaneous.texi
 
 @c Adapted from scifac.usg ----------------------
-@node Package scifac, Package sqdnst, Package rducon, simplification-pkg
+@node Package scifac, , Package rducon, simplification-pkg
 @section Package scifac
 
 @opencatbox
@@ -895,54 +898,6 @@ compact pair-factored result.
 @opencatbox
 @category{Package scifac}
 @category{Expressions}
-@closecatbox
-
-@end deffn
-
-@c Adapted from sqdnst.usg ----------------------
-@c THIS FUNCTION IS INTERESTING BUT THIS TEXT NEEDS WORK. HOW DEEPLY CAN SQRT BE NESTED ??
-@node Package sqdnst,  , Package scifac, simplification-pkg
-@section Package sqdnst
-
-@anchor{sqrtdenest}
-@deffn {Function} sqrtdenest (@var{expr})
-Denests @code{sqrt} of simple, numerical, binomial surds, where possible.  E.g.
-
-@c ===beg===
-@c load ("sqdnst")$
-@c sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
-@c sqrtdenest(%);
-@c ===end===
-@example
-(%i1) load ("sqdnst")$
-@group
-(%i2) sqrt(sqrt(3)/2+1)/sqrt(11*sqrt(2)-12);
-                             sqrt(3)
-                        sqrt(------- + 1)
-                                2
-(%o2)                 ---------------------
-                      sqrt(11 sqrt(2) - 12)
-@end group
-@group
-(%i3) sqrtdenest(%);
-                           sqrt(3)   1
-                           ------- + -
-                              2      2
-(%o3)                     -------------
-                             1/4    3/4
-                          3 2    - 2
-@end group
-@end example
-
-Sometimes it helps to apply @code{sqrtdenest} more than once, on such as
-@code{(19601-13860 sqrt(2))^(7/4)}.
-
-@code{load ("sqdnst")} loads this function.
-
-@opencatbox
-@category{Expressions}
-@category{Share packages}
-@category{Package sqdnst}
 @closecatbox
 
 @end deffn
