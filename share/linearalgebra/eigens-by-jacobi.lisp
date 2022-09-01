@@ -29,7 +29,7 @@
       (merror "The field must either be 'floatfield' or 'bigfloatfield'"))
   
   (setq mm (mfuncall '$mat_fullunblocker mm))
-  ($require_symmetric_matrix mm "$first" "$eigens_by_jacobi")
+  ($require_real_symmetric_matrix mm "$first" "$eigens_by_jacobi")
      
   (let* ((mat) (g) (h) (sweeps 0) (rotations 0) (eps) (change)
 	 (theta) (mpq) (c) (s)  (tee) (tau) (d) (v) (x) (row)
@@ -111,11 +111,11 @@
 	  (setq change (fmax change (if (fgreat (fabs x) eps) (fabs (fdiv (fsub (aref d i) x) x)) zero)))
 	  (setf (aref d i) x))
 	
-	(inform '$debug '|$linearalgebra| "The largest percent change was ~:M~%" change)
+	(inform '$debug '$linearalgebra "The largest percent change was ~:M~%" change)
 	(setq continue (fgreat change eps)))
 	
-      (inform '$verbose '|$linearalgebra| "number of sweeps: ~:M~%" sweeps)
-      (inform '$verbose '|$linearalgebra| "number of rotations: ~:M~%" rotations)
+      (inform '$verbose '$linearalgebra "number of sweeps: ~:M~%" sweeps)
+      (inform '$verbose '$linearalgebra "number of rotations: ~:M~%" rotations)
       
       (setq mm nil)
       (loop for i from 0 to n do

@@ -49,6 +49,14 @@
 	(merror "The ~:M argument to ~:M must be a symmetric matrix" pos fun)))
   '$done)
 
+(defun $require_real_symmetric_matrix (m pos fun)
+  (if (not ($matrixp m)) (merror "The ~:M argument to ~:M must be a matrix" pos fun))
+  (let ((n ($matrix_size m)))
+    (if (not (= ($first n) ($second n)))
+	(merror "The ~:M argument to ~:M must be a square matrix" pos fun))
+    (if (and ($zeromatrixp (sub m ($transpose m))) ($zeromatrixp (sub m (take '($conjugate) m)))) '$done
+      (merror "The ~:M argument to ~:M must be a real symmetric matrix" pos fun))))
+ 
 (defun $require_selfadjoint_matrix (m fun pos)
   (if (not ($matrixp m)) (merror "The ~:M argument to ~:M must be a matrix" pos fun))
   (let ((n ($matrix_size m)))
@@ -58,9 +66,13 @@
 	(merror "The ~:M argument to ~:M must be a selfadjoint (hermitian) matrix" pos fun)))
   '$done)
 
+;; matrix() is a 0 x 0 matrix, and matrix([]) is a 1 x 0 matrix.
+;; There is no representation for a 0 x 1 matrix. Currently,
+;; transpose(matrix([])) => matrix(). And that's a bug. 
+
 (defun $matrix_size(m)
   ($require_matrix m "$first" "$matrix_size")
-  `((mlist) ,($length m) ,($length ($first m))))
+  `((mlist) ,($length ($args m)) ,(if ($emptyp ($args m)) 0 ($length ($first ($args m))))))
   
 (defun $require_list (lst pos fun)
   (if (not ($listp lst))
@@ -129,13 +141,8 @@
  
 (defun $zeromatrixp (m)
   (if (or ($matrixp m) ($listp m)) (every '$zeromatrixp (cdr m))
-    (eq t (meqp 0 ($rectform m)))))
+    (eq '$zero (csign ($rectform m)))))
 	
-(eval-when (eval compile load)
-  (mfuncall '$alias '$copylist '$copy '$copymatrix '$copy))
-
-(defun $copy (e) (copy-tree e))
-
 (defun array-to-row-list (mat &optional (fn 'identity))
   (let ((acc) (r (array-dimensions mat)) (row) (c))
     (setq c (second r))

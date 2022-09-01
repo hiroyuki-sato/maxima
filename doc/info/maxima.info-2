@@ -11,7 +11,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: Input and Output
 
-9.4 Definitions for Input and Output
+9.3 Definitions for Input and Output
 ====================================
 
  -- System variable: __
@@ -184,7 +184,16 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      for more on this point.
 
      The notation `? word' (a question mark followed a word, separated
-     by whitespace) is equivalent to `describe ("word")'.
+     by whitespace) is equivalent to `describe("word")'.  The question
+     mark must occur at the beginning of an input line; otherwise it is
+     not recognized as a request for documentation.
+
+
+ -- Special symbol: ??
+     The notation `?? word' (`??' followed a word, separated by
+     whitespace) is equivalent to `describe("word", inexact)'.  The
+     question mark must occur at the beginning of an input line;
+     otherwise it is not recognized as a request for documentation.
 
 
  -- Option variable: absboxchar
@@ -1120,6 +1129,8 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
  -- Function: save (<filename>, [<m>, <n>])
  -- Function: save (<filename>, <name_1>=<expr_1>, ...)
  -- Function: save (<filename>, all)
+ -- Function: save (<filename>, <name_1>=<expr_1>, <name_2>=<expr_2>,
+          ...)
      Stores the current values of <name_1>, <name_2>, <name_3>, ..., in
      <filename>.  The arguments are the names of variables, functions,
      or other objects.  If a name has no value or function associated
@@ -1215,27 +1226,24 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
      used in a computation.
 
 
- -- Lisp variable: stringdisp
+ -- Option variable: stringdisp
      Default value: `false'
 
-     When `?stringdisp' is `true', strings are displayed enclosed in
+     When `stringdisp' is `true', strings are displayed enclosed in
      double quote marks.  Otherwise, quote marks are not displayed.
 
-     `?stringdisp' is always `true' when displaying a function
+     `stringdisp' is always `true' when displaying a function
      definition.
-
-     `?stringdisp' is a Lisp variable, so it must be written with a
-     leading question mark `?'.
 
      Examples:
 
-          (%i1) ?stringdisp: false$
+          (%i1) stringdisp: false$
           (%i2) "This is an example string.";
           (%o2)              This is an example string.
           (%i3) foo () := print ("This is a string in a function definition.");
           (%o3) foo() :=
                         print("This is a string in a function definition.")
-          (%i4) ?stringdisp: true$
+          (%i4) stringdisp: true$
           (%i5) "This is an example string.";
           (%o5)             "This is an example string."
 
@@ -1342,16 +1350,16 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
  -- Function: texput (<a>, <s>, <operator_type>)
  -- Function: texput (<a>, [<s_1>, <s_2>], matchfix)
  -- Function: texput (<a>, [<s_1>, <s_2>, <s_3>], matchfix)
-     Set the TeX output for the atom <a>, which can be a symbol or the
-     name of an operator.
+     Assign the TeX output for the atom <a>, which can be a symbol or
+     the name of an operator.
 
      `texput (<a>, <s>)' causes the `tex' function to interpolate the
      string <s> into the TeX output in place of <a>.
 
      `texput (<a>, <s>, <operator_type>)', where <operator_type> is
-     `prefix', `infix', or `postfix' causes the `tex' function to
-     interpolate <s> into the TeX output in place of <a>, and to place
-     the interpolated text in the appropriate position.
+     `prefix', `infix', `postfix', `nary', or `nofix', causes the `tex'
+     function to interpolate <s> into the TeX output in place of <a>,
+     and to place the interpolated text in the appropriate position.
 
      `texput (<a>, [<s_1>, <s_2>], matchfix)' causes the `tex' function
      to interpolate <s_1> and <s_2> into the TeX output on either side
@@ -1365,55 +1373,92 @@ File: maxima.info,  Node: Definitions for Input and Output,  Prev: Files,  Up: I
 
      Examples:
 
+     Assign TeX output for a variable.
+
           (%i1) texput (me,"\\mu_e");
           (%o1)                         \mu_e
           (%i2) tex (me);
           $$\mu_e$$
           (%o2)                         false
-          (%i3) texput (lcm, "\\mathrm{lcm}");
-          (%o3)                     \mathrm{lcm}
-          (%i4) tex (lcm (a, b));
+
+     Assign TeX output for an ordinary function (not an operator).
+
+          (%i1) texput (lcm, "\\mathrm{lcm}");
+          (%o1)                     \mathrm{lcm}
+          (%i2) tex (lcm (a, b));
           $$\mathrm{lcm}\left(a , b\right)$$
-          (%o4)                         false
-          (%i5) prefix ("grad");
-          (%o5)                         grad
-          (%i6) texput ("grad", " \\nabla ", prefix);
-          (%o6)                          180
-          (%i7) tex (grad f);
+          (%o2)                         false
+
+     Assign TeX output for a prefix operator.
+
+          (%i1) prefix ("grad");
+          (%o1)                         grad
+          (%i2) texput ("grad", " \\nabla ", prefix);
+          (%o2)                        \nabla
+          (%i3) tex (grad f);
           $$ \nabla f$$
-          (%o7)                         false
-          (%i8) infix ("~");
-          (%o8)                           ~
-          (%i9) texput ("~", " \\times ", infix);
-          (%o9)                          180
-          (%i10) tex (a ~ b);
+          (%o3)                         false
+
+     Assign TeX output for an infix operator.
+
+          (%i1) infix ("~");
+          (%o1)                           ~
+          (%i2) texput ("~", " \\times ", infix);
+          (%o2)                        \times
+          (%i3) tex (a ~ b);
           $$a \times b$$
-          (%o10)                        false
-          (%i11) postfix ("@");
-          (%o11)                          @
-          (%i12) texput ("@", "!!", postfix);
-          (%o12)                         160
-          (%i13) tex (x @);
+          (%o3)                         false
+
+     Assign TeX output for a postfix operator.
+
+          (%i1) postfix ("@");
+          (%o1)                           @
+          (%i2) texput ("@", "!!", postfix);
+          (%o2)                          !!
+          (%i3) tex (x @);
           $$x!!$$
-          (%o13)                        false
-          (%i14) matchfix ("<<", ">>");
-          (%o14)                         <<
-          (%i15) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
-          (%o15)              \langle ( \rangle , false)
-          (%i16) tex (<<a>>);
+          (%o3)                         false
+
+     Assign TeX output for a nary operator.
+
+          (%i1) nary ("@@");
+          (%o1)                          @@
+          (%i2) texput ("@@", " \\circ ", nary);
+          (%o2)                         \circ
+          (%i3) tex (a @@ b @@ c @@ d);
+          $$a \circ b \circ c \circ d$$
+          (%o3)                         false
+
+     Assign TeX output for a nofix operator.
+
+          (%i1) nofix ("foo");
+          (%o1)                          foo
+          (%i2) texput ("foo", "\\mathsc{foo}", nofix);
+          (%o2)                     \mathsc{foo}
+          (%i3) tex (foo);
+          $$\mathsc{foo}$$
+          (%o3)                         false
+
+     Assign TeX output for a matchfix operator.
+
+          (%i1) matchfix ("<<", ">>");
+          (%o1)                          <<
+          (%i2) texput ("<<", [" \\langle ", " \\rangle "], matchfix);
+          (%o2)                [ \langle ,  \rangle ]
+          (%i3) tex (<<a>>);
           $$ \langle a \rangle $$
-          (%o16)                        false
-          (%i17) tex (<<a, b>>);
+          (%o3)                         false
+          (%i4) tex (<<a, b>>);
           $$ \langle a , b \rangle $$
-          (%o17)                        false
-          (%i18) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
-          (%o18)            \langle ( \rangle ,  \, | \,)
-          (%i19) tex (<<a>>);
+          (%o4)                         false
+          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+          (%o5)           [ \langle ,  \rangle ,  \, | \,]
+          (%i6) tex (<<a>>);
           $$ \langle a \rangle $$
-          (%o19)                        false
-          (%i20) tex (<<a, b>>);
+          (%o6)                         false
+          (%i7) tex (<<a, b>>);
           $$ \langle a \, | \,b \rangle $$
-          (%o20)                        false
+          (%o7)                         false
 
 
  -- Function: system (<command>)
@@ -1630,30 +1675,6 @@ File: maxima.info,  Node: Definitions for Floating Point,  Prev: Floating Point,
      `fpprec', and the number of digits printed is equal to `fpprec'.
 
      `fpprintprec' cannot be 1.
-
-
- -- Lisp function: ?round (<x>)
- -- Lisp function: ?round (<x>, <divisor>)
-     Round the floating point <x> to the nearest integer.   The argument
-     must be an ordinary float, not a bigfloat.   The `?' beginning the
-     name indicates this is a Lisp function.
-
-          (%i1) ?round (-2.8);
-          (%o1)                            - 3
-
-
- -- Lisp function: ?truncate (<x>)
- -- Lisp function: ?truncate (<x>, <divisor>)
-     Truncate the floating point <x> towards 0, to become an integer.
-     The argument must be an ordinary float, not a bigfloat.  The `?'
-     beginning the name indicates this is a Lisp function.
-
-          (%i1) ?truncate (-2.8);
-          (%o1)                            - 2
-          (%i2) ?truncate (2.4);
-          (%o2)                             2
-          (%i3) ?truncate (2.8);
-          (%o3)                             2
 
 
 
@@ -3338,32 +3359,96 @@ File: maxima.info,  Node: Definitions for Constants,  Prev: Constants,  Up: Cons
 ==============================
 
  -- Constant: %e
-     - the base of natural logarithms, e, is represented in Maxima as
-     `%e'.
+     `%e' represents the base of the natural logarithm, also known as
+     Euler's number.  The numeric value of `%e' is the double-precision
+     floating-point value 2.718281828459045d0.
+
+
+ -- Constant: %i
+     `%i' represents the imaginary unit, sqrt(- 1).
 
 
  -- Constant: false
-     - the Boolean constant, false. (NIL in Lisp)
+     `false' represents the Boolean constant of the same name.  Maxima
+     implements `false' by the value `NIL' in Lisp.
 
 
  -- Constant: inf
-     - real positive infinity.
+     `inf' represents real positive infinity.
 
 
  -- Constant: infinity
-     - complex infinity.
+     `infinity' represents complex infinity.
 
 
  -- Constant: minf
-     - real minus infinity.
+     `minf' represents real minus (i.e., negative) infinity.
+
+
+ -- Constant: %phi
+     `%phi' represents the so-called golden mean, (1 + sqrt(5))/2.  The
+     numeric value of `%phi' is the double-precision floating-point
+     value 1.618033988749895d0.
+
+     `fibtophi' expresses Fibonacci numbers `fib(n)' in terms of `%phi'.
+
+     By default, Maxima does not know the algebraic properties of
+     `%phi'.  After evaluating `tellrat(%phi^2 - %phi - 1)' and
+     `algebraic: true', `ratsimp' can simplify some expressions
+     containing `%phi'.
+
+     Examples:
+
+     `fibtophi' expresses Fibonacci numbers `fib(n)' in terms of `%phi'.
+
+          (%i1) fibtophi (fib (n));
+                                     n             n
+                                 %phi  - (1 - %phi)
+          (%o1)                  -------------------
+                                     2 %phi - 1
+          (%i2) fib (n-1) + fib (n) - fib (n+1);
+          (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
+          (%i3) fibtophi (%);
+                      n + 1             n + 1       n             n
+                  %phi      - (1 - %phi)        %phi  - (1 - %phi)
+          (%o3) - --------------------------- + -------------------
+                          2 %phi - 1                2 %phi - 1
+                                                    n - 1             n - 1
+                                                %phi      - (1 - %phi)
+                                              + ---------------------------
+                                                        2 %phi - 1
+          (%i4) ratsimp (%);
+          (%o4)                           0
+
+     By default, Maxima does not know the algebraic properties of
+     `%phi'.  After evaluating `tellrat (%phi^2 - %phi - 1)' and
+     `algebraic: true', `ratsimp' can simplify some expressions
+     containing `%phi'.
+
+          (%i1) e : expand ((%phi^2 - %phi - 1) * (A + 1));
+                           2                      2
+          (%o1)        %phi  A - %phi A - A + %phi  - %phi - 1
+          (%i2) ratsimp (e);
+                            2                     2
+          (%o2)        (%phi  - %phi - 1) A + %phi  - %phi - 1
+          (%i3) tellrat (%phi^2 - %phi - 1);
+                                      2
+          (%o3)                  [%phi  - %phi - 1]
+          (%i4) algebraic : true;
+          (%o4)                         true
+          (%i5) ratsimp (e);
+          (%o5)                           0
 
 
  -- Constant: %pi
-     - "pi" is represented in Maxima as `%pi'.
+     `%pi' represents the ratio of the perimeter of a circle to its
+     diameter.  The numeric value of `%pi' is the double-precision
+     floating-point value 3.141592653589793d0.
 
 
  -- Constant: true
-     - the Boolean constant, true. (T in Lisp)
+     `true' represents the Boolean constant of the same name.  Maxima
+     implements `true' by the value `T' in Lisp.
 
 
 
@@ -3924,43 +4009,15 @@ File: maxima.info,  Node: Special Functions,  Next: Elliptic Functions,  Prev: T
 * Menu:
 
 * Introduction to Special Functions::
-* specint::
 * Definitions for Special Functions::
 
 
-File: maxima.info,  Node: Introduction to Special Functions,  Next: specint,  Prev: Special Functions,  Up: Special Functions
+File: maxima.info,  Node: Introduction to Special Functions,  Next: Definitions for Special Functions,  Prev: Special Functions,  Up: Special Functions
 
 16.1 Introduction to Special Functions
 ======================================
 
-
-File: maxima.info,  Node: specint,  Next: Definitions for Special Functions,  Prev: Introduction to Special Functions,  Up: Special Functions
-
-16.2 specint
-============
-
-`hypgeo' is a package for handling Laplace transforms of special
-functions.  `hyp' is a package for handling generalized Hypergeometric
-functions.
-
-   `specint' attempts to compute the definite integral (over the range
-from zero to infinity) of an expression containing special functions.
-When the integrand contains a factor `exp (-s t)', the result is a
-Laplace transform.
-
-   The syntax is as follows:
-
-     specint (exp (-s*<t>) * <expr>, <t>);
-
-   where <t> is the variable of integration and <expr> is an expression
-containing special functions.
-
-   If `specint' cannot compute the integral, the return value may
-contain various Lisp symbols, including
-`other-defint-to-follow-negtest', `other-lt-exponential-to-follow',
-`product-of-y-with-nofract-indices', etc.; this is a bug.
-
-   Special function notation follows:
+Special function notation follows:
 
      bessel_j (index, expr)         Bessel function, 1st kind
      bessel_y (index, expr)         Bessel function, 2nd kind
@@ -3983,59 +4040,11 @@ contain various Lisp symbols, including
      kelliptic (z)                  Complete elliptic integral of the first kind (K)
      %d [n] (z)                     Parabolic cylinder function
 
-   `demo ("hypgeo")' displays several examples of Laplace transforms
-computed by `specint'.
-
-   This is a work in progress.  Some of the function names may change.
-
 
-File: maxima.info,  Node: Definitions for Special Functions,  Prev: specint,  Up: Special Functions
+File: maxima.info,  Node: Definitions for Special Functions,  Prev: Introduction to Special Functions,  Up: Special Functions
 
-16.3 Definitions for Special Functions
+16.2 Definitions for Special Functions
 ======================================
-
- -- Function: airy (<x>)
-     The Airy function Ai.  If the argument <x> is a number, the
-     numerical value of `airy (<x>)' is returned.  Otherwise, an
-     unevaluated expression `airy (<x>)' is returned.
-
-     The Airy equation `diff (y(x), x, 2) - x y(x) = 0' has two
-     linearly independent solutions, named `ai' and `bi'. This equation
-     is very popular as an approximation to more complicated problems
-     in many mathematical physics settings.
-
-     `load ("airy")' loads the functions `ai', `bi', `dai', and `dbi'.
-
-     The `airy' package contains routines to compute `ai' and `bi' and
-     their derivatives `dai' and `dbi'. The result is a floating point
-     number if the argument is a number, and an unevaluated expression
-     otherwise.
-
-     An error occurs if the argument is large enough to cause an
-     overflow in the exponentials, or a loss of accuracy in `sin' or
-     `cos'. This makes the range of validity about -2800 to 10^38 for
-     `ai' and `dai', and -2800 to 25 for `bi' and `dbi'.
-
-     These derivative rules are known to Maxima:
-        * `diff (ai(x), x)' yields `dai(x)',
-
-        * `diff (dai(x), x)' yields `x ai(x)',
-
-        * `diff (bi(x), x)' yields `dbi(x)',
-
-        * `diff (dbi(x), x)' yields `x bi(x)'.
-
-     Function values are computed from the convergent Taylor series for
-     `abs(<x>) < 3', and from the asymptotic expansions for `<x> < -3'
-     or `<x> > 3' as needed.  This results in only very minor numerical
-     discrepancies at `<x> = 3' and `<x> = -3'.  For details, see
-     Abramowitz and Stegun, Handbook of Mathematical Functions, Section
-     10.4 and Table 10.11.
-
-     `ev (taylor (ai(x), x, 0, 9), infeval)' yields a floating point
-     Taylor expansions of the function `ai'.  A similar expression can
-     be constructed for `bi'.
-
 
  -- Function: airy_ai (<x>)
      The Airy function Ai, as defined in Abramowitz and Stegun,
@@ -4397,6 +4406,36 @@ File: maxima.info,  Node: Definitions for Special Functions,  Prev: specint,  Up
      Let <x> be a rational number less than one of the form `p/q'.  If
      `q' is greater than `maxpsifracdeonm', then `psi[<n>](<x>)' will
      not try to return a simplified value.
+
+
+ -- Function: specint (exp(- s*<t>) * <expr>, <t>)
+     Compute the Laplace transform of <expr> with respect to the
+     variable <t>.  The integrand <expr> may contain special functions.
+
+     If `specint' cannot compute the integral, the return value may
+     contain various Lisp symbols, including
+     `other-defint-to-follow-negtest', `other-lt-exponential-to-follow',
+     `product-of-y-with-nofract-indices', etc.; this is a bug.
+
+     `demo(hypgeo)' displays several examples of Laplace transforms
+     computed by `specint'.
+
+     Examples:
+
+          (%i1) assume (p > 0, a > 0);
+          (%o1)                    [p > 0, a > 0]
+          (%i2) specint (t^(1/2) * exp(-a*t/4) * exp(-p*t), t);
+                                     sqrt(%pi)
+          (%o2)                     ------------
+                                           a 3/2
+                                    2 (p + -)
+                                           4
+          (%i3) specint (t^(1/2) * bessel_j(1, 2 * a^(1/2) * t^(1/2)) * exp(-p*t), t);
+                                             - a/p
+                                   sqrt(a) %e
+          (%o3)                    ---------------
+                                          2
+                                         p
 
 
 
@@ -5330,17 +5369,15 @@ File: maxima.info,  Node: Introduction to Integration,  Next: Definitions for In
 Maxima has several routines for handling integration.  The `integrate'
 function makes use of most of them.  There is also the `antid' package,
 which handles an unspecified function (and its derivatives, of course).
-For numerical uses, there is the `romberg' function; an adaptave
-integrator which uses the Newton-Cotes 8 panel quadrature rule, called
-`quanc8'; and a set of adaptive integrators from Quadpack, named
-`quad_qag', `quad_qags', etc., which are described under the heading
-`QUADPACK'.  Hypergeometric functions are being worked on, see
-`specint' for details.  Generally speaking, Maxima only handles
-integrals which are integrable in terms of the "elementary functions"
-(rational functions, trigonometrics, logs, exponentials, radicals,
-etc.) and a few extensions (error function, dilogarithm).  It does not
-handle integrals in terms of unknown functions such as `g(x)' and
-`h(x)'.
+For numerical uses, there is a set of adaptive integrators from
+QUADPACK, named `quad_qag', `quad_qags', etc., which are described
+under the heading `QUADPACK'.  Hypergeometric functions are being
+worked on, see `specint' for details.  Generally speaking, Maxima only
+handles integrals which are integrable in terms of the "elementary
+functions" (rational functions, trigonometrics, logs, exponentials,
+radicals, etc.) and a few extensions (error function, dilogarithm).  It
+does not handle integrals in terms of unknown functions such as `g(x)'
+and `h(x)'.
 
 
 File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QUADPACK,  Prev: Introduction to Integration,  Up: Integration
@@ -5778,40 +5815,6 @@ File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QU
      `potentialzeroloc' is initially set to 0.
 
 
- -- Function: qq
-     The package `qq' (which may be loaded with `load ("qq")') contains
-     a function `quanc8' which can take either 3 or 4 arguments. The 3
-     arg version computes the integral of the function specified as the
-     first argument over the interval from lo to hi as in `quanc8
-     ('function, lo, hi)'.  The function name should be quoted.  The 4
-     arg version will compute the integral of the function or
-     expression (first arg) with respect to the variable (second arg)
-     over the interval from `lo' to `hi' as in `quanc8(<f(x) or
-     expression in x>, x, lo, hi)'.  The method used is the
-     Newton-Cotes 8th order polynomial quadrature, and the routine is
-     adaptive. It will thus spend time dividing the interval only when
-     necessary to achieve the error conditions specified by the global
-     variables `quanc8_relerr' (default value=1.0e-4) and
-     `quanc8_abserr' (default value=1.0e-8) which give the relative
-     error test:
-
-          |integral(function) - computed value| < quanc8_relerr*|integral(function)|
-
-     and the absolute error test:
-
-          |integral(function) - computed value| < quanc8_abserr
-
-     `printfile ("qq.usg")' yields additional information.
-
-
- -- Function: quanc8 (<expr>, <a>, <b>)
-     An adaptive integrator.  Demonstration and usage files are
-     provided.  The method is to use Newton-Cotes 8-panel quadrature
-     rule, hence the function name `quanc8', available in 3 or 4 arg
-     versions.  Absolute and relative error checks are used.  To use it
-     do `load ("qq")'.  See also `qq'.
-
-
  -- Function: residue (<expr>, <z>, <z_0>)
      Computes the residue in the complex plane of the expression <expr>
      when the variable <z> assumes the value <z_0>.  The residue is the
@@ -5850,178 +5853,6 @@ File: maxima.info,  Node: Definitions for Integration,  Next: Introduction to QU
           (%i2) diff(%, x), ratsimp;
                                        2
           (%o2)                       x  erf(x)
-
-
- -- Function: romberg (<expr>, <x>, <a>, <b>)
- -- Function: romberg (<expr>, <a>, <b>)
-     Romberg integration.  There are two ways to use this function.
-     The first is an inefficient way like the definite integral version
-     of `integrate': `romberg (<integrand>, <variable of integration>,
-     <lower limit>, <upper limit>)'.
-
-     Examples:
-
-          (%i1) showtime: true$
-          (%i2) romberg (sin(y), y, 0, %pi);
-          Evaluation took 0.00 seconds (0.01 elapsed) using 25.293 KB.
-          (%o2)                   2.000000016288042
-          (%i3) 1/((x-1)^2+1/100) + 1/((x-2)^2+1/1000) + 1/((x-3)^2+1/200)$
-          (%i4) f(x) := ''%$
-          (%i5) rombergtol: 1e-6$
-          (%i6) rombergit: 15$
-          (%i7) romberg (f(x), x, -5, 5);
-          Evaluation took 11.97 seconds (12.21 elapsed) using 12.423 MB.
-          (%o7)                   173.6730736617464
-
-     The second is an efficient way that is used as follows:
-
-          romberg (<function name>, <lower limit>, <upper limit>);
-
-     Continuing the above example, we have:
-          (%i8) f(x) := (mode_declare ([function(f), x], float), ''(%th(5)))$
-          (%i9) translate(f);
-          (%o9)                          [f]
-          (%i10) romberg (f, -5, 5);
-          Evaluation took 3.51 seconds (3.86 elapsed) using 6.641 MB.
-          (%o10)                  173.6730736617464
-
-     The first argument must be a translated or compiled function.  (If
-     it is compiled it must be declared to return a `flonum'.)  If the
-     first argument is not already translated, `romberg' will not
-     attempt to translate it but will give an error.
-
-     The accuracy of the integration is governed by the global variables
-     `rombergtol' (default value 1.E-4) and `rombergit' (default value
-     11).  `romberg' will return a result if the relative difference in
-     successive approximations is less than `rombergtol'.  It will try
-     halving the stepsize `rombergit' times before it gives up.  The
-     number of iterations and function evaluations which `romberg' will
-     do is governed by `rombergabs' and `rombergmin'.
-
-     `romberg' may be called recursively and thus can do double and
-     triple integrals.
-
-     Example:
-          (%i1) assume (x > 0)$
-          (%i2) integrate (integrate (x*y/(x+y), y, 0, x/2), x, 1, 3)$
-          (%i3) radcan (%);
-                              26 log(3) - 26 log(2) - 13
-          (%o3)             - --------------------------
-                                          3
-          (%i4) %,numer;
-          (%o4)                   .8193023963959073
-          (%i5) define_variable (x, 0.0, float, "Global variable in function F")$
-          (%i6) f(y) := (mode_declare (y, float), x*y/(x+y))$
-          (%i7) g(x) := romberg ('f, 0, x/2)$
-          (%i8) romberg (g, 1, 3);
-          (%o8)                   .8193022864324522
-
-     The advantage with this way is that the function `f' can be used
-     for other purposes, like plotting. The disadvantage is that you
-     have to think up a name for both the function `f' and its free
-     variable `x'.  Or, without the global:
-
-          (%i1) g_1(x) := (mode_declare (x, float), romberg (x*y/(x+y), y, 0, x/2))$
-          (%i2) romberg (g_1, 1, 3);
-          (%o2)                   .8193022864324522
-
-     The advantage here is shortness.
-
-          (%i3) q (a, b) := romberg (romberg (x*y/(x+y), y, 0, x/2), x, a, b)$
-          (%i4) q (1, 3);
-          (%o4)                   .8193022864324522
-
-     It is even shorter this way, and the variables do not need to be
-     declared because they are in the context of `romberg'.  Use of
-     `romberg' for multiple integrals can have great disadvantages,
-     though.  The amount of extra calculation needed because of the
-     geometric information thrown away by expressing multiple integrals
-     this way can be incredible.  The user should be sure to understand
-     and use the `rombergtol' and `rombergit' switches.
-
-
- -- Option variable: rombergabs
-     Default value: 0.0
-
-     Assuming that successive estimates produced by `romberg' are
-     `y[0]', `y[1]', `y[2]', etc., then `romberg' will return after `n'
-     iterations if (roughly speaking)
-
-           (abs(y[n]-y[n-1]) <= rombergabs or
-           abs(y[n]-y[n-1])/(if y[n]=0.0 then 1.0 else y[n]) <= rombergtol)
-
-     is `true'.  (The condition on the number of iterations given by
-     `rombergmin' must also be satisfied.)  Thus if `rombergabs' is 0.0
-     (the default) you just get the relative error test.  The
-     usefulness of the additional variable comes when you want to
-     perform an integral, where the dominant contribution comes from a
-     small region.  Then you can do the integral over the small
-     dominant region first, using the relative accuracy check, followed
-     by the integral over the rest of the region using the absolute
-     accuracy check.
-
-     Example:  Suppose you want to compute
-
-          'integrate (exp(-x), x, 0, 50)
-
-     (numerically) with a relative accuracy of  1 part in 10000000.
-     Define the function.  `n' is a counter, so we can see how many
-     function evaluations were needed.  First of all try doing the
-     whole integral at once.
-
-          (%i1) f(x) := (mode_declare (n, integer, x, float), n:n+1, exp(-x))$
-          (%i2) translate(f)$
-          Warning-> n is an undefined global variable.
-          (%i3) block ([rombergtol: 1.e-6, romberabs: 0.0], n:0, romberg (f, 0, 50));
-          (%o3)                   1.000000000488271
-          (%i4) n;
-          (%o4)                          257
-
-     That approach required 257 function evaluations.   Now do the
-     integral intelligently, by first doing      `'integrate (exp(-x),
-     x, 0, 10)' and then setting `rombergabs' to 1.E-6 times (this
-     partial integral).  This approach takes only 130 function
-     evaluations.
-
-          (%i5) block ([rombergtol: 1.e-6, rombergabs:0.0, sum:0.0],
-            n: 0, sum: romberg (f, 0, 10), rombergabs: sum*rombergtol, rombergtol:0.0,
-                sum + romberg (f, 10, 50));
-          (%o5)                   1.000000001234793
-          (%i6) n;
-          (%o6)                          130
-
-     So if `f(x)' were a function that took a long time to compute, the
-     second method would be about 2 times quicker.
-
-
- -- Option variable: rombergit
-     Default value: 11
-
-     The accuracy of the `romberg' integration command is governed by
-     the global variables `rombergtol' and `rombergit'.  `romberg' will
-     return a result if the relative difference in successive
-     approximations is less than `rombergtol'.  It will try halving the
-     stepsize `rombergit' times before it gives up.
-
-
- -- Option variable: rombergmin
-     Default value: 0
-
-     `rombergmin' governs the minimum number of function evaluations
-     that `romberg' will make.  `romberg' will evaluate its first arg.
-     at least `2^(rombergmin+2)+1' times.  This is useful for
-     integrating oscillatory functions, when the normal converge test
-     might sometimes wrongly pass.
-
-
- -- Option variable: rombergtol
-     Default value: 1e-4
-
-     The accuracy of the `romberg' integration command is governed by
-     the global variables `rombergtol' and `rombergit'.  `romberg' will
-     return a result if the relative difference in successive
-     approximations is less than `rombergtol'.  It will try halving the
-     stepsize `rombergit' times before it gives up.
 
 
  -- Function: tldefint (<expr>, <x>, <a>, <b>)
@@ -7298,16 +7129,52 @@ File: maxima.info,  Node: Definitions for Equations,  Prev: Equations,  Up: Equa
      which are free of `%i'.
 
 
- -- Function: realroots (<poly>, <bound>)
-     Finds all of the real roots of the real univariate polynomial poly
-     within a tolerance of bound which, if less than 1, causes all
-     integral roots to be found exactly.  The parameter bound may be
-     arbitrarily small in order to achieve any desired accuracy.  The
-     first argument may also be an equation.  `realroots' sets
-     `multiplicities', useful in case of multiple roots.  `realroots
-     (<p>)' is equivalent to `realroots (<p>, rootsepsilon)'.
-     `rootsepsilon' is a real number used to establish the confidence
-     interval for the roots.  Do `example (realroots)' for an example.
+ -- Function: realroots (<expr>, <bound>)
+ -- Function: realroots (<eqn>, <bound>)
+ -- Function: realroots (<expr>)
+ -- Function: realroots (<eqn>)
+     Computes rational approximations of the real roots of the
+     polynomial <expr> or polynomial equation <eqn> of one variable, to
+     within a tolerance of <bound>.  Coefficients of <expr> or <eqn>
+     must be literal numbers; symbol constants such as `%pi' are
+     rejected.
+
+     `realroots' assigns the multiplicities of the roots it finds to
+     the global variable `multiplicities'.
+
+     `realroots' constructs a Sturm sequence to bracket each root, and
+     then applies bisection to refine the approximations.  All
+     coefficients are converted to rational equivalents before
+     searching for roots, and computations are carried out by exact
+     rational arithmetic.  Even if some coefficients are floating-point
+     numbers, the results are rational (unless coerced to floats by the
+     `float' or `numer' flags).
+
+     When <bound> is less than 1, all integer roots are found exactly.
+     When <bound> is unspecified, it is assumed equal to the global
+     variable `rootsepsilon'.
+
+     When the global variable `programmode' is `true', `realroots'
+     returns a list of the form `[x = <x_1>, x = <x_2>, ...]'.  When
+     `programmode' is `false', `realroots' creates intermediate
+     expression labels `%t1', `%t2', ..., assigns the results to them,
+     and returns the list of labels.
+
+     Examples:
+
+          (%i1) realroots (-1 - x + x^5, 5e-6);
+                                         612003
+          (%o1)                     [x = ------]
+                                         524288
+          (%i2) ev (%[1], float);
+          (%o2)                 x = 1.167303085327148
+          (%i3) ev (-1 - x + x^5, %);
+          (%o3)                - 7.396496210176905E-6
+
+          (%i1) realroots (expand ((1 - x)^5 * (2 - x)^3 * (3 - x)), 1e-20);
+          (%o1)                 [x = 1, x = 2, x = 3]
+          (%i2) multiplicities;
+          (%o2)                       [5, 3, 1]
 
 
  -- Function: rhs (<expr>)
@@ -7656,5 +7523,224 @@ File: maxima.info,  Node: Differential Equations,  Next: Numerical,  Prev: Equat
 
 * Menu:
 
+* Introduction to Differential Equations::
 * Definitions for Differential Equations::
+
+
+File: maxima.info,  Node: Introduction to Differential Equations,  Next: Definitions for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
+
+22.1 Introduction to Differential Equations
+===========================================
+
+This section describes the functions available in Maxima to obtain
+analytic solutions for some specific types of first and second-order
+equations. To obtain a numerical solution for a system of differential
+equations, see the additional package `dynamics'. For graphical
+representations in phase space, see the additional package `plotdf'.
+
+
+File: maxima.info,  Node: Definitions for Differential Equations,  Prev: Introduction to Differential Equations,  Up: Differential Equations
+
+22.2 Definitions for Differential Equations
+===========================================
+
+ -- Function: bc2 (<solution>, <xval1>, <yval1>, <xval2>, <yval2>)
+     Solves a boundary value problem for a second order differential
+     equation.  Here: <solution> is a general solution to the equation,
+     as found by `ode2'; <xval1> specifies the value of the independent
+     variable in a first point, in the form `<x> = <x1>', and <yval1>
+     gives the value of the dependent variable in that point, in the
+     form `<y> = <y1>'. The expressions <xval2> and <yval2> give the
+     values for these variables at a second point, using the same form.
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: desolve (<eqn>, <x>)
+ -- Function: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+     The function `dsolve' solves systems of linear ordinary
+     differential equations using Laplace transform.  Here the <eqn>'s
+     are differential equations in the dependent variables <x_1>, ...,
+     <x_n>.  The functional dependence of <x_1>, ..., <x_n> on an
+     independent variable, for instance <x>, must be explicitly
+     indicated in the variables and its derivatives. For example, this
+     would not be the correct way to define two equations:
+
+          eqn_1: 'diff(f,x,2) = sin(x) + 'diff(g,x);
+          eqn_2: 'diff(f,x) + x^2 - f = 2*'diff(g,x,2);
+
+     The correct way would be:
+
+          eqn_1: 'diff(f(x),x,2) = sin(x) + 'diff(g(x),x);
+          eqn_2: 'diff(f(x),x) + x^2 - f(x) = 2*'diff(g(x),x,2);
+
+     The call to the function `desolve' would then be
+          desolve([eqn_1, eqn_2], [f(x),g(x)]);
+
+     If initial conditions at `x=0' are known, they can be supplied
+     before calling `desolve' by using `atvalue'.
+
+          (%i1) 'diff(f(x),x)='diff(g(x),x)+sin(x);
+                           d           d
+          (%o1)            -- (f(x)) = -- (g(x)) + sin(x)
+                           dx          dx
+          (%i2) 'diff(g(x),x,2)='diff(f(x),x)-cos(x);
+                            2
+                           d            d
+          (%o2)            --- (g(x)) = -- (f(x)) - cos(x)
+                             2          dx
+                           dx
+          (%i3) atvalue('diff(g(x),x),x=0,a);
+          (%o3)                           a
+          (%i4) atvalue(f(x),x=0,1);
+          (%o4)                           1
+          (%i5) desolve([%o1,%o2],[f(x),g(x)]);
+                            x
+          (%o5) [f(x) = a %e  - a + 1, g(x) =
+
+                                                          x
+                                             cos(x) + a %e  - a + g(0) - 1]
+          (%i6) [%o1,%o2],%o5,diff;
+                       x       x      x                x
+          (%o6)   [a %e  = a %e , a %e  - cos(x) = a %e  - cos(x)]
+
+     If `desolve' cannot obtain a solution, it returns `false'.
+
+
+ -- Function: ic1 (<solution>, <xval>, <yval>)
+     Solves initial value problems for first order differential
+     equations.  Here <solution> is a general solution to the equation,
+     as found by `ode2', <xval> gives an initial value for the
+     independent variable in the form `<x> = <x0>', and <yval> gives the
+     initial value for the dependent variable in the form `<y> = <y0>'.
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: ic2 (<solution>, <xval>, <yval>, <dval>)
+     Solves initial value problems for second-order differential
+     equations.  Here <solution> is a general solution to the equation,
+     as found by `ode2', <xval> gives the initial value for the
+     independent variable in the form `<x> = <x0>', <yval> gives the
+     initial value of the dependent variable in the form `<y> = <y0>',
+     and <dval> gives the initial value for the first derivative of the
+     dependent variable with respect to independent variable, in the
+     form `diff(<y>,<x>) = <dy0>' (`diff' does not have to be quoted).
+
+     See `ode2' for an example of its usage.
+
+
+ -- Function: ode2 (<eqn>, <dvar>, <ivar>)
+     The function `ode2' solves an ordinary differential equation (ODE)
+     of first or second order. It takes three arguments: an ODE given by
+     <eqn>, the dependent variable <dvar>, and the independent variable
+     <ivar>. When successful, it returns either an explicit or implicit
+     solution for the dependent variable. `%c' is used to represent the
+     integration constant in the case of first-order equations, and
+     `%k1' and `%k2' the constants for second-order equations. The
+     dependence of the dependent variable on the independent variable
+     does not have to be written explicitly, as in the case of
+     `desolve', but the independent variable must always be given as the
+     third argument.
+
+     If `ode2' cannot obtain a solution for whatever reason, it returns
+     `false', after perhaps printing out an error message. The methods
+     implemented for first order equations in the order in which they
+     are tested are: linear, separable, exact - perhaps requiring an
+     integrating factor, homogeneous, Bernoulli's equation, and a
+     generalized homogeneous method. The types of second-order
+     equations which can be solved are: constant coefficients, exact,
+     linear homogeneous with non-constant coefficients which can be
+     transformed to constant coefficients, the Euler or
+     equi-dimensional equation, equations solvable by the method of
+     variation of parameters, and equations which are free of either the
+     independent or of the dependent variable so that they can be
+     reduced to two first order linear equations to be solved
+     sequentially.
+
+     In the course of solving ODE's, several variables are set purely
+     for informational purposes: `method' denotes the method of solution
+     used (e.g., `linear'), `intfactor' denotes any integrating factor
+     used, `odeindex' denotes the index for Bernoulli's method or for
+     the generalized homogeneous method, and `yp' denotes the
+     particular solution for the variation of parameters technique.
+
+     In order to solve initial value problems (IVP) functions `ic1' and
+     `ic2' are available for first and second order equations, and to
+     solve second-order boundary value problems (BVP) the function `bc2'
+     can be used.
+
+     Example:
+
+          (%i1) x^2*'diff(y,x) + 3*y*x = sin(x)/x;
+                                2 dy           sin(x)
+          (%o1)                x  -- + 3 x y = ------
+                                  dx             x
+          (%i2) ode2(%,y,x);
+                                       %c - cos(x)
+          (%o2)                    y = -----------
+                                            3
+                                           x
+          (%i3) ic1(%o2,x=%pi,y=0);
+                                        cos(x) + 1
+          (%o3)                   y = - ----------
+                                             3
+                                            x
+          (%i4) 'diff(y,x,2) + y*'diff(y,x)^3 = 0;
+                                   2
+                                  d y      dy 3
+          (%o4)                   --- + y (--)  = 0
+                                    2      dx
+                                  dx
+          (%i5) ode2(%,y,x);
+                                3
+                               y  + 6 %k1 y
+          (%o5)                ------------ = x + %k2
+                                    6
+          (%i6) ratsimp(ic2(%o5,x=0,y=0,'diff(y,x)=2));
+                                       3
+                                    2 y  - 3 y
+          (%o6)                   - ---------- = x
+                                        6
+          (%i7) bc2(%o5,x=0,y=1,x=1,y=3);
+                                   3
+                                  y  - 10 y       3
+          (%o7)                   --------- = x - -
+                                      6           2
+
+
+
+File: maxima.info,  Node: Numerical,  Next: Arrays,  Prev: Differential Equations,  Up: Top
+
+23 Numerical
+************
+
+* Menu:
+
+* Introduction to Numerical::
+* Fourier packages::
+* Definitions for Numerical::
+* Definitions for Fourier Series::
+
+
+File: maxima.info,  Node: Introduction to Numerical,  Next: Fourier packages,  Prev: Numerical,  Up: Numerical
+
+23.1 Introduction to Numerical
+==============================
+
+
+File: maxima.info,  Node: Fourier packages,  Next: Definitions for Numerical,  Prev: Introduction to Numerical,  Up: Numerical
+
+23.2 Fourier packages
+=====================
+
+The `fft' package comprises functions for the numerical (not symbolic)
+computation of the fast Fourier transform.  `load ("fft")' loads this
+package.  See `fft'.
+
+   The `fourie' package comprises functions for the symbolic computation
+of Fourier series.  `load ("fourie")' loads this package.  There are
+functions in the `fourie' package to calculate Fourier integral
+coefficients and some functions for manipulation of expressions.  See
+`Definitions for Fourier Series'.
 

@@ -15,6 +15,10 @@
 @SET_MAKE@
 
 # versioned installation directories
+
+# Installation/uninstallation and distribution for .html files.
+# htmlname -- html base name (e.g. maxima or xmaxima)
+# htmlinstdir -- html installation directory  
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -37,9 +41,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(maxima_TEXINFOS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/maximahtml_pt.mk \
-	$(top_srcdir)/common.mk texinfo.tex
+DIST_COMMON = $(maxima_TEXINFOS) $(srcdir)/../common-lang.mk \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/common-html.mk $(top_srcdir)/common.mk \
+	texinfo.tex
 subdir = doc/info/pt
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -101,6 +106,10 @@ LANG_ES_FALSE = @LANG_ES_FALSE@
 LANG_ES_TRUE = @LANG_ES_TRUE@
 LANG_ES_UTF8_FALSE = @LANG_ES_UTF8_FALSE@
 LANG_ES_UTF8_TRUE = @LANG_ES_UTF8_TRUE@
+LANG_PT_BR_FALSE = @LANG_PT_BR_FALSE@
+LANG_PT_BR_TRUE = @LANG_PT_BR_TRUE@
+LANG_PT_BR_UTF8_FALSE = @LANG_PT_BR_UTF8_FALSE@
+LANG_PT_BR_UTF8_TRUE = @LANG_PT_BR_UTF8_TRUE@
 LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
@@ -196,7 +205,6 @@ Atensor.texi \
 augmented_lagrangian.texi \
 bode.texi \
 Bugs.texi \
-cholesky.texi \
 Command.texi \
 Constants.texi \
 Contexts.texi \
@@ -207,6 +215,7 @@ diag.texi \
 Differential.texi \
 Differentiation.texi \
 distrib.texi \
+dynamics.texi \
 Elliptic.texi \
 Equations.texi \
 eval_string.texi \
@@ -218,12 +227,14 @@ ggf.texi \
 Groups.texi \
 Help.texi \
 impdiff.texi \
+implicit_plot.texi \
 Indices.texi \
 Input.texi \
 Integration.texi \
 interpol.texi \
 Introduction.texi \
 Itensor.texi \
+lbfgs.texi \
 Limits.texi \
 lindstedt.texi \
 linearalgebra.texi \
@@ -245,6 +256,7 @@ plotdf.texi \
 Plotting.texi \
 Polynomials.texi \
 Program.texi \
+romberg.texi \
 Rules.texi \
 Runtime.texi \
 Series.texi \
@@ -252,9 +264,8 @@ simplex.texi \
 simplifications.texi \
 Simplification.texi \
 solve_rec.texi \
-SpecfunII.texi \
 Special.texi \
-Statistics.texi \
+stats.texi \
 stirling.texi \
 stringproc.texi \
 Symmetries.texi \
@@ -262,28 +273,6 @@ Trigonometric.texi \
 unit.texi \
 zeilberger.texi
 
-MAXIMAHTML = maxima_10.html maxima_11.html maxima_12.html \
-	maxima_13.html maxima_14.html maxima_15.html maxima_16.html \
-	maxima_17.html maxima_18.html maxima_19.html maxima_1.html \
-	maxima_20.html maxima_21.html maxima_22.html maxima_23.html \
-	maxima_24.html maxima_25.html maxima_26.html maxima_27.html \
-	maxima_28.html maxima_29.html maxima_2.html maxima_30.html \
-	maxima_31.html maxima_32.html maxima_33.html maxima_34.html \
-	maxima_35.html maxima_36.html maxima_37.html maxima_38.html \
-	maxima_39.html maxima_3.html maxima_40.html maxima_41.html \
-	maxima_42.html maxima_43.html maxima_44.html maxima_45.html \
-	maxima_46.html maxima_47.html maxima_48.html maxima_49.html \
-	maxima_4.html maxima_50.html maxima_51.html maxima_52.html \
-	maxima_53.html maxima_54.html maxima_55.html maxima_56.html \
-	maxima_57.html maxima_58.html maxima_59.html maxima_5.html \
-	maxima_60.html maxima_61.html maxima_62.html maxima_63.html \
-	maxima_64.html maxima_65.html maxima_66.html maxima_67.html \
-	maxima_68.html maxima_69.html maxima_6.html maxima_70.html \
-	maxima_71.html maxima_72.html maxima_73.html maxima_74.html \
-	maxima_75.html maxima_76.html maxima_77.html maxima_78.html \
-	maxima_79.html maxima_7.html maxima_80.html maxima_81.html \
-	maxima_82.html maxima_8.html maxima_9.html maxima_abt.html \
-	maxima_fot.html maxima.html maxima_ovr.html maxima_toc.html
 verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
 verpkgdatadir = $(pkgdatadir)/@VERSION@
@@ -297,15 +286,17 @@ instsrcdir = $(verpkgdatadir)/src
 xmaximadir = $(verpkgdatadir)/xmaxima
 insttestsdir = $(verpkgdatadir)/tests
 genericdir = $(dochtmldir)/pt
-genericdirDATA = $(MAXIMAHTML)\
-contents.hhc index.hhk header.hhp
+genericdirDATA = \
+contents.hhc index.hhk header.hhp maxima.hhp
 
-EXTRA_DIST = maximahtml_pt.mk header.hhp
+htmlname = maxima
+htmlinstdir = $(dochtmldir)/pt
+EXTRA_DIST = maxima-index.lisp $(genericdirDATA)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .dvi .html .info .pdf .ps .texi
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/maximahtml_pt.mk $(top_srcdir)/common.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(top_srcdir)/common-html.mk $(srcdir)/../common-lang.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -381,7 +372,6 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 $(srcdir)/maxima.info: maxima.texi $(maxima_TEXINFOS)
 maxima.dvi: maxima.texi $(maxima_TEXINFOS)
 maxima.pdf: maxima.texi $(maxima_TEXINFOS)
-maxima.html: maxima.texi $(maxima_TEXINFOS)
 .dvi.ps:
 	$(DVIPS) -o $@ $<
 
@@ -420,7 +410,7 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/../../..
+	$(mkdir_p) $(distdir)/.. $(distdir)/../../..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -449,10 +439,10 @@ distdir: $(DISTFILES)
 	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-info
+	  dist-info dist-hook
 check-am: all-am
 check: check-am
-all-am: Makefile $(INFO_DEPS)
+all-am: Makefile $(INFO_DEPS) all-local
 installdirs:
 	for dir in "$(DESTDIR)$(infodir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
@@ -530,25 +520,27 @@ ps-am: $(PSS)
 
 uninstall-am: uninstall-info-am uninstall-local
 
-.PHONY: all all-am check check-am clean clean-generic clean-local \
-	dist-info distclean distclean-generic distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-local install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-aminfo \
+.PHONY: all all-am all-local check check-am clean clean-generic \
+	clean-local dist-hook dist-info distclean distclean-generic \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-data install-data-am install-data-local \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-aminfo \
 	maintainer-clean-generic mostlyclean mostlyclean-aminfo \
 	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am uninstall-local
 
 
-maximahtml_pt.mk:
-	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
-	rm -f maximahtml_pt.mk
-	ls -1 maxima*.html | sed 's/\(.*\)/MAXIMAHTML += \1/' > maximahtml_pt.mk
+all-local: maxima-index.lisp maxima.html contents.hhc
 
-$(MAXIMAHTML): maxima.texi $(maxima_TEXINFOS)
+maxima-index.lisp: maxima.info ../build_index.pl
+	perl ../build_index.pl maxima.info ':crlf' > maxima-index.lisp
+
+maxima.html: maxima.texi $(maxima_TEXINFOS)
 	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
+
+contents.hhc: maxima.html
 	perl ../create_index
 
 # Support for installation of DATA files in a generic directory
@@ -585,17 +577,56 @@ uninstall-datafiles:
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
 
+install-data-local: install-maxima-html
+install-maxima-html: $(htmlname).html
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(htmlinstdir)
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list="$(srcdir)/$(htmlname).html $(srcdir)/$(htmlname)_*.html" ; \
+	for p in $$list; do \
+	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
+	  if test -f $(srcdir)/$$f; then \
+            if test ! -d `dirname $(DESTDIR)$(htmlinstdir)/$$f`; then \
+              $(mkinstalldirs) `dirname $(DESTDIR)$(htmlinstdir)/$$f`; \
+            fi; \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(htmlinstdir)/$$f"; \
+	    $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(htmlinstdir)/$$f; \
+	  else if test -f $$f; then \
+            if test ! -d `dirname $(DESTDIR)$(htmlinstdir)/$$f`; then \
+              $(mkinstalldirs) `dirname $(DESTDIR)$(htmlinstdir)/$$f`; \
+            fi; \
+	    echo " $(INSTALL_DATA) $$f $(DESTDIR)$(htmlinstdir)/$$f"; \
+	    $(INSTALL_DATA) $$f $(DESTDIR)$(htmlinstdir)/$$f; \
+	  fi; fi; \
+	done
+
+uninstall-local: uninstall-maxima-html
+uninstall-maxima-html:
+	@$(NORMAL_UNINSTALL)
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname).html 
+	rm -f $(DESTDIR)$(htmlinstdir)/$(htmlname)_*.html
+
+dist-hook: dist-maxima-html
+dist-maxima-html: $(htmlname).html
+	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
+	list="$(srcdir)/$(htmlname).html $(srcdir)/$(htmlname)_*.html" ; \
+	for p in $$list; do \
+	  f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`; \
+	  test -f $(distdir)/$$f || cp -p $(srcdir)/$$f $(distdir)/$$f; \
+	done
+
 clean-local: clean-info clean-html
 
 clean-info:
 	rm -f maxima.info*
+	rm -f maxima-index.lisp
 
 clean-html:
 	rm -f maxima.html maxima_*.html
 	rm -f contents.hhc
 	rm -f index.hhk
 
-install-info-am: $(INFO_DEPS)
+install-info-am: $(INFO_DEPS) maxima-index.lisp
 	test -z "$(infodir)$(langsdir)" || mkdir -p -- "$(DESTDIR)$(infodir)$(langsdir)"
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	list='$(INFO_DEPS)'; \
@@ -614,6 +645,7 @@ install-info-am: $(INFO_DEPS)
 	    else : ; fi; \
 	  done; \
 	done
+	$(INSTALL_DATA) maxima-index.lisp "$(DESTDIR)$(infodir)$(langsdir)/maxima-index.lisp"
 
 uninstall-info-am:
 	@list='$(INFO_DEPS)'; \
@@ -625,6 +657,7 @@ uninstall-info-am:
 	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
 	   else :; fi); \
 	done
+	rm -f "$(DESTDIR)$(infodir)$(langsdir)/maxima-index.lisp"
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

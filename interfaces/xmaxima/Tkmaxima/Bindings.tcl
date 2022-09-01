@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Bindings.tcl,v 1.4.2.2 2006/09/11 15:36:03 villate Exp $
+#       $Id: Bindings.tcl,v 1.10 2007/03/23 00:05:06 villate Exp $
 #
 ###### Bindings.tcl ######
 ############################################################
@@ -20,14 +20,23 @@ Bindings:
 <Control-y> Yank out the last kill, Meta-y cycles through previous
             kills.
 <Control-g> Interrupts the current computation.
-<Alt-p>     Previous input, or if repeated cycle through the previous
-            inputs.  If the current input is not empty, then
-            match only inputs which begin with the current input.
-<Alt-n>     Like Previous input, but in opposite direction.
+<Alt-p>     Gets the previous input in the history of inputs; if the
+            first input is reached, it proceeds to the last input. If
+            some characters are written before clicking on Alt-p, only
+            history items containing those characters will be considered.
+<Alt-n>     Gets the next input in the history of inputs; if the end is
+            reached, it proceeds to the first input. If some characters
+            are written before clicking on Alt-n, only history items
+            containing those characters will be considered.
 <Alt-s>     Print again the Maxima input prompt.
 "]
 
 proc vMAXSetCNTextBindings {w} {
+    # Prevent deleting output fields with BackSpace key
+    bind CNtext <Key-BackSpace> {
+	if {[lsearch [%W tag names [%W index insert-1c]] output] >= 0} break
+    }
+
     # Disable default keyboard bindings in output fields 
     bind CNtext <Key> {
 	if {[lsearch [%W tag names [%W index insert]] output] >= 0} break
@@ -55,17 +64,26 @@ proc vMAXSetCNTextBindings {w} {
 
     # Special keys (see NCtextHelp above for explanation)
     bind CNtext <Control-g> "CMinterrupt %W "
+    bind CNtext <Control-G> "CMinterrupt %W "
     bind CNtext <Control-u> "CNclearinput %W "
+    bind CNtext <Control-U> "CNclearinput %W "
     bind CNtext "\)"  "CNblinkMatchingParen %W %A"
     bind CNtext "\]"  "CNblinkMatchingParen %W %A"
     bind CNtext "\}"  "CNblinkMatchingParen %W %A"
     bind CNtext <Control-j> "tkTextInsert %W %A ; openMathAnyKey %W %K  %A"
+    bind CNtext <Control-J> "tkTextInsert %W %A ; openMathAnyKey %W %K  %A"
     bind CNtext <Alt-p>  "CNpreviousInput $w -1"
+    bind CNtext <Alt-P>  "CNpreviousInput $w -1"
     bind CNtext <Alt-n>  "CNpreviousInput $w 1"
+    bind CNtext <Alt-N>  "CNpreviousInput $w 1"
     bind CNtext <Alt-s>  {sendMaxima %W ":s\n" }
+    bind CNtext <Alt-S>  {sendMaxima %W ":s\n" }
     bind CNtext <Control-Key-c>  {tk_textCopy %W ;break}
+    bind CNtext <Control-Key-C>  {tk_textCopy %W ;break}
     bind CNtext <Control-Key-x>  {tk_textCut %W ;break}
+    bind CNtext <Control-Key-X>  {tk_textCut %W ;break}
     bind CNtext <Control-Key-v>  {tk_textPaste %W ;break}
+    bind CNtext <Control-Key-V>  {tk_textPaste %W ;break}
 }
 
 
@@ -73,6 +91,9 @@ global maxima_priv
 set maxima_priv(doublek) 0
 
 bind OpenMathText <Control-Key-k><Control-Key-k> {
+    set maxima_priv(doublek) 1
+}
+bind OpenMathText <Control-Key-K><Control-Key-K> {
     set maxima_priv(doublek) 1
 }
 
@@ -88,6 +109,7 @@ if {0} {
     }
 } else {
     bind OpenMathText <Control-Key-k> "+openMathControlK %W"
+    bind OpenMathText <Control-Key-K> "+openMathControlK %W"
 }
 
 

@@ -1,7 +1,7 @@
 ;;; -*-  Mode: Lisp; Package: Maxima; Syntax: Common-Lisp; Base: 10 -*- ;;;;
 
-
 ;;    ** (c) Copyright 1976, 1983 Massachusetts Institute of Technology **
+
 (in-package :maxima)
 
 ;;These are the main routines for finding the Laplace Transform
@@ -17,6 +17,10 @@
 		      $exponentialize $radexpand))
 
 (load-macsyma-macros rzmac)
+
+(defvar *hyp-return-noun-form-p* t
+  "Return noun form instead of internal Lisp symbols for integrals
+  that we don't support")
 
 ;; Return the maxima presentation of a bessel function with order v
 ;; and arg z.  If flg is 'J, the ti's the J function; otherwise, the I
@@ -73,14 +77,7 @@
 (defun parp (a)
   (eq a *par*))
 
-
-
-;;(DEFUN HASVAR(EXP)(COND ((FREEVAR EXP) NIL)(T T)))
-
-
-
-(defun arbpow1
-    (exp)
+(defun arbpow1 (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -653,8 +650,7 @@
 	((coeffpp) (a zerp)))
       nil))
 
-(defun onehe
-    (exp)
+(defun onehe (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -663,8 +659,7 @@
 	((coeffpp) (a zerp)))
       nil))
 
-(defun oneq
-    (exp)
+(defun oneq (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -675,8 +670,7 @@
 	((coeffpp) (a zerp)))
       nil))
 
-(defun onep0
-    (exp)
+(defun onep0 (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -685,8 +679,7 @@
 	((coeffpp) (a zerp)))
       nil))
 
-(defun hyp-onep
-    (exp)
+(defun hyp-onep (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -698,8 +691,7 @@
       nil))
 
 ;; Recognize %w[v1,v2](w), Whittaker W function.
-(defun onew
-    (exp)
+(defun onew (exp)
   (m2 exp
       '((mplus)
 	((coeffpt)
@@ -709,13 +701,6 @@
 	  (w true)))
 	((coeffpp) (a zerp)))
       nil))
-
- 
-
-
- 
-
-
 
 ;;...RECOGNIZES L.T.E. "U*%E^(A*X+E*F(X)-P*X+C)+D".
 
@@ -735,13 +720,8 @@
 	((coeffpp) (d zerp)))
       nil)) 
 
-;;(DEFUN ZERP(A)(EQUAL A 0))
-
-;;(DEFUN NONZERP(A)(NOT (ZERP A)))
-
 (defmfun $specint (exp var)
   (prog ($radexpand checkcoefsignlist)
-     (progn (find-function 'sinint))
      (setq $radexpand '$all)
      (return (grasp-some-trigs exp))))
 
@@ -968,28 +948,58 @@
 (defun f24p146test (c v a)
   (cond ((and (eq (asksign a) '$positive)
 	      (eq (asksign v) '$positive))
-	;; Both a and v must be positive
+	 ;; Both a and v must be positive
 	 (f24p146 c v a))
-	(t 'fail-on-f24p146test)))
+	(t
+	 (if *hyp-return-noun-form-p*
+	     `((%specint) ,(mul* c
+				 (pow var (add v -1))
+				 (pow '$%e (div (mul -1 var var)
+						(mul 8 a)))
+				 (pow '$%e (mul -1 *par* var)))
+	       ,var)
+	     'fail-on-f24p146test))))
 
 ;; Check if conditions for f35p147 hold
 (defun f35p147test (c v a)
   (cond ((eq (asksign v) '$positive)
 	 ;; v must be positive
 	 (f35p147 c v a))
-	(t 'fail-on-f35p147test)))
+	(t
+	 (if *hyp-return-noun-form-p*
+	     `((%specint) ,(mul* c
+				 (pow (mul 2 var)
+				      (add v -1))
+				 (pow '$%e (mul -2
+						(pow a 1//2)
+						(pow var 1//2)))
+				 (pow '$%e (mul -1 *par* var)))
+	       ,var)
+	     'fail-on-f35p147test))))
 
 ;; Check if conditions for f29p146test hold
 (defun f29p146test (v a)
   (cond ((eq (asksign a) '$positive)
 	 (f29p146 v a))
-	(t 'fail-on-f29p146test)))
+	(t
+	 (if *hyp-return-noun-form-p*
+	     `((%specint) ,(mul (pow var (add v -1))
+				(pow '$%e (div (mul -1 a)
+					       (mul 4 var)))
+				(pow '$%e (mul -1 *par* var)))
+	       ,var)
+	     'fail-on-f29p146test))))
 
 ;; Check if conditions for f1p137 hold
 (defun f1p137test (pow)
   (cond ((eq (asksign (add pow 1)) '$positive)
 	 (f1p137 pow))
-	(t 'fail-in-arbpow))) 
+	(t
+	 (if *hyp-return-noun-form-p*
+	     `((%specint) ,(mul (pow var pow)
+				(pow '$%e (mul -1 *par* var)))
+	       ,var)
+	     'fail-in-arbpow))))
 
 ;; Table of Integral Transforms
 ;;
@@ -2730,7 +2740,7 @@
 	   (cdras 'c arg))
      (cond ((and (maxima-integerp m)(zerp c))
 	    (return (f19cond a m l1 l2))))
-     (return 'prop4-and-aother-cases-to-folow)))
+     (return 'prop4-and-other-cases-to-follow)))
 
 
 ;; Match f(x)+c
@@ -2800,7 +2810,14 @@
 				       l2
 				       a
 				       m)))))
-     (return 'failed-on-f19cond-multiply-the-other-cases-with-d)))
+     (if *hyp-return-noun-form-p*
+	 (return
+	   `((%specint) ,(mul d
+			      (pow var s)
+			      (hgfsimp-exec l1 l2 (mul a (pow var m)))
+			      (pow '$%e (mul -1 *par* var)))
+	     ,var))
+	 (return 'failed-on-f19cond-multiply-the-other-cases-with-d))))
 
 ;; Table of Laplace transforms, p 220, formula 19:
 ;;
@@ -2848,10 +2865,24 @@
 	   m (cdras 'm arg) 
 	   c (cdras 'c arg))
      (cond ((and (zerp c) (equal m 1.))
-	    (return (f2p105v2cond a l index))))
+	    (let ((ans (f2p105v2cond a l index)))
+	      (unless (symbolp ans)
+		(return ans)))))
      (cond ((and (zerp c) (equal m (inv 2.)))
-	    (return (f50cond a l index))))
-     (return 'fail-in-dionarghyp-y))) 
+	    (let ((ans (f50cond a l index)))
+	      (unless (symbolp ans)
+		(return ans)))))
+     (if *hyp-return-noun-form-p*
+	 (return `((%specint) ,(mul (cdras 'd l)
+				    (pow var (cdras 'm l))
+				    (cdras 'q l)
+				    (bessy index
+					   (add c
+						(mul a
+						     (pow var m))))
+				    (pow '$%e (mul -1 *par* var)))
+		   ,var))
+	 (return 'fail-in-dionarghyp-y))))
 
 (defun f2p105v2cond (a l index) 
   (prog (d m) 
@@ -2860,7 +2891,7 @@
      (cond ((eq (checksigntm ($realpart (sub m index)))
 		'$positive)
 	    (return (f2p105v2cond-simp m index a))))
-     (return 'fail-in-f2p105v2cond))) 
+     (return 'fail-in-f2p105v2cond)))
 
 (defun f50cond (a l v) 
   (prog (d m) 

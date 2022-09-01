@@ -21,9 +21,9 @@
 ;; See graph2d.usg (which should come together with this program) for
 ;; a usage summary, and graph2d.dem for examples.
 ;;
-;; $Id: graph2d.lisp,v 1.1 2006/07/31 17:35:17 villate Exp $
+;; $Id: graph2d.lisp,v 1.2.6.1 2007/04/04 23:56:59 villate Exp $
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 ;; default graph2d options
 (defvar $graph2d_options '((mlist)
@@ -95,7 +95,7 @@
     (with-output-to-string (st)
 			   (sloop for v in (rest $graph2d_options)
 				  when (eq (second v) name)
-				  do (setq vv (mapcar #'stripdollar (rest v)))
+				  do (setq vv (mapcar #'print-invert-case (mapcar #'stripdollar (rest v))))
 				  (format st "{~a {~{~(~a~)~^ ~}}}"
 					  (first vv) (rest vv))))))
 

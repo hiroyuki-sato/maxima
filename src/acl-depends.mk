@@ -34,7 +34,6 @@ binary-acl/maxima.dxl : mformt.lisp
 binary-acl/maxima.dxl : mutils.lisp
 binary-acl/maxima.dxl : outmis.lisp
 binary-acl/maxima.dxl : ar.lisp
-binary-acl/maxima.dxl : misc.lisp
 binary-acl/maxima.dxl : comm.lisp
 binary-acl/maxima.dxl : comm2.lisp
 binary-acl/maxima.dxl : mlisp.lisp
@@ -218,7 +217,6 @@ binary-acl/maxima.dxl : ellipt.lisp
 binary-acl/maxima.dxl : airy.lisp
 binary-acl/maxima.dxl : numer.lisp
 binary-acl/maxima.dxl : intpol.lisp
-binary-acl/maxima.dxl : rombrg.lisp
 binary-acl/maxima.dxl : nparse.lisp
 binary-acl/maxima.dxl : displa.lisp
 binary-acl/maxima.dxl : nforma.lisp
@@ -287,6 +285,8 @@ binary-acl/maxima.dxl : hyp.lisp
 binary-acl/maxima.dxl : todd-coxeter.lisp
 binary-acl/maxima.dxl : mactex.lisp
 binary-acl/maxima.dxl : plot.lisp
+binary-acl/maxima.dxl : gnuplot.lisp
+binary-acl/maxima.dxl : openmath.lisp
 binary-acl/maxima.dxl : autol.lisp
 binary-acl/maxima.dxl : max_ext.lisp
 binary-acl/maxima.dxl : init-cl.lisp

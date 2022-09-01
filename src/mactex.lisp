@@ -1,4 +1,5 @@
 (in-package :maxima)
+
 ;; TeX-printing
 ;; (c) copyright 1987, Richard J. Fateman
 ;; small corrections and additions: Andrey Grozin, 2001
@@ -53,21 +54,11 @@
 ;; in case a file-name is supplied, the output will be sent
 ;; (perhaps appended) to that file.
 
-;;(macsyma-module tex ); based on "mrg/grind"
-
-(declare-top
- (special lop rop ccol $gcprint texport $labels $inchar
-	  vaxima-main-dir
-	  )
- (*expr tex-lbp tex-rbp))
+(declare-top (special lop rop ccol $gcprint texport $labels $inchar vaxima-main-dir))
 
 ;; top level command the result of tex'ing the expression x.
 ;; Lots of messing around here to get C-labels verbatim printed
 ;; and function definitions verbatim "ground"
-
-;;(defmspec $tex(l) ;; mexplabel, and optional filename
-;;  (let ((args (cdr l)))
-;;  (apply 'tex1  args)))
 
 (defmspec $tex(l) ;; mexplabel, and optional filename
   ;;if filename supplied but 'nil' then return a string
@@ -105,7 +96,7 @@
      ;; go back and analyze the first arg more thoroughly now.
      ;; do a normal evaluation of the expression in macsyma
      (setq mexp (meval mexplabel))
-     (cond ((memq mexplabel $labels)	; leave it if it is a label
+     (cond ((member mexplabel $labels :test #'eq)	; leave it if it is a label
 	    (setq mexplabel (concatenate 'string "(" (print-invert-case (stripdollar mexplabel))
 					 ")"))
 	    (setq itsalabel t))
@@ -121,7 +112,7 @@
 		 ((setq y (mget x 'aexpr))
 		  (setq mexp (list '(mdefine) (cons (list x 'array) (cdadr y)) (caddr y)))))))
      (cond ((and (null(atom mexp))
-		 (memq (caar mexp) '(mdefine mdefmacro)))
+		 (member (caar mexp) '(mdefine mdefmacro) :test #'eq))
 	    (format texport "~%\\begin{verbatim}~%")
 	    (cond (mexplabel (format texport "~a " mexplabel)))
 	    (mgrind mexp texport)	;write expression as string
@@ -175,16 +166,15 @@
 
 (defun myprinc (chstr)
   (prog (chlst)
-     (cond ((and (greaterp (plus (length (setq chlst (exploden chstr))) ccol) 70.)
+     (cond ((and (> (+ (length (setq chlst (exploden chstr))) ccol) 70.)
                  (or (stringp chstr) (equal chstr '| |)))
 	    (terpri texport)      ;would have exceeded the line length
 	    (setq ccol 1.)
-	    (myprinc " ")	    ; lead off with a space for safety
-	    ))				;so we split it up.
+	    (myprinc " "))) ; lead off with a space for safetyso we split it up.			
      (do ((ch chlst (cdr ch))
-	  (colc ccol (add1 colc)))
+	  (colc ccol (1+ colc)))
 	 ((null ch) (setq ccol colc))
-       (tyo (car ch) texport))))
+       (write-char (car ch) texport))))
 
 (defun myterpri nil
   (cond (texport (terpri texport))
@@ -201,7 +191,7 @@
 	((or (<= (tex-lbp (caar x)) (tex-rbp lop)) (> (tex-lbp rop) (tex-rbp (caar x))))
 	 (tex-paren x l r))
 	;; special check needed because macsyma notates arrays peculiarly
-	((memq 'array (cdar x)) (tex-array x l r))
+	((member 'array (cdar x) :test #'eq) (tex-array x l r))
 	;; dispatch for object-oriented tex-ifiying
 	((get (caar x) 'tex) (funcall (get (caar x) 'tex) x l r))
 	(t (tex-function x l r nil))))
@@ -213,7 +203,7 @@
                       ((stringp x) (tex-string x))
                       ((mstringp x)
                        (let ((s (maybe-invert-string-case (symbol-name (stripdollar x)))))
-                         (tex-string (quote-% (if stringdisp (concatenate 'string "``" s "''") s)))))
+                         (tex-string (quote-% (if $stringdisp (concatenate 'string "``" s "''") s)))))
                       ((characterp x) (tex-char x))
 		      (t (tex-stripdollar x))))
 	  r))
@@ -347,12 +337,12 @@
     (cond ((null y)       (tex-function x l r t)) ; this should not happen
           ((null (cdr y)) (tex-function x l r t)) ; this should not happen, too
           (t (do ((nl) (lop ext-lop op) (rop op (if (null (cdr y)) ext-rop op)))
-                 ((null (cdr y)) (setq nl (nconc nl (tex (car y)  l r lop rop))) nl)
-	       (setq nl (nconc nl (tex (car y)  l (list sym)   lop rop))
+                 ((null (cdr y)) (setq nl (append nl (tex (car y)  l r lop rop))) nl)
+	       (setq nl (append nl (tex (car y) l sym lop rop))
 		     y (cdr y)
 		     l nil))))))
 
-(defun tex-nofix (x l r) (tex (caar x) l r (caar x) rop))
+(defun tex-nofix (x l r) (tex (car (texsym (caar x))) l r (caar x) rop))
 
 (defun tex-matchfix (x l r)
   (setq l (append l (car (texsym (caar x))))
@@ -383,12 +373,13 @@
     ; Play it safe -- check anyway.
     (if (or (find '|b| formatted) (find '|B| formatted))
       (let*
-        ((expt-symbols '(|_| |b| | | |\\| |T| |I| |M| |E| |S| | | |1| |0| |^| |{|))
-         (spell-out-expt
+        ((spell-out-expt
            (append
              (apply #'append
                     (mapcar
-                      #'(lambda (e) (if (or (eq e '|b|) (eq e '|B|)) expt-symbols (list e)))
+                     #'(lambda (e) (if (or (eq e '|b|) (eq e '|B|))
+                                       '("_B" | | "\\times" | | "10^{")
+                                       (list e)))
                       formatted))
              '(|}|))))
         (append l spell-out-expt r))
@@ -531,11 +522,11 @@
 		 (expon (caddr x)) ;; this is the exponent
 		 (doit (and
 			f		; there is such a function
-			(memq (getchar f 1) '(% $)) ;; insist it is a % or $ function
+			(member (getchar f 1) '(% $) :test #'eq) ;; insist it is a % or $ function
 			(not (eq (car (last (car fx))) 'array))	; fix for x[i]^2
 					; Jesper Harder <harder@ifa.au.dk>
-			(not (memq f '(%sum %product %derivative %integrate %at
-				       %lsum %limit))) ;; what else? what a hack...
+			(not (member f '(%sum %product %derivative %integrate %at
+				       %lsum %limit) :test #'eq)) ;; what else? what a hack...
 			(or (and (atom expon) (not (numberp expon))) ; f(x)^y is ok
 			    (and (atom expon) (numberp expon) (> expon 0))))))
 					; f(x)^3 is ok, but not f(x)^-1, which could
@@ -570,10 +561,10 @@
 (defprop mncexpt tex-mexpt tex)
 
 (defprop mnctimes tex-nary tex)
-(defprop mnctimes "\\cdot " texsym)
+(defprop mnctimes ("\\cdot ") texsym)
 
 (defprop mtimes tex-nary tex)
-(defprop mtimes "\\," texsym)
+(defprop mtimes ("\\,") texsym)
 
 (defprop %sqrt tex-sqrt tex)
 
@@ -702,7 +693,7 @@
 
 (defun tex-mplus (x l r)
 					;(declare (fixnum w))
-  (cond ((memq 'trunc (car x))(setq r (cons "+\\cdots " r))))
+  (cond ((member 'trunc (car x) :test #'eq) (setq r (cons "+\\cdots " r))))
   (cond ((null (cddr x))
 	 (if (null (cdr x))
 	     (tex-function x l r t)
@@ -753,10 +744,10 @@
 (defprop mnot ("\\neg ") texsym)
 
 (defprop mand tex-nary tex)
-(defprop mand "\\land " texsym)
+(defprop mand ("\\land ") texsym)
 
 (defprop mor tex-nary tex)
-(defprop mor "\\lor " texsym)
+(defprop mor ("\\lor ") texsym)
 
 ;; make sin(x) display as sin x , but sin(x+y) as sin(x+y)
 ;; etc
@@ -834,8 +825,6 @@
     (%acoth "{\\rm acoth}\\; ")
 
 	)) ;; etc
-
-(defprop mor tex-nary tex)
 
 (defprop mcond tex-mcond tex)
 (defprop %mcond tex-mcond tex)
@@ -1031,7 +1020,7 @@
 	(t
 	 (setq s (list s))))
   
-  (setq s (mapcar #'stripdollar s))
+  (setq s (mapcar #'(lambda (x) (maybe-invert-string-case (symbol-name (stripdollar x)))) s))
 
   (cond ((null tx)
 	 (putprop e (nth 0 s) 'texword))
@@ -1043,23 +1032,40 @@
 	       ((eq (length s) 2)
 		(putprop e (list (list (nth 0 s)) (nth 1 s)) 'texsym))
 	       (t
-		(putprop e (list (list (nth 0 s)) (nth 1 s) (nth 2 s)) 'texsym))))
+		(putprop e (list (list (nth 0 s)) (nth 1 s) (nth 2 s)) 'texsym)))
+     `((mlist) ,@s))
+
+    ((eq tx '$nofix)
+     (putprop e 'tex-nofix 'tex)
+     (putprop e s 'texsym)
+     (car s))
 
 	((eq tx '$prefix)
 	 (putprop e 'tex-prefix 'tex)
      (when (null (get e 'grind))
        (putprop e 180 'tex-rbp))
-	 (putprop e s 'texsym))
+	 (putprop e s 'texsym)
+     (car s))
 		
 	((eq tx '$infix)
 	 (putprop e 'tex-infix 'tex)
      (when (null (get e 'grind))
        (putprop e 180 'tex-lbp)
        (putprop e 180 'tex-rbp))
-	 (putprop e  s 'texsym))
+	 (putprop e  s 'texsym)
+     (car s))
+
+    ((eq tx '$nary)
+     (putprop e 'tex-nary 'tex)
+     (when (null (get e 'grind))
+       (putprop e 180 'tex-lbp)
+       (putprop e 180 'tex-rbp))
+     (putprop e s 'texsym)
+     (car s))
 
 	((eq tx '$postfix)
 	 (putprop e 'tex-postfix 'tex)
      (when (null (get e 'grind))
        (putprop e 180 'tex-lbp))
-	 (putprop e  s 'texsym))))
+	 (putprop e  s 'texsym)
+     (car s))))

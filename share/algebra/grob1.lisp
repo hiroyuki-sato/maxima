@@ -306,8 +306,8 @@
 
 (defun *iterm (m1 m2)
 	(cons
-	  (times (car m1) (car m2))
-	  (mapcar '+ (cdr m1) (cdr m2))))
+	  (* (car m1) (car m2))
+	  (mapcar #'+ (cdr m1) (cdr m2))))
 
 (defun isyz (pair)
 	(let ((f (caddr pair))
@@ -326,7 +326,7 @@
 ;OPERATIONS ELEMENTAIRES DESTRUCTIVES (POLYNOMES) COEFFICIENTS ENTIERS
 
 (defun *icofpol (c p)	;destructif resultat dans p
-	(mapc #'(lambda(u) (rplaca u (times c (car u))))   p))
+	(mapc #'(lambda(u) (rplaca u (* c (car u))))   p))
 
 	;Cette fonction retourne et lie a p1 la difference (cdr p1) - p2
 	;iteratif et destructif
@@ -347,7 +347,7 @@
 	      ((funcall ordexp e1 e2)
 		(setq p (cdr p)))
 	      ((equal e1 e2)
-		(let ((a (difference (caadr p) (caar q))))
+		(let ((a (- (caadr p) (caar q))))
 		  (cond ((zerop a)
 			  (rplacd p (cddr p)))
 		        (t
@@ -357,7 +357,7 @@
 	      (t
 		(setq p (cdr (rplacd p (cons
 					  (cons
-					    (difference 0 (caar q))
+					    (- (caar q))
 					    (cdar q))
 					  (cdr p)))))
 		(setq q (cdr q))))))
@@ -461,7 +461,7 @@
 ;remettre a jour la liste des paires et recommencer
 
 (defun grobner (gener ordexp)
-	  (setq $base (cons nil (sort (copy gener)
+	  (setq $base (cons nil (sort (copy-tree gener)
 				#'(lambda (u v) (ordexp (cdar v) (cdar u))))))
 	  (let ((paires nil))
 	  (setq $nbsyz 0 $nbred 0 $nbreduc 0 $nbred0 0)
@@ -699,7 +699,7 @@
 	    ((null i) l)
 	    (rplaca i (1+ (car i)))
 	    (cond ((sousp m esc)
-		     (setq l (cons (copy m) l))
+		     (setq l (cons (copy-tree m) l))
 		     (setq i m))
 	          (t
 		    (rplaca i 0)
@@ -727,7 +727,7 @@
 (defun umat (basli base)
 	(mapcar #'(lambda (u) (divise
 			       (cons
-				 (cons 1 (rplaca (copy u) (1+ (car u))))
+				 (cons 1 (rplaca (copy-tree u) (1+ (car u))))
 				 nil)
 			       base))
 	         basli))

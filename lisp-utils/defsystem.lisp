@@ -2808,7 +2808,9 @@ the system definition, if provided."
 				   ;; (pathname-host nil)
 				   #+sbcl
 				   (component-host component)
-				   #-sbcl
+				   #+openmcl
+				   (component-host (if (eq component :unspecific) "" component))
+				   #-(or :sbcl :openmcl)
 				   (pathname-host (component-host component)))
 			   :directory (pathname-directory pathname)
 			   ;; Use :directory instead of :defaults
@@ -4667,6 +4669,7 @@ the system definition, if provided."
 Signal an error when it is not a filename designator.
 Return NIL when the file does not exist, or is not readable,
 or does not contain valid compiled code."
+  (declare (ignorable file-name))
   #+clisp
   (with-open-file (in file-name :direction :input :if-does-not-exist nil)
     (and in (char= #\( (peek-char nil in))

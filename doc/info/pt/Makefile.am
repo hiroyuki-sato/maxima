@@ -10,7 +10,6 @@ Atensor.texi \
 augmented_lagrangian.texi \
 bode.texi \
 Bugs.texi \
-cholesky.texi \
 Command.texi \
 Constants.texi \
 Contexts.texi \
@@ -21,6 +20,7 @@ diag.texi \
 Differential.texi \
 Differentiation.texi \
 distrib.texi \
+dynamics.texi \
 Elliptic.texi \
 Equations.texi \
 eval_string.texi \
@@ -32,12 +32,14 @@ ggf.texi \
 Groups.texi \
 Help.texi \
 impdiff.texi \
+implicit_plot.texi \
 Indices.texi \
 Input.texi \
 Integration.texi \
 interpol.texi \
 Introduction.texi \
 Itensor.texi \
+lbfgs.texi \
 Limits.texi \
 lindstedt.texi \
 linearalgebra.texi \
@@ -59,6 +61,7 @@ plotdf.texi \
 Plotting.texi \
 Polynomials.texi \
 Program.texi \
+romberg.texi \
 Rules.texi \
 Runtime.texi \
 Series.texi \
@@ -66,9 +69,8 @@ simplex.texi \
 simplifications.texi \
 Simplification.texi \
 solve_rec.texi \
-SpecfunII.texi \
 Special.texi \
-Statistics.texi \
+stats.texi \
 stirling.texi \
 stringproc.texi \
 Symmetries.texi \
@@ -76,63 +78,39 @@ Trigonometric.texi \
 unit.texi \
 zeilberger.texi
 
-maximahtml_pt.mk:
-	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
-	rm -f maximahtml_pt.mk
-	ls -1 maxima*.html | sed 's/\(.*\)/MAXIMAHTML += \1/' > maximahtml_pt.mk
 
-MAXIMAHTML = 
-include maximahtml_pt.mk
+all-local: maxima-index.lisp maxima.html contents.hhc
 
-$(MAXIMAHTML): maxima.texi $(maxima_TEXINFOS)
+maxima-index.lisp: maxima.info ../build_index.pl
+	perl ../build_index.pl maxima.info ':crlf' > maxima-index.lisp
+
+maxima.html: maxima.texi $(maxima_TEXINFOS)
 	perl ../texi2html -split_chapter --lang=pt --output=. --css-include=../manual.css --init-file ../texi2html.init maxima.texi 
+
+contents.hhc: maxima.html
 	perl ../create_index
 
 include $(top_srcdir)/common.mk
 genericdir = $(dochtmldir)/pt
-genericdirDATA = $(MAXIMAHTML)\
-contents.hhc index.hhk header.hhp
+genericdirDATA = \
+contents.hhc index.hhk header.hhp maxima.hhp
+
+htmlname = maxima
+htmlinstdir = $(dochtmldir)/pt
+include $(top_srcdir)/common-html.mk
 
 clean-local: clean-info clean-html
 
 clean-info:
 	rm -f maxima.info*
+	rm -f maxima-index.lisp
 
 clean-html:
 	rm -f maxima.html maxima_*.html
 	rm -f contents.hhc
 	rm -f index.hhk
 
-EXTRA_DIST = maximahtml_pt.mk header.hhp
+EXTRA_DIST = maxima-index.lisp $(genericdirDATA)
 
-install-info-am: $(INFO_DEPS)
-	test -z "$(infodir)$(langsdir)" || mkdir -p -- "$(DESTDIR)$(infodir)$(langsdir)"
-	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
-	list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  case $$file in \
-	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
-	  esac; \
-	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
-	  file_i=`echo "$$file" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  for ifile in $$d/$$file $$d/$$file-[0-9] $$d/$$file-[0-9][0-9] \
-                       $$d/$$file_i[0-9] $$d/$$file_i[0-9][0-9] ; do \
-	    if test -f $$ifile; then \
-	      relfile=`echo "$$ifile" | sed 's|^.*/||'`; \
-	      echo " $(INSTALL_DATA) '$$ifile' '$(DESTDIR)$(infodir)$(langsdir)/$$relfile'"; \
-	      $(INSTALL_DATA) "$$ifile" "$(DESTDIR)$(infodir)$(langsdir)/$$relfile"; \
-	    else : ; fi; \
-	  done; \
-	done
-
-uninstall-info-am:
-	@list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  relfile=`echo "$$file" | sed 's|^.*/||'`; \
-	  relfile_i=`echo "$$relfile" | sed 's|\.info$$||;s|$$|.i|'`; \
-	  (if cd "$(DESTDIR)$(infodir)$(langsdir)"; then \
-	     echo " cd '$(DESTDIR)$(infodir)$(langsdir)' && rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]"; \
-	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
-	   else :; fi); \
-	done
+include ../common-lang.mk
 

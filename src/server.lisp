@@ -1,4 +1,3 @@
-
 ;; very simple server started on port
 
 (in-package :maxima)
@@ -22,6 +21,7 @@
     (setq *standard-output* sock)
     (setq *error-output* sock)
     (setq *terminal-io* sock)
+    (setq *trace-output* sock)
     (format t "pid=~a~%"        (getpid))
     (force-output sock)
     (setq *debug-io* sock)
@@ -73,7 +73,7 @@
 #+clisp
 (deff getpid (symbol-function
 	      ;; Decide at load time which function to use.
-	      (or (and (memq :unix *features*)
+	      (or (and (member :unix *features* :test #'eq)
 		       (or (find-symbol "PROCESS-ID" "SYS")
 			   (find-symbol "PROGRAM-ID" "SYS")))
 		  'getpid-from-environment)))
@@ -91,5 +91,3 @@
   #+(or cmu scl) (unix::unix-chdir w)
   #+sbcl (sb-posix:chdir w)
   )
- 
-  

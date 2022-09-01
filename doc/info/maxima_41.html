@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on September, 20 2006 by texi2html 1.76 -->
+<!-- Created on May, 2 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima Manual: 41. Program Flow</title>
+<title>Maxima Manual: 41. Debugging</title>
 
-<meta name="description" content="Maxima Manual: 41. Program Flow">
-<meta name="keywords" content="Maxima Manual: 41. Program Flow">
+<meta name="description" content="Maxima Manual: 41. Debugging">
+<meta name="keywords" content="Maxima Manual: 41. Debugging">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -128,733 +128,583 @@ div.image
 
 <body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
 
-<a name="Program-Flow"></a>
-<a name="SEC162"></a>
+<a name="Debugging"></a>
+<a name="SEC169"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="maxima_40.html#SEC161" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC163" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="maxima_40.html#SEC168" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC170" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="maxima_40.html#SEC155" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_40.html#SEC166" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_42.html#SEC165" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_72.html#SEC264" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h1 class="chapter"> 41. Program Flow </h1>
+<h1 class="chapter"> 41. Debugging </h1>
 
 <table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#SEC163">41.1 Introduction to Program Flow</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  
+<tr><td align="left" valign="top"><a href="#SEC170">41.1 Source Level Debugging</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC164">41.2 Definitions for Program Flow</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  
+<tr><td align="left" valign="top"><a href="#SEC171">41.2 Keyword Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC172">41.3 Definitions for Debugging</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">   
 </td></tr>
 </table>
 
 <hr size="6">
-<a name="Introduction-to-Program-Flow"></a>
-<a name="SEC163"></a>
+<a name="Source-Level-Debugging"></a>
+<a name="SEC170"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC162" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC164" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC169" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC171" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#SEC162" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC162" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_42.html#SEC165" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_72.html#SEC264" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 41.1 Introduction to Program Flow </h2>
+<h2 class="section"> 41.1 Source Level Debugging </h2>
 
-<p>Maxima provides a <code>do</code> loop for iteration, as well as more primitive
-constructs such as <code>go</code>.
+<p>Maxima has a built-in source level debugger.  
+The user can set a breakpoint at a function,
+and then step line by line from there.  The call
+stack may be examined, together with the variables bound at that
+level.
+</p>
+<p>The command <code>:help</code> or <code>:h</code> shows the list of debugger commands.
+(In general,
+commands may be abbreviated if the abbreviation is unique.  If not
+unique, the alternatives will be listed.)
+Within the debugger, the user can also use any ordinary Maxima
+functions to examine, define, and manipulate variables and expressions.
+</p>
+<p>A breakpoint is set by the <code>:br</code> command at the Maxima prompt.
+Within the debugger,
+the user can advance one line at a time using the <code>:n</code> (&quot;next&quot;) command.
+The <code>:bt</code> (&quot;backtrace&quot;) command shows a list of stack frames.
+The <code>:r</code> (&quot;resume&quot;) command exits the debugger and continues with execution.
+These commands are demonstrated in the example below.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load (&quot;/tmp/foobar.mac&quot;);
+
+(%o1)                           /tmp/foobar.mac
+
+(%i2) :br foo
+Turning on debugging debugmode(true)
+Bkpt 0 for foo (in /tmp/foobar.mac line 1) 
+
+(%i2) bar (2,3);
+Bkpt 0:(foobar.mac 1)
+/tmp/foobar.mac:1::
+
+(dbm:1) :bt                        &lt;-- :bt typed here gives a backtrace
+#0: foo(y=5)(foobar.mac line 1)
+#1: bar(x=2,y=3)(foobar.mac line 9)
+
+(dbm:1) :n                         &lt;-- Here type :n to advance line
+(foobar.mac 2)
+/tmp/foobar.mac:2::
+
+(dbm:1) :n                         &lt;-- Here type :n to advance line
+(foobar.mac 3)
+/tmp/foobar.mac:3::
+
+(dbm:1) u;                         &lt;-- Investigate value of u
+28
+
+(dbm:1) u: 33;                     &lt;-- Change u to be 33
+33
+
+(dbm:1) :r                         &lt;-- Type :r to resume the computation
+
+(%o2)                                1094
+</pre></td></tr></table>
+<p>The file <code>/tmp/foobar.mac</code> is the following:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">foo(y) := block ([u:y^2],
+  u: u+3,
+  u: u^2,
+  u);
+ 
+bar(x,y) := (
+  x: x+2,
+  y: y+2,
+  x: foo(y),
+  x+y);
+</pre></td></tr></table>
+<p>USE OF THE DEBUGGER THROUGH EMACS
+</p>
+<p>If the user is running the code under GNU emacs in a shell
+window (dbl shell), or is running the graphical interface version,
+<code>xmaxima</code>, then if he stops at a break point, he will see his
+current position in the source file which will be displayed in the
+other half of the window, either highlighted in red, or with a little
+arrow pointing at the right line.  He can advance single lines at a
+time by typing M-n (Alt-n).
+</p>
+<p>Under Emacs you should run in a <code>dbl</code> shell, which requires the
+<code>dbl.el</code> file in the elisp directory.
+Make sure you install the elisp files or add the Maxima elisp directory to
+your path:
+e.g., add the following to your <tt>`.emacs'</tt> file or the <code>site-init.el</code>
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(setq load-path (cons &quot;/usr/share/maxima/5.9.1/emacs&quot; load-path))
+(autoload 'dbl &quot;dbl&quot;)
+</pre></td></tr></table>
+<p>then in emacs 
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">M-x dbl
+</pre></td></tr></table>
+<p>should start a shell window in which you can run programs, for example
+Maxima, gcl, gdb etc.   This shell window also knows about source level
+debugging, and display of source code in the other window.  
+</p>
+<p>The user may set a break point at a certain line of the
+file by typing <code>C-x space</code>.  This figures out which function
+the cursor is in, and then it sees which line of that function
+the cursor is on.   If the cursor is on, say, line 2 of <code>foo</code>, then it will
+insert in the other window the command, &quot;<code>:br foo 2</code>&quot;, to
+break <code>foo</code> at its second line.   To have this enabled, the user must have
+maxima-mode.el turned on in the window in which the file <code>foobar.mac</code> is visiting.
+There are additional commands available in that file window, such as
+evaluating the function into the Maxima, by typing <code>Alt-Control-x</code>.
 </p>
 <hr size="6">
-<a name="Definitions-for-Program-Flow"></a>
-<a name="SEC164"></a>
+<a name="Keyword-Commands"></a>
+<a name="SEC171"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC163" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_42.html#SEC165" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC170" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC172" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#SEC162" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC162" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_42.html#SEC165" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_72.html#SEC264" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 41.2 Definitions for Program Flow </h2>
+<h2 class="section"> 41.2 Keyword Commands </h2>
+
+<p>Keyword commands are special keywords which are not interpreted as Maxima expressions.
+A keyword command can be entered at the Maxima prompt or the debugger prompt,
+although not at the break prompt.
+Keyword commands start with a colon, ':'.
+For example, to evaluate a Lisp form you
+may type <code>:lisp</code> followed by the form to be evaluated.  
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) :lisp (+ 2 3) 
+5
+</pre></td></tr></table>
+<p>The number of arguments taken depends on the particular command.  Also,
+you need not type the whole command, just enough to be unique among
+the break keywords.   Thus <code>:br</code> would suffice for <code>:break</code>.
+</p>
+<p>The keyword commands are listed below.
+</p>
+<dl compact="compact">
+<dt> <code>:break F n</code></dt>
+<dd><p>Set a breakpoint in function <code>F</code> at line offset <code>n</code>
+from the beginning of the function.
+If <code>F</code> is given as a string, then it is assumed to be
+a file, and <code>n</code> is the offset from the beginning of the file.
+The offset is optional. If not given, it is assumed to be zero
+(first line of the function or file).
+</p></dd>
+<dt> <code>:bt</code></dt>
+<dd><p>Print a backtrace of the stack frames
+</p></dd>
+<dt> <code>:continue</code></dt>
+<dd><p>Continue the computation
+</p></dd>
+<dt> <code>:delete</code></dt>
+<dd><p>Delete the specified breakpoints, or all if none are specified
+</p></dd>
+<dt> <code>:disable</code></dt>
+<dd><p>Disable the specified breakpoints, or all if none are specified
+</p></dd>
+<dt> <code>:enable</code></dt>
+<dd><p>Enable the specified breakpoints, or all if none are specified
+</p></dd>
+<dt> <code>:frame n</code></dt>
+<dd><p>Print stack frame <code>n</code>, or the current frame if none is specified
+</p></dd>
+<dt> <code>:help</code></dt>
+<dd><p>Print help on a debugger command, or all commands if none is specified
+</p></dd>
+<dt> <code>:info</code></dt>
+<dd><p>Print information about item
+</p></dd>
+<dt> <code>:lisp some-form</code></dt>
+<dd><p>Evaluate <code>some-form</code> as a Lisp form
+</p></dd>
+<dt> <code>:lisp-quiet some-form</code></dt>
+<dd><p>Evaluate Lisp form <code>some-form</code> without any output
+</p></dd>
+<dt> <code>:next</code></dt>
+<dd><p>Like <code>:step</code>, except <code>:next</code> steps over function calls
+</p></dd>
+<dt> <code>:quit</code></dt>
+<dd><p>Quit the current debugger level without completing the computation
+</p></dd>
+<dt> <code>:resume</code></dt>
+<dd><p>Continue the computation
+</p></dd>
+<dt> <code>:step</code></dt>
+<dd><p>Continue the computation until it reaches a new source line
+</p></dd>
+<dt> <code>:top</code></dt>
+<dd><p>Return to the Maxima prompt (from any debugger level) without 
+completing the computation
+</p></dd>
+</dl>
+
+
+
+<hr size="6">
+<a name="Definitions-for-Debugging"></a>
+<a name="SEC172"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC171" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC169" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 41.3 Definitions for Debugging </h2>
 
 <dl>
-<dt><u>Function:</u> <b>backtrace</b><i> ()</i>
-<a name="IDX1346"></a>
+<dt><u>Option variable:</u> <b>refcheck</b>
+<a name="IDX1382"></a>
 </dt>
-<dt><u>Function:</u> <b>backtrace</b><i> (<var>n</var>)</i>
-<a name="IDX1347"></a>
-</dt>
-<dd><p>Prints the call stack, that is, the list of functions which
-called the currently active function.
+<dd><p>Default value: <code>false</code>
 </p>
-<p><code>backtrace()</code> prints the entire call stack.
+<p>When <code>refcheck</code> is <code>true</code>, Maxima prints a message
+each time a bound variable is used for the first time in a
+computation.
 </p>
-<p><code>backtrace (<var>n</var>)</code> prints the <var>n</var> most recent 
-functions, including the currently active function.
-</p>
-<p><code>backtrace</code> can be called from a script, a function, or the interactive prompt
-(not only in a debugging context).
-</p>
-<p>Examples:
-</p>
-<ul>
-<li>
-<code>backtrace()</code> prints the entire call stack.
-
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) h(x) := g(x/7)$
-(%i2) g(x) := f(x-11)$
-(%i3) f(x) := e(x^2)$
-(%i4) e(x) := (backtrace(), 2*x + 13)$
-(%i5) h(10);
-#0: e(x=4489/49)
-#1: f(x=-67/7)
-#2: g(x=10/7)
-#3: h(x=10)
-                              9615
-(%o5)                         ----
-                               49
-</pre></td></tr></table></li></ul>
-
-<ul>
-<li>
-<code>backtrace (<var>n</var>)</code> prints the <var>n</var> most recent 
-functions, including the currently active function.
-
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) h(x) := (backtrace(1), g(x/7))$
-(%i2) g(x) := (backtrace(1), f(x-11))$
-(%i3) f(x) := (backtrace(1), e(x^2))$
-(%i4) e(x) := (backtrace(1), 2*x + 13)$
-(%i5) h(10);
-#0: h(x=10)
-#0: g(x=10/7)
-#0: f(x=-67/7)
-#0: e(x=4489/49)
-                              9615
-(%o5)                         ----
-                               49
-</pre></td></tr></table></li></ul>
-
 </dd></dl>
 
 <dl>
-<dt><u>Special operator:</u> <b>do</b>
-<a name="IDX1348"></a>
+<dt><u>Option variable:</u> <b>setcheck</b>
+<a name="IDX1383"></a>
 </dt>
-<dd><p>The <code>do</code> statement is used for performing iteration.  Due to its
-great generality the <code>do</code> statement will be described in two parts.
-First the usual form will be given which is analogous to that used in
-several other programming languages (Fortran, Algol, PL/I, etc.); then
-the other features will be mentioned.
+<dd><p>Default value: <code>false</code>
 </p>
-<p>There are three variants of this form that differ only in their
-terminating conditions.  They are:
+<p>If <code>setcheck</code> is set to a list of variables (which can
+be subscripted), 
+Maxima prints a message whenever the variables, or
+subscripted occurrences of them, are bound with the
+ordinary assignment operator <code>:</code>, the <code>::</code> assignment
+operator, or function argument binding,
+but not the function assignment <code>:=</code> nor the macro assignment
+<code>::=</code> operators.
+The message comprises the name of the variable and the
+value it is bound to.
+</p>
+<p><code>setcheck</code> may be set to <code>all</code> or <code>true</code> thereby
+including all variables.
+</p>
+<p>Each new assignment of <code>setcheck</code> establishes a new list of variables
+to check, and any variables previously assigned to <code>setcheck</code> are forgotten.
+</p>
+<p>The names assigned to <code>setcheck</code> must be quoted if they would otherwise
+evaluate to something other than themselves.
+For example, if <code>x</code>, <code>y</code>, and <code>z</code> are already bound, then enter
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">setcheck: ['x, 'y, 'z]$
+</pre></td></tr></table>
+<p>to put them on the list of variables to check.
+</p>
+<p>No printout is generated when a
+variable on the <code>setcheck</code> list is assigned to itself, e.g., <code>X: 'X</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Option variable:</u> <b>setcheckbreak</b>
+<a name="IDX1384"></a>
+</dt>
+<dd><p>Default value: <code>false</code>
+</p>
+<p>When <code>setcheckbreak</code> is <code>true</code>,
+Maxima will present a break prompt 
+whenever a variable on the <code>setcheck</code> list is assigned a new value.
+The break occurs before the assignment is carried out.
+At this point, <code>setval</code> holds the value to which the variable is 
+about to be assigned.
+Hence, one may assign a different value by assigning to <code>setval</code>.
+</p>
+<p>See also <code>setcheck</code> and <code>setval</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>System variable:</u> <b>setval</b>
+<a name="IDX1385"></a>
+</dt>
+<dd><p>Holds the value to which a variable is about to be set when
+a <code>setcheckbreak</code> occurs.
+Hence, one may assign a different value by assigning to <code>setval</code>.
+</p>
+<p>See also <code>setcheck</code> and <code>setcheckbreak</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>timer</b><i> (<var>f_1</var>, ..., <var>f_n</var>)</i>
+<a name="IDX1386"></a>
+</dt>
+<dt><u>Function:</u> <b>timer</b><i> (all)</i>
+<a name="IDX1387"></a>
+</dt>
+<dt><u>Function:</u> <b>timer</b><i> ()</i>
+<a name="IDX1388"></a>
+</dt>
+<dd><p>Given functions <var>f_1</var>, ..., <var>f_n</var>,
+<code>timer</code> puts each one on the list of functions for which timing statistics are collected.
+<code>timer(f)$ timer(g)$</code> puts <code>f</code> and then <code>g</code> onto the list;
+the list accumulates from one call to the next.
+</p>
+<p><code>timer(all)</code> puts all user-defined functions (as named by the global variable <code>functions</code>)
+on the list of timed functions.
+</p>
+<p>With no arguments, 
+<code>timer</code> returns the list of timed functions.
+</p>
+<p>Maxima records how much time is spent executing each function
+on the list of timed functions.
+<code>timer_info</code> returns the timing statistics, including the
+average time elapsed per function call, the number of calls, and the
+total time elapsed.
+<code>untimer</code> removes functions from the list of timed functions.
+</p>
+<p><code>timer</code> quotes its arguments. 
+<code>f(x) := x^2$ g:f$ timer(g)$</code> does not put <code>f</code> on the timer list.
+</p>
+<p>If <code>trace(f)</code> is in effect, then <code>timer(f)</code> has no effect; <code>trace</code> and
+<code>timer</code> cannot both be in effect at the same time.
+</p>
+<p>See also <code>timer_devalue</code>.
+</p>
+</dd></dl>
+<dl>
+<dt><u>Function:</u> <b>untimer</b><i> (<var>f_1</var>, ..., <var>f_n</var>)</i>
+<a name="IDX1389"></a>
+</dt>
+<dt><u>Function:</u> <b>untimer</b><i> ()</i>
+<a name="IDX1390"></a>
+</dt>
+<dd><p>Given functions <var>f_1</var>, ..., <var>f_n</var>,
+<code>untimer</code> removes each function from the timer list.
+</p>
+<p>With no arguments, <code>untimer</code> removes all functions currently on the timer list.
+</p>
+<p>After <code>untimer (f)</code> is executed, <code>timer_info (f)</code> still returns
+previously collected timing statistics,
+although <code>timer_info()</code> (with no arguments) does not
+return information about any function not currently on the timer list.
+<code>timer (f)</code> resets all timing statistics to zero
+and puts <code>f</code> on the timer list again.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Option variable:</u> <b>timer_devalue</b>
+<a name="IDX1391"></a>
+</dt>
+<dd><p>Default value: <code>false</code>
+</p>
+<p>When <code>timer_devalue</code> is <code>true</code>, Maxima subtracts from each timed function
+the time spent in other timed functions. Otherwise, the time reported 
+for each function includes the time spent in other functions.
+Note that time spent in untimed functions is not subtracted from the
+total time.
+</p>
+<p>See also <code>timer</code> and <code>timer_info</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>timer_info</b><i> (<var>f_1</var>, ..., <var>f_n</var>)</i>
+<a name="IDX1392"></a>
+</dt>
+<dt><u>Function:</u> <b>timer_info</b><i> ()</i>
+<a name="IDX1393"></a>
+</dt>
+<dd><p>Given functions <var>f_1</var>, ..., <var>f_n</var>,
+<code>timer_info</code> returns a matrix containing timing information for each function.
+With no arguments, <code>timer_info</code> returns timing information for
+all functions currently on the timer list.
+</p>
+<p>The matrix returned by <code>timer_info</code> contains the function name,
+time per function call, number of function calls, total time,
+and <code>gctime</code>, which meant &quot;garbage collection time&quot; in the original Macsyma
+but is now always zero.
+</p>
+<p>The data from which <code>timer_info</code> constructs its return value
+can also be obtained by the <code>get</code> function:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">get(f, 'calls);  get(f, 'runtime);  get(f, 'gctime);
+</pre></td></tr></table>
+<p>See also <code>timer</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>trace</b><i> (<var>f_1</var>, ..., <var>f_n</var>)</i>
+<a name="IDX1394"></a>
+</dt>
+<dt><u>Function:</u> <b>trace</b><i> (all)</i>
+<a name="IDX1395"></a>
+</dt>
+<dt><u>Function:</u> <b>trace</b><i> ()</i>
+<a name="IDX1396"></a>
+</dt>
+<dd><p>Given functions <var>f_1</var>, ..., <var>f_n</var>,
+<code>trace</code> instructs Maxima to print out
+debugging information whenever those functions are called.
+<code>trace(f)$ trace(g)$</code> puts <code>f</code> and then <code>g</code> onto the list of functions
+to be traced; the list accumulates from one call to the next.
+</p>
+<p><code>trace(all)</code> puts all user-defined functions (as named by the global variable <code>functions</code>)
+on the list of functions to be traced.
+</p>
+<p>With no arguments,
+<code>trace</code> returns a list of all the functions currently being traced.
+</p>
+<p>The <code>untrace</code> function disables tracing.
+See also <code>trace_options</code>. 
+</p>
+<p><code>trace</code> quotes its arguments. Thus,
+<code>f(x) := x^2$ g:f$ trace(g)$</code> does not put <code>f</code> on the trace list.
+</p>
+<p>When a function is redefined, it is removed from the timer list.
+Thus after <code>timer(f)$ f(x) := x^2$</code>,
+function <code>f</code> is no longer on the timer list.
+</p>
+<p>If <code>timer (f)</code> is in effect, then <code>trace (f)</code> has no effect; <code>trace</code> and
+<code>timer</code> can't both be in effect for the same function.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>trace_options</b><i> (<var>f</var>, <var>option_1</var>, ..., <var>option_n</var>)</i>
+<a name="IDX1397"></a>
+</dt>
+<dt><u>Function:</u> <b>trace_options</b><i> (<var>f</var>)</i>
+<a name="IDX1398"></a>
+</dt>
+<dd><p>Sets the trace options for function <var>f</var>.
+Any previous options are superseded.
+<code>trace_options (<var>f</var>, ...)</code> has no effect unless
+<code>trace (<var>f</var>)</code> is also called (either before or after <code>trace_options</code>). 
+</p>
+<p><code>trace_options (<var>f</var>)</code> resets all options to their default values.
+</p>
+<p>The option keywords are:
 </p>
 <ul>
 <li>
-<code>for <var>variable</var>: <var>initial_value</var> step <var>increment</var>
-      thru <var>limit</var> do <var>body</var></code>
+<code>noprint</code>
+Do not print a message at function entry and exit.
 </li><li>
-<code>for <var>variable</var>: <var>initial_value</var> step <var>increment</var>
-      while <var>condition</var> do <var>body</var></code>
+<code>break</code>
+Put a breakpoint before the function is entered,
+and after the function is exited. See <code>break</code>.
 </li><li>
-<code>for <var>variable</var>: <var>initial_value</var> step <var>increment</var>
-      unless <var>condition</var> do <var>body</var></code>
+<code>lisp_print</code>
+Display arguments and return values as Lisp objects.
+</li><li>
+<code>info</code>
+Print <code>-&gt; true</code> at function entry and exit.
+</li><li>
+<code>errorcatch</code>
+Catch errors, giving the option to signal an error,
+retry the function call, or specify a return value.
 </li></ul>
 
-<p>(Alternatively, the <code>step</code> may be given after the termination condition
-or limit.)
+<p>Trace options are specified in two forms. The presence of the option 
+keyword alone puts the option into effect unconditionally.
+(Note that option <var>foo</var> is not put into effect by specifying 
+<code><var>foo</var>: true</code> or a similar form; note also that keywords need not
+be quoted.) Specifying the option keyword with a predicate
+function makes the option conditional on the predicate.
 </p>
-<p><var>initial_value</var>, <var>increment</var>, <var>limit</var>, and <var>body</var> can be any
-expressions.  If the increment is 1 then &quot;<code>step 1</code>&quot; may be omitted.
+<p>The argument list to the predicate function is always 
+<code>[level, direction, function, item]</code> where <code>level</code> is the recursion level
+for the function,  <code>direction</code> is either <code>enter</code> or <code>exit</code>, <code>function</code> is the
+name of the function, and <code>item</code> is the argument list (on entering)
+or the return value (on exiting).
 </p>
-<p>The execution of the <code>do</code> statement proceeds by first assigning the
-initial_value to the variable (henceforth called the
-control-variable). Then: (1) If the control-variable has exceeded the
-limit of a <code>thru</code> specification, or if the condition of the <code>unless</code> is
-<code>true</code>, or if the condition of the <code>while</code> is <code>false</code> then the <code>do</code>
-terminates. (2) The body is evaluated.  (3) The increment is added to
-the control-variable.  The process from (1) to (3) is performed
-repeatedly until the termination condition is satisfied.  One may also
-give several termination conditions in which case the <code>do</code> terminates
-when any of them is satisfied.
+<p>Here is an example of unconditional trace options:
 </p>
-<p>In general the <code>thru</code> test is satisfied when the control-variable is
-greater than the limit if the increment was non-negative, or when the
-control-variable is less than the limit if the increment was negative.
-The increment and limit may be non-numeric expressions as long as this
-inequality can be determined.  However, unless the increment is
-syntactically negative (e.g. is a negative number) at the time the <code>do</code>
-statement is input, Maxima assumes it will be positive when the <code>do</code> is
-executed.  If it is not positive, then the <code>do</code> may not terminate
-properly.
-</p>
-<p>Note that the limit, increment, and termination condition are
-evaluated each time through the loop.  Thus if any of these involve
-much computation, and yield a result that does not change during all
-the executions of the body, then it is more efficient to set a
-variable to their value prior to the <code>do</code> and use this variable in the
-<code>do</code> form.
-</p>
-<p>The value normally returned by a <code>do</code> statement is the atom <code>done</code>.
-However, the function
-<code>return</code> may be used inside the body to exit the <code>do</code> prematurely and give
-it any desired value.
-Note however that a <code>return</code> within a <code>do</code> that
-occurs in a <code>block</code> will exit only the <code>do</code> and not the <code>block</code>.  Note also
-that the <code>go</code> function may not be used to exit from a <code>do</code> into a
-surrounding <code>block</code>.
-</p>
-<p>The control-variable is always local to the <code>do</code> and thus any
-variable may be used without affecting the value of a variable with
-the same name outside of the <code>do</code>.  The control-variable is unbound
-after the <code>do</code> terminates.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) for a:-3 thru 26 step 7 do display(a)$
-                             a = - 3
+<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) ff(n) := if equal(n, 0) then 1 else n * ff(n - 1)$
 
-                              a = 4
+(%i2) trace (ff)$
 
-                             a = 11
+(%i3) trace_options (ff, lisp_print, break)$
 
-                             a = 18
+(%i4) ff(3);
+</pre></td></tr></table>
+<p>Here is the same function, with the <code>break</code> option conditional
+on a predicate:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(%i5) trace_options (ff, break(pp))$
 
-                             a = 25
-</pre></td></tr></table>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) s: 0$
-(%i2) for i: 1 while i &lt;= 10 do s: s+i;
-(%o2)                         done
-(%i3) s;
-(%o3)                          55
-</pre></td></tr></table>
-<p>Note that the condition <code>while i &lt;= 10</code>
-is equivalent to <code>unless i &gt; 10</code> and also <code>thru 10</code>.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) series: 1$
-(%i2) term: exp (sin (x))$
-(%i3) for p: 1 unless p &gt; 7 do
-          (term: diff (term, x)/p, 
-           series: series + subst (x=0, term)*x^p)$
-(%i4) series;
-                  7    6     5    4    2
-                 x    x     x    x    x
-(%o4)            -- - --- - -- - -- + -- + x + 1
-                 90   240   15   8    2
-</pre></td></tr></table>
-<p>which gives 8 terms of the Taylor series for <code>e^sin(x)</code>.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) poly: 0$
-(%i2) for i: 1 thru 5 do
-          for j: i step -1 thru 1 do
-              poly: poly + i*x^j$
-(%i3) poly;
-                  5      4       3       2
-(%o3)          5 x  + 9 x  + 12 x  + 14 x  + 15 x
-(%i4) guess: -3.0$
-(%i5) for i: 1 thru 10 do
-          (guess: subst (guess, x, 0.5*(x + 10/x)),
-           if abs (guess^2 - 10) &lt; 0.00005 then return (guess));
-(%o5)                  - 3.162280701754386
-</pre></td></tr></table>
-<p>This example computes the negative square root of 10 using the
-Newton- Raphson iteration a maximum of 10 times.  Had the convergence
-criterion not been met the value returned would have been <code>done</code>.
-</p>
-<p>Instead of always adding a quantity to the control-variable one
-may sometimes wish to change it in some other way for each iteration.
-In this case one may use <code>next <var>expression</var></code> instead of <code>step <var>increment</var></code>.
-This will cause the control-variable to be set to the
-result of evaluating expression each time through the loop.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i6) for count: 2 next 3*count thru 20 do display (count)$
-                            count = 2
+(%i6) pp (level, direction, function, item) := block (print (item),
+    return (function = 'ff and level = 3 and direction = exit))$
 
-                            count = 6
-
-                           count = 18
-</pre></td></tr></table>
-<p>As an alternative to <code>for <var>variable</var>: <var>value</var> ...do...</code> the syntax
-<code>for <var>variable</var> from <var>value</var> ...do...</code>  may be used.  This permits the
-<code>from <var>value</var></code> to be placed after the step or next value or after the
-termination condition.  If <code>from <var>value</var></code> is omitted then 1 is used as
-the initial value.
-</p>
-<p>Sometimes one may be interested in performing an iteration where
-the control-variable is never actually used.  It is thus permissible
-to give only the termination conditions omitting the initialization
-and updating information as in the following example to compute the
-square-root of 5 using a poor initial guess.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) x: 1000$
-(%i2) thru 20 do x: 0.5*(x + 5.0/x)$
-(%i3) x;
-(%o3)                   2.23606797749979
-(%i4) sqrt(5), numer;
-(%o4)                   2.23606797749979
-</pre></td></tr></table>
-<p>If it is desired one may even omit the termination conditions
-entirely and just give <code>do <var>body</var></code> which will continue to evaluate the
-body indefinitely.  In this case the function <code>return</code> should be used to
-terminate execution of the <code>do</code>.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) newton (f, x):= ([y, df, dfx], df: diff (f ('x), 'x),
-          do (y: ev(df), x: x - f(x)/y, 
-              if abs (f (x)) &lt; 5e-6 then return (x)))$
-(%i2) sqr (x) := x^2 - 5.0$
-(%i3) newton (sqr, 1000);
-(%o3)                   2.236068027062195
-</pre></td></tr></table>
-<p>(Note that <code>return</code>, when executed, causes the current value of
-<code>x</code> to be returned as the value of the <code>do</code>.  The <code>block</code> is exited and
-this value of the <code>do</code> is returned as the value of the <code>block</code> because the
-<code>do</code> is the last statement in the block.)
-</p>
-<p>One other form of the <code>do</code> is available in Maxima.  The syntax is:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">for <var>variable</var> in <var>list</var> <var>end_tests</var> do <var>body</var>
-</pre></td></tr></table>
-<p>The elements of <var>list</var> are any expressions which will
-successively be assigned to the variable on each iteration of the
-body.  The optional termination tests <var>end_tests</var> can be used to terminate execution of
-the <code>do</code>; otherwise it will terminate when the list is exhausted or when
-a <code>return</code> is executed in the body.  (In fact, list may be any
-non-atomic expression, and successive parts are taken.)
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1)  for f in [log, rho, atan] do ldisp(f(1))$
-(%t1)                                  0
-(%t2)                                rho(1)
-                                     %pi
-(%t3)                                 ---
-                                      4
-(%i4) ev(%t3,numer);
-(%o4)                             0.78539816
+(%i7) ff(6);
 </pre></td></tr></table>
 </dd></dl>
 
 <dl>
-<dt><u>Function:</u> <b>errcatch</b><i> (<var>expr_1</var>, ..., <var>expr_n</var>)</i>
-<a name="IDX1349"></a>
+<dt><u>Function:</u> <b>untrace</b><i> (<var>f_1</var>, ..., <var>f_n</var>)</i>
+<a name="IDX1399"></a>
 </dt>
-<dd><p>Evaluates <var>expr_1</var>, ..., <var>expr_n</var> one by one and
-returns <code>[<var>expr_n</var>]</code> (a list) if no error occurs.  If an
-error occurs in the evaluation of any argument, <code>errcatch</code> 
-prevents the error from propagating and
-returns the empty list <code>[]</code> without evaluating any more arguments.
-</p>
-<p><code>errcatch</code>
-is useful in <code>batch</code> files where one suspects an error might occur which
-would terminate the <code>batch</code> if the error weren't caught.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>error</b><i> (<var>expr_1</var>, ..., <var>expr_n</var>)</i>
-<a name="IDX1350"></a>
+<dt><u>Function:</u> <b>untrace</b><i> ()</i>
+<a name="IDX1400"></a>
 </dt>
-<dt><u>System variable:</u> <b>error</b>
-<a name="IDX1351"></a>
-</dt>
-<dd><p>Evaluates and prints <var>expr_1</var>, ..., <var>expr_n</var>,
-and then causes an error return to top level Maxima
-or to the nearest enclosing <code>errcatch</code>.
+<dd><p>Given functions <var>f_1</var>, ..., <var>f_n</var>,
+<code>untrace</code> disables tracing enabled by the <code>trace</code> function.
+With no arguments, <code>untrace</code> disables tracing for all functions.
 </p>
-<p>The variable <code>error</code> is set to a list describing the error.
-The first element of <code>error</code> is a format string,
-which merges all the strings among the arguments <var>expr_1</var>, ..., <var>expr_n</var>,
-and the remaining elements are the values of any non-string arguments.
+<p><code>untrace</code> returns a list of the functions for which 
+it disabled tracing.
 </p>
-<p><code>errormsg()</code> formats and prints <code>error</code>.
-This is effectively reprinting the most recent error message.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>errormsg</b><i> ()</i>
-<a name="IDX1352"></a>
-</dt>
-<dd><p>Reprints the most recent error message.
-The variable <code>error</code> holds the message,
-and <code>errormsg</code> formats and prints it.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Special operator:</u> <b>for</b>
-<a name="IDX1353"></a>
-</dt>
-<dd><p>Used in iterations. See <code>do</code> for a description of
-Maxima's iteration facilities.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>go</b><i> (<var>tag</var>)</i>
-<a name="IDX1354"></a>
-</dt>
-<dd><p>is used within a <code>block</code> to transfer control to the statement
-of the block which is tagged with the argument to <code>go</code>.  To tag a
-statement, precede it by an atomic argument as another statement in
-the <code>block</code>.  For example:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">block ([x], x:1, loop, x+1, ..., go(loop), ...)
-</pre></td></tr></table>
-<p>The argument to <code>go</code> must be the name of a tag appearing in the same
-<code>block</code>.  One cannot use <code>go</code> to transfer to tag in a <code>block</code> other than the
-one containing the <code>go</code>.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Special operator:</u> <b>if</b>
-<a name="IDX1355"></a>
-</dt>
-<dd><p>The <code>if</code> statement is used for conditional execution.  The syntax
-is:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">if &lt;condition&gt; then &lt;expr_1&gt; else &lt;expr_2&gt;
-</pre></td></tr></table>
-<p>The result of an <code>if</code> statement is <var>expr_1</var> if condition is <code>true</code> and
-<var>expr_2</var> otherwise.  <var>expr_1</var> and <var>expr_2</var> are any
-Maxima expressions (including nested <code>if</code> statements), and <var>condition</var> is
-an expression which evaluates to <code>true</code> or <code>false</code> and is composed of
-relational and logical operators which are as follows:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">Operation            Symbol      Type
- 
-less than            &lt;           relational infix
-less than            &lt;=
-  or equal to                    relational infix
-equality (syntactic) =           relational infix
-negation of =        #           relational infix
-equality (value)     equal       relational function
-negation of equal    notequal    relational function
-greater than         &gt;=
-  or equal to                    relational infix
-greater than         &gt;           relational infix
-and                  and         logical infix
-or                   or          logical infix
-not                  not         logical prefix
-</pre></td></tr></table>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>map</b><i> (<var>f</var>, <var>expr_1</var>, ..., <var>expr_n</var>)</i>
-<a name="IDX1356"></a>
-</dt>
-<dd><p>Returns an expression whose leading operator
-is the same as that of the expressions
-<var>expr_1</var>, ..., <var>expr_n</var> but whose subparts are the results of
-applying <var>f</var> to the corresponding subparts of the expressions.  <var>f</var> is either
-the name of a function of <em>n</em> arguments
-or is a <code>lambda</code> form of <em>n</em> arguments.
-</p>
-<p><code>maperror</code> - if <code>false</code> will cause all of the mapping functions to
-(1) stop when they finish going down the shortest expi if not all of
-the expi are of the same length and (2) apply fn to [exp1, exp2,...]
-if the expi are not all the same type of object. If <code>maperror</code> is <code>true</code>
-then an error message will be given in the above two instances.
-</p>
-<p>One of the uses of this function is to <code>map</code> a function (e.g. <code>partfrac</code>)
-onto each term of a very large expression where it ordinarily wouldn't
-be possible to use the function on the entire expression due to an
-exhaustion of list storage space in the course of the computation.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) map(f,x+a*y+b*z);
-(%o1)                        f(b z) + f(a y) + f(x)
-(%i2) map(lambda([u],partfrac(u,x)),x+1/(x^3+4*x^2+5*x+2));
-                           1       1        1
-(%o2)                     ----- - ----- + -------- + x
-                         x + 2   x + 1          2
-                                         (x + 1)
-(%i3) map(ratsimp, x/(x^2+x)+(y^2+y)/y);
-                                      1
-(%o3)                            y + ----- + 1
-                                    x + 1
-(%i4) map(&quot;=&quot;,[a,b],[-0.5,3]);
-(%o4)                          [a = - 0.5, b = 3]
-
-
-</pre></td></tr></table></dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>mapatom</b><i> (<var>expr</var>)</i>
-<a name="IDX1357"></a>
-</dt>
-<dd><p>Returns <code>true</code> if and only if <var>expr</var> is treated by the mapping
-routines as an atom.  &quot;Mapatoms&quot; are atoms, numbers
-(including rational numbers), and subscripted variables.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Option variable:</u> <b>maperror</b>
-<a name="IDX1358"></a>
-</dt>
-<dd><p>Default value: <code>true</code>
-</p>
-<p>When <code>maperror</code> is <code>false</code>, causes all of the mapping functions, for example
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">map (f, expr_1, expr_2, ...))
-</pre></td></tr></table>
-<p>to (1) stop when they finish
-going down the shortest expi if not all of the expi are of the same
-length and (2) apply <code>f</code> to <code>[expr_1, expr_2, ...]</code> if the <code>expr_i</code> are not all
-the same type of object.
-</p>
-<p>If <code>maperror</code> is <code>true</code> then an error message
-is displayed in the above two instances.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>maplist</b><i> (<var>f</var>, <var>expr_1</var>, ..., <var>expr_n</var>)</i>
-<a name="IDX1359"></a>
-</dt>
-<dd><p>Returns a list of the applications of <var>f</var>
-to the parts of the expressions <var>expr_1</var>, ..., <var>expr_n</var>.
-<var>f</var> is the name of a function, or a lambda expression.
-</p>
-<p><code>maplist</code> differs from <code>map (<var>f</var>, <var>expr_1</var>, ..., <var>expr_n</var>)</code>
-which returns an expression with the same main operator as <var>expr_i</var> has
-(except for simplifications and the case where <code>map</code> does an <code>apply</code>).
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Option variable:</u> <b>prederror</b>
-<a name="IDX1360"></a>
-</dt>
-<dd><p>Default value: <code>true</code>
-</p>
-<p>When <code>prederror</code> is <code>true</code>, an error message is displayed
-whenever the predicate of an <code>if</code> statement or an <code>is</code> function fails to
-evaluate to either <code>true</code> or <code>false</code>.
-</p>
-<p>If <code>false</code>, <code>unknown</code> is returned
-instead in this case.  The <code>prederror: false</code> mode is not supported in
-translated code;
-however, <code>maybe</code> is supported in translated code.
-</p>
-<p>See also <code>is</code> and <code>maybe</code>.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>return</b><i> (value)</i>
-<a name="IDX1361"></a>
-</dt>
-<dd><p>May be used to exit explicitly from a block, bringing
-its argument.  See <code>block</code> for more information.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>scanmap</b><i> (<var>f</var>, <var>expr</var>)</i>
-<a name="IDX1362"></a>
-</dt>
-<dt><u>Function:</u> <b>scanmap</b><i> (<var>f</var>, <var>expr</var>, bottomup)</i>
-<a name="IDX1363"></a>
-</dt>
-<dd><p>Recursively applies <var>f</var> to <var>expr</var>, in a top
-down manner.  This is most useful when complete factorization is
-desired, for example:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) exp:(a^2+2*a+1)*y + x^2$
-(%i2) scanmap(factor,exp);
-                                    2      2
-(%o2)                         (a + 1)  y + x
-</pre></td></tr></table>
-<p>Note the way in which <code>scanmap</code> applies the given function <code>factor</code> to the
-constituent subexpressions of <var>expr</var>; if another form of <var>expr</var> is presented
-to <code>scanmap</code> then the result may be different.  Thus, <code>%o2</code> is not
-recovered when <code>scanmap</code> is applied to the expanded form of exp:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) scanmap(factor,expand(exp));
-                           2                  2
-(%o3)                      a  y + 2 a y + y + x
-</pre></td></tr></table>
-<p>Here is another example of the way in which <code>scanmap</code> recursively
-applies a given function to all subexpressions, including exponents:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i4) expr : u*v^(a*x+b) + c$
-(%i5) scanmap('f, expr);
-                    f(f(f(a) f(x)) + f(b))
-(%o5) f(f(f(u) f(f(v)                      )) + f(c))
-</pre></td></tr></table>
-<p><code>scanmap (<var>f</var>, <var>expr</var>, bottomup)</code> applies <var>f</var> to <var>expr</var> in a
-bottom-up manner.  E.g., for undefined <code>f</code>,
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">scanmap(f,a*x+b) -&gt;
-   f(a*x+b) -&gt; f(f(a*x)+f(b)) -&gt; f(f(f(a)*f(x))+f(b))
-scanmap(f,a*x+b,bottomup) -&gt; f(a)*f(x)+f(b)
-    -&gt; f(f(a)*f(x))+f(b) -&gt;
-     f(f(f(a)*f(x))+f(b))
-</pre></td></tr></table>
-<p>In this case, you get the same answer both
-ways.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>throw</b><i> (<var>expr</var>)</i>
-<a name="IDX1364"></a>
-</dt>
-<dd><p>Evaluates <var>expr</var> and throws the value back to the most recent
-<code>catch</code>.  <code>throw</code> is used with <code>catch</code> as a nonlocal return
-mechanism.
-</p>
-</dd></dl>
-
-<dl>
-<dt><u>Function:</u> <b>outermap</b><i> (<var>f</var>, <var>a_1</var>, ..., <var>a_n</var>)</i>
-<a name="IDX1365"></a>
-</dt>
-<dd><p>Applies the function <var>f</var> to each one of the elements of the outer product
-<var>a_1</var> cross <var>a_2</var> ... cross <var>a_n</var>.
-</p>
-<p><var>f</var> is the name of a function of <em>n</em> arguments
-or a lambda expression of <em>n</em> arguments.
-Each argument <var>a_k</var> may be a list or nested list, or a matrix, or any other kind of expression.
-</p>
-<p>The <code>outermap</code> return value is a nested structure.
-Let <var>x</var> be the return value.
-Then <var>x</var> has the same structure as the first list, nested list, or matrix argument,
-<code><var>x</var>[i_1]...[i_m]</code> has the same structure as the second list, nested list, or matrix argument,
-<code><var>x</var>[i_1]...[i_m][j_1]...[j_n]</code> has the same structure as the third list, nested list, or matrix argument,
-and so on,
-where <var>m</var>, <var>n</var>, ... are the numbers of indices required to access the
-elements of each argument (one for a list, two for a matrix, one or more for a nested list).
-Arguments which are not lists or matrices have no effect on the structure of the return value.
-</p>
-<p>Note that the effect of <code>outermap</code> is different from that of applying <var>f</var>
-to each one of the elements of the outer product returned by <code>cartesian_product</code>.
-<code>outermap</code> preserves the structure of the arguments in the return value,
-while <code>cartesian_product</code> does not.
-</p>
-<p><code>outermap</code> evaluates its arguments.
-</p>
-<p>See also <code>map</code>, <code>maplist</code>, and <code>apply</code>.
-</p>
-<p>Examples:
-</p>
-<p>Elementary examples of <code>outermap</code>.
-To show the argument combinations more clearly, <code>F</code> is left undefined.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) outermap (F, [a, b, c], [1, 2, 3]);
-(%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)], 
-                                     [F(c, 1), F(c, 2), F(c, 3)]]
-(%i2) outermap (F, matrix ([a, b], [c, d]), matrix ([1, 2], [3, 4]));
-         [ [ F(a, 1)  F(a, 2) ]  [ F(b, 1)  F(b, 2) ] ]
-         [ [                  ]  [                  ] ]
-         [ [ F(a, 3)  F(a, 4) ]  [ F(b, 3)  F(b, 4) ] ]
-(%o2)    [                                            ]
-         [ [ F(c, 1)  F(c, 2) ]  [ F(d, 1)  F(d, 2) ] ]
-         [ [                  ]  [                  ] ]
-         [ [ F(c, 3)  F(c, 4) ]  [ F(d, 3)  F(d, 4) ] ]
-(%i3) outermap (F, [a, b], x, matrix ([1, 2], [3, 4]));
-       [ F(a, x, 1)  F(a, x, 2) ]  [ F(b, x, 1)  F(b, x, 2) ]
-(%o3) [[                        ], [                        ]]
-       [ F(a, x, 3)  F(a, x, 4) ]  [ F(b, x, 3)  F(b, x, 4) ]
-(%i4) outermap (F, [a, b], matrix ([1, 2]), matrix ([x], [y]));
-       [ [ F(a, 1, x) ]  [ F(a, 2, x) ] ]
-(%o4) [[ [            ]  [            ] ], 
-       [ [ F(a, 1, y) ]  [ F(a, 2, y) ] ]
-                              [ [ F(b, 1, x) ]  [ F(b, 2, x) ] ]
-                              [ [            ]  [            ] ]]
-                              [ [ F(b, 1, y) ]  [ F(b, 2, y) ] ]
-(%i5) outermap (&quot;+&quot;, [a, b, c], [1, 2, 3]);
-(%o5) [[a + 1, a + 2, a + 3], [b + 1, b + 2, b + 3], 
-                                           [c + 1, c + 2, c + 3]]
-</pre></td></tr></table>
-<p>A closer examination of the <code>outermap</code> return value.
-The first, second, and third arguments are a matrix, a list, and a matrix, respectively.
-The return value is a matrix.
-Each element of that matrix is a list,
-and each element of each list is a matrix.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) arg_1 :  matrix ([a, b], [c, d]);
-                            [ a  b ]
-(%o1)                       [      ]
-                            [ c  d ]
-(%i2) arg_2 : [11, 22];
-(%o2)                       [11, 22]
-(%i3) arg_3 : matrix ([xx, yy]);
-(%o3)                      [ xx  yy ]
-(%i4) xx_0 : outermap (lambda ([x, y, z], x / y + z), arg_1, arg_2, arg_3);
-               [  [      a        a  ]  [      a        a  ]  ]
-               [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
-               [  [      11       11 ]  [      22       22 ]  ]
-(%o4)  Col 1 = [                                              ]
-               [  [      c        c  ]  [      c        c  ]  ]
-               [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
-               [  [      11       11 ]  [      22       22 ]  ]
-                 [  [      b        b  ]  [      b        b  ]  ]
-                 [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
-                 [  [      11       11 ]  [      22       22 ]  ]
-         Col 2 = [                                              ]
-                 [  [      d        d  ]  [      d        d  ]  ]
-                 [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
-                 [  [      11       11 ]  [      22       22 ]  ]
-(%i5) xx_1 : xx_0 [1][1];
-           [      a        a  ]  [      a        a  ]
-(%o5)     [[ xx + --  yy + -- ], [ xx + --  yy + -- ]]
-           [      11       11 ]  [      22       22 ]
-(%i6) xx_2 : xx_0 [1][1] [1];
-                      [      a        a  ]
-(%o6)                 [ xx + --  yy + -- ]
-                      [      11       11 ]
-(%i7) xx_3 : xx_0 [1][1] [1] [1][1];
-                                  a
-(%o7)                        xx + --
-                                  11
-(%i8) [op (arg_1), op (arg_2), op (arg_3)];
-(%o8)                  [matrix, [, matrix]
-(%i9) [op (xx_0), op (xx_1), op (xx_2)];
-(%o9)                  [matrix, [, matrix]
-</pre></td></tr></table>
-<p><code>outermap</code> preserves the structure of the arguments in the return value,
-while <code>cartesian_product</code> does not.
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) outermap (F, [a, b, c], [1, 2, 3]);
-(%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)], 
-                                     [F(c, 1), F(c, 2), F(c, 3)]]
-(%i2) setify (flatten (%));
-(%o2) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3), 
-                                       F(c, 1), F(c, 2), F(c, 3)}
-(%i3) map (lambda ([L], apply (F, L)), cartesian_product ({a, b, c}, {1, 2, 3}));
-(%o3) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3), 
-                                       F(c, 1), F(c, 2), F(c, 3)}
-(%i4) is (equal (%, %th (2)));
-(%o4)                         true
-</pre></td></tr></table>
 </dd></dl>
 
 <hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC162" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_42.html#SEC165" title="Next chapter"> &gt;&gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC169" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_42.html#SEC173" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
@@ -862,12 +712,12 @@ while <code>cartesian_product</code> does not.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_72.html#SEC264" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>September, 20 2006</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>May, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 
