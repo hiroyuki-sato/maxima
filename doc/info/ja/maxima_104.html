@@ -1,0 +1,592 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Functions and Variables for fast Fourier transform</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for fast Fourier transform">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for fast Fourier transform">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_102.html#Numerical" rel="up" title="Numerical">
+<link href="maxima_105.html#Introduction-to-Fourier-series" rel="next" title="Introduction to Fourier series">
+<link href="maxima_103.html#Introduction-to-fast-Fourier-transform" rel="previous" title="Introduction to fast Fourier transform">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Functions-and-Variables-for-fast-Fourier-transform"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_105.html#Introduction-to-Fourier-series" accesskey="n" rel="next">Introduction to Fourier series</a>, Previous: <a href="maxima_103.html#Introduction-to-fast-Fourier-transform" accesskey="p" rel="previous">Introduction to fast Fourier transform</a>, Up: <a href="maxima_102.html#Numerical" accesskey="u" rel="up">Numerical</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Functions-and-Variables-for-fast-Fourier-transform-1"></a>
+<h3 class="section">22.2 Functions and Variables for fast Fourier transform</h3>
+
+<a name="polartorect"></a><a name="Item_003a-Numerical_002fdeffn_002fpolartorect"></a><dl>
+<dt><a name="index-polartorect"></a>関数: <strong>polartorect</strong> <em>(<var>r</var>, <var>t</var>)</em></dt>
+<dd>
+<p>形式<code>r %e^(%i t)</code>の複素値を形式<code>a + b %i</code>に変換します。
+ここで、<var>r</var>は大きさで、<var>t</var>は位相です。
+<var>r</var>と<var>t</var>は、同じサイズの１次元配列です。
+配列のサイズは2のべき乗である必要はありません。
+</p>
+<p>関数が戻ると、入力配列の元の値は、実部<code>a</code>と虚部<code>b</code>に置き換えられます。
+出力は、以下のように計算されます。
+</p>
+<div class="example">
+<pre class="example">a = r cos(t)
+b = r sin(t)
+</pre></div>
+
+<p><code>polartorect</code>は、<code>recttopolar</code>の逆関数です。
+</p>
+<p><code>load(&quot;fft&quot;)</code>はこの関数をロードします。
+<code>fft</code>も参照してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-fft">Package fft</a>
+&middot;<a href="maxima_311.html#Category_003a-Complex-variables">Complex variables</a>
+&middot;</div></dd></dl>
+
+<a name="recttopolar"></a><a name="Item_003a-Numerical_002fdeffn_002frecttopolar"></a><dl>
+<dt><a name="index-recttopolar"></a>関数: <strong>recttopolar</strong> <em>(<var>a</var>, <var>b</var>)</em></dt>
+<dd>
+<p>形式<code>a + b %i</code>の複素値を形式<code>r %e^(%i t)</code>に変換します。
+ここで、<var>a</var>は実部で、<var>b</var>は虚部です。
+<var>a</var>と<var>b</var>は同じサイズの１次元配列です。
+配列のサイズは2のべき乗である必要はありません。
+</p>
+<p>関数が戻ると、入力配列の元の値は、大きさ<code>r</code>と偏角<code>t</code>に置き換えられます。
+出力は、以下のように計算されます。
+</p>
+<div class="example">
+<pre class="example">r = sqrt(a^2 + b^2)
+t = atan2(b, a)
+</pre></div>
+
+<p>計算された偏角は、<code>-%pi</code>から<code>%pi</code>の範囲の中にあります。
+</p>
+<p><code>recttopolar</code>は<code>polartorect</code>の逆関数です。
+</p>
+<p><code>load(&quot;fft&quot;)</code>はこの関数をロードします。
+<code>fft</code>も参照してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-fft">Package fft</a>
+&middot;<a href="maxima_311.html#Category_003a-Complex-variables">Complex variables</a>
+&middot;</div></dd></dl>
+
+<a name="inverse_005ffft"></a><a name="Item_003a-Numerical_002fdeffn_002finverse_005ffft"></a><dl>
+<dt><a name="index-inverse_005ffft"></a>関数: <strong>inverse_fft</strong> <em>(<var>y</var>)</em></dt>
+<dd>
+<p>複素逆高速Fourier変換を計算します。
+<var>y</var>は、変換されるデータを含むリストもしくは配列です。
+要素の数は2のべき乗でなければいけません。
+要素は、数リテラル（整数、有理数、浮動小数点、多倍長浮動小数点）、シンボル定数、
+もしくは、<code>a</code>と<code>b</code>が数リテラルもしくはシンボル定数である式<code>a + b*%i</code>
+でなければいけません。
+</p>
+<p><code>inverse_fft</code>は、<var>y</var>と同じタイプの新しいオブジェクトを返します。
+<var>y</var>は変更されません。
+結果はいつも浮動小数点、もしくは<code>a</code>と<code>b</code>が浮動小数点であるところの式
+<code>a + b*%i</code>として計算されます。
+</p>
+<p>逆離散Fourier変換は、以下のように定義されます。
+<code>x</code>を逆変換の出力とします。
+<code>j</code>が0から<code>n - 1</code>まで変わる中、
+</p>
+<div class="example">
+<pre class="example">x[j] = sum(y[k] exp(+2 %i %pi j k / n), k, 0, n - 1)
+</pre></div>
+
+<p><code>load(&quot;fft&quot;)</code>はこの関数をロードします。
+</p>
+<p><code>fft</code> (正変換), <code>recttopolar</code>, <code>polartorect</code>も参照してください。
+</p>
+<p>例:
+</p>
+<p>実数データ。
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;fft&quot;) $
+(%i2) fpprintprec : 4 $
+(%i3) L : [1, 2, 3, 4, -1, -2, -3, -4] $
+(%i4) L1 : inverse_fft (L);
+(%o4) [0.0, 14.49 %i - .8284, 0.0, 2.485 %i + 4.828, 0.0, 
+                       4.828 - 2.485 %i, 0.0, - 14.49 %i - .8284]
+(%i5) L2 : fft (L1);
+(%o5) [1.0, 2.0 - 2.168L-19 %i, 3.0 - 7.525L-20 %i, 
+4.0 - 4.256L-19 %i, - 1.0, 2.168L-19 %i - 2.0, 
+7.525L-20 %i - 3.0, 4.256L-19 %i - 4.0]
+(%i6) lmax (abs (L2 - L));
+(%o6)                       3.545L-16
+</pre></div>
+
+<p>複素数データ
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;fft&quot;) $
+(%i2) fpprintprec : 4 $                 
+(%i3) L : [1, 1 + %i, 1 - %i, -1, -1, 1 - %i, 1 + %i, 1] $
+(%i4) L1 : inverse_fft (L);
+(%o4) [4.0, 2.711L-19 %i + 4.0, 2.0 %i - 2.0, 
+- 2.828 %i - 2.828, 0.0, 5.421L-20 %i + 4.0, - 2.0 %i - 2.0, 
+2.828 %i + 2.828]
+(%i5) L2 : fft (L1);
+(%o5) [4.066E-20 %i + 1.0, 1.0 %i + 1.0, 1.0 - 1.0 %i, 
+1.55L-19 %i - 1.0, - 4.066E-20 %i - 1.0, 1.0 - 1.0 %i, 
+1.0 %i + 1.0, 1.0 - 7.368L-20 %i]
+(%i6) lmax (abs (L2 - L));                    
+(%o6)                       6.841L-17
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-fft">Package fft</a>
+&middot;</div></dd></dl>
+
+<a name="fft"></a><a name="Item_003a-Numerical_002fdeffn_002ffft"></a><dl>
+<dt><a name="index-fft"></a>関数: <strong>fft</strong> <em>(<var>x</var>)</em></dt>
+<dd>
+<p>複素高速Fourier変換を計算します。
+<var>x</var>は、変換されるデータを含むリストもしくは配列です。
+要素の数は2のべき乗でなければいけません。
+要素は、数リテラル（整数、有理数、浮動小数点、多倍長浮動小数点）、シンボル定数、
+もしくは、<code>a</code>と<code>b</code>が数リテラルもしくはシンボル定数である式<code>a + b*%i</code>
+でなければいけません。
+</p>
+<p><code>fft</code>は、<var>x</var>と同じタイプの新しいオブジェクトを返します。
+<var>x</var>は変更されません。
+結果はいつも浮動小数点、もしくは<code>a</code>と<code>b</code>が浮動小数点であるところの式
+<code>a + b*%i</code>として計算されます。
+</p>
+<p>離散Fourier変換は、以下のように定義されます。
+<code>y</code>を変換の出力とします。
+<code>k</code>が0から<code>n - 1</code>まで変わる中、
+</p>
+<div class="example">
+<pre class="example">y[k] = (1/n) sum(x[j] exp(-2 %i %pi j k / n), j, 0, n - 1)
+</pre></div>
+
+<p>データ<var>x</var>が実数の時、
+実係数<code>a</code>と<code>b</code>は以下のように計算することができます。
+</p><div class="example">
+<pre class="example">x[j] = sum(a[k]*cos(2*%pi*j*k/n)+b[k]*sin(2*%pi*j*k/n), k, 0, n/2)
+</pre></div>
+
+<p>ここで、
+</p>
+<div class="example">
+<pre class="example">a[0] = realpart (y[0])
+b[0] = 0
+</pre></div>
+
+<p>そして、<code>k</code>が1からn/2 - 1まで変わる中、
+</p>
+<div class="example">
+<pre class="example">a[k] = realpart (y[k] + y[n - k])
+b[k] = imagpart (y[n - k] - y[k])
+</pre></div>
+
+<p>そして、
+</p>
+<div class="example">
+<pre class="example">a[n/2] = realpart (y[n/2])
+b[n/2] = 0
+</pre></div>
+
+<p><code>load(&quot;fft&quot;)</code>はこの関数をロードします。
+</p>
+<p><code>inverse_fft</code> (逆変換), <code>recttopolar</code>, <code>polartorect</code>も参照してください。
+</p>
+<p>例:
+</p>
+<p>実数データ。
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;fft&quot;) $
+(%i2) fpprintprec : 4 $
+(%i3) L : [1, 2, 3, 4, -1, -2, -3, -4] $
+(%i4) L1 : fft (L);
+(%o4) [0.0, - 1.811 %i - .1036, 0.0, .6036 - .3107 %i, 0.0, 
+                         .3107 %i + .6036, 0.0, 1.811 %i - .1036]
+(%i5) L2 : inverse_fft (L1);
+(%o5) [1.0, 2.168L-19 %i + 2.0, 7.525L-20 %i + 3.0, 
+4.256L-19 %i + 4.0, - 1.0, - 2.168L-19 %i - 2.0, 
+- 7.525L-20 %i - 3.0, - 4.256L-19 %i - 4.0]
+(%i6) lmax (abs (L2 - L));
+(%o6)                       3.545L-16
+</pre></div>
+
+<p>複素数データ
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;fft&quot;) $
+(%i2) fpprintprec : 4 $
+(%i3) L : [1, 1 + %i, 1 - %i, -1, -1, 1 - %i, 1 + %i, 1] $
+(%i4) L1 : fft (L);
+(%o4) [0.5, .3536 %i + .3536, - 0.25 %i - 0.25, 
+0.5 - 6.776L-21 %i, 0.0, - .3536 %i - .3536, 0.25 %i - 0.25, 
+0.5 - 3.388L-20 %i]
+(%i5) L2 : inverse_fft (L1);
+(%o5) [1.0 - 4.066E-20 %i, 1.0 %i + 1.0, 1.0 - 1.0 %i, 
+- 1.008L-19 %i - 1.0, 4.066E-20 %i - 1.0, 1.0 - 1.0 %i, 
+1.0 %i + 1.0, 1.947L-20 %i + 1.0]
+(%i6) lmax (abs (L2 - L));
+(%o6)                       6.83L-17
+</pre></div>
+
+<p>サインとコサイン係数の計算。
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;fft&quot;) $
+(%i2) fpprintprec : 4 $
+(%i3) L : [1, 2, 3, 4, 5, 6, 7, 8] $
+(%i4) n : length (L) $
+(%i5) x : make_array (any, n) $
+(%i6) fillarray (x, L) $
+(%i7) y : fft (x) $
+(%i8) a : make_array (any, n/2 + 1) $
+(%i9) b : make_array (any, n/2 + 1) $
+(%i10) a[0] : realpart (y[0]) $
+(%i11) b[0] : 0 $
+(%i12) for k : 1 thru n/2 - 1 do
+   (a[k] : realpart (y[k] + y[n - k]),
+    b[k] : imagpart (y[n - k] - y[k]));
+(%o12)                        done
+(%i13) a[n/2] : y[n/2] $
+(%i14) b[n/2] : 0 $
+(%i15) listarray (a);
+(%o15)          [4.5, - 1.0, - 1.0, - 1.0, - 0.5]
+(%i16) listarray (b);
+(%o16)           [0, - 2.414, - 1.0, - .4142, 0]
+(%i17) f(j) := sum (a[k]*cos(2*%pi*j*k/n) + b[k]*sin(2*%pi*j*k/n), 
+                    k, 0, n/2) $
+(%i18) makelist (float (f (j)), j, 0, n - 1);
+(%o18)      [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-fft">Package fft</a>
+&middot;</div></dd></dl>
+
+<a name="fortindent"></a><a name="Item_003a-Numerical_002fdefvr_002ffortindent"></a><dl>
+<dt><a name="index-fortindent"></a>オプション変数: <strong>fortindent</strong></dt>
+<dd><p>デフォルト値: 0
+</p>
+<p><code>fortindent</code>は、<code>fortran</code>コマンドが表示する式の
+式の左マージンインデントを制御します。
+0は、標準のプリントアウト(すなわち6スペース)を与え、
+正の値は、式を更に右に印字するようにします。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Translation-and-compilation">Translation and compilation</a>
+&middot;</div></dd></dl>
+
+<a name="fortran"></a><a name="Item_003a-Numerical_002fdeffn_002ffortran"></a><dl>
+<dt><a name="index-fortran"></a>関数: <strong>fortran</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>Fortran文として<var>expr</var>を印字します。
+出力行は、スペースでインデントされます。
+もし行が長過ぎるなら、
+<code>fortran</code>は継続行を印字します。
+<code>fortran</code>は、指数演算子<code>^</code>を<code>**</code>として印字し、
+複素数<code>a + b %i</code>を形式<code>(a,b)</code>で印字します。
+</p>
+<p><var>expr</var>は等式も取り、もしそうなら、<code>fortran</code>は、
+等式の右辺を左辺に割り当てる割り当て文を印字します。
+特に、もし<var>expr</var>の右辺が行列名なら、
+<code>fortran</code>は、行列の要素それぞれに対する割り当て文を印字します。
+</p>
+<p>もし<var>expr</var>が<code>fortran</code>が認識する何かでないなら、
+エラーなしに、式が<code>grind</code>フォーマットで印字されます。
+<code>fortran</code>は、リスト、配列、関数について知りません。
+</p>
+<p><code>fortindent</code>は、<code>fortran</code>コマンドが表示する式の
+式の左マージンインデントを制御します。
+0は、標準のプリントアウト(すなわち6スペース)を与え、
+正の値は、式を更に右に印字するようにします。
+</p>
+<p><code>fortspaces</code>が<code>true</code>の時、
+<code>fortran</code>は、印字行それぞれを80カラムまでスペースで埋めます。
+</p>
+<p><code>fortran</code>は引数を評価します;
+引数のクォートは評価を無効にします。
+<code>fortran</code>はいつも<code>done</code>を返します。
+</p>
+<p>例:
+</p>
+<pre class="verbatim">(%i1) expr: (a + b)^12$
+(%i2) fortran (expr);
+      (b+a)**12                                                                 
+(%o2)                         done
+(%i3) fortran ('x=expr);
+      x = (b+a)**12                                                             
+(%o3)                         done
+(%i4) fortran ('x=expand (expr));
+      x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+     1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+     2   **3+66*a**10*b**2+12*a**11*b+a**12
+(%o4)                         done
+(%i5) fortran ('x=7+5*%i);
+      x = (7,5)                                                                 
+(%o5)                         done
+(%i6) fortran ('x=[1,2,3,4]);
+      x = [1,2,3,4]                                                             
+(%o6)                         done
+(%i7) f(x) := x^2$
+(%i8) fortran (f);
+      f                                                                         
+(%o8)                         done
+</pre>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Translation-and-compilation">Translation and compilation</a>
+&middot;</div></dd></dl>
+
+<a name="fortspaces"></a><a name="Item_003a-Numerical_002fdefvr_002ffortspaces"></a><dl>
+<dt><a name="index-fortspaces"></a>オプション変数: <strong>fortspaces</strong></dt>
+<dd><p>デフォルト値: <code>false</code>
+</p>
+<p><code>fortspaces</code>が<code>true</code>の時、
+<code>fortran</code>は、印字行それぞれを80カラムまでスペースで埋めます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Translation-and-compilation">Translation and compilation</a>
+&middot;</div></dd></dl>
+
+<a name="horner"></a><a name="Item_003a-Numerical_002fdeffn_002fhorner"></a><dl>
+<dt><a name="index-horner"></a>関数: <strong>horner</strong> <em>(<var>expr</var>, <var>x</var>)</em></dt>
+<dt><a name="index-horner-1"></a>関数: <strong>horner</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p>Horner規則に従って、もし指定されないなら<var>x</var>を主変数として使い、
+<var>expr</var>の再配列された表現を返します。
+<code>x</code>は、<var>expr</var>の標準有理式形の主変数が使われる場合には、省略できます。
+</p>
+<p>もし<code>expr</code>が数値的に評価されるものなら、
+<code>horner</code>は、時々、安定性が改善されます。
+また、もしMaximaがFortranで走らせるプログラムを生成するのに使われるなら、
+役に立ちます。
+<code>stringout</code>も参照してください。
+</p>
+<div class="example">
+<pre class="example">(%i1) expr: 1e-155*x^2 - 5.5*x + 5.2e155;
+                           2
+(%o1)            1.0E-155 x  - 5.5 x + 5.2E+155
+(%i2) expr2: horner (%, x), keepfloat: true;
+(%o2)            (1.0E-155 x - 5.5) x + 5.2E+155
+(%i3) ev (expr, x=1e155);
+Maxima encountered a Lisp error:
+
+ floating point overflow
+
+Automatically continuing.
+To reenable the Lisp debugger set *debugger-hook* to nil.
+(%i4) ev (expr2, x=1e155);
+(%o4)                       7.0E+154
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Numerical-methods">Numerical methods</a>
+&middot;</div></dd></dl>
+
+<a name="find_005froot"></a><a name="bf_005ffind_005froot"></a><a name="find_005froot_005ferror"></a><a name="find_005froot_005fabs"></a><a name="find_005froot_005frel"></a><a name="Item_003a-Numerical_002fdeffn_002ffind_005froot"></a><dl>
+<dt><a name="index-find_005froot"></a>関数: <strong>find_root</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>, [<var>abserr</var>, <var>relerr</var>])</em></dt>
+<dt><a name="index-find_005froot-1"></a>関数: <strong>find_root</strong> <em>(<var>f</var>, <var>a</var>, <var>b</var>, [<var>abserr</var>, <var>relerr</var>])</em></dt>
+<dd><a name="Item_003a-Numerical_002fdeffn_002fbf_005ffind_005froot"></a></dd><dt><a name="index-bf_005ffind_005froot"></a>関数: <strong>bf_find_root</strong> <em>(<var>expr</var>, <var>x</var>, <var>a</var>, <var>b</var>, [<var>abserr</var>, <var>relerr</var>])</em></dt>
+<dt><a name="index-bf_005ffind_005froot-1"></a>関数: <strong>bf_find_root</strong> <em>(<var>f</var>, <var>a</var>, <var>b</var>, [<var>abserr</var>, <var>relerr</var>])</em></dt>
+<dd><a name="Item_003a-Numerical_002fdeffn_002ffind_005froot_005ferror"></a></dd><dt><a name="index-find_005froot_005ferror"></a>オプション変数: <strong>find_root_error</strong></dt>
+<dd><a name="Item_003a-Numerical_002fdeffn_002ffind_005froot_005fabs"></a></dd><dt><a name="index-find_005froot_005fabs"></a>オプション変数: <strong>find_root_abs</strong></dt>
+<dd><a name="Item_003a-Numerical_002fdeffn_002ffind_005froot_005frel"></a></dd><dt><a name="index-find_005froot_005frel"></a>オプション変数: <strong>find_root_rel</strong></dt>
+<dd>
+<p>式<var>expr</var>もしくは関数<var>f</var>の根を、閉区間<em>[<var>a</var>, <var>b</var>]</em>上で見つけます。
+式<var>expr</var>は等式でも問題ありません。
+その場合、<code>find_root</code>は<code>lhs(<var>expr</var>) - rhs(<var>expr</var>)</code>の根を探します。
+</p>
+<p>Maximaは<var>expr</var>もしくは<var>f</var>を<em>[<var>a</var>, <var>b</var>]</em>上で評価可能であり、
+<var>expr</var>もしくは<var>f</var>は連続と仮定して、<code>find_root</code>は根もしくは、
+もし複数の根があるなら、根の１つを見つけることを保証します。
+</p>
+<p><code>find_root</code>は初め、２分木探索を適用します。
+もし対象の関数が十分滑らかなら，<code>find_root</code>は代わりに線形内挿を適用します。
+</p>
+<p><code>f_find_root</code>は<code>find_root</code>の多倍長浮動小数点版です。
+関数は多倍長浮動小数点数値を使って計算され、多倍長浮動小数点の結果が返されます。
+そうでなければ、<code>bf_find_root</code>は<code>find_root</code>と同一で、以下の記述は<code>bf_find_root</code>に同様に適用されます。
+</p>
+<p><code>find_root</code>の精度は<code>abserr</code>と<code>relerr</code>に支配されます。
+それらは<code>fine_root</code>へのオプションのキーワード引数です。
+これらのキーワード引数は形式<code>key=val</code>を取ります。
+キーワード引数は
+</p><dl compact="compact">
+<dt><code>abserr</code></dt>
+<dd><p>根での関数値の望まれる絶対エラー。デフォルトは、<code>find_root_abs</code>です。
+</p></dd>
+<dt><code>relerr</code></dt>
+<dd><p>根の望まれる相対エラー。デフォルトは<code>find_root_rel</code>です。
+</p></dd>
+</dl>
+
+<p>懸案の関数が<code>abserr</code>以下の何かに評価される時、または、
+近似値<var>x_0</var>, <var>x_1</var>の差が<code>relerr * max(abs(x_0), abs(x_1))</code>以下になるなら、<code>find_root</code>は停止します。
+</p>
+<p><code>find_root_abs</code>と<code>find_root_rel</code>のデフォルト値はともに零です。
+</p>
+<p><code>find_root</code>は、探索区間の端で対象の関数が異なる符号を持つことを期待します。
+関数が両方の終端での数に評価されて、それらの数が同じ符号を持つ時、
+<code>find_root</code>の振る舞いは、<code>find_root_error</code>に支配されます。
+<code>find_root_error</code>が<code>true</code>の時、
+<code>find_root</code>はエラーメッセージを出力します。
+そうでなければ、<code>find_root</code>は<code>find_root_error</code>の値を返します。
+<code>find_root_error</code>のデフォルト値は<code>true</code>です。
+</p>
+<p>もし<var>f</var>が探索アルゴリズムの中の任意のステップで、数以外の何かに評価するなら、
+<code>find_root</code>は、部分的に評価された<code>find_root</code>式を返します。
+<var>a</var>と<var>b</var>の順序は無視されます;
+根が探索される区間は<em>[min(<var>a</var>, <var>b</var>), max(<var>a</var>, <var>b</var>)]</em>です。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) f(x) := sin(x) - x/2;
+                                        x
+(%o1)                  f(x) := sin(x) - -
+                                        2
+(%i2) find_root (sin(x) - x/2, x, 0.1, %pi);
+(%o2)                   1.895494267033981
+(%i3) find_root (sin(x) = x/2, x, 0.1, %pi);
+(%o3)                   1.895494267033981
+(%i4) find_root (f(x), x, 0.1, %pi);
+(%o4)                   1.895494267033981
+(%i5) find_root (f, 0.1, %pi);
+(%o5)                   1.895494267033981
+(%i6) find_root (exp(x) = y, x, 0, 100);
+                            x
+(%o6)           find_root(%e  = y, x, 0.0, 100.0)
+(%i7) find_root (exp(x) = y, x, 0, 100), y = 10;
+(%o7)                   2.302585092994046
+(%i8) log (10.0);
+(%o8)                   2.302585092994046
+(%i9) fpprec:32;
+(%o9)                           32
+(%i10) bf_find_root (exp(x) = y, x, 0, 100), y = 10;
+(%o10)                  2.3025850929940456840179914546844b0
+(%i11) log(10b0);
+(%o11)                  2.3025850929940456840179914546844b0
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Algebraic-equations">Algebraic equations</a>
+&middot;<a href="maxima_311.html#Category_003a-Numerical-methods">Numerical methods</a>
+&middot;</div>
+</dd></dl>
+
+<a name="newton"></a><a name="Item_003a-Numerical_002fdeffn_002fnewton"></a><dl>
+<dt><a name="index-newton"></a>関数: <strong>newton</strong> <em>(<var>expr</var>, <var>x</var>, <var>x_0</var>, <var>eps</var>)</em></dt>
+<dd>
+<p><var>expr</var>を<var>x</var>の１変数関数と考えて、
+Newton法による、<code><var>expr</var> = 0</code>の近似解を返します。
+探索は、<code><var>x</var> = <var>x_0</var></code>で始まり、
+(<var>x</var>の現在値で評価された<var>expr</var>を使った)<code>abs(<var>expr</var>) &lt; <var>eps</var></code>が成り立つまで続きます。
+</p>
+<p>終了テスト<code>abs(<var>expr</var>) &lt; <var>eps</var></code>が<code>true</code>または<code>false</code>に評価される限り、
+<code>newton</code>は、未定義変数が<var>expr</var>の中に現れることを許します。
+</p>
+<p>このように、
+<var>expr</var>は数に評価される必要はありません。
+</p>
+<p><code>load(&quot;newton1&quot;)</code>はこの関数をロードします。
+</p>
+<p><code>realroots</code>, <code>allroots</code>, <code>find_root</code>, <code>mnewton</code>も参照してください。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;newton1&quot;);
+(%o1) /usr/share/maxima/5.10.0cvs/share/numeric/newton1.mac
+(%i2) newton (cos (u), u, 1, 1/100);
+(%o2)                   1.570675277161251
+(%i3) ev (cos (u), u = %);
+(%o3)                 1.2104963335033528E-4
+(%i4) assume (a &gt; 0);
+(%o4)                        [a &gt; 0]
+(%i5) newton (x^2 - a^2, x, a/2, a^2/100);
+(%o5)                  1.00030487804878 a
+(%i6) ev (x^2 - a^2, x = %);
+                                           2
+(%o6)                6.098490481853958E-4 a
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Algebraic-equations">Algebraic equations</a>
+&middot;<a href="maxima_311.html#Category_003a-Numerical-methods">Numerical methods</a>
+&middot;</div></dd></dl>
+
+<a name="Item_003a-Numerical_002fnode_002fIntroduction-to-Fourier-series"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_105.html#Introduction-to-Fourier-series" accesskey="n" rel="next">Introduction to Fourier series</a>, Previous: <a href="maxima_103.html#Introduction-to-fast-Fourier-transform" accesskey="p" rel="previous">Introduction to fast Fourier transform</a>, Up: <a href="maxima_102.html#Numerical" accesskey="u" rel="up">Numerical</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Source Level Debugging</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Source Level Debugging">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Source Level Debugging">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_161.html#Debugging" rel="up" title="Debugging">
+<link href="maxima_163.html#Keyword-Commands" rel="next" title="Keyword Commands">
+<link href="maxima_161.html#Debugging" rel="previous" title="Debugging">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Source-Level-Debugging"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_163.html#Keyword-Commands" accesskey="n" rel="next">Keyword Commands</a>, Up: <a href="maxima_161.html#Debugging" accesskey="u" rel="up">Debugging</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Source-Level-Debugging-1"></a>
+<h3 class="section">38.1 Source Level Debugging</h3>
+
+<p>Maximaは、組み込みのソースレベルデバッガを持っています。
+ユーザーは、関数にブレイクポイントを設定でき、
+そこから行毎に実行することができます。
+そのレベルでバインドされた変数と一緒にコールスタックを検査することができます。
+</p>
+<p>コマンド<code>:help</code>または<code>:h</code>は、
+デバッガーコマンドのリストを示します。
+(一般的に、
+もし略字がただ１つなら、コマンドは略せます。
+もしただ１つでないなら、選択肢がリストされます。)
+デバッガー内では、
+変数と式を検査し、定義し、操作するために、ユーザーは任意の通常のMaxima関数も使うことができます。
+</p>
+<p>Maximaプロンプトで、
+<code>:br</code>コマンドで
+ブレイクポイントが設定できます。
+デバッガー内では、
+ユーザーは、
+<code>:n</code> (&ldquo;next&rdquo;)コマンドを使って１度に１行進むことができます。
+<code>:bt</code> (&ldquo;backtrace&rdquo;)コマンドは、スタックフレームのリストを示します。
+<code>:r</code> (&ldquo;resume&rdquo;)コマンドは、デバッガーから抜けて、実行を続けます。
+以下の例で、これらのコマンドを例示します。
+</p>
+<div class="example">
+<pre class="example">(%i1) load (&quot;/tmp/foobar.mac&quot;);
+
+(%o1)                           /tmp/foobar.mac
+
+(%i2) :br foo
+Turning on debugging debugmode(true)
+Bkpt 0 for foo (in /tmp/foobar.mac line 1) 
+
+(%i2) bar (2,3);
+Bkpt 0:(foobar.mac 1)
+/tmp/foobar.mac:1::
+
+(dbm:1) :bt                        &lt;-- :bt typed here gives a backtrace
+#0: foo(y=5)(foobar.mac line 1)
+#1: bar(x=2,y=3)(foobar.mac line 9)
+
+(dbm:1) :n                         &lt;-- Here type :n to advance line
+(foobar.mac 2)
+/tmp/foobar.mac:2::
+
+(dbm:1) :n                         &lt;-- Here type :n to advance line
+(foobar.mac 3)
+/tmp/foobar.mac:3::
+
+(dbm:1) u;                         &lt;-- Investigate value of u
+28
+
+(dbm:1) u: 33;                     &lt;-- Change u to be 33
+33
+
+(dbm:1) :r                         &lt;-- Type :r to resume the computation
+
+(%o2)                                1094
+</pre></div>
+
+<p>ファイル<code>/tmp/foobar.mac</code>は以下の通りです:
+</p>
+<div class="example">
+<pre class="example">foo(y) := block ([u:y^2],
+  u: u+3,
+  u: u^2,
+  u);
+ 
+bar(x,y) := (
+  x: x+2,
+  y: y+2,
+  x: foo(y),
+  x+y);
+</pre></div>
+
+<p>EMACSを通してのデバッガーの使用
+</p>
+<p>もしユーザーがシェルウィンドウ(dblシェル)で、GNU emacsの下でコードを走らせているか、
+グラフィカルならインターフェイスバージョンXmaximaを走らせているなら、
+もしブレイクポイントで停止させたら、
+ウィンドウの他の半面に表示されるソースファイルの中に、
+赤でハイライトされたか、右行を示す小さな矢印で
+現在位置を見るでしょう。
+M-n (Alt-n)をタイプすることで、一度に一行進めることができます。
+</p>
+<p>Emacsの下では、
+<code>dbl</code>シェルの中で走らせなければいけません。
+<code>dbl</code>シェルは、elispディレクトリの中に
+<code>dbl.el</code>ファイルを要求します。
+elispファイルをインストールしたか、Maxima elispディレクトリをパスに足したかを確認してください:
+例えば、以下を
+<samp>.emacs</samp>ファイルか<samp>site-init.el</samp>に足してください。
+</p>
+<div class="example">
+<pre class="example">(setq load-path (cons &quot;/usr/share/maxima/5.9.1/emacs&quot; load-path))
+(autoload 'dbl &quot;dbl&quot;)
+</pre></div>
+
+<p>すると、emacsの中で、
+</p>
+<div class="example">
+<pre class="example">M-x dbl
+</pre></div>
+
+<p>は、例えば、Maxima, gcl, gbbなどのプログラムを走らせることができるシェルウィンドウを開始するでしょう。
+このシェルウィンドウはソースレベルデバッグや
+他のウィンドウのソースコードの表示についても知っています。
+</p>
+<p>ユーザーは、
+<code>C-x space</code>をタイプすることで
+ファイルのある行に
+ブレイクポイントを設定できます。
+これは、カーソルがどの関数の中かがわかり、
+カーソルが示すその関数のどの行かわかります。
+もしカーソルが、例えば、<code>foo</code>の行2なら、
+<code>foo</code>を二番目の行でブレイクするために、
+他のウィンドウの中で、コマンド&ldquo;<code>:br foo 2</code>&rdquo;を挿入します。
+これをイネーブルにするには、
+ユーザーは
+ファイル<code>foobar.mac</code>が訪れるウィンドウの中で
+maxima-mode.elを機能させなければいけません。
+<code>Alt-Control-x</code>をタイプすることで
+関数をMaximaに評価ような、
+そのファイルウィンドウで利用可能な追加のコマンドがあります。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Debugging">Debugging</a>
+&middot;</div>
+<a name="Item_003a-Debugging_002fnode_002fKeyword-Commands"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_163.html#Keyword-Commands" accesskey="n" rel="next">Keyword Commands</a>, Up: <a href="maxima_161.html#Debugging" accesskey="u" rel="up">Debugging</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

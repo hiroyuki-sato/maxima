@@ -38,12 +38,12 @@
 
 (def%tr $define_variable (form)	;;VAR INIT MODE.
   (cond ((> (length form) 3)
-	 (destructuring-let (((var nil mode) (cdr form)))
+	 (destructuring-let (((var val mode) (cdr form)))
 			    (let ((mode-form `(($modedeclare) ,var ,mode)))
 			      (translate mode-form)
 			      (push-pre-transl-form
 			       ;; POSSIBLE OVERKILL HERE
-			       `(declare (special ,var)))
+			       `(declaim (special ,var)))
 			      (push var defined_variables)
 			      ;; Get rid of previous definitions put on by
 			      ;; the translator.
@@ -62,7 +62,7 @@
 					   (meval* ',mode-form)
 					   ,(if (not (eq mode '$any))
 						`(defprop ,var assign-mode-check assign))
-					   (def-mtrvar ,(cadr form) ,(dtranslate (caddr form))))))))
+					   (def-mtrvar ,var ,(dtranslate val)))))))
 	(t
 	 (tr-format (intl:gettext "error: 'define_variable' must have 3 arguments; found: ~:M~%") form)
 	 nil)))

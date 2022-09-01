@@ -1,6 +1,6 @@
 ;; gnuplot_def.lisp: routines for Maxima's interface to gnuplot
 ;; Copyright (C) 2007-2021 J. Villate
-;; Time-stamp: "2021-06-14 17:26:25 villate"
+;; Time-stamp: "2022-03-28 11:45:15 villate"
 ;; 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -228,7 +228,7 @@
            "palette: wrong keyword ~M. Must be hue, saturation, value, gray or gradient.")
           (first palette)))))))
 
-(defun gnuplot-plot3d-command (file palette gstyles colors gstrings titles n) 
+(defun gnuplot-plot3d-command (file palette gstyles colors titles n) 
 (let (title (style "with pm3d"))
   (with-output-to-string (out)
     (format out "splot ")
@@ -242,40 +242,47 @@
     (if titles
         (setq title (nth (mod i (length titles)) titles))
         (setq title ""))
-    (format out "~s title ~s ~a ~a" file title gstrings style)))))
+    (format out "~s title ~s ~a" file title style)))))
 
 (defun gnuplot-terminal-and-file (plot-options)
-(let (terminal-command out-file (preserve-file t))
+  (let ((gstrings
+         (if (getf plot-options :gnuplot_strings) "enhanced" "noenhanced"))
+        terminal-command out-file (preserve-file t))
   (cond
     ((getf plot-options :svg_file)
      (if (getf plot-options :gnuplot_svg_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_svg_term_command))
-         (setq terminal-command "set term svg font \",14\""))
+         (setq terminal-command
+               (format nil "set term svg font \",14\" ~a" gstrings)))
      (setq out-file (getf plot-options :svg_file)))
     ((getf plot-options :png_file)
      (if (getf plot-options :gnuplot_png_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_png_term_command))
-         (setq terminal-command "set term pngcairo font \",12\""))
+         (setq terminal-command
+               (format nil "set term pngcairo font \",12\" ~a" gstrings)))
      (setq out-file (getf plot-options :png_file)))
     ((getf plot-options :pdf_file)
      (if (getf plot-options :gnuplot_pdf_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_pdf_term_command))
-         (setq terminal-command "set term pdfcairo color solid lw 3 size 17.2 cm, 12.9 cm font \",18\""))
+         (setq terminal-command
+               (format nil "set term pdfcairo color solid lw 3 size 17.2 cm, 12.9 cm font \",18\" ~a" gstrings)))
      (setq out-file (getf plot-options :pdf_file)))
     ((getf plot-options :ps_file)
      (if (getf plot-options :gnuplot_ps_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_ps_term_command))
-         (setq terminal-command "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
+         (setq terminal-command
+               (format nil "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\" ~a" gstrings)))
      (setq out-file (getf plot-options :ps_file)))
     ((eq (getf plot-options :gnuplot_term) '$ps)
      (if (getf plot-options :gnuplot_ps_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_ps_term_command))
-         (setq terminal-command "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
+         (setq terminal-command
+               (format nil "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\" ~a" gstrings)))
      (if (getf plot-options :gnuplot_out_file)
          (setq out-file (getf plot-options :gnuplot_out_file))
          (setq out-file "maxplot.ps")))
@@ -292,7 +299,10 @@
          (setq terminal-command
                (getf plot-options :gnuplot_default_term_command))
          (setq terminal-command
-               "set term pop")))
+               (if (getf plot-options :window)
+                   (format nil "set term GNUTERM ~d ~a~%"
+                           (getf plot-options :window) gstrings)
+                   (format nil "set term GNUTERM ~a~%" gstrings)))))
     ((getf plot-options :gnuplot_term)
      (setq
       terminal-command
@@ -312,9 +322,7 @@
   (let ((palette (getf plot-options :palette))
                       (meshcolor (if (member :mesh_lines_color plot-options)
                                      (getf plot-options :mesh_lines_color)
-                                     '$black))
-                      (gstrings (if (getf plot-options :gnuplot_strings)
-                                    "" "noenhanced"))  terminal-file)
+                                     '$black)) terminal-file)
     (when (find 'mlist palette :key #'car) (setq palette (list palette)))
     ;; sets-up terminal command and output file name
     (setq terminal-file (gnuplot-terminal-and-file plot-options))
@@ -323,7 +331,9 @@
      (concatenate
       'string
       (slot-value plot 'data)
-      (with-output-to-string (dest)            
+      (with-output-to-string (dest)
+        ;; reset initial state
+        (format dest "reset~%unset output~%unset multiplot~%")
         ;; user's preamble
         (when (and (getf plot-options :gnuplot_preamble)
                    (> (length  (getf plot-options :gnuplot_preamble)) 0))
@@ -342,9 +352,12 @@
               (progn
                 (if meshcolor
                     (progn
-                      (format dest "set style line 100 lt rgb ~s lw 1~%"
+                      (format dest
+                              "if (GPVAL_VERSION < 5.0) set style line 100 lt rgb ~s lw 1; set pm3d hidden3d 100~%"
                               (rgb-color meshcolor))
-                      (format dest "set pm3d hidden3d 100~%")
+                      (format dest
+                              "if (GPVAL_VERSION >= 5.0) set pm3d hidden3d 100 border lw 0.5 lt rgb ~s~%"
+                              (rgb-color meshcolor))
                       (unless (getf plot-options :gnuplot_4_0)
                         (format dest "set pm3d depthorder~%")))
                     (format dest "set pm3d~%"))
@@ -382,14 +395,11 @@
         (when (getf plot-options :logy) (format dest "set log y~%"))
         ;; axes labels and legend
         (when (getf plot-options :xlabel)
-          (format dest
-                  "set xlabel ~s ~a~%" (getf plot-options :xlabel) gstrings))
+          (format dest "set xlabel ~s~%" (getf plot-options :xlabel)))
         (when (getf plot-options :ylabel)
-          (format dest
-                  "set ylabel ~s ~a~%" (getf plot-options :ylabel) gstrings))
+          (format dest "set ylabel ~s~%" (getf plot-options :ylabel)))
         (when (getf plot-options :zlabel)
-          (format dest
-                  "set zlabel ~s ~a~%" (getf plot-options :zlabel) gstrings))
+          (format dest "set zlabel ~s~%" (getf plot-options :zlabel)))
         (when (and (member :legend plot-options) 
                    (null (getf plot-options :legend)))
           (format dest "unset key~%"))
@@ -473,19 +483,15 @@
                 (t (format dest "set zeroaxis~%")))))
         ;; title and labels
         (when (getf plot-options :title)
-          (format dest "set title ~s ~a~%" (getf plot-options :title) gstrings))
+          (format dest "set title ~s~%" (getf plot-options :title)))
         (when (getf plot-options :label)
           (dolist (label (getf plot-options :label))
             (when (and (listp label) (= (length label) 4))
-              (format dest "set label ~s ~a at ~{~f~^, ~}~%"
-                      (cadr label) gstrings (cddr label)))))
+              (format dest "set label ~s at ~{~f~^, ~}~%"
+                      (cadr label) (cddr label)))))
         ;; identifier for missing data
-        (format dest "set datafile missing ~s~%" *missing-data-indicator*)
-        ;; user's commands; may overule any of the previous settings
-        (when (and (getf plot-options :gnuplot_postamble)
-                   (> (length  (getf plot-options :gnuplot_postamble)) 0))
-          (format dest "~a~%" (getf plot-options :gnuplot_postamble))))))
-        ;;returns a list with the name of the file created, or nil
+        (format dest "set datafile missing ~s~%" *missing-data-indicator*))))
+    ;;returns a list with the name of the file created, or nil
     (if (null (second terminal-file))
         nil (list (second terminal-file)))))
 
@@ -527,6 +533,11 @@
               (psetq ymin (- (* 1.05 ymin) (* 0.05 ymax))
                      ymax (- (* 1.05 ymax) (* 0.05 ymin)))
               (format st "set yrange [~,,,,,,'eg: ~,,,,,,'eg]~%" ymin ymax))))
+        ;; user's commands; may overule any of the previous settings
+        (when (and (getf options :gnuplot_postamble)
+                   (> (length  (getf options :gnuplot_postamble)) 0))
+          (format st "~a~%" (getf options :gnuplot_postamble)))
+        ;; plot command
         (format st "plot")
         (when (getf options :x)
           (format st " [~{~,,,,,,'eg~^ : ~}]" (getf options :x)))
@@ -538,14 +549,12 @@
               (colors (getf options :color))
               (types (getf options :point_type))
               (styles (getf options :style))
-              (gstrings (if (getf options :gnuplot_strings) "" "noenhanced "))
               (i 0) style plot-name)
           (unless (listp legend) (setq legend (list legend)))
           (unless (listp colors) (setq colors (list colors)))
           (unless (listp styles) (setq styles (list styles)))
           (loop for v in (cdr fun) for points-list in points-lists do
                (when points-list
-                 ;; case "contour" with several plots in one list
                  (when ($listp (car points-list))
                    (dolist (level (cdar points-list))
                      (if styles
@@ -556,10 +565,9 @@
                      (setq plot-name (ensure-string level))
                      (when (> i 1) (format st ","))
                      (format st " '-'")
-                     (format st " title ~s ~a" plot-name gstrings)
+                     (format st " title ~s " plot-name)
                      (format st (gnuplot-curve-style style colors types i)))
                    (return))
-                 ;; other cases with only one plot per list
                  (if styles
                      (setq style (nth (mod i (length styles)) styles))
                      (setq style nil))
@@ -591,7 +599,7 @@
                  (when (> i 1) (format st ","))
                  (format st " '-'")
                  (if plot-name 
-                     (format st " title ~s ~a" plot-name gstrings)
+                     (format st " title ~s " plot-name)
                      (format st " notitle "))
                  (format st (gnuplot-curve-style style colors types i)))))
         ;; Parses points data
@@ -638,11 +646,10 @@
                      (format st "~,,,,,,'eg ~,,,,,,'eg ~%"
                              (first (getf options :x))
                              (first (getf options :y)))))
-               (format st "e~%"))))))))
+               (when points-list (format st "e~%")))))))))
 
 (defmethod plot3d-command ((plot gnuplot-plot) functions options titles)
-  (let ((i 0) fun xrange yrange lvars trans (n (length functions))
-    (gstrings (if (getf options :gnuplot_strings) "" "")))
+  (let ((i 0) fun xrange yrange lvars trans (n (length functions)))
     (setf
      (slot-value plot 'data)
      (concatenate
@@ -653,7 +660,7 @@
                 (gnuplot-plot3d-command "-" (getf options :palette)
                                         (getf options :gnuplot_curve_styles)
                                         (getf options :color)
-                                        gstrings titles n))
+                                        titles n))
         ;; generate the mesh points for each surface in the functions stack
         (dolist (f functions)
           (setq i (+ 1 i))
@@ -675,7 +682,7 @@
                    (xmid (+ x0 (/ (- x1 x0) 2)))
                    (ymid (+ y0 (/ (- y1 y0) 2))))
                 (setq lvars `((mlist) ,(second xrange) ,(second yrange)))
-                (setq fun (coerce-float-fun fun lvars))
+                (setq fun (coerce-float-fun fun lvars "plot3d"))
                 ;; Evaluate FUN at the middle point of the range.
                 ;; Looking at a single point is somewhat unreliable.
                 ;; Call FUN with numerical arguments (symbolic arguments may
@@ -712,8 +719,8 @@
           (format fl "~a" (slot-value plot 'data)))
         (gnuplot-process options file output-file)
         (cons '(mlist) (cons file output-file))))
-      ($gnuplot_pipes
-       (check-gnuplot-process)
-       ($gnuplot_reset)
-       (send-gnuplot-command (slot-value plot 'data))
-       (if output-file (cons '(mlist) output-file) nil))))
+     ($gnuplot_pipes
+      (send-gnuplot-command (slot-value plot 'data))
+      (when output-file
+        (send-gnuplot-command "unset output")
+        (cons '(mlist) output-file)))))

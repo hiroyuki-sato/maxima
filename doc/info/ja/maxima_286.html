@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Functions and Variables for solve_rec</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for solve_rec">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for solve_rec">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_284.html#solve_005frec" rel="up" title="solve_rec">
+<link href="maxima_287.html#stats" rel="next" title="stats">
+<link href="maxima_285.html#Introduction-to-solve_005frec" rel="previous" title="Introduction to solve_rec">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Functions-and-Variables-for-solve_005frec"></a>
+<div class="header">
+<p>
+Previous: <a href="maxima_285.html#Introduction-to-solve_005frec" accesskey="p" rel="previous">Introduction to solve_rec</a>, Up: <a href="maxima_284.html#solve_005frec" accesskey="u" rel="up">solve_rec</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Functions-and-Variables-for-solve_005frec-1"></a>
+<h3 class="section">76.2 Functions and Variables for solve_rec</h3>
+
+<a name="Item_003a-solve_005frec_002fdeffn_002freduce_005forder"></a><dl>
+<dt><a name="index-reduce_005forder"></a>関数: <strong>reduce_order</strong> <em>(<var>rec</var>, <var>sol</var>, <var>var</var>)</em></dt>
+<dd>
+<p>特殊解<var>sol</var>が知られている時、
+線形漸化式<var>rec</var>の次数を減らします。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i3) rec: x[n+2] = x[n+1] + x[n]/n;
+                                      x
+                                       n
+(%o3)               x      = x      + --
+                     n + 2    n + 1   n
+</pre><pre class="example">(%i4) solve_rec(rec, x[n]);
+WARNING: found some hypergeometrical solutions! 
+(%o4)                    x  = %k  n
+                          n     1
+</pre><pre class="example">(%i5) reduce_order(rec, n, x[n]);
+(%t5)                    x  = n %z
+                          n       n
+
+                           n - 1
+                           ====
+                           \
+(%t6)                %z  =  &gt;     %u
+                       n   /        %j
+                           ====
+                           %j = 0
+
+(%o6)             (- n - 2) %u     - %u
+                              n + 1     n
+</pre><pre class="example">(%i6) solve_rec((n+2)*%u[n+1] + %u[n], %u[n]);
+                                     n
+                            %k  (- 1)
+                              1
+(%o6)                 %u  = ----------
+                        n    (n + 1)!
+
+だから一般解は以下の通りです。
+
+             n - 1
+             ====        j
+             \      (- 1)
+       %k  n  &gt;    -------- + %k  n
+         2   /     (j + 1)!     1
+             ====
+             j = 0
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdefvr_002fsimplify_005fproducts"></a><dl>
+<dt><a name="index-simplify_005fproducts"></a>オプション変数: <strong>simplify_products</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p>もし<code>simplify_products</code>が<code>true</code>なら、
+<code>solve_rec</code>は答えの積をを整理しようとします。
+</p>
+<p>以下も参照してください: <code>solve_rec</code>.
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdeffn_002fsimplify_005fsum"></a><dl>
+<dt><a name="index-simplify_005fsum"></a>関数: <strong>simplify_sum</strong> <em>(<var>expr</var>)</em></dt>
+<dd>
+<p><var>expr</var>に現れるすべての和を閉形式に整理しようとします。
+</p>
+<p>この関数を初めて使うには、
+<code>load(&quot;simplify_sum&quot;)</code>で
+<code>simplify_sum</code>パッケージをロードしてください。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) load(&quot;simplify_sum&quot;)$
+</pre><pre class="example">(%i2) sum(binomial(n+k,k)/2^k,k,1,n)+sum(binomial(2*n,2*k),k,1,n);
+        n                          n
+       ====                       ====
+       ¥     binomial(n + k, k)   ¥
+(%o2)   &gt;    ------------------ +  &gt;    binomial(2 n, 2 k)
+       /              k           /
+       ====          2            ====
+       k = 1                      k = 1
+</pre><pre class="example">(%i3) simplify_sum(%);
+
+                         2 n - 1    n
+(%o3)                   2        + 2  - 2
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;<a href="maxima_311.html#Category_003a-Sums-and-products">Sums and products</a>
+&middot;<a href="maxima_311.html#Category_003a-Simplification-functions">Simplification functions</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdeffn_002fsolve_005frec"></a><dl>
+<dt><a name="index-solve_005frec"></a>関数: <strong>solve_rec</strong> <em>(<var>eqn</var>, <var>var</var>, [<var>init</var>])</em></dt>
+<dd><p>変数<var>var</var>に関して多項式係数を持つ線形漸化式<var>eqn</var>の超幾何解について解きます。
+オプション引数<var>init</var>は初期条件です。
+</p>
+<p><code>solve_rec</code>は、
+定数係数の線形漸化式を解くことができ、
+多項式係数の斉次線形漸化式の超幾何解と多項式係数の有理解を見つけ、
+Ricatti型漸化式を解くことができます。
+</p>
+<p>超幾何解を見つけるのに使われるアルゴリズムの実行時間は
+主係数と最小次数(trailing)係数の次数に関して指数的であることに注意してください。
+</p>
+<p>この関数を使うには、
+最初に
+<code>load(&quot;solve_rec&quot;);</code>で<code>solve_rec</code>パッケージをロードしてください。
+</p>
+
+<p>定係数の線形漸化式の例:
+</p>
+<div class="example">
+<pre class="example">(%i2) solve_rec(a[n]=a[n-1]+a[n-2]+n/2^n, a[n]);
+                        n          n
+           (sqrt(5) - 1)  %k  (- 1)
+                            1           n
+(%o2) a  = ------------------------- - ----
+       n               n                  n
+                      2                5 2
+                                                n
+                                   (sqrt(5) + 1)  %k
+                                                    2    2
+                                 + ------------------ - ----
+                                            n              n
+                                           2            5 2
+</pre></div>
+
+<p>多項式係数の線形漸化式の例:
+</p>
+<div class="example">
+<pre class="example">(%i7) 2*x*(x+1)*y[x] - (x^2+3*x-2)*y[x+1] + (x-1)*y[x+2];
+                         2
+(%o7) (x - 1) y      - (x  + 3 x - 2) y      + 2 x (x + 1) y
+               x + 2                   x + 1                x
+</pre><pre class="example">(%i8) solve_rec(%, y[x], y[1]=1, y[3]=3);
+                              x
+                           3 2    x!
+(%o9)                 y  = ---- - --
+                       x    4     2
+</pre></div>
+
+<p>Ricatti型漸化式の例:
+</p>
+<div class="example">
+<pre class="example">(%i2) x*y[x+1]*y[x] - y[x+1]/(x+2) + y[x]/(x-1) = 0;
+                            y         y
+                             x + 1     x
+(%o2)         x y  y      - ------ + ----- = 0
+                 x  x + 1   x + 2    x - 1
+</pre><pre class="example">(%i3) solve_rec(%, y[x], y[3]=5)$
+</pre><pre class="example">(%i4) ratsimp(minfactorial(factcomb(%)));
+                                   3
+                               30 x  - 30 x
+(%o4) y  = - -------------------------------------------------
+       x        6      5       4       3       2
+             5 x  - 3 x  - 25 x  + 15 x  + 20 x  - 12 x - 1584
+</pre></div>
+
+
+<p>以下も参照してください: <code>solve_rec_rat</code>, <code>simplify_products</code>, and <code>product_use_gamma</code>.
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdeffn_002fsolve_005frec_005frat"></a><dl>
+<dt><a name="index-solve_005frec_005frat"></a>関数: <strong>solve_rec_rat</strong> <em>(<var>eqn</var>, <var>var</var>, [<var>init</var>])</em></dt>
+<dd>
+<p>線形漸化式の有理解について解きます。
+引数の記述についてはsolve_recを参照してください。
+</p>
+<p>この関数を使うには、
+最初に
+<code>load(&quot;solve_rec&quot;);</code>で<code>solve_rec</code>パッケージをロードしてください。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) (x+4)*a[x+3] + (x+3)*a[x+2] - x*a[x+1] + (x^2-1)*a[x];
+(%o1)  (x + 4) a      + (x + 3) a      - x a
+                x + 3            x + 2      x + 1
+                                                   2
+                                               + (x  - 1) a
+                                                            x
+</pre><pre class="example">(%i2) solve_rec_rat(% = (x+2)/(x+1), a[x]);
+                       1
+(%o2)      a  = ---------------
+            x   (x - 1) (x + 1)
+</pre></div>
+
+
+<p>以下も参照してください: <code>solve_rec</code>.
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdefvr_002fproduct_005fuse_005fgamma"></a><dl>
+<dt><a name="index-product_005fuse_005fgamma"></a>オプション変数: <strong>product_use_gamma</strong></dt>
+<dd><p>デフォルト値: <code>true</code>
+</p>
+<p>積を整理する時、
+もし<code>product_use_gamma</code>が<code>true</code>なら、
+<code>solve_rec</code>は式の中にガンマ函数を導入します。
+</p>
+
+<p>以下も参照してください: <code>simplify_products</code>, <code>solve_rec</code>.
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-solve_005frec_002fdeffn_002fsummand_005fto_005frec"></a><dl>
+<dt><a name="index-summand_005fto_005frec"></a>関数: <strong>summand_to_rec</strong> <em>(<var>summand</var>, <var>k</var>, <var>n</var>)</em></dt>
+<dt><a name="index-summand_005fto_005frec-1"></a>関数: <strong>summand_to_rec</strong> <em>(<var>summand</var>, [<var>k</var>, <var>lo</var>, <var>hi</var>], <var>n</var>)</em></dt>
+<dd>
+<p>和
+</p>
+<div class="example">
+<pre class="example">     hi
+    ====
+    \
+     &gt;     summand
+    /
+    ====
+  k = lo
+</pre></div>
+
+<p>が満たす漸化式を返します。
+ここで、被和(summand)は<var>k</var>と<var>n</var>に対して超幾何的です。
+もし<var>lo</var>と<var>hi</var>が省略されたら、
+それらは<code>lo = -inf</code>、<code>hi = inf</code>と仮定されます。
+</p>
+<p>この関数を初めて使うには、
+<code>load(&quot;simplify_sum&quot;)</code>で
+<code>simplify_sum</code>パッケージをロードしてください。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) load(&quot;simplify_sum&quot;)$
+</pre><pre class="example">(%i2) summand: binom(n,k);
+(%o2)                           binomial(n, k)
+</pre><pre class="example">(%i3) summand_to_rec(summand,k,n);
+(%o3)                      2 sm  - sm      = 0
+                               n     n + 1
+</pre><pre class="example">(%i7) summand: binom(n, k)/(k+1);
+                                binomial(n, k)
+(%o7)                           --------------
+                                    k + 1
+</pre><pre class="example">(%i8) summand_to_rec(summand, [k, 0, n], n);
+(%o8)               2 (n + 1) sm  - (n + 2) sm      = - 1
+                                n             n + 1
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-solve_005frec">Package solve_rec</a>
+&middot;</div>
+</dd></dl>
+
+<hr>
+<div class="header">
+<p>
+Previous: <a href="maxima_285.html#Introduction-to-solve_005frec" accesskey="p" rel="previous">Introduction to solve_rec</a>, Up: <a href="maxima_284.html#solve_005frec" accesskey="u" rel="up">solve_rec</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

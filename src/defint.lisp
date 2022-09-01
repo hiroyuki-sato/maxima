@@ -21,7 +21,8 @@
 
 ;; References are to "Evaluation of Definite Integrals by Symbolic
 ;; Manipulation", by Paul S. Wang,
-;; (http://www.lcs.mit.edu/publications/pubs/pdf/MIT-LCS-TR-092.pdf)
+;; (http://www.lcs.mit.edu/publications/pubs/pdf/MIT-LCS-TR-092.pdf;
+;; a better copy might be: https://maxima.sourceforge.io/misc/Paul_Wang_dissertation.pdf)
 ;;
 ;;	nointegrate is a macsyma level flag which inhibits indefinite
 ;;integration.
@@ -453,7 +454,13 @@ in the interval of integration.")
 					     %cot %acot %sec
 					     %asec %csc %acsc
 					     %derivative) :test #'eq))))
-		       (cond ((setq ans (antideriv exp))
+		       ;; Call ANTIDERIV with logabs disabled,
+		       ;; because the Risch algorithm assumes
+		       ;; the integral of 1/x is log(x), not log(abs(x)).
+		       ;; Why not just assume logabs = false within RISCHINT itself?
+		       ;; Well, there's at least one existing result which requires
+		       ;; logabs = true in RISCHINT, so try to make a minimal change here instead.
+		       (cond ((setq ans (let ($logabs) (antideriv exp)))
 			      (setq ans (intsubs ans ll ul))
 			      (return (cond (ans (m* c ans)) (t nil))))
 			     (t (return nil)))))
@@ -555,7 +562,13 @@ in the interval of integration.")
 		(setq ans ($expand ans))
 		(not (alike1 ans exp))
 		(intbyterm ans t)))
-	  ((setq ans (antideriv exp))
+	  ;; Call ANTIDERIV with logabs disabled,
+	  ;; because the Risch algorithm assumes
+	  ;; the integral of 1/x is log(x), not log(abs(x)).
+	  ;; Why not just assume logabs = false within RISCHINT itself?
+	  ;; Well, there's at least one existing result which requires
+	  ;; logabs = true in RISCHINT, so try to make a minimal change here instead.
+	  ((setq ans (let ($logabs) (antideriv exp)))
 	   (intsubs ans ll ul))
 	  (t nil))))
 
@@ -1943,6 +1956,7 @@ in the interval of integration.")
 	      (cc (cdras 'c arg))
 	      (bb (cdras 'b arg))
 	      (new-var (gensym "NEW-VAR-")))
+	(putprop new-var t 'internal)	  
 	 (when (or (not arg)
 		   (not (every-trigarg-alike e trigarg)))
 	   (return nil))

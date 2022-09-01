@@ -766,7 +766,8 @@
       (exptflag nil)) ; When T, the substitution is not possible.
   
   (defun superexpt (exp var bas1 pow1)
-    (prog (y (new-var (gensym "NEW-VAR-")))
+    (prog (y ($logabs nil) (new-var (gensym "NEW-VAR-")))
+      (putprop new-var t 'internal)
       (setq base bas1
             pow pow1
             exptflag nil)
@@ -1240,6 +1241,7 @@
 		    (new-var (gensym "NEW-VAR-"))
 		    (new-exp (maxima-substitute (div (sub new-var b) c)
 						var exp)))
+         (putprop new-var t 'internal)    
 	       (if (every-trigarg-alike new-exp new-var)
 		   ;; avoid endless recursion when more than one
 		   ;; trigarg exists or c is a float
@@ -2414,7 +2416,7 @@
       (div -1 a)
       (power '$%e (sub d (div (mul b c) a)))
       (power (add b (mul a var)) (add p 1))
-      ($expintegral_e (mul -1 p) (mul (div -1 a) c (add b (mul a var))))))
+      (ftake '%expintegral_e (mul -1 p) (mul (div -1 a) c (add b (mul a var))))))
 
     ((m2-exp-type-4 expr)
      (a b c d)

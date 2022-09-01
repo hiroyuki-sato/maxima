@@ -1,3 +1,10 @@
+@ifnottex
+@set figuresfolder ./figures
+@end ifnottex
+@iftex
+@set figuresfolder /home/vttoth/dev/maxima/doc/info/figures
+@end iftex
+
 @ifhtml
 @macro fname {name}
 @*@ @ @ @ @t{\name\}
@@ -26,12 +33,12 @@
 
 @ifhtml
 @macro figure {file}
-@image{figures/\file\}
+@image{@value{figuresfolder}/\file\}
 @end macro
 @end ifhtml
 @iftex
 @macro figure {file}
-@center @image{figures/\file\, 10cm}
+@center @image{@value{figuresfolder}/\file\, 10cm}
 @end macro
 @end iftex
 @ifinfo
@@ -51,17 +58,18 @@
 @end ifnothtml
 
 @ifhtml
-@macro opencatbox {}
+@macro opencatbox {label}
 @html
 <div class=categorybox>
+\label\
 @end html
 @end macro
 
 @macro category {name}
 @html
+@ref{Category: \name\, \name\}
 &middot;
 @end html
-@ref{Category: \name\}
 @end macro
 
 @macro closecatbox {}
@@ -100,13 +108,29 @@
 @code{@ref{\nodename\}})
 @end macro
 
+@macro nref {nodename}
+@ref{\nodename\}
+@end macro
+
+@macro nxref {nodename, text}
+@ref{\nodename\, \text\}
+@end macro
+
+@macro nrefdot {nodename}
+@ref{\nodename\}.
+@end macro
+
+@macro nrefcomma {nodename}
+@ref{\nodename\},
+@end macro
+
 @end ifhtml
 
 @c Non html versions of the macros
 
 @ifnothtml
 
-@macro opencatbox {}
+@macro opencatbox {label}
 @end macro
 
 @macro category {name}
@@ -144,6 +168,22 @@
 
 @macro mrefparen {nodename}
 @code{\nodename\})
+@end macro
+
+@macro nref {nodename}
+\nodename\
+@end macro
+
+@macro nxref {nodename, text}
+\text\
+@end macro
+
+@macro nrefdot {nodename}
+\nodename\.
+@end macro
+
+@macro nrefcomma {nodename}
+\nodename\,
 @end macro
 @end ifnottex
 
@@ -184,6 +224,22 @@
 
 @macro mrefparen {nodename}
 @mref{\nodename\})
+@end macro
+
+@macro nref {nodename}
+@ref{\nodename\}
+@end macro
+
+@macro nxref {nodename, text}
+@ref{\nodename\, \text\}
+@end macro
+
+@macro nrefdot {nodename}
+@ref{\nodename\}.
+@end macro
+
+@macro nrefcomma {nodename}
+@ref{\nodename\},
 @end macro
 
 @end iftex

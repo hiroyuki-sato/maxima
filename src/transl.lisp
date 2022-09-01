@@ -186,7 +186,7 @@ APPLY means like APPLY.")
 
 
 (defun barfo (msg)
-  (tr-format (intl:gettext "translator: internal error. Message: ~:M~%") msg)
+  (tr-format (intl:gettext "Internal translator error: ~M~%") msg)
   (cond (*transl-debug*
 	 (break "transl barfo"))
 	(t
@@ -494,6 +494,8 @@ APPLY means like APPLY.")
 		     (trfail name))
 		    (t name))))))))
 
+(defun punt-to-meval (form &optional (mode '$any))
+  (cons mode `(meval ',form)))
 
 (defun trfail (x)
   (tr-format (intl:gettext "error: failed to translate ~:@M~%") x)
@@ -671,8 +673,10 @@ APPLY means like APPLY.")
 	 (cdr temp))
 	((and (setq temp (mget form '$numer)) $tr_numer)
 	 `($float . ,temp))
-	((setq temp (implied-quotep form))
-	 `($any . ',temp))
+	((implied-quotep form)
+	 `($any . ',form))
+	((self-evaluating-lisp-object-p form)
+	 `($any . ,form))
 	((tboundp form)
 	 (setq form (teval form))
 	 `(,(value-mode form) . ,form))
@@ -754,7 +758,7 @@ APPLY means like APPLY.")
 	(t
 	 ;; This case used to be the most common, a real loser.
 	 (warn-meval form)
-	 `(,(function-mode (caar form)) . (meval ',form)))))
+	 (punt-to-meval form (function-mode (caar form))))))
 
 
 (defun attempt-translate-random-macro-op (form)
@@ -763,7 +767,7 @@ APPLY means like APPLY.")
 
 (defun attempt-translate-random-special-op (form)
   (warn-fexpr form)
-  `(,(function-mode (caar form)) . (meval ',form)))
+  (punt-to-meval form (function-mode (caar form))))
 
 
 (defun tr-lisp-function-call (form type)
@@ -807,22 +811,12 @@ APPLY means like APPLY.")
 	(args (tr-args (cdr form))))
     `($any . (simplify (list ',op ,@args)))))
 
-
-
 ;;; Some atoms, solely by usage, are self evaluating. 
+(defun implied-quotep (x)
+  (safe-get x 'implied-quotep))
 
-(defun implied-quotep (atom)
-  (cond
-	((stringp atom)
-	 (cond
-       ;; I WONDER IF THIS NEXT CONDITION CAN BE CUT OUT ?? !!
-       ((equal atom "**") ;;; foolishness. The PARSER should do this.
-		;; Losing Fortran hackers.
-		(tr-format "~% `**' is obsolete, use `^' !!!")
-		"^")
-       (t atom)))
-    ((get atom 'implied-quotep) atom)
-	(t nil)))
+(defun self-evaluating-lisp-object-p (x)
+  (not (or (symbolp x) (consp x))))
 
 ;;; the Translation Properties. the heart of TRANSL.
 
@@ -850,9 +844,6 @@ APPLY means like APPLY.")
 	(pushnew v *declared-translated-functions*)
 	else do (merror (intl:gettext "declare_translated: arguments must be symbols or strings; found: ~:M") v)))
 
-(def%tr $declare (form)
-  `($any . (meval ',form)))
-
 (def%tr $eval_when (form)
   (tr-format (intl:gettext "error: found 'eval_when' in a function or expression: ~:M~%") form)
   (tr-format (intl:gettext "note: 'eval_when' can appear only at the top level in a file.~%"))
@@ -866,7 +857,7 @@ APPLY means like APPLY.")
   ; translation without being cleaned it up afterward, but simply
   ; removing this breaks things.
   (meval form)
-  `($any . (meval ',form)))
+  (punt-to-meval form))
 
 (def%tr $local (form)
   (cond (local
@@ -878,7 +869,7 @@ APPLY means like APPLY.")
   ; what used to happen).  That would push onto LOCLIST and bind
   ; MLOCP at the "wrong time".  The push onto LOCLIST and the
   ; binding of MLOCP are handled in TR-LAMBDA.
-  (cons '$any `(meval ',form)))
+  (punt-to-meval form))
 
 
 (def%tr mquote (form)
@@ -1133,7 +1124,7 @@ APPLY means like APPLY.")
 			    ',fn)))
 	  (t
 	   (warn-meval form)
-	   `($any meval ',form)))))
+	   (punt-to-meval form)))))
 
 
 
@@ -1232,7 +1223,7 @@ APPLY means like APPLY.")
        (setq init (dtranslate (caddr form)))
        (cond ((or (cadr (cddddr form)) (caddr (cddddr form)))
 	      (tunbind 'mdo) (tunbind (cadr form))
-	      (return `($any meval '((mdoin) . ,(cdr form))))))
+	      (return (punt-to-meval `((mdoin) . ,(cdr form))))))
        (setq action (translate (cadddr (cddddr form)))
 	     mode (cond ((null returns) '$any)
 			(t return-mode)))

@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Functions and Variables for input and output</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Functions and Variables for input and output">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Functions and Variables for input and output">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_294.html#stringproc" rel="up" title="stringproc">
+<link href="maxima_297.html#Functions-and-Variables-for-characters" rel="next" title="Functions and Variables for characters">
+<link href="maxima_295.html#Introduction-to-string-processing" rel="previous" title="Introduction to string processing">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Functions-and-Variables-for-input-and-output"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_297.html#Functions-and-Variables-for-characters" accesskey="n" rel="next">Functions and Variables for characters</a>, Previous: <a href="maxima_295.html#Introduction-to-string-processing" accesskey="p" rel="previous">Introduction to string processing</a>, Up: <a href="maxima_294.html#stringproc" accesskey="u" rel="up">stringproc</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Functions-and-Variables-for-input-and-output-1"></a>
+<h3 class="section">79.2 Functions and Variables for input and output</h3>
+
+<p>例: 
+</p>
+<div class="example">
+<pre class="example">(%i1) s: openw(&quot;E:/file.txt&quot;);
+(%o1)                     #&lt;output stream E:/file.txt&gt;
+(%i2) control: 
+&quot;~2tAn atom: ~20t~a~%~2tand a list: ~20t~{~r ~}~%~2t\
+and an integer: ~20t~d~%&quot;$
+(%i3) printf( s,control, 'true,[1,2,3],42 )$
+(%o3)                                false
+(%i4) close(s);
+(%o4)                                true
+(%i5) s: openr(&quot;E:/file.txt&quot;);
+(%o5)                     #&lt;input stream E:/file.txt&gt;
+(%i6) while stringp( tmp:readline(s) ) do print(tmp)$
+  An atom:          true 
+  and a list:       one two three  
+  and an integer:   42 
+(%i7) close(s)$
+</pre></div>
+
+<a name="Item_003a-stringproc_002fdeffn_002fclose"></a><dl>
+<dt><a name="index-close"></a>関数: <strong>close</strong> <em>(<var>stream</var>) </em></dt>
+<dd><p><var>stream</var>を閉じて、
+もし<var>stream</var>が開いていたら
+<code>true</code>を返します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-input">File input</a>
+&middot;<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fflength"></a><dl>
+<dt><a name="index-flength"></a>関数: <strong>flength</strong> <em>(<var>stream</var>)</em></dt>
+<dd><p><var>stream</var>の中の要素の数を返します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-input">File input</a>
+&middot;<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002ffposition"></a><dl>
+<dt><a name="index-fposition"></a>関数: <strong>fposition</strong> <em>(<var>stream</var>)</em></dt>
+<dt><a name="index-fposition-1"></a>関数: <strong>fposition</strong> <em>(<var>stream</var>, <var>pos</var>)</em></dt>
+<dd><p>もし<var>pos</var>が使われてないなら、
+<var>stream</var>の中の現在位置を返します。
+もし<var>pos</var>が使われているなら、
+<code>fposition</code>は<var>stream</var>の中の位置を設定します。
+<var>pos</var>は正の数でなければいけません。
+<var>stream</var>の最初の要素は位置1にあります。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-input">File input</a>
+&middot;<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002ffreshline"></a><dl>
+<dt><a name="index-freshline"></a>関数: <strong>freshline</strong> <em>() </em></dt>
+<dt><a name="index-freshline-1"></a>関数: <strong>freshline</strong> <em>(<var>stream</var>) </em></dt>
+<dd><p>もし位置が行の最初でないなら
+(<var>stream</var>に)改行を書きます。
+<code>newline</code>も参照してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fnewline"></a><dl>
+<dt><a name="index-newline"></a>関数: <strong>newline</strong> <em>() </em></dt>
+<dt><a name="index-newline-1"></a>関数: <strong>newline</strong> <em>(<var>stream</var>) </em></dt>
+<dd><p>(<var>stream</var>に)改行を書きます。
+<code>newline()</code>の使用の例に関しては、
+<code>sprint</code>を参照してください。
+<code>newline()</code>が期待通りに動かない
+いくつかの場合があることに注意してください。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fopena"></a><dl>
+<dt><a name="index-opena"></a>関数: <strong>opena</strong> <em>(<var>file</var>) </em></dt>
+<dd><p><var>file</var>への出力ストリームを返します。
+もし存在しているファイルを開いたら、
+<code>opena</code>はファイルの終わりに要素を追加します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fopenr"></a><dl>
+<dt><a name="index-openr"></a>関数: <strong>openr</strong> <em>(<var>file</var>) </em></dt>
+<dd><p><var>file</var>への入力ストリームを返します。
+もし<var>file</var>が存在しないなら、生成されます。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-input">File input</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fopenw"></a><dl>
+<dt><a name="index-openw"></a>関数: <strong>openw</strong> <em>(<var>file</var>) </em></dt>
+<dd><p><var>file</var>への出力ストリームを返します。
+もし<var>file</var>が存在しないなら、生成されます。
+もし存在しているファイルを開いたら、<code>openw</code>は
+<var>file</var>を破壊的に変更します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002fprintf"></a><dl>
+<dt><a name="index-printf"></a>関数: <strong>printf</strong> <em>(<var>dest</var>, <var>string</var>)</em></dt>
+<dt><a name="index-printf-1"></a>関数: <strong>printf</strong> <em>(<var>dest</var>, <var>string</var>, <var>expr_1</var>, ..., <var>expr_n</var>)</em></dt>
+<dd><p>Common Lisp関数FORMATをMaximaで利用可能にします。
+(gcl.infoから:
+「フォーマットは
+制御文字列の文字を出力し、波形記号がディレクティブを挿入することを守ることで、
+フォーマットされた出力を生成します。
+波形記号の後の文字は多分、前置パラメータと修飾語が先行し、
+望まれるフォーマットの種類を指定します。
+ほとんどのディレクティブは、出力を生成するために1つまたは複数の引数を使います。」)
+</p>
+<p>以下の記述と例は<code>printf</code>を使うアイデアを与えるかもしれません。
+さらなる情報に関して、Lisp参考文献を参照してください。
+</p>
+<div class="example">
+<pre class="example">   ~%       改行
+   ~&amp;       行のフレッシュ
+   ~t       タブ
+   ~$       通貨記号
+   ~d       10進整数
+   ~b       2進整数
+   ~o       8進整数
+   ~x       16進整数
+   ~br      b進整数
+   ~r       整数を一字一字
+   ~p       複数形
+   ~f       浮動小数点
+   ~e       科学的記数法
+   ~g       大きさに応じて~fまたは~e
+   ~h       多倍長浮動小数点
+   ~a       Maxima関数文字列を使う
+   ~s       ~aと同様, しかし&quot;ダブルコーテーション&quot;で囲まれた出力
+   ~~       ~
+   ~&lt;       行揃え, ~&gt; 終端
+   ~(       大文字小文字変換, ~) 終端
+   ~[       選択, ~] 終端
+   ~{       繰り返し, ~} 終端
+</pre></div>
+
+<p>選択ディレクティブ<code>~[</code>は添字がゼロから始まることに注意してください。
+ディレクティブ~*がサポートされていないことにも注意してください。
+</p>
+<div class="example">
+<pre class="example">(%i1) printf( false, &quot;~a ~a ~4f ~a ~@r&quot;, 
+              &quot;String&quot;,sym,bound,sqrt(12),144), bound = 1.234;
+(%o1)                 String sym 1.23 2*sqrt(3) CXLIV
+(%i2) printf( false,&quot;~{~a ~}&quot;,[&quot;one&quot;,2,&quot;THREE&quot;] );
+(%o2)                          one 2 THREE 
+(%i3) printf(true,&quot;~{~{~9,1f ~}~%~}&quot;,mat ),
+          mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
+      1.1       2.0       3.3 
+      4.0       5.0       6.0 
+      7.0       8.9       9.0 
+(%i4) control: &quot;~:(~r~) bird~p ~[is~;are~] singing.&quot;$
+(%i5) printf( false,control, n,n,if n=1 then 0 else 1 ), n=2;
+(%o5)                    Two birds are singing.
+</pre></div>
+
+<p>もし<var>dest</var>がストリームか<code>true</code>なら、
+<code>printf</code>は<code>false</code>を返します。
+そうでないなら、<code>printf</code>は出力を含む文字列を返します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-output">File output</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="Item_003a-stringproc_002fdeffn_002freadline"></a><dl>
+<dt><a name="index-readline"></a>関数: <strong>readline</strong> <em>(<var>stream</var>) </em></dt>
+<dd><p><var>stream</var>の現在位置から行の終わりまでの文字を含む文字列か、
+もしファイルの終わりが来たら<var>false</var>を返します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-File-input">File input</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div>
+</dd></dl>
+
+<a name="sprint"></a><a name="Item_003a-stringproc_002fdeffn_002fsprint"></a><dl>
+<dt><a name="index-sprint"></a>関数: <strong>sprint</strong> <em>(<var>expr_1</var>, &hellip;, <var>expr_n</var>)</em></dt>
+<dd>
+<p>引数を順に評価し、一番左から始まる「一行」に表示します。
+数は数の右隣に&rsquo;-&rsquo;と共に印字され、行の長さを無視します。
+もし中間行ブレークを置きたいなら、
+<code>newline()</code>―<code>stringproc.lisp</code> から自動ロードされます―
+が役に立つかもしれません。
+</p>
+<p>例:
+</p>
+<div class="example">
+<pre class="example">(%i1) for n:0 thru 19 do sprint( fib(n) )$
+0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181
+(%i2) for n:0 thru 22 do ( 
+         sprint(fib(n)), if mod(n,10)=9 then newline() )$
+0 1 1 2 3 5 8 13 21 34 
+55 89 144 233 377 610 987 1597 2584 4181 
+6765 10946 17711 
+</pre></div>
+
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Package-stringproc">Package stringproc</a>
+&middot;</div></dd></dl>
+
+<a name="Item_003a-stringproc_002fnode_002fFunctions-and-Variables-for-characters"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_297.html#Functions-and-Variables-for-characters" accesskey="n" rel="next">Functions and Variables for characters</a>, Previous: <a href="maxima_295.html#Introduction-to-string-processing" accesskey="p" rel="previous">Introduction to string processing</a>, Up: <a href="maxima_294.html#stringproc" accesskey="u" rel="up">stringproc</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

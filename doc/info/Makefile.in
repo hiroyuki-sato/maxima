@@ -91,7 +91,8 @@ host_triplet = @host@
 DIST_COMMON = $(top_srcdir)/common-info.mk $(top_srcdir)/common.mk \
 	$(top_srcdir)/common-html.mk $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(srcdir)/build_html.sh.in \
-	$(srcdir)/include-maxima.texi.in $(srcdir)/texi2html.init.in \
+	$(srcdir)/include-maxima.texi.in \
+	$(srcdir)/category-macros.texi.in $(srcdir)/texi2html.init.in \
 	texinfo.tex README
 subdir = doc/info
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -99,7 +100,8 @@ am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = build_html.sh include-maxima.texi texi2html.init
+CONFIG_CLEAN_FILES = build_html.sh include-maxima.texi \
+	category-macros.texi texi2html.init
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -222,7 +224,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = es es.utf8 pt pt.utf8 pt_BR pt_BR.utf8 de de.utf8
+DIST_SUBDIRS = es pt pt_BR de ja ru
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -307,11 +309,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 POSIX_SHELL = @POSIX_SHELL@
-PYTHON = @PYTHON@
-PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
-PYTHON_PLATFORM = @PYTHON_PLATFORM@
-PYTHON_PREFIX = @PYTHON_PREFIX@
-PYTHON_VERSION = @PYTHON_VERSION@
 SBCL_EXTRA_ARGS = @SBCL_EXTRA_ARGS@
 SBCL_NAME = @SBCL_NAME@
 SCL_NAME = @SCL_NAME@
@@ -367,7 +364,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-iconv_found = @iconv_found@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -381,6 +377,7 @@ lispdir = @lispdir@
 lisps_enabled = @lisps_enabled@
 localedir = @localedir@
 localstatedir = @localstatedir@
+makeinfo_found = @makeinfo_found@
 mandir = @mandir@
 manual_version = @manual_version@
 mathjax_enable = @mathjax_enable@
@@ -389,14 +386,9 @@ mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 openmcl_found = @openmcl_found@
 pdfdir = @pdfdir@
-pkgpyexecdir = @pkgpyexecdir@
-pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
-pyexecdir = @pyexecdir@
-pythondir = @pythondir@
-recode_found = @recode_found@
 sbcl_found = @sbcl_found@
 sbindir = @sbindir@
 scl_found = @scl_found@
@@ -411,14 +403,12 @@ win32 = @win32@
 win64 = @win64@
 win64_installer = @win64_installer@
 @LANG_ES_TRUE@ES_DIR = es
-@LANG_ES_UTF8_TRUE@ES_DIR_UTF8 = es.utf8
 @LANG_PT_TRUE@PT_DIR = pt
-@LANG_PT_UTF8_TRUE@PT_DIR_UTF8 = pt.utf8
 @LANG_PT_BR_TRUE@PT_BR_DIR = pt_BR
-@LANG_PT_BR_UTF8_TRUE@PT_BR_DIR_UTF8 = pt_BR.utf8
 @LANG_DE_TRUE@DE_DIR = de
-@LANG_DE_UTF8_TRUE@DE_DIR_UTF8 = de.utf8
-SUBDIRS = $(ES_DIR) $(ES_DIR_UTF8) $(PT_DIR) $(PT_DIR_UTF8) $(PT_BR_DIR) $(PT_BR_DIR_UTF8) $(DE_DIR) $(DE_DIR_UTF8)
+@LANG_JA_TRUE@JA_DIR = ja
+@LANG_RU_TRUE@RU_DIR = ru
+SUBDIRS = $(ES_DIR) $(PT_DIR) $(PT_BR_DIR) $(DE_DIR) $(JA_DIR) $(RU_DIR)
 info_TEXINFOS = #maxima.texi
 maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  Bugs.texi Help.texi Command.texi DataTypes.texi Constants.texi Lists.texi \
@@ -434,12 +424,12 @@ maxima_TEXINFOS = include-maxima.texi category-macros.texi Introduction.texi \
  clebsch_gordan.texi combinatorics.texi odepack.texi \
  cobyla.texi contrib_ode.texi descriptive.texi diag.texi distrib.texi \
  draw.texi drawdf.texi dynamics.texi engineering-format.texi \
- wrstcse.texi ezunits.texi f90.texi finance.texi \
- fractals.texi ggf.texi graphs.texi grobner.texi hompack.texi impdiff.texi interpol.texi \
+ wrstcse.texi ezunits.texi f90.texi finance.texi fractals.texi gentran.texi \
+ ggf.texi graphs.texi grobner.texi hompack.texi impdiff.texi interpol.texi \
  lapack.texi lbfgs.texi lindstedt.texi linearalgebra.texi lsquares.texi \
  minpack.texi makeOrders.texi mnewton.texi numericalio.texi opsubst.texi \
- operatingsystem.texi \
- orthopoly.texi pytranslate.texi ratpow.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
+ operatingsystem.texi orthopoly.texi pytranslate.texi quantum_computing.texi \
+ ratpow.texi romberg.texi simplex.texi simplifications.texi solve_rec.texi \
  stats.texi stirling.texi stringproc.texi to_poly_solve.texi unit.texi \
  zeilberger.texi errormessages.texi commandline-options.texi
 
@@ -1074,7 +1064,7 @@ contents.hhc index.hhk header.hhp maxima.hhp
 
 htmlname = maxima
 htmlinstdir = $(dochtmldir)
-EXTRA_DIST = texi2html manual.css texi2html.init maxima.texi maxima.html \
+EXTRA_DIST = manual.css texi2html.init maxima.texi \
     $(genericdirDATA) $(pdffigures) $(macfiles) $(maxima_TEXINFOS) $(figurefiles) \
     create_index build_index.pl maxima-index.lisp docdraw.mac \
     extract_categories1.awk extract_categories1.sed check_tab fix_tab \
@@ -1120,6 +1110,8 @@ $(am__aclocal_m4_deps):
 build_html.sh: $(top_builddir)/config.status $(srcdir)/build_html.sh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 include-maxima.texi: $(top_builddir)/config.status $(srcdir)/include-maxima.texi.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+category-macros.texi: $(top_builddir)/config.status $(srcdir)/category-macros.texi.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 texi2html.init: $(top_builddir)/config.status $(srcdir)/texi2html.init.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -1642,7 +1634,7 @@ html: maxima_toc.html contents.hhc
 maxima-index.lisp: build_index.pl maxima.info
 	/usr/bin/env perl $^ ':crlf' > $@
 
-maxima_toc.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css texi2html.init
+maxima_singlepage.html maxima_toc.html: maxima.texi $(maxima_TEXINFOS) $(figurefiles) manual.css texi2html.init
 	./build_html.sh
 
 maxima.epub: maxima_toc.html
@@ -1653,8 +1645,8 @@ maxima.pdf: maxima.texi $(maxima_TEXINFOS) $(pdffigures)
 	rm -f maxima.fns maxima.vr maxima.tp maxima.pg maxima.ky maxima.cp \
 	maxima.toc maxima.fn maxima.aux maxima.log
 
-contents.hhc index.hhk: maxima_toc.html
-	/usr/bin/env perl $(srcdir)/create_index maxima_toc.html
+contents.hhc index.hhk: maxima_singlepage.html
+	/usr/bin/env perl $(srcdir)/create_index maxima_singlepage.html
 
 # Squash error on exit from hhc
 maxima.chm: maxima.hhp contents.hhc index.hhk

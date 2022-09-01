@@ -45,14 +45,14 @@
        (t
 	(merror (intl:gettext "MARRAYREF: encountered array ~M of unknown type.") aarray))))
     (cl:hash-table
-     (gethash (if inds (cons ind1 inds) inds) aarray))
+     (gethash (if inds (cons ind1 inds) ind1) aarray))
     (cl:symbol
      (if $use_fast_arrays
          (let ((tem (and (boundp aarray) (symbol-value aarray))))
            (simplify (cond ((arrayp tem)
                             (apply #'aref tem ind1 inds))
                            ((hash-table-p tem)
-                            (gethash (if inds (cons ind1 inds) inds) tem))
+                            (gethash (if inds (cons ind1 inds) ind1) tem))
                            ((eq aarray 'mqapply)
                             (apply #'marrayref ind1 inds))
                            ((mget aarray 'hashar)
@@ -73,7 +73,7 @@
                                     ((fixnum) (= val fixunbound))
                                     ((t) (eq val munbound))
                                     (t (merror (intl:gettext "MARRAYREF: encountered array pointer ~S of unknown type.") ap)))
-                                  (arrfind `((,aarray ,aarray) ,ind1 ,@inds))
+                                  (arrfind `((,aarray array) ,ind1 ,@inds))
                                   val)))
                            ((setq ap (mget aarray 'array))
                             (arrfind `((,aarray array) ,ind1 ,@inds)))
@@ -86,7 +86,7 @@
     (cl:list
      (simplify (if (member (caar aarray) '(mlist $matrix) :test #'eq)
 		   (list-ref aarray (cons ind1 inds))
-		   `((mqapply aarray) ,aarray ,ind1 ,@inds))))
+		   `((mqapply array) ,aarray ,ind1 ,@inds))))
     (t
      (merror (intl:gettext "MARRAYREF: cannot retrieve an element of ~M") aarray))))
 

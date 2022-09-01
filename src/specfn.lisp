@@ -938,8 +938,19 @@
 			     (* (/ lg 6)
 				(+ (* lg lg) (* dpi dpi))))))
 		 result))
-	  ((> (abs x) .9)
-	   (li-using-powers-of-log 3 x))
+	  ((> (abs x) series-threshold)
+	   (let ((result (li-using-powers-of-log 3 x)))
+	     ;; For real x, li-using-power-of-log can return a complex
+	     ;; number with a tiny imaginary part.  Get rid of that
+	     ;; when x is real.
+	     (if (realp x)
+		 (realpart result)
+		 result)))
+	  ;; Don't use the identity below because the identity seems
+	  ;; to be incorrect.  For example, for x = -0.862 it returns
+	  ;; a complex value with an imaginary part that is not close
+	  ;; to zero as expected.
+	  #+nil
 	  ((> (abs x) series-threshold)
 	   ;; The series converges too slowly so use the identity:
 	   ;;
@@ -960,7 +971,7 @@
 	     (incf s (/ (* dpi dpi u) 6))
 	     (decf s (li3numer (- (/ xc x))))
 	     (decf s (li3numer xc))
-	     (incf s (li3numer 1))))
+	     (incf s (li3numer (float 1 x)))))
 	  (t
 	   ;; Sum the power series.  threshold determines when the
 	   ;; summation has converted.
@@ -1097,7 +1108,15 @@
 	    ;; Return the result and the number of terms used for
 	    ;; helping in determining the series threshold and the
 	    ;; log-series threshold.
-	    (values sum k))
+	    ;;
+	    ;; Note that if z is real and less than 0, li[s](z) is
+	    ;; real.  The series can return a tiny complex value in
+	    ;; this case, so we want to clear that out before
+	    ;; returning the answer.
+	    (values (if (and (realp z) (minusp z))
+			(realpart sum)
+			sum)
+		    k))
 	(when *debug-li-eval*
 	  (format t "~3d: ~A / ~A = ~A~%" k top bot term))
 	(incf sum term)

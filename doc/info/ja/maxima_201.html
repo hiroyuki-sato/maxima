@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Maxima 5.46.0 Manual: Introduction to drawdf</title>
+
+<meta name="description" content="Maxima 5.46.0 Manual: Introduction to drawdf">
+<meta name="keywords" content="Maxima 5.46.0 Manual: Introduction to drawdf">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="maxima_toc.html#Top" rel="start" title="Top">
+<link href="maxima_307.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="maxima_200.html#drawdf" rel="up" title="drawdf">
+<link href="maxima_202.html#Functions-and-Variables-for-drawdf" rel="next" title="Functions and Variables for drawdf">
+<link href="maxima_200.html#drawdf" rel="previous" title="drawdf">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+body {color: black; background: white;  margin-left: 8%; margin-right: 13%;
+      font-family: "FreeSans", sans-serif}
+h1 {font-size: 150%; font-family: "FreeSans", sans-serif}
+h2 {font-size: 125%; font-family: "FreeSans", sans-serif}
+h3 {font-size: 100%; font-family: "FreeSans", sans-serif}
+a[href] {color: rgb(0,0,255); text-decoration: none;}
+a[href]:hover {background: rgb(220,220,220);}
+div.textbox {border: solid; border-width: thin; padding-top: 1em;
+    padding-bottom: 1em; padding-left: 2em; padding-right: 2em}
+div.titlebox {border: none; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 2em; padding-right: 2em; background: rgb(200,255,255);
+    font-family: sans-serif}
+div.synopsisbox {
+    border: none; padding-top: 1em; padding-bottom: 1em; padding-left: 2em;
+    padding-right: 2em; background: rgb(255,220,255);}
+pre.example {border: 1px solid rgb(180,180,180); padding-top: 1em;
+    padding-bottom: 1em; padding-left: 1em; padding-right: 1em;
+    background-color: rgb(238,238,255)}
+div.spacerbox {border: none; padding-top: 2em; padding-bottom: 2em}
+div.image {margin: 0; padding: 1em; text-align: center}
+div.categorybox {border: 1px solid gray; padding-top: 1em; padding-bottom: 1em;
+    padding-left: 1em; padding-right: 1em; background: rgb(247,242,220)}
+img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-right: auto}
+
+-->
+</style>
+
+<link rel="icon" href="figures/favicon.ico">
+
+</head>
+
+<body lang="ja" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Introduction-to-drawdf"></a>
+<div class="header">
+<p>
+Next: <a href="maxima_202.html#Functions-and-Variables-for-drawdf" accesskey="n" rel="next">Functions and Variables for drawdf</a>, Previous: <a href="maxima_200.html#drawdf" accesskey="p" rel="previous">drawdf</a>, Up: <a href="maxima_200.html#drawdf" accesskey="u" rel="up">drawdf</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<a name="Introduction-to-drawdf-1"></a>
+<h3 class="section">49.1 Introduction to drawdf</h3>
+
+<p>関数<code>drawdf</code>は
+一階常微分方程式(ODE)や
+二連立自律一階ODE系の方向場を描画します。
+</p>
+<p>これは追加パッケージなので、利用するには、最初に
+<code>load(&quot;drawdf&quot;)</code>でロードしなければいけません。
+Drawdfは<code>draw</code>パッケージ上に構築されています。これはGnuplot 4.2を要求します。
+</p>
+<p>単一のODEの方向場をプロットするには、ODEを以下の形式で書かなければいけません:
+</p><div class="example">
+<pre class="example">       dy
+       -- = F(x,y)
+       dx
+</pre></div>
+
+<p>そして関数<var>F</var>を<code>drawdf</code>の引数に与えなければいけません。
+もし独立変数と従属変数が、上の式のように<var>x</var>と<var>y</var>でないなら、
+drawdfコマンドへの引数として与えられるリストの中に明示的に
+それら2つの変数を指名しなければいけません。
+(例を見てください。)
+</p>
+<p>2つの自励ODEの組の方向場をプロットするには、
+それらを以下の形式で書かなければいけません。
+</p><div class="example">
+<pre class="example">       dx             dy
+       -- = G(x,y)    -- = F(x,y) 
+       dt             dt
+</pre></div>
+
+<p>そして<code>drawdf</code>の引数は2つの関数<var>G</var>と<var>F</var>を
+その順に持つリストでなければいけません;
+すなわち、リストの最初の式は水平軸上に表された変数の時間導関数であり、
+二番目の式は垂直軸上に表された変数の時間導関数です。
+それら2つの変数は<var>x</var>と<var>y</var>である必要はありませんが、
+もしそうでないなら、
+drawdfに与えられる二番目の引数は
+2つの変数を、最初のものが水平軸上のものを、その後垂直軸上のものを指定する別のリストでなければいけません。
+</p>
+<p>もしただ1つのODEが与えられるなら、
+<code>drawdf</code>は、
+暗に<code>x=t</code>,<code>G(x,y)=1</code>と認め、
+非自励方程式を2つの自励方程式系に変換します。
+</p>
+<div class=categorybox>
+<a href="maxima_311.html#Category_003a-Differential-equations">Differential equations</a>
+&middot;<a href="maxima_311.html#Category_003a-Plotting">Plotting</a>
+&middot;<a href="maxima_311.html#Category_003a-Share-packages">Share packages</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-drawdf">Package drawdf</a>
+&middot;<a href="maxima_311.html#Category_003a-Package-draw">Package draw</a>
+&middot;</div>
+
+<a name="Item_003a-drawdf_002fnode_002fFunctions-and-Variables-for-drawdf"></a><hr>
+<div class="header">
+<p>
+Next: <a href="maxima_202.html#Functions-and-Variables-for-drawdf" accesskey="n" rel="next">Functions and Variables for drawdf</a>, Previous: <a href="maxima_200.html#drawdf" accesskey="p" rel="previous">drawdf</a>, Up: <a href="maxima_200.html#drawdf" accesskey="u" rel="up">drawdf</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_307.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

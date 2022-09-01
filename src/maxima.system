@@ -75,6 +75,11 @@
 			     ;; Convert dir/foo.fas to dir/foo.o
 			     (make-pathname :type "o" :defaults p))
 			 files)))
+	(c::build-fasl "binary-ecl/maxima" :lisp-files obj
+			  :ld-flags
+			  (let ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*"
+							      (find-package "MAXIMA")))))
+			    (if (and x (not (string= x ""))) (list x))))
 	(c::build-program "binary-ecl/maxima" :lisp-files obj
 			  :ld-flags
 			  (let ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*"
@@ -599,7 +604,7 @@
 	     (:file "trprop")
 	     (:file "mdefun")))
    (:module numerical-functions :source-pathname ""
-	    :depends-on ("defmfun" "trigonometry")
+	    :depends-on ("defmfun" "trigonometry" "algebraic-database" "utility-macros")
 	    :components
 	    ((:file "bessel")
 	     (:file "ellipt")

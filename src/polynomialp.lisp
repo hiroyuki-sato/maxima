@@ -16,7 +16,7 @@
  		       								 
 ;;  You should have received a copy of the GNU General Public License	
 ;;  along with this program; if not, write to the Free Software 		 
-;;  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+;;  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 (in-package :maxima)
 
@@ -24,8 +24,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (if (not (functionp 'op-equalp)) ($load "linalg-utilities"))
   (if (not (functionp 'require-list-or-set)) ($load "nset")))
-
-($put '$polynomialp 1 '$version)
 
 ;; Return true iff n is an integer and n >= 0.
 
