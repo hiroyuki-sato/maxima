@@ -1,10 +1,24 @@
 ;;; -*- Mode:LISP; Package:MACSYMA -*-
+;; 
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+;;
+;; Comments: Symmetrization module for itensor.lisp
+;;
 ;;; symtry 100 Feb 12, 1982
+
 (in-package "MAXIMA")
 
 ;	** (c) Copyright 1979 Massachusetts Institute of Technology **
 
-(declare-top (special symtypes $symmetries $allsym csign smlist $dummyx))
+(declare-top (special symtypes $symmetries $allsym csign smlist $idummyx))
 
 (setq symtypes '($SYM $ANTI $CYC) $symmetries '((MLIST SIMP)))
 
@@ -124,7 +138,7 @@
 (defun CANTEN (e nfprpobjs)                                   ;CANonical TENsor
        (prog (cov contr deriv tensor)
 	     ((lambda (dummy) (and nfprpobjs dummy (setq e (rename1 e dummy))))
-	      (NONUMBER (cdaddr ($indices2 e)))) ;NFPRPOBJS is Not From Product
+	      (NONUMBER (cdaddr ($indices e)))) ;NFPRPOBJS is Not From Product
 	     (setq cov (copy (cdadr e))          ;of RP (indexed) OBJects
 		   contr (copy (cdaddr e))
 		   deriv (copy (cdddr e))
@@ -135,7 +149,7 @@
                                     ;Indicates whether overall sign of
                                     ;expression needs changing.
 	     (cond
-		   ((OR (OR (eq (caar e) '$LC) (eq (caar e) '%LC)) (OR (eq (caar e) '$KDELTA) (eq (caar e) '%KDELTA))) (setq cov (ANTISORT cov) contr (ANTISORT contr)))
+		   ((OR (OR (eq (caar e) '$Levi_Civita) (eq (caar e) '%Levi_Civita)) (OR (eq (caar e) '$KDELTA) (eq (caar e) '%KDELTA))) (setq cov (ANTISORT cov) contr (ANTISORT contr)))
 		   ((OR $allsym (eq (caar e) '$KDELS) (eq (caar e) '%KDELS)) (setq cov (itensor-sort cov) contr (itensor-sort contr)))
 		   ((zl-member ($VERBIFY tensor) (cdr $symmetries))
 		    (do ((q symtypes (cdr q)) (type))
@@ -155,7 +169,8 @@
 	     (setq tensor (mysubst0 (append (list (car e)
 						  (consmlist cov)
 						  (consmlist contr))
-					    (itensor-sort deriv)) e))
+(cond ($iframe_flag deriv) (t   (itensor-sort deriv) ))
+) e))
 	     (cond (csign (setq tensor (neg tensor))))
 	     (return tensor)))
 
@@ -165,7 +180,7 @@
 (defun CLEANUP0 (a)
        (do ((b a (cdr b)) (n 1 (1+ n)) (l) (dumx))
 	   ((null b) l)
-	   (setq dumx (concat $dummyx n))
+	   (setq dumx (concat $idummyx n))
 	   (cond ((not (eq dumx (car b)))
 		  (setq l (cons (cons (car b) dumx) l))))))
 
@@ -189,7 +204,7 @@
 	     (t (cycsort l))))
 
 (defun ANTISORT (l)         ;SORT ANTIsymmetric indices and set CSIGN as needed
-       ((lambda (q) (cond ((equal ($lc (consmlist (mapcar 'cdr q))) -1)
+       ((lambda (q) (cond ((equal ($Levi_Civita (consmlist (mapcar 'cdr q))) -1)
 		           (setq csign (not csign))))
 		    (mapcar 'car q))
 	(sortcar (index l) 'less)))
@@ -214,50 +229,79 @@
 
 (declare-top (special free-indices))
 
-(defun CANPROD (e)
-       (prog (scalars indexed)
-	     (cond ((catch 'foo (do ((f (cdr e) (cdr f)) (obj))
-			       ((null f)
-				(setq scalars (nreverse scalars)
-				      indexed (nreverse indexed))
-				nil)
-			       (setq obj (car f))
-			       (cond ((atom obj)
-				      (setq scalars (cons obj scalars)))
-				     ((rpobj obj)
-				      (setq indexed (cons obj indexed)))
-				     ((eq (caar obj) 'MPLUS) (throw 'foo t))
-				     (t (setq scalars (cons obj scalars))))))
-		    (return ($canform ($expand e))))
-		   ((null indexed) (return e))
-		   ((null (cdr indexed))
-		    (return (nconc (ncons '(MTIMES))
-				   scalars
-				   (ncons (canten (car indexed) t)))))
-		   (t (return
-		       (nconc (ncons '(MTIMES))
-			      scalars
-			      (mapcar (function (lambda (z) (canten z nil)))
-				      ((lambda (q)
-					       (rename1 q
-						       (NONUMBER (cdaddr
-						        ($indices2
-						         (cons '(MTIMES) q))))))
-				       (mapcar 'cdr
-					       (sortcar
-						(progn
-						 (setq free-indices
-						       (NONUMBER (cdadr ($indices2 e))))
-						 (mapcar 'describe-tensor
-							 indexed))
-						'tensorpred))))))))))
-
+(defun canprod (e)
+  (prog (scalars indexed)
+    (cond
+      (
+        (catch 'foo
+          (do
+            ((f (cdr e) (cdr f)) (obj))
+            (
+              (null f)
+              (setq scalars (nreverse scalars)
+                    indexed (nreverse indexed)
+              )
+              nil
+            )
+            (setq obj (car f))
+            (cond
+              ((atom obj) (setq scalars (cons obj scalars)))
+              ((rpobj obj) (setq indexed (cons obj indexed)))
+              ((eq (caar obj) 'mplus) (throw 'foo t))
+              (t (setq scalars (cons obj scalars)))
+            )
+          )
+        )
+        (return ($canform ($expand e)))
+      )
+      ((null indexed) (return e))
+      (
+        (null (cdr indexed))
+        (return
+          (nconc (ncons '(mtimes)) scalars (ncons (canten (car indexed) t)))
+        )
+      )
+      (t
+        (return
+          (nconc
+            (ncons '(mtimes))
+            scalars
+            (mapcar
+              (function (lambda (z) (canten z nil)))
+              (
+                (lambda (q)
+                  (rename1 q
+                    (nonumber (cdaddr ($indices2 (cons '(mtimes) (reverse q)))))
+                  )
+                )
+                (mapcar
+                  #'cdr
+                  (sortcar
+                    (progn
+                      (setq free-indices (nonumber (cdadr ($indices e))))
+                      (mapcar 'describe-tensor indexed)
+                    )
+                    #'tensorpred
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
 (defun TENSORPRED (x y)
        (do ((x x (cdr x)) (y y (cdr y)) (a) (b))
 	   ((null x))
 	   (setq a (car x) b (car y))
 	   (and (not (equal a b)) (return
-				   (cond ((eq (ml-typep a) 'FIXNUM) (> a b))
+				   (cond ((eq (ml-typep a) 'FIXNUM) (< a b))
+					 ((and (listp a) (listp b)) (tensorpred a b))
+					 ((null a) t)
+					 ((null b) nil)
 					 (t (alphalessp a b)))))))
 
 (defun DESCRIBE-TENSOR (f)

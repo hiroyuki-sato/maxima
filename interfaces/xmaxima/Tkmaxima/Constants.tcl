@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Constants.tcl,v 1.15 2002/09/19 16:24:37 mikeclarkson Exp $
+#       $Id: Constants.tcl,v 1.17 2004/10/28 18:26:29 vvzhy Exp $
 #
 
 proc cMAXINITBeforeIni {} {
@@ -102,19 +102,19 @@ static unsigned char disc_bits[] = {
 }
 
 # from xmaxima.tcl
-set maxima_priv(options,maxima) {{doinsert 0 [M "Do an insertion"] boolean}}
+set maxima_priv(options,maxima) {{doinsert 0 "Do an insertion" boolean}}
 
 # from EOctave.tcl
-set maxima_priv(options,octave) {{doinsert 1 [M "Do an insertion"] boolean}}
+set maxima_priv(options,octave) {{doinsert 1 "Do an insertion" boolean}}
 
 # from EOpenplot.tcl
-set maxima_priv(options,openplot) {{doinsert 0 [M "Do an insertion"] boolean}}
+set maxima_priv(options,openplot) {{doinsert 0 "Do an insertion" boolean}}
 
 # from EHref.tcl
 set maxima_priv(options,href) {
-    {src "" "A URL (universal resource locator) such as http://www.ma.utexas.edu/foo.om"}
-    {search "" "A string to search for, to get an initial position"}
-    {searchregexp "" "A regexp to search for, to get an initial position"}
+    {src "" [mc "A URL (universal resource locator) such as http://www.ma.utexas.edu/foo.om"]}
+    {search "" [mc "A string to search for, to get an initial position"]}
+    {searchregexp "" [mc "A regexp to search for, to get an initial position"]}
 }
 
 # from Preamle.tcl
@@ -146,7 +146,7 @@ set maxima_priv(brokenimage,data) R0lGODlhHQAgAMIAAAAAAP9jMcbGxoSEhP///zExY/9jzg
 
 global evalPrograms
 set evalPrograms {  gp gap gb }
-#set maxima_priv(options,maxima) {{doinsert 1 [M "Do an insertion"] boolean}}
-#set maxima_priv(options,gp) {{doinsert 1 [M "Do an insertion"] boolean}}
-# set maxima_priv(options,openplot) {{doinsert 0 [M "Do an insertion"] boolean}}
+#set maxima_priv(options,maxima) {{doinsert 1 "Do an insertion" boolean}}
+#set maxima_priv(options,gp) {{doinsert 1 "Do an insertion" boolean}}
+#set maxima_priv(options,openplot) {{doinsert 0 "Do an insertion" boolean}}
 

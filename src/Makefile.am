@@ -25,7 +25,7 @@ clisp: binary-clisp/maxima.mem
 binary-clisp/maxima.mem:
 	test -d binary-clisp || mkdir binary-clisp
 	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
-	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:saveinitmem "binary-clisp/maxima.mem" :init-function (function user::run)))'
+	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:saveinitmem "binary-clisp/maxima.mem" :init-function (function cl-user::run)))'
 
 install-clisp:
 	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-clisp"
@@ -170,17 +170,7 @@ if GCL_ALT_LINK
 	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
 	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
-	j=$$($(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMTESTLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)))'\
-	 < /dev/null | \
-		awk 'BEGIN {p="$(shell pwd)" "/"} /oading  *source  *file$$/ {a=$$0;next} {$$0=a $$0;sub(p,"");print;a=""}' |\
-                 grep Loading |\
-                 grep file | \
-                 awk 'BEGIN {a="$(shell pwd)"}\
-                          {gsub("\"","",$$NF);b=b " \"" a "/" $$NF "\""}\
-                      END {printf("(%s (list %s) %s %s \"\" t)",\
-                            "compiler::link",b,"\"" a "/$@\"",\
-                            "\"(provide \\\"maxima\\\")\"")}') && \
-        $(EXECUTEGCL) "$$j" < /dev/null
+	$(EXECUTEGCL) '(let ((com (quote (progn (defvar compiler::*gazonk-prefix* "gazonk") (defun compiler::gazonk-name (&aux tem)(dotimes (i 1000) (unless (probe-file (setq tem (merge-pathnames (format nil "~d~d.lsp" compiler::*gazonk-prefix* i))))(return-from compiler::gazonk-name (pathname tem))))(error "1000 gazonk names used already!"))(let ((compiler::*gazonk-prefix* "maxima_gazonk")(compiler::*keep-gaz* t))$(LOADDEFSYSTEM)$(DEFSYSTEMLOAD))))))(let ((si::*collect-binary-modules* t))(eval com)(let ((compiler::*default-system-p* t))(dolist (l (directory "maxima_gazonk*.lsp")) (compile-file l) (delete-file l)))(compiler::link si::*binary-modules* "binary-gcl/maxima" (format nil "~S" com) "" nil)(dolist (l (directory "maxima_gazonk*.lsp")) (delete-file l))))'
 else
 	test -d binary-gcl || mkdir binary-gcl
 	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
@@ -239,6 +229,7 @@ echo_%:
 
 genericdir = $(instsrcdir)
 real_lisp_sources = acall.lisp \
+airy.lisp \
 algfac.lisp \
 algsys.lisp \
 ar.lisp \
@@ -273,7 +264,6 @@ evalw.lisp \
 ezgcd.lisp \
 factor.lisp \
 fcall.lisp \
-flatten.lisp \
 float.lisp \
 fortra.lisp \
 generate-sys-proclaim.lisp \
@@ -333,6 +323,7 @@ nisimp.lisp \
 nparse.lisp \
 nrat4.lisp \
 nregex.lisp \
+nset.lisp \
 numer.lisp \
 numerm.lisp \
 numth.lisp \
@@ -352,6 +343,7 @@ polyrz.lisp \
 powers.lisp \
 procs.lisp \
 psolve.lisp \
+rand-mt19937.lisp \
 rat3a.lisp \
 rat3b.lisp \
 rat3c.lisp \
@@ -371,7 +363,6 @@ schatc.lisp \
 scs.lisp \
 series.lisp \
 server.lisp \
-set.lisp \
 simp.lisp \
 sin.lisp \
 sinint.lisp \
@@ -433,6 +424,8 @@ numerical/slatec/dbesk.lisp \
 numerical/slatec/dbesy0.lisp \
 numerical/slatec/dbesy1.lisp \
 numerical/slatec/dbesy.lisp \
+numerical/slatec/dbi.lisp \
+numerical/slatec/dbie.lisp \
 numerical/slatec/dbsi0e.lisp \
 numerical/slatec/dbsi1e.lisp \
 numerical/slatec/dbsk0e.lisp \
@@ -510,6 +503,7 @@ numerical/slatec/zbesj.lisp \
 numerical/slatec/zbesk.lisp \
 numerical/slatec/zbesy.lisp \
 numerical/slatec/zbinu.lisp \
+numerical/slatec/zbiry.lisp \
 numerical/slatec/zbknu.lisp \
 numerical/slatec/zbuni.lisp \
 numerical/slatec/zbunk.lisp \
