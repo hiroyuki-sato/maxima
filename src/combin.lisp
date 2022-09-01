@@ -469,9 +469,34 @@
 
 (defprop %zeta simp-zeta operators)
 
-;;; The Riemann Zeta functon has mirror symmetry
+;;; The Riemann Zeta function has mirror symmetry
 
 (defprop %zeta t commutes-with-conjugate)
+
+;;; The Riemann Zeta function distributes over lists, matrices, and equations
+
+(defprop %zeta (mlist $matrix mequal) distribute_over)
+
+;;; We support a simplim%function. The function is looked up in simplimit and 
+;;; handles specific values of the function.
+
+(defprop %zeta simplim%zeta simplim%function)
+
+(defun simplim%zeta (expr var val)
+  ;; Look for the limit of the argument
+  (let* ((arg (limit (cadr expr) var val 'think))
+         (dir (limit (add (cadr expr) (neg arg)) var val 'think)))
+  (cond
+    ;; Handle an argument 1 at this place
+    ((onep1 arg)
+     (cond ((eq dir '$zeroa)
+            '$inf)
+           ((eq dir '$zerob)
+            '$minf)
+           (t '$infinity)))
+    (t
+     ;; All other cases are handled by the simplifier of the function.
+     (simplify (list '(%zeta) arg))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -482,18 +507,20 @@
 
     ;; Check for special values
     ((eq z '$inf) 1)
+    ((alike1 z '((mtimes) -1 $minf)) 1)
     ((zerop1 z) 
      (cond (($bfloatp z) ($bfloat '((rat) -1 2)))
            ((floatp z) -0.5)
-           (t '((rat) -1 2))))
-    ((onep1 z) '$infinity)
+           (t '((rat simp) -1 2))))
+    ((onep1 z)
+     (simp-domain-error (intl:gettext "zeta: zeta(~:M) is undefined.") z))
 
     ;; Check for numerical evaluation
-    (($bfloatp z) (mfuncall '$bfzeta z $fpprec))
-    ((or (floatp z) (and (or $numer $float) (integerp z)))
-         (let (($float2bf t))
-           ($float (mfuncall '$bfzeta z 18))))
-
+    ((or (bigfloat-numerical-eval-p z)
+	 (complex-bigfloat-numerical-eval-p z)
+	 (float-numerical-eval-p z)
+	 (complex-float-numerical-eval-p z))
+     (to (float-zeta z)))
     ;; Check for transformations and argument simplifications
     ((integerp z)
      (cond
@@ -506,9 +533,9 @@
        ((not $zeta%pi) (eqtest (list '(%zeta) z) expr))
        (t (let ($numer $float)
             (mul (power '$%pi z)
-                 (mul (div (expt 2 (1- z)) 
-                           (simplify (list '(mfactorial) z)))
-                      (simplify (list '(mabs) ($bern z)))))))))
+                 (mul (div (power 2 (1- z)) 
+                           (take '(mfactorial) z))
+                      (take '(mabs) ($bern z))))))))
     (t
      (eqtest (list '(%zeta) z) expr))))
 
@@ -533,6 +560,88 @@
 			   (timesk (*red (expt 2 (1- s)) (factorial s))
 				   (simpabs (list 'mabs ($bern s)) 1 nil)))))
 	   (resimplify s))))
+
+;; See http://numbers.computation.free.fr/Constants/constants.html
+;; and, in particular,
+;; http://numbers.computation.free.fr/Constants/Miscellaneous/zetaevaluations.pdf.
+;; We use the algorithm from Proposition 2:
+;;
+;; zeta(s) = 1/(1-2^(1-s)) *
+;;            (sum((-1)^(k-1)/k^s,k,1,n) +
+;; 1/2^n*sum((-1)^(k-1)*e(k-n)/k^s,k,n+1,2*n))
+;;           + g(n,s)
+;;
+;; where e(k) = sum(binomial(n,j), j, k, n) and
+;; |g(n,s)| <= 1/8^n * 4^abs(sigma)/abs(1-2^(1-s))/abs(gamma(s))
+;;
+;; with s = sigma + %i*t
+;;
+;; This technique converge for sigma > -(n-1)
+;;
+;; Figure out how many terms we need from |g(n,s)|.  The answer is
+;;
+;; n = log(f/eps)/log(8), where f =
+;; 4^abs(sigma)/abs(1-2^(1-s))/abs(gamma(s))
+;;
+;; But for s near 0, the above is not very accurate.  In this case,
+;; use the expansion zeta(s) = -1/2-1/2*log(2*pi)*s.
+(defun float-zeta (s)
+  (let ((s (bigfloat:to s)))
+    (cond ((bigfloat:< (bigfloat:* s s) (bigfloat:epsilon s))
+           ;; s^2 < epsilon, use the expansion zeta(s) = -1/2-1/2*log(2*%pi)*s
+           (bigfloat:+ -1/2
+                       (bigfloat:* -1/2
+                                   (bigfloat:log (bigfloat:* 2 (bigfloat:%pi s)))
+                                   s)))
+	  ((bigfloat:minusp (bigfloat:realpart s))
+	   ;; Reflection formula
+	   (bigfloat:* (bigfloat:expt 2 s)
+		       (bigfloat:expt (bigfloat:%pi s)
+				      (bigfloat:- s 1))
+		       (bigfloat:sin (bigfloat:* (bigfloat:/ (bigfloat:%pi s)
+							     2)
+						 s))
+		       (bigfloat:to ($gamma (to (bigfloat:- 1 s))))
+		       (float-zeta (bigfloat:- 1 s))))
+	  (t
+	   (let ((n (bigfloat:ceiling
+		     (bigfloat:/
+		      (bigfloat:log
+		       (bigfloat:/ (bigfloat:expt 4 (bigfloat:abs (bigfloat:realpart s)))
+				   (bigfloat:abs (bigfloat:- 1
+							     (bigfloat:expt 2 (bigfloat:- 1 s))))
+				   (bigfloat:abs (bigfloat:to ($gamma (to s))))
+				   (bigfloat:epsilon s)))
+		      (bigfloat:log 8))))
+		 (sum1 0)
+		 (sum2 0))
+	     (flet ((binsum (k n)
+		      ;; sum(binomial(n,j), j, k, n) = sum(binomial(n,j), j, n, k)
+		      (let ((sum 0)
+			    (term 1))
+			(loop for j from n downto k
+			   do
+			   (progn
+			     (incf sum term)
+			     (setf term (/ (* term j) (+ n 1 (- j))))))
+			sum)))
+	       ;;(format t "n = ~D terms~%" n)
+	       ;; sum1 = sum((-1)^(k-1)/k^s,k,1,n)
+	       ;; sum2 = sum((-1)^(k-1)/e(n,k-n)/k^s, k, n+1, 2*n)
+	       ;;      = (-1)^n*sum((-1)^(m-1)*e(n,m)/(n+k)^s, k, 1, n)
+	       (loop for k from 1 to n
+		  for d = (bigfloat:expt k s)
+		  do (progn
+		       (bigfloat:incf sum1 (bigfloat:/ (cl:expt -1 (- k 1)) d))
+		       (bigfloat:incf sum2 (bigfloat:/ (* (cl:expt -1 (- k 1))
+							  (binsum k n))
+						       (bigfloat:expt (+ k n) s))))
+		  finally (return (values sum1 sum2)))
+	       (when (oddp n)
+		 (setq sum2 (bigfloat:- sum2)))
+	       (bigfloat:/ (bigfloat:+ sum1 
+				       (bigfloat:/ sum2 (bigfloat:expt 2 n)))
+			   (bigfloat:- 1 (bigfloat:expt 2 (bigfloat:- 1 s))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1102,7 +1211,7 @@
        ;; sum(binomial(a+k,c),k,l,h)
        ((and (equal 0 (cdr d)) (equal 1 (cdr n)))
 	(adsum (m* y (m- (list '(%binomial) (m+ h (car n) 1) (m+ (car d) 1))
-			 (list '(%binomial) (m+ l (car n) 1) (m+ (car d) 1))))))
+			 (list '(%binomial) (m+ l (car n)) (m+ (car d) 1))))))
 
        ;; sum(binomial(n,k),k,0,n)=2^n
        ((and (equal 1 (cdr d)) (equal 0 (cdr n)))

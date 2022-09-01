@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.20 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -826,6 +826,46 @@ File: maxima.info,  Node: Funciones y variables para integración,  Next: Introd
                                                        + ------------------
                                                           3  2      2
                                                          a  b  - 2 a  b + a
+
+
+ -- Variable opcional: intanalysis
+     Valor por defecto: `true'
+
+     Cuando vale `true', la integración definida trata de encontrar
+     polos en el integrando dentro del intervalo de integración. Si
+     encuentra alguno, entonces la integral se calcula como valor
+     principal. Si `intanalysis' vale `false', entonces no se realiza
+     esta comprobaciÃ³n y la integración se realiza sin tener en cuenta
+     los polos.
+
+     Véase también `ldefint'.
+
+     Ejemplos:
+
+     Maxima puede calcular las siguientes integrales cuando a
+     `intanalysis' se le asigna el valor `false':
+
+          (%i1) integrate(1/(sqrt(x)+1),x,0,1);
+                                          1
+                                         /
+                                         [       1
+          (%o1)                          I  ----------- dx
+                                         ]  sqrt(x) + 1
+                                         /
+                                          0
+
+          (%i2) integrate(1/(sqrt(x)+1),x,0,1),intanalysis:false;
+          (%o2)                            2 - 2 log(2)
+
+          (%i3) integrate(cos(a)/sqrt((tan(a))^2 +1),a,-%pi/2,%pi/2);
+          The number 1 isn't in the domain of atanh
+           -- an error. To debug this try: debugmode(true);
+
+          (%i4) intanalysis:false$
+          (%i5) integrate(cos(a)/sqrt((tan(a))^2+1),a,-%pi/2,%pi/2);
+                                                %pi
+          (%o5)                                 ---
+                                                 2
 
 
  -- Función: integrate (<expr>, <x>)
@@ -3513,12 +3553,13 @@ File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  N
      cero.
 
      `find_root' espera que la función en cuestión tenga signos
-     diferentes en los extremos del intervalo. Si esto no se verifica,
-     el comportamiento de `find_root' se controla con `find_root_error'.
-     Cuando `find_root_error' vale `true', `find_root' devuelve un
-     mensaje de error; en caso contrario, `find_root' devuelve el valor
-     de `find_root_error'. El valor por defecto de `find_root_error' es
-     `true'.
+     diferentes en los extremos del intervalo.  Si la función toma
+     valores numéricos en ambos extremos y estos números son del mismo
+     signo, entonces el comportamiento de `find_root' se controla con
+     `find_root_error'.  Cuando `find_root_error' vale `true',
+     `find_root' devuelve un mensaje de error; en caso contrario,
+     `find_root' devuelve el valor de `find_root_error'. El valor por
+     defecto de `find_root_error' es `true'.
 
      Si en algún momento del proceso de búsqueda <f> alcanza un valor
      no numérico, `find_root' devuelve una expresión parcialmente

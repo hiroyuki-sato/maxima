@@ -192,6 +192,10 @@
 
 (defprop %double_factorial simp-double-factorial operators)
 
+;;; Double factorial distributes over bags
+
+(defprop %double_factorial (mlist $matrix mequal) distribute_over)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Double factorial has mirror symmetry
@@ -339,6 +343,10 @@
 ;;; Incomplete Gamma function is a simplifying function
 
 (defprop %gamma_incomplete simp-gamma-incomplete operators)
+
+;;; Incomplete Gamma distributes over bags
+
+(defprop %gamma_incomplete (mlist $matrix mequal) distribute_over)
 
 ;;; Incomplete Gamma function has not mirror symmetry for z on the negative
 ;;; real axis. We support a conjugate-function which test this case.
@@ -720,12 +728,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar *gamma-incomplete-maxit* 10000)
-(defvar *gamma-incomplete-eps* 1.0e-16)
+(defvar *gamma-incomplete-eps* (* 2 double-float-epsilon))
 (defvar *gamma-incomplete-min* 1.0e-32)
 
-(defvar $gamma_radius 1.0
+(defvar *gamma-radius* 1.0
   "Controls the radius within a series expansion is done.")
-(defvar $gamma_imag 1.0)
+(defvar *gamma-imag* 1.0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -741,13 +749,13 @@
         (format t "~&GAMMA-INCOMPLETE with ~A and ~A~%" a x))
     (cond
       ;; The series expansion is done for x within a circle with a radius
-      ;; $gamma_radius+abs(realpart(a)), for all x which are on the negative 
+      ;; *gamma-radius*+abs(realpart(a)), for all x which are on the negative 
       ;; real axis and for all x which have an angle between [3*%pi/4,5*%pi/4] 
-      ((and (> (abs x) (+ $gamma_radius 
+      ((and (> (abs x) (+ *gamma-radius*
                           (if (> (realpart a) 0.0) (realpart a) 0.0)))
             (not (and (< (realpart x) 0)
                       (< (abs (imagpart x))
-                         (* $gamma_imag (abs (realpart x)))))))
+                         (* *gamma-imag* (abs (realpart x)))))))
        ;; Expansion in continued fractions
        (when *debug-gamma* 
          (format t "~&GAMMA-INCOMPLETE in continued fractions~%"))
@@ -825,7 +833,7 @@
     (cond
       ((and (eq ($sign x) '$pos)
             (eq ($sign (sub (simplify (list '(mabs) x))
-                            (add $gamma_radius
+                            (add *gamma-radius*
                                  (if (eq ($sign a) '$pos) a 0.0))))
                 '$pos))
        ;; Expansion in continued fractions of the Incomplete Gamma function
@@ -897,10 +905,10 @@
       (format t "   : x = ~A~%" x))
     (cond
       ;; The series expansion is done for x within a circle with a radius
-      ;; $gamma_radius+abs(realpart(a)), for all x which are on the negative 
+      ;; *gamma-radius*+abs(realpart(a)), for all x which are on the negative 
       ;; real axis and for all x which have an angle between [3*%pi/4,5*%pi/4]
       ((and (eq ($sign (sub (simplify (list '(mabs) x))
-                            (add $gamma_radius
+                            (add *gamma-radius*
                                  (if (eq ($sign ($realpart a)) '$pos)
                                      ($realpart a)
                                      0.0))))
@@ -1013,6 +1021,10 @@
 
 (defprop %gamma_incomplete_generalized 
          simp-gamma-incomplete-generalized operators)
+
+;;; Generalized Incomplete Gamma distributes over bags
+
+(defprop %gamma_incomplete_generalized (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1182,7 +1194,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun $gamma_incomplete_regularized (a z)
-  (simplify (list '(%gamma_incomplete) a z)))
+  (simplify (list '(%gamma_incomplete_regularized) a z)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1222,6 +1234,10 @@
 
 (defprop %gamma_incomplete_regularized 
          simp-gamma-incomplete-regularized operators)
+
+;;; Regularized Incomplete Gamma distributes over bags
+
+(defprop %gamma_incomplete_regularized (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1431,6 +1447,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprop %log_gamma simp-log-gamma operators)
+
+;;; Logarithm of the Gamma function distributes over bags
+
+(defprop %log_gamma (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1680,6 +1700,10 @@
 
 (defprop %erf simp-erf operators)
 
+;;; erf distributes over bags
+
+(defprop %erf (mlist $matrix mequal) distribute_over)
+
 ;;; Derivative of the Error function erf
 
 (defprop %erf 
@@ -1744,6 +1768,18 @@
                  (list '(mlist simp) '((rat simp) 1 2))
                  (list '(mlist simp) '((rat simp) 3 2))
                  (mul -1 (power z 2)))))
+    
+    ;; Transformation to Erfc or Erfi
+    
+    ((and $erf_representation
+          (not (eq $erf_representation '$erf)))
+     (case $erf_representation
+       (%erfc
+        (sub 1 (take '(%erfc) z)))
+       (%erfi
+        (mul -1 '$%i (take '(%erfi) (mul '$%i z))))
+       (t
+        (eqtest (list '(%erf) z) expr))))
 
     (t
      (eqtest (list '(%erf) z) expr))))
@@ -1833,6 +1869,10 @@
 ;;; Generalized Erf has mirror symmetry
 
 (defprop %erf_generalized t commutes-with-conjugate)
+
+;;; Generalized Erf distributes over bags
+
+(defprop %erf_generalized (mlist $matrix mequal) distribute_over)
 
 ;;; Generalized Erf is antisymmetric Erf(z1,z2) = - Erf(z2,z1)
 
@@ -1939,6 +1979,10 @@
 
 (defprop %erfc simp-erfc operators)
 
+;;; Complementary Error function distributes over bags
+
+(defprop %erfc (mlist $matrix mequal) distribute_over)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprop %erfc 
@@ -1993,11 +2037,8 @@
     ((taylorize (mop expr) (second expr)))
     ((and $trigsign (great (mul -1 z) z))
      (sub 2 (simplify (list  '(%erfc) (mul -1 z)))))
-
-    ;; Transformation to Erf
-
-    ($erf_representation
-     (sub 1 (simplify (list '(%erf) z))))
+    
+    ;; Representation through equivalent functions
     
     ($hypergeometric_representation
       (sub 1
@@ -2007,7 +2048,19 @@
                    (list '(mlist simp) '((rat simp) 1 2))
                    (list '(mlist simp) '((rat simp) 3 2))
                    (mul -1 (power z 2))))))
+    
+    ;; Transformation to Erf or Erfi
 
+    ((and $erf_representation
+          (not (eq $erf_representation '$erfc)))
+     (case $erf_representation
+       (%erf
+        (sub 1 (take '(%erf) z)))
+       (%erfi
+        (add 1 (mul '$%i (take '(%erfi) (mul '$%i z)))))
+       (t
+        (eqtest (list '(%erfc) z) expr))))
+    
     (t
      (eqtest (list '(%erfc) z) expr))))
 
@@ -2039,6 +2092,10 @@
 ;;; erfi is an simplifying function
 
 (defprop %erfi simp-erfi operators)
+
+;;; erfi distributes over bags
+
+(defprop %erfi (mlist $matrix mequal) distribute_over)
 
 ;;; Derivative of the Error function erfi
 
@@ -2107,9 +2164,6 @@
     ((apply-reflection-simp (mop expr) z $trigsign))
 
     ;; Representation through equivalent functions
-
-    ($erf_representation
-     (mul -1 '$%i (simplify (list '(%erf) (mul '$%i z)))))
     
     ($hypergeometric_representation
       (mul 2 z
@@ -2118,7 +2172,19 @@
                      (list '(mlist simp) '((rat simp) 1 2))
                      (list '(mlist simp) '((rat simp) 3 2))
                      (power z 2))))
-
+    
+    ;; Transformation to Erf or Erfc
+    
+    ((and $erf_representation
+          (not (eq $erf_representation '$erfi)))
+     (case $erf_representation
+       (%erf
+        (mul -1 '$%i (take '(%erf) (mul '$%i z))))
+       (%erfc
+        (sub (mul '$%i (take '(%erfc) (mul '$%i z))) '$%i))
+       (t
+        (eqtest (list '(%erfi) z) expr))))
+    
     (t
      (eqtest (list '(%erfi) z) expr))))
 
@@ -2146,6 +2212,10 @@
 ;;; The Inverse Error function is a simplifying function
 
 (defprop %inverse_erf simp-inverse-erf operators)
+
+;;; The Inverse Error function distributes over bags
+
+(defprop %inverse_erf (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2246,9 +2316,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; The Inverse Complementary Error function is a simplifying function
+;;; Inverse Complementary Error function is a simplifying function
 
 (defprop %inverse_erfc simp-inverse-erfc operators)
+
+;;; Inverse Complementary Error function distributes over bags
+
+(defprop %inverse_erfc (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2393,6 +2467,10 @@
 
 (defprop %fresnel_s simp-fresnel-s operators)
 
+;;; fresnel_s distributes over bags
+
+(defprop %fresnel_s (mlist $matrix mequal) distribute_over)
+
 ;;; fresnel_s has mirror symmetry
 
 (defprop %fresnel_s t commutes-with-conjugate)
@@ -2536,6 +2614,10 @@
 
 (defprop %fresnel_c simp-fresnel-c operators)
 
+;;; fresnel_c distributes over bags
+
+(defprop %fresnel_c (mlist $matrix mequal) distribute_over)
+
 ;;; fresnel_c has mirror symmetry
 
 (defprop %fresnel_c t commutes-with-conjugate)
@@ -2650,7 +2732,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar *fresnel-maxit* 1000)
-(defvar *fresnel-eps*   1e-16)
+(defvar *fresnel-eps*   (* 2 double-float-epsilon))
 (defvar *fresnel-min*   1e-32)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2951,6 +3033,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprop %beta_incomplete simp-beta-incomplete operators)
+
+;;; beta_incomplete distributes over bags
+
+(defprop %beta_incomplete (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3290,6 +3376,10 @@
 (defprop %beta_incomplete_generalized 
          simp-beta-incomplete-generalized operators)
 
+;;; beta_incomplete_generalized distributes over bags
+
+(defprop %beta_incomplete_generalized (mlist $matrix mequal) distribute_over)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Generalized Incomplete Gamma function has not mirror symmetry for z1 or z2 
@@ -3605,6 +3695,10 @@
 
 (defprop %beta_incomplete_regularized
          simp-beta-incomplete-regularized operators)
+
+;;; beta_incomplete_regularized distributes over bags
+
+(defprop %beta_incomplete_regularized (mlist $matrix mequal) distribute_over)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.20 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.21 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -748,6 +748,13 @@ File: maxima.info,  Node: Funciones y variables para la detección e informe de 
           texto como por un símbolo. Por defecto, todas las pruebas se
           ejecutan. El conjunto completo de pruebas está especificado
           en `testsuite_files'.
+
+    <time>
+          Muestra información sobre tiempos de ejecución. Si vale
+          `true', se muestran los tiempos de los ficheros de prueba. Si
+          vale `all', se muestran los tiempos de cada prueba individual
+          si `display_all' vale `true'. El valor por defecto es
+          `false', por lo que no se muestra información temporal alguna.
 
      Por ejemplo, `run_testsuite(display_known_bugs = true,
      tests=[rtest5])' ejecuta la prueba `rtest5' y muestra si está
@@ -3867,9 +3874,16 @@ macro.
      La llamada `sort (<L>)' equivale a `sort (<L>, orderlessp)'; esto
      es, el orden por defecto es el ascendente, tal como queda definido
      por `orderlessp'. Todos los átomos y expresiones de Maxima son
-     comparables para `orderlessp', aunque existen ejemplos aislados de
-     expresiones para las cuales `orderlessp' deja de ser transitivo;
-     se trata de un fallo de Maxima.
+     comparables para `orderlessp'.
+
+     El predicado `ordergreatp' ordena una lista en sentido
+     descendente. El predicado `ordermagnitudep' ordena según sus
+     respectivas normas, números, símbolos constantes con valores
+     numéricos y expresiones con valores constantes. Cualesquiera otros
+     elementos de la lista <L> se ordenan con `orderlessp'. El
+     predicado `"<"' permite también la ordenación por norma, pero no
+     ordena completamente los elementos de la lista <L> que no sean
+     comparables respecto de `"<"'.
 
      Ejemplos:
 
@@ -3893,6 +3907,13 @@ macro.
           (%i7) sort (my_list, lambda ([a, b],
                                        orderlessp (reverse (a), reverse (b))));
           (%o7) [[%pi, %e], [ee, cc], [zz, xx, mm, cc], [aa, hh, uu]]
+
+     Ordena según sus normas números, constantes y expresiones, así
+     como cualesquiera otros elementos en orden ascendente:
+
+          (%i8) sort([%i,1+%i,2*x,minf,inf,%e,sin(1),0,1,2,3,1.0,1.0b0],
+                ordermagnitudep);
+          (%o8)  [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i, %i + 1, 2 x]
 
 
  -- Función: sqrt (<x>)
@@ -4764,10 +4785,10 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
      La función `declare' reconoce las siguientes propiedades:
 
-
-          `evfun' Hace que <a_i> sea reconocida por `ev', de manera que
-          la función nombrada por <a_i> se aplique cuando <a_i>
-          aparezca como argumento de control de `ev'.  Véase `evfun'.
+    `evfun'
+          Hace que <a_i> sea reconocida por `ev', de manera que la
+          función nombrada por <a_i> se aplique cuando <a_i> aparezca
+          como argumento de control de `ev'.  Véase `evfun'.
 
     `evflag'
           Hace que <a_i> sea reconocida por `ev', de manera que a <a_i>
@@ -5516,10 +5537,15 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
  -- Función: listofvars (<expr>)
      Devuelve una lista con las variables presentes en <expr>.
 
-     Si la variable `listconstvars' vale `true' entonces  `listofvars'
-     incluirá `%e', `%pi', `%i'y cualquier otra variable declarada
+     Si la variable `listconstvars' vale `true' entonces `listofvars'
+     incluirá `%e', `%pi', `%i' y cualquier otra variable declarada
      constante de las que aparezcan en <expr>.  Estas constantes se
      omiten por defecto.
+
+     Véase también la variable opcional `listdummyvars' para excluir o
+     incluir variables ficticias en la lista de variables.
+
+     Ejemplo:
 
           (%i1) listofvars (f (x[1]+y) / g^(2+a));
           (%o1)                     [g, a, x , y]
@@ -6306,6 +6332,49 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
      `exponentialize' no pueden valer `true' al mismo tiempo.
 
 
+ -- Variable opcional: distribute_over
+     Valor por defecto: `true'
+
+     `distribute_over' controla la distribución de funciones sobre
+     estructuras como listas, matrices y ecuaciones. Actualmente, este
+     control sólo es aplicable a las funciones trigonométricas,
+     integrales exponenciales y a las funciones para enteros, como
+     `mod', `floor', `ceiling' y `round'.
+
+     La propiedad distributiva se desactiva asignándole a
+     `distribute_over' el valor `false'.
+
+     Ejemplos:
+
+     La función `sin' se distribuye sobre una lista:
+
+          (%i1) sin([x,1,1.0]);
+          (%o1)                 [sin(x), sin(1), .8414709848078965]
+
+     `mod' es una función de dos argumentos que se distribuye sobre
+     listas.  La distribución sobre listas anidadas también es posible.
+
+          (%i2) mod([x,11,2*a],10);
+          (%o2)                    [mod(x, 10), 1, 2 mod(a, 5)]
+          (%i3) mod([[x,y,z],11,2*a],10);
+          (%o3)       [[mod(x, 10), mod(y, 10), mod(z, 10)], 1, 2 mod(a, 5)]
+
+     Distribución de la función `floor' sobre una matriz y una ecuación.
+
+          (%i4) floor(matrix([a,b],[c,d]));
+                                      [ floor(a)  floor(b) ]
+          (%o4)                       [                    ]
+                                      [ floor(c)  floor(d) ]
+          (%i5) floor(a=b);
+          (%o5)                         floor(a) = floor(b)
+
+     Funciones con más de un argumento se distribuyen sobre cualquiera
+     de sus argumentos, o sobre todos ellos.
+
+          (%i6) expintegral_e([1,2],[x,y]);
+          (%o6) [[expintegral_e(1, x), expintegral_e(1, y)],
+                 [expintegral_e(2, x), expintegral_e(2, y)]]
+
  -- Variable opcional: domain
      Valor por defecto: `real'
 
@@ -6343,6 +6412,11 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
      `expand ((x+1)^n)' se desarrollará sólo si `maxposex' no es menor
      que `n'.
 
+     `expand(expr, 0, 0)' provoca que se vuelva a simplificar `expr'.
+     `expr' no se vuelve a evaluar. A diferencia de `ev(expr, noeval)',
+     se elimina la representación canónica de la expresión.  Véase
+     también `ev'.
+
      La variable `expand' utilizada con `ev' provocará una expansión.
 
      El fichero `simplification/facexp.mac' contiene algunas funciones
@@ -6353,6 +6427,54 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
      `simplification/facexp.usg' se pueden encontrar breves
      descripciones de estas funciones.  Se accederá a una demostración
      con la instrucción `demo("facexp")'.
+
+     Ejemplo:
+
+          (%i1) expr:(x+1)^2*(y+1)^3;
+                                                2        3
+          (%o1)                          (x + 1)  (y + 1)
+          (%i2) expand(expr);
+                 2  3        3    3      2  2        2      2      2
+          (%o2) x  y  + 2 x y  + y  + 3 x  y  + 6 x y  + 3 y  + 3 x  y
+                                                           2
+                                          + 6 x y + 3 y + x  + 2 x + 1
+
+          (%i3) expand(expr,2);
+                                2        3              3          3
+          (%o3)                x  (y + 1)  + 2 x (y + 1)  + (y + 1)
+
+          (%i4) expr:(x+1)^-2*(y+1)^3;
+                                                    3
+                                             (y + 1)
+          (%o4)                              --------
+                                                    2
+                                             (x + 1)
+          (%i5) expand(expr);
+                           3               2
+                          y             3 y            3 y             1
+          (%o5)      ------------ + ------------ + ------------ + ------------
+                      2              2              2              2
+                     x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1
+
+          (%i6) expand(expr,2,2);
+                                                    3
+                                             (y + 1)
+          (%o6)                            ------------
+                                            2
+                                           x  + 2 x + 1
+
+     Vuelve a simplificar una expresión pero sin expansión:
+
+          (%i7) expr:(1+x)^2*sin(x);
+                                                 2
+          (%o7)                           (x + 1)  sin(x)
+          (%i8) exponentialize:true;
+          (%o8)                                true
+          (%i9) expand(expr,0,0);
+                                             2    %i x     - %i x
+                                   %i (x + 1)  (%e     - %e      )
+          (%o9)                  - -------------------------------
+                                                  2
 
 
  -- Función: expandwrt (<expr>, <x_1>, ..., <x_n>)
@@ -6669,15 +6791,18 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
      de la expresión para simplificaciones basadas en factorizaciones y
      expansiones parciales de fracciones de exponentes.
 
-     Si `%e_to_numlog' vale `true', `%e^(r*log(expr))' se reduce a
-     `expr^r' si `r'  es un número racional.
+     Ejemplos:
 
-     Si `radexpand' vale `false', ciertas transformaciones se inhiben;
-     `radcan (sqrt (1-x))' se mantiene como `sqrt (1-x)' y no se reduce
-     a `%i sqrt (x-1)', o `radcan (sqrt (x^2 - 2*x + 1))' se mantiene
-     como  `sqrt (x^2 - 2*x + 1)' sin reducirse a`x - 1'.
+          (%i1) radcan((log(x+x^2)-log(x))^a/log(1+x)^(a/2));
+                                                     a/2
+          (%o1)                            log(x + 1)
 
-     La instrucción `example (radcan)' muestra algunos ejemplos.
+          (%i2) radcan((log(1+2*a^x+a^(2*x))/log(1+a^x)));
+          (%o2)                                  2
+
+          (%i3) radcan((%e^x-1)/(1+%e^(x/2)));
+                                               x/2
+          (%o3)                              %e    - 1
 
 
  -- Variable opcional: radexpand
@@ -6735,9 +6860,39 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
      La variable `simp' activa y desactiva la simplificación.  La
      simplificación está activada por defecto. La variable `simp'
      también es reconocida por la función `ev' como variable de entorno.
-
      Véase también `ev'.
 
+     Cuando `simp' se utiliza en un entorno `ev' con el valor `false',
+     la simplificación se evita sólo durante la fase de evaluación de
+     una expresión. La variable no evita la simplificación que sigue a
+     la fase de evaluación.
+
+     Ejemplos:
+
+     La simplificación se suspende globalmente. La expresión `sin(1.0)'
+     no se simplifica a su valor numérico. La variable de entorno `simp'
+     conmuta el estado de la simplificación.
+
+          (%i1) simp:false;
+          (%o1)                                false
+          (%i2) sin(1.0);
+          (%o2)                              sin(1.0)
+          (%i3) sin(1.0),simp;
+          (%o3)                          .8414709848078965
+
+     La simplificación se vuelve a activar. La variable de entorno
+     `simp' no puede suprimir totalmente la simplificación. El
+     resultado muestra una expresión simplificada, pero la variable `x'
+     guarda como valor una expresión sin simplificar, porque la
+     asignación se realizó durante la fase de evaluación de la
+     expresión.
+
+          (%i4) simp:true;
+          (%o4)                                true
+          (%i5) x:sin(1.0),simp:false;
+          (%o5)                          .8414709848078965
+          (%i6) :lisp $X
+          ((%SIN) 1.0)
 
  -- Variable opcional: simpsum
      Valor por defecto: `false'

@@ -235,9 +235,20 @@
     (cond ((fixnump pow)	   ; Sqrt(-x) -> %i*sqrt(x)
 	   (let ((sp (risplit (cadr l))))
 	     (cond ((= pow -1)
-		    (let ((a2+b2 (spabs sp)))
-		      (cons (div (car sp) a2+b2)
-			    (mul -1 (div (cdr sp) a2+b2)))))
+		    ;; Handle the case of 1/(x+%i*y) carefully.  This
+		    ;; is needed if x and y are (Lisp) numbers to
+		    ;; prevent spurious underflows/overflows.  See Bug
+		    ;; 2954472.
+		    ;; https://sourceforge.net/tracker/?func=detail&atid=104933&aid=2954472&group_id=4933.
+		    ;;
+		    (if (and (or (numberp (car sp))
+				 (ratnump (car sp)))
+			     (or (numberp (cdr sp))
+				 (ratnump (cdr sp))))
+			(sprecip sp)
+			(let ((a2+b2 (spabs sp)))
+			  (cons (div (car sp) a2+b2)
+				(mul -1 (div (cdr sp) a2+b2))))))
 		   ((> (abs pow) $maxposex)
 		    (cond ((=0 (cdr sp))
 			   (cons (powers (car sp) pow) 0))
@@ -412,7 +423,7 @@
 	   (cons l 0))
 	  ((or (arcp (caar l)) (eq (caar l) '$atan2))
 	   (let ((ans (risplit (let (($logarc t))
-				 (ssimplifya l)))))
+				 (resimplify l)))))
 	     (when (eq (caar l) '$atan2)
 	       (setq ans (cons (sratsimp (car ans)) (sratsimp (cdr ans)))))
 	     (if (and (free l '$%i) (=0 (cdr ans)))
@@ -472,8 +483,8 @@
            ;; return a real answer for subscripted variable
            (cons l 0))
           (t
-           (cons (list '(%realpart) l)
-                 (list '(%imagpart) l))))))
+           (cons (list '(%realpart simp) l)
+                 (list '(%imagpart simp) l))))))
 
 (defun coversinemyfoot (l)
   (prog (recip)
@@ -488,7 +499,53 @@
 	((=1 c) 1)
 	(t (power c d))))
 
-(defun spabs (sp) (add (powers (car sp) 2) (powers (cdr sp) 2)))
+(defun spabs (sp)
+  ;; SP is a cons of the real part and imaginary part of a complex
+  ;; number.  SPABS computes the sum of squares of the real and
+  ;; imaginary parts.
+  (add (powers (car sp) 2)
+       (powers (cdr sp) 2)))
+
+;; Compute 1/(x+%i*y) when both x and y are Lisp numbers or Maxima
+;; rationals.  Return a cons of the real and imaginary part of the
+;; result.  We count on the underlying Lisp to be able to compute (/
+;; (complex x y)) accurately and without unnecessary overflow or
+;; underflow..  If not, complain to your Lisp vendor.  Well, it seems
+;; that Clisp, CMUCL, and SBCL do a nice job.  But others apparently
+;; do not.  (I tested ecl 9.12.3 and ccl 1.4, which both fail.)
+;; Workaround those deficiencies.
+(defun sprecip (sp)
+  (destructuring-bind (x . y)
+      sp
+    #+(or cmu sbcl)
+    (let* ((x (bigfloat:to x))
+	   (y (bigfloat:to y))
+	   (q (bigfloat:/ (bigfloat:complex x y))))
+      (cons (to (bigfloat:realpart q))
+	    (to (bigfloat:imagpart q))))
+    #-(or cmu sbcl)
+    (let ((x (bigfloat:to x))
+	  (y (bigfloat:to y)))
+      ;; 1/(x+%i*y).
+      ;;
+      ;; Assume abs(x) > abs(y).  Let r = y/x.  Then
+      ;; 1/(x+%i*y) = 1/x/(1+%i*r)
+      ;;            = (1-%i*r)/(x*(1+r*r))
+      ;;
+      ;; The case for abs(x) <= abs(y) is similar with r = x/y:
+      ;; 1/(x+%i*y) = 1/y/(r+%i)
+      ;;            = (r-%i)/(y*(1+r^2))
+      (if (> (bigfloat:abs x) (bigfloat:abs y))
+	  (let* ((r (bigfloat:/ y x))
+		 (dn (bigfloat:* x (bigfloat:+ 1 (bigfloat:* r r)))))
+	    (cons (to (bigfloat:/ dn))
+		  (to (bigfloat:/ (bigfloat:- r) dn))))
+	  (let* ((r (bigfloat:/ x y))
+		 (dn (bigfloat:* y (bigfloat:+ 1 (bigfloat:* r r)))))
+	    (cons (to (bigfloat:/ r dn))
+		  (to (bigfloat:/ (bigfloat:- dn)))))))))
+      
+  
 
 
 (defvar negp* (let ((l (list nil nil t t))) (nconc l l)))
@@ -586,7 +643,9 @@
 ;; techniques, however, are not perfect.
 
 (defun absarg (l &optional (absflag nil))
-  (setq l ($expand l))
+;; Commenting out the the expansion of the expression l. It seems to be not
+;; necessary, but can cause expression swelling (DK 01/2010).
+;  (setq l ($expand l))
   (cond ((atom l)
 	 (cond ((eq l '$%i)
 		(cons 1 (simplify '((mtimes) ((rat simp) 1 2) $%pi))))
@@ -595,8 +654,8 @@
 	       ((member l '($%e $%pi) :test #'eq) (cons l 0))
 	       ((eq l '$infinity) (cons '$inf '$ind))
                ((decl-complexp l)
-                (cons (list '(mabs) l) ; noun form with mabs
-                      (list '($carg) l)))
+                (cons (list '(mabs simp) l) ; noun form with mabs
+                      (list '(%carg simp) l)))
 	       (absflag (cons (take '(mabs) l) 0))
 	       (t
                 ;; At this point l is representing a real value. Try to 
@@ -621,7 +680,7 @@
 	     (return (cons (muln absl t) (2pistrip (addn argl t)))))
 	   (setq abars (absarg (car n) absflag))))
 	((eq (caar l) 'mexpt)
-	 (let ((aa (absarg (cadr l) nil))  ;; we always need arg of base of exponent
+	 (let ((aa (absarg (cadr l) nil)) ; we always need arg of base of exponent
 	       (sp (risplit (caddr l)))
 	       ($radexpand nil))
 	   (cons (mul (powers (car aa) (car sp))

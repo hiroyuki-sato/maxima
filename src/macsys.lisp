@@ -366,6 +366,11 @@
 (defvar *maxima-prolog* "")
 (defvar *maxima-epilog* "")
 
+;; These 2 are actually defined in init-cl.lisp.  This is to get rid
+;; of some compiler warnings (clisp).
+(defvar *maxima-initlisp*)
+(defvar *maxima-initmac*)
+
 (defvar *maxima-quiet* nil)
 
 (defun macsyma-top-level (&optional (input-stream *standard-input*) batch-flag)
@@ -375,8 +380,9 @@
 	(progn
 	  (if (not *maxima-quiet*) (maxima-banner))
 	  (setq *maxima-started* t)))
-    (if ($file_search "maxima-init.lisp") ($load ($file_search "maxima-init.lisp")))
-    (if ($file_search "maxima-init.mac") ($batchload ($file_search "maxima-init.mac")))
+    
+    (if ($file_search *maxima-initlisp*) ($load ($file_search *maxima-initlisp*)))
+    (if ($file_search *maxima-initmac*) ($batchload ($file_search *maxima-initmac*)))
 
     (catch 'quit-to-lisp
       (in-package :maxima)
@@ -509,7 +515,9 @@
     #+(or cmu scl) (ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
     #+allegro (excl:run-shell-command (apply '$sconcat args) :wait t :output (or s nil))
     #+sbcl (sb-ext:run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
-    #+openmcl (ccl::run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t))
+    #+openmcl (if (member :windows *features*)
+		  (ccl::run-program "cmd" (list "/c" (apply '$sconcat args)) :output (or s t))
+		  (ccl::run-program "/bin/sh" (list "-c" (apply '$sconcat args)) :output (or s t)))
     #+abcl (extensions::run-shell-command (apply '$sconcat args) :output (or s *standard-output*))
     #+lispworks (system:run-shell-command (apply '$sconcat args) :wait t)))
 

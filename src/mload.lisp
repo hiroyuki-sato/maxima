@@ -57,7 +57,7 @@
   "Gives an MAXIMA-ERROR message including its first argument if its second
   argument is not a LIST"
   (or ($listp val)
-      (merror "The variable ~:M being set to a non-`listp' object:~%~M"
+      (merror (intl:gettext "assignment: value of ~:M must be a list; found: ~M")
 	      var val)))
 
 (defprop $file_search $listp_check assign)
@@ -103,25 +103,29 @@
 		    (($listp user-object)
 		     (fullstrip (cdr user-object)))
 		    (t
-		     (merror "Bad file spec:~%~M" user-object))))
+		     (merror (intl:gettext "filename_merge: unexpected argument: ~M") user-object))))
 	     (namestring-try (errset-namestring system-object)))
 	(if namestring-try (car namestring-try)
 	    ;; know its small now, so print on same line.
-	    (merror "Bad file spec: ~:M" user-object)))))
+	    (merror (intl:gettext "filename_merge: unexpected argument: ~:M") user-object)))))
+
+(defmvar $load_pathname nil
+  "The full pathname of the file being loaded")
 
 (defun $batchload (filename &aux expr (*mread-prompt* ""))
   (declare (special *mread-prompt* *prompt-on-read-hang*))
   (setq filename ($file_search1 filename '((mlist) $file_search_maxima)))
-  (with-open-file (in-stream filename)
-    (when $loadprint
-      (format t "~&batching ~A~&" (cl:namestring (truename in-stream))))
-    (cleanup)
-    (newline in-stream)
-    (loop while (and
-		  (setq  expr (let (*prompt-on-read-hang*) (mread in-stream nil)))
-		  (consp expr))
-	   do (meval* (third expr)))
-		  (cl:namestring (truename in-stream))))
+  (let (($load_pathname filename))
+    (with-open-file (in-stream filename)
+      (when $loadprint
+	(format t (intl:gettext "~&read and interpret file: ~A~&") (cl:namestring (truename in-stream))))
+      (cleanup)
+      (newline in-stream)
+      (loop while (and
+		   (setq  expr (let (*prompt-on-read-hang*) (mread in-stream nil)))
+		   (consp expr))
+	 do (meval* (third expr)))
+      (cl:namestring (truename in-stream)))))
 
 ;;returns appropriate error or existing pathname.
 ;; the second argument is a maxima list of variables
@@ -133,7 +137,7 @@
   (setq lis (apply '$append (mapcar 'symbol-value (cdr search-lists))))
   (let ((res ($file_search name lis)))
     (or res
-	(merror "Could not find `~M' using paths in ~A."
+	(merror (intl:gettext "file_search1: ~M not found in ~A.")
 		name
 		(string-trim "[]" ($sconcat search-lists))))))
 
@@ -160,23 +164,34 @@
        ;; during loading. Foobar fail act errors.
        (load-and-tell searched-for))
       (t
+       ;; UNREACHABLE MESSAGE: DEFAULT TYPE IS '$OBJECT (SEE $FILE_TYPE BELOW)
        (merror "Maxima bug: Unknown file type ~M" type)))
     searched-for))
 
 
-(defun $file_type (fil &aux typ)
-  (setq fil (pathname fil))
-  (setq typ (format nil "~(~A~)" (pathname-type fil)))
-  (or 
-   (and (> (length typ) 0)
-	(let ((ch (aref typ 0)))
-	  (cdr (assoc ch '((#\m . $maxima)
-			   (#\d . $maxima)
-			   (#\l . $lisp)
-			   (#\o . $object)
-			   (#\f . $object))))))
-   '$object))
-       			
+(defun $file_type (fil)
+  (let ((typ ($pathname_type fil)))
+    (cond
+      ((member typ '("l" "lsp" "lisp") :test #'string=)
+       '$lisp)
+      ((member typ '("mac" "mc" "demo" "dem" "dm1" "dm2" "dm3" "dmt")
+	       :test #'string=)
+       '$maxima)
+      (t
+       '$object))))
+
+(defun $pathname_directory (path)
+  (let ((pathname (pathname path)))
+    (namestring (make-pathname :directory (pathname-directory pathname)))))
+
+(defun $pathname_name (path)
+  (let ((pathname (pathname path)))
+    (pathname-name pathname)))
+
+(defun $pathname_type (path)
+  (let ((pathname (pathname path)))
+    (pathname-type pathname)))
+  
 
 (defvar *macsyma-startup-queue* nil)
 
@@ -190,8 +205,7 @@
    of each command line"
   (cond ((setq tem (member ($mkey demo) possible :test #'eq))
 	 (setq demo (car tem)))
-	(t (format t "Second arg ~A is not in ~A so using :Batch"
-		   demo possible)))
+	(t (format t (intl:gettext "batch: second argument must be 'demo, 'batch, or 'test; found: ~A, assume 'batch~%") demo)))
 
   (setq filename ($file_search1 filename
 				(if (eql demo :demo)
@@ -201,7 +215,7 @@
 	 (test-batch filename nil :show-all t))
 	(t
 	 (with-open-file (in-stream filename)
-	   (format t "~%batching ~A~%"
+	   (format t (intl:gettext "~%read and interpret file: ~A~%")
 		   (truename in-stream))
 	   (catch 'macsyma-quit (continue in-stream demo))
 	   (namestring in-stream)))))
@@ -309,10 +323,14 @@
 
 (defun test-batch (filename expected-errors
 			    &key (out *standard-output*) (show-expected nil)
-			    (show-all nil))
+			    (show-all nil) (showtime nil))
 
   (let ((result) (next-result) (next) (error-log) (all-differences nil) ($ratprint nil) (strm)
-	(*mread-prompt* "") (expr) (num-problems 0) (tmp-output) (save-output) (i 0))
+	(*mread-prompt* "") (expr) (num-problems 0) (tmp-output) (save-output) (i 0)
+	(start-run-time 0) (end-run-time 0)
+	(start-real-time 0) (end-real-time 0)
+	(test-start-run-time 0) (test-end-run-time 0)
+	(test-start-real-time 0) (test-end-real-time 0))
     
     (cond (*collect-errors*
 	   (setq error-log
@@ -322,13 +340,15 @@
 		     #-gcl (file-error () nil)
 		     #+gcl (cl::error () nil))))
 	   (when error-log
-	     (format t "~%Error log on ~a" error-log)
-	     (format error-log "~%/* maxima-error log from tests in ~A" filename)
+	     (format t (intl:gettext "~%batch: write error log to ~a") error-log)
+	     (format error-log (intl:gettext "~%/* Maxima error log from tests in ~A") filename)
 	     (format error-log " */~2%"))))
  
     (unwind-protect 
 	(progn
 	  (setq strm (open filename :direction :input))
+	  (setq start-real-time (get-internal-real-time))
+	  (setq start-run-time (get-internal-run-time))
 	  (while (not (eq 'eof (setq expr (mread strm 'eof))))
 	    (incf num-problems)
 	    (incf i)
@@ -338,13 +358,17 @@
 	  
 	    (unwind-protect
 		(progn
+		  (setq test-start-run-time (get-internal-run-time))
+		  (setq test-start-real-time (get-internal-real-time))
 		  (setq result (meval* `(($errcatch) ,(third expr))))
 		  (setq result (if ($emptyp result) 'error-catch (second result)))
+		  (setq test-end-run-time (get-internal-run-time))
+		  (setq test-end-real-time (get-internal-real-time))
 		  (setq $% result))
 	      (setf *standard-output* save-output))
 
 	    (setq next (mread strm 'eof))
-	    (if (eq next 'eof) (merror "Missing expected result"))
+	    (if (eq next 'eof) (merror (intl:gettext "batch: missing expected result in test script.")))
 	  
 	    (setq next-result (third next))
 	    (let* ((correct (batch-equal-check next-result result))
@@ -352,53 +376,71 @@
 		   (pass (or correct expected-error)))
 	      (when (or show-all (not pass) (and correct expected-error)
 			(and expected-error show-expected))
-		(format out "~%********************** Problem ~A ***************" i)
-		(format out "~%Input:~%" )
+		(format out (intl:gettext "~%********************** Problem ~A ***************") i)
+		(format out (intl:gettext "~%Input:~%"))
 		(displa (third expr))
-		(format out "~%~%Result:~%")
+		(format out (intl:gettext "~%~%Result:~%"))
 		(format out "~a" (get-output-stream-string tmp-output))
-		(displa $%))
+		(displa $%)
+		(when (eq showtime '$all)
+		  (format out (intl:gettext "~%Time:  ~,3F sec (~,3F elapsed)")
+			  (float (/ (- test-end-run-time test-start-run-time)
+				    internal-time-units-per-second))
+			  (float (/ (- test-end-run-time test-start-run-time)
+				    internal-time-units-per-second)))))
 	      (cond ((and correct expected-error)
-		     (format t "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima.~%"))
+		     (format t (intl:gettext "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima.~%")))
 		    (correct
-		     (if show-all (format t "~%... Which was correct.~%")))
+		     (if show-all (format t (intl:gettext "~%... Which was correct.~%"))))
 		    ((and (not correct) expected-error)
 		     (if (or show-all show-expected)
 			 (progn
-			   (format t "~%This is a known error in Maxima. The correct result is:~%")
+			   (format t (intl:gettext "~%This is a known error in Maxima. The correct result is:~%"))
 			   (displa next-result))))
-		    (t (format t "~%This differed from the expected result:~%")
+		    (t (format t (intl:gettext "~%This differed from the expected result:~%"))
 		       (push i all-differences)
 		       (displa next-result)
 		       (cond ((and *collect-errors* error-log)
-			      (format error-log "/* Problem ~A */~%" i)
-                  (mgrind (third expr) error-log)
+			      (format error-log (intl:gettext "/* Problem ~A */~%") i)
+			      (mgrind (third expr) error-log)
 			      (list-variable-bindings (third expr) error-log)
 			      (format error-log ";~%")
-			      (format error-log "/* Erroneous Result?:~%")
+			      (format error-log (intl:gettext "/* Erroneous Result?:~%"))
 			      (mgrind result error-log) (format error-log " */ ")
 			      (terpri error-log)
-                  (format error-log "/* Expected result: */~%")
+			      (format error-log (intl:gettext "/* Expected result: */~%"))
 			      (mgrind next-result error-log)
 			      (format error-log ";~%~%"))))))))
       (close strm))
+    (setq end-run-time (get-internal-run-time))
+    (setq end-real-time (get-internal-real-time))
     (cond (error-log
 	   (or (streamp *collect-errors*)
 	       (close error-log))))
     (let
       ((expected-errors-trailer
-         (if (or (null expected-errors) (= (length expected-errors) 0))
-           ""
-           (format nil " (not counting ~a expected errors)" (length expected-errors)))))
+	(if (or (null expected-errors) (= (length expected-errors) 0))
+	    ""
+	    (format nil (intl:gettext " (not counting ~a expected errors)") (length expected-errors))))
+       (time (if showtime
+		 (format nil (intl:gettext "   using ~,3F seconds (~,3F elapsed).~%")
+			 (float (/ (- end-run-time start-run-time) internal-time-units-per-second))
+			 (float (/ (- end-real-time start-real-time) internal-time-units-per-second)))
+		 "")))
       (cond ((null all-differences)
-           (format t "~a/~a tests passed~a.~%" num-problems num-problems expected-errors-trailer) '((mlist)))
-        (t (progn
-             (format t "~%~a/~a tests passed~a.~%" 
-                 (- num-problems (length all-differences)) num-problems expected-errors-trailer)
-             (let ((s (if (> (length all-differences) 1) "s" "")))
-           (format t "~%The following ~A problem~A failed: ~A~%" 
-               (length all-differences) s (reverse all-differences)))
-             `((mlist),filename ,@(reverse all-differences))))))))
+	     (format t (intl:gettext "~a/~a tests passed~a~%~A")
+		     num-problems num-problems
+		     expected-errors-trailer
+		     time)
+	     (values '((mlist)) num-problems))
+	    (t
+	     (format t (intl:gettext "~%~a/~a tests passed~a~%~A")
+		     (- num-problems (length all-differences)) num-problems expected-errors-trailer
+		     time)
+	     (let ((s (if (> (length all-differences) 1) "s" "")))
+	       (format t (intl:gettext "~%The following ~A problem~A failed: ~A~%")
+		       (length all-differences) s (reverse all-differences)))
+	     (values `((mlist) ,filename ,@(reverse all-differences)) num-problems))))))
        
 ;;to keep track of global values during the error:
 (defun list-variable-bindings (expr &optional str &aux tem)
@@ -505,32 +547,47 @@
 	       x)))
     (mapcar #'remove-dollarsign
 	    (cond (tests
-		   (intersection (cdr $testsuite_files)
-				 (mapcar #'remove-dollarsign (cdr tests))
-				 :key #'(lambda (x)
-					  (maxima-string (if (listp x)
-							     (second x)
-							     x)))
-				 :test #'string=))
+		   (let ((results nil))
+		     ;; Using INTERSECTION would be convenient, but
+		     ;; INTERSECTION can return the result in any
+		     ;; order, and we'd prefer that the order of the
+		     ;; tests be preserved.  CMUCL and CCL returns the
+		     ;; intersection in reverse order.  Clisp produces
+		     ;; the original order.  Fortunately, this doesn't
+		     ;; have to be very fast, so we do it very naively.
+		     (dolist (test (mapcar #'remove-dollarsign (cdr tests)))
+		       (when (find test (cdr $testsuite_files)
+				   :key #'(lambda (x)
+					    (maxima-string (if (listp x)
+							       (second x)
+							       x)))
+				   :test #'string=)
+			 (push test results)))
+		     (nreverse results)))
 		  (t
 		   (cdr $testsuite_files))))))
 
-(defun run-testsuite (&key display_known_bugs display_all tests)
+(defun run-testsuite (&key display_known_bugs display_all tests time)
   (declare (special $file_search_tests))
   (let ((test-file)
 	(expected-failures))
     ;; Allow only T and NIL for display_known_bugs and display_all
     (unless (member display_known_bugs '(t nil))
-      (merror "display_known_bugs should be either true or false, not ~M" display_known_bugs))
+      (merror (intl:gettext "run_testsuite: display_known_bugs must be true or false; found: ~M") display_known_bugs))
     (unless (member display_all  '(t nil))
-      (merror "display_all should be either true or false, not ~M" display_all))
+      (merror (intl:gettext "run_testsuite: display_all must be true or false; found: ~M") display_all))
+    (unless (member time '(t nil $all))
+      (merror (intl:gettext "run_testsuite: time must be true, false, or all; found: ~M") time))
     
     (setq *collect-errors* nil)
     (unless $testsuite_files
       (load (concatenate 'string *maxima-testsdir* "/" "testsuite.lisp")))
     (let ((error-break-file)
 	  (testresult)
-	  (tests-to-run (intersect-tests tests)))
+	  (tests-to-run (intersect-tests tests))
+	  (test-count 0)
+	  (total-count 0)
+	  (error-count 0))
       (time 
        (loop with errs = '() for testentry in tests-to-run
 	     do
@@ -542,34 +599,39 @@
 		   (setf test-file (second testentry))
 		   (setf expected-failures (cddr testentry))))
   
-	     (format t "Running tests in ~a: " (if (symbolp test-file)
+	     (format t (intl:gettext "Running tests in ~a: ") (if (symbolp test-file)
 						   (subseq (print-invert-case test-file) 1)
 						   test-file))
 	     (or (errset
 		  (progn
-		    (setq testresult 
-			  (rest (test-batch
-				 ($file_search test-file $file_search_tests)
-				 expected-failures
-				 :show-expected display_known_bugs
-				 :show-all display_all)))
-		    (if testresult
-			(setq errs (append errs (list testresult))))))
+		    (multiple-value-setq (testresult test-count)
+		      (test-batch ($file_search test-file $file_search_tests)
+				  expected-failures
+				  :show-expected display_known_bugs
+				  :show-all display_all
+				  :showtime time))
+		    (setf testresult (rest testresult))
+		    (incf total-count test-count)
+		    (when testresult
+		      (incf error-count (length (cdr testresult)))
+		      (setq errs (append errs (list testresult))))))
 		 (progn
 		   (setq error-break-file (format nil "~a" test-file))
 		   (setq errs 
 			 (append errs 
 				 (list (list error-break-file "error break"))))
-		   (format t "~%Caused an error break: ~a~%" test-file)))
+		   (format t (intl:gettext "~%Caused an error break: ~a~%") test-file)))
 	     finally (cond ((null errs) 
-			    (format t "~%~%No unexpected errors found.~%"))
-			   (t (format t "~%Error summary:~%")
+			    (format t (intl:gettext "~%~%No unexpected errors found out of ~:D tests.~%") total-count))
+			   (t (format t (intl:gettext "~%Error summary:~%"))
 			      (mapcar
 			       #'(lambda (x)
 				   (let ((s (if (> (length (rest x)) 1) "s" "")))
-				     (format t "Error~a found in ~a, problem~a:~%~a~%"
+				     (format t (intl:gettext "Error~a found in ~a, problem~a:~%~a~%")
 					     s (first x) s (sort (rest x) #'<))))
-			       errs)))))))
+			       errs)
+			      (format t (intl:gettext "~&~:D test~P failed out of ~:D total tests.~%")
+				      error-count error-count total-count)))))))
   '$done)
 
 ;; Convert a list of Maxima "keyword" arguments into the corresponding
@@ -587,6 +649,7 @@
   ;; Convert to a new list that looks like (:opt1 val1 :opt2 val2 ...)
   ;;
   (unless (listp options)
+    ;; UNREACHABLE MESSAGE: OPTIONS IS A &REST ARGUMENT TO $RUN_TESTSUITE SO IT MUST PASS LISTP
     (merror "Invalid Maxima keyword options: ~M" options))
   (when (every #'(lambda (o)
 		   ;; Make sure every option has the right form.
@@ -594,7 +657,9 @@
 				  (= (length o) 3)
 				  (eq (caar o) 'mequal))))
 		     (unless ok
-		       (merror "Badly formed keyword option: ~M" o))
+                       ;; WELL, IF EVER THIS FUNCTION IS CALLED FROM ANYWHERE ELSE,
+                       ;; I GUESS WE'LL HAVE TO FIX UP "RUN_TESTSUITE:" IN THE MESSAGE
+		       (merror (intl:gettext "run_testsuite: badly formed keyword option: ~M") o))
 		     ok))
 		 options)
     (mapcan #'(lambda (o)
@@ -606,9 +671,10 @@
 		    (flet ((keywordify (x)
 			     (intern (subseq (symbol-name x) 1) :keyword)))
 		      (list (keywordify opt) val))
-		    (merror "Unrecognized keyword: ~M" opt))))
+                    ;; SAME HERE ABOUT "RUN_TESTSUITE:"
+		    (merror (intl:gettext "run_testsuite: unrecognized keyword: ~M") opt))))
 	    options)))
 
 (defun $run_testsuite (&rest options)
   (apply #'run-testsuite
-	 (lispify-maxima-keyword-options options '($display_all $display_known_bugs $tests))))
+	 (lispify-maxima-keyword-options options '($display_all $display_known_bugs $tests $time))))

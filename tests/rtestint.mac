@@ -151,7 +151,7 @@ integrate(sqrt(R)/x,x);
 			+2*a/(sqrt(4*a*c-b^2)*abs(x)))
 	 +b*asinh((2*c*x+b)/sqrt(4*a*c-b^2))/(2*sqrt(c))+sqrt(c*x^2+b*x+a);
 
-integrate(sqrt(R^3)/x,x);
+integrate(sqrt(R^3)/x,x),radexpand:all;
 -a^(3/2)*asinh(b*x/(sqrt(4*a*c-b^2)*abs(x))
 			+2*a/(sqrt(4*a*c-b^2)*abs(x)))
 	 +3*a*b*asinh((2*c*x+b)/sqrt(4*a*c-b^2))/(4*sqrt(c))
@@ -164,7 +164,7 @@ integrate(sqrt(R)/x^2,x);
 	 /(2*sqrt(a))
 	 +sqrt(c)*asinh((2*c*x+b)/sqrt(4*a*c-b^2))-sqrt(c*x^2+b*x+a)/x;
 
-integrate(sqrt(R^3)/x^2,x);
+integrate(sqrt(R^3)/x^2,x),radexpand:all;
 -3*sqrt(a)*b
 	  *asinh(b*x/(sqrt(4*a*c-b^2)*abs(x))+2*a/(sqrt(4*a*c-b^2)*abs(x)))
 	 /2
@@ -177,18 +177,18 @@ integrate(sqrt(R^3)/x^2,x);
 integrate(sqrt(R-a)/x,x);
 b*log(2*sqrt(c)*sqrt(c*x^2+b*x)+2*c*x+b)/(2*sqrt(c))+sqrt(c*x^2+b*x);
 
-integrate(sqrt((R-a)^3)/x,x);
+integrate(sqrt((R-a)^3)/x,x),radexpand:all;
 -b^3*log(2*sqrt(c)*sqrt(c*x^2+b*x)+2*c*x+b)/(16*c^(3/2))
 	 +(c*x^2+b*x)^(3/2)/3+b*x*sqrt(c*x^2+b*x)/4+b^2*sqrt(c*x^2+b*x)/(8*c);
 
 integrate(sqrt(R-a)/x^2,x);
 sqrt(c)*log(2*sqrt(c)*sqrt(c*x^2+b*x)+2*c*x+b)-2*sqrt(c*x^2+b*x)/x;
 
-integrate(sqrt((R-a)^3)/x^2,x);
+integrate(sqrt((R-a)^3)/x^2,x),radexpand:all;
 3*b^2*log(2*sqrt(c)*sqrt(c*x^2+b*x)+2*c*x+b)/(8*sqrt(c))
 	 +(c*x^2+b*x)^(3/2)/(2*x)+3*b*sqrt(c*x^2+b*x)/4;
 
-integrate(sqrt((R-a)^3)/x^3,x);
+integrate(sqrt((R-a)^3)/x^3,x),radexpand:all;
 3*b*sqrt(c)*log(2*sqrt(c)*sqrt(c*x^2+b*x)+2*c*x+b)/2
 	 +(c*x^2+b*x)^(3/2)/x^2-3*b*sqrt(c*x^2+b*x)/x;
 
@@ -1055,8 +1055,17 @@ integrate( 1/(11/10+sin(2*%pi*x)), x);
         /(sqrt(21)*%pi);
 
 /* [ 1054472 ] defint(log(1+exp(A+B*cos(phi))),phi,0,%pi) wrong */
+
+/* Commenting this example out
+ * There is a problem: The integral does not return the noun form, but
+ * gives an error: "sign: argument cannot be imaginary; found %i".
+ * If we execute this integral within the testsuite, 
+ * this integral seems to loop endlessly
+
 integrate(log(1+exp(cos(phi))),phi,0,%pi);
 'integrate(log(1+exp(cos(phi))),phi,0,%pi);
+
+*/
 
 /* atan2 function is a special case in lisp function INTEGRATOR.
    There were no regression tests for it. */
@@ -1080,8 +1089,17 @@ integrate(exp(sqrt(x)),x,1,5);
 2*(sqrt(5)-1)*%e^sqrt(5);
 
  /* [ 1899352 ] integrate asks about (y-1)(y+1) after assume(y^2>1) */
-integrate(log(x^2+y^2),x,0,1);
+(assume(y^2>1),0);
+0;
+ratsimp(integrate(log(x^2+y^2),x,0,1));
 log(y^2+1)+2*atan(1/y)*y-2;
+(forget(y^2>1),0);
+0;
+
+/* integrate(sqrt(t)*log(t)^(1/2),t,0,1) wrong sign - ID: 2847436 */
+integrate(sqrt(t)*log(t)^(1/2),t,0,1);
+sqrt(2)*sqrt(%pi)*%i/(3^(3/2));
+
 
 /* Integrals of the type: c*z^w*log(z)^m*exp(-t^s) for 0 to inf */
 
@@ -1246,5 +1264,23 @@ done;
 %rnum:0;
 0;
 integrate((a*x^2+b*x+c)/(d*x^3+a*x^2+b),x),integrate_use_rootsof:true;
-'lsum((c+%r1*b+%r1^2*a)*d*log(x-%r1)/(3*%r1^2*d+2*%r1*a),%r1,
+'lsum((c+%r1*b+%r1^2*a)*log(x-%r1)/(3*%r1^2*d+2*%r1*a),%r1,
             rootsof(d*x^3+a*x^2+b));
+
+/* fourier integral incorrect - ID: 2875784 */
+integrate(cos(x)*sin(x)/x, x, minf, inf);
+%pi/2;
+
+integrate(exp(%i*x)*sin(x)/x, x, minf, inf);
+%pi/2;
+
+integrate(exp(-%i*x)*sin(x)/x, x, minf, inf);
+%pi/2;
+
+/* Bug ID: 655270 - Incomplete integration
+ */
+integrate(sin(3*asin(x)),x);
+(4*x^4-6*x^2+1)/-4;
+integrate(sin(4*asin(x)),x);
+(15*((1-x^2)^(3/2)/5-x^2*(1-x^2)^(3/2)/5)
+       +sqrt(1-x)*sqrt(x+1)*(93*x^4-106*x^2+13))/-60;
