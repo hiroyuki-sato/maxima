@@ -231,6 +231,7 @@ install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
 lispdir = @lispdir@
+lisps_enabled = @lisps_enabled@
 localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
@@ -995,18 +996,19 @@ all-local: sharefiles.mk $(BUILT_FILES)
 clean-local: $(CLEAN_TARGETS)
 install-exec-local: $(WEIRD_INSTALL_TARGETS)
 uninstall-hook: $(WEIRD_UNINSTALL_TARGETS)
-bd_%:
-	$(MKDIR_P) $(addprefix $(subst bd_,binary-,$@),$(binary_subdirs))
+.PHONY: bd
+bd:
+	for l in $(lisps_enabled); do for d in $(binary_subdirs); do $(MKDIR_P) binary-$$l$$d; done; done
 @CLISP_EXEC_FALSE@@CLISP_TRUE@install-clisp-copy:
-@CLISP_EXEC_FALSE@@CLISP_TRUE@	$(mkinstalldirs) $(clisplibdir)
-@CLISP_EXEC_FALSE@@CLISP_TRUE@	$(INSTALL_PROGRAM) @CLISP_RUNTIME_PATH@ "$(clisplibdir)/@CLISP_RUNTIME@"
+@CLISP_EXEC_FALSE@@CLISP_TRUE@	$(mkinstalldirs) $(DESTDIR)$(clisplibdir)
+@CLISP_EXEC_FALSE@@CLISP_TRUE@	$(INSTALL_PROGRAM) @CLISP_RUNTIME_PATH@ "$(DESTDIR)$(clisplibdir)/@CLISP_RUNTIME@"
 @CLISP_EXEC_FALSE@@CLISP_TRUE@uninstall-clisp-copy:
-@CLISP_EXEC_FALSE@@CLISP_TRUE@	rm -f "$(clisplibdir)/@CLISP_RUNTIME@"
+@CLISP_EXEC_FALSE@@CLISP_TRUE@	rm -f "$(DESTDIR)$(clisplibdir)/@CLISP_RUNTIME@"
 
 @CLISP_TRUE@clisp: $(CLISP_MAXIMA)
 
 @CLISP_TRUE@$(CLISP_MAXIMA):
-@CLISP_TRUE@	$(MAKE) bd_clisp
+@CLISP_TRUE@	$(MAKE) bd
 @CLISP_TRUE@	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
 @CLISP_TRUE@	$(EXECUTECLISP) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:saveinitmem "$@" :init-function (function cl-user::run) $(clispexeflag)))'
 
@@ -1021,7 +1023,7 @@ bd_%:
 @CMUCL_TRUE@cmucl: $(CMU_MAXIMA)
 
 @CMUCL_TRUE@$(CMU_MAXIMA):
-@CMUCL_TRUE@	$(MAKE) bd_cmucl
+@CMUCL_TRUE@	$(MAKE) bd
 @CMUCL_TRUE@	$(CMU_BUILD)
 
 @CMUCL_TRUE@clean-cmucl:
@@ -1035,14 +1037,14 @@ bd_%:
 @SCL_TRUE@scl: binary-scl/maxima.core
 
 @SCL_TRUE@binary-scl/maxima.core:
-@SCL_TRUE@	$(MAKE) bd_scl
+@SCL_TRUE@	$(MAKE) bd
 @SCL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTESCL)) && \
 @SCL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-scl/maxima.core"))' | $(EXECUTESCL))
 @SCL_TRUE@install-scl-copy:
-@SCL_TRUE@	$(mkinstalldirs) $(scllibdir)
-@SCL_TRUE@	$(INSTALL_PROGRAM) @SCL_RUNTIME_PATH@ "$(scllibdir)/@SCL_RUNTIME@"
+@SCL_TRUE@	$(mkinstalldirs) $(DESTDIR)$(scllibdir)
+@SCL_TRUE@	$(INSTALL_PROGRAM) @SCL_RUNTIME_PATH@ "$(DESTDIR)$(scllibdir)/@SCL_RUNTIME@"
 @SCL_TRUE@uninstall-scl-copy:
-@SCL_TRUE@	rm -f "$(scllibdir)/@SCL_RUNTIME@"
+@SCL_TRUE@	rm -f "$(DESTDIR)$(scllibdir)/@SCL_RUNTIME@"
 
 @SCL_TRUE@clean-scl:
 @SCL_TRUE@	rm -rf binary-scl
@@ -1055,7 +1057,7 @@ bd_%:
 @ACL_TRUE@acl: binary-acl/maxima.dxl
 
 @ACL_TRUE@binary-acl/maxima.dxl:
-@ACL_TRUE@	$(MAKE) bd_acl
+@ACL_TRUE@	$(MAKE) bd
 @ACL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTEACL)) && \
 @ACL_TRUE@	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (excl:dumplisp :name "binary-acl/maxima.dxl"))' | $(EXECUTEACL))
 
@@ -1070,7 +1072,7 @@ bd_%:
 @SBCL_TRUE@sbcl: $(SBCL_MAXIMA)
 
 @SBCL_TRUE@$(SBCL_MAXIMA):
-@SBCL_TRUE@	$(MAKE) bd_sbcl
+@SBCL_TRUE@	$(MAKE) bd
 @SBCL_TRUE@	$(BUILD_SBCL)
 
 @SBCL_TRUE@clean-sbcl:
@@ -1086,14 +1088,14 @@ bd_%:
 @GCL_TRUE@@SYS_PROCLAIM_TRUE@sys-proclaim.lisp:
 @GCL_TRUE@@SYS_PROCLAIM_TRUE@	rm -rf binary-gcl
 @GCL_TRUE@@SYS_PROCLAIM_TRUE@	touch sys-proclaim.lisp
-@GCL_TRUE@@SYS_PROCLAIM_TRUE@	$(MAKE) bd_gcl
+@GCL_TRUE@@SYS_PROCLAIM_TRUE@	$(MAKE) bd
 @GCL_TRUE@@SYS_PROCLAIM_TRUE@	$(EXECUTEGCL) '(progn (load "generate-sys-proclaim.lisp"))'
 @GCL_TRUE@@SYS_PROCLAIM_TRUE@	rm -rf binary-gcl
 
 @GCL_TRUE@gcl: binary-gcl/maxima
 
 @GCL_TRUE@binary-gcl/maxima: $(sys_proc_dependency)
-@GCL_TRUE@	$(MAKE) bd_gcl
+@GCL_TRUE@	$(MAKE) bd
 @GCL_ALT_LINK_TRUE@@GCL_TRUE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
 @GCL_ALT_LINK_TRUE@@GCL_TRUE@	$(EXECUTEGCL) '(let ((com (quote (progn (defvar compiler::*gazonk-prefix* "gazonk") (defun compiler::gazonk-name (&aux tem)(dotimes (i 1000) (unless (probe-file (setq tem (merge-pathnames (format nil "~d~d.lsp" compiler::*gazonk-prefix* i))))(return-from compiler::gazonk-name (pathname tem))))(error "1000 gazonk names used already!"))(let ((compiler::*gazonk-prefix* "maxima_gazonk")(compiler::*keep-gaz* t))$(LOADDEFSYSTEM)$(DEFSYSTEMLOAD))))))(let ((si::*collect-binary-modules* t))(eval com)(let ((compiler::*default-system-p* t))(dolist (l (directory "maxima_gazonk*.lsp")) (compile-file l) (delete-file l)))(compiler::link si::*binary-modules* "binary-gcl/maxima" (format nil "~S" com) "" nil)(dolist (l (directory "maxima_gazonk*.lsp")) (delete-file l))))'
 @GCL_ALT_LINK_FALSE@@GCL_TRUE@	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' && \
@@ -1127,7 +1129,7 @@ bd_%:
 @ECL_TRUE@ecl:binary-ecl/maxima
 
 @ECL_TRUE@binary-ecl/maxima:
-@ECL_TRUE@	$(MAKE) bd_ecl
+@ECL_TRUE@	$(MAKE) bd
 @ECL_TRUE@	$(EXECUTEECL) \
 @ECL_TRUE@           -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (build-maxima-lib))' \
 @ECL_TRUE@           -eval '(ext:quit)'
