@@ -51,7 +51,7 @@ sin(y)*(10.0+6*cos(x)),
 
 (defvar *plot-options* 
   `(:plot_format
-    ,(if (string= *autoconf-win32* "true")
+    ,(if (string= *autoconf-windows* "true")
          '$gnuplot
          '$gnuplot_pipes)
     :grid (30 30) :run_viewer t :axes t
@@ -68,7 +68,7 @@ sin(y)*(10.0+6*cos(x)),
 (defvar $plot_options 
   `((mlist)
     ((mlist) $plot_format
-     ,(if (string= *autoconf-win32* "true")
+     ,(if (string= *autoconf-windows* "true")
           '$gnuplot
           '$gnuplot_pipes))))
 
@@ -88,9 +88,7 @@ sin(y)*(10.0+6*cos(x)),
 (defvar *gnuplot-stream* nil)
 (defvar *gnuplot-command* "")
 
-(defvar $gnuplot_command (if (string= *autoconf-win32* "true")
-                             "wgnuplot"
-                             "gnuplot"))
+(defvar $gnuplot_command "gnuplot")
 
 (defun start-gnuplot-process (path)
   #+clisp (setq *gnuplot-stream* (ext:make-pipe-output-stream path))
@@ -648,7 +646,7 @@ sin(y)*(10.0+6*cos(x)),
 ;;sort the edges array so that drawing the edges will happen from the back towards
 ;; the front.   The if n==4 the edges array coming in looks like
 ;; v1 v2 v3 v4 0 w1 w2 w3 w4 0 ...
-;; where vi,wi are indices pointint into the points array specifiying a point
+;; where vi,wi are indices pointint into the points array specifying a point
 ;; in 3 space.   After the sorting is done, the 0 is filled in with the vertex
 ;; which is closer to us (ie highest z component after rotating towards the user)
 ;; and this is then they are sorted in groups of 5.   
@@ -1338,14 +1336,15 @@ sin(y)*(10.0+6*cos(x)),
 (defun gnuplot-process (plot-options &optional file out-file)
   (let ((gnuplot-term (getf plot-options :gnuplot_term))
         (run-viewer (getf plot-options :run_viewer))
-        (gnuplot-preamble
+        #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
+		(gnuplot-preamble
          (string-downcase (getf plot-options :gnuplot_preamble))))
 
     ;; creates the output file, when there is one to be created
     (when (and out-file (not (eq gnuplot-term '$default)))
-      #+(or (and sbcl win32) (and ccl windows))
+      #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
       ($system $gnuplot_command (format nil $gnuplot_file_args file))
-      #-(or (and sbcl win32) (and ccl windows))
+      #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
       ($system (format nil "~a ~a" $gnuplot_command
                        (format nil $gnuplot_file_args file))))
 
@@ -1356,9 +1355,9 @@ sin(y)*(10.0+6*cos(x)),
         ($default
          ;; the options given to gnuplot will be different when the user
          ;; redirects the output by using "set output" in the preamble
-	 #+(or (and sbcl win32) (and ccl windows))
+	 #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 	 ($system $gnuplot_command "-persist" (format nil $gnuplot_file_args file))
-	 #-(or (and sbcl win32) (and ccl windows))
+	 #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 	 ($system 
 	  (format nil "~a ~a" $gnuplot_command
 		  (format nil (if (search "set out" gnuplot-preamble) 
@@ -1674,7 +1673,7 @@ sin(y)*(10.0+6*cos(x)),
 
 ;; one of the possible formats
 (defun check-option-format (option &aux formats)
-  (if (string= *autoconf-win32* "true")
+  (if (string= *autoconf-windows* "true")
       (setq formats '($geomview $gnuplot $mgnuplot $openmath $xmaxima))
       (setq formats '($geomview $gnuplot $gnuplot_pipes $mgnuplot $openmath $xmaxima)))
   (unless (member (cadr option) formats)
@@ -1706,21 +1705,22 @@ sin(y)*(10.0+6*cos(x)),
 ;; style can be one or several of the names of the styles or one or several
 ;; Maxima lists starting with the name of one of the styles. 
 (defun check-option-style (option)
-  (let (name parsed)
-    (dolist (item (rest option))
-      (when ($listp item)
-        (setq item (cdr item)))
-      (if (listp item)
-          (setq name (first item))
-          (setq name item))
-      (when (not (member name 
-                         '($lines $points $linespoints $dots $impulses)))
-        (merror
-         (intl:gettext
-          "Wrong argument ~M for option ~M. Not a valid style")
-         name (car option)))
-      (setq parsed (cons item parsed)))
-    (reverse parsed)))
+  (if (and (= (length option) 2) (null (cadr option)))
+      nil
+      (progn
+        (let (name parsed)
+          (dolist (item (cdr option))
+            (if ($listp item)
+                (setq name (second item))
+              (setq name item))
+            (when (not (member name 
+                               '($lines $points $linespoints $dots $impulses)))
+              (merror
+               (intl:gettext
+                "Wrong argument ~M for option ~M. Not a valid style")
+               name (car option)))
+            (setq parsed (cons item parsed)))
+          (reverse parsed)))))
 
 ;; Transform can be false or the name of a function for the transformation.
 (defun check-option-transform (option)
@@ -1876,7 +1876,8 @@ sin(y)*(10.0+6*cos(x)),
         (setq file (plot-file-path gnuplot-out-file))
         (setq file
               (plot-file-path
-               (format nil "maxout.~(~a~)"
+               (format nil "maxout~d.~(~a~)"
+		       (getpid)
                        (ensure-string (getf options :plot_format))))))
 
     ;; old function $plot2dopen incorporated here
@@ -2213,14 +2214,14 @@ sin(y)*(10.0+6*cos(x)),
 
 (defun show-open-plot (ans file)
   (cond ($show_openplot
-         (with-open-file (st1 (plot-temp-file "maxout.xmaxima") :direction :output :if-exists :supersede)
+         (with-open-file (st1 (plot-temp-file (format nil "maxout~d.xmaxima" (getpid))) :direction :output :if-exists :supersede)
            (princ  ans st1))
          ($system (concatenate 'string *maxima-prefix* 
-                               (if (string= *autoconf-win32* "true") "\\bin\\" "/bin/") 
+                               (if (string= *autoconf-windows* "true") "\\bin\\" "/bin/") 
                                $xmaxima_plot_command)
-		  #-(or (and sbcl win32) (and ccl windows))
+		  #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 		  (format nil " ~s &" file)
-		  #+(or (and sbcl win32) (and ccl windows))
+		  #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
 		  file))
         (t (princ ans) "")))
 
@@ -2492,7 +2493,8 @@ Several functions depending on the two variables v1 and v2:
       (setq file (plot-file-path gnuplot-out-file))
       (setq file
             (plot-file-path
-             (format nil "maxout.~(~a~)"
+             (format nil "maxout~d.~(~a~)"
+		     (getpid)
                      (ensure-string (getf options :plot_format))))))
 
   (and $in_netmath 
@@ -2558,15 +2560,21 @@ Several functions depending on the two variables v1 and v2:
                                          ,(second yrange) $z)
                                        (second fun) (third fun) (fourth fun)))
                 (setq fun '$zero_fun))
-              (progn
+              (let*
+                ((x0 (third xrange))
+                 (x1 (fourth xrange))
+                 (y0 (third yrange))
+                 (y1 (fourth yrange))
+                 (xmid (+ x0 (/ (- x1 x0) 2)))
+                 (ymid (+ y0 (/ (- y1 y0) 2))))
                 (setq lvars `((mlist) ,(second xrange) ,(second yrange)))
                 (setq fun (coerce-float-fun fun lvars))
-                (when (cdr
-                       ($delete
-                        (second lvars)
-                        ($delete
-                         (third lvars)
-                         ($listofvars (mfuncall fun (second lvars) (third lvars))))))
+                ;; Evaluate FUN at a typical point, taken here as the middle point of the range.
+                ;; This approach is somewhat unreliable since this is only looking at a single point.
+                ;; Call FUN with numerical arguments since with symbolic arguments,
+                ;; FUN may fail due to trouble computing real/imaginary parts for complicated expressions,
+                ;; or FUN may be undefined for symbolic arguments (e.g. functions defined by numerical methods).
+                (when (cdr ($listofvars (mfuncall fun xmid ymid)))
                   (mtell (intl:gettext "plot3d: expected <expr. of v1 and v2>, [v1, min, max], [v2, min, max]~%"))
                   (mtell (intl:gettext "plot3d: keep going and hope for the best.~%")))))
           (let* ((pl
@@ -2620,11 +2628,11 @@ Several functions depending on the two variables v1 and v2:
                   ($system
                    (concatenate
                     'string *maxima-prefix* 
-                    (if (string= *autoconf-win32* "true") "\\bin\\" "/bin/")
+                    (if (string= *autoconf-windows* "true") "\\bin\\" "/bin/")
                     $xmaxima_plot_command) 
-                   #-(or (and sbcl win32) (and ccl windows))
+                   #-(or (and sbcl win32) (and sbcl win64) (and ccl windows))
                    (format nil " ~s &" file)
-                   #+(or (and sbcl win32) (and ccl windows))
+                   #+(or (and sbcl win32) (and sbcl win64) (and ccl windows))
                    file))
                  ($geomview 
                   ($system $geomview_command

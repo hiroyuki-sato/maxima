@@ -29,7 +29,7 @@
 ;;                      and the return value during BREAK EXIT.
 ;;                      This lets you change the arguments to a function,
 ;;                      or make a function return a different value,
-;;                      which are both usefull debugging hacks.
+;;                      which are both useful debugging hacks.
 ;;
 ;;                      You probably want to give this a short alias
 ;;                      for typing convenience.
@@ -329,7 +329,7 @@
 	   (fmakunbound fun))))
 
 ;;--- trace-fsymeval :: find original function
-;;  fun : a function which is being traced.  The original defintion may
+;;  fun : a function which is being traced.  The original definition may
 ;;	 be hidden on the property list behind the shadow function.
 ;;
 (defun trace-fsymeval (fun)
@@ -556,7 +556,7 @@
 
 (defun macsyma-fsymeval-sub (fun)
   ;; The semantics of $TRANSRUN are herein taken from DESCRIBE,
-  ;; a carefull reading of MEVAL1 reveals, well... I've promised to watch
+  ;; a careful reading of MEVAL1 reveals, well... I've promised to watch
   ;; my language in these comments.
 
   (let ((mprops (mgetl fun '(mexpr mmacro)))
@@ -617,15 +617,13 @@
   (mtell-open "~M" `((mtext) ((spaceout) ,(min $trace_max_indent trace-indent-level)) ,@l)))
 
 (defun trace-print (form)
-  (terpri)
   (do ((j (min $trace_max_indent trace-indent-level) (1- j)))
       ((not (> j 0)))
     (write-char #\space))
   (if *prin1*
       (funcall *prin1* form)
       (prin1 form))
-  (write-char #\space))
-
+  (terpri))
 
 ;; 9:02pm  Monday, 18 May 1981 -GJC
 ;; A function benchmark facility using trace utilities.

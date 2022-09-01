@@ -1290,8 +1290,8 @@
 
 (defmethod cis ((a bigfloat))
   (make-instance 'complex-bigfloat
-		 :real (maxima::bcons (maxima::fpsin (cdr (real-value a)) t))
-		 :imag (maxima::bcons (maxima::fpsin (cdr (real-value a)) nil))))
+		 :real (maxima::bcons (maxima::fpsin (cdr (real-value a)) nil))
+		 :imag (maxima::bcons (maxima::fpsin (cdr (real-value a)) t))))
 
 (defmethod phase ((a bigfloat))
   (let ((r (cdr (real-value a))))
@@ -1390,10 +1390,17 @@
       (one-arg-complex a)))
 
 (defmethod unary-floor ((a bigfloat))
-  ;; fpentier truncates to zero, so adjust for negative numbers.
-  (if (minusp a)
-      (maxima::fpentier (real-value (- a 1)))
-      (maxima::fpentier (real-value a))))
+  ;; fpentier truncates to zero, so adjust for negative numbers
+  (let ((trunc (maxima::fpentier (real-value a))))
+    (cond ((minusp a)
+	   ;; If the truncated value is the same as the original,
+	   ;; there's nothing to do because A was an integer.
+	   ;; Otherwise, we need to subtract 1 to make it the floor.
+	   (if (= trunc a)
+	       trunc
+	       (1- trunc)))
+	  (t
+	   trunc))))
 
 (defmethod unary-ffloor ((a bigfloat))
   ;; We can probably do better than converting to an integer and
@@ -1521,7 +1528,7 @@
 	    ((= b (truncate b))
 	     (with-extra-precision ((expt-extra-bits a b)
 				    (a b))
-	       (expt a (truncate b))))
+	       (intofp (expt a (truncate b)))))
 	    (t
 	     (with-extra-precision ((expt-extra-bits a b)
 				    (a b))

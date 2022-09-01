@@ -197,8 +197,7 @@
   (let (newexpt)
     (cond ((atom z) z)
 	  ((specrepp z) (subst2 x y (specdisrep z) negxpty timesp))
-	  ((and *atp* (member (caar z) '(%derivative %laplace) :test #'eq)) z)
-	  ((at-substp z) z)
+	  ((at-substp z) z) ;; IS SUBST-EXCEPT-SECOND-ARG APPROPRIATE HERE ?? !!
 	  ((alike1 y z) x)
 	  ((and timesp (eq (caar z) 'mtimes) (alike1 y (setq z (nformat z)))) x)
 	  ((and (eq (caar y) 'mexpt) (eq (caar z) 'mexpt) (alike1 (cadr y) (cadr z))
@@ -218,15 +217,39 @@
 ;; and we do not wish to subst 3 for x inside integrand.
 (defun subst-except-second-arg (x y z)
   (cond 
-    ((member (caar z) '(%integrate %sum %product %limit))
+    ((member (caar z) '(%integrate %sum %product %limit %laplace))
      (append 
-       (list (car z)
+       (list (remove 'simp (car z))   ; ensure resimplification after substitution
              (if (eq y (third z))     ; if (third z) is new var that shadows y
                  (second z)           ; leave (second z) unchanged
                  (subst1 x y (second z))) ; otherwise replace y with x in (second z)
              (third z))               ; never change integration var
        (mapcar (lambda (z) (subst1 x y z)); do subst in limits of integral
                (cdddr z))))
+    ((eq (caar z) '%at)
+     ;; similar considerations here, but different structure of expression.
+     (let*
+       ((at-eqn-or-eqns (third z))
+        (at-eqns-list (if (eq (caar at-eqn-or-eqns) 'mlist) (rest at-eqn-or-eqns) (list at-eqn-or-eqns))))
+       (list
+         (remove 'simp (car z)) ;; ensure resimplification after substitution
+         (if (member y (mapcar #'(lambda (e) (second e)) at-eqns-list))
+           (second z)
+           (subst1 x y (second z)))
+         `((mlist) ,@(mapcar #'(lambda (e) (list (first e) (second e) (subst1 x y (third e)))) at-eqns-list)))))
+    ((eq (caar z) '%derivative)
+     ;; and again, with yet a different structure.
+     (let*
+       ((vars-and-degrees (rest (rest z)))
+        (diff-vars (loop for v in vars-and-degrees by #'cddr collect v))
+        (diff-degrees (loop for n in (rest vars-and-degrees) by #'cddr collect n)))
+       (append
+         (list
+           (remove 'simp (car z)) ;; ensure resimplification after substitution
+           (if (member y diff-vars)
+             (second z)
+             (subst1 x y (second z))))
+         (apply #'append (loop for v in diff-vars for n in diff-degrees collect (list v (subst1 x y n)))))))
     (t z)))
 
 (defmfun subst0 (new old)
@@ -527,11 +550,11 @@
                result))
 
 	  ;; extension for pdiff.
-	  ((and (get '$pderivop 'operators) (sdiffgrad-pdiff e x)))
+	  ((and (get '$pderivop 'operators) (funcall 'sdiffgrad-pdiff e x)))
 
 	  ;; two line extension for hypergeometric.
 	  ((and (equal fun '$hypergeometric) (get '$hypergeometric 'operators))
-	   (diff-hypergeometric (second e) (third e) (fourth e) x))
+	   (funcall 'diff-hypergeometric (second e) (third e) (fourth e) x))
 
 	  ((or (eq fun 'mqapply) (null (setq grad (oldget fun 'grad))))
 	   (if (not (depends e x)) 0 (diff%deriv (list e x 1))))

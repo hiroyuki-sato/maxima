@@ -60,8 +60,9 @@ or if apply is being used are printed.")
 (defvar rulefcnl nil)
 (defvar featurel
   '($integer $noninteger $even $odd $rational $irrational $real $imaginary $complex
-             $analytic $increasing $decreasing $oddfun $evenfun $posfun $constant
-             $commutative $lassociative $rassociative $symmetric $antisymmetric))
+    $analytic $increasing $decreasing $oddfun $evenfun $posfun $constant
+    $commutative $lassociative $rassociative $symmetric $antisymmetric
+    $integervalued))
 
 (defmvar $features (cons '(mlist simp) (append featurel nil)))
 (defmvar $%enumer nil)
@@ -124,12 +125,12 @@ or if apply is being used are printed.")
 	((eq (car fn) 'lambda)
 	 (apply (coerce fn 'function) args))
 	((eq (caar fn) 'lambda) (mlambda fn args fnname t form))
-	((eq (caar fn) 'mquote) (cons (cdr fn) args))
+	((eq (caar fn) 'mquote) (cons (append (cdr fn) aryp) args))
 	((and aryp (member (caar fn) '(mlist $matrix) :test #'eq))
 	 (if (not (or (= (length args) 1)
 		      (and (eq (caar fn) '$matrix) (= (length args) 2))))
 	     (merror (intl:gettext "apply: wrong number of indices; found: ~M") (cons '(mlist) args)))
-	 (if (member 0 args :test #'eq)
+	 (if (member 0 args)
 	     (merror (intl:gettext "apply: no such ~M element: ~M") (if (eq (caar fn) 'mlist) (intl:gettext "list") (intl:gettext "matrix"))
 		     `((mlist) ,@args)))
 	 (do ((args1 args (cdr args1)))
@@ -286,7 +287,7 @@ is EQ to FNNAME if the latter is non-NIL."
                   (member form (cdr $values) :test #'eq)
                   (not (member form *refchkl* :test #'eq)))
          (setq *refchkl* (cons form *refchkl*))
-         (mtell (intl:gettext "evaluation: ~:M has a value.~%") form))
+         (mtell (intl:gettext "evaluation: ~:M has the value ~:M.~%") form val))
        (return val)))
     ((or (and (atom (car form))
               (setq form (cons (ncons (car form)) (cdr form))))
@@ -300,7 +301,7 @@ is EQ to FNNAME if the latter is non-NIL."
                      (member (caar form)
                              '(mplus mtimes mexpt mnctimes) :test #'eq))
                 (go c))
-               ;; dont bother pushing mplus and friends on *baktrcl*
+               ;; don't bother pushing mplus and friends on *baktrcl*
                ;; should maybe even go below aryp.
                ((and *mdebug*
                      (progn
@@ -322,7 +323,7 @@ is EQ to FNNAME if the latter is non-NIL."
          (setq u
                (or (safe-getl (caar form) '(noun))
                    (and *nounsflag*
-                        (eq (getcharn (caar form) 1) #\%)
+                        (and (symbolp (caar form)) (eq (getcharn (caar form) 1) #\%))
                         (not (or (getl-lm-fcn-prop (caar form) '(subr))
                                  (safe-getl (caar form) '(mfexpr*))))
                         (prog2 ($verbify (caar form))
@@ -625,7 +626,7 @@ wrapper for this."
 		     (and (not (atom x))
 			  (memalike (caar x) (cdr $setcheck))))
 		 (not (eq x y)))
-	    (displa (list '(mtext) (disp2 x) '| set to | y))
+	    (mtell (intl:gettext "~:M is being set to ~:M.~%") x y)
 	    (if (and $setcheckbreak (not (eq x '$setval)))
 		(let (($setval y))
 		  (merrbreak t)
@@ -1132,8 +1133,7 @@ wrapper for this."
 	($dotassoc msetchk) ($ratwtlvl msetchk) ($ratfac msetchk)
 	($all neverset) ($numer numerset) ($fortindent msetchk)
 	($gensumnum msetchk) ($genindex msetchk) ($fpprintprec msetchk)
-	($floatwidth msetchk) ($parsewindow msetchk) ($optimprefix msetchk)
-	($ttyintnum msetchk)))
+	($floatwidth msetchk) ($parsewindow msetchk) ($optimprefix msetchk)))
 
 (defmfun msetchk (x y)
   (cond ((member x '(*read-base* *print-base*) :test #'eq)
@@ -1141,7 +1141,7 @@ wrapper for this."
 	       ((or (not (fixnump y)) (< y 2) (> y 36)) (mseterr x y))
 	       ((eq x '*read-base*))))
 	((member x '($linel $fortindent $gensumnum $fpprintprec $floatwidth
-		   $parsewindow $ttyintnum) :test #'eq)
+		   $parsewindow) :test #'eq)
 	 (if (not (fixnump y)) (mseterr x y))
          (if (eq x '$linel)
              (cond ((not (and (> y 0)         ; at least one char per line
@@ -1149,7 +1149,7 @@ wrapper for this."
                     (mseterr x y))
                    (t
                     (setq linel y))))
-	 (cond ((and (member x '($fortindent $gensumnum $floatwidth $ttyintnum) :test #'eq) (< y 0))
+	 (cond ((and (member x '($fortindent $gensumnum $floatwidth) :test #'eq) (< y 0))
 		(mseterr x y))
 	       ((and (eq x '$parsewindow) (< y -1)) (mseterr x y))
 	       ((and (eq x '$fpprintprec) (or (< y 0) (= y 1))) (mseterr x y))))

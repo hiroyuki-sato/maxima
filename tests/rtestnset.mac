@@ -1831,3 +1831,60 @@ true;
 (a * kran_dalta (i, j)) . b, dotscrules=true;
 (a * kran_dalta (i, j)) . b;
 
+/* SF bug #3049: "set should act like list" */
+
+(kill (a, b, c, d, foo, bar, baz), foo : {a, b, c, d});
+{a, b, c, d};
+
+([a, b] : [17, 29], bar : '{a, b, c, d});
+{a, b, c, d};
+
+is (foo = bar);
+true;
+
+baz : {a, b, c, d};
+{17, 29, c, d};
+
+is (baz = subst (['a = a, 'b = b], foo));
+true;
+
+op (foo);
+"{";
+
+op (bar);
+"{";
+
+"{" (a, b, c, d);
+{17, 29, c, d};
+
+/* examples listed under "Bugs" in doc/info/nset.texi -- all work as expected now */
+
+{[x], [rat (x)]};
+{[x], [''(rat(x))]};
+
+setify ([[rat(a)], [rat(b)]]);
+{[''(rat(a))], [''(rat(b))]};
+
+orderlessp ([rat(a)], [rat(b)]);
+true;
+
+is ([rat(a)] = [rat(a)]);
+true;
+
+{x, rat (x)};
+{x, ''(rat(x))};
+
+/* for the record, q, r, s example is treated in greater generality in rtest1 */
+
+(kill (q, r, s), q: x^2,  r: (x + 1)^2,  s: x*(x + 2), 0);
+0;
+
+[orderlessp (q, r), orderlessp (r, s), orderlessp (q, s)]; 
+[true, false, false];
+
+kron_delta (1/sqrt(2), sqrt(2)/2);
+1;
+
+sign (1/sqrt(2) - sqrt(2)/2);
+zero;
+

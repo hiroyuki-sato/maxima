@@ -35,7 +35,7 @@
 ;;; Maxima User variable:
 ;;;
 ;;;   $factorial_expand    - Allows argument simplificaton for expressions like
-;;;                          factorial_double(n-1) and factorial_double(2*k+n)
+;;;                          double_factorial(n-1) and double_factorial(2*k+n)
 ;;;   $beta_expand         - Switch on further expansions for the Beta functions
 ;;;
 ;;;   $erf_representation  - When T erfc, erfi, erf_generalized, fresnel_s 
@@ -365,7 +365,7 @@
 (defun conjugate-gamma-incomplete (args)
   (let ((a (first args)) (z (second args)))
     (cond ((off-negative-real-axisp z)
-           ;; Definitly not on the negative real axis for z. Mirror symmetry.
+           ;; Definitely not on the negative real axis for z. Mirror symmetry.
 	   (simplify
              (list
               '(%gamma_incomplete)
@@ -481,7 +481,7 @@
               
       ((eq z '$inf) 0)
       ((and (eq z '$minf) 
-	    (eq a 0))
+	    (eql a 0))
        '$infinity)
 
       ;; Check for numerical evaluation in Float or Bigfloat precision
@@ -820,7 +820,7 @@
 	(%gamma-incomplete a x)
       (cond (lower-incomplete-tail-p
 	     ;; %gamma-incomplete compute the lower incomplete gamma
-	     ;; function, so we need to substract that from gamma(a),
+	     ;; function, so we need to subtract that from gamma(a),
 	     ;; more or less.
 	     (cond (regularized
 		    (- 1 (* result factor)))
@@ -1155,7 +1155,7 @@
 (defun conjugate-gamma-incomplete-generalized (args)
   (let ((a (first args)) (z1 (second args)) (z2 (third args)))
     (cond ((and (off-negative-real-axisp z1) (off-negative-real-axisp z2))
-           ;; z1 and z2 definitly not on the negative real axis. 
+           ;; z1 and z2 definitely not on the negative real axis. 
            ;; Mirror symmetry.
 	   (simplify
              (list
@@ -1372,7 +1372,7 @@
 (defun conjugate-gamma-incomplete-regularized (args)
   (let ((a (first args)) (z (second args)))
     (cond ((off-negative-real-axisp z)
-           ;; z definitly not on the negative real axis. Mirror symmetry.
+           ;; z definitely not on the negative real axis. Mirror symmetry.
 	   (simplify
              (list
               '(%gamma_incomplete_regularized)
@@ -1417,6 +1417,7 @@
             ((mtimes) -1 ((mqapply) (($psi array) 0) a)))))
    ;; The derivative wrt z
    ((mtimes)
+      -1
       ((mexpt) $%e ((mtimes) -1 z))
       ((mexpt) z ((mplus) -1 a))
       ((mexpt) ((%gamma) a) -1)))

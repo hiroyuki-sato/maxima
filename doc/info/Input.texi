@@ -135,7 +135,7 @@ every input expression in the file unless there is an error.  If user input is
 requested (by @mref{asksign} or @mrefcomma{askinteger} for example) @code{batch}
 pauses to collect the requisite input and then continue.
 
-@c CTRL-C BREAKS batch IN CMUCL, BUT CLISP (ALTHO IT SHOWS "User break") 
+@c CTRL-C BREAKS batch IN CMUCL, BUT CLISP (ALTHOUGH IT SHOWS "User break") 
 @c KEEPS GOING !!! DON'T KNOW ABOUT GCL !!!
 It may be possible to halt @code{batch} by typing @code{control-C} at the
 console.  The effect of @code{control-C} depends on the underlying Lisp
@@ -419,6 +419,10 @@ while processing @var{filename}, the global variables @code{_}, @code{__},
 @code{%}, and @code{%th} have whatever bindings they had when @code{load} was
 called.
 
+It is also to note that structures will only be read back as structures if
+they have been defined by @code{defstruct} before the @code{load} command
+is called.
+
 See also @mrefcomma{loadfile} @mrefcomma{batch} @mrefcomma{batchload} and
 @mrefdot{demo}  @code{loadfile} processes Lisp files; @code{batch},
 @code{batchload}, and @code{demo} process Maxima files.
@@ -607,7 +611,8 @@ other objects.  If a name has no value or function associated with it, it is
 ignored.  @code{save} returns @var{filename}.
 
 @code{save} stores data in the form of Lisp expressions.
-The data stored by @code{save} may be recovered by @code{load (@var{filename})}.
+If @var{filename} ends in @code{.lisp} the
+data stored by @code{save} may be recovered by @code{load (@var{filename})}.
 See @mrefdot{load}
 
 The global flag @mref{file_output_append} governs whether @code{save} appends or
@@ -797,6 +802,10 @@ displayed by @code{playback}.
 @c -----------------------------------------------------------------------------
 
 @c -----------------------------------------------------------------------------
+
+Note that the built-in TeX output functionality of wxMaxima makes no use of
+the functions described here but uses its own implementation instead.
+
 @anchor{tex}
 @deffn  {Function} tex @
 @fname{tex} (@var{expr}) @
@@ -1109,7 +1118,7 @@ one is printed before any other TeX output, and the other is printed after.
 Only the TeX environment of the top-level operator in an expression
 is output; TeX environments associated with other operators are ignored.
 
-@code{get_tex_environment} returns the TeX enviroment which is applied
+@code{get_tex_environment} returns the TeX environment which is applied
 to the operator @var{op}; returns the default if no other environment
 has been assigned.
 

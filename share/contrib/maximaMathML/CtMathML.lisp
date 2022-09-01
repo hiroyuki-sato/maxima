@@ -91,14 +91,13 @@
 (defun ctmathml(exp)
   (cond ((atom exp) (a2ml exp))     ;; atoms
         ((fractionp exp) nil)       ;; fractional number
-	((get (caar exp) 'ctfun)    ;; known function
-	    (op2ml (caar exp) (cdr exp)))
-	((member 'array (car exp) :test #'eq)
-		    (ctarray exp))
         ((get (caar exp) 'ct-proc)
-             (funcall (get (caar exp) 'ct-proc) (caar exp)  (cdr exp))
-	)
-	((cpxp exp) nil)      ;; complex number
+             (funcall (get (caar exp) 'ct-proc) (caar exp)  (cdr exp)))
+        ((get (caar exp) 'ctfun)    ;; known function
+            (op2ml (caar exp) (cdr exp)))
+        ((member 'array (car exp) :test #'eq)
+                    (ctarray exp))
+        ((cpxp exp) nil)      ;; complex number
         (t (op2ml (caar exp) (cdr exp)))
   )
 )
@@ -180,6 +179,11 @@
    (mapc (function ctmathml) args)
    (tprinc "</list>")
 )
+
+(defun ctset(op args)
+  (tprinc "<set>")
+  (mapc (function ctmathml) args)
+  (tprinc "</set>"))
 
 (defun matrixrow(args)
    (setq args (cdr args))
@@ -372,6 +376,7 @@
 
 ;;;;; containers
 (setup '(mlist (ct-proc ctlist)))
+(setup '($set (ct-proc ctset)))
 (setup '($matrix (ct-proc  ctmatrix)))
 (setup '($vector (ct-proc  ctvector)))
 
@@ -392,14 +397,15 @@
 (setup '(mfactorial  (ctfun "factorial/")))
 (setup '(mabs (ctfun "abs/")))
 (setup '(%abs (ct-proc abs)))
-(setup '(mnctimes  (ctfun "times/ type=\"noncommutative\"")))
+(setup '($conjugate (ctfun "conjugate/")))
+(setup '(mnctimes  (ctfun "times type=\"noncommutative\"/")))
 (setup '(mtimes  (ctfun "times/")))
 (setup '(mexpt (ctfun "power/")))
 ;;(setup '(mdottimes (ctfun "&CenterDot;")))
-(setup '(mquotient (ctfun "quotient/"))) 
+(setup '(mquotient (ctfun "divide/"))) 
 (setup '(rat (ct-proc rat)))
-(setup '($sqrt (ctfun "sqrt/")))
-(setup '(%sqrt (ctfun "sqrt/")))
+(setup '($sqrt (ctfun "root/")))
+(setup '(%sqrt (ctfun "root/")))
 
 (setup '(mquote  (ctfun "quote/")))
 

@@ -523,7 +523,7 @@ ct_coordsys(coordinate_system, [extra_args]):=
   else if coordinate_system='toroidal then
   (
     dim:3,
-    ct_coords:[u,v,phi],
+    ct_coords:[phi,u,v],
     declare(e,constant),
     if cframe_flag then
     (
@@ -931,32 +931,34 @@ ct_coordsys(coordinate_system, [extra_args]):=
 /* Compute the Ricci rotation coefficients in a frame base */
 trrc(disp):=block
 (
-  [l,a,b,c,d],
+  [a,b,c,d],
+  array(_l,dim,dim,dim),
   if not symmetricp(_lg(),dim) then
     error("Frame base calculations require a symmetric metric."),
   for a thru dim do for b thru dim do for c from b thru dim do
-  if b=c then l[a,b,c]:0
+  if b=c then _l[a,b,c]:0
   else
   (
     /* Landau-Lifshitz II p98, pp379 (Hungarian edition) */
-    l[a,b,c]:sum(sum((diff(fri[a][i%],ct_coords[k%])-
+    _l[a,b,c]:sum(sum((diff(fri[a][i%],ct_coords[k%])-
                       diff(fri[a][k%],ct_coords[i%]))*fr[b][i%]*fr[c][k%],
                      k%,1,dim),i%,1,dim),
-    if ctrgsimp then l[a,b,c]:trigsimp(l[a,b,c])
-    else if ratchristof then l[a,b,c]:ratsimp(l[a,b,c]),
-    l[a,c,b]:-l[a,b,c],
-    if disp#false and debugmode then ldisplay(l[a,b,c])
+    if ctrgsimp then _l[a,b,c]:trigsimp(_l[a,b,c])
+    else if ratchristof then _l[a,b,c]:ratsimp(_l[a,b,c]),
+    _l[a,c,b]:-_l[a,b,c],
+    if disp#false and debugmode then ldisplay(_l[a,b,c])
   ),
   for c thru dim do for a thru dim do for b from a thru dim do
   if a=b then lcs[c,a,b]:0
   else
   (
-    lcs[c,b,a]:(l[a,b,c]+l[b,c,a]-l[c,a,b])/2,
+    lcs[c,b,a]:(_l[a,b,c]+_l[b,c,a]-_l[c,a,b])/2,
     if ctrgsimp then lcs[c,b,a]:trigsimp(lcs[c,b,a])
     else if ratchristof then lcs[c,b,a]:ratsimp(lcs[c,b,a]),
     if ratfac then lcs[c,b,a]:factor(lcs[c,b,a]),
     lcs[c,a,b]:-lcs[c,b,a]
   ),
+  remarray(_l),
   if disp=all or disp=lcs then
     for a thru dim do for b thru dim-1 do for c from b+1 thru dim do
       if lcs[a,b,c]#0 then ldisplay(lcs[a,b,c])
@@ -1066,7 +1068,7 @@ tricci(disp):=block
   if not symmetricp(_lg(),dim) then
     error("Frame base calculations require a symmetric metric."),
   if not member('lriem,arrays) then triemann(false),
-  kill(ric),
+  /* kill(ric), */
   df:true,
   for i thru dim do for j from i thru dim do
   (
@@ -1220,9 +1222,19 @@ leinstein(dis):=block
 /* This function computes the (1,3) Riemann tensor */
 riemann(dis):=if cframe_flag then block
 (
+  [df],
   if not member('lriem,arrays) then triemann(false),
+  df:true,
   for i thru dim do for j thru dim do for k thru dim do for l thru dim do
+  (
     riem[i,j,k,l]:sum(lriem[i,j,k,m%]*ufg[l,m%],m%,1,dim),
+    if dis and riem[i,j,k,l]#0 then
+    (
+      ldisplay(riem[i,j,k,l]),
+      df:false
+    )
+  ),
+  if df and dis then print("THIS SPACETIME IS FLAT"),
   done
 )
 else block
@@ -1260,7 +1272,7 @@ triemann(disp):=block
   if not symmetricp(_lg(),dim) then
     error("Frame base calculations require a symmetric metric."),
   if not member('lcs,arrays) then trrc(false),
-  kill(lriem),
+  /* kill(lriem), */
   df:true,
   for i thru dim do
     for j from i thru dim do
@@ -1580,7 +1592,7 @@ psi(disp):=block
    Classifying geometries in general relativity: III Classification in practice
    by Pollney, Skea, d'Inverno, Class. Quant. Grav. 17 2885-2992 (2000)
 
-   The algoritm has been optimized to compute only quantities that are
+   The algorithm has been optimized to compute only quantities that are
    required for a specific (sub)case. As of 12/19/2004, it is essentially
    untested, may even contain typos in some expressions.
 */
