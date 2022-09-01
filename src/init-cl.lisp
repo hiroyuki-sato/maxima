@@ -286,6 +286,10 @@ When one changes, the other does too."
                          (concatenate 'string *maxima-userdir* "/binary"))
                        "/" (maxima-version1) "/" *maxima-lispname* "/" (lisp-implementation-version1)))
 
+    ;; On ECL the testbench fails mysteriously if this directory doesn't exist =>
+    ;; let's create it by hand as a workaround.
+    #+ecl (ensure-directories-exist (concatenate 'string *maxima-objdir* "/"))
+    
     ; On Windows Vista gcc requires explicit include
     #+gcl
     (when (string= *autoconf-windows* "true")
@@ -361,12 +365,13 @@ When one changes, the other does too."
 	       (not (probe-file (combine-path *maxima-infodir* *maxima-lang-subdir* "maxima-index.lisp"))))
        (setq *maxima-lang-subdir* nil))))
 
-(defun get-dirs (path)
-  #+(or :clisp :sbcl :ecl :openmcl)
-  (directory (concatenate 'string (namestring path) "/*/")
-	     #+openmcl :directories #+openmcl t)
-  #-(or :clisp :sbcl :ecl :openmcl)
-  (directory (concatenate 'string (namestring path) "/*")))
+(defun get-dirs (path &aux (ns (namestring path)))
+  (directory (concatenate 'string
+                          ns
+                          (if (eql #\/ (char ns (1- (length ns)))) "" "/")
+                          "*"
+                          #+(or :clisp :sbcl :ecl :openmcl) "/")
+             #+openmcl :directories #+openmcl t))
 
 (defun unix-like-basename (path)
   (let* ((pathstring (namestring path))
@@ -411,6 +416,7 @@ When one changes, the other does too."
   ;;    (format t "processing maxima args = ")
   ;;    (mapc #'(lambda (x) (format t "\"~a\"~%" x)) (get-application-args))
   ;;    (terpri)
+  ;;    (force-output)
   (let ((maxima-options nil))
     ;; Note: The current option parsing code expects every short
     ;; option to have an equivalent long option.  No check is made for
@@ -657,6 +663,7 @@ When one changes, the other does too."
   (declare (ignore me-or-my-encapsulation))
   (format t "~&Maxima encountered a Lisp error:~%~% ~A" condition)
   (format t "~&~%Automatically continuing.~%To reenable the Lisp debugger set *debugger-hook* to nil.~%")
+  (force-output)
   (throw 'to-maxima-repl t))
 
 (defvar $help "type `describe(topic);' or `example(topic);' or `? topic'")

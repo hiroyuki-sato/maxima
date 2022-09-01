@@ -70,16 +70,46 @@
       ((null l))
     (when (alike1 x (car l)) (return l))))
 
-;; Return a Maxima gensym.
+;;; Return the first duplicate element of the list LIST, or NIL if there
+;;; are no duplicates present in LIST.  The function KEY is applied to
+;;; each element of the list before comparison (or uses the element itself
+;;; if KEY is NIL), and the comparison is done with the function TEST.
+;;;
+;;; This was written with "small" lists in mind.  The original use case
+;;; was finding duplicates in parameter lists of functions, etc.
+;;;    - Kris Katterjohn 06/2017
+(defun find-duplicate (list &key (test #'eql) key)
+  (declare (optimize (speed 3)))
+  (declare (type (or function null) key)
+           (type function test))
+  (let ((seen nil))
+    (dolist (e list)
+      (let ((i (if key (funcall key e) e)))
+        (when (member i seen :test test)
+          (return-from find-duplicate e))
+        (push i seen)))))
+
+;;; Return a Maxima gensym.
+;;;
+;;; N.B. Maxima gensyms are interned, so they are not Lisp gensyms.
+;;; This function can return the same symbol multiple times, it can
+;;; return a symbol that was created and used elsewhere, etc.
+;;;
+;;; Maxima produces some expressions that contain Maxima gensyms, so
+;;; the use of uninterned symbols instead can cause confusion (since
+;;; these print like any other symbol).
 (defun $gensym (&optional x)
-  (when (and x
-             (not (or (and (integerp x)
-                           (not (minusp x)))
-                      (stringp x))))
-    (merror
-     (intl:gettext
-      "gensym: Argument must be a nonnegative integer or a string. Found: ~M") x))
-  (when (stringp x) (setq x (maybe-invert-string-case x)))
-  (if x
-      (cadr (dollarify (list (gensym x))))
-      (cadr (dollarify (list (gensym))))))
+  (typecase x
+    (null
+     (intern (symbol-name (gensym "$G")) :maxima))
+    (string
+     (intern
+       (symbol-name (gensym (format nil "$~a" (maybe-invert-string-case x))))
+       :maxima))
+    ((integer 0)
+     (let ((*gensym-counter* x))
+       (intern (symbol-name (gensym "$G")) :maxima)))
+    (t
+     (merror
+       (intl:gettext
+         "gensym: Argument must be a nonnegative integer or a string. Found: ~M") x))))

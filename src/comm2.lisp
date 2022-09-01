@@ -63,11 +63,11 @@
 (defmfun diffncexpt (e x)
   (let ((base* (cadr e))
 	(pow (caddr e)))
-    (cond ((and (mnump pow) (or (not (eq (ml-typep pow) 'fixnum)) (< pow 0))) ; POW cannot be 0
+    (cond ((and (mnump pow) (or (not (fixnump pow)) (< pow 0))) ; POW cannot be 0
 	   (diff%deriv (list e x 1)))
 	  ((and (atom base*) (eq base* x) (free pow base*))
 	   (mul2* pow (list '(mncexpt) base* (add2 pow -1))))
-	  ((ml-typep pow 'fixnum)
+	  ((fixnump pow)
 	   (let ((deriv (sdiff base* x))
 		 (ans nil))
 	     (do ((i 0 (1+ i))) ((= i pow))
@@ -103,7 +103,7 @@
 	   (add2 (ncmuln (cons (stotaldiff (cadr e)) (cddr e)) t)
 		 (ncmul2 (cadr e) (stotaldiff (ncmuln (cddr e) t))))))
 	((eq (caar e) 'mncexpt)
-	 (if (and (ml-typep (caddr e) 'fixnum) (> (caddr e) 0))
+	 (if (and (fixnump (caddr e)) (> (caddr e) 0))
 	     (stotaldiff (list '(mnctimes) (cadr e)
 			       (ncpower (cadr e) (1- (caddr e)))))
 	     (list '(%derivative) e)))
@@ -139,7 +139,9 @@
 	  ((or (atom exp) (and (eq (caar exp) '%derivative) (atom (cadr exp))))
 	   (improper-arg-err exp '$atvalue)))
     (cond ((not (eq (caar exp) '%derivative))
-	   (setq fun (caar exp) vl (cdr exp) dl (listof0s vl)))
+	   (setq fun (caar exp)
+                 vl (cdr exp)
+                 dl (make-list (length vl) :initial-element 0)))
 	  (t (setq fun (caaadr exp) vl (cdadr exp))
 	     (dolist (v vl)
 	       (setq dl (nconc dl (ncons (or (getf (cddr exp) v) 0)))))))
@@ -233,7 +235,7 @@
         (t (recur-apply #'(lambda (x) (atscan x ateqs)) expr))))
 
 (defun at1 (expr)
-  (atfind (caar expr) (cdr expr) (listof0s (cdr expr))))
+  (atfind (caar expr) (cdr expr) (make-list (length (cdr expr)) :initial-element 0)))
 
 (defun atfind (fun vl dl)
   (do ((atvalues (mget fun 'atvalues) (cdr atvalues)))
@@ -247,10 +249,6 @@
          (return (prog2
                     (atvarschk vl)
                     (substitutel vl atvars (caddar atvalues)))))))
-
-(defun listof0s (llist)
-  (do ((llist llist (cdr llist)) (l nil (cons 0 l)))
-      ((null llist) l)))
 
 (declare-top (special $ratfac genvar varlist $keepfloat))
 
@@ -409,10 +407,11 @@
 	     ((null x)
 	      (cond ((null roots) (subst0 (cons '(mtimes) (nreverse notroots)) e))
 		    (t (if $rootsconmode
-			   (destructuring-let (((min gcd lcm) (rtc-getinfo roots)))
+			   (multiple-value-bind (min gcd lcm)
+                               (rtc-getinfo roots)
 			     (cond ((and (= min gcd) (not (= gcd 1))
-					 (not (= min lcm))
-					 (not (eq $rootsconmode '$all)))
+                                       (not (= min lcm))
+                                       (not (eq $rootsconmode '$all)))
 				    (setq roots
 					  (rt-separ
 					   (list gcd
@@ -461,11 +460,14 @@
       (push (list '(mexpt) (muln (cdar x) nil) (quotient lcm (caar x)))
 	    root1))))
 
-(defun rtc-getinfo (llist)
-  (let ((m (caar llist)) (g (caar llist)) (l (caar llist)))
-    (do ((x (cdr llist) (cdr x)))
-	((null x) (list m g l))
-      (setq m (min m (caar x)) g (gcd g (caar x)) l (lcm l (caar x))))))
+(defun rtc-getinfo (list)
+  (let ((m (caar list))
+        (g (caar list))
+        (l (caar list)))
+    (dolist (x (cdr list) (values m g l))
+      (setq m (min m (car x))
+            g (gcd g (car x))
+            l (lcm l (car x))))))
 
 (defun rtc-fixitup (roots notroots)
   (mapcar #'(lambda (x) (rplacd x (list (sratsimp (muln (cdr x) (not $rootsconmode))))))
@@ -789,7 +791,7 @@
 (defmfun $arraymake (ary subs)
   (cond ((or (not ($listp subs)) (null (cdr subs)))
 	 (merror (intl:gettext "arraymake: second argument must be a list of one or more elements; found ~M") subs))
-	((eq (ml-typep ary) 'symbol)
+	((symbolp ary)
 	 (cons (cons (getopr ary) '(array)) (cdr subs)))
 	(t (cons '(mqapply array) (cons ary (cdr subs))))))
 

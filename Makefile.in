@@ -372,7 +372,8 @@ EXTRA_DIST = \
   ChangeLog-5.23 ChangeLog-5.24 ChangeLog-5.25 ChangeLog-5.26 ChangeLog-5.27 \
   ChangeLog-5.28 ChangeLog-5.29 ChangeLog-5.30 ChangeLog-5.31 ChangeLog-5.32 \
   ChangeLog-5.33 ChangeLog-5.34 ChangeLog-5.35 ChangeLog-5.36.md ChangeLog-5.37.md \
-  ChangeLog-5.38.md ChangeLog-5.39.md ChangeLog-5.40.md LICENSES/getopt-license.txt
+  ChangeLog-5.38.md ChangeLog-5.39.md ChangeLog-5.40.md LICENSES/getopt-license.txt\
+  snap/snapcraft.yaml
 
 verpkglibdir = $(pkglibdir)/@VERSION@
 verpkglibexecdir = $(libexecdir)/@PACKAGE@/@VERSION@
@@ -770,7 +771,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-local mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -841,9 +842,9 @@ uninstall-am: uninstall-local
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--refresh check check-am clean clean-cscope clean-generic \
-	cscope cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
-	distcheck distclean distclean-generic distclean-tags \
+	clean-local cscope cscopelist-am ctags ctags-am dist dist-all \
+	dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ dist-xz \
+	dist-zip distcheck distclean distclean-generic distclean-tags \
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-data-local install-dvi install-dvi-am \
@@ -855,6 +856,10 @@ uninstall-am: uninstall-local
 	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
 	uninstall-am uninstall-local
 
+
+# On debian-based systems this makes us use the right gcl version out-of-the box.
+# On other systems it doesn't hurt.
+export GCL_ANSI=t
 
 # Support for installation of DATA files in a generic directory
 # with subdirectories.
@@ -995,6 +1000,10 @@ rpm: $(distdir).tar.gz
 @GCC331_FALSE@@WIN32_TRUE@		$(prefix)/lib/gcc/mingw32/$(GCCVER)/include
 
 @WIN32_TRUE@iss: win32-lisp-runtime wxmaxima gnuplot extradocinstall
+
+clean-local:
+	rm -rf bin
+	rm -rf binary
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

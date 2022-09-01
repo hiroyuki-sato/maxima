@@ -1,3 +1,7 @@
+# On debian-based systems this makes us use the right gcl version out-of-the box.
+# On other systems it doesn't hurt.
+export GCL_ANSI=t
+
 if ENABLE_GETTEXT
    LOCALE_DIR = locale
 endif
@@ -18,7 +22,8 @@ EXTRA_DIST = \
   ChangeLog-5.23 ChangeLog-5.24 ChangeLog-5.25 ChangeLog-5.26 ChangeLog-5.27 \
   ChangeLog-5.28 ChangeLog-5.29 ChangeLog-5.30 ChangeLog-5.31 ChangeLog-5.32 \
   ChangeLog-5.33 ChangeLog-5.34 ChangeLog-5.35 ChangeLog-5.36.md ChangeLog-5.37.md \
-  ChangeLog-5.38.md ChangeLog-5.39.md ChangeLog-5.40.md LICENSES/getopt-license.txt
+  ChangeLog-5.38.md ChangeLog-5.39.md ChangeLog-5.40.md LICENSES/getopt-license.txt\
+  snap/snapcraft.yaml
 
 include common.mk
 
@@ -159,3 +164,7 @@ endif # GCC331
 iss: win32-lisp-runtime wxmaxima gnuplot extradocinstall
 
 endif # WIN32
+
+clean-local:
+	rm -rf bin
+	rm -rf binary
