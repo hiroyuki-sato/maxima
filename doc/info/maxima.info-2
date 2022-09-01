@@ -1,0 +1,1182 @@
+This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+
+   This is a Texinfo Maxima Manual
+
+   Copyright 1994,2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     A computer algebra system.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definitions for Operators,  Prev: PREFIX,  Up: Operators
+
+Definitions for Operators
+=========================
+
+ - operator: "!"
+     The factorial operator, which is the product of all the integers
+     from 1 up to its argument.  Thus 5! = 1*2*3*4*5 = 120.  The value
+     of /the option FACTLIM (default: [-1]) gives the highest factorial
+     which is automatically expanded.  If it is -1 then all integers
+     are expanded.  See also the FACTORIAL, MINFACTORIAL, and FACTCOMB
+     commands.
+
+
+ - operator: "!!"
+     Stands for double factorial which is defined as the product of all
+     the consecutive odd (or even) integers from 1 (or 2) to the odd
+     (or even) argument.  Thus 8!! is 2*4*6*8 = 384.
+
+
+ - operator: "#"
+     The logical operator "Not equals".
+
+
+ - operator: "."
+     The dot operator, for matrix (non-commutative) multiplication.
+     When "." is used in this way, spaces should be left on both sides
+     of it, e.g. A . B.  This distinguishes it plainly from a decimal
+     point in a floating point number.  Do APROPOS(DOT); for a list of
+     the switches which affect the dot operator.
+     DESCRIBE(switch-name); will explain them.
+
+
+ - operator: ":"
+     The assignment operator.  E.g. A:3 sets the variable A to 3.
+
+
+ - operator: "::"
+     Assignment operator.  :: assigns the value of the expression on
+     its right to the value of the quantity on its left, which must
+     evaluate to an atomic variable or subscripted variable.
+
+
+ - operator: "::="
+     The "::=" is used instead of ":=" to indicate that what follows is
+     a macro definition, rather than an ordinary functional definition.
+     See DESCRIBE(MACROS).
+
+
+ - operator: ":="
+     The function definition operator.  E.g. F(X):=SIN(X) defines a
+     function F.
+
+
+ - operator: "="
+     denotes an equation to MACSYMA.  To the pattern matcher in MACSYMA
+     it denotes a total relation that holds between two expressions if
+     and only if the expressions are syntactically identical.
+
+
+ - Function: ABS (exp)
+     returns the absolute value exp.  If exp is complex, returns the
+     complex modulus of exp.
+
+
+ - special symbol: ADDITIVE
+     - If DECLARE(F,ADDITIVE) has been executed, then: (1) If F is
+     univariate, whenever the simplifier encounters F applied to a sum,
+     F will be distributed over that sum.  I.e. F(Y+X); will simplify
+     to F(Y)+F(X).  (2) If F is a function of 2 or more arguments,
+     additivity is defined as additivity in the first argument to F, as
+     in the case of 'SUM or 'INTEGRATE, i.e. F(H(X)+G(X),X); will
+     simplify to F(H(X),X)+F(G(X),X).  This simplification does not
+     occur when F is applied to expressions of the form
+     SUM(X[I],I,lower-limit,upper-limit).
+
+
+ - keyword: ALLBUT
+     works with the PART commands (i.e. PART, INPART, SUBSTPART,
+     SUBSTINPART, DPART, and LPART).  For example,
+
+          if EXPR is E+D+C+B+A,
+          then PART(EXPR,[2,5]);
+          ==> D+A
+
+     while
+          PART(EXPR,ALLBUT(2,5))==>E+C+B
+
+     It also works with the KILL command,
+          KILL(ALLBUT(name1,...,namek))
+
+     will do a KILL(ALL) except it will not KILL the names specified.
+     Note: namei means a name such as function name such as U, F, FOO,
+     or G, not an infolist such as FUNCTIONS.
+
+
+ - declaration: ANTISYMMETRIC
+     - If DECLARE(H,ANTISYMMETRIC); is done, this tells the simplifier
+     that H is antisymmetric.  E.g. H(X,Z,Y) will simplify to - H(X, Y,
+     Z).  That is, it will give (-1)^n times the result given by
+     SYMMETRIC or COMMUTATIVE, where n is the number of interchanges of
+     two arguments necessary to convert it to that form.
+
+
+ - Function: CABS (exp)
+     returns the complex absolute value (the complex modulus) of exp.
+
+
+ - declaration: COMMUTATIVE
+     - If DECLARE(H,COMMUTATIVE); is done, this tells the simplifier
+     that H is a commutative function.  E.g. H(X,Z,Y) will simplify to
+     H(X, Y, Z).  This is the same as SYMMETRIC.
+
+
+ - Function: ENTIER (X)
+     largest integer <= X where X is numeric.  FIX (as in FIXnum) is a
+     synonym for this, so FIX(X); is precisely the same.
+
+
+ - Function: EQUAL (expr1,expr2)
+     used with an "IS", returns TRUE (or FALSE) if and only if expr1
+     and expr2 are equal (or not equal) for all possible values of
+     their variables (as determined by RATSIMP).  Thus
+     IS(EQUAL((X+1)**2,X**2+2*X+1)) returns TRUE whereas if X is unbound
+     IS((X+1)**2=X**2+2*X+1) returns FALSE.  Note also that IS(RAT(0)=0)
+     gives FALSE but IS(EQUAL(RAT(0),0)) gives TRUE.  If a determination
+     can't be made with EQUAL then a simplified but equivalent form is
+     returned whereas = always causes either TRUE or FALSE to be
+     returned.  All variables occurring in exp are presumed to be real
+     valued.  EV(exp,PRED) is equivalent to IS(exp).
+          (C1) IS(X**2 >= 2*X-1);
+          (D1)                               TRUE
+          (C2) ASSUME(A>1);
+          (D2)                               DONE
+          (C3) IS(LOG(LOG(A+1)+1)>0 AND A^2+1>2*A);
+          (D3)                               TRUE
+
+ - Function: EVAL
+     causes an extra post-evaluation of exp to occur.
+
+
+ - Function: EVENP (exp)
+     is TRUE if exp is an even integer.  FALSE is returned in all other
+     cases.
+
+
+ - Function: FIX (x)
+     a synonym for ENTIER(X) - largest integer <= X where X is numeric.
+
+
+ - Function: FULLMAP (fn, exp1, ...)
+     is similar to MAP but it will keep mapping down all subexpressions
+     until the main operators are no longer the same.  The user should
+     be aware that FULLMAP is used by the MACSYMA simplifier for
+     certain matrix manipulations; thus, the user might see an error
+     message concerning FULLMAP even though FULLMAP was not explicitly
+     called by the user.
+          (C1) A+B*C$
+          (C2) FULLMAP(G,%);
+          (D2)              G(B) G(C) + G(A)
+          (C3)  MAP(G,D1);
+          (D3)                G(B C) + G(A)
+
+ - Function: FULLMAPL (fn, list1, ...)
+     is similar to FULLMAP but it only maps onto lists and matrices
+          (C1) FULLMAPL("+",[3,[4,5]],[[A,1],[0,-1.5]]);
+          (D1)                      [[A + 3, 4], [4, 3.5]]
+
+ - Function: IS (exp)
+     attempts to determine whether exp (which must evaluate to a
+     predicate) is provable from the facts in the current data base.  IS
+     returns TRUE if the predicate is true for all values of its
+     variables consistent with the data base and returns FALSE if it is
+     false for all such values.  Otherwise, its action depends on the
+     setting of the switch PREDERROR (default: TRUE). IS errs out if
+     the value of PREDERROR is TRUE and returns UNKNOWN if PREDERROR is
+     FALSE.
+
+
+ - Function: ISQRT (X)
+     takes one integer argument and returns the "integer SQRT" of its
+     absolute value.
+
+
+ - Function: MAX (X1, X2, ...)
+     yields the maximum of its arguments (or returns a simplified form
+     if some of its arguments are non-numeric).
+
+
+ - Function: MIN (X1, X2, ...)
+     yields the minimum of its arguments (or returns a simplified form
+     if some of its arguments are non-numeric).
+
+
+ - Function: MOD (poly)
+     converts the polynomial poly to a modular representation with
+     respect to the current modulus which is the value of the variable
+     MODULUS.  MOD(poly,m) specifies a MODULUS m to be used for
+     converting poly, if it is desired to override the current global
+     value of MODULUS.  See DESCRIBE(MODULUS); .
+
+
+ - Function: ODDP (exp)
+     is TRUE if exp is an odd integer.  FALSE is returned in all other
+     cases.
+
+
+ - operator: PRED
+     (EVFLAG) causes predicates (expressions which evaluate to TRUE or
+     FALSE) to be evaluated.
+
+
+ - Function: RANDOM (X)
+     returns a random integer between 0 and X-1.  If no argument is
+     given then a random integer between -2^(29) and 2^(29) -1 is
+     returned.  If X is FALSE then the random sequence is restarted from
+     the beginning.  Note that the range of the returned result when no
+     argument is given differs in NIL MACSYMA from that of PDP-10 and
+     Multics MACSYMA, which is -2^(35) to 2^(35) -1.  This range is the
+     range of the FIXNUM datatype of the underlying LISP.
+
+
+ - Function: SIGN (exp)
+     attempts to determine the sign of its specified expression on the
+     basis of the facts in the current data base.  It returns one of
+     the following answers: POS (positive), NEG (negative), ZERO, PZ
+     (positive or zero), NZ (negative or zero), PN (positive or
+     negative), or PNZ (positive, negative, or zero, i.e. nothing
+     known).
+
+
+ - Function: SIGNUM (X)
+     if X<0 then -1 else if X>0 then 1 else 0.  If X is not numeric
+     then a simplified but equivalent form is returned. For example,
+     SIGNUM(-X) gives -SIGNUM(X).
+
+
+ - Function: SORT (list,optional-predicate)
+     sorts the list using a suitable optional-predicate of two
+     arguments (such as "<" or ORDERLESSP).  If the optional-predicate
+     is not given, then MACSYMA's built-in ordering predicate is used.
+
+
+ - Function: SQRT (X)
+     the square root of X. It is represented internally by X^(1/2).
+     Also see ROOTSCONTRACT.  RADEXPAND[TRUE] - if TRUE will cause nth
+     roots of factors of a product which are powers of n to be pulled
+     outside of the radical, e.g.  SQRT(16*X^2) will become 4*X only if
+     RADEXPAND is TRUE.
+
+
+ - Variable: SQRTDISPFLAG
+     default: [TRUE] - if FALSE causes SQRT to display with exponent
+     1/2.
+
+
+ - Function: SUBLIS (list,expr)
+     allows multiple substitutions into an expression in parallel.
+     Sample syntax:
+                  SUBLIS([A=B,B=A],SIN(A)+COS(B));
+                   => SIN(B) + COS(A)
+     The variable SUBLIS_APPLY_LAMBDA[TRUE] controls simplification
+     after SUBLIS.  For full documentation, see the file SHARE2;SUBLIS
+     INFO.
+
+
+ - Function: SUBLIST (L,F)
+     returns the list of elements of the list L for which the function
+     F returns TRUE.  E.g., SUBLIST([1,2,3,4],EVENP); returns [2,4].
+
+
+ - Variable: SUBLIS_APPLY_LAMBDA
+     default:[TRUE] - controls whether LAMBDA's substituted are applied
+     in simplification after SUBLIS is used or whether you have to do
+     an EV to get things to apply. TRUE means do the application.
+
+
+ - Function: SUBST (a, b, c)
+     substitutes a for b in c.  b must be an atom, or a complete
+     subexpression of c.  For example, X+Y+Z is a complete
+     subexpression of 2*(X+Y+Z)/W while X+Y is not. When b does not have
+     these characteristics, one may sometimes use SUBSTPART or RATSUBST
+     (see below).  Alternatively, if b is of the form e/f then one could
+     use SUBST(a*f,e,c) while if b is of the form e**(1/f) then one
+     could use SUBST(a**f,e,c).  The SUBST command also discerns the
+     X^Y in X^-Y so that SUBST(A,SQRT(X),1/SQRT(X)) yields 1/A.  a and
+     b may also be operators of an expression enclosed in "s or they
+     may be function names.  If one wishes to substitute for the
+     independent variable in derivative forms then the AT function (see
+     below) should be used.  Note:  SUBST is an alias for SUBSTITUTE.
+     SUBST(eq1,exp) or SUBST([eq1,...,eqk],exp) are other permissible
+     forms.  The eqi are equations indicating substitutions to be made.
+     For each equation, the right side will be substituted for the left
+     in the expression exp.  EXPTSUBST[FALSE] if TRUE permits
+     substitutions like Y for %E**X in %E**(A*X) to take place.
+     OPSUBST[TRUE] if FALSE, SUBST will not attempt to substitute into
+     the operator of an expression.  E.g. (OPSUBST:FALSE,
+     SUBST(X^2,R,R+R[0])); will work.
+          (C1) SUBST(A,X+Y,X+(X+Y)**2+Y);
+                                           2
+          (D1)                    Y + X + A
+          (C2) SUBST(-%I,%I,A+B*%I);
+          (D2)                             A - %I B
+
+     (Note that C2 is one way of obtaining the complex conjugate of an
+     analytic expression.)  For further examples, do EXAMPLE(SUBST);
+
+
+ - Function: SUBSTINPART (x, exp, n1, ...)
+     is like SUBSTPART but works on the internal representation of exp.
+          (C1) X.'DIFF(F(X),X,2);
+                                             2
+                                            d
+          (D1)                         X . (--- F(X))
+                                              2
+                                            dX
+          (C2) SUBSTINPART(D**2,%,2);
+                                                2
+          (D2)                             X . D
+          (C3) SUBSTINPART(F1,F[1](X+1),0);
+          (D3)                            F1(X + 1)
+                        Additional Information
+          If the last argument to a part function is a list of indices then
+          several subexpressions are picked out, each one corresponding to an
+          index of the list.  Thus
+               (C1) PART(X+Y+Z,[1,3]);
+               (D1) Z+X
+          PIECE holds the value of the last expression selected when using the
+          part functions.  It is set during the execution of the function and
+          thus may be referred to in the function itself as shown below.
+          If PARTSWITCH[FALSE] is set to TRUE then END is returned when a
+          selected part of an expression doesn't exist, otherwise an error
+          message is given.
+          (C1)  27*Y**3+54*X*Y**2+36*X**2*Y+Y+8*X**3+X+1;
+                      3         2       2            3
+          (D1)    27 Y  + 54 X Y  + 36 X  Y + Y + 8 X  + X + 1
+          (C2)  PART(D1,2,[1,3]);
+                            2
+          (D2)          54 Y
+          (C3)  SQRT(PIECE/54);
+          (D3)            Y
+          (C4)  SUBSTPART(FACTOR(PIECE),D1,[1,2,3,5]);
+                                    3
+          (D4)           (3 Y + 2 X) + Y + X + 1
+          (C5) 1/X+Y/X-1/Z;
+                                           1   Y   1
+          (D5)                           - - + - + -
+                                           Z   X   X
+          (C6) SUBSTPART(XTHRU(PIECE),%,[2,3]);
+                                          Y + 1   1
+          (D6)                            ----- - -
+                                            X     Z
+     Also, setting the option INFLAG to TRUE and calling PART/SUBSTPART
+     is the same as calling INPART/SUBSTINPART.
+
+
+ - Function: SUBSTPART (x, exp, n1, ..., nk)
+     substitutes x for the subexpression picked out by the rest of the
+     arguments as in PART.  It returns the new value of exp.  x may be
+     some operator to be substituted for an operator of exp.  In some
+     cases it needs to be enclosed in "s (e.g.  SUBSTPART("+",A*B,0);
+     -> B + A ).
+          (C1) 1/(X**2+2);
+                                              1
+          (D1)                              ------
+                                             2
+                                            X  + 2
+          (C2) SUBSTPART(3/2,%,2,1,2);
+                                              1
+          (D2)                             --------
+                                            3/2
+                                           X    + 2
+          (C3) A*X+F(B,Y);
+          (D3)                          A X + F(B, Y)
+          (C4) SUBSTPART("+",%,1,0);
+          (D4)                         X + F(B, Y) + A
+     Also, setting the option INFLAG to TRUE and calling PART/SUBSTPART
+     is the same as calling INPART/SUBSTINPART.
+
+
+ - Function: SUBVARP (exp)
+     is TRUE if exp is a subscripted variable, for example A[I].
+
+
+ - Function: SYMBOLP (exp)
+     returns TRUE if "exp" is a "symbol" or "name", else FALSE.  I.e.,
+     in effect, SYMBOLP(X):=ATOM(X) AND NOT NUMBERP(X)$ .
+
+
+ - Function: UNORDER ()
+     stops the aliasing created by the last use of the ordering
+     commands ORDERGREAT and ORDERLESS.  ORDERGREAT and ORDERLESS may
+     not be used more than one time each without calling UNORDER.  Do
+     DESCRIBE(ORDERGREAT); and DESCRIBE(ORDERLESS);, and also do
+     EXAMPLE(UNORDER); for specifics.
+
+
+ - Function: VECTORPOTENTIAL (givencurl)
+     Returns the vector potential of a given curl vector, in the
+     current coordinate system.  POTENTIALZEROLOC has a similar role as
+     for POTENTIAL, but the order of the left-hand sides of the
+     equations must be a cyclic permutation of the coordinate variables.
+
+
+ - Function: XTHRU (exp)
+     combines all terms of exp (which should be a sum) over a common
+     denominator without expanding products and exponentiated sums as
+     RATSIMP does.  XTHRU cancels common factors in the numerator and
+     denominator of rational expressions but only if the factors are
+     explicit.  Sometimes it is better to use XTHRU before RATSIMPing an
+     expression in order to cause explicit factors of the gcd of the
+     numerator and denominator to be canceled thus simplifying the
+     expression to be RATSIMPed.
+          (C1) ((X+2)**20-2*Y)/(X+Y)**20+(X+Y)**-19-X/(X+Y)**20;
+                                                          20
+                               1           X       (X + 2)   - 2 Y
+          (D1)             --------- - --------- + ---------------
+                                  19          20             20
+                           (Y + X)     (Y + X)        (Y + X)
+          (C2) XTHRU(%);
+                                               20
+                                        (X + 2)   - Y
+          (D2)                          -------------
+                                                 20
+                                          (Y + X)
+
+ - Function: ZEROEQUIV (exp,var)
+     tests whether the expression exp in the variable var is equivalent
+     to zero.  It returns either TRUE, FALSE, or DONTKNOW.  For example
+     ZEROEQUIV(SIN(2*X) - 2*SIN(X)*COS(X),X) returns TRUE and
+     ZEROEQUIV(%E^X+X,X) returns FALSE.  On the other hand
+     ZEROEQUIV(LOG(A*B) - LOG(A) - LOG(B),A) will return DONTKNOW
+     because of the presence of an extra parameter.  The restrictions
+     are: (1) Do not use functions that MACSYMA does not know how to
+     differentiate and evaluate.  (2) If the expression has poles on
+     the real line, there may be errors in the result (but this is
+     unlikely to occur).  (3) If the expression contains functions
+     which are not solutions to first order differential equations
+     (e.g.  Bessel functions) there may be incorrect results.  (4) The
+     algorithm uses evaluation at randomly chosen points for carefully
+     selected subexpressions.  This is always a somewhat hazardous
+     business, although the algorithm tries to minimize the potential
+     for error.
+
+
+
+File: maxima.info,  Node: Expressions,  Next: Simplification,  Prev: Operators,  Up: Top
+
+Expressions
+***********
+
+* Menu:
+
+* Introduction to Expressions::
+* ASSIGNMENT::
+* COMPLEX::
+* INEQUALITY::
+* SYNTAX::
+* Definitions for Expressions::
+
+
+File: maxima.info,  Node: Introduction to Expressions,  Next: ASSIGNMENT,  Prev: Expressions,  Up: Expressions
+
+Introduction to Expressions
+===========================
+
+   There are a number of reserved words which cannot be used as
+variable names.   Their use would cause a possibly cryptic syntax error.
+
+     INTEGRATE            NEXT           FROM                 DIFF
+     IN                   AT             LIMIT                SUM
+     FOR                  AND            ELSEIF               THEN
+     ELSE                 DO             OR                   IF
+     UNLESS               PRODUCT        WHILE                THRU
+     STEP
+
+   Most things in MAXIMA are expressions.   A sequence of expressions
+can be made into an expression by separating them by commas and putting
+parentheses around them.   This is similar to the C comma expression.
+
+     (C29) x:3$
+     (C30) joe:(x:x+1,x:x*x);
+     (D30) 16
+     (C31) joe:(if (x >17) then 2 else 4);
+     (D31) 4
+     (C32) joe:(if (x >17) then x:2 else joe:4,joe+x);
+     (D32) 20
+
+   Even loops in maxima are expressions, although the value they return
+is the not too useful `DONE'
+
+     (C33) joe:(x:1,for i from 1 thru 10 do (x:x*i));
+     (D33) DONE
+   whereas what you really want is probably to include a third term in
+the comma expression which actually gives back the value.
+
+     (C34) joe:(x:1,for i from 1 thru 10 do (x:x*i),x);
+     (D34) 3628800
+
+
+File: maxima.info,  Node: ASSIGNMENT,  Next: COMPLEX,  Prev: Introduction to Expressions,  Up: Expressions
+
+ASSIGNMENT
+==========
+
+   - There are two assignment operators in MACSYMA, : and :: .  E.g.
+A:3 sets the variable A to 3.  :: assigns the value of the expression
+on its right to the value of the quantity on its left, which must
+evaluate to an atomic variable or subscripted variable.
+
+
+File: maxima.info,  Node: COMPLEX,  Next: INEQUALITY,  Prev: ASSIGNMENT,  Up: Expressions
+
+COMPLEX
+=======
+
+   - A complex expression is specified in MACSYMA by adding the real
+part of the expression to %I times the imaginary part.  Thus the roots
+of the equation X^2-4*X+13=0 are 2+3*%I and 2-3*%I.  Note that
+simplification of products of complex expressions can be effected by
+expanding the product.  Simplification of quotients, roots, and other
+functions of complex expressions can usually be accomplished by using
+the REALPART, IMAGPART, RECTFORM, POLARFORM, ABS, CARG functions.
+
+
+File: maxima.info,  Node: INEQUALITY,  Next: SYNTAX,  Prev: COMPLEX,  Up: Expressions
+
+INEQUALITY
+==========
+
+   - MACSYMA has the usual inequality operators: less than:  < greater
+than:  > greater than or equal to:  >= less than or equal to:  <=
+
+
+File: maxima.info,  Node: SYNTAX,  Next: Definitions for Expressions,  Prev: INEQUALITY,  Up: Expressions
+
+SYNTAX
+======
+
+   - It is possible to add new operators to MACSYMA (infix, prefix,
+postfix, unary, or matchfix with given precedences), to remove existing
+operators, or to redefine the precedence of existing operators.  While
+MACSYMA's syntax should be adequate for most ordinary applications, it
+is possible to define new operators or eliminate predefined ones that
+get in the user's way.  The extension mechanism is rather
+straightforward and should be evident from the examples below.
+     (C1) PREFIX("DDX")$
+     (C2) DDX Y$
+          /* means                   "DDX"(Y) */
+     (C3) INFIX("<-")$
+     (C4) A<-DDX Y$
+         /* means               "<-"(A,"DDX"(Y)) */
+   For each of the types of operator except SPECIAL, there is a
+corresponding creation function that will give the lexeme specified the
+corresponding parsing properties.  Thus "PREFIX("DDX")" will make "DDX"
+a prefix operator just like "-" or "NOT".  Of course, certain extension
+functions require additional information such as the matching keyword
+for a matchfix operator.  In addition, binding powers and parts of
+speech must be specified for all keywords defined.  This is done by
+passing additional arguments to the extension functions.  If a user
+does not specify these additional parameters, MACSYMA will assign
+default values.  The six extension functions with binding powers and
+parts of speech defaults (enclosed in brackets) are summarized below.
+PREFIX(operator, rbp[180], rpos[ANY], pos[ANY]) POSTFIX(operator,
+lbp[180], lpos[ANY], pos[ANY]) INFIX(operator, lbp[180], rbp[180],
+lpos[ANY], rpos[ANY],pos[ANY]) NARY(operator, bp[180], argpos[ANY],
+pos[ANY]) NOFIX(operator, pos[ANY]) MATCHFIX(operator, match,
+argpos[ANY], pos[ANY])     The defaults have been provided so that a
+user who does not wish to concern himself with parts of speech or
+binding powers may simply omit those arguments to the extension
+functions.  Thus the following are all equivalent.
+PREFIX("DDX",180,ANY,ANY)$ PREFIX("DDX",180)$ PREFIX("DDX")$     It is
+also possible to remove the syntax properties of an operator by using
+the functions REMOVE or KILL.  Specifically, "REMOVE("DDX",OP)" or
+"KILL("DDX")" will return "DDX" to operand status; but in the second
+case all the other properties of "DDX" will also be removed.
+
+
+     (C20) PREFIX("DDX",180,ANY,ANY)$
+     
+     (C21) DDXYZ;
+     
+     (D21) 				    DDX YZ
+     
+     (C26) "ddx"(u):=u+4;
+     
+     (D26) 			        DDX u := u + 4
+     (C27) ddx 8;
+     
+     (D27) 				      12
+
+
+File: maxima.info,  Node: Definitions for Expressions,  Prev: SYNTAX,  Up: Expressions
+
+Definitions for Expressions
+===========================
+
+ - Function: AT (exp, list)
+     will evaluate exp (which may be any expression) with the variables
+     assuming the values as specified for them in the list of equations
+     or the single equation similar to that given to the ATVALUE
+     function.  If a subexpression depends on any of the variables in
+     list but it hasn't had an atvalue specified and it can't be
+     evaluated then a noun form of the AT will be returned which will
+     display in a two-dimensional form.  Do EXAMPLE(AT); for an example.
+
+
+ - Function: BOX (expr)
+     returns expr enclosed in a box.  The box is actually part of the
+     expression.
+          BOX(expr,label)
+     encloses expr in a labelled box.  label is a name which will be
+     truncated in display if it is too long.      BOXCHAR["] - is the
+     character used to draw the box in this and in the DPART and LPART
+     functions.
+
+
+ - Variable: BOXCHAR
+     default: ["] is the character used to draw the box in the BOX and
+     in the DPART and LPART functions.
+
+
+ - special operator: CONSTANT
+     - makes ai a constant as is %PI.
+
+
+ - Function: CONSTANTP (exp)
+     is TRUE if exp is a constant (i.e.  composed of numbers and %PI,
+     %E, %I or any variables bound to a constant or DECLAREd constant)
+     else FALSE.  Any function whose arguments are constant is also
+     considered to be a constant.
+
+
+ - Function: CONTRACT (exp)
+     carries out all possible contractions in exp, which may be any
+     well-formed combination of sums and products.  This function uses
+     the information given to the DEFCON function.  Since all tensors
+     are considered to be symmetric in all indices, the indices are
+     sorted into alphabetical order.  Also all dummy indices are
+     renamed using the symbols !1,!2,... to permit the expression to be
+     simplified as much as possible by reducing equivalent terms to a
+     canonical form.  For best results exp should be fully expanded.
+     RATEXPAND is the fastest way to expand products and powers of sums
+     if there are no variables in the denominators of the terms.  The
+     GCD switch should be FALSE if gcd cancellations are unnecessary.
+
+
+ - Function: DECLARE (a1, f1, a2, f2, ...)
+     gives the atom ai the flag fi.  The ai's and fi's may also be
+     lists of atoms and flags respectively in which case each of the
+     atoms gets all of the properties.  The possible flags and their
+     meanings are:
+
+     CONSTANT - makes ai a constant as is %PI.
+
+     MAINVAR - makes ai a MAINVAR.  The ordering scale for atoms:
+     numbers < constants (e.g. %E,%PI) < scalars < other variables <
+     mainvars.
+
+     SCALAR - makes ai a scalar.
+
+     NONSCALAR - makes ai behave as does a list or matrix with respect
+     to the dot operator.
+
+     NOUN - makes the function ai a noun so that it won't be evaluated
+     automatically.
+
+     EVFUN - makes ai known to the EV function so that it will get
+     applied if its name is mentioned.  Initial evfuns are
+          FACTOR, TRIGEXPAND,
+          TRIGREDUCE, BFLOAT, RATSIMP, RATEXPAND, and RADCAN
+
+     EVFLAG - makes ai known to the EV function so that it will be
+     bound to TRUE during the execution of EV if it is mentioned.
+     Initial evflags are
+          FLOAT, PRED, SIMP, NUMER, DETOUT, EXPONENTIALIZE, DEMOIVRE,
+          KEEPFLOAT, LISTARITH, TRIGEXPAND, SIMPSUM, ALGEBRAIC,
+          RATALGDENOM, FACTORFLAG, %EMODE, LOGARC, LOGNUMER,
+          RADEXPAND, RATSIMPEXPONS, RATMX, RATFAC, INFEVAL, %ENUMER,
+          PROGRAMMODE, LOGNEGINT, LOGABS, LETRAT, HALFANGLES,
+          EXPTISOLATE, ISOLATE_WRT_TIMES, SUMEXPAND, CAUCHYSUM,
+          NUMER_PBRANCH, M1PBRANCH, DOTSCRULES, and LOGEXPAND
+
+     BINDTEST - causes ai to signal an error if it ever is used in a
+     computation unbound.  DECLARE([var1, var2, ...], BINDTEST) causes
+     MACSYMA to give an error message whenever any of the vari occur
+     unbound in a computation.  MACSYMA currently recognizes and uses
+     the following features of objects:
+          EVEN, ODD, INTEGER, RATIONAL, IRRATIONAL, REAL, IMAGINARY,
+          and COMPLEX
+     he useful features of functions include:
+           INCREASING,
+          DECREASING, ODDFUN (odd function), EVENFUN (even function),
+          COMMUTATIVE (or SYMMETRIC), ANTISYMMETRIC, LASSOCIATIVE and
+          RASSOCIATIVE
+     DECLARE(F,INCREASING) is in all respects equivalent to
+
+          ASSUME(KIND(F,INCREASING))
+     The ai and fi may also be lists of objects or features.  The
+     command
+          FEATUREP(object,feature)
+     may be used to determine if an object has been DECLAREd to have
+     "feature".  See DESCRIBE(FEATURES); .
+
+
+ - Function: DISOLATE (exp, var1, var2, ..., varN)
+     is similar to ISOLATE(exp, var) (Do DESCRIBE(ISOLATE);) except
+     that it enables the user to isolate more than one variable
+     simultaneously.  This might be useful, for example, if one were
+     attempting to change variables in a multiple integration, and that
+     variable change involved two or more of the integration variables.
+     This function is autoloaded from `simplification/disol.mac'.  A
+     demo is available by `demo("disol")$'.
+
+
+ - Function: DISPFORM (exp)
+     returns the external representation of exp (wrt its main
+     operator).  This should be useful in conjunction with PART which
+     also deals with the external representation.  Suppose EXP is -A .
+     Then the internal representation of EXP is "*"(-1,A), while the
+     external representation is "-"(A). DISPFORM(exp,ALL) converts the
+     entire expression (not just the top-level) to external format.  For
+     example, if EXP:SIN(SQRT(X)), then FREEOF(SQRT,EXP) and
+     FREEOF(SQRT,DISPFORM(EXP)) give TRUE, while
+     FREEOF(SQRT,DISPFORM(EXP,ALL)) gives FALSE.
+
+
+ - Function: DISTRIB (exp)
+     distributes sums over products.  It differs from EXPAND in that it
+     works at only the top level of an expression, i.e. it doesn't
+     recurse and it is faster than EXPAND.  It differs from MULTTHRU in
+     that it expands all sums at that level. For example,
+     DISTRIB((A+B)*(C+D)) -> A C + A D + B C + B D MULTTHRU
+     ((A+B)*(C+D)) -> (A + B) C + (A + B) D DISTRIB (1/((A+B)*(C+D)))
+     ->  1/ ((A+B) *(C+D)) EXPAND(1/((A+B)*(C+D)),1,0) -> 1/(A C + A D
+     + B C + B D)
+
+
+ - Function: DPART (exp, n1, ..., nk)
+     selects the same subexpression as PART, but instead of just
+     returning that subexpression as its value, it returns the whole
+     expression with the selected subexpression displayed inside a box.
+     The box is actually part of the expression.
+          (C1) DPART(X+Y/Z**2,1,2,1);
+                                 Y
+          (D1)                  ---- + X
+                                   2
+                               *****
+                               * Z *
+                               *****
+
+ - Function: EXP (X)
+     the exponential function.  It is represented internally as %E^X.
+     DEMOIVRE[FALSE] - if TRUE will cause %E^(A+B*%I) to become
+     %E^A*(COS(B)+%I*SIN(B)) if B is free of %I.  A and B are not
+     expanded.    %EMODE[TRUE] - when TRUE %E^(%PI*%I*X) will be
+     simplified as follows: it will become COS(%PI*X)+%I*SIN(%PI*X) if
+     X is an integer or a multiple of 1/2, 1/3, 1/4, or 1/6 and thus
+     will simplify further.  For other numerical X it will become
+     %E^(%PI*%I*Y) where Y is X-2*k for some integer k such that
+     ABS(Y)<1.  If %EMODE is FALSE no simplification of %E^(%PI*%I*X)
+     will take place.    %ENUMER[FALSE] - when TRUE will cause %E to be
+     converted into 2.718...  whenever NUMER is TRUE.  The default is
+     that this conversion will take place only if the exponent in %E^X
+     evaluates to a number.
+
+
+ - Variable: EXPTISOLATE
+     default: [FALSE] if TRUE will cause ISOLATE(expr,var); to examine
+     exponents of atoms (like %E) which contain var.
+
+
+ - Variable: EXPTSUBST
+     default: [FALSE] if TRUE permits substitutions such as Y for %E**X
+     in %E**(A*X) to take place.
+
+
+ - Function: FREEOF (x1, x2, ..., exp)
+     yields TRUE if the xi do not occur in exp and FALSE otherwise.
+     The xi are atoms or they may be subscripted names, functions (e.g.
+     SIN(X) ), or operators enclosed in "s.  If 'var' is a "dummy
+     variable" of 'exp', then FREEOF(var,exp); will return TRUE.
+     "Dummy variables" are mathematical things like the index of a sum
+     or product, the limit variable, and the definite integration
+     variable.  Example: FREEOF(I,'SUM(F(I),I,0,N)); returns TRUE.  Do
+     EXAMPLE(FREEOF); for more examples.
+
+
+ - Function: GENFACT (X, Y, Z)
+     is the generalized factorial of X which is:
+     X*(X-Z)*(X-2*Z)*...*(X-(Y-1)*Z).  Thus, for integral X,
+     GENFACT(X,X,1)=X!  and GENFACT(X,X/2,2)=X!!
+
+
+ - Function: IMAGPART (exp)
+     returns the imaginary part of the expression exp.
+
+
+ - Function: INDICES (exp)
+     returns a list of two elements.  The first is a list of the free
+     indices in exp (those that occur only once); the second is the
+     list of dummy indices in exp (those that occur exactly twice).
+
+
+ - Function: INFIX (op)
+     - INFIX operators are used to denote functions of two arguments,
+     one given before the operator and one after, e.g. A^2 .  The
+     INFIX("x") function is a syntax extention function to declare x to
+     be an INFIX operator.  Do DESCRIBE(SYNTAX); for more details.
+
+
+ - Variable: INFLAG
+     default: [FALSE] if set to TRUE, the functions for part extraction
+     will look at the internal form of exp.  Note that the simplifier
+     re-orders expressions.  Thus FIRST(X+Y) will be X if INFLAG is
+     TRUE and Y if INFLAG is FALSE.  (FIRST(Y+X) gives the same
+     results).  Also, setting INFLAG to TRUE and calling PART/SUBSTPART
+     is the same as calling INPART/SUBSTINPART.  Functions affected by
+     the setting of INFLAG are: PART, SUBSTPART, FIRST, REST, LAST,
+     LENGTH, the FOR ... IN construct, MAP, FULLMAP, MAPLIST, REVEAL
+     and PICKAPART.
+
+
+ - Function: INPART (exp, n1, ..., nk)
+     is similar to PART but works on the internal representation of the
+     expression rather than the displayed form and thus may be faster
+     since no formatting is done.  Care should be taken with respect to
+     the order of subexpressions in sums and products (since the order
+     of variables in the internal form is often different from that in
+     the displayed form) and in dealing with unary minus, subtraction,
+     and division (since these operators are removed from the
+     expression). PART(X+Y,0) or INPART(X+Y,0) yield +, though in order
+     to refer to the operator it must be enclosed in "s.  For example
+     ...IF INPART(D9,0)="+" THEN ...
+          (C1)  X+Y+W*Z;
+          (D1)                  W Z + Y + X
+          (C2)  INPART(D1,3,2);
+          (D2)                  Z
+          (C3)  PART(D1,1,2);
+          (D3)                  Z
+          (C4) 'LIMIT(F(X)**G(X+1),X,0,MINUS);
+                                                G(X + 1)
+          (D4)                      LIMIT   F(X)
+                                    X ->0-
+          (C5) INPART(%,1,2);
+          (D5)                            G(X + 1)
+
+ - Function: ISOLATE (exp, var)
+     returns exp with subexpressions which are sums and which do not
+     contain var replaced by intermediate expression labels (these
+     being atomic symbols like E1, E2, ...).  This is often useful to
+     avoid unnecessary expansion of subexpressions which don't contain
+     the variable of interest.  Since the intermediate labels are bound
+     to the subexpressions they can all be substituted back by
+     evaluating the expression in which they occur.  EXPTISOLATE[FALSE]
+     if TRUE will cause ISOLATE to examine exponents of atoms (like %E)
+     which contain var.  ISOLATE_WRT_TIMES[FALSE] if TRUE, then ISOLATE
+     will also isolate wrt products.  E.g. compare both settings of the
+     switch on ISOLATE(EXPAND((A+B+C)^2),C); .  Do EXAMPLE(ISOLATE);
+     for examples.
+
+
+ - Variable: ISOLATE_WRT_TIMES
+     default: [FALSE] - if set to TRUE, then ISOLATE will also isolate
+     wrt products.  E.g. compare both settings of the switch on
+     ISOLATE(EXPAND((A+B+C)^2),C); .
+
+
+ - Variable: LISTCONSTVARS
+     default: [FALSE] - if TRUE will cause LISTOFVARS to include %E,
+     %PI, %I, and any variables declared constant in the list it
+     returns if they appear in the expression LISTOFVARS is called on.
+     The default is to omit these.
+
+
+ - Variable: LISTDUMMYVARS
+     default: [TRUE] - if FALSE, "dummy variables" in the expression
+     will not be included in the list returned by LISTOFVARS.  (The
+     meaning of "dummy variables" is as given in DESCRIBE(FREEOF):
+     "Dummy variables" are mathematical things like the index of a sum
+     or product, the limit variable, and the definite integration
+     variable.)  Example: LISTOFVARS('SUM(F(I),I,0,N)); gives [I,N] if
+     LISTDUMMYVARS is TRUE, and [N] if LISTDUMMYVARS is FALSE.
+
+
+ - Function: LISTOFVARS (exp)
+     yields a list of the variables in exp.  LISTCONSTVARS[FALSE] if
+     TRUE will cause LISTOFVARS to include %E, %PI, %I, and any
+     variables declared constant in the list it returns if they appear
+     in exp.  The default is to omit these.
+          (C1) LISTOFVARS(F(X[1]+Y)/G**(2+A));
+          (D1)                            [X[1], Y, A, G]
+
+ - Function: LFREEOF (list, exp)
+     For each member m of list, calls FREEOF(m,exp).  It returns false
+     if any call to FREEOF does and true otherwise.
+
+ - Function: LOPOW (exp, v)
+     the lowest exponent of v which explicitly appears in exp.  Thus
+
+          LOPOW((X+Y)**2+(X+Y)**A,X+Y) ==> MIN(A,2)
+     .
+
+
+ - Function: LPART (label, expr, n1, ..., nk)
+     is similar to DPART but uses a labelled box. A labelled box is
+     similar to the one produced by DPART but it has a name in the top
+     line.
+
+
+ - Function: MULTTHRU (exp)
+     multiplies a factor (which should be a sum) of exp by the other
+     factors of exp.  That is exp is f1*f2*...*fn where at least one
+     factor, say fi, is a sum of terms.  Each term in that sum is
+     multiplied by the other factors in the product.  (Namely all the
+     factors except fi).  MULTTHRU does not expand exponentiated sums.
+     This function is the fastest way to distribute products
+     (commutative or noncommutative) over sums.  Since quotients are
+     represented as products MULTTHRU can be used to divide sums by
+     products as well.  MULTTHRU(exp1, exp2) multiplies each term in
+     exp2 (which should be a sum or an equation) by exp1.  If exp1 is
+     not itself a sum then this form is equivalent to
+     MULTTHRU(exp1*exp2).
+          (C1) X/(X-Y)**2-1/(X-Y)-F(X)/(X-Y)**3;
+                         1        X         F(X)
+          (D1)       - ----- + -------- - --------
+                       X - Y          2          3
+                               (X - Y)    (X - Y)
+          (C2) MULTTHRU((X-Y)**3,%);
+                              2
+          (D2)       - (X - Y)  + X (X - Y) - F(X)
+          (C3) RATEXPAND(D2);
+                                     2
+          (D3)                    - Y  + X Y - F(X)
+          (C4) ((A+B)**10*S**2+2*A*B*S+(A*B)**2)/(A*B*S**2);
+                                   10  2              2  2
+                          (B  + A )   S  + 2 A B S + A  B
+          (D4)            --------------------------------
+                                             2
+                                        A B S
+          (C5) MULTTHRU(%);
+                                                    10
+                                  2   A B   (B  + A)
+          (D5)                    - + --- + -------
+                                  S    2      A B
+                                      S
+          (notice that (B+A)**10 is not expanded)
+          (C6) MULTTHRU(A.(B+C.(D+E)+F));
+          (D6)                A . F + A . (C . (E + D)) + A . B
+          (compare with similar example under EXPAND)
+
+ - Function: NOUNIFY (f)
+     returns the noun form of the function name f.  This is needed if
+     one wishes to refer to the name of a verb function as if it were a
+     noun.  Note that some verb functions will return their noun forms
+     if they can't be evaluated for certain arguments.  This is also
+     the form returned if a function call is preceded by a quote.
+
+
+ - Function: NTERMS (exp)
+     gives the number of terms that exp would have if it were fully
+     expanded out and no cancellations or combination of terms
+     occurred. Note that expressions like SIN(E), SQRT(E), EXP(E), etc.
+     count as just one term regardless of how many terms E has (if it
+     is a sum).
+
+
+ - Function: OP (exp)
+     Returns the operator of the expression, and functions the same way
+     as PART(exp,0).  It observes the setting of the INPART flag.  It
+     may not return the same value as the commercial Macsyma.
+
+
+ - Function: OPERATORP (exp, ool)
+     Uses OP to get the operator of the expression and either compares
+     it to ool, if it is a operator, or checks if it is a member of ool
+     if it is a list.
+
+
+ - Function: OPTIMIZE (exp)
+     returns an expression that produces the same value and side
+     effects as exp but does so more efficiently by avoiding the
+     recomputation of common subexpressions.  OPTIMIZE also has the side
+     effect of "collapsing" its argument so that all common
+     subexpressions are shared.  Do EXAMPLE(OPTIMIZE); for examples.
+
+
+ - Variable: OPTIMPREFIX
+     default: [%] - The prefix used for generated symbols by the
+     OPTIMIZE command.
+
+
+ - Function: ORDERGREAT (V1, ..., Vn)
+     sets up aliases for the variables V1, ..., Vn such that V1 > V2 >
+     ...  > Vn > any other variable not mentioned as an argument.  See
+     also ORDERLESS.  Caveat:  do EXAMPLE(ORDERGREAT); for some
+     specifics.
+
+
+ - Function: ORDERGREATP (exp1,exp2)
+     returns TRUE if exp2 precedes exp1 in the ordering set up with the
+     ORDERGREAT function (see DESCRIBE(ORDERGREAT);).
+
+
+ - Function: ORDERLESS (V1, ..., Vn)
+     sets up aliases for the variables V1, ..., Vn such that V1 < V2 <
+     ...  < Vn < any other variable not mentioned as an argument.  Thus
+     the complete ordering scale is: numerical constants < declared
+     constants < declared scalars < first argument to ORDERLESS < ...
+     < last argument to ORDERLESS < variables which begin with A < ...
+     < variables which begin with Z < last argument to ORDERGREAT <
+     ... < first argument to ORDERGREAT < declared MAINVARs.  Caveat: do
+     EXAMPLE(ORDERLESS); for some specifics.  For another ordering
+     scheme, see DESCRIBE(MAINVAR);.
+
+
+ - Function: ORDERLESSP (exp1,exp2)
+     returns TRUE if exp1 precedes exp2 in the ordering set up by the
+     ORDERLESS command (see DESCRIBE(ORDERLESS);).
+
+
+ - Function: PART (exp, n1, ..., nk)
+     deals with the displayed form of exp. It obtains the part of exp
+     as specified by the indices n1,...,nk.  First part n1 of exp is
+     obtained, then part n2 of that, etc.  The result is part nk of ...
+     part n2 of part n1 of exp.  Thus PART(Z+2*Y,2,1) yields 2.  PART
+     can be used to obtain an element of a list, a row of a matrix, etc.
+     If the last argument to a Part function is a list of indices then
+     several subexpressions are picked out, each one corresponding to an
+     index of the list.  Thus PART(X+Y+Z,[1,3]) is Z+X.  PIECE holds
+     the last expression selected when using the Part functions.  It is
+     set during the execution of the function and thus may be referred
+     to in the function itself as shown below.  If PARTSWITCH[FALSE] is
+     set to TRUE then END is returned when a selected part of an
+     expression doesn't exist, otherwise an error message is given.
+     For examples, do EXAMPLE(PART);
+
+
+ - Function: PARTITION (exp, var)
+     returns a list of two expressions.  They are (1) the factors of
+     exp (if it is a product), the terms of exp (if it is a sum), or
+     the list (if it is a list) which don't contain var and, (2) the
+     factors, terms, or list which do.
+          (C1) PARTITION(2*A*X*F(X),X);
+          (D1)                 [ 2 A , X F(X) ]
+          (C2) PARTITION(A+B,X);
+          (D2)                 [ A + B , 0 ]
+          (C3) PARTITION([A,B,F(A),C],A);
+          (D3)                [[B,C],[A,F(A)]]
+
+ - Variable: PARTSWITCH
+     default: [FALSE] - if set to TRUE then END is returned when a
+     selected part of an expression doesn't exist, otherwise an error
+     message is given.
+
+
+ - Function: PICKAPART (exp,depth)
+     will assign E labels to all subexpressions of exp down to the
+     specified integer depth.  This is useful for dealing with large
+     expressions and for automatically assigning parts of an expression
+     to a variable without having to use the part functions.
+          (C1) EXP:(A+B)/2+SIN(X^2)/3-LOG(1+SQRT(X+1));
+                                                           2
+                                                      SIN(X )   B + A
+          (D1)               - LOG(SQRT(X + 1) + 1) + ------- + -----
+                                                         3        2
+          (C2) PICKAPART(%,1);
+          (E2)                    - LOG(SQRT(X + 1) + 1)
+                                              2
+                                         SIN(X )
+          (E3)                           -------
+                                            3
+                                          B + A
+          (E4)                            -----
+                                            2
+          (D4)                         E4 + E3 + E2
+
+ - Variable: PIECE
+     - holds the last expression selected when using the Part
+     functions.  It is set during the execution of the function and thus
+     may be referred to in the function itself.
+
+
+ - Function: POWERS (expr, var)
+     gives the powers of var occuring in expr.  To use it, do
+     LOAD(POWERS);.  For details on usage, do PRINTFILE("powers.usg");.
+
+
+ - Function: PRODUCT (exp, ind, lo, hi)
+     gives the product of the values of exp as the index ind varies
+     from lo to hi.  The evaluation is similar to that of SUM.  No
+     simplification of products is available at this time.  If hi is
+     one less than lo, we have an "empty product" and PRODUCT returns 1
+     rather than erring out.  Also see DESCRIBE(PRODHACK).
+          (C1)  PRODUCT(X+I*(I+1)/2,I,1,4);
+          (D1)             (X + 1) (X + 3) (X + 6) (X + 10)
+
+ - Function: REALPART (exp)
+     gives the real part of exp. REALPART and IMAGPART will work on
+     expressions involving trigonometic and hyperbolic functions, as
+     well as SQRT, LOG, and exponentiation.
+
+
+ - Function: RECTFORM (exp)
+     returns an expression of the form A + B*%I, where A and B are
+     purely real.
+
+
+ - Function: REMBOX (expr, arg)
+     removes boxes from expr according to arg.  If arg is UNLABELED
+     then all unlabelled boxes are removed.  If arg is the name of some
+     label then only boxes with that label are removed.  If arg is
+     omitted then all boxes labelled and unlabelled are removed.
+
+
+ - Function: SUM (exp, ind, lo, hi)
+     performs a summation of the values of exp as the index ind varies
+     from lo to hi.  If the upper and lower limits differ by an integer
+     then each term in the sum is evaluated and added together.
+     Otherwise, if the SIMPSUM [FALSE] is TRUE the result is
+     simplified.  This simplification may sometimes be able to produce a
+     closed form.  If SIMPSUM is FALSE or if 'SUM is used, the value is
+     a sum noun form which is a representation of the sigma notation
+     used in mathematics.  If hi is one less than lo, we have an "empty
+     sum" and SUM returns 0 rather than erring out.  Sums may be
+     differentiated, added, subtracted, or multiplied with some
+     automatic simplification being performed.  Also see
+     DESCRIBE(SUMHACK).  CAUCHYSUM[FALSE] when TRUE causes the Cauchy
+     product to be used when multiplying sums together rather than the
+     usual product.  In the Cauchy product the index of the inner
+     summation is a function of the index of the outer one rather than
+     varying independently.  GENINDEX[I] is the alphabetic prefix used
+     to generate the next variable of summation.  GENSUMNUM[0] is the
+     numeric suffix used to generate the next variable of summation.
+     If it is set to FALSE then the index will consist only of GENINDEX
+     with no numeric suffix.  Do EXAMPLE(SUM); for examples.  See also
+     SUMCONTRACT, INTOSUM, BASHINDICES, and NICEINDICES.
+
+
+ - Function: LSUM (exp, ind, list)
+     performs the sum of EXP for each element IND of the LIST.
+          (C10) lsum(x^i,i,[1,2,7]);
+          
+                                      7    2
+          (D10)                      x  + x  + x
+     If the last element LIST argument does not evaluate, or does not
+     evaluate to a Maxima list then the answer is left in noun form
+          (C13) lsum(i^2,i,rootsof(x^3-1));
+          
+                               ====
+                               \      2
+          (D13)                 >    i
+                               /
+                               ====
+                                             3
+                               i in ROOTSOF(x  - 1)
+
+
+ - special symbol: VERB
+     - the opposite of "noun", i.e. a function form which "does
+     something" ("action" - for most functions the usual case).  E.g.
+     INTEGRATE integrates a function, unless it is DECLAREd to be a
+     "noun", in which case it represents the INTEGRAL of the function.
+     See NOUN, NOUNIFY, and VERBIFY.
+
+
+ - Function: VERBIFY (f)
+     returns the function name f in its verb form (See also VERB, NOUN,
+     and NOUNIFY).
+
+

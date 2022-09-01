@@ -1,0 +1,788 @@
+This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+
+   This is a Texinfo Maxima Manual
+
+   Copyright 1994,2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     A computer algebra system.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definitions for Differential Equations,  Prev: Differential Equations,  Up: Differential Equations
+
+Definitions for Differential Equations
+======================================
+
+ - Function: DESOLVE ([eq1,...,eqn],[var1,...,varn])
+     where the eq's are differential equations in the dependent
+     variables var1,...,varn.  The functional relationships must be
+     explicitly indicated in both the equations and the variables. For
+     example
+          (C1) 'DIFF(F,X,2)=SIN(X)+'DIFF(G,X);
+          (C2) 'DIFF(F,X)+X^2-F=2*'DIFF(G,X,2);
+          is NOT the proper format.  The correct way is:
+          (C3) 'DIFF(F(X),X,2)=SIN(X)+'DIFF(G(X),X);
+          (C4) 'DIFF(F(X),X)+X^2-F(X)=2*'DIFF(G(X),X,2);
+          The call is then DESOLVE([D3,D4],[F(X),G(X)]);
+          If initial conditions at 0 are known, they should be supplied before
+          calling DESOLVE by using ATVALUE.
+          (C11) 'DIFF(F(X),X)='DIFF(G(X),X)+SIN(X);
+                                  d         d
+          (D11)                   -- F(X) = -- G(X) + SIN(X)
+                                  dX        dX
+          (C12) 'DIFF(G(X),X,2)='DIFF(F(X),X)-COS(X);
+                                   2
+                                  d          d
+          (D12)                   --- G(X) = -- F(X) - COS(X)
+                                    2        dX
+                                  dX
+          (C13) ATVALUE('DIFF(G(X),X),X=0,A);
+          (D13)                                A
+          (C14) ATVALUE(F(X),X=0,1);
+          (D14)                                1
+          (C15) DESOLVE([D11,D12],[F(X),G(X)]);
+                          X                            X
+          (D16) [F(X)=A %E  - A+1, G(X) = COS(X) + A %E  - A + G(0) - 1]
+          /* VERIFICATION */
+          (C17) [D11,D12],D16,DIFF;
+                            X       X      X                X
+          (D17)        [A %E  = A %E , A %E  - COS(X) = A %E  - COS(X)]
+
+     If DESOLVE cannot obtain a solution, it returns "FALSE".
+
+
+ - Function: IC1 (exp,var,var)
+     In order to solve initial value problems (IVPs) and boundary value
+     problems (BVPs), the routine IC1 is available in the ODE2 package
+     for first order equations, and IC2 and BC2 for second order IVPs
+     and BVPs, respectively.  Do LOAD(ODE2) to access these.  They are
+     used as in the following examples:
+          (C3) IC1(D2,X=%PI,Y=0);
+                                   COS(X) + 1
+          (D3)               Y = - ----------
+                                        3
+                                       X
+          (C4) 'DIFF(Y,X,2) + Y*'DIFF(Y,X)^3 = 0;
+                                 2
+                                d Y      dY 3
+          (D4)                  --- + Y (--)  = 0
+                                  2      dX
+                                dX
+          (C5) ODE2(%,Y,X);
+                           3
+                          Y  - 6 %K1 Y - 6 X
+          (D7)            ------------------ = %K2
+                                  3
+          (C8) RATSIMP(IC2(D7,X=0,Y=0,'DIFF(Y,X)=2));
+                               3
+                            2 Y  - 3 Y + 6 X
+          (D9)            - ---------------- = 0
+                                   3
+          (C10) BC2(D7,X=0,Y=1,X=1,Y=3);
+                           3
+                          Y  - 10 Y - 6 X
+          (D11)           --------------- = - 3
+                                 3
+
+
+ - Function: ODE (equation,y,x)
+     This no longer exists in Maxima.  The documentation is left here
+     for historical purposes.
+
+     a pot-pourri of Ordinary Differential solvers combined in such a
+     way as to attempt more and more difficult methods as each fails.
+     For example, the first attempt is with ODE2, so therefore, a user
+     using ODE can assume he has all the capabilities of ODE2 at the
+     very beginning and if he has been using ODE2 in programs they will
+     still run if he substitutes ODE (the returned values, and calling
+     sequence are identical).  In addition, ODE has a number of user
+     features which can assist an experienced ODE solver if the basic
+     system cannot handle the equation.  The equation is of the same
+     form as required for ODE2 (which see) and the y and x are
+     dependent and independent variables, as with ODE2.  For more
+     details, do PRINTFILE(ODE,USAGE,SHARE); .
+
+
+ - Function: ODE2 (exp,dvar,ivar)
+     takes three arguments: an ODE of first or second order (only the
+     left hand side need be given if the right hand side is 0), the
+     dependent variable, and the independent variable.  When
+     successful, it returns either an explicit or implicit solution for
+     the dependent variable.  %C is used to represent the constant in
+     the case of first order equations, and %K1 and %K2 the constants
+     for second order equations.  If ODE2 cannot obtain a solution for
+     whatever reason, it returns FALSE, after perhaps printing out an
+     error message.  The methods implemented for first order equations
+     in the order in which they are tested are: linear, separable,
+     exact - perhaps requiring an integrating factor, homogeneous,
+     Bernoulli's equation, and a generalized homogeneous method.  For
+     second order: constant coefficient, exact, linear homogeneous with
+     non-constant coefficients which can be transformed to constant
+     coefficient, the Euler or equidimensional equation, the method of
+     variation of parameters, and equations which are free of either the
+     independent or of the dependent variable so that they can be
+     reduced to two first order linear equations to be solved
+     sequentially.  In the course of solving ODEs, several variables
+     are set purely for informational purposes: METHOD denotes the
+     method of solution used e.g. LINEAR, INTFACTOR denotes any
+     integrating factor used, ODEINDEX denotes the index for
+     Bernoulli's method or for the generalized homogeneous method, and
+     YP denotes the particular solution for the variation of parameters
+     technique.
+
+
+
+File: maxima.info,  Node: Numerical,  Next: Statistics,  Prev: Differential Equations,  Up: Top
+
+Numerical
+*********
+
+* Menu:
+
+* Introduction to Numerical::
+* DCADRE::
+* ELLIPT::
+* FOURIER::
+* NDIFFQ::
+* Definitions for Numerical::
+
+
+File: maxima.info,  Node: Introduction to Numerical,  Next: DCADRE,  Prev: Numerical,  Up: Numerical
+
+Introduction to Numerical
+=========================
+
+
+File: maxima.info,  Node: DCADRE,  Next: ELLIPT,  Prev: Introduction to Numerical,  Up: Numerical
+
+DCADRE
+======
+
+   The following is obsolete and does not exist in Maxima 5.9.  We leave
+the documentation here for historical purposes.
+
+   To make an interface to fortran libraries in the current MAXIMA look
+at the examples in "maxima/src/fortdef.lsp"  - The IMSL version of
+Romberg integration is now available in Macsyma.  For documentation, Do
+PRINTFILE(DCADRE,USAGE,IMSL1); .  For a demo, do batch("dcadre.mc");
+This is a numerical integration package using cautious, adaptive
+Romberg extrapolation.  The DCADRE package is written to call the IMSL
+fortran library routine DCADRE. This is documentation for that program.
+Send bugs/comments to KMP To load this package, do
+       LOADFILE("imsl")$
+   For a demo of this package, do
+       batch("dcadre.mc");
+   The worker function takes the following syntax:
+IMSL_ROMBERG(fn,low,hi) where fn is a function of 1 argument; low and
+hi should be the lower and upper bounds of integration. fn must return
+floating point values.  IMSL_ROMBERG(exp,var,low,hi)   where exp should
+be integrated over the range var=low to hi. The result   of evaluating
+exp must always be a floating point number.
+FAST_IMSL_ROMBERG(fn,low,hi)   This function does no error checking but
+may achieve a speed gain over   the IMSL_ROMBERG function. It expects
+that fn is a Lisp function (or   translated Macsyma function) which
+accepts a floating point argument   and that it always returns a
+floating point value.
+
+   Returns either  [SUCCESS, answer, error] where answer is the result
+of the integration and   error is the estimated bound on the absolute
+error of the output, DCADRE,   as described in PURPOSE below.  or
+[WARNING, n, answer, error] where n is a warning code, answer is the
+answer,   and error is the estimated bound on the absolute error of the
+output, DCADRE,   as described in PURPOSE below. The following warnings
+may occur:      65 = One or more singularities were successfully
+handled.       66 = In some subinterval(s), the estimate of the
+integral was accepted           merely because the estimated error was
+small, even though no regular           behavior was recognized.  or
+[ERROR, errorcode] where error code is the IMSL-generated    error
+code. The following error codes may occur:      131 = Failure due to
+insufficient internal working storage.       132 = Failure. This may be
+due to too much noise in function            (relative to the given
+error requirements) or due to an            ill-behaved integrand.
+133 = RERR is greater than 0.1 or less than 0.0 or is too small
+   for the precision of the machine.
+
+   The following flags have an influence upon the operation of
+IMSL_ROMBERG -
+
+   ROMBERG_AERR [Default 1.0E-5] - Desired absolute error in answer.
+
+   ROMBERG_RERR [Default 0.0] - Desired relative error in the answer.
+
+   Note: If IMSL signals an error, a message will be printed on the
+user's         console stating the nature of the error. (This error
+message         may be supressed by setting IMSLVERBOSE to FALSE.)
+
+   Note: Because this uses a translated Fortran routine, it may not be
+      recursively invoked. It does not call itself, but the user should
+       be aware that he may not type ^A in the middle of an
+IMSL_ROMBERG         computation, begin another calculation using the
+same package,         and expect to win - IMSL_ROMBERG will complain if
+it was already         doing one project when you invoke it. This
+should cause minimal         problems.
+
+   Purpose (modified version of the IMSL documentation)
+---------------------------------------------------
+
+   DCADRE attempts to solve the following problem: Given a real-valued
+function F of one argument, two real numbers A and B, find a number
+
+   DCADRE such that:
+
+     |   / B               |        [                              | / B      | ]
+     |   [                 |        [                              | [        | ]
+     |   I F(x)dx - DCADRE | <= max [ ROMBERG_AERR, ROMBERG_RERR * | I F(x)dx | ]
+     |   ]                 |        [                              | ]        | ]
+     |   / A               |        [                              | / A      | ]
+   Algorithm (modified version of the IMSL documentation)
+
+   This routine uses a scheme whereby DCADRE is computed as the sum of
+estimates for the integral of F(x) over suitably chosen subintervals of
+the given interval of integration. Starting with the interval of
+integration itself as the first such subinterval, cautious Romberg
+extrapolation is used to find an acceptable estimate on a given
+subinterval. If this attempt fails, the subinterval is divided into two
+subintervals of equal length, each of which is considered separately.
+Programming Notes (modified version of the IMSL documentation)
+
+   * 1. DCADRE (the translated-Fortran base for IMSL_ROMBERG) can, in
+     many cases,    handle jump discontinuities and certain algebraic
+     discontinuities. See    reference for full details.
+
+   * 2. The relative error parameter ROMBERG_RERR must be in the
+     interval [0.0,0.1].     For example, ROMBERG_RERR=0.1 indicates
+     that the estimate of the intergral    is to be correct to one
+     digit, where as ROMBERG_RERR=1.0E-4 calls for four    digits of
+     accuracy. If DCADRE determines that the relative accuracy
+     requirement cannot be satisfied, IER is set to 133 (ROMBERG_RERR
+     should be    large enough that, when added to 100.0, the result is
+     a number greater than    100.0 (this will not be true of very tiny
+     floating point numbers due to    the nature of machine
+     arithmetic)).
+
+   * 3. The absolute error parameter, ROMBERG_AERR, should be
+     nonnegative. In    order to give a reasonable value for
+     ROMBERG_AERR, the user must know    the approximate magnitude of
+     the integral being computed. In many cases,    it is satisfactory
+     to use AERR=0.0. In this case, only the relative error
+     requirement is satisfied in the compuatation.
+
+   * 4. We quote from the reference, "A very cautious man would accept
+     DCADRE    only if IER [the warning or error code] is 0 or 65. The
+     merely reasonable    man would keep the faith even if IER is 66.
+     The adventurous man is quite    often right in accepting DCADRE
+     even if the IER is 131 or 132." Even when    IER is not 0, DCADRE
+     returns the best estimate that has been computed.
+
+   For references on this technique, see de Boor, Calr, "CADRE: An
+Algorithm for Numerical Quadrature,"   Mathematical Software (John R.
+Rice, Ed.), New York, Academic Press,   1971, Chapter 7.
+
+
+File: maxima.info,  Node: ELLIPT,  Next: FOURIER,  Prev: DCADRE,  Up: Numerical
+
+ELLIPT
+======
+
+   - A package on the SHARE directory for Numerical routines for
+Elliptic Functions and Complete Elliptic Integrals.  (Notation of
+Abramowitz and Stegun, Chs 16 and 17) Do LOAD(ELLIPT); to use this
+package.  At present all arguments MUST be floating point.  You'll get
+nonsense otherwise.  Be warned.  The functions available are: Jacobian
+elliptic functions
+
+     AM(U,M) - amplitude with modulus M
+     AM1(U,M1) - amplitude with complementary modulus M1
+     AM(U,M):=AM1(U,1-M); so use AM1 if M ~ 1
+     SN(U,M):=SIN(AM(U,M));
+     CN(U,M):=COS(AM(U,M));
+     DN(U,M):=SQRT(1-M*SN(U,M)^2);
+     (These functions come defined like this.  Others CD, NS etc.  may be
+     similarly defined.)
+     Complete Elliptic Integrals
+     ELLIPTK(M) - Complete elliptic integral of first kind
+     ELLIPTK1(M1) - Same but with complementary modulus.
+     ELLIPTK(M):=ELLIPTK1(1-M); so use if M ~ 1
+     ELLIPTE(M) - Complete elliptic integral of second kind
+     ELLIPTE1(M1) - Same but with complementary modulus.
+     ELLIPTE(M):=ELLIPTE1(1-M); so use if M ~ 1
+
+
+File: maxima.info,  Node: FOURIER,  Next: NDIFFQ,  Prev: ELLIPT,  Up: Numerical
+
+FOURIER
+=======
+
+   - There is a Fast Fourier Transform package, do DESCRIBE(FFT) for
+details.  There is also a Fourier Series package.  It may be loaded
+with LOAD(FOURIE).  It will also calculate Fourier integral
+coefficients and has various other functions to do such things as
+replace all occurrences of F(ARG) by ARG in expression (like changing
+ABS(a*x+b) to a*x+b).  Do PRINTFILE(FOURIE,USAGE,DSK,SHARE1); for a
+list of the functions included.
+
+
+File: maxima.info,  Node: NDIFFQ,  Next: Definitions for Numerical,  Prev: FOURIER,  Up: Numerical
+
+NDIFFQ
+======
+
+   a package residing on the SHARE directory for numerical solutions of
+differential equations.  LOAD("NDIFFQ"); will load it in for use.  An
+example of its use would be:
+
+     Define_Variable(N,0.3,FLOAT);
+     Define_Variable(H,0.175,FLOAT);
+     F(X,E):=(Mode_Declare([X,E],FLOAT),N*EXP(X)/(E+X^(2*H)*EXP(H*X)));
+     Compile(F);
+     Array([X,E],FLOAT,35);
+     Init_Float_Array(X,1.0E-3,6.85); /* Fills X with the interval */
+     E[0]:5.0;                        /* Initial condition */
+     Runge_Kutta(F,X,E);              /* Solve it */
+     Graph2(X,E);                     /* Graph the solution */
+   p.s. Runge_Kutta(F,X,E,E_Prime) would be the call for a second-order
+equation.
+
+
+File: maxima.info,  Node: Definitions for Numerical,  Prev: NDIFFQ,  Up: Numerical
+
+Definitions for Numerical
+=========================
+
+ - Function: FFT (real-array, imag-array)
+     Fast Fourier Transform.  This package may be loaded by doing
+     LOAD(FFT); There is also an IFT command, for Inverse Fourier
+     Transform.  These functions perform a (complex) fast fourier
+     transform on either 1 or 2 dimensional FLOATING-POINT arrays,
+     obtained by:
+          ARRAY(<ary>,FLOAT,<dim1>); or
+          ARRAY(<ary>,FLOAT,<dim1>,<dim2>);
+     For 1D arrays
+          <dim1> = 2^n-1
+     and for 2D arrays
+          <dim1>=<dim2>=2^n-1
+     (i.e. the array is square).  (Recall that MACSYMA arrays are
+     indexed from a 0 origin so that there will be 2^n and (2^n)^2
+     arrays elements in the above two cases.)  This package also
+     contains two other functions, POLARTORECT and RECTTOPOLAR.  Do
+     DESCRIBE(cmd) for details. For details on the implementation, do
+     PRINTFILE(FFT,USAGE,SHARE); .
+
+
+ - Variable: FORTINDENT
+     default: [0] - controls the left margin indentation of expressions
+     printed out by the FORTRAN command.  0 gives normal printout (i.e.
+     6 spaces), and positive values will causes the expressions to be
+     printed farther to the right.
+
+
+ - Function: FORTMX (name,matrix)
+     converts a MACSYMA matrix into a sequence of FORTRAN assignment
+     statements of the form name(i,j)=<corresponding matrix element>.
+     This command is now obsolete.  FORTMX(name,matrix); may now be
+     done as FORTRAN(name=matrix);.  (If "name" is bound,
+     FORTRAN('name=matrix); may be necessary.)  Please convert code that
+     uses the FORTMX command as it may be flushed some day.
+
+
+ - Function: FORTRAN (exp)
+     converts exp into a FORTRAN linear expression in legal FORTRAN
+     with 6 spaces inserted at the beginning of each line, continuation
+     lines, and ** rather than ^ for exponentiation.  When the option
+     FORTSPACES[FALSE] is TRUE, the FORTRAN command fills out to 80
+     columns using spaces.  If FORTRAN is called on a bound symbolic
+     atom, e.g. FORTRAN(X); where X:A*B$ has been done, then X={value
+     of X}, e.g.  X=A*B will be generated.  In particular, if e.g.
+     M:MATRIX(...); has been done, then FORTRAN(M); will generate the
+     appropriate assignment statements of the form
+     name(i,j)=<corresponding matrix element>.  FORTINDENT[0] controls
+     the left margin of expressions printed out, 0 is the normal margin
+     (i.e. indented 6 spaces), increasing it will cause the expression
+     to be printed further to the right.
+
+
+ - Variable: FORTSPACES
+     default: [FALSE] - if TRUE, the FORTRAN command fills out to 80
+     columns using spaces.
+
+
+ - Function: HORNER (exp, var)
+     will convert exp into a rearranged representation as in Horner's
+     rule, using var as the main variable if it is specified.  Var may
+     also be omitted in which case the main variable of the CRE form of
+     exp is used.  HORNER sometimes improves stability if expr is to be
+     numerically evaluated.  It is also useful if MACSYMA is used to
+     generate programs to be run in FORTRAN (see DESCRIBE(STRINGOUT);)
+          (C1) 1.0E-20*X^2-5.5*X+5.2E20;
+                                          2
+          (D1)                   1.0E-20 X  - 5.5 X + 5.2E+20
+          (C2) HORNER(%,X),KEEPFLOAT:TRUE;
+          (D2)                  X (1.0E-20 X - 5.5) + 5.2E+20
+          (C3) D1,X=1.0E20;
+          ARITHMETIC OVERFLOW
+          (C4) D2,X=1.0E20;
+          (D4)                          6.9999999E+19
+
+ - Function: IFT (real-array, imag-array)
+     Inverse Fourier Transform.  Do LOAD(FFT); to load in this package.
+     These functions (FFT and IFT) perform a (complex) fast fourier
+     transform on either 1 or 2 dimensional FLOATING-POINT arrays,
+     obtained by: ARRAY(<ary>,FLOAT,<dim1>); or
+     ARRAY(<ary>,FLOAT,<dim1>,<dim2>); For 1D arrays <dim1> must equal
+     2^n-1, and for 2D arrays <dim1>=<dim2>=2^n-1 (i.e. the array is
+     square).  (Recall that MACSYMA arrays are indexed from a 0 origin
+     so that there will be 2^n and (2^n)^2 arrays elements in the above
+     two cases.)  For details on the implementation, do
+     PRINTFILE(FFT,USAGE,SHARE); .
+
+
+ - Function: INTERPOLATE (func,x,a,b)
+     finds the zero of func as x varies.  The last two args give the
+     range to look in.  The function must have a different sign at each
+     endpoint.  If this condition is not met, the action of the of the
+     function is governed by INTPOLERROR[TRUE]).  If INTPOLERROR is
+     TRUE then an error occurs, otherwise the value of INTPOLERROR is
+     returned (thus for plotting INTPOLERROR might be set to 0.0).
+     Otherwise (given that MACSYMA can evaluate the first argument in
+     the specified range, and that it is continuous) INTERPOLATE is
+     guaranteed to come up with the zero (or one of them if there is
+     more than one zero).  The accuracy of INTERPOLATE is governed by
+     INTPOLABS[0.0] and INTPOLREL[0.0] which must be non-negative
+     floating point numbers.  INTERPOLATE will stop when the first arg
+     evaluates to something less than or equal to INTPOLABS or if
+     successive approximants to the root differ by no more than
+     INTPOLREL * <one of the approximants>.  The default values of
+     INTPOLABS and INTPOLREL are 0.0 so INTERPOLATE gets as good an
+     answer as is possible with the single precision arithmetic we
+     have.  The first arg may be an equation.  The order of the last
+     two args is irrelevant.  Thus
+
+          INTERPOLATE(SIN(X)=X/2,X,%PI,.1);
+             is equivalent to
+          INTERPOLATE(SIN(X)=X/2,X,.1,%PI);
+     The method used is a binary search in the range specified by the
+     last two args.  When it thinks the function is close enough to
+     being linear, it starts using linear interpolation.  An
+     alternative syntax has been added to interpolate, this replaces the
+     first two arguments by a function name.  The function MUST be
+     TRANSLATEd or compiled function of one argument.  No checking of
+     the result is done, so make sure the function returns a floating
+     point number.
+
+          F(X):=(MODE_DECLARE(X,FLOAT),SIN(X)-X/2.0);
+          INTERPOLATE(SIN(X)-X/2,X,0.1,%PI)       time= 60 msec
+          INTERPOLATE(F(X),X,0.1,%PI);            time= 68 msec
+          TRANSLATE(F);
+          INTERPOLATE(F(X),X,0.1,%PI);            time= 26 msec
+          INTERPOLATE(F,0.1,%PI);                 time=  5 msec
+
+     There is also a Newton method interpolation routine, do
+     DESCRIBE(NEWTON); .
+
+
+ - Variable: INTPOLABS
+     default: [0.0] - The accuracy of the INTERPOLATE command is
+     governed by INTPOLABS[0.0] and INTPOLREL[0.0] which must be
+     non-negative floating point numbers.  INTERPOLATE will stop when
+     the first arg evaluates to something less than or equal to
+     INTPOLABS or if successive approximants to the root differ by no
+     more than INTPOLREL * <one of the approximants>.  The default
+     values of INTPOLABS and INTPOLREL are 0.0 so INTERPOLATE gets as
+     good an answer as is possible with the single precision arithmetic
+     we have.
+
+
+ - Variable: INTPOLERROR
+     default: [TRUE] - Governs the behavior of INTERPOLATE.  When
+     INTERPOLATE is called, it determines whether or not the function
+     to be interpolated satisfies the condition that the values of the
+     function at the endpoints of the interpolation interval are
+     opposite in sign.  If they are of opposite sign, the interpolation
+     proceeds.  If they are of like sign, and INTPOLERROR is TRUE, then
+     an error is signaled.  If they are of like sign and INTPOLERROR is
+     not TRUE, the value of INTPOLERROR is returned.  Thus for
+     plotting, INTPOLERROR might be set to 0.0.
+
+
+ - Variable: INTPOLREL
+     default: [0.0] - The accuracy of the INTERPOLATE command is
+     governed by INTPOLABS[0.0] and INTPOLREL[0.0] which must be
+     non-negative floating point numbers.  INTERPOLATE will stop when
+     the first arg evaluates to something less than or equal to
+     INTPOLABS or if successive approximants to the root differ by no
+     more than INTPOLREL * <one of the approximants>.  The default
+     values of INTPOLABS and INTPOLREL are 0.0 so INTERPOLATE gets as
+     good an answer as is possible with the single precision arithmetic
+     we have.
+
+
+ - Function: NEWTON (exp,var,X0,eps)
+     The file NEWTON 1 on the SHARE directory contains a function which
+     will do interpolation using Newton's method.  It may be accessed
+     by LOAD(NEWTON); .  The Newton method can do things that
+     INTERPOLATE will refuse to handle, since INTERPOLATE requires that
+     everything evaluate to a flonum. Thus
+     NEWTON(x^2-a^2,x,a/2,a^2/100); will say that it can't tell if
+     flonum*a^2<a^2/100. Doing ASSUME(a>0); and then doing NEWTON again
+     works. You get x=a+<small flonum>*a which is symbolic all the way.
+     INTERPOLATE(x^2-a^2,x,a/2,2*a); complains that .5*a is not
+     flonum...  An adaptive integrator which uses the Newton-Cotes 8
+     panel quadrature rule is available in SHARE1;QQ FASL.  Do
+     DESCRIBE(QQ) for details.
+
+
+ - Function: POLARTORECT (magnitude-array, phase-array)
+     converts from magnitude and phase form into real and imaginary
+     form putting the real part in the magnitude array and the
+     imaginary part into the phase array
+
+          <real>=<magnitude>*COS(<phase>) ==>
+            <imaginary>=<magnitude>*SIN(<phase>
+
+     This function is part of the FFT package.  Do LOAD(FFT); to use
+     it.  Like FFT and IFT this function accepts 1 or 2 dimensional
+     arrays.  However, the array dimensions need not be a power of 2,
+     nor need the 2D arrays be square.
+
+
+ - Function: RECTTOPOLAR (real-array, imag-array)
+     undoes POLARTORECT.  The phase is given in the range from -%PI to
+     %PI.  This function is part of the FFT package.  Do LOAD(FFT); to
+     use it.  Like FFT and IFT this function accepts 1 or 2 dimensional
+     arrays.  However, the array dimensions need not be a power of 2,
+     nor need the 2D arrays be square.
+
+
+
+File: maxima.info,  Node: Statistics,  Next: Arrays and Tables,  Prev: Numerical,  Up: Top
+
+Statistics
+**********
+
+* Menu:
+
+* Definitions for Statistics::
+
+
+File: maxima.info,  Node: Definitions for Statistics,  Prev: Statistics,  Up: Statistics
+
+Definitions for Statistics
+==========================
+
+ - Function: GAUSS (mean,sd)
+     returns a random floating point number from a normal distribution
+     with mean MEAN and standard deviation SD.  This is part of the
+     BESSEL function package, do LOAD(BESSEL); to use it.
+
+
+
+File: maxima.info,  Node: Arrays and Tables,  Next: Matrices and Linear Algebra,  Prev: Statistics,  Up: Top
+
+Arrays and Tables
+*****************
+
+* Menu:
+
+* Definitions for Arrays and Tables::
+
+
+File: maxima.info,  Node: Definitions for Arrays and Tables,  Prev: Arrays and Tables,  Up: Arrays and Tables
+
+Definitions for Arrays and Tables
+=================================
+
+ - Function: ARRAY (name, dim1, dim2, ..., dimk)
+ - Function: ARRAY (name, type, dim1, dim2, ..., dimk)
+     This sets up a k-dimensional array.  A maximum of five dimensions
+     may be used.  In the first form, a general array is created.  In
+     the second form, an array meant to have elements of the specified
+     type is created.  TYPE can be fixnum for integers of limited size
+     or flonum for floating-point numbers.
+
+     The subscripts for the ith dimension are the integers running from
+     0 to dimi.  If the user assigns to a subscripted variable before
+     declaring the corresponding array, an undeclared array is set up.
+     If the user has more than one array to be set up the same way,
+     they may all be set up at the same time, by
+     ARRAY([list-of-names],dim1, dim2, ..., dimk).  Undeclared arrays,
+     otherwise known as hashed arrays (because hash coding is done on
+     the subscripts), are more general than declared arrays.  The user
+     does not declare their maximum size, and they grow dynamically by
+     hashing as more elements are assigned values.  The subscripts of
+     undeclared arrays need not even be numbers.  However, unless an
+     array is rather sparse, it is probably more efficient to declare
+     it when possible than to leave it undeclared.  The ARRAY function
+     can be used to transform an undeclared array into a declared array.
+
+
+ - Function: ARRAYAPPLY (array,[sub1, ... ,subk])
+     is like APPLY except the first argument is an array.
+
+
+ - Function: ARRAYINFO (a)
+     returns a list of information about the array a.  For hashed
+     arrays it returns a list of "HASHED", the number of subscripts,
+     and the subscripts of every element which has a value.  For
+     declared arrays it returns a list of "DECLARED", the number of
+     subscripts, and the bounds that were given the the ARRAY function
+     when it was called on a.  Do EXAMPLE(ARRAYINFO); for an example.
+
+
+ - Function: ARRAYMAKE (name,[i1,i2,...])
+     returns name[i1,i2,...].
+
+
+ - Variable: ARRAYS
+     default: [] a list of all the arrays that have been allocated,
+     both declared and undeclared.  Functions which deal with arrays
+     are: ARRAY, ARRAYAPPLY, ARRAYINFO, ARRAYMAKE, FILLARRAY,
+     LISTARRAY, and REARRAY.
+
+ - Function: BASHINDICES (expr)
+     - transforms the expression expr by giving each summation and
+     product a unique index. This gives CHANGEVAR greater precision
+     when it is working with summations or products.  The form of the
+     unique index is J<number>. The quantity <number> is determined by
+     referring to GENSUMNUM, which can be changed by the user.  For
+     example, GENSUMNUM:0$ resets it.
+
+
+ - Function: FILLARRAY (array,list-or-array)
+     fills array from list-or-array.  If array is a floating-point
+     (integer) array then list-or-array should be either a list of
+     floating-point (integer) numbers or another floating-point
+     (integer) array.  If the dimensions of the arrays are different
+     array is filled in row-major order.  If there are not enough
+     elements in list-or-array the last element is used to fill out the
+     rest of array.  If there are too many the remaining ones are thrown
+     away.  FILLARRAY returns its first argument.
+
+
+ - Function: GETCHAR (a, i)
+     returns the ith character of the quoted string or atomic name a.
+     This function is useful in manipulating the LABELS list.
+
+
+ - Function: LISTARRAY (array)
+     returns a list of the elements of a declared or hashed array.  the
+     order is row-major.  Elements which you have not defined yet will
+     be represented by #####.
+
+
+ - Function: MAKE_ARRAY (type,dim1,dim2,...,dimn)
+     - creates an array.  "type" may be 'ANY, 'FLONUM, 'FIXNUM, 'HASHED
+     or 'FUNCTIONAL.  This is similar to the ARRAY command, except that
+     the created array is a functional array object.  The advantage of
+     this over ARRAY is that it doesn't have a name, and once a pointer
+     to it goes away, it will also go away.  e.g.  Y:MAKE_ARRAY(....);
+     Y now points to an object which takes up space, but do Y:FALSE,
+     and Y no longer points to that object, so the object will get
+     garbage collected.  Note: the "dimi" here are different from the
+     ARRAY command, since they go from 0 to i-1, i.e.  a "dimension" of
+     10 means you have elements from 0 to 9.
+     Y:MAKE_ARRAY('FUNCTIONAL,'F,'HASHED,1) - The second argument to
+     MAKE_ARRAY in this case is the function to call to calculate array
+     elements, and the rest of the arguments are passed recursively to
+     MAKE_ARRAY to generate the "memory" for the array function object.
+
+
+ - Function: REARRAY (array,dim1, ... ,dimk)
+     can be used to change the size or dimensions of an array.  The new
+     array will be filled with the elements of the old one in row-major
+     order.  If the old array was too small, FALSE, 0.0 or 0 will be
+     used to fill the remaining elements, depending on the type of the
+     array.  The type of the array cannot be changed.
+
+
+ - Function: REMARRAY (name1, name2, ...)
+     removes arrays and array associated functions and frees the
+     storage occupied.  If name is ALL then all arrays are removed.  It
+     may be necessary to use this function if it is desired to redefine
+     the values in a hashed array.
+
+
+ - Variable: USE_FAST_ARRAYS
+     [TRUE on Lispm] - If TRUE then only two types of arrays are
+     recognized.
+
+     1) The art-q array (t in common lisp) which may have several
+     dimensions indexed by integers, and may hold any lisp or macsyma
+     object as an entry.  To construct such an array, enter
+     A:MAKE_ARRAY(ANY,3,4); then A will have as value, an array with
+     twelve slots, and the indexing is zero based.
+
+     2) The Hash_table array which is the default type of array created
+     if one does B[X+1]:Y^2 (and B is not already an array,a list, or a
+     matrix- if it were one of these an error would be caused since x+1
+     would not be a valid subscript for an art-q array,a list or a
+     matrix ).  Its indices (also known as keys) may be any object.  It
+     only takes ONE KEY at a time (B[X+1,U]:Y would ignore the u)
+     Referencing is done by B[X+1]==> Y^2.  Of course the key may be a
+     list, eg B[[x+1,u]]:y would be valid.  This is in- compatible with
+     the old Macsyma hash arrays, but saves consing.
+
+     An advantage of storing the arrays as values of the symbol is that
+     the usual conventions about local variables of a function apply to
+     arrays as well.  The Hash_table type also uses less consing and is
+     more efficient than the old type of macsyma hashar.  To obtain
+     consistent behaviour in translated and compiled code set
+     TRANSLATE_FAST_ARRAYS [TRUE] to be TRUE.
+
+
+
+File: maxima.info,  Node: Matrices and Linear Algebra,  Next: Affine,  Prev: Arrays and Tables,  Up: Top
+
+Matrices and Linear Algebra
+***************************
+
+* Menu:
+
+* Introduction to Matrices and Linear Algebra::
+* Definitions for Matrices and Linear Algebra::
+
+
+File: maxima.info,  Node: Introduction to Matrices and Linear Algebra,  Next: Definitions for Matrices and Linear Algebra,  Prev: Matrices and Linear Algebra,  Up: Matrices and Linear Algebra
+
+Introduction to Matrices and Linear Algebra
+===========================================
+
+* Menu:
+
+* DOT::
+* VECTORS::
+
+
+File: maxima.info,  Node: DOT,  Next: VECTORS,  Prev: Introduction to Matrices and Linear Algebra,  Up: Introduction to Matrices and Linear Algebra
+
+DOT
+---
+
+   - . The dot operator, for matrix (non-commutative) multiplication.
+When "." is used in this way, spaces should be left on both sides of
+it, e.g. A . B.  This distinguishes it plainly from a decimal point in
+a floating point number.  Do APROPOS(DOT); for a list of the switches
+which affect the dot operator.
+
+
+File: maxima.info,  Node: VECTORS,  Prev: DOT,  Up: Introduction to Matrices and Linear Algebra
+
+VECTORS
+-------
+
+   - The file SHARE;VECT > contains a vector analysis package,
+share/vect.dem contains a corresponding demonstration, and SHARE;VECT
+ORTH contains definitions of various orthogonal curvilinear coordinate
+systems.  LOAD(VECT); will load this package for you.  The vector
+analysis package can combine and simplify symbolic expressions
+including dot products and cross products, together with the gradient,
+divergence, curl, and Laplacian operators.  The distribution of these
+operators over sums or products is under user control, as are various
+other expansions, including expansion into components in any specific
+orthogonal coordinate systems.  There is also a capability for deriving
+the scalar or vector potential of a field.  The package contains the
+following commands: VECTORSIMP, SCALEFACTORS, EXPRESS, POTENTIAL, and
+VECTORPOTENTIAL.  Do DESCRIBE(cmd) on these command names, or
+PRINTFILE(VECT,USAGE,SHARE); for details.  Warning:  The VECT package
+declares "." to be a commutative operator.
+

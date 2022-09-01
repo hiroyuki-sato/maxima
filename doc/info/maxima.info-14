@@ -1,0 +1,165 @@
+This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+
+   This is a Texinfo Maxima Manual
+
+   Copyright 1994,2001 William F. Schelter
+
+START-INFO-DIR-ENTRY
+* Maxima: (maxima).     A computer algebra system.
+END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Keyword Commands,  Next: Definitions for Debugging,  Prev: Source Level Debugging,  Up: Debugging
+
+Keyword Commands
+================
+
+   Break commands start with ':'.   Thus to evaluate a lisp form you
+may type `:lisp ' followed by the argument which is the form to be
+evaluated.
+     (C3) :lisp (+ 2 3)
+     5
+   The number of arguments taken depends on the particular command.
+Also you need not type the whole command, just enough to be unique among
+the keyword commands.   Thus `:br' would suffice for `:break'.  The
+current commands are:
+
+`:break'
+     Set a breakpoint in the specified FUNCTION at the specified LINE
+     offset from the beginning of the function.  If FUNCTION is given
+     as a string, then it is presumed to be a FILE and LINE is the
+     offset from the beginning of the file.
+
+`:bt'
+     Undocumented
+
+`:continue'
+     Continue the computation.
+
+`:delete'
+     Delete all breakpoints, or if arguments are supplied delete the
+     specified breakpoints
+
+`:disable'
+     Disable the specified breakpoints, or all if none are specified
+
+`:enable'
+     Enable the specified breakpoints, or all if none are specified
+
+`:frame'
+     With an argument print the selected stack frame.  Otherwise the
+     current frame.
+
+`:help'
+     Print help on a break command or with no arguments on all break
+     commands
+
+`:info'
+     Undocumented
+
+`:lisp'
+     Evaluate the lisp form following on the line
+
+`:lisp-quiet'
+     Evaluate its arg as a lisp form without printing a prompt.
+
+`:next     Like :step, except that subroutine calls are stepped over'
+
+`:quit'
+     Quit this level
+
+`:resume'
+     Continue the computation.
+
+`:step'
+     Step program until it reaches a new source line
+
+`:top'
+     Throw to top level
+
+
+File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  Up: Debugging
+
+Definitions for Debugging
+=========================
+
+ - Variable: REFCHECK
+     default: [FALSE] - if TRUE causes a message to be printed each
+     time a bound variable is used for the first time in a computation.
+
+
+ - Function: REMTRACE ()
+     This function is no longer used with the new TRACE package.
+
+
+ - Variable: SETCHECK
+     default: [FALSE] - if set to a list of variables (which can be
+     subscripted) will cause a printout whenever the variables, or
+     subscripted occurrences of them, are bound (with : or :: or
+     function argument binding).  The printout consists of the variable
+     and the value it is bound to.  SETCHECK may be set to ALL or TRUE
+     thereby including all variables.  Note: No printout is generated
+     when a SETCHECKed variable is set to itself, e.g. X:'X.
+
+
+ - Variable: SETCHECKBREAK
+     default: [FALSE] - if set to TRUE will cause a (MACSYMA-BREAK) to
+     occur whenever the variables on the SETCHECK list are bound.  The
+     break occurs before the binding is done.  At this point, SETVAL
+     holds the value to which the variable is about to be set.  Hence,
+     one may change this value by resetting SETVAL.
+
+
+ - Variable: SETVAL
+     - holds the value to which a variable is about to be set when a
+     SETCHECKBREAK occurs.  Hence, one may change this value by
+     resetting SETVAL.  (See SETCHECKBREAK).
+
+
+ - Function: TIMER (F)
+     will put a timer-wrapper on the function F, within the TRACE
+     package, i.e. it will print out the time spent in computing F.
+
+
+ - Variable: TIMER_DEVALUE
+     default: [FALSE] - when set to TRUE then the time charged against
+     a function is the time spent dynamically inside the function
+     devalued by the time spent inside other TIMED functions.
+
+
+ - Function: TIMER_INFO (F)
+     will print the information on timing which is stored also as
+     GET('F,'CALLS); GET('F,'RUNTIME); and GET('F,'GCTIME); .  This is
+     a TRACE package function.
+
+
+ - Function: TRACE (name1, name2, ...)
+     gives a trace printout whenever the functions mentioned are
+     called.  TRACE() prints a list of the functions currently under
+     TRACE.  On MC see MACDOC;TRACE USAGE for more information.  Also,
+     DEMO("trace.dem"); .  To remove tracing, see UNTRACE.
+
+
+ - Function: TRACE_OPTIONS (F,option1,option2,...)
+     gives the function F the options indicated.  An option is either a
+     keyword or an expression.  The possible Keywords are:  Keyword
+     Meaning of return value ---------------------------------------
+     NOPRINT     If TRUE do no printing.   BREAK       If TRUE give a
+     breakpoint.   LISP_PRINT  If TRUE use lisp printing.   INFO
+     Extra info to print.   ERRORCATCH  If TRUE errors are caught.  A
+     keyword means that the option is in effect.  Using a keyword as an
+     expression, e.g. NOPRINT(predicate_function) means to apply the
+     predicate_function (which is user-defined) to some arguments to
+     determine if the option is in effect. The argument list to this
+     predicate_function is always [LEVEL, DIRECTION, FUNCTION, ITEM]
+     where LEVEL is the recursion level for the function.  DIRECTION is
+     either ENTER or EXIT.  FUNCTION is the name of the function.  ITEM
+     is either the argument list or the return value.  On MC see
+     DEMO("trace.dem"); for more details.
+
+
+ - Function: UNTRACE (name1, ...)
+     removes tracing invoked by the TRACE function.  UNTRACE() removes
+     tracing from all functions.
+
+
