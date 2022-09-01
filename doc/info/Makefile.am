@@ -42,7 +42,8 @@ maxima_TEXINFOS = Introduction.texi Help.texi Command.texi Operators.texi \
   ggf.texi ezunits.texi f90.texi diag.texi dynamics.texi\
   bode.texi augmented_lagrangian.texi opsubst.texi stats.texi stirling.texi\
   implicit_plot.texi interpol.texi lbfgs.texi romberg.texi grobner.texi\
-  contrib_ode.texi graphs.texi category-macros.texi lapack.texi
+  contrib_ode.texi graphs.texi category-macros.texi lapack.texi \
+  asympa.texi Deleted.texi
 
 figurefiles = \
 figures/dynamics1.gif\
@@ -149,7 +150,10 @@ figures/plotting24.pdf\
 figures/plotting25.pdf\
 figures/orthopoly1.pdf
 
-all-local: maxima-index.lisp
+all-local: maxima.info maxima-index.lisp
+
+maxima.info : maxima.texi
+	makeinfo --split-size=1000000 maxima.texi
 
 html: maxima.html contents.hhc
 
@@ -199,7 +203,8 @@ clean-html:
 EXTRA_DIST = texi2html manual.css texi2html.init \
     $(genericdirDATA) $(pdffigures) \
     create_index maxima-index.lisp \
-    check_crlf check_tab fix_crlf fix_tab build_index.pl
+    check_crlf check_tab fix_crlf fix_tab build_index.pl \
+    extract_categories1.awk  extract_categories1.sed  extract_categories.sh
 
 check_texinfo:
 	pattern=`printf "\r$$"` ; \

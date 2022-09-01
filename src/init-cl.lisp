@@ -21,7 +21,6 @@
 (defvar *maxima-prefix*)
 (defvar *maxima-imagesdir*)
 (defvar *maxima-sharedir*)
-(defvar *maxima-symdir*)
 (defvar *maxima-srcdir*)
 (defvar *maxima-docdir*)
 (defvar *maxima-infodir*)
@@ -31,14 +30,37 @@
 (defvar *maxima-tempdir*)
 (defvar *maxima-lang-subdir*)
 (defvar *maxima-demodir*)
+(defvar *maxima-objdir*)		;; Where to store object (fasl) files.
 
-(defmvar $maxima_tempdir)
-(putprop '$maxima_tempdir 'shadow-string-assignment 'assign)
-(putprop '$maxima_tempdir '*maxima-tempdir* 'lisp-shadow)
+(eval-when (load compile eval)
+(defmacro def-lisp-shadow (root-name)
+  "Create a maxima variable $root_name that is an alias for the lisp name *root-name*.
+When one changes, the other does too."
+  (let ((maxima-name (intern (concatenate 'string "$"
+					  (substitute #\_ #\- (string root-name)))))
+	(lisp-name (intern (concatenate 'string "*" (string root-name) "*"))))
+  `(progn
+    (defmvar ,maxima-name)
+    (putprop ',maxima-name 'shadow-string-assignment 'assign)
+    (putprop ',maxima-name ',lisp-name 'lisp-shadow)))))
 
-(defmvar $maxima_userdir)
-(putprop '$maxima_userdir 'shadow-string-assignment 'assign)
-(putprop '$maxima_userdir '*maxima-userdir* 'lisp-shadow)
+(def-lisp-shadow maxima-tempdir)
+(def-lisp-shadow maxima-userdir)
+(def-lisp-shadow maxima-objdir)
+#+nil
+(progn
+  (defmvar $maxima_tempdir)
+  (putprop '$maxima_tempdir 'shadow-string-assignment 'assign)
+  (putprop '$maxima_tempdir '*maxima-tempdir* 'lisp-shadow)
+
+  (defmvar $maxima_userdir)
+  (putprop '$maxima_userdir 'shadow-string-assignment 'assign)
+  (putprop '$maxima_userdir '*maxima-userdir* 'lisp-shadow)
+
+  (defmvar $maxima_objdir)
+  (putprop '$maxima_objdir 'shadow-string-assignment 'assign)
+  (putprop '$maxima_objdir '*maxima-objdir* 'lips-shadow)
+  )
 
 (defun shadow-string-assignment (var value)
   (cond
@@ -46,13 +68,12 @@
      (set (get var 'lisp-shadow) value)
      value)
     (t
-      (merror "Attempt to assign a non-string to ~:M" var))))
+      (merror (intl:gettext "assignment: must assign a string to ~:M; found: ~M") var value))))
 
 (defun print-directories ()
   (format t "maxima-prefix=~a~%" *maxima-prefix*)
   (format t "maxima-imagesdir=~a~%" *maxima-imagesdir*)
   (format t "maxima-sharedir=~a~%" *maxima-sharedir*)
-  (format t "maxima-symdir=~a~%" *maxima-symdir*)
   (format t "maxima-srcdir=~a~%" *maxima-srcdir*)
   (format t "maxima-demodir=~a~%" *maxima-demodir*)
   (format t "maxima-testsdir=~a~%" *maxima-testsdir*)
@@ -64,9 +85,10 @@
   (format t "maxima-userdir=~a~%" *maxima-userdir*)
   (format t "maxima-tempdir=~a~%" *maxima-tempdir*)
   (format t "maxima-lang-subdir=~a~%" *maxima-lang-subdir*)
-  ($quit))
+  (format t "maxima-objdir=~A~%" *maxima-objdir*))
 
-(defvar *maxima-lispname* #+clisp "clisp"
+(defvar *maxima-lispname*
+        #+clisp "clisp"
 	#+cmu "cmucl"
 	#+scl "scl"
 	#+sbcl "sbcl"
@@ -129,7 +151,6 @@
 	  (setq infodir    (maxima-parse-dirstring *autoconf-infodir*))))
     (setq *maxima-imagesdir* (combine-path libdir package-version binary-subdirectory))
     (setq *maxima-sharedir*  (combine-path datadir package-version "share"))
-    (setq *maxima-symdir*    (combine-path datadir package-version "share" "sym"))
     (setq *maxima-srcdir*    (combine-path datadir package-version "src"))
     (setq *maxima-demodir*   (combine-path datadir package-version "demo"))
     (setq *maxima-testsdir*  (combine-path datadir package-version "tests"))
@@ -146,7 +167,6 @@
 
     (setq *maxima-imagesdir* (combine-path maxima-prefix "src" binary-subdirectory))
     (setq *maxima-sharedir*  (combine-path maxima-prefix "share"))
-    (setq *maxima-symdir*    (combine-path maxima-prefix "share" "sym"))
     (setq *maxima-srcdir*    (combine-path maxima-prefix "src"))
     (setq *maxima-demodir*   (combine-path maxima-prefix "demo"))
     (setq *maxima-testsdir*  (combine-path maxima-prefix "tests"))
@@ -188,26 +208,21 @@
 		  "/tmp")))
     (maxima-parse-dirstring base-dir)))
 
-(defun set-locale ()
-  (let (locale language territory codeset)
+(defun set-locale-subdir ()
+  (let (language territory codeset)
     ;; Determine *maxima-lang-subdir*
     ;;   1. from MAXIMA_LANG_SUBDIR environment variable
-    ;;   2. if 1. isn't set from user locale
+    ;;   2. from INTL::*LOCALE* if (1) fails
     (unless  (setq *maxima-lang-subdir* (maxima-getenv "MAXIMA_LANG_SUBDIR"))
-      (setq locale
-	    (or
-	      (let ((x (maxima-getenv "LC_ALL"))) (if (and x (not (equal x ""))) x))
-	      (let ((x (maxima-getenv "LC_MESSAGES"))) (if (and x (not (equal x ""))) x))
-	      (let ((x (maxima-getenv "LANG"))) (if (and x (not (equal x ""))) x))))
-	(cond ((or (null locale) (equal locale ""))
+      (cond ((or (null intl::*locale*) (equal intl::*locale* ""))
+	     (setq *maxima-lang-subdir* nil))
+	      ((member intl::*locale* '("C" "POSIX" "c" "posix") :test #'equal)
 	       (setq *maxima-lang-subdir* nil))
-	      ((member locale '("C" "POSIX" "c" "posix") :test #'equal)
-	       (setq *maxima-lang-subdir* nil))
-	      (t  (when (eql (position #\. locale) 5)
-		    (setq codeset (string-downcase (subseq locale 6))))
-		  (when (eql (position #\_ locale) 2)
-		    (setq territory (string-downcase (subseq locale 3 5))))
-		  (setq language (string-downcase (subseq locale 0 2)))
+	      (t  (when (eql (position #\. intl::*locale*) 5)
+		    (setq codeset (string-downcase (subseq intl::*locale* 6))))
+		  (when (eql (position #\_ intl::*locale*) 2)
+		    (setq territory (string-downcase (subseq intl::*locale* 3 5))))
+		  (setq language (string-downcase (subseq intl::*locale* 0 2)))
 		  ;; Set *maxima-lang-subdir* only for known languages.
 		  ;; Extend procedure below as soon as new translation
 		  ;; is available.
@@ -229,11 +244,177 @@
 				(setq *maxima-lang-subdir* (concatenate 'string *maxima-lang-subdir* ".koi8r")))))
 			(t  (setq *maxima-lang-subdir* nil))))))))
 
+;; Return a list of all the subdirectories of the sharedir.  If
+;; sharedir has directories /foo/share/affine and
+;; /foo/share/contrib/bitwise, the we want to return the list
+;; ("affine" "contrib/bitwise").
+#+cmu
+(defun share-subdirs-list ()
+  (let* ((share-root (pathname (concatenate 'string *maxima-sharedir* "/")))
+	 (file-list (directory (merge-pathnames (make-pathname :directory '(:relative :wild-inferiors)
+							       :name :wild :type :wild)
+						share-root)
+			       :truenamep nil)))
+    ;; Remove stuff we don't want like files and CVS directories.
+    ;; Anything else?
+    (setf file-list (remove-if #'(lambda (x)
+				   (or
+				    ;; Remove files (pathnames that have a name or type)
+				    (or (pathname-name x)
+					(pathname-type x))
+				    ;; Remove CVS directories
+				    (equal "CVS" (car (last (pathname-directory x))))
+				    ))
+			       file-list))
+    ;; Now just want the part after the *maxima-sharedir*, and we want
+    ;; strings.  
+    (mapcar #'(lambda (x)
+		(let ((dir (make-pathname :directory (butlast (pathname-directory x))
+					  :name (car (last (pathname-directory x))))))
+		  (enough-namestring dir share-root)))
+	    file-list)))
+
+#+clisp
+(defun share-subdirs-list ()
+  ;; This doesn't work yet on windows.  Give up in that case and use
+  ;; the default list.
+  (if (string= *autoconf-win32* "true")
+      (default-share-subdirs-list)
+      (let* ((share-root (pathname (concatenate 'string *maxima-sharedir* "/")))
+	     (dir-list (directory (merge-pathnames (make-pathname :directory '(:relative :wild-inferiors))
+						   share-root))))
+	;; dir-list contains all of the directories.  Remove stuff we
+	;; don't want like CVS directories.  Anything else?
+	(setf dir-list (delete-if #'(lambda (x)
+				      ;; Remove CVS directories
+				      (or (equal x share-root)
+					  (equal "CVS" (car (last (pathname-directory x))))))
+				  dir-list))
+	;; Now just want the part after the *maxima-sharedir*, and we want
+	;; strings.
+	(setf dir-list
+	      (mapcar #'(lambda (x)
+			  (let ((dir (make-pathname :directory (butlast (pathname-directory x))
+						    :name (car (last (pathname-directory x))))))
+			    (enough-namestring dir share-root)))
+		      dir-list))
+	;; Sort in alphabetical order
+	(sort dir-list #'string-lessp))))
+
+#+ecl
+(defun share-subdirs-list ()
+  ;; This doesn't work yet on windows.  Give up in that case and use
+  ;; the default list.
+  (if (string= *autoconf-win32* "true")
+      (default-share-subdirs-list)
+      ;; The call to DIRECTORY is to get ecl to follow any symlinks so
+      ;; that the subsequent call to directory all start with the same
+      ;; initial path.
+      (let* ((share-root (first (directory (pathname (concatenate 'string *maxima-sharedir* "/")))))
+	     (dir-list (directory (merge-pathnames (make-pathname :directory '(:relative :wild-inferiors))
+						   share-root))))
+	;; dir-list contains all of the directories.  Remove stuff we
+	;; don't want like CVS directories.  Anything else?
+	(setf dir-list (delete-if #'(lambda (x)
+				      ;; Remove CVS directories
+				      (or (equal x share-root)
+					  (equal "CVS" (car (last (pathname-directory x))))))
+				  dir-list))
+	;; Now just want the part after the *maxima-sharedir*, and we want
+	;; strings.
+	(setf dir-list
+	      (mapcar #'(lambda (x)
+			  (let ((dir (make-pathname :directory (butlast (pathname-directory x))
+						    :name (car (last (pathname-directory x))))))
+			    (enough-namestring dir share-root)))
+		      dir-list))
+	;; Sort in alphabetical order
+	(sort dir-list #'string-lessp))))
+
+
+(defun default-share-subdirs-list ()
+  ;; Default implementation.  Eventually this should go away.
+  '("affine"
+    "algebra"
+    "algebra/charsets"
+    "algebra/solver"
+    "calculus"
+    "combinatorics"
+    "contrib"
+    "contrib/amatrix"
+    "contrib/bitwise"
+    "contrib/boolsimp"
+    "contrib/descriptive"
+    "contrib/diffequations"
+    "contrib/diffequations/tests"
+    "contrib/distrib"
+    "contrib/ezunits"
+    "contrib/finance"
+    "contrib/format"
+    "contrib/fourier_elim"
+    "contrib/fractals"
+    "contrib/fresnel"
+    "contrib/gentran"
+    "contrib/gentran/test"
+    "contrib/gf"
+    "contrib/graphs"
+    "contrib/Grobner"
+    "contrib/integration"
+    "contrib/levin"
+    "contrib/lurkmathml"
+    "contrib/maximaMathML"
+    "contrib/mcclim"
+    "contrib/namespaces"
+    "contrib/noninteractive"
+    "contrib/numericalio"
+    "contrib/pdiff"
+    "contrib/prim"
+    "contrib/rand"
+    "contrib/sarag"
+    "contrib/simplex"
+    "contrib/simplex/Tests"
+    "contrib/solve_rec"
+    "contrib/state"
+    "contrib/stats"
+    "contrib/stringproc"
+    "contrib/vector3d"
+    "contrib/unit"
+    "contrib/Zeilberger"
+    "diff_form"
+    "diffequations"
+    "dynamics"
+    "draw"
+    "lapack"
+    "lbfgs"
+    "linearalgebra"
+    "integequations"
+    "integration"
+    "macro"
+    "matrix"
+    "minpack"
+    "misc"
+    "numeric"
+    "orthopoly"
+    "hypergeometric"
+    "physics"
+    "simplification"
+    "sym"
+    "tensor"
+    "tensor/tests"
+    "trigonometry"
+    "utils"
+    "vector"))
+
+#-(or cmu clisp ecl)
+(defun share-subdirs-list ()
+  (default-share-subdirs-list))
+
 (defun set-pathnames ()
   (let ((maxima-prefix-env (maxima-getenv "MAXIMA_PREFIX"))
 	(maxima-layout-autotools-env (maxima-getenv "MAXIMA_LAYOUT_AUTOTOOLS"))
 	(maxima-userdir-env (maxima-getenv "MAXIMA_USERDIR"))
-	(maxima-tempdir-env (maxima-getenv "MAXIMA_TEMPDIR")))
+	(maxima-tempdir-env (maxima-getenv "MAXIMA_TEMPDIR"))
+	(maxima-objdir-env (maxima-getenv "MAXIMA_OBJDIR")))
     ;; MAXIMA_DIRECTORY is a deprecated substitute for MAXIMA_PREFIX
     (unless maxima-prefix-env
       (setq maxima-prefix-env (maxima-getenv "MAXIMA_DIRECTORY")))
@@ -254,21 +435,34 @@
     (if maxima-tempdir-env
 	(setq *maxima-tempdir* (maxima-parse-dirstring maxima-tempdir-env))
 	(setq *maxima-tempdir* (default-tempdir)))
+    ;; Default *MAXIMA-OBJDIR* is <userdir>/binary/binary-<foo>lisp,
+    ;; because userdir is almost surely writable, and we don't want to clutter up
+    ;; random directories with Maxima stuff.
+    ;; Append binary-<foo>lisp whether objdir is the default or obtained from environment.
+    (setq *maxima-objdir*
+          (concatenate 'string
+                       (if maxima-objdir-env
+                         (maxima-parse-dirstring maxima-objdir-env)
+                         (concatenate 'string *maxima-userdir* "/binary"))
+                       "/binary-" *maxima-lispname*))
 
     ; On Windows Vista gcc requires explicit include
-    #+gcl (when (string= *autoconf-win32* "true")
-              (let ((mingw-gccver (maxima-getenv "mingw_gccver")))
-	          (when mingw-gccver
-	              (setq compiler::*cc*
-	                  (concatenate 'string compiler::*cc* " -I\"" *maxima-prefix* "\\include\""
-		                                              " -I\"" *maxima-prefix* "\\lib\\gcc-lib\\mingw32\\"
-							       mingw-gccver "\\include\" ")))))
+    #+gcl
+    (when (string= *autoconf-win32* "true")
+      (let ((mingw-gccver (maxima-getenv "mingw_gccver")))
+	(when mingw-gccver
+	  (setq compiler::*cc*
+		(concatenate 'string compiler::*cc* " -I\"" *maxima-prefix* "\\include\""
+			     " -I\"" *maxima-prefix* "\\lib\\gcc-lib\\mingw32\\"
+			     mingw-gccver "\\include\" ")))))
 
     ; Assign initial values for Maxima shadow variables
     (setq $maxima_userdir *maxima-userdir*)
     (setf (gethash '$maxima_userdir *variable-initial-values*) *maxima-userdir*)
     (setq $maxima_tempdir *maxima-tempdir*)
-    (setf (gethash '$maxima_tempdir *variable-initial-values*) *maxima-tempdir*))
+    (setf (gethash '$maxima_tempdir *variable-initial-values*) *maxima-tempdir*)
+    (setq $maxima_objdir *maxima-objdir*)
+    (setf (gethash '$maxima_objdir *variable-initial-values*) *maxima-objdir*))
 
   (let* ((ext #+gcl "o"
 	      #+(or cmu scl) (c::backend-fasl-file-type c::*target-backend*)
@@ -284,76 +478,7 @@
 	 (maxima-patterns "###.{mac,mc}")
 	 (demo-patterns "###.{dem,dm1,dm2,dm3,dmt}")
 	 (usage-patterns "##.{usg,texi}")
-	 (share-subdirs-list
-	  ;; It would be nice if we could find these at runtime
-	  ;; instead of hardwiring them here.
-	  '("affine"
-	    "algebra"
-	    "algebra/charsets"
-	    "algebra/solver"
-	    "calculus"
-	    "combinatorics"
-	    "contrib"
-	    "contrib/amatrix"
-       "contrib/bitwise"
-	    "contrib/boolsimp"
-	    "contrib/descriptive"
-	    "contrib/diffequations"
-	    "contrib/diffequations/tests"
-	    "contrib/distrib"
-	    "contrib/ezunits"
-	    "contrib/format"
-	    "contrib/fourier_elim"
-	    "contrib/fractals"
-	    "contrib/fresnel"
-	    "contrib/gentran"
-	    "contrib/gentran/test"
-	    "contrib/gf"
-	    "contrib/graphs"
-	    "contrib/Grobner"
-	    "contrib/levin"
-	    "contrib/lurkmathml"
-	    "contrib/maximaMathML"
-	    "contrib/mcclim"
-	    "contrib/namespaces"
-	    "contrib/noninteractive"
-	    "contrib/numericalio"
-	    "contrib/pdiff"
-	    "contrib/prim"
-	    "contrib/rand"
-	    "contrib/sarag"
-	    "contrib/simplex"
-	    "contrib/simplex/Tests"
-	    "contrib/solve_rec"
-	    "contrib/state"
-	    "contrib/stats"
-	    "contrib/stringproc"
-	    "contrib/vector3d"
-	    "contrib/unit"
-	    "contrib/Zeilberger"
-	    "donlp2"
-	    "diff_form"
-	    "diffequations"
-	    "dynamics"
-	    "draw"
-	    "lapack"
-	    "lbfgs"
-	    "linearalgebra"
-	    "integequations"
-	    "integration"
-	    "macro"
-	    "matrix"
-	    "misc"
-	    "numeric"
-	    "orthopoly"
-	    "physics"
-	    "simplification"
-	    "sym"
-	    "tensor"
-	    "tensor/tests"
-	    "trigonometry"
-	    "utils"
-	    "vector"))
+	 (share-subdirs-list (share-subdirs-list))
 	 ;; Smash the list of share subdirs into a string of the form
 	 ;; "{affine,algebra,...,vector}" .
 	 (share-subdirs (format nil "{~{~A~^,~}}" share-subdirs-list)))
@@ -398,9 +523,10 @@
 	    (combine-path *maxima-infodir* subdir-bit "maxima-index.lisp")))))
 
 (defun get-dirs (path)
-  #+(or :clisp :sbcl :ecl)
-  (directory (concatenate 'string (namestring path) "/*/"))
-  #-(or :clisp :sbcl :ecl)
+  #+(or :clisp :sbcl :ecl :openmcl)
+  (directory (concatenate 'string (namestring path) "/*/")
+	     #+openmcl :directories #+openmcl t)
+  #-(or :clisp :sbcl :ecl :openmcl)
   (directory (concatenate 'string (namestring path) "/*")))
 
 (defun unix-like-basename (path)
@@ -447,6 +573,10 @@
   ;;    (mapc #'(lambda (x) (format t "\"~a\"~%" x)) (get-application-args))
   ;;    (terpri)
   (let ((maxima-options nil))
+    ;; Note: The current option parsing code expects every short
+    ;; option to have an equivalent long option.  No check is made for
+    ;; this, so please make sure this holds.  Or change the code in
+    ;; process-args in command-line.lisp.
     (setf maxima-options
 	  (list
 	   (make-cl-option :names '("-b" "--batch")
@@ -478,7 +608,7 @@
 			   :help-string
 			   "Process maxima command(s) <string> in batch mode.")
 	   (make-cl-option :names '("-d" "--directories")
-			   :action 'print-directories
+			   :action #'(lambda () (print-directories) ($quit))
 			   :help-string
 			   "Display maxima internal directory information.")
 	   (make-cl-option :names '("--disable-readline")
@@ -498,6 +628,10 @@
 				       (list-cl-options maxima-options)
 				       (bye))
 			   :help-string "Display this usage message.")
+	   (make-cl-option :names '("--userdir")
+			   :argument "<directory>"
+			   :action nil
+			   :help-string "Use  <directory> for user directory (default is $HOME/.maxima)")
 	   (make-cl-option :names '("-l" "--lisp")
 			   :argument "<lisp>"
 			   :action nil
@@ -511,9 +645,9 @@
 			   :action #'(lambda (file)
 				       #-sbcl (load file) #+sbcl (with-compilation-unit nil (load file)))
 			   :help-string "Preload <lisp-file>.")
-       (make-cl-option :names '("-q" "--quiet")
-	       :action #'(lambda () (declare (special *maxima-quiet*)) (setq *maxima-quiet* t))
-	       :help-string "Suppress Maxima start-up message.")
+	   (make-cl-option :names '("-q" "--quiet")
+			   :action #'(lambda () (declare (special *maxima-quiet*)) (setq *maxima-quiet* t))
+			   :help-string "Suppress Maxima start-up message.")
 	   (make-cl-option :names '("-r" "--run-string")
 			   :argument "<string>"
 			   :action #'(lambda (string)
@@ -525,9 +659,9 @@
 	   (make-cl-option :names '("-s" "--server")
 			   :argument "<port>"
 			   :action #'(lambda (port-string)
-				       (start-server (parse-integer
+				       (start-client (parse-integer
 						      port-string)))
-			   :help-string "Start maxima server on <port>.")
+			   :help-string "Connect Maxima to server on <port>.")
 	   (make-cl-option :names '("-u" "--use-version")
 			   :argument "<version>"
 			   :action nil
@@ -543,10 +677,16 @@
 				       ($quit))
 			   :help-string
 			   "Display the default installed version.")
-       (make-cl-option :names '("--very-quiet")
-	       :action #'(lambda () (declare (special *maxima-quiet* *display-labels-p*))
-			   (setq *maxima-quiet* t *display-labels-p* nil))
-	       :help-string "Suppress expression labels and Maxima start-up message.")))
+	   (make-cl-option :names '("--very-quiet")
+			   :action #'(lambda () (declare (special *maxima-quiet* *display-labels-p*))
+					     (setq *maxima-quiet* t *display-labels-p* nil))
+			   :help-string "Suppress expression labels and Maxima start-up message.")
+	   (make-cl-option :names '("-X" "--lisp-options")
+			   :argument "<Lisp options>"
+			   :action #'(lambda (&rest opts)
+				       (format t "Lisp options: ~A" opts))
+			   :help-string "Options to be given to the underlying Lisp")
+			   ))
     (process-args (get-application-args) maxima-options))
   (values input-stream batch-flag))
 
@@ -555,6 +695,8 @@
   (in-package :maxima)
   (setf *load-verbose* nil)
   (setf *debugger-hook* #'maxima-lisp-debugger)
+  (setf *print-circle* t) ;; "assume" db contains circular objects
+  #+ccl (setf ccl::*invoke-debugger-hook-on-interrupt* t)
   (let ((input-stream *standard-input*)
 	(batch-flag nil))
     #+allegro
@@ -564,13 +706,25 @@
 
     (catch 'to-lisp
       (initialize-real-and-run-time)
-      (set-locale)
+      (intl::setlocale)
+      (set-locale-subdir)
+      (adjust-character-encoding)
       (set-pathnames)
+      (when (boundp '*maxima-prefix*)
+	(push (pathname (concatenate 'string *maxima-prefix* "/share/locale/"))
+	      intl::*locale-directories*))
       (setf (values input-stream batch-flag)
 	    (process-maxima-args input-stream batch-flag))
       (loop
 	 (with-simple-restart (macsyma-quit "Maxima top-level")
 	   (macsyma-top-level input-stream batch-flag))))))
+
+(defun adjust-character-encoding ()
+  (ignore-errors
+    #+clisp (progn (setf custom:*default-file-encoding*
+                         (ext:make-encoding :input-error-action #\?))
+                   (setf custom:*terminal-encoding*
+                         custom:*default-file-encoding*))))
 
 (import 'cl-user::run)
 
@@ -606,23 +760,36 @@
   (declare (ignore dummy))
   $help)
 
+(eval-when
+	#+gcl (load eval)
+	#-gcl (:load-toplevel :execute)
+    (let ((context '$global))
+      (declare (special context))
+      (mapc #'(lambda (x) (kind x '$constant) (setf (get x 'sysconst) t))
+            '($%pi $%i $%e $%phi %i $%gamma ;numeric constants
+                   $inf $minf $und $ind $infinity ;pseudo-constants
+                   t nil)))) ;logical constants (Maxima names: true, false)
+
 ;;; Now that all of maxima has been loaded, define the various lists
 ;;; and hashtables of builtin symbols and values.
 
-;;; The symbols in problematic-symbols contain properties with
-;;; circular data structures. Attempting to copy a circular structure
-;;; into *builtin-symbol-props* would cause a hang. Lacking a better
-;;; solution, we simply avoid those symbols.
-(let ((problematic-symbols '($%gamma $%phi $global $%pi $%e))
-      (maxima-package (find-package :maxima)))
+;;; The assume database structures for numeric constants such as $%pi and $%e
+;;; are circular.  Attempting to copy a circular structure
+;;; into *builtin-symbol-props* would cause a hang.  Therefore
+;;; the properties are copied into *builtin-symbol-props* before
+;;; initializing the assume database.
+(let ((maxima-package (find-package :maxima)))
   (do-symbols (s maxima-package)
     (when (and (eql (symbol-package s) maxima-package)
 	       (not (eq s '||))
 	       (member (char (symbol-name s) 0) '(#\$ #\%) :test #'char=))
       (push s *builtin-symbols*)
-      (unless (member s problematic-symbols :test #'eq)
-	(setf (gethash s *builtin-symbol-props*)
-	      (copy-tree (symbol-plist s)))))))
+      (setf (gethash s *builtin-symbol-props*)
+	    (copy-tree (symbol-plist s))))))
+
+;; Initialize assume database for $%pi, $%e, etc
+(dolist (c *builtin-numeric-constants*)
+  (initialize-numeric-constant c))
 
 (dolist (s *builtin-symbols*)
   (when (boundp s)
@@ -633,6 +800,17 @@
 
 (setf *builtin-$props* (copy-list $props))
 (setf *builtin-$rules* (copy-list $rules))
+
+(defun maxima-objdir (&rest subdirs)
+  "Return a pathname string such that subdirs is a subdirectory of maxima_objdir"
+  (apply #'combine-path *maxima-objdir* subdirs))
+
+;; The directory part of *load-pathname*.  GCL doesn't seem to have a
+;; usable *LOAD-PATHNAME*, but it does have SYS:*LOAD-PATHNAME*.
+(defun maxima-load-pathname-directory ()
+  "Return the directory part of *load-pathname*."
+  (make-pathname :directory (pathname-directory #-gcl *load-pathname*
+						#+gcl sys:*load-pathname*)))
 
 ;; Work around: ABCL handles special variables incorrectly
 ;; unless they have DEFVAR or DEFPARAMETER.

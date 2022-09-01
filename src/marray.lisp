@@ -42,22 +42,24 @@
 	      ((hash-table-p ary)
 	       (let (vals (tab ary))
 		 (declare (special vals tab))
-		 (maphash #'(lambda (x &rest l)l (push (gethash x tab) vals)) ary )
-		 vals))
+                 (maphash #'(lambda (x &rest l) l 
+                              (unless (eq x 'dim1) (push (gethash x tab) vals)))
+                            ary)
+                 (reverse vals)))
 	      (t 
-	       (merror "Argument to `listarray' must be an array:~%~M" ary)))))
+	       (merror (intl:gettext "listarray: argument must be an array; found: ~M") ary)))))
 
 (defmfun $fillarray (ary1 ary2)
   (let ((ary
 	 (or (mget ary1 'array)
 	     (and (arrayp ary1) ary1)
-	     (merror "First argument to `fillarray' must be a declared array:~%~M" ary1))))
+	     (merror (intl:gettext "fillarray: first argument must be a declared array; found: ~M") ary1))))
     (fillarray ary
 	       (cond (($listp ary2) (cdr ary2))
 		     ((get (mget ary2 'array) 'array))
 		     ((arrayp ary2) ary2)
 		     (t
-		      (merror "Second argument to `fillarray' must be an array or list:~%~M" ary2))))
+		      (merror (intl:gettext "fillarray: second argument must be an array or list; found: ~M") ary2))))
     ary1))
 
 (defun getvalue (sym)
@@ -66,7 +68,7 @@
 (defmspec $rearray (l)
   (setq l (cdr l))
   (let ((ar (car l))
-	(dims (cdr l)))
+	(dims (mapcar #'meval (cdr l))))
     (cond ($use_fast_arrays
 	   (setf (symbol-value ar) (rearray-aux ar (getvalue ar) dims)))
 	  (t
@@ -80,9 +82,9 @@
 	((setq marray-sym (mget ar 'array))
 	 (rearray-aux marray-sym nil dims)
 	 ar)
-	(t (error "unknown array ~A " ar))))
+	(t (merror (intl:gettext "rearray: argument is not an array: ~A") ar))))
 
 (defun lispm-rearray (ar &rest dims)
   (cond ((eql (array-rank ar) (length dims))
 	 (adjust-array ar (mapcar #'1+ (copy-list dims)) :element-type (array-element-type ar)  ))
-	(t (merror "Rearray only works for arrays with same rank ie number of subscripts"))))
+	(t (merror (intl:gettext "rearray: arrays must have the same number of subscripts.")))))

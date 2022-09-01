@@ -272,7 +272,7 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="src/macsys.lisp"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar EMACS EMACSLOADPATH lispdir build build_cpu build_vendor build_os host host_cpu host_vendor host_os win32 WIN32_TRUE WIN32_FALSE clisp_found cmucl_found scl_found sbcl_found acl_found gcl_found openmcl_found ecl_found LANG_ES_TRUE LANG_ES_FALSE LANG_ES_UTF8_TRUE LANG_ES_UTF8_FALSE LANG_PT_TRUE LANG_PT_FALSE LANG_PT_UTF8_TRUE LANG_PT_UTF8_FALSE LANG_PT_BR_TRUE LANG_PT_BR_FALSE LANG_PT_BR_UTF8_TRUE LANG_PT_BR_UTF8_FALSE iconv_found recode_found USE_RECODE_TRUE USE_RECODE_FALSE CLISP_TRUE CLISP_FALSE GCL_TRUE GCL_FALSE CMUCL_TRUE CMUCL_FALSE SCL_TRUE SCL_FALSE SBCL_TRUE SBCL_FALSE ACL_TRUE ACL_FALSE OPENMCL_TRUE OPENMCL_FALSE ECL_TRUE ECL_FALSE GCL_ALT_LINK_TRUE GCL_ALT_LINK_FALSE CLISP_NAME CLISP_RUNTIME CLISP_RUNTIME_PATH CMUCL_NAME CMUCL_RUNTIME CMUCL_RUNTIME_PATH SCL_NAME SCL_RUNTIME SCL_RUNTIME_PATH SBCL_NAME GCL_NAME ACL_NAME OPENMCL_NAME ECL_NAME DEFAULTLISP WISH POSIX_SHELL expanded_top_srcdir expanded_exec_prefix expanded_libdir expanded_libexecdir expanded_datadir expanded_infodir default_layout_autotools LDFLAGS EGREP LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar EMACS EMACSLOADPATH lispdir build build_cpu build_vendor build_os host host_cpu host_vendor host_os win32 WIN32_TRUE WIN32_FALSE clisp_found cmucl_found scl_found sbcl_found acl_found gcl_found openmcl_found ecl_found ENABLE_GETTEXT_TRUE ENABLE_GETTEXT_FALSE LANG_ES_TRUE LANG_ES_FALSE LANG_ES_UTF8_TRUE LANG_ES_UTF8_FALSE LANG_PT_TRUE LANG_PT_FALSE LANG_PT_UTF8_TRUE LANG_PT_UTF8_FALSE LANG_PT_BR_TRUE LANG_PT_BR_FALSE LANG_PT_BR_UTF8_TRUE LANG_PT_BR_UTF8_FALSE iconv_found recode_found USE_RECODE_TRUE USE_RECODE_FALSE CLISP_TRUE CLISP_FALSE GCL_TRUE GCL_FALSE CMUCL_TRUE CMUCL_FALSE SCL_TRUE SCL_FALSE SBCL_TRUE SBCL_FALSE ACL_TRUE ACL_FALSE OPENMCL_TRUE OPENMCL_FALSE ECL_TRUE ECL_FALSE GCL_ALT_LINK_TRUE GCL_ALT_LINK_FALSE CLISP_NAME CLISP_RUNTIME CLISP_RUNTIME_PATH CMUCL_NAME CMUCL_RUNTIME CMUCL_RUNTIME_PATH SCL_NAME SCL_RUNTIME SCL_RUNTIME_PATH SBCL_NAME GCL_NAME ACL_NAME OPENMCL_NAME ECL_NAME DEFAULTLISP WISH POSIX_SHELL expanded_top_srcdir expanded_exec_prefix expanded_libdir expanded_libexecdir expanded_datadir expanded_infodir default_layout_autotools LDFLAGS EGREP LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -808,6 +808,7 @@ Optional Features:
   --enable-gcl                     Use GCL
   --enable-openmcl                 Use OpenMCL
   --enable-ecl                 Use ECL
+  --enable-gettext                 Locale support
   --enable-lang-es                 Spanish language support
   --enable-lang-es-utf8            Spanish language support (UTF-8)
   --enable-lang-pt                 Portuguese language support
@@ -1591,7 +1592,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=maxima
- VERSION=5.17.1
+ VERSION=5.20.1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2717,6 +2718,31 @@ echo "$as_me: WARNING: ecl executable ${ECL_NAME} not found in PATH" >&2;}
 	fi
 fi
 
+# Check whether --enable-gettext or --disable-gettext was given.
+if test "${enable_gettext+set}" = set; then
+  enableval="$enable_gettext"
+  case "${enableval}" in
+	       yes) enable_gettext=true  ;;
+ 	       no)  enable_gettext=false ;;
+	       *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-gettext" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-gettext" >&2;}
+   { (exit 1); exit 1; }; } ;;
+	 esac
+else
+  enable_gettext=false
+fi;
+
+
+
+if test x$enable_gettext = xtrue; then
+  ENABLE_GETTEXT_TRUE=
+  ENABLE_GETTEXT_FALSE='#'
+else
+  ENABLE_GETTEXT_TRUE='#'
+  ENABLE_GETTEXT_FALSE=
+fi
+
+
 # Check whether --enable-lang-es or --disable-lang-es was given.
 if test "${enable_lang_es+set}" = set; then
   enableval="$enable_lang_es"
@@ -3733,7 +3759,14 @@ echo "${ECHO_T}$ac_cv_prog_egrep" >&6
 
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                              ac_config_files="$ac_config_files Makefile maxima-local xmaxima-local maxima.spec maxima.iss src/Makefile src/maxima src/maxima.bat src/rmaxima src/autoconf-variables.lisp lisp-utils/Makefile tests/Makefile doc/Makefile doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi doc/info/es/Makefile doc/info/es.utf8/Makefile doc/info/pt/Makefile doc/info/pt.utf8/Makefile doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1 doc/share/Makefile interfaces/Makefile interfaces/emacs/Makefile interfaces/emacs/emaxima/Makefile interfaces/emacs/imaxima/Makefile interfaces/emacs/misc/Makefile interfaces/xmaxima/Makefile interfaces/xmaxima/autoconf-variables.tcl interfaces/xmaxima/Tkmaxima/Header.tcl interfaces/xmaxima/doc/Makefile interfaces/xmaxima/doc/figures/Makefile interfaces/xmaxima/msgs/Makefile interfaces/xmaxima/win32/Makefile plotting/mgnuplot share/Makefile demo/Makefile plotting/Makefile"
+
+# Configure these files and make them executable
+          ac_config_files="$ac_config_files maxima-local"
+
+          ac_config_files="$ac_config_files xmaxima-local"
+
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile maxima.spec maxima.iss src/Makefile src/maxima src/maxima.bat src/rmaxima src/autoconf-variables.lisp lisp-utils/Makefile tests/Makefile doc/Makefile doc/emaxima/Makefile doc/info/Makefile doc/info/include-maxima.texi doc/info/es/Makefile doc/info/es.utf8/Makefile doc/info/pt/Makefile doc/info/pt.utf8/Makefile doc/info/pt_BR/Makefile doc/info/pt_BR.utf8/Makefile doc/intromax/Makefile doc/man/Makefile doc/man/maxima.1 doc/man/ru/maxima.1 doc/share/Makefile interfaces/Makefile interfaces/emacs/Makefile interfaces/emacs/emaxima/Makefile interfaces/emacs/imaxima/Makefile interfaces/emacs/misc/Makefile interfaces/xmaxima/Makefile interfaces/xmaxima/autoconf-variables.tcl interfaces/xmaxima/Tkmaxima/Header.tcl interfaces/xmaxima/doc/Makefile interfaces/xmaxima/doc/figures/Makefile interfaces/xmaxima/msgs/Makefile interfaces/xmaxima/win32/Makefile plotting/mgnuplot share/Makefile demo/Makefile plotting/Makefile locale/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -3860,6 +3893,13 @@ if test -z "${WIN32_TRUE}" && test -z "${WIN32_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"WIN32\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_GETTEXT_TRUE}" && test -z "${ENABLE_GETTEXT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_GETTEXT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_GETTEXT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -4404,9 +4444,9 @@ for ac_config_target in $ac_config_targets
 do
   case "$ac_config_target" in
   # Handling of arguments.
-  "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "maxima-local" ) CONFIG_FILES="$CONFIG_FILES maxima-local" ;;
   "xmaxima-local" ) CONFIG_FILES="$CONFIG_FILES xmaxima-local" ;;
+  "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "maxima.spec" ) CONFIG_FILES="$CONFIG_FILES maxima.spec" ;;
   "maxima.iss" ) CONFIG_FILES="$CONFIG_FILES maxima.iss" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
@@ -4447,6 +4487,7 @@ do
   "share/Makefile" ) CONFIG_FILES="$CONFIG_FILES share/Makefile" ;;
   "demo/Makefile" ) CONFIG_FILES="$CONFIG_FILES demo/Makefile" ;;
   "plotting/Makefile" ) CONFIG_FILES="$CONFIG_FILES plotting/Makefile" ;;
+  "locale/Makefile" ) CONFIG_FILES="$CONFIG_FILES locale/Makefile" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
@@ -4574,6 +4615,8 @@ s,@acl_found@,$acl_found,;t t
 s,@gcl_found@,$gcl_found,;t t
 s,@openmcl_found@,$openmcl_found,;t t
 s,@ecl_found@,$ecl_found,;t t
+s,@ENABLE_GETTEXT_TRUE@,$ENABLE_GETTEXT_TRUE,;t t
+s,@ENABLE_GETTEXT_FALSE@,$ENABLE_GETTEXT_FALSE,;t t
 s,@LANG_ES_TRUE@,$LANG_ES_TRUE,;t t
 s,@LANG_ES_FALSE@,$LANG_ES_FALSE,;t t
 s,@LANG_ES_UTF8_TRUE@,$LANG_ES_UTF8_TRUE,;t t
@@ -4872,6 +4915,11 @@ s,@INSTALL@,$ac_INSTALL,;t t
     rm -f $tmp/out
   fi
 
+  # Run the commands associated with the file.
+  case $ac_file in
+    maxima-local ) chmod +x maxima-local ;;
+    xmaxima-local ) chmod +x xmaxima-local ;;
+  esac
 done
 _ACEOF
 
@@ -4904,9 +4952,6 @@ if test "$no_create" != yes; then
   $ac_cs_success || { (exit 1); exit 1; }
 fi
 
-
-chmod +x maxima-local
-chmod +x xmaxima-local
 
 echo
 echo "Summary:"

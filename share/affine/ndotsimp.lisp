@@ -21,7 +21,6 @@
   (cond ((pzerop tem) tem)
 	(t (header-poly tem))))
 
-
 (defun ncdot-list (lis)
   (cond ((null lis) 1)
 	((null (cdr lis))
@@ -39,16 +38,16 @@
 		(list (ncdot-list (subseq (cdr big) 0 (- (length big) (length tem) 1)))
 		      (ncdot-list (cdr tem))))))
 	(t (setq leng (-  (length small) 1))
-	   (sloop for v on (cdr big)
+	   (loop for v on (cdr big)
 		 when ;;first part of v is equal to small
-		 (sloop
-		   initially (cond ((> leng (length v))(loop-return nil)))
+		 (loop
+		   initially (cond ((> leng (length v)) (return nil)))
 		   for vv in v
 		   for w in (cdr small)
 		   when (not (equal w vv))
-		   do (loop-return nil)
-		   finally (loop-return t))
-		 do (loop-return (list  (ncdot-list
+		   do (return nil)
+		   finally (return t))
+		 do (return (list  (ncdot-list
 				     (subseq (cdr big) 0 (- (length big) (length v) 1)))
 				   (ncdot-list (nthcdr (length (cdr small)) v))))))))
 
@@ -64,47 +63,46 @@
 (defun new-dotsimp (ratl-fun &aux mon repl num den)
   (format t "~%Beginning to simplify:")
   (sh ratl-fun)
-  (with-polynomial-area-new ()
-    (sloop
-      with expr = ratl-fun with answer = 0
-      when (pzerop expr) do (loop-return answer)
-      do   (setq-num-den num den expr)
-      (cond ((poly-scalarp num)(setq answer (n+ answer expr))
-	     (format t "~%Final answer:") (sh answer)
-			       (loop-return answer))
-	    (($must_replacep (setq mon (get (p-var num) 'disrep)))
-	     (cond (*verbose-check-overlaps* 
+  (loop
+     with expr = ratl-fun with answer = 0
+     when (pzerop expr) do (return answer)
+     do   (setq-num-den num den expr)
+       (cond ((poly-scalarp num)(setq answer (n+ answer expr))
+	      (format t "~%Final answer:")
+	      (sh answer)
+	      (return answer))
+	     (($must_replacep (setq mon (get (p-var num) 'disrep)))
+	      (cond (*verbose-check-overlaps*
 		     (format t "~%Simplifying the worst monomial ")
 		     (dot-show mon)))
-	     (setq repl (simp-once-monomial mon))
-	     (setq repl (n* (p-cof num) repl))
-	     (cond ((fifth num)
-		    (setq num (n+ repl (fifth num))))
-		   (t (setq num repl)))
-	     (setq expr (nred num den)))
-	    (t (multiple-value-bind
-		 (reduced rest)
-		   (split-numerator 0 num)
-		 (setq answer (n+ (nred reduced den) answer))
-		 (setq expr (nred rest den))
-		 (cond (*verbose-check-overlaps* 
+	      (setq repl (simp-once-monomial mon))
+	      (setq repl (n* (p-cof num) repl))
+	      (cond ((fifth num)
+		     (setq num (n+ repl (fifth num))))
+		    (t (setq num repl)))
+	      (setq expr (nred num den)))
+	     (t (multiple-value-bind
+		      (reduced rest)
+		    (split-numerator 0 num)
+		  (setq answer (n+ (nred reduced den) answer))
+		  (setq expr (nred rest den))
+		  (cond (*verbose-check-overlaps*
 			 (format t "~%Simplifying the worst monomial ")
 			 (dot-show mon) (format t " adding  to the answer" )))
-		 )))
-      
-;      (format t "~%Expr:") (sh expr)
-;      (format t "~%Reduced part:") (sh answer)
-      
-      (:maybe-reset (answer expr)))))
+		  )))
+					;      (format t "~%Expr:") (sh expr)
+					;      (format t "~%Reduced part:") (sh answer)
+       ))
+
 ;;;old reliable
 ;(defun new-dotsimp (ratl-fun &aux mon repl num den)
-;  (with-polynomial-area-new ()
-;    (sloop
+;  (progn
+;    (loop
 ;      with expr = ratl-fun with answer = 0
-;      when (pzerop expr) do (loop-return answer)
+;      when (pzerop expr) do (return answer)
 ;      do   (setq-num-den num den expr)
 ;      (cond ((poly-scalarp num)(setq answer (n+ answer expr))
-;			       (loop-return answer))
+;			       (return answer))
 ;	    (($must_replacep (setq mon (get (p-var num) 'disrep)))
 ;	     (format t "~%Simplifying the worst monomial ") (dot-show mon)
 ;	     (setq repl (simp-once-monomial mon))
@@ -119,7 +117,7 @@
 ;	       (cond ((fifth num)
 ;		      (setq expr (nred (fifth num) den)))
 ;		     (t (setq expr 0)))))
-;      (:maybe-reset (answer expr)))))
+;      )))
 
 (defun force-poly (repl)
   (cond ((numberp repl) repl)
@@ -129,20 +127,18 @@
 
 (defun simp-once-monomial (monom &aux tem)
   (cond ((atom monom)
-         (sloop for  (mon repl) on (cdr $dot_simplifications) by 'cddr
+	 (loop for (mon repl) on (cdr $dot_simplifications) by #'cddr
 	       when (eql mon monom)
-	       do (loop-return (force-poly repl))))
+	       do (return (force-poly repl))))
 	((and $dot_eps
 	     (setq tem (member '$eps monom :test 'eq))
 	     (member'$eps (cdr tem) :test 'eq))
 	 0)
-	(t(sloop for  (mon repl) on (cdr $dot_simplifications) by 'cddr
-		when (setq tem  (dot-subword mon monom))
+	(t (loop for (mon repl) on (cdr $dot_simplifications) by #'cddr
+		when (setq tem (dot-subword mon monom))
 		do
-		(loop-return (n. (n.  (first tem) (force-poly repl)) (second tem)))
-		finally (loop-return (st-rat monom))))))
-
-
+		(return (n. (n.  (first tem) (force-poly repl)) (second tem)))
+		finally (return (st-rat monom))))))
 
 (defun $dotsimp (expr)
   (declare (special $new_fast_dotsimp))
@@ -165,10 +161,10 @@ variables.dot_factor(form) = form "
 	 (vari (list-variables fo))
 	 (result (make-list (length variables) :initial-element 0))
 	 pos vv)
-    (sloop for v in vari
+    (loop for v in vari
 	  do (setq vv (get v 'disrep))
 	  (cond ((not (symbolp vv))
-                 (setq pos (position (nth slot vv) variables))
+		 (setq pos (position (nth slot vv) variables))
 		 (cond (pos (setf (nth pos result)
 				  (n+ (nth pos result) (n* (pcoeff fo v) (st-rat
 							   (meval* (cons '(mnctimes)
@@ -179,5 +175,3 @@ variables.dot_factor(form) = form "
 		 (cond (pos (setf (nth pos result)
 				  (n+ (nth pos result) (pcoeff fo (list v 1 1)))))))))
     (cons '(mlist) (mapcar 'new-disrep (cdr result)))))
-
-		

@@ -275,11 +275,9 @@
 			 ((mlist) $grid 30 30)
 			 ((mlist) $transform_xy nil)
 			 ((mlist) $run_viewer t)
-			 ((mlist) $plot_format $openmath)
+			 ((mlist) $plot_format $xmaxima)
 			 ((mlist) $nticks 100)
 			 ))
-;;for hypgeo.lisp
-'($%y $%k $%j)
 
 (dolist (f
      '($assoc_legendre_p
@@ -309,3 +307,23 @@
 
 (defprop $pochhammer simp-pochhammer operators)
 (autof 'simp-pochhammer "orthopoly")
+
+(dolist (f
+  '($julia
+    $mandelbrot
+    $plotdf
+    $ploteq))
+  (setf (get f 'autoload) "dynamics"))
+
+(dolist (mexpr       
+  '($evolution
+    $staircase
+    $evolution2d
+    $chaosgame
+    $ifs
+    $orbits
+    $rk))
+  ($auto_mexpr mexpr "dynamics"))
+
+(defprop $hypergeometric simp-hypergeometric operators)
+(autof 'simp-hypergeometric "hypergeometric")

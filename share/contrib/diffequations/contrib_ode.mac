@@ -171,15 +171,23 @@ ode_check(e_,a_) := block(
 )$
 
 /* Attempt to simplify the result from ode_check() */
-ode_check_tidy(e) := if freeof_bessel(e) then e else bessimp(e)$
-
+ode_check_tidy(e) := block(
+  for f in ['bessimp, 'expintegral_e_simp,'ode_trig_simp]
+  do 
+    (if (f(e)=0) then return(e:0)),
+  return(e)
+)$
 
 /*  This Bessel function simplification code can be improved,
     but is does work well on the contrib_ode testsuite.
 */
+bessimp(e) := 
+if freeof_bessel(e) then
+  e
+else
+  besksimp(besisimp(besysimp(besjsimp(e))))$
 
-freeof_bessel(e):=freeof(nounify(bessel_j),nounify(bessel_y),
-   nounify(bessel_i),nounify(bessel_k),e);
+freeof_bessel(e):=freeof(bessel_j,bessel_y,bessel_i,bessel_k,e);
 
 /* Simplify expressions containing bessel_F, where F in {j,y,i,k}.
    Repeatedly find the highest order term F and substitute Fsub for F 
@@ -192,7 +200,7 @@ freeof_bessel(e):=freeof(nounify(bessel_j),nounify(bessel_y),
    class until all the orders differ by less than 2. 
 */
 besFsimp(ex,F,Fsub) := block([arglist,ords,ord2,max,min,s,t,u,m,n,x,e:ex],
-  if freeof(nounify(F),ex) then return(ex),
+  if freeof(F,ex) then return(ex),
   argset:setify(gatherargs(ex,F)),
   /*  partition arguments into sets with same second argument and
       orders that differ by an integer */
@@ -215,7 +223,7 @@ besFsimp(ex,F,Fsub) := block([arglist,ords,ord2,max,min,s,t,u,m,n,x,e:ex],
       e:ratsimp(e)
     ) 
   ),
-  e
+  ratsimp(e)
 )$
 
 besjsimp(ex):=besFsimp(ex,bessel_j,
@@ -236,7 +244,7 @@ besksimp(ex):=block(
   e:besksimp_1(e,bk),
   /* Recurrence relation for bessel_k */
   e:besFsimp(e,bk,lambda([n,x], 2*(n-1)*bk(n-1,x)/x+bk(n-2,x))),
-  opsubst(nounify(bessel_k),bk,e)
+  opsubst(bessel_k,bk,e)
 );
 
 /* This is a helper function for besksimp.
@@ -273,4 +281,47 @@ besksimp_1(e,bk):=block(
   e
 );
 
-bessimp(e) := besksimp(besisimp(besysimp(besjsimp(e))))$
+/* Simplify expressions containing exponential integral expintegral_e
+   using the recurrence (A&S 5.1.14).
+
+   expintegral_e(n+1,z) 
+        = (1/n) * (exp(-z)-z*expintegral_e(n,z))      n = 1,2,3 ....
+
+   functions.wolfram.com indicates that it also applies for non-integer n,
+   and this is supported by some numerical tests.
+
+   This is a support routine for checking solutions of differential equations 
+   in the contrib_ode testsuite.  Assumes numberp(n) but this could be relaxed,
+   as was done for Bessel functions.  Not required for existing testsuite.
+*/
+
+expintegral_e_simp(ex) := block( [argset],
+  if freeof(expintegral_e,ex) then return(ex),
+  /* Get the set of arguments. Partition into sets with orders that
+     differ by an integer and with common second arguments.  */
+  argset:setify(gatherargs(ex,expintegral_e)),
+  argset:equiv_classes(argset,
+           lambda([x,y], integerp(x[1]-y[1]) and (second(x)=second(y)))),
+
+  /* Iterate over each equivalance class */
+  for s in argset do block( [z, ords],
+    z:second(first(s)),  /* The common argument for s */
+    ords:map('first,s),  /* List of orders */
+    for n: lmax(ords)-1 step -1 thru lmin(ords) do (
+      ex:subst((1/n)*(exp(-z)-z*expintegral_e(n,z)), expintegral_e(n+1,z), ex)
+    )
+  ),
+  /* Note: When ratsimp was in the loop, then z within the expression 
+     was sometimes altered and subst didn't work */
+  ratsimp(ex)
+);
+
+ode_freeof_trig(e) := 
+  freeof(cos,sin,tan,cot,sec,csc,cosh,sinh,tanh,coth,sech,csch,e)$
+
+ode_trig_simp(e) := block(
+  if ode_freeof_trig(e) then 
+    e
+  else
+    radcan(trigrat(trigsimp(e)))
+)$

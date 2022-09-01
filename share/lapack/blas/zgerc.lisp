@@ -1,5 +1,13 @@
-;;; Compiled by f2cl version 2.0 beta Date: 2006/12/21 03:42:11 
-;;; Using Lisp CMU Common Lisp CVS Head 2006-12-02 00:15:46 (19D)
+;;; Compiled by f2cl version:
+;;; ("f2cl1.l,v 1.215 2009/04/07 22:05:21 rtoy Exp $"
+;;;  "f2cl2.l,v 1.37 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl3.l,v 1.6 2008/02/22 22:19:33 rtoy Exp $"
+;;;  "f2cl4.l,v 1.7 2008/02/22 22:19:34 rtoy Exp $"
+;;;  "f2cl5.l,v 1.200 2009/01/19 02:38:17 rtoy Exp $"
+;;;  "f2cl6.l,v 1.48 2008/08/24 00:56:27 rtoy Exp $"
+;;;  "macros.l,v 1.112 2009/01/08 12:57:19 rtoy Exp $")
+
+;;; Using Lisp CMU Common Lisp 19f (19F)
 ;;; 
 ;;; Options: ((:prune-labels nil) (:auto-save t) (:relaxed-array-decls t)
 ;;;           (:coerce-assigns :as-needed) (:array-type ':array)
@@ -10,7 +18,7 @@
 
 
 (let* ((zero (f2cl-lib:cmplx 0.0 0.0)))
-  (declare (type (f2cl-lib:complex16) zero))
+  (declare (type (f2cl-lib:complex16) zero) (ignorable zero))
   (defun zgerc (m n alpha x incx y incy a lda)
     (declare (type (array f2cl-lib:complex16 (*)) a y x)
              (type (f2cl-lib:complex16) alpha)

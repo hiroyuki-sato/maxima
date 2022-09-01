@@ -52,8 +52,12 @@
     listofvars))
 
 (defun atomvars (e) 
-  (cond ((and (symbolp e) (or $listconstvars (not ($constantp e))))
-	 (add2lnc e listofvars))
+  (cond ((and (symbolp e)
+              (or $listconstvars
+                  ;; Do not add constants or boolean values to list of vars.
+                  (and (not ($constantp e))
+                       (not (member e '(t $true nil $false))))))
+         (add2lnc e listofvars))
 	((atom e))
 	((specrepp e) (atomvars (specdisrep e)))
 	((member 'array (car e) :test #'eq) (myadd2lnc e listofvars))
@@ -86,7 +90,7 @@
           (displa `((mtext) "reset: bind " ,key " to " ,displa-val))))
       (nconc actually-reset (list key))
       (let ((munbindp t))
-        (meval `((msetq) ,key ,val))))))
+        (meval `((msetq) ,key ((mquote) ,val)))))))
 
 (defmspec $reset_verbosely (L)
   (reset-do-the-work (cdr L) t))
@@ -100,7 +104,8 @@
     (if args
       (mapcar
         #'(lambda (key)
-            (maybe-reset key (gethash key *variable-initial-values*) actually-reset reset-verbose))
+            (multiple-value-bind (val found-p) (gethash key *variable-initial-values*)
+              (if found-p (maybe-reset key val actually-reset reset-verbose))))
         args)
 
       (maphash

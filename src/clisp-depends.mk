@@ -1,6 +1,7 @@
 binary-clisp/maxima.mem : maxima-package.lisp
 binary-clisp/maxima.mem : autoconf-variables.lisp
 binary-clisp/maxima.mem : nregex.lisp
+binary-clisp/maxima.mem : intl.lisp
 binary-clisp/maxima.mem : cl-info.lisp
 binary-clisp/maxima.mem : sloop.lisp
 binary-clisp/maxima.mem : lmdcls.lisp
@@ -10,6 +11,7 @@ binary-clisp/maxima.mem : clmacs.lisp
 binary-clisp/maxima.mem : commac.lisp
 binary-clisp/maxima.mem : mormac.lisp
 binary-clisp/maxima.mem : compat.lisp
+binary-clisp/maxima.mem : getopt.lisp
 binary-clisp/maxima.mem : command-line.lisp
 binary-clisp/maxima.mem : defopt.lisp
 binary-clisp/maxima.mem : defcal.lisp
@@ -169,6 +171,7 @@ binary-clisp/maxima.mem : csimp2.lisp
 binary-clisp/maxima.mem : zero.lisp
 binary-clisp/maxima.mem : logarc.lisp
 binary-clisp/maxima.mem : rpart.lisp
+binary-clisp/maxima.mem : numeric.lisp
 binary-clisp/maxima.mem : server.lisp
 binary-clisp/maxima.mem : macsys.lisp
 binary-clisp/maxima.mem : mload.lisp
@@ -214,6 +217,7 @@ binary-clisp/maxima.mem : trgred.lisp
 binary-clisp/maxima.mem : bessel.lisp
 binary-clisp/maxima.mem : ellipt.lisp
 binary-clisp/maxima.mem : airy.lisp
+binary-clisp/maxima.mem : plasma.lisp
 binary-clisp/maxima.mem : intpol.lisp
 binary-clisp/maxima.mem : nparse.lisp
 binary-clisp/maxima.mem : displa.lisp
@@ -236,6 +240,7 @@ binary-clisp/maxima.mem : defint.lisp
 binary-clisp/maxima.mem : residu.lisp
 binary-clisp/maxima.mem : specfn.lisp
 binary-clisp/maxima.mem : mat.lisp
+binary-clisp/maxima.mem : linnew.lisp
 binary-clisp/maxima.mem : matrix.lisp
 binary-clisp/maxima.mem : sprdet.lisp
 binary-clisp/maxima.mem : newinv.lisp
@@ -285,8 +290,8 @@ binary-clisp/maxima.mem : hyp.lisp
 binary-clisp/maxima.mem : todd-coxeter.lisp
 binary-clisp/maxima.mem : mactex.lisp
 binary-clisp/maxima.mem : plot.lisp
-binary-clisp/maxima.mem : gnuplot.lisp
-binary-clisp/maxima.mem : openmath.lisp
+binary-clisp/maxima.mem : gnuplot_def.lisp
+binary-clisp/maxima.mem : xmaxima_def.lisp
 binary-clisp/maxima.mem : autol.lisp
 binary-clisp/maxima.mem : max_ext.lisp
 binary-clisp/maxima.mem : init-cl.lisp

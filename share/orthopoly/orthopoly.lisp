@@ -1,13 +1,17 @@
 ;; 8/8 | 5/5 
-;; Copyright (C) 2000, 2001, 2003 Barton Willis
+;; Copyright (C) 2000, 2001, 2003, 2008, 2009 Barton Willis
 
-;; Maxima code for evaluating orthogonal polynomials listed in Chapter 22 
-;; of Abramowitz and Stegun (A & S). 
+#|
+  This is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License,
+  http://www.gnu.org/copyleft/gpl.html.
 
-;; Author: Barton Willis, University of Nebraska at Kearney (aka UNK).
-;; License: see README. The user of this code assumes all risk 
-;; for its use. It has no warranty. If you don't know the meaning 
-;; of "no warranty," don't use this code. :-)
+ This software has NO WARRANTY, not even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Maxima code for evaluating orthogonal polynomials listed in Chapter 22 of Abramowitz and Stegun (A & S). 
+|#
+
 
 (in-package :maxima)
 ($put '$orthopoly 1.0 '$version)
@@ -196,11 +200,20 @@
 		    (setq cf (div (mul cf (add i a) x) (mul (add i b) (+ 1 i))))
 		    (setq sum (add cf sum)))))))
 	(t
-	 `((%sum )
-	   ((mtimes) ((mexpt) ((mfactorial) ,$genindex) -1)
-	    (($pochhammer) ,a ,$genindex)
-	    ((mexpt) (($pochhammer ) ,b ,$genindex) -1) 
-	    ((mexpt) ,x ,$genindex)) ,$genindex 0 ,n))))
+; The following is replaced with simplifying code.
+;	 `((%sum )
+;	   ((mtimes) ((mexpt) ((mfactorial) ,$genindex) -1)
+;	    (($pochhammer) ,a ,$genindex)
+;	    ((mexpt) (($pochhammer ) ,b ,$genindex) -1) 
+;	    ((mexpt) ,x ,$genindex)) ,$genindex 0 ,n))))
+         (let ((index (gensumindex)))
+           (simplify
+             (list '(%sum)
+                   (mul (inv (take '(mfactorial) index))
+                        (take '($pochhammer) a index)
+                        (inv (take '($pochhammer) b index))
+                        (power x index))
+                   index 0 n))))))
 
 ;; return the F[2,1] hypergeometic sum from 0 to n. Use genindex as the 
 ;; sum index; genindex is defined in asum.lisp
@@ -224,49 +237,96 @@
 		    (setq sum (add cf sum)))))))
 	
 	(t
-	 `((%sum)
-	   ((mtimes) (($pochhammer) ,a ,$genindex) (($pochhammer) ,b ,$genindex)
-	    ((mexpt) (($pochhammer) ,c ,$genindex) -1)
-	    ((mexpt) ((mfactorial) ,$genindex) -1)
-	    ((mexpt) ,x ,$genindex)) 
-	   ,$genindex 0 ,n))))
-   
-;; When n is an integer with n > -1, return the product 
-;; x (x + 1) (x + 2) ... (x + n - 1).  This is the same as
-;; gamma(x + n) / gamma(x).  See A&S 6.1.22, page 256.  When
-;; n isn't an integer or n < 0, return the form (($pochhammer) x n))
-;; Also notice that pochhammer(1,n) = n!.
+; The following is replaced with simplifying code.
+;	 `((%sum)
+;	   ((mtimes) (($pochhammer) ,a ,$genindex) (($pochhammer) ,b ,$genindex)
+;	    ((mexpt) (($pochhammer) ,c ,$genindex) -1)
+;	    ((mexpt) ((mfactorial) ,$genindex) -1)
+;	    ((mexpt) ,x ,$genindex)) 
+;	   ,$genindex 0 ,n))))
+	 (let ((index (gensumindex)))
+           (simplify
+             (list '(%sum)
+                   (mul (take '($pochhammer) a index)
+                        (take '($pochhammer) b index)
+                        (inv (take '($pochhammer) c index))
+                        (inv (take '(mfactorial) index))
+                        (power x index))
+                   index 0 n))))))
 
-(meval `(($declare) $pochhammer $complex))
+(eval-when
+    #+gcl (load eval)
+    #-gcl (:load-toplevel :execute)
+    (let (($context '$global) (context '$global))
+      (meval '(($declare) $pochhammer $complex))))
+
 (defmvar $pochhammer_max_index 100)
 
+;; This disallows noninteger assignments to $max_pochhammer_index.
+
+(setf (get '$pochhammer_max_index 'assign)
+      #'(lambda (a b) 
+	  (declare (ignore a))
+	  (if (not (and (atom b) (integerp b)))
+	      (progn
+		(mtell "The value of `max_pochhammer_index' must be an integer.")
+		'munbindp))))
+
 (defun $pochhammer (x n)
-  (simplify `(($pochhammer) ,x ,n)))
+  (take '($pochhammer) x n))
+
+(in-package #-gcl #:bigfloat #+gcl "BIGFLOAT")
+
+;; Numerical evaluation of pochhammer using the bigfloat package.
+(defun pochhammer (x n)
+  (let ((acc 1))
+    (if (< n 0) (/ 1 (pochhammer (+ x n) (- n)))
+      (dotimes (k n acc)
+	(setq acc (* acc (+ k x)))))))
+
+(in-package :maxima)
 
 (defun simp-pochhammer (e y z)
   (declare (ignore y))
-  (let ((x) (n))
+  (let ((x) (n) (return-a-rat))
     (twoargcheck e)
+    (setq return-a-rat ($ratp (second e)))
     (setq x (simplifya (specrepcheck (second e)) z))
     (setq n (simplifya (specrepcheck (third e)) z))
  
-    (cond ((eq t (meqp n 0)) 1)
+    (cond ((or ($taylorp (second e)) ($taylorp (third e)))
+	   (setq x (simplifya (second e) z))
+	   (setq n (simplifya (third e) z))
+	   ($taylor (div (take '(%gamma) (add x n)) (take '(%gamma) x))))
+	   
+	  ((eq n 0) 1)
 	  
-	  ;; Use reflection rule when (great (neg n) n) is true or when n is a negative integer.
-	  
-	  ((and (integerp n) (< n 0))
-	   (div (power -1 n) (simplify `(($pochhammer) ,(sub 1 x) ,(neg n)))))
-	  
-	  ((eq t (eq x 1)) (take '(mfactorial) n))
+	  ;; pochhammer(1,n) = n! (factorial is faster than bigfloat::pochhammer.)
+	  ((eq x 1) (take '(mfactorial) n))
+     
+	  ;; pure numeric evaluation--use numeric package.
+	  ((and (integerp n) (complex-number-p x '$numberp))
+	   (maxima::to (bigfloat::pochhammer (bigfloat::to x) (bigfloat::to n))))
 
-	  ((and (integerp n) (> n -1) (<=  n $pochhammer_max_index)) 
-	   (let ((acc 1))
-	     (dotimes (i n)
-	       (setq acc (mul acc (add i x))))
-	     (if (complex-number-p x #'(lambda (s) (or (floatp s) ($bfloatp s)))) ($expand acc) acc)))
+	  ((and (integerp (mul 2 n)) (integerp (mul 2 x)) (> (mul 2 n) 0) (> (mul 2 x) 0))
+	   (div (take '(%gamma) (add x n)) (take '(%gamma) x)))
 
+	  ;; Use a reflection identity when (great (neg n) n) is true. Specifically,
+	  ;; use pochhammer(x,-n) * pochhammer(x-n,n) = 1; thus pochhammer(x,n) = 1/pochhammer(x+n,-n).
+	  ((great (neg n) n)
+	   (div 1 (take '($pochhammer) (add x n) (neg n))))
+	  
+	  ;; Expand when n is an integer and either abs(n) < $expop or abs(n) < $pochhammer_max_index.
+	  ;; Let's give $expand a bit of early help.
+	  ((and (integerp n) (or (< (abs n) $expop) (< (abs n) $pochhammer_max_index)))
+	   (if (< n 0) (div 1 (take '($pochhammer) (add x n) (neg n)))
+	     (let ((acc 1))
+	       (if (or (< (abs n) $expop) return-a-rat) (setq acc ($rat acc) x ($rat x)))
+	       (dotimes (k n (if return-a-rat acc ($ratdisrep acc)))
+		 (setq acc (mul acc (add k x)))))))
+	   
+	  ;; return a nounform.
 	  (t `(($pochhammer simp) ,x ,n)))))
-
 
 (putprop '$pochhammer
 	 '((x n)
@@ -671,7 +731,10 @@
 		  (setq d 1))
 		 ((< m 0)
 		  (setq f ($assoc_legendre_p n (neg m) x))
-		  (setq d (div (factorial (+ n m)) (factorial (- n m))))
+		  ;; Adding a factor (-1)^m to the transformation to get the
+		  ;; expected results for odd negative integers. DK 09/2009
+		  (setq d (mul (power -1 m)
+		               (div (factorial (+ n m)) (factorial (- n m)))))
 		  (setq dx 1))
 		 (t
 		  (cond ((eq m 0)
@@ -1045,11 +1108,8 @@
 
 (defun assoc-leg-cos (n m x)
   (interval-mult
-   (if (= m 0) 1 (mul (simplify 
-		       `((%genfact) ,(add (mul 2 m) -1) ,(add m (div 1 2)) 2))
-		      (power (simplify `((%sin) ,x)) m)))
-   ($ultraspherical (sub n m) (add m `((rat) 1 2)) 
-		    (simplify `((%cos) ,x)))))
+   (if (= m 0) 1 (mul (take '(%genfact) (sub (mul 2 m) 1) (sub m (div 1 2)) 2) (power (take '(%sin) x) m)))
+   ($ultraspherical (sub n m) (add m (div 1 2)) (take  '(%cos) x))))
 
 (defun $spherical_harmonic (n m th p)
   (cond ((and (integerp n) (integerp m) (> n -1))
@@ -1060,7 +1120,7 @@
 			       ($spherical_harmonic n (- m) th (mul -1 p))))
 	       (t
 		(interval-mult
-		 (mul (simplify ($exp (mul '$%i m p)))
+		 (mul ($exp (mul '$%i m p))
 		      (power (div (* (+ (* 2 n) 1) (factorial (- n m)))
 				  (mul '$%pi (* 4 (factorial (+ n m))))) 
 			     `((rat) 1 2)))

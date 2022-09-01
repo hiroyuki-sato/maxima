@@ -52,7 +52,7 @@
 (setf (get '%sec 'commutes-with-conjugate) t)
 (setf (get '%csc 'commutes-with-conjugate) t)
 (setf (get '%cot 'commutes-with-conjugate) t)
-(setf (get '%atan2 'commutes-with-conjugate) t)
+(setf (get '$atan2 'commutes-with-conjugate) t)
 
 (setf (get '%jacobi_cn 'commutes-with-conjugate) t)
 (setf (get '%jacobi_sn 'commutes-with-conjugate) t)
@@ -202,6 +202,7 @@
 (setf (get '%imagpart 'real-valued) t)
 (setf (get 'mabs 'real-valued) t)
 (setf (get '%realpart 'real-valued) t)
+(setf (get '%signum 'real-valued) t)
 
 ;; manifestly-real-p isn't a great name, but it's OK. Since (manifestly-real-p '$inf) --> true
 ;; it might be called manifestly-extended-real-p. A nonscalar isn't real.
@@ -223,11 +224,15 @@
 
 (defun manifestly-pure-imaginary-p (e)
   (let (($inflag t))
-    (and ($mapatom e)
-	 (or
-	  (eq e '$%i)
-	  (and (symbolp e) (kindp e '$imaginary) (not ($nonscalarp e)))
-	  (and ($subvarp e) (manifestly-pure-imaginary-p ($op e)))))))
+    (or 
+     (and ($mapatom e)
+	  (or
+	   (eq e '$%i)
+	   (and (symbolp e) (kindp e '$imaginary) (not ($nonscalarp e)))
+	   (and ($subvarp e) (manifestly-pure-imaginary-p ($op e)))))
+     ;; For now, let's use $csign on constant expressions only; once $csign improves,
+     ;; the ban on nonconstant expressions can be removed
+     (and ($constantp e) (eq '$imaginary ($csign e))))))
 
 ;; Don't use (kindp e '$complex)!
 

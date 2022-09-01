@@ -7,6 +7,7 @@ bin_SCRIPTS = maxima rmaxima
 endif
 
 LOADDEFSYSTEM = (load "$(top_srcdir)/lisp-utils/defsystem.lisp")
+LOADMAKEPROCLAIM = (load "$(top_srcdir)/lisp-utils/make-proclaim.lisp")
 LOADMAKEDEPENDS = (load "$(top_srcdir)/lisp-utils/make-depends.lisp")
 DEFSYSTEMCOMPILE = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :compile :verbose t)
 DEFSYSTEMLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t)
@@ -192,11 +193,11 @@ clean: clean-gcl
 distclean: clean-gcl
 
 sys-proclaim:
-	rm -r binary-gcl
+	rm -rf binary-gcl
 	test -d binary-gcl || mkdir binary-gcl
 	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
-	$(EXECUTEGCL) '(load "generate-sys-proclaim.lisp")'
+	$(EXECUTEGCL) '(progn $(LOADMAKEPROCLAIM) (load "generate-sys-proclaim.lisp")'
 
 gcl:binary-gcl/maxima
 
@@ -212,10 +213,10 @@ else
 	test -d binary-gcl/numerical || mkdir binary-gcl/numerical
 	test -d binary-gcl/numerical/slatec || mkdir binary-gcl/numerical/slatec
 if WIN32
-	$(EXECUTEGCL) '(progn (compiler::emit-fn t))' -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
+	$(EXECUTEGCL) '(progn (compiler::emit-fn t))' -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) $(LOADMAKEPROCLAIM) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
 	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
 else
-	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) (compiler::emit-fn t) $(DEFSYSTEMCOMPILE) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
+	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) (compiler::emit-fn t) $(DEFSYSTEMCOMPILE) $(LOADMAKEPROCLAIM) (compiler::make-all-proclaims "*/*.fn" "*/*/*/*.fn"))' && \
 	$(EXECUTEGCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (when (fboundp (quote si::sgc-on))(si::sgc-on t)) (si:save-system "binary-gcl/maxima"))'
 endif	
 endif
@@ -246,8 +247,8 @@ distclean: clean-openmcl
 openmcl:binary-openmcl/maxima.image
 
 binary-openmcl/maxima.image:
-	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (ccl::quit))' && \
-	$(EXECUTEOPENMCL) '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ccl:save-application "binary-openmcl/maxima.image" :toplevel-function (function cl-user::run)) (ccl::quit))'
+	$(EXECUTEOPENMCL) '(progn (require :defsystem)  $(DEFSYSTEMCOMPILE) (ccl::quit))' && \
+	$(EXECUTEOPENMCL) '(progn (require :defsystem) $(DEFSYSTEMLOAD) (ccl:save-application "binary-openmcl/maxima.image") (ccl::quit))'
 
 install-openmcl:
 	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-openmcl"
@@ -265,7 +266,7 @@ include openmcl-depends.mk
 endif
 
 if ECL
-EXECUTEECL = $(ECL_NAME)
+EXECUTEECL = $(ECL_NAME) -norc
 all-local: binary-ecl/maxima
 install-exec-local: install-ecl
 uninstall-hook: uninstall-ecl
@@ -343,7 +344,8 @@ fortra.lisp \
 gamma.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
-gnuplot.lisp \
+getopt.lisp \
+gnuplot_def.lisp \
 grind.lisp \
 hayat.lisp \
 homog.lisp \
@@ -352,6 +354,7 @@ hypgeo.lisp \
 ifactor.lisp \
 init-cl.lisp \
 inmis.lisp \
+intl.lisp \
 intpol.lisp \
 invert.lisp \
 irinte.lisp \
@@ -361,6 +364,7 @@ ldisp.lisp \
 lesfac.lisp \
 letmac.lisp \
 limit.lisp \
+linnew.lisp \
 lmdcls.lisp \
 logarc.lisp \
 macdes.lisp \
@@ -401,8 +405,8 @@ nrat4.lisp \
 nregex.lisp \
 nset.lisp \
 nummod.lisp \
+numeric.lisp \
 numth.lisp \
-openmath.lisp \
 opers.lisp \
 optim.lisp \
 optimize.lisp \
@@ -411,6 +415,7 @@ outmis.lisp \
 pade.lisp \
 parse-body.lisp \
 plot.lisp \
+plasma.lisp \
 pois2.lisp \
 pois3.lisp \
 polyrz.lisp \
@@ -471,6 +476,7 @@ trprop.lisp \
 trutil.lisp \
 ufact.lisp \
 utils.lisp \
+xmaxima_def.lisp \
 zero.lisp \
 autoconf-variables.lisp \
 numerical/f2cl-lib.lisp \

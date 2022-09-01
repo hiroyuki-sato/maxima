@@ -1,4 +1,4 @@
-@c english version 1.63
+@c english version 1.66
 @menu
 * Introducci@'on a las expresiones::  
 * Expresiones complejas::
@@ -13,9 +13,9 @@
 @node Introducci@'on a las expresiones, Expresiones complejas, Expresiones, Expresiones
 @section Introducci@'on a las expresiones
 
-Existe un cierto n@'umero de palabras reservadas que no pueden
+Existe un cierto n@'umero de palabras reservadas que no deber@'{@dotless{i}}an
 utilizarse como nombres de variables. Su uso podr@'{@dotless{i}}a causar 
-errores cr@'{@dotless{i}}ticos de sintaxis. 
+errores sint@'acticos. 
 
 @example
 integrate            next           from                 diff            
@@ -1078,14 +1078,86 @@ Es similar a @code{isolate (@var{expr}, @var{x})}, excepto que permite al usuari
 @end deffn
 
 @deffn {Funci@'on} dispform (@var{expr})
-Devuelve la representaci@'on externa de @var{expr} con respecto a su operador principal. Es @'util cuando se usa conjuntamente con @code{part}, que tambi@'en trata de la representaci@'on externa.  Sip@'ongase que  @var{expr} es -A .
-Entonces la representaci@'on interna de  @var{expr} es "*"(-1,A), mientras que la representaci@'on externa es "-"(A). La llamada @code{dispform (@var{expr}, all)} convierte la expresi@'on entera al formato externo.  Por ejemplo, si @code{expr: sin (sqrt (x))}, entonces @code{freeof (sqrt, expr)} y @code{freeof (sqrt, dispform (expr))} dan @code{true}, mientras que
-@code{freeof (sqrt, dispform (expr, all))} da @code{false}.
+@deffnx {Function} dispform (@var{expr}, all)
 
+@code{dispform(@var{expr})} devuelve la representaci@'on externa de
+@var{expr} respecto del operador del nivel superior.
+@code{dispform(@var{expr}, all)} devuelve la representaci@'on
+externa respecto de todos los operadores que haya en @var{expr}.
+
+V@'ease tambi@'en @code{part}, @code{inpart} y @code{inflag}.
+
+Ejemplos:
+
+La representaci@'on interna de @code{- x} es "menos uno 
+multiplicado por @code{x}", mientras que la representaci@'on externa es
+"menos @code{x}".
+
+@c ===beg===
+@c - x;
+@c ?format (true, "~S~%", %);
+@c dispform (- x);
+@c ?format (true, "~S~%", %);
+@c ===end===
+@example
+(%i1) - x;
+(%o1)                          - x
+(%i2) ?format (true, "~S~%", %);
+((MTIMES SIMP) -1 $X)
+(%o2)                         false
+(%i3) dispform (- x);
+(%o3)                          - x
+(%i4) ?format (true, "~S~%", %);
+((MMINUS SIMP) $X)
+(%o4)                         false
+@end example
+
+La representaci@'on interna de @code{sqrt(x)} es 
+"@code{x} elevado a 1/2", mientras que su representaci@'on
+externa es "ra@'{@dotless{i}}z de @code{x}".
+
+@c ===beg===
+@c sqrt (x);
+@c ?format (true, "~S~%", %);
+@c dispform (sqrt (x));
+@c ?format (true, "~S~%", %);
+@c ===end===
+@example
+(%i1) sqrt (x);
+(%o1)                        sqrt(x)
+(%i2) ?format (true, "~S~%", %);
+((MEXPT SIMP) $X ((RAT SIMP) 1 2))
+(%o2)                         false
+(%i3) dispform (sqrt (x));
+(%o3)                        sqrt(x)
+(%i4) ?format (true, "~S~%", %);
+((%SQRT SIMP) $X)
+(%o4)                         false
+@end example
+
+Utilizaci@'on del argumento opcional @code{all}.
+
+@c ===beg===
+@c expr : sin (sqrt (x));
+@c freeof (sqrt, expr);
+@c freeof (sqrt, dispform (expr));
+@c freeof (sqrt, dispform (expr, all));
+@c ===end===
+@example
+(%i1) expr : sin (sqrt (x));
+(%o1)                     sin(sqrt(x))
+(%i2) freeof (sqrt, expr);
+(%o2)                         true
+(%i3) freeof (sqrt, dispform (expr));
+(%o3)                         true
+(%i4) freeof (sqrt, dispform (expr, all));
+(%o4)                         false
+@end example
 @end deffn
 
+
 @deffn {Funci@'on} distrib (@var{expr})
-Diistribuye sumas sobre productos.  Difiere de @code{expand}
+Distribuye sumas sobre productos. Difiere de @code{expand}
 en que trabaja s@'olo al nivel superior de una expresi@'on, siendo m@'as r@'apida que @code{expand}.  Difiere de  @code{multthru} en que expande todas las sumas del nivel superior.
 
 Ejemplos:
@@ -1182,6 +1254,7 @@ Si @code{exptsubst} vale @code{true} permite la sustituci@'on @code{y} por @code
 @end defvr
 
 @deffn {Funci@'on} freeof (@var{x_1}, ..., @var{x_n}, @var{expr})
+
 @code{freeof (@var{x_1}, @var{expr})}
 Devuelve @code{true} si ninguna subexpresi@'on de @var{expr} coincide con @var{x_1},
 o si @var{x_1} aparece como variable muda en @var{expr}, o si @var{x_1} no es ni
@@ -1848,30 +1921,61 @@ Ordenaci@'on de expresiones no at@'omicas.
 
 @c NEEDS WORK
 @deffn {Funci@'on} part (@var{expr}, @var{n_1}, ..., @var{n_k})
-Devuelve partes de la forma mostrada de @code{expr}. Obtiene la parte de @code{expr} que se especifica por los @'{@dotless{i}}ndices @var{n_1}, ..., @var{n_k}.  Primero se obtiene la parte @var{n_1} de @code{expr}, despu@'es la parte @var{n_2} del resultado anterior, y as@'{@dotless{i}} sucesivamente.  El resultado que se obtiene es la parte @var{n_k} de ... la parte @var{n_2} de la parte @var{n_1} de @code{expr}.
+Devuelve partes de la forma mostrada de @code{expr}. Obtiene la 
+parte de @code{expr} que se especifica por los @'{@dotless{i}}ndices 
+@var{n_1}, ..., @var{n_k}.  Primero se obtiene la parte @var{n_1} de 
+@code{expr}, despu@'es la parte @var{n_2} del resultado anterior, 
+y as@'{@dotless{i}} sucesivamente.  El resultado que se obtiene es 
+la parte @var{n_k} de ... la parte @var{n_2} de la parte @var{n_1} de @code{expr}.
+Si no se especifican @'{@dotless{i}}ndices, devuelve @code{expr}.
 
-La funci@'on @code{part} se puede utilizar para obtener un elemento de una lista, una fila de una matriz, etc.
+La funci@'on @code{part} se puede utilizar para obtener un elemento 
+de una lista, una fila de una matriz, etc.
 
 @c "If the last argument to a part function" => FOLLOWING APPLIES TO OTHER FUNCTIONS ??
 @c ATTEMPT TO VERIFY; IF SO, COPY THIS COMMENTARY TO DESCRIPTIONS OF OTHER FUNCTIONS
-Si el @'ultimo argumento de la funci@'on @code{part} es una lista de @'{@dotless{i}}ndices, entonces se toman varias subexpresiones, cada una de las cuales correspondiente a un @'{@dotless{i}}ndice de la lista.  As@'{@dotless{i}}, @code{part (x + y + z, [1, 3])} devuelve @code{z+x}.
+Si el @'ultimo argumento de la funci@'on @code{part} es una lista de 
+@'{@dotless{i}}ndices, entonces se toman varias subexpresiones, cada 
+una de las cuales correspondiente a un @'{@dotless{i}}ndice de la lista.
+As@'{@dotless{i}}, @code{part (x + y + z, [1, 3])} devuelve @code{z+x}.
 
-La variable @code{piece} guarda la @'ultima expresi@'on seleccionada con la funci@'on @code{part}. Se actualiza durante la ejecuci@'on de la funci@'on, por lo que puede ser referenciada en la misma funci@'on.
+La variable @code{piece} guarda la @'ultima expresi@'on seleccionada
+con la funci@'on @code{part}. Se actualiza durante la ejecuci@'on de
+la funci@'on, por lo que puede ser referenciada en la misma funci@'on.
 
-Si @code{partswitch} vale @code{true} entonces de devuelve @code{end} cuando no exista la parte seleccionada de una expresi@'on, si vale @code{false} se mostrar@'a un mensaje de error.
+Si @code{partswitch} vale @code{true} entonces de devuelve @code{end}
+cuando no exista la parte seleccionada de una expresi@'on, si vale
+@code{false} se mostrar@'a un mensaje de error.
 
-@c NEED "SEE ALSO" POINTING TO ALL OTHER PART FUNCTIONS
+V@'eanse tambi@'en @code{inpart}, @code{substpart}, @code{substinpart},
+@code{dpart} y @code{lpart}.
 
-Ejemplo: @code{part (z+2*y, 2, 1)} devuelve 2.
+Ejemplos:
 
-@c MERGE IN example (part) OUTPUT HERE
+@c ===beg===
+@c part(z+2*y+a,2);
+@c part(z+2*y+a,[1,3]);
+@c part(z+2*y+a,2,1);
+@c ===end===
+@example
+(%i1) part(z+2*y+a,2);
+(%o1)                                 2 y
+(%i2) part(z+2*y+a,[1,3]);
+(%o2)                                z + a
+(%i3) part(z+2*y+a,2,1);
+(%o3)                                  2
+@end example
+
 La instrucci@'on @code{example (part)} muestra m@'as ejemplos.
 
 @end deffn
 
 @c NEEDS WORK
 @deffn {Funci@'on} partition (@var{expr}, @var{x})
-Devuelve una lista con dos expresiones, que son: (1) los factores de @var{expr} si es un producto, los t@'erminos de @var{expr} si es una suma, o los elementos de @var{expr}, si es una lista, que no contengan a @var{x}, (2) los factores, t@'erminos o lista que contengan a @var{x}.
+Devuelve una lista con dos expresiones, que son: (1) los factores de 
+@var{expr} si es un producto, los t@'erminos de @var{expr} si es una
+suma, o los elementos de @var{expr}, si es una lista, que no contengan
+a @var{x}, (2) los factores, t@'erminos o lista que contengan a @var{x}.
 
 @example
 (%i1) partition (2*a*x*f(x), x);

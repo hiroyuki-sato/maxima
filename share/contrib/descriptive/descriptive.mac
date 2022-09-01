@@ -1,6 +1,6 @@
 /*               COPYRIGHT NOTICE
 
-Copyright (C) 2005-2007 Mario Rodriguez Riotorto
+Copyright (C) 2005-2009 Mario Rodriguez Riotorto
 
 This program is free software; you can redistribute
 it and/or modify it under the terms of the
@@ -120,6 +120,11 @@ to contact me at
 mario AT edu DOT xunta DOT es
 www.biomates.net
 */
+
+
+put('descriptive, 1, 'version) $
+
+if not get('draw,'version) then load("draw") $
 
 
 
@@ -533,7 +538,16 @@ extract_options(s,[mo]):=
     [ss,mmo] )$
 
 
-/* Plots scatter diagrams.                                                 */
+random_color():=
+  block([obase : 16, col : "#"],
+    for i : 1 thru 6 do
+       col : concat(col,
+                    block([sz : concat(random(16))],
+                          substring(sz, slength(sz)))),
+    col)$
+
+
+/* Plots scatter diagrams. */
 scatterplot(m,[select]):=
   block([scen,localopts,nclass:10],
     [select, localopts]: extract_options(select,'nclasses),
@@ -612,46 +626,120 @@ histogram(m,[select]):=
 
 
 
-/* Plots bar charts for discrete or categorical data. Argument 'm' must be a   */
-/* list, a one column matrix or a one row matrix. The second and consecutive   */
-/* arguments are either draw options or the specific 'box_width' option (3/4   */
-/*  by default) to control boxes widths.                                       */
-barsplot(m,[select]):=
-   block([fr,tot,scen,localopts,boxwidth:3/4],
-      [select, localopts]: extract_options(select,'box_width),
-      for k in localopts do
-        if lhs(k) = 'box_width then boxwidth: float(rhs(k)),
+/* Plots bar charts for discrete or categorical data, both for one or more */
+/* samples.  This function admits an arbitrary number of arguments.        */
+/* The first arguments are lists or matrices with sample data. The rest of */
+/* arguments are options in equation format (option = value). Options can  */
+/* be the same used by package draw and/or those which are specific to this*/
+/* function, namely            */
+/*    - box_width,             */
+/*    - groups_gap,            */
+/*    - bars_colors,           */
+/*    - relative_frequencies,  */
+/*    - ordering,              */
+/*    - sample_keys            */
+barsplot([args]):=
+  block([lastsample: 0, nargs: length(args), drawopts, localopts,
+          freqs: [], samplespace, sspacesize, nsamples, scene, totalgap,
+         /* default options */
+         my_box_width: 3/4, my_groups_gap: 1, my_relative_frequencies: false,
+         my_ordering: 'orderlessp, my_bars_colors: [], my_sample_keys: [] ],
 
-      if boxwidth > 1 or boxwidth < 0
-         then error("boxes width is out of range"),
-      if listofnumbersp(m) or matrixp(m) and (length(m)=1 or length(m[1])=1)
-        then (/* transform input data into a list */
-              if matrixp(m)
-                then if length(m)=1
-                       then m: m[1]
-                       else m: transpose(m)[1],
+    /* check for data */
+    for i:1 thru nargs do
+      if listp(args[i]) or matrixp(args[i])
+        then lastsample: lastsample + 1,
 
-               /* frequency table */
-               fr: discrete_freq(m),
-               tot: length(fr[1]),
-               scen:append(select,
-                           [apply('bars,
-                                  makelist([k, fr[2][k], boxwidth],k,1,tot)),
-                            'xtics = setify(map("[", map('string, fr[1]), makelist(k,k,1,tot))),   
-                            'xrange = (tot-1)*0.05*[-1,+1.5]+[0.5,tot+0.5],
-                            'yrange = tree_reduce('max,fr[2])*[-0.05, 1.05] ] ),
-              if draw_compound
-                then apply('draw2d,scen)
-                else scen )
-        else error("sorry, can't plot the barsplot for these data") )$
+    /* check for barsplot options */
+    [drawopts, localopts]: extract_options(makelist(args[k],k,lastsample + 1,nargs),
+                                           'box_width, 'groups_gap, 'bars_colors,
+                                           'relative_frequencies, 'ordering, 'sample_keys),
+    for k in localopts do
+      if lhs(k) = 'box_width
+        then my_box_width: float(rhs(k))
+      elseif lhs(k) = 'groups_gap
+        then my_groups_gap: rhs(k)
+      elseif lhs(k) = 'bars_colors
+        then my_bars_colors: rhs(k)
+      elseif lhs(k) = 'relative_frequencies
+        then my_relative_frequencies: rhs(k)
+      elseif lhs(k) = 'ordering
+        then my_ordering: rhs(k)
+      elseif lhs(k) = 'sample_keys
+        then my_sample_keys: rhs(k),
+    if my_box_width > 1 or my_box_width < 0
+      then error("barsplot: illegal value for box_width"),
+    if not integerp(my_groups_gap) or my_groups_gap < 1
+      then error("barsplot: illegal value for groups_gap"),
+    if not listp(my_bars_colors)
+      then error("barsplot: illegal value for bars_colors"),
+    if my_relative_frequencies # true and my_relative_frequencies # false
+      then error("barsplot: illegal value for relative_frequencies"),
+    if not member(my_ordering, [orderlessp, ordergreatp])
+      then error("barsplot: illegal value for ordering"),
+    if not (my_sample_keys = []
+            or listp(my_sample_keys) and every('stringp, my_sample_keys))
+      then error("barsplot: illegal value for sample_keys"),
+
+    /* get absolute frequencies */
+    for k: 1 thru lastsample do (
+      if listp(args[k])
+        then freqs: cons(discrete_freq(args[k]), freqs)
+      elseif matrixp(args[k])
+        then for c in args(transpose(args[k])) do
+               freqs: cons(discrete_freq(c), freqs)
+        else error("barsplot: unknown data format")),
+
+    /* transform freqs into a more suitable form */
+    samplespace: listify(setify(apply('append,map('first,freqs)))),
+    samplespace : sort(samplespace, my_ordering),
+    sspacesize: length(samplespace),
+    nsamples: length(freqs),
+    if my_sample_keys = []
+      then my_sample_keys : makelist("",k,1,nsamples),
+    if nsamples # length(my_sample_keys)
+      then error("barsplot: incorrect number of elements in sample_keys"),
+    freqs: makelist(
+             makelist(
+               block([pos: ?position(k,first(i))],
+                    if pos = false
+                       then 0
+                       else second(i)[pos]),
+               i, freqs),
+             k,samplespace),
+
+    /* transform to relative frequencies, if necessary */
+    if my_relative_frequencies
+      then block([samplesizes: apply("+",freqs)],
+                 freqs: map(lambda([z], z/samplesizes), freqs)),
+
+    /* complete my_bars_colors with random colors, if necessary */
+    if nsamples > length(my_bars_colors)
+      then my_bars_colors: append(my_bars_colors,
+                              makelist(random_color(),k,length(my_bars_colors)+1,nsamples)),
+    totalgap: nsamples + my_groups_gap,
+    scene: append(drawopts,
+                  ['yrange = [0, lmax(flatten(freqs)) * 1.05],
+                   xtics = setify(makelist([string(samplespace[k]),
+                                            (k-1)*totalgap + (nsamples+1)/2],
+                                           k, 1, sspacesize))],
+                  apply(append,
+                        makelist(
+                          [fill_color = my_bars_colors[m],
+                           key = my_sample_keys[m],
+                           apply('bars,
+                                 makelist(
+                                   block(
+                                     [pos: (k-1)*totalgap + m],
+                                     [pos, freqs[k][m], my_box_width]),
+                                   k,1,sspacesize))],
+                        m,1,nsamples)) ),
+
+    if draw_compound
+      then apply('draw2d,scene)
+      else scene)$
 
 
-random_color():=
-  block([obase:16],
-    concat("#",
-           random(16),random(16),  /* red */
-           random(16),random(16),  /* green */
-           random(16),random(16))  /* blue */    )$
 
 
 /* Plots pie charts for discrete or categorical data. Argument 'm' must be a  */
@@ -756,345 +844,3 @@ boxplot(m,[select]):=
                 then apply('draw2d,scen)
                 else scen )
         else error("sorry, can't plot the box-whisker plot for these data") )$
-
-
-
-/************** O L D    P L O T T I N G    F U N C T I O N S **************/
-
-/* I have not renamed dataplot, but I have attached an extra 2 to the names of */
-/* the old versions of histogram, barsplot and boxplot. Sooner or later I'll  */
-/* remove these functions, since new versions take advantage of draw's options.*/
-
-dataplot(m,[select]):=
-   block([numer:true,display2d:false,options,defaults,aux,dim,ampx,ampy,x,y,fr,offs,listarith:true],
-
-      /* updating options */
-      options: ['outputdev, 'maintitle, 'axisnames, 'joined, 'picturescales, 'threedim, 'axisrot, 'nclasses, 'pointstyle],
-      defaults: ["x", "", ["x","y","z"], false, [1.0, 1.0], true, [60, 30], 10, 1],
-
-      if get(wxmaxima, version)#false then defaults[1]: "wxmaxima",
-
-      for i in select do(
-         aux: ?position(lhs(i),options),
-         if numberp(aux) and aux <= length(options) and aux >= 1
-            then defaults[aux]: rhs(i)),
-
-      /* if m is a list of numbers, first components are consecutive integers */
-      /* if m is a list of paired numbers, Maxima plots them.                 */
-      if listofnumbersp(m) or
-         matrixp(m) and length(m[1]) <= 2 then
-            (with_stdout("maxout.gnuplot",
-               if defaults[1] = "eps"
-                  then (print("set terminal postscript eps"),
-                        print("set out 'dataplot.eps'"))
-                  else if defaults[1] = "png"
-                          then (print("set terminal png"),
-                                print("set out 'dataplot.png'"))
-                  else if defaults[1] = "wxmaxima"
-                          then (print(wxplot_preamble()),
-                                print("set out 'dataplot.png'")),
-               print("set zeroaxis"),
-               print("set nokey"),
-               print("set size ", defaults[5][1], ",", defaults[5][2]),
-               if defaults[2] # ""
-                  then print("set title \'",defaults[2],"\'"),
-               if length(defaults[3]) > 1
-                  then (print("set xlabel \'",defaults[3][1],"\'"),
-                        print("set ylabel \'",defaults[3][2],"\'")),
-               aux: length(m),
-               /* offsets */
-               if listofnumbersp(m)
-                  then offs: [aux, range(m)]*0.05
-                  else /* m is a matrix */
-                       if length(m[1])=1
-                          then offs: [aux, range(m)[1]]*0.05
-                          else offs: range(m)*0.05,
-               print("set offset", offs[1], ",", offs[1],",", offs[2],",",offs[2]),
-               /* points */
-               if defaults[4]
-                  then print("plot '-' with lines 1")
-                  else print("plot '-' with points pointtype",defaults[9]),
-               if listofnumbersp(m)
-                  then for i thru aux do print(i, m[i])
-                  else /* m is a matrix */
-                       if length(m[1])=2
-                          then /* two column vector */
-                               for i thru aux do print(m[i,1], m[i,2])
-                          else /* one column vector */
-                               for i thru aux do print(i, m[i,1])),
-             if defaults[1] = "wxmaxima" then (
-               callgnuplot(false),
-               wxxmltag("dataplot.png", "img")
-             )
-             else if defaults[1] = "x" then callgnuplot(true)
-             else callgnuplot(true))
-
-      /* three column matrix with 3d plot */
-      else if matrixp(m) and length(m[1])=3 and defaults[6] then
-         (with_stdout("maxout.gnuplot",
-            if defaults[1] = "eps"
-              then (print("set terminal postscript eps"),
-                    print("set out 'dataplot.eps'"))
-              else if defaults[1] = "png"
-                      then (print("set terminal png"),
-                            print("set out 'dataplot.png'"))
-              else if defaults[1] = "wxmaxima"
-                       then (print(wxplot_preamble()),
-                             print("set out 'dataplot.png'")),
-            if 0 <= defaults[7][1] and defaults[7][1] <= 180 and
-               0 <= defaults[7][2] and defaults[7][2] <= 360
-               then print("set view ", defaults[7][1], ",", defaults[7][2], ",1,1"),
-            print("set nokey"),
-            print("set size ", defaults[5][1], ",", defaults[5][2]),
-            if defaults[2] # ""
-               then print("set title \'",defaults[2],"\'"),
-            if length(defaults[3]) > 2
-              then (print("set xlabel \'",defaults[3][1],"\'"),
-                    print("set ylabel \'",defaults[3][2],"\'"),
-                    print("set zlabel \'",defaults[3][3],"\'")),
-            if defaults[4]
-               then print("splot '-' with lines 1")
-               else print("splot '-' with points pointtype",defaults[9]),
-            aux: length(m),
-            for i thru aux do print(m[i,1], m[i,2], m[i,3]) ),
-             if defaults[1] = "wxmaxima" then (
-               callgnuplot(false),
-               wxxmltag("dataplot.png", "img")
-             )
-             else if defaults[1] = "x" then callgnuplot(true)
-             else callgnuplot(false))
-
-      /* multivariate scatterplot */
-      else if matrixp(m) then 
-         (with_stdout("maxout.gnuplot",
-            if defaults[1] = "eps"
-              then (print("set terminal postscript eps"),
-                    print("set out 'dataplot.eps'"))
-              else if defaults[1] = "png"
-                      then (print("set terminal png"),
-                            print("set out 'dataplot.png'"))
-              else if defaults[1] = "wxmaxima"
-                       then (print(wxplot_preamble()),
-                             print("set out 'dataplot.png'")),
-            print("unset key"),
-            print("set size ", defaults[5][1], ",", defaults[5][2]),
-            print("set origin 0.0,0.0"),
-            print("set multiplot"),
-            aux:length(m),
-            dim:length(m[1]),
-            ampx:defaults[5][1]/dim,
-            ampy:defaults[5][2]/dim,
-            m: transpose(m),
-            offs: makelist(range(m[i]),i,1,dim)*0.05,  /* offsets 5% */
-            for i:1 thru dim do
-               for j:1 thru dim do(
-                  x: ampx*(i-1),
-                  y: ampy*(dim-j),
-                  print("set size",ampx,",",ampy),
-                  print("set origin",x,",",y),
-                  fr: continuous_freq(m[i],defaults[8]),
-                  if i=j then (   /* plot histogram */
-                     print("set offsets 0, 0, 0, 0"),
-                     print("plot '-' with boxes fill solid 0.3"),
-                     for k:1 thru defaults[8] do
-                        print((fr[1][k]+fr[1][k+1])/2,fr[2][k]) )
-                  else (   /* plot cloud */
-                     print("set offsets ",offs[i],",",offs[i],",",offs[j],",",offs[j]),
-                     print("plot '-' with points pointtype",defaults[9]),
-                     for k:1 thru aux do
-                        print(m[i,k],m[j,k]) ),
-                  print("e") ),
-            print("unset multiplot") ),
-            if defaults[1] = "wxmaxima" then (
-               callgnuplot(false),
-               wxxmltag("dataplot.png", "img")
-            )
-            else if defaults[1] = "x" then callgnuplot(true)
-            else callgnuplot(false))
-
-      else error("sorry, can't plot these data") )$
-
-
-histogram2(m,[select]):=
-   block([numer:true,display2d:false,options,defaults,aux,fr,amp],
-
-      /* updating options */
-      options: ['outputdev, 'maintitle, 'axisnames, 'picturescales, 'nclasses,
-                'relbarwidth, 'barcolor, 'colorintensity],
-      defaults: ["x", "", ["x", "Fr."], [1.0, 1.0], 10, 0.9, 1, 1],
-
-      if get(wxmaxima, version)#false then defaults[1]: "wxmaxima",
-
-      for i in select do(
-         aux: ?position(lhs(i),options),
-         if numberp(aux) and aux <= length(options) and aux >= 1
-            then defaults[aux]: rhs(i)),
-
-      /* if m is a list of numbers or a column or a row matrix then */
-      /* plots a simple histogram.                                  */
-      if listofnumbersp(m) or
-         matrixp(m) and (length(m)=1 or length(m[1])=1) then
-            (with_stdout("maxout.gnuplot",
-               if defaults[1] = "eps"
-                  then (print("set terminal postscript eps"),
-                        print("set out 'histogram.eps'"))
-                  else if defaults[1] = "png"
-                          then (print("set terminal png"),
-                                print("set out 'histogram.png'"))
-              else if defaults[1] = "wxmaxima"
-                  then (print(wxplot_preamble()),
-                        print("set out 'dataplot.png'")),
-               print("set nokey"),
-               print("set size ", defaults[4][1], ",", defaults[4][2]),
-               if defaults[2] # ""
-                  then print("set title \'",defaults[2],"\'"),
-               if length(defaults[3]) > 1
-                  then (print("set xlabel \'",defaults[3][1],"\'"),
-                        print("set ylabel \'",defaults[3][2],"\'")),
-               print("set style fill solid", defaults[8], "border -1"),
-               print("set boxwidth", defaults[6] ,"relative"),
-               if matrixp(m)
-                  then if length(m)=1
-                          then m: m[1]
-                          else m: transpose(m)[1],
-               fr: continuous_freq(m,defaults[5]),
-               amp: fr[1][2]-fr[1][1],
-               print("set xrange [",fr[1][1]-amp/2,":",fr[1][defaults[5]+1]+amp/2,"]"),
-               print("set xtics ", fr[1][1], ",", amp),
-               print("set yrange [0:",tree_reduce('max,fr[2])*1.05,"]"),
-               print("plot '-' with boxes lt", defaults[7]),
-               for k:1 thru defaults[5] do
-                        print((fr[1][k]+fr[1][k+1])/2,fr[2][k])),
-             if defaults[1] = "wxmaxima" then (
-                callgnuplot(false),
-                wxxmltag("dataplot.png", "img")
-             )
-             else if defaults[1] = "x" then callgnuplot(true)
-             else callgnuplot(false))
-
-         else error("sorry, can't plot the histogram for these data") )$
-
-
-barsplot2(m,[select]):=
-   block([display2d:false,options,defaults,aux,fr,amp,str],
-
-      /* updating options */
-      options: ['outputdev, 'maintitle, 'axisnames, 'picturescales,
-                'relbarwidth, 'barcolor, 'colorintensity],
-      defaults: ["x", "", ["x", "Fr."], [1.0, 1.0], 0.9, 1, 1],
-
-      if get(wxmaxima, version)#false then defaults[1]: "wxmaxima",
-
-      for i in select do(
-         aux: ?position(lhs(i),options),
-         if numberp(aux) and aux <= length(options) and aux >= 1
-            then defaults[aux]: rhs(i)),
-
-      /* if m is a list of numbers or a column or a row matrix then */
-      /* plots a simple histogram.                                  */
-      if listp(m) or
-         matrixp(m) and (length(m)=1 or length(m[1])=1) then
-            (with_stdout("maxout.gnuplot",
-               if defaults[1] = "eps"
-                  then (print("set terminal postscript eps"),
-                        print("set out 'barsplot.eps'"))
-                  else if defaults[1] = "png"
-                          then (print("set terminal png"),
-                                print("set out 'barsplot.png'"))
-                  else if defaults[1] = "wxmaxima"
-                     then (print(wxplot_preamble()),
-                        print("set out 'dataplot.png'")),
-               print("set nokey"),
-               print("set size ", defaults[4][1], ",", defaults[4][2]),
-               if defaults[2] # ""
-                  then print("set title \'",defaults[2],"\'"),
-               if length(defaults[3]) > 1
-                  then (print("set xlabel \'",defaults[3][1],"\'"),
-                        print("set ylabel \'",defaults[3][2],"\'")),
-               print("set style fill solid", defaults[7], "border -1"),
-               print("set boxwidth", defaults[5] ,"relative"),
-               if matrixp(m)
-                  then if length(m)=1
-                          then m: m[1]
-                          else m: transpose(m)[1],
-               fr: discrete_freq(m),
-               aux: length(fr[2]),
-               str: sconcat("set xtics(\"",fr[1][1],"\" ",1),
-               for k:2 thru aux do
-                  str: sconcat(str,", \"",fr[1][k], "\" ", k),
-               print(str,")"),
-               print("set xrange [0.5:",aux+0.5,"]"),
-               print("set yrange [0:",tree_reduce('max,fr[2])*1.05,"]"),
-               print("plot '-' with boxes lt", defaults[6]),
-               for k:1 thru aux do
-                  print(k, fr[2][k])),
-             if defaults[1] = "wxmaxima" then (
-               callgnuplot(false),
-               wxxmltag("dataplot.png", "img")
-             )
-             else if defaults[1] = "x" then callgnuplot(true)
-             else callgnuplot(false))
-
-         else error("sorry, can't plot the bars for these data") )$
-
-
-boxplot2(m,[select]):=block([numer:true,display2d:false,options,defaults,aux],
-
-      /* updating options */
-      options: ['outputdev, 'maintitle, 'axisnames,'picturescales],
-      defaults: ["x", "", ["sample","y"], [1.0, 1.0]],
-      
-      if get(wxmaxima, version)#false then defaults[1]: "wxmaxima",
-
-      for i in select do(
-         aux: ?position(lhs(i),options),
-         if numberp(aux) and aux <= length(options) and aux >= 1
-            then defaults[aux]: rhs(i)),
-
-      /* if m is not a row matrix, transpose it */
-      if matrixp(m) and length(m)>1
-         then m: transpose(m),
-
-      /* if m is a list of numbers, transform it */
-      /* to be of the form [[n1,n2,....]]        */
-      if listofnumbersp(m) then m: [m],
-
-      /* plot boxes */
-      if listoflistsp(m) or matrixp(m) then
-         (with_stdout("maxout.gnuplot",
-             if defaults[1] = "eps"
-                then (print("set terminal postscript eps"),
-                      print("set out 'boxplot.eps'"))
-                else if defaults[1] = "png"
-                        then (print("set terminal png"),
-                              print("set out 'boxplot.png'"))
-                else if defaults[1] = "wxmaxima"
-                   then (print(wxplot_preamble()),
-                      print("set out 'dataplot.png'")),
-             print("set nokey"),
-             print("set size ", defaults[4][1], ",", defaults[4][2]),
-             if defaults[2] # ""
-                then print("set title \'",defaults[2],"\'"),
-             if length(defaults[3]) > 1
-                then (print("set xlabel \'",defaults[3][1],"\'"),
-                      print("set ylabel \'",defaults[3][2],"\'")),
-             print("set boxwidth 0.5 relative"),
-             aux: length(m),
-             print("set xrange [0:",aux+1,"]"),
-             print("set xtics ", 1, ",", 1),
-             print("plot '-' using 1:3:2:5:4 with candlesticks lt 1 lw 2,",
-                   " '-' using 1:2:2:2:2 with candlesticks lt 1 lw 2"),
-             for i thru aux do( z:m[i],
-                print(i, mini(m[i]), quantile(m[i],0.25), quantile(m[i],0.75), maxi(m[i]))     ),
-             print("e"),
-             for i thru aux do
-                print(i, median(m[i]))),
-         if defaults[1] = "wxmaxima" then (
-            callgnuplot(false),
-            wxxmltag("dataplot.png", "img")
-         )
-         else if defaults[1] = "x" then callgnuplot(true)
-         else callgnuplot(false))
-
-      else error("sorry, can't plot the box-whisker plot for these data") )$
-

@@ -161,14 +161,18 @@ done;
  -%e^x*sin(2*x)/5-%e^x*cos(2*x)/10+%e^x/2;
  ev(ans,x:1,numer)-ev(ans,x:0,numer);
  0.5779160182042402;
- block([fpprec:35], ev(ans,x:1,bfloat)-ev(ans,x:0,bfloat));
-''(block([fpprec : 35], 5.7791601820424019599988308251707781b-1));
+ (fpprec : 35, 0);
+ 0;
+ ev(ans,x:1,bfloat)-ev(ans,x:0,bfloat);
+ 5.7791601820424019599988308251707781b-1;
  integrate(%e^x*sin(x)^2,x);
  -(((2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10));
  trigreduce(%);
  -((2*%e^x*sin(2*x)+%e^x*cos(2*x)-5*%e^x)/10);
  % - ans,ratsimp;
  0 ;
+ reset (fpprec);
+ [fpprec];
 
 /* end fix*/
 
@@ -299,3 +303,47 @@ catch (block ([foo:1],
  for i thru 3 do (ilt (1/s, s, t),
  if foo > 3 then throw ('i = i) else foo : foo + 1)));
 done;
+
+/* bug reported to mailing list 2009-05-09
+ * unexpected behavior in for loop with variable step
+ */
+
+block ([L : []], for r:0 thru 7 step +2 do L : cons (r, L), L);
+[6, 4, 2, 0];
+
+block ([L : []], for r:7 thru 0 step -2 do L : cons (r, L), L);
+[1, 3, 5, 7];
+
+block ([L : [], r0 : 0, r1 : 7, s : +2], for r:r0 thru r1 step s do L : cons (r, L), L);
+[6, 4, 2, 0];
+
+block ([L : [], r0 : 7, r1 : 0, s : -2], for r:r0 thru r1 step s do L : cons (r, L), L);
+[1, 3, 5, 7];
+
+/* step is evaluated once at start of loop, so these loops are defined */
+
+block ([L : [], s : +2], for i:1 thru 10 step s do L : cons (s : -s, L), L);
+[-2, 2, -2, 2, -2];
+
+block ([L : [], s : -2], for i:10 thru 1 step s do L : cons (s : -s, L), L);
+[2, -2, 2, -2, 2];
+
+/* bug reported to mailing list 2009-05-13 "reset ( radexpand,  domain )" */
+
+(reset (), [radexpand, domain]);
+[true, real];
+
+[radexpand, domain] : [all, complex];
+[all, complex];
+
+reset (radexpand, domain);
+[radexpand, domain];
+
+[radexpand, domain];
+[true, real];
+
+([foo, bar, baz] : [1, 2, 3],
+ /* should ignore these non-defmvar's */
+ reset (foo, bar, baz));
+[];
+

@@ -13,7 +13,7 @@
 (macsyma-module dskfn)
 
 (declare-top (special $filename $device $direc $storenum $filenum $dskall
-		      $filesize filelist opers $packagefile
+		      filelist opers $packagefile
 		      fasdumpfl fasdeqlist fasdnoneqlist savenohack
 		      dsksavep aaaaa errset lessorder greatorder indlist
 		      $labels $aliases varlist mopl $props defaultf
@@ -54,20 +54,21 @@
     (and fl (nconc list (ncons (car x))))))
 
 (defun infolstchk (x)
-  ((lambda (iteml)
-     (if (eq iteml t) x (append (or iteml '(nil)) (cdr x))))
-   (cond ((not (and x (or (member (car x) '($all $contexts) :test #'eq)
-			  (member (car x) (cdr $infolists) :test #'eq))))
-	  t)
-	 ((eq (car x) '$all)
-	  (infolstchk (append (cdr $infolists)
-			      '($linenum $ratvars $weightlevels *ratweights
-				tellratlist *alphabet* $dontfactor $features $contexts))))
-	 ((eq (car x) '$labels) (reverse (cdr $labels)))
-	 ((member (car x) '($functions $macros $gradefs $dependencies) :test #'eq)
-	  (mapcar #'caar (cdr (symbol-value (car x)))))
-	 ((eq (car x) '$contexts) (delete '$global (reverse (cdr $contexts)) :count 1 :test #'eq))
-	 (t (cdr (symbol-value (car x)))))))
+  (let ((iteml (cond ((not (and x (or (member (car x) '($all $contexts) :test #'eq)
+				      (member (car x) (cdr $infolists) :test #'eq))))
+		      t)
+		     ((eq (car x) '$all)
+		      (infolstchk (append (cdr $infolists)
+					  '($linenum $ratvars $weightlevels *ratweights
+					    tellratlist *alphabet* $dontfactor $features $contexts))))
+		     ((eq (car x) '$labels) (reverse (cdr $labels)))
+		     ((member (car x) '($functions $macros $gradefs $dependencies) :test #'eq)
+		      (mapcar #'caar (cdr (symbol-value (car x)))))
+		     ((eq (car x) '$contexts) (delete '$global (reverse (cdr $contexts)) :count 1 :test #'eq))
+		     (t (cdr (symbol-value (car x)))))))
+    (if (eq iteml t)
+	x
+	(append (or iteml '(nil)) (cdr x)))))
 
 
 (defun filelength (file)
@@ -85,7 +86,7 @@
   (let (prinlength prinlevel file (fname (meval (car x)))
 		   *print-gensym* list fasdeqlist fasdnoneqlist maxima-error)
     (unless (stringp fname)
-      (merror "~a: first argument must be a string." fn))
+      (merror (intl:gettext "~a: first argument must be a string; found: ~M") fn fname))
     (setq savefile
 	  (if (or (eq $file_output_append '$true) (eq $file_output_append t))
 	      (open fname :direction :output :if-exists :append :if-does-not-exist :create)
@@ -378,7 +379,7 @@
   (let ((defaultf defaultf) (eof (list nil)) item)
     (setq file (open file))
     (setq item (do ((item (read file eof) (read file eof)))
-		   ((eq item eof) (merror "~%~:M not found" name))
+		   ((eq item eof) (merror (intl:gettext "unstore: ~:M not found.") name))
 		 (if (or (and (not (atom item)) (eq (car item) 'dsksetq)
 			      (eq flag 'value) (eq (cadr item) name))
 			 (and (not (atom item)) (= (length item) 4)

@@ -1,40 +1,8 @@
 ;;; -*- Mode: lisp -*-
 
-#-gcl
-(progn
-  (defun graphs-source-pathname (subdir)
-    (merge-pathnames (make-pathname :directory (list :relative subdir))
-		     (make-pathname :directory (pathname-directory *load-truename*))))
-  (defun graphs-binary-pathname (subdir)
-    (merge-pathnames
-     (make-pathname
-      :name (concatenate 'string "binary-"
-			 #+clisp "clisp"
-			 #+cmu "cmucl"
-			 #+scl "scl"
-			 #+sbcl "sbcl"
-			 #+allegro "acl"
-			 #+openmcl "openmcl"
-			 #+abcl "abcl"
-			 #+ecl "ecl"
-			 #-(or clisp cmu scl sbcl gcl allegro openmcl abcl ecl) "unknownlisp")
-      :directory (list :relative subdir))
-     (make-pathname :directory (pathname-directory *load-truename*))))
-  )
-
-#+gcl
-(progn
-  (defun graphs-source-pathname (subdir)
-    (merge-pathnames (make-pathname :directory (list subdir))
-		     (make-pathname :directory (pathname-directory sys:*load-pathname*))))
-  (defun graphs-binary-pathname (subdir)
-    (merge-pathnames (make-pathname :directory (list subdir))
-		     (make-pathname :directory (pathname-directory sys:*load-pathname*))))
-  )
-
 (mk:defsystem graphs
-  :source-pathname (graphs-source-pathname ".")
-  :binary-pathname (graphs-binary-pathname ".")
+  :source-pathname (maxima::maxima-load-pathname-directory)
+  :binary-pathname (maxima::maxima-objdir "share" "contrib" "graphs")
   :source-extension "lisp"
   :components
   ((:file "graph_core")
@@ -43,5 +11,6 @@
    (:file "matching")
    (:file "graph6")
    (:file "demoucron")
-   (:file "dijkstra")))
+   (:file "dijkstra")
+   (:file "wiener_index")))
 

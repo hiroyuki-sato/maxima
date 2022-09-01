@@ -6,6 +6,7 @@ binary-gcl/maxima : nregex.lisp
 binary-gcl/maxima : sys-proclaim.lisp
 binary-gcl/maxima : autoconf-variables.lisp
 binary-gcl/maxima : nregex.lisp
+binary-gcl/maxima : intl.lisp
 binary-gcl/maxima : cl-info.lisp
 binary-gcl/maxima : sloop.lisp
 binary-gcl/maxima : lmdcls.lisp
@@ -15,6 +16,7 @@ binary-gcl/maxima : clmacs.lisp
 binary-gcl/maxima : commac.lisp
 binary-gcl/maxima : mormac.lisp
 binary-gcl/maxima : compat.lisp
+binary-gcl/maxima : getopt.lisp
 binary-gcl/maxima : command-line.lisp
 binary-gcl/maxima : defopt.lisp
 binary-gcl/maxima : defcal.lisp
@@ -175,6 +177,7 @@ binary-gcl/maxima : csimp2.lisp
 binary-gcl/maxima : zero.lisp
 binary-gcl/maxima : logarc.lisp
 binary-gcl/maxima : rpart.lisp
+binary-gcl/maxima : numeric.lisp
 binary-gcl/maxima : server.lisp
 binary-gcl/maxima : macsys.lisp
 binary-gcl/maxima : mload.lisp
@@ -220,6 +223,7 @@ binary-gcl/maxima : trgred.lisp
 binary-gcl/maxima : bessel.lisp
 binary-gcl/maxima : ellipt.lisp
 binary-gcl/maxima : airy.lisp
+binary-gcl/maxima : plasma.lisp
 binary-gcl/maxima : intpol.lisp
 binary-gcl/maxima : nparse.lisp
 binary-gcl/maxima : displa.lisp
@@ -242,6 +246,7 @@ binary-gcl/maxima : defint.lisp
 binary-gcl/maxima : residu.lisp
 binary-gcl/maxima : specfn.lisp
 binary-gcl/maxima : mat.lisp
+binary-gcl/maxima : linnew.lisp
 binary-gcl/maxima : matrix.lisp
 binary-gcl/maxima : sprdet.lisp
 binary-gcl/maxima : newinv.lisp
@@ -291,8 +296,8 @@ binary-gcl/maxima : hyp.lisp
 binary-gcl/maxima : todd-coxeter.lisp
 binary-gcl/maxima : mactex.lisp
 binary-gcl/maxima : plot.lisp
-binary-gcl/maxima : gnuplot.lisp
-binary-gcl/maxima : openmath.lisp
+binary-gcl/maxima : gnuplot_def.lisp
+binary-gcl/maxima : xmaxima_def.lisp
 binary-gcl/maxima : autol.lisp
 binary-gcl/maxima : max_ext.lisp
 binary-gcl/maxima : init-cl.lisp

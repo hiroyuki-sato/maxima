@@ -15,8 +15,6 @@
 ;;; Macsyma error signalling. 
 ;;; 2:08pm  Tuesday, 30 June 1981 George Carrette.
 
-(defvar *mdebug* t "Enter the lisp debugger on an error if this is true")
-
 (defmvar $error `((mlist simp) "No error.")
   "During an MAXIMA-ERROR break this is bound to a list
   of the arguments to the call to MAXIMA-ERROR, with the message
@@ -41,6 +39,7 @@
   ; But RATDISREP simplifies its argument, which is a no-no if we got here
   ; because some simplification code is complaining, so inhibit simplification. Double ugh.
   (let (($simp nil))
+    (declare (special $simp))
     (setq exp (ratdisrep exp)))
 
   (if (atom exp)
@@ -79,8 +78,8 @@
   (cond (*mdebug*
 	 (let ((dispflag t) ret)
 	   (declare (special $help dispflag))
-	   (format t " -- an error.  Entering the Maxima Debugger dbm~%~
-                       Enter `:h' for help~%")
+	   (format t (intl:gettext " -- an error.  Entering the Maxima debugger.~%~
+                       Enter ':h' for help.~%"))
 	   (progn
 	     (setq ret (break-dbm-loop nil))
 	     (cond ((eql ret :resume)
@@ -89,7 +88,7 @@
 	(t
 	 (fresh-line *standard-output*)
 	 ($backtrace 3)
-	 (format t "~& -- an error.  To debug this try debugmode(true);~%")
+	 (format t (intl:gettext "~& -- an error. To debug this try: debugmode(true);~%"))
 	 (throw 'macsyma-quit 'maxima-error))))
 
 (defmacro with-$error (&body body)
@@ -97,7 +96,7 @@
   `(let ((errcatch t)
 	 *mdebug*		       ;let merror signal a lisp error
 	 $errormsg)			;don't print $error
-     (declare (special errcatch))
+     (declare (special errcatch *mdebug* $errormsg))
      ,@body))
 
 ;; Sample:
@@ -114,7 +113,7 @@
 		(do ((l (cdr val) (cdr l)))
 		    ((null l) (return t))
 		  (if (not (symbolp (car l))) (return nil)))))
-      (merror "The variable ~M being set to ~M which is not a list of symbols."
+      (merror (intl:gettext "assignment: assignment to ~M must be a list of symbols; found: ~M")
 	      var val)))
 
 (defun process-error-argl (l)
@@ -156,7 +155,7 @@
       (if (null (errset
 		 (apply #'mformat nil
 			(cadr $error) (caddr the-jig))))
-	  (mtell "~%** error while printing error message **~%~A~%"
+	  (mtell (intl:gettext "~%** error while printing error message **~%~A~%")
 		 (cadr $error)
 		 )))
     (fresh-line))
@@ -165,7 +164,7 @@
 (defmfun read-only-assign (var val)
   (if munbindp
       'munbindp
-      (merror "Attempting to assign read-only variable ~:M the value:~%~M" var val)))
+      (merror (intl:gettext "assignment: attempting to assign read-only variable ~:M the value ~M") var val)))
 
 
 (defprop $error read-only-assign  assign)

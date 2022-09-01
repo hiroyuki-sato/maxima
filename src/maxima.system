@@ -4,6 +4,10 @@
 
 (pushnew :cl *features*)
 
+;; Don't try to optimize so much in ECL.
+;; Therefore functions can be redefined (essential for share libraries).
+#+ecl (declaim (optimize (debug 2)))
+
 #+gcl
 (let ((version-num (+ (* 10000 system::*gcl-major-version*)
 		      (* 100 system::*gcl-minor-version*)
@@ -29,16 +33,15 @@
 (export '*maxima-build-time*)
 
 #+ecl
-(defun do-compile-ecl (&rest args)
+(defun do-compile-ecl (file &rest args)
   ;; Not sure about this.  Compile twice.  The first produces a .o
   ;; file.  The second produces the .fas file to keep defsystem happy
   ;; because defsystem needs to load the files while compiling so
   ;; macros and such are defined.
-  (apply #'compile-file args)
-  (let ((output (getf (cdr args) :output-file)))
-    (c:build-fasl (compile-file-pathname output :type :fasl)
-		  :lisp-files (list (compile-file-pathname output
-							   :type :object)))))
+  (let* ((output (getf args :output-file))
+	 (object-output (compile-file-pathname output :system-p t)))
+    (and (apply #'compile-file file :output-file object-output args)
+	 (c:build-fasl output :lisp-files (list object-output)))))
 
 #+ecl
 (defun build-maxima-lib ()
@@ -60,10 +63,10 @@
 			     (make-pathname :type "o" :defaults p))
 			 files)))
 	(c::build-program "binary-ecl/maxima" :lisp-files obj
-        :ld-flags
-        (let
-          ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*" (find-package "MAXIMA")))))
-          (if (and x (not (string= x ""))) (list x)))
+			  :ld-flags
+			  (let ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*"
+							      (find-package "MAXIMA")))))
+			    (if (and x (not (string= x ""))) (list x)))
 			  :epilogue-code '(progn (require :defsystem)
 					         (cl-user::run)))))))
 
@@ -118,6 +121,7 @@
 				     (:file "autoconf-variables")))
 	       (:module info :source-pathname ""
 			:components ((:file "nregex")
+				     (:file "intl")
 				     (:file "cl-info")))
 	       (:module sloop :source-pathname ""
 			:components ((:file "sloop")))
@@ -134,7 +138,10 @@
                         :components ((:file "mormac") 
                                      (:file "compat")))
 	       (:module command-line :source-pathname ""
+			:depends-on (getopt)
 			:components ((:file "command-line")))
+	       (:module getopt :source-pathname ""
+			:components ((:file "getopt")))
                (:module fundamental-macros :source-pathname ""
                         :components ((:file "defopt") 
                                      (:file "defcal") 
@@ -452,6 +459,10 @@
                                      (:file "zero")
                                      (:file "logarc") 
                                      (:file "rpart")))
+	       (:module numeric-bigfloat :source-pathname ""
+			:depends-on (#-gcl "package"
+				     #+gcl "proclaim")
+			:components ((:file "numeric")))
 	       (:module server :source-pathname ""
 			:components ((:file "server")))
                (:module i-o :source-pathname ""
@@ -507,6 +518,7 @@
 				     (:file "ellipt")
 				     (:file "airy"
 					    :depends-on ("ellipt"))
+				     (:file "plasma")
 				     (:file "intpol")))
 	       (:module reader :source-pathname ""
 			:depends-on (compatibility-macros)
@@ -544,6 +556,7 @@
 			:components ((:file "specfn")))
 	       (:module matrix-algebra :source-pathname ""
 			:components ((:file "mat") 
+                     (:file "linnew")
 				     (:file "matrix")))
 	       (:module determinants :source-pathname ""
 			:components ((:file "sprdet") 
@@ -604,8 +617,8 @@
 			 (:file "mactex")
 			 (:file "plot")))
 	       (:module graphics-drivers :source-pathname ""
-			:components ((:file "gnuplot")
-				     (:file "openmath")))
+			:components ((:file "gnuplot_def")
+				     (:file "xmaxima_def")))
 	       (:module final :source-pathname ""
 			;; These are not compiled, for whatever reason
 			#-ecl :load-only #-ecl t
