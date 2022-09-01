@@ -365,9 +365,12 @@
 (defun risplit (l)
   (let (($domain '$complex) ($m1pbranch t) $logarc op)
     (cond ((atom l)
+           ;; Symbols are assumed to represent real values, unless they have
+           ;; been declared to be complex. If they have been declared to be both
+           ;; real and complex, they are taken to be real.
 	   (cond ((eq l '$%i) (cons 0 1))
 		 ((eq l '$infinity) (cons '$und '$und))
-		 ((decl-complexp l) (risplit-noun l))
+		 ((and (decl-complexp l) (not (decl-realp l))) (risplit-noun l))
 		 (t (cons l 0))))
 	  ((eq (caar l) 'rat) (cons l 0))
 	  ((eq (caar l) 'mplus) (risplit-mplus l))
@@ -673,8 +676,11 @@
 			 (cons (neg l) (simplify '$%pi)))
 			(t (cons (take '(mabs) l) (genatan 0 l))))))))
 	((eq '$zero (let ((sign-imag-errp nil)) (catch 'sign-imag-err ($sign l))))
-	 (setq l ($expand l))
-	 (cons l l))
+	 (cond ((some-bfloatp l)
+		(cons bigfloatzero bigfloatzero))	; contagious
+	       ((some-floatp l)
+		(cons 0.0 0.0))
+	       (t (cons 0 0))))
 	((member (caar l) '(rat bigfloat) :test #'eq)
 	 (cons (list (car l) (abs (cadr l)) (caddr l))
 	       (argnum (cadr l))))

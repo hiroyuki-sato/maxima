@@ -698,6 +698,12 @@ map(csign,[(xneg)^(1/2),(xneg)^(3/2),(xneg)^(5/2),(xneg)^(7/2)]);
 map(csign,[(-xpos)^(1/2),(-xpos)^(3/2),(-xpos)^(5/2),(-xpos)^(7/2)]);
 [imaginary,imaginary,imaginary,imaginary];
 
+map(csign,[(-1)^xpos, (-1)^xneg]);
+[complex,complex];
+
+map(sign,[(-1)^xpos, (-1)^xneg]);
+[pn,pn];
+
 /* Expressions with an addition */
 
 csign(x+%i*y);
@@ -994,4 +1000,29 @@ false;
 
 is(equal(a,b));
 false;
+
+/* Check fix for bug 2547 (declare constant messes up sign calculations) */
+(declare (x, constant), declare (y, constant), assume (x > y), is (x>y));
+true$
+
+kill(all);
+done$
+
+/* facts in assume database not cleaned up by 'sign' */
+
+(kill (foo), foo : %e^(abs(uu)+uu)*(uu/abs(uu)+1)+%e^(abs(uu)-uu)*(uu/abs(uu)-1), 0);
+0;
+
+block ([bar, baz], bar : copy (facts (initial)), is (equal (foo, 0)), baz : facts (initial), is (bar = baz));
+true;
+
+/* tnx to Barton Willis for the next couple of tests */
+
+map('sign,[sqrt(x),x]);
+[pz, pnz];
+
+(kill(buddy),
+ buddy(p,q) := expand(if p >= 0 then q else q,0,0),
+ buddy(sqrt(x),abs(x)));
+abs(x);
 

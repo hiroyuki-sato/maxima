@@ -19,8 +19,6 @@
 (loop for (x y) on '(%cot %tan %csc %sin %sec %cos %coth %tanh %csch %sinh %sech %cosh)
    by #'cddr do (putprop x y 'recip) (putprop y x 'recip))
 
-(defun nill () '(nil))
-
 (defmvar $zeta%pi t)
 
 ;; polynomial predicates and other such things
@@ -727,9 +725,7 @@ summation when necessary."
 ;; multiplication of sums
 
 (defun gensumindex ()
-  (implode (nconc (exploden $genindex)
-		  (and $gensumnum
-		       (mexploden (setq $gensumnum (1+ $gensumnum)))))))
+  (intern (format nil "~S~D" $genindex (incf $gensumnum))))
 
 (defun sumtimes (x y)
   (cond ((null x) y)
@@ -834,7 +830,7 @@ summation when necessary."
       ((null l)
        (cons (simplifya (cons (list (caar e)) a) nil)
 	     (simplifya (cons (list (caar e)) b) nil)))
-    (if (or (mnump (car l)) (constant (car l)))
+    (if ($constantp (car l))
 	(setq a (cons (car l) a))
 	(setq b (cons (car l) b)))))
 
@@ -997,28 +993,28 @@ summation when necessary."
 (setq opers (cons '$antisymmetric opers)
       *opers-list (cons '($antisymmetric . antisym) *opers-list))
 
-(declare-top (special sign))
+(declare-top (special antisym-sign))
 
 (defmfun antisym (e z)
   (let ((l (mapcar #'(lambda (q) (simpcheck q z)) (cdr e))))
-    (let (sign) (if (or (not (eq (caar e) 'mnctimes)) (freel l 'mnctimes))
+    (let (antisym-sign) (if (or (not (eq (caar e) 'mnctimes)) (freel l 'mnctimes))
 		    (setq l (bbsort1 l)))
 	 (cond ((equal l 0) 0)
-	       ((prog1 (null sign) (setq e (oper-apply (cons (car e) l) t)))
+	       ((prog1 (null antisym-sign) (setq e (oper-apply (cons (car e) l) t)))
 		e)
 	       (t (neg e))))))
 
 (defun bbsort1 (l)
   (prog (sl sl1)
      (if (or (null l) (null (cdr l))) (return l))
-     (setq sign nil sl (list nil (car l)))
+     (setq antisym-sign nil sl (list nil (car l)))
      loop (setq l (cdr l))
      (if (null l) (return (nreverse (cdr sl))))
      (setq sl1 sl)
      loop1(cond ((null (cdr sl1)) (rplacd sl1 (cons (car l) nil)))
 		((alike1 (car l) (cadr sl1)) (return 0))
 		((great (car l) (cadr sl1)) (rplacd sl1 (cons (car l) (cdr sl1))))
-		(t (setq sign (not sign) sl1 (cdr sl1)) (go loop1)))
+		(t (setq antisym-sign (not antisym-sign) sl1 (cdr sl1)) (go loop1)))
      (go loop)))
 
 (setq opers (cons '$nary opers)

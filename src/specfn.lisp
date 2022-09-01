@@ -106,6 +106,25 @@
 		     . ,(prep1 (m^ e (m- subl)))))))
 	(go a)))
 
+
+;; computes first pw terms of asymptotic expansion of $li[s](z)
+;;
+;; pw should be < (1/2)*s or gamma term is undefined
+;;
+;; Wood, D.C. (June 1992). The Computation of Polylogarithms. Technical Report 15-92
+;; University of Kent Computing Laboratory.
+;; http://www.cs.kent.ac.uk/pubs/1992/110
+;; equation 11.1
+(defun li-asymptotic-expansion (pw s z)
+  (m+l (loop for k from 0 to pw collect
+	     (m* (m^ -1 k)
+		 (m- 1 (m^ 2 (m- 1 (m* 2 k))))
+		 (m^ (m* 2 '$%pi) (m* 2 k))
+		 (m// ($bern (m* 2 k))
+		      `((mfactorial) ,(m* 2 k)))
+		 (m// (m^ `((%log) ,(m- z)) (m- 2 (m* 2 k))) 
+		      ($gamma (m+ s 1 (m* -2 k))))))))
+
 ;; Numerical evaluation for Chebyschev expansions of the first kind
 
 (defun cheby (x chebarr)
@@ -737,7 +756,8 @@
 ;; k integer
 ;; z, w bigfloat: numbers
 (defun check-lambert-w-k (k w z)
-  (let ((tolerance 1.0e-6))
+  (let ((tolerance #-gcl 1.0e-6
+                   #+gcl (cl:float 1/1000000)))
   (if
      (cond 
        ;; k=-1 branch with z and w real.
