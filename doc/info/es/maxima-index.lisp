@@ -1542,7 +1542,9 @@
 ("minimize_lp" . ("maxima.info-8" 17994 1979 "Funciones y variables para simplex"))
 ("minimum_spanning_tree" . ("maxima.info-7" 115318 313 "Funciones y variables para graphs"))
 ("minor" . ("maxima.info-3" 275700 174 "Funciones y variables para las matrices y el álgebra lineal"))
+;; build_index.pl: something seems wrong for this next item
 ("minpack_lsquares" . ("" -1 828 "Funciones y variables para minpack"))
+;; build_index.pl: something seems wrong for this next item
 ("minpack_solve" . ("" -1 191 "Funciones y variables para minpack"))
 ("mnewton" . ("maxima.info-7" 267975 1623 "Funciones y variables para mnewton"))
 ("mod" . ("maxima.info-4" 208298 1326 "Funciones y variables para teoría de números"))

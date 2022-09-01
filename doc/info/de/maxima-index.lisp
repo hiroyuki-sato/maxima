@@ -104,7 +104,6 @@
 ("Zuweisungsoperator" . ("maxima.info-1" 289961 2721 "Zuweisungsoperatoren"))
 ("Zuweisungsoperator (wertet die linke Seite aus)" . ("maxima.info-1" 292684 824 "Zuweisungsoperatoren"))
 ("[" . ("maxima.info-1" 137385 1138 "Funktionen und Variablen für Listen"))
-("\\" . ("maxima.info-1" 115537 2010 "Einführung in Zeichenketten"))
 ("]" . ("maxima.info-1" 137386 1137 "Funktionen und Variablen für Listen"))
 ("^" . ("maxima.info-1" 265925 7517 "Arithmetische Operatoren"))
 ("^^" . ("maxima.info-1" 274230 595 "Arithmetische Operatoren"))
@@ -1545,7 +1544,9 @@
 ("minimize_lp" . ("maxima.info-8" 143417 1890 "Functions and Variables for simplex"))
 ("minimum_spanning_tree" . ("maxima.info-7" 126177 312 "Functions and Variables for graphs"))
 ("minor" . ("maxima.info-4" 92405 172 "Funktionen und Variablen der linearen Algebra"))
+;; build_index.pl: something seems wrong for this next item
 ("minpack_lsquares" . ("" -1 373 "Functions and Variables for minpack"))
+;; build_index.pl: something seems wrong for this next item
 ("minpack_solve" . ("" -1 229 "Functions and Variables for minpack"))
 ("minus unendlich" . ("maxima.info-1" 126620 530 "Funktionen und Variablen für Konstante"))
 ("mnewton" . ("maxima.info-8" 78264 1824 "Funktionen und Variablen für mnewton"))

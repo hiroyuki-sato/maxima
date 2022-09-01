@@ -11,9 +11,12 @@
 ("%and" . ("maxima.info-8" 197813 2858 "Functions and Variables for to_poly_solve"))
 ("%c" . ("maxima.info-6" 51284 76 "Functions and Variables for contrib_ode"))
 ("%e" . ("maxima.info-1" 122249 2040 "Funktionen und Variablen für Konstante"))
+;; build_index.pl: something seems wrong for this next item
 ("%e_to_numlog" . ("" -1 810 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("%edispflag" . ("maxima.info-1" 72976 610 "Funktionen und Variablen der Ausgabe"))
+;; build_index.pl: something seems wrong for this next item
 ("%emode" . ("" -1 371 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("%enumer" . ("" -1 638 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("%f" . ("maxima.info-5" 51828 255 "Hypergeometrische Funktionen"))
 ("%gamma" . ("maxima.info-1" 125321 869 "Funktionen und Variablen für Konstante"))
@@ -678,6 +681,7 @@
 ("evolution2d" . ("maxima.info-7" 30289 537 "Functions and Variables for dynamics"))
 ("evundiff" . ("maxima.info-4" 104940 2311 "Tensoranalysis"))
 ("example" . ("maxima.info-1" 37265 1574 "Funktionen und Variablen der Hilfe"))
+;; build_index.pl: something seems wrong for this next item
 ("exp" . ("" -1 216 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("expand" . ("maxima.info-2" 58136 4243 "Funktionen und Variablen für die Vereinfachung"))
 ("expandwrt" . ("maxima.info-2" 62401 637 "Funktionen und Variablen für die Vereinfachung"))
@@ -1210,15 +1214,23 @@
 ("loadprint" . ("maxima.info-2" 314733 0 "Funktionen und Variablen für die Eingabe und Ausgabe"))
 ("local" . ("maxima.info-5" 259255 1290 "Funktionen und Variablen der Programmierung"))
 ("locate_matrix_entry" . ("maxima.info-7" 239285 931 "Functions and Variables for linearalgebra"))
+;; build_index.pl: something seems wrong for this next item
 ("log" . ("" -1 155 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("log_gamma" . ("maxima.info-5" 7415 69 "Gammafunktionen und verwandte Funktionen"))
+;; build_index.pl: something seems wrong for this next item
 ("logabs" . ("" -1 363 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("logarc" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("logcb" . ("maxima.info-6" 340680 0 "Functions and Variables for draw"))
+;; build_index.pl: something seems wrong for this next item
 ("logconcoeffp" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("logcontract" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("logexpand" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("lognegint" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("logsimp" . ("" -1 254 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("logx" . ("maxima.info-2" 274758 211 "Grafikoptionen"))
 ("logx <1>" . ("maxima.info-6" 340680 0 "Functions and Variables for draw"))
@@ -1574,6 +1586,7 @@
 ("piechart_description" . ("maxima.info-6" 112143 1476 "Functions and Variables for statistical graphs"))
 ("planar_embedding" . ("maxima.info-7" 133571 537 "Functions and Variables for graphs"))
 ("playback" . ("maxima.info-1" 65140 1928 "Funktionen und Variablen der Eingabe"))
+;; build_index.pl: something seems wrong for this next item
 ("plog" . ("" -1 265 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("plot2d" . ("maxima.info-2" 256694 6783 "Funktionen und Variablen für die grafische Darstellung"))
 ("plot3d" . ("maxima.info-2" 263520 4727 "Funktionen und Variablen für die grafische Darstellung"))
@@ -1907,7 +1920,9 @@
 ("rombergmin" . ("maxima.info-8" 45557 288 "Functions and Variables for romberg"))
 ("rombergtol" . ("maxima.info-8" 45847 551 "Functions and Variables for romberg"))
 ("room" . ("maxima.info-5" 215482 1141 "Funktionen und Variablen der Laufzeitumgebung"))
+;; build_index.pl: something seems wrong for this next item
 ("rootsconmode" . ("" -1 452 "Wurzel-, Exponential- und Logarithmusfunktion"))
+;; build_index.pl: something seems wrong for this next item
 ("rootscontract" . ("" -1 1185 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("rootsepsilon" . ("maxima.info-3" 344233 0 "Funktionen und Variablen für Gleichungen"))
 ("round" . ("maxima.info-2" 94194 2483 "Funktionen für Zahlen"))
@@ -2072,6 +2087,7 @@
 ("spring_embedding_depth" . ("maxima.info-7" 151863 154 "Functions and Variables for graphs"))
 ("sprint" . ("maxima.info-8" 140982 766 "Functions and Variables for input and output"))
 ("sqfr" . ("maxima.info-3" 294162 312 "Funktionen und Variablen für Polynome"))
+;; build_index.pl: something seems wrong for this next item
 ("sqrt" . ("" -1 2356 "Wurzel-, Exponential- und Logarithmusfunktion"))
 ("sqrtdenest" . ("maxima.info-8" 71510 1012 "Package sqdnst"))
 ("sqrtdispflag" . ("maxima.info-1" 90911 191 "Funktionen und Variablen der Ausgabe"))
