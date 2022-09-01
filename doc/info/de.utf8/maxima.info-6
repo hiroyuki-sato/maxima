@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.8 from maxima.texi.
 
    Das ist ein Texinfo Maxima Manual
 
@@ -7,6 +7,860 @@ This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     Ein Computer Algebra System.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
+
+37 cobyla
+*********
+
+* Menu:
+
+* Introduction to cobyla::
+* Functions and Variables for cobyla::
+* Examples for cobyla::
+
+
+File: maxima.info,  Node: Introduction to cobyla,  Next: Functions and Variables for cobyla,  Prev: cobyla,  Up: cobyla
+
+37.1 Introduction to cobyla
+===========================
+
+`fmin_cobyla' is a Common Lisp translation (via `f2cl') of the Fortran
+constrained optimization routine COBYLA by Powell[1][2][3].
+
+COBYLA minimizes an objective function F(X) subject to M inequality
+constraints of the form g(X) >= 0 on X, where X is a vector of
+variables that has N components.
+
+Equality constraints g(X)=0 can often be implemented by a pair of
+inequality constraints g(X)>=0 and -g(X)>= 0.  Maxima's interface to
+COBYLA allows equality constraints and internally converts the equality
+constraints to a pair of inequality constraints.
+
+The algorithm employs linear approximations to the objective and
+constraint functions, the approximations being formed by linear
+interpolation at N+1 points in the space of the variables.  The
+interpolation points are regarded as vertices of a simplex.  The
+parameter RHO controls the size of the simplex and it is reduced
+automatically from RHOBEG to RHOEND.  For each RHO the subroutine tries
+to achieve a good vector of variables for the current size, and then
+RHO is reduced until the value RHOEND is reached.  Therefore RHOBEG and
+RHOEND should be set to reasonable initial changes to and the required
+accuracy in the variables respectively, but this accuracy should be
+viewed as a subject for experimentation because it is not guaranteed.
+The routine treats each constraint individually when calculating a
+change to the variables, rather than lumping the constraints together
+into a single penalty function.  The name of the subroutine is derived
+from the phrase Constrained Optimization BY Linear Approximations.
+
+References:
+
+[1] Fortran Code is from `http://plato.asu.edu/sub/nlores.html#general'
+
+[2] M. J. D. Powell, "A direct search optimization method that models
+the objective and constraint functions by linear interpolation," in
+Advances in Optimization and Numerical Analysis, eds. S. Gomez and
+J.-P. Hennart (Kluwer Academic: Dordrecht, 1994), p. 51-67.
+
+[3] M. J. D. Powell, "Direct search algorithms for optimization
+calculations," Acta Numerica 7, 287-336 (1998).  Also available as
+University of Cambridge, Department of Applied Mathematics and
+Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
+`http://www.damtp.cam.ac.uk/user/na/reports.html'
+
+
+File: maxima.info,  Node: Functions and Variables for cobyla,  Next: Examples for cobyla,  Prev: Introduction to cobyla,  Up: cobyla
+
+37.2 Functions and Variables for cobyla
+=======================================
+
+ -- Function: fmin_cobyla (<F>, <X>, <Y>)
+ -- Function: fmin_cobyla (<F>, <X>, <Y>, optional_args)
+     Returns an approximate minimum of the expression <F> with respect
+     to the variables <X>, subject to an optional set of constraints.
+     <Y> is a list of initial guesses for <X>.
+
+     <F> must be an ordinary expressions, not names of functions or
+     lambda expressions.
+
+     `optional_args' represents additional arguments, specified as
+     `<symbol> = <value>'.  The optional arguments recognized are:
+
+    `constraints'
+          List of inequality and equality constraints that must be
+          satisfied by <X>.  The inequality constraints must be actual
+          inequalities of the form `g(<X>) >= h(<X>)' or `g(<X>) <=
+          h(<X>)'.  The equality constraints must be of the form
+          `g(<X>) = h(<X>)'.
+
+    `rhobeg'
+          Initial value of the internal RHO variable which controls the
+          size of simplex.  (Defaults to 1.0)
+
+    `rhoend'
+          The desired final value rho parameter.  It is approximately
+          the accuracy in the variables.  (Defaults to 1d-6.)
+
+    `iprint'
+          Verbose output level.  (Defaults to 0)
+             * 0 - No output
+
+             * 1 - Summary at the end of the calculation
+
+             * 2 - Each new value of RHO and SIGMA is printed, including
+               the vector of variables, some function information when
+               RHO is reduced.
+
+             * 3 - Like 2, but information is printed when F(X) is
+               computed.
+
+    `maxfun'
+          The maximum number of function evaluations.  (Defaults to
+          1000).
+
+     On return, a vector is given:
+
+       1. The value of the variables giving the minimum.  This is a
+          list of elements of the form `<var> = <value>' for each of the
+          variables listed in <X>.
+
+       2. The minimized function value
+
+       3. The number of function evaluations.
+
+       4. Return code with the following meanings
+            1.  0 - No errors.
+
+            2.  1 - Limit on maximum number of function evaluations
+               reached.
+
+            3.  2 - Rounding errors inhibiting progress.
+
+     `load(fmin_cobyla)' loads this function.
+
+ -- Function: bf_fmin_cobyla (<F>, <X>, <Y>)
+ -- Function: bf_fmin_cobyla (<F>, <X>, <Y>, optional_args)
+     This function is identical to `fmin_cobyla', except that bigfloat
+     operations are used, and the default value for <rhoend> is
+     `10^(fpprec/2)'.
+
+     See `fmin_cobyla' for more information.
+
+     `load(fmin_cobyla)' loads this function.
+
+
+File: maxima.info,  Node: Examples for cobyla,  Prev: Functions and Variables for cobyla,  Up: cobyla
+
+37.3 Examples for cobyla
+========================
+
+Minimize x1*x2 with 1-x1^2-x2^2 >= 0.  The theoretical solution is x1 =
+1/sqrt(2), x2 = -1/sqrt(2).
+
+     (%i1) load(fmin_cobyla)$
+
+     (%i2) fmin_cobyla(x1*x2, [x1, x2], [1,1],
+                              constraints = [x1^2+x2^2<=1], iprint=1);
+
+        Normal return from subroutine COBYLA
+
+        NFVALS =   66   F =-5.000000E-01    MAXCV = 1.999956E-12
+        X = 7.071058E-01  -7.071077E-01
+     (%o2) [[x1 = .7071058493484819, x2 = - .7071077130247994],
+                                           - .499999999999263
+
+There are additional examples in the share/cobyla/ex directory.
+
+
+File: maxima.info,  Node: contrib_ode,  Next: Package descriptive,  Prev: cobyla,  Up: Top
+
+38 contrib_ode
+**************
+
+* Menu:
+
+* Introduction to contrib_ode::
+* Functions and Variables for contrib_ode::
+* Possible improvements to contrib_ode::
+* Test cases for contrib_ode::
+* References for contrib_ode::
+
+
+File: maxima.info,  Node: Introduction to contrib_ode,  Next: Functions and Variables for contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
+
+38.1 Introduction to contrib_ode
+================================
+
+Maxima's ordinary differential equation (ODE) solver `ode2' solves
+elementary linear ODEs of first and second order.  The function
+`contrib_ode' extends `ode2' with additional methods for linear and
+non-linear first order ODEs and linear homogeneous second order ODEs.
+The code is still under development and the calling sequence may change
+in future releases.  Once the code has stabilized it may be moved from
+the contrib directory and integrated into Maxima.
+
+This package must be loaded with the command `load('contrib_ode)'
+before use.
+
+The calling convention for `contrib_ode' is identical to `ode2'.  It
+takes three arguments: an ODE (only the left hand side need be given if
+the right hand side is 0), the dependent variable, and the independent
+variable.  When successful, it returns a list of solutions.
+
+The form of the solution differs from `ode2'.  As non-linear equations
+can have multiple solutions, `contrib_ode' returns a list of solutions.
+Each solution can have a number of forms:
+
+   * an explicit solution for the dependent variable,
+
+   * an implicit solution for the dependent variable,
+
+   * a parametric solution in terms of variable `%t', or
+
+   * a tranformation into another ODE in variable `%u'.
+
+`%c' is used to represent the constant of integration for first order
+equations.  `%k1' and `%k2' are the constants for second order
+equations.  If `contrib_ode' cannot obtain a solution for whatever
+reason, it returns `false', after perhaps printing out an error message.
+
+It is necessary to return a list of solutions, as even first order
+non-linear ODEs can have multiple solutions.  For example:
+
+     (%i1) load('contrib_ode)$
+     (%i2) eqn:x*'diff(y,x)^2-(1+x*y)*'diff(y,x)+y=0;
+
+                         dy 2             dy
+     (%o2)            x (--)  - (x y + 1) -- + y = 0
+                         dx               dx
+     (%i3) contrib_ode(eqn,y,x);
+                                                  x
+     (%o3)             [y = log(x) + %c, y = %c %e ]
+     (%i4) method;
+     (%o4)                        factor
+
+Nonlinear ODEs can have singular solutions without constants of
+integration, as in the second solution of the following example:
+
+     (%i1) load('contrib_ode)$
+     (%i2) eqn:'diff(y,x)^2+x*'diff(y,x)-y=0;
+                            dy 2     dy
+     (%o2)                 (--)  + x -- - y = 0
+                            dx       dx
+     (%i3) contrib_ode(eqn,y,x);
+                                                2
+                                      2        x
+     (%o3)              [y = %c x + %c , y = - --]
+                                               4
+     (%i4) method;
+     (%o4)                       clairault
+
+The following ODE has two parametric solutions in terms of the dummy
+variable `%t'.  In this case the parametric solutions can be manipulated
+to give explicit solutions.
+
+     (%i1) load('contrib_ode)$
+     (%i2) eqn:'diff(y,x)=(x+y)^2;
+
+                               dy          2
+     (%o2)                     -- = (y + x)
+                               dx
+     (%i3) contrib_ode(eqn,y,x);
+     (%o3) [[x = %c - atan(sqrt(%t)), y = - x - sqrt(%t)],
+                          [x = atan(sqrt(%t)) + %c, y = sqrt(%t) - x]]
+     (%i4) method;
+     (%o4)                       lagrange
+
+The following example (Kamke 1.112) demonstrates an implicit solution.
+
+     (%i1) load('contrib_ode)$
+     (%i2) assume(x>0,y>0);
+     (%o2)                    [x > 0, y > 0]
+     (%i3) eqn:x*'diff(y,x)-x*sqrt(y^2+x^2)-y;
+
+                          dy           2    2
+     (%o3)              x -- - x sqrt(y  + x ) - y
+                          dx
+     (%i4) contrib_ode(eqn,y,x);
+                                       y
+     (%o4)                  [x - asinh(-) = %c]
+                                       x
+     (%i5) method;
+     (%o5)                          lie
+
+The following Riccati equation is transformed into a linear second
+order ODE in the variable `%u'.  Maxima is unable to solve the new ODE,
+so it is returned unevaluated.
+
+     (%i1) load('contrib_ode)$
+     (%i2) eqn:x^2*'diff(y,x)=a+b*x^n+c*x^2*y^2;
+
+                         2 dy      2  2      n
+     (%o2)              x  -- = c x  y  + b x  + a
+                           dx
+     (%i3) contrib_ode(eqn,y,x);
+
+                    d%u
+                    ---                            2
+                    dx        2     n - 2   a     d %u
+     (%o3)  [[y = - ----, %u c  (b x      + --) + ---- c = 0]]
+                    %u c                     2      2
+                                            x     dx
+     (%i4) method;
+     (%o4)                        riccati
+
+For first order ODEs `contrib_ode' calls `ode2'.  It then tries the
+following methods: factorization, Clairault, Lagrange, Riccati, Abel
+and Lie symmetry methods.  The Lie method is not attempted on Abel
+equations if the Abel method fails, but it is tried if the Riccati
+method returns an unsolved second order ODE.
+
+For second order ODEs `contrib_ode' calls `ode2' then `odelin'.
+
+Extensive debugging traces and messages are displayed if the command
+`put('contrib_ode,true,'verbose)' is executed.
+
+
+File: maxima.info,  Node: Functions and Variables for contrib_ode,  Next: Possible improvements to contrib_ode,  Prev: Introduction to contrib_ode,  Up: contrib_ode
+
+38.2 Functions and Variables for contrib_ode
+============================================
+
+ -- Function: contrib_ode (<eqn>, <y>, <x>)
+     Returns a list of solutions of the ODE <eqn> with independent
+     variable <x> and dependent variable <y>.
+
+ -- Function: odelin (<eqn>, <y>, <x>)
+     `odelin' solves linear homogeneous ODEs of first and second order
+     with independent variable <x> and dependent variable <y>.  It
+     returns a fundamental solution set of the ODE.
+
+     For second order ODEs, `odelin' uses a method, due to Bronstein and
+     Lafaille, that searches for solutions in terms of given special
+     functions.
+
+          (%i1) load('contrib_ode);
+
+          (%i2) odelin(x*(x+1)*'diff(y,x,2)+(x+5)*'diff(y,x,1)+(-4)*y,y,x);
+          ...trying factor method
+          ...solving 7 equations in 4 variables
+          ...trying the Bessel solver
+          ...solving 1 equations in 2 variables
+          ...trying the F01 solver
+          ...solving 1 equations in 3 variables
+          ...trying the spherodial wave solver
+          ...solving 1 equations in 4 variables
+          ...trying the square root Bessel solver
+          ...solving 1 equations in 2 variables
+          ...trying the 2F1 solver
+          ...solving 9 equations in 5 variables
+                 gauss_a(- 6, - 2, - 3, - x)  gauss_b(- 6, - 2, - 3, - x)
+          (%o2) {---------------------------, ---------------------------}
+                              4                            4
+                             x                            x
+
+ -- Function: ode_check (<eqn>, <soln>)
+     Returns the value of ODE <eqn> after substituting a possible
+     solution <soln>.  The value is equivalent to zero if <soln> is a
+     solution of <eqn>.
+
+          (%i1) load('contrib_ode)$
+          (%i2) eqn:'diff(y,x,2)+(a*x+b)*y;
+
+                                   2
+                                  d y
+          (%o2)                   --- + (a x + b) y
+                                    2
+                                  dx
+          (%i3) ans:[y = bessel_y(1/3,2*(a*x+b)^(3/2)/(3*a))*%k2*sqrt(a*x+b)
+                   +bessel_j(1/3,2*(a*x+b)^(3/2)/(3*a))*%k1*sqrt(a*x+b)];
+
+                                            3/2
+                              1  2 (a x + b)
+          (%o3) [y = bessel_y(-, --------------) %k2 sqrt(a x + b)
+                              3       3 a
+                                                    3/2
+                                      1  2 (a x + b)
+                           + bessel_j(-, --------------) %k1 sqrt(a x + b)]
+                                      3       3 a
+          (%i4) ode_check(eqn,ans[1]);
+          (%o4)                           0
+
+ -- System variable: method
+     The variable `method' is set to the successful solution method.
+
+ -- Variable: %c
+     `%c' is the integration constant for first order ODEs.
+
+ -- Variable: %k1
+     `%k1' is the first integration constant for second order ODEs.
+
+ -- Variable: %k2
+     `%k2' is the second integration constant for second order ODEs.
+
+ -- Function: gauss_a (<a>, <b>, <c>, <x>)
+     `gauss_a(a,b,c,x)' and `gauss_b(a,b,c,x)' are 2F1 geometric
+     functions.  They represent any two independent solutions of the
+     hypergeometric differential equation `x(1-x) diff(y,x,2) +
+     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
+
+     The only use of these functions is in solutions of ODEs returned by
+     `odelin' and `contrib_ode'.  The definition and use of these
+     functions may change in future releases of Maxima.
+
+     See also `gauss_b', `dgauss_a' and `gauss_b'.
+
+ -- Function: gauss_b (<a>, <b>, <c>, <x>)
+     See `gauss_a'.
+
+ -- Function: dgauss_a (<a>, <b>, <c>, <x>)
+     The derivative with respect to <x> of `gauss_a(<a>, <b>, <c>,
+     <x>)'.
+
+ -- Function: dgauss_b (<a>, <b>, <c>, <x>)
+     The derivative with respect to <x> of `gauss_b(<a>, <b>, <c>,
+     <x>)'.
+
+ -- Function: kummer_m (<a>, <b>, <x>)
+     Kummer's M function, as defined in Abramowitz and Stegun, Handbook
+     of Mathematical Functions, Section 13.1.2.
+
+     The only use of this function is in solutions of ODEs returned by
+     `odelin' and `contrib_ode'.  The definition and use of this
+     function may change in future releases of Maxima.
+
+     See also `kummer_u', `dkummer_m' and `dkummer_u'.
+
+ -- Function: kummer_u (<a>, <b>, <x>)
+     Kummer's U function, as defined in Abramowitz and Stegun, Handbook
+     of Mathematical Functions, Section 13.1.3.
+
+     See `kummer_m'.
+
+ -- Function: dkummer_m (<a>, <b>, <x>)
+     The derivative with respect to <x> of `kummer_m(<a>, <b>, <x>)'.
+
+ -- Function: dkummer_u (<a>, <b>, <x>)
+     The derivative with respect to <x> of `kummer_u(<a>, <b>, <x>)'.
+
+
+File: maxima.info,  Node: Possible improvements to contrib_ode,  Next: Test cases for contrib_ode,  Prev: Functions and Variables for contrib_ode,  Up: contrib_ode
+
+38.3 Possible improvements to contrib_ode
+=========================================
+
+These routines are work in progress.  I still need to:
+
+   * Extend the FACTOR method `ode1_factor' to work for multiple roots.
+
+   * Extend the FACTOR method `ode1_factor' to attempt to solve higher
+     order factors.  At present it only attemps to solve linear
+     factors.
+
+   * Fix the LAGRANGE routine `ode1_lagrange' to prefer real roots over
+      complex roots.
+
+   * Add additional methods for Riccati equations.
+
+   * Improve the detection of Abel equations of second kind.  The
+     exisiting   pattern matching is weak.
+
+   * Work on the Lie symmetry group routine `ode1_lie'.  There are
+     quite a   few problems with it: some parts are unimplemented; some
+     test cases   seem to run forever; other test cases crash; yet
+     others return very   complex "solutions".  I wonder if it really
+     ready for release yet.
+
+   * Add more test cases.
+
+
+File: maxima.info,  Node: Test cases for contrib_ode,  Next: References for contrib_ode,  Prev: Possible improvements to contrib_ode,  Up: contrib_ode
+
+38.4 Test cases for contrib_ode
+===============================
+
+The routines have been tested on a approximately one thousand  test
+cases from Murphy, Kamke, Zwillinger and elsewhere.  These are included
+in the tests subdirectory.
+
+   * The Clairault routine `ode1_clairault' finds all known solutions,
+     including singular solutions, of the Clairault equations in
+     Murphy and   Kamke.
+
+   * The other routines often return a single solution when multiple
+     solutions exist.
+
+   * Some of the "solutions" from `ode1_lie' are overly complex and
+     impossible to check.
+
+   * There are some crashes.
+
+
+File: maxima.info,  Node: References for contrib_ode,  Prev: Test cases for contrib_ode,  Up: contrib_ode
+
+38.5 References for contrib_ode
+===============================
+
+  1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
+     Vol 1,     Geest & Portig, Leipzig, 1961
+
+  2. G. M. Murphy, Ordinary Differential Equations and Their Solutions,
+        Van Nostrand, New York, 1960
+
+  3. D. Zwillinger, Handbook of Differential Equations, 3rd edition,
+     Academic Press, 1998
+
+  4. F. Schwarz, Symmetry Analysis of Abel's Equation, Studies in
+     Applied Mathematics, 100:269-294 (1998)
+
+  5. F. Schwarz, Algorithmic Solution of Abel's Equation,     Computing
+     61, 39-49 (1998)
+
+  6. E. S. Cheb-Terrab, A. D. Roche, Symmetries and First Order     ODE
+     Patterns, Computer Physics Communications 113 (1998), p 239.
+     (`http://lie.uwaterloo.ca/papers/ode_vii.pdf')
+
+  7. E. S. Cheb-Terrab, T. Kolokolnikov,  First Order ODEs,
+     Symmetries and Linear Transformations, European Journal of
+     Applied Mathematics, Vol. 14, No. 2, pp. 231-246 (2003).
+     (`http://arxiv.org/abs/math-ph/0007023',
+     `http://lie.uwaterloo.ca/papers/ode_iv.pdf')
+  8. G. W. Bluman, S. C. Anco, Symmetry and Integration Methods for
+     Differential Equations, Springer, (2002)
+
+  9. M. Bronstein, S. Lafaille, Solutions of linear ordinary
+     differential equations in terms of special functions, Proceedings
+     of ISSAC 2002, Lille, ACM Press, 23-28.
+
+
+File: maxima.info,  Node: Package descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
+
+39 Package descriptive
+**********************
+
+* Menu:
+
+* Introduction to descriptive::
+* Functions and Variables for data manipulation::
+* Functions and Variables for descriptive statistics::
+* Functions and Variables for specific multivariate descriptive statistics::
+* Functions and Variables for statistical graphs::
+
+
+File: maxima.info,  Node: Introduction to descriptive,  Next: Functions and Variables for data manipulation,  Prev: Package descriptive,  Up: Package descriptive
+
+39.1 Introduction to descriptive
+================================
+
+Package `descriptive' contains a set of functions for making descriptive
+statistical computations and graphing.  Together with the source code
+there are three data sets in your Maxima tree: `pidigits.data',
+`wind.data' and `biomed.data'.
+
+Any statistics manual can be used as a reference to the functions in
+package `descriptive'.
+
+For comments, bugs or suggestions, please contact me at <'mario AT edu
+DOT xunta DOT es'>.
+
+Here is a simple example on how the descriptive functions in
+`descriptive' do they work, depending on the nature of their arguments,
+lists or matrices,
+
+     (%i1) load (descriptive)$
+     (%i2) /* univariate sample */   mean ([a, b, c]);
+                                 c + b + a
+     (%o2)                       ---------
+                                     3
+     (%i3) matrix ([a, b], [c, d], [e, f]);
+                                 [ a  b ]
+                                 [      ]
+     (%o3)                       [ c  d ]
+                                 [      ]
+                                 [ e  f ]
+     (%i4) /* multivariate sample */ mean (%);
+                           e + c + a  f + d + b
+     (%o4)                [---------, ---------]
+                               3          3
+
+Note that in multivariate samples the mean is calculated for each
+column.
+
+In case of several samples with possible different sizes, the Maxima
+function `map' can be used to get the desired results for each sample,
+
+     (%i1) load (descriptive)$
+     (%i2) map (mean, [[a, b, c], [d, e]]);
+                             c + b + a  e + d
+     (%o2)                  [---------, -----]
+                                 3        2
+
+In this case, two samples of sizes 3 and 2 were stored into a list.
+
+Univariate samples must be stored in lists like
+
+     (%i1) s1 : [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5];
+     (%o1)           [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+
+and multivariate samples in matrices as in
+
+     (%i1) s2 : matrix ([13.17, 9.29], [14.71, 16.88], [18.50, 16.88],
+                  [10.58, 6.63], [13.33, 13.25], [13.21,  8.12]);
+                             [ 13.17  9.29  ]
+                             [              ]
+                             [ 14.71  16.88 ]
+                             [              ]
+                             [ 18.5   16.88 ]
+     (%o1)                   [              ]
+                             [ 10.58  6.63  ]
+                             [              ]
+                             [ 13.33  13.25 ]
+                             [              ]
+                             [ 13.21  8.12  ]
+
+In this case, the number of columns equals the random variable
+dimension and the number of rows is the sample size.
+
+Data can be introduced by hand, but big samples are usually stored in
+plain text files.  For example, file `pidigits.data' contains the first
+100 digits of number `%pi':
+           3
+           1
+           4
+           1
+           5
+           9
+           2
+           6
+           5
+           3 ...
+
+In order to load these digits in Maxima,
+
+     (%i1) s1 : read_list (file_search ("pidigits.data"))$
+     (%i2) length (s1);
+     (%o2)                          100
+
+On the other hand, file `wind.data' contains daily average wind speeds
+at 5 meteorological stations in the Republic of Ireland (This is part
+of a data set taken at 12 meteorological stations.  The original file
+is freely downloadable from the StatLib Data Repository and its
+analysis is discused in Haslett, J., Raftery, A. E. (1989) <Space-time
+Modelling with Long-memory Dependence: Assessing Ireland's Wind Power
+Resource, with Discussion>.  Applied Statistics 38, 1-50).  This loads
+the data:
+
+     (%i1) s2 : read_matrix (file_search ("wind.data"))$
+     (%i2) length (s2);
+     (%o2)                          100
+     (%i3) s2 [%]; /* last record */
+     (%o3)            [3.58, 6.0, 4.58, 7.62, 11.25]
+
+Some samples contain non numeric data.  As an example, file
+`biomed.data' (which is part of another bigger one downloaded from the
+StatLib Data Repository) contains four blood measures taken from two
+groups of patients, `A' and `B', of different ages,
+
+     (%i1) s3 : read_matrix (file_search ("biomed.data"))$
+     (%i2) length (s3);
+     (%o2)                          100
+     (%i3) s3 [1]; /* first record */
+     (%o3)            [A, 30, 167.0, 89.0, 25.6, 364]
+
+The first individual belongs to group `A', is 30 years old and his/her
+blood measures were 167.0, 89.0, 25.6 and 364.
+
+One must take care when working with categorical data.  In the next
+example, symbol `a' is asigned a value in some previous moment and then
+a sample with categorical value `a' is taken,
+
+     (%i1) a : 1$
+     (%i2) matrix ([a, 3], [b, 5]);
+                                 [ 1  3 ]
+     (%o2)                       [      ]
+                                 [ b  5 ]
+
+
+File: maxima.info,  Node: Functions and Variables for data manipulation,  Next: Functions and Variables for descriptive statistics,  Prev: Introduction to descriptive,  Up: Package descriptive
+
+39.2 Functions and Variables for data manipulation
+==================================================
+
+ -- Function: continuous_freq (<list>)
+ -- Function: continuous_freq (<list>, <m>)
+     The argument of `continuous_freq' must be a list of numbers.
+     Divides the range in intervals and counts how many values are
+     inside them.  The second argument is optional and either equals
+     the number of classes we want, `10' by default, or equals a list
+     containing the class limits and the number of classes we want, or
+     a list containing only the limits.  Argument <list> must be a list
+     of (2 or 3) real numbers.  If sample values are all equal, this
+     function returns only one class of amplitude 2.
+
+     Examples:
+
+     Optional argument indicates the number of classes we want.  The
+     first list in the output contains the interval limits, and the
+     second the corresponding counts: there are 16 digits inside the
+     interval `[0, 1.8]', 24 digits in `(1.8, 3.6]', and so on.
+
+          (%i1) load (descriptive)$
+          (%i2) s1 : read_list (file_search ("pidigits.data"))$
+          (%i3) continuous_freq (s1, 5);
+          (%o3) [[0, 1.8, 3.6, 5.4, 7.2, 9.0], [16, 24, 18, 17, 25]]
+
+     Optional argument indicates we want 7 classes with limits `-2' and
+     `12':
+
+          (%i1) load (descriptive)$
+          (%i2) s1 : read_list (file_search ("pidigits.data"))$
+          (%i3) continuous_freq (s1, [-2,12,7]);
+          (%o3) [[- 2, 0, 2, 4, 6, 8, 10, 12], [8, 20, 22, 17, 20, 13, 0]]
+
+     Optional argument indicates we want the default number of classes
+     with limits `-2' and `12':
+
+          (%i1) load (descriptive)$
+          (%i2) s1 : read_list (file_search ("pidigits.data"))$
+          (%i3) continuous_freq (s1, [-2,12]);
+                          3  4  11  18     32  39  46  53
+          (%o3)  [[- 2, - -, -, --, --, 5, --, --, --, --, 12],
+                          5  5  5   5      5   5   5   5
+                         [0, 8, 20, 12, 18, 9, 8, 25, 0, 0]]
+
+ -- Function: discrete_freq (<list>)
+     Counts absolute frequencies in discrete samples, both numeric and
+     categorical.  Its unique argument is a list,
+
+          (%i1) load (descriptive)$
+          (%i2) s1 : read_list (file_search ("pidigits.data"))$
+          (%i3) discrete_freq (s1);
+          (%o3) [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                       [8, 8, 12, 12, 10, 8, 9, 8, 12, 13]]
+
+     The first list gives the sample values and the second their
+     absolute frequencies.  Commands `? col' and `? transpose' should
+     help you to understand the last input.
+
+ -- Function: subsample (<data_matrix>, <predicate_function>)
+ -- Function: subsample (<data_matrix>, <predicate_function>,
+          <col_num1>, <col_num2>, ...)
+     This is a sort of variant of the Maxima `submatrix' function.  The
+     first argument is the data matrix, the second is a predicate
+     function and optional additional arguments are the numbers of the
+     columns to be taken.  Its behaviour is better understood with
+     examples.
+
+     These are multivariate records in which the wind speed in the first
+     meteorological station were greater than 18.  See that in the
+     lambda expression the <i>-th component is refered to as `v[i]'.
+
+          (%i1) load (descriptive)$
+          (%i2) s2 : read_matrix (file_search ("wind.data"))$
+          (%i3) subsample (s2, lambda([v], v[1] > 18));
+                        [ 19.38  15.37  15.12  23.09  25.25 ]
+                        [                                   ]
+                        [ 18.29  18.66  19.08  26.08  27.63 ]
+          (%o3)         [                                   ]
+                        [ 20.25  21.46  19.95  27.71  23.38 ]
+                        [                                   ]
+                        [ 18.79  18.96  14.46  26.38  21.84 ]
+
+     In the following example, we request only the first, second and
+     fifth components of those records with wind speeds greater or
+     equal than 16 in station number 1 and less than 25 knots in
+     station number 4.  The sample contains only data from stations 1,
+     2 and 5.  In this case, the predicate function is defined as an
+     ordinary Maxima function.
+
+          (%i1) load (descriptive)$
+          (%i2) s2 : read_matrix (file_search ("wind.data"))$
+          (%i3) g(x):= x[1] >= 16 and x[4] < 25$
+          (%i4) subsample (s2, g, 1, 2, 5);
+                               [ 19.38  15.37  25.25 ]
+                               [                     ]
+                               [ 17.33  14.67  19.58 ]
+          (%o4)                [                     ]
+                               [ 16.92  13.21  21.21 ]
+                               [                     ]
+                               [ 17.25  18.46  23.87 ]
+
+     Here is an example with the categorical variables of `biomed.data'.
+     We want the records corresponding to those patients in group `B'
+     who are older than 38 years.
+
+          (%i1) load (descriptive)$
+          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i3) h(u):= u[1] = B and u[2] > 38 $
+          (%i4) subsample (s3, h);
+                          [ B  39  28.0  102.3  17.1  146 ]
+                          [                               ]
+                          [ B  39  21.0  92.4   10.3  197 ]
+                          [                               ]
+                          [ B  39  23.0  111.5  10.0  133 ]
+                          [                               ]
+                          [ B  39  26.0  92.6   12.3  196 ]
+          (%o4)           [                               ]
+                          [ B  39  25.0  98.7   10.0  174 ]
+                          [                               ]
+                          [ B  39  21.0  93.2   5.9   181 ]
+                          [                               ]
+                          [ B  39  18.0  95.0   11.3  66  ]
+                          [                               ]
+                          [ B  39  39.0  88.5   7.6   168 ]
+
+     Probably, the statistical analysis will involve only the blood
+     measures,
+
+          (%i1) load (descriptive)$
+          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i3) subsample (s3, lambda([v], v[1] = B and v[2] > 38),
+                           3, 4, 5, 6);
+                             [ 28.0  102.3  17.1  146 ]
+                             [                        ]
+                             [ 21.0  92.4   10.3  197 ]
+                             [                        ]
+                             [ 23.0  111.5  10.0  133 ]
+                             [                        ]
+                             [ 26.0  92.6   12.3  196 ]
+          (%o3)              [                        ]
+                             [ 25.0  98.7   10.0  174 ]
+                             [                        ]
+                             [ 21.0  93.2   5.9   181 ]
+                             [                        ]
+                             [ 18.0  95.0   11.3  66  ]
+                             [                        ]
+                             [ 39.0  88.5   7.6   168 ]
+
+     This is the multivariate mean of `s3',
+
+          (%i1) load (descriptive)$
+          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i3) mean (s3);
+                 65 B + 35 A  317          6 NA + 8144.999999999999
+          (%o3) [-----------, ---, 87.178, ------------------------,
+                     100      10                     100
+                                                              3 NA + 19587
+                                                      18.123, ------------]
+                                                                  100
+
+     Here, the first component is meaningless, since `A' and `B' are
+     categorical, the second component is the mean age of individuals
+     in rational form, and the fourth and last values exhibit some
+     strange behaviour.  This is because symbol `NA' is used here to
+     indicate <non available> data, and the two means are nonsense.  A
+     possible solution would be to take out from the matrix those rows
+     with `NA' symbols, although this deserves some loss of information.
+
+          (%i1) load (descriptive)$
+          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
+          (%i3) g(v):= v[4] # NA and v[6] # NA $
+          (%i4) mean (subsample (s3, g, 3, 4, 5, 6));
+          (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813,
+                                                                      2514
+                                                                      ----]
+                                                                       13
 
 
 File: maxima.info,  Node: Functions and Variables for descriptive statistics,  Next: Functions and Variables for specific multivariate descriptive statistics,  Prev: Functions and Variables for data manipulation,  Up: Package descriptive
@@ -738,14 +1592,14 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
         * <ordering> (default, `orderlessp'): possible values are
           `orderlessp' or `ordergreatp', indicating how statistical
-          outcomes should be ordered on the <x>-axis.
+          outcomes should be ordered on the `x'-axis.
 
         * <sample_keys> (default, `[]'): a list with the strings to be
-          used in the legend.  When the list length is other than 0 or
-          the number of samples, an error message is returned.
+          used in the legend.  When the list length is other than `0'
+          or the number of samples, an error message is returned.
 
         * <start_at> (default, `0'): indicates where the plot begins to
-          be plotted on the x axis.
+          be plotted on the `x'-axis.
 
         * All global `draw' options, except `xtics', which is
           internally assigned by `barsplot'.  If you want to set your
@@ -755,6 +1609,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
         * The following local `draw' options: `key', `color',
           `fill_color', `fill_density' and `line_width'.  See also
           `bars'.
+
 
      Function `barsplot_description' creates a graphic object suitable
      for creating complex scenes, together with other graphic objects.
@@ -837,8 +1692,9 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                    frequency = relative)$
           (%i6) draw(gr2d(bp1), gr2d(bp2))$
 
-     For bars diagrams related options, see `bars' of package `draw'.
-     See also functions `histogram' and `piechart'.
+     For bars diagrams related options, see `bars'  of package `draw'.
+     See also functions `histogram'  and `piechart'.
+
 
  -- Function: boxplot (<data>)
  -- Function: boxplot (<data>, <option_1>, <option_2>, ...)
@@ -868,6 +1724,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
         * The following local `draw' options: `key', `color', and
           `line_width'.
+
 
      Function `boxplot_description' creates a graphic object suitable
      for creating complex scenes, together with other graphic objects.
@@ -989,13 +1846,13 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
  -- Function: piechart (<one_row_matrix>)
  -- Function: piechart (<one_row_matrix>, <option_1>, <option_2>, ...)
  -- Function: piechart_description (...)
-     Similar to `barsplot', but plots sectors instead of rectangles.
+     Similar to `barsplot',  but plots sectors instead of rectangles.
 
      Available options are:
 
         * <sector_colors> (default, `[]'): a list of colors for sectors.
           When there are more sectors than specified colors, the extra
-          necesary colors are chosen at random.  See `color' to learn
+          necesary colors are chosen at random.  See `color'  to learn
           more about them.
 
         * <pie_center> (default, `[0,0]'): diagram's center.
@@ -1027,6 +1884,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                   title   = "Digit frequencies in pi")$
 
      See also function `barsplot'.
+
 
  -- Function: scatterplot (<list>)
  -- Function: scatterplot (<list>, <option_1>, <option_2>, ...)
@@ -1085,7 +1943,8 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
                   xtics        = 5)$
 
      For plotting isolated or line-joined points in two and three
-     dimensions, see `points'.  See also `histogram'.
+     dimensions, see `points'.    See also `histogram'.
+
 
  -- Function: starplot (<data1>, <data2>, ..., <option_1>, <option_2>,
           ...)
@@ -1105,7 +1964,7 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
           to learn more about them.
 
         * <frequency> (default, `absolute'): indicates the scale of the
-          radii.  Possible values are:  `absolute' and `relative'.
+          radii.  Possible values are: `absolute' and `relative'.
 
         * <ordering> (default, `orderlessp'): possible values are
           `orderlessp' or `ordergreatp', indicating how statistical
@@ -1151,12 +2010,10 @@ File: maxima.info,  Node: Functions and Variables for statistical graphs,  Prev:
 
  -- Function: stemplot (<data>)
  -- Function: stemplot (<data>, <option>)
-     Plots stem and leaf diagrams.
-
-     Unique available option is:
+     Plots stem and leaf diagrams.  Unique available option is:
 
         * <leaf_unit> (default, `1'): indicates the unit of the leaves;
-          must be a power of 10.
+          must be a power of `10'.
 
      Example:
 
@@ -3607,14 +4464,20 @@ File: maxima.info,  Node: Functions and Variables for discrete distributions,  P
  -- Function: pdf_hypergeometric (<x>, <n1>, <n2>, <n>)
      Returns the value at <x> of the probability function of a
      Hypergeometric(n1,n2,n) random variable, with <n1>, <n2> and <n>
-     non negative integers and n<=n1+n2.  To make use of this function,
-     write first `load(distrib)'.
+     non negative integers and n<=n1+n2.  Being <n1> the number of
+     objects of class A, <n2> the number of objects of class B, and <n>
+     the size of the sample without replacement, this function returns
+     the probability of event "exactly <x> objects are of class A".
+
+     To make use of this function, write first `load(distrib)'.
 
  -- Function: cdf_hypergeometric (<x>, <n1>, <n2>, <n>)
      Returns the value at <x> of the distribution function of a
      Hypergeometric(n1,n2,n) random variable, with <n1>, <n2> and <n>
-     non negative integers and n<=n1+n2.  To make use of this function,
-     write first `load(distrib)'.
+     non negative integers and n<=n1+n2.  See `pdf_hypergeometric'  for
+     a more complete description.
+
+     To make use of this function, write first `load(distrib)'.
 
  -- Function: quantile_hypergeometric (<q>, <n1>, <n2>, <n>)
      Returns the <q>-quantile of a Hypergeometric(n1,n2,n) random
@@ -4397,6 +5260,29 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                   dimensions = A4portrait,
                   terminal   = 'eps,
                   explicit(x^2-y^2,x,-2,2,y,-2,2)) $
+
+ -- Graphic option: draw_realpart
+     Default value: `true'
+
+     When `true', functions to be drawn are considered as complex
+     functions whose real part value should be plotted; when `false',
+     nothing will be plotted when the function does not give a real
+     value.
+
+     This option affects objects `explicit'  and `parametric'  in 2D
+     and 3D, and `parametric_surface'.
+
+     Example:
+
+     Option `draw_realpart' affects objects `explicit' and `parametric'.
+
+          (%i1) load(draw)$
+          (%i2) draw2d(
+                  draw_realpart = false,
+                  explicit(sqrt(x^2  - 4*x) - x, x, -1, 5),
+                  color         = red,
+                  draw_realpart = true,
+                  parametric(x,sqrt(x^2  - 4*x) - x + 1, x, -1, 5) );
 
  -- Graphic option: enhanced3d
      Default value: `none'
@@ -5540,12 +6426,30 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
           (%i2) draw3d(view = [170, 360],
                        explicit(sin(x^2+y^2),x,-2,2,y,-2,2) )$
 
+ -- Graphic option: wired_surface
+     Default value: `false'
+
+     Indicates whether 3D surfaces in `enhanced3d'  mode show the grid
+     joinning the points or not.
+
+     Since this is a global graphics option, its position in the scene
+     description does not matter.
+
+     Example:
+
+          (%i1) load(draw)$
+          (%i2) draw3d(
+                  enhanced3d    = [sin(x),x,y],
+                  wired_surface = true,
+                  explicit(x^2+y^2,x,-1,1,y,-1,1)) $
+
  -- Graphic option: x_voxel
      Default value: 10
 
      `x_voxel' is the number of voxels in the x direction to be used by
      the marching cubes algorithm implemented by the 3d `implicit'
      object.  It is also used by graphic object `region'.
+
 
  -- Graphic option: xaxis
      Default value: `false'
@@ -6282,7 +7186,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      <maxazi>.
 
      This object is affected by the following graphic options:
-     `xu_grid', `yv_grid', `line_type', `key' and `color'.
+     `xu_grid', `yv_grid', `line_type', `key', `wired_surface',
+     `enhanced3d' and `color'.
 
      Example:
 
@@ -6298,7 +7203,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      and a(m,n) on (x0+width,y0).
 
      This object is affected by the following graphic options:
-     `line_type', `line_width', `key', `enhanced3d', and `color'.
+     `line_type', `line_width', `key', `wired_surface', `enhanced3d',
+     and `color'.
 
      In older versions of Maxima, `elevation_grid' was called `mesh'.
      See also `mesh'.
@@ -6397,8 +7303,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      <fcn>, with variable <var> taking values from <minval> to <maxval>.
 
      This object is affected by the following graphic options: `nticks',
-     `adapt_depth', `line_width', `line_type', `key', `filled_func',
-     `fill_color' and `color'.
+     `adapt_depth', `draw_realpart', `line_width', `line_type', `key',
+     `filled_func', `fill_color' and `color'.
 
      Example:
 
@@ -6418,8 +7324,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      <var2> taking values from <minval2> to <maxval2>.
 
      This object is affected by the following graphic options:
-     `xu_grid', `yv_grid', `line_type', `line_width', `key',
-     `enhanced3d', and `color'.
+     `draw_realpart', `xu_grid', `yv_grid', `line_type', `line_width',
+     `key', `wired_surface', `enhanced3d', and `color'.
 
      Example:
 
@@ -6564,8 +7470,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      algorithm.
 
      This object is affected by the following graphic options:
-     `x_voxel', `y_voxel', `z_voxel', `line_width', `line_type', `key'
-     and `color'.
+     `x_voxel', `y_voxel', `z_voxel', `line_width', `line_type', `key',
+     `wired_surface', `enhanced3d', and `color'.
 
      Example:
 
@@ -6629,8 +7535,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      object.
 
      This object is affected by the following graphic options:
-     `line_type', `line_width', `color', `key', `enhanced3d', and
-     `transform'.
+     `line_type', `line_width', `color', `key', `wired_surface',
+     `enhanced3d', and `transform'.
 
      Examples:
 
@@ -6718,8 +7624,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      <par2min> to <par2max>.
 
      This object is affected by the following graphic options:
-     `xu_grid', `yv_grid', `line_type', `line_width', `key',
-     `enhanced3d', and `color'.
+     `draw_realpart', `xu_grid', `yv_grid', `line_type', `line_width',
+     `key', `wired_surface', `enhanced3d', and `color'.
 
      Example:
 
@@ -7044,7 +7950,8 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
      to <maxzen>.
 
      This object is affected by the following graphic options:
-     `xu_grid', `yv_grid', `line_type', `key' and `color'.
+     `xu_grid', `yv_grid', `line_type', `key', `wired_surface',
+     `enhanced3d', and `color'.
 
      Example:
 
@@ -7094,7 +8001,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
 
      This object is affected by the following graphic options:
      `xu_grid', `yv_grid', `line_type', `line_width', `key',
-     `enhanced3d', `color', and `tube_extremes'.
+     `wired_surface', `enhanced3d', `color', and `tube_extremes'.
 
      Example:
 
@@ -7144,677 +8051,6 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                        vector([0,0,0],[1,1,1]/sqrt(3)),
                        vector([0,0,0],[1,-1,0]/sqrt(2)),
                        vector([0,0,0],[1,1,-2]/sqrt(6)) )$
-
-
-File: maxima.info,  Node: Functions and Variables for pictures,  Next: Functions and Variables for worldmap,  Prev: Functions and Variables for draw,  Up: draw
-
-42.3 Functions and Variables for pictures
-=========================================
-
- -- Function: get_pixel (<pic>, <x>, <y>)
-     Returns pixel from picture.  Coordinates <x> and <y> range from 0
-     to `width-1' and `height-1', respectively.
-
- -- Function: make_level_picture (<data>)
- -- Function: make_level_picture (<data>, <width>, <height>)
-     Returns a levels <picture> object.  `make_level_picture(<data>)'
-     builds the <picture> object from matrix <data>.
-     `make_level_picture(<data>, <width>, <height>)' builds the object
-     from a list of numbers; in this case, both the <width> and the
-     <height> must be given.
-
-     The returned <picture> object contains the following four parts:
-
-       1. symbol `level'
-
-       2. image width
-
-       3. image height
-
-       4. an integer array with pixel data ranging from 0 to 255.
-          Argument <data> must contain only numbers ranged from 0 to
-          255; negative numbers are substituted by 0, and those which
-          are greater than 255 are set to 255.
-
-     Example:
-
-     Level picture from matrix.
-          (%i1) load(draw)$
-          (%i2) make_level_picture(matrix([3,2,5],[7,-9,3000]));
-          (%o2)         picture(level, 3, 2, {Array:  #(3 2 5 7 0 255)})
-
-     Level picture from numeric list.
-          (%i1) load(draw)$
-          (%i2) make_level_picture([-2,0,54,%pi],2,2);
-          (%o2)            picture(level, 2, 2, {Array:  #(0 0 54 3)})
-
- -- Function: make_rgb_picture (<redlevel>, <greenlevel>, <bluelevel>)
-     Returns an rgb-coloured <picture> object.  All three arguments must
-     be levels picture; with red, green and blue levels.
-
-     The returned <picture> object contains the following four parts:
-
-       1. symbol `rgb'
-
-       2. image width
-
-       3. image height
-
-       4. an integer array of length <3*width*height> with pixel data
-          ranging from 0 to 255.  Each pixel is represented by three
-          consecutive numbers (red, green, blue).
-
-     Example:
-
-          (%i1) load(draw)$
-          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
-          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
-          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
-          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
-          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
-          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
-          (%i5) make_rgb_picture(red,green,blue);
-          (%o5) picture(rgb, 2, 2,
-                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
-
- -- Function: negative_picture (<pic>)
-     Returns the negative of a (<level> or <rgb>) picture.
-
- -- Function: picture_equalp (<x>,<y>)
-     Returns `true' in case of equal pictures, and `false' otherwise.
-
- -- Function: picturep (<x>)
-     Returns `true' if the argument is a well formed image, and `false'
-     otherwise.
-
- -- Function: read_xpm (<xpm_file>)
-     Reads a file in xpm and returns a picture object.
-
- -- Function: rgb2level (<pic>)
-     Transforms an <rgb> picture into a <level> one by averaging the
-     red, green and blue channels.
-
- -- Function: take_channel (<im>,<color>)
-     If argument <color> is `red', `green' or `blue', function
-     `take_channel' returns the corresponding color channel of picture
-     <im>.
-
-     Example:
-
-          (%i1) load(draw)$
-          (%i2) red: make_level_picture(matrix([3,2],[7,260]));
-          (%o2)           picture(level, 2, 2, {Array:  #(3 2 7 255)})
-          (%i3) green: make_level_picture(matrix([54,23],[73,-9]));
-          (%o3)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
-          (%i4) blue: make_level_picture(matrix([123,82],[45,32.5698]));
-          (%o4)          picture(level, 2, 2, {Array:  #(123 82 45 33)})
-          (%i5) make_rgb_picture(red,green,blue);
-          (%o5) picture(rgb, 2, 2,
-                        {Array:  #(3 54 123 2 23 82 7 73 45 255 0 33)})
-          (%i6) take_channel(%,'green);  /* simple quote!!! */
-          (%o6)           picture(level, 2, 2, {Array:  #(54 23 73 0)})
-
-
-File: maxima.info,  Node: Functions and Variables for worldmap,  Prev: Functions and Variables for pictures,  Up: draw
-
-42.4 Functions and Variables for worldmap
-=========================================
-
-This package automatically loads package `draw'.
-
-42.4.1 Variables and Functions
-------------------------------
-
- -- Global variable: boundaries_array
-     Default value: `false'
-
-     `boundaries_array' is where the graphic object `geomap' looks for
-     boundaries coordinates.
-
-     Each component of `boundaries_array' is an array of floating point
-     quantities, the coordinates of a polygonal segment or map boundary.
-
-     See also `geomap'.
-
- -- Function: numbered_boundaries (<nlist>)
-     Draws a list of polygonal segments (boundaries), labeled by its
-     numbers (`boundaries_array' coordinates).  This is of great help
-     when building new geographical entities.
-
-     Example:
-
-     Map of Europe labeling borders with their component number in
-     `boundaries_array'.
-          (%i1) load(worldmap)$
-          (%i2) european_borders:
-                     region_boundaries(-31.81,74.92,49.84,32.06)$
-          (%i3) numbered_boundaries(european_borders)$
-
- -- Function: make_poly_continent (<continent_name>)
- -- Function: make_poly_continent (<country_list>)
-     Makes the necessary polygons to draw a colored continent or a list
-     of countries.
-
-     Example:
-
-          (%i1) load(worldmap)$
-          (%i2) /* A continent */
-                make_poly_continent(Africa)$
-          (%i3) apply(draw2d, %)$
-          (%i4) /* A list of countries */
-                make_poly_continent([Germany,Denmark,Poland])$
-          (%i5) apply(draw2d, %)$
-
- -- Function: make_poly_country (<country_name>)
-     Makes the necessary polygons to draw a colored country.  If
-     islands exist, one country can be defined with more than just one
-     polygon.
-
-     Example:
-
-          (%i1) load(worldmap)$
-          (%i2) make_poly_country(India)$
-          (%i3) apply(draw2d, %)$
-
- -- Function: make_polygon (<nlist>)
-     Returns a `polygon' object from boundary indices.  Argument
-     <nlist> is a list of components of `boundaries_array'.
-
-     Example:
-
-     Bhutan is defined by boundary numbers 171, 173 and 1143, so that
-     `make_polygon([171,173,1143])' appends arrays of coordinates
-     `boundaries_array[171]', `boundaries_array[173]' and
-     `boundaries_array[1143]' and returns a `polygon' object suited to
-     be plotted by `draw'.  To avoid an error message, arrays must be
-     compatible in the sense that any two consecutive arrays have two
-     coordinates in the extremes in common.  In this example, the two
-     first components of `boundaries_array[171]' are equal to the last
-     two coordinates of `boundaries_array[173]', and the two first of
-     `boundaries_array[173]' are equal to the two first of
-     `boundaries_array[1143]'; in conclussion, boundary numbers 171,
-     173 and 1143 (in this order) are compatible and the colored
-     polygon can be drawn.
-
-          (%i1) load(worldmap)$
-          (%i2) Bhutan;
-          (%o2)                        [[171, 173, 1143]]
-          (%i3) boundaries_array[171];
-          (%o3) {Array:
-                 #(88.750549 27.14727 88.806351 27.25305 88.901367 27.282221
-                   88.917877 27.321039)}
-          (%i4) boundaries_array[173];
-          (%o4) {Array:
-                 #(91.659554 27.76511 91.6008 27.66666 91.598022 27.62499
-                   91.631348 27.536381 91.765533 27.45694 91.775253 27.4161
-                   92.007751 27.471939 92.11441 27.28583 92.015259 27.168051
-                   92.015533 27.08083 92.083313 27.02277 92.112183 26.920271
-                   92.069977 26.86194 91.997192 26.85194 91.915253 26.893881
-                   91.916924 26.85416 91.8358 26.863331 91.712479 26.799999
-                   91.542191 26.80444 91.492188 26.87472 91.418854 26.873329
-                   91.371353 26.800831 91.307457 26.778049 90.682457 26.77417
-                   90.392197 26.903601 90.344131 26.894159 90.143044 26.75333
-                   89.98996 26.73583 89.841919 26.70138 89.618301 26.72694
-                   89.636093 26.771111 89.360786 26.859989 89.22081 26.81472
-                   89.110237 26.829161 88.921631 26.98777 88.873016 26.95499
-                   88.867737 27.080549 88.843307 27.108601 88.750549
-                   27.14727)}
-          (%i5) boundaries_array[1143];
-          (%o5) {Array:
-                 #(91.659554 27.76511 91.666924 27.88888 91.65831 27.94805
-                   91.338028 28.05249 91.314972 28.096661 91.108856 27.971109
-                   91.015808 27.97777 90.896927 28.05055 90.382462 28.07972
-                   90.396088 28.23555 90.366074 28.257771 89.996353 28.32333
-                   89.83165 28.24888 89.58609 28.139999 89.35997 27.87166
-                   89.225517 27.795 89.125793 27.56749 88.971077 27.47361
-                   88.917877 27.321039)}
-          (%i6) Bhutan_polygon: make_polygon([171,173,1143])$
-          (%i7) draw2d(Bhutan_polygon)$
-
- -- Function: region_boundaries (<x1>, <y1>, <x2>, <y2>)
-     Detects polygonal segments of global variable `boundaries_array'
-     fully contained in the rectangle with vertices (<x1>, <y1>) -upper
-     left- and (<x2>, <y2>) -bottom right-.
-
-     Example:
-
-     Returns segment numbers for plotting southern Italy.
-          (%i1) load(worldmap)$
-          (%i2) region_boundaries(10.4,41.5,20.7,35.4);
-          (%o2)                [1846, 1863, 1864, 1881, 1888, 1894]
-          (%i3) draw2d(geomap(%))$
-
- -- Function: region_boundaries_plus (<x1>, <y1>, <x2>, <y2>)
-     Detects polygonal segments of global variable `boundaries_array'
-     containing at least one vertex in the rectangle defined by
-     vertices (<x1>, <y1>) -upper left- and (<x2>, <y2>) -bottom right-.
-
-     Example:
-
-          (%i1) load(worldmap)$
-          (%i2) region_boundaries_plus(10.4,41.5,20.7,35.4);
-          (%o2) [1060, 1062, 1076, 1835, 1839, 1844, 1846, 1858,
-                 1861, 1863, 1864, 1871, 1881, 1888, 1894, 1897]
-          (%i3) draw2d(geomap(%))$
-
-42.4.2 Graphic objects
-----------------------
-
- -- Graphic object: geomap (<numlist>)
- -- Graphic object: geomap (<numlist>, <3Dprojection>)
-     Draws cartographic maps in 2D and 3D.
-
-     2D
-
-     This function works together with global variable
-     `boundaries_array'.
-
-     Argument <numlist> is a list containing numbers or lists of
-     numbers.  All these numbers must be integers greater or equal than
-     zero, representing the components of global array
-     `boundaries_array'.
-
-     Each component of `boundaries_array' is an array of floating point
-     quantities, the coordinates of a polygonal segment or map boundary.
-
-     `geomap (<numlist>)' flattens its arguments and draws the
-     associated boundaries in `boundaries_array'.
-
-     This object is affected by the following graphic options:
-     `line_width', `line_type' and `color'.
-
-     Examples:
-
-     A simple map defined by hand:
-
-          (%i1) load(worldmap)$
-          (%i2) /* Vertices of boundary #0: {(1,1),(2,5),(4,3)} */
-             ( bnd0: make_array(flonum,6),
-               bnd0[0]:1.0, bnd0[1]:1.0, bnd0[2]:2.0,
-               bnd0[3]:5.0, bnd0[4]:4.0, bnd0[5]:3.0 )$
-          (%i3) /* Vertices of boundary #1: {(4,3),(5,4),(6,4),(5,1)} */
-             ( bnd1: make_array(flonum,8),
-               bnd1[0]:4.0, bnd1[1]:3.0, bnd1[2]:5.0, bnd1[3]:4.0,
-               bnd1[4]:6.0, bnd1[5]:4.0, bnd1[6]:5.0, bnd1[7]:1.0)$
-          (%i4) /* Vertices of boundary #2: {(5,1), (3,0), (1,1)} */
-             ( bnd2: make_array(flonum,6),
-               bnd2[0]:5.0, bnd2[1]:1.0, bnd2[2]:3.0,
-               bnd2[3]:0.0, bnd2[4]:1.0, bnd2[5]:1.0 )$
-          (%i5) /* Vertices of boundary #3: {(1,1), (4,3)} */
-             ( bnd3: make_array(flonum,4),
-               bnd3[0]:1.0, bnd3[1]:1.0, bnd3[2]:4.0, bnd3[3]:3.0)$
-          (%i6) /* Vertices of boundary #4: {(4,3), (5,1)} */
-             ( bnd4: make_array(flonum,4),
-               bnd4[0]:4.0, bnd4[1]:3.0, bnd4[2]:5.0, bnd4[3]:1.0)$
-          (%i7) /* Pack all together in boundaries_array */
-             ( boundaries_array: make_array(any,5),
-               boundaries_array[0]: bnd0, boundaries_array[1]: bnd1,
-               boundaries_array[2]: bnd2, boundaries_array[3]: bnd3,
-               boundaries_array[4]: bnd4 )$
-          (%i8) draw2d(geomap([0,1,2,3,4]))$
-
-     The auxiliary package `worldmap' sets the global variable
-     `boundaries_array' to the real world boundaries in coordinates.
-     The data is in the public domain and come from
-     `http://www-cger.nies.go.jp/grid-e/gridtxt/grid19.html'.  The
-     package `worldmap' defines also boundaries for countries,
-     continents and coastlines as lists with the necessary components of
-     `boundaries_array' (see file `share/draw/worldmap.mac' for more
-     information).  The package `worldmap' automatically loads package
-     `worldmap'.
-
-          (%i1) load(worldmap)$
-          (%i2) c1: gr2d(geomap(Canada,United_States,
-                                Mexico,Cuba))$
-          (%i3) c2: gr2d(geomap(Africa))$
-          (%i4) c3: gr2d(geomap(Oceania,China,Japan))$
-          (%i5) c4: gr2d(geomap(France,Portugal,Spain,
-                                Morocco,Western_Sahara))$
-          (%i6) draw(columns  = 2,
-                     c1,c2,c3,c4)$
-
-     Package `worldmap' is also useful for plotting countries as
-     polygons.  In this case, graphic object `geomap' is no longer
-     necessary and the `polygon' object is used instead.  Since lists
-     are now used and not arrays, maps rendering will be slower.  See
-     also `make_poly_country' and `make_poly_continent' to understand
-     the following code.
-
-          (%i1) load(worldmap)$
-          (%i2) mymap: append(
-             [color      = white],  /* borders are white */
-             [fill_color = red],             make_poly_country(Bolivia),
-             [fill_color = cyan],            make_poly_country(Paraguay),
-             [fill_color = green],           make_poly_country(Colombia),
-             [fill_color = blue],            make_poly_country(Chile),
-             [fill_color = "#23ab0f"],       make_poly_country(Brazil),
-             [fill_color = goldenrod],       make_poly_country(Argentina),
-             [fill_color = "midnight-blue"], make_poly_country(Uruguay))$
-          (%i3) apply(draw2d, mymap)$
-
-     3D
-
-     `geomap(<numlist>)' projects map boundaries on the sphere of
-     radius 1 centered at (0,0,0).  It is possible to change the sphere
-     or the projection type by using `geomap(<numlist>,<3Dprojection>)'.
-
-     Available 3D projections:
-
-        * `[spherical_projection,<x>, <y>, <z>, <r>]': projects map
-          boundaries on the sphere of radius <r> centered at (<x>, <y>,
-          <z>).
-
-               (%i1) load(worldmap)$
-               (%i2) draw3d(geomap(Australia), /* default projection */
-                            geomap(Australia,
-                                   [spherical_projection,2,2,2,3]))$
-
-        * `[cylindrical_projection, <x>, <y>, <z>, <r>, <rc>]':
-          re-projects spherical map boundaries on the cylinder of
-          radius <rc> and axis passing through the poles of the globe
-          of radius <r> centered at (<x>, <y>, <z>).
-
-               (%i1) load(worldmap)$
-               (%i2) draw3d(geomap([America_coastlines,Eurasia_coastlines],
-                                   [cylindrical_projection,2,2,2,3,4]))$
-
-        * `[conic_projection, <x>, <y>, <z>, <r>, <alpha>]':
-          re-projects spherical map boundaries on the cones of angle
-          <alpha>, with axis passing through the poles of the globe of
-          radius <r> centered at (<x>, <y>, <z>).  Both the northern
-          and southern cones are tangent to sphere.
-
-               (%i1) load(worldmap)$
-               (%i2) draw3d(geomap(World_coastlines,
-                                   [conic_projection,0,0,0,1,90]))$
-
-     See also
-     `http://www.telefonica.net/web2/biomates/maxima/gpdraw/geomap' for
-     more elaborated examples.
-
-
-File: maxima.info,  Node: drawdf,  Next: dynamics,  Prev: draw,  Up: Top
-
-43 drawdf
-*********
-
-* Menu:
-
-* Introduction to drawdf::
-* Functions and Variables for drawdf::
-
-
-File: maxima.info,  Node: Introduction to drawdf,  Next: Functions and Variables for drawdf,  Prev: drawdf,  Up: drawdf
-
-43.1 Introduction to drawdf
-===========================
-
-The function `drawdf' draws the direction field of a first-order
-Ordinary Differential Equation (ODE) or a system of two autonomous
-first-order ODE's.
-
-Since this is an additional package, in order to use it you must first
-load it with `load(drawdf)'.  Drawdf is built upon the `draw' package,
-which requires Gnuplot 4.2.
-
-To plot the direction field of a single ODE, the ODE must be written in
-the form:
-            dy
-            -- = F(x,y)
-            dx
-
-and the function <F> should be given as the argument for `drawdf'. If
-the independent and dependent variables are not <x>, and <y>, as in the
-equation above, then those two variables should be named explicitly in
-a list given as an argument to the drawdf command (see the examples).
-
-To plot the direction field of a set of two autonomous ODE's, they must
-be written in the form
-            dx             dy
-            -- = G(x,y)    -- = F(x,y)
-            dt             dt
-
-and the argument for `drawdf' should be a list with the two functions
-<G> and <F>, in that order; namely, the first expression in the list
-will be taken to be the time derivative of the variable represented on
-the horizontal axis, and the second expression will be the time
-derivative of the variable represented on the vertical axis. Those two
-variables do not have to be <x> and <y>, but if they are not, then the
-second argument given to drawdf must be another list naming the two
-variables, first the one on the horizontal axis and then the one on the
-vertical axis.
-
-If only one ODE is given, `drawdf' will implicitly admit `x=t', and
-`G(x,y)=1', transforming the non-autonomous equation into a system of
-two autonomous equations.
-
-
-File: maxima.info,  Node: Functions and Variables for drawdf,  Prev: Introduction to drawdf,  Up: drawdf
-
-43.2 Functions and Variables for drawdf
-=======================================
-
-43.2.1 Functions
-----------------
-
- -- Function: drawdf (<dydx>, ...options and objects...)
- -- Function: drawdf (<dvdu>, `['<u>,<v>`]', ...options and objects...)
- -- Function: drawdf (<dvdu>, `['<u>,<umin>,<umax>`]',
-          `['<v>,<vmin>,<vmax>`]', ...options and objects...)
- -- Function: drawdf (`['<dxdt>,<dydt>`]', ...options and objects...)
- -- Function: drawdf (`['<dudt>,<dvdt>`]', `['<u>,<v>`]', ...options
-          and objects...)
- -- Function: drawdf (`['<dudt>,<dvdt>`]', `['<u>,<umin>,<umax>`]',
-          `['<v>,<vmin>,<vmax>`]', ...options and objects...)
-     Function `drawdf' draws a 2D direction field with optional
-     solution curves and other graphics using the `draw' package.
-
-     The first argument specifies the derivative(s), and must be either
-     an expression or a list of two expressions.  <dydx>, <dxdt> and
-     <dydt> are expressions that depend on <x> and <y>.  <dvdu>, <dudt>
-     and <dvdt> are expressions that depend on <u> and <v>.
-
-     If the independent and dependent variables are not <x> and <y>,
-     then their names must be specified immediately following the
-     derivative(s), either as a list of two names `['<u>,<v>`]', or as
-     two lists of the form `['<u>,<umin>,<umax>`]' and
-     `['<v>,<vmin>,<vmax>`]'.
-
-     The remaining arguments are graphic options, graphic objects, or
-     lists containing graphic options and objects, nested to arbitrary
-     depth.  The set of graphic options and objects supported by
-     `drawdf' is a superset of those supported by `draw2d' and `gr2d'
-     from the `draw' package.
-
-     The arguments are interpreted sequentially: graphic options affect
-     all following graphic objects.  Furthermore, graphic objects are
-     drawn on the canvas in order specified, and may obscure graphics
-     drawn earlier.  Some graphic options affect the global appearence
-     of the scene.
-
-     The additional graphic objects supported by `drawdf' include:
-     `solns_at', `points_at', `saddles_at', `soln_at', `point_at', and
-     `saddle_at'.
-
-     The additional graphic options supported by `drawdf' include:
-     `field_degree', `soln_arrows', `field_arrows', `field_grid',
-     `field_color', `show_field', `tstep', `nsteps', `duration',
-     `direction', `field_tstep', `field_nsteps', and `field_duration'.
-
-     Commonly used graphic objects inherited from the `draw' package
-     include: `explicit', `implicit', `parametric', `polygon',
-     `points', `vector', `label', and all others supported by `draw2d'
-     and `gr2d'.
-
-     Commonly used graphic options inherited from the `draw' package
-     include:
-     `points_joined', `color',
-     `point_type', `point_size', `line_width',
-     `line_type', `key', `title', `xlabel',
-     `ylabel', `user_preamble', `terminal',
-     `dimensions', `file_name', and all
-     others supported by `draw2d' and `gr2d'.
-
-     See also `draw2d'.
-
-     Users of wxMaxima or Imaxima may optionally use `wxdrawdf', which
-     is identical to `drawdf' except that the graphics are drawn within
-     the notebook using `wxdraw'.
-
-     To make use of this function, write first `load(drawdf)'.
-
-     Examples:
-
-          (%i1) load(drawdf)$
-          (%i2) drawdf(exp(-x)+y)$        /* default vars: x,y */
-          (%i3) drawdf(exp(-t)+y, [t,y])$ /* default range: [-10,10] */
-          (%i4) drawdf([y,-9*sin(x)-y/5], [x,1,5], [y,-2,2])$
-
-     For backward compatibility, `drawdf' accepts most of the
-     parameters supported by plotdf.
-
-          (%i5) drawdf(2*cos(t)-1+y, [t,y], [t,-5,10], [y,-4,9],
-                       [trajectory_at,0,0])$
-
-     `soln_at' and `solns_at' draw solution curves passing through the
-     specified points, using a slightly enhanced 4th-order Runge Kutta
-     numerical integrator.
-
-          (%i6) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
-                       solns_at([0,0.1],[0,-0.1]),
-                       color=blue, soln_at(0,0))$
-
-     `field_degree=2' causes the field to be composed of quadratic
-     splines, based on the first and second derivatives at each grid
-     point.  `field_grid=['<COLS>,<ROWS>`]' specifies the number of
-     columns and rows in the grid.
-
-          (%i7) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
-                       field_degree=2, field_grid=[20,15],
-                       solns_at([0,0.1],[0,-0.1]),
-                       color=blue, soln_at(0,0))$
-
-     `soln_arrows=true' adds arrows to the solution curves, and (by
-     default) removes them from the direction field.  It also changes
-     the default colors to emphasize the solution curves.
-
-          (%i8) drawdf(2*cos(t)-1+y, [t,-5,10], [y,-4,9],
-                       soln_arrows=true,
-                       solns_at([0,0.1],[0,-0.1],[0,0]))$
-
-     `duration=40' specifies the time duration of numerical integration
-     (default 10).  Integration will also stop automatically if the
-     solution moves too far away from the plotted region, or if the
-     derivative becomes complex or infinite.  Here we also specify
-     `field_degree=2' to plot quadratic splines.  The equations below
-     model a predator-prey system.
-
-          (%i9) drawdf([x*(1-x-y), y*(3/4-y-x/2)], [x,0,1.1], [y,0,1],
-                       field_degree=2, duration=40,
-                       soln_arrows=true, point_at(1/2,1/2),
-                       solns_at([0.1,0.2], [0.2,0.1], [1,0.8], [0.8,1],
-                                [0.1,0.1], [0.6,0.05], [0.05,0.4],
-                                [1,0.01], [0.01,0.75]))$
-
-     `field_degree='solns' causes the field to be composed of many
-     small solution curves computed by 4th-order Runge Kutta, with
-     better results in this case.
-
-          (%i10) drawdf([x*(1-x-y), y*(3/4-y-x/2)], [x,0,1.1], [y,0,1],
-                        field_degree='solns, duration=40,
-                        soln_arrows=true, point_at(1/2,1/2),
-                        solns_at([0.1,0.2], [0.2,0.1], [1,0.8],
-                                 [0.8,1], [0.1,0.1], [0.6,0.05],
-                                 [0.05,0.4], [1,0.01], [0.01,0.75]))$
-
-     `saddles_at' attempts to automatically linearize the equation at
-     each saddle, and to plot a numerical solution corresponding to each
-     eigenvector, including the separatrices.  `tstep=0.05' specifies
-     the maximum time step for the numerical integrator (the default is
-     0.1).  Note that smaller time steps will sometimes be used in
-     order to keep the x and y steps small.  The equations below model
-     a damped pendulum.
-
-          (%i11) drawdf([y,-9*sin(x)-y/5], tstep=0.05,
-                        soln_arrows=true, point_size=0.5,
-                        points_at([0,0], [2*%pi,0], [-2*%pi,0]),
-                        field_degree='solns,
-                        saddles_at([%pi,0], [-%pi,0]))$
-
-     `show_field=false' suppresses the field entirely.
-
-          (%i12) drawdf([y,-9*sin(x)-y/5], tstep=0.05,
-                        show_field=false, soln_arrows=true,
-                        point_size=0.5,
-                        points_at([0,0], [2*%pi,0], [-2*%pi,0]),
-                        saddles_at([3*%pi,0], [-3*%pi,0],
-                                   [%pi,0], [-%pi,0]))$
-
-     `drawdf' passes all unrecognized parameters to `draw2d' or `gr2d',
-     allowing you to combine the full power of the `draw' package with
-     `drawdf'.
-
-          (%i13) drawdf(x^2+y^2, [x,-2,2], [y,-2,2], field_color=gray,
-                        key="soln 1", color=black, soln_at(0,0),
-                        key="soln 2", color=red, soln_at(0,1),
-                        key="isocline", color=green, line_width=2,
-                        nticks=100, parametric(cos(t),sin(t),t,0,2*%pi))$
-
-     `drawdf' accepts nested lists of graphic options and objects,
-     allowing convenient use of makelist and other function calls to
-     generate graphics.
-
-          (%i14) colors : ['red,'blue,'purple,'orange,'green]$
-          (%i15) drawdf([x-x*y/2, (x*y - 3*y)/4],
-                        [x,2.5,3.5], [y,1.5,2.5],
-                        field_color = gray,
-                        makelist([ key   = concat("soln",k),
-                                   color = colors[k],
-                                   soln_at(3, 2 + k/20) ],
-                                 k,1,5))$
-
-
-
-File: maxima.info,  Node: dynamics,  Next: ezunits,  Prev: drawdf,  Up: Top
-
-44 dynamics
-***********
-
-* Menu:
-
-* Introduction to dynamics::
-* Functions and Variables for dynamics::
-
-
-File: maxima.info,  Node: Introduction to dynamics,  Next: Functions and Variables for dynamics,  Prev: dynamics,  Up: dynamics
-
-44.1 Introduction to dynamics
-=============================
-
-The additional package `dynamics' includes several functions to create
-various graphical representations of discrete dynamical systems and
-fractals, and an implementation of the Runge-Kutta 4th-order numerical
-method for solving systems of differential equations.
-
-To use the functions in this package you must first load it with
-`load("dynamics")'.
-
-Starting with Maxima 5.12, the dynamics package now uses the function
-`plot2d' to do the graphs.  The commands that produce graphics (with
-the exception of `julia' and `mandelbrot') now accept any options of
-`plot2d', including the option to change among the various graphical
-interfaces, using different plot styles and colors, and representing
-one or both axes in a logarithmic scale.  The old options <domain>,
-<pointsize>, <xcenter>, <xradius>, <ycenter>, <yradius>, <xaxislabel>
-and <yaxislabel> are not accepted in this new version.
-
-All programs will now accept any variables names, and not just <x> and
-<y> as in the older versions.  Two required parameters have changes in
-two of the programs: `evolution2d' now requires a list naming
-explicitely the two independent variables, and the horizontal range for
-`orbits' no longer requires a step size; the range should only specify
-the variable name, and the minimum and maximum values; the number of
-steps can now be changed with the option <nticks>.
 
 
 

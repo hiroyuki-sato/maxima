@@ -1525,11 +1525,10 @@ It appears in LIMIT and DEFINT.......")
 
 (defun lhsimp (term var val)
   (cond ((atom term)  term)
-	((not (eq (caar term) 'mfactorial))  term)
 	(t
 	 (let ((term-value (limit term var val 'think)))
 	   (cond ((not (member term-value
-			     '($inf $minf $und $ind $infinity $zeroa $zerob) :test #'eq))
+			       '($inf $minf $und $ind $infinity $zeroa $zerob 0)))
 		  term-value)
 		 (t term))))))
 
@@ -2671,7 +2670,7 @@ It appears in LIMIT and DEFINT.......")
 				 (t '$und)))
 			  (t '$und))))))
 	  ((eq arglim '$und) '$und)
-	  ((member arglim '($zeroa $zerob $ind) :test #'eq) arg)
+	  ((member arglim '($zeroa $zerob $ind) :test #'eq) arglim)
 ;;;Ignore tanh(%pi/2*%I) and multiples of the argument.
 	  (t
 	   ;; erf (or tanh) of a known value is just erf(arglim).

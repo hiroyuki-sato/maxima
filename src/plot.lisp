@@ -382,17 +382,6 @@ sin(y)*(10.0+6*cos(x)),
            )
     tem))
 
-(defun add-axes (pts vert)
-  (let ((origin (/ (length pts) 3)))
-    (loop for i from -3 below 9
-           do
-           (vector-push-extend  (if (eql 0 (mod i 4)) $axes_length 0.0) pts))
-    (loop for i below 15
-           do (vector-push-extend
-               (if (eql 1 (mod i 5)) (+ origin (ceiling i 5))  origin)
-               vert)
-           )))
-
 (defun $rotation1 (phi th)
   (let ((sinph (sin phi))
         (cosph (cos phi))
@@ -1901,7 +1890,7 @@ Several functions depending on the two variables v1 and v2:
                                     (coerce-float-fun (fourth exprn) lvars)
                                     (second lvars) (third lvars))))
                 (setq lvars ($listofvars `((mlist) ,vars1 ,vars2 ,vars3)))
-                (if (= 2 ($length lvars))
+                (if (<= ($length lvars) 2)
                     ;; we do have a valid parametric set. Push it into
                     ;; the functions stack, along with their domain
                     (progn
@@ -1915,7 +1904,7 @@ Several functions depending on the two variables v1 and v2:
                         (setf (getf features :const-expr)
                               ($float (meval (fourth exprn))))))
                     (merror
-                     (intl:gettext "plot3d: there must be two variables; found: ~M")
+                     (intl:gettext "plot3d: there must be at most two variables; found: ~M")
                      lvars))))
              
              (3

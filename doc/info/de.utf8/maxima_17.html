@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on August, 1 2011 by texi2html 1.76 -->
+<!-- Created on April, 4 2012 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -156,7 +156,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC404" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC409" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 17. Polynome </h1>
@@ -185,7 +185,7 @@ div.categorybox
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC404" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC409" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 17.1 Einf&uuml;hrung in Polynome </h2>
@@ -226,7 +226,9 @@ Ein Ausdruck in einer CRE-Form oder der CRE-Formen enth&auml;lt, wird in der
 Ausgabe mit dem Symbol <code>/R/</code> gekennzeichnet.  Mit der Funktion
 <code><a href="#rat">rat</a></code>
  k&ouml;nnen allgemeine Ausdr&uuml;cke in eine CRE-Form transformiert
-werden.
+werden.  Umgekehrt wird ein Ausdruck in einer CRE-Form mit der Funktion
+<code><a href="#ratdisrep">ratdisrep</a></code>
+ in eine allgemeine Form transformiert.
 </p>
 <p>F&uuml;r die Darstellung von Taylor-Polynomen der Funktion <code><a href="maxima_15.html#taylor">taylor</a></code>
  wird eine
@@ -252,7 +254,7 @@ dem Symbol <code>/T/</code> bezeichnet.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC404" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC409" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h2 class="section"> 17.2 Funktionen und Variablen f&uuml;r Polynome </h2>
@@ -260,31 +262,54 @@ dem Symbol <code>/T/</code> bezeichnet.
 <p><a name="algebraic"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>algebraic</b>
-<a name="IDX798"></a>
+<a name="IDX801"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
-
-<p>Die Optionsvariable <code>algebraic</code> muss den Wert <code>true</code> haben, damit
-algebraische Zahlen vereinfacht werden.
-</p></dd></dl>
+<p>Hat die Optionsvariable <code>algebraic</code> den Wert <code>true</code>, wird beim
+Umwandeln von Ausdr&uuml;cken in die CRE-Form und beim Rechnen mit Ausdr&uuml;cken
+in einer CRE-Form der Ausdruck so vereinfacht, dass der Nenner frei von
+algebraischen Zahlen (das sind Wurzeln von ganzen Zahlen) ist.
+</p>
+<p>Beispiele:
+</p>
+<p>Im zweiten Beispiel wird der Ausdruck automatisch mit <code>sqrt(2)</code> erweitert,
+um den Nenner frei von der algebraischen Zahl <code>sqrt(2)</code> zu machen.
+</p>
+<pre class="example">(%i1) algebraic:false;
+(%o1)                         false
+(%i2) rat(x^2+x)/sqrt(2);
+                              2
+                             x  + x
+(%o2)/R/                     -------
+                             sqrt(2)
+(%i3) algebraic:true;
+(%o3)                         true
+(%i4) rat(x^2+x)/sqrt(2);
+                              2
+                     sqrt(2) x  + sqrt(2) x
+(%o4)/R/             ----------------------
+                               2
+</pre></dd></dl>
 
 <p><a name="berlefact"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>berlefact</b>
-<a name="IDX799"></a>
+<a name="IDX802"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
 <p>Hat die Optionsvariable <code>berlefact</code> den Wert <code>false</code>, dann wird der
-Kronecker-Algorithmus f&uuml;r die Faktorisierung genutzt.  Ansonsten wird
-der Berlekamp-Algorithmus genutzt.  Der Standardwert ist <code>true</code>.
+Kronecker-Algorithmus von der Funktion <code><a href="#factor">factor</a></code>
+ f&uuml;r die
+Faktorisierung genutzt.  Ansonsten wird der Berlekamp-Algorithmus genutzt.  Der
+Standardwert ist <code>true</code>.
 </p></dd></dl>
 
 <p><a name="bezout"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>bezout</b><i> (<var>p1</var>, <var>p2</var>, <var>x</var>)</i>
-<a name="IDX800"></a>
+<a name="IDX803"></a>
 </dt>
 <dd><p>Die R&uuml;ckgabe ist die Sylvestermatrix der zwei Polynome <var>p1</var> und <var>p2</var>
 mit der unabh&auml;ngigen Variablen <var>x</var>.  Die Determinante der Sylvestermatrix
@@ -309,7 +334,7 @@ Funktion <code><a href="#resultant">resultant</a></code>
 <p><a name="bothcoef"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>bothcoef</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX801"></a>
+<a name="IDX804"></a>
 </dt>
 <dd><p>Gibt eine Liste zur&uuml;ck, deren erstes Element der Koeffizient der Variablen
 <var>x</var> im Ausdruck <var>expr</var> und deren zweites Element der verbleibende
@@ -343,22 +368,22 @@ nutzt, um den linearen Anteil eines Ausdrucks zu ermitteln.
 <p><a name="coeff"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>coeff</b><i> (<var>expr</var>, <var>x</var>, <var>n</var>)</i>
-<a name="IDX802"></a>
+<a name="IDX805"></a>
 </dt>
 <dt><u>Funktion:</u> <b>coeff</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX803"></a>
+<a name="IDX806"></a>
 </dt>
 <dd><p>Gibt den Koeffizienten von <code><var>x</var>^<var>n</var></code> des Ausdrucks <var>expr</var>
-zur&uuml;ck, wobei <var>expr</var> ein Polynom ist.
+zur&uuml;ck.  Das Argument <var>expr</var> ist ein Polynom in der Variablen <var>x</var>.
 </p>
 <p>Das Kommando <code>coeff(<var>expr</var>, <var>x</var>^<var>n</var>)</code> ist &auml;quivalent zu
 <code>coeff(<var>expr</var>, <var>x</var>, <var>n</var>)</code>.  Das Kommando
-<code>coeff(<var>expr</var>, <var>x</var>, 0)</code> gibt den Rest des Ausdrucks <var>expr</var>
+<code>coeff(<var>expr</var>, <var>x</var>, 0)</code> gibt den Teil des Ausdrucks <var>expr</var>
 zur&uuml;ck, der frei von der Variablen <var>x</var> ist.  Wenn nicht angegeben, wird
-<var>n</var> als 1 angenommen.
+das Argument <var>n</var> als <code>1</code> angenommen.
 </p>
-<p><var>x</var> kann auch eine indizierte Variable oder ein Teilausdruck von <var>expr</var>
-sein.
+<p>Das Argument <var>x</var> kann auch eine indizierte Variable oder ein Teilausdruck
+von <var>expr</var> sein.
 </p>
 <p><code>coeff</code> wendet weder die Funktion <code>expand</code> noch die Funktion 
 <code>factor</code> an, um einen Ausdruck zu expandieren oder zu faktorisieren.  Daher
@@ -390,7 +415,7 @@ Funktion auf die Elemente oder beide Seiten der Gleichung angewendet.
 (%o2)                         - c
                                  3
 </pre>
-<p><code>coeff(<var>expr</var>, <var>x</var>, 0)</code> gibt den Rest des Ausdrucks <var>expr</var>
+<p><code>coeff(<var>expr</var>, <var>x</var>, 0)</code> gibt den Teil des Ausdrucks <var>expr</var>
 zur&uuml;ck, der frei von der Variablen <var>x</var> ist.
 </p>
 <pre class="example">(%i1) coeff(a*u + b^2*u^2 + c^3*u^3, b, 0);
@@ -451,8 +476,7 @@ werden verwendet, um die Koeffizienten einer Liste hinzuf&uuml;gen und um die
 Liste zu invertieren.
 </p>
 <pre class="example">coeff_list(a,x) := 
-   block([liste],
-      liste:[],
+   block([liste:[]],
       for i:0 thru hipow(a,x) do 
       (
         liste : cons(coeff(a,x,i),liste)
@@ -467,7 +491,7 @@ Liste zu invertieren.
 <p><a name="content"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>content</b><i> (<var>p</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX804"></a>
+<a name="IDX807"></a>
 </dt>
 <dd><p>Gibt eine Liste zur&uuml;ck, deren erstes Element der gr&ouml;&szlig;te gemeinsame 
 Teiler der Koeffizienten des Polynoms <var>p</var> in der Variablen <var>x_n</var> ist 
@@ -486,7 +510,7 @@ haben dieselbe Bedeutung wie f&uuml;r die Funktion <code><a href="#ratvars">ratv
 <p><a name="denom"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>denom</b><i> (<var>expr</var>)</i>
-<a name="IDX805"></a>
+<a name="IDX808"></a>
 </dt>
 <dd><p>Gibt den Nenner des Ausdrucks <var>expr</var> zur&uuml;ck, wenn dieser ein
 Quotient ist.  Ist der Ausdruck <var>expr</var> kein Quotient wird <var>expr</var>
@@ -505,7 +529,7 @@ zur&uuml;ckgegeben.
 <p><a name="divide"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>divide</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX806"></a>
+<a name="IDX809"></a>
 </dt>
 <dd><p>Berechnet den Quotienten und den Rest der Division des Polynom <var>p_1</var> durch
 das Polynom <var>p_2</var> f&uuml;r die Variable <var>x_n</var>.  Die anderen Argumente
@@ -551,7 +575,7 @@ den Quotienten und den Rest der Polynomdivision zur&uuml;ckgegeben.
 <p><a name="dontfactor"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>dontfactor</b>
-<a name="IDX807"></a>
+<a name="IDX810"></a>
 </dt>
 <dd><p>Standardwert: <code>[]</code>
 </p>
@@ -584,7 +608,7 @@ faktorisiert.
 <p><a name="eliminate"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>eliminate</b><i> ([<var>eqn_1</var>, &hellip;, <var>eqn_n</var>], [<var>x_1</var>, &hellip;, <var>x_k</var>])</i>
-<a name="IDX808"></a>
+<a name="IDX811"></a>
 </dt>
 <dd><p>Wendet ein Subresultanten-Verfahren an, um die Variablen <var>x_1</var>, &hellip;, 
 <var>x_k</var> aus den Gleichungen <var>eqn_1</var>, &hellip;, <var>eqn_n</var> zu eliminieren.
@@ -610,7 +634,7 @@ eliminiert sind.
 <p><a name="ezgcd"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ezgcd</b><i> (<var>p_1</var>, <var>p_2</var>, <var>p_3</var>, &hellip;)</i>
-<a name="IDX809"></a>
+<a name="IDX812"></a>
 </dt>
 <dd><p>Gibt eine Liste zur&uuml;ck, deren erstes Element der gr&ouml;&szlig;te gemeinsame
 Teiler der Polynome <var>p_1</var>, &hellip;, <var>p_n</var> ist und deren weitere Elemente
@@ -652,7 +676,7 @@ berechnet.  Dann wird das Ergebnis der Funktion <code>ezgcd</code> gezeigt.
 <p><a name="facexpand"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>facexpand</b>
-<a name="IDX810"></a>
+<a name="IDX813"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
@@ -666,10 +690,10 @@ werden.
 <p><a name="factor"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>factor</b><i> (<var>expr</var>)</i>
-<a name="IDX811"></a>
+<a name="IDX814"></a>
 </dt>
 <dt><u>Funktion:</u> <b>factor</b><i> (<var>expr</var>, <var>p</var>)</i>
-<a name="IDX812"></a>
+<a name="IDX815"></a>
 </dt>
 <dd>
 <p>Faktorisiert den Ausdruck <var>expr</var>, der eine beliebige Zahl an Variablen 
@@ -818,7 +842,7 @@ gro&szlig;e ganze Zahlen zu faktorisieren, unn&ouml;tig viel Zeit verbraucht.
 <p>Das Polynom <code>x^4+1</code> l&auml;sst sich nicht &uuml;ber den K&ouml;rper der ganzen
 Zahlen faktorisieren.  Wird der K&ouml;rper um das minimale Polynom <code>a^2+1</code>
 erweitert, ist die Faktorisierung m&ouml;glich.  Die Nullstellen des minimalen
-Polynoms sind die imagin&auml;re Einheit <code>%i</code> und <code>- %i</code>.  Das Ergebnis
+Polynoms sind die imagin&auml;re Einheit <code>%i</code> und <code>-%i</code>.  Das Ergebnis
 entspricht der Faktorisierung mit der Funktion <code><a href="#gfactor">gfactor</a></code>.
 </p>
 
@@ -836,7 +860,7 @@ entspricht der Faktorisierung mit der Funktion <code><a href="#gfactor">gfactor<
 <p><a name="factorflag"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>factorflag</b>
-<a name="IDX813"></a>
+<a name="IDX816"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -865,7 +889,7 @@ Funktion auftreten.
 <p><a name="factorout"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>factorout</b><i> (<var>expr</var>, <var>x_1</var>, <var>x_2</var>, &hellip;)</i>
-<a name="IDX814"></a>
+<a name="IDX817"></a>
 </dt>
 <dd>
 <p>Gruppiert eine Summe <var>expr</var> in eine Summe mit Termen der Form
@@ -891,7 +915,7 @@ zuletzt nach beiden Variablen faktorisiert.
 <p><a name="factorsum"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>factorsum</b><i> (<var>expr</var>)</i>
-<a name="IDX815"></a>
+<a name="IDX818"></a>
 </dt>
 <dd>
 <p>Versucht Terme in <var>expr</var> so zu gruppieren, dass die Teilsummen
@@ -916,7 +940,7 @@ gemeinsame Variablen enthalten.
 <p><a name="fasttimes"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>fasttimes</b><i> (<var>p_1</var>, <var>p_2</var>)</i>
-<a name="IDX816"></a>
+<a name="IDX819"></a>
 </dt>
 <dd>
 <p>F&uuml;hrt eine schnelle Multiplikation der Polynome <var>p_1</var> und <var>p_2</var> aus
@@ -930,10 +954,10 @@ Sind <code>n_1</code> und <code>n_2</code> jeweils der Grad der Polynome <var>p_
 <p><a name="fullratsimp"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>fullratsimp</b><i> (<var>expr</var>)</i>
-<a name="IDX817"></a>
+<a name="IDX820"></a>
 </dt>
 <dt><u>Funktion:</u> <b>fullratsimp</b><i> (<var>expr</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX818"></a>
+<a name="IDX821"></a>
 </dt>
 <dd>
 
@@ -983,7 +1007,7 @@ Funktionen <code>ratsimp</code> und <code><a href="#rat">rat</a></code>.
 <p><a name="fullratsubst"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>fullratsubst</b><i> (<var>a</var>, <var>b</var>, <var>c</var>)</i>
-<a name="IDX819"></a>
+<a name="IDX822"></a>
 </dt>
 <dd>
 
@@ -1057,10 +1081,10 @@ Gleichung als erstes Argument.
 <p><a name="gcd"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>gcd</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x_1</var>, &hellip;)</i>
-<a name="IDX820"></a>
+<a name="IDX823"></a>
 </dt>
 <dt><u>Optionsvariable:</u> <b>gcd</b>
-<a name="IDX821"></a>
+<a name="IDX824"></a>
 </dt>
 <dd>
 <p>Gibt den gr&ouml;&szlig;ten gemeinsamen Teiler der Polynome <var>p_1</var> und <var>p_2</var>
@@ -1127,10 +1151,10 @@ den gr&ouml;&szlig;ten gemeinsamen Teiler dividierten Polynome enth&auml;lt.
 <p><a name="gcdex"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>gcdex</b><i> (<var>p_1</var>, <var>p_2</var>)</i>
-<a name="IDX822"></a>
+<a name="IDX825"></a>
 </dt>
 <dt><u>Funktion:</u> <b>gcdex</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x</var>)</i>
-<a name="IDX823"></a>
+<a name="IDX826"></a>
 </dt>
 <dd>
 <p>Wendet den erweiterten Euklidischen Algorithmus f&uuml;r die beiden Polynome
@@ -1183,7 +1207,7 @@ angegeben.  Ohne diese Angabe ist <var>y</var> die unabh&auml;ngige Variable.
 <p><a name="gcfactor"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>gcfactor</b><i> (<var>g</var>)</i>
-<a name="IDX824"></a>
+<a name="IDX827"></a>
 </dt>
 <dd>
 <p>Faktorisiert die Gau&szlig;sche Zahl <var>g</var> &uuml;ber die Gau&szlig;sche Zahlen.  Eine
@@ -1207,7 +1231,7 @@ und <code>b</code> ganze Zahlen sind.  Die Faktoren werden so normalisiert, dass
 <p><a name="gfactor"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>gfactor</b><i> (<var>expr</var>)</i>
-<a name="IDX825"></a>
+<a name="IDX828"></a>
 </dt>
 <dd>   
 <p>Faktorisiert das Polynom <var>expr</var> &uuml;ber die Gau&szlig;schen Zahlen.  Das ist
@@ -1232,7 +1256,7 @@ die Faktorisierung &uuml;ber den K&ouml;rper der ganzen Zahlen, der um das Eleme
 <p><a name="gfactorsum"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>gfactorsum</b><i> (<var>expr</var>)</i>
-<a name="IDX826"></a>
+<a name="IDX829"></a>
 </dt>
 <dd>
 <p>Entspricht der Funktion <code><a href="#factorsum">factorsum</a></code>
@@ -1246,14 +1270,12 @@ Ausdruck <var>expr</var> zu faktorisieren.
 <p><a name="hipow"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>hipow</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX827"></a>
+<a name="IDX830"></a>
 </dt>
-<dd>
-
-<p>Gibt den gr&ouml;&szlig;ten Exponenten des Arguments <var>x</var> zur&uuml;ck, der im
+<dd><p>Gibt den gr&ouml;&szlig;ten Exponenten des Arguments <var>x</var> zur&uuml;ck, der im
 Ausdruck <var>expr</var> auftritt.  Treten symbolische Exponenten auf, wird ein
 Ausdruck mit <code>max</code> zur&uuml;ckgegeben.  Ist das Argument <var>x</var> nicht im
-Ausdruck vorhanden, ist die R&uuml;ckgabe 0.
+Ausdruck vorhanden, ist die R&uuml;ckgabe <code>0</code>.
 </p>
 <p>Die Funktion <code>hipow</code> betrachtet keine &auml;quivalenten Ausdr&uuml;cke.  Daher
 k&ouml;nnen die Ausdr&uuml;cke <code>expand(<var>expr</var>)</code> und <var>expr</var> ein
@@ -1283,7 +1305,7 @@ verschiedenes Ergebnis haben.
 <p><a name="intfaclim"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>intfaclim</b>
-<a name="IDX828"></a>
+<a name="IDX831"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
@@ -1314,7 +1336,7 @@ faktorisieren, unn&ouml;tig viel Zeit verbraucht.
 <p><a name="keepfloat"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>keepfloat</b>
-<a name="IDX829"></a>
+<a name="IDX832"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -1352,7 +1374,7 @@ rat: replaced 1.0 by 1/1 = 1.0
 <p><a name="lopow"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>lopow</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX830"></a>
+<a name="IDX833"></a>
 </dt>
 <dd>
 <p>Gibt den kleinsten Exponenten von <var>x</var> zur&uuml;ck, der im Ausdruck <var>expr</var>
@@ -1378,7 +1400,7 @@ verschiedenes Ergebnis haben.
 <p><a name="lratsubst"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>lratsubst</b><i> (<var>L</var>, <var>expr</var>)</i>
-<a name="IDX831"></a>
+<a name="IDX834"></a>
 </dt>
 <dd>
 <p>Ist analog zum Kommando <code>subst (<var>L</var>, <var>expr</var>)</code> mit dem Unterschied,
@@ -1422,12 +1444,12 @@ als erstes Argument angegeben werden.
 <p><a name="modulus"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>modulus</b>
-<a name="IDX832"></a>
+<a name="IDX835"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
    
-<p>Hat die Optionsvariable <code>modulus</code> eine positive Zahl <var>p</var> als Wert
+<p>Hat die Optionsvariable <code>modulus</code> eine positive Zahl <var>p</var> als Wert,
 werden Operationen f&uuml;r rationale Zahlen, wie von der Funktion <code><a href="#rat">rat</a></code>
  und
 verwandte Funktionen, modulo <var>p</var> ausgef&uuml;hrt.
@@ -1449,13 +1471,37 @@ werden, um korrekte Ergebnisse zu erzielen.
 <p>Typischerweise erh&auml;lt die Optionsvariable <code>modulus</code> eine Primzahl als
 Wert.  Erh&auml;lt <code>modulus</code> eine positive ganze Zahl als Wert, die nicht eine
 Primzahl ist, wird die Zuweisung akzeptiert, jedoch eine Warnung ausgegeben.
-</p></dd></dl>
+Wird Null oder eine negative Zahl zugewiesen signalisiert Maxima einen Fehler.
+</p>
+<p>Beispiele:
+</p>
+<pre class="example">(%i1) modulus:7;
+(%o1)                           7
+(%i2) polymod([0,1,2,3,4,5,6,7]);
+(%o2)            [0, 1, 2, 3, - 3, - 2, - 1, 0]
+(%i3) modulus:false;
+(%o3)                         false
+(%i4) poly:x^6+x^2+1;
+                            6    2
+(%o4)                      x  + x  + 1
+(%i5) factor(poly);
+                            6    2
+(%o5)                      x  + x  + 1
+(%i6) modulus:13;
+(%o6)                          13
+(%i7) factor(poly);
+                      2        4      2
+(%o7)               (x  + 6) (x  - 6 x  - 2)
+(%i8) polymod(%);
+                            6    2
+(%o8)                      x  + x  + 1
+</pre></dd></dl>
 
 
 <p><a name="num"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>num</b><i> (<var>expr</var>)</i>
-<a name="IDX833"></a>
+<a name="IDX836"></a>
 </dt>
 <dd>
 
@@ -1477,7 +1523,7 @@ zur&uuml;ckgegeben.
 <p><a name="partfrac"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>partfrac</b><i> (<var>expr</var>, <var>var</var>)</i>
-<a name="IDX834"></a>
+<a name="IDX837"></a>
 </dt>
 <dd>
 
@@ -1505,7 +1551,7 @@ aus.
 <p><a name="polydecomp"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>polydecomp</b><i> (<var>p</var>, <var>x</var>)</i>
-<a name="IDX835"></a>
+<a name="IDX838"></a>
 </dt>
 <dd>
 <p>Zerlegt das Polynom <var>p</var> in der Variablen <var>x</var> in Polynome, die
@@ -1569,10 +1615,10 @@ Polynom <var>p</var> als Ergebnis hat, hat <code>polydecomp (compose ([<var>p_1<
 <p><a name="polymod"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>polymod</b><i> (<var>p</var>)</i>
-<a name="IDX836"></a>
+<a name="IDX839"></a>
 </dt>
 <dt><u>Funktion:</u> <b>polymod</b><i> (<var>p</var>, <var>m</var>)</i>
-<a name="IDX837"></a>
+<a name="IDX840"></a>
 </dt>
 <dd>
 <p>Konvertiert das Polynom <var>p</var> in eine modulare Darstellung bez&uuml;glich
@@ -1590,7 +1636,7 @@ dem aktuellen Modul.  Das Modul ist der Wert der Variablen <code>modulus</code>.
 <p><a name="powers"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>powers</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX838"></a>
+<a name="IDX841"></a>
 </dt>
 <dd>
 <p>Gibt eine Liste mit den Potenzen der Variablen <var>x</var> zur&uuml;ck, die im
@@ -1604,10 +1650,10 @@ Ausdruck <var>expr</var> auftreten.
 <p><a name="quotient"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>quotient</b><i> (<var>p_1</var>, <var>p_2</var>)</i>
-<a name="IDX839"></a>
+<a name="IDX842"></a>
 </dt>
 <dt><u>Funktion:</u> <b>quotient</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX840"></a>
+<a name="IDX843"></a>
 </dt>
 <dd><p>Berechnet den Quotienten der Polynome <var>p_1</var> und <var>p_2</var> f&uuml;r die Variable
 <var>x_n</var>.  Die anderen Variablen <var>x_1</var>, &hellip;, <var>x_n-1</var> haben dieselbe
@@ -1637,21 +1683,21 @@ Bedeutung wie f&uuml;r die Funktion <code><a href="#ratvars">ratvars</a></code>.
 <p><a name="rat"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>rat</b><i> (<var>expr</var>)</i>
-<a name="IDX841"></a>
+<a name="IDX844"></a>
 </dt>
 <dt><u>Funktion:</u> <b>rat</b><i> (<var>expr</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX842"></a>
+<a name="IDX845"></a>
 </dt>
 <dd>
 <p>Konvertiert einen Ausdruck <var>expr</var> in die CRE-Form.  Der Ausdruck wird so 
-expandiert und so gruppiert, dass alle Terme einen gemeinsamen Nenner haben und
+expandiert und gruppiert, dass alle Terme einen gemeinsamen Nenner haben und
 der gr&ouml;&szlig;te gemeinsame Teiler gek&uuml;rzt ist.  Weiterhin werden
 Gleitkommazahlen in rationale Zahlungen umgewandelt.  Die Toleranz der
 Umwandlung wird von der Optionsvariablen <code><a href="maxima_5.html#ratepsilon">ratepsilon</a></code>
  kontrolliert.  Die
 Variablen im Ausdruck werden entsprechend der Funktion <code><a href="#ratvars">ratvars</a></code>
-</p>
-<p>gem&auml;&szlig; der angegebenen Argumente <var>x_1</var>, &hellip;, <var>x_n</var> angeordnet.
+
+gem&auml;&szlig; der angegebenen Argumente <var>x_1</var>, &hellip;, <var>x_n</var> angeordnet.
 </p>
 
 <p><code>rat</code> vereinfacht im Allgemeinen keine Ausdr&uuml;cke bis auf die Addition
@@ -1686,9 +1732,12 @@ Gleitkommazahlen nicht in rationale Zahlen umgewandelt.
 </p>
 
 <p>Siehe auch die Funktionen <code><a href="#ratexpand">ratexpand</a></code>
- und <code><a href="#ratsimp">ratsimp</a></code>.
+ und <code><a href="#ratsimp">ratsimp</a></code>,
+ um
+Ausdr&uuml;cke zu vereinfachen, sowie die Funktion <code><a href="#ratdisrep">ratdisrep</a></code>,
+ um einen
+Ausdruck von einer CRE-Form in eine allgemeine Form zu transformieren.
 </p>
-
 <p>Beispiele:
 </p>
 <pre class="example">(%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x) /
@@ -1710,7 +1759,7 @@ Gleitkommazahlen nicht in rationale Zahlen umgewandelt.
 <p><a name="ratalgdenom"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratalgdenom</b>
-<a name="IDX843"></a>
+<a name="IDX846"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
@@ -1750,10 +1799,10 @@ vorliegt.
 <p><a name="ratcoef"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratcoef</b><i> (<var>expr</var>, <var>x</var>, <var>n</var>)</i>
-<a name="IDX844"></a>
+<a name="IDX847"></a>
 </dt>
 <dt><u>Funktion:</u> <b>ratcoef</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX845"></a>
+<a name="IDX848"></a>
 </dt>
 <dd>
 <p>Gibt den Koeffizienten des Ausdrucks <code><var>x</var>^<var>n</var></code> in dem Argument
@@ -1787,21 +1836,18 @@ die Variable <var>x</var> nicht enthalten.
 <p><a name="ratdenom"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratdenom</b><i> (<var>expr</var>)</i>
-<a name="IDX846"></a>
+<a name="IDX849"></a>
 </dt>
-<dd>
-<p>Gibt den Nenner des Argumentes <var>expr</var> zur&uuml;ck.  <code>ratdenom</code> wandelt
+<dd><p>Gibt den Nenner des Argumentes <var>expr</var> zur&uuml;ck.  <code>ratdenom</code> wandelt
 den Ausdruck zuerst in eine CRE-Form um und gibt das Ergebnis in einer 
 CRE-Form zur&uuml;ck.
 </p>
-   
 <p>Das Argument <var>expr</var> wird von der Funktion <code><a href="#rat">rat</a></code>
  in eine CRE-Form
 gebracht, falls <var>expr</var> nicht bereits in einer CRE-Form vorliegt.  Diese
 Transformation kann den Ausdruck <var>expr</var> ver&auml;ndern, da alle Terme &uuml;ber
 einen gemeinsamen Nenner zusammengefasst werden.
 </p>
-
 <p>Die Funktion <code><a href="#denom">denom</a></code>
  ist vergleichbar.  <code>denom</code> wandelt den Ausdruck
 jedoch nicht eine CRE-Form um und hat als Ergebnis einen Ausdruck in der
@@ -1824,7 +1870,7 @@ Standardform.  Daher k&ouml;nnen sich die Ergebnisse von <code>ratdenom</code> u
 <p><a name="ratdenomdivide"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratdenomdivide</b>
-<a name="IDX847"></a>
+<a name="IDX850"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
@@ -1874,7 +1920,7 @@ gemeinsamen Nenner zusammengefasst.
 <p><a name="ratdiff"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratdiff</b><i> (<var>expr</var>, <var>x</var>)</i>
-<a name="IDX848"></a>
+<a name="IDX851"></a>
 </dt>
 <dd>         
 <p>Differenziert einen rationalen Ausdruck <var>expr</var> nach der Variablen <var>x</var>.
@@ -1930,7 +1976,7 @@ werden von der Funktion <code>ratdiff</code> ignoriert.
 <p><a name="ratdisrep"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratdisrep</b><i> (<var>expr</var>)</i>
-<a name="IDX849"></a>
+<a name="IDX852"></a>
 </dt>
 <dd>
 <p>Gibt das Argument <var>expr</var> als einen allgemeinen Ausdruck zur&uuml;ck.  Ist
@@ -1951,10 +1997,10 @@ Ausdruck von der CRE-Form in einen allgemeinen Ausdruck umzuwandeln.
 <p><a name="ratexpand"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratexpand</b><i> (<var>expr</var>)</i>
-<a name="IDX850"></a>
+<a name="IDX853"></a>
 </dt>
 <dt><u>Optionsvariable:</u> <b>ratexpand</b>
-<a name="IDX851"></a>
+<a name="IDX854"></a>
 </dt>
 <dd>
 <p>Expandiert das Argument <var>expr</var> indem Produkte und Potenzen von Summen
@@ -2018,7 +2064,7 @@ wenn der Ausdruck in eine CRE-Form umgewandelt wird.
 <p><a name="ratfac"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratfac</b>
-<a name="IDX852"></a>
+<a name="IDX855"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -2045,7 +2091,7 @@ Variablen <code>ratfac</code>.
 <p><a name="ratnumer"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratnumer</b><i> (<var>expr</var>)</i>
-<a name="IDX853"></a>
+<a name="IDX856"></a>
 </dt>
 <dd>
 <p>Gibt den Z&auml;hler des Argumentes <var>expr</var> zur&uuml;ck.  <code>ratnumer</code> wandelt
@@ -2071,7 +2117,7 @@ Standardform.  Daher k&ouml;nnen sich die Ergebnisse von <code>ratnumer</code> u
 <p><a name="ratp"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratp</b><i> (<var>expr</var>)</i>
-<a name="IDX854"></a>
+<a name="IDX857"></a>
 </dt>
 <dd>
 <p>Gibt das Ergebnis <code>true</code> zur&uuml;ck, wenn das Argument <var>expr</var> in einer
@@ -2088,7 +2134,7 @@ Funktionen erzeugt.
 <p><a name="ratprint"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratprint</b>
-<a name="IDX855"></a>
+<a name="IDX858"></a>
 </dt>
 <dd><p>Standardwert: <code>true</code>
 </p>
@@ -2117,10 +2163,10 @@ rat: replaced 0.75 by 3/4 = 0.75
 <p><a name="ratsimp"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratsimp</b><i> (<var>expr</var>)</i>
-<a name="IDX856"></a>
+<a name="IDX859"></a>
 </dt>
 <dt><u>Funktion:</u> <b>ratsimp</b><i> (<var>expr</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX857"></a>
+<a name="IDX860"></a>
 </dt>
 <dd>
 <p>Vereinfacht den Ausdruck <var>expr</var> und alle Teilausdr&uuml;cke, einschlie&szlig;lich
@@ -2180,7 +2226,7 @@ haben.
 <p><a name="ratsimpexpons"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratsimpexpons</b>
-<a name="IDX858"></a>
+<a name="IDX861"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -2211,7 +2257,7 @@ haben.
 <p><a name="radsubstflag"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>radsubstflag</b>
-<a name="IDX859"></a>
+<a name="IDX862"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -2235,7 +2281,7 @@ enthalten sind.
 <p><a name="ratsubst"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratsubst</b><i> (<var>a</var>, <var>b</var>, <var>c</var>)</i>
-<a name="IDX860"></a>
+<a name="IDX863"></a>
 </dt>
 <dd>   
 <p>Substituiert <var>a</var> f&uuml;r <var>b</var> in den Ausdruck <var>c</var> und gibt das Ergebnis
@@ -2278,13 +2324,13 @@ enthalten sind.
 <p><a name="ratvars"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratvars</b><i> (<var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX861"></a>
+<a name="IDX864"></a>
 </dt>
 <dt><u>Funktion:</u> <b>ratvars</b><i> ()</i>
-<a name="IDX862"></a>
+<a name="IDX865"></a>
 </dt>
 <dt><u>Systemvariable:</u> <b>ratvars</b>
-<a name="IDX863"></a>
+<a name="IDX866"></a>
 </dt>
 <dd>
 <p>Deklariert die Variablen <var>x_1</var>, &hellip;, <var>x_n</var> zu Hauptvariablen einer
@@ -2310,10 +2356,10 @@ Argumente <code>ratvars()</code> l&ouml;scht die Systemvariable <code>ratvars</c
 <p><a name="ratweight"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>ratweight</b><i> (<var>x_1</var>, <var>w_1</var>, &hellip;, <var>x_n</var>, <var>w_n</var>)</i>
-<a name="IDX864"></a>
+<a name="IDX867"></a>
 </dt>
 <dt><u>Funktion:</u> <b>ratweight</b><i> ()</i>
-<a name="IDX865"></a>
+<a name="IDX868"></a>
 </dt>
 <dd>
 
@@ -2351,7 +2397,7 @@ Variablen <code>ratfac</code>.
 <p><a name="ratweights"></a>
 </p><dl>
 <dt><u>System variable:</u> <b>ratweights</b>
-<a name="IDX866"></a>
+<a name="IDX869"></a>
 </dt>
 <dd><p>Standardwert: <code>[]</code>
 </p>
@@ -2368,7 +2414,7 @@ werden.
 <p><a name="ratwtlvl"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>ratwtlvl</b>
-<a name="IDX867"></a>
+<a name="IDX870"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -2383,10 +2429,10 @@ Mit dem Standardwert <code>false</code> werden keine Terme entfernt.
 <p><a name="remainder"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>remainder</b><i> (<var>p_1</var>, <var>p_2</var>)</i>
-<a name="IDX868"></a>
+<a name="IDX871"></a>
 </dt>
 <dt><u>Funktion:</u> <b>remainder</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX869"></a>
+<a name="IDX872"></a>
 </dt>
 <dd><p>Berechnet den Rest der Polynomdivision von <var>p_1</var> und <var>p_2</var> f&uuml;r die
 Variable <var>x_n</var>.  Die anderen Variablen <var>x_1</var>, &hellip;, <var>x_n-1</var>
@@ -2415,10 +2461,7 @@ haben dieselbe Bedeutung wie f&uuml;r die Funktion <code><a href="#ratvars">ratv
 <p><a name="resultant"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>resultant</b><i> (<var>p_1</var>, <var>p_2</var>, <var>x</var>)</i>
-<a name="IDX870"></a>
-</dt>
-<dt><u>Optionsvariable:</u> <b>resultant</b>
-<a name="IDX871"></a>
+<a name="IDX873"></a>
 </dt>
 <dd>
 <p>Berechnet die Resultante der Polynome <var>p_1</var> und <var>p_2</var> und eliminiert
@@ -2431,20 +2474,10 @@ beiden Polynome <var>p_1</var> und <var>p_2</var> einen gemeinsamen Faktor haben
 von Vorteil sein, die Faktorisierung zuvor auszuf&uuml;hren.
 </p>
 
-<p>Die Optionsvariable <code>resultant</code> kontrolliert, welcher Algorithmus f&uuml;r die
-Berechnung der Resultante von Maxima genutzt wird.  Die m&ouml;glichen Werte sind:
+<p>Die Optionsvariable <code>resultant</code> kontrolliert, welcher Algorithmus f&uuml;r
+die Berechnung der Resultante von Maxima genutzt wird.  Siehe die 
+Optionsvariable <code><a href="#option_005fresultant">resultant</a></code>.
 </p>
-<dl compact="compact">
-<dt> <code>subres</code></dt>
-<dd><p>Subresultanten-Algorithmus
-</p></dd>
-<dt> <code>mod</code></dt>
-<dd><p>Modularer Resultanten-Algorithmus
-</p></dd>
-<dt> <code>red</code></dt>
-<dd><p>Reduzierter Subresultanten-Algorithmus
-</p></dd>
-</dl>
 
 
 <p>Die Funktion <code><a href="#bezout">bezout</a></code>
@@ -2472,10 +2505,39 @@ Resultante.
 (%o6)                   4 a - (2 b - c) c
 </pre></dd></dl>
 
+<p><a name="option_005fresultant"></a>
+</p><dl>
+<dt><u>Optionsvariable:</u> <b>resultant</b>
+<a name="IDX874"></a>
+</dt>
+<dd><p>Standardwert: <code>subres</code>
+</p>
+
+<p>Die Optionsvariable <code>resultant</code> kontrolliert, welcher Algorithmus f&uuml;r die
+Berechnung der Resultante mit der Funktion <code><a href="#resultant">resultant</a></code>
+ von Maxima genutzt
+wird.  Die m&ouml;glichen Werte sind:
+</p>
+<dl compact="compact">
+<dt> <code>subres</code></dt>
+<dd><p>Subresultanten-Algorithmus
+</p></dd>
+<dt> <code>mod</code></dt>
+<dd><p>Modularer Resultanten-Algorithmus
+</p></dd>
+<dt> <code>red</code></dt>
+<dd><p>Reduzierter Subresultanten-Algorithmus
+</p></dd>
+</dl>
+
+<p>Der Standwert <code>subres</code> ist f&uuml;r die meisten Probleme geeignet.  F&uuml;r
+gro&szlig;e Polynome in einer oder zwei Variablen kann <code>mod</code> besser sein.
+</p></dd></dl>
+
 <p><a name="savefactors"></a>
 </p><dl>
 <dt><u>Optionsvariable:</u> <b>savefactors</b>
-<a name="IDX872"></a>
+<a name="IDX875"></a>
 </dt>
 <dd><p>Standardwert: <code>false</code>
 </p>
@@ -2488,7 +2550,7 @@ zu erhalten, um weitere Vereinfachungen zu beschleunigen.
 <p><a name="showratvars"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>showratvars</b><i> (<var>expr</var>)</i>
-<a name="IDX873"></a>
+<a name="IDX876"></a>
 </dt>
 <dd>
 <p>Gibt eine Liste mit den Variablen des Ausdrucks <var>expr</var> zur&uuml;ck.  Der
@@ -2502,7 +2564,7 @@ Ausdruck liegt in einer CRE-Form vor.
 <p><a name="sqfr"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>sqfr</b><i> (<var>expr</var>)</i>
-<a name="IDX874"></a>
+<a name="IDX877"></a>
 </dt>
 <dd>
 
@@ -2522,10 +2584,10 @@ Polynome quadratfrei sind.
 <p><a name="tellrat"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>tellrat</b><i> (<var>p_1</var>, &hellip;, <var>p_n</var>)</i>
-<a name="IDX875"></a>
+<a name="IDX878"></a>
 </dt>
 <dt><u>Funktion:</u> <b>tellrat</b><i> ()</i>
-<a name="IDX876"></a>
+<a name="IDX879"></a>
 </dt>
 <dd>
 <p>F&uuml;gt dem Ring der ganzen Zahlen, die algebraische Zahlen hinzu, die L&ouml;sungen
@@ -2590,7 +2652,7 @@ besagt, dass <var>y^2</var> durch <var>x^2</var> zu ersetzen ist.
 <p><a name="totaldisrep"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>totaldisrep</b><i> (<var>expr</var>)</i>
-<a name="IDX877"></a>
+<a name="IDX880"></a>
 </dt>
 <dd>
 <p>Konvertiert alle Teilausdr&uuml;cke im Ausdruck <var>expr</var> von der CRE-Form in die
@@ -2606,7 +2668,7 @@ Matrizen in eine allgemeine Form zu konvertieren sind.
 <p><a name="untellrat"></a>
 </p><dl>
 <dt><u>Funktion:</u> <b>untellrat</b><i> (<var>x_1</var>, &hellip;, <var>x_n</var>)</i>
-<a name="IDX878"></a>
+<a name="IDX881"></a>
 </dt>
 <dd>
 <p>Entfernt Eigenschaften von den Symbolen <var>x_1</var>, &hellip;, <var>x_n</var>, die mit
@@ -2627,12 +2689,12 @@ der Funktion <code>tellrat</code> zugewiesen wurden.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_79.html#SEC404" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_79.html#SEC409" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>August, 1 2011</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated on <i>April, 4 2012</i> using <a href="http://texi2html.cvshome.org/"><i>texi2html 1.76</i></a>.
  </font>
  <br>
 
