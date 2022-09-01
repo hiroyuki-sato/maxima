@@ -55,7 +55,7 @@
 ; ------------------ search help topics ------------------
 
 (defun info-exact (x)
-  (cause-maxima-index-to-load)
+  (maxima::mfuncall 'cause-maxima-index-to-load)
   (let ((exact-matches (exact-topic-match x)))
     (if (null exact-matches)
       (progn
@@ -80,13 +80,13 @@
     (find-regex-matches topic *info-deffn-defvr-hashtable*)))
 
 (defun info (x)
-  (cause-maxima-index-to-load)
+  (maxima::mfuncall 'cause-maxima-index-to-load)
   (let (wanted tem)
     (setf tem (inexact-topic-match x))
     (when tem
       (let ((nitems (length tem)))
 
-        (loop for i from 0 for item in tem with prev do
+        (loop for i from 0 for item in tem do
           (when (> nitems 1)
             (let ((heading-title (nth 3 (cdr item))))
               (format t "~% ~d: ~a~@[  (~a)~]"
@@ -151,17 +151,16 @@
 
 (defun read-info-text (x)
   (declare (special maxima::*maxima-infodir* maxima::*maxima-lang-subdir*))
-  (let*
-    ((key (car x))
-     (value (cdr x))
-     (filename (car value))
-     (byte-offset (cadr value))
-     (byte-count (caddr value))
-     (text (make-string byte-count))
-     (subdir-bit
-       (if (null maxima::*maxima-lang-subdir*) ""
-         (concatenate 'string "/" maxima::*maxima-lang-subdir*)))
-     (path+filename (concatenate 'string maxima::*maxima-infodir* subdir-bit "/" filename)))
+  (let* ((value (cdr x))
+	 (filename (car value))
+	 (byte-offset (cadr value))
+	 (byte-count (caddr value))
+	 (text (make-string byte-count))
+	 (subdir-bit
+	  (if (null maxima::*maxima-lang-subdir*)
+	      ""
+	      (concatenate 'string "/" maxima::*maxima-lang-subdir*)))
+	 (path+filename (concatenate 'string maxima::*maxima-infodir* subdir-bit "/" filename)))
     (with-open-file (in path+filename :direction :input)
       (file-position in byte-offset)
       #+gcl (gcl-read-sequence text in :start 0 :end byte-count)
@@ -187,4 +186,3 @@
   (mapc
     #'(lambda (x) (setf (gethash (car x) *info-deffn-defvr-hashtable*) (cdr x)))
     *info-deffn-defvr-pairs*))
-

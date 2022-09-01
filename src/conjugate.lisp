@@ -8,6 +8,7 @@
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 (in-package :maxima)
+
 (macsyma-module conjugate)
 
 ($put '$conjugate 1 '$version)
@@ -17,17 +18,19 @@
 (defprop $conjugate 160. tex-lbp)
 (defprop $conjugate simp-conjugate operators)
 
-(eval-when (compile load eval)
-  (let (($context '$global) (context '$global))
-    (meval '(($declare) $conjugate $complex))))
+(eval-when
+    #+gcl (compile load eval)
+    #-gcl (:compile-toplevel :load-toplevel :execute)
+    (let (($context '$global) (context '$global))
+      (meval '(($declare) $conjugate $complex))))
 
 ;; When a function commutes with the conjugate, give the function the
 ;; commutes-with-conjugate property. The log function commutes with
 ;; the conjugate on all of C except on the negative real axis. Thus
 ;; log does not get the commutes-with-conjugate property.  Instead,
-;; log gets the conjugate-function property. 
+;; log gets the conjugate-function property.
 
-;; What importation functions have I missed? 
+;; What importation functions have I missed?
 
 ;; (1) Arithmetic operators
 
@@ -64,7 +67,7 @@
 (setf (get 'mlist 'commutes-with-conjugate) t)
 (setf (get '$set 'commutes-with-conjugate) t)
 
-;; Relations 
+;; Relations
 
 (setf (get 'mequal 'commutes-with-conjugate) t)
 (setf (get 'mnotequal 'commutes-with-conjugate) t)
@@ -77,17 +80,19 @@
 
 ;; When a function has the conjugate-function property,
 ;; use a non-generic function to conjugate it. Not done:
-;; conjugate-functions for all the inverse trigonometric 
-;; functions. 
+;; conjugate-functions for all the inverse trigonometric
+;; functions.
 
 ;; Trig like and hypergeometric like functions
 
 (setf (get '%log 'conjugate-function) 'conjugate-log)
 (setf (get 'mexpt 'conjugate-function) 'conjugate-mexpt)
 (setf (get '%asin 'conjugate-function) 'conjugate-asin)
-(setf (get '%acos 'conjugate-function) 'conjugate-acos) 
-(setf (get '%atan 'conjugate-function) 'conjugate-atan) 
-;;(setf (get '$asec 'conjugate-function) 'conjugate-asec) 
+(setf (get '%acos 'conjugate-function) 'conjugate-acos)
+(setf (get '%atan 'conjugate-function) 'conjugate-atan)
+(setf (get '%atanh 'conjugate-function) 'conjugate-atanh)
+
+;;(setf (get '$asec 'conjugate-function) 'conjugate-asec)
 ;;(setf (get '$acsc 'conjugate-function) 'conjugate-acsc)
 (setf (get '%bessel_j 'conjugate-function) 'conjugate-bessel-j)
 (setf (get '%bessel_y 'conjugate-function) 'conjugate-bessel-y)
@@ -97,35 +102,33 @@
 (setf (get '%sum 'conjugate-function) 'conjugate-sum)
 (setf (get '%product 'conjugate-function) 'conjugate-product)
 
-;; Return true iff Maxima can prove that z is not on the 
+;; Return true iff Maxima can prove that z is not on the
 ;; negative real axis.
 
 (defun off-negative-real-axisp (z)
-  (setq z ($rectform z))
-  (let ((x ($realpart z)) (y ($imagpart z)) ($prederror nil))
-    (or (eq t (mevalp `((mgreaterp) ,y 0))) 
-	(eq t (mevalp `((mgreaterp) 0 ,y)))
-	(eq t (mevalp `((mgreaterp) ,x 0))))))
+  (setq z (trisplit z))	          ; split into real and imaginary
+  (or (eq t (mnqp (cdr z) 0))     ; y #  0
+      (eq t (mgqp (car z) 0))))  ; x >= 0
 
 (defun on-negative-real-axisp (z)
-  (setq z ($rectform z))
-  (let ((x ($realpart z)) (y ($imagpart z)) ($prederror nil))
-    (and (like y 0) (eq t (mevalp `((mgreaterp) 0 ,x))))))
+  (setq z (trisplit z))
+  (and (meqp (cdr z) 0)
+       (eq t (mgrp 0 (car z)))))
 
 (defun in-domain-of-asin (z)
-  (setq z ($rectform z))
-  (let ((x ($realpart z)) (y ($imagpart z)) ($prederror nil))
-    (or (eq t (mevalp `((mgreaterp) ,y 0)))
-	(eq t (mevalp `((mgreaterp) 0 ,y)))
-	(and 
-	 (eq t (mevalp `((mgreaterp) ,x -1)))
-	 (eq t (mevalp `((mgreaterp) 1 ,x)))))))
-	     
+  (setq z (trisplit z))
+  (let ((x (car z)) (y (cdr z)))
+    (or (eq t (mgrp y 0))
+	(eq t (mgrp 0 y))
+	(and
+	 (eq t (mgrp x -1))
+	 (eq t (mgrp 1 x))))))
+
 ;; Return conjugate(log(x)). Actually, x is a lisp list (x).
 
 (defun conjugate-log (x)
   (setq x (car x))
-  (cond ((off-negative-real-axisp x) 
+  (cond ((off-negative-real-axisp x)
 	 (simplify `((%log) ,(mfuncall '$conjugate x))))
 	((on-negative-real-axisp x)
 	 (simplify `((mplus) ((mtimes) -1 $%i $%pi) ((%log) ((mtimes) -1 x)))))
@@ -133,7 +136,7 @@
 
 ;; Return conjugate(x^p), where e = (x, p). Suppose x isn't on the negative real axis.
 ;; Then conjugate(x^p) == conjugate(exp(p * log(x))) == exp(conjugate(p) * conjugate(log(x)))
-;; == exp(conjugate(p) * log(conjugate(x)) = conjugate(x)^conjugate(p). Thus, when 
+;; == exp(conjugate(p) * log(conjugate(x)) = conjugate(x)^conjugate(p). Thus, when
 ;; x is off the negative real axis, commute the conjugate with ^. Also if p is an integer
 ;; ^ commutes with the conjugate.
 
@@ -142,7 +145,7 @@
     (if (or (off-negative-real-axisp x) ($featurep p '$integer))
 	(power (mfuncall '$conjugate x) (mfuncall '$conjugate p))
       `(($conjugate simp) ,(power x p)))))
-  
+
 
 (defun conjugate-sum (e)
   `((%sum) ,(mfuncall '$conjugate (nth 0 e)) ,(nth 1 e) ,(nth 2 e) ,(nth 3 e)))
@@ -163,13 +166,20 @@
 (defun conjugate-atan (x)
   (let ((xx))
     (setq xx (mul '$%i (car x)))
-    (if (in-domain-of-asin xx) (simplify `((%atan) ,(mfuncall '$conjugate x)))
+    (if (in-domain-of-asin xx) (simplify `((%atan) ,(take '($conjugate) (car x))))
       `(($conjugate simp) ((%atan) ,x)))))
 
-;; Integer order Bessel functions are entire; thus they commute with the 
+;; atanh and asin are entire on the same set; see A&S Fig. 4.4 and 4.7.
+
+(defun conjugate-atanh (x)
+  (setq x (car x))
+  (if (in-domain-of-asin x) (simplify `((%atanh) ,(mfuncall '$conjugate x)))
+    `(($conjugate simp) ((%atanh) ,x))))
+
+;; Integer order Bessel functions are entire; thus they commute with the
 ;; conjugate (Schwartz refection principle).  But non-integer order Bessel
 ;; functions are not analytic along the negative real axis. Notice that A&S
-;; 9.1.40 isn't correct -- it says that the real order Bessel functions 
+;; 9.1.40 isn't correct -- it says that the real order Bessel functions
 ;; commute with the conjugate. Not true.
 
 (defun conjugate-bessel-j (z)
@@ -183,11 +193,11 @@
     (if (and (off-negative-real-axisp x) ($featurep n '$integer))
 	(simplify `((%bessel_y) ,n (($conjugate) ,x)))
       `(($conjugate simp) ((%bessel_y) ,@z)))))
-	  
+
 ;; When a function maps "everything" into the reals, put real-valued on the
-;; property list of the function name. This duplicates some knowledge that 
-;; $rectform has. So it goes. The functions floor, ceiling, carg, and signum 
-;; aren't defined off the real-axis. I suppose these functions could be given the 
+;; property list of the function name. This duplicates some knowledge that
+;; $rectform has. So it goes. The functions floor, ceiling, carg, and signum
+;; aren't defined off the real-axis. I suppose these functions could be given the
 ;; real-valued property.
 
 (setf (get '%imagpart 'real-valued) t)
@@ -197,17 +207,17 @@
 ;; manifestly-real-p isn't a great name, but it's OK. Since (manifestly-real-p '$inf) --> true
 ;; it might be called manifestly-extended-real-p. A nonscalar isn't real.
 
-;; There might be some advantage to requiring that the subscripts to a $subvarp 
+;; There might be some advantage to requiring that the subscripts to a $subvarp
 ;; all be real.  Why? Well li[n] maps reals to reals when n is real, but li[n] does
 ;; not map the reals to reals when n is nonreal.
 
 (defun manifestly-real-p (e)
   (let (($inflag t))
-    (and ($mapatom e) 
+    (and ($mapatom e)
 	 (not (manifestly-pure-imaginary-p e))
 	 (not (manifestly-complex-p e))
 	 (not (manifestly-nonreal-p e))
-	 (or 
+	 (or
 	  (mnump e)
 	  (mnump (numer e))
 	  (symbolp e)
@@ -227,35 +237,34 @@
   (let (($inflag t))
     (or (and (symbolp e) (decl-complexp e) (not ($nonscalarp e)))
 	(eq e '$infinity)
-	(and ($subvarp e) (manifestly-complex-p ($op e)) 
+	(and ($subvarp e) (manifestly-complex-p ($op e))
 	     (not ($nonscalarp e))))))
-           
+
 (defun manifestly-nonreal-p (e)
   (and (symbolp e) (or (member e `($und $ind $zeroa $zerob t nil)) ($nonscalarp e))))
 
 ;; For a subscripted function, conjugate always returns the conjugate noun-form.
 ;; This could be repaired. For now, we don't have a scheme for conjugate(li[m](x)).
 
-;; We could make commutes_with_conjugate and maps_to_reals features. But I 
+;; We could make commutes_with_conjugate and maps_to_reals features. But I
 ;; doubt it would get much use.
 
 (defun simp-conjugate (e f z)
   (oneargcheck e)
-  (setq e (simplifya (nth 1 e) z))
+  (setq e (simpcheck (cadr e) z))	; simp and disrep if necessary
   (cond ((complexp e) (conjugate e)) ;; never happens, but might someday.
 	((manifestly-real-p e) e)
 	((manifestly-pure-imaginary-p e) (mul -1 e))
 	((manifestly-nonreal-p e) `(($conjugate simp) ,e))
 	(($mapatom e) `(($conjugate simp) ,e))
 	((op-equalp e '$conjugate) (car (margs e)))
-		 
+
 	((and (symbolp (mop e)) (get (mop e) 'real-valued)) e)
 
 	((and (symbolp (mop e)) (get (mop e) 'commutes-with-conjugate))
-	 (simplify `((,(mop e)) ,@(mapcar #'(lambda (s) (mfuncall '$conjugate s)) (margs e)))))
-	       
-	((setq f (and (symbolp (mop e)) (get (mop e) 'conjugate-function))) 
-	 (funcall f (margs e)))
-	
-	(t `(($conjugate simp) ,e))))
+	 (simplify `((,(mop e)) ,@(mapcar #'(lambda (s) (take '($conjugate) s)) (margs e)))))
 
+	((setq f (and (symbolp (mop e)) (get (mop e) 'conjugate-function)))
+	 (funcall f (margs e)))
+
+	(t `(($conjugate simp) ,e))))

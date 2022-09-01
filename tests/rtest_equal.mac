@@ -32,7 +32,7 @@ true$
  
 /* bug 990924 */
 is(equal((%e^(%i*z)-%e^-(%i*z)), 0));
-'unknown$
+unknown$
 
 /* bug 851436 */
 
@@ -51,7 +51,7 @@ is(equal([a,0],[a,1]));
 false$
 
 is(equal([a,b],[a,c]));
-'unknown$
+unknown$
 
 /* bug 812968 */
 
@@ -106,7 +106,7 @@ is(equal(%i, x));
 false$
 
 is(equal(%i,x + %i));
-'unknown$
+unknown$
 
 is(equal(und, x));
 false$
@@ -151,7 +151,7 @@ is(equal((x+1)^2, x^2 + 2*x+1));
 true$
 
 is(equal(x,0));
-'unknown$
+unknown$
 
 is(equal(x,%i));
 false$
@@ -163,10 +163,10 @@ is(equal(x^2+1,x^2/5));
 false$
 
 is(equal(%i*x,%i));
-'unknown$
+unknown$
 
 is(equal([a],[b]));
-'unknown$
+unknown$
 
 is(equal([a],[a,b]));
 false$
@@ -187,10 +187,10 @@ is(equal(matrix([x]), rat(matrix([x]))));
 true$
 
 is(equal(matrix([x,y]), matrix([x,z])));
-'unknown$
+unknown$
 
 is(equal(matrix([x,y],[p,q]), matrix([p,q],[x,y])));
-'unknown$
+unknown$
 
 is(equal(matrix([x,y],[p,q]), matrix([p,q,s],[x,y,8])));
 false$
@@ -199,7 +199,7 @@ is(equal(set(u,n,k), set(u,n,k,u,n,k)));
 true$
 
 is(equal(set(a,b,c), set(b,a,a)));
-'unknown$
+unknown$
 
 is(equal(abs(1 + %i*z), z - %i));
 false$
@@ -287,7 +287,7 @@ is(equal(a = b, a = b));
 true$
 
 is(equal(a = b, b = a));
-'unknown$
+unknown$
 
 is(equal(a < b, b < a));
 unknown$
@@ -401,13 +401,13 @@ is(equal(sum(1/kk,kk,1,n), sum(1/ii,ii,1,n)));
 true$
 
 is(equal(sum(1/kk,kk,1,m), sum(1/ii,ii,1,n)));
-'unknown$
+unknown$
 
 is(equal(sqrt(5) - sum(%pi/kk,kk,1,n), sqrt(5) - sum(%pi/ii,ii,1,n)));
 true$
 
 is(equal(sqrt(5) - sum(%pi/kk,kk,1,m), sqrt(5) - sum(%pi/ii,ii,1,n)));
-'unknown$
+unknown$
 
 is(equal(sum(sqrt(2)/i^2,i,1,inf), sum(sqrt(2)/j^2,j,1,inf)));
 true$
@@ -445,40 +445,318 @@ false$
 is(equal(set(a,b), set(a,inf)));
 false$
 
+/* Ensure that equal is happy to compare objects of any
+ * Maxima or Lisp types.
+ *
+ * Stuff checked here (various Lisp types omitted):
+ *
+ *  Maxima string
+ *  Lisp string
+ *  Lisp array
+ *  Maxima declared array
+ *  Maxima undeclared array
+ */
+
+(mstring1a : "FOO",
+ mstring1b : "FOO",
+ mstring2 : "BAR",
+
+ lstring1a : sconcat ("FOO"),
+ lstring1b : sconcat ("FOO"),
+ lstring2 : sconcat ("BAR"),
+
+ larray1a : make_array (any, 5),
+ fillarray (larray1a, makelist (i, i, 1, 5)),
+ larray1b : make_array (any, 5),
+ fillarray (larray1b, makelist (i, i, 1, 5)),
+ larray2 : make_array (any, 5),
+ fillarray (larray2, makelist (i^2, i, 1, 5)),
+ larray3 : make_array (any, 10),
+ fillarray (larray3, makelist (i, i, 1, 10)),
+
+ array (marray_declared_1, fixnum, 3, 4),
+ fillarray (marray_declared_1, makelist (i, i, 1, 20)),
+ array (marray_declared_2, fixnum, 3, 4),
+ fillarray (marray_declared_2, makelist (i, i, 1, 20)),
+ array (marray_declared_3, flonum, 3, 4),
+ fillarray (marray_declared_3, makelist (float(i), i, 1, 20)),
+ array (marray_declared_4, fixnum, 4, 3),
+ fillarray (marray_declared_4, makelist (2*i, i, 1, 20)),
+
+ marray_undeclared_1 [foo, bar] : 1234,
+ marray_undeclared_1 [baz, quux] : 2345,
+ marray_undeclared_2 [foo, bar] : 1234,
+ marray_undeclared_2 [baz, quux] : 2345,
+ marray_undeclared_3 [foo, bar] : 3456,
+ marray_undeclared_3 [baz, quux] : 4567,
+ marray_undeclared_4 [foo, bar, baz] : 5678,
+
+ marray_array_fcn_1 [u, v, w] := u*v*w,
+ marray_array_fcn_1 [2, 3, 4],
+ marray_array_fcn_1 [a, b, c],
+ marray_array_fcn_2 [u, v, w] := u*v*w,
+ marray_array_fcn_2 [2, 3, 4],
+ marray_array_fcn_2 [a, b, c],
+ marray_array_fcn_3 [u, v, w] := u*v*w,
+ marray_array_fcn_3 [7, x, 4],
+ marray_array_fcn_3 [a, 3, c],
+ marray_array_fcn_4 [u, v, w] := u + v + w,
+ marray_array_fcn_4 [2, 3, 4],
+ marray_array_fcn_4 [a, b, c],
+
+ marray_subscripted_fcn_1 [a, b] (x, y) := x^a + y^b,
+ marray_subscripted_fcn_1 [3, 2] (u, 7),
+ marray_subscripted_fcn_1 [m, n] (2, z),
+ marray_subscripted_fcn_2 [a, b] (x, y) := x^a + y^b,
+ marray_subscripted_fcn_2 [3, 2] (u, 7),
+ marray_subscripted_fcn_2 [m, n] (2, z),
+ marray_subscripted_fcn_3 [a, b] (x, y) := x^a + y^b,
+ marray_subscripted_fcn_3 [2, 5] (8, q),
+ marray_subscripted_fcn_3 [1, t] (9, e),
+ marray_subscripted_fcn_4 [a, b] (x, y) := a*x - b*y,
+ marray_subscripted_fcn_4 [3, 2] (u, 7),
+ marray_subscripted_fcn_4 [m, n] (2, z),
+
+ 0);
+0;
+
+/* Comparisons to same type */
+
+is (equal (mstring1a, mstring1b));
+true;
+
+is (equal (mstring1a, mstring2));
+false;
+
+is (equal (lstring1a, lstring1b));
+true;
+
+is (equal (lstring1a, lstring2));
+false;
+
+is (equal (larray1a, larray1b));
+true;
+
+is (equal (larray1a, larray2));
+false;
+
+is (equal (larray1a, larray3));
+false;
+
+is (equal (marray_declared_1, marray_declared_2));
+true;
+
+is (equal (marray_declared_1, marray_declared_3));
+true;
+
+is (equal (marray_declared_1, marray_declared_4));
+false;
+
+is (equal (marray_undeclared_1, marray_undeclared_2));
+true;
+
+is (equal (marray_undeclared_1, marray_undeclared_3));
+false;
+
+is (equal (marray_undeclared_1, marray_undeclared_4));
+false;
+
+is (equal (marray_array_fcn_1, marray_array_fcn_2));
+true;
+
+/* This test fails at present because array functions are
+ * compared via arrayinfo and listarray output,
+ * but array functions should be compared via their AEXPR properties.
+ */
+is (equal (marray_array_fcn_1, marray_array_fcn_3));
+true;
+
+is (equal (marray_array_fcn_1, marray_array_fcn_4));
+false;
+
+is (equal (marray_subscripted_fcn_1, marray_subscripted_fcn_2));
+true;
+
+/* This test fails at present because subscripted functions are
+ * compared via arrayinfo and listarray output,
+ * but subscripted functions should be compared via their AEXPR properties.
+ */
+is (equal (marray_subscripted_fcn_1, marray_subscripted_fcn_3));
+true;
+
+is (equal (marray_subscripted_fcn_1, marray_subscripted_fcn_4));
+unknown; /* comparison of non-identical lambda expressions yields unknown */
+
+/* Comparisons to different type */
+
+/* No automatic type conversion */
+is (equal (mstring1a, lstring1a));
+false;
+
+is (equal (mstring1a, larray1a));
+false;
+
+is (equal (mstring1a, 1234));
+false;
+
+/* No automatic type conversion */
+is (equal (mstring1a, 'FOO));
+false;
+
+is (equal (mstring1a, sin('x)));
+false;
 
 
+/* No automatic type conversion */
+is (equal (lstring1a, mstring1a));
+false;
+
+is (equal (lstring1a, larray1a));
+false;
+
+is (equal (lstring1a, 1234));
+false;
+
+/* No automatic type conversion */
+is (equal (lstring1a, 'FOO));
+false;
+
+is (equal (lstring1a, sin('x)));
+false;
 
 
+is (equal (larray1a, mstring1a));
+false;
+
+is (equal (larray1a, lstring1a));
+false;
+
+is (equal (larray1a, 1234));
+false;
+
+is (equal (larray1a, 'FOO));
+false;
+
+is (equal (larray1a, sin('x)));
+false;
+
+/* No automatic conversions between array types */
+
+(similar_lisp_array : make_array (fixnum, 4, 5),
+ fillarray (similar_lisp_array, makelist (i, i, 1, 20)),
+ is (equal (marray_declared_1, similar_lisp_array)));
+false;
+
+(for i:0 thru 3
+   do for j:0 thru 4
+     do similar_undeclared_marray [i, j] : i*5 + j + 1,
+ is (equal (marray_declared_1, similar_undeclared_marray)));
+false;
+
+/* No automatic conversions between array and list or matrix */
+
+(similar_nested_list : [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]],
+ is (equal (marray_declared_1, similar_nested_list)));
+false;
+
+(similar_matrix : apply (matrix, similar_nested_list),
+ is (equal (marray_declared_1, similar_matrix)));
+false;
+
+/* Comparisons via = */
+
+/* Comparisons to same type */
+
+is (mstring1a = mstring1b);
+true;
+
+is (mstring1a = mstring2);
+false;
+
+is (lstring1a = lstring1b);
+true;
+
+is (lstring1a = lstring2);
+false;
+
+is (larray1a = larray1b);
+true;
+
+is (larray1a = larray2);
+false;
+
+is (larray1a = larray3);
+false;
 
 
+/* Comparisons to different type */
+
+/* No automatic type conversion */
+is (mstring1a = lstring1a);
+false;
+
+is (mstring1a = larray1a);
+false;
+
+is (mstring1a = 1234);
+false;
+
+/* No automatic type conversion */
+is (mstring1a = 'FOO);
+false;
+
+is (mstring1a = sin('x));
+false;
 
 
+/* No automatic type conversion */
+is (lstring1a = mstring1a);
+false;
+
+is (lstring1a = larray1a);
+false;
+
+is (lstring1a = 1234);
+false;
+
+/* No automatic type conversion */
+is (lstring1a = 'FOO);
+false;
+
+is (lstring1a = sin('x));
+false;
 
 
+is (larray1a = mstring1a);
+false;
+
+is (larray1a = lstring1a);
+false;
+
+is (larray1a = 1234);
+false;
+
+is (larray1a = 'FOO);
+false;
+
+is (larray1a = sin('x));
+false;
 
 
+/* Comparison of arrays with multiple dimensions and non-literal elements */
 
+(a1 : make_array (any, 10),
+ a2a : make_array (any, 2, 5),
+ a2b : make_array (any, 2, 5),
+ a3 : make_array (any, 3, 5),
+ 0);
+0;
 
+[is (equal (a1, a2a)), is (equal (a1, a3)), is (equal (a2a, a3))];
+[false, false, false];
 
+(a2a [1, 4] : 1234, a2b [1, 4] : '(x/(1 - x)), is (equal (a2a, a2b)));
+unknown;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(a2a [1, 4] : '(1/(1/x - 1)), a2b [1, 4] : '(x/(1 - x)), is (equal (a2a, a2b)));
+true;

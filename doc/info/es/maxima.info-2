@@ -9,10 +9,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  Up: Entrada y Salida
+File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev: Archivos,  Up: Lectura y escritura
 
-9.3 Definiciones para Entrada y Salida
-======================================
+9.3 Funciones y variables para lectura y escritura
+==================================================
 
  -- Variable del sistema: __
      `__' es la expresión de entrada que está siendo actualmente
@@ -124,7 +124,8 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
      <s_n>)', `%%' es el valor de la sentencia previa.  Por ejemplo,
 
           block (integrate (x^5, x), ev (%%, x=2) - ev (%%, x=1));
-          block ([prev], prev: integrate (x^5, x), ev (prev, x=2) - ev (prev, x=1));
+          block ([prev], prev: integrate (x^5, x),
+                         ev (prev, x=2) - ev (prev, x=1));
 
      devuelven el mismo resultado  `21/2'.
 
@@ -684,10 +685,12 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
           +252*aa^5*bb^5+210*aa^6*bb^4+120*aa^7*bb^3+45*aa^8*bb^2+10*aa^9*\
           bb+aa^10
           (%i14) cholesky (A):= block ([n : length (A), L : copymatrix (A),
-          p : makelist (0, i, 1, length (A))], for i thru n do for j : i thru n do
-          (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1), if i = j then
-          p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]), for i thru n do L[i, i] : 1 / p[i],
-          for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
+            p : makelist (0, i, 1, length (A))], for i thru n do
+            for j : i thru n do
+            (x : L[i, j], x : x - sum (L[j, k] * L[i, k], k, 1, i - 1),
+            if i = j then p[i] : 1 / sqrt(x) else L[j, i] : x * p[i]),
+            for i thru n do L[i, i] : 1 / p[i],
+            for i thru n do for j : i + 1 thru n do L[i, j] : 0, L)$
           (%i15) grind (cholesky);
           cholesky(A):=block(
                    [n:length(A),L:copymatrix(A),
@@ -887,11 +890,6 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
      `translate_file' y `compile_file'.  Puede ser más conveniente
      utilizar `load' en lugar de `loadfile'.
 
-     La función `loadfile' no evalúa su argumento, de manera que
-     `filename' debe ser una cadena, no una variable que la contenga.
-     La utilización del operador comilla-comilla sí permite la
-     evaluación.
-
 
  -- Variable opcional: loadprint
      Valor por defecto: `true'
@@ -992,14 +990,16 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
 
      Para mostrar el contenido de un archivo véase `printfile'.
 
-          (%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+          (%i1) r: print ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is",
+                radcan (log (a^10/b)))$
                       3        2      2      3
           (a+b)^3 is b  + 3 a b  + 3 a  b + a  log (a^10/b) is
 
                                                         10 log(a) - log(b)
           (%i2) r;
           (%o2)                  10 log(a) - log(b)
-          (%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is", radcan (log (a^10/b)))$
+          (%i3) disp ("(a+b)^3 is", expand ((a+b)^3), "log (a^10/b) is",
+                radcan (log (a^10/b)))$
                                      (a+b)^3 is
 
                                3        2      2      3
@@ -1171,14 +1171,7 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
      variables del sistema, como `file_search_maxima' o `showtime', si
      han sido modificadas por el usuario. Véase `myoptions'.
 
-     La función `save' no evalúa sus argumentos.  El argumento
-     <filename> debe ser una cadena, no una variable que contenga una
-     cadena. Si se especifican números de etiquetas, éstos deben ser
-     enteros.  El operador comilla-comilla `'''  evalúa una variable de
-     cadena devolviendo su valor; por ejemplo, `s: "foo.1"$ save (''s,
-     all)$', y de las variables enteras devuelve sus valores enteros,
-     como en `m: 5$ n: 12$ save ("foo.1", [''m, ''n])$'.
-
+     `save' evalúa <filename> pero no el resto de argumentos.
 
  -- Variable opcional: savedef
      Valor por defecto: `true'
@@ -1236,7 +1229,8 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
           (%i1) stringdisp: false$
           (%i2) "This is an example string.";
           (%o2)              This is an example string.
-          (%i3) foo () := print ("This is a string in a function definition.");
+          (%i3) foo () :=
+                print ("This is a string in a function definition.");
           (%o3) foo() :=
                         print("This is a string in a function definition.")
           (%i4) stringdisp: true$
@@ -1305,19 +1299,16 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
      expresión en TeX es la misma que la de Maxima.
 
      La instrucción `tex (<expr>, <filename>)' añade la representación
-     TeX de <expr> al fichero <filename>. La función `tex' no evalúa el
-     argumento <filename>, pero la doble comilla simple `''' fuerza su
-     evaluación.
+     TeX de <expr> al fichero <filename>.
 
      La instrucción `tex (<label>, <filename>)' añade la representación
      TeX de la expresión a la que hace referencia la etiqueta  <label>,
-     junto con una etiqueta, al fichero <filename>. La función `tex' no
-     evalúa el argumento <filename>, pero la doble comilla simple `'''
-     fuerza su evaluación.
+     junto con una etiqueta, al fichero <filename>.
 
-     La función `tex' evalúa sus argumentos tras comprobar si se trata
-     de una etiqueta. La doble comilla simple `''' fuerza la evaluación
-     del argumento, anulando la comprobación sobre la etiqueta.
+     La función `tex' evalúa su primer argumento tras comprobar si se
+     trata de una etiqueta. La doble comilla simple `''' fuerza la
+     evaluación del argumento, anulando la comprobación sobre la
+     etiqueta.
 
      Véase también `texput'.
 
@@ -1406,11 +1397,11 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
 
      Asigna código TeX para un operador postfijo..
 
-          (%i1) postfix ("@");
-          (%o1)                           @
-          (%i2) texput ("@", "!!", postfix);
+          (%i1) postfix ("##");
+          (%o1)                          ##
+          (%i2) texput ("##", "!!", postfix);
           (%o2)                          !!
-          (%i3) tex (x @);
+          (%i3) tex (x ##);
           $$x!!$$
           (%o3)                         false
 
@@ -1446,7 +1437,8 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
           (%i4) tex (<<a, b>>);
           $$ \langle a , b \rangle $$
           (%o4)                         false
-          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"], matchfix);
+          (%i5) texput ("<<", [" \\langle ", " \\rangle ", " \\, | \\,"],
+                matchfix);
           (%o5)           [ \langle ,  \rangle ,  \, | \,]
           (%i6) tex (<<a>>);
           $$ \langle a \rangle $$
@@ -1542,20 +1534,20 @@ File: maxima.info,  Node: Definiciones para Entrada y Salida,  Prev: Archivos,  
 
 
 
-File: maxima.info,  Node: Aritmética de punto flotante,  Next: Contextos,  Prev: Entrada y Salida,  Up: Top
+File: maxima.info,  Node: Aritmética de punto flotante,  Next: Contextos,  Prev: Lectura y escritura,  Up: Top
 
 10 Aritmética de punto flotante
 *******************************
 
 * Menu:
 
-* Definiones para aritmética de punto flotante::
+* Funciones y variables para la aritmética de punto flotante::
 
 
-File: maxima.info,  Node: Definiones para aritmética de punto flotante,  Prev: Aritmética de punto flotante,  Up: Aritmética de punto flotante
+File: maxima.info,  Node: Funciones y variables para la aritmética de punto flotante,  Prev: Aritmética de punto flotante,  Up: Aritmética de punto flotante
 
-10.1 Definiones para aritmética de punto flotante
-=================================================
+10.1 Funciones y variables para la aritmética de punto flotante
+===============================================================
 
  -- Función: bffac (<expr>, <n>)
      Versión para "bigfloat" de la función factorial (Gamma
@@ -1690,13 +1682,13 @@ File: maxima.info,  Node: Contextos,  Next: Polinomios,  Prev: Aritmética de pun
 
 * Menu:
 
-* Definiciones para Contextos::
+* Funciones y variables para Contextos::
 
 
-File: maxima.info,  Node: Definiciones para Contextos,  Prev: Contextos,  Up: Contextos
+File: maxima.info,  Node: Funciones y variables para Contextos,  Prev: Contextos,  Up: Contextos
 
-11.1 Definiciones para Contextos
-================================
+11.1 Funciones y variables para Contextos
+=========================================
 
  -- Función: activate (<context_1>, ..., <context_n>)
      Activa los contextos <context_1>, ..., <context_n>.  Los hechos en
@@ -2037,13 +2029,13 @@ File: maxima.info,  Node: Polinomios,  Next: Constantes,  Prev: Contextos,  Up: 
 
 * Menu:
 
-* Introducción a los Polinomios::
-* Definiciones para Polinomios::
+* Introducción a los polinomios::
+* Funciones y variables para polinomios::
 
 
-File: maxima.info,  Node: Introducción a los Polinomios,  Next: Definiciones para Polinomios,  Prev: Polinomios,  Up: Polinomios
+File: maxima.info,  Node: Introducción a los polinomios,  Next: Funciones y variables para polinomios,  Prev: Polinomios,  Up: Polinomios
 
-12.1 Introducción a los Polinomios
+12.1 Introducción a los polinomios
 ==================================
 
 Los polinomios se almacenan en Maxima, bien en un formato general, bien
@@ -2094,10 +2086,10 @@ truncamiento. Como con la forma CRE, el símbolo /T/ sigue la etiqueta
 de línea de comando en la que se encuentra dicha expresión.
 
 
-File: maxima.info,  Node: Definiciones para Polinomios,  Prev: Introducción a los Polinomios,  Up: Polinomios
+File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introducción a los polinomios,  Up: Polinomios
 
-12.2 Definiciones para Polinomios
-=================================
+12.2 Funciones y variables para polinomios
+==========================================
 
  -- Variable opcional: algebraic
      Valor por defecto: `false'
@@ -2694,7 +2686,7 @@ File: maxima.info,  Node: Definiciones para Polinomios,  Prev: Introducción a lo
      funcional de polinomios en <x>.  La función `polydecomp' devuelve
      una lista `[<p_1>, ..., <p_n>]' tal que
 
-          lambda ([x], p_1) (lambda ([x], p_2) (... (lambda ([x], p_n) (x)) ...))
+          lambda([x],p_1)(lambda ([x],p_2)(...(lambda([x],p_n)(x))...))
 
      es igual a  <p>.  El grado de <p_i> es mayor que 1 para <i> menor
      que <n>.
@@ -2780,8 +2772,8 @@ File: maxima.info,  Node: Definiciones para Polinomios,  Prev: Introducción a lo
      Véanse también `ratexpand' y  `ratsimp'.
 
      Ejemplos:
-
-          (%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x) /(4*y^2 + x^2);
+          (%i1) ((x - 2*y)^4/(x^2 - 4*y^2)^2 + 1)*(y + a)*(2*y + x)
+                   / (4*y^2 + x^2);
                                                      4
                                             (x - 2 y)
                         (y + a) (2 y + x) (------------ + 1)
@@ -3353,13 +3345,13 @@ File: maxima.info,  Node: Constantes,  Next: Logaritmos,  Prev: Polinomios,  Up:
 
 * Menu:
 
-* Definiciones para Constantes::
+* Funciones y variables para Constantes::
 
 
-File: maxima.info,  Node: Definiciones para Constantes,  Prev: Constantes,  Up: Constantes
+File: maxima.info,  Node: Funciones y variables para Constantes,  Prev: Constantes,  Up: Constantes
 
-13.1 Definiciones para Constantes
-=================================
+13.1 Funciones y variables para Constantes
+==========================================
 
  -- Constante: %e
      El símbolo `%e' representa a la base de los logaritmos naturales,
@@ -3399,8 +3391,8 @@ File: maxima.info,  Node: Definiciones para Constantes,  Prev: Constantes,  Up: 
 
      Ejemplos:
 
-     La función `fibtophi' expresa los números de Fibonacci `fib(n)' en
-     términos de `%phi'.
+     `fibtophi' expresa el número de Fibonacci `fib(n)' en términos de
+     `%phi'.
 
           (%i1) fibtophi (fib (n));
                                      n             n
@@ -3422,9 +3414,9 @@ File: maxima.info,  Node: Definiciones para Constantes,  Prev: Constantes,  Up: 
           (%o4)                           0
 
      Por defecto, Maxima desconoce las propiedades algebraicas de
-     `%phi'.  Tras evaluar `tellrat(%phi^2 - %phi - 1)' y `algebraic:
-     true', `ratsimp' puede simplificar algunas expresiones que
-     contengan `%phi'.
+     `%phi'.  Después de evaluar `tellrat (%phi^2 - %phi - 1)' y
+     `algebraic: true', `ratsimp' puede simplificar algunas expresiones
+     que contengan `%phi'.
 
           (%i1) e : expand ((%phi^2 - %phi - 1) * (A + 1));
                            2                      2
@@ -3458,13 +3450,13 @@ File: maxima.info,  Node: Logaritmos,  Next: Trigonometría,  Prev: Constantes,  
 
 * Menu:
 
-* Definiciones para Logaritmos::
+* Funciones y variables para logaritmos::
 
 
-File: maxima.info,  Node: Definiciones para Logaritmos,  Prev: Logaritmos,  Up: Logaritmos
+File: maxima.info,  Node: Funciones y variables para logaritmos,  Prev: Logaritmos,  Up: Logaritmos
 
-14.1 Definiciones para Logaritmos
-=================================
+14.1 Funciones y variables para logaritmos
+==========================================
 
  -- Variable opcional: %e_to_numlog
      Valor por defecto: `false'
@@ -3678,13 +3670,13 @@ File: maxima.info,  Node: Trigonometría,  Next: Funciones Especiales,  Prev: Log
 
 * Menu:
 
-* Introducción a la Trigonometría::
-* Definiciones para Trigonometría::
+* Introducción a la trigonometría::
+* Funciones y variables para trigonometría::
 
 
-File: maxima.info,  Node: Introducción a la Trigonometría,  Next: Definiciones para Trigonometría,  Prev: Trigonometría,  Up: Trigonometría
+File: maxima.info,  Node: Introducción a la trigonometría,  Next: Funciones y variables para trigonometría,  Prev: Trigonometría,  Up: Trigonometría
 
-15.1 Introducción a la Trigonometría
+15.1 Introducción a la trigonometría
 ====================================
 
 Maxima reconoce muchas funciones trigonométricas. No están programadas
@@ -3701,10 +3693,90 @@ simplificación de Maxima, `ntrig' y `atrig1'.  Ejecútese
 `describe(<command>)' para más detalles.
 
 
-File: maxima.info,  Node: Definiciones para Trigonometría,  Prev: Introducción a la Trigonometría,  Up: Trigonometría
+File: maxima.info,  Node: Funciones y variables para trigonometría,  Prev: Introducción a la trigonometría,  Up: Trigonometría
 
-15.2 Definiciones para Trigonometría
-====================================
+15.2 Funciones y variables para trigonometría
+=============================================
+
+ -- Variable opcional: %piargs
+     Valor por defecto: `true'
+
+     Cuando `%piargs' vale `true', las funciones trigonométricas se
+     simplifican a constantes algebraicas cuando el argumento es
+     múltiplo entero de `%pi', `%pi/2', `%pi/3', `%pi/4' o `%pi/6'.
+
+     Maxima conoce algunas identidades aplicables cuando `%pi', etc.,
+     se multiplican por una variable entera (esto es, un símbolo
+     declarado como entero).
+
+     Ejemplo:
+
+          (%i1) %piargs : false;
+          (%o1)                         false
+          (%i2) [sin (%pi), sin (%pi/2), sin (%pi/3)];
+                                          %pi       %pi
+          (%o2)            [sin(%pi), sin(---), sin(---)]
+                                           2         3
+          (%i3) [sin (%pi/4), sin (%pi/5), sin (%pi/6)];
+                                %pi       %pi       %pi
+          (%o3)            [sin(---), sin(---), sin(---)]
+                                 4         5         6
+          (%i4) %piargs : true;
+          (%o4)                         true
+          (%i5) [sin (%pi), sin (%pi/2), sin (%pi/3)];
+                                          sqrt(3)
+          (%o5)                    [0, 1, -------]
+                                             2
+          (%i6) [sin (%pi/4), sin (%pi/5), sin (%pi/6)];
+                                   1         %pi   1
+          (%o6)                [-------, sin(---), -]
+                                sqrt(2)       5    2
+          (%i7) [cos (%pi/3), cos (10*%pi/3), tan (10*%pi/3), cos (sqrt(2)*%pi/3)];
+                          1    1               sqrt(2) %pi
+          (%o7)          [-, - -, sqrt(3), cos(-----------)]
+                          2    2                    3
+
+     Se aplican ciertas identidades cuando `%pi' o `%pi/2' se
+     multiplican por una variable entera.
+
+          (%i1) declare (n, integer, m, even);
+          (%o1)                         done
+          (%i2) [sin (%pi * n), cos (%pi * m), sin (%pi/2 * m), cos (%pi/2 * m)];
+                                                m/2
+          (%o2)                  [0, 1, 0, (- 1)   ]
+
+
+ -- Variable opcional: %iargs
+     Valor por defecto: `true'
+
+     Cuando `%iargs' vale `true', las funciones trigonométricas se
+     simplifican a funciones hiperbólicas si el argumento es
+     aparentemente un múltiplo de la unidad imaginaria `%i'.
+
+     Maxima aplica esta simplificación cuando el argumento es un
+     múltiplo literal de `%i', aunque el resultado sea reducible a real.
+
+     Ejemplos:
+
+          (%i1) %iargs : false;
+          (%o1)                         false
+          (%i2) [sin (%i * x), cos (%i * x), tan (%i * x)];
+          (%o2)           [sin(%i x), cos(%i x), tan(%i x)]
+          (%i3) %iargs : true;
+          (%o3)                         true
+          (%i4) [sin (%i * x), cos (%i * x), tan (%i * x)];
+          (%o4)           [%i sinh(x), cosh(x), %i tanh(x)]
+
+     La simplificación se aplica incluso en el caso de que el argumento
+     se reduzca a un número real.
+
+          (%i1) declare (x, imaginary);
+          (%o1)                         done
+          (%i2) [featurep (x, imaginary), featurep (x, real)];
+          (%o2)                     [true, false]
+          (%i3) sin (%i * x);
+          (%o3)                      %i sinh(x)
+
 
  -- Function: acos (<x>)
      Arco coseno.
@@ -4014,13 +4086,13 @@ File: maxima.info,  Node: Funciones Especiales,  Next: Funciones elípticas,  Pre
 
 * Menu:
 
-* Introducción a las Funciones Especiales::
-* Definiciones para las Funciones Especiales::
+* Introducción a las funciones especiales::
+* Funciones y variables para las funciones especiales::
 
 
-File: maxima.info,  Node: Introducción a las Funciones Especiales,  Next: Definiciones para las Funciones Especiales,  Prev: Funciones Especiales,  Up: Funciones Especiales
+File: maxima.info,  Node: Introducción a las funciones especiales,  Next: Funciones y variables para las funciones especiales,  Prev: Funciones Especiales,  Up: Funciones Especiales
 
-16.1 Introducción a las Funciones Especiales
+16.1 Introducción a las funciones especiales
 ============================================
 
 A continuación se especifican las notaciones correspondientes a las
@@ -4030,7 +4102,8 @@ funciones especiales:
      bessel_y (index, expr)    Función de Bessel de segunda especie
      bessel_i (index, expr)    Función de Bessel modificada de primera especie
      bessel_k (index, expr)    Función de Bessel modificada de segunda especie
-     %he[n] (z)                Polinomio de Hermite (Ojo: `he', no `h'. Ver A&S 22.5.18)
+     %he[n] (z)                Polinomio de Hermite (Ojo: `he', no `h'.
+                                       Ver A&S 22.5.18)
      %p[u,v] (z)               Función de Legendre de primera especie
      %q[u,v] (z)               Función de Legendre de segunda especie
      hstruve[n] (z)            Función H de Struve
@@ -4044,14 +4117,15 @@ funciones especiales:
      %w[u,k] (z)               Función de Whittaker de segunda especie
      erfc (z)                  Complemento de la función de error, erf
      ei (z)                    Integral exponencial (?)
-     kelliptic (z)             Integral elíptica completa de primera especie (K)
+     kelliptic (z)             Integral elíptica completa
+                                       de primera especie (K)
      %d [n] (z)                Función cilíndrica parabólica
 
 
-File: maxima.info,  Node: Definiciones para las Funciones Especiales,  Prev: Introducción a las Funciones Especiales,  Up: Funciones Especiales
+File: maxima.info,  Node: Funciones y variables para las funciones especiales,  Prev: Introducción a las funciones especiales,  Up: Funciones Especiales
 
-16.2 Definiciones para las Funciones Especiales
-===============================================
+16.2 Funciones y variables para las funciones especiales
+========================================================
 
  -- Función: airy_ai (<x>)
      Función Ai de Airy, tal como la definen Abramowitz y Stegun,
@@ -4377,7 +4451,7 @@ File: maxima.info,  Node: Definiciones para las Funciones Especiales,  Prev: Int
 
 
  -- Variable opcional: maxpsifracnum
-     Valor por defecto: 4
+     Valor por defecto: 6
 
      Sea <x> un número racional menor que la unidad de la forma `p/q'.
      Si `p' es mayor que `maxpsifracnum', entonces `psi[<n>](<x>)' no
@@ -4385,11 +4459,44 @@ File: maxima.info,  Node: Definiciones para las Funciones Especiales,  Prev: Int
 
 
  -- Variable opcional: maxpsifracdenom
-     Valor por defecto: 4
+     Valor por defecto: 6
 
      Sea <x> un número racional menor que la unidad de la forma `p/q'.
      Si `q' es mayor que `maxpsifracnum', entonces `psi[<n>](<x>)' no
      devolverá una respuesta simplificada.
+
+
+ -- Función: specint (exp(- s*<t>) * <expr>, <t>)
+     Calcula la transformada de Laplace de <expr> respecto de la
+     variable <t>. El integrando <expr> puede contener funciones
+     especiales.
+
+     Si `specint' no puede calcular la integral, le valor devuelto
+     puede contener símbolos de Lisp, incluyendo
+     `other-defint-to-follow-negtest', `other-lt-exponential-to-follow',
+     `product-of-y-with-nofract-indices', etc.; se trata de un fallo
+     pendiente de corrección.
+
+     La ejecución de `demo(hypgeo)' muestra algunso ejemplos de
+     transformadas de Laplace calculadas con `specint'.
+
+     Examples:
+
+          (%i1) assume (p > 0, a > 0);
+          (%o1)                    [p > 0, a > 0]
+          (%i2) specint (t^(1/2) * exp(-a*t/4) * exp(-p*t), t);
+                                     sqrt(%pi)
+          (%o2)                     ------------
+                                           a 3/2
+                                    2 (p + -)
+                                           4
+          (%i3) specint (t^(1/2) * bessel_j(1, 2 * a^(1/2) * t^(1/2))
+                        * exp(-p*t), t);
+                                             - a/p
+                                   sqrt(a) %e
+          (%o3)                    ---------------
+                                          2
+                                         p
 
 
 
@@ -4401,11 +4508,11 @@ File: maxima.info,  Node: Funciones elípticas,  Next: Límites,  Prev: Funciones 
 * Menu:
 
 * Introducción a las funciones e integrales elípticas::
-* Definiciones para funciones elípticas::
-* Definiciones para integrales elípticas::
+* Funciones y variables para funciones elípticas::
+* Funciones y variables para integrales elípticas::
 
 
-File: maxima.info,  Node: Introducción a las funciones e integrales elípticas,  Next: Definiciones para funciones elípticas,  Prev: Funciones elípticas,  Up: Funciones elípticas
+File: maxima.info,  Node: Introducción a las funciones e integrales elípticas,  Next: Funciones y variables para funciones elípticas,  Prev: Funciones elípticas,  Up: Funciones elípticas
 
 17.1 Introducción a las funciones e integrales elípticas
 ========================================================
@@ -4502,10 +4609,10 @@ Raymond Toy. Se distribuye, igual que Maxima, bajo la General Public
 License (GPL).
 
 
-File: maxima.info,  Node: Definiciones para funciones elípticas,  Next: Definiciones para integrales elípticas,  Prev: Introducción a las funciones e integrales elípticas,  Up: Funciones elípticas
+File: maxima.info,  Node: Funciones y variables para funciones elípticas,  Next: Funciones y variables para integrales elípticas,  Prev: Introducción a las funciones e integrales elípticas,  Up: Funciones elípticas
 
-17.2 Definiciones para funciones elípticas
-==========================================
+17.2 Funciones y variables para funciones elípticas
+===================================================
 
  -- Función: jacobi_sn (<u>, <m>)
      Función elíptica jacobiana sn(u,m).
@@ -4580,10 +4687,10 @@ File: maxima.info,  Node: Definiciones para funciones elípticas,  Next: Definici
      Inversa de la función elíptica jacobiana dc(u,m).
 
 
-File: maxima.info,  Node: Definiciones para integrales elípticas,  Prev: Definiciones para funciones elípticas,  Up: Funciones elípticas
+File: maxima.info,  Node: Funciones y variables para integrales elípticas,  Prev: Funciones y variables para funciones elípticas,  Up: Funciones elípticas
 
-17.3 Definiciones para integrales elípticas
-===========================================
+17.3 Funciones y variables para integrales elípticas
+====================================================
 
  -- Función: elliptic_f (<phi>, <m>)
      Integral elíptica incompleta de primera especie, definida como
@@ -4648,13 +4755,13 @@ File: maxima.info,  Node: Límites,  Next: Diferenciación,  Prev: Funciones elípt
 
 * Menu:
 
-* Definiciones para Límites::
+* Funciones y variables para límites::
 
 
-File: maxima.info,  Node: Definiciones para Límites,  Prev: Límites,  Up: Límites
+File: maxima.info,  Node: Funciones y variables para límites,  Prev: Límites,  Up: Límites
 
-18.1 Definiciones para Límites
-==============================
+18.1 Funciones y variables para límites
+=======================================
 
  -- Variable optativa: lhospitallim
      Valor por defecto: 4
@@ -4733,13 +4840,13 @@ File: maxima.info,  Node: Diferenciación,  Next: Integración,  Prev: Límites,  U
 
 * Menu:
 
-* Definiciones para Diferenciación::
+* Funciones y variables para la diferenciación::
 
 
-File: maxima.info,  Node: Definiciones para Diferenciación,  Prev: Diferenciación,  Up: Diferenciación
+File: maxima.info,  Node: Funciones y variables para la diferenciación,  Prev: Diferenciación,  Up: Diferenciación
 
-19.1 Definiciones para Diferenciación
-=====================================
+19.1 Funciones y variables para la diferenciación
+=================================================
 
  -- Función: antid (<expr>, <x>, <u(x)>)
      Devuelve una lista con dos elementos, de manera que se pueda
@@ -5327,15 +5434,15 @@ File: maxima.info,  Node: Integración,  Next: Ecuaciones,  Prev: Diferenciación,
 
 * Menu:
 
-* Introducción a la Integración::
-* Definiciones para Integración::
+* Introducción a la integración::
+* Funciones y variables para integración::
 * Introducción a QUADPACK::
-* Definiciones para QUADPACK::
+* Funciones y variables para QUADPACK::
 
 
-File: maxima.info,  Node: Introducción a la Integración,  Next: Definiciones para Integración,  Prev: Integración,  Up: Integración
+File: maxima.info,  Node: Introducción a la integración,  Next: Funciones y variables para integración,  Prev: Integración,  Up: Integración
 
-20.1 Introducción a la Integración
+20.1 Introducción a la integración
 ==================================
 
 Maxima tiene varias rutinas para calcular integrales. La función
@@ -5353,10 +5460,10 @@ dilogaritmos. No opera con integrales en términos de funciones
 desconocidas, como  `g(x)' o `h(x)'.
 
 
-File: maxima.info,  Node: Definiciones para Integración,  Next: Introducción a QUADPACK,  Prev: Introducción a la Integración,  Up: Integración
+File: maxima.info,  Node: Funciones y variables para integración,  Next: Introducción a QUADPACK,  Prev: Introducción a la integración,  Up: Integración
 
-20.2 Definiciones para Integración
-==================================
+20.2 Funciones y variables para integración
+===========================================
 
  -- Función: changevar (<expr>, <f(x,y)>, <y>, <x>)
      Hace el cambio de variable dado por `<f(x,y)> = 0' en todas las
@@ -5825,7 +5932,7 @@ File: maxima.info,  Node: Definiciones para Integración,  Next: Introducción a Q
 
 
 
-File: maxima.info,  Node: Introducción a QUADPACK,  Next: Definiciones para QUADPACK,  Prev: Definiciones para Integración,  Up: Integración
+File: maxima.info,  Node: Introducción a QUADPACK,  Next: Funciones y variables para QUADPACK,  Prev: Funciones y variables para integración,  Up: Integración
 
 20.3 Introducción a QUADPACK
 ============================
@@ -5912,19 +6019,19 @@ que no son accesibles desde el nivel de Maxima.
 
    (4) National Bureau of Standards, Washington, D.C., U.S.A
 
-   (5) http://www.netlib.org/slatec
+   (5) `http://www.netlib.org/slatec'
 
-   (6) http://www.netlib.org/quadpack
+   (6) `http://www.netlib.org/quadpack'
 
    (7) R. Piessens, E. de Doncker-Kapenga, C.W. Uberhuber, and D.K.
 Kahaner.  QUADPACK: A Subroutine Package for Automatic Integration.
 Berlin: Springer-Verlag, 1983, ISBN 0387125531.
 
 
-File: maxima.info,  Node: Definiciones para QUADPACK,  Prev: Introducción a QUADPACK,  Up: Integración
+File: maxima.info,  Node: Funciones y variables para QUADPACK,  Prev: Introducción a QUADPACK,  Up: Integración
 
-20.4 Definiciones para QUADPACK
-===============================
+20.4 Funciones y variables para QUADPACK
+========================================
 
  -- Función: quad_qag (<f(x)>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
  -- Función: quad_qag (<f>, <x>, <a>, <b>, <key>, <epsrel>, <limit>)
@@ -6208,7 +6315,8 @@ File: maxima.info,  Node: Definiciones para QUADPACK,  Prev: Introducción a QUAD
 
           (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
-          (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1), x, 0, 5);
+          (%i2) integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
+                           x, 0, 5);
           Principal Value
                                  alpha
                   alpha       9 4                 9
@@ -6403,7 +6511,8 @@ File: maxima.info,  Node: Definiciones para QUADPACK,  Prev: Introducción a QUAD
 
           (%i1) quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
           (%o1)     [1.376043389877692, 4.72710759424899E-11, 765, 0]
-          (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x), x, 0, inf));
+          (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
+                                     x, 0, inf));
                              alpha/2 - 1/2            2 alpha
                   sqrt(%pi) 2              sqrt(sqrt(2        + 1) + 1)
           (%o2)   -----------------------------------------------------
@@ -6517,1023 +6626,7 @@ File: maxima.info,  Node: Ecuaciones,  Next: Ecuaciones Diferenciales,  Prev: In
 
 * Menu:
 
-* Definiciones para Ecuaciones::
-
-
-File: maxima.info,  Node: Definiciones para Ecuaciones,  Prev: Ecuaciones,  Up: Ecuaciones
-
-21.1 Definiciones para Ecuaciones
-=================================
-
- -- Variable del sistema: %rnum_list
-     Valor por defecto: `[]'
-
-     La variable `%rnum_list' es la lista de variables introducidas en
-     las soluciones por la función `algsys'.  Las variables `%r' se
-     añaden a `%rnum_list' en su orden de creación. Esto es útil para
-     hacer sustituciones en la solución.
-
-
- -- Variable opcional: algexact
-     Default value: `false'
-
-     El contenido de la variable `algexact' afecta al comportamiento de
-     `algsys' de la siguiente forma:
-
-     Si `algexact' vale `true', `algsys' llamará siempre a `solve' y
-     luego utilizará `realroots'.
-
-     Si `algexact' vale `false', `solve' será llamada sólo si la
-     ecuación no es univariante, o si es cuadrática o bicuadrática.
-
-     Sin embargo, `algexact: true' no garantiza que únicamente se
-     obtengan soluciones exactas, ya que aunque `algsys' intente
-     siempre dar soluciones exactas, dará resultados aproximados si no
-     encuentra una solución mejor.
-
-
- -- Función: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
- -- Función: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
-     Resuelve el sistema de ecuaciones polinómicas <expr_1>, ...,
-     <expr_m> o las ecuaciones <eqn_1>, ..., <eqn_m> para las variables
-     <x_1>, ..., <x_n>.  La expresión <expr> equivale a la ecuación
-     `<expr> = 0'. Puede haber más ecuaciones que variables o viceversa.
-
-     La función `algsys' devuelve una lista de soluciones, cada una de
-     las cuales consistente a su vez en una lista de ecuaciones
-     asociando valores a las variables <x_1>, ..., <x_n> que satisfacen
-     el sistema de ecuaciones.  Si `algsys' no puede encontrar
-     soluciones devuelve la lista vacía `[]'.
-
-     Si es necesario se introducen en la solución los símbolos  `%r1',
-     `%r2', ..., para representar parámetros arbitrarios; estas
-     variables también se añaden a la lista `%rnum_list'.
-
-     El proceso que se sigue es el siguiente:
-
-     (1) Primero se factorizan las ecuaciones y se reparten en
-     subsistemas.
-
-     (2) Para cada subsistema <S_i>, se seleccionan una ecuación <E> y
-     una variable <x>. Se elige la variable que tenga grado menor.
-     Entonces se calcula el resultado de <E> y <E_j> respecto de <x>,
-     siendo las <E_j> el resto de ecuaciones del subsistema <S_i>. De
-     aquí se obtiene otro subsistema <S_i'> con una incógnita menos, ya
-     que <x> ha sido eliminada. El proceso ahora vuelve al paso (1).
-
-     (3) En ocasiones se obtiene un subsistema consistente en una única
-     ecuación. Si la ecuación es multivariante y no se han introducido
-     aproximaciones en formato decimal de coma flotante, entonces  se
-     llama a `solve' para tratar de encontrar una solución exacta.
-
-     En algunos casos, `solve' no puede encontrar la solución, o si lo
-     consigue puede que el resultado tenga una expresión muy grande.
-
-     Si la ecuación tiene una sóla incógnita y es lineal, o cuadrática
-     o bicuadrática, entonces se llama a la función `solve' si no se
-     han introducido aproximaciones en formato decimal. Si se han
-     introducido aproximaciones, o si hay más de una incógnita, o si no
-     es lineal, ni cuadrática ni bicuadrática, y si la variables
-     `realonly' vale `true', entonces se llama a la función `realroots'
-     para calcular las soluciones reales.  Si `realonly' vale `false',
-     entonces se llama a `allroots' para obtener las soluciones reales
-     y complejas.
-
-     Si `algsys' devuelve una solución que tiene menos dígitos
-     significativos de los requeridos, el usuario puede cambiar a
-     voluntad el valor de `algepsilon' para obtener mayor precisión.
-
-     Si `algexact' vale `true', se llamará siempre a `solve'.
-
-     Cuando `algsys' encuentra una ecuación con múltiples incógnitas y
-     que contiene aproximaciones en coma flotante (normalmente debido a
-     la imposibilidad de encontrar soluciones exactas en pasos
-     anteriores), entonces no intenta aplicar los métodos exactos a
-     estas ecuaciones y presenta el mensaje: "`algsys' cannot solve -
-     system too complicated."
-
-     Las interacciones con `radcan' pueden dar lugar a expresiones
-     grandes o complicadas. En tal caso, puede ser posible aislar
-     partes del resultado con  `pickapart' o `reveal'.
-
-     Ocasionalmente, `radcan' puede introducir la unidad imaginaria
-     `%i' en una solución que de hecho es real.
-
-     Ejemplos:
-
-          (%i1) e1: 2*x*(1 - a1) - 2*(x - 1)*a2;
-          (%o1)              2 (1 - a1) x - 2 a2 (x - 1)
-          (%i2) e2: a2 - a1;
-          (%o2)                        a2 - a1
-          (%i3) e3: a1*(-y - x^2 + 1);
-                                             2
-          (%o3)                   a1 (- y - x  + 1)
-          (%i4) e4: a2*(y - (x - 1)^2);
-                                                 2
-          (%o4)                   a2 (y - (x - 1) )
-          (%i5) algsys ([e1, e2, e3, e4], [x, y, a1, a2]);
-          (%o5) [[x = 0, y = %r1, a1 = 0, a2 = 0],
-
-                                            [x = 1, y = 0, a1 = 1, a2 = 1]]
-          (%i6) e1: x^2 - y^2;
-                                        2    2
-          (%o6)                        x  - y
-          (%i7) e2: -1 - y + 2*y^2 - x + x^2;
-                                   2        2
-          (%o7)                 2 y  - y + x  - x - 1
-          (%i8) algsys ([e1, e2], [x, y]);
-                           1            1
-          (%o8) [[x = - -------, y = -------],
-                        sqrt(3)      sqrt(3)
-
-                  1              1             1        1
-          [x = -------, y = - -------], [x = - -, y = - -], [x = 1, y = 1]]
-               sqrt(3)        sqrt(3)          3        3
-
-
- -- Función: allroots (<expr>)
- -- Función: allroots (<eqn>)
-     Calcula aproximaciones numéricas de las raíces reales y complejas
-     del polinomio <expr> o ecuación polinómica <eqn> de una variable.
-
-     Si la variable `polyfactor' vale `true' hace que la función
-     `allroots' factorice el polinomio para números reales si el
-     polinomio es real, o para números complejos si el polinomio es
-     complejo.
-
-     La función `allroots' puede dar resultados inexactos en caso de
-     que haya raíces múltiples.  Si el polinomio es real, `allroots
-     (%i*<p>)') puede alcanzar mejores aproximaciones que `allroots
-     (<p>)', ya que `allroots' ejecuta entonces un algoritmo diferente.
-
-     La función `allroots' no opera sobre expresiones no polinómicas,
-     pues requiere que el numerador sea reducible a un polinomio y el
-     denominador sea, como mucho, un número complejo.
-
-     Para polinomios complejos se utiliza el algoritmo de Jenkins y
-     Traub descrito en (Algorithm 419, Comm. ACM, vol. 15, (1972), p.
-     97). Para polinomios reales se utiliza el algoritmo de Jenkins
-     descrito en (Algorithm 493, ACM TOMS, vol. 1, (1975), p.178).
-
-     Ejemplos:
-
-          (%i1) eqn: (1 + 2*x)^3 = 13.5*(1 + x^5);
-                                      3          5
-          (%o1)              (2 x + 1)  = 13.5 (x  + 1)
-          (%i2) soln: allroots (eqn);
-          (%o2) [x = .8296749902129361, x = - 1.015755543828121,
-
-          x = .9659625152196369 %i - .4069597231924075,
-
-          x = - .9659625152196369 %i - .4069597231924075, x = 1.0]
-          (%i3) for e in soln
-                  do (e2: subst (e, eqn), disp (expand (lhs(e2) - rhs(e2))));
-                                - 3.5527136788005E-15
-
-                               - 5.32907051820075E-15
-
-                   4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                  - 4.44089209850063E-15 %i - 4.88498130835069E-15
-
-                                 3.5527136788005E-15
-
-          (%o3)                         done
-          (%i4) polyfactor: true$
-          (%i5) allroots (eqn);
-          (%o5) - 13.5 (x - 1.0) (x - .8296749902129361)
-
-                                     2
-           (x + 1.015755543828121) (x  + .8139194463848151 x
-
-           + 1.098699797110288)
-
-
- -- Variable opcional: breakup
-     Valor por defecto: `true'
-
-     Si `breakup' vale `true', `solve' expresa sus soluciones a las
-     ecuaciones cúbicas y cuárticas en términos de subexpresiones
-     comunes, las cuales son asignadas a etiquetas del tipo `%t1',
-     `%t2', etc.  En otro caso, no se identifican subexpresiones
-     comunes.
-
-     La asignación `breakup: true' sólo tiene efecto cuando
-     `programmode' vale `false'.
-
-     Ejemplos:
-
-          (%i1) programmode: false$
-          (%i2) breakup: true$
-          (%i3) solve (x^3 + x^2 - 1);
-
-                                  sqrt(23)    25 1/3
-          (%t3)                  (--------- + --)
-                                  6 sqrt(3)   54
-          Solution:
-
-                                                sqrt(3) %i   1
-                                                ---------- - -
-                          sqrt(3) %i   1            2        2   1
-          (%t4)    x = (- ---------- - -) %t3 + -------------- - -
-                              2        2            9 %t3        3
-
-                                                sqrt(3) %i   1
-                                              - ---------- - -
-                        sqrt(3) %i   1              2        2   1
-          (%t5)    x = (---------- - -) %t3 + ---------------- - -
-                            2        2             9 %t3         3
-
-                                             1     1
-          (%t6)                  x = %t3 + ----- - -
-                                           9 %t3   3
-          (%o6)                    [%t4, %t5, %t6]
-          (%i6) breakup: false$
-          (%i7) solve (x^3 + x^2 - 1);
-          Solution:
-
-                       sqrt(3) %i   1
-                       ---------- - -
-                           2        2        sqrt(23)    25 1/3
-          (%t7) x = --------------------- + (--------- + --)
-                       sqrt(23)    25 1/3    6 sqrt(3)   54
-                    9 (--------- + --)
-                       6 sqrt(3)   54
-
-                                                        sqrt(3) %i   1    1
-                                                     (- ---------- - -) - -
-                                                            2        2    3
-
-                     sqrt(23)    25 1/3  sqrt(3) %i   1
-          (%t8) x = (--------- + --)    (---------- - -)
-                     6 sqrt(3)   54          2        2
-
-                                                      sqrt(3) %i   1
-                                                    - ---------- - -
-                                                          2        2      1
-                                                + --------------------- - -
-                                                     sqrt(23)    25 1/3   3
-                                                  9 (--------- + --)
-                                                     6 sqrt(3)   54
-
-                      sqrt(23)    25 1/3             1             1
-          (%t9)  x = (--------- + --)    + --------------------- - -
-                      6 sqrt(3)   54          sqrt(23)    25 1/3   3
-                                           9 (--------- + --)
-                                              6 sqrt(3)   54
-          (%o9)                    [%t7, %t8, %t9]
-
-
- -- Función: dimension (<eqn>)
- -- Función: dimension (<eqn_1>, ..., <eqn_n>)
-     El paquete `dimen' es para análisis dimensional. La instrucción
-     `load ("dimen")' carga el paquete y `demo ("dimen")' presenta una
-     pequeña demostración.
-
-
- -- Variable opcional: dispflag
-     Valor por defecto: `true'
-
-     Si `dispflag' vale `false', entonces se inhibirá que Maxima
-     muestre resultados de las funciones que resuelven ecuaciones
-     cuando éstas son llamadas desde dentro de un bloque (`block').
-     Cuando un bloque termina con el signo del dólar, $, a la variable
-     `dispflag' se le asigna `false'.
-
-
- -- Función: funcsolve (<eqn>, <g>(<t>))
-     Devuelve `[<g>(<t>) = ...]'  o `[]', dependiendo de que exista o
-     no una función racional  `<g>(<t>)' que satisfaga <eqn>, la cual
-     debe ser un polinomio de primer orden, lineal para `<g>(<t>)' y
-     `<g>(<t>+1)'
-
-          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1) = (n - 1)/(n + 2);
-                                      (n + 3) f(n + 1)   n - 1
-          (%o1)        (n + 1) f(n) - ---------------- = -----
-                                           n + 1         n + 2
-          (%i2) funcsolve (eqn, f(n));
-
-          Dependent equations eliminated:  (4 3)
-                                             n
-          (%o2)                f(n) = ---------------
-                                      (n + 1) (n + 2)
-
-     Aviso: esta es una implemetación rudimentaria, por lo que debe ser
-     utilizada con cautela.
-
-
- -- Variable opcional: globalsolve
-     Valor por defecto: `false'
-
-     Si `globalsolve' vale `true', a las incógnitas de las ecuaciones
-     se les asignan las soluciones encontradas por `linsolve' y por
-     `solve' cuando se resuelven sistemas de dos o más ecuaciones
-     lineales.
-
-     Si `globalsolve' vale `false', las soluciones encontradas por
-     `linsolve' y por `solve' cuando se resuelven sistemas de dos o más
-     ecuaciones lineales se expresan como ecuaciones y a las incógnitas
-     no se le asignan valores.
-
-     Cuando se resuelven ecuaciones que no son sistemas de dos o más
-     ecuaciones lineales, `solve' ignora el valor de `globalsolve'.
-     Otras funciones que resuelven ecuaciones (como `algsys') ignoran
-     siempre el valor de `globalsolve'.
-
-     Ejemplos:
-
-          (%i1) globalsolve: true$
-          (%i2) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t2)                        x : --
-                                           7
-
-                                             1
-          (%t3)                        y : - -
-                                             7
-          (%o3)                     [[%t2, %t3]]
-          (%i3) x;
-                                         17
-          (%o3)                          --
-                                         7
-          (%i4) y;
-                                           1
-          (%o4)                          - -
-                                           7
-          (%i5) globalsolve: false$
-          (%i6) kill (x, y)$
-          (%i7) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
-          Solution
-
-                                           17
-          (%t7)                        x = --
-                                           7
-
-                                             1
-          (%t8)                        y = - -
-                                             7
-          (%o8)                     [[%t7, %t8]]
-          (%i8) x;
-          (%o8)                           x
-          (%i9) y;
-          (%o9)                           y
-
-
- -- Función: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
-     El paquete `inteqn' se dedica a la resolución de ecuaciones
-     integrales. Para hacer uso de él, ejecutar la instrucción `load
-     ("inteqn")'.
-
-     El argumento <ie> es la ecuación integral; <unk> es la función
-     incógnita; <tech> es el método a aplicar para efectuar la
-     resolución del problema (<tech> = `first' significa: aplica el
-     primer método que encuentre una solución; <tech> = `all'
-     significa: aplica todos los métodos posibles); <n> es el número
-     máximo de términos que debe tomar `taylor', `neumann',
-     `firstkindseries' o `fredseries' (también es el máximo nivel de
-     recursión para el método de diferenciación); <guess> es la
-     solución candidata inicial para `neumann' o `firstkindseries'.
-
-     Valores por defecto para los argumentos segundo a quinto son:
-
-     <unk>: `<p>(<x>)', donde <p> es la primera función desconocida que
-     Maxima encuentra en el integrando y <x> es la variable que actúa
-     como argumento en la primera aparición de <p> encontrada fuera de
-     una integral en el caso de ecuaciones de segunda especie
-     (`secondkind'), o es la única variable aparte de la de integración
-     en el caso de ecuaciones de primera especie (`firstkind'). Si el
-     intento de encontrar <x> falla, el usuario será consultado para
-     suministrar una variable independiente.
-
-
- -- Variable opcional: ieqnprint
-     Valor por defecto: `true'
-
-     La variable `ieqnprint' controla el comportamiento del resultado
-     retornado por la instrucción `ieqn'. Si `ieqnprint' vale `false',
-     la lista devuelta por la función `ieqn' tiene el formato
-
-     [<solución>, <método utilizado>, <nterms>, <variable>]
-
-     donde <variable> estará ausente si la solución es exacta; en otro
-     caso, será la palabra `approximate' o `incomplete' según que la
-     solución sea inexacta o que no tenga forma explícita,
-     respectivamente. Si se ha utilizado un método basado en series,
-     <nterms> es el número de términos utilizado, que puede ser menor
-     que el `n' dado a `ieqn'.
-
-
- -- Función: lhs (<expr>)
-     Devuelve el miembro izquierdo (es decir, el primer argumento) de
-     la expresión <expr>, cuando el operador de <expr> es uno de los
-     operadores de relación `< <= = # equal notequal >= >', o un
-     operadores de asignación `:= ::= : ::', o un operador infijo
-     binario definido por el usuario mediante `infix'.
-
-     Si <expr> es un átomo o si su operador es diferente de los citados
-     más arriba, `lhs' devuelve <expr>.
-
-     Véase también `rhs'.
-
-     Ejemplo:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [lhs (aa < bb), lhs (aa <= bb), lhs (aa >= bb), lhs (aa > bb)];
-          (%o4)                   [aa, aa, aa, aa]
-          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)), lhs (notequal (aa, bb))];
-          (%o5)                   [aa, aa, aa, aa]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
-          (%o10)               [foo(x), bar(y), x, x]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) lhs (aa ][ bb);
-          (%o12)                         aa
-
-
- -- Función: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
-     Resuelve la lista de ecuaciones lineales simultáneas para la lista
-     de variables. Las expresiones deben ser polinomios lineales
-     respecto de las variables o ecuaciones.
-
-     Si `globalsolve' vale `true', a cada incógnita se le asigna el
-     valor de la solución encontrada.
-
-     Si `backsubst' vale `false', `linsolve' no hace la sustitución
-     tras la triangulariación de las ecuaciones.  Esto puede ser
-     necesario en problemas muy grandes en los que la sustitución puede
-     dar lugar a la generación de expresiones enormes.
-
-     Si `linsolve_params' vale `true', `linsolve' también genera
-     símbolos `%r' para representar parámetros arbitrarios como los
-     descritos para la función `algsys'. Si vale `false', el resultado
-     devuelto por `linsolve' expresará, si es el sistema es
-     indeterminado, unas variables en función de otras.
-
-     Si `programmode' vale `false', `linsolve' muestra la solución con
-     etiquetas de expresiones intermedias (`%t') y devuelve las lista
-     de etiquetas.
-
-          (%i1) e1: x + z = y;
-          (%o1)                       z + x = y
-          (%i2) e2: 2*a*x - y = 2*a^2;
-                                                 2
-          (%o2)                   2 a x - y = 2 a
-          (%i3) e3: y - 2*z = 2;
-          (%o3)                      y - 2 z = 2
-          (%i4) [globalsolve: false, programmode: true];
-          (%o4)                     [false, true]
-          (%i5) linsolve ([e1, e2, e3], [x, y, z]);
-          (%o5)            [x = a + 1, y = 2 a, z = a - 1]
-          (%i6) [globalsolve: false, programmode: false];
-          (%o6)                    [false, false]
-          (%i7) linsolve ([e1, e2, e3], [x, y, z]);
-          Solution
-
-          (%t7)                       z = a - 1
-
-          (%t8)                        y = 2 a
-
-          (%t9)                       x = a + 1
-          (%o9)                    [%t7, %t8, %t9]
-          (%i9) ''%;
-          (%o9)            [z = a - 1, y = 2 a, x = a + 1]
-          (%i10) [globalsolve: true, programmode: false];
-          (%o10)                    [true, false]
-          (%i11) linsolve ([e1, e2, e3], [x, y, z]);
-          Solution
-
-          (%t11)                      z : a - 1
-
-          (%t12)                       y : 2 a
-
-          (%t13)                      x : a + 1
-          (%o13)                 [%t11, %t12, %t13]
-          (%i13) ''%;
-          (%o13)           [z : a - 1, y : 2 a, x : a + 1]
-          (%i14) [x, y, z];
-          (%o14)                 [a + 1, 2 a, a - 1]
-          (%i15) [globalsolve: true, programmode: true];
-          (%o15)                    [true, true]
-          (%i16) linsolve ([e1, e2, e3], '[x, y, z]);
-          (%o16)           [x : a + 1, y : 2 a, z : a - 1]
-          (%i17) [x, y, z];
-          (%o17)                 [a + 1, 2 a, a - 1]
-
-
- -- Variable opcional: linsolvewarn
-     Valor por defecto: `true'
-
-     Si `linsolvewarn' vale `true', `linsolve' mostrará el mensaje:
-     "Dependent equations eliminated".
-
-
- -- Variable opcional: linsolve_params
-     Valor por defecto: `true'
-
-     Si `linsolve_params' vale `true', `linsolve' también genera
-     símbolos `%r' para representar parámetros arbitrarios como los
-     descritos para la función `algsys'. Si vale `false', el resultado
-     devuelto por `linsolve' expresará, si es el sistema es
-     indeterminado, unas variables en función de otras.
-
-
- -- System variable: multiplicities
-     Valor por defecto: `not_set_yet'
-
-     La variable `multiplicities' es una con las multiplicidades de las
-     soluciones encontradas por `solve' o `realroots'.
-
-
- -- Función: nroots (<p>, <low>, <high>)
-     Devuelve el número de raíces reales del polinomio real univariante
-     <p> en el intervalo semiabierto `(<low>, <high>]'. Los extremos
-     del intervalo pueden ser `minf' o `inf', menos y más infinito.
-
-     La función `nroots' utiliza el método de las secuencias de Sturm.
-
-          (%i1) p: x^10 - 2*x^4 + 1/2$
-          (%i2) nroots (p, -6, 9.1);
-          (%o2)                           4
-
-
- -- Función: nthroot (<p>, <n>)
-     Siendo `p' un polinomio de coeficientes enteros y `n' un entero
-     positivo, `nthroot' devuelve un polinomio `q', también de
-     coeficientes enteros, tal que `q^n=p', o un mensaje de error
-     indicando que `p' no es una `n'-potencia exacta. Esta función es
-     bastante más rápida que `factor' y que `sqfr'.
-
-
- -- Variable opcional: programmode
-     Valor por defecto: `true'
-
-     Si `programmode' vale `true', `solve', `realroots', `allroots' y
-     `linsolve' devuelve sus soluciones como elementos de una lista.
-     Si `programmode' vale `false', `solve' y las demás crean
-     expresiones intermedias etiquetadas `%t1', `t2', etc., y les
-     asinan las soluciones.
-
-          (%i1) solve(x^2+x+1);
-                              sqrt(3) %i + 1      sqrt(3) %i - 1
-          (%o1)        [x = - --------------, x = --------------]
-                                    2                   2
-          (%i2) programmode:false$
-          (%i3) solve(x^2+x+1);
-          Solution:
-
-                                        sqrt(3) %i + 1
-          (%t3)                   x = - --------------
-                                              2
-
-                                       sqrt(3) %i - 1
-          (%t4)                    x = --------------
-                                             2
-          (%o4)                        [%t4, %t5]
-
-
- -- Variable opcional: realonly
-     Valor por defecto: `false'
-
-     Si `realonly' vale `true', `algsys' sólo devuelve aquellas
-     soluciones exentas de la constante `%i'.
-
-
- -- Función: realroots (<expr>, <bound>)
- -- Función: realroots (<eqn>, <bound>)
- -- Función: realroots (<expr>)
- -- Función: realroots (<eqn>)
-     Calcula aproximaciones racionales de las raíces reales del
-     polinomio <expr> o de la ecuación polinómica <eqn> de una variable,
-     dentro de la tolerancia especificada por <bound>.  Los
-     coeficientes de <expr> o de <eqn> deben ser números literales, por
-     lo que las constantes simbólicas como `%pi' no son aceptadas.
-
-     La función `realroots' guarda las multiplicidades de las raíces
-     encontradas en la variable global `multiplicities'.
-
-     La función `realroots' genera una secuencia de Sturm para acotar
-     cada raíz, aplicando después el método de bisección para afinar
-     las aproximaciones. Todos los coeficientes se convierten a formas
-     racionales equivalentes antes de comenzar la búsqueda de las
-     raíces, de modo que los cálculos se realizan con aritmética exacta
-     racional. Incluso en el caso de que algunos coeficientes sean
-     números decimales en coma flotante, los resultados son racionales,
-     a menos que se les fuerce a ser decimales con las variables
-     `float' o `numer'.
-
-     Si <bound> es menor que la unidad, todas las raíces enteras se
-     expresan en forma exacta. Si no se especifica <bound>, se le
-     supone igual al valor de la variable global `rootsepsilon'.
-
-     Si la variable global `programmode' vale `true', la función
-     `realroots' devuelve una lista de la forma `[x = <x_1>, x = <x_2>,
-     ...]'.  Si `programmode' vale `false', `realroots' crea etiquetas
-     `%t1', `%t2', ... para las expresiones intermedias, les asigna
-     valores y, finalmente, devuelve la lista de etiquetas.
-
-     Ejemplos:
-
-          (%i1) realroots (-1 - x + x^5, 5e-6);
-                                         612003
-          (%o1)                     [x = ------]
-                                         524288
-          (%i2) ev (%[1], float);
-          (%o2)                 x = 1.167303085327148
-          (%i3) ev (-1 - x + x^5, %);
-          (%o3)                - 7.396496210176905E-6
-
-          (%i1) realroots (expand ((1 - x)^5 * (2 - x)^3 * (3 - x)), 1e-20);
-          (%o1)                 [x = 1, x = 2, x = 3]
-          (%i2) multiplicities;
-          (%o2)                       [5, 3, 1]
-
-
- -- Función: rhs (<expr>)
-     Devuelve el miembro derecho (es decir, el segundo argumento) de la
-     expresión <expr>, cuando el operador de <expr> es uno de los
-     operadores de relación `< <= = # equal notequal >= >', o un
-     operadores de asignación `:= ::= : ::', o un operador infijo
-     binario definido por el usuario mediante `infix'.
-
-     Si <expr> es un átomo o si su operador es diferente de los citados
-     más arriba, `rhs' devuelve <expr>.
-
-     Véase también `lhs'.
-
-     Ejemplo:
-
-          (%i1) e: aa + bb = cc;
-          (%o1)                     bb + aa = cc
-          (%i2) lhs (e);
-          (%o2)                        bb + aa
-          (%i3) rhs (e);
-          (%o3)                          cc
-          (%i4) [rhs (aa < bb), rhs (aa <= bb), rhs (aa >= bb), rhs (aa > bb)];
-          (%o4)                   [bb, bb, bb, bb]
-          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)), rhs (notequal (aa, bb))];
-          (%o5)                   [bb, bb, bb, bb]
-          (%i6) e1: '(foo(x) := 2*x);
-          (%o6)                     foo(x) := 2 x
-          (%i7) e2: '(bar(y) ::= 3*y);
-          (%o7)                    bar(y) ::= 3 y
-          (%i8) e3: '(x : y);
-          (%o8)                         x : y
-          (%i9) e4: '(x :: y);
-          (%o9)                        x :: y
-          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
-          (%o10)                  [2 x, 3 y, y, y]
-          (%i11) infix ("][");
-          (%o11)                         ][
-          (%i12) rhs (aa ][ bb);
-          (%o12)                         bb
-
-
- -- Variable opcional: rootsconmode
-     Valor por defecto: `true'
-
-     La variable `rootsconmode' controla el comportamiento de la
-     instrucción `rootscontract'.  Véase `rootscontract' para más
-     detalles.
-
-
- -- Función: rootscontract (<expr>)
-     Convierte productos de raíces en raíces de productos. Por ejemplo,
-     `rootscontract (sqrt(x)*y^(3/2))' devuelve `sqrt(x*y^3)'.
-
-     Si `radexpand' vale `true' y `domain' vale `real', `rootscontract'
-     convierte `abs' en `sqrt', por ejemplo, `rootscontract
-     (abs(x)*sqrt(y))' devuelve `sqrt(x^2*y)'.
-
-     La opción `rootsconmode' afecta el resultado de `rootscontract'
-     como sigue:
-
-          Problema            Valor de         Resultadod de
-                            rootsconmode        rootscontract
-
-          x^(1/2)*y^(3/2)      false          (x*y^3)^(1/2)
-          x^(1/2)*y^(1/4)      false          x^(1/2)*y^(1/4)
-          x^(1/2)*y^(1/4)      true           (x*y^(1/2))^(1/2)
-          x^(1/2)*y^(1/3)      true           x^(1/2)*y^(1/3)
-          x^(1/2)*y^(1/4)      all            (x^2*y)^(1/4)
-          x^(1/2)*y^(1/3)      all            (x^3*y^2)^(1/6)
-
-     Si `rootsconmode' vale `false', `rootscontract' contrae sólamente
-     respecto de exponentes racionales cuyos denominadores sean
-     iguales. La clave para los ejemplos `rootsconmode: true' es
-     simplemente que 2 divide a 4 pero no a 3. La asignación
-     `rootsconmode: all' hace que se calcule el mínimo común múltiplo
-     de los denominadores de los exponentes.
-
-     La función `rootscontract' utiliza `ratsimp' de forma similar a
-     como lo hace `logcontract'.
-
-     Ejemplos:
-
-          (%i1) rootsconmode: false$
-          (%i2) rootscontract (x^(1/2)*y^(3/2));
-                                             3
-          (%o2)                      sqrt(x y )
-          (%i3) rootscontract (x^(1/2)*y^(1/4));
-                                             1/4
-          (%o3)                     sqrt(x) y
-          (%i4) rootsconmode: true$
-          (%i5) rootscontract (x^(1/2)*y^(1/4));
-          (%o5)                    sqrt(x sqrt(y))
-          (%i6) rootscontract (x^(1/2)*y^(1/3));
-                                             1/3
-          (%o6)                     sqrt(x) y
-          (%i7) rootsconmode: all$
-          (%i8) rootscontract (x^(1/2)*y^(1/4));
-                                        2   1/4
-          (%o8)                       (x  y)
-          (%i9) rootscontract (x^(1/2)*y^(1/3));
-                                       3  2 1/6
-          (%o9)                      (x  y )
-          (%i10) rootsconmode: false$
-          (%i11) rootscontract (sqrt(sqrt(x) + sqrt(1 + x))
-                              *sqrt(sqrt(1 + x) - sqrt(x)));
-          (%o11)                          1
-          (%i12) rootsconmode: true$
-          (%i13) rootscontract (sqrt(5 + sqrt(5)) - 5^(1/4)*sqrt(1 + sqrt(5)));
-          (%o13)                          0
-
-
- -- Variable opcional: rootsepsilon
-     Valor por defecto: 1.0e-7
-
-     La variable `rootsepsilon' es la tolerancia que establece el
-     intervalo de confianza para las raíces calculadas por la función
-     `realroots'.
-
-
- -- Función: solve (<expr>, <x>)
- -- Función: solve (<expr>)
- -- Función: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     Resuelve la ecuación algebraica <expr> de incógnita <x> y devuelve
-     una lista de igualdades con la <x> despejada.  Si <expr> no es una
-     igualdad, se supone que se quiere resolver la ecuación `<expr> =
-     0'.  El argumento <x> puede ser una función (por ejemplo, `f(x)'),
-     u otra expresión no atómica, excepto una suma o producto. Puede
-     omitirse <x> si <expr> contiene solamente una variable. El
-     argumento <expr> puede ser una expresión racional y puede contener
-     funciones trigonométricas, exponenciales, etc.
-
-     Se utiliza el siguiente método de resolución:
-
-     Sea <E> la expresión y <X> la incógnita. Si <E> es lineal respecto
-     de <X> entonces <X> se resuelve de forma trivial. En caso
-     contrario, si <E> es de la forma `A*X^N + B' entonces el resultado
-     es `(-B/A)^1/N)' multiplicado por las `N'-ésimas raíces de la
-     unidad.
-
-     Si <E> no es lineal respecto de <X> entonces el máximo común
-     divisor de los exponentes de <X> en <E> (supóngase que es <N>) se
-     divide entre los exponentes y la multiplicidad de las raíces se
-     multiplica por <N>.  Entonces es llamado recursivamente `solve'
-     para este resultado. Si <E> es factorizable entonces `solve' es
-     invocado para cada uno de los factores.  Finalmente, `solve'
-     usará, según sea necesario, las fórmulas cuadrática, cúbica o
-     cuártica.
-
-     En caso de que <E> sea un polinomio respecto de una función de la
-     incógnita, por ejemplo `F(X)', entonces se calcula primero para
-     `F(X)' (sea <C> el resultado obtenido), entonces la ecuación
-     `F(X)=C' se resuelve para <X> en el supuesto que se conozca la
-     inversa de la función <F>.
-
-     Si la variable `breakup' vale `false' hará que `solve' muestre las
-     soluciones de las ecuaciones cúbicas o cuárticas como expresiones
-     únicas, en lugar de utilizar varias subexpresiones comunes, que es
-     el formato por defecto.
-
-     A la variable `multiplicities' se le asignará una lista con las
-     multiplicidades de las soluciones individuales devueltas por
-     `solve', `realroots' o `allroots'. La instrucción `apropos
-     (solve)' hará que se muestren las variables optativas que de algún
-     modo afectan al comportamiento de `solve'. Se podrá luego utilizar
-     la función  `describe' para aquellas variables cuyo objeto no esté
-     claro.
-
-     La llamada `solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])'
-     resuelve un sistema de ecuaciones polinómicas simultáneas
-     (lineales o no) llamando a `linsolve' o `algsys' y devuelve una
-     lista de listas con soluciones para las incógnitas. En caso de
-     haberse llamado a `linsolve' esta lista contendrá una única lista
-     de soluciones. La llamada a `solve' tiene dos listas como
-     argumentos. La primera lista tiene las ecuaciones a resolver y la
-     segunda son las incógnitas cuyos valores se quieren calcular. Si
-     el número de variables en las ecuaciones es igual al número de
-     incógnitas, el segundo argumento puede omitirse. En caso de
-     sistemas lineales incompatibles se mostrará el mensaje
-     `inconsistent' (véase la variable `solve_inconsistent_error'); si
-     no existe una única solución, se mostrará el mensaje `singular'.
-
-     Si `programmode' vale `false', `solve' muestra la solución con
-     etiquetas de expresiones intermedias (`%t') y devuelve las lista
-     de etiquetas.
-
-     Si `globalsolve' vale `true' y el problema consiste en resolver un
-     sistema de dos o más ecuaciones lineales, a cada incógnita se le
-     asigna el valor encontrado en la resolución del sistema.
-
-     Ejemplos:
-          (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
-
-          SOLVE is using arc-trig functions to get a solution.
-          Some solutions will be lost.
-                                      %pi
-          (%o1)                  [x = ---, f(x) = 1]
-                                       6
-          (%i2) ev (solve (5^f(x) = 125, f(x)), solveradcan);
-                                          log(125)
-          (%o2)                   [f(x) = --------]
-                                           log(5)
-          (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
-                                2    2
-          (%o3)             [4 x  - y  = 12, x y - x = 2]
-          (%i4) solve (%, [x, y]);
-          (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
-
-           - .1331240357358706, y = .0767837852378778
-
-           - 3.608003221870287 %i], [x = - .5202594388652008 %i
-
-           - .1331240357358706, y = 3.608003221870287 %i
-
-           + .0767837852378778], [x = - 1.733751846381093,
-
-          y = - .1535675710019696]]
-          (%i5) solve (1 + a*x + x^3, x);
-                                                 3
-                        sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (%o5) [x = (- ---------- - -) (--------------- - -)
-                            2        2      6 sqrt(3)      2
-
-                  sqrt(3) %i   1
-                 (---------- - -) a
-                      2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                                    3
-           sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
-          (---------- - -) (--------------- - -)
-               2        2      6 sqrt(3)      2
-
-                   sqrt(3) %i   1
-                (- ---------- - -) a
-                       2        2
-           - --------------------------, x =
-                        3
-                sqrt(4 a  + 27)   1 1/3
-             3 (--------------- - -)
-                   6 sqrt(3)      2
-
-                   3
-           sqrt(4 a  + 27)   1 1/3               a
-          (--------------- - -)    - --------------------------]
-              6 sqrt(3)      2                  3
-                                        sqrt(4 a  + 27)   1 1/3
-                                     3 (--------------- - -)
-                                           6 sqrt(3)      2
-          (%i6) solve (x^3 - 1);
-                       sqrt(3) %i - 1        sqrt(3) %i + 1
-          (%o6)   [x = --------------, x = - --------------, x = 1]
-                             2                     2
-          (%i7) solve (x^6 - 1);
-                     sqrt(3) %i + 1      sqrt(3) %i - 1
-          (%o7) [x = --------------, x = --------------, x = - 1,
-                           2                   2
-
-                               sqrt(3) %i + 1        sqrt(3) %i - 1
-                         x = - --------------, x = - --------------, x = 1]
-                                     2                     2
-          (%i8) ev (x^6 - 1, %[1]);
-                                                6
-                                (sqrt(3) %i + 1)
-          (%o8)                 ----------------- - 1
-                                       64
-          (%i9) expand (%);
-          (%o9)                           0
-          (%i10) x^2 - 1;
-                                        2
-          (%o10)                       x  - 1
-          (%i11) solve (%, x);
-          (%o11)                  [x = - 1, x = 1]
-          (%i12) ev (%th(2), %[1]);
-          (%o12)                          0
-
-
- -- Variable opcional: solvedecomposes
-     Valor por defecto: `true'
-
-     Si `solvedecomposes' vale `true', `solve' llama a `polydecomp' en
-     caso de que se le pida resolver ecuaciones polinómicas.
-
-
- -- Variable opcional: solveexplicit
-     Valor por defecto: `false'
-
-     Si `solveexplicit' vale `true', le inhibe a `solve' devolver
-     soluciones implícitas, esto es, soluciones de la forma `F(x) = 0',
-     donde `F' es cierta función.
-
-
- -- Variable opcional: solvefactors
-     Valor por defecto: `true'
-
-     Si `solvefactors' vale `false', `solve' no intenta factorizar la
-     expresión.  Este valor `false' puede ser útil en algunos casos en
-     los que la factorización no es necesaria.
-
-
- -- Variable opcional: solvenullwarn
-     Valor por defecto: `true'
-
-     Si `solvenullwarn' vale `true',  `solve' muestra un mensaje de
-     aviso si es llamado con una lista de ecuaciones vacía o con una
-     lista de incógnitas vacía. Por ejemplo, `solve ([], [])' imprimirá
-     dos mensajes de aviso y devolverá `[]'.
-
-
- -- Variable opcional: solveradcan
-     Valor por defecto: `false'
-
-     Si `solveradcan' vale `true', `solve' llama a `radcan', lo que
-     hará que `solve' se ejecute de forma más lenta, pero permitirá que
-     se resuelvan ciertas ecuaciones que contengan exponenciales y
-     logaritmos.
-
-
- -- Variable opcional: solvetrigwarn
-     Valor por defecto: `true'
-
-     Si `solvetrigwarn' vale `true', `solve' puede presentar un mensaje
-     diciendo que está utilizando funciones trigonométricas inversas
-     para resolver la ecuación, y que por lo tanto puede estar
-     ignorando algunas soluciones.
-
-
- -- Variable opcional: solve_inconsistent_error
-     Valor por defecto: `true'
-
-     Si `solve_inconsistent_error' vale `true', `solve' y `linsolve'
-     devuelven un error si las ecuaciones a resolver son incompatibles.
-     Si vale `false', `solve' y `linsolve' devuelven la lista vacía
-     `[]' en caso de incompatibilidad.
-
-     Ejemplo:
-
-          (%i1) solve_inconsistent_error: true$
-          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
-          Inconsistent equations:  (2)
-           -- an error.  Quitting.  To debug this try debugmode(true);
-          (%i3) solve_inconsistent_error: false$
-          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
-          (%o4)                          []
-
-
-
-File: maxima.info,  Node: Ecuaciones Diferenciales,  Next: Métodos numéricos,  Prev: Ecuaciones,  Up: Top
-
-22 Ecuaciones Diferenciales
-***************************
-
-* Menu:
-
-* Introducción a las Ecuaciones Diferenciales::
-* Definiciones para Ecuaciones Diferenciales::
-
-
-File: maxima.info,  Node: Introducción a las Ecuaciones Diferenciales,  Next: Definiciones para Ecuaciones Diferenciales,  Prev: Ecuaciones Diferenciales,  Up: Ecuaciones Diferenciales
-
-22.1 Introducción a las Ecuaciones Diferenciales
-================================================
-
-Esta sección describe las funciones disponibles en Maxima para el
-cálculo de las soluciones analíticas de ciertos tipos de ecuaciones de
-primer y segundo orden. Para las soluciones numéricas de sistemas de
-ecuaciones diferenciales, véase el paquete adicional `dynamics'. Para
-las representaciones gráficas en el espacio de fases, véase el paquete
-`plotdf'.
+* Funciones y variable para las ecuaciones::
 
 
 

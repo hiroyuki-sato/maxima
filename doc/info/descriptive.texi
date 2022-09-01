@@ -1,15 +1,15 @@
 @menu
 * Introduction to descriptive::
-* Definitions for data manipulation::
-* Definitions for descriptive statistics::
-* Definitions for specific multivariate descriptive statistics::
-* Definitions for statistical graphs::
+* Functions and Variables for data manipulation::
+* Functions and Variables for descriptive statistics::
+* Functions and Variables for specific multivariate descriptive statistics::
+* Functions and Variables for statistical graphs::
 @end menu
 
-@node Introduction to descriptive, Definitions for data manipulation, descriptive, descriptive
+@node Introduction to descriptive, Functions and Variables for data manipulation, descriptive, descriptive
 @section Introduction to descriptive
 
-Package @code{descriptive} contains a set of functions for making descriptive statistical computations and graphing. Together with the source code there are three data sets in your Maxima tree: @code{pidigits.data}, @code{wind.data} and @code{biomed.data}. They can be also downloaded from the web site @code{www.biomates.net}.
+Package @code{descriptive} contains a set of functions for making descriptive statistical computations and graphing. Together with the source code there are three data sets in your Maxima tree: @code{pidigits.data}, @code{wind.data} and @code{biomed.data}. They can be also downloaded from the web site @url{http://www.biomates.net}.
 
 Any statistics manual can be used as a reference to the functions in package @code{descriptive}.
 
@@ -173,8 +173,8 @@ One must take care when working with categorical data. In the next example, symb
 
 
 
-@node Definitions for data manipulation, Definitions for descriptive statistics, Introduction to descriptive, descriptive
-@section Definitions for data manipulation
+@node Functions and Variables for data manipulation, Functions and Variables for descriptive statistics, Introduction to descriptive, descriptive
+@section Functions and Variables for data manipulation
 
 @deffn {Function} continuous_freq (@var{list})
 @deffnx {Function} continuous_freq (@var{list}, @var{m})
@@ -228,7 +228,7 @@ The first list gives the sample values and the second their absolute frequencies
 
 
 @deffn {Function} subsample (@var{data_matrix}, @var{logical_expression})
-@deffnx {Function} subsample (@var{data_matrix}, @var{logical_expression}, @var{col_num}, @var{col_num}, ...)
+@deffnx {Function} subsample (@var{data_matrix}, @var{logical_expression}, @var{col_num1}, @var{col_num2}, ...)
 This is a sort of variation of the Maxima @code{submatrix} function. The first argument is the name of the data matrix, the second is a quoted logical expression and optional additional arguments are the numbers of the columns to be taken. Its behaviour is better understood with examples,
 
 @c ===beg===
@@ -367,7 +367,7 @@ Here, the first component is meaningless, since @code{A} and @code{B} are catego
 (%i1) load (descriptive)$
 (%i2) load (numericalio)$
 (%i3) s3 : read_matrix (file_search ("biomed.data"))$
-(%i4) mean (subsample (s3, '(%c[4] # NA and %c[6] # NA), 3, 4, 5, 6));
+(%i4) mean(subsample(s3, '(%c[4] # NA and %c[6] # NA), 3,4,5,6));
 (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813, 
                                                             2514
                                                             ----]
@@ -376,8 +376,8 @@ Here, the first component is meaningless, since @code{A} and @code{B} are catego
 @end deffn
 
 
-@node Definitions for descriptive statistics, Definitions for specific multivariate descriptive statistics, Definitions for data manipulation, descriptive
-@section Definitions for descriptive statistics
+@node Functions and Variables for descriptive statistics, Functions and Variables for specific multivariate descriptive statistics, Functions and Variables for data manipulation, descriptive
+@section Functions and Variables for descriptive statistics
 
 
 
@@ -834,7 +834,7 @@ Example:
 
 @deffn {Function} quantile (@var{list}, @var{p})
 @deffnx {Function} quantile (@var{matrix}, @var{p})
-This is the @var{p}-@code{quantile}, with @var{p} a number in @math{[0, 1]}, of the sample @var{list}.
+This is the @var{p}-quantile, with @var{p} a number in @math{[0, 1]}, of the sample @var{list}.
 Although there are several definitions for the sample quantile (Hyndman, R. J., Fan, Y. (1996) @var{Sample quantiles in statistical packages}. American Statistician, 50, 361-365), the one based on linear interpolation is implemented in package @code{descriptive}.
 
 Example:
@@ -843,7 +843,8 @@ Example:
 @c load (descriptive)$
 @c load (numericalio)$
 @c s1 : read_list (file_search ("pidigits.data"))$
-@c /* 1st and 3rd quartiles */ [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
+@c /* 1st and 3rd quartiles */ 
+@c          [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
 @c s2 : read_matrix (file_search ("wind.data"))$
 @c quantile (s2, 1/4);
 @c ===end===
@@ -851,7 +852,8 @@ Example:
 (%i1) load (descriptive)$
 (%i2) load (numericalio)$
 (%i3) s1 : read_list (file_search ("pidigits.data"))$
-(%i4) /* 1st and 3rd quartiles */ [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
+(%i4) /* 1st and 3rd quartiles */
+         [quantile (s1, 1/4), quantile (s1, 3/4)], numer;
 (%o4)                      [2.0, 7.25]
 (%i5) s2 : read_matrix (file_search ("wind.data"))$
 (%i6) quantile (s2, 1/4);
@@ -888,7 +890,7 @@ Example:
 (%o6)         [10.06, 9.855, 10.73, 15.48, 14.105]
 @end example
 
-The median is the 1/2-@code{quantile}.
+The median is the 1/2-quantile.
 
 See also function @code{quantile}.
 @end deffn
@@ -1375,8 +1377,8 @@ See also function @code{quantile}.
 
 
 
-@node Definitions for specific multivariate descriptive statistics, Definitions for statistical graphs, Definitions for descriptive statistics, descriptive
-@section Definitions for specific multivariate descriptive statistics
+@node Functions and Variables for specific multivariate descriptive statistics, Functions and Variables for statistical graphs, Functions and Variables for descriptive statistics, descriptive
+@section Functions and Variables for specific multivariate descriptive statistics
 
 
 
@@ -1752,8 +1754,8 @@ See also @code{cov} and @code{cov1}.
 
 
 
-@node Definitions for statistical graphs,  , Definitions for specific multivariate descriptive statistics, descriptive
-@section Definitions for statistical graphs
+@node Functions and Variables for statistical graphs,  , Functions and Variables for specific multivariate descriptive statistics, descriptive
+@section Functions and Variables for statistical graphs
 
 
 
@@ -1794,7 +1796,7 @@ Funtion @code{dataplot} permits direct visualization of sample data, both univar
 
 @end itemize
 
-For example, with the following input a simple plot of the first twenty digits of @code{%pi} is requested and the output stored in an eps file.
+For example, with the following input a simple plot of the first twenty digits of @code{%pi} is requested.
 
 @c ===beg===
 @c load (descriptive)$
@@ -1815,17 +1817,17 @@ Note that one dimensional data are plotted as a time series. In the next case, s
 @c load (descriptive)$
 @c load (numericalio)$
 @c s1 : read_list (file_search ("pidigits.data"))$
-@c dataplot (makelist (s1[k], k, 1, 50), 'maintitle = "First pi digits",
+@c dataplot (makelist (s1[k], k, 1, 50), 
 @c  'axisnames = ["digit order", "digit value"], 'pointstyle = 2,
-@c  'joined = true)$
+@c  'maintitle = "First pi digits", 'joined = true)$
 @c ===end===
 @example
 (%i1) load (descriptive)$
 (%i2) load (numericalio)$
 (%i3) s1 : read_list (file_search ("pidigits.data"))$
-(%i4) dataplot (makelist (s1[k], k, 1, 50), 'maintitle = "First pi digits",
+(%i4) dataplot (makelist (s1[k], k, 1, 50),
  'axisnames = ["digit order", "digit value"], 'pointstyle = 2,
- 'joined = true)$
+ 'maintitle = "First pi digits", 'joined = true)$
 @end example
 
 Function @code{dataplot} can be used to plot points in the plane. The next example is a scatterplot of the pairs of wind speeds corresponding to the first and fifth meteorological stations,
@@ -1859,7 +1861,7 @@ If points are stored in a two column matrix, @code{dataplot} can plot them direc
 (%i1) load (descriptive)$
 (%i2) x : [[-1, 2], [5, 7], [5, -3], [-6, -9], [-4, 6]]$
 (%i3) dataplot (apply ('matrix, x), 'maintitle = "Points",
- 'joined = true, 'axisnames = ["", ""], 'picturescales = [0.5, 1.0])$
+ 'joined=true, 'axisnames=["", ""], 'picturescales=[0.5, 1.0])$
 @end example
 
 Points in three dimensional space can be seen as a projection on the plane. In this example, plots of wind speeds corresponding to  three meteorological stations are requested, first in a 3D plot and then in a multivariate scatterplot.
@@ -1868,21 +1870,24 @@ Points in three dimensional space can be seen as a projection on the plane. In t
 @c load (descriptive)$
 @c load (numericalio)$
 @c s2 : read_matrix (file_search ("wind.data"))$
-@c /* 3D plot */ dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
+@c /* 3D plot */ 
+@c  dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
 @c  'maintitle = "Pairs of wind speeds measured in knots",
 @c  'axisnames = ["Station A", "Station B", "Station C"])$
-@c /* Multivariate scatterplot */ dataplot (submatrix (s2, 4, 5),
+@c /* Multivariate scatterplot */ 
+@c  dataplot (submatrix (s2, 4, 5),
 @c  'nclasses = 6, 'threedim = false)$
 @c ===end===
 @example
 (%i1) load (descriptive)$
 (%i2) load (numericalio)$
 (%i3) s2 : read_matrix (file_search ("wind.data"))$
-(%i4) /* 3D plot */ dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
+(%i4) /* 3D plot */
+ dataplot (submatrix (s2, 4, 5), 'pointstyle = 2,
  'maintitle = "Pairs of wind speeds measured in knots",
  'axisnames = ["Station A", "Station B", "Station C"])$
-(%i5) /* Multivariate scatterplot */ dataplot (submatrix (s2, 4, 5),
- 'nclasses = 6, 'threedim = false)$
+(%i5) /* Multivariate scatterplot */
+ dataplot (submatrix (s2, 4, 5), 'nclasses = 6, 'threedim = false)$
 @end example
 Note that in the last example, the number of classes in the histograms of the diagonal is set to 6, and that option @code{'threedim} is set to @code{false}.
 
@@ -1944,8 +1949,9 @@ In the next two examples, histograms are requested for the first 100 digits of n
 @c load (descriptive)$
 @c load (numericalio)$
 @c s1 : read_list (file_search ("pidigits.data"))$
-@c histogram (s1, 'maintitle = "pi digits", 'axisnames = ["", "Absolute frequency"],
-@c  'relbarwidth = 0.2, 'barcolor = 3, 'colorintensity = 0.6)$
+@c histogram (s1, 'maintitle = "pi digits", 
+@c  'axisnames = ["", "Absolute frequency"], 'relbarwidth = 0.2,
+@c  'barcolor = 3, 'colorintensity = 0.6)$
 @c s2 : read_matrix (file_search ("wind.data"))$
 @c histogram (col (s2, 3), 'colorintensity = 0.3)$
 @c ===end===
@@ -1953,8 +1959,9 @@ In the next two examples, histograms are requested for the first 100 digits of n
 (%i1) load (descriptive)$
 (%i2) load (numericalio)$
 (%i3) s1 : read_list (file_search ("pidigits.data"))$
-(%i4) histogram (s1, 'maintitle = "pi digits", 'axisnames = ["", "Absolute frequency"],
- 'relbarwidth = 0.2, 'barcolor = 3, 'colorintensity = 0.6)$
+(%i4) histogram (s1, 'maintitle = "pi digits",
+ 'axisnames = ["", "Absolute frequency"], 'relbarwidth = 0.2,
+ 'barcolor = 3, 'colorintensity = 0.6)$
 (%i5) s2 : read_matrix (file_search ("wind.data"))$
 (%i6) histogram (col (s2, 3), 'colorintensity = 0.3)$
 @end example
@@ -2010,7 +2017,7 @@ This example plots the barchart for groups @code{A} and @code{B} of patients in 
 (%i2) load (numericalio)$
 (%i3) s3 : read_matrix (file_search ("biomed.data"))$
 (%i4) barsplot (col (s3, 1), 'maintitle = "Groups of patients",
- 'axisnames = ["Group", "# of individuals"], 'colorintensity = 0.2)$
+ 'axisnames=["Group", "# of individuals"], 'colorintensity=0.2)$
 @end example
 The first column in sample @code{s3} stores the categorical values @code{A} and @code{B}, also known sometimes as factors. On the other hand, the positive integer numbers in the second column are ages, in years, which is a discrete variable, so we can plot the absolute frequencies for these values,
 

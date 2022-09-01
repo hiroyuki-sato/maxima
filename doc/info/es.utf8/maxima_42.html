@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on mayo, 2 2007 by texi2html 1.76 -->
+<!-- Created on agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -143,18 +156,18 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 42. augmented_lagrangian </h1>
 
 <table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#SEC165">42.1 Definiciones para augmented_lagrangian</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+<tr><td align="left" valign="top"><a href="#SEC165">42.1 Funciones y variables para augmented_lagrangian</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 </table>
 
 <hr size="6">
-<a name="Definiciones-para-augmented_005flagrangian"></a>
+<a name="Funciones-y-variables-para-augmented_005flagrangian"></a>
 <a name="SEC165"></a>
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC164" title="Previous section in reading order"> &lt; </a>]</td>
@@ -169,67 +182,82 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 42.1 Definiciones para augmented_lagrangian </h2>
-
-
-
-<dl>
-<dt><u>Variable opcional:</u> <b>niter</b>
-<a name="IDX1374"></a>
-</dt>
-<dd><p>Valor por defecto:  10
-</p>
-<p>N&uacute;mero de iteraciones para <code>augmented_lagrangian_method</code>.
-</p></dd></dl>
+<h2 class="section"> 42.1 Funciones y variables para augmented_lagrangian </h2>
 
 
 <dl>
-<dt><u>Funci&oacute;n:</u> <b>augmented_lagrangian_method</b><i> (<var>FOM</var>, <var>xx</var>, <var>constraints</var>, <var>yy</var>)</i>
-<a name="IDX1375"></a>
+<dt><u>Funci&oacute;n:</u> <b>augmented_lagrangian_method</b><i> (<var>FOM</var>, <var>xx</var>, <var>C</var>, <var>yy</var>)</i>
+<a name="IDX1382"></a>
 </dt>
-<dd><p>M&eacute;todo de Lagrange aumentado para optimizaci&oacute;n con restricciones.
-<var>FOM</var> es la funci&oacute;n objetivo, 
-<var>xx</var> es la lista de variables sobre las que minimizar,
-<var>constraints</var> es una lista de expresiones iguales a cero y
-<var>yy</var> es una lista de valores iniciales para <var>xx</var>.
+<dt><u>Funci&oacute;n:</u> <b>augmented_lagrangian_method</b><i> (<var>FOM</var>, <var>xx</var>, <var>C</var>, <var>yy</var>, optional_args)</i>
+<a name="IDX1383"></a>
+</dt>
+<dd><p>Devuelve una aproximaci&oacute;n del valor m&iacute;nimo de
+la expresi&oacute;n <var>FOM</var> respecto de las variables <var>xx</var>,
+manteniendo las restricciones <var>C</var> igual a cero. La lista
+<var>yy</var> contiene las soluciones iniciales para <var>xx</var>.
+El algoritmo que se utiliza es el m&eacute;todo del lagrangiano
+aumentado (ver referencias [1] y [2]).
 </p>
-<p>Este c&oacute;digo minimiza el lagrangiano aumentado calculando
-un punto estacionario de su gradiente; la t&eacute;cnica puede ser
-mejorada con un algoritmo de gradiente conjugado o un m&eacute;todo
-de minimizaci&oacute;n de Newton.
+<p>El argumento <code>optional_args</code> hace referencia a otros argumentos adicionales,
+los cuales se especifican de la forma <code><var>symbol</var> = <var>value</var></code>.
+Los argumentos opcionales reconocidos son:
 </p>
-<p>Para referencias v&eacute;anse
-</p><table><tr><td>&nbsp;</td><td><pre class="example">http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html
-</pre></td></tr></table><p>y
-</p><table><tr><td>&nbsp;</td><td><pre class="example">http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf
-</pre></td></tr></table>
-<p>El paquete <code>mnewton</code> debe cargarse antes de llamar a la 
-funci&oacute;n <code>augmented_lagrangian_method</code>, a fin de que pueda
-resolver <em>grad L = 0</em>.
+<dl compact="compact">
+<dt> <code>niter</code></dt>
+<dd><p>N&uacute;mero de iteraciones del algoritmo.
+</p></dd>
+<dt> <code>lbfgs_tolerance</code></dt>
+<dd><p>Tolerancia que se pasa a LBFGS.
+</p></dd>
+<dt> <code>iprint</code></dt>
+<dd><p>Par&aacute;metro IPRINT (lista de dos enteros que controlan la frecuencia
+de mensajes) que se pasa a LBFGS.
+</p></dd>
+<dt> <code>%lambda</code></dt>
+<dd><p>Valor inicial de <code>%lambda</code> que ser&aacute; utilizado para calcular el
+lagrangiano aumentado.
+</p></dd>
+</dl>
+
+<p>Esta funci&oacute;n minimiza el lagrangiano aumentado haciendo uso
+del algoritmo LBFGS, que es un m&eacute;todo de los llamados
+quasi-Newton.
+</p>
+<p>Antes de hacer uso de esta funci&oacute;n ejec&uacute;tense <code>load(&quot;augmented_lagrangian&quot;)</code>.
+</p>
+<p>V&eacute;ase tambi&eacute;n <code>lbfgs</code>.
+</p>
+<p>Referencias:
+</p>
+<p>[1] <a href="http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html">http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html</a>
+</p>
+<p>[2] <a href="http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf">http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf</a>
 </p>
 <p>Ejemplo:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load (mnewton)$
-
-(%i2) load(&quot;augmented_lagrangian&quot;)$
-
+</p>
+<pre class="example">(%i1) load (lbfgs);
+(%o1)     /maxima/share/lbfgs/lbfgs.mac
+(%i2) load (augmented_lagrangian);
+(%o2) 
+   /maxima/share/contrib/augmented_lagrangian.mac
 (%i3) FOM: x^2 + 2*y^2;
-                           2    2
-(%o3)                   2 y  + x
+                               2    2
+(%o3)                       2 y  + x
 (%i4) xx: [x, y];
-(%o4)                     [x, y]
+(%o4)                        [x, y]
 (%i5) C: [x + y - 1];
-(%o5)                  [y + x - 1]
+(%o5)                      [y + x - 1]
 (%i6) yy: [1, 1];
-(%o6)                     [1, 1]
-(%i7) augmented_lagrangian_method (FOM, xx, C, yy);
-(%o7)          [0.6478349834, 0.3239174917]
-</pre></td></tr></table>
-<p>Antes de hacer uso de esta funci&oacute;n ejec&uacute;tense  <code>load(&quot;mnewton&quot;)</code> y <code>load(&quot;augmented_lagrangian&quot;)</code>. 
-V&eacute;ase tambi&eacute;n <code>niter</code>.
-</p></dd></dl>
+(%o6)                        [1, 1]
+(%i7) augmented_lagrangian_method(FOM, xx, C, yy, iprint=[-1,0]);
+(%o7) [[x = 0.66665984108002, y = 0.33334027245545], 
+                                 %lambda = [- 1.333337940892525]]
+</pre>
+</dd></dl>
 
 <hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
@@ -242,12 +270,12 @@ V&eacute;ase tambi&eacute;n <code>niter</code>.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC268" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_76.html#SEC287" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>mayo, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

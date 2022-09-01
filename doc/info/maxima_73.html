@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on May, 2 2007 by texi2html 1.76 -->
+<!-- Created on August, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima Manual: 73. unit</title>
+<title>Maxima Manual: 73. stringproc</title>
 
-<meta name="description" content="Maxima Manual: 73. unit">
-<meta name="keywords" content="Maxima Manual: 73. unit">
+<meta name="description" content="Maxima Manual: 73. stringproc">
+<meta name="keywords" content="Maxima Manual: 73. stringproc">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -128,572 +141,1080 @@ div.image
 
 <body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
 
-<a name="unit"></a>
-<a name="SEC278"></a>
+<a name="stringproc"></a>
+<a name="SEC283"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="maxima_72.html#SEC277" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC279" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="maxima_72.html#SEC282" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC284" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="maxima_72.html#SEC273" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_72.html#SEC281" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC281" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h1 class="chapter"> 73. unit </h1>
+<h1 class="chapter"> 73. stringproc </h1>
 
 <table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#SEC279">73.1 Introduction to Units</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       
+<tr><td align="left" valign="top"><a href="#SEC284">73.1 Introduction to string processing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC280">73.2 Definitions for Units</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       
+<tr><td align="left" valign="top"><a href="#SEC285">73.2 Functions and Variables for input and output</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC286">73.3 Functions and Variables for characters</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC287">73.4 Functions and Variables for strings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 </table>
 
 <hr size="6">
-<a name="Introduction-to-Units"></a>
-<a name="SEC279"></a>
+<a name="Introduction-to-string-processing"></a>
+<a name="SEC284"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC278" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC280" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC283" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC285" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#SEC278" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC278" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC281" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 73.1 Introduction to Units </h2>
+<h2 class="section"> 73.1 Introduction to string processing </h2>
 
-<p>The <em>unit</em> package enables the user to convert between arbitrary
-units and work with dimensions in equations. The functioning of this package
-is radically different from the original Maxima units package - whereas the
-original was a basic list of definitions, this package uses rulesets to allow
-the user to chose, on a per dimension basis, what unit final answers should be
-rendered in.  It will separate units instead of intermixing them in the display,
-allowing the user to readily identify the units associated with a particular
-answer.  It will allow a user to simplify an expression to its fundamental Base
-Units, as well as providing fine control over simplifying to derived units.
-Dimensional analysis is possible, and a variety of tools are available to 
-manage conversion and simplification options. In addition to customizable 
-automatic conversion, <em>units</em> also provides a traditional manual 
-conversion option.  
+<p><code>stringproc.lisp</code> enlarges Maximas capabilities of working with strings 
+and adds some useful functions for file in/output.
 </p>
-<p>Note - when unit conversions are inexact Maxima will make approximations resulting 
-in fractions. This is a consequence of the techniques used to simplify units.
-The messages warning of this type of substitution are disabled by default in 
-the case of units (normally they are on) since this situation occurs frequently
-and the warnings clutter the output.  (The existing state of ratprint is restored
-after unit conversions, so user changes to that setting will be preserved 
-otherwise.)  If  the user needs this information for units, they can set 
-<em>unitverbose:on</em> to reactivate the printing of warnings from the unit 
-conversion process.
+<p>For questions and bugs please mail to van.nek at arcor.de .
 </p>
-<p><em>unit</em> is included in Maxima in the share/contrib/unit directory. It obeys
-normal Maxima package loading conventions:
-</p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(&quot;unit&quot;)$
-******************************************************************* 
-*                       Units version 0.50                        * 
-*          Definitions based on the NIST Reference on             * 
-*              Constants, Units, and Uncertainty                  * 
-*       Conversion factors from various sources including         * 
-*                   NIST and the GNU units package                * 
-******************************************************************* 
- 
-Redefining necessary functions... 
-WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
-WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
-WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
-WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
-Initializing unit arrays... 
-Done.
-</pre></td></tr></table>
-<p>The WARNING messages are expected and not a cause for concern - they indicate
-the <em>unit</em> package is redefining functions already defined in Maxima proper.  
-This is necessary in order to properly handle units.  The user
-should be aware that if other changes have been made to these functions by other
-packages those changes will be overwritten by this loading process.
-</p>
-<p>The <em>unit.mac</em> file also loads a lisp file <em>unit-functions.lisp</em> which
-contains the lisp functions needed for the package.
-</p>
-<p>Clifford Yapp is the primary author.  He has received valuable assistance from
-Barton Willis of the University of Nebraska at Kearney (UNK), Robert Dodier, and
-other intrepid folk of the Maxima mailing list.
-</p>
-<p>There are probably lots of bugs.  Let me know.  <code>float</code> and <code>numer</code>
-don't do what is expected.
-</p>
-<p>TODO : dimension functionality, handling of temperature, 
-showabbr and friends.  Show examples with addition of quantities containing
-units.
+<p>In Maxima a string is easily constructed by typing &quot;text&quot;.
+Note that Maxima-strings are no Lisp-strings and vice versa.
+<code>stringp</code> tests for Maxima
+strings, and <code>lstringp</code> tests for Lisp strings.
+If for some reasons you have a value,
+that is a Lisp-string, maybe when using Maxima-function <code>sconcat</code>, you can convert via <code>sunlisp</code>. 
 </p>
 
+<pre class="example">(%i1) m: &quot;text&quot;;
+(%o1)                         text
+(%i2) [stringp(m),lstringp(m)];
+(%o2)                     [true, false]
+(%i3) l: sconcat(&quot;text&quot;);
+(%o3)                         text
+(%i4) [stringp(l),lstringp(l)];
+(%o4)                     [false, true]
+(%i5) stringp( sunlisp(l) );
+(%o5)                         true
+</pre>
+<p>All functions in <code>stringproc.lisp</code>, that return strings, return Maxima-strings.
+</p>
+<p>Characters are introduced as Maxima-strings of length 1.
+Of course, these are no Lisp-characters.
+Tests can be done with <code>charp</code> (respectively <code>lcharp</code> and conversion from Lisp to Maxima with <code>cunlisp</code>).
+</p>
+
+<pre class="example">(%i1) c: &quot;e&quot;;
+(%o1)                           e
+(%i2) [charp(c),lcharp(c)];
+(%o2)                     [true, false]
+(%i3) supcase(c);
+(%o3)                           E
+(%i4) charp(%);
+(%o4)                         true
+</pre>
+<p>Again, all functions in <code>stringproc.lisp</code>, that return characters, return Maxima-characters.
+Due to the fact, that the introduced characters are strings of length 1,
+you can use a lot of string functions also for characters.
+As seen, <code>supcase</code> is one example.
+</p>
+<p>It is important to know,
+that the first character in a Maxima-string is at position 1.
+This is designed due to the fact that the first element in a Maxima-list is at position 1 too.
+See definitions of <code>charat</code> and <code>charlist</code> for examples.
+</p>
+<p>In applications string-functions are often used when working with files.
+You will find some useful stream- and print-functions in <code>stringproc.lisp</code>.
+The following example shows some of the here introduced functions at work.
+</p>
+<p>Example: 
+</p>
+<p><code>openw</code> returns an output stream to a file, <code>printf</code> then allows formatted writing 
+to this file. See <code>printf</code> for details.
+</p>
+<pre class="example">(%i1) s: openw(&quot;E:/file.txt&quot;);
+(%o1)                    #&lt;output stream E:/file.txt&gt;
+(%i2) for n:0 thru 10 do printf( s, &quot;~d &quot;, fib(n) );
+(%o2)                                done
+(%i3) printf( s, &quot;~%~d ~f ~a ~a ~f ~e ~a~%&quot;, 
+              42,1.234,sqrt(2),%pi,1.0e-2,1.0e-2,1.0b-2 );
+(%o3)                                false
+(%i4) close(s);
+(%o4)                                true
+</pre>
+<p>After closing the stream you can open it again, this time with input direction. 
+<code>readline</code> returns the entire line as one string. The <code>stringproc</code> package 
+now offers a lot of functions for manipulating strings. Tokenizing can be done by 
+<code>split</code> or <code>tokens</code>.
+</p>
+<pre class="example">(%i5) s: openr(&quot;E:/file.txt&quot;);
+(%o5)                     #&lt;input stream E:/file.txt&gt;
+(%i6) readline(s);
+(%o6)                     0 1 1 2 3 5 8 13 21 34 55 
+(%i7) line: readline(s);
+(%o7)               42 1.234 sqrt(2) %pi 0.01 1.0E-2 1.0b-2
+(%i8) list: tokens(line);
+(%o8)           [42, 1.234, sqrt(2), %pi, 0.01, 1.0E-2, 1.0b-2]
+(%i9) map( parsetoken, list );
+(%o9)           [42, 1.234, false, false, 0.01, 0.01, false]
+</pre>
+<p><code>parsetoken</code> only parses integer and float numbers. Parsing symbols or bigfloats 
+needs <code>parse_string</code>, which will be autoloaded from <code>eval_string.lisp</code>.
+</p>
+<pre class="example">(%i10) map( parse_string, list );
+(%o10)           [42, 1.234, sqrt(2), %pi, 0.01, 0.01, 1.0b-2]
+(%i11) float(%);
+(%o11) [42.0, 1.234, 1.414213562373095, 3.141592653589793, 0.01,
+                                                     0.01, 0.01]
+(%i12) readline(s);
+(%o12)                               false
+(%i13) close(s)$
+</pre>
+<p><code>readline</code> returns <code>false</code> when the end of file occurs.
+</p>
 <hr size="6">
-<a name="Definitions-for-Units"></a>
-<a name="SEC280"></a>
+<a name="Functions-and-Variables-for-input-and-output"></a>
+<a name="SEC285"></a>
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC279" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC281" title="Next section in reading order"> &gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC284" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC286" title="Next section in reading order"> &gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#SEC278" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#SEC278" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC281" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
-<h2 class="section"> 73.2 Definitions for Units </h2>
+<h2 class="section"> 73.2 Functions and Variables for input and output </h2>
+
+<p>Example: 
+</p>
+<pre class="example">(%i1) s: openw(&quot;E:/file.txt&quot;);
+(%o1)                     #&lt;output stream E:/file.txt&gt;
+(%i2) control: 
+&quot;~2tAn atom: ~20t~a~%~2tand a list: ~20t~{~r ~}~%~2t\
+and an integer: ~20t~d~%&quot;$
+(%i3) printf( s,control, 'true,[1,2,3],42 )$
+(%o3)                                false
+(%i4) close(s);
+(%o4)                                true
+(%i5) s: openr(&quot;E:/file.txt&quot;);
+(%o5)                     #&lt;input stream E:/file.txt&gt;
+(%i6) while stringp( tmp:readline(s) ) do print(tmp)$
+  An atom:          true 
+  and a list:       one two three  
+  and an integer:   42 
+(%i7) close(s)$
+</pre>
 
 <dl>
-<dt><u>Function:</u> <b>setunits</b><i> (<var>list</var>)</i>
+<dt><u>Function:</u> <b>close</b><i> (<var>stream</var>) </i>
+<a name="IDX2122"></a>
+</dt>
+<dd><p>Closes <var>stream</var> and returns <code>true</code> if <var>stream</var> had been open. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>flength</b><i> (<var>stream</var>)</i>
+<a name="IDX2123"></a>
+</dt>
+<dd><p>Returns the number of elements in <var>stream</var>. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>fposition</b><i> (<var>stream</var>)</i>
+<a name="IDX2124"></a>
+</dt>
+<dt><u>Function:</u> <b>fposition</b><i> (<var>stream</var>, <var>pos</var>)</i>
+<a name="IDX2125"></a>
+</dt>
+<dd><p>Returns the current position in <var>stream</var>, if <var>pos</var> is not used.
+If <var>pos</var> is used,
+<code>fposition</code> sets the position in <var>stream</var>.
+<var>pos</var> has to be a positive number,
+the first element in <var>stream</var> is in position 1.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>freshline</b><i> () </i>
+<a name="IDX2126"></a>
+</dt>
+<dt><u>Function:</u> <b>freshline</b><i> (<var>stream</var>) </i>
+<a name="IDX2127"></a>
+</dt>
+<dd><p>Writes a new line (to <var>stream</var>),
+if the position is not at the beginning of a line.
+See also <code>newline</code>.
+</p></dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>newline</b><i> () </i>
+<a name="IDX2128"></a>
+</dt>
+<dt><u>Function:</u> <b>newline</b><i> (<var>stream</var>) </i>
+<a name="IDX2129"></a>
+</dt>
+<dd><p>Writes a new line (to <var>stream</var>).
+See <code>sprint</code> for an example of using <code>newline()</code>.
+Note that there are some cases, where <code>newline()</code> does not work as expected. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>opena</b><i> (<var>file</var>) </i>
+<a name="IDX2130"></a>
+</dt>
+<dd><p>Returns an output stream to <var>file</var>.
+If an existing file is opened, <code>opena</code> appends elements at the end of file.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>openr</b><i> (<var>file</var>) </i>
+<a name="IDX2131"></a>
+</dt>
+<dd><p>Returns an input stream to <var>file</var>.
+If <var>file</var> does not exist, it will be created.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>openw</b><i> (<var>file</var>) </i>
+<a name="IDX2132"></a>
+</dt>
+<dd><p>Returns an output stream to <var>file</var>.
+If <var>file</var> does not exist, it will be created.
+If an existing file is opened, <code>openw</code> destructively modifies <var>file</var>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>printf</b><i> (<var>dest</var>, <var>string</var>)</i>
+<a name="IDX2133"></a>
+</dt>
+<dt><u>Function:</u> <b>printf</b><i> (<var>dest</var>, <var>string</var>, <var>expr_1</var>, ..., <var>expr_n</var>)</i>
+<a name="IDX2134"></a>
+</dt>
+<dd><p>Makes the Common Lisp function FORMAT available in Maxima. 
+(From gcl.info: &quot;format produces formatted output by outputting the characters of 
+control-string string and observing that a tilde introduces a directive.
+The character after the tilde,
+possibly preceded by prefix parameters and modifiers,
+specifies what kind of formatting is desired.
+Most directives use one or more elements of args to create their output.&quot;)
+</p>
+<p>The following description and the examples may give an idea of using <code>printf</code>.
+See a Lisp reference for more information.
+</p>
+<pre class="example">   ~%       new line
+   ~&amp;       fresh line
+   ~t       tab
+   ~$       monetary
+   ~d       decimal integer
+   ~b       binary integer
+   ~o       octal integer
+   ~x       hexadecimal integer
+   ~br      base-b integer
+   ~r       spell an integer
+   ~p       plural
+   ~f       floating point
+   ~e       scientific notation
+   ~g       ~f or ~e, depending upon magnitude
+   ~a       as printed by Maxima function print
+   ~s       strings enclosed in &quot;double quotes&quot;
+   ~~       ~
+   ~&lt;       justification, ~&gt; terminates
+   ~(       case conversion, ~) terminates 
+   ~[       selection, ~] terminates 
+   ~{       iteration, ~} terminates
+</pre>
+<p>Please note that there is no format specifier for bigfloats. However bigfloats can 
+simply be printed by using the <code>~a</code> directive. 
+<code>~s</code> prints strings enclosed in &quot;double quotes&quot;, you can avoid this by using <code>~a</code>.
+Note that the selection directive <code>~[</code> is zero-indexed.
+Also note that there are some directives, which do not work in Maxima.
+For example, <code>~:[</code> fails.
+</p>
+<pre class="example">(%i1) printf( false, &quot;~a ~a ~4f ~a ~@r&quot;, 
+              &quot;String&quot;,sym,bound,sqrt(12),144), bound = 1.234;
+(%o1)                 String sym 1.23 2*sqrt(3) CXLIV
+(%i2) printf( false,&quot;~{~a ~}&quot;,[&quot;one&quot;,2,&quot;THREE&quot;] );
+(%o2)                          one 2 THREE 
+(%i3) printf(true,&quot;~{~{~9,1f ~}~%~}&quot;,mat ),
+          mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
+      1.1       2.0       3.3 
+      4.0       5.0       6.0 
+      7.0       8.9       9.0 
+(%i4) control: &quot;~:(~r~) bird~p ~[is~;are~] singing.&quot;$
+(%i5) printf( false,control, n,n,if n=1 then 0 else 1 ), n=2;
+(%o5)                    Two birds are singing.
+</pre>
+<p>If <var>dest</var> is a stream or <code>true</code>, then <code>printf</code> returns <code>false</code>.
+Otherwise, <code>printf</code> returns a string containing the output.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>readline</b><i> (<var>stream</var>) </i>
+<a name="IDX2135"></a>
+</dt>
+<dd><p>Returns a string containing the characters from the current position in <var>stream</var> up to the end of the line or <var>false</var> if the end of the file is encountered.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sprint</b><i> (<var>expr_1</var>, ..., <var>expr_n</var>)</i>
+<a name="IDX2136"></a>
+</dt>
+<dd><p>Evaluates and displays its arguments one after the other `on a line' starting at the leftmost position.
+The numbers are printed with the '-' right next to the number,
+and it disregards line length. <code>newline()</code>, which will be autoloaded from <code>stringproc.lisp</code> 
+might be useful, if you whish to place intermediate line breaking.
+</p>
+<pre class="example">(%i1) for n:0 thru 20 do sprint( fib(n) )$
+0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765
+(%i2) for n:0 thru 22 do ( 
+         sprint(fib(n)), if mod(n,10)=9 then newline() )$
+0 1 1 2 3 5 8 13 21 34 
+55 89 144 233 377 610 987 1597 2584 4181 
+6765 10946 17711 
+</pre>
+</dd></dl>
+
+<hr size="6">
+<a name="Functions-and-Variables-for-characters"></a>
+<a name="SEC286"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC285" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC287" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 73.3 Functions and Variables for characters </h2>
+
+<dl>
+<dt><u>Function:</u> <b>alphacharp</b><i> (<var>char</var>)    </i>
+<a name="IDX2137"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char</var> is an alphabetic character. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>alphanumericp</b><i> (<var>char</var>) </i>
+<a name="IDX2138"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char</var> is an alphabetic character or a digit. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>ascii</b><i> (<var>int</var>) </i>
+<a name="IDX2139"></a>
+</dt>
+<dd><p>Returns the character corresponding to the ASCII number <var>int</var>.
+( -1 &lt; int &lt; 256 )
+</p>
+<pre class="example">(%i1) for n from 0 thru 255 do ( 
+   tmp: ascii(n), if alphacharp(tmp) then sprint(tmp),
+      if n=96 then newline() )$
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>cequal</b><i> (<var>char_1</var>, <var>char_2</var>)          </i>
+<a name="IDX2140"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char_1</var> and <var>char_2</var> are the same. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>cequalignore</b><i> (<var>char_1</var>, <var>char_2</var>)    </i>
+<a name="IDX2141"></a>
+</dt>
+<dd><p>Like <code>cequal</code> but ignores case. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>cgreaterp</b><i> (<var>char_1</var>, <var>char_2</var>)       </i>
+<a name="IDX2142"></a>
+</dt>
+<dd><p>Returns <code>true</code> if the ASCII number of <var>char_1</var> is greater than the number of <var>char_2</var>. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>cgreaterpignore</b><i> (<var>char_1</var>, <var>char_2</var>)</i>
+<a name="IDX2143"></a>
+</dt>
+<dd><p>Like <code>cgreaterp</code> but ignores case. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>charp</b><i> (<var>obj</var>) </i>
 <a name="IDX2144"></a>
 </dt>
-<dd><p>By default, the <em>unit</em> package does not use any derived dimensions, but will
-convert all units to the seven fundamental dimensions using MKS units.
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i2) N;
-                                     kg m
-(%o2)                                ----
-                                       2
-                                      s
-(%i3) dyn;
-                                   1      kg m
-(%o3)                           (------) (----)
-                                 100000     2
-                                           s
-(%i4) g;
-                                    1
-(%o4)                             (----) (kg)
-                                   1000
-(%i5) centigram*inch/minutes^2;
-                                  127        kg m
-(%o5)                       (-------------) (----)
-                             1800000000000     2
-                                              s
-</pre></td></tr></table>
-<p>In some cases this is the desired behavior.  If the user wishes to use other
-units, this is achieved with the <code>setunits</code> command:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i6) setunits([centigram,inch,minute]);
-(%o6)                                done
-(%i7) N;
-                            1800000000000   %in cg
-(%o7)                      (-------------) (------)
-                                 127            2
-                                            %min
-(%i8) dyn;
-                               18000000   %in cg
-(%o8)                         (--------) (------)
-                                 127          2
-                                          %min
-(%i9) g;
-(%o9)                             (100) (cg)
-(%i10) centigram*inch/minutes^2;
-                                    %in cg
-(%o10)                              ------
-                                        2
-                                    %min
-</pre></td></tr></table>
-<p>The setting of units is quite flexible.  For example, if we want to
-get back to kilograms, meters, and seconds as defaults for those
-dimensions we can do:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i11) setunits([kg,m,s]);
-(%o11)                               done
-(%i12) centigram*inch/minutes^2;
-                                  127        kg m
-(%o12)                      (-------------) (----)
-                             1800000000000     2
-                                              s
-</pre></td></tr></table>
-<p>Derived units are also handled by this command:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i17) setunits(N);
-(%o17)                               done
-(%i18) N;
-(%o18)                                 N
-(%i19) dyn; 
-                                    1
-(%o19)                           (------) (N)
-                                  100000
-(%i20) kg*m/s^2;
-(%o20)                                 N
-(%i21) centigram*inch/minutes^2;
-                                    127
-(%o21)                        (-------------) (N)
-                               1800000000000
-</pre></td></tr></table>
-<p>Notice that the <em>unit</em> package recognized the non MKS combination
-of mass, length, and inverse time squared as a force, and converted it
-to Newtons.  This is how Maxima works in general.  If, for example, we
-prefer dyne to Newtons, we simply do the following:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i22) setunits(dyn);
-(%o22)                               done
-(%i23) kg*m/s^2;
-(%o23)                          (100000) (dyn)
-(%i24) centigram*inch/minutes^2;
-                                  127
-(%o24)                         (--------) (dyn)
-                                18000000
-</pre></td></tr></table>
-<p>To discontinue simplifying to any force, we use the uforget command:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i26) uforget(dyn);
-(%o26)                               false
-(%i27) kg*m/s^2;
-                                     kg m
-(%o27)                               ----
-                                       2
-                                      s
-(%i28) centigram*inch/minutes^2;
-                                  127        kg m
-(%o28)                      (-------------) (----)
-                             1800000000000     2
-                                              s
-</pre></td></tr></table><p>This would have worked equally well with <code>uforget(N)</code> or 
-<code>uforget(%force)</code>.
+<dd><p>Returns <code>true</code> if <var>obj</var> is a Maxima-character.
+See introduction for example.
 </p>
-<p>See also <code>uforget</code>. To use this function write first <code>load(&quot;unit&quot;)</code>.
-</p></dd></dl>
+</dd></dl>
 
 <dl>
-<dt><u>Function:</u> <b>uforget</b><i> (<var>list</var>)</i>
+<dt><u>Function:</u> <b>cint</b><i> (<var>char</var>) </i>
 <a name="IDX2145"></a>
 </dt>
-<dd><p>By default, the <em>unit</em> package converts all units to the 
-seven fundamental dimensions using MKS units. This behavior can
-be changed with the <code>setunits</code> command. After that, the
-user can restore the default behavior for a particular dimension
-by means of the <code>uforget</code> command:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i13) setunits([centigram,inch,minute]);
-(%o13)                               done
-(%i14) centigram*inch/minutes^2;
-                                    %in cg
-(%o14)                              ------
-                                        2
-                                    %min
-(%i15) uforget([cg,%in,%min]);
-(%o15)                      [false, false, false]
-(%i16) centigram*inch/minutes^2;
-                                  127        kg m
-(%o16)                      (-------------) (----)
-                             1800000000000     2
-                                              s
-</pre></td></tr></table>
-<p><code>uforget</code> operates on dimensions,
-not units, so any unit of a particular dimension will work.  The
-dimension itself is also a legal argument.
+<dd><p>Returns the ASCII number of <var>char</var>.
 </p>
-<p>See also <code>setunits</code>. To use this function write first <code>load(&quot;unit&quot;)</code>.
-</p></dd></dl>
+</dd></dl>
 
 <dl>
-<dt><u>Function:</u> <b>convert</b><i> (<var>expr</var>, <var>list</var>)</i>
+<dt><u>Function:</u> <b>clessp</b><i> (<var>char_1</var>, <var>char_2</var>)</i>
 <a name="IDX2146"></a>
 </dt>
-<dd><p>When resetting the global environment is overkill, there is the <code>convert</code>
-command, which allows one time conversions.  It can accept either a single
-argument or a list of units to use in conversion.  When a convert operation is
-done, the normal global evaluation system is bypassed, in order to avoid the
-desired result being converted again.  As a consequence, for inexact calculations
-&quot;rat&quot; warnings will be visible if the global environment controlling this behavior
-(<code>ratprint</code>) is true.  This is also useful for spot-checking the
-accuracy of a global conversion.  Another feature is <code>convert</code> will allow a
-user to do Base Dimension conversions even if the global environment is set to
-simplify to a Derived Dimension.
+<dd><p>Returns <code>true</code> if the ASCII number of <var>char_1</var> is less than the number of <var>char_2</var>. 
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) kg*m/s^2;
-                                     kg m
-(%o2)                                ----
-                                       2
-                                      s
-(%i3) convert(kg*m/s^2,[g,km,s]);
-                                     g km
-(%o3)                                ----
-                                       2
-                                      s
-(%i4) convert(kg*m/s^2,[g,inch,minute]);
-
-`rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
-                              18000000000   %in g
-(%o4)                        (-----------) (-----)
-                                  127           2
-                                            %min
-(%i5) convert(kg*m/s^2,[N]);
-(%o5)                                  N
-(%i6) convert(kg*m^2/s^2,[N]);
-(%o6)                                 m N
-(%i7) setunits([N,J]);
-(%o7)                                done
-(%i8) convert(kg*m^2/s^2,[N]);
-(%o8)                                 m N
-(%i9) convert(kg*m^2/s^2,[N,inch]);
-
-`rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
-                                 5000
-(%o9)                           (----) (%in N)
-                                 127
-(%i10) convert(kg*m^2/s^2,[J]);
-(%o10)                                 J
-(%i11) kg*m^2/s^2;
-(%o11)                                 J
-(%i12) setunits([g,inch,s]);
-(%o12)                               done
-(%i13) kg*m/s^2;
-(%o13)                                 N
-(%i14) uforget(N);
-(%o14)                               false
-(%i15) kg*m/s^2;
-                                5000000   %in g
-(%o15)                         (-------) (-----)
-                                  127       2
-                                           s
-(%i16) convert(kg*m/s^2,[g,inch,s]);
-
-`rat' replaced 39.37007874015748 by 5000//127 = 39.37007874015748
-                                5000000   %in g
-(%o16)                         (-------) (-----)
-                                  127       2
-                                           s
-</pre></td></tr></table>
-<p>See also <code>setunits</code> and <code>uforget</code>. To use this function write first <code>load(&quot;unit&quot;)</code>.
-</p></dd></dl>
-
+</dd></dl>
 
 <dl>
-<dt><u>Optional variable:</u> <b>usersetunits</b>
+<dt><u>Function:</u> <b>clesspignore</b><i> (<var>char_1</var>, <var>char_2</var>)</i>
 <a name="IDX2147"></a>
 </dt>
-<dd><p>Default value: none
+<dd><p>Like <code>clessp</code> but ignores case. 
 </p>
-<p>If a user wishes to have a default unit behavior other than that described,
-they can make use of <em>maxima-init.mac</em> and the <em>usersetunits</em> 
-variable.  The <em>unit</em> package will check on startup to see if this variable 
-has been assigned a list.  If it has, it will use setunits on that list and take 
-the units from that list to be defaults.  <code>uforget</code> will revert to the behavior
-defined by usersetunits over its own defaults.  For example, if we have a
-<em>maxima-init.mac</em> file containing:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">usersetunits : [N,J];
-</pre></td></tr></table><p>we would see the following behavior:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(&quot;unit&quot;)$
-******************************************************************* 
-*                       Units version 0.50                        * 
-*          Definitions based on the NIST Reference on             * 
-*              Constants, Units, and Uncertainty                  * 
-*       Conversion factors from various sources including         * 
-*                   NIST and the GNU units package                * 
-******************************************************************* 
- 
-Redefining necessary functions... 
-WARNING: DEFUN/DEFMACRO: redefining function TOPLEVEL-MACSYMA-EVAL ...
-WARNING: DEFUN/DEFMACRO: redefining function MSETCHK ...
-WARNING: DEFUN/DEFMACRO: redefining function KILL1 ...
-WARNING: DEFUN/DEFMACRO: redefining function NFORMAT ...
-Initializing unit arrays... 
-Done. 
-User defaults found... 
-User defaults initialized.
-(%i2) kg*m/s^2;
-(%o2)                                  N
-(%i3) kg*m^2/s^2;
-(%o3)                                  J
-(%i4) kg*m^3/s^2;
-(%o4)                                 J m
-(%i5) kg*m*km/s^2;
-(%o5)                             (1000) (J)
-(%i6) setunits([dyn,eV]);
-(%o6)                                done
-(%i7) kg*m/s^2;
-(%o7)                           (100000) (dyn)
-(%i8) kg*m^2/s^2;
-(%o8)                     (6241509596477042688) (eV)
-(%i9) kg*m^3/s^2;
-(%o9)                    (6241509596477042688) (eV m)
-(%i10) kg*m*km/s^2;
-(%o10)                   (6241509596477042688000) (eV)
-(%i11) uforget([dyn,eV]);  
-(%o11)                           [false, false]
-(%i12) kg*m/s^2;
-(%o12)                                 N
-(%i13) kg*m^2/s^2;
-(%o13)                                 J
-(%i14) kg*m^3/s^2;
-(%o14)                                J m
-(%i15) kg*m*km/s^2;
-(%o15)                            (1000) (J)
-</pre></td></tr></table><p>Without <code>usersetunits</code>, the initial inputs would have been converted
-to MKS, and uforget would have resulted in a return to MKS rules.  Instead,
-the user preferences are respected in both cases.  Notice these can still
-be overridden if desired.  To completely eliminate this simplification - i.e.
-to have the user defaults reset to factory defaults - the <code>dontusedimension</code>
-command can be used.  <code>uforget</code> can restore user settings again, but
-only if <code>usedimension</code> frees it for use.  Alternately,
-<code>kill(usersetunits)</code> will completely remove all knowledge of the user defaults
-from the session.  Here are some examples of how these various options work.
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i2) kg*m/s^2;
-(%o2)                                  N
-(%i3) kg*m^2/s^2;
-(%o3)                                  J
-(%i4) setunits([dyn,eV]);
-(%o4)                                done
-(%i5) kg*m/s^2;
-(%o5)                           (100000) (dyn)
-(%i6) kg*m^2/s^2;
-(%o6)                     (6241509596477042688) (eV)
-(%i7) uforget([dyn,eV]);
-(%o7)                          [false, false]
-(%i8) kg*m/s^2;
-(%o8)                                  N
-(%i9) kg*m^2/s^2;
-(%o9)                                  J
-(%i10) dontusedimension(N);
-(%o10)                             [%force]
-(%i11) dontusedimension(J);
-(%o11)                         [%energy, %force]
-(%i12) kg*m/s^2;
-                                     kg m
-(%o12)                               ----
-                                       2
-                                      s
-(%i13) kg*m^2/s^2;
-                                         2
-                                     kg m
-(%o13)                               -----
-                                       2
-                                      s
-(%i14) setunits([dyn,eV]);
-(%o14)                               done
-(%i15) kg*m/s^2;
-                                     kg m
-(%o15)                               ----
-                                       2
-                                      s
-(%i16) kg*m^2/s^2;
-                                         2
-                                     kg m
-(%o16)                               -----
-                                       2
-                                      s
-(%i17) uforget([dyn,eV]);
-(%o17)                         [false, false]
-(%i18) kg*m/s^2;
-                                     kg m
-(%o18)                               ----
-                                       2
-                                      s
-(%i19) kg*m^2/s^2;
-                                         2
-                                     kg m
-(%o19)                               -----
-                                       2
-                                      s
-(%i20) usedimension(N);
-Done.  To have Maxima simplify to this dimension, use setunits([unit]) 
-to select a unit. 
-(%o20)                               true
-(%i21) usedimension(J);
-Done.  To have Maxima simplify to this dimension, use setunits([unit]) 
-to select a unit. 
-(%o21)                               true
-(%i22) kg*m/s^2;
-                                     kg m
-(%o22)                               ----
-                                       2
-                                      s
-(%i23) kg*m^2/s^2;
-                                         2
-                                     kg m
-(%o23)                               -----
-                                       2
-                                      s
-(%i24) setunits([dyn,eV]);
-(%o24)                               done
-(%i25) kg*m/s^2;
-(%o25)                          (100000) (dyn)
-(%i26) kg*m^2/s^2;
-(%o26)                    (6241509596477042688) (eV)
-(%i27) uforget([dyn,eV]);
-(%o27)                           [false, false]
-(%i28) kg*m/s^2;
-(%o28)                                 N
-(%i29) kg*m^2/s^2;
-(%o29)                                 J
-(%i30) kill(usersetunits);
-(%o30)                               done
-(%i31) uforget([dyn,eV]);
-(%o31)                          [false, false]
-(%i32) kg*m/s^2;
-                                     kg m
-(%o32)                               ----
-                                       2
-                                      s
-(%i33) kg*m^2/s^2;
-                                         2
-                                     kg m
-(%o33)                               -----
-                                       2
-                                      s
-</pre></td></tr></table><p>Unfortunately this wide variety of options is a little confusing at first,
-but once the user grows used to them they should find they have very full
-control over their working environment.
-</p>
-
 </dd></dl>
 
-
 <dl>
-<dt><u>Function:</u> <b>metricexpandall</b><i> (<var>x</var>)</i>
+<dt><u>Function:</u> <b>constituent</b><i> (<var>char</var>)   </i>
 <a name="IDX2148"></a>
 </dt>
-<dd><p>Rebuilds global unit lists automatically creating all desired metric units.
-<var>x</var> is a numerical argument which is used to specify how many metric
-prefixes the user wishes defined.  The arguments are as follows, with each
-higher number defining all lower numbers' units:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">           0 - none. Only base units
-           1 - kilo, centi, milli
-(default)  2 - giga, mega, kilo, hecto, deka, deci, centi, milli,
-               micro, nano
-           3 - peta, tera, giga, mega, kilo, hecto, deka, deci,
-               centi, milli, micro, nano, pico, femto
-           4 - all
-</pre></td></tr></table><p>Normally, Maxima will not define the full expansion since this results in a
-very large number of units, but <code>metricexpandall</code> can be used to
-rebuild the list in a more or less complete fashion. The relevant variable
-in the <em>unit.mac</em> file is <var>%unitexpand</var>.
-</p></dd></dl>
+<dd><p>Returns <code>true</code> if <var>char</var> is a graphic character and not the space character.
+A graphic character is a character one can see, plus the space character.
+(<code>constituent</code> is defined by Paul Graham, ANSI Common Lisp, 1996, page 67.)
+</p>
+<pre class="example">(%i1) for n from 0 thru 255 do ( 
+tmp: ascii(n), if constituent(tmp) then sprint(tmp) )$
+! &quot; #  %  ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; &lt; = &gt; ? @ A B
+C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c
+d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+</pre>
+</dd></dl>
 
 <dl>
-<dt><u>Variable:</u> <b>%unitexpand</b>
+<dt><u>Function:</u> <b>cunlisp</b><i> (<var>lisp_char</var>) </i>
 <a name="IDX2149"></a>
 </dt>
-<dd><p>Default value: <code>2</code>
-</p>
-<p>This is the value supplied to <code>metricexpandall</code> during the initial loading
-of <em>unit</em>.
+<dd><p>Converts a Lisp-character into a Maxima-character.
+(You won't need it.)
 </p>
 </dd></dl>
 
+<dl>
+<dt><u>Function:</u> <b>digitcharp</b><i> (<var>char</var>)    </i>
+<a name="IDX2150"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char</var> is a digit. 
+</p>
+</dd></dl>
 
+<dl>
+<dt><u>Function:</u> <b>lcharp</b><i> (<var>obj</var>) </i>
+<a name="IDX2151"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>obj</var> is a Lisp-character.
+(You won't need it.)
+</p>
+</dd></dl>
 
+<dl>
+<dt><u>Function:</u> <b>lowercasep</b><i> (<var>char</var>)    </i>
+<a name="IDX2152"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char</var> is a lowercase character. 
+</p>
+</dd></dl>
 
+<dl>
+<dt><u>Variable:</u> <b>newline</b>
+<a name="IDX2153"></a>
+</dt>
+<dd><p>The newline character. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Variable:</u> <b>space</b>
+<a name="IDX2154"></a>
+</dt>
+<dd><p>The space character.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Variable:</u> <b>tab</b>
+<a name="IDX2155"></a>
+</dt>
+<dd><p>The tab character.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>uppercasep</b><i> (<var>char</var>)    </i>
+<a name="IDX2156"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>char</var> is an uppercase character. 
+</p>
+</dd></dl>
+
+<hr size="6">
+<a name="Functions-and-Variables-for-strings"></a>
+<a name="SEC287"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC286" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC283" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 73.4 Functions and Variables for strings </h2>
+
+<dl>
+<dt><u>Function:</u> <b>sunlisp</b><i> (<var>lisp_string</var>) </i>
+<a name="IDX2157"></a>
+</dt>
+<dd><p>Converts a Lisp-string into a Maxima-string.
+(In general you won't need it.)
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>lstringp</b><i> (<var>obj</var>) </i>
+<a name="IDX2158"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>obj</var> is a Lisp-string.
+(In general you won't need it.)
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>stringp</b><i> (<var>obj</var>) </i>
+<a name="IDX2159"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>obj</var> is a Maxima-string.
+See introduction for example.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>charat</b><i> (<var>string</var>, <var>n</var>) </i>
+<a name="IDX2160"></a>
+</dt>
+<dd><p>Returns the <var>n</var>-th character of <var>string</var>.
+The first character in <var>string</var> is returned with <var>n</var> = 1.
+</p>
+<pre class="example">(%i1) charat(&quot;Lisp&quot;,1);
+(%o1)                           L
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>charlist</b><i> (<var>string</var>) </i>
+<a name="IDX2161"></a>
+</dt>
+<dd><p>Returns the list of all characters in <var>string</var>. 
+</p>
+<pre class="example">(%i1) charlist(&quot;Lisp&quot;);
+(%o1)                     [L, i, s, p]
+(%i2) %[1];
+(%o2)                           L
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>parsetoken</b><i> (<var>string</var>)  </i>
+<a name="IDX2162"></a>
+</dt>
+<dd><p><code>parsetoken</code> converts the first token in <var>string</var> to the corresponding number or returns <code>false</code> if the number cannot be determined .
+The delimiter set for tokenizing is <code>{space, comma, semicolon, tab, newline}</code>.
+</p>
+<pre class="example">(%i1) 2*parsetoken(&quot;1.234 5.678&quot;);
+(%o1)                         2.468
+</pre>
+<p>For parsing you can also use function parse_string.
+See description in file 'share\contrib\eval_string.lisp'. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sconc</b><i> (<var>expr_1</var>, ..., <var>expr_n</var>)</i>
+<a name="IDX2163"></a>
+</dt>
+<dd><p>Evaluates its arguments and concatenates them into a string.
+<code>sconc</code> is like <code>sconcat</code> but returns a Maxima string.
+</p>
+<pre class="example">(%i1) sconc(&quot;xx[&quot;,3,&quot;]:&quot;,expand((x+y)^3));
+(%o1)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+(%i2) stringp(%);
+(%o2)                         true
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>scopy</b><i> (<var>string</var>) </i>
+<a name="IDX2164"></a>
+</dt>
+<dd><p>Returns a copy of <var>string</var> as a new string. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sdowncase</b><i> (<var>string</var>) </i>
+<a name="IDX2165"></a>
+</dt>
+<dt><u>Function:</u> <b>sdowncase</b><i> (<var>string</var>, <var>start</var>) </i>
+<a name="IDX2166"></a>
+</dt>
+<dt><u>Function:</u> <b>sdowncase</b><i> (<var>string</var>, <var>start</var>, <var>end</var>) </i>
+<a name="IDX2167"></a>
+</dt>
+<dd><p>Like <code>supcase</code>, but uppercase characters are converted to lowercase. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sequal</b><i> (<var>string_1</var>, <var>string_2</var>) </i>
+<a name="IDX2168"></a>
+</dt>
+<dd><p>Returns <code>true</code> if <var>string_1</var> and <var>string_2</var> are the same length and contain the same characters. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sequalignore</b><i> (<var>string_1</var>, <var>string_2</var>)</i>
+<a name="IDX2169"></a>
+</dt>
+<dd><p>Like <code>sequal</code> but ignores case. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sexplode</b><i> (<var>string</var>)</i>
+<a name="IDX2170"></a>
+</dt>
+<dd><p><code>sexplode</code> is an alias for function <code>charlist</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>simplode</b><i> (<var>list</var>)  </i>
+<a name="IDX2171"></a>
+</dt>
+<dt><u>Function:</u> <b>simplode</b><i> (<var>list</var>, <var>delim</var>)  </i>
+<a name="IDX2172"></a>
+</dt>
+<dd><p><code>simplode</code> takes a list of expressions and concatenates them into a string.
+If no delimiter <var>delim</var> is used, <code>simplode</code> is like <code>sconc</code> and uses no delimiter.
+<var>delim</var> can be any string.
+</p>
+<pre class="example">(%i1) simplode([&quot;xx[&quot;,3,&quot;]:&quot;,expand((x+y)^3)]);
+(%o1)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
+(%i2) simplode( sexplode(&quot;stars&quot;),&quot; * &quot; );
+(%o2)                   s * t * a * r * s
+(%i3) simplode( [&quot;One&quot;,&quot;more&quot;,&quot;coffee.&quot;],&quot; &quot; );
+(%o3)                   One more coffee.
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sinsert</b><i> (<var>seq</var>, <var>string</var>, <var>pos</var>)  </i>
+<a name="IDX2173"></a>
+</dt>
+<dd><p>Returns a string that is a concatenation of <code>substring (<var>string</var>, 1, <var>pos</var> - 1)</code>,
+the string <var>seq</var> and <code>substring (<var>string</var>, <var>pos</var>)</code>.
+Note that the first character in <var>string</var> is in position 1.
+</p>
+<pre class="example">(%i1) s: &quot;A submarine.&quot;$
+(%i2) sconc( substring(s,1,3),&quot;yellow &quot;,substring(s,3) );
+(%o2)                  A yellow submarine.
+(%i3) sinsert(&quot;hollow &quot;,s,3);
+(%o3)                  A hollow submarine.
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sinvertcase</b><i> (<var>string</var>)  </i>
+<a name="IDX2174"></a>
+</dt>
+<dt><u>Function:</u> <b>sinvertcase</b><i> (<var>string</var>, <var>start</var>)  </i>
+<a name="IDX2175"></a>
+</dt>
+<dt><u>Function:</u> <b>sinvertcase</b><i> (<var>string</var>, <var>start</var>, <var>end</var>)  </i>
+<a name="IDX2176"></a>
+</dt>
+<dd><p>Returns <var>string</var> except that each character from position <var>start</var> to <var>end</var> is inverted.
+If <var>end</var> is not given,
+all characters from start to the <var>end</var> of <var>string</var> are replaced.
+</p>
+<pre class="example">(%i1) sinvertcase(&quot;sInvertCase&quot;);
+(%o1)                      SiNVERTcASE
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>slength</b><i> (<var>string</var>) </i>
+<a name="IDX2177"></a>
+</dt>
+<dd><p>Returns the number of characters in <var>string</var>. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>smake</b><i> (<var>num</var>, <var>char</var>) </i>
+<a name="IDX2178"></a>
+</dt>
+<dd><p>Returns a new string with a number of <var>num</var> characters <var>char</var>. 
+</p>
+<pre class="example">(%i1) smake(3,&quot;w&quot;);
+(%o1)                          www
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>smismatch</b><i> (<var>string_1</var>, <var>string_2</var>) </i>
+<a name="IDX2179"></a>
+</dt>
+<dt><u>Function:</u> <b>smismatch</b><i> (<var>string_1</var>, <var>string_2</var>, <var>test</var>) </i>
+<a name="IDX2180"></a>
+</dt>
+<dd><p>Returns the position of the first character of <var>string_1</var> at which <var>string_1</var> and <var>string_2</var> differ or <code>false</code>.
+Default test function for matching is <code>sequal</code>.
+If <code>smismatch</code> should ignore case, use <code>sequalignore</code> as test.
+</p>
+<pre class="example">(%i1) smismatch(&quot;seven&quot;,&quot;seventh&quot;);
+(%o1)                           6
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>split</b><i> (<var>string</var>)  </i>
+<a name="IDX2181"></a>
+</dt>
+<dt><u>Function:</u> <b>split</b><i> (<var>string</var>, <var>delim</var>)  </i>
+<a name="IDX2182"></a>
+</dt>
+<dt><u>Function:</u> <b>split</b><i> (<var>string</var>, <var>delim</var>, <var>multiple</var>)  </i>
+<a name="IDX2183"></a>
+</dt>
+<dd><p>Returns the list of all tokens in <var>string</var>.
+Each token is an unparsed string.
+<code>split</code> uses <var>delim</var> as delimiter.
+If <var>delim</var> is not given, the space character is the default delimiter.
+<var>multiple</var> is a boolean variable with <code>true</code> by default.
+Multiple delimiters are read as one.
+This is useful if tabs are saved as multiple space characters.
+If <var>multiple</var> is set to <code>false</code>, each delimiter is noted.
+</p>
+<pre class="example">(%i1) split(&quot;1.2   2.3   3.4   4.5&quot;);
+(%o1)                 [1.2, 2.3, 3.4, 4.5]
+(%i2) split(&quot;first;;third;fourth&quot;,&quot;;&quot;,false);
+(%o2)               [first, , third, fourth]
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sposition</b><i> (<var>char</var>, <var>string</var>) </i>
+<a name="IDX2184"></a>
+</dt>
+<dd><p>Returns the position of the first character in <var>string</var> which matches <var>char</var>.
+The first character in <var>string</var> is in position 1.
+For matching characters ignoring case see <code>ssearch</code>.
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sremove</b><i> (<var>seq</var>, <var>string</var>)  </i>
+<a name="IDX2185"></a>
+</dt>
+<dt><u>Function:</u> <b>sremove</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>)  </i>
+<a name="IDX2186"></a>
+</dt>
+<dt><u>Function:</u> <b>sremove</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>)  </i>
+<a name="IDX2187"></a>
+</dt>
+<dt><u>Function:</u> <b>sremove</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>, <var>end</var>)  </i>
+<a name="IDX2188"></a>
+</dt>
+<dd><p>Returns a string like <var>string</var> but without all substrings matching <var>seq</var>.
+Default test function for matching is <code>sequal</code>.
+If <code>sremove</code> should ignore case while searching for <var>seq</var>, use <code>sequalignore</code> as test.
+Use <var>start</var> and <var>end</var> to limit searching.
+Note that the first character in <var>string</var> is in position 1.
+</p>
+<pre class="example">(%i1) sremove(&quot;n't&quot;,&quot;I don't like coffee.&quot;);
+(%o1)                   I do like coffee.
+(%i2) sremove (&quot;DO &quot;,%,'sequalignore);
+(%o2)                    I like coffee.
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sremovefirst</b><i> (<var>seq</var>, <var>string</var>)  </i>
+<a name="IDX2189"></a>
+</dt>
+<dt><u>Function:</u> <b>sremovefirst</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>)  </i>
+<a name="IDX2190"></a>
+</dt>
+<dt><u>Function:</u> <b>sremovefirst</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>)  </i>
+<a name="IDX2191"></a>
+</dt>
+<dt><u>Function:</u> <b>sremovefirst</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>, <var>end</var>)  </i>
+<a name="IDX2192"></a>
+</dt>
+<dd><p>Like <code>sremove</code> except that only the first substring that matches <code>seq</code> is removed. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>sreverse</b><i> (<var>string</var>) </i>
+<a name="IDX2193"></a>
+</dt>
+<dd><p>Returns a string with all the characters of <var>string</var> in reverse order. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>ssearch</b><i> (<var>seq</var>, <var>string</var>)  </i>
+<a name="IDX2194"></a>
+</dt>
+<dt><u>Function:</u> <b>ssearch</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>)  </i>
+<a name="IDX2195"></a>
+</dt>
+<dt><u>Function:</u> <b>ssearch</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>)  </i>
+<a name="IDX2196"></a>
+</dt>
+<dt><u>Function:</u> <b>ssearch</b><i> (<var>seq</var>, <var>string</var>, <var>test</var>, <var>start</var>, <var>end</var>)</i>
+<a name="IDX2197"></a>
+</dt>
+<dd><p>Returns the position of the first substring of <var>string</var> that matches the string <var>seq</var>.
+Default test function for matching is <code>sequal</code>.
+If <code>ssearch</code> should ignore case, use <code>sequalignore</code> as test.
+Use <var>start</var> and <var>end</var> to limit searching.
+Note that the first character in <var>string</var> is in position 1.
+</p>
+<pre class="example">(%i1) ssearch(&quot;~s&quot;,&quot;~{~S ~}~%&quot;,'sequalignore);
+(%o1)                                  4
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>ssort</b><i> (<var>string</var>) </i>
+<a name="IDX2198"></a>
+</dt>
+<dt><u>Function:</u> <b>ssort</b><i> (<var>string</var>, <var>test</var>) </i>
+<a name="IDX2199"></a>
+</dt>
+<dd><p>Returns a string that contains all characters from <var>string</var> in an order such there are no two successive characters <var>c</var> and <var>d</var> such that <code>test (<var>c</var>, <var>d</var>)</code> is <code>false</code> and <code>test (<var>d</var>, <var>c</var>)</code> is <code>true</code>.
+Default test function for sorting is <var>clessp</var>.
+The set of test functions is <code>{clessp, clesspignore, cgreaterp, cgreaterpignore, cequal, cequalignore}</code>.
+</p>
+<pre class="example">(%i1) ssort(&quot;I don't like Mondays.&quot;);
+(%o1)                    '.IMaddeiklnnoosty
+(%i2) ssort(&quot;I don't like Mondays.&quot;,'cgreaterpignore);
+(%o2)                 ytsoonnMlkIiedda.'   
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>ssubst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>) </i>
+<a name="IDX2200"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>) </i>
+<a name="IDX2201"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>, <var>start</var>) </i>
+<a name="IDX2202"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>, <var>start</var>, <var>end</var>) </i>
+<a name="IDX2203"></a>
+</dt>
+<dd><p>Returns a string like <var>string</var> except that all substrings matching <var>old</var> are replaced by <var>new</var>.
+<var>old</var> and <var>new</var> need not to be of the same length.
+Default test function for matching is <code>sequal</code>.
+If <code>ssubst</code> should ignore case while searching for old, use <code>sequalignore</code> as test.
+Use <var>start</var> and <var>end</var> to limit searching.
+Note that the first character in <var>string</var> is in position 1.
+</p>
+<pre class="example">(%i1) ssubst(&quot;like&quot;,&quot;hate&quot;,&quot;I hate Thai food. I hate green tea.&quot;);
+(%o1)          I like Thai food. I like green tea.
+(%i2) ssubst(&quot;Indian&quot;,&quot;thai&quot;,%,'sequalignore,8,12);
+(%o2)         I like Indian food. I like green tea.
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>ssubstfirst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>) </i>
+<a name="IDX2204"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubstfirst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>) </i>
+<a name="IDX2205"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubstfirst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>, <var>start</var>) </i>
+<a name="IDX2206"></a>
+</dt>
+<dt><u>Function:</u> <b>ssubstfirst</b><i> (<var>new</var>, <var>old</var>, <var>string</var>, <var>test</var>, <var>start</var>, <var>end</var>) </i>
+<a name="IDX2207"></a>
+</dt>
+<dd><p>Like <code>subst</code> except that only the first substring that matches <var>old</var> is replaced. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>strim</b><i> (<var>seq</var>,<var>string</var>) </i>
+<a name="IDX2208"></a>
+</dt>
+<dd><p>Returns a string like <var>string</var>,
+but with all characters that appear in <var>seq</var> removed from both ends. 
+</p>
+<pre class="example">(%i1) &quot;/* comment */&quot;$
+(%i2) strim(&quot; /*&quot;,%);
+(%o2)                        comment
+(%i3) slength(%);
+(%o3)                           7
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>striml</b><i> (<var>seq</var>, <var>string</var>) </i>
+<a name="IDX2209"></a>
+</dt>
+<dd><p>Like <code>strim</code> except that only the left end of <var>string</var> is trimmed. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>strimr</b><i> (<var>seq</var>, <var>string</var>) </i>
+<a name="IDX2210"></a>
+</dt>
+<dd><p>Like <code>strim</code> except that only the right end of string is trimmed. 
+</p>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>substring</b><i> (<var>string</var>, <var>start</var>)</i>
+<a name="IDX2211"></a>
+</dt>
+<dt><u>Function:</u> <b>substring</b><i> (<var>string</var>, <var>start</var>, <var>end</var>) </i>
+<a name="IDX2212"></a>
+</dt>
+<dd><p>Returns the substring of <var>string</var> beginning at position <var>start</var> and ending at position <var>end</var>.
+The character at position <var>end</var> is not included.
+If <var>end</var> is not given, the substring contains the rest of the string.
+Note that the first character in <var>string</var> is in position 1.
+</p>
+<pre class="example">(%i1) substring(&quot;substring&quot;,4);
+(%o1)                        string
+(%i2) substring(%,4,6);
+(%o2)                          in
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>supcase</b><i> (<var>string</var>) </i>
+<a name="IDX2213"></a>
+</dt>
+<dt><u>Function:</u> <b>supcase</b><i> (<var>string</var>, <var>start</var>) </i>
+<a name="IDX2214"></a>
+</dt>
+<dt><u>Function:</u> <b>supcase</b><i> (<var>string</var>, <var>start</var>, <var>end</var>) </i>
+<a name="IDX2215"></a>
+</dt>
+<dd><p>Returns <var>string</var> except that lowercase characters from position <var>start</var> to <var>end</var> are replaced by the corresponding uppercase ones.
+If <var>end</var> is not given,
+all lowercase characters from <var>start</var> to the end of <var>string</var> are replaced.
+</p>
+<pre class="example">(%i1) supcase(&quot;english&quot;,1,2);
+(%o1)                        English
+</pre>
+</dd></dl>
+
+<dl>
+<dt><u>Function:</u> <b>tokens</b><i> (<var>string</var>) </i>
+<a name="IDX2216"></a>
+</dt>
+<dt><u>Function:</u> <b>tokens</b><i> (<var>string</var>, <var>test</var>) </i>
+<a name="IDX2217"></a>
+</dt>
+<dd><p>Returns a list of tokens, which have been extracted from <var>string</var>.
+The tokens are substrings whose characters satisfy a certain test function.
+If test is not given, <var>constituent</var> is used as the default test.
+<code>{constituent, alphacharp, digitcharp, lowercasep, uppercasep, charp, characterp, alphanumericp}</code> is the set of test functions. 
+(The Lisp-version of <code>tokens</code> is written by Paul Graham. ANSI Common Lisp, 1996, page 67.)
+</p>
+<pre class="example">(%i1) tokens(&quot;24 October 2005&quot;);
+(%o1)                  [24, October, 2005]
+(%i2) tokens(&quot;05-10-24&quot;,'digitcharp);
+(%o2)                     [05, 10, 24]
+(%i3) map(parsetoken,%);
+(%o3)                      [5, 10, 24]
+</pre>
+</dd></dl>
 
 <hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#SEC278" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="maxima_74.html#SEC281" title="Next chapter"> &gt;&gt; </a>]</td>
+<tr><td valign="middle" align="left">[<a href="#SEC283" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="maxima_74.html#SEC288" title="Next chapter"> &gt;&gt; </a>]</td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left"> &nbsp; </td>
@@ -701,12 +1222,12 @@ of <em>unit</em>.
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_76.html#SEC290" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC300" title="Index">Index</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>May, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>August, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on Maio, 2 2007 by texi2html 1.76 -->
+<!-- Created on Agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -182,39 +195,30 @@ Ordin&aacute;ria (EDO) de primeira ordem, ou para um sistema de duas EDO's
 aut&oacute;nomas, de primeira ordem.
 </p>
 <p>Por tratar-se de um pacote adicional, para poder us&aacute;-lo dever&aacute;
-primeiro carreg&aacute;-lo com o comando <code>load(&quot;plotdf&quot;)</code>. Plotdf
-precisa do Openmath, que &eacute; fornecido pelo pacote Xmaxima (Xmaxima,
-para al&eacute;m de servir como consola gr&aacute;fica para o Maxima, &eacute; tamb&eacute;m
-o programa que produz os gr&aacute;ficos no formato Openmath).
+primeiro carreg&aacute;-lo com o comando <code>load(&quot;plotdf&quot;)</code>. Tamb&eacute;m &eacute;
+necess&aacute;rio que Xmaxima esteja instalado, inclusivamente se executar o
+Maxima desde outra interface diferente.
 </p>
 <p>Para desenhar o campo de direc&ccedil;&otilde;es de uma &uacute;nica EDO,
 essa equa&ccedil;&atilde;o dever&aacute; escrever-se na forma seguinte:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">       dy
+</p><pre class="example">       dy
        -- = F(x,y)
        dx
-</pre></td></tr></table>
+</pre>
 <p>e a fun&ccedil;&atilde;o <var>F</var> ser&aacute; dada como argumento para o
-comando <code>plotdf</code>. Se as vari&aacute;veis independente e dependente n&atilde;o
-forem <var>x</var> e <var>y</var>, como na equa&ccedil;&atilde;o acima, ent&atilde;o
-os nomes dessas duas vari&aacute;veis dever&aacute; indicar-se numa lista que
-ser&aacute; o segundo argumento para o comando plotdf (ver os exemplos).
+comando <code>plotdf</code>. A vari&aacute;vel independente tem que ser sempre
+<var>x</var> e a vari&aacute;vel dependente <var>y</var>. A essas duas vari&aacute;veis
+n&atilde;o poder&aacute; estar associado nenhum valor num&eacute;rico.
 </p>
 <p>Para desenhar o campo de direc&ccedil;&otilde;es de um sistema
 aut&oacute;nomo de duas EDO's, as duas equa&ccedil;&otilde;es devem ser
 escritas na forma seguinte
-</p><table><tr><td>&nbsp;</td><td><pre class="example">       dx             dy
+</p><pre class="example">       dx             dy
        -- = G(x,y)    -- = F(x,y) 
        dt             dt
-</pre></td></tr></table>
+</pre>
 <p>e o argumento para o comando <code>plotdf</code> ser&aacute; uma lista com duas
-express&otilde;es para as fun&ccedil;&otilde;es <var>F</var> e <var>G</var>, nessa
-ordem; nomeadamente, a primeira express&atilde;o definir&aacute; a derivada no
-tempo da vari&aacute;vel representada no eixo horizontal, e a segunda
-express&atilde;o ser&aacute; a derivada no tempo da vari&aacute;vel representada no eixo
-vertical. Essas duas vari&aacute;veis n&atilde;o t&ecirc;m que ser <var>x</var> e <var>y</var>,
-mas se n&atilde;o forem, ent&atilde;o o segundo argumento para o comando plotdf
-dever&aacute; ser uma lista com os nomes dessas vari&aacute;veis, primeiro a
-vari&aacute;vel no eixo horizontal, seguida da vari&aacute;vel no eixo vertical.
+express&otilde;es para as fun&ccedil;&otilde;es <var>F</var> e <var>G</var>.
 </p>
 <p>Quando se trabalha com uma &uacute;nica equa&ccedil;&atilde;o,
 <code>plotdf</code> assume implicitamente que <code>x=t</code> e <code>G(x,y)=1</code>,
@@ -243,30 +247,22 @@ equa&ccedil;&otilde;es.
 <h2 class="section"> 63.2 Defini&ccedil;&otilde;es para plotdf </h2>
 
 <dl>
-<dt><u>Function:</u> <b>plotdf</b><i> (<var>dydx</var>, ...op&ccedil;&otilde;es...)</i>
+<dt><u>Function:</u> <b>plotdf</b><i> (<var>dydx</var>,...op&ccedil;&otilde;es...)</i>
 <a name="IDX1847"></a>
 </dt>
-<dt><u>Function:</u> <b>plotdf</b><i> (<var>dvdu</var>, <code>[</code><var>u</var>,<var>v</var><code>]</code>, ...op&ccedil;&otilde;es...)</i>
+<dt><u>Function:</u> <b>plotdf</b><i> (<code>[</code><var>dxdt</var>,<var>dydt</var><code>]</code>,...op&ccedil;&otilde;es...)</i>
 <a name="IDX1848"></a>
-</dt>
-<dt><u>Function:</u> <b>plotdf</b><i> (<code>[</code><var>dxdt</var>,<var>dydt</var><code>]</code>, ...op&ccedil;&otilde;es...)</i>
-<a name="IDX1849"></a>
-</dt>
-<dt><u>Function:</u> <b>plotdf</b><i> (<code>[</code><var>dudt</var>,<var>dvdt</var><code>]</code>, <code>[</code><var>u</var>,<var>v</var><code>]</code>, ...op&ccedil;&otilde;es...)</i>
-<a name="IDX1850"></a>
 </dt>
 <dd><p>Desenha um campo de direc&ccedil;&otilde;es em duas
 dimens&otilde;es <var>x</var> e <var>y</var>.
 </p>
 <p><var>dydx</var>, <var>dxdt</var> e <var>dydt</var> s&atilde;o express&otilde;es que dependem de
-<var>x</var> e <var>y</var>. <var>dvdu</var>, <var>dudt</var> e <var>dvdt</var> s&atilde;o
-express&otilde;es que dependem de <var>u</var> e <var>v</var>. Para al&eacute;m dessas duas
-vari&aacute;veis, as duas express&otilde;es podem depender de um conjunto de
-par&acirc;metros, com valores num&eacute;ricos que s&atilde;o dados por meio da
-op&ccedil;&atilde;o <code>parameters</code> (a sintaxe dessa
-op&ccedil;&atilde;o explica-se mais para a frente), ou com um
-intervalo de poss&iacute;veis valores definidos com a
-op&ccedil;&atilde;o <var>sliders</var>.
+<var>x</var> e <var>y</var>. Para al&eacute;m dessas duas vari&aacute;veis, as duas
+express&otilde;es podem depender de um conjunto de par&acirc;metros, com valores
+num&eacute;ricos que s&atilde;o dados por meio da op&ccedil;&atilde;o
+<code>parameters</code> (a sintaxe dessa op&ccedil;&atilde;o explica-se mais
+para a frente), ou com um intervalo de poss&iacute;veis valores
+definidos com a op&ccedil;&atilde;o <var>sliders</var>.
 </p>
 <p>V&aacute;rias outras op&ccedil;&otilde;es podem incluirem-se dentro do
 comando, ou serem seleccionadas no men&uacute;.  Clicando num ponto do
@@ -310,13 +306,19 @@ par&acirc;metros, por exemplo, o n&uacute;mero de passos, o valor inicial de
 <var>t</var>, as coordenadas do centro e o raio, podem ser alterados no
 sub-men&uacute; da op&ccedil;&atilde;o <em>Config</em>.
 </p>
-<p>Com a op&ccedil;&atilde;o <em>Save</em>, pode gravar-se o gr&aacute;fico num
-ficheiro Postscript.
+<p>Com a op&ccedil;&atilde;o <em>Save</em>, pode imprimir-se o
+gr&aacute;fico numa impressora Postscript ou gravar uma c&oacute;pia num ficheiro
+Postscript. Para optar entre impress&atilde;o ou grava&ccedil;&atilde;o em
+ficheiro, selecciona-se <em>Print Options</em> na janela de di&aacute;logo de
+<em>Config</em>. Ap&oacute;s ter preenchido os campos da janela de di&aacute;logo de
+<em>Save</em>, ser&aacute; necess&aacute;rio seleccionar a op&ccedil;&atilde;o
+<em>Save</em> do primeiro men&uacute; para criar o ficheiro ou imprimir o
+gr&aacute;fico.
 </p>
 <p><b>Op&ccedil;&otilde;es gr&aacute;ficas:</b>
 </p>
 <p>A fun&ccedil;&atilde;o <code>plotdf</code> admite varias
-op&ccedil;&otilde;es, cada uma sendo uma lista de dois ou mais
+op&ccedil;&otilde;es, cada uma sendo uma lista de duas ou mais
 elementos. O primeiro elemento &eacute; o nome da op&ccedil;&atilde;o, e o
 resto estar&aacute; formado pelos argumentos para essa op&ccedil;&atilde;o.
 </p>
@@ -340,12 +342,12 @@ O valor por omiss&atilde;o &eacute; 100.
 </li><li>
 <em>direction</em> estabelece a
 direc&ccedil;&atilde;o da vari&aacute;vel independente que ser&aacute; seguida
-para calcular uma curva integral.  Os valores poss&iacute;veis s&atilde;o:
+para calcular uma curva integral.  Os valores poss&iacute; s&atilde;o:
 <code>forward</code>, para fazer que a vari&aacute;vel independente aumente
 <code>nsteps</code> vezes, com incrementos <code>tstep</code>; <code>backward</code>, para
 fazer que a vari&aacute;vel independente diminua; <code>both</code>, para estender
 a curva integral <code>nsteps</code> passos para a frente e <code>nsteps</code>
-passos para atr&aacute;s.  As palavras <code>right</code> e <code>left</code> podem ser
+passos para atr&aacute;s.  As palavras <code>right</code> e <code>left</code> podem serem
 usadas como sin&oacute;nimos de <code>forward</code> e <code>backward</code>.
 O valor por omiss&atilde;o &eacute; <code>both</code>.
 
@@ -393,37 +395,58 @@ v&iacute;rgulas.
 com fun&ccedil;&otilde;es de <var>x</var> separadas por ponto e
 v&iacute;rgula para ser representadas por cima do campo de
 direc&ccedil;&otilde;es. Essas fun&ccedil;&otilde;es ser&atilde;o
-interpretadas pelo Tcl, e n&atilde;o pelo Maxima.
+interpretadas por Tcl, e n&atilde;o por Maxima.
 
 </li><li>
-<em>x</em> dever&aacute; estar seguida de dois n&uacute;meros que definem os valores
-m&iacute;nimo e m&aacute;ximo a serem apresentados no eixo horizontal.
-Se a vari&aacute;vel no eixo horizontal n&atilde;o for <var>x</var>, esta
-op&ccedil;&atilde;o dever&aacute; ter o nome da vari&aacute;vel no eixo
-horizontal.
-O intervalo por omiss&atilde;o &eacute; de -10 a 10.
+<em>xradius</em> &eacute; metade do comprimento do
+intervalo de valores a representar na direc&ccedil;&atilde;o x.
+O valor por omiss&atilde;o &eacute; 10.
 
 </li><li>
-<em>y</em> dever&aacute; estar seguida de dois n&uacute;meros que definem os valores
-m&iacute;nimo e m&aacute;ximo a serem apresentados no eixo vertical.
-Se a vari&aacute;vel no eixo vertical n&atilde;o for <var>y</var>, esta
-op&ccedil;&atilde;o dever&aacute; ter o nome da vari&aacute;vel no eixo
-vertical.
-O intervalo por omiss&atilde;o &eacute; de -10 a 10.
+<em>yradius</em> &eacute; metade do comprimento do
+intervalo de valores a representar na direc&ccedil;&atilde;o y.
+O valor por omiss&atilde;o &eacute; 10.
+
+</li><li>
+<em>xcenter</em> &eacute; a coordenada x do ponto
+situado no centro do gr&aacute;fico.
+O valor por omiss&atilde;o &eacute; 0.
+
+</li><li>
+<em>ycenter</em> &eacute; a coordenada y do ponto
+situado no centro do gr&aacute;fico.
+O valor por omiss&atilde;o &eacute; 0.
+
+</li><li>
+<em>width</em> estabelece a largura da janela gr&aacute;fica em
+pixels.
+O valor por omiss&atilde;o &eacute; 500.
+
+</li><li>
+<em>height</em> estabelece a altura da janela gr&aacute;fica em
+pixels.
+O valor por omiss&atilde;o &eacute; 500.
 
 </li></ul>
 
 <p><b>Exemplos:</b>
+</p>
+<p>NOTA: Em alguns casos, dependendo da interface usada para executar o
+Maxima, as fun&ccedil;&otilde;es que usam <code>openmath</code>, em
+particular <code>plotdf</code>, podem desencadear um bug se terminarem em
+ponto e v&iacute;rgula, e n&atilde;o com o s&iacute;mbolo de
+d&oacute;lar. Para evitar problemas, usaremos o s&iacute;mbolo de
+d&oacute;la nos exemplos a seguir.
 </p>
 <ul>
 <li>
 Para mostrar o campo de direc&ccedil;&otilde;es da
 equa&ccedil;&atilde;o diferencial <em>y' = exp(-x) + y</em> e a
 solu&ccedil;&atilde;o que passa por <em>(2, -0.1)</em>:
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) load(&quot;plotdf&quot;)$
+<pre class="example">(%i1) load(&quot;plotdf&quot;)$
 
-(%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1])$
-</pre></td></tr></table>
+(%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1]);
+</pre>
 <p><div class="image"><img src="./../figures/plotdf1.gif" alt="../figures/plotdf1"></div>
 </p>
 </li><li>
@@ -431,32 +454,32 @@ Para mostrar o campo de direc&ccedil;&otilde;es da
 equa&ccedil;&atilde;o <em>diff(y,x) = x - y^2</em> e a
 solu&ccedil;&atilde;o com condi&ccedil;&atilde;o inicial <em>y(-1)
 = 3</em>, pode utilizar-se o comando:
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) plotdf(x-y^2,[xfun,&quot;sqrt(x);-sqrt(x)&quot;],
+<pre class="example">(%i3) plotdf(x-y^2,[xfun,&quot;sqrt(x);-sqrt(x)&quot;],
           [trajectory_at,-1,3], [direction,forward],
-          [y,-5,5], [x,-4,16])$
-</pre></td></tr></table><p>O gr&aacute;fico tamb&eacute;m mostra a fun&ccedil;&atilde;o <em>y = sqrt(x)</em>.
+          [yradius,5],[xcenter,6]);
+</pre><p>O gr&aacute;fico tamb&eacute;m mostra a fun&ccedil;&atilde;o <em>y = sqrt(x)</em>.
 </p>
 <p><div class="image"><img src="./../figures/plotdf2.gif" alt="../figures/plotdf2"></div>
 </p>
 </li><li>
 O exemplo seguinte mostra o campo de direc&ccedil;&otilde;es de um
 oscilador harm&oacute;nico, definido pelas equa&ccedil;&otilde;es
-<em>dz/dt = v</em> e <em>dv/dt = -k*z/m</em>, e a curva integral que passa
-por <em>(z,v) = (6,0)</em>, com uma barra de slider que permitir&aacute; mudar
+<em>dx/dt = y</em> e <em>dy/dt = -k*x/m</em>, e a curva integral que passa
+por <em>(x,y) = (6,0)</em>, com uma barra de slider que permitir&aacute; mudar
 o valor de <em>m</em> interactivamente (<em>k</em> permanecer&aacute; fixo em 2):
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i4) plotdf([v,-k*z/m], [z,v], [parameters,&quot;m=2,k=2&quot;],
-            [sliders,&quot;m=1:5&quot;], [trajectory_at,6,0])$
-</pre></td></tr></table>
+<pre class="example">(%i4) plotdf([y,-k*x/m],[parameters,&quot;m=2,k=2&quot;],
+            [sliders,&quot;m=1:5&quot;], [trajectory_at,6,0]);
+</pre>
 <p><div class="image"><img src="./../figures/plotdf3.gif" alt="../figures/plotdf3"></div>
 </p>
 </li><li>
 Para representar o campo de direc&ccedil;&otilde;es da
 equa&ccedil;&atilde;o de Duffing, <em>m*x&quot;+c*x'+k*x+b*x^3 = 0</em>,
 introduz-se a vari&aacute;vel <em>y=x'</em> e faz-se:
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
+<pre class="example">(%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
               [parameters,&quot;k=-1,m=1.0,c=0,b=1&quot;],
-              [sliders,&quot;k=-2:2,m=-1:1&quot;], [tstep,0.1])$
-</pre></td></tr></table>
+              [sliders,&quot;k=-2:2,m=-1:1&quot;],[tstep,0.1]);
+</pre>
 <p><div class="image"><img src="./../figures/plotdf4.gif" alt="../figures/plotdf4"></div>
 </p>
 </li><li>
@@ -466,12 +489,13 @@ dadas, com uma barra de slider que pode usar-se para mudar o valor da
 masa, <em>m</em>, e com o gr&aacute;fico das duas vari&aacute;veis de estado em
 fun&ccedil;&atilde;o do tempo:
 
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i6) plotdf([w,-g*sin(a)/l - b*w/m/l], [a,w],
+<pre class="example">(%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
          [parameters,&quot;g=9.8,l=0.5,m=0.3,b=0.05&quot;],
          [trajectory_at,1.05,-9],[tstep,0.01],
-         [a,-10,2], [w,-14,14], [direction,forward],
-         [nsteps,300], [sliders,&quot;m=0.1:1&quot;], [versus_t,1])$
-</pre></td></tr></table>
+         [xradius,6],[yradius,14],
+         [xcenter,-4],[direction,forward],[nsteps,300],
+         [sliders,&quot;m=0.1:1&quot;], [versus_t,1]);
+</pre>
 <p><div class="image"><img src="./../figures/plotdf5.gif" alt="../figures/plotdf5"></div><div class="image"><img src="./../figures/plotdf6.gif" alt="../figures/plotdf6"></div>
 </p>
 </li></ul>
@@ -494,7 +518,7 @@ fun&ccedil;&atilde;o do tempo:
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>Maio, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>Agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

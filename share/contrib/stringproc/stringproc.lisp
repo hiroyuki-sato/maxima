@@ -37,6 +37,21 @@
 
 (defun $openr (file) (open (l-string file)))
 
+(defun $make_string_input_stream (s &optional (start 0) (end nil))
+  (if (not (or (stringp s) (mstringp s)))
+    (merror "make_string_input_stream: argument must be a string."))
+  (make-string-input-stream (l-string s) start end))
+
+(defun $make_string_output_stream ()
+  (make-string-output-stream))
+
+;; Ignore :element-type keyword. 
+;; So we get the default here, namely :element-type character.
+(defun $get_output_stream_string (s)
+  (if (not (streamp s))
+    (merror "get_output_stream_string: argument must be a stream."))
+  (m-string (get-output-stream-string s)))
+
 (defun $close (stream) (close stream))
 
 (defun $flength (stream) (file-length stream))
@@ -183,11 +198,17 @@
 
 ;;  converts maxima-string into lisp-string
 (defun $lstring (mstr) (l-string mstr)) ;; for testing only (avoid lisp string in maxima)
-(defun l-string (mstr) (strip& (maybe-invert-string-case (string mstr))))
+(defun l-string (mstr)
+  (if (stringp mstr)
+    mstr
+    (strip& (maybe-invert-string-case (string mstr)))))
 
 ;;  converts lisp-string back into maxima-string
 (defun $sunlisp (lstr) (m-string lstr))
-(defun m-string (lstr) (intern (maybe-invert-string-case (concatenate 'string "&" lstr))))
+(defun m-string (lstr)
+  (if (mstringp lstr)
+    lstr
+    (intern (maybe-invert-string-case (concatenate 'string "&" lstr)))))
 
 
 ;;  tests, if object is lisp-string
@@ -287,16 +308,33 @@
 	      (cons (m-string ss) (splitrest str dc m p1))))
 	(list str)))))
 
-;;  parser for numbers
-(defun $parsetoken (mstr)
-   (let ((res (with-input-from-string (lstr (l-string mstr))
-		 (read lstr))))
-      (if (numberp res) res)))
-
+;;  parser for numbers  
+(defun $parsetoken (mstr)  
+  (if (not (mstringp mstr)) (merror "parsetoken needs a string argument: ~M" mstr))
+  (let ((res (with-input-from-string
+               (lstr (l-string mstr))
+               (handler-case (read lstr)
+                             (error nil nil)))) ; ignore errors
+         bf)
+    (cond ((or (integerp res)
+               (typep res 'long-float))
+             ;; Maxima does not accept complex numbers, etc.
+             ;; parsetoken will still accept Lisp syntax, e.g. #C(2 `,0)
+             ;; but we're not fixing that for now
+           res)
+          ((rationalp res)
+           (list '(rat simp) (numerator res) (denominator res)))
+          ((and (symbolp res) 
+                (setf bf (car (or (maxima-nregex::regex "^[+-]?[0-9]+\\.?[0-9]*[bB][+-]?[0-9]+$" (string res))
+                                  (maxima-nregex::regex "^[+-]?\\.[0-9]+[bB][+-]?[0-9]+$" (string res)) ))))
+             (with-input-from-string 
+               (s (concatenate 'string bf "$"))
+               (third (mread s)) ))
+          (t nil) )))
 
 ;;  $sconcat for lists, allows an optional user defined separator string
 ;;  returns maxima-string
-(defun $simplode (lis &optional (ds "&"))
+(defun $simplode (lis &optional (ds ""))
    (setq lis (cdr lis))
    (let ((res ""))
       (setq ds (l-string ds))

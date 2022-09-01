@@ -7,34 +7,38 @@
 
 (setf $testsuite_files
       '((mlist simp)
-	"rtestnset" "rtest1" "rtest1a" "rtest2" "rtest4"  "rtest5"
+	"rtestnset" "rtest1" "rtest1a" "rtest2" "rtest4"  
+	((mlist) "rtest5" 48)
 	"rtest6" "rtest6a" "rtest6b" "rtest7" "rtest9"
 	"rtest9a"
-    ((mlist) "rtest10" 24 25)
-    "rtest11" "rtest13" "rtest13s"
+	((mlist) "rtest10" 24 25)
+	"rtest11" "rtest13" "rtest13s"
 	((mlist simp) "rtest14" 57 63)
-	((mlist simp) "rtest15")
+	((mlist simp) "rtest15" 148)
 	((mlist simp) "rtest16" 5)
 	"rtestode" "rtestode_zp"
 	"rtest3" "rtest8"
-    ((mlist) "rtest12" 76 78)
-    "rexamples"
+	((mlist) "rtest12" 76 78)
+	"rexamples"
 	"rtesthyp"
 	"rtestmt19937"
-    "rtest_allnummod"
-    "rtestconjugate"
-    ((mlist) "rtestsum" 3 4 18)
-    "rtest_trig"
-    "rtest_zeta"
-    "rtest_diff_invtrig"
-    "rtest_scalarp"
-    "rtest_everysome"
-    "rtestint"
-    "rtestifactor"
-    "rtest_equal"
-    ((mlist) "rtest_abs" 42 43)
-    ((mlist) "rtest_taylor" 66 67 72 88 89 90 91 94 96 99 104 110 112 113 118 119 120 121 122 123 124)
-    ((mlist) "rtest_dot")
-    "rtest_mset"
-    "rtest_boolean"
-    ))
+	((mlist) "rtest_allnummod" 135 136 417 418)
+	"rtestconjugate"
+	((mlist) "rtestsum" 3 4 18 75)
+	"rtest_trig"
+	"rtest_zeta"
+	"rtest_diff_invtrig"
+	"rtest_scalarp"
+	"rtest_everysome"
+	"rtestint"
+	"rtestifactor"
+	((mlist) "rtest_equal" 159 162)
+	((mlist) "rtest_abs" 42 43)
+	((mlist) "rtest_taylor" 66 67 72 88 89 90 91 94 96 99 104 110 112 113 118 119 120 121 122 123 124)
+	((mlist) "rtest_dot")
+	"rtest_mset"
+	((mlist) "rtest_boolean" 96 100 101)
+	((mlist) "rtest_round")
+	((mlist) "rtest_map" 2 3 4)
+	((mlist) "rtest_sign" 21 25 30 40 62 63 65 72 77 79 84)
+	))

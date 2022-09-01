@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on Maio, 2 2007 by texi2html 1.76 -->
+<!-- Created on Agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -218,36 +231,36 @@ o pacote <code>orthopoly</code> e sua documeta&ccedil;&atilde;o. O pacote
 </p>
 <p>Para encontrar o polin&oacute;mio de Legendre de terceira ordem,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) legendre_p (3, x);
+<pre class="example">(%i1) legendre_p (3, x);
                       3             2
              5 (1 - x)    15 (1 - x)
 (%o1)      - ---------- + ----------- - 6 (1 - x) + 1
                  2             2
-</pre></td></tr></table>
+</pre>
 <p>Para expressar esse polin&oacute;mio como uma soma de pot&ecirc;ncias de <var>x</var>, aplique <var>ratsimp</var> ou <var>rat</var>
 para o resultado anterior.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) [ratsimp (%), rat (%)];
+<pre class="example">(%i2) [ratsimp (%), rat (%)];
                         3           3
                      5 x  - 3 x  5 x  - 3 x
 (%o2)/R/            [----------, ----------]
                          2           2
-</pre></td></tr></table>
+</pre>
 <p>Alternativamente, fa&ccedil;a o segundo argumento  para <code>legendre_p</code> (sua vari&aacute;vel &quot;principal&quot;) 
 uma express&atilde;o racional can&oacute;nica (CRE)  usando <code>rat(x)</code> em lugar de somente <code>x</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) legendre_p (3, rat (x));
+<pre class="example">(%i1) legendre_p (3, rat (x));
                               3
                            5 x  - 3 x
 (%o1)/R/                   ----------
                                2
-</pre></td></tr></table>
+</pre>
 <p>Para avalia&ccedil;&atilde;o em ponto flutuante, <code>orthopoly</code> usa uma an&aacute;lise de erro durante a execu&ccedil;&atilde;o
 para estimar uma associa&ccedil;&atilde;o superior para o erro. Por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) jacobi_p (150, 2, 3, 0.2);
+<pre class="example">(%i1) jacobi_p (150, 2, 3, 0.2);
 (%o1) interval(- 0.062017037936715, 1.533267919277521E-11)
-</pre></td></tr></table>
+</pre>
 <p>intervalos possuem a forma <code>interval (<var>c</var>, <var>r</var>)</code>, onde <var>c</var> &eacute; o
 centro e <var>r</var> &eacute; o raio do intervalo. Uma vez que Maxima
 n&atilde;o suporta aritm&eacute;tica sobre intervalos, em algumas situa&ccedil;&otilde;es, tais
@@ -255,16 +268,16 @@ como em gr&aacute;ficos, vai querer suprimir o erro e sair somente com o
 centro do intervalo. Para fazer isso, escolha a vari&aacute;vel de
 op&ccedil;&atilde;o <code>orthopoly_returns_intervals</code> para <code>false</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) orthopoly_returns_intervals : false;
+<pre class="example">(%i1) orthopoly_returns_intervals : false;
 (%o1)                         false
 (%i2) jacobi_p (150, 2, 3, 0.2);
 (%o2)                  - 0.062017037936715
-</pre></td></tr></table>
+</pre>
 <p>Veja a sec&ccedil;&atilde;o see <a href="#Avalia_00e7_00e3o-em-Ponto-Flutuante">Avalia&ccedil;&atilde;o em Ponto Flutuante</a> para maiores informa&ccedil;&otilde;es.
 </p>
 <p>Muitas fun&ccedil;&otilde;es em <code>orthopoly</code> possuem uma propriedade <code>gradef</code>; dessa forma
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) diff (hermite (n, x), x);
+<pre class="example">(%i1) diff (hermite (n, x), x);
 (%o1)                     2 n H     (x)
                                n - 1
 (%i2) diff (gen_laguerre (n, a, x), x);
@@ -273,30 +286,30 @@ op&ccedil;&atilde;o <code>orthopoly_returns_intervals</code> para <code>false</c
               n                 n - 1
 (%o2)      ------------------------------------------
                                x
-</pre></td></tr></table>
+</pre>
 <p>A fun&ccedil;&atilde;o de um &uacute;nico passo no segundo exemplo previne um erro que poderia
 de outra forma surgir atrav&eacute;s da avalia&ccedil;&atilde;o de <var>n</var> para 0.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) ev (%, n = 0);
+<pre class="example">(%i3) ev (%, n = 0);
 (%o3)                           0
-</pre></td></tr></table>
+</pre>
 <p>A propriedade <code>gradef</code> somente aplica para a vari&aacute;vel &quot;principal&quot;; dderivadas com
 rela&ccedil;&atilde;o a outros argumentos usualmente resultam em uma mensagem de erro; por exemplo
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) diff (hermite (n, x), x);
+<pre class="example">(%i1) diff (hermite (n, x), x);
 (%o1)                     2 n H     (x)
                                n - 1
 (%i2) diff (hermite (n, x), n);
 
 Maxima doesn't know the derivative of hermite with respect the first argument
  -- an error.  Quitting.  To debug this try debugmode(true);
-</pre></td></tr></table>
+</pre>
 <p>Geralmente, fun&ccedil;&otilde;es em <code>orthopoly</code> mapeiam sobre listas e matrizes. Para
 o mapeamento para avalia&ccedil;&atilde;o total, as vari&aacute;veis de op&ccedil;&atilde;o 
 <code>doallmxops</code> e <code>listarith</code> devem ambas serem <code>true</code> (o valor padr&atilde;o).
 Para ilustrar o mapeamento sobre matrizes, considere
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) hermite (2, x);
+<pre class="example">(%i1) hermite (2, x);
                                      2
 (%o1)                    - 2 (1 - 2 x )
 (%i2) m : matrix ([0, x], [y, 0]);
@@ -309,27 +322,27 @@ Para ilustrar o mapeamento sobre matrizes, considere
 (%o3)          [                                ]
                [             2                  ]
                [ - 2 (1 - 2 y )       - 2       ]
-</pre></td></tr></table>
+</pre>
 <p>No segundo exemplo, o elemento <code>i, j</code> do valor
 &eacute; <code>hermite (2, m[i,j])</code>; isso n&atilde;o &eacute; o mesmo que calcular
 <code>-2 + 4 m . m</code>, como visto no pr&oacute;ximo exemplo.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
+<pre class="example">(%i4) -2 * matrix ([1, 0], [0, 1]) + 4 * m . m;
                     [ 4 x y - 2      0     ]
 (%o4)               [                      ]
                     [     0      4 x y - 2 ]
-</pre></td></tr></table>
+</pre>
 <p>Se avaliar uma fun&ccedil;&atilde;o em um ponto fora do seu dom&iacute;nio, geralmente
 <code>orthopoly</code> retorna uma fun&ccedil;&atilde;o n&atilde;o avaliada. Por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) legendre_p (2/3, x);
+<pre class="example">(%i1) legendre_p (2/3, x);
 (%o1)                        P   (x)
                               2/3
-</pre></td></tr></table>
+</pre>
 <p><code>orthopoly</code> suporta tradu&ccedil;&atilde;o em TeX; <code>orthopoly</code> tamb&eacute;m faz sa&iacute;das
 bidimensionais em um terminal.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) spherical_harmonic (l, m, theta, phi);
+<pre class="example">(%i1) spherical_harmonic (l, m, theta, phi);
                           m
 (%o1)                    Y (theta, phi)
                           l
@@ -343,7 +356,7 @@ $$Y_{l}^{m}\left(\vartheta,\varphi\right)$$
 (%i4) tex (%);
 $$P_{n}^{\left(a,a-b\right)}\left({{x}\over{2}}\right)$$
 (%o4)                         false
-</pre></td></tr></table>
+</pre>
 <hr size="6">
 <a name="SEC224"></a>
 <table cellpadding="1" cellspacing="1" border="0">
@@ -373,19 +386,19 @@ a seguinte express&atilde;o tende para zero para inteiros <var>n</var> maiores q
 1, e ainda ocorre tamb&eacute;m que Maxima est&aacute; incapacitado de simplificar
 essa express&atilde;o para zero.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x) + (1 - n) * legendre_p (n - 2, x);
+<pre class="example">(%i1) (2*n - 1) * legendre_p (n - 1, x) * x - n * legendre_p (n, x) + (1 - n) * legendre_p (n - 2, x);
 (%o1)  (2 n - 1) P     (x) x - n P (x) + (1 - n) P     (x)
                   n - 1           n               n - 2
-</pre></td></tr></table>
+</pre>
 <p>Para um <var>n</var> espec&iacute;fico, podemos reduzir a express&atilde;o a zero.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) ev (% ,n = 10, ratsimp);
+<pre class="example">(%i2) ev (% ,n = 10, ratsimp);
 (%o2)                           0
-</pre></td></tr></table>
+</pre>
 <p>Geralmente, a forma polinomial de um polin&oacute;mio ortogonal esteja adequada de forma hostil
 para avalia&ccedil;ao em ponto flutuante. Aqui est&aacute; um exemplo.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) p : jacobi_p (100, 2, 3, x)$
+<pre class="example">(%i1) p : jacobi_p (100, 2, 3, x)$
 
 (%i2) subst (0.2, x, p);
 (%o2)                3.4442767023833592E+35
@@ -393,14 +406,14 @@ para avalia&ccedil;ao em ponto flutuante. Aqui est&aacute; um exemplo.
 (%o3)  interval(0.18413609135169, 6.8990300925815987E-12)
 (%i4) float(jacobi_p (100, 2, 3, 2/10));
 (%o4)                   0.18413609135169
-</pre></td></tr></table>
+</pre>
 <p>O verdadeiro valor est&aacute; em torno de 0.184; ess calculo suporta erro de 
 cancelamento por extremo subtrativo.Expandindo o polin&oacute;mio e ent&atilde;o
 avaliando, fornecendo um melhor resultado.
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(%i5) p : expand(p)$
+</p><pre class="example">(%i5) p : expand(p)$
 (%i6) subst (0.2, x, p);
 (%o6) 0.18413609766122982
-</pre></td></tr></table>
+</pre>
 <p>Essa n&atilde;o &eacute; uma regra geral; expandindo o polin&oacute;mio n&atilde;o resulta sempre 
 em express&otilde;es que s&atilde;o melhores adaptadas a avalia&ccedil;&atilde;o num&eacute;rica.
 Com grande folga, o melhor caminho para fazer avalia&ccedil;&atilde;o num&eacute;rica &eacute; fazer um ou mais
@@ -413,7 +426,7 @@ grau simb&oacute;lico ou um par&acirc;metro de ordem, esses par&acirc;metos (int
 convertido em n&uacute;meros em ponto flutuante; ap&oacute;s o que, a express&atilde;o n&atilde;o ir&aacute; avaliar 
 completamente. Considere
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) assoc_legendre_p (n, 1, x);
+<pre class="example">(%i1) assoc_legendre_p (n, 1, x);
                                1
 (%o1)                         P (x)
                                n
@@ -425,28 +438,28 @@ completamente. Considere
                              1.0
 (%o3)                       P   (0.9)
                              2
-</pre></td></tr></table>
+</pre>
 <p>A express&atilde;o em (%o3) n&atilde;o ir&aacute; avaliar para um n&uacute;mero em ponto flutuante; <code>orthopoly</code> n&atilde;o
 reconhece valores em ponto flutuante em lugares onde deve haver valores inteiros. Similarmente, 
 avalia&ccedil;&atilde;o num&eacute;rica da fun&ccedil;&atilde;o <code>pochhammer</code> para ordens que
 excedam <code>pochhammer_max_index</code> pode ser perturbador; considere
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
+<pre class="example">(%i1) x :  pochhammer (1, 10), pochhammer_max_index : 5;
 (%o1)                         (1)
                                  10
-</pre></td></tr></table>
+</pre>
 <p>Aplicando <code>float</code> n&atilde;o avalia <var>x</var> para um n&uacute;mero em ponto flutuante
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i2) float (x);
+<pre class="example">(%i2) float (x);
 (%o2)                       (1.0)
                                  10.0
-</pre></td></tr></table>
+</pre>
 <p>Para avaliar <var>x</var> para um n&uacute;mero em ponto flutuante, ir&aacute; precisar associar
 <code>pochhammer_max_index</code> a 11 ou mais e aplicar <code>float</code> a <var>x</var>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i3) float (x), pochhammer_max_index : 11;
+<pre class="example">(%i3) float (x), pochhammer_max_index : 11;
 (%o3)                       3628800.0
-</pre></td></tr></table>
+</pre>
 <p>O valor padr&atilde;o de <code>pochhammer_max_index</code> &eacute; 100;
 modifique esse valor ap&oacute;s chama <code>orthopoly</code>.
 </p>
@@ -461,7 +474,7 @@ utilizam vers&otilde;es &quot;modificadas&quot; das fun&ccedil;&otilde;es que fa
 ortogonal sobre um intervalo diferente do intervalo <em>(-1, 1)</em>. Para definir, por exemplo,
 um polin&oacute;mio de Legendre que &eacute; ortogonal a <em>(0, 1)</em>, defina
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
+<pre class="example">(%i1) shifted_legendre_p (n, x) := legendre_p (n, 2*x - 1)$
 
 (%i2) shifted_legendre_p (2, rat (x));
                             2
@@ -471,7 +484,7 @@ um polin&oacute;mio de Legendre que &eacute; ortogonal a <em>(0, 1)</em>, defina
                             3 x  - 1
 (%o3)/R/                    --------
                                2
-</pre></td></tr></table>
+</pre>
 <p><a name="Avalia_00e7_00e3o-em-Ponto-Flutuante"></a>
 </p><hr size="6">
 <a name="SEC225"></a>
@@ -513,56 +526,56 @@ centro de um intervalo pode sr um n&uacute;mero complexo, e o raio &eacute; semp
 <p>Aqui est&aacute; um exemplo.
 </p>
 
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) fpprec : 50$
+<pre class="example">(%i1) fpprec : 50$
 
 (%i2) y0 : jacobi_p (100, 2, 3, 0.2);
 (%o2) interval(0.1841360913516871, 6.8990300925815987E-12)
 (%i3) y1 : bfloat (jacobi_p (100, 2, 3, 1/5));
 (%o3) 1.8413609135168563091370224958913493690868904463668b-1
-</pre></td></tr></table>
+</pre>
 <p>Vamos testar o quanto o erro actual &eacute; &eacute; menor que o erro estimado
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i4) is (abs (part (y0, 1) - y1) &lt; part (y0, 2));
+<pre class="example">(%i4) is (abs (part (y0, 1) - y1) &lt; part (y0, 2));
 (%o4)                         true
-</pre></td></tr></table>
+</pre>
 <p>Realmente, por esse exemplo o erro estimado &eacute; um maior que
 o erro verdadeiro.
 </p>
 <p>Maxima n&atilde;o suporta aritm&eacute;tica sobre intervalos.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
+<pre class="example">(%i1) legendre_p (7, 0.1) + legendre_p (8, 0.1);
 (%o1) interval(0.18032072148437508, 3.1477135311021797E-15)
         + interval(- 0.19949294375000004, 3.3769353084291579E-15)
-</pre></td></tr></table>
+</pre>
 <p>Um utilizador pode definir operadores aritm&eacute;ticos que fazem matem&aacute;tica de intervalos. Para
 definir adi&ccedil;&atilde;o de intervalos, podemos definir
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) infix (&quot;@+&quot;)$
+<pre class="example">(%i1) infix (&quot;@+&quot;)$
 
 (%i2) &quot;@+&quot;(x,y) := interval (part (x, 1) + part (y, 1), part (x, 2) + part (y, 2))$
 
 (%i3) legendre_p (7, 0.1) @+ legendre_p (8, 0.1);
 (%o3) interval(- 0.019172222265624955, 6.5246488395313372E-15)
-</pre></td></tr></table>
+</pre>
 <p>As rotinas eseciais em ponto flutuante s&atilde;o chamadas quando os argumentos
 forem complexos.  Por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) legendre_p (10, 2 + 3.0*%i);
+<pre class="example">(%i1) legendre_p (10, 2 + 3.0*%i);
 (%o1) interval(- 3.876378825E+7 %i - 6.0787748E+7, 
                                            1.2089173052721777E-6)
-</pre></td></tr></table>
+</pre>
 <p>Let's compare this to the true value.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) float (expand (legendre_p (10, 2 + 3*%i)));
+<pre class="example">(%i1) float (expand (legendre_p (10, 2 + 3*%i)));
 (%o1)          - 3.876378825E+7 %i - 6.0787748E+7
-</pre></td></tr></table>
+</pre>
 <p>Adicionalmente, quando os argumentos forem grandes n&uacute;meros em ponto flutuante, as rotinas especiais
 de ponto flutuante s&atilde;o chamadas; todavia, tos grandes n&uacute;meros em ponto flutuante s&atilde;o convertidos para n&uacute;meros em ponto flutuante de dupla precis&atilde;o
 e o resultado final &eacute; n&uacute;mero em ponto flutuante de precis&atilde;o dupla.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) ultraspherical (150, 0.5b0, 0.9b0);
+<pre class="example">(%i1) ultraspherical (150, 0.5b0, 0.9b0);
 (%o1) interval(- 0.043009481257265, 3.3750051301228864E-14)
-</pre></td></tr></table>
+</pre>
 <hr size="6">
 <a name="SEC226"></a>
 <table cellpadding="1" cellspacing="1" border="0">
@@ -596,9 +609,9 @@ de montar o gr&aacute;fico; consequ&ecirc;ntemente, as rotinas especializadas em
 Aqui est&aacute; um exemplo de como montar o gr&aacute;fico de uma express&atilde;o que envolve
 um polin&oacute;mio de Legendre.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]), orthopoly_returns_intervals : false;
+<pre class="example">(%i1) plot2d ('(legendre_p (5, x)), [x, 0, 1]), orthopoly_returns_intervals : false;
 (%o1)
-</pre></td></tr></table>
+</pre>
 <p><div class="image"><img src="./../figures/orthopoly1.gif" alt="../figures/orthopoly1"></div>
 </p>
 <p>A express&atilde;o <i>completa</i> <code>legendre_p (5, x)</code> recebe ap&oacute;strofo; isso &eacute; 
@@ -632,7 +645,7 @@ declara&ccedil;&otilde;es <code>gradef</code>.
 <p>Para converter os s&iacute;mbolos Pochhammer em quocientes da fun&ccedil;&otilde;es gama,
 use <code>makegamma</code>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) makegamma (pochhammer (x, n));
+<pre class="example">(%i1) makegamma (pochhammer (x, n));
                           gamma(x + n)
 (%o1)                     ------------
                             gamma(x)
@@ -640,17 +653,17 @@ use <code>makegamma</code>.
                                 1
 (%o2)                       ---------
                             sqrt(%pi)
-</pre></td></tr></table>
+</pre>
 <p>Derivadas de s&iacute;mbolos de Pochhammer s&atilde;o fornecidas em termos de <code>psi</code>
 function.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) diff (pochhammer (x, n), x);
+<pre class="example">(%i1) diff (pochhammer (x, n), x);
 (%o1)             (x)  (psi (x + n) - psi (x))
                      n     0             0
 (%i2) diff (pochhammer (x, n), n);
 (%o2)                   (x)  psi (x + n)
                            n    0
-</pre></td></tr></table>
+</pre>
 <p>&Eacute; preciso ser cuidadoso com express&otilde;es como (%o1); a diferen&ccedil;a das
 fun&ccedil;&otilde;es <code>psi</code> possuem polin&oacute;mios quando <code><var>x</var> = -1, -2, .., -<var>n</var></code>. Esses polin&oacute;mios
 cacelam-se com factores em <code>pochhammer (<var>x</var>, <var>n</var>)</code> fazendo da derivada um polin&oacute;mio
@@ -659,7 +672,7 @@ de grau <code><var>n</var> - 1</code> quando <var>n</var> for um inteiro positiv
 <p>O s&iacute;mbolo de Pochhammer &eacute; definido de ordens negativas at&eacute; sua
 representa&ccedil;&atilde;o como um quociente de fun&ccedil;&otilde;es gama. Considere
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) q : makegamma (pochhammer (x, n));
+<pre class="example">(%i1) q : makegamma (pochhammer (x, n));
                           gamma(x + n)
 (%o1)                     ------------
                             gamma(x)
@@ -667,31 +680,31 @@ representa&ccedil;&atilde;o como um quociente de fun&ccedil;&otilde;es gama. Con
                                729
 (%o2)                        - ----
                                2240
-</pre></td></tr></table>
+</pre>
 <p>Alternativamente, podemos tomar ese resultado directamente.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) pochhammer (11/3, -6);
+<pre class="example">(%i1) pochhammer (11/3, -6);
                                729
 (%o1)                        - ----
                                2240
-</pre></td></tr></table>
+</pre>
 <p>A fun&ccedil;&atilde;o passo de unidade &eacute; cont&iacute;nua &agrave; esquerda; dessa forma
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
+<pre class="example">(%i1) [unit_step (-1/10), unit_step (0), unit_step (1/10)];
 (%o1)                       [0, 0, 1]
-</pre></td></tr></table>
+</pre>
 <p>Se precisar de uma fun&ccedil;&atilde;o de degrau unit&aacute;rio que seja
 ou cont&iacute;nua &agrave; esquerda ou cont&iacute;nua &agrave;
 direita do zero, defina a sua pr&oacute;pria fun&ccedil;&atilde;o usando
 <code>signum</code>; por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) xunit_step (x) := (1 + signum (x))/2$
+<pre class="example">(%i1) xunit_step (x) := (1 + signum (x))/2$
 
 (%i2) [xunit_step (-1/10), xunit_step (0), xunit_step (1/10)];
                                 1
 (%o2)                       [0, -, 1]
                                 2
-</pre></td></tr></table>
+</pre>
 <p>N&atilde;o redefina a pr&oacute;pria <code>unit_step</code>; alguns c&oacute;digo em <code>orthopoly</code>
 requerem que a fun&ccedil;&atilde;o de passo de unidade seja cont&iacute;nua &agrave; esquerda.
 </p>
@@ -861,29 +874,29 @@ Jacobi <code>(1 - <var>x</var>)^<var>a</var> (1 + <var>x</var>)^<var>b</var></co
 <var>f</var> com argumentos <var>args</var>. A recursividade &eacute; com 
 rela&ccedil;&atilde;o ao grau do polin&oacute;mio.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) orthopoly_recur (legendre_p, [n, x]);
+<pre class="example">(%i1) orthopoly_recur (legendre_p, [n, x]);
                 (2 n - 1) P     (x) x + (1 - n) P     (x)
                            n - 1                 n - 2
 (%o1)   P (x) = -----------------------------------------
          n                          n
-</pre></td></tr></table>
+</pre>
 <p>O segundo argumento a <code>orthopoly_recur</code> deve ser uma lista com o 
 n&uacute;mero correcto de argumentos para a fun&ccedil;&atilde;o <var>f</var>; se o n&uacute;mero de argumentos n&atilde;o for o correcto, 
 Maxima sinaliza com um erro.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) orthopoly_recur (jacobi_p, [n, x]);
+<pre class="example">(%i1) orthopoly_recur (jacobi_p, [n, x]);
 
 Function jacobi_p needs 4 arguments, instead it received 2
  -- an error.  Quitting.  To debug this try debugmode(true);
-</pre></td></tr></table>
+</pre>
 <p>Adicionalmente, quando <var>f</var> n&atilde;o for o nome de uma das
 fam&iacute;lias de polin&oacute;mios ortogonais, um erro &eacute; sinalizado.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) orthopoly_recur (foo, [n, x]);
+<pre class="example">(%i1) orthopoly_recur (foo, [n, x]);
 
 A recursion relation for foo isn't known to Maxima
  -- an error.  Quitting.  To debug this try debugmode(true);
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Variable:</u> <b>orthopoly_returns_intervals</b>
@@ -907,13 +920,13 @@ a f&oacute;rmula do peso para a fam&iacute;lia de polin&oacute;mios ortogonais
 segundos e terceiros elementos fornecem os pontos finais inferior e superior
 do intervalo de ortogonalidade. Por exemplo,
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) w : orthopoly_weight (hermite, [n, x]);
+<pre class="example">(%i1) w : orthopoly_weight (hermite, [n, x]);
                             2
                          - x
 (%o1)                 [%e    , - inf, inf]
 (%i2) integrate (w[1] * hermite (3, x) * hermite (2, x), x, w[2], w[3]);
 (%o2)                           0
-</pre></td></tr></table>
+</pre>
 <p>A vari&aacute;vel principal de <var>f</var> deve ser um s&iacute;mbolo; Se n&atilde;o for, Maxima
 sinaliza com um erro. 
 </p>
@@ -931,28 +944,28 @@ para 1 quando <code><var>n</var> = 0</code>. Para valores negativos de <var>n</v
 <code>pochhammer (<var>x</var>, <var>n</var>)</code> &eacute; definido como <code>(-1)^<var>n</var> / pochhammer (1 - <var>x</var>, -<var>n</var>)</code>.
 Dessa forma
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) pochhammer (x, 3);
+<pre class="example">(%i1) pochhammer (x, 3);
 (%o1)                   x (x + 1) (x + 2)
 (%i2) pochhammer (x, -3);
                                  1
 (%o2)               - -----------------------
                       (1 - x) (2 - x) (3 - x)
-</pre></td></tr></table>
+</pre>
 <p>Para converter um s&iacute;mbolo de Pochhammer em um quociente de fun&ccedil;&otilde;es gama,
 (veja Abramowitz e Stegun, equa&ccedil;&atilde;o 6.1.22) use <code>makegamma</code>; por exemplo 
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) makegamma (pochhammer (x, n));
+<pre class="example">(%i1) makegamma (pochhammer (x, n));
                           gamma(x + n)
 (%o1)                     ------------
                             gamma(x)
-</pre></td></tr></table>
+</pre>
 <p>Quando <var>n</var> exceder <code>pochhammer_max_index</code> ou quando <var>n</var> 
 for simb&oacute;lico, <code>pochhammer</code> retorna uma forma substantiva.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) pochhammer (x, n);
+<pre class="example">(%i1) pochhammer (x, n);
 (%o1)                         (x)
                                  n
-</pre></td></tr></table></dd></dl>
+</pre></dd></dl>
 
 <dl>
 <dt><u>Vari&aacute;vel:</u> <b>pochhammer_max_index</b>
@@ -965,12 +978,12 @@ for simb&oacute;lico, <code>pochhammer</code> retorna uma forma substantiva.
 </p>
 <p>Exemplos:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) pochhammer (x, 3), pochhammer_max_index : 3;
+<pre class="example">(%i1) pochhammer (x, 3), pochhammer_max_index : 3;
 (%o1)                   x (x + 1) (x + 2)
 (%i2) pochhammer (x, 4), pochhammer_max_index : 3;
 (%o2)                         (x)
                                  4
-</pre></td></tr></table>
+</pre>
 <p>Refer&ecirc;ncia: Abramowitz e Stegun, equa&ccedil;&atilde;o 6.1.16,p&aacute;gina 256.
 </p></dd></dl>
 
@@ -1057,7 +1070,7 @@ valor 1/2 em zero, use <code>(1 + signum (<var>x</var>))/2</code>.
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>Maio, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>Agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

@@ -158,7 +158,7 @@
    :name '$crering
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (eq t (meqp b 0)))
+   :great #'(lambda (a b) (declare (ignore a)) (eq t (meqp b 0)))
    :add #'add
    :div #'div
    :rdiv #'div
@@ -181,7 +181,7 @@
    :name '$generalring
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (eq t (meqp b 0)))
+   :great #'(lambda (a b) (declare (ignore a)) (eq t (meqp b 0)))
    :add #'(lambda (a b) ($rectform (add a b)))
    :div #'(lambda (a b) ($rectform (div a b)))
    :rdiv #'(lambda (a b) ($rectform (div a b)))
@@ -223,8 +223,8 @@
    :mring-to-maxima #'(lambda (s) s)
    :maxima-to-mring #'(lambda (s) 
 			(setq s ($rectform ($bfloat s)))
-			(if (or (eq s '$%i) (complex-number-p s '$bfloatp)) s
-			  (merror "Unable to convert matrix entry to a big float")))))
+			(if (or (eq s '$%i) (complex-number-p s 'bigfloat-or-number-p)) s
+				(merror "Unable to convert matrix entry to a big float")))))
 
 (setf (get '$bigfloatfield 'ring) *bigfloatfield*)
 
@@ -290,7 +290,7 @@
    :name '$noncommutingring
    :coerce-to-lisp-float nil
    :abs #'(lambda (s) (simplify (mfuncall '$cabs s)))
-   :great #'(lambda (a b) (eq t (meqp b 0)))
+   :great #'(lambda (a b) (declare (ignore a)) (eq t (meqp b 0)))
    :add #'(lambda (a b) (add a b))
    :div #'(lambda (a b) (progn
 			  (let (($matrix_element_mult '&.)

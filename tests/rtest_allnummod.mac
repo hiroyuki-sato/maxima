@@ -44,7 +44,7 @@ ceiling(inf);
 und$
 
 ceiling(infinity);
-und$
+ceiling(infinity)$
 
 ceiling(zeroa);
 1$
@@ -320,7 +320,7 @@ charfun(integerp(sqrt(5)));
 charfun(rat(x));
 charfun(x)$
 
-(p : charfun('not(equal(x,1))),0);
+(p : charfun(not(equal(x,1))),0);
 0$
 
 subst(x=1,p);
@@ -330,9 +330,9 @@ subst(x=5,p);
 1$
 
 subst(x=z,p);
-charfun('not(equal(z,1)))$
+charfun(not(equal(z,1)))$
 
-(p : charfun('"and"(-1 < x, x < 1)),0);
+(p : charfun(-1 < x and x < 1),0);
 0$
 
 subst(x=1/%pi,p);
@@ -609,10 +609,10 @@ floor(0);
 0$
 
 floor(0.0);
-0.0$
+0$
 
 floor(0.0b0);
-0.0b0$
+0$
 
 floor(5/2);
 2$
@@ -863,7 +863,7 @@ floor(acos(67)) + 42$
 sum(floor(sqrt(k)),k,1,25^2-1);
 25^2 * 25 - 25^3 / 3 - 25^2/2 - 25/6$
 
-floor(sqrt(5) * (sqrt(5) - 1/sqrt(5)));
+expand(floor(sqrt(5) * (sqrt(5) - 1/sqrt(5))));
 4$
 
 floor(10! * sqrt(5) *(sqrt(5) - 1/sqrt(5)) + 1/(10^6 *%pi));
@@ -1229,16 +1229,16 @@ x^2 + 1$
 
 /*--CRE expressions----*/
 
-max(x,rat(x));
+ratdisrep(max(x,rat(x)));
 x$
 
-min(x,rat(x))$
+ratdisrep(min(x,rat(x)))$
 x$
 
-max(rat(x*y));
+ratdisrep(max(rat(x*y)));
 x*y$
 
-max(rat(x^2+y,x), rat(x^2+y,y));
+ratdisrep(max(rat(x^2+y,x), rat(x^2+y,y)));
 x^2+y$
 
 /*--absolute values---*/
@@ -1475,7 +1475,7 @@ rationalize(a^^0.125);
 a^^(1/8)$
 
 rationalize(rat(a+b + 0.125));
-a+b + 1/8$
+(8 * a + 8 * b + 1)/8$
 
 rationalize(rat(1+x+x^2.0));
 1+x+x^2$
@@ -1507,6 +1507,30 @@ rationalize(0.09375 < 0.3984375);
 rationalize(0.09375b0 < 0.3984375b0);
 3/32 < 51/128$
 
+/* SF bug 1703298  max leads to UND error */
+
+max(1/(q-1));
+1/(q-1)$
+
+max(1/(q-1),1/(q-1));
+1/(q-1)$
+
+sort(args(max(1/(q-1),1/(q-2))));
+''(sort([1/(q-1),1/(q-2)]))$
+
+is(compare(1/(q-1),minf) = ">");
+true$
+
+is(compare(minf, 1/(q-1)) = "<");
+true$
+
+/* SF bug 1703376  max(inf, ...) doesn't simplify to inf */
+
+max(1/(1-x),inf);
+inf$
+
+min(1/(1-x),minf);
+minf$
 
 
 

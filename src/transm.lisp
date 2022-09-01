@@ -14,8 +14,10 @@
 
 (macsyma-module transm macro)
 
-(load-macsyma-macros procs)
-(load-macsyma-macros-at-runtime 'procs)
+(eval-when (:execute :compile-toplevel :load-toplevel)
+  (load-macsyma-macros procs))
+
+;(load-macsyma-macros-at-runtime 'procs)
 
 (defvar transl-modules nil)
 
@@ -36,14 +38,9 @@
 ;;; user-level (and non-modular global only) INFOLISTS of FUNCTIONS and VALUES,
 ;;; inspired this, motivated by my characteristic lazyness.
 
-(defmacro enterq (thing list)
-  ;; should be a DEF-ALTERANT
-  `(or (member ,thing ,list :test #'eq)
-    (setf ,list (cons ,thing ,list))))
-
 (defmacro def-transl-module (name &rest properties)
   `(progn
-    (enterq ',name transl-modules)
+    (pushnew ',name transl-modules :test #'eq)
     ,@(mapcar #'(lambda (p)
 		  `(defprop ,name
 		    ,(if (atom p) t (cdr p))
@@ -74,17 +71,11 @@
 
 (defprop dcl maxdoc fasl-dir)
 
-(def-transl-module trmode ttime-auto
-  no-load-auto
-  ;; Temporary hack, TRANSL AUTOLOADs should be
-  ;; in a different file from functional autoloads.
-  )
+(def-transl-module trmode ttime-auto no-load-auto)  ; Temporary hack, TRANSL AUTOLOADs should be
+					            ; in a different file from functional autoloads.
 
 (def-transl-module trhook hyper)
 (def-transl-module transl-autoload pseudo)
-
-(eval-when (:execute :compile-toplevel :load-toplevel)
-  (load-macsyma-macros procs))
 
 (defmacro transl-module (name)
   (unless (member name transl-modules :test #'eq)
@@ -111,15 +102,6 @@
   `(let ((tr-prop (or (get ',from 'translate)
 		      (maxima-error "No TRANSLATE property to alias. ~a" ',from))))
     (mapc #'(lambda (name) (putprop name tr-prop 'translate))',others)))
-
-(defmacro deftrfun (name argl &rest body)
-  `(defun ,name ,argl ,@body))
-
-(defmacro deftrvar (name value &rest ignore-doc) ignore-doc
-	  ;; to be used to put the simple default value in
-	  ;; the autoload file. Should be generalized to include
-	  ;; BINDING methods.
-	  `(defvar ,name ,value))
 
 (defmacro tprop-call (op form)
   `(subr-call ,op ,form))
@@ -199,31 +181,6 @@
        (eq (car u) 'quote)
        (bind-transl-state (translate-macexpr-toplevel (second u)))))
 
-;;; These are used by MDEFUN and MFUNCTION-CALL.
-;;; N.B. this has arguments evaluated twice because I am too lazy to
-;;; use a LET around things.
-
-(defmacro push-info (name info stack)
-  `(let ((*info* (assoc ,name ,stack :test #'eq)))
-    (cond (*info* ;;; should check for compatibility of INFO here.
-	   )
-	  (t
-	   (push (cons ,name ,info) ,stack)))))
-
-(defmacro get-info (name stack)
-  `(cdr (assoc ,name ,stack :test #'eq)))
-
-(defmacro pop-info (name stack)
-  `(let ((*info* (assoc ,name ,stack :test #'eq)))
-    (cond (*info*
-	   (setq ,stack (delete *info* ,stack :test #'equal))
-	   (cdr *info*))
-	  (t nil))))
-
-(defmacro top-ind (stack)
-  `(cond ((null ,stack) nil)
-    (t (caar ,stack))))
-
 (defmacro maset (val ar &rest inds)
   `(progn
     (when (symbolp ,ar)
@@ -236,5 +193,3 @@
 	((consp ar)`(marrayref ,ar ,(first inds) ,@(cdr inds)))
 	(t
 	 `(maref1 ,ar ,@inds))))
-
- 	  	 

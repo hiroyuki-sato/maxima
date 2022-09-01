@@ -271,6 +271,16 @@
     (if maxima-tempdir-env
 	(setq *maxima-tempdir* (maxima-parse-dirstring maxima-tempdir-env))
 	(setq *maxima-tempdir* (default-tempdir)))
+	
+    ; On Windows Vista gcc requires explicit include 
+    #+gcl (when (string= *autoconf-win32* "true")
+              (let ((mingw-gccver (maxima-getenv "mingw_gccver")))
+	          (when mingw-gccver
+	              (setq compiler::*cc* 
+	                  (concatenate 'string compiler::*cc* " -I\"" *maxima-prefix* "\\include\"" 
+		                                              " -I\"" *maxima-prefix* "\\lib\\gcc-lib\\mingw32\\" 
+							                              mingw-gccver 
+	                        						      "\\include\" " )))))	    		
 
     ; Assign initial values for Maxima shadow variables
     (setq $maxima_userdir *maxima-userdir*)
@@ -327,6 +337,7 @@
 	 "contrib/state"
 	 "contrib/stats"
 	 "contrib/stringproc"
+	 "contrib/vector3d"
 	 "contrib/unit"
 	 "contrib/Zeilberger"
 	 "diff_form"
@@ -399,7 +410,8 @@
     ;; Autoload for Maxima documantation index file
     (let
       ((subdir-bit (if (null *maxima-lang-subdir*) "" (concatenate 'string "/" *maxima-lang-subdir*))))
-      (autof 'cl-info::cause-maxima-index-to-load
+      ;; Assign AUTOLOAD property instead of binding a function (the result of AUTOF).
+      (setf (get 'cl-info::cause-maxima-index-to-load 'autoload)
 	     (concatenate 'string *maxima-infodir* subdir-bit "/maxima-index.lisp")))))
 
 (defun get-dirs (path)
@@ -636,12 +648,14 @@
 ;;; circular data structures. Attempting to copy a circular structure
 ;;; into *builtin-symbol-props* would cause a hang. Lacking a better
 ;;; solution, we simply avoid those symbols.
-(let ((problematic-symbols '($%gamma $%phi $global $%pi $%e)))
-  (do-symbols (s (find-package :maxima))
-    (when (and (eql (symbol-package s) (find-package :maxima))
-	       (member (getchar s 1) '($ % &) :test #'eq))
+(let ((problematic-symbols '($%gamma $%phi $global $%pi $%e))
+      (maxima-package (find-package :maxima)))
+  (do-symbols (s maxima-package)
+    (when (and (eql (symbol-package s) maxima-package)
+	       (not (eq s '||))
+	       (member (char (symbol-name s) 0) '(#\$ #\% #\&) :test #'char=))
       (push s *builtin-symbols*)
-      (when (not (member s problematic-symbols :test #'eq))
+      (unless (member s problematic-symbols :test #'eq)
 	(setf (gethash s *builtin-symbol-props*)
 	      (copy-tree (symbol-plist s)))))))
 

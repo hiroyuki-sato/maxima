@@ -584,7 +584,8 @@ printing message (2).
 @c x: %pi;
 @c y: 1234;
 @c z: 1729 * w;
-@c printq1 (x) ::= block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+@c printq1 (x) ::= block (print ("(1) x is equal to", x), 
+@c                                 '(print ("(2) x is equal to", x)));
 @c printq1 (y - z);
 @c ===end===
 @example
@@ -594,7 +595,8 @@ printing message (2).
 (%o2)                         1234
 (%i3) z: 1729 * w;
 (%o3)                        1729 w
-(%i4) printq1 (x) ::= block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+(%i4) printq1 (x) ::= block (print ("(1) x is equal to", x),
+      '(print ("(2) x is equal to", x)));
 (%o4) printq1(x) ::= block(print("(1) x is equal to", x), 
                                 '(print("(2) x is equal to", x)))
 (%i5) printq1 (y - z);
@@ -611,7 +613,8 @@ until the explicit evaluation @code{''%}.
 @c x: %pi;
 @c y: 1234;
 @c z: 1729 * w;
-@c printe1 (x) := block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+@c printe1 (x) := block (print ("(1) x is equal to", x), 
+@c       '(print ("(2) x is equal to", x)));
 @c printe1 (y - z);
 @c ''%;
 @c ===end===
@@ -622,7 +625,8 @@ until the explicit evaluation @code{''%}.
 (%o2)                         1234
 (%i3) z: 1729 * w;
 (%o3)                        1729 w
-(%i4) printe1 (x) := block (print ("(1) x is equal to", x), '(print ("(2) x is equal to", x)));
+(%i4) printe1 (x) := block (print ("(1) x is equal to", x),
+      '(print ("(2) x is equal to", x)));
 (%o4) printe1(x) := block(print("(1) x is equal to", x), 
                                 '(print("(2) x is equal to", x)))
 (%i5) printe1 (y - z);
@@ -846,13 +850,15 @@ Expressions can be equivalent and not syntactically equal.
 Some operators evaluate @code{=} and @code{#} to @code{true} or @code{false}.
 
 @c ===beg===
-@c if expand ((x + y)^2) = x^2 + 2 * x * y + y^2 then FOO else BAR;
+@c if expand ((x + y)^2) = x^2 + 2 * x * y + y^2 then FOO else 
+@c       BAR;
 @c eq_3 : 2 * x = 3 * x;
 @c eq_4 : exp (2) = %e^2;
 @c [eq_3 and eq_4, eq_3 or eq_4, not eq_3];
 @c ===end===
 @example
-(%i1) if expand ((x + y)^2) = x^2 + 2 * x * y + y^2 then FOO else BAR;
+(%i1) if expand ((x + y)^2) = x^2 + 2 * x * y + y^2 then FOO else
+      BAR;
 (%o1)                          FOO
 (%i2) eq_3 : 2 * x = 3 * x;
 (%o2)                       2 x = 3 x
@@ -1320,8 +1326,8 @@ Some operators evaluate @code{equal} and @code{notequal} to @code{true} or @code
 @c [eq_1 and eq_2, eq_1 or eq_2, not eq_1];
 @c ===end===
 @example
-(%i4) if equal (y, y - 1) then FOO else BAR;
-(%o4)                          BAR
+(%i1) if equal (y, y - 1) then FOO else BAR;
+(%o1)                          BAR
 (%i2) eq_1 : equal (x, x + 1);
 (%o2)                    equal(x, x + 1)
 (%i3) eq_2 : equal (y^2 + 2*y + 1, (y + 1)^2);
@@ -1882,7 +1888,8 @@ Example use:
 
 @c ===beg===
 @c unitfrac(r) := block([uf : [], q],
-@c     if not(ratnump(r)) then error("The input to 'unitfrac' must be a rational number"),
+@c     if not(ratnump(r)) then 
+@c        error("The input to 'unitfrac' must be a rational number"),
 @c     while r # 0 do (
 @c         uf : cons(q : 1/ceiling(1/r), uf),
 @c         r : r - q),
@@ -1896,18 +1903,20 @@ Example use:
 @c ===end===
 @example
 (%i1) unitfrac(r) := block([uf : [], q],
-    if not(ratnump(r)) then error("The input to 'unitfrac' must be a rational number"),
+    if not(ratnump(r)) then
+       error("The input to 'unitfrac' must be a rational number"),
     while r # 0 do (
         uf : cons(q : 1/ceiling(1/r), uf),
         r : r - q),
     reverse(uf));
 (%o1) unitfrac(r) := block([uf : [], q], 
-if not ratnump(r) then error("The input to 'unitfrac' must be a rational number"
-                                     1
-), while r # 0 do (uf : cons(q : ----------, uf), r : r - q), 
-                                         1
-                                 ceiling(-)
-                                         r
+if not ratnump(r) then
+   error("The input to 'unitfrac' must be a rational number"),
+                                  1
+while r # 0 do (uf : cons(q : ----------, uf), r : r - q), 
+                                      1
+                              ceiling(-)
+                                      r
 reverse(uf))
 (%i2) unitfrac (9/10);
                             1  1  1
@@ -1989,20 +1998,25 @@ this is a bug.
 Examples:
 
 @c ===beg===
-@c sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x]);
-@c sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x], ordergreatp);
+@c sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 
+@c       19 - 3 * x]);
+@c sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x], 
+@c       ordergreatp);
 @c sort ([%pi, 3, 4, %e, %gamma]);
 @c sort ([%pi, 3, 4, %e, %gamma], "<");
 @c my_list : [[aa, hh, uu], [ee, cc], [zz, xx, mm, cc], [%pi, %e]];
 @c sort (my_list);
-@c sort (my_list, lambda ([a, b], orderlessp (reverse (a), reverse (b))));
+@c sort (my_list, lambda ([a, b], orderlessp (reverse (a), 
+@c       reverse (b))));
 @c ===end===
 @example
-(%i1) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x]);
+(%i1) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c,
+      19 - 3 * x]);
                5
 (%o1) [- 17, - -, 3, 7.55, 11, 2.9b1, b + a, 9 c, 19 - 3 x]
                2
-(%i2) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9 * c, 19 - 3 * x], ordergreatp);
+(%i2) sort ([11, -17, 29b0, 7.55, 3, -5/2, b + a, 9*c, 19 - 3*x],
+      ordergreatp);
                                                    5
 (%o2) [19 - 3 x, 9 c, b + a, 2.9b1, 11, 7.55, 3, - -, - 17]
                                                    2
@@ -2010,11 +2024,12 @@ Examples:
 (%o3)                [3, 4, %e, %gamma, %pi]
 (%i4) sort ([%pi, 3, 4, %e, %gamma], "<");
 (%o4)                [%gamma, %e, 3, %pi, 4]
-(%i5) my_list : [[aa, hh, uu], [ee, cc], [zz, xx, mm, cc], [%pi, %e]];
+(%i5) my_list: [[aa,hh,uu], [ee,cc], [zz,xx,mm,cc], [%pi,%e]];
 (%o5) [[aa, hh, uu], [ee, cc], [zz, xx, mm, cc], [%pi, %e]]
 (%i6) sort (my_list);
 (%o6) [[%pi, %e], [aa, hh, uu], [ee, cc], [zz, xx, mm, cc]]
-(%i7) sort (my_list, lambda ([a, b], orderlessp (reverse (a), reverse (b))));
+(%i7) sort (my_list, lambda ([a, b], orderlessp (reverse (a),
+      reverse (b))));
 (%o7) [[%pi, %e], [ee, cc], [zz, xx, mm, cc], [aa, hh, uu]]
 @end example
 

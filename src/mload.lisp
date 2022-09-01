@@ -124,7 +124,7 @@
     (when $loadprint
       (format t "~&batching ~A~&" (cl:namestring (truename in-stream))))
     (cleanup)
-    (newline in-stream #\n)
+    (newline in-stream)
     (loop while (and
 		  (setq  expr (mread in-stream nil))
 		  (consp expr))
@@ -173,43 +173,6 @@
        (merror "Maxima bug: Unknown file type ~M" type)))
     searched-for))
 
-(defun quote-simple-equal (f g)
-  (and (consp f) (eql (caar f) 'mquote)
-       (cond ((atom g) (equal (second f) g))
-	     ((not (eql (caar g) 'mquote))
-	      ($simple_equal (second f) g))
-	     (t ($simple_equal (cdr f) (cdr g))))))
-
-(defun unequal-pairlis (var gen)
-  (loop for v in var
-	 for u in gen
-	 collecting (cons v u)))
-
-(defun $simple_equal (f g)
-  "checks if equal up to simp flags"
-  (cond	((quote-simple-equal f g))
-	((quote-simple-equal g f))
-	((and  (numberp f) (numberp g)
-	       (or (eql f g))
-	       (< (- f g) 1.0e-4)))
-        ((atom f) (equal f g))
-	((atom g) nil)
-	((eql (caar f) 'mrat)
-	 (equal(fifth (car f)) (fifth (car g)))
-	 (equal (sublis (unequal-pairlis  (third (car f))
-					  (fourth (car f)))
-			(cdr f))
-		(sublis (unequal-pairlis (third (car g))
-					 (fourth (car g)))
-			(cdr g))))
-	(t(and (equal (caar f) (caar g))
-	       (eql (length f) (length g))
-	       (loop for v in (cdr f)
-		      for w in (cdr g)
-		      when (not ($simple_equal v w))
-		      do (return nil)
-		      finally (return t))))))
-
 
 (defun $file_type (fil &aux typ)
   (setq fil (pathname fil))
@@ -228,15 +191,6 @@
 (defvar *macsyma-startup-queue* nil)
 
 (declaim (special *mread-prompt*))
-
-(defmfun mfilename-onlyp (x)
-  "Returns T iff the argument could only be reasonably taken as a filename."
-  (cond ((macsyma-namestringp x) t)
-	(($listp x) t)
-	((symbolp x)
-	 (char= #\& (getcharn x 1)))
-	('else
-	 nil)))
 
 ;;;; batch & demo search hacks
 
@@ -262,52 +216,141 @@
 	   (continue in-stream demo)
 	   (namestring in-stream)))))
 
+;; Return true if $float converts both a and b to floats and 
+;; |a - b| <= float_approx_equal_tolerance * min(|a|, |b|).
+;; In all other cases, return false.
+
+(defmvar $float_approx_equal_tolerance (* 8 double-float-epsilon))
+
+(defun $float_approx_equal (a b)
+  (setq a (if (floatp a) a ($float a)))
+  (setq b (if (floatp b) b ($float b)))
+  (and
+   (floatp a)
+   (floatp b)
+   (<= (abs (- a b)) (* $float_approx_equal_tolerance (min (abs a) (abs b))))))
+
+;; Return true if $bfloat converts both a and b to big floats and 
+;; |a - b| <= 8 * big-float-epsilon * min(|a|, |b|). The big float
+;; epsilon is determined by the number with the greatest number of bits.
+
+(defun $bfloat_approx_equal (a b)
+  (setq a (if ($bfloatp a) a ($bfloat a)))
+  (setq b (if ($bfloatp b) b ($bfloat b)))
+  (and
+   ($bfloatp a)
+   ($bfloatp b)
+   (eq t (mgqp (mul (power 2 (- 8 (max (first (last (first a))) (first (last (first b))))))
+		    (take '($min) (take '(mabs) a) (take '(mabs) b)))
+	       (take '(mabs) (sub a b))))))
+
+;; The first argument 'f' is the expected result; the second argument 
+;; 'g' is the output of the test. By explicit evaluation, the expected 
+;; result *can* be a CL array, CL hashtable, or a taylor polynomial. Such
+;; a test would look something like (yes, it's a silly test)
+
+;;    taylor(x,x,0,2);
+;;    ''(taylor(x,x,0,2)
+ 
+(defun approx-alike (f g)
+ 
+  (cond ((floatp f) (and (floatp g) ($float_approx_equal f g)))
+	
+	(($bfloatp f) (and ($bfloatp g) ($bfloat_approx_equal f g)))
+	
+	(($taylorp g)
+	 (approx-alike 0 (sub (ratdisrep f) (ratdisrep g))))
+	
+	((atom f) (and (atom g) (equal f g)))
+		     
+	((op-equalp f 'lambda)
+	 (and (op-equalp g 'lambda)
+	      (approx-alike-list (mapcar #'(lambda (s) (simplifya s nil)) (margs f))
+				 (mapcar #'(lambda (s) (simplifya s nil)) (margs g)))))
+	
+	((arrayp f)
+	 (and (arrayp g) (approx-alike ($listarray f) ($listarray g))))
+	
+	((hash-table-p f)
+	 (and (hash-table-p g) (approx-alike ($listarray f) ($listarray g))))
+	
+	(($ratp f)
+	 (and ($ratp g) (approx-alike (ratdisrep f) (ratdisrep g))))
+	
+	;; maybe we don't want this.
+	((op-equalp f 'mquote)
+	 (approx-alike (second f) g))
+	 
+	;; I'm pretty sure that (mop f) and (mop g) won't signal errors, but
+	;; let's be extra careful.
+
+	((and (consp f) (consp (car f)) (consp g) (consp (car g))
+	      (or (approx-alike (mop f) (mop g)) 
+		  (and (symbolp (mop f)) (symbolp (mop g))
+		       (approx-alike ($nounify (mop f)) ($nounify (mop g)))))
+	      (approx-alike-list (margs f) (margs g))))
+	
+	(t nil)))
+
+(defun approx-alike-list (p q)
+  (cond ((null p) (null q))
+	((null q) (null p))
+	(t (and (approx-alike (first p) (first q)) (approx-alike-list (rest p) (rest q))))))
+
+(defun simple-equal-p (f g)
+  (approx-alike (simplifya f nil) (simplifya g nil)))
+
+(defun batch-equal-check (expected result)
+  (let ((answer (catch 'macsyma-quit (simple-equal-p expected result))))
+    (if (eql answer 'maxima-error) nil answer)))
+
 (defvar *collect-errors* t)
 
 (defun in-list (item list)
   (dolist (element list)
-    (if (equal item element)
-        (return-from in-list t)))
-  nil)
+    (if (equal item element) (return-from in-list t))) nil)
+
 
 (defun test-batch (filename expected-errors
-		   &key (out *standard-output*) (show-expected nil)
-		   (show-all nil)
-		   &aux result next-result next eof error-log all-differences
-		   (*mread-prompt* "")
-		   ($matrix_element_mult '&*)
-		   (num-problems 0)
-		   tmp-output
-		   save-output)
-  (cond (*collect-errors*
-	 (setq error-log
-	       (if (streamp *collect-errors*) *collect-errors*
-		   (open (alter-pathname filename :type "ERR")
-			 :direction :output :if-exists :supersede)))
-	 (format t "~%Error log on ~a" error-log)
-	 (format error-log "~%/*    maxima-error log for testing of ~A" filename)
-	 (format error-log "*/~2%")))
-  (setf $ratprint nil)
-  (unwind-protect 
-       (with-open-file
-	   (st filename)
-	 (loop with expr 
-	    for i from 1
-	    do
-	    (setq expr (mread st eof))
-	    while expr 
-	    do
-	    (setq num-problems (+ 1 num-problems))
+			    &key (out *standard-output*) (show-expected nil)
+			    (show-all nil))
+
+  (let ((result) (next-result) (next) (error-log) (all-differences nil) ($ratprint nil) (strm)
+	(*mread-prompt* "") (expr) (num-problems 0) (tmp-output) (save-output) (i 0))
+    
+    (cond (*collect-errors*
+	   (setq error-log
+		 (if (streamp *collect-errors*) *collect-errors*
+		   (handler-case
+		       (open (alter-pathname filename :type "ERR") :direction :output :if-exists :supersede)
+		     #-gcl (file-error () nil)
+		     #+gcl (cl::error () nil))))
+	   (when error-log
+	     (format t "~%Error log on ~a" error-log)
+	     (format error-log "~%/* maxima-error log from tests in ~A" filename)
+	     (format error-log " */~2%"))))
+ 
+    (unwind-protect 
+	(progn
+	  (setq strm (open filename :direction :input))
+	  (while (not (eq 'eof (setq expr (mread strm 'eof))))
+	    (incf num-problems)
+	    (incf i)
 	    (setf tmp-output (make-string-output-stream))
 	    (setf save-output *standard-output*)
 	    (setf *standard-output* tmp-output)
+	  
 	    (unwind-protect
-		 (catch 'macsyma-quit
-		   (setq $%(setq result  (meval* (third expr)))))
+		(progn
+		  (setq result (meval* `(($errcatch) ,(third expr))))
+		  (setq result (if ($emptyp result) 'error-catch (second result)))
+		  (setq $% result))
 	      (setf *standard-output* save-output))
-	    (setq next (catch 'macsyma-quit (mread st eof)))
-	    (cond ((null next) (error "no result")))
-	    (setq next-result  (third next))
+
+	    (setq next (mread strm 'eof))
+	    (if (eq next 'eof) (merror "Missing expected result"))
+	  
+	    (setq next-result (third next))
 	    (let* ((correct (batch-equal-check next-result result))
 		   (expected-error (in-list i expected-errors))
 		   (pass (or correct expected-error)))
@@ -332,64 +375,43 @@
 		    (t (format t "~%This differed from the expected result:~%")
 		       (push i all-differences)
 		       (displa next-result)
-		       (cond (*collect-errors*
-			      (mgrind (third expr) error-log)
+		       (cond ((and *collect-errors* error-log)
+			      (format error-log "/* Problem ~A */~%" i)
+                  (mgrind (third expr) error-log)
 			      (list-variable-bindings (third expr) error-log)
 			      (format error-log ";~%")
-			      (format error-log "//*Erroneous Result?:~%")
-			      (mgrind result error-log) (format error-log "*// ")
+			      (format error-log "/* Erroneous Result?:~%")
+			      (mgrind result error-log) (format error-log " */ ")
 			      (terpri error-log)
+                  (format error-log "/* Expected result: */~%")
 			      (mgrind next-result error-log)
-			      (format error-log ";~%~%"))))
-		    ))))
+			      (format error-log ";~%~%"))))))))
+      (close strm))
     (cond (error-log
 	   (or (streamp *collect-errors*)
-	       (close error-log)))))
-  (cond ((null all-differences)
-	 (format t "~a/~a tests passed.~%" num-problems num-problems) '((mlist)))
-	(t (progn
-	     (format t "~%~a/~a tests passed.~%" 
-		     (- num-problems (length all-differences)) num-problems)
-	     (let ((s (if (> (length all-differences) 1) "s" "")))
-	       (format t "~%The following ~A problem~A failed: ~A~%" 
-		       (length all-differences) s (reverse all-differences)))
-	     `((mlist),filename ,@ all-differences)))))
-	   
-(defun batch-equal-check (next-result result 
-			  &optional recursive)
-  (let ((answer 
-	 (catch 'macsyma-quit 
-	   (or (like next-result result)
-	       ($simple_equal next-result result)
-	       (cond ((not
-		       (or recursive ($simple_equal result $functions)))
-		      (batch-equal-check (meval* next-result) result t)))
-	       (and (not ($bfloatp result))
-            ; Next test succeeds when floats are same to $FPPRINTPREC digits.
-            ; Not sure about effect on non-floats.
-		    (let (($fpprintprec 12))
-		      (declare (special $fpprintprec))
-		      (equal (mstring result) (mstring next-result))))
-	       (cond ((not  (appears-in result 'factored))
-              ; Next test succeeds when floats are same within $RATEPSILON.
-              ; Not sure about effect on non-floats.
-		      (like ($ratsimp next-result)
-			    ($ratsimp result))))
-	       (equal 0 ($ratsimp `((mplus) ,next-result 
-				    ((mtimes) -1 ,result))))
-	       (equal (msize result nil nil nil nil )
-		      (msize next-result nil nil nil nil))))))
-    (if (eql answer 'maxima-error)
-	nil
-	answer)))
-
+	       (close error-log))))
+    (let
+      ((expected-errors-trailer
+         (if (or (null expected-errors) (= (length expected-errors) 0))
+           ""
+           (format nil " (not counting ~a expected errors)" (length expected-errors)))))
+      (cond ((null all-differences)
+           (format t "~a/~a tests passed~a.~%" num-problems num-problems expected-errors-trailer) '((mlist)))
+        (t (progn
+             (format t "~%~a/~a tests passed~a.~%" 
+                 (- num-problems (length all-differences)) num-problems expected-errors-trailer)
+             (let ((s (if (> (length all-differences) 1) "s" "")))
+           (format t "~%The following ~A problem~A failed: ~A~%" 
+               (length all-differences) s (reverse all-differences)))
+             `((mlist),filename ,@(reverse all-differences))))))))
+       
 ;;to keep track of global values during the error:
 (defun list-variable-bindings (expr &optional str &aux tem)
   (loop for v in(cdr ($listofvars  expr))
-	 when (member v $values :test #'equal)
-	 collecting (setq tem`((mequal) ,v ,(meval* v)))
-	 and
-	 do (cond (str (format str ",")(mgrind tem str)))))
+    when (member v $values :test #'equal)
+    collecting (setq tem`((mequal) ,v ,(meval* v)))
+    and
+    do (cond (str (format str ",")(mgrind tem str)))))
 
 ;;in init_max
 ;; name = foo or foo.type or dir/foo.type or dir/foo 
@@ -398,7 +420,7 @@
 ;; multiple possiblities.  eg foo.l{i,}sp or foo.{dem,dm1,dm2}
 (defun $file_search (name &optional paths)
   (if (and (symbolp name)
-	   (member (getcharn name 1) '(#\& #\$)))
+	   (member (char (symbol-name name) 0) '(#\& #\$)))
       (setq name (subseq (print-invert-case name) 1)))
   (if (symbolp name)  (setf name (string name)))
   (if (probe-file name) (return-from $file_search name))
@@ -464,10 +486,12 @@
 (defun $printfile (file)
   (setq file ($file_search1 file '((mlist) $file_search_usage)))
   (with-open-file (st file)
-    (loop while (setq tem (read-char st nil 'eof)) with tem
-	   do
-	   (if (eq tem 'eof) (return t))
-	   (princ tem))
+    (loop
+       with tem
+       while (setq tem (read-char st nil 'eof)) 
+       do
+       (if (eq tem 'eof) (return t))
+       (princ tem))
     (namestring file)))
 
   

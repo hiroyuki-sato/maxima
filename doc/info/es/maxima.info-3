@@ -9,10 +9,1031 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definiciones para Ecuaciones Diferenciales,  Prev: Introducción a las Ecuaciones Diferenciales,  Up: Ecuaciones Diferenciales
+File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuaciones,  Up: Ecuaciones
 
-22.2 Definiciones para Ecuaciones Diferenciales.
+21.1 Funciones y variable para las ecuaciones
+=============================================
+
+ -- Variable del sistema: %rnum_list
+     Valor por defecto: `[]'
+
+     La variable `%rnum_list' es la lista de variables introducidas en
+     las soluciones por la función `algsys'.  Las variables `%r' se
+     añaden a `%rnum_list' en su orden de creación. Esto es útil para
+     hacer sustituciones en la solución.
+
+
+ -- Variable opcional: algexact
+     Default value: `false'
+
+     El contenido de la variable `algexact' afecta al comportamiento de
+     `algsys' de la siguiente forma:
+
+     Si `algexact' vale `true', `algsys' llamará siempre a `solve' y
+     luego utilizará `realroots'.
+
+     Si `algexact' vale `false', `solve' será llamada sólo si la
+     ecuación no es univariante, o si es cuadrática o bicuadrática.
+
+     Sin embargo, `algexact: true' no garantiza que únicamente se
+     obtengan soluciones exactas, ya que aunque `algsys' intente
+     siempre dar soluciones exactas, dará resultados aproximados si no
+     encuentra una solución mejor.
+
+
+ -- Función: algsys ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
+ -- Función: algsys ([<eqn_1>, ..., <eqn_m>], [<x_1>, ..., <x_n>])
+     Resuelve el sistema de ecuaciones polinómicas <expr_1>, ...,
+     <expr_m> o las ecuaciones <eqn_1>, ..., <eqn_m> para las variables
+     <x_1>, ..., <x_n>.  La expresión <expr> equivale a la ecuación
+     `<expr> = 0'. Puede haber más ecuaciones que variables o viceversa.
+
+     La función `algsys' devuelve una lista de soluciones, cada una de
+     las cuales consistente a su vez en una lista de ecuaciones
+     asociando valores a las variables <x_1>, ..., <x_n> que satisfacen
+     el sistema de ecuaciones.  Si `algsys' no puede encontrar
+     soluciones devuelve la lista vacía `[]'.
+
+     Si es necesario se introducen en la solución los símbolos  `%r1',
+     `%r2', ..., para representar parámetros arbitrarios; estas
+     variables también se añaden a la lista `%rnum_list'.
+
+     El proceso que se sigue es el siguiente:
+
+     (1) Primero se factorizan las ecuaciones y se reparten en
+     subsistemas.
+
+     (2) Para cada subsistema <S_i>, se seleccionan una ecuación <E> y
+     una variable <x>. Se elige la variable que tenga grado menor.
+     Entonces se calcula el resultado de <E> y <E_j> respecto de <x>,
+     siendo las <E_j> el resto de ecuaciones del subsistema <S_i>. De
+     aquí se obtiene otro subsistema <S_i'> con una incógnita menos, ya
+     que <x> ha sido eliminada. El proceso ahora vuelve al paso (1).
+
+     (3) En ocasiones se obtiene un subsistema consistente en una única
+     ecuación. Si la ecuación es multivariante y no se han introducido
+     aproximaciones en formato decimal de coma flotante, entonces  se
+     llama a `solve' para tratar de encontrar una solución exacta.
+
+     En algunos casos, `solve' no puede encontrar la solución, o si lo
+     consigue puede que el resultado tenga una expresión muy grande.
+
+     Si la ecuación tiene una sóla incógnita y es lineal, o cuadrática
+     o bicuadrática, entonces se llama a la función `solve' si no se
+     han introducido aproximaciones en formato decimal. Si se han
+     introducido aproximaciones, o si hay más de una incógnita, o si no
+     es lineal, ni cuadrática ni bicuadrática, y si la variables
+     `realonly' vale `true', entonces se llama a la función `realroots'
+     para calcular las soluciones reales.  Si `realonly' vale `false',
+     entonces se llama a `allroots' para obtener las soluciones reales
+     y complejas.
+
+     Si `algsys' devuelve una solución que tiene menos dígitos
+     significativos de los requeridos, el usuario puede cambiar a
+     voluntad el valor de `algepsilon' para obtener mayor precisión.
+
+     Si `algexact' vale `true', se llamará siempre a `solve'.
+
+     Cuando `algsys' encuentra una ecuación con múltiples incógnitas y
+     que contiene aproximaciones en coma flotante (normalmente debido a
+     la imposibilidad de encontrar soluciones exactas en pasos
+     anteriores), entonces no intenta aplicar los métodos exactos a
+     estas ecuaciones y presenta el mensaje: "`algsys' cannot solve -
+     system too complicated."
+
+     Las interacciones con `radcan' pueden dar lugar a expresiones
+     grandes o complicadas. En tal caso, puede ser posible aislar
+     partes del resultado con  `pickapart' o `reveal'.
+
+     Ocasionalmente, `radcan' puede introducir la unidad imaginaria
+     `%i' en una solución que de hecho es real.
+
+     Ejemplos:
+
+          (%i1) e1: 2*x*(1 - a1) - 2*(x - 1)*a2;
+          (%o1)              2 (1 - a1) x - 2 a2 (x - 1)
+          (%i2) e2: a2 - a1;
+          (%o2)                        a2 - a1
+          (%i3) e3: a1*(-y - x^2 + 1);
+                                             2
+          (%o3)                   a1 (- y - x  + 1)
+          (%i4) e4: a2*(y - (x - 1)^2);
+                                                 2
+          (%o4)                   a2 (y - (x - 1) )
+          (%i5) algsys ([e1, e2, e3, e4], [x, y, a1, a2]);
+          (%o5) [[x = 0, y = %r1, a1 = 0, a2 = 0],
+
+                                            [x = 1, y = 0, a1 = 1, a2 = 1]]
+          (%i6) e1: x^2 - y^2;
+                                        2    2
+          (%o6)                        x  - y
+          (%i7) e2: -1 - y + 2*y^2 - x + x^2;
+                                   2        2
+          (%o7)                 2 y  - y + x  - x - 1
+          (%i8) algsys ([e1, e2], [x, y]);
+                           1            1
+          (%o8) [[x = - -------, y = -------],
+                        sqrt(3)      sqrt(3)
+
+                  1              1             1        1
+          [x = -------, y = - -------], [x = - -, y = - -], [x = 1, y = 1]]
+               sqrt(3)        sqrt(3)          3        3
+
+
+ -- Función: allroots (<expr>)
+ -- Función: allroots (<eqn>)
+     Calcula aproximaciones numéricas de las raíces reales y complejas
+     del polinomio <expr> o ecuación polinómica <eqn> de una variable.
+
+     Si la variable `polyfactor' vale `true' hace que la función
+     `allroots' factorice el polinomio para números reales si el
+     polinomio es real, o para números complejos si el polinomio es
+     complejo.
+
+     La función `allroots' puede dar resultados inexactos en caso de
+     que haya raíces múltiples.  Si el polinomio es real, `allroots
+     (%i*<p>)') puede alcanzar mejores aproximaciones que `allroots
+     (<p>)', ya que `allroots' ejecuta entonces un algoritmo diferente.
+
+     La función `allroots' no opera sobre expresiones no polinómicas,
+     pues requiere que el numerador sea reducible a un polinomio y el
+     denominador sea, como mucho, un número complejo.
+
+     Para polinomios complejos se utiliza el algoritmo de Jenkins y
+     Traub descrito en (Algorithm 419, Comm. ACM, vol. 15, (1972), p.
+     97). Para polinomios reales se utiliza el algoritmo de Jenkins
+     descrito en (Algorithm 493, ACM TOMS, vol. 1, (1975), p.178).
+
+     Ejemplos:
+
+          (%i1) eqn: (1 + 2*x)^3 = 13.5*(1 + x^5);
+                                      3          5
+          (%o1)              (2 x + 1)  = 13.5 (x  + 1)
+          (%i2) soln: allroots (eqn);
+          (%o2) [x = .8296749902129361, x = - 1.015755543828121,
+
+          x = .9659625152196369 %i - .4069597231924075,
+
+          x = - .9659625152196369 %i - .4069597231924075, x = 1.0]
+          (%i3) for e in soln
+                  do (e2: subst (e, eqn), disp (expand (lhs(e2) - rhs(e2))));
+                                - 3.5527136788005E-15
+
+                               - 5.32907051820075E-15
+
+                   4.44089209850063E-15 %i - 4.88498130835069E-15
+
+                  - 4.44089209850063E-15 %i - 4.88498130835069E-15
+
+                                 3.5527136788005E-15
+
+          (%o3)                         done
+          (%i4) polyfactor: true$
+          (%i5) allroots (eqn);
+          (%o5) - 13.5 (x - 1.0) (x - .8296749902129361)
+
+                                     2
+           (x + 1.015755543828121) (x  + .8139194463848151 x
+
+           + 1.098699797110288)
+
+
+ -- Variable opcional: breakup
+     Valor por defecto: `true'
+
+     Si `breakup' vale `true', `solve' expresa sus soluciones a las
+     ecuaciones cúbicas y cuárticas en términos de subexpresiones
+     comunes, las cuales son asignadas a etiquetas del tipo `%t1',
+     `%t2', etc.  En otro caso, no se identifican subexpresiones
+     comunes.
+
+     La asignación `breakup: true' sólo tiene efecto cuando
+     `programmode' vale `false'.
+
+     Ejemplos:
+
+          (%i1) programmode: false$
+          (%i2) breakup: true$
+          (%i3) solve (x^3 + x^2 - 1);
+
+                                  sqrt(23)    25 1/3
+          (%t3)                  (--------- + --)
+                                  6 sqrt(3)   54
+          Solution:
+
+                                                sqrt(3) %i   1
+                                                ---------- - -
+                          sqrt(3) %i   1            2        2   1
+          (%t4)    x = (- ---------- - -) %t3 + -------------- - -
+                              2        2            9 %t3        3
+
+                                                sqrt(3) %i   1
+                                              - ---------- - -
+                        sqrt(3) %i   1              2        2   1
+          (%t5)    x = (---------- - -) %t3 + ---------------- - -
+                            2        2             9 %t3         3
+
+                                             1     1
+          (%t6)                  x = %t3 + ----- - -
+                                           9 %t3   3
+          (%o6)                    [%t4, %t5, %t6]
+          (%i6) breakup: false$
+          (%i7) solve (x^3 + x^2 - 1);
+          Solution:
+
+                       sqrt(3) %i   1
+                       ---------- - -
+                           2        2        sqrt(23)    25 1/3
+          (%t7) x = --------------------- + (--------- + --)
+                       sqrt(23)    25 1/3    6 sqrt(3)   54
+                    9 (--------- + --)
+                       6 sqrt(3)   54
+
+                                                        sqrt(3) %i   1    1
+                                                     (- ---------- - -) - -
+                                                            2        2    3
+
+                     sqrt(23)    25 1/3  sqrt(3) %i   1
+          (%t8) x = (--------- + --)    (---------- - -)
+                     6 sqrt(3)   54          2        2
+
+                                                      sqrt(3) %i   1
+                                                    - ---------- - -
+                                                          2        2      1
+                                                + --------------------- - -
+                                                     sqrt(23)    25 1/3   3
+                                                  9 (--------- + --)
+                                                     6 sqrt(3)   54
+
+                      sqrt(23)    25 1/3             1             1
+          (%t9)  x = (--------- + --)    + --------------------- - -
+                      6 sqrt(3)   54          sqrt(23)    25 1/3   3
+                                           9 (--------- + --)
+                                              6 sqrt(3)   54
+          (%o9)                    [%t7, %t8, %t9]
+
+
+ -- Función: dimension (<eqn>)
+ -- Función: dimension (<eqn_1>, ..., <eqn_n>)
+     El paquete `dimen' es para análisis dimensional. La instrucción
+     `load ("dimen")' carga el paquete y `demo ("dimen")' presenta una
+     pequeña demostración.
+
+
+ -- Variable opcional: dispflag
+     Valor por defecto: `true'
+
+     Si `dispflag' vale `false', entonces se inhibirá que Maxima
+     muestre resultados de las funciones que resuelven ecuaciones
+     cuando éstas son llamadas desde dentro de un bloque (`block').
+     Cuando un bloque termina con el signo del dólar, $, a la variable
+     `dispflag' se le asigna `false'.
+
+
+ -- Función: funcsolve (<eqn>, <g>(<t>))
+     Devuelve `[<g>(<t>) = ...]'  o `[]', dependiendo de que exista o
+     no una función racional  `<g>(<t>)' que satisfaga <eqn>, la cual
+     debe ser un polinomio de primer orden, lineal para `<g>(<t>)' y
+     `<g>(<t>+1)'
+
+          (%i1) eqn: (n + 1)*f(n) - (n + 3)*f(n + 1)/(n + 1)
+                           = (n - 1)/(n + 2);
+                                      (n + 3) f(n + 1)   n - 1
+          (%o1)        (n + 1) f(n) - ---------------- = -----
+                                           n + 1         n + 2
+          (%i2) funcsolve (eqn, f(n));
+
+          Dependent equations eliminated:  (4 3)
+                                             n
+          (%o2)                f(n) = ---------------
+                                      (n + 1) (n + 2)
+
+     Aviso: esta es una implemetación rudimentaria, por lo que debe ser
+     utilizada con cautela.
+
+
+ -- Variable opcional: globalsolve
+     Valor por defecto: `false'
+
+     Si `globalsolve' vale `true', a las incógnitas de las ecuaciones
+     se les asignan las soluciones encontradas por `linsolve' y por
+     `solve' cuando se resuelven sistemas de dos o más ecuaciones
+     lineales.
+
+     Si `globalsolve' vale `false', las soluciones encontradas por
+     `linsolve' y por `solve' cuando se resuelven sistemas de dos o más
+     ecuaciones lineales se expresan como ecuaciones y a las incógnitas
+     no se le asignan valores.
+
+     Cuando se resuelven ecuaciones que no son sistemas de dos o más
+     ecuaciones lineales, `solve' ignora el valor de `globalsolve'.
+     Otras funciones que resuelven ecuaciones (como `algsys') ignoran
+     siempre el valor de `globalsolve'.
+
+     Ejemplos:
+
+          (%i1) globalsolve: true$
+          (%i2) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
+          Solution
+
+                                           17
+          (%t2)                        x : --
+                                           7
+
+                                             1
+          (%t3)                        y : - -
+                                             7
+          (%o3)                     [[%t2, %t3]]
+          (%i3) x;
+                                         17
+          (%o3)                          --
+                                         7
+          (%i4) y;
+                                           1
+          (%o4)                          - -
+                                           7
+          (%i5) globalsolve: false$
+          (%i6) kill (x, y)$
+          (%i7) solve ([x + 3*y = 2, 2*x - y = 5], [x, y]);
+          Solution
+
+                                           17
+          (%t7)                        x = --
+                                           7
+
+                                             1
+          (%t8)                        y = - -
+                                             7
+          (%o8)                     [[%t7, %t8]]
+          (%i8) x;
+          (%o8)                           x
+          (%i9) y;
+          (%o9)                           y
+
+
+ -- Función: ieqn (<ie>, <unk>, <tech>, <n>, <guess>)
+     El paquete `inteqn' se dedica a la resolución de ecuaciones
+     integrales. Para hacer uso de él, ejecutar la instrucción `load
+     ("inteqn")'.
+
+     El argumento <ie> es la ecuación integral; <unk> es la función
+     incógnita; <tech> es el método a aplicar para efectuar la
+     resolución del problema (<tech> = `first' significa: aplica el
+     primer método que encuentre una solución; <tech> = `all'
+     significa: aplica todos los métodos posibles); <n> es el número
+     máximo de términos que debe tomar `taylor', `neumann',
+     `firstkindseries' o `fredseries' (también es el máximo nivel de
+     recursión para el método de diferenciación); <guess> es la
+     solución candidata inicial para `neumann' o `firstkindseries'.
+
+     Valores por defecto para los argumentos segundo a quinto son:
+
+     <unk>: `<p>(<x>)', donde <p> es la primera función desconocida que
+     Maxima encuentra en el integrando y <x> es la variable que actúa
+     como argumento en la primera aparición de <p> encontrada fuera de
+     una integral en el caso de ecuaciones de segunda especie
+     (`secondkind'), o es la única variable aparte de la de integración
+     en el caso de ecuaciones de primera especie (`firstkind'). Si el
+     intento de encontrar <x> falla, el usuario será consultado para
+     suministrar una variable independiente.
+
+
+ -- Variable opcional: ieqnprint
+     Valor por defecto: `true'
+
+     La variable `ieqnprint' controla el comportamiento del resultado
+     retornado por la instrucción `ieqn'. Si `ieqnprint' vale `false',
+     la lista devuelta por la función `ieqn' tiene el formato
+
+     [<solución>, <método utilizado>, <nterms>, <variable>]
+
+     donde <variable> estará ausente si la solución es exacta; en otro
+     caso, será la palabra `approximate' o `incomplete' según que la
+     solución sea inexacta o que no tenga forma explícita,
+     respectivamente. Si se ha utilizado un método basado en series,
+     <nterms> es el número de términos utilizado, que puede ser menor
+     que el `n' dado a `ieqn'.
+
+
+ -- Función: lhs (<expr>)
+     Devuelve el miembro izquierdo (es decir, el primer argumento) de
+     la expresión <expr>, cuando el operador de <expr> es uno de los
+     operadores de relación `< <= = # equal notequal >= >', o un
+     operadores de asignación `:= ::= : ::', o un operador infijo
+     binario definido por el usuario mediante `infix'.
+
+     Si <expr> es un átomo o si su operador es diferente de los citados
+     más arriba, `lhs' devuelve <expr>.
+
+     Véase también `rhs'.
+
+     Ejemplo:
+
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
+          (%i2) lhs (e);
+          (%o2)                        bb + aa
+          (%i3) rhs (e);
+          (%o3)                          cc
+          (%i4) [lhs (aa < bb), lhs (aa <= bb),
+                 lhs (aa >= bb), lhs (aa > bb)];
+          (%o4)                   [aa, aa, aa, aa]
+          (%i5) [lhs (aa = bb), lhs (aa # bb), lhs (equal (aa, bb)),
+                 lhs (notequal (aa, bb))];
+          (%o5)                   [aa, aa, aa, aa]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [lhs (e1), lhs (e2), lhs (e3), lhs (e4)];
+          (%o10)               [foo(x), bar(y), x, x]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) lhs (aa ][ bb);
+          (%o12)                         aa
+
+
+ -- Función: linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ..., <x_n>])
+     Resuelve la lista de ecuaciones lineales simultáneas para la lista
+     de variables. Las expresiones deben ser polinomios lineales
+     respecto de las variables o ecuaciones.
+
+     Si `globalsolve' vale `true', a cada incógnita se le asigna el
+     valor de la solución encontrada.
+
+     Si `backsubst' vale `false', `linsolve' no hace la sustitución
+     tras la triangulariación de las ecuaciones.  Esto puede ser
+     necesario en problemas muy grandes en los que la sustitución puede
+     dar lugar a la generación de expresiones enormes.
+
+     Si `linsolve_params' vale `true', `linsolve' también genera
+     símbolos `%r' para representar parámetros arbitrarios como los
+     descritos para la función `algsys'. Si vale `false', el resultado
+     devuelto por `linsolve' expresará, si es el sistema es
+     indeterminado, unas variables en función de otras.
+
+     Si `programmode' vale `false', `linsolve' muestra la solución con
+     etiquetas de expresiones intermedias (`%t') y devuelve las lista
+     de etiquetas.
+
+          (%i1) e1: x + z = y;
+          (%o1)                       z + x = y
+          (%i2) e2: 2*a*x - y = 2*a^2;
+                                                 2
+          (%o2)                   2 a x - y = 2 a
+          (%i3) e3: y - 2*z = 2;
+          (%o3)                      y - 2 z = 2
+          (%i4) [globalsolve: false, programmode: true];
+          (%o4)                     [false, true]
+          (%i5) linsolve ([e1, e2, e3], [x, y, z]);
+          (%o5)            [x = a + 1, y = 2 a, z = a - 1]
+          (%i6) [globalsolve: false, programmode: false];
+          (%o6)                    [false, false]
+          (%i7) linsolve ([e1, e2, e3], [x, y, z]);
+          Solution
+
+          (%t7)                       z = a - 1
+
+          (%t8)                        y = 2 a
+
+          (%t9)                       x = a + 1
+          (%o9)                    [%t7, %t8, %t9]
+          (%i9) ''%;
+          (%o9)            [z = a - 1, y = 2 a, x = a + 1]
+          (%i10) [globalsolve: true, programmode: false];
+          (%o10)                    [true, false]
+          (%i11) linsolve ([e1, e2, e3], [x, y, z]);
+          Solution
+
+          (%t11)                      z : a - 1
+
+          (%t12)                       y : 2 a
+
+          (%t13)                      x : a + 1
+          (%o13)                 [%t11, %t12, %t13]
+          (%i13) ''%;
+          (%o13)           [z : a - 1, y : 2 a, x : a + 1]
+          (%i14) [x, y, z];
+          (%o14)                 [a + 1, 2 a, a - 1]
+          (%i15) [globalsolve: true, programmode: true];
+          (%o15)                    [true, true]
+          (%i16) linsolve ([e1, e2, e3], '[x, y, z]);
+          (%o16)           [x : a + 1, y : 2 a, z : a - 1]
+          (%i17) [x, y, z];
+          (%o17)                 [a + 1, 2 a, a - 1]
+
+
+ -- Variable opcional: linsolvewarn
+     Valor por defecto: `true'
+
+     Si `linsolvewarn' vale `true', `linsolve' mostrará el mensaje:
+     "Dependent equations eliminated".
+
+
+ -- Variable opcional: linsolve_params
+     Valor por defecto: `true'
+
+     Si `linsolve_params' vale `true', `linsolve' también genera
+     símbolos `%r' para representar parámetros arbitrarios como los
+     descritos para la función `algsys'. Si vale `false', el resultado
+     devuelto por `linsolve' expresará, si es el sistema es
+     indeterminado, unas variables en función de otras.
+
+
+ -- System variable: multiplicities
+     Valor por defecto: `not_set_yet'
+
+     La variable `multiplicities' es una con las multiplicidades de las
+     soluciones encontradas por `solve' o `realroots'.
+
+
+ -- Función: nroots (<p>, <low>, <high>)
+     Devuelve el número de raíces reales del polinomio real univariante
+     <p> en el intervalo semiabierto `(<low>, <high>]'. Los extremos
+     del intervalo pueden ser `minf' o `inf', menos y más infinito.
+
+     La función `nroots' utiliza el método de las secuencias de Sturm.
+
+          (%i1) p: x^10 - 2*x^4 + 1/2$
+          (%i2) nroots (p, -6, 9.1);
+          (%o2)                           4
+
+
+ -- Función: nthroot (<p>, <n>)
+     Siendo `p' un polinomio de coeficientes enteros y `n' un entero
+     positivo, `nthroot' devuelve un polinomio `q', también de
+     coeficientes enteros, tal que `q^n=p', o un mensaje de error
+     indicando que `p' no es una `n'-potencia exacta. Esta función es
+     bastante más rápida que `factor' y que `sqfr'.
+
+
+ -- Variable opcional: programmode
+     Valor por defecto: `true'
+
+     Si `programmode' vale `true', `solve', `realroots', `allroots' y
+     `linsolve' devuelve sus soluciones como elementos de una lista.
+     Si `programmode' vale `false', `solve' y las demás crean
+     expresiones intermedias etiquetadas `%t1', `t2', etc., y les
+     asinan las soluciones.
+
+          (%i1) solve(x^2+x+1);
+                              sqrt(3) %i + 1      sqrt(3) %i - 1
+          (%o1)        [x = - --------------, x = --------------]
+                                    2                   2
+          (%i2) programmode:false$
+          (%i3) solve(x^2+x+1);
+          Solution:
+
+                                        sqrt(3) %i + 1
+          (%t3)                   x = - --------------
+                                              2
+
+                                       sqrt(3) %i - 1
+          (%t4)                    x = --------------
+                                             2
+          (%o4)                        [%t4, %t5]
+
+
+ -- Variable opcional: realonly
+     Valor por defecto: `false'
+
+     Si `realonly' vale `true', `algsys' sólo devuelve aquellas
+     soluciones exentas de la constante `%i'.
+
+
+ -- Función: realroots (<expr>, <bound>)
+ -- Función: realroots (<eqn>, <bound>)
+ -- Función: realroots (<expr>)
+ -- Función: realroots (<eqn>)
+     Calcula aproximaciones racionales de las raíces reales del
+     polinomio <expr> o de la ecuación polinómica <eqn> de una variable,
+     dentro de la tolerancia especificada por <bound>.  Los
+     coeficientes de <expr> o de <eqn> deben ser números literales, por
+     lo que las constantes simbólicas como `%pi' no son aceptadas.
+
+     La función `realroots' guarda las multiplicidades de las raíces
+     encontradas en la variable global `multiplicities'.
+
+     La función `realroots' genera una secuencia de Sturm para acotar
+     cada raíz, aplicando después el método de bisección para afinar
+     las aproximaciones. Todos los coeficientes se convierten a formas
+     racionales equivalentes antes de comenzar la búsqueda de las
+     raíces, de modo que los cálculos se realizan con aritmética exacta
+     racional. Incluso en el caso de que algunos coeficientes sean
+     números decimales en coma flotante, los resultados son racionales,
+     a menos que se les fuerce a ser decimales con las variables
+     `float' o `numer'.
+
+     Si <bound> es menor que la unidad, todas las raíces enteras se
+     expresan en forma exacta. Si no se especifica <bound>, se le
+     supone igual al valor de la variable global `rootsepsilon'.
+
+     Si la variable global `programmode' vale `true', la función
+     `realroots' devuelve una lista de la forma `[x = <x_1>, x = <x_2>,
+     ...]'.  Si `programmode' vale `false', `realroots' crea etiquetas
+     `%t1', `%t2', ... para las expresiones intermedias, les asigna
+     valores y, finalmente, devuelve la lista de etiquetas.
+
+     Ejemplos:
+
+          (%i1) realroots (-1 - x + x^5, 5e-6);
+                                         612003
+          (%o1)                     [x = ------]
+                                         524288
+          (%i2) ev (%[1], float);
+          (%o2)                 x = 1.167303085327148
+          (%i3) ev (-1 - x + x^5, %);
+          (%o3)                - 7.396496210176905E-6
+
+          (%i1) realroots (expand ((1 - x)^5 * (2 - x)^3 * (3 - x)), 1e-20);
+          (%o1)                 [x = 1, x = 2, x = 3]
+          (%i2) multiplicities;
+          (%o2)                       [5, 3, 1]
+
+
+ -- Función: rhs (<expr>)
+     Devuelve el miembro derecho (es decir, el segundo argumento) de la
+     expresión <expr>, cuando el operador de <expr> es uno de los
+     operadores de relación `< <= = # equal notequal >= >', o un
+     operadores de asignación `:= ::= : ::', o un operador infijo
+     binario definido por el usuario mediante `infix'.
+
+     Si <expr> es un átomo o si su operador es diferente de los citados
+     más arriba, `rhs' devuelve <expr>.
+
+     Véase también `lhs'.
+
+     Ejemplo:
+
+          (%i1) e: aa + bb = cc;
+          (%o1)                     bb + aa = cc
+          (%i2) lhs (e);
+          (%o2)                        bb + aa
+          (%i3) rhs (e);
+          (%o3)                          cc
+          (%i4) [rhs (aa < bb), rhs (aa <= bb),
+                 rhs (aa >= bb), rhs (aa > bb)];
+          (%o4)                   [bb, bb, bb, bb]
+          (%i5) [rhs (aa = bb), rhs (aa # bb), rhs (equal (aa, bb)),
+                 rhs (notequal (aa, bb))];
+          (%o5)                   [bb, bb, bb, bb]
+          (%i6) e1: '(foo(x) := 2*x);
+          (%o6)                     foo(x) := 2 x
+          (%i7) e2: '(bar(y) ::= 3*y);
+          (%o7)                    bar(y) ::= 3 y
+          (%i8) e3: '(x : y);
+          (%o8)                         x : y
+          (%i9) e4: '(x :: y);
+          (%o9)                        x :: y
+          (%i10) [rhs (e1), rhs (e2), rhs (e3), rhs (e4)];
+          (%o10)                  [2 x, 3 y, y, y]
+          (%i11) infix ("][");
+          (%o11)                         ][
+          (%i12) rhs (aa ][ bb);
+          (%o12)                         bb
+
+
+ -- Variable opcional: rootsconmode
+     Valor por defecto: `true'
+
+     La variable `rootsconmode' controla el comportamiento de la
+     instrucción `rootscontract'.  Véase `rootscontract' para más
+     detalles.
+
+
+ -- Función: rootscontract (<expr>)
+     Convierte productos de raíces en raíces de productos. Por ejemplo,
+     `rootscontract (sqrt(x)*y^(3/2))' devuelve `sqrt(x*y^3)'.
+
+     Si `radexpand' vale `true' y `domain' vale `real', `rootscontract'
+     convierte `abs' en `sqrt', por ejemplo, `rootscontract
+     (abs(x)*sqrt(y))' devuelve `sqrt(x^2*y)'.
+
+     La opción `rootsconmode' afecta el resultado de `rootscontract'
+     como sigue:
+
+          Problema            Valor de         Resultadod de
+                            rootsconmode        rootscontract
+
+          x^(1/2)*y^(3/2)      false          (x*y^3)^(1/2)
+          x^(1/2)*y^(1/4)      false          x^(1/2)*y^(1/4)
+          x^(1/2)*y^(1/4)      true           (x*y^(1/2))^(1/2)
+          x^(1/2)*y^(1/3)      true           x^(1/2)*y^(1/3)
+          x^(1/2)*y^(1/4)      all            (x^2*y)^(1/4)
+          x^(1/2)*y^(1/3)      all            (x^3*y^2)^(1/6)
+
+     Si `rootsconmode' vale `false', `rootscontract' contrae sólamente
+     respecto de exponentes racionales cuyos denominadores sean
+     iguales. La clave para los ejemplos `rootsconmode: true' es
+     simplemente que 2 divide a 4 pero no a 3. La asignación
+     `rootsconmode: all' hace que se calcule el mínimo común múltiplo
+     de los denominadores de los exponentes.
+
+     La función `rootscontract' utiliza `ratsimp' de forma similar a
+     como lo hace `logcontract'.
+
+     Ejemplos:
+
+          (%i1) rootsconmode: false$
+          (%i2) rootscontract (x^(1/2)*y^(3/2));
+                                             3
+          (%o2)                      sqrt(x y )
+          (%i3) rootscontract (x^(1/2)*y^(1/4));
+                                             1/4
+          (%o3)                     sqrt(x) y
+          (%i4) rootsconmode: true$
+          (%i5) rootscontract (x^(1/2)*y^(1/4));
+          (%o5)                    sqrt(x sqrt(y))
+          (%i6) rootscontract (x^(1/2)*y^(1/3));
+                                             1/3
+          (%o6)                     sqrt(x) y
+          (%i7) rootsconmode: all$
+          (%i8) rootscontract (x^(1/2)*y^(1/4));
+                                        2   1/4
+          (%o8)                       (x  y)
+          (%i9) rootscontract (x^(1/2)*y^(1/3));
+                                       3  2 1/6
+          (%o9)                      (x  y )
+          (%i10) rootsconmode: false$
+          (%i11) rootscontract (sqrt(sqrt(x) + sqrt(1 + x))
+                              *sqrt(sqrt(1 + x) - sqrt(x)));
+          (%o11)                          1
+          (%i12) rootsconmode: true$
+          (%i13) rootscontract (sqrt(5 + sqrt(5)) - 5^(1/4)*sqrt(1 + sqrt(5)));
+          (%o13)                          0
+
+
+ -- Variable opcional: rootsepsilon
+     Valor por defecto: 1.0e-7
+
+     La variable `rootsepsilon' es la tolerancia que establece el
+     intervalo de confianza para las raíces calculadas por la función
+     `realroots'.
+
+
+ -- Función: solve (<expr>, <x>)
+ -- Función: solve (<expr>)
+ -- Función: solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
+     Resuelve la ecuación algebraica <expr> de incógnita <x> y devuelve
+     una lista de igualdades con la <x> despejada.  Si <expr> no es una
+     igualdad, se supone que se quiere resolver la ecuación `<expr> =
+     0'.  El argumento <x> puede ser una función (por ejemplo, `f(x)'),
+     u otra expresión no atómica, excepto una suma o producto. Puede
+     omitirse <x> si <expr> contiene solamente una variable. El
+     argumento <expr> puede ser una expresión racional y puede contener
+     funciones trigonométricas, exponenciales, etc.
+
+     Se utiliza el siguiente método de resolución:
+
+     Sea <E> la expresión y <X> la incógnita. Si <E> es lineal respecto
+     de <X> entonces <X> se resuelve de forma trivial. En caso
+     contrario, si <E> es de la forma `A*X^N + B' entonces el resultado
+     es `(-B/A)^1/N)' multiplicado por las `N'-ésimas raíces de la
+     unidad.
+
+     Si <E> no es lineal respecto de <X> entonces el máximo común
+     divisor de los exponentes de <X> en <E> (supóngase que es <N>) se
+     divide entre los exponentes y la multiplicidad de las raíces se
+     multiplica por <N>.  Entonces es llamado recursivamente `solve'
+     para este resultado. Si <E> es factorizable entonces `solve' es
+     invocado para cada uno de los factores.  Finalmente, `solve'
+     usará, según sea necesario, las fórmulas cuadrática, cúbica o
+     cuártica.
+
+     En caso de que <E> sea un polinomio respecto de una función de la
+     incógnita, por ejemplo `F(X)', entonces se calcula primero para
+     `F(X)' (sea <C> el resultado obtenido), entonces la ecuación
+     `F(X)=C' se resuelve para <X> en el supuesto que se conozca la
+     inversa de la función <F>.
+
+     Si la variable `breakup' vale `false' hará que `solve' muestre las
+     soluciones de las ecuaciones cúbicas o cuárticas como expresiones
+     únicas, en lugar de utilizar varias subexpresiones comunes, que es
+     el formato por defecto.
+
+     A la variable `multiplicities' se le asignará una lista con las
+     multiplicidades de las soluciones individuales devueltas por
+     `solve', `realroots' o `allroots'. La instrucción `apropos
+     (solve)' hará que se muestren las variables optativas que de algún
+     modo afectan al comportamiento de `solve'. Se podrá luego utilizar
+     la función  `describe' para aquellas variables cuyo objeto no esté
+     claro.
+
+     La llamada `solve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])'
+     resuelve un sistema de ecuaciones polinómicas simultáneas
+     (lineales o no) llamando a `linsolve' o `algsys' y devuelve una
+     lista de listas con soluciones para las incógnitas. En caso de
+     haberse llamado a `linsolve' esta lista contendrá una única lista
+     de soluciones. La llamada a `solve' tiene dos listas como
+     argumentos. La primera lista tiene las ecuaciones a resolver y la
+     segunda son las incógnitas cuyos valores se quieren calcular. Si
+     el número de variables en las ecuaciones es igual al número de
+     incógnitas, el segundo argumento puede omitirse. En caso de
+     sistemas lineales incompatibles se mostrará el mensaje
+     `inconsistent' (véase la variable `solve_inconsistent_error'); si
+     no existe una única solución, se mostrará el mensaje `singular'.
+
+     Si `programmode' vale `false', `solve' muestra la solución con
+     etiquetas de expresiones intermedias (`%t') y devuelve las lista
+     de etiquetas.
+
+     Si `globalsolve' vale `true' y el problema consiste en resolver un
+     sistema de dos o más ecuaciones lineales, a cada incógnita se le
+     asigna el valor encontrado en la resolución del sistema.
+
+     Ejemplos:
+          (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
+
+          SOLVE is using arc-trig functions to get a solution.
+          Some solutions will be lost.
+                                      %pi
+          (%o1)                  [x = ---, f(x) = 1]
+                                       6
+          (%i2) ev (solve (5^f(x) = 125, f(x)), solveradcan);
+                                          log(125)
+          (%o2)                   [f(x) = --------]
+                                           log(5)
+          (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
+                                2    2
+          (%o3)             [4 x  - y  = 12, x y - x = 2]
+          (%i4) solve (%, [x, y]);
+          (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
+
+           - .1331240357358706, y = .0767837852378778
+
+           - 3.608003221870287 %i], [x = - .5202594388652008 %i
+
+           - .1331240357358706, y = 3.608003221870287 %i
+
+           + .0767837852378778], [x = - 1.733751846381093,
+
+          y = - .1535675710019696]]
+          (%i5) solve (1 + a*x + x^3, x);
+                                                 3
+                        sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
+          (%o5) [x = (- ---------- - -) (--------------- - -)
+                            2        2      6 sqrt(3)      2
+
+                  sqrt(3) %i   1
+                 (---------- - -) a
+                      2        2
+           - --------------------------, x =
+                        3
+                sqrt(4 a  + 27)   1 1/3
+             3 (--------------- - -)
+                   6 sqrt(3)      2
+
+                                    3
+           sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
+          (---------- - -) (--------------- - -)
+               2        2      6 sqrt(3)      2
+
+                   sqrt(3) %i   1
+                (- ---------- - -) a
+                       2        2
+           - --------------------------, x =
+                        3
+                sqrt(4 a  + 27)   1 1/3
+             3 (--------------- - -)
+                   6 sqrt(3)      2
+
+                   3
+           sqrt(4 a  + 27)   1 1/3               a
+          (--------------- - -)    - --------------------------]
+              6 sqrt(3)      2                  3
+                                        sqrt(4 a  + 27)   1 1/3
+                                     3 (--------------- - -)
+                                           6 sqrt(3)      2
+          (%i6) solve (x^3 - 1);
+                       sqrt(3) %i - 1        sqrt(3) %i + 1
+          (%o6)   [x = --------------, x = - --------------, x = 1]
+                             2                     2
+          (%i7) solve (x^6 - 1);
+                     sqrt(3) %i + 1      sqrt(3) %i - 1
+          (%o7) [x = --------------, x = --------------, x = - 1,
+                           2                   2
+
+                               sqrt(3) %i + 1        sqrt(3) %i - 1
+                         x = - --------------, x = - --------------, x = 1]
+                                     2                     2
+          (%i8) ev (x^6 - 1, %[1]);
+                                                6
+                                (sqrt(3) %i + 1)
+          (%o8)                 ----------------- - 1
+                                       64
+          (%i9) expand (%);
+          (%o9)                           0
+          (%i10) x^2 - 1;
+                                        2
+          (%o10)                       x  - 1
+          (%i11) solve (%, x);
+          (%o11)                  [x = - 1, x = 1]
+          (%i12) ev (%th(2), %[1]);
+          (%o12)                          0
+
+
+ -- Variable opcional: solvedecomposes
+     Valor por defecto: `true'
+
+     Si `solvedecomposes' vale `true', `solve' llama a `polydecomp' en
+     caso de que se le pida resolver ecuaciones polinómicas.
+
+
+ -- Variable opcional: solveexplicit
+     Valor por defecto: `false'
+
+     Si `solveexplicit' vale `true', le inhibe a `solve' devolver
+     soluciones implícitas, esto es, soluciones de la forma `F(x) = 0',
+     donde `F' es cierta función.
+
+
+ -- Variable opcional: solvefactors
+     Valor por defecto: `true'
+
+     Si `solvefactors' vale `false', `solve' no intenta factorizar la
+     expresión.  Este valor `false' puede ser útil en algunos casos en
+     los que la factorización no es necesaria.
+
+
+ -- Variable opcional: solvenullwarn
+     Valor por defecto: `true'
+
+     Si `solvenullwarn' vale `true',  `solve' muestra un mensaje de
+     aviso si es llamado con una lista de ecuaciones vacía o con una
+     lista de incógnitas vacía. Por ejemplo, `solve ([], [])' imprimirá
+     dos mensajes de aviso y devolverá `[]'.
+
+
+ -- Variable opcional: solveradcan
+     Valor por defecto: `false'
+
+     Si `solveradcan' vale `true', `solve' llama a `radcan', lo que
+     hará que `solve' se ejecute de forma más lenta, pero permitirá que
+     se resuelvan ciertas ecuaciones que contengan exponenciales y
+     logaritmos.
+
+
+ -- Variable opcional: solvetrigwarn
+     Valor por defecto: `true'
+
+     Si `solvetrigwarn' vale `true', `solve' puede presentar un mensaje
+     diciendo que está utilizando funciones trigonométricas inversas
+     para resolver la ecuación, y que por lo tanto puede estar
+     ignorando algunas soluciones.
+
+
+ -- Variable opcional: solve_inconsistent_error
+     Valor por defecto: `true'
+
+     Si `solve_inconsistent_error' vale `true', `solve' y `linsolve'
+     devuelven un error si las ecuaciones a resolver son incompatibles.
+     Si vale `false', `solve' y `linsolve' devuelven la lista vacía
+     `[]' en caso de incompatibilidad.
+
+     Ejemplo:
+
+          (%i1) solve_inconsistent_error: true$
+          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
+          Inconsistent equations:  (2)
+           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i3) solve_inconsistent_error: false$
+          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
+          (%o4)                          []
+
+
+
+File: maxima.info,  Node: Ecuaciones Diferenciales,  Next: Métodos numéricos,  Prev: Ecuaciones,  Up: Top
+
+22 Ecuaciones Diferenciales
+***************************
+
+* Menu:
+
+* Introducción a las ecuaciones diferenciales::
+* Funciones y variables para ecuaciones diferenciales::
+
+
+File: maxima.info,  Node: Introducción a las ecuaciones diferenciales,  Next: Funciones y variables para ecuaciones diferenciales,  Prev: Ecuaciones Diferenciales,  Up: Ecuaciones Diferenciales
+
+22.1 Introducción a las ecuaciones diferenciales
 ================================================
+
+Esta sección describe las funciones disponibles en Maxima para el
+cálculo de las soluciones analíticas de ciertos tipos de ecuaciones de
+primer y segundo orden. Para las soluciones numéricas de sistemas de
+ecuaciones diferenciales, véase el paquete adicional `dynamics'. Para
+las representaciones gráficas en el espacio de fases, véase el paquete
+`plotdf'.
+
+
+File: maxima.info,  Node: Funciones y variables para ecuaciones diferenciales,  Prev: Introducción a las ecuaciones diferenciales,  Up: Ecuaciones Diferenciales
+
+22.2 Funciones y variables para ecuaciones diferenciales.
+=========================================================
 
  -- Función: bc2 (<soluc>, <xval1>, <yval1>, <xval2>, <yval2>)
      Resuelve el problema del valor en la frontera para ecuaciones
@@ -185,8 +1206,8 @@ File: maxima.info,  Node: Métodos numéricos,  Next: Arrays,  Prev: Ecuaciones Di
 
 * Introducción a los métodos numéricos::
 * Series de Fourier::
-* Definiciones para los métodos numéricos::
-* Definiciones para las series de Fourier::
+* Funciones y variables para los métodos numéricos::
+* Funciones y variables para las series de Fourier::
 
 
 File: maxima.info,  Node: Introducción a los métodos numéricos,  Next: Series de Fourier,  Prev: Métodos numéricos,  Up: Métodos numéricos
@@ -195,7 +1216,7 @@ File: maxima.info,  Node: Introducción a los métodos numéricos,  Next: Series de
 =========================================
 
 
-File: maxima.info,  Node: Series de Fourier,  Next: Definiciones para los métodos numéricos,  Prev: Introducción a los métodos numéricos,  Up: Métodos numéricos
+File: maxima.info,  Node: Series de Fourier,  Next: Funciones y variables para los métodos numéricos,  Prev: Introducción a los métodos numéricos,  Up: Métodos numéricos
 
 23.2 Series de Fourier
 ======================
@@ -207,14 +1228,14 @@ simbólico) de la transformada rápida de Fourier. La instrucción `load
    El paquete `fourie' contiene funciones para el cálculo simbólico de
 series de Fourier. La instrucción `load ("fourie")' carga el paquete.
 Hay funciones en el paquete `fourie' para calcular los coeficientes de
-Fourier y para la transformación de expresiones. Véase `Definiciones
-para las series de Fourier'.
+Fourier y para la transformación de expresiones. Véase `Funciones y
+variables para las series de Fourier'.
 
 
-File: maxima.info,  Node: Definiciones para los métodos numéricos,  Next: Definiciones para las series de Fourier,  Prev: Series de Fourier,  Up: Métodos numéricos
+File: maxima.info,  Node: Funciones y variables para los métodos numéricos,  Next: Funciones y variables para las series de Fourier,  Prev: Series de Fourier,  Up: Métodos numéricos
 
-23.3 Definiciones para los métodos numéricos
-============================================
+23.3 Funciones y variables para los métodos numéricos
+=====================================================
 
  -- Función: polartorect (<magnitude_array>, <phase_array>)
      Transforma valores complejos de la forma `r %e^(%i t)' a la forma
@@ -376,28 +1397,29 @@ File: maxima.info,  Node: Definiciones para los métodos numéricos,  Next: Defini
 
      Ejemplos:
 
-          (%i1) expr: (a + b)^12$
-          (%i2) fortran (expr);
-                (b+a)**12
-          (%o2)                         done
-          (%i3) fortran ('x=expr);
-                x = (b+a)**12
-          (%o3)                         done
-          (%i4) fortran ('x=expand (expr));
-                x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
-               1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
-               2   **3+66*a**10*b**2+12*a**11*b+a**12
-          (%o4)                         done
-          (%i5) fortran ('x=7+5*%i);
-                x = (7,5)
-          (%o5)                         done
-          (%i6) fortran ('x=[1,2,3,4]);
-                x = [1,2,3,4]
-          (%o6)                         done
-          (%i7) f(x) := x^2$
-          (%i8) fortran (f);
-                f
-          (%o8)                         done
+
+     (%i1) expr: (a + b)^12$
+     (%i2) fortran (expr);
+           (b+a)**12
+     (%o2)                         done
+     (%i3) fortran ('x=expr);
+           x = (b+a)**12
+     (%o3)                         done
+     (%i4) fortran ('x=expand (expr));
+           x = b**12+12*a*b**11+66*a**2*b**10+220*a**3*b**9+495*a**4*b**8+792
+          1   *a**5*b**7+924*a**6*b**6+792*a**7*b**5+495*a**8*b**4+220*a**9*b
+          2   **3+66*a**10*b**2+12*a**11*b+a**12
+     (%o4)                         done
+     (%i5) fortran ('x=7+5*%i);
+           x = (7,5)
+     (%o5)                         done
+     (%i6) fortran ('x=[1,2,3,4]);
+           x = [1,2,3,4]
+     (%o6)                         done
+     (%i7) f(x) := x^2$
+     (%i8) fortran (f);
+           f
+     (%o8)                         done
 
 
  -- Variable opcional: fortspaces
@@ -435,40 +1457,46 @@ File: maxima.info,  Node: Definiciones para los métodos numéricos,  Next: Defini
           (%o4)                       7.0E+154
 
 
- -- Función: find_root (<f>(<x>), <x>, <a>, <b>)
+ -- Función: find_root (<expr>, <x>, <a>, <b>)
  -- Función: find_root (<f>, <a>, <b>)
-     Calcula el cero de la función <f> cuando <x> varía en el rango
-     `[<a>, <b>]'.  La función debe tener signos diferentes en los
-     extremos del intervalo. Si esta condición no se cumple, la acción
-     de esta función la gobierna la variable `find_root_error'.  Si
-     `find_root_error' vale `true' entonces se emite un mensaje de
-     error, en otro caso se devuelve el valor de `find_root_error'. En
-     caso contrario, dado que Maxima pouede evaluar el primer argumento
-     en el rango especificado, el cual es continuo, está garantizado
-     que `find_root' encontrará el cero buscado (o uno de ellos en caso
-     de haber varios). La precisión de `find_root' está gobernada por
-     `find_root_abs' y `find_root_rel', que deben ser números no
-     negativos en coma flotante. La función `find_root' se detendrá
-     cuando el primer argumento tome un valor menor o igual que
-     `find_root_abs', o cuando sucesivas aproximaciones de la raíz se
-     diferencien en menos de `find_root_rel * <one of the
-     approximants>'. El valor por defecto de `find_root_abs' y
-     `find_root_rel' es 0.0 en ambos casos, de forma que `find_root'
-     obtiene la mejor aproximación posible para la aritmética de simple
-     precisión de que se dispone. El primer argumento puede ser una
-     ecuación. La ordenación de los dos últimos argumentos es
-     irrelevante. Así,
+ -- Variable opcional: find_root_error
+ -- Variable opcional: find_root_abs
+ -- Variable opcional: find_root_rel
+     Calcula una raíz de la expresión <expr> o de la función <f> en el
+     intervalo cerrado [<a>, <b>].  La expresión <expr> puede ser una
+     ecuación, en cuyo caso `find_root' busca una raíz de `lhs(<expr>)
+     - rhs(<expr>)'.
 
-          find_root (sin(x) = x/2, x, %pi, 0.1);
+     Dado que Maxima puede evaluar <expr> o <f> en [<a>, <b>],
+     entonces, si <expr> o <f> es continua, `find_root' encuentrará la
+     raíz buscada; o raíces en caso de existir varias.
 
-     equivale a
+     La función `find_root' aplica al principio la búsqueda binaria. Si
+     la expresión es lo suficientemente suave, entonces `find_root'
+     aplicará el método de interpolación lineal.
 
-          find_root (sin(x) = x/2, x, 0.1, %pi);
+     La precisión del resultado se controla con `find_root_abs' y
+     `find_root_rel'. La búsqueda se detiene cuando la función alcanza
+     valores menores o iguales a `find_root_abs', o cuando dos
+     soluciones sucesivas <x_0> y <x_1> se diferencian en una cantidad
+     menor o igual a `find_root_rel * max(abs(x_0), abs(x_1))'.  Los
+     valores por defecto de `find_root_abs' y `find_root_rel' son ambos
+     cero.
 
-     El método que se aplica es una búsqueda binaria en el rango
-     especificado por los dos últimos argumentos. Cuando el algoritmo
-     considera que la función está lo suficientemente cerca de ser
-     lineal, comienza a utilizar interpolación lineal.
+     `find_root' espera que la función en cuestión tenga signos
+     diferentes en los extremos del intervalo. Si esto no se verifica,
+     el comportamiento de `find_root' se controla con `find_root_error'.
+     Cuando `find_root_error' vale `true', `find_root' devuelve un
+     mensaje de error; en caso contrario, `find_root' devuelve el valor
+     de `find_root_error'. El valor por defecto de `find_root_error' es
+     `true'.
+
+     Si en algún momento del proceso de búsqueda <f> alcanza un valor
+     no numérico, `find_root' devuelve una expresión parcialmente
+     evaluada.
+
+     Se ignora el orden de <a> y <b>; la región de búsqueda es
+     [min(<a>, <b>), max(<a>, <b>)].
 
      Ejemplos:
 
@@ -484,53 +1512,13 @@ File: maxima.info,  Node: Definiciones para los métodos numéricos,  Next: Defini
           (%o4)                   1.895494267033981
           (%i5) find_root (f, 0.1, %pi);
           (%o5)                   1.895494267033981
-
-
- -- Variable opcional: find_root_abs
-     Valor por defecto: 0.0
-
-     La variable `find_root_abs' es la precisión de la instrucción
-     `find_root', cuyo comportamiento lo controlan `find_root_abs' y
-     `find_root_rel', variables que deben guardar dos números no
-     negativos decimales en coma flotante.  La función `find_root'
-     parará cuando su primer argumento tome un valor menor o igual que
-     `find_root_abs' o si sucesivas aproximaciones a la raíz difieren
-     entre sí en no más de `find_root_rel * <one of the approximants>'.
-     El valor por defecto de `find_root_abs' y `find_root_rel' es 0.0
-     en ambos casos, de forma que `find_root' obtiene la mejor
-     aproximación posible para la aritmética de simple precisión de que
-     se dispone.
-
-
- -- Variable opcional: find_root_error
-     Valor por defecto: `true'
-
-     La variable `find_root_error' controla el comportamiento de
-     `find_root'.  Cuando se llama a la función `find_root', ésta
-     determina si la función a ser resuelta satisface la condición de
-     que sus valores en los extremos de los intervalos tengan signos
-     diferentes. Si son de signo opuesto, se procede a la
-     interpolación. Si son del mismo signo, y `find_root_error' vale
-     `true', entonces se señala un error. Si son del mismo signo y
-     `find_root_error' no vale `true', retornará el valor de
-     `find_root_error'.
-
-
- -- Variable opcional: find_root_rel
-     Valor por defecto: 0.0
-
-     La variable `find_root_rel' es la precisión de la instrucción
-     `find_root', cuyo comportamiento lo controlan `find_root_abs' y
-     `find_root_rel', variables que deben guardar dos números no
-     negativos decimales en coma flotante.  La función `find_root'
-     parará cuando su primer argumento tome un valor menor o igual que
-     `find_root_abs' o si sucesivas aproximaciones a la raíz difieren
-     entre sí en no más de `find_root_rel * <one of the approximants>'.
-     El valor por defecto de `find_root_abs' y `find_root_rel' es 0.0
-     en ambos casos, de forma que `find_root' obtiene la mejor
-     aproximación posible para la aritmética de simple precisión de que
-     se dispone.
-
+          (%i6) find_root (exp(x) = y, x, 0, 100);
+                                      x
+          (%o6)           find_root(%e  = y, x, 0.0, 100.0)
+          (%i7) find_root (exp(x) = y, x, 0, 100), y = 10;
+          (%o7)                   2.302585092994046
+          (%i8) log (10.0);
+          (%o8)                   2.302585092994046
 
  -- Función: newton (<expr>, <x>, <x_0>, <eps>)
      Devuelve una solución aproximada de `<expr> = 0' obtenida por el
@@ -567,10 +1555,10 @@ File: maxima.info,  Node: Definiciones para los métodos numéricos,  Next: Defini
 
 
 
-File: maxima.info,  Node: Definiciones para las series de Fourier,  Prev: Definiciones para los métodos numéricos,  Up: Métodos numéricos
+File: maxima.info,  Node: Funciones y variables para las series de Fourier,  Prev: Funciones y variables para los métodos numéricos,  Up: Métodos numéricos
 
-23.4 Definiciones para las series de Fourier
-============================================
+23.4 Funciones y variables para las series de Fourier
+=====================================================
 
  -- Función: equalp (<x>, <y>)
      Devuelve `true' si `equal (<x>, <y>)', en otro caso devuelve
@@ -680,13 +1668,13 @@ File: maxima.info,  Node: Arrays,  Next: Matrices y Álgebra Lineal,  Prev: Métod
 
 * Menu:
 
-* Definiciones para Arrays::
+* Funciones y variables para Arrays::
 
 
-File: maxima.info,  Node: Definiciones para Arrays,  Prev: Arrays,  Up: Arrays
+File: maxima.info,  Node: Funciones y variables para Arrays,  Prev: Arrays,  Up: Arrays
 
-24.1 Definiciones para Arrays
-=============================
+24.1 Funciones y variables para Arrays
+======================================
 
  -- Función: array (<nombre>, <dim_1>, ..., <dim_n>)
  -- Función: array (<nombre>, <type>, <dim_1>, ..., <dim_n>)
@@ -1170,13 +2158,13 @@ File: maxima.info,  Node: Matrices y Álgebra Lineal,  Next: Afines,  Prev: Array
 
 * Menu:
 
-* Introducción a las Matrices y al Álgebra Lineal::
-* Definiciones para las Matrices y el Álgebra Lineal::
+* Introducción a las matrices y el álgebra lineal::
+* Funciones y variables para las matrices y el álgebra lineal::
 
 
-File: maxima.info,  Node: Introducción a las Matrices y al Álgebra Lineal,  Next: Definiciones para las Matrices y el Álgebra Lineal,  Prev: Matrices y Álgebra Lineal,  Up: Matrices y Álgebra Lineal
+File: maxima.info,  Node: Introducción a las matrices y el álgebra lineal,  Next: Funciones y variables para las matrices y el álgebra lineal,  Prev: Matrices y Álgebra Lineal,  Up: Matrices y Álgebra Lineal
 
-25.1 Introducción a las Matrices y al Álgebra Lineal
+25.1 Introducción a las matrices y el álgebra lineal
 ====================================================
 
 * Menu:
@@ -1186,7 +2174,7 @@ File: maxima.info,  Node: Introducción a las Matrices y al Álgebra Lineal,  Next
 * Paquete eigen::
 
 
-File: maxima.info,  Node: Operador punto,  Next: Vectores,  Prev: Introducción a las Matrices y al Álgebra Lineal,  Up: Introducción a las Matrices y al Álgebra Lineal
+File: maxima.info,  Node: Operador punto,  Next: Vectores,  Prev: Introducción a las matrices y el álgebra lineal,  Up: Introducción a las matrices y el álgebra lineal
 
 25.1.1 Operador punto
 ---------------------
@@ -1217,7 +2205,7 @@ expresiones que contengan al operador `.', a saber, `dot',
 `dotdistrib', `dotexptsimp', `dotident', y `dotscrules'.
 
 
-File: maxima.info,  Node: Vectores,  Next: Paquete eigen,  Prev: Operador punto,  Up: Introducción a las Matrices y al Álgebra Lineal
+File: maxima.info,  Node: Vectores,  Next: Paquete eigen,  Prev: Operador punto,  Up: Introducción a las matrices y el álgebra lineal
 
 25.1.2 Vectores
 ---------------
@@ -1241,7 +2229,7 @@ potencial escalar o vectorial de un campo.
    Aviso: el paquete `vect' declara el operador `.' como conmutativo.
 
 
-File: maxima.info,  Node: Paquete eigen,  Prev: Vectores,  Up: Introducción a las Matrices y al Álgebra Lineal
+File: maxima.info,  Node: Paquete eigen,  Prev: Vectores,  Up: Introducción a las matrices y el álgebra lineal
 
 25.1.3 Paquete eigen
 --------------------
@@ -1261,10 +2249,10 @@ demostración pero sin pausas entre los sucesivos cálculos.
 `uniteigenvectors' y `similaritytransform'.
 
 
-File: maxima.info,  Node: Definiciones para las Matrices y el Álgebra Lineal,  Prev: Introducción a las Matrices y al Álgebra Lineal,  Up: Matrices y Álgebra Lineal
+File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra lineal,  Prev: Introducción a las matrices y el álgebra lineal,  Up: Matrices y Álgebra Lineal
 
-25.2 Definiciones para las Matrices y el Álgebra Lineal
-=======================================================
+25.2 Funciones y variables para las matrices y el álgebra lineal
+================================================================
 
  -- Función: addcol (<M>, <lista_1>, ..., <lista_n>)
      Añade la/s columna/s dada/s por la/s lista/s (o matrices) a la
@@ -1707,7 +2695,8 @@ File: maxima.info,  Node: Definiciones para las Matrices y el Álgebra Lineal,  P
           (%i1) n: 3$
           (%i2) m: entermatrix (n, n)$
 
-          Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric  4. General
+          Is the matrix  1. Diagonal  2. Symmetric  3. Antisymmetric
+             4. General
           Answer 1, 2, 3 or 4 :
           1$
           Row 1 Column 1:
@@ -2153,7 +3142,8 @@ File: maxima.info,  Node: Definiciones para las Matrices y el Álgebra Lineal,  P
                                   [ transpose(a) ]
           (%o6)                   [              ]
                                   [ transpose(b) ]
-          (%i7) matrix_element_transpose: lambda ([x], realpart(x) - %i*imagpart(x))$
+          (%i7) matrix_element_transpose:
+                     lambda ([x], realpart(x) - %i*imagpart(x))$
           (%i8) m: matrix ([1 + 5*%i, 3 - 2*%i], [7*%i, 11]);
                                [ 5 %i + 1  3 - 2 %i ]
           (%o8)                [                    ]
@@ -2480,13 +3470,13 @@ File: maxima.info,  Node: Afines,  Next: itensor,  Prev: Matrices y Álgebra Line
 
 * Menu:
 
-* Definiciones para Afines::
+* Funciones y variables para Afines::
 
 
-File: maxima.info,  Node: Definiciones para Afines,  Prev: Afines,  Up: Afines
+File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up: Afines
 
-26.1 Definiciones para Afines
-=============================
+26.1 Funciones y variables para Afines
+======================================
 
  -- Función: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
           <x_n>])
@@ -2609,10 +3599,10 @@ File: maxima.info,  Node: itensor,  Next: ctensor,  Prev: Afines,  Up: Top
 * Menu:
 
 * Introducción a itensor::
-* Definiciones para itensor::
+* Funciones y variables para itensor::
 
 
-File: maxima.info,  Node: Introducción a itensor,  Next: Definiciones para itensor,  Prev: itensor,  Up: itensor
+File: maxima.info,  Node: Introducción a itensor,  Next: Funciones y variables para itensor,  Prev: itensor,  Up: itensor
 
 27.1 Introducción a itensor
 ===========================
@@ -2803,8 +3793,8 @@ cálculos sencillos.
      (%t12) v    - g      v   (e p       + e   p     - e p       - e    p
              i,j           %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
 
-                                                     + e p       + e   p    )/2
-                                                          i %5,j    ,j  i %5
+                                              + e p       + e   p    )/2
+                                                   i %5,j    ,j  i %5
      (%i13) iframe_flag:true;
      (%o13)                               true
      (%i14) ishow(covdiff(v([i],[]),j))$
@@ -2820,9 +3810,9 @@ cálculos sencillos.
      (%t16) - (ifg      v   ifb       + ifg      v   ifb       - 2 v
                          %6    j %8 i             %6    i j %8      i,j
 
-                                                         %6 %8
-                                                    - ifg      v   ifb      )/2
-                                                                %6    %8 i j
+                                                  %6 %8
+                                             - ifg      v   ifb      )/2
+                                                         %6    %8 i j
      (%i17) ishow(canform(s([i,j],[])-s([j,i])))$
      (%t17)                            s    - s
                                         i j    j i
@@ -2839,10 +3829,10 @@ cálculos sencillos.
      (%t22)                                 0
 
 
-File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itensor,  Up: itensor
+File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducción a itensor,  Up: itensor
 
-27.2 Definiciones para itensor
-==============================
+27.2 Funciones y variables para itensor
+=======================================
 
 27.2.1 Trabajando con objetos indexados
 ---------------------------------------
@@ -2944,9 +3934,9 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t4) g      g      ichr2      ichr2      ichr2      ichr2
                                    %1 %4      %2 %3      %5 %6      %7 r
 
-                        %4 %5  %6 %7      u          %1         %3         %2
-                     - g      g      ichr2      ichr2      ichr2      ichr2
-                                          %1 %2      %3 %5      %4 %6      %7 r
+                  %4 %5  %6 %7      u          %1         %3         %2
+               - g      g      ichr2      ichr2      ichr2      ichr2
+                                    %1 %2      %3 %5      %4 %6      %7 r
           (%i5) flipflag:true;
           (%o5)                                true
           (%i6) ishow(rename(expr))$
@@ -2954,9 +3944,9 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t6) g      g      ichr2      ichr2      ichr2      ichr2
                                    %1 %2      %3 %4      %5 %6      %7 r
 
-                        %4 %5  %6 %7      u          %1         %3         %2
-                     - g      g      ichr2      ichr2      ichr2      ichr2
-                                          %1 %2      %3 %4      %5 %6      %7 r
+                  %4 %5  %6 %7      u          %1         %3         %2
+               - g      g      ichr2      ichr2      ichr2      ichr2
+                                    %1 %2      %3 %4      %5 %6      %7 r
           (%i7) flipflag:false;
           (%o7)                                false
           (%i8) rename(%th(2));
@@ -2966,9 +3956,9 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t9) g      g      ichr2      ichr2      ichr2     ichr2
                                    %1 %6      %2 %3      %4 r      %5 %7
 
-                        %1 %2  %3 %4      %6         %5         %7        u
-                     - g      g      ichr2      ichr2      ichr2     ichr2
-                                          %1 %3      %2 %6      %4 r      %5 %7
+                  %1 %2  %3 %4      %6         %5         %7        u
+               - g      g      ichr2      ichr2      ichr2     ichr2
+                                    %1 %3      %2 %6      %4 r      %5 %7
 
 
  -- Variable opcional: flipflag
@@ -3236,7 +4226,8 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) expr:ishow('levi_civita([],[i,j])*'levi_civita([k,l],[])*a([j],[k]))$
+          (%i2) expr:ishow('levi_civita([],[i,j])
+                           *'levi_civita([k,l],[])*a([j],[k]))$
                                             i j  k
           (%t2)                  levi_civita    a  levi_civita
                                                  j            k l
@@ -3266,7 +4257,8 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
      obtiene un mensaje de error.
 
 
-          (%i7) expr:ishow('levi_civita([],[i,j])*'levi_civita([],[k,l])*a([j,k],[]))$
+          (%i7) expr:ishow('levi_civita([],[i,j])
+                           *'levi_civita([],[k,l])*a([j,k],[]))$
                                            i j            k l
           (%t7)                 levi_civita    levi_civita    a
                                                                j k
@@ -3281,9 +4273,12 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%i9) imetric(g);
           (%o9)                                done
           (%i10) ishow(lc2kdt(expr))$
-                   %3 i       k   %4 j       l     %3 i       l   %4 j       k
-          (%t10) (g     kdelta   g     kdelta   - g     kdelta   g     kdelta  ) a
-                              %3             %4               %3             %4   j k
+                   %3 i       k   %4 j       l     %3 i       l   %4 j
+          (%t10) (g     kdelta   g     kdelta   - g     kdelta   g
+                              %3             %4               %3
+                        k
+                  kdelta  ) a
+                        %4   j k
           (%i11) ishow(contract(expand(%)))$
                                             l i      l i
           (%t11)                           a    - a g
@@ -3375,7 +4370,8 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) expr:contract(expand(a([i1,j1,k1],[])*kdels([i,j,k],[i1,j1,k1])))$
+          (%i2) expr:contract(expand(a([i1,j1,k1],[])
+                      *kdels([i,j,k],[i1,j1,k1])))$
           (%i3) ishow(expr)$
           (%t3)         a      + a      + a      + a      + a      + a
                          k j i    k i j    j k i    j i k    i k j    i j k
@@ -3458,9 +4454,9 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t2) b   (v   a       + v   a     + v   a    )
                  ,l       i j,%2    ,j  i %2    ,i  %2 j
 
-                                          %1  k        %1  k      %1  k
-                                      + (v   b      - b   v    + v   b   ) a
-                                              ,%1 l    ,l  ,%1    ,l  ,%1   i j
+                                    %1  k        %1  k      %1  k
+                                + (v   b      - b   v    + v   b   ) a
+                                        ,%1 l    ,l  ,%1    ,l  ,%1   i j
 
 
  -- Función: rediff (<ten>)
@@ -3503,9 +4499,29 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t4) - ichr2        - ichr2     ichr2      - ichr2       ichr2
                        i k,j m        %1 j      i k,m        %1 j,m      i k
 
-                          l              l         %1           l           %1
-                   + ichr2        + ichr2     ichr2      + ichr2       ichr2
-                          i j,k m        %1 k      i j,m        %1 k,m      i j
+                       l              l         %1           l           %1
+                + ichr2        + ichr2     ichr2      + ichr2       ichr2
+                       i j,k m        %1 k      i j,m        %1 k,m      i j
+
+     Nota: en versiones antiguas de Maxima, las formas derivadas de los
+     símbolos de Christoffel no se podían evaluar. Este fallo ha sido
+     subsanado, de manera que `evundiff' ya no se necesita en
+     expresiones como esta:
+
+          (%i5) imetric(g);
+          (%o5)                                done
+          (%i6) ishow(ichr2([i,j],[k],l))$
+                 k %3
+                g     (g         - g         + g        )
+                        j %3,i l    i j,%3 l    i %3,j l
+          (%t6) -----------------------------------------
+                                    2
+
+                                   k %3
+                                  g     (g       - g       + g      )
+                                   ,l     j %3,i    i j,%3    i %3,j
+                                + -----------------------------------
+                                                   2
 
 
  -- Función: flush (<expr>, <tensor_1>, <tensor_2>, ...)
@@ -3726,9 +4742,13 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%t2)                                a
                                                 i j
           (%i3) ishow(covdiff(%,s))$
-                       k         %1     k         %1     k            k     %1
-          (%t3)     - a     ichr2    - a     ichr2    + a      + ichr2     a
-                       i %1      j s    %1 j      i s    i j,s        %1 s  i j
+                       k         %1     k         %1     k
+          (%t3)     - a     ichr2    - a     ichr2    + a
+                       i %1      j s    %1 j      i s    i j,s
+
+                       k     %1
+                + ichr2     a
+                       %1 s  i j
           (%i4) imetric:g;
           (%o4)                                  g
           (%i5) ishow(ev(%th(2),ichr2))$
@@ -3769,9 +4789,13 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
           (%i2) ishow(icurvature([r,s,t],[u]))$
-                       u            u         %1         u            u         %1
-          (%t2) - ichr2      - ichr2     ichr2    + ichr2      + ichr2     ichr2
-                       r t,s        %1 s      r t        r s,t        %1 t      r s
+                       u            u         %1         u
+          (%t2) - ichr2      - ichr2     ichr2    + ichr2
+                       r t,s        %1 s      r t        r s,t
+
+                                                        u         %1
+                                                 + ichr2     ichr2
+                                                        %1 t      r s
           (%i3) ishow(igeodesic_coords(%,ichr2))$
                                            u            u
           (%t3)                       ichr2      - ichr2
@@ -3779,13 +4803,13 @@ File: maxima.info,  Node: Definiciones para itensor,  Prev: Introducción a itens
           (%i4) ishow(igeodesic_coords(icurvature([r,s,t],[u]),ichr2)+
                       igeodesic_coords(icurvature([s,t,r],[u]),ichr2)+
                       igeodesic_coords(icurvature([t,r,s],[u]),ichr2))$
-                       u            u            u            u            u
-          (%t4) - ichr2      + ichr2      + ichr2      - ichr2      - ichr2
-                       t s,r        t r,s        s t,r        s r,t        r t,s
+                       u            u            u            u
+          (%t4) - ichr2      + ichr2      + ichr2      - ichr2
+                       t s,r        t r,s        s t,r        s r,t
 
-                                                                            u
-                                                                     + ichr2
-                                                                            r s,t
+                                                       u            u
+                                                - ichr2      + ichr2
+                                                       r t,s        r s,t
           (%i5) canform(%);
           (%o5)                                  0
 
@@ -4060,7 +5084,8 @@ componentes de no metricidad cuando `inonmet_flag' vale  `true'.
           (%o1)      /share/tensor/itensor.lisp
           (%i2) imetric:g;
           (%o2)                                  g
-          (%i3) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+          (%i3) covdiff(covdiff(f([],[]),i),j)
+                   -covdiff(covdiff(f([],[]),j),i)$
           (%i4) ishow(%)$
                                              %4              %2
           (%t4)                    f    ichr2    - f    ichr2
@@ -4069,7 +5094,8 @@ componentes de no metricidad cuando `inonmet_flag' vale  `true'.
           (%o5)                                  0
           (%i6) itorsion_flag:true;
           (%o6)                                true
-          (%i7) covdiff(covdiff(f([],[]),i),j)-covdiff(covdiff(f([],[]),j),i)$
+          (%i7) covdiff(covdiff(f([],[]),i),j)
+                  -covdiff(covdiff(f([],[]),j),i)$
           (%i8) ishow(%)$
                                      %8             %6
           (%t8)             f    icc2    - f    icc2    - f     + f
@@ -4271,10 +5297,10 @@ defecto), se utiliza la primera definición, si vale `true', la segunda.
                                              6
           (%i8) ishow(canform(hodge(%)))$
                            %1 %2 %3 %8            %4 %5 %6 %7
-          (%t8) levi_civita            levi_civita            g        g
-                                                               %1 %106  %2 %107
-                                                      g        g      A        /6
-                                                       %3 %108  %4 %8  %5 %6 %7
+          (%t8) levi_civita            levi_civita            g
+                                                               %1 %106
+                                       g        g        g      A         /6
+                                        %2 %107  %3 %108  %4 %8  %5 %6 %7
           (%i9) lc2kdt(%)$
 
           (%i10) %,kdelta$
@@ -4316,9 +5342,13 @@ objetos de TeX correctamente indexados.
           (%i3) idummyx:m;
           (%o3)                                  m
           (%i4) ishow(icurvature([j,k,l],[i]))$
-                      m1       i           m1       i           i            i
-          (%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2      + ichr2
-                      j k      m1 l        j l      m1 k        j l,k        j k,l
+                      m1       i           m1       i           i
+          (%t4)  ichr2    ichr2     - ichr2    ichr2     - ichr2
+                      j k      m1 l        j l      m1 k        j l,k
+
+                                                                i
+                                                         + ichr2
+                                                                j k,l
           (%i5) tentex(%)$
           $$\Gamma_{j\,k}^{m_1}\,\Gamma_{l\,m_1}^{i}-\Gamma_{j\,l}^{m_1}\,
            \Gamma_{k\,m_1}^{i}-\Gamma_{j\,l,k}^{i}+\Gamma_{j\,k,l}^{i}$$
@@ -4355,15 +5385,16 @@ tarea es `ic_convert'.
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
-          (%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)*b([i],[l,k]))$
+          (%i2) eqn:ishow(t([i,j],[k])=f([],[])*g([l,m],[])*a([],[m],j)
+                *b([i],[l,k]))$
                                        k        m   l k
           (%t2)                       t    = f a   b    g
                                        i j      ,j  i    l m
           (%i3) ic_convert(eqn);
-          (%o3) for i thru dim do (for j thru dim
-
-          do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                                 i, j, k                   m           j   i, l, k
+          (%o3) for i thru dim do (for j thru dim do (
+                 for k thru dim do
+                  t        : f sum(sum(diff(a , ct_coords ) b
+                   i, j, k                   m           j   i, l, k
 
            g    , l, 1, dim), m, 1, dim)))
             l, m
@@ -4372,10 +5403,10 @@ tarea es `ic_convert'.
           (%i5) metricconvert:true;
           (%o5)                                true
           (%i6) ic_convert(eqn);
-          (%o6) for i thru dim do (for j thru dim
-
-          do (for k thru dim do t        : f sum(sum(diff(a , ct_coords ) b
-                                 i, j, k                   m           j   i, l, k
+          (%o6) for i thru dim do (for j thru dim do (
+                 for k thru dim do
+                  t        : f sum(sum(diff(a , ct_coords ) b
+                   i, j, k                   m           j   i, l, k
 
            lg    , l, 1, dim), m, 1, dim)))
              l, m
@@ -4410,10 +5441,10 @@ File: maxima.info,  Node: ctensor,  Next: atensor,  Prev: itensor,  Up: Top
 * Menu:
 
 * Introducción a ctensor::
-* Definiciones para ctensor::
+* Funciones y variables para ctensor::
 
 
-File: maxima.info,  Node: Introducción a ctensor,  Next: Definiciones para ctensor,  Prev: ctensor,  Up: ctensor
+File: maxima.info,  Node: Introducción a ctensor,  Next: Funciones y variables para ctensor,  Prev: ctensor,  Up: ctensor
 
 28.1 Introducción a ctensor
 ===========================
@@ -4528,10 +5559,10 @@ métrica estándar.
      (%o11)                               done
 
 
-File: maxima.info,  Node: Definiciones para ctensor,  Prev: Introducción a ctensor,  Up: ctensor
+File: maxima.info,  Node: Funciones y variables para ctensor,  Prev: Introducción a ctensor,  Up: ctensor
 
-28.2 Definiciones para ctensor
-==============================
+28.2 Funciones y variables para ctensor
+=======================================
 
 28.2.1 Inicialización y preparación
 -----------------------------------
@@ -5803,10 +6834,10 @@ File: maxima.info,  Node: atensor,  Next: Series,  Prev: ctensor,  Up: Top
 * Menu:
 
 * Introducción a atensor::
-* Definiciones para atensor::
+* Funciones y variables para atensor::
 
 
-File: maxima.info,  Node: Introducción a atensor,  Next: Definiciones para atensor,  Prev: atensor,  Up: atensor
+File: maxima.info,  Node: Introducción a atensor,  Next: Funciones y variables para atensor,  Prev: atensor,  Up: atensor
 
 29.1 Introducción a atensor
 ===========================
@@ -5898,10 +6929,10 @@ embargo, `atensimp' no será siempre capaz de realizar las
 simplificaciones deseadas.
 
 
-File: maxima.info,  Node: Definiciones para atensor,  Prev: Introducción a atensor,  Up: atensor
+File: maxima.info,  Node: Funciones y variables para atensor,  Prev: Introducción a atensor,  Up: atensor
 
-29.2 Definiciones para atensor
-==============================
+29.2 Funciones y variables para atensor
+=======================================
 
  -- Función: init_atensor (<alg_type>, <opt_dims>)
  -- Función: init_atensor (<alg_type>)
@@ -6049,13 +7080,13 @@ File: maxima.info,  Node: Series,  Next: Teoría de Números,  Prev: atensor,  Up:
 
 * Menu:
 
-* Introducción a las Series::
-* Definiciones para las Series::
+* Introducción a las series::
+* Funciones y variables para las series::
 
 
-File: maxima.info,  Node: Introducción a las Series,  Next: Definiciones para las Series,  Prev: Series,  Up: Series
+File: maxima.info,  Node: Introducción a las series,  Next: Funciones y variables para las series,  Prev: Series,  Up: Series
 
-30.1 Introducción a las Series
+30.1 Introducción a las series
 ==============================
 
 Maxima dispone de las funciones `taylor' y `powerseries' para calcular
@@ -6064,682 +7095,6 @@ como `nusum' capaces de encontrar la expresión compacta de algunas
 series. Operaciones como la suma y la multiplicación operan de la forma
 habitual en el contexto de las series. Esta sección presenta las
 variables globales que controlan la expansión.
-
-
-File: maxima.info,  Node: Definiciones para las Series,  Prev: Introducción a las Series,  Up: Series
-
-30.2 Definiciones para las Series
-=================================
-
- -- Variable opcional: cauchysum
-     Valor por defecto: `false'
-
-     Cuando se multiplican sumatorios infinitos, si `sumexpand' vale
-     `true' y `cauchysum' vale `true', entonces se utilizará el
-     producto  de Cauchy en lugar del usual. En el producto de Cauchy
-     el índice de la suma interna es función del índice de la exterior
-     en lugar de variar de forma independiente. Un ejemplo aclara esta
-     idea:
-
-          (%i1) sumexpand: false$
-          (%i2) cauchysum: false$
-          (%i3) s: sum (f(i), i, 0, inf) * sum (g(j), j, 0, inf);
-                                inf         inf
-                                ====        ====
-                                \           \
-          (%o3)                ( >    f(i))  >    g(j)
-                                /           /
-                                ====        ====
-                                i = 0       j = 0
-          (%i4) sumexpand: true$
-          (%i5) cauchysum: true$
-          (%i6) ''s;
-                           inf     i1
-                           ====   ====
-                           \      \
-          (%o6)             >      >     g(i1 - i2) f(i2)
-                           /      /
-                           ====   ====
-                           i1 = 0 i2 = 0
-
-
- -- Función: deftaylor (<f_1>(<x_1>), <expr_1>, ..., <f_n>(<x_n>),
-          <expr_n>)
-     Para cada función <f_i> de variable <x_i>,  `deftaylor' define
-     <expr_i> como una serie de Taylor alrededor de cero. La expresión
-     <expr_i> será un polinomio en  <x_i> o una suma; `deftaylor'
-     admite también expresiones más generales.
-
-     La llamada `powerseries (<f_i>(<x_i>), <x_i>, 0)' devuelve la
-     serie definida por  `deftaylor'.
-
-     La función `deftaylor' evalúa sus argumentos y devuelve la lista
-     de las funciones <f_1>, ..., <f_n>.
-
-     Ejemplo:
-
-          (%i1) deftaylor (f(x), x^2 + sum(x^i/(2^i*i!^2), i, 4, inf));
-          (%o1)                          [f]
-          (%i2) powerseries (f(x), x, 0);
-                                inf
-                                ====      i1
-                                \        x         2
-          (%o2)                  >     -------- + x
-                                /       i1    2
-                                ====   2   i1!
-                                i1 = 4
-          (%i3) taylor (exp (sqrt (f(x))), x, 0, 4);
-                                2         3          4
-                               x    3073 x    12817 x
-          (%o3)/T/     1 + x + -- + ------- + -------- + . . .
-                               2     18432     307200
-
-
- -- Variable opcional: maxtayorder
-     Valor por defecto: `true'
-
-     Si `maxtayorder' vale `true', entonces durante la manipulación
-     algebraica de series truncadas de Taylor, la función `taylor'
-     trata de retener tantos términos correctos como sea posible.
-
-
- -- Función: niceindices (<expr>)
-     Cambia las etiquetas de los índices de sumas y productos de
-     <expr>. La función `niceindices' trata de cambiar cada índice al
-     valor de `niceindicespref[1]', a menos que esa etiqueta aparezca
-     ya en el sumando o factor, en cuyo caso  `niceindices' realiza
-     intentos con los siguientes elementos de  `niceindicespref', hasta
-     que encuentre una variable que que no esté en uso. Si todas las
-     variables de la lista han sido ya revisadas, se formarán nuevos
-     ínices añadiendo números enteros al valor de `niceindicespref[1]',
-     como `i0', `i1', `i2', ....
-
-     La función `niceindices' evalúa sus argumentos y devuelve una
-     expresión.
-
-     Ejemplo:
-
-          (%i1) niceindicespref;
-          (%o1)                  [i, j, k, l, m, n]
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j l + k)
-                               ! !  /
-                              l = 1 ====
-                                    k = 1
-
-
- -- Variable opcional: niceindicespref
-     Valor por defecto: `[i, j, k, l, m, n]'
-
-     La variable `niceindicespref' es la lista de la que la función
-     `niceindices' va tomando nombres de etiquetas para índices de
-     sumatorios y productos.
-
-     En `niceindicespref' se guardan normalmente nombres de variables.
-
-     Ejemplo:
-
-          (%i1) niceindicespref: [p, q, r, s, t, u]$
-          (%i2) product (sum (f (foo + i*j*bar), foo, 1, inf), bar, 1, inf);
-                           inf    inf
-                          /===\   ====
-                           ! !    \
-          (%o2)            ! !     >      f(bar i j + foo)
-                           ! !    /
-                          bar = 1 ====
-                                  foo = 1
-          (%i3) niceindices (%);
-                               inf  inf
-                              /===\ ====
-                               ! !  \
-          (%o3)                ! !   >    f(i j q + p)
-                               ! !  /
-                              q = 1 ====
-                                    p = 1
-
-
- -- Función: nusum (<expr>, <x>, <i_0>, <i_1>)
-     Calcula la suma hipergeométrica indefinida de  <expr> con respecto
-     a la variable  <x> utilizando una procedimiento de decisión debido
-     a R.W. Gosper. La expresión <expr> y el resultado deben poder ser
-     escritos como productos de potencias enteras, factoriales,
-     coeficientes binomiales y funciones racionales.
-
-     Los términos suma "definida" e "indefinida" se usan de forma
-     análoga a integración "definida" e "indefinida". La suma
-     indefinida significa dar un resultado simbólico.
-
-     Las funciones `nusum' y `unsum' disponen de cierta información
-     sobre sumas y diferencias de productos finitos. Véase también
-     `unsum'.
-
-     Ejemplos:
-
-          (%i1) nusum (n*n!, n, 0, n);
-
-          Dependent equations eliminated:  (1)
-          (%o1)                     (n + 1)! - 1
-          (%i2) nusum (n^4*4^n/binomial(2*n,n), n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o2) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i3) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o3)                   ----------------
-                                  binomial(2 n, n)
-          (%i4) unsum (prod (i^2, i, 1, n), n);
-                              n - 1
-                              /===\
-                               ! !   2
-          (%o4)              ( ! !  i ) (n - 1) (n + 1)
-                               ! !
-                              i = 1
-          (%i5) nusum (%, n, 1, n);
-
-          Dependent equations eliminated:  (2 3)
-                                      n
-                                    /===\
-                                     ! !   2
-          (%o5)                      ! !  i  - 1
-                                     ! !
-                                    i = 1
-
-
- -- Función: pade (<taylor_series>, <numer_deg_bound>,
-          <denom_deg_bound>)
-     Devuelve la lista de todas las funciones racionales que tienen el
-     desarrollo de Taylor dado, en las que la suma de los grados del
-     numerador y denominador es menor o igual que el nivel de
-     truncamiento de la serie de potencias.
-
-     La expresión <taylor_series> es una serie de Taylor univariante.
-     Los argumentos <numer_deg_bound> y <denom_deg_bound> son enteros
-     positivos que indican las cotas para numerador y denominador.
-
-     La expresión <taylor_series> también puede ser una serie de
-     Laurent, y las cotas de los grados pueden ser `inf'. El grado
-     total se define como `<numer_deg_bound> + <denom_deg_bound>'. La
-     longitud de una serie de potencias se define como `"truncation
-     level" + 1 - min(0, "order of series")'.
-
-          (%i1) taylor (1 + x + x^2 + x^3, x, 0, 3);
-                                        2    3
-          (%o1)/T/             1 + x + x  + x  + . . .
-          (%i2) pade (%, 1, 1);
-                                           1
-          (%o2)                       [- -----]
-                                         x - 1
-          (%i3) t: taylor(-(83787*x^10 - 45552*x^9 - 187296*x^8
-                             + 387072*x^7 + 86016*x^6 - 1507328*x^5
-                             + 1966080*x^4 + 4194304*x^3 - 25165824*x^2
-                             + 67108864*x - 134217728)
-                 /134217728, x, 0, 10);
-                              2    3       4       5       6        7
-                       x   3 x    x    15 x    23 x    21 x    189 x
-          (%o3)/T/ 1 - - + ---- - -- - ----- + ----- - ----- - ------
-                       2    16    32   1024    2048    32768   65536
-
-                                            8         9          10
-                                      5853 x    2847 x    83787 x
-                                    + ------- + ------- - --------- + . . .
-                                      4194304   8388608   134217728
-          (%i4) pade (t, 4, 4);
-          (%o4)                          []
-
-     No hay ninguna función racional de grado 4 en numerador y
-     denominador con este desarrollo en serie de potencias. Es
-     necesario dar un número de grados al numerador y denominador cuya
-     suma sea al menos el grado del desarrollo de la serie, a fin de
-     disponer de un número suficiente de coeficientes desconocidos para
-     calcular.
-
-          (%i5) pade (t, 5, 5);
-                               5                4                 3
-          (%o5) [- (520256329 x  - 96719020632 x  - 489651410240 x
-
-                            2
-           - 1619100813312 x  - 2176885157888 x - 2386516803584)
-
-                         5                 4                  3
-          /(47041365435 x  + 381702613848 x  + 1360678489152 x
-
-                            2
-           + 2856700692480 x  + 3370143559680 x + 2386516803584)]
-
-
- -- Variable opcional: powerdisp
-     Valor por defecto: `false'
-
-     Si `powerdisp' vale `true', se muestran las sumas con sus términos
-     ordenados de menor a mayor potencia. Así, un polinomio se presenta
-     como una serie de potencias truncada con el término constante al
-     principio y el de mayor potencia al final.
-
-     Por defecto, los términos de una suma se muestran en el orden de
-     las potencias decrecientes.
-
-
- -- Función: powerseries (<expr>, <x>, <a>)
-     Devuelve la forma general del desarrollo en serie de potencias de
-     <expr> para la variable <x> alrededor del punto <a> (que puede ser
-     `inf', de infinito).
-
-     Si `powerseries' no es capaz de desarrollar <expr>, la función
-     `taylor' puede calcular los primeros términos de la serie.
-
-     Si `verbose' vale `true', `powerseries' va mostrando mensajes
-     mientras progresa el cálculo.
-
-          (%i1) verbose: true$
-          (%i2) powerseries (log(sin(x)/x), x, 0);
-          can't expand
-                                           log(sin(x))
-          so we'll try again after applying the rule:
-                                                  d
-                                                / -- (sin(x))
-                                                [ dx
-                                  log(sin(x)) = i ----------- dx
-                                                ]   sin(x)
-                                                /
-          in the first simplification we have returned:
-                                       /
-                                       [
-                                       i cot(x) dx - log(x)
-                                       ]
-                                       /
-                              inf
-                              ====        i1  2 i1             2 i1
-                              \      (- 1)   2     bern(2 i1) x
-                               >     ------------------------------
-                              /                i1 (2 i1)!
-                              ====
-                              i1 = 1
-          (%o2)                -------------------------------------
-                                                2
-
-
- -- Variable opcional: psexpand
-     Valor por defecto: `false'
-
-     Si `psexpand' vale `true', toda expresi'on racional se muestra
-     completamente expandida. La variable `ratexpand' tiene el mismo
-     efecto.
-
-     Si `psexpand' vale `false', las expresines multivariantes se
-     presentan tal como lo hace el paquete de funciones racionales.
-
-     Si `psexpand' vale  `multi', los términos de igual grado son
-     agrupados.
-
-
- -- Función: revert (<expr>, <x>)
- -- Función: revert2 (<expr>, <x>, <n>)
-     Estas funciones devuelven el recíproco de <expr> en forma de
-     desarrollo de Taylor alrededor de cero respecto de la variable
-     <x>. La función `revert' devuelve un polinomio de grado igual a la
-     mayor potencia en <expr>.  La función `revert2' devuelve un
-     polinomio de grado <n>, el cual puede ser mayor, igual o menor que
-     el grado de  <expr>.
-
-     Para utilizar estas funciones es necesario cargarlas en memoria
-     mediante `load ("revert")'.
-
-     Ejemplos:
-
-          (%i1) load ("revert")$
-          (%i2) t: taylor (exp(x) - 1, x, 0, 6);
-                             2    3    4    5     6
-                            x    x    x    x     x
-          (%o2)/T/      x + -- + -- + -- + --- + --- + . . .
-                            2    6    24   120   720
-          (%i3) revert (t, x);
-                         6       5       4       3       2
-                     10 x  - 12 x  + 15 x  - 20 x  + 30 x  - 60 x
-          (%o3)/R/ - --------------------------------------------
-                                          60
-          (%i4) ratexpand (%);
-                               6    5    4    3    2
-                              x    x    x    x    x
-          (%o4)             - -- + -- - -- + -- - -- + x
-                              6    5    4    3    2
-          (%i5) taylor (log(x+1), x, 0, 6);
-                              2    3    4    5    6
-                             x    x    x    x    x
-          (%o5)/T/       x - -- + -- - -- + -- - -- + . . .
-                             2    3    4    5    6
-          (%i6) ratsimp (revert (t, x) - taylor (log(x+1), x, 0, 6));
-          (%o6)                           0
-          (%i7) revert2 (t, x, 4);
-                                    4    3    2
-                                   x    x    x
-          (%o7)                  - -- + -- - -- + x
-                                   4    3    2
-
-
- -- Función: taylor (<expr>, <x>, <a>, <n>)
- -- Función: taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)
- -- Función: taylor (<expr>, [<x>, <a>, <n>, 'asymp])
- -- Función: taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>, ...],
-          [<n_1>, <n_2>, ...])
- -- Función: taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>,
-          <n_2>], ...)
-     La llamada `taylor (<expr>, <x>, <a>, <n>)' expande la expresión
-     <expr> en un desarrollo  de  Taylor o de  Laurent respecto de la
-     variable <x> alrededor del punto <a>, con términos hasta `(<x> -
-     <a>)^<n>'.
-
-     Si <expr> es de la forma `<f>(<x>)/<g>(<x>)' y `<g>(<x>)' no tiene
-     términos hasta de grado <n>, entonces `taylor' intenta expandir
-     `<g>(<x>)' hasta el grado  `2 <n>'. Si aún así no hay términos no
-     nulos, `taylor' dobla el grado de la expansión de `<g>(<x>)' hasta
-     que el grado de la expansión sea menor o igual que `<n>
-     2^taylordepth'.
-
-     La llamada `taylor (<expr>, [<x_1>, <x_2>, ...], <a>, <n>)'
-     devuelve la serie en potencias truncada de grado  <n> en todas las
-     variables <x_1>, <x_2>, ... alrededor del punto `(<a>, <a>, ...)'.
-
-     La llamada `taylor (<expr>, [<x_1>, <a_1>, <n_1>], [<x_2>, <a_2>,
-     <n_2>], ...)' devuelve la serie en potencias truncada en las
-     variables <x_1>, <x_2>, ... alrededor del punto `(<a_1>, <a_2>,
-     ...)'; el truncamiento se realiza, respectivamente, en los grados
-     <n_1>, <n_2>, ....
-
-     La llamada `taylor (<expr>, [<x_1>, <x_2>, ...], [<a_1>, <a_2>,
-     ...], [<n_1>, <n_2>, ...])' devuelve la serie en potencias
-     truncada en las variables <x_1>, <x_2>, ... alrededor del punto
-     `(<a_1>, <a_2>, ...)', el truncamiento se realiza,
-     respectivamente, en los grados <n_1>, <n_2>, ....
-
-     La llamada `taylor (<expr>, [<x>, <a>, <n>, 'asymp])' devuelve el
-     desarrollo de  <expr> en potencias negativas de `<x> - <a>'. El
-     término de mayor orden es `(<x> - <a>)^<-n>'.
-
-     Si `maxtayorder' vale `true', entonces durante la manipulación
-     algebraica de las series (truncadas) de Taylor, la función
-     `taylor' intenta mantener tantos términos correctos como sea
-     posible.
-
-     Si `psexpand' vale `true', una expresión racional desarrollada se
-     muestra completamente expandida. La variable  `ratexpand' tiene el
-     mismo efecto. Si `psexpand' vale `false', una expresión
-     multivariante se mostrará tal como lo hace el paquete de funciones
-     racionales. Si  `psexpand' vale  `multi', los términos del mismo
-     grado son agrupados.
-
-     Véase también la variable `taylor_logexpand' para el control del
-     desarrollo.
-
-     Ejemplos:
-
-          (%i1) taylor (sqrt (sin(x) + a*x + 1), x, 0, 3);
-                                     2             2
-                       (a + 1) x   (a  + 2 a + 1) x
-          (%o1)/T/ 1 + --------- - -----------------
-                           2               8
-
-                                             3      2             3
-                                         (3 a  + 9 a  + 9 a - 1) x
-                                       + -------------------------- + . . .
-                                                     48
-          (%i2) %^2;
-                                              3
-                                             x
-          (%o2)/T/           1 + (a + 1) x - -- + . . .
-                                             6
-          (%i3) taylor (sqrt (x + 1), x, 0, 5);
-                                 2    3      4      5
-                            x   x    x    5 x    7 x
-          (%o3)/T/      1 + - - -- + -- - ---- + ---- + . . .
-                            2   8    16   128    256
-          (%i4) %^2;
-          (%o4)/T/                  1 + x + . . .
-          (%i5) product ((1 + x^i)^2.5, i, 1, inf)/(1 + x^2);
-                                   inf
-                                  /===\
-                                   ! !    i     2.5
-                                   ! !  (x  + 1)
-                                   ! !
-                                  i = 1
-          (%o5)                   -----------------
-                                        2
-                                       x  + 1
-          (%i6) ev (taylor(%, x,  0, 3), keepfloat);
-                                         2           3
-          (%o6)/T/    1 + 2.5 x + 3.375 x  + 6.5625 x  + . . .
-          (%i7) taylor (1/log (x + 1), x, 0, 3);
-                                         2       3
-                           1   1   x    x    19 x
-          (%o7)/T/         - + - - -- + -- - ----- + . . .
-                           x   2   12   24    720
-          (%i8) taylor (cos(x) - sec(x), x, 0, 5);
-                                          4
-                                     2   x
-          (%o8)/T/                - x  - -- + . . .
-                                         6
-          (%i9) taylor ((cos(x) - sec(x))^3, x, 0, 5);
-          (%o9)/T/                    0 + . . .
-          (%i10) taylor (1/(cos(x) - sec(x))^3, x, 0, 5);
-                                                         2          4
-                      1     1       11      347    6767 x    15377 x
-          (%o10)/T/ - -- + ---- + ------ - ----- - ------- - --------
-                       6      4        2   15120   604800    7983360
-                      x    2 x    120 x
-
-                                                                    + . . .
-          (%i11) taylor (sqrt (1 - k^2*sin(x)^2), x, 0, 6);
-                         2  2       4      2   4
-                        k  x    (3 k  - 4 k ) x
-          (%o11)/T/ 1 - ----- - ----------------
-                          2            24
-
-                                              6       4       2   6
-                                         (45 k  - 60 k  + 16 k ) x
-                                       - -------------------------- + . . .
-                                                    720
-          (%i12) taylor ((x + 1)^n, x, 0, 4);
-                                2       2     3      2         3
-                              (n  - n) x    (n  - 3 n  + 2 n) x
-          (%o12)/T/ 1 + n x + ----------- + --------------------
-                                   2                 6
-
-                                         4      3       2         4
-                                       (n  - 6 n  + 11 n  - 6 n) x
-                                     + ---------------------------- + . . .
-                                                    24
-          (%i13) taylor (sin (y + x), x, 0, 3, y, 0, 3);
-                         3                 2
-                        y                 y
-          (%o13)/T/ y - -- + . . . + (1 - -- + . . .) x
-                        6                 2
-
-                              3                       2
-                         y   y            2      1   y            3
-                    + (- - + -- + . . .) x  + (- - + -- + . . .) x  + . . .
-                         2   12                  6   12
-          (%i14) taylor (sin (y + x), [x, y], 0, 3);
-                               3        2      2      3
-                              x  + 3 y x  + 3 y  x + y
-          (%o14)/T/   y + x - ------------------------- + . . .
-                                          6
-          (%i15) taylor (1/sin (y + x), x, 0, 3, y, 0, 3);
-                    1   y              1    1               1            2
-          (%o15)/T/ - + - + . . . + (- -- + - + . . .) x + (-- + . . .) x
-                    y   6               2   6                3
-                                       y                    y
-
-                                                     1            3
-                                                + (- -- + . . .) x  + . . .
-                                                      4
-                                                     y
-          (%i16) taylor (1/sin (y + x), [x, y], 0, 3);
-                                       3         2       2        3
-                      1     x + y   7 x  + 21 y x  + 21 y  x + 7 y
-          (%o16)/T/ ----- + ----- + ------------------------------- + . . .
-                    x + y     6                   360
-
-
- -- Variable opcional: taylordepth
-     Valor por defecto: 3
-
-     Si todavía no hay términos no nulos, la función `taylor' dobla el
-     grado del desarrollo de `<g>(<x>)' tantas veces como sea necesario
-     para que el grado del desarrollo sea menor o igual que `<n>
-     2^taylordepth'.
-
-
- -- Función: taylorinfo (<expr>)
-     Devuelve información sobre el desarrollo de Taylor <expr>. El
-     valor devuelto por esta función es una lista de listas. Cada lista
-     contiene el nombre de una variable, el punto de expansión y el
-     grado del desarrollo.
-
-     La función `taylorinfo' devuelve `false' si <expr> no es un
-     desarrollo de Taylor.
-
-     Ejemplo:
-
-          (%i1) taylor ((1 - y^2)/(1 - x), x, 0, 3, [y, a, inf]);
-                            2                       2
-          (%o1)/T/ - (y - a)  - 2 a (y - a) + (1 - a )
-
-                   2                        2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   2
-           + (1 - a  - 2 a (y - a) - (y - a) ) x
-
-                   2                        2   3
-           + (1 - a  - 2 a (y - a) - (y - a) ) x  + . . .
-          (%i2) taylorinfo(%);
-          (%o2)               [[y, a, inf], [x, 0, 3]]
-
-
- -- Función: taylorp (<expr>)
-     Devuelve `true' si <expr> es un desarrollo de Taylor y `false' en
-     caso contrario.
-
-
- -- Variable opcional: taylor_logexpand
-     Valor por defecto: `true'
-
-     La variable `taylor_logexpand' controla los desarrollos de
-     logaritmos en la función `taylor'.
-
-     Si `taylor_logexpand' vale `true', todos los logaritmos se
-     expanden completamente de manera que algunos problemas que se
-     plantean debido a ciertas identidades logarítmicas no interfieran
-     con el proceso del cálculo del desarrollo de Taylor. Sin embargo,
-     este proceder no es del todo correcto.
-
-
- -- Variable opcional: taylor_order_coefficients
-     Valor por defecto: `true'
-
-     La variable `taylor_order_coefficients' controla la ordenación de
-     los coeficientes en un desarrollo de Taylor.
-
-     Si `taylor_order_coefficients' vale `true', los coeficientes del
-     desarrollo de Taylor se ordenan de la forma canónica.
-
-
- -- Función: taylor_simplifier (<expr>)
-     Simplifica los coeficientes de la serie de potencias <expr>. Esta
-     función es llamada desde la función `taylor'.
-
-
- -- Variable opcional: taylor_truncate_polynomials
-     Valor por defecto: `true'
-
-     Si `taylor_truncate_polynomials' vale `true', los polinomios
-     quedan truncados en base a los niveles de truncamiento de entrada.
-
-     En otro caso, aquellos polinomios que se utilicen como entrada a
-     la función  `taylor' se consideran que tienen precisión infinita.
-
-
- -- Función: taytorat (<expr>)
-     Convierte <expr> del formato de `taylor' al formato CRE (Canonical
-     Rational Expression). El efecto es el mismo que haciendo  `rat
-     (ratdisrep (<expr>))', pero más rápido.
-
-
- -- Función: trunc (<expr>)
-     Devuelve la representación interna de la expresión <expr> de tal
-     forma como si sus sumas fuesen una serie truncada de Taylor. La
-     expresión <expr> no sufre ninguna otra modificación.
-
-     Ejemplo:
-
-          (%i1) expr: x^2 + x + 1;
-                                      2
-          (%o1)                      x  + x + 1
-          (%i2) trunc (expr);
-                                          2
-          (%o2)                  1 + x + x  + . . .
-          (%i3) is (expr = trunc (expr));
-          (%o3)                         true
-
-
- -- Función: unsum (<f>, <n>)
-     Devuelve la diferencia `<f>(<n>) - <f>(<n> - 1)'. En cierto
-     sentido `unsum' es la inversa de `sum'.
-
-     Véase también `nusum'.
-
-     Ejemplos:
-
-          (%i1) g(p) := p*4^n/binomial(2*n,n);
-                                               n
-                                            p 4
-          (%o1)               g(p) := ----------------
-                                      binomial(2 n, n)
-          (%i2) g(n^4);
-                                        4  n
-                                       n  4
-          (%o2)                   ----------------
-                                  binomial(2 n, n)
-          (%i3) nusum (%, n, 0, n);
-                               4        3       2              n
-                2 (n + 1) (63 n  + 112 n  + 18 n  - 22 n + 3) 4      2
-          (%o3) ------------------------------------------------ - ------
-                              693 binomial(2 n, n)                 3 11 7
-          (%i4) unsum (%, n);
-                                        4  n
-                                       n  4
-          (%o4)                   ----------------
-                                  binomial(2 n, n)
-
-
- -- Variable opcional: verbose
-     Valor por defecto: `false'
-
-     Si `verbose' vale `true', la función `powerseries' va imprimiendo
-     mensajes durante su ejecución.
-
-
-
-File: maxima.info,  Node: Teoría de Números,  Next: Simetrías,  Prev: Series,  Up: Top
-
-31 Teoría de Números
-********************
-
-* Menu:
-
-* Definiciones para Teoría de Números::
 
 
 

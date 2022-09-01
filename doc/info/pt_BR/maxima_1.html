@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on Maio, 2 2007 by texi2html 1.76 -->
+<!-- Created on Agosto, 25 2007 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -97,14 +97,15 @@ div.synopsisbox
 
 pre.example
 {
-    border: none;
+    border: 1px solid gray;
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    background: rgb(247,242,180); /* kind of sandy */
+    /* background: rgb(247,242,180); */ /* kind of sandy */
     /* background: rgb(200,255,255); */ /* sky blue */
-    font-family: "Lucida Console", monospace
+    background-color: #F1F5F9; /* light blue-gray */
+    /* font-family: "Lucida Console", monospace */
 }
 
 div.spacerbox
@@ -120,6 +121,18 @@ div.image
     padding: 1em;
     text-align: center;
 }
+
+div.categorybox
+{
+    border: 1px solid gray;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: rgb(247,242,220);
+}
+
+
 -->
 </style>
 
@@ -143,7 +156,7 @@ div.image
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_75.html#SEC278" title="Index">&Iacute;ndice</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC296" title="Index">&Iacute;ndice</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <h1 class="chapter"> 1. Introdu&ccedil;&atilde;o ao Maxima </h1>
@@ -152,7 +165,7 @@ div.image
 de vers&atilde;o e uma linha de comando.  Termine cada comando Maxima com um ponto e v&iacute;rgula.
 Termine uma sess&atilde;o com o comando &quot;quit();&quot;.  Aqui est&aacute; um exemplo de sess&atilde;o:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">[wfs@chromium]$ maxima
+<pre class="example">[wfs@chromium]$ maxima
 Maxima 5.9.1 http://maxima.sourceforge.net
 Using Lisp CMU Common Lisp 19a
 Distributed under the GNU Public License. See the file COPYING.
@@ -170,51 +183,76 @@ provides bug reporting information.
 (%o3)       (x - 1) (x + 1) (x  - x + 1) (x  + x + 1)
 (%i4) quit();
 [wfs@chromium]$
-</pre></td></tr></table>
+</pre>
 <p>Maxima pode procurar as p&aacute;ginas info.  Use o comando <kbd>describe</kbd> para mostrar
-todos os comandos e vari&aacute;veis contendo uma dada seq&uuml;&ecirc;ncia de caracteres, e opcionalmente sua
-documenta&ccedil;&atilde;o.  O ponto de interroga&ccedil;&atilde;o <code>?</code> &eacute; uma abreviatura para <code>describe</code>:
+informa&ccedil;&otilde;es sobre o comando ou todos os comandos e vari&aacute;veis contendo 
+uma seq&uuml;&ecirc;ncia de caracteres. 
+O ponto de interroga&ccedil;&atilde;o <code>?</code> (busca exata) e o duplo ponto de interroga&ccedil;&atilde;o <code>??</code> 
+(busca inexata) s&atilde;o abrevia&ccedil;&otilde;es para <code>describe</code>:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) ? integ
+<pre class="example">(%i1) ?? integ
+ 0: Functions and Variables for Elliptic Integrals
+ 1: Functions and Variables for Integration
+ 2: Introduction to Elliptic Functions and Integrals
+ 3: Introduction to Integration
+ 4: askinteger  (Functions and Variables for Simplification)
+ 5: integerp  (Functions and Variables for Miscellaneous Options)
+ 6: integer_partitions  (Functions and Variables for Sets)
+ 7: integrate  (Functions and Variables for Integration)
+ 8: integrate_use_rootsof  (Functions and Variables for Integration)
+ 9: integration_constant_counter  (Functions and Variables for Integration)
+ 10: nonnegintegerp  (Functions and Variables for linearalgebra)
+Enter space-separated numbers, `all' or `none': 5 4
 
- 0: (maxima.info)Introduction to Elliptic Functions and Integrals.
- 1: Definitions for Elliptic Integrals.
- 2: Integration.
- 3: Introduction to Integration.
- 4: Definitions for Integration.
- 5: askinteger :Definitions for Simplification.
- 6: integerp :Definitions for Miscellaneous Options.
- 7: integrate :Definitions for Integration.
- 8: integrate_use_rootsof :Definitions for Integration.
- 9: integration_constant_counter :Definitions for Integration.
-Enter space-separated numbers, `all' or `none': 6 5
+ -- Function: integerp (&lt;expr&gt;)
+     Returns `true' if &lt;expr&gt; is a literal numeric integer, otherwise
+     `false'.
 
-Info from file /usr/local/info/maxima.info:
- - Function: integerp (&lt;expr&gt;)
-     Returns `true' if &lt;expr&gt; is an integer, otherwise `false'.
+     `integerp' returns false if its argument is a symbol, even if the
+     argument is declared integer.
 
+     Examples:
 
- - Function: askinteger (expr, integer)
- - Function: askinteger (expr)
- - Function: askinteger (expr, even)
- - Function: askinteger (expr, odd)
-     `askinteger (expr, integer)' attempts to determine from the
-     `assume' database whether `expr' is an integer.  `askinteger' will
-     ask the user if it cannot tell otherwise, and attempt to install
-     the information in the database if possible.  `askinteger (expr)'
-     is equivalent to `askinteger (expr, integer)'.
+          (%i1) integerp (0);
+          (%o1)                         true
+          (%i2) integerp (1);
+          (%o2)                         true
+          (%i3) integerp (-17);
+          (%o3)                         true
+          (%i4) integerp (0.0);
+          (%o4)                         false
+          (%i5) integerp (1.0);
+          (%o5)                         false
+          (%i6) integerp (%pi);
+          (%o6)                         false
+          (%i7) integerp (n);
+          (%o7)                         false
+          (%i8) declare (n, integer);
+          (%o8)                         done
+          (%i9) integerp (n);
+          (%o9)                         false
 
-     `askinteger (expr, even)' and `askinteger (expr, odd)' likewise
-     attempt to determine if `expr' is an even integer or odd integer,
-     respectively.
+ -- Function: askinteger (&lt;expr&gt;, integer)
+ -- Function: askinteger (&lt;expr&gt;)
+ -- Function: askinteger (&lt;expr&gt;, even)
+ -- Function: askinteger (&lt;expr&gt;, odd)
+     `askinteger (&lt;expr&gt;, integer)' attempts to determine from the
+     `assume' database whether &lt;expr&gt; is an integer.  `askinteger'
+     prompts the user if it cannot tell otherwise, and attempt to
+     install the information in the database if possible.  `askinteger
+     (&lt;expr&gt;)' is equivalent to `askinteger (&lt;expr&gt;, integer)'.
 
-(%o1)                         false
-</pre></td></tr></table>
+     `askinteger (&lt;expr&gt;, even)' and `askinteger (&lt;expr&gt;, odd)'
+     likewise attempt to determine if &lt;expr&gt; is an even integer or odd
+     integer, respectively.
+
+(%o1)                                true
+</pre>
 <p>Para usar um resultado em c&aacute;lculos posteriores, voc&ecirc; pode atribuir esse valor a uma vari&aacute;vel ou
 referir-se a esse mesmo valor atrav&eacute;s de seu r&oacute;tulo gerado automaticamente.  Adicionalmente, <kbd>%</kbd>
 refere-se ao mais recente resultado calculado:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) u: expand ((x + y)^6);
+<pre class="example">(%i1) u: expand ((x + y)^6);
        6        5       2  4       3  3       4  2      5      6
 (%o1) y  + 6 x y  + 15 x  y  + 20 x  y  + 15 x  y  + 6 x  y + x
 (%i2) diff (u, x);
@@ -223,17 +261,17 @@ refere-se ao mais recente resultado calculado:
 (%i3) factor (%o2);
                                     5
 (%o3)                      6 (y + x)
-</pre></td></tr></table>
+</pre>
 <p>Maxima tem conhecimento sobre n&uacute;meros complexos e constantes num&eacute;ricas:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) cos(%pi);
+<pre class="example">(%i1) cos(%pi);
 (%o1)                          - 1
 (%i2) exp(%i*%pi);
 (%o2)                          - 1
-</pre></td></tr></table>
+</pre>
 <p>Maxima pode fazer c&aacute;lculos diferenciais e integrais:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) u: expand ((x + y)^6);
+<pre class="example">(%i1) u: expand ((x + y)^6);
        6        5       2  4       3  3       4  2      5      6
 (%o1) y  + 6 x y  + 15 x  y  + 20 x  y  + 15 x  y  + 6 x  y + x
 (%i2) diff (%, x);
@@ -245,21 +283,21 @@ refere-se ao mais recente resultado calculado:
            log(x  - x + 1)        sqrt(3)    log(x + 1)
 (%o3)    - --------------- + ------------- + ----------
                   6             sqrt(3)          3
-</pre></td></tr></table>
+</pre>
 <p>Maxima pode resolver sistemas lineares e equa&ccedil;&otilde;es c&uacute;bicas:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) linsolve ([3*x + 4*y = 7, 2*x + a*y = 13], [x, y]);
+<pre class="example">(%i1) linsolve ([3*x + 4*y = 7, 2*x + a*y = 13], [x, y]);
                         7 a - 52        25
 (%o1)              [x = --------, y = -------]
                         3 a - 8       3 a - 8
 (%i2) solve (x^3 - 3*x^2 + 5*x = 15, x);
 (%o2)       [x = - sqrt(5) %i, x = sqrt(5) %i, x = 3]
-</pre></td></tr></table>
+</pre>
 <p>Maxima pode resolver sistemas de equa&ccedil;&otilde;es n&atilde;o lineares.  Note que se voc&ecirc; n&atilde;o
 quer um resultado impresso, voc&ecirc; pode encerrar seu comando com <kbd>$</kbd> em lugar de
 encerrar com <kbd>;</kbd>.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
+<pre class="example">(%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
 (%i2) eq_2: 3*x + y = 1$
 (%i3) solve ([eq_1, eq_2]);
               3 sqrt(5) + 7      sqrt(5) + 3
@@ -269,11 +307,11 @@ encerrar com <kbd>;</kbd>.
                                3 sqrt(5) - 7        sqrt(5) - 3
                           [y = -------------, x = - -----------]]
                                      2                   2
-</pre></td></tr></table>
+</pre>
 <p>Maxima pode gerar gr&aacute;ficos de uma ou mais
 fun&ccedil;&otilde;es:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
+<pre class="example">(%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
 (%i2) eq_2: 3*x + y = 1$
 (%i3) solve ([eq_1, eq_2]);
               3 sqrt(5) + 7      sqrt(5) + 3
@@ -291,7 +329,7 @@ fun&ccedil;&otilde;es:
 (%o2) 
 (%i3) plot3d (sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2), [x, -12, 12], [y, -12, 12]);
 (%o3) 
-</pre></td></tr></table>
+</pre>
 
 
 <hr size="6">
@@ -305,12 +343,12 @@ fun&ccedil;&otilde;es:
 <td valign="middle" align="left"> &nbsp; </td>
 <td valign="middle" align="left">[<a href="maxima.html#SEC_Top" title="Cover (top) of document">Top</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="maxima_75.html#SEC278" title="Index">&Iacute;ndice</a>]</td>
+<td valign="middle" align="left">[<a href="maxima_77.html#SEC296" title="Index">&Iacute;ndice</a>]</td>
 <td valign="middle" align="left">[<a href="maxima_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>Maio, 2 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>Agosto, 25 2007</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

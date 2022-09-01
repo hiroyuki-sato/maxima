@@ -137,6 +137,7 @@ contrib/diffequations/ode1_lie.mac\
 contrib/diffequations/ode1_nonlinear.mac\
 contrib/diffequations/ode1_riccati.mac\
 contrib/diffequations/odelin.lisp\
+contrib/diffequations/odeutils.lisp\
 contrib/diffequations/tests/Makefile\
 contrib/diffequations/tests/README\
 contrib/diffequations/spherodialwave.lisp\
@@ -186,6 +187,7 @@ contrib/format/coeflistp.lisp\
 contrib/format/format.announce\
 contrib/format/format.demo\
 contrib/format/format.lisp\
+contrib/format/format.mac\
 contrib/format/format.ps\
 contrib/format/pois2.demo\
 contrib/format/pois2m.ps\
@@ -255,6 +257,12 @@ contrib/gentran/vaxinit.lisp\
 contrib/gentran/vaxlsp.lisp\
 contrib/ggf.mac\
 contrib/graph2d.lisp\
+contrib/graphs/create_graph.mac\
+contrib/graphs/draw_graph.mac\
+contrib/graphs/graph_core.lisp\
+contrib/graphs/graph_polynomials.mac\
+contrib/graphs/graphs.mac\
+contrib/graphs/graphs_documentation.pdf\
 contrib/impdiff.mac\
 contrib/implicit_plot.lisp\
 contrib/levin/levin.dem\
@@ -269,6 +277,7 @@ contrib/lurkmathml/mathml_ref_list_for_IE\
 contrib/lurkmathml/mathmltest\
 contrib/lurkmathml/maximadiffs.txt\
 contrib/makeOrders.mac\
+contrib/maxima-server.lisp\
 contrib/maximaMathML/CtMathML.lisp\
 contrib/maximaMathML/PrMathML.lisp\
 contrib/maximaMathML/load-mathml.lisp\
@@ -287,21 +296,15 @@ contrib/nset/announce-1.2.txt\
 contrib/nset/changes_1.0_to_1.2.txt\
 contrib/numericalio/README\
 contrib/numericalio/array.data\
-contrib/numericalio/array.mac\
-contrib/numericalio/csv.mac\
-contrib/numericalio/is_equal_array.lisp\
-contrib/numericalio/my_flatten.mac\
 contrib/numericalio/numericalio.lisp\
 contrib/numericalio/pipe.data\
 contrib/numericalio/ragged.data\
-contrib/numericalio/ragged.mac\
 contrib/numericalio/really-csv.data\
 contrib/numericalio/really-space-separated.csv\
 contrib/numericalio/rectangular.csv\
 contrib/numericalio/rectangular.data\
-contrib/numericalio/rectangular.mac\
+contrib/numericalio/rtest_numericalio.mac\
 contrib/numericalio/semicolon.data\
-contrib/numericalio/separators.mac\
 contrib/pdiff/battex.sty\
 contrib/pdiff/history.txt\
 contrib/pdiff/pdiff-doc.pdf\
@@ -369,6 +372,7 @@ contrib/rand/vandpol.mac\
 contrib/rand/vandpol.usg\
 contrib/rtest_opproperties.mac\
 contrib/rtestdefstruct.mac\
+contrib/rtest_lsquares.mac\
 contrib/sarag/aliases.mac\
 contrib/sarag/arag_test.mac\
 contrib/sarag/constants.mac\
@@ -431,6 +435,9 @@ contrib/stringproc/stringproc.lisp\
 contrib/stringproc/stringproc.mac\
 contrib/unit/unit-functions.lisp\
 contrib/unit/unit.mac\
+contrib/vector3d/vector3d.dem\
+contrib/vector3d/vector3d.mac\
+contrib/vector3d/vector3d.usg\
 contrib/opsubst.lisp\
 contrib/stirling.mac\
 contrib/tex2ooo.lisp\
@@ -463,6 +470,9 @@ diffequations/phypgm.mac\
 diffequations/pivtr.mac\
 diffequations/pmain.mac\
 draw/draw.lisp\
+draw/picture.lisp\
+draw/worldmap.mac\
+draw/wbd.lisp\
 dynamics/complex_dynamics.lisp\
 dynamics/dynamics.mac\
 dynamics/plotdf.lisp\
@@ -896,6 +906,7 @@ maxima-init.lisp\
 share.usg\
 template.texi\
 builtins-list.txt\
+share_testsuite.mac\
 $(sharefiles)
 
 EXTRA_DIST = $(genericdirDATA)

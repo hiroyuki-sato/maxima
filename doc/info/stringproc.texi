@@ -1,11 +1,11 @@
 @menu
 * Introduction to string processing::
-* Definitions for input and output::
-* Definitions for characters::
-* Definitions for strings::
+* Functions and Variables for input and output::
+* Functions and Variables for characters::
+* Functions and Variables for strings::
 @end menu
 
-@node Introduction to string processing, Definitions for input and output, stringproc, stringproc
+@node Introduction to string processing, Functions and Variables for input and output, stringproc, stringproc
 @section Introduction to string processing
 
 @code{stringproc.lisp} enlarges Maximas capabilities of working with strings 
@@ -121,7 +121,8 @@ needs @code{parse_string}, which will be autoloaded from @code{eval_string.lisp}
 (%i10) map( parse_string, list );
 (%o10)           [42, 1.234, sqrt(2), %pi, 0.01, 0.01, 1.0b-2]
 (%i11) float(%);
-(%o11) [42.0, 1.234, 1.414213562373095, 3.141592653589793, 0.01, 0.01, 0.01]
+(%o11) [42.0, 1.234, 1.414213562373095, 3.141592653589793, 0.01,
+                                                     0.01, 0.01]
 (%i12) readline(s);
 (%o12)                               false
 (%i13) close(s)$
@@ -129,8 +130,8 @@ needs @code{parse_string}, which will be autoloaded from @code{eval_string.lisp}
 
 @code{readline} returns @code{false} when the end of file occurs.
 
-@node Definitions for input and output, Definitions for characters, Introduction to string processing, stringproc
-@section Definitions for input and output
+@node Functions and Variables for input and output, Functions and Variables for characters, Introduction to string processing, stringproc
+@section Functions and Variables for input and output
 
 Example: 
 
@@ -148,7 +149,8 @@ Example:
 (%i1) s: openw("E:/file.txt");
 (%o1)                     #<output stream E:/file.txt>
 (%i2) control: 
-"~2tAn atom: ~20t~a~%~2tand a list: ~20t~@{~r ~@}~%~2tand an integer: ~20t~d~%"$
+"~2tAn atom: ~20t~a~%~2tand a list: ~20t~@{~r ~@}~%~2t\
+and an integer: ~20t~d~%"$
 (%i3) printf( s,control, 'true,[1,2,3],42 )$
 (%o3)                                false
 (%i4) close(s);
@@ -276,8 +278,8 @@ For example, @code{~:[} fails.
 (%o1)                 String sym 1.23 2*sqrt(3) CXLIV
 (%i2) printf( false,"~@{~a ~@}",["one",2,"THREE"] );
 (%o2)                          one 2 THREE 
-(%i3) printf( true,"~@{~@{~9,1f ~@}~%~@}",mat ),
-              mat = args( matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]) )$
+(%i3) printf(true,"~@{~@{~9,1f ~@}~%~@}",mat ),
+          mat = args(matrix([1.1,2,3.33],[4,5,6],[7,8.88,9]))$
       1.1       2.0       3.3 
       4.0       5.0       6.0 
       7.0       8.9       9.0 
@@ -303,13 +305,13 @@ and it disregards line length. @code{newline()}, which will be autoloaded from @
 might be useful, if you whish to place intermediate line breaking.
 
 @c ===beg===
-@c for n:0 thru 22 do sprint( fib(n) )$
+@c for n:0 thru 20 do sprint( fib(n) )$
 @c for n:0 thru 22 do ( 
 @c    sprint(fib(n)), if mod(n,10)=9 then newline() )$
 @c ===end===
 @example
-(%i1) for n:0 thru 22 do sprint( fib(n) )$
-0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 
+(%i1) for n:0 thru 20 do sprint( fib(n) )$
+0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765
 (%i2) for n:0 thru 22 do ( 
          sprint(fib(n)), if mod(n,10)=9 then newline() )$
 0 1 1 2 3 5 8 13 21 34 
@@ -319,8 +321,8 @@ might be useful, if you whish to place intermediate line breaking.
 
 @end deffn
 
-@node Definitions for characters, Definitions for strings, Definitions for input and output, stringproc
-@section Definitions for characters
+@node Functions and Variables for characters, Functions and Variables for strings, Functions and Variables for input and output, stringproc
+@section Functions and Variables for characters
 
 @deffn {Function} alphacharp (@var{char})    
 Returns @code{true} if @var{char} is an alphabetic character. 
@@ -338,11 +340,13 @@ Returns the character corresponding to the ASCII number @var{int}.
 
 @c ===beg===
 @c for n from 0 thru 255 do ( 
-@c    tmp: ascii(n), if alphacharp(tmp) then sprint(tmp), if n=96 then newline() )$
+@c    tmp: ascii(n), if alphacharp(tmp) then sprint(tmp), 
+@c       if n=96 then newline() )$
 @c ===end===
 @example
 (%i1) for n from 0 thru 255 do ( 
-tmp: ascii(n), if alphacharp(tmp) then sprint(tmp), if n=96 then newline() )$
+   tmp: ascii(n), if alphacharp(tmp) then sprint(tmp),
+      if n=96 then newline() )$
 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 
 a b c d e f g h i j k l m n o p q r s t u v w x y z
 @end example
@@ -451,8 +455,8 @@ Returns @code{true} if @var{char} is an uppercase character.
 
 @end deffn
 
-@node Definitions for strings,  , Definitions for characters, stringproc
-@section Definitions for strings
+@node Functions and Variables for strings,  , Functions and Variables for characters, stringproc
+@section Functions and Variables for strings
 
 @deffn {Function} sunlisp (@var{lisp_string}) 
 Converts a Lisp-string into a Maxima-string.

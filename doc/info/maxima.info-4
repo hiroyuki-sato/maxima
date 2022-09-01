@@ -9,10 +9,491 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Symmetries
+File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Number Theory,  Up: Number Theory
 
-32.1 Definitions for Symmetries
-===============================
+31.1 Functions and Variables for Number Theory
+==============================================
+
+ -- Function: bern (<n>)
+     Returns the <n>'th Bernoulli number for integer <n>.  Bernoulli
+     numbers equal to zero are suppressed if `zerobern' is `false'.
+
+     See also `burn'.
+
+          (%i1) zerobern: true$
+          (%i2) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+                            1  1       1      1        1
+          (%o2)       [1, - -, -, 0, - --, 0, --, 0, - --]
+                            2  6       30     42       30
+          (%i3) zerobern: false$
+          (%i4) map (bern, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+                      1  1    1   5     691   7    3617  43867
+          (%o4) [1, - -, -, - --, --, - ----, -, - ----, -----]
+                      2  6    30  66    2730  6    510    798
+
+
+ -- Function: bernpoly (<x>, <n>)
+     Returns the <n>'th Bernoulli polynomial in the variable <x>.
+
+
+ -- Function: bfzeta (<s>, <n>)
+     Returns the Riemann zeta function for the argument <s>.  The
+     return value is a big float (bfloat); <n> is the number of digits
+     in the return value.
+
+     `load ("bffac")' loads this function.
+
+
+ -- Function: bfhzeta (<s>, <h>, <n>)
+     Returns the Hurwitz zeta function for the arguments <s> and <h>.
+     The return value is a big float (bfloat); <n> is the number of
+     digits in the return value.
+
+     The Hurwitz zeta function is defined as
+
+          sum ((k+h)^-s, k, 0, inf)
+
+     `load ("bffac")' loads this function.
+
+
+ -- Function: binomial (<x>, <y>)
+     The binomial coefficient `<x>!/(<y>! (<x> - <y>)!)'.  If <x> and
+     <y> are integers, then the numerical value of the binomial
+     coefficient is computed.  If <y>, or <x - y>, is an integer, the
+     binomial coefficient is expressed as a polynomial.
+
+     Examples:
+
+          (%i1) binomial (11, 7);
+          (%o1)                          330
+          (%i2) 11! / 7! / (11 - 7)!;
+          (%o2)                          330
+          (%i3) binomial (x, 7);
+                  (x - 6) (x - 5) (x - 4) (x - 3) (x - 2) (x - 1) x
+          (%o3)   -------------------------------------------------
+                                        5040
+          (%i4) binomial (x + 7, x);
+                (x + 1) (x + 2) (x + 3) (x + 4) (x + 5) (x + 6) (x + 7)
+          (%o4) -------------------------------------------------------
+                                         5040
+          (%i5) binomial (11, y);
+          (%o5)                    binomial(11, y)
+
+
+ -- Function: burn (<n>)
+     Returns the <n>'th Bernoulli number for integer <n>.  `burn' may
+     be more efficient than `bern' for large, isolated <n> (perhaps <n>
+     greater than 105 or so), as `bern' computes all the Bernoulli
+     numbers up to index <n> before returning.
+
+     `burn' exploits the observation that (rational) Bernoulli numbers
+     can be approximated by (transcendental) zetas with tolerable
+     efficiency.
+
+     `load ("bffac")' loads this function.
+
+
+ -- Function: cf (<expr>)
+     Converts <expr> into a continued fraction.  <expr> is an expression
+     comprising continued fractions and square roots of integers.
+     Operands in the expression may be combined with arithmetic
+     operators.  Aside from continued fractions and square roots,
+     factors in the expression must be integer or rational numbers.
+     Maxima does not know about operations on continued fractions
+     outside of `cf'.
+
+     `cf' evaluates its arguments after binding `listarith' to `false'.
+     `cf' returns a continued fraction, represented as a list.
+
+     A continued fraction `a + 1/(b + 1/(c + ...))' is represented by
+     the list `[a, b, c, ...]'.  The list elements `a', `b', `c', ...
+     must evaluate to integers.  <expr> may also contain `sqrt (n)'
+     where `n' is an integer.  In this case `cf' will give as many
+     terms of the continued fraction as the value of the variable
+     `cflength' times the period.
+
+     A continued fraction can be evaluated to a number by evaluating
+     the arithmetic representation returned by `cfdisrep'.  See also
+     `cfexpand' for another way to evaluate a continued fraction.
+
+     See also `cfdisrep', `cfexpand', and `cflength'.
+
+     Examples:
+
+        * <expr> is an expression comprising continued fractions and
+          square roots of integers.
+
+               (%i1) cf ([5, 3, 1]*[11, 9, 7] + [3, 7]/[4, 3, 2]);
+               (%o1)               [59, 17, 2, 1, 1, 1, 27]
+               (%i2) cf ((3/17)*[1, -2, 5]/sqrt(11) + (8/13));
+               (%o2)        [0, 1, 1, 1, 3, 2, 1, 4, 1, 9, 1, 9, 2]
+
+        * `cflength' controls how many periods of the continued fraction
+          are computed for algebraic, irrational numbers.
+
+               (%i1) cflength: 1$
+               (%i2) cf ((1 + sqrt(5))/2);
+               (%o2)                    [1, 1, 1, 1, 2]
+               (%i3) cflength: 2$
+               (%i4) cf ((1 + sqrt(5))/2);
+               (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
+               (%i5) cflength: 3$
+               (%i6) cf ((1 + sqrt(5))/2);
+               (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
+
+        * A continued fraction can be evaluated by evaluating the
+          arithmetic representation returned by `cfdisrep'.
+
+               (%i1) cflength: 3$
+               (%i2) cfdisrep (cf (sqrt (3)))$
+               (%i3) ev (%, numer);
+               (%o3)                   1.731707317073171
+
+        * Maxima does not know about operations on continued fractions
+          outside of `cf'.
+
+               (%i1) cf ([1,1,1,1,1,2] * 3);
+               (%o1)                     [4, 1, 5, 2]
+               (%i2) cf ([1,1,1,1,1,2]) * 3;
+               (%o2)                  [3, 3, 3, 3, 3, 6]
+
+
+ -- Function: cfdisrep (<list>)
+     Constructs and returns an ordinary arithmetic expression of the
+     form `a + 1/(b + 1/(c + ...))' from the list representation of a
+     continued fraction `[a, b, c, ...]'.
+
+          (%i1) cf ([1, 2, -3] + [1, -2, 1]);
+          (%o1)                     [1, 1, 1, 2]
+          (%i2) cfdisrep (%);
+                                            1
+          (%o2)                     1 + ---------
+                                              1
+                                        1 + -----
+                                                1
+                                            1 + -
+                                                2
+
+
+ -- Function: cfexpand (<x>)
+     Returns a matrix of the numerators and denominators of the last
+     (column 1) and next-to-last (column 2) convergents of the
+     continued fraction <x>.
+
+          (%i1) cf (rat (ev (%pi, numer)));
+
+          `rat' replaced 3.141592653589793 by 103993/33102 =3.141592653011902
+          (%o1)                  [3, 7, 15, 1, 292]
+          (%i2) cfexpand (%);
+                                   [ 103993  355 ]
+          (%o2)                    [             ]
+                                   [ 33102   113 ]
+          (%i3) %[1,1]/%[2,1], numer;
+          (%o3)                   3.141592653011902
+
+
+ -- Option variable: cflength
+     Default value: 1
+
+     `cflength' controls the number of terms of the continued fraction
+     the function `cf' will give, as the value `cflength' times the
+     period.  Thus the default is to give one period.
+
+          (%i1) cflength: 1$
+          (%i2) cf ((1 + sqrt(5))/2);
+          (%o2)                    [1, 1, 1, 1, 2]
+          (%i3) cflength: 2$
+          (%i4) cf ((1 + sqrt(5))/2);
+          (%o4)               [1, 1, 1, 1, 1, 1, 1, 2]
+          (%i5) cflength: 3$
+          (%i6) cf ((1 + sqrt(5))/2);
+          (%o6)           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]
+
+
+ -- Function: divsum (<n>, <k>)
+ -- Function: divsum (<n>)
+     `divsum (<n>, <k>)' returns the sum of the divisors of <n> raised
+     to the <k>'th power.
+
+     `divsum (<n>)' returns the sum of the divisors of <n>.
+
+          (%i1) divsum (12);
+          (%o1)                          28
+          (%i2) 1 + 2 + 3 + 4 + 6 + 12;
+          (%o2)                          28
+          (%i3) divsum (12, 2);
+          (%o3)                          210
+          (%i4) 1^2 + 2^2 + 3^2 + 4^2 + 6^2 + 12^2;
+          (%o4)                          210
+
+
+ -- Function: euler (<n>)
+     Returns the <n>'th Euler number for nonnegative integer <n>.
+
+     For the Euler-Mascheroni constant, see `%gamma'.
+
+          (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+          (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
+
+
+ -- Constant: %gamma
+     The Euler-Mascheroni constant, 0.5772156649015329 ....
+
+
+ -- Function: factorial (<x>)
+     Represents the factorial function. Maxima treats `factorial (<x>)'
+     the same as `<x>!'.  See `!'.
+
+
+ -- Function: fib (<n>)
+     Returns the <n>'th Fibonacci number.  `fib(0)' equal to 0 and
+     `fib(1)' equal to 1, and `fib (-<n>)' equal to `(-1)^(<n> + 1) *
+     fib(<n>)'.
+
+     After calling `fib', `prevfib' is equal to `fib (<x> - 1)', the
+     Fibonacci number preceding the last one computed.
+
+          (%i1) map (fib, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+          (%o1)         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+
+
+ -- Function: fibtophi (<expr>)
+     Expresses Fibonacci numbers in <expr> in terms of the constant
+     `%phi', which is `(1 + sqrt(5))/2', approximately 1.61803399.
+
+     Examples:
+
+          (%i1) fibtophi (fib (n));
+                                     n             n
+                                 %phi  - (1 - %phi)
+          (%o1)                  -------------------
+                                     2 %phi - 1
+          (%i2) fib (n-1) + fib (n) - fib (n+1);
+          (%o2)          - fib(n + 1) + fib(n) + fib(n - 1)
+          (%i3) fibtophi (%);
+                      n + 1             n + 1       n             n
+                  %phi      - (1 - %phi)        %phi  - (1 - %phi)
+          (%o3) - --------------------------- + -------------------
+                          2 %phi - 1                2 %phi - 1
+                                                    n - 1             n - 1
+                                                %phi      - (1 - %phi)
+                                              + ---------------------------
+                                                        2 %phi - 1
+          (%i4) ratsimp (%);
+          (%o4)                           0
+
+
+ -- Function: ifactors (<n>)
+     For a positive integer <n> returns the factorization of <n>. If
+     `n=p1^e1..pk^nk' is the decomposition of <n> into prime factors,
+     ifactors returns `[[p1, e1], ... , [pk, ek]]'.
+
+     Factorization methods used are trial divisions by primes up to
+     9973, Pollard's rho method and elliptic curve method.
+
+          (%i1) ifactors(51575319651600);
+          (%o1)     [[2, 4], [3, 2], [5, 2], [1583, 1], [9050207, 1]]
+          (%i2) apply("*", map(lambda([u], u[1]^u[2]), %));
+          (%o2)                        51575319651600
+
+
+ -- Function: inrt (<x>, <n>)
+     Returns the integer <n>'th root of the absolute value of <x>.
+
+          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
+          (%i2) map (lambda ([a], inrt (10^a, 3)), l);
+          (%o2) [2, 4, 10, 21, 46, 100, 215, 464, 1000, 2154, 4641, 10000]
+
+
+ -- Function: inv_mod (<n>, <m>)
+     Computes the inverse of <n> modulo <m>.  `inv_mod (n,m)' returns
+     `false', if <n> is a zero divisor modulo <m>.
+
+          (%i1) inv_mod(3, 41);
+          (%o1)                           14
+          (%i2) ratsimp(3^-1), modulus=41;
+          (%o2)                           14
+          (%i3) inv_mod(3, 42);
+          (%o3)                          false
+
+
+ -- Function: jacobi (<p>, <q>)
+     Returns the Jacobi symbol of <p> and <q>.
+
+          (%i1) l: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]$
+          (%i2) map (lambda ([a], jacobi (a, 9)), l);
+          (%o2)         [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]
+
+
+ -- Function: lcm (<expr_1>, ..., <expr_n>)
+     Returns the least common multiple of its arguments.  The arguments
+     may be general expressions as well as integers.
+
+     `load ("functs")' loads this function.
+
+
+ -- Function: minfactorial (<expr>)
+     Examines <expr> for occurrences of two factorials which differ by
+     an integer.  `minfactorial' then turns one into a polynomial times
+     the other.
+
+          (%i1) n!/(n+2)!;
+                                         n!
+          (%o1)                       --------
+                                      (n + 2)!
+          (%i2) minfactorial (%);
+                                          1
+          (%o2)                    ---------------
+                                   (n + 1) (n + 2)
+
+
+ -- Function: next_prime (<n>)
+     Returns the smallest prime bigger than <n>.
+
+          (%i1) next_prime(27);
+          (%o1)                       29
+
+
+ -- Function: partfrac (<expr>, <var>)
+     Expands the expression <expr> in partial fractions with respect to
+     the main variable <var>.  `partfrac' does a complete partial
+     fraction decomposition.  The algorithm employed is based on the
+     fact that the denominators of the partial fraction expansion (the
+     factors of the original denominator) are relatively prime.  The
+     numerators can be written as linear combinations of denominators,
+     and the expansion falls out.
+
+          (%i1) 1/(1+x)^2 - 2/(1+x) + 2/(2+x);
+                                2       2        1
+          (%o1)               ----- - ----- + --------
+                              x + 2   x + 1          2
+                                              (x + 1)
+          (%i2) ratsimp (%);
+                                           x
+          (%o2)                 - -------------------
+                                   3      2
+                                  x  + 4 x  + 5 x + 2
+          (%i3) partfrac (%, x);
+                                2       2        1
+          (%o3)               ----- - ----- + --------
+                              x + 2   x + 1          2
+                                              (x + 1)
+
+ -- Function: power_mod (<a>, <n>, <m>)
+     Uses a modular algorithm to compute `a^n mod m' where <a> and <n>
+     are integers and <m> is a positive integer.  If <n> is negative,
+     `inv_mod' is used to find the modular inverse.
+
+          (%i1) power_mod(3, 15, 5);
+          (%o1)                          2
+          (%i2) mod(3^15,5);
+          (%o2)                          2
+          (%i3) power_mod(2, -1, 5);
+          (%o3)                          3
+          (%i4) inv_mod(2,5);
+          (%o4)                          3
+
+
+ -- Function: primep (<n>)
+     Primality test. If `primep (n)' returns `false', <n> is a
+     composite number and if it returns `true', <n> is a prime number
+     with very high probability.
+
+     For <n> less than 341550071728321 a deterministic version of
+     Miller-Rabin's test is used. If `primep (n)' returns `true', then
+     <n> is a prime number.
+
+     For <n> bigger than 34155071728321 `primep' uses
+     `primep_number_of_tests' Miller-Rabin's pseudo-primality tests and
+     one Lucas pseudo-primality test. The probability that <n> will
+     pass one Miller-Rabin test is less than 1/4. Using the default
+     value 25 for `primep_number_of_tests', the probability of <n>
+     beeing composite is much smaller that 10^-15.
+
+
+ -- Option variable: primep_number_of_tests
+     Default value: 25
+
+     Number of Miller-Rabin's tests used in `primep'.
+
+ -- Function: prev_prime (<n>)
+     Returns the greatest prime smaller than <n>.
+
+          (%i1) prev_prime(27);
+          (%o1)                       23
+
+ -- Function: qunit (<n>)
+     Returns the principal unit of the real quadratic number field
+     `sqrt (<n>)' where <n> is an integer, i.e., the element whose norm
+     is unity.  This amounts to solving Pell's equation `a^2 - <n> b^2
+     = 1'.
+
+          (%i1) qunit (17);
+          (%o1)                     sqrt(17) + 4
+          (%i2) expand (% * (sqrt(17) - 4));
+          (%o2)                           1
+
+
+ -- Function: totient (<n>)
+     Returns the number of integers less than or equal to <n> which are
+     relatively prime to <n>.
+
+
+ -- Option variable: zerobern
+     Default value: `true'
+
+     When `zerobern' is `false', `bern' excludes the Bernoulli numbers
+     which are equal to zero.  See `bern'.
+
+
+ -- Function: zeta (<n>)
+     Returns the Riemann zeta function if <x> is a negative integer, 0,
+     1, or a positive even number, and returns a noun form `zeta (<n>)'
+     for all other arguments, including rational noninteger, floating
+     point, and complex arguments.
+
+     See also `bfzeta' and `zeta%pi'.
+
+          (%i1) map (zeta, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
+                                               2              4
+                     1        1     1       %pi            %pi
+          (%o1) [0, ---, 0, - --, - -, inf, ----, zeta(3), ----, zeta(5)]
+                    120       12    2        6              90
+
+
+ -- Option variable: zeta%pi
+     Default value: `true'
+
+     When `zeta%pi' is `true', `zeta' returns an expression
+     proportional to `%pi^n' for even integer `n'.  Otherwise, `zeta'
+     returns a noun form `zeta (n)' for even integer `n'.
+
+          (%i1) zeta%pi: true$
+          (%i2) zeta (4);
+                                           4
+                                        %pi
+          (%o2)                         ----
+                                         90
+          (%i3) zeta%pi: false$
+          (%i4) zeta (4);
+          (%o4)                        zeta(4)
+
+
+
+File: maxima.info,  Node: Symmetries,  Next: Groups,  Prev: Number Theory,  Up: Top
+
+32 Symmetries
+*************
+
+* Menu:
+
+* Functions and Variables for Symmetries::
+
+
+File: maxima.info,  Node: Functions and Variables for Symmetries,  Prev: Symmetries,  Up: Symmetries
+
+32.1 Functions and Variables for Symmetries
+===========================================
 
 32.1.1 Changing bases
 ---------------------
@@ -107,7 +588,8 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
      of lists <l_var> in terms of the elementary symmetric functions
      contained in <l_elem>.
 
-          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
+          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3,
+                [[x, y], [a, b]]);
                                                             3
           (%o1)         - 2 f2 + f1 (f1 + e1) - 3 e1 e2 + e1
           (%i2) ratsimp (%);
@@ -121,7 +603,8 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
      is to the function `pui' what the function `multi_elem' is to the
      function `elem'.
 
-          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3, [[x, y], [a, b]]);
+          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3,
+                [[x, y], [a, b]]);
                                                       3
                                           3 p1 p2   p1
           (%o1)              t2 + p1 t1 + ------- - ---
@@ -453,7 +936,8 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
 
               3  3  3  3       4  2  4  2      5    5        6  6
           40 a  b  x  y  + 15 a  b  x  y  + 6 a  b x  y + 2 a  x ]
-          (%i4) pui_direct ([y + x + 2*c, y + x + 2*b, y + x + 2*a], [[x, y], [a, b, c]], [2, 3]);
+          (%i4) pui_direct ([y + x + 2*c, y + x + 2*b, y + x + 2*a],
+                [[x, y], [a, b, c]], [2, 3]);
                                        2              2
           (%o4) [3 x + 2 a, 6 x y + 3 x  + 4 a x + 4 a ,
 
@@ -623,9 +1107,11 @@ File: maxima.info,  Node: Definitions for Symmetries,  Prev: Symmetries,  Up: Sy
         *   generale.
 
           (%i1) resolvante: unitaire$
-          (%i2) resolvante (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x, x^3 - 1, [x]);
+          (%i2) resolvante (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x, x^3 - 1,
+                [x]);
 
-          " resolvante unitaire " [7, 0, 28, 0, 168, 0, 1120, - 154, 7840, - 2772, 56448, - 33880,
+          " resolvante unitaire " [7, 0, 28, 0, 168, 0, 1120, - 154, 7840,
+                                   - 2772, 56448, - 33880,
 
           413952, - 352352, 3076668, - 3363360, 23114112, - 30494464,
 
@@ -905,13 +1391,13 @@ File: maxima.info,  Node: Groups,  Next: Runtime Environment,  Prev: Symmetries,
 
 * Menu:
 
-* Definitions for Groups::
+* Functions and Variables for Groups::
 
 
-File: maxima.info,  Node: Definitions for Groups,  Prev: Groups,  Up: Groups
+File: maxima.info,  Node: Functions and Variables for Groups,  Prev: Groups,  Up: Groups
 
-33.1 Definitions for Groups
-===========================
+33.1 Functions and Variables for Groups
+=======================================
 
  -- Function: todd_coxeter (<relations>, <subgroup>)
  -- Function: todd_coxeter (<relations>)
@@ -981,7 +1467,7 @@ File: maxima.info,  Node: Runtime Environment,  Next: Miscellaneous Options,  Pr
 
 * Introduction for Runtime Environment::
 * Interrupts::
-* Definitions for Runtime Environment::
+* Functions and Variables for Runtime Environment::
 
 
 File: maxima.info,  Node: Introduction for Runtime Environment,  Next: Interrupts,  Prev: Runtime Environment,  Up: Runtime Environment
@@ -1010,7 +1496,7 @@ variable.  The `maxima-init.mac' file can contain any other assignments
 or other Maxima statements.
 
 
-File: maxima.info,  Node: Interrupts,  Next: Definitions for Runtime Environment,  Prev: Introduction for Runtime Environment,  Up: Runtime Environment
+File: maxima.info,  Node: Interrupts,  Next: Functions and Variables for Runtime Environment,  Prev: Introduction for Runtime Environment,  Up: Runtime Environment
 
 34.2 Interrupts
 ===============
@@ -1020,7 +1506,7 @@ character.  The default action is to stop the computation and print
 another user prompt.  In this case, it is not possible to restart a
 stopped computation.
 
-   If the variable `*debugger-hook*' is set to `nil', by executing
+   If the Lisp variable `*debugger-hook*' is set to `nil', by executing
 
      :lisp (setq *debugger-hook* nil)
 
@@ -1036,10 +1522,10 @@ altogether, and control is returned to the shell prompt.  The `fg'
 command causes Maxima to resume from the point at which it was stopped.
 
 
-File: maxima.info,  Node: Definitions for Runtime Environment,  Prev: Interrupts,  Up: Runtime Environment
+File: maxima.info,  Node: Functions and Variables for Runtime Environment,  Prev: Interrupts,  Up: Runtime Environment
 
-34.3 Definitions for Runtime Environment
-========================================
+34.3 Functions and Variables for Runtime Environment
+====================================================
 
  -- Declaration: feature
      Maxima understands two distinct types of features, system features
@@ -1222,7 +1708,7 @@ File: maxima.info,  Node: Miscellaneous Options,  Next: Rules and Patterns,  Pre
 
 * Introduction to Miscellaneous Options::
 * Share::
-* Definitions for Miscellaneous Options::
+* Functions and Variables for Miscellaneous Options::
 
 
 File: maxima.info,  Node: Introduction to Miscellaneous Options,  Next: Share,  Prev: Miscellaneous Options,  Up: Miscellaneous Options
@@ -1235,7 +1721,7 @@ on the operation of Maxima.   Also various lists such as the list of all
 user defined functions, are discussed.
 
 
-File: maxima.info,  Node: Share,  Next: Definitions for Miscellaneous Options,  Prev: Introduction to Miscellaneous Options,  Up: Miscellaneous Options
+File: maxima.info,  Node: Share,  Next: Functions and Variables for Miscellaneous Options,  Prev: Introduction to Miscellaneous Options,  Up: Miscellaneous Options
 
 35.2 Share
 ==========
@@ -1253,10 +1739,10 @@ packages.  Users may find it more informative to browse the share
 directory using a file system browser.
 
 
-File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  Up: Miscellaneous Options
+File: maxima.info,  Node: Functions and Variables for Miscellaneous Options,  Prev: Share,  Up: Miscellaneous Options
 
-35.3 Definitions for Miscellaneous Options
-==========================================
+35.3 Functions and Variables for Miscellaneous Options
+======================================================
 
  -- System variable: aliases
      Default value: `[]'
@@ -1305,9 +1791,7 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
      `inflag'.
 
      `args (<expr>)' is equivalent to `substpart ("[", <expr>, 0)'.
-     See also `substpart'.
-
-     See also `op'.
+     See also `substpart', and `op'.
 
 
  -- Option variable: genindex
@@ -1396,8 +1880,8 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
      Returns `true' if <expr> is a literal numeric integer, otherwise
      `false'.
 
-     `integerp' returns false if its argument is a symbol, even if the
-     argument is declared integer.
+     `integerp' returns `false' if its argument is a symbol, even if
+     the argument is declared integer.
 
      Examples:
 
@@ -1444,10 +1928,10 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
      Returns `true' if <expr> is a literal integer, rational number,
      floating point number, or bigfloat, otherwise `false'.
 
-     `numberp' returns false if its argument is a symbol, even if the
+     `numberp' returns `false' if its argument is a symbol, even if the
      argument is a symbolic number such as `%pi' or `%i', or declared
-     to be even, odd, integer, rational, irrational, real, imaginary,
-     or complex.
+     to be `even', `odd', `integer', `rational', `irrational', `real',
+     `imaginary', or `complex'.
 
      Examples:
 
@@ -1475,9 +1959,9 @@ File: maxima.info,  Node: Definitions for Miscellaneous Options,  Prev: Share,  
 
  -- Special symbol: props
      `props' are atoms which have any property other than those
-     explicitly mentioned in `infolists', such as atvalues,
-     matchdeclares, etc., as well as properties specified in the
-     `declare' function.
+     explicitly mentioned in `infolists', such as specified by
+     `atvalue', `matchdeclare', etc., as well as properties specified
+     in the `declare' function.
 
 
  -- Function: propvars (<prop>)
@@ -1648,10 +2132,10 @@ File: maxima.info,  Node: Rules and Patterns,  Next: Lists,  Prev: Miscellaneous
 * Menu:
 
 * Introduction to Rules and Patterns::
-* Definitions for Rules and Patterns::
+* Functions and Variables for Rules and Patterns::
 
 
-File: maxima.info,  Node: Introduction to Rules and Patterns,  Next: Definitions for Rules and Patterns,  Prev: Rules and Patterns,  Up: Rules and Patterns
+File: maxima.info,  Node: Introduction to Rules and Patterns,  Next: Functions and Variables for Rules and Patterns,  Prev: Rules and Patterns,  Up: Rules and Patterns
 
 36.1 Introduction to Rules and Patterns
 =======================================
@@ -1674,10 +2158,10 @@ call.
 package.
 
 
-File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introduction to Rules and Patterns,  Up: Rules and Patterns
+File: maxima.info,  Node: Functions and Variables for Rules and Patterns,  Prev: Introduction to Rules and Patterns,  Up: Rules and Patterns
 
-36.2 Definitions for Rules and Patterns
-=======================================
+36.2 Functions and Variables for Rules and Patterns
+===================================================
 
  -- Function: apply1 (<expr>, <rule_1>, ..., <rule_n>)
      Repeatedly applies <rule_1> to <expr> until it fails, then
@@ -1785,7 +2269,8 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
      which are linear in any variable, because the pattern argument `x'
      is given to `defmatch'.
 
-          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                              freeof(x));
           (%o1)                         done
           (%i2) defmatch (linearp, a*x + b, x);
           (%o2)                        linearp
@@ -1806,7 +2291,8 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
      linear in `x', not any other variable, because no pattern argument
      is given to `defmatch'.
 
-          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+          (%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                              freeof(x));
           (%o1)                         done
           (%i2) defmatch (linearp, a*x + b);
           (%o2)                        linearp
@@ -2141,12 +2627,14 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
 
           (%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
           (%o1)                         done
-          (%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+          (%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+                         bb]);
           bb + aa partitions `sum'
           (%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
           (%i3) r1 (8 + a*b + sin(x));
           (%o3)     [all atoms = 8, all nonatoms = sin(x) + a b]
-          (%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+          (%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+                         bb]);
           bb aa partitions `product'
           (%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
           (%i5) r2 (8 * (a + b) * sin(x));
@@ -2159,13 +2647,15 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
 
           (%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
           (%o1)                         done
-          (%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+          (%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+                         bb]);
           bb + aa partitions `sum'
           (%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
           (%i3) r1 (8 + a*b + %pi + sin(x) - c + 2^n);
                                                                n
           (%o3) [all atoms = %pi + 8, all nonatoms = sin(x) + 2  - c + a b]
-          (%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+          (%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+                         bb]);
           bb aa partitions `product'
           (%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
           (%i5) r2 (8 * (a + b) * %pi * sin(x) / c * 2^n);
@@ -2239,22 +2729,22 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
 
         * Delimiters may be almost any strings.
 
-          (%i1) matchfix ("@", "~");
-          (%o1)                          "@"
-          (%i2) @ a, b, c ~;
-          (%o2)                       @a, b, c~
+          (%i1) matchfix ("@@", "~");
+          (%o1)                          @@
+          (%i2) @@ a, b, c ~;
+          (%o2)                      @@a, b, c~
           (%i3) matchfix (">>", "<<");
-          (%o3)                         ">>"
+          (%o3)                          >>
           (%i4) >> a, b, c <<;
           (%o4)                      >>a, b, c<<
           (%i5) matchfix ("foo", "oof");
-          (%o5)                         "foo"
+          (%o5)                          foo
           (%i6) foo a, b, c oof;
           (%o6)                     fooa, b, coof
-          (%i7) >> w + foo x, y oof + z << / @ p, q ~;
+          (%i7) >> w + foo x, y oof + z << / @@ p, q ~;
                                >>z + foox, yoof + w<<
           (%o7)                ----------------------
-                                       @p, q~
+                                      @@p, q~
 
         * Matchfix operators are ordinary user-defined functions.
 
@@ -2330,15 +2820,16 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
           (%o1)                   [foorule1, false]
           (%i2) tellsimpafter (aa + bb, special_add (aa, bb));
           (%o2)                   [+rule1, simplus]
-          (%i3) infix ("@");
-          (%o3)                          @
-          (%i4) tellsimp (aa @ bb, bb/aa);
-          (%o4)                   [@rule1, false]
+          (%i3) infix ("@@");
+          (%o3)                          @@
+          (%i4) tellsimp (aa @@ bb, bb/aa);
+          (%o4)                   [@@rule1, false]
           (%i5) tellsimpafter (quux (%pi, %e), %pi - %e);
           (%o5)                  [quuxrule1, false]
           (%i6) tellsimpafter (quux (%e, %pi), %pi + %e);
           (%o6)             [quuxrule2, quuxrule1, false]
-          (%i7) [foo (aa, bb), aa + bb, aa @ bb, quux (%pi, %e), quux (%e, %pi)];
+          (%i7) [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e),
+                 quux (%e, %pi)];
                                                bb
           (%o7) [bb - aa, special_add(aa, bb), --, %pi - %e, %pi + %e]
                                                aa
@@ -2346,13 +2837,14 @@ File: maxima.info,  Node: Definitions for Rules and Patterns,  Prev: Introductio
           (%o8)                          foo
           (%i9) remrule ("+", "+rule1");
           (%o9)                           +
-          (%i10) remrule ("@", "@rule1");
-          (%o10)                         @
+          (%i10) remrule ("@@", "@@rule1");
+          (%o10)                         @@
           (%i11) remrule (quux, all);
           (%o11)                        quux
-          (%i12) [foo (aa, bb), aa + bb, aa @ bb, quux (%pi, %e), quux (%e, %pi)];
-          (%o12) [foo(aa, bb), bb + aa, aa @ bb, quux(%pi, %e),
-                                                             quux(%e, %pi)]
+          (%i12) [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e),
+                  quux (%e, %pi)];
+          (%o12) [foo(aa, bb), bb + aa, aa @@ bb, quux(%pi, %e),
+                                                   quux(%e, %pi)]
 
 
  -- Function: tellsimp (<pattern>, <replacement>)
@@ -2620,10 +3112,10 @@ File: maxima.info,  Node: Lists,  Next: Sets,  Prev: Rules and Patterns,  Up: To
 * Menu:
 
 * Introduction to Lists::
-* Definitions for Lists::
+* Functions and Variables for Lists::
 
 
-File: maxima.info,  Node: Introduction to Lists,  Next: Definitions for Lists,  Prev: Lists,  Up: Lists
+File: maxima.info,  Node: Introduction to Lists,  Next: Functions and Variables for Lists,  Prev: Lists,  Up: Lists
 
 37.1 Introduction to Lists
 ==========================
@@ -2651,10 +3143,10 @@ become
      ((MLIST SIMP) 1 2 7 ((MPLUS SIMP) $X $Y))
 
 
-File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  Up: Lists
+File: maxima.info,  Node: Functions and Variables for Lists,  Prev: Introduction to Lists,  Up: Lists
 
-37.2 Definitions for Lists
-==========================
+37.2 Functions and Variables for Lists
+======================================
 
  -- Function: append (<list_1>, ..., <list_n>)
      Returns a single list of the elements of <list_1> followed by the
@@ -2718,8 +3210,8 @@ File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  
           (%i1) create_list([i,j],i,[1,2,3],j,1,i);
           (%o1) [[1, 1], [2, 1], [2, 2], [3, 1], [3, 2], [3, 3]]
 
-     Note that the limits or list for the <j> variable can depend on
-     the current value of <i>.
+     Note that the limits or list for the `j' variable can depend on
+     the current value of `i'.
 
 
  -- Function: delete (<expr_1>, <expr_2>)
@@ -2811,7 +3303,7 @@ File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  
      If the lists are different lengths, `join' ignores elements of the
      longer list.
 
-     Maxima complains if <L_1> or <L_2> is not a list.
+     Maxima complains if <l> or <m> is not a list.
 
      Examples:
 
@@ -2950,11 +3442,13 @@ File: maxima.info,  Node: Definitions for Lists,  Prev: Introduction to Lists,  
 
      Examples:
 
-          (%i1) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], lambda ([x], x='b));
+          (%i1) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b],
+                                 lambda ([x], x='b));
           (%o1)                     [2, 3, 7, 9]
           (%i2) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b], symbolp);
           (%o2)                  [1, 2, 3, 4, 7, 9]
-          (%i3) sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0], identity);
+          (%i3) sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0],
+                                 identity);
           (%o3)                       [1, 4, 5]
           (%i4) assume (x < -1);
           (%o4)                       [x < - 1]
@@ -2983,10 +3477,10 @@ File: maxima.info,  Node: Sets,  Next: Function Definition,  Prev: Lists,  Up: T
 * Menu:
 
 * Introduction to Sets::
-* Definitions for Sets::
+* Functions and Variables for Sets::
 
 
-File: maxima.info,  Node: Introduction to Sets,  Next: Definitions for Sets,  Prev: Sets,  Up: Sets
+File: maxima.info,  Node: Introduction to Sets,  Next: Functions and Variables for Sets,  Prev: Sets,  Up: Sets
 
 38.1 Introduction to Sets
 =========================
@@ -3071,12 +3565,12 @@ while `is(<x> = <y>)' yields `false'; in that case the elements <x> and
      (%o1)                        {a, b}
 
    Set members `x' and `y' are equal provided `is(x = y)' evaluates to
-true. Thus `rat(x)' and `x' are equal as set members; consequently,
+`true'. Thus `rat(x)' and `x' are equal as set members; consequently,
 
      (%i1) {x, rat(x)};
      (%o1)                          {x}
 
-   Further, since `is((x - 1)*(x + 1) = x^2 - 1)' evaluates to false,
+   Further, since `is((x - 1)*(x + 1) = x^2 - 1)' evaluates to `false',
 `(x - 1)*(x + 1)' and `x^2 - 1' are distinct set members; thus
 
      (%i1) {(x - 1)*(x + 1), x^2 - 1};
@@ -3134,11 +3628,12 @@ to convert it to a set. Thus
 For example, to find the equations in a given set that do not depend on
 a variable `z', use
 
-     (%i1) subset ({x + y + z, x - y + 4, x + y - 5}, lambda ([e], freeof (z, e)));
+     (%i1) subset ({x + y + z, x - y + 4, x + y - 5},
+                                         lambda ([e], freeof (z, e)));
      (%o1)               {- y + x + 4, y + x - 5}
 
-   The section *Note Definitions for Sets:: has a complete list of the
-set functions in Maxima.
+   The section *Note Functions and Variables for Sets:: has a complete
+list of the set functions in Maxima.
 
 38.1.2 Set Member Iteration
 ---------------------------
@@ -3253,10 +3748,10 @@ University of Nebraska at Kearney (UNK) wrote the Maxima set functions
 and their documentation.
 
 
-File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up: Sets
+File: maxima.info,  Node: Functions and Variables for Sets,  Prev: Introduction to Sets,  Up: Sets
 
-38.2 Definitions for Sets
-=========================
+38.2 Functions and Variables for Sets
+=====================================
 
  -- Function: adjoin (<x>, <a>)
      Returns the union of the set <a> with `{<x>}'.
@@ -3293,7 +3788,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
           (%o1)               [1, 1, 2, 5, 15, 52, 203]
           (%i2) is (cardinality (set_partitions ({})) = belln (0));
           (%o2)                         true
-          (%i3) is (cardinality (set_partitions ({1, 2, 3, 4, 5, 6})) = belln (6));
+          (%i3) is (cardinality (set_partitions ({1, 2, 3, 4, 5, 6})) =
+                                 belln (6));
           (%o3)                         true
 
      `belln' applied to arguments which are not nonnegative integers.
@@ -3455,7 +3951,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
      The equivalence relation is a lambda expression which returns
      `true' or `false'.
 
-          (%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0}, lambda ([x, y], is (equal (x, y))));
+          (%i1) equiv_classes ({1, 1.0, 2, 2.0, 3, 3.0},
+                                  lambda ([x, y], is (equal (x, y))));
           (%o1)            {{1, 1.0}, {2, 2.0}, {3, 3.0}}
 
      The equivalence relation is the name of a relational function
@@ -3467,7 +3964,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
      The equivalence classes are numbers which differ by a multiple of
      3.
 
-          (%i1) equiv_classes ({1, 2, 3, 4, 5, 6, 7}, lambda ([x, y], remainder (x - y, 3) = 0));
+          (%i1) equiv_classes ({1, 2, 3, 4, 5, 6, 7},
+                               lambda ([x, y], remainder (x - y, 3) = 0));
           (%o1)              {{1, 4, 7}, {2, 5}, {3, 6}}
 
  -- Function: every (<f>, <s>)
@@ -3491,7 +3989,7 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
      returns `false'.
 
      When the global flag `maperror' is `true', all lists <L_1>, ...,
-     <L_n> must have equal lengths.  When `maperror' is false, list
+     <L_n> must have equal lengths.  When `maperror' is `false', list
      arguments are effectively truncated to the length of the shortest
      list.
 
@@ -3526,7 +4024,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
           (%i1) prederror : false;
           (%o1)                         false
-          (%i2) map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+          (%i2) map (lambda ([a, b], is (a < b)), [x, y, z],
+                             [x^2, y^2, z^2]);
           (%o2)              [unknown, unknown, unknown]
           (%i3) every ("<", [x, y, z], [x^2, y^2, z^2]);
           (%o3)                        unknown
@@ -3646,7 +4145,7 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
      Examples:
 
-     In line (%o2), the argument of `f' isn't converted to a set
+     In line `(%o2)', the argument of `f' isn't converted to a set
      because the main operator of `f([b])' isn't a list.
 
           (%i1) fullsetify ([a, [a]]);
@@ -4057,7 +4556,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
           (%i1) partition_set ({2, 7, 1, 8, 2, 8}, evenp);
           (%o1)                   [{1, 7}, {2, 8}]
-          (%i2) partition_set ({x, rat(y), rat(y) + z, 1}, lambda ([x], ratp(x)));
+          (%i2) partition_set ({x, rat(y), rat(y) + z, 1},
+                               lambda ([x], ratp(x)));
           (%o2)/R/              [{1, x}, {y, y + z}]
 
  -- Function: permutations (<a>)
@@ -4320,7 +4820,7 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
      returns `false'.
 
      When the global flag `maperror' is `true', all lists <L_1>, ...,
-     <L_n> must have equal lengths.  When `maperror' is false, list
+     <L_n> must have equal lengths.  When `maperror' is `false', list
      arguments are effectively truncated to the length of the shortest
      list.
 
@@ -4354,7 +4854,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
 
           (%i1) prederror : false;
           (%o1)                         false
-          (%i2) map (lambda ([a, b], is (a < b)), [x, y, z], [x^2, y^2, z^2]);
+          (%i2) map (lambda ([a, b], is (a < b)), [x, y, z],
+                     [x^2, y^2, z^2]);
           (%o2)              [unknown, unknown, unknown]
           (%i3) some ("<", [x, y, z], [x^2, y^2, z^2]);
           (%o3)                        unknown
@@ -4530,8 +5031,8 @@ File: maxima.info,  Node: Definitions for Sets,  Prev: Introduction to Sets,  Up
      Returns the symmetric difference, that is, the set of members that
      occur in exactly one set <a_k>.
 
-     Given two arguments, `symmdifference(<a>, <b>)' is the same as
-     `union(setdifference(<a>, <b>), setdifference(<b>, <a>))'.
+     Given two arguments, `symmdifference ( <a>, <b>)' is the same as
+     `union ( setdifference ( <a>, <b>), setdifference(<b>, <a>))'.
 
      `symmdifference' complains if any argument is not a literal set.
 
@@ -4671,7 +5172,7 @@ File: maxima.info,  Node: Function Definition,  Next: Program Flow,  Prev: Sets,
 * Introduction to Function Definition::
 * Function::
 * Macros::
-* Definitions for Function Definition::
+* Functions and Variables for Function Definition::
 
 
 File: maxima.info,  Node: Introduction to Function Definition,  Next: Function,  Prev: Function Definition,  Up: Function Definition
@@ -4688,7 +5189,7 @@ File: maxima.info,  Node: Function,  Next: Macros,  Prev: Introduction to Functi
 39.2.1 Ordinary functions
 -------------------------
 
-To define a function in Maxima you use the := operator.  E.g.
+To define a function in Maxima you use the `:=' operator.  E.g.
 
      f(x) := sin(x)
 
@@ -4806,7 +5307,7 @@ all of the stored values at once, except for `kill(<a>)' or
 `remarray(<a>)', which also remove the function definition.
 
 
-File: maxima.info,  Node: Macros,  Next: Definitions for Function Definition,  Prev: Function,  Up: Function Definition
+File: maxima.info,  Node: Macros,  Next: Functions and Variables for Function Definition,  Prev: Function,  Up: Function Definition
 
 39.3 Macros
 ===========
@@ -4875,9 +5376,11 @@ File: maxima.info,  Node: Macros,  Next: Definitions for Function Definition,  P
 
           (%i1) buildq ([a: b, b: a], foo (a, b));
           (%o1)                       foo(b, a)
-          (%i2) buildq ([u: v, v: w, w: x, x: y, y: z, z: u], bar (u, v, w, x, y, z));
+          (%i2) buildq ([u: v, v: w, w: x, x: y, y: z, z: u],
+                        bar (u, v, w, x, y, z));
           (%o2)                 bar(v, w, x, y, z, u)
-          (%i3) subst ([u=v, v=w, w=x, x=y, y=z, z=u], bar (u, v, w, x, y, z));
+          (%i3) subst ([u=v, v=w, w=x, x=y, y=z, z=u],
+                       bar (u, v, w, x, y, z));
           (%o3)                 bar(u, u, u, u, u, u)
 
      Construct a list of equations with some variables or expressions
@@ -5005,10 +5508,10 @@ File: maxima.info,  Node: Macros,  Next: Definitions for Function Definition,  P
 
 
 
-File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  Up: Function Definition
+File: maxima.info,  Node: Functions and Variables for Function Definition,  Prev: Macros,  Up: Function Definition
 
-39.4 Definitions for Function Definition
-========================================
+39.4 Functions and Variables for Function Definition
+====================================================
 
  -- Function: apply (<F>, [<x_1>, ..., <x_n>])
      Constructs and evaluates an expression `<F>(<arg_1>, ...,
@@ -5306,7 +5809,6 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
      Examples:
 
      `foo' is a Boolean variable, with the initial value `true'.
-
           (%i1) define_variable (foo, true, boolean);
           (%o1)                         true
           (%i2) foo;
@@ -5320,12 +5822,12 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
           (%o5)                         false
 
      `bar' is an integer variable, which must be prime.
-
           (%i1) define_variable (bar, 2, integer);
           (%o1)                           2
           (%i2) qput (bar, prime_test, value_check);
           (%o2)                      prime_test
-          (%i3) prime_test (y) := if not primep(y) then error (y, "is not prime.");
+          (%i3) prime_test (y) := if not primep(y) then
+                                     error (y, "is not prime.");
           (%o3) prime_test(y) := if not primep(y)
 
                                              then error(y, "is not prime.")
@@ -5341,10 +5843,10 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
      `baz_quux' is a variable which cannot be assigned a value.  The
      mode `any_check' is like `any', but `any_check' enables the
      `value_check' mechanism, and `any' does not.
-
           (%i1) define_variable (baz_quux, 'baz_quux, any_check);
           (%o1)                       baz_quux
-          (%i2) F: lambda ([y], if y # 'baz_quux then error ("Cannot assign to `baz_quux'."));
+          (%i2) F: lambda ([y], if y # 'baz_quux then
+                           error ("Cannot assign to `baz_quux'."));
           (%o2) lambda([y], if y # 'baz_quux
 
                                   then error(Cannot assign to `baz_quux'.))
@@ -5356,7 +5858,8 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
           (%o4)                       baz_quux
           (%i5) baz_quux: sqrt(2);
           Cannot assign to `baz_quux'.
-          #0: lambda([y],if y # 'baz_quux then error("Cannot assign to `baz_quux'."))(y=sqrt(2))
+          #0: lambda([y],if y # 'baz_quux then
+                           error("Cannot assign to `baz_quux'."))(y=sqrt(2))
            -- an error.  Quitting.  To debug this try debugmode(true);
           (%i6) baz_quux;
           (%o6)                       baz_quux
@@ -5783,10 +6286,12 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
                                             h(x)
           (%o1)                     f(x) := ----
                                             g(x)
-          (%i2) g (x) ::= block (print ("x + 99 is equal to", x), return (x + 99));
+          (%i2) g (x) ::= block (print ("x + 99 is equal to", x),
+                                 return (x + 99));
           (%o2) g(x) ::= block(print("x + 99 is equal to", x),
                                                             return(x + 99))
-          (%i3) h (x) ::= block (print ("x - 99 is equal to", x), return (x - 99));
+          (%i3) h (x) ::= block (print ("x - 99 is equal to", x),
+                                 return (x - 99));
           (%o3) h(x) ::= block(print("x - 99 is equal to", x),
                                                             return(x - 99))
           (%i4) macroexpansion: false;
@@ -5817,10 +6322,12 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
                                             h(x)
           (%o1)                     f(x) := ----
                                             g(x)
-          (%i2) g (x) ::= block (print ("x + 99 is equal to", x), return (x + 99));
+          (%i2) g (x) ::= block (print ("x + 99 is equal to", x),
+                                 return (x + 99));
           (%o2) g(x) ::= block(print("x + 99 is equal to", x),
                                                             return(x + 99))
-          (%i3) h (x) ::= block (print ("x - 99 is equal to", x), return (x - 99));
+          (%i3) h (x) ::= block (print ("x - 99 is equal to", x),
+                                 return (x - 99));
           (%o3) h(x) ::= block(print("x - 99 is equal to", x),
                                                             return(x - 99))
           (%i4) macroexpansion: expand;
@@ -5849,10 +6356,12 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
                                             h(x)
           (%o1)                     f(x) := ----
                                             g(x)
-          (%i2) g (x) ::= block (print ("x + 99 is equal to", x), return (x + 99));
+          (%i2) g (x) ::= block (print ("x + 99 is equal to", x),
+                                 return (x + 99));
           (%o2) g(x) ::= block(print("x + 99 is equal to", x),
                                                             return(x + 99))
-          (%i3) h (x) ::= block (print ("x - 99 is equal to", x), return (x - 99));
+          (%i3) h (x) ::= block (print ("x - 99 is equal to", x),
+                                 return (x - 99));
           (%o3) h(x) ::= block(print("x - 99 is equal to", x),
                                                             return(x - 99))
           (%i4) macroexpansion: displace;
@@ -6000,7 +6509,7 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
      Functions should not be translated unless they are fully debugged.
 
      Expressions are assumed simplified; if they are not, correct but
-     non- optimal code gets generated.  Thus, the user should not set
+     non-optimal code gets generated.  Thus, the user should not set
      the `simp' switch to `false' which inhibits simplification of the
      expressions to be translated.
 
@@ -6086,8 +6595,8 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
  -- Option variable: tr_array_as_ref
      Default value: `true'
 
-     If `translate_fast_arrays' is false, array references in Lisp code
-     emitted by `translate_file' are affected by `tr_array_as_ref'.
+     If `translate_fast_arrays' is `false', array references in Lisp
+     code emitted by `translate_file' are affected by `tr_array_as_ref'.
      When `tr_array_as_ref' is `true', array names are evaluated,
      otherwise array names appear as literal symbols in translated code.
 
@@ -6149,7 +6658,7 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
  -- Option variable: tr_numer
      Default value: `false'
 
-     When `tr_numer' is `true' numer properties are used for atoms
+     When `tr_numer' is `true', `numer' properties are used for atoms
      which have them, e.g. `%pi'.
 
 
@@ -6275,7 +6784,7 @@ File: maxima.info,  Node: Definitions for Function Definition,  Prev: Macros,  U
      at the top of the file, lets it know that although a symbol does
      which does not yet have a Lisp function value, will have one at
      call time. `(MFUNCTION-CALL fn arg1 arg2 ...)' is generated when
-     the translator does not know fn is going to be a Lisp function.
+     the translator does not know `fn' is going to be a Lisp function.
 
 
 
@@ -6287,10 +6796,10 @@ File: maxima.info,  Node: Program Flow,  Next: Debugging,  Prev: Function Defini
 * Menu:
 
 * Introduction to Program Flow::
-* Definitions for Program Flow::
+* Functions and Variables for Program Flow::
 
 
-File: maxima.info,  Node: Introduction to Program Flow,  Next: Definitions for Program Flow,  Prev: Program Flow,  Up: Program Flow
+File: maxima.info,  Node: Introduction to Program Flow,  Next: Functions and Variables for Program Flow,  Prev: Program Flow,  Up: Program Flow
 
 40.1 Introduction to Program Flow
 =================================
@@ -6299,10 +6808,10 @@ Maxima provides a `do' loop for iteration, as well as more primitive
 constructs such as `go'.
 
 
-File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to Program Flow,  Up: Program Flow
+File: maxima.info,  Node: Functions and Variables for Program Flow,  Prev: Introduction to Program Flow,  Up: Program Flow
 
-40.2 Definitions for Program Flow
-=================================
+40.2 Functions and Variables for Program Flow
+=============================================
 
  -- Function: backtrace ()
  -- Function: backtrace (<n>)
@@ -6376,41 +6885,42 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      <initial_value>, <increment>, <limit>, and <body> can be any
      expressions.  If the increment is 1 then "`step 1'" may be omitted.
 
-     The execution of the `do' statement proceeds by first assigning the
-     initial_value to the variable (henceforth called the
+     The execution of the `do' statement proceeds by first assigning
+     the <initial_value> to the <variable> (henceforth called the
      control-variable). Then: (1) If the control-variable has exceeded
      the limit of a `thru' specification, or if the condition of the
      `unless' is `true', or if the condition of the `while' is `false'
-     then the `do' terminates. (2) The body is evaluated.  (3) The
+     then the `do' terminates. (2) The <body> is evaluated.  (3) The
      increment is added to the control-variable.  The process from (1)
      to (3) is performed repeatedly until the termination condition is
      satisfied.  One may also give several termination conditions in
      which case the `do' terminates when any of them is satisfied.
 
      In general the `thru' test is satisfied when the control-variable
-     is greater than the limit if the increment was non-negative, or
-     when the control-variable is less than the limit if the increment
-     was negative.  The increment and limit may be non-numeric
-     expressions as long as this inequality can be determined.
-     However, unless the increment is syntactically negative (e.g. is a
-     negative number) at the time the `do' statement is input, Maxima
-     assumes it will be positive when the `do' is executed.  If it is
-     not positive, then the `do' may not terminate properly.
+     is greater than the <limit> if the <increment> was non-negative,
+     or when the control-variable is less than the <limit> if the
+     <increment> was negative.  The <increment> and <limit> may be
+     non-numeric expressions as long as this inequality can be
+     determined.  However, unless the <increment> is syntactically
+     negative (e.g. is a negative number) at the time the `do'
+     statement is input, Maxima assumes it will be positive when the
+     `do' is executed.  If it is not positive, then the `do' may not
+     terminate properly.
 
-     Note that the limit, increment, and termination condition are
+     Note that the <limit>, <increment>, and termination condition are
      evaluated each time through the loop.  Thus if any of these involve
      much computation, and yield a result that does not change during
-     all the executions of the body, then it is more efficient to set a
-     variable to their value prior to the `do' and use this variable in
-     the `do' form.
+     all the executions of the <body>, then it is more efficient to set
+     a variable to their value prior to the `do' and use this variable
+     in the `do' form.
 
-     The value normally returned by a `do' statement is the atom `done'.
-     However, the function `return' may be used inside the body to exit
-     the `do' prematurely and give it any desired value.  Note however
-     that a `return' within a `do' that occurs in a `block' will exit
-     only the `do' and not the `block'.  Note also that the `go'
-     function may not be used to exit from a `do' into a surrounding
-     `block'.
+     The value normally returned by a `do' statement is the atom
+     `done'.  However, the function `return' may be used inside the
+     <body> to exit the `do' prematurely and give it any desired value.
+     Note however that a `return' within a `do' that occurs in a
+     `block' will exit only the `do' and not the `block'. Note also
+     that the `go' function may not be used to exit from a `do' into a
+     surrounding `block'.
 
      The control-variable is always local to the `do' and thus any
      variable may be used without affecting the value of a variable with
@@ -6472,7 +6982,7 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      may sometimes wish to change it in some other way for each
      iteration.  In this case one may use `next <expression>' instead
      of `step <increment>'.  This will cause the control-variable to be
-     set to the result of evaluating expression each time through the
+     set to the result of evaluating <expression> each time through the
      loop.
 
           (%i6) for count: 2 next 3*count thru 20 do display (count)$
@@ -6484,8 +6994,8 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
 
      As an alternative to `for <variable>: <value> ...do...' the syntax
      `for <variable> from <value> ...do...'  may be used.  This permits
-     the `from <value>' to be placed after the step or next value or
-     after the termination condition.  If `from <value>' is omitted
+     the `from <value>' to be placed after the `step' or `next' value
+     or after the termination condition.  If `from <value>' is omitted
      then 1 is used as the initial value.
 
      Sometimes one may be interested in performing an iteration where
@@ -6503,8 +7013,8 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
 
      If it is desired one may even omit the termination conditions
      entirely and just give `do <body>' which will continue to evaluate
-     the body indefinitely.  In this case the function `return' should
-     be used to terminate execution of the `do'.
+     the <body> indefinitely.  In this case the function `return'
+     should be used to terminate execution of the `do'.
 
           (%i1) newton (f, x):= ([y, df, dfx], df: diff (f ('x), 'x),
                     do (y: ev(df), x: x - f(x)/y,
@@ -6523,12 +7033,12 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
           for <variable> in <list> <end_tests> do <body>
 
      The elements of <list> are any expressions which will successively
-     be assigned to the variable on each iteration of the body.  The
-     optional termination tests <end_tests> can be used to terminate
-     execution of the `do'; otherwise it will terminate when the list
-     is exhausted or when a `return' is executed in the body.  (In
-     fact, list may be any non-atomic expression, and successive parts
-     are taken.)
+     be assigned to the `variable' on each iteration of the <body>.
+     The optional termination tests <end_tests> can be used to
+     terminate execution of the `do'; otherwise it will terminate when
+     the <list> is exhausted or when a `return' is executed in the
+     <body>.  (In fact, `list' may be any non-atomic expression, and
+     successive parts are taken.)
 
           (%i1)  for f in [log, rho, atan] do ldisp(f(1))$
           (%t1)                                  0
@@ -6596,7 +7106,7 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
 
      `if <cond_1> then <expr_1> else <expr_0>' evaluates to <expr_1> if
      <cond_1> evaluates to `true', otherwise the expression evaluates
-     to `expr_0'.
+     to <expr_0>.
 
      `if <cond_1> then <expr_1> elseif <cond_2> then <expr_2> elseif
      ... else <expr_0>' evaluates to <expr_k> if <cond_k> is `true' and
@@ -6651,11 +7161,11 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      or is a `lambda' form of n arguments.
 
      `maperror' - if `false' will cause all of the mapping functions to
-     (1) stop when they finish going down the shortest expi if not all
-     of the expi are of the same length and (2) apply fn to [exp1,
-     exp2,...]  if the expi are not all the same type of object. If
-     `maperror' is `true' then an error message will be given in the
-     above two instances.
+     (1) stop when they finish going down the shortest <expr_i> if not
+     all of the <expr_i> are of the same length and (2) apply <f> to
+     [<expr_1>, <expr_2>, ...]  if the <expr_i> are not all the same
+     type of object. If `maperror' is `true' then an error message will
+     be given in the above two instances.
 
      One of the uses of this function is to `map' a function (e.g.
      `partfrac') onto each term of a very large expression where it
@@ -6689,12 +7199,12 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      When `maperror' is `false', causes all of the mapping functions,
      for example
 
-          map (f, expr_1, expr_2, ...))
+          map (<f>, <expr_1>, <expr_2>, ...)
 
-     to (1) stop when they finish going down the shortest expi if not
-     all of the expi are of the same length and (2) apply `f' to
-     `[expr_1, expr_2, ...]' if the `expr_i' are not all the same type
-     of object.
+     to (1) stop when they finish going down the shortest <expr_i> if
+     not all of the <expr_i> are of the same length and (2) apply <f>
+     to [<expr_1>, <expr_2>, ...] if the <expr_i> are not all the same
+     type of object.
 
      If `maperror' is `true' then an error message is displayed in the
      above two instances.
@@ -6725,7 +7235,7 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      See also `is' and `maybe'.
 
 
- -- Function: return (value)
+ -- Function: return (<value>)
      May be used to exit explicitly from a block, bringing its
      argument.  See `block' for more information.
 
@@ -6743,8 +7253,8 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      Note the way in which `scanmap' applies the given function
      `factor' to the constituent subexpressions of <expr>; if another
      form of <expr> is presented to `scanmap' then the result may be
-     different.  Thus, `%o2' is not recovered when `scanmap' is applied
-     to the expanded form of exp:
+     different. Thus, `%o2' is not recovered when `scanmap' is applied
+     to the expanded form of `exp':
 
           (%i3) scanmap(factor,expand(exp));
                                      2                  2
@@ -6815,10 +7325,10 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
      Elementary examples of `outermap'.  To show the argument
      combinations more clearly, `F' is left undefined.
 
-          (%i1) outermap (F, [a, b, c], [1, 2, 3]);
+          (%i1) outermap(F, [a, b, c], [1, 2, 3]);
           (%o1) [[F(a, 1), F(a, 2), F(a, 3)], [F(b, 1), F(b, 2), F(b, 3)],
                                                [F(c, 1), F(c, 2), F(c, 3)]]
-          (%i2) outermap (F, matrix ([a, b], [c, d]), matrix ([1, 2], [3, 4]));
+          (%i2) outermap(F, matrix([a, b],[c, d]), matrix([1, 2],[3, 4]));
                    [ [ F(a, 1)  F(a, 2) ]  [ F(b, 1)  F(b, 2) ] ]
                    [ [                  ]  [                  ] ]
                    [ [ F(a, 3)  F(a, 4) ]  [ F(b, 3)  F(b, 4) ] ]
@@ -6854,7 +7364,8 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
           (%o2)                       [11, 22]
           (%i3) arg_3 : matrix ([xx, yy]);
           (%o3)                      [ xx  yy ]
-          (%i4) xx_0 : outermap (lambda ([x, y, z], x / y + z), arg_1, arg_2, arg_3);
+          (%i4) xx_0 : outermap(lambda([x, y, z], x / y + z), arg_1,
+                                                             arg_2, arg_3);
                          [  [      a        a  ]  [      a        a  ]  ]
                          [ [[ xx + --  yy + -- ], [ xx + --  yy + -- ]] ]
                          [  [      11       11 ]  [      22       22 ]  ]
@@ -6895,7 +7406,8 @@ File: maxima.info,  Node: Definitions for Program Flow,  Prev: Introduction to P
           (%i2) setify (flatten (%));
           (%o2) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3),
                                                  F(c, 1), F(c, 2), F(c, 3)}
-          (%i3) map (lambda ([L], apply (F, L)), cartesian_product ({a, b, c}, {1, 2, 3}));
+          (%i3) map(lambda([L], apply(F, L)),
+                               cartesian_product({a, b, c}, {1, 2, 3}));
           (%o3) {F(a, 1), F(a, 2), F(a, 3), F(b, 1), F(b, 2), F(b, 3),
                                                  F(c, 1), F(c, 2), F(c, 3)}
           (%i4) is (equal (%, %th (2)));
@@ -6912,7 +7424,7 @@ File: maxima.info,  Node: Debugging,  Next: augmented_lagrangian,  Prev: Program
 
 * Source Level Debugging::
 * Keyword Commands::
-* Definitions for Debugging::
+* Functions and Variables for Debugging::
 
 
 File: maxima.info,  Node: Source Level Debugging,  Next: Keyword Commands,  Up: Debugging
@@ -6988,7 +7500,7 @@ example below.
    USE OF THE DEBUGGER THROUGH EMACS
 
    If the user is running the code under GNU emacs in a shell window
-(dbl shell), or is running the graphical interface version, `xmaxima',
+(dbl shell), or is running the graphical interface version, Xmaxima,
 then if he stops at a break point, he will see his current position in
 the source file which will be displayed in the other half of the
 window, either highlighted in red, or with a little arrow pointing at
@@ -7020,518 +7532,4 @@ To have this enabled, the user must have maxima-mode.el turned on in
 the window in which the file `foobar.mac' is visiting.  There are
 additional commands available in that file window, such as evaluating
 the function into the Maxima, by typing `Alt-Control-x'.
-
-
-File: maxima.info,  Node: Keyword Commands,  Next: Definitions for Debugging,  Prev: Source Level Debugging,  Up: Debugging
-
-41.2 Keyword Commands
-=====================
-
-Keyword commands are special keywords which are not interpreted as
-Maxima expressions.  A keyword command can be entered at the Maxima
-prompt or the debugger prompt, although not at the break prompt.
-Keyword commands start with a colon, ':'.  For example, to evaluate a
-Lisp form you may type `:lisp' followed by the form to be evaluated.
-
-     (%i1) :lisp (+ 2 3)
-     5
-
-   The number of arguments taken depends on the particular command.
-Also, you need not type the whole command, just enough to be unique
-among the break keywords.   Thus `:br' would suffice for `:break'.
-
-   The keyword commands are listed below.
-
-`:break F n'
-     Set a breakpoint in function `F' at line offset `n' from the
-     beginning of the function.  If `F' is given as a string, then it
-     is assumed to be a file, and `n' is the offset from the beginning
-     of the file.  The offset is optional. If not given, it is assumed
-     to be zero (first line of the function or file).
-
-`:bt'
-     Print a backtrace of the stack frames
-
-`:continue'
-     Continue the computation
-
-`:delete'
-     Delete the specified breakpoints, or all if none are specified
-
-`:disable'
-     Disable the specified breakpoints, or all if none are specified
-
-`:enable'
-     Enable the specified breakpoints, or all if none are specified
-
-`:frame n'
-     Print stack frame `n', or the current frame if none is specified
-
-`:help'
-     Print help on a debugger command, or all commands if none is
-     specified
-
-`:info'
-     Print information about item
-
-`:lisp some-form'
-     Evaluate `some-form' as a Lisp form
-
-`:lisp-quiet some-form'
-     Evaluate Lisp form `some-form' without any output
-
-`:next'
-     Like `:step', except `:next' steps over function calls
-
-`:quit'
-     Quit the current debugger level without completing the computation
-
-`:resume'
-     Continue the computation
-
-`:step'
-     Continue the computation until it reaches a new source line
-
-`:top'
-     Return to the Maxima prompt (from any debugger level) without
-     completing the computation
-
-
-File: maxima.info,  Node: Definitions for Debugging,  Prev: Keyword Commands,  Up: Debugging
-
-41.3 Definitions for Debugging
-==============================
-
- -- Option variable: refcheck
-     Default value: `false'
-
-     When `refcheck' is `true', Maxima prints a message each time a
-     bound variable is used for the first time in a computation.
-
-
- -- Option variable: setcheck
-     Default value: `false'
-
-     If `setcheck' is set to a list of variables (which can be
-     subscripted), Maxima prints a message whenever the variables, or
-     subscripted occurrences of them, are bound with the ordinary
-     assignment operator `:', the `::' assignment operator, or function
-     argument binding, but not the function assignment `:=' nor the
-     macro assignment `::=' operators.  The message comprises the name
-     of the variable and the value it is bound to.
-
-     `setcheck' may be set to `all' or `true' thereby including all
-     variables.
-
-     Each new assignment of `setcheck' establishes a new list of
-     variables to check, and any variables previously assigned to
-     `setcheck' are forgotten.
-
-     The names assigned to `setcheck' must be quoted if they would
-     otherwise evaluate to something other than themselves.  For
-     example, if `x', `y', and `z' are already bound, then enter
-
-          setcheck: ['x, 'y, 'z]$
-
-     to put them on the list of variables to check.
-
-     No printout is generated when a variable on the `setcheck' list is
-     assigned to itself, e.g., `X: 'X'.
-
-
- -- Option variable: setcheckbreak
-     Default value: `false'
-
-     When `setcheckbreak' is `true', Maxima will present a break prompt
-     whenever a variable on the `setcheck' list is assigned a new value.
-     The break occurs before the assignment is carried out.  At this
-     point, `setval' holds the value to which the variable is about to
-     be assigned.  Hence, one may assign a different value by assigning
-     to `setval'.
-
-     See also `setcheck' and `setval'.
-
-
- -- System variable: setval
-     Holds the value to which a variable is about to be set when a
-     `setcheckbreak' occurs.  Hence, one may assign a different value
-     by assigning to `setval'.
-
-     See also `setcheck' and `setcheckbreak'.
-
-
- -- Function: timer (<f_1>, ..., <f_n>)
- -- Function: timer (all)
- -- Function: timer ()
-     Given functions <f_1>, ..., <f_n>, `timer' puts each one on the
-     list of functions for which timing statistics are collected.
-     `timer(f)$ timer(g)$' puts `f' and then `g' onto the list; the
-     list accumulates from one call to the next.
-
-     `timer(all)' puts all user-defined functions (as named by the
-     global variable `functions') on the list of timed functions.
-
-     With no arguments, `timer' returns the list of timed functions.
-
-     Maxima records how much time is spent executing each function on
-     the list of timed functions.  `timer_info' returns the timing
-     statistics, including the average time elapsed per function call,
-     the number of calls, and the total time elapsed.  `untimer'
-     removes functions from the list of timed functions.
-
-     `timer' quotes its arguments.  `f(x) := x^2$ g:f$ timer(g)$' does
-     not put `f' on the timer list.
-
-     If `trace(f)' is in effect, then `timer(f)' has no effect; `trace'
-     and `timer' cannot both be in effect at the same time.
-
-     See also `timer_devalue'.
-
-
- -- Function: untimer (<f_1>, ..., <f_n>)
- -- Function: untimer ()
-     Given functions <f_1>, ..., <f_n>, `untimer' removes each function
-     from the timer list.
-
-     With no arguments, `untimer' removes all functions currently on
-     the timer list.
-
-     After `untimer (f)' is executed, `timer_info (f)' still returns
-     previously collected timing statistics, although `timer_info()'
-     (with no arguments) does not return information about any function
-     not currently on the timer list.  `timer (f)' resets all timing
-     statistics to zero and puts `f' on the timer list again.
-
-
- -- Option variable: timer_devalue
-     Default value: `false'
-
-     When `timer_devalue' is `true', Maxima subtracts from each timed
-     function the time spent in other timed functions. Otherwise, the
-     time reported for each function includes the time spent in other
-     functions.  Note that time spent in untimed functions is not
-     subtracted from the total time.
-
-     See also `timer' and `timer_info'.
-
-
- -- Function: timer_info (<f_1>, ..., <f_n>)
- -- Function: timer_info ()
-     Given functions <f_1>, ..., <f_n>, `timer_info' returns a matrix
-     containing timing information for each function.  With no
-     arguments, `timer_info' returns timing information for all
-     functions currently on the timer list.
-
-     The matrix returned by `timer_info' contains the function name,
-     time per function call, number of function calls, total time, and
-     `gctime', which meant "garbage collection time" in the original
-     Macsyma but is now always zero.
-
-     The data from which `timer_info' constructs its return value can
-     also be obtained by the `get' function:
-
-          get(f, 'calls);  get(f, 'runtime);  get(f, 'gctime);
-
-     See also `timer'.
-
-
- -- Function: trace (<f_1>, ..., <f_n>)
- -- Function: trace (all)
- -- Function: trace ()
-     Given functions <f_1>, ..., <f_n>, `trace' instructs Maxima to
-     print out debugging information whenever those functions are
-     called.  `trace(f)$ trace(g)$' puts `f' and then `g' onto the list
-     of functions to be traced; the list accumulates from one call to
-     the next.
-
-     `trace(all)' puts all user-defined functions (as named by the
-     global variable `functions') on the list of functions to be traced.
-
-     With no arguments, `trace' returns a list of all the functions
-     currently being traced.
-
-     The `untrace' function disables tracing.  See also `trace_options'.
-
-     `trace' quotes its arguments. Thus, `f(x) := x^2$ g:f$ trace(g)$'
-     does not put `f' on the trace list.
-
-     When a function is redefined, it is removed from the timer list.
-     Thus after `timer(f)$ f(x) := x^2$', function `f' is no longer on
-     the timer list.
-
-     If `timer (f)' is in effect, then `trace (f)' has no effect;
-     `trace' and `timer' can't both be in effect for the same function.
-
-
- -- Function: trace_options (<f>, <option_1>, ..., <option_n>)
- -- Function: trace_options (<f>)
-     Sets the trace options for function <f>.  Any previous options are
-     superseded.  `trace_options (<f>, ...)' has no effect unless
-     `trace (<f>)' is also called (either before or after
-     `trace_options').
-
-     `trace_options (<f>)' resets all options to their default values.
-
-     The option keywords are:
-
-        * `noprint' Do not print a message at function entry and exit.
-
-        * `break' Put a breakpoint before the function is entered, and
-          after the function is exited. See `break'.
-
-        * `lisp_print' Display arguments and return values as Lisp
-          objects.
-
-        * `info' Print `-> true' at function entry and exit.
-
-        * `errorcatch' Catch errors, giving the option to signal an
-          error, retry the function call, or specify a return value.
-
-     Trace options are specified in two forms. The presence of the
-     option keyword alone puts the option into effect unconditionally.
-     (Note that option <foo> is not put into effect by specifying
-     `<foo>: true' or a similar form; note also that keywords need not
-     be quoted.) Specifying the option keyword with a predicate
-     function makes the option conditional on the predicate.
-
-     The argument list to the predicate function is always `[level,
-     direction, function, item]' where `level' is the recursion level
-     for the function,  `direction' is either `enter' or `exit',
-     `function' is the name of the function, and `item' is the argument
-     list (on entering) or the return value (on exiting).
-
-     Here is an example of unconditional trace options:
-
-          (%i1) ff(n) := if equal(n, 0) then 1 else n * ff(n - 1)$
-
-          (%i2) trace (ff)$
-
-          (%i3) trace_options (ff, lisp_print, break)$
-
-          (%i4) ff(3);
-
-     Here is the same function, with the `break' option conditional on
-     a predicate:
-
-          (%i5) trace_options (ff, break(pp))$
-
-          (%i6) pp (level, direction, function, item) := block (print (item),
-              return (function = 'ff and level = 3 and direction = exit))$
-
-          (%i7) ff(6);
-
-
- -- Function: untrace (<f_1>, ..., <f_n>)
- -- Function: untrace ()
-     Given functions <f_1>, ..., <f_n>, `untrace' disables tracing
-     enabled by the `trace' function.  With no arguments, `untrace'
-     disables tracing for all functions.
-
-     `untrace' returns a list of the functions for which it disabled
-     tracing.
-
-
-
-File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Debugging,  Up: Top
-
-42 augmented_lagrangian
-***********************
-
-* Menu:
-
-* Definitions for augmented_lagrangian::
-
-
-File: maxima.info,  Node: Definitions for augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
-
-42.1 Definitions for augmented_lagrangian
-=========================================
-
- -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
- -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
-          optional_args)
-     Returns an approximate minimum of the expression <FOM> with
-     respect to the variables <xx>, holding the constraints <C> equal
-     to zero.  <yy> is a list of initial guesses for <xx>.  The method
-     employed is the augmented Lagrangian method (see Refs [1] and [2]).
-
-     `optional_args' represents additional arguments, specified as
-     `<symbol> = <value>'.  The optional arguments recognized are:
-
-    `niter'
-          Number of iterations of the augmented Lagrangian algorithm
-
-    `lbfgs_tolerance'
-          Tolerance supplied to LBFGS
-
-    `iprint'
-          IPRINT parameter (a list of two integers which controls
-          verbosity) supplied to LBFGS
-
-    `%lambda'
-          Initial value of `%lambda' to be used for calculating the
-          augmented Lagrangian
-
-     This implementation minimizes the augmented Lagrangian by applying
-     the limited-memory BFGS (LBFGS) algorithm, which is a quasi-Newton
-     algorithm.
-
-     `load(augmented_lagrangian)' loads this function.
-
-     See also `lbfgs'.
-
-     References:
-
-     [1]
-     http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html
-
-     [2] http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf
-
-     Example:
-
-          (%i1) load (lbfgs);
-          (%o1) /home/robert/tmp/maxima-release-branch/maxima/share/lbfgs/\
-          lbfgs.mac
-          (%i2) load (augmented_lagrangian);
-          (%o2) /home/robert/tmp/maxima-release-branch/maxima/share/contri\
-          b/augmented_lagrangian.mac
-          (%i3) FOM: x^2 + 2*y^2;
-                                         2    2
-          (%o3)                       2 y  + x
-          (%i4) xx: [x, y];
-          (%o4)                        [x, y]
-          (%i5) C: [x + y - 1];
-          (%o5)                      [y + x - 1]
-          (%i6) yy: [1, 1];
-          (%o6)                        [1, 1]
-          (%i7) augmented_lagrangian_method (FOM, xx, C, yy, iprint = [-1, 0]);
-          (%o7) [[x = 0.6478349888525, y = 0.32391749442625],
-                                           %lambda = [- 1.267422460983745]]
-
-
-
-File: maxima.info,  Node: bode,  Next: descriptive,  Prev: augmented_lagrangian,  Up: Top
-
-43 bode
-*******
-
-* Menu:
-
-* Definitions for bode::
-
-
-File: maxima.info,  Node: Definitions for bode,  Prev: bode,  Up: bode
-
-43.1 Definitions for bode
-=========================
-
- -- Function: bode_gain (<H>, <range>, ...<plot_opts>...)
-     Function to draw Bode gain plots.
-
-     Examples (1 through 7 from
-          http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html,
-     8 from Ron Crummett):
-          (%i1) load("bode")$
-
-          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
-
-          (%i3) bode_gain (H1 (s), [w, 1/1000, 1000])$
-
-          (%i4) H2 (s) := 1 / (1 + s/omega0)$
-
-          (%i5) bode_gain (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
-
-          (%i7) bode_gain (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i8) H4 (s) := 1 + s/omega0$
-
-          (%i9) bode_gain (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i10) H5 (s) := 1/s$
-
-          (%i11) bode_gain (H5 (s), [w, 1/1000, 1000])$
-
-          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
-
-          (%i13) bode_gain (H6 (s), [w, 1/1000, 1000]),
-                            omega0 = 10, zeta = 1/10$
-
-          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
-
-          (%i15) bode_gain (H7 (s), [w, 1/1000, 1000]),
-                            omega0 = 10, zeta = 1/10$
-
-          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
-
-          (%i17) bode_gain (H8 (s), [w, 1/1000, 1000])$
-
-     To use this function write first `load("bode")'. See also
-     `bode_phase'
-
- -- Function: bode_phase (<H>, <range>, ...<plot_opts>...)
-     Function to draw Bode phase plots.
-
-     Examples (1 through 7 from
-          http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html,
-     8 from Ron Crummett):
-          (%i1) load("bode")$
-
-          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
-
-          (%i3) bode_phase (H1 (s), [w, 1/1000, 1000])$
-
-          (%i4) H2 (s) := 1 / (1 + s/omega0)$
-
-          (%i5) bode_phase (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
-
-          (%i7) bode_phase (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i8) H4 (s) := 1 + s/omega0$
-
-          (%i9) bode_phase (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i10) H5 (s) := 1/s$
-
-          (%i11) bode_phase (H5 (s), [w, 1/1000, 1000])$
-
-          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
-
-          (%i13) bode_phase (H6 (s), [w, 1/1000, 1000]),
-                             omega0 = 10, zeta = 1/10$
-
-          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
-
-          (%i15) bode_phase (H7 (s), [w, 1/1000, 1000]),
-                             omega0 = 10, zeta = 1/10$
-
-          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
-
-          (%i17) bode_phase (H8 (s), [w, 1/1000, 1000])$
-
-          (%i18) block ([bode_phase_unwrap : false],
-                        bode_phase (H8 (s), [w, 1/1000, 1000]));
-
-          (%i19) block ([bode_phase_unwrap : true],
-                        bode_phase (H8 (s), [w, 1/1000, 1000]));
-
-     To use this function write first `load("bode")'. See also
-     `bode_gain'
-
-
-File: maxima.info,  Node: descriptive,  Next: diag,  Prev: bode,  Up: Top
-
-44 descriptive
-**************
-
-* Menu:
-
-* Introduction to descriptive::
-* Definitions for data manipulation::
-* Definitions for descriptive statistics::
-* Definitions for specific multivariate descriptive statistics::
-* Definitions for statistical graphs::
 

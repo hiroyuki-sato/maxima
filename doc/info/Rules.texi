@@ -1,9 +1,9 @@
 @menu
 * Introduction to Rules and Patterns::  
-* Definitions for Rules and Patterns::  
+* Functions and Variables for Rules and Patterns::  
 @end menu
 
-@node Introduction to Rules and Patterns, Definitions for Rules and Patterns, Rules and Patterns, Rules and Patterns
+@node Introduction to Rules and Patterns, Functions and Variables for Rules and Patterns, Rules and Patterns, Rules and Patterns
 @section Introduction to Rules and Patterns
 
 This section describes user-defined pattern matching and
@@ -23,8 +23,8 @@ There are additional mechanisms for rules applied to polynomials by @code{tellra
 and for commutative and noncommutative algebra in @code{affine} package. 
 
 @c end concepts Rules and Patterns
-@node Definitions for Rules and Patterns,  , Introduction to Rules and Patterns, Rules and Patterns
-@section Definitions for Rules and Patterns
+@node Functions and Variables for Rules and Patterns,  , Introduction to Rules and Patterns, Rules and Patterns
+@section Functions and Variables for Rules and Patterns
 
 @c NEEDS CLARIFICATION AND EXAMPLES
 @deffn {Function} apply1 (@var{expr}, @var{rule_1}, ..., @var{rule_n})
@@ -142,7 +142,8 @@ because the pattern argument @code{x} is given to @code{defmatch}.
 @c HOW HARD WILL MAXIMA TRY TO COLLECT TERMS AND DO OTHER MUNGEING TO FIT THE PATTERN ??
 
 @c ===beg===
-@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, 
+@c                     freeof(x));
 @c defmatch (linearp, a*x + b, x);
 @c linearp (3*z + (y + 1)*z + y^2, z);
 @c a;
@@ -150,7 +151,8 @@ because the pattern argument @code{x} is given to @code{defmatch}.
 @c x;
 @c ===end===
 @example
-(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                    freeof(x));
 (%o1)                         done
 (%i2) defmatch (linearp, a*x + b, x);
 (%o2)                        linearp
@@ -173,13 +175,15 @@ This match function only matches expressions linear in @code{x},
 not any other variable, because no pattern argument is given to @code{defmatch}.
 
 @c ===beg===
-@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+@c matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, 
+@c                     freeof(x));
 @c defmatch (linearp, a*x + b);
 @c linearp (3*z + (y + 1)*z + y^2);
 @c linearp (3*x + (y + 1)*x + y^2);
 @c ===end===
 @example
-(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b, freeof(x));
+(%i1) matchdeclare (a, lambda ([e], e#0 and freeof(x, e)), b,
+                    freeof(x));
 (%o1)                         done
 (%i2) defmatch (linearp, a*x + b);
 (%o2)                        linearp
@@ -580,20 +584,24 @@ or a sum or product (respectively) of such expressions.
 
 @c ===beg===
 @c matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
-@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
 @c r1 (8 + a*b + sin(x));
-@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
 @c r2 (8 * (a + b) * sin(x));
 @c ===end===
 @example
 (%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
 (%o1)                         done
-(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
 bb + aa partitions `sum'
 (%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
 (%i3) r1 (8 + a*b + sin(x));
 (%o3)     [all atoms = 8, all nonatoms = sin(x) + a b]
-(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
 bb aa partitions `product'
 (%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
 (%i5) r2 (8 * (a + b) * sin(x));
@@ -607,21 +615,25 @@ as one match predicate cannot accept terms matched by another.
 
 @c ===beg===
 @c matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
-@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
 @c r1 (8 + a*b + %pi + sin(x) - c + 2^n);
-@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+@c defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = 
+@c                bb]);
 @c r2 (8 * (a + b) * %pi * sin(x) / c * 2^n);
 @c ===end===
 @example
 (%i1) matchdeclare (aa, atom, bb, lambda ([x], not atom(x)));
 (%o1)                         done
-(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" = bb]);
+(%i2) defrule (r1, aa + bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
 bb + aa partitions `sum'
 (%o2)  r1 : bb + aa -> [all atoms = aa, all nonatoms = bb]
 (%i3) r1 (8 + a*b + %pi + sin(x) - c + 2^n);
                                                      n
 (%o3) [all atoms = %pi + 8, all nonatoms = sin(x) + 2  - c + a b]
-(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" = bb]);
+(%i4) defrule (r2, aa * bb, ["all atoms" = aa, "all nonatoms" =
+               bb]);
 bb aa partitions `product'
 (%o4)   r2 : aa bb -> [all atoms = aa, all nonatoms = bb]
 (%i5) r2 (8 * (a + b) * %pi * sin(x) / c * 2^n);
@@ -720,23 +732,32 @@ Examples:
 @item
 Delimiters may be almost any strings.
 @end itemize
+@c ===beg===
+@c matchfix ("@@", "~");
+@c @@ a, b, c ~;
+@c matchfix (">>", "<<");
+@c >> a, b, c <<;
+@c matchfix ("foo", "oof");
+@c foo a, b, c oof;
+@c >> w + foo x, y oof + z << / @@ p, q ~;
+@c ===end===
 @example
-(%i1) matchfix ("@@", "~");
-(%o1)                          "@@"
-(%i2) @@ a, b, c ~;
-(%o2)                       @@a, b, c~
+(%i1) matchfix ("@@@@", "~");
+(%o1)                          @@@@
+(%i2) @@@@ a, b, c ~;
+(%o2)                      @@@@a, b, c~
 (%i3) matchfix (">>", "<<");
-(%o3)                         ">>"
+(%o3)                          >>
 (%i4) >> a, b, c <<;
 (%o4)                      >>a, b, c<<
 (%i5) matchfix ("foo", "oof");
-(%o5)                         "foo"
+(%o5)                          foo
 (%i6) foo a, b, c oof;
 (%o6)                     fooa, b, coof
-(%i7) >> w + foo x, y oof + z << / @@ p, q ~;
+(%i7) >> w + foo x, y oof + z << / @@@@ p, q ~;
                      >>z + foox, yoof + w<<
 (%o7)                ----------------------
-                             @@p, q~
+                            @@@@p, q~
 @end example
 
 @itemize @bullet
@@ -822,27 +843,30 @@ Examples:
 @c tellsimp (aa @@ bb, bb/aa);
 @c tellsimpafter (quux (%pi, %e), %pi - %e);
 @c tellsimpafter (quux (%e, %pi), %pi + %e);
-@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), quux (%e, %pi)];
+@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), 
+@c        quux (%e, %pi)];
 @c remrule (foo, foorule1);
 @c remrule ("+", "+rule1");
 @c remrule ("@@", "@@rule1");
 @c remrule (quux, all);
-@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), quux (%e, %pi)];
+@c [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), 
+@c         quux (%e, %pi)];
 @c ===end===
 @example
 (%i1) tellsimp (foo (aa, bb), bb - aa);
 (%o1)                   [foorule1, false]
 (%i2) tellsimpafter (aa + bb, special_add (aa, bb));
 (%o2)                   [+rule1, simplus]
-(%i3) infix ("@@");
-(%o3)                          @@
-(%i4) tellsimp (aa @@ bb, bb/aa);
-(%o4)                   [@@rule1, false]
+(%i3) infix ("@@@@");
+(%o3)                          @@@@
+(%i4) tellsimp (aa @@@@ bb, bb/aa);
+(%o4)                   [@@@@rule1, false]
 (%i5) tellsimpafter (quux (%pi, %e), %pi - %e);
 (%o5)                  [quuxrule1, false]
 (%i6) tellsimpafter (quux (%e, %pi), %pi + %e);
 (%o6)             [quuxrule2, quuxrule1, false]
-(%i7) [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), quux (%e, %pi)];
+(%i7) [foo (aa, bb), aa + bb, aa @@@@ bb, quux (%pi, %e),
+       quux (%e, %pi)];
                                      bb
 (%o7) [bb - aa, special_add(aa, bb), --, %pi - %e, %pi + %e]
                                      aa
@@ -850,13 +874,14 @@ Examples:
 (%o8)                          foo
 (%i9) remrule ("+", "+rule1");
 (%o9)                           +
-(%i10) remrule ("@@", "@@rule1");
-(%o10)                         @@
+(%i10) remrule ("@@@@", "@@@@rule1");
+(%o10)                         @@@@
 (%i11) remrule (quux, all);
 (%o11)                        quux
-(%i12) [foo (aa, bb), aa + bb, aa @@ bb, quux (%pi, %e), quux (%e, %pi)];
-(%o12) [foo(aa, bb), bb + aa, aa @@ bb, quux(%pi, %e), 
-                                                   quux(%e, %pi)]
+(%i12) [foo (aa, bb), aa + bb, aa @@@@ bb, quux (%pi, %e),
+        quux (%e, %pi)];
+(%o12) [foo(aa, bb), bb + aa, aa @@@@ bb, quux(%pi, %e), 
+                                         quux(%e, %pi)]
 @end example
 
 @end deffn
