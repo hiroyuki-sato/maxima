@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html>
-<!-- Created on August, 24 2008 by texi2html 1.76 -->
+<!-- Created on December, 2 2008 by texi2html 1.76 -->
 <!--
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -11,10 +11,10 @@ Send bugs and suggestions to <users@texi2html.cvshome.org>
 
 -->
 <head>
-<title>Maxima Manual: 42. augmented_lagrangian</title>
+<title>Maxima 5.17.0 Manual: 42. augmented_lagrangian</title>
 
-<meta name="description" content="Maxima Manual: 42. augmented_lagrangian">
-<meta name="keywords" content="Maxima Manual: 42. augmented_lagrangian">
+<meta name="description" content="Maxima 5.17.0 Manual: 42. augmented_lagrangian">
+<meta name="keywords" content="Maxima 5.17.0 Manual: 42. augmented_lagrangian">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="texi2html 1.76">
@@ -191,16 +191,30 @@ div.categorybox
 <p><a name="Item_003a-augmented_005flagrangian_005fmethod"></a>
 </p><dl>
 <dt><u>Function:</u> <b>augmented_lagrangian_method</b><i> (<var>FOM</var>, <var>xx</var>, <var>C</var>, <var>yy</var>)</i>
-<a name="IDX1419"></a>
+<a name="IDX1418"></a>
 </dt>
 <dt><u>Function:</u> <b>augmented_lagrangian_method</b><i> (<var>FOM</var>, <var>xx</var>, <var>C</var>, <var>yy</var>, optional_args)</i>
+<a name="IDX1419"></a>
+</dt>
+<dt><u>Function:</u> <b>augmented_lagrangian_method</b><i> ([<var>FOM</var>, <var>grad</var>], <var>xx</var>, <var>C</var>, <var>yy</var>)</i>
 <a name="IDX1420"></a>
+</dt>
+<dt><u>Function:</u> <b>augmented_lagrangian_method</b><i> ([<var>FOM</var>, <var>grad</var>], <var>xx</var>, <var>C</var>, <var>yy</var>, optional_args)</i>
+<a name="IDX1421"></a>
 </dt>
 <dd><p>Returns an approximate minimum of the expression <var>FOM</var>
 with respect to the variables <var>xx</var>,
 holding the constraints <var>C</var> equal to zero.
 <var>yy</var> is a list of initial guesses for <var>xx</var>.
 The method employed is the augmented Lagrangian method (see Refs [1] and [2]).
+</p>
+<p><var>grad</var>, if present, is the gradient of <var>FOM</var> with respect to <var>xx</var>,
+represented as a list of expressions,
+one for each variable in <var>xx</var>.
+If not present, the gradient is constructed automatically.
+</p>
+<p><var>FOM</var> and each element of <var>grad</var>, if present,
+must be ordinary expressions, not names of functions or lambda expressions.
 </p>
 <p><code>optional_args</code> represents additional arguments,
 specified as <code><var>symbol</var> = <var>value</var></code>.
@@ -235,7 +249,7 @@ which is a quasi-Newton algorithm.
 </p>
 <p>[2] <a href="http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf">http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf</a>
 </p>
-<p>Example:
+<p>Examples:
 </p>
 <pre class="example">(%i1) load (lbfgs);
 (%o1)     /maxima/share/lbfgs/lbfgs.mac
@@ -255,14 +269,36 @@ which is a quasi-Newton algorithm.
 (%o7) [[x = 0.66665984108002, y = 0.33334027245545], 
                                  %lambda = [- 1.333337940892525]]
 </pre>
+<p>Same example as before, but this time the gradient is supplied as an argument.
+</p>
+<pre class="example">(%i1) load (lbfgs)$
+(%i2) load (augmented_lagrangian)$
+(%i3) FOM: x^2 + 2*y^2;
+                               2    2
+(%o3)                       2 y  + x
+(%i4) FOM: x^2 + 2*y^2;
+                               2    2
+(%o4)                       2 y  + x
+(%i5) xx: [x, y];
+(%o5)                        [x, y]
+(%i6) grad : [2*x, 4*y];
+(%o6)                      [2 x, 4 y]
+(%i7) C: [x + y - 1];
+(%o7)                      [y + x - 1]
+(%i8) yy: [1, 1];
+(%o8)                        [1, 1]
+(%i9) augmented_lagrangian_method ([FOM, grad], xx, C, yy, iprint = [-1, 0]);
+(%o9) [[x = 0.666659841080025, y = .3333402724554462], 
+                                 %lambda = [- 1.333337940892543]]
+</pre>
 <div class=categorybox>
 
-
-<p>Categories:&nbsp;&nbsp;<a href="maxima_93.html#Category_003a-Numerical-methods">Numerical methods</a>
+&middot;
+<p>@ref{Category: Numerical methods}
  &middot;
-<a href="maxima_93.html#Category_003a-Share-packages">Share packages</a>
+@ref{Category: Share packages}
  &middot;
-<a href="maxima_93.html#Category_003a-Package-augmented_005flagrangian">Package augmented_lagrangian</a>
+@ref{Category: Package augmented_lagrangian}
 </p>
 </div>
 
@@ -270,7 +306,8 @@ which is a quasi-Newton algorithm.
 </dd></dl>
 
 
-<hr size="6">
+<p><a name="Item_003a-bode"></a>
+</p><hr size="6">
 <table cellpadding="1" cellspacing="1" border="0">
 <tr><td valign="middle" align="left">[<a href="#SEC176" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
 <td valign="middle" align="left">[<a href="maxima_43.html#SEC178" title="Next chapter"> &gt;&gt; </a>]</td>
@@ -286,7 +323,7 @@ which is a quasi-Newton algorithm.
 </tr></table>
 <p>
  <font size="-1">
-  This document was generated by <em>Robert Dodier</em> on <em>August, 24 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+  This document was generated by <em>Robert Dodier</em> on <em>December, 2 2008</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
  </font>
  <br>
 

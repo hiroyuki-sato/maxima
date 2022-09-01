@@ -2402,10 +2402,21 @@ File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Pre
  -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
  -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
           optional_args)
+ -- Function: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>)
+ -- Function: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>, optional_args)
      Returns an approximate minimum of the expression <FOM> with
      respect to the variables <xx>, holding the constraints <C> equal
      to zero.  <yy> is a list of initial guesses for <xx>.  The method
      employed is the augmented Lagrangian method (see Refs [1] and [2]).
+
+     <grad>, if present, is the gradient of <FOM> with respect to <xx>,
+     represented as a list of expressions, one for each variable in
+     <xx>.  If not present, the gradient is constructed automatically.
+
+     <FOM> and each element of <grad>, if present, must be ordinary
+     expressions, not names of functions or lambda expressions.
 
      `optional_args' represents additional arguments, specified as
      `<symbol> = <value>'.  The optional arguments recognized are:
@@ -2439,7 +2450,7 @@ File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Pre
 
      [2] `http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf'
 
-     Example:
+     Examples:
 
           (%i1) load (lbfgs);
           (%o1)     /maxima/share/lbfgs/lbfgs.mac
@@ -2458,6 +2469,29 @@ File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Pre
           (%i7) augmented_lagrangian_method(FOM, xx, C, yy, iprint=[-1,0]);
           (%o7) [[x = 0.66665984108002, y = 0.33334027245545],
                                            %lambda = [- 1.333337940892525]]
+
+     Same example as before, but this time the gradient is supplied as
+     an argument.
+
+          (%i1) load (lbfgs)$
+          (%i2) load (augmented_lagrangian)$
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o4)                       2 y  + x
+          (%i5) xx: [x, y];
+          (%o5)                        [x, y]
+          (%i6) grad : [2*x, 4*y];
+          (%o6)                      [2 x, 4 y]
+          (%i7) C: [x + y - 1];
+          (%o7)                      [y + x - 1]
+          (%i8) yy: [1, 1];
+          (%o8)                        [1, 1]
+          (%i9) augmented_lagrangian_method ([FOM, grad], xx, C, yy, iprint = [-1, 0]);
+          (%o9) [[x = 0.666659841080025, y = .3333402724554462],
+                                           %lambda = [- 1.333337940892543]]
 
 
 
@@ -4882,15 +4916,16 @@ File: maxima.info,  Node: Functions and Variables for continuous distributions, 
 
  -- Function: pdf_student_t (<x>,<n>)
      Returns the value at <x> of the density function of a Student
-     random variable t(n), with n>0. To make use of this function,
-     write first `load(distrib)'.
+     random variable t(n), with n>0 degrees of freedom. To make use of
+     this function, write first `load(distrib)'.
 
 
  -- Function: cdf_student_t (<x>,<n>)
      Returns the value at <x> of the distribution function of a Student
-     random variable t(n), with n>0. This function has no closed form
-     and it is numerically computed if the global variable `numer'
-     equals `true',  otherwise it returns a nominal expression.
+     random variable t(n), with n>0 degrees of freedom. This function
+     has no closed form and it is numerically computed if the global
+     variable `numer' equals `true',  otherwise it returns a nominal
+     expression.
 
           (%i1) load (distrib)$
           (%i2) cdf_student_t(1/2, 7/3);
@@ -4958,6 +4993,118 @@ File: maxima.info,  Node: Functions and Variables for continuous distributions, 
                                | ---  |
                                \  n   /
      is a Student random variable with <n> degrees of freedom, t(n).
+
+     To make use of this function, write first `load(distrib)'.
+
+
+ -- Function: pdf_noncentral_student_t (<x>,<n>,<ncp>)
+     Returns the value at <x> of the density function of a noncentral
+     Student random variable nc_t(n,ncp), with n>0 degrees of freedom
+     and noncentrality parameter ncp. To make use of this function,
+     write first `load(distrib)'.
+
+     Sometimes an extra work is necessary to get the final result.
+
+          (%i1) load (distrib)$
+          (%i2) expand(pdf_noncentral_student_t(3,5,0.1));
+                 .01370030107589574 sqrt(5)
+          (%o2)  --------------------------
+                 sqrt(2) sqrt(14) sqrt(%pi)
+             1.654562884111515E-4 sqrt(5)
+           + ----------------------------
+                      sqrt(%pi)
+             .02434921505438663 sqrt(5)
+           + --------------------------
+                        %pi
+          (%i3) float(%);
+          (%o3)          .02080593159405669
+
+
+ -- Function: cdf_noncentral_student_t (<x>,<n>,<ncp>)
+     Returns the value at <x> of the distribution function of a
+     noncentral Student random variable nc_t(n,ncp), with n>0 degrees
+     of freedom and noncentrality parameter ncp. This function has no
+     closed form and it is numerically computed if the global variable
+     `numer' equals `true' or at least one of the arguments is a float,
+     otherwise it returns a nominal expression.
+
+          (%i1) load (distrib)$
+          (%i2) cdf_noncentral_student_t(-2,5,-5);
+          (%o2) cdf_noncentral_student_t(- 2, 5, - 5)
+          (%i3) cdf_noncentral_student_t(-2.0,5,-5);
+          (%o3)          .9952030093319743
+
+
+ -- Function: quantile_noncentral_student_t (<q>,<n>,<ncp>)
+     Returns the <q>-quantile of a noncentral Student random variable
+     nc_t(n,ncp), with n>0 degrees of freedom and noncentrality
+     parameter ncp; in other words, this is the inverse of
+     `cdf_noncentral_student_t'. Argument <q> must be an element of
+     [0,1]. To make use of this function, write first `load(distrib)'.
+
+
+ -- Function: mean_noncentral_student_t (<n>,<ncp>)
+     Returns the mean of a noncentral Student random variable
+     nc_t(n,ncp), with n>1 degrees of freedom and noncentrality
+     parameter ncp. To make use of this function, write first
+     `load(distrib)'.
+
+          (%i1) load (distrib)$
+          (%i2) (assume(df>1), mean_noncentral_student_t(df,k));
+                             df - 1
+                       gamma(------) sqrt(df) k
+                               2
+          (%o2)        ------------------------
+                                        df
+                          sqrt(2) gamma(--)
+                                        2
+
+
+ -- Function: var_noncentral_student_t (<n>,<ncp>)
+     Returns the variance of a noncentral Student random variable
+     nc_t(n,ncp), with n>2 degrees of freedom and noncentrality
+     parameter ncp. To make use of this function, write first
+     `load(distrib)'.
+
+
+ -- Function: std_noncentral_student_t (<n>,<ncp>)
+     Returns the standard deviation of a noncentral Student random
+     variable nc_t(n,ncp), with n>2 degrees of freedom and
+     noncentrality parameter ncp. To make use of this function, write
+     first `load(distrib)'.
+
+
+ -- Function: skewness_noncentral_student_t (<n>,<ncp>)
+     Returns the skewness coefficient of a noncentral Student random
+     variable nc_t(n,ncp), with n>3 degrees of freedom and
+     noncentrality parameter ncp. To make use of this function, write
+     first `load(distrib)'.
+
+
+ -- Function: kurtosis_noncentral_student_t (<n>,<ncp>)
+     Returns the kurtosis coefficient of a noncentral Student random
+     variable nc_t(n,ncp), with n>4 degrees of freedom and
+     noncentrality parameter ncp. To make use of this function, write
+     first `load(distrib)'.
+
+
+ -- Function: random_noncentral_student_t (<n>,<ncp>)
+ -- Function: random_noncentral_student_t (<n>,<ncp>,<m>)
+     Returns a noncentral Student random variate nc_t(n,ncp), with n>0.
+     Calling `random_noncentral_student_t' with a third argument <m>, a
+     random sample of size <m> will be simulated.
+
+     The implemented algorithm is based on the fact that if <X> is a
+     normal random variable N(ncp,1) and S^2 is a chi square random
+     variable with <n> degrees of freedom, Chi^2(n), then
+                                     X
+                           U = -------------
+                               /   2  \ 1/2
+                               |  S   |
+                               | ---  |
+                               \  n   /
+     is a noncentral Student random variable with <n> degrees of
+     freedom and noncentrality parameter ncp, nc_t(n,ncp).
 
      To make use of this function, write first `load(distrib)'.
 

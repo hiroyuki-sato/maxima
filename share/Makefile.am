@@ -816,6 +816,7 @@ numeric/forma1.usg\
 numeric/format.lisp\
 numeric/format.usg\
 numeric/interpol.mac\
+numeric/jtroot3.mac\
 numeric/newton.mac\
 numeric/newton1.mac\
 numeric/riemsum.mac\
@@ -864,6 +865,7 @@ simplification/rducon.dem\
 simplification/rducon.lisp\
 simplification/rncomb.dem\
 simplification/rncomb.mac\
+simplification/rtest_rncomb.mac\
 simplification/scifac.dem\
 simplification/scifac.lisp\
 simplification/sqdnst.mac\
@@ -973,7 +975,10 @@ vector/vect.usg\
 vector/vect_transform.mac\
 vector/vector.dem\
 vector/vector.mac\
-vector/vector.usg
+vector/vector.usg\
+vector/vector_rebuild.lisp\
+vector/vector_rebuild.mac\
+vector/vector_rebuild.usg
 
 genericdirDATA = \
 maxima-init.lisp\
